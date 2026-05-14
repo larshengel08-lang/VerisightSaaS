@@ -26,6 +26,11 @@ import {
   getLiveActionCenterSummary,
   type ActionCenterWorkspaceReadbackSummary,
 } from '@/lib/action-center-live'
+import {
+  buildActionCenterEntryHref,
+  isActionCenterEntrySource,
+  type ActionCenterEntrySource,
+} from '@/lib/action-center-entry'
 import type {
   ActionCenterPreviewItem,
   ActionCenterPreviewManagerOption,
@@ -72,6 +77,7 @@ interface Props {
   itemHrefs?: Record<string, string>
   hideSidebar?: boolean
   boundedOverviewOnly?: boolean
+  allowEmptyInitialSelection?: boolean
 }
 
 interface CreateActionFormState {
@@ -857,9 +863,11 @@ export function ActionCenterPreview({
   itemHrefs = {},
   hideSidebar = false,
   boundedOverviewOnly = false,
+  allowEmptyInitialSelection = false,
 }: Props) {
   const explicitlySelectedInitialItem = initialItems.find((item) => item.id === initialSelectedItemId) ?? null
-  const initialSelectedItem = explicitlySelectedInitialItem ?? (boundedOverviewOnly ? null : initialItems[0] ?? null)
+  const initialSelectedItem =
+    explicitlySelectedInitialItem ?? (boundedOverviewOnly || allowEmptyInitialSelection ? null : initialItems[0] ?? null)
   const [items, setItems] = useState(() => initialItems.map((item) => finalizeActionCenterPreviewItem(item)))
   const [activeView, setActiveView] = useState<ActionCenterPreviewView>(initialView)
   const [selectedItemId, setSelectedItemId] = useState(initialSelectedItem?.id ?? null)
@@ -882,13 +890,13 @@ export function ActionCenterPreview({
   const deferredSearchQuery = useDeferredValue(searchQuery)
 
   useEffect(() => {
-    if (!boundedOverviewOnly && !selectedItemId && items[0]) {
+    if (!boundedOverviewOnly && !allowEmptyInitialSelection && !selectedItemId && items[0]) {
       setSelectedItemId(items[0].id)
     }
     if (!selectedTeamId && items[0]) {
       setSelectedTeamId(items[0].teamId)
     }
-  }, [boundedOverviewOnly, items, selectedItemId, selectedTeamId])
+  }, [allowEmptyInitialSelection, boundedOverviewOnly, items, selectedItemId, selectedTeamId])
 
   useEffect(() => {
     if (boundedOverviewOnly && activeView !== 'overview') {
@@ -930,7 +938,7 @@ export function ActionCenterPreview({
 
   const selectedItem = selectedItemId
     ? filteredItems.find((item) => item.id === selectedItemId) ?? items.find((item) => item.id === selectedItemId) ?? null
-    : boundedOverviewOnly
+    : boundedOverviewOnly || allowEmptyInitialSelection
       ? null
       : filteredItems[0] ?? items[0] ?? null
   const managerActionSurfaceCopy = getManagerActionSurfaceCopy(selectedItem)
@@ -1067,6 +1075,30 @@ export function ActionCenterPreview({
     : null
   const canShowFollowUpRouteAffordance = Boolean(canRenderFollowUpRoute && !followUpRouteBlockReason)
 
+  function replaceEntryUrl(args: {
+    focus?: string | null
+    view: ActionCenterPreviewView
+  }) {
+    if (typeof window === 'undefined') return
+
+    const nextHref = buildContextualEntryHref(window.location.href, {
+      focus: args.focus ?? selectedItemId,
+      view: args.view,
+    })
+
+    window.history.replaceState(window.history.state, '', nextHref)
+  }
+
+  function setContextualView(
+    nextView: ActionCenterPreviewView,
+    options?: {
+      focus?: string | null
+    },
+  ) {
+    setActiveView(nextView)
+    replaceEntryUrl({ focus: options?.focus ?? selectedItemId, view: nextView })
+  }
+
   function updateItem(itemId: string, updater: (item: ActionCenterPreviewItem) => ActionCenterPreviewItem) {
     setItems((currentItems) =>
       currentItems.map((item) =>
@@ -1122,9 +1154,8 @@ export function ActionCenterPreview({
     })
 
     setItems((current) => [newItem, ...current])
-    setSelectedItemId(newItem.id)
     setSelectedTeamId(newItem.teamId)
-    setActiveView('actions')
+    focusActionRoute(newItem.id)
     setShowCreateModal(false)
     setCreateForm(getCreateDefaults([newItem, ...items]))
   }
@@ -1356,11 +1387,7 @@ export function ActionCenterPreview({
   function focusActionRoute(routeId: string) {
     setSelectedItemId(routeId)
     setActiveView('actions')
-    if (typeof window !== 'undefined') {
-      const url = new URL(window.location.href)
-      url.searchParams.set('focus', routeId)
-      window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`)
-    }
+    replaceEntryUrl({ focus: routeId, view: 'actions' })
   }
 
   function handleStatusChange(nextStatus: ActionCenterPreviewStatus) {
@@ -1445,7 +1472,7 @@ export function ActionCenterPreview({
                 : item.key === 'managers'
                   ? navigationCounts.managers
                   : navigationCounts.teams,
-        onClick: () => setActiveView(item.key),
+        onClick: () => setContextualView(item.key),
       }))
     : []
 
@@ -1481,7 +1508,7 @@ export function ActionCenterPreview({
                   label: 'Overzicht',
                   active: activeView === 'overview',
                   count: 0,
-                  onClick: () => setActiveView('overview'),
+                  onClick: () => setContextualView('overview'),
                 },
               ]}
             />
@@ -1499,7 +1526,7 @@ export function ActionCenterPreview({
                       : item.key === 'managers'
                         ? navigationCounts.managers
                         : navigationCounts.teams,
-                onClick: () => setActiveView(item.key),
+                onClick: () => setContextualView(item.key),
               }))}
             />
 
@@ -1623,7 +1650,10 @@ export function ActionCenterPreview({
                   upcomingReviews={upcomingReviews}
                   overviewStatusCounts={overviewStatusCounts}
                   selectedItem={selectedItem}
-                  onSelectItem={setSelectedItemId}
+                  onSelectItem={(itemId) => {
+                    setSelectedItemId(itemId)
+                    replaceEntryUrl({ focus: itemId, view: 'overview' })
+                  }}
                   selectedItemHref={selectedItemHref}
                   workbenchLabel={workbenchLabel}
                 />
@@ -1663,7 +1693,7 @@ export function ActionCenterPreview({
                       <button
                         type="button"
                         className="text-sm font-semibold text-[#4a5f74] transition hover:text-[#132033]"
-                        onClick={() => setActiveView('actions')}
+                        onClick={() => setContextualView('actions')}
                       >
                         Open actielijst
                       </button>
@@ -1674,10 +1704,7 @@ export function ActionCenterPreview({
                           key={item.id}
                           type="button"
                           className="flex w-full flex-col gap-4 py-5 text-left transition hover:bg-[#f8f2eb]"
-                          onClick={() => {
-                            setSelectedItemId(item.id)
-                            setActiveView('actions')
-                          }}
+                          onClick={() => focusActionRoute(item.id)}
                         >
                           <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                             <div className="min-w-0">
@@ -1736,10 +1763,9 @@ export function ActionCenterPreview({
                         className="inline-flex min-h-11 items-center rounded-full bg-[#ff9b4a] px-4.5 py-2.5 text-sm font-semibold text-[#132033] transition hover:brightness-[0.98]"
                         onClick={() => {
                           if (focusItem) {
-                            setSelectedItemId(focusItem.id)
-                            setActiveView('actions')
+                            focusActionRoute(focusItem.id)
                           } else {
-                            setActiveView('actions')
+                            setContextualView('actions')
                           }
                         }}
                       >
@@ -1768,7 +1794,7 @@ export function ActionCenterPreview({
                               className="flex w-full items-start justify-between gap-4 rounded-[16px] border border-white/10 bg-white/[0.03] px-4 py-3.5 text-left transition hover:bg-white/[0.06]"
                               onClick={() => {
                                 setSelectedItemId(item.id)
-                                setActiveView('reviews')
+                                setContextualView('reviews', { focus: item.id })
                               }}
                             >
                               <div className="min-w-0">
@@ -1807,7 +1833,7 @@ export function ActionCenterPreview({
                       <button
                         type="button"
                         className="min-h-11 rounded-full border border-[#ded3c6] px-4.5 py-2.5 text-sm font-semibold text-[#1a2533] transition hover:border-[#1a2533]"
-                        onClick={() => setActiveView('managers')}
+                        onClick={() => setContextualView('managers')}
                       >
                         Open managers
                       </button>
@@ -1885,7 +1911,7 @@ export function ActionCenterPreview({
                     <button
                       type="button"
                       className="inline-flex min-h-11 items-center rounded-full border border-[#ded3c6] bg-[#fcfaf7] px-4.5 py-2.5 text-sm font-semibold text-[#1a2533] transition hover:border-[#1a2533]"
-                      onClick={() => setActiveView('overview')}
+                      onClick={() => setContextualView('overview')}
                     >
                       Terug naar overzicht
                     </button>
@@ -2697,8 +2723,12 @@ export function ActionCenterPreview({
                 </div>
               ) : (
                 <EmptySection
-                  title="Nog geen acties beschikbaar"
-                  body="Zodra er routes live staan, verschijnt hier automatisch de eerstvolgende managerstap, begrensde reactie of actiekaart."
+                  title={allowEmptyInitialSelection ? 'Kies eerst een route' : 'Nog geen acties beschikbaar'}
+                  body={
+                    allowEmptyInitialSelection
+                      ? 'Voor deze campagne zijn meerdere zichtbare routes gevonden. Kies eerst de juiste afdeling of route om de actiecontext te openen.'
+                      : 'Zodra er routes live staan, verschijnt hier automatisch de eerstvolgende managerstap, begrensde reactie of actiekaart.'
+                  }
                 />
               )
             ) : null}
@@ -2730,8 +2760,7 @@ export function ActionCenterPreview({
                       items={overdueReviews}
                       emptyText="In deze selectie staan nu geen achterstallige reviews meer open."
                       onOpen={(item) => {
-                        setSelectedItemId(item.id)
-                        setActiveView('actions')
+                        focusActionRoute(item.id)
                       }}
                     />
                     <ReviewLane
@@ -2739,8 +2768,7 @@ export function ActionCenterPreview({
                       items={thisWeekReviews}
                       emptyText="Voor deze week staat nu geen nieuw reviewgesprek meer open."
                       onOpen={(item) => {
-                        setSelectedItemId(item.id)
-                        setActiveView('actions')
+                        focusActionRoute(item.id)
                       }}
                     />
                     <ReviewLane
@@ -2748,8 +2776,7 @@ export function ActionCenterPreview({
                       items={nextWeekReviews}
                       emptyText="Voor volgende week is nog geen nieuw reviewgesprek ingepland."
                       onOpen={(item) => {
-                        setSelectedItemId(item.id)
-                        setActiveView('actions')
+                        focusActionRoute(item.id)
                       }}
                     />
                   </section>
@@ -2781,8 +2808,7 @@ export function ActionCenterPreview({
                         className="mt-6 inline-flex min-h-11 rounded-full bg-[#ff9b4a] px-4.5 py-2.5 text-sm font-semibold text-[#132033] transition hover:brightness-[0.98]"
                         onClick={() => {
                           if (upcomingReviews[0]) {
-                            setSelectedItemId(upcomingReviews[0].id)
-                            setActiveView('actions')
+                            focusActionRoute(upcomingReviews[0].id)
                           }
                         }}
                       >
@@ -2871,7 +2897,7 @@ export function ActionCenterPreview({
                               className="text-left"
                               onClick={() => {
                                 setSelectedTeamId(team.id)
-                                setActiveView('teams')
+                                setContextualView('teams')
                               }}
                             >
                               <p className="font-semibold">{team.label}</p>
@@ -2997,10 +3023,7 @@ export function ActionCenterPreview({
                               key={item.id}
                               type="button"
                               className="flex w-full items-start justify-between gap-4 rounded-[22px] border border-[#ebe1d5] bg-[#fcfaf7] px-5 py-5 text-left transition hover:border-[#d7cab9]"
-                              onClick={() => {
-                                setSelectedItemId(item.id)
-                                setActiveView('actions')
-                              }}
+                              onClick={() => focusActionRoute(item.id)}
                             >
                               <div className="min-w-0">
                                 <div className="flex flex-wrap items-center gap-2 text-sm text-[#6d6458]">
@@ -3060,10 +3083,7 @@ export function ActionCenterPreview({
                                 key={item.id}
                                 type="button"
                                 className="w-full rounded-[18px] border border-[#efe7dc] bg-[#fcfaf7] px-4 py-4 text-left transition hover:border-[#d7cab9]"
-                                onClick={() => {
-                                  setSelectedItemId(item.id)
-                                  setActiveView('actions')
-                                }}
+                                onClick={() => focusActionRoute(item.id)}
                               >
                                 <p className="font-semibold text-[#132033]">{item.title}</p>
                                 <p className="mt-1 text-sm text-[#5d6f84]">Volgende bespreking {item.reviewDateLabel}</p>
@@ -3796,6 +3816,37 @@ function buildDetailLineageEntries(
   ]
 
   return entries.filter((entry): entry is ActionCenterDetailLineageEntry => entry !== null)
+}
+
+export function buildContextualEntryHref(
+  currentHref: string,
+  args: {
+    focus?: string | null
+    view: ActionCenterPreviewView
+  },
+) {
+  const url = new URL(currentHref)
+  const source = url.searchParams.get('source')
+  const nextSource: ActionCenterEntrySource | null = isActionCenterEntrySource(source) ? source : null
+  const canonicalEntryHref = buildActionCenterEntryHref({
+    focus: args.focus ?? null,
+    view: args.view,
+    source: nextSource,
+  })
+  const canonicalEntryUrl = new URL(canonicalEntryHref, url.origin)
+
+  for (const key of ['focus', 'view', 'source'] as const) {
+    const value = canonicalEntryUrl.searchParams.get(key)
+
+    if (value === null) {
+      url.searchParams.delete(key)
+      continue
+    }
+
+    url.searchParams.set(key, value)
+  }
+
+  return `${url.pathname}${url.search}${url.hash}`
 }
 
 function RouteFieldCard({ label, value }: { label: string; value: string }) {

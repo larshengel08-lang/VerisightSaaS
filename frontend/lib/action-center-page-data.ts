@@ -70,6 +70,7 @@ export interface ActionCenterPageData {
   managerOptions: ActionCenterPreviewManagerOption[]
   itemHrefs: Record<string, string>
   organizationNames: string[]
+  inviteDownloadEligibleRouteIds: string[]
 }
 
 function normalizeDepartmentLabel(value: string | null | undefined) {
@@ -128,6 +129,27 @@ function getManagerAssignment(
         row.can_view,
     ) ?? null
   )
+}
+
+function hasNonEmptyLoginEmail(value: string | null | undefined) {
+  return Boolean(value?.trim())
+}
+
+function isInviteDownloadEligibleRoute(args: {
+  campaign: Campaign
+  routeId: string
+  assignment: ActionCenterWorkspaceMember | null
+  visibleRouteIdSet: Set<string>
+}) {
+  if (!args.visibleRouteIdSet.has(args.routeId)) {
+    return false
+  }
+
+  if (args.campaign.scan_type !== 'exit') {
+    return false
+  }
+
+  return hasNonEmptyLoginEmail(args.assignment?.login_email)
 }
 
 export async function getActionCenterPageData({
@@ -195,6 +217,7 @@ export async function getActionCenterPageData({
   const dossiers = ((dossiersRaw ?? []) as PilotLearningDossier[]).filter((dossier) =>
     dossier.campaign_id ? campaignIds.includes(dossier.campaign_id) : false,
   )
+  const inviteEligibilityWorkspaceRows = (managerWorkspaceRowsRaw ?? []) as ActionCenterWorkspaceMember[]
   const managerWorkspaceRows = (
     context.canManageActionCenterAssignments ? managerWorkspaceRowsRaw ?? [] : currentUserWorkspaceMemberships
   ) as ActionCenterWorkspaceMember[]
@@ -380,12 +403,29 @@ export async function getActionCenterPageData({
     return acc
   }, {})
 
+  const inviteDownloadEligibleRouteIds: string[] = []
   const liveContexts = campaigns.flatMap((campaign) => {
     return (visibleScopesByCampaignId[campaign.id] ?? []).map((scope) => {
       const deliveryRecord = deliveryRecordByCampaignId.get(campaign.id) ?? null
       const learningDossier = learningDossierByCampaignId.get(campaign.id) ?? null
       const assignment = getManagerAssignment(managerWorkspaceRows, campaign.organization_id, scope.scopeValue)
+      const inviteEligibilityAssignment = getManagerAssignment(
+        inviteEligibilityWorkspaceRows,
+        campaign.organization_id,
+        scope.scopeValue,
+      )
       const routeId = buildActionCenterRouteId(campaign.id, scope.scopeValue)
+
+      if (
+        isInviteDownloadEligibleRoute({
+          campaign,
+          routeId,
+          assignment: inviteEligibilityAssignment,
+          visibleRouteIdSet,
+        })
+      ) {
+        inviteDownloadEligibleRouteIds.push(routeId)
+      }
 
       return {
         campaign,
@@ -443,5 +483,6 @@ export async function getActionCenterPageData({
     managerOptions,
     itemHrefs,
     organizationNames: [...new Set(organizations.map((organization) => organization.name).filter(Boolean))],
+    inviteDownloadEligibleRouteIds,
   }
 }
