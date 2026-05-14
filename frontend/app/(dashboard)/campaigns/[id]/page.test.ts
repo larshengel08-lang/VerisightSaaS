@@ -8,6 +8,20 @@ const componentSource = () =>
   )
 
 describe('exit dashboard analytics guardrails', () => {
+  it('removes the old hybrid campaign tabs and keeps results-first blocks visible on the route page', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('Responsbasis')
+    expect(source).toContain('Kernsignaal')
+    expect(source).toContain('Signalen in samenhang')
+    expect(source).toContain('Drivers & prioriteiten')
+    expect(source).toContain('Verdiepingslagen')
+    expect(source).toContain('Survey-stemmen')
+    expect(source).not.toContain('Samenvatting')
+    expect(source).not.toContain('Methodiek')
+    expect(source).not.toContain('Uitvoering')
+  })
+
   it('keeps the ExitScan dashboard free from owner, action, review, workflow and setup language', () => {
     const source = componentSource().toLowerCase()
     const forbiddenTerms = [

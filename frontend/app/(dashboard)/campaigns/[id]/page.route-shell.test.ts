@@ -2,6 +2,12 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 describe('campaign detail route shell', () => {
+  it('keeps open answers reachable from the results environment in one click', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('/open-antwoorden')
+  })
+
   it('keeps the manager-only insight boundary intact', () => {
     const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
 
@@ -12,8 +18,6 @@ describe('campaign detail route shell', () => {
   it('wires ExitScan through a dedicated analytical component and preserves report + module navigation', () => {
     const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
 
-    expect(source).toContain('ExitProductDashboard')
-    expect(source).toContain('averageSignalScoreLabel')
     expect(source).toContain('PdfDownloadButton')
     expect(source).toContain('moduleBackLinkLabel')
     expect(source).toContain('if (stats.scan_type === "exit")')

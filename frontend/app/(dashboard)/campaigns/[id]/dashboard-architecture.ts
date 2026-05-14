@@ -1,6 +1,6 @@
 import type { ScanType } from '@/lib/types'
 
-export type DashboardViewKind = 'overview' | 'evidence' | 'action' | 'campaign'
+export type DashboardViewKind = 'results'
 export type DashboardSectionEmphasis = 'hero' | 'primary' | 'secondary'
 
 export type DashboardViewDefinition = {
@@ -63,72 +63,23 @@ export function buildDashboardArchitecture(args: {
   hasSegmentDeepDive: boolean
 }): DashboardArchitecture {
   return {
-    primaryViews: [
-      { id: 'overview', label: 'Overzicht', kind: 'overview' },
-      { id: 'evidence', label: 'Onderbouwing', kind: 'evidence' },
-      { id: 'action', label: 'Actie', kind: 'action' },
-      { id: 'campaign', label: 'Campagne', kind: 'campaign' },
-    ],
+    primaryViews: [{ id: 'results', label: 'Resultaten', kind: 'results' }],
     overviewSections: [
-      { id: 'cover', title: 'Cover en context', emphasis: 'secondary' },
-      { id: 'response', title: 'Response interpretation', emphasis: 'secondary' },
-      { id: 'handoff', title: 'Bestuurlijke handoff', emphasis: 'hero' },
-      { id: 'score', title: getScoreInterpretationTitle(args.scanType), emphasis: 'primary' },
+      { id: 'response', title: 'Responsbasis', emphasis: 'secondary' },
+      { id: 'score', title: getScoreInterpretationTitle(args.scanType), emphasis: 'hero' },
       { id: 'synthesis', title: 'Signalen in samenhang', emphasis: 'primary' },
       {
         id: 'drivers',
-        title: 'Drivers en prioriteiten',
+        title: 'Drivers & prioriteiten',
         emphasis: 'primary',
         interaction: 'drilldown',
-        highlightCount: 2,
       },
-      { id: 'action', title: 'Eerste route en actie', emphasis: 'primary' },
-      {
-        id: 'methodology',
-        title: 'Compacte methodiek en leeswijzer',
-        emphasis: 'secondary',
-        interaction: 'disclosure',
-      },
+      { id: 'depth', title: 'Verdiepingslagen', emphasis: 'secondary' },
+      { id: 'voices', title: 'Survey-stemmen', emphasis: 'secondary' },
     ],
-    evidenceSections: [
-      { id: 'sdt', title: 'SDT basislaag', emphasis: 'secondary' },
-      { id: 'org-factors', title: 'Organisatiefactoren', emphasis: 'secondary' },
-      {
-        id: 'segments',
-        title: 'Conditionele segmentanalyse',
-        emphasis: 'secondary',
-        requiresSegmentDeepDive: true,
-      },
-      {
-        id: 'methodology',
-        title: 'Methodologie, privacy en drempels',
-        emphasis: 'secondary',
-        interaction: 'disclosure',
-      },
-      { id: 'technical', title: 'Technische verantwoording', emphasis: 'secondary' },
-      { id: 'report', title: 'Volledig rapport', emphasis: 'secondary' },
-    ],
-    actionSections: [
-      { id: 'route', title: 'Eerste route, eigenaar en review', emphasis: 'primary' },
-      { id: 'playbooks', title: 'Verificatievragen en playbooks', emphasis: 'primary' },
-      ...(args.scanType === 'team' || args.scanType === 'leadership'
-        ? [
-            {
-              id: 'bounded-fallback',
-              title: 'Terug naar bredere duiding wanneer deze bounded route te smal wordt',
-              emphasis: 'secondary' as const,
-            },
-          ]
-        : []),
-    ],
-    campaignSections: [
-      {
-        id: 'campaign-status',
-        title: args.canManageCampaign ? 'Campagnestatus en readiness' : 'Campagnestatus',
-        emphasis: 'secondary',
-      },
-      { id: 'respondents', title: 'Respondenten en uitnodigingen', emphasis: 'secondary' },
-    ],
+    evidenceSections: [],
+    actionSections: [],
+    campaignSections: [],
   }
 }
 
