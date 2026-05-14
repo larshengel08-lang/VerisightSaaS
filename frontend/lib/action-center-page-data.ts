@@ -217,6 +217,7 @@ export async function getActionCenterPageData({
   const dossiers = ((dossiersRaw ?? []) as PilotLearningDossier[]).filter((dossier) =>
     dossier.campaign_id ? campaignIds.includes(dossier.campaign_id) : false,
   )
+  const inviteEligibilityWorkspaceRows = (managerWorkspaceRowsRaw ?? []) as ActionCenterWorkspaceMember[]
   const managerWorkspaceRows = (
     context.canManageActionCenterAssignments ? managerWorkspaceRowsRaw ?? [] : currentUserWorkspaceMemberships
   ) as ActionCenterWorkspaceMember[]
@@ -408,13 +409,18 @@ export async function getActionCenterPageData({
       const deliveryRecord = deliveryRecordByCampaignId.get(campaign.id) ?? null
       const learningDossier = learningDossierByCampaignId.get(campaign.id) ?? null
       const assignment = getManagerAssignment(managerWorkspaceRows, campaign.organization_id, scope.scopeValue)
+      const inviteEligibilityAssignment = getManagerAssignment(
+        inviteEligibilityWorkspaceRows,
+        campaign.organization_id,
+        scope.scopeValue,
+      )
       const routeId = buildActionCenterRouteId(campaign.id, scope.scopeValue)
 
       if (
         isInviteDownloadEligibleRoute({
           campaign,
           routeId,
-          assignment,
+          assignment: inviteEligibilityAssignment,
           visibleRouteIdSet,
         })
       ) {
