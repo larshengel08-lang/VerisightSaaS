@@ -46,13 +46,15 @@ export function ReviewMomentPageClient({
   governanceCounts,
   organizationName,
   lastUpdated,
-  canDownloadInviteArtifact,
+  canScheduleActionCenterReview,
+  inviteDownloadEligibleRouteIds,
 }: {
   items: ActionCenterPreviewItem[]
   governanceCounts: ReviewMomentGovernanceCounts
   organizationName: string
   lastUpdated: string
-  canDownloadInviteArtifact: boolean
+  canScheduleActionCenterReview: boolean
+  inviteDownloadEligibleRouteIds: string[]
 }) {
   const [statusFilter, setStatusFilter] = useState<'all' | ActionCenterPreviewStatus>('all')
   const [scopeFilter, setScopeFilter] = useState<string>('all')
@@ -61,6 +63,10 @@ export function ReviewMomentPageClient({
   const [selectedItemId, setSelectedItemId] = useState<string | null>(getFirstVisibleItem(items))
 
   const referenceNow = useMemo(() => new Date(lastUpdated), [lastUpdated])
+  const inviteDownloadEligibleRouteIdSet = useMemo(
+    () => new Set(inviteDownloadEligibleRouteIds),
+    [inviteDownloadEligibleRouteIds],
+  )
   const scopeOptions = useMemo(
     () => [...new Set(items.map((item) => getReviewMomentScopeLabel(item)))].sort((left, right) => left.localeCompare(right)),
     [items],
@@ -109,6 +115,9 @@ export function ReviewMomentPageClient({
             ? 'completed'
             : null
     : null
+  const canDownloadInviteArtifact = canScheduleActionCenterReview && Boolean(
+    selectedItem?.id && inviteDownloadEligibleRouteIdSet.has(selectedItem.id),
+  )
   const lastUpdatedLabel = formatReviewMomentLastUpdated(lastUpdated)
 
   if (items.length === 0) {

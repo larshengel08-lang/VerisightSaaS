@@ -26,11 +26,15 @@ describe('review moment page client source', () => {
     expect(source).toContain("Reviewmomenten tonen ritme en discipline. Acties, dashboardduiding en rapportinhoud staan op aparte pagina's.")
   })
 
-  it('threads review invite artifact permission only into the detail panel caller path', () => {
+  it('threads review invite permission and server-derived route eligibility only into the detail panel caller path', () => {
     const source = readFileSync(new URL('./review-moment-page-client.tsx', import.meta.url), 'utf8')
 
+    expect(source).toContain('canScheduleActionCenterReview')
+    expect(source).toContain('inviteDownloadEligibleRouteIds')
+    expect(source).toContain('new Set(inviteDownloadEligibleRouteIds)')
     expect(source).toContain('canDownloadInviteArtifact')
     expect(source).toContain('ReviewMomentDetailPanel')
+    expect(source).toContain('inviteDownloadEligibleRouteIdSet.has(selectedItem.id)')
     expect(source).toContain('canDownloadInviteArtifact={canDownloadInviteArtifact}')
   })
 

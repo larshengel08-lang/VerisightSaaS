@@ -119,6 +119,8 @@ describe('review moment detail panel invite CTA', () => {
     expect(source).toContain('buildReviewInviteDownloadHref')
     expect(source).toContain('/api/action-center-review-invites?reviewItemId=')
     expect(source).toContain('canDownloadInviteArtifact')
+    expect(source).toContain("item.status !== 'afgerond'")
+    expect(source).toContain("item.status !== 'gestopt'")
     expect(source).toContain('Download .ics')
     expect(source).not.toContain('Verstuur uitnodiging')
   })
