@@ -25,8 +25,8 @@ export const metadata: Metadata = {
     template: '%s | Loep',
   },
   icons: {
-    icon: [{ url: '/icon.svg', type: 'image/svg+xml' }],
-    shortcut: [{ url: '/icon.svg', type: 'image/svg+xml' }],
+    icon: [{ url: '/icon.png', type: 'image/png' }],
+    shortcut: [{ url: '/icon.png', type: 'image/png' }],
   },
   description:
     'Loep helpt HR-teams bij organisaties met 200 tot 1.000 medewerkers om vertrek te duiden met ExitScan en behoud eerder zichtbaar te maken met RetentieScan.',
@@ -72,7 +72,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     '@type': 'Organization',
     name: 'Loep',
     url: 'https://www.verisight.nl',
-    logo: 'https://www.verisight.nl/icon.svg',
+    logo: 'https://www.verisight.nl/icon.png',
     description:
       'Loep helpt HR-teams bij organisaties met 200 tot 1.000 medewerkers om vertrek te duiden met ExitScan en behoud eerder zichtbaar te maken met RetentieScan.',
     areaServed: {
