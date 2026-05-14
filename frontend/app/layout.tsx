@@ -24,6 +24,10 @@ export const metadata: Metadata = {
     default: 'Loep',
     template: '%s | Loep',
   },
+  icons: {
+    icon: [{ url: '/icon.svg', type: 'image/svg+xml' }],
+    shortcut: [{ url: '/icon.svg', type: 'image/svg+xml' }],
+  },
   description:
     'Loep helpt HR-teams bij organisaties met 200 tot 1.000 medewerkers om vertrek te duiden met ExitScan en behoud eerder zichtbaar te maken met RetentieScan.',
   metadataBase: new URL('https://www.verisight.nl'),
