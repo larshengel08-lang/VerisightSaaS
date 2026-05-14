@@ -49,6 +49,16 @@ This baseline means the next phase may assume:
 - Action Center remains canonical truth for review state, owner state, closeout, and reopen
 - scheduler permissions and `can_view` gating already matter and must stay aligned across UI and API
 
+### Baseline Synchronization Rule
+
+This masterplan assumes the current planning worktree already contains the live baseline from `main`.
+
+Before writing any child plan from this file:
+
+- verify the worktree contains merge commit `31832e58b4209428ca64f0a628b0f7744e5212f2` or an equivalent synced `main` baseline
+- if the worktree is behind or materially diverged from that baseline, sync it from `main` first
+- do not write child plans against a stale local assumption set
+
 ## Product Rules To Preserve
 
 - Outlook-first remains the strategic direction, but `email + ICS` remains the baseline operational model.
@@ -56,6 +66,15 @@ This baseline means the next phase may assume:
 - ExitScan remains the only route family assumed live-safe for strong-hybrid follow-through until parity work explicitly widens the perimeter.
 - HR remains the rhythm owner; manager interactions should stay lighter than HR interactions.
 - Reminder and review logic must land through contextual entry, not generic Action Center entry.
+
+At masterplan level, `Outlook-friendly` means:
+
+- the customer primarily works in Outlook / Exchange for calendar behavior
+- standard email + ICS invites are operationally acceptable in the baseline
+- there is a workable organizer mailbox model for review invites
+- later customer IT posture could support a Graph consent path if the optional native integration becomes relevant
+
+It does **not** mean that delegated per-manager calendar write access is available in the baseline.
 
 ## Required Child Plans
 
@@ -68,6 +87,23 @@ This baseline means the next phase may assume:
 | `docs/superpowers/plans/2026-05-14-action-center-route-defaults-and-suite-parity.md` | Route eligibility expansion, defaults per route family, and suite-broad parity gating |
 
 Do **not** create code from this masterplan without first creating the relevant child plan file.
+
+## Planning Contract
+
+The sections below are **plan-authoring tasks only**.
+
+Completing one of these tasks means:
+
+- the named child-plan document has been written
+- the child plan has been sanity-checked against this masterplan
+- the child plan document has been committed
+
+Completing one of these tasks does **not** mean:
+
+- any feature code was written
+- any database shape changed
+- any UI was shipped
+- any deploy or merge happened
 
 ## File Structure Guidance For The Next Wave
 
@@ -92,33 +128,36 @@ Avoid:
 
 ## Execution Order
 
-The recommended next-wave order stays:
+The recommended next-wave **child-plan authoring order** is:
 
-1. Triggered Follow-Through Mail Layer
-2. HR Rhythm Console
+1. HR Rhythm Console
+2. Triggered Follow-Through Mail Layer
 3. Review Reschedule Flows
 4. Native Outlook / Graph Integration
 5. Route Defaults and Suite Parity
 
 The reason for this order is:
 
-- triggers create the first major adoption unlock after the invite foundation
-- HR rhythm control is required before reminders become safe and governable at scale
+- HR rhythm control defines the cadence, reminder, and escalation model that the mail layer must obey
+- triggered mail remains the first major user-visible adoption unlock after that governance model exists
 - rescheduling must be canonical before any native calendar sync path becomes trustworthy
 - Graph should improve an already-stable baseline, not become the baseline
 - parity should only expand after the rhythm model is proven on ExitScan
 
 ## Rollout Gates
 
-### Gate A: Before Triggered Mail Starts
+### Gate A: Before Any Next-Wave Child Plan Starts
 
 - [ ] PR #136 baseline is merged and live on `main`
+- [ ] the current worktree contains merge commit `31832e58b4209428ca64f0a628b0f7744e5212f2` or an equivalent synced `main` baseline
 - [ ] contextual entry remains stable in production
 - [ ] review invite route and `.ics` CTA remain green in targeted tests
 
-### Gate B: Before HR Rhythm Console Starts
+### Gate B: Before Triggered Mail Starts
 
-- [ ] reminder-trigger semantics are explicit
+- [ ] HR cadence defaults are explicit
+- [ ] reminder timing and escalation timing rules are explicit
+- [ ] owner reassignment boundaries are explicit
 - [ ] mail events are bounded to Action Center truth and do not mutate canonical state
 - [ ] dedupe/throttle rules exist so HR does not create spam loops
 
@@ -136,46 +175,14 @@ The reason for this order is:
 
 ### Gate E: Before Route Parity Starts
 
-- [ ] ExitScan rhythm behavior is stable enough to measure
+- [ ] at least 10 live ExitScan routes across at least 2 customer contexts have produced measurable rhythm data
+- [ ] no invite/reminder regression has remained open in production for 2 consecutive weeks
+- [ ] manager engagement after trigger is at least 60% within the expected follow-through window
+- [ ] scheduled reviews completed or explicitly rescheduled are at least 70%
 - [ ] HR oversight model is trusted in live use
 - [ ] explicit route inclusion/exclusion matrix is ready for the next route family
 
-## Task 1: Write the Triggered Follow-Through Mail Layer Child Plan
-
-**Files:**
-- Create: `C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer-structure\docs\superpowers\plans\2026-05-14-action-center-triggered-follow-through-mail-layer.md`
-- Reference: `C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer-structure\docs\superpowers\specs\2026-05-14-action-center-strong-hybrid-upsell-design.md`
-- Reference: `C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer-structure\docs\superpowers\plans\2026-05-14-action-center-outlook-email-ics-channel-contract.md`
-
-- [ ] Define the exact trigger set for phase 1:
-  - assignment created
-  - review upcoming
-  - review overdue
-  - follow-up still open after review
-
-- [ ] Make the child plan explicit about what it must not include:
-  - no broad marketing mail framework
-  - no Microsoft Graph dependency
-  - no canonical writes by email reply
-  - no route-family broadening beyond explicit eligibility
-
-- [ ] Define the delivery contract:
-  - event source
-  - recipient resolution
-  - template ownership
-  - dedupe window
-  - reminder suppression rules
-  - contextual deeplink requirements
-
-- [ ] Require test coverage in the child plan for:
-  - duplicate-send prevention
-  - stale schedule suppression
-  - non-eligible route blocking
-  - permission-safe recipient selection
-
-- [ ] Commit the child plan when written.
-
-## Task 2: Write the HR Rhythm Console Child Plan
+## Planning Task 1: Write the HR Rhythm Console Child Plan
 
 **Files:**
 - Create: `C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer-structure\docs\superpowers\plans\2026-05-14-action-center-hr-rhythm-console.md`
@@ -198,7 +205,7 @@ The reason for this order is:
   - stale follow-through
   - pending escalations
 
-- [ ] Require testing for:
+- [ ] Require test coverage in the child plan for:
   - permission boundaries
   - invalid cadence/rule combinations
   - stale-overview correctness
@@ -206,7 +213,45 @@ The reason for this order is:
 
 - [ ] Commit the child plan when written.
 
-## Task 3: Write the Review Reschedule Flows Child Plan
+## Planning Task 2: Write the Triggered Follow-Through Mail Layer Child Plan
+
+**Files:**
+- Create: `C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer-structure\docs\superpowers\plans\2026-05-14-action-center-triggered-follow-through-mail-layer.md`
+- Reference: `C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer-structure\docs\superpowers\specs\2026-05-14-action-center-strong-hybrid-upsell-design.md`
+- Reference: `C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer-structure\docs\superpowers\plans\2026-05-14-action-center-outlook-email-ics-channel-contract.md`
+- Reference: `C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer-structure\docs\superpowers\plans\2026-05-14-action-center-hr-rhythm-console.md`
+
+- [ ] Define the exact trigger set for phase 1:
+  - assignment created
+  - review upcoming
+  - review overdue
+  - follow-up still open after review
+
+- [ ] Make the child plan explicit about what it must not include:
+  - no broad marketing mail framework
+  - no Microsoft Graph dependency
+  - no canonical writes by email reply
+  - no route-family broadening beyond explicit eligibility
+
+- [ ] Define the delivery contract:
+  - event source
+  - recipient resolution
+  - template ownership
+  - dedupe window
+  - reminder suppression rules
+  - contextual deeplink requirements
+
+- [ ] Make the child plan explicitly inherit cadence, reminder, and escalation boundaries from the HR Rhythm Console child plan rather than redefining them ad hoc.
+
+- [ ] Require testing for:
+  - duplicate-send prevention
+  - stale schedule suppression
+  - non-eligible route blocking
+  - permission-safe recipient selection
+
+- [ ] Commit the child plan when written.
+
+## Planning Task 3: Write the Review Reschedule Flows Child Plan
 
 **Files:**
 - Create: `C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer-structure\docs\superpowers\plans\2026-05-14-action-center-review-reschedule-flows.md`
@@ -237,7 +282,7 @@ The reason for this order is:
 
 - [ ] Commit the child plan when written.
 
-## Task 4: Write the Native Outlook / Graph Integration Child Plan
+## Planning Task 4: Write the Native Outlook / Graph Integration Child Plan
 
 **Files:**
 - Create: `C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer-structure\docs\superpowers\plans\2026-05-14-action-center-native-outlook-graph-integration.md`
@@ -256,7 +301,7 @@ The reason for this order is:
 
 - [ ] Define the product gating:
   - which customers qualify
-  - what “Outlook-friendly” means
+  - what `Outlook-friendly` means in terms of mailbox model, consent expectations, and IT tolerance
   - what is unsupported in the first Graph release
 
 - [ ] Require testing for:
@@ -266,7 +311,7 @@ The reason for this order is:
 
 - [ ] Commit the child plan when written.
 
-## Task 5: Write the Route Defaults and Suite Parity Child Plan
+## Planning Task 5: Write the Route Defaults and Suite Parity Child Plan
 
 **Files:**
 - Create: `C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer-structure\docs\superpowers\plans\2026-05-14-action-center-route-defaults-and-suite-parity.md`
@@ -295,6 +340,7 @@ The reason for this order is:
 ## Verification Checklist
 
 - [ ] PR #136 live baseline is explicitly acknowledged in every child plan that depends on it
+- [ ] every child plan first verifies that the current worktree still contains the live baseline contract from `main`
 - [ ] no child plan assumes Microsoft Graph as the baseline delivery path
 - [ ] no child plan introduces off-platform canonical writes
 - [ ] child-plan order preserves rhythm before parity and baseline before Graph
@@ -324,8 +370,8 @@ Type/term consistency:
 
 This masterplan is complete when it is saved and committed.
 
-The next implementation-planning step should be to write **Task 1** as the first actual child plan:
+The next implementation-planning step should be to write **Planning Task 1** as the first actual child plan:
 
-- `docs/superpowers/plans/2026-05-14-action-center-triggered-follow-through-mail-layer.md`
+- `docs/superpowers/plans/2026-05-14-action-center-hr-rhythm-console.md`
 
 Do not start coding the next wave from this document directly.
