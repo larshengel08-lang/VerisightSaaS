@@ -70,26 +70,27 @@ function toAnchorId(value: string) {
 
 export function buildOpenAnswerItems(scanType: ScanType, responses: SurveyResponse[]) {
   const seen = new Set<string>()
+  const items: OpenAnswerItem[] = []
 
-  return responses
-    .map((response) => {
-      const rawText = response.open_text_raw?.trim() || response.open_text_analysis?.trim() || ''
-      const text = sanitizeOpenAnswerText(rawText)
+  for (const response of responses) {
+    const rawText = response.open_text_raw?.trim() || response.open_text_analysis?.trim() || ''
+    const text = sanitizeOpenAnswerText(rawText)
 
-      if (text.length < MIN_OPEN_ANSWER_LENGTH) return null
+    if (text.length < MIN_OPEN_ANSWER_LENGTH) continue
 
-      const normalized = text.toLowerCase()
-      if (seen.has(normalized)) return null
-      seen.add(normalized)
+    const normalized = text.toLowerCase()
+    if (seen.has(normalized)) continue
+    seen.add(normalized)
 
-      return {
-        id: response.id,
-        theme: inferTheme(scanType, response),
-        text,
-        submittedAt: response.submitted_at,
-      } satisfies OpenAnswerItem
+    items.push({
+      id: response.id,
+      theme: inferTheme(scanType, response),
+      text,
+      submittedAt: response.submitted_at,
     })
-    .filter((item): item is OpenAnswerItem => Boolean(item))
+  }
+
+  return items
 }
 
 export function buildOpenAnswersViewModel(items: OpenAnswerItem[]) {
