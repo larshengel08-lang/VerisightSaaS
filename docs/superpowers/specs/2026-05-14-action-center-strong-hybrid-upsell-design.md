@@ -22,6 +22,9 @@ This document defines:
 - which capability waves and initiatives should land first
 - how to improve adoption without turning Action Center into "just another tool"
 
+This document is a **north-star program spec**, not a directly buildable single implementation spec.
+Execution must be decomposed into narrower child specs before implementation planning starts.
+
 ---
 
 ## 1. North Star
@@ -112,6 +115,16 @@ It explicitly rejects two weaker alternatives:
 - `dashboard homebase`: too dependent on self-initiated checking
 - `inbox-first`: too likely to fragment truth, workflow, and governance across channels
 
+### 2.6 Dependency rule
+
+Contextual entry and deeplinking are a prerequisite foundation for the first serious channel work.
+
+That means:
+
+- Outlook invites may not ship without route-aware contextual landing
+- triggered follow-through mail may not ship without route-aware contextual landing
+- sending users to a generic Action Center entry and asking them to self-orient is explicitly out of scope for the first strong-hybrid release
+
 ---
 
 ## 3. Product Boundary
@@ -150,6 +163,35 @@ Even while Action Center becomes more commercially prominent, its boundary must 
 - bounded to follow-through
 
 Prominence must not create scope drift.
+
+### 3.4 Off-platform write policy
+
+To keep the strong-hybrid boundary stable, phase 1 off-platform behavior is explicitly limited.
+
+Allowed off-platform in phase 1:
+
+- receiving a review invite by email
+- accepting, declining, or tentatively responding to a calendar invite
+- opening a deeplink back into Action Center
+
+Allowed off-platform in phase 1 as non-canonical signal only:
+
+- RSVP state as an attendance hint
+
+Not allowed off-platform in phase 1:
+
+- recording review outcome
+- marking a route reviewed
+- changing owner
+- changing canonical route status
+- closing a route
+- reopening a route
+- postponing a review in a way that changes canonical schedule without going through Action Center
+
+The phase 1 rule is simple:
+
+- channels may carry awareness and attendance
+- Action Center remains the place where canonical follow-through state changes
 
 ---
 
@@ -198,6 +240,26 @@ The main problem is that Action Center still depends too much on:
 
 The product can already do meaningful things.
 The missing layer is what makes it **live reliably in the work rhythm of HR and managers**.
+
+### 5.1 First serious external rollout scope
+
+The "suite-wide standard upsell" label describes the destination state, not the first external rollout perimeter.
+
+For the first serious external rollout, the eligible route family must be explicit:
+
+- **In**: ExitScan
+- **Conditional next candidate**: RetentieScan, but only after route defaults, review rhythm defaults, and strong-hybrid channel behavior are validated on ExitScan
+- **Out for first serious rollout**: Onboarding 30-60-90, Pulse, Leadership Scan, TeamScan, Combinatie
+- **Not part of external suite-wide follow-through rollout**: internal MTO design/input-only carriers
+
+This means sales and product should not treat Action Center as a standard upsell for every route from phase 1 onward.
+
+The maturity path is:
+
+- first prove the strong-hybrid model on ExitScan
+- then explicitly unlock RetentieScan
+- then broaden route-family coverage with defaults and eligibility rules
+- only then move toward a true suite-wide standard upsell motion
 
 ---
 
@@ -248,6 +310,41 @@ It is the combination of:
 - route parity
 - stronger HR oversight
 - measurable proof
+
+### 6.4 Decision thresholds
+
+The maturity labels are not only directional. They also define decision gates.
+
+#### `6/10` -> `8/10` gate
+
+Action Center may be treated as a strong bounded upsell when all of the following are true for the first eligible route family:
+
+- review invites and reminder triggers work with contextual landing
+- no tenant-specific native Microsoft integration is required for baseline operation
+- at least 60% of assigned managers engage after a trigger within the expected follow-through window
+- at least 70% of scheduled reviews are actually completed or explicitly rescheduled
+- stale route share is below 25%
+- HR can operate the rhythm without repeated product-team rescue
+
+#### `8/10` -> `standard upsell` gate
+
+Action Center may be treated as a standard upsell when:
+
+- the eligible route family is explicitly documented
+- route defaults and eligibility rules exist for all in-scope routes
+- review rhythm and reminders are operationally reliable
+- stale route share is below 20%
+- overdue review rate is below 20%
+- closeout and reopen behavior are trusted enough for customer-facing use
+
+#### `standard upsell` -> `10/10 suite-wide motion` gate
+
+Action Center may be treated as a suite-wide standard upsell motion only when:
+
+- at least the intended in-scope route family has parity in follow-through defaults and channel rhythm
+- the attach story is consistent enough that sales is not improvising route fit every time
+- HR oversight is strong enough to run multi-route follow-through without manual chasing becoming the norm
+- adoption proof exists across multiple customer contexts, not only one favorable pilot
 
 ---
 
@@ -366,6 +463,19 @@ over broad operational overview.
 The first serious implementation path should focus on Outlook and email.
 But interfaces and event models should be designed so that later channels can be added without rewriting the product model.
 
+### 8.7 Channel feasibility before channel ambition
+
+The first serious rollout must not depend on heavy customer IT prerequisites.
+
+That means phase 1 must assume:
+
+- standards-based email delivery
+- ICS-based calendar invitation support
+- no mandatory tenant-wide Microsoft consent
+- no mandatory native Microsoft Graph integration as the baseline
+
+Native Microsoft integration may become a later optimization layer, but it is not the baseline viability requirement for the first external strong-hybrid release.
+
 ---
 
 ## 9. Workstreams
@@ -379,6 +489,7 @@ move Action Center from passive workbench to active rhythm layer.
 
 Scope:
 
+- contextual entry and deeplink foundation
 - Outlook review invites
 - notification events
 - reminder logic
@@ -434,9 +545,10 @@ make Action Center stop depending on active checking.
 
 Priority outcomes:
 
+- contextual deeplink foundation
 - Outlook review invites
 - triggered follow-through email
-- precise deeplinks
+- precise route-aware landing
 - manager-first entry improvements
 - basic HR rhythm control
 
@@ -487,9 +599,9 @@ Priority outcomes:
 
 These are the must-have improvements that unlock adoption and make the upsell more sellable.
 
+- contextual deeplink foundation
 - Outlook review invites
 - triggered email layer
-- precision deeplinking
 - manager-first entry experience
 - HR control over rhythm
 
@@ -518,7 +630,23 @@ These matter for the `10/10` end state, but should not be the first unlock.
 
 The following initiatives are the recommended execution units.
 
-### 12.1 Initiative 1: Outlook Review Loop
+### 12.1 Initiative 1: Contextual Entry and Deeplink Foundation
+
+Purpose:
+make every strong-hybrid trigger land in exact route context instead of a generic Action Center destination.
+
+Must deliver:
+
+- route-level deeplinks
+- review-level deeplinks
+- action-level deeplinks where relevant
+- a manager-focused landing state that answers "what needs attention now?"
+
+Dependency rule:
+
+- no serious email or calendar trigger should ship before this foundation exists
+
+### 12.2 Initiative 2: Outlook Review Loop
 
 Purpose:
 make review moments real calendar events in the manager and HR operating rhythm.
@@ -531,7 +659,16 @@ Must deliver:
 - route-aware context and deeplink in the invite
 - HR visibility that the review loop is actually scheduled
 
-### 12.2 Initiative 2: Triggered Follow-Through Mail Layer
+Phase 1 feasibility rule:
+
+- the baseline mechanism is email plus ICS calendar support
+- native Microsoft integration is optional and later
+- phase 1 must work without mandatory customer tenant consent
+- the organizer model must be supportable through a Verisight-controlled or HR-controlled sending identity without requiring per-manager delegated calendar write access
+- customers who can consume standard calendar invites remain in the baseline rollout shape even without native Microsoft integration
+- customers who cannot reliably consume calendar invites may still receive email-triggered follow-through, but they are not the target ideal for the first strong-hybrid rollout
+
+### 12.3 Initiative 3: Triggered Follow-Through Mail Layer
 
 Purpose:
 make Action Center push the right follow-through prompts at the right time.
@@ -543,18 +680,6 @@ Must deliver:
 - missed-review email
 - follow-up-open email
 - clear distinction between informational and action-needed messages
-
-### 12.3 Initiative 3: Deep-Link Navigation and Landing
-
-Purpose:
-make every trigger land the user in the exact right Action Center context.
-
-Must deliver:
-
-- route-level deeplinks
-- review-level deeplinks
-- action-level deeplinks where relevant
-- compact manager-focused landing state
 
 ### 12.4 Initiative 4: HR Rhythm Console
 
@@ -603,6 +728,9 @@ Must deliver:
 - owner and review defaults
 - clear route eligibility rules
 - boundedness enforcement for follow-through fit
+
+This initiative does not create first-rollout eligibility from scratch.
+It operationalizes and scales the explicit first-rollout route perimeter already defined in section 5.1.
 
 ### 12.8 Initiative 8: Adoption Instrumentation
 
@@ -675,7 +803,35 @@ The maturity proof should come from adoption and rhythm behavior.
 
 ---
 
-## 14. What Not to Build First
+## 14. Required Child Specs Before Implementation Planning
+
+This document must be decomposed into narrower executable specs before implementation planning begins.
+
+Required child specs:
+
+- Contextual Entry and Deeplink Foundation
+- Outlook / Email / ICS Channel Contract
+- HR Rhythm Console
+- Triggered Follow-Through Mail Layer
+- Manager Quick-Action Experience
+- Route Defaults and Eligibility Rules
+- Adoption Instrumentation and Readback
+- Commercial Packaging Kit
+
+Each child spec should define:
+
+- the exact bounded scope
+- product rules
+- roles and permissions
+- data truth and write rules
+- success and failure states
+- test strategy
+
+This avoids treating a cross-functional roadmap as if it were already a single directly buildable implementation spec.
+
+---
+
+## 15. What Not to Build First
 
 The following are explicitly lower priority or actively discouraged in the next phase:
 
@@ -688,13 +844,13 @@ The following are explicitly lower priority or actively discouraged in the next 
 
 ---
 
-## 15. Recommended Primary Execution Order
+## 16. Recommended Primary Execution Order
 
 The recommended program order is:
 
-1. Outlook Review Loop
-2. Triggered Follow-Through Mail Layer
-3. Deep-Link Navigation and Landing
+1. Contextual Entry and Deeplink Foundation
+2. Outlook Review Loop
+3. Triggered Follow-Through Mail Layer
 4. HR Rhythm Console
 5. Stalled Route and Escalation Model
 6. Manager Quick-Action Flows
@@ -711,7 +867,7 @@ This order intentionally favors:
 
 ---
 
-## 16. Relationship to Earlier Action Center Roadmaps
+## 17. Relationship to Earlier Action Center Roadmaps
 
 This document complements earlier Action Center roadmap documents focused on:
 
