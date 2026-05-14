@@ -69,3 +69,76 @@ describe('review moment detail panel entry links', () => {
     expect(markup).toContain('12 mei 2026')
   })
 })
+
+describe('review moment detail panel invite CTA', () => {
+  it('keeps the invite CTA bounded to the review-invite route', () => {
+    const source = readFileSync(new URL('./review-moment-detail-panel.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('/api/action-center-review-invites?reviewItemId=')
+    expect(source).toContain('Download .ics')
+    expect(source).not.toContain('Verstuur uitnodiging')
+  })
+
+  it('renders the ics link only when a review date exists', () => {
+    const item = {
+      id: 'cmp-exit-1::org-1::department::operations',
+      code: 'AC-1',
+      title: 'Begrens verloop in operations',
+      summary: 'Compacte route',
+      reason: 'Lees terug',
+      sourceLabel: 'ExitScan',
+      orgId: 'org-1',
+      scopeType: 'department',
+      teamId: 'operations',
+      teamLabel: 'Operations',
+      ownerId: 'manager-1',
+      ownerName: 'Mila Jansen',
+      ownerRole: 'Manager',
+      ownerSubtitle: 'Operations',
+      reviewOwnerName: 'Mila Jansen',
+      priority: 'hoog',
+      status: 'reviewbaar',
+      reviewDate: '2026-05-28',
+      expectedEffect: null,
+      reviewReason: 'Toets effect',
+      reviewOutcome: 'geen-uitkomst',
+      reviewDateLabel: '28 mei',
+      reviewRhythm: 'Tweewekelijks',
+      signalLabel: 'Open review',
+      signalBody: 'Open review',
+      nextStep: 'Open review',
+      peopleCount: 12,
+      coreSemantics: {
+        route: {
+          routeId: 'cmp-exit-1::org-1::department::operations',
+          campaignId: 'cmp-exit-1',
+        },
+      },
+      openSignals: [],
+      updates: [],
+    } as ActionCenterPreviewItem
+
+    const markupWithDate = renderToStaticMarkup(
+      createElement(ReviewMomentDetailPanel, {
+        urgency: 'this-week',
+        item,
+      }),
+    )
+
+    const markupWithoutDate = renderToStaticMarkup(
+      createElement(ReviewMomentDetailPanel, {
+        urgency: 'this-week',
+        item: {
+          ...item,
+          reviewDate: null,
+        },
+      }),
+    )
+
+    expect(markupWithDate).toContain('Download .ics')
+    expect(markupWithDate).toContain('reviewItemId=cmp-exit-1%3A%3Aorg-1%3A%3Adepartment%3A%3Aoperations')
+    expect(markupWithDate).toContain('mode=request')
+    expect(markupWithDate).toContain('format=ics')
+    expect(markupWithoutDate).not.toContain('Download .ics')
+  })
+})

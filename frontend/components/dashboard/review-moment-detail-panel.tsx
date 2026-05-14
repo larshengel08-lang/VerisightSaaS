@@ -35,6 +35,10 @@ function formatDateLabel(value: string | null) {
   })
 }
 
+function buildReviewInviteDownloadHref(reviewItemId: string) {
+  return `/api/action-center-review-invites?reviewItemId=${encodeURIComponent(reviewItemId)}&mode=request&format=ics`
+}
+
 export function ReviewMomentDetailPanel({
   item,
   urgency,
@@ -100,6 +104,14 @@ export function ReviewMomentDetailPanel({
         >
           Bekijk gekoppelde opvolging
         </Link>
+        {item.reviewDate ? (
+          <Link
+            href={buildReviewInviteDownloadHref(item.id)}
+            className="rounded-full border border-[color:var(--dashboard-frame-border)] bg-white px-3 py-2 text-xs font-semibold text-[color:var(--dashboard-ink)] transition hover:bg-[color:var(--dashboard-muted-surface)]"
+          >
+            Download .ics
+          </Link>
+        ) : null}
       </div>
     </div>
   )
