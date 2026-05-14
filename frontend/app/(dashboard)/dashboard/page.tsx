@@ -1,10 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { PdfDownloadButton } from '@/app/(dashboard)/campaigns/[id]/pdf-download-button'
 import { DashboardSection } from '@/components/dashboard/dashboard-primitives'
-import {
-  getCampaignCompositionState,
-  type CampaignCompositionState,
-} from '@/lib/dashboard/dashboard-state-composition'
 import {
   getDashboardModuleKeyForScanType,
   getDashboardModuleLabel,
@@ -12,63 +9,12 @@ import {
   normalizeDashboardModuleFilter,
   type DashboardCategoryModuleKey,
 } from '@/lib/dashboard/shell-navigation'
-import { getScanDefinition } from '@/lib/scan-definitions'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import { createClient } from '@/lib/supabase/server'
-import { getCampaignAverageSignalScore, type CampaignStats } from '@/lib/types'
+import type { CampaignStats } from '@/lib/types'
+import { buildCockpitIndexRows, buildCockpitSummary, type CockpitAction, type CockpitRow } from './cockpit-index'
 
-type CampaignHomeEntry = {
-  campaign: CampaignStats
-  state: CampaignCompositionState
-  invitesNotSent: number
-}
-
-type OverviewRouteTone = 'slate' | 'blue' | 'emerald' | 'amber'
-type CockpitBucket =
-  | 'action_needed'
-  | 'nearly_ready'
-  | 'live_readable'
-  | 'blocked_not_started'
-  | 'recent_closed'
-type CockpitStatusFilter = Exclude<CockpitBucket, 'recent_closed'> | 'all'
-
-type CockpitRouteItem = {
-  entry: CampaignHomeEntry
-  bucket: CockpitBucket
-  productLabel: string
-  contextLabel: string
-  stateLabel: string
-  stateTone: OverviewRouteTone
-  why: string
-  nextStep: string
-  ctaLabel: string
-  ctaHref: string
-  responseValue: string
-}
-
-type CockpitCounter = {
-  key: Exclude<CockpitBucket, 'recent_closed'>
-  label: string
-  tone: OverviewRouteTone
-  count: number
-  body: string
-}
-
-const STATUS_FILTERS: Array<{ key: CockpitStatusFilter; label: string }> = [
-  { key: 'all', label: 'Alle statussen' },
-  { key: 'action_needed', label: 'Actie nodig' },
-  { key: 'nearly_ready', label: 'Bijna klaar' },
-  { key: 'live_readable', label: 'Live en leesbaar' },
-  { key: 'blocked_not_started', label: 'Geblokkeerd / niet gestart' },
-]
-
-const MODULE_ORDER: DashboardCategoryModuleKey[] = [
-  'exit',
-  'retention',
-  'onboarding',
-  'pulse',
-  'leadership',
-]
+const MODULE_ORDER: DashboardCategoryModuleKey[] = ['exit', 'retention', 'onboarding', 'pulse', 'leadership']
 
 export default async function DashboardHomePage({
   searchParams,
@@ -78,9 +24,6 @@ export default async function DashboardHomePage({
   const resolvedSearchParams = searchParams ? await searchParams : undefined
   const requestedModuleFilter = normalizeDashboardModuleFilter(
     typeof resolvedSearchParams?.module === 'string' ? resolvedSearchParams.module : undefined,
-  )
-  const requestedStatusFilter = normalizeDashboardStatusFilter(
-    typeof resolvedSearchParams?.status === 'string' ? resolvedSearchParams.status : undefined,
   )
   const supabase = await createClient()
   const {
@@ -92,13 +35,13 @@ export default async function DashboardHomePage({
   if (context.managerOnly) redirect('/action-center')
 
   const isAdmin = profile?.is_verisight_admin === true
-
   const { data: stats } = await supabase.from('campaign_stats').select('*').order('created_at', { ascending: false })
 
   const allCampaigns = (stats ?? []) as CampaignStats[]
   const campaigns = requestedModuleFilter
     ? allCampaigns.filter((campaign) => campaign.scan_type === getScanTypeForDashboardModule(requestedModuleFilter))
     : allCampaigns
+  const productFilters = buildAvailableModuleFilters(allCampaigns)
   const campaignIds = campaigns.map((campaign) => campaign.campaign_id)
   const { data: respondentStateRowsRaw } =
     campaignIds.length > 0
@@ -113,62 +56,9 @@ export default async function DashboardHomePage({
     completed: boolean
   }>
   const invitesNotSentByCampaign = buildInvitesNotSentByCampaign(campaigns, respondentStateRows)
-  const campaignEntries = campaigns.map((campaign) => {
-    const invitesNotSent = invitesNotSentByCampaign.get(campaign.campaign_id)
-    if (invitesNotSent === undefined) {
-      throw new Error(`Missing invite state for campaign ${campaign.campaign_id}`)
-    }
-
-    return {
-      campaign,
-      invitesNotSent,
-      state: getCampaignCompositionState({
-        isActive: campaign.is_active,
-        totalInvited: campaign.total_invited,
-        totalCompleted: campaign.total_completed,
-        invitesNotSent,
-        incompleteScores: 0,
-        hasMinDisplay: campaign.total_completed >= 5,
-        hasEnoughData: campaign.total_completed >= 10,
-      }),
-    }
-  })
-
-  const moduleLabel = requestedModuleFilter ? getDashboardModuleLabel(requestedModuleFilter) : null
-  const productFilters = buildAvailableModuleFilters(allCampaigns)
-  const counters = buildCockpitCounters(campaignEntries)
-  const activeEntries = campaignEntries.filter((entry) => entry.campaign.is_active)
-  const primaryActiveEntries = activeEntries.filter((entry) =>
-    ['exit', 'retention'].includes(entry.campaign.scan_type),
-  )
-  const readableEntries = [...campaignEntries]
-    .filter((entry) => ['full', 'partial', 'closed'].includes(entry.state))
-    .sort(
-      (left, right) =>
-        new Date(right.campaign.created_at).getTime() - new Date(left.campaign.created_at).getTime(),
-    )
-  const primaryLeadEntry = selectPrimaryLeadEntry(primaryActiveEntries, readableEntries)
-  const triageItems = buildTriageItems(campaignEntries, primaryLeadEntry)
-  const blockedItems = buildBlockedItems(campaignEntries)
-  const closedItems = buildRecentClosedItems(campaignEntries).slice(0, 3)
-  const hasStatusFilter = requestedStatusFilter !== 'all'
-  const filteredTriageItems =
-    requestedStatusFilter === 'all'
-      ? triageItems
-      : triageItems.filter((item) => item.bucket === requestedStatusFilter)
-  const showTriageSection =
-    requestedStatusFilter === 'all' ||
-    requestedStatusFilter === 'action_needed' ||
-    requestedStatusFilter === 'nearly_ready' ||
-    requestedStatusFilter === 'live_readable'
-  const showBlockedSection =
-    blockedItems.length > 0 &&
-    (requestedStatusFilter === 'all' || requestedStatusFilter === 'blocked_not_started')
-  const showClosedSection = closedItems.length > 0 && requestedStatusFilter === 'all'
-  const filterEmptyMessage = hasStatusFilter && !showBlockedSection && filteredTriageItems.length === 0
-  const contextLabel = moduleLabel ?? 'Alle routes'
-  const activeStatusLabel = getStatusFilterLabel(requestedStatusFilter)
-  const hasActiveFilters = requestedModuleFilter !== null || requestedStatusFilter !== 'all'
+  const rows = buildCockpitIndexRows({ campaigns, invitesNotSentByCampaign })
+  const summary = buildCockpitSummary(rows)
+  const contextLabel = requestedModuleFilter ? getDashboardModuleLabel(requestedModuleFilter) : 'Alle routes'
 
   return (
     <div className="space-y-8">
@@ -177,7 +67,7 @@ export default async function DashboardHomePage({
       ) : campaigns.length === 0 ? (
         requestedModuleFilter ? (
           <DashboardSection
-            eyebrow={moduleLabel ?? 'Route'}
+            eyebrow={contextLabel}
             title="Nog geen campagnes voor deze route"
             description="Zodra deze route live staat, verschijnt hier automatisch het volledige overzicht."
           >
@@ -198,7 +88,7 @@ export default async function DashboardHomePage({
           <header className="space-y-5 border-b border-[color:var(--dashboard-frame-border)] pb-6">
             {requestedModuleFilter ? (
               <Link
-                href={buildDashboardOverviewHref({ statusFilter: requestedStatusFilter })}
+                href="/dashboard"
                 className="inline-flex text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:text-[color:var(--dashboard-ink)]"
               >
                 Terug naar alle routes
@@ -216,67 +106,27 @@ export default async function DashboardHomePage({
                   Dashboard overview
                 </h1>
                 <p className="max-w-3xl text-[0.98rem] leading-7 text-[color:var(--dashboard-text)]">
-                  Bekijk welke routes aandacht vragen en ga direct naar de juiste vervolglaag.
+                  Open scans, download rapporten en beheer instellingen vanuit een overzicht.
                 </p>
               </div>
-              <div className="rounded-[20px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-4 py-4 shadow-[0_1px_3px_rgba(15,23,42,0.03)] sm:px-5">
-                <div className="flex flex-col gap-3 border-b border-[color:var(--dashboard-frame-border)] pb-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="space-y-1.5">
-                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
-                      Filters
-                    </p>
-                    <p className="text-sm leading-6 text-[color:var(--dashboard-text)]">
-                      <span className="font-semibold text-[color:var(--dashboard-ink)]">Actief:</span>{' '}
-                      {activeStatusLabel} · {contextLabel}
-                    </p>
-                  </div>
-                  {hasActiveFilters ? (
-                    <Link
-                      href="/dashboard"
-                      className="inline-flex text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:text-[color:var(--dashboard-ink)]"
-                    >
-                      Wis filters
-                    </Link>
-                  ) : (
-                    <span className="text-sm text-[color:var(--dashboard-muted)]">Geen extra filters actief</span>
-                  )}
+              <div className="grid gap-4 lg:grid-cols-[minmax(0,1.35fr),minmax(0,1fr)]">
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                  <SummaryCard label="Scans" value={summary.total} />
+                  <SummaryCard label="Resultaten" value={summary.resultsAvailable} />
+                  <SummaryCard label="PDF" value={summary.pdfAvailable} />
+                  <SummaryCard label="Aandacht" value={summary.attentionNeeded} />
                 </div>
-                <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1.35fr),minmax(0,1fr)]">
-                  <div className="space-y-2">
-                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
-                      Status
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {STATUS_FILTERS.map((filter) => (
-                        <FilterPill
-                          key={filter.key}
-                          href={buildDashboardOverviewHref({
-                            moduleFilter: requestedModuleFilter,
-                            statusFilter: filter.key,
-                          })}
-                          active={requestedStatusFilter === filter.key}
-                          label={filter.label}
-                        />
-                      ))}
-                    </div>
-                  </div>
+                <div className="rounded-[20px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-4 py-4 shadow-[0_1px_3px_rgba(15,23,42,0.03)] sm:px-5">
                   <div className="space-y-2">
                     <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
                       Product
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      <FilterPill
-                        href={buildDashboardOverviewHref({ statusFilter: requestedStatusFilter })}
-                        active={requestedModuleFilter === null}
-                        label="Alle routes"
-                      />
+                      <FilterPill href="/dashboard" active={requestedModuleFilter === null} label="Alle routes" />
                       {productFilters.map((filterKey) => (
                         <FilterPill
                           key={filterKey}
-                          href={buildDashboardOverviewHref({
-                            moduleFilter: filterKey,
-                            statusFilter: requestedStatusFilter,
-                          })}
+                          href={buildDashboardOverviewHref(filterKey)}
                           active={requestedModuleFilter === filterKey}
                           label={getDashboardModuleLabel(filterKey)}
                         />
@@ -288,122 +138,21 @@ export default async function DashboardHomePage({
             </div>
           </header>
 
-          <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {counters.map((counter) => (
-              <StatusCounterCard key={counter.key} counter={counter} />
+          <section className="space-y-3">
+            {rows.map((row) => (
+              <CockpitScanRow key={row.campaign.campaign_id} row={row} />
             ))}
           </section>
-
-          {showTriageSection ? (
-            <section className="space-y-4">
-              <div className="space-y-1.5">
-                <h2 className="text-[1.55rem] font-semibold tracking-[-0.04em] text-[color:var(--dashboard-ink)]">
-                  Nu eerst
-                </h2>
-                <p className="max-w-3xl text-sm leading-6 text-[color:var(--dashboard-text)]">
-                  Deze routes vragen als eerste aandacht op basis van status, volgende stap of beschikbare output.
-                </p>
-              </div>
-              {filteredTriageItems.length === 0 ? (
-                <InlineEmptyState message="Geen routes vragen op dit moment actie." />
-              ) : (
-                <div className="space-y-4">
-                  {filteredTriageItems.map((item, index) => (
-                    <TriageRouteCard
-                      key={item.entry.campaign.campaign_id}
-                      item={item}
-                      highlightLabel={index === 0 && requestedStatusFilter === 'all' ? 'Nu eerst' : undefined}
-                    />
-                  ))}
-                </div>
-              )}
-            </section>
-          ) : null}
-
-          {showBlockedSection ? (
-            <section className="space-y-4">
-              <div className="space-y-1.5">
-                <h2 className="text-[1.35rem] font-semibold tracking-[-0.04em] text-[color:var(--dashboard-ink)]">
-                  Geblokkeerd / niet gestart
-                </h2>
-                <p className="text-sm leading-6 text-[color:var(--dashboard-text)]">
-                  Deze routes missen nog livegang en vragen eerst een operationele startstap.
-                </p>
-              </div>
-              <div className="space-y-3">
-                {blockedItems.map((item) => (
-                  <BlockerRouteRow key={item.entry.campaign.campaign_id} item={item} />
-                ))}
-              </div>
-            </section>
-          ) : null}
-
-          {filterEmptyMessage ? (
-            <InlineEmptyState message="Geen routes met deze status." />
-          ) : null}
-
-          {showClosedSection ? (
-            <section className="space-y-4">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                <div className="space-y-1.5">
-                  <h2 className="text-[1.35rem] font-semibold tracking-[-0.04em] text-[color:var(--dashboard-ink)]">
-                    Recente afgeronde routes
-                  </h2>
-                  <p className="text-sm leading-6 text-[color:var(--dashboard-text)]">
-                    Gesloten routes die nu vooral rapport-first gelezen worden.
-                  </p>
-                </div>
-                <Link
-                  href="/reports"
-                  className="text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:text-[color:var(--dashboard-ink)]"
-                >
-                  Open rapporten
-                </Link>
-              </div>
-              <div className="space-y-3">
-                {closedItems.map((item) => (
-                  <ClosedRouteRow key={item.entry.campaign.campaign_id} item={item} />
-                ))}
-              </div>
-            </section>
-          ) : null}
         </>
       )}
     </div>
   )
 }
 
-function normalizeDashboardStatusFilter(value: string | undefined): CockpitStatusFilter {
-  if (
-    value === 'action_needed' ||
-    value === 'nearly_ready' ||
-    value === 'live_readable' ||
-    value === 'blocked_not_started'
-  ) {
-    return value
-  }
-
-  return 'all'
-}
-
-function getStatusFilterLabel(filter: CockpitStatusFilter) {
-  return STATUS_FILTERS.find((item) => item.key === filter)?.label ?? 'Alle statussen'
-}
-
-function buildDashboardOverviewHref(args: {
-  moduleFilter?: DashboardCategoryModuleKey | null
-  statusFilter?: CockpitStatusFilter
-}) {
+function buildDashboardOverviewHref(moduleFilter: DashboardCategoryModuleKey) {
   const params = new URLSearchParams()
-  if (args.moduleFilter) {
-    params.set('module', args.moduleFilter)
-  }
-  if (args.statusFilter && args.statusFilter !== 'all') {
-    params.set('status', args.statusFilter)
-  }
-
-  const query = params.toString()
-  return query ? `/dashboard?${query}` : '/dashboard'
+  params.set('module', moduleFilter)
+  return `/dashboard?${params.toString()}`
 }
 
 function buildAvailableModuleFilters(campaigns: CampaignStats[]) {
@@ -415,175 +164,6 @@ function buildAvailableModuleFilters(campaigns: CampaignStats[]) {
   }
 
   return MODULE_ORDER.filter((key) => availableKeys.has(key))
-}
-
-function mapStateToCockpitBucket(state: CampaignCompositionState): CockpitBucket {
-  if (state === 'setup') return 'blocked_not_started'
-  if (state === 'ready_to_launch' || state === 'running' || state === 'sparse') return 'action_needed'
-  if (state === 'partial') return 'nearly_ready'
-  if (state === 'full') return 'live_readable'
-  return 'recent_closed'
-}
-
-function buildCockpitCounters(entries: CampaignHomeEntry[]): CockpitCounter[] {
-  return [
-    {
-      key: 'action_needed',
-      label: 'ACTIE NODIG',
-      tone: 'amber',
-      count: entries.filter((entry) => mapStateToCockpitBucket(entry.state) === 'action_needed').length,
-      body: 'Routes waar livegang of extra respons eerst expliciet aandacht vraagt.',
-    },
-    {
-      key: 'nearly_ready',
-      label: 'BIJNA KLAAR',
-      tone: 'blue',
-      count: entries.filter((entry) => mapStateToCockpitBucket(entry.state) === 'nearly_ready').length,
-      body: 'Routes waar de eerste leeslaag open is, maar de read nog begrensd blijft.',
-    },
-    {
-      key: 'live_readable',
-      label: 'LIVE EN LEESBAAR',
-      tone: 'emerald',
-      count: entries.filter((entry) => mapStateToCockpitBucket(entry.state) === 'live_readable').length,
-      body: 'Routes die nu veilig genoeg zijn voor dashboardlezing.',
-    },
-    {
-      key: 'blocked_not_started',
-      label: 'GEBLOKKEERD / NIET GESTART',
-      tone: 'slate',
-      count: entries.filter((entry) => mapStateToCockpitBucket(entry.state) === 'blocked_not_started').length,
-      body: 'Routes die nog niet live zijn en eerst operationeel gestart moeten worden.',
-    },
-  ]
-}
-
-function buildTriageItems(
-  entries: CampaignHomeEntry[],
-  primaryLeadEntry: CampaignHomeEntry | null,
-) {
-  const activeEntries = entries.filter((entry) => entry.campaign.is_active)
-  const primaryEntries = activeEntries.filter((entry) => ['exit', 'retention'].includes(entry.campaign.scan_type))
-  const boundedEntries = activeEntries.filter((entry) => !['exit', 'retention'].includes(entry.campaign.scan_type))
-  const orderedEntries = [
-    ...(primaryLeadEntry ? [primaryLeadEntry] : []),
-    ...primaryEntries
-      .filter((entry) => entry.campaign.campaign_id !== primaryLeadEntry?.campaign.campaign_id)
-      .sort(compareOverviewEntries),
-    ...boundedEntries.sort(compareOverviewEntries),
-  ]
-
-  return orderedEntries
-    .filter((entry) => {
-      const bucket = mapStateToCockpitBucket(entry.state)
-      return bucket === 'action_needed' || bucket === 'nearly_ready' || bucket === 'live_readable'
-    })
-    .map(buildCockpitRouteItem)
-}
-
-function buildBlockedItems(entries: CampaignHomeEntry[]) {
-  return entries
-    .filter((entry) => entry.state === 'setup')
-    .sort(compareOverviewEntries)
-    .map(buildCockpitRouteItem)
-}
-
-function buildRecentClosedItems(entries: CampaignHomeEntry[]) {
-  return entries
-    .filter((entry) => entry.state === 'closed')
-    .sort(
-      (left, right) =>
-        new Date(right.campaign.created_at).getTime() - new Date(left.campaign.created_at).getTime(),
-    )
-    .map(buildCockpitRouteItem)
-}
-
-function buildCockpitRouteItem(entry: CampaignHomeEntry): CockpitRouteItem {
-  const scanDefinition = getScanDefinition(entry.campaign.scan_type)
-  const stateMeta = getHomeStateMeta(entry.state)
-  const completionValue = Number.isFinite(entry.campaign.completion_rate_pct)
-    ? `${entry.campaign.completion_rate_pct}%`
-    : '—'
-  const ctaLabel = getCtaLabelForState(entry.state)
-  const bucket = mapStateToCockpitBucket(entry.state)
-
-  return {
-    entry,
-    bucket,
-    productLabel: scanDefinition.productName,
-    contextLabel: `${formatCampaignPeriod(entry.campaign)} · ${scanDefinition.productName}`,
-    stateLabel: stateMeta.label,
-    stateTone: getToneForBucket(bucket),
-    why: getWhyCopy(entry),
-    nextStep: ctaLabel,
-    ctaLabel,
-    ctaHref:
-      entry.state === 'setup' || entry.state === 'ready_to_launch' || entry.state === 'running'
-        ? `/campaigns/${entry.campaign.campaign_id}/beheer`
-        : `/campaigns/${entry.campaign.campaign_id}`,
-    responseValue: completionValue,
-  }
-}
-
-function getToneForBucket(bucket: CockpitBucket): OverviewRouteTone {
-  if (bucket === 'live_readable') return 'emerald'
-  if (bucket === 'nearly_ready') return 'blue'
-  if (bucket === 'action_needed') return 'amber'
-  return 'slate'
-}
-
-function getCtaLabelForState(state: CampaignCompositionState) {
-  if (state === 'partial' || state === 'full') return 'Open dashboard'
-  if (state === 'closed') return 'Open rapport'
-  return 'Beheer route'
-}
-
-function getWhyCopy(entry: CampaignHomeEntry) {
-  if (entry.state === 'setup' || entry.state === 'running') {
-    return getOverviewBlockerCopy(entry)
-  }
-
-  return getHomeStateMeta(entry.state).body
-}
-
-function compareOverviewEntries(left: CampaignHomeEntry, right: CampaignHomeEntry) {
-  const stateRank: Record<CampaignCompositionState, number> = {
-    full: 0,
-    partial: 1,
-    sparse: 2,
-    ready_to_launch: 3,
-    running: 4,
-    setup: 5,
-    closed: 6,
-  }
-
-  const rankDelta = stateRank[left.state] - stateRank[right.state]
-  if (rankDelta !== 0) return rankDelta
-
-  const scoreDelta =
-    (getCampaignAverageSignalScore(right.campaign) ?? -1) - (getCampaignAverageSignalScore(left.campaign) ?? -1)
-  if (scoreDelta !== 0) return scoreDelta
-
-  return new Date(right.campaign.created_at).getTime() - new Date(left.campaign.created_at).getTime()
-}
-
-function selectPrimaryLeadEntry(
-  primaryActiveEntries: CampaignHomeEntry[],
-  readableEntries: CampaignHomeEntry[],
-) {
-  const readablePrimary = primaryActiveEntries
-    .filter((entry) => ['full', 'partial'].includes(entry.state))
-    .sort(compareOverviewEntries)[0]
-
-  if (readablePrimary) return readablePrimary
-
-  const readableAny = readableEntries
-    .filter((entry) => ['exit', 'retention'].includes(entry.campaign.scan_type))
-    .sort(compareOverviewEntries)[0]
-
-  if (readableAny) return readableAny
-
-  return primaryActiveEntries.sort(compareOverviewEntries)[0] ?? null
 }
 
 function buildInvitesNotSentByCampaign(
@@ -605,106 +185,6 @@ function buildInvitesNotSentByCampaign(
   }
 
   return counts
-}
-
-function getHomeStateMeta(state: CampaignCompositionState) {
-  const meta = {
-    setup: {
-      label: 'Nog niet live',
-      body: 'Respondentimport of livegang ontbreekt nog.',
-    },
-    ready_to_launch: {
-      label: 'Nog in opbouw',
-      body: 'Uitnodigingen zijn nog niet volledig live gezet.',
-    },
-    running: {
-      label: 'Nog in opbouw',
-      body: 'Er is nog geen eerste veilige responslaag zichtbaar.',
-    },
-    sparse: {
-      label: 'Nog in opbouw',
-      body: 'Meer respons nodig voordat deze route echt leesbaar wordt.',
-    },
-    partial: {
-      label: 'Deels zichtbaar',
-      body: 'Eerste read beschikbaar.',
-    },
-    full: {
-      label: 'Leesbaar',
-      body: 'Dashboard beschikbaar.',
-    },
-    closed: {
-      label: 'Afgerond',
-      body: 'Rapport beschikbaar.',
-    },
-  } satisfies Record<
-    CampaignCompositionState,
-    {
-      label: string
-      body: string
-    }
-  >
-
-  return meta[state]
-}
-
-function getOverviewBlockerCopy(entry: CampaignHomeEntry) {
-  if (entry.state === 'setup') return 'Respondentimport ontbreekt nog.'
-  return 'Meer respons nodig voor een eerste read.'
-}
-
-function formatCampaignPeriod(campaign: CampaignStats) {
-  const quarterMatch = campaign.campaign_name.match(/Q[1-4]\s?\d{4}/i)
-  if (quarterMatch) return quarterMatch[0].replace(/\s+/, ' ')
-
-  return new Intl.DateTimeFormat('nl-NL', {
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(campaign.created_at))
-}
-
-function getOverviewToneClasses(tone: OverviewRouteTone) {
-  if (tone === 'emerald') {
-    return {
-      border: 'border-[color:var(--dashboard-accent-soft-border)]',
-      accent: 'bg-[color:var(--dashboard-accent-strong)]',
-      rail: 'border-l-[color:var(--dashboard-accent-strong)]',
-      chip:
-        'border-[color:var(--dashboard-accent-soft-border)] bg-[color:var(--dashboard-accent-soft)] text-[color:var(--dashboard-accent-strong)]',
-      button:
-        'bg-[color:var(--dashboard-accent-strong)] text-white hover:bg-[#00584f]',
-    }
-  }
-
-  if (tone === 'blue') {
-    return {
-      border: 'border-[#c7d0dc]',
-      accent: 'bg-[#8292a5]',
-      rail: 'border-l-[#8292a5]',
-      chip: 'border-[#d9e1ea] bg-[#f5f7fa] text-[#506071]',
-      button: 'bg-[#1B2B3A] text-white hover:bg-[#24384b]',
-    }
-  }
-
-  if (tone === 'amber') {
-    return {
-      border: 'border-[#e7d7af]',
-      accent: 'bg-[#C88C20]',
-      rail: 'border-l-[#C88C20]',
-      chip: 'border-[#E7D7AF] bg-[#FBF4DF] text-[#7A5B18]',
-      button: 'bg-[#1B2B3A] text-white hover:bg-[#24384b]',
-    }
-  }
-
-  return {
-    border: 'border-[color:var(--dashboard-frame-border)]',
-    accent: 'bg-slate-300',
-    rail: 'border-l-slate-300',
-    chip:
-      'border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] text-[color:var(--dashboard-text)]',
-    button:
-      'bg-transparent text-[color:var(--dashboard-accent-strong)] hover:text-[color:var(--dashboard-ink)]',
-  }
 }
 
 function FilterPill({
@@ -730,162 +210,104 @@ function FilterPill({
   )
 }
 
-function StatusCounterCard({ counter }: { counter: CockpitCounter }) {
-  const tone = getOverviewToneClasses(counter.tone)
-
+function SummaryCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className={`relative overflow-hidden rounded-[18px] border bg-white px-4 py-3.5 ${tone.border}`}>
-      <div className={`absolute left-0 top-0 h-full w-[3px] ${tone.accent}`} />
-      <p className="pl-2 text-[0.64rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">
-        {counter.label}
-      </p>
-      <div className="mt-2.5 pl-2">
-        <p className="dash-number text-[1.65rem] leading-none text-[color:var(--dashboard-ink)]">{counter.count}</p>
-        <p className="mt-2 text-sm leading-6 text-[color:var(--dashboard-text)]">{counter.body}</p>
-      </div>
-      {counter.key === 'blocked_not_started' ? (
-        <span className="absolute right-4 top-4 inline-flex h-2 w-2 rounded-full bg-[#C88C20]" />
-      ) : null}
-    </div>
-  )
-}
-
-function TriageRouteCard({
-  item,
-  highlightLabel,
-}: {
-  item: CockpitRouteItem
-  highlightLabel?: string
-}) {
-  const tone = getOverviewToneClasses(item.stateTone)
-
-  return (
-    <article className={`overflow-hidden rounded-[18px] border bg-white shadow-[0_1px_3px_rgba(17,24,39,0.04)] transition-shadow hover:shadow-[0_12px_24px_rgba(17,24,39,0.08)] ${tone.border}`}>
-      <div className={`h-full border-l-4 ${tone.rail}`}>
-        <div className="flex flex-col gap-5 px-5 py-5 xl:flex-row xl:items-center xl:justify-between">
-          <div className="min-w-0 flex-1 space-y-4">
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-center gap-2">
-                {highlightLabel ? (
-                  <span className="inline-flex rounded-full border border-[color:var(--dashboard-accent-soft-border)] bg-[color:var(--dashboard-accent-soft)] px-2.5 py-1 text-[0.72rem] font-semibold text-[color:var(--dashboard-accent-strong)]">
-                    {highlightLabel}
-                  </span>
-                ) : null}
-                <span className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
-                  {item.contextLabel}
-                </span>
-              </div>
-              <div className="flex flex-wrap items-center gap-2.5">
-                <h3 className="text-[1.08rem] font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">
-                  {item.entry.campaign.campaign_name}
-                </h3>
-                <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[0.78rem] font-semibold ${tone.chip}`}>
-                  <span className={`inline-flex h-2 w-2 rounded-full ${tone.accent}`} />
-                  {item.stateLabel}
-                </span>
-              </div>
-              <p className="text-sm font-medium uppercase tracking-[0.16em] text-[color:var(--dashboard-muted)]">
-                Product: {item.productLabel}
-              </p>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1.2fr),180px,140px] xl:items-start">
-              <MetricBlock label="WAAROM" value={item.why} />
-              <MetricBlock label="VOLGENDE STAP" value={item.nextStep} />
-              <MetricBlock label="RESPONS" value={item.responseValue} compact />
-            </div>
-          </div>
-          <div className="xl:pl-6">
-            <Link
-              href={item.ctaHref}
-              className={`inline-flex w-full items-center justify-center rounded-lg px-5 py-3 text-sm font-semibold transition-colors xl:min-w-[158px] ${tone.button}`}
-            >
-              {item.ctaLabel}
-            </Link>
-          </div>
-        </div>
-      </div>
-    </article>
-  )
-}
-
-function BlockerRouteRow({ item }: { item: CockpitRouteItem }) {
-  return (
-    <article className="rounded-[18px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-4 py-4 shadow-[0_1px_3px_rgba(10,25,47,0.03)]">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-        <div className="grid gap-4 md:grid-cols-[minmax(0,0.9fr),minmax(0,1.1fr),160px] xl:flex-1 xl:grid-cols-[minmax(0,0.8fr),minmax(0,1fr),160px]">
-          <div className="min-w-0">
-            <p className="text-sm font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">
-              {item.entry.campaign.campaign_name}
-            </p>
-            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--dashboard-muted)]">
-              {item.productLabel}
-            </p>
-          </div>
-          <MetricBlock label="REDEN" value={item.why} />
-          <MetricBlock label="NEXT" value={item.nextStep} />
-        </div>
-        <Link
-          href={item.ctaHref}
-          className="text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:text-[color:var(--dashboard-ink)]"
-        >
-          {item.ctaLabel}
-        </Link>
-      </div>
-    </article>
-  )
-}
-
-function ClosedRouteRow({ item }: { item: CockpitRouteItem }) {
-  return (
-    <article className="rounded-[18px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-4 py-4 opacity-70 transition-opacity hover:opacity-100">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <p className="text-sm font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">
-            {item.entry.campaign.campaign_name}
-          </p>
-          <p className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--dashboard-muted)]">
-            {item.productLabel}
-          </p>
-        </div>
-        <Link
-          href={item.ctaHref}
-          className="text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:text-[color:var(--dashboard-ink)]"
-        >
-          {item.ctaLabel}
-        </Link>
-      </div>
-    </article>
-  )
-}
-
-function MetricBlock({
-  label,
-  value,
-  compact = false,
-}: {
-  label: string
-  value: string
-  compact?: boolean
-}) {
-  return (
-    <div className="min-w-0">
-      <p className="text-[0.64rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
+    <div className="rounded-[18px] border border-[color:var(--dashboard-frame-border)] bg-white px-4 py-3.5">
+      <p className="text-[0.64rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">
         {label}
       </p>
-      <p
-        className={`mt-1.5 ${compact ? 'dash-number text-[1.02rem] leading-none' : 'text-sm leading-6'} text-[color:var(--dashboard-ink)]`}
-      >
-        {value}
-      </p>
+      <p className="dash-number mt-2 text-[1.65rem] leading-none text-[color:var(--dashboard-ink)]">{value}</p>
     </div>
   )
 }
 
-function InlineEmptyState({ message }: { message: string }) {
+function CockpitScanRow({ row }: { row: CockpitRow }) {
   return (
-    <div className="rounded-[18px] border border-dashed border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-6 text-sm leading-6 text-[color:var(--dashboard-text)]">
-      {message}
-    </div>
+    <article className="rounded-[18px] border border-[color:var(--dashboard-frame-border)] bg-white px-5 py-5 shadow-[0_1px_3px_rgba(17,24,39,0.04)] transition-shadow hover:shadow-[0_12px_24px_rgba(17,24,39,0.08)]">
+      <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+        <div className="min-w-0 flex-1 space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+              {row.periodLabel} - {row.productLabel}
+            </span>
+            <span className="inline-flex rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-3 py-1 text-[0.78rem] font-semibold text-[color:var(--dashboard-text)]">
+              {row.statusLabel}
+            </span>
+          </div>
+          <h2 className="text-[1.08rem] font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">
+            {row.campaign.campaign_name}
+          </h2>
+          <div className="flex flex-wrap items-center gap-4 text-sm text-[color:var(--dashboard-text)]">
+            <span>Respons {row.responseValue}</span>
+            <span>{row.factualLine}</span>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 xl:justify-end">
+          <CockpitActionButton
+            action={row.primaryAction}
+            campaignId={row.campaign.campaign_id}
+            campaignName={row.campaign.campaign_name}
+            scanType={row.campaign.scan_type}
+            primary
+          />
+          {row.secondaryActions.map((action) => (
+            <CockpitActionButton
+              key={`${row.campaign.campaign_id}-${action.kind}`}
+              action={action}
+              campaignId={row.campaign.campaign_id}
+              campaignName={row.campaign.campaign_name}
+              scanType={row.campaign.scan_type}
+            />
+          ))}
+        </div>
+      </div>
+    </article>
+  )
+}
+
+function CockpitActionButton({
+  action,
+  campaignId,
+  campaignName,
+  scanType,
+  primary = false,
+}: {
+  action: CockpitAction
+  campaignId: string
+  campaignName: string
+  scanType: CampaignStats['scan_type']
+  primary?: boolean
+}) {
+  if (action.kind === 'pdf') {
+    return (
+      <PdfDownloadButton
+        campaignId={campaignId}
+        campaignName={campaignName}
+        scanType={scanType}
+        label="Download PDF"
+        loadingLabel="PDF ophalen..."
+        containerClassName="flex flex-col items-start gap-1"
+        errorClassName="max-w-48 text-xs text-red-600"
+        buttonClassName={
+          primary
+            ? 'inline-flex rounded-lg bg-[color:var(--dashboard-accent-strong)] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#00584f] disabled:cursor-not-allowed disabled:opacity-60'
+            : 'inline-flex rounded-lg border border-[color:var(--dashboard-frame-border)] bg-white px-4 py-3 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] hover:text-[color:var(--dashboard-accent-strong)] disabled:cursor-not-allowed disabled:opacity-60'
+        }
+      />
+    )
+  }
+
+  return (
+    <Link
+      href={action.href}
+      className={
+        primary
+          ? 'inline-flex rounded-lg bg-[color:var(--dashboard-accent-strong)] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#00584f]'
+          : 'inline-flex rounded-lg border border-[color:var(--dashboard-frame-border)] bg-white px-4 py-3 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] hover:text-[color:var(--dashboard-accent-strong)]'
+      }
+    >
+      {action.label}
+    </Link>
   )
 }
 
