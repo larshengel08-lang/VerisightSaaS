@@ -517,7 +517,10 @@ function buildCockpitRouteItem(entry: CampaignHomeEntry): CockpitRouteItem {
     why: getWhyCopy(entry),
     nextStep: ctaLabel,
     ctaLabel,
-    ctaHref: `/campaigns/${entry.campaign.campaign_id}`,
+    ctaHref:
+      entry.state === 'setup' || entry.state === 'ready_to_launch' || entry.state === 'running'
+        ? `/campaigns/${entry.campaign.campaign_id}/beheer`
+        : `/campaigns/${entry.campaign.campaign_id}`,
     responseValue: completionValue,
   }
 }

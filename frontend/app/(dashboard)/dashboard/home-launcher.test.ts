@@ -187,6 +187,7 @@ describe('dashboard and pdf availability', () => {
 
     expect(setupCard?.primaryAction.available).toBe(true)
     expect(setupCard?.primaryAction.kind).toBe('setup')
+    expect(setupCard?.primaryAction.label).toBe('Beheer route')
     expect(setupCard?.primaryAction.href).toBe('/campaigns/setup-1/beheer')
   })
 
