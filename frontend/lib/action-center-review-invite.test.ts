@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildActionCenterEntryHref } from '@/lib/action-center-entry'
-import type { ActionCenterRouteStatus } from '@/lib/action-center-route-contract'
+import type { ActionCenterPreviewStatus } from '@/lib/action-center-preview-model'
 import type { ScanType } from '@/lib/types'
 import {
   actionCenterBaseUrl,
@@ -27,6 +27,18 @@ describe('action center review invite draft contract', () => {
 
   it('reports an eligible ExitScan review invite context', () => {
     expect(getActionCenterReviewInviteEligibility(baseContext)).toEqual({
+      ok: true,
+      reason: null,
+    })
+  })
+
+  it('accepts a reviewbaar preview status from the Action Center caller path', () => {
+    expect(
+      getActionCenterReviewInviteEligibility({
+        ...baseContext,
+        routeStatus: 'reviewbaar',
+      }),
+    ).toEqual({
       ok: true,
       reason: null,
     })
@@ -108,17 +120,17 @@ describe('action center review invite draft contract', () => {
     },
     {
       name: 'closed route for afgerond',
-      override: { routeStatus: 'afgerond' as ActionCenterRouteStatus },
+      override: { routeStatus: 'afgerond' as ActionCenterPreviewStatus },
       reason: 'closed-route',
     },
     {
       name: 'closed route for gestopt',
-      override: { routeStatus: 'gestopt' as ActionCenterRouteStatus },
+      override: { routeStatus: 'gestopt' as ActionCenterPreviewStatus },
       reason: 'closed-route',
     },
     {
       name: 'closed route with whitespace and casing drift',
-      override: { routeStatus: ' Afgerond ' as unknown as ActionCenterRouteStatus },
+      override: { routeStatus: ' Afgerond ' as unknown as ActionCenterPreviewStatus },
       reason: 'closed-route',
     },
   ])('returns $reason for $name', ({ override, reason }) => {
@@ -140,6 +152,20 @@ describe('action center review invite draft contract', () => {
         reviewDate: 'not-a-date',
       }),
     ).toThrow('missing-review-date')
+  })
+
+  it('throws when building a draft with a blank review item id to avoid an unfocused Action Center link', () => {
+    expect(getActionCenterReviewInviteEligibility(baseContext)).toEqual({
+      ok: true,
+      reason: null,
+    })
+
+    expect(() =>
+      buildActionCenterReviewInviteDraft({
+        ...baseContext,
+        reviewItemId: '   ',
+      }),
+    ).toThrow('reviewItemId')
   })
 
   it('normalizes the Action Center origin before composing the absolute URL', () => {

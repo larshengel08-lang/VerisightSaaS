@@ -1,5 +1,5 @@
 import { buildActionCenterEntryHref } from '@/lib/action-center-entry'
-import type { ActionCenterRouteStatus } from '@/lib/action-center-route-contract'
+import type { ActionCenterPreviewStatus } from '@/lib/action-center-preview-model'
 import type { ScanType } from '@/lib/types'
 
 export type ActionCenterReviewInviteEligibilityReason =
@@ -18,7 +18,7 @@ export interface ActionCenterReviewInviteContext {
   reviewDate: string | null
   reviewItemId: string
   routeId: string
-  routeStatus: ActionCenterRouteStatus | null
+  routeStatus: ActionCenterPreviewStatus | null
   scanType: ScanType | null
   scopeLabel: string
 }
@@ -132,13 +132,17 @@ export function buildActionCenterReviewInviteDraft(
 
   const reviewDate = getNormalizedIsoDate(context.reviewDate)
   const recipientEmail = normalizeText(context.managerEmail)
+  const reviewItemId = normalizeText(context.reviewItemId)
   if (!reviewDate || !recipientEmail) {
     throw new Error('Action Center review invite eligibility drifted during draft construction.')
+  }
+  if (!reviewItemId) {
+    throw new Error('Action Center review invite draft requires a non-empty reviewItemId.')
   }
 
   const actionCenterHref = new URL(
     buildActionCenterEntryHref({
-      focus: context.reviewItemId,
+      focus: reviewItemId,
       view: 'reviews',
       source: 'notification',
     }),
@@ -149,7 +153,7 @@ export function buildActionCenterReviewInviteDraft(
   const subject = `Reviewmoment ${context.campaignName} / ${context.scopeLabel}`
 
   return {
-    reviewItemId: context.reviewItemId,
+    reviewItemId,
     routeId: context.routeId,
     campaignId: context.campaignId,
     recipientEmail,
