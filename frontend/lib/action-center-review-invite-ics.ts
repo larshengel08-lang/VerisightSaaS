@@ -8,6 +8,13 @@ function escapeIcsText(value: string) {
     .replace(/;/g, '\\;')
 }
 
+function escapeIcsParameterValue(value: string) {
+  return `"${value
+    .replace(/\^/g, '^^')
+    .replace(/"/g, "^'")
+    .replace(/\r?\n/g, '^n')}"`
+}
+
 function toIcsDateOnly(value: string) {
   return value.replace(/-/g, '')
 }
@@ -25,6 +32,22 @@ function addOneDay(value: string) {
 
 function buildReviewInviteUid(routeId: string) {
   return `ac-review-${routeId}@verisight.nl`
+}
+
+function foldIcsLine(value: string) {
+  if (value.length <= 75) {
+    return value
+  }
+
+  let folded = value.slice(0, 75)
+  let index = 75
+
+  while (index < value.length) {
+    folded += `\r\n ${value.slice(index, index + 74)}`
+    index += 74
+  }
+
+  return folded
 }
 
 export function renderActionCenterReviewInviteIcs(args: {
@@ -53,9 +76,11 @@ export function renderActionCenterReviewInviteIcs(args: {
     `DTSTART;VALUE=DATE:${toIcsDateOnly(draft.reviewDate)}`,
     `DTEND;VALUE=DATE:${addOneDay(draft.reviewDate)}`,
     `ORGANIZER:mailto:${organizerEmail}`,
-    `ATTENDEE;CN=${escapeIcsText(draft.recipientName || draft.recipientEmail)}:mailto:${draft.recipientEmail}`,
+    `ATTENDEE;CN=${escapeIcsParameterValue(draft.recipientName || draft.recipientEmail)}:mailto:${draft.recipientEmail}`,
     method === 'CANCEL' ? 'STATUS:CANCELLED' : 'STATUS:CONFIRMED',
     'END:VEVENT',
     'END:VCALENDAR',
-  ].join('\r\n')
+  ]
+    .map(foldIcsLine)
+    .join('\r\n')
 }
