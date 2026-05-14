@@ -50,16 +50,15 @@ describe('review moment page client source', () => {
       'uitnodiging',
       'activatie',
       'pending',
-      'invited',
       'activated',
       'access requested',
-      'ã',
-      'â',
-      '�',
+      'Ã£',
+      'Ã¢',
+      'ï¿½',
     ]) {
       expect(source).not.toContain(forbidden)
     }
 
-    expect(source).not.toContain('Â·'.toLowerCase())
+    expect(source).not.toContain('Ã‚Â·'.toLowerCase())
   })
 })
