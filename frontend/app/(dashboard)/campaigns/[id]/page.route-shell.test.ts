@@ -6,6 +6,7 @@ describe('campaign detail route shell', () => {
     const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
 
     expect(source).toContain('/open-antwoorden')
+    expect(source).toContain("blockVisibility.voices === 'visible' && releasedOpenAnswerItems.length > 0")
   })
 
   it('keeps the manager-only insight boundary intact', () => {
@@ -31,5 +32,14 @@ describe('campaign detail route shell', () => {
     expect(source).toContain('getDashboardModuleKeyForScanType')
     expect(source).toContain('getDashboardModuleLabel')
     expect(source).toContain('Terug naar alle ExitScans')
+  })
+
+  it('preserves the campaign-detail bridge into Action Center for candidate and active routes', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('buildCampaignDetailActionCenterBridge')
+    expect(source).toContain('openActionCenterRoute')
+    expect(source).toContain("buildActionCenterRouteOpenRedirect(id, 'campaign-detail')")
+    expect(source).toContain('Vervolgroute')
   })
 })

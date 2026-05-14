@@ -1,7 +1,15 @@
 import type { ReactNode } from 'react'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
+import { isLiveActionCenterScanType } from '@/lib/action-center-live'
 import { SuiteAccessDenied } from '@/components/dashboard/suite-access-denied'
+import {
+  buildActionCenterRouteOpenPatch,
+  buildActionCenterRouteOpenRedirect,
+  canOpenActionCenterRoute,
+  getActionCenterRouteOpenableStages,
+  hasOpenedActionCenterRoute,
+} from '@/lib/dashboard/open-action-center-route'
 import { getManagementBandLabel } from '@/lib/management-language'
 import { getScanDefinition } from '@/lib/scan-definitions'
 import {
@@ -10,6 +18,7 @@ import {
   getDashboardModuleLabel,
 } from '@/lib/dashboard/shell-navigation'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { FACTOR_LABELS, hasCampaignAddOn } from '@/lib/types'
 import type { CampaignStats, Respondent, ScanType, SurveyResponse } from '@/lib/types'
@@ -18,6 +27,7 @@ import {
   buildOpenAnswersViewModel,
 } from './open-answers-view-model'
 import {
+  buildCampaignDetailActionCenterBridge,
   MethodologyCard,
   MIN_N_DISPLAY,
   MIN_N_PATTERNS,
@@ -26,6 +36,7 @@ import {
   computeFactorAverages,
   computeRetentionSupplementalAverages,
   computeStrongWorkSignalRate,
+  getLargestDistributionSegment,
   getTopContributingReasonLabel,
   getTopExitReasonLabel,
 } from './page-helpers'
@@ -332,7 +343,9 @@ function buildSynthesisItems(args: {
       })
     }
 
-    const topSegment = args.exitDistribution?.segments[0]
+    const topSegment = args.exitDistribution
+      ? getLargestDistributionSegment(args.exitDistribution.segments)
+      : null
     if (topSegment) {
       items.push({
         label: 'Verdeling',
@@ -593,7 +606,13 @@ export default async function CampaignPage({ params }: Props) {
   if (!statsRow) notFound()
   const stats = statsRow as CampaignStats
 
-  const [{ data: organization }, { data: campaignMeta }, { data: responsesRaw }, { data: respondentsRaw }] =
+  const [
+    { data: organization },
+    { data: campaignMeta },
+    { data: responsesRaw },
+    { data: respondentsRaw },
+    { data: deliveryRecord },
+  ] =
     await Promise.all([
       supabase.from('organizations').select('name').eq('id', stats.organization_id).maybeSingle(),
       supabase.from('campaigns').select('enabled_modules').eq('id', id).maybeSingle(),
@@ -627,6 +646,11 @@ export default async function CampaignPage({ params }: Props) {
         .select('*')
         .eq('campaign_id', id)
         .order('completed_at', { ascending: false, nullsFirst: false }),
+      supabase
+        .from('campaign_delivery_records')
+        .select('id, lifecycle_stage, first_management_use_confirmed_at, updated_at')
+        .eq('campaign_id', id)
+        .maybeSingle(),
     ])
 
   const responses = (responsesRaw ?? []) as unknown as (SurveyResponse & {
@@ -674,6 +698,24 @@ export default async function CampaignPage({ params }: Props) {
   const moduleBackLinkLabel = getDashboardModuleBackLinkLabel(stats.scan_type)
   const topFactorLabel = factorPriorityRows[0]?.factor ?? null
   const secondFactorLabel = factorPriorityRows[1]?.factor ?? null
+  const canOpenActionCenterFromDeliveryRecord = deliveryRecord
+    ? canOpenActionCenterRoute(deliveryRecord)
+    : false
+  const actionCenterBridge = buildCampaignDetailActionCenterBridge({
+    campaignId: id,
+    routeEntryStage:
+      deliveryRecord && hasOpenedActionCenterRoute(deliveryRecord)
+        ? 'active'
+        : null,
+    canOpenRoute:
+      blockVisibility.signal === 'visible' &&
+      isLiveActionCenterScanType(stats.scan_type) &&
+      canOpenActionCenterFromDeliveryRecord,
+    assessedAt: deliveryRecord?.updated_at ?? stats.created_at,
+  })
+  const actionCenterRouteHref = buildActionCenterRouteOpenRedirect(id, 'campaign-detail')
+  const showOpenAnswersRoute =
+    blockVisibility.voices === 'visible' && releasedOpenAnswerItems.length > 0
   const signalHighlights = buildSignalHighlights({
     scanType: stats.scan_type,
     signalLabel: scanDefinition.signalLabel,
@@ -700,6 +742,95 @@ export default async function CampaignPage({ params }: Props) {
     hasEnoughData,
   })
   const openAnswersHref = `/campaigns/${id}/open-antwoorden`
+
+  async function openActionCenterRoute() {
+    'use server'
+
+    const admin = createAdminClient()
+    const actionCenterHref = buildActionCenterRouteOpenRedirect(id, 'campaign-detail')
+    const { data: currentDeliveryRecord, error: loadError } = await admin
+      .from('campaign_delivery_records')
+      .select('id, lifecycle_stage, first_management_use_confirmed_at')
+      .eq('campaign_id', id)
+      .maybeSingle()
+
+    if (loadError || !currentDeliveryRecord) {
+      notFound()
+    }
+
+    if (hasOpenedActionCenterRoute(currentDeliveryRecord)) {
+      redirect(actionCenterHref)
+    }
+
+    if (!canOpenActionCenterRoute(currentDeliveryRecord)) {
+      notFound()
+    }
+
+    const openedAt = new Date().toISOString()
+    const { data: updatedRecord, error } = await admin
+      .from('campaign_delivery_records')
+      .update(buildActionCenterRouteOpenPatch(openedAt))
+      .eq('id', currentDeliveryRecord.id)
+      .is('first_management_use_confirmed_at', null)
+      .in('lifecycle_stage', getActionCenterRouteOpenableStages())
+      .select('id')
+      .maybeSingle()
+
+    if (error) {
+      notFound()
+    }
+
+    if (!updatedRecord) {
+      const { data: latestDeliveryRecord } = await admin
+        .from('campaign_delivery_records')
+        .select('id, lifecycle_stage, first_management_use_confirmed_at')
+        .eq('campaign_id', id)
+        .maybeSingle()
+
+      if (!latestDeliveryRecord || !hasOpenedActionCenterRoute(latestDeliveryRecord)) {
+        notFound()
+      }
+    }
+
+    redirect(actionCenterHref)
+  }
+
+  const actionCenterBridgeCard =
+    actionCenterBridge.presentation.ctaKind === 'open' ? (
+      <div className="rounded-[24px] border border-slate-200 bg-white px-5 py-5 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="space-y-2">
+            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+              Vervolgroute
+            </p>
+            <h2 className="text-lg font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">
+              {actionCenterBridge.presentation.label}
+            </h2>
+            <p className="max-w-3xl text-sm leading-6 text-[color:var(--dashboard-text)]">
+              {actionCenterBridge.presentation.body}
+            </p>
+          </div>
+
+          {actionCenterBridge.bridgeState === 'candidate' ? (
+            <form action={openActionCenterRoute}>
+              <button
+                type="submit"
+                className="inline-flex rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50"
+              >
+                {actionCenterBridge.presentation.ctaLabel}
+              </button>
+            </form>
+          ) : (
+            <Link
+              href={actionCenterRouteHref}
+              className="inline-flex rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50"
+            >
+              {actionCenterBridge.presentation.ctaLabel}
+            </Link>
+          )}
+        </div>
+      </div>
+    ) : null
 
   const responseSection = (
     <ResultsBlockCard
@@ -899,8 +1030,8 @@ export default async function CampaignPage({ params }: Props) {
             ? 'Er zijn nog geen vrijgegeven open antwoorden binnen deze route.'
             : `Open antwoorden openen pas vanaf ${MIN_N_DISPLAY} leesbare responses.`
       }
-      href={openAnswersHref}
-      linkLabel="Open alle open antwoorden"
+      href={showOpenAnswersRoute ? openAnswersHref : undefined}
+      linkLabel={showOpenAnswersRoute ? 'Open alle open antwoorden' : undefined}
     >
       {blockVisibility.voices === 'visible' && openAnswersViewModel.groups.length > 0 ? (
         <div className="space-y-4">
@@ -953,6 +1084,8 @@ export default async function CampaignPage({ params }: Props) {
         campaignId={id}
         scanType={stats.scan_type}
       />
+
+      {actionCenterBridgeCard}
 
       <ResultsLayout
         sections={{

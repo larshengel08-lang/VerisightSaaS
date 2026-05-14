@@ -8,5 +8,7 @@ describe('open answers page', () => {
     expect(source).toContain('Alle open antwoorden')
     expect(source).toContain('Thematische clusters')
     expect(source).not.toContain('Routebeheer')
+    expect(source).toContain('if (releasedItems.length === 0)')
+    expect(source).toContain('notFound()')
   })
 })

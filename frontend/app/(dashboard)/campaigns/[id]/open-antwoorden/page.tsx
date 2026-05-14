@@ -117,6 +117,10 @@ export default async function OpenAnswersPage({ params }: Props) {
   const responses = (responsesRaw ?? []) as unknown as SurveyResponse[]
   const hasMinDisplay = responses.length >= MIN_N_DISPLAY
   const releasedItems = hasMinDisplay ? buildOpenAnswerItems(stats.scan_type, responses) : []
+  if (releasedItems.length === 0) {
+    notFound()
+  }
+
   const viewModel = buildOpenAnswersViewModel(releasedItems)
   const resultsViewModel = buildResultsViewModel({
     scanType: stats.scan_type,
