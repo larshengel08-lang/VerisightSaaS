@@ -6,6 +6,8 @@ import {
 import { renderActionCenterReviewInviteIcs } from '@/lib/action-center-review-invite-ics'
 
 describe('action center review invite ics', () => {
+  const textEncoder = new TextEncoder()
+
   function unfoldIcs(value: string) {
     return value.replace(/\r\n /g, '')
   }
@@ -97,5 +99,23 @@ describe('action center review invite ics', () => {
     expect(urlLineIndex).toBeGreaterThan(-1)
     expect(lines[urlLineIndex + 1]?.startsWith(' ')).toBe(true)
     expect(ics).not.toContain(`URL:${longDraft.actionCenterHref}\r\nDTSTART`)
+  })
+
+  it('keeps folded physical lines within the RFC byte limit for UTF-8 content', () => {
+    const utf8Draft = buildDraft({
+      campaignName: 'é'.repeat(30),
+    })
+    const ics = renderActionCenterReviewInviteIcs({
+      draft: utf8Draft,
+      method: 'REQUEST',
+      revision: 6,
+      organizerEmail: 'noreply@verisight.nl',
+    })
+    const lines = ics.split('\r\n')
+    const summaryLineIndex = lines.findIndex((line) => line.startsWith('SUMMARY:'))
+
+    expect(summaryLineIndex).toBeGreaterThan(-1)
+    expect(textEncoder.encode(lines[summaryLineIndex] ?? '').length).toBeLessThanOrEqual(75)
+    expect(lines[summaryLineIndex + 1]?.startsWith(' ')).toBe(true)
   })
 })

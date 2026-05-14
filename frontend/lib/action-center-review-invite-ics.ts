@@ -1,5 +1,7 @@
 import type { ActionCenterReviewInviteDraft } from '@/lib/action-center-review-invite'
 
+const textEncoder = new TextEncoder()
+
 function escapeIcsText(value: string) {
   return value
     .replace(/\\/g, '\\\\')
@@ -35,19 +37,29 @@ function buildReviewInviteUid(routeId: string) {
 }
 
 function foldIcsLine(value: string) {
-  if (value.length <= 75) {
-    return value
+  const segments: string[] = []
+  let currentSegment = ''
+  let currentBytes = 0
+  let maxBytes = 75
+
+  for (const character of value) {
+    const characterBytes = textEncoder.encode(character).length
+
+    if (currentBytes + characterBytes > maxBytes) {
+      segments.push(currentSegment)
+      currentSegment = character
+      currentBytes = characterBytes
+      maxBytes = 74
+      continue
+    }
+
+    currentSegment += character
+    currentBytes += characterBytes
   }
 
-  let folded = value.slice(0, 75)
-  let index = 75
+  segments.push(currentSegment)
 
-  while (index < value.length) {
-    folded += `\r\n ${value.slice(index, index + 74)}`
-    index += 74
-  }
-
-  return folded
+  return segments.join('\r\n ')
 }
 
 export function renderActionCenterReviewInviteIcs(args: {
