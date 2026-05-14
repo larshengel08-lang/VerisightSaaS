@@ -86,6 +86,15 @@ export async function resolveReviewInviteContext(args: {
     }
   }
 
+  if (!suiteAccess.context.canScheduleActionCenterReview) {
+    return {
+      error: {
+        status: 403,
+        detail: 'Geen toegang om reviewuitnodigingen te plannen.',
+      },
+    }
+  }
+
   const pageData = await getActionCenterPageData({
     context: suiteAccess.context,
     orgMemberships: suiteAccess.orgMemberships,
@@ -150,6 +159,15 @@ export async function resolveReviewInviteContext(args: {
       error: {
         status: 409,
         detail: 'Reviewuitnodiging kan nog niet worden opgebouwd: missing-campaign-context.',
+      },
+    }
+  }
+
+  if (normalizeText(campaign.organization_id) !== orgId) {
+    return {
+      error: {
+        status: 409,
+        detail: 'Reviewuitnodiging kan nog niet worden opgebouwd: campaign-org-mismatch.',
       },
     }
   }

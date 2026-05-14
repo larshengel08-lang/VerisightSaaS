@@ -77,6 +77,7 @@ describe('action center review invite route', () => {
     mockLoadSuiteAccessContext.mockResolvedValue({
       context: {
         canViewActionCenter: true,
+        canScheduleActionCenterReview: true,
         canManageActionCenterAssignments: true,
         organizationIds: ['org-1'],
         workspaceOrgIds: ['org-1'],
@@ -173,6 +174,7 @@ describe('action center review invite route', () => {
     mockLoadSuiteAccessContext.mockResolvedValue({
       context: {
         canViewActionCenter: false,
+        canScheduleActionCenterReview: false,
         canManageActionCenterAssignments: false,
         organizationIds: [],
         workspaceOrgIds: [],
@@ -194,6 +196,35 @@ describe('action center review invite route', () => {
     expect(response.status).toBe(403)
     expect(await response.json()).toEqual({
       detail: 'Geen toegang tot Action Center.',
+    })
+  })
+
+  it('requires the dedicated review scheduling capability', async () => {
+    mockLoadSuiteAccessContext.mockResolvedValue({
+      context: {
+        canViewActionCenter: true,
+        canScheduleActionCenterReview: false,
+        canManageActionCenterAssignments: false,
+        organizationIds: ['org-1'],
+        workspaceOrgIds: ['org-1'],
+        isVerisightAdmin: false,
+      },
+      orgMemberships: [{ org_id: 'org-1', role: 'member' }],
+      workspaceMemberships: [],
+    })
+
+    const response = await POST(
+      new Request('https://app.verisight.nl/api/action-center-review-invites', {
+        method: 'POST',
+        body: JSON.stringify({
+          reviewItemId: mockItem.id,
+        }),
+      }),
+    )
+
+    expect(response.status).toBe(403)
+    expect(await response.json()).toEqual({
+      detail: 'Geen toegang om reviewuitnodigingen te plannen.',
     })
   })
 
@@ -228,7 +259,7 @@ describe('action center review invite route', () => {
         method: 'POST',
         body: JSON.stringify({
           reviewItemId: mockItem.id,
-          revision: 2,
+          revision: 2.7,
         }),
       }),
     )
@@ -266,6 +297,33 @@ describe('action center review invite route', () => {
     expect(payload.organizerEmail).toBe('northwind-hr@example.com')
   })
 
+  it('accepts uppercase echoed mode values on GET without degrading CANCEL to REQUEST', async () => {
+    const response = await GET(
+      new Request(
+        `https://app.verisight.nl/api/action-center-review-invites?reviewItemId=${encodeURIComponent(mockItem.id)}&revision=4&mode=CANCEL&format=ics`,
+      ),
+    )
+
+    expect(response.status).toBe(200)
+    const body = await response.text()
+    expect(body).toContain('METHOD:CANCEL')
+    expect(body).toContain('STATUS:CANCELLED')
+    expect(body).toContain('SEQUENCE:4')
+  })
+
+  it('normalizes non-integer revision values consistently on GET', async () => {
+    const response = await GET(
+      new Request(
+        `https://app.verisight.nl/api/action-center-review-invites?reviewItemId=${encodeURIComponent(mockItem.id)}&revision=3.9`,
+      ),
+    )
+
+    expect(response.status).toBe(200)
+    const payload = await response.json()
+    expect(payload.revision).toBe(3)
+    expect(payload.method).toBe('REQUEST')
+  })
+
   it('returns a downloadable .ics artifact when format=ics is requested', async () => {
     const response = await GET(
       new Request(
@@ -280,6 +338,59 @@ describe('action center review invite route', () => {
     expect(body).toContain('METHOD:REQUEST')
     expect(body).toContain('SEQUENCE:3')
     expect(body).toContain('ORGANIZER:mailto:northwind-hr@example.com')
+  })
+
+  it('fails closed when the fetched campaign org does not match the selected review item org', async () => {
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'campaigns') {
+        return createMaybeSingleQuery({
+          data: {
+            id: 'cmp-exit-1',
+            name: 'ExitScan Q2',
+            scan_type: 'exit',
+            organization_id: 'org-2',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'organizations') {
+        return createMaybeSingleQuery({
+          data: {
+            id: 'org-1',
+            name: 'Northwind',
+            contact_email: 'northwind-hr@example.com',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_workspace_members') {
+        return createMaybeSingleQuery({
+          data: {
+            login_email: 'mila@northwind.example',
+            display_name: 'Mila Jansen',
+          },
+          error: null,
+        })
+      }
+
+      throw new Error(`Unhandled table ${table}`)
+    })
+
+    const response = await POST(
+      new Request('https://app.verisight.nl/api/action-center-review-invites', {
+        method: 'POST',
+        body: JSON.stringify({
+          reviewItemId: mockItem.id,
+        }),
+      }),
+    )
+
+    expect(response.status).toBe(409)
+    expect(await response.json()).toEqual({
+      detail: 'Reviewuitnodiging kan nog niet worden opgebouwd: campaign-org-mismatch.',
+    })
   })
 
   it('returns 409 when invite eligibility fails', async () => {

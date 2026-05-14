@@ -6,17 +6,20 @@ import {
 import { renderActionCenterReviewInviteIcs } from '@/lib/action-center-review-invite-ics'
 import { resolveReviewInviteContext } from './invite-helpers'
 
-function getRevision(value: number | string | null | undefined) {
+function normalizeRevision(value: unknown) {
   const parsed =
     typeof value === 'number'
       ? value
-      : Number.parseInt(value ?? '0', 10)
+      : typeof value === 'string'
+        ? Number(value)
+        : Number.NaN
 
-  return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0
+  return Number.isFinite(parsed) && parsed >= 0 ? Math.trunc(parsed) : 0
 }
 
-function getMethod(value: string | null | undefined) {
-  return value === 'cancel' ? 'CANCEL' : 'REQUEST'
+function normalizeMethod(value: unknown) {
+  const normalized = typeof value === 'string' ? value.trim().toLowerCase() : ''
+  return normalized === 'cancel' ? 'CANCEL' : 'REQUEST'
 }
 
 function buildEligibilityError(reason: string) {
@@ -81,8 +84,8 @@ async function resolvePreview(args: {
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null) as {
     reviewItemId?: string
-    revision?: number
-    mode?: string
+    revision?: unknown
+    mode?: unknown
   } | null
 
   const reviewItemId = body?.reviewItemId?.trim()
@@ -100,8 +103,8 @@ export async function POST(request: Request) {
   const resolved = await resolvePreview({
     request,
     reviewItemId,
-    revision: getRevision(body?.revision),
-    method: getMethod(body?.mode),
+    revision: normalizeRevision(body?.revision),
+    method: normalizeMethod(body?.mode),
   })
 
   if (resolved.error) {
@@ -125,8 +128,8 @@ export async function GET(request: Request) {
     )
   }
 
-  const revision = getRevision(url.searchParams.get('revision'))
-  const method = getMethod(url.searchParams.get('mode'))
+  const revision = normalizeRevision(url.searchParams.get('revision'))
+  const method = normalizeMethod(url.searchParams.get('mode'))
   const format = url.searchParams.get('format')
   const resolved = await resolvePreview({
     request,
