@@ -8,6 +8,21 @@ const componentSource = () =>
   )
 
 describe('exit dashboard analytics guardrails', () => {
+  it('keeps the shared route shell factual and free from the old exit-only branch', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8').toLowerCase()
+    const forbiddenTerms = [
+      'exitproductdashboard',
+      'managementread',
+      'bestuurlijke',
+      'eerste actie',
+      'reviewmoment',
+    ]
+
+    for (const term of forbiddenTerms) {
+      expect(source).not.toContain(term)
+    }
+  })
+
   it('removes the old hybrid campaign tabs and keeps results-first blocks visible on the route page', () => {
     const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
 

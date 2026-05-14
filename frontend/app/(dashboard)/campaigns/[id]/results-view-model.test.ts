@@ -62,4 +62,16 @@ describe('buildResultsViewModel', () => {
     expect(model.blocks.find((block) => block.key === 'signal')?.visibility).toBe('visible')
     expect(model.blocks.find((block) => block.key === 'drivers')?.visibility).toBe('limited')
   })
+
+  it('keeps survey-stemmen limited until the release threshold is open', () => {
+    const model = buildResultsViewModel({
+      scanType: 'retention',
+      respondentsCount: 4,
+      hasMinDisplay: false,
+      hasEnoughData: false,
+      hasOpenAnswers: true,
+    })
+
+    expect(model.blocks.find((block) => block.key === 'voices')?.visibility).toBe('limited')
+  })
 })

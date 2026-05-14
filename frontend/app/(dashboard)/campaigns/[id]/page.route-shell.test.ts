@@ -20,8 +20,8 @@ describe('campaign detail route shell', () => {
 
     expect(source).toContain('PdfDownloadButton')
     expect(source).toContain('moduleBackLinkLabel')
-    expect(source).toContain('if (stats.scan_type === "exit")')
-    expect(source).not.toContain('return stats.scan_type === "exit" ? (')
+    expect(source).not.toContain('ExitProductDashboard')
+    expect(source).not.toContain('if (stats.scan_type === "exit")')
   })
 
   it('keeps existing module breadcrumbs instead of collapsing to a generic dashboard jump', () => {

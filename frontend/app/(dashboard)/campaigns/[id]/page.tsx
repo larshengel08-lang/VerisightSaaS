@@ -1,34 +1,40 @@
-import Link from "next/link"
-import { notFound } from "next/navigation"
-import { ExitProductDashboard } from "@/components/dashboard/exit-product-dashboard"
-import { SuiteAccessDenied } from "@/components/dashboard/suite-access-denied"
-import { getManagementBandLabel } from "@/lib/management-language"
-import { getScanDefinition } from "@/lib/scan-definitions"
+import type { ReactNode } from 'react'
+import Link from 'next/link'
+import { notFound } from 'next/navigation'
+import { SuiteAccessDenied } from '@/components/dashboard/suite-access-denied'
+import { getManagementBandLabel } from '@/lib/management-language'
+import { getScanDefinition } from '@/lib/scan-definitions'
 import {
   getDashboardModuleHref,
   getDashboardModuleKeyForScanType,
   getDashboardModuleLabel,
-} from "@/lib/dashboard/shell-navigation"
-import { loadSuiteAccessContext } from "@/lib/suite-access-server"
-import { createClient } from "@/lib/supabase/server"
-import { FACTOR_LABELS, hasCampaignAddOn } from "@/lib/types"
-import type { CampaignStats, Respondent, SurveyResponse } from "@/lib/types"
-import { PdfDownloadButton } from "./pdf-download-button"
+} from '@/lib/dashboard/shell-navigation'
+import { loadSuiteAccessContext } from '@/lib/suite-access-server'
+import { createClient } from '@/lib/supabase/server'
+import { FACTOR_LABELS, hasCampaignAddOn } from '@/lib/types'
+import type { CampaignStats, Respondent, ScanType, SurveyResponse } from '@/lib/types'
+import {
+  buildOpenAnswerItems,
+  buildOpenAnswersViewModel,
+} from './open-answers-view-model'
 import {
   MethodologyCard,
   MIN_N_DISPLAY,
   MIN_N_PATTERNS,
+  clusterRetentionOpenSignals,
   computeAverageSignalScore,
   computeFactorAverages,
+  computeRetentionSupplementalAverages,
   computeStrongWorkSignalRate,
   getTopContributingReasonLabel,
   getTopExitReasonLabel,
-} from "./page-helpers"
-import { ResultsLayout } from "./results-layout"
+} from './page-helpers'
+import { PdfDownloadButton } from './pdf-download-button'
+import { ResultsLayout } from './results-layout'
 import {
   buildResultsViewModel,
   type ResultsBlockVisibility,
-} from "./results-view-model"
+} from './results-view-model'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -53,34 +59,34 @@ type SdtRow = {
   note: string
 }
 
-type NarrativeItem = {
-  title: string
-  tag: string
-  body: string
-}
-
-type ContributingItem = {
+type MetricItem = {
   label: string
   value: string
+  caption: string
+}
+
+type SummaryItem = {
+  label: string
+  title: string
   body: string
 }
 
 const PRIMARY_RESULTS_ORDER = {
-  response: "Responsbasis",
-  signal: "Kernsignaal",
-  synthesis: "Signalen in samenhang",
-  drivers: "Drivers & prioriteiten",
-  depth: "Verdiepingslagen",
-  voices: "Survey-stemmen",
+  response: 'Responsbasis',
+  signal: 'Kernsignaal',
+  synthesis: 'Signalen in samenhang',
+  drivers: 'Drivers & prioriteiten',
+  depth: 'Verdiepingslagen',
+  voices: 'Survey-stemmen',
 } as const
 
 function formatRoutePeriodLabel(campaignName: string, createdAt: string) {
   const quarterMatch = campaignName.match(/Q[1-4]\s?\d{4}/i)
-  if (quarterMatch) return quarterMatch[0].replace(/\s+/, " ")
+  if (quarterMatch) return quarterMatch[0].replace(/\s+/, ' ')
 
-  return new Intl.DateTimeFormat("nl-NL", {
-    month: "long",
-    year: "numeric",
+  return new Intl.DateTimeFormat('nl-NL', {
+    month: 'long',
+    year: 'numeric',
   }).format(new Date(createdAt))
 }
 
@@ -89,52 +95,43 @@ function deriveScopeLabel(respondents: Respondent[]) {
     new Set(respondents.map((respondent) => respondent.department).filter(Boolean)),
   ) as string[]
 
-  if (departments.length === 0) return "Scope binnen deze route"
+  if (departments.length === 0) return 'Scope binnen deze route'
   if (departments.length === 1) return departments[0]
   if (departments.length === 2) return `${departments[0]} & ${departments[1]}`
   return `${departments[0]}, ${departments[1]} + ${departments.length - 2} meer`
 }
 
-function getDashboardModuleBackLinkLabel(scanType: CampaignStats["scan_type"]) {
-  if (scanType === "exit") return "Terug naar alle ExitScans"
-  if (scanType === "retention") return "Terug naar alle RetentieScans"
-  if (scanType === "onboarding") return "Terug naar alle Onboarding 30-60-90-routes"
-  if (scanType === "pulse") return "Terug naar alle Pulse-routes"
-  if (scanType === "leadership") return "Terug naar alle Leadership Scans"
-  return "Terug naar overzicht"
+function getDashboardModuleBackLinkLabel(scanType: CampaignStats['scan_type']) {
+  if (scanType === 'exit') return 'Terug naar alle ExitScans'
+  if (scanType === 'retention') return 'Terug naar alle RetentieScans'
+  if (scanType === 'onboarding') return 'Terug naar alle Onboarding 30-60-90-routes'
+  if (scanType === 'pulse') return 'Terug naar alle Pulse-routes'
+  if (scanType === 'leadership') return 'Terug naar alle Leadership Scans'
+  return 'Terug naar overzicht'
+}
+
+function formatScore(value: number | null) {
+  return value === null ? 'Nog niet beschikbaar' : `${value.toFixed(1)}/10`
+}
+
+function formatPercent(value: number | null) {
+  return value === null ? 'Nog niet beschikbaar' : `${Math.round(value)}%`
+}
+
+function truncateText(value: string, limit = 140) {
+  return value.length > limit ? `${value.slice(0, limit - 3).trimEnd()}...` : value
 }
 
 function buildResponseContextNote(totalCompleted: number, completionRate: number) {
   if (totalCompleted >= MIN_N_PATTERNS) {
-    return `Responsbasis van ${completionRate}% is stevig genoeg voor een eerste lezing. Lees verschillen nog steeds in samenhang met scope en context.`
+    return `${completionRate}% respons en ${totalCompleted} ingevulde responses liggen boven de analysegrens van ${MIN_N_PATTERNS}.`
   }
 
-  return `Eerste read is zichtbaar, maar detail blijft nog begrensd. Gebruik de responsbasis van ${completionRate}% vooral om richting te bepalen, niet om al te ver te concluderen.`
-}
+  if (totalCompleted >= MIN_N_DISPLAY) {
+    return `${completionRate}% respons en ${totalCompleted} ingevulde responses liggen boven de weergavegrens van ${MIN_N_DISPLAY}, maar nog onder de analysegrens van ${MIN_N_PATTERNS}.`
+  }
 
-function buildVisibleVoices(responses: SurveyResponse[]) {
-  const sanitize = (value: string) =>
-    value
-      .replace(/\s+/g, " ")
-      .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[verwijderd]")
-      .replace(/https?:\/\/\S+/gi, "[link verwijderd]")
-      .replace(/\+?\d[\d\s().-]{7,}\d/g, "[verwijderd]")
-      .trim()
-
-  const seen = new Set<string>()
-
-  return responses
-    .map((response) =>
-      sanitize(response.open_text_raw?.trim() || response.open_text_analysis?.trim() || ""),
-    )
-    .filter((text) => text.length >= 24)
-    .filter((text) => {
-      const normalized = text.toLowerCase()
-      if (seen.has(normalized)) return false
-      seen.add(normalized)
-      return true
-    })
-    .slice(0, 2)
+  return `${totalCompleted} ingevulde responses. Detailweergave opent vanaf ${MIN_N_DISPLAY} responses.`
 }
 
 function buildExitPictureDistribution(responses: SurveyResponse[]) {
@@ -147,8 +144,8 @@ function buildExitPictureDistribution(responses: SurveyResponse[]) {
   for (const response of responses) {
     const code = response.exit_reason_code
     if (!code) continue
-    if (code.startsWith("PL")) counts.pull += 1
-    else if (code.startsWith("S")) counts.situational += 1
+    if (code.startsWith('PL')) counts.pull += 1
+    else if (code.startsWith('S')) counts.situational += 1
     else counts.work += 1
   }
 
@@ -159,75 +156,22 @@ function buildExitPictureDistribution(responses: SurveyResponse[]) {
     total,
     segments: [
       {
-        label: "Werkfrictie zichtbaar",
+        label: 'Werkgerelateerde redenen',
         value: `${toPercent(counts.work)}%`,
         percent: toPercent(counts.work),
       },
       {
-        label: "Andere trekfactoren zichtbaar",
+        label: 'Trekfactoren elders',
         value: `${toPercent(counts.pull)}%`,
         percent: toPercent(counts.pull),
       },
       {
-        label: "Situationele context zichtbaar",
+        label: 'Situationele redenen',
         value: `${toPercent(counts.situational)}%`,
         percent: toPercent(counts.situational),
       },
     ],
   }
-}
-
-function buildExitNarratives(args: {
-  topFactorLabel: string | null
-  secondFactorLabel: string | null
-  topExitReasonLabel: string | null
-  topContributingReasonLabel: string | null
-  strongWorkSignalRate: number | null
-  distribution: ReturnType<typeof buildExitPictureDistribution>
-}): NarrativeItem[] {
-  const items: NarrativeItem[] = []
-
-  if (args.topFactorLabel) {
-    items.push({
-      title: `${args.topFactorLabel} zet de eerste leesrichting`,
-      tag: "Primair signaal",
-      body: `${args.topFactorLabel} ligt het scherpst onder de organisatiefactoren en hoort daarom de eerste bestuurlijke leeslaag te openen.`,
-    })
-  }
-
-  if (args.secondFactorLabel) {
-    items.push({
-      title: `${args.secondFactorLabel} versterkt het vertrekbeeld`,
-      tag: "Samenhang",
-      body: `${args.secondFactorLabel} komt niet losstaand terug, maar kleurt het patroon mee naast de eerste driver.`,
-    })
-  }
-
-  if (args.topExitReasonLabel || args.topContributingReasonLabel) {
-    items.push({
-      title: "Vertrekredenen en context wijzen dezelfde kant op",
-      tag: "Rapportlezing",
-      body: `${args.topExitReasonLabel ?? "De dominante vertrekreden"} en ${args.topContributingReasonLabel ?? "de contextcodes"} versterken samen het beeld dat vooral intern werkgerelateerde frictie zichtbaar is.`,
-    })
-  }
-
-  if (items.length < 3) {
-    items.push({
-      title: "Werkfrictie blijft de dominante lezing",
-      tag: "Vertrekbeeld",
-      body: `${args.distribution.segments[0]?.value ?? "0%"} van het vertrekbeeld valt in werkfrictie. Andere trekfactoren en situationele context blijven zichtbaar, maar dragen minder hard de eerste managementread.`,
-    })
-  }
-
-  if (items.length < 3 && args.strongWorkSignalRate !== null) {
-    items.push({
-      title: "Beinvloedbare werkcontext blijft bestuurlijk relevant",
-      tag: "Werkbaarheid",
-      body: `${args.strongWorkSignalRate}% van de leesbare responses valt in sterk werksignaal. Daardoor blijft deze route bestuurlijk vooral een intern werkvraagstuk, niet alleen een marktvraagstuk.`,
-    })
-  }
-
-  return items.slice(0, 3)
 }
 
 function buildFactorPriorityRows(factorAverages: Record<string, number>) {
@@ -244,10 +188,10 @@ function buildFactorPriorityRows(factorAverages: Record<string, number>) {
         band: getManagementBandLabel(signalValue),
         note:
           signalValue >= 7
-            ? "Vraagt in dit beeld als eerste aandacht."
+            ? 'Laagste ervaren score in deze route.'
             : signalValue >= 4.5
-              ? "Eerst toetsen voordat deze factor zwaarder meeweegt."
-              : "Zichtbaar, maar niet de eerste factor om te openen.",
+              ? 'Zichtbaar in het huidige patroon.'
+              : 'Nu minder uitgesproken dan de bovenste factoren.',
       } satisfies FactorRow
     })
     .sort((left, right) => right.signalValue - left.signalValue)
@@ -259,11 +203,11 @@ function buildSdtRows(sdtAverages: {
   relatedness?: number
 }) {
   return [
-    { key: "autonomy", label: "Autonomie", value: sdtAverages.autonomy },
-    { key: "competence", label: "Competentie & groei", value: sdtAverages.competence },
-    { key: "relatedness", label: "Verbondenheid", value: sdtAverages.relatedness },
+    { label: 'Autonomie', value: sdtAverages.autonomy },
+    { label: 'Competentie & groei', value: sdtAverages.competence },
+    { label: 'Verbondenheid', value: sdtAverages.relatedness },
   ]
-    .filter((item) => typeof item.value === "number")
+    .filter((item) => typeof item.value === 'number')
     .map((item) => {
       const scoreValue = Number(item.value)
       const signalValue = 11 - scoreValue
@@ -276,64 +220,282 @@ function buildSdtRows(sdtAverages: {
         band: getManagementBandLabel(signalValue),
         note:
           signalValue >= 7
-            ? "Draagt duidelijk mee aan het vertrekbeeld."
+            ? 'Duidelijk zichtbaar in de verdiepingslaag.'
             : signalValue >= 4.5
-              ? "Relevant als verdiepingslaag naast de organisatiefactoren."
-              : "Ondersteunend, maar niet de eerste driver van dit beeld.",
+              ? 'Aanwezig als aanvullende context.'
+              : 'Nu minder uitgesproken dan de andere SDT-lagen.',
       } satisfies SdtRow
     })
 }
 
-function getResultsStatusLabel(readState: ReturnType<typeof buildResultsViewModel>["readState"]) {
-  if (readState === "readable") return "Leesbaar"
-  if (readState === "early-read") return "Eerste read"
-  return "Nog aan het opbouwen"
+function getResultsStatusLabel(readState: ReturnType<typeof buildResultsViewModel>['readState']) {
+  if (readState === 'readable') return 'Leesbaar'
+  if (readState === 'early-read') return 'Eerste read'
+  return 'Nog aan het opbouwen'
+}
+
+function buildSignalHighlights(args: {
+  scanType: ScanType
+  signalLabel: string
+  isVisible: boolean
+  averageSignalScore: number | null
+  topFactorLabel: string | null
+  strongWorkSignalRate: number | null
+  supplemental: ReturnType<typeof computeRetentionSupplementalAverages>
+}) {
+  const items: MetricItem[] = [
+    {
+      label: args.signalLabel,
+      value: args.isVisible ? formatScore(args.averageSignalScore) : 'Nog niet beschikbaar',
+      caption: args.isVisible
+        ? 'Gemiddelde score over de leesbare responses.'
+        : `Beschikbaar vanaf ${MIN_N_DISPLAY} responses.`,
+    },
+  ]
+
+  if (args.scanType === 'exit') {
+    items.push(
+      {
+        label: 'Sterkste factor',
+        value: args.isVisible ? args.topFactorLabel ?? 'Nog niet beschikbaar' : 'Nog niet beschikbaar',
+        caption: 'Factor met de laagste gemiddelde belevingsscore in deze route.',
+      },
+      {
+        label: 'Sterk werksignaal',
+        value: args.isVisible ? formatPercent(args.strongWorkSignalRate) : 'Nog niet beschikbaar',
+        caption: 'Aandeel responses met een sterk werkgerelateerd signaal.',
+      },
+    )
+
+    return items
+  }
+
+  if (args.scanType === 'retention') {
+    items.push(
+      {
+        label: 'Bevlogenheid',
+        value: args.isVisible ? formatScore(args.supplemental.engagement) : 'Nog niet beschikbaar',
+        caption: 'Gemiddelde UWES-score binnen de leesbare responses.',
+      },
+      {
+        label: 'Stay-intent',
+        value: args.isVisible ? formatScore(args.supplemental.stayIntent) : 'Nog niet beschikbaar',
+        caption: 'Gemiddelde richtingsscore op groepsniveau.',
+      },
+    )
+
+    return items
+  }
+
+  items.push(
+    {
+      label: 'Richtingsvraag',
+      value: args.isVisible ? formatScore(args.supplemental.stayIntent) : 'Nog niet beschikbaar',
+      caption: 'Gemiddelde richtingsscore op groepsniveau.',
+    },
+    {
+      label: 'Topfactor',
+      value: args.isVisible ? args.topFactorLabel ?? 'Nog niet beschikbaar' : 'Nog niet beschikbaar',
+      caption: 'Factor met de laagste gemiddelde belevingsscore in deze route.',
+    },
+  )
+
+  return items
+}
+
+function buildSynthesisItems(args: {
+  scanType: ScanType
+  topFactorLabel: string | null
+  secondFactorLabel: string | null
+  topExitReasonLabel: string | null
+  topContributingReasonLabel: string | null
+  retentionThemes: ReturnType<typeof clusterRetentionOpenSignals>
+  openAnswerThemes: ReturnType<typeof buildOpenAnswersViewModel>['themes']
+  exitDistribution: ReturnType<typeof buildExitPictureDistribution> | null
+}) {
+  const items: SummaryItem[] = []
+
+  if (args.scanType === 'exit') {
+    if (args.topExitReasonLabel) {
+      items.push({
+        label: 'Dominante reden',
+        title: args.topExitReasonLabel,
+        body: 'Meest voorkomende vertrekreden binnen de leesbare exitresponses.',
+      })
+    }
+
+    if (args.topContributingReasonLabel) {
+      items.push({
+        label: 'Meespelende code',
+        title: args.topContributingReasonLabel,
+        body: 'Tweede reden die in dezelfde response-set zichtbaar terugkomt.',
+      })
+    }
+
+    const topSegment = args.exitDistribution?.segments[0]
+    if (topSegment) {
+      items.push({
+        label: 'Verdeling',
+        title: `${topSegment.label} (${topSegment.value})`,
+        body: 'Grootste segment in de huidige verdeling van het vertrekbeeld.',
+      })
+    }
+
+    return items
+  }
+
+  if (args.scanType === 'retention') {
+    for (const theme of args.retentionThemes.slice(0, 2)) {
+      items.push({
+        label: 'Open antwoorden',
+        title: `${theme.title} (${theme.count})`,
+        body: truncateText(theme.sample, 150),
+      })
+    }
+  }
+
+  if (args.topFactorLabel) {
+    items.push({
+      label: 'Topfactor',
+      title: args.topFactorLabel,
+      body: 'Laagste gemiddelde belevingsscore in de huidige route.',
+    })
+  }
+
+  if (args.secondFactorLabel) {
+    items.push({
+      label: 'Tweede factor',
+      title: args.secondFactorLabel,
+      body: 'Volgende factor op basis van de huidige gemiddelde scores.',
+    })
+  }
+
+  if (items.length < 3 && args.openAnswerThemes[0]) {
+    items.push({
+      label: 'Thema in survey-stemmen',
+      title: `${args.openAnswerThemes[0].title} (${args.openAnswerThemes[0].count})`,
+      body: 'Meest voorkomende groep binnen de vrijgegeven open antwoorden.',
+    })
+  }
+
+  return items.slice(0, 3)
+}
+
+function buildDepthNotes(args: {
+  scanDefinition: ReturnType<typeof getScanDefinition>
+  responsesLength: number
+  hasMinDisplay: boolean
+  hasEnoughData: boolean
+}) {
+  const thresholdBody = args.hasEnoughData
+    ? `${args.responsesLength} responses voldoen aan de analysegrens van ${MIN_N_PATTERNS}.`
+    : args.hasMinDisplay
+      ? `${args.responsesLength} responses voldoen aan de weergavegrens van ${MIN_N_DISPLAY}, maar nog niet aan de analysegrens van ${MIN_N_PATTERNS}.`
+      : `${args.responsesLength} responses; detailweergave start bij ${MIN_N_DISPLAY}.`
+
+  return [
+    {
+      label: 'Wat deze route toont',
+      body: args.scanDefinition.whatItIsText,
+    },
+    {
+      label: 'Wat deze route niet toont',
+      body: args.scanDefinition.whatItIsNotText,
+    },
+    {
+      label: 'Privacygrens',
+      body: args.scanDefinition.privacyBoundaryText,
+    },
+    {
+      label: 'Leesgrens',
+      body: thresholdBody,
+    },
+  ]
 }
 
 function ResultsBlockCard({
   title,
   visibility,
-  value,
+  summary,
   body,
   href,
   linkLabel,
+  children,
 }: {
   title: string
   visibility: ResultsBlockVisibility
-  value?: string
+  summary?: string
   body: string
   href?: string
   linkLabel?: string
+  children?: ReactNode
 }) {
   const toneClasses =
-    visibility === "visible"
-      ? "border-slate-200 bg-white"
-      : "border-dashed border-slate-200 bg-slate-50"
+    visibility === 'visible'
+      ? 'border-slate-200 bg-white'
+      : 'border-dashed border-slate-200 bg-slate-50'
 
   return (
-    <div className={`rounded-[22px] px-5 py-5 shadow-sm ${toneClasses}`}>
+    <div className={`rounded-[24px] border px-5 py-5 shadow-sm ${toneClasses}`}>
       <div className="flex items-start justify-between gap-3">
         <h2 className="text-lg font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">
           {title}
         </h2>
         <span className="rounded-full bg-slate-100 px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-slate-600">
-          {visibility === "visible" ? "Vrij" : "Begrensd"}
+          {visibility === 'visible' ? 'Vrij' : 'Begrensd'}
         </span>
       </div>
-      {value ? (
+      {summary ? (
         <p className="mt-4 text-xl font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">
-          {value}
+          {summary}
         </p>
       ) : null}
       <p className="mt-3 text-sm leading-6 text-[color:var(--dashboard-text)]">{body}</p>
+      {children ? <div className="mt-5">{children}</div> : null}
       {href && linkLabel ? (
         <Link
           href={href}
-          className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-slate-700 transition-colors hover:text-slate-950"
+          className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-slate-700 transition-colors hover:text-slate-950"
         >
           {linkLabel}
         </Link>
       ) : null}
+    </div>
+  )
+}
+
+function MetricTile({ item }: { item: MetricItem }) {
+  return (
+    <div className="rounded-[20px] bg-[color:var(--dashboard-soft)]/55 px-4 py-4">
+      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+        {item.label}
+      </p>
+      <p className="mt-3 text-lg font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">
+        {item.value}
+      </p>
+      <p className="mt-2 text-sm leading-6 text-[color:var(--dashboard-text)]">{item.caption}</p>
+    </div>
+  )
+}
+
+function SummaryCard({ item }: { item: SummaryItem }) {
+  return (
+    <div className="rounded-[20px] bg-[color:var(--dashboard-soft)]/52 px-5 py-5">
+      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+        {item.label}
+      </p>
+      <h3 className="mt-3 text-[1.08rem] font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">
+        {item.title}
+      </h3>
+      <p className="mt-3 text-sm leading-6 text-[color:var(--dashboard-text)]">{item.body}</p>
+    </div>
+  )
+}
+
+function EmptyInlineState({ body }: { body: string }) {
+  return (
+    <div className="rounded-[20px] border border-dashed border-slate-200 bg-slate-50 px-5 py-5 text-sm leading-6 text-[color:var(--dashboard-text)]">
+      {body}
     </div>
   )
 }
@@ -366,11 +528,11 @@ function ResultsShellHeader({
       <p className="text-[0.78rem] font-medium tracking-[0.01em] text-slate-500">
         <Link href="/dashboard" className="transition-colors hover:text-slate-700">
           Overzicht
-        </Link>{" "}
-        /{" "}
+        </Link>{' '}
+        /{' '}
         <Link href={moduleHref} className="transition-colors hover:text-slate-700">
           {moduleLabel}
-        </Link>{" "}
+        </Link>{' '}
         / <span className="text-slate-700">{campaignName}</span>
       </p>
       <Link
@@ -390,7 +552,7 @@ function ResultsShellHeader({
             {campaignName}
           </h1>
           <p className="text-sm leading-6 text-slate-600">
-            {organizationName} <span aria-hidden="true">&middot;</span> {routePeriodLabel}{" "}
+            {organizationName} <span aria-hidden="true">&middot;</span> {routePeriodLabel}{' '}
             <span aria-hidden="true">&middot;</span> {scopeLabel}
           </p>
         </div>
@@ -423,9 +585,9 @@ export default async function CampaignPage({ params }: Props) {
   }
 
   const { data: statsRow } = await supabase
-    .from("campaign_stats")
-    .select("*")
-    .eq("campaign_id", id)
+    .from('campaign_stats')
+    .select('*')
+    .eq('campaign_id', id)
     .single()
 
   if (!statsRow) notFound()
@@ -433,10 +595,10 @@ export default async function CampaignPage({ params }: Props) {
 
   const [{ data: organization }, { data: campaignMeta }, { data: responsesRaw }, { data: respondentsRaw }] =
     await Promise.all([
-      supabase.from("organizations").select("name").eq("id", stats.organization_id).maybeSingle(),
-      supabase.from("campaigns").select("enabled_modules").eq("id", id).maybeSingle(),
+      supabase.from('organizations').select('name').eq('id', stats.organization_id).maybeSingle(),
+      supabase.from('campaigns').select('enabled_modules').eq('id', id).maybeSingle(),
       supabase
-        .from("survey_responses")
+        .from('survey_responses')
         .select(
           `
           id,
@@ -459,12 +621,12 @@ export default async function CampaignPage({ params }: Props) {
           respondents!inner(id, campaign_id, department, role_level, completed, completed_at, token)
         `,
         )
-        .eq("respondents.campaign_id", id),
+        .eq('respondents.campaign_id', id),
       supabase
-        .from("respondents")
-        .select("*")
-        .eq("campaign_id", id)
-        .order("completed_at", { ascending: false, nullsFirst: false }),
+        .from('respondents')
+        .select('*')
+        .eq('campaign_id', id)
+        .order('completed_at', { ascending: false, nullsFirst: false }),
     ])
 
   const responses = (responsesRaw ?? []) as unknown as (SurveyResponse & {
@@ -472,248 +634,310 @@ export default async function CampaignPage({ params }: Props) {
   })[]
   const respondents = (respondentsRaw ?? []) as Respondent[]
 
+  const hasMinDisplay = responses.length >= MIN_N_DISPLAY
+  const hasEnoughData = responses.length >= MIN_N_PATTERNS
   const factorData = computeFactorAverages(responses)
   const factorPriorityRows = buildFactorPriorityRows(factorData.orgAverages)
   const sdtRows = buildSdtRows(factorData.sdtAverages)
-  const averageRiskScore = computeAverageSignalScore(responses)
-  const hasMinDisplay = responses.length >= MIN_N_DISPLAY
-  const hasEnoughData = responses.length >= MIN_N_PATTERNS
-  const openAnswers = buildVisibleVoices(responses)
-  const openAnswersHref = `/campaigns/${id}/open-antwoorden`
+  const averageSignalScore = computeAverageSignalScore(responses)
+  const supplemental = computeRetentionSupplementalAverages(responses)
+  const releasedOpenAnswerItems = hasMinDisplay ? buildOpenAnswerItems(stats.scan_type, responses) : []
+  const openAnswersViewModel = buildOpenAnswersViewModel(releasedOpenAnswerItems)
+  const strongWorkSignalRate = hasMinDisplay ? computeStrongWorkSignalRate(responses) : null
+  const topExitReasonLabel = hasMinDisplay ? getTopExitReasonLabel(responses) : null
+  const topContributingReasonLabel = hasEnoughData ? getTopContributingReasonLabel(responses) : null
+  const exitDistribution = hasEnoughData ? buildExitPictureDistribution(responses) : null
+  const retentionThemes = stats.scan_type === 'retention' ? clusterRetentionOpenSignals(responses) : []
   const resultsViewModel = buildResultsViewModel({
     scanType: stats.scan_type,
     respondentsCount: respondents.length,
     hasMinDisplay,
     hasEnoughData,
-    hasOpenAnswers: openAnswers.length > 0,
+    hasOpenAnswers: releasedOpenAnswerItems.length > 0,
   })
+
   const blockVisibility = Object.fromEntries(
     resultsViewModel.blocks.map((block) => [block.key, block.visibility]),
-  ) as Record<"response" | "signal" | "synthesis" | "drivers" | "depth" | "voices", ResultsBlockVisibility>
+  ) as Record<
+    'response' | 'signal' | 'synthesis' | 'drivers' | 'depth' | 'voices',
+    ResultsBlockVisibility
+  >
 
   const scanDefinition = getScanDefinition(stats.scan_type)
-  const organizationName = organization?.name ?? "Organisatie"
+  const organizationName = organization?.name ?? 'Organisatie'
   const routePeriodLabel = formatRoutePeriodLabel(stats.campaign_name, stats.created_at)
   const scopeLabel = deriveScopeLabel(respondents)
   const moduleKey =
-    stats.scan_type === "team" ? null : getDashboardModuleKeyForScanType(stats.scan_type)
+    stats.scan_type === 'team' ? null : getDashboardModuleKeyForScanType(stats.scan_type)
   const moduleLabel = moduleKey ? getDashboardModuleLabel(moduleKey) : scanDefinition.productName
-  const moduleHref = moduleKey ? getDashboardModuleHref(moduleKey) : "/dashboard"
+  const moduleHref = moduleKey ? getDashboardModuleHref(moduleKey) : '/dashboard'
   const moduleBackLinkLabel = getDashboardModuleBackLinkLabel(stats.scan_type)
   const topFactorLabel = factorPriorityRows[0]?.factor ?? null
   const secondFactorLabel = factorPriorityRows[1]?.factor ?? null
+  const signalHighlights = buildSignalHighlights({
+    scanType: stats.scan_type,
+    signalLabel: scanDefinition.signalLabel,
+    isVisible: blockVisibility.signal === 'visible',
+    averageSignalScore,
+    topFactorLabel,
+    strongWorkSignalRate,
+    supplemental,
+  })
+  const synthesisItems = buildSynthesisItems({
+    scanType: stats.scan_type,
+    topFactorLabel,
+    secondFactorLabel,
+    topExitReasonLabel,
+    topContributingReasonLabel,
+    retentionThemes,
+    openAnswerThemes: openAnswersViewModel.themes,
+    exitDistribution,
+  })
+  const depthNotes = buildDepthNotes({
+    scanDefinition,
+    responsesLength: responses.length,
+    hasMinDisplay,
+    hasEnoughData,
+  })
+  const openAnswersHref = `/campaigns/${id}/open-antwoorden`
 
   const responseSection = (
     <ResultsBlockCard
       title={PRIMARY_RESULTS_ORDER.response}
       visibility={blockVisibility.response}
-      value={`${stats.total_completed}/${stats.total_invited} ingevuld · ${stats.completion_rate_pct ?? 0}%`}
+      summary={`${stats.total_completed}/${stats.total_invited} ingevuld · ${stats.completion_rate_pct ?? 0}%`}
       body={buildResponseContextNote(stats.total_completed, stats.completion_rate_pct ?? 0)}
-      href={stats.scan_type === "exit" ? "#responscontext" : undefined}
-      linkLabel={stats.scan_type === "exit" ? "Ga naar responscontext" : undefined}
-    />
+    >
+      <div className="grid gap-3 sm:grid-cols-3">
+        {[
+          { label: 'Uitgenodigd', value: String(stats.total_invited) },
+          { label: 'Ingevuld', value: String(stats.total_completed) },
+          { label: 'Status', value: getResultsStatusLabel(resultsViewModel.readState) },
+        ].map((item) => (
+          <div
+            key={item.label}
+            className="rounded-[18px] bg-[color:var(--dashboard-soft)]/62 px-4 py-4"
+          >
+            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+              {item.label}
+            </p>
+            <p className="mt-3 text-base font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">
+              {item.value}
+            </p>
+          </div>
+        ))}
+      </div>
+    </ResultsBlockCard>
   )
 
   const signalSection = (
     <ResultsBlockCard
       title={PRIMARY_RESULTS_ORDER.signal}
       visibility={blockVisibility.signal}
-      value={averageRiskScore !== null && hasMinDisplay ? `${averageRiskScore.toFixed(1)}/10` : "Nog niet beschikbaar"}
+      summary={blockVisibility.signal === 'visible' ? formatScore(averageSignalScore) : 'Nog niet beschikbaar'}
       body={
-        topFactorLabel && hasMinDisplay
-          ? `${scanDefinition.signalLabel} blijft de opening, met ${topFactorLabel.toLowerCase()} als eerste zichtbare factor binnen deze route.`
-          : `Deze laag komt pas vrij vanaf ${MIN_N_DISPLAY} leesbare responses. Tot die tijd blijft het kernsignaal bewust begrensd.`
+        blockVisibility.signal === 'visible'
+          ? `${scanDefinition.signalLabel} is vrijgegeven voor deze route. De aanvullende metrics hieronder tonen de scan-specifieke context die samen met het hoofdsignaal is opgeslagen.`
+          : `Deze laag opent vanaf ${MIN_N_DISPLAY} leesbare responses.`
       }
-      href={stats.scan_type === "exit" ? "#sterkste-signaal" : undefined}
-      linkLabel={stats.scan_type === "exit" ? "Ga naar sterkste signaal" : undefined}
-    />
+    >
+      <div className="grid gap-4 md:grid-cols-3">
+        {signalHighlights.map((item) => (
+          <MetricTile key={item.label} item={item} />
+        ))}
+      </div>
+    </ResultsBlockCard>
   )
-
-  const synthesisTitle =
-    stats.scan_type === "exit"
-      ? getTopExitReasonLabel(responses) ?? topFactorLabel ?? "Nog niet beschikbaar"
-      : topFactorLabel ?? "Nog niet beschikbaar"
-  const synthesisBody =
-    stats.scan_type === "exit"
-      ? getTopContributingReasonLabel(responses)
-        ? `${getTopContributingReasonLabel(responses)} speelt zichtbaar mee naast de dominante vertrekreden en hoort in dezelfde managementlezing thuis.`
-        : `Deze laag blijft pas echt scherp zodra er naast de hoofdreden ook een tweede contextsignaal stevig terugkomt.`
-      : secondFactorLabel
-        ? `${secondFactorLabel} kleurt het primaire signaal mee en helpt om verschillen in samenhang te lezen, niet als los detail.`
-        : `Gebruik deze laag pas steviger vanaf voldoende respons en meer dan een enkel zichtbaar factorspoor.`
 
   const synthesisSection = (
     <ResultsBlockCard
       title={PRIMARY_RESULTS_ORDER.synthesis}
       visibility={blockVisibility.synthesis}
-      value={blockVisibility.synthesis === "visible" ? synthesisTitle : "Nog niet beschikbaar"}
-      body={synthesisBody}
-      href={stats.scan_type === "exit" ? "#hoofdreden-vertrekbeeld" : undefined}
-      linkLabel={stats.scan_type === "exit" ? "Ga naar samenhang" : undefined}
-    />
+      summary={blockVisibility.synthesis === 'visible' ? synthesisItems[0]?.title ?? 'Nog niet beschikbaar' : 'Nog niet beschikbaar'}
+      body={
+        blockVisibility.synthesis === 'visible'
+          ? 'Deze laag bundelt de eerste samenhang die op groepsniveau zichtbaar is.'
+          : `Deze laag opent samen met het kernsignaal vanaf ${MIN_N_DISPLAY} responses.`
+      }
+    >
+      {blockVisibility.synthesis === 'visible' && synthesisItems.length > 0 ? (
+        <div className="grid gap-4 xl:grid-cols-3">
+          {synthesisItems.map((item) => (
+            <SummaryCard key={`${item.label}-${item.title}`} item={item} />
+          ))}
+        </div>
+      ) : (
+        <EmptyInlineState body="Nog geen tweede laag beschikbaar binnen de huidige leesgrens." />
+      )}
+    </ResultsBlockCard>
   )
 
-  const driversValue =
-    factorPriorityRows.length > 0 && hasEnoughData
-      ? factorPriorityRows
-          .slice(0, 3)
-          .map((row) => row.factor)
-          .join(" · ")
-      : "Nog niet beschikbaar"
   const driversSection = (
     <ResultsBlockCard
       title={PRIMARY_RESULTS_ORDER.drivers}
       visibility={blockVisibility.drivers}
-      value={driversValue}
+      summary={
+        blockVisibility.drivers === 'visible'
+          ? factorPriorityRows
+              .slice(0, 3)
+              .map((row) => row.factor)
+              .join(' · ')
+          : 'Nog niet beschikbaar'
+      }
       body={
-        hasEnoughData
-          ? "Gebruik deze laag om te zien welke factoren het eerst bestuurlijke aandacht vragen. Prioriteiten blijven groepsmatig en feitelijk."
+        blockVisibility.drivers === 'visible'
+          ? 'Factoren zijn geordend op huidige signaalsterkte binnen deze route.'
           : `Deze laag blijft begrensd tot er minimaal ${MIN_N_PATTERNS} leesbare responses zijn.`
       }
-      href={stats.scan_type === "exit" ? "#driverlaag" : undefined}
-      linkLabel={stats.scan_type === "exit" ? "Ga naar drivers" : undefined}
-    />
+    >
+      {blockVisibility.drivers === 'visible' && factorPriorityRows.length > 0 ? (
+        <div className="space-y-4">
+          {factorPriorityRows.slice(0, 4).map((row) => (
+            <div key={row.factor} className="rounded-[20px] bg-[color:var(--dashboard-soft)]/52 px-5 py-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-[color:var(--dashboard-ink)]">{row.factor}</p>
+                  <p className="mt-2 text-sm leading-6 text-[color:var(--dashboard-text)]">{row.note}</p>
+                </div>
+                <div className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600">
+                  {row.signal}
+                </div>
+              </div>
+              <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-white/85">
+                <div
+                  className="h-full rounded-full bg-[#C36A29]"
+                  style={{ width: `${Math.max(12, Math.min(100, row.signalValue * 10))}%` }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <EmptyInlineState body={`Volledige factorprioritering opent vanaf ${MIN_N_PATTERNS} responses.`} />
+      )}
+    </ResultsBlockCard>
   )
 
-  const depthValue =
-    blockVisibility.depth === "visible"
-      ? sdtRows.length > 0
-        ? `${sdtRows.length} verdiepingslaag${sdtRows.length === 1 ? "" : "en"}`
-        : `${factorPriorityRows.length} factorlaag${factorPriorityRows.length === 1 ? "" : "en"}`
-      : "Nog niet beschikbaar"
   const depthSection = (
     <ResultsBlockCard
       title={PRIMARY_RESULTS_ORDER.depth}
       visibility={blockVisibility.depth}
-      value={depthValue}
-      body={
-        blockVisibility.depth === "visible"
-          ? "Verdiepingslagen blijven ondersteunend aan de hoofdlezing: extra factorcontext, SDT en methodische begrenzing."
-          : "Deze laag blijft bewust compact zolang de eerste veilige read nog niet volledig open ligt."
+      summary={
+        blockVisibility.depth === 'visible'
+          ? sdtRows.length > 0
+            ? `${sdtRows.length} SDT-lagen zichtbaar`
+            : `${factorPriorityRows.length} factoren berekend`
+          : 'Nog niet beschikbaar'
       }
-      href={stats.scan_type === "exit" ? "#factorlaag" : undefined}
-      linkLabel={stats.scan_type === "exit" ? "Ga naar verdieping" : undefined}
-    />
+      body={
+        blockVisibility.depth === 'visible'
+          ? 'Verdiepingslagen tonen extra context en methodische grenzen binnen dezelfde route.'
+          : `Deze laag opent vanaf ${MIN_N_DISPLAY} leesbare responses.`
+      }
+    >
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr),minmax(0,1fr)]">
+        <div className="space-y-4">
+          {blockVisibility.depth === 'visible' && sdtRows.length > 0 ? (
+            <div className="grid gap-3">
+              {sdtRows.map((row) => (
+                <div
+                  key={row.factor}
+                  className="rounded-[20px] bg-[color:var(--dashboard-soft)]/52 px-5 py-4"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold text-[color:var(--dashboard-ink)]">{row.factor}</p>
+                    <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600">
+                      {row.score}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-[color:var(--dashboard-text)]">{row.note}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyInlineState body="Nog geen extra verdiepingslaag zichtbaar binnen de huidige routegegevens." />
+          )}
+
+          <div className="grid gap-3 md:grid-cols-2">
+            {depthNotes.map((note) => (
+              <div
+                key={note.label}
+                className="rounded-[20px] border border-slate-200 bg-white px-4 py-4"
+              >
+                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                  {note.label}
+                </p>
+                <p className="mt-3 text-sm leading-6 text-[color:var(--dashboard-text)]">{note.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <MethodologyCard
+          scanType={stats.scan_type}
+          hasSegmentDeepDive={hasCampaignAddOn(campaignMeta, 'segment_deep_dive')}
+          signalLabel={scanDefinition.signalLabel}
+          embedded
+        />
+      </div>
+    </ResultsBlockCard>
   )
 
-  const voicesPreview =
-    openAnswers[0] && blockVisibility.voices === "visible"
-      ? openAnswers[0].length > 120
-        ? `${openAnswers[0].slice(0, 117).trimEnd()}...`
-        : openAnswers[0]
-      : "Nog niet beschikbaar"
-  const voicesBody =
-    blockVisibility.voices === "visible"
-      ? "Survey-stemmen blijven geanonimiseerd en horen bij deze resultatenomgeving. Open antwoorden zijn in een klik bereikbaar."
-      : "Open antwoorden komen pas vrij zodra er daadwerkelijk leesbare survey-stemmen beschikbaar zijn."
   const voicesSection = (
     <ResultsBlockCard
       title={PRIMARY_RESULTS_ORDER.voices}
       visibility={blockVisibility.voices}
-      value={voicesPreview}
-      body={voicesBody}
+      summary={
+        blockVisibility.voices === 'visible'
+          ? `${releasedOpenAnswerItems.length} antwoorden vrijgegeven`
+          : 'Nog niet beschikbaar'
+      }
+      body={
+        blockVisibility.voices === 'visible'
+          ? 'Open antwoorden blijven geanonimiseerd en zijn gegroepeerd per zichtbaar thema.'
+          : hasMinDisplay
+            ? 'Er zijn nog geen vrijgegeven open antwoorden binnen deze route.'
+            : `Open antwoorden openen pas vanaf ${MIN_N_DISPLAY} leesbare responses.`
+      }
       href={openAnswersHref}
       linkLabel="Open alle open antwoorden"
-    />
+    >
+      {blockVisibility.voices === 'visible' && openAnswersViewModel.groups.length > 0 ? (
+        <div className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            {openAnswersViewModel.themes.slice(0, 3).map((theme) => (
+              <span
+                key={theme.title}
+                className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600"
+              >
+                {theme.title} · {theme.count}
+              </span>
+            ))}
+          </div>
+          <div className="grid gap-4 xl:grid-cols-2">
+            {openAnswersViewModel.groups
+              .flatMap((group) => group.answers.slice(0, 1).map((answer) => ({ group, answer })))
+              .slice(0, 2)
+              .map(({ group, answer }) => (
+                <div
+                  key={answer.id}
+                  className="rounded-[20px] bg-[color:var(--dashboard-soft)]/52 px-5 py-5"
+                >
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+                    {group.title}
+                  </p>
+                  <p className="mt-3 text-sm leading-6 text-[color:var(--dashboard-text)]">
+                    {truncateText(answer.text, 180)}
+                  </p>
+                </div>
+              ))}
+          </div>
+        </div>
+      ) : (
+        <EmptyInlineState body="Er zijn nog geen vrijgegeven open antwoorden om te groeperen." />
+      )}
+    </ResultsBlockCard>
   )
-
-  const summaryShell = (
-    <ResultsLayout
-      sections={{
-        response: responseSection,
-        signal: signalSection,
-        synthesis: synthesisSection,
-        drivers: driversSection,
-        depth: depthSection,
-        voices: voicesSection,
-      }}
-    />
-  )
-
-  if (stats.scan_type === "exit") {
-    const strongWorkSignalRate = hasMinDisplay ? computeStrongWorkSignalRate(responses) : null
-    const topExitReasonLabel = hasMinDisplay ? getTopExitReasonLabel(responses) : null
-    const topContributingReasonLabel = hasMinDisplay ? getTopContributingReasonLabel(responses) : null
-    const exitDistribution = hasMinDisplay ? buildExitPictureDistribution(responses) : { total: 0, segments: [] }
-    const exitNarratives =
-      hasMinDisplay
-        ? buildExitNarratives({
-            topFactorLabel,
-            secondFactorLabel,
-            topExitReasonLabel,
-            topContributingReasonLabel,
-            strongWorkSignalRate,
-            distribution: buildExitPictureDistribution(responses),
-          })
-        : []
-    const contributingItems: ContributingItem[] = []
-
-    if (topContributingReasonLabel) {
-      contributingItems.push({
-        label: "Contextcode",
-        value: topContributingReasonLabel,
-        body: "Deze meespelende reden ligt zichtbaar onder het vertrekbeeld en helpt om de hoofdrichting beter feitelijk te lezen.",
-      })
-    }
-
-    if (secondFactorLabel) {
-      contributingItems.push({
-        label: "Tweede factor",
-        value: secondFactorLabel,
-        body: "Deze factor kleurt mee naast het primaire signaal en hoort daarom in dezelfde analytische laag thuis.",
-      })
-    }
-
-    return (
-      <div className="space-y-10">
-        {summaryShell}
-        <ExitProductDashboard
-          moduleHref={moduleHref}
-          moduleLabel={moduleLabel}
-          moduleBackLinkLabel={moduleBackLinkLabel}
-          campaignName={stats.campaign_name}
-          organizationName={organizationName}
-          routePeriodLabel={routePeriodLabel}
-          scopeLabel={scopeLabel}
-          statusLabel={getResultsStatusLabel(resultsViewModel.readState)}
-          headerActions={
-            <PdfDownloadButton campaignId={id} campaignName={stats.campaign_name} scanType={stats.scan_type} />
-          }
-          averageSignalScoreLabel={
-            averageRiskScore !== null && hasMinDisplay ? `${averageRiskScore.toFixed(1)}/10` : "Nog niet beschikbaar"
-          }
-          strongestFactorLabel={topFactorLabel ?? "Nog niet beschikbaar"}
-          strongWorkSignalLabel={
-            strongWorkSignalRate !== null ? `${strongWorkSignalRate}%` : "Nog niet beschikbaar"
-          }
-          primaryReasonTitle={topExitReasonLabel ?? topFactorLabel ?? "Nog niet beschikbaar"}
-          primaryReasonBody={
-            topExitReasonLabel
-              ? `${topExitReasonLabel} geeft de bestuurlijke hoofdrichting van het vertrekbeeld binnen deze route.`
-              : "Nog niet beschikbaar voor een eerlijke analytische hoofdrichting."
-          }
-          whyItMattersItems={exitNarratives}
-          contributingItems={contributingItems}
-          totalInvited={String(stats.total_invited)}
-          totalCompleted={String(stats.total_completed)}
-          responseRate={`${stats.completion_rate_pct ?? 0}%`}
-          responseContextNote={buildResponseContextNote(stats.total_completed, stats.completion_rate_pct ?? 0)}
-          topFactors={blockVisibility.signal === "visible" ? factorPriorityRows : []}
-          distributionSegments={blockVisibility.synthesis === "visible" ? exitDistribution.segments : []}
-          factorRows={blockVisibility.drivers === "visible" ? factorPriorityRows : []}
-          sdtRows={blockVisibility.depth === "visible" ? sdtRows : []}
-          methodologyContent={
-            <MethodologyCard
-              scanType={stats.scan_type}
-              hasSegmentDeepDive={hasCampaignAddOn(campaignMeta, "segment_deep_dive")}
-              signalLabel={scanDefinition.signalLabel}
-              embedded
-            />
-          }
-        />
-      </div>
-    )
-  }
 
   return (
     <div className="space-y-10">
@@ -729,7 +953,17 @@ export default async function CampaignPage({ params }: Props) {
         campaignId={id}
         scanType={stats.scan_type}
       />
-      {summaryShell}
+
+      <ResultsLayout
+        sections={{
+          response: responseSection,
+          signal: signalSection,
+          synthesis: synthesisSection,
+          drivers: driversSection,
+          depth: depthSection,
+          voices: voicesSection,
+        }}
+      />
     </div>
   )
 }

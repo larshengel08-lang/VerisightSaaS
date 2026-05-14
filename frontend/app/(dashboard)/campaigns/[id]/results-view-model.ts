@@ -28,6 +28,7 @@ function getReadState(args: Pick<Args, 'hasMinDisplay' | 'hasEnoughData'>): Resu
 
 export function buildResultsViewModel(args: Args): ResultsViewModel {
   const readState = getReadState(args)
+  const answersReleased = args.hasMinDisplay && args.hasOpenAnswers
 
   return {
     readState,
@@ -37,7 +38,7 @@ export function buildResultsViewModel(args: Args): ResultsViewModel {
       { key: 'synthesis', visibility: args.hasMinDisplay ? 'visible' : 'limited' },
       { key: 'drivers', visibility: args.hasEnoughData ? 'visible' : 'limited' },
       { key: 'depth', visibility: args.hasMinDisplay ? 'visible' : 'limited' },
-      { key: 'voices', visibility: args.hasOpenAnswers ? 'visible' : 'limited' },
+      { key: 'voices', visibility: answersReleased ? 'visible' : 'limited' },
     ],
   }
 }
