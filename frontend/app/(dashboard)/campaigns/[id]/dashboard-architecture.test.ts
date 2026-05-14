@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import {
   buildDashboardArchitecture,
@@ -6,122 +7,77 @@ import {
 } from './dashboard-architecture'
 
 describe('dashboard architecture', () => {
-  it('uses a reduced primary navigation with management reading first', () => {
+  it('keeps one fixed HR results order across scans', () => {
+    const source = readFileSync(new URL('./dashboard-architecture.ts', import.meta.url), 'utf8')
+
+    expect(source).toContain("id: 'response'")
+    expect(source).toContain("id: 'score'")
+    expect(source).toContain("id: 'synthesis'")
+    expect(source).toContain("id: 'drivers'")
+    expect(source).toContain("id: 'depth'")
+    expect(source).toContain("id: 'voices'")
+    expect(source).not.toContain("id: 'methodology'")
+    expect(source).not.toContain("id: 'campaign'")
+  })
+
+  it('reduces the shared architecture to one results-first primary view', () => {
     const architecture = buildDashboardArchitecture({
       scanType: 'exit',
       canManageCampaign: true,
       hasSegmentDeepDive: true,
     })
 
-    expect(architecture.primaryViews.map((view) => view.label)).toEqual([
-      'Overzicht',
-      'Onderbouwing',
-      'Actie',
-      'Campagne',
-    ])
-    expect(architecture.primaryViews[0]?.kind).toBe('overview')
-    expect(architecture.primaryViews[3]?.kind).toBe('campaign')
+    expect(architecture.primaryViews).toEqual([{ id: 'results', label: 'Resultaten', kind: 'results' }])
   })
 
-  it('keeps response, handoff and score interpretation explicit in the overview order', () => {
+  it('keeps the fixed results section order with score as the hero layer', () => {
     const architecture = buildDashboardArchitecture({
-      scanType: 'exit',
+      scanType: 'retention',
       canManageCampaign: true,
       hasSegmentDeepDive: true,
     })
 
     expect(architecture.overviewSections.map((section) => section.id)).toEqual([
-      'cover',
       'response',
-      'handoff',
       'score',
       'synthesis',
       'drivers',
-      'action',
-      'methodology',
+      'depth',
+      'voices',
     ])
-    expect(architecture.overviewSections.find((section) => section.id === 'response')?.emphasis).toBe(
-      'secondary',
+    expect(architecture.overviewSections.find((section) => section.id === 'response')?.title).toBe(
+      'Responsbasis',
     )
-    expect(architecture.overviewSections.find((section) => section.id === 'handoff')?.emphasis).toBe(
-      'hero',
+    expect(architecture.overviewSections.find((section) => section.id === 'score')?.emphasis).toBe('hero')
+    expect(architecture.overviewSections.find((section) => section.id === 'drivers')?.interaction).toBe(
+      'drilldown',
     )
-    expect(architecture.overviewSections.find((section) => section.id === 'score')?.emphasis).toBe(
-      'primary',
+    expect(architecture.overviewSections.find((section) => section.id === 'depth')?.title).toBe(
+      'Verdiepingslagen',
     )
-  })
-
-  it('keeps methodology and segment analysis out of the primary navigation headline layer', () => {
-    const architecture = buildDashboardArchitecture({
-      scanType: 'retention',
-      canManageCampaign: true,
-      hasSegmentDeepDive: true,
-    })
-
-    expect(architecture.primaryViews.some((view) => view.label === 'Methodiek')).toBe(false)
-    expect(architecture.overviewSections.find((section) => section.id === 'methodology')?.emphasis).toBe(
-      'secondary',
-    )
-    expect(
-      architecture.evidenceSections.find((section) => section.id === 'segments')?.requiresSegmentDeepDive,
-    ).toBe(true)
-    expect(architecture.evidenceSections.find((section) => section.id === 'segments')?.emphasis).toBe(
-      'secondary',
+    expect(architecture.overviewSections.find((section) => section.id === 'voices')?.title).toBe(
+      'Survey-stemmen',
     )
   })
 
-  it('marks the drivers layer as top-2-first drilldown instead of a flat factor dump', () => {
-    const architecture = buildDashboardArchitecture({
-      scanType: 'retention',
-      canManageCampaign: true,
-      hasSegmentDeepDive: true,
-    })
-
-    const driversSection = architecture.overviewSections.find((section) => section.id === 'drivers')
-
-    expect(driversSection?.interaction).toBe('drilldown')
-    expect(driversSection?.highlightCount).toBe(2)
-  })
-
-  it('keeps campaign operations in a separate view and only when operational detail exists', () => {
+  it('drops the old hybrid evidence, action and campaign section arrays', () => {
     const architecture = buildDashboardArchitecture({
       scanType: 'exit',
       canManageCampaign: false,
       hasSegmentDeepDive: false,
     })
 
-    expect(architecture.campaignSections.map((section) => section.id)).toEqual([
-      'campaign-status',
-      'respondents',
-    ])
-  })
-
-  it('keeps bounded fallback guidance explicit for non-core routes', () => {
-    const teamArchitecture = buildDashboardArchitecture({
-      scanType: 'team',
-      canManageCampaign: true,
-      hasSegmentDeepDive: false,
-    })
-    const leadershipArchitecture = buildDashboardArchitecture({
-      scanType: 'leadership',
-      canManageCampaign: true,
-      hasSegmentDeepDive: false,
-    })
-
-    expect(teamArchitecture.actionSections.find((section) => section.id === 'bounded-fallback')?.title).toContain(
-      'bredere duiding',
-    )
-    expect(
-      leadershipArchitecture.actionSections.find((section) => section.id === 'bounded-fallback')?.title,
-    ).toContain('bredere duiding')
+    expect(architecture.evidenceSections).toEqual([])
+    expect(architecture.actionSections).toEqual([])
+    expect(architecture.campaignSections).toEqual([])
   })
 })
 
 describe('score interpretation titles', () => {
-  it('keeps frictiescore language only on ExitScan', () => {
+  it('keeps scan-specific score titles while staying inside the shared results shell', () => {
     expect(getScoreInterpretationTitle('exit')).toContain('Frictiescore')
-    expect(getScoreInterpretationTitle('retention')).not.toContain('Frictiescore')
     expect(getScoreInterpretationTitle('retention')).toContain('Retentiesignaal')
+    expect(getScoreInterpretationTitle('onboarding')).toContain('Onboardingsignaal')
   })
 })
 

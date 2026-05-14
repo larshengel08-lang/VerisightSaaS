@@ -8,6 +8,45 @@ const componentSource = () =>
   )
 
 describe('exit dashboard analytics guardrails', () => {
+  it('keeps the shared route shell factual and free from the old exit-only branch', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8').toLowerCase()
+    const forbiddenTerms = [
+      'exitproductdashboard',
+      'managementread',
+      'bestuurlijke',
+      'eerste actie',
+      'reviewmoment',
+    ]
+
+    for (const term of forbiddenTerms) {
+      expect(source).not.toContain(term)
+    }
+  })
+
+  it('removes the old hybrid campaign tabs and keeps results-first blocks visible on the route page', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('Responsbasis')
+    expect(source).toContain('Kernsignaal')
+    expect(source).toContain('Signalen in samenhang')
+    expect(source).toContain('Drivers & prioriteiten')
+    expect(source).toContain('Verdiepingslagen')
+    expect(source).toContain('Survey-stemmen')
+    expect(source).not.toContain('Samenvatting')
+    expect(source).not.toContain('Methodiek')
+    expect(source).not.toContain('Uitvoering')
+  })
+
+  it('does not keep the old tabs as the primary HR results structure', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).not.toContain('DashboardTabs')
+    expect(source).not.toContain("label: 'Overzicht'")
+    expect(source).not.toContain("label: 'Onderbouwing'")
+    expect(source).not.toContain("label: 'Actie'")
+    expect(source).not.toContain("label: 'Campagne'")
+  })
+
   it('keeps the ExitScan dashboard free from owner, action, review, workflow and setup language', () => {
     const source = componentSource().toLowerCase()
     const forbiddenTerms = [

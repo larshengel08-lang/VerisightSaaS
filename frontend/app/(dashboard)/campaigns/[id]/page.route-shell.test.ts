@@ -2,6 +2,13 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 describe('campaign detail route shell', () => {
+  it('keeps open answers reachable from the results environment in one click', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('/open-antwoorden')
+    expect(source).toContain("blockVisibility.voices === 'visible' && releasedOpenAnswerItems.length > 0")
+  })
+
   it('keeps the manager-only insight boundary intact', () => {
     const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
 
@@ -12,12 +19,10 @@ describe('campaign detail route shell', () => {
   it('wires ExitScan through a dedicated analytical component and preserves report + module navigation', () => {
     const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
 
-    expect(source).toContain('ExitProductDashboard')
-    expect(source).toContain('averageSignalScoreLabel')
     expect(source).toContain('PdfDownloadButton')
     expect(source).toContain('moduleBackLinkLabel')
-    expect(source).toContain('if (stats.scan_type === "exit")')
-    expect(source).not.toContain('return stats.scan_type === "exit" ? (')
+    expect(source).not.toContain('ExitProductDashboard')
+    expect(source).not.toContain('if (stats.scan_type === "exit")')
   })
 
   it('keeps existing module breadcrumbs instead of collapsing to a generic dashboard jump', () => {
@@ -27,5 +32,14 @@ describe('campaign detail route shell', () => {
     expect(source).toContain('getDashboardModuleKeyForScanType')
     expect(source).toContain('getDashboardModuleLabel')
     expect(source).toContain('Terug naar alle ExitScans')
+  })
+
+  it('preserves the campaign-detail bridge into Action Center for candidate and active routes', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('buildCampaignDetailActionCenterBridge')
+    expect(source).toContain('openActionCenterRoute')
+    expect(source).toContain("buildActionCenterRouteOpenRedirect(id, 'campaign-detail')")
+    expect(source).toContain('Vervolgroute')
   })
 })
