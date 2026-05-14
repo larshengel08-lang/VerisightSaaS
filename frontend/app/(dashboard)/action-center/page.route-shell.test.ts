@@ -379,6 +379,16 @@ function renderOverviewMarkup() {
 }
 
 describe("action center landing shell", () => {
+  it("parses contextual entry params and passes the selected view through to the preview", () => {
+    const pageSource = readFileSync(new URL("./page.tsx", import.meta.url), "utf8");
+
+    expect(pageSource).toContain("view?: string");
+    expect(pageSource).toContain("resolveActionCenterEntryParams");
+    expect(pageSource).toContain("initialView={entry.view}");
+    expect(pageSource).toContain("source === 'campaign-detail'");
+    expect(pageSource).toContain("source === 'review-moments'");
+  });
+
   it("keeps a thin shell around the preview and route params", () => {
     const pageSource = readFileSync(new URL("./page.tsx", import.meta.url), "utf8");
 

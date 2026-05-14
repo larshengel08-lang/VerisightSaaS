@@ -1,3 +1,5 @@
+import type { ActionCenterEntrySource, ActionCenterEntryView } from '@/lib/action-center-entry'
+import { buildActionCenterEntryHref } from '@/lib/action-center-entry'
 import type { DeliveryLifecycleStage } from '@/lib/ops-delivery'
 
 const ACTION_CENTER_ROUTE_OPENABLE_STAGES: DeliveryLifecycleStage[] = [
@@ -32,14 +34,14 @@ export function buildActionCenterRouteOpenPatch(openedAt: string): {
 
 export function buildActionCenterRouteOpenRedirect(
   campaignId: string,
-  source: 'campaign-detail' | null = null,
+  source: Extract<ActionCenterEntrySource, 'campaign-detail'> | null = null,
+  view: ActionCenterEntryView = 'actions',
 ) {
-  const params = new URLSearchParams({ focus: campaignId })
-  if (source) {
-    params.set('source', source)
-  }
-
-  return `/action-center?${params.toString()}`
+  return buildActionCenterEntryHref({
+    focus: campaignId,
+    view,
+    source,
+  })
 }
 
 export function hasOpenedActionCenterRoute(record: ActionCenterRouteOpenRecord) {

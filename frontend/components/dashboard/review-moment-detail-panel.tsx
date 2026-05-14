@@ -1,7 +1,9 @@
 'use client'
 
+import React from 'react'
 import Link from 'next/link'
 import { DashboardChip, DashboardKeyValue, DashboardPanel } from '@/components/dashboard/dashboard-primitives'
+import { buildActionCenterEntryHref } from '@/lib/action-center-entry'
 import type { ActionCenterPreviewItem } from '@/lib/action-center-preview-model'
 import {
   getReviewMomentManagerLabel,
@@ -17,7 +19,16 @@ function formatDateLabel(value: string | null) {
     return 'Niet beschikbaar'
   }
 
-  return new Date(value).toLocaleDateString('nl-NL', {
+  const dateOnlyMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
+  const parsed = dateOnlyMatch
+    ? new Date(Number(dateOnlyMatch[1]), Number(dateOnlyMatch[2]) - 1, Number(dateOnlyMatch[3]))
+    : new Date(value)
+
+  if (Number.isNaN(parsed.getTime())) {
+    return 'Niet beschikbaar'
+  }
+
+  return parsed.toLocaleDateString('nl-NL', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
@@ -80,7 +91,11 @@ export function ReviewMomentDetailPanel({
 
       <div className="flex flex-wrap gap-2">
         <Link
-          href={`/action-center?focus=${encodeURIComponent(item.id)}`}
+          href={buildActionCenterEntryHref({
+            focus: item.id,
+            view: 'reviews',
+            source: 'review-moments',
+          })}
           className="rounded-full border border-[color:var(--dashboard-frame-border)] bg-white px-3 py-2 text-xs font-semibold text-[color:var(--dashboard-ink)] transition hover:bg-[color:var(--dashboard-muted-surface)]"
         >
           Bekijk gekoppelde opvolging
