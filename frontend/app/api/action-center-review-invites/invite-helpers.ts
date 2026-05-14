@@ -19,30 +19,36 @@ function normalizeText(value: string | null | undefined) {
   return trimmed.length > 0 ? trimmed : null
 }
 
+function toCanonicalOrigin(value: string | null | undefined) {
+  const normalized = normalizeText(value)
+  if (!normalized) {
+    return null
+  }
+
+  try {
+    return new URL(normalized).origin
+  } catch {
+    return null
+  }
+}
+
 function parseScopeValueFromRouteId(routeId: string, campaignId: string) {
   const prefix = `${campaignId}::`
   return routeId.startsWith(prefix) ? routeId.slice(prefix.length) : null
 }
 
 function getConfiguredOrigin() {
-  return normalizeText(
+  return toCanonicalOrigin(
     process.env.FRONTEND_URL ??
       process.env.NEXT_PUBLIC_SITE_URL ??
       process.env.NEXT_PUBLIC_APP_URL,
-  )?.replace(/\/+$/, '') ?? null
+  )
 }
 
 export function getCanonicalInviteOrigin(request: Request) {
   const configuredOrigin = getConfiguredOrigin()
   if (configuredOrigin) {
     return configuredOrigin
-  }
-
-  const forwardedHost = normalizeText(request.headers.get('x-forwarded-host'))
-  const forwardedProto = normalizeText(request.headers.get('x-forwarded-proto')) ?? 'https'
-
-  if (forwardedHost) {
-    return `${forwardedProto}://${forwardedHost}`
   }
 
   return new URL(request.url).origin
@@ -147,10 +153,11 @@ export async function resolveReviewInviteContext(args: {
       .maybeSingle(),
     admin
       .from('action_center_workspace_members')
-      .select('login_email, display_name')
+      .select('login_email, display_name, can_view')
       .eq('org_id', orgId)
       .eq('access_role', 'manager_assignee')
       .eq('scope_value', scopeValue)
+      .eq('can_view', true)
       .maybeSingle(),
   ])
 

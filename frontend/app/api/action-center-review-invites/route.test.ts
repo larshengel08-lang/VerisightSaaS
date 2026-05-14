@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const {
   mockGetUser,
@@ -34,6 +34,7 @@ vi.mock('@/lib/supabase/admin', () => ({
   }),
 }))
 
+import { getCanonicalInviteOrigin } from './invite-helpers'
 import { GET, POST } from './route'
 
 const mockItem = {
@@ -53,12 +54,55 @@ const mockItem = {
   },
 } as const
 
-function createMaybeSingleQuery(result: { data: unknown; error: unknown }) {
-  return {
-    select: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    maybeSingle: vi.fn().mockResolvedValue(result),
+const originalEnv = {
+  FRONTEND_URL: process.env.FRONTEND_URL,
+  NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+  NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+}
+
+function restoreEnvVar(key: 'FRONTEND_URL' | 'NEXT_PUBLIC_SITE_URL' | 'NEXT_PUBLIC_APP_URL', value: string | undefined) {
+  if (typeof value === 'undefined') {
+    delete process.env[key]
+    return
   }
+
+  process.env[key] = value
+}
+
+function buildManagerMembershipRow(overrides: Partial<Record<string, unknown>> = {}) {
+  return {
+    org_id: 'org-1',
+    access_role: 'manager_assignee',
+    scope_value: 'org-1::department::operations',
+    login_email: 'mila@northwind.example',
+    display_name: 'Mila Jansen',
+    can_view: true,
+    ...overrides,
+  }
+}
+
+function createMaybeSingleQuery(result: { data: Record<string, unknown> | null; error: unknown }) {
+  const filters = new Map<string, unknown>()
+
+  const query = {
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn((column: string, value: unknown) => {
+      filters.set(column, value)
+      return query
+    }),
+    maybeSingle: vi.fn().mockImplementation(async () => {
+      const matches =
+        result.data &&
+        [...filters.entries()].every(([column, value]) => result.data?.[column] === value)
+
+      return {
+        data: matches ? result.data : null,
+        error: result.error,
+      }
+    }),
+  }
+
+  return query
 }
 
 describe('action center review invite route', () => {
@@ -122,16 +166,19 @@ describe('action center review invite route', () => {
 
       if (table === 'action_center_workspace_members') {
         return createMaybeSingleQuery({
-          data: {
-            login_email: 'mila@northwind.example',
-            display_name: 'Mila Jansen',
-          },
+          data: buildManagerMembershipRow(),
           error: null,
         })
       }
 
       throw new Error(`Unhandled table ${table}`)
     })
+  })
+
+  afterEach(() => {
+    restoreEnvVar('FRONTEND_URL', originalEnv.FRONTEND_URL)
+    restoreEnvVar('NEXT_PUBLIC_SITE_URL', originalEnv.NEXT_PUBLIC_SITE_URL)
+    restoreEnvVar('NEXT_PUBLIC_APP_URL', originalEnv.NEXT_PUBLIC_APP_URL)
   })
 
   it('returns 400 when reviewItemId is missing on POST', async () => {
@@ -367,10 +414,7 @@ describe('action center review invite route', () => {
 
       if (table === 'action_center_workspace_members') {
         return createMaybeSingleQuery({
-          data: {
-            login_email: 'mila@northwind.example',
-            display_name: 'Mila Jansen',
-          },
+          data: buildManagerMembershipRow(),
           error: null,
         })
       }
@@ -420,10 +464,9 @@ describe('action center review invite route', () => {
 
       if (table === 'action_center_workspace_members') {
         return createMaybeSingleQuery({
-          data: {
+          data: buildManagerMembershipRow({
             login_email: '',
-            display_name: 'Mila Jansen',
-          },
+          }),
           error: null,
         })
       }
@@ -444,5 +487,74 @@ describe('action center review invite route', () => {
     expect(await response.json()).toEqual({
       detail: 'Reviewuitnodiging kan nog niet worden opgebouwd: missing-manager-email.',
     })
+  })
+
+  it('fails closed when the manager assignment is not viewable in the shared Action Center eligibility path', async () => {
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'campaigns') {
+        return createMaybeSingleQuery({
+          data: {
+            id: 'cmp-exit-1',
+            name: 'ExitScan Q2',
+            scan_type: 'exit',
+            organization_id: 'org-1',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'organizations') {
+        return createMaybeSingleQuery({
+          data: {
+            id: 'org-1',
+            name: 'Northwind',
+            contact_email: 'northwind-hr@example.com',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_workspace_members') {
+        return createMaybeSingleQuery({
+          data: buildManagerMembershipRow({
+            can_view: false,
+          }),
+          error: null,
+        })
+      }
+
+      throw new Error(`Unhandled table ${table}`)
+    })
+
+    const response = await POST(
+      new Request('https://app.verisight.nl/api/action-center-review-invites', {
+        method: 'POST',
+        body: JSON.stringify({
+          reviewItemId: mockItem.id,
+        }),
+      }),
+    )
+
+    expect(response.status).toBe(409)
+    expect(await response.json()).toEqual({
+      detail: 'Reviewuitnodiging kan nog niet worden opgebouwd: missing-manager-email.',
+    })
+  })
+
+  it('uses the request URL origin instead of forwarded host headers when no site URL env var is configured', () => {
+    delete process.env.FRONTEND_URL
+    delete process.env.NEXT_PUBLIC_SITE_URL
+    delete process.env.NEXT_PUBLIC_APP_URL
+
+    const origin = getCanonicalInviteOrigin(
+      new Request('https://app.verisight.nl/api/action-center-review-invites', {
+        headers: {
+          'x-forwarded-host': 'evil.example',
+          'x-forwarded-proto': 'http',
+        },
+      }),
+    )
+
+    expect(origin).toBe('https://app.verisight.nl')
   })
 })
