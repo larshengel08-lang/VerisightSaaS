@@ -1,5 +1,6 @@
 import type { ActionCenterPreviewStatus } from '@/lib/action-center-preview-model'
 
+export type ActionCenterReviewRhythmSupportedScanType = 'exit'
 export interface ActionCenterReviewRhythmConfig {
   cadenceDays: 7 | 14 | 30
   reminderLeadDays: 1 | 3 | 5
@@ -16,9 +17,29 @@ const DEFAULT_ACTION_CENTER_REVIEW_RHYTHM_CONFIG: ActionCenterReviewRhythmConfig
   remindersEnabled: true,
 }
 
+function isDateOnlyValue(value: string) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value)
+}
+
 function parseReviewDate(value: string) {
   const parsed = value.includes('T') ? new Date(value) : new Date(`${value}T00:00:00.000Z`)
   return Number.isNaN(parsed.getTime()) ? null : parsed
+}
+
+function getLocalCalendarDayDiff(reviewDate: string, now: Date) {
+  const [year, month, day] = reviewDate.split('-').map((value) => Number(value))
+  if (!year || !month || !day) return null
+
+  const reviewDay = Date.UTC(year, month - 1, day)
+  const nowDay = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())
+
+  return Math.round((nowDay - reviewDay) / 86_400_000)
+}
+
+export function isActionCenterReviewRhythmSupportedScanType(
+  scanType: string | null | undefined,
+): scanType is ActionCenterReviewRhythmSupportedScanType {
+  return scanType === 'exit'
 }
 
 export function buildDefaultActionCenterReviewRhythmConfig(): ActionCenterReviewRhythmConfig {
@@ -48,7 +69,14 @@ export function normalizeActionCenterReviewRhythmConfig(input: {
   }
 }
 
-export function validateActionCenterReviewRhythmInput(config: ActionCenterReviewRhythmConfig) {
+export function validateActionCenterReviewRhythmInput(
+  config: ActionCenterReviewRhythmConfig,
+  scanType: string | null | undefined = 'exit',
+) {
+  if (!isActionCenterReviewRhythmSupportedScanType(scanType)) {
+    return { ok: false as const, reason: 'unsupported-scan-type' as const }
+  }
+
   if (config.remindersEnabled && config.reminderLeadDays >= config.cadenceDays) {
     return { ok: false as const, reason: 'invalid-reminder-window' as const }
   }
@@ -79,7 +107,13 @@ export function classifyActionCenterReviewRhythmStatus(args: {
     return 'stale'
   }
 
-  const diffDays = Math.floor((args.now.getTime() - scheduled.getTime()) / 86_400_000)
+  const diffDays = isDateOnlyValue(args.reviewDate)
+    ? getLocalCalendarDayDiff(args.reviewDate, args.now)
+    : Math.floor((args.now.getTime() - scheduled.getTime()) / 86_400_000)
+
+  if (diffDays === null) {
+    return 'stale'
+  }
 
   if (diffDays > args.config.cadenceDays) {
     return 'stale'

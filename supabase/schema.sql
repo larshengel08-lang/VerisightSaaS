@@ -713,6 +713,10 @@ create table if not exists public.action_center_review_rhythm_configs (
   escalation_lead_days smallint not null
     check (escalation_lead_days in (3, 7, 14)),
   reminders_enabled boolean not null default true,
+  constraint action_center_review_rhythm_configs_reminder_window_check
+    check ((not reminders_enabled) or (reminder_lead_days < cadence_days)),
+  constraint action_center_review_rhythm_configs_escalation_window_check
+    check (escalation_lead_days > reminder_lead_days),
   updated_by uuid references auth.users(id) on delete set null,
   updated_by_role text not null
     check (updated_by_role in ('verisight_admin', 'hr_owner', 'hr_member')),
@@ -1336,6 +1340,7 @@ create policy "hr_and_admins_can_select_action_center_review_rhythm_configs"
       where m.user_id = auth.uid()
         and m.org_id = action_center_review_rhythm_configs.org_id
         and m.access_role in ('hr_owner', 'hr_member')
+        and (m.scope_type = 'org' or m.scope_value = action_center_review_rhythm_configs.route_scope_value)
         and m.can_view
     )
   );
@@ -1351,6 +1356,7 @@ create policy "hr_and_admins_can_upsert_action_center_review_rhythm_configs"
       where m.user_id = auth.uid()
         and m.org_id = action_center_review_rhythm_configs.org_id
         and m.access_role in ('hr_owner', 'hr_member')
+        and (m.scope_type = 'org' or m.scope_value = action_center_review_rhythm_configs.route_scope_value)
         and m.can_update
     )
   )
@@ -1363,6 +1369,7 @@ create policy "hr_and_admins_can_upsert_action_center_review_rhythm_configs"
       where m.user_id = auth.uid()
         and m.org_id = action_center_review_rhythm_configs.org_id
         and m.access_role in ('hr_owner', 'hr_member')
+        and (m.scope_type = 'org' or m.scope_value = action_center_review_rhythm_configs.route_scope_value)
         and m.can_update
     )
   );
