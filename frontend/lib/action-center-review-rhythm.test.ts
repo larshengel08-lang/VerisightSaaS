@@ -1,0 +1,64 @@
+import { describe, expect, it } from 'vitest'
+import {
+  buildDefaultActionCenterReviewRhythmConfig,
+  classifyActionCenterReviewRhythmStatus,
+  normalizeActionCenterReviewRhythmConfig,
+  validateActionCenterReviewRhythmInput,
+} from './action-center-review-rhythm'
+
+describe('action center review rhythm contract', () => {
+  it('provides the bounded default config for ExitScan routes', () => {
+    expect(buildDefaultActionCenterReviewRhythmConfig()).toEqual({
+      cadenceDays: 14,
+      reminderLeadDays: 3,
+      escalationLeadDays: 7,
+      remindersEnabled: true,
+    })
+  })
+
+  it('normalizes persisted payloads and falls back to defaults when values are missing', () => {
+    expect(
+      normalizeActionCenterReviewRhythmConfig({
+        cadence_days: null,
+        reminder_lead_days: 5,
+        escalation_lead_days: null,
+        reminders_enabled: null,
+      }),
+    ).toEqual({
+      cadenceDays: 14,
+      reminderLeadDays: 5,
+      escalationLeadDays: 7,
+      remindersEnabled: true,
+    })
+  })
+
+  it('rejects invalid cadence and escalation combinations', () => {
+    expect(
+      validateActionCenterReviewRhythmInput({
+        cadenceDays: 7,
+        reminderLeadDays: 7,
+        escalationLeadDays: 5,
+        remindersEnabled: true,
+      }),
+    ).toEqual({
+      ok: false,
+      reason: 'invalid-reminder-window',
+    })
+  })
+
+  it('classifies stale routes when the review date is far behind the cadence window', () => {
+    const status = classifyActionCenterReviewRhythmStatus({
+      reviewDate: '2026-05-01',
+      now: new Date('2026-05-28T12:00:00.000Z'),
+      config: {
+        cadenceDays: 14,
+        reminderLeadDays: 3,
+        escalationLeadDays: 7,
+        remindersEnabled: true,
+      },
+      itemStatus: 'reviewbaar',
+    })
+
+    expect(status).toBe('stale')
+  })
+})
