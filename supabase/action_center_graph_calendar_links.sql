@@ -26,6 +26,8 @@ create table if not exists public.action_center_graph_calendar_links (
     check (length(btrim(organizer_email)) > 0),
   constraint action_center_graph_calendar_links_route_identity_check
     check (route_id = ((route_source_id)::text || '::' || route_scope_value)),
+  constraint action_center_graph_calendar_links_review_item_identity_check
+    check (review_item_id = route_id),
   constraint action_center_graph_calendar_links_route_source_campaign_org_fk
     foreign key (route_source_id, org_id) references public.campaigns(id, organization_id) on delete cascade,
   created_at timestamptz not null default now(),
@@ -37,6 +39,21 @@ create unique index if not exists idx_action_center_graph_calendar_links_route_p
 
 create unique index if not exists idx_action_center_graph_calendar_links_event_provider
   on public.action_center_graph_calendar_links(event_id, provider);
+
+create or replace function public.set_action_center_graph_calendar_links_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists action_center_graph_calendar_links_set_updated_at on public.action_center_graph_calendar_links;
+create trigger action_center_graph_calendar_links_set_updated_at
+before update on public.action_center_graph_calendar_links
+for each row execute function public.set_action_center_graph_calendar_links_updated_at();
 
 alter table public.action_center_graph_calendar_links enable row level security;
 

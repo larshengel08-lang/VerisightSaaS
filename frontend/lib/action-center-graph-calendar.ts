@@ -153,6 +153,7 @@ export function buildActionCenterGraphCalendarLinkRecord(
     !routeSourceId ||
     !isUuid(routeSourceId) ||
     routeId !== expectedRouteId ||
+    reviewItemId !== routeId ||
     input.provider !== 'microsoft_graph' ||
     !eventId ||
     !organizerEmail ||

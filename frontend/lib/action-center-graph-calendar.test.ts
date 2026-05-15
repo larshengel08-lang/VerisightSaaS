@@ -43,6 +43,8 @@ function assertGraphCalendarSchema(sql: string) {
   expect(sql).toMatch(/last_synced_revision\s+integer\s+not null check \(last_synced_revision >= 0\)/i)
   expect(sql).toMatch(/constraint action_center_graph_calendar_links_route_identity_check/i)
   expect(sql).toMatch(/check \(route_id = \(\(route_source_id\)::text \|\| '::' \|\| route_scope_value\)\)/i)
+  expect(sql).toMatch(/constraint action_center_graph_calendar_links_review_item_identity_check/i)
+  expect(sql).toMatch(/check \(review_item_id = route_id\)/i)
   expect(sql).toMatch(/constraint action_center_graph_calendar_links_event_id_text_check/i)
   expect(sql).toMatch(/check \(length\(btrim\(event_id\)\) > 0\)/i)
   expect(sql).toMatch(/constraint action_center_graph_calendar_links_organizer_email_text_check/i)
@@ -52,6 +54,9 @@ function assertGraphCalendarSchema(sql: string) {
   expect(sql).toMatch(/create unique index if not exists idx_action_center_graph_calendar_links_event_provider/i)
   expect(sql).toMatch(/on public\.action_center_graph_calendar_links\(event_id,\s*provider\)/i)
   expect(sql).toMatch(/alter table public\.action_center_graph_calendar_links enable row level security/i)
+  expect(sql).toMatch(/create or replace function public\.set_action_center_graph_calendar_links_updated_at\(\)/i)
+  expect(sql).toMatch(/drop trigger if exists action_center_graph_calendar_links_set_updated_at on public\.action_center_graph_calendar_links/i)
+  expect(sql).toMatch(/create trigger action_center_graph_calendar_links_set_updated_at/i)
   expect(sql).not.toMatch(/action_center_graph_calendar_links\s+for delete/i)
   expect(sql).not.toMatch(/action_center_graph_calendar_links\s+for all/i)
 
@@ -158,6 +163,27 @@ describe('action center graph calendar capability', () => {
         orgId: '22222222-2222-4222-8222-222222222222',
         routeId: '33333333-3333-4333-8333-333333333333::22222222-2222-4222-8222-222222222222::department::operations',
         reviewItemId: '11111111-1111-4111-8111-111111111111::22222222-2222-4222-8222-222222222222::department::operations',
+        routeScopeValue: '22222222-2222-4222-8222-222222222222::department::operations',
+        routeSourceId: '11111111-1111-4111-8111-111111111111',
+        provider: 'microsoft_graph',
+        eventId: 'AAMkAGI0M2I0ZWI0LWIzYjMtNDYyZi1hZGM1LWI0ZDA2YjM3YjJmYQBGAAAAAAD',
+        organizerEmail: 'hr@verisight.nl',
+        organizerUserId: 'hr-organizer@tenant.example',
+        consentState: 'granted',
+        syncState: 'linked',
+        lastSyncedRevision: 3,
+        iCalUId: null,
+        lastSyncError: null,
+      }),
+    ).toThrow('Ongeldige Action Center Graph calendar link.')
+  })
+
+  it('rejects a provider link record when the review item id drifts away from the canonical route id', () => {
+    expect(() =>
+      buildActionCenterGraphCalendarLinkRecord({
+        orgId: '22222222-2222-4222-8222-222222222222',
+        routeId: '11111111-1111-4111-8111-111111111111::22222222-2222-4222-8222-222222222222::department::operations',
+        reviewItemId: 'review-item-42',
         routeScopeValue: '22222222-2222-4222-8222-222222222222::department::operations',
         routeSourceId: '11111111-1111-4111-8111-111111111111',
         provider: 'microsoft_graph',
