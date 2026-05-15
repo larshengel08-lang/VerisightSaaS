@@ -8,7 +8,13 @@ import {
   DashboardPanel,
   DashboardSection,
 } from '@/components/dashboard/dashboard-primitives'
+import { ReviewRhythmConsole } from '@/components/dashboard/review-rhythm-console'
 import type { ActionCenterPreviewItem, ActionCenterPreviewStatus } from '@/lib/action-center-preview-model'
+import {
+  buildDefaultActionCenterReviewRhythmConfig,
+  classifyActionCenterReviewRhythmStatus,
+  type ActionCenterReviewRhythmConfig,
+} from '@/lib/action-center-review-rhythm'
 import {
   formatReviewMomentLastUpdated,
   getReviewMomentManagerLabel,
@@ -41,6 +47,48 @@ function getFirstVisibleItem(items: ActionCenterPreviewItem[]) {
   return items[0]?.id ?? null
 }
 
+type ReviewRhythmSummary = {
+  staleCount: number
+  overdueCount: number
+  upcomingCount: number
+  reminderManagedCount: number
+}
+
+function isExitRouteItem(item: Pick<ActionCenterPreviewItem, 'sourceLabel'>) {
+  return item.sourceLabel === 'ExitScan'
+}
+
+function computeRhythmSummary(
+  items: ActionCenterPreviewItem[],
+  configByRouteId: Record<string, ActionCenterReviewRhythmConfig>,
+  now: Date,
+): ReviewRhythmSummary {
+  return items.filter(isExitRouteItem).reduce<ReviewRhythmSummary>(
+    (acc, item) => {
+      const config = configByRouteId[item.id] ?? buildDefaultActionCenterReviewRhythmConfig()
+      const health = classifyActionCenterReviewRhythmStatus({
+        reviewDate: item.reviewDate,
+        now,
+        config,
+        itemStatus: item.status,
+      })
+
+      if (health === 'stale') acc.staleCount += 1
+      if (health === 'overdue') acc.overdueCount += 1
+      if (health === 'upcoming') acc.upcomingCount += 1
+      if (health !== 'completed' && config.remindersEnabled) acc.reminderManagedCount += 1
+
+      return acc
+    },
+    {
+      staleCount: 0,
+      overdueCount: 0,
+      upcomingCount: 0,
+      reminderManagedCount: 0,
+    },
+  )
+}
+
 export function ReviewMomentPageClient({
   items,
   governanceCounts,
@@ -48,6 +96,9 @@ export function ReviewMomentPageClient({
   lastUpdated,
   canScheduleActionCenterReview,
   inviteDownloadEligibleRouteIds,
+  canManageReviewRhythm,
+  rhythmConfigByRouteId,
+  rhythmSummary,
 }: {
   items: ActionCenterPreviewItem[]
   governanceCounts: ReviewMomentGovernanceCounts
@@ -55,12 +106,16 @@ export function ReviewMomentPageClient({
   lastUpdated: string
   canScheduleActionCenterReview: boolean
   inviteDownloadEligibleRouteIds: string[]
+  canManageReviewRhythm: boolean
+  rhythmConfigByRouteId: Record<string, ActionCenterReviewRhythmConfig>
+  rhythmSummary: ReviewRhythmSummary
 }) {
   const [statusFilter, setStatusFilter] = useState<'all' | ActionCenterPreviewStatus>('all')
   const [scopeFilter, setScopeFilter] = useState<string>('all')
   const [managerFilter, setManagerFilter] = useState<string>('all')
   const [showCompleted, setShowCompleted] = useState(false)
   const [selectedItemId, setSelectedItemId] = useState<string | null>(getFirstVisibleItem(items))
+  const [clientRhythmConfigByRouteId, setClientRhythmConfigByRouteId] = useState(rhythmConfigByRouteId)
 
   const referenceNow = useMemo(() => new Date(lastUpdated), [lastUpdated])
   const inviteDownloadEligibleRouteIdSet = useMemo(
@@ -103,6 +158,10 @@ export function ReviewMomentPageClient({
     }
   }, [selectedItemId, visibleItems])
 
+  useEffect(() => {
+    setClientRhythmConfigByRouteId(rhythmConfigByRouteId)
+  }, [rhythmConfigByRouteId])
+
   const selectedItem = visibleItems.find((item) => item.id === selectedItemId) ?? null
   const selectedUrgency: ReviewMomentUrgency | null = selectedItem
     ? grouped.overdue.some((item) => item.id === selectedItem.id)
@@ -119,6 +178,24 @@ export function ReviewMomentPageClient({
     selectedItem?.id && inviteDownloadEligibleRouteIdSet.has(selectedItem.id),
   )
   const lastUpdatedLabel = formatReviewMomentLastUpdated(lastUpdated)
+  const visibleRhythmSummary = useMemo(() => {
+    if (!items.some(isExitRouteItem)) {
+      return rhythmSummary
+    }
+
+    return computeRhythmSummary(items, clientRhythmConfigByRouteId, referenceNow)
+  }, [clientRhythmConfigByRouteId, items, referenceNow, rhythmSummary])
+
+  function handleReviewRhythmSaved(nextConfig: ActionCenterReviewRhythmConfig) {
+    if (!selectedItem?.id) {
+      return
+    }
+
+    setClientRhythmConfigByRouteId((current) => ({
+      ...current,
+      [selectedItem.id]: nextConfig,
+    }))
+  }
 
   if (items.length === 0) {
     return (
@@ -249,7 +326,23 @@ export function ReviewMomentPageClient({
         </div>
       </div>
 
+      <ReviewRhythmConsole
+        selectedRouteId={selectedItem?.id ?? null}
+        selectedRouteLabel={selectedItem ? getReviewMomentScopeLabel(selectedItem) : null}
+        selectedRouteSourceId={selectedItem?.coreSemantics.route.campaignId ?? null}
+        selectedRouteOrgId={selectedItem?.orgId ?? null}
+        selectedRouteScanType={selectedItem?.sourceLabel === 'ExitScan' ? 'exit' : null}
+        canManageReviewRhythm={canManageReviewRhythm}
+        config={
+          (selectedItem?.id ? clientRhythmConfigByRouteId[selectedItem.id] : null) ??
+          buildDefaultActionCenterReviewRhythmConfig()
+        }
+        summary={visibleRhythmSummary}
+        onConfigSaved={handleReviewRhythmSaved}
+      />
+
       <ReviewMomentGovernanceSection counts={governanceCounts} />
+
 
       <DashboardSection
         surface="ops"

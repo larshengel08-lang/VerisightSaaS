@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { ReviewMomentPageClient } from '@/components/dashboard/review-moment-page-client'
 import { getActionCenterPageData } from '@/lib/action-center-page-data'
+import { getActionCenterReviewRhythmData } from '@/lib/action-center-review-rhythm-data'
 import { computeReviewMomentGovernanceCounts } from '@/lib/action-center-review-moments'
 import { createClient } from '@/lib/supabase/server'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
@@ -49,6 +50,12 @@ export default async function ActionCenterReviewmomentenPage() {
     currentUserWorkspaceMemberships,
   })
   const now = new Date()
+  const rhythmData = await getActionCenterReviewRhythmData({
+    items: pageData.items,
+    now,
+  })
+  const canManageReviewRhythm =
+    context.canUpdateActionCenter && context.canScheduleActionCenterReview
 
   return (
     <ReviewMomentPageClient
@@ -58,6 +65,9 @@ export default async function ActionCenterReviewmomentenPage() {
       lastUpdated={now.toISOString()}
       canScheduleActionCenterReview={context.canScheduleActionCenterReview}
       inviteDownloadEligibleRouteIds={pageData.inviteDownloadEligibleRouteIds}
+      canManageReviewRhythm={canManageReviewRhythm}
+      rhythmConfigByRouteId={rhythmData.configByRouteId}
+      rhythmSummary={rhythmData.summary}
     />
   )
 }
