@@ -28,7 +28,12 @@ export type ActionCenterGraphCapability =
   | {
       mode: 'fallback-only'
       provider: 'microsoft_graph'
-      reason: 'missing-consent' | 'revoked-consent' | 'missing-organizer' | 'unsupported-scan-type'
+      reason:
+        | 'missing-consent'
+        | 'revoked-consent'
+        | 'missing-organizer'
+        | 'missing-client-config'
+        | 'unsupported-scan-type'
       organizerEmail: string | null
       organizerUserId: null
     }
