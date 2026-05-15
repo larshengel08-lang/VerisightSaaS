@@ -1256,6 +1256,8 @@ drop policy if exists "hr_and_admins_can_insert_action_center_route_relations" o
 drop policy if exists "hr_and_admins_can_update_action_center_route_relations" on public.action_center_route_relations;
 drop policy if exists "hr_and_admins_can_select_action_center_review_rhythm_configs" on public.action_center_review_rhythm_configs;
 drop policy if exists "hr_and_admins_can_upsert_action_center_review_rhythm_configs" on public.action_center_review_rhythm_configs;
+drop policy if exists "hr_and_admins_can_insert_action_center_review_rhythm_configs" on public.action_center_review_rhythm_configs;
+drop policy if exists "hr_and_admins_can_update_action_center_review_rhythm_configs" on public.action_center_review_rhythm_configs;
 
 create policy "hr_and_admins_can_select_action_center_route_relations"
   on public.action_center_route_relations for select
@@ -1345,8 +1347,26 @@ create policy "hr_and_admins_can_select_action_center_review_rhythm_configs"
     )
   );
 
-create policy "hr_and_admins_can_upsert_action_center_review_rhythm_configs"
-  on public.action_center_review_rhythm_configs for all
+create policy "hr_and_admins_can_insert_action_center_review_rhythm_configs"
+  on public.action_center_review_rhythm_configs for insert
+  with check (
+    public.is_verisight_admin_user()
+    or public.is_org_owner(org_id)
+    or exists (
+      select 1
+      from public.action_center_workspace_members m
+      where m.user_id = auth.uid()
+        and m.org_id = action_center_review_rhythm_configs.org_id
+        and m.access_role in ('hr_owner', 'hr_member')
+        and (m.scope_type = 'org' or m.scope_value = action_center_review_rhythm_configs.route_scope_value)
+        and m.can_view
+        and m.can_update
+        and m.can_schedule_review
+    )
+  );
+
+create policy "hr_and_admins_can_update_action_center_review_rhythm_configs"
+  on public.action_center_review_rhythm_configs for update
   using (
     public.is_verisight_admin_user()
     or public.is_org_owner(org_id)
@@ -1357,7 +1377,9 @@ create policy "hr_and_admins_can_upsert_action_center_review_rhythm_configs"
         and m.org_id = action_center_review_rhythm_configs.org_id
         and m.access_role in ('hr_owner', 'hr_member')
         and (m.scope_type = 'org' or m.scope_value = action_center_review_rhythm_configs.route_scope_value)
+        and m.can_view
         and m.can_update
+        and m.can_schedule_review
     )
   )
   with check (
@@ -1370,7 +1392,9 @@ create policy "hr_and_admins_can_upsert_action_center_review_rhythm_configs"
         and m.org_id = action_center_review_rhythm_configs.org_id
         and m.access_role in ('hr_owner', 'hr_member')
         and (m.scope_type = 'org' or m.scope_value = action_center_review_rhythm_configs.route_scope_value)
+        and m.can_view
         and m.can_update
+        and m.can_schedule_review
     )
   );
 
