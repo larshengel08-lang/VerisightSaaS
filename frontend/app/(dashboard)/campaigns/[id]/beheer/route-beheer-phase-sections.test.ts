@@ -124,6 +124,8 @@ const routeBeheerData: RouteBeheerPageData = {
   canManageCampaign: true,
   membershipRole: 'owner',
   selfServe: {
+    currentStep: 'active',
+    phaseKey: 'live',
     deliveryMode: 'baseline',
     importReady: true,
     hasSegmentDeepDive: false,
@@ -198,6 +200,39 @@ describe('routebeheer phase sections', () => {
 
     expect(markup).toContain('GuidedSelfServePanel')
     expect(markup).toContain('CampaignActions')
+  })
+
+  it('does not render the self-serve workspace on non-matching phases or closed routes', () => {
+    const nonMatchingMarkup = renderToStaticMarkup(
+      createElement(RouteBeheerPhaseDetailPanel, {
+        phases: [
+          {
+            key: 'communicatie',
+            label: 'Communicatie instellen',
+            status: 'current',
+            body: 'Route en startdatum',
+            items: [],
+            links: [{ label: 'Bekijk instellingen', href: '/campaigns/cmp-1/beheer?fase=communicatie#route-instellingen' }],
+          },
+        ],
+        selectedPhaseKey: 'communicatie',
+        data: routeBeheerData,
+      }),
+    )
+
+    const closedMarkup = renderToStaticMarkup(
+      createElement(RouteBeheerPhaseDetailPanel, {
+        phases: routeBeheerData.phaseDetails,
+        selectedPhaseKey: 'live',
+        data: {
+          ...routeBeheerData,
+          isActive: false,
+        },
+      }),
+    )
+
+    expect(nonMatchingMarkup).not.toContain('GuidedSelfServePanel')
+    expect(closedMarkup).not.toContain('GuidedSelfServePanel')
   })
 
   it('keeps the always-visible output summary compact and action-only', () => {

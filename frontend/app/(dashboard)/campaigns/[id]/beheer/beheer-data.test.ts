@@ -409,6 +409,8 @@ describe('routebeheer source integration', () => {
     })
 
     expect(data?.selfServe).toMatchObject({
+      currentStep: 'active',
+      phaseKey: 'live',
       deliveryMode: 'guided_self_serve',
       importReady: true,
       remindableCount: 6,

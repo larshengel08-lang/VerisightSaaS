@@ -174,7 +174,9 @@ export function RouteBeheerPhaseWorkspace(args: {
 
 function RouteBeheerPhaseDetailContent({ data, detail }: { data: RouteBeheerPageData; detail: HrRouteBeheerPhaseDetail }) {
   const showSelfServeWorkspace =
-    data.canExecuteCampaign && (detail.key === 'doelgroep' || detail.key === 'communicatie' || detail.key === 'live')
+    data.canExecuteCampaign &&
+    data.isActive &&
+    data.selfServe.phaseKey === detail.key
 
   return (
     <div id={PHASE_DETAIL_IDS[detail.key]} className="space-y-4">

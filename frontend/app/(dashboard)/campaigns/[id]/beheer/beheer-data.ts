@@ -117,6 +117,8 @@ export interface RouteBeheerPageData {
   canManageCampaign: boolean
   membershipRole: MemberRole | null
   selfServe: {
+    currentStep: 'upload' | 'launch' | 'active'
+    phaseKey: 'doelgroep' | 'communicatie' | 'live'
     deliveryMode: Campaign['delivery_mode']
     importReady: boolean
     hasSegmentDeepDive: boolean
@@ -422,6 +424,27 @@ function getHrRouteBeheerPhaseStatus(
   if (phaseIndex < currentIndex) return 'done'
   if (phaseIndex === currentIndex) return 'current'
   return 'open'
+}
+
+function getGuidedSelfServeCurrentStep(args: {
+  totalInvited: number
+  invitesNotSent: number
+}) {
+  if (args.totalInvited === 0) return 'upload' as const
+  if (args.invitesNotSent > 0) return 'launch' as const
+  return 'active' as const
+}
+
+function mapGuidedSelfServeStepToRoutePhase(step: 'upload' | 'launch' | 'active') {
+  switch (step) {
+    case 'upload':
+      return 'doelgroep' as const
+    case 'launch':
+      return 'communicatie' as const
+    case 'active':
+    default:
+      return 'live' as const
+  }
 }
 
 export function getRouteBeheerPhaseHref(campaignId: string, phaseKey: HrRouteBeheerPhaseKey) {
@@ -849,6 +872,10 @@ export async function fetchRouteBeheerData(args: {
     label: 'Dashboard / rapportstatus',
   } satisfies RouteBeheerPageData['outputSummary']
   const currentHrPhase = mapGuidedPhaseToHrRoutePhase(guidedState.phase)
+  const selfServeCurrentStep = getGuidedSelfServeCurrentStep({
+    totalInvited: stats.total_invited,
+    invitesNotSent,
+  })
   const nowDoing = buildHrRouteBeheerNowDoing({ guidedState, campaignId })
   const phaseSummaries = HR_ROUTE_PHASE_ORDER.map((key) =>
     buildHrRouteBeheerPhaseSummary({
@@ -928,6 +955,8 @@ export async function fetchRouteBeheerData(args: {
     canManageCampaign,
     membershipRole: memberRole,
     selfServe: {
+      currentStep: selfServeCurrentStep,
+      phaseKey: mapGuidedSelfServeStepToRoutePhase(selfServeCurrentStep),
       deliveryMode: campaign?.delivery_mode ?? null,
       importReady: importReady === true,
       hasSegmentDeepDive: hasCampaignAddOn(campaign, 'segment_deep_dive'),
