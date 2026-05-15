@@ -71,10 +71,14 @@ export function ReviewRhythmConsole({
   }, [config])
 
   const routeScopeValue = getRouteScopeValue(selectedRouteId, selectedRouteSourceId)
-  const hasSelectedRouteIdentity = Boolean(
-    selectedRouteId && selectedRouteSourceId && selectedRouteOrgId && routeScopeValue,
+  const hasBoundedSelection = Boolean(
+    selectedRouteId &&
+      selectedRouteSourceId &&
+      selectedRouteOrgId &&
+      routeScopeValue &&
+      selectedRouteScanType === 'exit',
   )
-  const canSave = canManageReviewRhythm && hasSelectedRouteIdentity
+  const canSave = canManageReviewRhythm && hasBoundedSelection
 
   function updateDraft<K extends keyof ActionCenterReviewRhythmConfig>(
     key: K,
@@ -85,7 +89,13 @@ export function ReviewRhythmConsole({
   }
 
   async function persistDraft() {
-    if (!selectedRouteId || !selectedRouteSourceId || !selectedRouteOrgId || !routeScopeValue) {
+    if (
+      !selectedRouteId ||
+      !selectedRouteSourceId ||
+      !selectedRouteOrgId ||
+      !routeScopeValue ||
+      selectedRouteScanType !== 'exit'
+    ) {
       setSaveState({
         status: 'error',
         message: 'Kies eerst een zichtbare ExitScan-route om reviewritme vast te leggen.',
@@ -204,97 +214,103 @@ export function ReviewRhythmConsole({
             <DashboardChip surface="ops" tone="slate" label="ExitScan" />
           </div>
 
-          <div className="mt-5 grid gap-3 lg:grid-cols-[repeat(3,minmax(0,200px)),minmax(0,1fr)]">
-            <label className="space-y-2 text-sm text-[color:var(--dashboard-ink)]">
-              <span className="block font-medium">Cadans</span>
-              <select
-                aria-label="Cadans"
-                disabled={!canManageReviewRhythm || !selectedRouteId}
-                value={String(draft.cadenceDays)}
-                onChange={(event) => updateDraft('cadenceDays', Number(event.target.value) as 7 | 14 | 30)}
-                className="w-full rounded-[16px] border border-[color:var(--dashboard-frame-border)] bg-white px-4 py-3 text-sm text-[color:var(--dashboard-ink)]"
-              >
-                {CADENCE_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option} dagen
-                  </option>
-                ))}
-              </select>
-            </label>
+          {hasBoundedSelection ? (
+            <>
+              <div className="mt-5 grid gap-3 lg:grid-cols-[repeat(3,minmax(0,200px)),minmax(0,1fr)]">
+                <label className="space-y-2 text-sm text-[color:var(--dashboard-ink)]">
+                  <span className="block font-medium">Cadans</span>
+                  <select
+                    aria-label="Cadans"
+                    disabled={!canManageReviewRhythm}
+                    value={String(draft.cadenceDays)}
+                    onChange={(event) => updateDraft('cadenceDays', Number(event.target.value) as 7 | 14 | 30)}
+                    className="w-full rounded-[16px] border border-[color:var(--dashboard-frame-border)] bg-white px-4 py-3 text-sm text-[color:var(--dashboard-ink)]"
+                  >
+                    {CADENCE_OPTIONS.map((option) => (
+                      <option key={option} value={option}>
+                        {option} dagen
+                      </option>
+                    ))}
+                  </select>
+                </label>
 
-            <label className="space-y-2 text-sm text-[color:var(--dashboard-ink)]">
-              <span className="block font-medium">Herinnering</span>
-              <select
-                aria-label="Herinnering"
-                disabled={!canManageReviewRhythm || !draft.remindersEnabled || !selectedRouteId}
-                value={String(draft.reminderLeadDays)}
-                onChange={(event) => updateDraft('reminderLeadDays', Number(event.target.value) as 1 | 3 | 5)}
-                className="w-full rounded-[16px] border border-[color:var(--dashboard-frame-border)] bg-white px-4 py-3 text-sm text-[color:var(--dashboard-ink)]"
-              >
-                {REMINDER_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option} dagen vooraf
-                  </option>
-                ))}
-              </select>
-            </label>
+                <label className="space-y-2 text-sm text-[color:var(--dashboard-ink)]">
+                  <span className="block font-medium">Herinnering</span>
+                  <select
+                    aria-label="Herinnering"
+                    disabled={!canManageReviewRhythm || !draft.remindersEnabled}
+                    value={String(draft.reminderLeadDays)}
+                    onChange={(event) => updateDraft('reminderLeadDays', Number(event.target.value) as 1 | 3 | 5)}
+                    className="w-full rounded-[16px] border border-[color:var(--dashboard-frame-border)] bg-white px-4 py-3 text-sm text-[color:var(--dashboard-ink)]"
+                  >
+                    {REMINDER_OPTIONS.map((option) => (
+                      <option key={option} value={option}>
+                        {option} dagen vooraf
+                      </option>
+                    ))}
+                  </select>
+                </label>
 
-            <label className="space-y-2 text-sm text-[color:var(--dashboard-ink)]">
-              <span className="block font-medium">Escalatie</span>
-              <select
-                aria-label="Escalatie"
-                disabled={!canManageReviewRhythm || !selectedRouteId}
-                value={String(draft.escalationLeadDays)}
-                onChange={(event) => updateDraft('escalationLeadDays', Number(event.target.value) as 3 | 7 | 14)}
-                className="w-full rounded-[16px] border border-[color:var(--dashboard-frame-border)] bg-white px-4 py-3 text-sm text-[color:var(--dashboard-ink)]"
-              >
-                {ESCALATION_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option} dagen na overschrijding
-                  </option>
-                ))}
-              </select>
-            </label>
+                <label className="space-y-2 text-sm text-[color:var(--dashboard-ink)]">
+                  <span className="block font-medium">Escalatie</span>
+                  <select
+                    aria-label="Escalatie"
+                    disabled={!canManageReviewRhythm}
+                    value={String(draft.escalationLeadDays)}
+                    onChange={(event) => updateDraft('escalationLeadDays', Number(event.target.value) as 3 | 7 | 14)}
+                    className="w-full rounded-[16px] border border-[color:var(--dashboard-frame-border)] bg-white px-4 py-3 text-sm text-[color:var(--dashboard-ink)]"
+                  >
+                    {ESCALATION_OPTIONS.map((option) => (
+                      <option key={option} value={option}>
+                        {option} dagen na overschrijding
+                      </option>
+                    ))}
+                  </select>
+                </label>
 
-            <label className="flex items-center gap-3 rounded-[16px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-muted-surface)] px-4 py-3 text-sm text-[color:var(--dashboard-ink)]">
-              <input
-                type="checkbox"
-                checked={draft.remindersEnabled}
-                disabled={!canManageReviewRhythm || !selectedRouteId}
-                onChange={(event) => updateDraft('remindersEnabled', event.target.checked)}
-                className="h-4 w-4 rounded border-[color:var(--dashboard-frame-border)]"
-              />
-              <span>
-                Herinneringen aan
-                <span className="block text-xs text-[color:var(--dashboard-text)]">
-                  Alleen timing, geen verzending vanuit deze pagina.
-                </span>
-              </span>
-            </label>
-          </div>
+                <label className="flex items-center gap-3 rounded-[16px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-muted-surface)] px-4 py-3 text-sm text-[color:var(--dashboard-ink)]">
+                  <input
+                    type="checkbox"
+                    checked={draft.remindersEnabled}
+                    disabled={!canManageReviewRhythm}
+                    onChange={(event) => updateDraft('remindersEnabled', event.target.checked)}
+                    className="h-4 w-4 rounded border-[color:var(--dashboard-frame-border)]"
+                  />
+                  <span>
+                    Herinneringen aan
+                    <span className="block text-xs text-[color:var(--dashboard-text)]">
+                      Alleen timing, geen verzending vanuit deze pagina.
+                    </span>
+                  </span>
+                </label>
+              </div>
 
-          <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-            <div className="text-sm text-[color:var(--dashboard-text)]">
-              {saveState.message ? (
-                <span className={saveState.status === 'error' ? 'text-[#8C6B1F]' : 'text-[#2C6E68]'}>
-                  {saveState.message}
-                </span>
-              ) : selectedRouteId ? (
-                'Reviewritme wordt op routeniveau bewaard binnen Action Center.'
-              ) : (
-                'Selecteer een reviewmoment om ritme-instellingen te beheren.'
-              )}
+              <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+                <div className="text-sm text-[color:var(--dashboard-text)]">
+                  {saveState.message ? (
+                    <span className={saveState.status === 'error' ? 'text-[#8C6B1F]' : 'text-[#2C6E68]'}>
+                      {saveState.message}
+                    </span>
+                  ) : (
+                    'Reviewritme wordt op routeniveau bewaard binnen Action Center.'
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={!canSave || isPending}
+                  className="rounded-full border border-[color:var(--dashboard-frame-border)] bg-white px-4 py-2 text-xs font-semibold text-[color:var(--dashboard-ink)] transition hover:bg-[color:var(--dashboard-muted-surface)] disabled:cursor-not-allowed disabled:opacity-60"
+                  data-save-tone={getSaveStatusTone(saveState.status)}
+                >
+                  {isPending ? 'Opslaan...' : 'Opslaan'}
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="mt-5 rounded-[18px] border border-dashed border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-muted-surface)] px-4 py-4 text-sm leading-6 text-[color:var(--dashboard-text)]">
+              Selecteer een reviewmoment om ritme-instellingen te bekijken.
             </div>
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={!canSave || isPending}
-              className="rounded-full border border-[color:var(--dashboard-frame-border)] bg-white px-4 py-2 text-xs font-semibold text-[color:var(--dashboard-ink)] transition hover:bg-[color:var(--dashboard-muted-surface)] disabled:cursor-not-allowed disabled:opacity-60"
-              data-save-tone={getSaveStatusTone(saveState.status)}
-            >
-              {isPending ? 'Opslaan...' : 'Opslaan'}
-            </button>
-          </div>
+          )}
         </div>
       </div>
     </DashboardSection>

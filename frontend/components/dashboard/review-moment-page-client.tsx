@@ -163,6 +163,7 @@ export function ReviewMomentPageClient({
   }, [rhythmConfigByRouteId])
 
   const selectedItem = visibleItems.find((item) => item.id === selectedItemId) ?? null
+  const selectedRhythmItem = selectedItem && isExitRouteItem(selectedItem) ? selectedItem : null
   const selectedUrgency: ReviewMomentUrgency | null = selectedItem
     ? grouped.overdue.some((item) => item.id === selectedItem.id)
       ? 'overdue'
@@ -187,13 +188,13 @@ export function ReviewMomentPageClient({
   }, [clientRhythmConfigByRouteId, items, referenceNow, rhythmSummary])
 
   function handleReviewRhythmSaved(nextConfig: ActionCenterReviewRhythmConfig) {
-    if (!selectedItem?.id) {
+    if (!selectedRhythmItem?.id) {
       return
     }
 
     setClientRhythmConfigByRouteId((current) => ({
       ...current,
-      [selectedItem.id]: nextConfig,
+      [selectedRhythmItem.id]: nextConfig,
     }))
   }
 
@@ -226,7 +227,7 @@ export function ReviewMomentPageClient({
         aside={
           <div className="space-y-3 text-sm text-slate-700">
             <p className="font-semibold text-slate-950">Context</p>
-            <p>Deze pagina toont reviewritme. Geen scananalyse, rapportduiding of generieke planning.</p>
+            <p>Deze pagina toont reviewritme. Geen scananalyse, rapportduiding of extra coördinatielaag.</p>
           </div>
         }
       />
@@ -235,7 +236,7 @@ export function ReviewMomentPageClient({
         surface="ops"
         eyebrow="Filters"
         title="Filter reviewmomenten"
-        description="Filter client-side op status, scope of manager zonder een tweede data- of planningslaag toe te voegen."
+        description="Filter client-side op status, scope of manager zonder een tweede data- of coördinatielaag toe te voegen."
       >
         <div className="grid gap-3 lg:grid-cols-[repeat(3,minmax(0,220px)),1fr]">
           <select
@@ -327,14 +328,14 @@ export function ReviewMomentPageClient({
       </div>
 
       <ReviewRhythmConsole
-        selectedRouteId={selectedItem?.id ?? null}
-        selectedRouteLabel={selectedItem ? getReviewMomentScopeLabel(selectedItem) : null}
-        selectedRouteSourceId={selectedItem?.coreSemantics.route.campaignId ?? null}
-        selectedRouteOrgId={selectedItem?.orgId ?? null}
-        selectedRouteScanType={selectedItem?.sourceLabel === 'ExitScan' ? 'exit' : null}
+        selectedRouteId={selectedRhythmItem ? selectedRhythmItem.id : null}
+        selectedRouteLabel={selectedRhythmItem ? getReviewMomentScopeLabel(selectedRhythmItem) : null}
+        selectedRouteSourceId={selectedRhythmItem?.coreSemantics.route.campaignId ?? null}
+        selectedRouteOrgId={selectedRhythmItem?.orgId ?? null}
+        selectedRouteScanType={selectedRhythmItem ? 'exit' : null}
         canManageReviewRhythm={canManageReviewRhythm}
         config={
-          (selectedItem?.id ? clientRhythmConfigByRouteId[selectedItem.id] : null) ??
+          (selectedRhythmItem?.id ? clientRhythmConfigByRouteId[selectedRhythmItem.id] : null) ??
           buildDefaultActionCenterReviewRhythmConfig()
         }
         summary={visibleRhythmSummary}

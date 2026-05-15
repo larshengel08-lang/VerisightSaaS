@@ -11,7 +11,7 @@ describe('review moment page client source', () => {
 
     expect(source).toContain('Reviewmomenten')
     expect(source).toContain('Bewaak geplande opvolgmomenten, gekoppelde scopes en bekende uitkomsten.')
-    expect(source).toContain('Deze pagina toont reviewritme. Geen scananalyse, rapportduiding of generieke planning.')
+    expect(source).toContain('Deze pagina toont reviewritme. Geen scananalyse, rapportduiding of extra coördinatielaag.')
     expect(source).toContain("join(' · ')")
     expect(counterSource).toContain('Achterstallig')
     expect(counterSource).toContain('Deze week')
@@ -46,6 +46,8 @@ describe('review moment page client source', () => {
     expect(source).toContain('rhythmConfigByRouteId')
     expect(source).toContain('rhythmSummary')
     expect(source).toContain('buildDefaultActionCenterReviewRhythmConfig')
+    expect(source).toContain('const selectedRhythmItem = selectedItem && isExitRouteItem(selectedItem) ? selectedItem : null')
+    expect(source).toContain('selectedRouteId={selectedRhythmItem ? selectedRhythmItem.id : null}')
     expect(source).not.toContain('Graph')
     expect(source).not.toContain('automation builder')
   })
@@ -58,6 +60,8 @@ describe('review moment page client source', () => {
       'recurring',
       'advies',
       'dashboardinterpretatie',
+      'generieke planning',
+      'planningslaag',
       'planningstool',
       'uitnodiging',
       'activatie',
