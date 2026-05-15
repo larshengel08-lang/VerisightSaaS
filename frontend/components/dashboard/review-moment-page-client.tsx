@@ -113,7 +113,6 @@ export function ReviewMomentPageClient({
   manageableReviewRhythmRouteIds,
   nativeCalendarEligibleRouteIds,
   rhythmConfigByRouteId,
-  rhythmSummary,
 }: {
   items: ActionCenterPreviewItem[]
   governanceCounts: ReviewMomentGovernanceCounts
@@ -125,7 +124,6 @@ export function ReviewMomentPageClient({
   manageableReviewRhythmRouteIds: string[]
   nativeCalendarEligibleRouteIds: string[]
   rhythmConfigByRouteId: Record<string, ActionCenterReviewRhythmConfig>
-  rhythmSummary: ReviewRhythmSummary
 }) {
   const [statusFilter, setStatusFilter] = useState<'all' | ActionCenterPreviewStatus>('all')
   const [scopeFilter, setScopeFilter] = useState<string>('all')

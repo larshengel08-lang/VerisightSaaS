@@ -61,7 +61,6 @@ describe('review moment page client source', () => {
     expect(source).toContain('new Set(manageableReviewRhythmRouteIds)')
     expect(source).toContain('canManageSelectedReviewRhythm')
     expect(source).toContain('rhythmConfigByRouteId')
-    expect(source).toContain('rhythmSummary')
     expect(source).toContain('buildDefaultActionCenterReviewRhythmConfig')
     expect(source).toContain('getActionCenterEnabledRouteDefaults(routeScanTypeByRouteId[getReviewMomentRouteId(selectedItem)])')
     expect(source).toContain('selectedRouteId={selectedRhythmItem ? selectedRhythmItem.coreSemantics.route.routeId : null}')

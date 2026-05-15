@@ -133,7 +133,6 @@ export default async function ActionCenterReviewmomentenPage() {
       manageableReviewRhythmRouteIds={manageableReviewRhythmRouteIds}
       nativeCalendarEligibleRouteIds={nativeCalendarEligibleRouteIds}
       rhythmConfigByRouteId={rhythmData.configByRouteId}
-      rhythmSummary={rhythmData.summary}
     />
   )
 }
