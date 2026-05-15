@@ -18,7 +18,8 @@ describe('action center reviewmomenten entry shell', () => {
     const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
 
     expect(source).toContain('getActionCenterReviewRhythmData')
-    expect(source).toContain('canManageReviewRhythm=')
+    expect(source).toContain('resolveActionCenterReviewRhythmWriteAccess')
+    expect(source).toContain('manageableReviewRhythmRouteIds=')
     expect(source).toContain('rhythmConfigByRouteId=')
     expect(source).toContain('rhythmSummary=')
     expect(source).not.toContain('Graph')

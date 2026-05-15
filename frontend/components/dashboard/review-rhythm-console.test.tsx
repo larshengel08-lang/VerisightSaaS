@@ -73,4 +73,15 @@ describe('review rhythm console', () => {
       expect(source).not.toContain(forbidden)
     }
   })
+
+  it('resets sticky save feedback when the selected route context changes', () => {
+    const source = readFileSync(new URL('./review-rhythm-console.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('setSaveState({')
+    expect(source).toContain("status: 'idle'")
+    expect(source).toContain('selectedRouteId')
+    expect(source).toContain('selectedRouteSourceId')
+    expect(source).toContain('selectedRouteOrgId')
+    expect(source).toContain('selectedRouteScanType')
+  })
 })

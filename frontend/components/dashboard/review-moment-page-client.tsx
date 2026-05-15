@@ -54,6 +54,13 @@ type ReviewRhythmSummary = {
   reminderManagedCount: number
 }
 
+const EMPTY_REVIEW_RHYTHM_SUMMARY: ReviewRhythmSummary = {
+  staleCount: 0,
+  overdueCount: 0,
+  upcomingCount: 0,
+  reminderManagedCount: 0,
+}
+
 function isExitRouteItem(item: Pick<ActionCenterPreviewItem, 'sourceLabel'>) {
   return item.sourceLabel === 'ExitScan'
 }
@@ -96,7 +103,7 @@ export function ReviewMomentPageClient({
   lastUpdated,
   canScheduleActionCenterReview,
   inviteDownloadEligibleRouteIds,
-  canManageReviewRhythm,
+  manageableReviewRhythmRouteIds,
   rhythmConfigByRouteId,
   rhythmSummary,
 }: {
@@ -106,7 +113,7 @@ export function ReviewMomentPageClient({
   lastUpdated: string
   canScheduleActionCenterReview: boolean
   inviteDownloadEligibleRouteIds: string[]
-  canManageReviewRhythm: boolean
+  manageableReviewRhythmRouteIds: string[]
   rhythmConfigByRouteId: Record<string, ActionCenterReviewRhythmConfig>
   rhythmSummary: ReviewRhythmSummary
 }) {
@@ -121,6 +128,10 @@ export function ReviewMomentPageClient({
   const inviteDownloadEligibleRouteIdSet = useMemo(
     () => new Set(inviteDownloadEligibleRouteIds),
     [inviteDownloadEligibleRouteIds],
+  )
+  const manageableReviewRhythmRouteIdSet = useMemo(
+    () => new Set(manageableReviewRhythmRouteIds),
+    [manageableReviewRhythmRouteIds],
   )
   const scopeOptions = useMemo(
     () => [...new Set(items.map((item) => getReviewMomentScopeLabel(item)))].sort((left, right) => left.localeCompare(right)),
@@ -164,6 +175,9 @@ export function ReviewMomentPageClient({
 
   const selectedItem = visibleItems.find((item) => item.id === selectedItemId) ?? null
   const selectedRhythmItem = selectedItem && isExitRouteItem(selectedItem) ? selectedItem : null
+  const canManageSelectedReviewRhythm = Boolean(
+    selectedRhythmItem?.id && manageableReviewRhythmRouteIdSet.has(selectedRhythmItem.id),
+  )
   const selectedUrgency: ReviewMomentUrgency | null = selectedItem
     ? grouped.overdue.some((item) => item.id === selectedItem.id)
       ? 'overdue'
@@ -180,12 +194,12 @@ export function ReviewMomentPageClient({
   )
   const lastUpdatedLabel = formatReviewMomentLastUpdated(lastUpdated)
   const visibleRhythmSummary = useMemo(() => {
-    if (!items.some(isExitRouteItem)) {
-      return rhythmSummary
+    if (visibleItems.length === 0) {
+      return EMPTY_REVIEW_RHYTHM_SUMMARY
     }
 
-    return computeRhythmSummary(items, clientRhythmConfigByRouteId, referenceNow)
-  }, [clientRhythmConfigByRouteId, items, referenceNow, rhythmSummary])
+    return computeRhythmSummary(visibleItems, clientRhythmConfigByRouteId, referenceNow)
+  }, [clientRhythmConfigByRouteId, referenceNow, visibleItems])
 
   function handleReviewRhythmSaved(nextConfig: ActionCenterReviewRhythmConfig) {
     if (!selectedRhythmItem?.id) {
@@ -333,7 +347,7 @@ export function ReviewMomentPageClient({
         selectedRouteSourceId={selectedRhythmItem?.coreSemantics.route.campaignId ?? null}
         selectedRouteOrgId={selectedRhythmItem?.orgId ?? null}
         selectedRouteScanType={selectedRhythmItem ? 'exit' : null}
-        canManageReviewRhythm={canManageReviewRhythm}
+        canManageReviewRhythm={canManageSelectedReviewRhythm}
         config={
           (selectedRhythmItem?.id ? clientRhythmConfigByRouteId[selectedRhythmItem.id] : null) ??
           buildDefaultActionCenterReviewRhythmConfig()

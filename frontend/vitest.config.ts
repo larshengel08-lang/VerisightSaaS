@@ -9,6 +9,14 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
-    include: ['lib/**/*.test.ts', 'app/**/*.test.ts', 'components/**/*.test.ts', 'scripts/import-content-machine-post.test.mjs'],
+    include: [
+      'lib/**/*.test.ts',
+      'lib/**/*.test.tsx',
+      'app/**/*.test.ts',
+      'app/**/*.test.tsx',
+      'components/**/*.test.ts',
+      'components/**/*.test.tsx',
+      'scripts/import-content-machine-post.test.mjs',
+    ],
   },
 })
