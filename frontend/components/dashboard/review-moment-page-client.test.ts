@@ -38,6 +38,18 @@ describe('review moment page client source', () => {
     expect(source).toContain('canDownloadInviteArtifact={canDownloadInviteArtifact}')
   })
 
+  it('threads the bounded HR rhythm console into the existing reviewmomenten surface', () => {
+    const source = readFileSync(new URL('./review-moment-page-client.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('ReviewRhythmConsole')
+    expect(source).toContain('canManageReviewRhythm')
+    expect(source).toContain('rhythmConfigByRouteId')
+    expect(source).toContain('rhythmSummary')
+    expect(source).toContain('buildDefaultActionCenterReviewRhythmConfig')
+    expect(source).not.toContain('Graph')
+    expect(source).not.toContain('automation builder')
+  })
+
   it('keeps forbidden automation, lifecycle copy and mojibake out of the page shell', () => {
     const source = readFileSync(new URL('./review-moment-page-client.tsx', import.meta.url), 'utf8').toLowerCase()
 
@@ -49,6 +61,9 @@ describe('review moment page client source', () => {
       'planningstool',
       'uitnodiging',
       'activatie',
+      'workflow builder',
+      'outlook',
+      'mail engine',
       'pending',
       'activated',
       'access requested',
