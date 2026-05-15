@@ -700,7 +700,7 @@ describe('action center review reschedules route', () => {
     expect(insertQuery.insert).not.toHaveBeenCalled()
   })
 
-  it('reschedules successfully after a prior cancel by using the latest persisted schedule context', async () => {
+  it('reschedules successfully after a prior cancel while recording the current canonical null state', async () => {
     const updateQuery = createUpdateManagerResponseQuery({
       data: {
         review_scheduled_for: '2099-06-03',
@@ -774,7 +774,7 @@ describe('action center review reschedules route', () => {
       scan_type: 'exit',
       revision: 5,
       operation: 'reschedule',
-      previous_review_date: '2026-05-28',
+      previous_review_date: null,
       review_date: '2099-06-03',
       reason: 'manager-beschikbaar',
       changed_by: 'user-1',

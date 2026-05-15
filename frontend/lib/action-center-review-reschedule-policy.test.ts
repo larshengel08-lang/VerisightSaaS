@@ -65,9 +65,9 @@ function assertReviewScheduleRevisionSchema(sql: string) {
     /check \(\(operation = 'cancel' and review_date is null\) or \(operation = 'reschedule' and review_date is not null\)\)/i,
   )
   expect(sql).toMatch(/constraint action_center_review_schedule_revisions_previous_review_date_check/i)
-  expect(sql).toMatch(/check \(previous_review_date is not null\)/i)
+  expect(sql).toMatch(/check \(\(operation = 'cancel' and previous_review_date is not null\) or operation = 'reschedule'\)/i)
   expect(sql).toMatch(/constraint action_center_review_schedule_revisions_review_date_change_check/i)
-  expect(sql).toMatch(/check \(\(operation = 'cancel'\) or \(review_date <> previous_review_date\)\)/i)
+  expect(sql).toMatch(/check \(\(operation = 'cancel'\) or previous_review_date is null or \(review_date <> previous_review_date\)\)/i)
   expect(sql).toMatch(/constraint action_center_review_schedule_revisions_route_identity_check/i)
   expect(sql).toMatch(
     /check \(route_id = \(\(route_source_id\)::text \|\| '::' \|\| route_scope_value\)\)/i,

@@ -36,8 +36,25 @@ function formatDateLabel(value: string | null) {
   })
 }
 
-function buildReviewInviteDownloadHref(reviewItemId: string) {
-  return `/api/action-center-review-invites?reviewItemId=${encodeURIComponent(reviewItemId)}&mode=request&format=ics`
+function buildReviewInviteDownloadHref(args: {
+  reviewItemId: string
+  mode?: 'cancel' | 'request'
+  revision?: number | null
+}) {
+  const params = new URLSearchParams({
+    reviewItemId: args.reviewItemId,
+    format: 'ics',
+  })
+
+  if (args.mode) {
+    params.set('mode', args.mode)
+  }
+
+  if (typeof args.revision === 'number') {
+    params.set('revision', String(args.revision))
+  }
+
+  return `/api/action-center-review-invites?${params.toString()}`
 }
 
 function parseRouteScopeValueFromRoute(item: ActionCenterPreviewItem) {
@@ -51,12 +68,14 @@ function parseRouteScopeValueFromRoute(item: ActionCenterPreviewItem) {
 function canRenderReviewInviteDownload(
   item: ActionCenterPreviewItem,
   canDownloadInviteArtifact: boolean,
+  artifactPreviewOverride: { mode: 'cancel' | 'request'; revision: number | null } | null,
 ) {
-  if (!canDownloadInviteArtifact || !item.reviewDate) {
+  if (!canDownloadInviteArtifact) {
     return false
   }
 
-  return item.status !== 'afgerond' && item.status !== 'gestopt'
+  const hasReviewArtifact = Boolean(item.reviewDate) || artifactPreviewOverride?.mode === 'cancel'
+  return hasReviewArtifact && item.status !== 'afgerond' && item.status !== 'gestopt'
 }
 
 function isActiveReviewRoute(item: ActionCenterPreviewItem) {
@@ -88,12 +107,20 @@ export function ReviewMomentDetailPanel({
   const router = useRouter()
   const [draftReviewDate, setDraftReviewDate] = useState(getInitialDraftReviewDate(item))
   const [feedback, setFeedback] = useState<string | null>(null)
+  const [artifactPreviewOverride, setArtifactPreviewOverride] = useState<{
+    mode: 'cancel' | 'request'
+    revision: number | null
+  } | null>(null)
   const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
     setDraftReviewDate(getInitialDraftReviewDate(item))
+  }, [item])
+
+  useEffect(() => {
     setFeedback(null)
-  }, [item?.id, item?.reviewDate])
+    setArtifactPreviewOverride(null)
+  }, [item?.id])
 
   if (!item) {
     return (
@@ -107,9 +134,11 @@ export function ReviewMomentDetailPanel({
     )
   }
 
+  const selectedItem = item
+
   async function submitReviewSchedule(operation: 'cancel' | 'reschedule') {
-    const routeScopeValue = parseRouteScopeValueFromRoute(item)
-    if (!routeScopeValue || !item.orgId) {
+    const routeScopeValue = parseRouteScopeValueFromRoute(selectedItem)
+    if (!routeScopeValue || !selectedItem.orgId) {
       setFeedback('Reviewroute is nog niet volledig beschikbaar voor beheer.')
       return
     }
@@ -129,10 +158,10 @@ export function ReviewMomentDetailPanel({
           },
           body: JSON.stringify({
             operation,
-            routeId: item.coreSemantics.route.routeId,
+            routeId: selectedItem.coreSemantics.route.routeId,
             routeScopeValue,
-            routeSourceId: item.coreSemantics.route.campaignId,
-            orgId: item.orgId,
+            routeSourceId: selectedItem.coreSemantics.route.campaignId,
+            orgId: selectedItem.orgId,
             scanType: 'exit',
             reviewDate: operation === 'cancel' ? null : draftReviewDate,
             reason:
@@ -142,16 +171,25 @@ export function ReviewMomentDetailPanel({
           }),
         })
 
+        const payload = (await response.json().catch(() => null)) as
+          | { detail?: string; operation?: 'cancel' | 'reschedule'; reviewDate?: string | null; revision?: number }
+          | null
+
         if (!response.ok) {
-          const payload = (await response.json().catch(() => null)) as { detail?: string } | null
           setFeedback(payload?.detail ?? 'Reviewmoment kon niet worden bijgewerkt.')
           return
         }
 
+        setArtifactPreviewOverride({
+          mode: payload?.operation === 'cancel' ? 'cancel' : 'request',
+          revision: typeof payload?.revision === 'number' ? payload.revision : null,
+        })
+
         if (operation === 'cancel') {
-          setDraftReviewDate('')
+          setDraftReviewDate(payload?.reviewDate ?? '')
           setFeedback('Reviewmoment geannuleerd. De detailkaart wordt ververst.')
         } else {
+          setDraftReviewDate(payload?.reviewDate ?? draftReviewDate)
           setFeedback('Reviewmoment verplaatst. De detailkaart wordt ververst.')
         }
 
@@ -208,9 +246,13 @@ export function ReviewMomentDetailPanel({
         >
           Bekijk gekoppelde opvolging
         </Link>
-        {canRenderReviewInviteDownload(item, canDownloadInviteArtifact) ? (
+        {canRenderReviewInviteDownload(item, canDownloadInviteArtifact, artifactPreviewOverride) ? (
           <Link
-            href={buildReviewInviteDownloadHref(item.id)}
+            href={buildReviewInviteDownloadHref({
+              reviewItemId: item.id,
+              mode: artifactPreviewOverride?.mode,
+              revision: artifactPreviewOverride?.revision,
+            })}
             className="rounded-full border border-[color:var(--dashboard-frame-border)] bg-white px-3 py-2 text-xs font-semibold text-[color:var(--dashboard-ink)] transition hover:bg-[color:var(--dashboard-muted-surface)]"
           >
             Download .ics

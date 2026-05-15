@@ -128,8 +128,9 @@ describe('review moment detail panel invite CTA', () => {
     const source = readFileSync(new URL('./review-moment-detail-panel.tsx', import.meta.url), 'utf8')
 
     expect(source).toContain('buildReviewInviteDownloadHref')
-    expect(source).toContain('/api/action-center-review-invites?reviewItemId=')
+    expect(source).toContain('/api/action-center-review-invites?')
     expect(source).toContain('canDownloadInviteArtifact')
+    expect(source).toContain("artifactPreviewOverride?.mode === 'cancel'")
     expect(source).toContain("item.status !== 'afgerond'")
     expect(source).toContain("item.status !== 'gestopt'")
     expect(source).toContain('Download .ics')
@@ -139,7 +140,7 @@ describe('review moment detail panel invite CTA', () => {
   it('renders the exact ics href when the review is open, dated, and allowed', () => {
     const item = createReviewMomentItem()
     const expectedHref =
-      '/api/action-center-review-invites?reviewItemId=cmp-exit-1%3A%3Aorg-1%3A%3Adepartment%3A%3Aoperations&amp;mode=request&amp;format=ics'
+      '/api/action-center-review-invites?reviewItemId=cmp-exit-1%3A%3Aorg-1%3A%3Adepartment%3A%3Aoperations&amp;format=ics'
 
     const markup = renderToStaticMarkup(
       createElement(ReviewMomentDetailPanel, {
@@ -167,6 +168,14 @@ describe('review moment detail panel invite CTA', () => {
     )
 
     expect(markup).not.toContain('Download .ics')
+  })
+
+  it('keeps a cancel artifact link renderable when the canonical review date has been cleared', () => {
+    const source = readFileSync(new URL('./review-moment-detail-panel.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('setArtifactPreviewOverride')
+    expect(source).toContain("mode: payload?.operation === 'cancel' ? 'cancel' : 'request'")
+    expect(source).toContain('revision: typeof payload?.revision === \'number\' ? payload.revision : null')
   })
 
   it('hides the ics link for closed review statuses', () => {

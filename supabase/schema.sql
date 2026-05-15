@@ -745,9 +745,9 @@ create table if not exists public.action_center_review_schedule_revisions (
   constraint action_center_review_schedule_revisions_review_date_state_check
     check ((operation = 'cancel' and review_date is null) or (operation = 'reschedule' and review_date is not null)),
   constraint action_center_review_schedule_revisions_previous_review_date_check
-    check (previous_review_date is not null),
+    check ((operation = 'cancel' and previous_review_date is not null) or operation = 'reschedule'),
   constraint action_center_review_schedule_revisions_review_date_change_check
-    check ((operation = 'cancel') or (review_date <> previous_review_date)),
+    check ((operation = 'cancel') or previous_review_date is null or (review_date <> previous_review_date)),
   constraint action_center_review_schedule_revisions_route_identity_check
     check (route_id = ((route_source_id)::text || '::' || route_scope_value)),
   reason text not null,

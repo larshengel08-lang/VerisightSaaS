@@ -235,7 +235,7 @@ export async function POST(request: Request) {
 
   const adminClient = createAdminClient()
   const reviewDate = parsed.operation === 'cancel' ? null : parsed.reviewDate
-  const previousReviewDate = routeData.reviewDate ?? routeData.latestPreviousReviewDate
+  const previousReviewDate = routeData.reviewDate
 
   if (parsed.operation === 'cancel' && routeData.reviewDate === null) {
     return NextResponse.json(
