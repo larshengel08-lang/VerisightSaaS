@@ -93,6 +93,7 @@ function matchesCanonicalRoute(input: ActionCenterReviewRescheduleDataInput, cam
 
   return {
     campaignId: campaign.id,
+    orgId: canonicalOrgId,
     routeId: canonicalRouteId,
     routeScopeType: parsedScope.scopeType,
     routeScopeValue: canonicalScopeValue,
@@ -185,7 +186,7 @@ export async function loadActionCenterReviewRescheduleData(
   return {
     status: 'ok',
     campaignId: canonicalCampaignId,
-    orgId: campaignRow.organization_id,
+    orgId: canonicalRoute.orgId,
     routeId: canonicalRouteId,
     routeScopeValue: canonicalRoute.routeScopeValue,
     routeScopeType: canonicalRoute.routeScopeType,
