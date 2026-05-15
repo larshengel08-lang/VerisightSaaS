@@ -196,7 +196,6 @@ export function loadActionCenterGraphCapability(args: {
       tenantId: mergedEnv.tenantId,
       clientId: mergedEnv.clientId,
       clientSecret: mergedEnv.clientSecret,
-      organizerUserId: mergedEnv.organizerUserId,
     })
   ) {
     return {
@@ -215,7 +214,7 @@ export async function requestActionCenterGraphAccessToken(
   credentials: Pick<ActionCenterGraphCredentials, 'tenantId' | 'clientId' | 'clientSecret'>,
   options: ActionCenterGraphRequestOptions = {},
 ): Promise<ActionCenterGraphAccessTokenResult> {
-  if (!hasClientConfig({ ...credentials, organizerUserId: '' })) {
+  if (!hasClientConfig(credentials)) {
     return { ok: false, reason: 'missing_graph_env' }
   }
 

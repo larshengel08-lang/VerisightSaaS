@@ -5,11 +5,13 @@ const {
   mockLoadSuiteAccessContext,
   mockGetActionCenterPageData,
   mockAdminFrom,
+  mockSyncActionCenterGraphReview,
 } = vi.hoisted(() => ({
   mockGetUser: vi.fn(),
   mockLoadSuiteAccessContext: vi.fn(),
   mockGetActionCenterPageData: vi.fn(),
   mockAdminFrom: vi.fn(),
+  mockSyncActionCenterGraphReview: vi.fn(),
 }))
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -32,6 +34,10 @@ vi.mock('@/lib/supabase/admin', () => ({
   createAdminClient: () => ({
     from: mockAdminFrom,
   }),
+}))
+
+vi.mock('@/lib/action-center-graph-sync', () => ({
+  syncActionCenterGraphReview: mockSyncActionCenterGraphReview,
 }))
 
 import { getCanonicalInviteOrigin } from './invite-helpers'
@@ -224,6 +230,16 @@ describe('action center review invite route', () => {
 
       throw new Error(`Unhandled table ${table}`)
     })
+
+    mockSyncActionCenterGraphReview.mockResolvedValue({
+      status: 'linked',
+      provider: 'microsoft_graph',
+      action: 'created',
+      eventId: 'graph-event-1',
+      iCalUId: 'ical-1',
+      lastSyncedRevision: 2,
+      reason: null,
+    })
   })
 
   afterEach(() => {
@@ -378,6 +394,49 @@ describe('action center review invite route', () => {
     expect(payload.revision).toBe(2)
     expect(payload.method).toBe('REQUEST')
     expect(payload.organizerEmail).toBe('northwind-hr@example.com')
+  })
+
+  it('can explicitly trigger bounded Outlook sync on POST without changing the default preview contract', async () => {
+    const response = await POST(
+      new Request('https://app.verisight.nl/api/action-center-review-invites', {
+        method: 'POST',
+        body: JSON.stringify({
+          reviewItemId: mockItem.id,
+          revision: 2,
+          syncProvider: 'microsoft_graph',
+        }),
+      }),
+    )
+
+    expect(response.status).toBe(200)
+    const payload = await response.json()
+    expect(payload.graphSync).toEqual({
+      status: 'linked',
+      provider: 'microsoft_graph',
+      action: 'created',
+      eventId: 'graph-event-1',
+      iCalUId: 'ical-1',
+      lastSyncedRevision: 2,
+      reason: null,
+    })
+    expect(mockSyncActionCenterGraphReview).toHaveBeenCalledWith({
+      orgId: 'org-1',
+      routeId: mockItem.id,
+      reviewItemId: mockItem.id,
+      routeScopeValue: 'org-1::department::operations',
+      routeSourceId: 'cmp-exit-1',
+      scanType: 'exit',
+      organizerEmail: 'northwind-hr@example.com',
+      revision: 2,
+      method: 'REQUEST',
+      inviteDraft: {
+        subject: 'Reviewmoment ExitScan Q2 / Operations',
+        emailHtml: expect.stringContaining('Action Center'),
+        reviewDate: '2026-05-28',
+        recipientEmail: 'mila@northwind.example',
+        recipientName: 'Mila Jansen',
+      },
+    })
   })
 
   it('returns preview json by default on GET', async () => {

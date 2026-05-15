@@ -3,6 +3,7 @@ import {
   buildActionCenterReviewInviteDraft,
   getActionCenterReviewInviteEligibility,
 } from '@/lib/action-center-review-invite'
+import { syncActionCenterGraphReview } from '@/lib/action-center-graph-sync'
 import { renderActionCenterReviewInviteIcs } from '@/lib/action-center-review-invite-ics'
 import { resolveReviewInviteContext } from './invite-helpers'
 
@@ -80,6 +81,10 @@ function resolvePreviewMethod(args: {
   return args.isCanonicalReviewCancelled ? 'CANCEL' : 'REQUEST'
 }
 
+function parseSyncProvider(value: unknown) {
+  return value === 'microsoft_graph' ? 'microsoft_graph' : null
+}
+
 function buildEligibilityError(reason: string) {
   return NextResponse.json(
     {
@@ -148,6 +153,15 @@ async function resolvePreview(args: {
       method,
       organizerEmail: resolved.organizerEmail,
     },
+    syncContext: {
+      orgId: resolved.orgId,
+      routeId: resolved.context.routeId,
+      reviewItemId: resolved.context.routeId,
+      routeScopeValue: resolved.routeScopeValue,
+      routeSourceId: resolved.routeSourceId,
+      scanType: resolved.context.scanType,
+      organizerEmail: resolved.organizerEmail,
+    },
   }
 }
 
@@ -156,6 +170,7 @@ export async function POST(request: Request) {
     reviewItemId?: string
     revision?: unknown
     mode?: unknown
+    syncProvider?: unknown
   } | null
 
   const reviewItemId = body?.reviewItemId?.trim()
@@ -172,6 +187,7 @@ export async function POST(request: Request) {
 
   const revisionOverride = parseRevisionOverride(body?.revision)
   const methodOverride = parseMethodOverride(body?.mode)
+  const syncProvider = parseSyncProvider(body?.syncProvider)
   const resolved = await resolvePreview({
     request,
     reviewItemId,
@@ -185,7 +201,30 @@ export async function POST(request: Request) {
     return resolved.error
   }
 
-  return NextResponse.json(resolved.preview, { status: 200 })
+  if (syncProvider !== 'microsoft_graph') {
+    return NextResponse.json(resolved.preview, { status: 200 })
+  }
+
+  const graphSync = await syncActionCenterGraphReview({
+    ...resolved.syncContext,
+    revision: resolved.preview.revision,
+    method: resolved.preview.method,
+    inviteDraft: {
+      subject: resolved.preview.subject,
+      emailHtml: resolved.preview.emailHtml,
+      reviewDate: resolved.preview.reviewDate,
+      recipientEmail: resolved.preview.recipientEmail,
+      recipientName: resolved.preview.recipientName,
+    },
+  })
+
+  return NextResponse.json(
+    {
+      ...resolved.preview,
+      graphSync,
+    },
+    { status: 200 },
+  )
 }
 
 export async function GET(request: Request) {

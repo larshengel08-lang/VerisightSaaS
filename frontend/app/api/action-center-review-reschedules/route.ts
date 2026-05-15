@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { resolveActionCenterReviewRhythmWriteAccess } from '@/lib/action-center-governance'
+import { syncActionCenterGraphReview } from '@/lib/action-center-graph-sync'
 import {
   buildCampaignItemScopeValue,
   buildDepartmentScopeValue,
@@ -10,10 +11,12 @@ import {
   buildNextActionCenterReviewScheduleRevision,
   validateActionCenterReviewRescheduleInput,
 } from '@/lib/action-center-review-reschedule'
+import { buildActionCenterReviewInviteDraft } from '@/lib/action-center-review-invite'
 import { loadActionCenterReviewRescheduleData } from '@/lib/action-center-review-reschedule-data'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
+import { resolveReviewInviteContext } from '../action-center-review-invites/invite-helpers'
 
 type RollbackLatestRevisionRow = {
   revision: number | null
@@ -329,6 +332,37 @@ export async function POST(request: Request) {
       },
       { status: 500 },
     )
+  }
+
+  try {
+    const inviteContextResolution = await resolveReviewInviteContext({
+      request,
+      reviewItemId: routeData.routeId,
+    })
+
+    if (!('error' in inviteContextResolution)) {
+      const inviteDraft = buildActionCenterReviewInviteDraft(inviteContextResolution.context)
+      await syncActionCenterGraphReview({
+        orgId: inviteContextResolution.orgId,
+        routeId: routeData.routeId,
+        reviewItemId: routeData.routeId,
+        routeScopeValue: routeData.routeScopeValue,
+        routeSourceId: routeData.campaignId,
+        scanType: routeData.scanType,
+        organizerEmail: inviteContextResolution.organizerEmail,
+        revision: insertResult.data.revision,
+        method: parsed.operation === 'cancel' ? 'CANCEL' : 'REQUEST',
+        inviteDraft: {
+          subject: inviteDraft.subject,
+          emailHtml: inviteDraft.emailHtml,
+          reviewDate: inviteDraft.reviewDate,
+          recipientEmail: inviteDraft.recipientEmail,
+          recipientName: inviteDraft.recipientName,
+        },
+      })
+    }
+  } catch {
+    // Canonical review truth is already committed; Graph mirroring stays best-effort in this slice.
   }
 
   return NextResponse.json(

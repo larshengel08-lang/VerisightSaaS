@@ -12,6 +12,9 @@ type ReviewInviteResolverError = {
 
 type ReviewInviteResolution = {
   context: ActionCenterReviewInviteContext
+  orgId: string
+  routeScopeValue: string
+  routeSourceId: string
   organizerEmail: string
   persistedScheduleDefaults: {
     latestRevision: number | null
@@ -239,6 +242,9 @@ export async function resolveReviewInviteContext(args: {
 
   return {
     context,
+    orgId,
+    routeScopeValue: scopeValue,
+    routeSourceId: campaignId,
     organizerEmail: getOrganizerEmail({
       organizationContactEmail: normalizeText(organization?.contact_email),
       userEmail: normalizeText(user.email),
