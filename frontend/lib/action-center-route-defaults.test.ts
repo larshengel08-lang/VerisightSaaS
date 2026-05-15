@@ -59,8 +59,24 @@ describe('action center route defaults contract', () => {
     }
   })
 
+  it('keeps the exported predicate helpers aligned with the explicit route tuples', () => {
+    for (const scanType of ACTION_CENTER_ROUTE_DEFAULTS_SCAN_TYPES) {
+      expect(isActionCenterRouteDefaultsKnownScanType(scanType)).toBe(true)
+      expect(Boolean(getActionCenterRouteDefaults(scanType)?.routeEnabled)).toBe(
+        ACTION_CENTER_ROUTE_DEFAULTS_ENABLED_SCAN_TYPES.includes(scanType as 'exit' | 'retention'),
+      )
+      expect(isActionCenterRouteDefaultsEnabledScanType(scanType)).toBe(
+        ACTION_CENTER_ROUTE_DEFAULTS_ENABLED_SCAN_TYPES.includes(scanType as 'exit' | 'retention'),
+      )
+      expect(isActionCenterRouteDefaultsProviderEligibleScanType(scanType)).toBe(
+        ACTION_CENTER_ROUTE_DEFAULTS_ENABLED_SCAN_TYPES.includes(scanType as 'exit' | 'retention'),
+      )
+    }
+  })
+
   it('accepts only the six known scan types and otherwise fails closed', () => {
     expect(isActionCenterRouteDefaultsKnownScanType('exit')).toBe(true)
+    expect(isActionCenterRouteDefaultsKnownScanType('retention')).toBe(true)
     expect(isActionCenterRouteDefaultsKnownScanType('team')).toBe(true)
 
     expect(isActionCenterRouteDefaultsKnownScanType('')).toBe(false)
