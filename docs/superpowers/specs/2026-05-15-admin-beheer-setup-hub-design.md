@@ -68,6 +68,33 @@ The page should be ordered like this:
 3. secondary admin workbenches
 4. collapsed campaign status overview
 
+## Canonical Setup Context
+
+Steps 3 and 4 depend on one explicit setup context.
+
+The page must define a single active setup target:
+
+- `selected organization`
+- `selected campaign`
+
+This pair drives:
+
+- respondent import
+- client access activation
+- any compact setup status shown for those later steps
+
+Rules:
+
+- Steps 1 and 2 do not depend on an already selected campaign
+- Steps 3 and 4 do
+- the UI may prefill a sensible default, but the page must still have one explicit setup target state
+
+Recommended rule:
+
+- after creating or selecting an organization, campaign selection becomes explicit
+- if a default is needed, use the newest active campaign inside the selected organization
+- the page should still make the active campaign context visible to the admin
+
 ## Header
 
 Keep the top compact.
@@ -137,7 +164,7 @@ After campaign selection:
 
 ### Step 4: Klanttoegang
 
-Only becomes active after a campaign is chosen.
+Klanttoegang remains organization-scoped in capability, but should only open in this setup hub once a real setup context exists.
 
 Before campaign selection:
 
@@ -147,6 +174,12 @@ After campaign selection:
 
 - invite/activate client users
 - show current activation state
+
+Important rule:
+
+- this does **not** mean client access becomes technically campaign-bound
+- the underlying capability stays organization-scoped
+- the campaign requirement is only a setup-flow gating rule, so admin does not activate client access too early or without a concrete campaign context
 
 ## Open vs Locked Behavior
 
@@ -174,6 +207,21 @@ Rules:
 - these are secondary links, not primary blocks
 - no long explanation per link
 - no heavy operational panels here
+
+## Current Delivery Wall
+
+The current `Open delivery- en activatiewerk` / cadence-heavy surface should not remain above setup.
+
+Decision:
+
+- remove it from the primary `/beheer` surface
+- do not keep it as a dominant section above the setup flow
+- do not let cadence anchors or operations framing lead the page
+
+If parts of that information still matter:
+
+- fold them into the collapsed campaign status overview
+- or keep them in specialized workbenches instead of the setup homepage
 
 ### Contact-aanvragen
 
@@ -226,12 +274,16 @@ Avoid:
 The redesign is done when all of the following are true:
 
 - `/beheer` clearly reads as a setup hub first
+- one explicit setup context exists for steps 3 and 4
 - `Organisatie` and `Campaign` are immediately usable on first load
 - `Respondenten` is not fully active before a campaign is chosen
 - `Klanttoegang` is not fully active before a campaign is chosen
 - secondary admin workbenches are visible but visually smaller than setup
 - campaign status overview is still present but collapsed by default
 - no large cadence or operations wall appears above the setup flow
+- no workbench CTA buttons sit in the hero as primary admin actions
+- no cadence anchor appears before setup
+- no primary ops section appears above the setup flow
 - no core setup capability is removed
 
 ## Explicit Non-Goals
