@@ -14,11 +14,15 @@ describe('admin color semantics', () => {
     expect(primitivesSource).toContain('blue: "border-[#dfe6ea] bg-[#fbfcfd]"')
     expect(primitivesSource).toContain('blue: "text-[color:var(--text)]"')
 
-    expect(beheerSource).toContain("tone: setupProgressCount === 4 ? 'emerald' : 'amber'")
-    expect(beheerSource).toContain("tone={openFollowUpCount > 0 ? 'amber' : 'slate'}")
-    expect(beheerSource).toContain("tone={step4Done ? 'emerald' : 'amber'}")
-    expect(beheerSource).toContain('title="Learning default"')
+    expect(beheerSource).toContain('title="Setuphub voor nieuwe klant en campaign"')
+    expect(beheerSource).toContain('title="Secundaire werkbanken"')
+    expect(beheerSource).toContain('title="Campagne-overzicht"')
+    expect(beheerSource).toContain("tone={setupProgressCount === 4 ? 'emerald' : 'amber'}")
     expect(beheerSource).toContain('tone="slate"')
+    expect(beheerSource).not.toContain('Open delivery- en activatiewerk')
+    expect(beheerSource).not.toContain('Billing default')
+    expect(beheerSource).not.toContain('Health review default')
+    expect(beheerSource).not.toContain('Proof ladder default')
 
     expect(contactSource).toContain("tone: Object.keys(linkedCampaignsByLead).length > 0 ? 'slate' : 'slate'")
 
