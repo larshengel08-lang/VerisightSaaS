@@ -725,6 +725,30 @@ create table if not exists public.action_center_review_rhythm_configs (
   unique (route_id)
 );
 
+create table if not exists public.action_center_follow_through_mail_events (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid references public.organizations(id) on delete cascade not null,
+  route_id text not null,
+  route_scope_value text not null,
+  route_source_id uuid references public.campaigns(id) on delete cascade not null,
+  scan_type text not null
+    check (scan_type in ('exit')),
+  trigger_type text not null
+    check (trigger_type in ('assignment_created', 'review_upcoming', 'review_overdue', 'follow_up_open_after_review')),
+  recipient_role text not null
+    check (recipient_role in ('manager', 'hr_oversight')),
+  recipient_email text not null,
+  source_marker text not null,
+  dedupe_key text not null,
+  delivery_status text not null
+    check (delivery_status in ('sent', 'suppressed', 'failed')),
+  suppression_reason text,
+  provider_message_id text,
+  sent_at timestamptz,
+  created_at timestamptz not null default now(),
+  unique (dedupe_key)
+);
+
 -- ============================================================
 -- INDEXES
 -- ============================================================
@@ -756,6 +780,10 @@ create unique index if not exists idx_action_center_route_relations_active_direc
 create index if not exists idx_action_center_review_rhythm_configs_org on public.action_center_review_rhythm_configs(org_id);
 create index if not exists idx_action_center_review_rhythm_configs_route_source
   on public.action_center_review_rhythm_configs(route_source_type, route_source_id);
+create index if not exists idx_action_center_follow_through_mail_events_org
+  on public.action_center_follow_through_mail_events(org_id, created_at desc);
+create index if not exists idx_action_center_follow_through_mail_events_route
+  on public.action_center_follow_through_mail_events(route_id, trigger_type);
 create index if not exists idx_delivery_records_org on public.campaign_delivery_records(organization_id);
 create index if not exists idx_delivery_records_contact_request on public.campaign_delivery_records(contact_request_id);
 create index if not exists idx_delivery_records_lifecycle on public.campaign_delivery_records(lifecycle_stage);
@@ -781,6 +809,7 @@ alter table public.action_center_review_decisions enable row level security;
 alter table public.action_center_manager_responses enable row level security;
 alter table public.action_center_route_relations enable row level security;
 alter table public.action_center_review_rhythm_configs enable row level security;
+alter table public.action_center_follow_through_mail_events enable row level security;
 
 -- ── Hulpfuncties ─────────────────────────────────────────────────────────────
 
@@ -1397,6 +1426,19 @@ create policy "hr_and_admins_can_update_action_center_review_rhythm_configs"
         and m.can_schedule_review
     )
   );
+
+drop policy if exists "service_role_can_select_action_center_follow_through_mail_events" on public.action_center_follow_through_mail_events;
+drop policy if exists "service_role_can_insert_action_center_follow_through_mail_events" on public.action_center_follow_through_mail_events;
+
+create policy "service_role_can_select_action_center_follow_through_mail_events"
+  on public.action_center_follow_through_mail_events for select
+  to service_role
+  using (true);
+
+create policy "service_role_can_insert_action_center_follow_through_mail_events"
+  on public.action_center_follow_through_mail_events for insert
+  to service_role
+  with check (true);
 
 -- ============================================================
 -- PROFILES: is_verisight_admin per gebruiker
