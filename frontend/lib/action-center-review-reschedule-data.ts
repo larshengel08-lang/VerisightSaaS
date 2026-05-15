@@ -1,5 +1,9 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import {
+  getActionCenterEnabledRouteDefaults,
+  type ActionCenterRouteDefaultsEnabledScanType,
+} from './action-center-route-defaults'
+import {
   buildCampaignItemScopeValue,
   buildDepartmentScopeValue,
   normalizeCampaignIdentifier,
@@ -43,7 +47,7 @@ type ActionCenterReviewRescheduleDataSuccess = {
   routeId: string
   routeScopeValue: string
   routeScopeType: 'department' | 'item'
-  scanType: 'exit'
+  scanType: ActionCenterRouteDefaultsEnabledScanType
   reviewDate: string | null
   latestRevision: number | null
   latestOperation: ActionCenterReviewRescheduleOperation | null
@@ -124,7 +128,8 @@ export async function loadActionCenterReviewRescheduleData(
     return { status: 'not-found' }
   }
 
-  if (campaignRow.scan_type !== 'exit') {
+  const routeDefaults = getActionCenterEnabledRouteDefaults(campaignRow.scan_type)
+  if (!routeDefaults) {
     return { status: 'unsupported-scan-type' }
   }
 
@@ -190,7 +195,7 @@ export async function loadActionCenterReviewRescheduleData(
     routeId: canonicalRouteId,
     routeScopeValue: canonicalRoute.routeScopeValue,
     routeScopeType: canonicalRoute.routeScopeType,
-    scanType: 'exit',
+    scanType: routeDefaults.scanType,
     reviewDate: managerResponseRow.review_scheduled_for,
     latestRevision:
       typeof latestRevisionRow?.revision === 'number' ? latestRevisionRow.revision : null,

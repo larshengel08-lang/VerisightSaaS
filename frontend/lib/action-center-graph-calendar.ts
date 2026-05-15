@@ -1,4 +1,5 @@
 import { buildActionCenterRouteId } from './action-center-route-contract'
+import { isActionCenterRouteDefaultsProviderEligibleScanType } from './action-center-route-defaults'
 
 export const ACTION_CENTER_GRAPH_CALENDAR_PROVIDERS = ['microsoft_graph'] as const
 export type ActionCenterGraphCalendarProvider =
@@ -65,7 +66,7 @@ function normalizeLowerText(value: string | null | undefined) {
 }
 
 function isSupportedScanType(scanType: string | null | undefined) {
-  return normalizeLowerText(scanType) === 'exit'
+  return isActionCenterRouteDefaultsProviderEligibleScanType(normalizeLowerText(scanType))
 }
 
 function isUuid(value: string | null | undefined) {

@@ -1,5 +1,6 @@
 import { buildLiveActionCenterItems, getLiveActionCenterSummary } from '@/lib/action-center-live'
 import type { ActionCenterPreviewManagerOption } from '@/lib/action-center-preview-model'
+import { isActionCenterRouteDefaultsEnabledScanType } from '@/lib/action-center-route-defaults'
 import { buildActionCenterRouteId } from '@/lib/action-center-route-contract'
 import { projectActionCenterRouteCloseout } from '@/lib/action-center-route-closeout'
 import {
@@ -145,7 +146,7 @@ function isInviteDownloadEligibleRoute(args: {
     return false
   }
 
-  if (args.campaign.scan_type !== 'exit') {
+  if (!isActionCenterRouteDefaultsEnabledScanType(args.campaign.scan_type)) {
     return false
   }
 

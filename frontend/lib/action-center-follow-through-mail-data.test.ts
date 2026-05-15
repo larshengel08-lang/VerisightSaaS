@@ -9,11 +9,25 @@ vi.mock('@/lib/supabase/admin', () => ({
 import { buildActionCenterFollowThroughMailRouteSnapshot } from './action-center-follow-through-mail-data'
 
 describe('action center follow-through mail data', () => {
-  it('rejects non-ExitScan routes before they enter the mail planner', () => {
+  it('accepts RetentieScan routes and still rejects blocked routes before they enter the mail planner', () => {
     expect(
       buildActionCenterFollowThroughMailRouteSnapshot({
         routeId: 'camp-2::org::support',
         scanType: 'retention',
+        routeStatus: 'reviewbaar',
+      }),
+    ).toEqual({
+      ok: true,
+      value: expect.objectContaining({
+        routeId: 'camp-2::org::support',
+        scanType: 'retention',
+      }),
+    })
+
+    expect(
+      buildActionCenterFollowThroughMailRouteSnapshot({
+        routeId: 'camp-2::org::support',
+        scanType: 'pulse',
         routeStatus: 'reviewbaar',
       }),
     ).toEqual({
@@ -26,7 +40,7 @@ describe('action center follow-through mail data', () => {
     const snapshot = buildActionCenterFollowThroughMailRouteSnapshot({
       routeId: 'camp-1::org::sales',
       routeScopeValue: 'org-1::department::sales',
-      scanType: 'exit',
+      scanType: 'retention',
       routeStatus: 'reviewbaar',
       hrRecipients: [
         {

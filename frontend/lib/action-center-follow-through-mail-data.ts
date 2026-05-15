@@ -1,6 +1,10 @@
 import { getActionCenterPageData } from '@/lib/action-center-page-data'
 import { inferActionCenterManagerResponseScopeType } from '@/lib/action-center-manager-responses'
 import {
+  ACTION_CENTER_ROUTE_DEFAULTS_ENABLED_SCAN_TYPES,
+  type ActionCenterRouteDefaultsEnabledScanType,
+} from '@/lib/action-center-route-defaults'
+import {
   buildDefaultActionCenterReviewRhythmConfig,
   isActionCenterReviewRhythmSupportedScanType,
   normalizeActionCenterReviewRhythmConfig,
@@ -32,7 +36,7 @@ export interface ActionCenterFollowThroughMailRouteSnapshot {
   campaignId: string
   campaignName: string
   scopeLabel: string
-  scanType: 'exit'
+  scanType: ActionCenterRouteDefaultsEnabledScanType
   routeStatus: ActionCenterPreviewStatus
   reviewScheduledFor: string | null
   reviewCompletedAt: string | null
@@ -190,7 +194,7 @@ export function buildActionCenterFollowThroughMailRouteSnapshot(
       campaignId: normalizeText(input.campaignId) ?? input.routeId.split('::')[0] ?? input.routeId,
       campaignName: normalizeText(input.campaignName) ?? 'ExitScan',
       scopeLabel: normalizeText(input.scopeLabel) ?? routeScopeValue,
-      scanType: 'exit',
+      scanType: input.scanType,
       routeStatus: input.routeStatus,
       reviewScheduledFor: normalizeText(input.reviewScheduledFor),
       reviewCompletedAt: normalizeText(input.reviewCompletedAt),
@@ -335,7 +339,7 @@ export async function getActionCenterFollowThroughMailData(args: {
     currentUserWorkspaceMemberships: args.currentUserWorkspaceMemberships,
   })
 
-  const eligibleItems = pageData.items.filter((item) => item.sourceLabel === 'ExitScan')
+  const eligibleItems = pageData.items
   if (eligibleItems.length === 0) {
     return {
       snapshots: [] as ActionCenterFollowThroughMailRouteSnapshot[],
@@ -461,7 +465,7 @@ export async function getActionCenterFollowThroughMailDispatchData() {
   const { data, error } = await admin
     .from('campaigns')
     .select('organization_id')
-    .eq('scan_type', 'exit')
+    .in('scan_type', [...ACTION_CENTER_ROUTE_DEFAULTS_ENABLED_SCAN_TYPES])
 
   if (error) {
     throw new Error(error.message ?? 'Action Center dispatch campaign discovery failed.')

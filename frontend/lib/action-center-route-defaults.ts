@@ -17,6 +17,7 @@ export type ActionCenterRouteDefaultsEnabledScanType =
 
 export interface ActionCenterRouteDefaults {
   scanType: ActionCenterRouteDefaultsKnownScanType
+  actionCenterStatus: 'enabled' | 'blocked'
   routeEnabled: boolean
   cadenceDays: 14
   reminderLeadDays: 3
@@ -36,6 +37,7 @@ function buildEnabledRouteDefaults(
 ): ActionCenterRouteDefaults {
   return {
     scanType,
+    actionCenterStatus: 'enabled',
     routeEnabled: true,
     ...BASELINE_ROUTE_DEFAULTS,
     remindersEnabled: true,
@@ -48,6 +50,7 @@ function buildBlockedRouteDefaults(
 ): ActionCenterRouteDefaults {
   return {
     scanType,
+    actionCenterStatus: 'blocked',
     routeEnabled: false,
     ...BASELINE_ROUTE_DEFAULTS,
     remindersEnabled: false,
@@ -100,4 +103,15 @@ export function isActionCenterRouteDefaultsProviderEligibleScanType(
 ) {
   const defaults = getActionCenterRouteDefaults(scanType)
   return defaults?.providerEligible === true
+}
+
+export function getActionCenterEnabledRouteDefaults(
+  scanType: string | null | undefined,
+): ActionCenterRouteDefaults & { scanType: ActionCenterRouteDefaultsEnabledScanType } | null {
+  const defaults = getActionCenterRouteDefaults(scanType)
+  if (!defaults?.routeEnabled) {
+    return null
+  }
+
+  return defaults as ActionCenterRouteDefaults & { scanType: ActionCenterRouteDefaultsEnabledScanType }
 }

@@ -32,6 +32,20 @@ describe('action center review invite draft contract', () => {
     })
   })
 
+  it('reports an eligible RetentieScan review invite context in the bounded parity slice', () => {
+    expect(
+      getActionCenterReviewInviteEligibility({
+        ...baseContext,
+        scanType: 'retention',
+        campaignId: 'campaign-retention-q2',
+        campaignName: 'RetentieScan Q2',
+      }),
+    ).toEqual({
+      ok: true,
+      reason: null,
+    })
+  })
+
   it('accepts a reviewbaar preview status from the Action Center caller path', () => {
     expect(
       getActionCenterReviewInviteEligibility({
@@ -84,8 +98,8 @@ describe('action center review invite draft contract', () => {
 
   it.each([
     {
-      name: 'unsupported scan type outside ExitScan',
-      override: { scanType: 'retention' as ScanType },
+      name: 'unsupported scan type outside the enabled parity routes',
+      override: { scanType: 'pulse' as ScanType },
       reason: 'unsupported-scan-type',
     },
     {

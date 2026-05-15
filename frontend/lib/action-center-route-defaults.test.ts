@@ -24,6 +24,7 @@ describe('action center route defaults contract', () => {
   it('keeps ExitScan as the enabled baseline and unlocks RetentieScan with the same defaults', () => {
     expect(getActionCenterRouteDefaults('exit')).toEqual({
       scanType: 'exit',
+      actionCenterStatus: 'enabled',
       routeEnabled: true,
       cadenceDays: 14,
       reminderLeadDays: 3,
@@ -34,6 +35,7 @@ describe('action center route defaults contract', () => {
 
     expect(getActionCenterRouteDefaults('retention')).toEqual({
       scanType: 'retention',
+      actionCenterStatus: 'enabled',
       routeEnabled: true,
       cadenceDays: 14,
       reminderLeadDays: 3,
@@ -47,6 +49,7 @@ describe('action center route defaults contract', () => {
     for (const scanType of ['onboarding', 'pulse', 'leadership', 'team'] as const) {
       expect(getActionCenterRouteDefaults(scanType)).toEqual({
         scanType,
+        actionCenterStatus: 'blocked',
         routeEnabled: false,
         cadenceDays: 14,
         reminderLeadDays: 3,

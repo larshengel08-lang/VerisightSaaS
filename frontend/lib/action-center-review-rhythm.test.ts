@@ -8,7 +8,7 @@ import {
 } from './action-center-review-rhythm'
 
 describe('action center review rhythm contract', () => {
-  it('provides the bounded default config for ExitScan routes', () => {
+  it('provides the bounded default config for enabled Action Center routes', () => {
     expect(buildDefaultActionCenterReviewRhythmConfig()).toEqual({
       cadenceDays: 14,
       reminderLeadDays: 3,
@@ -47,9 +47,24 @@ describe('action center review rhythm contract', () => {
     })
   })
 
-  it('rejects non-exit scan types in the shared contract layer', () => {
+  it('supports retention beside exit and still rejects blocked scan types in the shared contract layer', () => {
     expect(isActionCenterReviewRhythmSupportedScanType('exit')).toBe(true)
+    expect(isActionCenterReviewRhythmSupportedScanType('retention')).toBe(true)
     expect(isActionCenterReviewRhythmSupportedScanType('pulse')).toBe(false)
+    expect(
+      validateActionCenterReviewRhythmInput(
+        {
+          cadenceDays: 14,
+          reminderLeadDays: 3,
+          escalationLeadDays: 7,
+          remindersEnabled: true,
+        },
+        'retention',
+      ),
+    ).toEqual({
+      ok: true,
+      reason: null,
+    })
     expect(
       validateActionCenterReviewRhythmInput(
         {

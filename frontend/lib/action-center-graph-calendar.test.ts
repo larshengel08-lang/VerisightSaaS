@@ -79,10 +79,27 @@ function assertGraphCalendarSchema(sql: string) {
 }
 
 describe('action center graph calendar capability', () => {
-  it('enables Graph only for ExitScan routes with granted consent and a bounded organizer mailbox', () => {
+  it('enables Graph for the bounded parity routes with granted consent and a bounded organizer mailbox', () => {
     expect(
       getActionCenterGraphCalendarCapability({
         scanType: 'exit',
+        consentState: 'granted',
+        organizerEmail: 'hr@verisight.nl',
+        organizerUserId: 'hr-organizer@tenant.example',
+      }),
+    ).toEqual({
+      mode: 'graph-enabled',
+      provider: 'microsoft_graph',
+      reason: null,
+      organizerEmail: 'hr@verisight.nl',
+      organizerUserId: 'hr-organizer@tenant.example',
+    })
+  })
+
+  it('enables Graph for RetentieScan when the shared route contract marks the route as provider-eligible', () => {
+    expect(
+      getActionCenterGraphCalendarCapability({
+        scanType: 'retention',
         consentState: 'granted',
         organizerEmail: 'hr@verisight.nl',
         organizerUserId: 'hr-organizer@tenant.example',
@@ -113,10 +130,10 @@ describe('action center graph calendar capability', () => {
     })
   })
 
-  it('falls back cleanly for non-ExitScan routes even when consent exists', () => {
+  it('falls back cleanly for blocked routes even when consent exists', () => {
     expect(
       getActionCenterGraphCalendarCapability({
-        scanType: 'retention',
+        scanType: 'pulse',
         consentState: 'granted',
         organizerEmail: 'hr@verisight.nl',
         organizerUserId: 'hr-organizer@tenant.example',
