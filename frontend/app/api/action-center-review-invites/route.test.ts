@@ -1103,6 +1103,95 @@ describe('action center review invite route', () => {
     })
   })
 
+  it('returns 409 when a blocked route family like Pulse tries to reuse the invite route', async () => {
+    mockGetActionCenterPageData.mockResolvedValue({
+      items: [
+        {
+          ...mockItem,
+          id: 'cmp-pulse-1::org-1::department::operations',
+          title: 'Pulse: Operations',
+          sourceLabel: 'Pulse',
+          coreSemantics: {
+            route: {
+              routeId: 'cmp-pulse-1::org-1::department::operations',
+              campaignId: 'cmp-pulse-1',
+            },
+          },
+        },
+      ],
+      summary: { reviewCount: 1 },
+      ownerOptions: [],
+      managerOptions: [],
+      itemHrefs: {},
+      organizationNames: ['Northwind'],
+    })
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'campaigns') {
+        return createMaybeSingleQuery({
+          data: {
+            id: 'cmp-pulse-1',
+            name: 'Pulse Q2',
+            scan_type: 'pulse',
+            organization_id: 'org-1',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'organizations') {
+        return createMaybeSingleQuery({
+          data: {
+            id: 'org-1',
+            name: 'Northwind',
+            contact_email: 'northwind-hr@example.com',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_workspace_members') {
+        return createMaybeSingleQuery({
+          data: buildManagerMembershipRow(),
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_manager_responses') {
+        return createMaybeSingleQuery({
+          data: {
+            ...buildManagerResponseRow(),
+            campaign_id: 'cmp-pulse-1',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_review_schedule_revisions') {
+        return createLatestRevisionQuery({
+          data: null,
+          error: null,
+        })
+      }
+
+      throw new Error(`Unhandled table ${table}`)
+    })
+
+    const response = await POST(
+      new Request('https://app.verisight.nl/api/action-center-review-invites', {
+        method: 'POST',
+        body: JSON.stringify({
+          reviewItemId: 'cmp-pulse-1::org-1::department::operations',
+        }),
+      }),
+    )
+
+    expect(response.status).toBe(409)
+    expect(await response.json()).toEqual({
+      detail: 'Reviewuitnodiging kan nog niet worden opgebouwd: unsupported-scan-type.',
+    })
+  })
+
   it('fails closed when the manager assignment is not viewable in the shared Action Center eligibility path', async () => {
     mockAdminFrom.mockImplementation((table: string) => {
       if (table === 'campaigns') {

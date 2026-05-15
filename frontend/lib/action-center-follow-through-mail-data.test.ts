@@ -9,7 +9,7 @@ vi.mock('@/lib/supabase/admin', () => ({
 import { buildActionCenterFollowThroughMailRouteSnapshot } from './action-center-follow-through-mail-data'
 
 describe('action center follow-through mail data', () => {
-  it('accepts RetentieScan routes and still rejects blocked routes before they enter the mail planner', () => {
+  it('accepts RetentieScan routes and still rejects blocked route families before they enter the mail planner', () => {
     expect(
       buildActionCenterFollowThroughMailRouteSnapshot({
         routeId: 'camp-2::org::support',
@@ -34,6 +34,19 @@ describe('action center follow-through mail data', () => {
       ok: false,
       reason: 'unsupported-route',
     })
+
+    for (const scanType of ['onboarding', 'leadership', 'team'] as const) {
+      expect(
+        buildActionCenterFollowThroughMailRouteSnapshot({
+          routeId: `camp-2::${scanType}::support`,
+          scanType,
+          routeStatus: 'reviewbaar',
+        }),
+      ).toEqual({
+        ok: false,
+        reason: 'unsupported-route',
+      })
+    }
   })
 
   it('keeps scoped HR oversight recipients bounded to writable review-rhythm actors only', () => {

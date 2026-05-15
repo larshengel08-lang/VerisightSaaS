@@ -130,22 +130,25 @@ describe('action center graph calendar capability', () => {
     })
   })
 
-  it('falls back cleanly for blocked routes even when consent exists', () => {
-    expect(
-      getActionCenterGraphCalendarCapability({
-        scanType: 'pulse',
-        consentState: 'granted',
+  it.each(['pulse', 'onboarding', 'leadership', 'team'] as const)(
+    'falls back cleanly for blocked route family %s even when consent exists',
+    (scanType) => {
+      expect(
+        getActionCenterGraphCalendarCapability({
+          scanType,
+          consentState: 'granted',
+          organizerEmail: 'hr@verisight.nl',
+          organizerUserId: 'hr-organizer@tenant.example',
+        }),
+      ).toEqual({
+        mode: 'fallback-only',
+        provider: 'microsoft_graph',
+        reason: 'unsupported-scan-type',
         organizerEmail: 'hr@verisight.nl',
-        organizerUserId: 'hr-organizer@tenant.example',
-      }),
-    ).toEqual({
-      mode: 'fallback-only',
-      provider: 'microsoft_graph',
-      reason: 'unsupported-scan-type',
-      organizerEmail: 'hr@verisight.nl',
-      organizerUserId: null,
-    })
-  })
+        organizerUserId: null,
+      })
+    },
+  )
 
   it('builds a stable provider link record without drifting from canonical route identity', () => {
     expect(
