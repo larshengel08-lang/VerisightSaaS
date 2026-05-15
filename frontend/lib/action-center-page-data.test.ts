@@ -91,6 +91,13 @@ describe('getActionCenterPageData invite eligibility', () => {
           scan_type: 'exit',
           created_at: '2026-05-01T00:00:00.000Z',
         },
+        {
+          id: 'campaign-retention-1',
+          organization_id: 'org-1',
+          name: 'Retention Operations',
+          scan_type: 'retention',
+          created_at: '2026-05-02T00:00:00.000Z',
+        },
       ],
       campaign_stats: [
         {
@@ -99,6 +106,13 @@ describe('getActionCenterPageData invite eligibility', () => {
           total_completed: 4,
           total_invited: 4,
           created_at: '2026-05-01T00:00:00.000Z',
+        },
+        {
+          campaign_id: 'campaign-retention-1',
+          organization_id: 'org-1',
+          total_completed: 3,
+          total_invited: 3,
+          created_at: '2026-05-02T00:00:00.000Z',
         },
       ],
       campaign_delivery_records: [],
@@ -121,6 +135,10 @@ describe('getActionCenterPageData invite eligibility', () => {
           campaign_id: 'campaign-exit-1',
           department: 'Operations',
         },
+        {
+          campaign_id: 'campaign-retention-1',
+          department: 'Operations',
+        },
       ],
       campaign_delivery_checkpoints: [],
       pilot_learning_checkpoints: [],
@@ -133,7 +151,7 @@ describe('getActionCenterPageData invite eligibility', () => {
     mockAdminFrom.mockImplementation((table: string) => createThenableQuery(tableData[table] ?? []))
   })
 
-  it('keeps visible exit routes eligible for hr_member schedulers even without their own manager_assignee row', async () => {
+  it('keeps visible route-default-enabled routes eligible for hr_member schedulers even without their own manager_assignee row', async () => {
     const context: SuiteAccessContext = {
       persona: 'customer_member',
       isVerisightAdmin: false,
@@ -160,11 +178,12 @@ describe('getActionCenterPageData invite eligibility', () => {
     })
 
     const routeId = buildActionCenterRouteId('campaign-exit-1', 'org-1::department::operations')
+    const retentionRouteId = buildActionCenterRouteId('campaign-retention-1', 'org-1::department::operations')
 
-    expect(pageData.inviteDownloadEligibleRouteIds).toEqual([routeId])
+    expect(pageData.inviteDownloadEligibleRouteIds).toEqual([routeId, retentionRouteId])
 
     const liveContexts = mockBuildLiveActionCenterItems.mock.calls[0]?.[0]
-    expect(liveContexts).toHaveLength(1)
+    expect(liveContexts).toHaveLength(2)
     expect(liveContexts[0]?.assignedManager).toBeNull()
   })
 })
