@@ -26,21 +26,34 @@ function ReportRow({
   extraDisambiguator?: string | null
 }) {
   return (
-    <article className="grid gap-4 border-b border-[color:var(--dashboard-frame-border)] px-5 py-4 last:border-b-0 lg:grid-cols-[minmax(0,1.25fr),150px,170px,140px,auto] lg:items-start">
+    <article className="grid gap-4 border-b border-slate-200 px-5 py-5 last:border-b-0 lg:grid-cols-[minmax(0,1.45fr),170px,170px,140px,auto] lg:items-start">
       <div className="min-w-0">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
+        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">
           {scanName}
         </p>
-        <p className="mt-2 text-base font-semibold text-[color:var(--dashboard-ink)]">{campaignName}</p>
+        <p className="mt-2 text-[1.02rem] font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">
+          {campaignName}
+        </p>
         {extraDisambiguator ? (
-          <p className="mt-1 text-xs text-[color:var(--dashboard-muted)]">{extraDisambiguator}</p>
+          <p className="mt-2 text-xs text-[color:var(--dashboard-muted)]">{extraDisambiguator}</p>
         ) : null}
       </div>
       <p className="text-sm text-[color:var(--dashboard-text)]">{periodLabel}</p>
       <p className="text-sm text-[color:var(--dashboard-text)]">{responseBasis}</p>
-      <p className="text-sm font-medium text-[color:var(--dashboard-ink)]">{status}</p>
+      <p className="inline-flex w-fit rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">
+        {status}
+      </p>
       <div className="flex justify-start lg:justify-end">
-        <PdfDownloadButton campaignId={campaignId} campaignName={campaignName} scanType={scanType} />
+        <PdfDownloadButton
+          campaignId={campaignId}
+          campaignName={campaignName}
+          scanType={scanType}
+          label="Download PDF"
+          loadingLabel="PDF ophalen..."
+          buttonClassName="inline-flex items-center justify-center rounded-full bg-[#C36A29] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+          containerClassName="flex flex-col items-start gap-1 lg:items-end"
+          errorClassName="max-w-48 text-xs text-red-600 lg:text-right"
+        />
       </div>
     </article>
   )
@@ -62,19 +75,23 @@ function UnavailableReportRow({
   extraDisambiguator?: string | null
 }) {
   return (
-    <article className="grid gap-4 border-b border-[color:var(--dashboard-frame-border)] px-5 py-4 last:border-b-0 lg:grid-cols-[minmax(0,1.25fr),150px,170px,1fr] lg:items-start">
+    <article className="grid gap-4 border-b border-slate-200 bg-[color:var(--dashboard-soft)]/24 px-5 py-5 last:border-b-0 lg:grid-cols-[minmax(0,1.45fr),170px,170px,1fr] lg:items-start">
       <div className="min-w-0">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
+        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">
           {scanName}
         </p>
-        <p className="mt-2 text-base font-semibold text-[color:var(--dashboard-ink)]">{campaignName}</p>
+        <p className="mt-2 text-[1.02rem] font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">
+          {campaignName}
+        </p>
         {extraDisambiguator ? (
-          <p className="mt-1 text-xs text-[color:var(--dashboard-muted)]">{extraDisambiguator}</p>
+          <p className="mt-2 text-xs text-[color:var(--dashboard-muted)]">{extraDisambiguator}</p>
         ) : null}
       </div>
       <p className="text-sm text-[color:var(--dashboard-text)]">{periodLabel}</p>
       <p className="text-sm text-[color:var(--dashboard-text)]">{responseBasis}</p>
-      <p className="text-sm font-medium text-[color:var(--dashboard-muted)]">{status}</p>
+      <p className="inline-flex w-fit rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--dashboard-muted)]">
+        {status}
+      </p>
     </article>
   )
 }
@@ -107,11 +124,14 @@ export default async function ReportsPage() {
 
   return (
     <div className="space-y-8">
-      <section className="space-y-2">
-        <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">
-          Rapporten
-        </p>
-        <h1 className="text-[2rem] font-semibold tracking-[-0.04em] text-[color:var(--dashboard-ink)]">
+      <section className="space-y-3 border-b border-slate-200/80 pb-6">
+        <div className="flex items-center gap-3">
+          <span className="h-px w-10 bg-[#C36A29]" />
+          <p className="text-[0.72rem] font-semibold uppercase tracking-[0.28em] text-[color:var(--dashboard-muted)]">
+            Rapporten
+          </p>
+        </div>
+        <h1 className="text-[2.4rem] font-semibold leading-none tracking-[-0.06em] text-[color:var(--dashboard-ink)] md:text-[3rem]">
           Download scanrapporten
         </h1>
         <p className="max-w-3xl text-sm leading-6 text-[color:var(--dashboard-text)]">
@@ -121,15 +141,15 @@ export default async function ReportsPage() {
 
       <section className="space-y-4">
         <div className="flex items-center justify-between gap-4">
-          <h2 className="text-lg font-semibold text-[color:var(--dashboard-ink)]">Beschikbaar nu</h2>
-          <p className="text-sm text-[color:var(--dashboard-muted)]">
+          <h2 className="text-lg font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">Beschikbaar nu</h2>
+          <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
             {reportIndex.availableRows.length} rapport{reportIndex.availableRows.length === 1 ? '' : 'en'}
           </p>
         </div>
 
         {reportIndex.availableRows.length > 0 ? (
-          <div className="overflow-hidden rounded-xl border border-[color:var(--dashboard-frame-border)] bg-white">
-            <div className="hidden border-b border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)]/45 px-5 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)] lg:grid lg:grid-cols-[minmax(0,1.25fr),150px,170px,140px,auto] lg:items-center">
+          <div className="overflow-hidden border border-slate-200 bg-white">
+            <div className="hidden border-b border-slate-200 bg-[color:var(--dashboard-soft)]/45 px-5 py-3 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)] lg:grid lg:grid-cols-[minmax(0,1.45fr),170px,170px,140px,auto] lg:items-center">
               <span>Scan</span>
               <span>Periode</span>
               <span>Responsbasis</span>
@@ -151,17 +171,17 @@ export default async function ReportsPage() {
             ))}
           </div>
         ) : (
-          <div className="rounded-xl border border-dashed border-[color:var(--dashboard-frame-border)] bg-white/80 px-5 py-8 text-sm leading-7 text-[color:var(--dashboard-text)]">
+          <div className="border border-dashed border-slate-200 bg-white/80 px-5 py-8 text-sm leading-7 text-[color:var(--dashboard-text)]">
             Er zijn nu nog geen downloadbare scanrapporten.
           </div>
         )}
       </section>
 
-      <details className="overflow-hidden rounded-xl border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)]/40">
-        <summary className="cursor-pointer list-none px-5 py-4 text-sm font-semibold text-[color:var(--dashboard-ink)]">
+      <details className="overflow-hidden border border-slate-200 bg-[color:var(--dashboard-soft)]/24">
+        <summary className="cursor-pointer list-none px-5 py-4 text-sm font-semibold tracking-[-0.01em] text-[color:var(--dashboard-ink)]">
           Nog niet beschikbaar ({reportIndex.unavailableRows.length})
         </summary>
-        <div className="border-t border-[color:var(--dashboard-frame-border)] bg-white">
+        <div className="border-t border-slate-200 bg-white">
           {reportIndex.unavailableRows.length > 0 ? (
             reportIndex.unavailableRows.map((row) => (
               <UnavailableReportRow
