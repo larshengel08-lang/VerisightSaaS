@@ -98,3 +98,57 @@ export function resolveActionCenterHrWriteAccess(args: {
     auditRole: null,
   }
 }
+
+export function resolveActionCenterReviewRhythmWriteAccess(args: {
+  context: Pick<SuiteAccessContext, 'isVerisightAdmin'>
+  orgMemberships: SuiteOrgMembership[]
+  workspaceMemberships: ActionCenterWorkspaceMember[]
+  orgId: string
+  routeScopeValue: string
+}):
+  | {
+      allowed: true
+      auditRole: ActionCenterGovernanceWriteRole
+    }
+  | {
+      allowed: false
+      auditRole: null
+    } {
+  if (args.context.isVerisightAdmin) {
+    return {
+      allowed: true,
+      auditRole: 'verisight_admin',
+    }
+  }
+
+  const orgMembership = args.orgMemberships.find((membership) => membership.org_id === args.orgId) ?? null
+  if (orgMembership?.role === 'owner') {
+    return {
+      allowed: true,
+      auditRole: 'hr_owner',
+    }
+  }
+
+  const hrWorkspaceMembership =
+    args.workspaceMemberships.find(
+      (membership) =>
+        membership.org_id === args.orgId &&
+        (membership.access_role === 'hr_owner' || membership.access_role === 'hr_member') &&
+        membership.can_view &&
+        membership.can_update &&
+        membership.can_schedule_review &&
+        (membership.scope_type === 'org' || membership.scope_value === args.routeScopeValue),
+    ) ?? null
+
+  if (hrWorkspaceMembership) {
+    return {
+      allowed: true,
+      auditRole: hrWorkspaceMembership.access_role === 'hr_owner' ? 'hr_owner' : 'hr_member',
+    }
+  }
+
+  return {
+    allowed: false,
+    auditRole: null,
+  }
+}

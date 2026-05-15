@@ -70,6 +70,13 @@ export function ReviewRhythmConsole({
     setDraft(config)
   }, [config])
 
+  useEffect(() => {
+    setSaveState({
+      status: 'idle',
+      message: null,
+    })
+  }, [selectedRouteId, selectedRouteSourceId, selectedRouteOrgId, selectedRouteScanType])
+
   const routeScopeValue = getRouteScopeValue(selectedRouteId, selectedRouteSourceId)
   const hasBoundedSelection = Boolean(
     selectedRouteId &&
