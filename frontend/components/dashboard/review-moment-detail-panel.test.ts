@@ -1,10 +1,20 @@
 import { readFileSync } from 'node:fs'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { ReviewMomentDetailPanel } from './review-moment-detail-panel'
 import { buildActionCenterEntryHref } from '@/lib/action-center-entry'
 import type { ActionCenterPreviewItem } from '@/lib/action-center-preview-model'
+
+const { mockRefresh } = vi.hoisted(() => ({
+  mockRefresh: vi.fn(),
+}))
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    refresh: mockRefresh,
+  }),
+}))
 
 function createReviewMomentItem(overrides: Partial<ActionCenterPreviewItem> = {}) {
   return {
@@ -104,6 +114,7 @@ describe('review moment detail panel entry links', () => {
         item,
         urgency: 'this-week',
         canDownloadInviteArtifact: true,
+        canScheduleReviewControls: true,
       }),
     )
 
@@ -135,6 +146,7 @@ describe('review moment detail panel invite CTA', () => {
         urgency: 'this-week',
         item,
         canDownloadInviteArtifact: true,
+        canScheduleReviewControls: true,
       }),
     )
 
@@ -150,6 +162,7 @@ describe('review moment detail panel invite CTA', () => {
           reviewDate: null,
         }),
         canDownloadInviteArtifact: true,
+        canScheduleReviewControls: true,
       }),
     )
 
@@ -164,6 +177,7 @@ describe('review moment detail panel invite CTA', () => {
           status: 'afgerond',
         }),
         canDownloadInviteArtifact: true,
+        canScheduleReviewControls: true,
       }),
     )
 
@@ -176,9 +190,100 @@ describe('review moment detail panel invite CTA', () => {
         urgency: 'this-week',
         item: createReviewMomentItem(),
         canDownloadInviteArtifact: false,
+        canScheduleReviewControls: false,
       }),
     )
 
     expect(markup).not.toContain('Download .ics')
+  })
+})
+
+describe('review moment detail panel reschedule controls', () => {
+  it('keeps reschedule controls bounded to the existing review detail surface', () => {
+    const source = readFileSync(new URL('./review-moment-detail-panel.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('Verplaats review')
+    expect(source).toContain('Annuleer review')
+    expect(source).toContain("item.sourceLabel === 'ExitScan'")
+    expect(source).toContain('canScheduleReviewControls')
+    expect(source).toContain('/api/action-center-review-reschedules')
+    expect(source).not.toContain('workflow builder')
+    expect(source).not.toContain('Outlook sync')
+  })
+
+  it('renders bounded reschedule controls for an active eligible review', () => {
+    const markup = renderToStaticMarkup(
+      createElement(ReviewMomentDetailPanel, {
+        urgency: 'this-week',
+        item: createReviewMomentItem(),
+        canDownloadInviteArtifact: true,
+        canScheduleReviewControls: true,
+      }),
+    )
+
+    expect(markup).toContain('Reviewdatum beheren')
+    expect(markup).toContain('type="date"')
+    expect(markup).toContain('Verplaats review')
+    expect(markup).toContain('Annuleer review')
+  })
+
+  it('hides reschedule controls when review scheduling access is unavailable', () => {
+    const markup = renderToStaticMarkup(
+      createElement(ReviewMomentDetailPanel, {
+        urgency: 'this-week',
+        item: createReviewMomentItem(),
+        canDownloadInviteArtifact: false,
+        canScheduleReviewControls: false,
+      }),
+    )
+
+    expect(markup).not.toContain('Verplaats review')
+    expect(markup).not.toContain('Annuleer review')
+  })
+
+  it('hides reschedule controls for closed review statuses', () => {
+    const markup = renderToStaticMarkup(
+      createElement(ReviewMomentDetailPanel, {
+        urgency: 'completed',
+        item: createReviewMomentItem({
+          status: 'afgerond',
+        }),
+        canDownloadInviteArtifact: true,
+        canScheduleReviewControls: true,
+      }),
+    )
+
+    expect(markup).not.toContain('Verplaats review')
+    expect(markup).not.toContain('Annuleer review')
+  })
+
+  it('hides reschedule controls for non-ExitScan routes', () => {
+    const markup = renderToStaticMarkup(
+      createElement(ReviewMomentDetailPanel, {
+        urgency: 'this-week',
+        item: createReviewMomentItem({
+          sourceLabel: 'RetentieScan',
+        }),
+        canDownloadInviteArtifact: true,
+        canScheduleReviewControls: true,
+      }),
+    )
+
+    expect(markup).not.toContain('Verplaats review')
+    expect(markup).not.toContain('Annuleer review')
+  })
+
+  it('hides reschedule controls when scheduling capability is missing even if invite download stays available', () => {
+    const markup = renderToStaticMarkup(
+      createElement(ReviewMomentDetailPanel, {
+        urgency: 'this-week',
+        item: createReviewMomentItem(),
+        canDownloadInviteArtifact: true,
+        canScheduleReviewControls: false,
+      }),
+    )
+
+    expect(markup).not.toContain('Verplaats review')
+    expect(markup).not.toContain('Annuleer review')
   })
 })
