@@ -82,10 +82,20 @@ describe('action center review rhythm contract', () => {
     expect(status).toBe('stale')
   })
 
-  it('treats date-only review dates by local calendar day instead of elapsed UTC milliseconds', () => {
+  it('treats date-only review dates by a deterministic UTC calendar day instead of host-local time', () => {
+    const sameInstantWithConflictingLocalDay = {
+      getTime: () => new Date('2026-05-16T00:30:00.000Z').getTime(),
+      getUTCFullYear: () => 2026,
+      getUTCMonth: () => 4,
+      getUTCDate: () => 16,
+      getFullYear: () => 2026,
+      getMonth: () => 4,
+      getDate: () => 15,
+    } as Date
+
     const status = classifyActionCenterReviewRhythmStatus({
       reviewDate: '2026-05-15',
-      now: new Date('2026-05-16T00:30:00.000+02:00'),
+      now: sameInstantWithConflictingLocalDay,
       config: {
         cadenceDays: 14,
         reminderLeadDays: 3,

@@ -26,12 +26,12 @@ function parseReviewDate(value: string) {
   return Number.isNaN(parsed.getTime()) ? null : parsed
 }
 
-function getLocalCalendarDayDiff(reviewDate: string, now: Date) {
+function getUtcCalendarDayDiff(reviewDate: string, now: Date) {
   const [year, month, day] = reviewDate.split('-').map((value) => Number(value))
   if (!year || !month || !day) return null
 
   const reviewDay = Date.UTC(year, month - 1, day)
-  const nowDay = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())
+  const nowDay = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
 
   return Math.round((nowDay - reviewDay) / 86_400_000)
 }
@@ -108,7 +108,7 @@ export function classifyActionCenterReviewRhythmStatus(args: {
   }
 
   const diffDays = isDateOnlyValue(args.reviewDate)
-    ? getLocalCalendarDayDiff(args.reviewDate, args.now)
+    ? getUtcCalendarDayDiff(args.reviewDate, args.now)
     : Math.floor((args.now.getTime() - scheduled.getTime()) / 86_400_000)
 
   if (diffDays === null) {
