@@ -89,6 +89,13 @@ function canRenderReviewRescheduleControls(
   return canScheduleReviewControls && item.sourceLabel === 'ExitScan' && isActiveReviewRoute(item)
 }
 
+function canRenderNativeCalendarSync(
+  item: ActionCenterPreviewItem,
+  canUseNativeCalendarSync: boolean,
+) {
+  return canUseNativeCalendarSync && canRenderReviewInviteDownload(item, true, null)
+}
+
 function getInitialDraftReviewDate(item: ActionCenterPreviewItem | null) {
   return item?.reviewDate ?? ''
 }
@@ -98,11 +105,13 @@ export function ReviewMomentDetailPanel({
   urgency,
   canDownloadInviteArtifact,
   canScheduleReviewControls,
+  canUseNativeCalendarSync,
 }: {
   item: ActionCenterPreviewItem | null
   urgency: ReviewMomentUrgency | null
   canDownloadInviteArtifact: boolean
   canScheduleReviewControls: boolean
+  canUseNativeCalendarSync: boolean
 }) {
   const router = useRouter()
   const [draftReviewDate, setDraftReviewDate] = useState(getInitialDraftReviewDate(item))
@@ -135,6 +144,55 @@ export function ReviewMomentDetailPanel({
   }
 
   const selectedItem = item
+
+  async function syncNativeCalendar() {
+    setFeedback(null)
+    startTransition(async () => {
+      try {
+        const response = await fetch('/api/action-center-review-invites', {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+          },
+          body: JSON.stringify({
+            reviewItemId: selectedItem.id,
+            syncProvider: 'microsoft_graph',
+            revision: artifactPreviewOverride?.revision ?? undefined,
+            mode: artifactPreviewOverride?.mode,
+          }),
+        })
+
+        const payload = (await response.json().catch(() => null)) as
+          | {
+              graphSync?: {
+                status?: 'linked' | 'already-current' | 'fallback' | 'failed' | 'cancelled'
+              }
+              detail?: string
+            }
+          | null
+
+        if (!response.ok) {
+          setFeedback(payload?.detail ?? 'Outlook-agenda kon niet worden bijgewerkt.')
+          return
+        }
+
+        const graphStatus = payload?.graphSync?.status
+        if (graphStatus === 'linked' || graphStatus === 'cancelled' || graphStatus === 'already-current') {
+          setFeedback('Outlook-agenda bijgewerkt. Action Center blijft leidend voor reviewstatus.')
+          return
+        }
+
+        if (graphStatus === 'fallback') {
+          setFeedback('Outlook-sync is hier niet actief. De .ics-download blijft beschikbaar.')
+          return
+        }
+
+        setFeedback('Outlook-agenda kon niet worden bijgewerkt. De .ics-download blijft beschikbaar.')
+      } catch {
+        setFeedback('Outlook-agenda kon niet worden bijgewerkt. De .ics-download blijft beschikbaar.')
+      }
+    })
+  }
 
   async function submitReviewSchedule(operation: 'cancel' | 'reschedule') {
     const routeScopeValue = parseRouteScopeValueFromRoute(selectedItem)
@@ -257,6 +315,16 @@ export function ReviewMomentDetailPanel({
           >
             Download .ics
           </Link>
+        ) : null}
+        {canRenderNativeCalendarSync(item, canUseNativeCalendarSync) ? (
+          <button
+            type="button"
+            onClick={() => void syncNativeCalendar()}
+            disabled={isPending}
+            className="rounded-full border border-[color:var(--dashboard-frame-border)] bg-white px-3 py-2 text-xs font-semibold text-[color:var(--dashboard-ink)] transition hover:bg-[color:var(--dashboard-muted-surface)] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Sync Outlook-agenda
+          </button>
         ) : null}
       </div>
 

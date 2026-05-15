@@ -115,6 +115,7 @@ describe('review moment detail panel entry links', () => {
         urgency: 'this-week',
         canDownloadInviteArtifact: true,
         canScheduleReviewControls: true,
+        canUseNativeCalendarSync: false,
       }),
     )
 
@@ -148,6 +149,7 @@ describe('review moment detail panel invite CTA', () => {
         item,
         canDownloadInviteArtifact: true,
         canScheduleReviewControls: true,
+        canUseNativeCalendarSync: false,
       }),
     )
 
@@ -164,6 +166,7 @@ describe('review moment detail panel invite CTA', () => {
         }),
         canDownloadInviteArtifact: true,
         canScheduleReviewControls: true,
+        canUseNativeCalendarSync: false,
       }),
     )
 
@@ -187,6 +190,7 @@ describe('review moment detail panel invite CTA', () => {
         }),
         canDownloadInviteArtifact: true,
         canScheduleReviewControls: true,
+        canUseNativeCalendarSync: false,
       }),
     )
 
@@ -200,6 +204,7 @@ describe('review moment detail panel invite CTA', () => {
         item: createReviewMomentItem(),
         canDownloadInviteArtifact: false,
         canScheduleReviewControls: false,
+        canUseNativeCalendarSync: false,
       }),
     )
 
@@ -220,6 +225,16 @@ describe('review moment detail panel reschedule controls', () => {
     expect(source).not.toContain('Outlook sync')
   })
 
+  it('renders a bounded Outlook sync affordance only when native calendar sync is explicitly available', () => {
+    const source = readFileSync(new URL('./review-moment-detail-panel.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('canUseNativeCalendarSync')
+    expect(source).toContain('Sync Outlook-agenda')
+    expect(source).toContain("syncProvider: 'microsoft_graph'")
+    expect(source).toContain('Action Center blijft leidend voor reviewstatus.')
+    expect(source).not.toContain('Outlook is leidend')
+  })
+
   it('renders bounded reschedule controls for an active eligible review', () => {
     const markup = renderToStaticMarkup(
       createElement(ReviewMomentDetailPanel, {
@@ -227,6 +242,7 @@ describe('review moment detail panel reschedule controls', () => {
         item: createReviewMomentItem(),
         canDownloadInviteArtifact: true,
         canScheduleReviewControls: true,
+        canUseNativeCalendarSync: false,
       }),
     )
 
@@ -243,6 +259,7 @@ describe('review moment detail panel reschedule controls', () => {
         item: createReviewMomentItem(),
         canDownloadInviteArtifact: false,
         canScheduleReviewControls: false,
+        canUseNativeCalendarSync: false,
       }),
     )
 
@@ -259,6 +276,7 @@ describe('review moment detail panel reschedule controls', () => {
         }),
         canDownloadInviteArtifact: true,
         canScheduleReviewControls: true,
+        canUseNativeCalendarSync: false,
       }),
     )
 
@@ -275,6 +293,7 @@ describe('review moment detail panel reschedule controls', () => {
         }),
         canDownloadInviteArtifact: true,
         canScheduleReviewControls: true,
+        canUseNativeCalendarSync: false,
       }),
     )
 
@@ -289,10 +308,37 @@ describe('review moment detail panel reschedule controls', () => {
         item: createReviewMomentItem(),
         canDownloadInviteArtifact: true,
         canScheduleReviewControls: false,
+        canUseNativeCalendarSync: false,
       }),
     )
 
     expect(markup).not.toContain('Verplaats review')
     expect(markup).not.toContain('Annuleer review')
+  })
+
+  it('shows the Outlook sync affordance only for explicitly eligible review routes', () => {
+    const eligibleMarkup = renderToStaticMarkup(
+      createElement(ReviewMomentDetailPanel, {
+        urgency: 'this-week',
+        item: createReviewMomentItem(),
+        canDownloadInviteArtifact: true,
+        canScheduleReviewControls: true,
+        canUseNativeCalendarSync: true,
+      }),
+    )
+
+    const fallbackMarkup = renderToStaticMarkup(
+      createElement(ReviewMomentDetailPanel, {
+        urgency: 'this-week',
+        item: createReviewMomentItem(),
+        canDownloadInviteArtifact: true,
+        canScheduleReviewControls: true,
+        canUseNativeCalendarSync: false,
+      }),
+    )
+
+    expect(eligibleMarkup).toContain('Sync Outlook-agenda')
+    expect(fallbackMarkup).not.toContain('Sync Outlook-agenda')
+    expect(fallbackMarkup).toContain('Download .ics')
   })
 })

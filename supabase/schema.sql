@@ -762,6 +762,42 @@ create table if not exists public.action_center_review_schedule_revisions (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.action_center_graph_calendar_links (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.organizations(id) on delete cascade,
+  route_id text not null,
+  review_item_id text not null,
+  route_scope_value text not null,
+  route_source_id uuid not null,
+  provider text not null check (provider in ('microsoft_graph')),
+  event_id text not null,
+  organizer_email text not null,
+  organizer_user_id text,
+  consent_state text not null check (consent_state in ('granted', 'missing', 'revoked')),
+  sync_state text not null check (sync_state in ('linked', 'cancelled', 'fallback', 'failed')),
+  last_synced_revision integer not null check (last_synced_revision >= 0),
+  i_cal_uid text,
+  last_sync_error text,
+  constraint action_center_graph_calendar_links_route_id_text_check
+    check (length(btrim(route_id)) > 0),
+  constraint action_center_graph_calendar_links_review_item_id_text_check
+    check (length(btrim(review_item_id)) > 0),
+  constraint action_center_graph_calendar_links_route_scope_value_text_check
+    check (length(btrim(route_scope_value)) > 0),
+  constraint action_center_graph_calendar_links_event_id_text_check
+    check (length(btrim(event_id)) > 0),
+  constraint action_center_graph_calendar_links_organizer_email_text_check
+    check (length(btrim(organizer_email)) > 0),
+  constraint action_center_graph_calendar_links_route_identity_check
+    check (route_id = ((route_source_id)::text || '::' || route_scope_value)),
+  constraint action_center_graph_calendar_links_review_item_identity_check
+    check (review_item_id = route_id),
+  constraint action_center_graph_calendar_links_route_source_campaign_org_fk
+    foreign key (route_source_id, org_id) references public.campaigns(id, organization_id) on delete cascade,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create table if not exists public.action_center_follow_through_mail_events (
   id uuid primary key default gen_random_uuid(),
   org_id uuid references public.organizations(id) on delete cascade not null,
@@ -819,6 +855,10 @@ create index if not exists idx_action_center_review_rhythm_configs_route_source
   on public.action_center_review_rhythm_configs(route_source_type, route_source_id);
 create unique index if not exists idx_action_center_review_schedule_revisions_route_revision
   on public.action_center_review_schedule_revisions(route_id, revision);
+create unique index if not exists idx_action_center_graph_calendar_links_route_provider
+  on public.action_center_graph_calendar_links(route_id, provider);
+create unique index if not exists idx_action_center_graph_calendar_links_event_provider
+  on public.action_center_graph_calendar_links(event_id, provider);
 create index if not exists idx_action_center_follow_through_mail_events_org
   on public.action_center_follow_through_mail_events(org_id, created_at desc);
 create index if not exists idx_action_center_follow_through_mail_events_route
@@ -849,6 +889,7 @@ alter table public.action_center_manager_responses enable row level security;
 alter table public.action_center_route_relations enable row level security;
 alter table public.action_center_review_rhythm_configs enable row level security;
 alter table public.action_center_review_schedule_revisions enable row level security;
+alter table public.action_center_graph_calendar_links enable row level security;
 alter table public.action_center_follow_through_mail_events enable row level security;
 
 -- ── Hulpfuncties ─────────────────────────────────────────────────────────────
@@ -898,6 +939,21 @@ drop trigger if exists action_center_review_rhythm_configs_set_updated_at on pub
 create trigger action_center_review_rhythm_configs_set_updated_at
 before update on public.action_center_review_rhythm_configs
 for each row execute function public.set_action_center_review_rhythm_updated_at();
+
+create or replace function public.set_action_center_graph_calendar_links_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists action_center_graph_calendar_links_set_updated_at on public.action_center_graph_calendar_links;
+create trigger action_center_graph_calendar_links_set_updated_at
+before update on public.action_center_graph_calendar_links
+for each row execute function public.set_action_center_graph_calendar_links_updated_at();
 
 create or replace function public.is_verisight_admin_user()
 returns boolean
@@ -1471,6 +1527,9 @@ drop policy if exists "service_role_can_select_action_center_follow_through_mail
 drop policy if exists "service_role_can_insert_action_center_follow_through_mail_events" on public.action_center_follow_through_mail_events;
 drop policy if exists "service_role_can_select_action_center_review_schedule_revisions" on public.action_center_review_schedule_revisions;
 drop policy if exists "service_role_can_insert_action_center_review_schedule_revisions" on public.action_center_review_schedule_revisions;
+drop policy if exists "service_role_can_select_action_center_graph_calendar_links" on public.action_center_graph_calendar_links;
+drop policy if exists "service_role_can_insert_action_center_graph_calendar_links" on public.action_center_graph_calendar_links;
+drop policy if exists "service_role_can_update_action_center_graph_calendar_links" on public.action_center_graph_calendar_links;
 
 create policy "service_role_can_select_action_center_review_schedule_revisions"
   on public.action_center_review_schedule_revisions for select
@@ -1480,6 +1539,22 @@ create policy "service_role_can_select_action_center_review_schedule_revisions"
 create policy "service_role_can_insert_action_center_review_schedule_revisions"
   on public.action_center_review_schedule_revisions for insert
   to service_role
+  with check (true);
+
+create policy "service_role_can_select_action_center_graph_calendar_links"
+  on public.action_center_graph_calendar_links for select
+  to service_role
+  using (true);
+
+create policy "service_role_can_insert_action_center_graph_calendar_links"
+  on public.action_center_graph_calendar_links for insert
+  to service_role
+  with check (true);
+
+create policy "service_role_can_update_action_center_graph_calendar_links"
+  on public.action_center_graph_calendar_links for update
+  to service_role
+  using (true)
   with check (true);
 
 create policy "service_role_can_select_action_center_follow_through_mail_events"

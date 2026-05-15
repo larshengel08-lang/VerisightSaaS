@@ -109,6 +109,7 @@ export function ReviewMomentPageClient({
   canScheduleActionCenterReview,
   inviteDownloadEligibleRouteIds,
   manageableReviewRhythmRouteIds,
+  nativeCalendarEligibleRouteIds,
   rhythmConfigByRouteId,
   rhythmSummary,
 }: {
@@ -119,6 +120,7 @@ export function ReviewMomentPageClient({
   canScheduleActionCenterReview: boolean
   inviteDownloadEligibleRouteIds: string[]
   manageableReviewRhythmRouteIds: string[]
+  nativeCalendarEligibleRouteIds: string[]
   rhythmConfigByRouteId: Record<string, ActionCenterReviewRhythmConfig>
   rhythmSummary: ReviewRhythmSummary
 }) {
@@ -137,6 +139,10 @@ export function ReviewMomentPageClient({
   const manageableReviewRhythmRouteIdSet = useMemo(
     () => new Set(manageableReviewRhythmRouteIds),
     [manageableReviewRhythmRouteIds],
+  )
+  const nativeCalendarEligibleRouteIdSet = useMemo(
+    () => new Set(nativeCalendarEligibleRouteIds),
+    [nativeCalendarEligibleRouteIds],
   )
   const scopeOptions = useMemo(
     () => [...new Set(items.map((item) => getReviewMomentScopeLabel(item)))].sort((left, right) => left.localeCompare(right)),
@@ -201,6 +207,11 @@ export function ReviewMomentPageClient({
   )
   const canScheduleReviewControls =
     canScheduleActionCenterReview && canManageSelectedReviewRhythm
+  const canUseNativeCalendarSync = Boolean(
+    selectedItem?.coreSemantics.route.routeId &&
+      nativeCalendarEligibleRouteIdSet.has(selectedItem.coreSemantics.route.routeId) &&
+      canScheduleReviewControls,
+  )
   const lastUpdatedLabel = formatReviewMomentLastUpdated(lastUpdated)
   const visibleRhythmSummary = useMemo(() => {
     if (visibleItems.length === 0) {
@@ -347,6 +358,7 @@ export function ReviewMomentPageClient({
             urgency={selectedUrgency}
             canDownloadInviteArtifact={canDownloadInviteArtifact}
             canScheduleReviewControls={canScheduleReviewControls}
+            canUseNativeCalendarSync={canUseNativeCalendarSync}
           />
         </div>
       </div>

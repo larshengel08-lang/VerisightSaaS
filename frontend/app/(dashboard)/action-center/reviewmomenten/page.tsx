@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { ReviewMomentPageClient } from '@/components/dashboard/review-moment-page-client'
+import { loadActionCenterGraphCapability } from '@/lib/action-center-graph-client'
 import { getActionCenterPageData } from '@/lib/action-center-page-data'
 import { resolveActionCenterReviewRhythmWriteAccess } from '@/lib/action-center-governance'
 import { getActionCenterReviewRhythmData } from '@/lib/action-center-review-rhythm-data'
@@ -28,6 +29,21 @@ function getRouteScopeValue(item: Pick<ActionCenterPreviewItem, 'id' | 'coreSema
   }
 
   return item.id.slice(routePrefix.length)
+}
+
+function getNativeCalendarEligibleRouteIds(items: ActionCenterPreviewItem[]) {
+  return items.flatMap((item) => {
+    if (!item.orgId || item.sourceLabel !== 'ExitScan') {
+      return []
+    }
+
+    const capability = loadActionCenterGraphCapability({
+      orgId: item.orgId,
+      scanType: 'exit',
+    })
+
+    return capability.mode === 'graph-enabled' ? [item.id] : []
+  })
 }
 
 export default async function ActionCenterReviewmomentenPage() {
@@ -86,6 +102,7 @@ export default async function ActionCenterReviewmomentenPage() {
 
     return access.allowed ? [item.id] : []
   })
+  const nativeCalendarEligibleRouteIds = getNativeCalendarEligibleRouteIds(pageData.items)
 
   return (
     <ReviewMomentPageClient
@@ -96,6 +113,7 @@ export default async function ActionCenterReviewmomentenPage() {
       canScheduleActionCenterReview={context.canScheduleActionCenterReview}
       inviteDownloadEligibleRouteIds={pageData.inviteDownloadEligibleRouteIds}
       manageableReviewRhythmRouteIds={manageableReviewRhythmRouteIds}
+      nativeCalendarEligibleRouteIds={nativeCalendarEligibleRouteIds}
       rhythmConfigByRouteId={rhythmData.configByRouteId}
       rhythmSummary={rhythmData.summary}
     />

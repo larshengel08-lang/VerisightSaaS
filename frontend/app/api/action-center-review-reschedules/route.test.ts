@@ -4,10 +4,14 @@ const {
   mockGetUser,
   mockLoadSuiteAccessContext,
   mockAdminFrom,
+  mockSyncActionCenterGraphReview,
+  mockResolveReviewInviteContext,
 } = vi.hoisted(() => ({
   mockGetUser: vi.fn(),
   mockLoadSuiteAccessContext: vi.fn(),
   mockAdminFrom: vi.fn(),
+  mockSyncActionCenterGraphReview: vi.fn(),
+  mockResolveReviewInviteContext: vi.fn(),
 }))
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -26,6 +30,14 @@ vi.mock('@/lib/supabase/admin', () => ({
   createAdminClient: () => ({
     from: mockAdminFrom,
   }),
+}))
+
+vi.mock('@/lib/action-center-graph-sync', () => ({
+  syncActionCenterGraphReview: mockSyncActionCenterGraphReview,
+}))
+
+vi.mock('../action-center-review-invites/invite-helpers', () => ({
+  resolveReviewInviteContext: mockResolveReviewInviteContext,
 }))
 
 import { POST } from './route'
@@ -134,6 +146,42 @@ describe('action center review reschedules route', () => {
           can_schedule_review: true,
         },
       ],
+    })
+
+    mockResolveReviewInviteContext.mockResolvedValue({
+      context: {
+        actionCenterOrigin: 'https://app.verisight.nl',
+        campaignId: ROUTE_SOURCE_ID,
+        campaignName: 'ExitScan Q2',
+        managerEmail: 'mila@northwind.example',
+        managerName: 'Mila Jansen',
+        phase: 1,
+        reviewDate: '2026-05-28',
+        reviewItemId: ROUTE_ID,
+        routeId: ROUTE_ID,
+        routeStatus: 'reviewbaar',
+        scanType: 'exit',
+        scopeLabel: 'Operations',
+      },
+      orgId: ORG_ID,
+      routeScopeValue: ROUTE_SCOPE_VALUE,
+      routeSourceId: ROUTE_SOURCE_ID,
+      organizerEmail: 'northwind-hr@example.com',
+      persistedScheduleDefaults: {
+        latestRevision: 2,
+        latestOperation: 'reschedule',
+        isCanonicalReviewCancelled: false,
+      },
+    })
+
+    mockSyncActionCenterGraphReview.mockResolvedValue({
+      status: 'linked',
+      provider: 'microsoft_graph',
+      action: 'updated',
+      eventId: 'graph-event-1',
+      iCalUId: 'ical-1',
+      lastSyncedRevision: 3,
+      reason: null,
     })
   })
 
@@ -515,6 +563,28 @@ describe('action center review reschedules route', () => {
       changed_by: 'user-1',
       changed_by_role: 'hr_member',
     })
+    expect(mockResolveReviewInviteContext).toHaveBeenCalledWith({
+      request: expect.any(Request),
+      reviewItemId: ROUTE_ID,
+    })
+    expect(mockSyncActionCenterGraphReview).toHaveBeenCalledWith({
+      orgId: ORG_ID,
+      routeId: ROUTE_ID,
+      reviewItemId: ROUTE_ID,
+      routeScopeValue: ROUTE_SCOPE_VALUE,
+      routeSourceId: ROUTE_SOURCE_ID,
+      scanType: 'exit',
+      organizerEmail: 'northwind-hr@example.com',
+      revision: 3,
+      method: 'REQUEST',
+      inviteDraft: {
+        subject: 'Reviewmoment ExitScan Q2 / Operations',
+        emailHtml: expect.stringContaining('Action Center'),
+        reviewDate: '2026-05-28',
+        recipientEmail: 'mila@northwind.example',
+        recipientName: 'Mila Jansen',
+      },
+    })
     await expect(response.json()).resolves.toEqual({
       revision: 3,
       operation: 'reschedule',
@@ -612,11 +682,107 @@ describe('action center review reschedules route', () => {
       changed_by: 'user-1',
       changed_by_role: 'hr_member',
     })
+    expect(mockSyncActionCenterGraphReview).toHaveBeenCalledWith({
+      orgId: ORG_ID,
+      routeId: ROUTE_ID,
+      reviewItemId: ROUTE_ID,
+      routeScopeValue: ROUTE_SCOPE_VALUE,
+      routeSourceId: ROUTE_SOURCE_ID,
+      scanType: 'exit',
+      organizerEmail: 'northwind-hr@example.com',
+      revision: 4,
+      method: 'CANCEL',
+      inviteDraft: {
+        subject: 'Reviewmoment ExitScan Q2 / Operations',
+        emailHtml: expect.stringContaining('Action Center'),
+        reviewDate: '2026-05-28',
+        recipientEmail: 'mila@northwind.example',
+        recipientName: 'Mila Jansen',
+      },
+    })
     await expect(response.json()).resolves.toEqual({
       revision: 4,
       operation: 'cancel',
       reviewDate: null,
     })
+  })
+
+  it('does not roll back canonical success when Graph mirroring fails after the revision insert', async () => {
+    const updateQuery = createUpdateManagerResponseQuery({
+      data: {
+        review_scheduled_for: '2099-06-03',
+      },
+    })
+    const insertQuery = createInsertRevisionQuery({
+      data: {
+        revision: 3,
+        operation: 'reschedule',
+        review_date: '2099-06-03',
+      },
+    })
+    let managerResponseCallCount = 0
+    let revisionCallCount = 0
+
+    mockSyncActionCenterGraphReview.mockRejectedValue(new Error('graph unavailable'))
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'campaigns') {
+        return createCampaignQuery({
+          data: {
+            id: ROUTE_SOURCE_ID,
+            organization_id: ORG_ID,
+            scan_type: 'exit',
+          },
+        })
+      }
+
+      if (table === 'action_center_manager_responses') {
+        managerResponseCallCount += 1
+        if (managerResponseCallCount === 1) {
+          return createManagerResponseQuery({
+            data: {
+              campaign_id: ROUTE_SOURCE_ID,
+              org_id: ORG_ID,
+              route_scope_type: 'department',
+              route_scope_value: ROUTE_SCOPE_VALUE,
+              review_scheduled_for: '2026-05-28',
+            },
+          })
+        }
+
+        return updateQuery
+      }
+
+      if (table === 'action_center_review_schedule_revisions') {
+        revisionCallCount += 1
+        if (revisionCallCount === 1) {
+          return createLatestRevisionQuery({
+            data: {
+              revision: 2,
+              operation: 'reschedule',
+            },
+          })
+        }
+
+        return insertQuery
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(makeRequest(buildValidBody()))
+
+    expect(response.status).toBe(200)
+    await expect(response.json()).resolves.toEqual({
+      revision: 3,
+      operation: 'reschedule',
+      reviewDate: '2099-06-03',
+    })
+    expect(updateQuery.update).toHaveBeenCalledWith({
+      review_scheduled_for: '2099-06-03',
+      updated_by: 'user-1',
+    })
+    expect(insertQuery.insert).toHaveBeenCalled()
   })
 
   it('fails closed before mutation when cancel is requested for an already-cancelled canonical route', async () => {
