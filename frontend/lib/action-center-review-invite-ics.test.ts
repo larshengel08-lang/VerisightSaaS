@@ -54,18 +54,18 @@ describe('action center review invite ics', () => {
     expect(ics).toContain('\r\n')
   })
 
-  it('renders a CANCEL invite with the same UID and a higher sequence', () => {
-    const ics = renderActionCenterReviewInviteIcs({
+  it('renders a CANCEL invite with the same UID and the supplied persisted sequence', () => {
+    const unfolded = unfoldIcs(renderActionCenterReviewInviteIcs({
       draft,
       method: 'CANCEL',
-      revision: 3,
+      revision: 5,
       organizerEmail: 'noreply@verisight.nl',
-    })
+    }))
 
-    expect(ics).toContain('METHOD:CANCEL')
-    expect(ics).toContain('STATUS:CANCELLED')
-    expect(ics).toContain('SEQUENCE:3')
-    expect(ics).toContain('UID:ac-review-route-42@verisight.nl')
+    expect(unfolded).toContain('METHOD:CANCEL')
+    expect(unfolded).toContain('STATUS:CANCELLED')
+    expect(unfolded).toContain('SEQUENCE:5')
+    expect(unfolded).toContain('UID:ac-review-route-42@verisight.nl')
   })
 
   it('quotes and escapes ATTENDEE CN as an ICS parameter value', () => {

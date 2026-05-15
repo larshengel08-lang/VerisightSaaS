@@ -1,5 +1,6 @@
 import { getActionCenterPageData } from '@/lib/action-center-page-data'
 import type { ActionCenterReviewInviteContext } from '@/lib/action-center-review-invite'
+import { loadActionCenterReviewRescheduleData } from '@/lib/action-center-review-reschedule-data'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
@@ -12,6 +13,11 @@ type ReviewInviteResolverError = {
 type ReviewInviteResolution = {
   context: ActionCenterReviewInviteContext
   organizerEmail: string
+  persistedScheduleDefaults: {
+    latestRevision: number | null
+    latestOperation: 'reschedule' | 'cancel' | null
+    isCanonicalReviewCancelled: boolean
+  }
 }
 
 function normalizeText(value: string | null | undefined) {
@@ -179,6 +185,43 @@ export async function resolveReviewInviteContext(args: {
     }
   }
 
+  let persistedScheduleDefaults: ReviewInviteResolution['persistedScheduleDefaults'] = {
+    latestRevision: null,
+    latestOperation: null,
+    isCanonicalReviewCancelled: false,
+  }
+  let effectiveReviewDate = normalizeText(item.reviewDate)
+
+  const persistedSchedule = await loadActionCenterReviewRescheduleData({
+    routeId,
+    routeScopeValue: scopeValue,
+    routeSourceId: campaignId,
+    orgId,
+  })
+
+  if (persistedSchedule.status === 'missing-canonical-review-truth') {
+    return {
+      error: {
+        status: 409,
+        detail:
+          'Reviewuitnodiging kan nog niet worden opgebouwd: missing-canonical-review-truth.',
+      },
+    }
+  }
+
+  if (persistedSchedule.status === 'ok') {
+    persistedScheduleDefaults = {
+      latestRevision: persistedSchedule.latestRevision,
+      latestOperation: persistedSchedule.latestOperation,
+      isCanonicalReviewCancelled: persistedSchedule.latestOperation === 'cancel',
+    }
+
+    effectiveReviewDate =
+      normalizeText(persistedSchedule.reviewDate) ??
+      normalizeText(persistedSchedule.latestPreviousReviewDate) ??
+      normalizeText(item.reviewDate)
+  }
+
   const context: ActionCenterReviewInviteContext = {
     actionCenterOrigin: getCanonicalInviteOrigin(args.request),
     campaignId,
@@ -186,7 +229,7 @@ export async function resolveReviewInviteContext(args: {
     managerEmail: normalizeText(managerMembership?.login_email),
     managerName: normalizeText(managerMembership?.display_name),
     phase: 1,
-    reviewDate: normalizeText(item.reviewDate),
+    reviewDate: effectiveReviewDate,
     reviewItemId: item.id,
     routeId,
     routeStatus: item.status,
@@ -200,5 +243,6 @@ export async function resolveReviewInviteContext(args: {
       organizationContactEmail: normalizeText(organization?.contact_email),
       userEmail: normalizeText(user.email),
     }),
+    persistedScheduleDefaults,
   }
 }

@@ -6,7 +6,14 @@ import {
 import { renderActionCenterReviewInviteIcs } from '@/lib/action-center-review-invite-ics'
 import { resolveReviewInviteContext } from './invite-helpers'
 
-function normalizeRevision(value: unknown) {
+function parseRevisionOverride(value: unknown) {
+  if (value === null || typeof value === 'undefined') {
+    return {
+      hasExplicitOverride: false,
+      revision: 0,
+    }
+  }
+
   const parsed =
     typeof value === 'number'
       ? value
@@ -14,12 +21,63 @@ function normalizeRevision(value: unknown) {
         ? Number(value)
         : Number.NaN
 
-  return Number.isFinite(parsed) && parsed >= 0 ? Math.trunc(parsed) : 0
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    return {
+      hasExplicitOverride: false,
+      revision: 0,
+    }
+  }
+
+  return {
+    hasExplicitOverride: true,
+    revision: Math.trunc(parsed),
+  }
 }
 
-function normalizeMethod(value: unknown) {
+function parseMethodOverride(value: unknown) {
   const normalized = typeof value === 'string' ? value.trim().toLowerCase() : ''
-  return normalized === 'cancel' ? 'CANCEL' : 'REQUEST'
+  if (normalized === 'cancel') {
+    return {
+      hasExplicitOverride: true,
+      method: 'CANCEL' as const,
+    }
+  }
+
+  if (normalized === 'request') {
+    return {
+      hasExplicitOverride: true,
+      method: 'REQUEST' as const,
+    }
+  }
+
+  return {
+    hasExplicitOverride: false,
+    method: 'REQUEST' as const,
+  }
+}
+
+function resolvePreviewRevision(args: {
+  hasExplicitOverride: boolean
+  requestedRevision: number
+  latestRevision: number | null
+}) {
+  if (args.hasExplicitOverride) {
+    return args.requestedRevision
+  }
+
+  return typeof args.latestRevision === 'number' ? args.latestRevision : 0
+}
+
+function resolvePreviewMethod(args: {
+  hasExplicitOverride: boolean
+  requestedMethod: 'REQUEST' | 'CANCEL'
+  isCanonicalReviewCancelled: boolean
+}) {
+  if (args.hasExplicitOverride) {
+    return args.requestedMethod
+  }
+
+  return args.isCanonicalReviewCancelled ? 'CANCEL' : 'REQUEST'
 }
 
 function buildEligibilityError(reason: string) {
@@ -40,8 +98,10 @@ function buildIcsFilename(campaignId: string) {
 async function resolvePreview(args: {
   request: Request
   reviewItemId: string
-  revision: number
-  method: 'REQUEST' | 'CANCEL'
+  requestedRevision: number
+  hasRevisionOverride: boolean
+  requestedMethod: 'REQUEST' | 'CANCEL'
+  hasMethodOverride: boolean
 }) {
   const resolved = await resolveReviewInviteContext({
     request: args.request,
@@ -69,13 +129,23 @@ async function resolvePreview(args: {
   }
 
   const draft = buildActionCenterReviewInviteDraft(resolved.context)
+  const revision = resolvePreviewRevision({
+    hasExplicitOverride: args.hasRevisionOverride,
+    requestedRevision: args.requestedRevision,
+    latestRevision: resolved.persistedScheduleDefaults.latestRevision,
+  })
+  const method = resolvePreviewMethod({
+    hasExplicitOverride: args.hasMethodOverride,
+    requestedMethod: args.requestedMethod,
+    isCanonicalReviewCancelled: resolved.persistedScheduleDefaults.isCanonicalReviewCancelled,
+  })
 
   return {
     error: null,
     preview: {
       ...draft,
-      revision: args.revision,
-      method: args.method,
+      revision,
+      method,
       organizerEmail: resolved.organizerEmail,
     },
   }
@@ -100,11 +170,15 @@ export async function POST(request: Request) {
     )
   }
 
+  const revisionOverride = parseRevisionOverride(body?.revision)
+  const methodOverride = parseMethodOverride(body?.mode)
   const resolved = await resolvePreview({
     request,
     reviewItemId,
-    revision: normalizeRevision(body?.revision),
-    method: normalizeMethod(body?.mode),
+    requestedRevision: revisionOverride.revision,
+    hasRevisionOverride: revisionOverride.hasExplicitOverride,
+    requestedMethod: methodOverride.method,
+    hasMethodOverride: methodOverride.hasExplicitOverride,
   })
 
   if (resolved.error) {
@@ -128,14 +202,18 @@ export async function GET(request: Request) {
     )
   }
 
-  const revision = normalizeRevision(url.searchParams.get('revision'))
-  const method = normalizeMethod(url.searchParams.get('mode'))
+  const rawRevision = url.searchParams.get('revision')
+  const rawMethod = url.searchParams.get('mode')
+  const revisionOverride = parseRevisionOverride(rawRevision)
+  const methodOverride = parseMethodOverride(rawMethod)
   const format = url.searchParams.get('format')
   const resolved = await resolvePreview({
     request,
     reviewItemId,
-    revision,
-    method,
+    requestedRevision: revisionOverride.revision,
+    hasRevisionOverride: revisionOverride.hasExplicitOverride,
+    requestedMethod: methodOverride.method,
+    hasMethodOverride: methodOverride.hasExplicitOverride,
   })
 
   if (resolved.error) {
@@ -148,8 +226,8 @@ export async function GET(request: Request) {
 
   const ics = renderActionCenterReviewInviteIcs({
     draft: resolved.preview,
-    method,
-    revision,
+    method: resolved.preview.method,
+    revision: resolved.preview.revision,
     organizerEmail: resolved.preview.organizerEmail,
   })
 
