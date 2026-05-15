@@ -13,7 +13,7 @@ type ResultsLayoutProps = {
 
 export function ResultsLayout({ sections }: ResultsLayoutProps) {
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <section id="responsbasis">{sections.response}</section>
       <section id="kernsignaal">{sections.signal}</section>
       <section id="signalen-in-samenhang">{sections.synthesis}</section>
