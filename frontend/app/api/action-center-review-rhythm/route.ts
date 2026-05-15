@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { resolveActionCenterReviewRhythmWriteAccess } from '@/lib/action-center-governance'
 import { validateActionCenterReviewRhythmInput } from '@/lib/action-center-review-rhythm'
 import { buildActionCenterRouteId } from '@/lib/action-center-route-contract'
 import {
@@ -9,7 +10,6 @@ import {
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
-import type { ActionCenterWorkspaceMember, SuiteOrgMembership } from '@/lib/suite-access'
 
 type ReviewRhythmRequestBody = {
   routeId?: string | null
@@ -148,52 +148,6 @@ function resolveReviewRhythmIdentity(args: {
   }
 }
 
-function hasBoundedReviewRhythmWriteAccess(args: {
-  isVerisightAdmin: boolean
-  orgMemberships: SuiteOrgMembership[]
-  workspaceMemberships: ActionCenterWorkspaceMember[]
-  orgId: string
-  routeScopeValue: string
-}) {
-  if (args.isVerisightAdmin) {
-    return {
-      allowed: true as const,
-      auditRole: 'verisight_admin' as const,
-    }
-  }
-
-  const orgMembership = args.orgMemberships.find((membership) => membership.org_id === args.orgId) ?? null
-  if (orgMembership?.role === 'owner') {
-    return {
-      allowed: true as const,
-      auditRole: 'hr_owner' as const,
-    }
-  }
-
-  const matchingWorkspaceMembership =
-    args.workspaceMemberships.find(
-      (membership) =>
-        membership.org_id === args.orgId &&
-        (membership.access_role === 'hr_owner' || membership.access_role === 'hr_member') &&
-        membership.can_view &&
-        membership.can_update &&
-        membership.can_schedule_review &&
-        (membership.scope_type === 'org' || membership.scope_value === args.routeScopeValue),
-    ) ?? null
-
-  if (matchingWorkspaceMembership) {
-    return {
-      allowed: true as const,
-      auditRole: matchingWorkspaceMembership.access_role,
-    }
-  }
-
-  return {
-    allowed: false as const,
-    auditRole: null,
-  }
-}
-
 function canManageReviewRhythm(auditRole: 'verisight_admin' | 'hr_owner' | 'hr_member' | null) {
   return Boolean(
     auditRole === 'verisight_admin' || auditRole === 'hr_owner' || auditRole === 'hr_member',
@@ -220,8 +174,10 @@ export async function POST(request: Request) {
   }
 
   const { context, orgMemberships, workspaceMemberships } = await loadSuiteAccessContext(supabase, user.id)
-  const hrWriteAccess = hasBoundedReviewRhythmWriteAccess({
-    isVerisightAdmin: context.isVerisightAdmin,
+  const hrWriteAccess = resolveActionCenterReviewRhythmWriteAccess({
+    context: {
+      isVerisightAdmin: context.isVerisightAdmin,
+    },
     orgMemberships,
     workspaceMemberships,
     orgId: parsed.orgId,
