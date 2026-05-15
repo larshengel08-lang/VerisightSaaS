@@ -161,48 +161,10 @@ describe('action center review reschedules route', () => {
       workspaceMemberships: [],
     })
 
-    const latestRevisionQuery = createLatestRevisionQuery({
-      data: {
-        revision: 2,
-        operation: 'reschedule',
-        review_date: '2026-05-28',
-        previous_review_date: '2026-05-14',
-      },
-    })
-
-    mockAdminFrom.mockImplementation((table: string) => {
-      if (table === 'campaigns') {
-        return createCampaignQuery({
-          data: {
-            id: ROUTE_SOURCE_ID,
-            organization_id: ORG_ID,
-            scan_type: 'exit',
-          },
-        })
-      }
-
-      if (table === 'action_center_manager_responses') {
-        return createManagerResponseQuery({
-          data: {
-            campaign_id: ROUTE_SOURCE_ID,
-            org_id: ORG_ID,
-            route_scope_type: 'department',
-            route_scope_value: ROUTE_SCOPE_VALUE,
-            review_scheduled_for: '2026-05-28',
-          },
-        })
-      }
-
-      if (table === 'action_center_review_schedule_revisions') {
-        return latestRevisionQuery
-      }
-
-      throw new Error(`Unexpected table ${table}`)
-    })
-
     const response = await POST(makeRequest(buildValidBody()))
 
     expect(response.status).toBe(403)
+    expect(mockAdminFrom).not.toHaveBeenCalled()
     await expect(response.json()).resolves.toEqual({
       detail: 'Geen toegang om reviewdatum te beheren.',
     })
@@ -1036,6 +998,122 @@ describe('action center review reschedules route', () => {
       detail: 'insert failed',
       rollback: 'failed',
       rollbackDetail: 'rollback failed',
+    })
+  })
+
+  it('restores the prior canonical review date through the null rollback branch after a cancel insert failure', async () => {
+    const applyUpdateQuery = createUpdateManagerResponseQuery({
+      data: {
+        review_scheduled_for: null,
+      },
+    })
+    const rollbackReadQuery = createManagerResponseQuery({
+      data: {
+        review_scheduled_for: null,
+      },
+    })
+    const rollbackUpdateQuery = createUpdateManagerResponseQuery({
+      data: {
+        review_scheduled_for: '2026-05-28',
+      },
+    })
+    const insertQuery = createInsertRevisionQuery({
+      data: null,
+      error: {
+        message: 'insert failed',
+      },
+    })
+    let managerResponseCallCount = 0
+    let revisionCallCount = 0
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'campaigns') {
+        return createCampaignQuery({
+          data: {
+            id: ROUTE_SOURCE_ID,
+            organization_id: ORG_ID,
+            scan_type: 'exit',
+          },
+        })
+      }
+
+      if (table === 'action_center_manager_responses') {
+        managerResponseCallCount += 1
+        if (managerResponseCallCount === 1) {
+          return createManagerResponseQuery({
+            data: {
+              campaign_id: ROUTE_SOURCE_ID,
+              org_id: ORG_ID,
+              route_scope_type: 'department',
+              route_scope_value: ROUTE_SCOPE_VALUE,
+              review_scheduled_for: '2026-05-28',
+            },
+          })
+        }
+
+        if (managerResponseCallCount === 2) {
+          return applyUpdateQuery
+        }
+
+        if (managerResponseCallCount === 3) {
+          return rollbackReadQuery
+        }
+
+        return rollbackUpdateQuery
+      }
+
+      if (table === 'action_center_review_schedule_revisions') {
+        revisionCallCount += 1
+        if (revisionCallCount === 1) {
+          return createLatestRevisionQuery({
+            data: {
+              revision: 2,
+              operation: 'reschedule',
+              review_date: '2026-05-28',
+              previous_review_date: '2026-05-14',
+            },
+          })
+        }
+
+        if (revisionCallCount === 2) {
+          return insertQuery
+        }
+
+        return createLatestRevisionQuery({
+          data: {
+            revision: 2,
+            operation: 'reschedule',
+            review_date: '2026-05-28',
+            previous_review_date: '2026-05-14',
+          },
+        })
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest(
+        buildValidBody({
+          operation: 'cancel',
+          reviewDate: null,
+        }),
+      ),
+    )
+
+    expect(response.status).toBe(500)
+    expect(applyUpdateQuery.update).toHaveBeenCalledWith({
+      review_scheduled_for: null,
+      updated_by: 'user-1',
+    })
+    expect(rollbackUpdateQuery.is).toHaveBeenCalledWith('review_scheduled_for', null)
+    expect(rollbackUpdateQuery.update).toHaveBeenCalledWith({
+      review_scheduled_for: '2026-05-28',
+      updated_by: 'user-1',
+    })
+    await expect(response.json()).resolves.toEqual({
+      detail: 'insert failed',
+      rollback: 'restored',
     })
   })
 

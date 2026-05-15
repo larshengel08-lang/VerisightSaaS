@@ -1,6 +1,12 @@
 import { NextResponse } from 'next/server'
 import { resolveActionCenterReviewRhythmWriteAccess } from '@/lib/action-center-governance'
 import {
+  buildCampaignItemScopeValue,
+  buildDepartmentScopeValue,
+  normalizeCampaignIdentifier,
+  parseActionCenterManagerResponseScopeValue,
+} from '@/lib/action-center-manager-responses'
+import {
   buildNextActionCenterReviewScheduleRevision,
   validateActionCenterReviewRescheduleInput,
 } from '@/lib/action-center-review-reschedule'
@@ -29,6 +35,32 @@ type RollbackOutcome =
       operation: 'reschedule' | 'cancel'
       reviewDate: string | null
     }
+
+function resolveCanonicalWriteIdentity(input: { orgId: string; routeScopeValue: string }) {
+  const canonicalOrgId = normalizeCampaignIdentifier(input.orgId)
+  if (!canonicalOrgId) {
+    return null
+  }
+
+  let parsedScope
+  try {
+    parsedScope = parseActionCenterManagerResponseScopeValue(input.routeScopeValue)
+  } catch {
+    return null
+  }
+
+  if (normalizeCampaignIdentifier(parsedScope.orgId) !== canonicalOrgId) {
+    return null
+  }
+
+  return {
+    orgId: canonicalOrgId,
+    routeScopeValue:
+      parsedScope.scopeType === 'department'
+        ? buildDepartmentScopeValue(canonicalOrgId, parsedScope.scopeKey)
+        : buildCampaignItemScopeValue(canonicalOrgId, parsedScope.scopeKey),
+  }
+}
 
 async function restoreCanonicalReviewDate(args: {
   adminClient: ReturnType<typeof createAdminClient>
@@ -153,6 +185,29 @@ export async function POST(request: Request) {
     return NextResponse.json({ detail: 'Niet ingelogd.' }, { status: 401 })
   }
 
+  const canonicalWriteIdentity = resolveCanonicalWriteIdentity({
+    orgId: parsed.orgId,
+    routeScopeValue: parsed.routeScopeValue,
+  })
+  if (!canonicalWriteIdentity) {
+    return NextResponse.json({ detail: 'Geen toegang om reviewdatum te beheren.' }, { status: 403 })
+  }
+
+  const { context, orgMemberships, workspaceMemberships } = await loadSuiteAccessContext(supabase, user.id)
+  const hrWriteAccess = resolveActionCenterReviewRhythmWriteAccess({
+    context: {
+      isVerisightAdmin: context.isVerisightAdmin,
+    },
+    orgMemberships,
+    workspaceMemberships,
+    orgId: canonicalWriteIdentity.orgId,
+    routeScopeValue: canonicalWriteIdentity.routeScopeValue,
+  })
+
+  if (!hrWriteAccess.allowed) {
+    return NextResponse.json({ detail: 'Geen toegang om reviewdatum te beheren.' }, { status: 403 })
+  }
+
   const routeData = await loadActionCenterReviewRescheduleData({
     routeId: parsed.routeId,
     routeScopeValue: parsed.routeScopeValue,
@@ -176,21 +231,6 @@ export async function POST(request: Request) {
 
   if (routeData.status !== 'ok') {
     return NextResponse.json({ detail: 'Review reschedule route bestaat niet.' }, { status: 400 })
-  }
-
-  const { context, orgMemberships, workspaceMemberships } = await loadSuiteAccessContext(supabase, user.id)
-  const hrWriteAccess = resolveActionCenterReviewRhythmWriteAccess({
-    context: {
-      isVerisightAdmin: context.isVerisightAdmin,
-    },
-    orgMemberships,
-    workspaceMemberships,
-    orgId: routeData.orgId,
-    routeScopeValue: routeData.routeScopeValue,
-  })
-
-  if (!hrWriteAccess.allowed) {
-    return NextResponse.json({ detail: 'Geen toegang om reviewdatum te beheren.' }, { status: 403 })
   }
 
   const adminClient = createAdminClient()
