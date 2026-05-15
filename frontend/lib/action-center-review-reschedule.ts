@@ -7,6 +7,17 @@ export type ActionCenterReviewRescheduleOperation =
 
 export type ActionCenterReviewScheduleArtifactMode = 'CANCEL' | 'REQUEST'
 
+export interface ValidatedActionCenterReviewRescheduleInput {
+  operation: ActionCenterReviewRescheduleOperation
+  routeId: string
+  routeScopeValue: string
+  routeSourceId: string
+  orgId: string
+  scanType: 'exit'
+  reviewDate: string | null
+  reason: string
+}
+
 export interface ActionCenterReviewRescheduleInput {
   operation: ActionCenterReviewRescheduleOperation
   routeId: string
@@ -60,7 +71,7 @@ function isUuid(value: string | null | undefined) {
 
 export function validateActionCenterReviewRescheduleInput(
   input: ActionCenterReviewRescheduleInput | Record<string, unknown> | null | undefined,
-) {
+): ValidatedActionCenterReviewRescheduleInput {
   const operation = input?.operation
   const rawReviewDate = input?.reviewDate
   const routeId = normalizeText(typeof input?.routeId === 'string' ? input.routeId : null)
@@ -96,8 +107,10 @@ export function validateActionCenterReviewRescheduleInput(
     throw new Error('Ongeldige review reschedule input.')
   }
 
+  const normalizedOperation: ActionCenterReviewRescheduleOperation = operation
+
   return {
-    operation,
+    operation: normalizedOperation,
     routeId,
     routeScopeValue,
     routeSourceId,
