@@ -86,7 +86,7 @@ function canRenderReviewRescheduleControls(
   item: ActionCenterPreviewItem,
   canScheduleReviewControls: boolean,
 ) {
-  return canScheduleReviewControls && item.sourceLabel === 'ExitScan' && isActiveReviewRoute(item)
+  return canScheduleReviewControls && isActiveReviewRoute(item)
 }
 
 function canRenderNativeCalendarSync(
@@ -106,12 +106,14 @@ export function ReviewMomentDetailPanel({
   canDownloadInviteArtifact,
   canScheduleReviewControls,
   canUseNativeCalendarSync,
+  selectedRouteScanType,
 }: {
   item: ActionCenterPreviewItem | null
   urgency: ReviewMomentUrgency | null
   canDownloadInviteArtifact: boolean
   canScheduleReviewControls: boolean
   canUseNativeCalendarSync: boolean
+  selectedRouteScanType: string | null
 }) {
   const router = useRouter()
   const [draftReviewDate, setDraftReviewDate] = useState(getInitialDraftReviewDate(item))
@@ -220,7 +222,7 @@ export function ReviewMomentDetailPanel({
             routeScopeValue,
             routeSourceId: selectedItem.coreSemantics.route.campaignId,
             orgId: selectedItem.orgId,
-            scanType: 'exit',
+            scanType: selectedRouteScanType,
             reviewDate: operation === 'cancel' ? null : draftReviewDate,
             reason:
               operation === 'cancel'

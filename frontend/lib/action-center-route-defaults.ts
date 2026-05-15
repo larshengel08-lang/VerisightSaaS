@@ -115,3 +115,26 @@ export function getActionCenterEnabledRouteDefaults(
 
   return defaults as ActionCenterRouteDefaults & { scanType: ActionCenterRouteDefaultsEnabledScanType }
 }
+
+export function getActionCenterScanTypeFromSourceLabel(
+  sourceLabel: string | null | undefined,
+): ActionCenterRouteDefaultsKnownScanType | null {
+  const normalized = sourceLabel?.trim().toLowerCase() ?? ''
+
+  switch (normalized) {
+    case 'exitscan':
+      return 'exit'
+    case 'retentiescan':
+      return 'retention'
+    case 'onboarding 30-60-90':
+      return 'onboarding'
+    case 'pulse':
+      return 'pulse'
+    case 'leadership scan':
+      return 'leadership'
+    case 'teamscan':
+      return 'team'
+    default:
+      return null
+  }
+}

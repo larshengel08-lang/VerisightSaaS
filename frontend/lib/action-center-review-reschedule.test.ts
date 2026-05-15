@@ -22,8 +22,27 @@ describe('action center review reschedule contract', () => {
 
     expect(validateActionCenterReviewRescheduleInput(buildReviewRescheduleInput())).toMatchObject({
       operation: 'reschedule',
+      scanType: 'exit',
       reviewDate: '2099-06-03',
       reason: 'manager-beschikbaar',
+    })
+  })
+
+  it('accepts RetentieScan as the only non-exit parity unlock in the shared reschedule contract', async () => {
+    const { validateActionCenterReviewRescheduleInput } = await import('./action-center-review-reschedule') as {
+      validateActionCenterReviewRescheduleInput: (input: Record<string, unknown>) => Record<string, unknown>
+    }
+
+    expect(
+      validateActionCenterReviewRescheduleInput(
+        buildReviewRescheduleInput({
+          scanType: 'retention',
+        }),
+      ),
+    ).toMatchObject({
+      operation: 'reschedule',
+      scanType: 'retention',
+      reviewDate: '2099-06-03',
     })
   })
 

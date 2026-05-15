@@ -24,7 +24,7 @@ describe('action center review rhythm data', () => {
     vi.clearAllMocks()
   })
 
-  it('returns visible ExitScan route configs and bounded overview counts', async () => {
+  it('returns visible Action Center parity-route configs and bounded overview counts', async () => {
     const configQuery = createRhythmConfigQuery({
       data: [
         {
@@ -57,10 +57,14 @@ describe('action center review rhythm data', () => {
           id: 'cmp-exit-2::org-1::department::finance',
           status: 'reviewbaar',
           reviewDate: '2026-05-27',
-          sourceLabel: 'ExitScan',
+          sourceLabel: 'RetentieScan',
         },
       ] as never,
       now: new Date('2026-05-28T12:00:00.000Z'),
+      routeScanTypeByRouteId: {
+        'cmp-exit-1::org-1::department::operations': 'exit',
+        'cmp-exit-2::org-1::department::finance': 'retention',
+      },
     })
 
     expect(configQuery.in).toHaveBeenCalledWith('route_id', [
@@ -87,7 +91,7 @@ describe('action center review rhythm data', () => {
     })
   })
 
-  it('ignores non-ExitScan items for persistence and summary counts', async () => {
+  it('ignores blocked route families for persistence and summary counts', async () => {
     const configQuery = createRhythmConfigQuery({
       data: [],
     })
@@ -110,6 +114,9 @@ describe('action center review rhythm data', () => {
         },
       ] as never,
       now: new Date('2026-05-28T12:00:00.000Z'),
+      routeScanTypeByRouteId: {
+        'cmp-pulse-1::org-1::department::operations': 'pulse',
+      },
     })
 
     expect(configQuery.in).not.toHaveBeenCalled()
@@ -149,6 +156,9 @@ describe('action center review rhythm data', () => {
           },
         ] as never,
         now: new Date('2026-05-28T12:00:00.000Z'),
+        routeScanTypeByRouteId: {
+          'cmp-exit-1::org-1::department::operations': 'exit',
+        },
       }),
     ).rejects.toThrow('database offline')
   })

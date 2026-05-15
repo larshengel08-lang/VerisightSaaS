@@ -3,6 +3,7 @@
 import React from 'react'
 import { useEffect, useState, useTransition } from 'react'
 import { DashboardChip, DashboardSection } from '@/components/dashboard/dashboard-primitives'
+import { isActionCenterRouteDefaultsEnabledScanType } from '@/lib/action-center-route-defaults'
 import type { ActionCenterReviewRhythmConfig } from '@/lib/action-center-review-rhythm'
 
 const CADENCE_OPTIONS = [7, 14, 30] as const
@@ -33,6 +34,12 @@ function getSaveStatusTone(status: 'idle' | 'success' | 'error') {
   if (status === 'success') return 'emerald'
   if (status === 'error') return 'amber'
   return 'slate'
+}
+
+function getRouteProductLabel(scanType: string | null | undefined) {
+  if (scanType === 'retention') return 'RetentieScan'
+  if (scanType === 'exit') return 'ExitScan'
+  return 'Follow-through'
 }
 
 export function ReviewRhythmConsole({
@@ -83,7 +90,7 @@ export function ReviewRhythmConsole({
       selectedRouteSourceId &&
       selectedRouteOrgId &&
       routeScopeValue &&
-      selectedRouteScanType === 'exit',
+      isActionCenterRouteDefaultsEnabledScanType(selectedRouteScanType),
   )
   const canSave = canManageReviewRhythm && hasBoundedSelection
 
@@ -101,11 +108,11 @@ export function ReviewRhythmConsole({
       !selectedRouteSourceId ||
       !selectedRouteOrgId ||
       !routeScopeValue ||
-      selectedRouteScanType !== 'exit'
+      !isActionCenterRouteDefaultsEnabledScanType(selectedRouteScanType)
     ) {
       setSaveState({
         status: 'error',
-        message: 'Kies eerst een zichtbare ExitScan-route om reviewritme vast te leggen.',
+        message: 'Kies eerst een zichtbare follow-through-route om reviewritme vast te leggen.',
       })
       return
     }
@@ -141,7 +148,7 @@ export function ReviewRhythmConsole({
 
       setSaveState({
         status: 'success',
-        message: 'Reviewritme opgeslagen voor deze ExitScan-route.',
+        message: 'Reviewritme opgeslagen voor deze follow-through-route.',
       })
       onConfigSaved?.(draft)
     } catch {
@@ -163,7 +170,7 @@ export function ReviewRhythmConsole({
       surface="ops"
       eyebrow="Reviewritme"
       title="HR Rhythm Console"
-      description="Beheer voor zichtbare ExitScan-opvolgroutes het reviewritme, reminder-venster en escalatiemoment zonder een generieke laag toe te voegen."
+      description="Beheer voor zichtbare follow-through-routes het reviewritme, reminder-venster en escalatiemoment zonder een generieke laag toe te voegen."
       aside={
         <div className="flex justify-start sm:justify-end">
           <DashboardChip
@@ -214,11 +221,11 @@ export function ReviewRhythmConsole({
                 {selectedRouteLabel ?? 'Selecteer een reviewmoment'}
               </p>
               <p className="max-w-3xl text-sm leading-6 text-[color:var(--dashboard-text)]">
-                Alleen ritmegegevens voor ExitScan-opvolging worden hier bijgehouden. Verzendlogica en eigenaarschap
+                Alleen ritmegegevens voor ingeschakelde follow-through-routes worden hier bijgehouden. Verzendlogica en eigenaarschap
                 blijven buiten deze console.
               </p>
             </div>
-            <DashboardChip surface="ops" tone="slate" label="ExitScan" />
+            <DashboardChip surface="ops" tone="slate" label={getRouteProductLabel(selectedRouteScanType)} />
           </div>
 
           {hasBoundedSelection ? (

@@ -11,6 +11,10 @@ import {
 import { ReviewRhythmConsole } from '@/components/dashboard/review-rhythm-console'
 import type { ActionCenterPreviewItem, ActionCenterPreviewStatus } from '@/lib/action-center-preview-model'
 import {
+  getActionCenterEnabledRouteDefaults,
+  type ActionCenterRouteDefaultsKnownScanType,
+} from '@/lib/action-center-route-defaults'
+import {
   buildDefaultActionCenterReviewRhythmConfig,
   classifyActionCenterReviewRhythmStatus,
   type ActionCenterReviewRhythmConfig,
@@ -61,10 +65,6 @@ const EMPTY_REVIEW_RHYTHM_SUMMARY: ReviewRhythmSummary = {
   reminderManagedCount: 0,
 }
 
-function isExitRouteItem(item: Pick<ActionCenterPreviewItem, 'sourceLabel'>) {
-  return item.sourceLabel === 'ExitScan'
-}
-
 function getReviewMomentRouteId(item: Pick<ActionCenterPreviewItem, 'coreSemantics'>) {
   return item.coreSemantics.route.routeId
 }
@@ -72,9 +72,10 @@ function getReviewMomentRouteId(item: Pick<ActionCenterPreviewItem, 'coreSemanti
 function computeRhythmSummary(
   items: ActionCenterPreviewItem[],
   configByRouteId: Record<string, ActionCenterReviewRhythmConfig>,
+  routeScanTypeByRouteId: Record<string, ActionCenterRouteDefaultsKnownScanType>,
   now: Date,
 ): ReviewRhythmSummary {
-  return items.filter(isExitRouteItem).reduce<ReviewRhythmSummary>(
+  return items.filter((item) => getActionCenterEnabledRouteDefaults(routeScanTypeByRouteId[getReviewMomentRouteId(item)])).reduce<ReviewRhythmSummary>(
     (acc, item) => {
       const config =
         configByRouteId[getReviewMomentRouteId(item)] ?? buildDefaultActionCenterReviewRhythmConfig()
@@ -108,6 +109,7 @@ export function ReviewMomentPageClient({
   lastUpdated,
   canScheduleActionCenterReview,
   inviteDownloadEligibleRouteIds,
+  routeScanTypeByRouteId,
   manageableReviewRhythmRouteIds,
   nativeCalendarEligibleRouteIds,
   rhythmConfigByRouteId,
@@ -119,6 +121,7 @@ export function ReviewMomentPageClient({
   lastUpdated: string
   canScheduleActionCenterReview: boolean
   inviteDownloadEligibleRouteIds: string[]
+  routeScanTypeByRouteId: Record<string, ActionCenterRouteDefaultsKnownScanType>
   manageableReviewRhythmRouteIds: string[]
   nativeCalendarEligibleRouteIds: string[]
   rhythmConfigByRouteId: Record<string, ActionCenterReviewRhythmConfig>
@@ -185,11 +188,18 @@ export function ReviewMomentPageClient({
   }, [rhythmConfigByRouteId])
 
   const selectedItem = visibleItems.find((item) => item.id === selectedItemId) ?? null
-  const selectedRhythmItem = selectedItem && isExitRouteItem(selectedItem) ? selectedItem : null
+  const selectedRhythmItem =
+    selectedItem && getActionCenterEnabledRouteDefaults(routeScanTypeByRouteId[getReviewMomentRouteId(selectedItem)])
+      ? selectedItem
+      : null
   const canManageSelectedReviewRhythm = Boolean(
     selectedRhythmItem?.coreSemantics.route.routeId &&
       manageableReviewRhythmRouteIdSet.has(selectedRhythmItem.coreSemantics.route.routeId),
   )
+  const selectedRouteScanType =
+    selectedRhythmItem?.coreSemantics.route.routeId
+      ? routeScanTypeByRouteId[selectedRhythmItem.coreSemantics.route.routeId] ?? null
+      : null
   const selectedUrgency: ReviewMomentUrgency | null = selectedItem
     ? grouped.overdue.some((item) => item.id === selectedItem.id)
       ? 'overdue'
@@ -218,8 +228,13 @@ export function ReviewMomentPageClient({
       return EMPTY_REVIEW_RHYTHM_SUMMARY
     }
 
-    return computeRhythmSummary(visibleItems, clientRhythmConfigByRouteId, referenceNow)
-  }, [clientRhythmConfigByRouteId, referenceNow, visibleItems])
+    return computeRhythmSummary(
+      visibleItems,
+      clientRhythmConfigByRouteId,
+      routeScanTypeByRouteId,
+      referenceNow,
+    )
+  }, [clientRhythmConfigByRouteId, referenceNow, routeScanTypeByRouteId, visibleItems])
 
   function handleReviewRhythmSaved(nextConfig: ActionCenterReviewRhythmConfig) {
     if (!selectedRhythmItem?.coreSemantics.route.routeId) {
@@ -359,6 +374,7 @@ export function ReviewMomentPageClient({
             canDownloadInviteArtifact={canDownloadInviteArtifact}
             canScheduleReviewControls={canScheduleReviewControls}
             canUseNativeCalendarSync={canUseNativeCalendarSync}
+            selectedRouteScanType={selectedRouteScanType}
           />
         </div>
       </div>
@@ -368,7 +384,7 @@ export function ReviewMomentPageClient({
         selectedRouteLabel={selectedRhythmItem ? getReviewMomentScopeLabel(selectedRhythmItem) : null}
         selectedRouteSourceId={selectedRhythmItem?.coreSemantics.route.campaignId ?? null}
         selectedRouteOrgId={selectedRhythmItem?.orgId ?? null}
-        selectedRouteScanType={selectedRhythmItem ? 'exit' : null}
+        selectedRouteScanType={selectedRouteScanType}
         canManageReviewRhythm={canManageSelectedReviewRhythm}
         config={
           (

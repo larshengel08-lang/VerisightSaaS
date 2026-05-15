@@ -116,6 +116,7 @@ describe('review moment detail panel entry links', () => {
         canDownloadInviteArtifact: true,
         canScheduleReviewControls: true,
         canUseNativeCalendarSync: false,
+        selectedRouteScanType: 'exit',
       }),
     )
 
@@ -218,7 +219,7 @@ describe('review moment detail panel reschedule controls', () => {
 
     expect(source).toContain('Verplaats review')
     expect(source).toContain('Annuleer review')
-    expect(source).toContain("item.sourceLabel === 'ExitScan'")
+    expect(source).toContain('selectedRouteScanType')
     expect(source).toContain('canScheduleReviewControls')
     expect(source).toContain('/api/action-center-review-reschedules')
     expect(source).not.toContain('workflow builder')
@@ -243,6 +244,7 @@ describe('review moment detail panel reschedule controls', () => {
         canDownloadInviteArtifact: true,
         canScheduleReviewControls: true,
         canUseNativeCalendarSync: false,
+        selectedRouteScanType: 'exit',
       }),
     )
 
@@ -260,6 +262,7 @@ describe('review moment detail panel reschedule controls', () => {
         canDownloadInviteArtifact: false,
         canScheduleReviewControls: false,
         canUseNativeCalendarSync: false,
+        selectedRouteScanType: null,
       }),
     )
 
@@ -277,6 +280,7 @@ describe('review moment detail panel reschedule controls', () => {
         canDownloadInviteArtifact: true,
         canScheduleReviewControls: true,
         canUseNativeCalendarSync: false,
+        selectedRouteScanType: 'exit',
       }),
     )
 
@@ -284,7 +288,7 @@ describe('review moment detail panel reschedule controls', () => {
     expect(markup).not.toContain('Annuleer review')
   })
 
-  it('hides reschedule controls for non-ExitScan routes', () => {
+  it('allows the same bounded reschedule controls for RetentieScan when the server-derived gate enables them', () => {
     const markup = renderToStaticMarkup(
       createElement(ReviewMomentDetailPanel, {
         urgency: 'this-week',
@@ -294,11 +298,12 @@ describe('review moment detail panel reschedule controls', () => {
         canDownloadInviteArtifact: true,
         canScheduleReviewControls: true,
         canUseNativeCalendarSync: false,
+        selectedRouteScanType: 'retention',
       }),
     )
 
-    expect(markup).not.toContain('Verplaats review')
-    expect(markup).not.toContain('Annuleer review')
+    expect(markup).toContain('Verplaats review')
+    expect(markup).toContain('Annuleer review')
   })
 
   it('hides reschedule controls when scheduling capability is missing even if invite download stays available', () => {
@@ -309,6 +314,7 @@ describe('review moment detail panel reschedule controls', () => {
         canDownloadInviteArtifact: true,
         canScheduleReviewControls: false,
         canUseNativeCalendarSync: false,
+        selectedRouteScanType: 'exit',
       }),
     )
 
@@ -324,6 +330,7 @@ describe('review moment detail panel reschedule controls', () => {
         canDownloadInviteArtifact: true,
         canScheduleReviewControls: true,
         canUseNativeCalendarSync: true,
+        selectedRouteScanType: 'exit',
       }),
     )
 
@@ -334,6 +341,7 @@ describe('review moment detail panel reschedule controls', () => {
         canDownloadInviteArtifact: true,
         canScheduleReviewControls: true,
         canUseNativeCalendarSync: false,
+        selectedRouteScanType: 'exit',
       }),
     )
 

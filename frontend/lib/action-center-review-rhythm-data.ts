@@ -1,5 +1,9 @@
 import type { ActionCenterPreviewItem } from '@/lib/action-center-preview-model'
 import {
+  getActionCenterEnabledRouteDefaults,
+  type ActionCenterRouteDefaultsKnownScanType,
+} from '@/lib/action-center-route-defaults'
+import {
   buildDefaultActionCenterReviewRhythmConfig,
   classifyActionCenterReviewRhythmStatus,
   normalizeActionCenterReviewRhythmConfig,
@@ -13,10 +17,6 @@ type ActionCenterReviewRhythmConfigRow = {
   reminder_lead_days: number | null
   escalation_lead_days: number | null
   reminders_enabled: boolean | null
-}
-
-function isExitRouteItem(item: Pick<ActionCenterPreviewItem, 'sourceLabel'>) {
-  return item.sourceLabel === 'ExitScan'
 }
 
 function normalizeConfigRow(row: ActionCenterReviewRhythmConfigRow): ActionCenterReviewRhythmConfig | null {
@@ -35,9 +35,12 @@ function normalizeConfigRow(row: ActionCenterReviewRhythmConfigRow): ActionCente
 export async function getActionCenterReviewRhythmData(args: {
   items: ActionCenterPreviewItem[]
   now: Date
+  routeScanTypeByRouteId: Record<string, ActionCenterRouteDefaultsKnownScanType>
 }) {
-  const exitItems = args.items.filter(isExitRouteItem)
-  const routeIds = exitItems.map((item) => item.id)
+  const eligibleItems = args.items.filter((item) =>
+    getActionCenterEnabledRouteDefaults(args.routeScanTypeByRouteId[item.id]) !== null,
+  )
+  const routeIds = eligibleItems.map((item) => item.id)
   const admin = createAdminClient()
 
   const { data, error } =
@@ -62,10 +65,10 @@ export async function getActionCenterReviewRhythmData(args: {
     return acc
   }, {})
   const configByRouteId = Object.fromEntries(
-    exitItems.map((item) => [item.id, persistedConfigByRouteId[item.id] ?? buildDefaultActionCenterReviewRhythmConfig()]),
+    eligibleItems.map((item) => [item.id, persistedConfigByRouteId[item.id] ?? buildDefaultActionCenterReviewRhythmConfig()]),
   )
 
-  const summary = exitItems.reduce(
+  const summary = eligibleItems.reduce(
     (acc, item) => {
       const config = configByRouteId[item.id] ?? buildDefaultActionCenterReviewRhythmConfig()
       const health = classifyActionCenterReviewRhythmStatus({

@@ -218,7 +218,7 @@ describe('action center review reschedules route', () => {
     })
   })
 
-  it('rejects non-ExitScan routes in this slice', async () => {
+  it('rejects blocked route families in this slice', async () => {
     let managerResponseCallCount = 0
     let revisionCallCount = 0
 
@@ -277,8 +277,116 @@ describe('action center review reschedules route', () => {
 
     expect(response.status).toBe(409)
     await expect(response.json()).resolves.toEqual({
-      detail: 'Review reschedule blijft in deze slice beperkt tot ExitScan.',
+      detail: 'Review reschedule blijft in deze slice beperkt tot ingeschakelde follow-through-routes.',
     })
+  })
+
+  it('allows RetentieScan routes through the same bounded reschedule route', async () => {
+    const updateQuery = createUpdateManagerResponseQuery({
+      data: {
+        review_scheduled_for: '2099-06-03',
+      },
+    })
+    const insertQuery = createInsertRevisionQuery({
+      data: {
+        revision: 3,
+        operation: 'reschedule',
+        review_date: '2099-06-03',
+      },
+    })
+    let managerResponseCallCount = 0
+    let revisionCallCount = 0
+
+    mockResolveReviewInviteContext.mockResolvedValue({
+      context: {
+        actionCenterOrigin: 'https://app.verisight.nl',
+        campaignId: ROUTE_SOURCE_ID,
+        campaignName: 'RetentieScan Q2',
+        managerEmail: 'mila@northwind.example',
+        managerName: 'Mila Jansen',
+        phase: 1,
+        reviewDate: '2026-05-28',
+        reviewItemId: ROUTE_ID,
+        routeId: ROUTE_ID,
+        routeStatus: 'reviewbaar',
+        scanType: 'retention',
+        scopeLabel: 'Operations',
+      },
+      orgId: ORG_ID,
+      routeScopeValue: ROUTE_SCOPE_VALUE,
+      routeSourceId: ROUTE_SOURCE_ID,
+      organizerEmail: 'northwind-hr@example.com',
+      persistedScheduleDefaults: {
+        latestRevision: 2,
+        latestOperation: 'reschedule',
+        isCanonicalReviewCancelled: false,
+      },
+    })
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'campaigns') {
+        return createCampaignQuery({
+          data: {
+            id: ROUTE_SOURCE_ID,
+            organization_id: ORG_ID,
+            scan_type: 'retention',
+          },
+        })
+      }
+
+      if (table === 'action_center_manager_responses') {
+        managerResponseCallCount += 1
+        if (managerResponseCallCount === 1) {
+          return createManagerResponseQuery({
+            data: {
+              campaign_id: ROUTE_SOURCE_ID,
+              org_id: ORG_ID,
+              route_scope_type: 'department',
+              route_scope_value: ROUTE_SCOPE_VALUE,
+              review_scheduled_for: '2026-05-28',
+            },
+          })
+        }
+
+        return updateQuery
+      }
+
+      if (table === 'action_center_review_schedule_revisions') {
+        revisionCallCount += 1
+        if (revisionCallCount === 1) {
+          return createLatestRevisionQuery({
+            data: {
+              revision: 2,
+              operation: 'reschedule',
+            },
+          })
+        }
+
+        return insertQuery
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest(
+        buildValidBody({
+          scanType: 'retention',
+        }),
+      ),
+    )
+
+    expect(response.status).toBe(200)
+    expect(insertQuery.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        scan_type: 'retention',
+      }),
+    )
+    expect(mockSyncActionCenterGraphReview).toHaveBeenCalledWith(
+      expect.objectContaining({
+        scanType: 'retention',
+      }),
+    )
   })
 
   it('fails closed when no canonical manager response row exists for the route', async () => {

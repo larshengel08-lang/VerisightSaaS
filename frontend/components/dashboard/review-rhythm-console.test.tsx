@@ -12,7 +12,7 @@ describe('review rhythm console', () => {
         selectedRouteLabel: 'Operations',
         selectedRouteSourceId: 'cmp-exit-1',
         selectedRouteOrgId: 'org-1',
-        selectedRouteScanType: 'exit',
+        selectedRouteScanType: 'retention',
         canManageReviewRhythm: true,
         config: {
           cadenceDays: 14,
@@ -33,7 +33,7 @@ describe('review rhythm console', () => {
     expect(markup).toContain('Cadans')
     expect(markup).toContain('Herinnering')
     expect(markup).toContain('Escalatie')
-    expect(markup).toContain('ExitScan')
+    expect(markup).toContain('RetentieScan')
     expect(markup).not.toContain('workflow')
   })
 

@@ -148,7 +148,7 @@ describe('action center review rhythm route', () => {
     })
   })
 
-  it('rejects non-ExitScan saves in this slice', async () => {
+  it('rejects blocked route families in this slice', async () => {
     const campaignQuery = createCampaignQuery({
       data: { id: 'cmp-pulse-1', organization_id: 'org-1', scan_type: 'pulse' },
       error: null,
@@ -182,7 +182,7 @@ describe('action center review rhythm route', () => {
 
     expect(response.status).toBe(409)
     await expect(response.json()).resolves.toEqual({
-      detail: 'Reviewritme blijft in deze slice beperkt tot ExitScan.',
+      detail: 'Reviewritme blijft in deze slice beperkt tot ingeschakelde follow-through-routes.',
     })
   })
 
@@ -296,6 +296,72 @@ describe('action center review rhythm route', () => {
       config: expect.objectContaining({
         route_id: 'cmp-exit-1::org-1::department::operations',
         scan_type: 'exit',
+      }),
+    })
+  })
+
+  it('persists the same bounded rhythm config payload for RetentieScan routes', async () => {
+    const upsertQuery = createUpsertQuery({
+      data: {
+        route_id: 'cmp-retention-1::org-1::department::operations',
+        route_scope_value: 'org-1::department::operations',
+        route_source_type: 'campaign',
+        route_source_id: 'cmp-retention-1',
+        org_id: 'org-1',
+        scan_type: 'retention',
+        cadence_days: 14,
+        reminder_lead_days: 3,
+        escalation_lead_days: 7,
+        reminders_enabled: true,
+        updated_by_role: 'hr_member',
+      },
+      error: null,
+    })
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'campaigns') {
+        return createCampaignQuery({
+          data: { id: 'cmp-retention-1', organization_id: 'org-1', scan_type: 'retention' },
+          error: null,
+        })
+      }
+
+      if (table === 'respondents') {
+        return createRespondentsQuery({
+          data: [{ department: 'Operations' }],
+        })
+      }
+
+      if (table === 'action_center_review_rhythm_configs') {
+        return upsertQuery
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest(
+        buildValidBody({
+          routeId: 'cmp-retention-1::org-1::department::operations',
+          routeSourceId: 'cmp-retention-1',
+          scanType: 'retention',
+        }),
+      ),
+    )
+
+    expect(response.status).toBe(200)
+    expect(upsertQuery.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        route_id: 'cmp-retention-1::org-1::department::operations',
+        route_source_id: 'cmp-retention-1',
+        scan_type: 'retention',
+      }),
+      { onConflict: 'route_id' },
+    )
+    await expect(response.json()).resolves.toEqual({
+      config: expect.objectContaining({
+        route_id: 'cmp-retention-1::org-1::department::operations',
+        scan_type: 'retention',
       }),
     })
   })
