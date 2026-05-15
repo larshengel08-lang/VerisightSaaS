@@ -7,23 +7,60 @@ const schemaSql = readFileSync(schemaPath, 'utf8')
 const migrationPath = fileURLToPath(new URL('../../supabase/action_center_review_rhythm_console.sql', import.meta.url))
 const migrationSql = readFileSync(migrationPath, 'utf8')
 
+function extractPolicyBlock(sql: string, policyName: string) {
+  const escapedName = policyName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const startPattern = new RegExp(`create policy "${escapedName}"`, 'i')
+  const startMatch = startPattern.exec(sql)
+
+  expect(startMatch).not.toBeNull()
+
+  const startIndex = startMatch?.index ?? 0
+  const rest = sql.slice(startIndex)
+  const nextPolicyIndex = rest.slice(1).search(/\ncreate policy "/i)
+
+  if (nextPolicyIndex === -1) {
+    return rest
+  }
+
+  return rest.slice(0, nextPolicyIndex + 1)
+}
+
 function assertBoundedReviewRhythmPolicy(sql: string) {
-  expect(sql).toMatch(/create policy "hr_and_admins_can_select_action_center_review_rhythm_configs"/i)
-  expect(sql).toMatch(/create policy "hr_and_admins_can_insert_action_center_review_rhythm_configs"/i)
-  expect(sql).toMatch(/create policy "hr_and_admins_can_update_action_center_review_rhythm_configs"/i)
   expect(sql).not.toMatch(/create policy "hr_and_admins_can_upsert_action_center_review_rhythm_configs"/i)
   expect(sql).not.toMatch(/action_center_review_rhythm_configs\s+for all/i)
   expect(sql).not.toMatch(/action_center_review_rhythm_configs\s+for delete/i)
-  expect(sql).toMatch(/action_center_review_rhythm_configs for insert/i)
-  expect(sql).toMatch(/action_center_review_rhythm_configs for update/i)
-  expect(sql).toMatch(/public\.is_verisight_admin_user\(\)/i)
-  expect(sql).toMatch(/public\.is_org_owner\(org_id\)/i)
-  expect(sql).toMatch(/m\.access_role in \('hr_owner', 'hr_member'\)/i)
-  expect(sql).toMatch(/m\.scope_type = 'org'/i)
-  expect(sql).toMatch(/m\.scope_value = action_center_review_rhythm_configs\.route_scope_value/i)
-  expect(sql).toMatch(/m\.can_view/i)
-  expect(sql).toMatch(/m\.can_update/i)
-  expect(sql).toMatch(/m\.can_schedule_review/i)
+
+  const selectPolicy = extractPolicyBlock(sql, 'hr_and_admins_can_select_action_center_review_rhythm_configs')
+  const insertPolicy = extractPolicyBlock(sql, 'hr_and_admins_can_insert_action_center_review_rhythm_configs')
+  const updatePolicy = extractPolicyBlock(sql, 'hr_and_admins_can_update_action_center_review_rhythm_configs')
+
+  expect(selectPolicy).toMatch(/action_center_review_rhythm_configs for select/i)
+  expect(selectPolicy).toMatch(/public\.is_verisight_admin_user\(\)/i)
+  expect(selectPolicy).toMatch(/public\.is_org_owner\(org_id\)/i)
+  expect(selectPolicy).toMatch(/m\.access_role in \('hr_owner', 'hr_member'\)/i)
+  expect(selectPolicy).toMatch(/m\.scope_type = 'org'/i)
+  expect(selectPolicy).toMatch(/m\.scope_value = action_center_review_rhythm_configs\.route_scope_value/i)
+  expect(selectPolicy).toMatch(/m\.can_view/i)
+
+  expect(insertPolicy).toMatch(/action_center_review_rhythm_configs for insert/i)
+  expect(insertPolicy).toMatch(/public\.is_verisight_admin_user\(\)/i)
+  expect(insertPolicy).toMatch(/public\.is_org_owner\(org_id\)/i)
+  expect(insertPolicy).toMatch(/m\.access_role in \('hr_owner', 'hr_member'\)/i)
+  expect(insertPolicy).toMatch(/m\.scope_type = 'org'/i)
+  expect(insertPolicy).toMatch(/m\.scope_value = action_center_review_rhythm_configs\.route_scope_value/i)
+  expect(insertPolicy).toMatch(/m\.can_view/i)
+  expect(insertPolicy).toMatch(/m\.can_update/i)
+  expect(insertPolicy).toMatch(/m\.can_schedule_review/i)
+
+  expect(updatePolicy).toMatch(/action_center_review_rhythm_configs for update/i)
+  expect(updatePolicy).toMatch(/public\.is_verisight_admin_user\(\)/i)
+  expect(updatePolicy).toMatch(/public\.is_org_owner\(org_id\)/i)
+  expect(updatePolicy).toMatch(/m\.access_role in \('hr_owner', 'hr_member'\)/i)
+  expect(updatePolicy).toMatch(/m\.scope_type = 'org'/i)
+  expect(updatePolicy).toMatch(/m\.scope_value = action_center_review_rhythm_configs\.route_scope_value/i)
+  expect(updatePolicy).toMatch(/m\.can_view/i)
+  expect(updatePolicy).toMatch(/m\.can_update/i)
+  expect(updatePolicy).toMatch(/m\.can_schedule_review/i)
 }
 
 describe('action center review rhythm schema policy', () => {
