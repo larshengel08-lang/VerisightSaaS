@@ -76,10 +76,10 @@ export function RouteBeheerStructuredBody(args: {
         />
       </DashboardSection>
 
-      <RouteBeheerOutputSummary summary={data.outputSummary} />
+      <RouteBeheerOutputSummary data={data} />
 
       <RouteBeheerLogbookSummary
-        href={`/campaigns/${data.campaignId}#operatie`}
+        href={`/campaigns/${data.campaignId}/beheer?fase=afronding#status-en-logboek`}
         latestAuditSummary={data.latestAuditSummary}
       />
     </div>

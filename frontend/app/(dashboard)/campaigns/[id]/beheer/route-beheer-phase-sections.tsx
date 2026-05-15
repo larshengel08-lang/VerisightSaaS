@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import React, { useState } from 'react'
+import { GuidedSelfServePanel } from '@/components/dashboard/guided-self-serve-panel'
 import { CampaignActions } from '../campaign-actions'
 import { PdfDownloadButton } from '../pdf-download-button'
 import type {
@@ -172,6 +173,11 @@ export function RouteBeheerPhaseWorkspace(args: {
 }
 
 function RouteBeheerPhaseDetailContent({ data, detail }: { data: RouteBeheerPageData; detail: HrRouteBeheerPhaseDetail }) {
+  const showSelfServeWorkspace =
+    data.canExecuteCampaign &&
+    data.isActive &&
+    data.selfServe.phaseKey === detail.key
+
   return (
     <div id={PHASE_DETAIL_IDS[detail.key]} className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -220,6 +226,32 @@ function RouteBeheerPhaseDetailContent({ data, detail }: { data: RouteBeheerPage
               canArchiveCampaign={data.canManageCampaign}
             />
           ) : null}
+          {showSelfServeWorkspace ? (
+            <GuidedSelfServePanel
+              campaignId={data.campaignId}
+              scanType={data.scanType}
+              isActive={data.isActive}
+              deliveryMode={data.selfServe.deliveryMode}
+              importReady={data.selfServe.importReady}
+              hasSegmentDeepDive={data.selfServe.hasSegmentDeepDive}
+              totalInvited={data.totalInvited}
+              totalCompleted={data.totalCompleted}
+              invitesNotSent={data.invitesNotSent}
+              hasMinDisplay={data.hasMinDisplay}
+              hasEnoughData={data.hasEnoughData}
+              pendingCount={data.pendingCount}
+              importQaConfirmed={data.selfServe.importQaConfirmed}
+              launchTimingConfirmed={data.selfServe.launchTimingConfirmed}
+              communicationReady={data.selfServe.communicationReady}
+              remindableCount={data.selfServe.remindableCount}
+              unsentRespondents={data.selfServe.unsentRespondents}
+              launchDate={data.launchDate}
+              launchConfirmedAt={data.selfServe.launchConfirmedAt}
+              participantCommsConfig={data.selfServe.participantCommsConfig}
+              reminderConfig={data.selfServe.reminderConfig}
+              memberRole={data.membershipRole}
+            />
+          ) : null}
         </div>
       ) : detail.key === 'output' ? (
         <div className="flex flex-wrap items-center gap-3">
@@ -239,19 +271,47 @@ function RouteBeheerPhaseDetailContent({ data, detail }: { data: RouteBeheerPage
           )}
         </div>
       ) : (
-        <div className="flex flex-wrap gap-2">
-          {detail.links.map((link, index) => {
-            const label =
-              detail.key === 'communicatie' && index > 0
-                ? ROUTE_SETTINGS_CTA_LABEL
-                : link.label
+        <div className="space-y-3">
+          <div className="flex flex-wrap gap-2">
+            {detail.links.map((link, index) => {
+              const label =
+                detail.key === 'communicatie' && index > 0
+                  ? ROUTE_SETTINGS_CTA_LABEL
+                  : link.label
 
-            return (
-              <Link key={link.href} href={link.href} className={detailActionClass(index === 0 ? 'primary' : 'secondary')}>
-                {label}
-              </Link>
-            )
-          })}
+              return (
+                <Link key={link.href} href={link.href} className={detailActionClass(index === 0 ? 'primary' : 'secondary')}>
+                    {label}
+                </Link>
+              )
+            })}
+          </div>
+          {showSelfServeWorkspace ? (
+            <GuidedSelfServePanel
+              campaignId={data.campaignId}
+              scanType={data.scanType}
+              isActive={data.isActive}
+              deliveryMode={data.selfServe.deliveryMode}
+              importReady={data.selfServe.importReady}
+              hasSegmentDeepDive={data.selfServe.hasSegmentDeepDive}
+              totalInvited={data.totalInvited}
+              totalCompleted={data.totalCompleted}
+              invitesNotSent={data.invitesNotSent}
+              hasMinDisplay={data.hasMinDisplay}
+              hasEnoughData={data.hasEnoughData}
+              pendingCount={data.pendingCount}
+              importQaConfirmed={data.selfServe.importQaConfirmed}
+              launchTimingConfirmed={data.selfServe.launchTimingConfirmed}
+              communicationReady={data.selfServe.communicationReady}
+              remindableCount={data.selfServe.remindableCount}
+              unsentRespondents={data.selfServe.unsentRespondents}
+              launchDate={data.launchDate}
+              launchConfirmedAt={data.selfServe.launchConfirmedAt}
+              participantCommsConfig={data.selfServe.participantCommsConfig}
+              reminderConfig={data.selfServe.reminderConfig}
+              memberRole={data.membershipRole}
+            />
+          ) : null}
         </div>
       )}
     </div>
@@ -358,11 +418,9 @@ export function RouteBeheerPhaseDetailPanel(args: {
   )
 }
 
-export function RouteBeheerOutputSummary({
-  summary,
-}: {
-  summary: RouteBeheerPageData['outputSummary']
-}) {
+export function RouteBeheerOutputSummary({ data }: { data: RouteBeheerPageData }) {
+  const summary = data.outputSummary
+
   return (
     <section className="rounded-[18px] border border-[color:var(--border)] bg-white px-4 py-4 shadow-[0_1px_4px_rgba(10,25,47,0.04)]">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -385,10 +443,17 @@ export function RouteBeheerOutputSummary({
         <Link href={summary.dashboardHref} className={detailActionClass('secondary')}>
           Open dashboard
         </Link>
-        {summary.reportHref ? (
-          <Link href={summary.reportHref} className={detailActionClass('secondary')}>
-            Open rapport
-          </Link>
+        {data.reportAvailable ? (
+          <PdfDownloadButton
+            campaignId={data.campaignId}
+            campaignName={data.campaignName}
+            scanType={data.scanType}
+            label="Download PDF"
+            loadingLabel="PDF ophalen..."
+            containerClassName="flex flex-col items-start gap-1"
+            buttonClassName="inline-flex items-center justify-center rounded-full border border-[color:var(--border)] bg-white px-4 py-2 text-sm font-semibold text-[color:var(--text)] transition hover:border-[color:var(--teal)] hover:text-[color:var(--ink)]"
+            errorClassName="max-w-48 text-xs text-red-600"
+          />
         ) : null}
       </div>
     </section>
