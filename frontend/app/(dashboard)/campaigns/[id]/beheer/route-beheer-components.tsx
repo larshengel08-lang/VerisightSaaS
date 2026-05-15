@@ -9,21 +9,27 @@ import {
 } from './route-beheer-phase-sections'
 
 function sectionButtonClass() {
-  return 'inline-flex items-center justify-center rounded-full border border-[color:var(--border)] bg-white px-4 py-2 text-sm font-semibold text-[color:var(--text)] transition hover:border-[color:var(--teal)] hover:text-[color:var(--ink)]'
+  return 'inline-flex items-center justify-center rounded-full border border-slate-950 bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800'
 }
 
 export function RouteBeheerHeader({ data }: { data: RouteBeheerPageData }) {
   return (
     <section
       id="route-meta"
-      className="rounded-lg border border-[color:var(--border)] bg-white p-5 shadow-[0_1px_4px_rgba(10,25,47,0.04)] sm:p-6"
+      className="border border-slate-200 bg-white px-5 py-5 sm:px-7 sm:py-6"
     >
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[color:var(--muted)]">
-            Routebeheer
+          <div className="flex items-center gap-3">
+            <span className="h-px w-10 bg-[#C36A29]" />
+            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.28em] text-slate-500">
+              Routebeheer
+            </p>
+          </div>
+          <p className="mt-4 text-xs font-semibold uppercase tracking-[0.22em] text-[color:var(--muted)]">
+            {data.scanTypeLabel}
           </p>
-          <h1 className="mt-2 text-[1.8rem] font-bold tracking-tight text-[color:var(--ink)] sm:text-[2.05rem]">
+          <h1 className="mt-2 text-[2rem] font-bold tracking-[-0.05em] text-[color:var(--ink)] sm:text-[2.5rem]">
             {data.campaignName}
           </h1>
           <div className="mt-4 flex flex-wrap items-center gap-2.5 text-sm text-[color:var(--text)]">
@@ -40,7 +46,10 @@ export function RouteBeheerHeader({ data }: { data: RouteBeheerPageData }) {
 
         <div className="flex flex-col items-start gap-3 lg:items-end">
           <DashboardChip label={data.statusBadgeLabel} tone={data.statusBadgeTone} surface="ops" />
-          <p className="text-sm text-[color:var(--text)]">{formatLatestActivityLabel(data.lastActivityAt)}</p>
+          <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-slate-400">
+            Laatste activiteit
+          </p>
+          <p className="-mt-2 text-sm text-[color:var(--text)]">{formatLatestActivityLabel(data.lastActivityAt)}</p>
           <div className="flex flex-wrap gap-2">
             <Link href={`/campaigns/${data.campaignId}`} className={sectionButtonClass()}>
               Open dashboard
@@ -65,7 +74,7 @@ export function RouteBeheerStructuredBody(args: {
       <DashboardSection
         id="route-fasen"
         title="Routefasen"
-        description="Kies een fase voor details."
+        description="Kies een fase voor details en uitvoering."
         eyebrow="Fasen"
         surface="ops"
         tone="slate"

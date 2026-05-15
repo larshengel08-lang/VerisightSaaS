@@ -54,8 +54,8 @@ function phaseStatusClass(status: 'done' | 'current' | 'open') {
 
 function detailActionClass(kind: 'primary' | 'secondary') {
   return kind === 'primary'
-    ? 'inline-flex items-center justify-center rounded-full bg-[color:var(--teal)] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-95'
-    : 'inline-flex items-center justify-center rounded-full border border-[color:var(--border)] bg-white px-4 py-2 text-sm font-semibold text-[color:var(--text)] transition hover:border-[color:var(--teal)] hover:text-[color:var(--ink)]'
+    ? 'inline-flex items-center justify-center rounded-full bg-[#C36A29] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-95'
+    : 'inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-[color:var(--text)] transition hover:border-[#C36A29] hover:text-[color:var(--ink)]'
 }
 
 export function RouteBeheerNowDoingRow({ nowDoing }: { nowDoing: HrRouteBeheerNowDoing | null }) {
@@ -64,16 +64,16 @@ export function RouteBeheerNowDoingRow({ nowDoing }: { nowDoing: HrRouteBeheerNo
   return (
     <Link
       href={nowDoing.href}
-      className="group flex items-center justify-between gap-4 rounded-[18px] border border-[color:var(--border)] bg-[color:var(--bg)] px-4 py-3 transition hover:border-[color:var(--teal)] hover:bg-white"
+      className="group flex items-center justify-between gap-4 border border-amber-200 bg-amber-50/70 px-5 py-4 transition hover:border-[#C36A29] hover:bg-amber-50"
     >
       <div className="min-w-0">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#8B4A17]">
           {nowDoing.label ?? NOW_DOING_LABEL}
         </p>
-        <p className="mt-1 text-sm font-semibold text-[color:var(--ink)]">{nowDoing.title}</p>
+        <p className="mt-2 text-base font-semibold tracking-[-0.03em] text-[color:var(--ink)]">{nowDoing.title}</p>
         <p className="mt-1 text-sm text-[color:var(--text)]">{nowDoing.body}</p>
       </div>
-      <span className="shrink-0 text-sm font-semibold text-[color:var(--teal)] transition group-hover:translate-x-0.5">
+      <span className="shrink-0 text-sm font-semibold text-[#8B4A17] transition group-hover:translate-x-0.5">
         Open
       </span>
     </Link>
@@ -99,18 +99,23 @@ function RouteBeheerPhaseOverviewList(args: {
             onClick={() => onSelectPhase(phase.key)}
             aria-expanded={active}
             className={joinClasses(
-              'w-full rounded-[18px] border px-4 py-3 text-left transition',
+              'w-full border px-4 py-4 text-left transition',
               active
-                ? 'border-[color:var(--teal)] bg-white shadow-[0_4px_16px_rgba(10,25,47,0.05)]'
-                : 'border-[color:var(--border)] bg-[color:var(--bg)] hover:border-[color:var(--teal)] hover:bg-white',
+                ? 'border-[#C36A29] bg-white'
+                : 'border-slate-200 bg-[color:var(--bg)] hover:border-[#C36A29] hover:bg-white',
             )}
           >
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-[color:var(--ink)]">
-                  {PHASE_TITLES[phase.key] ?? phase.label}
-                </p>
-                <p className="mt-1 text-sm text-[color:var(--text)]">{phase.body}</p>
+                <div className="flex items-center gap-3">
+                  <span className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-slate-400">
+                    {String(args.phases.indexOf(phase) + 1).padStart(2, '0')}
+                  </span>
+                  <p className="text-sm font-semibold text-[color:var(--ink)]">
+                    {PHASE_TITLES[phase.key] ?? phase.label}
+                  </p>
+                </div>
+                <p className="mt-2 text-sm text-[color:var(--text)]">{phase.body}</p>
               </div>
               <span
                 className={joinClasses(
@@ -182,10 +187,10 @@ function RouteBeheerPhaseDetailContent({ data, detail }: { data: RouteBeheerPage
     <div id={PHASE_DETAIL_IDS[detail.key]} className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
             {PHASE_TITLES[detail.key] ?? detail.label}
           </p>
-          <p className="mt-2 text-sm leading-6 text-[color:var(--text)]">{detail.body}</p>
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-[color:var(--text)]">{detail.body}</p>
         </div>
         <span
           className={joinClasses(
@@ -197,13 +202,13 @@ function RouteBeheerPhaseDetailContent({ data, detail }: { data: RouteBeheerPage
         </span>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {detail.items.map((item) => (
-          <div key={`${detail.key}-${item.label}`} className="rounded-[16px] border border-[color:var(--border)] bg-[color:var(--bg)] px-4 py-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
+          <div key={`${detail.key}-${item.label}`} className="border border-slate-200 bg-[color:var(--bg)] px-4 py-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--muted)]">
               {item.label}
             </p>
-            <p className="mt-2 text-sm font-semibold text-[color:var(--ink)]">{item.value}</p>
+            <p className="mt-3 text-sm font-semibold text-[color:var(--ink)]">{item.value}</p>
           </div>
         ))}
       </div>
@@ -332,7 +337,7 @@ function RouteBeheerPhaseDetailSurface(args: {
   return (
     <section
       id="fase-detail"
-      className="rounded-[20px] border border-[color:var(--border)] bg-white p-5 shadow-[0_1px_4px_rgba(10,25,47,0.04)]"
+      className="border border-slate-200 bg-white p-5 md:p-6"
     >
       <RouteBeheerPhaseDetailContent data={args.data} detail={detail} />
     </section>
@@ -361,15 +366,15 @@ export function RouteBeheerPhaseDetailPanel(args: {
     return (
       <section
         id="fase-detail"
-        className="rounded-[20px] border border-[color:var(--border)] bg-white p-5 shadow-[0_1px_4px_rgba(10,25,47,0.04)]"
+        className="border border-slate-200 bg-white p-5 md:p-6"
       >
         <div className="space-y-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
                 {PHASE_TITLES[detail.key] ?? detail.label}
               </p>
-              <p className="mt-2 text-sm leading-6 text-[color:var(--text)]">{detail.body}</p>
+              <p className="mt-3 text-sm leading-6 text-[color:var(--text)]">{detail.body}</p>
             </div>
             <span
               className={joinClasses(
@@ -380,13 +385,13 @@ export function RouteBeheerPhaseDetailPanel(args: {
               {phaseStatusLabel(detail.status)}
             </span>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {detail.items.map((item) => (
-              <div key={`${detail.key}-${item.label}`} className="rounded-[16px] border border-[color:var(--border)] bg-[color:var(--bg)] px-4 py-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
+              <div key={`${detail.key}-${item.label}`} className="border border-slate-200 bg-[color:var(--bg)] px-4 py-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--muted)]">
                   {item.label}
                 </p>
-                <p className="mt-2 text-sm font-semibold text-[color:var(--ink)]">{item.value}</p>
+                <p className="mt-3 text-sm font-semibold text-[color:var(--ink)]">{item.value}</p>
               </div>
             ))}
           </div>
@@ -422,13 +427,16 @@ export function RouteBeheerOutputSummary({ data }: { data: RouteBeheerPageData }
   const summary = data.outputSummary
 
   return (
-    <section className="rounded-[18px] border border-[color:var(--border)] bg-white px-4 py-4 shadow-[0_1px_4px_rgba(10,25,47,0.04)]">
+    <section className="border border-slate-200 bg-white px-5 py-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
-            Output & afronding
-          </p>
-          <p className="mt-2 text-sm text-[color:var(--text)]">{summary.label}</p>
+          <div className="flex items-center gap-3">
+            <span className="h-px w-8 bg-[#C36A29]" />
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--muted)]">
+              Output & afronding
+            </p>
+          </div>
+          <p className="mt-3 text-sm text-[color:var(--text)]">{summary.label}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <span className={joinClasses('rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]', summary.dashboardReady ? 'border-[#D7E6DF] bg-[#F6FAF8] text-[#3C8D8A]' : 'border-[color:var(--border)] bg-[color:var(--bg)] text-[color:var(--muted)]')}>
@@ -439,7 +447,7 @@ export function RouteBeheerOutputSummary({ data }: { data: RouteBeheerPageData }
           </span>
         </div>
       </div>
-      <div className="mt-3 flex flex-wrap gap-2">
+      <div className="mt-4 flex flex-wrap gap-2">
         <Link href={summary.dashboardHref} className={detailActionClass('secondary')}>
           Open dashboard
         </Link>
@@ -465,13 +473,16 @@ export function RouteBeheerLogbookSummary(args: {
   latestAuditSummary: string | null
 }) {
   return (
-    <section className="rounded-[18px] border border-[color:var(--border)] bg-[color:var(--bg)] px-4 py-4">
+    <section className="border border-slate-200 bg-[color:var(--bg)] px-5 py-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
-            Logboek / controle
-          </p>
-          <p className="mt-2 text-sm text-[color:var(--text)]">
+          <div className="flex items-center gap-3">
+            <span className="h-px w-8 bg-slate-300" />
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--muted)]">
+              Logboek / controle
+            </p>
+          </div>
+          <p className="mt-3 text-sm text-[color:var(--text)]">
             {args.latestAuditSummary ?? 'Geen activiteit'}
           </p>
         </div>
