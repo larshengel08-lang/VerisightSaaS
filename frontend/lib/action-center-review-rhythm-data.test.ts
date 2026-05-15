@@ -121,4 +121,35 @@ describe('action center review rhythm data', () => {
       reminderManagedCount: 0,
     })
   })
+
+  it('surfaces a failed review rhythm config query instead of silently defaulting', async () => {
+    const configQuery = createRhythmConfigQuery({
+      data: null,
+      error: {
+        message: 'database offline',
+      },
+    })
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'action_center_review_rhythm_configs') {
+        return configQuery
+      }
+
+      throw new Error(`Unhandled table ${table}`)
+    })
+
+    await expect(
+      getActionCenterReviewRhythmData({
+        items: [
+          {
+            id: 'cmp-exit-1::org-1::department::operations',
+            status: 'reviewbaar',
+            reviewDate: '2026-05-01',
+            sourceLabel: 'ExitScan',
+          },
+        ] as never,
+        now: new Date('2026-05-28T12:00:00.000Z'),
+      }),
+    ).rejects.toThrow('database offline')
+  })
 })

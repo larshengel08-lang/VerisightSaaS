@@ -186,6 +186,53 @@ describe('action center review rhythm route', () => {
     })
   })
 
+  it('rejects mixed global capability when update and scheduling truth come from different workspace scopes', async () => {
+    mockLoadSuiteAccessContext.mockResolvedValue({
+      context: {
+        canViewActionCenter: true,
+        canUpdateActionCenter: true,
+        canScheduleActionCenterReview: true,
+        isVerisightAdmin: false,
+      },
+      orgMemberships: [],
+      workspaceMemberships: [
+        {
+          org_id: 'org-1',
+          user_id: 'user-1',
+          display_name: 'HR Member',
+          login_email: 'hr@northwind.example',
+          access_role: 'hr_member',
+          scope_type: 'department',
+          scope_value: 'org-1::department::finance',
+          can_view: true,
+          can_update: true,
+          can_assign: false,
+          can_schedule_review: false,
+        },
+        {
+          org_id: 'org-1',
+          user_id: 'user-1',
+          display_name: 'HR Member',
+          login_email: 'hr@northwind.example',
+          access_role: 'hr_member',
+          scope_type: 'department',
+          scope_value: 'org-1::department::operations',
+          can_view: true,
+          can_update: false,
+          can_assign: false,
+          can_schedule_review: true,
+        },
+      ],
+    })
+
+    const response = await POST(makeRequest(buildValidBody()))
+
+    expect(response.status).toBe(403)
+    await expect(response.json()).resolves.toEqual({
+      detail: 'Geen toegang om reviewritme te beheren.',
+    })
+  })
+
   it('persists a bounded ExitScan rhythm config payload', async () => {
     const upsertQuery = createUpsertQuery({
       data: {
