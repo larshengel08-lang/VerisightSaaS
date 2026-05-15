@@ -13,6 +13,7 @@ import {
   SCAN_TYPE_LABELS,
   type Campaign,
   type CampaignStats,
+  hasCampaignAddOn,
   type MemberRole,
   type Respondent,
   type ScanType,
@@ -115,6 +116,19 @@ export interface RouteBeheerPageData {
   canExecuteCampaign: boolean
   canManageCampaign: boolean
   membershipRole: MemberRole | null
+  selfServe: {
+    deliveryMode: Campaign['delivery_mode']
+    importReady: boolean
+    hasSegmentDeepDive: boolean
+    importQaConfirmed: boolean
+    launchTimingConfirmed: boolean
+    communicationReady: boolean
+    remindableCount: number
+    unsentRespondents: Array<{ token: string; email: string | null }>
+    launchConfirmedAt: string | null
+    participantCommsConfig: unknown
+    reminderConfig: unknown
+  }
 }
 
 export type RouteBeeheerPageData = RouteBeheerPageData
@@ -446,7 +460,7 @@ export function buildHrRouteBeheerNowDoing(
       phaseKey === 'output'
         ? `/campaigns/${args.campaignId}`
         : phaseKey === 'afronding'
-          ? `/campaigns/${args.campaignId}#operatie`
+          ? getRouteBeheerPhaseDetailHref(args.campaignId, phaseKey)
           : getRouteBeheerPhaseDetailHref(args.campaignId, phaseKey),
   }
 }
@@ -552,7 +566,10 @@ function buildHrRouteBeheerPhaseDetail(args: {
         body: 'Deelnemers en importstatus',
         items: [{ label: 'Geimporteerd', value: `${args.respondentCount} deelnemers` }],
         links: [
-          { label: 'Open doelgroep', href: `/campaigns/${args.campaignId}#operatie` },
+          {
+            label: 'Open doelgroep',
+            href: getRouteBeheerPhaseDetailHref(args.campaignId, args.key),
+          },
         ],
       } satisfies HrRouteBeheerPhaseDetail
     case 'communicatie':
@@ -608,7 +625,12 @@ function buildHrRouteBeheerPhaseDetail(args: {
         status: args.status,
         body: 'Status en logboek',
         items: [{ label: 'Laatste logregel', value: args.latestAuditSummary ?? 'Geen activiteit' }],
-        links: [{ label: 'Bekijk logboek', href: `/campaigns/${args.campaignId}#operatie` }],
+        links: [
+          {
+            label: 'Bekijk logboek',
+            href: getRouteBeheerPhaseDetailHref(args.campaignId, args.key),
+          },
+        ],
       } satisfies HrRouteBeheerPhaseDetail
     default:
       return {
@@ -660,7 +682,11 @@ export async function fetchRouteBeheerData(args: {
       .eq('user_id', userId)
       .maybeSingle(),
     supabase.from('organizations').select('name').eq('id', stats.organization_id).maybeSingle(),
-    supabase.from('campaigns').select('delivery_mode, created_at').eq('id', campaignId).maybeSingle(),
+    supabase
+      .from('campaigns')
+      .select('delivery_mode, created_at, enabled_modules')
+      .eq('id', campaignId)
+      .maybeSingle(),
     supabase
       .from('org_members')
       .select('id', { count: 'exact', head: true })
@@ -674,7 +700,7 @@ export async function fetchRouteBeheerData(args: {
     supabase.from('campaign_delivery_records').select('*').eq('campaign_id', campaignId).maybeSingle(),
     supabase
       .from('respondents')
-      .select('id, sent_at, completed, completed_at')
+      .select('id, token, email, sent_at, completed, completed_at')
       .eq('campaign_id', campaignId)
       .order('completed_at', { ascending: false, nullsFirst: false }),
     supabase
@@ -711,14 +737,29 @@ export async function fetchRouteBeheerData(args: {
 
   const respondents = (respondentsRaw ?? []) as Pick<
     Respondent,
-    'id' | 'sent_at' | 'completed' | 'completed_at'
+    'id' | 'token' | 'email' | 'sent_at' | 'completed' | 'completed_at'
   >[]
   const responseRows = (responsesRaw ?? []) as Array<{ id: string; org_scores: unknown; sdt_scores: unknown }>
   const auditEvents = (auditEventsRaw ?? []) as CampaignAuditEventRecord[]
-  const campaign = (campaignMeta ?? null) as Pick<Campaign, 'delivery_mode' | 'created_at'> | null
+  const campaign = (campaignMeta ?? null) as Pick<
+    Campaign,
+    'delivery_mode' | 'created_at' | 'enabled_modules'
+  > | null
 
   const pendingCount = stats.total_invited - stats.total_completed
   const invitesNotSent = respondents.filter((respondent) => !respondent.sent_at && !respondent.completed).length
+  const remindableRespondents = respondents.filter(
+    (respondent) => !respondent.completed && typeof respondent.email === 'string' && respondent.email.trim().length > 0,
+  )
+  const unsentRespondents = respondents
+    .filter(
+      (respondent) =>
+        !respondent.sent_at &&
+        !respondent.completed &&
+        typeof respondent.email === 'string' &&
+        respondent.email.trim().length > 0,
+    )
+    .map((respondent) => ({ token: respondent.token, email: respondent.email }))
   const incompleteScores = responseRows.filter(
     (response) => !response.org_scores || !response.sdt_scores,
   ).length
@@ -804,7 +845,7 @@ export async function fetchRouteBeheerData(args: {
     dashboardReady: hasMinDisplay,
     reportReady: hasMinDisplay,
     dashboardHref: `/campaigns/${campaignId}`,
-    reportHref: hasMinDisplay ? '/reports' : null,
+    reportHref: null,
     label: 'Dashboard / rapportstatus',
   } satisfies RouteBeheerPageData['outputSummary']
   const currentHrPhase = mapGuidedPhaseToHrRoutePhase(guidedState.phase)
@@ -886,6 +927,19 @@ export async function fetchRouteBeheerData(args: {
     canExecuteCampaign,
     canManageCampaign,
     membershipRole: memberRole,
+    selfServe: {
+      deliveryMode: campaign?.delivery_mode ?? null,
+      importReady: importReady === true,
+      hasSegmentDeepDive: hasCampaignAddOn(campaign, 'segment_deep_dive'),
+      importQaConfirmed: guidedSetupDiscipline.importQaConfirmed,
+      launchTimingConfirmed: guidedSetupDiscipline.launchTimingConfirmed,
+      communicationReady: guidedSetupDiscipline.communicationReady,
+      remindableCount: remindableRespondents.length,
+      unsentRespondents,
+      launchConfirmedAt: deliveryRecord?.launch_confirmed_at ?? null,
+      participantCommsConfig: deliveryRecord?.participant_comms_config ?? null,
+      reminderConfig: deliveryRecord?.reminder_config ?? null,
+    },
   } satisfies RouteBeheerPageData
 }
 

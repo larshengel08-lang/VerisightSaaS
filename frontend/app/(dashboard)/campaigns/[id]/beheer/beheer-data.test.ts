@@ -33,7 +33,7 @@ function createSupabaseMock() {
     ['profiles|is_verisight_admin', { data: { is_verisight_admin: false } }],
     ['org_members|role', { data: { role: 'owner' } }],
     ['organizations|name', { data: { name: 'Acme HR' } }],
-    ['campaigns|delivery_mode, created_at', { data: { delivery_mode: 'guided_self_serve', created_at: '2026-05-01T08:00:00.000Z' } }],
+    ['campaigns|delivery_mode, created_at, enabled_modules', { data: { delivery_mode: 'guided_self_serve', created_at: '2026-05-01T08:00:00.000Z', enabled_modules: null } }],
     ['org_members|id', { count: 4 }],
     ['org_invites|id', { count: 1 }],
     [
@@ -51,21 +51,21 @@ function createSupabaseMock() {
       },
     ],
     [
-      'respondents|id, sent_at, completed, completed_at',
+      'respondents|id, token, email, sent_at, completed, completed_at',
       {
         data: [
-          { id: 'r1', sent_at: '2026-05-10T10:00:00.000Z', completed: true, completed_at: '2026-05-11T10:00:00.000Z' },
-          { id: 'r2', sent_at: '2026-05-10T10:00:00.000Z', completed: true, completed_at: '2026-05-11T11:00:00.000Z' },
-          { id: 'r3', sent_at: '2026-05-10T10:00:00.000Z', completed: true, completed_at: '2026-05-11T12:00:00.000Z' },
-          { id: 'r4', sent_at: '2026-05-10T10:00:00.000Z', completed: true, completed_at: '2026-05-11T13:00:00.000Z' },
-          { id: 'r5', sent_at: '2026-05-10T10:00:00.000Z', completed: true, completed_at: '2026-05-11T14:00:00.000Z' },
-          { id: 'r6', sent_at: '2026-05-10T10:00:00.000Z', completed: true, completed_at: '2026-05-11T15:00:00.000Z' },
-          { id: 'r7', sent_at: '2026-05-10T10:00:00.000Z', completed: false, completed_at: null },
-          { id: 'r8', sent_at: '2026-05-10T10:00:00.000Z', completed: false, completed_at: null },
-          { id: 'r9', sent_at: '2026-05-10T10:00:00.000Z', completed: false, completed_at: null },
-          { id: 'r10', sent_at: '2026-05-10T10:00:00.000Z', completed: false, completed_at: null },
-          { id: 'r11', sent_at: '2026-05-10T10:00:00.000Z', completed: false, completed_at: null },
-          { id: 'r12', sent_at: '2026-05-10T10:00:00.000Z', completed: false, completed_at: null },
+          { id: 'r1', token: 't1', email: 'r1@example.com', sent_at: '2026-05-10T10:00:00.000Z', completed: true, completed_at: '2026-05-11T10:00:00.000Z' },
+          { id: 'r2', token: 't2', email: 'r2@example.com', sent_at: '2026-05-10T10:00:00.000Z', completed: true, completed_at: '2026-05-11T11:00:00.000Z' },
+          { id: 'r3', token: 't3', email: 'r3@example.com', sent_at: '2026-05-10T10:00:00.000Z', completed: true, completed_at: '2026-05-11T12:00:00.000Z' },
+          { id: 'r4', token: 't4', email: 'r4@example.com', sent_at: '2026-05-10T10:00:00.000Z', completed: true, completed_at: '2026-05-11T13:00:00.000Z' },
+          { id: 'r5', token: 't5', email: 'r5@example.com', sent_at: '2026-05-10T10:00:00.000Z', completed: true, completed_at: '2026-05-11T14:00:00.000Z' },
+          { id: 'r6', token: 't6', email: 'r6@example.com', sent_at: '2026-05-10T10:00:00.000Z', completed: true, completed_at: '2026-05-11T15:00:00.000Z' },
+          { id: 'r7', token: 't7', email: 'r7@example.com', sent_at: '2026-05-10T10:00:00.000Z', completed: false, completed_at: null },
+          { id: 'r8', token: 't8', email: 'r8@example.com', sent_at: '2026-05-10T10:00:00.000Z', completed: false, completed_at: null },
+          { id: 'r9', token: 't9', email: 'r9@example.com', sent_at: '2026-05-10T10:00:00.000Z', completed: false, completed_at: null },
+          { id: 'r10', token: 't10', email: 'r10@example.com', sent_at: '2026-05-10T10:00:00.000Z', completed: false, completed_at: null },
+          { id: 'r11', token: 't11', email: 'r11@example.com', sent_at: '2026-05-10T10:00:00.000Z', completed: false, completed_at: null },
+          { id: 'r12', token: 't12', email: 'r12@example.com', sent_at: '2026-05-10T10:00:00.000Z', completed: false, completed_at: null },
         ],
       },
     ],
@@ -304,13 +304,34 @@ describe('routebeheer data helpers', () => {
       href: '/campaigns/campaign-1',
     })
   })
+
+  it('sends closeout now-doing links back into the routebeheer worktable instead of old operatie anchors', () => {
+    const guidedState = buildGuidedSelfServeState({
+      isActive: false,
+      totalInvited: 12,
+      totalCompleted: 12,
+      invitesNotSent: 0,
+      hasMinDisplay: true,
+      hasEnoughData: true,
+      importQaConfirmed: true,
+      launchTimingConfirmed: true,
+      communicationReady: true,
+      importReady: true,
+    })
+
+    expect(buildHrRouteBeheerNowDoing({ guidedState, campaignId: 'campaign-1' })).toMatchObject({
+      phaseKey: 'afronding',
+      href: '/campaigns/campaign-1/beheer?fase=afronding#status-en-logboek',
+    })
+  })
 })
 
 describe('routebeheer source integration', () => {
   it('does not silently coerce unknown import readiness into a false auto-signal', () => {
     const source = readFileSync(new URL('./beheer-data.ts', import.meta.url), 'utf8')
 
-    expect(source).not.toContain('importReady: importReady === true')
+    expect(source).toContain('importReady,')
+    expect(source).toContain('importReady: importReady ?? undefined')
   })
 
   it('keeps a visible routebeheer entrypoint in the dashboard launcher for setup-heavy campaigns', () => {
@@ -320,6 +341,14 @@ describe('routebeheer source integration', () => {
     )
 
     expect(launcherSource).toContain('href: `/campaigns/${campaign.campaign_id}/beheer`')
+  })
+
+  it('removes stale operatie-anchor fallbacks from the new routebeheer worktable', () => {
+    const dataSource = readFileSync(new URL('./beheer-data.ts', import.meta.url), 'utf8')
+    const componentSource = readFileSync(new URL('./route-beheer-components.tsx', import.meta.url), 'utf8')
+    const combined = `${dataSource}\n${componentSource}`
+
+    expect(combined).not.toContain('#operatie')
   })
 
   it('keeps routebeheer restricted to HR-capable users instead of manager-only action center access', () => {
@@ -356,7 +385,7 @@ describe('routebeheer source integration', () => {
       dashboardReady: true,
       reportReady: true,
       dashboardHref: '/campaigns/campaign-1',
-      reportHref: '/reports',
+      reportHref: null,
       label: 'Dashboard / rapportstatus',
     })
 
@@ -370,6 +399,22 @@ describe('routebeheer source integration', () => {
       status: 'current',
       body: 'Dashboard / rapportstatus',
     })
+  })
+
+  it('keeps the HR self-serve execution workspace available on routebeheer data for owner flows', async () => {
+    const data = await fetchRouteBeheerData({
+      campaignId: 'campaign-1',
+      supabase: createSupabaseMock(),
+      userId: 'user-1',
+    })
+
+    expect(data?.selfServe).toMatchObject({
+      deliveryMode: 'guided_self_serve',
+      importReady: true,
+      remindableCount: 6,
+      launchConfirmedAt: '2026-05-10T08:00:00.000Z',
+    })
+    expect(data?.selfServe.unsentRespondents).toHaveLength(0)
   })
 
   it('keeps route settings inside the communicatie phase instead of as a top-level standalone block', async () => {
