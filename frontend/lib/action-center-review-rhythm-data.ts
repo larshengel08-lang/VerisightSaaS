@@ -40,13 +40,17 @@ export async function getActionCenterReviewRhythmData(args: {
   const routeIds = exitItems.map((item) => item.id)
   const admin = createAdminClient()
 
-  const { data } =
+  const { data, error } =
     routeIds.length > 0
       ? await admin
           .from('action_center_review_rhythm_configs')
           .select('route_id, cadence_days, reminder_lead_days, escalation_lead_days, reminders_enabled')
           .in('route_id', routeIds)
       : { data: [] }
+
+  if (error) {
+    throw new Error(error.message ?? 'Action Center review rhythm config query failed.')
+  }
 
   const persistedConfigByRouteId = ((data ?? []) as ActionCenterReviewRhythmConfigRow[]).reduce<
     Record<string, ActionCenterReviewRhythmConfig>
