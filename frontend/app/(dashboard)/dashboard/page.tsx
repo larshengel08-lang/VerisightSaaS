@@ -85,40 +85,43 @@ export default async function DashboardHomePage({
         )
       ) : (
         <>
-          <header className="space-y-5 border-b border-[color:var(--dashboard-frame-border)] pb-6">
+          <header className="space-y-6 border-b border-[color:rgba(13,27,42,0.15)] pb-8">
             {requestedModuleFilter ? (
               <Link
                 href="/dashboard"
-                className="inline-flex text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:text-[color:var(--dashboard-ink)]"
+                className="inline-flex font-mono text-[0.66rem] font-medium uppercase tracking-[0.2em] text-[color:var(--dashboard-text)] transition-colors hover:text-[color:var(--dashboard-ink)]"
               >
                 Terug naar alle routes
               </Link>
             ) : null}
-            <div className="space-y-5">
-              <div className="space-y-3">
+            <div className="space-y-6">
+              <div className="space-y-4">
                 <div className="flex flex-wrap items-center gap-3">
-                  <span className="inline-flex rounded-full bg-[color:var(--dashboard-accent-soft)] px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--dashboard-accent-strong)]">
+                  <span className="inline-flex items-center gap-2 font-mono text-[0.68rem] font-medium uppercase tracking-[0.22em] text-[color:var(--dashboard-text)]">
+                    <span className="h-2.5 w-2.5 bg-[color:var(--dashboard-accent-strong)]" />
                     Cockpit
                   </span>
-                  <span className="text-sm font-medium text-[color:var(--dashboard-muted)]">{contextLabel}</span>
+                  <span className="font-mono text-[0.68rem] font-medium uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
+                    {contextLabel}
+                  </span>
                 </div>
-                <h1 className="font-serif text-[2.25rem] leading-[0.95] tracking-[-0.05em] text-[color:var(--dashboard-ink)] sm:text-[2.8rem]">
-                  Dashboard overview
+                <h1 className="font-[family-name:var(--font-inter-tight)] text-[2.45rem] font-extrabold leading-[0.92] tracking-[-0.045em] text-[color:var(--dashboard-ink)] sm:text-[3.15rem]">
+                  Open scans, download rapporten en beheer instellingen.
                 </h1>
                 <p className="max-w-3xl text-[0.98rem] leading-7 text-[color:var(--dashboard-text)]">
-                  Open scans, download rapporten en beheer instellingen vanuit een overzicht.
+                  Een compact overzicht van alle actieve scans, met per scan precies de acties die nu beschikbaar zijn.
                 </p>
               </div>
-              <div className="grid gap-4 lg:grid-cols-[minmax(0,1.35fr),minmax(0,1fr)]">
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                  <SummaryCard label="Scans" value={summary.total} />
-                  <SummaryCard label="Resultaten" value={summary.resultsAvailable} />
-                  <SummaryCard label="PDF" value={summary.pdfAvailable} />
-                  <SummaryCard label="Aandacht" value={summary.attentionNeeded} />
+              <div className="grid gap-5 xl:grid-cols-[minmax(0,1.5fr),minmax(20rem,0.9fr)]">
+                <div className="grid gap-px border border-[color:rgba(13,27,42,0.15)] bg-[color:rgba(13,27,42,0.15)] sm:grid-cols-2 xl:grid-cols-4">
+                  <SummaryCard label="Aantal scans" value={summary.total} />
+                  <SummaryCard label="Resultaten beschikbaar" value={summary.resultsAvailable} />
+                  <SummaryCard label="PDF beschikbaar" value={summary.pdfAvailable} />
+                  <SummaryCard label="Aandacht nodig" value={summary.attentionNeeded} highlight />
                 </div>
-                <div className="rounded-[20px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-4 py-4 shadow-[0_1px_3px_rgba(15,23,42,0.03)] sm:px-5">
-                  <div className="space-y-2">
-                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+                <div className="border border-[color:rgba(13,27,42,0.15)] bg-white px-4 py-4 sm:px-5">
+                  <div className="space-y-3">
+                    <p className="font-mono text-[0.66rem] font-medium uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">
                       Product
                     </p>
                     <div className="flex flex-wrap gap-2">
@@ -138,7 +141,7 @@ export default async function DashboardHomePage({
             </div>
           </header>
 
-          <section className="space-y-3">
+          <section className="space-y-px border-y border-[color:rgba(13,27,42,0.15)] bg-[color:rgba(13,27,42,0.15)]">
             {rows.map((row) => (
               <CockpitScanRow key={row.campaign.campaign_id} row={row} />
             ))}
@@ -199,10 +202,10 @@ function FilterPill({
   return (
     <Link
       href={href}
-      className={`inline-flex rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+      className={`inline-flex rounded-full border px-3 py-1.5 font-mono text-[0.66rem] font-medium uppercase tracking-[0.18em] transition-colors ${
         active
           ? 'border-[color:var(--dashboard-accent-soft-border)] bg-[color:var(--dashboard-accent-soft)] text-[color:var(--dashboard-accent-strong)]'
-          : 'border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] text-[color:var(--dashboard-text)] hover:border-[color:var(--dashboard-accent-soft-border)] hover:text-[color:var(--dashboard-ink)]'
+          : 'border-[color:rgba(13,27,42,0.15)] bg-white text-[color:var(--dashboard-text)] hover:border-[color:var(--dashboard-ink)] hover:text-[color:var(--dashboard-ink)]'
       }`}
     >
       {label}
@@ -210,39 +213,54 @@ function FilterPill({
   )
 }
 
-function SummaryCard({ label, value }: { label: string; value: number }) {
+function SummaryCard({ label, value, highlight = false }: { label: string; value: number; highlight?: boolean }) {
   return (
-    <div className="rounded-[18px] border border-[color:var(--dashboard-frame-border)] bg-white px-4 py-3.5">
-      <p className="text-[0.64rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">
+    <div className={`px-4 py-4 ${highlight ? 'bg-[color:rgba(232,160,32,0.08)]' : 'bg-white'}`}>
+      <p className="font-mono text-[0.62rem] font-medium uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">
         {label}
       </p>
-      <p className="dash-number mt-2 text-[1.65rem] leading-none text-[color:var(--dashboard-ink)]">{value}</p>
+      <p className="dash-number mt-3 text-[1.9rem] leading-none text-[color:var(--dashboard-ink)]">{value}</p>
     </div>
   )
 }
 
 function CockpitScanRow({ row }: { row: CockpitRow }) {
   return (
-    <article className="rounded-[18px] border border-[color:var(--dashboard-frame-border)] bg-white px-5 py-5 shadow-[0_1px_3px_rgba(17,24,39,0.04)] transition-shadow hover:shadow-[0_12px_24px_rgba(17,24,39,0.08)]">
-      <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
-        <div className="min-w-0 flex-1 space-y-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
-              {row.periodLabel} - {row.productLabel}
+    <article className="bg-white px-5 py-5 transition-colors hover:bg-[color:rgba(13,27,42,0.02)] sm:px-6">
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.55fr)_auto] xl:items-center">
+        <div className="min-w-0 space-y-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="font-mono text-[0.64rem] font-medium uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">
+              {row.productLabel}
             </span>
-            <span className="inline-flex rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-3 py-1 text-[0.78rem] font-semibold text-[color:var(--dashboard-text)]">
-              {row.statusLabel}
+            <span className="font-mono text-[0.64rem] font-medium uppercase tracking-[0.18em] text-[color:var(--dashboard-text)]">
+              {row.periodLabel}
             </span>
           </div>
-          <h2 className="text-[1.08rem] font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">
+          <h2 className="font-[family-name:var(--font-inter-tight)] text-[1.28rem] font-bold leading-[1] tracking-[-0.035em] text-[color:var(--dashboard-ink)]">
             {row.campaign.campaign_name}
           </h2>
-          <div className="flex flex-wrap items-center gap-4 text-sm text-[color:var(--dashboard-text)]">
-            <span>Respons {row.responseValue}</span>
-            <span>{row.factualLine}</span>
+        </div>
+        <div className="space-y-3 xl:justify-self-start">
+          <span className="inline-flex rounded-full border border-[color:rgba(13,27,42,0.15)] bg-[color:var(--dashboard-soft)] px-3 py-1 font-mono text-[0.64rem] font-medium uppercase tracking-[0.18em] text-[color:var(--dashboard-text)]">
+            {row.statusLabel}
+          </span>
+          <div className="grid gap-2 text-sm text-[color:var(--dashboard-text)] sm:grid-cols-2 xl:grid-cols-1">
+            <div>
+              <p className="font-mono text-[0.62rem] font-medium uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
+                Respons
+              </p>
+              <p className="mt-1 text-[0.95rem] font-medium text-[color:var(--dashboard-ink)]">{row.responseValue}</p>
+            </div>
+            <div>
+              <p className="font-mono text-[0.62rem] font-medium uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
+                Status
+              </p>
+              <p className="mt-1 text-[0.95rem] text-[color:var(--dashboard-ink)]">{row.factualLine}</p>
+            </div>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2 xl:justify-end">
+        <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap xl:justify-end">
           <CockpitActionButton
             action={row.primaryAction}
             campaignId={row.campaign.campaign_id}
@@ -286,12 +304,12 @@ function CockpitActionButton({
         scanType={scanType}
         label="Download PDF"
         loadingLabel="PDF ophalen..."
-        containerClassName="flex flex-col items-start gap-1"
-        errorClassName="max-w-48 text-xs text-red-600"
+        containerClassName="flex flex-col items-stretch gap-1"
+        errorClassName="max-w-52 text-xs text-red-600"
         buttonClassName={
           primary
-            ? 'inline-flex rounded-lg bg-[color:var(--dashboard-accent-strong)] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#00584f] disabled:cursor-not-allowed disabled:opacity-60'
-            : 'inline-flex rounded-lg border border-[color:var(--dashboard-frame-border)] bg-white px-4 py-3 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] hover:text-[color:var(--dashboard-accent-strong)] disabled:cursor-not-allowed disabled:opacity-60'
+            ? 'inline-flex items-center justify-center rounded-full bg-[color:var(--dashboard-accent-strong)] px-5 py-3 font-mono text-[0.68rem] font-medium uppercase tracking-[0.18em] text-[color:var(--dashboard-ink)] transition-colors hover:bg-[#c88a18] disabled:cursor-not-allowed disabled:opacity-60'
+            : 'inline-flex items-center justify-center rounded-full border border-[color:rgba(13,27,42,0.15)] bg-white px-4 py-3 font-mono text-[0.68rem] font-medium uppercase tracking-[0.18em] text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-ink)] disabled:cursor-not-allowed disabled:opacity-60'
         }
       />
     )
@@ -302,8 +320,8 @@ function CockpitActionButton({
       href={action.href}
       className={
         primary
-          ? 'inline-flex rounded-lg bg-[color:var(--dashboard-accent-strong)] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#00584f]'
-          : 'inline-flex rounded-lg border border-[color:var(--dashboard-frame-border)] bg-white px-4 py-3 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] hover:text-[color:var(--dashboard-accent-strong)]'
+          ? 'inline-flex items-center justify-center rounded-full bg-[color:var(--dashboard-accent-strong)] px-5 py-3 font-mono text-[0.68rem] font-medium uppercase tracking-[0.18em] text-[color:var(--dashboard-ink)] transition-colors hover:bg-[#c88a18]'
+          : 'inline-flex items-center justify-center rounded-full border border-[color:rgba(13,27,42,0.15)] bg-white px-4 py-3 font-mono text-[0.68rem] font-medium uppercase tracking-[0.18em] text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-ink)]'
       }
     >
       {action.label}

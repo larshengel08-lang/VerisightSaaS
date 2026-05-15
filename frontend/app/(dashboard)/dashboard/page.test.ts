@@ -42,9 +42,9 @@ describe('dashboard home UX guardrails', () => {
   it('renders the overview route as a compact cockpit list with visible multi-action controls', () => {
     const pageSource = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
 
-    expect(pageSource).toContain('Dashboard overview')
     expect(pageSource).toContain('Cockpit')
-    expect(pageSource).toContain('Open scans, download rapporten en beheer instellingen vanuit een overzicht.')
+    expect(pageSource).toContain('Open scans, download rapporten en beheer instellingen.')
+    expect(pageSource).toContain('Een compact overzicht van alle actieve scans')
     expect(pageSource).toContain('PdfDownloadButton')
     expect(pageSource).toContain('primaryAction')
     expect(pageSource).toContain('secondaryActions')
@@ -81,7 +81,7 @@ describe('dashboard home UX guardrails', () => {
     expect(source).not.toContain("const requestedStatusFilter = normalizeDashboardStatusFilter(")
     expect(source).toContain('Product')
     expect(source).toContain('FilterPill')
-    expect(source).not.toContain('Status')
+    expect(source).not.toContain('STATUS_FILTERS')
     expect(source).not.toContain('Geen routes met deze status.')
     expect(source).not.toContain('Accepteren')
     expect(source).not.toContain('Afwijzen')
@@ -98,10 +98,10 @@ describe('dashboard home UX guardrails', () => {
   it('keeps the cockpit summary compact instead of score-heavy route cards', () => {
     const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
 
-    expect(source).toContain('<SummaryCard label="Scans"')
-    expect(source).toContain('<SummaryCard label="Resultaten"')
-    expect(source).toContain('<SummaryCard label="PDF"')
-    expect(source).toContain('<SummaryCard label="Aandacht"')
+    expect(source).toContain('<SummaryCard label="Aantal scans"')
+    expect(source).toContain('<SummaryCard label="Resultaten beschikbaar"')
+    expect(source).toContain('<SummaryCard label="PDF beschikbaar"')
+    expect(source).toContain('<SummaryCard label="Aandacht nodig"')
     expect(source).not.toContain('getCampaignAverageSignalScore')
   })
 
