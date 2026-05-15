@@ -1,8 +1,12 @@
 import { getActionCenterPageData } from '@/lib/action-center-page-data'
 import { inferActionCenterManagerResponseScopeType } from '@/lib/action-center-manager-responses'
 import {
+  ACTION_CENTER_ROUTE_DEFAULTS_ENABLED_SCAN_TYPES,
+  getActionCenterEnabledRouteDefaults,
+  type ActionCenterRouteDefaultsEnabledScanType,
+} from '@/lib/action-center-route-defaults'
+import {
   buildDefaultActionCenterReviewRhythmConfig,
-  isActionCenterReviewRhythmSupportedScanType,
   normalizeActionCenterReviewRhythmConfig,
   type ActionCenterReviewRhythmConfig,
 } from '@/lib/action-center-review-rhythm'
@@ -32,7 +36,7 @@ export interface ActionCenterFollowThroughMailRouteSnapshot {
   campaignId: string
   campaignName: string
   scopeLabel: string
-  scanType: 'exit'
+  scanType: ActionCenterRouteDefaultsEnabledScanType
   routeStatus: ActionCenterPreviewStatus
   reviewScheduledFor: string | null
   reviewCompletedAt: string | null
@@ -171,7 +175,8 @@ export function buildActionCenterFollowThroughMailRouteSnapshot(
 ):
   | { ok: false; reason: 'unsupported-route' }
   | { ok: true; value: ActionCenterFollowThroughMailRouteSnapshot } {
-  if (!isActionCenterReviewRhythmSupportedScanType(input.scanType)) {
+  const routeDefaults = getActionCenterEnabledRouteDefaults(input.scanType)
+  if (!routeDefaults) {
     return {
       ok: false,
       reason: 'unsupported-route',
@@ -188,9 +193,9 @@ export function buildActionCenterFollowThroughMailRouteSnapshot(
       routeScopeValue,
       orgId: normalizeText(input.orgId) ?? 'unknown-org',
       campaignId: normalizeText(input.campaignId) ?? input.routeId.split('::')[0] ?? input.routeId,
-      campaignName: normalizeText(input.campaignName) ?? 'ExitScan',
+      campaignName: normalizeText(input.campaignName) ?? 'Campagne',
       scopeLabel: normalizeText(input.scopeLabel) ?? routeScopeValue,
-      scanType: 'exit',
+      scanType: routeDefaults.scanType,
       routeStatus: input.routeStatus,
       reviewScheduledFor: normalizeText(input.reviewScheduledFor),
       reviewCompletedAt: normalizeText(input.reviewCompletedAt),
@@ -335,7 +340,7 @@ export async function getActionCenterFollowThroughMailData(args: {
     currentUserWorkspaceMemberships: args.currentUserWorkspaceMemberships,
   })
 
-  const eligibleItems = pageData.items.filter((item) => item.sourceLabel === 'ExitScan')
+  const eligibleItems = pageData.items
   if (eligibleItems.length === 0) {
     return {
       snapshots: [] as ActionCenterFollowThroughMailRouteSnapshot[],
@@ -411,6 +416,8 @@ export async function getActionCenterFollowThroughMailData(args: {
     const route = item.coreSemantics.route
     const campaign = campaignsById.get(route.campaignId)
     if (!campaign) return []
+    const routeDefaults = getActionCenterEnabledRouteDefaults(campaign.scan_type)
+    if (!routeDefaults) return []
 
     const routeScopeValue = normalizeText(item.teamId)
     let canonicalReviewScheduledFor: string | null = null
@@ -438,7 +445,7 @@ export async function getActionCenterFollowThroughMailData(args: {
       campaignId: campaign.id,
       campaignName: campaign.name,
       scopeLabel: item.teamLabel,
-      scanType: campaign.scan_type,
+      scanType: routeDefaults.scanType,
       routeStatus: item.status,
       reviewScheduledFor: canonicalReviewScheduledFor,
       reviewCompletedAt: route.reviewCompletedAt,
@@ -453,7 +460,10 @@ export async function getActionCenterFollowThroughMailData(args: {
     return snapshot.ok ? [snapshot.value] : []
   })
 
-  return { snapshots, routeIds }
+  return {
+    snapshots,
+    routeIds: snapshots.map((snapshot) => snapshot.routeId),
+  }
 }
 
 export async function getActionCenterFollowThroughMailDispatchData() {
@@ -461,7 +471,7 @@ export async function getActionCenterFollowThroughMailDispatchData() {
   const { data, error } = await admin
     .from('campaigns')
     .select('organization_id')
-    .eq('scan_type', 'exit')
+    .in('scan_type', [...ACTION_CENTER_ROUTE_DEFAULTS_ENABLED_SCAN_TYPES])
 
   if (error) {
     throw new Error(error.message ?? 'Action Center dispatch campaign discovery failed.')

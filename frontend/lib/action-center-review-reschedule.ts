@@ -1,4 +1,8 @@
 import { buildActionCenterRouteId } from './action-center-route-contract'
+import {
+  isActionCenterRouteDefaultsKnownScanType,
+  type ActionCenterRouteDefaultsKnownScanType,
+} from './action-center-route-defaults'
 
 export const ACTION_CENTER_REVIEW_RESCHEDULE_OPERATIONS = ['reschedule', 'cancel'] as const
 
@@ -13,7 +17,7 @@ export interface ValidatedActionCenterReviewRescheduleInput {
   routeScopeValue: string
   routeSourceId: string
   orgId: string
-  scanType: 'exit'
+  scanType: ActionCenterRouteDefaultsKnownScanType
   reviewDate: string | null
   reason: string
 }
@@ -93,7 +97,7 @@ export function validateActionCenterReviewRescheduleInput(
     !orgId ||
     !isUuid(orgId) ||
     routeId !== expectedRouteId ||
-    scanType !== 'exit' ||
+    !isActionCenterRouteDefaultsKnownScanType(scanType) ||
     !isBoundedReason(reason)
   ) {
     throw new Error('Ongeldige review reschedule input.')
@@ -116,7 +120,7 @@ export function validateActionCenterReviewRescheduleInput(
     routeScopeValue,
     routeSourceId,
     orgId,
-    scanType: 'exit' as const,
+    scanType,
     reviewDate: operation === 'cancel' ? null : reviewDate,
     reason: normalizedReason,
   }

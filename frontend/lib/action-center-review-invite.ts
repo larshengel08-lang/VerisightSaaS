@@ -1,5 +1,6 @@
 import { buildActionCenterEntryHref } from '@/lib/action-center-entry'
 import type { ActionCenterPreviewStatus } from '@/lib/action-center-preview-model'
+import { isActionCenterRouteDefaultsEnabledScanType } from '@/lib/action-center-route-defaults'
 import type { ScanType } from '@/lib/types'
 
 export type ActionCenterReviewInviteEligibilityReason =
@@ -60,7 +61,7 @@ function isClosedRoute(routeStatus: string | null | undefined) {
 }
 
 function isSupportedScanType(scanType: string | null | undefined, phase: number) {
-  return normalizeLowerText(scanType) === 'exit' && phase === 1
+  return isActionCenterRouteDefaultsEnabledScanType(normalizeLowerText(scanType)) && phase === 1
 }
 
 function getNormalizedIsoDate(value: string | null | undefined) {

@@ -1,6 +1,10 @@
 import type { ActionCenterPreviewStatus } from '@/lib/action-center-preview-model'
+import {
+  getActionCenterEnabledRouteDefaults,
+  type ActionCenterRouteDefaultsEnabledScanType,
+} from '@/lib/action-center-route-defaults'
 
-export type ActionCenterReviewRhythmSupportedScanType = 'exit'
+export type ActionCenterReviewRhythmSupportedScanType = ActionCenterRouteDefaultsEnabledScanType
 export interface ActionCenterReviewRhythmConfig {
   cadenceDays: 7 | 14 | 30
   reminderLeadDays: 1 | 3 | 5
@@ -9,13 +13,6 @@ export interface ActionCenterReviewRhythmConfig {
 }
 
 export type ActionCenterReviewRhythmHealth = 'upcoming' | 'overdue' | 'stale' | 'completed'
-
-const DEFAULT_ACTION_CENTER_REVIEW_RHYTHM_CONFIG: ActionCenterReviewRhythmConfig = {
-  cadenceDays: 14,
-  reminderLeadDays: 3,
-  escalationLeadDays: 7,
-  remindersEnabled: true,
-}
 
 function isDateOnlyValue(value: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(value)
@@ -39,11 +36,21 @@ function getUtcCalendarDayDiff(reviewDate: string, now: Date) {
 export function isActionCenterReviewRhythmSupportedScanType(
   scanType: string | null | undefined,
 ): scanType is ActionCenterReviewRhythmSupportedScanType {
-  return scanType === 'exit'
+  return getActionCenterEnabledRouteDefaults(scanType) !== null
 }
 
 export function buildDefaultActionCenterReviewRhythmConfig(): ActionCenterReviewRhythmConfig {
-  return { ...DEFAULT_ACTION_CENTER_REVIEW_RHYTHM_CONFIG }
+  const defaults = getActionCenterEnabledRouteDefaults('exit')
+  if (!defaults) {
+    throw new Error('Action Center route defaults lost the enabled baseline route.')
+  }
+
+  return {
+    cadenceDays: defaults.cadenceDays,
+    reminderLeadDays: defaults.reminderLeadDays,
+    escalationLeadDays: defaults.escalationLeadDays,
+    remindersEnabled: defaults.remindersEnabled,
+  }
 }
 
 export function normalizeActionCenterReviewRhythmConfig(input: {

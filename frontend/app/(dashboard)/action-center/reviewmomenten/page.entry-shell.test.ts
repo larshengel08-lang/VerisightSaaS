@@ -10,8 +10,10 @@ describe('action center reviewmomenten entry shell', () => {
     expect(source).toContain('computeReviewMomentGovernanceCounts')
     expect(source).toContain('context.canScheduleActionCenterReview')
     expect(source).toContain('pageData.inviteDownloadEligibleRouteIds')
+    expect(source).toContain('pageData.routeScanTypeByRouteId')
     expect(source).toContain('canScheduleActionCenterReview={context.canScheduleActionCenterReview}')
     expect(source).toContain('inviteDownloadEligibleRouteIds={pageData.inviteDownloadEligibleRouteIds}')
+    expect(source).toContain('routeScanTypeByRouteId={pageData.routeScanTypeByRouteId}')
   })
 
   it('threads review rhythm data and management permission into the existing reviewmomenten page', () => {
@@ -23,6 +25,5 @@ describe('action center reviewmomenten entry shell', () => {
     expect(source).toContain('manageableReviewRhythmRouteIds=')
     expect(source).toContain('nativeCalendarEligibleRouteIds=')
     expect(source).toContain('rhythmConfigByRouteId=')
-    expect(source).toContain('rhythmSummary=')
   })
 })

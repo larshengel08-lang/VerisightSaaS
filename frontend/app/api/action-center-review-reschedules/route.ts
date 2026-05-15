@@ -220,7 +220,7 @@ export async function POST(request: Request) {
 
   if (routeData.status === 'unsupported-scan-type') {
     return NextResponse.json(
-      { detail: 'Review reschedule blijft in deze slice beperkt tot ExitScan.' },
+      { detail: 'Review reschedule blijft in deze slice beperkt tot ingeschakelde follow-through-routes.' },
       { status: 409 },
     )
   }

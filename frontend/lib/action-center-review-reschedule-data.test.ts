@@ -109,7 +109,66 @@ describe('action center review reschedule data', () => {
     })
   })
 
-  it('fails closed when the route is not an ExitScan campaign', async () => {
+  it('returns the canonical review truth for a RetentieScan route when the shared route contract enables it', async () => {
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'campaigns') {
+        return createCampaignQuery({
+          data: {
+            id: ROUTE_SOURCE_ID,
+            organization_id: ORG_ID,
+            scan_type: 'retention',
+          },
+        })
+      }
+
+      if (table === 'action_center_manager_responses') {
+        return createManagerResponseQuery({
+          data: {
+            campaign_id: ROUTE_SOURCE_ID,
+            org_id: ORG_ID,
+            route_scope_type: 'department',
+            route_scope_value: ROUTE_SCOPE_VALUE,
+            review_scheduled_for: '2026-05-28',
+          },
+        })
+      }
+
+      if (table === 'action_center_review_schedule_revisions') {
+        return createLatestRevisionQuery({
+          data: {
+            revision: 2,
+            operation: 'reschedule',
+            review_date: '2026-05-28',
+            previous_review_date: '2026-05-14',
+          },
+        })
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    await expect(
+      loadActionCenterReviewRescheduleData({
+        routeId: ROUTE_ID,
+        routeScopeValue: ROUTE_SCOPE_VALUE,
+        routeSourceId: ROUTE_SOURCE_ID,
+        orgId: ORG_ID,
+      }),
+    ).resolves.toMatchObject({
+      status: 'ok',
+      campaignId: ROUTE_SOURCE_ID,
+      orgId: ORG_ID,
+      routeId: ROUTE_ID,
+      routeScopeValue: ROUTE_SCOPE_VALUE,
+      routeScopeType: 'department',
+      scanType: 'retention',
+      reviewDate: '2026-05-28',
+      latestRevision: 2,
+      latestOperation: 'reschedule',
+    })
+  })
+
+  it('fails closed when the route is not an enabled Action Center campaign', async () => {
     mockAdminFrom.mockImplementation((table: string) => {
       if (table === 'campaigns') {
         return createCampaignQuery({

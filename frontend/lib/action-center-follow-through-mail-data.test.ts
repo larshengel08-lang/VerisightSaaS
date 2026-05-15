@@ -9,7 +9,7 @@ vi.mock('@/lib/supabase/admin', () => ({
 import { buildActionCenterFollowThroughMailRouteSnapshot } from './action-center-follow-through-mail-data'
 
 describe('action center follow-through mail data', () => {
-  it('rejects non-ExitScan routes before they enter the mail planner', () => {
+  it('accepts RetentieScan routes and still rejects blocked route families before they enter the mail planner', () => {
     expect(
       buildActionCenterFollowThroughMailRouteSnapshot({
         routeId: 'camp-2::org::support',
@@ -17,16 +17,43 @@ describe('action center follow-through mail data', () => {
         routeStatus: 'reviewbaar',
       }),
     ).toEqual({
+      ok: true,
+      value: expect.objectContaining({
+        routeId: 'camp-2::org::support',
+        scanType: 'retention',
+      }),
+    })
+
+    expect(
+      buildActionCenterFollowThroughMailRouteSnapshot({
+        routeId: 'camp-2::org::support',
+        scanType: 'pulse',
+        routeStatus: 'reviewbaar',
+      }),
+    ).toEqual({
       ok: false,
       reason: 'unsupported-route',
     })
+
+    for (const scanType of ['onboarding', 'leadership', 'team'] as const) {
+      expect(
+        buildActionCenterFollowThroughMailRouteSnapshot({
+          routeId: `camp-2::${scanType}::support`,
+          scanType,
+          routeStatus: 'reviewbaar',
+        }),
+      ).toEqual({
+        ok: false,
+        reason: 'unsupported-route',
+      })
+    }
   })
 
   it('keeps scoped HR oversight recipients bounded to writable review-rhythm actors only', () => {
     const snapshot = buildActionCenterFollowThroughMailRouteSnapshot({
       routeId: 'camp-1::org::sales',
       routeScopeValue: 'org-1::department::sales',
-      scanType: 'exit',
+      scanType: 'retention',
       routeStatus: 'reviewbaar',
       hrRecipients: [
         {

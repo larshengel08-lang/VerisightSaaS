@@ -296,6 +296,143 @@ describe('action center follow-through mail planner', () => {
     )
   })
 
+  it('keeps RetentieScan routes in the shared follow-through loader when route defaults enable them', async () => {
+    mockGetActionCenterPageData.mockResolvedValue({
+      items: [
+        {
+          id: 'camp-2::org-1::department::sales',
+          sourceLabel: 'RetentieScan',
+          orgId: 'org-1',
+          teamId: 'org-1::department::sales',
+          teamLabel: 'Sales',
+          status: 'reviewbaar',
+          reviewDate: '2026-05-20',
+          coreSemantics: {
+            route: {
+              campaignId: 'camp-2',
+              reviewCompletedAt: null,
+              reviewOutcome: 'geen-uitkomst',
+              ownerAssignedAt: '2026-05-10T09:00:00.000Z',
+              hasFollowUpTarget: false,
+            },
+          },
+        },
+      ],
+      routeIds: [],
+    })
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'action_center_workspace_members') {
+        return {
+          select: vi.fn().mockReturnThis(),
+          in: vi.fn().mockResolvedValue({
+            data: [
+              {
+                org_id: 'org-1',
+                user_id: 'mgr-1',
+                display_name: 'Manager',
+                login_email: 'manager@example.com',
+                access_role: 'manager_assignee',
+                scope_type: 'department',
+                scope_value: 'org-1::department::sales',
+                can_view: true,
+                can_update: false,
+                can_schedule_review: false,
+              },
+            ],
+            error: null,
+          }),
+        }
+      }
+
+      if (table === 'action_center_review_rhythm_configs') {
+        return {
+          select: vi.fn().mockReturnThis(),
+          in: vi.fn().mockResolvedValue({
+            data: [
+              {
+                route_id: 'camp-2::org-1::department::sales',
+                cadence_days: 14,
+                reminder_lead_days: 5,
+                escalation_lead_days: 7,
+                reminders_enabled: true,
+              },
+            ],
+            error: null,
+          }),
+        }
+      }
+
+      if (table === 'campaigns') {
+        return {
+          select: vi.fn().mockReturnThis(),
+          in: vi.fn().mockResolvedValue({
+            data: [
+              {
+                id: 'camp-2',
+                name: 'RetentionScan Q2',
+                organization_id: 'org-1',
+                scan_type: 'retention',
+              },
+            ],
+            error: null,
+          }),
+        }
+      }
+
+      if (table === 'action_center_manager_responses') {
+        return {
+          select: vi.fn().mockReturnThis(),
+          in: vi.fn().mockResolvedValue({
+            data: [
+              {
+                campaign_id: 'camp-2',
+                route_scope_type: 'department',
+                route_scope_value: 'org-1::department::sales',
+                review_scheduled_for: '2026-05-23',
+                updated_at: '2026-05-12T09:00:00.000Z',
+              },
+            ],
+            error: null,
+          }),
+        }
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const { snapshots, routeIds } = await getActionCenterFollowThroughMailData({
+      context: {
+        persona: 'verisight_admin',
+        isVerisightAdmin: true,
+        memberRole: null,
+        primaryOrgId: 'org-1',
+        organizationIds: ['org-1'],
+        workspaceOrgIds: ['org-1'],
+        managerScopeValues: [],
+        canViewInsights: true,
+        canViewReports: true,
+        canViewActionCenter: true,
+        canUpdateActionCenter: true,
+        canManageActionCenterAssignments: true,
+        canScheduleActionCenterReview: true,
+        managerOnly: false,
+      },
+      orgMemberships: [],
+      currentUserWorkspaceMemberships: [],
+    })
+
+    expect(routeIds).toEqual(['camp-2::org-1::department::sales'])
+    expect(snapshots).toEqual([
+      expect.objectContaining({
+        routeId: 'camp-2::org-1::department::sales',
+        scanType: 'retention',
+        campaignName: 'RetentionScan Q2',
+        reviewScheduledFor: '2026-05-23',
+      }),
+    ])
+  })
+
   it('suppresses review reminders when canonical manager-response truth cleared the review date', async () => {
     mockGetActionCenterPageData.mockResolvedValue({
       items: [

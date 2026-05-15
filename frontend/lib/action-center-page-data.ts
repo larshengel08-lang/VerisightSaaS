@@ -1,5 +1,10 @@
 import { buildLiveActionCenterItems, getLiveActionCenterSummary } from '@/lib/action-center-live'
 import type { ActionCenterPreviewManagerOption } from '@/lib/action-center-preview-model'
+import {
+  isActionCenterRouteDefaultsEnabledScanType,
+  isActionCenterRouteDefaultsKnownScanType,
+  type ActionCenterRouteDefaultsKnownScanType,
+} from '@/lib/action-center-route-defaults'
 import { buildActionCenterRouteId } from '@/lib/action-center-route-contract'
 import { projectActionCenterRouteCloseout } from '@/lib/action-center-route-closeout'
 import {
@@ -71,6 +76,7 @@ export interface ActionCenterPageData {
   itemHrefs: Record<string, string>
   organizationNames: string[]
   inviteDownloadEligibleRouteIds: string[]
+  routeScanTypeByRouteId: Record<string, ActionCenterRouteDefaultsKnownScanType>
 }
 
 function normalizeDepartmentLabel(value: string | null | undefined) {
@@ -145,7 +151,7 @@ function isInviteDownloadEligibleRoute(args: {
     return false
   }
 
-  if (args.campaign.scan_type !== 'exit') {
+  if (!isActionCenterRouteDefaultsEnabledScanType(args.campaign.scan_type)) {
     return false
   }
 
@@ -404,6 +410,7 @@ export async function getActionCenterPageData({
   }, {})
 
   const inviteDownloadEligibleRouteIds: string[] = []
+  const routeScanTypeByRouteId: Record<string, ActionCenterRouteDefaultsKnownScanType> = {}
   const liveContexts = campaigns.flatMap((campaign) => {
     return (visibleScopesByCampaignId[campaign.id] ?? []).map((scope) => {
       const deliveryRecord = deliveryRecordByCampaignId.get(campaign.id) ?? null
@@ -415,6 +422,10 @@ export async function getActionCenterPageData({
         scope.scopeValue,
       )
       const routeId = buildActionCenterRouteId(campaign.id, scope.scopeValue)
+
+      if (isActionCenterRouteDefaultsKnownScanType(campaign.scan_type)) {
+        routeScanTypeByRouteId[routeId] = campaign.scan_type
+      }
 
       if (
         isInviteDownloadEligibleRoute({
@@ -484,5 +495,6 @@ export async function getActionCenterPageData({
     itemHrefs,
     organizationNames: [...new Set(organizations.map((organization) => organization.name).filter(Boolean))],
     inviteDownloadEligibleRouteIds,
+    routeScanTypeByRouteId,
   }
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { resolveActionCenterReviewRhythmWriteAccess } from '@/lib/action-center-governance'
 import { validateActionCenterReviewRhythmInput } from '@/lib/action-center-review-rhythm'
+import { getActionCenterEnabledRouteDefaults } from '@/lib/action-center-route-defaults'
 import { buildActionCenterRouteId } from '@/lib/action-center-route-contract'
 import {
   buildCampaignItemScopeValue,
@@ -199,8 +200,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ detail: 'Route voor reviewritme bestaat niet.' }, { status: 404 })
   }
 
-  if (parsed.scanType !== 'exit' || campaignResult.campaign.scan_type !== 'exit') {
-    return NextResponse.json({ detail: 'Reviewritme blijft in deze slice beperkt tot ExitScan.' }, { status: 409 })
+  const requestedRouteDefaults = getActionCenterEnabledRouteDefaults(parsed.scanType)
+  const canonicalRouteDefaults = getActionCenterEnabledRouteDefaults(campaignResult.campaign.scan_type)
+  if (!requestedRouteDefaults || !canonicalRouteDefaults || requestedRouteDefaults.scanType !== canonicalRouteDefaults.scanType) {
+    return NextResponse.json(
+      { detail: 'Reviewritme blijft in deze slice beperkt tot ingeschakelde follow-through-routes.' },
+      { status: 409 },
+    )
   }
 
   const validation = validateActionCenterReviewRhythmInput({
@@ -208,7 +214,7 @@ export async function POST(request: Request) {
     reminderLeadDays: parsed.reminderLeadDays,
     escalationLeadDays: parsed.escalationLeadDays,
     remindersEnabled: parsed.remindersEnabled,
-  })
+  }, canonicalRouteDefaults.scanType)
 
   if (!validation.ok) {
     return NextResponse.json({ detail: validation.reason }, { status: 400 })
@@ -242,7 +248,7 @@ export async function POST(request: Request) {
         route_scope_value: identity.routeScopeValue,
         route_source_type: identity.routeSourceType,
         route_source_id: campaignResult.campaign.id,
-        scan_type: 'exit',
+        scan_type: canonicalRouteDefaults.scanType,
         cadence_days: parsed.cadenceDays,
         reminder_lead_days: parsed.reminderLeadDays,
         escalation_lead_days: parsed.escalationLeadDays,
