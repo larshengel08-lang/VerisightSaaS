@@ -65,6 +65,10 @@ function isExitRouteItem(item: Pick<ActionCenterPreviewItem, 'sourceLabel'>) {
   return item.sourceLabel === 'ExitScan'
 }
 
+function getReviewMomentRouteId(item: Pick<ActionCenterPreviewItem, 'coreSemantics'>) {
+  return item.coreSemantics.route.routeId
+}
+
 function computeRhythmSummary(
   items: ActionCenterPreviewItem[],
   configByRouteId: Record<string, ActionCenterReviewRhythmConfig>,
@@ -72,7 +76,8 @@ function computeRhythmSummary(
 ): ReviewRhythmSummary {
   return items.filter(isExitRouteItem).reduce<ReviewRhythmSummary>(
     (acc, item) => {
-      const config = configByRouteId[item.id] ?? buildDefaultActionCenterReviewRhythmConfig()
+      const config =
+        configByRouteId[getReviewMomentRouteId(item)] ?? buildDefaultActionCenterReviewRhythmConfig()
       const health = classifyActionCenterReviewRhythmStatus({
         reviewDate: item.reviewDate,
         now,
@@ -176,7 +181,8 @@ export function ReviewMomentPageClient({
   const selectedItem = visibleItems.find((item) => item.id === selectedItemId) ?? null
   const selectedRhythmItem = selectedItem && isExitRouteItem(selectedItem) ? selectedItem : null
   const canManageSelectedReviewRhythm = Boolean(
-    selectedRhythmItem?.id && manageableReviewRhythmRouteIdSet.has(selectedRhythmItem.id),
+    selectedRhythmItem?.coreSemantics.route.routeId &&
+      manageableReviewRhythmRouteIdSet.has(selectedRhythmItem.coreSemantics.route.routeId),
   )
   const selectedUrgency: ReviewMomentUrgency | null = selectedItem
     ? grouped.overdue.some((item) => item.id === selectedItem.id)
@@ -190,8 +196,11 @@ export function ReviewMomentPageClient({
             : null
     : null
   const canDownloadInviteArtifact = canScheduleActionCenterReview && Boolean(
-    selectedItem?.id && inviteDownloadEligibleRouteIdSet.has(selectedItem.id),
+    selectedItem?.coreSemantics.route.routeId &&
+      inviteDownloadEligibleRouteIdSet.has(selectedItem.coreSemantics.route.routeId),
   )
+  const canScheduleReviewControls =
+    canScheduleActionCenterReview && canManageSelectedReviewRhythm
   const lastUpdatedLabel = formatReviewMomentLastUpdated(lastUpdated)
   const visibleRhythmSummary = useMemo(() => {
     if (visibleItems.length === 0) {
@@ -202,13 +211,13 @@ export function ReviewMomentPageClient({
   }, [clientRhythmConfigByRouteId, referenceNow, visibleItems])
 
   function handleReviewRhythmSaved(nextConfig: ActionCenterReviewRhythmConfig) {
-    if (!selectedRhythmItem?.id) {
+    if (!selectedRhythmItem?.coreSemantics.route.routeId) {
       return
     }
 
     setClientRhythmConfigByRouteId((current) => ({
       ...current,
-      [selectedRhythmItem.id]: nextConfig,
+      [selectedRhythmItem.coreSemantics.route.routeId]: nextConfig,
     }))
   }
 
@@ -337,19 +346,24 @@ export function ReviewMomentPageClient({
             item={selectedItem}
             urgency={selectedUrgency}
             canDownloadInviteArtifact={canDownloadInviteArtifact}
+            canScheduleReviewControls={canScheduleReviewControls}
           />
         </div>
       </div>
 
       <ReviewRhythmConsole
-        selectedRouteId={selectedRhythmItem ? selectedRhythmItem.id : null}
+        selectedRouteId={selectedRhythmItem ? selectedRhythmItem.coreSemantics.route.routeId : null}
         selectedRouteLabel={selectedRhythmItem ? getReviewMomentScopeLabel(selectedRhythmItem) : null}
         selectedRouteSourceId={selectedRhythmItem?.coreSemantics.route.campaignId ?? null}
         selectedRouteOrgId={selectedRhythmItem?.orgId ?? null}
         selectedRouteScanType={selectedRhythmItem ? 'exit' : null}
         canManageReviewRhythm={canManageSelectedReviewRhythm}
         config={
-          (selectedRhythmItem?.id ? clientRhythmConfigByRouteId[selectedRhythmItem.id] : null) ??
+          (
+            selectedRhythmItem?.coreSemantics.route.routeId
+              ? clientRhythmConfigByRouteId[selectedRhythmItem.coreSemantics.route.routeId]
+              : null
+          ) ??
           buildDefaultActionCenterReviewRhythmConfig()
         }
         summary={visibleRhythmSummary}

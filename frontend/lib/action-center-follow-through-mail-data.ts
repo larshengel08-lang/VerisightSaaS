@@ -1,4 +1,5 @@
 import { getActionCenterPageData } from '@/lib/action-center-page-data'
+import { inferActionCenterManagerResponseScopeType } from '@/lib/action-center-manager-responses'
 import {
   buildDefaultActionCenterReviewRhythmConfig,
   isActionCenterReviewRhythmSupportedScanType,
@@ -99,6 +100,14 @@ type CampaignRow = {
   name: string
   organization_id: string
   scan_type: string
+}
+
+type ManagerResponseScheduleRow = {
+  campaign_id: string | null
+  route_scope_type: 'department' | 'item' | null
+  route_scope_value: string | null
+  review_scheduled_for: string | null
+  updated_at: string | null
 }
 
 function normalizeText(value: string | null | undefined) {
@@ -250,6 +259,71 @@ function buildHrRecipientInputs(
     }))
 }
 
+function buildManagerResponseScheduleKey(args: {
+  campaignId: string
+  routeScopeType: 'department' | 'item'
+  routeScopeValue: string
+}) {
+  return `${args.campaignId}::${args.routeScopeType}::${args.routeScopeValue}`
+}
+
+function buildCanonicalReviewScheduleByRoute(
+  rows: ManagerResponseScheduleRow[],
+) {
+  const canonicalRowsByRoute = rows.reduce<
+    Map<string, { reviewScheduledFor: string | null; updatedAt: number | null }>
+  >((acc, row) => {
+    if (!row.campaign_id || !row.route_scope_value) {
+      return acc
+    }
+
+    let routeScopeType = row.route_scope_type
+    if (!routeScopeType) {
+      try {
+        routeScopeType = inferActionCenterManagerResponseScopeType(row.route_scope_value)
+      } catch {
+        return acc
+      }
+    }
+
+    const scheduleKey = buildManagerResponseScheduleKey({
+      campaignId: row.campaign_id,
+      routeScopeType,
+      routeScopeValue: row.route_scope_value,
+    })
+    const updatedAtValue = normalizeText(row.updated_at)
+    const updatedAt =
+      updatedAtValue ? new Date(updatedAtValue).getTime() : null
+    const nextUpdatedAt = Number.isNaN(updatedAt) ? null : updatedAt
+    const current = acc.get(scheduleKey)
+
+    if (!current) {
+      acc.set(scheduleKey, {
+        reviewScheduledFor: normalizeText(row.review_scheduled_for),
+        updatedAt: nextUpdatedAt,
+      })
+      return acc
+    }
+
+    const shouldReplace =
+      current.updatedAt === null ||
+      (nextUpdatedAt !== null && nextUpdatedAt >= current.updatedAt)
+
+    if (shouldReplace) {
+      acc.set(scheduleKey, {
+        reviewScheduledFor: normalizeText(row.review_scheduled_for),
+        updatedAt: nextUpdatedAt,
+      })
+    }
+
+    return acc
+  }, new Map<string, { reviewScheduledFor: string | null; updatedAt: number | null }>())
+
+  return new Map(
+    [...canonicalRowsByRoute.entries()].map(([key, value]) => [key, value.reviewScheduledFor]),
+  )
+}
+
 export async function getActionCenterFollowThroughMailData(args: {
   context: SuiteAccessContext
   orgMemberships: SuiteOrgMembership[]
@@ -278,6 +352,7 @@ export async function getActionCenterFollowThroughMailData(args: {
     workspaceRowsResult,
     rhythmRowsResult,
     campaignsResult,
+    managerResponsesResult,
   ] = await Promise.all([
     admin
       .from('action_center_workspace_members')
@@ -290,6 +365,10 @@ export async function getActionCenterFollowThroughMailData(args: {
       .select('route_id, cadence_days, reminder_lead_days, escalation_lead_days, reminders_enabled')
       .in('route_id', routeIds),
     admin.from('campaigns').select('id, name, organization_id, scan_type').in('id', campaignIds),
+    admin
+      .from('action_center_manager_responses')
+      .select('campaign_id, route_scope_type, route_scope_value, review_scheduled_for, updated_at')
+      .in('campaign_id', campaignIds),
   ])
 
   if (workspaceRowsResult.error) {
@@ -301,10 +380,18 @@ export async function getActionCenterFollowThroughMailData(args: {
   if (campaignsResult.error) {
     throw new Error(campaignsResult.error.message ?? 'Action Center campaign query failed.')
   }
+  if (managerResponsesResult.error) {
+    throw new Error(
+      managerResponsesResult.error.message ?? 'Action Center manager response query failed.',
+    )
+  }
 
   const workspaceRows = (workspaceRowsResult.data ?? []) as WorkspaceMemberRow[]
   const campaignsById = new Map(
     ((campaignsResult.data ?? []) as CampaignRow[]).map((campaign) => [campaign.id, campaign]),
+  )
+  const canonicalReviewScheduleByRoute = buildCanonicalReviewScheduleByRoute(
+    (managerResponsesResult.data ?? []) as ManagerResponseScheduleRow[],
   )
   const rhythmConfigByRouteId = ((rhythmRowsResult.data ?? []) as ReviewRhythmRow[]).reduce<
     Record<string, ActionCenterReviewRhythmConfig>
@@ -325,16 +412,35 @@ export async function getActionCenterFollowThroughMailData(args: {
     const campaign = campaignsById.get(route.campaignId)
     if (!campaign) return []
 
+    const routeScopeValue = normalizeText(item.teamId)
+    let canonicalReviewScheduledFor: string | null = null
+    if (routeScopeValue) {
+      try {
+        const routeScopeType = inferActionCenterManagerResponseScopeType(routeScopeValue)
+        const scheduleKey = buildManagerResponseScheduleKey({
+          campaignId: campaign.id,
+          routeScopeType,
+          routeScopeValue,
+        })
+
+        if (canonicalReviewScheduleByRoute.has(scheduleKey)) {
+          canonicalReviewScheduledFor = canonicalReviewScheduleByRoute.get(scheduleKey) ?? null
+        }
+      } catch {
+        canonicalReviewScheduledFor = null
+      }
+    }
+
     const snapshot = buildActionCenterFollowThroughMailRouteSnapshot({
       routeId: item.id,
-      routeScopeValue: item.teamId,
+      routeScopeValue,
       orgId: item.orgId ?? campaign.organization_id,
       campaignId: campaign.id,
       campaignName: campaign.name,
       scopeLabel: item.teamLabel,
       scanType: campaign.scan_type,
       routeStatus: item.status,
-      reviewScheduledFor: item.reviewDate,
+      reviewScheduledFor: canonicalReviewScheduledFor,
       reviewCompletedAt: route.reviewCompletedAt,
       reviewOutcome: route.reviewOutcome,
       ownerAssignedAt: route.ownerAssignedAt,

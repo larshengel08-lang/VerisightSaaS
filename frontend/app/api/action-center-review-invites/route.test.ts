@@ -81,6 +81,17 @@ function buildManagerMembershipRow(overrides: Partial<Record<string, unknown>> =
   }
 }
 
+function buildManagerResponseRow(overrides: Partial<Record<string, unknown>> = {}) {
+  return {
+    campaign_id: 'cmp-exit-1',
+    org_id: 'org-1',
+    route_scope_type: 'department',
+    route_scope_value: 'org-1::department::operations',
+    review_scheduled_for: '2026-05-28',
+    ...overrides,
+  }
+}
+
 function createMaybeSingleQuery(result: { data: Record<string, unknown> | null; error: unknown }) {
   const filters = new Map<string, unknown>()
 
@@ -90,6 +101,32 @@ function createMaybeSingleQuery(result: { data: Record<string, unknown> | null; 
       filters.set(column, value)
       return query
     }),
+    maybeSingle: vi.fn().mockImplementation(async () => {
+      const matches =
+        result.data &&
+        [...filters.entries()].every(([column, value]) => result.data?.[column] === value)
+
+      return {
+        data: matches ? result.data : null,
+        error: result.error,
+      }
+    }),
+  }
+
+  return query
+}
+
+function createLatestRevisionQuery(result: { data: Record<string, unknown> | null; error: unknown }) {
+  const filters = new Map<string, unknown>()
+
+  const query = {
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn((column: string, value: unknown) => {
+      filters.set(column, value)
+      return query
+    }),
+    order: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
     maybeSingle: vi.fn().mockImplementation(async () => {
       const matches =
         result.data &&
@@ -167,6 +204,20 @@ describe('action center review invite route', () => {
       if (table === 'action_center_workspace_members') {
         return createMaybeSingleQuery({
           data: buildManagerMembershipRow(),
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_manager_responses') {
+        return createMaybeSingleQuery({
+          data: buildManagerResponseRow(),
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_review_schedule_revisions') {
+        return createLatestRevisionQuery({
+          data: null,
           error: null,
         })
       }
@@ -387,6 +438,432 @@ describe('action center review invite route', () => {
     expect(body).toContain('ORGANIZER:mailto:northwind-hr@example.com')
   })
 
+  it('uses the persisted latest cancel revision state by default on GET preview when no override is supplied', async () => {
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'campaigns') {
+        return createMaybeSingleQuery({
+          data: {
+            id: 'cmp-exit-1',
+            name: 'ExitScan Q2',
+            scan_type: 'exit',
+            organization_id: 'org-1',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'organizations') {
+        return createMaybeSingleQuery({
+          data: {
+            id: 'org-1',
+            name: 'Northwind',
+            contact_email: 'northwind-hr@example.com',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_workspace_members') {
+        return createMaybeSingleQuery({
+          data: buildManagerMembershipRow(),
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_manager_responses') {
+        return createMaybeSingleQuery({
+          data: buildManagerResponseRow({
+            review_scheduled_for: null,
+          }),
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_review_schedule_revisions') {
+        return createLatestRevisionQuery({
+          data: {
+            route_id: mockItem.coreSemantics.route.routeId,
+            revision: 5,
+            operation: 'cancel',
+            review_date: null,
+            previous_review_date: '2026-05-28',
+          },
+          error: null,
+        })
+      }
+
+      throw new Error(`Unhandled table ${table}`)
+    })
+
+    const response = await GET(
+      new Request(
+        `https://app.verisight.nl/api/action-center-review-invites?reviewItemId=${encodeURIComponent(mockItem.id)}`,
+      ),
+    )
+
+    expect(response.status).toBe(200)
+    const payload = await response.json()
+    expect(payload.reviewItemId).toBe(mockItem.id)
+    expect(payload.reviewDate).toBe('2026-05-28')
+    expect(payload.revision).toBe(5)
+    expect(payload.method).toBe('CANCEL')
+    expect(payload.organizerEmail).toBe('northwind-hr@example.com')
+  })
+
+  it('uses the persisted latest cancel revision state by default for .ics downloads when no override is supplied', async () => {
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'campaigns') {
+        return createMaybeSingleQuery({
+          data: {
+            id: 'cmp-exit-1',
+            name: 'ExitScan Q2',
+            scan_type: 'exit',
+            organization_id: 'org-1',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'organizations') {
+        return createMaybeSingleQuery({
+          data: {
+            id: 'org-1',
+            name: 'Northwind',
+            contact_email: 'northwind-hr@example.com',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_workspace_members') {
+        return createMaybeSingleQuery({
+          data: buildManagerMembershipRow(),
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_manager_responses') {
+        return createMaybeSingleQuery({
+          data: buildManagerResponseRow({
+            review_scheduled_for: null,
+          }),
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_review_schedule_revisions') {
+        return createLatestRevisionQuery({
+          data: {
+            route_id: mockItem.coreSemantics.route.routeId,
+            revision: 5,
+            operation: 'cancel',
+            review_date: null,
+            previous_review_date: '2026-05-28',
+          },
+          error: null,
+        })
+      }
+
+      throw new Error(`Unhandled table ${table}`)
+    })
+
+    const response = await GET(
+      new Request(
+        `https://app.verisight.nl/api/action-center-review-invites?reviewItemId=${encodeURIComponent(mockItem.id)}&format=ics`,
+      ),
+    )
+
+    expect(response.status).toBe(200)
+    const body = await response.text()
+    expect(body).toContain('METHOD:CANCEL')
+    expect(body).toContain('STATUS:CANCELLED')
+    expect(body).toContain('SEQUENCE:5')
+  })
+
+  it('still honors explicit revision and mode overrides when persisted cancel state exists', async () => {
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'campaigns') {
+        return createMaybeSingleQuery({
+          data: {
+            id: 'cmp-exit-1',
+            name: 'ExitScan Q2',
+            scan_type: 'exit',
+            organization_id: 'org-1',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'organizations') {
+        return createMaybeSingleQuery({
+          data: {
+            id: 'org-1',
+            name: 'Northwind',
+            contact_email: 'northwind-hr@example.com',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_workspace_members') {
+        return createMaybeSingleQuery({
+          data: buildManagerMembershipRow(),
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_manager_responses') {
+        return createMaybeSingleQuery({
+          data: buildManagerResponseRow({
+            review_scheduled_for: null,
+          }),
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_review_schedule_revisions') {
+        return createLatestRevisionQuery({
+          data: {
+            route_id: mockItem.coreSemantics.route.routeId,
+            revision: 5,
+            operation: 'cancel',
+            review_date: null,
+            previous_review_date: '2026-05-28',
+          },
+          error: null,
+        })
+      }
+
+      throw new Error(`Unhandled table ${table}`)
+    })
+
+    const response = await GET(
+      new Request(
+        `https://app.verisight.nl/api/action-center-review-invites?reviewItemId=${encodeURIComponent(mockItem.id)}&revision=8&mode=request`,
+      ),
+    )
+
+    expect(response.status).toBe(200)
+    const payload = await response.json()
+    expect(payload.revision).toBe(8)
+    expect(payload.method).toBe('REQUEST')
+  })
+
+  it('uses persisted cancel defaults on POST preview when no override is supplied', async () => {
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'campaigns') {
+        return createMaybeSingleQuery({
+          data: {
+            id: 'cmp-exit-1',
+            name: 'ExitScan Q2',
+            scan_type: 'exit',
+            organization_id: 'org-1',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'organizations') {
+        return createMaybeSingleQuery({
+          data: {
+            id: 'org-1',
+            name: 'Northwind',
+            contact_email: 'northwind-hr@example.com',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_workspace_members') {
+        return createMaybeSingleQuery({
+          data: buildManagerMembershipRow(),
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_manager_responses') {
+        return createMaybeSingleQuery({
+          data: buildManagerResponseRow({
+            review_scheduled_for: null,
+          }),
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_review_schedule_revisions') {
+        return createLatestRevisionQuery({
+          data: {
+            route_id: mockItem.coreSemantics.route.routeId,
+            revision: 5,
+            operation: 'cancel',
+            review_date: null,
+            previous_review_date: '2026-05-28',
+          },
+          error: null,
+        })
+      }
+
+      throw new Error(`Unhandled table ${table}`)
+    })
+
+    const response = await POST(
+      new Request('https://app.verisight.nl/api/action-center-review-invites', {
+        method: 'POST',
+        body: JSON.stringify({
+          reviewItemId: mockItem.id,
+        }),
+      }),
+    )
+
+    expect(response.status).toBe(200)
+    const payload = await response.json()
+    expect(payload.revision).toBe(5)
+    expect(payload.method).toBe('CANCEL')
+  })
+
+  it('falls back to persisted cancel defaults when POST override inputs are blank or invalid', async () => {
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'campaigns') {
+        return createMaybeSingleQuery({
+          data: {
+            id: 'cmp-exit-1',
+            name: 'ExitScan Q2',
+            scan_type: 'exit',
+            organization_id: 'org-1',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'organizations') {
+        return createMaybeSingleQuery({
+          data: {
+            id: 'org-1',
+            name: 'Northwind',
+            contact_email: 'northwind-hr@example.com',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_workspace_members') {
+        return createMaybeSingleQuery({
+          data: buildManagerMembershipRow(),
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_manager_responses') {
+        return createMaybeSingleQuery({
+          data: buildManagerResponseRow({
+            review_scheduled_for: null,
+          }),
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_review_schedule_revisions') {
+        return createLatestRevisionQuery({
+          data: {
+            route_id: mockItem.coreSemantics.route.routeId,
+            revision: 5,
+            operation: 'cancel',
+            review_date: null,
+            previous_review_date: '2026-05-28',
+          },
+          error: null,
+        })
+      }
+
+      throw new Error(`Unhandled table ${table}`)
+    })
+
+    const response = await POST(
+      new Request('https://app.verisight.nl/api/action-center-review-invites', {
+        method: 'POST',
+        body: JSON.stringify({
+          reviewItemId: mockItem.id,
+          revision: 'abc',
+          mode: '',
+        }),
+      }),
+    )
+
+    expect(response.status).toBe(200)
+    const payload = await response.json()
+    expect(payload.revision).toBe(5)
+    expect(payload.method).toBe('CANCEL')
+  })
+
+  it('falls back to persisted cancel defaults when GET override query params are blank or invalid', async () => {
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'campaigns') {
+        return createMaybeSingleQuery({
+          data: {
+            id: 'cmp-exit-1',
+            name: 'ExitScan Q2',
+            scan_type: 'exit',
+            organization_id: 'org-1',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'organizations') {
+        return createMaybeSingleQuery({
+          data: {
+            id: 'org-1',
+            name: 'Northwind',
+            contact_email: 'northwind-hr@example.com',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_workspace_members') {
+        return createMaybeSingleQuery({
+          data: buildManagerMembershipRow(),
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_manager_responses') {
+        return createMaybeSingleQuery({
+          data: buildManagerResponseRow({
+            review_scheduled_for: null,
+          }),
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_review_schedule_revisions') {
+        return createLatestRevisionQuery({
+          data: {
+            route_id: mockItem.coreSemantics.route.routeId,
+            revision: 5,
+            operation: 'cancel',
+            review_date: null,
+            previous_review_date: '2026-05-28',
+          },
+          error: null,
+        })
+      }
+
+      throw new Error(`Unhandled table ${table}`)
+    })
+
+    const response = await GET(
+      new Request(
+        `https://app.verisight.nl/api/action-center-review-invites?reviewItemId=${encodeURIComponent(mockItem.id)}&revision=abc&mode=`,
+      ),
+    )
+
+    expect(response.status).toBe(200)
+    const payload = await response.json()
+    expect(payload.revision).toBe(5)
+    expect(payload.method).toBe('CANCEL')
+  })
+
   it('fails closed when the fetched campaign org does not match the selected review item org', async () => {
     mockAdminFrom.mockImplementation((table: string) => {
       if (table === 'campaigns') {
@@ -437,6 +914,70 @@ describe('action center review invite route', () => {
     })
   })
 
+  it('fails closed when canonical review schedule truth cannot be established', async () => {
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'campaigns') {
+        return createMaybeSingleQuery({
+          data: {
+            id: 'cmp-exit-1',
+            name: 'ExitScan Q2',
+            scan_type: 'exit',
+            organization_id: 'org-1',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'organizations') {
+        return createMaybeSingleQuery({
+          data: {
+            id: 'org-1',
+            name: 'Northwind',
+            contact_email: 'northwind-hr@example.com',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_workspace_members') {
+        return createMaybeSingleQuery({
+          data: buildManagerMembershipRow(),
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_manager_responses') {
+        return createMaybeSingleQuery({
+          data: null,
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_review_schedule_revisions') {
+        return createLatestRevisionQuery({
+          data: null,
+          error: null,
+        })
+      }
+
+      throw new Error(`Unhandled table ${table}`)
+    })
+
+    const response = await POST(
+      new Request('https://app.verisight.nl/api/action-center-review-invites', {
+        method: 'POST',
+        body: JSON.stringify({
+          reviewItemId: mockItem.id,
+        }),
+      }),
+    )
+
+    expect(response.status).toBe(409)
+    expect(await response.json()).toEqual({
+      detail: 'Reviewuitnodiging kan nog niet worden opgebouwd: missing-canonical-review-truth.',
+    })
+  })
+
   it('returns 409 when invite eligibility fails', async () => {
     mockAdminFrom.mockImplementation((table: string) => {
       if (table === 'campaigns') {
@@ -467,6 +1008,20 @@ describe('action center review invite route', () => {
           data: buildManagerMembershipRow({
             login_email: '',
           }),
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_manager_responses') {
+        return createMaybeSingleQuery({
+          data: buildManagerResponseRow(),
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_review_schedule_revisions') {
+        return createLatestRevisionQuery({
+          data: null,
           error: null,
         })
       }
@@ -519,6 +1074,20 @@ describe('action center review invite route', () => {
           data: buildManagerMembershipRow({
             can_view: false,
           }),
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_manager_responses') {
+        return createMaybeSingleQuery({
+          data: buildManagerResponseRow(),
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_review_schedule_revisions') {
+        return createLatestRevisionQuery({
+          data: null,
           error: null,
         })
       }
