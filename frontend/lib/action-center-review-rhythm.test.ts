@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   buildDefaultActionCenterReviewRhythmConfig,
   classifyActionCenterReviewRhythmStatus,
+  isActionCenterReviewRhythmSupportedScanType,
   normalizeActionCenterReviewRhythmConfig,
   validateActionCenterReviewRhythmInput,
 } from './action-center-review-rhythm'
@@ -46,6 +47,25 @@ describe('action center review rhythm contract', () => {
     })
   })
 
+  it('rejects non-exit scan types in the shared contract layer', () => {
+    expect(isActionCenterReviewRhythmSupportedScanType('exit')).toBe(true)
+    expect(isActionCenterReviewRhythmSupportedScanType('pulse')).toBe(false)
+    expect(
+      validateActionCenterReviewRhythmInput(
+        {
+          cadenceDays: 14,
+          reminderLeadDays: 3,
+          escalationLeadDays: 7,
+          remindersEnabled: true,
+        },
+        'pulse',
+      ),
+    ).toEqual({
+      ok: false,
+      reason: 'unsupported-scan-type',
+    })
+  })
+
   it('classifies stale routes when the review date is far behind the cadence window', () => {
     const status = classifyActionCenterReviewRhythmStatus({
       reviewDate: '2026-05-01',
@@ -60,5 +80,21 @@ describe('action center review rhythm contract', () => {
     })
 
     expect(status).toBe('stale')
+  })
+
+  it('treats date-only review dates by local calendar day instead of elapsed UTC milliseconds', () => {
+    const status = classifyActionCenterReviewRhythmStatus({
+      reviewDate: '2026-05-15',
+      now: new Date('2026-05-16T00:30:00.000+02:00'),
+      config: {
+        cadenceDays: 14,
+        reminderLeadDays: 3,
+        escalationLeadDays: 7,
+        remindersEnabled: true,
+      },
+      itemStatus: 'reviewbaar',
+    })
+
+    expect(status).toBe('overdue')
   })
 })
