@@ -13,4 +13,15 @@ describe('action center reviewmomenten entry shell', () => {
     expect(source).toContain('canScheduleActionCenterReview={context.canScheduleActionCenterReview}')
     expect(source).toContain('inviteDownloadEligibleRouteIds={pageData.inviteDownloadEligibleRouteIds}')
   })
+
+  it('threads review rhythm data and management permission into the existing reviewmomenten page', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('getActionCenterReviewRhythmData')
+    expect(source).toContain('resolveActionCenterReviewRhythmWriteAccess')
+    expect(source).toContain('manageableReviewRhythmRouteIds=')
+    expect(source).toContain('rhythmConfigByRouteId=')
+    expect(source).toContain('rhythmSummary=')
+    expect(source).not.toContain('Graph')
+  })
 })

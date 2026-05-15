@@ -11,7 +11,7 @@ describe('review moment page client source', () => {
 
     expect(source).toContain('Reviewmomenten')
     expect(source).toContain('Bewaak geplande opvolgmomenten, gekoppelde scopes en bekende uitkomsten.')
-    expect(source).toContain('Deze pagina toont reviewritme. Geen scananalyse, rapportduiding of generieke planning.')
+    expect(source).toContain('Deze pagina toont reviewritme. Geen scananalyse, rapportduiding of extra coördinatielaag.')
     expect(source).toContain("join(' · ')")
     expect(counterSource).toContain('Achterstallig')
     expect(counterSource).toContain('Deze week')
@@ -38,6 +38,23 @@ describe('review moment page client source', () => {
     expect(source).toContain('canDownloadInviteArtifact={canDownloadInviteArtifact}')
   })
 
+  it('threads the bounded HR rhythm console into the existing reviewmomenten surface', () => {
+    const source = readFileSync(new URL('./review-moment-page-client.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('ReviewRhythmConsole')
+    expect(source).toContain('manageableReviewRhythmRouteIds')
+    expect(source).toContain('new Set(manageableReviewRhythmRouteIds)')
+    expect(source).toContain('canManageSelectedReviewRhythm')
+    expect(source).toContain('rhythmConfigByRouteId')
+    expect(source).toContain('rhythmSummary')
+    expect(source).toContain('buildDefaultActionCenterReviewRhythmConfig')
+    expect(source).toContain('const selectedRhythmItem = selectedItem && isExitRouteItem(selectedItem) ? selectedItem : null')
+    expect(source).toContain('selectedRouteId={selectedRhythmItem ? selectedRhythmItem.id : null}')
+    expect(source).toContain('computeRhythmSummary(visibleItems, clientRhythmConfigByRouteId, referenceNow)')
+    expect(source).not.toContain('Graph')
+    expect(source).not.toContain('automation builder')
+  })
+
   it('keeps forbidden automation, lifecycle copy and mojibake out of the page shell', () => {
     const source = readFileSync(new URL('./review-moment-page-client.tsx', import.meta.url), 'utf8').toLowerCase()
 
@@ -46,9 +63,14 @@ describe('review moment page client source', () => {
       'recurring',
       'advies',
       'dashboardinterpretatie',
+      'generieke planning',
+      'planningslaag',
       'planningstool',
       'uitnodiging',
       'activatie',
+      'workflow builder',
+      'outlook',
+      'mail engine',
       'pending',
       'activated',
       'access requested',
