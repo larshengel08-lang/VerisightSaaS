@@ -108,6 +108,7 @@ export function validateActionCenterReviewRescheduleInput(
   }
 
   const normalizedOperation: ActionCenterReviewRescheduleOperation = operation
+  const normalizedReason = reason as string
 
   return {
     operation: normalizedOperation,
@@ -117,7 +118,7 @@ export function validateActionCenterReviewRescheduleInput(
     orgId,
     scanType: 'exit' as const,
     reviewDate: operation === 'cancel' ? null : reviewDate,
-    reason,
+    reason: normalizedReason,
   }
 }
 
