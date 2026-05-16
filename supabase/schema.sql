@@ -707,7 +707,7 @@ create table if not exists public.action_center_review_rhythm_configs (
     check (route_source_type in ('campaign')),
   route_source_id uuid references public.campaigns(id) on delete cascade not null,
   scan_type text not null
-    check (scan_type in ('exit')),
+    check (scan_type in ('exit', 'retention')),
   cadence_days smallint not null
     check (cadence_days in (7, 14, 30)),
   reminder_lead_days smallint not null
@@ -733,7 +733,7 @@ create table if not exists public.action_center_review_schedule_revisions (
   route_id text not null,
   route_scope_value text not null,
   route_source_id uuid not null,
-  scan_type text not null check (scan_type in ('exit')),
+  scan_type text not null check (scan_type in ('exit', 'retention')),
   operation text not null check (operation in ('reschedule', 'cancel')),
   revision integer not null check (revision >= 0),
   review_date date,
@@ -805,7 +805,7 @@ create table if not exists public.action_center_follow_through_mail_events (
   route_scope_value text not null,
   route_source_id uuid references public.campaigns(id) on delete cascade not null,
   scan_type text not null
-    check (scan_type in ('exit')),
+    check (scan_type in ('exit', 'retention')),
   trigger_type text not null
     check (trigger_type in ('assignment_created', 'review_upcoming', 'review_overdue', 'follow_up_open_after_review')),
   recipient_role text not null

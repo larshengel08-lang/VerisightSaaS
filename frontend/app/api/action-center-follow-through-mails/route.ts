@@ -105,6 +105,9 @@ async function handleDispatch(args: {
   const filteredSnapshots = args.requestedRouteIds
     ? dispatchData.snapshots.filter((snapshot) => args.requestedRouteIds?.includes(snapshot.routeId))
     : dispatchData.snapshots
+  const filteredSnapshotsByRouteId = new Map(
+    filteredSnapshots.map((snapshot) => [snapshot.routeId, snapshot]),
+  )
 
   if (args.requestedRouteIds && filteredSnapshots.length === 0) {
     return NextResponse.json(
@@ -189,12 +192,18 @@ async function handleDispatch(args: {
       continue
     }
 
+    const snapshot = filteredSnapshotsByRouteId.get(entry.routeId)
+    if (!snapshot) {
+      suppressedCount += 1
+      continue
+    }
+
     const insertResult = await createLedgerQueries().insert({
       org_id: entry.orgId,
       route_id: entry.routeId,
       route_scope_value: entry.routeScopeValue,
       route_source_id: entry.campaignId,
-      scan_type: 'exit',
+      scan_type: snapshot.scanType,
       trigger_type: entry.triggerType,
       recipient_role: entry.recipientRole,
       recipient_email: entry.recipientEmail ?? 'missing-recipient',
@@ -213,6 +222,7 @@ async function handleDispatch(args: {
   }
 
   for (const job of planned.jobs) {
+    const originalSnapshot = filteredSnapshotsByRouteId.get(job.routeId) ?? null
     const refreshedSnapshot = refreshedSnapshotsByRouteId.get(job.routeId) ?? null
     const recheckReason =
       !refreshedSnapshot
@@ -238,12 +248,13 @@ async function handleDispatch(args: {
           })
 
     if (recheckReason) {
+      const ledgerScanType = refreshedSnapshot?.scanType ?? originalSnapshot?.scanType ?? 'exit'
       const suppressionInsert = await createLedgerQueries().insert({
         org_id: job.orgId,
         route_id: job.routeId,
         route_scope_value: job.routeScopeValue,
         route_source_id: job.campaignId,
-        scan_type: 'exit',
+        scan_type: ledgerScanType,
         trigger_type: job.triggerType,
         recipient_role: job.recipientRole,
         recipient_email: job.recipientEmail,
@@ -260,6 +271,11 @@ async function handleDispatch(args: {
       }
       suppressedCount += 1
       existingDedupeKeys.add(job.dedupeKey)
+      continue
+    }
+
+    if (!refreshedSnapshot) {
+      failedCount += 1
       continue
     }
 
@@ -290,7 +306,7 @@ async function handleDispatch(args: {
       route_id: job.routeId,
       route_scope_value: job.routeScopeValue,
       route_source_id: job.campaignId,
-      scan_type: 'exit',
+      scan_type: refreshedSnapshot.scanType,
       trigger_type: job.triggerType,
       recipient_role: job.recipientRole,
       recipient_email: job.recipientEmail,
