@@ -67,6 +67,7 @@ describe('action center review rhythm schema policy', () => {
   it('keeps the consolidated schema aligned to the bounded review rhythm write policy', () => {
     expect(schemaSql).toMatch(/create table if not exists public\.action_center_review_rhythm_configs/i)
     expect(schemaSql).toMatch(/scan_type\s+text\s+not null/i)
+    expect(schemaSql).toMatch(/check \(scan_type in \('exit', 'retention'\)\)/i)
     expect(schemaSql).toMatch(/cadence_days\s+smallint\s+not null/i)
     expect(schemaSql).toMatch(/reminder_lead_days\s+smallint\s+not null/i)
     expect(schemaSql).toMatch(/escalation_lead_days\s+smallint\s+not null/i)
@@ -81,6 +82,7 @@ describe('action center review rhythm schema policy', () => {
 
   it('keeps the review rhythm migration aligned to the same bounded write policy', () => {
     expect(migrationSql).toMatch(/create table if not exists public\.action_center_review_rhythm_configs/i)
+    expect(migrationSql).toMatch(/check \(scan_type in \('exit', 'retention'\)\)/i)
     assertBoundedReviewRhythmPolicy(migrationSql)
   })
 })

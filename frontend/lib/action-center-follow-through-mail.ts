@@ -3,7 +3,10 @@ import type {
   ActionCenterReviewOutcome,
   ActionCenterRouteStatus,
 } from './action-center-route-contract'
-import { isActionCenterReviewRhythmSupportedScanType } from './action-center-review-rhythm'
+import {
+  isActionCenterReviewRhythmSupportedScanType,
+  type ActionCenterReviewRhythmSupportedScanType,
+} from './action-center-review-rhythm'
 
 export const ACTION_CENTER_FOLLOW_THROUGH_TRIGGER_TYPES = [
   'assignment_created',
@@ -48,7 +51,7 @@ export interface ActionCenterFollowThroughMailLedgerRecord {
   routeId: string
   routeScopeValue: string
   routeSourceId: string
-  scanType: 'exit'
+  scanType: ActionCenterReviewRhythmSupportedScanType
   triggerType: ActionCenterFollowThroughTriggerType
   recipientRole: ActionCenterFollowThroughRecipientRole
   recipientEmail: string

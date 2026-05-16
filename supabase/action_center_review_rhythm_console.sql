@@ -8,7 +8,7 @@ create table if not exists public.action_center_review_rhythm_configs (
     check (route_source_type in ('campaign')),
   route_source_id uuid references public.campaigns(id) on delete cascade not null,
   scan_type text not null
-    check (scan_type in ('exit')),
+    check (scan_type in ('exit', 'retention')),
   cadence_days smallint not null
     check (cadence_days in (7, 14, 30)),
   reminder_lead_days smallint not null

@@ -12,6 +12,7 @@ import {
   validateActionCenterReviewRescheduleInput,
 } from '@/lib/action-center-review-reschedule'
 import { buildActionCenterReviewInviteDraft } from '@/lib/action-center-review-invite'
+import { getActionCenterEnabledRouteDefaults } from '@/lib/action-center-route-defaults'
 import { loadActionCenterReviewRescheduleData } from '@/lib/action-center-review-reschedule-data'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
@@ -234,6 +235,14 @@ export async function POST(request: Request) {
 
   if (routeData.status !== 'ok') {
     return NextResponse.json({ detail: 'Review reschedule route bestaat niet.' }, { status: 400 })
+  }
+
+  const requestedRouteDefaults = getActionCenterEnabledRouteDefaults(parsed.scanType)
+  if (!requestedRouteDefaults || requestedRouteDefaults.scanType !== routeData.scanType) {
+    return NextResponse.json(
+      { detail: 'Review reschedule input kwam niet overeen met de canonieke follow-through-route.' },
+      { status: 409 },
+    )
   }
 
   const adminClient = createAdminClient()

@@ -8,6 +8,7 @@ const schemaSql = readFileSync(schemaPath, 'utf8')
 describe('action center follow-through mail schema policy', () => {
   it('defines a bounded ledger table with dedupe uniqueness and service-only policies', () => {
     expect(schemaSql).toMatch(/create table if not exists public\.action_center_follow_through_mail_events/i)
+    expect(schemaSql).toMatch(/scan_type\s+text\s+not null\s+check \(scan_type in \('exit', 'retention'\)\)/i)
     expect(schemaSql).toMatch(/trigger_type\s+text\s+not null/i)
     expect(schemaSql).toMatch(/recipient_email\s+text\s+not null/i)
     expect(schemaSql).toMatch(/dedupe_key\s+text\s+not null/i)

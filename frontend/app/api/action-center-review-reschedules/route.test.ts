@@ -281,6 +281,75 @@ describe('action center review reschedules route', () => {
     })
   })
 
+  it('fails closed when the requested scan type does not match the canonical enabled route family', async () => {
+    let managerResponseCallCount = 0
+    let revisionCallCount = 0
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'campaigns') {
+        return createCampaignQuery({
+          data: {
+            id: ROUTE_SOURCE_ID,
+            organization_id: ORG_ID,
+            scan_type: 'exit',
+          },
+        })
+      }
+
+      if (table === 'action_center_manager_responses') {
+        managerResponseCallCount += 1
+        if (managerResponseCallCount === 1) {
+          return createManagerResponseQuery({
+            data: {
+              campaign_id: ROUTE_SOURCE_ID,
+              org_id: ORG_ID,
+              route_scope_type: 'department',
+              route_scope_value: ROUTE_SCOPE_VALUE,
+              review_scheduled_for: '2026-05-28',
+            },
+          })
+        }
+
+        return createUpdateManagerResponseQuery({
+          data: null,
+        })
+      }
+
+      if (table === 'action_center_review_schedule_revisions') {
+        revisionCallCount += 1
+        if (revisionCallCount === 1) {
+          return createLatestRevisionQuery({
+            data: {
+              revision: 2,
+              operation: 'reschedule',
+              review_date: '2026-05-28',
+            },
+          })
+        }
+
+        return createInsertRevisionQuery({
+          data: null,
+        })
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest(
+        buildValidBody({
+          scanType: 'pulse',
+        }),
+      ),
+    )
+
+    expect(response.status).toBe(409)
+    expect(mockSyncActionCenterGraphReview).not.toHaveBeenCalled()
+    await expect(response.json()).resolves.toEqual({
+      detail: 'Review reschedule input kwam niet overeen met de canonieke follow-through-route.',
+    })
+  })
+
   it('allows RetentieScan routes through the same bounded reschedule route', async () => {
     const updateQuery = createUpdateManagerResponseQuery({
       data: {
