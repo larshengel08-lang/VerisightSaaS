@@ -18,7 +18,11 @@ import { NewCampaignForm } from '@/components/dashboard/new-campaign-form'
 import { NewOrgForm } from '@/components/dashboard/new-org-form'
 import { getBeheerPageData } from '@/app/(dashboard)/beheer/get-beheer-page-data'
 import { summarizeActionCenterOpsHealth } from '@/lib/action-center-ops-health'
-import { summarizeBillingRegistry } from '@/lib/billing-registry'
+import {
+  getBillingRegistryStatusLabel,
+  getContractStateLabel,
+  summarizeBillingRegistry,
+} from '@/lib/billing-registry'
 import { listBillingRegistryRows } from '@/lib/billing-registry-server'
 import { getDeliveryModeLabel } from '@/lib/implementation-readiness'
 import { summarizeProofRegistry } from '@/lib/proof-registry'
@@ -81,10 +85,7 @@ export default async function BeheerPage({
     campaigns,
     campaignCountByOrg,
     respondentCount,
-    clientAccessCount,
     invites,
-    accessAvailable,
-    deliveryAvailable,
     pendingInviteCount,
     activeCampaignCount,
     blockedDeliveriesCount,
@@ -114,6 +115,7 @@ export default async function BeheerPage({
   const actionCenterHealth = summarizeActionCenterOpsHealth(healthRows)
   const proofSummary = summarizeProofRegistry(proofEntries)
   const billingReadyCount = billingSummary.readyCount
+  const latestBillingRow = billingRows[0] ?? null
   const healthAttentionCount =
     (blockedDeliveriesCount ?? 0) +
     healthCounts.manager_denied_insights +
@@ -541,12 +543,14 @@ export default async function BeheerPage({
                 }
                 tone={billingReadyCount > 0 ? 'emerald' : 'amber'}
                 detailLines={[
-                  accessAvailable
-                    ? `${clientAccessCount ?? 0} actieve klanttoegang${clientAccessCount === 1 ? '' : 'en'} zichtbaar`
-                    : 'Klanttoegang momenteel niet leesbaar',
-                  pendingActivations === 0
-                    ? 'Geen activatiewachtrij op beheer'
-                    : `${pendingActivations} activatie${pendingActivations === 1 ? '' : 's'} wacht op opvolging`,
+                  latestBillingRow
+                    ? `Contractstatus: ${getContractStateLabel(latestBillingRow.contractState)}`
+                    : 'Contractstatus: nog geen registryrow zichtbaar',
+                  latestBillingRow
+                    ? `Billingstatus: ${getBillingRegistryStatusLabel(latestBillingRow.billingState)}`
+                    : 'Billingstatus: nog geen registryrow zichtbaar',
+                  `Betaalwijze bevestigd: ${billingRows.filter((row) => row.paymentMethodConfirmed).length}/${billingSummary.total}`,
+                  `Assisted launch readiness: ${billingReadyCount}/${billingSummary.total}`,
                 ]}
                 actionLabel="Open billing registry"
               />
@@ -563,10 +567,11 @@ export default async function BeheerPage({
                 }
                 tone={healthAttentionCount > 0 ? 'amber' : 'emerald'}
                 detailLines={[
-                  deliveryAvailable
-                    ? `${blockedDeliveriesCount ?? 0} deliveryblokkade${blockedDeliveriesCount === 1 ? '' : 's'} zichtbaar`
-                    : 'Deliverysignalen momenteel niet leesbaar',
-                  `${healthCounts.manager_denied_insights} denied insight${healthCounts.manager_denied_insights === 1 ? '' : 's'} en ${actionCenterHealth.missingEventTypes.length} ontbrekende Action Center-flow${actionCenterHealth.missingEventTypes.length === 1 ? '' : 's'}`,
+                  `Owner access confirmed: ${healthCounts.owner_access_confirmed}`,
+                  `First value confirmed: ${healthCounts.first_value_confirmed}`,
+                  `First management use confirmed: ${healthCounts.first_management_use_confirmed}`,
+                  `Denied insights: ${healthCounts.manager_denied_insights}`,
+                  `Action Center follow-through: ${actionCenterHealth.coveredEventTypes.length}/4 flowtypes zichtbaar`,
                 ]}
                 actionLabel="Open health-signalen"
               />
@@ -650,7 +655,7 @@ function OperationsRegistryCard({
   value: string
   body: string
   tone: 'slate' | 'emerald' | 'amber'
-  detailLines: [string, string]
+  detailLines: string[]
   actionLabel: string
 }) {
   return (
@@ -664,8 +669,9 @@ function OperationsRegistryCard({
         tone={tone}
       />
       <div className="mt-4 space-y-2 text-xs text-slate-600">
-        <p>{detailLines[0]}</p>
-        <p>{detailLines[1]}</p>
+        {detailLines.map((line) => (
+          <p key={line}>{line}</p>
+        ))}
       </div>
       <Link
         href={href}

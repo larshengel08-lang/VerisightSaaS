@@ -30,9 +30,11 @@ vi.mock('@/lib/billing-registry-server', () => ({
 import BillingPage from './page'
 
 describe('beheer billing page', () => {
-  it('renders the live billing registry framing', async () => {
+  it('renders the billing page as a transition registry', async () => {
     const html = renderToString(await BillingPage())
-    expect(html).toContain('Billing registry')
+    expect(html).toContain('Billing transition registry')
+    expect(html).toContain('Transition deep link')
+    expect(html).toContain('Expert registry')
     expect(html).toContain('Actief (handmatig)')
     expect(html).toContain('launch-ready')
   })

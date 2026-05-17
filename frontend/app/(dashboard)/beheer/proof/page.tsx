@@ -35,9 +35,9 @@ export default async function ProofPage() {
       <DashboardHero
         surface="ops"
         tone="slate"
-        eyebrow="Case proof"
-        title="Case proof registry"
-        description="Gebruik deze route als bounded registry voor proof-status en approval. Dit blijft een interne bewijslaag, geen verkoopvloer."
+        eyebrow="Transition deep link"
+        title="Proof transition registry"
+        description="Gebruik deze route als expert registry voor proof-status en approval zodra de compacte leessamenvatting in klantlearnings niet genoeg is. Dit blijft een tijdelijke verdiepingslaag, geen primaire beheerbestemming."
         meta={
           <>
             <DashboardChip surface="ops" label={`${summary.salesUsableCount} sales-usable`} tone="amber" />
@@ -55,8 +55,8 @@ export default async function ProofPage() {
       />
 
       <DashboardSection
-        title="Approval ladder"
-        description="Gebruik deze ladder vooral als compacte leesregel: intern leren, sales-proof of pas echt publiek bewijs."
+        title="Expert registry"
+        description="Open deze deep link alleen wanneer een case of approvalpad expliciet moet worden nagelezen buiten de klantlearnings-samenvatting."
       >
         <div className="grid gap-4 lg:grid-cols-3">
           <DashboardPanel title="lesson_only" value={`${lessonOnlyCount}`} body="Waardevolle interne les, nog geen extern bewijs." tone="slate" />
