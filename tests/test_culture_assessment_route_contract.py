@@ -35,13 +35,12 @@ def test_culture_assessment_is_allowed_in_shared_route_contracts():
     assert update.qualified_route == "culture_assessment"
     assert module.scan_type == "culture_assessment"
     assert module.get_definition()["product_name"] == "Loep Culture Assessment"
+    assert module.get_management_summary_payload()["index_label"] == "Loep Culture Index"
+    assert module.get_methodology_payload()["benchmark_state"] == "inactive_v1"
     assert scan_definition["product_name"] == "Loep Culture Assessment"
     assert scan_definition["signal_label"] == "Loep Culture Index"
-    assert scan_definition["route_type"] == "primary_route_placeholder"
-    assert "in opbouw" in scan_definition["dashboard_signal_help"].lower()
-
-    with pytest.raises(NotImplementedError, match="culture_assessment backend product module is not implemented yet"):
-        module.get_management_summary_payload()
+    assert scan_definition["route_type"] == "primary_route"
+    assert "geen eindoordeel" in scan_definition["dashboard_signal_help"].lower()
 
 
 def test_culture_assessment_is_baseline_only_for_now():

@@ -5273,7 +5273,10 @@ def generate_campaign_report(
     _mode     = (camp.delivery_mode or "baseline").lower()
     _mode_lbl = "Live" if _mode == "live" else "Baseline"
     scan_meta = get_scan_definition(camp.scan_type)
-    scan_lbl = scan_meta["report_title"]
+    scan_lbl = scan_meta.get(
+        "report_title",
+        f"ExitScan {_mode_lbl}" if camp.scan_type == "exit" else scan_meta["product_name"],
+    )
     product_module = get_product_module(camp.scan_type)
     signal_label = scan_meta["signal_label"]
     signal_label_lower = scan_meta["signal_short_label"]
