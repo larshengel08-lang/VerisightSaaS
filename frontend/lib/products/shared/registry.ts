@@ -7,17 +7,31 @@ import { pulseProductModule } from '@/lib/products/pulse'
 import { retentionProductModule } from '@/lib/products/retention'
 import { teamProductModule } from '@/lib/products/team'
 
+function failUnimplementedCultureAssessmentRuntime(): never {
+  throw new Error('culture_assessment product module is not implemented yet')
+}
+
 const cultureAssessmentPlaceholderModule: ProductModule = {
-  ...exitProductModule,
   scanType: 'culture_assessment',
   definition: {
-    ...exitProductModule.definition,
     scanType: 'culture_assessment',
     productName: 'Loep Culture Assessment',
     signalLabel: 'Loep Culture Index',
     signalLabelLower: 'loep culture index',
     summaryLabel: 'Executive culture read',
+    methodologyText: 'Culture assessment runtime is not implemented yet.',
+    whatItIsText: 'Culture assessment route registration is reserved for the upcoming product module.',
+    whatItIsNotText: 'This placeholder must not reuse ExitScan behavior before the dedicated module exists.',
+    howToReadText: 'Wait for the dedicated culture assessment module before using dashboard behavior.',
+    privacyBoundaryText: 'No runtime views are available from the shared placeholder module.',
+    evidenceStatusText: 'Task 1 only wires the shared route contract.',
+    signalHelp: 'Loep Culture Index metadata is registered, but runtime behavior is intentionally unavailable.',
+    reliabilityText: 'This placeholder fails fast when runtime methods are called.',
+    segmentText: 'Segment behavior will arrive with the dedicated culture assessment implementation.',
   },
+  buildDashboardViewModel: () => failUnimplementedCultureAssessmentRuntime(),
+  getFocusQuestions: () => failUnimplementedCultureAssessmentRuntime(),
+  getActionPlaybooks: () => failUnimplementedCultureAssessmentRuntime(),
 }
 
 const PRODUCT_MODULES: Record<ScanType, ProductModule> = {

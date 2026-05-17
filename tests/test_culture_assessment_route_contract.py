@@ -1,3 +1,5 @@
+import pytest
+
 from backend.products.shared.registry import get_product_module
 from backend.schemas import CampaignCreate, ContactRequestCreate, ContactRequestUpdate
 
@@ -23,3 +25,16 @@ def test_culture_assessment_is_allowed_in_shared_route_contracts():
     assert lead.route_interest == "culture_assessment"
     assert update.qualified_route == "culture_assessment"
     assert module.scan_type == "culture_assessment"
+    assert module.get_definition()["product_name"] == "Loep Culture Assessment"
+
+    with pytest.raises(NotImplementedError, match="culture_assessment backend product module is not implemented yet"):
+        module.get_management_summary_payload()
+
+
+def test_culture_assessment_is_baseline_only_for_now():
+    with pytest.raises(ValueError, match="Loep Culture Assessment ondersteunt in deze wave alleen baseline campaigns."):
+        CampaignCreate(
+            name="Culture Live",
+            scan_type="culture_assessment",
+            delivery_mode="live",
+        )

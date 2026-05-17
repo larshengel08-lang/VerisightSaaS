@@ -73,7 +73,7 @@ class CampaignCreate(BaseModel):
 
     @model_validator(mode="after")
     def validate_delivery_mode_for_scan(self) -> "CampaignCreate":
-        if self.scan_type in {"pulse", "team", "onboarding", "leadership"} and self.delivery_mode == "live":
+        if self.scan_type in {"pulse", "team", "onboarding", "leadership", "culture_assessment"} and self.delivery_mode == "live":
             product_name = (
                 "Pulse"
                 if self.scan_type == "pulse"
@@ -82,6 +82,8 @@ class CampaignCreate(BaseModel):
                 else "Onboarding 30-60-90"
                 if self.scan_type == "onboarding"
                 else "Leadership Scan"
+                if self.scan_type == "leadership"
+                else "Loep Culture Assessment"
             )
             raise ValueError(f"{product_name} ondersteunt in deze wave alleen baseline campaigns.")
         return self
