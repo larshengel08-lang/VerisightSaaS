@@ -21,7 +21,7 @@ describe('dashboard shell config', () => {
   it('keeps admin mode in the same family but deliberately soberer', () => {
     const config = getDashboardShellConfig({
       isAdmin: true,
-      pathname: '/beheer/contact-aanvragen',
+      pathname: '/beheer/klantlearnings',
       acceptedCount: 0,
       userEmail: 'admin@example.com',
     })
@@ -29,8 +29,16 @@ describe('dashboard shell config', () => {
     expect(config.mode).toBe('admin')
     expect(config.accountLabel).toBe('Loep beheer')
     expect(config.bannerText).toBeNull()
-    expect(config.navigation.some((item) => item.href === '/beheer/klantlearnings')).toBe(true)
-    expect(config.currentLabel).toBe('Leadcontext')
+    expect(config.navigation.map((item) => item.label)).toEqual([
+      'Cockpit',
+      'Setup',
+      'Leads',
+      'Learnings',
+    ])
+    expect(config.navigation.some((item) => item.href === '/beheer/billing')).toBe(false)
+    expect(config.navigation.some((item) => item.href === '/beheer/health')).toBe(false)
+    expect(config.navigation.some((item) => item.href === '/beheer/proof')).toBe(false)
+    expect(config.currentLabel).toBe('Learnings')
     expect(config.modeLabel).toContain('Beheerweergave')
   })
 })

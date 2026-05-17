@@ -248,8 +248,8 @@ export function buildDashboardShellNavigation({
           disabled: false,
         },
         {
-          label: 'Action Center bron',
-          detail: 'Broncampagnes en opvolging beheren.',
+          label: 'Learnings',
+          detail: 'Klantlessen, opvolging en closeout-signalen.',
           href: '/beheer/klantlearnings',
           disabled: false,
         },
@@ -277,7 +277,7 @@ export function getDashboardShellCurrentLabel(pathname: string) {
   if (pathname.startsWith('/action-center')) return 'Action Center'
   if (pathname.startsWith('/campaigns/')) return 'Campagnedetail'
   if (pathname.startsWith('/beheer/contact-aanvragen')) return 'Leadcontext'
-  if (pathname.startsWith('/beheer/klantlearnings')) return 'Action Center'
+  if (pathname.startsWith('/beheer/klantlearnings')) return 'Learnings'
   if (pathname.startsWith('/beheer')) return 'Setup en beheer'
 
   return 'Overzicht'
