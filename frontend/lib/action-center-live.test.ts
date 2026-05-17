@@ -179,6 +179,7 @@ describe('live action center builder', () => {
     expect(isLiveActionCenterScanType('onboarding')).toBe(true)
     expect(isLiveActionCenterScanType('pulse')).toBe(true)
     expect(isLiveActionCenterScanType('leadership')).toBe(true)
+    expect(isLiveActionCenterScanType('culture_assessment')).toBe(false)
     expect(isLiveActionCenterScanType('team')).toBe(false)
   })
 

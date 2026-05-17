@@ -54,7 +54,7 @@ create table if not exists public.campaigns (
   id              uuid primary key default gen_random_uuid(),
   organization_id uuid references public.organizations(id) on delete cascade not null,
   name            text not null,
-  scan_type       text not null check (scan_type in ('exit', 'retention', 'pulse', 'team', 'onboarding', 'leadership')),
+  scan_type       text not null check (scan_type in ('exit', 'retention', 'pulse', 'team', 'onboarding', 'leadership', 'culture_assessment')),
   delivery_mode   text check (delivery_mode in ('baseline', 'live')),
   is_active       boolean default true,
   enabled_modules jsonb,
@@ -234,7 +234,7 @@ create table if not exists public.contact_requests (
   ops_next_step     text,
   ops_handoff_note  text,
   qualification_status text not null default 'not_reviewed' check (qualification_status in ('not_reviewed', 'needs_route_review', 'route_confirmed')),
-  qualified_route   text check (qualified_route is null or qualified_route in ('exitscan', 'retentiescan', 'teamscan', 'onboarding', 'leadership', 'combinatie')),
+  qualified_route   text check (qualified_route is null or qualified_route in ('exitscan', 'retentiescan', 'teamscan', 'onboarding', 'leadership', 'combinatie', 'culture_assessment')),
   qualification_note text,
   qualification_reviewed_by text,
   qualification_reviewed_at timestamptz,
@@ -327,7 +327,7 @@ do $$ begin
     alter table public.contact_requests add column qualified_route text;
     alter table public.contact_requests
       add constraint contact_requests_qualified_route_check
-      check (qualified_route is null or qualified_route in ('exitscan', 'retentiescan', 'teamscan', 'onboarding', 'leadership', 'combinatie'));
+      check (qualified_route is null or qualified_route in ('exitscan', 'retentiescan', 'teamscan', 'onboarding', 'leadership', 'combinatie', 'culture_assessment'));
   end if;
   if not exists (
     select 1 from information_schema.columns
@@ -475,7 +475,7 @@ create table if not exists public.pilot_learning_dossiers (
   contact_request_id      uuid references public.contact_requests(id) on delete set null,
   title                   text not null,
   route_interest          text not null default 'exitscan' check (route_interest in ('exitscan', 'retentiescan', 'teamscan', 'combinatie', 'nog-onzeker')),
-  scan_type               text check (scan_type is null or scan_type in ('exit', 'retention', 'pulse', 'team', 'onboarding', 'leadership')),
+  scan_type               text check (scan_type is null or scan_type in ('exit', 'retention', 'pulse', 'team', 'onboarding', 'leadership', 'culture_assessment')),
   delivery_mode           text check (delivery_mode in ('baseline', 'live')),
   triage_status           text not null default 'nieuw' check (triage_status in ('nieuw', 'bevestigd', 'geparkeerd', 'uitgevoerd', 'verworpen')),
   lead_contact_name       text,

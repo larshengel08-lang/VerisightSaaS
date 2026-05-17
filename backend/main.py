@@ -285,6 +285,7 @@ QUALIFICATION_CONFIRMABLE_ROUTE_INTERESTS = {
     "teamscan",
     "onboarding",
     "leadership",
+    "culture_assessment",
 }
 
 
@@ -323,6 +324,18 @@ def _supports_bounded_commerce_route(route_interest: str | None) -> bool:
 
 def _supports_confirmable_qualified_route(route_interest: str | None) -> bool:
     return route_interest in QUALIFICATION_CONFIRMABLE_ROUTE_INTERESTS
+
+
+def _is_placeholder_primary_route(scan_type: str | None) -> bool:
+    return scan_type == "culture_assessment"
+
+
+def _get_report_unavailable_product_name(scan_type: str) -> str | None:
+    if scan_type == "pulse":
+        return "Pulse"
+    if scan_type == "culture_assessment":
+        return "Loep Culture Assessment"
+    return None
 
 
 def _normalize_optional_text(value: str | None) -> str | None:
@@ -1011,6 +1024,11 @@ async def submit_survey(
         raise HTTPException(status_code=409, detail="Survey al ingevuld.")
     if not respondent.campaign.is_active:
         raise HTTPException(status_code=410, detail="Deze survey is gesloten en accepteert geen nieuwe inzendingen meer.")
+    if _is_placeholder_primary_route(respondent.campaign.scan_type):
+        raise HTTPException(
+            status_code=422,
+            detail="Loep Culture Assessment accepteert in deze wave nog geen survey-inzendingen.",
+        )
     product_module = get_product_module(respondent.campaign.scan_type)
     product_module.validate_submission(payload)
 
@@ -1606,14 +1624,8 @@ async def download_report(
     ).first()
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
-    if campaign.scan_type in {"pulse"}:
-        product_name = (
-            "Pulse"
-            if campaign.scan_type == "pulse"
-            else "TeamScan"
-            if campaign.scan_type == "team"
-            else "Leadership Scan"
-        )
+    product_name = _get_report_unavailable_product_name(campaign.scan_type)
+    if product_name:
         raise HTTPException(status_code=422, detail=f"{product_name} ondersteunt in deze wave nog geen PDF-rapport.")
 
     try:
@@ -1646,14 +1658,8 @@ async def download_report_internal(
     campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
-    if campaign.scan_type in {"pulse"}:
-        product_name = (
-            "Pulse"
-            if campaign.scan_type == "pulse"
-            else "TeamScan"
-            if campaign.scan_type == "team"
-            else "Leadership Scan"
-        )
+    product_name = _get_report_unavailable_product_name(campaign.scan_type)
+    if product_name:
         raise HTTPException(status_code=422, detail=f"{product_name} ondersteunt in deze wave nog geen PDF-rapport.")
 
     try:

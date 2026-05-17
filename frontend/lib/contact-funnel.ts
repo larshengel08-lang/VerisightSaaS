@@ -45,6 +45,12 @@ export const CONTACT_ROUTE_OPTIONS = [
 
 const LEGACY_HIDDEN_CONTACT_ROUTE_OPTIONS = [
   {
+    value: 'culture_assessment',
+    label: 'Loep Culture Assessment',
+    description: 'Verborgen placeholder-route voor de primaire culture-assessment contractlaag in opbouw.',
+    firstStepLabel: 'een Loep Culture Assessment baseline-route in opbouw',
+  },
+  {
     value: 'teamscan',
     label: 'TeamScan',
     description: 'Verborgen legacy route voor interne of historische teamreads.',
@@ -196,6 +202,13 @@ export function normalizeContactDesiredTiming(value: string | null | undefined):
 
 export function inferRouteInterestFromSource(source: string | null | undefined): ContactRouteInterest {
   const normalizedSource = (source ?? '').toLowerCase()
+  if (
+    normalizedSource.includes('culture_assessment') ||
+    normalizedSource.includes('culture-assessment') ||
+    normalizedSource.includes('cultureassessment')
+  ) {
+    return 'culture_assessment'
+  }
   if (normalizedSource.includes('retentie')) {
     return 'retentiescan'
   }

@@ -44,6 +44,13 @@ describe('dashboard shell navigation', () => {
       created_at: '2026-04-15T10:00:00.000Z',
       total_completed: 9,
     },
+    {
+      campaign_id: 'culture-1',
+      scan_type: 'culture_assessment',
+      is_active: true,
+      created_at: '2026-04-14T10:00:00.000Z',
+      total_completed: 6,
+    },
   ] as const
 
   it('maps product rail items onto category overview routes instead of a single campaign detail', () => {
@@ -97,6 +104,12 @@ describe('dashboard shell navigation', () => {
         disabled: false,
       },
       {
+        key: 'culture_assessment',
+        label: 'Loep Culture Assessment',
+        href: '/dashboard?module=culture_assessment',
+        disabled: false,
+      },
+      {
         key: 'reports',
         label: 'Rapporten',
         href: '/reports',
@@ -144,6 +157,7 @@ describe('dashboard shell navigation', () => {
     expect(getActiveModuleFromLocation('/campaigns/retention-1', null, [...campaigns])).toBe('retention')
     expect(getActiveModuleFromLocation('/campaigns/pulse-1', null, [...campaigns])).toBe('pulse')
     expect(getActiveModuleFromLocation('/campaigns/leadership-1', null, [...campaigns])).toBe('leadership')
+    expect(getActiveModuleFromLocation('/campaigns/culture-1', null, [...campaigns])).toBe('culture_assessment')
     expect(getActiveModuleFromLocation('/campaigns/unknown', null, [...campaigns])).toBe('overview')
     expect(getActiveModuleFromLocation('/reports', null, [...campaigns])).toBe('reports')
     expect(getActiveModuleFromLocation('/action-center', null, [...campaigns])).toBe('action_center')
@@ -226,9 +240,11 @@ describe('dashboard shell navigation', () => {
   it('normalizes dashboard module filters and exposes stable category hrefs', () => {
     expect(normalizeDashboardModuleFilter('exit')).toBe('exit')
     expect(normalizeDashboardModuleFilter('leadership')).toBe('leadership')
+    expect(normalizeDashboardModuleFilter('culture_assessment')).toBe('culture_assessment')
     expect(normalizeDashboardModuleFilter('unknown')).toBeNull()
     expect(normalizeDashboardModuleFilter(undefined)).toBeNull()
     expect(getDashboardModuleHref('exit')).toBe('/dashboard?module=exit')
     expect(getDashboardModuleHref('retention')).toBe('/dashboard?module=retention')
+    expect(getDashboardModuleHref('culture_assessment')).toBe('/dashboard?module=culture_assessment')
   })
 })
