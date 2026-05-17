@@ -19,6 +19,26 @@ function createRhythmConfigQuery(result: { data: unknown; error?: unknown }) {
   }
 }
 
+function buildItem(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'cmp-exit-1::org-1::department::operations',
+    status: 'reviewbaar',
+    reviewDate: '2026-05-01',
+    sourceLabel: 'ExitScan',
+    teamLabel: 'Operations',
+    reviewDateLabel: '1 mei',
+    reviewOutcome: 'geen-uitkomst',
+    coreSemantics: {
+      route: {
+        routeId: 'cmp-exit-1::org-1::department::operations',
+        reviewCompletedAt: null,
+        hasFollowUpTarget: false,
+      },
+    },
+    ...overrides,
+  }
+}
+
 describe('action center review rhythm data', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -47,18 +67,21 @@ describe('action center review rhythm data', () => {
 
     const result = await getActionCenterReviewRhythmData({
       items: [
-        {
-          id: 'cmp-exit-1::org-1::department::operations',
-          status: 'reviewbaar',
-          reviewDate: '2026-05-01',
-          sourceLabel: 'ExitScan',
-        },
-        {
+        buildItem(),
+        buildItem({
           id: 'cmp-exit-2::org-1::department::finance',
-          status: 'reviewbaar',
-          reviewDate: '2026-05-27',
+          reviewDate: '2026-05-20',
+          reviewDateLabel: '20 mei',
           sourceLabel: 'RetentieScan',
-        },
+          teamLabel: 'Finance',
+          coreSemantics: {
+            route: {
+              routeId: 'cmp-exit-2::org-1::department::finance',
+              reviewCompletedAt: null,
+              hasFollowUpTarget: false,
+            },
+          },
+        }),
       ] as never,
       now: new Date('2026-05-28T12:00:00.000Z'),
       routeScanTypeByRouteId: {
@@ -89,6 +112,23 @@ describe('action center review rhythm data', () => {
       upcomingCount: 0,
       reminderManagedCount: 2,
     })
+    expect(result.oversight.summary).toEqual({
+      upcomingCount: 0,
+      overdueCount: 0,
+      staleCount: 1,
+      escalationSensitiveCount: 1,
+      resolvedCount: 0,
+    })
+    expect(result.oversight.attentionItems).toMatchObject([
+      {
+        routeId: 'cmp-exit-2::org-1::department::finance',
+        state: 'escalation-sensitive',
+      },
+      {
+        routeId: 'cmp-exit-1::org-1::department::operations',
+        state: 'stale',
+      },
+    ])
   })
 
   it('ignores blocked route families for persistence and summary counts', async () => {
@@ -106,12 +146,17 @@ describe('action center review rhythm data', () => {
 
     const result = await getActionCenterReviewRhythmData({
       items: [
-        {
+        buildItem({
           id: 'cmp-pulse-1::org-1::department::operations',
-          status: 'reviewbaar',
-          reviewDate: '2026-05-01',
           sourceLabel: 'Pulse',
-        },
+          coreSemantics: {
+            route: {
+              routeId: 'cmp-pulse-1::org-1::department::operations',
+              reviewCompletedAt: null,
+              hasFollowUpTarget: false,
+            },
+          },
+        }),
       ] as never,
       now: new Date('2026-05-28T12:00:00.000Z'),
       routeScanTypeByRouteId: {
@@ -127,6 +172,14 @@ describe('action center review rhythm data', () => {
       upcomingCount: 0,
       reminderManagedCount: 0,
     })
+    expect(result.oversight.summary).toEqual({
+      upcomingCount: 0,
+      overdueCount: 0,
+      staleCount: 0,
+      escalationSensitiveCount: 0,
+      resolvedCount: 0,
+    })
+    expect(result.oversight.attentionItems).toEqual([])
   })
 
   it('surfaces a failed review rhythm config query instead of silently defaulting', async () => {
@@ -148,12 +201,7 @@ describe('action center review rhythm data', () => {
     await expect(
       getActionCenterReviewRhythmData({
         items: [
-          {
-            id: 'cmp-exit-1::org-1::department::operations',
-            status: 'reviewbaar',
-            reviewDate: '2026-05-01',
-            sourceLabel: 'ExitScan',
-          },
+          buildItem(),
         ] as never,
         now: new Date('2026-05-28T12:00:00.000Z'),
         routeScanTypeByRouteId: {

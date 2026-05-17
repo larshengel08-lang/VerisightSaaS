@@ -1,4 +1,5 @@
 import type { ActionCenterPreviewItem } from '@/lib/action-center-preview-model'
+import { buildActionCenterReviewOversightSummary } from '@/lib/action-center-review-oversight'
 import {
   getActionCenterEnabledRouteDefaults,
   type ActionCenterRouteDefaultsKnownScanType,
@@ -92,9 +93,16 @@ export async function getActionCenterReviewRhythmData(args: {
       reminderManagedCount: 0,
     },
   )
+  const oversight = buildActionCenterReviewOversightSummary({
+    items: eligibleItems,
+    configByRouteId,
+    routeScanTypeByRouteId: args.routeScanTypeByRouteId,
+    now: args.now,
+  })
 
   return {
     configByRouteId,
     summary,
+    oversight,
   }
 }
