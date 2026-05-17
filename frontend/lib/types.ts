@@ -1,6 +1,13 @@
 ﻿// Verisight — gedeelde TypeScript types
 
-export type ScanType = 'exit' | 'retention' | 'pulse' | 'team' | 'onboarding' | 'leadership'
+export type ScanType =
+  | 'exit'
+  | 'retention'
+  | 'pulse'
+  | 'team'
+  | 'onboarding'
+  | 'leadership'
+  | 'culture_assessment'
 export type RiskBand = 'HOOG' | 'MIDDEN' | 'LAAG'
 export type CampaignAddOn = 'segment_deep_dive'
 export type DeliveryMode = 'baseline' | 'live'
@@ -17,6 +24,7 @@ export const SCAN_TYPE_LABELS: Record<ScanType, string> = {
   team: 'TeamScan',
   onboarding: 'Onboarding 30-60-90',
   leadership: 'Leadership Scan',
+  culture_assessment: 'Loep Culture Assessment',
 }
 
 // Current tenant boundary and v1 customer account boundary.

@@ -46,7 +46,10 @@ class OrganizationRead(OrmBase):
 
 class CampaignCreate(BaseModel):
     name: str = Field(..., min_length=2, max_length=255)
-    scan_type: str = Field(..., pattern=r"^(exit|retention|pulse|team|onboarding|leadership)$")
+    scan_type: str = Field(
+        ...,
+        pattern=r"^(exit|retention|pulse|team|onboarding|leadership|culture_assessment)$",
+    )
     delivery_mode: str = Field(default="baseline", pattern=r"^(baseline|live)$")
     enabled_modules: Optional[list[str]] = None
 
@@ -176,6 +179,7 @@ class ContactRequestCreate(BaseModel):
         "teamscan",
         "onboarding",
         "leadership",
+        "culture_assessment",
         "combinatie",
         "nog-onzeker",
     ] = "exitscan"
@@ -251,6 +255,7 @@ class ContactRequestUpdate(BaseModel):
         "teamscan",
         "onboarding",
         "leadership",
+        "culture_assessment",
         "combinatie",
     ] | None = None
     qualification_note: str | None = Field(default=None, max_length=2000)
