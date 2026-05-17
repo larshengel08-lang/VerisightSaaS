@@ -42,7 +42,7 @@ def get_product_module(scan_type: str) -> ModuleType:
     module_path = _PRODUCT_MODULES.get(scan_type, _PRODUCT_MODULES["exit"])
     try:
         return import_module(module_path)
-    except ModuleNotFoundError:
-        if scan_type == "culture_assessment":
+    except ModuleNotFoundError as exc:
+        if scan_type == "culture_assessment" and exc.name == module_path:
             return _build_placeholder_module(scan_type)
         raise
