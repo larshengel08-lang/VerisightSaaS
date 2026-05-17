@@ -2,7 +2,8 @@
 
 > Verisight helpt HR-teams bij organisaties vanaf circa 200 medewerkers om
 > eerst de juiste managementroute te kiezen: ExitScan voor vertrekduiding en
-> verloopanalyse, RetentieScan voor vroegsignalering op behoud, Pulse als
+> verloopanalyse, RetentieScan voor vroegsignalering op behoud, Loep
+> Cultuurbeeld voor een brede jaarlijkse cultuur- en engagementbaseline, Pulse als
 > compacte vervolgroute na diagnose of baseline, onboarding als bounded
 > peer-route voor nieuwe medewerkers, Leadership Scan als bounded
 > managementread na een bestaand people-signaal, of een bewuste combinatie van beide.
@@ -10,9 +11,10 @@
 ## Publieke routes
 
 - [Homepage](https://www.verisight.nl): routekeuze, proof en kennismaking
-- [Producten](https://www.verisight.nl/producten): overzicht van ExitScan, RetentieScan, Combinatie, Onboarding 30-60-90, Pulse en Leadership Scan
+- [Producten](https://www.verisight.nl/producten): overzicht van ExitScan, RetentieScan, Loep Cultuurbeeld, Combinatie, Onboarding 30-60-90, Pulse en Leadership Scan
 - [ExitScan](https://www.verisight.nl/producten/exitscan): primaire route voor vertrekduiding en verloopanalyse
 - [RetentieScan](https://www.verisight.nl/producten/retentiescan): gerichte route voor medewerkersbehoud en vroegsignalering
+- [Loep Cultuurbeeld](https://www.verisight.nl/producten/cultuurbeeld): jaarlijkse primary route voor brede cultuur- en engagementbaseline met board-read
 - [Combinatie](https://www.verisight.nl/producten/combinatie): portfolioroute wanneer vertrekduiding en vroegsignalering bewust in dezelfde managementlijn moeten samenkomen
 - [Onboarding 30-60-90](https://www.verisight.nl/producten/onboarding-30-60-90): bounded peer-route voor een vroege checkpoint-read bij nieuwe medewerkers
 - [Pulse](https://www.verisight.nl/producten/pulse): compacte vervolgroute voor bounded managementreviews na diagnose of baseline
@@ -25,8 +27,10 @@
 
 - ExitScan Baseline: EUR 2.950
 - RetentieScan Baseline: EUR 3.450
+- Loep Culture Assessment Baseline: op aanvraag
 - ExitScan Live: op aanvraag
 - RetentieScan ritme: vanaf EUR 4.950
+- Pulse na Culture Assessment: op aanvraag
 - Combinatie: op aanvraag
 - Onboarding 30-60-90: op aanvraag
 - Pulse: op aanvraag

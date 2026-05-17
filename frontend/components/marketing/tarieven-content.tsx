@@ -34,11 +34,26 @@ const corePricing = [
     ],
     href: '/producten/retentiescan',
   },
+  {
+    label: 'Loep Culture Assessment baseline',
+    price: 'op aanvraag',
+    accent: '#7c3aed',
+    accentFaint: '#efe7ff',
+    body: 'Jaarlijkse enterprise-baseline voor cultuur en engagement, met executive read, Loep Culture Index en board-read.',
+    bullets: [
+      'Executive culture read en domeinbeeld',
+      'Board-read en governed drilldown waar toegestaan',
+      'Pulse alleen als optioneel follow-on ritme na baseline',
+      'Geen benchmark-first, ranking of individuele voorspellingen',
+    ],
+    href: '/producten/cultuurbeeld',
+  },
 ] as const
 
 const followOnRows = [
   ['ExitScan ritmeroute', 'Op aanvraag', 'Logisch vervolg na eerste baseline wanneer proces, volume en eigenaarschap al staan.'],
   ['RetentieScan ritmeroute', 'Op aanvraag', 'Doorlopende vervolgvorm wanneer vroegsignalering structureel onderdeel van de managementcyclus wordt.'],
+  ['Pulse na Culture Assessment', 'Op aanvraag', 'Compact reviewritme na een bestaande Culture Assessment baseline of board-read, niet als onderdeel van de eerste baseline.'],
   ['Pulse', 'Op aanvraag', 'Compacte reviewlaag na een eerste kernroute of baseline, geen nieuwe eerste instap.'],
   ['TeamScan', 'Op aanvraag', 'Bounded lokale verdieping nadat een breder signaal al zichtbaar is.'],
   ['Onboarding 30-60-90', 'Op aanvraag', 'Gerichte lifecycle-check wanneer vroege landing van nieuwe medewerkers centraal staat.'],
@@ -65,7 +80,7 @@ function HeroSection() {
             </div>
             <div style={{ animation: 'slideUpFade .8s cubic-bezier(.16,1,.3,1) .3s both' }}>
               <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '46ch', margin: '28px 0 0' }}>
-                U koopt een gerichte route met vaste output, geen licentie. ExitScan en RetentieScan vormen de twee kerninstappen.
+                U koopt een gerichte route met vaste output, geen licentie. ExitScan, RetentieScan en Loep Culture Assessment vormen de drie primary routes.
               </p>
             </div>
           </div>
@@ -78,7 +93,7 @@ function HeroSection() {
                 </div>
               ))}
             </div>
-            <div style={{ marginTop: 14, fontSize: 11, color: T.inkMuted, fontStyle: 'italic' }}>Per traject, geen licenties. Vervolgroutes bewust kleiner.</div>
+            <div style={{ marginTop: 14, fontSize: 11, color: T.inkMuted, fontStyle: 'italic' }}>Een volledige Scan-campagne, inclusief setup, rapportage en begeleiding. Maatwerk op aanvraag.</div>
           </div>
         </div>
       </div>
@@ -98,11 +113,11 @@ function CorePricingSection() {
           <h2 style={{ fontFamily: FF, fontSize: 'clamp(28px,3.5vw,42px)', fontWeight: 400, letterSpacing: '-.026em', color: T.ink, marginBottom: 14, lineHeight: 1.06 }}>
             De eerste koop blijft helder.
           </h2>
-          <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, marginBottom: 44, maxWidth: '50ch' }}>
-            ExitScan en RetentieScan zijn de twee buyer-facing kernproducten. De prijsopbouw is bedoeld om de eerste route duidelijk te houden.
+          <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, marginBottom: 44, maxWidth: '56ch' }}>
+            ExitScan, RetentieScan en Loep Culture Assessment zijn de buyer-facing primary routes. De prijsopbouw is bedoeld om de eerste route duidelijk te houden en Pulse pas daarna als bounded vervolg te openen.
           </p>
         </Reveal>
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {corePricing.map((item, i) => (
             <Reveal key={i} delay={.08 + i * .1}>
               <div style={{ background: T.white, border: `1px solid ${T.rule}`, padding: '36px', boxShadow: `0 2px 8px rgba(0,0,0,.04), 0 0 0 1px ${item.accentFaint}`, position: 'relative', overflow: 'hidden' }}>

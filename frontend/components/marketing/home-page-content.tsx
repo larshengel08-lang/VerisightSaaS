@@ -89,10 +89,10 @@ const routeCards = [
   },
   {
     index: '03',
-    eyebrow: 'Als vroege landing aandacht vraagt',
-    title: 'Onboarding 30-60-90',
-    body: 'Zie vroeg hoe nieuwe medewerkers landen en waar uitval kan ontstaan.',
-    accent: SURFACE.border,
+    eyebrow: 'Als brede cultuur en engagement de vraag zijn',
+    title: 'Loep Cultuurbeeld',
+    body: 'Jaarlijkse executive baseline voor cultuur, engagement, werkbeleving en bestuurlijke aandachtspunten.',
+    accent: '#7c3aed',
   },
 ]
 

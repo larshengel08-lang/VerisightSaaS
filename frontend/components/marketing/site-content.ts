@@ -22,6 +22,7 @@ export const marketingFooterLinks = [
   { href: '/producten', label: 'Producten' },
   { href: '/producten/exitscan', label: 'ExitScan' },
   { href: '/producten/retentiescan', label: 'RetentieScan' },
+  { href: '/producten/cultuurbeeld', label: 'Loep Cultuurbeeld' },
   { href: '/aanpak', label: 'Aanpak' },
   { href: '/tarieven', label: 'Tarieven' },
   { href: '/vertrouwen', label: 'Vertrouwen' },
@@ -52,6 +53,14 @@ export const homepageProductRoutes = [
     accent: 'border-[#DCEFEA] bg-[#F7F5F1]',
     chip: 'Kernroute',
   },
+  {
+    name: 'Loep Cultuurbeeld',
+    title: 'Lees cultuur en engagement breed op organisatieniveau',
+    body: 'Jaarlijkse enterprise-baseline voor board, directie en HR met executive read, Loep Culture Index en governed drilldown.',
+    href: '/producten/cultuurbeeld',
+    accent: 'border-[#E8DEF6] bg-[#F7F5F1]',
+    chip: 'Kernroute',
+  },
 ] as const
 
 // Keep the existing homepage module contract intact for builds that still
@@ -69,12 +78,17 @@ export const homepageComparisonRows = [
     'RetentieScan',
     'Retentiesignaal, stay-intent, bevlogenheid en vertrekintentie op groepsniveau',
   ],
+  [
+    'Je wilt cultuur en engagement breed organisatiebreed begrijpen',
+    'Loep Cultuurbeeld',
+    'Executive culture read, Loep Culture Index, domeinbeeld en board attention points zonder benchmark-first of ranking',
+  ],
 ] as const
 
 export const homepageProofSignals = [
   'Eén suite-login voor dashboard, rapport en Action Center',
   'HR kan managers per afdeling toewijzen zonder survey-inzichten open te zetten',
-  'ExitScan als default route, RetentieScan als volwaardige eerste route bij expliciete behoudsvraag',
+  'Drie duidelijke primary routes: ExitScan, RetentieScan en Loep Cultuurbeeld',
   'Groepsinzichten met expliciete claims- en privacygrenzen',
   'Publieke proof verschijnt pas na expliciete approval en provenance',
 ] as const
@@ -96,7 +110,7 @@ export const homepageUtilityLinks = [
   {
     href: '/producten',
     title: 'Bekijk de productroutes',
-    body: 'Zie snel wanneer ExitScan of RetentieScan logisch wordt.',
+    body: 'Zie snel wanneer ExitScan, RetentieScan of Loep Cultuurbeeld logisch wordt.',
   },
   {
     href: '/aanpak',
@@ -128,6 +142,12 @@ export const productOverviewComparisonRows = [
     'Waar staat behoud nu onder druk in de actieve populatie?',
     'Voor vroegsignalering en prioritering',
   ],
+  [
+    'Loep Cultuurbeeld',
+    'Brede cultuur- en engagementbaseline',
+    'Welke brede cultuur- en engagementpatronen vragen bestuurlijke aandacht en waar zitten de belangrijkste verschillen tussen onderdelen?',
+    'Voor jaarlijkse executive baseline en board-read',
+  ],
 ] as const
 
 export const comparisonCards = [
@@ -155,6 +175,7 @@ export const trustItems = [
   'Signalen, geen schijnzekerheid',
   'Rapportage op geaggregeerd niveau',
   'Vraagblokken gebaseerd op relevante literatuur',
+  'Nederlandse dienst met begeleide uitvoering',
   'AVG-conform, primaire dataopslag in een EU-regio',
   'Geen koppeling aan individuen in rapportage.',
 ] as const
@@ -537,6 +558,17 @@ export const pricingCards = [
       'Geschikt als basis voor vervolgmeting of een gerichte vervolgronde',
     ],
   },
+  {
+    eyebrow: 'Loep Culture Assessment Baseline',
+    price: 'op aanvraag',
+    description:
+      'De enterprise-instap voor organisaties die cultuur en engagement breed organisatiebreed willen begrijpen, met executive read, board attention points en een board-level baseline in plaats van een generieke survey of benchmark-first platform.',
+    bullets: [
+      'Executive culture read, Loep Culture Index en domeinbeeld',
+      'Board-read als vast productonderdeel en governed drilldown waar toegestaan',
+      'Pulse blijft pas een optioneel follow-on ritme na de jaarlijkse baseline',
+    ],
+  },
 ] as const
 
 export const pricingFollowOnRoutes = [
@@ -562,6 +594,18 @@ export const pricingFollowOnRoutes = [
       'Buyer-facing vervolgvorm na RetentieScan Baseline',
       'Baseline plus herhaalmeting per kwartaal of halfjaar',
       'Trendbeeld op retentiesignaal, bevlogenheid en stay-intent',
+    ],
+  },
+  {
+    title: 'Pulse na Culture Assessment',
+    price: 'op aanvraag',
+    fit: 'Optioneel follow-on ritme na jaarlijkse baseline',
+    description:
+      'Voor organisaties die na een eerste Loep Culture Assessment een bounded reviewritme willen openen op bestaande aandachtspunten, niet als onderdeel van de baseline.',
+    bullets: [
+      'Alleen logisch na een bestaande Loep Culture Assessment baseline of board-read',
+      'Bounded reviewlaag op gekozen aandachtspunten, niet als nieuwe brede nulmeting',
+      'Blijft een vervolgroute en geen parallel primary route',
     ],
   },
 ] as const
@@ -597,6 +641,10 @@ export const pricingChoiceGuide = [
     'Je wilt eerder zien waar behoud in de actieve populatie onder druk staat en zoekt daarvoor een gerichte eerste baseline.',
   ],
   [
+    'Loep Culture Assessment Baseline',
+    'Je wilt cultuur en engagement breed organisatiebreed begrijpen en zoekt daarvoor een jaarlijkse enterprise-baseline met board-read.',
+  ],
+  [
     'Combinatie op aanvraag',
     'Je wilt zowel leren van vertrek als eerder kunnen bijsturen op behoud, maar pas nadat de eerste route helder staat.',
   ],
@@ -618,9 +666,18 @@ export const pricingAddOns = [
     'op aanvraag',
     'Voor organisaties die ExitScan en RetentieScan bewust naast elkaar willen inzetten. We prijzen dit niet als korting of bundel, maar als portfolioroute in een gedeelde managementstructuur.',
   ],
+  [
+    'Governed drilldown voor Cultuurbeeld',
+    'op aanvraag',
+    'Extra governed uitsplitsing voor Loep Culture Assessment naar locatie, afdeling, team en waar expliciet toegestaan named manager read, zonder ranking of individuele export.',
+  ],
 ] as const
 
 export const pricingFaqs = [
+  [
+    'Wanneer kies je voor Loep Culture Assessment?',
+    'Als de hoofdvraag breed organisatiebreed is: cultuur, engagement, werkbeleving, vertrouwen, leiderschap en samenwerking. Dan past een jaarlijkse Loep Culture Assessment baseline beter dan RetentieScan, ExitScan of Pulse.',
+  ],
   [
     'Waarom is RetentieScan niet goedkoper dan ExitScan?',
     'Omdat RetentieScan geen lichtere algemene survey of MTO-light is. Het product vraagt juist scherpere privacykaders, actieve-medewerkersduiding en een eigen managementverhaal.',
@@ -683,6 +740,10 @@ export const faqs = [
   [
     'Hoe vaak herhaal je RetentieScan?',
     'Voor v1 is een baseline logisch als startpunt. Daarna kun je periodiek herhalen, bijvoorbeeld per kwartaal of halfjaar, als je gericht wilt volgen of acties effect hebben.',
+  ],
+  [
+    'Is Loep Cultuurbeeld gewoon een MTO of Pulse?',
+    'Nee. Loep Cultuurbeeld is een jaarlijkse board-level cultuur- en engagementbaseline met executive read, board attention points en governed drilldown. Pulse blijft alleen een bounded vervolgritme na een bestaande baseline of actie.',
   ],
   [
     'Is Verisight een tool of een dienst?',

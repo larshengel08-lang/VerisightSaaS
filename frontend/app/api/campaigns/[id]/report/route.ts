@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getOrganizationApiKey } from '@/lib/organization-secrets'
 import { getBackendApiUrl } from '@/lib/server-env'
+import { SCAN_TYPE_LABELS, type ScanType } from '@/lib/types'
 
 interface Context {
   params: Promise<{ id: string }>
@@ -18,7 +19,7 @@ export async function GET(_request: Request, { params }: Context) {
 
   const { data: campaign, error: campaignError } = await supabase
     .from('campaigns')
-    .select('organization_id, name')
+    .select('organization_id, name, scan_type')
     .eq('id', id)
     .single()
 
@@ -82,13 +83,31 @@ export async function GET(_request: Request, { params }: Context) {
     )
   }
 
+  const fallbackFilename = buildFallbackReportFilename(campaign.scan_type, campaign.name)
+
   return new NextResponse(backendResponse.body, {
     status: 200,
     headers: {
       'Content-Type': 'application/pdf',
       'Content-Disposition': backendResponse.headers.get('content-disposition') ??
-        `attachment; filename="Verisight_${campaign.name.replace(/ /g, '_')}.pdf"`,
+        `attachment; filename="${fallbackFilename}"`,
       'Cache-Control': 'no-store',
     },
   })
+}
+
+export function buildFallbackReportFilename(scanType: ScanType, campaignName: string) {
+  const label = sanitizeFilenameSegment(SCAN_TYPE_LABELS[scanType] ?? 'Verisight')
+  const campaignSegment = sanitizeFilenameSegment(campaignName || 'campaign')
+  return `${label}_${campaignSegment}.pdf`
+}
+
+function sanitizeFilenameSegment(value: string) {
+  const normalized = value
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^A-Za-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+
+  return normalized || 'campaign'
 }

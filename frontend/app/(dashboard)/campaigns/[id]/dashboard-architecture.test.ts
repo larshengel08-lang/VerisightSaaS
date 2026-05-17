@@ -122,6 +122,7 @@ describe('score interpretation titles', () => {
     expect(getScoreInterpretationTitle('exit')).toContain('Frictiescore')
     expect(getScoreInterpretationTitle('retention')).not.toContain('Frictiescore')
     expect(getScoreInterpretationTitle('retention')).toContain('Retentiesignaal')
+    expect(getScoreInterpretationTitle('culture_assessment')).toContain('Loep Culture Index')
   })
 })
 
@@ -157,6 +158,22 @@ describe('dashboard visibility state', () => {
 
     expect(visibility.showDriverDrilldown).toBe(true)
     expect(visibility.showSegmentAnalysis).toBe(false)
+    expect(visibility.showActionPlaybooks).toBe(true)
+  })
+
+  it('opens governed segment analysis for culture assessment without treating it like pulse or team live logic', () => {
+    const visibility = buildDashboardVisibilityState({
+      scanType: 'culture_assessment',
+      hasMinDisplay: true,
+      hasEnoughData: true,
+      hasSegmentDeepDive: true,
+      canManageCampaign: true,
+      respondentsCount: 34,
+      isArchivedPeriod: false,
+    })
+
+    expect(visibility.showDriverDrilldown).toBe(true)
+    expect(visibility.showSegmentAnalysis).toBe(true)
     expect(visibility.showActionPlaybooks).toBe(true)
   })
 

@@ -690,7 +690,7 @@ def test_implementation_smoke_flow_imports_sends_invites_and_generates_output(
     db_session: Session,
     monkeypatch: pytest.MonkeyPatch,
 ):
-    monkeypatch.setattr("backend.main.send_survey_invite", lambda **kwargs: True)
+    monkeypatch.setattr("backend.main.send_survey_invite_result", lambda **kwargs: EmailSendResult(ok=True))
     org = _create_org(db_session, api_key="implementation-smoke-key")
 
     create_response = client.post(
@@ -962,6 +962,45 @@ def test_contact_request_accepts_leadership_route_and_persists_it(
     assert stored.cta_source == "product_leadership_form"
     assert stored.desired_timing == "dit-kwartaal"
     assert captured["route_interest"] == "leadership"
+
+
+def test_contact_request_accepts_culture_assessment_route_and_persists_it(
+    client,
+    db_session: Session,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    captured: dict[str, str] = {}
+
+    def _fake_send_contact_request_result(**kwargs):
+        captured.update(kwargs)
+        return EmailSendResult(ok=True)
+
+    monkeypatch.setattr("backend.main.send_contact_request_result", _fake_send_contact_request_result)
+
+    response = client.post(
+        "/api/contact-request",
+        json={
+            "name": "Lars",
+            "work_email": "lars@verisight.nl",
+            "organization": "Verisight",
+            "employee_count": "200-500",
+            "route_interest": "culture_assessment",
+            "cta_source": "product_culture_assessment_form",
+            "desired_timing": "dit-kwartaal",
+            "current_question": "We willen een brede cultuur- en engagementbaseline met board-read voor de organisatie.",
+            "website": "",
+        },
+        headers={"x-forwarded-for": "203.0.113.14"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["notification_sent"] is True
+
+    stored = db_session.query(ContactRequest).one()
+    assert stored.route_interest == "culture_assessment"
+    assert stored.cta_source == "product_culture_assessment_form"
+    assert stored.desired_timing == "dit-kwartaal"
+    assert captured["route_interest"] == "culture_assessment"
 
 
 def test_contact_requests_list_returns_recent_leads(client, db_session: Session, monkeypatch: pytest.MonkeyPatch):

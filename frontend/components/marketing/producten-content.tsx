@@ -40,6 +40,21 @@ const primaryRoutes = [
     accent: 'oklch(0.50 0.12 188)' as string,
     accentSoft: 'oklch(0.972 0.018 185)' as string,
   },
+  {
+    title: 'Loep Cultuurbeeld',
+    eyebrow: 'Als brede cultuur en engagement de vraag is',
+    body:
+      'Voor organisaties die een jaarlijkse board-level baseline willen op cultuur, engagement, werkbeleving, vertrouwen, leiderschap en samenwerking.',
+    bullets: [
+      'U wilt een brede jaarlijkse cultuur- en engagementbaseline',
+      'U wilt executive read en board-read in plaats van een generieke surveytool',
+      'U wilt verschillen tussen onderdelen veilig kunnen lezen zonder rankinglogica',
+      'U wilt Pulse pas later als optioneel follow-on ritme openen',
+    ],
+    href: '/producten/cultuurbeeld',
+    accent: 'oklch(0.55 0.10 305)' as string,
+    accentSoft: 'oklch(0.97 0.02 305)' as string,
+  },
 ] as const
 
 function HeroSection() {
@@ -119,7 +134,8 @@ function HeroSection() {
             }}
           >
             Kies ExitScan als u vertrek achteraf wilt begrijpen. Kies RetentieScan als u eerder wilt zien waar
-            behoud onder druk staat. Andere routes komen pas in beeld als de volgende vraag echt speelt.
+            behoud onder druk staat. Kies Loep Cultuurbeeld als u cultuur en engagement breed organisatiebreed wilt
+            lezen. Andere routes komen pas in beeld als de volgende vraag echt speelt.
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
             <Link
@@ -152,7 +168,7 @@ function HeroSection() {
                 textDecoration: 'none',
               }}
             >
-              Bekijk ExitScan en RetentieScan
+              Bekijk de primary routes
             </Link>
           </div>
         </div>
@@ -187,10 +203,10 @@ function PrimaryRoutesSection() {
           </h2>
           <p style={{ color: T.inkSoft, fontSize: 15, lineHeight: 1.74, maxWidth: '58ch', margin: '0 auto' }}>
             Kies ExitScan als u vertrek wilt duiden. Kies RetentieScan als u eerder wilt zien waar behoud onder druk
-            staat.
+            staat. Kies Loep Cultuurbeeld als u een brede jaarlijkse cultuur- en engagementbaseline zoekt.
           </p>
         </div>
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {primaryRoutes.map((route) => (
             <article
               key={route.title}

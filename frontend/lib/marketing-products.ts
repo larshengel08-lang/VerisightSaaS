@@ -57,6 +57,23 @@ export const CORE_MARKETING_PRODUCTS: MarketingProduct[] = [
     portfolioRole: 'core_product',
     href: '/producten/retentiescan',
   },
+  {
+    slug: 'cultuurbeeld',
+    label: 'Loep Cultuurbeeld',
+    shortLabel: 'Cultuurbeeld',
+    tagline: 'Jaarlijkse board-level baseline voor cultuur en engagement',
+    description:
+      'Voor organisaties die cultuur en engagement breed organisatiebreed willen begrijpen, met een scherpe executive read, bestuurlijke aandachtspunten en governed drilldown zonder externe ranglijsten als startpunt of individuele managers tegen elkaar af te zetten.',
+    seoTitle: 'Loep Cultuurbeeld | Jaarlijkse cultuur- en engagementbaseline voor directie en HR',
+    ogAlt: 'Loep Cultuurbeeld productpagina van Verisight',
+    serviceType: 'Jaarlijkse cultuur- en engagementbaseline',
+    serviceAudience: 'Directie, board en HR-teams die cultuur en engagement breed willen lezen',
+    serviceOutput:
+      'Executive culture read, Loep Culture Index, domeinbeeld, board attention points, segmentcontrasten, board-read en governed drilldown waar toegestaan',
+    status: 'core_live',
+    portfolioRole: 'core_product',
+    href: '/producten/cultuurbeeld',
+  },
 ]
 
 export const PORTFOLIO_ROUTE_MARKETING_PRODUCTS: MarketingProduct[] = [

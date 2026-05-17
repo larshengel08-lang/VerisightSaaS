@@ -26,23 +26,27 @@ import {
 } from '@/components/marketing/site-content'
 
 describe('Portfolio architecture marketing model', () => {
-  it('keeps a core-first five-route suite with onboarding as bounded peer and only pulse plus leadership as follow-up', () => {
+  it('keeps three primary routes with onboarding as bounded peer and pulse plus leadership as follow-up', () => {
     const boundedPeerSlugs = BOUNDED_PEER_MARKETING_PRODUCTS.map((product) => product.slug)
     const followOnSlugs = FOLLOW_ON_MARKETING_PRODUCTS.map((product) => product.slug)
     const reservedSlugs = RESERVED_MARKETING_PRODUCTS.map((product) => product.slug)
 
-    expect(CORE_MARKETING_PRODUCTS.map((product) => product.slug)).toEqual(['exitscan', 'retentiescan'])
+    expect(CORE_MARKETING_PRODUCTS.map((product) => product.slug)).toEqual([
+      'exitscan',
+      'retentiescan',
+      'cultuurbeeld',
+    ])
     expect(PORTFOLIO_ROUTE_MARKETING_PRODUCTS).toHaveLength(0)
     expect(boundedPeerSlugs).toEqual(['onboarding-30-60-90'])
     expect(BOUNDED_PEER_MARKETING_PRODUCTS.every((product) => product.status === 'bounded_live')).toBe(true)
     expect(BOUNDED_PEER_MARKETING_PRODUCTS.every((product) => product.portfolioRole === 'bounded_peer_route')).toBe(true)
-    expect(followOnSlugs).toEqual(['pulse', 'leadership-scan'])
+    expect(followOnSlugs).toEqual(['combinatie', 'pulse', 'leadership-scan'])
     expect(FOLLOW_ON_MARKETING_PRODUCTS.every((product) => product.status === 'bounded_live')).toBe(true)
     expect(FOLLOW_ON_MARKETING_PRODUCTS.every((product) => product.portfolioRole === 'follow_on_route')).toBe(true)
     expect(FOLLOW_ON_MARKETING_PRODUCTS.every((product) => !product.description.toLowerCase().includes('live bounded'))).toBe(true)
     expect(CORE_MARKETING_PRODUCTS.every((product) => product.status === 'core_live')).toBe(true)
     expect(PORTFOLIO_ROUTE_MARKETING_PRODUCTS.every((product) => product.status === 'portfolio_live')).toBe(true)
-    expect(LIVE_MARKETING_PRODUCTS).toHaveLength(5)
+    expect(LIVE_MARKETING_PRODUCTS).toHaveLength(7)
     expect(reservedSlugs).toEqual(['mto', 'customer-feedback'])
     expect(RESERVED_MARKETING_PRODUCTS.every((product) => product.status === 'reserved_future')).toBe(true)
     expect(RESERVED_MARKETING_PRODUCTS.every((product) => product.portfolioRole === 'future_reserved_route')).toBe(
@@ -102,6 +106,26 @@ describe('ExitScan positioning copy', () => {
     expect(exitLifecycle?.expansion.toLowerCase()).toContain('retentiescan baseline')
     expect(freePilotFaq?.[1].toLowerCase()).toContain('betaald baseline-traject')
     expect(freePilotFaq?.[1].toLowerCase()).toContain('echte urgentie')
+  })
+
+  it('keeps Loep Cultuurbeeld framed as a broad annual baseline instead of a pulse, benchmark or ranking layer', () => {
+    const cultureProduct = LIVE_MARKETING_PRODUCTS.find((product) => product.slug === 'cultuurbeeld')
+    const cultureBaselineCard = pricingCards.find((card) => card.eyebrow === 'Loep Culture Assessment Baseline')
+    const cultureFaq = pricingFaqs.find(([question]) => question === 'Wanneer kies je voor Loep Culture Assessment?')
+    const pulseFollowOn = pricingFollowOnRoutes.find((route) => route.title === 'Pulse na Culture Assessment')
+    const cultureRow = productOverviewComparisonRows.find((row) => row[0] === 'Loep Cultuurbeeld')
+
+    expect(cultureProduct).toBeTruthy()
+    expect(cultureProduct?.description.toLowerCase()).toContain('executive read')
+    expect(cultureProduct?.description.toLowerCase()).toContain('governed drilldown')
+    expect(cultureProduct?.description.toLowerCase()).not.toContain('benchmark-first')
+    expect(cultureProduct?.description.toLowerCase()).not.toContain('ranking')
+    expect(cultureBaselineCard?.price).toBe('op aanvraag')
+    expect(cultureBaselineCard?.bullets.join(' ').toLowerCase()).toContain('board-read')
+    expect(cultureFaq?.[1].toLowerCase()).toContain('cultuur')
+    expect(cultureFaq?.[1].toLowerCase()).toContain('engagement')
+    expect(pulseFollowOn?.description.toLowerCase()).toContain('niet als onderdeel van de baseline')
+    expect(cultureRow?.[2].toLowerCase()).toContain('cultuur- en engagementpatronen')
   })
 
   it('keeps expansion framed as a value-based follow-up instead of a loose upsell', () => {

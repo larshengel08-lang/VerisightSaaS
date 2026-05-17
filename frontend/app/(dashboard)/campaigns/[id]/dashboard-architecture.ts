@@ -52,6 +52,8 @@ export function getScoreInterpretationTitle(scanType: ScanType) {
       return 'Pulsesignaal en bounded reviewverdeling'
     case 'leadership':
       return 'Leadershipsignaal en managementcontextverdeling'
+    case 'culture_assessment':
+      return 'Loep Culture Index en domeinverdeling'
     default:
       return 'Signaalinterpretatie'
   }
@@ -145,7 +147,10 @@ export function buildDashboardVisibilityState(args: {
     showResponseInterpretation: args.hasMinDisplay || args.respondentsCount > 0,
     showScoreInterpretation: args.hasMinDisplay,
     showDriverDrilldown: args.hasEnoughData,
-    showSegmentAnalysis: args.hasEnoughData && args.hasSegmentDeepDive && args.scanType === 'retention',
+    showSegmentAnalysis:
+      args.hasEnoughData &&
+      args.hasSegmentDeepDive &&
+      (args.scanType === 'retention' || args.scanType === 'culture_assessment'),
     showActionPlaybooks: args.hasEnoughData,
     showCampaignView: args.canManageCampaign || args.respondentsCount > 0 || args.isArchivedPeriod,
     showCampaignControls: args.canManageCampaign,

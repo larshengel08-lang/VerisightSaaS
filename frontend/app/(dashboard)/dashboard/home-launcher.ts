@@ -215,6 +215,9 @@ function compareRecommendationPriority(left: HomeCampaignCardModel, right: HomeC
   const bucketRank = recommendationOrder.indexOf(left.bucket) - recommendationOrder.indexOf(right.bucket)
   if (bucketRank !== 0) return bucketRank
 
+  const routeRank = getRecommendationRoutePriority(right.campaign.scan_type) - getRecommendationRoutePriority(left.campaign.scan_type)
+  if (routeRank !== 0) return routeRank
+
   const responseRank = (right.campaign.completion_rate_pct ?? 0) - (left.campaign.completion_rate_pct ?? 0)
   if (responseRank !== 0) return responseRank
 
@@ -225,6 +228,14 @@ function compareRecommendationPriority(left: HomeCampaignCardModel, right: HomeC
   if (signalRank !== 0) return signalRank
 
   return compareCampaignRecency(left.campaign, right.campaign)
+}
+
+function getRecommendationRoutePriority(scanType: CampaignStats['scan_type']) {
+  if (scanType === 'culture_assessment') return 4
+  if (scanType === 'exit') return 3
+  if (scanType === 'retention') return 2
+  if (scanType === 'leadership') return 1
+  return 0
 }
 
 function compareCampaignRecency(left: CampaignStats, right: CampaignStats) {
@@ -240,10 +251,10 @@ function buildDashboardAction(
     if (isAdmin) {
       return {
         kind: 'setup',
-        label: 'Naar setup',
-        description: 'Open beheer om respondentimport, launchcontrole en livegang af te ronden.',
+        label: 'Beheer route',
+        description: 'Open de werktafel om doelgroep, communicatie en livegang af te ronden.',
         available: true,
-        href: '/beheer',
+        href: `/campaigns/${campaign.campaign_id}/beheer`,
       }
     }
 
@@ -322,6 +333,9 @@ function getStatusTone(bucket: DashboardHomeBucket, campaign: CampaignStats): Ho
 
 function getManagementSummary(bucket: DashboardHomeBucket, campaign: CampaignStats, productName: string) {
   if (bucket === 'open_now') {
+    if (campaign.scan_type === 'culture_assessment') {
+      return `${productName} heeft nu genoeg respons voor een bestuurlijke read van de jaarlijkse baseline, met Loep Culture Index, domeinbeeld en governed vervolg.`
+    }
     return `${productName} heeft nu genoeg respons om echt te lezen, te prioriteren en het vervolggesprek te richten.`
   }
 
@@ -376,6 +390,9 @@ function buildRecommendationTitle(card: HomeCampaignCardModel, isAdmin: boolean)
 
 function buildRecommendationReason(card: HomeCampaignCardModel, isAdmin: boolean) {
   if (card.bucket === 'open_now') {
+    if (card.campaign.scan_type === 'culture_assessment') {
+      return `${card.campaign.campaign_name} is nu de beste board-first route om te openen: de jaarlijkse baseline is leesbaar genoeg voor een executive read met Loep Culture Index, domeinen en governed vervolg.`
+    }
     return `${card.campaign.campaign_name} heeft nu het stevigste leesniveau in je actieve portfolio en is daardoor de beste eerste managementroute om nu te openen.`
   }
 

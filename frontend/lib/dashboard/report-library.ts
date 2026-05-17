@@ -42,7 +42,7 @@ export interface BuildReportLibraryEntriesOptions {
   hrDemoArtifact?: Pick<HrDemoPilotArtifact, 'campaignId'> | null
 }
 
-const MANAGEMENT_SCAN_TYPES: ScanType[] = ['exit', 'retention', 'leadership']
+const MANAGEMENT_SCAN_TYPES: ScanType[] = ['culture_assessment', 'exit', 'retention', 'leadership']
 const MODULE_SCAN_TYPES: ScanType[] = ['pulse', 'team']
 
 function formatDutchDate(dateLike: string) {
@@ -83,6 +83,9 @@ function getEntrySummary(campaign: CampaignStats, category: Exclude<ReportLibrar
   const signalText = signalDisplay !== null ? `${signalDisplay.toFixed(1)}/10 signaal` : 'signaal volgt na voldoende respons'
 
   if (category === 'management') {
+    if (campaign.scan_type === 'culture_assessment') {
+      return 'Loep Culture Assessment als board-read, met Loep Culture Index, domeinbeeld en governed vervolg zonder ranglijsten of benchmark-first duiding.'
+    }
     return `${SCAN_TYPE_LABELS[campaign.scan_type]} voor eerste samenvatting, vervolgstap en reviewmoment.`
   }
 
@@ -103,17 +106,19 @@ function getEntryTitle(campaign: CampaignStats, category: Exclude<ReportLibraryC
 
 function getPriority(campaign: CampaignStats) {
   const base =
-    campaign.scan_type === 'exit'
-      ? 6
-      : campaign.scan_type === 'retention'
-        ? 5
-        : campaign.scan_type === 'leadership'
-          ? 4
-          : campaign.scan_type === 'pulse'
-            ? 3
-            : campaign.scan_type === 'team'
-              ? 2
-              : 1
+    campaign.scan_type === 'culture_assessment'
+      ? 7
+      : campaign.scan_type === 'exit'
+        ? 6
+        : campaign.scan_type === 'retention'
+          ? 5
+          : campaign.scan_type === 'leadership'
+            ? 4
+            : campaign.scan_type === 'pulse'
+              ? 3
+              : campaign.scan_type === 'team'
+                ? 2
+                : 1
 
   return base * 1000 + campaign.total_completed
 }
@@ -212,7 +217,9 @@ export function buildReportLibraryEntries(campaigns: CampaignStats[], options: B
           `${SCAN_TYPE_LABELS[featuredCandidate.scan_type]} ${formatDutchQuarter(featuredCandidate.created_at)}`,
         subtitle: `${SCAN_TYPE_LABELS[featuredCandidate.scan_type]} · ${formatDutchQuarter(featuredCandidate.created_at)}`,
         description:
-          'Gebruik dit rapport als eerste samenvatting: wat speelt nu, wat vraagt verificatie en welke eigenaar, eerste stap en reviewmoment horen daarna vastgelegd te worden.',
+          featuredCandidate.scan_type === 'culture_assessment'
+            ? 'Gebruik dit board-read als eerste samenvatting: lees eerst Loep Culture Index, domeinbeeld en segmentpatronen, en leg daarna eigenaar, eerste stap en reviewmoment vast zonder ranglijsten of benchmark-first claims.'
+            : 'Gebruik dit rapport als eerste samenvatting: wat speelt nu, wat vraagt verificatie en welke eigenaar, eerste stap en reviewmoment horen daarna vastgelegd te worden.',
         stats: [
           { label: 'Responses', value: String(featuredCandidate.total_completed) },
           {

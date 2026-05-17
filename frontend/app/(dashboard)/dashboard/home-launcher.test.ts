@@ -80,6 +80,41 @@ describe('dashboard home launcher buckets', () => {
 })
 
 describe('dashboard home recommendation logic', () => {
+  it('prioritizes culture assessment as the board-first primary route when it is report-ready', () => {
+    const campaigns = [
+      buildCampaign({
+        campaign_id: 'exit-1',
+        campaign_name: 'ExitScan voorjaar',
+        scan_type: 'exit',
+        total_completed: 24,
+        completion_rate_pct: 52,
+        created_at: '2026-04-14T10:00:00Z',
+      }),
+      buildCampaign({
+        campaign_id: 'culture-1',
+        campaign_name: 'Loep Cultuurbeeld 2026',
+        scan_type: 'culture_assessment',
+        total_invited: 280,
+        total_completed: 31,
+        completion_rate_pct: 11,
+        avg_risk_score: 6.8,
+        avg_signal_score: 6.8,
+        created_at: '2026-04-13T10:00:00Z',
+      }),
+    ]
+
+    const model = buildDashboardHomeModel({ campaigns, isAdmin: false })
+
+    expect(model.recommendation?.campaign.campaign_id).toBe('culture-1')
+    expect(model.recommendation?.primaryAction.kind).toBe('dashboard')
+    expect(model.recommendation?.secondaryAction?.kind).toBe('pdf')
+    expect(model.recommendation?.reason.toLowerCase()).toContain('board')
+    expect(model.groups[0]?.campaigns.find((card) => card.campaign.campaign_id === 'culture-1')?.metrics[3]).toEqual({
+      label: 'Loep Culture Index',
+      value: '6.8/10',
+    })
+  })
+
   it('surfaces one clearly recommended campaign and keeps dashboard first when an active campaign is management-ready', () => {
     const campaigns = [
       buildCampaign({
@@ -171,6 +206,25 @@ describe('dashboard and pdf availability', () => {
     expect(setupCard?.primaryAction.reason).toContain('Nog niet leesbaar')
   })
 
+  it('sends admin setup campaigns directly to the campaign-specific routebeheer page', () => {
+    const setupCampaign = buildCampaign({
+      campaign_id: 'setup-1',
+      campaign_name: 'ExitScan nieuw',
+      total_invited: 0,
+      total_completed: 0,
+      completion_rate_pct: 0,
+      avg_risk_score: null,
+      avg_signal_score: null,
+    })
+
+    const model = buildDashboardHomeModel({ campaigns: [setupCampaign], isAdmin: true })
+    const setupCard = model.groups.flatMap((group) => group.campaigns).find((card) => card.campaign.campaign_id === 'setup-1')
+
+    expect(setupCard?.primaryAction.available).toBe(true)
+    expect(setupCard?.primaryAction.label).toBe('Beheer route')
+    expect(setupCard?.primaryAction.href).toBe('/campaigns/setup-1/beheer')
+  })
+
   it('keeps the dashboard-versus-pdf choice explicit but compact in the recommendation model', () => {
     const model = buildDashboardHomeModel({
       campaigns: [buildCampaign({ campaign_id: 'ready-1' })],
@@ -183,6 +237,29 @@ describe('dashboard and pdf availability', () => {
     expect(model.recommendation?.pdfChoiceDescription).toBe(
       'PDF = delen, bespreken en meenemen als compacte managementsamenvatting.',
     )
+  })
+
+  it('keeps culture assessment pdf output board-ready once the annual baseline is readable', () => {
+    const model = buildDashboardHomeModel({
+      campaigns: [
+        buildCampaign({
+          campaign_id: 'culture-1',
+          campaign_name: 'Loep Cultuurbeeld 2026',
+          scan_type: 'culture_assessment',
+          total_invited: 260,
+          total_completed: 34,
+          completion_rate_pct: 13,
+          avg_risk_score: 6.6,
+          avg_signal_score: 6.6,
+        }),
+      ],
+      isAdmin: false,
+    })
+    const cultureCard = model.groups.flatMap((group) => group.campaigns).find((card) => card.campaign.campaign_id === 'culture-1')
+
+    expect(cultureCard?.secondaryAction?.available).toBe(true)
+    expect(cultureCard?.secondaryAction?.description.toLowerCase()).toContain('board')
+    expect(cultureCard?.managementSummary.toLowerCase()).toContain('bestuurlijke')
   })
 })
 

@@ -12,6 +12,12 @@ export const CONTACT_ROUTE_OPTIONS = [
     firstStepLabel: 'RetentieScan Baseline',
   },
   {
+    value: 'culture_assessment',
+    label: 'Loep Culture Assessment',
+    description: 'We willen een brede jaarlijkse cultuur- en engagementbaseline voor de organisatie.',
+    firstStepLabel: 'Loep Culture Assessment Baseline',
+  },
+  {
     value: 'combinatie',
     label: 'Combinatie',
     description: 'We willen beide kernvragen bewust naast elkaar organiseren.',
@@ -44,12 +50,6 @@ export const CONTACT_ROUTE_OPTIONS = [
 ] as const
 
 const LEGACY_HIDDEN_CONTACT_ROUTE_OPTIONS = [
-  {
-    value: 'culture_assessment',
-    label: 'Loep Culture Assessment',
-    description: 'Verborgen placeholder-route voor de primaire culture-assessment contractlaag in opbouw.',
-    firstStepLabel: 'een Loep Culture Assessment baseline-route in opbouw',
-  },
   {
     value: 'teamscan',
     label: 'TeamScan',
@@ -85,10 +85,14 @@ export type ContactRouteInterest =
   | (typeof CONTACT_ROUTE_OPTIONS)[number]['value']
   | (typeof LEGACY_HIDDEN_CONTACT_ROUTE_OPTIONS)[number]['value']
 export type ContactDesiredTiming = (typeof CONTACT_DESIRED_TIMING_OPTIONS)[number]['value']
-export type CoreContactRouteInterest = Extract<ContactRouteInterest, 'exitscan' | 'retentiescan' | 'combinatie'>
+export type CoreContactRouteInterest = Extract<
+  ContactRouteInterest,
+  'exitscan' | 'retentiescan' | 'culture_assessment' | 'combinatie'
+>
 export type FollowOnContactRouteInterest = Extract<ContactRouteInterest, 'teamscan' | 'onboarding' | 'pulse' | 'leadership'>
 export type ContactQualificationStatus =
   | 'core_default'
+  | 'culture_primary'
   | 'retention_primary'
   | 'combination_candidate'
   | 'bounded_peer_review'
@@ -140,6 +144,24 @@ const RETENTION_SIGNAL_KEYWORDS = [
   'stay',
   'blijven',
   'verloop voorkomen',
+]
+
+const CULTURE_ASSESSMENT_KEYWORDS = [
+  'cultuur',
+  'culture',
+  'engagement',
+  'betrokkenheid',
+  'werkbeleving',
+  'medewerkerstevredenheid',
+  'tevredenheid',
+  'vertrouwen',
+  'psychologische veiligheid',
+  'samenwerking',
+  'leiderschap',
+  'organisatiebreed',
+  'jaarlijkse baseline',
+  'brede baseline',
+  'mto',
 ]
 
 const PULSE_SIGNAL_KEYWORDS = [
@@ -280,20 +302,28 @@ export function getContactQualificationGuidance({
   const normalizedQuestion = (currentQuestion ?? '').trim().toLowerCase()
   const hasExitSignal = includesAnyKeyword(normalizedQuestion, EXIT_SIGNAL_KEYWORDS)
   const hasRetentionSignal = includesAnyKeyword(normalizedQuestion, RETENTION_SIGNAL_KEYWORDS)
+  const hasCultureAssessmentSignal = includesAnyKeyword(normalizedQuestion, CULTURE_ASSESSMENT_KEYWORDS)
   const followOnEvidence = includesAnyKeyword(normalizedQuestion, FOLLOW_ON_EVIDENCE_KEYWORDS)
   const explicitFollowOnCandidate = followOnRoutes.has(normalizedRoute as FollowOnContactRouteInterest)
     ? (normalizedRoute as FollowOnContactRouteInterest)
     : null
   const inferredFollowOnCandidate = detectFollowOnCandidateRoute(normalizedQuestion)
-  const followOnCandidateRoute = explicitFollowOnCandidate ?? inferredFollowOnCandidate
+  const followOnCandidateRoute =
+    normalizedRoute === 'culture_assessment' ? null : explicitFollowOnCandidate ?? inferredFollowOnCandidate
   const onboardingCandidate =
     normalizedRoute === 'onboarding' || inferredFollowOnCandidate === 'onboarding' ? 'onboarding' : null
 
-  let recommendedCoreRoute: CoreContactRouteInterest = 'exitscan'
+  let recommendedCoreRoute: CoreContactRouteInterest =
+    normalizedRoute === 'culture_assessment' ? 'culture_assessment' : 'exitscan'
   if (hasExitSignal && hasRetentionSignal) {
     recommendedCoreRoute = 'combinatie'
   } else if (hasRetentionSignal && !hasExitSignal) {
     recommendedCoreRoute = 'retentiescan'
+  } else if (
+    normalizedRoute === 'culture_assessment' ||
+    (hasCultureAssessmentSignal && !hasExitSignal && !hasRetentionSignal)
+  ) {
+    recommendedCoreRoute = 'culture_assessment'
   }
 
   if (onboardingCandidate) {
@@ -348,6 +378,19 @@ export function getContactQualificationGuidance({
       headline: 'RetentieScan lijkt nu de logische eerste route.',
       detail: `De vraag leest als een vroeg behouds- of stay-intent vraagstuk op groepsniveau. Daardoor mag RetentieScan in intake als eerste route worden getoetst, met ${normalizedTiming === 'zo-snel-mogelijk' ? 'hoge urgentie' : 'bounded eerste verificatie'} als uitgangspunt.`,
       operatorSummary: 'Vroege behoudsvraag zichtbaar; toets RetentieScan als primaire route en bevestig dat het niet alsnog vooral om vertrekduiding achteraf gaat.',
+    }
+  }
+
+  if (recommendedCoreRoute === 'culture_assessment') {
+    return {
+      status: 'culture_primary',
+      recommendedCoreRoute,
+      followOnCandidateRoute: null,
+      headline: 'Loep Culture Assessment lijkt nu de logische eerste route.',
+      detail:
+        'De vraag leest als een brede organisatievraag rond cultuur, engagement, werkbeleving, vertrouwen of leiderschap. Daardoor toetsen we eerst een jaarlijkse Loep Culture Assessment baseline met board-read en governed drilldown, niet Pulse, TeamScan of een generieke MTO-light route.',
+      operatorSummary:
+        'Brede cultuur- en engagementvraag zichtbaar; toets Loep Culture Assessment als primaire board-level baseline en bewaak dat de intake niet vernauwt naar behoudsdruk, exitduiding of een lokale follow-on route.',
     }
   }
 

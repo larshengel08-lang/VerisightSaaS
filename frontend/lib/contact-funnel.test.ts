@@ -91,4 +91,18 @@ describe('contact qualification guidance', () => {
       'route_interest=culture_assessment',
     )
   })
+
+  it('allows Loep Culture Assessment to become the primary recommendation for broad culture and engagement questions', () => {
+    const guidance = getContactQualificationGuidance({
+      routeInterest: 'culture_assessment',
+      desiredTiming: 'dit-kwartaal',
+      currentQuestion:
+        'We willen een jaarlijkse brede cultuur- en engagementbaseline met vertrouwen, leiderschap, samenwerking en werkbeleving op organisatieniveau.',
+    })
+
+    expect(guidance.status).toBe('culture_primary')
+    expect(guidance.recommendedCoreRoute).toBe('culture_assessment')
+    expect(guidance.followOnCandidateRoute).toBeNull()
+    expect(guidance.detail.toLowerCase()).toContain('board-read')
+  })
 })

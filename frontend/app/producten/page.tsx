@@ -7,14 +7,14 @@ import { buildContactHref } from '@/lib/contact-funnel'
 export const metadata: Metadata = {
   title: 'Producten',
   description:
-    'Kies ExitScan als u vertrek achteraf wilt begrijpen. Kies RetentieScan als u eerder wilt zien waar behoud onder druk staat. Andere routes komen pas in beeld als de volgende vraag echt speelt.',
+    'Kies ExitScan als u vertrek achteraf wilt begrijpen. Kies RetentieScan als u eerder wilt zien waar behoud onder druk staat. Kies Loep Cultuurbeeld als u cultuur en engagement breed organisatiebreed wilt lezen.',
   alternates: {
     canonical: '/producten',
   },
   openGraph: {
     title: 'Producten | Verisight',
     description:
-      'Kies ExitScan als u vertrek achteraf wilt begrijpen. Kies RetentieScan als u eerder wilt zien waar behoud onder druk staat. Andere routes komen pas in beeld als de volgende vraag echt speelt.',
+      'Kies ExitScan als u vertrek achteraf wilt begrijpen. Kies RetentieScan als u eerder wilt zien waar behoud onder druk staat. Kies Loep Cultuurbeeld als u cultuur en engagement breed organisatiebreed wilt lezen.',
     url: 'https://www.verisight.nl/producten',
     images: ['/opengraph-image'],
   },
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Producten | Verisight',
     description:
-      'Kies ExitScan als u vertrek achteraf wilt begrijpen. Kies RetentieScan als u eerder wilt zien waar behoud onder druk staat. Andere routes komen pas in beeld als de volgende vraag echt speelt.',
+      'Kies ExitScan als u vertrek achteraf wilt begrijpen. Kies RetentieScan als u eerder wilt zien waar behoud onder druk staat. Kies Loep Cultuurbeeld als u cultuur en engagement breed organisatiebreed wilt lezen.',
     images: ['/opengraph-image'],
   },
 }

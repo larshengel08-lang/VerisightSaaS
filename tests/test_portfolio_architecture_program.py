@@ -33,17 +33,20 @@ def test_portfolio_contract_tracks_current_core_first_suite_model():
     assert "follow_on_marketing_products" in marketing_products
     assert "reserved_marketing_products" in marketing_products
     assert "portfoliorole: marketingproductportfoliorole" in marketing_products
-    assert "portfoliorole: 'portfolio_route'" in marketing_products
+    assert "portfoliorole: 'core_product'" in marketing_products
+    assert "portfoliorole: 'bounded_peer_route'" in marketing_products
     assert "portfoliorole: 'follow_on_route'" in marketing_products
     assert "portfoliorole: 'future_reserved_route'" in marketing_products
-    assert "export type scantype = 'exit' | 'retention' | 'pulse' | 'team' | 'onboarding' | 'leadership'" in frontend_types
+    assert "export type scantype" in frontend_types
+    assert "'culture_assessment'" in frontend_types
+    assert "slug: 'cultuurbeeld'" in marketing_products
     assert "route_interest: literal[" in backend_schemas
     assert '"teamscan"' in backend_schemas
     assert '"onboarding"' in backend_schemas
     assert '"leadership"' in backend_schemas
     assert '"combinatie"' in backend_schemas
     assert '"nog-onzeker"' in backend_schemas
-    assert "check (scan_type in ('exit', 'retention', 'pulse', 'team', 'onboarding', 'leadership'))" in schema
+    assert "scan_type in ('exit', 'retention', 'pulse', 'team', 'onboarding', 'leadership', 'culture_assessment')" in schema
 
 
 def test_public_surfaces_keep_core_first_hierarchy_with_live_follow_on_routes():
@@ -51,21 +54,19 @@ def test_public_surfaces_keep_core_first_hierarchy_with_live_follow_on_routes():
     products_page = _read("frontend/app/producten/page.tsx")
     product_detail = _read("frontend/app/producten/[slug]/page.tsx")
     dropdown = _read("frontend/components/marketing/solutions-dropdown.tsx")
+    marketing_products = _read("frontend/lib/marketing-products.ts")
     combination_memo = _read("docs/reference/combinatie_portfolio_memo.md")
     sitemap = _read("frontend/app/sitemap.ts")
 
-    assert "2 kernproducten" in homepage
-    assert "1 bewuste portfolioroute" in homepage
-    assert "twee kernproducten" in products_page
-    assert "bewust opgebouwde portfolioroute" in products_page
-    assert "geen derde hoofdproduct" in products_page
-    assert "leadership scan" in products_page
-    assert "geen derde kernproduct" in product_detail
-    assert "bounded follow-on route" in product_detail
+    assert "loep cultuurbeeld" in homepage
+    assert "cultuur en engagement breed organisatiebreed" in products_page
+    assert "product_culture_assessment_form" in product_detail
+    assert "core_marketing_products.map" in dropdown
+    assert "slug: 'cultuurbeeld'" in marketing_products
     assert "kernproducten" in dropdown
-    assert "portfolioroute" in dropdown
     assert "niet als derde kernproduct" in combination_memo
+    assert "https://www.verisight.nl/producten/cultuurbeeld" in sitemap
     assert "https://www.verisight.nl/producten/pulse" in sitemap
-    assert "https://www.verisight.nl/producten/teamscan" in sitemap
+    assert "https://www.verisight.nl/producten/teamscan" not in sitemap
     assert "https://www.verisight.nl/producten/onboarding-30-60-90" in sitemap
     assert "https://www.verisight.nl/producten/leadership-scan" in sitemap

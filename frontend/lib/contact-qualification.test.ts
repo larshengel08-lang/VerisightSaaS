@@ -26,6 +26,20 @@ describe('contact qualification visibility summary', () => {
     expect(summary.recommendationLabel).toContain('RetentieScan')
   })
 
+  it('surfaces Loep Culture Assessment for broad culture and engagement baseline questions', () => {
+    const summary = buildContactQualificationVisibilitySummary({
+      routeInterest: 'culture_assessment',
+      desiredTiming: 'dit-kwartaal',
+      currentQuestion:
+        'We willen een brede jaarlijkse cultuur- en engagementbaseline met vertrouwen, leiderschap, samenwerking en werkbeleving op organisatieniveau.',
+    })
+
+    expect(summary.tone).toBe('emerald')
+    expect(summary.headline).toContain('Loep Culture Assessment')
+    expect(summary.recommendationLabel).toContain('Loep Culture Assessment')
+    expect(summary.nextAction.toLowerCase()).toContain('organisatiebreed')
+  })
+
   it('treats onboarding as a bounded peer instead of a flat first route', () => {
     const summary = buildContactQualificationVisibilitySummary({
       routeInterest: 'onboarding',

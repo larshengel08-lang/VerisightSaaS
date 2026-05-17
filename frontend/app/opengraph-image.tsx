@@ -73,16 +73,16 @@ export default function OpenGraphImage() {
                   background: '#2563eb',
                 }}
               />
-              ExitScan + RetentieScan
+              ExitScan + RetentieScan + Loep Cultuurbeeld
             </div>
             <div style={{ fontSize: '74px', fontWeight: 700, lineHeight: 1.02 }}>
               Kies eerst de juiste route.
             </div>
             <div style={{ fontSize: '34px', lineHeight: 1.3, color: '#334155' }}>
-              Begrijp waarom mensen gingen of zie eerder waar behoud onder druk staat.
+              Begrijp waarom mensen gingen, zie eerder waar behoud onder druk staat of lees cultuur en engagement breed.
             </div>
             <div style={{ fontSize: '26px', lineHeight: 1.5, color: '#475569' }}>
-              Verisight levert twee duidelijke producten met dashboard, rapport en managementduiding in dezelfde taal.
+              Verisight levert drie duidelijke primary routes met dashboard, rapport en managementduiding in dezelfde taal.
             </div>
           </div>
 
@@ -126,6 +126,9 @@ export default function OpenGraphImage() {
               </div>
               <div style={{ fontSize: '24px', lineHeight: 1.3, color: '#059669' }}>
                 RetentieScan
+              </div>
+              <div style={{ fontSize: '24px', lineHeight: 1.3, color: '#7c3aed' }}>
+                Loep Cultuurbeeld
               </div>
               <div style={{ fontSize: '22px', lineHeight: 1.3, color: '#0284c7' }}>
                 Combinatie

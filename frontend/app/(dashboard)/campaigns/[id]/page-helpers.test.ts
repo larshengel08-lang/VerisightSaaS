@@ -126,4 +126,50 @@ describe('dashboard page helpers field semantics', () => {
     expect(nextStep).toContain('Frictiescore')
     expect(nextStep).toContain('werkfrictie')
   })
+
+  it('keeps culture assessment helper copy board-readable and non-ranking', () => {
+    const hero = buildHeroDescription({
+      scanType: 'culture_assessment',
+      isActive: true,
+      completionRate: 38,
+      pendingCount: 14,
+      hasEnoughData: true,
+      averageRiskScore: 6.5,
+      scanDefinition: getScanDefinition('culture_assessment'),
+    })
+    const panels = buildDecisionPanels({
+      stats: {
+        scan_type: 'culture_assessment',
+        completion_rate_pct: 38,
+      } as never,
+      averageRiskScore: 6.5,
+      scanDefinition: getScanDefinition('culture_assessment'),
+      strongWorkSignalRate: null,
+      retentionSupplemental: {
+        engagement: 6.1,
+        turnoverIntention: 4.2,
+        stayIntent: 6.0,
+      },
+      factorAverages: {
+        trust_psychological_safety: 5.7,
+      },
+      hasEnoughData: true,
+      hasMinDisplay: true,
+    })
+    const nextStep = buildNextStepBody({
+      scanType: 'culture_assessment',
+      hasEnoughData: true,
+      hasMinDisplay: true,
+      pendingCount: 0,
+      topFactor: 'Vertrouwen en psychologische veiligheid',
+    })
+
+    expect(hero).toContain('jaarlijkse')
+    expect(hero).toContain('Loep Culture Index')
+    expect(hero.toLowerCase()).not.toContain('ranking')
+    expect(panels[2]?.title.toLowerCase()).toContain('managerlaag')
+    expect(panels[2]?.body.toLowerCase()).toContain('locked')
+    expect(nextStep.toLowerCase()).toContain('navigatiesignaal')
+    expect(nextStep.toLowerCase()).toContain('board')
+  })
 })

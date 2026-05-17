@@ -150,6 +150,14 @@ export function buildHeroDescription({
     return `Deze Leadership Scan laat een begrensde support-read zien op groepsniveau. Gebruik de uitkomst om te bepalen welke managementcontext het bestaande people-signaal nu mee kleurt, zonder dit te lezen als named leader view, 360-output of performance-oordeel. Huidig ${scanDefinition.signalLabelLower}: ${averageRiskScore?.toFixed(1) ?? '-'} /10.`
   }
 
+  if (scanType === 'culture_assessment') {
+    return `Deze Loep Culture Assessment-campaign laat een jaarlijkse enterprise baseline zien voor board, directie en HR. Gebruik de Loep Culture Index als navigatiesignaal, lees daarna domeinen en segmentpatronen, en houd ranglijsten, causaliteitsclaims en benchmark-first duiding bewust buiten beeld. Huidig ${scanDefinition.signalLabelLower}: ${averageRiskScore?.toFixed(1) ?? '-'} /10.`
+  }
+
+  if (scanType === 'exit') {
+    return 'Deze ExitScan laat een bestuurlijke read zien van terugkerende werkfrictie. Gebruik Frictiescore als openingssignaal en lees daarna welke werkfactoren en verschillen het vertrekbeeld nu het sterkst kleuren.'
+  }
+
   return `Bekijk eerst welke factoren het laagst scoren en waar de grootste verschillen zichtbaar zijn.`
 }
 
@@ -280,6 +288,19 @@ export function buildDecisionPanels({
     ]
   }
 
+  if (stats.scan_type === 'culture_assessment') {
+    return [
+      ...sharedPanels,
+      {
+        eyebrow: 'Governancegrens',
+        title: 'Managerlaag blijft locked',
+        value: 'Standaard dicht',
+        body: 'Gebruik Loep Culture Index, domeinen en segmentpatronen eerst op geaggregeerd niveau. Named manager detail blijft standaard locked en opent niet als ranglijst-, causaliteits- of benchmarklaag.',
+        tone: 'slate',
+      },
+    ]
+  }
+
   return [
     ...sharedPanels,
     {
@@ -301,6 +322,7 @@ export function buildNextStepTitle(scanType: ScanType, hasEnoughData: boolean, h
   if (scanType === 'team') return 'Lokaal verifieren'
   if (scanType === 'onboarding') return 'Checkpoint duiden'
   if (scanType === 'leadership') return 'Managementcontext toetsen'
+  if (scanType === 'culture_assessment') return 'Bestuurlijk duiden en begrenzen'
   return scanType === 'retention' ? 'Valideren en prioriteren' : 'Duiden en verbeteren'
 }
 
@@ -359,6 +381,12 @@ export function buildNextStepBody({
       : 'Gebruik de compact gemeten werkfactoren om te kiezen welke managementcontext nu als eerste een begrensde check verdient.'
   }
 
+  if (scanType === 'culture_assessment') {
+    return topFactor
+      ? `Gebruik ${topFactor.toLowerCase()} als eerste board-read spoor, lees de Loep Culture Index alleen als navigatiesignaal en bepaal daarna welke bestuurlijke vervolgvraag nu binnen governancegrenzen aandacht vraagt.`
+      : 'Lees de Loep Culture Index eerst als navigatiesignaal en bepaal daarna welke bestuurlijke vervolgvraag nu het scherpst telt voor board, directie of HR.'
+  }
+
   return topFactor
     ? `Gebruik Frictiescore als openingssignaal en ${topFactor.toLowerCase()} als eerste werkfrictiespoor om te bepalen waar management eerst moet doorvragen en welke verbeteractie binnen 30-90 dagen het meest logisch is.`
     : 'Gebruik Frictiescore als openingssignaal en werkfrictie als verklarende laag om het eerstvolgende verbetergesprek te richten.'
@@ -386,7 +414,8 @@ export function getDisclosureDefaults({
       scanType === 'exit' ||
       scanType === 'pulse' ||
       scanType === 'onboarding' ||
-      scanType === 'leadership',
+      scanType === 'leadership' ||
+      scanType === 'culture_assessment',
   }
 }
 
@@ -429,7 +458,9 @@ export function buildInsightWarnings({
               : scanType === 'onboarding'
                 ? 'Lees onboarding als checkpoint-read'
                 : scanType === 'leadership'
-                ? 'Lees Leadership Scan als bounded support-read'
+                  ? 'Lees Leadership Scan als bounded support-read'
+                  : scanType === 'culture_assessment'
+                    ? 'Lees Loep Culture Assessment als executive baseline'
                 : 'Lees dit als managementinput',
       body:
         scanType === 'retention'
@@ -442,6 +473,8 @@ export function buildInsightWarnings({
                 ? 'Onboarding blijft een checkpoint-read op groepsniveau. Gebruik de uitkomst om vroege integratie en frictie te duiden, niet als performance-oordeel, retentievoorspelling of volledige 30-60-90-journey.'
                 : scanType === 'leadership'
                   ? 'Leadership Scan blijft een geaggregeerde bounded support-read op groepsniveau. Gebruik de uitkomst om managementcontext te duiden, niet om individuele leidinggevenden te beoordelen of named leaders te rangschikken.'
+                  : scanType === 'culture_assessment'
+                    ? 'Loep Culture Assessment blijft een jaarlijkse executive baseline. Gebruik Loep Culture Index, domeinen en segmentpatronen als navigatiesignaal voor bestuurlijke aandacht, niet als benchmark-first oordeel, causaliteitsclaim of manager-ranglijst.'
             : 'ExitScan bundelt vertrekervaringen tot managementpatronen. Gebruik deze uitkomsten om gesprekken te richten, niet om een score als sluitend bewijs te behandelen.',
       tone: 'slate',
     })
