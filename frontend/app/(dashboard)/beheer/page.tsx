@@ -4,14 +4,7 @@ import type { ReactNode } from 'react'
 import { AddRespondentsForm } from '@/components/dashboard/add-respondents-form'
 import { ArchiveOrgButton } from '@/components/dashboard/archive-org-button'
 import { ClientAccessList } from '@/components/dashboard/client-access-list'
-import {
-  DashboardChip,
-  DashboardDisclosure,
-  DashboardHero,
-  DashboardPanel,
-  DashboardSection,
-  DashboardSummaryBar,
-} from '@/components/dashboard/dashboard-primitives'
+import { DashboardChip, DashboardDisclosure, DashboardPanel } from '@/components/dashboard/dashboard-primitives'
 import { DeleteOrgButton } from '@/components/dashboard/delete-org-button'
 import { InviteClientUserForm } from '@/components/dashboard/invite-client-user-form'
 import { NewCampaignForm } from '@/components/dashboard/new-campaign-form'
@@ -42,6 +35,8 @@ function buildSetupHref(orgId: string | null, campaignId?: string | null) {
   if (campaignId) params.set('campaign', campaignId)
   return params.size > 0 ? `/beheer?${params.toString()}` : '/beheer'
 }
+
+type StepCardState = 'active' | 'complete' | 'locked'
 
 export default async function BeheerPage({
   searchParams,
@@ -122,384 +117,389 @@ export default async function BeheerPage({
     actionCenterHealth.missingEventTypes.length
   const proofPublicCount = proofSummary.publicUsableCount
 
+  const step1State: StepCardState = step1Done ? 'complete' : 'active'
+  const step2State: StepCardState = activeOrgs.length === 0 ? 'locked' : step2Done ? 'complete' : 'active'
+  const step3State: StepCardState =
+    respondentsLocked || !selectedOrganization || !selectedCampaign ? 'locked' : step3Done ? 'complete' : 'active'
+  const step4State: StepCardState =
+    clientAccessLocked || !selectedOrganization || !selectedCampaign ? 'locked' : step4Done ? 'complete' : 'active'
+
   return (
-    <div className="space-y-6">
-      <DashboardHero
-        surface="ops"
-        tone="slate"
-        eyebrow="Admin"
-        title="Setuphub voor nieuwe klant en campaign"
-        description="Zet hier organisaties, campaigns, respondentimport en klanttoegang op in een compacte vaste volgorde."
-        meta={
-          <>
-            <DashboardChip
-              surface="ops"
-              label={`${activeOrgs.length} actieve organisatie${activeOrgs.length === 1 ? '' : 's'}`}
-            />
-            <DashboardChip
-              surface="ops"
-              label={`${activeCampaignCount ?? 0} actieve campaign${activeCampaignCount === 1 ? '' : 's'}`}
-              tone="slate"
-            />
-            <DashboardChip
-              surface="ops"
-              label={
-                pendingActivations === 0
-                  ? 'Geen open activaties'
-                  : `${pendingActivations} activatie${pendingActivations === 1 ? '' : 's'} wacht`
-              }
-              tone={pendingActivations > 0 ? 'amber' : 'slate'}
-            />
-          </>
-        }
-      />
-
-      <DashboardSummaryBar
-        surface="ops"
-        items={[
-          {
-            label: 'Organisaties',
-            value: `${activeOrgs.length}`,
-            tone: activeOrgs.length > 0 ? 'emerald' : 'slate',
-          },
-          {
-            label: 'Campaigns',
-            value: `${activeCampaignCount ?? 0}`,
-            tone: (activeCampaignCount ?? 0) > 0 ? 'emerald' : 'slate',
-          },
-          {
-            label: 'Respondenten',
-            value: `${liveRespondentCount} gekoppeld`,
-            tone: liveRespondentCount > 0 ? 'emerald' : 'slate',
-          },
-          {
-            label: 'Activaties',
-            value: pendingActivations === 0 ? 'Geen wachtrij' : `${pendingActivations} wacht`,
-            tone: pendingActivations > 0 ? 'amber' : 'slate',
-          },
-        ]}
-        anchors={[
-          { id: 'setup', label: 'Setup' },
-          { id: 'werkbanken', label: 'Werkbanken' },
-          { id: 'operations', label: 'Operations' },
-        ]}
-      />
-
-      <DashboardSection
-        id="setup"
-        surface="ops"
-        eyebrow="Setup"
-        title="Primaire setupflow"
-        description="Werk eerst organisatie, campaign, respondenten en klanttoegang af. Latere adminwerkbanken blijven beschikbaar, maar staan niet meer vooraan."
-        aside={
-          <DashboardChip
-            surface="ops"
-            label={`${setupProgressCount}/4 setupstappen actief`}
-            tone={setupProgressCount === 4 ? 'emerald' : 'amber'}
-          />
-        }
-      >
-        <div className="space-y-5">
-          <div className="rounded-[22px] border border-slate-200 bg-white px-5 py-5 shadow-[0_8px_24px_rgba(19,32,51,0.04)]">
-            <div className="flex flex-col gap-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                  Actieve setupcontext
-                </p>
-                <p className="mt-2 text-sm text-slate-600">
-                  Gekozen organisatie en campaign bepalen wanneer respondenten en klanttoegang openklappen.
-                </p>
-              </div>
-              <div className="grid gap-4 lg:grid-cols-2">
-                <div className="space-y-3">
-                  <p className="text-sm font-semibold text-slate-900">Organisatie</p>
-                  <div className="flex flex-wrap gap-2">
-                    {activeOrgs.length === 0 ? (
-                      <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-500">
-                        Nog geen actieve organisaties
-                      </span>
-                    ) : (
-                      activeOrgs.map((organization) => (
-                        <Link
-                          key={organization.id}
-                          href={buildSetupHref(organization.id)}
-                          className={`rounded-full border px-3 py-2 text-xs font-semibold transition ${
-                            selectedOrganization?.id === organization.id
-                              ? 'border-slate-900 bg-slate-900 text-white'
-                              : 'border-slate-300 bg-slate-50 text-slate-700 hover:border-slate-400 hover:bg-white'
-                          }`}
-                        >
-                          {selectedOrganization?.id === organization.id ? 'Actief: ' : ''}
-                          {organization.name}
-                        </Link>
-                      ))
-                    )}
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <p className="text-sm font-semibold text-slate-900">Campaign</p>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedOrganizationCampaigns.length === 0 ? (
-                      <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-500">
-                        Kies of maak eerst een campaign
-                      </span>
-                    ) : (
-                      selectedOrganizationCampaigns.map((campaign) => (
-                        <Link
-                          key={campaign.id}
-                          href={buildSetupHref(selectedOrganization?.id ?? null, campaign.id)}
-                          className={`rounded-full border px-3 py-2 text-xs font-semibold transition ${
-                            selectedCampaign?.id === campaign.id
-                              ? 'border-slate-900 bg-slate-900 text-white'
-                              : 'border-slate-300 bg-slate-50 text-slate-700 hover:border-slate-400 hover:bg-white'
-                          }`}
-                        >
-                          {selectedCampaign?.id === campaign.id ? 'Actief: ' : ''}
-                          {campaign.name}
-                        </Link>
-                      ))
-                    )}
-                  </div>
-                </div>
-              </div>
+    <div className="space-y-8 pb-8">
+      <section className="border border-[#d8d0c2] bg-[#f6f2ea]">
+        <div className="border-b border-[#ddd5c8] px-5 py-4 sm:px-7">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.28em] text-[#6f6557]">
+                Admin console
+              </p>
+              <h1 className="mt-2 text-[2rem] font-semibold tracking-[-0.05em] text-[#111827] sm:text-[2.45rem]">
+                Beheer
+              </h1>
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-[#4a5565]">
+                Nieuwe organisatie en eerste campaign opzetten, daarna pas respondenten en klanttoegang openen.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+              <DashboardChip
+                surface="ops"
+                label={`${setupProgressCount}/4 actief`}
+                tone={setupProgressCount === 4 ? 'emerald' : 'amber'}
+              />
+              <DashboardChip surface="ops" label={`${activeOrgs.length} org`} />
+              <DashboardChip surface="ops" label={`${activeCampaignCount ?? 0} campaign`} />
             </div>
           </div>
+        </div>
+        <div className="grid gap-px bg-[#ddd5c8] sm:grid-cols-2 xl:grid-cols-4">
+          <SetupMetric
+            label="Organisaties"
+            value={`${activeOrgs.length}`}
+            detail={activeOrgs.length === 1 ? 'actieve organisatie' : 'actieve organisaties'}
+          />
+          <SetupMetric
+            label="Campaigns"
+            value={`${activeCampaignCount ?? 0}`}
+            detail={(activeCampaignCount ?? 0) === 1 ? 'actieve campaign' : 'actieve campaigns'}
+          />
+          <SetupMetric
+            label="Respondenten"
+            value={`${liveRespondentCount}`}
+            detail={liveRespondentCount > 0 ? 'gekoppeld aan campaign' : 'nog niet gekoppeld'}
+          />
+          <SetupMetric
+            label="Activaties"
+            value={pendingActivations === 0 ? '0' : `${pendingActivations}`}
+            detail={pendingActivations === 0 ? 'geen wachtrij' : 'wacht op activatie'}
+          />
+        </div>
+      </section>
 
-          <div className="grid gap-5 lg:grid-cols-2">
-            <StepCard done={step1Done} number={1} title="Organisatie">
-              {orgs.length > 0 ? (
-                <div className="space-y-3">
-                  {orgs.map((org) => (
-                    <div
-                      key={org.id}
-                      className="flex items-start justify-between gap-3 rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700"
-                    >
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span
-                            className={`text-xs font-semibold ${
-                              org.is_active ? 'text-emerald-700' : 'text-slate-400'
-                            }`}
-                          >
-                            {org.is_active ? 'Actief' : 'Gearchiveerd'}
-                          </span>
-                          {selectedOrganization?.id === org.id ? (
-                            <DashboardChip surface="ops" label="Setupcontext" tone="slate" />
-                          ) : null}
-                        </div>
-                        <p className="mt-2 font-medium text-slate-900">{org.name}</p>
-                        <p className="mt-1 text-xs text-slate-500">
-                          {campaignCountByOrg[org.id] ?? 0} campaign(s) gekoppeld
-                        </p>
-                        {org.is_active ? (
-                          <Link
-                            href={buildSetupHref(org.id)}
-                            className="mt-3 inline-flex items-center rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
-                          >
-                            {selectedOrganization?.id === org.id ? 'Actieve organisatie' : 'Kies voor setup'}
-                          </Link>
-                        ) : null}
-                      </div>
-                      <div className="flex items-start gap-2">
-                        <ArchiveOrgButton orgId={org.id} orgName={org.name} isActive={org.is_active} />
-                        <DeleteOrgButton
-                          orgId={org.id}
-                          orgName={org.name}
-                          campaignCount={campaignCountByOrg[org.id] ?? 0}
-                        />
-                      </div>
-                    </div>
-                  ))}
-
-                  {archivedOrgs.length > 0 ? (
-                    <p className="text-xs text-slate-500">
-                      Gearchiveerde organisaties blijven zichtbaar voor historie, maar zijn geen standaard
-                      setupcontext.
-                    </p>
-                  ) : null}
-
-                  <div className="border-t border-slate-200 pt-3">
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                      Nieuwe organisatie
-                    </p>
-                    <NewOrgForm />
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <DashboardPanel
-                    surface="ops"
-                    eyebrow="Start"
-                    title="Nog geen organisaties zichtbaar"
-                    body="Maak eerst een klantorganisatie aan. Daarna wordt campaign-setup meteen bruikbaar."
-                    tone="slate"
-                  />
-                  <NewOrgForm />
-                </div>
-              )}
-            </StepCard>
-
-            <StepCard done={step2Done} number={2} title="Campaign">
+      <section className="border border-[#243242] bg-[#1d2a38] px-5 py-5 text-white sm:px-7">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.28em] text-white/62">
+              Setupcontext
+            </p>
+            <h2 className="mt-2 text-xl font-semibold tracking-[-0.04em]">Geselecteerde organisatie en campaign</h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-white/70">
+              Respondenten en klanttoegang openen pas echt zodra deze context concreet is.
+            </p>
+          </div>
+          <nav className="flex flex-wrap gap-2">
+            <a
+              href="#setup"
+              className="rounded-full border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white/76 transition hover:bg-white/10"
+            >
+              Setup
+            </a>
+            <a
+              href="#werkbanken"
+              className="rounded-full border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white/76 transition hover:bg-white/10"
+            >
+              Werkbanken
+            </a>
+            <a
+              href="#operations"
+              className="rounded-full border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white/76 transition hover:bg-white/10"
+            >
+              Registries
+            </a>
+          </nav>
+        </div>
+        <div className="mt-5 grid gap-px bg-white/10 lg:grid-cols-2">
+          <SetupContextCard
+            label="ORG"
+            title={selectedOrganization?.name ?? 'Nog geen actieve organisatie'}
+            description={
+              selectedOrganization
+                ? `${selectedOrganizationCampaigns.length} campaign(s) binnen deze setupcontext`
+                : 'Maak of kies eerst een organisatie om de campaignflow te openen.'
+            }
+          >
+            <div className="flex flex-wrap gap-2">
               {activeOrgs.length === 0 ? (
-                <LockedStep message="Maak eerst een actieve organisatie aan of heractiveer een bestaande organisatie." />
+                <span className="border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-white/60">
+                  Geen actieve organisaties
+                </span>
               ) : (
-                <div className="space-y-4">
-                  <DashboardPanel
-                    surface="ops"
-                    eyebrow="Context"
-                    title={
-                      selectedOrganization
-                        ? `Nieuwe campaign voor ${selectedOrganization.name}`
-                        : 'Kies eerst een organisatie'
-                    }
-                    body={
-                      selectedOrganization
-                        ? 'De campaign-selector hieronder blijft open, zodat respondenten en klanttoegang daarna direct op dezelfde setupcontext kunnen aansluiten.'
-                        : 'Kies linksboven een organisatie als setupcontext. Je kunt nog steeds direct een nieuwe campaign aanmaken.'
-                    }
-                    tone="slate"
-                  />
-                  <NewCampaignForm orgs={activeOrgs} />
+                activeOrgs.map((organization) => (
+                  <Link
+                    key={organization.id}
+                    href={buildSetupHref(organization.id)}
+                    className={`px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] transition ${
+                      selectedOrganization?.id === organization.id
+                        ? 'border border-[#c88a18] bg-[#c88a18] text-[#111827]'
+                        : 'border border-white/15 bg-white/5 text-white/76 hover:bg-white/10'
+                    }`}
+                  >
+                    {organization.name}
+                  </Link>
+                ))
+              )}
+            </div>
+          </SetupContextCard>
+          <SetupContextCard
+            label="CAMPAGNE"
+            title={selectedCampaign?.name ?? 'Nog geen campaign gekozen'}
+            description={
+              selectedCampaign
+                ? 'Deze campaign stuurt respondentimport en opent daarna klanttoegang.'
+                : 'Kies of maak eerst een campaign binnen de geselecteerde organisatie.'
+            }
+          >
+            <div className="flex flex-wrap gap-2">
+              {selectedOrganizationCampaigns.length === 0 ? (
+                <span className="border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-white/60">
+                  Geen campaign in context
+                </span>
+              ) : (
+                selectedOrganizationCampaigns.map((campaign) => (
+                  <Link
+                    key={campaign.id}
+                    href={buildSetupHref(selectedOrganization?.id ?? null, campaign.id)}
+                    className={`px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] transition ${
+                      selectedCampaign?.id === campaign.id
+                        ? 'border border-[#c88a18] bg-[#c88a18] text-[#111827]'
+                        : 'border border-white/15 bg-white/5 text-white/76 hover:bg-white/10'
+                    }`}
+                  >
+                    {campaign.name}
+                  </Link>
+                ))
+              )}
+            </div>
+          </SetupContextCard>
+        </div>
+      </section>
 
-                  {selectedOrganizationCampaigns.length > 0 ? (
-                    <div className="space-y-2 border-t border-slate-200 pt-4">
-                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                        Campaigns binnen actieve context
-                      </p>
-                      {selectedOrganizationCampaigns.map((campaign) => (
-                        <div
-                          key={campaign.id}
-                          className={`rounded-[18px] border px-4 py-3 ${
-                            selectedCampaign?.id === campaign.id
-                              ? 'border-slate-900 bg-slate-900 text-white'
-                              : 'border-slate-200 bg-slate-50 text-slate-700'
+      <section id="setup" className="space-y-5">
+        <SectionLead
+          eyebrow="Setup flow"
+          title="Vier vaste stappen, zonder operationsruis bovenaan"
+          description="Organisatie en campaign blijven open werkblokken. Respondenten en klanttoegang worden pas actief zodra de setupcontext er klaar voor is."
+        />
+
+        <div className="grid gap-5 lg:grid-cols-2">
+          <StepCard state={step1State} number={1} title="Organisatie aanmaken" kicker="Altijd open">
+            {orgs.length > 0 ? (
+              <div className="space-y-3">
+                {orgs.map((org) => (
+                  <div
+                    key={org.id}
+                    className="flex items-start justify-between gap-3 border border-[#ded7cb] bg-[#f9f6f0] px-4 py-4 text-sm text-slate-700"
+                  >
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span
+                          className={`font-mono text-[11px] font-semibold uppercase tracking-[0.2em] ${
+                            org.is_active ? 'text-emerald-700' : 'text-slate-400'
                           }`}
                         >
-                          <div className="flex flex-wrap items-center gap-2">
-                            <DashboardChip
-                              surface="ops"
-                              label={getDeliveryModeLabel(campaign.delivery_mode, campaign.scan_type)}
-                              tone="slate"
-                            />
-                            <span
-                              className={`text-xs font-semibold ${
-                                selectedCampaign?.id === campaign.id ? 'text-slate-200' : 'text-slate-500'
-                              }`}
-                            >
-                              {campaign.is_active ? 'Actief' : 'Gearchiveerd'}
-                            </span>
-                          </div>
-                          <p
-                            className={`mt-2 font-medium ${
-                              selectedCampaign?.id === campaign.id ? 'text-white' : 'text-slate-900'
-                            }`}
-                          >
-                            {campaign.name}
-                          </p>
-                          {hasCampaignAddOn(campaign, 'segment_deep_dive') ? (
-                            <p
-                              className={`mt-1 text-xs ${
-                                selectedCampaign?.id === campaign.id ? 'text-slate-200' : 'text-slate-500'
-                              }`}
-                            >
-                              Add-on actief: {REPORT_ADD_ON_LABELS.segment_deep_dive}
-                            </p>
-                          ) : null}
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            <Link
-                              href={buildSetupHref(selectedOrganization?.id ?? null, campaign.id)}
-                              className={`inline-flex items-center rounded-full border px-3 py-2 text-xs font-semibold transition ${
-                                selectedCampaign?.id === campaign.id
-                                  ? 'border-white/30 bg-white/10 text-white hover:bg-white/20'
-                                  : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50'
-                              }`}
-                            >
-                              {selectedCampaign?.id === campaign.id ? 'Actieve campaign' : 'Kies voor setup'}
-                            </Link>
-                            <Link
-                              href={`/campaigns/${campaign.id}`}
-                              className={`inline-flex items-center rounded-full border px-3 py-2 text-xs font-semibold transition ${
-                                selectedCampaign?.id === campaign.id
-                                  ? 'border-white/30 bg-white/10 text-white hover:bg-white/20'
-                                  : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50'
-                              }`}
-                            >
-                              Open resultaten
-                            </Link>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-              )}
-            </StepCard>
-
-            <StepCard done={step3Done} number={3} title="Respondenten" span="full">
-              {respondentsLocked || !selectedOrganization || !selectedCampaign ? (
-                <LockedStep message="Kies eerst een actieve campaign in de setupcontext voordat je respondenten importeert." />
-              ) : (
-                <div className="space-y-4">
-                  <DashboardPanel
-                    surface="ops"
-                    eyebrow="Import"
-                    title={`Importeer voor ${selectedCampaign.name}`}
-                    body="Deze stap opent pas zodra er een concrete campaign is gekozen. De import blijft strikt op CSV/XLSX-format en draait dan alleen op die campaign."
-                    tone="slate"
-                  />
-                  <p className="text-xs text-slate-500">
-                    Actieve setupcontext: {selectedOrganization.name} / {selectedCampaign.name}
-                  </p>
-                  <AddRespondentsForm campaigns={[selectedCampaign]} organizations={[selectedOrganization]} />
-                </div>
-              )}
-            </StepCard>
-
-            <StepCard done={step4Done} number={4} title="Klanttoegang" span="full">
-              {clientAccessLocked || !selectedOrganization || !selectedCampaign ? (
-                <LockedStep message="Kies eerst een actieve campaign in de setupcontext voordat je klanttoegang activeert." />
-              ) : (
-                <div className="space-y-4">
-                  <DashboardPanel
-                    surface="ops"
-                    eyebrow="Toegang"
-                    title={`Activeer toegang voor ${selectedOrganization.name}`}
-                    body="Klanttoegang blijft organisatie-scoped, maar opent hier pas zodra de setupcontext concreet genoeg is om niet te vroeg te activeren."
-                    tone="slate"
-                  />
-                  <p className="text-xs text-slate-500">
-                    Actieve setupcontext: {selectedOrganization.name} / {selectedCampaign.name}
-                  </p>
-                  <InviteClientUserForm orgs={[selectedOrganization]} />
-                  <div className="space-y-3 border-t border-slate-200 pt-4">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                        Uitnodigingen en toegang
-                      </p>
-                      {selectedOrganizationInvites.filter((invite) => !invite.accepted_at).length > 0 ? (
-                        <DashboardChip
-                          surface="ops"
-                          label={`${selectedOrganizationInvites.filter((invite) => !invite.accepted_at).length} wacht op activatie`}
-                          tone="amber"
-                        />
+                          {org.is_active ? 'Actief' : 'Gearchiveerd'}
+                        </span>
+                        {selectedOrganization?.id === org.id ? (
+                          <span className="border border-[#c88a18] bg-[#f4e7c8] px-2 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7a5b18]">
+                            Setupcontext
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="mt-2 text-base font-semibold tracking-[-0.02em] text-[#111827]">{org.name}</p>
+                      <p className="mt-1 text-xs text-slate-500">{campaignCountByOrg[org.id] ?? 0} campaign(s) gekoppeld</p>
+                      {org.is_active ? (
+                        <Link
+                          href={buildSetupHref(org.id)}
+                          className="mt-3 inline-flex items-center rounded-full border border-[#111827] bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#111827] transition hover:bg-[#f4f1ea]"
+                        >
+                          {selectedOrganization?.id === org.id ? 'Actieve organisatie' : 'Kies voor setup'}
+                        </Link>
                       ) : null}
                     </div>
-                    <ClientAccessList invites={selectedOrganizationInvites} />
+                    <div className="flex items-start gap-2">
+                      <ArchiveOrgButton orgId={org.id} orgName={org.name} isActive={org.is_active} />
+                      <DeleteOrgButton orgId={org.id} orgName={org.name} campaignCount={campaignCountByOrg[org.id] ?? 0} />
+                    </div>
                   </div>
-                </div>
-              )}
-            </StepCard>
-          </div>
-        </div>
-      </DashboardSection>
+                ))}
 
-      <DashboardSection
-        id="werkbanken"
-        surface="ops"
-        eyebrow="Primair na setup"
-        title="Kernwerkbanken"
-        description="Alleen leads en learnings blijven primaire specialistische routes naast setup. Billing, health en proof zakken weg naar een secundaire operationslaag."
-      >
+                {archivedOrgs.length > 0 ? (
+                  <p className="text-xs text-slate-500">
+                    Gearchiveerde organisaties blijven zichtbaar voor historie, maar zijn geen standaard setupcontext.
+                  </p>
+                ) : null}
+
+                <div className="border-t border-[#ddd5c8] pt-4">
+                  <p className="mb-2 font-mono text-[11px] font-semibold uppercase tracking-[0.22em] text-[#6f6557]">
+                    Nieuwe organisatie
+                  </p>
+                  <NewOrgForm />
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <DashboardPanel
+                  surface="ops"
+                  eyebrow="Start"
+                  title="Nog geen organisaties zichtbaar"
+                  body="Maak eerst een klantorganisatie aan. Daarna wordt campaign-setup meteen bruikbaar."
+                  tone="slate"
+                />
+                <NewOrgForm />
+              </div>
+            )}
+          </StepCard>
+
+          <StepCard state={step2State} number={2} title="Campaign aanmaken" kicker="Open na organisatie">
+            {activeOrgs.length === 0 ? (
+              <LockedStep message="Maak eerst een actieve organisatie aan of heractiveer een bestaande organisatie." />
+            ) : (
+              <div className="space-y-4">
+                <DashboardPanel
+                  surface="ops"
+                  eyebrow="Context"
+                  title={selectedOrganization ? `Nieuwe campaign voor ${selectedOrganization.name}` : 'Kies eerst een organisatie'}
+                  body={
+                    selectedOrganization
+                      ? 'De campaign-selector hieronder blijft open, zodat respondenten en klanttoegang daarna direct op dezelfde setupcontext kunnen aansluiten.'
+                      : 'Kies in de donkere setupcontext een organisatie. Je kunt daarna meteen een campaign vastzetten.'
+                  }
+                  tone="slate"
+                />
+                <NewCampaignForm orgs={activeOrgs} />
+
+                {selectedOrganizationCampaigns.length > 0 ? (
+                  <div className="space-y-2 border-t border-[#ddd5c8] pt-4">
+                    <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.22em] text-[#6f6557]">
+                      Campaigns binnen actieve context
+                    </p>
+                    {selectedOrganizationCampaigns.map((campaign) => (
+                      <div
+                        key={campaign.id}
+                        className={`border px-4 py-4 ${
+                          selectedCampaign?.id === campaign.id
+                            ? 'border-[#111827] bg-[#111827] text-white'
+                            : 'border-[#ded7cb] bg-[#f9f6f0] text-slate-700'
+                        }`}
+                      >
+                        <div className="flex flex-wrap items-center gap-2">
+                          <DashboardChip
+                            surface="ops"
+                            label={getDeliveryModeLabel(campaign.delivery_mode, campaign.scan_type)}
+                            tone="slate"
+                          />
+                          <span
+                            className={`font-mono text-[11px] font-semibold uppercase tracking-[0.18em] ${
+                              selectedCampaign?.id === campaign.id ? 'text-slate-200' : 'text-slate-500'
+                            }`}
+                          >
+                            {campaign.is_active ? 'Actief' : 'Gearchiveerd'}
+                          </span>
+                        </div>
+                        <p
+                          className={`mt-2 text-base font-semibold tracking-[-0.02em] ${
+                            selectedCampaign?.id === campaign.id ? 'text-white' : 'text-[#111827]'
+                          }`}
+                        >
+                          {campaign.name}
+                        </p>
+                        {hasCampaignAddOn(campaign, 'segment_deep_dive') ? (
+                          <p className={`mt-1 text-xs ${selectedCampaign?.id === campaign.id ? 'text-slate-200' : 'text-slate-500'}`}>
+                            Add-on actief: {REPORT_ADD_ON_LABELS.segment_deep_dive}
+                          </p>
+                        ) : null}
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <Link
+                            href={buildSetupHref(selectedOrganization?.id ?? null, campaign.id)}
+                            className={`inline-flex items-center rounded-full border px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] transition ${
+                              selectedCampaign?.id === campaign.id
+                                ? 'border-white/30 bg-white/10 text-white hover:bg-white/20'
+                                : 'border-[#111827] bg-white text-[#111827] hover:bg-[#f4f1ea]'
+                            }`}
+                          >
+                            {selectedCampaign?.id === campaign.id ? 'Actieve campaign' : 'Kies voor setup'}
+                          </Link>
+                          <Link
+                            href={`/campaigns/${campaign.id}`}
+                            className={`inline-flex items-center rounded-full border px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] transition ${
+                              selectedCampaign?.id === campaign.id
+                                ? 'border-white/30 bg-white/10 text-white hover:bg-white/20'
+                                : 'border-[#111827] bg-white text-[#111827] hover:bg-[#f4f1ea]'
+                            }`}
+                          >
+                            Open resultaten
+                          </Link>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            )}
+          </StepCard>
+
+          <StepCard state={step3State} number={3} title="Respondenten importeren" kicker="Open na campaignselectie" span="full">
+            {respondentsLocked || !selectedOrganization || !selectedCampaign ? (
+              <LockedStep message="Kies eerst een actieve campaign in de setupcontext voordat je respondenten importeert." />
+            ) : (
+              <div className="space-y-4">
+                <DashboardPanel
+                  surface="ops"
+                  eyebrow="Import"
+                  title={`Importeer voor ${selectedCampaign.name}`}
+                  body="Deze stap opent pas zodra er een concrete campaign is gekozen. De import blijft strikt op CSV/XLSX-format en draait dan alleen op die campaign."
+                  tone="slate"
+                />
+                <p className="text-xs text-slate-500">
+                  Actieve setupcontext: {selectedOrganization.name} / {selectedCampaign.name}
+                </p>
+                <AddRespondentsForm campaigns={[selectedCampaign]} organizations={[selectedOrganization]} />
+              </div>
+            )}
+          </StepCard>
+
+          <StepCard state={step4State} number={4} title="Klanttoegang activeren" kicker="Open na campaignselectie" span="full">
+            {clientAccessLocked || !selectedOrganization || !selectedCampaign ? (
+              <LockedStep message="Kies eerst een actieve campaign in de setupcontext voordat je klanttoegang activeert." />
+            ) : (
+              <div className="space-y-4">
+                <DashboardPanel
+                  surface="ops"
+                  eyebrow="Toegang"
+                  title={`Activeer toegang voor ${selectedOrganization.name}`}
+                  body="Klanttoegang blijft organisatie-scoped, maar opent hier pas zodra de setupcontext concreet genoeg is om niet te vroeg te activeren."
+                  tone="slate"
+                />
+                <p className="text-xs text-slate-500">
+                  Actieve setupcontext: {selectedOrganization.name} / {selectedCampaign.name}
+                </p>
+                <InviteClientUserForm orgs={[selectedOrganization]} />
+                <div className="space-y-3 border-t border-[#ddd5c8] pt-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.22em] text-[#6f6557]">
+                      Uitnodigingen en toegang
+                    </p>
+                    {selectedOrganizationInvites.filter((invite) => !invite.accepted_at).length > 0 ? (
+                      <DashboardChip
+                        surface="ops"
+                        label={`${selectedOrganizationInvites.filter((invite) => !invite.accepted_at).length} wacht op activatie`}
+                        tone="amber"
+                      />
+                    ) : null}
+                  </div>
+                  <ClientAccessList invites={selectedOrganizationInvites} />
+                </div>
+              </div>
+            )}
+          </StepCard>
+        </div>
+      </section>
+
+      <section id="werkbanken" className="space-y-4">
+        <SectionLead
+          eyebrow="Secundair na setup"
+          title="Kernwerkbanken"
+          description="Leads en learnings blijven bereikbaar, maar ze onderbreken de setupflow niet meer."
+        />
         <div className="grid gap-3 lg:grid-cols-2">
           <WorkbenchLinkCard
             href="/beheer/contact-aanvragen"
@@ -514,16 +514,15 @@ export default async function BeheerPage({
             body="Open deze werkbank alleen wanneer vroege klantlessen of deliveryfrictie apart vastgelegd moeten worden."
           />
         </div>
-      </DashboardSection>
+      </section>
 
-      <DashboardSection
-        id="operations"
-        surface="ops"
-        eyebrow="Secundair"
-        title="Operations & registries"
-        description="Billing, health en proof blijven beschikbaar als bounded controles. Open ze alleen wanneer setup al staat of wanneer een specifieke registry echt nagekeken moet worden."
-        aside={<DashboardChip surface="ops" label="Secundaire controllaag" tone="slate" />}
-      >
+      <section id="operations" className="space-y-4">
+        <SectionLead
+          eyebrow="Tertiair"
+          title="Operations & registries"
+          description="Billing, health en proof blijven bounded expertlagen. Ze zijn nu bewust later op de pagina gezet en standaard ingeklapt."
+          aside={<DashboardChip surface="ops" label="Secundaire controllaag" tone="slate" />}
+        />
         <DashboardDisclosure
           surface="ops"
           title="Open operations & registries"
@@ -593,14 +592,13 @@ export default async function BeheerPage({
                 actionLabel="Open proof registry"
               />
             </div>
-            <div className="rounded-[20px] border border-slate-200 bg-slate-50 px-5 py-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <div className="border border-[#ddd5c8] bg-[#f9f6f0] px-5 py-4">
+              <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.22em] text-[#6f6557]">
                 Setup-first geheugensteun
               </p>
               <div className="mt-3 grid gap-3 lg:grid-cols-2">
                 <p className="text-sm leading-6 text-slate-700">
-                  Gebruik billing, health en proof pas nadat de setupflow staat of wanneer een specifieke
-                  afwijking dat afdwingt.
+                  Gebruik billing, health en proof pas nadat de setupflow staat of wanneer een specifieke afwijking dat afdwingt.
                 </p>
                 <p className="text-sm leading-6 text-slate-700">
                   {setupBlockers.length > 0
@@ -611,7 +609,69 @@ export default async function BeheerPage({
             </div>
           </div>
         </DashboardDisclosure>
-      </DashboardSection>
+      </section>
+    </div>
+  )
+}
+
+function SectionLead({
+  eyebrow,
+  title,
+  description,
+  aside,
+}: {
+  eyebrow: string
+  title: string
+  description: string
+  aside?: ReactNode
+}) {
+  return (
+    <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+      <div>
+        <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.28em] text-[#6f6557]">{eyebrow}</p>
+        <h2 className="mt-2 text-[1.55rem] font-semibold tracking-[-0.04em] text-[#111827]">{title}</h2>
+        <p className="mt-2 max-w-3xl text-sm leading-6 text-[#4a5565]">{description}</p>
+      </div>
+      {aside ? <div className="lg:text-right">{aside}</div> : null}
+    </div>
+  )
+}
+
+function SetupMetric({
+  label,
+  value,
+  detail,
+}: {
+  label: string
+  value: string
+  detail: string
+}) {
+  return (
+    <div className="bg-white px-5 py-4">
+      <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.24em] text-[#6f6557]">{label}</p>
+      <p className="mt-2 text-[1.6rem] font-semibold tracking-[-0.04em] text-[#111827]">{value}</p>
+      <p className="mt-1 text-xs text-[#6b7280]">{detail}</p>
+    </div>
+  )
+}
+
+function SetupContextCard({
+  label,
+  title,
+  description,
+  children,
+}: {
+  label: string
+  title: string
+  description: string
+  children: ReactNode
+}) {
+  return (
+    <div className="bg-[#243242] px-5 py-4">
+      <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.24em] text-white/55">{label}</p>
+      <p className="mt-2 text-lg font-semibold tracking-[-0.03em] text-white">{title}</p>
+      <p className="mt-2 text-sm leading-6 text-white/70">{description}</p>
+      <div className="mt-4">{children}</div>
     </div>
   )
 }
@@ -630,11 +690,11 @@ function WorkbenchLinkCard({
   return (
     <Link
       href={href}
-      className="rounded-[20px] border border-slate-200 bg-white px-5 py-5 shadow-[0_8px_24px_rgba(19,32,51,0.04)] transition hover:border-slate-300 hover:bg-slate-50"
+      className="border border-[#ded7cb] bg-[#fbf8f2] px-5 py-5 transition hover:border-[#c8bca8] hover:bg-white"
     >
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{eyebrow}</p>
-      <p className="mt-3 text-lg font-semibold tracking-[-0.02em] text-slate-950">{title}</p>
-      <p className="mt-3 text-sm leading-6 text-slate-600">{body}</p>
+      <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.22em] text-[#6f6557]">{eyebrow}</p>
+      <p className="mt-3 text-lg font-semibold tracking-[-0.03em] text-[#111827]">{title}</p>
+      <p className="mt-3 text-sm leading-6 text-[#4a5565]">{body}</p>
     </Link>
   )
 }
@@ -659,15 +719,8 @@ function OperationsRegistryCard({
   actionLabel: string
 }) {
   return (
-    <div className="rounded-[20px] border border-slate-200 bg-white p-5 shadow-[0_8px_24px_rgba(19,32,51,0.04)]">
-      <DashboardPanel
-        surface="ops"
-        eyebrow={eyebrow}
-        title={title}
-        value={value}
-        body={body}
-        tone={tone}
-      />
+    <div className="border border-[#ded7cb] bg-white p-5">
+      <DashboardPanel surface="ops" eyebrow={eyebrow} title={title} value={value} body={body} tone={tone} />
       <div className="mt-4 space-y-2 text-xs text-slate-600">
         {detailLines.map((line) => (
           <p key={line}>{line}</p>
@@ -684,33 +737,69 @@ function OperationsRegistryCard({
 }
 
 function StepCard({
-  done,
+  state,
   number,
   title,
+  kicker,
   children,
   span = 'half',
 }: {
-  done: boolean
+  state: StepCardState
   number: number
   title: string
+  kicker: string
   children: ReactNode
   span?: 'half' | 'full'
 }) {
+  const isComplete = state === 'complete'
+  const isLocked = state === 'locked'
+
   return (
     <section
-      className={`rounded-[22px] border bg-white p-5 shadow-[0_8px_24px_rgba(19,32,51,0.04)] ${
+      className={`relative border bg-white p-5 ${
         span === 'full' ? 'lg:col-span-2' : ''
-      } ${done ? 'border-emerald-200' : 'border-slate-200'}`}
+      } ${
+        isLocked
+          ? 'border-[#e3ddd1] bg-[#f7f5f1]'
+          : isComplete
+            ? 'border-[#d7e4dd]'
+            : 'border-[#d8d0c2]'
+      }`}
     >
-      <div className="mb-4 flex items-center gap-2">
+      <div
+        className={`absolute inset-x-0 top-0 h-1 ${
+          isLocked ? 'bg-[#d7d1c8]' : isComplete ? 'bg-[#3c8d8a]' : 'bg-[#c88a18]'
+        }`}
+      />
+      <div className="mb-5 flex items-start justify-between gap-3 pt-2">
+        <div className="flex items-center gap-3">
+          <div
+            className={`flex h-8 w-8 flex-shrink-0 items-center justify-center font-mono text-[11px] font-semibold uppercase tracking-[0.16em] ${
+              isLocked
+                ? 'border border-[#d8d0c2] bg-white text-[#8b8174]'
+                : isComplete
+                  ? 'bg-[#3c8d8a] text-white'
+                  : 'bg-[#111827] text-white'
+            }`}
+          >
+            {isComplete ? 'OK' : number}
+          </div>
+          <div>
+            <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.22em] text-[#6f6557]">{kicker}</p>
+            <h2 className="mt-2 text-[1.05rem] font-semibold tracking-[-0.03em] text-[#111827]">{title}</h2>
+          </div>
+        </div>
         <div
-          className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-            done ? 'bg-emerald-600 text-white' : 'bg-slate-900 text-white'
+          className={`border px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] ${
+            isLocked
+              ? 'border-[#d8d0c2] bg-white text-[#8b8174]'
+              : isComplete
+                ? 'border-[#b9d7cd] bg-[#edf7f3] text-[#3c8d8a]'
+                : 'border-[#e6d6af] bg-[#fbf5e7] text-[#8c6b1f]'
           }`}
         >
-          {done ? 'âœ“' : number}
+          {isLocked ? 'Locked' : isComplete ? 'Complete' : 'Active'}
         </div>
-        <h2 className="text-base font-semibold text-slate-900">{title}</h2>
       </div>
       {children}
     </section>
@@ -719,8 +808,11 @@ function StepCard({
 
 function LockedStep({ message }: { message: string }) {
   return (
-    <div className="rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
-      {message}
+    <div className="border border-[#ddd5c8] bg-white px-4 py-4">
+      <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.22em] text-[#8c6b1f]">
+        Actief na campaignselectie
+      </p>
+      <p className="mt-2 text-sm leading-6 text-[#5b6573]">{message}</p>
     </div>
   )
 }
