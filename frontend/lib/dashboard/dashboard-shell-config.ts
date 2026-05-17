@@ -87,7 +87,7 @@ export function isDashboardNavActive(pathname: string, href: string) {
 function getDashboardCurrentLabel(pathname: string) {
   if (pathname.startsWith('/campaigns/')) return 'Campagnedetail'
   if (pathname.startsWith('/beheer/contact-aanvragen')) return 'Leadcontext'
-  if (pathname.startsWith('/beheer/klantlearnings')) return 'Learningoverzicht'
+  if (pathname.startsWith('/beheer/klantlearnings')) return 'Learnings'
   if (pathname.startsWith('/beheer')) return 'Setup en beheer'
   return 'Campagneoverzicht'
 }

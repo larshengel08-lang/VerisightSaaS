@@ -39,9 +39,9 @@ export default async function HealthPage() {
       <DashboardHero
         surface="ops"
         tone="slate"
-        eyebrow="Health review"
-        title="Suite health evidence"
-        description="Gebruik deze route als bounded health-check voor activatie, denied access en Action Center follow-through. Geen analytics-stack, wel compacte operations-evidence."
+        eyebrow="Transition deep link"
+        title="Health transition registry"
+        description="Gebruik deze route als expert registry voor activatie, denied access en Action Center follow-through zodra een setup- of supportvraag daarom vraagt. Dit is een verdiepingslaag, geen primaire beheerbestemming."
         meta={
           <>
             <DashboardChip surface="ops" label={`${counts.owner_access_confirmed} owner access`} tone="emerald" />
@@ -59,8 +59,8 @@ export default async function HealthPage() {
       />
 
       <DashboardSection
-        title="Kernsignalen"
-        description="Gebruik de minimale signal set om wekelijks snel te zien waar activatie of follow-through begint te schuiven."
+        title="Expert registry"
+        description="Open deze deep link alleen wanneer activation evidence of follow-through coverage opnieuw gelezen moet worden."
       >
         <div className="grid gap-4 lg:grid-cols-3">
           <DashboardPanel title="Owner access confirmed" value={`${counts.owner_access_confirmed}`} body="Owner-toegang bevestigd binnen de insights-shell." tone="emerald" />

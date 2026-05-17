@@ -43,9 +43,9 @@ export default async function BillingPage() {
       <DashboardHero
         surface="ops"
         tone="slate"
-        eyebrow="Billing en self-serve"
-        title="Billing registry"
-        description="Gebruik deze route als compacte registry voor contract, betaalwijze en launch-readiness. Dit blijft een bounded adminlaag, geen commerciële of checkout-surface."
+        eyebrow="Transition deep link"
+        title="Billing transition registry"
+        description="Gebruik deze route als expert registry voor contract, betaalwijze en launch-readiness zodra setup of delivery daar expliciet om vraagt. Dit blijft een tijdelijke verdiepingslaag, geen primaire beheerbestemming."
         meta={
           <>
             <DashboardChip surface="ops" label={`${summary.readyCount} launch-ready`} tone="emerald" />
@@ -62,7 +62,10 @@ export default async function BillingPage() {
         }
       />
 
-      <DashboardSection title="Bounded runtime truth" description="Gebruik deze laag alleen om billingwaarheid en assisted launch-readiness snel te bevestigen.">
+      <DashboardSection
+        title="Expert registry"
+        description="Open deze deep link alleen wanneer billingwaarheid of assisted launch-readiness het setupspoor echt blokkeert."
+      >
         <div className="grid gap-4 lg:grid-cols-3">
           <DashboardPanel title="Launch-ready" value={`${summary.readyCount}`} body="Organisaties met contract en betaalwijze op orde." tone="emerald" />
           <DashboardPanel title="Nog assisted te bevestigen" value={`${summary.pendingCount}`} body="Rows waar contract of betaalstap nog openstaat." tone="amber" />
