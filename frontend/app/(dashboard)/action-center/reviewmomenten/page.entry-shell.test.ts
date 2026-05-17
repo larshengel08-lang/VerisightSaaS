@@ -25,5 +25,7 @@ describe('action center reviewmomenten entry shell', () => {
     expect(source).toContain('manageableReviewRhythmRouteIds=')
     expect(source).toContain('nativeCalendarEligibleRouteIds=')
     expect(source).toContain('rhythmConfigByRouteId=')
+    expect(source).toContain('oversightSummary={rhythmData.oversight.summary}')
+    expect(source).toContain('oversightAttentionItems={rhythmData.oversight.attentionItems}')
   })
 })

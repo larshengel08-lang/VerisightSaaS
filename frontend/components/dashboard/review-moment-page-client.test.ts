@@ -57,10 +57,13 @@ describe('review moment page client source', () => {
     const source = readFileSync(new URL('./review-moment-page-client.tsx', import.meta.url), 'utf8')
 
     expect(source).toContain('ReviewRhythmConsole')
+    expect(source).toContain('ReviewRhythmOversight')
     expect(source).toContain('manageableReviewRhythmRouteIds')
     expect(source).toContain('new Set(manageableReviewRhythmRouteIds)')
     expect(source).toContain('canManageSelectedReviewRhythm')
     expect(source).toContain('rhythmConfigByRouteId')
+    expect(source).toContain('oversightSummary')
+    expect(source).toContain('oversightAttentionItems')
     expect(source).toContain('buildDefaultActionCenterReviewRhythmConfig')
     expect(source).toContain('getActionCenterEnabledRouteDefaults(routeScanTypeByRouteId[getReviewMomentRouteId(selectedItem)])')
     expect(source).toContain('selectedRouteId={selectedRhythmItem ? selectedRhythmItem.coreSemantics.route.routeId : null}')
@@ -84,6 +87,8 @@ describe('review moment page client source', () => {
       'uitnodiging',
       'activatie',
       'workflow builder',
+      'task board',
+      'project planning',
       'outlook',
       'mail engine',
       'pending',

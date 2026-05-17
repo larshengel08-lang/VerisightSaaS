@@ -9,7 +9,12 @@ import {
   DashboardSection,
 } from '@/components/dashboard/dashboard-primitives'
 import { ReviewRhythmConsole } from '@/components/dashboard/review-rhythm-console'
+import { ReviewRhythmOversight } from '@/components/dashboard/review-rhythm-oversight'
 import type { ActionCenterPreviewItem, ActionCenterPreviewStatus } from '@/lib/action-center-preview-model'
+import type {
+  ActionCenterReviewOversightAttentionItem,
+  ActionCenterReviewOversightSummary,
+} from '@/lib/action-center-review-oversight'
 import {
   getActionCenterEnabledRouteDefaults,
   type ActionCenterRouteDefaultsKnownScanType,
@@ -113,6 +118,8 @@ export function ReviewMomentPageClient({
   manageableReviewRhythmRouteIds,
   nativeCalendarEligibleRouteIds,
   rhythmConfigByRouteId,
+  oversightSummary,
+  oversightAttentionItems,
 }: {
   items: ActionCenterPreviewItem[]
   governanceCounts: ReviewMomentGovernanceCounts
@@ -124,6 +131,8 @@ export function ReviewMomentPageClient({
   manageableReviewRhythmRouteIds: string[]
   nativeCalendarEligibleRouteIds: string[]
   rhythmConfigByRouteId: Record<string, ActionCenterReviewRhythmConfig>
+  oversightSummary: ActionCenterReviewOversightSummary
+  oversightAttentionItems: ActionCenterReviewOversightAttentionItem[]
 }) {
   const [statusFilter, setStatusFilter] = useState<'all' | ActionCenterPreviewStatus>('all')
   const [scopeFilter, setScopeFilter] = useState<string>('all')
@@ -334,6 +343,11 @@ export function ReviewMomentPageClient({
         completedCount={grouped.completed.length}
         showCompleted={showCompleted}
         onToggleCompleted={() => setShowCompleted((current) => !current)}
+      />
+
+      <ReviewRhythmOversight
+        summary={oversightSummary}
+        attentionItems={oversightAttentionItems}
       />
 
       <div id="review-lanes" className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr),minmax(320px,0.82fr)]">
