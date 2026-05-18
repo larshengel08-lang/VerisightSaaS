@@ -176,7 +176,7 @@ export default async function BeheerPage() {
         description="Werk de setup hier direct af in vaste volgorde."
         aside={<DashboardChip surface="ops" label={`${campaigns.length} campaign${campaigns.length === 1 ? '' : 's'} totaal`} />}
       >
-        <div className="grid gap-5 lg:grid-cols-2">
+        <div className="grid gap-5">
           <StepCard done={step1Done} number={1} title="Organisatie aanmaken">
             {orgs.length > 0 ? (
               <div className="space-y-2">
