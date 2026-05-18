@@ -13,6 +13,8 @@ describe('beheer admin alignment', () => {
     expect(source).toContain('Klanttoegang activeren')
     expect(source).toContain('Secundaire werkbanken')
     expect(source).toContain('Operations & registries')
+    expect(source).toContain('Bestaande organisaties')
+    expect(source).toContain('Bestaande campaigns')
     expect(source).not.toContain('DashboardHero')
     expect(source).not.toContain('DashboardSummaryBar')
     expect(source).not.toContain('Operationele setup')
