@@ -2,25 +2,20 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import {
+  CAMPAIGN_SCAN_OPTIONS,
+  getCampaignNamePlaceholder,
+  getDefaultModulesForScanType,
+  isBaselineOnlyScanType,
+  supportsCampaignModuleSelection,
+  supportsCampaignReportAddOns,
+} from '@/lib/campaign-setup'
 import { createClient } from '@/lib/supabase/client'
 import type { DeliveryMode, Organization, ScanType } from '@/lib/types'
-import { FACTOR_LABELS, REPORT_ADD_ON_DESCRIPTIONS, REPORT_ADD_ON_LABELS } from '@/lib/types'
+import { FACTOR_LABELS, REPORT_ADD_ON_LABELS } from '@/lib/types'
 
 const ORG_FACTORS = ['leadership', 'culture', 'growth', 'compensation', 'workload', 'role_clarity']
 const REPORT_ADD_ONS = ['segment_deep_dive'] as const
-const ONBOARDING_DEFAULT_MODULES = ['leadership', 'role_clarity', 'culture', 'growth']
-const PULSE_DEFAULT_MODULES = ['leadership', 'growth', 'workload']
-const TEAM_DEFAULT_MODULES = ['leadership', 'culture', 'workload', 'role_clarity']
-const LEADERSHIP_DEFAULT_MODULES = ['leadership', 'role_clarity', 'culture', 'growth']
-
-const SCAN_OPTIONS: Array<{ value: ScanType; title: string; short: string }> = [
-  { value: 'exit', title: 'ExitScan', short: 'Vertrek en frictie' },
-  { value: 'retention', title: 'RetentieScan', short: 'Behoud onder druk' },
-  { value: 'pulse', title: 'Pulse', short: 'Korte momentcheck' },
-  { value: 'team', title: 'TeamScan', short: 'Lokaal teambeeld' },
-  { value: 'onboarding', title: 'Onboarding 30-60-90', short: 'Vroege instroomcheck' },
-  { value: 'leadership', title: 'Leadership Scan', short: 'Geaggregeerde managementread' },
-]
 
 interface Props {
   orgs: Organization[]
@@ -39,18 +34,7 @@ export function NewCampaignForm({ orgs }: Props) {
   const supabase = createClient()
 
   const hasSegmentDeepDive = modules.includes('segment_deep_dive')
-  const campaignNamePlaceholder =
-    scanType === 'exit'
-      ? 'ExitScan Q2 2026'
-      : scanType === 'retention'
-        ? 'RetentieScan Voorjaar 2026'
-        : scanType === 'pulse'
-          ? 'Pulse April 2026'
-          : scanType === 'team'
-            ? 'TeamScan Operations Q2 2026'
-            : scanType === 'onboarding'
-              ? 'Onboarding checkpoint Mei 2026'
-              : 'Leadership Scan Juni 2026'
+  const campaignNamePlaceholder = getCampaignNamePlaceholder(scanType)
 
   function toggleModule(module: string) {
     setModules((prev) => (prev.includes(module) ? prev.filter((entry) => entry !== module) : [...prev, module]))
@@ -58,32 +42,10 @@ export function NewCampaignForm({ orgs }: Props) {
 
   function handleScanTypeChange(nextScanType: ScanType) {
     setScanType(nextScanType)
-
-    if (nextScanType === 'pulse') {
+    if (isBaselineOnlyScanType(nextScanType)) {
       setDeliveryMode('baseline')
-      setModules(PULSE_DEFAULT_MODULES)
-      return
     }
-
-    if (nextScanType === 'team') {
-      setDeliveryMode('baseline')
-      setModules(TEAM_DEFAULT_MODULES)
-      return
-    }
-
-    if (nextScanType === 'onboarding') {
-      setDeliveryMode('baseline')
-      setModules(ONBOARDING_DEFAULT_MODULES)
-      return
-    }
-
-    if (nextScanType === 'leadership') {
-      setDeliveryMode('baseline')
-      setModules(LEADERSHIP_DEFAULT_MODULES)
-      return
-    }
-
-    setModules((current) => current.filter((module) => module !== 'segment_deep_dive'))
+    setModules(getDefaultModulesForScanType(nextScanType))
   }
 
   async function handleSubmit(event: React.FormEvent) {
@@ -147,7 +109,7 @@ export function NewCampaignForm({ orgs }: Props) {
       </div>
 
       <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
-        {SCAN_OPTIONS.map((option) => (
+        {CAMPAIGN_SCAN_OPTIONS.map((option) => (
           <button
             key={option.value}
             type="button"
@@ -166,7 +128,7 @@ export function NewCampaignForm({ orgs }: Props) {
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Kies route</p>
       </div>
 
-      <div className={`grid gap-2 ${scanType === 'pulse' || scanType === 'team' || scanType === 'onboarding' || scanType === 'leadership' ? 'sm:grid-cols-1' : 'sm:grid-cols-2'}`}>
+      <div className={`grid gap-2 ${isBaselineOnlyScanType(scanType) ? 'sm:grid-cols-1' : 'sm:grid-cols-2'}`}>
         {([
           {
             value: 'baseline',
@@ -178,7 +140,7 @@ export function NewCampaignForm({ orgs }: Props) {
             value: 'live',
             title: 'Live / vervolgroute',
             body: 'Alleen voor vervolggebruik.',
-            disabled: scanType === 'pulse' || scanType === 'team' || scanType === 'onboarding' || scanType === 'leadership',
+            disabled: isBaselineOnlyScanType(scanType),
           },
         ] as const).map((option) => (
           <button
@@ -199,46 +161,48 @@ export function NewCampaignForm({ orgs }: Props) {
       </div>
 
       <div
-        className={`rounded-[22px] border p-4 text-sm leading-6 ${
+        className={`rounded-[22px] border p-3 text-sm ${
           deliveryMode === 'baseline'
             ? 'border-emerald-100 bg-emerald-50 text-emerald-950'
             : 'border-amber-100 bg-amber-50 text-amber-950'
         }`}
       >
-        <p className="font-semibold">{deliveryMode === 'baseline' ? 'Aanbevolen default' : 'Bewuste afwijking op de standaardroute'}</p>
-        {deliveryMode === 'live' ? (
-          <p className="mt-2 text-xs text-amber-900">Gebruik live pas nadat baseline, importkwaliteit en eigenaarschap staan.</p>
-        ) : (
-          <p className="mt-2 text-xs text-emerald-900">Gebruik baseline voor de eerste setup en eerste uitleesbare wave.</p>
-        )}
+        <p className="font-semibold">{deliveryMode === 'baseline' ? 'Baseline is de standaardroute.' : 'Live alleen na een stabiele baseline.'}</p>
       </div>
 
-      <div>
-        <label className="mb-1 block text-sm font-medium text-slate-700">
-          Surveymodules <span className="text-xs font-normal text-slate-400">(leeg = volledige scan)</span>
-        </label>
-        <div className="grid gap-2 sm:grid-cols-2">
-          {ORG_FACTORS.map((factor) => (
-            <label key={factor} className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
-              <input
-                type="checkbox"
-                checked={modules.includes(factor)}
-                onChange={() => toggleModule(factor)}
-                className="rounded"
-              />
-              {FACTOR_LABELS[factor]}
-            </label>
-          ))}
+      {supportsCampaignModuleSelection(scanType) ? (
+        <div>
+          <label className="mb-1 block text-sm font-medium text-slate-700">
+            Surveymodules <span className="text-xs font-normal text-slate-400">(leeg = volledige scan)</span>
+          </label>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {ORG_FACTORS.map((factor) => (
+              <label key={factor} className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={modules.includes(factor)}
+                  onChange={() => toggleModule(factor)}
+                  className="rounded"
+                />
+                {FACTOR_LABELS[factor]}
+              </label>
+            ))}
+          </div>
+          <p className="mt-2 text-xs leading-5 text-slate-500">
+            Pas dit alleen aan wanneer je bewust een compactere subset wilt meten.
+          </p>
         </div>
-        <p className="mt-2 text-xs leading-5 text-slate-500">
-          Pas dit alleen aan wanneer je bewust een compactere subset wilt meten.
-        </p>
-      </div>
+      ) : (
+        <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+          <p className="font-semibold text-slate-900">Vaste instrumentroute</p>
+          <p className="mt-2 text-xs leading-5 text-slate-600">Deze scan gebruikt een vaste baseline-opzet.</p>
+        </div>
+      )}
 
-      {scanType !== 'pulse' && scanType !== 'team' && scanType !== 'onboarding' && scanType !== 'leadership' ? (
+      {supportsCampaignReportAddOns(scanType) ? (
         <div className="rounded-[22px] border border-blue-100 bg-blue-50 p-4">
           <p className="text-sm font-semibold text-slate-900">Rapport-add-ons</p>
-          <div className="mt-3 space-y-3">
+          <div className="mt-3 space-y-2">
             {REPORT_ADD_ONS.map((addOn) => (
               <label key={addOn} className="flex items-start gap-3 rounded-2xl border border-white/80 bg-white/70 p-3 text-sm text-slate-700">
                 <input
@@ -249,7 +213,7 @@ export function NewCampaignForm({ orgs }: Props) {
                 />
                 <span>
                   <span className="block font-medium text-slate-900">{REPORT_ADD_ON_LABELS[addOn]}</span>
-                  <span className="block text-xs leading-5 text-slate-500">{REPORT_ADD_ON_DESCRIPTIONS[addOn]}</span>
+                  <span className="block text-xs leading-5 text-slate-500">Gebruik alleen wanneer extra segmentdetail nodig is.</span>
                 </span>
               </label>
             ))}

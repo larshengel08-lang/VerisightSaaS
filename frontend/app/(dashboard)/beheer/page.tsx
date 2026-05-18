@@ -173,41 +173,55 @@ export default async function BeheerPage() {
         surface="ops"
         eyebrow="Setup"
         title="Organisatie, campaign, import en klanttoegang"
-        description="Werk de setup hier direct af in vaste volgorde."
+        description="Werk de setup direct af in vaste volgorde."
         aside={<DashboardChip surface="ops" label={`${campaigns.length} campaign${campaigns.length === 1 ? '' : 's'} totaal`} />}
       >
         <div className="grid gap-5">
           <StepCard done={step1Done} number={1} title="Organisatie aanmaken">
             {orgs.length > 0 ? (
-              <div className="space-y-2">
-                {orgs.map((org) => (
-                  <div key={org.id} className="flex items-start justify-between gap-3 rounded-[18px] border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-700">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className={org.is_active ? 'text-emerald-600' : 'text-slate-400'}>{org.is_active ? '✓' : '○'}</span>
-                        <span className="font-medium text-slate-900">{org.name}</span>
-                        <span className="truncate text-xs text-slate-400">({org.slug})</span>
-                        {!org.is_active ? (
-                          <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-medium text-slate-600">Gearchiveerd</span>
-                        ) : null}
-                      </div>
-                      <p className="mt-1 text-xs text-slate-500">{campaignCountByOrg[org.id] ?? 0} campaign(s) gekoppeld</p>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <ArchiveOrgButton orgId={org.id} orgName={org.name} isActive={org.is_active} />
-                      <DeleteOrgButton orgId={org.id} orgName={org.name} campaignCount={campaignCountByOrg[org.id] ?? 0} />
-                    </div>
-                  </div>
-                ))}
-
-                {archivedOrgs.length > 0 ? (
-                  <p className="text-xs text-slate-500">Gearchiveerde organisaties blijven beschikbaar voor historie.</p>
-                ) : null}
-
-                <div className="border-t border-slate-200 pt-3">
+              <div className="space-y-4">
+                <div>
                   <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Nieuwe organisatie</p>
                   <NewOrgForm />
                 </div>
+
+                <details className="rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3">
+                  <summary className="cursor-pointer list-none">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Bestaande organisaties</p>
+                        <p className="mt-1 text-sm text-slate-600">{orgs.length} organisatie{orgs.length === 1 ? '' : 's'}</p>
+                      </div>
+                      <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                        {archivedOrgs.length > 0 ? `${archivedOrgs.length} archief` : 'Actueel'}
+                      </span>
+                    </div>
+                  </summary>
+                  <div className="mt-4 space-y-2 border-t border-slate-200 pt-4">
+                    {orgs.map((org) => (
+                      <div
+                        key={org.id}
+                        className="flex flex-col gap-3 rounded-[16px] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 lg:flex-row lg:items-center lg:justify-between"
+                      >
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className={org.is_active ? 'text-emerald-600' : 'text-slate-400'}>{org.is_active ? '✓' : '○'}</span>
+                            <span className="font-medium text-slate-900">{org.name}</span>
+                            <span className="truncate text-xs text-slate-400">({org.slug})</span>
+                            {!org.is_active ? (
+                              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">Archief</span>
+                            ) : null}
+                          </div>
+                          <p className="mt-1 text-xs text-slate-500">{campaignCountByOrg[org.id] ?? 0} campaign(s)</p>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <ArchiveOrgButton orgId={org.id} orgName={org.name} isActive={org.is_active} />
+                          <DeleteOrgButton orgId={org.id} orgName={org.name} campaignCount={campaignCountByOrg[org.id] ?? 0} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </details>
               </div>
             ) : (
               <div className="space-y-3">
@@ -229,14 +243,11 @@ export default async function BeheerPage() {
             {!selectedCampaign ? (
               <LockedStep message="Import wordt actief nadat je een campaign hebt gekozen." />
             ) : (
-              <div className="space-y-5">
+              <div className="space-y-4">
                 <div className="flex flex-wrap items-center gap-2">
                   <DashboardChip surface="ops" label={selectedCampaign.name} tone="slate" />
                   <DashboardChip surface="ops" label={selectedCampaign.scan_type === 'exit' ? 'ExitScan' : 'RetentieScan'} tone="slate" />
                 </div>
-                <p className="text-sm leading-6 text-slate-600">
-                  Gebruik het templatebestand en controleer de preview voordat je de deelnemers koppelt.
-                </p>
 
                 {campaigns.filter((campaign) => campaign.is_active).length === 0 ? (
                   <div className="rounded-[18px] border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
@@ -246,40 +257,52 @@ export default async function BeheerPage() {
 
                 <AddRespondentsForm campaigns={campaigns} organizations={orgs} />
 
-                <div className="space-y-2 border-t border-slate-200 pt-3">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Bestaande campaigns</p>
-                  {campaigns.map((campaign) => (
-                    <div key={campaign.id} className="flex items-center justify-between rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3">
-                      <div className="min-w-0 flex-1">
-                        <div className="mb-0.5 flex flex-wrap items-center gap-2">
-                          <DashboardChip surface="ops" label={campaign.scan_type === 'exit' ? 'ExitScan' : 'RetentieScan'} />
-                          <DashboardChip surface="ops" label={getDeliveryModeLabel(campaign.delivery_mode, campaign.scan_type)} />
-                          <span className={`text-xs font-medium ${campaign.is_active ? 'text-emerald-700' : 'text-slate-400'}`}>
-                            {campaign.is_active ? '● Actief' : '○ Gearchiveerd'}
-                          </span>
-                        </div>
-                        <p className="truncate text-sm font-medium text-slate-900">{campaign.name}</p>
-                        {hasCampaignAddOn(campaign, 'segment_deep_dive') ? (
-                          <p className="mt-1 text-xs font-medium text-slate-700">Add-on actief: {REPORT_ADD_ON_LABELS.segment_deep_dive}</p>
-                        ) : null}
-                        <p className="text-xs text-slate-500">
-                          Aangemaakt{' '}
-                          {new Date(campaign.created_at).toLocaleDateString('nl-NL', {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric',
-                          })}
-                        </p>
+                <details className="rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3">
+                  <summary className="cursor-pointer list-none">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Bestaande campaigns</p>
+                        <p className="mt-1 text-sm text-slate-600">{campaigns.length} campaign{campaigns.length === 1 ? '' : 's'}</p>
                       </div>
-                      <a
-                        href={`/campaigns/${campaign.id}`}
-                        className="ml-4 flex-shrink-0 rounded-full border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
-                      >
-                        {campaign.is_active ? 'Open campaign' : 'Bekijk archief'}
-                      </a>
+                      <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Overzicht</span>
                     </div>
-                  ))}
-                </div>
+                  </summary>
+                  <div className="mt-4 space-y-2 border-t border-slate-200 pt-4">
+                    {campaigns.map((campaign) => (
+                      <div
+                        key={campaign.id}
+                        className="flex flex-col gap-3 rounded-[16px] border border-slate-200 bg-white px-4 py-3 lg:flex-row lg:items-center lg:justify-between"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="mb-1 flex flex-wrap items-center gap-2">
+                            <DashboardChip surface="ops" label={campaign.scan_type === 'exit' ? 'ExitScan' : 'RetentieScan'} />
+                            <DashboardChip surface="ops" label={getDeliveryModeLabel(campaign.delivery_mode, campaign.scan_type)} />
+                            <span className={`text-xs font-medium ${campaign.is_active ? 'text-emerald-700' : 'text-slate-400'}`}>
+                              {campaign.is_active ? '● Actief' : '○ Archief'}
+                            </span>
+                          </div>
+                          <p className="truncate text-sm font-medium text-slate-900">{campaign.name}</p>
+                          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
+                            <span>
+                              {new Date(campaign.created_at).toLocaleDateString('nl-NL', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric',
+                              })}
+                            </span>
+                            {hasCampaignAddOn(campaign, 'segment_deep_dive') ? <span>{REPORT_ADD_ON_LABELS.segment_deep_dive}</span> : null}
+                          </div>
+                        </div>
+                        <a
+                          href={`/campaigns/${campaign.id}`}
+                          className="flex-shrink-0 rounded-full border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+                        >
+                          {campaign.is_active ? 'Open' : 'Archief'}
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                </details>
               </div>
             )}
           </StepCard>
@@ -290,25 +313,31 @@ export default async function BeheerPage() {
             ) : !selectedCampaign ? (
               <LockedStep message="Klanttoegang opent na campaign-keuze, maar blijft organisatiegebonden." />
             ) : (
-              <div className="space-y-5">
-                <p className="text-sm leading-6 text-slate-600">
-                  Nodig de klant uit vanuit de gekozen organisatiecontext en controleer daarna de activatiestatus.
-                </p>
+              <div className="space-y-4">
                 {pendingInviteCount > 0 && confirmedClientAccessCount === 0 ? (
                   <div className="rounded-[18px] border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
                     Er lopen al klantactivaties, maar er is nog geen bevestigde dashboardtoegang.
                   </div>
                 ) : null}
                 <InviteClientUserForm orgs={activeOrgs} />
-                <div className="space-y-3 border-t border-slate-200 pt-4">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Klanttoegang en uitnodigingen</p>
-                    {pendingInviteCount > 0 ? (
-                      <DashboardChip surface="ops" label={`${pendingInviteCount} wacht op activatie`} tone="amber" />
-                    ) : null}
+                <details className="rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3">
+                  <summary className="cursor-pointer list-none">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Bestaande toegang</p>
+                        <p className="mt-1 text-sm text-slate-600">{confirmedClientAccessCount} bevestigd</p>
+                      </div>
+                      {pendingInviteCount > 0 ? (
+                        <DashboardChip surface="ops" label={`${pendingInviteCount} wacht op activatie`} tone="amber" />
+                      ) : (
+                        <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Overzicht</span>
+                      )}
+                    </div>
+                  </summary>
+                  <div className="mt-4 border-t border-slate-200 pt-4">
+                    <ClientAccessList invites={invites} />
                   </div>
-                  <ClientAccessList invites={invites} />
-                </div>
+                </details>
               </div>
             )}
           </StepCard>
@@ -320,20 +349,20 @@ export default async function BeheerPage() {
         surface="ops"
         eyebrow="Werkbanken"
         title="Secundaire werkbanken"
-        description="Open deze pas wanneer de setupcontext staat en er echt vervolgwerk ligt."
+        description="Alleen na setup."
       >
         <div className="grid gap-3 lg:grid-cols-2">
           <WorkbenchLinkCard
             href="/beheer/contact-aanvragen"
             eyebrow="Instroom"
             title="Contact-aanvragen"
-            body="Bekijk nieuwe aanvragen en koppel ze later aan de juiste setupcontext."
+            body="Nieuwe aanvragen."
           />
           <WorkbenchLinkCard
             href="/beheer/klantlearnings"
             eyebrow="Learning"
             title="Klantlearnings"
-            body="Leg klantlessen, pilotfrictie en proof-context vast buiten de setuphoofdlijn."
+            body="Lessen en proof-context."
           />
         </div>
       </DashboardSection>
@@ -343,15 +372,12 @@ export default async function BeheerPage() {
         surface="ops"
         eyebrow="Operations"
         title="Operations & registries"
-        description="Lagere control-laag voor readiness- en expertregistries."
+        description="Alleen wanneer nodig."
       >
         <details className="rounded-[22px] border border-slate-200 bg-white px-5 py-4 shadow-[0_8px_24px_rgba(19,32,51,0.04)]">
           <summary className="cursor-pointer list-none">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm font-semibold text-slate-950">Open operations & registries</p>
-                <p className="mt-1 text-sm text-slate-600">Gebruik deze laag alleen wanneer je een registry of expertcontrole nodig hebt.</p>
-              </div>
+              <p className="text-sm font-semibold text-slate-950">Open operations & registries</p>
               <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Secundair</span>
             </div>
           </summary>
@@ -360,19 +386,19 @@ export default async function BeheerPage() {
               href="/beheer/billing"
               eyebrow="Billing"
               title="Billing readiness"
-              body="Contract, betaalwijze en assisted launch readiness blijven beschikbaar als expertlaag."
+              body="Contract en betaalstatus."
             />
             <WorkbenchLinkCard
               href="/beheer/health"
               eyebrow="Health"
               title="Health-signalen"
-              body="Controleer activatie-, denied-access- en follow-through signalen wanneer daar echt reden voor is."
+              body="Activatie en follow-through."
             />
             <WorkbenchLinkCard
               href="/beheer/proof"
               eyebrow="Proof"
               title="Proof-status"
-              body="Bekijk de proof-ladder alleen wanneer learnings of casegebruik dat expliciet vragen."
+              body="Proof-ladder en status."
             />
           </div>
         </details>
@@ -384,16 +410,13 @@ export default async function BeheerPage() {
           surface="ops"
           eyebrow="Campagnes"
           title="Campagne-statusoverzicht"
-          description="Controlelaag voor bestaande campaigns."
+          description="Alleen voor controle."
           aside={<DashboardChip surface="ops" label={`${campaignStats.length} campaignstats`} tone="slate" />}
         >
           <details className="rounded-[22px] border border-slate-200 bg-white px-5 py-4 shadow-[0_8px_24px_rgba(19,32,51,0.04)]">
             <summary className="cursor-pointer list-none">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-slate-950">Toon campagne-statusoverzicht</p>
-                  <p className="mt-1 text-sm text-slate-600">Gebruik dit alleen wanneer je een bestaande campaign gericht wilt nalopen.</p>
-                </div>
+                <p className="text-sm font-semibold text-slate-950">Toon campagne-statusoverzicht</p>
                 <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{campaignStats.length} campaigns</span>
               </div>
             </summary>
