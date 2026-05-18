@@ -14,7 +14,7 @@ describe('admin color semantics', () => {
     expect(primitivesSource).toContain('blue: "border-[#dfe6ea] bg-[#fbfcfd]"')
     expect(primitivesSource).toContain('blue: "text-[color:var(--text)]"')
 
-    expect(beheerSource).toContain('title="Setuphub voor nieuwe klant en campaign"')
+    expect(beheerSource).toContain('Nieuwe organisatie en eerste campaign opzetten')
     expect(beheerSource).toContain('title="Kernwerkbanken"')
     expect(beheerSource).toContain('title="Operations & registries"')
     expect(beheerSource).toContain("tone={setupProgressCount === 4 ? 'emerald' : 'amber'}")
@@ -22,6 +22,8 @@ describe('admin color semantics', () => {
     expect(beheerSource).toContain("tone={healthAttentionCount > 0 ? 'amber' : 'emerald'}")
     expect(beheerSource).toContain("tone={proofPublicCount > 0 ? 'emerald' : 'slate'}")
     expect(beheerSource).toContain('tone="slate"')
+    expect(beheerSource).toContain("selectedOrganization?.id === organization.id")
+    expect(beheerSource).toContain("selectedCampaign?.id === campaign.id")
     expect(beheerSource).not.toContain('Open delivery- en activatiewerk')
     expect(beheerSource).not.toContain('Billing default')
     expect(beheerSource).not.toContain('Health review default')
