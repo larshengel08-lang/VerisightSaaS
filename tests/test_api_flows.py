@@ -1003,6 +1003,66 @@ def test_contact_request_accepts_culture_assessment_route_and_persists_it(
     assert captured["route_interest"] == "culture_assessment"
 
 
+def test_contact_request_update_accepts_culture_assessment_bounded_commerce_readiness(
+    client,
+    db_session: Session,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setattr(
+        "backend.main.send_contact_request_result",
+        lambda **kwargs: EmailSendResult(ok=True),
+    )
+
+    create_response = client.post(
+        "/api/contact-request",
+        json={
+            "name": "Board Sponsor",
+            "work_email": "board@loep.nl",
+            "organization": "Loep Corp",
+            "employee_count": "500-1000",
+            "route_interest": "culture_assessment",
+            "cta_source": "product_culture_assessment_form",
+            "desired_timing": "deze-maand",
+            "current_question": "We willen Loep Culture Assessment commercieel bevestigen en daarna intake plannen.",
+            "website": "",
+        },
+        headers={"x-forwarded-for": "203.0.113.141"},
+    )
+
+    lead_id = create_response.json()["lead_id"]
+    update_response = client.patch(
+        f"/api/contact-requests/{lead_id}",
+        json={
+            "ops_stage": "implementation_intake_ready",
+            "qualification_status": "route_confirmed",
+            "qualified_route": "culture_assessment",
+            "qualification_reviewed_by": "Verisight Intake",
+            "qualification_note": "Loep Culture Assessment bevestigd als primaire board-level route.",
+            "commercial_agreement_status": "confirmed",
+            "commercial_pricing_mode": "custom_quote",
+            "commercial_agreement_confirmed_by": "Verisight Ops",
+            "commercial_start_readiness_status": "ready",
+            "commercial_readiness_reviewed_by": "Delivery Lead",
+        },
+    )
+
+    assert update_response.status_code == 200
+    body = update_response.json()
+    assert body["route_interest"] == "culture_assessment"
+    assert body["qualified_route"] == "culture_assessment"
+    assert body["commercial_agreement_status"] == "confirmed"
+    assert body["commercial_pricing_mode"] == "custom_quote"
+    assert body["commercial_start_readiness_status"] == "ready"
+    assert body["commercial_agreement_confirmed_by"] == "Verisight Ops"
+    assert body["commercial_readiness_reviewed_by"] == "Delivery Lead"
+
+    stored = db_session.query(ContactRequest).filter(ContactRequest.id == lead_id).one()
+    assert stored.qualified_route == "culture_assessment"
+    assert stored.commercial_agreement_status == "confirmed"
+    assert stored.commercial_pricing_mode == "custom_quote"
+    assert stored.commercial_start_readiness_status == "ready"
+
+
 def test_contact_requests_list_returns_recent_leads(client, db_session: Session, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(
         "backend.main.send_contact_request_result",
@@ -1144,7 +1204,7 @@ def test_contact_request_update_rejects_bounded_commerce_for_non_core_routes(
     )
 
     assert update_response.status_code == 422
-    assert "alleen ExitScan en RetentieScan" in update_response.json()["detail"]
+    assert "alleen ExitScan, RetentieScan en Loep Culture Assessment" in update_response.json()["detail"]
 
     stored = db_session.query(ContactRequest).filter(ContactRequest.id == lead_id).one()
     assert stored.commercial_agreement_status == "not_started"

@@ -71,12 +71,14 @@ describe('pilot learning defaults', () => {
     ])
     expect(CASE_OUTCOME_CLASS_OPTIONS.map((option) => option.value)).toContain('management_adoptie')
     expect(LEARNING_ROUTE_OPTIONS.map((option) => option.value)).toContain('teamscan')
+    expect(LEARNING_ROUTE_OPTIONS.map((option) => option.value)).toContain('culture_assessment')
   })
 
-  it('maps TeamScan campaigns onto the MTO learning route without opening other carriers', () => {
+  it('maps active primary and legacy team campaigns onto their learning routes without dropping culture assessment', () => {
     expect(getLearningRouteInterestForCampaign('team')).toBe('teamscan')
     expect(getLearningRouteInterestForCampaign('exit')).toBe('exitscan')
     expect(getLearningRouteInterestForCampaign('retention')).toBe('retentiescan')
+    expect(getLearningRouteInterestForCampaign('culture_assessment')).toBe('culture_assessment')
     expect(getLearningRouteInterestForCampaign('pulse')).toBe('nog-onzeker')
   })
 

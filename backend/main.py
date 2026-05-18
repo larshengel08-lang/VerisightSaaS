@@ -1,5 +1,5 @@
 ﻿"""
-Verisight — FastAPI Backend
+Loep — FastAPI Backend
 ===================================
 Entrypoint: uvicorn backend.main:app --reload
 
@@ -52,7 +52,12 @@ from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm import Session, selectinload
 
 from backend.database import DATABASE_URL, check_db_connection, get_db, init_db
-from backend.email import send_contact_request_result, send_hr_notification, send_survey_invite
+from backend.email import (
+    send_contact_request_result,
+    send_hr_notification,
+    send_survey_invite,
+    send_survey_invite_result,
+)
 from backend.models import Campaign, ContactRequest, Organization, OrganizationSecret, Respondent, SurveyResponse
 from backend.products.leadership.definition import DEFAULT_LEADERSHIP_MODULES
 from backend.products.onboarding.definition import DEFAULT_ONBOARDING_MODULES
@@ -69,6 +74,7 @@ from backend.schemas import (
     ContactRequestRead,
     ContactRequestResponse,
     ContactRequestUpdate,
+    InviteEvidenceItem,
     InviteSendResult,
     OrganizationCreate,
     OrganizationRead,
@@ -178,7 +184,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Verisight API",
+    title="Loep API",
     version="2.0.0",
     description="HR verloopanalyse platform — ExitScan & RetentieScan",
     lifespan=lifespan,
@@ -277,7 +283,7 @@ ROLE_LEVEL_ALIASES = {
     "mt": "c_level",
 }
 
-BOUNDED_COMMERCE_CORE_ROUTE_INTERESTS = {"exitscan", "retentiescan"}
+BOUNDED_COMMERCE_CORE_ROUTE_INTERESTS = {"exitscan", "retentiescan", "culture_assessment"}
 QUALIFICATION_CONFIRMABLE_ROUTE_INTERESTS = {
     "exitscan",
     "retentiescan",
@@ -324,6 +330,12 @@ def _supports_bounded_commerce_route(route_interest: str | None) -> bool:
 
 def _supports_confirmable_qualified_route(route_interest: str | None) -> bool:
     return route_interest in QUALIFICATION_CONFIRMABLE_ROUTE_INTERESTS
+
+
+def _get_runtime_locked_product_name(scan_type: str | None) -> str | None:
+    if scan_type == "culture_assessment":
+        return "Loep Culture Assessment"
+    return None
 
 
 def _is_placeholder_primary_route(scan_type: str | None) -> bool:
@@ -804,7 +816,7 @@ async def update_contact_request(
     if commerce_update_requested and not _supports_bounded_commerce_route(lead.route_interest):
         raise HTTPException(
             status_code=422,
-            detail="Bounded billing/check-out foundation ondersteunt in deze wave alleen ExitScan en RetentieScan.",
+            detail="Bounded billing/check-out foundation ondersteunt in deze wave alleen ExitScan, RetentieScan en Loep Culture Assessment.",
         )
 
     if commerce_update_requested:
@@ -987,6 +999,20 @@ async def serve_survey(
             heading="Deze survey is gesloten",
             message="Deze campagne accepteert geen nieuwe inzendingen meer. Eerder ingevulde antwoorden blijven wel meegenomen in de rapportage.",
             hint="Heb je vragen over de uitkomsten of verwerking van je gegevens, neem dan contact op met de HR-afdeling van je organisatie.",
+            tone="info",
+        )
+    locked_product_name = _get_runtime_locked_product_name(campaign.scan_type)
+    if locked_product_name:
+        return _render_survey_status(
+            request,
+            status_code=423,
+            title=f"{locked_product_name} nog niet open voor respondentinvulling",
+            heading="Deze route staat nog niet open voor respondentinvulling",
+            message=(
+                f"{locked_product_name} is in deze wave al wel als route en board-level baseline zichtbaar, "
+                "maar de respondentenvulling en survey-runtime staan nog bewust dicht."
+            ),
+            hint="Gebruik deze route nu alleen voor intake, routebevestiging en bestuurlijke voorbereiding.",
             tone="info",
         )
 
@@ -1176,7 +1202,7 @@ async def create_organization(
         if not admin_profile_id:
             raise HTTPException(
                 status_code=503,
-                detail="Geen Verisight admin-profiel beschikbaar om een organisatie aan te maken.",
+                detail="Geen Loep admin-profiel beschikbaar om een organisatie aan te maken.",
             )
 
         # Supabase-triggers gebruiken auth.uid() om org ownership te registreren.
@@ -1270,7 +1296,7 @@ def _create_campaign_respondents(
     respondent_inputs: list[RespondentCreate],
     db: Session,
     send_invites: bool,
-) -> tuple[list[Respondent], int]:
+) -> tuple[list[Respondent], int, list[InviteEvidenceItem]]:
     respondents = [
         Respondent(
             campaign_id=campaign.id,
@@ -1287,21 +1313,34 @@ def _create_campaign_respondents(
     db.commit()
 
     emails_sent = 0
+    invite_evidence: list[InviteEvidenceItem] = []
     if send_invites:
         for respondent, req in zip(respondents, respondent_inputs):
             if req.email:
-                sent = send_survey_invite(
+                send_result = send_survey_invite_result(
                     to_email=req.email,
                     campaign_name=campaign.name,
                     token=respondent.token,
                     scan_type=campaign.scan_type,
                 )
-                if sent:
+                invite_evidence.append(
+                    InviteEvidenceItem(
+                        token=str(respondent.token),
+                        email=req.email,
+                        status="sent" if send_result.ok else "failed",
+                        invite_url=f"{(os.getenv('BACKEND_URL') or 'http://localhost:8000').rstrip('/')}/survey/{respondent.token}",
+                        provider=send_result.provider,
+                        provider_email_id=send_result.provider_email_id,
+                        provider_message_id=send_result.provider_message_id,
+                        failure_reason=send_result.reason,
+                    )
+                )
+                if send_result.ok:
                     respondent.sent_at = datetime.now(timezone.utc)
                     emails_sent += 1
         db.commit()
 
-    return respondents, emails_sent
+    return respondents, emails_sent, invite_evidence
 
 
 @app.post("/api/campaigns", response_model=CampaignRead, status_code=201)
@@ -1356,6 +1395,12 @@ async def add_respondents(
     )
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
+    locked_product_name = _get_runtime_locked_product_name(campaign.scan_type)
+    if locked_product_name:
+        raise HTTPException(
+            status_code=422,
+            detail=f"{locked_product_name} ondersteunt in deze wave nog geen respondenttoevoeging of uitnodigingen.",
+        )
     respondents, _emails_sent = _create_campaign_respondents(
         campaign=campaign,
         respondent_inputs=body.respondents,
@@ -1381,6 +1426,12 @@ async def import_respondents(
     ).first()
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
+    locked_product_name = _get_runtime_locked_product_name(campaign.scan_type)
+    if locked_product_name:
+        raise HTTPException(
+            status_code=422,
+            detail=f"{locked_product_name} ondersteunt in deze wave nog geen respondentimport of uitnodigingen.",
+        )
 
     content = await upload.read()
     if not content:
@@ -1419,7 +1470,7 @@ async def import_respondents(
     if dry_run or issues:
         return response
 
-    respondents, emails_sent = _create_campaign_respondents(
+    respondents, emails_sent, invite_evidence = _create_campaign_respondents(
         campaign=campaign,
         respondent_inputs=normalized_rows,
         db=db,
@@ -1427,6 +1478,7 @@ async def import_respondents(
     )
     response.imported = len(respondents)
     response.emails_sent = emails_sent
+    response.invite_evidence = invite_evidence
     return response
 
 
@@ -1465,10 +1517,17 @@ async def send_invites(
     ).first()
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
+    locked_product_name = _get_runtime_locked_product_name(campaign.scan_type)
+    if locked_product_name:
+        raise HTTPException(
+            status_code=422,
+            detail=f"{locked_product_name} ondersteunt in deze wave nog geen survey-uitnodigingen.",
+        )
 
     sent = 0
     failed = 0
     skipped = 0
+    evidence: list[InviteEvidenceItem] = []
 
     requested_tokens = [item.token for item in body]
     respondents = (
@@ -1486,20 +1545,49 @@ async def send_invites(
 
         if not respondent or not respondent.email:
             failed += 1
+            evidence.append(
+                InviteEvidenceItem(
+                    token=item.token,
+                    email=item.email,
+                    status="failed",
+                    failure_reason="missing_recipient",
+                )
+            )
             continue
 
         if item.email and item.email != respondent.email:
             skipped += 1
+            evidence.append(
+                InviteEvidenceItem(
+                    token=item.token,
+                    email=respondent.email,
+                    status="skipped",
+                    invite_url=f"{(os.getenv('BACKEND_URL') or 'http://localhost:8000').rstrip('/')}/survey/{item.token}",
+                    failure_reason="email_mismatch",
+                )
+            )
             continue
 
-        ok = send_survey_invite(
+        send_result = send_survey_invite_result(
             to_email=respondent.email,
             campaign_name=campaign.name,
             token=item.token,
             scan_type=campaign.scan_type,
         )
+        evidence.append(
+            InviteEvidenceItem(
+                token=item.token,
+                email=respondent.email,
+                status="sent" if send_result.ok else "failed",
+                invite_url=f"{(os.getenv('BACKEND_URL') or 'http://localhost:8000').rstrip('/')}/survey/{item.token}",
+                provider=send_result.provider,
+                provider_email_id=send_result.provider_email_id,
+                provider_message_id=send_result.provider_message_id,
+                failure_reason=send_result.reason,
+            )
+        )
 
-        if ok:
+        if send_result.ok:
             respondent.sent_at = datetime.now(timezone.utc)
             sent += 1
         else:
@@ -1516,7 +1604,7 @@ async def send_invites(
             campaign_id,
         )
 
-    return InviteSendResult(sent=sent, failed=failed, skipped=skipped)
+    return InviteSendResult(sent=sent, failed=failed, skipped=skipped, evidence=evidence)
 
 
 # ---------------------------------------------------------------------------
@@ -1638,7 +1726,7 @@ async def download_report(
     import re as _re
     safe_name = _re.sub(r"[^\w\s-]", "", campaign.name)   # verwijder em-dash etc.
     safe_name = _re.sub(r"[\s-]+", "_", safe_name).strip("_")  # spaties/streepjes → _
-    filename = f"Verisight_{safe_name}.pdf"
+    filename = f"Loep_{safe_name}.pdf"
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
@@ -1671,7 +1759,7 @@ async def download_report_internal(
     import re as _re
     safe_name = _re.sub(r"[^\w\s-]", "", campaign.name)
     safe_name = _re.sub(r"[\s-]+", "_", safe_name).strip("_")
-    filename = f"Verisight_{safe_name}.pdf"
+    filename = f"Loep_{safe_name}.pdf"
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",

@@ -171,6 +171,51 @@ def test_culture_assessment_submit_path_is_safely_fenced(client, db_session: Ses
     assert respondent.completed is False
 
 
+def test_culture_assessment_survey_page_is_locked_for_respondents(client, db_session: Session):
+    org = _create_org(db_session, api_key="culture-survey-page-key")
+    campaign = _create_campaign(db_session, org)
+    respondent = _create_respondent(db_session, campaign)
+
+    response = client.get(f"/survey/{respondent.token}")
+
+    assert response.status_code == 423
+    assert "nog niet open voor respondentinvulling" in response.text
+
+
+def test_culture_assessment_respondent_management_paths_are_safely_fenced(client, db_session: Session):
+    org = _create_org(db_session, api_key="culture-respondent-key")
+    campaign = _create_campaign(db_session, org)
+    respondent = _create_respondent(db_session, campaign)
+
+    add_response = client.post(
+        f"/api/campaigns/{campaign.id}/respondents",
+        headers={"x-api-key": "culture-respondent-key"},
+        json={
+            "respondents": [{"email": "extra@example.com", "department": "People", "role_level": "manager"}],
+            "send_invites": False,
+        },
+    )
+    assert add_response.status_code == 422
+    assert "respondenttoevoeging" in add_response.json()["detail"]
+
+    import_response = client.post(
+        f"/api/campaigns/{campaign.id}/respondents/import",
+        headers={"x-api-key": "culture-respondent-key"},
+        files={"upload": ("respondenten.csv", b"email\na@example.com\n", "text/csv")},
+        data={"dry_run": "true", "send_invites": "false"},
+    )
+    assert import_response.status_code == 422
+    assert "respondentimport" in import_response.json()["detail"]
+
+    invite_response = client.post(
+        f"/api/campaigns/{campaign.id}/send-invites",
+        headers={"x-api-key": "culture-respondent-key"},
+        json=[{"token": str(respondent.token), "email": respondent.email}],
+    )
+    assert invite_response.status_code == 422
+    assert "survey-uitnodigingen" in invite_response.json()["detail"]
+
+
 def test_culture_assessment_report_generation_is_safely_fenced(client, db_session: Session):
     org = _create_org(db_session, api_key="culture-report-key")
     campaign = _create_campaign(db_session, org)
