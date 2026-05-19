@@ -3,6 +3,7 @@ import {
   getActionCenterGovernanceActorRoleLabel,
   isActionCenterGovernanceActorRole,
   resolveActionCenterHrWriteAccess,
+  resolveActionCenterTransitionAccess,
 } from './action-center-governance'
 
 describe('action center governance helpers', () => {
@@ -81,5 +82,25 @@ describe('action center governance helpers', () => {
       allowed: false,
       auditRole: null,
     })
+  })
+
+  it('does not allow manager canonical reschedule or close access', () => {
+    expect(
+      resolveActionCenterTransitionAccess({
+        actorRole: 'manager',
+        object: 'follow_through_route',
+        fromState: 'open',
+        toState: 'closed',
+      }).allowed,
+    ).toBe(false)
+
+    expect(
+      resolveActionCenterTransitionAccess({
+        actorRole: 'manager',
+        object: 'review_moment',
+        fromState: 'scheduled',
+        toState: 'rescheduled',
+      }).allowed,
+    ).toBe(false)
   })
 })

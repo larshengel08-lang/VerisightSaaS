@@ -1,3 +1,10 @@
+import {
+  ACTION_CENTER_CANONICAL_ROUTE_STATES,
+  isActionCenterCanonicalRouteStateTransitionAllowed,
+  type ActionCenterActor,
+  type ActionCenterCanonicalRouteState,
+  type ActionCenterConstitutionObject,
+} from '@/lib/action-center-constitution'
 import type {
   ActionCenterWorkspaceMember,
   SuiteAccessContext,
@@ -96,6 +103,57 @@ export function resolveActionCenterHrWriteAccess(args: {
   return {
     allowed: false,
     auditRole: null,
+  }
+}
+
+type ActionCenterGovernanceTransitionObject =
+  | ActionCenterConstitutionObject
+  | 'review_moment'
+  | 'owner_assignment'
+
+function isActionCenterCanonicalRouteState(
+  value: string,
+): value is ActionCenterCanonicalRouteState {
+  return ACTION_CENTER_CANONICAL_ROUTE_STATES.includes(value as ActionCenterCanonicalRouteState)
+}
+
+function getActionCenterTransitionActor(
+  actorRole: ActionCenterGovernanceActorRole,
+): ActionCenterActor {
+  switch (actorRole) {
+    case 'manager':
+      return 'manager_participant'
+    case 'verisight_admin':
+    case 'hr_owner':
+    case 'hr_member':
+      return 'hr_rhythm_owner'
+    case 'verisight':
+    case 'hr':
+      return 'system_channel'
+  }
+}
+
+export function resolveActionCenterTransitionAccess(args: {
+  actorRole: ActionCenterGovernanceActorRole
+  object: ActionCenterGovernanceTransitionObject
+  fromState: string
+  toState: string
+}): { allowed: boolean } {
+  if (
+    args.object !== 'follow_through_route' ||
+    !isActionCenterCanonicalRouteState(args.fromState) ||
+    !isActionCenterCanonicalRouteState(args.toState)
+  ) {
+    return { allowed: false }
+  }
+
+  return {
+    allowed: isActionCenterCanonicalRouteStateTransitionAllowed({
+      actor: getActionCenterTransitionActor(args.actorRole),
+      object: args.object,
+      fromState: args.fromState,
+      toState: args.toState,
+    }),
   }
 }
 

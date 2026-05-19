@@ -29,6 +29,8 @@ describe('action center route defaults contract', () => {
       cadenceDays: 14,
       reminderLeadDays: 3,
       escalationLeadDays: 7,
+      reviewWindowDays: { min: 60, max: 90 },
+      staleAfterDays: 90,
       remindersEnabled: true,
       providerEligible: true,
     })
@@ -40,8 +42,24 @@ describe('action center route defaults contract', () => {
       cadenceDays: 14,
       reminderLeadDays: 3,
       escalationLeadDays: 7,
+      reviewWindowDays: { min: 45, max: 90 },
+      staleAfterDays: 90,
       remindersEnabled: true,
       providerEligible: true,
+    })
+  })
+
+  it('returns route-specific defaults for exit and retention', () => {
+    expect(getActionCenterRouteDefaults('exit')).toMatchObject({
+      actionCenterStatus: 'enabled',
+      routeEnabled: true,
+      reviewWindowDays: { min: 60, max: 90 },
+    })
+
+    expect(getActionCenterRouteDefaults('retention')).toMatchObject({
+      actionCenterStatus: 'enabled',
+      routeEnabled: true,
+      reviewWindowDays: { min: 45, max: 90 },
     })
   })
 

@@ -1,3 +1,5 @@
+import { getActionCenterApprovedRouteDefault } from '@/lib/action-center-constitution'
+
 export const ACTION_CENTER_ROUTE_DEFAULTS_SCAN_TYPES = [
   'exit',
   'retention',
@@ -19,9 +21,14 @@ export interface ActionCenterRouteDefaults {
   scanType: ActionCenterRouteDefaultsKnownScanType
   actionCenterStatus: 'enabled' | 'blocked'
   routeEnabled: boolean
-  cadenceDays: 14
-  reminderLeadDays: 3
-  escalationLeadDays: 7
+  cadenceDays: number
+  reminderLeadDays: number
+  escalationLeadDays: number
+  reviewWindowDays?: {
+    min: number
+    max: number
+  }
+  staleAfterDays?: number
   remindersEnabled: boolean
   providerEligible: boolean
 }
@@ -35,11 +42,15 @@ const BASELINE_ROUTE_DEFAULTS = {
 function buildEnabledRouteDefaults(
   scanType: ActionCenterRouteDefaultsEnabledScanType,
 ): ActionCenterRouteDefaults {
+  const approvedRouteDefault = getActionCenterApprovedRouteDefault(scanType)
+
   return {
     scanType,
     actionCenterStatus: 'enabled',
     routeEnabled: true,
     ...BASELINE_ROUTE_DEFAULTS,
+    reviewWindowDays: approvedRouteDefault?.reviewWindowDays,
+    staleAfterDays: approvedRouteDefault?.staleAfterDays,
     remindersEnabled: true,
     providerEligible: true,
   }
