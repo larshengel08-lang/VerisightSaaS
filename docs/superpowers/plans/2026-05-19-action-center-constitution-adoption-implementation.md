@@ -790,13 +790,13 @@ Typecheck passes for Action Center changes
 Known unrelated auth/Supabase prerender baseline may still remain
 ```
 
-- [ ] **Step 3: Mark the plan with verification notes**
+- [x] **Step 3: Mark the plan with verification notes**
 
 ```md
-- [ ] Verification notes added after constitution regression run:
-  - bounded suite status
-  - build status
-  - known unrelated blockers, if any
+- [x] Verification notes added after constitution regression run:
+  - bounded suite status: `npx vitest run lib/action-center-constitution.test.ts lib/action-center-route-defaults.test.ts lib/action-center-governance.test.ts lib/action-center-review-rhythm-data.test.ts lib/action-center-review-reschedule.test.ts lib/action-center-route-closeout.test.ts lib/action-center-route-reopen.test.ts lib/action-center-follow-through-mail-planner.test.ts lib/action-center-graph-sync.test.ts app/api/action-center-review-rhythm/route.test.ts app/api/action-center-review-reschedules/route.test.ts app/api/action-center-route-closeouts/route.test.ts app/api/action-center-route-reopens/route.test.ts components/dashboard/review-rhythm-console.test.tsx components/dashboard/review-rhythm-oversight.test.tsx components/dashboard/review-moment-page-client.test.ts` passed with `16 files / 125 tests` green on 2026-05-19.
+  - build status: `npm run build` completed compile + lint + Action Center typecheck after the review-rhythm literal fix, then failed during prerender on the known auth/Supabase env baseline.
+  - known unrelated blockers: prerender failures on `/(auth)/login` and `/(auth)/signup` because Supabase SSR env vars are unavailable in this local build context; this is outside the Action Center constitution scope. Non-blocking ESLint warnings also remain in unrelated marketing/product files and two unused imports in `app/api/action-center-route-closeouts/route.ts`.
 ```
 
 - [ ] **Step 4: Commit**

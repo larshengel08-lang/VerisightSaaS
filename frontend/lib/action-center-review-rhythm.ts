@@ -14,6 +14,18 @@ export interface ActionCenterReviewRhythmConfig {
 
 export type ActionCenterReviewRhythmHealth = 'upcoming' | 'overdue' | 'stale' | 'completed'
 
+function toCadenceDays(value: number): ActionCenterReviewRhythmConfig['cadenceDays'] {
+  return value === 7 || value === 30 ? value : 14
+}
+
+function toReminderLeadDays(value: number): ActionCenterReviewRhythmConfig['reminderLeadDays'] {
+  return value === 1 || value === 5 ? value : 3
+}
+
+function toEscalationLeadDays(value: number): ActionCenterReviewRhythmConfig['escalationLeadDays'] {
+  return value === 3 || value === 14 ? value : 7
+}
+
 function isDateOnlyValue(value: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(value)
 }
@@ -46,9 +58,9 @@ export function buildDefaultActionCenterReviewRhythmConfig(): ActionCenterReview
   }
 
   return {
-    cadenceDays: defaults.cadenceDays,
-    reminderLeadDays: defaults.reminderLeadDays,
-    escalationLeadDays: defaults.escalationLeadDays,
+    cadenceDays: toCadenceDays(defaults.cadenceDays),
+    reminderLeadDays: toReminderLeadDays(defaults.reminderLeadDays),
+    escalationLeadDays: toEscalationLeadDays(defaults.escalationLeadDays),
     remindersEnabled: defaults.remindersEnabled,
   }
 }
@@ -62,16 +74,9 @@ export function normalizeActionCenterReviewRhythmConfig(input: {
   const defaults = buildDefaultActionCenterReviewRhythmConfig()
 
   return {
-    cadenceDays:
-      input.cadence_days === 7 || input.cadence_days === 30 ? input.cadence_days : defaults.cadenceDays,
-    reminderLeadDays:
-      input.reminder_lead_days === 1 || input.reminder_lead_days === 5
-        ? input.reminder_lead_days
-        : defaults.reminderLeadDays,
-    escalationLeadDays:
-      input.escalation_lead_days === 3 || input.escalation_lead_days === 14
-        ? input.escalation_lead_days
-        : defaults.escalationLeadDays,
+    cadenceDays: toCadenceDays(input.cadence_days ?? defaults.cadenceDays),
+    reminderLeadDays: toReminderLeadDays(input.reminder_lead_days ?? defaults.reminderLeadDays),
+    escalationLeadDays: toEscalationLeadDays(input.escalation_lead_days ?? defaults.escalationLeadDays),
     remindersEnabled: input.reminders_enabled ?? defaults.remindersEnabled,
   }
 }
