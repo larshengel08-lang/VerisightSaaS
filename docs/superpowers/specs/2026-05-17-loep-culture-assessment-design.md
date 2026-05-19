@@ -175,6 +175,85 @@ Interpretation:
 - a lighter `volwaardig` package may be introduced later
 - v1 must not add a survey builder or client-configurable module system
 
+### 7.4 V1 questionnaire and scoring lock
+
+WP0 is considered complete only when the core instrument is locked as one fixed v1 baseline instrument.
+
+```yaml
+questionnaire_lock:
+  item_count: 40
+  domains: 10
+  items_per_domain: 4
+  answer_scale: "agreement_5pt"
+  answer_scale_labels_nl:
+    - "Helemaal oneens"
+    - "Eerder oneens"
+    - "Neutraal / gemengd"
+    - "Eerder eens"
+    - "Helemaal eens"
+  target_completion_minutes: 12
+  max_completion_minutes: 14
+  reverse_scored_items: 10
+  minimum_closed_items_answered: 32
+  minimum_answered_items_per_domain: 3
+  minimum_valid_domains: 8
+  open_text_optional: true
+```
+
+Quality gates:
+
+- use plain Dutch business language
+- do not use suggestive questions
+- do not allow duplicated or materially overlapping items
+- keep item-count parity across domains in v1
+- pilot-test the instrument with a small internal sample before first customer use
+
+Scoring lock:
+
+```yaml
+scoring_lock:
+  normalized_output_scale: "0_to_10"
+  domain_score_method: "mean_of_answered_items_after_reverse_scoring"
+  culture_index_method: "mean_of_valid_domain_scores"
+  reverse_scoring_method: "agreement_5pt_inversion"
+```
+
+Implementation rule:
+
+- runtime may remain disabled in the current wave
+- but the questionnaire, score model, and validity rules may no longer be left vague or placeholder-only
+
+### 7.5 Board attention logic
+
+Board attention points must be deterministic and bounded.
+
+```yaml
+board_attention_logic:
+  inputs:
+    - domain_scores
+    - segment_spread
+    - response_coverage
+    - contrast_strength
+    - recurring_theme_pairs
+    - safe_open_text_clusters
+  outputs:
+    - attention_points_max_5
+    - priority_reason
+    - confidence_label
+    - what_to_verify_next
+  forbidden_outputs:
+    - causal_diagnosis
+    - automatic_intervention_advice
+    - manager_blame
+```
+
+Interpretation:
+
+- attention points are descriptive executive ordering signals
+- they are not automated interventions
+- they are not causal explanations
+- they are not a disguised management blame layer
+
 ---
 
 ## 8. Domain Model
@@ -752,55 +831,98 @@ Implementation note:
 
 ## 17. Commercial Packaging
 
-### 17.1 Canonical packages
+### 17.1 V1 package frame lock
+
+The v1 commercial frame is locked as follows:
+
+- default v1 package name: `Loep Cultuurbeeld Board Baseline`
+- board-read is always included
+- HR appendix is not default and belongs to governed / enterprise delivery
+- segment summary export is not default and belongs to governed / enterprise delivery
+- `Pulse` remains follow-on only
+
+Standard included in the default package:
+
+- annual culture assessment baseline
+- executive dashboard view
+- board report PDF
+- boardroom PowerPoint deck
+- executive one-pager
+- guided board-read session
+
+Optional / governed additions:
+
+- HR appendix PDF
+- segment summary export
+- governed drilldown
+- HR deepening handout
+- manager cascade handout when threshold-safe
+- Pulse follow-on after baseline
+
+What is explicitly not sold in v1:
+
+- benchmark package
+- self-serve survey platform
+- manager ranking layer
+- custom questionnaire modules
+- Pulse as part of the initial baseline
+
+### 17.2 Canonical packages
 
 ```yaml
 commercial_packaging:
-  - package_id: "culture_assessment_baseline"
-    label: "Culture Assessment Baseline"
-    includes:
-      - "annual enterprise survey baseline"
-      - "executive dashboard view"
-      - "board-safe aggregate output"
-    excludes:
-      - "board-read session"
-      - "governed deep drilldown"
-      - "pulse rhythm"
-  - package_id: "culture_assessment_board_read"
-    label: "Culture Assessment + Board Read"
+  - package_id: "culture_assessment_board_baseline"
+    label: "Loep Cultuurbeeld Board Baseline"
     includes:
       - "annual enterprise survey baseline"
       - "executive dashboard view"
       - "board report pdf"
-      - "board-read session"
+      - "boardroom powerpoint deck"
+      - "executive one-pager"
+      - "guided board-read session"
     excludes:
+      - "hr appendix pdf"
+      - "segment summary export"
       - "governed deep drilldown"
       - "pulse rhythm"
-  - package_id: "culture_assessment_governed_drilldown"
-    label: "Culture Assessment + Governed Drilldown"
+  - package_id: "culture_assessment_governed"
+    label: "Loep Cultuurbeeld Governed"
     includes:
       - "annual enterprise survey baseline"
       - "executive dashboard view"
       - "board report pdf"
-      - "board-read session"
+      - "boardroom powerpoint deck"
+      - "executive one-pager"
+      - "guided board-read session"
+      - "hr appendix pdf"
+      - "segment summary export"
+      - "hr deepening handout"
+    excludes:
+      - "pulse rhythm"
+  - package_id: "culture_assessment_enterprise"
+    label: "Loep Cultuurbeeld Enterprise"
+    includes:
+      - "annual enterprise survey baseline"
+      - "executive dashboard view"
+      - "board report pdf"
+      - "boardroom powerpoint deck"
+      - "executive one-pager"
+      - "guided board-read session"
+      - "hr appendix pdf"
+      - "segment summary export"
       - "approved segment contrasts"
       - "governed drilldown"
+      - "hr deepening handout"
+      - "manager cascade handout when threshold-safe"
     excludes:
       - "pulse rhythm"
-  - package_id: "culture_assessment_pulse_rhythm"
-    label: "Culture Assessment + Pulse Rhythm"
-    includes:
-      - "annual enterprise survey baseline"
-      - "board-read session"
-      - "pulse follow-on after baseline"
-    excludes:
-      - "pulse as part of initial baseline"
 ```
 
 Packaging rule:
 
 - `Pulse` is not part of the baseline package by default
 - `Pulse` is a follow-on after the annual culture assessment baseline
+- MKB may still use the default package, but with shallower safe segment exposure rather than different product logic
 
 ---
 
@@ -918,6 +1040,93 @@ Implementation rule:
 
 - executive view must privilege narrative structure over ranking structure
 - if a component is suppressed, show a deterministic state reason rather than a broken empty block
+
+### 20.1 Premium output blueprint lock
+
+The following structures are locked before implementation.
+
+`board_report_pdf`
+
+1. Context and scope
+2. Response base and coverage
+3. Executive culture read
+4. Loep Culture Index
+5. Domain picture
+6. Board attention points
+7. Safe segment contrasts
+8. What not to conclude
+9. Follow-on route options
+10. Method and governance note
+
+`hr_appendix_pdf`
+
+1. Scope and governance boundary
+2. Response base by safe segment
+3. Domain detail by safe segment
+4. Pattern analysis and recurring theme pairs
+5. Safe open-text cluster summary when enabled
+6. Suppressed segments and why they are hidden
+7. Practical follow-up boundaries
+
+`boardroom_powerpoint_deck`
+
+1. Title and context
+2. What was measured
+3. Response and coverage
+4. Executive read
+5. Culture Index as navigation signal
+6. Domain picture
+7. 3-5 board attention points
+8. Segment contrasts where safe
+9. What not to conclude
+10. Board decision questions
+11. Follow-on route options
+
+`executive_one_pager`
+
+1. What this baseline is
+2. Response and coverage snapshot
+3. Culture Index snapshot
+4. Top 3 attention points
+5. Safe follow-up framing
+6. Governance reminder
+
+`hr_deepening_handout`
+
+1. What HR should read first
+2. Safe segment interpretation rules
+3. Domain deepening cues
+4. Pattern questions for HR follow-up
+5. What HR should not conclude
+
+`manager_cascade_handout`
+
+1. What was measured at organization level
+2. What managers may safely say to teams
+3. Conversation prompts without score defense
+4. What managers may not do
+5. Escalation path when local detail is hidden
+
+`board_read_facilitator_script`
+
+1. Session objective
+2. Setup and governance reminder
+3. Slide-by-slide facilitation cues
+4. Attention point discussion prompts
+5. What not to conclude or speculate
+6. Decision capture
+7. Follow-on route close
+
+`sample_output_pack`
+
+1. Sample board report PDF
+2. Sample boardroom PowerPoint deck
+3. Sample executive one-pager
+4. Sample HR appendix
+5. Sample dashboard screenshots or demo environment
+6. Sample invite mail
+7. Sample board-read agenda
+8. Sample "what you receive after completion" page
 
 ---
 
