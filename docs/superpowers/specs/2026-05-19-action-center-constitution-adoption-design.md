@@ -154,12 +154,12 @@ This keeps route closure from collapsing into a single vague status.
 
 The adoption event object anchors the measurement layer.
 
-It should capture:
+It captures:
 
 - who received a trigger
 - who opened contextual entry
 - who completed a quick action
-- who attended/reviewed/rescheduled/closed through canonical flows
+- who attended, reviewed, rescheduled, or closed through canonical flows
 
 This object exists to make later adoption proof possible.
 
@@ -173,7 +173,7 @@ The state model must be explicit and bounded.
 
 ### 5.1 Route-level states
 
-The route-level model should distinguish at least:
+The route-level model distinguishes at least:
 
 - `open`
 - `scheduled`
@@ -189,7 +189,7 @@ It is **not** safe as the canonical end-state for people signals.
 
 ### 5.2 Completion semantics that must remain distinct
 
-The design must distinguish at least:
+The design distinguishes at least:
 
 - action completed
 - review completed
@@ -203,7 +203,7 @@ These may map to shared route truth, but may not be blurred into one generic `re
 
 ### 5.3 Review-level states
 
-The review object should distinguish at least:
+The review object distinguishes at least:
 
 - `scheduled`
 - `completed`
@@ -233,7 +233,7 @@ State transitions must be explicit and actor-bounded.
 
 ### 6.1 Allowed transition families
 
-The design should support:
+The design supports:
 
 - owner assignment and reassignment
 - review scheduling and rescheduling
@@ -244,17 +244,17 @@ The design should support:
 
 ### 6.2 Prohibited transition pattern
 
-The design must reject:
+The design rejects:
 
 - transitions with no accountable actor
 - transitions caused only by passive channel events
 - silent transitions from reminder or invite behavior
 - status changes inferred purely from RSVP behavior
-- generic catch-all transitions such as “resolved somehow”
+- generic catch-all transitions such as `resolved somehow`
 
 ### 6.3 Transition logging rule
 
-Every canonical transition must be auditable with:
+Every canonical transition is auditable with:
 
 - actor
 - timestamp
@@ -262,14 +262,43 @@ Every canonical transition must be auditable with:
 - new state
 - affected object
 - reason where required
+- channel/source
 
 ---
 
-## 7. Roles And Permissions
+## 7. State Transition Matrix
+
+| Object | From state | To state | Actor allowed | Trigger | Audit required | Off-platform allowed? | Notes / constraints |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| follow-through route | `open` | `scheduled` | HR rhythm owner | canonical review scheduled for active route | yes | no | Action Center remains canonical truth; invites may mirror later |
+| follow-through route | `open` | `closed` | HR rhythm owner | explicit closeout with closeout reason | yes | no | HR is the only closeout actor |
+| follow-through route | `scheduled` | `overdue` | system derivation | review window passes without canonical completion or canonical reschedule | yes | no | derived from canonical schedule only |
+| follow-through route | `scheduled` | `stale` | system derivation | stale trigger crossed or required review date missing or invalid | yes | no | no passive channel event may cause this transition |
+| follow-through route | `overdue` | `closed` | HR rhythm owner | explicit closeout after overdue follow-through decision | yes | no | overdue does not prevent closeout |
+| follow-through route | `stale` | `escalation_sensitive` | system derivation | escalation threshold crossed while route remains unresolved | yes | no | system may derive only; it may not close or reopen |
+| follow-through route | `closed` | `reopened` | HR rhythm owner | explicit reopen with reason and continuation decision | yes | no | reopen must never be inferred from channel behavior |
+| review moment | `scheduled` | `rescheduled` | HR rhythm owner | canonical review date/time changed in Action Center | yes | no | managers do not reschedule canonical reviews in this wave |
+| review moment | `scheduled` | `completed` | HR rhythm owner, manager participant through explicitly allowed quick action | canonical review completion recorded in Action Center | yes | no | manager may complete only the one bounded quick action defined for that trigger |
+| review moment | `scheduled` | `missed` | system derivation, HR rhythm owner | review window expires without canonical completion | yes | no | RSVP decline or no-response does not directly set canonical missed |
+| review moment | `scheduled` | `cancelled` | HR rhythm owner | canonical cancellation recorded in Action Center | yes | no | ICS/Graph may mirror cancellation but not define it |
+| owner assignment | `unassigned` | `assigned` | HR rhythm owner | initial accountable owner set | yes | no | assignment is canonical follow-through truth |
+| owner assignment | `assigned` | `reassigned` | HR rhythm owner | explicit owner change with reason | yes | no | managers may not reassign owners |
+
+Binding rules:
+
+- HR is the only actor allowed to close or reopen a route.
+- The system may derive `overdue`, `stale`, and `escalation_sensitive`, but may not close or reopen routes.
+- Managers may complete only explicitly allowed bounded quick actions.
+- RSVP, email open, ICS behavior, Outlook behavior, and Graph behavior may not directly cause canonical route state changes.
+- Every canonical state transition must be auditable.
+
+---
+
+## 8. Roles And Permissions
 
 The design assumes two primary product actors and one system layer.
 
-### 7.1 HR
+### 8.1 HR rhythm owner
 
 HR may:
 
@@ -283,9 +312,9 @@ HR may:
 
 HR is the final closeout actor.
 
-### 7.2 Manager
+### 8.2 Manager participant
 
-Managers may participate through contextual quick actions.
+Managers participate through contextual quick actions.
 
 Managers may:
 
@@ -298,7 +327,7 @@ Managers do not own the system.
 
 Managers do not become free-form workflow operators.
 
-### 7.3 System / channel layer
+### 8.3 System / channel layer
 
 The system layer may:
 
@@ -307,16 +336,27 @@ The system layer may:
 - mirror calendar artifacts
 - reflect attendance hints
 - record non-canonical notification events
+- derive oversight states from canonical truth
 
 The system layer may not silently mutate canonical route truth.
 
+### 8.4 Permissions matrix
+
+| Actor | May read | May create | May update | May close | May reopen | May reschedule | May add notes | May view adoption metrics | Explicitly prohibited |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| HR rhythm owner | route state, review history, oversight, bounded notes, adoption metrics | owner assignments, review moments, closeout/continuation records | route truth, review truth, assignments, bounded notes | yes | yes | yes | yes, bounded to route/review context | yes | generic workflow automation, broad employee narrative, off-platform canonical write delegation |
+| manager participant | contextual route/review surface relevant to their participation | no standalone canonical objects | one explicitly allowed quick action, bounded contextual note if policy allows | no | no | no | yes, bounded to route/review context and non-dossier-like | no | route closeout, owner reassignment, canonical reschedule, broad dashboard ownership, free-form case management |
+| executive viewer | out of scope for this wave unless separately approved | out of scope | out of scope | out of scope | out of scope | out of scope | out of scope | out of scope | implicit broad read layer or executive workflow surface |
+| system / channel layer | canonical objects needed for notification, mirroring, and derivation | non-canonical notification events, mirrored calendar artifacts | derived oversight signals, delivery state, attendance hints | no | no | no | no | yes, only for system-generated measurement events | silent canonical mutation, route closeout, reopen, owner reassignment |
+| Verisight support / operator | out of scope by default; if enabled, operational troubleshooting only | no canonical business objects | operational annotations only where separately approved | no | no | no | no business notes | no by default | tenant-unsafe access, product-side state mutation, dossier-like inspection |
+
 ---
 
-## 8. Off-Platform Write Policy
+## 9. Off-Platform Write Policy
 
 The off-platform write policy is mandatory.
 
-### 8.1 Allowed off-platform behavior
+### 9.1 Allowed off-platform behavior
 
 Allowed off-platform behavior includes:
 
@@ -325,7 +365,7 @@ Allowed off-platform behavior includes:
 - responding to Outlook invites as attendance hints
 - using deeplinks into Action Center
 
-### 8.2 Non-canonical signal behavior
+### 9.2 Non-canonical signal behavior
 
 The following may be recorded as non-canonical signals:
 
@@ -338,7 +378,7 @@ These signals inform measurement and operations.
 
 They do not change canonical state by themselves.
 
-### 8.3 Prohibited off-platform canonical writes
+### 9.3 Prohibited off-platform canonical writes
 
 The following remain prohibited in this design:
 
@@ -353,18 +393,18 @@ Any exception to these rules requires a later approved policy and is out of scop
 
 ---
 
-## 9. Route Eligibility
+## 10. Route Eligibility
 
 Route eligibility is explicit and fail-closed.
 
-### 9.1 Approved route families
+### 10.1 Approved route families
 
 This design covers only:
 
 - `exit`
 - `retention`
 
-### 9.2 Excluded route families
+### 10.2 Excluded route families
 
 The following remain excluded in this wave:
 
@@ -374,7 +414,7 @@ The following remain excluded in this wave:
 - `team`
 - any future route family not explicitly approved
 
-### 9.3 Eligibility rule
+### 10.3 Eligibility rule
 
 Action Center belongs to a route only where bounded follow-through semantics are clear enough to support:
 
@@ -388,11 +428,26 @@ If a route cannot satisfy those semantics, it is not eligible.
 
 ---
 
-## 10. Manager Quick-Action Contract
+## 11. Approved Route Defaults
+
+| Route family | Default review window | Default rhythm owner | Default manager participant role | Default closeout question | Default stale trigger | Default continuation logic | Excluded behavior |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `exit` | `60-90 days` | HR rhythm owner | contextual manager participant for the relevant review/follow-up moment | what was chosen, what was executed, and what returns in the next exit batch or management conversation? | route becomes `stale` when no valid review date exists or the scheduled review passes the bounded review window without canonical update | continuation stays bounded to the next relevant exit batch, management conversation, or explicit closeout | no generic project board, no broad task engine, no advisory case log |
+| `retention` | `45-90 days` | HR rhythm owner | contextual manager participant for the relevant review/follow-up moment | what was verified, what first intervention or follow-up was started, and what should still be watched in retention signal, stay-intent, or departure intention? | route becomes `stale` when no valid review date exists or the scheduled review passes the bounded review window without canonical update | continuation stays bounded to follow-up on retention signal, stay-intent, departure intention, or explicit closeout | no generic project board, no broad task engine, no advisory case log |
+
+Shared defaults:
+
+- HR is rhythm owner.
+- Managers are contextual participants.
+- No route gains a generic project board or broad task engine in this wave.
+
+---
+
+## 12. Manager Quick-Action Contract
 
 Manager participation must stay focused and light.
 
-### 10.1 One-primary-action rule
+### 12.1 One-primary-action rule
 
 Each manager-facing trigger should have one primary expected action.
 
@@ -404,7 +459,7 @@ Examples:
 
 Managers should not have to interpret a broad dashboard surface to understand what is expected.
 
-### 10.2 Quick-action limits
+### 12.2 Quick-action limits
 
 Quick actions must remain:
 
@@ -421,22 +476,22 @@ They must not become:
 
 ---
 
-## 11. Adoption Measurement Framework
+## 13. Adoption Measurement Framework
 
 This wave defines measurement readiness only.
 
-### 11.1 What this framework is for
+### 13.1 What this framework is for
 
-The framework should make later adoption proof possible by defining:
+The framework makes later adoption proof possible by defining:
 
 - which events are captured
 - which metrics exist
 - how they are calculated
 - how they should be interpreted
 
-### 11.2 Core metrics
+### 13.2 Core metrics
 
-The design should define at least:
+The design defines the following core metrics:
 
 - manager trigger open rate
 - manager quick-action completion rate
@@ -449,9 +504,9 @@ The design should define at least:
 - reopen rate
 - HR chasing reduction proxy
 
-### 11.3 Metric contract
+### 13.3 Metric contract
 
-Each metric must define:
+Each metric defines:
 
 - event source
 - canonical object anchor
@@ -459,7 +514,28 @@ Each metric must define:
 - interpretation guidance
 - what the metric does **not** prove
 
-### 11.4 Commercial rule
+### 13.4 Metric definitions table
+
+| Metric name | Formula | Event source | Canonical object anchor | Interpretation | What it does not prove |
+| --- | --- | --- | --- | --- | --- |
+| `manager_trigger_open_rate` | unique manager contextual-entry opens / unique manager trigger deliveries | trigger delivery ledger + contextual-entry events | adoption event linked to follow-through route and review moment | indicates whether manager-facing triggers cause first engagement | does not prove useful follow-through, review quality, or management action quality |
+| `manager_quick_action_completion_rate` | completed manager quick actions / manager quick-action opportunities | quick-action events | adoption event linked to review moment or follow-through route | shows whether managers complete the bounded primary action asked of them | does not prove that the underlying decision or intervention was good |
+| `review_completion_rate` | canonically completed reviews / scheduled reviews in measurement window | review moment transition events | review moment | shows whether planned reviews are actually completed | does not prove route closure quality or intervention success |
+| `reschedule_rate` | canonically rescheduled reviews / scheduled reviews in measurement window | review reschedule events | review moment | indicates how often rhythm slips and requires replanning | does not prove bad governance by itself |
+| `stale_route_rate` | routes in `stale` state / active eligible follow-through routes | route state derivation events | follow-through route | shows broken or missing review rhythm on eligible routes | does not prove neglect in every case |
+| `overdue_route_rate` | routes in `overdue` state / active eligible follow-through routes | route state derivation events | follow-through route | shows follow-through pressure that has crossed the planned review date | does not prove failure of follow-through by itself |
+| `escalation_sensitive_route_rate` | routes in `escalation_sensitive` state / active eligible follow-through routes | route state derivation events | follow-through route | shows routes that have crossed the bounded escalation threshold and need HR attention | does not prove poor product fit by itself |
+| `closeout_discipline_rate` | canonically closed routes with required closeout fields completed / canonically closed routes | closeout events | closeout / continuation record | shows whether closure is disciplined rather than vague | does not prove the chosen action was correct |
+| `reopen_rate` | reopened routes / canonically closed routes | reopen events | closeout / continuation record plus follow-through route | shows how often closure did not hold | does not prove reopen is always bad |
+| `HR_chasing_reduction_proxy` | 1 - (HR manual chase events / (routes in `overdue` + routes in `stale` + routes in `escalation_sensitive`)) | HR chase events + derived oversight events | adoption event linked to follow-through route | estimates whether the system reduces manual HR chasing pressure over time | does not prove manager satisfaction or total operating efficiency |
+
+These metrics enable later proof.
+
+They are not proof by themselves.
+
+Commercial claims require later live-route evidence.
+
+### 13.5 Commercial rule
 
 No commercial claim of proven Action Center adoption may be made from this spec alone.
 
@@ -467,13 +543,23 @@ Proof requires later live-route evidence.
 
 ---
 
-## 12. Governance, Audit And Data Boundaries Appendix
+## 14. Governance, Audit And Data Boundaries Appendix
 
 The follow-up implementation work must inherit the following governance rules.
 
-### 12.1 Auditlog
+### 14.1 Auditlog
 
-Audit requirements must cover:
+Every canonical audit entry captures:
+
+- actor
+- timestamp
+- previous state
+- new state
+- affected object
+- reason where required
+- channel/source
+
+Audit coverage includes:
 
 - owner changes
 - review scheduling changes
@@ -481,66 +567,81 @@ Audit requirements must cover:
 - reopen
 - escalation-related transitions where applicable
 
-### 12.2 Data retention assumptions
+### 14.2 Data retention assumptions
 
-The design must explicitly state:
+The default assumption is:
 
-- what follow-through history is retained
-- what is operational history versus people-sensitive record
-- what can age out, if anything
+- follow-through history is retained as operational route history unless later retention policy says otherwise
+- operational history and people-sensitive record remain distinct
+- no retention behavior may silently turn Action Center into a personnel dossier
+- any aging-out policy must preserve audit integrity for canonical transitions
 
-### 12.3 Visibility boundaries
+### 14.3 Visibility boundaries
 
-The design must define:
+Default visibility is:
 
-- who can see route state
-- who can see review history
-- who can see manager notes or updates
-- whether notes remain route-visible, HR-only, or hidden from managers
+- HR can see route state and review history for eligible routes they govern
+- managers see only the contextual route/review actions relevant to them
+- broad executive visibility is out of scope unless separately approved
+- manager notes remain bounded to route/review context and are not broad employee narratives
+- note visibility must be intentionally set as route-visible, HR-only, or hidden from managers
 
-### 12.4 Follow-through history versus personnel record
+### 14.4 Follow-through history versus personnel record
 
 Action Center is follow-through software.
 
 It is not a personnel dossier.
 
-The design must keep `opvolghistorie` separate from employee file semantics.
+The design keeps `opvolghistorie` separate from employee file semantics.
 
-### 12.5 Customer and tenant boundary
+### 14.5 Customer and tenant boundary
 
-All canonical truth, audit, and metrics must remain tenant-safe and route-safe.
+All canonical truth, audit, and metrics remain tenant-safe and route-safe.
 
-### 12.6 Export and support boundary
+### 14.6 Export and support boundary
 
-The design must define:
+Default export/support rules are:
 
-- what may be exported
-- what support staff may inspect
-- what should remain internal-only
+- exports may include route history and audit where allowed
+- exports must not imply personnel dossier export
+- support access must be tenant-safe, auditable, and limited to operational troubleshooting
+- support access must not become a shadow business-admin surface
 
-### 12.7 Microsoft Graph governance
+### 14.7 Microsoft Graph governance
 
-The design must define:
+Default Graph governance is:
 
-- consent assumptions
-- fallback behavior
-- what Graph may mirror
-- what Graph may never canonically change
+- Graph mirrors invite and calendar artifacts only
+- Graph is never schedule truth or route truth
+- Graph consent remains optional and route-bounded
+- fallback behavior remains standards-based email + ICS
+- Graph may never canonically change route status, owner truth, closeout truth, or reopen truth
 
-### 12.8 Prohibited storage
+### 14.8 Manager notes boundary
 
-The design must state what may not be stored in Action Center.
+Manager notes are bounded to route/review context only.
 
-At minimum, that should block drifting into:
+They may not become:
+
+- free-form employee narrative
+- performance narrative
+- individual risk note
+- unbounded commentary thread
+
+### 14.9 Prohibited storage
+
+The following may not be stored in Action Center:
 
 - broad HR case files
+- performance narratives
+- individual risk notes
 - unbounded employee narrative records
 - generic advisory logs
 - unrelated workflow commentary
 
 ---
 
-## 13. Test Strategy
+## 15. Test Strategy
 
 The eventual implementation plan must cover tests for:
 
@@ -558,7 +659,7 @@ The test strategy exists to protect the constitutional model, not just the UI.
 
 ---
 
-## 14. Non-Goals
+## 16. Non-Goals
 
 This design does not attempt to:
 
@@ -571,7 +672,7 @@ This design does not attempt to:
 
 ---
 
-## 15. Approval Gate
+## 17. Approval Gate
 
 This design is only ready for implementation planning when it explicitly defines:
 
@@ -579,18 +680,26 @@ This design is only ready for implementation planning when it explicitly defines
 - every allowed state and prohibited state
 - every allowed state transition
 - actor permissions for each transition
+- route defaults for approved route families
 - the full off-platform write policy
 - route eligibility rules and exclusion rules
 - manager quick-action boundaries
-- governance/audit/data boundaries
+- metric formulas
+- governance, audit, and data boundaries
 - adoption measurement semantics
 - test coverage expectations
+
+The spec is not implementation-planning ready if any core object, state, transition, permission, route default, off-platform rule, metric formula, or governance boundary remains described only as `should define later` or `must define later`.
+
+The design defines the product defaults now.
+
+Implementation plans may decompose work, but may not invent new product truth.
 
 If any of these remain ambiguous, the implementation plan should not be written.
 
 ---
 
-## 16. Next Step
+## 18. Next Step
 
 After review and approval, the next document should be the implementation plan for this design.
 
