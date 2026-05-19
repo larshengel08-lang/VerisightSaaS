@@ -137,6 +137,9 @@ describe('action center graph sync orchestration', () => {
       reason: null,
       mutationClass: 'mirror_only',
       canonicalWrite: false,
+      mirroredObject: 'review_moment',
+      mirroredReviewState: 'scheduled',
+      attendancePolicy: 'hint_only',
     })
     expect(createEvent).toHaveBeenCalledTimes(1)
     expect(graphTable.state.upserts).toHaveLength(1)
@@ -216,6 +219,9 @@ describe('action center graph sync orchestration', () => {
       reason: null,
       mutationClass: 'mirror_only',
       canonicalWrite: false,
+      mirroredObject: 'review_moment',
+      mirroredReviewState: 'scheduled',
+      attendancePolicy: 'hint_only',
     })
     expect(createEvent).not.toHaveBeenCalled()
     expect(updateEvent).toHaveBeenCalledTimes(1)
@@ -280,6 +286,9 @@ describe('action center graph sync orchestration', () => {
       reason: null,
       mutationClass: 'mirror_only',
       canonicalWrite: false,
+      mirroredObject: 'review_moment',
+      mirroredReviewState: 'cancelled',
+      attendancePolicy: 'hint_only',
     })
     expect(cancelEvent).toHaveBeenCalledTimes(1)
     expect(graphTable.state.upserts[0]).toMatchObject({
@@ -317,6 +326,9 @@ describe('action center graph sync orchestration', () => {
       reason: 'missing-consent',
       mutationClass: 'mirror_only',
       canonicalWrite: false,
+      mirroredObject: 'review_moment',
+      mirroredReviewState: 'scheduled',
+      attendancePolicy: 'hint_only',
     })
     expect(createEvent).not.toHaveBeenCalled()
     expect(graphTable.state.upserts).toHaveLength(0)
@@ -369,6 +381,9 @@ describe('action center graph sync orchestration', () => {
       reason: null,
       mutationClass: 'mirror_only',
       canonicalWrite: false,
+      mirroredObject: 'review_moment',
+      mirroredReviewState: 'scheduled',
+      attendancePolicy: 'hint_only',
     })
     expect(createEvent).not.toHaveBeenCalled()
     expect(updateEvent).not.toHaveBeenCalled()

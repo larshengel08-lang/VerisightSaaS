@@ -117,6 +117,20 @@ describe('action center review invite draft contract', () => {
     expect(ics).not.toContain('REOPEN ROUTE')
   })
 
+  it('renders cancel ICS artifacts with cancelled mirror-state markers instead of scheduled drift', () => {
+    const draft = buildActionCenterReviewInviteDraft(baseContext)
+    const ics = renderActionCenterReviewInviteIcs({
+      draft,
+      method: 'CANCEL',
+      revision: 3,
+      organizerEmail: 'hr@verisight.nl',
+    })
+
+    expect(ics).toContain('STATUS:CANCELLED')
+    expect(ics).toContain('X-VERISIGHT-MIRRORED-REVIEW-STATE:CANCELLED')
+    expect(ics).not.toContain('X-VERISIGHT-MIRRORED-REVIEW-STATE:SCHEDULED')
+  })
+
   it.each([
     {
       name: 'unsupported scan type outside the enabled parity routes',

@@ -72,6 +72,7 @@ export function renderActionCenterReviewInviteIcs(args: {
   if (draft.canonicalWrite || draft.mutationClass !== 'mirror_only') {
     throw new Error('Action Center review invite ICS must stay mirror-only.')
   }
+  const mirroredReviewState = method === 'CANCEL' ? 'cancelled' : draft.mirroredReviewState
 
   const description = escapeIcsText(
     `${draft.emailText}\n\nAttendance is a hint only. Action Center remains the canonical follow-through truth.\n\nOpen review in Action Center: ${draft.actionCenterHref}`,
@@ -92,7 +93,7 @@ export function renderActionCenterReviewInviteIcs(args: {
     `X-VERISIGHT-MUTATION-CLASS:${draft.mutationClass.toUpperCase()}`,
     `X-VERISIGHT-CANONICAL-WRITE:${String(draft.canonicalWrite).toUpperCase()}`,
     `X-VERISIGHT-MIRRORED-OBJECT:${draft.mirroredObject.toUpperCase()}`,
-    `X-VERISIGHT-MIRRORED-REVIEW-STATE:${draft.mirroredReviewState.toUpperCase()}`,
+    `X-VERISIGHT-MIRRORED-REVIEW-STATE:${mirroredReviewState.toUpperCase()}`,
     `DTSTART;VALUE=DATE:${toIcsDateOnly(draft.reviewDate)}`,
     `DTEND;VALUE=DATE:${addOneDay(draft.reviewDate)}`,
     `ORGANIZER:mailto:${organizerEmail}`,

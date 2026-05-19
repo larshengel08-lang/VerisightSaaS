@@ -70,6 +70,14 @@ type ActionCenterGraphSyncReason =
   | 'graph_event_missing_id'
   | string
 
+type ActionCenterGraphMirrorResultMetadata = {
+  mutationClass: 'mirror_only'
+  canonicalWrite: false
+  mirroredObject: 'review_moment'
+  mirroredReviewState: 'scheduled' | 'cancelled'
+  attendancePolicy: 'hint_only'
+}
+
 export type ActionCenterGraphSyncResult =
   | {
       status: 'linked'
@@ -79,9 +87,7 @@ export type ActionCenterGraphSyncResult =
       iCalUId: string | null
       lastSyncedRevision: number
       reason: null
-      mutationClass: 'mirror_only'
-      canonicalWrite: false
-    }
+    } & ActionCenterGraphMirrorResultMetadata
   | {
       status: 'cancelled'
       provider: 'microsoft_graph'
@@ -90,9 +96,7 @@ export type ActionCenterGraphSyncResult =
       iCalUId: string | null
       lastSyncedRevision: number
       reason: null
-      mutationClass: 'mirror_only'
-      canonicalWrite: false
-    }
+    } & ActionCenterGraphMirrorResultMetadata
   | {
       status: 'already-current'
       provider: 'microsoft_graph'
@@ -101,9 +105,7 @@ export type ActionCenterGraphSyncResult =
       iCalUId: string | null
       lastSyncedRevision: number
       reason: null
-      mutationClass: 'mirror_only'
-      canonicalWrite: false
-    }
+    } & ActionCenterGraphMirrorResultMetadata
   | {
       status: 'fallback'
       provider: 'microsoft_graph'
@@ -112,9 +114,7 @@ export type ActionCenterGraphSyncResult =
       iCalUId: string | null
       lastSyncedRevision: number | null
       reason: ActionCenterGraphSyncReason
-      mutationClass: 'mirror_only'
-      canonicalWrite: false
-    }
+    } & ActionCenterGraphMirrorResultMetadata
   | {
       status: 'failed'
       provider: 'microsoft_graph'
@@ -123,9 +123,7 @@ export type ActionCenterGraphSyncResult =
       iCalUId: string | null
       lastSyncedRevision: number | null
       reason: string
-      mutationClass: 'mirror_only'
-      canonicalWrite: false
-    }
+    } & ActionCenterGraphMirrorResultMetadata
 
 export interface ActionCenterGraphSyncInput {
   orgId: string
@@ -206,13 +204,26 @@ function toDatabasePayload(record: ActionCenterGraphCalendarLinkRecord) {
   }
 }
 
-function withMirrorOnlyResult<T extends Omit<ActionCenterGraphSyncResult, 'mutationClass' | 'canonicalWrite'>>(
+function withMirrorOnlyResult<
+  T extends Omit<
+    ActionCenterGraphSyncResult,
+    | 'mutationClass'
+    | 'canonicalWrite'
+    | 'mirroredObject'
+    | 'mirroredReviewState'
+    | 'attendancePolicy'
+  >,
+>(
   result: T,
-): T & Pick<ActionCenterGraphSyncResult, 'mutationClass' | 'canonicalWrite'> {
+  method: ActionCenterGraphSyncMethod,
+): T & ActionCenterGraphMirrorResultMetadata {
   return {
     ...result,
     mutationClass: 'mirror_only',
     canonicalWrite: false,
+    mirroredObject: 'review_moment',
+    mirroredReviewState: method === 'CANCEL' ? 'cancelled' : 'scheduled',
+    attendancePolicy: 'hint_only',
   }
 }
 
@@ -319,7 +330,7 @@ export async function syncActionCenterGraphReview(
       iCalUId: existingLink?.iCalUId ?? null,
       lastSyncedRevision: existingLink?.lastSyncedRevision ?? null,
       reason: capability.reason,
-    })
+    }, input.method)
   }
 
   if (existingLink && isAlreadyCurrent({ existingLink, revision: input.revision, method: input.method })) {
@@ -331,7 +342,7 @@ export async function syncActionCenterGraphReview(
       iCalUId: existingLink.iCalUId,
       lastSyncedRevision: existingLink.lastSyncedRevision,
       reason: null,
-    })
+    }, input.method)
   }
 
   if (input.method === 'CANCEL') {
@@ -344,7 +355,7 @@ export async function syncActionCenterGraphReview(
         iCalUId: null,
         lastSyncedRevision: null,
         reason: 'missing-provider-link',
-      })
+      }, input.method)
     }
 
     const mirrorPayload = buildActionCenterGraphCalendarSyncPayload({
@@ -380,7 +391,7 @@ export async function syncActionCenterGraphReview(
         iCalUId: existingLink.iCalUId,
         lastSyncedRevision: existingLink.lastSyncedRevision,
         reason: cancelResult.reason,
-      })
+      }, input.method)
     }
 
     const nextRecord = buildActionCenterGraphCalendarLinkRecord({
@@ -405,7 +416,7 @@ export async function syncActionCenterGraphReview(
       iCalUId: nextRecord.iCalUId,
       lastSyncedRevision: nextRecord.lastSyncedRevision,
       reason: null,
-    })
+    }, input.method)
   }
 
   if (!input.inviteDraft) {
@@ -417,7 +428,7 @@ export async function syncActionCenterGraphReview(
       iCalUId: existingLink?.iCalUId ?? null,
       lastSyncedRevision: existingLink?.lastSyncedRevision ?? null,
       reason: 'missing-invite-draft',
-    })
+    }, input.method)
   }
 
   const reviewDate = normalizeText(input.inviteDraft.reviewDate)
@@ -430,7 +441,7 @@ export async function syncActionCenterGraphReview(
       iCalUId: existingLink?.iCalUId ?? null,
       lastSyncedRevision: existingLink?.lastSyncedRevision ?? null,
       reason: 'missing-invite-draft',
-    })
+    }, input.method)
   }
 
   const mirrorPayload = buildActionCenterGraphCalendarSyncPayload({
@@ -497,7 +508,7 @@ export async function syncActionCenterGraphReview(
       iCalUId: existingLink?.iCalUId ?? null,
       lastSyncedRevision: existingLink?.lastSyncedRevision ?? null,
       reason: mutationResult.reason,
-    })
+    }, input.method)
   }
 
   const nextRecord = buildActionCenterGraphCalendarLinkRecord({
@@ -529,5 +540,5 @@ export async function syncActionCenterGraphReview(
     iCalUId: nextRecord.iCalUId,
     lastSyncedRevision: nextRecord.lastSyncedRevision,
     reason: null,
-  })
+  }, input.method)
 }
