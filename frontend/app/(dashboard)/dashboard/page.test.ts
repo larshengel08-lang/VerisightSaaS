@@ -74,6 +74,7 @@ describe('dashboard home UX guardrails', () => {
     const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
 
     expect(source).toContain("if (context.managerOnly) redirect('/action-center')")
+    expect(source).toContain("['culture_assessment', 'exit', 'retention'].includes(entry.campaign.scan_type)")
     expect(source).toContain("const requestedModuleFilter = normalizeDashboardModuleFilter(")
     expect(source).toContain("const requestedStatusFilter = normalizeDashboardStatusFilter(")
     expect(source).toContain("if (state === 'ready_to_launch' || state === 'running' || state === 'sparse') return 'action_needed'")
@@ -83,6 +84,19 @@ describe('dashboard home UX guardrails', () => {
     expect(source).not.toContain('Afwijzen')
     expect(source).not.toContain('Toewijzen')
     expect(source).not.toContain('Reviewmoment')
+  })
+
+  it('sends setup and in-opbouw cockpit routes to campaign-specific routebeheer instead of campaign detail', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain("entry.state === 'setup' || entry.state === 'ready_to_launch' || entry.state === 'running'")
+    expect(source).toContain("`/campaigns/${entry.campaign.campaign_id}/beheer`")
+  })
+
+  it('does not leak helper exports from the Next.js page module', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).not.toContain('export function getCtaHrefForState')
   })
 
   it('keeps signal scoring out of the visible overview card metrics', () => {

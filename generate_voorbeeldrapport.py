@@ -1,5 +1,5 @@
 """
-Verisight - Voorbeeldrapport Generator
+Loep - Voorbeeldrapport Generator
 ======================================
 Genereert een fictief ExitScan- of RetentieScan-rapport met synthetische data.
 
@@ -70,8 +70,8 @@ TENURES = [0.5, 1.0, 1.5, 2.0, 2.0, 3.0, 4.0, 5.5, 7.0]
 EXIT_CONFIG = {
     "scan_type": "exit",
     "campaign_name": "ExitScan Q1 2026",
-    "docs_output_name": "voorbeeldrapport_verisight.pdf",
-    "public_output_name": "voorbeeldrapport_verisight.pdf",
+    "docs_output_name": "voorbeeldrapport_loep.pdf",
+    "public_output_name": "voorbeeldrapport_loep.pdf",
     "invited": 51,
     "responses": 35,
 }
@@ -83,6 +83,15 @@ RETENTION_CONFIG = {
     "public_output_name": "voorbeeldrapport_retentiescan.pdf",
     "invited": 58,
     "responses": 39,
+}
+
+CULTURE_CONFIG = {
+    "scan_type": "culture_assessment",
+    "campaign_name": "Loep Cultuurbeeld 2026",
+    "docs_output_name": "voorbeeldrapport_cultuurbeeld.pdf",
+    "public_output_name": "voorbeeldrapport_cultuurbeeld.pdf",
+    "invited": 120,
+    "responses": 48,
 }
 
 EXIT_PROFILES = [
@@ -170,6 +179,41 @@ RETENTION_OPEN_TEXTS = [
     "",
 ]
 
+CULTURE_PROFILES = [
+    (
+        "vertrouwen_richting_spanning", 0.27,
+        6.1, 5.5, 5.3, 5.8, 5.6, 5.9, 5.7, 5.8, 5.9, 5.7,
+    ),
+    (
+        "werkdruk_draagkracht", 0.24,
+        6.0, 5.8, 5.9, 5.9, 5.1, 5.4, 5.7, 5.8, 5.9, 5.8,
+    ),
+    (
+        "groei_alignment", 0.19,
+        6.2, 5.9, 5.8, 5.4, 5.7, 5.8, 5.2, 5.5, 5.8, 5.4,
+    ),
+    (
+        "verandering_samenwerking", 0.18,
+        6.0, 5.8, 5.7, 5.3, 5.6, 5.7, 5.8, 5.1, 5.7, 5.6,
+    ),
+    (
+        "stabiel_maar_voorzichtig", 0.12,
+        6.6, 6.3, 6.2, 6.1, 6.0, 6.1, 6.2, 6.0, 6.1, 6.2,
+    ),
+]
+
+CULTURE_OPEN_TEXTS = [
+    "Meer richting en voorspelbaarheid vanuit de top zou helpen om vertrouwen vast te houden.",
+    "Samenwerking tussen teams voelt stroperig wanneer prioriteiten niet scherp genoeg zijn.",
+    "Werkdruk en herstel vragen meer aandacht als dit tempo structureel zo blijft.",
+    "Ik zie kansen, maar mis soms ontwikkelperspectief en heldere vervolgafspraken.",
+    "We zijn betrokken, maar verandering kost veel energie als afstemming achterblijft.",
+    "Beloning is niet het hoofdthema, maar eerlijkheid en uitlegbaarheid mogen sterker.",
+    "De basis is redelijk stabiel, toch blijft psychologische veiligheid niet overal vanzelfsprekend.",
+    "",
+    "",
+]
+
 STAY_INTENT_MAP = {
     "leiderschap_probleem": [3, 4, 4, 5],
     "groei_frustratie": [3, 4, 4],
@@ -193,6 +237,33 @@ def _pick_profile(profiles: list[tuple]) -> dict[str, float | str]:
     for profile in profiles:
         cumulative += profile[1]
         if r <= cumulative:
+            if len(profile) == 12:
+                (
+                    name, _weight,
+                    engagement_involvement,
+                    trust_psychological_safety,
+                    leadership_direction,
+                    collaboration_alignment,
+                    workload_capacity,
+                    autonomy_role_clarity,
+                    growth_development,
+                    change_readiness,
+                    reward_conditions,
+                    organizational_connection_intent,
+                ) = profile
+                return {
+                    "name": name,
+                    "engagement_involvement": engagement_involvement,
+                    "trust_psychological_safety": trust_psychological_safety,
+                    "leadership_direction": leadership_direction,
+                    "collaboration_alignment": collaboration_alignment,
+                    "workload_capacity": workload_capacity,
+                    "autonomy_role_clarity": autonomy_role_clarity,
+                    "growth_development": growth_development,
+                    "change_readiness": change_readiness,
+                    "reward_conditions": reward_conditions,
+                    "organizational_connection_intent": organizational_connection_intent,
+                }
             if isinstance(profile[-1], (int, float)) and isinstance(profile[-2], (int, float)):
                 (
                     name, _weight,
@@ -394,12 +465,12 @@ def _purge_campaign(db, campaign: Campaign) -> None:
 
 
 def _parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Genereer een fictief Verisight-rapport.")
+    parser = argparse.ArgumentParser(description="Genereer een fictief Loep-rapport.")
     parser.add_argument(
         "scan_type",
         nargs="?",
         default="exit",
-        choices=["exit", "retention"],
+        choices=["exit", "retention", "culture_assessment"],
         help="Welk rapporttype je wilt genereren.",
     )
     parser.add_argument(
@@ -536,9 +607,78 @@ def _build_retention_response(profile: dict[str, float | str]) -> dict:
     }
 
 
+def _build_culture_response(profile: dict[str, float | str]) -> dict:
+    domain_scores = {
+        "engagement_involvement": round(float(profile["engagement_involvement"]), 1),
+        "trust_psychological_safety": round(float(profile["trust_psychological_safety"]), 1),
+        "leadership_direction": round(float(profile["leadership_direction"]), 1),
+        "collaboration_alignment": round(float(profile["collaboration_alignment"]), 1),
+        "workload_capacity": round(float(profile["workload_capacity"]), 1),
+        "autonomy_role_clarity": round(float(profile["autonomy_role_clarity"]), 1),
+        "growth_development": round(float(profile["growth_development"]), 1),
+        "change_readiness": round(float(profile["change_readiness"]), 1),
+        "reward_conditions": round(float(profile["reward_conditions"]), 1),
+        "organizational_connection_intent": round(float(profile["organizational_connection_intent"]), 1),
+    }
+    culture_index = round(sum(domain_scores.values()) / len(domain_scores), 2)
+    if culture_index >= 7:
+        risk_band = "HOOG"
+    elif culture_index >= 5.5:
+        risk_band = "MIDDEN"
+    else:
+        risk_band = "LAAG"
+    text = random.choice(CULTURE_OPEN_TEXTS)
+
+    return {
+        "tenure_years": None,
+        "exit_reason_category": None,
+        "exit_reason_code": None,
+        "stay_intent_score": None,
+        "sdt_raw": {},
+        "sdt_scores": {
+            "culture_wave_1": round(sum(list(domain_scores.values())[:5]) / 5, 2),
+            "culture_wave_2": round(sum(list(domain_scores.values())[5:]) / 5, 2),
+            "culture_index": culture_index,
+            "answered_items": 40,
+        },
+        "org_raw": {},
+        "org_scores": domain_scores,
+        "pull_factors_raw": {},
+        "open_text_raw": anonymize_text(text) if text else None,
+        "uwes_raw": {},
+        "uwes_score": None,
+        "turnover_intention_raw": {},
+        "turnover_intention_score": None,
+        "risk_score": culture_index,
+        "risk_band": risk_band,
+        "preventability": None,
+        "replacement_cost_eur": None,
+        "full_result": {
+            "culture_index": culture_index,
+            "domain_scores": domain_scores,
+            "board_attention_points": [],
+            "response_basis": {
+                "answered_closed_items": 40,
+                "minimum_closed_items_answered": 32,
+                "minimum_valid_domains": 8,
+            },
+            "method_guardrails": {
+                "no_causal_claims": True,
+                "no_individual_predictions": True,
+                "no_manager_ranking_logic": True,
+            },
+        },
+    }
+
+
 def main() -> None:
     args = _parse_args()
-    config = RETENTION_CONFIG if args.scan_type == "retention" else EXIT_CONFIG
+    if args.scan_type == "retention":
+        config = RETENTION_CONFIG
+    elif args.scan_type == "culture_assessment":
+        config = CULTURE_CONFIG
+    else:
+        config = EXIT_CONFIG
 
     session_factory, isolated_database_url, isolated_db_path, isolated_engine = _build_demo_session_factory(
         str(config["scan_type"]),
@@ -601,7 +741,12 @@ def main() -> None:
     print(f"  Genereer {responses} ingevulde responses...")
     print("")
 
-    profiles = RETENTION_PROFILES if campaign.scan_type == "retention" else EXIT_PROFILES
+    if campaign.scan_type == "retention":
+        profiles = RETENTION_PROFILES
+    elif campaign.scan_type == "culture_assessment":
+        profiles = CULTURE_PROFILES
+    else:
+        profiles = EXIT_PROFILES
 
     for index in range(responses):
         profile = _pick_profile(profiles)
@@ -631,6 +776,14 @@ def main() -> None:
                 f"bevlogenheid {response_payload['uwes_score']:.1f}  "
                 f"vertrekintentie {response_payload['turnover_intention_score']:.1f}  "
                 f"stay-intent {response_payload['full_result']['retention_summary']['stay_intent_score']:.1f}"
+            )
+        elif campaign.scan_type == "culture_assessment":
+            response_payload = _build_culture_response(profile)
+            print(
+                f"  [{index + 1:02d}] {department:<16} {role:<12} "
+                f"culture index {response_payload['risk_score']:.1f}  "
+                f"vertrouwen {response_payload['org_scores']['trust_psychological_safety']:.1f}  "
+                f"werkdruk {response_payload['org_scores']['workload_capacity']:.1f}"
             )
         else:
             response_payload = _build_exit_response(profile, salary, role)

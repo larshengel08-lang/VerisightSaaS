@@ -156,12 +156,25 @@ class RespondentImportResponse(BaseModel):
     errors: list[RespondentImportIssue] = Field(default_factory=list)
     imported: int = 0
     emails_sent: int = 0
+    invite_evidence: list["InviteEvidenceItem"] = Field(default_factory=list)
+
+
+class InviteEvidenceItem(BaseModel):
+    token: str
+    email: EmailStr | None = None
+    status: Literal["sent", "failed", "skipped"]
+    invite_url: str | None = None
+    provider: str | None = None
+    provider_email_id: str | None = None
+    provider_message_id: str | None = None
+    failure_reason: str | None = None
 
 
 class InviteSendResult(BaseModel):
     sent: int
     failed: int
     skipped: int  # geen e-mailadres
+    evidence: list[InviteEvidenceItem] = Field(default_factory=list)
 
 
 class SendInviteItem(BaseModel):

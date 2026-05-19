@@ -1,3 +1,5 @@
+import type { ScanType } from '@/lib/types'
+
 export type CampaignCompositionState =
   | 'setup'
   | 'ready_to_launch'
@@ -18,6 +20,7 @@ export const HOME_STATE_ORDER: CampaignCompositionState[] = [
 ]
 
 export function getCampaignCompositionState({
+  scanType,
   isActive,
   totalInvited,
   totalCompleted,
@@ -26,6 +29,7 @@ export function getCampaignCompositionState({
   hasMinDisplay,
   hasEnoughData,
 }: {
+  scanType: ScanType
   isActive: boolean
   totalInvited: number
   totalCompleted: number
@@ -34,16 +38,28 @@ export function getCampaignCompositionState({
   hasMinDisplay: boolean
   hasEnoughData: boolean
 }): CampaignCompositionState {
-  if (!isActive) {
-    return 'closed'
-  }
-
   if (totalInvited === 0) {
     return 'setup'
   }
 
   if (invitesNotSent > 0) {
     return 'ready_to_launch'
+  }
+
+  if (scanType === 'culture_assessment') {
+    if (isActive) {
+      return 'running'
+    }
+
+    if (totalCompleted === 0 || !hasMinDisplay || !hasEnoughData || incompleteScores > 0) {
+      return 'sparse'
+    }
+
+    return 'closed'
+  }
+
+  if (!isActive) {
+    return 'closed'
   }
 
   if (totalCompleted === 0) {

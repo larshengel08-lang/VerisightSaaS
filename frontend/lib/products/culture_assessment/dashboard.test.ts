@@ -7,6 +7,9 @@ describe('culture assessment product module', () => {
   it('uses the canonical Culture Index copy and contract thresholds', () => {
     expect(cultureAssessmentProductModule.definition.productName).toBe('Loep Culture Assessment')
     expect(cultureAssessmentProductModule.definition.signalLabel).toBe('Loep Culture Index')
+    expect(cultureAssessmentProductModule.definition.launchStatus).toContain('pilot-ready')
+    expect(cultureAssessmentProductModule.definition.deploymentProfiles?.mkb.toLowerCase()).toContain('dezelfde kernvragenlijst')
+    expect(cultureAssessmentProductModule.definition.standardOutputs).toContain('boardroom deck blueprint')
     expect(CULTURE_ASSESSMENT_CONTRACT.thresholds.organizationMinN).toBe(30)
     expect(CULTURE_ASSESSMENT_CONTRACT.namedManagerLayer.defaultState).toBe('locked')
     expect(CULTURE_ASSESSMENT_CONTRACT.canonicalBlockOrder).toEqual([
@@ -22,6 +25,10 @@ describe('culture assessment product module', () => {
       'board_read_follow_on',
       'report_export_methodology',
     ])
+    expect(cultureAssessmentProductModule.definition.optionalOutputs).toContain('segment summary export')
+    expect(cultureAssessmentProductModule.definition.outputReadiness?.boardroomDeck).toBe('blueprint_ready')
+    expect(cultureAssessmentProductModule.definition.outputReadiness?.boardReportPdf).toBe('demo_asset_ready')
+    expect(cultureAssessmentProductModule.definition.outputSequenceNote?.toLowerCase()).toContain('compacte executive read')
   })
 
   it('builds an executive-safe dashboard model without ranking language', () => {

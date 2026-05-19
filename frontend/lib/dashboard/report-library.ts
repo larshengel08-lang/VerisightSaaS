@@ -5,7 +5,7 @@ import {
   prioritizeHrDemoCampaigns,
 } from '@/lib/dashboard/hr-demo-pilot-artifact'
 import { getHrBridgePresentation } from '@/lib/dashboard/hr-bridge-state'
-import { FIRST_DASHBOARD_THRESHOLD } from '@/lib/response-activation'
+import { getResponseActivationThresholds, isDashboardReleaseReady, isInsightReleaseReady } from '@/lib/response-activation'
 import { buildBridgeAssessmentTruth, resolveHrBridgeState } from '@/lib/dashboard/hr-bridge-state'
 import { SCAN_TYPE_LABELS, getCampaignAverageSignalScore, type CampaignStats, type ScanType } from '@/lib/types'
 
@@ -129,7 +129,10 @@ function getReportBridgeState(args: {
   routeOpenable: boolean
 }): ReportLibraryEntry['bridgeState'] {
   const { campaign, routeEntryStage, routeOpenable } = args
-  const isReportReady = campaign.total_completed >= FIRST_DASHBOARD_THRESHOLD
+  const isReportReady = isDashboardReleaseReady(campaign.total_completed, {
+    scanType: campaign.scan_type,
+    isActive: campaign.is_active,
+  })
   const assessment = buildBridgeAssessmentTruth({
     sourceType: 'report',
     sourceId: campaign.campaign_id,
@@ -159,7 +162,12 @@ export function getReportEntryBridge(entry: Pick<ReportLibraryEntry, 'campaignId
 
 export function buildReportLibraryEntries(campaigns: CampaignStats[], options: BuildReportLibraryEntriesOptions = {}) {
   const readyCampaigns = campaigns
-    .filter((campaign) => campaign.total_completed >= FIRST_DASHBOARD_THRESHOLD)
+    .filter((campaign) =>
+      isDashboardReleaseReady(campaign.total_completed, {
+        scanType: campaign.scan_type,
+        isActive: campaign.is_active,
+      }),
+    )
     .sort((left, right) => {
       const createdDiff = new Date(right.created_at).getTime() - new Date(left.created_at).getTime()
       if (createdDiff !== 0) return createdDiff
@@ -169,7 +177,12 @@ export function buildReportLibraryEntries(campaigns: CampaignStats[], options: B
   const demoArtifact = options.hrDemoArtifact ?? loadHrDemoPilotArtifact()
   const prioritizedReadyCampaigns = prioritizeHrDemoCampaigns(
     [...readyCampaigns]
-      .filter((campaign) => campaign.total_completed >= 10)
+      .filter((campaign) =>
+        isInsightReleaseReady(campaign.total_completed, {
+          scanType: campaign.scan_type,
+          isActive: campaign.is_active,
+        }),
+      )
       .sort((left, right) => getPriority(right) - getPriority(left))
       .map((campaign) => ({
         campaignId: campaign.campaign_id,
@@ -227,6 +240,10 @@ export function buildReportLibraryEntries(campaigns: CampaignStats[], options: B
             value: `${(getCampaignAverageSignalScore(featuredCandidate) ?? 0).toFixed(1)}/10`,
           },
           { label: 'Route', value: SCAN_TYPE_LABELS[featuredCandidate.scan_type] },
+          {
+            label: 'Responsgrens',
+            value: `${getResponseActivationThresholds(featuredCandidate.scan_type).insightMin}+`,
+          },
         ],
       }
     : null

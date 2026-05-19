@@ -4,7 +4,11 @@ import { buildBridgeAssessmentTruth, getHrBridgePresentation, resolveHrBridgeSta
 import { getProductModule } from '@/lib/products/shared/registry'
 import type { SegmentPlaybookEntry, SignalTrendCard } from '@/lib/products/shared/types'
 import { buildFactorPresentation, getManagementBandLabel } from '@/lib/management-language'
-import { FIRST_DASHBOARD_THRESHOLD, FIRST_INSIGHT_THRESHOLD } from '@/lib/response-activation'
+import {
+  FIRST_DASHBOARD_THRESHOLD,
+  FIRST_INSIGHT_THRESHOLD,
+  getResponseActivationThresholds,
+} from '@/lib/response-activation'
 import { getScanDefinition } from '@/lib/scan-definitions'
 import {
   EXIT_REASON_LABELS,
@@ -73,6 +77,20 @@ export type InsightNotice = {
   title: string
   body: string
   tone: 'slate' | 'amber' | 'red'
+}
+
+function getOrderedFactorKeys(factorAverages: Record<string, number>) {
+  const fallbackKeys = Object.keys(factorAverages)
+    .filter((factor) => !ORG_FACTORS.includes(factor))
+    .sort((left, right) => (FACTOR_LABELS[left] ?? left).localeCompare(FACTOR_LABELS[right] ?? right, 'nl'))
+
+  return [...ORG_FACTORS.filter((factor) => factor in factorAverages), ...fallbackKeys]
+}
+
+function getOrderedFactorKeysFromTotals(totals: Record<string, number[]>) {
+  return getOrderedFactorKeys(
+    Object.fromEntries(Object.keys(totals).map((key) => [key, 0])) as Record<string, number>,
+  )
 }
 
 export function buildCampaignDetailActionCenterBridge(args: {
@@ -339,15 +357,17 @@ export function buildNextStepBody({
   pendingCount: number
   topFactor: string | null
 }) {
+  const thresholds = getResponseActivationThresholds(scanType)
+
   if (!hasMinDisplay) {
     return pendingCount > 0
-      ? `Nodig de resterende ${pendingCount} respondent(en) eerst uit of stuur een reminder. Pas vanaf 5 responses wordt detailweergave veilig zichtbaar.`
+      ? `Nodig de resterende ${pendingCount} respondent(en) eerst uit of stuur een reminder. Pas vanaf ${thresholds.dashboardMin} responses wordt detailweergave veilig zichtbaar.`
       : 'Zorg eerst voor voldoende ingevulde responses voordat je deze campagne als besluitinput gebruikt.'
   }
 
   if (!hasEnoughData) {
     return topFactor
-      ? `Gebruik ${topFactor.toLowerCase()} als eerste gesprekshaak, maar houd conclusies voorlopig indicatief totdat minimaal 10 responses binnen zijn.`
+      ? `Gebruik ${topFactor.toLowerCase()} als eerste gesprekshaak, maar houd conclusies voorlopig indicatief totdat minimaal ${thresholds.insightMin} responses binnen zijn.`
       : 'Lees de huidige signalen nog als richting, niet als vast patroon.'
   }
 
@@ -430,18 +450,19 @@ export function buildInsightWarnings({
   hasEnoughData: boolean
   scanType: ScanType
 }) {
+  const thresholds = getResponseActivationThresholds(scanType)
   const items: InsightNotice[] = []
 
   if (!hasMinDisplay && responsesLength > 0) {
     items.push({
       title: 'Nog onvoldoende responses voor veilige detailweergave',
-      body: `Met minder dan ${MIN_N_DISPLAY} responses blijven individuele details en scores bewust beperkt. Voeg meer responses toe voordat je conclusies trekt.`,
+      body: `Met minder dan ${thresholds.dashboardMin} responses blijven individuele details en scores bewust beperkt. Voeg meer responses toe voordat je conclusies trekt.`,
       tone: 'amber',
     })
   } else if (hasMinDisplay && !hasEnoughData) {
     items.push({
       title: 'Beeld is nog indicatief',
-      body: `Grafieken, patronen en diepere interpretatie worden steviger vanaf ${MIN_N_PATTERNS} responses. Gebruik de huidige inzichten vooral om gerichte vervolgvragen te kiezen.`,
+      body: `Grafieken, patronen en diepere interpretatie worden steviger vanaf ${thresholds.insightMin} responses. Gebruik de huidige inzichten vooral om gerichte vervolgvragen te kiezen.`,
       tone: 'amber',
     })
   }
@@ -717,8 +738,7 @@ export function computeFactorAverages(responses: SurveyResponse[]) {
   const sdtTotals: Record<string, number[]> = {}
 
   for (const response of responses) {
-    for (const factor of ORG_FACTORS) {
-      const value = response.org_scores?.[factor]
+    for (const [factor, value] of Object.entries(response.org_scores ?? {})) {
       if (typeof value === 'number') {
         orgTotals[factor] = [...(orgTotals[factor] ?? []), value]
       }
@@ -737,7 +757,7 @@ export function computeFactorAverages(responses: SurveyResponse[]) {
 
   return {
     orgAverages: Object.fromEntries(
-      ORG_FACTORS
+      getOrderedFactorKeysFromTotals(orgTotals)
         .filter((factor) => (orgTotals[factor] ?? []).length > 0)
         .map((factor) => [factor, average(orgTotals[factor] ?? [])]),
     ),
@@ -1180,7 +1200,7 @@ export function RecommendationList({
   bandOverride?: 'HOOG' | 'MIDDEN' | 'LAAG' | null
 }) {
   const focusQuestions = getProductModule(scanType).getFocusQuestions()
-  const items = ORG_FACTORS
+  const items = getOrderedFactorKeys(factorAverages)
     .filter((factor) => factor in factorAverages)
       .map((factor) => {
         const score = factorAverages[factor]
@@ -1246,7 +1266,7 @@ export function ActionPlaybookList({
   bandOverride?: 'HOOG' | 'MIDDEN' | 'LAAG' | null
 }) {
   const playbooks = getProductModule(scanType).getActionPlaybooks()
-  const items = ORG_FACTORS
+  const items = getOrderedFactorKeys(factorAverages)
     .filter((factor) => factor in factorAverages)
       .map((factor) => {
         const score = factorAverages[factor]
@@ -1424,6 +1444,7 @@ function CardColumn({
 }
 
 export function CampaignHealthIndicator({
+  scanType,
   totalInvited,
   totalCompleted,
   invitesNotSent,
@@ -1431,6 +1452,7 @@ export function CampaignHealthIndicator({
   hasEnoughData,
   hasMinDisplay,
 }: {
+  scanType: ScanType
   totalInvited: number
   totalCompleted: number
   invitesNotSent: number
@@ -1438,10 +1460,11 @@ export function CampaignHealthIndicator({
   hasEnoughData: boolean
   hasMinDisplay: boolean
 }) {
+  const thresholds = getResponseActivationThresholds(scanType)
   const checks: { label: string; ok: boolean; warn?: boolean; detail?: string }[] = [
     { label: 'Uitnodigingen verstuurd', ok: invitesNotSent === 0, warn: invitesNotSent > 0, detail: invitesNotSent > 0 ? `${invitesNotSent} respondent(en) hebben nog geen uitnodiging ontvangen` : undefined },
-    { label: 'Minimum responses bereikt', ok: hasMinDisplay, warn: !hasMinDisplay && totalCompleted > 0, detail: !hasMinDisplay ? `${totalCompleted} van min. 5 vereist voor weergave` : undefined },
-    { label: 'Voldoende data voor analyse', ok: hasEnoughData, warn: hasMinDisplay && !hasEnoughData, detail: !hasEnoughData ? `${totalCompleted} van min. 10 vereist voor patroonanalyse` : undefined },
+    { label: 'Minimum responses bereikt', ok: hasMinDisplay, warn: !hasMinDisplay && totalCompleted > 0, detail: !hasMinDisplay ? `${totalCompleted} van min. ${thresholds.dashboardMin} vereist voor weergave` : undefined },
+    { label: 'Voldoende data voor analyse', ok: hasEnoughData, warn: hasMinDisplay && !hasEnoughData, detail: !hasEnoughData ? `${totalCompleted} van min. ${thresholds.insightMin} vereist voor patroonanalyse` : undefined },
     { label: 'Alle scores volledig', ok: incompleteScores === 0, warn: incompleteScores > 0, detail: incompleteScores > 0 ? `${incompleteScores} response(s) met ontbrekende scores` : undefined },
   ]
 

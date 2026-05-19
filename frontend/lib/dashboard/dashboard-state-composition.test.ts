@@ -7,6 +7,7 @@ import {
 
 function classify(overrides: Partial<Parameters<typeof getCampaignCompositionState>[0]> = {}) {
   return getCampaignCompositionState({
+    scanType: 'exit',
     isActive: true,
     totalInvited: 0,
     totalCompleted: 0,
@@ -106,6 +107,59 @@ describe('dashboard state-aware composition', () => {
         isActive: false,
         totalInvited: 24,
         totalCompleted: 14,
+        hasMinDisplay: true,
+        hasEnoughData: true,
+      }),
+    ).toBe('closed')
+  })
+
+  it('keeps culture assessment in running state while the annual baseline is still open', () => {
+    expect(
+      classify({
+        scanType: 'culture_assessment',
+        totalInvited: 220,
+        invitesNotSent: 0,
+        totalCompleted: 46,
+        hasMinDisplay: true,
+        hasEnoughData: true,
+      }),
+    ).toBe('running')
+  })
+
+  it('keeps closed culture campaigns below organization minimum-n out of management-visible states', () => {
+    expect(
+      classify({
+        scanType: 'culture_assessment',
+        isActive: false,
+        totalInvited: 220,
+        totalCompleted: 24,
+        hasMinDisplay: false,
+        hasEnoughData: false,
+      }),
+    ).toBe('sparse')
+  })
+
+  it('keeps closed culture campaigns sparse when release conditions are not fully valid yet', () => {
+    expect(
+      classify({
+        scanType: 'culture_assessment',
+        isActive: false,
+        totalInvited: 220,
+        totalCompleted: 35,
+        incompleteScores: 2,
+        hasMinDisplay: true,
+        hasEnoughData: false,
+      }),
+    ).toBe('sparse')
+  })
+
+  it('opens closed culture campaigns as report-first only after baseline close and valid release conditions', () => {
+    expect(
+      classify({
+        scanType: 'culture_assessment',
+        isActive: false,
+        totalInvited: 220,
+        totalCompleted: 35,
         hasMinDisplay: true,
         hasEnoughData: true,
       }),

@@ -354,6 +354,34 @@ def test_create_leadership_campaign_rejects_live_delivery_mode(client, db_sessio
     assert "Leadership Scan" in response.text
 
 
+def test_create_culture_assessment_campaign_defaults_to_baseline_delivery_mode(client, db_session: Session):
+    _create_org(db_session, api_key="culture-default-key")
+
+    response = client.post(
+        "/api/campaigns",
+        headers={"x-api-key": "culture-default-key"},
+        json={"name": "Loep Cultuurbeeld 2026", "scan_type": "culture_assessment"},
+    )
+
+    assert response.status_code == 201
+    body = response.json()
+    assert body["scan_type"] == "culture_assessment"
+    assert body["delivery_mode"] == "baseline"
+
+
+def test_create_culture_assessment_campaign_rejects_live_delivery_mode(client, db_session: Session):
+    _create_org(db_session, api_key="culture-live-key")
+
+    response = client.post(
+        "/api/campaigns",
+        headers={"x-api-key": "culture-live-key"},
+        json={"name": "Loep Cultuurbeeld Live", "scan_type": "culture_assessment", "delivery_mode": "live"},
+    )
+
+    assert response.status_code == 422
+    assert "Loep Culture Assessment" in response.text
+
+
 def test_create_organization_creates_secret_when_missing(client, db_session: Session):
     response = client.post(
         "/api/organizations",

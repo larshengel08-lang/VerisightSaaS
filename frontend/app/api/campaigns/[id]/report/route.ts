@@ -2,20 +2,31 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getOrganizationApiKey } from '@/lib/organization-secrets'
 import { getBackendApiUrl } from '@/lib/server-env'
-import { SCAN_TYPE_LABELS, type ScanType } from '@/lib/types'
+import { canDownloadCampaignReport, type ReportDownloadFormat } from './permissions'
+import { buildFallbackReportFilename } from './filenames'
 
 interface Context {
   params: Promise<{ id: string }>
 }
 
-export async function GET(_request: Request, { params }: Context) {
+export async function GET(request: Request, { params }: Context) {
   const { id } = await params
   const supabase = await createClient()
+  const url = new URL(request.url)
+  const format: ReportDownloadFormat = url.searchParams.get('format') === 'segment_summary'
+    ? 'segment_summary'
+    : 'pdf'
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     return NextResponse.json({ detail: 'Niet ingelogd.' }, { status: 401 })
   }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('is_verisight_admin')
+    .eq('id', user.id)
+    .maybeSingle()
 
   const { data: campaign, error: campaignError } = await supabase
     .from('campaigns')
@@ -27,15 +38,38 @@ export async function GET(_request: Request, { params }: Context) {
     return NextResponse.json({ detail: 'Campaign niet gevonden of niet toegankelijk.' }, { status: 404 })
   }
 
+  const { data: membership } = await supabase
+    .from('org_members')
+    .select('role')
+    .eq('org_id', campaign.organization_id)
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  const isVerisightAdmin = profile?.is_verisight_admin === true
+  const membershipRole = membership?.role ?? null
+  if (!canDownloadCampaignReport({ format, isVerisightAdmin, membershipRole })) {
+    return NextResponse.json(
+      {
+        detail:
+          format === 'segment_summary'
+            ? 'Governed segmentexport is alleen beschikbaar voor geautoriseerde owner- of adminrollen na baselinevrijgave.'
+            : 'Je hebt geen rechten om dit rapport te downloaden.',
+      },
+      { status: 403 },
+    )
+  }
+
   const backendBaseUrl = getBackendApiUrl()
   const adminToken = process.env.BACKEND_ADMIN_TOKEN?.trim()
+  const backendUrl = `${backendBaseUrl}/api/campaigns/${id}/report${format === 'segment_summary' ? '?format=segment_summary' : ''}`
+  const backendInternalUrl = `${backendBaseUrl}/api/internal/campaigns/${id}/report${format === 'segment_summary' ? '?format=segment_summary' : ''}`
 
   async function fetchWithAdminFallback() {
     if (!adminToken) {
       return null
     }
 
-    return fetch(`${backendBaseUrl}/api/internal/campaigns/${id}/report`, {
+    return fetch(backendInternalUrl, {
       headers: {
         'x-admin-token': adminToken,
       },
@@ -47,7 +81,7 @@ export async function GET(_request: Request, { params }: Context) {
 
   try {
     const apiKey = await getOrganizationApiKey(campaign.organization_id, { supabase })
-    backendResponse = await fetch(`${backendBaseUrl}/api/campaigns/${id}/report`, {
+    backendResponse = await fetch(backendUrl, {
       headers: {
         'x-api-key': apiKey,
       },
@@ -83,31 +117,17 @@ export async function GET(_request: Request, { params }: Context) {
     )
   }
 
-  const fallbackFilename = buildFallbackReportFilename(campaign.scan_type, campaign.name)
+  const fallbackFilename = buildFallbackReportFilename(campaign.scan_type, campaign.name, format)
+  const contentType = backendResponse.headers.get('content-type') ??
+    (format === 'segment_summary' ? 'text/csv; charset=utf-8' : 'application/pdf')
 
   return new NextResponse(backendResponse.body, {
     status: 200,
     headers: {
-      'Content-Type': 'application/pdf',
+      'Content-Type': contentType,
       'Content-Disposition': backendResponse.headers.get('content-disposition') ??
         `attachment; filename="${fallbackFilename}"`,
       'Cache-Control': 'no-store',
     },
   })
-}
-
-export function buildFallbackReportFilename(scanType: ScanType, campaignName: string) {
-  const label = sanitizeFilenameSegment(SCAN_TYPE_LABELS[scanType] ?? 'Verisight')
-  const campaignSegment = sanitizeFilenameSegment(campaignName || 'campaign')
-  return `${label}_${campaignSegment}.pdf`
-}
-
-function sanitizeFilenameSegment(value: string) {
-  const normalized = value
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^A-Za-z0-9]+/g, '_')
-    .replace(/^_+|_+$/g, '')
-
-  return normalized || 'campaign'
 }

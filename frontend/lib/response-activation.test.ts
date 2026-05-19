@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
+  CULTURE_ASSESSMENT_DASHBOARD_THRESHOLD,
+  CULTURE_ASSESSMENT_INSIGHT_THRESHOLD,
   FIRST_DASHBOARD_THRESHOLD,
   FIRST_INSIGHT_THRESHOLD,
   buildResponseActivationState,
@@ -50,5 +52,32 @@ describe('response activation thresholds', () => {
     expect(state.heroActionLabel).toBe('Eerste inzichten actief')
     expect(state.statusDetail).toContain('reviewmoment')
     expect(state.statusDetail).toContain('follow-up')
+  })
+
+  it('keeps culture assessment results locked while the annual baseline is still open', () => {
+    const state = buildResponseActivationState(CULTURE_ASSESSMENT_DASHBOARD_THRESHOLD + 4, {
+      scanType: 'culture_assessment',
+      isActive: true,
+    })
+
+    expect(state.stage).toBe('collecting_responses')
+    expect(state.readinessLabel).toBe('Baseline loopt nog')
+    expect(state.dashboardVisible).toBe(false)
+    expect(state.reportVisible).toBe(false)
+    expect(state.deeperInsightsVisible).toBe(false)
+    expect(state.heroActionLabel).toBe('Sluit baseline voor resultaatvrijgave')
+    expect(state.statusDetail).toContain('baseline formeel is gesloten')
+  })
+
+  it('releases culture assessment results only after close and threshold', () => {
+    const state = buildResponseActivationState(CULTURE_ASSESSMENT_INSIGHT_THRESHOLD, {
+      scanType: 'culture_assessment',
+      isActive: false,
+    })
+
+    expect(state.stage).toBe('insights_active')
+    expect(state.dashboardVisible).toBe(true)
+    expect(state.reportVisible).toBe(true)
+    expect(state.deeperInsightsVisible).toBe(true)
   })
 })

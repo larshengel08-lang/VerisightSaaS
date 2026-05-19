@@ -63,5 +63,14 @@ def test_resolved_output_paths_write_to_docs_and_public_examples():
 
     normalized_paths = [str(path).replace('\\', '/') for path in paths]
 
-    assert normalized_paths[0].endswith('/docs/examples/voorbeeldrapport_verisight.pdf')
-    assert normalized_paths[1].endswith('/frontend/public/examples/voorbeeldrapport_verisight.pdf')
+    assert normalized_paths[0].endswith('/docs/examples/voorbeeldrapport_loep.pdf')
+    assert normalized_paths[1].endswith('/frontend/public/examples/voorbeeldrapport_loep.pdf')
+
+
+def test_resolved_output_paths_support_culture_assessment_sample():
+    paths = sample_generator._resolved_output_paths(sample_generator.CULTURE_CONFIG)
+
+    normalized_paths = [str(path).replace('\\', '/') for path in paths]
+
+    assert normalized_paths[0].endswith('/docs/examples/voorbeeldrapport_cultuurbeeld.pdf')
+    assert normalized_paths[1].endswith('/frontend/public/examples/voorbeeldrapport_cultuurbeeld.pdf')

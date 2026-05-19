@@ -15,6 +15,7 @@ import {
 import { getScanDefinition } from '@/lib/scan-definitions'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import { createClient } from '@/lib/supabase/server'
+import { getResponseActivationThresholds } from '@/lib/response-activation'
 import { getCampaignAverageSignalScore, type CampaignStats } from '@/lib/types'
 
 type CampaignHomeEntry = {
@@ -123,13 +124,14 @@ export default async function DashboardHomePage({
       campaign,
       invitesNotSent,
       state: getCampaignCompositionState({
+        scanType: campaign.scan_type,
         isActive: campaign.is_active,
         totalInvited: campaign.total_invited,
         totalCompleted: campaign.total_completed,
         invitesNotSent,
         incompleteScores: 0,
-        hasMinDisplay: campaign.total_completed >= 5,
-        hasEnoughData: campaign.total_completed >= 10,
+        hasMinDisplay: campaign.total_completed >= getResponseActivationThresholds(campaign.scan_type).dashboardMin,
+        hasEnoughData: campaign.total_completed >= getResponseActivationThresholds(campaign.scan_type).insightMin,
       }),
     }
   })
@@ -463,8 +465,12 @@ function buildTriageItems(
   primaryLeadEntry: CampaignHomeEntry | null,
 ) {
   const activeEntries = entries.filter((entry) => entry.campaign.is_active)
-  const primaryEntries = activeEntries.filter((entry) => ['exit', 'retention'].includes(entry.campaign.scan_type))
-  const boundedEntries = activeEntries.filter((entry) => !['exit', 'retention'].includes(entry.campaign.scan_type))
+  const primaryEntries = activeEntries.filter((entry) =>
+    ['culture_assessment', 'exit', 'retention'].includes(entry.campaign.scan_type),
+  )
+  const boundedEntries = activeEntries.filter(
+    (entry) => !['culture_assessment', 'exit', 'retention'].includes(entry.campaign.scan_type),
+  )
   const orderedEntries = [
     ...(primaryLeadEntry ? [primaryLeadEntry] : []),
     ...primaryEntries
@@ -517,7 +523,10 @@ function buildCockpitRouteItem(entry: CampaignHomeEntry): CockpitRouteItem {
     why: getWhyCopy(entry),
     nextStep: ctaLabel,
     ctaLabel,
-    ctaHref: `/campaigns/${entry.campaign.campaign_id}`,
+    ctaHref:
+      entry.state === 'setup' || entry.state === 'ready_to_launch' || entry.state === 'running'
+        ? `/campaigns/${entry.campaign.campaign_id}/beheer`
+        : `/campaigns/${entry.campaign.campaign_id}`,
     responseValue: completionValue,
   }
 }
@@ -665,6 +674,7 @@ function getOverviewToneClasses(tone: OverviewRouteTone) {
     return {
       border: 'border-[color:var(--dashboard-accent-soft-border)]',
       accent: 'bg-[color:var(--dashboard-accent-strong)]',
+      rail: 'border-l-[color:var(--dashboard-accent-strong)]',
       chip:
         'border-[color:var(--dashboard-accent-soft-border)] bg-[color:var(--dashboard-accent-soft)] text-[color:var(--dashboard-accent-strong)]',
       button:
@@ -676,6 +686,7 @@ function getOverviewToneClasses(tone: OverviewRouteTone) {
     return {
       border: 'border-[#c7d0dc]',
       accent: 'bg-[#8292a5]',
+      rail: 'border-l-[#8292a5]',
       chip: 'border-[#d9e1ea] bg-[#f5f7fa] text-[#506071]',
       button: 'bg-[#1B2B3A] text-white hover:bg-[#24384b]',
     }
@@ -685,6 +696,7 @@ function getOverviewToneClasses(tone: OverviewRouteTone) {
     return {
       border: 'border-[#e7d7af]',
       accent: 'bg-[#C88C20]',
+      rail: 'border-l-[#C88C20]',
       chip: 'border-[#E7D7AF] bg-[#FBF4DF] text-[#7A5B18]',
       button: 'bg-[#1B2B3A] text-white hover:bg-[#24384b]',
     }
@@ -693,6 +705,7 @@ function getOverviewToneClasses(tone: OverviewRouteTone) {
   return {
     border: 'border-[color:var(--dashboard-frame-border)]',
     accent: 'bg-slate-300',
+    rail: 'border-l-slate-300',
     chip:
       'border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] text-[color:var(--dashboard-text)]',
     button:
@@ -727,17 +740,17 @@ function StatusCounterCard({ counter }: { counter: CockpitCounter }) {
   const tone = getOverviewToneClasses(counter.tone)
 
   return (
-    <div className={`relative overflow-hidden rounded-[18px] border bg-[color:var(--dashboard-surface)] px-4 py-4 shadow-[0_1px_2px_rgba(15,23,42,0.03)] ${tone.border}`}>
-      <div className={`absolute left-0 top-0 h-full w-1 ${tone.accent}`} />
-      <p className="pl-2 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">
+    <div className={`relative overflow-hidden rounded-[18px] border bg-white px-4 py-3.5 ${tone.border}`}>
+      <div className={`absolute left-0 top-0 h-full w-[3px] ${tone.accent}`} />
+      <p className="pl-2 text-[0.64rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">
         {counter.label}
       </p>
-      <div className="mt-3 pl-2">
-        <p className="dash-number text-[2rem] leading-none text-[color:var(--dashboard-ink)]">{counter.count}</p>
-        <p className="mt-3 text-sm leading-6 text-[color:var(--dashboard-text)]">{counter.body}</p>
+      <div className="mt-2.5 pl-2">
+        <p className="dash-number text-[1.65rem] leading-none text-[color:var(--dashboard-ink)]">{counter.count}</p>
+        <p className="mt-2 text-sm leading-6 text-[color:var(--dashboard-text)]">{counter.body}</p>
       </div>
       {counter.key === 'blocked_not_started' ? (
-        <span className="absolute right-4 top-4 inline-flex h-2.5 w-2.5 rounded-full bg-[#C88C20]" />
+        <span className="absolute right-4 top-4 inline-flex h-2 w-2 rounded-full bg-[#C88C20]" />
       ) : null}
     </div>
   )
@@ -753,14 +766,14 @@ function TriageRouteCard({
   const tone = getOverviewToneClasses(item.stateTone)
 
   return (
-    <article className={`overflow-hidden rounded-[18px] border bg-[color:var(--dashboard-surface)] shadow-[0_2px_8px_rgba(17,24,39,0.035)] transition-shadow hover:shadow-[0_16px_32px_rgba(17,24,39,0.08)] ${tone.border}`}>
-      <div className={`h-full border-l-4 ${tone.accent}`}>
+    <article className={`overflow-hidden rounded-[18px] border bg-white shadow-[0_1px_3px_rgba(17,24,39,0.04)] transition-shadow hover:shadow-[0_12px_24px_rgba(17,24,39,0.08)] ${tone.border}`}>
+      <div className={`h-full border-l-4 ${tone.rail}`}>
         <div className="flex flex-col gap-5 px-5 py-5 xl:flex-row xl:items-center xl:justify-between">
           <div className="min-w-0 flex-1 space-y-4">
             <div className="space-y-2">
               <div className="flex flex-wrap items-center gap-2">
                 {highlightLabel ? (
-                  <span className="inline-flex rounded-full border border-[color:var(--dashboard-accent-soft-border)] bg-[color:var(--dashboard-accent-soft)] px-2.5 py-1 text-[0.74rem] font-semibold text-[color:var(--dashboard-accent-strong)]">
+                  <span className="inline-flex rounded-full border border-[color:var(--dashboard-accent-soft-border)] bg-[color:var(--dashboard-accent-soft)] px-2.5 py-1 text-[0.72rem] font-semibold text-[color:var(--dashboard-accent-strong)]">
                     {highlightLabel}
                   </span>
                 ) : null}

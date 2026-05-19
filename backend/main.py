@@ -125,6 +125,14 @@ def _resolve_survey_modules(scan_type: str, enabled_modules: list[str] | None) -
     subset is configured, the full default factor set remains active.
     """
     if not enabled_modules:
+        if scan_type == "culture_assessment":
+            return [
+                "autonomy_role_clarity",
+                "growth_development",
+                "change_readiness",
+                "reward_conditions",
+                "organizational_connection_intent",
+            ]
         if scan_type == "leadership":
             return list(DEFAULT_LEADERSHIP_MODULES)
         if scan_type == "onboarding":
@@ -138,6 +146,14 @@ def _resolve_survey_modules(scan_type: str, enabled_modules: list[str] | None) -
     factor_modules = [module for module in enabled_modules if module in ORG_FACTOR_KEYS]
     if factor_modules:
         return factor_modules
+    if scan_type == "culture_assessment":
+        return [
+            "autonomy_role_clarity",
+            "growth_development",
+            "change_readiness",
+            "reward_conditions",
+            "organizational_connection_intent",
+        ]
     if scan_type == "leadership":
         return list(DEFAULT_LEADERSHIP_MODULES)
     if scan_type == "onboarding":
@@ -333,20 +349,16 @@ def _supports_confirmable_qualified_route(route_interest: str | None) -> bool:
 
 
 def _get_runtime_locked_product_name(scan_type: str | None) -> str | None:
-    if scan_type == "culture_assessment":
-        return "Loep Culture Assessment"
     return None
 
 
 def _is_placeholder_primary_route(scan_type: str | None) -> bool:
-    return scan_type == "culture_assessment"
+    return False
 
 
 def _get_report_unavailable_product_name(scan_type: str) -> str | None:
     if scan_type == "pulse":
         return "Pulse"
-    if scan_type == "culture_assessment":
-        return "Loep Culture Assessment"
     return None
 
 
@@ -1401,7 +1413,7 @@ async def add_respondents(
             status_code=422,
             detail=f"{locked_product_name} ondersteunt in deze wave nog geen respondenttoevoeging of uitnodigingen.",
         )
-    respondents, _emails_sent = _create_campaign_respondents(
+    respondents, _emails_sent, _invite_evidence = _create_campaign_respondents(
         campaign=campaign,
         respondent_inputs=body.respondents,
         db=db,
@@ -1702,6 +1714,7 @@ async def campaign_stats(
 async def download_report(
     campaign_id: str,
     x_api_key: Annotated[str, Header()],
+    format: str = Query(default="pdf", pattern="^(pdf|segment_summary)$"),
     db: Session = Depends(get_db),
 ) -> Response:
     """Genereer en download een PDF-rapport voor de campaign."""
@@ -1717,19 +1730,24 @@ async def download_report(
         raise HTTPException(status_code=422, detail=f"{product_name} ondersteunt in deze wave nog geen PDF-rapport.")
 
     try:
-        from backend.report import generate_campaign_report
-        pdf_bytes = generate_campaign_report(campaign_id, db)
+        from backend.report import generate_campaign_report, generate_culture_assessment_segment_summary_export
+        if format == "segment_summary":
+            export_bytes = generate_culture_assessment_segment_summary_export(campaign_id, db)
+        else:
+            export_bytes = generate_campaign_report(campaign_id, db)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"PDF-generatie mislukt: {e}")
+        raise HTTPException(status_code=500, detail=f"Rapport- of exportgeneratie mislukt: {e}")
 
     # HTTP Content-Disposition headers zijn latin-1; strip alle niet-ASCII tekens
     import re as _re
     safe_name = _re.sub(r"[^\w\s-]", "", campaign.name)   # verwijder em-dash etc.
     safe_name = _re.sub(r"[\s-]+", "_", safe_name).strip("_")  # spaties/streepjes → _
-    filename = f"Loep_{safe_name}.pdf"
+    filename = f"Loep_{safe_name}.csv" if format == "segment_summary" else f"Loep_{safe_name}.pdf"
     return Response(
-        content=pdf_bytes,
-        media_type="application/pdf",
+        content=export_bytes,
+        media_type="text/csv; charset=utf-8" if format == "segment_summary" else "application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
@@ -1738,6 +1756,7 @@ async def download_report(
 async def download_report_internal(
     campaign_id: str,
     x_admin_token: Annotated[str | None, Header()] = None,
+    format: str = Query(default="pdf", pattern="^(pdf|segment_summary)$"),
     db: Session = Depends(get_db),
 ) -> Response:
     """Interne rapportdownload voor vertrouwde server-side proxy's."""
@@ -1751,18 +1770,23 @@ async def download_report_internal(
         raise HTTPException(status_code=422, detail=f"{product_name} ondersteunt in deze wave nog geen PDF-rapport.")
 
     try:
-        from backend.report import generate_campaign_report
-        pdf_bytes = generate_campaign_report(campaign_id, db)
+        from backend.report import generate_campaign_report, generate_culture_assessment_segment_summary_export
+        if format == "segment_summary":
+            export_bytes = generate_culture_assessment_segment_summary_export(campaign_id, db)
+        else:
+            export_bytes = generate_campaign_report(campaign_id, db)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"PDF-generatie mislukt: {e}")
+        raise HTTPException(status_code=500, detail=f"Rapport- of exportgeneratie mislukt: {e}")
 
     import re as _re
     safe_name = _re.sub(r"[^\w\s-]", "", campaign.name)
     safe_name = _re.sub(r"[\s-]+", "_", safe_name).strip("_")
-    filename = f"Loep_{safe_name}.pdf"
+    filename = f"Loep_{safe_name}.csv" if format == "segment_summary" else f"Loep_{safe_name}.pdf"
     return Response(
-        content=pdf_bytes,
-        media_type="application/pdf",
+        content=export_bytes,
+        media_type="text/csv; charset=utf-8" if format == "segment_summary" else "application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 

@@ -64,4 +64,50 @@ describe('campaign detail management-read guardrails', () => {
     expect(normalizedSource).toContain("familyRoleLabel: 'Begrensde peer-route'")
     expect(normalizedSource).toContain("familyRoleLabel: 'Begrensde support-route'")
   })
+
+  it('keeps culture assessment on an explicit primary-route branch instead of falling back to pulse framing', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+    const primaryRouteIndex = source.indexOf('familyRoleLabel: "Primary route"')
+    const cultureBranch = primaryRouteIndex >= 0
+      ? source.slice(Math.max(0, primaryRouteIndex - 600), primaryRouteIndex + 7000)
+      : ''
+
+    expect(source).toContain('buildDashboardArchitecture({')
+    expect(primaryRouteIndex).toBeGreaterThan(-1)
+    expect(cultureBranch).toContain('familyRoleLabel: "Primary route"')
+    expect(cultureBranch).toContain('summarySignalLabel: "Loep Culture Index"')
+    expect(cultureBranch).toContain('summaryContextLabel: "Jaarlijkse cultuur- en engagementbaseline"')
+    expect(cultureBranch).toContain('routeTitle: "Board-read & vervolgritme"')
+    expect(cultureBranch).not.toContain('Pulsesignaal')
+    expect(cultureBranch).not.toContain('Pulse groepsread')
+    expect(cultureBranch).not.toContain('Begrensde support-route')
+  })
+
+  it('wires culture assessment pages to the canonical executive reading order', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+    const cultureReturn = source.match(
+      /if \(showManagementOutput && stats\.scan_type === "culture_assessment"\)[\s\S]*?if \(\s*showManagementOutput &&\s*\(stats\.scan_type === "exit" \|\| stats\.scan_type === "retention"\)/,
+    )?.[0] ?? ''
+
+    const orderedLabels = [
+      '1. Responsbasis & meetdekking',
+      '2. Executive culture read',
+      '3. Loep Culture Index',
+      '4. Board attention points',
+      '5. Domeinbeeld',
+      '6. Patronen in samenhang',
+      '7. Segmentcontrasten',
+      '8. Verdiepingslagen',
+      '9. Open signalen',
+      '10. Board-read & vervolgritme',
+      '11. Rapport, export & methodiek',
+    ]
+
+    let previousIndex = -1
+    for (const label of orderedLabels) {
+      const nextIndex = cultureReturn.indexOf(label)
+      expect(nextIndex).toBeGreaterThan(previousIndex)
+      previousIndex = nextIndex
+    }
+  })
 })

@@ -4,6 +4,7 @@ import {
   buildHeroDescription,
   buildNextStepBody,
   computeAverageRiskScore,
+  computeFactorAverages,
   computeRetentionSupplementalAverages,
 } from './page-helpers'
 import { getScanDefinition } from '@/lib/scan-definitions'
@@ -171,5 +172,43 @@ describe('dashboard page helpers field semantics', () => {
     expect(panels[2]?.body.toLowerCase()).toContain('locked')
     expect(nextStep.toLowerCase()).toContain('navigatiesignaal')
     expect(nextStep.toLowerCase()).toContain('board')
+  })
+
+  it('aggregates culture assessment domain keys from org_scores', () => {
+    const averages = computeFactorAverages([
+      {
+        id: 'resp-1',
+        respondent_id: 'r-1',
+        risk_score: 6.1,
+        risk_band: 'MIDDEN',
+        preventability: null,
+        exit_reason_code: null,
+        sdt_scores: {},
+        org_scores: {
+          engagement_involvement: 6.2,
+          trust_psychological_safety: 5.6,
+        },
+        full_result: {},
+        submitted_at: '2026-05-18T10:00:00Z',
+      },
+      {
+        id: 'resp-2',
+        respondent_id: 'r-2',
+        risk_score: 6.7,
+        risk_band: 'MIDDEN',
+        preventability: null,
+        exit_reason_code: null,
+        sdt_scores: {},
+        org_scores: {
+          engagement_involvement: 7.2,
+          trust_psychological_safety: 6.4,
+        },
+        full_result: {},
+        submitted_at: '2026-05-18T11:00:00Z',
+      },
+    ])
+
+    expect(averages.orgAverages.engagement_involvement).toBe(6.7)
+    expect(averages.orgAverages.trust_psychological_safety).toBe(6)
   })
 })

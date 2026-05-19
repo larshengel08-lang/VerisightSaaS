@@ -1,4 +1,5 @@
 import type { ScanType } from '@/lib/types'
+import { CULTURE_ASSESSMENT_CONTRACT } from '@/lib/products/culture_assessment/contract'
 
 export type DashboardViewKind = 'overview' | 'evidence' | 'action' | 'campaign'
 export type DashboardSectionEmphasis = 'hero' | 'primary' | 'secondary'
@@ -64,6 +65,70 @@ export function buildDashboardArchitecture(args: {
   canManageCampaign: boolean
   hasSegmentDeepDive: boolean
 }): DashboardArchitecture {
+  if (args.scanType === 'culture_assessment') {
+    return {
+      primaryViews: [
+        { id: 'overview', label: 'Overzicht', kind: 'overview' },
+        { id: 'evidence', label: 'Onderbouwing', kind: 'evidence' },
+        { id: 'action', label: 'Actie', kind: 'action' },
+        { id: 'campaign', label: 'Campagne', kind: 'campaign' },
+      ],
+      overviewSections: [
+        { id: CULTURE_ASSESSMENT_CONTRACT.canonicalBlockOrder[0], title: 'Responsbasis & meetdekking', emphasis: 'secondary' },
+        { id: CULTURE_ASSESSMENT_CONTRACT.canonicalBlockOrder[1], title: 'Executive culture read', emphasis: 'hero' },
+        { id: CULTURE_ASSESSMENT_CONTRACT.canonicalBlockOrder[2], title: 'Loep Culture Index', emphasis: 'primary' },
+        { id: CULTURE_ASSESSMENT_CONTRACT.canonicalBlockOrder[3], title: 'Board attention points', emphasis: 'primary', interaction: 'drilldown', highlightCount: 5 },
+        { id: CULTURE_ASSESSMENT_CONTRACT.canonicalBlockOrder[4], title: 'Domeinbeeld', emphasis: 'primary' },
+        { id: CULTURE_ASSESSMENT_CONTRACT.canonicalBlockOrder[5], title: 'Patronen in samenhang', emphasis: 'primary' },
+        {
+          id: CULTURE_ASSESSMENT_CONTRACT.canonicalBlockOrder[6],
+          title: 'Segmentcontrasten',
+          emphasis: 'secondary',
+          requiresSegmentDeepDive: true,
+        },
+        { id: CULTURE_ASSESSMENT_CONTRACT.canonicalBlockOrder[7], title: 'Verdiepingslagen', emphasis: 'secondary' },
+        { id: CULTURE_ASSESSMENT_CONTRACT.canonicalBlockOrder[8], title: 'Open signalen', emphasis: 'secondary' },
+        { id: CULTURE_ASSESSMENT_CONTRACT.canonicalBlockOrder[9], title: 'Board-read & vervolgritme', emphasis: 'primary' },
+        {
+          id: CULTURE_ASSESSMENT_CONTRACT.canonicalBlockOrder[10],
+          title: 'Rapport, export & methodiek',
+          emphasis: 'secondary',
+          interaction: 'disclosure',
+        },
+      ],
+      evidenceSections: [
+        { id: 'domain_view', title: 'Domeinbeeld', emphasis: 'secondary' },
+        { id: 'pattern_view', title: 'Patronen in samenhang', emphasis: 'secondary' },
+        {
+          id: 'segment_contrasts',
+          title: 'Governed segmentcontrasten',
+          emphasis: 'secondary',
+          requiresSegmentDeepDive: true,
+        },
+        { id: 'deepening_layers', title: 'Verdiepingslagen', emphasis: 'secondary' },
+        { id: 'open_signals', title: 'Open signalen', emphasis: 'secondary' },
+        {
+          id: 'report_export_methodology',
+          title: 'Rapport, export & methodiek',
+          emphasis: 'secondary',
+          interaction: 'disclosure',
+        },
+      ],
+      actionSections: [
+        { id: 'board_attention_points', title: 'Board attention points', emphasis: 'primary' },
+        { id: 'board_read_follow_on', title: 'Board-read & vervolgritme', emphasis: 'primary' },
+      ],
+      campaignSections: [
+        {
+          id: 'campaign-status',
+          title: args.canManageCampaign ? 'Campagnestatus en readiness' : 'Campagnestatus',
+          emphasis: 'secondary',
+        },
+        { id: 'respondents', title: 'Respondenten en uitnodigingen', emphasis: 'secondary' },
+      ],
+    }
+  }
+
   return {
     primaryViews: [
       { id: 'overview', label: 'Overzicht', kind: 'overview' },

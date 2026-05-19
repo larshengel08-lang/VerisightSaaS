@@ -8,7 +8,7 @@ const campaigns: CampaignStats[] = [
     campaign_name: 'Loep Cultuurbeeld 2026',
     scan_type: 'culture_assessment',
     organization_id: 'org-1',
-    is_active: true,
+    is_active: false,
     created_at: '2025-10-14T09:00:00Z',
     total_invited: 220,
     total_completed: 46,
@@ -18,6 +18,22 @@ const campaigns: CampaignStats[] = [
     band_high: 16,
     band_medium: 18,
     band_low: 12,
+  },
+  {
+    campaign_id: 'culture-open-1',
+    campaign_name: 'Loep Cultuurbeeld 2027',
+    scan_type: 'culture_assessment',
+    organization_id: 'org-1',
+    is_active: true,
+    created_at: '2025-10-15T09:00:00Z',
+    total_invited: 240,
+    total_completed: 52,
+    completion_rate_pct: 22,
+    avg_risk_score: 6.9,
+    avg_signal_score: 6.9,
+    band_high: 20,
+    band_medium: 19,
+    band_low: 13,
   },
   {
     campaign_id: 'exit-1',
@@ -97,6 +113,12 @@ describe('report library', () => {
     expect(model.entries.find((entry) => entry.campaignId === 'culture-1')?.recommended).toBe(true)
   })
 
+  it('keeps an open culture assessment baseline out of the report library until close', () => {
+    const model = buildReportLibraryEntries(campaigns)
+
+    expect(model.entries.some((entry) => entry.campaignId === 'culture-open-1')).toBe(false)
+  })
+
   it('formats the featured subtitle without encoding artifacts', () => {
     const model = buildReportLibraryEntries(campaigns)
 
@@ -160,7 +182,7 @@ describe('report library', () => {
     expect(getReportEntryBridge(model.featured!)).toMatchObject({
       href: '/action-center',
       bridge: {
-        ctaLabel: 'Open route in Action Center',
+        ctaLabel: 'Open in Action Center',
       },
     })
   })
@@ -188,7 +210,7 @@ describe('report library', () => {
     expect(getReportEntryBridge(activeEntry!)).toMatchObject({
       href: '/action-center',
       bridge: {
-        ctaLabel: 'Open route in Action Center',
+        ctaLabel: 'Open in Action Center',
       },
     })
   })

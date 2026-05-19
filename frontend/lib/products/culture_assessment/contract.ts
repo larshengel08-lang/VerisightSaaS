@@ -122,6 +122,16 @@ export const CULTURE_ASSESSMENT_DOMAIN_MODEL: Array<{
 ]
 
 export const CULTURE_ASSESSMENT_CONTRACT = {
+  questionnaireLock: {
+    itemCount: 40,
+    domainCount: 10,
+    scaleId: 'agreement_5pt',
+    targetCompletionMinutes: 12,
+    maxCompletionMinutes: 14,
+    minimumClosedItemsAnswered: 32,
+    minimumAnsweredItemsPerDomain: 3,
+    minimumValidDomains: 8,
+  },
   thresholds: {
     organizationMinN: 30,
     locationMinN: 10,
@@ -226,5 +236,17 @@ export const CULTURE_ASSESSMENT_CONTRACT = {
     segmentSummaryExport: true,
     openTextAppendixWhenEnabled: true,
     noIndividualDataExport: true,
+  },
+  boardAttentionLogic: {
+    inputKeys: [
+      'domain_scores',
+      'segment_spread',
+      'response_coverage',
+      'contrast_strength',
+      'recurring_theme_pairs',
+      'safe_open_text_clusters',
+    ],
+    outputLimit: 5,
+    forbiddenOutputs: ['causal_diagnosis', 'automatic_intervention_advice', 'manager_blame'],
   },
 } as const

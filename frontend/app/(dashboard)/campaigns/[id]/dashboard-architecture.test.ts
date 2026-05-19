@@ -115,6 +115,33 @@ describe('dashboard architecture', () => {
       leadershipArchitecture.actionSections.find((section) => section.id === 'bounded-fallback')?.title,
     ).toContain('bredere duiding')
   })
+
+  it('uses the canonical culture assessment block order for the executive baseline route', () => {
+    const architecture = buildDashboardArchitecture({
+      scanType: 'culture_assessment',
+      canManageCampaign: true,
+      hasSegmentDeepDive: true,
+    })
+
+    expect(architecture.overviewSections.map((section) => section.id)).toEqual([
+      'response_basis',
+      'executive_culture_read',
+      'culture_index',
+      'board_attention_points',
+      'domain_view',
+      'pattern_view',
+      'segment_contrasts',
+      'deepening_layers',
+      'open_signals',
+      'board_read_follow_on',
+      'report_export_methodology',
+    ])
+    expect(architecture.overviewSections[1]?.emphasis).toBe('hero')
+    expect(architecture.overviewSections[3]).toMatchObject({
+      interaction: 'drilldown',
+      highlightCount: 5,
+    })
+  })
 })
 
 describe('score interpretation titles', () => {

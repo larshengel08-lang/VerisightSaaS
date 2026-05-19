@@ -4,6 +4,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 import backend.main as backend_main
+from backend.email import EmailSendResult
 import backend.products.shared.registry as product_registry
 import backend.report as backend_report
 from backend.models import Campaign, ContactRequest, Organization, OrganizationSecret, Respondent
@@ -72,14 +73,21 @@ def _create_org(db: Session, *, api_key: str = "culture-contract-key") -> Organi
     return org
 
 
-def _create_campaign(db: Session, org: Organization, *, scan_type: str = "culture_assessment") -> Campaign:
+def _create_campaign(
+    db: Session,
+    org: Organization,
+    *,
+    scan_type: str = "culture_assessment",
+    is_active: bool = True,
+    enabled_modules: list[str] | None = None,
+) -> Campaign:
     campaign = Campaign(
         organization_id=org.id,
         name="Culture Assessment Placeholder",
         scan_type=scan_type,
         delivery_mode="baseline",
-        is_active=True,
-        enabled_modules=None,
+        is_active=is_active,
+        enabled_modules=enabled_modules,
     )
     db.add(campaign)
     db.commit()
@@ -100,21 +108,28 @@ def _create_respondent(db: Session, campaign: Campaign) -> Respondent:
 
 
 def _culture_payload(token: str) -> dict[str, object]:
+    sdt_raw = {f"CA{i:02d}": 4 for i in range(1, 21)}
+    org_raw = {f"CA{i:02d}": 4 for i in range(21, 41)}
+    sdt_raw["CA04"] = 2
+    sdt_raw["CA08"] = 2
+    sdt_raw["CA12"] = 2
+    sdt_raw["CA16"] = 2
+    sdt_raw["CA20"] = 2
+    org_raw["CA24"] = 2
+    org_raw["CA28"] = 2
+    org_raw["CA32"] = 2
+    org_raw["CA36"] = 2
+    org_raw["CA40"] = 2
     return {
         "token": token,
-        "tenure_years": 2.0,
-        "exit_reason_category": "cultuur",
-        "stay_intent_score": 4,
-        "signal_visibility_score": 3,
-        "sdt_raw": {f"B{i}": 3 for i in range(1, 13)},
-        "org_raw": {
-            "leadership_1": 3,
-            "culture_1": 4,
-            "growth_1": 3,
-            "workload_1": 3,
-        },
-        "pull_factors_raw": {"cultuur": 1},
-        "open_text": "We willen eerst een brede cultuurbaseline, nog zonder live route.",
+        "tenure_years": None,
+        "exit_reason_category": None,
+        "stay_intent_score": None,
+        "signal_visibility_score": None,
+        "sdt_raw": sdt_raw,
+        "org_raw": org_raw,
+        "pull_factors_raw": {},
+        "open_text": "Brede cultuurread met aandacht voor vertrouwen, werkdruk en richting.",
         "uwes_raw": {},
         "turnover_intention_raw": {},
     }
@@ -158,34 +173,47 @@ def test_culture_assessment_confirmation_path_accepts_confirmed_route(client, db
     assert stored.qualified_route == "culture_assessment"
 
 
-def test_culture_assessment_submit_path_is_safely_fenced(client, db_session: Session):
+def test_culture_assessment_submit_path_accepts_baseline_submission(client, db_session: Session):
     org = _create_org(db_session, api_key="culture-submit-key")
     campaign = _create_campaign(db_session, org)
     respondent = _create_respondent(db_session, campaign)
 
     response = client.post("/survey/submit", json=_culture_payload(respondent.token))
 
-    assert response.status_code == 422
-    assert "Loep Culture Assessment" in response.json()["detail"]
+    assert response.status_code == 200
     db_session.refresh(respondent)
-    assert respondent.completed is False
+    assert respondent.completed is True
+    assert respondent.response is not None
+    assert respondent.response.risk_score is not None
+    assert respondent.response.risk_band in {"HOOG", "MIDDEN", "LAAG"}
+    assert respondent.response.org_scores["engagement_involvement"] > 0
+    assert respondent.response.org_scores["trust_psychological_safety"] > 0
+    assert respondent.response.full_result["culture_index"] == respondent.response.risk_score
 
 
-def test_culture_assessment_survey_page_is_locked_for_respondents(client, db_session: Session):
+def test_culture_assessment_survey_page_renders_for_respondents(client, db_session: Session):
     org = _create_org(db_session, api_key="culture-survey-page-key")
     campaign = _create_campaign(db_session, org)
     respondent = _create_respondent(db_session, campaign)
 
     response = client.get(f"/survey/{respondent.token}")
 
-    assert response.status_code == 423
-    assert "nog niet open voor respondentinvulling" in response.text
+    assert response.status_code == 200
+    assert "Loep Culture Assessment" in response.text
+    assert "CA01" in response.text
+    assert "CA40" in response.text
 
 
-def test_culture_assessment_respondent_management_paths_are_safely_fenced(client, db_session: Session):
+def test_culture_assessment_respondent_management_paths_are_available(client, db_session: Session, monkeypatch: pytest.MonkeyPatch):
     org = _create_org(db_session, api_key="culture-respondent-key")
     campaign = _create_campaign(db_session, org)
     respondent = _create_respondent(db_session, campaign)
+
+    monkeypatch.setattr(
+        backend_main,
+        "send_survey_invite_result",
+        lambda **_kwargs: EmailSendResult(ok=True, provider="test"),
+    )
 
     add_response = client.post(
         f"/api/campaigns/{campaign.id}/respondents",
@@ -195,8 +223,8 @@ def test_culture_assessment_respondent_management_paths_are_safely_fenced(client
             "send_invites": False,
         },
     )
-    assert add_response.status_code == 422
-    assert "respondenttoevoeging" in add_response.json()["detail"]
+    assert add_response.status_code == 201
+    assert len(add_response.json()) == 1
 
     import_response = client.post(
         f"/api/campaigns/{campaign.id}/respondents/import",
@@ -204,19 +232,19 @@ def test_culture_assessment_respondent_management_paths_are_safely_fenced(client
         files={"upload": ("respondenten.csv", b"email\na@example.com\n", "text/csv")},
         data={"dry_run": "true", "send_invites": "false"},
     )
-    assert import_response.status_code == 422
-    assert "respondentimport" in import_response.json()["detail"]
+    assert import_response.status_code == 200
+    assert import_response.json()["valid_rows"] == 1
 
     invite_response = client.post(
         f"/api/campaigns/{campaign.id}/send-invites",
         headers={"x-api-key": "culture-respondent-key"},
         json=[{"token": str(respondent.token), "email": respondent.email}],
     )
-    assert invite_response.status_code == 422
-    assert "survey-uitnodigingen" in invite_response.json()["detail"]
+    assert invite_response.status_code == 200
+    assert invite_response.json()["sent"] == 1
 
 
-def test_culture_assessment_report_generation_is_safely_fenced(client, db_session: Session):
+def test_culture_assessment_report_generation_requires_closed_baseline(client, db_session: Session):
     org = _create_org(db_session, api_key="culture-report-key")
     campaign = _create_campaign(db_session, org)
 
@@ -226,10 +254,70 @@ def test_culture_assessment_report_generation_is_safely_fenced(client, db_sessio
     )
 
     assert response.status_code == 422
-    assert response.json()["detail"] == "Loep Culture Assessment ondersteunt in deze wave nog geen PDF-rapport."
+    assert response.json()["detail"] == "Loep Culture Assessment boardrapport komt pas beschikbaar na formele sluiting van de baseline."
 
-    with pytest.raises(ValueError, match="Loep Culture Assessment ondersteunt in deze wave nog geen PDF-rapport."):
+    with pytest.raises(ValueError, match="Loep Culture Assessment boardrapport komt pas beschikbaar na formele sluiting van de baseline."):
         backend_report.generate_campaign_report(campaign.id, db_session)
+
+
+def test_culture_assessment_report_generation_allows_closed_baseline_route(client, db_session: Session, monkeypatch: pytest.MonkeyPatch):
+    org = _create_org(db_session, api_key="culture-report-live-key")
+    campaign = _create_campaign(db_session, org, is_active=False)
+
+    monkeypatch.setattr(backend_report, "generate_campaign_report", lambda *_args, **_kwargs: b"%PDF-1.4 fake culture report")
+
+    response = client.get(
+        f"/api/campaigns/{campaign.id}/report",
+        headers={"x-api-key": "culture-report-live-key"},
+    )
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/pdf"
+    assert response.content.startswith(b"%PDF-1.4")
+
+
+def test_culture_assessment_segment_summary_export_requires_governed_add_on(client, db_session: Session):
+    org = _create_org(db_session, api_key="culture-segment-export-key")
+    campaign = _create_campaign(db_session, org, is_active=False)
+
+    response = client.get(
+        f"/api/campaigns/{campaign.id}/report?format=segment_summary",
+        headers={"x-api-key": "culture-segment-export-key"},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == (
+        "Segment summary export opent alleen binnen governed drilldown met segment deep dive."
+    )
+
+
+def test_culture_assessment_segment_summary_export_allows_governed_closed_baseline_route(
+    client,
+    db_session: Session,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    org = _create_org(db_session, api_key="culture-segment-export-live-key")
+    campaign = _create_campaign(
+        db_session,
+        org,
+        is_active=False,
+        enabled_modules=["segment_deep_dive"],
+    )
+
+    monkeypatch.setattr(
+        backend_report,
+        "generate_culture_assessment_segment_summary_export",
+        lambda *_args, **_kwargs: b"segment_type,segment_label,n,culture_index\r\nAfdeling,People,18,6.4\r\n",
+    )
+
+    response = client.get(
+        f"/api/campaigns/{campaign.id}/report?format=segment_summary",
+        headers={"x-api-key": "culture-segment-export-live-key"},
+    )
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/csv")
+    assert response.content.startswith(b"segment_type,segment_label")
 
 
 def test_culture_assessment_schema_sql_constraints_include_confirmed_route_contract():
