@@ -26,6 +26,7 @@ import {
 } from '@/lib/action-center-review-rhythm'
 import {
   formatReviewMomentLastUpdated,
+  getReviewMomentActionLabel,
   getReviewMomentManagerLabel,
   getReviewMomentScopeLabel,
   groupReviewMomentsByUrgency,
@@ -72,6 +73,10 @@ const EMPTY_REVIEW_RHYTHM_SUMMARY: ReviewRhythmSummary = {
 
 function getReviewMomentRouteId(item: Pick<ActionCenterPreviewItem, 'coreSemantics'>) {
   return item.coreSemantics.route.routeId
+}
+
+function buildPrimaryQuickAction(item: ActionCenterPreviewItem) {
+  return getReviewMomentActionLabel(item)
 }
 
 function computeRhythmSummary(
@@ -134,11 +139,15 @@ export function ReviewMomentPageClient({
   oversightSummary: ActionCenterReviewOversightSummary
   oversightAttentionItems: ActionCenterReviewOversightAttentionItem[]
 }) {
+  const reviewMomentItems = useMemo(
+    () => items.filter((item) => getActionCenterEnabledRouteDefaults(routeScanTypeByRouteId[getReviewMomentRouteId(item)])),
+    [items, routeScanTypeByRouteId],
+  )
   const [statusFilter, setStatusFilter] = useState<'all' | ActionCenterPreviewStatus>('all')
   const [scopeFilter, setScopeFilter] = useState<string>('all')
   const [managerFilter, setManagerFilter] = useState<string>('all')
   const [showCompleted, setShowCompleted] = useState(false)
-  const [selectedItemId, setSelectedItemId] = useState<string | null>(getFirstVisibleItem(items))
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(getFirstVisibleItem(reviewMomentItems))
   const [clientRhythmConfigByRouteId, setClientRhythmConfigByRouteId] = useState(rhythmConfigByRouteId)
 
   const referenceNow = useMemo(() => new Date(lastUpdated), [lastUpdated])
@@ -155,24 +164,29 @@ export function ReviewMomentPageClient({
     [nativeCalendarEligibleRouteIds],
   )
   const scopeOptions = useMemo(
-    () => [...new Set(items.map((item) => getReviewMomentScopeLabel(item)))].sort((left, right) => left.localeCompare(right)),
-    [items],
+    () =>
+      [...new Set(reviewMomentItems.map((item) => getReviewMomentScopeLabel(item)))].sort((left, right) =>
+        left.localeCompare(right),
+      ),
+    [reviewMomentItems],
   )
   const managerOptions = useMemo(
     () =>
-      [...new Set(items.map((item) => getReviewMomentManagerLabel(item)))].sort((left, right) => left.localeCompare(right)),
-    [items],
+      [...new Set(reviewMomentItems.map((item) => getReviewMomentManagerLabel(item)))].sort((left, right) =>
+        left.localeCompare(right),
+      ),
+    [reviewMomentItems],
   )
 
   const filteredItems = useMemo(
     () =>
-      items.filter((item) => {
+      reviewMomentItems.filter((item) => {
         if (statusFilter !== 'all' && item.status !== statusFilter) return false
         if (scopeFilter !== 'all' && getReviewMomentScopeLabel(item) !== scopeFilter) return false
         if (managerFilter !== 'all' && getReviewMomentManagerLabel(item) !== managerFilter) return false
         return true
       }),
-    [items, managerFilter, scopeFilter, statusFilter],
+    [managerFilter, reviewMomentItems, scopeFilter, statusFilter],
   )
 
   const grouped = useMemo(() => groupReviewMomentsByUrgency(filteredItems, referenceNow), [filteredItems, referenceNow])
@@ -195,6 +209,7 @@ export function ReviewMomentPageClient({
   }, [rhythmConfigByRouteId])
 
   const selectedItem = visibleItems.find((item) => item.id === selectedItemId) ?? null
+  const primaryQuickAction = selectedItem ? buildPrimaryQuickAction(selectedItem) : null
   const selectedRhythmItem =
     selectedItem && getActionCenterEnabledRouteDefaults(routeScanTypeByRouteId[getReviewMomentRouteId(selectedItem)])
       ? selectedItem
@@ -254,7 +269,7 @@ export function ReviewMomentPageClient({
     }))
   }
 
-  if (items.length === 0) {
+  if (reviewMomentItems.length === 0) {
     return (
       <DashboardPanel
         surface="ops"
@@ -383,6 +398,7 @@ export function ReviewMomentPageClient({
           <ReviewMomentDetailPanel
             item={selectedItem}
             urgency={selectedUrgency}
+            primaryQuickAction={primaryQuickAction}
             canDownloadInviteArtifact={canDownloadInviteArtifact}
             canScheduleReviewControls={canScheduleReviewControls}
             canUseNativeCalendarSync={canUseNativeCalendarSync}
@@ -397,6 +413,7 @@ export function ReviewMomentPageClient({
         selectedRouteSourceId={selectedRhythmItem?.coreSemantics.route.campaignId ?? null}
         selectedRouteOrgId={selectedRhythmItem?.orgId ?? null}
         selectedRouteScanType={selectedRouteScanType}
+        primaryQuickAction={primaryQuickAction}
         canManageReviewRhythm={canManageSelectedReviewRhythm}
         config={
           (

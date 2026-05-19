@@ -131,6 +131,63 @@ describe('action center review rhythm data', () => {
     ])
   })
 
+  it('queries and returns only constitution-approved route families by canonical route id', async () => {
+    const configQuery = createRhythmConfigQuery({
+      data: [
+        {
+          route_id: 'route-retention-1',
+          cadence_days: 14,
+          reminder_lead_days: 3,
+          escalation_lead_days: 7,
+          reminders_enabled: true,
+        },
+      ],
+    })
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'action_center_review_rhythm_configs') {
+        return configQuery
+      }
+
+      throw new Error(`Unhandled table ${table}`)
+    })
+
+    const result = await getActionCenterReviewRhythmData({
+      items: [
+        buildItem({
+          id: 'preview-retention-1',
+          sourceLabel: 'RetentieScan',
+          coreSemantics: {
+            route: {
+              routeId: 'route-retention-1',
+              reviewCompletedAt: null,
+              hasFollowUpTarget: false,
+            },
+          },
+        }),
+        buildItem({
+          id: 'preview-pulse-1',
+          sourceLabel: 'Pulse',
+          coreSemantics: {
+            route: {
+              routeId: 'route-pulse-1',
+              reviewCompletedAt: null,
+              hasFollowUpTarget: false,
+            },
+          },
+        }),
+      ] as never,
+      now: new Date('2026-05-28T12:00:00.000Z'),
+      routeScanTypeByRouteId: {
+        'route-retention-1': 'retention',
+        'route-pulse-1': 'pulse',
+      },
+    })
+
+    expect(configQuery.in).toHaveBeenCalledWith('route_id', ['route-retention-1'])
+    expect(Object.keys(result.configByRouteId)).toEqual(['route-retention-1'])
+  })
+
   it('ignores blocked route families for persistence and summary counts', async () => {
     const configQuery = createRhythmConfigQuery({
       data: [],

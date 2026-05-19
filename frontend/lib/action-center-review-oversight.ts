@@ -49,6 +49,19 @@ function getOverdueDayDiff(reviewDate: string | null, now: Date) {
   return Math.round((nowDay - reviewDay) / 86_400_000)
 }
 
+function getConstitutionRouteFamilyLabel(scanType: ActionCenterRouteDefaultsKnownScanType | string | null | undefined) {
+  const routeDefaults = getActionCenterEnabledRouteDefaults(scanType)
+  if (routeDefaults?.scanType === 'retention') {
+    return 'RetentieScan'
+  }
+
+  if (routeDefaults?.scanType === 'exit') {
+    return 'ExitScan'
+  }
+
+  return null
+}
+
 export function classifyActionCenterReviewOversightState(args: {
   scanType: ActionCenterRouteDefaultsKnownScanType | string | null | undefined
   routeStatus: ActionCenterPreviewStatus
@@ -154,7 +167,7 @@ export function buildActionCenterReviewOversightSummary(args: {
         routeId,
         state,
         scopeLabel: getReviewMomentScopeLabel(item),
-        sourceLabel: item.sourceLabel,
+        sourceLabel: getConstitutionRouteFamilyLabel(scanType) ?? item.sourceLabel,
         reviewDateLabel: item.reviewDateLabel,
       })
     }

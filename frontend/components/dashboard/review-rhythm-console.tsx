@@ -3,7 +3,10 @@
 import React from 'react'
 import { useEffect, useState, useTransition } from 'react'
 import { DashboardChip, DashboardSection } from '@/components/dashboard/dashboard-primitives'
-import { isActionCenterRouteDefaultsEnabledScanType } from '@/lib/action-center-route-defaults'
+import {
+  getActionCenterEnabledRouteDefaults,
+  isActionCenterRouteDefaultsEnabledScanType,
+} from '@/lib/action-center-route-defaults'
 import type { ActionCenterReviewRhythmConfig } from '@/lib/action-center-review-rhythm'
 
 const CADENCE_OPTIONS = [7, 14, 30] as const
@@ -37,8 +40,10 @@ function getSaveStatusTone(status: 'idle' | 'success' | 'error') {
 }
 
 function getRouteProductLabel(scanType: string | null | undefined) {
-  if (scanType === 'retention') return 'RetentieScan'
-  if (scanType === 'exit') return 'ExitScan'
+  const routeDefaults = getActionCenterEnabledRouteDefaults(scanType)
+
+  if (routeDefaults?.scanType === 'retention') return 'RetentieScan'
+  if (routeDefaults?.scanType === 'exit') return 'ExitScan'
   return 'Follow-through'
 }
 
@@ -48,6 +53,7 @@ export function ReviewRhythmConsole({
   selectedRouteSourceId = null,
   selectedRouteOrgId = null,
   selectedRouteScanType = 'exit',
+  primaryQuickAction = null,
   canManageReviewRhythm,
   config,
   summary,
@@ -58,6 +64,7 @@ export function ReviewRhythmConsole({
   selectedRouteSourceId?: string | null
   selectedRouteOrgId?: string | null
   selectedRouteScanType?: string | null
+  primaryQuickAction?: string | null
   canManageReviewRhythm: boolean
   config: ActionCenterReviewRhythmConfig
   summary: ReviewRhythmSummary
@@ -224,6 +231,11 @@ export function ReviewRhythmConsole({
                 Alleen ritmegegevens voor ingeschakelde follow-through-routes worden hier bijgehouden. Verzendlogica en eigenaarschap
                 blijven buiten deze console.
               </p>
+              {primaryQuickAction ? (
+                <p className="text-xs leading-6 text-[color:var(--dashboard-text)]">
+                  Primaire manageractie: {primaryQuickAction}.
+                </p>
+              ) : null}
             </div>
             <DashboardChip surface="ops" tone="slate" label={getRouteProductLabel(selectedRouteScanType)} />
           </div>

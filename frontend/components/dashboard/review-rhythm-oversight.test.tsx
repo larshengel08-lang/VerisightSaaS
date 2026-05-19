@@ -45,4 +45,30 @@ describe('review rhythm oversight', () => {
     expect(markup).not.toContain('task board')
     expect(markup).not.toContain('project planning')
   })
+
+  it('does not render blocked route family labels inside the bounded oversight list', () => {
+    const markup = renderToStaticMarkup(
+      <ReviewRhythmOversight
+        summary={{
+          upcomingCount: 0,
+          overdueCount: 0,
+          staleCount: 1,
+          escalationSensitiveCount: 0,
+          resolvedCount: 0,
+        }}
+        attentionItems={[
+          {
+            routeId: 'route-1',
+            state: 'stale',
+            scopeLabel: 'Operations',
+            sourceLabel: 'Pulse',
+            reviewDateLabel: 'Nog niet gepland',
+          },
+        ]}
+      />,
+    )
+
+    expect(markup).not.toContain('Pulse')
+    expect(markup).not.toContain('Leadership')
+  })
 })

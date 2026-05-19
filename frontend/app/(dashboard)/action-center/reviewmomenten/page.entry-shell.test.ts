@@ -28,4 +28,14 @@ describe('action center reviewmomenten entry shell', () => {
     expect(source).toContain('oversightSummary={rhythmData.oversight.summary}')
     expect(source).toContain('oversightAttentionItems={rhythmData.oversight.attentionItems}')
   })
+
+  it('filters reviewmomenten surfaces to constitution-approved route families before wiring the page client', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('const reviewMomentItems = pageData.items.filter')
+    expect(source).toContain('getActionCenterEnabledRouteDefaults(')
+    expect(source).toContain('items={reviewMomentItems}')
+    expect(source).not.toContain("'pulse'")
+    expect(source).not.toContain("'leadership'")
+  })
 })

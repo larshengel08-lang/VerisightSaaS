@@ -73,6 +73,16 @@ describe('review moment page client source', () => {
     expect(source).not.toContain('automation builder')
   })
 
+  it('keeps governance surfaces bounded to constitution-approved route families and one primary quick action', () => {
+    const source = readFileSync(new URL('./review-moment-page-client.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('items.filter((item) => getActionCenterEnabledRouteDefaults(')
+    expect(source).toContain('primaryQuickAction')
+    expect(source).not.toContain('secondaryTaskList')
+    expect(source).not.toContain('Pulse')
+    expect(source).not.toContain('Leadership')
+  })
+
   it('keeps forbidden automation, lifecycle copy and mojibake out of the page shell', () => {
     const source = readFileSync(new URL('./review-moment-page-client.tsx', import.meta.url), 'utf8').toLowerCase()
 

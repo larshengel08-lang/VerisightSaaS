@@ -15,6 +15,14 @@ function getOversightStateLabel(
   return 'Achter op review'
 }
 
+function getBoundedSourceLabel(sourceLabel: string) {
+  if (sourceLabel === 'ExitScan' || sourceLabel === 'RetentieScan') {
+    return sourceLabel
+  }
+
+  return 'Action Center'
+}
+
 export function ReviewRhythmOversight({
   summary,
   attentionItems,
@@ -59,8 +67,8 @@ export function ReviewRhythmOversight({
           surface="ops"
           eyebrow="Achter op review"
           title={`${summary.overdueCount} open`}
-          body="Routes met een gemiste reviewdatum die nog niet vervallen of geëscaleerd zijn."
-          tone={summary.overdueCount > 0 ? 'slate' : 'slate'}
+          body="Routes met een gemiste reviewdatum die nog niet vervallen of geescaleerd zijn."
+          tone="slate"
         />
         <DashboardPanel
           surface="ops"
@@ -85,7 +93,7 @@ export function ReviewRhythmOversight({
                 <div className="space-y-1">
                   <p className="text-sm font-semibold text-[color:var(--dashboard-ink)]">{item.scopeLabel}</p>
                   <p className="text-xs text-[color:var(--dashboard-text)]">
-                    {item.sourceLabel} · {item.reviewDateLabel}
+                    {getBoundedSourceLabel(item.sourceLabel)} · {item.reviewDateLabel}
                   </p>
                 </div>
                 <span className="rounded-full border border-[color:var(--dashboard-frame-border)] bg-white px-3 py-1 text-xs font-semibold text-[color:var(--dashboard-ink)]">

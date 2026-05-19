@@ -20,6 +20,10 @@ type ActionCenterReviewRhythmConfigRow = {
   reminders_enabled: boolean | null
 }
 
+function getReviewRhythmRouteId(item: Pick<ActionCenterPreviewItem, 'coreSemantics'>) {
+  return item.coreSemantics.route.routeId
+}
+
 function normalizeConfigRow(row: ActionCenterReviewRhythmConfigRow): ActionCenterReviewRhythmConfig | null {
   if (!row.route_id) {
     return null
@@ -39,9 +43,9 @@ export async function getActionCenterReviewRhythmData(args: {
   routeScanTypeByRouteId: Record<string, ActionCenterRouteDefaultsKnownScanType>
 }) {
   const eligibleItems = args.items.filter((item) =>
-    getActionCenterEnabledRouteDefaults(args.routeScanTypeByRouteId[item.id]) !== null,
+    getActionCenterEnabledRouteDefaults(args.routeScanTypeByRouteId[getReviewRhythmRouteId(item)]) !== null,
   )
-  const routeIds = eligibleItems.map((item) => item.id)
+  const routeIds = eligibleItems.map((item) => getReviewRhythmRouteId(item))
   const admin = createAdminClient()
 
   const { data, error } =
@@ -66,23 +70,27 @@ export async function getActionCenterReviewRhythmData(args: {
     return acc
   }, {})
   const configByRouteId = Object.fromEntries(
-    eligibleItems.map((item) => [item.id, persistedConfigByRouteId[item.id] ?? buildDefaultActionCenterReviewRhythmConfig()]),
+    eligibleItems.map((item) => {
+      const routeId = getReviewRhythmRouteId(item)
+      return [routeId, persistedConfigByRouteId[routeId] ?? buildDefaultActionCenterReviewRhythmConfig()]
+    }),
   )
 
   const summary = eligibleItems.reduce(
     (acc, item) => {
-      const config = configByRouteId[item.id] ?? buildDefaultActionCenterReviewRhythmConfig()
+      const routeId = getReviewRhythmRouteId(item)
+      const boundedConfig = configByRouteId[routeId] ?? buildDefaultActionCenterReviewRhythmConfig()
       const health = classifyActionCenterReviewRhythmStatus({
         reviewDate: item.reviewDate,
         now: args.now,
-        config,
+        config: boundedConfig,
         itemStatus: item.status,
       })
 
       if (health === 'stale') acc.staleCount += 1
       if (health === 'overdue') acc.overdueCount += 1
       if (health === 'upcoming') acc.upcomingCount += 1
-      if (health !== 'completed' && config.remindersEnabled) acc.reminderManagedCount += 1
+      if (health !== 'completed' && boundedConfig.remindersEnabled) acc.reminderManagedCount += 1
 
       return acc
     },

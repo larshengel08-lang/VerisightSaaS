@@ -84,4 +84,12 @@ describe('review rhythm console', () => {
     expect(source).toContain('selectedRouteOrgId')
     expect(source).toContain('selectedRouteScanType')
   })
+
+  it('derives the visible product label from constitution-approved route defaults', () => {
+    const source = readFileSync(new URL('./review-rhythm-console.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('getActionCenterEnabledRouteDefaults')
+    expect(source).not.toContain("if (scanType === 'retention')")
+    expect(source).not.toContain("if (scanType === 'exit')")
+  })
 })
