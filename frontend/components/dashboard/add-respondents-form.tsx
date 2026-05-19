@@ -9,8 +9,6 @@ import {
   normalizeDeliveryMode,
 } from '@/lib/implementation-readiness'
 import {
-  hasCampaignAddOn,
-  REPORT_ADD_ON_LABELS,
   SCAN_TYPE_LABELS,
   type Campaign,
   type Organization,
@@ -86,7 +84,6 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
     [organizations],
   )
   const selectedDeliveryMode = normalizeDeliveryMode(selectedCampaign?.delivery_mode)
-  const hasSegmentDeepDive = hasCampaignAddOn(selectedCampaign, 'segment_deep_dive')
   const isExitCampaign = selectedCampaign?.scan_type === 'exit'
   const [mode, setMode] = useState<Mode>('emails')
 
@@ -133,6 +130,16 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
     const emails = mode === 'emails' ? parseEmails(emailInput) : []
     if (mode === 'emails' && emails.length === 0) {
       setError('Voer minimaal één geldig e-mailadres in.')
+      setLoading(null)
+      return
+    }
+    if (!department.trim()) {
+      setError('Afdeling is verplicht voor deze respondentimport.')
+      setLoading(null)
+      return
+    }
+    if (!roleLevel) {
+      setError('Functieniveau is verplicht voor deze respondentimport.')
       setLoading(null)
       return
     }
@@ -262,35 +269,22 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
 
   return (
     <div className="space-y-5">
-      <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
-        <p className="mb-1 font-semibold">Rol van Loep en rol van de klant</p>
-        <p className="text-blue-800">
-          Deze setup is voor Loep-beheerders. De klant levert een respondentbestand aan; Loep zet de
-          campagne op, controleert de import en verstuurt uitnodigingen. Daarna krijgt de organisatie toegang tot
-          het eigen dashboard en rapport.
+      <div className="rounded-xl border border-slate-200 bg-white px-4 py-4 text-sm text-slate-700">
+        <p className="font-semibold text-slate-900">Standaard uploadvelden</p>
+        <p className="mt-2 leading-6">
+          Gebruik per respondent altijd <code className="font-mono">email</code>, <code className="font-mono">department</code> en{' '}
+          <code className="font-mono">role_level</code>.
+          {isExitCampaign ? (
+            <>
+              {' '}Voor ExitScan kun je daarnaast <code className="font-mono">exit_month</code> en{' '}
+              <code className="font-mono">annual_salary_eur</code> meesturen.
+            </>
+          ) : (
+            <>
+              {' '}Optioneel blijft <code className="font-mono">annual_salary_eur</code>.
+            </>
+          )}
         </p>
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border border-slate-200 bg-white px-4 py-4 text-sm text-slate-700">
-          <p className="font-semibold text-slate-900">Canonieke klantaanlevering</p>
-          <p className="mt-2 leading-6">
-            Gebruik bij voorkeur een eenvoudig Excel- of CSV-bestand met minimaal <code className="font-mono">email</code>.
-            Voor segmentatie, teamcontext en scherpere opvolging blijven <code className="font-mono">department</code> en{' '}
-            <code className="font-mono">role_level</code> de aanbevolen standaard.
-          </p>
-          <p className="mt-2 text-xs leading-5 text-slate-500">
-            Verplicht: {CLIENT_FILE_SPEC.required.join(', ')}. Aanbevolen: {CLIENT_FILE_SPEC.recommended.join(', ')}.
-            {isExitCampaign ? ` Exit-specifiek optioneel: ${CLIENT_FILE_SPEC.exitOptional.join(', ')}.` : ''}
-          </p>
-        </div>
-        <div className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-4 text-sm text-amber-950">
-          <p className="font-semibold">Acceptance-gate voor import</p>
-          <p className="mt-2 leading-6">
-            Importeer pas definitief nadat preview, foutregels en dubbelen kloppen. Zo blijft de handoff van klantbestand
-            naar inviteflow controleerbaar en hoeft de klant geen technische correcties in de app te doen.
-          </p>
-        </div>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -346,35 +340,12 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
           </div>
         ) : null}
 
-        {hasSegmentDeepDive ? (
-          <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
-            <p className="mb-1 font-semibold">{REPORT_ADD_ON_LABELS.segment_deep_dive} staat aan voor deze campaign</p>
-            <p className="text-blue-800">
-              Voor deze rapportverdieping zijn <code className="font-mono">department</code> en{' '}
-              <code className="font-mono">role_level</code> sterk aanbevolen. Diensttijd wordt al uit de survey gehaald;
-              de rest van de segmentanalyse valt of staat met nette metadata per respondent.
-            </p>
-            <p className="mt-2 text-blue-800">
-              Aan te leveren Excel-kolommen: <code className="font-mono">email</code> (verplicht),{' '}
-              <code className="font-mono">department</code> en <code className="font-mono">role_level</code> (sterk
-              aanbevolen), <code className="font-mono">annual_salary_eur</code> (optioneel).
-            </p>
-            <p className="mt-2 text-blue-800">
-              Gebruik bij retrospectieve batches ook <code className="font-mono">exit_month</code> in formaat{' '}
-              <code className="font-mono">YYYY-MM</code>, zodat recency en recall bias beter te duiden zijn in het
-              rapport.
-            </p>
-          </div>
-        ) : null}
-
         {selectedCampaign?.scan_type === 'retention' ? (
           <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
-            <p className="mb-1 font-semibold">RetentieScan: minimale datadiscipline voor v1.1</p>
+            <p className="mb-1 font-semibold">RetentieScan: standaard metadata</p>
             <p className="text-emerald-900">
-              Lever voor RetentieScan bij voorkeur altijd <code className="font-mono">email</code>,{' '}
-              <code className="font-mono">department</code> en <code className="font-mono">role_level</code> aan.
-              Zonder afdeling en functieniveau wordt niet alleen het dashboard beperkter, maar ook de latere validatie
-              van segmentverschillen en pragmatische follow-up.
+              Lever voor RetentieScan altijd <code className="font-mono">email</code>, <code className="font-mono">department</code> en{' '}
+              <code className="font-mono">role_level</code> aan. Zonder afdeling en functieniveau wordt segmentatie direct te grof.
             </p>
             <p className="mt-2 text-emerald-900">
               Zet na de baseline ook een follow-up bestand klaar met team- of segmentuitkomsten zoals uitstroom,
@@ -425,7 +396,7 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
             <div className={`grid gap-3 pt-1 ${isExitCampaign ? 'sm:grid-cols-4' : 'sm:grid-cols-3'}`}>
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">
-                  Afdeling <span className="text-xs font-normal text-gray-400">(optioneel)</span>
+                  Afdeling <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -437,7 +408,7 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">
-                  Niveau <span className="text-xs font-normal text-gray-400">(optioneel)</span>
+                  Niveau <span className="text-red-500">*</span>
                 </label>
                 <select value={roleLevel} onChange={(e) => setRoleLevel(e.target.value)} className={selectCls}>
                   {ROLE_LEVELS.map((option) => (
@@ -491,10 +462,10 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
           <div>
             <p className="mb-1 text-sm font-semibold text-gray-800">Upload respondentbestand</p>
             <p className="text-xs leading-relaxed text-gray-500">
-              Gebruik één rij per respondent met minimaal een kolom <code className="font-mono">email</code>. Optioneel
-              kun je <code className="font-mono">department</code>, <code className="font-mono">role_level</code>
-              {isExitCampaign ? <>, <code className="font-mono">exit_month</code></> : null} en{' '}
-              <code className="font-mono">annual_salary_eur</code> meesturen. Upload een{' '}
+              Gebruik één rij per respondent met minimaal <code className="font-mono">email</code>,{' '}
+              <code className="font-mono">department</code> en <code className="font-mono">role_level</code>.
+              {isExitCampaign ? <>, Voeg waar relevant ook <code className="font-mono">exit_month</code></> : null}{' '}
+              toe. <code className="font-mono">annual_salary_eur</code> blijft optioneel. Upload een{' '}
               <code className="font-mono">.csv</code> of <code className="font-mono">.xlsx</code> bestand.
             </p>
             <p className="mt-2 text-xs leading-relaxed text-gray-500">
@@ -503,32 +474,19 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
             </p>
             {selectedCampaign?.scan_type === 'retention' ? (
               <p className="mt-2 text-xs leading-relaxed text-emerald-800">
-                Voor RetentieScan v1.1-validatie zijn <code className="font-mono">department</code> en{' '}
-                <code className="font-mono">role_level</code> de aanbevolen standaard. Daarmee kunnen we later
-                betrouwbaarheid, segmentverschillen en pragmatische follow-up veel netter toetsen.
-              </p>
-            ) : null}
-            {hasSegmentDeepDive ? (
-              <p className="mt-2 text-xs leading-relaxed text-blue-800">
-                Voor {REPORT_ADD_ON_LABELS.segment_deep_dive.toLowerCase()} zijn ingevulde kolommen{' '}
-                <code className="font-mono">department</code> en <code className="font-mono">role_level</code> sterk
-                aanbevolen. Zonder die velden blijft het rapport beperkter op subgroepniveau. Gebruik bij voorkeur exact
-                deze kolommen: <code className="font-mono">email</code>,{' '}
-                <code className="font-mono">department</code>, <code className="font-mono">role_level</code>,{' '}
-                <code className="font-mono">exit_month</code>,{' '}
-                <code className="font-mono">annual_salary_eur</code>.
+                Voor RetentieScan horen <code className="font-mono">department</code> en <code className="font-mono">role_level</code> standaard in elk bestand.
               </p>
             ) : null}
             <div className="mt-3 flex flex-wrap gap-3 text-xs font-medium">
               <a
-                href="/templates/verisight-respondenten-template.xlsx"
+                href="/templates/loep-respondenten-template.xlsx"
                 download
                 className="inline-flex text-blue-600 hover:underline"
               >
                 Download Excel-template
               </a>
               <a
-                href="/templates/verisight-respondenten-template.csv"
+                href="/templates/loep-respondenten-template.csv"
                 download
                 className="inline-flex text-blue-600 hover:underline"
               >
@@ -665,7 +623,7 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
                       ? 'Baseline-route: import pas definitief nadat preview, duplicaten en invitekeuze kloppen.'
                       : 'Live-route: import pas definitief nadat preview, timing en klantcommunicatie nog één keer zijn gecontroleerd.'}
                   </p>
-                  {selectedCampaign?.scan_type === 'retention' || hasSegmentDeepDive ? (
+                  {selectedCampaign?.scan_type === 'retention' ? (
                     <p className="mt-1">
                       Metadata-alert: {previewMissingDepartmentCount} rij(en) zonder{' '}
                       <code className="font-mono">department</code> en {previewMissingRoleLevelCount} rij(en) zonder{' '}

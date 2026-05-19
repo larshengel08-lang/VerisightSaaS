@@ -497,12 +497,10 @@ export function SdtGauge({ label, score }: { label: string; score: number }) {
 
 export function MethodologyCard({
   scanType,
-  hasSegmentDeepDive,
   signalLabel,
   embedded = false,
 }: {
   scanType: ScanType
-  hasSegmentDeepDive: boolean
   signalLabel: string
   embedded?: boolean
 }) {
@@ -536,14 +534,7 @@ export function MethodologyCard({
         <InfoBlock title={signalLabel} body={scanDefinition.signalHelp} />
         <InfoBlock title="Signaalbanden" body={signaalbandenText} />
         <InfoBlock title="Betrouwbaarheid" body={scanDefinition.reliabilityText} />
-        <InfoBlock
-          title="Segment deep dive"
-          body={
-            hasSegmentDeepDive
-              ? `${scanDefinition.segmentText} Deze campagne gebruikt die add-on al.`
-              : scanDefinition.segmentText
-          }
-        />
+        <InfoBlock title="Segmentanalyse" body={scanDefinition.segmentText} />
       </div>
     </div>
   )

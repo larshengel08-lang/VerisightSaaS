@@ -96,7 +96,7 @@ export function buildDashboardVisibilityState(args: {
     showResponseInterpretation: args.hasMinDisplay || args.respondentsCount > 0,
     showScoreInterpretation: args.hasMinDisplay,
     showDriverDrilldown: args.hasEnoughData,
-    showSegmentAnalysis: args.hasEnoughData && args.hasSegmentDeepDive && args.scanType === 'retention',
+    showSegmentAnalysis: args.hasEnoughData && args.scanType === 'retention',
     showActionPlaybooks: args.hasEnoughData,
     showCampaignView: args.canManageCampaign || args.respondentsCount > 0 || args.isArchivedPeriod,
     showCampaignControls: args.canManageCampaign,

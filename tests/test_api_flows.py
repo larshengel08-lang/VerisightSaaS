@@ -685,6 +685,52 @@ def test_respondent_import_dry_run_reports_duplicate_email_without_persisting(cl
     assert len(rows) == 1
 
 
+def test_respondent_import_dry_run_requires_department(client, db_session: Session):
+    org = _create_org(db_session, api_key="required-department-key")
+    campaign = _create_campaign(db_session, org, name="Department vereist")
+    csv_content = (
+        "email,department,role_level,exit_month\n"
+        "missing-department@example.com,,specialist,2026-03\n"
+    )
+
+    response = client.post(
+        f"/api/campaigns/{campaign.id}/respondents/import",
+        headers={"x-api-key": "required-department-key"},
+        data={"dry_run": "true", "send_invites": "false"},
+        files={"upload": ("respondents.csv", io.BytesIO(csv_content.encode("utf-8")), "text/csv")},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["imported"] == 0
+    assert body["invalid_rows"] == 1
+    assert body["errors"][0]["field"] == "department"
+    assert "afdeling" in body["errors"][0]["message"].lower()
+
+
+def test_respondent_import_dry_run_requires_role_level(client, db_session: Session):
+    org = _create_org(db_session, api_key="required-role-level-key")
+    campaign = _create_campaign(db_session, org, name="Niveau vereist")
+    csv_content = (
+        "email,department,role_level,exit_month\n"
+        "missing-level@example.com,Operations,,2026-03\n"
+    )
+
+    response = client.post(
+        f"/api/campaigns/{campaign.id}/respondents/import",
+        headers={"x-api-key": "required-role-level-key"},
+        data={"dry_run": "true", "send_invites": "false"},
+        files={"upload": ("respondents.csv", io.BytesIO(csv_content.encode("utf-8")), "text/csv")},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["imported"] == 0
+    assert body["invalid_rows"] == 1
+    assert body["errors"][0]["field"] == "role_level"
+    assert "functieniveau" in body["errors"][0]["message"].lower()
+
+
 def test_implementation_smoke_flow_imports_sends_invites_and_generates_output(
     client,
     db_session: Session,

@@ -2,7 +2,6 @@ import type { ScanType } from '@/lib/types'
 import {
   CANONICAL_CUSTOMER_LIFECYCLE,
   CANONICAL_ONBOARDING_PHASES,
-  CLIENT_FILE_SPEC,
   FIRST_VALUE_THRESHOLDS,
   IMPLEMENTATION_INTAKE_INPUTS,
   PRODUCT_ROUTE_VARIANTS,
@@ -58,12 +57,13 @@ export function OperatorOnboardingBlueprint() {
           <div className="rounded-[22px] border border-amber-100 bg-amber-50 p-4 sm:p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Klantaanlevering</p>
             <ul className="mt-3 space-y-2 text-sm leading-6 text-amber-950">
-              <li>Verplicht: <code className="font-mono">email</code></li>
-              <li>Sterk aanbevolen: <code className="font-mono">department</code>, <code className="font-mono">role_level</code></li>
+              <li>Verplicht: <code className="font-mono">email</code>, <code className="font-mono">department</code>, <code className="font-mono">role_level</code></li>
               <li>ExitScan extra: <code className="font-mono">exit_month</code>, <code className="font-mono">annual_salary_eur</code></li>
               <li>RetentieScan extra: <code className="font-mono">annual_salary_eur</code></li>
             </ul>
-            <p className="mt-3 text-xs leading-5 text-amber-900">{CLIENT_FILE_SPEC.segmentDeepDiveNote}</p>
+            <p className="mt-3 text-xs leading-5 text-amber-900">
+              Zonder afdeling en functieniveau blijft segmentatie te grof voor een betrouwbare managementread.
+            </p>
           </div>
         </div>
       </div>

@@ -8,6 +8,8 @@ describe('new campaign form clarity', () => {
     expect(source).toContain('Kies product')
     expect(source).toContain('Kies route')
     expect(source).toContain('Surveymodules')
+    expect(source).not.toContain('Rapport-add-ons')
+    expect(source).not.toContain('segment_deep_dive')
     expect(source).not.toContain('Onboardingverwachting voor deze route')
     expect(source).not.toContain('RetentieScan v1.1-validatievoorbereiding')
     expect(source).not.toContain('Pulse wave 1-boundary')

@@ -31,10 +31,11 @@ describe('campaign setup rails', () => {
     expect(getAllowedDeliveryModes('pulse')).toEqual(['baseline'])
   })
 
-  it('keeps non-survey follow-up scans free from report add-ons while exit/retention stay flexible', () => {
+  it('removes report add-ons from campaign setup now that segment analysis is part of the standard scan layer', () => {
     expect(getDefaultModulesForScanType('leadership')).toEqual(['leadership', 'role_clarity', 'culture', 'growth'])
     expect(supportsCampaignModuleSelection('exit')).toBe(true)
-    expect(supportsCampaignReportAddOns('exit')).toBe(true)
+    expect(supportsCampaignReportAddOns('exit')).toBe(false)
+    expect(supportsCampaignReportAddOns('retention')).toBe(false)
     expect(supportsCampaignReportAddOns('pulse')).toBe(false)
   })
 })

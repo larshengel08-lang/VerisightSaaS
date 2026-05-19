@@ -8,14 +8,12 @@ import {
   getDefaultModulesForScanType,
   isBaselineOnlyScanType,
   supportsCampaignModuleSelection,
-  supportsCampaignReportAddOns,
 } from '@/lib/campaign-setup'
 import { createClient } from '@/lib/supabase/client'
 import type { DeliveryMode, Organization, ScanType } from '@/lib/types'
-import { FACTOR_LABELS, REPORT_ADD_ON_LABELS } from '@/lib/types'
+import { FACTOR_LABELS } from '@/lib/types'
 
 const ORG_FACTORS = ['leadership', 'culture', 'growth', 'compensation', 'workload', 'role_clarity']
-const REPORT_ADD_ONS = ['segment_deep_dive'] as const
 
 interface Props {
   orgs: Organization[]
@@ -33,7 +31,6 @@ export function NewCampaignForm({ orgs }: Props) {
   const router = useRouter()
   const supabase = createClient()
 
-  const hasSegmentDeepDive = modules.includes('segment_deep_dive')
   const campaignNamePlaceholder = getCampaignNamePlaceholder(scanType)
 
   function toggleModule(module: string) {
@@ -198,31 +195,6 @@ export function NewCampaignForm({ orgs }: Props) {
           <p className="mt-2 text-xs leading-5 text-slate-600">Deze scan gebruikt een vaste baseline-opzet.</p>
         </div>
       )}
-
-      {supportsCampaignReportAddOns(scanType) ? (
-        <div className="rounded-[22px] border border-blue-100 bg-blue-50 p-4">
-          <p className="text-sm font-semibold text-slate-900">Rapport-add-ons</p>
-          <div className="mt-3 space-y-2">
-            {REPORT_ADD_ONS.map((addOn) => (
-              <label key={addOn} className="flex items-start gap-3 rounded-2xl border border-white/80 bg-white/70 p-3 text-sm text-slate-700">
-                <input
-                  type="checkbox"
-                  checked={modules.includes(addOn)}
-                  onChange={() => toggleModule(addOn)}
-                  className="mt-1 rounded"
-                />
-                <span>
-                  <span className="block font-medium text-slate-900">{REPORT_ADD_ON_LABELS[addOn]}</span>
-                  <span className="block text-xs leading-5 text-slate-500">Gebruik alleen wanneer extra segmentdetail nodig is.</span>
-                </span>
-              </label>
-            ))}
-          </div>
-          {hasSegmentDeepDive ? (
-            <p className="mt-3 text-xs leading-5 text-blue-800">Segment deep dive gebruikt bestaande metadata in het rapport.</p>
-          ) : null}
-        </div>
-      ) : null}
 
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
       {success ? <p className="text-sm text-green-600">Campaign aangemaakt.</p> : null}

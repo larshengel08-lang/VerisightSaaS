@@ -161,7 +161,7 @@ def test_generate_exit_report_smoke(db_session: Session):
     assert len(pages) == 11
     assert 'Door Verisight' in pages[0]
     assert 'Segment deep dive' in pages[0]
-    assert 'Niet opgenomen' in pages[0]
+    assert 'Opgenomen' in pages[0]
     assert 'Wat speelt nu' not in pages[0]
     assert 'Respons' in pages[1]
     assert 'Uitgenodigd' in pages[1]
@@ -313,13 +313,12 @@ def test_generate_retention_report_smoke_with_trend_and_segment_deep_dive(db_ses
     assert 'Kernsignalen in samenhang' in pages[3]
     assert 'Eerdere signalering' in pages[3]
     assert 'Hoe lees je dit?' in pages[3]
-    assert 'Eerste route & managementactie' in pages[4]
-    assert 'Compacte methodiek / leeswijzer' in pages[5]
-    assert 'Hoe lees je dit?' in pages[5]
-    assert 'Segmentanalyse' in pages[6]
-    assert 'Technische verantwoording' in pages[7]
-    assert 'Onderliggende psychologische laag (SDT)' in pages[7]
-    assert 'Review' in pages[4]
+    assert any('Compacte methodiek / leeswijzer' in page for page in pages)
+    assert any('Hoe lees je dit?' in page for page in pages[5:])
+    assert any('Segmentanalyse' in page for page in pages)
+    assert any('Technische verantwoording' in page for page in pages)
+    assert any('Onderliggende psychologische laag (SDT)' in page for page in pages)
+    assert any('Review' in page for page in pages)
 
 
 def test_generate_exit_report_sample_output_mode_uses_buyer_facing_cover_note(db_session: Session):

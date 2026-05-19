@@ -193,5 +193,8 @@ export function hasCampaignAddOn(
   campaign: Pick<Campaign, 'enabled_modules'> | null | undefined,
   addOn: CampaignAddOn,
 ) {
+  if (addOn === 'segment_deep_dive') {
+    return true
+  }
   return campaign?.enabled_modules?.includes(addOn) ?? false
 }
