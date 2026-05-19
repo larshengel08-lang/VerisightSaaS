@@ -46,7 +46,7 @@ describe('review rhythm oversight', () => {
     expect(markup).not.toContain('project planning')
   })
 
-  it('does not render blocked route family labels inside the bounded oversight list', () => {
+  it('excludes blocked route family items from the bounded oversight list instead of masking them', () => {
     const markup = renderToStaticMarkup(
       <ReviewRhythmOversight
         summary={{
@@ -70,5 +70,7 @@ describe('review rhythm oversight', () => {
 
     expect(markup).not.toContain('Pulse')
     expect(markup).not.toContain('Leadership')
+    expect(markup).not.toContain('Operations')
+    expect(markup).not.toContain('Nu aandacht nodig')
   })
 })

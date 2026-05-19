@@ -25,14 +25,15 @@ function getReviewOrganizationName(organizationNames: string[]) {
   return 'Loep organisatie'
 }
 
-function getRouteScopeValue(item: Pick<ActionCenterPreviewItem, 'id' | 'coreSemantics'>) {
+function getRouteScopeValue(item: Pick<ActionCenterPreviewItem, 'coreSemantics'>) {
   const routePrefix = `${item.coreSemantics.route.campaignId}::`
+  const routeId = item.coreSemantics.route.routeId
 
-  if (!item.id.startsWith(routePrefix)) {
+  if (!routeId.startsWith(routePrefix)) {
     return null
   }
 
-  return item.id.slice(routePrefix.length)
+  return routeId.slice(routePrefix.length)
 }
 
 function getNativeCalendarEligibleRouteIds(args: {

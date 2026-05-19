@@ -15,12 +15,8 @@ function getOversightStateLabel(
   return 'Achter op review'
 }
 
-function getBoundedSourceLabel(sourceLabel: string) {
-  if (sourceLabel === 'ExitScan' || sourceLabel === 'RetentieScan') {
-    return sourceLabel
-  }
-
-  return 'Action Center'
+function isBoundedSourceLabel(sourceLabel: string) {
+  return sourceLabel === 'ExitScan' || sourceLabel === 'RetentieScan'
 }
 
 export function ReviewRhythmOversight({
@@ -40,6 +36,8 @@ export function ReviewRhythmOversight({
   if (totalCount === 0) {
     return null
   }
+
+  const boundedAttentionItems = attentionItems.filter((item) => isBoundedSourceLabel(item.sourceLabel))
 
   return (
     <DashboardSection
@@ -79,13 +77,13 @@ export function ReviewRhythmOversight({
         />
       </div>
 
-      {attentionItems.length > 0 ? (
+      {boundedAttentionItems.length > 0 ? (
         <div className="mt-4 rounded-[22px] border border-[color:var(--dashboard-frame-border)] bg-white p-5 shadow-[0_10px_24px_rgba(19,32,51,0.05)]">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-text)]">
             Nu aandacht nodig
           </p>
           <div className="mt-4 space-y-3">
-            {attentionItems.map((item) => (
+            {boundedAttentionItems.map((item) => (
               <div
                 key={`${item.routeId}:${item.state}`}
                 className="flex flex-wrap items-center justify-between gap-3 rounded-[18px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-muted-surface)] px-4 py-3"
@@ -93,7 +91,7 @@ export function ReviewRhythmOversight({
                 <div className="space-y-1">
                   <p className="text-sm font-semibold text-[color:var(--dashboard-ink)]">{item.scopeLabel}</p>
                   <p className="text-xs text-[color:var(--dashboard-text)]">
-                    {getBoundedSourceLabel(item.sourceLabel)} · {item.reviewDateLabel}
+                    {item.sourceLabel} - {item.reviewDateLabel}
                   </p>
                 </div>
                 <span className="rounded-full border border-[color:var(--dashboard-frame-border)] bg-white px-3 py-1 text-xs font-semibold text-[color:var(--dashboard-ink)]">

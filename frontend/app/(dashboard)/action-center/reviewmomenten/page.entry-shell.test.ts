@@ -29,6 +29,15 @@ describe('action center reviewmomenten entry shell', () => {
     expect(source).toContain('oversightAttentionItems={rhythmData.oversight.attentionItems}')
   })
 
+  it('derives manageable review-rhythm scope from the canonical route id instead of preview item ids', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('const routeId = item.coreSemantics.route.routeId')
+    expect(source).toContain('if (!routeId.startsWith(routePrefix))')
+    expect(source).toContain('return routeId.slice(routePrefix.length)')
+    expect(source).not.toContain('if (!item.id.startsWith(routePrefix))')
+  })
+
   it('filters reviewmomenten surfaces to constitution-approved route families before wiring the page client', () => {
     const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
 
