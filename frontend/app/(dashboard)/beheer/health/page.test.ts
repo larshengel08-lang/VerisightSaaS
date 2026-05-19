@@ -58,9 +58,11 @@ vi.mock('@/lib/telemetry/store', () => ({
 import HealthPage from './page'
 
 describe('beheer health page', () => {
-  it('renders the suite health evidence surface', async () => {
+  it('renders the health page as a transition registry', async () => {
     const html = renderToString(await HealthPage())
-    expect(html).toContain('Suite health evidence')
+    expect(html).toContain('Health transition registry')
+    expect(html).toContain('Transition deep link')
+    expect(html).toContain('Expert registry')
     expect(html).toContain('Owner access confirmed')
     expect(html).toContain('Manager denied insights')
     expect(html).toContain('Action Center pilot-ops')

@@ -59,9 +59,9 @@ function createLedgerSelectQuery(result: { data: unknown; error?: unknown }) {
   }
 }
 
-function createLedgerInsertQuery() {
+function createLedgerInsertQuery(insertSpy: ReturnType<typeof vi.fn> = vi.fn().mockResolvedValue({ error: null })) {
   return {
-    insert: vi.fn().mockResolvedValue({ error: null }),
+    insert: insertSpy,
   }
 }
 
@@ -209,5 +209,166 @@ describe('POST /api/action-center-follow-through-mails', () => {
     await expect(response.json()).resolves.toEqual({
       detail: 'Geen eligible Action Center-routes gevonden voor dispatch.',
     })
+  })
+
+  it('records RetentieScan sends with the canonical retention scan type in the ledger', async () => {
+    const insertSpy = vi.fn().mockResolvedValue({ error: null })
+
+    mockGetDispatchData.mockResolvedValue({
+      snapshots: [
+        {
+          routeId: 'camp-2::org::support',
+          routeScopeValue: 'org-1::department::support',
+          orgId: 'org-1',
+          campaignId: 'camp-2',
+          campaignName: 'RetentieScan Q2',
+          scopeLabel: 'Support',
+          scanType: 'retention',
+          routeStatus: 'reviewbaar',
+          reviewScheduledFor: '2026-05-20',
+          reviewCompletedAt: null,
+          reviewOutcome: 'geen-uitkomst',
+          ownerAssignedAt: '2026-05-10T09:00:00.000Z',
+          hasFollowUpTarget: false,
+          remindersEnabled: true,
+          cadenceDays: 14,
+          reminderLeadDays: 3,
+          escalationLeadDays: 7,
+          managerRecipient: { email: 'manager@example.com', name: 'Manager' },
+          hrOversightRecipients: [],
+        },
+      ],
+      routeIds: ['camp-2::org::support'],
+    })
+
+    mockPlanJobs.mockReturnValue({
+      jobs: [
+        {
+          routeId: 'camp-2::org::support',
+          orgId: 'org-1',
+          campaignId: 'camp-2',
+          campaignName: 'RetentieScan Q2',
+          scopeLabel: 'Support',
+          routeScopeValue: 'org-1::department::support',
+          triggerType: 'review_upcoming',
+          recipientRole: 'manager',
+          recipientEmail: 'manager@example.com',
+          recipientName: 'Manager',
+          sourceMarker: '2026-05-20',
+          dedupeKey: 'camp-2::org::support::review_upcoming::manager@example.com::2026-05-20',
+          reviewScheduledFor: '2026-05-20',
+        },
+      ],
+      suppressions: [],
+    })
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'action_center_follow_through_mail_events') {
+        const selectQuery = createLedgerSelectQuery({ data: [] })
+        const insertQuery = createLedgerInsertQuery(insertSpy)
+        return {
+          ...selectQuery,
+          ...insertQuery,
+        }
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest(
+        { mode: 'dispatch' },
+        { authorization: 'Bearer test-token' },
+      ),
+    )
+
+    expect(response.status).toBe(200)
+    expect(insertSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        route_id: 'camp-2::org::support',
+        scan_type: 'retention',
+      }),
+    )
+  })
+
+  it('records RetentieScan suppressions with the canonical retention scan type in the ledger', async () => {
+    const insertSpy = vi.fn().mockResolvedValue({ error: null })
+
+    mockGetDispatchData.mockResolvedValue({
+      snapshots: [
+        {
+          routeId: 'camp-2::org::support',
+          routeScopeValue: 'org-1::department::support',
+          orgId: 'org-1',
+          campaignId: 'camp-2',
+          campaignName: 'RetentieScan Q2',
+          scopeLabel: 'Support',
+          scanType: 'retention',
+          routeStatus: 'reviewbaar',
+          reviewScheduledFor: '2026-05-20',
+          reviewCompletedAt: null,
+          reviewOutcome: 'geen-uitkomst',
+          ownerAssignedAt: '2026-05-10T09:00:00.000Z',
+          hasFollowUpTarget: false,
+          remindersEnabled: true,
+          cadenceDays: 14,
+          reminderLeadDays: 3,
+          escalationLeadDays: 7,
+          managerRecipient: { email: 'manager@example.com', name: 'Manager' },
+          hrOversightRecipients: [],
+        },
+      ],
+      routeIds: ['camp-2::org::support'],
+    })
+
+    mockPlanJobs.mockReturnValue({
+      jobs: [],
+      suppressions: [
+        {
+          routeId: 'camp-2::org::support',
+          orgId: 'org-1',
+          campaignId: 'camp-2',
+          campaignName: 'RetentieScan Q2',
+          scopeLabel: 'Support',
+          routeScopeValue: 'org-1::department::support',
+          triggerType: 'review_upcoming',
+          recipientRole: 'manager',
+          recipientEmail: 'manager@example.com',
+          recipientName: 'Manager',
+          sourceMarker: '2026-05-20',
+          suppressionReason: 'reminders-disabled',
+          reviewScheduledFor: '2026-05-20',
+        },
+      ],
+    })
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'action_center_follow_through_mail_events') {
+        const selectQuery = createLedgerSelectQuery({ data: [] })
+        const insertQuery = createLedgerInsertQuery(insertSpy)
+        return {
+          ...selectQuery,
+          ...insertQuery,
+        }
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest(
+        { mode: 'dispatch' },
+        { authorization: 'Bearer test-token' },
+      ),
+    )
+
+    expect(response.status).toBe(200)
+    expect(insertSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        route_id: 'camp-2::org::support',
+        scan_type: 'retention',
+        delivery_status: 'suppressed',
+      }),
+    )
   })
 })

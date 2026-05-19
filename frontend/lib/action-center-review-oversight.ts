@@ -1,4 +1,4 @@
-import type { ActionCenterPreviewItem } from '@/lib/action-center-preview-model'
+import type { ActionCenterPreviewItem, ActionCenterPreviewStatus } from '@/lib/action-center-preview-model'
 import { getReviewMomentScopeLabel } from '@/lib/action-center-review-moments'
 import {
   getActionCenterEnabledRouteDefaults,
@@ -8,9 +8,8 @@ import {
   classifyActionCenterReviewRhythmStatus,
   type ActionCenterReviewRhythmConfig,
 } from '@/lib/action-center-review-rhythm'
-import { isActionCenterFollowThroughMailRouteResolved } from '@/lib/action-center-follow-through-mail'
 import type { ActionCenterReviewOutcome } from '@/lib/action-center-route-contract'
-import type { ActionCenterPreviewStatus } from '@/lib/action-center-preview-model'
+import { isActionCenterFollowThroughMailRouteResolved } from '@/lib/action-center-follow-through-mail'
 
 export type ActionCenterReviewOversightState =
   | 'upcoming'
@@ -38,9 +37,7 @@ export interface ActionCenterReviewOversightAttentionItem {
 function getOverdueDayDiff(reviewDate: string | null, now: Date) {
   if (!reviewDate) return null
 
-  const normalized = /^\d{4}-\d{2}-\d{2}$/.test(reviewDate)
-    ? `${reviewDate}T00:00:00.000Z`
-    : reviewDate
+  const normalized = /^\d{4}-\d{2}-\d{2}$/.test(reviewDate) ? `${reviewDate}T00:00:00.000Z` : reviewDate
   const parsed = new Date(normalized)
   if (Number.isNaN(parsed.getTime())) return null
 

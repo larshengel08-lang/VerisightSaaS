@@ -131,7 +131,10 @@ describe('dashboard shell navigation', () => {
       key: 'overview',
       href: '/dashboard',
     })
-    expect(navigation.admin.map((item) => item.label)).toEqual(['Setup', 'Leads', 'Action Center bron'])
+    expect(navigation.admin.map((item) => item.label)).toEqual(['Setup', 'Leads', 'Learnings'])
+    expect(navigation.admin.some((item) => item.href === '/beheer/billing')).toBe(false)
+    expect(navigation.admin.some((item) => item.href === '/beheer/health')).toBe(false)
+    expect(navigation.admin.some((item) => item.href === '/beheer/proof')).toBe(false)
     expect(navigation.modules[3]).toMatchObject({
       key: 'onboarding',
       href: '/dashboard?module=onboarding',

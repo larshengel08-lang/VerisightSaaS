@@ -257,9 +257,7 @@ describe('action center review rhythm data', () => {
 
     await expect(
       getActionCenterReviewRhythmData({
-        items: [
-          buildItem(),
-        ] as never,
+        items: [buildItem()] as never,
         now: new Date('2026-05-28T12:00:00.000Z'),
         routeScanTypeByRouteId: {
           'cmp-exit-1::org-1::department::operations': 'exit',

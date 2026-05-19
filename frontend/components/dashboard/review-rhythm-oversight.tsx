@@ -7,9 +7,7 @@ import type {
   ActionCenterReviewOversightSummary,
 } from '@/lib/action-center-review-oversight'
 
-function getOversightStateLabel(
-  state: ActionCenterReviewOversightAttentionItem['state'],
-) {
+function getOversightStateLabel(state: ActionCenterReviewOversightAttentionItem['state']) {
   if (state === 'escalation-sensitive') return 'Escalatiegevoelig'
   if (state === 'stale') return 'Achter cadans'
   return 'Achter op review'
