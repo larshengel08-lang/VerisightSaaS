@@ -32,12 +32,16 @@ export const ACTION_CENTER_ACTOR_TYPES = [
 
 export type ActionCenterActor = (typeof ACTION_CENTER_ACTOR_TYPES)[number]
 
-export type ActionCenterConstitutionObject = 'follow_through_route'
+export type ActionCenterConstitutionObject = 'follow_through_route' | 'review_moment'
+
+export type ActionCenterConstitutionState =
+  | ActionCenterCanonicalRouteState
+  | ActionCenterCanonicalReviewState
 
 export type ActionCenterTransitionRule = {
   readonly object: ActionCenterConstitutionObject
-  readonly fromState: ActionCenterCanonicalRouteState
-  readonly toState: ActionCenterCanonicalRouteState
+  readonly fromState: ActionCenterConstitutionState
+  readonly toState: ActionCenterConstitutionState
   actors: readonly ActionCenterActor[]
 }
 
@@ -61,10 +65,19 @@ export const ACTION_CENTER_TRANSITION_RULES: readonly Readonly<ActionCenterTrans
     toState: 'reopened',
     actors: ['hr_rhythm_owner'],
   }),
+  freezeActionCenterTransitionRule({
+    object: 'review_moment',
+    fromState: 'scheduled',
+    toState: 'rescheduled',
+    actors: ['hr_rhythm_owner'],
+  }),
 ])
 
 export type ActionCenterApprovedRouteDefault = {
   readonly scanType: ActionCenterApprovedRouteFamily
+  readonly cadenceDays: number
+  readonly reminderLeadDays: number
+  readonly escalationLeadDays: number
   readonly reviewWindowDays: {
     readonly min: number
     readonly max: number
@@ -87,11 +100,17 @@ const ACTION_CENTER_APPROVED_ROUTE_DEFAULTS: Record<
 > = {
   exit: freezeActionCenterApprovedRouteDefault({
     scanType: 'exit',
+    cadenceDays: 14,
+    reminderLeadDays: 3,
+    escalationLeadDays: 7,
     reviewWindowDays: { min: 60, max: 90 },
     staleAfterDays: 90,
   }),
   retention: freezeActionCenterApprovedRouteDefault({
     scanType: 'retention',
+    cadenceDays: 14,
+    reminderLeadDays: 3,
+    escalationLeadDays: 7,
     reviewWindowDays: { min: 45, max: 90 },
     staleAfterDays: 90,
   }),
@@ -110,8 +129,8 @@ export function getActionCenterApprovedRouteDefault(
 export function isActionCenterCanonicalRouteStateTransitionAllowed(args: {
   actor: ActionCenterActor
   object: ActionCenterConstitutionObject
-  fromState: ActionCenterCanonicalRouteState
-  toState: ActionCenterCanonicalRouteState
+  fromState: ActionCenterConstitutionState
+  toState: ActionCenterConstitutionState
 }): boolean {
   return ACTION_CENTER_TRANSITION_RULES.some(
     (rule) =>

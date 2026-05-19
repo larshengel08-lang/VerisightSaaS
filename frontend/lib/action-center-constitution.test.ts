@@ -30,11 +30,17 @@ describe('action-center constitution', () => {
   it('exposes only exit and retention as approved route defaults', () => {
     expect(getActionCenterApprovedRouteDefault('exit')).toEqual({
       scanType: 'exit',
+      cadenceDays: 14,
+      reminderLeadDays: 3,
+      escalationLeadDays: 7,
       reviewWindowDays: { min: 60, max: 90 },
       staleAfterDays: 90,
     })
     expect(getActionCenterApprovedRouteDefault('retention')).toEqual({
       scanType: 'retention',
+      cadenceDays: 14,
+      reminderLeadDays: 3,
+      escalationLeadDays: 7,
       reviewWindowDays: { min: 45, max: 90 },
       staleAfterDays: 90,
     })
@@ -53,12 +59,15 @@ describe('action-center constitution', () => {
 
     expect(getActionCenterApprovedRouteDefault('exit')).toEqual({
       scanType: 'exit',
+      cadenceDays: 14,
+      reminderLeadDays: 3,
+      escalationLeadDays: 7,
       reviewWindowDays: { min: 60, max: 90 },
       staleAfterDays: 90,
     })
   })
 
-  it('keeps bounded transition truth for manager-blocked close and hr reopen allowance', () => {
+  it('keeps bounded transition truth for route close, route reopen, and review reschedule', () => {
     expect(ACTION_CENTER_TRANSITION_RULES).toEqual([
       {
         object: 'follow_through_route',
@@ -70,6 +79,12 @@ describe('action-center constitution', () => {
         object: 'follow_through_route',
         fromState: 'closed',
         toState: 'reopened',
+        actors: ['hr_rhythm_owner'],
+      },
+      {
+        object: 'review_moment',
+        fromState: 'scheduled',
+        toState: 'rescheduled',
         actors: ['hr_rhythm_owner'],
       },
     ])
@@ -123,5 +138,25 @@ describe('action-center constitution', () => {
         toState: 'reopened',
       }),
     ).toBe(true)
+  })
+
+  it('allows hr review reschedule transitions and blocks manager access', () => {
+    expect(
+      isActionCenterCanonicalRouteStateTransitionAllowed({
+        actor: 'hr_rhythm_owner',
+        object: 'review_moment',
+        fromState: 'scheduled',
+        toState: 'rescheduled',
+      }),
+    ).toBe(true)
+
+    expect(
+      isActionCenterCanonicalRouteStateTransitionAllowed({
+        actor: 'manager_participant',
+        object: 'review_moment',
+        fromState: 'scheduled',
+        toState: 'rescheduled',
+      }),
+    ).toBe(false)
   })
 })

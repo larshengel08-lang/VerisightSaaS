@@ -1,9 +1,12 @@
 import {
+  ACTION_CENTER_CANONICAL_REVIEW_STATES,
   ACTION_CENTER_CANONICAL_ROUTE_STATES,
   isActionCenterCanonicalRouteStateTransitionAllowed,
   type ActionCenterActor,
+  type ActionCenterCanonicalReviewState,
   type ActionCenterCanonicalRouteState,
   type ActionCenterConstitutionObject,
+  type ActionCenterConstitutionState,
 } from '@/lib/action-center-constitution'
 import type {
   ActionCenterWorkspaceMember,
@@ -108,13 +111,19 @@ export function resolveActionCenterHrWriteAccess(args: {
 
 type ActionCenterGovernanceTransitionObject =
   | ActionCenterConstitutionObject
-  | 'review_moment'
   | 'owner_assignment'
 
-function isActionCenterCanonicalRouteState(
-  value: string,
-): value is ActionCenterCanonicalRouteState {
-  return ACTION_CENTER_CANONICAL_ROUTE_STATES.includes(value as ActionCenterCanonicalRouteState)
+function isActionCenterCanonicalStateForObject(args: {
+  object: ActionCenterConstitutionObject
+  state: string
+}): args is
+  | { object: 'follow_through_route'; state: ActionCenterCanonicalRouteState }
+  | { object: 'review_moment'; state: ActionCenterCanonicalReviewState } {
+  if (args.object === 'follow_through_route') {
+    return ACTION_CENTER_CANONICAL_ROUTE_STATES.includes(args.state as ActionCenterCanonicalRouteState)
+  }
+
+  return ACTION_CENTER_CANONICAL_REVIEW_STATES.includes(args.state as ActionCenterCanonicalReviewState)
 }
 
 function getActionCenterTransitionActor(
@@ -140,9 +149,9 @@ export function resolveActionCenterTransitionAccess(args: {
   toState: string
 }): { allowed: boolean } {
   if (
-    args.object !== 'follow_through_route' ||
-    !isActionCenterCanonicalRouteState(args.fromState) ||
-    !isActionCenterCanonicalRouteState(args.toState)
+    args.object === 'owner_assignment' ||
+    !isActionCenterCanonicalStateForObject({ object: args.object, state: args.fromState }) ||
+    !isActionCenterCanonicalStateForObject({ object: args.object, state: args.toState })
   ) {
     return { allowed: false }
   }
@@ -151,8 +160,8 @@ export function resolveActionCenterTransitionAccess(args: {
     allowed: isActionCenterCanonicalRouteStateTransitionAllowed({
       actor: getActionCenterTransitionActor(args.actorRole),
       object: args.object,
-      fromState: args.fromState,
-      toState: args.toState,
+      fromState: args.fromState as ActionCenterConstitutionState,
+      toState: args.toState as ActionCenterConstitutionState,
     }),
   }
 }

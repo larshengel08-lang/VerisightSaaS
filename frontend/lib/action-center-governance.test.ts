@@ -87,6 +87,15 @@ describe('action center governance helpers', () => {
   it('does not allow manager canonical reschedule or close access', () => {
     expect(
       resolveActionCenterTransitionAccess({
+        actorRole: 'hr_owner',
+        object: 'review_moment',
+        fromState: 'scheduled',
+        toState: 'rescheduled',
+      }).allowed,
+    ).toBe(true)
+
+    expect(
+      resolveActionCenterTransitionAccess({
         actorRole: 'manager',
         object: 'follow_through_route',
         fromState: 'open',
