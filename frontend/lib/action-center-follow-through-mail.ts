@@ -5,6 +5,9 @@ import type {
 } from './action-center-route-contract'
 import { isActionCenterReviewRhythmSupportedScanType } from './action-center-review-rhythm'
 
+export const ACTION_CENTER_FOLLOW_THROUGH_MAIL_ADOPTION_EVENT_SOURCE =
+  'trigger_delivery_ledger' as const
+
 export const ACTION_CENTER_FOLLOW_THROUGH_TRIGGER_TYPES = [
   'assignment_created',
   'review_upcoming',

@@ -8,6 +8,9 @@ import {
   type ActionCenterRouteDefaultsKnownScanType,
 } from './action-center-route-defaults'
 
+export const ACTION_CENTER_REVIEW_RESCHEDULE_ADOPTION_EVENT_SOURCE =
+  'review_reschedule' as const
+
 export const ACTION_CENTER_REVIEW_RESCHEDULE_OPERATIONS = ['reschedule', 'cancel'] as const
 
 export type ActionCenterReviewRescheduleOperation =
