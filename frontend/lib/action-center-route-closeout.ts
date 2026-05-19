@@ -77,6 +77,18 @@ function isIsoTimestamp(value: string | null | undefined) {
   return !Number.isNaN(new Date(normalized).getTime())
 }
 
+export function isActionCenterRouteCloseoutStatus(
+  value: string | null | undefined,
+): value is ActionCenterRouteCloseoutStatus {
+  return Boolean(value && CLOSEOUT_STATUSES.has(value as ActionCenterRouteCloseoutStatus))
+}
+
+export function isActionCenterRouteCloseoutReason(
+  value: string | null | undefined,
+): value is ActionCenterRouteCloseoutReason {
+  return Boolean(value && CLOSEOUT_REASONS.has(value as ActionCenterRouteCloseoutReason))
+}
+
 export function projectActionCenterRouteCloseout(
   input: Record<string, unknown> | null | undefined,
 ): ActionCenterRouteCloseoutRecord {

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { buildDepartmentScopeValue } from '@/lib/action-center-manager-responses'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { buildActionCenterRouteId } from '@/lib/action-center-route-contract'
@@ -6,6 +7,8 @@ import { resolveActionCenterHrWriteAccess } from '@/lib/action-center-governance
 import { getActionCenterEnabledRouteDefaults } from '@/lib/action-center-route-defaults'
 import {
   ActionCenterRouteCloseoutMutationError,
+  isActionCenterRouteCloseoutReason,
+  isActionCenterRouteCloseoutStatus,
   projectActionCenterRouteCloseout,
   assertActionCenterRouteCloseoutMutationAllowed,
   type ActionCenterRouteCloseoutRecord,
@@ -56,16 +59,16 @@ function parseRouteCloseoutInput(input: RouteCloseoutRequestBody | null) {
   const campaignId = normalizeText(input?.campaign_id)
   const routeScopeType = input?.route_scope_type
   const routeScopeValue = normalizeText(input?.route_scope_value)
-  const closeoutStatus = normalizeText(input?.closeout_status) as ActionCenterRouteCloseoutStatus | null
-  const closeoutReason = normalizeText(input?.closeout_reason) as ActionCenterRouteCloseoutReason | null
+  const closeoutStatus = normalizeText(input?.closeout_status)
+  const closeoutReason = normalizeText(input?.closeout_reason)
   const closeoutNote = normalizeText(input?.closeout_note)
 
   if (
     !campaignId ||
     (routeScopeType !== 'department' && routeScopeType !== 'item') ||
     !routeScopeValue ||
-    !closeoutStatus ||
-    !closeoutReason
+    !isActionCenterRouteCloseoutStatus(closeoutStatus) ||
+    !isActionCenterRouteCloseoutReason(closeoutReason)
   ) {
     throw new Error('Ongeldige route closeout input.')
   }
@@ -120,11 +123,15 @@ function resolveRouteCloseoutIdentity(args: {
   campaignOrgId: string
   visibleDepartmentLabels: string[]
 }) {
+  let canonicalScopeValue = args.parsed.route_scope_value
+
   if (args.parsed.route_scope_type === 'department') {
-    const normalizedScopeValue = args.parsed.route_scope_value.toLocaleLowerCase('nl-NL')
-    if (!args.visibleDepartmentLabels.includes(normalizedScopeValue.split('::').at(-1) ?? '')) {
+    const departmentLabel = args.parsed.route_scope_value.toLocaleLowerCase('nl-NL').split('::').at(-1) ?? ''
+    if (!args.visibleDepartmentLabels.includes(departmentLabel)) {
       throw new Error('Route closeout route bestaat niet voor deze campagne.')
     }
+
+    canonicalScopeValue = buildDepartmentScopeValue(args.campaignOrgId, departmentLabel)
   }
 
   if (
@@ -135,11 +142,11 @@ function resolveRouteCloseoutIdentity(args: {
   }
 
   return {
-    route_id: buildActionCenterRouteId(args.parsed.campaign_id, args.parsed.route_scope_value),
+    route_id: buildActionCenterRouteId(args.parsed.campaign_id, canonicalScopeValue),
     campaign_id: args.parsed.campaign_id,
     org_id: args.campaignOrgId,
     route_scope_type: args.parsed.route_scope_type,
-    route_scope_value: args.parsed.route_scope_value,
+    route_scope_value: canonicalScopeValue,
   }
 }
 

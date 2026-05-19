@@ -224,6 +224,86 @@ describe('action center route reopens route', () => {
     ).not.toThrow()
   })
 
+  it('canonicalizes forged department scope prefixes before persisting reopen truth', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'hr-owner-1' } } })
+    mockLoadSuiteAccessContext.mockResolvedValue({
+      context: { isVerisightAdmin: false },
+      orgMemberships: [{ org_id: 'org-1', role: 'owner' }],
+      workspaceMemberships: [],
+    })
+
+    const insertQuery = createInsertQuery({
+      data: {
+        route_id: 'campaign-1::org-1::department::operations',
+        campaign_id: 'campaign-1',
+        org_id: 'org-1',
+        route_scope_type: 'department',
+        route_scope_value: 'org-1::department::operations',
+        reopen_reason: 'te-vroeg-afgesloten',
+        reopened_at: '2026-05-21T09:00:00.000Z',
+        reopened_by_role: 'hr_owner',
+      },
+      error: null,
+    })
+
+    let reopenCallCount = 0
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'campaigns') {
+        return createCampaignQuery({
+          data: { id: 'campaign-1', organization_id: 'org-1', scan_type: 'exit' },
+          error: null,
+        })
+      }
+      if (table === 'respondents') {
+        return createRespondentsQuery({ data: [{ department: 'Operations' }] })
+      }
+      if (table === 'action_center_route_closeouts') {
+        return createCampaignQuery({
+          data: {
+            route_id: 'campaign-1::org-1::department::operations',
+            closeout_status: 'afgerond',
+            closeout_reason: 'voldoende-opgepakt',
+            closeout_note: null,
+            closed_at: '2026-05-20T09:00:00.000Z',
+            closed_by_role: 'hr_owner',
+          },
+          error: null,
+        })
+      }
+      if (table === 'action_center_route_reopens') {
+        reopenCallCount += 1
+        if (reopenCallCount === 1) {
+          return createLatestReopenQuery({
+            data: null,
+          })
+        }
+
+        return insertQuery
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest({
+        route_id: 'campaign-1::forged-org::department::operations',
+        campaign_id: 'campaign-1',
+        route_scope_type: 'department',
+        route_scope_value: 'forged-org::department::operations',
+        reopen_reason: 'te-vroeg-afgesloten',
+      }),
+    )
+
+    expect(response.status).toBe(200)
+    expect(insertQuery.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        route_id: 'campaign-1::org-1::department::operations',
+        route_scope_value: 'org-1::department::operations',
+      }),
+    )
+  })
+
   it('persists a canonical reopen event', async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: 'hr-owner-1' } } })
     mockLoadSuiteAccessContext.mockResolvedValue({

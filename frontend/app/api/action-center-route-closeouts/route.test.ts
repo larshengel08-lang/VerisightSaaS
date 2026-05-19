@@ -262,6 +262,201 @@ describe('action center route closeouts route', () => {
     ).not.toThrow()
   })
 
+  it('canonicalizes forged department scope prefixes before persisting closeout truth', async () => {
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: 'hr-owner-1' } },
+    })
+    mockLoadSuiteAccessContext.mockResolvedValue({
+      context: { isVerisightAdmin: false },
+      orgMemberships: [{ org_id: 'org-1', role: 'owner' }],
+      workspaceMemberships: [],
+    })
+
+    const upsertQuery = createUpsertQuery({
+      data: {
+        route_id: 'campaign-1::org-1::department::operations',
+        campaign_id: 'campaign-1',
+        org_id: 'org-1',
+        route_scope_type: 'department',
+        route_scope_value: 'org-1::department::operations',
+        closeout_status: 'afgerond',
+        closeout_reason: 'voldoende-opgepakt',
+        closeout_note: null,
+        closed_at: '2026-05-20T09:00:00.000Z',
+        closed_by_role: 'hr_owner',
+      },
+      error: null,
+    })
+
+    let closeoutCallCount = 0
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'campaigns') {
+        return createCampaignQuery({
+          data: { id: 'campaign-1', organization_id: 'org-1', scan_type: 'exit' },
+          error: null,
+        })
+      }
+
+      if (table === 'respondents') {
+        return createRespondentsQuery({
+          data: [{ department: 'Operations' }],
+        })
+      }
+
+      if (table === 'action_center_route_closeouts') {
+        closeoutCallCount += 1
+        if (closeoutCallCount === 1) {
+          return createCampaignQuery({
+            data: null,
+            error: null,
+          })
+        }
+
+        return upsertQuery
+      }
+
+      if (table === 'action_center_route_reopens') {
+        return createLatestReopenQuery({
+          data: null,
+        })
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest({
+        campaign_id: 'campaign-1',
+        route_scope_type: 'department',
+        route_scope_value: 'forged-org::department::operations',
+        closeout_status: 'afgerond',
+        closeout_reason: 'voldoende-opgepakt',
+      }),
+    )
+
+    expect(response.status).toBe(200)
+    expect(upsertQuery.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        route_id: 'campaign-1::org-1::department::operations',
+        route_scope_value: 'org-1::department::operations',
+      }),
+      { onConflict: 'route_id' },
+    )
+  })
+
+  it('rejects invalid closeout status before DB write', async () => {
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: 'hr-owner-1' } },
+    })
+    mockLoadSuiteAccessContext.mockResolvedValue({
+      context: { isVerisightAdmin: false },
+      orgMemberships: [{ org_id: 'org-1', role: 'owner' }],
+      workspaceMemberships: [],
+    })
+
+    const upsertQuery = createUpsertQuery({ data: null, error: null })
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'campaigns') {
+        return createCampaignQuery({
+          data: { id: 'campaign-1', organization_id: 'org-1', scan_type: 'exit' },
+          error: null,
+        })
+      }
+
+      if (table === 'respondents') {
+        return createRespondentsQuery({
+          data: [{ department: 'Operations' }],
+        })
+      }
+
+      if (table === 'action_center_route_closeouts') {
+        return upsertQuery
+      }
+
+      if (table === 'action_center_route_reopens') {
+        return createLatestReopenQuery({
+          data: null,
+        })
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest({
+        campaign_id: 'campaign-1',
+        route_scope_type: 'department',
+        route_scope_value: 'org-1::department::operations',
+        closeout_status: 'onbekend',
+        closeout_reason: 'voldoende-opgepakt',
+      }),
+    )
+
+    expect(response.status).toBe(400)
+    expect(upsertQuery.upsert).not.toHaveBeenCalled()
+    await expect(response.json()).resolves.toEqual({
+      detail: 'Ongeldige route closeout input.',
+    })
+  })
+
+  it('rejects invalid closeout reason before DB write', async () => {
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: 'hr-owner-1' } },
+    })
+    mockLoadSuiteAccessContext.mockResolvedValue({
+      context: { isVerisightAdmin: false },
+      orgMemberships: [{ org_id: 'org-1', role: 'owner' }],
+      workspaceMemberships: [],
+    })
+
+    const upsertQuery = createUpsertQuery({ data: null, error: null })
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'campaigns') {
+        return createCampaignQuery({
+          data: { id: 'campaign-1', organization_id: 'org-1', scan_type: 'exit' },
+          error: null,
+        })
+      }
+
+      if (table === 'respondents') {
+        return createRespondentsQuery({
+          data: [{ department: 'Operations' }],
+        })
+      }
+
+      if (table === 'action_center_route_closeouts') {
+        return upsertQuery
+      }
+
+      if (table === 'action_center_route_reopens') {
+        return createLatestReopenQuery({
+          data: null,
+        })
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest({
+        campaign_id: 'campaign-1',
+        route_scope_type: 'department',
+        route_scope_value: 'org-1::department::operations',
+        closeout_status: 'afgerond',
+        closeout_reason: 'ongeldige-reason',
+      }),
+    )
+
+    expect(response.status).toBe(400)
+    expect(upsertQuery.upsert).not.toHaveBeenCalled()
+    await expect(response.json()).resolves.toEqual({
+      detail: 'Ongeldige route closeout input.',
+    })
+  })
+
   it('persists a canonical HR closeout with structured reason', async () => {
     mockGetUser.mockResolvedValue({
       data: { user: { id: 'hr-owner-1' } },

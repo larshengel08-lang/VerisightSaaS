@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { buildDepartmentScopeValue } from '@/lib/action-center-manager-responses'
 import { buildActionCenterRouteId } from '@/lib/action-center-route-contract'
 import { resolveActionCenterHrWriteAccess } from '@/lib/action-center-governance'
 import { getActionCenterEnabledRouteDefaults } from '@/lib/action-center-route-defaults'
@@ -116,16 +117,15 @@ function resolveRouteReopenIdentity(args: {
   campaignOrgId: string
   visibleDepartmentLabels: string[]
 }) {
-  const canonicalRouteId = buildActionCenterRouteId(args.parsed.campaign_id, args.parsed.route_scope_value)
-  if (args.parsed.route_id !== canonicalRouteId) {
-    throw new Error('Route reopen route bestaat niet voor deze campagne.')
-  }
+  let canonicalScopeValue = args.parsed.route_scope_value
 
   if (args.parsed.route_scope_type === 'department') {
-    const normalizedScopeValue = args.parsed.route_scope_value.toLocaleLowerCase('nl-NL')
-    if (!args.visibleDepartmentLabels.includes(normalizedScopeValue.split('::').at(-1) ?? '')) {
+    const departmentLabel = args.parsed.route_scope_value.toLocaleLowerCase('nl-NL').split('::').at(-1) ?? ''
+    if (!args.visibleDepartmentLabels.includes(departmentLabel)) {
       throw new Error('Route reopen route bestaat niet voor deze campagne.')
     }
+
+    canonicalScopeValue = buildDepartmentScopeValue(args.campaignOrgId, departmentLabel)
   }
 
   if (
@@ -135,12 +135,14 @@ function resolveRouteReopenIdentity(args: {
     throw new Error('Route reopen route bestaat niet voor deze campagne.')
   }
 
+  const canonicalRouteId = buildActionCenterRouteId(args.parsed.campaign_id, canonicalScopeValue)
+
   return {
     route_id: canonicalRouteId,
     campaign_id: args.parsed.campaign_id,
     org_id: args.campaignOrgId,
     route_scope_type: args.parsed.route_scope_type,
-    route_scope_value: args.parsed.route_scope_value,
+    route_scope_value: canonicalScopeValue,
   }
 }
 
