@@ -184,7 +184,7 @@ The execution layer defines:
 
 ## 7. Capability Streams
 
-The operating system is built around seven capability streams.
+The operating system is built around ten capability streams.
 
 ### 7.1 Stream 1 - Governed Product Stack
 
@@ -219,6 +219,19 @@ Includes:
 - evidence framing
 - recognizable language for buyers and delivery teams
 
+Minimum top-tier capability expectation:
+
+- construct definitions per domain
+- item bank rationale
+- psychometric support proportional to product maturity
+- reliability view per domain
+- valid-response policy
+- confidence framing
+- interpretation guide
+- questionnaire and scoring versioning
+- explicit "what this does not prove" system
+- method governance log
+
 ### 7.3 Stream 3 - Premium Delivery & Output Excellence
 
 Purpose:
@@ -236,6 +249,15 @@ Includes:
 - output consistency
 - delivery artifact readiness states
 
+Minimum top-tier quality bar:
+
+- board deck must work in an executive or board meeting without live dashboard dependence
+- executive one-pager must stand alone
+- HR appendix must deepen safely without breaking privacy boundaries
+- manager cascade handout must prevent ranking and score-defense behavior
+- facilitator script must support a reliable 60-90 minute board-read
+- all outputs must follow one shared structure, one shared terminology system, and one shared interpretation boundary system
+
 ### 7.4 Stream 4 - Enterprise Drilldown & Analysis Environment
 
 Purpose:
@@ -252,22 +274,87 @@ Includes:
 - safe open-text handling
 - governed exports
 
-### 7.5 Stream 5 - Operating Model / Delivery Repeatability
+Minimum enterprise expectation:
+
+- organization hierarchy model
+- multi-level segment model
+- comparison eligibility rules
+- permission inheritance
+- view-level suppression logic
+- small-n handling
+- export entitlement rules
+- release approval logic
+- auditability
+- "why hidden?" explanation rules
+
+### 7.5 Stream 5 - Listening Program Operations
 
 Purpose:
 
-- make the product reliably deliverable across customers and over time
+- make the product reliably deliverable as a full employee listening program across customers and over time
 
 Includes:
 
 - baseline operating playbooks
+- stakeholder mapping
+- launch readiness
+- communication planning
 - census-run preparation
+- reminder cadence
+- response monitoring
+- closure protocol
+- results release protocol
 - QA and review routines
 - turnaround discipline
 - board-read preparation
 - internal ownership model
 
-### 7.6 Stream 6 - Follow-On Architecture
+### 7.6 Stream 6 - Action & Follow-through System
+
+Purpose:
+
+- turn the annual baseline into controlled management follow-through without becoming a generic task or workflow platform
+
+Includes:
+
+- board decision questions
+- HR follow-up structure
+- manager cascade boundaries
+- action theme selection
+- 30/60/90 day review logic
+- route selection after baseline
+- Pulse handoff where justified
+
+Does not include:
+
+- full task management
+- manager performance workflows
+- automated intervention prescription
+- causal recommendations
+
+### 7.7 Stream 7 - Text & Open Comment Intelligence
+
+Purpose:
+
+- make open comments useful without creating privacy, identifiability, or quote-theater risks
+
+Includes:
+
+- clustering
+- sensitive-content suppression
+- quote policy
+- executive-safe summaries
+- manager-safe summaries
+- open-text thresholds
+- theme confidence labels
+
+Does not include:
+
+- raw comment dumps
+- individual-level inference
+- sentiment claims without method support
+
+### 7.8 Stream 8 - Follow-On Architecture
 
 Purpose:
 
@@ -280,7 +367,7 @@ Includes:
 - route selection after baseline
 - expansion logic for enterprise and MKB
 
-### 7.7 Stream 7 - Benchmark Layer
+### 7.9 Stream 9 - Benchmark & Reference Layer
 
 Purpose:
 
@@ -293,6 +380,39 @@ Includes:
 - normalization
 - benchmark governance
 
+Benchmark-readiness rules that must exist before benchmark is activated:
+
+- stable questionnaire versions
+- stable domain definitions
+- client metadata taxonomy
+- sector taxonomy
+- response population definitions
+- normalization rules
+- consent and commercial terms for reference data
+- minimum dataset thresholds
+
+### 7.10 Stream 10 - Enterprise Trust & Procurement Readiness
+
+Purpose:
+
+- make the product credible in enterprise buying, privacy, security, and works-council contexts
+
+Includes:
+
+- AVG and DPA readiness
+- data retention rules
+- access control explanation
+- export boundaries
+- processor and subprocessor answers
+- audit and incident response basics
+- works-council explanation pack
+- buyer security FAQ
+
+Does not include:
+
+- procurement theater beyond actual operating capability
+- unsupported security claims
+
 ---
 
 ## 8. Stream Priority Order
@@ -304,17 +424,20 @@ Recommended priority order:
 1. Governed Product Stack
 2. Methodology Authority
 3. Premium Delivery & Output Excellence
-4. Enterprise Drilldown & Analysis Environment
-5. Operating Model / Delivery Repeatability
-6. Follow-On Architecture
-7. Benchmark Layer
+4. Enterprise Trust & Procurement Readiness
+5. Enterprise Drilldown & Analysis Environment
+6. Text & Open Comment Intelligence
+7. Listening Program Operations
+8. Action & Follow-through System
+9. Follow-On Architecture
+10. Benchmark & Reference Layer
 
 Reasoning:
 
 - without the governed product stack, there is no durable product boundary
 - without methodology authority, the product stays weaker than Gallup in legitimacy
 - without premium delivery, the product cannot win in the boardroom
-- without drilldown maturity and repeatable operations, the product cannot truly scale to heavier enterprise use
+- without drilldown maturity, text maturity, and repeatable listening operations, the product cannot truly scale to heavier enterprise use
 
 ---
 
@@ -485,6 +608,33 @@ It needs to define where it intends to win:
 - governance discipline
 - methodical restraint and clarity
 
+### 11.5 Category Capability Benchmark
+
+Loep does not aim to copy Culture Amp, Qualtrics, Gallup, or Perceptyx one-to-one. However, to become credible in the same buying context, the product must be evaluated against a fixed category capability benchmark.
+
+The benchmark must cover at least:
+
+1. measurement authority
+2. survey program operations
+3. executive and manager reporting
+4. governed drilldown
+5. open-text intelligence
+6. action and follow-through
+7. benchmark and reference readiness
+8. enterprise trust and procurement
+9. admin and access control
+10. delivery repeatability
+
+For each capability, Loep must define:
+
+- category expectation
+- Loep target
+- what Loep deliberately will not copy
+- current maturity
+- required spec
+- required plan
+- launch blocker yes/no
+
 ---
 
 ## 12. Deployment Profile Rule
@@ -570,18 +720,22 @@ This operating system must generate a direct spec backlog.
 
 Recommended first-wave specs:
 
-1. `Methodology Authority System`
-2. `Premium Delivery & Board Output System`
-3. `Governed Drilldown & Analysis Environment`
-4. `Delivery Operating Model`
+1. `Category Capability Benchmark`
+2. `Methodology Authority System`
+3. `Premium Delivery & Board Output System`
+4. `Enterprise Trust & Procurement Readiness`
 
 Recommended second-wave specs:
 
-5. `Follow-On Architecture`
+5. `Governed Drilldown & Analysis Environment`
+6. `Text & Open Comment Intelligence`
+7. `Listening Program Operations`
 
 Recommended later-wave specs:
 
-6. `Benchmark & Reference Layer`
+8. `Action & Follow-through System`
+9. `Follow-On Architecture`
+10. `Benchmark & Reference Layer`
 
 Optional future specs only after strong justification:
 
@@ -606,10 +760,22 @@ The operating system must therefore own an execution index that maps:
 
 After the operating system is approved, the recommended first-wave planning order is:
 
-1. `Methodology Authority System` plan
-2. `Premium Delivery & Board Output System` plan
-3. `Governed Drilldown & Analysis Environment` plan
-4. `Delivery Operating Model` plan
+1. `Category Capability Benchmark` plan
+2. `Methodology Authority System` plan
+3. `Premium Delivery & Board Output System` plan
+4. `Enterprise Trust & Procurement Readiness` plan
+
+Recommended second-wave planning order:
+
+5. `Governed Drilldown & Analysis Environment` plan
+6. `Text & Open Comment Intelligence` plan
+7. `Listening Program Operations` plan
+
+Recommended third-wave planning order:
+
+8. `Action & Follow-through System` plan
+9. `Follow-On Architecture` plan
+10. `Benchmark & Reference Layer` plan
 
 ### 15.2 Rule for plan creation
 
@@ -636,7 +802,7 @@ At the time of writing, `Loep Culture Assessment` appears to be:
 - promising in premium positioning
 - not yet mature enough in methodology authority
 - not yet mature enough in enterprise drilldown depth
-- not yet mature enough in repeatable premium delivery operations to be placed on equal footing with Gallup, Perceptyx, or Culture Amp
+- not yet mature enough in text intelligence, action follow-through, trust and procurement readiness, or repeatable listening operations to be placed on equal footing with Gallup, Perceptyx, Culture Amp, or Qualtrics
 
 That is not a failure state.
 
@@ -674,20 +840,22 @@ The intended end state is:
 
 ## 18. Immediate Next Step
 
-After approval of this operating system, the next required artifact should be:
+After approval of this operating system, the next required artifact sequence should be:
 
-- a gap-mapped master roadmap derived from these streams
-
-Immediately after that:
-
-- first-wave specs should be written in the priority order defined above
+1. create the category capability benchmark
+2. create the gap-mapped master roadmap derived from these streams
+3. create the first-wave specs in the priority order defined above
+4. create a 90-day product maturity plan
+5. create a pilot-readiness gate
 
 Do not jump directly from this document into broad implementation.
 
 The operating system must first produce:
 
+- a capability benchmark
 - a roadmap
 - a spec backlog
 - a plan backlog
+- a pilot-readiness control layer
 
 before additional major execution starts.
