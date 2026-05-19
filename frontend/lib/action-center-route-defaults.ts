@@ -1,4 +1,9 @@
-import { getActionCenterApprovedRouteDefault } from '@/lib/action-center-constitution'
+import {
+  ACTION_CENTER_APPROVED_ROUTE_FAMILIES,
+  getActionCenterApprovedRouteDefault,
+  type ActionCenterApprovedRouteDefault,
+  type ActionCenterApprovedRouteFamily,
+} from '@/lib/action-center-constitution'
 
 export const ACTION_CENTER_ROUTE_DEFAULTS_SCAN_TYPES = [
   'exit',
@@ -9,13 +14,12 @@ export const ACTION_CENTER_ROUTE_DEFAULTS_SCAN_TYPES = [
   'team',
 ] as const
 
-export const ACTION_CENTER_ROUTE_DEFAULTS_ENABLED_SCAN_TYPES = ['exit', 'retention'] as const
+export const ACTION_CENTER_ROUTE_DEFAULTS_ENABLED_SCAN_TYPES = ACTION_CENTER_APPROVED_ROUTE_FAMILIES
 
 export type ActionCenterRouteDefaultsKnownScanType =
   (typeof ACTION_CENTER_ROUTE_DEFAULTS_SCAN_TYPES)[number]
 
-export type ActionCenterRouteDefaultsEnabledScanType =
-  (typeof ACTION_CENTER_ROUTE_DEFAULTS_ENABLED_SCAN_TYPES)[number]
+export type ActionCenterRouteDefaultsEnabledScanType = ActionCenterApprovedRouteFamily
 
 export interface ActionCenterRouteDefaults {
   scanType: ActionCenterRouteDefaultsKnownScanType
@@ -40,26 +44,24 @@ const BASELINE_ROUTE_DEFAULTS = {
 }
 
 function buildEnabledRouteDefaults(
-  scanType: ActionCenterRouteDefaultsEnabledScanType,
+  approvedRouteDefault: ActionCenterApprovedRouteDefault,
 ): ActionCenterRouteDefaults {
-  const approvedRouteDefault = getActionCenterApprovedRouteDefault(scanType)
-
   return {
-    scanType,
+    scanType: approvedRouteDefault.scanType,
     actionCenterStatus: 'enabled',
     routeEnabled: true,
-    cadenceDays: approvedRouteDefault?.cadenceDays ?? BASELINE_ROUTE_DEFAULTS.cadenceDays,
-    reminderLeadDays: approvedRouteDefault?.reminderLeadDays ?? BASELINE_ROUTE_DEFAULTS.reminderLeadDays,
-    escalationLeadDays: approvedRouteDefault?.escalationLeadDays ?? BASELINE_ROUTE_DEFAULTS.escalationLeadDays,
-    reviewWindowDays: approvedRouteDefault?.reviewWindowDays,
-    staleAfterDays: approvedRouteDefault?.staleAfterDays,
+    cadenceDays: approvedRouteDefault.cadenceDays,
+    reminderLeadDays: approvedRouteDefault.reminderLeadDays,
+    escalationLeadDays: approvedRouteDefault.escalationLeadDays,
+    reviewWindowDays: approvedRouteDefault.reviewWindowDays,
+    staleAfterDays: approvedRouteDefault.staleAfterDays,
     remindersEnabled: true,
     providerEligible: true,
   }
 }
 
 function buildBlockedRouteDefaults(
-  scanType: Exclude<ActionCenterRouteDefaultsKnownScanType, ActionCenterRouteDefaultsEnabledScanType>,
+  scanType: Exclude<ActionCenterRouteDefaultsKnownScanType, ActionCenterApprovedRouteFamily>,
 ): ActionCenterRouteDefaults {
   return {
     scanType,
@@ -87,19 +89,17 @@ export function isActionCenterRouteDefaultsKnownScanType(
 export function getActionCenterRouteDefaults(
   scanType: string | null | undefined,
 ): ActionCenterRouteDefaults | null {
+  const approvedRouteDefault = getActionCenterApprovedRouteDefault(scanType)
+  if (approvedRouteDefault) {
+    return buildEnabledRouteDefaults(approvedRouteDefault)
+  }
+
   switch (scanType) {
-    case 'exit':
-      return buildEnabledRouteDefaults('exit')
-    case 'retention':
-      return buildEnabledRouteDefaults('retention')
     case 'onboarding':
-      return buildBlockedRouteDefaults('onboarding')
     case 'pulse':
-      return buildBlockedRouteDefaults('pulse')
     case 'leadership':
-      return buildBlockedRouteDefaults('leadership')
     case 'team':
-      return buildBlockedRouteDefaults('team')
+      return buildBlockedRouteDefaults(scanType)
     default:
       return null
   }

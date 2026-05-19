@@ -3,6 +3,7 @@ import {
   getActionCenterGovernanceActorRoleLabel,
   isActionCenterGovernanceActorRole,
   resolveActionCenterHrWriteAccess,
+  resolveActionCenterReviewRhythmWriteAccess,
   resolveActionCenterTransitionAccess,
 } from './action-center-governance'
 
@@ -111,5 +112,103 @@ describe('action center governance helpers', () => {
         toState: 'rescheduled',
       }).allowed,
     ).toBe(false)
+  })
+
+  it('requires view, update, schedule, and matching scope for review rhythm access', () => {
+    expect(
+      resolveActionCenterReviewRhythmWriteAccess({
+        context: { isVerisightAdmin: false },
+        orgMemberships: [{ org_id: 'org-1', role: 'viewer' }],
+        workspaceMemberships: [
+          {
+            org_id: 'org-1',
+            user_id: 'hr-member-1',
+            display_name: 'HR Member',
+            login_email: 'hr.member@example.com',
+            access_role: 'hr_member',
+            scope_type: 'route',
+            scope_value: 'org-1::route::other-route',
+            can_view: true,
+            can_update: true,
+            can_assign: false,
+            can_schedule_review: true,
+          },
+          {
+            org_id: 'org-1',
+            user_id: 'hr-member-2',
+            display_name: 'HR Member',
+            login_email: 'hr.member.two@example.com',
+            access_role: 'hr_member',
+            scope_type: 'route',
+            scope_value: 'org-1::route::route-1',
+            can_view: true,
+            can_update: true,
+            can_assign: false,
+            can_schedule_review: false,
+          },
+        ],
+        orgId: 'org-1',
+        routeScopeValue: 'org-1::route::route-1',
+      }),
+    ).toEqual({
+      allowed: false,
+      auditRole: null,
+    })
+  })
+
+  it('allows review rhythm access for matching route scope and org-wide hr memberships', () => {
+    expect(
+      resolveActionCenterReviewRhythmWriteAccess({
+        context: { isVerisightAdmin: false },
+        orgMemberships: [{ org_id: 'org-1', role: 'viewer' }],
+        workspaceMemberships: [
+          {
+            org_id: 'org-1',
+            user_id: 'hr-member-1',
+            display_name: 'HR Member',
+            login_email: 'hr.member@example.com',
+            access_role: 'hr_member',
+            scope_type: 'route',
+            scope_value: 'org-1::route::route-1',
+            can_view: true,
+            can_update: true,
+            can_assign: false,
+            can_schedule_review: true,
+          },
+        ],
+        orgId: 'org-1',
+        routeScopeValue: 'org-1::route::route-1',
+      }),
+    ).toEqual({
+      allowed: true,
+      auditRole: 'hr_member',
+    })
+
+    expect(
+      resolveActionCenterReviewRhythmWriteAccess({
+        context: { isVerisightAdmin: false },
+        orgMemberships: [{ org_id: 'org-1', role: 'viewer' }],
+        workspaceMemberships: [
+          {
+            org_id: 'org-1',
+            user_id: 'hr-owner-1',
+            display_name: 'HR Owner',
+            login_email: 'hr.owner@example.com',
+            access_role: 'hr_owner',
+            scope_type: 'org',
+            scope_value: 'org-1::org::org-1',
+            can_view: true,
+            can_update: true,
+            can_assign: true,
+            can_schedule_review: true,
+          },
+        ],
+        orgId: 'org-1',
+        routeScopeValue: 'org-1::route::route-1',
+      }),
+    ).toEqual({
+      allowed: true,
+      auditRole: 'hr_owner',
+    })
   })
 })

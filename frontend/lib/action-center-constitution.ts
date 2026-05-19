@@ -73,31 +73,29 @@ export const ACTION_CENTER_TRANSITION_RULES: readonly Readonly<ActionCenterTrans
   }),
 ])
 
-export type ActionCenterApprovedRouteDefault = {
-  readonly scanType: ActionCenterApprovedRouteFamily
-  readonly cadenceDays: number
-  readonly reminderLeadDays: number
-  readonly escalationLeadDays: number
-  readonly reviewWindowDays: {
-    readonly min: number
-    readonly max: number
-  }
-  readonly staleAfterDays: number
-}
+export type ActionCenterApprovedRouteDefault = Readonly<{
+  scanType: ActionCenterApprovedRouteFamily
+  cadenceDays: number
+  reminderLeadDays: number
+  escalationLeadDays: number
+  reviewWindowDays: Readonly<{
+    min: number
+    max: number
+  }>
+  staleAfterDays: number
+}>
 
 function freezeActionCenterApprovedRouteDefault(
   routeDefault: ActionCenterApprovedRouteDefault,
-): Readonly<ActionCenterApprovedRouteDefault> {
+): ActionCenterApprovedRouteDefault {
   return Object.freeze({
     ...routeDefault,
     reviewWindowDays: Object.freeze({ ...routeDefault.reviewWindowDays }),
   })
 }
 
-const ACTION_CENTER_APPROVED_ROUTE_DEFAULTS: Record<
-  ActionCenterApprovedRouteFamily,
-  Readonly<ActionCenterApprovedRouteDefault>
-> = {
+const ACTION_CENTER_APPROVED_ROUTE_DEFAULTS: Record<ActionCenterApprovedRouteFamily, ActionCenterApprovedRouteDefault> =
+  {
   exit: freezeActionCenterApprovedRouteDefault({
     scanType: 'exit',
     cadenceDays: 14,
@@ -114,7 +112,7 @@ const ACTION_CENTER_APPROVED_ROUTE_DEFAULTS: Record<
     reviewWindowDays: { min: 45, max: 90 },
     staleAfterDays: 90,
   }),
-}
+  }
 
 export function getActionCenterApprovedRouteDefault(
   scanType: string | null | undefined,

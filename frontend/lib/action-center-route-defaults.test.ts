@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { ACTION_CENTER_APPROVED_ROUTE_FAMILIES } from './action-center-constitution'
 import {
   ACTION_CENTER_ROUTE_DEFAULTS_ENABLED_SCAN_TYPES,
   ACTION_CENTER_ROUTE_DEFAULTS_SCAN_TYPES,
@@ -18,7 +19,7 @@ describe('action center route defaults contract', () => {
       'leadership',
       'team',
     ])
-    expect(ACTION_CENTER_ROUTE_DEFAULTS_ENABLED_SCAN_TYPES).toEqual(['exit', 'retention'])
+    expect(ACTION_CENTER_ROUTE_DEFAULTS_ENABLED_SCAN_TYPES).toEqual(ACTION_CENTER_APPROVED_ROUTE_FAMILIES)
   })
 
   it('keeps ExitScan as the enabled baseline and unlocks RetentieScan with the same defaults', () => {
