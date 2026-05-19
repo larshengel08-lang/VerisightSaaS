@@ -14,6 +14,7 @@ create table if not exists public.action_center_adoption_events (
       event_name in (
         'manager_trigger_delivered',
         'manager_contextual_entry_opened',
+        'manager_quick_action_offered',
         'manager_quick_action_completed',
         'review_completed',
         'review_rescheduled',
@@ -59,10 +60,16 @@ create table if not exists public.action_center_adoption_events (
       ((object_anchor = 'review_moment') and review_item_id is not null)
       or ((object_anchor <> 'review_moment') and review_item_id is null)
     ),
+  constraint action_center_adoption_events_actor_identity_check
+    check (
+      ((actor_role = 'system_channel') and actor_user_id is null)
+      or ((actor_role <> 'system_channel') and actor_user_id is not null)
+    ),
   constraint action_center_adoption_events_event_mapping_check
     check (
       (event_name = 'manager_trigger_delivered' and event_source = 'trigger_delivery_ledger' and object_anchor = 'follow_through_route' and actor_role = 'system_channel')
       or (event_name = 'manager_contextual_entry_opened' and event_source = 'contextual_entry' and object_anchor = 'follow_through_route' and actor_role = 'manager_participant')
+      or (event_name = 'manager_quick_action_offered' and event_source = 'manager_quick_action' and object_anchor = 'review_moment' and actor_role = 'system_channel')
       or (event_name = 'manager_quick_action_completed' and event_source = 'manager_quick_action' and object_anchor = 'review_moment' and actor_role = 'manager_participant')
       or (event_name = 'review_completed' and event_source = 'review_transition' and object_anchor = 'review_moment' and actor_role in ('hr_rhythm_owner', 'manager_participant'))
       or (event_name = 'review_rescheduled' and event_source = 'review_reschedule' and object_anchor = 'review_moment' and actor_role = 'hr_rhythm_owner')

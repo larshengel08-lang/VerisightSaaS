@@ -30,6 +30,7 @@ export type ActionCenterAdoptionObjectAnchor =
 export const ACTION_CENTER_ADOPTION_EVENT_NAMES = [
   'manager_trigger_delivered',
   'manager_contextual_entry_opened',
+  'manager_quick_action_offered',
   'manager_quick_action_completed',
   'review_completed',
   'review_rescheduled',
@@ -78,6 +79,17 @@ export const ACTION_CENTER_ADOPTION_EVENT_DEFINITIONS = [
     readinessOnly: true,
     provesAdoption: false,
     description: 'Manager opened Action Center through a bounded contextual entry point.',
+  },
+  {
+    name: 'manager_quick_action_offered',
+    eventSource: 'manager_quick_action',
+    objectAnchor: 'review_moment',
+    actorRoles: ['system_channel'],
+    requiresReviewItemId: true,
+    metadataPolicy: 'empty_object_only',
+    readinessOnly: true,
+    provesAdoption: false,
+    description: 'Bounded manager quick action opportunity surfaced for a review moment.',
   },
   {
     name: 'manager_quick_action_completed',
@@ -225,7 +237,7 @@ export const ACTION_CENTER_ADOPTION_METRIC_DEFINITIONS = [
   },
   {
     name: 'manager_quick_action_completion_rate',
-    formula: 'completed_manager_quick_actions / manager_quick_action_opportunities',
+    formula: 'completed_manager_quick_actions / surfaced_manager_quick_action_opportunities',
     eventSource: 'manager_quick_action',
     eventAnchors: ['manager_quick_action'],
     objectAnchor: 'review_moment',

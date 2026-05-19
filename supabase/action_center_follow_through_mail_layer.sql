@@ -5,7 +5,7 @@ create table if not exists public.action_center_follow_through_mail_events (
   route_scope_value text not null,
   route_source_id uuid references public.campaigns(id) on delete cascade not null,
   scan_type text not null
-    check (scan_type in ('exit')),
+    check (scan_type in ('exit', 'retention')),
   trigger_type text not null
     check (trigger_type in ('assignment_created', 'review_upcoming', 'review_overdue', 'follow_up_open_after_review')),
   recipient_role text not null

@@ -1,3 +1,7 @@
+import { readFileSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
 import { describe, expect, it } from 'vitest'
 
 import {
@@ -11,6 +15,17 @@ import {
 import { ACTION_CENTER_ENTRY_ADOPTION_EVENT_SOURCE } from './action-center-entry'
 import { ACTION_CENTER_FOLLOW_THROUGH_MAIL_ADOPTION_EVENT_SOURCE } from './action-center-follow-through-mail'
 import { ACTION_CENTER_REVIEW_RESCHEDULE_ADOPTION_EVENT_SOURCE } from './action-center-review-reschedule'
+
+const TEST_DIR = dirname(fileURLToPath(import.meta.url))
+const ADOPTION_SQL_PATH = resolve(
+  TEST_DIR,
+  '../../supabase/action_center_constitution_adoption_readiness.sql',
+)
+const SCHEMA_SQL_PATH = resolve(TEST_DIR, '../../supabase/schema.sql')
+
+function readSqlFixture(path: string) {
+  return readFileSync(path, 'utf8')
+}
 
 describe('action center adoption measurement readiness', () => {
   it('defines metric formulas and event anchors for manager trigger open rate', () => {
@@ -41,6 +56,7 @@ describe('action center adoption measurement readiness', () => {
     expect(ACTION_CENTER_ADOPTION_EVENT_NAMES).toEqual([
       'manager_trigger_delivered',
       'manager_contextual_entry_opened',
+      'manager_quick_action_offered',
       'manager_quick_action_completed',
       'review_completed',
       'review_rescheduled',
@@ -102,6 +118,39 @@ describe('action center adoption measurement readiness', () => {
       expect(metric.readinessOnly).toBe(true)
       expect(metric.whatItDoesNotProve.length).toBeGreaterThan(0)
       expect(metric.eventAnchors.length).toBeGreaterThan(0)
+    }
+
+    expect(getActionCenterAdoptionMetricDefinition('manager_quick_action_completion_rate')).toMatchObject({
+      formula: 'completed_manager_quick_actions / surfaced_manager_quick_action_opportunities',
+      eventSource: 'manager_quick_action',
+      eventAnchors: ['manager_quick_action'],
+    })
+  })
+
+  it('keeps the TypeScript readiness contract aligned with the SQL allowlists and review-scope rules', () => {
+    const adoptionSql = readSqlFixture(ADOPTION_SQL_PATH)
+    const schemaSql = readSqlFixture(SCHEMA_SQL_PATH)
+
+    for (const sqlSource of [adoptionSql, schemaSql]) {
+      expect(sqlSource).toContain("check (scan_type in ('exit', 'retention'))")
+      expect(sqlSource).toContain(
+        "((object_anchor = 'review_moment') and review_item_id is not null)",
+      )
+      expect(sqlSource).toContain(
+        "or ((object_anchor <> 'review_moment') and review_item_id is null)",
+      )
+      expect(sqlSource).toContain(
+        "((actor_role = 'system_channel') and actor_user_id is null)",
+      )
+      expect(sqlSource).toContain(
+        "or ((actor_role <> 'system_channel') and actor_user_id is not null)",
+      )
+
+      for (const eventDefinition of ACTION_CENTER_ADOPTION_EVENT_DEFINITIONS) {
+        expect(sqlSource).toContain(`'${eventDefinition.name}'`)
+        expect(sqlSource).toContain(`'${eventDefinition.eventSource}'`)
+        expect(sqlSource).toContain(`'${eventDefinition.objectAnchor}'`)
+      }
     }
   })
 })

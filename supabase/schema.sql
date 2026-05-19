@@ -707,7 +707,7 @@ create table if not exists public.action_center_review_rhythm_configs (
     check (route_source_type in ('campaign')),
   route_source_id uuid references public.campaigns(id) on delete cascade not null,
   scan_type text not null
-    check (scan_type in ('exit')),
+    check (scan_type in ('exit', 'retention')),
   cadence_days smallint not null
     check (cadence_days in (7, 14, 30)),
   reminder_lead_days smallint not null
@@ -733,7 +733,7 @@ create table if not exists public.action_center_review_schedule_revisions (
   route_id text not null,
   route_scope_value text not null,
   route_source_id uuid not null,
-  scan_type text not null check (scan_type in ('exit')),
+  scan_type text not null check (scan_type in ('exit', 'retention')),
   operation text not null check (operation in ('reschedule', 'cancel')),
   revision integer not null check (revision >= 0),
   review_date date,
@@ -880,6 +880,7 @@ create table if not exists public.action_center_adoption_events (
       event_name in (
         'manager_trigger_delivered',
         'manager_contextual_entry_opened',
+        'manager_quick_action_offered',
         'manager_quick_action_completed',
         'review_completed',
         'review_rescheduled',
@@ -925,10 +926,16 @@ create table if not exists public.action_center_adoption_events (
       ((object_anchor = 'review_moment') and review_item_id is not null)
       or ((object_anchor <> 'review_moment') and review_item_id is null)
     ),
+  constraint action_center_adoption_events_actor_identity_check
+    check (
+      ((actor_role = 'system_channel') and actor_user_id is null)
+      or ((actor_role <> 'system_channel') and actor_user_id is not null)
+    ),
   constraint action_center_adoption_events_event_mapping_check
     check (
       (event_name = 'manager_trigger_delivered' and event_source = 'trigger_delivery_ledger' and object_anchor = 'follow_through_route' and actor_role = 'system_channel')
       or (event_name = 'manager_contextual_entry_opened' and event_source = 'contextual_entry' and object_anchor = 'follow_through_route' and actor_role = 'manager_participant')
+      or (event_name = 'manager_quick_action_offered' and event_source = 'manager_quick_action' and object_anchor = 'review_moment' and actor_role = 'system_channel')
       or (event_name = 'manager_quick_action_completed' and event_source = 'manager_quick_action' and object_anchor = 'review_moment' and actor_role = 'manager_participant')
       or (event_name = 'review_completed' and event_source = 'review_transition' and object_anchor = 'review_moment' and actor_role in ('hr_rhythm_owner', 'manager_participant'))
       or (event_name = 'review_rescheduled' and event_source = 'review_reschedule' and object_anchor = 'review_moment' and actor_role = 'hr_rhythm_owner')

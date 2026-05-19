@@ -6,7 +6,7 @@ create table if not exists public.action_center_review_schedule_revisions (
   route_id text not null,
   route_scope_value text not null,
   route_source_id uuid not null,
-  scan_type text not null check (scan_type in ('exit')),
+  scan_type text not null check (scan_type in ('exit', 'retention')),
   operation text not null check (operation in ('reschedule', 'cancel')),
   revision integer not null check (revision >= 0),
   review_date date,

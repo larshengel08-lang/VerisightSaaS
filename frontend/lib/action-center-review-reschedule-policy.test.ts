@@ -41,7 +41,7 @@ function assertReviewScheduleRevisionSchema(sql: string) {
   expect(sql).toMatch(/route_id\s+text\s+not null/i)
   expect(sql).toMatch(/route_scope_value\s+text\s+not null/i)
   expect(sql).toMatch(/route_source_id\s+uuid\s+not null/i)
-  expect(sql).toMatch(/scan_type\s+text\s+not null\s+check \(scan_type in \('exit'\)\)/i)
+  expect(sql).toMatch(/scan_type\s+text\s+not null\s+check \(scan_type in \('exit', 'retention'\)\)/i)
   expect(sql).toMatch(/operation\s+text\s+not null\s+check \(operation in \('reschedule', 'cancel'\)\)/i)
   expect(sql).toMatch(/revision\s+integer\s+not null/i)
   expect(sql).toMatch(/review_date\s+date/i)
