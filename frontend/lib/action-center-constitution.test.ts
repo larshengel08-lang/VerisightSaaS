@@ -42,6 +42,22 @@ describe('action-center constitution', () => {
     expect(getActionCenterApprovedRouteDefault(null)).toBeNull()
   })
 
+  it('returns route defaults that are safe against caller mutation', () => {
+    const exitDefaults = getActionCenterApprovedRouteDefault('exit')
+
+    expect(exitDefaults).not.toBeNull()
+
+    expect(() => {
+      ;(exitDefaults as { reviewWindowDays: { min: number } }).reviewWindowDays.min = 999
+    }).toThrow()
+
+    expect(getActionCenterApprovedRouteDefault('exit')).toEqual({
+      scanType: 'exit',
+      reviewWindowDays: { min: 60, max: 90 },
+      staleAfterDays: 90,
+    })
+  })
+
   it('keeps bounded transition truth for manager-blocked close and hr reopen allowance', () => {
     expect(ACTION_CENTER_TRANSITION_RULES).toEqual([
       {
@@ -57,6 +73,25 @@ describe('action-center constitution', () => {
         actors: ['hr_rhythm_owner'],
       },
     ])
+  })
+
+  it('exports transition rules that are safe against object mutation', () => {
+    const closeRule = ACTION_CENTER_TRANSITION_RULES[0]
+
+    expect(() => {
+      ;(closeRule as { toState: string }).toState = 'reopened'
+    }).toThrow()
+
+    expect(() => {
+      ;(closeRule.actors as string[]).push('manager_participant')
+    }).toThrow()
+
+    expect(ACTION_CENTER_TRANSITION_RULES[0]).toEqual({
+      object: 'follow_through_route',
+      fromState: 'open',
+      toState: 'closed',
+      actors: ['hr_rhythm_owner'],
+    })
   })
 
   it('blocks manager route close transitions', () => {

@@ -35,50 +35,66 @@ export type ActionCenterActor = (typeof ACTION_CENTER_ACTOR_TYPES)[number]
 export type ActionCenterConstitutionObject = 'follow_through_route'
 
 export type ActionCenterTransitionRule = {
-  object: ActionCenterConstitutionObject
-  fromState: ActionCenterCanonicalRouteState
-  toState: ActionCenterCanonicalRouteState
+  readonly object: ActionCenterConstitutionObject
+  readonly fromState: ActionCenterCanonicalRouteState
+  readonly toState: ActionCenterCanonicalRouteState
   actors: readonly ActionCenterActor[]
 }
 
-export const ACTION_CENTER_TRANSITION_RULES: readonly ActionCenterTransitionRule[] = [
-  {
+function freezeActionCenterTransitionRule(rule: ActionCenterTransitionRule): Readonly<ActionCenterTransitionRule> {
+  return Object.freeze({
+    ...rule,
+    actors: Object.freeze([...rule.actors]),
+  })
+}
+
+export const ACTION_CENTER_TRANSITION_RULES: readonly Readonly<ActionCenterTransitionRule>[] = Object.freeze([
+  freezeActionCenterTransitionRule({
     object: 'follow_through_route',
     fromState: 'open',
     toState: 'closed',
     actors: ['hr_rhythm_owner'],
-  },
-  {
+  }),
+  freezeActionCenterTransitionRule({
     object: 'follow_through_route',
     fromState: 'closed',
     toState: 'reopened',
     actors: ['hr_rhythm_owner'],
-  },
-] as const
+  }),
+])
 
 export type ActionCenterApprovedRouteDefault = {
-  scanType: ActionCenterApprovedRouteFamily
-  reviewWindowDays: {
-    min: number
-    max: number
+  readonly scanType: ActionCenterApprovedRouteFamily
+  readonly reviewWindowDays: {
+    readonly min: number
+    readonly max: number
   }
-  staleAfterDays: number
+  readonly staleAfterDays: number
+}
+
+function freezeActionCenterApprovedRouteDefault(
+  routeDefault: ActionCenterApprovedRouteDefault,
+): Readonly<ActionCenterApprovedRouteDefault> {
+  return Object.freeze({
+    ...routeDefault,
+    reviewWindowDays: Object.freeze({ ...routeDefault.reviewWindowDays }),
+  })
 }
 
 const ACTION_CENTER_APPROVED_ROUTE_DEFAULTS: Record<
   ActionCenterApprovedRouteFamily,
-  ActionCenterApprovedRouteDefault
+  Readonly<ActionCenterApprovedRouteDefault>
 > = {
-  exit: {
+  exit: freezeActionCenterApprovedRouteDefault({
     scanType: 'exit',
     reviewWindowDays: { min: 60, max: 90 },
     staleAfterDays: 90,
-  },
-  retention: {
+  }),
+  retention: freezeActionCenterApprovedRouteDefault({
     scanType: 'retention',
     reviewWindowDays: { min: 45, max: 90 },
     staleAfterDays: 90,
-  },
+  }),
 }
 
 export function getActionCenterApprovedRouteDefault(
@@ -88,7 +104,7 @@ export function getActionCenterApprovedRouteDefault(
     return null
   }
 
-  return ACTION_CENTER_APPROVED_ROUTE_DEFAULTS[scanType]
+  return freezeActionCenterApprovedRouteDefault(ACTION_CENTER_APPROVED_ROUTE_DEFAULTS[scanType])
 }
 
 export function isActionCenterCanonicalRouteStateTransitionAllowed(args: {
