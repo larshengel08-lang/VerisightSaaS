@@ -25,14 +25,15 @@ function getReviewOrganizationName(organizationNames: string[]) {
   return 'Loep organisatie'
 }
 
-function getRouteScopeValue(item: Pick<ActionCenterPreviewItem, 'id' | 'coreSemantics'>) {
+function getRouteScopeValue(item: Pick<ActionCenterPreviewItem, 'coreSemantics'>) {
   const routePrefix = `${item.coreSemantics.route.campaignId}::`
+  const routeId = item.coreSemantics.route.routeId
 
-  if (!item.id.startsWith(routePrefix)) {
+  if (!routeId.startsWith(routePrefix)) {
     return null
   }
 
-  return item.id.slice(routePrefix.length)
+  return routeId.slice(routePrefix.length)
 }
 
 function getNativeCalendarEligibleRouteIds(args: {
@@ -52,7 +53,7 @@ function getNativeCalendarEligibleRouteIds(args: {
       scanType,
     })
 
-    return capability.mode === 'graph-enabled' ? [item.id] : []
+    return capability.mode === 'graph-enabled' ? [routeId] : []
   })
 }
 
@@ -87,13 +88,16 @@ export default async function ActionCenterReviewmomentenPage() {
     orgMemberships,
     currentUserWorkspaceMemberships,
   })
+  const reviewMomentItems = pageData.items.filter((item) =>
+    getActionCenterEnabledRouteDefaults(pageData.routeScanTypeByRouteId[item.coreSemantics.route.routeId]),
+  )
   const now = new Date()
   const rhythmData = await getActionCenterReviewRhythmData({
-    items: pageData.items,
+    items: reviewMomentItems,
     now,
     routeScanTypeByRouteId: pageData.routeScanTypeByRouteId,
   })
-  const manageableReviewRhythmRouteIds = pageData.items.flatMap((item) => {
+  const manageableReviewRhythmRouteIds = reviewMomentItems.flatMap((item) => {
     const routeId = item.coreSemantics.route.routeId
     const scanType = pageData.routeScanTypeByRouteId[routeId]
 
@@ -114,17 +118,17 @@ export default async function ActionCenterReviewmomentenPage() {
       routeScopeValue,
     })
 
-    return access.allowed ? [item.id] : []
+    return access.allowed ? [routeId] : []
   })
   const nativeCalendarEligibleRouteIds = getNativeCalendarEligibleRouteIds({
-    items: pageData.items,
+    items: reviewMomentItems,
     routeScanTypeByRouteId: pageData.routeScanTypeByRouteId,
   })
 
   return (
     <ReviewMomentPageClient
-      items={pageData.items}
-      governanceCounts={computeReviewMomentGovernanceCounts(pageData.items, now)}
+      items={reviewMomentItems}
+      governanceCounts={computeReviewMomentGovernanceCounts(reviewMomentItems, now)}
       organizationName={getReviewOrganizationName(pageData.organizationNames)}
       lastUpdated={now.toISOString()}
       canScheduleActionCenterReview={context.canScheduleActionCenterReview}

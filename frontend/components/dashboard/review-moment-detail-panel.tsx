@@ -103,6 +103,7 @@ function getInitialDraftReviewDate(item: ActionCenterPreviewItem | null) {
 export function ReviewMomentDetailPanel({
   item,
   urgency,
+  primaryQuickAction,
   canDownloadInviteArtifact,
   canScheduleReviewControls,
   canUseNativeCalendarSync,
@@ -110,6 +111,7 @@ export function ReviewMomentDetailPanel({
 }: {
   item: ActionCenterPreviewItem | null
   urgency: ReviewMomentUrgency | null
+  primaryQuickAction?: string | null
   canDownloadInviteArtifact: boolean
   canScheduleReviewControls: boolean
   canUseNativeCalendarSync: boolean
@@ -304,7 +306,7 @@ export function ReviewMomentDetailPanel({
           })}
           className="rounded-full border border-[color:var(--dashboard-frame-border)] bg-white px-3 py-2 text-xs font-semibold text-[color:var(--dashboard-ink)] transition hover:bg-[color:var(--dashboard-muted-surface)]"
         >
-          Bekijk gekoppelde opvolging
+          {primaryQuickAction ?? 'Bekijk gekoppelde opvolging'}
         </Link>
         {canRenderReviewInviteDownload(item, canDownloadInviteArtifact, artifactPreviewOverride) ? (
           <Link

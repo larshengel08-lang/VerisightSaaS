@@ -53,6 +53,9 @@ describe('action center follow-through mail planner', () => {
     })
 
     expect(result.jobs.some((job) => job.triggerType === 'assignment_created')).toBe(true)
+    expect(result.jobs.every((job) => job.mutationClass === 'mirror_only')).toBe(true)
+    expect(result.jobs.every((job) => job.canonicalWrite === false)).toBe(true)
+    expect(result.jobs.every((job) => job.kind !== 'canonical_state_change')).toBe(true)
   })
 
   it('suppresses review-upcoming when the review moved outside the current reminder window', () => {

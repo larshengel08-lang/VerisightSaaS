@@ -1,8 +1,15 @@
 import { buildActionCenterRouteId } from './action-center-route-contract'
 import {
+  resolveActionCenterTransitionAccess,
+  type ActionCenterGovernanceActorRole,
+} from './action-center-governance'
+import {
   isActionCenterRouteDefaultsKnownScanType,
   type ActionCenterRouteDefaultsKnownScanType,
 } from './action-center-route-defaults'
+
+export const ACTION_CENTER_REVIEW_RESCHEDULE_ADOPTION_EVENT_SOURCE =
+  'review_reschedule' as const
 
 export const ACTION_CENTER_REVIEW_RESCHEDULE_OPERATIONS = ['reschedule', 'cancel'] as const
 
@@ -10,6 +17,17 @@ export type ActionCenterReviewRescheduleOperation =
   (typeof ACTION_CENTER_REVIEW_RESCHEDULE_OPERATIONS)[number]
 
 export type ActionCenterReviewScheduleArtifactMode = 'CANCEL' | 'REQUEST'
+
+export class ActionCenterReviewRescheduleMutationError extends Error {
+  constructor(
+    public readonly code:
+      | 'manager_reschedule_not_allowed'
+      | 'forbidden_transition',
+  ) {
+    super(code)
+    this.name = 'ActionCenterReviewRescheduleMutationError'
+  }
+}
 
 export interface ValidatedActionCenterReviewRescheduleInput {
   operation: ActionCenterReviewRescheduleOperation
@@ -130,6 +148,30 @@ export function buildNextActionCenterReviewScheduleRevision(
   latestRevision: number | null | undefined,
 ) {
   return (latestRevision ?? -1) + 1
+}
+
+export function assertActionCenterReviewRescheduleMutationAllowed(args: {
+  actorRole: ActionCenterGovernanceActorRole
+  operation: ActionCenterReviewRescheduleOperation
+}) {
+  if (args.actorRole === 'manager') {
+    throw new ActionCenterReviewRescheduleMutationError('manager_reschedule_not_allowed')
+  }
+
+  if (args.operation !== 'reschedule') {
+    return
+  }
+
+  const access = resolveActionCenterTransitionAccess({
+    actorRole: args.actorRole,
+    object: 'review_moment',
+    fromState: 'scheduled',
+    toState: 'rescheduled',
+  })
+
+  if (!access.allowed) {
+    throw new ActionCenterReviewRescheduleMutationError('forbidden_transition')
+  }
 }
 
 export function getActionCenterReviewScheduleArtifactMode(

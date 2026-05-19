@@ -1,4 +1,4 @@
-import type { ActionCenterPreviewItem } from '@/lib/action-center-preview-model'
+import type { ActionCenterPreviewItem, ActionCenterPreviewStatus } from '@/lib/action-center-preview-model'
 import { getReviewMomentScopeLabel } from '@/lib/action-center-review-moments'
 import {
   getActionCenterEnabledRouteDefaults,
@@ -8,9 +8,8 @@ import {
   classifyActionCenterReviewRhythmStatus,
   type ActionCenterReviewRhythmConfig,
 } from '@/lib/action-center-review-rhythm'
-import { isActionCenterFollowThroughMailRouteResolved } from '@/lib/action-center-follow-through-mail'
 import type { ActionCenterReviewOutcome } from '@/lib/action-center-route-contract'
-import type { ActionCenterPreviewStatus } from '@/lib/action-center-preview-model'
+import { isActionCenterFollowThroughMailRouteResolved } from '@/lib/action-center-follow-through-mail'
 
 export type ActionCenterReviewOversightState =
   | 'upcoming'
@@ -38,15 +37,26 @@ export interface ActionCenterReviewOversightAttentionItem {
 function getOverdueDayDiff(reviewDate: string | null, now: Date) {
   if (!reviewDate) return null
 
-  const normalized = /^\d{4}-\d{2}-\d{2}$/.test(reviewDate)
-    ? `${reviewDate}T00:00:00.000Z`
-    : reviewDate
+  const normalized = /^\d{4}-\d{2}-\d{2}$/.test(reviewDate) ? `${reviewDate}T00:00:00.000Z` : reviewDate
   const parsed = new Date(normalized)
   if (Number.isNaN(parsed.getTime())) return null
 
   const nowDay = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
   const reviewDay = Date.UTC(parsed.getUTCFullYear(), parsed.getUTCMonth(), parsed.getUTCDate())
   return Math.round((nowDay - reviewDay) / 86_400_000)
+}
+
+function getConstitutionRouteFamilyLabel(scanType: ActionCenterRouteDefaultsKnownScanType | string | null | undefined) {
+  const routeDefaults = getActionCenterEnabledRouteDefaults(scanType)
+  if (routeDefaults?.scanType === 'retention') {
+    return 'RetentieScan'
+  }
+
+  if (routeDefaults?.scanType === 'exit') {
+    return 'ExitScan'
+  }
+
+  return null
 }
 
 export function classifyActionCenterReviewOversightState(args: {
@@ -154,7 +164,7 @@ export function buildActionCenterReviewOversightSummary(args: {
         routeId,
         state,
         scopeLabel: getReviewMomentScopeLabel(item),
-        sourceLabel: item.sourceLabel,
+        sourceLabel: getConstitutionRouteFamilyLabel(scanType) ?? item.sourceLabel,
         reviewDateLabel: item.reviewDateLabel,
       })
     }

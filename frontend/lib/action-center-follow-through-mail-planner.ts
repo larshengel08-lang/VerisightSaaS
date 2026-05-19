@@ -7,6 +7,7 @@ import {
 import type { ActionCenterFollowThroughMailRouteSnapshot } from '@/lib/action-center-follow-through-mail-data'
 
 export interface ActionCenterFollowThroughMailPlannedJob {
+  kind: 'notification'
   routeId: string
   orgId: string
   campaignId: string
@@ -20,9 +21,12 @@ export interface ActionCenterFollowThroughMailPlannedJob {
   sourceMarker: string
   dedupeKey: string
   reviewScheduledFor: string | null
+  mutationClass: 'mirror_only'
+  canonicalWrite: false
 }
 
 export interface ActionCenterFollowThroughMailSuppressedJob {
+  kind: 'notification'
   routeId: string
   orgId: string
   campaignId: string
@@ -36,6 +40,23 @@ export interface ActionCenterFollowThroughMailSuppressedJob {
   sourceMarker: string | null
   suppressionReason: ActionCenterFollowThroughMailSuppressionReason
   reviewScheduledFor: string | null
+  mutationClass: 'mirror_only'
+  canonicalWrite: false
+}
+
+type ActionCenterFollowThroughMailChannelCandidate =
+  | ActionCenterFollowThroughMailPlannedJob
+  | ActionCenterFollowThroughMailSuppressedJob
+  | { kind: 'canonical_state_change' }
+
+function assertMirrorOnlyChannelCandidate<T extends ActionCenterFollowThroughMailChannelCandidate>(
+  candidate: T,
+): T {
+  if (candidate.kind === 'canonical_state_change') {
+    throw new Error('channel surfaces may not emit canonical state changes')
+  }
+
+  return candidate
 }
 
 function getUtcDayDiff(dateValue: string, now: Date) {
@@ -83,6 +104,7 @@ function pushJob(args: {
 
   if (suppressionReason) {
     args.suppressions.push({
+      kind: 'notification',
       routeId: args.snapshot.routeId,
       orgId: args.snapshot.orgId,
       campaignId: args.snapshot.campaignId,
@@ -96,6 +118,8 @@ function pushJob(args: {
       sourceMarker: args.sourceMarker,
       suppressionReason,
       reviewScheduledFor: args.snapshot.reviewScheduledFor,
+      mutationClass: 'mirror_only',
+      canonicalWrite: false,
     })
     return
   }
@@ -110,21 +134,26 @@ function pushJob(args: {
   if (args.existingDedupeKeys.has(dedupeKey)) return
   args.existingDedupeKeys.add(dedupeKey)
 
-  args.jobs.push({
-    routeId: args.snapshot.routeId,
-    orgId: args.snapshot.orgId,
-    campaignId: args.snapshot.campaignId,
-    campaignName: args.snapshot.campaignName,
-    scopeLabel: args.snapshot.scopeLabel,
-    routeScopeValue: args.snapshot.routeScopeValue,
-    triggerType: args.triggerType,
-    recipientRole: args.recipientRole,
-    recipientEmail: args.recipientEmail,
-    recipientName: args.recipientName ?? null,
-    sourceMarker: args.sourceMarker,
-    dedupeKey,
-    reviewScheduledFor: args.snapshot.reviewScheduledFor,
-  })
+  args.jobs.push(
+    assertMirrorOnlyChannelCandidate({
+      kind: 'notification',
+      routeId: args.snapshot.routeId,
+      orgId: args.snapshot.orgId,
+      campaignId: args.snapshot.campaignId,
+      campaignName: args.snapshot.campaignName,
+      scopeLabel: args.snapshot.scopeLabel,
+      routeScopeValue: args.snapshot.routeScopeValue,
+      triggerType: args.triggerType,
+      recipientRole: args.recipientRole,
+      recipientEmail: args.recipientEmail,
+      recipientName: args.recipientName ?? null,
+      sourceMarker: args.sourceMarker,
+      dedupeKey,
+      reviewScheduledFor: args.snapshot.reviewScheduledFor,
+      mutationClass: 'mirror_only',
+      canonicalWrite: false,
+    }),
+  )
 }
 
 export function planActionCenterFollowThroughMailJobs(args: {

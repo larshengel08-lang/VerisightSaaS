@@ -200,4 +200,42 @@ describe('action center review oversight contract', () => {
     })
     expect(summary.attentionItems.map((item) => item.routeId)).toEqual(['route-stale'])
   })
+
+  it('uses constitution-backed route family labels in oversight attention items', () => {
+    const summary = buildActionCenterReviewOversightSummary({
+      items: [
+        {
+          id: 'route-retention',
+          title: 'Retention route',
+          sourceLabel: 'Leadership',
+          teamLabel: 'Support',
+          status: 'reviewbaar',
+          reviewDate: null,
+          reviewDateLabel: 'Nog niet gepland',
+          reviewOutcome: 'geen-uitkomst',
+          coreSemantics: {
+            route: {
+              routeId: 'route-retention',
+              reviewCompletedAt: null,
+              hasFollowUpTarget: false,
+            },
+          },
+        },
+      ] as never,
+      configByRouteId: {
+        'route-retention': DEFAULT_CONFIG,
+      },
+      routeScanTypeByRouteId: {
+        'route-retention': 'retention',
+      },
+      now: new Date('2026-05-17T12:00:00.000Z'),
+    })
+
+    expect(summary.attentionItems).toMatchObject([
+      {
+        routeId: 'route-retention',
+        sourceLabel: 'RetentieScan',
+      },
+    ])
+  })
 })

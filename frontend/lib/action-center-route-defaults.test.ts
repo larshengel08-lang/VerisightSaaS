@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { ACTION_CENTER_APPROVED_ROUTE_FAMILIES } from './action-center-constitution'
 import {
   ACTION_CENTER_ROUTE_DEFAULTS_ENABLED_SCAN_TYPES,
   ACTION_CENTER_ROUTE_DEFAULTS_SCAN_TYPES,
@@ -18,7 +19,7 @@ describe('action center route defaults contract', () => {
       'leadership',
       'team',
     ])
-    expect(ACTION_CENTER_ROUTE_DEFAULTS_ENABLED_SCAN_TYPES).toEqual(['exit', 'retention'])
+    expect(ACTION_CENTER_ROUTE_DEFAULTS_ENABLED_SCAN_TYPES).toEqual(ACTION_CENTER_APPROVED_ROUTE_FAMILIES)
   })
 
   it('keeps ExitScan as the enabled baseline and unlocks RetentieScan with the same defaults', () => {
@@ -29,6 +30,8 @@ describe('action center route defaults contract', () => {
       cadenceDays: 14,
       reminderLeadDays: 3,
       escalationLeadDays: 7,
+      reviewWindowDays: { min: 60, max: 90 },
+      staleAfterDays: 90,
       remindersEnabled: true,
       providerEligible: true,
     })
@@ -40,8 +43,24 @@ describe('action center route defaults contract', () => {
       cadenceDays: 14,
       reminderLeadDays: 3,
       escalationLeadDays: 7,
+      reviewWindowDays: { min: 45, max: 90 },
+      staleAfterDays: 90,
       remindersEnabled: true,
       providerEligible: true,
+    })
+  })
+
+  it('returns route-specific defaults for exit and retention', () => {
+    expect(getActionCenterRouteDefaults('exit')).toMatchObject({
+      actionCenterStatus: 'enabled',
+      routeEnabled: true,
+      reviewWindowDays: { min: 60, max: 90 },
+    })
+
+    expect(getActionCenterRouteDefaults('retention')).toMatchObject({
+      actionCenterStatus: 'enabled',
+      routeEnabled: true,
+      reviewWindowDays: { min: 45, max: 90 },
     })
   })
 

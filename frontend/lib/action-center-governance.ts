@@ -1,3 +1,13 @@
+import {
+  ACTION_CENTER_CANONICAL_REVIEW_STATES,
+  ACTION_CENTER_CANONICAL_ROUTE_STATES,
+  isActionCenterCanonicalRouteStateTransitionAllowed,
+  type ActionCenterActor,
+  type ActionCenterCanonicalReviewState,
+  type ActionCenterCanonicalRouteState,
+  type ActionCenterConstitutionObject,
+  type ActionCenterConstitutionState,
+} from '@/lib/action-center-constitution'
 import type {
   ActionCenterWorkspaceMember,
   SuiteAccessContext,
@@ -96,6 +106,63 @@ export function resolveActionCenterHrWriteAccess(args: {
   return {
     allowed: false,
     auditRole: null,
+  }
+}
+
+type ActionCenterGovernanceTransitionObject =
+  | ActionCenterConstitutionObject
+  | 'owner_assignment'
+
+function isActionCenterCanonicalStateForObject(args: {
+  object: ActionCenterConstitutionObject
+  state: string
+}): args is
+  | { object: 'follow_through_route'; state: ActionCenterCanonicalRouteState }
+  | { object: 'review_moment'; state: ActionCenterCanonicalReviewState } {
+  if (args.object === 'follow_through_route') {
+    return ACTION_CENTER_CANONICAL_ROUTE_STATES.includes(args.state as ActionCenterCanonicalRouteState)
+  }
+
+  return ACTION_CENTER_CANONICAL_REVIEW_STATES.includes(args.state as ActionCenterCanonicalReviewState)
+}
+
+function getActionCenterTransitionActor(
+  actorRole: ActionCenterGovernanceActorRole,
+): ActionCenterActor {
+  switch (actorRole) {
+    case 'manager':
+      return 'manager_participant'
+    case 'verisight_admin':
+    case 'hr_owner':
+    case 'hr_member':
+      return 'hr_rhythm_owner'
+    case 'verisight':
+    case 'hr':
+      return 'system_channel'
+  }
+}
+
+export function resolveActionCenterTransitionAccess(args: {
+  actorRole: ActionCenterGovernanceActorRole
+  object: ActionCenterGovernanceTransitionObject
+  fromState: string
+  toState: string
+}): { allowed: boolean } {
+  if (
+    args.object === 'owner_assignment' ||
+    !isActionCenterCanonicalStateForObject({ object: args.object, state: args.fromState }) ||
+    !isActionCenterCanonicalStateForObject({ object: args.object, state: args.toState })
+  ) {
+    return { allowed: false }
+  }
+
+  return {
+    allowed: isActionCenterCanonicalRouteStateTransitionAllowed({
+      actor: getActionCenterTransitionActor(args.actorRole),
+      object: args.object,
+      fromState: args.fromState as ActionCenterConstitutionState,
+      toState: args.toState as ActionCenterConstitutionState,
+    }),
   }
 }
 

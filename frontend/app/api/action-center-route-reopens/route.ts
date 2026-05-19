@@ -1,8 +1,18 @@
 import { NextResponse } from 'next/server'
+import { buildDepartmentScopeValue } from '@/lib/action-center-manager-responses'
 import { buildActionCenterRouteId } from '@/lib/action-center-route-contract'
 import { resolveActionCenterHrWriteAccess } from '@/lib/action-center-governance'
+import { getActionCenterEnabledRouteDefaults } from '@/lib/action-center-route-defaults'
 import {
+  projectActionCenterRouteCloseout,
+  type ActionCenterRouteCloseoutRecord,
+} from '@/lib/action-center-route-closeout'
+import {
+  ActionCenterRouteReopenMutationError,
+  assertActionCenterRouteReopenMutationAllowed,
+  projectActionCenterRouteLifecycle,
   projectActionCenterRouteReopen,
+  type ActionCenterRouteReopenRecord,
   type ActionCenterRouteReopenReason,
 } from '@/lib/action-center-route-reopen'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -19,6 +29,12 @@ type RouteReopenRequestBody = {
 
 type RespondentDepartmentRow = {
   department: string | null
+}
+
+type CampaignRow = {
+  id: string
+  organization_id: string | null
+  scan_type: string | null
 }
 
 function normalizeText(value: string | null | undefined) {
@@ -68,7 +84,7 @@ async function loadRouteTruth(input: {
   const adminClient = createAdminClient()
   const { data: campaign, error: campaignError } = await adminClient
     .from('campaigns')
-    .select('id, organization_id')
+    .select('id, organization_id, scan_type')
     .eq('id', input.campaignId)
     .maybeSingle()
 
@@ -77,7 +93,7 @@ async function loadRouteTruth(input: {
   }
 
   if (input.routeScopeType !== 'department') {
-    return { campaign, visibleDepartmentLabels: [] as string[] }
+    return { campaign: campaign as CampaignRow, visibleDepartmentLabels: [] as string[] }
   }
 
   const { data: respondentsRaw } = await adminClient
@@ -93,7 +109,7 @@ async function loadRouteTruth(input: {
     ),
   ]
 
-  return { campaign, visibleDepartmentLabels }
+  return { campaign: campaign as CampaignRow, visibleDepartmentLabels }
 }
 
 function resolveRouteReopenIdentity(args: {
@@ -101,16 +117,15 @@ function resolveRouteReopenIdentity(args: {
   campaignOrgId: string
   visibleDepartmentLabels: string[]
 }) {
-  const canonicalRouteId = buildActionCenterRouteId(args.parsed.campaign_id, args.parsed.route_scope_value)
-  if (args.parsed.route_id !== canonicalRouteId) {
-    throw new Error('Route reopen route bestaat niet voor deze campagne.')
-  }
+  let canonicalScopeValue = args.parsed.route_scope_value
 
   if (args.parsed.route_scope_type === 'department') {
-    const normalizedScopeValue = args.parsed.route_scope_value.toLocaleLowerCase('nl-NL')
-    if (!args.visibleDepartmentLabels.includes(normalizedScopeValue.split('::').at(-1) ?? '')) {
+    const departmentLabel = args.parsed.route_scope_value.toLocaleLowerCase('nl-NL').split('::').at(-1) ?? ''
+    if (!args.visibleDepartmentLabels.includes(departmentLabel)) {
       throw new Error('Route reopen route bestaat niet voor deze campagne.')
     }
+
+    canonicalScopeValue = buildDepartmentScopeValue(args.campaignOrgId, departmentLabel)
   }
 
   if (
@@ -120,13 +135,60 @@ function resolveRouteReopenIdentity(args: {
     throw new Error('Route reopen route bestaat niet voor deze campagne.')
   }
 
+  const canonicalRouteId = buildActionCenterRouteId(args.parsed.campaign_id, canonicalScopeValue)
+
   return {
     route_id: canonicalRouteId,
     campaign_id: args.parsed.campaign_id,
     org_id: args.campaignOrgId,
     route_scope_type: args.parsed.route_scope_type,
-    route_scope_value: args.parsed.route_scope_value,
+    route_scope_value: canonicalScopeValue,
   }
+}
+
+async function loadRouteReopenMutationState(args: {
+  adminClient: ReturnType<typeof createAdminClient>
+  routeId: string
+}) {
+  const [closeoutResult, latestReopenResult] = await Promise.all([
+    args.adminClient.from('action_center_route_closeouts').select('*').eq('route_id', args.routeId).maybeSingle(),
+    args.adminClient
+      .from('action_center_route_reopens')
+      .select('*')
+      .eq('route_id', args.routeId)
+      .order('reopened_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ])
+
+  if (closeoutResult.error) {
+    throw new Error(closeoutResult.error.message)
+  }
+
+  if (latestReopenResult.error) {
+    throw new Error(latestReopenResult.error.message)
+  }
+
+  const routeCloseout = closeoutResult.data
+    ? projectActionCenterRouteCloseout(closeoutResult.data as Record<string, unknown>)
+    : null
+  const latestReopen = latestReopenResult.data
+    ? projectActionCenterRouteReopen(latestReopenResult.data as Record<string, unknown>)
+    : null
+  const lifecycle = projectActionCenterRouteLifecycle({
+    routeCloseout: routeCloseout as ActionCenterRouteCloseoutRecord | null,
+    routeReopens: latestReopen ? ([latestReopen] as ActionCenterRouteReopenRecord[]) : [],
+  })
+
+  if (lifecycle.activeCloseout) {
+    return 'closed' as const
+  }
+
+  if (lifecycle.isCurrentlyReopened) {
+    return 'reopened' as const
+  }
+
+  return 'open' as const
 }
 
 export async function POST(request: Request) {
@@ -158,6 +220,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ detail: 'Route reopen route bestaat niet voor deze campagne.' }, { status: 400 })
   }
 
+  if (!getActionCenterEnabledRouteDefaults(routeTruth.campaign.scan_type)) {
+    return NextResponse.json(
+      { detail: 'Route reopen blijft in deze slice beperkt tot ingeschakelde follow-through-routes.' },
+      { status: 409 },
+    )
+  }
+
   const writeAccess = resolveActionCenterHrWriteAccess({
     context,
     orgMemberships,
@@ -183,8 +252,41 @@ export async function POST(request: Request) {
     )
   }
 
-  const reopenedAt = new Date().toISOString()
   const adminClient = createAdminClient()
+  let currentState
+  try {
+    currentState = await loadRouteReopenMutationState({
+      adminClient,
+      routeId: identity.route_id,
+    })
+  } catch (error) {
+    return NextResponse.json(
+      { detail: error instanceof Error ? error.message : 'Route heropenen mislukt.' },
+      { status: 500 },
+    )
+  }
+
+  try {
+    assertActionCenterRouteReopenMutationAllowed({
+      actorRole: writeAccess.auditRole,
+      currentState,
+      reopenReason: parsed.reopen_reason,
+    })
+  } catch (error) {
+    if (error instanceof ActionCenterRouteReopenMutationError) {
+      const status = error.code === 'missing_reopen_reason' ? 400 : 409
+      const detail =
+        error.code === 'missing_reopen_reason'
+          ? 'Ongeldige route reopen input.'
+          : 'Route reopen is niet toegestaan vanuit de huidige canonieke toestand.'
+
+      return NextResponse.json({ detail }, { status })
+    }
+
+    return NextResponse.json({ detail: 'Route heropenen mislukt.' }, { status: 500 })
+  }
+
+  const reopenedAt = new Date().toISOString()
   const persisted = {
     ...identity,
     reopen_reason: parsed.reopen_reason,

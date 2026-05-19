@@ -17,6 +17,8 @@ export const ACTION_CENTER_ENTRY_SOURCES = [
   'notification',
 ] as const
 
+export const ACTION_CENTER_ENTRY_ADOPTION_EVENT_SOURCE = 'contextual_entry' as const
+
 export type ActionCenterEntrySource = (typeof ACTION_CENTER_ENTRY_SOURCES)[number]
 
 export interface ActionCenterEntryParams {

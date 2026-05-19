@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { ActionCenterReviewInviteDraft } from './action-center-review-invite'
 import {
+  buildActionCenterGraphCalendarSyncPayload,
   buildActionCenterGraphCalendarLinkRecord,
   type ActionCenterGraphCalendarLinkRecord,
   type ActionCenterGraphConsentState,
@@ -69,6 +70,14 @@ type ActionCenterGraphSyncReason =
   | 'graph_event_missing_id'
   | string
 
+type ActionCenterGraphMirrorResultMetadata = {
+  mutationClass: 'mirror_only'
+  canonicalWrite: false
+  mirroredObject: 'review_moment'
+  mirroredReviewState: 'scheduled' | 'cancelled'
+  attendancePolicy: 'hint_only'
+}
+
 export type ActionCenterGraphSyncResult =
   | {
       status: 'linked'
@@ -78,7 +87,7 @@ export type ActionCenterGraphSyncResult =
       iCalUId: string | null
       lastSyncedRevision: number
       reason: null
-    }
+    } & ActionCenterGraphMirrorResultMetadata
   | {
       status: 'cancelled'
       provider: 'microsoft_graph'
@@ -87,7 +96,7 @@ export type ActionCenterGraphSyncResult =
       iCalUId: string | null
       lastSyncedRevision: number
       reason: null
-    }
+    } & ActionCenterGraphMirrorResultMetadata
   | {
       status: 'already-current'
       provider: 'microsoft_graph'
@@ -96,7 +105,7 @@ export type ActionCenterGraphSyncResult =
       iCalUId: string | null
       lastSyncedRevision: number
       reason: null
-    }
+    } & ActionCenterGraphMirrorResultMetadata
   | {
       status: 'fallback'
       provider: 'microsoft_graph'
@@ -105,7 +114,7 @@ export type ActionCenterGraphSyncResult =
       iCalUId: string | null
       lastSyncedRevision: number | null
       reason: ActionCenterGraphSyncReason
-    }
+    } & ActionCenterGraphMirrorResultMetadata
   | {
       status: 'failed'
       provider: 'microsoft_graph'
@@ -114,7 +123,7 @@ export type ActionCenterGraphSyncResult =
       iCalUId: string | null
       lastSyncedRevision: number | null
       reason: string
-    }
+    } & ActionCenterGraphMirrorResultMetadata
 
 export interface ActionCenterGraphSyncInput {
   orgId: string
@@ -195,16 +204,26 @@ function toDatabasePayload(record: ActionCenterGraphCalendarLinkRecord) {
   }
 }
 
-function buildGraphEventWindow(reviewDate: string) {
+function withMirrorOnlyResult<
+  T extends Omit<
+    ActionCenterGraphSyncResult,
+    | 'mutationClass'
+    | 'canonicalWrite'
+    | 'mirroredObject'
+    | 'mirroredReviewState'
+    | 'attendancePolicy'
+  >,
+>(
+  result: T,
+  method: ActionCenterGraphSyncMethod,
+): T & ActionCenterGraphMirrorResultMetadata {
   return {
-    start: {
-      dateTime: `${reviewDate}T09:00:00`,
-      timeZone: 'W. Europe Standard Time',
-    },
-    end: {
-      dateTime: `${reviewDate}T09:30:00`,
-      timeZone: 'W. Europe Standard Time',
-    },
+    ...result,
+    mutationClass: 'mirror_only',
+    canonicalWrite: false,
+    mirroredObject: 'review_moment',
+    mirroredReviewState: method === 'CANCEL' ? 'cancelled' : 'scheduled',
+    attendancePolicy: 'hint_only',
   }
 }
 
@@ -303,7 +322,7 @@ export async function syncActionCenterGraphReview(
       })
     }
 
-    return {
+    return withMirrorOnlyResult({
       status: 'fallback',
       provider: 'microsoft_graph',
       action: 'fallback',
@@ -311,11 +330,11 @@ export async function syncActionCenterGraphReview(
       iCalUId: existingLink?.iCalUId ?? null,
       lastSyncedRevision: existingLink?.lastSyncedRevision ?? null,
       reason: capability.reason,
-    }
+    }, input.method)
   }
 
   if (existingLink && isAlreadyCurrent({ existingLink, revision: input.revision, method: input.method })) {
-    return {
+    return withMirrorOnlyResult({
       status: 'already-current',
       provider: 'microsoft_graph',
       action: 'noop',
@@ -323,12 +342,12 @@ export async function syncActionCenterGraphReview(
       iCalUId: existingLink.iCalUId,
       lastSyncedRevision: existingLink.lastSyncedRevision,
       reason: null,
-    }
+    }, input.method)
   }
 
   if (input.method === 'CANCEL') {
     if (!existingLink) {
-      return {
+      return withMirrorOnlyResult({
         status: 'fallback',
         provider: 'microsoft_graph',
         action: 'fallback',
@@ -336,8 +355,12 @@ export async function syncActionCenterGraphReview(
         iCalUId: null,
         lastSyncedRevision: null,
         reason: 'missing-provider-link',
-      }
+      }, input.method)
     }
+
+    const mirrorPayload = buildActionCenterGraphCalendarSyncPayload({
+      method: 'CANCEL',
+    })
 
     const cancelResult = await cancelEvent(
       {
@@ -348,7 +371,7 @@ export async function syncActionCenterGraphReview(
       },
       {
         eventId: existingLink.eventId,
-        comment: 'Reviewmoment aangepast in Action Center.',
+        comment: mirrorPayload.cancelComment ?? 'Reviewmoment aangepast in Action Center.',
       },
     )
 
@@ -360,7 +383,7 @@ export async function syncActionCenterGraphReview(
         reason: cancelResult.reason,
       })
 
-      return {
+      return withMirrorOnlyResult({
         status: 'failed',
         provider: 'microsoft_graph',
         action: 'failed',
@@ -368,7 +391,7 @@ export async function syncActionCenterGraphReview(
         iCalUId: existingLink.iCalUId,
         lastSyncedRevision: existingLink.lastSyncedRevision,
         reason: cancelResult.reason,
-      }
+      }, input.method)
     }
 
     const nextRecord = buildActionCenterGraphCalendarLinkRecord({
@@ -385,7 +408,7 @@ export async function syncActionCenterGraphReview(
       record: nextRecord,
     })
 
-    return {
+    return withMirrorOnlyResult({
       status: 'cancelled',
       provider: 'microsoft_graph',
       action: 'cancelled',
@@ -393,11 +416,11 @@ export async function syncActionCenterGraphReview(
       iCalUId: nextRecord.iCalUId,
       lastSyncedRevision: nextRecord.lastSyncedRevision,
       reason: null,
-    }
+    }, input.method)
   }
 
   if (!input.inviteDraft) {
-    return {
+    return withMirrorOnlyResult({
       status: 'fallback',
       provider: 'microsoft_graph',
       action: 'fallback',
@@ -405,12 +428,12 @@ export async function syncActionCenterGraphReview(
       iCalUId: existingLink?.iCalUId ?? null,
       lastSyncedRevision: existingLink?.lastSyncedRevision ?? null,
       reason: 'missing-invite-draft',
-    }
+    }, input.method)
   }
 
   const reviewDate = normalizeText(input.inviteDraft.reviewDate)
   if (!reviewDate) {
-    return {
+    return withMirrorOnlyResult({
       status: 'fallback',
       provider: 'microsoft_graph',
       action: 'fallback',
@@ -418,15 +441,20 @@ export async function syncActionCenterGraphReview(
       iCalUId: existingLink?.iCalUId ?? null,
       lastSyncedRevision: existingLink?.lastSyncedRevision ?? null,
       reason: 'missing-invite-draft',
-    }
+    }, input.method)
   }
 
-  const eventWindow = buildGraphEventWindow(reviewDate)
-  const commonPayload = {
+  const mirrorPayload = buildActionCenterGraphCalendarSyncPayload({
+    method: 'REQUEST',
+    reviewDate,
     subject: input.inviteDraft.subject,
     bodyHtml: input.inviteDraft.emailHtml,
-    start: eventWindow.start,
-    end: eventWindow.end,
+  })
+  const commonPayload = {
+    subject: mirrorPayload.subject ?? input.inviteDraft.subject,
+    bodyHtml: mirrorPayload.bodyHtml ?? input.inviteDraft.emailHtml,
+    start: mirrorPayload.start!,
+    end: mirrorPayload.end!,
   }
   const shouldCreate = !existingLink || existingLink.syncState === 'cancelled'
   const mutationResult = shouldCreate
@@ -472,7 +500,7 @@ export async function syncActionCenterGraphReview(
       })
     }
 
-    return {
+    return withMirrorOnlyResult({
       status: 'failed',
       provider: 'microsoft_graph',
       action: 'failed',
@@ -480,7 +508,7 @@ export async function syncActionCenterGraphReview(
       iCalUId: existingLink?.iCalUId ?? null,
       lastSyncedRevision: existingLink?.lastSyncedRevision ?? null,
       reason: mutationResult.reason,
-    }
+    }, input.method)
   }
 
   const nextRecord = buildActionCenterGraphCalendarLinkRecord({
@@ -504,7 +532,7 @@ export async function syncActionCenterGraphReview(
     record: nextRecord,
   })
 
-  return {
+  return withMirrorOnlyResult({
     status: 'linked',
     provider: 'microsoft_graph',
     action: shouldCreate ? 'created' : 'updated',
@@ -512,5 +540,5 @@ export async function syncActionCenterGraphReview(
     iCalUId: nextRecord.iCalUId,
     lastSyncedRevision: nextRecord.lastSyncedRevision,
     reason: null,
-  }
+  }, input.method)
 }

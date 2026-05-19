@@ -3,10 +3,12 @@ import type {
   ActionCenterReviewOutcome,
   ActionCenterRouteStatus,
 } from './action-center-route-contract'
-import {
-  isActionCenterReviewRhythmSupportedScanType,
-  type ActionCenterReviewRhythmSupportedScanType,
-} from './action-center-review-rhythm'
+import type { ActionCenterApprovedRouteFamily } from './action-center-constitution'
+import { ACTION_CENTER_APPROVED_ROUTE_FAMILIES } from './action-center-constitution'
+import { isActionCenterReviewRhythmSupportedScanType } from './action-center-review-rhythm'
+
+export const ACTION_CENTER_FOLLOW_THROUGH_MAIL_ADOPTION_EVENT_SOURCE =
+  'trigger_delivery_ledger' as const
 
 export const ACTION_CENTER_FOLLOW_THROUGH_TRIGGER_TYPES = [
   'assignment_created',
@@ -46,12 +48,18 @@ export const ACTION_CENTER_FOLLOW_THROUGH_MAIL_SUPPRESSION_REASONS = [
 export type ActionCenterFollowThroughMailSuppressionReason =
   (typeof ACTION_CENTER_FOLLOW_THROUGH_MAIL_SUPPRESSION_REASONS)[number]
 
+export const ACTION_CENTER_FOLLOW_THROUGH_MAIL_LEDGER_SCAN_TYPES =
+  ACTION_CENTER_APPROVED_ROUTE_FAMILIES
+
+export type ActionCenterFollowThroughMailLedgerScanType =
+  (typeof ACTION_CENTER_FOLLOW_THROUGH_MAIL_LEDGER_SCAN_TYPES)[number]
+
 export interface ActionCenterFollowThroughMailLedgerRecord {
   orgId: string
   routeId: string
   routeScopeValue: string
   routeSourceId: string
-  scanType: ActionCenterReviewRhythmSupportedScanType
+  scanType: ActionCenterApprovedRouteFamily
   triggerType: ActionCenterFollowThroughTriggerType
   recipientRole: ActionCenterFollowThroughRecipientRole
   recipientEmail: string
