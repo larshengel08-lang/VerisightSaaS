@@ -56,6 +56,20 @@ export interface ActionCenterGraphCalendarLinkRecord {
   lastSyncError: string | null
 }
 
+export interface ActionCenterGraphCalendarSyncPayload {
+  provider: 'microsoft_graph'
+  mutationClass: 'mirror_only'
+  canonicalWrite: false
+  mirroredObject: 'review_moment'
+  mirroredReviewState: 'scheduled' | 'cancelled'
+  attendancePolicy: 'hint_only'
+  subject: string | null
+  bodyHtml: string | null
+  start: { dateTime: string; timeZone: string } | null
+  end: { dateTime: string; timeZone: string } | null
+  cancelComment: string | null
+}
+
 function normalizeText(value: string | null | undefined) {
   const trimmed = value?.trim() ?? ''
   return trimmed.length > 0 ? trimmed : null
@@ -74,6 +88,66 @@ function isUuid(value: string | null | undefined) {
     value &&
       /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value),
   )
+}
+
+function buildGraphEventWindow(reviewDate: string) {
+  return {
+    start: {
+      dateTime: `${reviewDate}T09:00:00`,
+      timeZone: 'W. Europe Standard Time',
+    },
+    end: {
+      dateTime: `${reviewDate}T09:30:00`,
+      timeZone: 'W. Europe Standard Time',
+    },
+  }
+}
+
+export function buildActionCenterGraphCalendarSyncPayload(input: {
+  method: 'REQUEST' | 'CANCEL'
+  reviewDate?: string | null
+  subject?: string | null
+  bodyHtml?: string | null
+}): ActionCenterGraphCalendarSyncPayload {
+  if (input.method === 'CANCEL') {
+    return {
+      provider: 'microsoft_graph',
+      mutationClass: 'mirror_only',
+      canonicalWrite: false,
+      mirroredObject: 'review_moment',
+      mirroredReviewState: 'cancelled',
+      attendancePolicy: 'hint_only',
+      subject: null,
+      bodyHtml: null,
+      start: null,
+      end: null,
+      cancelComment: 'Reviewmoment aangepast in Action Center. Attendance is a hint only.',
+    }
+  }
+
+  const reviewDate = normalizeText(input.reviewDate)
+  const subject = normalizeText(input.subject)
+  const bodyHtml = normalizeText(input.bodyHtml)
+
+  if (!reviewDate || !subject || !bodyHtml) {
+    throw new Error('Action Center Graph sync payload requires reviewDate, subject, and bodyHtml.')
+  }
+
+  const eventWindow = buildGraphEventWindow(reviewDate)
+
+  return {
+    provider: 'microsoft_graph',
+    mutationClass: 'mirror_only',
+    canonicalWrite: false,
+    mirroredObject: 'review_moment',
+    mirroredReviewState: 'scheduled',
+    attendancePolicy: 'hint_only',
+    subject,
+    bodyHtml,
+    start: eventWindow.start,
+    end: eventWindow.end,
+    cancelComment: null,
+  }
 }
 
 export function getActionCenterGraphCalendarCapability(input: {

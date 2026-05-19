@@ -8,6 +8,7 @@ import {
   getActionCenterReviewInviteEligibility,
   type ActionCenterReviewInviteContext,
 } from '@/lib/action-center-review-invite'
+import { renderActionCenterReviewInviteIcs } from '@/lib/action-center-review-invite-ics'
 
 describe('action center review invite draft contract', () => {
   const baseContext: ActionCenterReviewInviteContext = {
@@ -79,6 +80,10 @@ describe('action center review invite draft contract', () => {
         organizerMode: 'organizer',
         nativeMicrosoftRequired: false,
       },
+      mutationClass: 'mirror_only',
+      canonicalWrite: false,
+      mirroredObject: 'review_moment',
+      mirroredReviewState: 'scheduled',
       writePolicy: {
         calendarRsvp: 'hint-only',
         canonicalReviewState: 'action-center-only',
@@ -94,6 +99,22 @@ describe('action center review invite draft contract', () => {
     expect(draft.emailText).toContain(draft.actionCenterHref)
     expect(draft.emailHtml).toContain(draft.actionCenterHref)
     expect(draft.emailHtml).toContain('href=')
+  })
+
+  it('renders ICS artifacts as mirror-only calendar hints, not canonical writes', () => {
+    const draft = buildActionCenterReviewInviteDraft(baseContext)
+    const ics = renderActionCenterReviewInviteIcs({
+      draft,
+      method: 'REQUEST',
+      revision: 2,
+      organizerEmail: 'hr@verisight.nl',
+    })
+
+    expect(ics).toContain('X-VERISIGHT-MUTATION-CLASS:MIRROR_ONLY')
+    expect(ics).toContain('X-VERISIGHT-CANONICAL-WRITE:FALSE')
+    expect(ics).toMatch(/Attendance i[\r\n ]*s a hint only/)
+    expect(ics).not.toContain('CLOSE ROUTE')
+    expect(ics).not.toContain('REOPEN ROUTE')
   })
 
   it.each([

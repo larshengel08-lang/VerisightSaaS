@@ -40,6 +40,10 @@ export interface ActionCenterReviewInviteDraft {
     organizerMode: 'organizer'
     nativeMicrosoftRequired: false
   }
+  mutationClass: 'mirror_only'
+  canonicalWrite: false
+  mirroredObject: 'review_moment'
+  mirroredReviewState: 'scheduled'
   writePolicy: {
     calendarRsvp: 'hint-only'
     canonicalReviewState: 'action-center-only'
@@ -175,6 +179,10 @@ export function buildActionCenterReviewInviteDraft(
       organizerMode: 'organizer',
       nativeMicrosoftRequired: false,
     },
+    mutationClass: 'mirror_only',
+    canonicalWrite: false,
+    mirroredObject: 'review_moment',
+    mirroredReviewState: 'scheduled',
     writePolicy: {
       calendarRsvp: 'hint-only',
       canonicalReviewState: 'action-center-only',

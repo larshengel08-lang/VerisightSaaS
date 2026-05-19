@@ -22,6 +22,7 @@ vi.mock('@/lib/supabase/admin', () => ({
 }))
 
 import { syncActionCenterGraphReview } from './action-center-graph-sync'
+import { buildActionCenterGraphCalendarSyncPayload } from './action-center-graph-calendar'
 
 function createGraphTableMock(args: {
   existingRow?: Record<string, unknown> | null
@@ -119,7 +120,8 @@ describe('action center graph sync orchestration', () => {
       organizerUserId: 'hr-organizer@tenant.example',
     })
 
-    const result = await syncActionCenterGraphReview(buildInput(), {
+    const input = buildInput()
+    const result = await syncActionCenterGraphReview(input, {
       adminClient,
       loadCapability,
       createEvent,
@@ -133,6 +135,8 @@ describe('action center graph sync orchestration', () => {
       iCalUId: 'ical-1',
       lastSyncedRevision: 3,
       reason: null,
+      mutationClass: 'mirror_only',
+      canonicalWrite: false,
     })
     expect(createEvent).toHaveBeenCalledTimes(1)
     expect(graphTable.state.upserts).toHaveLength(1)
@@ -143,6 +147,22 @@ describe('action center graph sync orchestration', () => {
       event_id: 'graph-event-1',
       sync_state: 'linked',
       last_synced_revision: 3,
+    })
+  })
+
+  it('builds Graph sync payloads as mirror-only attendance hints', () => {
+    expect(
+      buildActionCenterGraphCalendarSyncPayload({
+        method: 'REQUEST',
+        reviewDate: '2026-05-28',
+        subject: 'Reviewmoment ExitScan / Operations',
+        bodyHtml: '<p>Open Action Center.</p>',
+      }),
+    ).toMatchObject({
+      mutationClass: 'mirror_only',
+      canonicalWrite: false,
+      mirroredObject: 'review_moment',
+      mirroredReviewState: 'scheduled',
     })
   })
 
@@ -194,6 +214,8 @@ describe('action center graph sync orchestration', () => {
       iCalUId: 'ical-1',
       lastSyncedRevision: 3,
       reason: null,
+      mutationClass: 'mirror_only',
+      canonicalWrite: false,
     })
     expect(createEvent).not.toHaveBeenCalled()
     expect(updateEvent).toHaveBeenCalledTimes(1)
@@ -256,6 +278,8 @@ describe('action center graph sync orchestration', () => {
       iCalUId: 'ical-1',
       lastSyncedRevision: 3,
       reason: null,
+      mutationClass: 'mirror_only',
+      canonicalWrite: false,
     })
     expect(cancelEvent).toHaveBeenCalledTimes(1)
     expect(graphTable.state.upserts[0]).toMatchObject({
@@ -291,6 +315,8 @@ describe('action center graph sync orchestration', () => {
       iCalUId: null,
       lastSyncedRevision: null,
       reason: 'missing-consent',
+      mutationClass: 'mirror_only',
+      canonicalWrite: false,
     })
     expect(createEvent).not.toHaveBeenCalled()
     expect(graphTable.state.upserts).toHaveLength(0)
@@ -341,6 +367,8 @@ describe('action center graph sync orchestration', () => {
       iCalUId: 'ical-1',
       lastSyncedRevision: 3,
       reason: null,
+      mutationClass: 'mirror_only',
+      canonicalWrite: false,
     })
     expect(createEvent).not.toHaveBeenCalled()
     expect(updateEvent).not.toHaveBeenCalled()
