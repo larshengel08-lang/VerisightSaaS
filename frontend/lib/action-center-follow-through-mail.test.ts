@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  ACTION_CENTER_FOLLOW_THROUGH_MAIL_LEDGER_SCAN_TYPES,
   ACTION_CENTER_FOLLOW_THROUGH_TRIGGER_TYPES,
+  type ActionCenterFollowThroughMailLedgerRecord,
   buildActionCenterFollowThroughMailDedupeKey,
   getActionCenterFollowThroughMailSuppressionReason,
 } from './action-center-follow-through-mail'
@@ -14,6 +16,7 @@ describe('action center follow-through mail contract', () => {
       'review_overdue',
       'follow_up_open_after_review',
     ])
+    expect(ACTION_CENTER_FOLLOW_THROUGH_MAIL_LEDGER_SCAN_TYPES).toEqual(['exit', 'retention'])
   })
 
   it('builds a stable dedupe key from route, trigger family, recipient, and canonical source marker', () => {
@@ -52,5 +55,26 @@ describe('action center follow-through mail contract', () => {
         hasFollowUpTarget: true,
       }),
     ).toBe('route-resolved')
+  })
+
+  it('accepts retention as a bounded ledger scan type for follow-through delivery records', () => {
+    const record: ActionCenterFollowThroughMailLedgerRecord = {
+      orgId: 'org-1',
+      routeId: 'camp-1::org::sales',
+      routeScopeValue: 'org::sales',
+      routeSourceId: 'camp-1',
+      scanType: 'retention',
+      triggerType: 'review_upcoming',
+      recipientRole: 'manager',
+      recipientEmail: 'manager@example.com',
+      sourceMarker: '2026-05-20',
+      dedupeKey: 'dedupe',
+      deliveryStatus: 'sent',
+      suppressionReason: null,
+      providerMessageId: 'msg-1',
+      sentAt: '2026-05-20T08:00:00.000Z',
+    }
+
+    expect(record.scanType).toBe('retention')
   })
 })
