@@ -1,4 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import {
+  assertActionCenterRouteCloseoutMutationAllowed,
+  projectActionCenterRouteCloseout,
+} from '@/lib/action-center-route-closeout'
 
 const { mockGetUser, mockLoadSuiteAccessContext, mockAdminFrom } = vi.hoisted(() => ({
   mockGetUser: vi.fn(),
@@ -41,6 +45,16 @@ function createCampaignQuery(result: { data: unknown; error: unknown }) {
   }
 }
 
+function createLatestReopenQuery(result: { data: unknown; error?: unknown }) {
+  return {
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    order: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    maybeSingle: vi.fn().mockResolvedValue(result),
+  }
+}
+
 function createRespondentsQuery(result: { data: unknown; error?: unknown }) {
   return {
     select: vi.fn().mockReturnThis(),
@@ -74,7 +88,7 @@ describe('action center route closeouts route', () => {
     mockAdminFrom.mockImplementation((table: string) => {
       if (table === 'campaigns') {
         return createCampaignQuery({
-          data: { id: 'campaign-1', organization_id: 'org-1' },
+          data: { id: 'campaign-1', organization_id: 'org-1', scan_type: 'exit' },
           error: null,
         })
       }
@@ -106,6 +120,148 @@ describe('action center route closeouts route', () => {
     expect(response.status).toBe(403)
   })
 
+  it('rejects manager closeout audit truth in the canonical mutation module', () => {
+    expect(() =>
+      projectActionCenterRouteCloseout({
+        route_id: 'campaign-1::org-1::department::operations',
+        closeout_status: 'afgerond',
+        closeout_reason: 'voldoende-opgepakt',
+        closed_at: '2026-05-20T09:00:00.000Z',
+        closed_by_role: 'manager',
+      }),
+    ).toThrow('Ongeldige action center route closeout input')
+  })
+
+  it('rejects closeout when the canonical route is already closed', async () => {
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: 'hr-owner-1' } },
+    })
+    mockLoadSuiteAccessContext.mockResolvedValue({
+      context: { isVerisightAdmin: false },
+      orgMemberships: [{ org_id: 'org-1', role: 'owner' }],
+      workspaceMemberships: [],
+    })
+
+    let closeoutCallCount = 0
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'campaigns') {
+        return createCampaignQuery({
+          data: { id: 'campaign-1', organization_id: 'org-1', scan_type: 'exit' },
+          error: null,
+        })
+      }
+
+      if (table === 'respondents') {
+        return createRespondentsQuery({
+          data: [{ department: 'Operations' }],
+        })
+      }
+
+      if (table === 'action_center_route_closeouts') {
+        closeoutCallCount += 1
+        if (closeoutCallCount === 1) {
+          return createCampaignQuery({
+            data: {
+              route_id: 'campaign-1::org-1::department::operations',
+              closeout_status: 'afgerond',
+              closeout_reason: 'voldoende-opgepakt',
+              closeout_note: null,
+              closed_at: '2026-05-20T09:00:00.000Z',
+              closed_by_role: 'hr_owner',
+            },
+            error: null,
+          })
+        }
+
+        return createUpsertQuery({
+          data: null,
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_route_reopens') {
+        return createLatestReopenQuery({
+          data: null,
+        })
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest({
+        campaign_id: 'campaign-1',
+        route_scope_type: 'department',
+        route_scope_value: 'org-1::department::operations',
+        closeout_status: 'afgerond',
+        closeout_reason: 'voldoende-opgepakt',
+      }),
+    )
+
+    expect(response.status).toBe(409)
+    await expect(response.json()).resolves.toEqual({
+      detail: 'Route closeout is niet toegestaan vanuit de huidige canonieke toestand.',
+    })
+  })
+
+  it('rejects blocked route families for closeout in this slice', async () => {
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: 'hr-owner-1' } },
+    })
+    mockLoadSuiteAccessContext.mockResolvedValue({
+      context: { isVerisightAdmin: false },
+      orgMemberships: [{ org_id: 'org-1', role: 'owner' }],
+      workspaceMemberships: [],
+    })
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'campaigns') {
+        return createCampaignQuery({
+          data: { id: 'campaign-1', organization_id: 'org-1', scan_type: 'pulse' },
+          error: null,
+        })
+      }
+
+      if (table === 'respondents') {
+        return createRespondentsQuery({
+          data: [{ department: 'Operations' }],
+        })
+      }
+
+      if (table === 'action_center_route_closeouts') {
+        return createUpsertQuery({ data: null, error: null })
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest({
+        campaign_id: 'campaign-1',
+        route_scope_type: 'department',
+        route_scope_value: 'org-1::department::operations',
+        closeout_status: 'afgerond',
+        closeout_reason: 'voldoende-opgepakt',
+      }),
+    )
+
+    expect(response.status).toBe(409)
+    await expect(response.json()).resolves.toEqual({
+      detail: 'Route closeout blijft in deze slice beperkt tot ingeschakelde follow-through-routes.',
+    })
+  })
+
+  it('allows canonical open route closeout transitions for hr actors', () => {
+    expect(() =>
+      assertActionCenterRouteCloseoutMutationAllowed({
+        actorRole: 'hr_owner',
+        currentState: 'open',
+        closeoutReason: 'voldoende-opgepakt',
+      }),
+    ).not.toThrow()
+  })
+
   it('persists a canonical HR closeout with structured reason', async () => {
     mockGetUser.mockResolvedValue({
       data: { user: { id: 'hr-owner-1' } },
@@ -132,10 +288,12 @@ describe('action center route closeouts route', () => {
       error: null,
     })
 
+    let closeoutCallCount = 0
+
     mockAdminFrom.mockImplementation((table: string) => {
       if (table === 'campaigns') {
         return createCampaignQuery({
-          data: { id: 'campaign-1', organization_id: 'org-1' },
+          data: { id: 'campaign-1', organization_id: 'org-1', scan_type: 'exit' },
           error: null,
         })
       }
@@ -147,7 +305,21 @@ describe('action center route closeouts route', () => {
       }
 
       if (table === 'action_center_route_closeouts') {
+        closeoutCallCount += 1
+        if (closeoutCallCount === 1) {
+          return createCampaignQuery({
+            data: null,
+            error: null,
+          })
+        }
+
         return upsertQuery
+      }
+
+      if (table === 'action_center_route_reopens') {
+        return createLatestReopenQuery({
+          data: null,
+        })
       }
 
       throw new Error(`Unexpected table ${table}`)
@@ -231,10 +403,12 @@ describe('action center route closeouts route', () => {
       error: null,
     })
 
+    let closeoutCallCount = 0
+
     mockAdminFrom.mockImplementation((table: string) => {
       if (table === 'campaigns') {
         return createCampaignQuery({
-          data: { id: 'campaign-1', organization_id: 'org-1' },
+          data: { id: 'campaign-1', organization_id: 'org-1', scan_type: 'exit' },
           error: null,
         })
       }
@@ -246,7 +420,21 @@ describe('action center route closeouts route', () => {
       }
 
       if (table === 'action_center_route_closeouts') {
+        closeoutCallCount += 1
+        if (closeoutCallCount === 1) {
+          return createCampaignQuery({
+            data: null,
+            error: null,
+          })
+        }
+
         return upsertQuery
+      }
+
+      if (table === 'action_center_route_reopens') {
+        return createLatestReopenQuery({
+          data: null,
+        })
       }
 
       throw new Error(`Unexpected table ${table}`)

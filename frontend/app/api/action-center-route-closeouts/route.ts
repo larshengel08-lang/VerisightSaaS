@@ -3,12 +3,21 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { buildActionCenterRouteId } from '@/lib/action-center-route-contract'
 import { resolveActionCenterHrWriteAccess } from '@/lib/action-center-governance'
-import { loadSuiteAccessContext } from '@/lib/suite-access-server'
+import { getActionCenterEnabledRouteDefaults } from '@/lib/action-center-route-defaults'
 import {
+  ActionCenterRouteCloseoutMutationError,
   projectActionCenterRouteCloseout,
+  assertActionCenterRouteCloseoutMutationAllowed,
+  type ActionCenterRouteCloseoutRecord,
   type ActionCenterRouteCloseoutReason,
   type ActionCenterRouteCloseoutStatus,
 } from '@/lib/action-center-route-closeout'
+import {
+  projectActionCenterRouteLifecycle,
+  projectActionCenterRouteReopen,
+  type ActionCenterRouteReopenRecord,
+} from '@/lib/action-center-route-reopen'
+import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 
 type RouteCloseoutRequestBody = {
   campaign_id?: string
@@ -21,6 +30,12 @@ type RouteCloseoutRequestBody = {
 
 type RespondentDepartmentRow = {
   department: string | null
+}
+
+type CampaignRow = {
+  id: string
+  organization_id: string | null
+  scan_type: string | null
 }
 
 function normalizeText(value: string | null | undefined) {
@@ -72,7 +87,7 @@ async function loadCloseoutRouteTruth(input: {
   const adminClient = createAdminClient()
   const { data: campaign, error: campaignError } = await adminClient
     .from('campaigns')
-    .select('id, organization_id')
+    .select('id, organization_id, scan_type')
     .eq('id', input.campaignId)
     .maybeSingle()
 
@@ -81,7 +96,7 @@ async function loadCloseoutRouteTruth(input: {
   }
 
   if (input.routeScopeType !== 'department') {
-    return { campaign, visibleDepartmentLabels: [] as string[] }
+    return { campaign: campaign as CampaignRow, visibleDepartmentLabels: [] as string[] }
   }
 
   const { data: respondentsRaw } = await adminClient
@@ -97,7 +112,7 @@ async function loadCloseoutRouteTruth(input: {
     ),
   ]
 
-  return { campaign, visibleDepartmentLabels }
+  return { campaign: campaign as CampaignRow, visibleDepartmentLabels }
 }
 
 function resolveRouteCloseoutIdentity(args: {
@@ -126,6 +141,51 @@ function resolveRouteCloseoutIdentity(args: {
     route_scope_type: args.parsed.route_scope_type,
     route_scope_value: args.parsed.route_scope_value,
   }
+}
+
+async function loadRouteCloseoutMutationState(args: {
+  adminClient: ReturnType<typeof createAdminClient>
+  routeId: string
+}) {
+  const [closeoutResult, latestReopenResult] = await Promise.all([
+    args.adminClient.from('action_center_route_closeouts').select('*').eq('route_id', args.routeId).maybeSingle(),
+    args.adminClient
+      .from('action_center_route_reopens')
+      .select('*')
+      .eq('route_id', args.routeId)
+      .order('reopened_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ])
+
+  if (closeoutResult.error) {
+    throw new Error(closeoutResult.error.message)
+  }
+
+  if (latestReopenResult.error) {
+    throw new Error(latestReopenResult.error.message)
+  }
+
+  const routeCloseout = closeoutResult.data
+    ? projectActionCenterRouteCloseout(closeoutResult.data as Record<string, unknown>)
+    : null
+  const latestReopen = latestReopenResult.data
+    ? projectActionCenterRouteReopen(latestReopenResult.data as Record<string, unknown>)
+    : null
+  const lifecycle = projectActionCenterRouteLifecycle({
+    routeCloseout: routeCloseout as ActionCenterRouteCloseoutRecord | null,
+    routeReopens: latestReopen ? ([latestReopen] as ActionCenterRouteReopenRecord[]) : [],
+  })
+
+  if (lifecycle.activeCloseout) {
+    return 'closed' as const
+  }
+
+  if (lifecycle.isCurrentlyReopened) {
+    return 'reopened' as const
+  }
+
+  return 'open' as const
 }
 
 export async function POST(request: Request) {
@@ -157,6 +217,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ detail: 'Route closeout route bestaat niet voor deze campagne.' }, { status: 400 })
   }
 
+  if (!getActionCenterEnabledRouteDefaults(routeTruth.campaign.scan_type)) {
+    return NextResponse.json(
+      { detail: 'Route closeout blijft in deze slice beperkt tot ingeschakelde follow-through-routes.' },
+      { status: 409 },
+    )
+  }
+
   const writeAccess = resolveActionCenterHrWriteAccess({
     context,
     orgMemberships,
@@ -182,8 +249,41 @@ export async function POST(request: Request) {
     )
   }
 
-  const closedAt = new Date().toISOString()
   const adminClient = createAdminClient()
+  let currentState
+  try {
+    currentState = await loadRouteCloseoutMutationState({
+      adminClient,
+      routeId: identity.route_id,
+    })
+  } catch (error) {
+    return NextResponse.json(
+      { detail: error instanceof Error ? error.message : 'Route closeout opslaan mislukt.' },
+      { status: 500 },
+    )
+  }
+
+  try {
+    assertActionCenterRouteCloseoutMutationAllowed({
+      actorRole: writeAccess.auditRole,
+      currentState,
+      closeoutReason: parsed.closeout_reason,
+    })
+  } catch (error) {
+    if (error instanceof ActionCenterRouteCloseoutMutationError) {
+      const status = error.code === 'missing_closeout_reason' ? 400 : 409
+      const detail =
+        error.code === 'missing_closeout_reason'
+          ? 'Ongeldige route closeout input.'
+          : 'Route closeout is niet toegestaan vanuit de huidige canonieke toestand.'
+
+      return NextResponse.json({ detail }, { status })
+    }
+
+    return NextResponse.json({ detail: 'Route closeout opslaan mislukt.' }, { status: 500 })
+  }
+
+  const closedAt = new Date().toISOString()
   const persisted = {
     ...identity,
     closeout_status: parsed.closeout_status,

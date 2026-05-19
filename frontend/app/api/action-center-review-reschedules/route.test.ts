@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { assertActionCenterReviewRescheduleMutationAllowed } from '@/lib/action-center-review-reschedule'
 
 const {
   mockGetUser,
@@ -216,6 +217,15 @@ describe('action center review reschedules route', () => {
     await expect(response.json()).resolves.toEqual({
       detail: 'Geen toegang om reviewdatum te beheren.',
     })
+  })
+
+  it('keeps manager reschedule forbidden in the canonical mutation module', () => {
+    expect(() =>
+      assertActionCenterReviewRescheduleMutationAllowed({
+        actorRole: 'manager',
+        operation: 'reschedule',
+      }),
+    ).toThrow('manager_reschedule_not_allowed')
   })
 
   it('rejects blocked route families in this slice', async () => {

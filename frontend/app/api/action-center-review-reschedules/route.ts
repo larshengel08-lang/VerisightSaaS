@@ -8,6 +8,8 @@ import {
   parseActionCenterManagerResponseScopeValue,
 } from '@/lib/action-center-manager-responses'
 import {
+  ActionCenterReviewRescheduleMutationError,
+  assertActionCenterReviewRescheduleMutationAllowed,
   buildNextActionCenterReviewScheduleRevision,
   validateActionCenterReviewRescheduleInput,
 } from '@/lib/action-center-review-reschedule'
@@ -209,6 +211,19 @@ export async function POST(request: Request) {
 
   if (!hrWriteAccess.allowed) {
     return NextResponse.json({ detail: 'Geen toegang om reviewdatum te beheren.' }, { status: 403 })
+  }
+
+  try {
+    assertActionCenterReviewRescheduleMutationAllowed({
+      actorRole: hrWriteAccess.auditRole,
+      operation: parsed.operation,
+    })
+  } catch (error) {
+    if (error instanceof ActionCenterReviewRescheduleMutationError) {
+      return NextResponse.json({ detail: 'Geen toegang om reviewdatum te beheren.' }, { status: 403 })
+    }
+
+    return NextResponse.json({ detail: 'Review reschedule opslaan mislukt.' }, { status: 500 })
   }
 
   const routeData = await loadActionCenterReviewRescheduleData({
