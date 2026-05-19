@@ -20,7 +20,7 @@ import {
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
-import { FACTOR_LABELS, hasCampaignAddOn } from '@/lib/types'
+import { FACTOR_LABELS } from '@/lib/types'
 import type { CampaignStats, Respondent, ScanType, SurveyResponse } from '@/lib/types'
 import {
   buildOpenAnswerItems,
@@ -680,14 +680,12 @@ export default async function CampaignPage({ params }: Props) {
 
   const [
     { data: organization },
-    { data: campaignMeta },
     { data: responsesRaw },
     { data: respondentsRaw },
     { data: deliveryRecord },
   ] =
     await Promise.all([
       supabase.from('organizations').select('name').eq('id', stats.organization_id).maybeSingle(),
-      supabase.from('campaigns').select('enabled_modules').eq('id', id).maybeSingle(),
       supabase
         .from('survey_responses')
         .select(
@@ -1215,7 +1213,6 @@ export default async function CampaignPage({ params }: Props) {
 
             <MethodologyCard
               scanType={stats.scan_type}
-              hasSegmentDeepDive={hasCampaignAddOn(campaignMeta, 'segment_deep_dive')}
               signalLabel={scanDefinition.signalLabel}
               embedded
             />

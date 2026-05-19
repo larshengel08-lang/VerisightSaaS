@@ -25,5 +25,6 @@ describe('beheer admin alignment', () => {
     expect(source).not.toContain('Open klantlearnings')
     expect(source).not.toContain('Open health review')
     expect(source).not.toContain('Open setupwerkvloer')
+    expect(source).not.toContain('Segment deep dive')
   })
 })

@@ -100,7 +100,7 @@ describe('dashboard visibility state', () => {
     expect(visibility.showActionPlaybooks).toBe(false)
   })
 
-  it('keeps segment analysis hidden when deep dive is unavailable even if the pattern is strong enough', () => {
+  it('keeps segment analysis available for retention when the pattern is strong enough', () => {
     const visibility = buildDashboardVisibilityState({
       scanType: 'retention',
       hasMinDisplay: true,
@@ -112,7 +112,7 @@ describe('dashboard visibility state', () => {
     })
 
     expect(visibility.showDriverDrilldown).toBe(true)
-    expect(visibility.showSegmentAnalysis).toBe(false)
+    expect(visibility.showSegmentAnalysis).toBe(true)
     expect(visibility.showActionPlaybooks).toBe(true)
   })
 
