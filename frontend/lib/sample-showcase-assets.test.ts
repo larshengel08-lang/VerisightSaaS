@@ -76,7 +76,7 @@ describe('sample showcase asset registry', () => {
     expect(cultureDocs).toContain('docs/reference/CULTURE_ASSESSMENT_HR_APPENDIX.md')
     expect(cultureDocs).toContain('docs/reference/CULTURE_ASSESSMENT_BOARD_READ_AGENDA.md')
     expect(cultureDocs).toContain('docs/reference/CULTURE_ASSESSMENT_DEMO_ENVIRONMENT.md')
-    expect(boardDeck?.deliveryReadiness).toBe('blueprint_ready')
+    expect(boardDeck?.deliveryReadiness).toBe('pilot_delivery_ready')
     expect(executiveOnePager?.deliveryReadiness).toBe('blueprint_ready')
     expect(hrAppendix?.accessMode).toBe('internal_demo_only')
   })

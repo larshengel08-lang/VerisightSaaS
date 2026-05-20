@@ -27,6 +27,8 @@ export interface ScanDefinition {
   outputSequenceNote?: string
   followOnOutcomes?: string[]
   followOnDecisionNote?: string
+  governedExportEntitlements?: Record<string, Record<string, string>>
+  textSafetyStates?: string[]
 }
 
 export function getScanDefinition(scanType: ScanType): ScanDefinition {

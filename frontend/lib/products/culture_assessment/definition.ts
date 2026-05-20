@@ -1,6 +1,9 @@
 import type { ScanDefinition } from '@/lib/scan-definitions'
 
-import { CULTURE_ASSESSMENT_CULTURE_INDEX_COPY } from '@/lib/products/culture_assessment/contract'
+import {
+  CULTURE_ASSESSMENT_CONTRACT,
+  CULTURE_ASSESSMENT_CULTURE_INDEX_COPY,
+} from '@/lib/products/culture_assessment/contract'
 
 export const cultureAssessmentDefinition: ScanDefinition = {
   scanType: 'culture_assessment',
@@ -41,7 +44,7 @@ export const cultureAssessmentDefinition: ScanDefinition = {
   },
   standardOutputs: [
     'board report pdf',
-    'boardroom deck blueprint',
+    'boardroom pdf deck',
     'executive one-pager',
     'guided board-read session',
   ],
@@ -54,7 +57,7 @@ export const cultureAssessmentDefinition: ScanDefinition = {
   ],
   outputReadiness: {
     boardReportPdf: 'demo_asset_ready',
-    boardroomDeck: 'blueprint_ready',
+    boardroomDeck: 'pilot_delivery_ready',
     executiveOnePager: 'blueprint_ready',
     hrAppendixPdf: 'blueprint_ready',
     segmentSummaryExport: 'commercial_delivery_ready',
@@ -69,4 +72,6 @@ export const cultureAssessmentDefinition: ScanDefinition = {
   ],
   followOnDecisionNote:
     'Geen vervolgrichting opent automatisch na de baseline. De board-read sluit expliciet af met een keuze tussen geen onmiddellijke vervolgrichting, deeper governed work, een bounded Pulse-follow-on of een andere Loep-route als de vervolgvraag echt smaller is.',
+  governedExportEntitlements: CULTURE_ASSESSMENT_CONTRACT.governedExportEntitlements,
+  textSafetyStates: CULTURE_ASSESSMENT_CONTRACT.textSafetyStates,
 }

@@ -9,7 +9,7 @@ describe('culture assessment product module', () => {
     expect(cultureAssessmentProductModule.definition.signalLabel).toBe('Loep Culture Index')
     expect(cultureAssessmentProductModule.definition.launchStatus).toContain('pilot-ready')
     expect(cultureAssessmentProductModule.definition.deploymentProfiles?.mkb.toLowerCase()).toContain('dezelfde kernvragenlijst')
-    expect(cultureAssessmentProductModule.definition.standardOutputs).toContain('boardroom deck blueprint')
+    expect(cultureAssessmentProductModule.definition.standardOutputs).toContain('boardroom pdf deck')
     expect(CULTURE_ASSESSMENT_CONTRACT.thresholds.organizationMinN).toBe(30)
     expect(CULTURE_ASSESSMENT_CONTRACT.namedManagerLayer.defaultState).toBe('locked')
     expect(CULTURE_ASSESSMENT_CONTRACT.canonicalBlockOrder).toEqual([
@@ -26,7 +26,7 @@ describe('culture assessment product module', () => {
       'report_export_methodology',
     ])
     expect(cultureAssessmentProductModule.definition.optionalOutputs).toContain('segment summary export')
-    expect(cultureAssessmentProductModule.definition.outputReadiness?.boardroomDeck).toBe('blueprint_ready')
+    expect(cultureAssessmentProductModule.definition.outputReadiness?.boardroomDeck).toBe('pilot_delivery_ready')
     expect(cultureAssessmentProductModule.definition.outputReadiness?.boardReportPdf).toBe('demo_asset_ready')
     expect(cultureAssessmentProductModule.definition.outputSequenceNote?.toLowerCase()).toContain('compacte executive read')
     expect(cultureAssessmentProductModule.definition.followOnOutcomes).toEqual([
@@ -38,6 +38,21 @@ describe('culture assessment product module', () => {
     expect(cultureAssessmentProductModule.definition.followOnDecisionNote?.toLowerCase()).toContain(
       'geen vervolgrichting opent automatisch',
     )
+    expect(cultureAssessmentProductModule.definition.governedExportEntitlements?.hr_partner?.segmentSummaryExport).toBe(
+      'governed',
+    )
+    expect(cultureAssessmentProductModule.definition.governedExportEntitlements?.manager_limited?.segmentSummaryExport).toBe(
+      'denied',
+    )
+    expect(cultureAssessmentProductModule.definition.textSafetyStates).toEqual([
+      'not_collected',
+      'collected_not_processed',
+      'processed_safe_none_visible',
+      'processed_safe_summary_visible',
+      'suppressed_below_threshold',
+      'suppressed_sensitive_content',
+      'suppressed_unapproved',
+    ])
   })
 
   it('builds an executive-safe dashboard model without ranking language', () => {

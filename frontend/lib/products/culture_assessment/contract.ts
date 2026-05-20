@@ -16,6 +16,7 @@ type ScoreDirection =
   | 'higher_is_more_sustainable'
 
 type VisibilityRole = 'executive' | 'hr_partner' | 'business_unit_lead' | 'manager_limited' | 'admin'
+type EntitlementState = 'allowed' | 'governed' | 'denied' | 'admin_state_only'
 
 export const CULTURE_ASSESSMENT_CULTURE_INDEX_COPY =
   'De Loep Culture Index is een navigatiesignaal voor het organisatiebeeld. De index is geen eindoordeel over cultuur, geen individuele beoordeling en geen bewijs van oorzaak-gevolg. Lees de index altijd samen met domeinen, segmentpatronen, responsbasis en governancegrenzen.'
@@ -237,6 +238,77 @@ export const CULTURE_ASSESSMENT_CONTRACT = {
     openTextAppendixWhenEnabled: true,
     noIndividualDataExport: true,
   },
+  governedExportEntitlements: {
+    executive: {
+      organizationView: 'allowed',
+      approvedSegmentContrasts: 'governed',
+      businessUnitScope: 'governed',
+      hrGovernedAnalysis: 'denied',
+      segmentSummaryExport: 'denied',
+      hrAppendixExport: 'denied',
+      managerCascadeOutput: 'governed',
+      hiddenReasonVisibility: 'governed',
+      releaseStateVisibility: 'governed',
+      exportApproval: 'denied',
+    },
+    hr_partner: {
+      organizationView: 'allowed',
+      approvedSegmentContrasts: 'governed',
+      businessUnitScope: 'governed',
+      hrGovernedAnalysis: 'allowed',
+      segmentSummaryExport: 'governed',
+      hrAppendixExport: 'governed',
+      managerCascadeOutput: 'governed',
+      hiddenReasonVisibility: 'allowed',
+      releaseStateVisibility: 'allowed',
+      exportApproval: 'denied',
+    },
+    business_unit_lead: {
+      organizationView: 'allowed',
+      approvedSegmentContrasts: 'governed',
+      businessUnitScope: 'governed',
+      hrGovernedAnalysis: 'denied',
+      segmentSummaryExport: 'denied',
+      hrAppendixExport: 'denied',
+      managerCascadeOutput: 'governed',
+      hiddenReasonVisibility: 'governed',
+      releaseStateVisibility: 'governed',
+      exportApproval: 'denied',
+    },
+    manager_limited: {
+      organizationView: 'denied',
+      approvedSegmentContrasts: 'denied',
+      businessUnitScope: 'denied',
+      hrGovernedAnalysis: 'denied',
+      segmentSummaryExport: 'denied',
+      hrAppendixExport: 'denied',
+      managerCascadeOutput: 'governed',
+      hiddenReasonVisibility: 'denied',
+      releaseStateVisibility: 'denied',
+      exportApproval: 'denied',
+    },
+    admin: {
+      organizationView: 'admin_state_only',
+      approvedSegmentContrasts: 'admin_state_only',
+      businessUnitScope: 'admin_state_only',
+      hrGovernedAnalysis: 'admin_state_only',
+      segmentSummaryExport: 'admin_state_only',
+      hrAppendixExport: 'admin_state_only',
+      managerCascadeOutput: 'admin_state_only',
+      hiddenReasonVisibility: 'admin_state_only',
+      releaseStateVisibility: 'admin_state_only',
+      exportApproval: 'admin_state_only',
+    },
+  } satisfies Record<VisibilityRole, Record<string, EntitlementState>>,
+  textSafetyStates: [
+    'not_collected',
+    'collected_not_processed',
+    'processed_safe_none_visible',
+    'processed_safe_summary_visible',
+    'suppressed_below_threshold',
+    'suppressed_sensitive_content',
+    'suppressed_unapproved',
+  ],
   boardAttentionLogic: {
     inputKeys: [
       'domain_scores',

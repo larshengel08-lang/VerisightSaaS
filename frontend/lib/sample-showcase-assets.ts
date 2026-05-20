@@ -10,6 +10,7 @@ export type SampleShowcaseAccessMode = 'public_buyer_sample' | 'guided_sales_dem
 export type SampleShowcaseDeliveryReadiness =
   | 'blueprint_ready'
   | 'demo_asset_ready'
+  | 'pilot_delivery_ready'
   | 'commercial_delivery_ready'
 
 export type SampleShowcaseProduct = 'exit' | 'retention' | 'culture_assessment' | 'portfolio' | 'shared'
@@ -169,10 +170,10 @@ export const SAMPLE_SHOWCASE_ASSETS: SampleShowcaseAsset[] = [
     kind: 'doc',
     status: 'internal demo support',
     accessMode: 'guided_sales_demo',
-    deliveryReadiness: 'blueprint_ready',
+    deliveryReadiness: 'pilot_delivery_ready',
     docsPath: 'docs/reference/CULTURE_ASSESSMENT_BOARDROOM_DECK.md',
     intendedUse:
-      'Boardroom-deck blueprint voor begeleide demo, proposal prep en board-read voorbereiding binnen dezelfde premium outputlijn als het rapport.',
+      'Boardroom PDF-deck voor begeleide pilotdelivery, proposal prep en board-read voorbereiding binnen dezelfde premium outputlijn als het rapport.',
     evidenceTier: 'deliverable_proof',
     buyerUse: 'Gebruik begeleid in sales of board context; niet als losse websiteclaim of benchmarkbewijs.',
     claimBoundary:

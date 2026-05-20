@@ -37,6 +37,7 @@ def get_management_summary_payload() -> dict[str, Any]:
             "facilitator_owner": "Loep / Verisight consultant of founder-led board facilitator",
             "session_length_minutes": "60-90",
             "always_guided": True,
+            "first_pilot_deck_format": "PDF deck",
             "manual_rewrite_forbidden": [
                 "board attention points",
                 "culture index explanation",
@@ -60,6 +61,39 @@ def get_methodology_payload() -> dict[str, Any]:
         "segment_comparison_min_n": 10,
         "open_text_cluster_min_n": 5,
         "allows_individual_export": False,
+        "local_threshold_invention_forbidden": True,
+        "local_text_threshold_invention_forbidden": True,
+        "text_safety_states": [
+            "not_collected",
+            "collected_not_processed",
+            "processed_safe_none_visible",
+            "processed_safe_summary_visible",
+            "suppressed_below_threshold",
+            "suppressed_sensitive_content",
+            "suppressed_unapproved",
+        ],
+        "governed_export_entitlements": {
+            "executive": {
+                "segment_summary_export": "denied",
+                "hr_appendix_export": "denied",
+            },
+            "hr_partner": {
+                "segment_summary_export": "governed",
+                "hr_appendix_export": "governed",
+            },
+            "business_unit_lead": {
+                "segment_summary_export": "denied",
+                "hr_appendix_export": "denied",
+            },
+            "manager_limited": {
+                "segment_summary_export": "denied",
+                "hr_appendix_export": "denied",
+            },
+            "admin": {
+                "segment_summary_export": "admin_state_only",
+                "hr_appendix_export": "admin_state_only",
+            },
+        },
         "launch_status": [
             "pilot-ready",
             "commercially demoable",

@@ -8,8 +8,8 @@ def test_culture_assessment_module_exposes_definition_and_report_payloads():
     assert module.get_definition()["product_name"] == "Loep Culture Assessment"
     assert "pilot-ready" in module.get_definition()["launch_status"]
     assert "segment summary export" in module.get_definition()["optional_outputs"]
-    assert "boardroom deck blueprint" in module.get_definition()["standard_outputs"]
-    assert module.get_definition()["output_readiness"]["boardroom_deck"] == "blueprint_ready"
+    assert "boardroom pdf deck" in module.get_definition()["standard_outputs"]
+    assert module.get_definition()["output_readiness"]["boardroom_deck"] == "pilot_delivery_ready"
     assert "compacte executive read" in module.get_definition()["output_sequence_note"]
     assert module.get_definition()["follow_on_outcomes"] == [
         "no immediate next route",
@@ -18,6 +18,17 @@ def test_culture_assessment_module_exposes_definition_and_report_payloads():
         "another Loep route",
     ]
     assert "opent geen vervolgrichting automatisch" in module.get_definition()["follow_on_decision_note"]
+    assert module.get_definition()["governed_export_entitlements"]["hr_partner"]["segment_summary_export"] == "governed"
+    assert module.get_definition()["governed_export_entitlements"]["manager_limited"]["segment_summary_export"] == "denied"
+    assert module.get_definition()["text_safety_states"] == [
+        "not_collected",
+        "collected_not_processed",
+        "processed_safe_none_visible",
+        "processed_safe_summary_visible",
+        "suppressed_below_threshold",
+        "suppressed_sensitive_content",
+        "suppressed_unapproved",
+    ]
     assert "Loep Culture Index" in module.get_management_summary_payload()["index_label"]
     assert "domeinbeeld" in module.get_management_summary_payload()["board_attention_scope_note"]
     assert "compacte executive read" in module.get_management_summary_payload()["output_sequence_note"]
