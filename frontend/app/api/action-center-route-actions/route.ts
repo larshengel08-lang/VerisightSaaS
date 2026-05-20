@@ -45,8 +45,7 @@ function parseRouteActionRequestInput(input: RouteActionRequestBody | null) {
   const actionText = normalizeText(input?.primary_action_text)
   const expectedEffect = normalizeText(input?.primary_action_expected_effect)
   const reviewScheduledFor = normalizeText(input?.review_scheduled_for)
-  const status =
-    (normalizeText(input?.primary_action_status) as ActionCenterRouteActionStatus | null) ?? 'open'
+  const status = normalizeText(input?.primary_action_status) as ActionCenterRouteActionStatus | null
 
   if (!campaignId || (routeScopeType !== 'department' && routeScopeType !== 'item') || !routeScopeValue) {
     throw new Error('Ongeldige route action input.')

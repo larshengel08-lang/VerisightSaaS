@@ -260,6 +260,7 @@ describe('action center route actions route', () => {
     expect(payload.actionDraft).toMatchObject({
       semanticState: 'draft',
       validationDisposition: 'needs_hr_review',
+      primary_action_status: null,
     })
   })
 
@@ -372,6 +373,7 @@ describe('action center route actions route', () => {
     expect(payload.actionDraft).toMatchObject({
       semanticState: 'draft',
       validationDisposition: 'invalid',
+      primary_action_status: null,
     })
   })
 
@@ -483,6 +485,7 @@ describe('action center route actions route', () => {
       primary_action_theme_key: null,
       primary_action_text: null,
       primary_action_expected_effect: null,
+      primary_action_status: null,
       review_scheduled_for: null,
       semanticState: 'draft',
       validationDisposition: 'invalid',
@@ -768,6 +771,7 @@ describe('action center route actions route', () => {
       primary_action_status: null,
     })
     expect(payload.actionDraft).toMatchObject({
+      primary_action_status: null,
       semanticState: 'draft',
       validationDisposition: 'valid',
     })

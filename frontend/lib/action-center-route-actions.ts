@@ -19,23 +19,35 @@ export interface ActionCenterRouteActionWriteInput {
   route_scope_value: string
   owner_name: string
   owner_assigned_at: string
+  primary_action_theme_key: ActionCenterManagerActionThemeKey | null
+  primary_action_text: string | null
+  primary_action_expected_effect: string | null
+  primary_action_status: ActionCenterRouteActionStatus | null
+  review_scheduled_for: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ValidatedActionCenterRouteActionWriteInput extends ActionCenterRouteActionWriteInput {
   primary_action_theme_key: ActionCenterManagerActionThemeKey
   primary_action_text: string
   primary_action_expected_effect: string
   primary_action_status: ActionCenterRouteActionStatus
   review_scheduled_for: string
-  created_at: string
-  updated_at: string
+  semanticState: Extract<ActionCenterActionSemanticState, 'active'>
+  validationDisposition: null
 }
 
 export interface ActionCenterRouteActionRecord {
   actionId: string
   routeId: string
-  themeKey: ActionCenterManagerActionThemeKey
-  actionText: string
-  expectedEffect: string
-  reviewScheduledFor: string
-  status: ActionCenterRouteActionStatus
+  themeKey: ActionCenterManagerActionThemeKey | null
+  actionText: string | null
+  expectedEffect: string | null
+  reviewScheduledFor: string | null
+  status: ActionCenterRouteActionStatus | null
+  semanticState: Extract<ActionCenterActionSemanticState, 'draft' | 'active'>
+  validationDisposition: ActionCenterActionDraftDisposition | null
   createdAt: string
   updatedAt: string
 }
@@ -119,7 +131,6 @@ function resolveActionCenterRouteActionDraftValidationDisposition(args: {
     } {
   const isStructurallyBounded =
     Boolean(args.themeKey) &&
-    Boolean(args.status) &&
     Boolean(args.reviewScheduledFor && isIsoDate(args.reviewScheduledFor)) &&
     Boolean(args.actionText) &&
     Boolean(args.expectedEffect) &&
@@ -155,7 +166,7 @@ function resolveActionCenterRouteActionDraftValidationDisposition(args: {
   }
 }
 
-export function validateActionCenterRouteActionWriteInput(
+function validatePersistedActionCenterRouteActionInput(
   input: Partial<ActionCenterRouteActionWriteInput> | null | undefined,
 ): ActionCenterRouteActionWriteInput {
   const actionId = normalizeText(input?.id)
@@ -181,22 +192,24 @@ export function validateActionCenterRouteActionWriteInput(
     !routeScopeValue ||
     !ownerName ||
     !ownerAssignedAt ||
-    !themeKey ||
-    !THEME_LABELS.has(themeKey) ||
-    !actionText ||
-    !expectedEffect ||
-    !status ||
-    !ACTION_STATUSES.has(status) ||
-    !reviewScheduledFor ||
     !createdAt ||
     !updatedAt ||
-    !isIsoDate(reviewScheduledFor) ||
     !isIsoTimestamp(ownerAssignedAt) ||
     !isIsoTimestamp(createdAt) ||
-    !isIsoTimestamp(updatedAt) ||
-    !looksLikeActionCenterStep(actionText) ||
-    !looksLikeActionCenterExpectedEffect(expectedEffect)
+    !isIsoTimestamp(updatedAt)
   ) {
+    throw new Error('Ongeldige route action input.')
+  }
+
+  if (themeKey && !THEME_LABELS.has(themeKey)) {
+    throw new Error('Ongeldige route action input.')
+  }
+
+  if (status && !ACTION_STATUSES.has(status)) {
+    throw new Error('Ongeldige route action input.')
+  }
+
+  if (reviewScheduledFor && !isIsoDate(reviewScheduledFor)) {
     throw new Error('Ongeldige route action input.')
   }
 
@@ -215,6 +228,35 @@ export function validateActionCenterRouteActionWriteInput(
     review_scheduled_for: reviewScheduledFor,
     created_at: createdAt,
     updated_at: updatedAt,
+  }
+}
+
+export function validateActionCenterRouteActionWriteInput(
+  input: Partial<ActionCenterRouteActionWriteInput> | null | undefined,
+): ValidatedActionCenterRouteActionWriteInput {
+  const validated = validatePersistedActionCenterRouteActionInput(input)
+
+  if (
+    !validated.primary_action_theme_key ||
+    !validated.primary_action_text ||
+    !validated.primary_action_expected_effect ||
+    !validated.primary_action_status ||
+    !validated.review_scheduled_for ||
+    !looksLikeActionCenterStep(validated.primary_action_text) ||
+    !looksLikeActionCenterExpectedEffect(validated.primary_action_expected_effect)
+  ) {
+    throw new Error('Ongeldige route action input.')
+  }
+
+  return {
+    ...validated,
+    primary_action_theme_key: validated.primary_action_theme_key,
+    primary_action_text: validated.primary_action_text,
+    primary_action_expected_effect: validated.primary_action_expected_effect,
+    primary_action_status: validated.primary_action_status,
+    review_scheduled_for: validated.review_scheduled_for,
+    semanticState: 'active',
+    validationDisposition: null,
   }
 }
 
@@ -256,17 +298,45 @@ export function validateActionCenterRouteActionDraftInput(
 export function projectActionCenterRouteActionCard(
   input: Partial<ActionCenterRouteActionWriteInput> | null | undefined,
 ): ActionCenterRouteActionRecord {
-  const validated = validateActionCenterRouteActionWriteInput(input)
+  const persisted = validatePersistedActionCenterRouteActionInput(input)
+
+  if (persisted.primary_action_status) {
+    const validated = validateActionCenterRouteActionWriteInput(persisted)
+
+    return {
+      actionId: validated.id,
+      routeId: validated.route_id,
+      themeKey: validated.primary_action_theme_key,
+      actionText: validated.primary_action_text,
+      expectedEffect: validated.primary_action_expected_effect,
+      reviewScheduledFor: validated.review_scheduled_for,
+      status: validated.primary_action_status,
+      semanticState: validated.semanticState,
+      validationDisposition: validated.validationDisposition,
+      createdAt: validated.created_at,
+      updatedAt: validated.updated_at,
+    }
+  }
+
+  const draft = validateActionCenterRouteActionDraftInput({
+    primary_action_theme_key: persisted.primary_action_theme_key,
+    primary_action_text: persisted.primary_action_text,
+    primary_action_expected_effect: persisted.primary_action_expected_effect,
+    primary_action_status: persisted.primary_action_status,
+    review_scheduled_for: persisted.review_scheduled_for,
+  })
 
   return {
-    actionId: validated.id,
-    routeId: validated.route_id,
-    themeKey: validated.primary_action_theme_key,
-    actionText: validated.primary_action_text,
-    expectedEffect: validated.primary_action_expected_effect,
-    reviewScheduledFor: validated.review_scheduled_for,
-    status: validated.primary_action_status,
-    createdAt: validated.created_at,
-    updatedAt: validated.updated_at,
+    actionId: persisted.id,
+    routeId: persisted.route_id,
+    themeKey: draft.primary_action_theme_key,
+    actionText: draft.primary_action_text,
+    expectedEffect: draft.primary_action_expected_effect,
+    reviewScheduledFor: draft.review_scheduled_for,
+    status: null,
+    semanticState: draft.semanticState,
+    validationDisposition: draft.validationDisposition,
+    createdAt: persisted.created_at,
+    updatedAt: persisted.updated_at,
   }
 }

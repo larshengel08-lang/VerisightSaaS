@@ -52,6 +52,60 @@ describe('action center route actions', () => {
     })
   })
 
+  it('projects a persisted draft action row as retained draft truth instead of forcing active truth', async () => {
+    const { projectActionCenterRouteActionCard } = await import('./action-center-route-actions') as {
+      projectActionCenterRouteActionCard: (input: Record<string, unknown>) => Record<string, unknown>
+    }
+
+    expect(
+      projectActionCenterRouteActionCard(
+        buildCanonicalOpenActionInput({
+          primary_action_status: null,
+        }),
+      ),
+    ).toMatchObject({
+      actionId: 'action-1',
+      routeId: 'campaign-exit::operations',
+      themeKey: 'workload',
+      actionText: 'Plan deze week een gericht teamgesprek over workloadpieken.',
+      expectedEffect: 'Binnen twee weken moet zichtbaar zijn of de workloadpieken smaller worden.',
+      reviewScheduledFor: '2026-05-12',
+      status: null,
+      semanticState: 'draft',
+      validationDisposition: 'valid',
+      createdAt: '2026-04-21T09:00:00.000Z',
+      updatedAt: '2026-04-21T09:00:00.000Z',
+    })
+  })
+
+  it('projects a persisted incomplete draft row without rejecting null draft fields', async () => {
+    const { projectActionCenterRouteActionCard } = await import('./action-center-route-actions') as {
+      projectActionCenterRouteActionCard: (input: Record<string, unknown>) => Record<string, unknown>
+    }
+
+    expect(
+      projectActionCenterRouteActionCard(
+        buildCanonicalOpenActionInput({
+          primary_action_theme_key: null,
+          primary_action_text: null,
+          primary_action_expected_effect: null,
+          primary_action_status: null,
+          review_scheduled_for: null,
+        }),
+      ),
+    ).toMatchObject({
+      actionId: 'action-1',
+      routeId: 'campaign-exit::operations',
+      themeKey: null,
+      actionText: null,
+      expectedEffect: null,
+      reviewScheduledFor: null,
+      status: null,
+      semanticState: 'draft',
+      validationDisposition: 'invalid',
+    })
+  })
+
   it('accepts postgres microsecond timestamps from persisted manager assignments and action rows', async () => {
     const { validateActionCenterRouteActionWriteInput } = await import('./action-center-route-actions') as {
       validateActionCenterRouteActionWriteInput: (input: Record<string, unknown>) => Record<string, unknown>
