@@ -205,6 +205,15 @@ function hasBoundedDraftStructure(input: ActionCenterRouteActionDraftInput) {
   )
 }
 
+function hasPresentDraftFields(input: ActionCenterRouteActionDraftInput) {
+  return (
+    Boolean(input.primary_action_theme_key) &&
+    Boolean(input.review_scheduled_for && isIsoDate(input.review_scheduled_for)) &&
+    Boolean(input.primary_action_text) &&
+    Boolean(input.primary_action_expected_effect)
+  )
+}
+
 function buildDraftSemanticSurface(input: Pick<
   ActionCenterRouteActionDraftInput,
   'primary_action_text' | 'primary_action_expected_effect'
@@ -256,19 +265,22 @@ function classifyActionCenterRouteActionDraft(
     }
   }
 
+  if (
+    looksLikeBroadProjectLanguage(validated.primary_action_text, validated.primary_action_expected_effect) &&
+    hasPresentDraftFields(validated)
+  ) {
+    return {
+      ...validated,
+      semanticState: 'draft',
+      validationDisposition: 'needs_hr_review',
+    }
+  }
+
   if (!hasBoundedDraftStructure(validated)) {
     return {
       ...validated,
       semanticState: 'draft',
       validationDisposition: 'invalid',
-    }
-  }
-
-  if (looksLikeBroadProjectLanguage(validated.primary_action_text, validated.primary_action_expected_effect)) {
-    return {
-      ...validated,
-      semanticState: 'draft',
-      validationDisposition: 'needs_hr_review',
     }
   }
 
@@ -354,7 +366,16 @@ export function validateActionCenterRouteActionWriteInput(
     !validated.primary_action_text ||
     !validated.primary_action_expected_effect ||
     !validated.primary_action_status ||
-    !validated.review_scheduled_for ||
+    !validated.review_scheduled_for
+  ) {
+    throw new Error('Ongeldige route action input.')
+  }
+
+  if (looksLikeEmployeeDossierLanguage(validated.primary_action_text, validated.primary_action_expected_effect)) {
+    throw new Error('Route action is outside bounded execution.')
+  }
+
+  if (
     !looksLikeActionCenterStep(validated.primary_action_text) ||
     !looksLikeActionCenterExpectedEffect(validated.primary_action_expected_effect)
   ) {

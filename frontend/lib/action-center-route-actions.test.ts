@@ -260,6 +260,25 @@ describe('action center route actions', () => {
     })
   })
 
+  it('keeps broad project language in needs-hr-review when fields are present but the expected effect stays weak', async () => {
+    const { validateActionCenterRouteActionDraftInput } = await import('./action-center-route-actions') as {
+      validateActionCenterRouteActionDraftInput: (input: Record<string, unknown>) => Record<string, unknown>
+    }
+
+    expect(
+      validateActionCenterRouteActionDraftInput(
+        buildDraftInput({
+          primary_action_theme_key: 'workload',
+          primary_action_text: 'Start een breed HR-project om werkdruk overal op te lossen.',
+          primary_action_expected_effect: 'We kijken later verder.',
+        }),
+      ),
+    ).toMatchObject({
+      semanticState: 'draft',
+      validationDisposition: 'needs_hr_review',
+    })
+  })
+
   it('rejects employee-dossier-like action text', async () => {
     const { validateActionCenterRouteActionDraftInput } = await import('./action-center-route-actions') as {
       validateActionCenterRouteActionDraftInput: (input: Record<string, unknown>) => Record<string, unknown>
@@ -296,6 +315,22 @@ describe('action center route actions', () => {
       actionText: 'Monitor employee X in detail for risk.',
       expectedEffect: 'Track individual risk more closely.',
     })
+  })
+
+  it('does not project persisted open dossier-like actions as active truth', async () => {
+    const { projectActionCenterRouteActionCard } = await import('./action-center-route-actions') as {
+      projectActionCenterRouteActionCard: (input: Record<string, unknown>) => Record<string, unknown>
+    }
+
+    expect(() =>
+      projectActionCenterRouteActionCard(
+        buildCanonicalOpenActionInput({
+          primary_action_text: 'Monitor employee X in detail for risk.',
+          primary_action_expected_effect: 'Track individual risk more closely.',
+          primary_action_status: 'open',
+        }),
+      ),
+    ).toThrow('Route action is outside bounded execution.')
   })
 
   it('models the hr-only promotion path from draft to active route action truth', async () => {
