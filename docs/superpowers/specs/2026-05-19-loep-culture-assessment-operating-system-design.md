@@ -425,9 +425,9 @@ Recommended priority order:
 2. Methodology Authority
 3. Premium Delivery & Output Excellence
 4. Enterprise Trust & Procurement Readiness
-5. Enterprise Drilldown & Analysis Environment
-6. Text & Open Comment Intelligence
-7. Listening Program Operations
+5. Listening Program Operations
+6. Enterprise Drilldown & Analysis Environment
+7. Text & Open Comment Intelligence
 8. Action & Follow-through System
 9. Follow-On Architecture
 10. Benchmark & Reference Layer
@@ -533,6 +533,7 @@ Each stream must answer:
 9. `Dependencies`
 10. `Out-of-scope boundaries`
 11. `Verdict line`
+12. `Maturity scorecard`
 
 ### 10.2 Meaning of each section
 
@@ -573,6 +574,14 @@ Each stream must answer:
   - `strong differentiator, should be expanded`
   - `later scale mechanism, not leading now`
 
+`Maturity scorecard`
+- current maturity phase
+- target maturity phase
+- launch-critical status
+- top-tier relevance
+- confidence level
+- next required artifact
+
 ---
 
 ## 11. Competitive Reading Frame
@@ -597,7 +606,13 @@ Loep should read Culture Amp primarily as:
 
 - the benchmark for modern HR product usability and broader product ecosystem maturity
 
-### 11.4 Comparative rule
+### 11.4 Qualtrics
+
+Loep should read Qualtrics primarily as:
+
+- the benchmark for enterprise EX infrastructure, analytics scale, survey operations, workflow breadth, and procurement credibility
+
+### 11.5 Comparative rule
 
 Loep does not need to copy all three.
 
@@ -608,7 +623,7 @@ It needs to define where it intends to win:
 - governance discipline
 - methodical restraint and clarity
 
-### 11.5 Category Capability Benchmark
+### 11.6 Category Capability Benchmark
 
 Loep does not aim to copy Culture Amp, Qualtrics, Gallup, or Perceptyx one-to-one. However, to become credible in the same buying context, the product must be evaluated against a fixed category capability benchmark.
 
@@ -730,10 +745,10 @@ Recommended second-wave specs:
 5. `Governed Drilldown & Analysis Environment`
 6. `Text & Open Comment Intelligence`
 7. `Listening Program Operations`
+8. `Action & Follow-through System`
 
 Recommended later-wave specs:
 
-8. `Action & Follow-through System`
 9. `Follow-On Architecture`
 10. `Benchmark & Reference Layer`
 
@@ -770,10 +785,10 @@ Recommended second-wave planning order:
 5. `Governed Drilldown & Analysis Environment` plan
 6. `Text & Open Comment Intelligence` plan
 7. `Listening Program Operations` plan
+8. `Action & Follow-through System` plan
 
 Recommended third-wave planning order:
 
-8. `Action & Follow-through System` plan
 9. `Follow-On Architecture` plan
 10. `Benchmark & Reference Layer` plan
 
@@ -847,6 +862,13 @@ After approval of this operating system, the next required artifact sequence sho
 3. create the first-wave specs in the priority order defined above
 4. create a 90-day product maturity plan
 5. create a pilot-readiness gate
+
+Each artifact in that sequence must define its own acceptance criteria, including:
+
+- what "done" means
+- who can approve it
+- whether it is launch-critical
+- which next artifact it unlocks
 
 Do not jump directly from this document into broad implementation.
 
