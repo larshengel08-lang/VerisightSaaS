@@ -151,6 +151,20 @@ export function getActionCenterGovernanceSignalLabel(code: ActionCenterGovernanc
   }
 }
 
+function getGovernanceRouteFamilyLabel(scanType: ActionCenterRouteDefaultsKnownScanType | string | null | undefined) {
+  const routeDefaults = getActionCenterEnabledRouteDefaults(scanType)
+
+  if (routeDefaults?.scanType === 'retention') {
+    return 'RetentieScan'
+  }
+
+  if (routeDefaults?.scanType === 'exit') {
+    return 'ExitScan'
+  }
+
+  return null
+}
+
 function normalizeDateString(value: string | null | undefined) {
   const trimmed = value?.trim() ?? ''
   return trimmed.length > 0 ? trimmed : null
@@ -275,7 +289,7 @@ export function deriveActionCenterRouteGovernanceSignals(args: {
   ).length
   const signals: ActionCenterGovernanceSignal[] = []
 
-  if (isActiveRouteStatus(routeStatus) && totalActionCount === 0 && !routeReadyForCloseout) {
+  if (isActiveRouteStatus(routeStatus) && activeActionCount === 0 && !routeReadyForCloseout) {
     signals.push({
       code: 'missing_action_where_execution_is_expected',
       label: getActionCenterGovernanceSignalLabel('missing_action_where_execution_is_expected'),
@@ -373,7 +387,7 @@ export function deriveActionCenterRouteGovernanceSignals(args: {
   return {
     routeId: args.item.coreSemantics.route.routeId,
     scopeLabel: args.item.teamLabel,
-    sourceLabel: args.item.sourceLabel,
+    sourceLabel: getGovernanceRouteFamilyLabel(args.scanType) ?? args.item.sourceLabel,
     reviewDateLabel: args.item.reviewDateLabel,
     signals,
   }

@@ -21,6 +21,10 @@ type ActionCenterReviewRhythmConfigRow = {
   reminders_enabled: boolean | null
 }
 
+type GovernanceMergedAttentionItem = ReturnType<typeof buildActionCenterReviewOversightSummary>['attentionItems'][number] & {
+  governanceSignals?: NonNullable<ReturnType<typeof deriveActionCenterRouteGovernanceSignals>>['signals']
+}
+
 function getReviewRhythmRouteId(item: Pick<ActionCenterPreviewItem, 'coreSemantics'>) {
   return item.coreSemantics.route.routeId
 }
@@ -36,6 +40,26 @@ function normalizeConfigRow(row: ActionCenterReviewRhythmConfigRow): ActionCente
     escalation_lead_days: row.escalation_lead_days,
     reminders_enabled: row.reminders_enabled,
   })
+}
+
+function sortOversightAttentionItems(items: GovernanceMergedAttentionItem[]) {
+  const priority = (state: GovernanceMergedAttentionItem['state']) => {
+    if (state === 'escalation-sensitive') return 0
+    if (state === 'stale') return 1
+    return 2
+  }
+
+  return items
+    .slice()
+    .sort((left, right) => {
+      const stateDiff = priority(left.state) - priority(right.state)
+      if (stateDiff !== 0) {
+        return stateDiff
+      }
+
+      return left.scopeLabel.localeCompare(right.scopeLabel)
+    })
+    .slice(0, 5)
 }
 
 function mergeGovernanceIntoOversight(args: {
@@ -57,7 +81,7 @@ function mergeGovernanceIntoOversight(args: {
       .map((snapshot) => [snapshot.routeId, snapshot] as const),
   )
 
-  const mergedAttentionItems = args.oversight.attentionItems.map((item) => {
+  const mergedAttentionItems: GovernanceMergedAttentionItem[] = args.oversight.attentionItems.map((item) => {
     const governance = governanceByRouteId.get(item.routeId)
     if (!governance) {
       return item
@@ -90,7 +114,7 @@ function mergeGovernanceIntoOversight(args: {
 
   return {
     ...args.oversight,
-    attentionItems: mergedAttentionItems,
+    attentionItems: sortOversightAttentionItems(mergedAttentionItems),
   }
 }
 

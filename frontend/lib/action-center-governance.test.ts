@@ -525,6 +525,55 @@ describe('action center governance helpers', () => {
     expect(closeoutReady?.signals.map((signal) => signal.code)).toEqual(['route_ready_for_closeout'])
   })
 
+  it('flags missing execution when a route only has historical action cards and no active bounded action remains', () => {
+    const executionGap = deriveActionCenterRouteGovernanceSignals({
+      item: buildGovernanceItem({
+        id: 'route-historical-only',
+        status: 'in-uitvoering',
+        reviewDate: '2026-05-28',
+        reviewDateLabel: '28 mei',
+        coreSemantics: {
+          route: {
+            routeId: 'route-historical-only',
+            routeOpenedAt: '2026-05-01T09:00:00.000Z',
+            reviewCompletedAt: null,
+            hasFollowUpTarget: false,
+          },
+          decisionHistory: [],
+          routeActionCards: [
+            buildRouteActionCard({
+              actionId: 'action-finished-1',
+              status: 'afgerond',
+              latestReview: buildActionReview({
+                actionReviewId: 'review-finished-1',
+                actionId: 'action-finished-1',
+                actionOutcome: 'effect-zichtbaar',
+              }),
+            }),
+            buildRouteActionCard({
+              actionId: 'action-finished-2',
+              status: 'gestopt',
+            }),
+          ],
+          routeCloseout: {
+            closeoutStatus: null,
+            closeoutReason: null,
+            closeoutNote: null,
+            closedAt: null,
+            closedByRole: null,
+            readyForCloseout: false,
+          },
+        },
+      }) as never,
+      scanType: 'exit',
+      now: new Date('2026-05-20T12:00:00.000Z'),
+    })
+
+    expect(executionGap?.signals.map((signal) => signal.code)).toEqual([
+      'missing_action_where_execution_is_expected',
+    ])
+  })
+
   it('keeps blocked route families out of bounded HR governance derivation', () => {
     expect(
       deriveActionCenterRouteGovernanceSignals({
