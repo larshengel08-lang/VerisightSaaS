@@ -49,10 +49,21 @@ function createInsertQuery(result: { data: unknown; error: unknown }) {
   }
 }
 
-function createUpdateQuery(result: { error: unknown }) {
+function createUpdateQuery(result: { data?: unknown; error: unknown }) {
+  const resolvedData = result.error
+    ? null
+    : Object.prototype.hasOwnProperty.call(result, 'data')
+      ? result.data
+      : { id: 'updated-action-1' }
+
   return {
     update: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockResolvedValue(result),
+    eq: vi.fn().mockReturnThis(),
+    select: vi.fn().mockReturnThis(),
+    maybeSingle: vi.fn().mockResolvedValue({
+      data: resolvedData,
+      error: result.error,
+    }),
   }
 }
 
@@ -601,5 +612,90 @@ describe('action center action reviews route', () => {
     expect(updateQuery.update).toHaveBeenCalledTimes(1)
     expect(deleteQuery.delete).toHaveBeenCalledTimes(1)
     expect(deleteQuery.eq).toHaveBeenCalledWith('id', 'review-rollback-2')
+  })
+
+  it('treats a zero-row action status update as a failure and compensates the inserted review', async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: { id: 'manager-1' },
+      },
+    })
+    mockLoadSuiteAccessContext.mockResolvedValue({
+      context: { isVerisightAdmin: false },
+      workspaceMemberships: [
+        {
+          org_id: 'org-1',
+          user_id: 'manager-1',
+          access_role: 'manager_assignee',
+          scope_type: 'department',
+          scope_value: 'org-1::department::operations',
+          can_view: true,
+          can_update: true,
+        },
+      ],
+    })
+
+    const insertQuery = createInsertQuery({
+      data: {
+        id: 'review-rollback-3',
+        action_id: 'action-15',
+        reviewed_at: '2026-05-12T09:30:00.000Z',
+        observation: 'The status update matched zero rows after the review insert.',
+        action_outcome: 'bijsturen-nodig',
+        follow_up_note: 'Treat missing confirmation as a failed write.',
+      },
+      error: null,
+    })
+    const updateQuery = createUpdateQuery({ data: null, error: null })
+    const deleteQuery = createDeleteQuery({ error: null })
+    let routeActionTableCalls = 0
+    let actionReviewTableCalls = 0
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'action_center_route_actions') {
+        routeActionTableCalls += 1
+        if (routeActionTableCalls === 1) {
+          return createActionQuery({
+            data: {
+              id: 'action-15',
+              org_id: 'org-1',
+              route_scope_type: 'department',
+              route_scope_value: 'org-1::department::operations',
+              manager_user_id: 'manager-1',
+              primary_action_status: 'in_review',
+            },
+            error: null,
+          })
+        }
+
+        return updateQuery
+      }
+
+      if (table === 'action_center_action_reviews') {
+        actionReviewTableCalls += 1
+        return actionReviewTableCalls === 1 ? insertQuery : deleteQuery
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest({
+        action_id: 'action-15',
+        reviewed_at: '2026-05-12T09:30:00.000Z',
+        observation: 'The status update matched zero rows after the review insert.',
+        action_outcome: 'bijsturen-nodig',
+        follow_up_note: 'Treat missing confirmation as a failed write.',
+      }),
+    )
+
+    expect(response.status).toBe(500)
+    await expect(response.json()).resolves.toEqual({
+      detail: 'Route action statusupdate bevestigen mislukt.',
+    })
+    expect(insertQuery.insert).toHaveBeenCalledTimes(1)
+    expect(updateQuery.update).toHaveBeenCalledTimes(1)
+    expect(deleteQuery.delete).toHaveBeenCalledTimes(1)
+    expect(deleteQuery.eq).toHaveBeenCalledWith('id', 'review-rollback-3')
   })
 })

@@ -218,7 +218,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ detail: error?.message ?? 'Route action review opslaan mislukt.' }, { status: 500 })
   }
 
-  const { error: updateError } = await adminClient
+  const { data: updatedAction, error: updateError } = await adminClient
     .from('action_center_route_actions')
     .update({
       primary_action_status: resolvePersistedActionStatusFromSemanticState(nextActionState),
@@ -226,8 +226,10 @@ export async function POST(request: Request) {
       updated_at: new Date().toISOString(),
     })
     .eq('id', parsed.action_id)
+    .select('id')
+    .maybeSingle()
 
-  if (updateError) {
+  if (updateError || !updatedAction) {
     if (typeof data.id === 'string' && data.id.length > 0) {
       const { error: rollbackError } = await adminClient
         .from('action_center_action_reviews')
@@ -242,7 +244,10 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({ detail: updateError.message }, { status: 500 })
+    return NextResponse.json(
+      { detail: updateError?.message ?? 'Route action statusupdate bevestigen mislukt.' },
+      { status: 500 },
+    )
   }
 
   return NextResponse.json({ review: data }, { status: 200 })
