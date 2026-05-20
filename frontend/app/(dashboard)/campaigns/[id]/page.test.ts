@@ -121,4 +121,15 @@ describe('campaign detail management-read guardrails', () => {
     expect(source).toContain('Segment deep dive is niet geactiveerd; de organisatiebrede read blijft daarom leidend.')
     expect(source).toContain('Segment deep dive is ingericht, maar governed export blijft dicht tot de baseline formeel is vrijgegeven.')
   })
+
+  it('surfaces premium board deliverables and bounded text-safety states directly in the culture read layer', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('Boardroom PDF-deck')
+    expect(source).toContain('Pilot delivery-ready')
+    expect(source).toContain('Executive one-pager')
+    expect(source).toContain('Blueprint, nog geen standaarddeliverable')
+    expect(source).toContain('Veilige samenvatting zichtbaar')
+    expect(source).toContain('Verborgen door drempel of gevoelige inhoud')
+  })
 })

@@ -2314,6 +2314,57 @@ export default async function CampaignPage({ params }: Props) {
       id: section.id,
       label: section.title,
     }))
+    const cultureOutputReadiness = scanDefinition.outputReadiness ?? {}
+    const cultureDeliveryPanels = [
+      {
+        eyebrow: "Pilot deliverable",
+        title: "Boardroom PDF-deck",
+        body:
+          cultureOutputReadiness.boardroomDeck === "pilot_delivery_ready"
+            ? "Pilot delivery-ready. Gebruik deze decklaag als begeleide board-read deliverable binnen dezelfde governance als het boardrapport."
+            : "Decklaag nog niet vrijgegeven als pilot-deliverable.",
+        tone: "blue" as const,
+      },
+      {
+        eyebrow: "Executive samenvatting",
+        title: "Executive one-pager",
+        body:
+          cultureOutputReadiness.executiveOnePager === "blueprint_ready"
+            ? "Blueprint, nog geen standaarddeliverable. Gebruik alleen begeleid totdat de one-pager dezelfde productrail draagt als boardrapport en deck."
+            : "Executive samenvatting volgt de bounded premium deliveryrail.",
+        tone: "amber" as const,
+      },
+      {
+        eyebrow: "Governed verdieping",
+        title: "HR appendix en segmentexport",
+        body:
+          "HR appendix en segmentexport blijven governed outputs: alleen na baselinevrijgave, boven threshold en binnen owner/admin-governance.",
+        tone: "slate" as const,
+      },
+    ]
+    const cultureTextSafetyPanels = [
+      {
+        eyebrow: "Text safety",
+        title: "Niet verzameld of nog niet verwerkt",
+        body:
+          "Open tekst kan bewust uit staan of nog onbewerkt blijven. Tot dat moment hoort deze laag niet mee te sturen in de executive read.",
+        tone: "slate" as const,
+      },
+      {
+        eyebrow: "Text safety",
+        title: "Veilige samenvatting zichtbaar",
+        body:
+          "Alleen veilig geclusterde open signalen mogen als compacte samenvatting terugkomen. Raw quotes of respondentdetails blijven buiten beeld.",
+        tone: "emerald" as const,
+      },
+      {
+        eyebrow: "Text safety",
+        title: "Verborgen door drempel of gevoelige inhoud",
+        body:
+          "Onder drempel, gevoelige inhoud of ontbrekende goedkeuring betekent suppressie. Deze executive laag kiest dan bewust voor geen open-signaaloutput.",
+        tone: "amber" as const,
+      },
+    ]
     const cultureAttentionPanels = [
       {
         eyebrow: "Bestuurlijke eerste vraag",
@@ -2606,8 +2657,21 @@ export default async function CampaignPage({ params }: Props) {
           aside={<DashboardChip label="Veilig geclusterd of verborgen" tone="amber" />}
           variant="quiet"
         >
-          <div className="rounded-[22px] border border-dashed border-slate-200 bg-white px-4 py-4 text-sm leading-6 text-slate-600">
-            Open tekst blijft in v1 alleen zichtbaar als veilige clustering bevestigd is. Tot die tijd blijft deze laag bewust compact en zonder ruwe quotes, namen of incidentdetails.
+          <div className="space-y-4">
+            <div className="rounded-[22px] border border-dashed border-slate-200 bg-white px-4 py-4 text-sm leading-6 text-slate-600">
+              Open tekst blijft in v1 alleen zichtbaar als veilige clustering bevestigd is. Tot die tijd blijft deze laag bewust compact en zonder ruwe quotes, namen of incidentdetails.
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              {cultureTextSafetyPanels.map((panel) => (
+                <DashboardPanel
+                  key={panel.title}
+                  eyebrow={panel.eyebrow}
+                  title={panel.title}
+                  body={panel.body}
+                  tone={panel.tone}
+                />
+              ))}
+            </div>
           </div>
         </DashboardSection>
 
@@ -2652,6 +2716,17 @@ export default async function CampaignPage({ params }: Props) {
                 {governedSegmentExportHint}
               </div>
             ) : null}
+            <div className="grid gap-4 md:grid-cols-3">
+              {cultureDeliveryPanels.map((panel) => (
+                <DashboardPanel
+                  key={panel.title}
+                  eyebrow={panel.eyebrow}
+                  title={panel.title}
+                  body={panel.body}
+                  tone={panel.tone}
+                />
+              ))}
+            </div>
             <MethodologyCard
               scanType={stats.scan_type}
               hasSegmentDeepDive={hasSegmentDeepDive}
