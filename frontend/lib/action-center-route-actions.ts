@@ -315,10 +315,6 @@ export function validateActionCenterRouteActionDraftInput(
       : null
   const actionText = normalizeText(input?.primary_action_text)
   const expectedEffect = normalizeText(input?.primary_action_expected_effect)
-  const rawStatus = normalizeText(input?.primary_action_status)
-  const status = rawStatus && ACTION_STATUSES.has(rawStatus as ActionCenterRouteActionStatus)
-    ? (rawStatus as ActionCenterRouteActionStatus)
-    : null
   const rawReviewScheduledFor = normalizeText(input?.review_scheduled_for)
   const reviewScheduledFor =
     rawReviewScheduledFor && isIsoDate(rawReviewScheduledFor) ? rawReviewScheduledFor : null
