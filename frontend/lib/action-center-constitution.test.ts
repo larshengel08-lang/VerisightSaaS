@@ -29,12 +29,6 @@ describe('action-center constitution', () => {
     expect(ACTION_CENTER_ACTION_SEMANTIC_STATES).toEqual([
       'draft',
       'active',
-      'review_due',
-      'in_review',
-      'blocked',
-      'completed',
-      'stopped',
-      'superseded',
     ])
   })
 

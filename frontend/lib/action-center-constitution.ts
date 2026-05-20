@@ -31,12 +31,6 @@ export type ActionCenterActionDraftDisposition = (typeof ACTION_CENTER_ACTION_DR
 export const ACTION_CENTER_ACTION_SEMANTIC_STATES = [
   'draft',
   'active',
-  'review_due',
-  'in_review',
-  'blocked',
-  'completed',
-  'stopped',
-  'superseded',
 ] as const
 
 export type ActionCenterActionSemanticState = (typeof ACTION_CENTER_ACTION_SEMANTIC_STATES)[number]
