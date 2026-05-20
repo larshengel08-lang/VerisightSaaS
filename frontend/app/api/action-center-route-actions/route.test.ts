@@ -151,6 +151,9 @@ describe('action center route actions route', () => {
     )
 
     expect(response.status).toBe(400)
+    await expect(response.json()).resolves.toEqual({
+      detail: 'Route action is outside bounded execution.',
+    })
     expect(mockAdminFrom).not.toHaveBeenCalled()
   })
 
@@ -328,10 +331,13 @@ describe('action center route actions route', () => {
     )
 
     expect(response.status).toBe(400)
+    await expect(response.json()).resolves.toEqual({
+      detail: 'Route action is outside bounded execution.',
+    })
     expect(mockAdminFrom).not.toHaveBeenCalled()
   })
 
-  it('blocks more than three active actions on a route', async () => {
+  it('blocks valid drafts when a route already has more than 2 active actions', async () => {
     mockGetUser.mockResolvedValue({
       data: {
         user: { id: 'manager-1' },
@@ -407,6 +413,9 @@ describe('action center route actions route', () => {
     const response = await POST(makeRouteActionRequest({ existingActiveActionCount: 3 }))
 
     expect(response.status).toBe(409)
+    await expect(response.json()).resolves.toEqual({
+      detail: 'Route exceeds bounded active-action limit.',
+    })
     expect(insertQuery.insert).not.toHaveBeenCalled()
   })
 

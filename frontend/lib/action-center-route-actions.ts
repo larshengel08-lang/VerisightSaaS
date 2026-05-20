@@ -240,6 +240,45 @@ function looksLikeBroadProjectLanguage(
   return matchesAnyPattern(semanticSurface, ACTION_CENTER_DRAFT_HR_REVIEW_PATTERNS)
 }
 
+function classifyActionCenterRouteActionDraft(
+  validated: ActionCenterRouteActionDraftInput,
+  options?: { rejectOutsideBoundedExecution?: boolean },
+): ValidatedActionCenterRouteActionDraft {
+  if (looksLikeEmployeeDossierLanguage(validated.primary_action_text, validated.primary_action_expected_effect)) {
+    if (options?.rejectOutsideBoundedExecution) {
+      throw new Error('Route action is outside bounded execution.')
+    }
+
+    return {
+      ...validated,
+      semanticState: 'draft',
+      validationDisposition: 'invalid',
+    }
+  }
+
+  if (!hasBoundedDraftStructure(validated)) {
+    return {
+      ...validated,
+      semanticState: 'draft',
+      validationDisposition: 'invalid',
+    }
+  }
+
+  if (looksLikeBroadProjectLanguage(validated.primary_action_text, validated.primary_action_expected_effect)) {
+    return {
+      ...validated,
+      semanticState: 'draft',
+      validationDisposition: 'needs_hr_review',
+    }
+  }
+
+  return {
+    ...validated,
+    semanticState: 'draft',
+    validationDisposition: 'valid',
+  }
+}
+
 function validatePersistedActionCenterRouteActionInput(
   input: Partial<ActionCenterRouteActionWriteInput> | null | undefined,
 ): ActionCenterRouteActionWriteInput {
@@ -339,31 +378,9 @@ export function validateActionCenterRouteActionDraftInput(
 ): ValidatedActionCenterRouteActionDraft {
   const validated = validateRequiredActionDraftFields(input)
 
-  if (looksLikeEmployeeDossierLanguage(validated.primary_action_text, validated.primary_action_expected_effect)) {
-    throw new Error('Route action is outside bounded execution.')
-  }
-
-  if (!hasBoundedDraftStructure(validated)) {
-    return {
-      ...validated,
-      semanticState: 'draft',
-      validationDisposition: 'invalid',
-    }
-  }
-
-  if (looksLikeBroadProjectLanguage(validated.primary_action_text, validated.primary_action_expected_effect)) {
-    return {
-      ...validated,
-      semanticState: 'draft',
-      validationDisposition: 'needs_hr_review',
-    }
-  }
-
-  return {
-    ...validated,
-    semanticState: 'draft',
-    validationDisposition: 'valid',
-  }
+  return classifyActionCenterRouteActionDraft(validated, {
+    rejectOutsideBoundedExecution: true,
+  })
 }
 
 export function projectActionCenterRouteActionCard(
@@ -389,24 +406,29 @@ export function projectActionCenterRouteActionCard(
     }
   }
 
-  const draft = validateActionCenterRouteActionDraftInput({
-    primary_action_theme_key: persisted.primary_action_theme_key,
-    primary_action_text: persisted.primary_action_text,
-    primary_action_expected_effect: persisted.primary_action_expected_effect,
-    primary_action_status: persisted.primary_action_status,
-    review_scheduled_for: persisted.review_scheduled_for,
-  })
+  const toleratedDraft = classifyActionCenterRouteActionDraft(
+    validateRequiredActionDraftFields({
+      primary_action_theme_key: persisted.primary_action_theme_key,
+      primary_action_text: persisted.primary_action_text,
+      primary_action_expected_effect: persisted.primary_action_expected_effect,
+      primary_action_status: persisted.primary_action_status,
+      review_scheduled_for: persisted.review_scheduled_for,
+    }),
+    {
+      rejectOutsideBoundedExecution: false,
+    },
+  )
 
   return {
     actionId: persisted.id,
     routeId: persisted.route_id,
-    themeKey: draft.primary_action_theme_key,
-    actionText: draft.primary_action_text,
-    expectedEffect: draft.primary_action_expected_effect,
-    reviewScheduledFor: draft.review_scheduled_for,
+    themeKey: toleratedDraft.primary_action_theme_key,
+    actionText: toleratedDraft.primary_action_text,
+    expectedEffect: toleratedDraft.primary_action_expected_effect,
+    reviewScheduledFor: toleratedDraft.review_scheduled_for,
     status: null,
-    semanticState: draft.semanticState,
-    validationDisposition: draft.validationDisposition,
+    semanticState: toleratedDraft.semanticState,
+    validationDisposition: toleratedDraft.validationDisposition,
     createdAt: persisted.created_at,
     updatedAt: persisted.updated_at,
   }

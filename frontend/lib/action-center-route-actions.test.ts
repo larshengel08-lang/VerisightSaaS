@@ -276,6 +276,28 @@ describe('action center route actions', () => {
     ).toThrow('Route action is outside bounded execution.')
   })
 
+  it('projects persisted dossier-like drafts as invalid draft truth instead of failing projection', async () => {
+    const { projectActionCenterRouteActionCard } = await import('./action-center-route-actions') as {
+      projectActionCenterRouteActionCard: (input: Record<string, unknown>) => Record<string, unknown>
+    }
+
+    expect(
+      projectActionCenterRouteActionCard(
+        buildCanonicalOpenActionInput({
+          primary_action_text: 'Monitor employee X in detail for risk.',
+          primary_action_expected_effect: 'Track individual risk more closely.',
+          primary_action_status: null,
+        }),
+      ),
+    ).toMatchObject({
+      status: null,
+      semanticState: 'draft',
+      validationDisposition: 'invalid',
+      actionText: 'Monitor employee X in detail for risk.',
+      expectedEffect: 'Track individual risk more closely.',
+    })
+  })
+
   it('models the hr-only promotion path from draft to active route action truth', async () => {
     const { isActionCenterCanonicalRouteStateTransitionAllowed } = await import('./action-center-constitution') as {
       isActionCenterCanonicalRouteStateTransitionAllowed: (input: Record<string, unknown>) => boolean

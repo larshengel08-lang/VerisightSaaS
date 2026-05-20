@@ -219,8 +219,13 @@ export async function POST(request: Request) {
       primary_action_status: parsed.primary_action_status,
       review_scheduled_for: parsed.review_scheduled_for,
     })
-  } catch {
-    return NextResponse.json({ detail: 'Ongeldige route action input.' }, { status: 400 })
+  } catch (error) {
+    const detail =
+      error instanceof Error && error.message === 'Route action is outside bounded execution.'
+        ? error.message
+        : 'Ongeldige route action input.'
+
+    return NextResponse.json({ detail }, { status: 400 })
   }
 
   const supabase = await createClient()
