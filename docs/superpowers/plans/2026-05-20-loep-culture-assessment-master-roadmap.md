@@ -44,7 +44,7 @@ Current maturity summary:
 
 ## 3. Roadmap Sequence
 
-The roadmap is split into four waves.
+The roadmap is split into five bounded waves.
 
 ### Wave 0 - Control Layer
 
@@ -68,6 +68,18 @@ Artifacts:
 3. methodology authority system spec
 4. premium delivery and board output system spec
 5. enterprise trust and procurement readiness spec
+6. admin and access control note
+
+### Wave 1.5 - Pilot Delivery & Listening Operations Slice
+
+Purpose:
+
+- make the product pilot-executable with a bounded annual listening cadence before deeper enterprise drilldown work
+
+Artifacts:
+
+7. listening program operations spec
+8. pilot-readiness gate
 
 ### Wave 2 - Enterprise Usability
 
@@ -77,9 +89,8 @@ Purpose:
 
 Artifacts:
 
-6. governed drilldown and analysis environment spec
-7. text and open comment intelligence spec
-8. listening program operations spec
+9. governed drilldown and analysis environment spec
+10. text and open comment intelligence spec
 
 ### Wave 3 - Controlled Expansion
 
@@ -89,9 +100,9 @@ Purpose:
 
 Artifacts:
 
-9. action and follow-through system spec
-10. follow-on architecture spec
-11. benchmark and reference layer spec
+11. action and follow-through system spec
+12. follow-on architecture spec
+13. benchmark and reference layer spec
 
 ---
 
@@ -151,6 +162,16 @@ Artifacts:
 **Next required artifact**
 
 - roadmap-owned control plus downstream trust/drilldown specs
+
+**Control subartifact**
+
+- `Admin & Access Control` note covering:
+  - roles
+  - entitlements
+  - export permissions
+  - release permissions
+  - manager-limited restrictions
+  - audit and release ownership
 
 **Dependencies**
 
@@ -843,22 +864,38 @@ Artifacts:
 1. `Methodology Authority System` spec
 2. `Premium Delivery & Board Output System` spec
 3. `Enterprise Trust & Procurement Readiness` spec
+4. `Admin & Access Control` note
 
 ### 5.2 Immediate planning artifacts after that
 
-4. 90-day product maturity plan
-5. pilot-readiness gate
+5. `Listening Program Operations` spec
+6. pilot-readiness gate
+7. 90-day product maturity plan
 
 ### 5.3 Second-wave artifact sequence
 
-6. `Governed Drilldown & Analysis Environment` spec
-7. `Text & Open Comment Intelligence` spec
-8. `Listening Program Operations` spec
-9. `Action & Follow-through System` spec
+8. `Governed Drilldown & Analysis Environment` spec
+9. `Text & Open Comment Intelligence` spec
+10. `Action & Follow-through System` spec
 
 ---
 
-## 6. Acceptance Rules for Every Next Artifact
+## 6. Pilot-Readiness Gate
+
+The first pilot may only proceed if all of the following are true:
+
+- method source is locked
+- output pack is demo-ready
+- trust and procurement FAQ is ready
+- launch-to-close operating cadence is ready
+- no unsafe exports remain
+- minimum-n and release rules are tested
+- board-read script is ready
+- first pilot constraints are accepted
+
+---
+
+## 7. Acceptance Rules for Every Next Artifact
 
 Every artifact created from this roadmap must define:
 
@@ -871,7 +908,7 @@ If any artifact does not define those four things, it is incomplete.
 
 ---
 
-## 7. Roadmap Verdict
+## 8. Roadmap Verdict
 
 The product is strong enough to justify continued investment.
 

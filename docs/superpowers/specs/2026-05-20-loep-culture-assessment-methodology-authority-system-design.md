@@ -48,6 +48,23 @@ This stream therefore exists to turn:
 
 from a positioning claim into an actual product asset.
 
+### 2.1 Named method core
+
+The working method core name for this route is:
+
+- `Loep Cultuurbeeld Methode`
+- English working label: `Loep Culture Method`
+
+This name identifies the fixed product methodology behind `Loep Culture Assessment / Loep Cultuurbeeld`.
+
+It is not a claim of:
+
+- external scientific certification
+- independent academic validation
+- psychometric finality
+
+It is the internal and commercial method identity that keeps the route stable, governable, and explainable.
+
 ---
 
 ## 3. Method Stance
@@ -351,6 +368,15 @@ That means:
 
 Any such change is a **method version event**.
 
+### 9.1 Questionnaire design rationale
+
+The current structure is intentional:
+
+- `40` items balances seriousness with a completion time that remains usable in an annual baseline
+- `4` items per domain provides minimal construct coverage without turning the route into a heavy item bank
+- one `5-point agreement scale` supports consistency, comparability, and simpler respondent interpretation
+- the structure remains fixed unless a method version event is approved
+
 ---
 
 ## 10. Scale System
@@ -405,6 +431,20 @@ This policy exists to prevent:
 - unstable domain averages
 - false confidence in low-completion response sets
 
+### 11.1 Valid response versus safe release
+
+These are different controls:
+
+- the `valid response policy` determines whether an individual response contributes to scoring
+- the `release threshold policy` determines whether aggregate results may be shown to users
+
+Normal output may render only if both conditions pass:
+
+1. valid response rules are met for the underlying scoring set
+2. release threshold and governance rules are met for the aggregate view
+
+This distinction prevents a technically scorable dataset from automatically becoming a safely releasable results view.
+
 ---
 
 ## 12. Culture Index Philosophy
@@ -427,6 +467,30 @@ It must not function as:
 Canonical index reading rule:
 
 > Read the Loep Culture Index only together with domains, response basis, segment patterns, suppression boundaries, and governance limits.
+
+### 12.1 Culture Index calculation
+
+The default calculation rule is:
+
+- calculate each valid domain score first
+- take the equal-weighted average of valid domain scores
+- calculate the index only if at least `8 of 10` domains are valid
+- transform the result consistently to the reporting scale used by the route
+
+The index must not be shown if:
+
+- valid-response rules fail
+- minimum domain-validity rules fail
+- release threshold or governance rules fail
+
+Any future change to:
+
+- domain weighting
+- minimum valid domain count
+- transformation rule
+- eligibility conditions
+
+is a **method version event**.
 
 ---
 
@@ -519,6 +583,27 @@ Board attention outputs must never include:
 
 This keeps the product disciplined until later maturity stages justify more advanced logic.
 
+### 15.1 Recurring theme pairs
+
+Recurring theme pairs are deterministic descriptive pairings between domains that may strengthen an executive reading when both domains point to the same broad pattern.
+
+They are:
+
+- descriptive only
+- never causal
+- never a substitute for domain reading
+- allowed only from the canonical pair list below
+
+Allowed pair list:
+
+1. `leadership_direction` + `trust_psychological_safety`
+2. `workload_capacity` + `autonomy_role_clarity`
+3. `collaboration_alignment` + `leadership_direction`
+4. `growth_development` + `organizational_connection_intent`
+5. `change_readiness` + `leadership_direction`
+
+Any change to the allowed pair list is a method version event.
+
 ---
 
 ## 16. What the Method Does Not Prove
@@ -563,6 +648,18 @@ This framing should appear consistently in:
 - board outputs
 - HR outputs
 - facilitator guidance
+
+### 17.1 Evidence maturity ladder
+
+The method should mature through five evidence levels:
+
+1. `Level 1 - Internal construct and item review`
+2. `Level 2 - Pilot response review and item functioning check`
+3. `Level 3 - Domain reliability view after sufficient n`
+4. `Level 4 - Cross-client stability review after multiple deployments`
+5. `Level 5 - Benchmark and reference readiness`
+
+The route may be commercially launched before Level 5, but it may not claim benchmark or reference maturity before the ladder reaches the relevant stage.
 
 ---
 
@@ -637,6 +734,12 @@ It should not sound:
 - overclaimed
 - platform-generic
 
+### 20.1 Canonical commercial method paragraph
+
+Plain Dutch core explanation:
+
+> `Loep Cultuurbeeld` meet hoe medewerkers de organisatie ervaren over tien vaste domeinen die samen een breed cultuur- en engagementbeeld geven. We gebruiken bewust tien vaste domeinen, omdat een jaarlijkse baseline alleen bestuurlijk bruikbaar is als hij breed genoeg is om echte patronen zichtbaar te maken, maar ook stabiel genoeg blijft om vergelijkbaar te meten. De `Loep Cultuurindex` is daarbij een navigatiesignaal: een samenvattend startpunt voor het organisatiebeeld, geen eindoordeel over cultuur. De uitkomsten zijn geen bewijs van oorzaak-gevolg, geen beoordeling van managers en geen individuele voorspellingen. Juist daarom horen governancegrenzen, minimum-n regels en begrensde uitlezing bij de kwaliteit van de methode en niet alleen bij privacybeleid.
+
 ---
 
 ## 21. Required Downstream Assets
@@ -662,13 +765,17 @@ That means:
 
 1. all ten domains have construct definitions
 2. the index philosophy is explicit
-3. valid-response policy is explicit
-4. board-attention logic scope is explicit
-5. non-proof boundaries are explicit
-6. evidence framing is explicit
-7. versioning rules are explicit
-8. method governance requirements are explicit
-9. the commercial method story is clear enough for sales and delivery translation
+3. index calculation and validity conditions are explicit
+4. valid-response policy is explicit
+5. valid response and safe release are explicitly separated
+6. board-attention logic scope is explicit
+7. recurring theme pairs are explicitly bounded
+8. non-proof boundaries are explicit
+9. evidence framing and maturity ladder are explicit
+10. versioning rules are explicit
+11. method governance requirements are explicit
+12. item-intent slots exist for all ten domains
+13. the commercial method story is clear enough for sales and delivery translation
 
 ---
 
@@ -706,3 +813,79 @@ It must also define clear acceptance for:
 - method source of truth
 - interpretation copy source of truth
 - versioning and governance-log ownership
+
+---
+
+## Appendix A - Item-Intent Slots by Domain
+
+These intent slots guide questionnaire writing and prevent item overlap inside each domain. They are not final item wording.
+
+### A.1 `engagement_involvement`
+
+1. day-to-day energy and involvement in work
+2. felt willingness to contribute beyond minimum role compliance
+3. perceived meaning and relevance of contribution
+4. active participation in organizational life
+
+### A.2 `trust_psychological_safety`
+
+1. comfort raising concerns or mistakes
+2. confidence that colleagues or leaders respond constructively
+3. perceived openness to dissenting views
+4. sense of relational trust in immediate work context
+
+### A.3 `leadership_direction`
+
+1. clarity of organizational direction
+2. understandability of leadership choices
+3. consistency between priorities and messaging
+4. confidence that direction is coherent enough to act on
+
+### A.4 `collaboration_alignment`
+
+1. practical cooperation across teams or units
+2. alignment around shared goals and priorities
+3. quality of coordination and handoffs
+4. ability to resolve friction or dependency issues
+
+### A.5 `workload_capacity`
+
+1. manageability of workload volume
+2. sustainability of pace and pressure
+3. adequacy of time or resources to do work well
+4. sense that work demands fit realistic capacity
+
+### A.6 `autonomy_role_clarity`
+
+1. clarity of role expectations
+2. understanding of decision space and ownership
+3. ability to organize work with enough discretion
+4. fit between accountability and control
+
+### A.7 `growth_development`
+
+1. access to learning or development opportunities
+2. perceived room to build capability
+3. visibility of growth perspective
+4. support for development in current role
+
+### A.8 `change_readiness`
+
+1. understanding of ongoing change
+2. confidence in the organization’s ability to adapt
+3. practical readiness to work through change
+4. felt capacity to absorb change without losing direction
+
+### A.9 `reward_conditions`
+
+1. perceived fairness of reward and recognition
+2. workability of core employment conditions
+3. credibility of how conditions are applied
+4. sense that conditions support sustained contribution
+
+### A.10 `organizational_connection_intent`
+
+1. sense of belonging to the organization
+2. pride or identification with the organization
+3. willingness to remain meaningfully connected
+4. intention to continue contributing in the near future

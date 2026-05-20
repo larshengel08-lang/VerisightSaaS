@@ -42,6 +42,12 @@ Reference points used:
 - Culture Amp positions itself around engagement, performance, development, benchmarks, action planning, dashboards, and retention insights. Source: [Culture Amp employee engagement platform](https://www.cultureamp.com/platform/employee-engagement), [Culture Amp insights](https://www.cultureamp.com/science/insights), [Culture Amp Action Dashboard](https://support.cultureamp.com/en/articles/7048527-admin-s-action-dashboard), [Culture Amp retention insights access](https://support.cultureamp.com/en/articles/8753201-granting-access-to-the-retention-insights-dashboard)
 - Qualtrics positions employee experience as a broader suite with employee listening, passive listening, AI analysis, retention analytics, action planning, workflow breadth, lifecycle programs, and enterprise EX credibility. Source: [Qualtrics employee experience](https://www.qualtrics.com/employee-experience/), [Qualtrics employee listening](https://www.qualtrics.com/employee-experience/employee-listening/), [Qualtrics employee engagement](https://www.qualtrics.com/employee-experience/employee-engagement/), [Qualtrics action planning](https://www.qualtrics.com/support/employee-experience/creating-ee-project/dashboards-tab/action-planning-ex/creating-action-plans/), [Qualtrics EX25 solution](https://www.qualtrics.com/support/common-use-case/xm-solutions/ex25-xm-solution/)
 
+### 2.1 Competitive source review cadence
+
+- review the comparison set every `6 months`
+- update this benchmark only if competitor positioning or category expectations materially change
+- source updates do not automatically create product scope
+
 ---
 
 ## 3. Rating Model
@@ -115,6 +121,22 @@ The next artifact must be explicit:
 
 - `yes`
 
+**Launch blocker**
+
+- `yes`
+
+**Minimum launch bar**
+
+- named method core exists
+- fixed domain model, valid-response policy, and index philosophy are locked
+- claim-safe method note exists for board and HR explanation
+
+**Evidence required before claiming**
+
+- internal construct and item review completed
+- method source, versioning rule, and non-proof language locked
+- pilot-ready explanation reviewed by product and delivery owners
+
 **Top-tier relevance**
 
 - `high`
@@ -157,6 +179,22 @@ The next artifact must be explicit:
 
 - `yes`
 
+**Launch blocker**
+
+- `yes`
+
+**Minimum launch bar**
+
+- bounded annual baseline launch-to-close cadence exists
+- invite, reminder, closure, and release protocol are defined
+- pilot delivery checklist and board-read handoff exist
+
+**Evidence required before claiming**
+
+- one end-to-end pilot operating cadence walkthrough completed
+- launch, close, and release decisions can be explained without improvisation
+- pilot constraints are documented and accepted
+
 **Top-tier relevance**
 
 - `high`
@@ -198,6 +236,22 @@ The next artifact must be explicit:
 
 - `yes`
 
+**Launch blocker**
+
+- `yes`
+
+**Minimum launch bar**
+
+- board report, executive read, and governed cascade logic are structurally complete
+- manager/cascade outputs are clearly bounded and non-ranking
+- premium output readiness state is explicit per artifact
+
+**Evidence required before claiming**
+
+- demo pack reviewed against board, HR, and manager-safe reading rules
+- claim-safe copy review completed
+- facilitator can explain what is and is not shown per audience
+
 **Top-tier relevance**
 
 - `high`
@@ -238,6 +292,22 @@ The next artifact must be explicit:
 **Launch-critical**
 
 - `partial`
+
+**Launch blocker**
+
+- `partial`
+
+**Minimum launch bar**
+
+- organization-level release logic is safe
+- any segment drilldown shown is thresholded and governed
+- export logic is bounded to safe aggregate layers
+
+**Evidence required before claiming**
+
+- threshold and suppression behavior tested
+- hidden-layer reason model documented
+- role and entitlement assumptions reviewed with delivery owners
 
 **Top-tier relevance**
 
@@ -281,6 +351,22 @@ The next artifact must be explicit:
 
 - `partial`
 
+**Launch blocker**
+
+- `partial`
+
+**Minimum launch bar**
+
+- no raw comment dependence in executive output
+- open text is either disabled or clustered and safe
+- sensitive-content suppression policy exists
+
+**Evidence required before claiming**
+
+- role-safe summary rules documented
+- threshold and suppression policy reviewed
+- no unsafe quote path remains in pilot outputs
+
 **Top-tier relevance**
 
 - `high`
@@ -323,6 +409,22 @@ The next artifact must be explicit:
 
 - `partial`
 
+**Launch blocker**
+
+- `no`
+
+**Minimum launch bar**
+
+- bounded board/HR follow-through structure exists
+- no workflow-platform behavior is implied
+- Pulse remains follow-on only
+
+**Evidence required before claiming**
+
+- decision-question structure documented
+- 30/60/90 review logic drafted
+- cascade boundaries reviewed for governance safety
+
 **Top-tier relevance**
 
 - `high`
@@ -362,6 +464,22 @@ The next artifact must be explicit:
 **Launch-critical**
 
 - `no`
+
+**Launch blocker**
+
+- `no`
+
+**Minimum launch bar**
+
+- readiness requirements are documented
+- no benchmark promise is sold in launch materials
+- versioning and metadata dependencies are known
+
+**Evidence required before claiming**
+
+- benchmark-readiness checklist exists
+- questionnaire and scoring versioning are stable enough to preserve comparability
+- reference-data governance assumptions are documented
 
 **Top-tier relevance**
 
@@ -404,6 +522,22 @@ The next artifact must be explicit:
 
 - `yes`
 
+**Launch blocker**
+
+- `yes`
+
+**Minimum launch bar**
+
+- privacy/process role explanation exists
+- trust/procurement FAQ exists
+- retention, export, and access boundaries are documented
+
+**Evidence required before claiming**
+
+- FAQ and trust pack reviewed by product owner
+- unsupported security and compliance claims removed
+- buyer-facing explanation is consistent with actual operating capability
+
 **Top-tier relevance**
 
 - `high`
@@ -444,6 +578,22 @@ The next artifact must be explicit:
 
 - `yes`
 
+**Launch blocker**
+
+- `yes`
+
+**Minimum launch bar**
+
+- role model and entitlements are explicit
+- export permissions and release permissions are explicit
+- manager-limited restrictions and audit/release ownership are explicit
+
+**Evidence required before claiming**
+
+- role matrix reviewed against route governance
+- export and release ownership documented
+- restricted-role behavior tested for pilot surfaces
+
 **Top-tier relevance**
 
 - `high`
@@ -482,6 +632,22 @@ The next artifact must be explicit:
 **Launch-critical**
 
 - `yes`
+
+**Launch blocker**
+
+- `yes`
+
+**Minimum launch bar**
+
+- launch, readout, and board-delivery steps can be repeated without ad hoc reinvention
+- quality bar exists for the premium output pack
+- preparation time and turnaround expectation are explicit
+
+**Evidence required before claiming**
+
+- at least one internal dry run of launch-to-board cadence completed
+- output pack can be reviewed without live customer dependency
+- delivery owner can explain what is manual, semi-automated, and automated
 
 **Top-tier relevance**
 
