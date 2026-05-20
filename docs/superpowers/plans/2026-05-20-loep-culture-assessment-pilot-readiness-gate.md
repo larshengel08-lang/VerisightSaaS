@@ -157,7 +157,7 @@ The same person may hold multiple roles in the first pilot, but ownership may no
 
 ## 6. Immediate Next Step
 
-After this gate is first populated, the next required artifact is:
+After this gate and the four first implementation plans exist, the next required step is:
 
-- the 90-day product maturity plan
-
+- populate this gate with real statuses during execution
+- produce an explicit `go`, `go with bounded accepted risks`, or `no-go` decision

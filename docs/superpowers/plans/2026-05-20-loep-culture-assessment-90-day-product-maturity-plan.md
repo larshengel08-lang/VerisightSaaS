@@ -159,10 +159,8 @@ without becoming:
 
 ## 7. Immediate Next Step
 
-After this plan is accepted, the next required artifacts should be:
+After this plan and the four first implementation plans exist, the next required step should be:
 
-- the methodology implementation plan
-- the premium delivery implementation plan
-- the trust/procurement implementation plan
-- the listening operations implementation plan
-
+- execute the methodology and premium delivery plans first
+- execute the trust/procurement and listening operations plans second
+- populate the pilot-readiness gate with real status and bounded risks
