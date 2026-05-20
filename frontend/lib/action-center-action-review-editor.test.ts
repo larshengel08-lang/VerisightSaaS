@@ -33,4 +33,22 @@ describe('ActionCenterActionReviewEditor', () => {
     expect(html).not.toContain('HR check')
     expect(html).not.toContain('Operationele indicator')
   })
+
+  it('can render a persisted-only review form without collecting dropped fields', () => {
+    const html = renderToStaticMarkup(
+      React.createElement(ActionCenterActionReviewEditor, {
+        onSave: vi.fn(),
+        includeStructuredMetadata: false,
+      }),
+    )
+
+    expect(html).toContain('Review opslaan')
+    expect(html).toContain('Wat zagen we terug?')
+    expect(html).toContain('Uitkomst')
+    expect(html).toContain('Korte toelichting')
+    expect(html).not.toContain('Bron van observatie')
+    expect(html).not.toContain('Hoe zeker zijn we hiervan?')
+    expect(html).not.toContain('Managerobservatie')
+    expect(html).not.toContain('Gemiddeld')
+  })
 })

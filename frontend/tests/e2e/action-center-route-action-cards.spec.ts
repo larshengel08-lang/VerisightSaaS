@@ -74,12 +74,11 @@ test.describe('action center route action cards', () => {
 
   const pilot = artifact as RouteActionPilotArtifact
 
-  test('manager can add multiple themed actions under one route and save a per-action review', async ({ page }) => {
+  test('manager can add multiple themed actions under one route without treating new drafts as instantly reviewable', async ({ page }) => {
     const manager = pilot.managers[0]
     const suffix = Date.now().toString().slice(-6)
     const firstAction = `Plan deze week een gericht teamgesprek over leiderschapsfeedback ${suffix}.`
     const secondAction = `Leg deze week een gericht groeigesprek vast in het teamoverleg ${suffix}.`
-    const reviewObservation = `Het team noemt groei explicieter sinds de tweede actie ${suffix}.`
 
     await login(page, manager.email, manager.password)
     await page.waitForURL(/\/action-center$/)
@@ -103,6 +102,11 @@ test.describe('action center route action cards', () => {
 
     await expect(page.getByText(firstAction)).toBeVisible()
     await expect(page.getByText('Review 15 mei 2026')).toBeVisible()
+    const firstDraftCard = page
+      .getByText(firstAction)
+      .locator('xpath=ancestor::div[contains(@class, "rounded-[18px]")][1]')
+    await expect(firstDraftCard.getByText('Nog niet reviewbaar')).toBeVisible()
+    await expect(firstDraftCard.getByRole('button', { name: 'Review toevoegen', exact: true })).toHaveCount(0)
 
     await page.getByRole('button', { name: 'Actie toevoegen', exact: true }).click()
     await routeActionEditor(page).getByLabel('Thema').selectOption('growth')
@@ -120,30 +124,25 @@ test.describe('action center route action cards', () => {
 
     await expect(page.getByText(secondAction)).toBeVisible()
     await expect(page.getByText('Review 20 mei 2026')).toBeVisible()
-
-    await page.getByRole('button', { name: 'Review toevoegen', exact: true }).first().click()
-    await page.getByLabel('Wat zagen we terug?').fill(reviewObservation)
-    await page.getByLabel('Uitkomst').selectOption('effect-zichtbaar')
-    await page.getByLabel('Bron van observatie').selectOption('manager-observation')
-    await page.getByLabel('Hoe zeker zijn we hiervan?').selectOption('medium')
-    await page.getByLabel('Korte toelichting').fill('Nog een week monitoren en dan afronden.')
-    await page.getByRole('button', { name: 'Review opslaan', exact: true }).click()
-
-    const reviewedActionCard = page
-      .getByText(firstAction)
+    const secondDraftCard = page
+      .getByText(secondAction)
       .locator('xpath=ancestor::div[contains(@class, "rounded-[18px]")][1]')
-
-    await expect(reviewedActionCard.getByText(reviewObservation)).toBeVisible()
-    await expect(reviewedActionCard.getByRole('button', { name: 'Review toevoegen', exact: true })).toHaveCount(0)
+    await expect(secondDraftCard.getByText('Nog niet reviewbaar')).toBeVisible()
+    await expect(secondDraftCard.getByRole('button', { name: 'Review toevoegen', exact: true })).toHaveCount(0)
 
     await openFocusedRoute(page, pilot.routeContext.focusItemId)
-    const reopenedReviewedActionCard = page
+    const reopenedFirstDraftCard = page
       .getByText(firstAction)
       .locator('xpath=ancestor::div[contains(@class, "rounded-[18px]")][1]')
+    const reopenedSecondDraftCard = page
+      .getByText(secondAction)
+      .locator('xpath=ancestor::div[contains(@class, "rounded-[18px]")][1]')
 
-    await expect(reopenedReviewedActionCard).toBeVisible()
-    await expect(page.getByText(secondAction)).toBeVisible()
-    await expect(reopenedReviewedActionCard.getByText(reviewObservation)).toBeVisible()
-    await expect(reopenedReviewedActionCard.getByRole('button', { name: 'Review toevoegen', exact: true })).toHaveCount(0)
+    await expect(reopenedFirstDraftCard).toBeVisible()
+    await expect(reopenedSecondDraftCard).toBeVisible()
+    await expect(reopenedFirstDraftCard.getByText('Nog niet reviewbaar')).toBeVisible()
+    await expect(reopenedSecondDraftCard.getByText('Nog niet reviewbaar')).toBeVisible()
+    await expect(reopenedFirstDraftCard.getByRole('button', { name: 'Review toevoegen', exact: true })).toHaveCount(0)
+    await expect(reopenedSecondDraftCard.getByRole('button', { name: 'Review toevoegen', exact: true })).toHaveCount(0)
   })
 })

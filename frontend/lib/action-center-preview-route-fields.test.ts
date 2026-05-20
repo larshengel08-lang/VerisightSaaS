@@ -158,6 +158,14 @@ describe('action center preview route fields', () => {
         },
         resultProgression: [],
         decisionHistory: [],
+        lineageSummary: {
+          overviewLabel: null,
+          backwardLabel: null,
+          backwardRouteId: null,
+          forwardLabel: null,
+          forwardRouteId: null,
+          detailLabels: [],
+        },
         routeActionCards: [
           {
             actionId: 'action-1',
@@ -165,7 +173,7 @@ describe('action center preview route fields', () => {
             actionText: 'Plan twee teamgesprekken over leiderschapsfeedback.',
             reviewScheduledFor: '2026-05-15',
             expectedEffect: 'Zichtbaar maken of leiderschapsfrictie de hoofdreden is.',
-            status: 'open',
+            status: null,
             latestReview: null,
           },
           {
@@ -175,14 +183,17 @@ describe('action center preview route fields', () => {
             reviewScheduledFor: '2026-05-20',
             expectedEffect: 'Zichtbaar maken of gebrek aan ontwikkelperspectief terugkomt.',
             status: 'in_review',
-            latestReview: {
-              reviewedAt: '2026-05-18T09:00:00.000Z',
-              observation: 'Het team noemt groei explicieter dan in de vorige ronde.',
-              actionOutcome: 'effect-zichtbaar',
-              followUpNote: 'Nog een week monitoren en dan afronden.',
-            },
+            latestReview: null,
           },
         ],
+        routeCloseout: {
+          closeoutStatus: null,
+          closeoutReason: null,
+          closeoutNote: null,
+          closedAt: null,
+          closedByRole: null,
+          readyForCloseout: false,
+        },
         closingSemantics: {
           status: 'lopend',
           summary: null,
@@ -211,8 +222,10 @@ describe('action center preview route fields', () => {
     expect(html).toContain('Leg groeigesprekken vast in het volgende teamoverleg.')
     expect(html).toContain('Leiderschap')
     expect(html).toContain('Groei en perspectief')
-    expect(html).toContain('Het team noemt groei explicieter dan in de vorige ronde.')
+    expect(html).toContain('Nog niet reviewbaar')
     expect(html).toContain('Actie toevoegen')
     expect(html).toContain('Review toevoegen')
+    expect(html).not.toContain('Bron van observatie')
+    expect(html).not.toContain('Hoe zeker zijn we hiervan?')
   })
 })

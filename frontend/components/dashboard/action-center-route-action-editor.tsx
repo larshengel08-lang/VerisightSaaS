@@ -14,7 +14,7 @@ export interface ActionCenterRouteActionEditorValue {
 }
 
 interface Props {
-  onSave(value: ActionCenterRouteActionEditorValue): Promise<void> | void
+  onSave(value: ActionCenterRouteActionEditorValue): Promise<boolean | void> | boolean | void
   pending?: boolean
   error?: string | null
   submitLabel?: string
@@ -27,6 +27,10 @@ const EMPTY_VALUE: ActionCenterRouteActionEditorValue = {
   expectedEffect: '',
 }
 
+export function shouldResetActionCenterRouteActionEditorAfterSave(result: boolean | void) {
+  return result !== false
+}
+
 export function ActionCenterRouteActionEditor({
   onSave,
   pending = false,
@@ -37,8 +41,10 @@ export function ActionCenterRouteActionEditor({
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    await onSave(value)
-    setValue(EMPTY_VALUE)
+    const result = await onSave(value)
+    if (shouldResetActionCenterRouteActionEditorAfterSave(result)) {
+      setValue(EMPTY_VALUE)
+    }
   }
 
   return (

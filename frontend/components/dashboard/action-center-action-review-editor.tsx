@@ -23,6 +23,7 @@ interface Props {
   pending?: boolean
   error?: string | null
   submitLabel?: string
+  includeStructuredMetadata?: boolean
 }
 
 const OUTCOME_OPTIONS: Array<{ value: ActionCenterActionOutcome; label: string }> = [
@@ -69,6 +70,7 @@ export function ActionCenterActionReviewEditor({
   pending = false,
   error = null,
   submitLabel = 'Review opslaan',
+  includeStructuredMetadata = true,
 }: Props) {
   const [value, setValue] = useState<ActionCenterActionReviewEditorValue>({
     observation: '',
@@ -103,7 +105,7 @@ export function ActionCenterActionReviewEditor({
         />
       </FormField>
 
-      <div className="grid gap-3 md:grid-cols-[1.1fr_1fr_0.8fr]">
+      <div className={includeStructuredMetadata ? 'grid gap-3 md:grid-cols-[1.1fr_1fr_0.8fr]' : 'grid gap-3 md:grid-cols-1'}>
         <FormField label="Uitkomst">
           <select
             value={value.actionOutcome}
@@ -117,44 +119,48 @@ export function ActionCenterActionReviewEditor({
             ))}
           </select>
         </FormField>
-        <FormField label="Bron van observatie">
-          <select
-            value={value.evidenceSource}
-            onChange={(event) =>
-              setValue((current) => ({
-                ...current,
-                evidenceSource: event.target.value as ActionCenterActionEvidenceSource,
-              }))
-            }
-            className="w-full rounded-2xl border border-white/12 bg-white/[0.06] px-4 py-3 text-sm text-white/90 outline-none transition focus:border-[#ffb16e]"
-          >
-            {EVIDENCE_SOURCE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value} className="text-[#132033]">
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </FormField>
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-3">
-          <FormField label="Hoe zeker zijn we hiervan?" labelClassName="text-[11px] uppercase tracking-[0.14em] text-white/52">
+        {includeStructuredMetadata ? (
+          <FormField label="Bron van observatie">
             <select
-              value={value.confidenceLevel}
+              value={value.evidenceSource}
               onChange={(event) =>
                 setValue((current) => ({
                   ...current,
-                  confidenceLevel: event.target.value as ActionCenterActionConfidenceLevel,
+                  evidenceSource: event.target.value as ActionCenterActionEvidenceSource,
                 }))
               }
-              className="w-full rounded-2xl border border-white/12 bg-white/[0.06] px-3 py-3 text-sm text-white/82 outline-none transition focus:border-[#ffb16e]"
+              className="w-full rounded-2xl border border-white/12 bg-white/[0.06] px-4 py-3 text-sm text-white/90 outline-none transition focus:border-[#ffb16e]"
             >
-              {CONFIDENCE_OPTIONS.map((option) => (
+              {EVIDENCE_SOURCE_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value} className="text-[#132033]">
                   {option.label}
                 </option>
               ))}
             </select>
           </FormField>
-        </div>
+        ) : null}
+        {includeStructuredMetadata ? (
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-3">
+            <FormField label="Hoe zeker zijn we hiervan?" labelClassName="text-[11px] uppercase tracking-[0.14em] text-white/52">
+              <select
+                value={value.confidenceLevel}
+                onChange={(event) =>
+                  setValue((current) => ({
+                    ...current,
+                    confidenceLevel: event.target.value as ActionCenterActionConfidenceLevel,
+                  }))
+                }
+                className="w-full rounded-2xl border border-white/12 bg-white/[0.06] px-3 py-3 text-sm text-white/82 outline-none transition focus:border-[#ffb16e]"
+              >
+                {CONFIDENCE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value} className="text-[#132033]">
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </FormField>
+          </div>
+        ) : null}
       </div>
 
       <FormField label="Korte toelichting">
