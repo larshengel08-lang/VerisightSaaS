@@ -24,6 +24,8 @@ Minimum operating roles:
 - one person may hold multiple roles in the first pilot
 - ownership may not be implicit
 - release ownership and delivery ownership may not silently disappear into "the team"
+- fictive placeholder names may be used for internal dry-run and pilot preparation only
+- fictive placeholder names may not be presented as real external pilot ownership
 
 ---
 
@@ -31,11 +33,13 @@ Minimum operating roles:
 
 | Role | Named owner | Backup owner | Scope |
 | --- | --- | --- | --- |
-| Executive sponsor | `Client executive sponsor (provisional first-pilot owner)` | `Client deputy sponsor (provisional)` | board context, sponsor alignment |
-| HR implementation partner | `Client HR lead (provisional first-pilot owner)` | `Client HR backup (provisional)` | respondent coordination, HR liaison |
-| Loep delivery lead | `Loep route owner / founder-led delivery (provisional)` | `Loep delivery backup (provisional)` | launch-to-close delivery |
-| Release owner | `Loep governance owner (provisional)` | `Loep release backup (provisional)` | release approval and threshold ownership |
-| Board-read facilitator | `Loep board-read facilitator (provisional)` | `Loep facilitation backup (provisional)` | guided board-read |
+| Executive sponsor | `Eva van Dijk (fictief internal-pilot owner)` | `Mark Jansen (fictief backup)` | board context, sponsor alignment |
+| HR implementation partner | `Sanne de Boer (fictief internal-pilot owner)` | `Tom Vermeer (fictief backup)` | respondent coordination, HR liaison |
+| Loep delivery lead | `Lotte Meijer (fictief Loep delivery owner)` | `Ruben Smit (fictief backup)` | launch-to-close delivery |
+| Release owner | `Daan Visser (fictief release owner)` | `Nina Bakker (fictief backup)` | release approval and threshold ownership |
+| Board-read facilitator | `Mila de Vries (fictief facilitator)` | `Koen Hoekstra (fictief backup)` | guided board-read |
+
+These names are placeholders for internal rehearsal, dry-run, and pilot-prep use only. They exist to make the ownership model fully concrete before a real external pilot is staffed.
 
 ---
 
@@ -44,4 +48,4 @@ Minimum operating roles:
 Approved when:
 
 - all five roles have named ownership before pilot start
-- provisional role-based ownership is replaced by named human owners before external pilot launch
+- fictive placeholder ownership is replaced by real named human owners before external pilot launch

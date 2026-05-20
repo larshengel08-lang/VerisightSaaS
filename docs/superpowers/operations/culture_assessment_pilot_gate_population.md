@@ -130,7 +130,7 @@ Current recommendation:
 Bounded accepted risks:
 
 - board deck remains demo-ready rather than production-ready
-- operating owner map is still provisional and must be replaced by named human owners before external pilot launch
+- operating owner map is populated with fictive placeholder owners for internal preparation and must be replaced by real named human owners before external pilot launch
 
 ---
 
@@ -139,4 +139,4 @@ Bounded accepted risks:
 Before external launch or merge-readiness claim:
 
 - confirm the board deck artifact format used in the first pilot
-- replace the provisional operating owner map with named human owners
+- replace the fictive placeholder owner map with real named human owners
