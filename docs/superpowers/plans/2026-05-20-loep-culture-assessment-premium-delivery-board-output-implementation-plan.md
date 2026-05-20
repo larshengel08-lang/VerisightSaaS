@@ -31,6 +31,13 @@ without pretending that every artifact is already a fully automated production d
 4. no output may outrun method or governance truth
 5. manager cascade artifacts stay bounded and non-ranking
 
+### 2.1 Readiness states
+
+- `blueprint_ready`: structure is correct, not yet commercially showable
+- `demo_ready`: showable in guided sales or review without customer data
+- `pilot_delivery_ready`: usable in a first guided pilot delivery
+- `production_ready`: reusable without ad hoc rewriting
+
 ---
 
 ## 3. Work Package Sequence
@@ -46,6 +53,7 @@ Deliverables:
 - output family register
 - artifact owner map
 - readiness-state register
+- standard versus governed output classification
 
 Dependencies:
 
@@ -57,6 +65,21 @@ Acceptance:
 - all canonical artifacts are listed
 - standard versus governed outputs are explicit
 - each artifact has an owner and readiness state
+
+Output classification:
+
+Standard outputs:
+
+- board report
+- executive one-pager
+- board-read agenda or facilitator script
+
+Governed outputs:
+
+- HR appendix
+- segment summary
+- manager cascade handout
+- open-text summary if enabled and safe
 
 ### WP2 - Executive Spine Alignment
 
@@ -126,6 +149,17 @@ Acceptance:
 - one-pager stands alone
 - facilitator script can support a 60-90 minute board-read
 
+Board deck artifact format must be explicit:
+
+- PPTX
+- PDF deck
+- markdown blueprint
+- static design deck
+
+For V1 pilot, minimum:
+
+- demo-ready PDF, PPTX, or visually representative slide deck
+
 ### WP5 - Governed HR and Cascade Readiness
 
 Goal:
@@ -174,6 +208,19 @@ Acceptance:
 
 ---
 
+## 3.1 Artifact Lock Table
+
+| WP | Required artifact path | Format | Owner | Reviewer | Acceptance method |
+| --- | --- | --- | --- | --- | --- |
+| WP1 | `docs/superpowers/output/culture_assessment_output_registry.md` | markdown | output owner | product owner | registry review |
+| WP2 | `docs/superpowers/output/culture_assessment_executive_spine_map.md` | markdown | output owner | method reviewer | structure review |
+| WP3 | `docs/superpowers/output/culture_assessment_claim_safe_copy_lock.md` | markdown | output owner | governance reviewer | copy review |
+| WP4 | `docs/superpowers/output/culture_assessment_board_pack_readiness.md` | markdown | output owner | delivery reviewer | artifact readiness review |
+| WP5 | `docs/superpowers/output/culture_assessment_governed_output_readiness.md` | markdown | governance owner | HR reviewer | governance review |
+| WP6 | `docs/superpowers/output/culture_assessment_demo_sample_pack_status.md` | markdown | output owner | sales reviewer | demo-readiness review |
+
+---
+
 ## 4. Cross-Artifact Dependencies
 
 This plan must stay aligned with:
@@ -210,4 +257,3 @@ This implementation plan is complete only when:
 4. the board pack is delivery-usable
 5. HR and cascade outputs are governance-safe
 6. the sample/demo pack is explicitly status-marked and commercially coherent
-

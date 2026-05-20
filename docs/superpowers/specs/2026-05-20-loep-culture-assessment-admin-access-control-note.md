@@ -22,6 +22,24 @@ It exists to make the route's access posture explicit across:
 This note is intentionally bounded.
 It does not design a broad enterprise permissions platform.
 
+### 1.1 Control ownership
+
+This note is a launch-critical control artifact.
+
+Minimum ownership must be explicit for:
+
+- route owner
+- governance owner
+- release approver
+- governed export approver
+- HR visibility approver
+
+This note must be reviewed before:
+
+- Premium WP5
+- Trust WP3
+- Listening WP5
+
 ---
 
 ## 2. Core Control Principle
@@ -196,6 +214,13 @@ The route must maintain clear ownership for:
 V1 does not require a full audit platform.
 It does require that ownership is explicit and reviewable.
 
+At minimum, the route must name:
+
+- who may approve release
+- who may approve segment summary export download
+- who may approve HR appendix visibility
+- who owns audit and release review
+
 ---
 
 ## 9. Buyer-Facing Explanation
@@ -232,4 +257,3 @@ This note does not:
 - create complex inheritance rules for the full suite
 - introduce self-serve access provisioning
 - override route governance
-

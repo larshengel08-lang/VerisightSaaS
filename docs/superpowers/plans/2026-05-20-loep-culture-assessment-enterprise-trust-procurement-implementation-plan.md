@@ -76,6 +76,21 @@ Acceptance:
 - no unsupported claims appear
 - answers stay consistent with route governance
 
+FAQ must cover:
+
+- purpose of the measurement
+- anonymity and confidentiality
+- minimum-n and suppression
+- open text
+- manager ranking excluded
+- individual prediction excluded
+- data retention
+- exports
+- access and roles
+- OR / employee representation
+- security and hosting at a bounded level
+- incident and contact route
+
 ### WP3 - Privacy, Export, and Release Boundary Pack
 
 Goal:
@@ -87,6 +102,7 @@ Deliverables:
 - privacy/process role explanation
 - export boundary summary
 - release and approval summary
+- data processing and subprocessor note
 
 Dependencies:
 
@@ -98,6 +114,7 @@ Acceptance:
 - no respondent-level export posture is explicit
 - release and threshold logic are explained in plain language
 - valid response versus safe release is not conflated
+- processor/controller role, DPA status, subprocessors, hosting or data location, retention summary, access summary, and incident route are explicit
 
 ### WP4 - OR / Works-Council Explanation Draft
 
@@ -119,6 +136,7 @@ Acceptance:
 - aggregate-level purpose is clear
 - manager ranking and individual prediction are explicitly excluded
 - open-text boundaries are explicit
+- OR / works-council note is Dutch-first and usable in guided customer conversations
 
 ### WP5 - Retention and Incident Basics
 
@@ -140,6 +158,18 @@ Acceptance:
 - retention posture is supportable
 - incident ownership is explicit
 - no fake enterprise support-machine language appears
+
+---
+
+## 3.1 Artifact Lock Table
+
+| WP | Required artifact path | Format | Owner | Reviewer | Acceptance method |
+| --- | --- | --- | --- | --- | --- |
+| WP1 | `docs/superpowers/trust/culture_assessment_trust_source_map.md` | markdown | trust owner | product owner | trust source review |
+| WP2 | `docs/superpowers/trust/culture_assessment_buyer_faq.md` | markdown | trust owner | sales reviewer | FAQ review |
+| WP3 | `docs/superpowers/trust/culture_assessment_privacy_export_release_pack.md` | markdown | trust owner | governance reviewer | boundary review |
+| WP4 | `docs/superpowers/trust/culture_assessment_or_note_nl.md` | markdown | trust owner | delivery reviewer | guided-conversation review |
+| WP5 | `docs/superpowers/trust/culture_assessment_retention_incident_note.md` | markdown | trust owner | governance reviewer | supportability review |
 
 ---
 
@@ -178,4 +208,3 @@ This implementation plan is complete only when:
 4. OR / works-council note exists
 5. retention and incident basics are explicit
 6. trust language is consistent with route behavior
-

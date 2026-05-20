@@ -67,6 +67,7 @@ Deliverables:
 - canonical domain register
 - index calculation note
 - recurring theme pair register
+- scoring and contract lock note
 
 Dependencies:
 
@@ -79,6 +80,13 @@ Acceptance:
 - equal-weighted index rule is explicit
 - recurring theme pairs are bounded and versioned
 
+Test / contract lock:
+
+- scoring fixture for Culture Index
+- valid response fixture
+- 8-of-10 domain fixture
+- recurring theme pair fixture
+
 ### WP3 - Response Validity and Release Boundary Lock
 
 Goal:
@@ -90,6 +98,7 @@ Deliverables:
 - valid response policy note
 - safe release rule note
 - method-to-governance boundary summary
+- invalid-response contract note
 
 Dependencies:
 
@@ -101,6 +110,12 @@ Acceptance:
 - valid response versus safe release is explicit
 - no normal output is possible when either side fails
 - release logic language is claim-safe and buyer-safe
+
+Test / contract lock:
+
+- invalid response fixture
+- no-index-when-invalid fixture
+- release-boundary fixture
 
 ### WP4 - Item-Intent and Questionnaire Writing Guardrails
 
@@ -123,6 +138,17 @@ Acceptance:
 - all ten domains have four intent slots
 - reverse scoring rules are explicit
 - questionnaire changes are treated as method version events
+
+Item quality checklist:
+
+- one construct per item
+- no double negatives
+- no suggestive wording
+- understandable Dutch
+- no HR jargon
+- no normative blame framing
+- answerable by all relevant employees
+- clearly linked to one domain
 
 ### WP5 - Commercial Method Story and Method Note
 
@@ -194,6 +220,30 @@ Acceptance:
 - launch claims are bounded by current level
 - benchmark or stability claims cannot outrun evidence level
 
+Pilot response review must check:
+
+- item non-response
+- suspiciously misunderstood items
+- domain spread
+- reverse-scored item behavior
+- completion time
+- open feedback on wording
+- whether any item causes avoidable sensitivity or confusion
+
+---
+
+## 3.1 Artifact Lock Table
+
+| WP | Required artifact path | Format | Owner | Reviewer | Acceptance method |
+| --- | --- | --- | --- | --- | --- |
+| WP1 | `docs/superpowers/methodology/culture_assessment_method_source_map.md` | markdown | method owner | product owner | source-of-truth review |
+| WP2 | `docs/superpowers/methodology/culture_assessment_domain_index_lock.md` | markdown | method owner | engineering reviewer | rule and fixture review |
+| WP3 | `docs/superpowers/methodology/culture_assessment_validity_release_lock.md` | markdown | method owner | governance reviewer | policy and fixture review |
+| WP4 | `docs/superpowers/methodology/culture_assessment_item_quality_rules.md` | markdown | method owner | delivery reviewer | checklist review |
+| WP5 | `docs/superpowers/methodology/culture_assessment_method_note.md` | markdown | method owner | sales reviewer | claim-safe copy review |
+| WP6 | `docs/superpowers/methodology/culture_assessment_versioning_governance_log_template.md` | markdown | method owner | product owner | governance review |
+| WP7 | `docs/superpowers/methodology/culture_assessment_evidence_review_checklist.md` | markdown | method owner | delivery reviewer | pilot-readiness review |
+
 ---
 
 ## 4. Cross-Artifact Dependencies
@@ -232,4 +282,3 @@ This implementation plan is complete only when:
 4. commercial method explanation is claim-safe
 5. versioning and governance ownership are explicit
 6. evidence maturity and launch-claim boundaries are explicit
-

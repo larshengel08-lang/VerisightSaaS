@@ -25,6 +25,17 @@ It does not create a general survey operations platform.
 4. board-read remains guided
 5. operations stay consistent with method, trust, and output truth
 
+### 2.1 First pilot constraints
+
+- maximum one organization at a time
+- no benchmark
+- no manager layer unlock
+- no custom questions
+- open text only if safely clustered or disabled
+- maximum two segment dimensions
+- board-read always guided
+- no self-serve setup
+
 ---
 
 ## 3. Work Package Sequence
@@ -117,6 +128,15 @@ Acceptance:
 - reminder rhythm exists
 - insufficient coverage handling is explicit
 
+Default cadence:
+
+- T-3: optional pre-announcement
+- T0: invite
+- T+3 or T+4: first reminder
+- T+7: second reminder
+- T-2 before close: final reminder
+- close date stays fixed unless release owner approves extension
+
 ### WP5 - Closure and Release Checklist
 
 Goal:
@@ -163,6 +183,12 @@ Acceptance:
 - manual versus semi-automated expectations are explicit
 - guided board-read handoff is operationally defined
 
+Pilot turnaround target:
+
+- survey close to draft board output: explicit business-day target
+- draft to reviewed board pack: explicit business-day target
+- board-read timing after close: explicit week target
+
 ### WP7 - Pilot Gate Population
 
 Goal:
@@ -185,6 +211,28 @@ Acceptance:
 - every launch-critical gate item has a status
 - any accepted risk is explicit and owned
 - no-go is still allowed if readiness is insufficient
+
+Pilot gate input map:
+
+- Methodology WP7 -> method claims and evidence level
+- Premium WP6 -> sample and demo pack status
+- Trust WP5 -> buyer FAQ, OR note, retention and incident basics
+- Admin note -> roles, export permissions, release permissions
+- Listening WP5 and WP6 -> closure, release, and board-read readiness
+
+---
+
+## 3.1 Artifact Lock Table
+
+| WP | Required artifact path | Format | Owner | Reviewer | Acceptance method |
+| --- | --- | --- | --- | --- | --- |
+| WP1 | `docs/superpowers/operations/culture_assessment_operating_owner_map.md` | markdown | delivery owner | product owner | ownership review |
+| WP2 | `docs/superpowers/operations/culture_assessment_launch_readiness_checklist.md` | markdown | delivery owner | governance reviewer | readiness review |
+| WP3 | `docs/superpowers/operations/culture_assessment_respondent_import_rules.md` | markdown | delivery owner | HR reviewer | import-readiness review |
+| WP4 | `docs/superpowers/operations/culture_assessment_invite_reminder_cadence.md` | markdown | delivery owner | sales reviewer | cadence review |
+| WP5 | `docs/superpowers/operations/culture_assessment_closure_release_checklist.md` | markdown | release owner | governance reviewer | release-control review |
+| WP6 | `docs/superpowers/operations/culture_assessment_board_handoff_checklist.md` | markdown | delivery owner | output owner | handoff review |
+| WP7 | `docs/superpowers/operations/culture_assessment_pilot_gate_population.md` | markdown | delivery owner | route owner | go/no-go review |
 
 ---
 
@@ -226,4 +274,3 @@ This implementation plan is complete only when:
 5. closure and release are operationally separated
 6. board-read handoff is operationalized
 7. the pilot gate can be populated without ad hoc invention
-
