@@ -31,8 +31,19 @@ function buildItem(overrides: Record<string, unknown> = {}) {
     coreSemantics: {
       route: {
         routeId: 'cmp-exit-1::org-1::department::operations',
+        routeOpenedAt: '2026-04-20T09:00:00.000Z',
         reviewCompletedAt: null,
         hasFollowUpTarget: false,
+      },
+      decisionHistory: [],
+      routeActionCards: [],
+      routeCloseout: {
+        closeoutStatus: null,
+        closeoutReason: null,
+        closeoutNote: null,
+        closedAt: null,
+        closedByRole: null,
+        readyForCloseout: false,
       },
     },
     ...overrides,
@@ -264,5 +275,143 @@ describe('action center review rhythm data', () => {
         },
       }),
     ).rejects.toThrow('database offline')
+  })
+
+  it('merges bounded governance-only routes into the HR oversight feed without broadening beyond exit and retention', async () => {
+    const configQuery = createRhythmConfigQuery({
+      data: [],
+    })
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'action_center_review_rhythm_configs') {
+        return configQuery
+      }
+
+      throw new Error(`Unhandled table ${table}`)
+    })
+
+    const result = await getActionCenterReviewRhythmData({
+      items: [
+        buildItem({
+          id: 'route-exec-gap',
+          status: 'in-uitvoering',
+          reviewDate: '2026-06-05',
+          reviewDateLabel: '5 jun',
+          coreSemantics: {
+            route: {
+              routeId: 'route-exec-gap',
+              routeOpenedAt: '2026-05-20T09:00:00.000Z',
+              reviewCompletedAt: null,
+              hasFollowUpTarget: false,
+            },
+            decisionHistory: [],
+            routeActionCards: [],
+            routeCloseout: {
+              closeoutStatus: null,
+              closeoutReason: null,
+              closeoutNote: null,
+              closedAt: null,
+              closedByRole: null,
+              readyForCloseout: false,
+            },
+          },
+        }),
+        buildItem({
+          id: 'route-closeout-ready',
+          status: 'in-uitvoering',
+          reviewDate: '2026-06-08',
+          reviewDateLabel: '8 jun',
+          coreSemantics: {
+            route: {
+              routeId: 'route-closeout-ready',
+              routeOpenedAt: '2026-04-20T09:00:00.000Z',
+              reviewCompletedAt: null,
+              hasFollowUpTarget: false,
+            },
+            decisionHistory: [
+              { decisionEntryId: 'decision-closeout-1' },
+            ],
+            routeActionCards: [
+              {
+                actionId: 'action-closeout-1',
+                themeKey: 'leadership',
+                actionText: 'Rond de laatste bounded actie af.',
+                reviewScheduledFor: '2026-05-10',
+                expectedEffect: 'Maak zichtbaar of de route klaar is.',
+                status: 'afgerond',
+                latestReview: {
+                  actionReviewId: 'review-closeout-1',
+                  actionId: 'action-closeout-1',
+                  reviewedAt: '2026-05-12T09:00:00.000Z',
+                  observation: 'Effect is zichtbaar genoeg.',
+                  actionOutcome: 'effect-zichtbaar',
+                  evidenceSource: 'manager-observation',
+                  confidenceLevel: 'medium',
+                  followUpNote: null,
+                },
+              },
+            ],
+            routeCloseout: {
+              closeoutStatus: null,
+              closeoutReason: null,
+              closeoutNote: null,
+              closedAt: null,
+              closedByRole: null,
+              readyForCloseout: true,
+            },
+          },
+        }),
+        buildItem({
+          id: 'route-pulse-ignored',
+          sourceLabel: 'Pulse',
+          status: 'in-uitvoering',
+          reviewDate: '2026-06-10',
+          reviewDateLabel: '10 jun',
+          coreSemantics: {
+            route: {
+              routeId: 'route-pulse-ignored',
+              routeOpenedAt: '2026-05-01T09:00:00.000Z',
+              reviewCompletedAt: null,
+              hasFollowUpTarget: false,
+            },
+            decisionHistory: [],
+            routeActionCards: [],
+            routeCloseout: {
+              closeoutStatus: null,
+              closeoutReason: null,
+              closeoutNote: null,
+              closedAt: null,
+              closedByRole: null,
+              readyForCloseout: false,
+            },
+          },
+        }),
+      ] as never,
+      now: new Date('2026-05-28T12:00:00.000Z'),
+      routeScanTypeByRouteId: {
+        'route-exec-gap': 'exit',
+        'route-closeout-ready': 'retention',
+        'route-pulse-ignored': 'pulse',
+      },
+    })
+
+    expect(result.oversight.summary).toEqual({
+      upcomingCount: 2,
+      overdueCount: 0,
+      staleCount: 0,
+      escalationSensitiveCount: 0,
+      resolvedCount: 0,
+    })
+    expect(result.oversight.attentionItems).toMatchObject([
+      {
+        routeId: 'route-exec-gap',
+        governanceSignals: [{ code: 'missing_action_where_execution_is_expected' }],
+      },
+      {
+        routeId: 'route-closeout-ready',
+        governanceSignals: [{ code: 'route_ready_for_closeout' }],
+      },
+    ])
+    expect(result.oversight.attentionItems.map((item) => item.routeId)).not.toContain('route-pulse-ignored')
   })
 })

@@ -28,6 +28,16 @@ describe('review rhythm oversight', () => {
             scopeLabel: 'Support',
             sourceLabel: 'ExitScan',
             reviewDateLabel: 'Nog niet gepland',
+            governanceSignals: [
+              {
+                code: 'stuck_action',
+                label: 'Actie blijft hangen',
+              },
+              {
+                code: 'missing_action_review',
+                label: 'Actiereview ontbreekt',
+              },
+            ],
           },
         ]}
       />,
@@ -39,6 +49,8 @@ describe('review rhythm oversight', () => {
     expect(markup).toContain('Achter cadans')
     expect(markup).toContain('Achter op review')
     expect(markup).toContain('Binnen cadans')
+    expect(markup).toContain('Actie blijft hangen')
+    expect(markup).toContain('Actiereview ontbreekt')
     expect(markup).toContain('Operations')
     expect(markup).toContain('RetentieScan')
     expect(markup).not.toContain('workflow')
@@ -72,5 +84,53 @@ describe('review rhythm oversight', () => {
     expect(markup).not.toContain('Leadership')
     expect(markup).not.toContain('Operations')
     expect(markup).not.toContain('Nu aandacht nodig')
+  })
+
+  it('renders governance-only closeout and execution-gap routes inside the existing HR oversight surface', () => {
+    const markup = renderToStaticMarkup(
+      <ReviewRhythmOversight
+        summary={{
+          upcomingCount: 2,
+          overdueCount: 0,
+          staleCount: 0,
+          escalationSensitiveCount: 0,
+          resolvedCount: 0,
+        }}
+        attentionItems={[
+          {
+            routeId: 'route-exec-gap',
+            state: 'stale',
+            scopeLabel: 'Operations',
+            sourceLabel: 'ExitScan',
+            reviewDateLabel: '5 jun',
+            governanceSignals: [
+              {
+                code: 'missing_action_where_execution_is_expected',
+                label: 'Actie ontbreekt',
+              },
+            ],
+          },
+          {
+            routeId: 'route-closeout-ready',
+            state: 'overdue',
+            scopeLabel: 'Finance',
+            sourceLabel: 'RetentieScan',
+            reviewDateLabel: '8 jun',
+            governanceSignals: [
+              {
+                code: 'route_ready_for_closeout',
+                label: 'Klaar voor closeout',
+              },
+            ],
+          },
+        ] as never}
+      />,
+    )
+
+    expect(markup).toContain('Nu aandacht nodig')
+    expect(markup).toContain('Actie ontbreekt')
+    expect(markup).toContain('Klaar voor closeout')
+    expect(markup).toContain('Operations')
+    expect(markup).toContain('Finance')
   })
 })
