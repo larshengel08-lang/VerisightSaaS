@@ -47,6 +47,8 @@ export interface ActionCenterRouteGovernanceSignals {
   signals: ActionCenterGovernanceSignal[]
 }
 
+const NO_PROGRESS_ACTION_OUTCOMES = new Set(['bijsturen-nodig', 'nog-te-vroeg'])
+
 const ACTION_CENTER_GOVERNANCE_ROLE_SET = new Set<ActionCenterGovernanceActorRole>([
   'verisight_admin',
   'verisight',
@@ -183,12 +185,37 @@ function isActiveRouteStatus(status: ActionCenterPreviewItem['status']) {
   return status === 'in-uitvoering' || status === 'reviewbaar'
 }
 
+function isActiveRouteAction(
+  action: ActionCenterPreviewItem['coreSemantics']['routeActionCards'][number],
+) {
+  return action.status === 'open' || action.status === 'in_review'
+}
+
+function isNoProgressActionOutcome(value: string | null | undefined) {
+  return Boolean(value && NO_PROGRESS_ACTION_OUTCOMES.has(value))
+}
+
+function getActionLastEvidenceAgeDays(args: {
+  action: ActionCenterPreviewItem['coreSemantics']['routeActionCards'][number]
+  now: Date
+}) {
+  if (args.action.latestReview && isNoProgressActionOutcome(args.action.latestReview.actionOutcome)) {
+    return getCalendarDayDiffFromDate(args.action.latestReview.reviewedAt, args.now)
+  }
+
+  if (!args.action.latestReview) {
+    return getCalendarDayDiffFromDate(args.action.reviewScheduledFor, args.now)
+  }
+
+  return null
+}
+
 function buildGovernanceSignalDetail(args: {
   code: ActionCenterGovernanceSignalCode
   activeActionCount: number
   actionThreshold: number | null
   dayThreshold: number | null
-  reviewCount: number
+  signalCount: number
 }) {
   switch (args.code) {
     case 'missing_action_where_execution_is_expected':
@@ -200,7 +227,7 @@ function buildGovernanceSignalDetail(args: {
     case 'stuck_action':
       return `Actieve acties lopen langer door dan de route-default van ${args.dayThreshold ?? 0} dagen zonder nieuw reviewbewijs.`
     case 'repeated_review_without_progress':
-      return `De route heeft ${args.reviewCount} reviewmomenten vastgelegd en overschrijdt daarmee de waarschuwinggrens van ${args.actionThreshold ?? 0}.`
+      return `${args.signalCount} actieve acties blijven hangen op no-progress reviewuitkomsten en overschrijden daarmee de waarschuwinggrens van ${args.actionThreshold ?? 0}.`
     case 'route_ready_for_closeout':
       return 'Alle bounded acties zijn afgerond of bewust gestopt en de route kan bestuurlijk worden afgesloten.'
   }
@@ -222,17 +249,30 @@ export function deriveActionCenterRouteGovernanceSignals(args: {
   }
 
   const routeActionCards = args.item.coreSemantics?.routeActionCards ?? []
-  const activeRouteActions = routeActionCards.filter(
-    (action) => action.status === 'open' || action.status === 'in_review',
-  )
+  const activeRouteActions = routeActionCards.filter((action) => isActiveRouteAction(action))
   const activeActionCount = activeRouteActions.length
   const totalActionCount = routeActionCards.length
-  const decisionHistoryCount = args.item.coreSemantics?.decisionHistory?.length ?? 0
-  const hasActionReviewEvidence = activeRouteActions.some((action) => action.latestReview !== null)
   const routeReadyForCloseout = Boolean(args.item.coreSemantics?.routeCloseout?.readyForCloseout)
-  const overdueReviewDays = getCalendarDayDiffFromDate(args.item.reviewDate, args.now)
-  const routeOpenAgeDays = getCalendarDayDiffFromDate(args.item.coreSemantics?.route?.routeOpenedAt ?? null, args.now)
   const stuckThresholdDays = getStuckThresholdDays(routeDefaults.stuckActiveWarningDays)
+  const missingActionReviewCount = activeRouteActions.filter((action) => {
+    if (action.latestReview !== null) {
+      return false
+    }
+
+    const overdueDays = getCalendarDayDiffFromDate(action.reviewScheduledFor, args.now)
+    return overdueDays !== null && overdueDays > routeDefaults.reviewDueGraceDays
+  }).length
+  const stuckActionCount = activeRouteActions.filter((action) => {
+    if (stuckThresholdDays === null) {
+      return false
+    }
+
+    const lastEvidenceAgeDays = getActionLastEvidenceAgeDays({ action, now: args.now })
+    return lastEvidenceAgeDays !== null && lastEvidenceAgeDays >= stuckThresholdDays
+  }).length
+  const repeatedNoProgressCount = activeRouteActions.filter(
+    (action) => action.latestReview !== null && isNoProgressActionOutcome(action.latestReview.actionOutcome),
+  ).length
   const signals: ActionCenterGovernanceSignal[] = []
 
   if (isActiveRouteStatus(routeStatus) && totalActionCount === 0 && !routeReadyForCloseout) {
@@ -244,7 +284,7 @@ export function deriveActionCenterRouteGovernanceSignals(args: {
         activeActionCount,
         actionThreshold: null,
         dayThreshold: null,
-        reviewCount: decisionHistoryCount,
+        signalCount: 0,
       }),
     })
   }
@@ -261,18 +301,12 @@ export function deriveActionCenterRouteGovernanceSignals(args: {
         activeActionCount,
         actionThreshold: routeDefaults.sprawlRiskCount,
         dayThreshold: null,
-        reviewCount: decisionHistoryCount,
+        signalCount: 0,
       }),
     })
   }
 
-  if (
-    activeActionCount > 0 &&
-    !routeReadyForCloseout &&
-    !hasActionReviewEvidence &&
-    overdueReviewDays !== null &&
-    overdueReviewDays > routeDefaults.reviewDueGraceDays
-  ) {
+  if (missingActionReviewCount > 0 && !routeReadyForCloseout) {
     signals.push({
       code: 'missing_action_review',
       label: getActionCenterGovernanceSignalLabel('missing_action_review'),
@@ -281,19 +315,12 @@ export function deriveActionCenterRouteGovernanceSignals(args: {
         activeActionCount,
         actionThreshold: null,
         dayThreshold: routeDefaults.reviewDueGraceDays,
-        reviewCount: decisionHistoryCount,
+        signalCount: missingActionReviewCount,
       }),
     })
   }
 
-  if (
-    activeActionCount > 0 &&
-    !routeReadyForCloseout &&
-    !hasActionReviewEvidence &&
-    stuckThresholdDays !== null &&
-    routeOpenAgeDays !== null &&
-    routeOpenAgeDays >= stuckThresholdDays
-  ) {
+  if (stuckActionCount > 0 && !routeReadyForCloseout) {
     signals.push({
       code: 'stuck_action',
       label: getActionCenterGovernanceSignalLabel('stuck_action'),
@@ -302,7 +329,7 @@ export function deriveActionCenterRouteGovernanceSignals(args: {
         activeActionCount,
         actionThreshold: null,
         dayThreshold: stuckThresholdDays,
-        reviewCount: decisionHistoryCount,
+        signalCount: stuckActionCount,
       }),
     })
   }
@@ -310,7 +337,7 @@ export function deriveActionCenterRouteGovernanceSignals(args: {
   if (
     activeActionCount > 0 &&
     !routeReadyForCloseout &&
-    decisionHistoryCount > routeDefaults.repeatedReviewWarningCount
+    repeatedNoProgressCount > routeDefaults.repeatedReviewWarningCount
   ) {
     signals.push({
       code: 'repeated_review_without_progress',
@@ -320,7 +347,7 @@ export function deriveActionCenterRouteGovernanceSignals(args: {
         activeActionCount,
         actionThreshold: routeDefaults.repeatedReviewWarningCount,
         dayThreshold: null,
-        reviewCount: decisionHistoryCount,
+        signalCount: repeatedNoProgressCount,
       }),
     })
   }
@@ -334,7 +361,7 @@ export function deriveActionCenterRouteGovernanceSignals(args: {
         activeActionCount,
         actionThreshold: null,
         dayThreshold: null,
-        reviewCount: decisionHistoryCount,
+        signalCount: 0,
       }),
     })
   }

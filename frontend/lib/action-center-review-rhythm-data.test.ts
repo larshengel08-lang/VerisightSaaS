@@ -317,34 +317,77 @@ describe('action center review rhythm data', () => {
           },
         }),
         buildItem({
-          id: 'route-closeout-ready',
-          status: 'in-uitvoering',
-          reviewDate: '2026-06-08',
-          reviewDateLabel: '8 jun',
+          id: 'route-governance-signals',
+          status: 'reviewbaar',
+          reviewDate: '2026-05-10',
+          reviewDateLabel: '10 mei',
           coreSemantics: {
             route: {
-              routeId: 'route-closeout-ready',
-              routeOpenedAt: '2026-04-20T09:00:00.000Z',
+              routeId: 'route-governance-signals',
+              routeOpenedAt: '2026-05-18T09:00:00.000Z',
               reviewCompletedAt: null,
               hasFollowUpTarget: false,
             },
-            decisionHistory: [
-              { decisionEntryId: 'decision-closeout-1' },
-            ],
+            decisionHistory: [],
             routeActionCards: [
               {
-                actionId: 'action-closeout-1',
+                actionId: 'action-stuck',
                 themeKey: 'leadership',
-                actionText: 'Rond de laatste bounded actie af.',
-                reviewScheduledFor: '2026-05-10',
-                expectedEffect: 'Maak zichtbaar of de route klaar is.',
-                status: 'afgerond',
+                actionText: 'Plan een bounded teamcheck.',
+                reviewScheduledFor: '2026-04-15',
+                expectedEffect: 'Maak zichtbaar of het team rustiger reageert.',
+                status: 'open',
+                latestReview: null,
+              },
+              {
+                actionId: 'action-progress-1',
+                themeKey: 'growth',
+                actionText: 'Leg groeigesprekken klein vast.',
+                reviewScheduledFor: '2026-05-01',
+                expectedEffect: 'Maak zichtbaar of groeifricite afneemt.',
+                status: 'open',
                 latestReview: {
-                  actionReviewId: 'review-closeout-1',
-                  actionId: 'action-closeout-1',
-                  reviewedAt: '2026-05-12T09:00:00.000Z',
-                  observation: 'Effect is zichtbaar genoeg.',
-                  actionOutcome: 'effect-zichtbaar',
+                  actionReviewId: 'review-progress-1',
+                  actionId: 'action-progress-1',
+                  reviewedAt: '2026-05-18T09:00:00.000Z',
+                  observation: 'Nog geen zichtbaar effect.',
+                  actionOutcome: 'bijsturen-nodig',
+                  evidenceSource: 'manager-observation',
+                  confidenceLevel: 'medium',
+                  followUpNote: null,
+                },
+              },
+              {
+                actionId: 'action-progress-2',
+                themeKey: 'leadership',
+                actionText: 'Plan een tweede bounded teamcheck.',
+                reviewScheduledFor: '2026-05-03',
+                expectedEffect: 'Maak zichtbaar of feedbackritme verbetert.',
+                status: 'in_review',
+                latestReview: {
+                  actionReviewId: 'review-progress-2',
+                  actionId: 'action-progress-2',
+                  reviewedAt: '2026-05-18T09:00:00.000Z',
+                  observation: 'Nog geen zichtbaar effect.',
+                  actionOutcome: 'nog-te-vroeg',
+                  evidenceSource: 'manager-observation',
+                  confidenceLevel: 'medium',
+                  followUpNote: null,
+                },
+              },
+              {
+                actionId: 'action-progress-3',
+                themeKey: 'growth',
+                actionText: 'Kies een kleine groeicorrectie.',
+                reviewScheduledFor: '2026-05-05',
+                expectedEffect: 'Maak zichtbaar of behoudsvertrouwen toeneemt.',
+                status: 'open',
+                latestReview: {
+                  actionReviewId: 'review-progress-3',
+                  actionId: 'action-progress-3',
+                  reviewedAt: '2026-05-18T09:00:00.000Z',
+                  observation: 'Nog geen zichtbaar effect.',
+                  actionOutcome: 'bijsturen-nodig',
                   evidenceSource: 'manager-observation',
                   confidenceLevel: 'medium',
                   followUpNote: null,
@@ -357,7 +400,7 @@ describe('action center review rhythm data', () => {
               closeoutNote: null,
               closedAt: null,
               closedByRole: null,
-              readyForCloseout: true,
+              readyForCloseout: false,
             },
           },
         }),
@@ -390,28 +433,37 @@ describe('action center review rhythm data', () => {
       now: new Date('2026-05-28T12:00:00.000Z'),
       routeScanTypeByRouteId: {
         'route-exec-gap': 'exit',
-        'route-closeout-ready': 'retention',
+        'route-governance-signals': 'retention',
         'route-pulse-ignored': 'pulse',
       },
     })
 
     expect(result.oversight.summary).toEqual({
-      upcomingCount: 2,
+      upcomingCount: 1,
       overdueCount: 0,
-      staleCount: 0,
+      staleCount: 1,
       escalationSensitiveCount: 0,
       resolvedCount: 0,
     })
-    expect(result.oversight.attentionItems).toMatchObject([
-      {
-        routeId: 'route-exec-gap',
-        governanceSignals: [{ code: 'missing_action_where_execution_is_expected' }],
-      },
-      {
-        routeId: 'route-closeout-ready',
-        governanceSignals: [{ code: 'route_ready_for_closeout' }],
-      },
-    ])
+    expect(result.oversight.attentionItems).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          routeId: 'route-exec-gap',
+          governanceSignals: expect.arrayContaining([
+            expect.objectContaining({ code: 'missing_action_where_execution_is_expected' }),
+          ]),
+        }),
+        expect.objectContaining({
+          routeId: 'route-governance-signals',
+          governanceSignals: expect.arrayContaining([
+            expect.objectContaining({ code: 'action_sprawl_risk' }),
+            expect.objectContaining({ code: 'missing_action_review' }),
+            expect.objectContaining({ code: 'stuck_action' }),
+            expect.objectContaining({ code: 'repeated_review_without_progress' }),
+          ]),
+        }),
+      ]),
+    )
     expect(result.oversight.attentionItems.map((item) => item.routeId)).not.toContain('route-pulse-ignored')
   })
 })

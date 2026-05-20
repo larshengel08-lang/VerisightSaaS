@@ -8,6 +8,33 @@ import {
   resolveActionCenterTransitionAccess,
 } from './action-center-governance'
 
+function buildActionReview(overrides: Record<string, unknown> = {}) {
+  return {
+    actionReviewId: 'review-1',
+    actionId: 'action-1',
+    reviewedAt: '2026-05-18T09:00:00.000Z',
+    observation: 'Nog geen zichtbaar effect.',
+    actionOutcome: 'nog-te-vroeg',
+    evidenceSource: 'manager-observation',
+    confidenceLevel: 'medium',
+    followUpNote: null,
+    ...overrides,
+  }
+}
+
+function buildRouteActionCard(overrides: Record<string, unknown> = {}) {
+  return {
+    actionId: 'action-1',
+    themeKey: 'leadership',
+    actionText: 'Plan een bounded teamcheck.',
+    reviewScheduledFor: '2026-05-28',
+    expectedEffect: 'Maak zichtbaar of het team rustiger reageert.',
+    status: 'open',
+    latestReview: null,
+    ...overrides,
+  }
+}
+
 function buildGovernanceItem(overrides: Record<string, unknown> = {}) {
   return {
     id: 'route-retention-1',
@@ -38,53 +65,12 @@ function buildGovernanceItem(overrides: Record<string, unknown> = {}) {
     coreSemantics: {
       route: {
         routeId: 'route-retention-1',
-        routeOpenedAt: '2026-04-01T09:00:00.000Z',
+        routeOpenedAt: '2026-05-18T09:00:00.000Z',
         reviewCompletedAt: null,
         hasFollowUpTarget: false,
       },
-      decisionHistory: [
-        { decisionEntryId: 'decision-1' },
-        { decisionEntryId: 'decision-2' },
-        { decisionEntryId: 'decision-3' },
-      ],
-      routeActionCards: [
-        {
-          actionId: 'action-1',
-          themeKey: 'leadership',
-          actionText: 'Plan een bounded teamcheck.',
-          reviewScheduledFor: '2026-05-01',
-          expectedEffect: 'Maak zichtbaar of het team rustiger reageert.',
-          status: 'open',
-          latestReview: null,
-        },
-        {
-          actionId: 'action-2',
-          themeKey: 'growth',
-          actionText: 'Leg groeigesprekken klein vast.',
-          reviewScheduledFor: '2026-05-03',
-          expectedEffect: 'Maak zichtbaar of groeifricite afneemt.',
-          status: 'open',
-          latestReview: null,
-        },
-        {
-          actionId: 'action-3',
-          themeKey: 'leadership',
-          actionText: 'Plan een tweede bounded teamcheck.',
-          reviewScheduledFor: '2026-05-05',
-          expectedEffect: 'Maak zichtbaar of feedbackritme verbetert.',
-          status: 'in_review',
-          latestReview: null,
-        },
-        {
-          actionId: 'action-4',
-          themeKey: 'growth',
-          actionText: 'Kies een kleine groeicorrectie.',
-          reviewScheduledFor: '2026-05-07',
-          expectedEffect: 'Maak zichtbaar of behoudsvertrouwen toeneemt.',
-          status: 'open',
-          latestReview: null,
-        },
-      ],
+      decisionHistory: [],
+      routeActionCards: [],
       routeCloseout: {
         closeoutStatus: null,
         closeoutReason: null,
@@ -303,9 +289,62 @@ describe('action center governance helpers', () => {
     })
   })
 
-  it('derives bounded HR governance signals from approved route defaults instead of inventing new thresholds', () => {
+  it('derives action-level stuck and no-progress review signals from bounded action truth', () => {
     const signals = deriveActionCenterRouteGovernanceSignals({
-      item: buildGovernanceItem() as never,
+      item: buildGovernanceItem({
+        reviewDate: '2026-05-10',
+        coreSemantics: {
+          route: {
+            routeId: 'route-retention-1',
+            routeOpenedAt: '2026-05-18T09:00:00.000Z',
+            reviewCompletedAt: null,
+            hasFollowUpTarget: false,
+          },
+          decisionHistory: [],
+          routeActionCards: [
+            buildRouteActionCard({
+              actionId: 'action-stuck',
+              reviewScheduledFor: '2026-04-15',
+              latestReview: null,
+            }),
+            buildRouteActionCard({
+              actionId: 'action-progress-1',
+              reviewScheduledFor: '2026-05-01',
+              latestReview: buildActionReview({
+                actionReviewId: 'review-progress-1',
+                actionId: 'action-progress-1',
+                actionOutcome: 'bijsturen-nodig',
+              }),
+            }),
+            buildRouteActionCard({
+              actionId: 'action-progress-2',
+              reviewScheduledFor: '2026-05-03',
+              latestReview: buildActionReview({
+                actionReviewId: 'review-progress-2',
+                actionId: 'action-progress-2',
+                actionOutcome: 'nog-te-vroeg',
+              }),
+            }),
+            buildRouteActionCard({
+              actionId: 'action-progress-3',
+              reviewScheduledFor: '2026-05-05',
+              latestReview: buildActionReview({
+                actionReviewId: 'review-progress-3',
+                actionId: 'action-progress-3',
+                actionOutcome: 'bijsturen-nodig',
+              }),
+            }),
+          ],
+          routeCloseout: {
+            closeoutStatus: null,
+            closeoutReason: null,
+            closeoutNote: null,
+            closedAt: null,
+            closedByRole: null,
+            readyForCloseout: false,
+          },
+        },
+      }) as never,
       scanType: 'retention',
       now: new Date('2026-05-20T12:00:00.000Z'),
     })
@@ -316,6 +355,87 @@ describe('action center governance helpers', () => {
       'stuck_action',
       'repeated_review_without_progress',
     ])
+  })
+
+  it('does not infer stuck_action from old route age when active action evidence is still fresh', () => {
+    const signals = deriveActionCenterRouteGovernanceSignals({
+      item: buildGovernanceItem({
+        reviewDate: '2026-05-28',
+        coreSemantics: {
+          route: {
+            routeId: 'route-retention-fresh-action',
+            routeOpenedAt: '2026-04-01T09:00:00.000Z',
+            reviewCompletedAt: null,
+            hasFollowUpTarget: false,
+          },
+          decisionHistory: [],
+          routeActionCards: [
+            buildRouteActionCard({
+              actionId: 'action-fresh',
+              reviewScheduledFor: '2026-05-28',
+              latestReview: null,
+            }),
+          ],
+          routeCloseout: {
+            closeoutStatus: null,
+            closeoutReason: null,
+            closeoutNote: null,
+            closedAt: null,
+            closedByRole: null,
+            readyForCloseout: false,
+          },
+        },
+      }) as never,
+      scanType: 'retention',
+      now: new Date('2026-05-20T12:00:00.000Z'),
+    })
+
+    expect(signals?.signals.map((signal) => signal.code) ?? []).not.toContain('stuck_action')
+  })
+
+  it('does not infer repeated_review_without_progress from decision history volume alone', () => {
+    const signals = deriveActionCenterRouteGovernanceSignals({
+      item: buildGovernanceItem({
+        reviewDate: '2026-05-28',
+        coreSemantics: {
+          route: {
+            routeId: 'route-retention-decision-history-only',
+            routeOpenedAt: '2026-05-18T09:00:00.000Z',
+            reviewCompletedAt: null,
+            hasFollowUpTarget: false,
+          },
+          decisionHistory: [
+            { decisionEntryId: 'decision-1' },
+            { decisionEntryId: 'decision-2' },
+            { decisionEntryId: 'decision-3' },
+          ],
+          routeActionCards: [
+            buildRouteActionCard({
+              actionId: 'action-with-progress',
+              latestReview: buildActionReview({
+                actionReviewId: 'review-with-progress',
+                actionId: 'action-with-progress',
+                actionOutcome: 'effect-zichtbaar',
+              }),
+            }),
+          ],
+          routeCloseout: {
+            closeoutStatus: null,
+            closeoutReason: null,
+            closeoutNote: null,
+            closedAt: null,
+            closedByRole: null,
+            readyForCloseout: false,
+          },
+        },
+      }) as never,
+      scanType: 'retention',
+      now: new Date('2026-05-20T12:00:00.000Z'),
+    })
+
+    expect(signals?.signals.map((signal) => signal.code) ?? []).not.toContain(
+      'repeated_review_without_progress',
+    )
   })
 
   it('flags missing execution and closeout readiness from existing bounded route truth', () => {
