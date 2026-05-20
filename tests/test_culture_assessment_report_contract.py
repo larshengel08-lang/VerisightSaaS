@@ -11,6 +11,13 @@ def test_culture_assessment_module_exposes_definition_and_report_payloads():
     assert "boardroom deck blueprint" in module.get_definition()["standard_outputs"]
     assert module.get_definition()["output_readiness"]["boardroom_deck"] == "blueprint_ready"
     assert "compacte executive read" in module.get_definition()["output_sequence_note"]
+    assert module.get_definition()["follow_on_outcomes"] == [
+        "no immediate next route",
+        "deeper governed work",
+        "Pulse follow-on",
+        "another Loep route",
+    ]
+    assert "opent geen vervolgrichting automatisch" in module.get_definition()["follow_on_decision_note"]
     assert "Loep Culture Index" in module.get_management_summary_payload()["index_label"]
     assert "domeinbeeld" in module.get_management_summary_payload()["board_attention_scope_note"]
     assert "compacte executive read" in module.get_management_summary_payload()["output_sequence_note"]

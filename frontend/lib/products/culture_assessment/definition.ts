@@ -61,4 +61,12 @@ export const cultureAssessmentDefinition: ScanDefinition = {
   },
   outputSequenceNote:
     'Het board report pdf is in v1 een compacte executive read. Dashboard en board-deck-structuur dragen de volledige canonieke 11-blokvolgorde; het pdf comprimeert die volgorde zonder benchmark-, ranking- of health-scoreframing.',
+  followOnOutcomes: [
+    'no immediate next route',
+    'deeper governed work',
+    'Pulse follow-on',
+    'another Loep route',
+  ],
+  followOnDecisionNote:
+    'Geen vervolgrichting opent automatisch na de baseline. De board-read sluit expliciet af met een keuze tussen geen onmiddellijke vervolgrichting, deeper governed work, een bounded Pulse-follow-on of een andere Loep-route als de vervolgvraag echt smaller is.',
 }

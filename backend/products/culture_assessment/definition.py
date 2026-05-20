@@ -160,6 +160,17 @@ SCAN_DEFINITION: dict[str, Any] = {
         "Het board report pdf is in v1 een compacte executive read. Dashboard en board-deck-structuur dragen de volledige "
         "canonieke 11-blokvolgorde; het pdf comprimeert die volgorde zonder benchmark-, ranking- of health-scoreframing."
     ),
+    "follow_on_outcomes": [
+        "no immediate next route",
+        "deeper governed work",
+        "Pulse follow-on",
+        "another Loep route",
+    ],
+    "follow_on_decision_note": (
+        "Na de baseline opent geen vervolgrichting automatisch. De board-read sluit expliciet af met een keuze tussen geen "
+        "onmiddellijke vervolgrichting, deeper governed work, een bounded Pulse-follow-on of een andere Loep-route als de "
+        "vervolgvraag echt smaller is."
+    ),
     "questionnaire_lock": QUESTIONNAIRE_LOCK_PAYLOAD,
     "sdt_items": SDT_ITEMS,
     "org_sections": ORG_SECTIONS,

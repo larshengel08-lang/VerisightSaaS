@@ -29,6 +29,15 @@ describe('culture assessment product module', () => {
     expect(cultureAssessmentProductModule.definition.outputReadiness?.boardroomDeck).toBe('blueprint_ready')
     expect(cultureAssessmentProductModule.definition.outputReadiness?.boardReportPdf).toBe('demo_asset_ready')
     expect(cultureAssessmentProductModule.definition.outputSequenceNote?.toLowerCase()).toContain('compacte executive read')
+    expect(cultureAssessmentProductModule.definition.followOnOutcomes).toEqual([
+      'no immediate next route',
+      'deeper governed work',
+      'Pulse follow-on',
+      'another Loep route',
+    ])
+    expect(cultureAssessmentProductModule.definition.followOnDecisionNote?.toLowerCase()).toContain(
+      'geen vervolgrichting opent automatisch',
+    )
   })
 
   it('builds an executive-safe dashboard model without ranking language', () => {
@@ -54,5 +63,12 @@ describe('culture assessment product module', () => {
     expect(view.primaryQuestion.title).toContain('Bestuurlijke')
     expect(JSON.stringify(view).toLowerCase()).not.toContain('ranking')
     expect(JSON.stringify(view).toLowerCase()).not.toContain('gezondheidsscore')
+    expect(view.followThroughCards.some((card) => card.body.toLowerCase().includes('geen onmiddellijke vervolgrichting'))).toBe(
+      true,
+    )
+    expect(view.followThroughCards.some((card) => card.body.toLowerCase().includes('deeper governed work'))).toBe(true)
+    expect(view.followThroughCards.some((card) => card.body.includes('RetentieScan') || card.body.includes('ExitScan'))).toBe(
+      true,
+    )
   })
 })

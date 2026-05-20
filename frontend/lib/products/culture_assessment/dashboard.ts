@@ -235,7 +235,7 @@ export function buildCultureAssessmentDashboardViewModel(args: {
       },
       {
         title: 'Vervolg na baseline',
-        body: 'Kies pas na de board-read of een bounded Pulse-ritme of aanvullende lokale verificatie logisch is.',
+        body: 'Kies pas na de board-read tussen geen onmiddellijke vervolgrichting, deeper governed work, een bounded Pulse-follow-on of een andere Loep-route zoals RetentieScan of ExitScan als de vervolgvraag echt smaller is.',
         tone: 'emerald',
       },
     ],

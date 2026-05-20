@@ -25,6 +25,8 @@ export interface ScanDefinition {
   optionalOutputs?: string[]
   outputReadiness?: Record<string, string>
   outputSequenceNote?: string
+  followOnOutcomes?: string[]
+  followOnDecisionNote?: string
 }
 
 export function getScanDefinition(scanType: ScanType): ScanDefinition {
