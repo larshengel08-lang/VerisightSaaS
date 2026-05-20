@@ -23,6 +23,17 @@ type EntitlementState = 'allowed' | 'governed' | 'denied' | 'admin_state_only'
 export type CultureAssessmentVisibilityRole = VisibilityRole
 export type CultureAssessmentEntitlementState = EntitlementState
 
+export const CULTURE_ASSESSMENT_RUNTIME_ACTIVE_ROLES_V1 = [
+  'admin',
+  'hr_partner',
+  'executive',
+] as const
+
+export const CULTURE_ASSESSMENT_FUTURE_CONTRACT_ROLES_V1 = [
+  'business_unit_lead',
+  'manager_limited',
+] as const
+
 export const CULTURE_ASSESSMENT_CULTURE_INDEX_COPY =
   'De Loep Culture Index is een navigatiesignaal voor het organisatiebeeld. De index is geen eindoordeel over cultuur, geen individuele beoordeling en geen bewijs van oorzaak-gevolg. Lees de index altijd samen met domeinen, segmentpatronen, responsbasis en governancegrenzen.'
 
@@ -166,6 +177,12 @@ export const CULTURE_ASSESSMENT_CONTRACT = {
     'board_read_follow_on',
     'report_export_methodology',
   ],
+  runtimeRoleModel: {
+    activeInV1: CULTURE_ASSESSMENT_RUNTIME_ACTIVE_ROLES_V1,
+    futureContractRolesNotActiveInV1: CULTURE_ASSESSMENT_FUTURE_CONTRACT_ROLES_V1,
+    note:
+      'V1 runtime ondersteunt alleen admin, hr_partner en executive. business_unit_lead en manager_limited blijven contract-future rollen tot expliciete entitlement- en surface-activatie.',
+  },
   visibilityRules: {
     executive: ['response_basis', 'executive_culture_read', 'culture_index', 'board_attention_points', 'domain_view'],
     hr_partner: [

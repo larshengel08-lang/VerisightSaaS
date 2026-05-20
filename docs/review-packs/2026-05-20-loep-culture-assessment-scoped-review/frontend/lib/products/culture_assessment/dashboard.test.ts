@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { CULTURE_ASSESSMENT_CONTRACT } from '@/lib/products/culture_assessment/contract'
+import {
+  CULTURE_ASSESSMENT_CONTRACT,
+  CULTURE_ASSESSMENT_FUTURE_CONTRACT_ROLES_V1,
+  CULTURE_ASSESSMENT_RUNTIME_ACTIVE_ROLES_V1,
+} from '@/lib/products/culture_assessment/contract'
 import { cultureAssessmentProductModule } from '@/lib/products/culture_assessment'
 
 describe('culture assessment product module', () => {
@@ -53,6 +57,22 @@ describe('culture assessment product module', () => {
       'suppressed_sensitive_content',
       'suppressed_unapproved',
     ])
+    expect(CULTURE_ASSESSMENT_RUNTIME_ACTIVE_ROLES_V1).toEqual([
+      'admin',
+      'hr_partner',
+      'executive',
+    ])
+    expect(CULTURE_ASSESSMENT_FUTURE_CONTRACT_ROLES_V1).toEqual([
+      'business_unit_lead',
+      'manager_limited',
+    ])
+    expect(CULTURE_ASSESSMENT_CONTRACT.runtimeRoleModel.activeInV1).toEqual(
+      CULTURE_ASSESSMENT_RUNTIME_ACTIVE_ROLES_V1,
+    )
+    expect(CULTURE_ASSESSMENT_CONTRACT.runtimeRoleModel.futureContractRolesNotActiveInV1).toEqual(
+      CULTURE_ASSESSMENT_FUTURE_CONTRACT_ROLES_V1,
+    )
+    expect(CULTURE_ASSESSMENT_CONTRACT.runtimeRoleModel.note.toLowerCase()).toContain('contract-future')
   })
 
   it('builds an executive-safe dashboard model without ranking language', () => {

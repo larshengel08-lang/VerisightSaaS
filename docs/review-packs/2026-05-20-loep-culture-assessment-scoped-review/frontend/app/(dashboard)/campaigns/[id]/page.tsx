@@ -2647,7 +2647,7 @@ export default async function CampaignPage({ params }: Props) {
                   Domeinen
                 </p>
                 <p className="mt-1 text-sm leading-6 text-[color:var(--dashboard-text)]">
-                  Organisatiebreed domeinbeeld in vaste volgorde, zonder ranking van teams of managers.
+                  Organisatiebreed domeinbeeld in een bestuurlijke leesvolgorde. De volgorde helpt patronen te openen en is geen ranking van teams, managers of domeinen als waardeoordeel.
                 </p>
               </div>
               <div className="divide-y divide-[color:var(--dashboard-frame-border)]/80">
@@ -2657,8 +2657,8 @@ export default async function CampaignPage({ params }: Props) {
                     className="grid gap-3 px-5 py-4 lg:grid-cols-[58px_minmax(0,1.15fr)_180px] lg:items-center lg:gap-5"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="text-[1.1rem] font-semibold tabular-nums text-[color:var(--dashboard-ink)]">
-                        {String(index + 1).padStart(2, "0")}
+                      <span className="rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)]/72 px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+                        Lees {String(index + 1).padStart(2, "0")}
                       </span>
                     </div>
                     <div className="space-y-1.5">

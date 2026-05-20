@@ -19,6 +19,8 @@ This refreshed pack already includes recent scoped hardening for:
 - board-PDF segment rows gated behind governed `segment_deep_dive`
 - `segment_summary` export blocked on the public org-key route and forced through the internal governance proxy
 - truthful runtime readiness for `board_report_pdf` as `pilot_delivery_ready`
+- explicit V1 runtime role clarity: only `admin`, `hr_partner` and `executive` are active; `business_unit_lead` and `manager_limited` remain contract-future
+- domain presentation softened into a bestuurlijke leesvolgorde instead of a heavier ranking feel
 - imported module dependencies and referenced premium-delivery artifacts included in the pack
 
 This route is explicitly:
@@ -74,7 +76,7 @@ Scoped verification already run for this refreshed pack:
 Frontend:
 
 - `cmd /c npx vitest run --config vitest.config.ts lib/products/culture_assessment/dashboard.test.ts lib/sample-showcase-assets.test.ts lib/products/shared/registry.test.ts lib/client-onboarding.test.ts "app/(dashboard)/campaigns/[id]/page.test.ts" "app/api/campaigns/[id]/report/route.test.ts"`
-- Result: `36 passed`
+- Result: `37 passed`
 
 Backend:
 
