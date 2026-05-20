@@ -11,7 +11,7 @@ import { NewCampaignForm } from '@/components/dashboard/new-campaign-form'
 import { NewOrgForm } from '@/components/dashboard/new-org-form'
 import { getDeliveryModeLabel } from '@/lib/implementation-readiness'
 import { createClient } from '@/lib/supabase/server'
-import { hasCampaignAddOn, REPORT_ADD_ON_LABELS, type Campaign, type CampaignStats, type Organization, type OrgInvite } from '@/lib/types'
+import { type Campaign, type CampaignStats, type Organization, type OrgInvite } from '@/lib/types'
 
 export default async function BeheerPage() {
   const supabase = await createClient()
@@ -290,7 +290,6 @@ export default async function BeheerPage() {
                                 year: 'numeric',
                               })}
                             </span>
-                            {hasCampaignAddOn(campaign, 'segment_deep_dive') ? <span>{REPORT_ADD_ON_LABELS.segment_deep_dive}</span> : null}
                           </div>
                         </div>
                         <a

@@ -41,7 +41,8 @@ export function supportsCampaignModuleSelection(scanType: ScanType) {
 }
 
 export function supportsCampaignReportAddOns(scanType: ScanType) {
-  return scanType !== 'pulse' && scanType !== 'team' && scanType !== 'onboarding' && scanType !== 'leadership'
+  void scanType
+  return false
 }
 
 export function getAllowedDeliveryModes(scanType: ScanType): DeliveryMode[] {
