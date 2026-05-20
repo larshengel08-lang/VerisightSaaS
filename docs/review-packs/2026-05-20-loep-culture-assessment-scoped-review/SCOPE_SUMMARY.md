@@ -28,10 +28,11 @@
 - public org-key block on `segment_summary`
 - board-PDF segment rows only with governed `segment_deep_dive`
 - explicit V1 runtime role model: only `admin`, `hr_partner` and `executive` are active today
+- matching backend V1 role-model truth for active versus future contract roles
 - domain presentation framed as bestuurlijke leesvolgorde rather than domain ranking
 - board deck pilot-delivery readiness state
 - board report PDF pilot-delivery readiness state
-- executive one-pager blueprint state
+- executive one-pager optional blueprint state
 - text-safety state canon
 - follow-on outcome canon
 - scoped readiness review artifact
@@ -49,7 +50,7 @@
 
 ## Current scoped verification
 
-- Frontend scoped suite: `37 passed`
+- Frontend scoped suite: `40 passed`
 - Backend scoped suite: `21 passed, 5 deselected`
 - These results support scoped pilot / PR review only, not repo-wide merge-readiness
 

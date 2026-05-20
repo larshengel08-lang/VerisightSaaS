@@ -139,10 +139,10 @@ SCAN_DEFINITION: dict[str, Any] = {
     "standard_outputs": [
         "board report pdf",
         "boardroom pdf deck",
-        "executive one-pager",
         "guided board-read session",
     ],
     "optional_outputs": [
+        "executive one-pager",
         "HR appendix pdf",
         "segment summary export",
         "HR deepening handout",
@@ -171,6 +171,17 @@ SCAN_DEFINITION: dict[str, Any] = {
         "onmiddellijke vervolgrichting, deeper governed work, een bounded Pulse-follow-on of een andere Loep-route als de "
         "vervolgvraag echt smaller is."
     ),
+    "runtime_role_model": {
+        "active_in_v1": ["admin", "hr_partner", "executive"],
+        "future_contract_roles_not_active_in_v1": [
+            "business_unit_lead",
+            "manager_limited",
+        ],
+        "note": (
+            "V1 runtime ondersteunt alleen admin, hr_partner en executive. business_unit_lead en manager_limited blijven "
+            "contract-future rollen tot expliciete entitlement- en surface-activatie."
+        ),
+    },
     "governed_export_entitlements": {
         "executive": {
             "organization_view": "allowed",

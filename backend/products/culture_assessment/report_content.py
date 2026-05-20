@@ -57,6 +57,17 @@ def get_methodology_payload() -> dict[str, Any]:
     return {
         "benchmark_state": "inactive_v1",
         "named_manager_layer_default": "locked",
+        "runtime_role_model": {
+            "active_in_v1": ["admin", "hr_partner", "executive"],
+            "future_contract_roles_not_active_in_v1": [
+                "business_unit_lead",
+                "manager_limited",
+            ],
+            "note": (
+                "V1 runtime ondersteunt alleen admin, hr_partner en executive. business_unit_lead en manager_limited "
+                "blijven contract-future rollen tot expliciete entitlement- en surface-activatie."
+            ),
+        },
         "organization_min_n": 30,
         "segment_comparison_min_n": 10,
         "open_text_cluster_min_n": 5,

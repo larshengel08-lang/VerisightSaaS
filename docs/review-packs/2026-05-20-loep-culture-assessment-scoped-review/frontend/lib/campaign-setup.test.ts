@@ -4,6 +4,7 @@ import {
   CAMPAIGN_SCAN_OPTIONS,
   getAllowedDeliveryModes,
   getCampaignNamePlaceholder,
+  getCampaignReportAddOnSetupNote,
   getDefaultModulesForScanType,
   isBaselineOnlyScanType,
   supportsCampaignModuleSelection,
@@ -25,7 +26,10 @@ describe('campaign setup rails', () => {
     expect(getDefaultModulesForScanType('culture_assessment')).toEqual([])
     expect(supportsCampaignModuleSelection('culture_assessment')).toBe(false)
     expect(supportsCampaignReportAddOns('culture_assessment')).toBe(false)
+    expect(getCampaignReportAddOnSetupNote('culture_assessment')).toContain('admin/manual-seeded')
+    expect(getCampaignReportAddOnSetupNote('culture_assessment')).toContain('niet klantconfigureerbaar')
     expect(supportsCampaignReportAddOns('exit')).toBe(false)
     expect(supportsCampaignReportAddOns('retention')).toBe(false)
+    expect(getCampaignReportAddOnSetupNote('retention')).toBeNull()
   })
 })

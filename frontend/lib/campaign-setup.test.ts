@@ -4,6 +4,7 @@ import {
   CAMPAIGN_SCAN_OPTIONS,
   getAllowedDeliveryModes,
   getCampaignNamePlaceholder,
+  getCampaignReportAddOnSetupNote,
   getDefaultModulesForScanType,
   isBaselineOnlyScanType,
   supportsCampaignModuleSelection,
@@ -21,9 +22,14 @@ describe('campaign setup rails', () => {
     expect(getAllowedDeliveryModes('culture_assessment')).toEqual(['baseline'])
   })
 
-  it('keeps culture_assessment on a fixed instrument while allowing governed report add-ons', () => {
+  it('keeps culture_assessment on a fixed instrument and removes report add-on configuration from beheer', () => {
     expect(getDefaultModulesForScanType('culture_assessment')).toEqual([])
     expect(supportsCampaignModuleSelection('culture_assessment')).toBe(false)
-    expect(supportsCampaignReportAddOns('culture_assessment')).toBe(true)
+    expect(supportsCampaignReportAddOns('culture_assessment')).toBe(false)
+    expect(getCampaignReportAddOnSetupNote('culture_assessment')).toContain('admin/manual-seeded')
+    expect(getCampaignReportAddOnSetupNote('culture_assessment')).toContain('niet klantconfigureerbaar')
+    expect(supportsCampaignReportAddOns('exit')).toBe(false)
+    expect(supportsCampaignReportAddOns('retention')).toBe(false)
+    expect(getCampaignReportAddOnSetupNote('retention')).toBeNull()
   })
 })

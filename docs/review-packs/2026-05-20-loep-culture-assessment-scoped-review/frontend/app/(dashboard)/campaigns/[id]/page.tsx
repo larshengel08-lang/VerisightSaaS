@@ -902,9 +902,9 @@ export default async function CampaignPage({ params }: Props) {
     stats.scan_type !== "culture_assessment"
       ? null
       : !hasSegmentDeepDive
-        ? "Segment deep dive is niet geactiveerd; de organisatiebrede read blijft daarom leidend."
+        ? "Segment deep dive is in v1 alleen admin/manual-seeded; zonder die inrichting blijft de organisatiebrede read leidend."
         : !activationState.reportVisible
-          ? "Segment deep dive is ingericht, maar governed export blijft dicht tot de baseline formeel is vrijgegeven."
+          ? "Segment deep dive is in v1 admin/manual-seeded ingericht, maar governed export blijft dicht tot de baseline formeel is vrijgegeven."
           : canAccessGovernedSegmentExport
             ? "Governed segmentexport blijft in deze pilotlaag alleen open voor owner/adminrollen na baselinevrijgave."
             : "Governed segmentexport is na baselinevrijgave alleen beschikbaar voor owner/adminrollen; overige rollen blijven organisatiebreed read-first.";

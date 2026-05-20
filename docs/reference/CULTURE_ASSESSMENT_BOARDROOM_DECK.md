@@ -1,9 +1,9 @@
 # Loep Culture Assessment Boardroom Deck
 
 Status:
-- `delivery_readiness`: `blueprint_ready`
-- `intended_use`: guided board demo, proposal prep en board-read voorbereiding
-- `note`: dit document beschrijft de canonieke inhoudsstructuur. Het is in v1 nog geen automatisch gegenereerde `.pptx`-deliverable.
+- `delivery_readiness`: `pilot_delivery_ready`
+- `intended_use`: guided board pilot delivery, proposal prep en board-read voorbereiding
+- `note`: dit document beschrijft de canonieke inhoudsstructuur voor de v1 `boardroom pdf deck`-deliverable. Het is in v1 nog geen automatisch gegenereerde `.pptx`-deliverable.
 
 1. Title and context
 - Loep Culture Assessment / Loep Cultuurbeeld

@@ -74,5 +74,8 @@ def test_culture_assessment_definition_and_methodology_expose_wp0_lock():
     assert "vaste 40-item enterprise-vragenlijst" in SCAN_DEFINITION["survey_intro"]
     assert SCAN_DEFINITION["output_readiness"]["board_report_pdf"] == "pilot_delivery_ready"
     assert SCAN_DEFINITION["output_readiness"]["boardroom_deck"] == "pilot_delivery_ready"
+    assert "executive one-pager" not in SCAN_DEFINITION["standard_outputs"]
+    assert "executive one-pager" in SCAN_DEFINITION["optional_outputs"]
+    assert SCAN_DEFINITION["runtime_role_model"]["active_in_v1"] == ["admin", "hr_partner", "executive"]
     assert SCAN_DEFINITION["governed_export_entitlements"]["admin"]["export_approval"] == "admin_state_only"
     assert SCAN_DEFINITION["text_safety_states"][0] == "not_collected"

@@ -47,6 +47,14 @@ export function supportsCampaignReportAddOns(scanType: ScanType) {
   return false
 }
 
+export function getCampaignReportAddOnSetupNote(scanType: ScanType) {
+  if (scanType === 'culture_assessment') {
+    return 'Governed report add-ons zoals segment deep dive blijven in v1 admin/manual-seeded en zijn niet klantconfigureerbaar in campaign setup.'
+  }
+
+  return null
+}
+
 export function getAllowedDeliveryModes(scanType: ScanType): DeliveryMode[] {
   return isBaselineOnlyScanType(scanType) ? ['baseline'] : ['baseline', 'live']
 }

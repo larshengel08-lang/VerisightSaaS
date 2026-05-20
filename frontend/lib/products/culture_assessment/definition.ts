@@ -45,10 +45,10 @@ export const cultureAssessmentDefinition: ScanDefinition = {
   standardOutputs: [
     'board report pdf',
     'boardroom pdf deck',
-    'executive one-pager',
     'guided board-read session',
   ],
   optionalOutputs: [
+    'executive one-pager',
     'HR appendix pdf',
     'segment summary export',
     'HR deepening handout',

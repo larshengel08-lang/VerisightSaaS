@@ -65,7 +65,6 @@ frontend/lib/sample-showcase-assets.test.ts
 frontend/lib/sample-showcase-assets.ts
 frontend/lib/scan-definitions.ts
 frontend/lib/types.ts
-MANIFEST.txt
 README.md
 REVIEW_PROMPT.md
 SCOPE_SUMMARY.md

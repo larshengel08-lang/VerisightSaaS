@@ -34,7 +34,10 @@ This refreshed pack already includes the latest scoped hardening for:
 - governed gating of board-PDF segment rows
 - internal-only `segment_summary` export path
 - truthful `board_report_pdf` pilot-delivery readiness
+- `executive one-pager` kept optional and blueprint-only instead of standard-output ready
+- explicit `segment_deep_dive` truth as admin/manual-seeded in V1, not customer-configurable in setup
 - explicit V1 runtime-role clarity in the culture contract
+- mirrored backend truth that only `admin`, `hr_partner` and `executive` are active in V1
 - domain presentation as a bestuurlijke leesvolgorde rather than a heavier rank surface
 - inclusion of previously missing imported/reference artifacts
 
@@ -53,9 +56,9 @@ This refreshed pack already includes the latest scoped hardening for:
 
 Frontend:
 
-`cmd /c npx vitest run --config vitest.config.ts lib/products/culture_assessment/dashboard.test.ts lib/sample-showcase-assets.test.ts lib/products/shared/registry.test.ts lib/client-onboarding.test.ts "app/(dashboard)/campaigns/[id]/page.test.ts" "app/api/campaigns/[id]/report/route.test.ts"`
+`cmd /c npx vitest run --config vitest.config.ts lib/products/culture_assessment/dashboard.test.ts lib/sample-showcase-assets.test.ts lib/products/shared/registry.test.ts lib/client-onboarding.test.ts lib/campaign-setup.test.ts "app/(dashboard)/campaigns/[id]/page.test.ts" "app/api/campaigns/[id]/report/route.test.ts"`
 
-Result: `37 passed`
+Result: `40 passed`
 
 Backend:
 

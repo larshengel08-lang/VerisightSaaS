@@ -118,8 +118,8 @@ describe('campaign detail management-read guardrails', () => {
     const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
 
     expect(source).toContain('Governed segmentexport blijft in deze pilotlaag alleen open voor owner/adminrollen na baselinevrijgave.')
-    expect(source).toContain('Segment deep dive is niet geactiveerd; de organisatiebrede read blijft daarom leidend.')
-    expect(source).toContain('Segment deep dive is ingericht, maar governed export blijft dicht tot de baseline formeel is vrijgegeven.')
+    expect(source).toContain('Segment deep dive is in v1 alleen admin/manual-seeded; zonder die inrichting blijft de organisatiebrede read leidend.')
+    expect(source).toContain('Segment deep dive is in v1 admin/manual-seeded ingericht, maar governed export blijft dicht tot de baseline formeel is vrijgegeven.')
   })
 
   it('surfaces premium board deliverables and bounded text-safety states directly in the culture read layer', () => {
