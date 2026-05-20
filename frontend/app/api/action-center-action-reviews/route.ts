@@ -215,8 +215,6 @@ export async function POST(request: Request) {
       reviewed_at: parsed.reviewed_at,
       observation: parsed.observation,
       action_outcome: parsed.action_outcome,
-      evidence_source: parsed.evidence_source,
-      confidence_level: parsed.confidence_level,
       follow_up_note: parsed.follow_up_note,
       created_by: user.id,
       updated_by: user.id,
@@ -261,5 +259,14 @@ export async function POST(request: Request) {
     )
   }
 
-  return NextResponse.json({ review: data }, { status: 200 })
+  return NextResponse.json(
+    {
+      review: data,
+      submittedStructuredMetadata: {
+        evidence_source: parsed.evidence_source,
+        confidence_level: parsed.confidence_level,
+      },
+    },
+    { status: 200 },
+  )
 }

@@ -1542,14 +1542,25 @@ export function ActionCenterPreview({
         }),
       })
       const result = (await response.json().catch(() => null)) as
-        | { review?: Record<string, unknown>; detail?: string }
+        | {
+            review?: Record<string, unknown>
+            submittedStructuredMetadata?: {
+              evidence_source?: string | null
+              confidence_level?: string | null
+            }
+            detail?: string
+          }
         | null
 
       if (!response.ok || !result?.review) {
         throw new Error(result?.detail ?? 'Route action review opslaan mislukt.')
       }
 
-      const projectedReview = projectActionCenterActionReview(result.review)
+      const projectedReview = projectActionCenterActionReview({
+        ...result.review,
+        evidence_source: result.submittedStructuredMetadata?.evidence_source ?? null,
+        confidence_level: result.submittedStructuredMetadata?.confidence_level ?? null,
+      })
       updateRouteActionCards(selectedItem.id, (cards) =>
         cards.map((card) =>
           card.actionId === actionId

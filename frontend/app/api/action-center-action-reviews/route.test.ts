@@ -191,7 +191,7 @@ describe('action center action reviews route', () => {
     expect(response.status).toBe(403)
   })
 
-  it('accepts a valid review write with lightweight outcome fields only', async () => {
+  it('accepts a valid review write without requiring new review-table metadata columns', async () => {
     mockGetUser.mockResolvedValue({
       data: {
         user: { id: 'manager-1' },
@@ -219,8 +219,6 @@ describe('action center action reviews route', () => {
         reviewed_at: '2026-05-12T09:30:00.000Z',
         observation: 'Dezelfde werkdrukfrictie bleef zichtbaar in twee teams.',
         action_outcome: 'bijsturen-nodig',
-        evidence_source: 'team-conversation',
-        confidence_level: 'medium',
         follow_up_note: 'Plan volgende week een kleiner teamgesprek met concrete workload-afspraken.',
         created_at: '2026-04-30T10:05:00.000Z',
         updated_at: '2026-04-30T10:05:00.000Z',
@@ -279,8 +277,6 @@ describe('action center action reviews route', () => {
       reviewed_at: '2026-05-12T09:30:00.000Z',
       observation: 'Dezelfde werkdrukfrictie bleef zichtbaar in twee teams.',
       action_outcome: 'bijsturen-nodig',
-      evidence_source: 'team-conversation',
-      confidence_level: 'medium',
       follow_up_note: 'Plan volgende week een kleiner teamgesprek met concrete workload-afspraken.',
       created_by: 'manager-1',
       updated_by: 'manager-1',
@@ -304,6 +300,8 @@ describe('action center action reviews route', () => {
     expect(payload.review).toMatchObject({
       action_id: 'action-1',
       action_outcome: 'bijsturen-nodig',
+    })
+    expect(payload.submittedStructuredMetadata).toEqual({
       evidence_source: 'team-conversation',
       confidence_level: 'medium',
     })
