@@ -19,10 +19,10 @@
 - [ ] claim-safe copy lock exists
 - [ ] operating owner map is populated
 - [ ] first pilot constraints are accepted
+- [ ] follow-on outcome logic is explicit
 
 ---
 
 ## 2. Pre-Launch Review Note
 
 The route may not launch if the checklist is materially incomplete or if ownership remains implicit.
-

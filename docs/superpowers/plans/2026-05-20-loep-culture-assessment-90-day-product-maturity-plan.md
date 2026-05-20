@@ -25,6 +25,7 @@ At the end of this bounded maturity sequence, the route should be able to say:
 - the trust/procurement layer is usable in serious buyer context
 - the admin/access posture is explicit
 - the annual baseline can be run as a bounded pilot program
+- post-baseline continuation can be described without suite drift
 
 It should not yet claim:
 
@@ -170,3 +171,8 @@ The agreed next second-wave sequence after this bounded pilot line is:
 1. `Governed Drilldown & Analysis Environment`
 2. `Text & Open Comment Intelligence`
 3. `Action & Follow-through System`
+
+The later-wave continuation sequence after those second-wave slices is:
+
+4. `Follow-On Architecture`
+5. later benchmark and reference discipline

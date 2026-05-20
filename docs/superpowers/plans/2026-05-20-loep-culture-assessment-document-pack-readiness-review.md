@@ -38,6 +38,7 @@ This means the document pack now covers:
 - executed first-wave control artifacts
 - second-wave specs for drilldown, text, follow-through, and follow-on architecture
 - executed second-wave control artifacts for drilldown, text, and follow-through
+- follow-on execution artifacts for post-baseline continuation logic
 
 ---
 
@@ -107,7 +108,7 @@ Evidence:
 
 Current read:
 
-- `ready with bounded later-wave dependency`
+- `ready`
 
 Evidence:
 
@@ -116,10 +117,7 @@ Evidence:
 - follow-through control artifacts exist
 - cross-wave review exists
 - follow-on architecture implementation plan exists
-
-Bounded note:
-
-- follow-on architecture execution artifacts do not yet exist
+- follow-on outcome, Pulse handoff, route-switch, profile, and readiness artifacts exist
 
 ---
 
@@ -156,7 +154,6 @@ It relies on the latest recorded route-specific checks already referenced in the
 ## 6. Remaining Bounded Risks
 
 - the board deck remains a bounded `PDF deck` pilot choice rather than a broader production deck system
-- follow-on architecture exists only at spec and implementation-plan level; its execution artifacts are still absent
 - no production text-clustering engine exists
 - no broad suite-wide inheritance model exists
 - the broader repository worktree remains noisy and contains many unrelated changes outside the `culture_assessment` scope

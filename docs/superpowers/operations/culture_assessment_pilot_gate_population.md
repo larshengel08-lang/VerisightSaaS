@@ -141,6 +141,7 @@ Before external launch or merge-readiness claim:
 
 - use the chosen `PDF deck` artifact format for the first pilot board-read
 - replace the fictive placeholder owner map with real named human owners
+- keep any post-baseline route recommendation inside the canonical follow-on outcome model
 
 ---
 
