@@ -10,6 +10,10 @@ The goal is **not** to invent a new manager interaction model.
 
 The goal is to take the **existing route + action-card execution model** and harden it into an enterprise-grade, bounded operating layer.
 
+This wave still produces **adoption and operating readiness**, not adoption proof.
+
+Any later commercial claim of proven adoption, better retention, or intervention impact requires live-route evidence after this design has been implemented and used.
+
 This design assumes:
 
 - Action Center remains an embedded follow-through layer inside Verisight
@@ -23,9 +27,15 @@ This design does **not** reposition Action Center as:
 - a standalone product
 - a third first-buy route
 - generic workflow software
-- project management tooling
+- broad project or action management
 - advisory tooling
 - an HR operating system
+- HR case management
+- an employee risk ledger
+- a task board
+- a broad collaboration system
+
+It hardens the current product truth without broadening Action Center scope.
 
 ---
 
@@ -75,9 +85,11 @@ The following should be treated as settled starting truth:
 
 What is still not enterprise-hard enough:
 
-- the action lifecycle contract
+- the action-card contract
+- the action quality rules
 - the route-to-action growth policy
-- the action review grammar and consequences
+- the action lifecycle
+- the action review grammar and evidence model
 - the repeated-use manager execution flow
 - HR oversight on action execution
 - action execution metrics and buyer-proof packaging
@@ -92,7 +104,7 @@ The enterprise-grade bounded execution end state is:
 
 - a route opens a bounded follow-through question
 - the assigned manager can add and review one or more concrete actions inside that route
-- those actions remain small, explicit, and reviewable
+- those actions remain small, explicit, evidence-bearing, and reviewable
 - HR can see where action execution is healthy, stalled, overgrown, overdue, or ready for closeout
 - the system stays measurably useful without becoming a project board
 
@@ -147,7 +159,7 @@ Reviews on action cards exist to answer:
 - what did we try
 - what did we observe
 - what does that mean
-- do we continue, adjust, complete, or stop
+- do we continue, adjust, complete, stop, or ask for HR review
 
 Review does not exist as generic commentary.
 
@@ -169,93 +181,229 @@ HR governs.
 
 ---
 
-## 5. Action Lifecycle
+## 5. Action Card Contract
+
+Every valid action card must carry a bounded execution contract.
+
+### 5.1 Required fields
+
+A valid action card must define at least:
+
+- `action_id`
+- `route_id`
+- `route_family`
+- `action_title`
+- `bounded_focus`
+- `accountable_manager`
+- `created_by`
+- `created_at`
+- `current_state`
+- `expected_first_step`
+- `intended_observation`
+- `review_due_date` or `review_trigger`
+- `latest_review_outcome`
+- `evidence_note`
+- `blocker_signal`, if any
+- `HR_visibility_status`
+- audit metadata
+
+### 5.2 Contract meaning
+
+The minimum contract exists so that each action card is:
+
+- clearly tied to one route
+- clearly tied to one accountable manager
+- reviewable in one bounded cycle
+- readable by HR without reconstructing hidden context
+
+### 5.3 Prohibited action-card content
+
+Action cards may not contain:
+
+- subtasks
+- dependencies
+- percent complete
+- arbitrary priority levels
+- free project tags
+- cross-route actions
+- employee-specific dossier notes
+- open comment threads
+- broad project descriptions
+
+If a proposed action needs those structures, it is outside the bounded execution model.
+
+---
+
+## 6. Action Quality Rules
+
+Manager-created actions are allowed only if they remain bounded and execution-grade.
+
+### 6.1 A valid action must be
+
+- concrete
+- route-bound
+- tied to the scan-derived management question
+- owned by one accountable manager
+- reviewable within a bounded time window
+- non-personnel-dossier-like
+- small enough to be assessed in one review cycle
+- written as an execution step, not as a vague ambition
+
+### 6.2 Invalid examples
+
+`Improve leadership`
+
+- invalid because it is a broad aspiration, not a bounded execution step
+
+`Fix culture`
+
+- invalid because it is route-agnostic, too broad, and not reviewable in one cycle
+
+`Communicate more`
+
+- invalid because it does not describe a concrete bounded intervention
+
+`Monitor employee X`
+
+- invalid because it turns the product toward employee-level dossier behavior
+
+`Create a full development program`
+
+- invalid because it expands the route into a broader project/program management shape
+
+`Solve workload everywhere`
+
+- invalid because it is not bounded to one route-level management question
+
+`Start a broad HR project`
+
+- invalid because it leaves the follow-through layer and enters generic project management
+
+### 6.3 Design consequence
+
+The product should reject or escalate weak action quality rather than quietly persist it as acceptable truth.
+
+---
+
+## 7. Action Lifecycle
 
 The action-card model must be explicit enough to become product truth rather than informal runtime behavior.
 
-### 5.1 Canonical action states
+### 7.1 Semantic lifecycle
 
-The bounded action lifecycle distinguishes:
+The bounded semantic action lifecycle distinguishes:
+
+- `draft`
+- `active`
+- `review_due`
+- `in_review`
+- `blocked`
+- `completed`
+- `stopped`
+- `superseded`
+
+### 7.2 User-facing labels
+
+The UI may map those states to simpler labels such as:
 
 - `open`
-- `in_review`
-- `afgerond`
-- `gestopt`
+- `review needed`
+- `adjust / continue`
+- `blocked`
+- `completed`
+- `stopped`
 
-The product may use friendlier labels on screen, but the semantic model must stay explicit.
+### 7.3 State meanings
 
-### 5.2 State meanings
+`draft`
 
-`open`
+- action structure exists but is not yet a fully valid execution card
 
-- a concrete action exists
-- it is active or expected to be active
-- it has not yet been formally reviewed to a terminal outcome
+`active`
+
+- concrete action is live and expected to be executed
+
+`review_due`
+
+- bounded review date or trigger has been reached and review is now expected
 
 `in_review`
 
-- the action has reached a review checkpoint
-- the outcome suggests the action remains active but requires continuation or adjustment
+- action is under explicit review and may continue or adjust
 
-`afgerond`
+`blocked`
+
+- execution is impeded
+- this is an execution signal, not an escalation by itself
+
+`completed`
 
 - the action itself is complete
-- this does **not** automatically close the route
+- this never closes the route automatically
 
-`gestopt`
+`stopped`
 
 - the action should not continue
-- this does **not** automatically close the route
+- this never closes the route automatically
 
-### 5.3 What the lifecycle must not do
+`superseded`
+
+- the action has been replaced by a newer route-bound action
+- it is not deleted
+
+### 7.4 What the lifecycle must not do
 
 The action lifecycle must not:
 
 - silently imply route closure
 - blur action completion into route resolution
 - let review semantics float outside explicit state consequences
+- let a blocked action auto-escalate without HR governance rules
+
+HR decides route closeout or continuation.
 
 ---
 
-## 6. Action Review Grammar
+## 8. Action Evidence Grammar
 
-The review layer must drive action meaning more explicitly than it does today.
+Action reviews must produce bounded execution evidence, not generic commentary.
 
-### 6.1 Required review outcome grammar
+### 8.1 Required review fields
 
-The bounded review model distinguishes at least:
+Each action review must define:
 
-- `effect-zichtbaar`
-- `bijsturen-nodig`
-- `nog-te-vroeg`
-- `stoppen`
+- `review_outcome`: `effect-zichtbaar` / `bijsturen-nodig` / `nog-te-vroeg` / `stoppen`
+- `observed_change`
+- `evidence_source`: `manager observation` / `team conversation` / `follow-up survey` / `HR check` / `operational indicator` / `other bounded source`
+- `confidence_level`: `low` / `medium` / `high`
+- `next_consequence`: `complete` / `continue` / `adjust` / `stop` / `HR review needed`
+- `bounded_note`
 
-### 6.2 Outcome consequences
+### 8.2 Evidence rules
 
-The product default consequences are:
+- evidence does not prove causality
+- evidence must not become employee-level dossier text
+- evidence supports follow-through quality, not intervention claims
+- `effect-zichtbaar` requires at least one `observed_change` and one `evidence_source`
 
-- `effect-zichtbaar` -> action moves to `afgerond`
-- `stoppen` -> action moves to `gestopt`
-- `bijsturen-nodig` -> action moves to `in_review`
-- `nog-te-vroeg` -> action moves to `in_review`
+### 8.3 Review consequence mapping
 
-### 6.3 Review does not decide route closure by itself
+The default consequence mapping is:
 
-Even if an action is `afgerond` or `gestopt`, the route remains open until HR decides:
+- `effect-zichtbaar` -> action moves toward `completed`
+- `stoppen` -> action moves toward `stopped`
+- `bijsturen-nodig` -> action stays live and requires adjustment
+- `nog-te-vroeg` -> action stays live and requires continued review
 
-- no further follow-through is needed
-- continuation is needed
-- closeout is appropriate
-
-This separation is mandatory.
+Action review does not decide route closure by itself.
 
 ---
 
-## 7. Route-To-Action Policy
+## 9. Route-To-Action Policy
 
 This is the most important boundedness rule in the design.
 
-### 7.1 Not every route needs action cards immediately
+### 9.1 Not every route needs action cards immediately
 
 A route may remain at a lighter state where:
 
@@ -265,7 +413,7 @@ A route may remain at a lighter state where:
 
 The product must not force every route into heavier execution structure.
 
-### 7.2 When action cards are warranted
+### 9.2 When action cards are warranted
 
 Action cards become the expected execution surface when:
 
@@ -274,7 +422,7 @@ Action cards become the expected execution surface when:
 - review should attach to an explicit intervention rather than only a route-level response
 - the route has moved beyond acknowledgement into execution
 
-### 7.3 Active action limits
+### 9.3 Active action limits
 
 The bounded execution default is:
 
@@ -283,7 +431,7 @@ The bounded execution default is:
 - `3` active actions is the maximum healthy default
 - more than `3` active actions should be treated as governance friction and surfaced to HR as action-sprawl risk
 
-### 7.4 What the product must prevent
+### 9.4 What the product must prevent
 
 The product must prevent drift into:
 
@@ -293,11 +441,44 @@ The product must prevent drift into:
 
 ---
 
-## 8. Manager Execution UX
+## 10. HR Intervention Rules
+
+HR remains the governance owner, not the day-to-day action operator.
+
+### 10.1 Default interpretation
+
+- `1` active action: normal
+- `2` active actions: acceptable if both are concrete and route-bound
+- `3` active actions: maximum healthy default; visible as expanded execution
+- more than `3` active actions: `action_sprawl_risk` and HR intervention required
+
+### 10.2 Invalid or escalated conditions
+
+- action without review due date: invalid
+- action with employee-specific dossier language: blocked or HR review required
+- action outside route scope: blocked
+- action with broad project language: HR review required
+- repeated action review outcome `bijsturen-nodig` or `nog-te-vroeg` more than twice: HR review required
+- action stuck open beyond threshold: HR oversight signal
+
+### 10.3 Intervention philosophy
+
+HR should:
+
+- flag
+- review
+- guide
+- govern
+
+HR should not take over the route as the day-to-day action operator by default.
+
+---
+
+## 11. Manager Execution UX
 
 This design deliberately prefers **contextual execution** over dashboard ownership.
 
-### 8.1 Interaction principle
+### 11.1 Interaction principle
 
 Managers should feel:
 
@@ -306,7 +487,7 @@ Managers should feel:
 - I can take one bounded next step
 - I do not need to manage a large system
 
-### 8.2 Default action flow
+### 11.2 Default action flow
 
 The standard repeated-use flow is:
 
@@ -315,7 +496,7 @@ The standard repeated-use flow is:
 3. manager adds or updates a bounded action if concrete execution is needed
 4. manager later completes a bounded action review
 
-### 8.3 Manager-visible actions in this wave
+### 11.3 Manager-visible actions in this wave
 
 Managers may:
 
@@ -332,7 +513,7 @@ Managers do not:
 - canonically reschedule review moments
 - operate a general task dashboard
 
-### 8.4 UX simplification goals
+### 11.4 UX simplification goals
 
 The manager execution surface should become:
 
@@ -346,11 +527,39 @@ This wave should simplify the current action create and review experience rather
 
 ---
 
-## 9. HR Governance On Action Execution
+## 12. Route-Specific Execution Defaults
+
+### 12.1 ExitScan
+
+- default review window: `60-90 days`
+- action focus: verify and act on the selected departure pattern / work-friction route
+- closeout question: what was chosen, what was executed, and what returns in the next exit batch or management conversations?
+- continuation logic: continue if departure pattern remains active, action evidence is weak, or route signal needs further monitoring
+
+### 12.2 RetentieScan
+
+- default review window: `45-90 days`
+- action focus: verify and act on selected retention pressure / work-factor route
+- closeout question: what was verified, what first intervention or follow-up was started, and what should be watched in retention signal / stay-intent / departure intention?
+- continuation logic: continue if retention pressure persists, review evidence is weak, or follow-up measurement is planned
+
+### 12.3 Shared defaults
+
+For both route families:
+
+- HR is rhythm owner
+- managers are contextual execution participants
+- no generic project board
+- no broad task engine
+- no people case management
+
+---
+
+## 13. HR Governance On Action Execution
 
 Enterprise maturity requires HR control on the action layer, not just the route layer.
 
-### 9.1 HR must be able to see
+### 13.1 HR must be able to see
 
 HR needs bounded visibility into:
 
@@ -359,11 +568,11 @@ HR needs bounded visibility into:
 - routes with two or three active actions
 - routes with action-sprawl risk
 - actions without timely review
-- actions stuck in `open`
+- actions stuck in `active` or `review_due`
 - actions lingering in `in_review`
 - routes whose actions are done but whose route is not yet closed
 
-### 9.2 HR must not become the action operator
+### 13.2 HR must not become the action operator
 
 The oversight layer must not turn HR into the day-to-day execution owner.
 
@@ -374,7 +583,7 @@ HR governs:
 - whether review rhythm is healthy
 - whether closeout or continuation is due
 
-### 9.3 Governance signals
+### 13.3 Governance signals
 
 The design should explicitly support these derived governance signals:
 
@@ -382,31 +591,35 @@ The design should explicitly support these derived governance signals:
 - `action_sprawl_risk`
 - `missing_action_review`
 - `stuck_action`
+- `repeated_review_without_progress`
 - `route_ready_for_closeout`
 
 These are bounded operational signals, not generic workflow analytics.
 
 ---
 
-## 10. Reporting And Measurement
+## 14. Reporting And Measurement
 
 This wave should make the existing action model measurable enough to later prove effectiveness.
 
-### 10.1 Core action execution measures
+### 14.1 Core metric definitions
 
-The measurement layer should support at least:
+| Metric | Formula | Event source | Object anchor | Interpretation | What it does not prove |
+| --- | --- | --- | --- | --- | --- |
+| `route_to_action_conversion_rate` | routes with at least one valid action / eligible active routes | route + action creation events | follow-through route | shows how often routes become concrete execution | does not prove action quality or intervention impact |
+| `time_to_first_action` | median time between route-open and first valid action creation | route-open event + action create event | follow-through route | shows how quickly managers move from route awareness to execution | does not prove good prioritization |
+| `actions_per_route_distribution` | count of routes by `0`, `1`, `2`, `3`, `>3` active actions | action state events | follow-through route | shows whether routes stay bounded or drift into action sprawl | does not prove execution quality |
+| `action_review_completion_rate` | actions reviewed within bounded review window / actions with review due | action review events | action card | shows whether actions are actually being reviewed | does not prove review quality |
+| `action_completion_rate` | actions entering `completed` / valid created actions | action state transitions | action card | shows how often actions reach bounded completion | does not prove route success |
+| `action_stop_rate` | actions entering `stopped` / valid created actions | action state transitions | action card | shows how often actions are intentionally halted | does not prove poor management by itself |
+| `time_from_action_creation_to_first_review` | median time between action create and first action review | action create + action review events | action card | shows review timeliness | does not prove intervention quality |
+| `route_stale_rate_with_actions_present` | stale routes with at least one active action / routes with at least one active action | route state derivation + action state events | follow-through route | shows whether actions are still failing to keep routes healthy | does not prove action irrelevance by itself |
+| `hr_chasing_reduction_proxy_on_action_routes` | 1 - (HR chase events / routes with overdue, stale, blocked, or repeated-review-without-progress signals) | HR chase events + derived governance events | follow-through route | estimates whether bounded execution lowers manual HR chasing burden | does not prove lower operating cost overall |
+| `action_sprawl_rate` | routes with `>3` active actions / routes with at least one active action | action state events | follow-through route | shows whether bounded execution is drifting toward workflow sprawl | does not prove buyer-visible risk by itself |
+| `action_quality_rejection_rate` | rejected or HR-escalated invalid actions / submitted action drafts | action validation and HR review events | action card draft | shows whether managers understand bounded action quality | does not prove route quality |
+| `repeated_review_without_progress_rate` | actions with `bijsturen-nodig` or `nog-te-vroeg` more than twice / reviewed actions | action review events | action card | shows where follow-through loops are spinning without progress | does not prove no later success is possible |
 
-- `route_to_action_conversion_rate`
-- `time_to_first_action`
-- `actions_per_route_distribution`
-- `action_review_completion_rate`
-- `action_completion_rate`
-- `action_stop_rate`
-- `time_from_action_creation_to_first_review`
-- `route_stale_rate_with_actions_present`
-- `hr_chasing_reduction_proxy_on_action_routes`
-
-### 10.2 Metric meaning
+### 14.2 Metric meaning
 
 These metrics help answer:
 
@@ -415,36 +628,44 @@ These metrics help answer:
 - are actions being reviewed
 - are actions helping routes progress
 - is HR still manually chasing too much
+- is the model staying bounded
 
-### 10.3 What the metrics do not prove
+### 14.3 What the metrics do not prove
 
-These metrics do not by themselves prove:
+These metrics are operating and adoption metrics.
 
-- intervention quality
+They do not by themselves prove:
+
 - causal impact
+- retention improvement
 - management quality
-- retention outcomes
+- intervention effectiveness
 
-They are adoption and operating evidence, not causal proof.
+Commercial proof requires later live-route evidence.
 
 ---
 
-## 11. Buyer-Proof Boundaries
+## 15. Buyer-Proof Boundaries
 
 The manager-created action model must be buyer-safe.
 
-### 11.1 What must be explainable to buyers
+### 15.1 What must be explainable to buyers
 
-Enterprise buyers must be able to understand:
+Enterprise buyers must be able to understand Action Center as:
 
-- why managers may create actions
-- why those actions are bounded
-- how HR remains in control
-- why this does not become task management
-- how route truth stays canonical
-- how notes and action reviews stay out of personnel-dossier behavior
+- route-bound execution after a scan
+- HR-governed follow-through
+- bounded manager participation
+- auditable review rhythm
+- not employee monitoring
+- not a personnel dossier
+- not project management
 
-### 11.2 What must stay explicitly true
+### 15.2 Buyer-safe phrase
+
+Action Center tracks whether agreed follow-through happened, was reviewed, and requires continuation. It does not judge individual employees or claim causal intervention impact.
+
+### 15.3 What must stay explicitly true
 
 Action Center still does **not** become:
 
@@ -461,21 +682,22 @@ Its legitimate scope remains:
 
 ---
 
-## 12. Workstreams
+## 16. Workstreams
 
 This design should be realized through four product workstreams.
 
-### 12.1 Workstream A: Action contract
+### 16.1 Workstream A: Action contract
 
 Define and harden:
 
+- action-card contract
 - action lifecycle
 - review-outcome consequences
 - route-to-action growth rules
 - active action limits
 - explicit route-status versus action-status boundaries
 
-### 12.2 Workstream B: Manager operating flow
+### 16.2 Workstream B: Manager operating flow
 
 Simplify and strengthen:
 
@@ -485,16 +707,17 @@ Simplify and strengthen:
 - default field structure
 - route-to-action entry clarity
 
-### 12.3 Workstream C: HR execution oversight
+### 16.3 Workstream C: HR execution oversight
 
 Add bounded HR visibility for:
 
 - action growth
 - missing reviews
 - stuck actions
+- repeated review without progress
 - closeout readiness
 
-### 12.4 Workstream D: Measurement and buyer readiness
+### 16.4 Workstream D: Measurement and buyer readiness
 
 Add:
 
@@ -504,15 +727,17 @@ Add:
 
 ---
 
-## 13. Phasing
+## 17. Phasing
 
 ### Phase 1: Action contract hardening
 
 First settle:
 
+- action-card contract
+- action quality rules
 - lifecycle
 - route-to-action policy
-- review consequences
+- review evidence grammar
 - active action guardrails
 
 ### Phase 2: Manager repeated-use UX
@@ -529,6 +754,7 @@ Then add:
 
 - action-layer governance visibility
 - action-sprawl signaling
+- repeated-review-without-progress signaling
 - closeout-readiness signaling
 
 ### Phase 4: Measurement and buyer packaging
@@ -541,7 +767,7 @@ Last add:
 
 ---
 
-## 14. Non-Goals
+## 18. Non-Goals
 
 This design does not:
 
@@ -551,12 +777,15 @@ This design does not:
 - allow off-platform canonical writes
 - create subtasks or project boards
 - replace route truth with action truth
+- let managers close routes
 - move route closeout to managers
 - claim adoption proof
+- create advisory tooling
+- create generic workflow software
 
 ---
 
-## 15. Success Criteria
+## 19. Success Criteria
 
 This design is successful when:
 
@@ -569,23 +798,26 @@ This design is successful when:
 
 ---
 
-## 16. Approval Gate
+## 20. Approval Gate
 
 This design is ready for implementation planning only when the follow-up plan can execute without inventing new product truth around:
 
-- action lifecycle
-- review-outcome consequences
-- route-to-action policy
-- action-count limits
-- HR oversight semantics
-- measurement contract
+- action-card contract
+- valid and invalid action rules
+- HR intervention rules
+- enriched lifecycle
+- review evidence grammar
+- route-specific defaults
+- metric formulas
 - buyer-proof boundaries
+- non-goals
+- tests required for action lifecycle, permissions, HR intervention, action-sprawl, invalid actions, review outcomes, and metric event generation
 
-If those are not explicit, implementation planning should stop.
+Implementation planning may not start if any of these remain only implied or deferred.
 
 ---
 
-## 17. Next Step
+## 21. Next Step
 
 After approval, the next document should be an implementation plan that decomposes this bounded execution upgrade into slices.
 
