@@ -33,6 +33,21 @@ function makeRequest(body: Record<string, unknown>) {
   })
 }
 
+function makeRouteActionRequest(overrides: Record<string, unknown> = {}) {
+  return makeRequest({
+    campaign_id: 'campaign-1',
+    route_scope_type: 'department',
+    route_scope_value: 'org-1::department::operations',
+    manager_user_id: 'manager-1',
+    primary_action_theme_key: 'workload',
+    primary_action_text: 'Plan deze week een kort teamgesprek over workloadpieken.',
+    primary_action_expected_effect:
+      'Binnen twee weken moet zichtbaar zijn of de workloadpieken kleiner worden.',
+    review_scheduled_for: '2026-05-20',
+    ...overrides,
+  })
+}
+
 function createCampaignQuery(result: { data: unknown; error: unknown }) {
   return {
     select: vi.fn().mockReturnThis(),
@@ -81,6 +96,16 @@ function createDeleteQuery(result: { error: unknown }) {
   }
 }
 
+function createCountQuery(result: { count: number | null; error: unknown }) {
+  const query = {
+    select: vi.fn(() => query),
+    eq: vi.fn(() => query),
+    in: vi.fn().mockResolvedValue(result),
+  }
+
+  return query
+}
+
 describe('action center route actions route', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -111,7 +136,7 @@ describe('action center route actions route', () => {
     expect(mockAdminFrom).not.toHaveBeenCalled()
   })
 
-  it('does not hard-reject dossier-like language before auth because it remains a draft-invalid submission', async () => {
+  it('rejects employee-dossier-like language before auth because it is outside bounded execution', async () => {
     mockGetUser.mockResolvedValue({
       data: {
         user: null,
@@ -119,20 +144,13 @@ describe('action center route actions route', () => {
     })
 
     const response = await POST(
-      makeRequest({
-        campaign_id: 'campaign-1',
-        route_scope_type: 'department',
-        route_scope_value: 'org-1::department::operations',
-        manager_user_id: 'manager-1',
-        primary_action_theme_key: 'workload',
-        primary_action_text: 'Leg het dossier aan en vul de vervolgroute en stopreden voor deze casus bij.',
-        primary_action_expected_effect:
-          'Binnen twee weken moet duidelijk zijn of het dossier compleet genoeg is voor verdere routing.',
-        review_scheduled_for: '2026-05-20',
+      makeRouteActionRequest({
+        primary_action_text: 'Monitor employee X in detail for risk.',
+        primary_action_expected_effect: 'Track individual risk more closely.',
       }),
     )
 
-    expect(response.status).toBe(401)
+    expect(response.status).toBe(400)
     expect(mockAdminFrom).not.toHaveBeenCalled()
   })
 
@@ -295,7 +313,25 @@ describe('action center route actions route', () => {
     })
   })
 
-  it('persists dossier-like route language as an invalid draft instead of a 400 validation error', async () => {
+  it('rejects employee-dossier-like language instead of persisting it as draft truth', async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: { id: 'manager-1' },
+      },
+    })
+
+    const response = await POST(
+      makeRouteActionRequest({
+        primary_action_text: 'Monitor employee X in detail for risk.',
+        primary_action_expected_effect: 'Track individual risk more closely.',
+      }),
+    )
+
+    expect(response.status).toBe(400)
+    expect(mockAdminFrom).not.toHaveBeenCalled()
+  })
+
+  it('blocks more than three active actions on a route', async () => {
     mockGetUser.mockResolvedValue({
       data: {
         user: { id: 'manager-1' },
@@ -320,33 +356,18 @@ describe('action center route actions route', () => {
       ],
     })
 
+    const activeActionCountQuery = createCountQuery({
+      count: 3,
+      error: null,
+    })
     const insertQuery = createInsertQuery({
       data: {
-        id: 'action-draft-2',
-        route_id: 'campaign-1::org-1::department::operations',
-        campaign_id: 'campaign-1',
-        org_id: 'org-1',
-        route_scope_type: 'department',
-        route_scope_value: 'org-1::department::operations',
-        manager_user_id: 'manager-1',
-        owner_name: 'Manager Operations',
-        owner_assigned_at: '2026-04-01T08:00:00.000Z',
-        primary_action_theme_key: 'workload',
-        primary_action_text: 'Leg het dossier aan en vul de vervolgroute en stopreden voor deze casus bij.',
-        primary_action_expected_effect:
-          'Binnen twee weken moet duidelijk zijn of het dossier compleet genoeg is voor verdere routing.',
-        primary_action_status: null,
-        review_scheduled_for: '2026-05-20',
-        created_at: '2026-04-30T10:00:00.000Z',
-        updated_at: '2026-04-30T10:00:00.000Z',
+        id: 'action-over-limit',
       },
       error: null,
     })
-    const metricsInsertQuery = createInsertQuery({
-      data: [{ id: 'event-invalid-created' }, { id: 'event-invalid-rejected' }],
-      error: null,
-    })
 
+    let routeActionTableCalls = 0
     mockAdminFrom.mockImplementation((table: string) => {
       if (table === 'campaigns') {
         return createCampaignQuery({
@@ -364,7 +385,7 @@ describe('action center route actions route', () => {
       if (table === 'action_center_manager_responses') {
         return createRouteContainerQuery({
           data: {
-            id: 'response-invalid',
+            id: 'response-limit',
             campaign_id: 'campaign-1',
             org_id: 'org-1',
             route_scope_type: 'department',
@@ -376,58 +397,17 @@ describe('action center route actions route', () => {
       }
 
       if (table === 'action_center_route_actions') {
-        return insertQuery
-      }
-
-      if (table === 'action_center_bounded_execution_events') {
-        return metricsInsertQuery
+        routeActionTableCalls += 1
+        return routeActionTableCalls === 1 ? activeActionCountQuery : insertQuery
       }
 
       throw new Error(`Unexpected table ${table}`)
     })
 
-    const response = await POST(
-      makeRequest({
-        campaign_id: 'campaign-1',
-        route_scope_type: 'department',
-        route_scope_value: 'org-1::department::operations',
-        manager_user_id: 'manager-1',
-        primary_action_theme_key: 'workload',
-        primary_action_text: 'Leg het dossier aan en vul de vervolgroute en stopreden voor deze casus bij.',
-        primary_action_expected_effect:
-          'Binnen twee weken moet duidelijk zijn of het dossier compleet genoeg is voor verdere routing.',
-        review_scheduled_for: '2026-05-20',
-      }),
-    )
+    const response = await POST(makeRouteActionRequest({ existingActiveActionCount: 3 }))
 
-    expect(response.status).toBe(200)
-    expect(insertQuery.insert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        manager_response_id: 'response-invalid',
-        primary_action_status: null,
-      }),
-    )
-    expect(metricsInsertQuery.insert).toHaveBeenCalledWith([
-      expect.objectContaining({
-        event_type: 'action_draft_created',
-        object_anchor: 'action_card',
-        route_family: 'exit',
-        action_id: 'action-draft-2',
-      }),
-      expect.objectContaining({
-        event_type: 'action_draft_rejected',
-        object_anchor: 'action_card',
-        route_family: 'exit',
-        action_id: 'action-draft-2',
-      }),
-    ])
-
-    const payload = await response.json()
-    expect(payload.actionDraft).toMatchObject({
-      semanticState: 'draft',
-      validationDisposition: 'invalid',
-      primary_action_status: null,
-    })
+    expect(response.status).toBe(409)
+    expect(insertQuery.insert).not.toHaveBeenCalled()
   })
 
   it('persists missing content as an invalid draft instead of rejecting before draft validation', async () => {
@@ -1025,6 +1005,11 @@ describe('action center route actions route', () => {
       data: [{ id: 'event-valid-created' }, { id: 'event-valid-validated' }],
       error: null,
     })
+    const activeActionCountQuery = createCountQuery({
+      count: 0,
+      error: null,
+    })
+    let routeActionTableCalls = 0
 
     mockAdminFrom.mockImplementation((table: string) => {
       if (table === 'campaigns') {
@@ -1055,7 +1040,8 @@ describe('action center route actions route', () => {
       }
 
       if (table === 'action_center_route_actions') {
-        return insertQuery
+        routeActionTableCalls += 1
+        return routeActionTableCalls === 1 ? activeActionCountQuery : insertQuery
       }
 
       if (table === 'action_center_bounded_execution_events') {
@@ -1181,6 +1167,11 @@ describe('action center route actions route', () => {
       data: [{ id: 'event-valid-created' }, { id: 'event-valid-validated' }],
       error: null,
     })
+    const activeActionCountQuery = createCountQuery({
+      count: 0,
+      error: null,
+    })
+    let routeActionTableCalls = 0
 
     mockAdminFrom.mockImplementation((table: string) => {
       if (table === 'campaigns') {
@@ -1209,7 +1200,8 @@ describe('action center route actions route', () => {
       }
 
       if (table === 'action_center_route_actions') {
-        return insertQuery
+        routeActionTableCalls += 1
+        return routeActionTableCalls === 1 ? activeActionCountQuery : insertQuery
       }
 
       if (table === 'action_center_bounded_execution_events') {
@@ -1360,6 +1352,11 @@ describe('action center route actions route', () => {
       data: [{ id: 'event-admin-created' }, { id: 'event-admin-validated' }],
       error: null,
     })
+    const activeActionCountQuery = createCountQuery({
+      count: 0,
+      error: null,
+    })
+    let routeActionTableCalls = 0
 
     mockAdminFrom.mockImplementation((table: string) => {
       if (table === 'campaigns') {
@@ -1409,7 +1406,8 @@ describe('action center route actions route', () => {
       }
 
       if (table === 'action_center_route_actions') {
-        return insertQuery
+        routeActionTableCalls += 1
+        return routeActionTableCalls === 1 ? activeActionCountQuery : insertQuery
       }
 
       if (table === 'action_center_bounded_execution_events') {
@@ -1581,6 +1579,10 @@ describe('action center route actions route', () => {
       error: { message: 'metric insert failed' },
     })
     const deleteQuery = createDeleteQuery({ error: null })
+    const activeActionCountQuery = createCountQuery({
+      count: 0,
+      error: null,
+    })
     let routeActionTableCalls = 0
 
     mockAdminFrom.mockImplementation((table: string) => {
@@ -1613,7 +1615,11 @@ describe('action center route actions route', () => {
 
       if (table === 'action_center_route_actions') {
         routeActionTableCalls += 1
-        return routeActionTableCalls === 1 ? insertQuery : deleteQuery
+        if (routeActionTableCalls === 1) {
+          return activeActionCountQuery
+        }
+
+        return routeActionTableCalls === 2 ? insertQuery : deleteQuery
       }
 
       if (table === 'action_center_bounded_execution_events') {

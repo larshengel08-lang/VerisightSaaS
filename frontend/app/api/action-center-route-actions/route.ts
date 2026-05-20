@@ -317,6 +317,25 @@ export async function POST(request: Request) {
   }
 
   const adminClient = createAdminClient()
+  if (actionDraft.validationDisposition === 'valid') {
+    const { count: activeActionCount, error: activeActionCountError } = await adminClient
+      .from('action_center_route_actions')
+      .select('id', { count: 'exact', head: true })
+      .eq('route_id', identity.route_id)
+      .in('primary_action_status', ['open', 'in_review'])
+
+    if (activeActionCountError) {
+      return NextResponse.json({ detail: 'Route action route laden mislukt.' }, { status: 500 })
+    }
+
+    if ((activeActionCount ?? 0) > 2) {
+      return NextResponse.json(
+        { detail: 'Route exceeds bounded active-action limit.' },
+        { status: 409 },
+      )
+    }
+  }
+
   const { data, error } = await adminClient
     .from('action_center_route_actions')
     .insert({
