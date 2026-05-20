@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import {
+  type ActionCenterActor,
   isActionCenterActionStateTransitionAllowed,
   type ActionCenterActionSemanticState,
 } from '@/lib/action-center-constitution'
@@ -13,6 +14,10 @@ import {
   validateActionCenterActionReviewInput,
   type ActionCenterActionOutcome,
 } from '@/lib/action-center-action-reviews'
+import {
+  buildActionCenterBoundedExecutionEvent,
+  resolveActionCenterBoundedExecutionRouteFamily,
+} from '@/lib/action-center-bounded-execution-metrics'
 import { resolveActionReviewWriteIdentity } from '@/lib/action-center-route-write-access'
 import type { ActionCenterRouteActionStatus } from '@/lib/action-center-route-actions'
 import type { ActionCenterWorkspaceMember } from '@/lib/suite-access'
@@ -126,6 +131,13 @@ function resolvePersistedActionStatusFromSemanticState(
   }
 }
 
+function resolveReviewMetricActorRole(isVerisightAdmin: boolean): Extract<
+  ActionCenterActor,
+  'hr_rhythm_owner' | 'manager_participant'
+> {
+  return isVerisightAdmin ? 'hr_rhythm_owner' : 'manager_participant'
+}
+
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as ActionReviewRequestBody | null
 
@@ -153,7 +165,9 @@ export async function POST(request: Request) {
   const adminClient = createAdminClient()
   const { data: action, error: actionError } = await adminClient
     .from('action_center_route_actions')
-    .select('id, org_id, route_scope_type, route_scope_value, manager_user_id, primary_action_status')
+    .select(
+      'id, campaign_id, route_id, org_id, route_scope_type, route_scope_value, manager_user_id, primary_action_status, updated_by, updated_at',
+    )
     .eq('id', parsed.action_id)
     .maybeSingle()
 
@@ -208,6 +222,31 @@ export async function POST(request: Request) {
     )
   }
 
+  const actionCampaignId = normalizeText(action.campaign_id)
+  const actionRouteId = normalizeText(action.route_id)
+  let routeFamily = null
+
+  if (actionCampaignId) {
+    const { data: campaign, error: campaignError } = await adminClient
+      .from('campaigns')
+      .select('scan_type')
+      .eq('id', actionCampaignId)
+      .maybeSingle()
+
+    if (campaignError) {
+      return NextResponse.json({ detail: 'Route action route laden mislukt.' }, { status: 500 })
+    }
+
+    routeFamily = resolveActionCenterBoundedExecutionRouteFamily(normalizeText(campaign?.scan_type))
+  }
+
+  if (!routeFamily || !actionCampaignId || !actionRouteId || !routeScopeValue) {
+    return NextResponse.json(
+      { detail: 'Route action route family valt buiten bounded execution.' },
+      { status: 500 },
+    )
+  }
+
   const { data, error } = await adminClient
     .from('action_center_action_reviews')
     .insert({
@@ -255,6 +294,84 @@ export async function POST(request: Request) {
 
     return NextResponse.json(
       { detail: updateError?.message ?? 'Route action statusupdate bevestigen mislukt.' },
+      { status: 500 },
+    )
+  }
+
+  const reviewId = normalizeText(data.id)
+  const nextPersistedActionStatus = resolvePersistedActionStatusFromSemanticState(nextActionState)
+
+  if (!reviewId) {
+    return NextResponse.json({ detail: 'Route action review opslaan mislukt.' }, { status: 500 })
+  }
+
+  const metricEvents = [
+    buildActionCenterBoundedExecutionEvent('action_review_completed', {
+      orgId: action.org_id,
+      routeId: actionRouteId,
+      routeScopeValue,
+      routeSourceId: actionCampaignId,
+      routeFamily,
+      actionId: parsed.action_id,
+      actorRole: resolveReviewMetricActorRole(context.isVerisightAdmin),
+      actorUserId: user.id,
+      occurredAt: parsed.reviewed_at,
+    }),
+    buildActionCenterBoundedExecutionEvent('action_state_changed', {
+      orgId: action.org_id,
+      routeId: actionRouteId,
+      routeScopeValue,
+      routeSourceId: actionCampaignId,
+      routeFamily,
+      actionId: parsed.action_id,
+      actorRole: resolveReviewMetricActorRole(context.isVerisightAdmin),
+      actorUserId: user.id,
+      occurredAt: parsed.reviewed_at,
+    }),
+  ]
+
+  const { error: metricError } = await adminClient
+    .from('action_center_bounded_execution_events')
+    .insert(metricEvents)
+
+  if (metricError) {
+    const rollbackPayload: {
+      primary_action_status: string | null | undefined
+      updated_by?: string | null
+      updated_at?: string | null
+    } = {
+      primary_action_status: action.primary_action_status,
+    }
+
+    if (Object.prototype.hasOwnProperty.call(action, 'updated_by')) {
+      rollbackPayload.updated_by = action.updated_by ?? null
+    }
+
+    if (Object.prototype.hasOwnProperty.call(action, 'updated_at')) {
+      rollbackPayload.updated_at = action.updated_at ?? null
+    }
+
+    const rollbackStatusUpdate = await adminClient
+      .from('action_center_route_actions')
+      .update(rollbackPayload)
+      .eq('id', parsed.action_id)
+      .eq('primary_action_status', nextPersistedActionStatus)
+      .select('id')
+      .maybeSingle()
+    const reviewDelete = await adminClient.from('action_center_action_reviews').delete().eq('id', reviewId)
+
+    if (rollbackStatusUpdate.error || !rollbackStatusUpdate.data || reviewDelete.error) {
+      return NextResponse.json(
+        {
+          detail:
+            'Route action review opslaan is deels mislukt: bounded event logging en rollback faalden.',
+        },
+        { status: 500 },
+      )
+    }
+
+    return NextResponse.json(
+      { detail: 'Route action bounded event logging mislukt.' },
       { status: 500 },
     )
   }

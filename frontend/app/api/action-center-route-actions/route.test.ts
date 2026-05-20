@@ -66,9 +66,18 @@ function createAssignmentQuery(result: { data: unknown; error?: unknown }) {
 
 function createInsertQuery(result: { data: unknown; error: unknown }) {
   return {
+    data: result.data,
+    error: result.error,
     insert: vi.fn().mockReturnThis(),
     select: vi.fn().mockReturnThis(),
     single: vi.fn().mockResolvedValue(result),
+  }
+}
+
+function createDeleteQuery(result: { error: unknown }) {
+  return {
+    delete: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockResolvedValue(result),
   }
 }
 
@@ -198,11 +207,15 @@ describe('action center route actions route', () => {
       },
       error: null,
     })
+    const metricsInsertQuery = createInsertQuery({
+      data: [{ id: 'event-hr-review-created' }, { id: 'event-hr-review-disposition' }],
+      error: null,
+    })
 
     mockAdminFrom.mockImplementation((table: string) => {
       if (table === 'campaigns') {
         return createCampaignQuery({
-          data: { id: 'campaign-1', organization_id: 'org-1' },
+          data: { id: 'campaign-1', organization_id: 'org-1', scan_type: 'exit' },
           error: null,
         })
       }
@@ -231,6 +244,10 @@ describe('action center route actions route', () => {
         return insertQuery
       }
 
+      if (table === 'action_center_bounded_execution_events') {
+        return metricsInsertQuery
+      }
+
       throw new Error(`Unexpected table ${table}`)
     })
 
@@ -255,6 +272,20 @@ describe('action center route actions route', () => {
         primary_action_status: null,
       }),
     )
+    expect(metricsInsertQuery.insert).toHaveBeenCalledWith([
+      expect.objectContaining({
+        event_type: 'action_draft_created',
+        object_anchor: 'action_card',
+        route_family: 'exit',
+        action_id: 'action-draft-1',
+      }),
+      expect.objectContaining({
+        event_type: 'action_draft_sent_to_hr_review',
+        object_anchor: 'action_card',
+        route_family: 'exit',
+        action_id: 'action-draft-1',
+      }),
+    ])
 
     const payload = await response.json()
     expect(payload.actionDraft).toMatchObject({
@@ -311,11 +342,15 @@ describe('action center route actions route', () => {
       },
       error: null,
     })
+    const metricsInsertQuery = createInsertQuery({
+      data: [{ id: 'event-invalid-created' }, { id: 'event-invalid-rejected' }],
+      error: null,
+    })
 
     mockAdminFrom.mockImplementation((table: string) => {
       if (table === 'campaigns') {
         return createCampaignQuery({
-          data: { id: 'campaign-1', organization_id: 'org-1' },
+          data: { id: 'campaign-1', organization_id: 'org-1', scan_type: 'exit' },
           error: null,
         })
       }
@@ -344,6 +379,10 @@ describe('action center route actions route', () => {
         return insertQuery
       }
 
+      if (table === 'action_center_bounded_execution_events') {
+        return metricsInsertQuery
+      }
+
       throw new Error(`Unexpected table ${table}`)
     })
 
@@ -368,6 +407,20 @@ describe('action center route actions route', () => {
         primary_action_status: null,
       }),
     )
+    expect(metricsInsertQuery.insert).toHaveBeenCalledWith([
+      expect.objectContaining({
+        event_type: 'action_draft_created',
+        object_anchor: 'action_card',
+        route_family: 'exit',
+        action_id: 'action-draft-2',
+      }),
+      expect.objectContaining({
+        event_type: 'action_draft_rejected',
+        object_anchor: 'action_card',
+        route_family: 'exit',
+        action_id: 'action-draft-2',
+      }),
+    ])
 
     const payload = await response.json()
     expect(payload.actionDraft).toMatchObject({
@@ -423,11 +476,15 @@ describe('action center route actions route', () => {
       },
       error: null,
     })
+    const metricsInsertQuery = createInsertQuery({
+      data: [{ id: 'event-valid-created' }, { id: 'event-valid-validated' }],
+      error: null,
+    })
 
     mockAdminFrom.mockImplementation((table: string) => {
       if (table === 'campaigns') {
         return createCampaignQuery({
-          data: { id: 'campaign-1', organization_id: 'org-1' },
+          data: { id: 'campaign-1', organization_id: 'org-1', scan_type: 'exit' },
           error: null,
         })
       }
@@ -454,6 +511,10 @@ describe('action center route actions route', () => {
 
       if (table === 'action_center_route_actions') {
         return insertQuery
+      }
+
+      if (table === 'action_center_bounded_execution_events') {
+        return metricsInsertQuery
       }
 
       throw new Error(`Unexpected table ${table}`)
@@ -548,11 +609,15 @@ describe('action center route actions route', () => {
       },
       error: null,
     })
+    const metricsInsertQuery = createInsertQuery({
+      data: [{ id: 'event-valid-created' }, { id: 'event-valid-validated' }],
+      error: null,
+    })
 
     mockAdminFrom.mockImplementation((table: string) => {
       if (table === 'campaigns') {
         return createCampaignQuery({
-          data: { id: 'campaign-1', organization_id: 'org-1' },
+          data: { id: 'campaign-1', organization_id: 'org-1', scan_type: 'exit' },
           error: null,
         })
       }
@@ -579,6 +644,10 @@ describe('action center route actions route', () => {
 
       if (table === 'action_center_route_actions') {
         return insertQuery
+      }
+
+      if (table === 'action_center_bounded_execution_events') {
+        return metricsInsertQuery
       }
 
       throw new Error(`Unexpected table ${table}`)
@@ -846,7 +915,7 @@ describe('action center route actions route', () => {
     mockAdminFrom.mockImplementation((table: string) => {
       if (table === 'campaigns') {
         return createCampaignQuery({
-          data: { id: 'campaign-1', organization_id: 'org-1' },
+          data: { id: 'campaign-1', organization_id: 'org-1', scan_type: 'exit' },
           error: null,
         })
       }
@@ -952,11 +1021,15 @@ describe('action center route actions route', () => {
       },
       error: null,
     })
+    const metricsInsertQuery = createInsertQuery({
+      data: [{ id: 'event-valid-created' }, { id: 'event-valid-validated' }],
+      error: null,
+    })
 
     mockAdminFrom.mockImplementation((table: string) => {
       if (table === 'campaigns') {
         return createCampaignQuery({
-          data: { id: 'campaign-1', organization_id: 'org-1' },
+          data: { id: 'campaign-1', organization_id: 'org-1', scan_type: 'exit' },
           error: null,
         })
       }
@@ -983,6 +1056,10 @@ describe('action center route actions route', () => {
 
       if (table === 'action_center_route_actions') {
         return insertQuery
+      }
+
+      if (table === 'action_center_bounded_execution_events') {
+        return metricsInsertQuery
       }
 
       throw new Error(`Unexpected table ${table}`)
@@ -1023,6 +1100,20 @@ describe('action center route actions route', () => {
         updated_by: 'manager-1',
       }),
     )
+    expect(metricsInsertQuery.insert).toHaveBeenCalledWith([
+      expect.objectContaining({
+        event_type: 'action_draft_created',
+        object_anchor: 'action_card',
+        route_family: 'exit',
+        action_id: 'action-1',
+      }),
+      expect.objectContaining({
+        event_type: 'action_draft_validated',
+        object_anchor: 'action_card',
+        route_family: 'exit',
+        action_id: 'action-1',
+      }),
+    ])
 
     const payload = await response.json()
     expect(payload.action).toMatchObject({
@@ -1086,11 +1177,15 @@ describe('action center route actions route', () => {
       },
       error: null,
     })
+    const metricsInsertQuery = createInsertQuery({
+      data: [{ id: 'event-valid-created' }, { id: 'event-valid-validated' }],
+      error: null,
+    })
 
     mockAdminFrom.mockImplementation((table: string) => {
       if (table === 'campaigns') {
         return createCampaignQuery({
-          data: { id: 'campaign-1', organization_id: 'org-1' },
+          data: { id: 'campaign-1', organization_id: 'org-1', scan_type: 'exit' },
           error: null,
         })
       }
@@ -1115,6 +1210,10 @@ describe('action center route actions route', () => {
 
       if (table === 'action_center_route_actions') {
         return insertQuery
+      }
+
+      if (table === 'action_center_bounded_execution_events') {
+        return metricsInsertQuery
       }
 
       throw new Error(`Unexpected table ${table}`)
@@ -1257,11 +1356,15 @@ describe('action center route actions route', () => {
       },
       error: null,
     })
+    const metricsInsertQuery = createInsertQuery({
+      data: [{ id: 'event-admin-created' }, { id: 'event-admin-validated' }],
+      error: null,
+    })
 
     mockAdminFrom.mockImplementation((table: string) => {
       if (table === 'campaigns') {
         return createCampaignQuery({
-          data: { id: 'campaign-1', organization_id: 'org-1' },
+          data: { id: 'campaign-1', organization_id: 'org-1', scan_type: 'exit' },
           error: null,
         })
       }
@@ -1307,6 +1410,10 @@ describe('action center route actions route', () => {
 
       if (table === 'action_center_route_actions') {
         return insertQuery
+      }
+
+      if (table === 'action_center_bounded_execution_events') {
+        return metricsInsertQuery
       }
 
       throw new Error(`Unexpected table ${table}`)
@@ -1420,5 +1527,211 @@ describe('action center route actions route', () => {
     )
 
     expect(response.status).toBe(400)
+  })
+
+  it('rolls back the inserted action when bounded event logging fails', async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: { id: 'manager-1' },
+      },
+    })
+    mockLoadSuiteAccessContext.mockResolvedValue({
+      context: { isVerisightAdmin: false },
+      workspaceMemberships: [
+        {
+          org_id: 'org-1',
+          user_id: 'manager-1',
+          access_role: 'manager_assignee',
+          scope_type: 'department',
+          scope_value: 'org-1::department::operations',
+          can_view: true,
+          can_update: true,
+          display_name: 'Manager Operations',
+          login_email: 'manager.operations@example.com',
+          created_at: '2026-04-01T08:00:00.000Z',
+          updated_at: '2026-04-01T08:00:00.000Z',
+        },
+      ],
+    })
+
+    const insertQuery = createInsertQuery({
+      data: {
+        id: 'action-metric-failure',
+        route_id: 'campaign-1::org-1::department::operations',
+        campaign_id: 'campaign-1',
+        org_id: 'org-1',
+        route_scope_type: 'department',
+        route_scope_value: 'org-1::department::operations',
+        manager_user_id: 'manager-1',
+        owner_name: 'Manager Operations',
+        owner_assigned_at: '2026-04-01T08:00:00.000Z',
+        primary_action_theme_key: 'workload',
+        primary_action_text: 'Plan deze week een kort teamgesprek over workloadpieken.',
+        primary_action_expected_effect:
+          'Binnen twee weken moet zichtbaar zijn of de workloadpieken kleiner worden.',
+        primary_action_status: null,
+        review_scheduled_for: '2026-05-20',
+        created_at: '2026-04-30T10:00:00.000Z',
+        updated_at: '2026-04-30T10:00:00.000Z',
+      },
+      error: null,
+    })
+    const metricsInsertQuery = createInsertQuery({
+      data: null,
+      error: { message: 'metric insert failed' },
+    })
+    const deleteQuery = createDeleteQuery({ error: null })
+    let routeActionTableCalls = 0
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'campaigns') {
+        return createCampaignQuery({
+          data: { id: 'campaign-1', organization_id: 'org-1', scan_type: 'exit' },
+          error: null,
+        })
+      }
+
+      if (table === 'respondents') {
+        return createRespondentsQuery({
+          data: [{ department: 'Operations' }],
+        })
+      }
+
+      if (table === 'action_center_manager_responses') {
+        return createRouteContainerQuery({
+          data: {
+            id: 'response-metric-failure',
+            campaign_id: 'campaign-1',
+            org_id: 'org-1',
+            route_scope_type: 'department',
+            route_scope_value: 'org-1::department::operations',
+            manager_user_id: 'manager-1',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_route_actions') {
+        routeActionTableCalls += 1
+        return routeActionTableCalls === 1 ? insertQuery : deleteQuery
+      }
+
+      if (table === 'action_center_bounded_execution_events') {
+        return metricsInsertQuery
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest({
+        campaign_id: 'campaign-1',
+        route_scope_type: 'department',
+        route_scope_value: 'org-1::department::operations',
+        manager_user_id: 'manager-1',
+        primary_action_theme_key: 'workload',
+        primary_action_text: 'Plan deze week een kort teamgesprek over workloadpieken.',
+        primary_action_expected_effect:
+          'Binnen twee weken moet zichtbaar zijn of de workloadpieken kleiner worden.',
+        review_scheduled_for: '2026-05-20',
+      }),
+    )
+
+    expect(response.status).toBe(500)
+    await expect(response.json()).resolves.toEqual({
+      detail: 'Route action bounded event logging mislukt.',
+    })
+    expect(metricsInsertQuery.insert).toHaveBeenCalledTimes(1)
+    expect(deleteQuery.delete).toHaveBeenCalledTimes(1)
+    expect(deleteQuery.eq).toHaveBeenCalledWith('id', 'action-metric-failure')
+  })
+
+  it('fails closed before persisting an action when the campaign route family is outside bounded execution', async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: { id: 'manager-1' },
+      },
+    })
+    mockLoadSuiteAccessContext.mockResolvedValue({
+      context: { isVerisightAdmin: false },
+      workspaceMemberships: [
+        {
+          org_id: 'org-1',
+          user_id: 'manager-1',
+          access_role: 'manager_assignee',
+          scope_type: 'department',
+          scope_value: 'org-1::department::operations',
+          can_view: true,
+          can_update: true,
+          display_name: 'Manager Operations',
+          login_email: 'manager.operations@example.com',
+          created_at: '2026-04-01T08:00:00.000Z',
+          updated_at: '2026-04-01T08:00:00.000Z',
+        },
+      ],
+    })
+
+    const insertQuery = createInsertQuery({ data: null, error: null })
+    const metricsInsertQuery = createInsertQuery({ data: null, error: null })
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'campaigns') {
+        return createCampaignQuery({
+          data: { id: 'campaign-1', organization_id: 'org-1', scan_type: 'pulse' },
+          error: null,
+        })
+      }
+
+      if (table === 'respondents') {
+        return createRespondentsQuery({
+          data: [{ department: 'Operations' }],
+        })
+      }
+
+      if (table === 'action_center_manager_responses') {
+        return createRouteContainerQuery({
+          data: {
+            id: 'response-unsupported-family',
+            campaign_id: 'campaign-1',
+            org_id: 'org-1',
+            route_scope_type: 'department',
+            route_scope_value: 'org-1::department::operations',
+            manager_user_id: 'manager-1',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_route_actions') {
+        return insertQuery
+      }
+
+      if (table === 'action_center_bounded_execution_events') {
+        return metricsInsertQuery
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest({
+        campaign_id: 'campaign-1',
+        route_scope_type: 'department',
+        route_scope_value: 'org-1::department::operations',
+        manager_user_id: 'manager-1',
+        primary_action_theme_key: 'workload',
+        primary_action_text: 'Plan deze week een kort teamgesprek over workloadpieken.',
+        primary_action_expected_effect:
+          'Binnen twee weken moet zichtbaar zijn of de workloadpieken kleiner worden.',
+        review_scheduled_for: '2026-05-20',
+      }),
+    )
+
+    expect(response.status).toBe(500)
+    await expect(response.json()).resolves.toEqual({
+      detail: 'Route action route family valt buiten bounded execution.',
+    })
+    expect(insertQuery.insert).not.toHaveBeenCalled()
+    expect(metricsInsertQuery.insert).not.toHaveBeenCalled()
   })
 })

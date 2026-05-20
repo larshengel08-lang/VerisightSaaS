@@ -119,4 +119,95 @@ create policy "service_role_can_insert_action_center_adoption_events"
   to service_role
   with check (true);
 
+create table if not exists public.action_center_bounded_execution_events (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.organizations(id) on delete cascade,
+  route_id text not null,
+  route_scope_value text not null,
+  route_source_id uuid not null,
+  route_family text not null
+    check (route_family in ('exit', 'retention')),
+  action_id uuid,
+  object_anchor text not null
+    check (object_anchor in ('follow_through_route', 'action_card')),
+  event_type text not null
+    check (
+      event_type in (
+        'route_opened',
+        'route_became_execution_expected',
+        'action_draft_created',
+        'action_draft_validated',
+        'action_draft_rejected',
+        'action_draft_sent_to_hr_review',
+        'action_state_changed',
+        'action_review_opened',
+        'action_review_completed',
+        'hr_chase_event'
+      )
+    ),
+  actor_role text not null
+    check (actor_role in ('hr_rhythm_owner', 'manager_participant', 'system_channel')),
+  actor_user_id uuid references auth.users(id) on delete set null,
+  metadata jsonb not null default '{}'::jsonb,
+  occurred_at timestamptz not null default now(),
+  created_at timestamptz not null default now(),
+  constraint action_center_bounded_execution_events_route_id_text_check
+    check (length(btrim(route_id)) > 0),
+  constraint action_center_bounded_execution_events_route_scope_value_text_check
+    check (length(btrim(route_scope_value)) > 0),
+  constraint action_center_bounded_execution_events_route_identity_check
+    check (route_id = ((route_source_id)::text || '::' || route_scope_value)),
+  constraint action_center_bounded_execution_events_action_scope_check
+    check (
+      ((object_anchor = 'action_card') and action_id is not null)
+      or ((object_anchor = 'follow_through_route') and action_id is null)
+    ),
+  constraint action_center_bounded_execution_events_actor_identity_check
+    check (
+      ((actor_role = 'system_channel') and actor_user_id is null)
+      or ((actor_role <> 'system_channel') and actor_user_id is not null)
+    ),
+  constraint action_center_bounded_execution_events_event_mapping_check
+    check (
+      (event_type = 'route_opened' and object_anchor = 'follow_through_route' and actor_role in ('hr_rhythm_owner', 'system_channel'))
+      or (event_type = 'route_became_execution_expected' and object_anchor = 'follow_through_route' and actor_role = 'system_channel')
+      or (event_type = 'action_draft_created' and object_anchor = 'action_card' and actor_role in ('hr_rhythm_owner', 'manager_participant'))
+      or (event_type = 'action_draft_validated' and object_anchor = 'action_card' and actor_role in ('hr_rhythm_owner', 'manager_participant'))
+      or (event_type = 'action_draft_rejected' and object_anchor = 'action_card' and actor_role in ('hr_rhythm_owner', 'manager_participant'))
+      or (event_type = 'action_draft_sent_to_hr_review' and object_anchor = 'action_card' and actor_role in ('hr_rhythm_owner', 'manager_participant'))
+      or (event_type = 'action_state_changed' and object_anchor = 'action_card' and actor_role in ('hr_rhythm_owner', 'manager_participant', 'system_channel'))
+      or (event_type = 'action_review_opened' and object_anchor = 'action_card' and actor_role in ('hr_rhythm_owner', 'manager_participant'))
+      or (event_type = 'action_review_completed' and object_anchor = 'action_card' and actor_role in ('hr_rhythm_owner', 'manager_participant'))
+      or (event_type = 'hr_chase_event' and object_anchor = 'follow_through_route' and actor_role = 'hr_rhythm_owner')
+    ),
+  constraint action_center_bounded_execution_events_metadata_check
+    check (jsonb_typeof(metadata) = 'object' and metadata = '{}'::jsonb),
+  constraint action_center_bounded_execution_events_route_source_campaign_org_fk
+    foreign key (route_source_id, org_id) references public.campaigns(id, organization_id) on delete cascade
+);
+
+create index if not exists idx_action_center_bounded_execution_events_org
+  on public.action_center_bounded_execution_events(org_id, occurred_at desc);
+
+create index if not exists idx_action_center_bounded_execution_events_route
+  on public.action_center_bounded_execution_events(route_id, event_type, occurred_at desc);
+
+create index if not exists idx_action_center_bounded_execution_events_action
+  on public.action_center_bounded_execution_events(action_id, occurred_at desc)
+  where action_id is not null;
+
+alter table public.action_center_bounded_execution_events enable row level security;
+
+drop policy if exists "service_role_can_select_action_center_bounded_execution_events" on public.action_center_bounded_execution_events;
+create policy "service_role_can_select_action_center_bounded_execution_events"
+  on public.action_center_bounded_execution_events for select
+  to service_role
+  using (true);
+
+drop policy if exists "service_role_can_insert_action_center_bounded_execution_events" on public.action_center_bounded_execution_events;
+create policy "service_role_can_insert_action_center_bounded_execution_events"
+  on public.action_center_bounded_execution_events for insert
+  to service_role
+  with check (true);
+
 notify pgrst, 'reload schema';

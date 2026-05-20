@@ -41,8 +41,18 @@ function createActionQuery(result: { data: unknown; error: unknown }) {
   }
 }
 
+function createCampaignQuery(result: { data: unknown; error: unknown }) {
+  return {
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    maybeSingle: vi.fn().mockResolvedValue(result),
+  }
+}
+
 function createInsertQuery(result: { data: unknown; error: unknown }) {
   return {
+    data: result.data,
+    error: result.error,
     insert: vi.fn().mockReturnThis(),
     select: vi.fn().mockReturnThis(),
     single: vi.fn().mockResolvedValue(result),
@@ -226,6 +236,10 @@ describe('action center action reviews route', () => {
       error: null,
     })
     const updateQuery = createUpdateQuery({ error: null })
+    const metricsInsertQuery = createInsertQuery({
+      data: [{ id: 'event-review-completed' }, { id: 'event-state-changed' }],
+      error: null,
+    })
     let actionLookupCount = 0
 
     mockAdminFrom.mockImplementation((table: string) => {
@@ -234,22 +248,37 @@ describe('action center action reviews route', () => {
         if (actionLookupCount === 1) {
           return createActionQuery({
             data: {
-            id: 'action-1',
-            org_id: 'org-1',
-            route_scope_type: 'department',
-            route_scope_value: 'org-1::department::operations',
-            manager_user_id: 'manager-1',
-            primary_action_status: 'in_review',
-          },
-          error: null,
-        })
+              id: 'action-1',
+              campaign_id: 'campaign-1',
+              route_id: 'campaign-1::org-1::department::operations',
+              org_id: 'org-1',
+              route_scope_type: 'department',
+              route_scope_value: 'org-1::department::operations',
+              manager_user_id: 'manager-1',
+              primary_action_status: 'in_review',
+            },
+            error: null,
+          })
         }
 
         return updateQuery
       }
 
+      if (table === 'campaigns') {
+        return createCampaignQuery({
+          data: {
+            scan_type: 'retention',
+          },
+          error: null,
+        })
+      }
+
       if (table === 'action_center_action_reviews') {
         return insertQuery
+      }
+
+      if (table === 'action_center_bounded_execution_events') {
+        return metricsInsertQuery
       }
 
       throw new Error(`Unexpected table ${table}`)
@@ -287,6 +316,21 @@ describe('action center action reviews route', () => {
         updated_by: 'manager-1',
       }),
     )
+    expect(metricsInsertQuery.insert).toHaveBeenCalledWith([
+      expect.objectContaining({
+        event_type: 'action_review_completed',
+        object_anchor: 'action_card',
+        route_family: 'retention',
+        action_id: 'action-1',
+      }),
+      expect.objectContaining({
+        event_type: 'action_state_changed',
+        object_anchor: 'action_card',
+        route_family: 'retention',
+        action_id: 'action-1',
+        metadata: {},
+      }),
+    ])
     expect(updateQuery.eq).toHaveBeenCalledWith('id', 'action-1')
 
     const actionUpdate = updateQuery.update.mock.calls[0]?.[0]
@@ -359,6 +403,10 @@ describe('action center action reviews route', () => {
         return insertQuery
       }
 
+      if (table === 'action_center_bounded_execution_events') {
+        return metricsInsertQuery
+      }
+
       throw new Error(`Unexpected table ${table}`)
     })
 
@@ -421,6 +469,10 @@ describe('action center action reviews route', () => {
 
       if (table === 'action_center_action_reviews') {
         return insertQuery
+      }
+
+      if (table === 'action_center_bounded_execution_events') {
+        return metricsInsertQuery
       }
 
       throw new Error(`Unexpected table ${table}`)
@@ -490,6 +542,8 @@ describe('action center action reviews route', () => {
           return createActionQuery({
             data: {
               id: 'action-13',
+              campaign_id: 'campaign-1',
+              route_id: 'campaign-1::org-1::department::operations',
               org_id: 'org-1',
               route_scope_type: 'department',
               route_scope_value: 'org-1::department::operations',
@@ -501,6 +555,13 @@ describe('action center action reviews route', () => {
         }
 
         return updateQuery
+      }
+
+      if (table === 'campaigns') {
+        return createCampaignQuery({
+          data: { scan_type: 'retention' },
+          error: null,
+        })
       }
 
       if (table === 'action_center_action_reviews') {
@@ -579,6 +640,8 @@ describe('action center action reviews route', () => {
           return createActionQuery({
             data: {
               id: 'action-14',
+              campaign_id: 'campaign-1',
+              route_id: 'campaign-1::org-1::department::operations',
               org_id: 'org-1',
               route_scope_type: 'department',
               route_scope_value: 'org-1::department::operations',
@@ -590,6 +653,13 @@ describe('action center action reviews route', () => {
         }
 
         return updateQuery
+      }
+
+      if (table === 'campaigns') {
+        return createCampaignQuery({
+          data: { scan_type: 'retention' },
+          error: null,
+        })
       }
 
       if (table === 'action_center_action_reviews') {
@@ -664,6 +734,8 @@ describe('action center action reviews route', () => {
           return createActionQuery({
             data: {
               id: 'action-15',
+              campaign_id: 'campaign-1',
+              route_id: 'campaign-1::org-1::department::operations',
               org_id: 'org-1',
               route_scope_type: 'department',
               route_scope_value: 'org-1::department::operations',
@@ -675,6 +747,13 @@ describe('action center action reviews route', () => {
         }
 
         return updateQuery
+      }
+
+      if (table === 'campaigns') {
+        return createCampaignQuery({
+          data: { scan_type: 'retention' },
+          error: null,
+        })
       }
 
       if (table === 'action_center_action_reviews') {
@@ -749,6 +828,8 @@ describe('action center action reviews route', () => {
           return createActionQuery({
             data: {
               id: 'action-16',
+              campaign_id: 'campaign-1',
+              route_id: 'campaign-1::org-1::department::operations',
               org_id: 'org-1',
               route_scope_type: 'department',
               route_scope_value: 'org-1::department::operations',
@@ -760,6 +841,13 @@ describe('action center action reviews route', () => {
         }
 
         return updateQuery
+      }
+
+      if (table === 'campaigns') {
+        return createCampaignQuery({
+          data: { scan_type: 'retention' },
+          error: null,
+        })
       }
 
       if (table === 'action_center_action_reviews') {
@@ -788,5 +876,214 @@ describe('action center action reviews route', () => {
     expect(updateQuery.eq).toHaveBeenNthCalledWith(2, 'primary_action_status', 'in_review')
     expect(deleteQuery.delete).toHaveBeenCalledTimes(1)
     expect(deleteQuery.eq).toHaveBeenCalledWith('id', 'review-rollback-4')
+  })
+
+  it('restores the previous action audit state when bounded event logging fails after review completion', async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: { id: 'manager-1' },
+      },
+    })
+    mockLoadSuiteAccessContext.mockResolvedValue({
+      context: { isVerisightAdmin: false },
+      workspaceMemberships: [
+        {
+          org_id: 'org-1',
+          user_id: 'manager-1',
+          access_role: 'manager_assignee',
+          scope_type: 'department',
+          scope_value: 'org-1::department::operations',
+          can_view: true,
+          can_update: true,
+        },
+      ],
+    })
+
+    const insertQuery = createInsertQuery({
+      data: {
+        id: 'review-metric-rollback-1',
+        action_id: 'action-17',
+        reviewed_at: '2026-05-12T09:30:00.000Z',
+        observation: 'The review succeeded before bounded metrics failed.',
+        action_outcome: 'bijsturen-nodig',
+        follow_up_note: 'Restore the exact prior audit state.',
+      },
+      error: null,
+    })
+    const metricsInsertQuery = createInsertQuery({
+      data: null,
+      error: { message: 'metric insert failed' },
+    })
+    const updateQuery = {
+      update: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      maybeSingle: vi
+        .fn()
+        .mockResolvedValueOnce({ data: { id: 'action-17' }, error: null })
+        .mockResolvedValueOnce({ data: { id: 'action-17' }, error: null }),
+    }
+    const deleteQuery = createDeleteQuery({ error: null })
+    let routeActionTableCalls = 0
+    let actionReviewTableCalls = 0
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'action_center_route_actions') {
+        routeActionTableCalls += 1
+        if (routeActionTableCalls === 1) {
+          return createActionQuery({
+            data: {
+              id: 'action-17',
+              campaign_id: 'campaign-1',
+              route_id: 'campaign-1::org-1::department::operations',
+              org_id: 'org-1',
+              route_scope_type: 'department',
+              route_scope_value: 'org-1::department::operations',
+              manager_user_id: 'manager-1',
+              primary_action_status: 'in_review',
+              updated_by: 'hr-previous',
+              updated_at: '2026-05-01T08:15:00.000Z',
+            },
+            error: null,
+          })
+        }
+
+        return updateQuery
+      }
+
+      if (table === 'campaigns') {
+        return createCampaignQuery({
+          data: {
+            scan_type: 'retention',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_action_reviews') {
+        actionReviewTableCalls += 1
+        return actionReviewTableCalls === 1 ? insertQuery : deleteQuery
+      }
+
+      if (table === 'action_center_bounded_execution_events') {
+        return metricsInsertQuery
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest({
+        action_id: 'action-17',
+        reviewed_at: '2026-05-12T09:30:00.000Z',
+        observation: 'The review succeeded before bounded metrics failed.',
+        action_outcome: 'bijsturen-nodig',
+        follow_up_note: 'Restore the exact prior audit state.',
+      }),
+    )
+
+    expect(response.status).toBe(500)
+    await expect(response.json()).resolves.toEqual({
+      detail: 'Route action bounded event logging mislukt.',
+    })
+    expect(updateQuery.update).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        primary_action_status: 'open',
+        updated_by: 'manager-1',
+      }),
+    )
+    expect(updateQuery.update).toHaveBeenNthCalledWith(2, {
+      primary_action_status: 'in_review',
+      updated_by: 'hr-previous',
+      updated_at: '2026-05-01T08:15:00.000Z',
+    })
+    expect(deleteQuery.delete).toHaveBeenCalledTimes(1)
+    expect(deleteQuery.eq).toHaveBeenCalledWith('id', 'review-metric-rollback-1')
+  })
+
+  it('fails closed before inserting a review when the campaign route family is outside bounded execution', async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: { id: 'manager-1' },
+      },
+    })
+    mockLoadSuiteAccessContext.mockResolvedValue({
+      context: { isVerisightAdmin: false },
+      workspaceMemberships: [
+        {
+          org_id: 'org-1',
+          user_id: 'manager-1',
+          access_role: 'manager_assignee',
+          scope_type: 'department',
+          scope_value: 'org-1::department::operations',
+          can_view: true,
+          can_update: true,
+        },
+      ],
+    })
+
+    const insertQuery = createInsertQuery({ data: null, error: null })
+    const updateQuery = createUpdateQuery({ error: null })
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'action_center_route_actions') {
+        return createActionQuery({
+          data: {
+            id: 'action-18',
+            campaign_id: 'campaign-1',
+            route_id: 'campaign-1::org-1::department::operations',
+            org_id: 'org-1',
+            route_scope_type: 'department',
+            route_scope_value: 'org-1::department::operations',
+            manager_user_id: 'manager-1',
+            primary_action_status: 'in_review',
+            updated_by: 'hr-previous',
+            updated_at: '2026-05-01T08:15:00.000Z',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'campaigns') {
+        return createCampaignQuery({
+          data: {
+            scan_type: 'pulse',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_action_reviews') {
+        return insertQuery
+      }
+
+      if (table === 'action_center_bounded_execution_events') {
+        return createInsertQuery({ data: null, error: null })
+      }
+
+      if (table === 'action_center_route_actions') {
+        return updateQuery
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest({
+        action_id: 'action-18',
+        reviewed_at: '2026-05-12T09:30:00.000Z',
+        observation: 'Unsupported route family should fail closed.',
+        action_outcome: 'bijsturen-nodig',
+        follow_up_note: 'Do not silently skip the metrics rail.',
+      }),
+    )
+
+    expect(response.status).toBe(500)
+    await expect(response.json()).resolves.toEqual({
+      detail: 'Route action route family valt buiten bounded execution.',
+    })
+    expect(insertQuery.insert).not.toHaveBeenCalled()
+    expect(updateQuery.update).not.toHaveBeenCalled()
   })
 })
