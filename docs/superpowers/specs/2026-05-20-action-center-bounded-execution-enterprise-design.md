@@ -216,6 +216,12 @@ The minimum contract exists so that each action card is:
 - reviewable in one bounded cycle
 - readable by HR without reconstructing hidden context
 
+The contract also distinguishes between:
+
+- a submitted but not yet valid `draft`
+- a valid execution card that may become `active`
+- an invalid or escalated draft that is not yet canonical execution truth
+
 ### 5.3 Prohibited action-card content
 
 Action cards may not contain:
@@ -282,6 +288,30 @@ Manager-created actions are allowed only if they remain bounded and execution-gr
 ### 6.3 Design consequence
 
 The product should reject or escalate weak action quality rather than quietly persist it as acceptable truth.
+
+### 6.4 Draft and approval behavior
+
+Weak action quality must not silently become active execution truth.
+
+The default behavior is:
+
+- manager submissions enter `draft`
+- a structurally valid, route-bound action may be promoted from `draft` to `active`
+- an invalid submission stays `draft` and is marked `invalid`
+- a borderline or governance-sensitive submission may stay `draft` and be marked `needs_hr_review`
+- only a valid action may count toward active action limits, execution metrics, or route-to-action conversion
+
+Managers may revise their own `draft` actions.
+
+HR may:
+
+- request adjustment
+- approve a `needs_hr_review` draft into `active`
+- reject a draft from becoming canonical execution truth
+
+HR should not routinely rewrite manager actions line by line.
+
+`action_quality_rejection_rate` must include drafts rejected or held back from active execution truth because of quality or governance violations.
 
 ---
 
@@ -351,7 +381,47 @@ The UI may map those states to simpler labels such as:
 - the action has been replaced by a newer route-bound action
 - it is not deleted
 
-### 7.4 What the lifecycle must not do
+### 7.4 Action transition matrix
+
+Implementation planning must treat this as canonical transition truth.
+
+| From state | To state | Allowed? | Actor | Trigger | Notes |
+| --- | --- | --- | --- | --- | --- |
+| `draft` | `active` | yes | manager or HR | action passes validation and is accepted as bounded execution truth | manager may promote only their own valid draft; HR may approve `needs_hr_review` drafts |
+| `draft` | `stopped` | yes | manager or HR | draft is intentionally abandoned before activation | remains auditable; never counted as active execution |
+| `draft` | `superseded` | yes | manager or HR | newer draft or active action replaces this draft before activation | old draft remains in history |
+| `draft` | `completed` | no | none | prohibited | draft may not skip execution and review |
+| `active` | `review_due` | yes | system | review due date or trigger reached | derived timing transition only |
+| `active` | `blocked` | yes | manager or HR | blocker explicitly signaled | blocked is an execution signal, not route escalation by itself |
+| `active` | `superseded` | yes | manager or HR | newer route-bound action formally replaces this action | older action remains in history |
+| `active` | `completed` | no | none | prohibited | active action must go through review |
+| `review_due` | `in_review` | yes | manager or HR | review opened | canonical review session starts |
+| `review_due` | `blocked` | yes | manager or HR | blocker identified before or during review opening | review may still be required afterward |
+| `review_due` | `completed` | no | none | prohibited | review_due may not skip review outcome |
+| `in_review` | `active` | yes | manager or HR | review outcome `bijsturen-nodig` or `nog-te-vroeg` with consequence `continue` or `adjust` | action remains live |
+| `in_review` | `blocked` | yes | manager or HR | review identifies explicit execution blocker | route may later surface governance signal |
+| `in_review` | `completed` | yes | manager or HR | review outcome `effect-zichtbaar` with consequence `complete` | requires observed change and evidence source |
+| `in_review` | `stopped` | yes | manager or HR | review outcome `stoppen` or consequence `stop` | action ends without closing route |
+| `blocked` | `in_review` | yes | manager or HR | blocker is reviewed explicitly | preferred path back into active evaluation |
+| `blocked` | `active` | no | none | prohibited | blocked may not silently recover without review |
+| `blocked` | `completed` | no | none | prohibited | blocked action may not skip review to completion |
+| `blocked` | `stopped` | yes | manager or HR | review or explicit governance decision stops the action | remains auditable |
+| `completed` | `superseded` | no | none | prohibited | completed work is historical truth, not replaceable truth |
+| `completed` | `active` | no | none | prohibited | new work requires a new route-bound action |
+| `stopped` | `active` | no | none | prohibited | restarting requires a new or superseding action |
+| `stopped` | `superseded` | yes | manager or HR | newer route-bound action replaces prior stopped attempt | keeps execution lineage explicit |
+| `superseded` | any other state | no | none | prohibited | superseded actions are historical only |
+
+### 7.5 Review-outcome transition defaults
+
+The default review-outcome mapping is:
+
+- `effect-zichtbaar` -> `in_review` to `completed`
+- `bijsturen-nodig` -> `in_review` to `active`
+- `nog-te-vroeg` -> `in_review` to `active`
+- `stoppen` -> `in_review` to `stopped`
+
+### 7.6 What the lifecycle must not do
 
 The action lifecycle must not:
 
@@ -396,6 +466,27 @@ The default consequence mapping is:
 - `nog-te-vroeg` -> action stays live and requires continued review
 
 Action review does not decide route closure by itself.
+
+### 8.4 Manager review UX simplification rules
+
+The review grammar must stay enterprise-safe without becoming manager-heavy.
+
+The default interaction should be:
+
+- one primary review question
+- one compact outcome selector
+- one simple `evidence_source` dropdown
+- one bounded note field with strict placeholder guidance
+
+`confidence_level` should default to compact selection and may stay visually secondary.
+
+Additional structure should expand only when needed:
+
+- `effect-zichtbaar` requires `observed_change` and `evidence_source`
+- `bijsturen-nodig` requires a bounded explanation of what needs adjustment
+- `HR review needed` requires a concise reason
+
+The design should prefer structured brevity over free-form review forms.
 
 ---
 
@@ -461,7 +552,21 @@ HR remains the governance owner, not the day-to-day action operator.
 - repeated action review outcome `bijsturen-nodig` or `nog-te-vroeg` more than twice: HR review required
 - action stuck open beyond threshold: HR oversight signal
 
-### 10.3 Intervention philosophy
+### 10.3 Route-family default thresholds
+
+These defaults must be treated as product defaults, not implementation guesses.
+
+| Situation | ExitScan default | RetentieScan default | Meaning |
+| --- | --- | --- | --- |
+| action review due | `60-90 days` | `45-90 days` | default bounded review window |
+| stuck active warning | `30 days` without meaningful update or review after activation | `21-30 days` without meaningful update or review after activation | route remains active but HR sees `stuck_action` risk |
+| review_due grace period | `7 days` | `7 days` | small grace period before stronger overdue signaling |
+| repeated review warning | more than `2` consecutive `bijsturen-nodig` or `nog-te-vroeg` outcomes | more than `2` consecutive `bijsturen-nodig` or `nog-te-vroeg` outcomes | HR review required |
+| sprawl risk | more than `3` active actions | more than `3` active actions | `action_sprawl_risk` and HR intervention required |
+
+These defaults may later be refined by approved route-default policy, but implementation planning may not invent looser starting thresholds.
+
+### 10.4 Intervention philosophy
 
 HR should:
 
@@ -552,6 +657,7 @@ For both route families:
 - no generic project board
 - no broad task engine
 - no people case management
+- no action becomes canonical execution truth before it passes bounded validation
 
 ---
 
@@ -619,7 +725,27 @@ This wave should make the existing action model measurable enough to later prove
 | `action_quality_rejection_rate` | rejected or HR-escalated invalid actions / submitted action drafts | action validation and HR review events | action card draft | shows whether managers understand bounded action quality | does not prove route quality |
 | `repeated_review_without_progress_rate` | actions with `bijsturen-nodig` or `nog-te-vroeg` more than twice / reviewed actions | action review events | action card | shows where follow-through loops are spinning without progress | does not prove no later success is possible |
 
-### 14.2 Metric meaning
+### 14.2 Metric event schema minimum
+
+Implementation planning must define an event schema that can support these formulas without reconstructing truth indirectly.
+
+At minimum the metric layer must be able to emit or derive:
+
+- route opened
+- route became execution-expected
+- action draft created
+- action draft validated as active
+- action draft rejected
+- action draft sent to HR review
+- action state changed
+- action review opened
+- action review completed
+- HR chase event
+- route stale / overdue / escalation-sensitive derived
+
+Metric implementation may decompose storage and transport, but it may not invent different product semantics than this design.
+
+### 14.3 Metric meaning
 
 These metrics help answer:
 
@@ -630,7 +756,7 @@ These metrics help answer:
 - is HR still manually chasing too much
 - is the model staying bounded
 
-### 14.3 What the metrics do not prove
+### 14.4 What the metrics do not prove
 
 These metrics are operating and adoption metrics.
 
@@ -679,6 +805,12 @@ Its legitimate scope remains:
 - post-scan follow-through
 - route-bound concrete execution
 - review and oversight discipline
+
+Implementation work should also preserve a later buyer-artifact path:
+
+- route -> action -> review -> closeout lineage must stay legible
+- labels must support a future governance one-pager and privacy-boundary note
+- metrics must be explainable without implying personnel-dossier or employee-monitoring semantics
 
 ---
 
@@ -804,11 +936,15 @@ This design is ready for implementation planning only when the follow-up plan ca
 
 - action-card contract
 - valid and invalid action rules
+- draft, invalid, and HR-review draft behavior
 - HR intervention rules
+- concrete HR thresholds
 - enriched lifecycle
+- action transition matrix
 - review evidence grammar
 - route-specific defaults
 - metric formulas
+- metric event schema minimum
 - buyer-proof boundaries
 - non-goals
 - tests required for action lifecycle, permissions, HR intervention, action-sprawl, invalid actions, review outcomes, and metric event generation
