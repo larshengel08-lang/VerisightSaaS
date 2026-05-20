@@ -13,6 +13,14 @@ Review this pack as a combined:
 - Product type: premium boardroom culture and engagement assessment
 - V1 posture: annual baseline-first route with governed drilldown and bounded follow-on
 
+This refreshed pack already includes recent scoped hardening for:
+
+- no fabricated fallback gauges in `Verdiepingslagen`
+- board-PDF segment rows gated behind governed `segment_deep_dive`
+- `segment_summary` export blocked on the public org-key route and forced through the internal governance proxy
+- truthful runtime readiness for `board_report_pdf` as `pilot_delivery_ready`
+- imported module dependencies and referenced premium-delivery artifacts included in the pack
+
 This route is explicitly:
 
 - not Pulse runtime
@@ -59,6 +67,22 @@ Please review for:
 - Is this product line materially ready for bounded pilot / PR review in its own scope?
 - What real blockers remain inside the current scope?
 
+## Current Verification Context
+
+Scoped verification already run for this refreshed pack:
+
+Frontend:
+
+- `cmd /c npx vitest run --config vitest.config.ts lib/products/culture_assessment/dashboard.test.ts lib/sample-showcase-assets.test.ts lib/products/shared/registry.test.ts lib/client-onboarding.test.ts "app/(dashboard)/campaigns/[id]/page.test.ts" "app/api/campaigns/[id]/report/route.test.ts"`
+- Result: `36 passed`
+
+Backend:
+
+- `py -m pytest tests\test_culture_assessment_report_contract.py tests\test_culture_assessment_questionnaire_lock.py tests\test_culture_assessment_route_contract.py tests\test_report_generation_smoke.py -q -k "culture_assessment and not retention"`
+- Result: `21 passed, 5 deselected`
+
+Use these as current scoped evidence, not as a repo-wide quality claim.
+
 ## Output Format
 
 ### 1. Findings
@@ -90,3 +114,4 @@ Classify the scoped `culture_assessment` line as:
 - Prefer real bugs, governance gaps and contract drift over style commentary.
 - Stay inside current V1 scope.
 - Do not ask for benchmark engines, self-serve analytics workspaces or broader EX-platform scope unless a missing piece is truly required for the current product line.
+- Treat unrelated retention or broader repo issues as out of scope unless they materially break `culture_assessment` itself.

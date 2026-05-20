@@ -11,6 +11,8 @@ It is intentionally narrower than a full branch review. The goal is to let an ex
 - key shared helpers that materially affect `culture_assessment`
 - route-specific tests
 - selected product / governance / readiness docs
+- imported `culture_assessment` module dependencies used by the scoped files
+- referenced premium-delivery artifacts needed to verify sample/showcase truth
 
 ## Excluded on purpose
 
@@ -25,6 +27,14 @@ See:
 
 - `SCOPE_SUMMARY.md`
 - `docs/superpowers/plans/2026-05-20-loep-culture-assessment-scoped-readiness-pass.md`
+
+This refreshed pack already includes the latest scoped hardening for:
+
+- culture-specific deepening panels with no fabricated fallback scores
+- governed gating of board-PDF segment rows
+- internal-only `segment_summary` export path
+- truthful `board_report_pdf` pilot-delivery readiness
+- inclusion of previously missing imported/reference artifacts
 
 ## How to use
 
@@ -43,6 +53,20 @@ Frontend:
 
 `cmd /c npx vitest run --config vitest.config.ts lib/products/culture_assessment/dashboard.test.ts lib/sample-showcase-assets.test.ts lib/products/shared/registry.test.ts lib/client-onboarding.test.ts "app/(dashboard)/campaigns/[id]/page.test.ts" "app/api/campaigns/[id]/report/route.test.ts"`
 
+Result: `36 passed`
+
 Backend:
 
-`py -m pytest tests\test_culture_assessment_report_contract.py tests\test_culture_assessment_questionnaire_lock.py tests\test_culture_assessment_route_contract.py -q`
+`py -m pytest tests\test_culture_assessment_report_contract.py tests\test_culture_assessment_questionnaire_lock.py tests\test_culture_assessment_route_contract.py tests\test_report_generation_smoke.py -q -k "culture_assessment and not retention"`
+
+Result: `21 passed, 5 deselected`
+
+## Scope note
+
+This pack is suitable for a clean scoped external review of the `culture_assessment` line.
+
+It is not a claim that:
+
+- the full branch is clean
+- the full repository is merge-ready
+- unrelated retention or non-Cultuurbeeld failures are resolved
