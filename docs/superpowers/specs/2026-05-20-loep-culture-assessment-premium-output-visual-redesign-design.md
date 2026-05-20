@@ -165,7 +165,10 @@ Role:
 Design consequence:
 
 - visually rich enough to stand on its own
+- self-readable without facilitator dependence
 - concise enough to remain scannable
+- more textual than the deck
+- print-worthy and download-worthy as a standalone artifact
 - must feel like a finished board artifact, not a draft layout
 
 ### 6.2 Boardroom PDF deck
@@ -178,8 +181,11 @@ Role:
 Design consequence:
 
 - same design language as report
-- more presentational pacing
-- slightly more cinematic page rhythm
+- guided and facilitator-friendly
+- more spacious than the report
+- larger-statement oriented
+- less text per slide than the report
+- paced for a facilitated board-read
 - not dependent on future `.pptx` automation to feel premium
 
 ### 6.3 Executive one-pager
@@ -332,6 +338,39 @@ Must include:
 - what this does not prove
 - governance as quality boundary
 
+### 7.11 Board report PDF v1 sequence
+
+The board report PDF v1 sequence is fixed as:
+
+1. Cover
+2. Executive opener
+3. Response basis & governance frame
+4. Loep Culture Index hero
+5. Board attention points
+6. Domain profile
+7. Pattern logic
+8. Segment contrasts, if governed and released
+9. Follow-on decision
+10. Method & boundaries
+
+### 7.12 Boardroom deck v1 sequence
+
+The boardroom deck v1 sequence is fixed as:
+
+1. Opening / purpose
+2. What was measured
+3. Response and governance
+4. Executive read
+5. Culture Index hero
+6. Domain picture
+7. Board attention point 1
+8. Board attention point 2
+9. Board attention point 3
+10. Segment contrast, if released
+11. What not to conclude
+12. Decision questions
+13. Follow-on route options
+
 ---
 
 ## 8. Visual Building Blocks
@@ -403,9 +442,11 @@ Used for:
 
 Used for:
 
-- `hoog`
-- `midden`
-- `voorzichtig`
+- `Hoog vertrouwen`
+- `Gematigd vertrouwen`
+- `Voorzichtig lezen`
+
+Confidence describes signal stability, not truth certainty and not causal certainty.
 
 ### 8.10 Theme summary blocks
 
@@ -416,9 +457,86 @@ Used for:
 
 ---
 
-## 9. Core Visualization Rules
+## 9. Visual System Mini-Layer
 
-### 9.1 Loep Culture Index
+This redesign must define a concrete visual system layer so that report and deck use the same tokens even when their pacing differs.
+
+### 9.1 Report page format
+
+- portrait A4
+- PDF export first
+- print-safe contrast and annotation density
+
+### 9.2 Deck page format
+
+- 16:9 landscape
+- optimized for boardroom screen share and exported PDF deck use
+- fewer modules per page than the report
+
+### 9.3 Grid system
+
+- report: 12-column editorial grid
+- deck: 12-column presentation grid with wider visual spans
+- all modules must snap to grid logic; no dashboard widget placement
+
+### 9.4 Margin system
+
+- report: generous outer margin and stable inner gutter
+- deck: wider side margins and stronger top/bottom breathing room
+- no dense edge-to-edge chart framing
+
+### 9.5 Typography scale
+
+- display tier for cover, section openers and hero signal pages
+- heading tier for page titles and attention titles
+- subheading tier for governance labels, module headers and confidence framing
+- body tier for narrative explanation
+- caption tier for annotations, source notes and interpretation boundaries
+
+### 9.6 Color roles
+
+- background neutral
+- ink neutral
+- warm accent
+- secondary warm accent
+- governance neutral
+- subdued emphasis tint
+
+### 9.7 Chart palette roles
+
+- primary signal tone
+- secondary comparison tone
+- suppressed / hidden governance tone
+- neutral context tone
+- annotation tone
+
+### 9.8 Module spacing
+
+- large spacing between primary page modules
+- medium spacing between related narrative/chart blocks
+- tight spacing only inside cards or annotations
+- no compressed multi-widget density
+
+### 9.9 Annotation style
+
+- short
+- quiet
+- precise
+- editorial rather than technical-debug
+
+### 9.10 Icon / line style
+
+- simple
+- restrained
+- non-playful
+- thin-to-medium line weights
+- no decorative icon library overload
+
+---
+
+## 10. Core Visualization Rules
+
+### 10.1 Loep Culture Index
 
 The index must be a hero visual, not a standard score widget.
 
@@ -429,17 +547,25 @@ Required qualities:
 - descriptive, not diagnostic
 - paired with explicit read boundaries
 
+Allowed forms:
+
+- editorial index band with large numeric anchor and interpretation text
+- vertical signal column with domain context
+- abstract signal field without gauge semantics
+
 Forbidden:
 
 - gauges
 - speedometers
-- default dashboard stat tiles
+- traffic-light health widgets
+- benchmark-position visuals
+- pass/fail visuals
 
-### 9.2 Domain picture
+### 10.2 Domain picture
 
 The domain visual must:
 
-- support a bestuurijke leesvolgorde
+- support a bestuurlijke leesvolgorde
 - surface the broadest signal pattern
 - avoid a raw ranking-table feel
 
@@ -449,7 +575,16 @@ Preferred forms:
 - stepped profile compositions
 - visually rich ordered bars
 
-### 9.3 Board attention points
+Domain profile rules:
+
+- no red/amber/green status coloring
+- no rank-number dominance
+- domains may be ordered only as reading sequence
+- show scores with subdued labels
+- include a short domain interpretation line
+- top/bottom framing is forbidden
+
+### 10.3 Board attention points
 
 These may not appear as a plain bullet list.
 
@@ -459,7 +594,7 @@ They must render as:
 - visually central on the page
 - clearly more important than surrounding detail
 
-### 9.4 Pattern logic
+### 10.4 Pattern logic
 
 Recurring theme pairs must be shown through:
 
@@ -472,7 +607,7 @@ Not through:
 - raw cross-tables
 - technical analytics tables
 
-### 9.5 Segment contrasts
+### 10.5 Segment contrasts
 
 Segment visuals must:
 
@@ -486,7 +621,15 @@ Preferred forms:
 - compact contrast columns
 - small-number comparisons
 
-### 9.6 Governance boundaries
+Segment contrast rules:
+
+- no sorted league table
+- no worst/best segment labels
+- no color-coded winners/losers
+- only released segments may appear
+- hidden or suppressed layers must show as governance state, not as blank absence
+
+### 10.6 Governance boundaries
 
 Governance content must:
 
@@ -500,11 +643,18 @@ It must not feel like:
 - footnote clutter
 - apologetic copy
 
+The governance boundary module must include:
+
+- `Wat getoond mag worden`
+- `Wat verborgen blijft`
+- `Waarom dat zo is`
+- `Wat je hier niet uit mag concluderen`
+
 ---
 
-## 10. Visual Style Rules
+## 11. Visual Style Rules
 
-### 10.1 Typography
+### 11.1 Typography
 
 The family should use:
 
@@ -518,7 +668,7 @@ The typography must support:
 - human warmth
 - generous visual pacing
 
-### 10.2 Color
+### 11.2 Color
 
 The color world should be:
 
@@ -537,7 +687,7 @@ Accent colors should help:
 
 not simulate a health dashboard.
 
-### 10.3 Spacing
+### 11.3 Spacing
 
 The family must use:
 
@@ -547,7 +697,7 @@ The family must use:
 
 Every page should feel composed, not densely packed.
 
-### 10.4 Chart behavior
+### 11.4 Chart behavior
 
 All charts must feel like one family.
 
@@ -559,7 +709,7 @@ They must share:
 - restrained palette
 - strong white-space discipline
 
-### 10.5 Narrative behavior
+### 11.5 Narrative behavior
 
 Every page must answer a boardroom question.
 
@@ -573,7 +723,19 @@ Each page should have:
 
 ---
 
-## 11. Anti-Patterns
+## 12. Visual Redesign Governance Guardrails
+
+Visual redesign may not:
+
+- introduce new result fields
+- change score meaning
+- change threshold behavior
+- visually amplify suppressed or unreleased layers
+- make optional outputs appear standard
+
+---
+
+## 13. Anti-Patterns
 
 The redesign must explicitly avoid:
 
@@ -591,9 +753,9 @@ If a page feels like it came straight out of a product dashboard, it fails the d
 
 ---
 
-## 12. Artifact-Specific Redesign Priorities
+## 14. Artifact-Specific Redesign Priorities
 
-### 12.1 Board report PDF
+### 14.1 Board report PDF
 
 This is the first and main redesign target.
 
@@ -603,7 +765,7 @@ Priority:
 - strengthen cover, opener, index and board attention
 - give the report stronger page rhythm and visual drama
 
-### 12.2 Boardroom deck
+### 14.2 Boardroom deck
 
 This is the second target.
 
@@ -613,7 +775,7 @@ Priority:
 - lean more presentational than the report
 - preserve the same signal, domain, attention and governance logic
 
-### 12.3 Executive one-pager
+### 14.3 Executive one-pager
 
 This remains a derivative target for a later pass.
 
@@ -621,7 +783,7 @@ This spec must support it, but not fully design it now.
 
 ---
 
-## 13. Acceptance Criteria
+## 15. Acceptance Criteria
 
 This redesign spec is only successful if it produces a family that:
 
@@ -632,9 +794,19 @@ This redesign spec is only successful if it produces a family that:
 - makes the board report visually convincing enough for guided buyer and pilot contexts
 - preserves bounded interpretation and no-ranking behavior
 
+The board report is accepted only if:
+
+- the first 5 pages feel visually premium
+- no page looks like a dashboard screenshot
+- the Culture Index is not gauge-like
+- the domain page does not feel like ranking
+- the governance block feels designed
+- deck and report use the same visual tokens
+- output remains readable in PDF export
+
 ---
 
-## 14. Immediate Next Artifacts
+## 16. Immediate Next Artifacts
 
 This spec should lead directly to:
 
@@ -649,9 +821,32 @@ The next step is a blueprint layer that defines:
 - exact visual modules per page
 - narrative pacing across the report and deck
 
+The `Board Report Redesign Blueprint` must define per page:
+
+- page title
+- purpose
+- data inputs
+- layout composition
+- visual modules
+- copy blocks
+- governance cues
+- forbidden elements
+- acceptance criteria
+
+The `Board Deck Redesign Blueprint` must define per slide:
+
+- slide title
+- presenter purpose
+- audience question answered
+- visual center
+- supporting copy
+- speaker note
+- governance boundary
+- transition to next slide
+
 ---
 
-## 15. Out-of-Scope Reminder
+## 17. Out-of-Scope Reminder
 
 This redesign does not authorize:
 
