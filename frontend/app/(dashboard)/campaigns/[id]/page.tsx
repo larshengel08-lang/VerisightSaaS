@@ -1312,11 +1312,11 @@ export default async function CampaignPage({ params }: Props) {
                   "De uitvoerlaag onder deze baseline helpt om van executive read naar board-read, HR-verdieping en eventueel een bounded follow-on te gaan zonder de baseline te verwarren met Pulse runtime.",
                 routeTitle: "Board-read & vervolgritme",
                 routeDescription:
-                  "Deze laag bundelt board-read, governed drilldown en het expliciete besluit of na de baseline een bounded Pulse-ritme logisch is.",
+                  "Deze laag bundelt board-read, governed drilldown en het expliciete besluit of geen onmiddellijke vervolgrichting, deeper governed work, een bounded Pulse-follow-on of een smallere route zoals RetentieScan of ExitScan logisch is.",
                 routeBadgeLabel: "Jaarlijkse board baseline",
                 afterSessionTitle: "Na de board-read",
                 afterSessionDescription:
-                  "Gebruik de board-read om expliciet te kiezen welke patronen verdere HR-verdieping vragen en of pas daarna een bounded Pulse-follow-on logisch is.",
+                  "Gebruik de board-read om expliciet te kiezen of geen onmiddellijke vervolgrichting volstaat, welke patronen eerst deeper governed work vragen en of pas daarna een bounded Pulse-follow-on, RetentieScan of ExitScan logisch is.",
               }
             : stats.scan_type === "onboarding"
             ? {

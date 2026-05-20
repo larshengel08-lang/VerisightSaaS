@@ -344,7 +344,7 @@ export function getFirstNextStepGuidance(scanType: ScanType): FirstNextStepGuida
           key: 'follow_on',
           title: 'Mogelijk vervolgproduct',
           body:
-            'Een vervolgroute wordt pas logisch als de jaarlijkse baseline al is gelezen en er een nieuwe managementvraag ontstaat die Pulse, TeamScan of een andere bounded route eerlijk vraagt.',
+            'Na de board-read blijft geen onmiddellijke vervolgrichting een geldige uitkomst. Pas als verdere HR-verdieping niet genoeg is, kies je expliciet tussen deeper governed work, een bounded Pulse-follow-on of een andere Loep-route voor een echt smallere vervolgvraag.',
         },
       ],
       followOnSuggestions: [
@@ -357,6 +357,16 @@ export function getFirstNextStepGuidance(scanType: ScanType): FirstNextStepGuida
           productLabel: 'Pulse',
           when: 'Als na de baseline een begrensde vervolgroute nodig is om een specifiek werkspoor kort te herchecken.',
           boundary: 'Gebruik Pulse alleen als follow-on op een nieuwe reviewvraag, niet als vervanging van de jaarlijkse baseline.',
+        },
+        {
+          productLabel: 'RetentieScan',
+          when: 'Als de vervolgvraag niet meer breed cultureel is, maar expliciet verschuift naar actieve behoudsdruk in de huidige populatie.',
+          boundary: 'Open RetentieScan alleen bij een echt smallere behoudsvraag; deeper governed work blijft eerst de default tussenlaag.',
+        },
+        {
+          productLabel: 'ExitScan',
+          when: 'Als de vervolgvraag verschuift naar retrospectieve vertrekduiding en vertrekpatronen in plaats van brede cultuur- en engagementlezing.',
+          boundary: 'Open ExitScan alleen bij een echt nieuwe vertrekvraag, niet als standaard vervolg op iedere baseline.',
         },
       ],
     }

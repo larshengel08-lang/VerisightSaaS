@@ -7,6 +7,7 @@ import {
   IMPLEMENTATION_INTAKE_INPUTS,
   PRODUCT_ROUTE_VARIANTS,
   getAdoptionSuccessDefinition,
+  getFirstNextStepGuidance,
   getFirstManagementReadSteps,
   getLifecycleDecisionCards,
 } from '@/lib/client-onboarding'
@@ -146,5 +147,18 @@ describe('client onboarding defaults', () => {
     expect(cultureAssessmentDecisions[1]?.body.toLowerCase()).toContain('loep culture index')
     expect(cultureAssessmentDecisions[2]?.body.toLowerCase()).toContain('pulse')
     expect(cultureAssessmentDecisions[2]?.body.toLowerCase()).toContain('vervolgroute')
+  })
+
+  it('keeps culture assessment follow-on guidance bounded and explicit', () => {
+    const guidance = getFirstNextStepGuidance('culture_assessment')
+    const guidanceJson = JSON.stringify(guidance).toLowerCase()
+
+    expect(guidance.cards[2]?.body.toLowerCase()).toContain('geen onmiddellijke vervolgrichting')
+    expect(guidance.cards[2]?.body.toLowerCase()).toContain('deeper governed work')
+    expect(guidance.cards[2]?.body.toLowerCase()).toContain('pulse-follow-on')
+    expect(guidance.followOnSuggestions.some((suggestion) => suggestion.productLabel === 'Pulse')).toBe(true)
+    expect(guidance.followOnSuggestions.some((suggestion) => suggestion.productLabel === 'RetentieScan')).toBe(true)
+    expect(guidance.followOnSuggestions.some((suggestion) => suggestion.productLabel === 'ExitScan')).toBe(true)
+    expect(guidanceJson).not.toContain('teamscan')
   })
 })
