@@ -640,6 +640,21 @@ function getNextRouteActionStatusFromReviewOutcome(
   }
 }
 
+function hasExplicitRouteCloseoutMetadata(item: ActionCenterPreviewItem | null) {
+  if (!item) {
+    return false
+  }
+
+  const closeout = item.coreSemantics.routeCloseout
+  return Boolean(
+    closeout.closeoutStatus ||
+      closeout.closeoutReason ||
+      closeout.closeoutNote ||
+      closeout.closedAt ||
+      closeout.closedByRole,
+  )
+}
+
 function getRouteSummaryDisplay(item: ActionCenterPreviewItem) {
   return (
     item.coreSemantics.routeSummary ?? {
@@ -2633,7 +2648,7 @@ export function ActionCenterPreview({
                         </div>
                       ) : null}
 
-                      {selectedItem && isClosedRouteStatus(selectedItem.status) ? (
+                      {selectedItem && (isClosedRouteStatus(selectedItem.status) || hasExplicitRouteCloseoutMetadata(selectedItem)) ? (
                         <div className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
                           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">
                             Route afgesloten
@@ -3710,9 +3725,9 @@ function ActionCenterBoundedOverview({
           tone="teal"
         />
         <ActionCenterBoundedCounter
-          label="Aandacht nu"
+          label="Te bespreken / reviewbaar"
           value={`${overviewStatusCounts.reviewReady + overviewStatusCounts.blocked}`}
-          detail={`${overviewStatusCounts.blocked} geblokkeerd / ${overviewStatusCounts.reviewReady} reviewbaar`}
+          detail={`${overviewStatusCounts.blocked} Geblokkeerd / ${overviewStatusCounts.reviewReady} reviewbaar`}
           tone="red"
         />
         <ActionCenterBoundedCounter
@@ -3724,10 +3739,11 @@ function ActionCenterBoundedOverview({
       </div>
 
       <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-[#ebe1d5] pb-4 text-sm text-[#6d6458]">
-        <span>{overviewStatusCounts.closed} afgerond</span>
-        {typeof overviewStatusCounts.unavailable === 'number' ? (
-          <span>{overviewStatusCounts.unavailable} nog niet beschikbaar</span>
-        ) : null}
+        <span>Afgerond {overviewStatusCounts.closed}</span>
+        <span>
+          Niet beschikbaar{' '}
+          {typeof overviewStatusCounts.unavailable === 'number' ? overviewStatusCounts.unavailable : 'n.v.t.'}
+        </span>
         <span>{visibleItems.length} zichtbare route{visibleItems.length === 1 ? '' : 's'}</span>
       </div>
 
@@ -3760,10 +3776,10 @@ function ActionCenterBoundedOverview({
         <div className="space-y-6">
           <aside className="rounded-[24px] border border-[#e4d9cb] bg-[#fcfaf7] px-6 py-6">
             <div>
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Nu signalen</p>
-                        <span className="text-xs text-[#7d7368]">{blockedItems.length} geblokkeerd</span>
-                      </div>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Wat vraagt nu aandacht?</p>
+                <span className="text-xs text-[#7d7368]">{blockedItems.length} Geblokkeerd</span>
+              </div>
               <div className="mt-4 space-y-3">
                 {blockedItems.length === 0 ? (
                   <EmptyBlock text="Er staan nu geen geblokkeerde routes in deze selectie." />
@@ -4182,14 +4198,21 @@ function buildDetailLineageEntries(
   item: ActionCenterPreviewItem,
   routeTitlesById: ReadonlyMap<string, string>,
 ): ActionCenterDetailLineageEntry[] {
+  const routeLineage = item.coreSemantics.route
   const { backwardLabel, backwardRouteId, forwardLabel, forwardRouteId } = item.coreSemantics.lineageSummary
+  const fallbackBackwardLabel =
+    backwardLabel ??
+    (routeLineage.lineageLabel === 'Heropend traject' || routeLineage.followUpFromRouteId
+      ? routeLineage.lineageLabel
+      : null)
+  const fallbackBackwardRouteId = backwardRouteId ?? routeLineage.followUpFromRouteId ?? null
   const entries: Array<ActionCenterDetailLineageEntry | null> = [
-    backwardLabel
+    fallbackBackwardLabel
       ? {
           key: 'backward',
-          label: backwardLabel,
-          routeId: backwardRouteId,
-          routeTitle: backwardRouteId ? (routeTitlesById.get(backwardRouteId) ?? null) : null,
+          label: fallbackBackwardLabel,
+          routeId: fallbackBackwardRouteId,
+          routeTitle: fallbackBackwardRouteId ? (routeTitlesById.get(fallbackBackwardRouteId) ?? null) : null,
         }
       : null,
     forwardLabel
