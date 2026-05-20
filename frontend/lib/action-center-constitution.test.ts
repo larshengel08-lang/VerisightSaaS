@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  ACTION_CENTER_ACTION_SEMANTIC_STATES,
   ACTION_CENTER_CANONICAL_REVIEW_STATES,
   ACTION_CENTER_CANONICAL_ROUTE_STATES,
   ACTION_CENTER_TRANSITION_RULES,
@@ -24,6 +25,16 @@ describe('action-center constitution', () => {
       'missed',
       'cancelled',
       'rescheduled',
+    ])
+    expect(ACTION_CENTER_ACTION_SEMANTIC_STATES).toEqual([
+      'draft',
+      'active',
+      'review_due',
+      'in_review',
+      'blocked',
+      'completed',
+      'stopped',
+      'superseded',
     ])
   })
 
@@ -67,7 +78,7 @@ describe('action-center constitution', () => {
     })
   })
 
-  it('keeps bounded transition truth for route close, route reopen, and review reschedule', () => {
+  it('keeps bounded transition truth for route close, route reopen, review reschedule, and draft promotion', () => {
     expect(ACTION_CENTER_TRANSITION_RULES).toEqual([
       {
         object: 'follow_through_route',
@@ -85,6 +96,12 @@ describe('action-center constitution', () => {
         object: 'review_moment',
         fromState: 'scheduled',
         toState: 'rescheduled',
+        actors: ['hr_rhythm_owner'],
+      },
+      {
+        object: 'route_action',
+        fromState: 'draft',
+        toState: 'active',
         actors: ['hr_rhythm_owner'],
       },
     ])
@@ -156,6 +173,26 @@ describe('action-center constitution', () => {
         object: 'review_moment',
         fromState: 'scheduled',
         toState: 'rescheduled',
+      }),
+    ).toBe(false)
+  })
+
+  it('allows only hr to promote route actions from draft to active', () => {
+    expect(
+      isActionCenterCanonicalRouteStateTransitionAllowed({
+        actor: 'hr_rhythm_owner',
+        object: 'route_action',
+        fromState: 'draft',
+        toState: 'active',
+      }),
+    ).toBe(true)
+
+    expect(
+      isActionCenterCanonicalRouteStateTransitionAllowed({
+        actor: 'manager_participant',
+        object: 'route_action',
+        fromState: 'draft',
+        toState: 'active',
       }),
     ).toBe(false)
   })

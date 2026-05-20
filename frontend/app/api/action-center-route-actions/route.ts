@@ -178,9 +178,10 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as RouteActionRequestBody | null
 
   let parsed
+  let actionDraft
   try {
     parsed = parseRouteActionRequestInput(body)
-    validateActionCenterRouteActionDraftInput({
+    actionDraft = validateActionCenterRouteActionDraftInput({
       primary_action_theme_key: parsed.primary_action_theme_key,
       primary_action_text: parsed.primary_action_text,
       primary_action_expected_effect: parsed.primary_action_expected_effect,
@@ -273,7 +274,7 @@ export async function POST(request: Request) {
       primary_action_theme_key: parsed.primary_action_theme_key,
       primary_action_text: parsed.primary_action_text,
       primary_action_expected_effect: parsed.primary_action_expected_effect,
-      primary_action_status: parsed.primary_action_status,
+      primary_action_status: null,
       review_scheduled_for: parsed.review_scheduled_for,
       created_by: user.id,
       updated_by: user.id,
@@ -285,5 +286,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ detail: error?.message ?? 'Route action opslaan mislukt.' }, { status: 500 })
   }
 
-  return NextResponse.json({ action: data }, { status: 200 })
+  return NextResponse.json({ action: data, actionDraft }, { status: 200 })
 }
