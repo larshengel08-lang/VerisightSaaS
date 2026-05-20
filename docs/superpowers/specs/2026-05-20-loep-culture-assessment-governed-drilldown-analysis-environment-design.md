@@ -192,9 +192,15 @@ A segment may only appear if:
 
 - the segmentation field is approved in campaign setup
 - metadata quality is sufficient
-- minimum-n threshold is met
+- the canonical threshold source is satisfied
 - release owner permits the layer
 - the segment does not create obvious identifiability risk
+
+Canonical threshold source:
+
+- `docs/superpowers/methodology/culture_assessment_validity_release_lock.md`
+
+The drilldown environment may not invent local threshold values outside that canonical threshold source.
 
 ### 6.3 Comparison eligibility
 
@@ -206,6 +212,29 @@ A comparison is only allowed when:
 - comparison does not create de facto ranking behavior
 
 The environment must treat "available" and "comparable" as separate states.
+
+### 6.4 Merge eligibility
+
+A layer is merge-eligible only if:
+
+- the child layer is unsafe on its own
+- the parent layer remains safe and interpretable
+- the merge does not imply disguised local visibility
+- the merge result does not create de facto ranking behavior
+
+If these conditions fail, the layer stays hidden rather than merged.
+
+### 6.5 Package entitlement reference
+
+Governed drilldown requires package entitlement in addition to threshold and release passing.
+
+At minimum, package entitlement must distinguish:
+
+- standard baseline package
+- governed package
+- enterprise package
+
+No governed drilldown layer may appear simply because the data exists if the package does not include governed depth.
 
 ---
 
@@ -253,6 +282,23 @@ If any one of these fails, the layer is not shown as normal output.
 
 - may inspect release and entitlement state
 - may not use admin posture as a content-governance override
+
+### 7.3 Role / layer / export entitlement matrix
+
+Cell values:
+
+- `allowed`
+- `governed`
+- `denied`
+- `admin_state_only`
+
+| Role | organization_view | approved_segment_contrasts | business_unit_scope | hr_governed_analysis | segment_summary_export | HR_appendix_export | manager_cascade_output | hidden_reason_visibility | release_state_visibility | export_approval |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `executive` | `allowed` | `governed` | `denied` | `denied` | `denied` | `denied` | `denied` | `governed` | `governed` | `denied` |
+| `hr_partner` | `allowed` | `allowed` | `governed` | `allowed` | `governed` | `governed` | `governed` | `allowed` | `allowed` | `governed` |
+| `business_unit_lead` | `governed` | `governed` | `governed` | `denied` | `denied` | `denied` | `governed` | `governed` | `governed` | `denied` |
+| `manager_limited` | `denied` | `denied` | `denied` | `denied` | `denied` | `denied` | `governed` | `denied` | `denied` | `denied` |
+| `admin` | `admin_state_only` | `admin_state_only` | `admin_state_only` | `admin_state_only` | `admin_state_only` | `admin_state_only` | `admin_state_only` | `admin_state_only` | `admin_state_only` | `admin_state_only` |
 
 ---
 

@@ -168,8 +168,19 @@ Text intelligence must follow a stricter threshold model than raw survey complet
 
 Open-comment outputs may appear only if:
 
-- text input volume is above the minimum safe cluster threshold
+- text input volume is above the canonical minimum safe cluster threshold
 - clustering produces enough safe grouped material to avoid thin inference
+
+Canonical threshold reference:
+
+- text threshold values must point to the canonical culture-assessment text threshold register when it exists
+- implementation may not invent local text threshold values per team, manager scope, or ad hoc delivery preference
+
+Optional V1 defaults if no separate threshold register exists yet:
+
+- no text-derived output below `5` safe comments at the relevant aggregate layer
+- no visible cluster below `3` safely grouped comments
+- no manager-layer text output
 
 ### 6.2 Audience eligibility
 
@@ -185,6 +196,18 @@ If the threshold fails:
 
 - no text-derived insight is shown
 - the route may explain that open text is not displayed because safe volume or safe clustering was insufficient
+
+### 6.4 Text safety states
+
+The text layer must use one canonical safety state:
+
+- `not_collected`
+- `collected_not_processed`
+- `processed_safe_none_visible`
+- `processed_safe_summary_visible`
+- `suppressed_below_threshold`
+- `suppressed_sensitive_content`
+- `suppressed_unapproved`
 
 ---
 
@@ -240,6 +263,9 @@ May not receive:
 - real client open text
 - pseudo-anonymized raw examples presented as safe by default
 
+Demo text must be synthetic or fictive, or clearly marked illustrative.
+Real client text may not be paraphrased into demo assets without explicit approval and an anonymization policy.
+
 ---
 
 ## 8. Clustering and Theme Model
@@ -250,11 +276,16 @@ The route must use deterministic cluster logic at the product level, even if fut
 
 Every cluster must define:
 
-- cluster label
+- `cluster_id`
+- `label_nl`
+- `label_en`
 - inclusion rule
+- exclusion rule
+- linked domains
+- role visibility
+- confidence rule
+- approval owner
 - minimum safe cluster size
-- audience eligibility
-- confidence label
 
 ### 8.2 Allowed theme behavior
 

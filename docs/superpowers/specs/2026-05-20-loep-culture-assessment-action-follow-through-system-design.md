@@ -159,6 +159,16 @@ Outputs:
 
 The board-read must end with explicit decision questions.
 
+### 6.1 Canonical board decision template
+
+The route must use a fixed board decision template with these questions:
+
+1. Which one or two themes require board sponsorship rather than local interpretation?
+2. Which visible patterns should remain hypotheses rather than conclusions?
+3. Which follow-up questions belong to HR governed deepening rather than immediate action?
+4. Which cascade messages are safe to communicate now, and which are not?
+5. Is any follow-on route justified now, or is no immediate next route the better decision?
+
 The route may support questions such as:
 
 - what needs board sponsorship rather than local interpretation
@@ -178,18 +188,25 @@ The route may not support:
 
 HR follow-up must remain structured but bounded.
 
+### 7.1 Allowed HR follow-up types
+
 It may include:
 
 - focus areas for governed discussion
 - planning who needs to be involved
 - determining which deeper outputs are safe and useful
 - clarifying how local conversations should be framed
+- clarifying whether a 30/60/90 review rhythm is sufficient without new measurement
+
+### 7.2 Forbidden HR follow-up types
 
 It may not include:
 
 - turning HR into a free-form analytics program without governance
 - back-solving causality from one baseline
 - using the route as a disciplinary instrument
+- mandating intervention recipes from one baseline read
+- using unclear local signals as manager-performance evidence
 
 ---
 
@@ -223,6 +240,10 @@ Focus:
 - board and HR confirm what is being followed up
 - no drift into unsupported claims
 
+Artifact:
+
+- `30-day board/HR follow-up confirmation note`
+
 ### 9.2 60-day review
 
 Focus:
@@ -230,11 +251,19 @@ Focus:
 - HR and sponsor review whether follow-up remains bounded and useful
 - local cascade questions are checked for governance drift
 
+Artifact:
+
+- `60-day governance drift check and cascade questions log`
+
 ### 9.3 90-day review
 
 Focus:
 
 - determine whether a next measurement, deeper route, or no immediate next route is appropriate
+
+Artifact:
+
+- `90-day route decision note`
 
 ---
 
@@ -242,11 +271,17 @@ Focus:
 
 Pulse remains a follow-on only route.
 
+### 10.1 Deterministic Pulse eligibility rule
+
 Pulse may become eligible only if:
 
-- the baseline value is understood
-- governance boundaries remain intact
-- the organization has a clear reason to monitor a bounded theme
+- baseline board-read completed
+- selected theme is bounded
+- owner is assigned
+- review question is specific
+- measurement cadence is justified
+- no unresolved release or governance dispute remains
+- Pulse is not being used to compensate for unclear baseline interpretation
 
 Pulse may not become:
 

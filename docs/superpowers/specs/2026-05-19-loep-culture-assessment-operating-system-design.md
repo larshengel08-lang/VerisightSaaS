@@ -742,9 +742,14 @@ Recommended first-wave specs:
 
 Recommended second-wave specs:
 
-5. `Governed Drilldown & Analysis Environment`
-6. `Text & Open Comment Intelligence`
-7. `Listening Program Operations`
+### Wave 2A
+
+5. `Listening Program Operations`
+6. `Governed Drilldown & Analysis Environment`
+
+### Wave 2B
+
+7. `Text & Open Comment Intelligence`
 8. `Action & Follow-through System`
 
 Recommended later-wave specs:
@@ -782,9 +787,14 @@ After the operating system is approved, the recommended first-wave planning orde
 
 Recommended second-wave planning order:
 
-5. `Governed Drilldown & Analysis Environment` plan
-6. `Text & Open Comment Intelligence` plan
-7. `Listening Program Operations` plan
+### Wave 2A
+
+5. `Listening Program Operations` plan
+6. `Governed Drilldown & Analysis Environment` plan
+
+### Wave 2B
+
+7. `Text & Open Comment Intelligence` plan
 8. `Action & Follow-through System` plan
 
 Recommended third-wave planning order:
