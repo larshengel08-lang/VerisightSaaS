@@ -359,6 +359,26 @@ export function getCultureAssessmentSegmentSummaryEntitlement(args: {
   return CULTURE_ASSESSMENT_CONTRACT.governedExportEntitlements[visibilityRole].segmentSummaryExport
 }
 
+export function getCultureAssessmentGovernedEntitlement(
+  args: {
+    isVerisightAdmin: boolean
+    membershipRole: MemberRole | null | undefined
+  },
+  entitlementKey:
+    | 'segmentSummaryExport'
+    | 'hrAppendixExport'
+    | 'hiddenReasonVisibility'
+    | 'releaseStateVisibility'
+    | 'hrGovernedAnalysis',
+): CultureAssessmentEntitlementState {
+  const visibilityRole = getCultureAssessmentVisibilityRole(args)
+  if (!visibilityRole) {
+    return 'denied'
+  }
+
+  return CULTURE_ASSESSMENT_CONTRACT.governedExportEntitlements[visibilityRole][entitlementKey]
+}
+
 export function canAccessCultureAssessmentSegmentSummaryExport(args: {
   isVerisightAdmin: boolean
   membershipRole: MemberRole | null | undefined

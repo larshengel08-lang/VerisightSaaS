@@ -115,7 +115,10 @@ import {
   buildResponseActivationState,
   getResponseActivationThresholds,
 } from "@/lib/response-activation";
-import { canAccessCultureAssessmentSegmentSummaryExport } from "@/lib/products/culture_assessment/contract";
+import {
+  canAccessCultureAssessmentSegmentSummaryExport,
+  getCultureAssessmentGovernedEntitlement,
+} from "@/lib/products/culture_assessment/contract";
 import { getScanDefinition } from "@/lib/scan-definitions";
 import {
   getDashboardModuleHref,
@@ -2315,6 +2318,20 @@ export default async function CampaignPage({ params }: Props) {
       label: section.title,
     }))
     const cultureOutputReadiness = scanDefinition.outputReadiness ?? {}
+    const hiddenReasonEntitlement = getCultureAssessmentGovernedEntitlement(
+      {
+        isVerisightAdmin,
+        membershipRole: membership?.role ?? null,
+      },
+      "hiddenReasonVisibility",
+    )
+    const hrGovernedAnalysisEntitlement = getCultureAssessmentGovernedEntitlement(
+      {
+        isVerisightAdmin,
+        membershipRole: membership?.role ?? null,
+      },
+      "hrGovernedAnalysis",
+    )
     const cultureDeliveryPanels = [
       {
         eyebrow: "Pilot deliverable",
@@ -2339,6 +2356,36 @@ export default async function CampaignPage({ params }: Props) {
         title: "HR appendix en segmentexport",
         body:
           "HR appendix en segmentexport blijven governed outputs: alleen na baselinevrijgave, boven threshold en binnen owner/admin-governance.",
+        tone: "slate" as const,
+      },
+    ]
+    const cultureGovernancePanels = [
+      {
+        eyebrow: "Verborgen laagreden",
+        title: "Drempel, vrijgave of entitlement",
+        body:
+          hiddenReasonEntitlement === "denied"
+            ? "Deze rol leest de organisatiebrede executive laag, maar krijgt geen detailuitleg per verborgen segment of suppressiereden."
+            : "Verborgen lagen mogen alleen verklaard worden als drempel-, vrijgave-, entitlement- of packagegrens. De uitleg mag nooit onveilig lokaal detail verraden.",
+        tone: hiddenReasonEntitlement === "denied" ? ("amber" as const) : ("slate" as const),
+      },
+      {
+        eyebrow: "HR governed analysis",
+        title: "Veilige HR-verdieping",
+        body:
+          hrGovernedAnalysisEntitlement === "allowed" || hrGovernedAnalysisEntitlement === "admin_state_only"
+            ? "HR kan veilige segmentlagen, hidden reasons en exportstatus lezen, maar blijft binnen governed interpretatie en expliciete suppressiegrenzen."
+            : "HR governed analysis opent niet voor deze rol. De executive read blijft leidend totdat een governance-owner veilige verdieping vrijgeeft.",
+        tone:
+          hrGovernedAnalysisEntitlement === "allowed" || hrGovernedAnalysisEntitlement === "admin_state_only"
+            ? ("blue" as const)
+            : ("amber" as const),
+      },
+      {
+        eyebrow: "Analysegrens",
+        title: "Geen vrije slicing of quote browsing of lokale blame-laag",
+        body:
+          "Deze route opent geen analyst-sandbox. Geen vrije slicing, quote browsing of lokale blame-laag; alleen bounded drilldown binnen de canonical suppressie- en releasegrenzen.",
         tone: "slate" as const,
       },
     ]
@@ -2705,6 +2752,17 @@ export default async function CampaignPage({ params }: Props) {
           variant="quiet"
         >
           <div className="space-y-5">
+            <div className="grid gap-4 md:grid-cols-3">
+              {cultureGovernancePanels.map((panel) => (
+                <DashboardPanel
+                  key={panel.title}
+                  eyebrow={panel.eyebrow}
+                  title={panel.title}
+                  body={panel.body}
+                  tone={panel.tone}
+                />
+              ))}
+            </div>
             <PdfDownloadButton
               campaignId={id}
               campaignName={stats.campaign_name}

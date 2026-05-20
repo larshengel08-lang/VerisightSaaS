@@ -132,4 +132,14 @@ describe('campaign detail management-read guardrails', () => {
     expect(source).toContain('Veilige samenvatting zichtbaar')
     expect(source).toContain('Verborgen door drempel of gevoelige inhoud')
   })
+
+  it('surfaces hidden-reason boundaries and HR governed analysis as bounded governance layers', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('Verborgen laagreden')
+    expect(source).toContain('Drempel, vrijgave of entitlement')
+    expect(source).toContain('HR governed analysis')
+    expect(source).toContain('HR kan veilige segmentlagen, hidden reasons en exportstatus lezen')
+    expect(source).toContain('Geen vrije slicing, quote browsing of lokale blame-laag')
+  })
 })
