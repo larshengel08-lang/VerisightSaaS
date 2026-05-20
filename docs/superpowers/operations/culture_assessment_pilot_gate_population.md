@@ -131,6 +131,7 @@ Bounded accepted risks:
 
 - board deck remains demo-ready rather than production-ready
 - operating owner map is populated with fictive placeholder owners for internal preparation and must be replaced by real named human owners before external pilot launch
+- first external pilot remains guided rather than self-serve by design
 
 ---
 
@@ -138,5 +139,19 @@ Bounded accepted risks:
 
 Before external launch or merge-readiness claim:
 
-- confirm the board deck artifact format used in the first pilot
+- use the chosen `PDF deck` artifact format for the first pilot board-read
 - replace the fictive placeholder owner map with real named human owners
+
+---
+
+## 5. Agreed Default Choices
+
+The current bounded pilot line assumes:
+
+- `PDF deck` as the first-pilot board deck format
+- `go with bounded accepted risks` as the internal pilot decision state
+- fictive placeholder owners for internal preparation, replaced by real named humans before external launch
+- next product-maturity sequence:
+  - `Governed Drilldown & Analysis Environment`
+  - `Text & Open Comment Intelligence`
+  - `Action & Follow-through System`

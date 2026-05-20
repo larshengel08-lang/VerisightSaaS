@@ -40,11 +40,12 @@ Current state:
 
 Artifact format:
 
-- markdown blueprint plus guided demo deck structure
+- `PDF deck` for the first bounded pilot
+- supported by markdown blueprint plus guided demo deck structure
 
 V1 pilot minimum:
 
-- visually representative deck or PDF deck must remain available for guided use
+- a guided `PDF deck` must remain available for board-read use
 
 ### 2.3 Executive one-pager
 
@@ -84,7 +85,7 @@ The board pack is considered usable when:
 ## 4. Remaining Bounded Gaps
 
 - the board deck remains demo-ready rather than production-ready
-- visual polish and final deck format may still need later upgrade
+- visual polish may still need later upgrade
 - live delivery still depends on guided facilitation
 
 These are acceptable within first-pilot scope.
@@ -99,4 +100,3 @@ Approved when:
 - the deck is at least demo-ready
 - the one-pager stands alone
 - the facilitator script is pilot-delivery ready
-

@@ -158,7 +158,7 @@ Board deck artifact format must be explicit:
 
 For V1 pilot, minimum:
 
-- demo-ready PDF, PPTX, or visually representative slide deck
+- demo-ready `PDF deck`
 
 ### WP5 - Governed HR and Cascade Readiness
 

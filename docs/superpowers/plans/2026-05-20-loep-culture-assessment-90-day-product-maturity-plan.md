@@ -164,3 +164,9 @@ After this plan and the four first implementation plans exist, the next required
 - execute the methodology and premium delivery plans first
 - execute the trust/procurement and listening operations plans second
 - populate the pilot-readiness gate with real status and bounded risks
+
+The agreed next second-wave sequence after this bounded pilot line is:
+
+1. `Governed Drilldown & Analysis Environment`
+2. `Text & Open Comment Intelligence`
+3. `Action & Follow-through System`
