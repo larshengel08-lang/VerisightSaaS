@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import {
+  resolveActionCenterActionReviewTransition,
   validateActionCenterActionReviewInput,
   type ActionCenterActionOutcome,
 } from '@/lib/action-center-action-reviews'
@@ -63,19 +64,6 @@ function findWritableMembership(
         membership.can_update,
     ) ?? null
   )
-}
-
-function getPersistedActionStatusFromOutcome(outcome: string) {
-  switch (outcome) {
-    case 'effect-zichtbaar':
-      return 'afgerond'
-    case 'stoppen':
-      return 'gestopt'
-    case 'bijsturen-nodig':
-    case 'nog-te-vroeg':
-    default:
-      return 'in_review'
-  }
 }
 
 export async function POST(request: Request) {
@@ -163,7 +151,7 @@ export async function POST(request: Request) {
   const { error: updateError } = await adminClient
     .from('action_center_route_actions')
     .update({
-      primary_action_status: getPersistedActionStatusFromOutcome(parsed.action_outcome),
+      primary_action_status: resolveActionCenterActionReviewTransition(parsed.action_outcome),
       updated_by: user.id,
       updated_at: new Date().toISOString(),
     })

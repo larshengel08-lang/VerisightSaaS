@@ -260,11 +260,18 @@ describe('action center action reviews route', () => {
     })
     expect(updateQuery.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        primary_action_status: 'in_review',
+        primary_action_status: 'active',
         updated_by: 'manager-1',
       }),
     )
     expect(updateQuery.eq).toHaveBeenCalledWith('id', 'action-1')
+
+    const actionUpdate = updateQuery.update.mock.calls[0]?.[0]
+    expect(actionUpdate).not.toHaveProperty('closeout_status')
+    expect(actionUpdate).not.toHaveProperty('closeout_reason')
+    expect(actionUpdate).not.toHaveProperty('closeout_note')
+    expect(actionUpdate).not.toHaveProperty('closed_at')
+    expect(actionUpdate).not.toHaveProperty('closed_by_role')
 
     const payload = await response.json()
     expect(payload.review).toMatchObject({
@@ -275,5 +282,10 @@ describe('action center action reviews route', () => {
     expect(payload.review).not.toHaveProperty('decision')
     expect(payload.review).not.toHaveProperty('next_step')
     expect(payload.review).not.toHaveProperty('expected_effect')
+    expect(payload.review).not.toHaveProperty('closeout_status')
+    expect(payload.review).not.toHaveProperty('closeout_reason')
+    expect(payload.review).not.toHaveProperty('closeout_note')
+    expect(payload.review).not.toHaveProperty('closed_at')
+    expect(payload.review).not.toHaveProperty('closed_by_role')
   })
 })

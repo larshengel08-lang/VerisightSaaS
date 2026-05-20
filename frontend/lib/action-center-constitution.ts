@@ -239,11 +239,13 @@ export function resolveActionCenterActionReviewTransition(
   switch (outcome) {
     case 'effect-zichtbaar':
       return 'completed'
+    case 'bijsturen-nodig':
+      return 'active'
+    case 'nog-te-vroeg':
+      return 'active'
     case 'stoppen':
       return 'stopped'
-    case 'bijsturen-nodig':
-    case 'nog-te-vroeg':
-    default:
-      return 'active'
   }
+
+  throw new Error(`Unsupported action review outcome: ${outcome}`)
 }

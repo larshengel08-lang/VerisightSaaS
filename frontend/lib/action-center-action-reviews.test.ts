@@ -64,4 +64,14 @@ describe('action center action reviews', () => {
     expect(resolveActionCenterActionReviewTransition('nog-te-vroeg')).toBe('active')
     expect(resolveActionCenterActionReviewTransition('stoppen')).toBe('stopped')
   })
+
+  it('rejects unknown review outcomes instead of silently falling back', async () => {
+    const { resolveActionCenterActionReviewTransition } = await import('./action-center-action-reviews') as {
+      resolveActionCenterActionReviewTransition: (outcome: string) => string
+    }
+
+    expect(() =>
+      resolveActionCenterActionReviewTransition('onbekend'),
+    ).toThrow('Unsupported action review outcome: onbekend')
+  })
 })
