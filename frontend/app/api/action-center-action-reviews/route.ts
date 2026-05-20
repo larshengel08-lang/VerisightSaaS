@@ -3,10 +3,23 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import {
+  type ActionCenterActor,
+  isActionCenterActionStateTransitionAllowed,
+  type ActionCenterActionSemanticState,
+} from '@/lib/action-center-constitution'
+import {
+  type ActionCenterActionConfidenceLevel,
+  type ActionCenterActionEvidenceSource,
+  resolveActionCenterActionReviewTransition,
   validateActionCenterActionReviewInput,
   type ActionCenterActionOutcome,
 } from '@/lib/action-center-action-reviews'
+import {
+  buildActionCenterBoundedExecutionEvent,
+  resolveActionCenterBoundedExecutionRouteFamily,
+} from '@/lib/action-center-bounded-execution-metrics'
 import { resolveActionReviewWriteIdentity } from '@/lib/action-center-route-write-access'
+import type { ActionCenterRouteActionStatus } from '@/lib/action-center-route-actions'
 import type { ActionCenterWorkspaceMember } from '@/lib/suite-access'
 
 type ActionReviewRequestBody = {
@@ -14,6 +27,8 @@ type ActionReviewRequestBody = {
   reviewed_at?: string
   observation?: string
   action_outcome?: string
+  evidence_source?: string | null
+  confidence_level?: string | null
   follow_up_note?: string | null
 }
 
@@ -27,6 +42,8 @@ function parseActionReviewRequestInput(input: ActionReviewRequestBody | null) {
   const reviewedAt = normalizeText(input?.reviewed_at)
   const observation = normalizeText(input?.observation)
   const actionOutcome = normalizeText(input?.action_outcome) as ActionCenterActionOutcome | null
+  const evidenceSource = normalizeText(input?.evidence_source) as ActionCenterActionEvidenceSource | null
+  const confidenceLevel = normalizeText(input?.confidence_level) as ActionCenterActionConfidenceLevel | null
   const followUpNote = normalizeText(input?.follow_up_note)
 
   if (!actionId || !reviewedAt || !observation || !actionOutcome) {
@@ -38,6 +55,8 @@ function parseActionReviewRequestInput(input: ActionReviewRequestBody | null) {
     reviewed_at: reviewedAt,
     observation,
     action_outcome: actionOutcome,
+    evidence_source: evidenceSource,
+    confidence_level: confidenceLevel,
     follow_up_note: followUpNote,
   }
 }
@@ -65,17 +84,58 @@ function findWritableMembership(
   )
 }
 
-function getPersistedActionStatusFromOutcome(outcome: string) {
-  switch (outcome) {
-    case 'effect-zichtbaar':
-      return 'afgerond'
-    case 'stoppen':
-      return 'gestopt'
-    case 'bijsturen-nodig':
-    case 'nog-te-vroeg':
-    default:
-      return 'in_review'
+function resolvePersistedActionSemanticState(
+  value: string | null | undefined,
+): ActionCenterActionSemanticState | null {
+  const normalized = normalizeText(value)
+
+  if (!normalized) {
+    return 'draft'
   }
+
+  switch (normalized) {
+    case 'draft':
+      return 'draft'
+    case 'open':
+    case 'active':
+      return 'active'
+    case 'review_due':
+      return 'review_due'
+    case 'in_review':
+      return 'in_review'
+    case 'blocked':
+      return 'blocked'
+    case 'afgerond':
+    case 'completed':
+      return 'completed'
+    case 'gestopt':
+    case 'stopped':
+      return 'stopped'
+    case 'superseded':
+      return 'superseded'
+    default:
+      return null
+  }
+}
+
+function resolvePersistedActionStatusFromSemanticState(
+  state: Extract<ActionCenterActionSemanticState, 'active' | 'completed' | 'stopped'>,
+): ActionCenterRouteActionStatus {
+  switch (state) {
+    case 'active':
+      return 'open'
+    case 'completed':
+      return 'afgerond'
+    case 'stopped':
+      return 'gestopt'
+  }
+}
+
+function resolveReviewMetricActorRole(isVerisightAdmin: boolean): Extract<
+  ActionCenterActor,
+  'hr_rhythm_owner' | 'manager_participant'
+> {
+  return isVerisightAdmin ? 'hr_rhythm_owner' : 'manager_participant'
 }
 
 export async function POST(request: Request) {
@@ -105,7 +165,9 @@ export async function POST(request: Request) {
   const adminClient = createAdminClient()
   const { data: action, error: actionError } = await adminClient
     .from('action_center_route_actions')
-    .select('id, org_id, route_scope_type, route_scope_value, manager_user_id')
+    .select(
+      'id, campaign_id, route_id, org_id, route_scope_type, route_scope_value, manager_user_id, primary_action_status, updated_by, updated_at',
+    )
     .eq('id', parsed.action_id)
     .maybeSingle()
 
@@ -142,6 +204,49 @@ export async function POST(request: Request) {
     return NextResponse.json({ detail }, { status })
   }
 
+  const currentActionState = resolvePersistedActionSemanticState(action.primary_action_status)
+  const nextActionState = resolveActionCenterActionReviewTransition(parsed.action_outcome)
+  const actor = context.isVerisightAdmin ? 'hr_rhythm_owner' : 'manager_participant'
+
+  if (
+    currentActionState !== 'in_review' ||
+    !isActionCenterActionStateTransitionAllowed({
+      actor,
+      fromState: currentActionState,
+      toState: nextActionState,
+    })
+  ) {
+    return NextResponse.json(
+      { detail: 'Route action review is niet toegestaan vanuit de huidige canonieke toestand.' },
+      { status: 409 },
+    )
+  }
+
+  const actionCampaignId = normalizeText(action.campaign_id)
+  const actionRouteId = normalizeText(action.route_id)
+  let routeFamily = null
+
+  if (actionCampaignId) {
+    const { data: campaign, error: campaignError } = await adminClient
+      .from('campaigns')
+      .select('scan_type')
+      .eq('id', actionCampaignId)
+      .maybeSingle()
+
+    if (campaignError) {
+      return NextResponse.json({ detail: 'Route action route laden mislukt.' }, { status: 500 })
+    }
+
+    routeFamily = resolveActionCenterBoundedExecutionRouteFamily(normalizeText(campaign?.scan_type))
+  }
+
+  if (!routeFamily || !actionCampaignId || !actionRouteId || !routeScopeValue) {
+    return NextResponse.json(
+      { detail: 'Route action route family valt buiten bounded execution.' },
+      { status: 500 },
+    )
+  }
+
   const { data, error } = await adminClient
     .from('action_center_action_reviews')
     .insert({
@@ -160,18 +265,125 @@ export async function POST(request: Request) {
     return NextResponse.json({ detail: error?.message ?? 'Route action review opslaan mislukt.' }, { status: 500 })
   }
 
-  const { error: updateError } = await adminClient
+  const { data: updatedAction, error: updateError } = await adminClient
     .from('action_center_route_actions')
     .update({
-      primary_action_status: getPersistedActionStatusFromOutcome(parsed.action_outcome),
+      primary_action_status: resolvePersistedActionStatusFromSemanticState(nextActionState),
       updated_by: user.id,
       updated_at: new Date().toISOString(),
     })
     .eq('id', parsed.action_id)
+    .eq('primary_action_status', action.primary_action_status)
+    .select('id')
+    .maybeSingle()
 
-  if (updateError) {
-    return NextResponse.json({ detail: updateError.message }, { status: 500 })
+  if (updateError || !updatedAction) {
+    if (typeof data.id === 'string' && data.id.length > 0) {
+      const { error: rollbackError } = await adminClient
+        .from('action_center_action_reviews')
+        .delete()
+        .eq('id', data.id)
+
+      if (rollbackError) {
+        return NextResponse.json(
+          { detail: 'Route action review opslaan is deels mislukt: statusupdate en rollback faalden.' },
+          { status: 500 },
+        )
+      }
+    }
+
+    return NextResponse.json(
+      { detail: updateError?.message ?? 'Route action statusupdate bevestigen mislukt.' },
+      { status: 500 },
+    )
   }
 
-  return NextResponse.json({ review: data }, { status: 200 })
+  const reviewId = normalizeText(data.id)
+  const nextPersistedActionStatus = resolvePersistedActionStatusFromSemanticState(nextActionState)
+
+  if (!reviewId) {
+    return NextResponse.json({ detail: 'Route action review opslaan mislukt.' }, { status: 500 })
+  }
+
+  const metricEvents = [
+    buildActionCenterBoundedExecutionEvent('action_review_completed', {
+      orgId: action.org_id,
+      routeId: actionRouteId,
+      routeScopeValue,
+      routeSourceId: actionCampaignId,
+      routeFamily,
+      actionId: parsed.action_id,
+      actorRole: resolveReviewMetricActorRole(context.isVerisightAdmin),
+      actorUserId: user.id,
+      occurredAt: parsed.reviewed_at,
+    }),
+    buildActionCenterBoundedExecutionEvent('action_state_changed', {
+      orgId: action.org_id,
+      routeId: actionRouteId,
+      routeScopeValue,
+      routeSourceId: actionCampaignId,
+      routeFamily,
+      actionId: parsed.action_id,
+      actorRole: resolveReviewMetricActorRole(context.isVerisightAdmin),
+      actorUserId: user.id,
+      occurredAt: parsed.reviewed_at,
+    }),
+  ]
+
+  const { error: metricError } = await adminClient
+    .from('action_center_bounded_execution_events')
+    .insert(metricEvents)
+
+  if (metricError) {
+    const rollbackPayload: {
+      primary_action_status: string | null | undefined
+      updated_by?: string | null
+      updated_at?: string | null
+    } = {
+      primary_action_status: action.primary_action_status,
+    }
+
+    if (Object.prototype.hasOwnProperty.call(action, 'updated_by')) {
+      rollbackPayload.updated_by = action.updated_by ?? null
+    }
+
+    if (Object.prototype.hasOwnProperty.call(action, 'updated_at')) {
+      rollbackPayload.updated_at = action.updated_at ?? null
+    }
+
+    const rollbackStatusUpdate = await adminClient
+      .from('action_center_route_actions')
+      .update(rollbackPayload)
+      .eq('id', parsed.action_id)
+      .eq('primary_action_status', nextPersistedActionStatus)
+      .select('id')
+      .maybeSingle()
+    const reviewDelete = await adminClient.from('action_center_action_reviews').delete().eq('id', reviewId)
+
+    if (rollbackStatusUpdate.error || !rollbackStatusUpdate.data || reviewDelete.error) {
+      return NextResponse.json(
+        {
+          detail:
+            'Route action review opslaan is deels mislukt: bounded event logging en rollback faalden.',
+        },
+        { status: 500 },
+      )
+    }
+
+    return NextResponse.json(
+      { detail: 'Route action bounded event logging mislukt.' },
+      { status: 500 },
+    )
+  }
+
+  return NextResponse.json(
+    {
+      review: data,
+      submittedStructuredMetadata: {
+        evidence_source: parsed.evidence_source,
+        confidence_level: parsed.confidence_level,
+      },
+    },
+    { status: 200 },
+  )
 }

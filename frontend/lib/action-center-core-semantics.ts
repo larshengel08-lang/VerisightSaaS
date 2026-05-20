@@ -71,9 +71,9 @@ export interface ActionCenterCoreSemantics {
   routeActionCards: Array<{
     actionId: string
     themeKey: ActionCenterRouteActionRecord['themeKey']
-    actionText: string
-    reviewScheduledFor: string
-    expectedEffect: string
+    actionText: string | null
+    reviewScheduledFor: string | null
+    expectedEffect: string | null
     status: ActionCenterRouteActionRecord['status']
     latestReview: ActionCenterActionReviewRecord | null
   }>
@@ -260,7 +260,14 @@ function getSurfaceStatusLabel(status: ActionCenterPreviewStatus | null | undefi
 function countReviewPressure(routeActionCards: ActionCenterCoreSemantics['routeActionCards']) {
   const today = new Date().toISOString().slice(0, 10)
   return routeActionCards.filter(
-    (action) => action.status === 'in_review' || (action.status === 'open' && action.reviewScheduledFor <= today),
+    (action) => {
+      const reviewScheduledFor = action.reviewScheduledFor
+
+      return (
+        action.status === 'in_review' ||
+        (action.status === 'open' && reviewScheduledFor !== null && reviewScheduledFor <= today)
+      )
+    },
   ).length
 }
 

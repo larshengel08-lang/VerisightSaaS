@@ -32,6 +32,10 @@ describe('action center route defaults contract', () => {
       escalationLeadDays: 7,
       reviewWindowDays: { min: 60, max: 90 },
       staleAfterDays: 90,
+      stuckActiveWarningDays: 30,
+      reviewDueGraceDays: 7,
+      sprawlRiskCount: 3,
+      repeatedReviewWarningCount: 2,
       remindersEnabled: true,
       providerEligible: true,
     })
@@ -45,22 +49,34 @@ describe('action center route defaults contract', () => {
       escalationLeadDays: 7,
       reviewWindowDays: { min: 45, max: 90 },
       staleAfterDays: 90,
+      stuckActiveWarningDays: { min: 21, max: 30 },
+      reviewDueGraceDays: 7,
+      sprawlRiskCount: 3,
+      repeatedReviewWarningCount: 2,
       remindersEnabled: true,
       providerEligible: true,
     })
   })
 
-  it('returns route-specific defaults for exit and retention', () => {
+  it('exposes stricter execution thresholds per approved route family', () => {
     expect(getActionCenterRouteDefaults('exit')).toMatchObject({
       actionCenterStatus: 'enabled',
       routeEnabled: true,
       reviewWindowDays: { min: 60, max: 90 },
+      stuckActiveWarningDays: 30,
+      reviewDueGraceDays: 7,
+      sprawlRiskCount: 3,
+      repeatedReviewWarningCount: 2,
     })
 
     expect(getActionCenterRouteDefaults('retention')).toMatchObject({
       actionCenterStatus: 'enabled',
       routeEnabled: true,
       reviewWindowDays: { min: 45, max: 90 },
+      stuckActiveWarningDays: { min: 21, max: 30 },
+      reviewDueGraceDays: 7,
+      sprawlRiskCount: 3,
+      repeatedReviewWarningCount: 2,
     })
   })
 

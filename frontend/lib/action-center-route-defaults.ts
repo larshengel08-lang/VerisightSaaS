@@ -33,14 +33,43 @@ export interface ActionCenterRouteDefaults {
     max: number
   }
   staleAfterDays?: number
+  stuckActiveWarningDays?: number | { min: number; max: number }
+  reviewDueGraceDays?: number
+  sprawlRiskCount?: number
+  repeatedReviewWarningCount?: number
   remindersEnabled: boolean
   providerEligible: boolean
+}
+
+export interface ActionCenterExecutionThresholds {
+  stuckActiveWarningDays: number | { min: number; max: number }
+  reviewDueGraceDays: number
+  sprawlRiskCount: number
+  repeatedReviewWarningCount: number
 }
 
 const BASELINE_ROUTE_DEFAULTS = {
   cadenceDays: 14 as const,
   reminderLeadDays: 3 as const,
   escalationLeadDays: 7 as const,
+}
+
+const ACTION_CENTER_EXECUTION_THRESHOLDS: Record<
+  ActionCenterApprovedRouteFamily,
+  ActionCenterExecutionThresholds
+> = {
+  exit: {
+    stuckActiveWarningDays: 30,
+    reviewDueGraceDays: 7,
+    sprawlRiskCount: 3,
+    repeatedReviewWarningCount: 2,
+  },
+  retention: {
+    stuckActiveWarningDays: { min: 21, max: 30 },
+    reviewDueGraceDays: 7,
+    sprawlRiskCount: 3,
+    repeatedReviewWarningCount: 2,
+  },
 }
 
 function buildEnabledRouteDefaults(
@@ -55,6 +84,7 @@ function buildEnabledRouteDefaults(
     escalationLeadDays: approvedRouteDefault.escalationLeadDays,
     reviewWindowDays: approvedRouteDefault.reviewWindowDays,
     staleAfterDays: approvedRouteDefault.staleAfterDays,
+    ...ACTION_CENTER_EXECUTION_THRESHOLDS[approvedRouteDefault.scanType],
     remindersEnabled: true,
     providerEligible: true,
   }
@@ -120,13 +150,19 @@ export function isActionCenterRouteDefaultsProviderEligibleScanType(
 
 export function getActionCenterEnabledRouteDefaults(
   scanType: string | null | undefined,
-): ActionCenterRouteDefaults & { scanType: ActionCenterRouteDefaultsEnabledScanType } | null {
+): (ActionCenterRouteDefaults &
+  ActionCenterExecutionThresholds & {
+    scanType: ActionCenterRouteDefaultsEnabledScanType
+  }) | null {
   const defaults = getActionCenterRouteDefaults(scanType)
   if (!defaults?.routeEnabled) {
     return null
   }
 
-  return defaults as ActionCenterRouteDefaults & { scanType: ActionCenterRouteDefaultsEnabledScanType }
+  return defaults as ActionCenterRouteDefaults &
+    ActionCenterExecutionThresholds & {
+      scanType: ActionCenterRouteDefaultsEnabledScanType
+    }
 }
 
 export function getActionCenterScanTypeFromSourceLabel(

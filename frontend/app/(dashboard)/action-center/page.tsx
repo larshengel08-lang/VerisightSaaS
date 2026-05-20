@@ -557,6 +557,8 @@ export default async function ActionCenterPage({
       managerAssignmentEndpoint="/api/action-center/workspace-members"
       canRespondToRequests={context.canUpdateActionCenter}
       managerResponseEndpoint="/api/action-center-manager-responses"
+      routeActionEndpoint="/api/action-center-route-actions"
+      actionReviewEndpoint="/api/action-center-action-reviews"
       canCloseRoutes={context.canManageActionCenterAssignments}
       routeCloseoutEndpoint="/api/action-center-route-closeouts"
       routeFollowUpEndpoint="/api/action-center-route-follow-ups"

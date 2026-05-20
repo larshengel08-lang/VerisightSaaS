@@ -1,4 +1,5 @@
 import type { ActionCenterPreviewItem } from '@/lib/action-center-preview-model'
+import { deriveActionCenterRouteGovernanceSignals } from '@/lib/action-center-governance'
 import { buildActionCenterReviewOversightSummary } from '@/lib/action-center-review-oversight'
 import {
   getActionCenterEnabledRouteDefaults,
@@ -20,6 +21,10 @@ type ActionCenterReviewRhythmConfigRow = {
   reminders_enabled: boolean | null
 }
 
+type GovernanceMergedAttentionItem = ReturnType<typeof buildActionCenterReviewOversightSummary>['attentionItems'][number] & {
+  governanceSignals?: NonNullable<ReturnType<typeof deriveActionCenterRouteGovernanceSignals>>['signals']
+}
+
 function getReviewRhythmRouteId(item: Pick<ActionCenterPreviewItem, 'coreSemantics'>) {
   return item.coreSemantics.route.routeId
 }
@@ -35,6 +40,82 @@ function normalizeConfigRow(row: ActionCenterReviewRhythmConfigRow): ActionCente
     escalation_lead_days: row.escalation_lead_days,
     reminders_enabled: row.reminders_enabled,
   })
+}
+
+function sortOversightAttentionItems(items: GovernanceMergedAttentionItem[]) {
+  const priority = (state: GovernanceMergedAttentionItem['state']) => {
+    if (state === 'escalation-sensitive') return 0
+    if (state === 'stale') return 1
+    return 2
+  }
+
+  return items
+    .slice()
+    .sort((left, right) => {
+      const stateDiff = priority(left.state) - priority(right.state)
+      if (stateDiff !== 0) {
+        return stateDiff
+      }
+
+      return left.scopeLabel.localeCompare(right.scopeLabel)
+    })
+    .slice(0, 5)
+}
+
+function mergeGovernanceIntoOversight(args: {
+  items: ActionCenterPreviewItem[]
+  oversight: ReturnType<typeof buildActionCenterReviewOversightSummary>
+  routeScanTypeByRouteId: Record<string, ActionCenterRouteDefaultsKnownScanType>
+  now: Date
+}) {
+  const governanceByRouteId = new Map(
+    args.items
+      .map((item) =>
+        deriveActionCenterRouteGovernanceSignals({
+          item,
+          scanType: args.routeScanTypeByRouteId[getReviewRhythmRouteId(item)],
+          now: args.now,
+        }),
+      )
+      .filter((snapshot): snapshot is NonNullable<typeof snapshot> => Boolean(snapshot))
+      .map((snapshot) => [snapshot.routeId, snapshot] as const),
+  )
+
+  const mergedAttentionItems: GovernanceMergedAttentionItem[] = args.oversight.attentionItems.map((item) => {
+    const governance = governanceByRouteId.get(item.routeId)
+    if (!governance) {
+      return item
+    }
+
+    return {
+      ...item,
+      governanceSignals: governance.signals,
+    }
+  })
+
+  const existingRouteIds = new Set(mergedAttentionItems.map((item) => item.routeId))
+
+  for (const item of args.items) {
+    const routeId = getReviewRhythmRouteId(item)
+    const governance = governanceByRouteId.get(routeId)
+    if (!governance || existingRouteIds.has(routeId)) {
+      continue
+    }
+
+    mergedAttentionItems.push({
+      routeId,
+      state: 'stale',
+      scopeLabel: governance.scopeLabel,
+      sourceLabel: governance.sourceLabel,
+      reviewDateLabel: governance.reviewDateLabel,
+      governanceSignals: governance.signals,
+    })
+  }
+
+  return {
+    ...args.oversight,
+    attentionItems: sortOversightAttentionItems(mergedAttentionItems),
+  }
 }
 
 export async function getActionCenterReviewRhythmData(args: {
@@ -107,10 +188,16 @@ export async function getActionCenterReviewRhythmData(args: {
     routeScanTypeByRouteId: args.routeScanTypeByRouteId,
     now: args.now,
   })
+  const governanceAwareOversight = mergeGovernanceIntoOversight({
+    items: eligibleItems,
+    oversight,
+    routeScanTypeByRouteId: args.routeScanTypeByRouteId,
+    now: args.now,
+  })
 
   return {
     configByRouteId,
     summary,
-    oversight,
+    oversight: governanceAwareOversight,
   }
 }

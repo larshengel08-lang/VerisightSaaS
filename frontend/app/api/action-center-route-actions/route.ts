@@ -3,10 +3,15 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import {
+  buildActionCenterBoundedExecutionEvent,
+  resolveActionCenterBoundedExecutionRouteFamily,
+} from '@/lib/action-center-bounded-execution-metrics'
+import {
   validateActionCenterRouteActionDraftInput,
   type ActionCenterRouteActionStatus,
 } from '@/lib/action-center-route-actions'
 import { resolveRouteActionWriteIdentity } from '@/lib/action-center-route-write-access'
+import type { ActionCenterActor } from '@/lib/action-center-constitution'
 import type { ActionCenterManagerActionThemeKey } from '@/lib/pilot-learning'
 import type { ActionCenterWorkspaceMember } from '@/lib/suite-access'
 
@@ -45,18 +50,9 @@ function parseRouteActionRequestInput(input: RouteActionRequestBody | null) {
   const actionText = normalizeText(input?.primary_action_text)
   const expectedEffect = normalizeText(input?.primary_action_expected_effect)
   const reviewScheduledFor = normalizeText(input?.review_scheduled_for)
-  const status =
-    (normalizeText(input?.primary_action_status) as ActionCenterRouteActionStatus | null) ?? 'open'
+  const status = normalizeText(input?.primary_action_status) as ActionCenterRouteActionStatus | null
 
-  if (
-    !campaignId ||
-    (routeScopeType !== 'department' && routeScopeType !== 'item') ||
-    !routeScopeValue ||
-    !themeKey ||
-    !actionText ||
-    !expectedEffect ||
-    !reviewScheduledFor
-  ) {
+  if (!campaignId || (routeScopeType !== 'department' && routeScopeType !== 'item') || !routeScopeValue) {
     throw new Error('Ongeldige route action input.')
   }
 
@@ -83,7 +79,11 @@ async function loadWritableRouteTruth(input: {
     { data: campaign, error: campaignError },
     { data: routeContainer, error: routeContainerError },
   ] = await Promise.all([
-    adminClient.from('campaigns').select('id, organization_id').eq('id', input.campaignId).maybeSingle(),
+    adminClient
+      .from('campaigns')
+      .select('id, organization_id, scan_type')
+      .eq('id', input.campaignId)
+      .maybeSingle(),
     adminClient
       .from('action_center_manager_responses')
       .select('id, campaign_id, org_id, route_scope_type, route_scope_value, manager_user_id')
@@ -93,12 +93,15 @@ async function loadWritableRouteTruth(input: {
       .maybeSingle(),
   ])
 
-  if (campaignError || !campaign?.id || !campaign.organization_id) {
+  if (campaignError || routeContainerError) {
+    throw new Error('Route action route laden mislukt.')
+  }
+
+  if (!campaign?.id || !campaign.organization_id) {
     return { campaign: null, routeContainer: null, visibleDepartmentLabels: [] }
   }
 
   if (
-    routeContainerError ||
     !routeContainer?.id ||
     !routeContainer.campaign_id ||
     !routeContainer.org_id ||
@@ -113,10 +116,14 @@ async function loadWritableRouteTruth(input: {
     return { campaign, routeContainer, visibleDepartmentLabels: [] }
   }
 
-  const { data: respondentsRaw } = await adminClient
+  const { data: respondentsRaw, error: respondentsError } = await adminClient
     .from('respondents')
     .select('department')
     .eq('campaign_id', input.campaignId)
+
+  if (respondentsError) {
+    throw new Error('Route action route laden mislukt.')
+  }
 
   const visibleDepartmentLabels = [
     ...new Set(
@@ -159,7 +166,7 @@ async function loadAssignedManagerMembership(input: {
   routeScopeValue: string
 }) {
   const adminClient = createAdminClient()
-  const { data } = await adminClient
+  const { data, error } = await adminClient
     .from('action_center_workspace_members')
     .select(
       'org_id, user_id, display_name, login_email, access_role, scope_type, scope_value, can_view, can_update, created_at, updated_at',
@@ -171,16 +178,41 @@ async function loadAssignedManagerMembership(input: {
     .eq('scope_value', input.routeScopeValue)
     .maybeSingle()
 
+  if (error) {
+    throw new Error('Route action manager-toewijzing laden mislukt.')
+  }
+
   return (data ?? null) as ActionCenterWorkspaceMember | null
+}
+
+function resolveRouteActionMetricActorRole(isVerisightAdmin: boolean): Extract<
+  ActionCenterActor,
+  'hr_rhythm_owner' | 'manager_participant'
+> {
+  return isVerisightAdmin ? 'hr_rhythm_owner' : 'manager_participant'
+}
+
+function resolveRouteActionDispositionEventType(
+  disposition: 'valid' | 'invalid' | 'needs_hr_review',
+) {
+  switch (disposition) {
+    case 'valid':
+      return 'action_draft_validated'
+    case 'invalid':
+      return 'action_draft_rejected'
+    case 'needs_hr_review':
+      return 'action_draft_sent_to_hr_review'
+  }
 }
 
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as RouteActionRequestBody | null
 
   let parsed
+  let actionDraft
   try {
     parsed = parseRouteActionRequestInput(body)
-    validateActionCenterRouteActionDraftInput({
+    actionDraft = validateActionCenterRouteActionDraftInput({
       primary_action_theme_key: parsed.primary_action_theme_key,
       primary_action_text: parsed.primary_action_text,
       primary_action_expected_effect: parsed.primary_action_expected_effect,
@@ -201,11 +233,19 @@ export async function POST(request: Request) {
   }
 
   const { context, workspaceMemberships } = await loadSuiteAccessContext(supabase, user.id)
-  const routeTruth = await loadWritableRouteTruth({
-    campaignId: parsed.campaign_id,
-    routeScopeType: parsed.route_scope_type,
-    routeScopeValue: parsed.route_scope_value,
-  })
+  let routeTruth
+  try {
+    routeTruth = await loadWritableRouteTruth({
+      campaignId: parsed.campaign_id,
+      routeScopeType: parsed.route_scope_type,
+      routeScopeValue: parsed.route_scope_value,
+    })
+  } catch (error) {
+    return NextResponse.json(
+      { detail: error instanceof Error ? error.message : 'Route action route laden mislukt.' },
+      { status: 500 },
+    )
+  }
 
   if (!routeTruth.campaign?.organization_id) {
     return NextResponse.json({ detail: 'Route action route bestaat niet voor deze campagne.' }, { status: 400 })
@@ -222,14 +262,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ detail: 'Route action route-container bestaat niet voor deze route.' }, { status: 400 })
   }
 
-  const assignedManagerMembership = context.isVerisightAdmin
-    ? await loadAssignedManagerMembership({
-        orgId: routeTruth.campaign.organization_id,
-        managerUserId: routeTruth.routeContainer.manager_user_id,
-        routeScopeType: parsed.route_scope_type,
-        routeScopeValue: parsed.route_scope_value,
-      })
-    : currentUserMembership
+  let assignedManagerMembership
+  try {
+    assignedManagerMembership = context.isVerisightAdmin
+      ? await loadAssignedManagerMembership({
+          orgId: routeTruth.campaign.organization_id,
+          managerUserId: routeTruth.routeContainer.manager_user_id,
+          routeScopeType: parsed.route_scope_type,
+          routeScopeValue: parsed.route_scope_value,
+        })
+      : currentUserMembership
+  } catch (error) {
+    return NextResponse.json(
+      { detail: error instanceof Error ? error.message : 'Route action manager-toewijzing laden mislukt.' },
+      { status: 500 },
+    )
+  }
 
   let identity
   try {
@@ -257,6 +305,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ detail }, { status })
   }
 
+  const routeFamily = resolveActionCenterBoundedExecutionRouteFamily(
+    normalizeText(routeTruth.campaign.scan_type),
+  )
+
+  if (!routeFamily) {
+    return NextResponse.json(
+      { detail: 'Route action route family valt buiten bounded execution.' },
+      { status: 500 },
+    )
+  }
+
   const adminClient = createAdminClient()
   const { data, error } = await adminClient
     .from('action_center_route_actions')
@@ -270,11 +329,11 @@ export async function POST(request: Request) {
       manager_user_id: identity.manager_user_id,
       owner_name: identity.owner_name,
       owner_assigned_at: identity.owner_assigned_at,
-      primary_action_theme_key: parsed.primary_action_theme_key,
-      primary_action_text: parsed.primary_action_text,
-      primary_action_expected_effect: parsed.primary_action_expected_effect,
-      primary_action_status: parsed.primary_action_status,
-      review_scheduled_for: parsed.review_scheduled_for,
+      primary_action_theme_key: actionDraft.primary_action_theme_key,
+      primary_action_text: actionDraft.primary_action_text,
+      primary_action_expected_effect: actionDraft.primary_action_expected_effect,
+      primary_action_status: null,
+      review_scheduled_for: actionDraft.review_scheduled_for,
       created_by: user.id,
       updated_by: user.id,
     })
@@ -285,5 +344,62 @@ export async function POST(request: Request) {
     return NextResponse.json({ detail: error?.message ?? 'Route action opslaan mislukt.' }, { status: 500 })
   }
 
-  return NextResponse.json({ action: data }, { status: 200 })
+  const occurredAt = normalizeText(data.created_at) ?? new Date().toISOString()
+  const actorRole = resolveRouteActionMetricActorRole(context.isVerisightAdmin)
+  const actionId = normalizeText(data.id)
+
+  if (!actionId) {
+    return NextResponse.json({ detail: 'Route action opslaan mislukt.' }, { status: 500 })
+  }
+
+  const metricEvents = [
+    buildActionCenterBoundedExecutionEvent('action_draft_created', {
+      orgId: identity.org_id,
+      routeId: identity.route_id,
+      routeScopeValue: identity.route_scope_value,
+      routeSourceId: identity.campaign_id,
+      routeFamily,
+      actionId,
+      actorRole,
+      actorUserId: user.id,
+      occurredAt,
+    }),
+    buildActionCenterBoundedExecutionEvent(
+      resolveRouteActionDispositionEventType(actionDraft.validationDisposition),
+      {
+        orgId: identity.org_id,
+        routeId: identity.route_id,
+        routeScopeValue: identity.route_scope_value,
+        routeSourceId: identity.campaign_id,
+        routeFamily,
+        actionId,
+        actorRole,
+        actorUserId: user.id,
+        occurredAt,
+      },
+    ),
+  ]
+
+  const { error: metricError } = await adminClient
+    .from('action_center_bounded_execution_events')
+    .insert(metricEvents)
+
+  if (metricError) {
+    const rollbackActionId = actionId
+    const { error: rollbackError } = await adminClient
+      .from('action_center_route_actions')
+      .delete()
+      .eq('id', rollbackActionId)
+
+    if (rollbackError) {
+      return NextResponse.json(
+        { detail: 'Route action opslaan is deels mislukt: bounded event logging en rollback faalden.' },
+        { status: 500 },
+      )
+    }
+
+    return NextResponse.json({ detail: 'Route action bounded event logging mislukt.' }, { status: 500 })
+  }
+
+  return NextResponse.json({ action: data, actionDraft }, { status: 200 })
 }

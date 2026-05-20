@@ -397,6 +397,8 @@ describe("action center landing shell", () => {
     expect(pageSource).toContain("<ActionCenterPreview");
     expect(pageSource).toContain("searchParams");
     expect(pageSource).toContain('routeFollowUpEndpoint="/api/action-center-route-follow-ups"');
+    expect(pageSource).toContain('routeActionEndpoint="/api/action-center-route-actions"');
+    expect(pageSource).toContain('actionReviewEndpoint="/api/action-center-action-reviews"');
     expect(pageSource).toContain("hideSidebar");
     expect(pageSource).toContain("readOnly");
     expect(pageSource).toContain("boundedOverviewOnly");

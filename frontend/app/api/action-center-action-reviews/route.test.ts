@@ -41,17 +41,45 @@ function createActionQuery(result: { data: unknown; error: unknown }) {
   }
 }
 
+function createCampaignQuery(result: { data: unknown; error: unknown }) {
+  return {
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    maybeSingle: vi.fn().mockResolvedValue(result),
+  }
+}
+
 function createInsertQuery(result: { data: unknown; error: unknown }) {
   return {
+    data: result.data,
+    error: result.error,
     insert: vi.fn().mockReturnThis(),
     select: vi.fn().mockReturnThis(),
     single: vi.fn().mockResolvedValue(result),
   }
 }
 
-function createUpdateQuery(result: { error: unknown }) {
+function createUpdateQuery(result: { data?: unknown; error: unknown }) {
+  const resolvedData = result.error
+    ? null
+    : Object.prototype.hasOwnProperty.call(result, 'data')
+      ? result.data
+      : { id: 'updated-action-1' }
+
   return {
     update: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    select: vi.fn().mockReturnThis(),
+    maybeSingle: vi.fn().mockResolvedValue({
+      data: resolvedData,
+      error: result.error,
+    }),
+  }
+}
+
+function createDeleteQuery(result: { error: unknown }) {
+  return {
+    delete: vi.fn().mockReturnThis(),
     eq: vi.fn().mockResolvedValue(result),
   }
 }
@@ -91,6 +119,7 @@ describe('action center action reviews route', () => {
             route_scope_type: 'department',
             route_scope_value: 'org-1::department::finance',
             manager_user_id: 'manager-2',
+            primary_action_status: 'in_review',
           },
           error: null,
         })
@@ -146,6 +175,7 @@ describe('action center action reviews route', () => {
             route_scope_type: 'department',
             route_scope_value: 'org-1::department::operations',
             manager_user_id: 'manager-2',
+            primary_action_status: 'in_review',
           },
           error: null,
         })
@@ -171,7 +201,7 @@ describe('action center action reviews route', () => {
     expect(response.status).toBe(403)
   })
 
-  it('accepts a valid review write with lightweight outcome fields only', async () => {
+  it('accepts a valid review write without requiring new review-table metadata columns', async () => {
     mockGetUser.mockResolvedValue({
       data: {
         user: { id: 'manager-1' },
@@ -206,6 +236,10 @@ describe('action center action reviews route', () => {
       error: null,
     })
     const updateQuery = createUpdateQuery({ error: null })
+    const metricsInsertQuery = createInsertQuery({
+      data: [{ id: 'event-review-completed' }, { id: 'event-state-changed' }],
+      error: null,
+    })
     let actionLookupCount = 0
 
     mockAdminFrom.mockImplementation((table: string) => {
@@ -215,10 +249,13 @@ describe('action center action reviews route', () => {
           return createActionQuery({
             data: {
               id: 'action-1',
+              campaign_id: 'campaign-1',
+              route_id: 'campaign-1::org-1::department::operations',
               org_id: 'org-1',
               route_scope_type: 'department',
               route_scope_value: 'org-1::department::operations',
               manager_user_id: 'manager-1',
+              primary_action_status: 'in_review',
             },
             error: null,
           })
@@ -227,8 +264,21 @@ describe('action center action reviews route', () => {
         return updateQuery
       }
 
+      if (table === 'campaigns') {
+        return createCampaignQuery({
+          data: {
+            scan_type: 'retention',
+          },
+          error: null,
+        })
+      }
+
       if (table === 'action_center_action_reviews') {
         return insertQuery
+      }
+
+      if (table === 'action_center_bounded_execution_events') {
+        return metricsInsertQuery
       }
 
       throw new Error(`Unexpected table ${table}`)
@@ -244,6 +294,8 @@ describe('action center action reviews route', () => {
         reviewed_at: '2026-05-12T09:30:00.000Z',
         observation: 'Dezelfde werkdrukfrictie bleef zichtbaar in twee teams.',
         action_outcome: 'bijsturen-nodig',
+        evidence_source: 'team-conversation',
+        confidence_level: 'medium',
         follow_up_note: 'Plan volgende week een kleiner teamgesprek met concrete workload-afspraken.',
       }),
     )
@@ -260,20 +312,778 @@ describe('action center action reviews route', () => {
     })
     expect(updateQuery.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        primary_action_status: 'in_review',
+        primary_action_status: 'open',
         updated_by: 'manager-1',
       }),
     )
+    expect(metricsInsertQuery.insert).toHaveBeenCalledWith([
+      expect.objectContaining({
+        event_type: 'action_review_completed',
+        object_anchor: 'action_card',
+        route_family: 'retention',
+        action_id: 'action-1',
+      }),
+      expect.objectContaining({
+        event_type: 'action_state_changed',
+        object_anchor: 'action_card',
+        route_family: 'retention',
+        action_id: 'action-1',
+        metadata: {},
+      }),
+    ])
     expect(updateQuery.eq).toHaveBeenCalledWith('id', 'action-1')
+
+    const actionUpdate = updateQuery.update.mock.calls[0]?.[0]
+    expect(actionUpdate).not.toHaveProperty('closeout_status')
+    expect(actionUpdate).not.toHaveProperty('closeout_reason')
+    expect(actionUpdate).not.toHaveProperty('closeout_note')
+    expect(actionUpdate).not.toHaveProperty('closed_at')
+    expect(actionUpdate).not.toHaveProperty('closed_by_role')
 
     const payload = await response.json()
     expect(payload.review).toMatchObject({
       action_id: 'action-1',
       action_outcome: 'bijsturen-nodig',
     })
+    expect(payload.submittedStructuredMetadata).toEqual({
+      evidence_source: 'team-conversation',
+      confidence_level: 'medium',
+    })
     expect(payload.review).not.toHaveProperty('route_scope_value')
     expect(payload.review).not.toHaveProperty('decision')
     expect(payload.review).not.toHaveProperty('next_step')
     expect(payload.review).not.toHaveProperty('expected_effect')
+    expect(payload.review).not.toHaveProperty('closeout_status')
+    expect(payload.review).not.toHaveProperty('closeout_reason')
+    expect(payload.review).not.toHaveProperty('closeout_note')
+    expect(payload.review).not.toHaveProperty('closed_at')
+    expect(payload.review).not.toHaveProperty('closed_by_role')
+  })
+
+  it('rejects review writes when the current action is still a draft', async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: { id: 'manager-1' },
+      },
+    })
+    mockLoadSuiteAccessContext.mockResolvedValue({
+      context: { isVerisightAdmin: false },
+      workspaceMemberships: [
+        {
+          org_id: 'org-1',
+          user_id: 'manager-1',
+          access_role: 'manager_assignee',
+          scope_type: 'department',
+          scope_value: 'org-1::department::operations',
+          can_view: true,
+          can_update: true,
+        },
+      ],
+    })
+
+    const insertQuery = createInsertQuery({ data: null, error: null })
+    const updateQuery = createUpdateQuery({ error: null })
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'action_center_route_actions') {
+        return createActionQuery({
+          data: {
+            id: 'action-11',
+            org_id: 'org-1',
+            route_scope_type: 'department',
+            route_scope_value: 'org-1::department::operations',
+            manager_user_id: 'manager-1',
+            primary_action_status: 'draft',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_action_reviews') {
+        return insertQuery
+      }
+
+      if (table === 'action_center_bounded_execution_events') {
+        return metricsInsertQuery
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest({
+        action_id: 'action-11',
+        reviewed_at: '2026-05-12T09:30:00.000Z',
+        observation: 'Te vroeg om dit al als uitgevoerde review te registreren.',
+        action_outcome: 'bijsturen-nodig',
+        follow_up_note: 'De draft moet eerst echt gestart worden.',
+      }),
+    )
+
+    expect(response.status).toBe(409)
+    await expect(response.json()).resolves.toEqual({
+      detail: 'Route action review is niet toegestaan vanuit de huidige canonieke toestand.',
+    })
+    expect(insertQuery.insert).not.toHaveBeenCalled()
+    expect(updateQuery.update).not.toHaveBeenCalled()
+  })
+
+  it('rejects review writes when the current action is blocked', async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: { id: 'manager-1' },
+      },
+    })
+    mockLoadSuiteAccessContext.mockResolvedValue({
+      context: { isVerisightAdmin: false },
+      workspaceMemberships: [
+        {
+          org_id: 'org-1',
+          user_id: 'manager-1',
+          access_role: 'manager_assignee',
+          scope_type: 'department',
+          scope_value: 'org-1::department::operations',
+          can_view: true,
+          can_update: true,
+        },
+      ],
+    })
+
+    const insertQuery = createInsertQuery({ data: null, error: null })
+    const updateQuery = createUpdateQuery({ error: null })
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'action_center_route_actions') {
+        return createActionQuery({
+          data: {
+            id: 'action-12',
+            org_id: 'org-1',
+            route_scope_type: 'department',
+            route_scope_value: 'org-1::department::operations',
+            manager_user_id: 'manager-1',
+            primary_action_status: 'blocked',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_action_reviews') {
+        return insertQuery
+      }
+
+      if (table === 'action_center_bounded_execution_events') {
+        return metricsInsertQuery
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest({
+        action_id: 'action-12',
+        reviewed_at: '2026-05-12T09:30:00.000Z',
+        observation: 'Er is nog een expliciete blocker en die is niet eerst in review gebracht.',
+        action_outcome: 'bijsturen-nodig',
+        follow_up_note: 'Los eerst de blocker op en open daarna een review.',
+      }),
+    )
+
+    expect(response.status).toBe(409)
+    await expect(response.json()).resolves.toEqual({
+      detail: 'Route action review is niet toegestaan vanuit de huidige canonieke toestand.',
+    })
+    expect(insertQuery.insert).not.toHaveBeenCalled()
+    expect(updateQuery.update).not.toHaveBeenCalled()
+  })
+
+  it('rolls back the inserted review when the action status update fails', async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: { id: 'manager-1' },
+      },
+    })
+    mockLoadSuiteAccessContext.mockResolvedValue({
+      context: { isVerisightAdmin: false },
+      workspaceMemberships: [
+        {
+          org_id: 'org-1',
+          user_id: 'manager-1',
+          access_role: 'manager_assignee',
+          scope_type: 'department',
+          scope_value: 'org-1::department::operations',
+          can_view: true,
+          can_update: true,
+        },
+      ],
+    })
+
+    const insertQuery = createInsertQuery({
+      data: {
+        id: 'review-rollback-1',
+        action_id: 'action-13',
+        reviewed_at: '2026-05-12T09:30:00.000Z',
+        observation: 'Review was inserted before the status update failed.',
+        action_outcome: 'bijsturen-nodig',
+        follow_up_note: 'Compensate if the status write fails.',
+      },
+      error: null,
+    })
+    const updateQuery = createUpdateQuery({
+      error: { message: 'status update failed' },
+    })
+    const deleteQuery = createDeleteQuery({ error: null })
+    let routeActionTableCalls = 0
+    let actionReviewTableCalls = 0
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'action_center_route_actions') {
+        routeActionTableCalls += 1
+        if (routeActionTableCalls === 1) {
+          return createActionQuery({
+            data: {
+              id: 'action-13',
+              campaign_id: 'campaign-1',
+              route_id: 'campaign-1::org-1::department::operations',
+              org_id: 'org-1',
+              route_scope_type: 'department',
+              route_scope_value: 'org-1::department::operations',
+              manager_user_id: 'manager-1',
+              primary_action_status: 'in_review',
+            },
+            error: null,
+          })
+        }
+
+        return updateQuery
+      }
+
+      if (table === 'campaigns') {
+        return createCampaignQuery({
+          data: { scan_type: 'retention' },
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_action_reviews') {
+        actionReviewTableCalls += 1
+        return actionReviewTableCalls === 1 ? insertQuery : deleteQuery
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest({
+        action_id: 'action-13',
+        reviewed_at: '2026-05-12T09:30:00.000Z',
+        observation: 'Review was inserted before the status update failed.',
+        action_outcome: 'bijsturen-nodig',
+        follow_up_note: 'Compensate if the status write fails.',
+      }),
+    )
+
+    expect(response.status).toBe(500)
+    await expect(response.json()).resolves.toEqual({
+      detail: 'status update failed',
+    })
+    expect(insertQuery.insert).toHaveBeenCalledTimes(1)
+    expect(updateQuery.update).toHaveBeenCalledTimes(1)
+    expect(deleteQuery.delete).toHaveBeenCalledTimes(1)
+    expect(deleteQuery.eq).toHaveBeenCalledWith('id', 'review-rollback-1')
+  })
+
+  it('returns an explicit combined failure when both the status update and rollback delete fail', async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: { id: 'manager-1' },
+      },
+    })
+    mockLoadSuiteAccessContext.mockResolvedValue({
+      context: { isVerisightAdmin: false },
+      workspaceMemberships: [
+        {
+          org_id: 'org-1',
+          user_id: 'manager-1',
+          access_role: 'manager_assignee',
+          scope_type: 'department',
+          scope_value: 'org-1::department::operations',
+          can_view: true,
+          can_update: true,
+        },
+      ],
+    })
+
+    const insertQuery = createInsertQuery({
+      data: {
+        id: 'review-rollback-2',
+        action_id: 'action-14',
+        reviewed_at: '2026-05-12T09:30:00.000Z',
+        observation: 'Review write succeeded before both follow-up writes failed.',
+        action_outcome: 'bijsturen-nodig',
+        follow_up_note: 'This should surface a combined failure response.',
+      },
+      error: null,
+    })
+    const updateQuery = createUpdateQuery({
+      error: { message: 'status update failed' },
+    })
+    const deleteQuery = createDeleteQuery({
+      error: { message: 'rollback delete failed' },
+    })
+    let routeActionTableCalls = 0
+    let actionReviewTableCalls = 0
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'action_center_route_actions') {
+        routeActionTableCalls += 1
+        if (routeActionTableCalls === 1) {
+          return createActionQuery({
+            data: {
+              id: 'action-14',
+              campaign_id: 'campaign-1',
+              route_id: 'campaign-1::org-1::department::operations',
+              org_id: 'org-1',
+              route_scope_type: 'department',
+              route_scope_value: 'org-1::department::operations',
+              manager_user_id: 'manager-1',
+              primary_action_status: 'in_review',
+            },
+            error: null,
+          })
+        }
+
+        return updateQuery
+      }
+
+      if (table === 'campaigns') {
+        return createCampaignQuery({
+          data: { scan_type: 'retention' },
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_action_reviews') {
+        actionReviewTableCalls += 1
+        return actionReviewTableCalls === 1 ? insertQuery : deleteQuery
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest({
+        action_id: 'action-14',
+        reviewed_at: '2026-05-12T09:30:00.000Z',
+        observation: 'Review write succeeded before both follow-up writes failed.',
+        action_outcome: 'bijsturen-nodig',
+        follow_up_note: 'This should surface a combined failure response.',
+      }),
+    )
+
+    expect(response.status).toBe(500)
+    await expect(response.json()).resolves.toEqual({
+      detail: 'Route action review opslaan is deels mislukt: statusupdate en rollback faalden.',
+    })
+    expect(insertQuery.insert).toHaveBeenCalledTimes(1)
+    expect(updateQuery.update).toHaveBeenCalledTimes(1)
+    expect(deleteQuery.delete).toHaveBeenCalledTimes(1)
+    expect(deleteQuery.eq).toHaveBeenCalledWith('id', 'review-rollback-2')
+  })
+
+  it('treats a zero-row action status update as a failure and compensates the inserted review', async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: { id: 'manager-1' },
+      },
+    })
+    mockLoadSuiteAccessContext.mockResolvedValue({
+      context: { isVerisightAdmin: false },
+      workspaceMemberships: [
+        {
+          org_id: 'org-1',
+          user_id: 'manager-1',
+          access_role: 'manager_assignee',
+          scope_type: 'department',
+          scope_value: 'org-1::department::operations',
+          can_view: true,
+          can_update: true,
+        },
+      ],
+    })
+
+    const insertQuery = createInsertQuery({
+      data: {
+        id: 'review-rollback-3',
+        action_id: 'action-15',
+        reviewed_at: '2026-05-12T09:30:00.000Z',
+        observation: 'The status update matched zero rows after the review insert.',
+        action_outcome: 'bijsturen-nodig',
+        follow_up_note: 'Treat missing confirmation as a failed write.',
+      },
+      error: null,
+    })
+    const updateQuery = createUpdateQuery({ data: null, error: null })
+    const deleteQuery = createDeleteQuery({ error: null })
+    let routeActionTableCalls = 0
+    let actionReviewTableCalls = 0
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'action_center_route_actions') {
+        routeActionTableCalls += 1
+        if (routeActionTableCalls === 1) {
+          return createActionQuery({
+            data: {
+              id: 'action-15',
+              campaign_id: 'campaign-1',
+              route_id: 'campaign-1::org-1::department::operations',
+              org_id: 'org-1',
+              route_scope_type: 'department',
+              route_scope_value: 'org-1::department::operations',
+              manager_user_id: 'manager-1',
+              primary_action_status: 'in_review',
+            },
+            error: null,
+          })
+        }
+
+        return updateQuery
+      }
+
+      if (table === 'campaigns') {
+        return createCampaignQuery({
+          data: { scan_type: 'retention' },
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_action_reviews') {
+        actionReviewTableCalls += 1
+        return actionReviewTableCalls === 1 ? insertQuery : deleteQuery
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest({
+        action_id: 'action-15',
+        reviewed_at: '2026-05-12T09:30:00.000Z',
+        observation: 'The status update matched zero rows after the review insert.',
+        action_outcome: 'bijsturen-nodig',
+        follow_up_note: 'Treat missing confirmation as a failed write.',
+      }),
+    )
+
+    expect(response.status).toBe(500)
+    await expect(response.json()).resolves.toEqual({
+      detail: 'Route action statusupdate bevestigen mislukt.',
+    })
+    expect(insertQuery.insert).toHaveBeenCalledTimes(1)
+    expect(updateQuery.update).toHaveBeenCalledTimes(1)
+    expect(deleteQuery.delete).toHaveBeenCalledTimes(1)
+    expect(deleteQuery.eq).toHaveBeenCalledWith('id', 'review-rollback-3')
+  })
+
+  it('treats a stale action status write as a failure and compensates the inserted review', async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: { id: 'manager-1' },
+      },
+    })
+    mockLoadSuiteAccessContext.mockResolvedValue({
+      context: { isVerisightAdmin: false },
+      workspaceMemberships: [
+        {
+          org_id: 'org-1',
+          user_id: 'manager-1',
+          access_role: 'manager_assignee',
+          scope_type: 'department',
+          scope_value: 'org-1::department::operations',
+          can_view: true,
+          can_update: true,
+        },
+      ],
+    })
+
+    const insertQuery = createInsertQuery({
+      data: {
+        id: 'review-rollback-4',
+        action_id: 'action-16',
+        reviewed_at: '2026-05-12T09:30:00.000Z',
+        observation: 'The action status changed after the initial read and before the update.',
+        action_outcome: 'bijsturen-nodig',
+        follow_up_note: 'A stale write must compensate the review insert.',
+      },
+      error: null,
+    })
+    const updateQuery = createUpdateQuery({ data: null, error: null })
+    const deleteQuery = createDeleteQuery({ error: null })
+    let routeActionTableCalls = 0
+    let actionReviewTableCalls = 0
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'action_center_route_actions') {
+        routeActionTableCalls += 1
+        if (routeActionTableCalls === 1) {
+          return createActionQuery({
+            data: {
+              id: 'action-16',
+              campaign_id: 'campaign-1',
+              route_id: 'campaign-1::org-1::department::operations',
+              org_id: 'org-1',
+              route_scope_type: 'department',
+              route_scope_value: 'org-1::department::operations',
+              manager_user_id: 'manager-1',
+              primary_action_status: 'in_review',
+            },
+            error: null,
+          })
+        }
+
+        return updateQuery
+      }
+
+      if (table === 'campaigns') {
+        return createCampaignQuery({
+          data: { scan_type: 'retention' },
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_action_reviews') {
+        actionReviewTableCalls += 1
+        return actionReviewTableCalls === 1 ? insertQuery : deleteQuery
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest({
+        action_id: 'action-16',
+        reviewed_at: '2026-05-12T09:30:00.000Z',
+        observation: 'The action status changed after the initial read and before the update.',
+        action_outcome: 'bijsturen-nodig',
+        follow_up_note: 'A stale write must compensate the review insert.',
+      }),
+    )
+
+    expect(response.status).toBe(500)
+    await expect(response.json()).resolves.toEqual({
+      detail: 'Route action statusupdate bevestigen mislukt.',
+    })
+    expect(updateQuery.eq).toHaveBeenNthCalledWith(1, 'id', 'action-16')
+    expect(updateQuery.eq).toHaveBeenNthCalledWith(2, 'primary_action_status', 'in_review')
+    expect(deleteQuery.delete).toHaveBeenCalledTimes(1)
+    expect(deleteQuery.eq).toHaveBeenCalledWith('id', 'review-rollback-4')
+  })
+
+  it('restores the previous action audit state when bounded event logging fails after review completion', async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: { id: 'manager-1' },
+      },
+    })
+    mockLoadSuiteAccessContext.mockResolvedValue({
+      context: { isVerisightAdmin: false },
+      workspaceMemberships: [
+        {
+          org_id: 'org-1',
+          user_id: 'manager-1',
+          access_role: 'manager_assignee',
+          scope_type: 'department',
+          scope_value: 'org-1::department::operations',
+          can_view: true,
+          can_update: true,
+        },
+      ],
+    })
+
+    const insertQuery = createInsertQuery({
+      data: {
+        id: 'review-metric-rollback-1',
+        action_id: 'action-17',
+        reviewed_at: '2026-05-12T09:30:00.000Z',
+        observation: 'The review succeeded before bounded metrics failed.',
+        action_outcome: 'bijsturen-nodig',
+        follow_up_note: 'Restore the exact prior audit state.',
+      },
+      error: null,
+    })
+    const metricsInsertQuery = createInsertQuery({
+      data: null,
+      error: { message: 'metric insert failed' },
+    })
+    const updateQuery = {
+      update: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      maybeSingle: vi
+        .fn()
+        .mockResolvedValueOnce({ data: { id: 'action-17' }, error: null })
+        .mockResolvedValueOnce({ data: { id: 'action-17' }, error: null }),
+    }
+    const deleteQuery = createDeleteQuery({ error: null })
+    let routeActionTableCalls = 0
+    let actionReviewTableCalls = 0
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'action_center_route_actions') {
+        routeActionTableCalls += 1
+        if (routeActionTableCalls === 1) {
+          return createActionQuery({
+            data: {
+              id: 'action-17',
+              campaign_id: 'campaign-1',
+              route_id: 'campaign-1::org-1::department::operations',
+              org_id: 'org-1',
+              route_scope_type: 'department',
+              route_scope_value: 'org-1::department::operations',
+              manager_user_id: 'manager-1',
+              primary_action_status: 'in_review',
+              updated_by: 'hr-previous',
+              updated_at: '2026-05-01T08:15:00.000Z',
+            },
+            error: null,
+          })
+        }
+
+        return updateQuery
+      }
+
+      if (table === 'campaigns') {
+        return createCampaignQuery({
+          data: {
+            scan_type: 'retention',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_action_reviews') {
+        actionReviewTableCalls += 1
+        return actionReviewTableCalls === 1 ? insertQuery : deleteQuery
+      }
+
+      if (table === 'action_center_bounded_execution_events') {
+        return metricsInsertQuery
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest({
+        action_id: 'action-17',
+        reviewed_at: '2026-05-12T09:30:00.000Z',
+        observation: 'The review succeeded before bounded metrics failed.',
+        action_outcome: 'bijsturen-nodig',
+        follow_up_note: 'Restore the exact prior audit state.',
+      }),
+    )
+
+    expect(response.status).toBe(500)
+    await expect(response.json()).resolves.toEqual({
+      detail: 'Route action bounded event logging mislukt.',
+    })
+    expect(updateQuery.update).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        primary_action_status: 'open',
+        updated_by: 'manager-1',
+      }),
+    )
+    expect(updateQuery.update).toHaveBeenNthCalledWith(2, {
+      primary_action_status: 'in_review',
+      updated_by: 'hr-previous',
+      updated_at: '2026-05-01T08:15:00.000Z',
+    })
+    expect(deleteQuery.delete).toHaveBeenCalledTimes(1)
+    expect(deleteQuery.eq).toHaveBeenCalledWith('id', 'review-metric-rollback-1')
+  })
+
+  it('fails closed before inserting a review when the campaign route family is outside bounded execution', async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: { id: 'manager-1' },
+      },
+    })
+    mockLoadSuiteAccessContext.mockResolvedValue({
+      context: { isVerisightAdmin: false },
+      workspaceMemberships: [
+        {
+          org_id: 'org-1',
+          user_id: 'manager-1',
+          access_role: 'manager_assignee',
+          scope_type: 'department',
+          scope_value: 'org-1::department::operations',
+          can_view: true,
+          can_update: true,
+        },
+      ],
+    })
+
+    const insertQuery = createInsertQuery({ data: null, error: null })
+    const updateQuery = createUpdateQuery({ error: null })
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'action_center_route_actions') {
+        return createActionQuery({
+          data: {
+            id: 'action-18',
+            campaign_id: 'campaign-1',
+            route_id: 'campaign-1::org-1::department::operations',
+            org_id: 'org-1',
+            route_scope_type: 'department',
+            route_scope_value: 'org-1::department::operations',
+            manager_user_id: 'manager-1',
+            primary_action_status: 'in_review',
+            updated_by: 'hr-previous',
+            updated_at: '2026-05-01T08:15:00.000Z',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'campaigns') {
+        return createCampaignQuery({
+          data: {
+            scan_type: 'pulse',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_action_reviews') {
+        return insertQuery
+      }
+
+      if (table === 'action_center_bounded_execution_events') {
+        return createInsertQuery({ data: null, error: null })
+      }
+
+      if (table === 'action_center_route_actions') {
+        return updateQuery
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest({
+        action_id: 'action-18',
+        reviewed_at: '2026-05-12T09:30:00.000Z',
+        observation: 'Unsupported route family should fail closed.',
+        action_outcome: 'bijsturen-nodig',
+        follow_up_note: 'Do not silently skip the metrics rail.',
+      }),
+    )
+
+    expect(response.status).toBe(500)
+    await expect(response.json()).resolves.toEqual({
+      detail: 'Route action route family valt buiten bounded execution.',
+    })
+    expect(insertQuery.insert).not.toHaveBeenCalled()
+    expect(updateQuery.update).not.toHaveBeenCalled()
   })
 })

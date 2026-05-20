@@ -8,11 +8,21 @@ import type {
   ActionCenterRouteContract,
   ActionCenterRouteStatus,
 } from '@/lib/action-center-route-contract'
+import { summarizeActionCenterRouteActions } from '@/lib/action-center-route-contract'
 import {
   ACTION_CENTER_MANAGER_RESPONSE_THEME_OPTIONS,
   getActionCenterManagerResponseLabel,
   hasPrimaryManagerAction,
 } from '@/lib/action-center-manager-responses'
+import {
+  projectActionCenterRouteActionCard,
+  type ActionCenterRouteActionRecord,
+} from '@/lib/action-center-route-actions'
+import {
+  projectActionCenterActionReview,
+  type ActionCenterActionConfidenceLevel,
+  type ActionCenterActionEvidenceSource,
+} from '@/lib/action-center-action-reviews'
 import type {
   ActionCenterRouteCloseoutReason,
   ActionCenterRouteCloseoutStatus,
@@ -43,6 +53,14 @@ import type {
   ActionCenterManagerResponse,
   ActionCenterManagerResponseType,
 } from '@/lib/pilot-learning'
+import {
+  ActionCenterActionReviewEditor,
+  type ActionCenterActionReviewEditorValue,
+} from './action-center-action-review-editor'
+import {
+  ActionCenterRouteActionEditor,
+  type ActionCenterRouteActionEditorValue,
+} from './action-center-route-action-editor'
 import React, { useDeferredValue, useEffect, useMemo, useState } from 'react'
 
 export type {
@@ -65,6 +83,8 @@ interface Props {
   managerAssignmentEndpoint?: string
   canRespondToRequests?: boolean
   managerResponseEndpoint?: string
+  routeActionEndpoint?: string
+  actionReviewEndpoint?: string
   canCloseRoutes?: boolean
   routeCloseoutEndpoint?: string
   routeFollowUpEndpoint?: string
@@ -111,6 +131,9 @@ interface RouteCloseoutFormState {
   closeoutReason: ActionCenterRouteCloseoutReason
   closeoutNote: string
 }
+
+type RouteActionValidationDisposition = 'valid' | 'invalid' | 'needs_hr_review'
+type RouteActionFeedbackTone = 'error' | 'warning'
 
 type ManagerActionPhase =
   | 'awaiting-first-move'
@@ -544,6 +567,229 @@ function getManagerActionSurfaceCopy(item: ActionCenterPreviewItem | null) {
   }
 }
 
+function getRouteActionThemeLabel(themeKey: ActionCenterRouteActionRecord['themeKey']) {
+  return (
+    ACTION_CENTER_MANAGER_RESPONSE_THEME_OPTIONS.find((option) => option.value === themeKey)?.label ??
+    themeKey ??
+    'Nog geen thema'
+  )
+}
+
+function getRouteActionStatusLabel(status: ActionCenterRouteActionRecord['status']) {
+  switch (status) {
+    case 'open':
+      return 'Actief'
+    case 'in_review':
+      return 'Reviewbaar'
+    case 'afgerond':
+      return 'Afgerond'
+    case 'gestopt':
+      return 'Gestopt'
+    default:
+      return 'Nog niet reviewbaar'
+  }
+}
+
+function getRouteActionStatusTone(status: ActionCenterRouteActionRecord['status']) {
+  switch (status) {
+    case 'open':
+      return 'border-[#d7ece8] bg-[#eef9f6] text-[#28776f]'
+    case 'in_review':
+      return 'border-[#ffe1c7] bg-[#fff3e8] text-[#bb6b1f]'
+    case 'afgerond':
+      return 'border-[#d5ebdb] bg-[#edf8f0] text-[#2f8454]'
+    case 'gestopt':
+      return 'border-[#f0d9d4] bg-[#fff1ef] text-[#c4584d]'
+    default:
+      return 'border-[#e3d8ca] bg-[#fbf7f1] text-[#6b6257]'
+  }
+}
+
+function getActionReviewOutcomeLabel(outcome: ActionCenterActionReviewEditorValue['actionOutcome']) {
+  switch (outcome) {
+    case 'effect-zichtbaar':
+      return 'Effect zichtbaar'
+    case 'bijsturen-nodig':
+      return 'Bijsturen nodig'
+    case 'nog-te-vroeg':
+      return 'Nog te vroeg'
+    case 'stoppen':
+    default:
+      return 'Stoppen'
+  }
+}
+
+function getRouteActionDraftDispositionMessage(disposition: RouteActionValidationDisposition) {
+  switch (disposition) {
+    case 'needs_hr_review':
+      return 'Draft opgeslagen. Deze actie wacht eerst op HR-review en staat nog niet live in deze route.'
+    case 'invalid':
+      return 'Draft opgeslagen. Deze actie staat nog niet live in deze route. Maak de stap concreter voordat je hem opnieuw indient.'
+    case 'valid':
+    default:
+      return null
+  }
+}
+
+function getNextRouteActionStatusFromReviewOutcome(
+  outcome: ActionCenterActionReviewEditorValue['actionOutcome'],
+): Extract<ActionCenterRouteActionRecord['status'], 'open' | 'afgerond' | 'gestopt'> {
+  switch (outcome) {
+    case 'effect-zichtbaar':
+      return 'afgerond'
+    case 'stoppen':
+      return 'gestopt'
+    case 'bijsturen-nodig':
+    case 'nog-te-vroeg':
+    default:
+      return 'open'
+  }
+}
+
+function getRouteActionMutationStateLabel(status: 'reviewbaar' | 'in-uitvoering') {
+  return status === 'reviewbaar' ? 'Reviewbaar' : 'In uitvoering'
+}
+
+function buildRouteActionMutationProgressSummary(args: {
+  status: 'reviewbaar' | 'in-uitvoering'
+  actionCount: number
+  reviewPressureCount: number
+}) {
+  if (args.status === 'reviewbaar') {
+    return args.reviewPressureCount > 0
+      ? `${args.reviewPressureCount} actie${args.reviewPressureCount === 1 ? '' : 's'} of reviewmoment${args.reviewPressureCount === 1 ? '' : 'en'} vragen nu expliciete teruglezing.`
+      : `${args.actionCount} actie${args.actionCount === 1 ? '' : 's'} dragen deze route, maar reviewdruk wint nu van uitvoering.`
+  }
+
+  return `${args.actionCount} actie${args.actionCount === 1 ? '' : 's'} dragen nu de lokale follow-through in deze route.`
+}
+
+function buildRouteActionMutationOverviewSummary(args: {
+  status: 'reviewbaar' | 'in-uitvoering'
+  actionCount: number
+  reviewPressureCount: number
+}) {
+  if (args.status === 'reviewbaar') {
+    return args.reviewPressureCount > 0
+      ? `Actieve route waarbij ${args.reviewPressureCount} reviewmoment${args.reviewPressureCount === 1 ? '' : 'en'} nu aandacht vraagt.`
+      : 'Actieve route die nu expliciete teruglezing en review vraagt.'
+  }
+
+  return `Actieve route met ${args.actionCount} expliciete actie${args.actionCount === 1 ? '' : 's'} in dezelfde follow-through.`
+}
+
+function buildRouteActionMutationSummaryText(args: {
+  actionCount: number
+  reviewPressureCount: number
+  completedCount: number
+}) {
+  const parts = [`${args.actionCount} ${args.actionCount === 1 ? 'actie' : 'acties'}`]
+
+  if (args.reviewPressureCount > 0) {
+    parts.push(`${args.reviewPressureCount} reviewbaar`)
+  } else if (args.completedCount > 0) {
+    parts.push(`${args.completedCount} afgerond`)
+  } else {
+    parts.push('actief in deze route')
+  }
+
+  return parts.join(' - ')
+}
+
+export function synchronizeActionCenterRouteActionSurface(
+  item: ActionCenterPreviewItem,
+  cards: ActionCenterPreviewItem['coreSemantics']['routeActionCards'],
+) {
+  const persistedCards = cards.filter(
+    (card): card is typeof card & { status: NonNullable<typeof card.status>; reviewScheduledFor: string } =>
+      card.status !== null && Boolean(card.reviewScheduledFor),
+  )
+
+  if (persistedCards.length === 0) {
+    return finalizeActionCenterPreviewItem(
+      {
+        ...item,
+        coreSemantics: {
+          ...item.coreSemantics,
+          routeActionCards: cards,
+        },
+      },
+      { recomputeCoreSemantics: false },
+    )
+  }
+
+  const aggregate = summarizeActionCenterRouteActions(
+    persistedCards.map((card) => ({
+      actionId: card.actionId,
+      status: card.status,
+      reviewScheduledFor: card.reviewScheduledFor,
+    })),
+  )
+  const surfaceStatus = aggregate.routeStatus === 'reviewbaar' ? 'reviewbaar' : 'in-uitvoering'
+  const reviewPressureCount = persistedCards.filter(
+    (card) =>
+      card.status === 'in_review' ||
+      (card.status === 'open' && card.reviewScheduledFor <= new Date().toISOString().slice(0, 10)),
+  ).length
+  const completedCount = persistedCards.filter((card) => card.status === 'afgerond').length
+  const nextReviewDate = aggregate.nextReviewScheduledFor ?? item.reviewDate
+
+  return finalizeActionCenterPreviewItem(
+    {
+      ...item,
+      status: surfaceStatus,
+      reviewDate: nextReviewDate,
+      reviewDateLabel: formatShortDate(nextReviewDate),
+      summary: buildRouteActionMutationSummaryText({
+        actionCount: persistedCards.length,
+        reviewPressureCount,
+        completedCount,
+      }),
+      coreSemantics: {
+        ...item.coreSemantics,
+        routeActionCards: cards,
+        routeSummary: {
+          stateLabel: getRouteActionMutationStateLabel(surfaceStatus),
+          overviewSummary: buildRouteActionMutationOverviewSummary({
+            status: surfaceStatus,
+            actionCount: persistedCards.length,
+            reviewPressureCount,
+          }),
+          routeAsk:
+            surfaceStatus === 'reviewbaar'
+              ? 'Kijk nu expliciet terug op de lopende follow-through en bepaal wat de route daarna vraagt.'
+              : 'Houd de actielaag klein en zorg dat review per actie leidend blijft voor verdere uitvoering.',
+          progressSummary: buildRouteActionMutationProgressSummary({
+            status: surfaceStatus,
+            actionCount: persistedCards.length,
+            reviewPressureCount,
+          }),
+        },
+        routeCloseout: {
+          ...item.coreSemantics.routeCloseout,
+          readyForCloseout: aggregate.readyForCloseout,
+        },
+      },
+    },
+    { recomputeCoreSemantics: false },
+  )
+}
+
+function hasExplicitRouteCloseoutMetadata(item: ActionCenterPreviewItem | null) {
+  if (!item) {
+    return false
+  }
+
+  const closeout = item.coreSemantics.routeCloseout
+  return Boolean(
+    closeout.closeoutStatus ||
+      closeout.closeoutReason ||
+      closeout.closeoutNote ||
+      closeout.closedAt ||
+      closeout.closedByRole,
+  )
+}
+
 function getRouteSummaryDisplay(item: ActionCenterPreviewItem) {
   return (
     item.coreSemantics.routeSummary ?? {
@@ -851,6 +1097,8 @@ export function ActionCenterPreview({
   managerAssignmentEndpoint,
   canRespondToRequests = false,
   managerResponseEndpoint,
+  routeActionEndpoint,
+  actionReviewEndpoint,
   canCloseRoutes = false,
   routeCloseoutEndpoint,
   routeFollowUpEndpoint,
@@ -881,6 +1129,15 @@ export function ActionCenterPreview({
   )
   const [managerResponsePending, setManagerResponsePending] = useState(false)
   const [managerResponseError, setManagerResponseError] = useState<string | null>(null)
+  const [routeActionEditorOpen, setRouteActionEditorOpen] = useState(false)
+  const [routeActionPending, setRouteActionPending] = useState(false)
+  const [routeActionFeedback, setRouteActionFeedback] = useState<{
+    message: string
+    tone: RouteActionFeedbackTone
+  } | null>(null)
+  const [openReviewActionId, setOpenReviewActionId] = useState<string | null>(null)
+  const [actionReviewPendingActionId, setActionReviewPendingActionId] = useState<string | null>(null)
+  const [actionReviewError, setActionReviewError] = useState<string | null>(null)
   const [routeCloseoutForm, setRouteCloseoutForm] = useState<RouteCloseoutFormState>(() => buildRouteCloseoutDefaults())
   const [routeCloseoutPanelOpen, setRouteCloseoutPanelOpen] = useState(false)
   const [routeCloseoutPending, setRouteCloseoutPending] = useState(false)
@@ -946,6 +1203,10 @@ export function ActionCenterPreview({
   useEffect(() => {
     setManagerResponseForm(buildManagerResponseDefaults(selectedItem))
     setManagerResponseError(null)
+    setRouteActionEditorOpen(false)
+    setRouteActionFeedback(null)
+    setOpenReviewActionId(null)
+    setActionReviewError(null)
   }, [selectedItem])
   useEffect(() => {
     setRouteCloseoutForm(buildRouteCloseoutDefaults())
@@ -1029,6 +1290,26 @@ export function ActionCenterPreview({
         currentUserId &&
         selectedItem.ownerId === currentUserId,
     )
+  const canUseRouteActionFlow =
+    Boolean(
+      routeActionEndpoint &&
+        selectedItem?.orgId &&
+        supportsManagerResponseFlow(selectedItem) &&
+        selectedItem?.managerResponse?.id &&
+        selectedItem?.ownerId &&
+        currentUserId &&
+        selectedItem.ownerId === currentUserId,
+    )
+  const canUseActionReviewFlow =
+    Boolean(
+      actionReviewEndpoint &&
+        selectedItem?.orgId &&
+        supportsManagerResponseFlow(selectedItem) &&
+        selectedItem?.managerResponse?.id &&
+        selectedItem?.ownerId &&
+        currentUserId &&
+        selectedItem.ownerId === currentUserId,
+    )
   const canRenderFollowUpRoute = Boolean(
     routeFollowUpEndpoint &&
       canAssignManagers &&
@@ -1104,6 +1385,21 @@ export function ActionCenterPreview({
       currentItems.map((item) =>
         item.id === itemId ? finalizeActionCenterPreviewItem(updater(item), { recomputeCoreSemantics: true }) : item,
       ),
+    )
+  }
+
+  function updateRouteActionCards(
+    itemId: string,
+    updater: (cards: ActionCenterPreviewItem['coreSemantics']['routeActionCards']) => ActionCenterPreviewItem['coreSemantics']['routeActionCards'],
+  ) {
+    setItems((currentItems) =>
+      currentItems.map((item) => {
+        if (item.id !== itemId) {
+          return item
+        }
+
+        return synchronizeActionCenterRouteActionSurface(item, updater(item.coreSemantics.routeActionCards))
+      }),
     )
   }
 
@@ -1280,6 +1576,145 @@ export function ActionCenterPreview({
       )
     } finally {
       setManagerResponsePending(false)
+    }
+  }
+
+  async function handleRouteActionSave(value: ActionCenterRouteActionEditorValue) {
+    if (!selectedItem || !routeActionEndpoint || !selectedItem.orgId || !supportsManagerResponseFlow(selectedItem)) {
+      return false
+    }
+
+    setRouteActionPending(true)
+    setRouteActionFeedback(null)
+
+    try {
+      const response = await fetch(routeActionEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          campaign_id: selectedItem.coreSemantics.route.campaignId,
+          route_scope_type: selectedItem.scopeType,
+          route_scope_value: selectedItem.teamId,
+          manager_user_id: selectedItem.ownerId ?? '',
+          primary_action_theme_key: value.themeKey || null,
+          primary_action_text: value.actionText,
+          primary_action_expected_effect: value.expectedEffect,
+          review_scheduled_for: value.reviewScheduledFor,
+        }),
+      })
+      const result = (await response.json().catch(() => null)) as
+        | {
+            action?: Record<string, unknown>
+            actionDraft?: { validationDisposition?: RouteActionValidationDisposition | null }
+            detail?: string
+          }
+        | null
+
+      if (!response.ok || !result?.action || !result?.actionDraft) {
+        throw new Error(result?.detail ?? 'Route action opslaan mislukt.')
+      }
+
+      const validationDisposition = result.actionDraft.validationDisposition ?? 'invalid'
+      if (validationDisposition !== 'valid') {
+        setRouteActionFeedback({
+          message: getRouteActionDraftDispositionMessage(validationDisposition) ?? 'Route action opslaan mislukt.',
+          tone: 'warning',
+        })
+        return false
+      }
+
+      const actionCard = projectActionCenterRouteActionCard(result.action)
+      updateRouteActionCards(selectedItem.id, (cards) => [
+        ...cards,
+        {
+          actionId: actionCard.actionId,
+          themeKey: actionCard.themeKey,
+          actionText: actionCard.actionText ?? '',
+          reviewScheduledFor: actionCard.reviewScheduledFor ?? '',
+          expectedEffect: actionCard.expectedEffect ?? '',
+          status: actionCard.status,
+          latestReview: null,
+        },
+      ])
+      setRouteActionEditorOpen(false)
+      setRouteActionFeedback(null)
+      return true
+    } catch (error) {
+      setRouteActionFeedback({
+        message: error instanceof Error ? error.message : 'Route action opslaan mislukt.',
+        tone: 'error',
+      })
+      return false
+    } finally {
+      setRouteActionPending(false)
+    }
+  }
+
+  async function handleActionReviewSave(
+    actionId: string,
+    value: ActionCenterActionReviewEditorValue,
+  ) {
+    if (!actionReviewEndpoint || !selectedItem) {
+      return
+    }
+
+    setActionReviewPendingActionId(actionId)
+    setActionReviewError(null)
+
+    try {
+      const response = await fetch(actionReviewEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action_id: actionId,
+          reviewed_at: new Date().toISOString(),
+          observation: value.observation,
+          action_outcome: value.actionOutcome,
+          evidence_source: value.evidenceSource,
+          confidence_level: value.confidenceLevel,
+          follow_up_note: value.followUpNote.trim() || null,
+        }),
+      })
+      const result = (await response.json().catch(() => null)) as
+        | {
+            review?: Record<string, unknown>
+            submittedStructuredMetadata?: {
+              evidence_source?: ActionCenterActionEvidenceSource | null
+              confidence_level?: ActionCenterActionConfidenceLevel | null
+            }
+            detail?: string
+          }
+        | null
+
+      if (!response.ok || !result?.review) {
+        throw new Error(result?.detail ?? 'Route action review opslaan mislukt.')
+      }
+
+      const projectedReview = projectActionCenterActionReview({
+        ...result.review,
+        evidence_source: result.submittedStructuredMetadata?.evidence_source ?? null,
+        confidence_level: result.submittedStructuredMetadata?.confidence_level ?? null,
+      })
+      updateRouteActionCards(selectedItem.id, (cards) =>
+        cards.map((card) =>
+          card.actionId === actionId
+            ? {
+                ...card,
+                status: getNextRouteActionStatusFromReviewOutcome(projectedReview.actionOutcome),
+                latestReview: projectedReview,
+              }
+            : card,
+        ),
+      )
+      setOpenReviewActionId(null)
+    } catch (error) {
+      setActionReviewError(error instanceof Error ? error.message : 'Route action review opslaan mislukt.')
+    } finally {
+      setActionReviewPendingActionId(null)
     }
   }
 
@@ -2364,7 +2799,7 @@ export function ActionCenterPreview({
                         </div>
                       ) : null}
 
-                      {selectedItem && isClosedRouteStatus(selectedItem.status) ? (
+                      {selectedItem && (isClosedRouteStatus(selectedItem.status) || hasExplicitRouteCloseoutMetadata(selectedItem)) ? (
                         <div className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
                           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">
                             Route afgesloten
@@ -2670,6 +3105,130 @@ export function ActionCenterPreview({
                           ) : (
                             <div className="mt-5">
                               <EmptyBlock text={managerActionSurfaceCopy.emptyText} />
+                            </div>
+                          )}
+                        </div>
+                      ) : null}
+
+                      {selectedItem.coreSemantics.routeActionCards.length > 0 || canUseRouteActionFlow ? (
+                        <div className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
+                          <div className="flex flex-wrap items-start justify-between gap-4">
+                            <div>
+                              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">
+                                Actieroute
+                              </p>
+                              <h3 className="mt-3 text-[1.35rem] font-semibold tracking-[-0.03em] text-[#132033]">
+                                Acties in deze route
+                              </h3>
+                              <p className="mt-3 text-sm leading-7 text-[#4f6175]">
+                                Houd elke actie klein: 1 concrete stap, 1 reviewdatum, 1 zichtbare observatie.
+                              </p>
+                            </div>
+                            {canUseRouteActionFlow ? (
+                              <button
+                                type="button"
+                                className="inline-flex min-h-11 items-center rounded-full border border-[#ded3c6] bg-[#fcfaf7] px-4.5 py-2.5 text-sm font-semibold text-[#1a2533] transition hover:border-[#1a2533]"
+                                onClick={() => {
+                                  setRouteActionEditorOpen((current) => !current)
+                                  setRouteActionFeedback(null)
+                                }}
+                              >
+                                Actie toevoegen
+                              </button>
+                            ) : null}
+                          </div>
+
+                          {routeActionEditorOpen ? (
+                            <div className="mt-5">
+                              <ActionCenterRouteActionEditor
+                                onSave={handleRouteActionSave}
+                                pending={routeActionPending}
+                                error={routeActionFeedback?.message ?? null}
+                                feedbackTone={routeActionFeedback?.tone ?? 'error'}
+                              />
+                            </div>
+                          ) : routeActionFeedback ? (
+                            <div
+                              className={`mt-5 rounded-[18px] border px-4 py-4 text-sm leading-7 ${
+                                routeActionFeedback.tone === 'warning'
+                                  ? 'border-[#ffe1c7] bg-[#fff8ef] text-[#9a5a17]'
+                                  : 'border-[#f3c0bc] bg-[#fff1ef] text-[#9c3f36]'
+                              }`}
+                            >
+                              {routeActionFeedback.message}
+                            </div>
+                          ) : null}
+
+                          {selectedItem.coreSemantics.routeActionCards.length > 0 ? (
+                            <div className="mt-5 space-y-4">
+                              {selectedItem.coreSemantics.routeActionCards.map((action) => (
+                                <div
+                                  key={action.actionId}
+                                  className="rounded-[18px] border border-[#eadfce] bg-[#fcfaf7] px-4 py-4"
+                                >
+                                  <div className="flex flex-wrap items-center justify-between gap-3">
+                                    <div className="flex flex-wrap items-center gap-2 text-sm text-[#6d6458]">
+                                      <MiniTag>{getRouteActionThemeLabel(action.themeKey)}</MiniTag>
+                                      <span className={`inline-flex items-center rounded-xl border px-3 py-1.5 text-sm font-semibold ${getRouteActionStatusTone(action.status)}`}>
+                                        {getRouteActionStatusLabel(action.status)}
+                                      </span>
+                                    </div>
+                                    <span className="text-sm font-semibold text-[#5a7088]">
+                                      Review {formatLongDate(action.reviewScheduledFor)}
+                                    </span>
+                                  </div>
+
+                                  <p className="mt-4 text-[1rem] font-semibold leading-7 text-[#132033]">
+                                    {action.actionText}
+                                  </p>
+                                  <p className="mt-2 text-sm leading-7 text-[#4f6175]">
+                                    {action.expectedEffect}
+                                  </p>
+
+                                  {action.latestReview ? (
+                                    <div className="mt-4 rounded-[16px] border border-[#e5ddd1] bg-white px-4 py-4">
+                                      <p className="text-sm font-semibold text-[#132033]">
+                                        Laatste review ({getActionReviewOutcomeLabel(action.latestReview.actionOutcome)})
+                                      </p>
+                                      <p className="mt-2 text-sm leading-7 text-[#4f6175]">
+                                        {action.latestReview.observation}
+                                      </p>
+                                      {action.latestReview.followUpNote ? (
+                                        <p className="mt-2 text-sm leading-7 text-[#6d6458]">
+                                          {action.latestReview.followUpNote}
+                                        </p>
+                                      ) : null}
+                                    </div>
+                                  ) : null}
+
+                                  {canUseActionReviewFlow && action.status === 'in_review' && !action.latestReview ? (
+                                    <div className="mt-4">
+                                      {openReviewActionId === action.actionId ? (
+                                        <ActionCenterActionReviewEditor
+                                          onSave={(value) => void handleActionReviewSave(action.actionId, value)}
+                                          pending={actionReviewPendingActionId === action.actionId}
+                                          error={actionReviewError}
+                                        />
+                                      ) : (
+                                        <button
+                                          type="button"
+                                          className="inline-flex min-h-11 items-center rounded-full bg-[#ffb16e] px-4.5 py-2.5 text-sm font-semibold text-[#132033] transition hover:brightness-[0.98]"
+                                          onClick={() => {
+                                            setOpenReviewActionId(action.actionId)
+                                            setActionReviewError(null)
+                                          }}
+                                        >
+                                          Review toevoegen
+                                        </button>
+                                      )}
+                                    </div>
+                                  ) : null}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="mt-5">
+                              <EmptyBlock text="Nog geen expliciete actiekaart vastgelegd. Houd de route klein tot een concrete actie echt helpt." />
                             </div>
                           )}
                         </div>
@@ -3323,9 +3882,9 @@ function ActionCenterBoundedOverview({
           tone="teal"
         />
         <ActionCenterBoundedCounter
-          label="Aandacht nu"
+          label="Te bespreken / reviewbaar"
           value={`${overviewStatusCounts.reviewReady + overviewStatusCounts.blocked}`}
-          detail={`${overviewStatusCounts.blocked} geblokkeerd / ${overviewStatusCounts.reviewReady} reviewbaar`}
+          detail={`${overviewStatusCounts.blocked} Geblokkeerd / ${overviewStatusCounts.reviewReady} reviewbaar`}
           tone="red"
         />
         <ActionCenterBoundedCounter
@@ -3337,10 +3896,11 @@ function ActionCenterBoundedOverview({
       </div>
 
       <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-[#ebe1d5] pb-4 text-sm text-[#6d6458]">
-        <span>{overviewStatusCounts.closed} afgerond</span>
-        {typeof overviewStatusCounts.unavailable === 'number' ? (
-          <span>{overviewStatusCounts.unavailable} nog niet beschikbaar</span>
-        ) : null}
+        <span>Afgerond {overviewStatusCounts.closed}</span>
+        <span>
+          Niet beschikbaar{' '}
+          {typeof overviewStatusCounts.unavailable === 'number' ? overviewStatusCounts.unavailable : 'n.v.t.'}
+        </span>
         <span>{visibleItems.length} zichtbare route{visibleItems.length === 1 ? '' : 's'}</span>
       </div>
 
@@ -3373,10 +3933,10 @@ function ActionCenterBoundedOverview({
         <div className="space-y-6">
           <aside className="rounded-[24px] border border-[#e4d9cb] bg-[#fcfaf7] px-6 py-6">
             <div>
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Nu signalen</p>
-                        <span className="text-xs text-[#7d7368]">{blockedItems.length} geblokkeerd</span>
-                      </div>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Wat vraagt nu aandacht?</p>
+                <span className="text-xs text-[#7d7368]">{blockedItems.length} Geblokkeerd</span>
+              </div>
               <div className="mt-4 space-y-3">
                 {blockedItems.length === 0 ? (
                   <EmptyBlock text="Er staan nu geen geblokkeerde routes in deze selectie." />
@@ -3795,14 +4355,21 @@ function buildDetailLineageEntries(
   item: ActionCenterPreviewItem,
   routeTitlesById: ReadonlyMap<string, string>,
 ): ActionCenterDetailLineageEntry[] {
+  const routeLineage = item.coreSemantics.route
   const { backwardLabel, backwardRouteId, forwardLabel, forwardRouteId } = item.coreSemantics.lineageSummary
+  const fallbackBackwardLabel =
+    backwardLabel ??
+    (routeLineage.lineageLabel === 'Heropend traject' || routeLineage.followUpFromRouteId
+      ? routeLineage.lineageLabel
+      : null)
+  const fallbackBackwardRouteId = backwardRouteId ?? routeLineage.followUpFromRouteId ?? null
   const entries: Array<ActionCenterDetailLineageEntry | null> = [
-    backwardLabel
+    fallbackBackwardLabel
       ? {
           key: 'backward',
-          label: backwardLabel,
-          routeId: backwardRouteId,
-          routeTitle: backwardRouteId ? (routeTitlesById.get(backwardRouteId) ?? null) : null,
+          label: fallbackBackwardLabel,
+          routeId: fallbackBackwardRouteId,
+          routeTitle: fallbackBackwardRouteId ? (routeTitlesById.get(fallbackBackwardRouteId) ?? null) : null,
         }
       : null,
     forwardLabel
