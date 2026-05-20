@@ -84,7 +84,9 @@ test.describe('action center route action cards', () => {
     await page.waitForURL(/\/action-center$/)
 
     await openFocusedRoute(page, pilot.routeContext.focusItemId)
+    await expect(page.getByRole('button', { name: 'Actie toevoegen', exact: true })).toHaveCount(0)
     await ensureManagerResponseExists(page)
+    await expect(page.getByRole('button', { name: 'Actie toevoegen', exact: true })).toBeVisible()
 
     await page.getByRole('button', { name: 'Actie toevoegen', exact: true }).click()
     await routeActionEditor(page).getByLabel('Thema').selectOption('leadership')

@@ -17,6 +17,7 @@ interface Props {
   onSave(value: ActionCenterRouteActionEditorValue): Promise<boolean | void> | boolean | void
   pending?: boolean
   error?: string | null
+  feedbackTone?: 'error' | 'warning'
   submitLabel?: string
 }
 
@@ -35,6 +36,7 @@ export function ActionCenterRouteActionEditor({
   onSave,
   pending = false,
   error = null,
+  feedbackTone = 'error',
   submitLabel = 'Actie toevoegen',
 }: Props) {
   const [value, setValue] = useState<ActionCenterRouteActionEditorValue>(EMPTY_VALUE)
@@ -104,7 +106,13 @@ export function ActionCenterRouteActionEditor({
       </FormField>
 
       {error ? (
-        <p className="rounded-2xl border border-[#ffd7d1] bg-[#fff1ef] px-4 py-3 text-sm text-[#b75046]">
+        <p
+          className={`rounded-2xl border px-4 py-3 text-sm ${
+            feedbackTone === 'warning'
+              ? 'border-[#ffe1c7] bg-[#fff3e8] text-[#9a5a17]'
+              : 'border-[#ffd7d1] bg-[#fff1ef] text-[#b75046]'
+          }`}
+        >
           {error}
         </p>
       ) : null}

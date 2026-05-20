@@ -8,6 +8,7 @@ import type {
   ActionCenterRouteContract,
   ActionCenterRouteStatus,
 } from '@/lib/action-center-route-contract'
+import { summarizeActionCenterRouteActions } from '@/lib/action-center-route-contract'
 import {
   ACTION_CENTER_MANAGER_RESPONSE_THEME_OPTIONS,
   getActionCenterManagerResponseLabel,
@@ -128,6 +129,7 @@ interface RouteCloseoutFormState {
 }
 
 type RouteActionValidationDisposition = 'valid' | 'invalid' | 'needs_hr_review'
+type RouteActionFeedbackTone = 'error' | 'warning'
 
 type ManagerActionPhase =
   | 'awaiting-first-move'
@@ -616,9 +618,9 @@ function getActionReviewOutcomeLabel(outcome: ActionCenterActionReviewEditorValu
 function getRouteActionDraftDispositionMessage(disposition: RouteActionValidationDisposition) {
   switch (disposition) {
     case 'needs_hr_review':
-      return 'Deze actie vraagt eerst HR-review en blijft nog buiten de actieroute.'
+      return 'Draft opgeslagen. Deze actie wacht eerst op HR-review en staat nog niet live in deze route.'
     case 'invalid':
-      return 'Deze actie is nog niet bounded genoeg en blijft een draft. Maak de stap concreter en probeer opnieuw.'
+      return 'Draft opgeslagen. Deze actie staat nog niet live in deze route. Maak de stap concreter voordat je hem opnieuw indient.'
     case 'valid':
     default:
       return null
@@ -638,6 +640,135 @@ function getNextRouteActionStatusFromReviewOutcome(
     default:
       return 'open'
   }
+}
+
+function getRouteActionMutationStateLabel(status: 'reviewbaar' | 'in-uitvoering') {
+  return status === 'reviewbaar' ? 'Reviewbaar' : 'In uitvoering'
+}
+
+function buildRouteActionMutationProgressSummary(args: {
+  status: 'reviewbaar' | 'in-uitvoering'
+  actionCount: number
+  reviewPressureCount: number
+}) {
+  if (args.status === 'reviewbaar') {
+    return args.reviewPressureCount > 0
+      ? `${args.reviewPressureCount} actie${args.reviewPressureCount === 1 ? '' : 's'} of reviewmoment${args.reviewPressureCount === 1 ? '' : 'en'} vragen nu expliciete teruglezing.`
+      : `${args.actionCount} actie${args.actionCount === 1 ? '' : 's'} dragen deze route, maar reviewdruk wint nu van uitvoering.`
+  }
+
+  return `${args.actionCount} actie${args.actionCount === 1 ? '' : 's'} dragen nu de lokale follow-through in deze route.`
+}
+
+function buildRouteActionMutationOverviewSummary(args: {
+  status: 'reviewbaar' | 'in-uitvoering'
+  actionCount: number
+  reviewPressureCount: number
+}) {
+  if (args.status === 'reviewbaar') {
+    return args.reviewPressureCount > 0
+      ? `Actieve route waarbij ${args.reviewPressureCount} reviewmoment${args.reviewPressureCount === 1 ? '' : 'en'} nu aandacht vraagt.`
+      : 'Actieve route die nu expliciete teruglezing en review vraagt.'
+  }
+
+  return `Actieve route met ${args.actionCount} expliciete actie${args.actionCount === 1 ? '' : 's'} in dezelfde follow-through.`
+}
+
+function buildRouteActionMutationSummaryText(args: {
+  actionCount: number
+  reviewPressureCount: number
+  completedCount: number
+}) {
+  const parts = [`${args.actionCount} ${args.actionCount === 1 ? 'actie' : 'acties'}`]
+
+  if (args.reviewPressureCount > 0) {
+    parts.push(`${args.reviewPressureCount} reviewbaar`)
+  } else if (args.completedCount > 0) {
+    parts.push(`${args.completedCount} afgerond`)
+  } else {
+    parts.push('actief in deze route')
+  }
+
+  return parts.join(' - ')
+}
+
+export function synchronizeActionCenterRouteActionSurface(
+  item: ActionCenterPreviewItem,
+  cards: ActionCenterPreviewItem['coreSemantics']['routeActionCards'],
+) {
+  const persistedCards = cards.filter(
+    (card): card is typeof card & { status: NonNullable<typeof card.status>; reviewScheduledFor: string } =>
+      card.status !== null && Boolean(card.reviewScheduledFor),
+  )
+
+  if (persistedCards.length === 0) {
+    return finalizeActionCenterPreviewItem(
+      {
+        ...item,
+        coreSemantics: {
+          ...item.coreSemantics,
+          routeActionCards: cards,
+        },
+      },
+      { recomputeCoreSemantics: false },
+    )
+  }
+
+  const aggregate = summarizeActionCenterRouteActions(
+    persistedCards.map((card) => ({
+      actionId: card.actionId,
+      status: card.status,
+      reviewScheduledFor: card.reviewScheduledFor,
+    })),
+  )
+  const surfaceStatus = aggregate.routeStatus === 'reviewbaar' ? 'reviewbaar' : 'in-uitvoering'
+  const reviewPressureCount = persistedCards.filter(
+    (card) =>
+      card.status === 'in_review' ||
+      (card.status === 'open' && card.reviewScheduledFor <= new Date().toISOString().slice(0, 10)),
+  ).length
+  const completedCount = persistedCards.filter((card) => card.status === 'afgerond').length
+  const nextReviewDate = aggregate.nextReviewScheduledFor ?? item.reviewDate
+
+  return finalizeActionCenterPreviewItem(
+    {
+      ...item,
+      status: surfaceStatus,
+      reviewDate: nextReviewDate,
+      reviewDateLabel: formatShortDate(nextReviewDate),
+      summary: buildRouteActionMutationSummaryText({
+        actionCount: persistedCards.length,
+        reviewPressureCount,
+        completedCount,
+      }),
+      coreSemantics: {
+        ...item.coreSemantics,
+        routeActionCards: cards,
+        routeSummary: {
+          stateLabel: getRouteActionMutationStateLabel(surfaceStatus),
+          overviewSummary: buildRouteActionMutationOverviewSummary({
+            status: surfaceStatus,
+            actionCount: persistedCards.length,
+            reviewPressureCount,
+          }),
+          routeAsk:
+            surfaceStatus === 'reviewbaar'
+              ? 'Kijk nu expliciet terug op de lopende follow-through en bepaal wat de route daarna vraagt.'
+              : 'Houd de actielaag klein en zorg dat review per actie leidend blijft voor verdere uitvoering.',
+          progressSummary: buildRouteActionMutationProgressSummary({
+            status: surfaceStatus,
+            actionCount: persistedCards.length,
+            reviewPressureCount,
+          }),
+        },
+        routeCloseout: {
+          ...item.coreSemantics.routeCloseout,
+          readyForCloseout: aggregate.readyForCloseout,
+        },
+      },
+    },
+    { recomputeCoreSemantics: false },
+  )
 }
 
 function hasExplicitRouteCloseoutMetadata(item: ActionCenterPreviewItem | null) {
@@ -996,7 +1127,10 @@ export function ActionCenterPreview({
   const [managerResponseError, setManagerResponseError] = useState<string | null>(null)
   const [routeActionEditorOpen, setRouteActionEditorOpen] = useState(false)
   const [routeActionPending, setRouteActionPending] = useState(false)
-  const [routeActionError, setRouteActionError] = useState<string | null>(null)
+  const [routeActionFeedback, setRouteActionFeedback] = useState<{
+    message: string
+    tone: RouteActionFeedbackTone
+  } | null>(null)
   const [openReviewActionId, setOpenReviewActionId] = useState<string | null>(null)
   const [actionReviewPendingActionId, setActionReviewPendingActionId] = useState<string | null>(null)
   const [actionReviewError, setActionReviewError] = useState<string | null>(null)
@@ -1066,7 +1200,7 @@ export function ActionCenterPreview({
     setManagerResponseForm(buildManagerResponseDefaults(selectedItem))
     setManagerResponseError(null)
     setRouteActionEditorOpen(false)
-    setRouteActionError(null)
+    setRouteActionFeedback(null)
     setOpenReviewActionId(null)
     setActionReviewError(null)
   }, [selectedItem])
@@ -1157,6 +1291,7 @@ export function ActionCenterPreview({
       routeActionEndpoint &&
         selectedItem?.orgId &&
         supportsManagerResponseFlow(selectedItem) &&
+        selectedItem?.managerResponse?.id &&
         selectedItem?.ownerId &&
         currentUserId &&
         selectedItem.ownerId === currentUserId,
@@ -1166,6 +1301,7 @@ export function ActionCenterPreview({
       actionReviewEndpoint &&
         selectedItem?.orgId &&
         supportsManagerResponseFlow(selectedItem) &&
+        selectedItem?.managerResponse?.id &&
         selectedItem?.ownerId &&
         currentUserId &&
         selectedItem.ownerId === currentUserId,
@@ -1258,16 +1394,7 @@ export function ActionCenterPreview({
           return item
         }
 
-        return finalizeActionCenterPreviewItem(
-          {
-            ...item,
-            coreSemantics: {
-              ...item.coreSemantics,
-              routeActionCards: updater(item.coreSemantics.routeActionCards),
-            },
-          },
-          { recomputeCoreSemantics: false },
-        )
+        return synchronizeActionCenterRouteActionSurface(item, updater(item.coreSemantics.routeActionCards))
       }),
     )
   }
@@ -1454,7 +1581,7 @@ export function ActionCenterPreview({
     }
 
     setRouteActionPending(true)
-    setRouteActionError(null)
+    setRouteActionFeedback(null)
 
     try {
       const response = await fetch(routeActionEndpoint, {
@@ -1487,7 +1614,10 @@ export function ActionCenterPreview({
 
       const validationDisposition = result.actionDraft.validationDisposition ?? 'invalid'
       if (validationDisposition !== 'valid') {
-        setRouteActionError(getRouteActionDraftDispositionMessage(validationDisposition) ?? 'Route action opslaan mislukt.')
+        setRouteActionFeedback({
+          message: getRouteActionDraftDispositionMessage(validationDisposition) ?? 'Route action opslaan mislukt.',
+          tone: 'warning',
+        })
         return false
       }
 
@@ -1505,9 +1635,13 @@ export function ActionCenterPreview({
         },
       ])
       setRouteActionEditorOpen(false)
+      setRouteActionFeedback(null)
       return true
     } catch (error) {
-      setRouteActionError(error instanceof Error ? error.message : 'Route action opslaan mislukt.')
+      setRouteActionFeedback({
+        message: error instanceof Error ? error.message : 'Route action opslaan mislukt.',
+        tone: 'error',
+      })
       return false
     } finally {
       setRouteActionPending(false)
@@ -2992,7 +3126,7 @@ export function ActionCenterPreview({
                                 className="inline-flex min-h-11 items-center rounded-full border border-[#ded3c6] bg-[#fcfaf7] px-4.5 py-2.5 text-sm font-semibold text-[#1a2533] transition hover:border-[#1a2533]"
                                 onClick={() => {
                                   setRouteActionEditorOpen((current) => !current)
-                                  setRouteActionError(null)
+                                  setRouteActionFeedback(null)
                                 }}
                               >
                                 Actie toevoegen
@@ -3005,12 +3139,19 @@ export function ActionCenterPreview({
                               <ActionCenterRouteActionEditor
                                 onSave={handleRouteActionSave}
                                 pending={routeActionPending}
-                                error={routeActionError}
+                                error={routeActionFeedback?.message ?? null}
+                                feedbackTone={routeActionFeedback?.tone ?? 'error'}
                               />
                             </div>
-                          ) : routeActionError ? (
-                            <div className="mt-5 rounded-[18px] border border-[#f3c0bc] bg-[#fff1ef] px-4 py-4 text-sm leading-7 text-[#9c3f36]">
-                              {routeActionError}
+                          ) : routeActionFeedback ? (
+                            <div
+                              className={`mt-5 rounded-[18px] border px-4 py-4 text-sm leading-7 ${
+                                routeActionFeedback.tone === 'warning'
+                                  ? 'border-[#ffe1c7] bg-[#fff8ef] text-[#9a5a17]'
+                                  : 'border-[#f3c0bc] bg-[#fff1ef] text-[#9c3f36]'
+                              }`}
+                            >
+                              {routeActionFeedback.message}
                             </div>
                           ) : null}
 
