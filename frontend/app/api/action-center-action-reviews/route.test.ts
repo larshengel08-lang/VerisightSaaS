@@ -698,4 +698,89 @@ describe('action center action reviews route', () => {
     expect(deleteQuery.delete).toHaveBeenCalledTimes(1)
     expect(deleteQuery.eq).toHaveBeenCalledWith('id', 'review-rollback-3')
   })
+
+  it('treats a stale action status write as a failure and compensates the inserted review', async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: { id: 'manager-1' },
+      },
+    })
+    mockLoadSuiteAccessContext.mockResolvedValue({
+      context: { isVerisightAdmin: false },
+      workspaceMemberships: [
+        {
+          org_id: 'org-1',
+          user_id: 'manager-1',
+          access_role: 'manager_assignee',
+          scope_type: 'department',
+          scope_value: 'org-1::department::operations',
+          can_view: true,
+          can_update: true,
+        },
+      ],
+    })
+
+    const insertQuery = createInsertQuery({
+      data: {
+        id: 'review-rollback-4',
+        action_id: 'action-16',
+        reviewed_at: '2026-05-12T09:30:00.000Z',
+        observation: 'The action status changed after the initial read and before the update.',
+        action_outcome: 'bijsturen-nodig',
+        follow_up_note: 'A stale write must compensate the review insert.',
+      },
+      error: null,
+    })
+    const updateQuery = createUpdateQuery({ data: null, error: null })
+    const deleteQuery = createDeleteQuery({ error: null })
+    let routeActionTableCalls = 0
+    let actionReviewTableCalls = 0
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'action_center_route_actions') {
+        routeActionTableCalls += 1
+        if (routeActionTableCalls === 1) {
+          return createActionQuery({
+            data: {
+              id: 'action-16',
+              org_id: 'org-1',
+              route_scope_type: 'department',
+              route_scope_value: 'org-1::department::operations',
+              manager_user_id: 'manager-1',
+              primary_action_status: 'in_review',
+            },
+            error: null,
+          })
+        }
+
+        return updateQuery
+      }
+
+      if (table === 'action_center_action_reviews') {
+        actionReviewTableCalls += 1
+        return actionReviewTableCalls === 1 ? insertQuery : deleteQuery
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest({
+        action_id: 'action-16',
+        reviewed_at: '2026-05-12T09:30:00.000Z',
+        observation: 'The action status changed after the initial read and before the update.',
+        action_outcome: 'bijsturen-nodig',
+        follow_up_note: 'A stale write must compensate the review insert.',
+      }),
+    )
+
+    expect(response.status).toBe(500)
+    await expect(response.json()).resolves.toEqual({
+      detail: 'Route action statusupdate bevestigen mislukt.',
+    })
+    expect(updateQuery.eq).toHaveBeenNthCalledWith(1, 'id', 'action-16')
+    expect(updateQuery.eq).toHaveBeenNthCalledWith(2, 'primary_action_status', 'in_review')
+    expect(deleteQuery.delete).toHaveBeenCalledTimes(1)
+    expect(deleteQuery.eq).toHaveBeenCalledWith('id', 'review-rollback-4')
+  })
 })

@@ -226,6 +226,7 @@ export async function POST(request: Request) {
       updated_at: new Date().toISOString(),
     })
     .eq('id', parsed.action_id)
+    .eq('primary_action_status', action.primary_action_status)
     .select('id')
     .maybeSingle()
 
