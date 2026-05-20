@@ -631,7 +631,7 @@ The benchmark must cover at least:
 
 1. measurement authority
 2. survey program operations
-3. executive and manager reporting
+3. executive reporting and governed manager/cascade enablement
 4. governed drilldown
 5. open-text intelligence
 6. action and follow-through
