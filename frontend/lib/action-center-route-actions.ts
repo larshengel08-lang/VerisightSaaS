@@ -41,11 +41,11 @@ export interface ActionCenterRouteActionRecord {
 }
 
 export interface ActionCenterRouteActionDraftInput {
-  primary_action_theme_key: ActionCenterManagerActionThemeKey
-  primary_action_text: string
-  primary_action_expected_effect: string
-  primary_action_status: ActionCenterRouteActionStatus
-  review_scheduled_for: string
+  primary_action_theme_key: ActionCenterManagerActionThemeKey | null
+  primary_action_text: string | null
+  primary_action_expected_effect: string | null
+  primary_action_status: ActionCenterRouteActionStatus | null
+  review_scheduled_for: string | null
 }
 
 export interface ValidatedActionCenterRouteActionDraft extends ActionCenterRouteActionDraftInput {
@@ -103,8 +103,11 @@ function matchesAnyPattern(value: string, patterns: readonly RegExp[]) {
 }
 
 function resolveActionCenterRouteActionDraftValidationDisposition(args: {
+  themeKey: ActionCenterManagerActionThemeKey | null
   actionText: string | null
   expectedEffect: string | null
+  status: ActionCenterRouteActionStatus | null
+  reviewScheduledFor: string | null
 }):
   | {
       disposition: ActionCenterActionDraftDisposition
@@ -114,14 +117,16 @@ function resolveActionCenterRouteActionDraftValidationDisposition(args: {
       disposition: ActionCenterActionDraftDisposition
       detail: string
     } {
-  if (!args.actionText || !args.expectedEffect) {
-    return {
-      disposition: 'invalid',
-      detail: 'Route action draft needs a concrete bounded step and expected effect.',
-    }
-  }
+  const isStructurallyBounded =
+    Boolean(args.themeKey) &&
+    Boolean(args.status) &&
+    Boolean(args.reviewScheduledFor && isIsoDate(args.reviewScheduledFor)) &&
+    Boolean(args.actionText) &&
+    Boolean(args.expectedEffect) &&
+    looksLikeActionCenterStep(args.actionText) &&
+    looksLikeActionCenterExpectedEffect(args.expectedEffect)
 
-  if (!looksLikeActionCenterStep(args.actionText) || !looksLikeActionCenterExpectedEffect(args.expectedEffect)) {
+  if (!isStructurallyBounded) {
     return {
       disposition: 'invalid',
       detail: 'Route action draft needs a concrete bounded step and expected effect.',
@@ -216,32 +221,31 @@ export function validateActionCenterRouteActionWriteInput(
 export function validateActionCenterRouteActionDraftInput(
   input: Partial<ActionCenterRouteActionDraftInput> | null | undefined,
 ): ValidatedActionCenterRouteActionDraft {
-  const themeKey = normalizeText(input?.primary_action_theme_key) as ActionCenterManagerActionThemeKey | null
+  const rawThemeKey = normalizeText(input?.primary_action_theme_key)
+  const themeKey =
+    rawThemeKey && THEME_LABELS.has(rawThemeKey as ActionCenterManagerActionThemeKey)
+      ? (rawThemeKey as ActionCenterManagerActionThemeKey)
+      : null
   const actionText = normalizeText(input?.primary_action_text)
   const expectedEffect = normalizeText(input?.primary_action_expected_effect)
-  const status = normalizeText(input?.primary_action_status) as ActionCenterRouteActionStatus | null
+  const rawStatus = normalizeText(input?.primary_action_status)
+  const status = rawStatus && ACTION_STATUSES.has(rawStatus as ActionCenterRouteActionStatus)
+    ? (rawStatus as ActionCenterRouteActionStatus)
+    : null
   const reviewScheduledFor = normalizeText(input?.review_scheduled_for)
 
-  if (
-    !themeKey ||
-    !THEME_LABELS.has(themeKey) ||
-    !status ||
-    !ACTION_STATUSES.has(status) ||
-    !reviewScheduledFor ||
-    !isIsoDate(reviewScheduledFor)
-  ) {
-    throw new Error('Ongeldige route action input.')
-  }
-
   const draftValidation = resolveActionCenterRouteActionDraftValidationDisposition({
+    themeKey,
     actionText,
     expectedEffect,
+    status,
+    reviewScheduledFor,
   })
 
   return {
     primary_action_theme_key: themeKey,
-    primary_action_text: actionText ?? '',
-    primary_action_expected_effect: expectedEffect ?? '',
+    primary_action_text: actionText,
+    primary_action_expected_effect: expectedEffect,
     primary_action_status: status,
     review_scheduled_for: reviewScheduledFor,
     semanticState: 'draft',

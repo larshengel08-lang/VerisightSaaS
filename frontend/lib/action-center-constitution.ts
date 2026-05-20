@@ -61,6 +61,7 @@ export type ActionCenterTransitionRule = {
   readonly fromState: ActionCenterConstitutionState
   readonly toState: ActionCenterConstitutionState
   actors: readonly ActionCenterActor[]
+  draftValidationDisposition?: Extract<ActionCenterActionDraftDisposition, 'valid'>
 }
 
 function freezeActionCenterTransitionRule(rule: ActionCenterTransitionRule): Readonly<ActionCenterTransitionRule> {
@@ -94,6 +95,7 @@ export const ACTION_CENTER_TRANSITION_RULES: readonly Readonly<ActionCenterTrans
     fromState: 'draft',
     toState: 'active',
     actors: ['hr_rhythm_owner'],
+    draftValidationDisposition: 'valid',
   }),
 ])
 
@@ -153,12 +155,14 @@ export function isActionCenterCanonicalRouteStateTransitionAllowed(args: {
   object: ActionCenterConstitutionObject
   fromState: ActionCenterConstitutionState
   toState: ActionCenterConstitutionState
+  draftValidationDisposition?: ActionCenterActionDraftDisposition | null
 }): boolean {
   return ACTION_CENTER_TRANSITION_RULES.some(
     (rule) =>
       rule.object === args.object &&
       rule.fromState === args.fromState &&
       rule.toState === args.toState &&
-      rule.actors.includes(args.actor),
+      rule.actors.includes(args.actor) &&
+      (rule.draftValidationDisposition ? rule.draftValidationDisposition === args.draftValidationDisposition : true),
   )
 }

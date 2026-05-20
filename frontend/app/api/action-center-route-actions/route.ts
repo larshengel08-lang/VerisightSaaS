@@ -48,15 +48,7 @@ function parseRouteActionRequestInput(input: RouteActionRequestBody | null) {
   const status =
     (normalizeText(input?.primary_action_status) as ActionCenterRouteActionStatus | null) ?? 'open'
 
-  if (
-    !campaignId ||
-    (routeScopeType !== 'department' && routeScopeType !== 'item') ||
-    !routeScopeValue ||
-    !themeKey ||
-    !actionText ||
-    !expectedEffect ||
-    !reviewScheduledFor
-  ) {
+  if (!campaignId || (routeScopeType !== 'department' && routeScopeType !== 'item') || !routeScopeValue) {
     throw new Error('Ongeldige route action input.')
   }
 
@@ -271,11 +263,11 @@ export async function POST(request: Request) {
       manager_user_id: identity.manager_user_id,
       owner_name: identity.owner_name,
       owner_assigned_at: identity.owner_assigned_at,
-      primary_action_theme_key: parsed.primary_action_theme_key,
-      primary_action_text: parsed.primary_action_text,
-      primary_action_expected_effect: parsed.primary_action_expected_effect,
+      primary_action_theme_key: actionDraft.primary_action_theme_key,
+      primary_action_text: actionDraft.primary_action_text,
+      primary_action_expected_effect: actionDraft.primary_action_expected_effect,
       primary_action_status: null,
-      review_scheduled_for: parsed.review_scheduled_for,
+      review_scheduled_for: actionDraft.review_scheduled_for,
       created_by: user.id,
       updated_by: user.id,
     })

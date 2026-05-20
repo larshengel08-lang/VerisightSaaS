@@ -375,6 +375,120 @@ describe('action center route actions route', () => {
     })
   })
 
+  it('persists missing content as an invalid draft instead of rejecting before draft validation', async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: { id: 'manager-1' },
+      },
+    })
+    mockLoadSuiteAccessContext.mockResolvedValue({
+      context: { isVerisightAdmin: false },
+      workspaceMemberships: [
+        {
+          org_id: 'org-1',
+          user_id: 'manager-1',
+          access_role: 'manager_assignee',
+          scope_type: 'department',
+          scope_value: 'org-1::department::operations',
+          can_view: true,
+          can_update: true,
+          display_name: 'Manager Operations',
+          login_email: 'manager.operations@example.com',
+          created_at: '2026-04-01T08:00:00.000Z',
+          updated_at: '2026-04-01T08:00:00.000Z',
+        },
+      ],
+    })
+
+    const insertQuery = createInsertQuery({
+      data: {
+        id: 'action-draft-3',
+        route_id: 'campaign-1::org-1::department::operations',
+        campaign_id: 'campaign-1',
+        org_id: 'org-1',
+        route_scope_type: 'department',
+        route_scope_value: 'org-1::department::operations',
+        manager_user_id: 'manager-1',
+        owner_name: 'Manager Operations',
+        owner_assigned_at: '2026-04-01T08:00:00.000Z',
+        primary_action_theme_key: null,
+        primary_action_text: null,
+        primary_action_expected_effect: null,
+        primary_action_status: null,
+        review_scheduled_for: null,
+        created_at: '2026-04-30T10:00:00.000Z',
+        updated_at: '2026-04-30T10:00:00.000Z',
+      },
+      error: null,
+    })
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'campaigns') {
+        return createCampaignQuery({
+          data: { id: 'campaign-1', organization_id: 'org-1' },
+          error: null,
+        })
+      }
+
+      if (table === 'respondents') {
+        return createRespondentsQuery({
+          data: [{ department: 'Operations' }],
+        })
+      }
+
+      if (table === 'action_center_manager_responses') {
+        return createRouteContainerQuery({
+          data: {
+            id: 'response-missing',
+            campaign_id: 'campaign-1',
+            org_id: 'org-1',
+            route_scope_type: 'department',
+            route_scope_value: 'org-1::department::operations',
+            manager_user_id: 'manager-1',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_route_actions') {
+        return insertQuery
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest({
+        campaign_id: 'campaign-1',
+        route_scope_type: 'department',
+        route_scope_value: 'org-1::department::operations',
+        manager_user_id: 'manager-1',
+      }),
+    )
+
+    expect(response.status).toBe(200)
+    expect(insertQuery.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        manager_response_id: 'response-missing',
+        primary_action_theme_key: null,
+        primary_action_text: null,
+        primary_action_expected_effect: null,
+        primary_action_status: null,
+        review_scheduled_for: null,
+      }),
+    )
+
+    const payload = await response.json()
+    expect(payload.actionDraft).toMatchObject({
+      primary_action_theme_key: null,
+      primary_action_text: null,
+      primary_action_expected_effect: null,
+      review_scheduled_for: null,
+      semanticState: 'draft',
+      validationDisposition: 'invalid',
+    })
+  })
+
   it('rejects unauthorized manager writes', async () => {
     mockGetUser.mockResolvedValue({
       data: {

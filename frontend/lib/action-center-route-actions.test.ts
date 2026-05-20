@@ -104,6 +104,30 @@ describe('action center route actions', () => {
     })
   })
 
+  it('retains missing draft content as invalid draft truth instead of throwing', async () => {
+    const { validateActionCenterRouteActionDraftInput } = await import('./action-center-route-actions') as {
+      validateActionCenterRouteActionDraftInput: (input: Record<string, unknown>) => Record<string, unknown>
+    }
+
+    expect(
+      validateActionCenterRouteActionDraftInput(
+        buildDraftInput({
+          primary_action_theme_key: null,
+          primary_action_text: null,
+          primary_action_expected_effect: null,
+          review_scheduled_for: null,
+        }),
+      ),
+    ).toMatchObject({
+      primary_action_theme_key: null,
+      primary_action_text: null,
+      primary_action_expected_effect: null,
+      review_scheduled_for: null,
+      semanticState: 'draft',
+      validationDisposition: 'invalid',
+    })
+  })
+
   it('retains broad project language as a draft that needs hr review', async () => {
     const { validateActionCenterRouteActionDraftInput } = await import('./action-center-route-actions') as {
       validateActionCenterRouteActionDraftInput: (input: Record<string, unknown>) => Record<string, unknown>
@@ -153,6 +177,7 @@ describe('action center route actions', () => {
         object: 'route_action',
         fromState: 'draft',
         toState: 'active',
+        draftValidationDisposition: 'valid',
       }),
     ).toBe(true)
 
@@ -162,6 +187,7 @@ describe('action center route actions', () => {
         object: 'route_action',
         fromState: 'draft',
         toState: 'active',
+        draftValidationDisposition: 'valid',
       }),
     ).toBe(false)
   })

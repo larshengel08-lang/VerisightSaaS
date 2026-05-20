@@ -103,6 +103,7 @@ describe('action-center constitution', () => {
         fromState: 'draft',
         toState: 'active',
         actors: ['hr_rhythm_owner'],
+        draftValidationDisposition: 'valid',
       },
     ])
   })
@@ -184,6 +185,7 @@ describe('action-center constitution', () => {
         object: 'route_action',
         fromState: 'draft',
         toState: 'active',
+        draftValidationDisposition: 'valid',
       }),
     ).toBe(true)
 
@@ -193,6 +195,27 @@ describe('action-center constitution', () => {
         object: 'route_action',
         fromState: 'draft',
         toState: 'active',
+        draftValidationDisposition: 'valid',
+      }),
+    ).toBe(false)
+
+    expect(
+      isActionCenterCanonicalRouteStateTransitionAllowed({
+        actor: 'hr_rhythm_owner',
+        object: 'route_action',
+        fromState: 'draft',
+        toState: 'active',
+        draftValidationDisposition: 'invalid',
+      }),
+    ).toBe(false)
+
+    expect(
+      isActionCenterCanonicalRouteStateTransitionAllowed({
+        actor: 'hr_rhythm_owner',
+        object: 'route_action',
+        fromState: 'draft',
+        toState: 'active',
+        draftValidationDisposition: 'needs_hr_review',
       }),
     ).toBe(false)
   })
