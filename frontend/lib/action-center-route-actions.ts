@@ -96,7 +96,21 @@ function normalizeText(value: string | null | undefined) {
 
 function isIsoDate(value: string | null | undefined) {
   const normalized = normalizeText(value)
-  return Boolean(normalized && /^\d{4}-\d{2}-\d{2}$/.test(normalized))
+  if (!normalized) return false
+
+  const match = /^(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})$/.exec(normalized)
+  if (!match?.groups) return false
+
+  const year = Number.parseInt(match.groups.year, 10)
+  const month = Number.parseInt(match.groups.month, 10)
+  const day = Number.parseInt(match.groups.day, 10)
+  const candidate = new Date(Date.UTC(year, month - 1, day))
+
+  return (
+    candidate.getUTCFullYear() === year &&
+    candidate.getUTCMonth() === month - 1 &&
+    candidate.getUTCDate() === day
+  )
 }
 
 function isIsoTimestamp(value: string | null | undefined) {
@@ -273,7 +287,9 @@ export function validateActionCenterRouteActionDraftInput(
   const status = rawStatus && ACTION_STATUSES.has(rawStatus as ActionCenterRouteActionStatus)
     ? (rawStatus as ActionCenterRouteActionStatus)
     : null
-  const reviewScheduledFor = normalizeText(input?.review_scheduled_for)
+  const rawReviewScheduledFor = normalizeText(input?.review_scheduled_for)
+  const reviewScheduledFor =
+    rawReviewScheduledFor && isIsoDate(rawReviewScheduledFor) ? rawReviewScheduledFor : null
 
   const draftValidation = resolveActionCenterRouteActionDraftValidationDisposition({
     themeKey,

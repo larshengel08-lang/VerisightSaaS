@@ -200,6 +200,33 @@ describe('action center route actions', () => {
     })
   })
 
+  it.each([
+    {
+      label: 'a freeform date string is submitted',
+      review_scheduled_for: 'tomorrow',
+    },
+    {
+      label: 'an impossible iso date is submitted',
+      review_scheduled_for: '2026-02-31',
+    },
+  ])('normalizes review timing away when $label', async ({ review_scheduled_for }) => {
+    const { validateActionCenterRouteActionDraftInput } = await import('./action-center-route-actions') as {
+      validateActionCenterRouteActionDraftInput: (input: Record<string, unknown>) => Record<string, unknown>
+    }
+
+    expect(
+      validateActionCenterRouteActionDraftInput(
+        buildDraftInput({
+          review_scheduled_for,
+        }),
+      ),
+    ).toMatchObject({
+      review_scheduled_for: null,
+      semanticState: 'draft',
+      validationDisposition: 'invalid',
+    })
+  })
+
   it('retains broad project language as a draft that needs hr review', async () => {
     const { validateActionCenterRouteActionDraftInput } = await import('./action-center-route-actions') as {
       validateActionCenterRouteActionDraftInput: (input: Record<string, unknown>) => Record<string, unknown>

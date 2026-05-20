@@ -492,6 +492,128 @@ describe('action center route actions route', () => {
     })
   })
 
+  it.each([
+    {
+      label: 'a freeform date string is submitted',
+      review_scheduled_for: 'tomorrow',
+    },
+    {
+      label: 'an impossible iso date is submitted',
+      review_scheduled_for: '2026-02-31',
+    },
+  ])('persists null review timing when $label so invalid dates never reach the db', async ({ review_scheduled_for }) => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: { id: 'manager-1' },
+      },
+    })
+    mockLoadSuiteAccessContext.mockResolvedValue({
+      context: { isVerisightAdmin: false },
+      workspaceMemberships: [
+        {
+          org_id: 'org-1',
+          user_id: 'manager-1',
+          access_role: 'manager_assignee',
+          scope_type: 'department',
+          scope_value: 'org-1::department::operations',
+          can_view: true,
+          can_update: true,
+          display_name: 'Manager Operations',
+          login_email: 'manager.operations@example.com',
+          created_at: '2026-04-01T08:00:00.000Z',
+          updated_at: '2026-04-01T08:00:00.000Z',
+        },
+      ],
+    })
+
+    const insertQuery = createInsertQuery({
+      data: {
+        id: 'action-draft-date',
+        route_id: 'campaign-1::org-1::department::operations',
+        campaign_id: 'campaign-1',
+        org_id: 'org-1',
+        route_scope_type: 'department',
+        route_scope_value: 'org-1::department::operations',
+        manager_user_id: 'manager-1',
+        owner_name: 'Manager Operations',
+        owner_assigned_at: '2026-04-01T08:00:00.000Z',
+        primary_action_theme_key: 'workload',
+        primary_action_text: 'Plan deze week een kort teamgesprek over workloadpieken.',
+        primary_action_expected_effect:
+          'Binnen twee weken moet zichtbaar zijn of de workloadpieken kleiner worden.',
+        primary_action_status: null,
+        review_scheduled_for: null,
+        created_at: '2026-04-30T10:00:00.000Z',
+        updated_at: '2026-04-30T10:00:00.000Z',
+      },
+      error: null,
+    })
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'campaigns') {
+        return createCampaignQuery({
+          data: { id: 'campaign-1', organization_id: 'org-1' },
+          error: null,
+        })
+      }
+
+      if (table === 'respondents') {
+        return createRespondentsQuery({
+          data: [{ department: 'Operations' }],
+        })
+      }
+
+      if (table === 'action_center_manager_responses') {
+        return createRouteContainerQuery({
+          data: {
+            id: 'response-invalid-date',
+            campaign_id: 'campaign-1',
+            org_id: 'org-1',
+            route_scope_type: 'department',
+            route_scope_value: 'org-1::department::operations',
+            manager_user_id: 'manager-1',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_route_actions') {
+        return insertQuery
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest({
+        campaign_id: 'campaign-1',
+        route_scope_type: 'department',
+        route_scope_value: 'org-1::department::operations',
+        manager_user_id: 'manager-1',
+        primary_action_theme_key: 'workload',
+        primary_action_text: 'Plan deze week een kort teamgesprek over workloadpieken.',
+        primary_action_expected_effect:
+          'Binnen twee weken moet zichtbaar zijn of de workloadpieken kleiner worden.',
+        review_scheduled_for,
+      }),
+    )
+
+    expect(response.status).toBe(200)
+    expect(insertQuery.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        manager_response_id: 'response-invalid-date',
+        review_scheduled_for: null,
+      }),
+    )
+
+    const payload = await response.json()
+    expect(payload.actionDraft).toMatchObject({
+      review_scheduled_for: null,
+      semanticState: 'draft',
+      validationDisposition: 'invalid',
+    })
+  })
+
   it('rejects unauthorized manager writes', async () => {
     mockGetUser.mockResolvedValue({
       data: {
