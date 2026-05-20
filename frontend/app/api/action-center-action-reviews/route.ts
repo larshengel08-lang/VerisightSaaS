@@ -12,6 +12,7 @@ import {
   type ActionCenterActionOutcome,
 } from '@/lib/action-center-action-reviews'
 import { resolveActionReviewWriteIdentity } from '@/lib/action-center-route-write-access'
+import type { ActionCenterRouteActionStatus } from '@/lib/action-center-route-actions'
 import type { ActionCenterWorkspaceMember } from '@/lib/suite-access'
 
 type ActionReviewRequestBody = {
@@ -101,6 +102,19 @@ function resolvePersistedActionSemanticState(
       return 'superseded'
     default:
       return null
+  }
+}
+
+function resolvePersistedActionStatusFromSemanticState(
+  state: Extract<ActionCenterActionSemanticState, 'active' | 'completed' | 'stopped'>,
+): ActionCenterRouteActionStatus {
+  switch (state) {
+    case 'active':
+      return 'open'
+    case 'completed':
+      return 'afgerond'
+    case 'stopped':
+      return 'gestopt'
   }
 }
 
@@ -207,13 +221,17 @@ export async function POST(request: Request) {
   const { error: updateError } = await adminClient
     .from('action_center_route_actions')
     .update({
-      primary_action_status: resolveActionCenterActionReviewTransition(parsed.action_outcome),
+      primary_action_status: resolvePersistedActionStatusFromSemanticState(nextActionState),
       updated_by: user.id,
       updated_at: new Date().toISOString(),
     })
     .eq('id', parsed.action_id)
 
   if (updateError) {
+    if (typeof data.id === 'string' && data.id.length > 0) {
+      await adminClient.from('action_center_action_reviews').delete().eq('id', data.id)
+    }
+
     return NextResponse.json({ detail: updateError.message }, { status: 500 })
   }
 

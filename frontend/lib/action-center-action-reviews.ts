@@ -36,15 +36,53 @@ function normalizeText(value: string | null | undefined) {
   return trimmed.length > 0 ? trimmed : null
 }
 
+function isValidCalendarDate(year: number, month: number, day: number) {
+  const candidate = new Date(Date.UTC(year, month - 1, day))
+
+  return (
+    candidate.getUTCFullYear() === year &&
+    candidate.getUTCMonth() === month - 1 &&
+    candidate.getUTCDate() === day
+  )
+}
+
 function isIsoTimestamp(value: string | null | undefined) {
   const normalized = normalizeText(value)
   if (!normalized) return false
 
-  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})$/.test(normalized)) {
+  const match =
+    /^(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})T(?<hour>\d{2}):(?<minute>\d{2}):(?<second>\d{2})(?:\.\d{1,6})?(?<timezone>Z|(?<offsetSign>[+-])(?<offsetHour>\d{2}):(?<offsetMinute>\d{2}))$/.exec(
+      normalized,
+    )
+  if (!match?.groups) {
     return false
   }
 
-  return !Number.isNaN(new Date(normalized).getTime())
+  const year = Number.parseInt(match.groups.year, 10)
+  const month = Number.parseInt(match.groups.month, 10)
+  const day = Number.parseInt(match.groups.day, 10)
+  const hour = Number.parseInt(match.groups.hour, 10)
+  const minute = Number.parseInt(match.groups.minute, 10)
+  const second = Number.parseInt(match.groups.second, 10)
+
+  if (!isValidCalendarDate(year, month, day)) {
+    return false
+  }
+
+  if (hour > 23 || minute > 59 || second > 59) {
+    return false
+  }
+
+  if (match.groups.timezone !== 'Z') {
+    const offsetHour = Number.parseInt(match.groups.offsetHour ?? '', 10)
+    const offsetMinute = Number.parseInt(match.groups.offsetMinute ?? '', 10)
+
+    if (Number.isNaN(offsetHour) || Number.isNaN(offsetMinute) || offsetHour > 23 || offsetMinute > 59) {
+      return false
+    }
+  }
+
+  return true
 }
 
 function getActionOutcomeLabel(outcome: ActionCenterActionOutcome) {

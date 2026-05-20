@@ -44,6 +44,25 @@ describe('action center action reviews', () => {
     })
   })
 
+  it.each([
+    '2026-02-31T09:30:00.000Z',
+    '2026-05-12T24:00:00.000Z',
+    '2026-05-12T09:60:00.000Z',
+    '2026-05-12T09:30:61.000Z',
+  ])('rejects impossible rollover timestamps: %s', async (reviewed_at) => {
+    const { projectActionCenterActionReview } = await import('./action-center-action-reviews') as {
+      projectActionCenterActionReview: (input: Record<string, unknown>) => Record<string, unknown>
+    }
+
+    expect(() =>
+      projectActionCenterActionReview(
+        buildActionReviewInput({
+          reviewed_at,
+        }),
+      ),
+    ).toThrow('Ongeldige route action review input.')
+  })
+
   it('builds a compact action outcome from action outcome plus follow-up note', async () => {
     const { buildCompactActionOutcome } = await import('./action-center-action-reviews') as {
       buildCompactActionOutcome: (input: Record<string, unknown>) => string
