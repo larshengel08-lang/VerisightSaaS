@@ -513,4 +513,93 @@ describe('action center action reviews route', () => {
     expect(deleteQuery.delete).toHaveBeenCalledTimes(1)
     expect(deleteQuery.eq).toHaveBeenCalledWith('id', 'review-rollback-1')
   })
+
+  it('returns an explicit combined failure when both the status update and rollback delete fail', async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: { id: 'manager-1' },
+      },
+    })
+    mockLoadSuiteAccessContext.mockResolvedValue({
+      context: { isVerisightAdmin: false },
+      workspaceMemberships: [
+        {
+          org_id: 'org-1',
+          user_id: 'manager-1',
+          access_role: 'manager_assignee',
+          scope_type: 'department',
+          scope_value: 'org-1::department::operations',
+          can_view: true,
+          can_update: true,
+        },
+      ],
+    })
+
+    const insertQuery = createInsertQuery({
+      data: {
+        id: 'review-rollback-2',
+        action_id: 'action-14',
+        reviewed_at: '2026-05-12T09:30:00.000Z',
+        observation: 'Review write succeeded before both follow-up writes failed.',
+        action_outcome: 'bijsturen-nodig',
+        follow_up_note: 'This should surface a combined failure response.',
+      },
+      error: null,
+    })
+    const updateQuery = createUpdateQuery({
+      error: { message: 'status update failed' },
+    })
+    const deleteQuery = createDeleteQuery({
+      error: { message: 'rollback delete failed' },
+    })
+    let routeActionTableCalls = 0
+    let actionReviewTableCalls = 0
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'action_center_route_actions') {
+        routeActionTableCalls += 1
+        if (routeActionTableCalls === 1) {
+          return createActionQuery({
+            data: {
+              id: 'action-14',
+              org_id: 'org-1',
+              route_scope_type: 'department',
+              route_scope_value: 'org-1::department::operations',
+              manager_user_id: 'manager-1',
+              primary_action_status: 'in_review',
+            },
+            error: null,
+          })
+        }
+
+        return updateQuery
+      }
+
+      if (table === 'action_center_action_reviews') {
+        actionReviewTableCalls += 1
+        return actionReviewTableCalls === 1 ? insertQuery : deleteQuery
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest({
+        action_id: 'action-14',
+        reviewed_at: '2026-05-12T09:30:00.000Z',
+        observation: 'Review write succeeded before both follow-up writes failed.',
+        action_outcome: 'bijsturen-nodig',
+        follow_up_note: 'This should surface a combined failure response.',
+      }),
+    )
+
+    expect(response.status).toBe(500)
+    await expect(response.json()).resolves.toEqual({
+      detail: 'Route action review opslaan is deels mislukt: statusupdate en rollback faalden.',
+    })
+    expect(insertQuery.insert).toHaveBeenCalledTimes(1)
+    expect(updateQuery.update).toHaveBeenCalledTimes(1)
+    expect(deleteQuery.delete).toHaveBeenCalledTimes(1)
+    expect(deleteQuery.eq).toHaveBeenCalledWith('id', 'review-rollback-2')
+  })
 })

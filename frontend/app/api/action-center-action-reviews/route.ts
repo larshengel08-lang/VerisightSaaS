@@ -229,7 +229,17 @@ export async function POST(request: Request) {
 
   if (updateError) {
     if (typeof data.id === 'string' && data.id.length > 0) {
-      await adminClient.from('action_center_action_reviews').delete().eq('id', data.id)
+      const { error: rollbackError } = await adminClient
+        .from('action_center_action_reviews')
+        .delete()
+        .eq('id', data.id)
+
+      if (rollbackError) {
+        return NextResponse.json(
+          { detail: 'Route action review opslaan is deels mislukt: statusupdate en rollback faalden.' },
+          { status: 500 },
+        )
+      }
     }
 
     return NextResponse.json({ detail: updateError.message }, { status: 500 })
