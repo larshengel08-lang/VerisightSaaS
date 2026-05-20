@@ -3,6 +3,10 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import {
+  isActionCenterActionStateTransitionAllowed,
+  type ActionCenterActionSemanticState,
+} from '@/lib/action-center-constitution'
+import {
   resolveActionCenterActionReviewTransition,
   validateActionCenterActionReviewInput,
   type ActionCenterActionOutcome,
@@ -66,6 +70,40 @@ function findWritableMembership(
   )
 }
 
+function resolvePersistedActionSemanticState(
+  value: string | null | undefined,
+): ActionCenterActionSemanticState | null {
+  const normalized = normalizeText(value)
+
+  if (!normalized) {
+    return 'draft'
+  }
+
+  switch (normalized) {
+    case 'draft':
+      return 'draft'
+    case 'open':
+    case 'active':
+      return 'active'
+    case 'review_due':
+      return 'review_due'
+    case 'in_review':
+      return 'in_review'
+    case 'blocked':
+      return 'blocked'
+    case 'afgerond':
+    case 'completed':
+      return 'completed'
+    case 'gestopt':
+    case 'stopped':
+      return 'stopped'
+    case 'superseded':
+      return 'superseded'
+    default:
+      return null
+  }
+}
+
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as ActionReviewRequestBody | null
 
@@ -93,7 +131,7 @@ export async function POST(request: Request) {
   const adminClient = createAdminClient()
   const { data: action, error: actionError } = await adminClient
     .from('action_center_route_actions')
-    .select('id, org_id, route_scope_type, route_scope_value, manager_user_id')
+    .select('id, org_id, route_scope_type, route_scope_value, manager_user_id, primary_action_status')
     .eq('id', parsed.action_id)
     .maybeSingle()
 
@@ -128,6 +166,24 @@ export async function POST(request: Request) {
     const detail = error instanceof Error ? error.message : 'Ongeldige route action review-identiteit.'
     const status = detail.includes('Alleen de toegewezen manager') ? 403 : 400
     return NextResponse.json({ detail }, { status })
+  }
+
+  const currentActionState = resolvePersistedActionSemanticState(action.primary_action_status)
+  const nextActionState = resolveActionCenterActionReviewTransition(parsed.action_outcome)
+  const actor = context.isVerisightAdmin ? 'hr_rhythm_owner' : 'manager_participant'
+
+  if (
+    currentActionState !== 'in_review' ||
+    !isActionCenterActionStateTransitionAllowed({
+      actor,
+      fromState: currentActionState,
+      toState: nextActionState,
+    })
+  ) {
+    return NextResponse.json(
+      { detail: 'Route action review is niet toegestaan vanuit de huidige canonieke toestand.' },
+      { status: 409 },
+    )
   }
 
   const { data, error } = await adminClient

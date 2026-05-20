@@ -91,6 +91,7 @@ describe('action center action reviews route', () => {
             route_scope_type: 'department',
             route_scope_value: 'org-1::department::finance',
             manager_user_id: 'manager-2',
+            primary_action_status: 'in_review',
           },
           error: null,
         })
@@ -146,6 +147,7 @@ describe('action center action reviews route', () => {
             route_scope_type: 'department',
             route_scope_value: 'org-1::department::operations',
             manager_user_id: 'manager-2',
+            primary_action_status: 'in_review',
           },
           error: null,
         })
@@ -214,14 +216,15 @@ describe('action center action reviews route', () => {
         if (actionLookupCount === 1) {
           return createActionQuery({
             data: {
-              id: 'action-1',
-              org_id: 'org-1',
-              route_scope_type: 'department',
-              route_scope_value: 'org-1::department::operations',
-              manager_user_id: 'manager-1',
-            },
-            error: null,
-          })
+            id: 'action-1',
+            org_id: 'org-1',
+            route_scope_type: 'department',
+            route_scope_value: 'org-1::department::operations',
+            manager_user_id: 'manager-1',
+            primary_action_status: 'in_review',
+          },
+          error: null,
+        })
         }
 
         return updateQuery
@@ -287,5 +290,133 @@ describe('action center action reviews route', () => {
     expect(payload.review).not.toHaveProperty('closeout_note')
     expect(payload.review).not.toHaveProperty('closed_at')
     expect(payload.review).not.toHaveProperty('closed_by_role')
+  })
+
+  it('rejects review writes when the current action is still a draft', async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: { id: 'manager-1' },
+      },
+    })
+    mockLoadSuiteAccessContext.mockResolvedValue({
+      context: { isVerisightAdmin: false },
+      workspaceMemberships: [
+        {
+          org_id: 'org-1',
+          user_id: 'manager-1',
+          access_role: 'manager_assignee',
+          scope_type: 'department',
+          scope_value: 'org-1::department::operations',
+          can_view: true,
+          can_update: true,
+        },
+      ],
+    })
+
+    const insertQuery = createInsertQuery({ data: null, error: null })
+    const updateQuery = createUpdateQuery({ error: null })
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'action_center_route_actions') {
+        return createActionQuery({
+          data: {
+            id: 'action-11',
+            org_id: 'org-1',
+            route_scope_type: 'department',
+            route_scope_value: 'org-1::department::operations',
+            manager_user_id: 'manager-1',
+            primary_action_status: 'draft',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_action_reviews') {
+        return insertQuery
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest({
+        action_id: 'action-11',
+        reviewed_at: '2026-05-12T09:30:00.000Z',
+        observation: 'Te vroeg om dit al als uitgevoerde review te registreren.',
+        action_outcome: 'bijsturen-nodig',
+        follow_up_note: 'De draft moet eerst echt gestart worden.',
+      }),
+    )
+
+    expect(response.status).toBe(409)
+    await expect(response.json()).resolves.toEqual({
+      detail: 'Route action review is niet toegestaan vanuit de huidige canonieke toestand.',
+    })
+    expect(insertQuery.insert).not.toHaveBeenCalled()
+    expect(updateQuery.update).not.toHaveBeenCalled()
+  })
+
+  it('rejects review writes when the current action is blocked', async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: { id: 'manager-1' },
+      },
+    })
+    mockLoadSuiteAccessContext.mockResolvedValue({
+      context: { isVerisightAdmin: false },
+      workspaceMemberships: [
+        {
+          org_id: 'org-1',
+          user_id: 'manager-1',
+          access_role: 'manager_assignee',
+          scope_type: 'department',
+          scope_value: 'org-1::department::operations',
+          can_view: true,
+          can_update: true,
+        },
+      ],
+    })
+
+    const insertQuery = createInsertQuery({ data: null, error: null })
+    const updateQuery = createUpdateQuery({ error: null })
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'action_center_route_actions') {
+        return createActionQuery({
+          data: {
+            id: 'action-12',
+            org_id: 'org-1',
+            route_scope_type: 'department',
+            route_scope_value: 'org-1::department::operations',
+            manager_user_id: 'manager-1',
+            primary_action_status: 'blocked',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_action_reviews') {
+        return insertQuery
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest({
+        action_id: 'action-12',
+        reviewed_at: '2026-05-12T09:30:00.000Z',
+        observation: 'Er is nog een expliciete blocker en die is niet eerst in review gebracht.',
+        action_outcome: 'bijsturen-nodig',
+        follow_up_note: 'Los eerst de blocker op en open daarna een review.',
+      }),
+    )
+
+    expect(response.status).toBe(409)
+    await expect(response.json()).resolves.toEqual({
+      detail: 'Route action review is niet toegestaan vanuit de huidige canonieke toestand.',
+    })
+    expect(insertQuery.insert).not.toHaveBeenCalled()
+    expect(updateQuery.update).not.toHaveBeenCalled()
   })
 })
