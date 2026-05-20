@@ -115,6 +115,7 @@ import {
   buildResponseActivationState,
   getResponseActivationThresholds,
 } from "@/lib/response-activation";
+import { canAccessCultureAssessmentSegmentSummaryExport } from "@/lib/products/culture_assessment/contract";
 import { getScanDefinition } from "@/lib/scan-definitions";
 import {
   getDashboardModuleHref,
@@ -880,15 +881,30 @@ export default async function CampaignPage({ params }: Props) {
     scanType: stats.scan_type,
     isActive: stats.is_active,
   });
+  const canAccessGovernedSegmentExport =
+    stats.scan_type === "culture_assessment" &&
+    canAccessCultureAssessmentSegmentSummaryExport({
+      isVerisightAdmin,
+      membershipRole: membership?.role ?? null,
+    });
   const canDownloadGovernedSegmentExport =
     stats.scan_type === "culture_assessment" &&
     activationState.reportVisible &&
     hasSegmentDeepDive &&
-    (isVerisightAdmin ||
-      getCustomerActionPermission(membership?.role ?? null, "review_launch"));
+    canAccessGovernedSegmentExport;
   const showGovernedSegmentExport =
     stats.scan_type === "culture_assessment" &&
     canDownloadGovernedSegmentExport;
+  const governedSegmentExportHint =
+    stats.scan_type !== "culture_assessment"
+      ? null
+      : !hasSegmentDeepDive
+        ? "Segment deep dive is niet geactiveerd; de organisatiebrede read blijft daarom leidend."
+        : !activationState.reportVisible
+          ? "Segment deep dive is ingericht, maar governed export blijft dicht tot de baseline formeel is vrijgegeven."
+          : canAccessGovernedSegmentExport
+            ? "Governed segmentexport blijft in deze pilotlaag alleen open voor owner/adminrollen na baselinevrijgave."
+            : "Governed segmentexport is na baselinevrijgave alleen beschikbaar voor owner/adminrollen; overige rollen blijven organisatiebreed read-first.";
   const showClientExecutionFlow =
       !isVerisightAdmin && compositionState !== "closed";
   const showManagementOutput = isManagementVisibleState(compositionState);
@@ -2314,9 +2330,8 @@ export default async function CampaignPage({ params }: Props) {
     ].slice(0, 5)
     const segmentContrastBody = showGovernedSegmentExport
       ? "Governed segmentcontrasten zijn beschikbaar als veilige aggregatielaag via de segmentexport. Gebruik deze laag descriptief en nooit als ranking."
-      : hasSegmentDeepDive
-        ? "Segment deep dive is ingericht, maar blijft nog gesloten of onderdrukt totdat de baseline formeel is vrijgegeven voor governed drilldown."
-        : "Segmentcontrasten horen in deze route alleen thuis als governed drilldown. Zonder segment deep dive blijft de organisatiebrede read leidend."
+      : governedSegmentExportHint ??
+        "Segmentcontrasten horen in deze route alleen thuis als governed drilldown. Zonder segment deep dive blijft de organisatiebrede read leidend."
 
     return (
       <div className="space-y-10">
@@ -2632,6 +2647,11 @@ export default async function CampaignPage({ params }: Props) {
               scanType={stats.scan_type}
               showSegmentSummaryExport={showGovernedSegmentExport}
             />
+            {governedSegmentExportHint ? (
+              <div className="rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">
+                {governedSegmentExportHint}
+              </div>
+            ) : null}
             <MethodologyCard
               scanType={stats.scan_type}
               hasSegmentDeepDive={hasSegmentDeepDive}

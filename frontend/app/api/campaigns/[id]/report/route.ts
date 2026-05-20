@@ -47,7 +47,7 @@ export async function GET(request: Request, { params }: Context) {
 
   const isVerisightAdmin = profile?.is_verisight_admin === true
   const membershipRole = membership?.role ?? null
-  if (!canDownloadCampaignReport({ format, isVerisightAdmin, membershipRole })) {
+  if (!canDownloadCampaignReport({ format, scanType: campaign.scan_type, isVerisightAdmin, membershipRole })) {
     return NextResponse.json(
       {
         detail:

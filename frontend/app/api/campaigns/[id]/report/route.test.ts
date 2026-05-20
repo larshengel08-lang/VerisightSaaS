@@ -28,6 +28,7 @@ describe('campaign report route', () => {
     expect(
       canDownloadCampaignReport({
         format: 'segment_summary',
+        scanType: 'culture_assessment',
         isVerisightAdmin: false,
         membershipRole: 'viewer',
       }),
@@ -35,6 +36,7 @@ describe('campaign report route', () => {
     expect(
       canDownloadCampaignReport({
         format: 'segment_summary',
+        scanType: 'culture_assessment',
         isVerisightAdmin: false,
         membershipRole: 'member',
       }),
@@ -42,6 +44,26 @@ describe('campaign report route', () => {
     expect(
       canDownloadCampaignReport({
         format: 'segment_summary',
+        scanType: 'culture_assessment',
+        isVerisightAdmin: false,
+        membershipRole: 'owner',
+      }),
+    ).toBe(true)
+  })
+
+  it('keeps culture assessment governed export tied to contract entitlements instead of generic report visibility', () => {
+    expect(
+      canDownloadCampaignReport({
+        format: 'segment_summary',
+        scanType: 'culture_assessment',
+        isVerisightAdmin: true,
+        membershipRole: null,
+      }),
+    ).toBe(true)
+    expect(
+      canDownloadCampaignReport({
+        format: 'segment_summary',
+        scanType: 'retention',
         isVerisightAdmin: false,
         membershipRole: 'owner',
       }),
@@ -52,6 +74,7 @@ describe('campaign report route', () => {
     expect(
       canDownloadCampaignReport({
         format: 'pdf',
+        scanType: 'culture_assessment',
         isVerisightAdmin: false,
         membershipRole: 'viewer',
       }),
@@ -59,6 +82,7 @@ describe('campaign report route', () => {
     expect(
       canDownloadCampaignReport({
         format: 'pdf',
+        scanType: 'culture_assessment',
         isVerisightAdmin: true,
         membershipRole: null,
       }),

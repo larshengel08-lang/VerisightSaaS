@@ -1,3 +1,5 @@
+import type { MemberRole } from '@/lib/types'
+
 export type CultureAssessmentDomainId =
   | 'engagement_involvement'
   | 'trust_psychological_safety'
@@ -17,6 +19,9 @@ type ScoreDirection =
 
 type VisibilityRole = 'executive' | 'hr_partner' | 'business_unit_lead' | 'manager_limited' | 'admin'
 type EntitlementState = 'allowed' | 'governed' | 'denied' | 'admin_state_only'
+
+export type CultureAssessmentVisibilityRole = VisibilityRole
+export type CultureAssessmentEntitlementState = EntitlementState
 
 export const CULTURE_ASSESSMENT_CULTURE_INDEX_COPY =
   'De Loep Culture Index is een navigatiesignaal voor het organisatiebeeld. De index is geen eindoordeel over cultuur, geen individuele beoordeling en geen bewijs van oorzaak-gevolg. Lees de index altijd samen met domeinen, segmentpatronen, responsbasis en governancegrenzen.'
@@ -322,3 +327,42 @@ export const CULTURE_ASSESSMENT_CONTRACT = {
     forbiddenOutputs: ['causal_diagnosis', 'automatic_intervention_advice', 'manager_blame'],
   },
 } as const
+
+export function getCultureAssessmentVisibilityRole(args: {
+  isVerisightAdmin: boolean
+  membershipRole: MemberRole | null | undefined
+}): CultureAssessmentVisibilityRole | null {
+  if (args.isVerisightAdmin) {
+    return 'admin'
+  }
+
+  if (args.membershipRole === 'owner') {
+    return 'hr_partner'
+  }
+
+  if (args.membershipRole === 'member' || args.membershipRole === 'viewer') {
+    return 'executive'
+  }
+
+  return null
+}
+
+export function getCultureAssessmentSegmentSummaryEntitlement(args: {
+  isVerisightAdmin: boolean
+  membershipRole: MemberRole | null | undefined
+}): CultureAssessmentEntitlementState {
+  const visibilityRole = getCultureAssessmentVisibilityRole(args)
+  if (!visibilityRole) {
+    return 'denied'
+  }
+
+  return CULTURE_ASSESSMENT_CONTRACT.governedExportEntitlements[visibilityRole].segmentSummaryExport
+}
+
+export function canAccessCultureAssessmentSegmentSummaryExport(args: {
+  isVerisightAdmin: boolean
+  membershipRole: MemberRole | null | undefined
+}) {
+  const entitlement = getCultureAssessmentSegmentSummaryEntitlement(args)
+  return entitlement === 'allowed' || entitlement === 'governed' || entitlement === 'admin_state_only'
+}

@@ -113,4 +113,12 @@ describe('campaign detail management-read guardrails', () => {
       previousIndex = nextIndex
     }
   })
+
+  it('keeps culture governed export guidance explicit about baseline release, segment deep dive and owner-admin gating', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('Governed segmentexport blijft in deze pilotlaag alleen open voor owner/adminrollen na baselinevrijgave.')
+    expect(source).toContain('Segment deep dive is niet geactiveerd; de organisatiebrede read blijft daarom leidend.')
+    expect(source).toContain('Segment deep dive is ingericht, maar governed export blijft dicht tot de baseline formeel is vrijgegeven.')
+  })
 })
