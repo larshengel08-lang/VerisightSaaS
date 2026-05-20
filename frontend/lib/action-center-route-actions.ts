@@ -118,7 +118,6 @@ function resolveActionCenterRouteActionDraftValidationDisposition(args: {
   themeKey: ActionCenterManagerActionThemeKey | null
   actionText: string | null
   expectedEffect: string | null
-  status: ActionCenterRouteActionStatus | null
   reviewScheduledFor: string | null
 }):
   | {
@@ -280,7 +279,6 @@ export function validateActionCenterRouteActionDraftInput(
     themeKey,
     actionText,
     expectedEffect,
-    status,
     reviewScheduledFor,
   })
 
@@ -288,7 +286,7 @@ export function validateActionCenterRouteActionDraftInput(
     primary_action_theme_key: themeKey,
     primary_action_text: actionText,
     primary_action_expected_effect: expectedEffect,
-    primary_action_status: status,
+    primary_action_status: null,
     review_scheduled_for: reviewScheduledFor,
     semanticState: 'draft',
     validationDisposition: draftValidation.disposition,

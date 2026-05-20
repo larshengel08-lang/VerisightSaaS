@@ -133,8 +133,26 @@ describe('action center route actions', () => {
 
     expect(validateActionCenterRouteActionDraftInput(buildDraftInput())).toMatchObject({
       primary_action_theme_key: 'leadership',
-      primary_action_status: 'open',
+      primary_action_status: null,
       review_scheduled_for: '2026-05-15',
+      semanticState: 'draft',
+      validationDisposition: 'valid',
+    })
+  })
+
+  it('strips submitted active-looking status from retained draft truth before promotion', async () => {
+    const { validateActionCenterRouteActionDraftInput } = await import('./action-center-route-actions') as {
+      validateActionCenterRouteActionDraftInput: (input: Record<string, unknown>) => Record<string, unknown>
+    }
+
+    expect(
+      validateActionCenterRouteActionDraftInput(
+        buildDraftInput({
+          primary_action_status: 'open',
+        }),
+      ),
+    ).toMatchObject({
+      primary_action_status: null,
       semanticState: 'draft',
       validationDisposition: 'valid',
     })

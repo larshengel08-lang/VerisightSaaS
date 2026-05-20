@@ -84,12 +84,15 @@ async function loadWritableRouteTruth(input: {
       .maybeSingle(),
   ])
 
-  if (campaignError || !campaign?.id || !campaign.organization_id) {
+  if (campaignError || routeContainerError) {
+    throw new Error('Route action route laden mislukt.')
+  }
+
+  if (!campaign?.id || !campaign.organization_id) {
     return { campaign: null, routeContainer: null, visibleDepartmentLabels: [] }
   }
 
   if (
-    routeContainerError ||
     !routeContainer?.id ||
     !routeContainer.campaign_id ||
     !routeContainer.org_id ||
@@ -104,10 +107,14 @@ async function loadWritableRouteTruth(input: {
     return { campaign, routeContainer, visibleDepartmentLabels: [] }
   }
 
-  const { data: respondentsRaw } = await adminClient
+  const { data: respondentsRaw, error: respondentsError } = await adminClient
     .from('respondents')
     .select('department')
     .eq('campaign_id', input.campaignId)
+
+  if (respondentsError) {
+    throw new Error('Route action route laden mislukt.')
+  }
 
   const visibleDepartmentLabels = [
     ...new Set(
@@ -150,7 +157,7 @@ async function loadAssignedManagerMembership(input: {
   routeScopeValue: string
 }) {
   const adminClient = createAdminClient()
-  const { data } = await adminClient
+  const { data, error } = await adminClient
     .from('action_center_workspace_members')
     .select(
       'org_id, user_id, display_name, login_email, access_role, scope_type, scope_value, can_view, can_update, created_at, updated_at',
@@ -161,6 +168,10 @@ async function loadAssignedManagerMembership(input: {
     .eq('scope_type', input.routeScopeType)
     .eq('scope_value', input.routeScopeValue)
     .maybeSingle()
+
+  if (error) {
+    throw new Error('Route action manager-toewijzing laden mislukt.')
+  }
 
   return (data ?? null) as ActionCenterWorkspaceMember | null
 }
@@ -193,11 +204,19 @@ export async function POST(request: Request) {
   }
 
   const { context, workspaceMemberships } = await loadSuiteAccessContext(supabase, user.id)
-  const routeTruth = await loadWritableRouteTruth({
-    campaignId: parsed.campaign_id,
-    routeScopeType: parsed.route_scope_type,
-    routeScopeValue: parsed.route_scope_value,
-  })
+  let routeTruth
+  try {
+    routeTruth = await loadWritableRouteTruth({
+      campaignId: parsed.campaign_id,
+      routeScopeType: parsed.route_scope_type,
+      routeScopeValue: parsed.route_scope_value,
+    })
+  } catch (error) {
+    return NextResponse.json(
+      { detail: error instanceof Error ? error.message : 'Route action route laden mislukt.' },
+      { status: 500 },
+    )
+  }
 
   if (!routeTruth.campaign?.organization_id) {
     return NextResponse.json({ detail: 'Route action route bestaat niet voor deze campagne.' }, { status: 400 })
@@ -214,14 +233,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ detail: 'Route action route-container bestaat niet voor deze route.' }, { status: 400 })
   }
 
-  const assignedManagerMembership = context.isVerisightAdmin
-    ? await loadAssignedManagerMembership({
-        orgId: routeTruth.campaign.organization_id,
-        managerUserId: routeTruth.routeContainer.manager_user_id,
-        routeScopeType: parsed.route_scope_type,
-        routeScopeValue: parsed.route_scope_value,
-      })
-    : currentUserMembership
+  let assignedManagerMembership
+  try {
+    assignedManagerMembership = context.isVerisightAdmin
+      ? await loadAssignedManagerMembership({
+          orgId: routeTruth.campaign.organization_id,
+          managerUserId: routeTruth.routeContainer.manager_user_id,
+          routeScopeType: parsed.route_scope_type,
+          routeScopeValue: parsed.route_scope_value,
+        })
+      : currentUserMembership
+  } catch (error) {
+    return NextResponse.json(
+      { detail: error instanceof Error ? error.message : 'Route action manager-toewijzing laden mislukt.' },
+      { status: 500 },
+    )
+  }
 
   let identity
   try {
