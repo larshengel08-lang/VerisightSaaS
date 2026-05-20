@@ -171,7 +171,62 @@ Ensure Action Center execution remains aligned to the product differences betwee
 - create route-specific workflow exceptions that break shared Action Center truth
 - use Action Center to hide unresolved `RetentieScan` MTO-light ambiguity
 
-## 7. Product Decisions Required In Batch A
+## 7. Sub-Batch Exit Criteria
+
+### A1 Exit Criteria
+
+A1 may exit only when all of the following are true:
+
+- action-card contract is finalized
+- required and prohibited fields are finalized
+- valid and invalid action rules are finalized
+- invalid examples are translated into explicit validation behavior
+- canonical action lifecycle is finalized
+- action transition matrix is finalized
+- draft / invalid / HR-review flow is finalized
+- route-to-action limits are finalized
+- tests are specified for validation, transitions, permissions, and route/action boundaries
+
+### A2 Exit Criteria
+
+A2 may exit only when all of the following are true:
+
+- manager create path is specified
+- manager update path is specified
+- manager review path is specified
+- invalid-action correction flow is specified
+- compact evidence entry behavior is specified
+- field load is bounded for repeated-use review
+- no-dashboard-heavy entry is preserved
+- scenario walkthroughs are complete for valid action creation, invalid action correction, action review, and blocked action
+
+### A3 Exit Criteria
+
+A3 may exit only when all of the following are true:
+
+- ExitScan and RetentieScan route defaults matrix is finalized
+- action focus differs by route
+- review window differs by route where appropriate
+- closeout questions differ by route
+- evidence and confidence expectations differ by route
+- shared Action Center truth remains intact
+- no route-specific workflow exception is introduced
+- RetentieScan does not remain MTO-light in Action Center follow-through
+
+## 8. Minimum Route Differentiation Matrix
+
+| Dimension | ExitScan | RetentieScan |
+| --- | --- | --- |
+| route intent | retrospective departure and work-friction follow-through | active retention-pressure follow-through |
+| action focus | verify and act on selected departure pattern or work-friction route | verify and act on selected retention pressure or work-factor route |
+| default review window | 60-90 days | 45-90 days |
+| evidence expectation | management-visible evidence that a selected departure-related follow-through step was attempted and reviewed | management-visible evidence that a selected retention-related follow-through step was attempted, reviewed, and interpreted with explicit caution |
+| closeout question | what was chosen, what was executed, and what returns in the next exit batch or management conversations? | what was verified, what first intervention or follow-up started, and what should be watched in retention signal, stay-intent, or departure intention? |
+| continuation logic | continue if the departure pattern remains active, the action evidence remains weak, or the route still needs monitoring in later exit batches or management conversations | continue if retention pressure persists, review evidence remains weak, or follow-up measurement is still planned |
+| confidence / uncertainty framing | do not claim causality or proof of preventability | do not claim individual risk prediction or broad MTO diagnosis |
+| what not to claim | no causal explanation, no preventability proof, no broad organizational diagnosis from one route | no individual risk prediction, no causal retention proof, no broad MTO-light diagnosis |
+
+## 9. Product Decisions Required In Batch A
 
 Batch A must settle the following product decisions:
 
@@ -185,7 +240,7 @@ Batch A must settle the following product decisions:
 
 No implementation plan should be written until these product decisions are explicit in the Batch A output documents.
 
-## 8. Required Deliverables
+## 10. Required Deliverables
 
 Batch A must produce at least:
 
@@ -200,7 +255,7 @@ Batch A must produce at least:
 - finalized manager execution UX contract
 - finalized route differentiation defaults for `ExitScan` and `RetentieScan`
 
-## 9. Decision Order
+## 11. Decision Order
 
 Batch A should settle decisions in this order:
 
@@ -214,7 +269,73 @@ Batch A should settle decisions in this order:
 
 This order is mandatory because manager UX and route differentiation should build on stable action truth, not redefine it indirectly.
 
-## 10. Non-Goals
+## 12. Implementation Slice Guidance
+
+Batch A should not be implemented as one large coding slice.
+
+Recommended implementation slices:
+
+1. Action Card Contract & Validation
+2. Action Lifecycle & Transition Matrix
+3. Draft / Invalid / HR Review Flow
+4. Manager Create / Update / Review UX
+5. ExitScan and RetentieScan Route Defaults
+6. Test and Regression Hardening
+
+Implementation plans may decompose and sequence the work, but they may not invent or reinterpret:
+
+- action-card fields
+- lifecycle states
+- validation rules
+- route defaults
+- manager permissions
+- route / action / review semantics
+
+## 13. Required Scenario Walkthroughs
+
+The Batch A output must define or document walkthroughs for at least:
+
+- manager creates a valid route-bound action
+- manager creates a vague action and corrects it
+- manager attempts an employee-dossier-like action and is blocked or escalated
+- action reaches `review_due`
+- manager completes a review with `effect-zichtbaar`
+- manager reviews twice with `nog-te-vroeg` or `bijsturen-nodig`
+- HR sees `action_sprawl_risk`
+- HR sees `repeated_review_without_progress`
+- HR sees `route_ready_for_closeout`
+- ExitScan and RetentieScan show differentiated route defaults
+
+## 14. Test Expectations
+
+Batch A must define tests for:
+
+- valid and invalid action creation
+- prohibited action-card content
+- lifecycle transitions
+- prohibited transitions
+- manager permission boundaries
+- HR-only closeout boundaries
+- draft / invalid / HR-review flow
+- route-to-action limits
+- action-sprawl signal
+- repeated-review-without-progress signal
+- route differentiation defaults
+- no off-platform canonical writes
+- no route-family expansion
+
+## 15. Approval / Sign-Off
+
+Batch A output may not move to implementation unless approved by:
+
+- product or founder owner
+- engineering implementer or technical owner
+- governance or trust reviewer
+- route owner for ExitScan / RetentieScan differentiation, if separate
+
+If any of these roles are not formally assigned, the founder or product owner must explicitly assume that sign-off responsibility.
+
+## 16. Non-Goals
 
 Batch A explicitly does not do the following:
 
@@ -229,20 +350,20 @@ Batch A explicitly does not do the following:
 - no intervention impact claims
 - no adoption proof claims
 
-## 11. Exit Criteria
+## 17. Exit Criteria
 
 Batch A may exit only when all of the following are true:
 
-- action-card contract is finalized
-- action transition matrix is finalized
-- draft / invalid / HR-review flow is defined
-- manager create / update / review UX is specified and scenario-tested
-- ExitScan and RetentieScan route defaults are explicitly differentiated
-- no unresolved product truth remains around route, action, or review semantics
+- all A1, A2, and A3 sub-batch exit criteria are met
+- required scenario walkthroughs are complete
+- test expectations are defined
+- route differentiation matrix is complete
+- implementation slice plan is approved
+- no unresolved product truth remains around route, action, review, permissions, validation, or route defaults
 
 Batch A is not complete if any of A1, A2, or A3 still contains unresolved product truth.
 
-## 12. Stop Conditions
+## 18. Stop Conditions
 
 Batch A must stop and simplify if any of the following happen:
 
@@ -252,7 +373,7 @@ Batch A must stop and simplify if any of the following happen:
 - RetentieScan semantics remain too close to MTO-light and create false alignment with Action Center execution
 - route-specific needs begin to create separate workflow rules instead of shared bounded truth
 
-## 13. Implementation Preconditions
+## 19. Implementation Preconditions
 
 Coding must not start from this batch spec directly.
 
@@ -266,7 +387,7 @@ Before implementation begins, Batch A requires:
 - no off-platform canonical write behavior
 - no route expansion outside approved scope
 
-## 14. Success Definition
+## 20. Success Definition
 
 Batch A is successful when:
 
