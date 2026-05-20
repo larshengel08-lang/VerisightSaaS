@@ -73,6 +73,23 @@ describe('culture assessment product module', () => {
       CULTURE_ASSESSMENT_FUTURE_CONTRACT_ROLES_V1,
     )
     expect(CULTURE_ASSESSMENT_CONTRACT.runtimeRoleModel.note.toLowerCase()).toContain('contract-future')
+    expect(CULTURE_ASSESSMENT_CONTRACT.boardAttentionLogic.implementedInputs).toEqual([
+      'domain_scores',
+      'recurring_theme_pairs',
+    ])
+    expect(CULTURE_ASSESSMENT_CONTRACT.boardAttentionLogic.plannedGovernedInputs).toEqual([
+      'segment_spread',
+      'response_coverage',
+      'contrast_strength',
+      'safe_open_text_clusters',
+    ])
+    expect(CULTURE_ASSESSMENT_CONTRACT.visibilityRules.manager_limited).toEqual([
+      'manager_cascade_output_only_when_explicitly_activated',
+    ])
+    expect(CULTURE_ASSESSMENT_CONTRACT.futureVisibilityRules.manager_limited).toEqual([
+      'response_basis',
+      'domain_view',
+    ])
   })
 
   it('builds an executive-safe dashboard model without ranking language', () => {

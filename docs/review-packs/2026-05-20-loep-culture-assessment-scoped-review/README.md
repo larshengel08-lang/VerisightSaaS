@@ -38,8 +38,10 @@ This refreshed pack already includes the latest scoped hardening for:
 - explicit `segment_deep_dive` truth as admin/manual-seeded in V1, not customer-configurable in setup
 - explicit V1 runtime-role clarity in the culture contract
 - mirrored backend truth that only `admin`, `hr_partner` and `executive` are active in V1
+- frontend board-attention contract split into implemented V1 inputs versus later governed inputs
+- aligned culture-domain labels across frontend, backend definition and report output
 - domain presentation as a bestuurlijke leesvolgorde rather than a heavier rank surface
-- inclusion of previously missing imported/reference artifacts
+- inclusion of previously missing imported/reference artifacts, including the culture sample PDF
 
 ## How to use
 
@@ -56,15 +58,15 @@ This refreshed pack already includes the latest scoped hardening for:
 
 Frontend:
 
-`cmd /c npx vitest run --config vitest.config.ts lib/products/culture_assessment/dashboard.test.ts lib/sample-showcase-assets.test.ts lib/products/shared/registry.test.ts lib/client-onboarding.test.ts lib/campaign-setup.test.ts "app/(dashboard)/campaigns/[id]/page.test.ts" "app/api/campaigns/[id]/report/route.test.ts"`
+`cmd /c npx vitest run --config vitest.config.ts lib/products/culture_assessment/questionnaire.test.ts lib/products/culture_assessment/dashboard.test.ts lib/sample-showcase-assets.test.ts lib/products/shared/registry.test.ts lib/client-onboarding.test.ts lib/campaign-setup.test.ts "app/(dashboard)/campaigns/[id]/page.test.ts" "app/api/campaigns/[id]/report/route.test.ts"`
 
-Result: `40 passed`
+Result: `44 passed`
 
 Backend:
 
 `py -m pytest tests\test_culture_assessment_report_contract.py tests\test_culture_assessment_questionnaire_lock.py tests\test_culture_assessment_route_contract.py tests\test_report_generation_smoke.py -q -k "culture_assessment and not retention"`
 
-Result: `21 passed, 5 deselected`
+Result: `22 passed, 5 deselected`
 
 ## Scope note
 

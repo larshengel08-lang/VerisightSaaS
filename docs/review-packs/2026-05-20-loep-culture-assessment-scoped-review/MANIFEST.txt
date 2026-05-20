@@ -7,6 +7,7 @@ backend/products/shared/registry.py
 backend/report.py
 backend/scan_definitions.py
 backend/schemas.py
+docs/examples/voorbeeldrapport_cultuurbeeld.pdf
 docs/reference/CULTURE_ASSESSMENT_BOARD_READ_AGENDA.md
 docs/reference/CULTURE_ASSESSMENT_BOARD_READ_FACILITATOR_SCRIPT.md
 docs/reference/CULTURE_ASSESSMENT_BOARDROOM_DECK.md

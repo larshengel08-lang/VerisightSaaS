@@ -118,7 +118,7 @@ CULTURE_DOMAIN_LABELS_NL = {
     "engagement_involvement": "Engagement en betrokkenheid",
     "trust_psychological_safety": "Vertrouwen en psychologische veiligheid",
     "leadership_direction": "Leiderschap en richting",
-    "collaboration_alignment": "Samenwerking en alignment",
+    "collaboration_alignment": "Samenwerking en afstemming",
     "workload_capacity": "Werkdruk en draagkracht",
     "autonomy_role_clarity": "Autonomie en rolhelderheid",
     "growth_development": "Groei en ontwikkeling",

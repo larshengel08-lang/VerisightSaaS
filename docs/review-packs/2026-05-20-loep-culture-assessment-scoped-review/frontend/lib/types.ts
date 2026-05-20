@@ -153,7 +153,7 @@ export const FACTOR_LABELS: Record<string, string> = {
   growth_development: 'Groei en ontwikkeling',
   change_readiness: 'Veranderbereidheid',
   reward_conditions: 'Beloning en voorwaarden',
-  organizational_connection_intent: 'Verbondenheid en intentie',
+  organizational_connection_intent: 'Organisatieverbinding en intentie',
   autonomy:     'Autonomie',
   competence:   'Competentie',
   relatedness:  'Verbondenheid',

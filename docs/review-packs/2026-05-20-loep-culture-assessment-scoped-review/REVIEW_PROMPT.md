@@ -23,8 +23,10 @@ This refreshed pack already includes recent scoped hardening for:
 - explicit V1 truth that `segment_deep_dive` is admin/manual-seeded rather than customer-configurable setup
 - explicit V1 runtime role clarity: only `admin`, `hr_partner` and `executive` are active; `business_unit_lead` and `manager_limited` remain contract-future
 - mirrored backend truth for the same active/future V1 role split
+- frontend board-attention contract split into implemented V1 inputs versus later governed inputs
+- aligned culture-domain labels across frontend, backend definition and report output
 - domain presentation softened into a bestuurlijke leesvolgorde instead of a heavier ranking feel
-- imported module dependencies and referenced premium-delivery artifacts included in the pack
+- imported module dependencies, referenced premium-delivery artifacts and the culture sample PDF included in the pack
 
 This route is explicitly:
 
@@ -78,13 +80,13 @@ Scoped verification already run for this refreshed pack:
 
 Frontend:
 
-- `cmd /c npx vitest run --config vitest.config.ts lib/products/culture_assessment/dashboard.test.ts lib/sample-showcase-assets.test.ts lib/products/shared/registry.test.ts lib/client-onboarding.test.ts lib/campaign-setup.test.ts "app/(dashboard)/campaigns/[id]/page.test.ts" "app/api/campaigns/[id]/report/route.test.ts"`
-- Result: `40 passed`
+- `cmd /c npx vitest run --config vitest.config.ts lib/products/culture_assessment/questionnaire.test.ts lib/products/culture_assessment/dashboard.test.ts lib/sample-showcase-assets.test.ts lib/products/shared/registry.test.ts lib/client-onboarding.test.ts lib/campaign-setup.test.ts "app/(dashboard)/campaigns/[id]/page.test.ts" "app/api/campaigns/[id]/report/route.test.ts"`
+- Result: `44 passed`
 
 Backend:
 
 - `py -m pytest tests\test_culture_assessment_report_contract.py tests\test_culture_assessment_questionnaire_lock.py tests\test_culture_assessment_route_contract.py tests\test_report_generation_smoke.py -q -k "culture_assessment and not retention"`
-- Result: `21 passed, 5 deselected`
+- Result: `22 passed, 5 deselected`
 
 Use these as current scoped evidence, not as a repo-wide quality claim.
 

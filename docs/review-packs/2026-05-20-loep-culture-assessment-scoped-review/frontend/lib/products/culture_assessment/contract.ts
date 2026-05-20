@@ -75,7 +75,7 @@ export const CULTURE_ASSESSMENT_DOMAIN_MODEL: Array<{
   },
   {
     id: 'collaboration_alignment',
-    label_nl: 'Samenwerking en alignment',
+    label_nl: 'Samenwerking en afstemming',
     label_en: 'Collaboration and alignment',
     short_description: 'Laat zien of samenwerking tussen teams en lagen voldoende aansluit op de organisatierichting.',
     score_direction: 'higher_is_more_positive',
@@ -197,10 +197,14 @@ export const CULTURE_ASSESSMENT_CONTRACT = {
       'open_signals',
       'report_export_methodology',
     ],
-    business_unit_lead: ['response_basis', 'domain_view', 'segment_contrasts'],
-    manager_limited: ['response_basis', 'domain_view'],
+    business_unit_lead: ['future_governed_scope_not_active_in_v1'],
+    manager_limited: ['manager_cascade_output_only_when_explicitly_activated'],
     admin: ['response_basis', 'deepening_layers', 'report_export_methodology'],
   } satisfies Record<VisibilityRole, string[]>,
+  futureVisibilityRules: {
+    business_unit_lead: ['response_basis', 'domain_view', 'segment_contrasts'],
+    manager_limited: ['response_basis', 'domain_view'],
+  },
   stateMapping: {
     collecting_responses: {
       userMessage: 'Responses komen nog binnen; het executive culture read opent zodra de minimumrespons veilig gehaald is.',
@@ -332,13 +336,19 @@ export const CULTURE_ASSESSMENT_CONTRACT = {
     'suppressed_unapproved',
   ],
   boardAttentionLogic: {
-    inputKeys: [
+    implementedInputs: [
       'domain_scores',
+      'recurring_theme_pairs',
+    ],
+    plannedGovernedInputs: [
       'segment_spread',
       'response_coverage',
       'contrast_strength',
-      'recurring_theme_pairs',
       'safe_open_text_clusters',
+    ],
+    inputKeys: [
+      'domain_scores',
+      'recurring_theme_pairs',
     ],
     outputLimit: 5,
     forbiddenOutputs: ['causal_diagnosis', 'automatic_intervention_advice', 'manager_blame'],

@@ -106,9 +106,11 @@ export const CULTURE_ASSESSMENT_SCORING_LOCK = {
 } as const
 
 export const CULTURE_ASSESSMENT_BOARD_ATTENTION_LOGIC = {
-  inputs: ['domain_scores', 'segment_spread', 'response_coverage', 'contrast_strength', 'recurring_theme_pairs', 'safe_open_text_clusters'],
+  mode: 'domain_score_based_v1_attention_logic' as const,
+  implementedInputs: ['domain_scores', 'recurring_theme_pairs'],
+  plannedGovernedInputs: ['segment_spread', 'response_coverage', 'contrast_strength', 'safe_open_text_clusters'],
+  inputs: ['domain_scores', 'recurring_theme_pairs'],
   outputs: ['attention_points_max_5', 'priority_reason', 'confidence_label', 'what_to_verify_next'],
   forbiddenOutputs: ['causal_diagnosis', 'automatic_intervention_advice', 'manager_blame'],
   confidenceLabels: ['hoog', 'midden', 'voorzichtig'],
 } as const
-

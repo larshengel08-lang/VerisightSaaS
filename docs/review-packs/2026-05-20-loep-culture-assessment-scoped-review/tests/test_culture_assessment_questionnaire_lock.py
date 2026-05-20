@@ -1,10 +1,11 @@
 from collections import Counter
 
-from backend.products.culture_assessment.definition import SCAN_DEFINITION
+from backend.products.culture_assessment.definition import DOMAIN_LABELS_NL, SCAN_DEFINITION
 from backend.products.culture_assessment.report_content import (
     get_management_summary_payload,
     get_methodology_payload,
 )
+from backend.report import CULTURE_DOMAIN_LABELS_NL
 from backend.products.culture_assessment.scoring import (
     BOARD_ATTENTION_LOGIC,
     MIN_VALID_RESPONSE_RULES,
@@ -60,6 +61,10 @@ def test_culture_assessment_scoring_lock_and_board_attention_logic_are_determini
         "automatic_intervention_advice",
         "manager_blame",
     ]
+
+
+def test_culture_assessment_backend_domain_labels_match_report_output():
+    assert DOMAIN_LABELS_NL == CULTURE_DOMAIN_LABELS_NL
 
 
 def test_culture_assessment_definition_and_methodology_expose_wp0_lock():
