@@ -151,6 +151,11 @@ function getVisualMetricWidth(value: string) {
   return null
 }
 
+function getVisualMetricPercent(value: string) {
+  const width = getVisualMetricWidth(value)
+  return width ? Math.round(width) : null
+}
+
 function buildResponseContextNote(totalCompleted: number, completionRate: number) {
   if (totalCompleted >= MIN_N_PATTERNS) {
     return `${completionRate}% respons en ${totalCompleted} ingevulde responses liggen boven de analysegrens van ${MIN_N_PATTERNS}.`
@@ -286,7 +291,7 @@ function buildSignalHighlights(args: {
     items.push(
       {
         label: 'Sterkste factor',
-        value: args.isVisible ? args.topFactorLabel ?? 'Nog niet beschikbaar' : 'Nog niet beschikbaar',
+        value: args.isVisible ? (args.topFactorLabel ?? 'Nog niet beschikbaar') : 'Nog niet beschikbaar',
         caption: 'Factor met de laagste gemiddelde belevingsscore in deze route.',
       },
       {
@@ -324,7 +329,7 @@ function buildSignalHighlights(args: {
     },
     {
       label: 'Topfactor',
-      value: args.isVisible ? args.topFactorLabel ?? 'Nog niet beschikbaar' : 'Nog niet beschikbaar',
+      value: args.isVisible ? (args.topFactorLabel ?? 'Nog niet beschikbaar') : 'Nog niet beschikbaar',
       caption: 'Factor met de laagste gemiddelde belevingsscore in deze route.',
     },
   )
@@ -499,11 +504,11 @@ function ResultsBlockCard({
 }) {
   const toneClasses =
     visibility === 'visible'
-      ? 'border-slate-200 bg-white'
+      ? 'border-slate-200 bg-white shadow-[0_18px_48px_rgba(15,23,42,0.06)]'
       : 'border-dashed border-slate-200 bg-[color:var(--dashboard-soft)]/36'
 
   return (
-    <div className={`border px-5 py-5 md:px-7 md:py-7 ${toneClasses} ${className ?? 'rounded-[18px]'}`}>
+    <div className={`border px-5 py-5 md:px-7 md:py-7 ${toneClasses} ${className ?? 'rounded-[28px]'}`}>
       <SectionKicker title={title} visibility={visibility} />
       {summary && !hideSummary ? (
         <p
@@ -531,36 +536,174 @@ function ResultsBlockCard({
 }
 
 function MetricTile({ item }: { item: MetricItem }) {
-  const width = getVisualMetricWidth(item.value)
+  const metricPercent = getVisualMetricPercent(item.value)
 
   return (
-    <div className="border border-slate-200 bg-[color:var(--dashboard-soft)]/45 px-4 py-4">
-      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
-        {item.label}
-      </p>
-      <p className="mt-3 text-lg font-semibold tracking-[-0.04em] text-[color:var(--dashboard-ink)]">
-        {item.value}
-      </p>
-      {width ? (
-        <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/90">
-          <div className="h-full bg-[#C36A29]" style={{ width: `${width}%` }} />
+    <div className="relative overflow-hidden rounded-[24px] border border-slate-200 bg-[linear-gradient(145deg,rgba(255,255,255,0.96),rgba(246,239,229,0.88))] px-4 py-4 shadow-[0_12px_28px_rgba(15,23,42,0.05)]">
+      <div className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,rgba(195,106,41,0),rgba(195,106,41,0.9),rgba(195,106,41,0))]" />
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+            {item.label}
+          </p>
+          <p className="mt-3 text-xl font-semibold tracking-[-0.05em] text-[color:var(--dashboard-ink)]">
+            {item.value}
+          </p>
         </div>
-      ) : null}
-      <p className="mt-2 text-sm leading-6 text-[color:var(--dashboard-text)]">{item.caption}</p>
+        {metricPercent ? (
+          <div
+            className="relative mt-1 size-[4.25rem] shrink-0 rounded-full"
+            style={{
+              background: `conic-gradient(#C36A29 0 ${metricPercent}%, rgba(195,106,41,0.16) ${metricPercent}% 100%)`,
+            }}
+          >
+            <div className="absolute inset-[6px] rounded-full bg-white/90" />
+            <div className="absolute inset-0 flex items-center justify-center text-[0.72rem] font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">
+              {metricPercent}%
+            </div>
+          </div>
+        ) : null}
+      </div>
+      <p className="mt-3 text-sm leading-6 text-[color:var(--dashboard-text)]">{item.caption}</p>
     </div>
   )
 }
 
-function SummaryCard({ item }: { item: SummaryItem }) {
+function SummaryCard({ item, index }: { item: SummaryItem; index: number }) {
+  const accentClasses = [
+    'from-[#fff7ef] via-white to-[#f6eee4]',
+    'from-[#f6efe4] via-white to-[#f3f6fb]',
+    'from-[#f8f4ee] via-white to-[#fff7ef]',
+  ]
+
   return (
-    <div className="border border-slate-200 bg-white px-5 py-5">
+    <div
+      className={`relative overflow-hidden rounded-[28px] border border-slate-200 bg-gradient-to-br ${accentClasses[index % accentClasses.length]} px-5 py-5 shadow-[0_18px_40px_rgba(15,23,42,0.05)]`}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+            {item.label}
+          </p>
+          <h3 className="mt-3 text-[1.18rem] font-semibold tracking-[-0.05em] text-[color:var(--dashboard-ink)]">
+            {item.title}
+          </h3>
+        </div>
+        <div className="text-[2.4rem] font-semibold leading-none tracking-[-0.08em] text-[#C36A29]/18">
+          0{index + 1}
+        </div>
+      </div>
+      <p className="mt-4 max-w-md text-sm leading-6 text-[color:var(--dashboard-text)]">{item.body}</p>
+    </div>
+  )
+}
+
+function SignalOrbit({
+  segments,
+  total,
+}: {
+  segments: Array<{ label: string; value: string; percent: number }>
+  total: number
+}) {
+  const [first, second, third] = segments
+  const firstStop = first?.percent ?? 0
+  const secondStop = firstStop + (second?.percent ?? 0)
+  const thirdStop = secondStop + (third?.percent ?? 0)
+
+  return (
+    <div className="rounded-[30px] border border-slate-200 bg-[linear-gradient(145deg,#fffdf9,rgba(246,239,229,0.88))] px-5 py-5 shadow-[0_18px_40px_rgba(15,23,42,0.06)]">
+      <div className="grid gap-6 lg:grid-cols-[auto,minmax(0,1fr)] lg:items-center">
+        <div className="mx-auto">
+          <div
+            className="relative flex size-48 items-center justify-center rounded-full"
+            style={{
+              background: `conic-gradient(#C36A29 0 ${firstStop}%, #D9985D ${firstStop}% ${secondStop}%, #E9D7BE ${secondStop}% ${thirdStop}%, rgba(15,23,42,0.06) ${thirdStop}% 100%)`,
+            }}
+          >
+            <div className="absolute inset-[14px] rounded-full bg-[linear-gradient(180deg,#fffefc,rgba(255,255,255,0.92))]" />
+            <div className="relative z-10 text-center">
+              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                Responses
+              </p>
+              <p className="mt-3 text-[3rem] font-semibold leading-none tracking-[-0.08em] text-[color:var(--dashboard-ink)]">
+                {total}
+              </p>
+              <p className="mt-2 text-sm text-[color:var(--dashboard-text)]">verdeeld over het vertrekbeeld</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-3">
+          {segments.map((segment, index) => (
+            <div
+              key={segment.label}
+              className="rounded-[22px] border border-white/70 bg-white/90 px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.04)]"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <span
+                    className="size-3 rounded-full"
+                    style={{
+                      backgroundColor: index === 0 ? '#C36A29' : index === 1 ? '#D9985D' : '#E9D7BE',
+                    }}
+                  />
+                  <p className="text-sm font-semibold text-[color:var(--dashboard-ink)]">{segment.label}</p>
+                </div>
+                <span className="text-base font-semibold tracking-[-0.04em] text-[color:var(--dashboard-ink)]">
+                  {segment.value}
+                </span>
+              </div>
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-[rgba(15,23,42,0.05)]">
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${Math.max(8, segment.percent)}%`,
+                    backgroundColor: index === 0 ? '#C36A29' : index === 1 ? '#D9985D' : '#E9D7BE',
+                  }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function PrioritySpotlight({ row, rank }: { row: FactorRow; rank: number }) {
+  const signalPercent = Math.max(10, Math.min(100, row.signalValue * 10))
+
+  return (
+    <div className="relative overflow-hidden rounded-[26px] border border-slate-200 bg-[linear-gradient(145deg,rgba(255,255,255,0.98),rgba(246,239,229,0.85))] px-5 py-5 shadow-[0_16px_36px_rgba(15,23,42,0.06)]">
+      <div className="absolute -right-5 -top-7 text-[5rem] font-semibold tracking-[-0.12em] text-[#C36A29]/10">
+        0{rank}
+      </div>
       <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
-        {item.label}
+        Prioriteit {rank}
       </p>
-      <h3 className="mt-3 text-[1.08rem] font-semibold tracking-[-0.04em] text-[color:var(--dashboard-ink)]">
-        {item.title}
+      <h3 className="mt-3 max-w-[14rem] text-[1.18rem] font-semibold tracking-[-0.05em] text-[color:var(--dashboard-ink)]">
+        {row.factor}
       </h3>
-      <p className="mt-3 text-sm leading-6 text-[color:var(--dashboard-text)]">{item.body}</p>
+      <p className="mt-3 text-sm leading-6 text-[color:var(--dashboard-text)]">{row.note}</p>
+      <div className="mt-5 flex items-end justify-between gap-4">
+        <div>
+          <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-slate-500">Signaal</p>
+          <p className="mt-2 text-2xl font-semibold tracking-[-0.06em] text-[color:var(--dashboard-ink)]">
+            {row.signal}
+          </p>
+        </div>
+        <div
+          className="relative size-[4.5rem] rounded-full"
+          style={{
+            background: `conic-gradient(#C36A29 0 ${signalPercent}%, rgba(195,106,41,0.15) ${signalPercent}% 100%)`,
+          }}
+        >
+          <div className="absolute inset-[7px] rounded-full bg-white/95" />
+          <div className="absolute inset-0 flex items-center justify-center text-xs font-semibold uppercase tracking-[0.12em] text-slate-600">
+            {row.band}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -606,7 +749,8 @@ function ResultsShellHeader({
         <Link href={moduleHref} className="transition-colors hover:text-slate-700">
           {moduleLabel}
         </Link>{' '}
-        / <span className="text-slate-700">{campaignName}</span>
+        <span aria-hidden> / </span>
+        <span className="text-slate-700">{campaignName}</span>
       </p>
       <Link
         href={moduleHref}
@@ -907,9 +1051,9 @@ export default async function CampaignPage({ params }: Props) {
       body={buildResponseContextNote(stats.total_completed, stats.completion_rate_pct ?? 0)}
       hideSummary
       className="rounded-[18px] border-0 bg-transparent px-0 py-0"
-      bodyClassName="px-5 md:px-7"
+      bodyClassName="px-2 text-base md:px-1"
     >
-      <div className="grid border border-slate-200 bg-white md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {[
           { label: 'Uitgenodigd', value: String(stats.total_invited) },
           { label: 'Ingevuld', value: String(stats.total_completed) },
@@ -918,12 +1062,13 @@ export default async function CampaignPage({ params }: Props) {
         ].map((item) => (
           <div
             key={item.label}
-            className="border-b border-slate-200 px-5 py-4 last:border-b-0 md:border-b-0 md:border-r last:md:border-r-0"
+            className="relative overflow-hidden rounded-[24px] border border-slate-200 bg-[linear-gradient(160deg,rgba(255,255,255,0.98),rgba(246,239,229,0.8))] px-5 py-5 shadow-[0_14px_30px_rgba(15,23,42,0.05)]"
           >
+            <div className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,rgba(195,106,41,0),rgba(195,106,41,0.8),rgba(195,106,41,0))]" />
             <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
               {item.label}
             </p>
-            <p className="mt-3 text-xl font-semibold tracking-[-0.04em] text-[color:var(--dashboard-ink)]">
+            <p className="mt-4 text-[2rem] font-semibold leading-none tracking-[-0.06em] text-[color:var(--dashboard-ink)]">
               {item.value}
             </p>
           </div>
@@ -939,46 +1084,33 @@ export default async function CampaignPage({ params }: Props) {
       summary={blockVisibility.signal === 'visible' ? formatScore(averageSignalScore) : 'Nog niet beschikbaar'}
       body={
         blockVisibility.signal === 'visible'
-          ? `${scanDefinition.signalLabel} is vrijgegeven voor deze route. Lees dit blok samen met de verdeling, de responsbasis en de sterkste ondersteunende signalen hieronder.`
+          ? `${scanDefinition.signalLabel} is vrijgegeven voor deze route. Gebruik dit scherm als visueel leesvlak: eerst het kernbeeld, daarna de samenhang en pas daarna de driverlaag.`
           : `Deze laag opent vanaf ${MIN_N_DISPLAY} leesbare responses.`
       }
-      className="rounded-[20px]"
-      summaryClassName="text-[3.25rem] md:text-[4.5rem]"
+      className="rounded-[28px]"
+      summaryClassName="text-[3.4rem] md:text-[4.9rem]"
     >
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr),minmax(0,0.8fr)]">
-        <div className="border border-slate-200 bg-[color:var(--dashboard-soft)]/35 px-5 py-5 md:px-6 md:py-6">
-          <div className="flex flex-wrap items-end justify-between gap-4 border-b border-slate-200 pb-4">
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.18fr),minmax(0,0.82fr)]">
+        <div className="overflow-hidden rounded-[30px] border border-slate-200 bg-[linear-gradient(145deg,#fffdf9,rgba(246,239,229,0.86))] px-5 py-5 shadow-[0_20px_44px_rgba(15,23,42,0.06)] md:px-6 md:py-6">
+          <div className="flex flex-wrap items-end justify-between gap-4 border-b border-slate-200/80 pb-5">
             <div>
               <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-slate-500">
                 {scanDefinition.signalLabel}
               </p>
-              <p className="mt-2 text-4xl font-semibold tracking-[-0.06em] text-[color:var(--dashboard-ink)] md:text-[5rem]">
+              <p className="mt-3 text-5xl font-semibold tracking-[-0.08em] text-[color:var(--dashboard-ink)] md:text-[5.75rem]">
                 {blockVisibility.signal === 'visible' ? formatScore(averageSignalScore) : '—'}
               </p>
             </div>
             <div className="max-w-xs text-sm leading-6 text-[color:var(--dashboard-text)]">
               {blockVisibility.signal === 'visible'
-                ? 'Gebruik de verdeling en de aanvullende metrics om het groepsbeeld te lezen, zonder het al als aanbeveling te framen.'
+                ? 'Sterkste visuele ingang tot het groepsbeeld. Lees dit samen met de segmenten en de ondersteunende signalen rechts.'
                 : `Deze laag wordt zichtbaar vanaf ${MIN_N_DISPLAY} leesbare responses.`}
             </div>
           </div>
 
           {exitDistribution ? (
-            <div className="mt-5 space-y-4">
-              {exitDistribution.segments.map((segment) => (
-                <div key={segment.label} className="space-y-2">
-                  <div className="flex items-center justify-between gap-3 text-sm text-[color:var(--dashboard-text)]">
-                    <span>{segment.label}</span>
-                    <span className="font-semibold text-[color:var(--dashboard-ink)]">{segment.value}</span>
-                  </div>
-                  <div className="h-2.5 overflow-hidden rounded-full bg-white">
-                    <div
-                      className="h-full bg-[#C36A29]"
-                      style={{ width: `${Math.max(8, segment.percent)}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
+            <div className="mt-6">
+              <SignalOrbit segments={exitDistribution.segments} total={exitDistribution.total} />
             </div>
           ) : (
             <div className="mt-5 grid gap-4 md:grid-cols-2">
@@ -1005,16 +1137,16 @@ export default async function CampaignPage({ params }: Props) {
       summary={blockVisibility.synthesis === 'visible' ? synthesisItems[0]?.title ?? 'Nog niet beschikbaar' : 'Nog niet beschikbaar'}
       body={
         blockVisibility.synthesis === 'visible'
-          ? 'Deze laag bundelt de eerste zichtbare samenhang op groepsniveau, zonder interpretatie of vervolgstapadvies.'
+          ? 'Deze laag maakt het patroon leesbaar door signalen als één compositie te tonen in plaats van als losse bullets.'
           : `Deze laag opent samen met het kernsignaal vanaf ${MIN_N_DISPLAY} responses.`
       }
-      className="rounded-[20px]"
+      className="rounded-[28px]"
     >
       {blockVisibility.synthesis === 'visible' && synthesisItems.length > 0 ? (
         <div className="grid gap-4 xl:grid-cols-3">
           {synthesisItems.map((item, index) => (
             <div key={`${item.label}-${item.title}`} className={index === 0 ? 'xl:col-span-2' : undefined}>
-              <SummaryCard item={item} />
+              <SummaryCard item={item} index={index} />
             </div>
           ))}
         </div>
@@ -1033,18 +1165,24 @@ export default async function CampaignPage({ params }: Props) {
           ? factorPriorityRows
               .slice(0, 3)
               .map((row) => row.factor)
-              .join(' · ')
+              .join(' / ')
           : 'Nog niet beschikbaar'
       }
       body={
         blockVisibility.drivers === 'visible'
-          ? 'Factoren zijn geordend op huidige signaalsterkte binnen deze route en blijven feitelijk geformuleerd.'
+          ? 'De driverlaag laat eerst de prioriteiten zien en pas daarna de volledige rangorde. Zo blijft de lezing snel en visueel scherp.'
           : `Deze laag blijft begrensd tot er minimaal ${MIN_N_PATTERNS} leesbare responses zijn.`
       }
-      className="rounded-[20px]"
+      className="rounded-[28px]"
     >
       {blockVisibility.drivers === 'visible' && factorPriorityRows.length > 0 ? (
         <>
+          <div className="grid gap-4 lg:grid-cols-3">
+            {factorPriorityRows.slice(0, 3).map((row, index) => (
+              <PrioritySpotlight key={row.factor} row={row} rank={index + 1} />
+            ))}
+          </div>
+
           <div className="hidden overflow-hidden border border-slate-200 md:block">
             <div className="grid grid-cols-[minmax(0,1.8fr),140px,140px,160px] border-b border-slate-200 bg-[color:var(--dashboard-soft)]/45 px-5 py-3 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-slate-500">
               <span>Factor</span>
@@ -1066,7 +1204,7 @@ export default async function CampaignPage({ params }: Props) {
                   <p className="text-sm font-semibold text-[color:var(--dashboard-ink)]">{row.signal}</p>
                   <div className="mt-3 h-2 overflow-hidden rounded-full bg-[color:var(--dashboard-soft)]">
                     <div
-                      className="h-full bg-[#C36A29]"
+                      className="h-full rounded-full bg-[linear-gradient(90deg,#C36A29,#D9985D)]"
                       style={{ width: `${Math.max(10, Math.min(100, row.signalValue * 10))}%` }}
                     />
                   </div>
@@ -1082,7 +1220,7 @@ export default async function CampaignPage({ params }: Props) {
 
           <div className="grid gap-4 md:hidden">
             {factorPriorityRows.slice(0, 6).map((row) => (
-              <div key={row.factor} className="border border-slate-200 bg-[color:var(--dashboard-soft)]/38 px-5 py-4">
+              <div key={row.factor} className="rounded-[24px] border border-slate-200 bg-[color:var(--dashboard-soft)]/38 px-5 py-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold text-[color:var(--dashboard-ink)]">{row.factor}</p>
@@ -1108,7 +1246,7 @@ export default async function CampaignPage({ params }: Props) {
                 </div>
                 <div className="mt-3 h-2 overflow-hidden rounded-full bg-white">
                   <div
-                    className="h-full bg-[#C36A29]"
+                    className="h-full rounded-full bg-[linear-gradient(90deg,#C36A29,#D9985D)]"
                     style={{ width: `${Math.max(10, Math.min(100, row.signalValue * 10))}%` }}
                   />
                 </div>
@@ -1135,15 +1273,15 @@ export default async function CampaignPage({ params }: Props) {
       }
       body={
         blockVisibility.depth === 'visible'
-          ? 'Verdiepingslagen tonen extra context en meetgrenzen binnen dezelfde route, zonder aparte methodiekpagina.'
+          ? 'De verdiepingslaag geeft extra context met een rustiger ritme, zodat verdieping anders voelt dan het hero-signaal erboven.'
           : `Deze laag opent vanaf ${MIN_N_DISPLAY} leesbare responses.`
       }
-      className="rounded-[20px]"
+      className="rounded-[28px]"
     >
       <div className="space-y-5">
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           {depthNotes.map((note) => (
-            <div key={note.label} className="border border-slate-200 bg-white px-4 py-4">
+            <div key={note.label} className="rounded-[22px] border border-slate-200 bg-white px-4 py-4 shadow-[0_10px_22px_rgba(15,23,42,0.04)]">
               <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-slate-500">
                 {note.label}
               </p>
@@ -1155,19 +1293,29 @@ export default async function CampaignPage({ params }: Props) {
         <div className="grid gap-4 xl:grid-cols-[minmax(0,0.95fr),minmax(0,1.05fr)]">
           <div className="space-y-4">
             {blockVisibility.depth === 'visible' && sdtRows.length > 0 ? (
-              <div className="grid gap-3">
+              <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-1">
                 {sdtRows.map((row) => (
-                  <div key={row.factor} className="border border-slate-200 bg-[color:var(--dashboard-soft)]/38 px-5 py-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-sm font-semibold text-[color:var(--dashboard-ink)]">{row.factor}</p>
-                      <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600">
-                        {row.score}
-                      </span>
-                    </div>
-                    <p className="mt-2 text-sm leading-6 text-[color:var(--dashboard-text)]">{row.note}</p>
-                    <div className="mt-3 h-2 overflow-hidden rounded-full bg-white">
+                  <div key={row.factor} className="rounded-[24px] border border-slate-200 bg-[linear-gradient(145deg,rgba(255,255,255,0.98),rgba(246,239,229,0.84))] px-5 py-5 shadow-[0_12px_28px_rgba(15,23,42,0.04)]">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-semibold text-[color:var(--dashboard-ink)]">{row.factor}</p>
+                        <p className="mt-2 text-sm leading-6 text-[color:var(--dashboard-text)]">{row.note}</p>
+                      </div>
                       <div
-                        className="h-full bg-[#C36A29]"
+                        className="relative size-[4.4rem] shrink-0 rounded-full"
+                        style={{
+                          background: `conic-gradient(#C36A29 0 ${Math.max(10, Math.min(100, row.scoreValue * 10))}%, rgba(195,106,41,0.14) ${Math.max(10, Math.min(100, row.scoreValue * 10))}% 100%)`,
+                        }}
+                      >
+                        <div className="absolute inset-[7px] rounded-full bg-white/95" />
+                        <div className="absolute inset-0 flex items-center justify-center text-xs font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">
+                          {row.score}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-4 h-2 overflow-hidden rounded-full bg-white">
+                      <div
+                        className="h-full rounded-full bg-[linear-gradient(90deg,#C36A29,#D9985D)]"
                         style={{ width: `${Math.max(10, Math.min(100, row.scoreValue * 10))}%` }}
                       />
                     </div>
@@ -1181,7 +1329,7 @@ export default async function CampaignPage({ params }: Props) {
 
           <div className="space-y-4">
             {blockVisibility.depth === 'visible' && factorPriorityRows.length > 0 ? (
-              <div className="border border-slate-200 bg-white px-5 py-5">
+              <div className="rounded-[26px] border border-slate-200 bg-white px-5 py-5 shadow-[0_12px_28px_rgba(15,23,42,0.04)]">
                 <div className="border-b border-slate-200 pb-3">
                   <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-slate-500">
                     Organisatiefactoren
@@ -1199,7 +1347,7 @@ export default async function CampaignPage({ params }: Props) {
                       </div>
                       <div className="h-2 overflow-hidden rounded-full bg-[color:var(--dashboard-soft)]">
                         <div
-                          className="h-full bg-[#C36A29]"
+                          className="h-full rounded-full bg-[linear-gradient(90deg,#C36A29,#D9985D)]"
                           style={{ width: `${Math.max(10, Math.min(100, row.signalValue * 10))}%` }}
                         />
                       </div>
@@ -1231,14 +1379,14 @@ export default async function CampaignPage({ params }: Props) {
       }
       body={
         blockVisibility.voices === 'visible'
-          ? 'Open antwoorden blijven geanonimiseerd en zijn gegroepeerd per zichtbaar thema.'
+          ? 'Survey-stemmen sluiten de kwantitatieve lagen af met geclusterde, geanonimiseerde taal uit dezelfde route.'
           : hasMinDisplay
             ? 'Er zijn nog geen vrijgegeven open antwoorden binnen deze route.'
             : `Open antwoorden openen pas vanaf ${MIN_N_DISPLAY} leesbare responses.`
       }
       href={showOpenAnswersRoute ? openAnswersHref : undefined}
       linkLabel={showOpenAnswersRoute ? 'Bekijk alle open antwoorden' : undefined}
-      className="rounded-[20px]"
+      className="rounded-[28px]"
     >
       {blockVisibility.voices === 'visible' && openAnswersViewModel.groups.length > 0 ? (
         <div className="space-y-4">
@@ -1246,7 +1394,7 @@ export default async function CampaignPage({ params }: Props) {
             {openAnswersViewModel.themes.slice(0, 3).map((theme) => (
               <span
                 key={theme.title}
-                className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600"
+                className="rounded-full border border-slate-200 bg-[linear-gradient(145deg,rgba(255,255,255,0.98),rgba(246,239,229,0.84))] px-3 py-1 text-xs font-semibold text-slate-600 shadow-[0_8px_18px_rgba(15,23,42,0.04)]"
               >
                 {theme.title} · {theme.count}
               </span>
@@ -1259,12 +1407,15 @@ export default async function CampaignPage({ params }: Props) {
               .map(({ group, answer }) => (
                 <div
                   key={answer.id}
-                  className="border border-slate-200 bg-[color:var(--dashboard-soft)]/35 px-5 py-5"
+                  className="relative overflow-hidden rounded-[26px] border border-slate-200 bg-[linear-gradient(145deg,rgba(255,255,255,0.98),rgba(246,239,229,0.82))] px-5 py-5 shadow-[0_16px_34px_rgba(15,23,42,0.05)]"
                 >
+                  <div className="absolute -left-2 top-2 text-[4.5rem] leading-none tracking-[-0.08em] text-[#C36A29]/10">
+                    ”
+                  </div>
                   <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
                     {group.title}
                   </p>
-                  <p className="mt-3 text-sm leading-6 text-[color:var(--dashboard-text)]">
+                  <p className="relative mt-4 text-sm leading-6 text-[color:var(--dashboard-text)]">
                     {truncateText(answer.text, 180)}
                   </p>
                 </div>
