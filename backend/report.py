@@ -5394,6 +5394,7 @@ def _generate_culture_assessment_report(
     scan_meta = get_scan_definition(camp.scan_type)
     domain_averages = _build_culture_domain_averages(responses)
     board_attention_points = _build_culture_board_attention_points(domain_averages)
+    has_governed_drilldown = _campaign_has_add_on(camp, SEGMENT_DEEP_DIVE_KEY)
     safe_segment_rows = _build_culture_safe_segment_summary(
         responses,
         minimum_n=int(methodology_payload["segment_comparison_min_n"]),
@@ -5503,8 +5504,8 @@ def _generate_culture_assessment_report(
             f"{row['segment_type']} {row['label']}: n={row['n']}, Culture Index {row['culture_index']:.1f}/10"
             for row in safe_segment_rows[:4]
         ]
-        if safe_segment_rows
-        else ["Geen veilige segmentcontrasten beschikbaar boven de huidige minimum-n grenzen."]
+        if has_governed_drilldown and safe_segment_rows
+        else ["Segmentcontrasten zijn niet vrijgegeven binnen deze baseline of blijven onder governancegrenzen verborgen."]
     )
     _append_culture_report_section(
         story,
@@ -5523,7 +5524,7 @@ def _generate_culture_assessment_report(
         "Benchmarking blijft in v1 bewust niet actief.",
         "Er wordt geen individuele respondentdata geëxporteerd.",
     ]
-    if _campaign_has_add_on(camp, SEGMENT_DEEP_DIVE_KEY) and safe_segment_rows:
+    if has_governed_drilldown and safe_segment_rows:
         follow_on_bullets.append("Governed drilldown is beschikbaar als HR-verdiepingslaag binnen veilige segmentgrenzen.")
 
     _append_culture_report_section(
@@ -5545,7 +5546,7 @@ def _generate_culture_assessment_report(
         )
     )
 
-    if _campaign_has_add_on(camp, SEGMENT_DEEP_DIVE_KEY) and safe_segment_rows:
+    if has_governed_drilldown and safe_segment_rows:
         story.append(PageBreak())
         _append_culture_report_section(
             story,

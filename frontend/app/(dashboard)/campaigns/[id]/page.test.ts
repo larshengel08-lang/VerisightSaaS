@@ -142,4 +142,17 @@ describe('campaign detail management-read guardrails', () => {
     expect(source).toContain('HR kan veilige segmentlagen, hidden reasons en exportstatus lezen')
     expect(source).toContain('Geen vrije slicing, quote browsing of lokale blame-laag')
   })
+
+  it('keeps culture deepening layers tied to real culture domains instead of fabricated SDT fallback scores', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+    const cultureReturn = source.match(
+      /if \(showManagementOutput && stats\.scan_type === "culture_assessment"\)[\s\S]*?if \(\s*showManagementOutput &&\s*\(stats\.scan_type === "exit" \|\| stats\.scan_type === "retention"\)/,
+    )?.[0] ?? ''
+
+    expect(cultureReturn).toContain('autonomy_role_clarity')
+    expect(cultureReturn).toContain('growth_development')
+    expect(cultureReturn).toContain('organizational_connection_intent')
+    expect(cultureReturn).not.toContain('factorData.sdtAverages[dimension] ?? 5.5')
+    expect(cultureReturn).not.toContain('["autonomy", "competence", "relatedness"]')
+  })
 })

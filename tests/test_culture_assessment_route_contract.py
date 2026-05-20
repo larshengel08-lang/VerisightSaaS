@@ -281,8 +281,7 @@ def test_culture_assessment_segment_summary_export_requires_governed_add_on(clie
     campaign = _create_campaign(db_session, org, is_active=False)
 
     response = client.get(
-        f"/api/campaigns/{campaign.id}/report?format=segment_summary",
-        headers={"x-api-key": "culture-segment-export-key"},
+        f"/api/internal/campaigns/{campaign.id}/report?format=segment_summary",
     )
 
     assert response.status_code == 422
@@ -291,7 +290,30 @@ def test_culture_assessment_segment_summary_export_requires_governed_add_on(clie
     )
 
 
-def test_culture_assessment_segment_summary_export_allows_governed_closed_baseline_route(
+def test_culture_assessment_segment_summary_export_public_route_stays_internal_only(
+    client,
+    db_session: Session,
+):
+    org = _create_org(db_session, api_key="culture-segment-public-key")
+    campaign = _create_campaign(
+        db_session,
+        org,
+        is_active=False,
+        enabled_modules=["segment_deep_dive"],
+    )
+
+    response = client.get(
+        f"/api/campaigns/{campaign.id}/report?format=segment_summary",
+        headers={"x-api-key": "culture-segment-public-key"},
+    )
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == (
+        "Segment summary export is alleen beschikbaar via de interne governance-proxy."
+    )
+
+
+def test_culture_assessment_segment_summary_export_allows_governed_closed_baseline_internal_route(
     client,
     db_session: Session,
     monkeypatch: pytest.MonkeyPatch,
@@ -311,8 +333,7 @@ def test_culture_assessment_segment_summary_export_allows_governed_closed_baseli
     )
 
     response = client.get(
-        f"/api/campaigns/{campaign.id}/report?format=segment_summary",
-        headers={"x-api-key": "culture-segment-export-live-key"},
+        f"/api/internal/campaigns/{campaign.id}/report?format=segment_summary",
     )
 
     assert response.status_code == 200

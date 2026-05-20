@@ -2412,6 +2412,50 @@ export default async function CampaignPage({ params }: Props) {
         tone: "amber" as const,
       },
     ]
+    const cultureDeepeningPanels =
+      (
+        [
+          {
+            key: "autonomy_role_clarity",
+            eyebrow: "Verdiepende domeinlaag",
+            body:
+              "Gebruik deze laag om te toetsen of ruimte, rolhelderheid en uitvoerbaarheid het boardbeeld mee dragen zonder naar named manager detail te springen.",
+          },
+          {
+            key: "growth_development",
+            eyebrow: "Verdiepende domeinlaag",
+            body:
+              "Gebruik deze laag om te toetsen of perspectief, feedback en ontwikkeling de bredere cultuurread versterken of juist afremmen.",
+          },
+          {
+            key: "organizational_connection_intent",
+            eyebrow: "Verdiepende domeinlaag",
+            body:
+              "Gebruik deze laag om te lezen hoe verbondenheid, trots en intentie het executive beeld kleuren, zonder er een vertrekvoorspeller van te maken.",
+          },
+        ] as const
+      )
+        .map((panel) => {
+          const score = factorData.orgAverages[panel.key]
+          if (typeof score !== "number") return null
+
+          return {
+            eyebrow: panel.eyebrow,
+            title: FACTOR_LABELS[panel.key] ?? panel.key,
+            body: `Domeinscore ${score.toFixed(1)}/10. ${panel.body}`,
+            tone: (score < 5.5 ? "amber" : "slate") as const,
+          }
+        })
+        .filter(
+          (
+            panel,
+          ): panel is {
+            eyebrow: string
+            title: string
+            body: string
+            tone: "slate" | "amber"
+          } => Boolean(panel),
+        )
     const cultureAttentionPanels = [
       {
         eyebrow: "Bestuurlijke eerste vraag",
@@ -2686,13 +2730,24 @@ export default async function CampaignPage({ params }: Props) {
           variant="quiet"
         >
           <div className="grid gap-4 sm:grid-cols-3">
-            {(["autonomy", "competence", "relatedness"] as const).map((dimension) => (
-              <SdtGauge
-                key={dimension}
-                label={FACTOR_LABELS[dimension]}
-                score={factorData.sdtAverages[dimension] ?? 5.5}
+            {cultureDeepeningPanels.length > 0 ? (
+              cultureDeepeningPanels.map((panel) => (
+                <DashboardPanel
+                  key={panel.title}
+                  eyebrow={panel.eyebrow}
+                  title={panel.title}
+                  body={panel.body}
+                  tone={panel.tone}
+                />
+              ))
+            ) : (
+              <DashboardPanel
+                eyebrow="Governed verdieping"
+                title="Verdiepingslagen openen pas met echte domeindata"
+                body="Deze baseline toont hier alleen echte cultuurdomeinen. Als er geen veilige domeinlaag beschikbaar is, blijft verdieping compact en zonder vervangende gauges of placeholder-scores."
+                tone="amber"
               />
-            ))}
+            )}
           </div>
         </DashboardSection>
 

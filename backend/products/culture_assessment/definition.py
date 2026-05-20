@@ -150,7 +150,7 @@ SCAN_DEFINITION: dict[str, Any] = {
         "Pulse follow-on after baseline",
     ],
     "output_readiness": {
-        "board_report_pdf": "demo_asset_ready",
+        "board_report_pdf": "pilot_delivery_ready",
         "boardroom_deck": "pilot_delivery_ready",
         "executive_one_pager": "blueprint_ready",
         "hr_appendix_pdf": "blueprint_ready",

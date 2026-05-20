@@ -1,3 +1,6 @@
+import { existsSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import {
   SAMPLE_SHOWCASE_ASSETS,
@@ -79,5 +82,14 @@ describe('sample showcase asset registry', () => {
     expect(boardDeck?.deliveryReadiness).toBe('pilot_delivery_ready')
     expect(executiveOnePager?.deliveryReadiness).toBe('blueprint_ready')
     expect(hrAppendix?.accessMode).toBe('internal_demo_only')
+  })
+
+  it('keeps every docsPath-backed showcase asset resolvable in the repo', () => {
+    const repoRoot = fileURLToPath(new URL('../..', import.meta.url))
+
+    for (const asset of SAMPLE_SHOWCASE_ASSETS) {
+      if (!asset.docsPath) continue
+      expect(existsSync(resolve(repoRoot, asset.docsPath)), `${asset.id} -> ${asset.docsPath}`).toBe(true)
+    }
   })
 })

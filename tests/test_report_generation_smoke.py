@@ -204,6 +204,62 @@ def test_generate_exit_report_smoke(db_session: Session):
 
 
 def test_generate_culture_assessment_report_smoke(db_session: Session):
+    org = Organization(name="Cultuurgroep Zonder Drilldown", slug="cultuurgroep-zonder-drilldown", contact_email="board@cultuurgroep.nl")
+    db_session.add(org)
+    db_session.flush()
+
+    campaign = _build_campaign(
+        db_session,
+        organization=org,
+        name="Loep Cultuurbeeld 2026",
+        scan_type="culture_assessment",
+        created_at=datetime.now(timezone.utc),
+    )
+    campaign.is_active = False
+
+    for idx in range(30):
+        respondent = Respondent(
+            campaign=campaign,
+            department="Operatie" if idx < 15 else "Support",
+            role_level="manager" if idx % 3 == 0 else "specialist",
+            completed=True,
+            completed_at=datetime.now(timezone.utc),
+            email=f"cultuur-zonder-drilldown-{idx}@voorbeeld.nl",
+        )
+        domain_scores = _culture_domain_scores(6.4 + (idx % 3) * 0.1)
+        response = SurveyResponse(
+            respondent=respondent,
+            sdt_raw={},
+            sdt_scores={"culture_index": round(sum(domain_scores.values()) / len(domain_scores), 2)},
+            org_raw={},
+            org_scores=domain_scores,
+            pull_factors_raw={},
+            open_text_raw="Meer duidelijkheid, vertrouwen en betere samenwerking helpt." if idx < 8 else None,
+            uwes_raw={},
+            turnover_intention_raw={},
+            risk_score=round(sum(domain_scores.values()) / len(domain_scores), 2),
+            risk_band="MIDDEN",
+            full_result={
+                "culture_index": round(sum(domain_scores.values()) / len(domain_scores), 2),
+                "domain_scores": domain_scores,
+            },
+        )
+        db_session.add_all([respondent, response])
+
+    db_session.commit()
+
+    pdf_bytes = generate_campaign_report(campaign.id, db_session)
+
+    assert pdf_bytes.startswith(b"%PDF")
+    assert len(pdf_bytes) > 5000
+    text = _extract_pdf_text(pdf_bytes)
+    assert "Loep Culture Assessment - Board Baseline" in text
+    assert "Segmentcontrasten zijn niet vrijgegeven binnen deze baseline of blijven onder governancegrenzen verborgen." in text
+    assert "Governed drilldown voor HR" not in text
+    assert "Afdeling Operatie: n=15, Culture Index" not in text
+
+
+def test_generate_culture_assessment_report_smoke_with_governed_drilldown(db_session: Session):
     org = Organization(name="Cultuurgroep", slug="cultuurgroep", contact_email="board@cultuurgroep.nl")
     db_session.add(org)
     db_session.flush()
@@ -261,6 +317,7 @@ def test_generate_culture_assessment_report_smoke(db_session: Session):
     assert "Benchmarking blijft in v1 bewust niet actief." in text
     assert "geen manager ranking tool" in text
     assert "Governed drilldown voor HR" in text
+    assert "Afdeling Operatie: n=15, Culture Index" in text
 
 
 def test_generate_culture_assessment_segment_summary_export_smoke(db_session: Session):

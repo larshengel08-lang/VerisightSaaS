@@ -1,4 +1,4 @@
-backend/main.py
+﻿backend/main.py
 backend/report.py
 backend/scan_definitions.py
 backend/schemas.py
@@ -62,3 +62,10 @@ tests/test_api_flows.py
 tests/test_culture_assessment_questionnaire_lock.py
 tests/test_culture_assessment_report_contract.py
 tests/test_culture_assessment_route_contract.py
+frontend/lib/products/culture_assessment/action-playbooks.ts
+frontend/lib/products/culture_assessment/focus-questions.ts
+docs/reference/CULTURE_ASSESSMENT_HR_DEEPENING_HANDOUT.md
+docs/reference/CULTURE_ASSESSMENT_MANAGER_CASCADE_HANDOUT.md
+docs/reference/CULTURE_ASSESSMENT_BOARD_READ_AGENDA.md
+docs/reference/CULTURE_ASSESSMENT_SAMPLE_INVITE_MAIL.md
+docs/reference/CULTURE_ASSESSMENT_DEMO_ENVIRONMENT.md

@@ -9,6 +9,7 @@ def test_culture_assessment_module_exposes_definition_and_report_payloads():
     assert "pilot-ready" in module.get_definition()["launch_status"]
     assert "segment summary export" in module.get_definition()["optional_outputs"]
     assert "boardroom pdf deck" in module.get_definition()["standard_outputs"]
+    assert module.get_definition()["output_readiness"]["board_report_pdf"] == "pilot_delivery_ready"
     assert module.get_definition()["output_readiness"]["boardroom_deck"] == "pilot_delivery_ready"
     assert "compacte executive read" in module.get_definition()["output_sequence_note"]
     assert module.get_definition()["follow_on_outcomes"] == [

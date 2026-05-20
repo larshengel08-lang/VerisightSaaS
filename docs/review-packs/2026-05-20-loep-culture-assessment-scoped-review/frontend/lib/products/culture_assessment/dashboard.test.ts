@@ -27,7 +27,7 @@ describe('culture assessment product module', () => {
     ])
     expect(cultureAssessmentProductModule.definition.optionalOutputs).toContain('segment summary export')
     expect(cultureAssessmentProductModule.definition.outputReadiness?.boardroomDeck).toBe('pilot_delivery_ready')
-    expect(cultureAssessmentProductModule.definition.outputReadiness?.boardReportPdf).toBe('demo_asset_ready')
+    expect(cultureAssessmentProductModule.definition.outputReadiness?.boardReportPdf).toBe('pilot_delivery_ready')
     expect(cultureAssessmentProductModule.definition.outputSequenceNote?.toLowerCase()).toContain('compacte executive read')
     expect(cultureAssessmentProductModule.definition.followOnOutcomes).toEqual([
       'no immediate next route',

@@ -1718,6 +1718,12 @@ async def download_report(
     db: Session = Depends(get_db),
 ) -> Response:
     """Genereer en download een PDF-rapport voor de campaign."""
+    if format == "segment_summary":
+        raise HTTPException(
+            status_code=403,
+            detail="Segment summary export is alleen beschikbaar via de interne governance-proxy.",
+        )
+
     org = _get_org_by_api_key(x_api_key, db)
     campaign = db.query(Campaign).filter(
         Campaign.id == campaign_id,

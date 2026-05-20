@@ -72,7 +72,7 @@ def test_culture_assessment_definition_and_methodology_expose_wp0_lock():
     assert methodology["questionnaire_lock"]["min_valid_response_rules"]["minimum_closed_items_answered"] == 32
     assert management["board_attention_logic"]["output_limit"] == 5
     assert "vaste 40-item enterprise-vragenlijst" in SCAN_DEFINITION["survey_intro"]
-    assert SCAN_DEFINITION["output_readiness"]["board_report_pdf"] == "demo_asset_ready"
+    assert SCAN_DEFINITION["output_readiness"]["board_report_pdf"] == "pilot_delivery_ready"
     assert SCAN_DEFINITION["output_readiness"]["boardroom_deck"] == "pilot_delivery_ready"
     assert SCAN_DEFINITION["governed_export_entitlements"]["admin"]["export_approval"] == "admin_state_only"
     assert SCAN_DEFINITION["text_safety_states"][0] == "not_collected"

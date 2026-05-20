@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('server-only', () => ({}))
@@ -87,5 +88,13 @@ describe('campaign report route', () => {
         membershipRole: null,
       }),
     ).toBe(true)
+  })
+
+  it('routes governed culture segment export through the internal backend path instead of the public org-key report path', () => {
+    const source = readFileSync(new URL('./route.ts', import.meta.url), 'utf8')
+
+    expect(source).toContain("if (format === 'segment_summary')")
+    expect(source).toContain('backendInternalUrl')
+    expect(source).toContain('fetch(backendInternalUrl')
   })
 })

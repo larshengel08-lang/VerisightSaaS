@@ -56,7 +56,7 @@ export const cultureAssessmentDefinition: ScanDefinition = {
     'Pulse follow-on after baseline',
   ],
   outputReadiness: {
-    boardReportPdf: 'demo_asset_ready',
+    boardReportPdf: 'pilot_delivery_ready',
     boardroomDeck: 'pilot_delivery_ready',
     executiveOnePager: 'blueprint_ready',
     hrAppendixPdf: 'blueprint_ready',
