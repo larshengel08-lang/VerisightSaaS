@@ -273,7 +273,17 @@ describe('action-center constitution', () => {
     ).toBe(false)
   })
 
-  it('does not allow blocked actions to jump to completed without review', () => {
+  it('allows in_review to active for no-progress review outcomes', () => {
+    expect(
+      isActionCenterActionStateTransitionAllowed({
+        actor: 'manager_participant',
+        fromState: 'in_review',
+        toState: 'active',
+      }),
+    ).toBe(true)
+  })
+
+  it('does not allow blocked to completed without review', () => {
     expect(
       isActionCenterActionStateTransitionAllowed({
         actor: 'manager_participant',
