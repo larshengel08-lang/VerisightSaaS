@@ -33,14 +33,43 @@ export interface ActionCenterRouteDefaults {
     max: number
   }
   staleAfterDays?: number
+  stuckActiveWarningDays?: number
+  reviewDueGraceDays?: number
+  sprawlRiskCount?: number
+  repeatedReviewWarningCount?: number
   remindersEnabled: boolean
   providerEligible: boolean
+}
+
+export interface ActionCenterExecutionThresholds {
+  stuckActiveWarningDays: number
+  reviewDueGraceDays: number
+  sprawlRiskCount: number
+  repeatedReviewWarningCount: number
 }
 
 const BASELINE_ROUTE_DEFAULTS = {
   cadenceDays: 14 as const,
   reminderLeadDays: 3 as const,
   escalationLeadDays: 7 as const,
+}
+
+const ACTION_CENTER_EXECUTION_THRESHOLDS: Record<
+  ActionCenterApprovedRouteFamily,
+  ActionCenterExecutionThresholds
+> = {
+  exit: {
+    stuckActiveWarningDays: 30,
+    reviewDueGraceDays: 7,
+    sprawlRiskCount: 3,
+    repeatedReviewWarningCount: 2,
+  },
+  retention: {
+    stuckActiveWarningDays: 21,
+    reviewDueGraceDays: 7,
+    sprawlRiskCount: 3,
+    repeatedReviewWarningCount: 2,
+  },
 }
 
 function buildEnabledRouteDefaults(
@@ -55,6 +84,7 @@ function buildEnabledRouteDefaults(
     escalationLeadDays: approvedRouteDefault.escalationLeadDays,
     reviewWindowDays: approvedRouteDefault.reviewWindowDays,
     staleAfterDays: approvedRouteDefault.staleAfterDays,
+    ...ACTION_CENTER_EXECUTION_THRESHOLDS[approvedRouteDefault.scanType],
     remindersEnabled: true,
     providerEligible: true,
   }

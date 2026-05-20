@@ -89,14 +89,14 @@ test.describe('action center route action cards', () => {
 
     await page.getByRole('button', { name: 'Actie toevoegen', exact: true }).click()
     await routeActionEditor(page).getByLabel('Thema').selectOption('leadership')
-    await routeActionEditor(page).getByLabel('Wanneer reviewen we dit?').fill('2026-05-15')
-    await routeActionEditor(page).getByLabel('Wat ga je doen?').fill(firstAction)
-    await routeActionEditor(page).getByLabel('Wat moet dit zichtbaar maken?').fill(
+    await routeActionEditor(page).getByLabel('Reviewdatum').fill('2026-05-15')
+    await routeActionEditor(page).getByLabel('Kernactie').fill(firstAction)
+    await routeActionEditor(page).getByLabel('Waaraan zien we dit terug?').fill(
       `Binnen twee weken moet zichtbaar zijn of leiderschapsfrictie kleiner wordt in dit team ${suffix}.`,
     )
-    await expect(routeActionEditor(page).getByLabel('Wanneer reviewen we dit?')).toHaveValue('2026-05-15')
-    await expect(routeActionEditor(page).getByLabel('Wat ga je doen?')).toHaveValue(firstAction)
-    await expect(routeActionEditor(page).getByLabel('Wat moet dit zichtbaar maken?')).toHaveValue(
+    await expect(routeActionEditor(page).getByLabel('Reviewdatum')).toHaveValue('2026-05-15')
+    await expect(routeActionEditor(page).getByLabel('Kernactie')).toHaveValue(firstAction)
+    await expect(routeActionEditor(page).getByLabel('Waaraan zien we dit terug?')).toHaveValue(
       `Binnen twee weken moet zichtbaar zijn of leiderschapsfrictie kleiner wordt in dit team ${suffix}.`,
     )
     await submitRouteAction(page)
@@ -106,14 +106,14 @@ test.describe('action center route action cards', () => {
 
     await page.getByRole('button', { name: 'Actie toevoegen', exact: true }).click()
     await routeActionEditor(page).getByLabel('Thema').selectOption('growth')
-    await routeActionEditor(page).getByLabel('Wanneer reviewen we dit?').fill('2026-05-20')
-    await routeActionEditor(page).getByLabel('Wat ga je doen?').fill(secondAction)
-    await routeActionEditor(page).getByLabel('Wat moet dit zichtbaar maken?').fill(
+    await routeActionEditor(page).getByLabel('Reviewdatum').fill('2026-05-20')
+    await routeActionEditor(page).getByLabel('Kernactie').fill(secondAction)
+    await routeActionEditor(page).getByLabel('Waaraan zien we dit terug?').fill(
       `Binnen twee weken moet zichtbaar zijn of groeiperspectief duidelijker terugkomt in dit team ${suffix}.`,
     )
-    await expect(routeActionEditor(page).getByLabel('Wanneer reviewen we dit?')).toHaveValue('2026-05-20')
-    await expect(routeActionEditor(page).getByLabel('Wat ga je doen?')).toHaveValue(secondAction)
-    await expect(routeActionEditor(page).getByLabel('Wat moet dit zichtbaar maken?')).toHaveValue(
+    await expect(routeActionEditor(page).getByLabel('Reviewdatum')).toHaveValue('2026-05-20')
+    await expect(routeActionEditor(page).getByLabel('Kernactie')).toHaveValue(secondAction)
+    await expect(routeActionEditor(page).getByLabel('Waaraan zien we dit terug?')).toHaveValue(
       `Binnen twee weken moet zichtbaar zijn of groeiperspectief duidelijker terugkomt in dit team ${suffix}.`,
     )
     await submitRouteAction(page)
@@ -123,8 +123,10 @@ test.describe('action center route action cards', () => {
 
     await page.getByRole('button', { name: 'Review toevoegen', exact: true }).first().click()
     await page.getByLabel('Wat zagen we terug?').fill(reviewObservation)
-    await page.getByLabel('Wat betekent dit?').selectOption('effect-zichtbaar')
-    await page.getByLabel('Follow-upnotitie').fill('Nog een week monitoren en dan afronden.')
+    await page.getByLabel('Uitkomst').selectOption('effect-zichtbaar')
+    await page.getByLabel('Bron van observatie').selectOption('manager-observation')
+    await page.getByLabel('Hoe zeker zijn we hiervan?').selectOption('medium')
+    await page.getByLabel('Korte toelichting').fill('Nog een week monitoren en dan afronden.')
     await page.getByRole('button', { name: 'Review opslaan', exact: true }).click()
 
     const reviewedActionCard = page
