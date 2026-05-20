@@ -1536,6 +1536,8 @@ export function ActionCenterPreview({
           reviewed_at: new Date().toISOString(),
           observation: value.observation,
           action_outcome: value.actionOutcome,
+          evidence_source: value.evidenceSource,
+          confidence_level: value.confidenceLevel,
           follow_up_note: value.followUpNote.trim() || null,
         }),
       })
@@ -3050,7 +3052,6 @@ export function ActionCenterPreview({
                                           onSave={(value) => void handleActionReviewSave(action.actionId, value)}
                                           pending={actionReviewPendingActionId === action.actionId}
                                           error={actionReviewError}
-                                          includeStructuredMetadata={false}
                                         />
                                       ) : (
                                         <button

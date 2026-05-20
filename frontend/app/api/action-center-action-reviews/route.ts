@@ -7,6 +7,8 @@ import {
   type ActionCenterActionSemanticState,
 } from '@/lib/action-center-constitution'
 import {
+  type ActionCenterActionConfidenceLevel,
+  type ActionCenterActionEvidenceSource,
   resolveActionCenterActionReviewTransition,
   validateActionCenterActionReviewInput,
   type ActionCenterActionOutcome,
@@ -20,6 +22,8 @@ type ActionReviewRequestBody = {
   reviewed_at?: string
   observation?: string
   action_outcome?: string
+  evidence_source?: string | null
+  confidence_level?: string | null
   follow_up_note?: string | null
 }
 
@@ -33,6 +37,8 @@ function parseActionReviewRequestInput(input: ActionReviewRequestBody | null) {
   const reviewedAt = normalizeText(input?.reviewed_at)
   const observation = normalizeText(input?.observation)
   const actionOutcome = normalizeText(input?.action_outcome) as ActionCenterActionOutcome | null
+  const evidenceSource = normalizeText(input?.evidence_source) as ActionCenterActionEvidenceSource | null
+  const confidenceLevel = normalizeText(input?.confidence_level) as ActionCenterActionConfidenceLevel | null
   const followUpNote = normalizeText(input?.follow_up_note)
 
   if (!actionId || !reviewedAt || !observation || !actionOutcome) {
@@ -44,6 +50,8 @@ function parseActionReviewRequestInput(input: ActionReviewRequestBody | null) {
     reviewed_at: reviewedAt,
     observation,
     action_outcome: actionOutcome,
+    evidence_source: evidenceSource,
+    confidence_level: confidenceLevel,
     follow_up_note: followUpNote,
   }
 }
@@ -207,6 +215,8 @@ export async function POST(request: Request) {
       reviewed_at: parsed.reviewed_at,
       observation: parsed.observation,
       action_outcome: parsed.action_outcome,
+      evidence_source: parsed.evidence_source,
+      confidence_level: parsed.confidence_level,
       follow_up_note: parsed.follow_up_note,
       created_by: user.id,
       updated_by: user.id,

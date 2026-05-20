@@ -6,12 +6,21 @@ export type ActionCenterActionOutcome =
   | 'nog-te-vroeg'
   | 'stoppen'
 
+export type ActionCenterActionEvidenceSource =
+  | 'manager-observation'
+  | 'team-conversation'
+  | 'other-bounded-source'
+
+export type ActionCenterActionConfidenceLevel = 'low' | 'medium' | 'high'
+
 export interface ActionCenterActionReviewWriteInput {
   action_review_id: string
   action_id: string
   reviewed_at: string
   observation: string
   action_outcome: ActionCenterActionOutcome
+  evidence_source: ActionCenterActionEvidenceSource | null
+  confidence_level: ActionCenterActionConfidenceLevel | null
   follow_up_note: string | null
 }
 
@@ -21,6 +30,8 @@ export interface ActionCenterActionReviewRecord {
   reviewedAt: string
   observation: string
   actionOutcome: ActionCenterActionOutcome
+  evidenceSource: ActionCenterActionEvidenceSource | null
+  confidenceLevel: ActionCenterActionConfidenceLevel | null
   followUpNote: string | null
 }
 
@@ -30,6 +41,14 @@ const ACTION_OUTCOMES = new Set<ActionCenterActionOutcome>([
   'nog-te-vroeg',
   'stoppen',
 ])
+
+const EVIDENCE_SOURCES = new Set<ActionCenterActionEvidenceSource>([
+  'manager-observation',
+  'team-conversation',
+  'other-bounded-source',
+])
+
+const CONFIDENCE_LEVELS = new Set<ActionCenterActionConfidenceLevel>(['low', 'medium', 'high'])
 
 function normalizeText(value: string | null | undefined) {
   const trimmed = value?.trim() ?? ''
@@ -107,6 +126,8 @@ export function validateActionCenterActionReviewInput(
   const reviewedAt = normalizeText(input?.reviewed_at)
   const observation = normalizeText(input?.observation)
   const actionOutcome = normalizeText(input?.action_outcome) as ActionCenterActionOutcome | null
+  const evidenceSource = normalizeText(input?.evidence_source) as ActionCenterActionEvidenceSource | null
+  const confidenceLevel = normalizeText(input?.confidence_level) as ActionCenterActionConfidenceLevel | null
   const followUpNote = normalizeText(input?.follow_up_note)
 
   if (
@@ -116,6 +137,8 @@ export function validateActionCenterActionReviewInput(
     !observation ||
     !actionOutcome ||
     !ACTION_OUTCOMES.has(actionOutcome) ||
+    (evidenceSource !== null && !EVIDENCE_SOURCES.has(evidenceSource)) ||
+    (confidenceLevel !== null && !CONFIDENCE_LEVELS.has(confidenceLevel)) ||
     !isIsoTimestamp(reviewedAt)
   ) {
     throw new Error('Ongeldige route action review input.')
@@ -127,6 +150,8 @@ export function validateActionCenterActionReviewInput(
     reviewed_at: reviewedAt,
     observation,
     action_outcome: actionOutcome,
+    evidence_source: evidenceSource,
+    confidence_level: confidenceLevel,
     follow_up_note: followUpNote,
   }
 }
@@ -142,6 +167,8 @@ export function projectActionCenterActionReview(
     reviewedAt: validated.reviewed_at,
     observation: validated.observation,
     actionOutcome: validated.action_outcome,
+    evidenceSource: validated.evidence_source,
+    confidenceLevel: validated.confidence_level,
     followUpNote: validated.follow_up_note,
   }
 }

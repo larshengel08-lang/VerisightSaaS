@@ -7,6 +7,8 @@ function buildActionReviewInput(overrides: Record<string, unknown> = {}) {
     reviewed_at: '2026-05-12T09:30:00.000Z',
     observation: 'Dezelfde werkdrukfrictie bleef zichtbaar in twee teams.',
     action_outcome: 'bijsturen-nodig',
+    evidence_source: 'team-conversation',
+    confidence_level: 'medium',
     follow_up_note: 'Plan volgende week een kleiner teamgesprek met concrete workload-afspraken.',
     ...overrides,
   }
@@ -24,6 +26,8 @@ describe('action center action reviews', () => {
       reviewedAt: '2026-05-12T09:30:00.000Z',
       observation: 'Dezelfde werkdrukfrictie bleef zichtbaar in twee teams.',
       actionOutcome: 'bijsturen-nodig',
+      evidenceSource: 'team-conversation',
+      confidenceLevel: 'medium',
       followUpNote: 'Plan volgende week een kleiner teamgesprek met concrete workload-afspraken.',
     })
   })

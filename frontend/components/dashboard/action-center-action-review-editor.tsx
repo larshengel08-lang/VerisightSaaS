@@ -1,14 +1,11 @@
 'use client'
 
-import type { ActionCenterActionOutcome } from '@/lib/action-center-action-reviews'
+import type {
+  ActionCenterActionConfidenceLevel,
+  ActionCenterActionEvidenceSource,
+  ActionCenterActionOutcome,
+} from '@/lib/action-center-action-reviews'
 import React, { useState } from 'react'
-
-export type ActionCenterActionEvidenceSource =
-  | 'manager-observation'
-  | 'team-conversation'
-  | 'other-bounded-source'
-
-export type ActionCenterActionConfidenceLevel = 'low' | 'medium' | 'high'
 
 export interface ActionCenterActionReviewEditorValue {
   observation: string

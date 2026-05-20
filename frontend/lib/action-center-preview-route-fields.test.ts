@@ -225,7 +225,5 @@ describe('action center preview route fields', () => {
     expect(html).toContain('Nog niet reviewbaar')
     expect(html).toContain('Actie toevoegen')
     expect(html).toContain('Review toevoegen')
-    expect(html).not.toContain('Bron van observatie')
-    expect(html).not.toContain('Hoe zeker zijn we hiervan?')
   })
 })
