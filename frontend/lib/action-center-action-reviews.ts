@@ -1,3 +1,5 @@
+export { resolveActionCenterActionReviewTransition } from './action-center-constitution'
+
 export type ActionCenterActionOutcome =
   | 'effect-zichtbaar'
   | 'bijsturen-nodig'

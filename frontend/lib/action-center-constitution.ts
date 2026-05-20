@@ -1,3 +1,5 @@
+import type { ActionCenterActionOutcome } from './action-center-action-reviews'
+
 export const ACTION_CENTER_APPROVED_ROUTE_FAMILIES = ['exit', 'retention'] as const
 
 export type ActionCenterApprovedRouteFamily = (typeof ACTION_CENTER_APPROVED_ROUTE_FAMILIES)[number]
@@ -31,6 +33,12 @@ export type ActionCenterActionDraftDisposition = (typeof ACTION_CENTER_ACTION_DR
 export const ACTION_CENTER_ACTION_SEMANTIC_STATES = [
   'draft',
   'active',
+  'review_due',
+  'in_review',
+  'blocked',
+  'completed',
+  'stopped',
+  'superseded',
 ] as const
 
 export type ActionCenterActionSemanticState = (typeof ACTION_CENTER_ACTION_SEMANTIC_STATES)[number]
@@ -58,7 +66,22 @@ export type ActionCenterTransitionRule = {
   draftValidationDisposition?: Extract<ActionCenterActionDraftDisposition, 'valid'>
 }
 
+export type ActionCenterActionTransitionRule = {
+  readonly fromState: ActionCenterActionSemanticState
+  readonly toState: ActionCenterActionSemanticState
+  actors: readonly ActionCenterActor[]
+}
+
 function freezeActionCenterTransitionRule(rule: ActionCenterTransitionRule): Readonly<ActionCenterTransitionRule> {
+  return Object.freeze({
+    ...rule,
+    actors: Object.freeze([...rule.actors]),
+  })
+}
+
+function freezeActionCenterActionTransitionRule(
+  rule: ActionCenterActionTransitionRule,
+): Readonly<ActionCenterActionTransitionRule> {
   return Object.freeze({
     ...rule,
     actors: Object.freeze([...rule.actors]),
@@ -92,6 +115,45 @@ export const ACTION_CENTER_TRANSITION_RULES: readonly Readonly<ActionCenterTrans
     draftValidationDisposition: 'valid',
   }),
 ])
+
+export const ACTION_CENTER_ACTION_TRANSITION_RULES: readonly Readonly<ActionCenterActionTransitionRule>[] =
+  Object.freeze([
+    freezeActionCenterActionTransitionRule({
+      fromState: 'draft',
+      toState: 'active',
+      actors: ['manager_participant', 'hr_rhythm_owner'],
+    }),
+    freezeActionCenterActionTransitionRule({
+      fromState: 'active',
+      toState: 'review_due',
+      actors: ['system_channel'],
+    }),
+    freezeActionCenterActionTransitionRule({
+      fromState: 'review_due',
+      toState: 'in_review',
+      actors: ['manager_participant', 'hr_rhythm_owner'],
+    }),
+    freezeActionCenterActionTransitionRule({
+      fromState: 'in_review',
+      toState: 'active',
+      actors: ['manager_participant', 'hr_rhythm_owner'],
+    }),
+    freezeActionCenterActionTransitionRule({
+      fromState: 'in_review',
+      toState: 'completed',
+      actors: ['manager_participant', 'hr_rhythm_owner'],
+    }),
+    freezeActionCenterActionTransitionRule({
+      fromState: 'in_review',
+      toState: 'stopped',
+      actors: ['manager_participant', 'hr_rhythm_owner'],
+    }),
+    freezeActionCenterActionTransitionRule({
+      fromState: 'blocked',
+      toState: 'in_review',
+      actors: ['manager_participant', 'hr_rhythm_owner'],
+    }),
+  ])
 
 export type ActionCenterApprovedRouteDefault = Readonly<{
   scanType: ActionCenterApprovedRouteFamily
@@ -159,4 +221,29 @@ export function isActionCenterCanonicalRouteStateTransitionAllowed(args: {
       rule.actors.includes(args.actor) &&
       (rule.draftValidationDisposition ? rule.draftValidationDisposition === args.draftValidationDisposition : true),
   )
+}
+
+export function isActionCenterActionStateTransitionAllowed(args: {
+  actor: ActionCenterActor
+  fromState: ActionCenterActionSemanticState
+  toState: ActionCenterActionSemanticState
+}): boolean {
+  return ACTION_CENTER_ACTION_TRANSITION_RULES.some(
+    (rule) => rule.fromState === args.fromState && rule.toState === args.toState && rule.actors.includes(args.actor),
+  )
+}
+
+export function resolveActionCenterActionReviewTransition(
+  outcome: ActionCenterActionOutcome,
+): Extract<ActionCenterActionSemanticState, 'active' | 'completed' | 'stopped'> {
+  switch (outcome) {
+    case 'effect-zichtbaar':
+      return 'completed'
+    case 'stoppen':
+      return 'stopped'
+    case 'bijsturen-nodig':
+    case 'nog-te-vroeg':
+    default:
+      return 'active'
+  }
 }

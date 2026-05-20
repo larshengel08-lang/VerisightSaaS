@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import {
+  ACTION_CENTER_ACTION_TRANSITION_RULES,
   ACTION_CENTER_ACTION_SEMANTIC_STATES,
   ACTION_CENTER_CANONICAL_REVIEW_STATES,
   ACTION_CENTER_CANONICAL_ROUTE_STATES,
   ACTION_CENTER_TRANSITION_RULES,
   getActionCenterApprovedRouteDefault,
+  isActionCenterActionStateTransitionAllowed,
   isActionCenterCanonicalRouteStateTransitionAllowed,
+  resolveActionCenterActionReviewTransition,
 } from '@/lib/action-center-constitution'
 
 describe('action-center constitution', () => {
@@ -29,6 +32,12 @@ describe('action-center constitution', () => {
     expect(ACTION_CENTER_ACTION_SEMANTIC_STATES).toEqual([
       'draft',
       'active',
+      'review_due',
+      'in_review',
+      'blocked',
+      'completed',
+      'stopped',
+      'superseded',
     ])
   })
 
@@ -98,6 +107,46 @@ describe('action-center constitution', () => {
         toState: 'active',
         actors: ['hr_rhythm_owner'],
         draftValidationDisposition: 'valid',
+      },
+    ])
+  })
+
+  it('keeps bounded action lifecycle transition truth explicit', () => {
+    expect(ACTION_CENTER_ACTION_TRANSITION_RULES).toEqual([
+      {
+        fromState: 'draft',
+        toState: 'active',
+        actors: ['manager_participant', 'hr_rhythm_owner'],
+      },
+      {
+        fromState: 'active',
+        toState: 'review_due',
+        actors: ['system_channel'],
+      },
+      {
+        fromState: 'review_due',
+        toState: 'in_review',
+        actors: ['manager_participant', 'hr_rhythm_owner'],
+      },
+      {
+        fromState: 'in_review',
+        toState: 'active',
+        actors: ['manager_participant', 'hr_rhythm_owner'],
+      },
+      {
+        fromState: 'in_review',
+        toState: 'completed',
+        actors: ['manager_participant', 'hr_rhythm_owner'],
+      },
+      {
+        fromState: 'in_review',
+        toState: 'stopped',
+        actors: ['manager_participant', 'hr_rhythm_owner'],
+      },
+      {
+        fromState: 'blocked',
+        toState: 'in_review',
+        actors: ['manager_participant', 'hr_rhythm_owner'],
       },
     ])
   })
@@ -212,5 +261,32 @@ describe('action-center constitution', () => {
         draftValidationDisposition: 'needs_hr_review',
       }),
     ).toBe(false)
+  })
+
+  it('does not allow draft to jump straight to completed', () => {
+    expect(
+      isActionCenterActionStateTransitionAllowed({
+        actor: 'manager_participant',
+        fromState: 'draft',
+        toState: 'completed',
+      }),
+    ).toBe(false)
+  })
+
+  it('does not allow blocked actions to jump to completed without review', () => {
+    expect(
+      isActionCenterActionStateTransitionAllowed({
+        actor: 'manager_participant',
+        fromState: 'blocked',
+        toState: 'completed',
+      }),
+    ).toBe(false)
+  })
+
+  it('maps review outcomes back to canonical action lifecycle states', () => {
+    expect(resolveActionCenterActionReviewTransition('effect-zichtbaar')).toBe('completed')
+    expect(resolveActionCenterActionReviewTransition('bijsturen-nodig')).toBe('active')
+    expect(resolveActionCenterActionReviewTransition('nog-te-vroeg')).toBe('active')
+    expect(resolveActionCenterActionReviewTransition('stoppen')).toBe('stopped')
   })
 })
