@@ -21,6 +21,18 @@ function buildCanonicalOpenActionInput(overrides: Record<string, unknown> = {}) 
   }
 }
 
+function buildDraftInput(overrides: Record<string, unknown> = {}) {
+  return {
+    primary_action_theme_key: 'leadership',
+    primary_action_text: 'Plan deze week een gericht teamgesprek over leiderschapsfeedback.',
+    primary_action_expected_effect:
+      'Binnen twee weken moet zichtbaar zijn of leiderschapsfrictie kleiner wordt in dit team.',
+    primary_action_status: 'open',
+    review_scheduled_for: '2026-05-15',
+    ...overrides,
+  }
+}
+
 describe('action center route actions', () => {
   it('projects a canonical open action card with canonical action truth only', async () => {
     const { projectActionCenterRouteActionCard } = await import('./action-center-route-actions') as {
@@ -65,20 +77,93 @@ describe('action center route actions', () => {
       validateActionCenterRouteActionDraftInput: (input: Record<string, unknown>) => Record<string, unknown>
     }
 
-    expect(
-      validateActionCenterRouteActionDraftInput({
-        primary_action_theme_key: 'leadership',
-        primary_action_text: 'Plan deze week een gericht teamgesprek over leiderschapsfeedback.',
-        primary_action_expected_effect:
-          'Binnen twee weken moet zichtbaar zijn of leiderschapsfrictie kleiner wordt in dit team.',
-        primary_action_status: 'open',
-        review_scheduled_for: '2026-05-15',
-      }),
-    ).toMatchObject({
+    expect(validateActionCenterRouteActionDraftInput(buildDraftInput())).toMatchObject({
       primary_action_theme_key: 'leadership',
       primary_action_status: 'open',
       review_scheduled_for: '2026-05-15',
+      semanticState: 'draft',
+      validationDisposition: 'valid',
     })
+  })
+
+  it('keeps weak draft quality in draft truth with invalid disposition instead of throwing', async () => {
+    const { validateActionCenterRouteActionDraftInput } = await import('./action-center-route-actions') as {
+      validateActionCenterRouteActionDraftInput: (input: Record<string, unknown>) => Record<string, unknown>
+    }
+
+    expect(
+      validateActionCenterRouteActionDraftInput(
+        buildDraftInput({
+          primary_action_text: 'Wat moeten we hier nu mee doen?',
+          primary_action_expected_effect: 'Plan daarna de follow-up met het managementteam.',
+        }),
+      ),
+    ).toMatchObject({
+      semanticState: 'draft',
+      validationDisposition: 'invalid',
+    })
+  })
+
+  it('retains broad project language as a draft that needs hr review', async () => {
+    const { validateActionCenterRouteActionDraftInput } = await import('./action-center-route-actions') as {
+      validateActionCenterRouteActionDraftInput: (input: Record<string, unknown>) => Record<string, unknown>
+    }
+
+    expect(
+      validateActionCenterRouteActionDraftInput(
+        buildDraftInput({
+          primary_action_text: 'Start een organisatiebreed verbeterproject en werk de roadmap voor meerdere teams uit.',
+          primary_action_expected_effect:
+            'Binnen twee weken moet duidelijk zijn welke workstreams in dit programma moeten landen.',
+        }),
+      ),
+    ).toMatchObject({
+      semanticState: 'draft',
+      validationDisposition: 'needs_hr_review',
+    })
+  })
+
+  it('retains dossier-like route language as an invalid draft instead of throwing', async () => {
+    const { validateActionCenterRouteActionDraftInput } = await import('./action-center-route-actions') as {
+      validateActionCenterRouteActionDraftInput: (input: Record<string, unknown>) => Record<string, unknown>
+    }
+
+    expect(
+      validateActionCenterRouteActionDraftInput(
+        buildDraftInput({
+          primary_action_text: 'Leg het dossier aan en vul de vervolgroute en stopreden voor deze casus bij.',
+          primary_action_expected_effect:
+            'Binnen twee weken moet duidelijk zijn of het dossier compleet genoeg is voor verdere routing.',
+        }),
+      ),
+    ).toMatchObject({
+      semanticState: 'draft',
+      validationDisposition: 'invalid',
+    })
+  })
+
+  it('models the hr-only promotion path from draft to active route action truth', async () => {
+    const { isActionCenterCanonicalRouteStateTransitionAllowed } = await import('./action-center-constitution') as {
+      isActionCenterCanonicalRouteStateTransitionAllowed: (input: Record<string, unknown>) => boolean
+    }
+
+    expect(
+      isActionCenterCanonicalRouteStateTransitionAllowed({
+        actor: 'hr_rhythm_owner',
+        object: 'route_action',
+        fromState: 'draft',
+        toState: 'active',
+      }),
+    ).toBe(true)
+
+    expect(
+      isActionCenterCanonicalRouteStateTransitionAllowed({
+        actor: 'manager_participant',
+        object: 'route_action',
+        fromState: 'draft',
+        toState: 'active',
+      }),
+    ).toBe(false)
   })
 
   it.each([

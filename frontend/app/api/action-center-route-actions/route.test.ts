@@ -77,6 +77,80 @@ describe('action center route actions route', () => {
     vi.clearAllMocks()
   })
 
+  it('does not hard-reject broad project language before auth because it remains a draft needing hr review', async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: null,
+      },
+    })
+
+    const response = await POST(
+      makeRequest({
+        campaign_id: 'campaign-1',
+        route_scope_type: 'department',
+        route_scope_value: 'org-1::department::operations',
+        manager_user_id: 'manager-1',
+        primary_action_theme_key: 'workload',
+        primary_action_text: 'Start een organisatiebreed verbeterproject en werk de roadmap voor meerdere teams uit.',
+        primary_action_expected_effect:
+          'Binnen twee weken moet duidelijk zijn welke workstreams in dit programma moeten landen.',
+        review_scheduled_for: '2026-05-20',
+      }),
+    )
+
+    expect(response.status).toBe(401)
+    expect(mockAdminFrom).not.toHaveBeenCalled()
+  })
+
+  it('does not hard-reject dossier-like language before auth because it remains a draft-invalid submission', async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: null,
+      },
+    })
+
+    const response = await POST(
+      makeRequest({
+        campaign_id: 'campaign-1',
+        route_scope_type: 'department',
+        route_scope_value: 'org-1::department::operations',
+        manager_user_id: 'manager-1',
+        primary_action_theme_key: 'workload',
+        primary_action_text: 'Leg het dossier aan en vul de vervolgroute en stopreden voor deze casus bij.',
+        primary_action_expected_effect:
+          'Binnen twee weken moet duidelijk zijn of het dossier compleet genoeg is voor verdere routing.',
+        review_scheduled_for: '2026-05-20',
+      }),
+    )
+
+    expect(response.status).toBe(401)
+    expect(mockAdminFrom).not.toHaveBeenCalled()
+  })
+
+  it('does not hard-reject weak action quality before auth because it remains a draft-invalid submission', async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: null,
+      },
+    })
+
+    const response = await POST(
+      makeRequest({
+        campaign_id: 'campaign-1',
+        route_scope_type: 'department',
+        route_scope_value: 'org-1::department::operations',
+        manager_user_id: 'manager-1',
+        primary_action_theme_key: 'workload',
+        primary_action_text: 'Wat moeten we hier nu mee doen?',
+        primary_action_expected_effect: 'Plan daarna de follow-up met het managementteam.',
+        review_scheduled_for: '2026-05-20',
+      }),
+    )
+
+    expect(response.status).toBe(401)
+    expect(mockAdminFrom).not.toHaveBeenCalled()
+  })
+
   it('rejects unauthorized manager writes', async () => {
     mockGetUser.mockResolvedValue({
       data: {
@@ -228,7 +302,7 @@ describe('action center route actions route', () => {
     expect(response.status).toBe(400)
   })
 
-  it('accepts a valid action and persists server-derived identity', async () => {
+  it('accepts a valid action and persists server-derived identity without asserting immediate active truth on the manager draft', async () => {
     mockGetUser.mockResolvedValue({
       data: {
         user: { id: 'manager-1' },
@@ -341,7 +415,6 @@ describe('action center route actions route', () => {
         manager_user_id: 'manager-1',
         owner_name: 'Manager Operations',
         owner_assigned_at: '2026-04-01T08:00:00.000Z',
-        primary_action_status: 'open',
         created_by: 'manager-1',
         updated_by: 'manager-1',
       }),

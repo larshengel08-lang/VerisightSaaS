@@ -24,6 +24,23 @@ export const ACTION_CENTER_CANONICAL_REVIEW_STATES = [
 
 export type ActionCenterCanonicalReviewState = (typeof ACTION_CENTER_CANONICAL_REVIEW_STATES)[number]
 
+export const ACTION_CENTER_ACTION_DRAFT_DISPOSITIONS = ['valid', 'invalid', 'needs_hr_review'] as const
+
+export type ActionCenterActionDraftDisposition = (typeof ACTION_CENTER_ACTION_DRAFT_DISPOSITIONS)[number]
+
+export const ACTION_CENTER_ACTION_SEMANTIC_STATES = [
+  'draft',
+  'active',
+  'review_due',
+  'in_review',
+  'blocked',
+  'completed',
+  'stopped',
+  'superseded',
+] as const
+
+export type ActionCenterActionSemanticState = (typeof ACTION_CENTER_ACTION_SEMANTIC_STATES)[number]
+
 export const ACTION_CENTER_ACTOR_TYPES = [
   'hr_rhythm_owner',
   'manager_participant',
@@ -32,11 +49,12 @@ export const ACTION_CENTER_ACTOR_TYPES = [
 
 export type ActionCenterActor = (typeof ACTION_CENTER_ACTOR_TYPES)[number]
 
-export type ActionCenterConstitutionObject = 'follow_through_route' | 'review_moment'
+export type ActionCenterConstitutionObject = 'follow_through_route' | 'review_moment' | 'route_action'
 
 export type ActionCenterConstitutionState =
   | ActionCenterCanonicalRouteState
   | ActionCenterCanonicalReviewState
+  | ActionCenterActionSemanticState
 
 export type ActionCenterTransitionRule = {
   readonly object: ActionCenterConstitutionObject
@@ -69,6 +87,12 @@ export const ACTION_CENTER_TRANSITION_RULES: readonly Readonly<ActionCenterTrans
     object: 'review_moment',
     fromState: 'scheduled',
     toState: 'rescheduled',
+    actors: ['hr_rhythm_owner'],
+  }),
+  freezeActionCenterTransitionRule({
+    object: 'route_action',
+    fromState: 'draft',
+    toState: 'active',
     actors: ['hr_rhythm_owner'],
   }),
 ])

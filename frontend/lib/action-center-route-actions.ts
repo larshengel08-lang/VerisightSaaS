@@ -1,4 +1,8 @@
 import { ACTION_CENTER_MANAGER_RESPONSE_THEME_OPTIONS } from './action-center-manager-responses'
+import type {
+  ActionCenterActionDraftDisposition,
+  ActionCenterActionSemanticState,
+} from './action-center-constitution'
 import {
   looksLikeActionCenterExpectedEffect,
   looksLikeActionCenterStep,
@@ -44,11 +48,34 @@ export interface ActionCenterRouteActionDraftInput {
   review_scheduled_for: string
 }
 
+export interface ValidatedActionCenterRouteActionDraft extends ActionCenterRouteActionDraftInput {
+  semanticState: Extract<ActionCenterActionSemanticState, 'draft'>
+  validationDisposition: ActionCenterActionDraftDisposition
+}
+
 const ACTION_STATUSES = new Set<ActionCenterRouteActionStatus>(['open', 'in_review', 'afgerond', 'gestopt'])
 const ACTION_SCOPE_TYPES = new Set<ActionCenterRouteActionWriteInput['route_scope_type']>(['department', 'item'])
 const THEME_LABELS = new Map(
   ACTION_CENTER_MANAGER_RESPONSE_THEME_OPTIONS.map((option) => [option.value, option.label] as const),
 )
+const ACTION_CENTER_DRAFT_HR_REVIEW_PATTERNS = [
+  /\bproject\b/,
+  /\broadmap\b/,
+  /\bprogramma\b/,
+  /\bprogrammalijn\b/,
+  /\bworkstreams?\b/,
+  /\borganisatiebreed\b/,
+  /\borganisatie-breed\b/,
+] as const
+const ACTION_CENTER_DRAFT_OUTSIDE_BOUNDED_PATTERNS = [
+  /\bdossier\b/,
+  /\bvervolgroute\b/,
+  /\bstopreden\b/,
+  /\brouting\b/,
+  /\bmanagement_action_outcome\b/,
+  /\badoption_outcome\b/,
+  /\bcase_public_summary\b/,
+] as const
 
 function normalizeText(value: string | null | undefined) {
   const trimmed = value?.trim() ?? ''
@@ -69,6 +96,58 @@ function isIsoTimestamp(value: string | null | undefined) {
   }
 
   return !Number.isNaN(new Date(normalized).getTime())
+}
+
+function matchesAnyPattern(value: string, patterns: readonly RegExp[]) {
+  return patterns.some((pattern) => pattern.test(value))
+}
+
+function resolveActionCenterRouteActionDraftValidationDisposition(args: {
+  actionText: string | null
+  expectedEffect: string | null
+}):
+  | {
+      disposition: ActionCenterActionDraftDisposition
+      detail: null
+    }
+  | {
+      disposition: ActionCenterActionDraftDisposition
+      detail: string
+    } {
+  if (!args.actionText || !args.expectedEffect) {
+    return {
+      disposition: 'invalid',
+      detail: 'Route action draft needs a concrete bounded step and expected effect.',
+    }
+  }
+
+  if (!looksLikeActionCenterStep(args.actionText) || !looksLikeActionCenterExpectedEffect(args.expectedEffect)) {
+    return {
+      disposition: 'invalid',
+      detail: 'Route action draft needs a concrete bounded step and expected effect.',
+    }
+  }
+
+  const semanticSurface = `${args.actionText} ${args.expectedEffect}`.toLocaleLowerCase('nl-NL')
+
+  if (matchesAnyPattern(semanticSurface, ACTION_CENTER_DRAFT_OUTSIDE_BOUNDED_PATTERNS)) {
+    return {
+      disposition: 'invalid',
+      detail: 'Route action is outside bounded execution.',
+    }
+  }
+
+  if (matchesAnyPattern(semanticSurface, ACTION_CENTER_DRAFT_HR_REVIEW_PATTERNS)) {
+    return {
+      disposition: 'needs_hr_review',
+      detail: 'Route action requires HR review.',
+    }
+  }
+
+  return {
+    disposition: 'valid',
+    detail: null,
+  }
 }
 
 export function validateActionCenterRouteActionWriteInput(
@@ -136,7 +215,7 @@ export function validateActionCenterRouteActionWriteInput(
 
 export function validateActionCenterRouteActionDraftInput(
   input: Partial<ActionCenterRouteActionDraftInput> | null | undefined,
-): ActionCenterRouteActionDraftInput {
+): ValidatedActionCenterRouteActionDraft {
   const themeKey = normalizeText(input?.primary_action_theme_key) as ActionCenterManagerActionThemeKey | null
   const actionText = normalizeText(input?.primary_action_text)
   const expectedEffect = normalizeText(input?.primary_action_expected_effect)
@@ -146,10 +225,6 @@ export function validateActionCenterRouteActionDraftInput(
   if (
     !themeKey ||
     !THEME_LABELS.has(themeKey) ||
-    !actionText ||
-    !looksLikeActionCenterStep(actionText) ||
-    !expectedEffect ||
-    !looksLikeActionCenterExpectedEffect(expectedEffect) ||
     !status ||
     !ACTION_STATUSES.has(status) ||
     !reviewScheduledFor ||
@@ -158,12 +233,19 @@ export function validateActionCenterRouteActionDraftInput(
     throw new Error('Ongeldige route action input.')
   }
 
+  const draftValidation = resolveActionCenterRouteActionDraftValidationDisposition({
+    actionText,
+    expectedEffect,
+  })
+
   return {
     primary_action_theme_key: themeKey,
-    primary_action_text: actionText,
-    primary_action_expected_effect: expectedEffect,
+    primary_action_text: actionText ?? '',
+    primary_action_expected_effect: expectedEffect ?? '',
     primary_action_status: status,
     review_scheduled_for: reviewScheduledFor,
+    semanticState: 'draft',
+    validationDisposition: draftValidation.disposition,
   }
 }
 
