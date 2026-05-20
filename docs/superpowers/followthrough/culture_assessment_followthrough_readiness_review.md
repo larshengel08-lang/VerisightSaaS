@@ -49,6 +49,10 @@ This stream now materially supports:
 
 - later `Follow-On Architecture`
 
+and prepares the route for:
+
+- a broader second-wave readiness pass
+
 ---
 
 ## 5. Verdict

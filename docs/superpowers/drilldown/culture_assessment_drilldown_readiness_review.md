@@ -33,7 +33,7 @@ This means:
 ## 3. Unresolved Risks
 
 - no broad suite-wide inheritance model is defined
-- no text intelligence layer is yet attached to governed drilldown
+- text intelligence still remains a separate governed stream rather than an integrated runtime layer
 - heavier enterprise UX still depends on later-wave execution
 
 These are acceptable at this stage because they are explicitly deferred rather than silently missing.
@@ -49,6 +49,7 @@ This stream now clearly unlocks:
 and materially supports later:
 
 - `Action & Follow-through System`
+- `Follow-On Architecture`
 
 ---
 
@@ -56,4 +57,4 @@ and materially supports later:
 
 Verdict:
 
-- `proceed to text/open-comment wave`
+- `drilldown slice remains ready inside the broader second-wave stack`
