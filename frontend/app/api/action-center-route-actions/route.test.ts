@@ -1039,6 +1039,190 @@ describe('action center route actions route', () => {
     })
   })
 
+  it('accepts an item-scope action using the canonical campaign scope without department canonicalization', async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: { id: 'manager-1' },
+      },
+    })
+    mockLoadSuiteAccessContext.mockResolvedValue({
+      context: { isVerisightAdmin: false },
+      workspaceMemberships: [
+        {
+          org_id: 'org-1',
+          user_id: 'manager-1',
+          access_role: 'manager_assignee',
+          scope_type: 'item',
+          scope_value: 'org-1::campaign::campaign-1',
+          can_view: true,
+          can_update: true,
+          display_name: 'Manager Operations',
+          login_email: 'manager.operations@example.com',
+          created_at: '2026-04-01T08:00:00.000Z',
+          updated_at: '2026-04-01T08:00:00.000Z',
+        },
+      ],
+    })
+
+    const insertQuery = createInsertQuery({
+      data: {
+        id: 'action-item-1',
+        route_id: 'campaign-1::org-1::campaign::campaign-1',
+        campaign_id: 'campaign-1',
+        org_id: 'org-1',
+        route_scope_type: 'item',
+        route_scope_value: 'org-1::campaign::campaign-1',
+        manager_user_id: 'manager-1',
+        owner_name: 'Manager Operations',
+        owner_assigned_at: '2026-04-01T08:00:00.000Z',
+        primary_action_theme_key: 'workload',
+        primary_action_text: 'Plan deze week een kort teamgesprek over workloadpieken.',
+        primary_action_expected_effect:
+          'Binnen twee weken moet zichtbaar zijn of de workloadpieken kleiner worden.',
+        primary_action_status: null,
+        review_scheduled_for: '2026-05-20',
+        created_at: '2026-04-30T10:00:00.000Z',
+        updated_at: '2026-04-30T10:00:00.000Z',
+      },
+      error: null,
+    })
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'campaigns') {
+        return createCampaignQuery({
+          data: { id: 'campaign-1', organization_id: 'org-1' },
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_manager_responses') {
+        return createRouteContainerQuery({
+          data: {
+            id: 'response-item-1',
+            campaign_id: 'campaign-1',
+            org_id: 'org-1',
+            route_scope_type: 'item',
+            route_scope_value: 'org-1::campaign::campaign-1',
+            manager_user_id: 'manager-1',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'respondents') {
+        throw new Error('respondents lookup should not run for item scope')
+      }
+
+      if (table === 'action_center_route_actions') {
+        return insertQuery
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest({
+        campaign_id: 'campaign-1',
+        route_scope_type: 'item',
+        route_scope_value: 'org-1::campaign::campaign-1',
+        manager_user_id: 'manager-1',
+        primary_action_theme_key: 'workload',
+        primary_action_text: 'Plan deze week een kort teamgesprek over workloadpieken.',
+        primary_action_expected_effect:
+          'Binnen twee weken moet zichtbaar zijn of de workloadpieken kleiner worden.',
+        review_scheduled_for: '2026-05-20',
+      }),
+    )
+
+    expect(response.status).toBe(200)
+    expect(insertQuery.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        manager_response_id: 'response-item-1',
+        route_id: 'campaign-1::org-1::campaign::campaign-1',
+        route_scope_type: 'item',
+        route_scope_value: 'org-1::campaign::campaign-1',
+      }),
+    )
+  })
+
+  it('rejects an item-scope action when the submitted scope is not the canonical campaign item value', async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: { id: 'manager-1' },
+      },
+    })
+    mockLoadSuiteAccessContext.mockResolvedValue({
+      context: { isVerisightAdmin: false },
+      workspaceMemberships: [
+        {
+          org_id: 'org-1',
+          user_id: 'manager-1',
+          access_role: 'manager_assignee',
+          scope_type: 'item',
+          scope_value: 'org-1::campaign::campaign-1-forged',
+          can_view: true,
+          can_update: true,
+          display_name: 'Manager Operations',
+          login_email: 'manager.operations@example.com',
+          created_at: '2026-04-01T08:00:00.000Z',
+          updated_at: '2026-04-01T08:00:00.000Z',
+        },
+      ],
+    })
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'campaigns') {
+        return createCampaignQuery({
+          data: { id: 'campaign-1', organization_id: 'org-1' },
+          error: null,
+        })
+      }
+
+      if (table === 'action_center_manager_responses') {
+        return createRouteContainerQuery({
+          data: {
+            id: 'response-item-invalid',
+            campaign_id: 'campaign-1',
+            org_id: 'org-1',
+            route_scope_type: 'item',
+            route_scope_value: 'org-1::campaign::campaign-1-forged',
+            manager_user_id: 'manager-1',
+          },
+          error: null,
+        })
+      }
+
+      if (table === 'respondents') {
+        throw new Error('respondents lookup should not run for item scope')
+      }
+
+      if (table === 'action_center_route_actions') {
+        return createInsertQuery({ data: null, error: null })
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest({
+        campaign_id: 'campaign-1',
+        route_scope_type: 'item',
+        route_scope_value: 'org-1::campaign::campaign-1-forged',
+        manager_user_id: 'manager-1',
+        primary_action_theme_key: 'workload',
+        primary_action_text: 'Plan deze week een kort teamgesprek over workloadpieken.',
+        primary_action_expected_effect:
+          'Binnen twee weken moet zichtbaar zijn of de workloadpieken kleiner worden.',
+        review_scheduled_for: '2026-05-20',
+      }),
+    )
+
+    expect(response.status).toBe(400)
+    await expect(response.json()).resolves.toMatchObject({
+      detail: 'Route action route bestaat niet voor deze campagne.',
+    })
+  })
+
   it('derives admin write identity from assignment truth instead of the submitted manager id', async () => {
     mockGetUser.mockResolvedValue({
       data: {

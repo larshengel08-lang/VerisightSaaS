@@ -126,6 +126,20 @@ describe('action center route actions', () => {
     })
   })
 
+  it('rejects impossible iso timestamps instead of normalizing them through Date parsing', async () => {
+    const { validateActionCenterRouteActionWriteInput } = await import('./action-center-route-actions') as {
+      validateActionCenterRouteActionWriteInput: (input: Record<string, unknown>) => Record<string, unknown>
+    }
+
+    expect(() =>
+      validateActionCenterRouteActionWriteInput(
+        buildCanonicalOpenActionInput({
+          owner_assigned_at: '2026-02-31T08:00:00.000Z',
+        }),
+      ),
+    ).toThrow('Ongeldige route action input.')
+  })
+
   it('accepts a bounded route action draft without requiring server-derived identity fields', async () => {
     const { validateActionCenterRouteActionDraftInput } = await import('./action-center-route-actions') as {
       validateActionCenterRouteActionDraftInput: (input: Record<string, unknown>) => Record<string, unknown>
