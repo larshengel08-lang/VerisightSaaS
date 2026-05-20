@@ -112,7 +112,7 @@ Deliverables:
 
 - claim-safe copy source note
 - forbidden-claims checklist
-- per-artifact “what not to conclude” guidance
+- per-artifact "what not to conclude" guidance
 
 Dependencies:
 
