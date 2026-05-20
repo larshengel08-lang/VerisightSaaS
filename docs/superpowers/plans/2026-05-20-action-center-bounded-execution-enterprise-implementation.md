@@ -668,7 +668,7 @@ git -C 'C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer
 - Test: `C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer-structure\frontend\lib\action-center-review-rhythm-data.test.ts`
 - Test: `C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer-structure\frontend\lib\action-center-bounded-execution-metrics.test.ts`
 
-- [ ] **Step 1: Run the bounded execution regression suite**
+- [x] **Step 1: Run the bounded execution regression suite**
 
 Run:
 
@@ -683,7 +683,13 @@ Expected:
 PASS  11 files
 ```
 
-- [ ] **Step 2: Run the broader Action Center guardrail suite**
+Result:
+
+```text
+PASS  11 files / 103 tests
+```
+
+- [x] **Step 2: Run the broader Action Center guardrail suite**
 
 Run:
 
@@ -698,7 +704,19 @@ Expected:
 PASS  Action Center adjacent regression suites
 ```
 
-- [ ] **Step 3: Update the plan with verification notes**
+Result:
+
+```text
+PASS  5 files / 37 tests
+```
+
+Operational note:
+
+- `tests/e2e/action-center-route-action-cards.spec.ts` is excluded from Vitest discovery, so the real browser check was rerun via Playwright.
+- `npm run test:e2e -- tests/e2e/action-center-route-action-cards.spec.ts` advanced past the bounded execution compile fixes and then stopped on the known Supabase SSR/prerender environment baseline for `/(auth)/complete-account`.
+- That remaining blocker is external to this Action Center wave and matches the previously known auth-page build baseline.
+
+- [x] **Step 3: Update the plan with verification notes**
 
 ```md
 ## Verification Notes
@@ -708,9 +726,12 @@ PASS  Action Center adjacent regression suites
 - Manager create/review UX remained compact and bounded
 - HR execution signals verified for sprawl, stuck review, and repeated no-progress loops
 - Metric event schema minimum verified
+- Task 6 hardening closed the remaining build-facing type gaps around structured review metadata, nullable draft action fields, live summary aggregation, and enabled-route threshold typing
+- `npm run build` now clears the Action Center bounded execution wave through production compilation and type checking; the remaining build stop is the known Supabase SSR/prerender environment baseline on auth pages
+- Playwright webserver startup fails only on that same known auth baseline, not on an Action Center bounded execution regression
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```powershell
 git -C 'C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer-structure' add docs/superpowers/plans/2026-05-20-action-center-bounded-execution-enterprise-implementation.md

@@ -150,13 +150,19 @@ export function isActionCenterRouteDefaultsProviderEligibleScanType(
 
 export function getActionCenterEnabledRouteDefaults(
   scanType: string | null | undefined,
-): ActionCenterRouteDefaults & { scanType: ActionCenterRouteDefaultsEnabledScanType } | null {
+): (ActionCenterRouteDefaults &
+  ActionCenterExecutionThresholds & {
+    scanType: ActionCenterRouteDefaultsEnabledScanType
+  }) | null {
   const defaults = getActionCenterRouteDefaults(scanType)
   if (!defaults?.routeEnabled) {
     return null
   }
 
-  return defaults as ActionCenterRouteDefaults & { scanType: ActionCenterRouteDefaultsEnabledScanType }
+  return defaults as ActionCenterRouteDefaults &
+    ActionCenterExecutionThresholds & {
+      scanType: ActionCenterRouteDefaultsEnabledScanType
+    }
 }
 
 export function getActionCenterScanTypeFromSourceLabel(

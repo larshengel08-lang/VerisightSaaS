@@ -98,12 +98,12 @@ function isIsoDate(value: string | null | undefined) {
   const normalized = normalizeText(value)
   if (!normalized) return false
 
-  const match = /^(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})$/.exec(normalized)
-  if (!match?.groups) return false
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(normalized)
+  if (!match) return false
 
-  const year = Number.parseInt(match.groups.year, 10)
-  const month = Number.parseInt(match.groups.month, 10)
-  const day = Number.parseInt(match.groups.day, 10)
+  const year = Number.parseInt(match[1] ?? '', 10)
+  const month = Number.parseInt(match[2] ?? '', 10)
+  const day = Number.parseInt(match[3] ?? '', 10)
   return isValidCalendarDate(year, month, day)
 }
 
@@ -122,19 +122,19 @@ function isIsoTimestamp(value: string | null | undefined) {
   if (!normalized) return false
 
   const match =
-    /^(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})T(?<hour>\d{2}):(?<minute>\d{2}):(?<second>\d{2})(?:\.\d{1,6})?(?<timezone>Z|(?<offsetSign>[+-])(?<offsetHour>\d{2}):(?<offsetMinute>\d{2}))$/.exec(
+    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,6})?(Z|([+-])(\d{2}):(\d{2}))$/.exec(
       normalized,
     )
-  if (!match?.groups) {
+  if (!match) {
     return false
   }
 
-  const year = Number.parseInt(match.groups.year, 10)
-  const month = Number.parseInt(match.groups.month, 10)
-  const day = Number.parseInt(match.groups.day, 10)
-  const hour = Number.parseInt(match.groups.hour, 10)
-  const minute = Number.parseInt(match.groups.minute, 10)
-  const second = Number.parseInt(match.groups.second, 10)
+  const year = Number.parseInt(match[1] ?? '', 10)
+  const month = Number.parseInt(match[2] ?? '', 10)
+  const day = Number.parseInt(match[3] ?? '', 10)
+  const hour = Number.parseInt(match[4] ?? '', 10)
+  const minute = Number.parseInt(match[5] ?? '', 10)
+  const second = Number.parseInt(match[6] ?? '', 10)
 
   if (!isValidCalendarDate(year, month, day)) {
     return false
@@ -144,9 +144,9 @@ function isIsoTimestamp(value: string | null | undefined) {
     return false
   }
 
-  if (match.groups.timezone !== 'Z') {
-    const offsetHour = Number.parseInt(match.groups.offsetHour ?? '', 10)
-    const offsetMinute = Number.parseInt(match.groups.offsetMinute ?? '', 10)
+  if (match[7] !== 'Z') {
+    const offsetHour = Number.parseInt(match[9] ?? '', 10)
+    const offsetMinute = Number.parseInt(match[10] ?? '', 10)
 
     if (Number.isNaN(offsetHour) || Number.isNaN(offsetMinute) || offsetHour > 23 || offsetMinute > 59) {
       return false

@@ -18,7 +18,11 @@ import {
   projectActionCenterRouteActionCard,
   type ActionCenterRouteActionRecord,
 } from '@/lib/action-center-route-actions'
-import { projectActionCenterActionReview } from '@/lib/action-center-action-reviews'
+import {
+  projectActionCenterActionReview,
+  type ActionCenterActionConfidenceLevel,
+  type ActionCenterActionEvidenceSource,
+} from '@/lib/action-center-action-reviews'
 import type {
   ActionCenterRouteCloseoutReason,
   ActionCenterRouteCloseoutStatus,
@@ -1679,8 +1683,8 @@ export function ActionCenterPreview({
         | {
             review?: Record<string, unknown>
             submittedStructuredMetadata?: {
-              evidence_source?: string | null
-              confidence_level?: string | null
+              evidence_source?: ActionCenterActionEvidenceSource | null
+              confidence_level?: ActionCenterActionConfidenceLevel | null
             }
             detail?: string
           }
