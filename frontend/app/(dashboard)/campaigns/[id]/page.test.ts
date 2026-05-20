@@ -155,4 +155,15 @@ describe('campaign detail management-read guardrails', () => {
     expect(cultureReturn).not.toContain('factorData.sdtAverages[dimension] ?? 5.5')
     expect(cultureReturn).not.toContain('["autonomy", "competence", "relatedness"]')
   })
+
+  it('keeps the culture domain list framed as a leesvolgorde instead of a ranking table', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+    const cultureReturn = source.match(
+      /if \(showManagementOutput && stats\.scan_type === "culture_assessment"\)[\s\S]*?if \(\s*showManagementOutput &&\s*\(stats\.scan_type === "exit" \|\| stats\.scan_type === "retention"\)/,
+    )?.[0] ?? ''
+
+    expect(cultureReturn).toContain('bestuurlijke leesvolgorde')
+    expect(cultureReturn).toContain('Lees {String(index + 1).padStart(2, "0")}')
+    expect(cultureReturn).toContain('geen ranking van teams, managers of domeinen als waardeoordeel')
+  })
 })
