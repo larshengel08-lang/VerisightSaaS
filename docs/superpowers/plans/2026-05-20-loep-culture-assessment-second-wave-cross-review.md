@@ -107,7 +107,7 @@ Remaining note:
 
 ## 4. Remaining Bounded Risks
 
-- no suite-wide follow-on architecture exists yet
+- follow-on architecture exists at spec and implementation-plan level, but its execution artifacts do not yet exist
 - no production text-clustering engine exists yet
 - no broad enterprise inheritance model exists yet
 

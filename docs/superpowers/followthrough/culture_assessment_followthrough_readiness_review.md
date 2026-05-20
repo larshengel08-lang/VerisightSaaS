@@ -37,7 +37,7 @@ This means:
 
 - no workflow platform exists, by design
 - no automated intervention recommendation exists, by design
-- later follow-on architecture still needs a broader suite-level decision system
+- follow-on architecture now exists at spec and implementation-plan level, but still needs its own execution artifacts
 
 These are acceptable because the route aims for disciplined follow-through, not workflow software.
 
@@ -47,7 +47,7 @@ These are acceptable because the route aims for disciplined follow-through, not 
 
 This stream now materially supports:
 
-- later `Follow-On Architecture`
+- `Follow-On Architecture`
 
 and prepares the route for:
 
