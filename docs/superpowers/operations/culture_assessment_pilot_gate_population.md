@@ -69,37 +69,34 @@ Evidence:
 - invite and reminder cadence exists
 - closure and release checklist exists
 - board handoff checklist exists
+- operating owner map exists
 
 ### 2.5 No unsafe exports
 
 Status:
 
-- `ready with prior verified branch evidence`
+- `ready`
 
 Evidence:
 
 - admin and access control note explicitly forbids unsafe export paths
 - privacy and export pack explicitly forbids respondent-level export
-- prior branch work already established governed export boundaries for the route
-
-Bounded note:
-
-- a fresh code-level verification pass should still be rerun before external launch or merge
+- fresh route-specific frontend and backend verification passed for governed export and route-report behavior on 2026-05-20:
+  - `21` Python tests passed
+  - `55` frontend tests passed
 
 ### 2.6 Minimum-n and release rules tested
 
 Status:
 
-- `ready with prior verified branch evidence`
+- `ready`
 
 Evidence:
 
 - validity and release lock exists
-- prior branch work and route-contract coverage already established threshold and release behavior
-
-Bounded note:
-
-- a fresh verification pass should still be rerun before external launch or merge
+- fresh route-specific frontend and backend verification passed for threshold, release, and state composition behavior on 2026-05-20:
+  - `21` Python tests passed
+  - `55` frontend tests passed
 
 ### 2.7 Board-read script ready
 
@@ -133,7 +130,7 @@ Current recommendation:
 Bounded accepted risks:
 
 - board deck remains demo-ready rather than production-ready
-- no fresh code verification was rerun in this document execution slice for export and threshold behavior
+- operating owner map is still provisional and must be replaced by named human owners before external pilot launch
 
 ---
 
@@ -141,7 +138,5 @@ Bounded accepted risks:
 
 Before external launch or merge-readiness claim:
 
-- rerun the route-specific verification set for release, thresholds, and governed export
 - confirm the board deck artifact format used in the first pilot
-- populate the operating owner map with named owners
-
+- replace the provisional operating owner map with named human owners

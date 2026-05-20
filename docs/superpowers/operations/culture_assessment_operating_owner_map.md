@@ -31,11 +31,11 @@ Minimum operating roles:
 
 | Role | Named owner | Backup owner | Scope |
 | --- | --- | --- | --- |
-| Executive sponsor | `TBD` | `TBD` | board context, sponsor alignment |
-| HR implementation partner | `TBD` | `TBD` | respondent coordination, HR liaison |
-| Loep delivery lead | `TBD` | `TBD` | launch-to-close delivery |
-| Release owner | `TBD` | `TBD` | release approval and threshold ownership |
-| Board-read facilitator | `TBD` | `TBD` | guided board-read |
+| Executive sponsor | `Client executive sponsor (provisional first-pilot owner)` | `Client deputy sponsor (provisional)` | board context, sponsor alignment |
+| HR implementation partner | `Client HR lead (provisional first-pilot owner)` | `Client HR backup (provisional)` | respondent coordination, HR liaison |
+| Loep delivery lead | `Loep route owner / founder-led delivery (provisional)` | `Loep delivery backup (provisional)` | launch-to-close delivery |
+| Release owner | `Loep governance owner (provisional)` | `Loep release backup (provisional)` | release approval and threshold ownership |
+| Board-read facilitator | `Loep board-read facilitator (provisional)` | `Loep facilitation backup (provisional)` | guided board-read |
 
 ---
 
@@ -44,4 +44,4 @@ Minimum operating roles:
 Approved when:
 
 - all five roles have named ownership before pilot start
-
+- provisional role-based ownership is replaced by named human owners before external pilot launch
