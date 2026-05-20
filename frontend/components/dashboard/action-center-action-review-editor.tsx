@@ -6,9 +6,6 @@ import React, { useState } from 'react'
 export type ActionCenterActionEvidenceSource =
   | 'manager-observation'
   | 'team-conversation'
-  | 'follow-up-survey'
-  | 'hr-check'
-  | 'operational-indicator'
   | 'other-bounded-source'
 
 export type ActionCenterActionConfidenceLevel = 'low' | 'medium' | 'high'
@@ -41,9 +38,6 @@ const EVIDENCE_SOURCE_OPTIONS: Array<{
 }> = [
   { value: 'manager-observation', label: 'Managerobservatie' },
   { value: 'team-conversation', label: 'Teamgesprek' },
-  { value: 'follow-up-survey', label: 'Follow-up survey' },
-  { value: 'hr-check', label: 'HR check' },
-  { value: 'operational-indicator', label: 'Operationele indicator' },
   { value: 'other-bounded-source', label: 'Andere bounded bron' },
 ]
 

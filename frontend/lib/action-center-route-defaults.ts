@@ -33,7 +33,7 @@ export interface ActionCenterRouteDefaults {
     max: number
   }
   staleAfterDays?: number
-  stuckActiveWarningDays?: number
+  stuckActiveWarningDays?: number | { min: number; max: number }
   reviewDueGraceDays?: number
   sprawlRiskCount?: number
   repeatedReviewWarningCount?: number
@@ -42,7 +42,7 @@ export interface ActionCenterRouteDefaults {
 }
 
 export interface ActionCenterExecutionThresholds {
-  stuckActiveWarningDays: number
+  stuckActiveWarningDays: number | { min: number; max: number }
   reviewDueGraceDays: number
   sprawlRiskCount: number
   repeatedReviewWarningCount: number
@@ -65,7 +65,7 @@ const ACTION_CENTER_EXECUTION_THRESHOLDS: Record<
     repeatedReviewWarningCount: 2,
   },
   retention: {
-    stuckActiveWarningDays: 21,
+    stuckActiveWarningDays: { min: 21, max: 30 },
     reviewDueGraceDays: 7,
     sprawlRiskCount: 3,
     repeatedReviewWarningCount: 2,
