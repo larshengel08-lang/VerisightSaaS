@@ -34,7 +34,7 @@ def test_culture_assessment_module_exposes_definition_and_report_payloads():
     ]
     assert "Loep Culture Index" in module.get_management_summary_payload()["index_label"]
     assert "domeinbeeld" in module.get_management_summary_payload()["board_attention_scope_note"]
-    assert "compacte executive read" in module.get_management_summary_payload()["output_sequence_note"]
+    assert "premium board artifact" in module.get_management_summary_payload()["output_sequence_note"]
     assert module.get_management_summary_payload()["board_read_delivery"]["always_guided"] is True
     assert module.get_methodology_payload()["benchmark_state"] == "inactive_v1"
     assert module.get_methodology_payload()["named_manager_layer_default"] == "locked"

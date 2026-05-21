@@ -157,8 +157,9 @@ SCAN_DEFINITION: dict[str, Any] = {
         "segment_summary_export": "commercial_delivery_ready",
     },
     "output_sequence_note": (
-        "Het board report pdf is in v1 een compacte executive read. Dashboard en board-deck-structuur dragen de volledige "
-        "canonieke 11-blokvolgorde; het pdf comprimeert die volgorde zonder benchmark-, ranking- of health-scoreframing."
+        "Het board report pdf is in v1 een compacte executive read en premium board artifact. "
+        "Het boardroom pdf deck is de ruimere, guided zusterlaag voor facilitated board-read; "
+        "de executive one-pager blijft een afgeleide van dezelfde visuele grammatica."
     ),
     "follow_on_outcomes": [
         "no immediate next route",
