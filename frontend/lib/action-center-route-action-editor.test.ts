@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 import {
   ActionCenterRouteActionEditor,
+  serializeActionCenterRouteActionEditorValue,
   shouldResetActionCenterRouteActionEditorAfterSave,
 } from '@/components/dashboard/action-center-route-action-editor'
 
@@ -28,33 +29,58 @@ describe('ActionCenterRouteActionEditor', () => {
     expect(shouldResetActionCenterRouteActionEditorAfterSave(false)).toBe(false)
   })
 
-  it('shows explicit compact correction feedback for invalid drafts', () => {
+  it('shows saved-not-live correction feedback and blocks unchanged invalid draft resubmission', () => {
+    const initialValue = {
+      themeKey: 'workload' as const,
+      actionText: 'Verbeter overal de cultuur.',
+      reviewScheduledFor: '2026-05-20',
+      expectedEffect: 'Iedereen voelt snel verschil.',
+    }
     const html = renderToStaticMarkup(
       React.createElement(ActionCenterRouteActionEditor, {
         onSave: vi.fn(),
+        initialValue,
         submissionState: {
           validationDisposition: 'invalid',
+          statusMessage: 'Draft opgeslagen, nog niet live in deze route.',
           validationMessage: 'Pas deze actie aan zodat hij bounded en route-specifiek is.',
+          persistedDraftFingerprint: serializeActionCenterRouteActionEditorValue(initialValue),
         },
       }),
     )
 
+    expect(html).toContain('Draft opgeslagen, nog niet live in deze route.')
     expect(html).toContain('Pas deze actie aan zodat hij bounded en route-specifiek is.')
-    expect(html).not.toContain('Draft opgeslagen.')
+    expect(html).toContain('Wijzig deze opgeslagen draft voordat je hem opnieuw indient.')
+    expect(html).toContain('disabled=""')
   })
 
-  it('shows explicit hr-review feedback inside the compact editor surface', () => {
+  it('keeps the submit path open once the draft content differs from the saved hr-review draft', () => {
+    const persistedDraftValue = {
+      themeKey: 'workload' as const,
+      actionText: 'Start een breed HR-project.',
+      reviewScheduledFor: '2026-05-20',
+      expectedEffect: 'De cultuur verbetert overal.',
+    }
     const html = renderToStaticMarkup(
       React.createElement(ActionCenterRouteActionEditor, {
         onSave: vi.fn(),
+        initialValue: {
+          ...persistedDraftValue,
+          actionText: 'Plan twee route-specifieke teamgesprekken over werkdruk.',
+        },
         submissionState: {
           validationDisposition: 'needs_hr_review',
+          statusMessage: 'Draft opgeslagen, nog niet live in deze route.',
           validationMessage: 'Deze actie vraagt eerst HR-beoordeling.',
+          persistedDraftFingerprint: serializeActionCenterRouteActionEditorValue(persistedDraftValue),
         },
       }),
     )
 
+    expect(html).toContain('Draft opgeslagen, nog niet live in deze route.')
     expect(html).toContain('Deze actie vraagt eerst HR-beoordeling.')
-    expect(html).not.toContain('Deze actie wacht eerst op HR-review en staat nog niet live in deze route.')
+    expect(html).not.toContain('Wijzig deze opgeslagen draft voordat je hem opnieuw indient.')
+    expect(html).not.toContain('disabled=""')
   })
 })

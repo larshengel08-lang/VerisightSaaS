@@ -60,6 +60,7 @@ import {
 import {
   ActionCenterRouteActionEditor,
   type ActionCenterRouteActionEditorSubmissionState,
+  serializeActionCenterRouteActionEditorValue,
   type ActionCenterRouteActionEditorValue,
 } from './action-center-route-action-editor'
 import React, { useDeferredValue, useEffect, useMemo, useState } from 'react'
@@ -632,6 +633,27 @@ function getRouteActionDraftDispositionMessage(disposition: RouteActionValidatio
   }
 }
 
+function getRouteActionPersistedDraftStatusMessage() {
+  return 'Draft opgeslagen, nog niet live in deze route.'
+}
+
+export function buildPersistedRouteActionFeedback(args: {
+  value: ActionCenterRouteActionEditorValue
+  validationDisposition: Extract<RouteActionValidationDisposition, 'invalid' | 'needs_hr_review'>
+  validationMessage: string
+}) {
+  const statusMessage = getRouteActionPersistedDraftStatusMessage()
+
+  return {
+    message: `${statusMessage} ${args.validationMessage}`,
+    tone: 'warning' as const,
+    validationDisposition: args.validationDisposition,
+    validationMessage: args.validationMessage,
+    statusMessage,
+    persistedDraftFingerprint: serializeActionCenterRouteActionEditorValue(args.value),
+  }
+}
+
 function getNextRouteActionStatusFromReviewOutcome(
   outcome: ActionCenterActionReviewEditorValue['actionOutcome'],
 ): Extract<ActionCenterRouteActionRecord['status'], 'open' | 'afgerond' | 'gestopt'> {
@@ -1137,6 +1159,8 @@ export function ActionCenterPreview({
     tone: RouteActionFeedbackTone
     validationDisposition?: RouteActionValidationDisposition | null
     validationMessage?: string | null
+    statusMessage?: string | null
+    persistedDraftFingerprint?: string | null
   } | null>(null)
   const [openReviewActionId, setOpenReviewActionId] = useState<string | null>(null)
   const [actionReviewPendingActionId, setActionReviewPendingActionId] = useState<string | null>(null)
@@ -1627,12 +1651,13 @@ export function ActionCenterPreview({
         result.validationMessage ?? getRouteActionDraftDispositionMessage(validationDisposition)
 
       if (validationDisposition !== 'valid') {
-        setRouteActionFeedback({
-          message: validationMessage ?? 'Route action opslaan mislukt.',
-          tone: 'warning',
-          validationDisposition,
-          validationMessage,
-        })
+        setRouteActionFeedback(
+          buildPersistedRouteActionFeedback({
+            value,
+            validationDisposition,
+            validationMessage: validationMessage ?? 'Route action opslaan mislukt.',
+          }),
+        )
         return false
       }
 
@@ -1658,6 +1683,8 @@ export function ActionCenterPreview({
         tone: 'error',
         validationDisposition: null,
         validationMessage: null,
+        statusMessage: null,
+        persistedDraftFingerprint: null,
       })
       return false
     } finally {
@@ -3143,7 +3170,6 @@ export function ActionCenterPreview({
                                 className="inline-flex min-h-11 items-center rounded-full border border-[#ded3c6] bg-[#fcfaf7] px-4.5 py-2.5 text-sm font-semibold text-[#1a2533] transition hover:border-[#1a2533]"
                                 onClick={() => {
                                   setRouteActionEditorOpen((current) => !current)
-                                  setRouteActionFeedback(null)
                                 }}
                               >
                                 Actie toevoegen
@@ -3164,11 +3190,16 @@ export function ActionCenterPreview({
                                 feedbackTone={routeActionFeedback?.tone ?? 'error'}
                                 submissionState={
                                   routeActionFeedback?.validationDisposition &&
-                                  routeActionFeedback.validationMessage
+                                  routeActionFeedback.validationMessage &&
+                                  routeActionFeedback.statusMessage &&
+                                  routeActionFeedback.persistedDraftFingerprint
                                     ? ({
                                         validationDisposition:
                                           routeActionFeedback.validationDisposition,
+                                        statusMessage: routeActionFeedback.statusMessage,
                                         validationMessage: routeActionFeedback.validationMessage,
+                                        persistedDraftFingerprint:
+                                          routeActionFeedback.persistedDraftFingerprint,
                                       } satisfies ActionCenterRouteActionEditorSubmissionState)
                                     : null
                                 }

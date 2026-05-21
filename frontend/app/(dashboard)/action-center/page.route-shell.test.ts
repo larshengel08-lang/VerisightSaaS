@@ -1,5 +1,9 @@
 import { readFileSync } from "node:fs";
-import { ActionCenterPreview } from "@/components/dashboard/action-center-preview";
+import {
+  ActionCenterPreview,
+  buildPersistedRouteActionFeedback,
+} from "@/components/dashboard/action-center-preview";
+import { serializeActionCenterRouteActionEditorValue } from "@/components/dashboard/action-center-route-action-editor";
 import { describe, expect, it } from "vitest";
 import { projectActionCenterCoreSemantics } from "@/lib/action-center-core-semantics";
 import { buildLiveActionCenterItems } from "@/lib/action-center-live";
@@ -404,15 +408,29 @@ describe("action center landing shell", () => {
     expect(pageSource).toContain("boundedOverviewOnly");
   });
 
-  it("keeps route-action draft feedback inside the compact route preview surface", () => {
-    const previewSource = readFileSync(
-      new URL("../../../components/dashboard/action-center-preview.tsx", import.meta.url),
-      "utf8",
-    );
+  it("treats a non-valid route-action response as a persisted draft outcome instead of a generic save error", () => {
+    const draftValue = {
+      themeKey: "workload" as const,
+      actionText: "Verbeter overal de cultuur.",
+      reviewScheduledFor: "2026-05-20",
+      expectedEffect: "Iedereen voelt snel verschil.",
+    };
 
-    expect(previewSource).toContain("validationDisposition?: RouteActionValidationDisposition | null");
-    expect(previewSource).toContain("validationMessage?: string | null");
-    expect(previewSource).toContain("submissionState={");
+    expect(
+      buildPersistedRouteActionFeedback({
+        value: draftValue,
+        validationDisposition: "invalid",
+        validationMessage: "Pas deze actie aan zodat hij bounded en route-specifiek is.",
+      }),
+    ).toEqual({
+      message:
+        "Draft opgeslagen, nog niet live in deze route. Pas deze actie aan zodat hij bounded en route-specifiek is.",
+      persistedDraftFingerprint: serializeActionCenterRouteActionEditorValue(draftValue),
+      statusMessage: "Draft opgeslagen, nog niet live in deze route.",
+      tone: "warning",
+      validationDisposition: "invalid",
+      validationMessage: "Pas deze actie aan zodat hij bounded en route-specifiek is.",
+    });
   });
 
   it("renders the route as a bounded overview cockpit instead of a broad workflow suite", () => {
