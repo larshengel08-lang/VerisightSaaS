@@ -204,22 +204,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ detail }, { status })
   }
 
-  const currentActionState = resolvePersistedActionSemanticState(action.primary_action_status)
-  const nextActionState = resolveActionCenterActionReviewTransition(parsed.action_outcome)
+  const currentSemanticState = resolvePersistedActionSemanticState(action.primary_action_status)
+  const nextSemanticState = resolveActionCenterActionReviewTransition(parsed.action_outcome)
   const actor = context.isVerisightAdmin ? 'hr_rhythm_owner' : 'manager_participant'
 
   if (
-    currentActionState !== 'in_review' ||
+    !currentSemanticState ||
+    currentSemanticState !== 'in_review' ||
     !isActionCenterActionStateTransitionAllowed({
       actor,
-      fromState: currentActionState,
-      toState: nextActionState,
+      fromState: currentSemanticState,
+      toState: nextSemanticState,
     })
   ) {
-    return NextResponse.json(
-      { detail: 'Route action review is niet toegestaan vanuit de huidige canonieke toestand.' },
-      { status: 409 },
-    )
+    return NextResponse.json({ detail: 'Route action transition is not allowed.' }, { status: 409 })
   }
 
   const actionCampaignId = normalizeText(action.campaign_id)
@@ -268,7 +266,7 @@ export async function POST(request: Request) {
   const { data: updatedAction, error: updateError } = await adminClient
     .from('action_center_route_actions')
     .update({
-      primary_action_status: resolvePersistedActionStatusFromSemanticState(nextActionState),
+      primary_action_status: resolvePersistedActionStatusFromSemanticState(nextSemanticState),
       updated_by: user.id,
       updated_at: new Date().toISOString(),
     })
@@ -299,7 +297,7 @@ export async function POST(request: Request) {
   }
 
   const reviewId = normalizeText(data.id)
-  const nextPersistedActionStatus = resolvePersistedActionStatusFromSemanticState(nextActionState)
+  const nextPersistedActionStatus = resolvePersistedActionStatusFromSemanticState(nextSemanticState)
 
   if (!reviewId) {
     return NextResponse.json({ detail: 'Route action review opslaan mislukt.' }, { status: 500 })

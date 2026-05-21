@@ -3,6 +3,7 @@ import { deriveActionCenterRouteGovernanceSignals } from '@/lib/action-center-go
 import { buildActionCenterReviewOversightSummary } from '@/lib/action-center-review-oversight'
 import {
   getActionCenterEnabledRouteDefaults,
+  getActionCenterRouteFamilyLabel,
   type ActionCenterRouteDefaultsKnownScanType,
 } from '@/lib/action-center-route-defaults'
 import {
@@ -29,16 +30,31 @@ function getReviewRhythmRouteId(item: Pick<ActionCenterPreviewItem, 'coreSemanti
   return item.coreSemantics.route.routeId
 }
 
-function normalizeConfigRow(row: ActionCenterReviewRhythmConfigRow): ActionCenterReviewRhythmConfig | null {
-  if (!row.route_id) {
+function toReviewRhythmConfigFromRouteDefaults(
+  routeDefaults: NonNullable<ReturnType<typeof getActionCenterEnabledRouteDefaults>>,
+): ActionCenterReviewRhythmConfig {
+  return normalizeActionCenterReviewRhythmConfig({
+    cadence_days: routeDefaults.cadenceDays,
+    reminder_lead_days: routeDefaults.reminderLeadDays,
+    escalation_lead_days: routeDefaults.escalationLeadDays,
+    reminders_enabled: routeDefaults.remindersEnabled,
+  })
+}
+
+function normalizeConfigRow(args: {
+  row: ActionCenterReviewRhythmConfigRow
+  routeDefaultConfig: ActionCenterReviewRhythmConfig
+}): ActionCenterReviewRhythmConfig | null {
+  if (!args.row.route_id) {
     return null
   }
 
   return normalizeActionCenterReviewRhythmConfig({
-    cadence_days: row.cadence_days,
-    reminder_lead_days: row.reminder_lead_days,
-    escalation_lead_days: row.escalation_lead_days,
-    reminders_enabled: row.reminders_enabled,
+    cadence_days: args.row.cadence_days ?? args.routeDefaultConfig.cadenceDays,
+    reminder_lead_days: args.row.reminder_lead_days ?? args.routeDefaultConfig.reminderLeadDays,
+    escalation_lead_days:
+      args.row.escalation_lead_days ?? args.routeDefaultConfig.escalationLeadDays,
+    reminders_enabled: args.row.reminders_enabled ?? args.routeDefaultConfig.remindersEnabled,
   })
 }
 
@@ -62,6 +78,14 @@ function sortOversightAttentionItems(items: GovernanceMergedAttentionItem[]) {
     .slice(0, 5)
 }
 
+function getCanonicalRouteFamilySourceLabel(args: {
+  routeId: string
+  routeScanTypeByRouteId: Record<string, ActionCenterRouteDefaultsKnownScanType>
+  fallbackLabel: string
+}) {
+  return getActionCenterRouteFamilyLabel(args.routeScanTypeByRouteId[args.routeId]) ?? args.fallbackLabel
+}
+
 function mergeGovernanceIntoOversight(args: {
   items: ActionCenterPreviewItem[]
   oversight: ReturnType<typeof buildActionCenterReviewOversightSummary>
@@ -83,12 +107,22 @@ function mergeGovernanceIntoOversight(args: {
 
   const mergedAttentionItems: GovernanceMergedAttentionItem[] = args.oversight.attentionItems.map((item) => {
     const governance = governanceByRouteId.get(item.routeId)
+    const sourceLabel = getCanonicalRouteFamilySourceLabel({
+      routeId: item.routeId,
+      routeScanTypeByRouteId: args.routeScanTypeByRouteId,
+      fallbackLabel: item.sourceLabel,
+    })
+
     if (!governance) {
-      return item
+      return {
+        ...item,
+        sourceLabel,
+      }
     }
 
     return {
       ...item,
+      sourceLabel,
       governanceSignals: governance.signals,
     }
   })
@@ -106,7 +140,11 @@ function mergeGovernanceIntoOversight(args: {
       routeId,
       state: 'stale',
       scopeLabel: governance.scopeLabel,
-      sourceLabel: governance.sourceLabel,
+      sourceLabel: getCanonicalRouteFamilySourceLabel({
+        routeId,
+        routeScanTypeByRouteId: args.routeScanTypeByRouteId,
+        fallbackLabel: governance.sourceLabel,
+      }),
       reviewDateLabel: governance.reviewDateLabel,
       governanceSignals: governance.signals,
     })
@@ -144,7 +182,16 @@ export async function getActionCenterReviewRhythmData(args: {
   const persistedConfigByRouteId = ((data ?? []) as ActionCenterReviewRhythmConfigRow[]).reduce<
     Record<string, ActionCenterReviewRhythmConfig>
   >((acc, row) => {
-    const config = normalizeConfigRow(row)
+    const enabledRouteDefaults = getActionCenterEnabledRouteDefaults(
+      args.routeScanTypeByRouteId[row.route_id ?? ''],
+    )
+    const routeDefaultConfig = enabledRouteDefaults
+      ? toReviewRhythmConfigFromRouteDefaults(enabledRouteDefaults)
+      : buildDefaultActionCenterReviewRhythmConfig()
+    const config = normalizeConfigRow({
+      row,
+      routeDefaultConfig,
+    })
     if (row.route_id && config) {
       acc[row.route_id] = config
     }
@@ -153,7 +200,14 @@ export async function getActionCenterReviewRhythmData(args: {
   const configByRouteId = Object.fromEntries(
     eligibleItems.map((item) => {
       const routeId = getReviewRhythmRouteId(item)
-      return [routeId, persistedConfigByRouteId[routeId] ?? buildDefaultActionCenterReviewRhythmConfig()]
+      const enabledRouteDefaults = getActionCenterEnabledRouteDefaults(
+        args.routeScanTypeByRouteId[routeId],
+      )
+      const routeDefaultConfig = enabledRouteDefaults
+        ? toReviewRhythmConfigFromRouteDefaults(enabledRouteDefaults)
+        : buildDefaultActionCenterReviewRhythmConfig()
+
+      return [routeId, persistedConfigByRouteId[routeId] ?? routeDefaultConfig]
     }),
   )
 

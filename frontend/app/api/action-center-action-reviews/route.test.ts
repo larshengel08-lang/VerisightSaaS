@@ -422,7 +422,7 @@ describe('action center action reviews route', () => {
 
     expect(response.status).toBe(409)
     await expect(response.json()).resolves.toEqual({
-      detail: 'Route action review is niet toegestaan vanuit de huidige canonieke toestand.',
+      detail: 'Route action transition is not allowed.',
     })
     expect(insertQuery.insert).not.toHaveBeenCalled()
     expect(updateQuery.update).not.toHaveBeenCalled()
@@ -490,7 +490,7 @@ describe('action center action reviews route', () => {
 
     expect(response.status).toBe(409)
     await expect(response.json()).resolves.toEqual({
-      detail: 'Route action review is niet toegestaan vanuit de huidige canonieke toestand.',
+      detail: 'Route action transition is not allowed.',
     })
     expect(insertQuery.insert).not.toHaveBeenCalled()
     expect(updateQuery.update).not.toHaveBeenCalled()

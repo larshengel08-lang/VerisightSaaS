@@ -205,6 +205,20 @@ function resolveRouteActionDispositionEventType(
   }
 }
 
+function resolveRouteActionValidationMessage(
+  disposition: 'valid' | 'invalid' | 'needs_hr_review',
+) {
+  switch (disposition) {
+    case 'invalid':
+      return 'Pas deze actie aan zodat hij bounded en route-specifiek is.'
+    case 'needs_hr_review':
+      return 'Deze actie vraagt eerst HR-beoordeling.'
+    case 'valid':
+    default:
+      return null
+  }
+}
+
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as RouteActionRequestBody | null
 
@@ -219,8 +233,13 @@ export async function POST(request: Request) {
       primary_action_status: parsed.primary_action_status,
       review_scheduled_for: parsed.review_scheduled_for,
     })
-  } catch {
-    return NextResponse.json({ detail: 'Ongeldige route action input.' }, { status: 400 })
+  } catch (error) {
+    const detail =
+      error instanceof Error && error.message === 'Route action is outside bounded execution.'
+        ? error.message
+        : 'Ongeldige route action input.'
+
+    return NextResponse.json({ detail }, { status: 400 })
   }
 
   const supabase = await createClient()
@@ -317,6 +336,25 @@ export async function POST(request: Request) {
   }
 
   const adminClient = createAdminClient()
+  if (actionDraft.validationDisposition === 'valid') {
+    const { count: activeActionCount, error: activeActionCountError } = await adminClient
+      .from('action_center_route_actions')
+      .select('id', { count: 'exact', head: true })
+      .eq('route_id', identity.route_id)
+      .in('primary_action_status', ['open', 'in_review'])
+
+    if (activeActionCountError) {
+      return NextResponse.json({ detail: 'Route action route laden mislukt.' }, { status: 500 })
+    }
+
+    if ((activeActionCount ?? 0) > 2) {
+      return NextResponse.json(
+        { detail: 'Route exceeds bounded active-action limit.' },
+        { status: 409 },
+      )
+    }
+  }
+
   const { data, error } = await adminClient
     .from('action_center_route_actions')
     .insert({
@@ -401,5 +439,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ detail: 'Route action bounded event logging mislukt.' }, { status: 500 })
   }
 
-  return NextResponse.json({ action: data, actionDraft }, { status: 200 })
+  return NextResponse.json(
+    {
+      action: data,
+      actionDraft,
+      validationDisposition: actionDraft.validationDisposition,
+      validationMessage: resolveRouteActionValidationMessage(actionDraft.validationDisposition),
+    },
+    { status: 200 },
+  )
 }

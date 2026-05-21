@@ -15,11 +15,17 @@ export const ACTION_CENTER_ROUTE_DEFAULTS_SCAN_TYPES = [
 ] as const
 
 export const ACTION_CENTER_ROUTE_DEFAULTS_ENABLED_SCAN_TYPES = ACTION_CENTER_APPROVED_ROUTE_FAMILIES
+export const ACTION_CENTER_ROUTE_FAMILY_LABELS = {
+  exit: 'ExitScan',
+  retention: 'RetentieScan',
+} as const
 
 export type ActionCenterRouteDefaultsKnownScanType =
   (typeof ACTION_CENTER_ROUTE_DEFAULTS_SCAN_TYPES)[number]
 
 export type ActionCenterRouteDefaultsEnabledScanType = ActionCenterApprovedRouteFamily
+export type ActionCenterRouteFamilyLabel =
+  (typeof ACTION_CENTER_ROUTE_FAMILY_LABELS)[ActionCenterApprovedRouteFamily]
 
 export interface ActionCenterRouteDefaults {
   scanType: ActionCenterRouteDefaultsKnownScanType
@@ -54,22 +60,31 @@ const BASELINE_ROUTE_DEFAULTS = {
   escalationLeadDays: 7 as const,
 }
 
-const ACTION_CENTER_EXECUTION_THRESHOLDS: Record<
-  ActionCenterApprovedRouteFamily,
-  ActionCenterExecutionThresholds
-> = {
+const ACTION_CENTER_EXECUTION_THRESHOLDS = {
   exit: {
     stuckActiveWarningDays: 30,
     reviewDueGraceDays: 7,
     sprawlRiskCount: 3,
     repeatedReviewWarningCount: 2,
   },
-  retention: {
-    stuckActiveWarningDays: { min: 21, max: 30 },
+  retention: Object.freeze({
+    stuckActiveWarningDays: Object.freeze({ min: 21, max: 30 }),
     reviewDueGraceDays: 7,
     sprawlRiskCount: 3,
     repeatedReviewWarningCount: 2,
-  },
+  }),
+} satisfies Record<ActionCenterApprovedRouteFamily, ActionCenterExecutionThresholds>
+
+function cloneActionCenterExecutionThresholds(
+  thresholds: ActionCenterExecutionThresholds,
+): ActionCenterExecutionThresholds {
+  return {
+    ...thresholds,
+    stuckActiveWarningDays:
+      typeof thresholds.stuckActiveWarningDays === 'number'
+        ? thresholds.stuckActiveWarningDays
+        : { ...thresholds.stuckActiveWarningDays },
+  }
 }
 
 function buildEnabledRouteDefaults(
@@ -84,7 +99,9 @@ function buildEnabledRouteDefaults(
     escalationLeadDays: approvedRouteDefault.escalationLeadDays,
     reviewWindowDays: approvedRouteDefault.reviewWindowDays,
     staleAfterDays: approvedRouteDefault.staleAfterDays,
-    ...ACTION_CENTER_EXECUTION_THRESHOLDS[approvedRouteDefault.scanType],
+    ...cloneActionCenterExecutionThresholds(
+      ACTION_CENTER_EXECUTION_THRESHOLDS[approvedRouteDefault.scanType],
+    ),
     remindersEnabled: true,
     providerEligible: true,
   }
@@ -146,6 +163,17 @@ export function isActionCenterRouteDefaultsProviderEligibleScanType(
 ) {
   const defaults = getActionCenterRouteDefaults(scanType)
   return defaults?.providerEligible === true
+}
+
+export function getActionCenterRouteFamilyLabel(
+  scanType: string | null | undefined,
+): ActionCenterRouteFamilyLabel | null {
+  const defaults = getActionCenterEnabledRouteDefaults(scanType)
+  if (!defaults) {
+    return null
+  }
+
+  return ACTION_CENTER_ROUTE_FAMILY_LABELS[defaults.scanType]
 }
 
 export function getActionCenterEnabledRouteDefaults(

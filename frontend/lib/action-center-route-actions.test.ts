@@ -241,7 +241,7 @@ describe('action center route actions', () => {
     })
   })
 
-  it('retains broad project language as a draft that needs hr review', async () => {
+  it('marks broad project language for hr review', async () => {
     const { validateActionCenterRouteActionDraftInput } = await import('./action-center-route-actions') as {
       validateActionCenterRouteActionDraftInput: (input: Record<string, unknown>) => Record<string, unknown>
     }
@@ -249,9 +249,9 @@ describe('action center route actions', () => {
     expect(
       validateActionCenterRouteActionDraftInput(
         buildDraftInput({
-          primary_action_text: 'Start een organisatiebreed verbeterproject en werk de roadmap voor meerdere teams uit.',
-          primary_action_expected_effect:
-            'Binnen twee weken moet duidelijk zijn welke workstreams in dit programma moeten landen.',
+          primary_action_theme_key: 'workload',
+          primary_action_text: 'Start een breed HR-project om werkdruk overal op te lossen.',
+          primary_action_expected_effect: 'De cultuur moet verbeteren.',
         }),
       ),
     ).toMatchObject({
@@ -260,7 +260,7 @@ describe('action center route actions', () => {
     })
   })
 
-  it('retains dossier-like route language as an invalid draft instead of throwing', async () => {
+  it('keeps broad project language in needs-hr-review when fields are present but the expected effect stays weak', async () => {
     const { validateActionCenterRouteActionDraftInput } = await import('./action-center-route-actions') as {
       validateActionCenterRouteActionDraftInput: (input: Record<string, unknown>) => Record<string, unknown>
     }
@@ -268,15 +268,69 @@ describe('action center route actions', () => {
     expect(
       validateActionCenterRouteActionDraftInput(
         buildDraftInput({
-          primary_action_text: 'Leg het dossier aan en vul de vervolgroute en stopreden voor deze casus bij.',
-          primary_action_expected_effect:
-            'Binnen twee weken moet duidelijk zijn of het dossier compleet genoeg is voor verdere routing.',
+          primary_action_theme_key: 'workload',
+          primary_action_text: 'Start een breed HR-project om werkdruk overal op te lossen.',
+          primary_action_expected_effect: 'We kijken later verder.',
         }),
       ),
     ).toMatchObject({
       semanticState: 'draft',
-      validationDisposition: 'invalid',
+      validationDisposition: 'needs_hr_review',
     })
+  })
+
+  it('rejects employee-dossier-like action text', async () => {
+    const { validateActionCenterRouteActionDraftInput } = await import('./action-center-route-actions') as {
+      validateActionCenterRouteActionDraftInput: (input: Record<string, unknown>) => Record<string, unknown>
+    }
+
+    expect(() =>
+      validateActionCenterRouteActionDraftInput(
+        buildDraftInput({
+          primary_action_theme_key: 'workload',
+          primary_action_text: 'Monitor employee X in detail for risk.',
+          primary_action_expected_effect: 'Track individual risk more closely.',
+        }),
+      ),
+    ).toThrow('Route action is outside bounded execution.')
+  })
+
+  it('projects persisted dossier-like drafts as invalid draft truth instead of failing projection', async () => {
+    const { projectActionCenterRouteActionCard } = await import('./action-center-route-actions') as {
+      projectActionCenterRouteActionCard: (input: Record<string, unknown>) => Record<string, unknown>
+    }
+
+    expect(
+      projectActionCenterRouteActionCard(
+        buildCanonicalOpenActionInput({
+          primary_action_text: 'Monitor employee X in detail for risk.',
+          primary_action_expected_effect: 'Track individual risk more closely.',
+          primary_action_status: null,
+        }),
+      ),
+    ).toMatchObject({
+      status: null,
+      semanticState: 'draft',
+      validationDisposition: 'invalid',
+      actionText: 'Monitor employee X in detail for risk.',
+      expectedEffect: 'Track individual risk more closely.',
+    })
+  })
+
+  it('does not project persisted open dossier-like actions as active truth', async () => {
+    const { projectActionCenterRouteActionCard } = await import('./action-center-route-actions') as {
+      projectActionCenterRouteActionCard: (input: Record<string, unknown>) => Record<string, unknown>
+    }
+
+    expect(() =>
+      projectActionCenterRouteActionCard(
+        buildCanonicalOpenActionInput({
+          primary_action_text: 'Monitor employee X in detail for risk.',
+          primary_action_expected_effect: 'Track individual risk more closely.',
+          primary_action_status: 'open',
+        }),
+      ),
+    ).toThrow('Route action is outside bounded execution.')
   })
 
   it('models the hr-only promotion path from draft to active route action truth', async () => {

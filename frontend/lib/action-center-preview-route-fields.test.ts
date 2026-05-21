@@ -228,6 +228,9 @@ describe('action center preview route fields', () => {
     expect(html).toContain('Nog niet reviewbaar')
     expect(html).toContain('Actie toevoegen')
     expect(html).toContain('Review toevoegen')
+    expect(html).not.toContain('Thema van deze eerste concrete stap')
+    expect(html).not.toContain('Wat is die eerste concrete stap?')
+    expect(html).not.toContain('Wat moet deze stap zichtbaar maken?')
   })
 
   it('keeps route-action creation hidden until a persisted manager response route container exists', () => {

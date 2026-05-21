@@ -1,3 +1,472 @@
+create table if not exists public.action_center_route_actions (
+  id uuid primary key default gen_random_uuid(),
+  manager_response_id uuid references public.action_center_manager_responses(id) on delete cascade not null,
+  campaign_id uuid references public.campaigns(id) on delete cascade not null,
+  org_id uuid references public.organizations(id) on delete cascade not null,
+  route_id text not null,
+  route_scope_type text not null
+    check (route_scope_type in ('department', 'item')),
+  route_scope_value text not null,
+  manager_user_id uuid references auth.users(id) on delete cascade not null,
+  owner_name text not null,
+  owner_assigned_at timestamptz not null,
+  primary_action_theme_key text
+    check (primary_action_theme_key is null or primary_action_theme_key in ('leadership', 'culture', 'growth', 'compensation', 'workload', 'role_clarity')),
+  primary_action_text text,
+  primary_action_expected_effect text,
+  primary_action_status text
+    check (primary_action_status is null or primary_action_status in ('open', 'in_review', 'afgerond', 'gestopt')),
+  review_scheduled_for date,
+  semantic_state text
+    check (semantic_state is null or semantic_state in ('draft', 'active', 'review_due', 'in_review', 'blocked', 'completed', 'stopped', 'superseded')),
+  validation_disposition text
+    check (validation_disposition is null or validation_disposition in ('valid', 'invalid', 'needs_hr_review')),
+  created_by uuid references auth.users(id) on delete set null,
+  updated_by uuid references auth.users(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint action_center_route_actions_route_id_text_check
+    check (length(btrim(route_id)) > 0),
+  constraint action_center_route_actions_route_scope_value_text_check
+    check (length(btrim(route_scope_value)) > 0),
+  constraint action_center_route_actions_owner_name_text_check
+    check (length(btrim(owner_name)) > 0),
+  constraint action_center_route_actions_route_identity_check
+    check (route_id = ((campaign_id)::text || '::' || route_scope_value))
+);
+
+create table if not exists public.action_center_action_reviews (
+  id uuid primary key default gen_random_uuid(),
+  action_id uuid references public.action_center_route_actions(id) on delete cascade not null,
+  reviewed_at timestamptz not null,
+  observation text not null,
+  action_outcome text not null
+    check (action_outcome in ('effect-zichtbaar', 'bijsturen-nodig', 'nog-te-vroeg', 'stoppen')),
+  evidence_source text
+    check (evidence_source is null or evidence_source in ('manager-observation', 'team-conversation', 'other-bounded-source')),
+  confidence_level text
+    check (confidence_level is null or confidence_level in ('low', 'medium', 'high')),
+  follow_up_note text,
+  created_by uuid references auth.users(id) on delete set null,
+  updated_by uuid references auth.users(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint action_center_action_reviews_observation_text_check
+    check (length(btrim(observation)) > 0),
+  constraint action_center_action_reviews_follow_up_note_text_check
+    check (follow_up_note is null or length(btrim(follow_up_note)) > 0)
+);
+
+do $$
+begin
+  if exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'action_center_route_actions'
+      and column_name = 'theme_key'
+  ) and not exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'action_center_route_actions'
+      and column_name = 'primary_action_theme_key'
+  ) then
+    alter table public.action_center_route_actions rename column theme_key to primary_action_theme_key;
+  end if;
+
+  if exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'action_center_route_actions'
+      and column_name = 'action_text'
+  ) and not exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'action_center_route_actions'
+      and column_name = 'primary_action_text'
+  ) then
+    alter table public.action_center_route_actions rename column action_text to primary_action_text;
+  end if;
+
+  if exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'action_center_route_actions'
+      and column_name = 'expected_effect'
+  ) and not exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'action_center_route_actions'
+      and column_name = 'primary_action_expected_effect'
+  ) then
+    alter table public.action_center_route_actions rename column expected_effect to primary_action_expected_effect;
+  end if;
+
+  if exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'action_center_route_actions'
+      and column_name = 'status'
+  ) and not exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'action_center_route_actions'
+      and column_name = 'primary_action_status'
+  ) then
+    alter table public.action_center_route_actions rename column status to primary_action_status;
+  end if;
+end $$;
+
+alter table public.action_center_route_actions
+  add column if not exists manager_response_id uuid references public.action_center_manager_responses(id) on delete cascade,
+  add column if not exists route_id text,
+  add column if not exists owner_name text,
+  add column if not exists owner_assigned_at timestamptz,
+  add column if not exists primary_action_theme_key text,
+  add column if not exists primary_action_text text,
+  add column if not exists primary_action_expected_effect text,
+  add column if not exists primary_action_status text,
+  add column if not exists semantic_state text,
+  add column if not exists validation_disposition text;
+
+alter table public.action_center_action_reviews
+  add column if not exists evidence_source text,
+  add column if not exists confidence_level text;
+
+alter table public.action_center_action_reviews
+  alter column follow_up_note drop not null;
+
+do $$
+begin
+  update public.action_center_route_actions
+  set route_id = ((campaign_id)::text || '::' || route_scope_value)
+  where route_id is null
+    and campaign_id is not null
+    and route_scope_value is not null;
+
+  update public.action_center_route_actions a
+  set manager_response_id = r.id
+  from public.action_center_manager_responses r
+  where a.manager_response_id is null
+    and r.campaign_id = a.campaign_id
+    and r.org_id = a.org_id
+    and r.route_scope_type = a.route_scope_type
+    and r.route_scope_value = a.route_scope_value
+    and r.manager_user_id = a.manager_user_id;
+
+  if exists (
+    select 1
+    from information_schema.tables
+    where table_schema = 'public'
+      and table_name = 'action_center_workspace_members'
+  ) then
+    update public.action_center_route_actions a
+    set owner_name = coalesce(
+      nullif(btrim(m.display_name), ''),
+      nullif(regexp_replace(split_part(coalesce(m.login_email, ''), '@', 1), '[._-]+', ' ', 'g'), ''),
+      (a.manager_user_id)::text
+    )
+    from public.action_center_workspace_members m
+    where a.owner_name is null
+      and m.org_id = a.org_id
+      and m.user_id = a.manager_user_id
+      and m.scope_type = a.route_scope_type
+      and m.scope_value = a.route_scope_value
+      and m.access_role = 'manager_assignee';
+
+    update public.action_center_route_actions a
+    set owner_assigned_at = coalesce(m.created_at, a.created_at)
+    from public.action_center_workspace_members m
+    where a.owner_assigned_at is null
+      and m.org_id = a.org_id
+      and m.user_id = a.manager_user_id
+      and m.scope_type = a.route_scope_type
+      and m.scope_value = a.route_scope_value
+      and m.access_role = 'manager_assignee';
+  end if;
+
+  update public.action_center_route_actions
+  set owner_name = (manager_user_id)::text
+  where owner_name is null
+    and manager_user_id is not null;
+
+  update public.action_center_route_actions
+  set owner_assigned_at = created_at
+  where owner_assigned_at is null;
+end $$;
+
+alter table public.action_center_route_actions
+  drop constraint if exists action_center_route_actions_route_id_text_check;
+
+alter table public.action_center_route_actions
+  add constraint action_center_route_actions_route_id_text_check
+  check (route_id is null or length(btrim(route_id)) > 0);
+
+alter table public.action_center_route_actions
+  drop constraint if exists action_center_route_actions_route_scope_value_text_check;
+
+alter table public.action_center_route_actions
+  add constraint action_center_route_actions_route_scope_value_text_check
+  check (length(btrim(route_scope_value)) > 0);
+
+alter table public.action_center_route_actions
+  drop constraint if exists action_center_route_actions_owner_name_text_check;
+
+alter table public.action_center_route_actions
+  add constraint action_center_route_actions_owner_name_text_check
+  check (owner_name is null or length(btrim(owner_name)) > 0);
+
+alter table public.action_center_route_actions
+  drop constraint if exists action_center_route_actions_route_identity_check;
+
+alter table public.action_center_route_actions
+  add constraint action_center_route_actions_route_identity_check
+  check (
+    route_id is null
+    or route_scope_value is null
+    or campaign_id is null
+    or route_id = ((campaign_id)::text || '::' || route_scope_value)
+  );
+
+alter table public.action_center_route_actions
+  drop constraint if exists action_center_route_actions_primary_action_theme_key_check;
+
+alter table public.action_center_route_actions
+  add constraint action_center_route_actions_primary_action_theme_key_check
+  check (
+    primary_action_theme_key is null
+    or primary_action_theme_key in ('leadership', 'culture', 'growth', 'compensation', 'workload', 'role_clarity')
+  );
+
+alter table public.action_center_route_actions
+  drop constraint if exists action_center_route_actions_primary_action_status_check;
+
+alter table public.action_center_route_actions
+  add constraint action_center_route_actions_primary_action_status_check
+  check (
+    primary_action_status is null
+    or primary_action_status in ('open', 'in_review', 'afgerond', 'gestopt')
+  );
+
+alter table public.action_center_route_actions
+  drop constraint if exists action_center_route_actions_semantic_state_check;
+
+alter table public.action_center_route_actions
+  add constraint action_center_route_actions_semantic_state_check
+  check (
+    semantic_state is null
+    or semantic_state in ('draft', 'active', 'review_due', 'in_review', 'blocked', 'completed', 'stopped', 'superseded')
+  );
+
+alter table public.action_center_route_actions
+  drop constraint if exists action_center_route_actions_validation_disposition_check;
+
+alter table public.action_center_route_actions
+  add constraint action_center_route_actions_validation_disposition_check
+  check (
+    validation_disposition is null
+    or validation_disposition in ('valid', 'invalid', 'needs_hr_review')
+  );
+
+alter table public.action_center_action_reviews
+  drop constraint if exists action_center_action_reviews_action_outcome_check;
+
+alter table public.action_center_action_reviews
+  add constraint action_center_action_reviews_action_outcome_check
+  check (action_outcome in ('effect-zichtbaar', 'bijsturen-nodig', 'nog-te-vroeg', 'stoppen'));
+
+alter table public.action_center_action_reviews
+  drop constraint if exists action_center_action_reviews_evidence_source_check;
+
+alter table public.action_center_action_reviews
+  add constraint action_center_action_reviews_evidence_source_check
+  check (
+    evidence_source is null
+    or evidence_source in ('manager-observation', 'team-conversation', 'other-bounded-source')
+  );
+
+alter table public.action_center_action_reviews
+  drop constraint if exists action_center_action_reviews_confidence_level_check;
+
+alter table public.action_center_action_reviews
+  add constraint action_center_action_reviews_confidence_level_check
+  check (
+    confidence_level is null
+    or confidence_level in ('low', 'medium', 'high')
+  );
+
+alter table public.action_center_action_reviews
+  drop constraint if exists action_center_action_reviews_observation_text_check;
+
+alter table public.action_center_action_reviews
+  add constraint action_center_action_reviews_observation_text_check
+  check (length(btrim(observation)) > 0);
+
+alter table public.action_center_action_reviews
+  drop constraint if exists action_center_action_reviews_follow_up_note_text_check;
+
+alter table public.action_center_action_reviews
+  add constraint action_center_action_reviews_follow_up_note_text_check
+  check (follow_up_note is null or length(btrim(follow_up_note)) > 0);
+
+create index if not exists idx_action_center_route_actions_manager_response
+  on public.action_center_route_actions(manager_response_id);
+
+create index if not exists idx_action_center_route_actions_route
+  on public.action_center_route_actions(route_id, primary_action_status, review_scheduled_for);
+
+create index if not exists idx_action_center_route_actions_manager_scope
+  on public.action_center_route_actions(org_id, manager_user_id, route_scope_type, route_scope_value);
+
+create index if not exists idx_action_center_action_reviews_action
+  on public.action_center_action_reviews(action_id, reviewed_at desc);
+
+alter table public.action_center_route_actions enable row level security;
+alter table public.action_center_action_reviews enable row level security;
+
+drop policy if exists "managers_can_select_action_center_route_actions" on public.action_center_route_actions;
+create policy "managers_can_select_action_center_route_actions"
+  on public.action_center_route_actions for select
+  using (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.action_center_workspace_members m
+      where m.user_id = auth.uid()
+        and m.org_id = action_center_route_actions.org_id
+        and m.access_role = 'manager_assignee'
+        and m.scope_type = action_center_route_actions.route_scope_type
+        and m.scope_value = action_center_route_actions.route_scope_value
+        and m.can_view
+    )
+  );
+
+drop policy if exists "managers_can_insert_action_center_route_actions" on public.action_center_route_actions;
+create policy "managers_can_insert_action_center_route_actions"
+  on public.action_center_route_actions for insert
+  with check (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.action_center_workspace_members m
+      where m.user_id = auth.uid()
+        and m.org_id = action_center_route_actions.org_id
+        and m.access_role = 'manager_assignee'
+        and m.scope_type = action_center_route_actions.route_scope_type
+        and m.scope_value = action_center_route_actions.route_scope_value
+        and m.can_update
+    )
+  );
+
+drop policy if exists "managers_can_update_action_center_route_actions" on public.action_center_route_actions;
+create policy "managers_can_update_action_center_route_actions"
+  on public.action_center_route_actions for update
+  using (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.action_center_workspace_members m
+      where m.user_id = auth.uid()
+        and m.org_id = action_center_route_actions.org_id
+        and m.access_role = 'manager_assignee'
+        and m.scope_type = action_center_route_actions.route_scope_type
+        and m.scope_value = action_center_route_actions.route_scope_value
+        and m.can_update
+    )
+  )
+  with check (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.action_center_workspace_members m
+      where m.user_id = auth.uid()
+        and m.org_id = action_center_route_actions.org_id
+        and m.access_role = 'manager_assignee'
+        and m.scope_type = action_center_route_actions.route_scope_type
+        and m.scope_value = action_center_route_actions.route_scope_value
+        and m.can_update
+    )
+  );
+
+drop policy if exists "managers_can_select_action_center_action_reviews" on public.action_center_action_reviews;
+create policy "managers_can_select_action_center_action_reviews"
+  on public.action_center_action_reviews for select
+  using (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.action_center_route_actions a
+      join public.action_center_workspace_members m
+        on m.org_id = a.org_id
+       and m.scope_type = a.route_scope_type
+       and m.scope_value = a.route_scope_value
+      where a.id = action_center_action_reviews.action_id
+        and m.user_id = auth.uid()
+        and m.access_role = 'manager_assignee'
+        and m.can_view
+    )
+  );
+
+drop policy if exists "managers_can_insert_action_center_action_reviews" on public.action_center_action_reviews;
+create policy "managers_can_insert_action_center_action_reviews"
+  on public.action_center_action_reviews for insert
+  with check (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.action_center_route_actions a
+      join public.action_center_workspace_members m
+        on m.org_id = a.org_id
+       and m.scope_type = a.route_scope_type
+       and m.scope_value = a.route_scope_value
+      where a.id = action_center_action_reviews.action_id
+        and m.user_id = auth.uid()
+        and m.access_role = 'manager_assignee'
+        and m.can_update
+    )
+  );
+
+drop policy if exists "managers_can_update_action_center_action_reviews" on public.action_center_action_reviews;
+create policy "managers_can_update_action_center_action_reviews"
+  on public.action_center_action_reviews for update
+  using (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.action_center_route_actions a
+      join public.action_center_workspace_members m
+        on m.org_id = a.org_id
+       and m.scope_type = a.route_scope_type
+       and m.scope_value = a.route_scope_value
+      where a.id = action_center_action_reviews.action_id
+        and m.user_id = auth.uid()
+        and m.access_role = 'manager_assignee'
+        and m.can_update
+    )
+  )
+  with check (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.action_center_route_actions a
+      join public.action_center_workspace_members m
+        on m.org_id = a.org_id
+       and m.scope_type = a.route_scope_type
+       and m.scope_value = a.route_scope_value
+      where a.id = action_center_action_reviews.action_id
+        and m.user_id = auth.uid()
+        and m.access_role = 'manager_assignee'
+        and m.can_update
+    )
+  );
+
 create table if not exists public.action_center_adoption_events (
   id uuid primary key default gen_random_uuid(),
   org_id uuid not null references public.organizations(id) on delete cascade,

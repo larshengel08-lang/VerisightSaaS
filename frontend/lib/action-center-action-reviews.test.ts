@@ -77,12 +77,19 @@ describe('action center action reviews', () => {
     )
   })
 
-  it('resolves review outcomes into canonical action lifecycle states', async () => {
+  it('maps effect-zichtbaar to completed', async () => {
     const { resolveActionCenterActionReviewTransition } = await import('./action-center-action-reviews') as {
       resolveActionCenterActionReviewTransition: (outcome: string) => string
     }
 
     expect(resolveActionCenterActionReviewTransition('effect-zichtbaar')).toBe('completed')
+  })
+
+  it('resolves review outcomes into canonical action lifecycle states', async () => {
+    const { resolveActionCenterActionReviewTransition } = await import('./action-center-action-reviews') as {
+      resolveActionCenterActionReviewTransition: (outcome: string) => string
+    }
+
     expect(resolveActionCenterActionReviewTransition('bijsturen-nodig')).toBe('active')
     expect(resolveActionCenterActionReviewTransition('nog-te-vroeg')).toBe('active')
     expect(resolveActionCenterActionReviewTransition('stoppen')).toBe('stopped')
