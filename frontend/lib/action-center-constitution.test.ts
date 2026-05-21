@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import {
+  ACTION_CENTER_ACTION_DRAFT_TRANSITION_RULES,
   ACTION_CENTER_ACTION_TRANSITION_RULES,
   ACTION_CENTER_ACTION_SEMANTIC_STATES,
   ACTION_CENTER_CANONICAL_REVIEW_STATES,
   ACTION_CENTER_CANONICAL_ROUTE_STATES,
   ACTION_CENTER_TRANSITION_RULES,
   getActionCenterApprovedRouteDefault,
+  isActionCenterActionDraftTransitionAllowed,
   isActionCenterActionStateTransitionAllowed,
   isActionCenterCanonicalRouteStateTransitionAllowed,
   resolveActionCenterActionReviewTransition,
@@ -114,39 +116,99 @@ describe('action-center constitution', () => {
   it('keeps bounded action lifecycle transition truth explicit', () => {
     expect(ACTION_CENTER_ACTION_TRANSITION_RULES).toEqual([
       {
-        fromState: 'draft',
-        toState: 'active',
-        actors: ['manager_participant', 'hr_rhythm_owner'],
-      },
-      {
         fromState: 'active',
         toState: 'review_due',
         actors: ['system_channel'],
+        phase: 'execution_lifecycle',
+      },
+      {
+        fromState: 'active',
+        toState: 'blocked',
+        actors: ['manager_participant', 'hr_rhythm_owner'],
+        phase: 'execution_lifecycle',
+      },
+      {
+        fromState: 'active',
+        toState: 'superseded',
+        actors: ['manager_participant', 'hr_rhythm_owner'],
+        phase: 'execution_lifecycle',
       },
       {
         fromState: 'review_due',
         toState: 'in_review',
         actors: ['manager_participant', 'hr_rhythm_owner'],
+        phase: 'execution_lifecycle',
+      },
+      {
+        fromState: 'review_due',
+        toState: 'blocked',
+        actors: ['manager_participant', 'hr_rhythm_owner'],
+        phase: 'execution_lifecycle',
       },
       {
         fromState: 'in_review',
         toState: 'active',
         actors: ['manager_participant', 'hr_rhythm_owner'],
+        phase: 'execution_lifecycle',
+      },
+      {
+        fromState: 'in_review',
+        toState: 'blocked',
+        actors: ['manager_participant', 'hr_rhythm_owner'],
+        phase: 'execution_lifecycle',
       },
       {
         fromState: 'in_review',
         toState: 'completed',
         actors: ['manager_participant', 'hr_rhythm_owner'],
+        phase: 'execution_lifecycle',
       },
       {
         fromState: 'in_review',
         toState: 'stopped',
         actors: ['manager_participant', 'hr_rhythm_owner'],
+        phase: 'execution_lifecycle',
       },
       {
         fromState: 'blocked',
         toState: 'in_review',
         actors: ['manager_participant', 'hr_rhythm_owner'],
+        phase: 'execution_lifecycle',
+      },
+      {
+        fromState: 'blocked',
+        toState: 'stopped',
+        actors: ['manager_participant', 'hr_rhythm_owner'],
+        phase: 'execution_lifecycle',
+      },
+      {
+        fromState: 'stopped',
+        toState: 'superseded',
+        actors: ['manager_participant', 'hr_rhythm_owner'],
+        phase: 'execution_lifecycle',
+      },
+    ])
+  })
+
+  it('keeps draft-resolution transitions explicit and separate from generic execution lifecycle truth', () => {
+    expect(ACTION_CENTER_ACTION_DRAFT_TRANSITION_RULES).toEqual([
+      {
+        fromState: 'draft',
+        toState: 'active',
+        actors: ['hr_rhythm_owner'],
+        phase: 'draft_resolution',
+      },
+      {
+        fromState: 'draft',
+        toState: 'stopped',
+        actors: ['manager_participant', 'hr_rhythm_owner'],
+        phase: 'draft_resolution',
+      },
+      {
+        fromState: 'draft',
+        toState: 'superseded',
+        actors: ['manager_participant', 'hr_rhythm_owner'],
+        phase: 'draft_resolution',
       },
     ])
   })
@@ -263,6 +325,58 @@ describe('action-center constitution', () => {
     ).toBe(false)
   })
 
+  it('does not let generic execution transitions treat draft promotion as a review-like lifecycle move', () => {
+    expect(
+      isActionCenterActionStateTransitionAllowed({
+        actor: 'manager_participant',
+        fromState: 'draft',
+        toState: 'active',
+      }),
+    ).toBe(false)
+
+    expect(
+      isActionCenterActionStateTransitionAllowed({
+        actor: 'hr_rhythm_owner',
+        fromState: 'draft',
+        toState: 'active',
+      }),
+    ).toBe(false)
+  })
+
+  it('allows draft transitions only through the explicit draft-resolution helper', () => {
+    expect(
+      isActionCenterActionDraftTransitionAllowed({
+        actor: 'hr_rhythm_owner',
+        fromState: 'draft',
+        toState: 'active',
+      }),
+    ).toBe(true)
+
+    expect(
+      isActionCenterActionDraftTransitionAllowed({
+        actor: 'manager_participant',
+        fromState: 'draft',
+        toState: 'active',
+      }),
+    ).toBe(false)
+
+    expect(
+      isActionCenterActionDraftTransitionAllowed({
+        actor: 'manager_participant',
+        fromState: 'draft',
+        toState: 'stopped',
+      }),
+    ).toBe(true)
+
+    expect(
+      isActionCenterActionDraftTransitionAllowed({
+        actor: 'manager_participant',
+        fromState: 'draft',
+        toState: 'superseded',
+      }),
+    ).toBe(true)
+  })
+
   it('does not allow draft to jump straight to completed', () => {
     expect(
       isActionCenterActionStateTransitionAllowed({
@@ -283,12 +397,44 @@ describe('action-center constitution', () => {
     ).toBe(true)
   })
 
+  it.each([
+    ['active', 'blocked'],
+    ['active', 'superseded'],
+    ['review_due', 'blocked'],
+    ['in_review', 'blocked'],
+    ['blocked', 'stopped'],
+    ['stopped', 'superseded'],
+  ] as const)('allows bounded execution lifecycle transition %s -> %s', (fromState, toState) => {
+    expect(
+      isActionCenterActionStateTransitionAllowed({
+        actor: 'manager_participant',
+        fromState,
+        toState,
+      }),
+    ).toBe(true)
+  })
+
   it('does not allow blocked to completed without review', () => {
     expect(
       isActionCenterActionStateTransitionAllowed({
         actor: 'manager_participant',
         fromState: 'blocked',
         toState: 'completed',
+      }),
+    ).toBe(false)
+  })
+
+  it.each([
+    ['active', 'completed'],
+    ['blocked', 'active'],
+    ['completed', 'superseded'],
+    ['stopped', 'active'],
+  ] as const)('keeps prohibited execution lifecycle transition %s -> %s blocked', (fromState, toState) => {
+    expect(
+      isActionCenterActionStateTransitionAllowed({
+        actor: 'manager_participant',
+        fromState,
+        toState,
       }),
     ).toBe(false)
   })

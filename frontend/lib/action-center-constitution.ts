@@ -69,6 +69,7 @@ export type ActionCenterTransitionRule = {
 export type ActionCenterActionTransitionRule = {
   readonly fromState: ActionCenterActionSemanticState
   readonly toState: ActionCenterActionSemanticState
+  readonly phase: 'draft_resolution' | 'execution_lifecycle'
   actors: readonly ActionCenterActor[]
 }
 
@@ -119,39 +120,98 @@ export const ACTION_CENTER_TRANSITION_RULES: readonly Readonly<ActionCenterTrans
 export const ACTION_CENTER_ACTION_TRANSITION_RULES: readonly Readonly<ActionCenterActionTransitionRule>[] =
   Object.freeze([
     freezeActionCenterActionTransitionRule({
-      fromState: 'draft',
-      toState: 'active',
-      actors: ['manager_participant', 'hr_rhythm_owner'],
-    }),
-    freezeActionCenterActionTransitionRule({
       fromState: 'active',
       toState: 'review_due',
       actors: ['system_channel'],
+      phase: 'execution_lifecycle',
+    }),
+    freezeActionCenterActionTransitionRule({
+      fromState: 'active',
+      toState: 'blocked',
+      actors: ['manager_participant', 'hr_rhythm_owner'],
+      phase: 'execution_lifecycle',
+    }),
+    freezeActionCenterActionTransitionRule({
+      fromState: 'active',
+      toState: 'superseded',
+      actors: ['manager_participant', 'hr_rhythm_owner'],
+      phase: 'execution_lifecycle',
     }),
     freezeActionCenterActionTransitionRule({
       fromState: 'review_due',
       toState: 'in_review',
       actors: ['manager_participant', 'hr_rhythm_owner'],
+      phase: 'execution_lifecycle',
+    }),
+    freezeActionCenterActionTransitionRule({
+      fromState: 'review_due',
+      toState: 'blocked',
+      actors: ['manager_participant', 'hr_rhythm_owner'],
+      phase: 'execution_lifecycle',
     }),
     freezeActionCenterActionTransitionRule({
       fromState: 'in_review',
       toState: 'active',
       actors: ['manager_participant', 'hr_rhythm_owner'],
+      phase: 'execution_lifecycle',
+    }),
+    freezeActionCenterActionTransitionRule({
+      fromState: 'in_review',
+      toState: 'blocked',
+      actors: ['manager_participant', 'hr_rhythm_owner'],
+      phase: 'execution_lifecycle',
     }),
     freezeActionCenterActionTransitionRule({
       fromState: 'in_review',
       toState: 'completed',
       actors: ['manager_participant', 'hr_rhythm_owner'],
+      phase: 'execution_lifecycle',
     }),
     freezeActionCenterActionTransitionRule({
       fromState: 'in_review',
       toState: 'stopped',
       actors: ['manager_participant', 'hr_rhythm_owner'],
+      phase: 'execution_lifecycle',
     }),
     freezeActionCenterActionTransitionRule({
       fromState: 'blocked',
       toState: 'in_review',
       actors: ['manager_participant', 'hr_rhythm_owner'],
+      phase: 'execution_lifecycle',
+    }),
+    freezeActionCenterActionTransitionRule({
+      fromState: 'blocked',
+      toState: 'stopped',
+      actors: ['manager_participant', 'hr_rhythm_owner'],
+      phase: 'execution_lifecycle',
+    }),
+    freezeActionCenterActionTransitionRule({
+      fromState: 'stopped',
+      toState: 'superseded',
+      actors: ['manager_participant', 'hr_rhythm_owner'],
+      phase: 'execution_lifecycle',
+    }),
+  ])
+
+export const ACTION_CENTER_ACTION_DRAFT_TRANSITION_RULES: readonly Readonly<ActionCenterActionTransitionRule>[] =
+  Object.freeze([
+    freezeActionCenterActionTransitionRule({
+      fromState: 'draft',
+      toState: 'active',
+      actors: ['hr_rhythm_owner'],
+      phase: 'draft_resolution',
+    }),
+    freezeActionCenterActionTransitionRule({
+      fromState: 'draft',
+      toState: 'stopped',
+      actors: ['manager_participant', 'hr_rhythm_owner'],
+      phase: 'draft_resolution',
+    }),
+    freezeActionCenterActionTransitionRule({
+      fromState: 'draft',
+      toState: 'superseded',
+      actors: ['manager_participant', 'hr_rhythm_owner'],
+      phase: 'draft_resolution',
     }),
   ])
 
@@ -227,8 +287,23 @@ export function isActionCenterActionStateTransitionAllowed(args: {
   actor: ActionCenterActor
   fromState: ActionCenterActionSemanticState
   toState: ActionCenterActionSemanticState
+  phase?: ActionCenterActionTransitionRule['phase']
 }): boolean {
   return ACTION_CENTER_ACTION_TRANSITION_RULES.some(
+    (rule) =>
+      rule.fromState === args.fromState &&
+      rule.toState === args.toState &&
+      rule.actors.includes(args.actor) &&
+      (!args.phase || rule.phase === args.phase),
+  )
+}
+
+export function isActionCenterActionDraftTransitionAllowed(args: {
+  actor: ActionCenterActor
+  fromState: Extract<ActionCenterActionSemanticState, 'draft'>
+  toState: Extract<ActionCenterActionSemanticState, 'active' | 'stopped' | 'superseded'>
+}): boolean {
+  return ACTION_CENTER_ACTION_DRAFT_TRANSITION_RULES.some(
     (rule) => rule.fromState === args.fromState && rule.toState === args.toState && rule.actors.includes(args.actor),
   )
 }

@@ -210,6 +210,7 @@ export async function POST(request: Request) {
 
   if (
     !currentSemanticState ||
+    currentSemanticState !== 'in_review' ||
     !isActionCenterActionStateTransitionAllowed({
       actor,
       fromState: currentSemanticState,

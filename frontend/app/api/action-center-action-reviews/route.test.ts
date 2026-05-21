@@ -360,7 +360,7 @@ describe('action center action reviews route', () => {
     expect(payload.review).not.toHaveProperty('closed_by_role')
   })
 
-  it('allows a no-progress review outcome to reactivate a draft action through the canonical transition rules', async () => {
+  it('rejects review writes when the current action is still a draft', async () => {
     mockGetUser.mockResolvedValue({
       data: {
         user: { id: 'manager-1' },
@@ -381,51 +381,20 @@ describe('action center action reviews route', () => {
       ],
     })
 
-    const insertQuery = createInsertQuery({
-      data: {
-        id: 'review-draft-1',
-        action_id: 'action-11',
-        reviewed_at: '2026-05-12T09:30:00.000Z',
-        observation: 'Te vroeg voor closeout, dus dit blijft een actief actiepunt.',
-        action_outcome: 'bijsturen-nodig',
-        follow_up_note: 'De draft gaat terug de uitvoering in met een concreter vervolg.',
-        created_at: '2026-04-30T10:05:00.000Z',
-        updated_at: '2026-04-30T10:05:00.000Z',
-      },
-      error: null,
-    })
+    const insertQuery = createInsertQuery({ data: null, error: null })
     const updateQuery = createUpdateQuery({ error: null })
-    const metricsInsertQuery = createInsertQuery({
-      data: [{ id: 'event-review-draft' }, { id: 'event-state-draft' }],
-      error: null,
-    })
-    let actionLookupCount = 0
 
     mockAdminFrom.mockImplementation((table: string) => {
       if (table === 'action_center_route_actions') {
-        actionLookupCount += 1
-        if (actionLookupCount === 1) {
-          return createActionQuery({
-            data: {
-              id: 'action-11',
-              campaign_id: 'campaign-1',
-              route_id: 'campaign-1::org-1::department::operations',
-              org_id: 'org-1',
-              route_scope_type: 'department',
-              route_scope_value: 'org-1::department::operations',
-              manager_user_id: 'manager-1',
-              primary_action_status: 'draft',
-            },
-            error: null,
-          })
-        }
-
-        return updateQuery
-      }
-
-      if (table === 'campaigns') {
-        return createCampaignQuery({
-          data: { scan_type: 'retention' },
+        return createActionQuery({
+          data: {
+            id: 'action-11',
+            org_id: 'org-1',
+            route_scope_type: 'department',
+            route_scope_value: 'org-1::department::operations',
+            manager_user_id: 'manager-1',
+            primary_action_status: 'draft',
+          },
           error: null,
         })
       }
@@ -445,21 +414,18 @@ describe('action center action reviews route', () => {
       makeRequest({
         action_id: 'action-11',
         reviewed_at: '2026-05-12T09:30:00.000Z',
-        observation: 'Te vroeg voor closeout, dus dit blijft een actief actiepunt.',
+        observation: 'Te vroeg om dit al als uitgevoerde review te registreren.',
         action_outcome: 'bijsturen-nodig',
-        follow_up_note: 'De draft gaat terug de uitvoering in met een concreter vervolg.',
+        follow_up_note: 'De draft moet eerst echt gestart worden.',
       }),
     )
 
-    expect(response.status).toBe(200)
-    expect(insertQuery.insert).toHaveBeenCalledTimes(1)
-    expect(updateQuery.update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        primary_action_status: 'open',
-        updated_by: 'manager-1',
-      }),
-    )
-    expect(metricsInsertQuery.insert).toHaveBeenCalledTimes(1)
+    expect(response.status).toBe(409)
+    await expect(response.json()).resolves.toEqual({
+      detail: 'Route action transition is not allowed.',
+    })
+    expect(insertQuery.insert).not.toHaveBeenCalled()
+    expect(updateQuery.update).not.toHaveBeenCalled()
   })
 
   it('rejects review writes when the current action is blocked', async () => {
