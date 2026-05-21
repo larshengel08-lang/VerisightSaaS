@@ -78,7 +78,7 @@ Deck behavior:
 - `Wat je hier niet uit mag concluderen`
 - no causal proof
 - no manager ranking
-- no individual prediction
+- no individual inference
 - no benchmark claim
 
 12. Decision questions
@@ -99,6 +99,12 @@ This deck must remain the guided sibling of the board report PDF:
 - the report is more compact and self-readable
 - the deck is more spacious and presenter-led
 - both stay inside the same governance and interpretation boundaries
+
+Fixed boundary language for this deck family:
+- no causal proof
+- no manager ranking
+- no individual inference
+- no benchmark claim
 
 This deck must not introduce:
 - benchmark positioning

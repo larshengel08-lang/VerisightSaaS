@@ -9,12 +9,16 @@ Deckritme:
 - elke attention point krijgt een eigen discussiemoment
 - governance blijft zichtbaar in wat wel en niet getoond wordt
 
+Bron van waarheid:
+- de canonieke slidevolgorde en vaste boundary language erven rechtstreeks van `CULTURE_ASSESSMENT_BOARDROOM_DECK.md`
+- dit agenda-document beschrijft alleen pacing en bespreekritme voor die canonieke deckvolgorde
+
 Deelnemers:
 - board / directie
 - HR lead of People lead
 - Loep / Verisight facilitator
 
-Vaste agenda:
+Vaste agenda volgens de canonieke deckvolgorde:
 1. Opening en purpose
 2. Wat is gemeten
 3. Respons en governance
@@ -36,10 +40,12 @@ Bespreekfocus:
 - houd de drie attention points gescheiden zodat het tempo ruim blijft
 - gebruik de besluitvragen om discussie te openen, niet om een actieplan te dicteren
 
-Expliciet niet:
-- benchmark- of positiegesprek
+Vaste boundary language uit de canonieke deck:
+- no causal proof
+- no manager ranking
+- no individual inference
+- no benchmark claim
+
+Expliciet niet tijdens deze board-read:
 - vrije score-interpretatie
-- manager ranking
-- individuele inference
-- causale diagnose
 - self-serve drilldown tijdens de board-read
