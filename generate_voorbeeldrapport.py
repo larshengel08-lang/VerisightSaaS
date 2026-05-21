@@ -89,7 +89,6 @@ CULTURE_CONFIG = {
     "scan_type": "culture_assessment",
     "campaign_name": "Loep Cultuurbeeld 2026",
     "docs_output_name": "voorbeeldrapport_cultuurbeeld.pdf",
-    "public_output_name": "voorbeeldrapport_cultuurbeeld.pdf",
     "invited": 120,
     "responses": 48,
 }
@@ -415,8 +414,14 @@ def _get_or_create_demo_org(db) -> tuple[Organization, bool]:
 
 def _resolved_output_paths(config: dict[str, str | int]) -> list[Path]:
     docs_path = Path(__file__).parent / DOCS_EXAMPLES_DIR / str(config["docs_output_name"])
-    public_path = Path(__file__).parent / PUBLIC_EXAMPLES_DIR / str(config["public_output_name"])
-    return [docs_path, public_path]
+    output_paths = [docs_path]
+
+    public_output_name = config.get("public_output_name")
+    if public_output_name:
+        public_path = Path(__file__).parent / PUBLIC_EXAMPLES_DIR / str(public_output_name)
+        output_paths.append(public_path)
+
+    return output_paths
 
 
 def _write_pdf_outputs(pdf_bytes: bytes, config: dict[str, str | int]) -> list[Path]:

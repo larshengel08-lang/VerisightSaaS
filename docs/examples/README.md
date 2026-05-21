@@ -38,12 +38,7 @@ Statuslegend:
   - Gebruik: interne sales-, board- en delivery-demo voor de jaarlijkse baseline
   - Status: `demo_asset_ready` + `guided_sales_demo`
   - Framing: illustratief voorbeeld met fictieve data in dezelfde executive structuur als live output
-  - Boundary: blijft internal demo support, niet buyer-facing active of open sample canon; geen benchmarkbewijs en geen manager rankingframing
-
-- `frontend/public/examples/voorbeeldrapport_cultuurbeeld.pdf`
-  - Publieke repo-kopie van hetzelfde interne demo-artifact
-  - Bestaat voor guided delivery, demo-review en review-pack portability tussen app en repo
-  - Niet gebruiken als open buyer-facing canon, website-prooflaag of actieve productsample-route
+  - Boundary: blijft internal demo support, docs-side only, niet buyer-facing active of open sample canon; geen benchmarkbewijs en geen manager rankingframing
 
 - `docs/reference/CULTURE_ASSESSMENT_BOARDROOM_DECK.md`
 - `docs/reference/CULTURE_ASSESSMENT_EXECUTIVE_ONE_PAGER.md`
@@ -77,9 +72,9 @@ Gebruik de legacy-bestanden alleen nog als historisch referentiepunt. Ze zijn ni
 - ExitScan blijft de primaire showcase-route.
 - RetentieScan blijft complementair en verification-first.
 - Loep Cultuurbeeld blijft in deze map internal demo support en is nog geen open buyer-facing sample canon.
-- De publieke kopie van `voorbeeldrapport_cultuurbeeld.pdf` in `frontend/public/examples/` is een portability- en guided-delivery artifact, geen buyer-facing canon.
+- `voorbeeldrapport_cultuurbeeld.pdf` wordt alleen onder `docs/examples/` bewaard en niet gespiegeld naar `frontend/public/examples/`.
 - Loep Cultuurbeeld deck-, one-pager- en handout-bestanden zijn in v1 blueprint/demo-artefacten tenzij expliciet anders gelabeld.
 - Buyer-facing sample-assets dragen geen vertrouwelijkheidsframing.
 - Demo-output mag niet mooier of harder claimen dan het echte product kan dragen.
 - Internal sales demo, QA/live-fixtures en validation-sandboxes blijven expliciet gescheiden van deze buyer-facing normset.
-- Werk bij wijzigingen in report contracts, preview-copy of buyer-facing routing ook deze normset, de publieke kopieen en de demo-architectuurdocs bij.
+- Werk bij wijzigingen in report contracts, preview-copy of buyer-facing routing ook deze normset en de demo-architectuurdocs bij.

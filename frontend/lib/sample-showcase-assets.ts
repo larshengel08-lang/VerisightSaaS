@@ -157,11 +157,11 @@ export const SAMPLE_SHOWCASE_ASSETS: SampleShowcaseAsset[] = [
       'Interne sales- en board-demo prooflaag voor Loep Culture Assessment zolang de route nog niet benchmark-first of self-serve wordt gepositioneerd.',
     evidenceTier: 'deliverable_proof',
     buyerUse:
-      'Gebruik in begeleide sales- en boardcontext om de jaarlijkse baseline, board-read en governancegrenzen te laten zien; nog niet als open website-prooflaag.',
+      'Gebruik in begeleide sales- en boardcontext vanaf het docs-side sample om de jaarlijkse baseline, board-read en governancegrenzen te laten zien; niet als web-served website-prooflaag.',
     claimBoundary:
       'Illustratief voorbeeld met fictieve data in dezelfde executive structuur als echte Loep Culture Assessment-output; geen benchmark, causaliteitsclaim of manager ranking.',
     trustFrame:
-      'Premium board-first output family met board report-ritme, guided boardroom deck en governance-safe reading order; geen open buyer-facing sample canon.',
+      'Premium board-first output family met board report-ritme, guided boardroom deck en governance-safe reading order; docs-only sample en geen open buyer-facing sample canon.',
   },
   {
     id: 'culture-assessment-board-deck',

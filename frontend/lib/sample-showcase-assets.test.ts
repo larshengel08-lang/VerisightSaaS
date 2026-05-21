@@ -56,7 +56,10 @@ describe('sample showcase asset registry', () => {
       docsPath: 'docs/examples/voorbeeldrapport_cultuurbeeld.pdf',
     })
     expect(cultureAsset?.publicHref).toBeUndefined()
+    expect(cultureAsset?.buyerUse.toLowerCase()).toContain('docs-side sample')
+    expect(cultureAsset?.buyerUse.toLowerCase()).toContain('niet als web-served website-prooflaag')
     expect(cultureAsset?.claimBoundary.toLowerCase()).toContain('manager ranking')
+    expect(cultureAsset?.trustFrame.toLowerCase()).toContain('docs-only sample')
     expect(cultureAsset?.trustFrame.toLowerCase()).toContain('guided boardroom deck')
     expect(cultureAsset?.trustFrame.toLowerCase()).toContain('buyer-facing sample canon')
     expect(getBuyerFacingShowcaseAssets().some((asset) => asset.product === 'culture_assessment')).toBe(false)
