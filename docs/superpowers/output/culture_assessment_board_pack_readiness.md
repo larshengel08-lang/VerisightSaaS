@@ -95,7 +95,14 @@ These are acceptable within first-pilot scope.
 
 ---
 
-## 5. Approval
+## 5. Scoped Verification Evidence
+
+- backend: `py -m pytest tests\test_culture_assessment_report_contract.py tests\test_report_generation_smoke.py tests\test_sample_generator.py -q -k "culture_assessment or sample"` -> `11 passed, 4 deselected`
+- frontend: `cmd /c npx vitest run --config vitest.config.ts lib/sample-showcase-assets.test.ts` -> `1 file passed, 6 tests passed`
+
+---
+
+## 6. Approval
 
 Approved when:
 
