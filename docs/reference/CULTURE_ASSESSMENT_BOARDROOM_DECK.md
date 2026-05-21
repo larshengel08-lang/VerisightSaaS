@@ -2,60 +2,107 @@
 
 Status:
 - `delivery_readiness`: `pilot_delivery_ready`
-- `intended_use`: guided board pilot delivery, proposal prep en board-read voorbereiding
-- `note`: dit document beschrijft de canonieke inhoudsstructuur voor de v1 `boardroom pdf deck`-deliverable. Het is in v1 nog geen automatisch gegenereerde `.pptx`-deliverable.
+- `intended_use`: guided board-read pilot delivery, proposal prep and spacious boardroom discussion
+- `note`: this document is the canonical v1 reference for the premium `boardroom pdf deck` family. It stays the guided, lower-density sibling of the compact board report PDF and is not a self-serve analytics surface.
 
-1. Title and context
-- Loep Culture Assessment / Loep Cultuurbeeld
-- Annual executive baseline for culture and engagement
-- Board, directie, HR
+Deck behavior:
+- guided and facilitated rather than self-read first
+- spacious, larger-statement, and boardroom paced
+- one dominant speaking line per slide
+- governance-visible throughout the sequence
+- no benchmark, ranking, pass/fail, or self-serve drift
+
+## Fixed 13-Slide Sequence
+
+1. Opening / purpose
+- `Loep Culture Assessment / Loep Cultuurbeeld`
+- annual baseline framing
+- boardroom context and guided session purpose
+- no verdict before the signal slides
 
 2. What was measured
-- Broad culture and engagement baseline
-- Fixed enterprise questionnaire
-- No custom modules in v1
+- fixed-method culture and engagement baseline
+- ten fixed domains shown as one calm system view
+- annual baseline-first route
+- no custom question logic or benchmark-first interpretation
 
-3. Response and coverage
-- Invited
-- Completed
-- Coverage by safe aggregation level
-- Suppressed layers below threshold
+3. Response and governance
+- invited, completed, and safe response basis
+- what may be shown in this room
+- what remains hidden or suppressed and why
+- governance presented as quality control, not caution tape
 
 4. Executive read
-- What is visible at organization level
-- What is still bounded by governance
+- one integrated executive reading line
+- one core management question
+- one sentence on how to read the rest of the deck
+- descriptive, bounded, and non-causal
 
-5. Loep Culture Index as navigation signal
-- What the index is
-- What the index is not
+5. Culture Index hero
+- `Loep Culture Index`
+- large editorial hero treatment as the deck's navigation signal
+- short interpretation line
+- explicit boundary on what the index is not
 
 6. Domain picture
-- Lowest visible domains
-- Broadest organization patterns
+- `Domeinbeeld`
+- organization-wide profile across the ten fixed domains
+- reading-sequence guidance rather than top/bottom rhetoric
+- one visible pattern called out without ranking language
 
-7. Board attention points
-- 3-5 maximum
-- Priority reason
-- Confidence label
-- What to verify next
+7. Board attention point 1
+- one bounded issue or tension given full slide space
+- attention headline
+- priority reason
+- what to verify next
 
-8. Segment contrasts where safe
-- Only above minimum-n
-- No named manager layer
-- No ranking tables
+8. Board attention point 2
+- second board discussion topic kept visually separate
+- attention headline
+- priority reason
+- what to verify next
 
-9. What not to conclude
-- No culture good/bad claim
-- No causal diagnosis
-- No individual or manager inference
-- No benchmark claim in v1
+9. Board attention point 3
+- third board discussion topic completing the core attention set
+- attention headline
+- priority reason
+- what to verify next
 
-10. Board decision questions
-- Which broad pattern deserves first board attention
-- Which difference between organization parts matters first
-- What needs verification before intervention
+10. Segment contrast, if released
+- `Segmentcontrasten`
+- only released segment differences may appear
+- hidden or unreleased layers render as governance state
+- no sorted league table or best/worst framing
 
-11. Follow-on routes
-- Board-read first
-- Governed drilldown where allowed
-- Pulse only as follow-on after baseline
+11. What not to conclude
+- `Wat je hier niet uit mag concluderen`
+- no causal proof
+- no manager ranking
+- no individual prediction
+- no benchmark claim
+
+12. Decision questions
+- `Bestuurlijke besluitvragen`
+- 3-5 fixed board questions
+- discussion-opening prompts tied to the baseline evidence shown
+- no action tracker or recommendation engine framing
+
+13. Follow-on route options
+- `Vervolgroutes`
+- bounded next-route choices after the baseline
+- no automatic continuation
+- Pulse or deeper governed work only as explicit follow-on choices
+
+## Family Boundaries
+
+This deck must remain the guided sibling of the board report PDF:
+- the report is more compact and self-readable
+- the deck is more spacious and presenter-led
+- both stay inside the same governance and interpretation boundaries
+
+This deck must not introduce:
+- benchmark positioning
+- ranking logic
+- dashboard screenshot behavior
+- self-serve workspace cues
+- intervention theater disguised as insight
