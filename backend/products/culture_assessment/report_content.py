@@ -4,13 +4,35 @@ from typing import Any
 
 from backend.products.culture_assessment.scoring import get_questionnaire_lock_payload
 
-OUTPUT_SEQUENCE_NOTE = (
-    "Het board report pdf is in v1 een compacte executive read en premium board artifact met een vaste tien-pagina leesvolgorde: "
-    "cover, executive opener, responsbasis en governancekader, Loep Culture Index, board attention points, domeinbeeld, "
-    "patronen in samenhang, governed segmentcontrasten waar vrijgegeven, vervolgrichting en methodiek/begrenzingen. "
-    "Het boardroom pdf deck is de ruimere, guided zusterlaag voor facilitated board-read; "
-    "de executive one-pager blijft een afgeleide van dezelfde visuele grammatica."
+CULTURE_BOARD_REPORT_SECTIONS: tuple[dict[str, str], ...] = (
+    {"key": "cover", "title": "Loep Culture Assessment - Board Baseline", "eyebrow": "Cover", "anchor": "Loep Culture Assessment - Board Baseline"},
+    {"key": "executive_opener", "title": "Executive culture read", "eyebrow": "1. Executive opener", "anchor": "1. EXECUTIVE OPENER"},
+    {"key": "response_governance", "title": "Responsbasis en governancekader", "eyebrow": "2. Response and governance", "anchor": "2. RESPONSE AND GOVERNANCE"},
+    {"key": "index_hero", "title": "Loep Culture Index", "eyebrow": "3. Index hero", "anchor": "3. INDEX HERO"},
+    {"key": "board_attention", "title": "Board attention points", "eyebrow": "4. Board attention points", "anchor": "4. BOARD ATTENTION POINTS"},
+    {"key": "domain_profile", "title": "Domeinbeeld", "eyebrow": "5. Domain profile", "anchor": "5. DOMAIN PROFILE"},
+    {"key": "pattern_logic", "title": "Patronen in samenhang", "eyebrow": "6. Pattern logic", "anchor": "6. PATTERN LOGIC"},
+    {"key": "segment_contrasts", "title": "Segmentcontrasten", "eyebrow": "7. Segment contrasts", "anchor": "7. SEGMENT CONTRASTS"},
+    {"key": "follow_on_decision", "title": "Vervolgrichting na de baseline", "eyebrow": "8. Follow-on decision", "anchor": "8. FOLLOW-ON DECISION"},
+    {"key": "method_boundaries", "title": "Methodiek en begrenzingen", "eyebrow": "9. Method and boundaries", "anchor": "9. METHOD AND BOUNDARIES"},
 )
+
+
+def get_board_report_sections() -> list[dict[str, str]]:
+    return [dict(section) for section in CULTURE_BOARD_REPORT_SECTIONS]
+
+
+def _board_report_sequence_note() -> str:
+    ordered_titles = ", ".join(section["title"] for section in CULTURE_BOARD_REPORT_SECTIONS)
+    return (
+        "Het board report pdf is in v1 een compacte executive read en premium board artifact met een vaste tien-pagina leesvolgorde: "
+        f"{ordered_titles}. "
+        "Het boardroom pdf deck is de ruimere, guided zusterlaag voor facilitated board-read; "
+        "de executive one-pager blijft een afgeleide van dezelfde visuele grammatica."
+    )
+
+
+OUTPUT_SEQUENCE_NOTE = _board_report_sequence_note()
 
 
 def get_management_summary_payload() -> dict[str, Any]:
@@ -41,6 +63,7 @@ def get_management_summary_payload() -> dict[str, Any]:
             "Segmentcontrasten en open signalen blijven aparte governed vervolglagen en tellen niet automatisch als directe attention-input mee."
         ),
         "board_attention_logic": get_questionnaire_lock_payload()["board_attention_logic"],
+        "board_report_sections": get_board_report_sections(),
         "board_report_editorial_note": (
             "Lees de eerste pagina's als een compacte board publication: editorial, bounded en governance-first, "
             "niet als dashboardexport of self-serve analyseomgeving."

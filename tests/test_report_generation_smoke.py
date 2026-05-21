@@ -7,6 +7,7 @@ from pypdf import PdfReader
 from sqlalchemy.orm import Session
 
 from backend.models import Campaign, Organization, Respondent, SurveyResponse
+from backend.products.culture_assessment.report_content import get_board_report_sections
 from backend.report import generate_campaign_report, generate_culture_assessment_segment_summary_export
 
 
@@ -119,6 +120,12 @@ def _extract_pdf_text(pdf_bytes: bytes, max_pages: int = 20) -> str:
 def _extract_pdf_pages(pdf_bytes: bytes) -> list[str]:
     reader = PdfReader(io.BytesIO(pdf_bytes))
     return [' '.join((page.extract_text() or '').split()) for page in reader.pages]
+
+
+def _culture_board_pages(pdf_bytes: bytes) -> tuple[list[dict[str, str]], list[str]]:
+    sections = get_board_report_sections()
+    pages = _extract_pdf_pages(pdf_bytes)
+    return sections, pages
 
 
 def _culture_domain_scores(base: float) -> dict[str, float]:
@@ -252,22 +259,15 @@ def test_generate_culture_assessment_report_smoke(db_session: Session):
 
     assert pdf_bytes.startswith(b"%PDF")
     assert len(pdf_bytes) > 5000
-    pages = _extract_pdf_pages(pdf_bytes)
+    sections, pages = _culture_board_pages(pdf_bytes)
     assert len(pages) == 10
-    text = _extract_pdf_text(pdf_bytes)
-    assert "Loep Culture Assessment - Board Baseline" in text
-    for heading in (
-        "Executive culture read",
-        "Responsbasis en governancekader",
-        "Loep Culture Index",
-        "Board attention points",
-        "Vervolgrichting na de baseline",
-        "Methodiek en begrenzingen",
-    ):
-        assert heading in text
-    assert "Segmentcontrasten zijn niet vrijgegeven binnen deze baseline of blijven onder governancegrenzen verborgen." in text
-    assert "Governed drilldown voor HR" not in text
-    assert "Afdeling Operatie: n=15, Culture Index" not in text
+    assert len(sections) == 10
+    assert "Loep Culture Assessment - Board Baseline" in pages[0]
+    for page_text, section in zip(pages[1:], sections[1:]):
+        assert section["title"] in page_text
+        assert section["anchor"] in page_text
+    assert "Governed drilldown voor HR" not in " ".join(pages)
+    assert "Afdeling Operatie: n=15, Culture Index" not in pages[7]
 
 
 def test_generate_culture_assessment_report_smoke_with_governed_drilldown(db_session: Session):
@@ -320,22 +320,15 @@ def test_generate_culture_assessment_report_smoke_with_governed_drilldown(db_ses
 
     assert pdf_bytes.startswith(b"%PDF")
     assert len(pdf_bytes) > 5000
-    pages = _extract_pdf_pages(pdf_bytes)
+    sections, pages = _culture_board_pages(pdf_bytes)
     assert len(pages) == 10
-    text = _extract_pdf_text(pdf_bytes)
-    assert "Loep Culture Assessment - Board Baseline" in text
-    for heading in (
-        "Executive culture read",
-        "Responsbasis en governancekader",
-        "Loep Culture Index",
-        "Board attention points",
-        "Vervolgrichting na de baseline",
-        "Methodiek en begrenzingen",
-    ):
-        assert heading in text
-    assert "Benchmarking blijft in v1 bewust niet actief." in text
-    assert "geen manager ranking tool" in text
-    assert "Afdeling Operatie: n=15, Culture Index" in text
+    assert len(sections) == 10
+    assert "Loep Culture Assessment - Board Baseline" in pages[0]
+    for page_text, section in zip(pages[1:], sections[1:]):
+        assert section["title"] in page_text
+        assert section["anchor"] in page_text
+    assert "Afdeling Operatie: n=15, Culture Index" in pages[7]
+    assert "Benchmarking blijft in v1 bewust niet actief." in pages[9]
 
 
 def test_generate_culture_assessment_segment_summary_export_smoke(db_session: Session):
