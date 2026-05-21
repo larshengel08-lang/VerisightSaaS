@@ -50,6 +50,7 @@ import type {
 } from '@/lib/action-center-preview-model'
 import type {
   ActionCenterManagerActionThemeKey,
+  ActionCenterManagerActionStatus,
   ActionCenterManagerResponse,
   ActionCenterManagerResponseType,
 } from '@/lib/pilot-learning'
@@ -451,7 +452,8 @@ function getCreateDefaults(items: ActionCenterPreviewItem[]) {
 
 function buildManagerResponseDefaults(item: ActionCenterPreviewItem | null): ManagerResponseFormState {
   const response = item?.managerResponse ?? null
-  const hasPrimaryAction = Boolean(
+  const routeActionGoverned = isRouteActionGoverned(item)
+  const hasPrimaryAction = !routeActionGoverned && Boolean(
     response?.primary_action_theme_key &&
       response.primary_action_text &&
       response.primary_action_expected_effect,
@@ -466,9 +468,49 @@ function buildManagerResponseDefaults(item: ActionCenterPreviewItem | null): Man
         : ''),
     reviewScheduledFor: response?.review_scheduled_for ?? item?.reviewDate ?? '',
     includePrimaryAction: hasPrimaryAction,
-    primaryActionThemeKey: response?.primary_action_theme_key ?? '',
-    primaryActionText: response?.primary_action_text ?? '',
-    primaryActionExpectedEffect: response?.primary_action_expected_effect ?? '',
+    primaryActionThemeKey: routeActionGoverned ? '' : response?.primary_action_theme_key ?? '',
+    primaryActionText: routeActionGoverned ? '' : response?.primary_action_text ?? '',
+    primaryActionExpectedEffect: routeActionGoverned ? '' : response?.primary_action_expected_effect ?? '',
+  }
+}
+
+export function isRouteActionGoverned(item: ActionCenterPreviewItem | null) {
+  return (item?.coreSemantics.routeActionCards.length ?? 0) > 0
+}
+
+export function resolveManagerResponsePrimaryActionPayload(args: {
+  routeActionCardCount: number
+  includePrimaryAction: boolean
+  primaryActionThemeKey: ActionCenterManagerActionThemeKey | ''
+  primaryActionText: string
+  primaryActionExpectedEffect: string
+}): {
+  primary_action_theme_key: ActionCenterManagerActionThemeKey | null
+  primary_action_text: string | null
+  primary_action_expected_effect: string | null
+  primary_action_status: ActionCenterManagerActionStatus | null
+} {
+  if (args.routeActionCardCount > 0 || !args.includePrimaryAction) {
+    return {
+      primary_action_theme_key: null,
+      primary_action_text: null,
+      primary_action_expected_effect: null,
+      primary_action_status: null,
+    }
+  }
+
+  const primaryActionThemeKey = args.primaryActionThemeKey || null
+  const primaryActionText = args.primaryActionText.trim() || null
+  const primaryActionExpectedEffect = args.primaryActionExpectedEffect.trim() || null
+  const hasCompletePrimaryAction = Boolean(
+    primaryActionThemeKey && primaryActionText && primaryActionExpectedEffect,
+  )
+
+  return {
+    primary_action_theme_key: primaryActionThemeKey,
+    primary_action_text: primaryActionText,
+    primary_action_expected_effect: primaryActionExpectedEffect,
+    primary_action_status: hasCompletePrimaryAction ? 'active' : null,
   }
 }
 
@@ -836,17 +878,27 @@ function applyManagerResponseToItem(
   item: ActionCenterPreviewItem,
   response: ActionCenterManagerResponse,
 ): ActionCenterPreviewItem {
-  const nextStatus = getManagerResponseProjectedStatus(item.status, response)
-  const followThroughMode = hasPrimaryManagerAction(response) ? 'primary_action' : 'bounded_response'
+  const routeActionGoverned = isRouteActionGoverned(item)
+  const nextStatus = routeActionGoverned ? item.status : getManagerResponseProjectedStatus(item.status, response)
+  const followThroughMode =
+    routeActionGoverned
+      ? item.coreSemantics.route.followThroughMode
+      : hasPrimaryManagerAction(response)
+        ? 'primary_action'
+        : 'bounded_response'
   const nextRoute: ActionCenterRouteContract = {
     ...item.coreSemantics.route,
     routeStatus: nextStatus,
-    intervention: response.primary_action_text ?? null,
-    expectedEffect: response.primary_action_expected_effect ?? null,
+    intervention: routeActionGoverned
+      ? item.coreSemantics.route.intervention
+      : response.primary_action_text ?? null,
+    expectedEffect: routeActionGoverned
+      ? item.coreSemantics.route.expectedEffect
+      : response.primary_action_expected_effect ?? null,
     reviewScheduledFor: response.review_scheduled_for,
     managerResponseType: response.response_type,
     managerResponseNote: response.response_note,
-    primaryActionThemeKey: response.primary_action_theme_key ?? null,
+    primaryActionThemeKey: routeActionGoverned ? null : response.primary_action_theme_key ?? null,
     followThroughMode,
   }
 
@@ -1327,7 +1379,7 @@ export function ActionCenterPreview({
         currentUserId &&
         selectedItem.ownerId === currentUserId,
     )
-  const allowInlinePrimaryAction = !canUseRouteActionFlow
+  const allowInlinePrimaryAction = !isRouteActionGoverned(selectedItem)
   const canUseActionReviewFlow =
     Boolean(
       actionReviewEndpoint &&
@@ -1540,27 +1592,13 @@ export function ActionCenterPreview({
       return
     }
 
-    const persistedPrimaryAction = selectedItem.managerResponse
-    const nextPrimaryActionThemeKey = allowInlinePrimaryAction
-      ? managerResponseForm.includePrimaryAction && managerResponseForm.primaryActionThemeKey
-        ? managerResponseForm.primaryActionThemeKey
-        : null
-      : persistedPrimaryAction?.primary_action_theme_key ?? null
-    const nextPrimaryActionText = allowInlinePrimaryAction
-      ? managerResponseForm.includePrimaryAction && managerResponseForm.primaryActionText.trim()
-        ? managerResponseForm.primaryActionText
-        : null
-      : persistedPrimaryAction?.primary_action_text ?? null
-    const nextPrimaryActionExpectedEffect = allowInlinePrimaryAction
-      ? managerResponseForm.includePrimaryAction && managerResponseForm.primaryActionExpectedEffect.trim()
-        ? managerResponseForm.primaryActionExpectedEffect
-        : null
-      : persistedPrimaryAction?.primary_action_expected_effect ?? null
-    const nextPrimaryActionStatus = allowInlinePrimaryAction
-      ? managerResponseForm.includePrimaryAction
-        ? 'active'
-        : null
-      : persistedPrimaryAction?.primary_action_status ?? null
+    const primaryActionPayload = resolveManagerResponsePrimaryActionPayload({
+      routeActionCardCount: selectedItem.coreSemantics.routeActionCards.length,
+      includePrimaryAction: managerResponseForm.includePrimaryAction,
+      primaryActionThemeKey: managerResponseForm.primaryActionThemeKey,
+      primaryActionText: managerResponseForm.primaryActionText,
+      primaryActionExpectedEffect: managerResponseForm.primaryActionExpectedEffect,
+    })
 
     setManagerResponsePending(true)
     setManagerResponseError(null)
@@ -1574,10 +1612,7 @@ export function ActionCenterPreview({
       response_type: managerResponseForm.responseType,
       response_note: managerResponseForm.responseNote,
       review_scheduled_for: managerResponseForm.reviewScheduledFor,
-      primary_action_theme_key: nextPrimaryActionThemeKey,
-      primary_action_text: nextPrimaryActionText,
-      primary_action_expected_effect: nextPrimaryActionExpectedEffect,
-      primary_action_status: nextPrimaryActionStatus,
+      ...primaryActionPayload,
     }
 
     try {
