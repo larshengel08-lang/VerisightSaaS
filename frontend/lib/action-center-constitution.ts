@@ -71,6 +71,7 @@ export type ActionCenterActionTransitionRule = {
   readonly toState: ActionCenterActionSemanticState
   readonly phase: 'draft_resolution' | 'execution_lifecycle'
   actors: readonly ActionCenterActor[]
+  draftValidationDisposition?: Extract<ActionCenterActionDraftDisposition, 'valid'>
 }
 
 function freezeActionCenterTransitionRule(rule: ActionCenterTransitionRule): Readonly<ActionCenterTransitionRule> {
@@ -200,6 +201,7 @@ export const ACTION_CENTER_ACTION_DRAFT_TRANSITION_RULES: readonly Readonly<Acti
       toState: 'active',
       actors: ['hr_rhythm_owner'],
       phase: 'draft_resolution',
+      draftValidationDisposition: 'valid',
     }),
     freezeActionCenterActionTransitionRule({
       fromState: 'draft',
@@ -302,9 +304,14 @@ export function isActionCenterActionDraftTransitionAllowed(args: {
   actor: ActionCenterActor
   fromState: Extract<ActionCenterActionSemanticState, 'draft'>
   toState: Extract<ActionCenterActionSemanticState, 'active' | 'stopped' | 'superseded'>
+  draftValidationDisposition?: ActionCenterActionDraftDisposition | null
 }): boolean {
   return ACTION_CENTER_ACTION_DRAFT_TRANSITION_RULES.some(
-    (rule) => rule.fromState === args.fromState && rule.toState === args.toState && rule.actors.includes(args.actor),
+    (rule) =>
+      rule.fromState === args.fromState &&
+      rule.toState === args.toState &&
+      rule.actors.includes(args.actor) &&
+      (rule.draftValidationDisposition ? rule.draftValidationDisposition === args.draftValidationDisposition : true),
   )
 }
 

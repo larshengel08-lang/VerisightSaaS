@@ -197,6 +197,7 @@ describe('action-center constitution', () => {
         toState: 'active',
         actors: ['hr_rhythm_owner'],
         phase: 'draft_resolution',
+        draftValidationDisposition: 'valid',
       },
       {
         fromState: 'draft',
@@ -349,6 +350,7 @@ describe('action-center constitution', () => {
         actor: 'hr_rhythm_owner',
         fromState: 'draft',
         toState: 'active',
+        draftValidationDisposition: 'valid',
       }),
     ).toBe(true)
 
@@ -357,6 +359,7 @@ describe('action-center constitution', () => {
         actor: 'manager_participant',
         fromState: 'draft',
         toState: 'active',
+        draftValidationDisposition: 'valid',
       }),
     ).toBe(false)
 
@@ -375,6 +378,43 @@ describe('action-center constitution', () => {
         toState: 'superseded',
       }),
     ).toBe(true)
+  })
+
+  it('requires a valid draft disposition before hr can promote draft to active through the draft-resolution helper', () => {
+    expect(
+      isActionCenterActionDraftTransitionAllowed({
+        actor: 'hr_rhythm_owner',
+        fromState: 'draft',
+        toState: 'active',
+        draftValidationDisposition: 'valid',
+      }),
+    ).toBe(true)
+
+    expect(
+      isActionCenterActionDraftTransitionAllowed({
+        actor: 'hr_rhythm_owner',
+        fromState: 'draft',
+        toState: 'active',
+        draftValidationDisposition: 'invalid',
+      }),
+    ).toBe(false)
+
+    expect(
+      isActionCenterActionDraftTransitionAllowed({
+        actor: 'hr_rhythm_owner',
+        fromState: 'draft',
+        toState: 'active',
+        draftValidationDisposition: 'needs_hr_review',
+      }),
+    ).toBe(false)
+
+    expect(
+      isActionCenterActionDraftTransitionAllowed({
+        actor: 'hr_rhythm_owner',
+        fromState: 'draft',
+        toState: 'active',
+      }),
+    ).toBe(false)
   })
 
   it('does not allow draft to jump straight to completed', () => {
