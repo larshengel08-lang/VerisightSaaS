@@ -15,11 +15,20 @@ describe('open action center route', () => {
     })
   })
 
-  it('redirects back into action center with the opened campaign in focus', () => {
-    expect(buildActionCenterRouteOpenRedirect('cmp-1')).toBe('/action-center?focus=cmp-1')
+  it('opens the route directly in the actions view', () => {
+    expect(buildActionCenterRouteOpenRedirect('cmp-1')).toBe('/action-center?focus=cmp-1&view=actions')
     expect(buildActionCenterRouteOpenRedirect('cmp-1', 'campaign-detail')).toBe(
-      '/action-center?focus=cmp-1&source=campaign-detail',
+      '/action-center?focus=cmp-1&view=actions&source=campaign-detail',
     )
+  })
+
+  it('allows opening a route while the campaign is still in an openable delivery stage', () => {
+    expect(
+      canOpenActionCenterRoute({
+        lifecycle_stage: 'first_value_reached',
+        first_management_use_confirmed_at: null,
+      }),
+    ).toBe(true)
   })
 
   it('does not reopen a route after lifecycle has already advanced past first management use', () => {

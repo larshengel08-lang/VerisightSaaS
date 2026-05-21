@@ -65,6 +65,25 @@ export type RetentionTheme = {
   sample: string
 }
 
+export function sanitizeOpenAnswerExcerpt(value: string) {
+  return value
+    .replace(/\s+/g, ' ')
+    .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, '[verwijderd]')
+    .replace(/https?:\/\/\S+/gi, '[link verwijderd]')
+    .replace(/\+?\d[\d\s().-]{7,}\d/g, '[verwijderd]')
+    .trim()
+}
+
+export function getLargestDistributionSegment<T extends { percent: number }>(segments: T[]) {
+  return segments.reduce<T | null>((largest, segment) => {
+    if (!largest || segment.percent > largest.percent) {
+      return segment
+    }
+
+    return largest
+  }, null)
+}
+
 export type DecisionPanel = {
   eyebrow: string
   title: string
@@ -528,12 +547,10 @@ export function SdtGauge({ label, score }: { label: string; score: number }) {
 
 export function MethodologyCard({
   scanType,
-  hasSegmentDeepDive,
   signalLabel,
   embedded = false,
 }: {
   scanType: ScanType
-  hasSegmentDeepDive: boolean
   signalLabel: string
   embedded?: boolean
 }) {
@@ -567,14 +584,7 @@ export function MethodologyCard({
         <InfoBlock title={signalLabel} body={scanDefinition.signalHelp} />
         <InfoBlock title="Signaalbanden" body={signaalbandenText} />
         <InfoBlock title="Betrouwbaarheid" body={scanDefinition.reliabilityText} />
-        <InfoBlock
-          title="Segment deep dive"
-          body={
-            hasSegmentDeepDive
-              ? `${scanDefinition.segmentText} Deze campagne gebruikt die add-on al.`
-              : scanDefinition.segmentText
-          }
-        />
+        <InfoBlock title="Segmentanalyse" body={scanDefinition.segmentText} />
       </div>
     </div>
   )
@@ -1142,7 +1152,7 @@ export function clusterRetentionOpenSignals(responses: SurveyResponse[]): Retent
   for (const definition of definitions) counts.set(definition.key, { definition, texts: [] })
 
   for (const response of responses) {
-    const text = response.open_text_raw?.trim()
+    const text = sanitizeOpenAnswerExcerpt(response.open_text_raw?.trim() ?? '')
     if (!text) continue
     const normalized = text.toLowerCase()
     for (const definition of definitions) {

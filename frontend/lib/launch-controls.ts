@@ -60,7 +60,7 @@ function normalizeContextLine(value: unknown) {
 
 export function createDefaultParticipantCommunicationConfig(): ParticipantCommunicationConfig {
   return {
-    senderName: 'Verisight',
+    senderName: 'Loep',
     replyToEmail: '',
     introContext: '',
     closingContext: '',
@@ -78,7 +78,7 @@ export function createDefaultReminderConfig(): ReminderConfig {
 export function normalizeParticipantCommunicationConfig(value: unknown): ParticipantCommunicationConfig {
   const config = (value ?? {}) as Partial<ParticipantCommunicationConfig>
   return {
-    senderName: asTrimmedString(config.senderName) || 'Verisight',
+    senderName: asTrimmedString(config.senderName) || 'Loep',
     replyToEmail: asTrimmedString(config.replyToEmail),
     introContext: normalizeContextLine(config.introContext),
     closingContext: normalizeContextLine(config.closingContext),
@@ -187,14 +187,14 @@ export function buildParticipantCommunicationPreview(args: {
   const launchDateLabel = formatLaunchDate(args.launchDate)
 
   return {
-    subject: `Uitnodiging voor de Verisight ${SCAN_TYPE_LABELS[args.scanType]}`,
+    subject: `Uitnodiging voor de Loep ${SCAN_TYPE_LABELS[args.scanType]}`,
     senderName: config.senderName,
     replyToEmail: config.replyToEmail,
     body: [
       'Beste collega,',
       ...(config.introContext ? [config.introContext] : []),
-      `Op ${launchDateLabel} opent Verisight de vragenlijst voor deze ${SCAN_TYPE_LABELS[args.scanType]} ${getDeliveryModePreviewLabel(args.deliveryMode)}. Je ontvangt dan een persoonlijke uitnodiging om deel te nemen.`,
-      'Verisight verzorgt de uitnodiging, verzending en verwerking binnen de campagnegrenzen. Jullie interne communicatie ondersteunt alleen timing, deelname en opvolging.',
+      `Op ${launchDateLabel} opent Loep de vragenlijst voor deze ${SCAN_TYPE_LABELS[args.scanType]} ${getDeliveryModePreviewLabel(args.deliveryMode)}. Je ontvangt dan een persoonlijke uitnodiging om deel te nemen.`,
+      'Loep verzorgt de uitnodiging, verzending en verwerking binnen de campagnegrenzen. Jullie interne communicatie ondersteunt alleen timing, deelname en opvolging.',
       'De uitkomst wordt op groepsniveau gelezen. Gebruik interne aankondiging daarom alleen om deelname en planning helder te maken, niet om methodiek of productlogica te herschrijven.',
       ...(config.closingContext ? [config.closingContext] : []),
       'Groet,',
@@ -206,7 +206,7 @@ export function buildParticipantCommunicationPreview(args: {
 export function buildReminderPreview(value: unknown) {
   const config = normalizeReminderConfig(value)
   if (!config.enabled) {
-    return 'Reminders staan uit. Verisight verstuurt na launch geen automatische herinneringen in deze campaign.'
+    return 'Reminders staan uit. Loep verstuurt na launch geen automatische herinneringen in deze campaign.'
   }
-  return `Verisight verstuurt de eerste reminder ${config.firstReminderAfterDays} dagen na launch en daarna maximaal ${config.maxReminderCount} reminder(s) zolang deelname uitblijft.`
+  return `Loep verstuurt de eerste reminder ${config.firstReminderAfterDays} dagen na launch en daarna maximaal ${config.maxReminderCount} reminder(s) zolang deelname uitblijft.`
 }

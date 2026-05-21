@@ -330,7 +330,7 @@ describe('action center route contract', () => {
     const context = buildContext({
       deliveryRecord: buildDeliveryRecord({
         first_management_use_confirmed_at: '2026-04-20T09:00:00.000Z',
-        operator_owner: 'Verisight delivery',
+        operator_owner: 'Loep delivery',
         next_step: 'Plan eerste managementgesprek met HR en sponsor.',
       }),
       learningCheckpoints: [

@@ -62,6 +62,8 @@ create table if not exists public.campaigns (
   closed_at       timestamptz
 );
 
+create unique index if not exists idx_campaigns_id_organization_id on public.campaigns(id, organization_id);
+
 create table if not exists public.respondents (
   id                uuid primary key default gen_random_uuid(),
   campaign_id       uuid references public.campaigns(id) on delete cascade not null,
@@ -674,6 +676,77 @@ create table if not exists public.action_center_manager_responses (
   unique (campaign_id, route_scope_type, route_scope_value)
 );
 
+create table if not exists public.action_center_route_actions (
+  id uuid primary key default gen_random_uuid(),
+  manager_response_id uuid references public.action_center_manager_responses(id) on delete cascade not null,
+  campaign_id uuid references public.campaigns(id) on delete cascade not null,
+  org_id uuid references public.organizations(id) on delete cascade not null,
+  route_id text not null,
+  route_scope_type text not null
+    check (route_scope_type in ('department', 'item')),
+  route_scope_value text not null,
+  manager_user_id uuid references auth.users(id) on delete cascade not null,
+  owner_name text not null,
+  owner_assigned_at timestamptz not null,
+  primary_action_theme_key text
+    check (primary_action_theme_key is null or primary_action_theme_key in ('leadership', 'culture', 'growth', 'compensation', 'workload', 'role_clarity')),
+  primary_action_text text,
+  primary_action_expected_effect text,
+  primary_action_status text
+    check (primary_action_status is null or primary_action_status in ('open', 'in_review', 'afgerond', 'gestopt')),
+  review_scheduled_for date,
+  semantic_state text
+    check (semantic_state is null or semantic_state in ('draft', 'active', 'review_due', 'in_review', 'blocked', 'completed', 'stopped', 'superseded')),
+  validation_disposition text
+    check (validation_disposition is null or validation_disposition in ('valid', 'invalid', 'needs_hr_review')),
+  created_by uuid references auth.users(id) on delete set null,
+  updated_by uuid references auth.users(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint action_center_route_actions_route_id_text_check
+    check (length(btrim(route_id)) > 0),
+  constraint action_center_route_actions_route_scope_value_text_check
+    check (length(btrim(route_scope_value)) > 0),
+  constraint action_center_route_actions_owner_name_text_check
+    check (length(btrim(owner_name)) > 0),
+  constraint action_center_route_actions_route_identity_check
+    check (route_id = ((campaign_id)::text || '::' || route_scope_value))
+);
+
+create index if not exists idx_action_center_route_actions_manager_response
+  on public.action_center_route_actions(manager_response_id);
+
+create index if not exists idx_action_center_route_actions_route
+  on public.action_center_route_actions(route_id, primary_action_status, review_scheduled_for);
+
+create index if not exists idx_action_center_route_actions_manager_scope
+  on public.action_center_route_actions(org_id, manager_user_id, route_scope_type, route_scope_value);
+
+create table if not exists public.action_center_action_reviews (
+  id uuid primary key default gen_random_uuid(),
+  action_id uuid references public.action_center_route_actions(id) on delete cascade not null,
+  reviewed_at timestamptz not null,
+  observation text not null,
+  action_outcome text not null
+    check (action_outcome in ('effect-zichtbaar', 'bijsturen-nodig', 'nog-te-vroeg', 'stoppen')),
+  evidence_source text
+    check (evidence_source is null or evidence_source in ('manager-observation', 'team-conversation', 'other-bounded-source')),
+  confidence_level text
+    check (confidence_level is null or confidence_level in ('low', 'medium', 'high')),
+  follow_up_note text,
+  created_by uuid references auth.users(id) on delete set null,
+  updated_by uuid references auth.users(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint action_center_action_reviews_observation_text_check
+    check (length(btrim(observation)) > 0),
+  constraint action_center_action_reviews_follow_up_note_text_check
+    check (follow_up_note is null or length(btrim(follow_up_note)) > 0)
+);
+
+create index if not exists idx_action_center_action_reviews_action
+  on public.action_center_action_reviews(action_id, reviewed_at desc);
+
 create table if not exists public.action_center_route_relations (
   id uuid primary key default gen_random_uuid(),
   org_id uuid references public.organizations(id) on delete cascade not null,
@@ -693,6 +766,131 @@ create table if not exists public.action_center_route_relations (
     check (recorded_by_role in ('verisight_admin', 'hr', 'hr_owner', 'hr_member')),
   recorded_at timestamptz not null default now(),
   ended_at timestamptz
+);
+
+create table if not exists public.action_center_review_rhythm_configs (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid references public.organizations(id) on delete cascade not null,
+  route_id text not null,
+  route_scope_value text not null,
+  route_source_type text not null
+    default 'campaign'
+    check (route_source_type in ('campaign')),
+  route_source_id uuid references public.campaigns(id) on delete cascade not null,
+  scan_type text not null
+    check (scan_type in ('exit', 'retention')),
+  cadence_days smallint not null
+    check (cadence_days in (7, 14, 30)),
+  reminder_lead_days smallint not null
+    check (reminder_lead_days in (1, 3, 5)),
+  escalation_lead_days smallint not null
+    check (escalation_lead_days in (3, 7, 14)),
+  reminders_enabled boolean not null default true,
+  constraint action_center_review_rhythm_configs_reminder_window_check
+    check ((not reminders_enabled) or (reminder_lead_days < cadence_days)),
+  constraint action_center_review_rhythm_configs_escalation_window_check
+    check (escalation_lead_days > reminder_lead_days),
+  updated_by uuid references auth.users(id) on delete set null,
+  updated_by_role text not null
+    check (updated_by_role in ('verisight_admin', 'hr_owner', 'hr_member')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (route_id)
+);
+
+create table if not exists public.action_center_review_schedule_revisions (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.organizations(id) on delete cascade,
+  route_id text not null,
+  route_scope_value text not null,
+  route_source_id uuid not null,
+  scan_type text not null check (scan_type in ('exit', 'retention')),
+  operation text not null check (operation in ('reschedule', 'cancel')),
+  revision integer not null check (revision >= 0),
+  review_date date,
+  previous_review_date date,
+  constraint action_center_review_schedule_revisions_route_id_text_check
+    check (length(btrim(route_id)) > 0),
+  constraint action_center_review_schedule_revisions_route_scope_value_text_check
+    check (length(btrim(route_scope_value)) > 0),
+  constraint action_center_review_schedule_revisions_review_date_state_check
+    check ((operation = 'cancel' and review_date is null) or (operation = 'reschedule' and review_date is not null)),
+  constraint action_center_review_schedule_revisions_previous_review_date_check
+    check ((operation = 'cancel' and previous_review_date is not null) or operation = 'reschedule'),
+  constraint action_center_review_schedule_revisions_review_date_change_check
+    check ((operation = 'cancel') or previous_review_date is null or (review_date <> previous_review_date)),
+  constraint action_center_review_schedule_revisions_route_identity_check
+    check (route_id = ((route_source_id)::text || '::' || route_scope_value)),
+  reason text not null,
+  constraint action_center_review_schedule_revisions_reason_text_check
+    check (length(btrim(reason)) > 0),
+  constraint action_center_review_schedule_revisions_reason_length_check
+    check (char_length(reason) <= 160),
+  constraint action_center_review_schedule_revisions_route_source_campaign_org_fk
+    foreign key (route_source_id, org_id) references public.campaigns(id, organization_id) on delete cascade,
+  changed_by uuid not null,
+  changed_by_role text not null check (changed_by_role in ('verisight_admin', 'hr_owner', 'hr_member')),
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.action_center_graph_calendar_links (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.organizations(id) on delete cascade,
+  route_id text not null,
+  review_item_id text not null,
+  route_scope_value text not null,
+  route_source_id uuid not null,
+  provider text not null check (provider in ('microsoft_graph')),
+  event_id text not null,
+  organizer_email text not null,
+  organizer_user_id text,
+  consent_state text not null check (consent_state in ('granted', 'missing', 'revoked')),
+  sync_state text not null check (sync_state in ('linked', 'cancelled', 'fallback', 'failed')),
+  last_synced_revision integer not null check (last_synced_revision >= 0),
+  i_cal_uid text,
+  last_sync_error text,
+  constraint action_center_graph_calendar_links_route_id_text_check
+    check (length(btrim(route_id)) > 0),
+  constraint action_center_graph_calendar_links_review_item_id_text_check
+    check (length(btrim(review_item_id)) > 0),
+  constraint action_center_graph_calendar_links_route_scope_value_text_check
+    check (length(btrim(route_scope_value)) > 0),
+  constraint action_center_graph_calendar_links_event_id_text_check
+    check (length(btrim(event_id)) > 0),
+  constraint action_center_graph_calendar_links_organizer_email_text_check
+    check (length(btrim(organizer_email)) > 0),
+  constraint action_center_graph_calendar_links_route_identity_check
+    check (route_id = ((route_source_id)::text || '::' || route_scope_value)),
+  constraint action_center_graph_calendar_links_review_item_identity_check
+    check (review_item_id = route_id),
+  constraint action_center_graph_calendar_links_route_source_campaign_org_fk
+    foreign key (route_source_id, org_id) references public.campaigns(id, organization_id) on delete cascade,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.action_center_follow_through_mail_events (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid references public.organizations(id) on delete cascade not null,
+  route_id text not null,
+  route_scope_value text not null,
+  route_source_id uuid references public.campaigns(id) on delete cascade not null,
+  scan_type text not null
+    check (scan_type in ('exit', 'retention')),
+  trigger_type text not null
+    check (trigger_type in ('assignment_created', 'review_upcoming', 'review_overdue', 'follow_up_open_after_review')),
+  recipient_role text not null
+    check (recipient_role in ('manager', 'hr_oversight')),
+  recipient_email text not null,
+  source_marker text not null,
+  dedupe_key text not null,
+  delivery_status text not null
+    check (delivery_status in ('sent', 'suppressed', 'failed')),
+  suppression_reason text,
+  provider_message_id text,
+  sent_at timestamptz,
+  created_at timestamptz not null default now(),
+  unique (dedupe_key)
 );
 
 -- ============================================================
@@ -723,6 +921,193 @@ create index if not exists idx_action_center_route_relations_target on public.ac
 create unique index if not exists idx_action_center_route_relations_active_direct_follow_up
   on public.action_center_route_relations(source_route_id)
   where route_relation_type = 'follow-up-from' and ended_at is null;
+create index if not exists idx_action_center_review_rhythm_configs_org on public.action_center_review_rhythm_configs(org_id);
+create index if not exists idx_action_center_review_rhythm_configs_route_source
+  on public.action_center_review_rhythm_configs(route_source_type, route_source_id);
+create unique index if not exists idx_action_center_review_schedule_revisions_route_revision
+  on public.action_center_review_schedule_revisions(route_id, revision);
+create unique index if not exists idx_action_center_graph_calendar_links_route_provider
+  on public.action_center_graph_calendar_links(route_id, provider);
+create unique index if not exists idx_action_center_graph_calendar_links_event_provider
+  on public.action_center_graph_calendar_links(event_id, provider);
+create index if not exists idx_action_center_follow_through_mail_events_org
+  on public.action_center_follow_through_mail_events(org_id, created_at desc);
+create index if not exists idx_action_center_follow_through_mail_events_route
+  on public.action_center_follow_through_mail_events(route_id, trigger_type);
+
+create table if not exists public.action_center_adoption_events (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.organizations(id) on delete cascade,
+  route_id text not null,
+  route_scope_value text not null,
+  route_source_id uuid not null,
+  scan_type text not null
+    check (scan_type in ('exit', 'retention')),
+  review_item_id text,
+  object_anchor text not null
+    check (object_anchor in ('follow_through_route', 'review_moment', 'closeout_continuation_record')),
+  event_name text not null
+    check (
+      event_name in (
+        'manager_trigger_delivered',
+        'manager_contextual_entry_opened',
+        'manager_quick_action_offered',
+        'manager_quick_action_completed',
+        'review_completed',
+        'review_rescheduled',
+        'route_became_stale',
+        'route_became_overdue',
+        'route_became_escalation_sensitive',
+        'route_closed',
+        'route_reopened',
+        'hr_manual_chase_logged'
+      )
+    ),
+  event_source text not null
+    check (
+      event_source in (
+        'trigger_delivery_ledger',
+        'contextual_entry',
+        'manager_quick_action',
+        'review_transition',
+        'review_reschedule',
+        'route_state_derivation',
+        'route_closeout',
+        'route_reopen',
+        'hr_manual_chase'
+      )
+    ),
+  actor_role text not null
+    check (actor_role in ('hr_rhythm_owner', 'manager_participant', 'system_channel')),
+  actor_user_id uuid references auth.users(id) on delete set null,
+  measurement_window_key text,
+  metadata jsonb not null default '{}'::jsonb,
+  occurred_at timestamptz not null default now(),
+  created_at timestamptz not null default now(),
+  constraint action_center_adoption_events_route_id_text_check
+    check (length(btrim(route_id)) > 0),
+  constraint action_center_adoption_events_route_scope_value_text_check
+    check (length(btrim(route_scope_value)) > 0),
+  constraint action_center_adoption_events_route_identity_check
+    check (route_id = ((route_source_id)::text || '::' || route_scope_value)),
+  constraint action_center_adoption_events_review_item_id_text_check
+    check (review_item_id is null or length(btrim(review_item_id)) > 0),
+  constraint action_center_adoption_events_review_scope_check
+    check (
+      ((object_anchor = 'review_moment') and review_item_id is not null)
+      or ((object_anchor <> 'review_moment') and review_item_id is null)
+    ),
+  constraint action_center_adoption_events_actor_identity_check
+    check (
+      ((actor_role = 'system_channel') and actor_user_id is null)
+      or ((actor_role <> 'system_channel') and actor_user_id is not null)
+    ),
+  constraint action_center_adoption_events_event_mapping_check
+    check (
+      (event_name = 'manager_trigger_delivered' and event_source = 'trigger_delivery_ledger' and object_anchor = 'follow_through_route' and actor_role = 'system_channel')
+      or (event_name = 'manager_contextual_entry_opened' and event_source = 'contextual_entry' and object_anchor = 'follow_through_route' and actor_role = 'manager_participant')
+      or (event_name = 'manager_quick_action_offered' and event_source = 'manager_quick_action' and object_anchor = 'review_moment' and actor_role = 'system_channel')
+      or (event_name = 'manager_quick_action_completed' and event_source = 'manager_quick_action' and object_anchor = 'review_moment' and actor_role = 'manager_participant')
+      or (event_name = 'review_completed' and event_source = 'review_transition' and object_anchor = 'review_moment' and actor_role in ('hr_rhythm_owner', 'manager_participant'))
+      or (event_name = 'review_rescheduled' and event_source = 'review_reschedule' and object_anchor = 'review_moment' and actor_role = 'hr_rhythm_owner')
+      or (event_name = 'route_became_stale' and event_source = 'route_state_derivation' and object_anchor = 'follow_through_route' and actor_role = 'system_channel')
+      or (event_name = 'route_became_overdue' and event_source = 'route_state_derivation' and object_anchor = 'follow_through_route' and actor_role = 'system_channel')
+      or (event_name = 'route_became_escalation_sensitive' and event_source = 'route_state_derivation' and object_anchor = 'follow_through_route' and actor_role = 'system_channel')
+      or (event_name = 'route_closed' and event_source = 'route_closeout' and object_anchor = 'closeout_continuation_record' and actor_role = 'hr_rhythm_owner')
+      or (event_name = 'route_reopened' and event_source = 'route_reopen' and object_anchor = 'closeout_continuation_record' and actor_role = 'hr_rhythm_owner')
+      or (event_name = 'hr_manual_chase_logged' and event_source = 'hr_manual_chase' and object_anchor = 'follow_through_route' and actor_role = 'hr_rhythm_owner')
+    ),
+  constraint action_center_adoption_events_metadata_check
+    check (jsonb_typeof(metadata) = 'object' and metadata = '{}'::jsonb),
+  constraint action_center_adoption_events_measurement_window_key_text_check
+    check (measurement_window_key is null or length(btrim(measurement_window_key)) > 0),
+  constraint action_center_adoption_events_route_source_campaign_org_fk
+    foreign key (route_source_id, org_id) references public.campaigns(id, organization_id) on delete cascade
+);
+
+create table if not exists public.action_center_bounded_execution_events (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.organizations(id) on delete cascade,
+  route_id text not null,
+  route_scope_value text not null,
+  route_source_id uuid not null,
+  route_family text not null
+    check (route_family in ('exit', 'retention')),
+  action_id uuid,
+  object_anchor text not null
+    check (object_anchor in ('follow_through_route', 'action_card')),
+  event_type text not null
+    check (
+      event_type in (
+        'route_opened',
+        'route_became_execution_expected',
+        'action_draft_created',
+        'action_draft_validated',
+        'action_draft_rejected',
+        'action_draft_sent_to_hr_review',
+        'action_state_changed',
+        'action_review_opened',
+        'action_review_completed',
+        'hr_chase_event'
+      )
+    ),
+  actor_role text not null
+    check (actor_role in ('hr_rhythm_owner', 'manager_participant', 'system_channel')),
+  actor_user_id uuid references auth.users(id) on delete set null,
+  metadata jsonb not null default '{}'::jsonb,
+  occurred_at timestamptz not null default now(),
+  created_at timestamptz not null default now(),
+  constraint action_center_bounded_execution_events_route_id_text_check
+    check (length(btrim(route_id)) > 0),
+  constraint action_center_bounded_execution_events_route_scope_value_text_check
+    check (length(btrim(route_scope_value)) > 0),
+  constraint action_center_bounded_execution_events_route_identity_check
+    check (route_id = ((route_source_id)::text || '::' || route_scope_value)),
+  constraint action_center_bounded_execution_events_action_scope_check
+    check (
+      ((object_anchor = 'action_card') and action_id is not null)
+      or ((object_anchor = 'follow_through_route') and action_id is null)
+    ),
+  constraint action_center_bounded_execution_events_actor_identity_check
+    check (
+      ((actor_role = 'system_channel') and actor_user_id is null)
+      or ((actor_role <> 'system_channel') and actor_user_id is not null)
+    ),
+  constraint action_center_bounded_execution_events_event_mapping_check
+    check (
+      (event_type = 'route_opened' and object_anchor = 'follow_through_route' and actor_role in ('hr_rhythm_owner', 'system_channel'))
+      or (event_type = 'route_became_execution_expected' and object_anchor = 'follow_through_route' and actor_role = 'system_channel')
+      or (event_type = 'action_draft_created' and object_anchor = 'action_card' and actor_role in ('hr_rhythm_owner', 'manager_participant'))
+      or (event_type = 'action_draft_validated' and object_anchor = 'action_card' and actor_role in ('hr_rhythm_owner', 'manager_participant'))
+      or (event_type = 'action_draft_rejected' and object_anchor = 'action_card' and actor_role in ('hr_rhythm_owner', 'manager_participant'))
+      or (event_type = 'action_draft_sent_to_hr_review' and object_anchor = 'action_card' and actor_role in ('hr_rhythm_owner', 'manager_participant'))
+      or (event_type = 'action_state_changed' and object_anchor = 'action_card' and actor_role in ('hr_rhythm_owner', 'manager_participant', 'system_channel'))
+      or (event_type = 'action_review_opened' and object_anchor = 'action_card' and actor_role in ('hr_rhythm_owner', 'manager_participant'))
+      or (event_type = 'action_review_completed' and object_anchor = 'action_card' and actor_role in ('hr_rhythm_owner', 'manager_participant'))
+      or (event_type = 'hr_chase_event' and object_anchor = 'follow_through_route' and actor_role = 'hr_rhythm_owner')
+    ),
+  constraint action_center_bounded_execution_events_metadata_check
+    check (jsonb_typeof(metadata) = 'object' and metadata = '{}'::jsonb),
+  constraint action_center_bounded_execution_events_route_source_campaign_org_fk
+    foreign key (route_source_id, org_id) references public.campaigns(id, organization_id) on delete cascade
+);
+
+create index if not exists idx_action_center_adoption_events_org
+  on public.action_center_adoption_events(org_id, occurred_at desc);
+
+create index if not exists idx_action_center_adoption_events_route
+  on public.action_center_adoption_events(route_id, event_name, occurred_at desc);
+
+create index if not exists idx_action_center_adoption_events_review_item
+  on public.action_center_adoption_events(review_item_id)
+  where review_item_id is not null;
+create index if not exists idx_action_center_bounded_execution_events_org
+  on public.action_center_bounded_execution_events(org_id, occurred_at desc);
+create index if not exists idx_action_center_bounded_execution_events_route
+  on public.action_center_bounded_execution_events(route_id, event_type, occurred_at desc);
+create index if not exists idx_action_center_bounded_execution_events_action
+  on public.action_center_bounded_execution_events(action_id, occurred_at desc)
+  where action_id is not null;
 create index if not exists idx_delivery_records_org on public.campaign_delivery_records(organization_id);
 create index if not exists idx_delivery_records_contact_request on public.campaign_delivery_records(contact_request_id);
 create index if not exists idx_delivery_records_lifecycle on public.campaign_delivery_records(lifecycle_stage);
@@ -746,7 +1131,15 @@ alter table public.pilot_learning_dossiers enable row level security;
 alter table public.pilot_learning_checkpoints enable row level security;
 alter table public.action_center_review_decisions enable row level security;
 alter table public.action_center_manager_responses enable row level security;
+alter table public.action_center_route_actions enable row level security;
+alter table public.action_center_action_reviews enable row level security;
 alter table public.action_center_route_relations enable row level security;
+alter table public.action_center_review_rhythm_configs enable row level security;
+alter table public.action_center_review_schedule_revisions enable row level security;
+alter table public.action_center_graph_calendar_links enable row level security;
+alter table public.action_center_follow_through_mail_events enable row level security;
+alter table public.action_center_adoption_events enable row level security;
+alter table public.action_center_bounded_execution_events enable row level security;
 
 -- ── Hulpfuncties ─────────────────────────────────────────────────────────────
 
@@ -780,6 +1173,36 @@ as $$
       and org_members.role in ('owner', 'member')
   );
 $$;
+
+create or replace function public.set_action_center_review_rhythm_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists action_center_review_rhythm_configs_set_updated_at on public.action_center_review_rhythm_configs;
+create trigger action_center_review_rhythm_configs_set_updated_at
+before update on public.action_center_review_rhythm_configs
+for each row execute function public.set_action_center_review_rhythm_updated_at();
+
+create or replace function public.set_action_center_graph_calendar_links_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists action_center_graph_calendar_links_set_updated_at on public.action_center_graph_calendar_links;
+create trigger action_center_graph_calendar_links_set_updated_at
+before update on public.action_center_graph_calendar_links
+for each row execute function public.set_action_center_graph_calendar_links_updated_at();
 
 create or replace function public.is_verisight_admin_user()
 returns boolean
@@ -1139,6 +1562,12 @@ drop policy if exists "managers_can_select_action_center_manager_responses" on p
 drop policy if exists "managers_can_insert_action_center_manager_responses" on public.action_center_manager_responses;
 drop policy if exists "managers_can_update_action_center_manager_responses" on public.action_center_manager_responses;
 drop policy if exists "admins_can_select_action_center_manager_responses" on public.action_center_manager_responses;
+drop policy if exists "managers_can_select_action_center_route_actions" on public.action_center_route_actions;
+drop policy if exists "managers_can_insert_action_center_route_actions" on public.action_center_route_actions;
+drop policy if exists "managers_can_update_action_center_route_actions" on public.action_center_route_actions;
+drop policy if exists "managers_can_select_action_center_action_reviews" on public.action_center_action_reviews;
+drop policy if exists "managers_can_insert_action_center_action_reviews" on public.action_center_action_reviews;
+drop policy if exists "managers_can_update_action_center_action_reviews" on public.action_center_action_reviews;
 
 create policy "managers_can_select_action_center_manager_responses"
   on public.action_center_manager_responses for select
@@ -1201,10 +1630,144 @@ create policy "managers_can_update_action_center_manager_responses"
     )
   );
 
+create policy "managers_can_select_action_center_route_actions"
+  on public.action_center_route_actions for select
+  using (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.action_center_workspace_members m
+      where m.user_id = auth.uid()
+        and m.org_id = action_center_route_actions.org_id
+        and m.access_role = 'manager_assignee'
+        and m.scope_type = action_center_route_actions.route_scope_type
+        and m.scope_value = action_center_route_actions.route_scope_value
+        and m.can_view
+    )
+  );
+
+create policy "managers_can_insert_action_center_route_actions"
+  on public.action_center_route_actions for insert
+  with check (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.action_center_workspace_members m
+      where m.user_id = auth.uid()
+        and m.org_id = action_center_route_actions.org_id
+        and m.access_role = 'manager_assignee'
+        and m.scope_type = action_center_route_actions.route_scope_type
+        and m.scope_value = action_center_route_actions.route_scope_value
+        and m.can_update
+    )
+  );
+
+create policy "managers_can_update_action_center_route_actions"
+  on public.action_center_route_actions for update
+  using (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.action_center_workspace_members m
+      where m.user_id = auth.uid()
+        and m.org_id = action_center_route_actions.org_id
+        and m.access_role = 'manager_assignee'
+        and m.scope_type = action_center_route_actions.route_scope_type
+        and m.scope_value = action_center_route_actions.route_scope_value
+        and m.can_update
+    )
+  )
+  with check (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.action_center_workspace_members m
+      where m.user_id = auth.uid()
+        and m.org_id = action_center_route_actions.org_id
+        and m.access_role = 'manager_assignee'
+        and m.scope_type = action_center_route_actions.route_scope_type
+        and m.scope_value = action_center_route_actions.route_scope_value
+        and m.can_update
+    )
+  );
+
+create policy "managers_can_select_action_center_action_reviews"
+  on public.action_center_action_reviews for select
+  using (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.action_center_route_actions a
+      join public.action_center_workspace_members m
+        on m.org_id = a.org_id
+       and m.scope_type = a.route_scope_type
+       and m.scope_value = a.route_scope_value
+      where a.id = action_center_action_reviews.action_id
+        and m.user_id = auth.uid()
+        and m.access_role = 'manager_assignee'
+        and m.can_view
+    )
+  );
+
+create policy "managers_can_insert_action_center_action_reviews"
+  on public.action_center_action_reviews for insert
+  with check (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.action_center_route_actions a
+      join public.action_center_workspace_members m
+        on m.org_id = a.org_id
+       and m.scope_type = a.route_scope_type
+       and m.scope_value = a.route_scope_value
+      where a.id = action_center_action_reviews.action_id
+        and m.user_id = auth.uid()
+        and m.access_role = 'manager_assignee'
+        and m.can_update
+    )
+  );
+
+create policy "managers_can_update_action_center_action_reviews"
+  on public.action_center_action_reviews for update
+  using (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.action_center_route_actions a
+      join public.action_center_workspace_members m
+        on m.org_id = a.org_id
+       and m.scope_type = a.route_scope_type
+       and m.scope_value = a.route_scope_value
+      where a.id = action_center_action_reviews.action_id
+        and m.user_id = auth.uid()
+        and m.access_role = 'manager_assignee'
+        and m.can_update
+    )
+  )
+  with check (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.action_center_route_actions a
+      join public.action_center_workspace_members m
+        on m.org_id = a.org_id
+       and m.scope_type = a.route_scope_type
+       and m.scope_value = a.route_scope_value
+      where a.id = action_center_action_reviews.action_id
+        and m.user_id = auth.uid()
+        and m.access_role = 'manager_assignee'
+        and m.can_update
+    )
+  );
+
 drop policy if exists "hr_and_admins_can_select_action_center_route_relations" on public.action_center_route_relations;
 drop policy if exists "managers_can_select_action_center_route_relations" on public.action_center_route_relations;
 drop policy if exists "hr_and_admins_can_insert_action_center_route_relations" on public.action_center_route_relations;
 drop policy if exists "hr_and_admins_can_update_action_center_route_relations" on public.action_center_route_relations;
+drop policy if exists "hr_and_admins_can_select_action_center_review_rhythm_configs" on public.action_center_review_rhythm_configs;
+drop policy if exists "hr_and_admins_can_upsert_action_center_review_rhythm_configs" on public.action_center_review_rhythm_configs;
+drop policy if exists "hr_and_admins_can_insert_action_center_review_rhythm_configs" on public.action_center_review_rhythm_configs;
+drop policy if exists "hr_and_admins_can_update_action_center_review_rhythm_configs" on public.action_center_review_rhythm_configs;
 
 create policy "hr_and_admins_can_select_action_center_route_relations"
   on public.action_center_route_relations for select
@@ -1277,6 +1840,141 @@ create policy "hr_and_admins_can_update_action_center_route_relations"
         and m.can_update
     )
   );
+
+create policy "hr_and_admins_can_select_action_center_review_rhythm_configs"
+  on public.action_center_review_rhythm_configs for select
+  using (
+    public.is_verisight_admin_user()
+    or public.is_org_owner(org_id)
+    or exists (
+      select 1
+      from public.action_center_workspace_members m
+      where m.user_id = auth.uid()
+        and m.org_id = action_center_review_rhythm_configs.org_id
+        and m.access_role in ('hr_owner', 'hr_member')
+        and (m.scope_type = 'org' or m.scope_value = action_center_review_rhythm_configs.route_scope_value)
+        and m.can_view
+    )
+  );
+
+create policy "hr_and_admins_can_insert_action_center_review_rhythm_configs"
+  on public.action_center_review_rhythm_configs for insert
+  with check (
+    public.is_verisight_admin_user()
+    or public.is_org_owner(org_id)
+    or exists (
+      select 1
+      from public.action_center_workspace_members m
+      where m.user_id = auth.uid()
+        and m.org_id = action_center_review_rhythm_configs.org_id
+        and m.access_role in ('hr_owner', 'hr_member')
+        and (m.scope_type = 'org' or m.scope_value = action_center_review_rhythm_configs.route_scope_value)
+        and m.can_view
+        and m.can_update
+        and m.can_schedule_review
+    )
+  );
+
+create policy "hr_and_admins_can_update_action_center_review_rhythm_configs"
+  on public.action_center_review_rhythm_configs for update
+  using (
+    public.is_verisight_admin_user()
+    or public.is_org_owner(org_id)
+    or exists (
+      select 1
+      from public.action_center_workspace_members m
+      where m.user_id = auth.uid()
+        and m.org_id = action_center_review_rhythm_configs.org_id
+        and m.access_role in ('hr_owner', 'hr_member')
+        and (m.scope_type = 'org' or m.scope_value = action_center_review_rhythm_configs.route_scope_value)
+        and m.can_view
+        and m.can_update
+        and m.can_schedule_review
+    )
+  )
+  with check (
+    public.is_verisight_admin_user()
+    or public.is_org_owner(org_id)
+    or exists (
+      select 1
+      from public.action_center_workspace_members m
+      where m.user_id = auth.uid()
+        and m.org_id = action_center_review_rhythm_configs.org_id
+        and m.access_role in ('hr_owner', 'hr_member')
+        and (m.scope_type = 'org' or m.scope_value = action_center_review_rhythm_configs.route_scope_value)
+        and m.can_view
+        and m.can_update
+        and m.can_schedule_review
+    )
+  );
+
+drop policy if exists "service_role_can_select_action_center_follow_through_mail_events" on public.action_center_follow_through_mail_events;
+drop policy if exists "service_role_can_insert_action_center_follow_through_mail_events" on public.action_center_follow_through_mail_events;
+drop policy if exists "service_role_can_select_action_center_adoption_events" on public.action_center_adoption_events;
+drop policy if exists "service_role_can_insert_action_center_adoption_events" on public.action_center_adoption_events;
+drop policy if exists "service_role_can_select_action_center_bounded_execution_events" on public.action_center_bounded_execution_events;
+drop policy if exists "service_role_can_insert_action_center_bounded_execution_events" on public.action_center_bounded_execution_events;
+drop policy if exists "service_role_can_select_action_center_review_schedule_revisions" on public.action_center_review_schedule_revisions;
+drop policy if exists "service_role_can_insert_action_center_review_schedule_revisions" on public.action_center_review_schedule_revisions;
+drop policy if exists "service_role_can_select_action_center_graph_calendar_links" on public.action_center_graph_calendar_links;
+drop policy if exists "service_role_can_insert_action_center_graph_calendar_links" on public.action_center_graph_calendar_links;
+drop policy if exists "service_role_can_update_action_center_graph_calendar_links" on public.action_center_graph_calendar_links;
+
+create policy "service_role_can_select_action_center_review_schedule_revisions"
+  on public.action_center_review_schedule_revisions for select
+  to service_role
+  using (true);
+
+create policy "service_role_can_insert_action_center_review_schedule_revisions"
+  on public.action_center_review_schedule_revisions for insert
+  to service_role
+  with check (true);
+
+create policy "service_role_can_select_action_center_graph_calendar_links"
+  on public.action_center_graph_calendar_links for select
+  to service_role
+  using (true);
+
+create policy "service_role_can_insert_action_center_graph_calendar_links"
+  on public.action_center_graph_calendar_links for insert
+  to service_role
+  with check (true);
+
+create policy "service_role_can_update_action_center_graph_calendar_links"
+  on public.action_center_graph_calendar_links for update
+  to service_role
+  using (true)
+  with check (true);
+
+create policy "service_role_can_select_action_center_follow_through_mail_events"
+  on public.action_center_follow_through_mail_events for select
+  to service_role
+  using (true);
+
+create policy "service_role_can_insert_action_center_follow_through_mail_events"
+  on public.action_center_follow_through_mail_events for insert
+  to service_role
+  with check (true);
+
+create policy "service_role_can_select_action_center_adoption_events"
+  on public.action_center_adoption_events for select
+  to service_role
+  using (true);
+
+create policy "service_role_can_insert_action_center_adoption_events"
+  on public.action_center_adoption_events for insert
+  to service_role
+  with check (true);
+
+create policy "service_role_can_select_action_center_bounded_execution_events"
+  on public.action_center_bounded_execution_events for select
+  to service_role
+  using (true);
+
+create policy "service_role_can_insert_action_center_bounded_execution_events"
+  on public.action_center_bounded_execution_events for insert
+  to service_role
+  with check (true);
 
 -- ============================================================
 -- PROFILES: is_verisight_admin per gebruiker

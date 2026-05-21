@@ -229,7 +229,13 @@ def test_culture_assessment_respondent_management_paths_are_available(client, db
     import_response = client.post(
         f"/api/campaigns/{campaign.id}/respondents/import",
         headers={"x-api-key": "culture-respondent-key"},
-        files={"upload": ("respondenten.csv", b"email\na@example.com\n", "text/csv")},
+        files={
+            "upload": (
+                "respondenten.csv",
+                b"email,department,role_level\na@example.com,People,manager\n",
+                "text/csv",
+            )
+        },
         data={"dry_run": "true", "send_invites": "false"},
     )
     assert import_response.status_code == 200

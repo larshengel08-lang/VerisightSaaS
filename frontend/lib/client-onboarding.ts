@@ -105,13 +105,11 @@ export const IMPLEMENTATION_INTAKE_INPUTS = [
 ] as const
 
 export const CLIENT_FILE_SPEC = {
-  required: ['email'],
-  recommended: ['department', 'role_level'],
+  required: ['email', 'department', 'role_level'],
+  recommended: [],
   exitOptional: ['exit_month', 'annual_salary_eur'],
   retentionOptional: ['annual_salary_eur'],
   minimumParticipants: 5,
-  segmentDeepDiveNote:
-    'Bij segment deep dive zijn nette metadata extra belangrijk. Zonder afdeling en functieniveau verliest de verdieping snel waarde.',
 } as const
 
 export const PRODUCT_ROUTE_VARIANTS = [

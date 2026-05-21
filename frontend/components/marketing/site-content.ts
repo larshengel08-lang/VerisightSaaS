@@ -1,9 +1,8 @@
-import { buildContactHref } from '@/lib/contact-funnel'
+﻿import { buildContactHref } from '@/lib/contact-funnel'
 
 export const marketingNavLinks = [
   { href: '/producten', label: 'Producten' },
   { href: '/aanpak', label: 'Aanpak' },
-  { href: '/inzichten', label: 'Inzichten' },
   { href: '/tarieven', label: 'Tarieven' },
   { href: '/vertrouwen', label: 'Vertrouwen' },
 ] as const
@@ -21,7 +20,6 @@ export const marketingSecondaryCta = {
 export const marketingFooterLinks = [
   { href: '/', label: 'Home' },
   { href: '/producten', label: 'Producten' },
-  { href: '/inzichten', label: 'Inzichten' },
   { href: '/producten/exitscan', label: 'ExitScan' },
   { href: '/producten/retentiescan', label: 'RetentieScan' },
   { href: '/aanpak', label: 'Aanpak' },
@@ -136,7 +134,7 @@ export const comparisonCards = [
   {
     title: 'Gerichte scan, geen brede vragenlijst',
     description:
-      'Verisight is opgebouwd rondom een specifieke managementvraag — niet een generieke tool die achteraf betekenis moet krijgen.',
+      'Loep is opgebouwd rondom een specifieke managementvraag — niet een generieke tool die achteraf betekenis moet krijgen.',
     outcome: 'U koopt een gerichte route, geen open instrument.',
   },
   {
@@ -165,7 +163,7 @@ export const trustQuickLinks = [
   {
     href: '/vertrouwen',
     label: 'Methodiek en vertrouwelijkheid',
-    body: 'Hoe Verisight is opgebouwd en wat u ervan kunt verwachten.',
+    body: 'Hoe Loep is opgebouwd en wat u ervan kunt verwachten.',
   },
   {
     href: '/privacy',
@@ -202,7 +200,7 @@ export const trustSignalHighlights = [
   },
   {
     title: 'Begeleide productvorm',
-    body: 'Verisight biedt een strakke productvorm met intake, uitvoering, rapportage en begeleide vervolgstappen, in plaats van losse surveysoftware of open consultancy.',
+    body: 'Loep biedt een strakke productvorm met intake, uitvoering, rapportage en begeleide vervolgstappen, in plaats van losse surveysoftware of open consultancy.',
   },
   {
     title: 'Publiek verifieerbare basis',
@@ -212,47 +210,47 @@ export const trustSignalHighlights = [
 
 export const trustVerificationCards = [
   {
-    title: 'Wat u nu publiek kunt verifiëren',
-    body: 'Verisight laat publiek zien hoe privacy, rapportage en de eerste stap zijn ingericht voordat u een gesprek plant.',
+    title: 'Zo weet u vooraf waar u aan toe bent',
+    body: 'U kunt vooraf zien hoe Loep omgaat met privacy, rapportage en de eerste stap naar een Baseline.',
   },
   {
     title: 'Waar publieke voorbeeldoutput stopt',
-    body: 'ExitScan en RetentieScan dragen de publieke voorbeeldrapporten. Andere routes worden publiek lichter toegelicht en niet als aparte samplebibliotheek uitgewerkt.',
+    body: 'Voorbeeldoutput is beschikbaar voor de belangrijkste eerste routes. Andere routes lichten we kort toe, zonder onnodige voorbeeldbibliotheek.',
   },
   {
     title: 'Wat u in rapport en dashboard terugziet',
-    body: 'Geaggregeerde inzichten, topfactoren, prioriteiten en een eerste richting voor vervolg.',
+    body: 'Een groepsbeeld, belangrijkste aandachtspunten, prioriteiten en eerste vervolgrichting.',
   },
   {
     title: 'Wat we bewust niet claimen',
-    body: 'Geen individuele voorspellingen, geen persoonsgerichte beoordeling en geen bewijsclaims die verder gaan dan de data dragen.',
+    body: 'Geen individuele voorspellingen, geen persoonsgerichte beoordeling en geen conclusies die verder gaan dan het groepsbeeld toelaat.',
   },
 ] as const
 
 export const trustHubAnswerCards = [
   {
     title: 'Waar draait de data?',
-    body: 'De primaire database draait in een EU-regio. Subverwerkers voor hosting en mail staan in privacybeleid en DPA benoemd.',
+    body: 'De primaire database draait in de EU. Subverwerkers voor hosting en e-mail staan in het privacybeleid en de verwerkersovereenkomst.',
   },
   {
     title: 'Wat ziet u precies terug?',
-    body: 'U ziet groeps- en segmentinzichten, geen individuele signalen of persoonsgerichte actieroutes.',
+    body: 'U ziet groeps- en segmentinzichten. Geen individuele signalen, persoonsprofielen of persoonlijke risicolijsten.',
   },
   {
     title: 'Hoe voorkom je schijnprecisie?',
-    body: 'Detail start pas vanaf minimale aantallen. Kleine segmenten blijven verborgen en open tekst wordt waar nodig geanonimiseerd.',
+    body: 'Detailweergave start pas vanaf minimale groepsgroottes. Te kleine segmenten blijven verborgen en open tekst wordt zorgvuldig behandeld.',
   },
   {
     title: 'Welke juridische basis is publiek beschikbaar?',
-    body: 'Er zijn publieke pagina\'s voor trust en privacy, privacybeleid, voorwaarden en een standaard DPA-template.',
+    body: 'U vindt publieke pagina’s over trust, privacy, voorwaarden en een standaard verwerkersovereenkomst.',
   },
   {
     title: 'Wat koopt u precies?',
-    body: 'Geen losse tool, maar een duidelijke aanpak met dashboard, rapport en heldere grenzen in hoe u de uitkomsten gebruikt.',
+    body: 'U start met een Baseline: scan, dashboard en managementrapport. Opvolging kan daarna optioneel worden geborgd.',
   },
   {
     title: 'Heeft elke route een publiek voorbeeldrapport?',
-    body: 'Nee. Publieke voorbeeldoutput blijft bewust beperkt tot ExitScan en RetentieScan.',
+    body: 'Nee. Voorbeeldoutput is bewust beperkt tot de belangrijkste eerste routes: ExitScan en RetentieScan.',
   },
 ] as const
 
@@ -260,22 +258,22 @@ export const trustReadingRows = [
   [
     'Gebruik',
     'Samenvatting, prioriteiten en gesprek op groepsniveau',
-    'Niet als diagnose, individuele voorspelling of performance-oordeel',
+    'Niet als diagnose, individuele voorspelling of beoordeling van personen',
   ],
   [
     'Wat u terugziet',
-    'Dashboard, samenvatting, topfactoren en eerste vervolgrichting.',
-    'Niet elke ruwe response, geen persoonsprofielen en geen verborgen black-box score',
+    'Dashboard, managementsamenvatting, topfactoren en eerste vervolgrichting.',
+    'Geen ruwe individuele responses, geen persoonsprofielen en geen verborgen black-box score.',
   ],
   [
     'Privacygrens',
-    'Minimale n-grenzen, segmentonderdrukking en geanonimiseerde open tekst',
-    'Niet doen alsof kleine groepen of open tekst zonder terughoudendheid veilig te lezen zijn',
+    'Minimale groepsgroottes, onderdrukking van te kleine segmenten en zorgvuldige omgang met open tekst.',
+    'Niet gebruiken alsof kleine groepen of open tekst altijd volledig veilig of representatief zijn.',
   ],
   [
     'Wat de uitkomsten wel en niet zeggen',
-    'Methodisch onderbouwd en begrensd in wat het wel en niet claimt.',
-    'Niet verkopen als volledig diagnostisch instrument of bewezen voorspeller',
+    'Onderbouwde signalen met duidelijke grenzen in wat ze wel en niet zeggen.',
+    'Niet gebruiken als diagnose, voorspeller of sluitend bewijs.',
   ],
 ] as const
 
@@ -283,22 +281,22 @@ export const trustSupportCards = [
   {
     title: 'Trust en privacy',
     href: '/vertrouwen',
-    body: 'Methodiek, privacy en hoe u de uitkomsten leest.',
+    body: 'Methodiek, privacy en verantwoord gebruik van uitkomsten.',
   },
   {
     title: 'Privacybeleid',
     href: '/privacy',
-    body: 'Persoonsgegevens, subverwerkers en rechten onder de AVG.',
+    body: 'Hoe Loep persoonsgegevens, subverwerkers en AVG-rechten behandelt.',
   },
   {
     title: 'Verwerkersovereenkomst',
     href: '/dpa',
-    body: 'Standaard DPA-template voor klantorganisaties.',
+    body: 'Standaard verwerkersovereenkomst voor klantorganisaties.',
   },
   {
     title: 'Algemene voorwaarden',
     href: '/voorwaarden',
-    body: 'Dienstvorm, beschikbaarheid, facturatie en rollen.',
+    body: 'Voorwaarden over dienstvorm, beschikbaarheid, facturatie en rollen.',
   },
 ] as const
 
@@ -341,7 +339,7 @@ export const outcomeCards = [
   ],
   [
     'Geen extra toolbeheer',
-    'Verisight begeleidt de uitvoering, zodat jouw team niet ook nog een nieuwe surveytool hoeft in te richten of te beheren.',
+    'Loep begeleidt de uitvoering, zodat jouw team niet ook nog een nieuwe surveytool hoeft in te richten of te beheren.',
   ],
   [
     'Privacy by design',
@@ -401,7 +399,7 @@ export const approachSteps = [
   },
   {
     title: '6. Eerste opvolging organiseren',
-    body: 'Waar relevant helpt Verisight om de eerste opvolging zichtbaar te maken, met duidelijke acties en verantwoordelijkheden.',
+    body: 'Waar relevant helpt Loep om de eerste opvolging zichtbaar te maken, met duidelijke acties en verantwoordelijkheden.',
   },
 ] as const
 
@@ -522,7 +520,7 @@ export const pricingCards = [
     eyebrow: 'ExitScan Baseline',
     price: 'vanaf EUR 4.500',
     description:
-      'De standaard eerste stap voor organisaties die vertrek eerst scherp willen begrijpen en daarvoor een compacte managementread nodig hebben.',
+      'Voor organisaties die beter willen begrijpen welke patronen terugkomen in uitstroom en wat management eerst moet bespreken.',
     bullets: [
       'Intake',
       'Scan',
@@ -534,7 +532,7 @@ export const pricingCards = [
     eyebrow: 'RetentieScan Baseline',
     price: 'vanaf EUR 4.500',
     description:
-      'De eerste stap voor organisaties die eerder willen zien waar behoud onder druk staat, zonder individuele signalen naar management te trekken.',
+      'Voor organisaties die eerder willen zien waar behoud onder druk staat, voordat signalen pas zichtbaar worden in exitdata.',
     bullets: [
       'Intake',
       'Scan',
@@ -546,7 +544,7 @@ export const pricingCards = [
     eyebrow: 'Onboarding 30-60-90 Baseline',
     price: 'vanaf EUR 4.500',
     description:
-      'Een kleinere, gerichte startroute voor organisaties die juist in de eerste maanden van nieuwe medewerkers sneller helderheid nodig hebben.',
+      'Voor organisaties die willen zien of nieuwe medewerkers goed landen in rol, team, leiding en werkcontext.',
     bullets: [
       'Intake',
       'Scan',
@@ -562,7 +560,7 @@ export const pricingFollowOnRoutes = [
     price: 'op aanvraag',
     fit: 'Later vervolg na baseline',
     description:
-      'Voor organisaties die uitstroom niet alleen eenmalig willen duiden, maar daarna doorlopend willen blijven volgen zodra baseline en review al staan.',
+      'Voor organisaties die nieuwe exits vanaf nu structureel willen volgen.',
     bullets: [
       'Geen extra startroute naast de baseline',
       'Pas logisch als proces en eigenaar al staan',
@@ -574,7 +572,7 @@ export const pricingFollowOnRoutes = [
     price: 'op aanvraag',
     fit: 'Later vervolg na baseline',
     description:
-      'Voor organisaties die de gekozen route later in een vast reviewritme willen herijken nadat de eerste baseline en opvolgrichting al staan.',
+      'Voor organisaties die periodiek willen herijken of signalen verschuiven en opvolging werkt.',
     bullets: [
       'Geen hoofdkaart boven de fold',
       'Past na eerste managementwaarde',
@@ -586,7 +584,7 @@ export const pricingFollowOnRoutes = [
     price: 'op aanvraag',
     fit: 'Bounded vervolgroute',
     description:
-      'Compacte vervolgronde wanneer een eerste baseline al staat en u een beperkte hercheck wilt doen op dezelfde vraag.',
+      'Voor een compacte hercheck nadat de eerste vraag al scherp is.',
     bullets: [
       'Niet bedoeld als nieuwe eerste stap',
       'Kleinere vervolgroute na een bestaand beeld',
@@ -598,7 +596,7 @@ export const pricingFollowOnRoutes = [
     price: 'op aanvraag',
     fit: 'Bounded vervolgroute',
     description:
-      'Gerichte vervolgronde als een bestaand people-signaal extra duiding vraagt rond managementcontext, niet als brede leiderschapsinstap.',
+      'Wanneer signalen vooral vragen oproepen over aansturing of leiding.',
     bullets: [
       'Komt pas na een bestaand signaal in beeld',
       'Blijft op groepsniveau en beperkt in scope',
@@ -610,7 +608,7 @@ export const pricingFollowOnRoutes = [
     price: 'op aanvraag',
     fit: 'Portfolioroute',
     description:
-      'Pas logisch wanneer vertrekduiding en behoudsvraag allebei bestuurlijk spelen en de eerste route al scherp staat.',
+      'Wanneer vertrek en behoud tegelijk aandacht vragen en gefaseerd bekeken moeten worden.',
     bullets: [
       'Geen derde kernproduct',
       'Pas na een eerste route logisch',
@@ -690,42 +688,41 @@ export const productPrimaryRouteCards = [
 
 export const productSecondaryFirstBuyRoute = {
   title: 'Onboarding 30-60-90',
-  eyebrow: 'Gerichte startroute',
+  eyebrow: 'Voor vragen rond de eerste 30, 60 en 90 dagen',
   body:
-    'Onboarding 30-60-90 Baseline is de kleinere, gerichte startroute wanneer juist de eerste maanden van nieuwe medewerkers nu de belangrijkste managementvraag vormen.',
+    'Voor organisaties die vroeg willen zien of nieuwe medewerkers goed landen — en waar eerste frictie aandacht vraagt voordat die uitgroeit tot uitval, verloop of langdurige onzekerheid.',
   bullets: [
-    'Geen derde kernroute naast ExitScan en RetentieScan',
-    'Wel een volwaardige baseline als onboarding nu de eerste vraag is',
-    'Gericht op vroege landing, eerste frictie en eerste uitval',
+    'Voor vragen rond de eerste 30, 60 en 90 dagen',
+    'Maakt vroege frictie in rol, team en leiding zichtbaar',
+    'Startpunt wanneer onboarding nu de belangrijkste vraag is',
   ],
   href: '/producten/onboarding-30-60-90',
 } as const
 
 export const actionCenterStartPositioning = {
   eyebrow: 'Optionele uitbreiding',
-  title: 'Voeg Action Center Start pas toe als opvolging zichtbaar geborgd moet worden.',
+  title: 'Borg opvolging pas als er echt iets gekozen is',
   body:
-    'Action Center Start is geen derde kernproduct, maar een optionele opvolglaag na of naast een baseline. U gebruikt het voor een gekozen opvolgscope, een of enkele owners, zichtbare status en een reviewmoment.',
+    'Na een Baseline kan Action Center helpen om één gekozen vervolgrichting zichtbaar te houden: wie pakt dit op, wat loopt er en wanneer kijken we terug? Het is bedoeld voor gerichte opvolging, niet als breed workflowplatform.',
   bullets: [
-    'Begrensd tot een gekozen opvolgscope',
-    'Voor een of enkele owners of managers',
-    'Geen brede workflowlaag of taakmanagementsysteem',
+    'Voor één gekozen vervolgrichting',
+    'Beperkte manager- of eigenaartoegang',
+    'Zichtbare status en één reviewmoment',
   ],
 } as const
 
 export const productFollowOnRouteRows = [
-  ['ExitScan Live Start', 'Later vervolg wanneer dezelfde uitstroomvraag structureel gevolgd moet worden.'],
-  ['Reviewcadans', 'Later vervolg wanneer dezelfde route in een vast reviewritme opnieuw herijkt moet worden.'],
+  ['ExitScan Live Start', 'Voor organisaties die nieuwe exits vanaf nu structureel willen volgen, nadat duidelijk is welke vertrekvraag centraal staat.'],
+  ['Reviewcadans', 'Voor organisaties die periodiek willen terugkijken of signalen verschuiven, opvolging werkt en een nieuwe managementkeuze nodig is.'],
   ['Pulse', 'Compacte vervolgronde na een eerste baseline.'],
-  ['Leadership Scan', 'Gerichte vervolgronde als managementcontext extra duiding vraagt.'],
-  ['Combinatie', 'Pas logisch wanneer vertrekduiding en behoudsvraag allebei bestuurlijk spelen.'],
+  ['Leadership Scan', 'Wanneer signalen vooral vragen oproepen over aansturing of leiding.'],
 ] as const
 
 export const pricingAddOns = [
   [
     'Action Center Start',
     'vanaf EUR 1.250',
-    'Optionele uitbreiding voor een gekozen opvolgscope, een of enkele owners, beperkte actieopvolging, zichtbare status en een reviewmoment.',
+    'Optionele uitbreiding voor één gekozen vervolgrichting, met beperkte manager- of eigenaartoegang, zichtbare status en één reviewmoment.',
   ],
 ] as const
 
@@ -736,7 +733,7 @@ export const pricingFaqs = [
   ],
   [
     'Waarom starten jullie niet met een gratis pilot?',
-    'Omdat Verisight bedoeld is als serieuze eerste stap met een duidelijke baseline, een eerste managementread en een concrete vervolgrichting. Een betaald eerste traject voorkomt vrijblijvende validatie zonder besluitvorming.',
+    'Omdat Loep bedoeld is als serieuze eerste stap met een duidelijke baseline, een eerste managementread en een concrete vervolgrichting. Een betaald eerste traject voorkomt vrijblijvende validatie zonder besluitvorming.',
   ],
   [
     'Is Action Center Start standaard onderdeel van elke baseline?',
@@ -764,7 +761,7 @@ export const pricingFaqs = [
   ],
   [
     'Beloof je hiermee lager verloop?',
-    'Nee. Verisight verkoopt geen garantie op lager verloop, maar scherpere duiding, betere prioritering en een sterkere basis voor managementbeslissingen op groepsniveau.',
+    'Nee. Loep verkoopt geen garantie op lager verloop, maar scherpere duiding, betere prioritering en een sterkere basis voor managementbeslissingen op groepsniveau.',
   ],
 ] as const
 
@@ -794,7 +791,7 @@ export const faqs = [
     'Voor v1 is een baseline logisch als startpunt. Daarna kun je periodiek herhalen, bijvoorbeeld per kwartaal of halfjaar, als je gericht wilt volgen of acties effect hebben.',
   ],
   [
-    'Is Verisight een tool of een dienst?',
+    'Is Loep een tool of een dienst?',
     'Het is een begeleide dienst met software. Je krijgt dashboard en rapportage, zonder self-service implementatie of losse consultancy zonder productvorm.',
   ],
 ] as const
@@ -815,4 +812,5 @@ export const faqSchema = {
     acceptedAnswer: { '@type': 'Answer', text: answer },
   })),
 }
+
 

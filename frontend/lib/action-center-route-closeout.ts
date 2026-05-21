@@ -1,4 +1,7 @@
-import type { ActionCenterGovernanceActorRole } from './action-center-governance'
+import {
+  resolveActionCenterTransitionAccess,
+  type ActionCenterGovernanceActorRole,
+} from './action-center-governance'
 
 export type ActionCenterRouteCloseoutStatus = 'afgerond' | 'gestopt'
 
@@ -11,6 +14,17 @@ export type ActionCenterRouteCloseoutReason =
   | 'elders-opgepakt'
 
 export type ActionCenterRouteCloseoutRole = ActionCenterGovernanceActorRole | 'manager'
+
+export class ActionCenterRouteCloseoutMutationError extends Error {
+  constructor(
+    public readonly code:
+      | 'forbidden_transition'
+      | 'missing_closeout_reason',
+  ) {
+    super(code)
+    this.name = 'ActionCenterRouteCloseoutMutationError'
+  }
+}
 
 export interface ActionCenterRouteCloseoutRecord {
   routeId: string
@@ -45,7 +59,6 @@ const CLOSEOUT_ROLES = new Set<ActionCenterRouteCloseoutRole>([
   'hr_owner',
   'hr_member',
   'hr',
-  'manager',
 ])
 
 function normalizeText(value: string | null | undefined) {
@@ -62,6 +75,18 @@ function isIsoTimestamp(value: string | null | undefined) {
   }
 
   return !Number.isNaN(new Date(normalized).getTime())
+}
+
+export function isActionCenterRouteCloseoutStatus(
+  value: string | null | undefined,
+): value is ActionCenterRouteCloseoutStatus {
+  return Boolean(value && CLOSEOUT_STATUSES.has(value as ActionCenterRouteCloseoutStatus))
+}
+
+export function isActionCenterRouteCloseoutReason(
+  value: string | null | undefined,
+): value is ActionCenterRouteCloseoutReason {
+  return Boolean(value && CLOSEOUT_REASONS.has(value as ActionCenterRouteCloseoutReason))
 }
 
 export function projectActionCenterRouteCloseout(
@@ -156,5 +181,27 @@ export function projectActionCenterRouteCloseoutState(args: {
     closedAt: null,
     closedByRole: null,
     readyForCloseout: Boolean(args.readyForCloseout),
+  }
+}
+
+export function assertActionCenterRouteCloseoutMutationAllowed(args: {
+  actorRole: ActionCenterGovernanceActorRole
+  currentState: 'open' | 'closed' | 'reopened'
+  closeoutReason: string | null | undefined
+}) {
+  if (!normalizeText(args.closeoutReason)) {
+    throw new ActionCenterRouteCloseoutMutationError('missing_closeout_reason')
+  }
+
+  const fromState = args.currentState === 'reopened' ? 'open' : args.currentState
+  const access = resolveActionCenterTransitionAccess({
+    actorRole: args.actorRole,
+    object: 'follow_through_route',
+    fromState,
+    toState: 'closed',
+  })
+
+  if (!access.allowed) {
+    throw new ActionCenterRouteCloseoutMutationError('forbidden_transition')
   }
 }

@@ -57,8 +57,8 @@ describe('client onboarding defaults', () => {
   })
 
   it('keeps the respondent file specification aligned with assisted import', () => {
-    expect(CLIENT_FILE_SPEC.required).toEqual(['email'])
-    expect(CLIENT_FILE_SPEC.recommended).toEqual(['department', 'role_level'])
+    expect(CLIENT_FILE_SPEC.required).toEqual(['email', 'department', 'role_level'])
+    expect(CLIENT_FILE_SPEC.recommended).toEqual([])
     expect(CLIENT_FILE_SPEC.exitOptional).toContain('exit_month')
   })
 

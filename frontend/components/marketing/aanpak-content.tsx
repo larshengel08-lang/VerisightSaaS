@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { AC, Arrow, FF, Reveal, SHELL, T } from '@/components/marketing/design-tokens'
@@ -82,7 +82,7 @@ function HeroSection() {
               </em>
             </h1>
             <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '48ch', margin: '28px 0 36px' }}>
-              Verisight helpt eerst bepalen welke eerste stap nu het meeste duidelijkheid geeft. Daarna volgt een
+              Loep helpt eerst bepalen welke eerste stap nu het meeste duidelijkheid geeft. Daarna volgt een
               compacte route naar dashboard, rapport en eerste opvolging, zodat snel zichtbaar wordt wat speelt en wat
               als eerste aandacht vraagt.
             </p>
@@ -419,3 +419,4 @@ export function AanpakContent() {
     </div>
   )
 }
+

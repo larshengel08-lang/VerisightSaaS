@@ -8,9 +8,25 @@ import {
   DashboardPanel,
   DashboardSection,
 } from '@/components/dashboard/dashboard-primitives'
+import { ReviewRhythmConsole } from '@/components/dashboard/review-rhythm-console'
+import { ReviewRhythmOversight } from '@/components/dashboard/review-rhythm-oversight'
 import type { ActionCenterPreviewItem, ActionCenterPreviewStatus } from '@/lib/action-center-preview-model'
+import type {
+  ActionCenterReviewOversightAttentionItem,
+  ActionCenterReviewOversightSummary,
+} from '@/lib/action-center-review-oversight'
+import {
+  getActionCenterEnabledRouteDefaults,
+  type ActionCenterRouteDefaultsKnownScanType,
+} from '@/lib/action-center-route-defaults'
+import {
+  buildDefaultActionCenterReviewRhythmConfig,
+  classifyActionCenterReviewRhythmStatus,
+  type ActionCenterReviewRhythmConfig,
+} from '@/lib/action-center-review-rhythm'
 import {
   formatReviewMomentLastUpdated,
+  getReviewMomentActionLabel,
   getReviewMomentManagerLabel,
   getReviewMomentScopeLabel,
   groupReviewMomentsByUrgency,
@@ -41,43 +57,136 @@ function getFirstVisibleItem(items: ActionCenterPreviewItem[]) {
   return items[0]?.id ?? null
 }
 
+type ReviewRhythmSummary = {
+  staleCount: number
+  overdueCount: number
+  upcomingCount: number
+  reminderManagedCount: number
+}
+
+const EMPTY_REVIEW_RHYTHM_SUMMARY: ReviewRhythmSummary = {
+  staleCount: 0,
+  overdueCount: 0,
+  upcomingCount: 0,
+  reminderManagedCount: 0,
+}
+
+function getReviewMomentRouteId(item: Pick<ActionCenterPreviewItem, 'coreSemantics'>) {
+  return item.coreSemantics.route.routeId
+}
+
+function buildPrimaryQuickAction(item: ActionCenterPreviewItem) {
+  return getReviewMomentActionLabel(item)
+}
+
+function computeRhythmSummary(
+  items: ActionCenterPreviewItem[],
+  configByRouteId: Record<string, ActionCenterReviewRhythmConfig>,
+  routeScanTypeByRouteId: Record<string, ActionCenterRouteDefaultsKnownScanType>,
+  now: Date,
+): ReviewRhythmSummary {
+  return items.filter((item) => getActionCenterEnabledRouteDefaults(routeScanTypeByRouteId[getReviewMomentRouteId(item)])).reduce<ReviewRhythmSummary>(
+    (acc, item) => {
+      const config =
+        configByRouteId[getReviewMomentRouteId(item)] ?? buildDefaultActionCenterReviewRhythmConfig()
+      const health = classifyActionCenterReviewRhythmStatus({
+        reviewDate: item.reviewDate,
+        now,
+        config,
+        itemStatus: item.status,
+      })
+
+      if (health === 'stale') acc.staleCount += 1
+      if (health === 'overdue') acc.overdueCount += 1
+      if (health === 'upcoming') acc.upcomingCount += 1
+      if (health !== 'completed' && config.remindersEnabled) acc.reminderManagedCount += 1
+
+      return acc
+    },
+    {
+      staleCount: 0,
+      overdueCount: 0,
+      upcomingCount: 0,
+      reminderManagedCount: 0,
+    },
+  )
+}
+
 export function ReviewMomentPageClient({
   items,
   governanceCounts,
   organizationName,
   lastUpdated,
+  canScheduleActionCenterReview,
+  inviteDownloadEligibleRouteIds,
+  routeScanTypeByRouteId,
+  manageableReviewRhythmRouteIds,
+  nativeCalendarEligibleRouteIds,
+  rhythmConfigByRouteId,
+  oversightSummary,
+  oversightAttentionItems,
 }: {
   items: ActionCenterPreviewItem[]
   governanceCounts: ReviewMomentGovernanceCounts
   organizationName: string
   lastUpdated: string
+  canScheduleActionCenterReview: boolean
+  inviteDownloadEligibleRouteIds: string[]
+  routeScanTypeByRouteId: Record<string, ActionCenterRouteDefaultsKnownScanType>
+  manageableReviewRhythmRouteIds: string[]
+  nativeCalendarEligibleRouteIds: string[]
+  rhythmConfigByRouteId: Record<string, ActionCenterReviewRhythmConfig>
+  oversightSummary: ActionCenterReviewOversightSummary
+  oversightAttentionItems: ActionCenterReviewOversightAttentionItem[]
 }) {
+  const reviewMomentItems = useMemo(
+    () => items.filter((item) => getActionCenterEnabledRouteDefaults(routeScanTypeByRouteId[getReviewMomentRouteId(item)])),
+    [items, routeScanTypeByRouteId],
+  )
   const [statusFilter, setStatusFilter] = useState<'all' | ActionCenterPreviewStatus>('all')
   const [scopeFilter, setScopeFilter] = useState<string>('all')
   const [managerFilter, setManagerFilter] = useState<string>('all')
   const [showCompleted, setShowCompleted] = useState(false)
-  const [selectedItemId, setSelectedItemId] = useState<string | null>(getFirstVisibleItem(items))
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(getFirstVisibleItem(reviewMomentItems))
+  const [clientRhythmConfigByRouteId, setClientRhythmConfigByRouteId] = useState(rhythmConfigByRouteId)
 
   const referenceNow = useMemo(() => new Date(lastUpdated), [lastUpdated])
+  const inviteDownloadEligibleRouteIdSet = useMemo(
+    () => new Set(inviteDownloadEligibleRouteIds),
+    [inviteDownloadEligibleRouteIds],
+  )
+  const manageableReviewRhythmRouteIdSet = useMemo(
+    () => new Set(manageableReviewRhythmRouteIds),
+    [manageableReviewRhythmRouteIds],
+  )
+  const nativeCalendarEligibleRouteIdSet = useMemo(
+    () => new Set(nativeCalendarEligibleRouteIds),
+    [nativeCalendarEligibleRouteIds],
+  )
   const scopeOptions = useMemo(
-    () => [...new Set(items.map((item) => getReviewMomentScopeLabel(item)))].sort((left, right) => left.localeCompare(right)),
-    [items],
+    () =>
+      [...new Set(reviewMomentItems.map((item) => getReviewMomentScopeLabel(item)))].sort((left, right) =>
+        left.localeCompare(right),
+      ),
+    [reviewMomentItems],
   )
   const managerOptions = useMemo(
     () =>
-      [...new Set(items.map((item) => getReviewMomentManagerLabel(item)))].sort((left, right) => left.localeCompare(right)),
-    [items],
+      [...new Set(reviewMomentItems.map((item) => getReviewMomentManagerLabel(item)))].sort((left, right) =>
+        left.localeCompare(right),
+      ),
+    [reviewMomentItems],
   )
 
   const filteredItems = useMemo(
     () =>
-      items.filter((item) => {
+      reviewMomentItems.filter((item) => {
         if (statusFilter !== 'all' && item.status !== statusFilter) return false
         if (scopeFilter !== 'all' && getReviewMomentScopeLabel(item) !== scopeFilter) return false
         if (managerFilter !== 'all' && getReviewMomentManagerLabel(item) !== managerFilter) return false
         return true
       }),
-    [items, managerFilter, scopeFilter, statusFilter],
+    [managerFilter, reviewMomentItems, scopeFilter, statusFilter],
   )
 
   const grouped = useMemo(() => groupReviewMomentsByUrgency(filteredItems, referenceNow), [filteredItems, referenceNow])
@@ -95,7 +204,24 @@ export function ReviewMomentPageClient({
     }
   }, [selectedItemId, visibleItems])
 
+  useEffect(() => {
+    setClientRhythmConfigByRouteId(rhythmConfigByRouteId)
+  }, [rhythmConfigByRouteId])
+
   const selectedItem = visibleItems.find((item) => item.id === selectedItemId) ?? null
+  const primaryQuickAction = selectedItem ? buildPrimaryQuickAction(selectedItem) : null
+  const selectedRhythmItem =
+    selectedItem && getActionCenterEnabledRouteDefaults(routeScanTypeByRouteId[getReviewMomentRouteId(selectedItem)])
+      ? selectedItem
+      : null
+  const canManageSelectedReviewRhythm = Boolean(
+    selectedRhythmItem?.coreSemantics.route.routeId &&
+      manageableReviewRhythmRouteIdSet.has(selectedRhythmItem.coreSemantics.route.routeId),
+  )
+  const selectedRouteScanType =
+    selectedRhythmItem?.coreSemantics.route.routeId
+      ? routeScanTypeByRouteId[selectedRhythmItem.coreSemantics.route.routeId] ?? null
+      : null
   const selectedUrgency: ReviewMomentUrgency | null = selectedItem
     ? grouped.overdue.some((item) => item.id === selectedItem.id)
       ? 'overdue'
@@ -107,9 +233,43 @@ export function ReviewMomentPageClient({
             ? 'completed'
             : null
     : null
+  const canDownloadInviteArtifact = canScheduleActionCenterReview && Boolean(
+    selectedItem?.coreSemantics.route.routeId &&
+      inviteDownloadEligibleRouteIdSet.has(selectedItem.coreSemantics.route.routeId),
+  )
+  const canScheduleReviewControls =
+    canScheduleActionCenterReview && canManageSelectedReviewRhythm
+  const canUseNativeCalendarSync = Boolean(
+    selectedItem?.coreSemantics.route.routeId &&
+      nativeCalendarEligibleRouteIdSet.has(selectedItem.coreSemantics.route.routeId) &&
+      canScheduleReviewControls,
+  )
   const lastUpdatedLabel = formatReviewMomentLastUpdated(lastUpdated)
+  const visibleRhythmSummary = useMemo(() => {
+    if (visibleItems.length === 0) {
+      return EMPTY_REVIEW_RHYTHM_SUMMARY
+    }
 
-  if (items.length === 0) {
+    return computeRhythmSummary(
+      visibleItems,
+      clientRhythmConfigByRouteId,
+      routeScanTypeByRouteId,
+      referenceNow,
+    )
+  }, [clientRhythmConfigByRouteId, referenceNow, routeScanTypeByRouteId, visibleItems])
+
+  function handleReviewRhythmSaved(nextConfig: ActionCenterReviewRhythmConfig) {
+    if (!selectedRhythmItem?.coreSemantics.route.routeId) {
+      return
+    }
+
+    setClientRhythmConfigByRouteId((current) => ({
+      ...current,
+      [selectedRhythmItem.coreSemantics.route.routeId]: nextConfig,
+    }))
+  }
+
+  if (reviewMomentItems.length === 0) {
     return (
       <DashboardPanel
         surface="ops"
@@ -138,7 +298,7 @@ export function ReviewMomentPageClient({
         aside={
           <div className="space-y-3 text-sm text-slate-700">
             <p className="font-semibold text-slate-950">Context</p>
-            <p>Deze pagina toont reviewritme. Geen scananalyse, rapportduiding of generieke planning.</p>
+            <p>Deze pagina toont reviewritme. Geen scananalyse, rapportduiding of extra coördinatielaag.</p>
           </div>
         }
       />
@@ -147,7 +307,7 @@ export function ReviewMomentPageClient({
         surface="ops"
         eyebrow="Filters"
         title="Filter reviewmomenten"
-        description="Filter client-side op status, scope of manager zonder een tweede data- of planningslaag toe te voegen."
+        description="Filter client-side op status, scope of manager zonder een tweede data- of coördinatielaag toe te voegen."
       >
         <div className="grid gap-3 lg:grid-cols-[repeat(3,minmax(0,220px)),1fr]">
           <select
@@ -200,6 +360,11 @@ export function ReviewMomentPageClient({
         onToggleCompleted={() => setShowCompleted((current) => !current)}
       />
 
+      <ReviewRhythmOversight
+        summary={oversightSummary}
+        attentionItems={oversightAttentionItems}
+      />
+
       <div id="review-lanes" className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr),minmax(320px,0.82fr)]">
         <div className="space-y-8">
           <ReviewMomentLane
@@ -230,11 +395,40 @@ export function ReviewMomentPageClient({
           ) : null}
         </div>
         <div id="review-detail" className="xl:sticky xl:top-[8rem] xl:self-start">
-          <ReviewMomentDetailPanel item={selectedItem} urgency={selectedUrgency} />
+          <ReviewMomentDetailPanel
+            item={selectedItem}
+            urgency={selectedUrgency}
+            primaryQuickAction={primaryQuickAction}
+            canDownloadInviteArtifact={canDownloadInviteArtifact}
+            canScheduleReviewControls={canScheduleReviewControls}
+            canUseNativeCalendarSync={canUseNativeCalendarSync}
+            selectedRouteScanType={selectedRouteScanType}
+          />
         </div>
       </div>
 
+      <ReviewRhythmConsole
+        selectedRouteId={selectedRhythmItem ? selectedRhythmItem.coreSemantics.route.routeId : null}
+        selectedRouteLabel={selectedRhythmItem ? getReviewMomentScopeLabel(selectedRhythmItem) : null}
+        selectedRouteSourceId={selectedRhythmItem?.coreSemantics.route.campaignId ?? null}
+        selectedRouteOrgId={selectedRhythmItem?.orgId ?? null}
+        selectedRouteScanType={selectedRouteScanType}
+        primaryQuickAction={primaryQuickAction}
+        canManageReviewRhythm={canManageSelectedReviewRhythm}
+        config={
+          (
+            selectedRhythmItem?.coreSemantics.route.routeId
+              ? clientRhythmConfigByRouteId[selectedRhythmItem.coreSemantics.route.routeId]
+              : null
+          ) ??
+          buildDefaultActionCenterReviewRhythmConfig()
+        }
+        summary={visibleRhythmSummary}
+        onConfigSaved={handleReviewRhythmSaved}
+      />
+
       <ReviewMomentGovernanceSection counts={governanceCounts} />
+
 
       <DashboardSection
         surface="ops"

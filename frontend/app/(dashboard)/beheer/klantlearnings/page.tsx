@@ -1,3 +1,5 @@
+import React from 'react'
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import type { ActionCenterReviewOutcome } from '@/lib/action-center-route-contract'
 import {
@@ -15,10 +17,13 @@ import {
 } from '@/lib/action-center-exit'
 import {
   DashboardPanel,
+  DashboardDisclosure,
   DashboardSection,
 } from '@/components/dashboard/dashboard-primitives'
 import { finalizeActionCenterPreviewItem } from '@/lib/action-center-live'
 import { getContactRequestsForAdmin } from '@/lib/contact-requests'
+import { getProofApprovalLabel, getProofStateLabel, type ProofRegistrySummary } from '@/lib/proof-registry'
+import { getLatestProofRegistryPreview, getProofRegistrySummarySnapshot } from '@/lib/proof-registry-server'
 import { createClient } from '@/lib/supabase/server'
 import type {
   ActionCenterReviewDecision,
@@ -109,6 +114,13 @@ function normalizePreviewReviewOutcome(value: string | null | undefined): Action
     default:
       return 'geen-uitkomst'
   }
+}
+
+const EMPTY_PROOF_SUMMARY: ProofRegistrySummary = {
+  total: 0,
+  lessonOnlyCount: 0,
+  salesUsableCount: 0,
+  publicUsableCount: 0,
 }
 
 export default async function KlantLearningsPage({ searchParams }: Props) {
@@ -210,6 +222,20 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
     acc[invite.org_id] = (acc[invite.org_id] ?? 0) + 1
     return acc
   }, {})
+  let proofSummary = EMPTY_PROOF_SUMMARY
+  let latestProofPreview: Awaited<ReturnType<typeof getLatestProofRegistryPreview>> = null
+  let proofSummaryUnavailable = false
+
+  try {
+    const [summarySnapshot, latestPreviewSnapshot] = await Promise.all([
+      getProofRegistrySummarySnapshot(),
+      getLatestProofRegistryPreview(),
+    ])
+    proofSummary = summarySnapshot
+    latestProofPreview = latestPreviewSnapshot
+  } catch {
+    proofSummaryUnavailable = true
+  }
 
   const {
     rows: leads,
@@ -304,7 +330,7 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
   const initialExitCampaignId = exitCampaigns.some((campaign) => campaign.id === initialCampaignId)
     ? initialCampaignId
     : null
-  const fallbackOwnerName = 'Verisight beheer'
+  const fallbackOwnerName = 'Loep beheer'
   const previewItems: ActionCenterPreviewItem[] = exitDossiers.map((dossier, index) => {
     const dossierCheckpoints = checkpointsByDossier[dossier.id] ?? []
     const managementCheckpoint =
@@ -505,25 +531,113 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
       ) : null}
 
       <DashboardSection
+        surface="ops"
+        eyebrow="Proof"
+        title="Proofsamenvatting"
+        description="Lichte leeslaag voor intern leerbewijs en case-rijpheid. Gebruik de losse proofroute alleen wanneer je approval of individuele bewijsrecords echt wilt nalopen."
+      >
+        <div className="grid gap-4 lg:grid-cols-4">
+          <DashboardPanel
+            surface="ops"
+            title="Lesson only"
+            value={`${proofSummary.lessonOnlyCount}`}
+            body="Interne lessen die nog niet als extern bewijs hoeven te lezen."
+            tone="slate"
+          />
+          <DashboardPanel
+            surface="ops"
+            title="Sales-usable"
+            value={`${proofSummary.salesUsableCount}`}
+            body="Buyer-safe cases die al een claim check hebben overleefd."
+            tone="amber"
+          />
+          <DashboardPanel
+            surface="ops"
+            title="Publiek bruikbaar"
+            value={`${proofSummary.publicUsableCount}`}
+            body="Cases die al door kunnen naar publiek inzetbaar bewijs."
+            tone="emerald"
+          />
+          <DashboardPanel
+            surface="ops"
+            title="Expert registry"
+            value={`${proofSummary.total} rows`}
+            body="Detail of approvalpad nodig? Gebruik dan de expert registry als diepe vervolglaag."
+            tone="slate"
+          />
+        </div>
+        <div className="mt-4 rounded-[20px] border border-slate-200 bg-slate-50 px-5 py-4">
+          <div className="grid gap-4 lg:grid-cols-[0.9fr_0.9fr_1.2fr_auto] lg:items-start">
+            <DashboardPanel
+              surface="ops"
+              title="Proof state"
+              value={latestProofPreview ? getProofStateLabel(latestProofPreview.proofState) : 'Nog leeg'}
+              body={
+                proofSummaryUnavailable
+                  ? 'Proofsamenvatting tijdelijk niet beschikbaar; de learnings-werkbank blijft wel bruikbaar.'
+                  : 'Laatste zichtbare bewijsvorm in deze bounded leerlaag.'
+              }
+              tone="slate"
+            />
+            <DashboardPanel
+              surface="ops"
+              title="Approval state"
+              value={latestProofPreview ? getProofApprovalLabel(latestProofPreview.approvalState) : 'Nog leeg'}
+              body="Huidige approvaltrede van de laatst zichtbare proof-entry."
+              tone={latestProofPreview?.approvalState === 'approved' ? 'emerald' : 'amber'}
+            />
+            <DashboardPanel
+              surface="ops"
+              title="Summary"
+              body={
+                latestProofPreview?.summary ??
+                'Nog geen proof-summary zichtbaar; klantlearnings blijven voorlopig de primaire bounded leerlaag.'
+              }
+              tone="slate"
+            />
+            <div className="flex lg:justify-end">
+              <Link
+                href="/beheer/proof"
+                className="inline-flex items-center rounded-full border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-100"
+              >
+                Open /beheer/proof
+              </Link>
+            </div>
+          </div>
+        </div>
+      </DashboardSection>
+
+      <DashboardSection
         id="dossierbron"
         surface="ops"
         eyebrow="Dossierbron"
         title="Dossierlog en bounded opvolging"
         description="Bewuste delta ten opzichte van de preview: de echte dossierbron blijft zichtbaar onder de nieuwe surface, zodat admin-first opvolging en dossierbron op current main bij elkaar blijven."
       >
-        <PilotLearningWorkbench
-          orgs={exitOrgs}
-          campaigns={exitCampaigns}
-          campaignStats={exitCampaignStats}
-          leads={exitLeads as ContactRequestRecord[]}
-          dossiers={exitDossiers}
-          checkpoints={exitCheckpoints}
-          reviewDecisions={reviewDecisions}
-          activeClientAccessByOrg={exitActiveClientAccessByOrg}
-          pendingClientInvitesByOrg={exitPendingClientInvitesByOrg}
-          initialLeadId={initialExitLeadId}
-          initialCampaignId={initialExitCampaignId}
-        />
+        <DashboardDisclosure
+          surface="ops"
+          title="Open dossierbron"
+          description="Gebruik deze werkvloer alleen wanneer je echt in checkpoints, dossierbron of campaignkoppelingen moet werken."
+          badge={
+            <span className="rounded-full border border-[color:var(--border)] bg-[color:var(--bg)] px-3 py-1 text-xs font-medium text-[color:var(--text)]">
+              {exitDossiers.length} dossiers
+            </span>
+          }
+        >
+          <PilotLearningWorkbench
+            orgs={exitOrgs}
+            campaigns={exitCampaigns}
+            campaignStats={exitCampaignStats}
+            leads={exitLeads as ContactRequestRecord[]}
+            dossiers={exitDossiers}
+            checkpoints={exitCheckpoints}
+            reviewDecisions={reviewDecisions}
+            activeClientAccessByOrg={exitActiveClientAccessByOrg}
+            pendingClientInvitesByOrg={exitPendingClientInvitesByOrg}
+            initialLeadId={initialExitLeadId}
+            initialCampaignId={initialExitCampaignId}
+          />
+        </DashboardDisclosure>
       </DashboardSection>
     </div>
   )

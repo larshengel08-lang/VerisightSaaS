@@ -1,18 +1,18 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import { LegalPageShell } from '@/components/marketing/legal-page-shell'
 
 export const metadata: Metadata = {
   title: 'Verwerkersovereenkomst',
   description:
-    'Standaard verwerkersovereenkomst (DPA) van Verisight voor klantorganisaties - AVG-conform en afgestemd op ExitScan en RetentieScan.',
+    'Standaard verwerkersovereenkomst (DPA) van Loep voor klantorganisaties - AVG-conform en afgestemd op ExitScan en RetentieScan.',
 }
 
 export default function DpaPage() {
   return (
     <LegalPageShell
       title="Verwerkersovereenkomst"
-      description="Onderstaande verwerkersovereenkomst is het standaardtemplate dat Verisight gebruikt voor klantorganisaties. Het document is op verzoek beschikbaar als gepersonaliseerde, ondertekende versie. Neem hiervoor contact op via privacy@verisight.nl. Voor een publieksvriendelijke samenvatting van trust en privacy kun je ook de Trust & privacy-pagina bekijken."
+      description="Onderstaande verwerkersovereenkomst is het standaardtemplate dat Loep gebruikt voor klantorganisaties. Het document is op verzoek beschikbaar als gepersonaliseerde, ondertekende versie. Neem hiervoor contact op via privacy@verisight.nl. Voor een publieksvriendelijke samenvatting van trust en privacy kun je ook de Trust & privacy-pagina bekijken."
       lastUpdated="13 april 2026"
     >
       <section>
@@ -45,9 +45,9 @@ export default function DpaPage() {
         </p>
         <p>en</p>
         <p>
-          <strong>Verwerker:</strong> Verisight, Nederlandse dienst voor begeleide HR-signalering en
+          <strong>Verwerker:</strong> Loep, Nederlandse dienst voor begeleide HR-signalering en
           rapportage. Volledige bedrijfsgegevens worden opgenomen in de gepersonaliseerde en ondertekende
-          versie van deze overeenkomst. Verisight is bereikbaar via{' '}
+          versie van deze overeenkomst. Loep is bereikbaar via{' '}
           <a href="mailto:privacy@verisight.nl">privacy@verisight.nl</a>, hierna te noemen
           &quot;Verwerker&quot;.
         </p>
@@ -188,3 +188,4 @@ export default function DpaPage() {
     </LegalPageShell>
   )
 }
+

@@ -1,17 +1,17 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import { LegalPageShell } from '@/components/marketing/legal-page-shell'
 
 export const metadata: Metadata = {
   title: 'Privacybeleid',
-  description: 'Lees hoe Verisight omgaat met persoonsgegevens, hosting en rechten onder de AVG voor ExitScan en RetentieScan.',
+  description: 'Lees hoe Loep omgaat met persoonsgegevens, hosting en rechten onder de AVG voor ExitScan en RetentieScan.',
 }
 
 export default function PrivacyPage() {
   return (
     <LegalPageShell
       title="Privacybeleid"
-      description="Op deze pagina lees je hoe Verisight omgaat met persoonsgegevens van klantgebruikers en respondenten binnen ExitScan en RetentieScan. Voor een publieksvriendelijke samenvatting in gewone taal kun je ook de Trust & privacy-pagina bekijken."
+      description="Op deze pagina lees je hoe Loep omgaat met persoonsgegevens van klantgebruikers en respondenten binnen ExitScan en RetentieScan. Voor een publieksvriendelijke samenvatting in gewone taal kun je ook de Trust & privacy-pagina bekijken."
       lastUpdated="9 april 2026"
     >
       <section>
@@ -24,10 +24,10 @@ export default function PrivacyPage() {
       </section>
 
       <section>
-        <h2>1. Wie is Verisight?</h2>
+        <h2>1. Wie is Loep?</h2>
         <p>
-          Verisight is een in Nederland gevestigde dienst voor begeleide HR-signalering en rapportage.
-          Verisight helpt HR-teams om vertrekredenen beter te begrijpen via ExitScan en om eerder te zien waar
+          Loep is een in Nederland gevestigde dienst voor begeleide HR-signalering en rapportage.
+          Loep helpt HR-teams om vertrekredenen beter te begrijpen via ExitScan en om eerder te zien waar
           behoud onder druk staat via RetentieScan.
         </p>
         <p>
@@ -73,7 +73,7 @@ export default function PrivacyPage() {
       <section>
         <h2>4. Op welke grondslag gebeurt dit?</h2>
         <p>
-          Verisight verwerkt persoonsgegevens op basis van uitvoering van de overeenkomst met de klantorganisatie,
+          Loep verwerkt persoonsgegevens op basis van uitvoering van de overeenkomst met de klantorganisatie,
           gerechtvaardigd belang voor beveiliging en platformbeheer, en waar nodig toestemming of vrijwillige
           deelname van respondenten. De klantorganisatie blijft verantwoordelijk voor het informeren van respondenten
           over de verwerking binnen haar eigen context.
@@ -92,7 +92,7 @@ export default function PrivacyPage() {
       <section>
         <h2>6. Delen wij gegevens met derden?</h2>
         <p>
-          Verisight verkoopt geen persoonsgegevens en deelt die niet voor marketingdoeleinden. Voor het leveren van
+          Loep verkoopt geen persoonsgegevens en deelt die niet voor marketingdoeleinden. Voor het leveren van
           de dienst maken wij gebruik van verwerkers.
         </p>
         <ul>
@@ -115,7 +115,7 @@ export default function PrivacyPage() {
       <section>
         <h2>7. Hoe beveiligen wij gegevens?</h2>
         <p>
-          Verisight gebruikt versleutelde verbindingen, toegangsbeperking en database-afscherming per organisatie.
+          Loep gebruikt versleutelde verbindingen, toegangsbeperking en database-afscherming per organisatie.
           Rapportages zijn bedoeld voor groepsinzichten. Waar nodig passen wij minimale groepsgroottes,
           segmentonderdrukking, anonimisering van open tekst en betrouwbaarheidsduiding toe om herleidbaarheid en
           schijnprecisie te beperken.
@@ -128,7 +128,7 @@ export default function PrivacyPage() {
       </section>
 
       <section>
-        <h2>8. Gebruikt Verisight cookies?</h2>
+        <h2>8. Gebruikt Loep cookies?</h2>
         <p>
           Op de marketing-site gebruiken wij geen trackingcookies. Binnen het platform gebruiken wij alleen
           functionele sessiecookies die nodig zijn om gebruikers ingelogd te houden en het systeem veilig te laten
@@ -154,7 +154,7 @@ export default function PrivacyPage() {
       <section>
         <h2>10. Verwerkersovereenkomst (DPA)</h2>
         <p>
-          Als klantorganisatie treedt Verisight op als verwerker namens jouw organisatie. Op verzoek stellen wij
+          Als klantorganisatie treedt Loep op als verwerker namens jouw organisatie. Op verzoek stellen wij
           een verwerkersovereenkomst beschikbaar. Het standaardtemplate is beschikbaar op de{' '}
           <Link href="/dpa">DPA-pagina</Link>. Voor een gepersonaliseerd en ondertekend exemplaar kun je contact
           opnemen via <a href="mailto:privacy@verisight.nl">privacy@verisight.nl</a>.
@@ -174,3 +174,4 @@ export default function PrivacyPage() {
     </LegalPageShell>
   )
 }
+

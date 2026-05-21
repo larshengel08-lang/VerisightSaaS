@@ -4,19 +4,14 @@ import type { ReactNode } from 'react'
 import { AddRespondentsForm } from '@/components/dashboard/add-respondents-form'
 import { ArchiveOrgButton } from '@/components/dashboard/archive-org-button'
 import { ClientAccessList } from '@/components/dashboard/client-access-list'
-import {
-  DashboardChip,
-  DashboardHero,
-  DashboardPanel,
-  DashboardSection,
-} from '@/components/dashboard/dashboard-primitives'
+import { DashboardChip, DashboardSection } from '@/components/dashboard/dashboard-primitives'
 import { DeleteOrgButton } from '@/components/dashboard/delete-org-button'
 import { InviteClientUserForm } from '@/components/dashboard/invite-client-user-form'
 import { NewCampaignForm } from '@/components/dashboard/new-campaign-form'
 import { NewOrgForm } from '@/components/dashboard/new-org-form'
+import { getDeliveryModeLabel } from '@/lib/implementation-readiness'
 import { createClient } from '@/lib/supabase/server'
-import { SCAN_TYPE_LABELS } from '@/lib/types'
-import { getBeheerPageData } from './get-beheer-page-data'
+import { type Campaign, type CampaignStats, type Organization, type OrgInvite } from '@/lib/types'
 
 export default async function BeheerPage() {
   const supabase = await createClient()
@@ -38,485 +33,539 @@ export default async function BeheerPage() {
     redirect('/dashboard')
   }
 
-  const {
-    organizationsAvailable,
-    campaignsAvailable,
-    accessAvailable,
-    deliveryAvailable,
-    orgs,
-    activeOrgs,
-    archivedOrgs,
-    campaigns,
-    topCampaigns,
-    remainingCampaignCount,
-    campaignCountByOrg,
-    respondentCount,
-    clientAccessCount,
-    invites,
-    pendingInviteCount,
-    activeCampaignCount,
-    blockedDeliveriesCount,
-    setupBlockers,
-    dataImportAlert,
-  } = await getBeheerPageData(supabase, user.id)
+  const { data: memberships } = await supabase
+    .from('org_members')
+    .select('organizations(*)')
+    .eq('user_id', user.id)
 
-  const hasSetupBlockers = setupBlockers.length > 0
+  const orgs = (memberships?.flatMap((membership) => membership.organizations).filter(Boolean) ?? []) as Organization[]
+  const activeOrgs = orgs.filter((org) => org.is_active)
+  const archivedOrgs = orgs.filter((org) => !org.is_active)
+
+  const orgIds = orgs.map((org) => org.id)
+  const { data: campaignsRaw } = orgIds.length
+    ? await supabase
+        .from('campaigns')
+        .select('*')
+        .in('organization_id', orgIds)
+        .order('created_at', { ascending: false })
+    : { data: [] }
+
+  const campaigns = (campaignsRaw ?? []) as Campaign[]
+  const activeCampaignCount = campaigns.filter((campaign) => campaign.is_active).length
+  const campaignCountByOrg = campaigns.reduce<Record<string, number>>((acc, campaign) => {
+    acc[campaign.organization_id] = (acc[campaign.organization_id] ?? 0) + 1
+    return acc
+  }, {})
+
+  const campaignIds = campaigns.map((campaign) => campaign.id)
+  const { count: respondentCount } = campaignIds.length
+    ? await supabase
+        .from('respondents')
+        .select('id', { count: 'exact', head: true })
+        .in('campaign_id', campaignIds)
+    : { count: 0 }
+
+  const { count: clientAccessCount } = orgIds.length
+    ? await supabase
+        .from('org_members')
+        .select('id', { count: 'exact', head: true })
+        .in('org_id', orgIds)
+        .neq('user_id', user.id)
+    : { count: 0 }
+
+  const { data: campaignStatsRaw } = orgIds.length
+    ? await supabase
+        .from('campaign_stats')
+        .select('*')
+        .in('organization_id', orgIds)
+        .order('created_at', { ascending: false })
+    : { data: [] }
+
+  const campaignStats = (campaignStatsRaw ?? []) as CampaignStats[]
+
+  const { data: invitesRaw } = orgIds.length
+    ? await supabase
+        .from('org_invites')
+        .select('id, org_id, email, full_name, role, invited_by, invited_at, accepted_at, organizations(id, name)')
+        .in('org_id', orgIds)
+        .order('accepted_at', { ascending: true, nullsFirst: true })
+        .order('invited_at', { ascending: false })
+    : { data: [] }
+
+  const invites = (invitesRaw ?? []).map((invite) => ({
+    ...invite,
+    organizations: Array.isArray(invite.organizations) ? invite.organizations[0] : invite.organizations,
+  })) as OrgInvite[]
+
+  const pendingInviteCount = invites.filter((invite) => !invite.accepted_at).length
+
+  const step1Done = activeOrgs.length > 0
+  const step2Done = campaigns.some((campaign) => campaign.is_active)
+  const step3Done = (respondentCount ?? 0) > 0
+  const step4Done = step2Done && (clientAccessCount ?? 0) > 0
+  const liveRespondentCount = respondentCount ?? 0
+  const confirmedClientAccessCount = clientAccessCount ?? 0
+  const setupProgressCount = [step1Done, step2Done, step3Done, step4Done].filter(Boolean).length
+  const selectedCampaign = campaigns.find((campaign) => campaign.is_active) ?? campaigns[0] ?? null
+  const selectedOrganization =
+    (selectedCampaign ? orgs.find((org) => org.id === selectedCampaign.organization_id) : null) ??
+    activeOrgs[0] ??
+    orgs[0] ??
+    null
 
   return (
     <div className="space-y-6">
-      <DashboardHero
-        surface="ops"
-        tone="slate"
-        eyebrow="Admin en configuratie"
-        title="Dashboard admin setup"
-        description="Configureer organisaties, toegang, campagnes en data-readiness."
-        meta={
-          <>
-            <DashboardChip
-              surface="ops"
-              tone={organizationsAvailable ? 'slate' : 'amber'}
-              label={organizationsAvailable ? `${orgs.length} organisaties` : 'Organisaties niet beschikbaar'}
-            />
-            <DashboardChip
-              surface="ops"
-              tone={campaignsAvailable ? 'slate' : 'amber'}
-              label={campaignsAvailable ? `${campaigns.length} campaigns` : 'Campaigns niet beschikbaar'}
-            />
-          </>
-        }
-        aside={
-          hasSetupBlockers ? (
+      <section className="rounded-[28px] border border-slate-200 bg-white px-6 py-6 shadow-[0_10px_30px_rgba(19,32,51,0.05)]">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+          <div className="space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Admin setup</p>
             <div className="space-y-2">
-              <DashboardChip surface="ops" tone="amber" label="Setup aandacht nodig" />
-              <p className="text-sm font-semibold text-slate-950">
-                {setupBlockers.length} open blokkade{setupBlockers.length === 1 ? '' : 's'}
-              </p>
-              <p className="text-xs leading-5 text-slate-500">
-                Los eerst de open setupblokkades op voordat je verder gaat met toegang, campagnes of import.
+              <h1 className="text-3xl font-semibold tracking-[-0.04em] text-slate-950">Beheer</h1>
+              <p className="max-w-2xl text-sm leading-6 text-slate-600">
+                Zet hier de klantcontext op: organisatie, campaign, respondenten en klanttoegang.
               </p>
             </div>
-          ) : null
-        }
-      />
-
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <SetupStatusCard
-          label="ORGANISATIES"
-          metric={organizationsAvailable ? `${activeOrgs.length}` : '—'}
-          statusText={
-            !organizationsAvailable ? 'Niet beschikbaar' : activeOrgs.length > 0 ? 'Geconfigureerd' : 'Ontbreekt'
-          }
-          tone={!organizationsAvailable ? 'amber' : activeOrgs.length > 0 ? 'emerald' : 'amber'}
-        />
-        <SetupStatusCard
-          label="TOEGANG & ROLLEN"
-          metric={accessAvailable ? `${pendingInviteCount ?? 0}` : '—'}
-          statusText={
-            !accessAvailable
-              ? 'Niet beschikbaar'
-              : (pendingInviteCount ?? 0) > 0
-                ? 'Aandacht nodig'
-                : 'Geconfigureerd'
-          }
-          tone={!accessAvailable ? 'amber' : (pendingInviteCount ?? 0) > 0 ? 'amber' : 'emerald'}
-        />
-        <SetupStatusCard
-          label="CAMPAGNES"
-          metric={campaignsAvailable ? `${campaigns.length}` : '—'}
-          statusText={
-            !campaignsAvailable ? 'Niet beschikbaar' : getCampaignStatusText(campaigns.length, activeCampaignCount)
-          }
-          tone={!campaignsAvailable ? 'amber' : activeCampaignCount && activeCampaignCount > 0 ? 'emerald' : 'slate'}
-        />
-        <SetupStatusCard
-          label="DATA & IMPORT"
-          metric={deliveryAvailable ? `${blockedDeliveriesCount ?? 0}` : '—'}
-          statusText={
-            !deliveryAvailable
-              ? 'Niet beschikbaar'
-              : (blockedDeliveriesCount ?? 0) > 0
-                ? 'Blokkade'
-                : 'Geconfigureerd'
-          }
-          tone={!deliveryAvailable ? 'amber' : (blockedDeliveriesCount ?? 0) > 0 ? 'amber' : 'emerald'}
-        />
-      </div>
-
-      {hasSetupBlockers ? (
-        <DashboardSection
-          surface="ops"
-          tone="amber"
-          title="Open setupblokkades"
-          description="Alleen blokkades binnen campagnes, toegang en data-import worden hier getoond."
-        >
-          <div className="grid gap-4 xl:grid-cols-2">
-            {setupBlockers.map((blocker) => (
-              <article
-                key={blocker.id}
-                className="rounded-[20px] border border-amber-200 bg-amber-50 px-5 py-5 shadow-[0_1px_4px_rgba(10,25,47,0.04)]"
-              >
-                <div className="flex flex-wrap gap-2">
-                  <DashboardChip surface="ops" tone="amber" label={blocker.category} />
-                  {blocker.impactLabel ? (
-                    <DashboardChip surface="ops" tone="amber" label={`Impact: ${blocker.impactLabel}`} />
-                  ) : null}
-                </div>
-                <h3 className="mt-4 text-base font-semibold text-slate-950">{blocker.title}</h3>
-                <p className="mt-2 text-sm leading-6 text-slate-700">{blocker.description}</p>
-                {blocker.actionHref ? (
-                  <Link
-                    href={blocker.actionHref}
-                    className="mt-4 inline-flex items-center rounded-full border border-emerald-300 bg-white px-4 py-2 text-sm font-semibold text-emerald-800 transition hover:border-emerald-400 hover:bg-emerald-50"
-                  >
-                    Open setupzone
-                  </Link>
-                ) : null}
-              </article>
-            ))}
           </div>
-        </DashboardSection>
-      ) : null}
+          <div className="flex flex-wrap items-center gap-2">
+            <DashboardChip surface="ops" label={`${setupProgressCount}/4 setupstappen`} tone={setupProgressCount === 4 ? 'emerald' : 'amber'} />
+            <DashboardChip surface="ops" label={`${activeOrgs.length} actieve organisatie${activeOrgs.length === 1 ? '' : 's'}`} />
+            <DashboardChip surface="ops" label={`${activeCampaignCount} actieve campaign${activeCampaignCount === 1 ? '' : 's'}`} tone="slate" />
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-[28px] border border-slate-900 bg-slate-950 px-6 py-5 text-white shadow-[0_14px_34px_rgba(15,23,42,0.24)]">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+          <div className="space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-300">Setupcontext</p>
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="rounded-[20px] border border-white/10 bg-white/5 px-4 py-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">Geselecteerde organisatie</p>
+                <p className="mt-2 text-base font-semibold text-white">{selectedOrganization?.name ?? 'Nog geen organisatie gekozen'}</p>
+                <p className="mt-1 text-sm text-slate-300">
+                  {selectedOrganization
+                    ? `${campaignCountByOrg[selectedOrganization.id] ?? 0} campaign${(campaignCountByOrg[selectedOrganization.id] ?? 0) === 1 ? '' : 's'}`
+                    : 'Maak eerst een organisatie aan'}
+                </p>
+              </div>
+              <div className="rounded-[20px] border border-white/10 bg-white/5 px-4 py-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">Geselecteerde campaign</p>
+                <p className="mt-2 text-base font-semibold text-white">{selectedCampaign?.name ?? 'Nog geen campaign gekozen'}</p>
+                <p className="mt-1 text-sm text-slate-300">
+                  {selectedCampaign
+                    ? `${selectedCampaign.scan_type === 'exit' ? 'ExitScan' : 'RetentieScan'} · ${selectedCampaign.is_active ? 'Actief' : 'Gearchiveerd'}`
+                    : 'Respondenten en klanttoegang worden actief na campaign-keuze'}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <DashboardChip surface="ops" label={`${liveRespondentCount} respondenten`} tone={liveRespondentCount > 0 ? 'emerald' : 'slate'} />
+            <DashboardChip surface="ops" label={`${confirmedClientAccessCount} klanttoegang`} tone={step4Done ? 'emerald' : 'amber'} />
+            <DashboardChip surface="ops" label={selectedCampaign ? 'Campaign gekozen' : 'Campaign ontbreekt'} tone={selectedCampaign ? 'emerald' : 'amber'} />
+          </div>
+        </div>
+      </section>
 
       <DashboardSection
+        id="setup"
         surface="ops"
-        tone="slate"
-        title="Setupkern"
-        description="Gebruik deze vier zones alleen voor admin-configuratie en technische readiness."
+        eyebrow="Setup"
+        title="Organisatie, campaign, import en klanttoegang"
+        description="Werk de setup direct af in vaste volgorde."
+        aside={<DashboardChip surface="ops" label={`${campaigns.length} campaign${campaigns.length === 1 ? '' : 's'} totaal`} />}
       >
-        <div className="grid gap-5 lg:grid-cols-2">
-          <SetupPanel
-            id="organisaties"
-            title="Organisaties"
-            summary={organizationsAvailable ? `${activeOrgs.length} actief · ${archivedOrgs.length} gearchiveerd` : 'Niet beschikbaar'}
-          >
-            {!organizationsAvailable ? (
-              <SectionFallback />
-            ) : orgs.length === 0 ? (
+        <div className="grid gap-5">
+          <StepCard done={step1Done} number={1} title="Organisatie aanmaken">
+            {orgs.length > 0 ? (
               <div className="space-y-4">
-                <DashboardPanel
-                  surface="ops"
-                  title="Nog geen organisaties. Maak hieronder de eerste organisatie aan."
-                  body="Zodra de eerste organisatie bestaat, worden campagnes, toegang en data-import beschikbaar."
-                  tone="amber"
-                />
-                <NewOrgForm />
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  {orgs.map((org) => (
-                    <div
-                      key={org.id}
-                      className="flex items-start justify-between gap-3 rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3"
-                    >
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className={`text-sm ${org.is_active ? 'text-emerald-600' : 'text-slate-400'}`}>
-                            {org.is_active ? '●' : '○'}
-                          </span>
-                          <p className="text-sm font-semibold text-slate-900">{org.name}</p>
-                          <span className="truncate text-xs text-slate-400">({org.slug})</span>
-                          {!org.is_active ? <DashboardChip surface="ops" label="Gearchiveerd" /> : null}
-                        </div>
-                        <p className="mt-1 text-xs text-slate-500">
-                          {campaignCountByOrg[org.id] ?? 0} campaign{campaignCountByOrg[org.id] === 1 ? '' : 's'} gekoppeld
-                        </p>
-                      </div>
-                      <div className="flex items-start gap-2">
-                        <ArchiveOrgButton orgId={org.id} orgName={org.name} isActive={org.is_active} />
-                        <DeleteOrgButton
-                          orgId={org.id}
-                          orgName={org.name}
-                          campaignCount={campaignCountByOrg[org.id] ?? 0}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="border-t border-slate-200 pt-4">
-                  <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    Nieuwe organisatie
-                  </p>
+                <div>
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Nieuwe organisatie</p>
                   <NewOrgForm />
                 </div>
-              </div>
-            )}
-          </SetupPanel>
 
-          <SetupPanel
-            id="toegang"
-            title="Toegang en rollen"
-            summary={
-              accessAvailable
-                ? `${clientAccessCount ?? 0} gekoppeld · ${pendingInviteCount ?? 0} open uitnodigingen`
-                : 'Niet beschikbaar'
-            }
-          >
-            {!accessAvailable ? (
-              <SectionFallback />
-            ) : activeOrgs.length === 0 ? (
-              <LockedState message="Maak eerst een actieve organisatie aan voordat je klanttoegang configureert." />
-            ) : (
-              <div className="space-y-4">
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <DashboardPanel
-                    surface="ops"
-                    title="Gekoppelde klantgebruikers"
-                    value={`${clientAccessCount ?? 0}`}
-                    body="Toegang blijft beperkt tot dashboardtoegang en activatiebeheer."
-                    tone="slate"
-                  />
-                  <DashboardPanel
-                    surface="ops"
-                    title="Open uitnodigingen"
-                    value={`${pendingInviteCount ?? 0}`}
-                    body={
-                      (pendingInviteCount ?? 0) === 0
-                        ? 'Geen openstaande uitnodigingen.'
-                        : 'Er lopen nog uitnodigingen die op activatie wachten.'
-                    }
-                    tone={(pendingInviteCount ?? 0) > 0 ? 'amber' : 'emerald'}
-                  />
-                </div>
-                <InviteClientUserForm orgs={activeOrgs} />
-                <div className="border-t border-slate-200 pt-4">
-                  <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    Bestaande toegang
-                  </p>
-                  <ClientAccessList invites={invites} />
-                </div>
-              </div>
-            )}
-          </SetupPanel>
-
-          <SetupPanel
-            id="campagnes"
-            title="Campagnes"
-            summary={campaignsAvailable ? `${campaigns.length} totaal` : 'Niet beschikbaar'}
-          >
-            {!campaignsAvailable ? (
-              <SectionFallback />
-            ) : (
-              <div className="space-y-4">
-                {topCampaigns.length === 0 ? (
-                  <DashboardPanel
-                    surface="ops"
-                    title="Geen campagnes gevonden."
-                    body="Maak hieronder de eerste campaign aan zodra er een actieve organisatie beschikbaar is."
-                    tone="amber"
-                  />
-                ) : (
-                  <div className="space-y-2">
-                    {topCampaigns.map((campaign) => (
+                <details className="rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3">
+                  <summary className="cursor-pointer list-none">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Bestaande organisaties</p>
+                        <p className="mt-1 text-sm text-slate-600">{orgs.length} organisatie{orgs.length === 1 ? '' : 's'}</p>
+                      </div>
+                      <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                        {archivedOrgs.length > 0 ? `${archivedOrgs.length} archief` : 'Actueel'}
+                      </span>
+                    </div>
+                  </summary>
+                  <div className="mt-4 space-y-2 border-t border-slate-200 pt-4">
+                    {orgs.map((org) => (
                       <div
-                        key={campaign.id}
-                        className="flex items-center justify-between gap-3 rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3"
+                        key={org.id}
+                        className="flex flex-col gap-3 rounded-[16px] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 lg:flex-row lg:items-center lg:justify-between"
                       >
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
-                            <span
-                              className={`text-sm ${campaign.is_active ? 'text-emerald-600' : 'text-slate-400'}`}
-                            >
-                              {campaign.is_active ? '●' : '○'}
-                            </span>
-                            <p className="truncate text-sm font-semibold text-slate-900">{campaign.name}</p>
+                            <span className={org.is_active ? 'text-emerald-600' : 'text-slate-400'}>{org.is_active ? '✓' : '○'}</span>
+                            <span className="font-medium text-slate-900">{org.name}</span>
+                            <span className="truncate text-xs text-slate-400">({org.slug})</span>
+                            {!org.is_active ? (
+                              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">Archief</span>
+                            ) : null}
                           </div>
-                          <p className="mt-1 text-xs text-slate-500">
-                            {SCAN_TYPE_LABELS[campaign.scan_type] ?? campaign.scan_type}
-                            {campaign.is_active ? ' · actief' : ' · gearchiveerd'}
-                          </p>
+                          <p className="mt-1 text-xs text-slate-500">{campaignCountByOrg[org.id] ?? 0} campaign(s)</p>
                         </div>
-                        <Link
-                          href={`/campaigns/${campaign.id}`}
-                          className="rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
-                        >
-                          Open campaign
-                        </Link>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <ArchiveOrgButton orgId={org.id} orgName={org.name} isActive={org.is_active} />
+                          <DeleteOrgButton orgId={org.id} orgName={org.name} campaignCount={campaignCountByOrg[org.id] ?? 0} />
+                        </div>
                       </div>
                     ))}
-                    {remainingCampaignCount > 0 ? (
-                      <p className="text-xs text-slate-500">
-                        + {remainingCampaignCount} extra campaign{remainingCampaignCount === 1 ? '' : 's'}
-                      </p>
-                    ) : null}
                   </div>
-                )}
-
-                <div className="border-t border-slate-200 pt-4">
-                  <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    Nieuwe campaign
-                  </p>
-                  {activeOrgs.length === 0 ? (
-                    <LockedState message="Maak eerst een actieve organisatie aan voordat je een campaign configureert." />
-                  ) : (
-                    <NewCampaignForm orgs={activeOrgs} />
-                  )}
-                </div>
+                </details>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-sm leading-6 text-slate-600">Maak eerst de organisatie aan. Daarna worden campaign en vervolgstappen beschikbaar.</p>
+                <NewOrgForm />
               </div>
             )}
-          </SetupPanel>
+          </StepCard>
 
-          <SetupPanel
-            id="data-import"
-            title="Data en import"
-            summary={
-              campaignsAvailable
-                ? `${respondentCount === null ? '—' : respondentCount} respondent${respondentCount === 1 ? '' : 'en'}`
-                : 'Niet beschikbaar'
-            }
-          >
-            {!campaignsAvailable || !deliveryAvailable ? (
-              <SectionFallback />
-            ) : campaigns.length === 0 ? (
-              <LockedState message="Maak eerst een campaign aan voordat je data importeert." />
+          <StepCard done={step2Done} number={2} title="Campaign aanmaken">
+            {activeOrgs.length === 0 ? (
+              <LockedStep message="Maak eerst een actieve organisatie aan of heractiveer een gearchiveerde organisatie." />
+            ) : (
+              <NewCampaignForm orgs={activeOrgs} />
+            )}
+          </StepCard>
+
+          <StepCard done={step3Done} number={3} title="Respondenten importeren" span="full">
+            {!selectedCampaign ? (
+              <LockedStep message="Import wordt actief nadat je een campaign hebt gekozen." />
             ) : (
               <div className="space-y-4">
-                {dataImportAlert ? (
-                  <div className="rounded-[18px] border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-950">
-                    <div className="flex flex-wrap gap-2">
-                      <DashboardChip surface="ops" tone="amber" label={dataImportAlert.category} />
-                      {dataImportAlert.impactLabel ? (
-                        <DashboardChip surface="ops" tone="amber" label={`Impact: ${dataImportAlert.impactLabel}`} />
-                      ) : null}
-                    </div>
-                    <p className="mt-3 font-semibold">{dataImportAlert.title}</p>
-                    <p className="mt-2 leading-6">{dataImportAlert.description}</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <DashboardChip surface="ops" label={selectedCampaign.name} tone="slate" />
+                  <DashboardChip surface="ops" label={selectedCampaign.scan_type === 'exit' ? 'ExitScan' : 'RetentieScan'} tone="slate" />
+                </div>
+
+                {campaigns.filter((campaign) => campaign.is_active).length === 0 ? (
+                  <div className="rounded-[18px] border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                    Geen actieve campaigns. Maak eerst een nieuwe campaign aan of gebruik archiefcampagnes alleen voor inzage.
                   </div>
-                ) : (
-                  <DashboardPanel
-                    surface="ops"
-                    title="Geen importblokkades gevonden."
-                    body="Data-import kan hier verder worden voorbereid zonder open setupblokkade."
-                    tone="emerald"
-                  />
-                )}
+                ) : null}
+
                 <AddRespondentsForm campaigns={campaigns} organizations={orgs} />
+
+                <details className="rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3">
+                  <summary className="cursor-pointer list-none">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Bestaande campaigns</p>
+                        <p className="mt-1 text-sm text-slate-600">{campaigns.length} campaign{campaigns.length === 1 ? '' : 's'}</p>
+                      </div>
+                      <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Overzicht</span>
+                    </div>
+                  </summary>
+                  <div className="mt-4 space-y-2 border-t border-slate-200 pt-4">
+                    {campaigns.map((campaign) => (
+                      <div
+                        key={campaign.id}
+                        className="flex flex-col gap-3 rounded-[16px] border border-slate-200 bg-white px-4 py-3 lg:flex-row lg:items-center lg:justify-between"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="mb-1 flex flex-wrap items-center gap-2">
+                            <DashboardChip surface="ops" label={campaign.scan_type === 'exit' ? 'ExitScan' : 'RetentieScan'} />
+                            <DashboardChip surface="ops" label={getDeliveryModeLabel(campaign.delivery_mode, campaign.scan_type)} />
+                            <span className={`text-xs font-medium ${campaign.is_active ? 'text-emerald-700' : 'text-slate-400'}`}>
+                              {campaign.is_active ? '● Actief' : '○ Archief'}
+                            </span>
+                          </div>
+                          <p className="truncate text-sm font-medium text-slate-900">{campaign.name}</p>
+                          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
+                            <span>
+                              {new Date(campaign.created_at).toLocaleDateString('nl-NL', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric',
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                        <a
+                          href={`/campaigns/${campaign.id}`}
+                          className="flex-shrink-0 rounded-full border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+                        >
+                          {campaign.is_active ? 'Open' : 'Archief'}
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                </details>
               </div>
             )}
-          </SetupPanel>
+          </StepCard>
+
+          <StepCard done={step4Done} number={4} title="Klanttoegang activeren" span="full">
+            {activeOrgs.length === 0 ? (
+              <LockedStep message="Maak eerst een actieve organisatie aan of heractiveer een gearchiveerde organisatie." />
+            ) : !selectedCampaign ? (
+              <LockedStep message="Klanttoegang opent na campaign-keuze, maar blijft organisatiegebonden." />
+            ) : (
+              <div className="space-y-4">
+                {pendingInviteCount > 0 && confirmedClientAccessCount === 0 ? (
+                  <div className="rounded-[18px] border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                    Er lopen al klantactivaties, maar er is nog geen bevestigde dashboardtoegang.
+                  </div>
+                ) : null}
+                <InviteClientUserForm orgs={activeOrgs} />
+                <details className="rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3">
+                  <summary className="cursor-pointer list-none">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Bestaande toegang</p>
+                        <p className="mt-1 text-sm text-slate-600">{confirmedClientAccessCount} bevestigd</p>
+                      </div>
+                      {pendingInviteCount > 0 ? (
+                        <DashboardChip surface="ops" label={`${pendingInviteCount} wacht op activatie`} tone="amber" />
+                      ) : (
+                        <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Overzicht</span>
+                      )}
+                    </div>
+                  </summary>
+                  <div className="mt-4 border-t border-slate-200 pt-4">
+                    <ClientAccessList invites={invites} />
+                  </div>
+                </details>
+              </div>
+            )}
+          </StepCard>
         </div>
       </DashboardSection>
 
       <DashboardSection
+        id="werkbanken"
         surface="ops"
-        tone="slate"
-        eyebrow="SECUNDAIRE ADMINMODULES"
-        title="Secundaire adminmodules"
-        description="Gebruik deze links alleen voor gespecialiseerde adminstromen buiten de setupkern."
+        eyebrow="Werkbanken"
+        title="Secundaire werkbanken"
+        description="Alleen na setup."
       >
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          <AdminModuleLink href="/beheer/billing" label="Billing" subLabel="Naar billingmodule" />
-          <AdminModuleLink href="/beheer/health" label="Health" subLabel="Naar healthmodule" />
-          <AdminModuleLink href="/beheer/proof" label="Proof" subLabel="Naar proofmodule" />
-          <AdminModuleLink href="/beheer/klantlearnings" label="Klantlearnings" subLabel="Naar learnings" />
-          <AdminModuleLink href="/beheer/contact-aanvragen" label="Aanvragen" subLabel="Naar contact" />
+        <div className="grid gap-3 lg:grid-cols-2">
+          <WorkbenchLinkCard
+            href="/beheer/contact-aanvragen"
+            eyebrow="Instroom"
+            title="Contact-aanvragen"
+            body="Nieuwe aanvragen."
+          />
+          <WorkbenchLinkCard
+            href="/beheer/klantlearnings"
+            eyebrow="Learning"
+            title="Klantlearnings"
+            body="Lessen en proof-context."
+          />
         </div>
       </DashboardSection>
-    </div>
-  )
-}
 
-function getCampaignStatusText(campaignCount: number, activeCampaignCount: number | null) {
-  if (campaignCount === 0) return 'Geen campaigns'
-  if ((activeCampaignCount ?? 0) > 0) return 'Actief'
-  return 'Geen actieve campaigns'
-}
+      <DashboardSection
+        id="operations"
+        surface="ops"
+        eyebrow="Operations"
+        title="Operations & registries"
+        description="Alleen wanneer nodig."
+      >
+        <details className="rounded-[22px] border border-slate-200 bg-white px-5 py-4 shadow-[0_8px_24px_rgba(19,32,51,0.04)]">
+          <summary className="cursor-pointer list-none">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm font-semibold text-slate-950">Open operations & registries</p>
+              <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Secundair</span>
+            </div>
+          </summary>
+          <div className="mt-5 grid gap-3 border-t border-slate-200 pt-5 lg:grid-cols-3">
+            <WorkbenchLinkCard
+              href="/beheer/billing"
+              eyebrow="Billing"
+              title="Billing readiness"
+              body="Contract en betaalstatus."
+            />
+            <WorkbenchLinkCard
+              href="/beheer/health"
+              eyebrow="Health"
+              title="Health-signalen"
+              body="Activatie en follow-through."
+            />
+            <WorkbenchLinkCard
+              href="/beheer/proof"
+              eyebrow="Proof"
+              title="Proof-status"
+              body="Proof-ladder en status."
+            />
+          </div>
+        </details>
+      </DashboardSection>
 
-function SetupStatusCard({
-  label,
-  metric,
-  statusText,
-  tone,
-}: {
-  label: string
-  metric: string
-  statusText: string
-  tone: 'slate' | 'emerald' | 'amber'
-}) {
-  return (
-    <div className="rounded-[20px] border border-slate-200 bg-white px-5 py-4 shadow-[0_1px_4px_rgba(10,25,47,0.04)]">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</p>
-      <p className="mt-3 text-[1.7rem] font-bold tracking-tight text-slate-950">{metric}</p>
-      <div className="mt-3 flex items-center gap-2">
-        <span
-          className={`h-2.5 w-2.5 rounded-full ${
-            tone === 'emerald' ? 'bg-emerald-500' : tone === 'amber' ? 'bg-amber-500' : 'bg-slate-400'
-          }`}
-        />
-        <p
-          className={`text-sm font-medium ${
-            tone === 'emerald' ? 'text-emerald-700' : tone === 'amber' ? 'text-amber-800' : 'text-slate-600'
-          }`}
+      {campaignStats.length > 0 ? (
+        <DashboardSection
+          id="campagnes"
+          surface="ops"
+          eyebrow="Campagnes"
+          title="Campagne-statusoverzicht"
+          description="Alleen voor controle."
+          aside={<DashboardChip surface="ops" label={`${campaignStats.length} campaignstats`} tone="slate" />}
         >
-          {statusText}
-        </p>
-      </div>
+          <details className="rounded-[22px] border border-slate-200 bg-white px-5 py-4 shadow-[0_8px_24px_rgba(19,32,51,0.04)]">
+            <summary className="cursor-pointer list-none">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm font-semibold text-slate-950">Toon campagne-statusoverzicht</p>
+                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{campaignStats.length} campaigns</span>
+              </div>
+            </summary>
+            <div className="mt-5 overflow-x-auto border-t border-slate-200 pt-5">
+              <div className="overflow-x-auto rounded-[20px] border border-slate-200 bg-white">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      <th className="px-5 py-3 text-left">Campaign</th>
+                      <th className="px-5 py-3 text-left">Organisatie</th>
+                      <th className="px-5 py-3 text-center">Status</th>
+                      <th className="px-5 py-3 text-right">Uitgenodigd</th>
+                      <th className="px-5 py-3 text-right">Ingevuld</th>
+                      <th className="px-5 py-3 text-right">Respons</th>
+                      <th className="px-5 py-3 text-right">Gem. risico</th>
+                      <th className="px-4 py-3" />
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {campaignStats.map((stats) => {
+                      const pct = stats.completion_rate_pct ?? 0
+                      const org = orgs.find((item) => item.id === stats.organization_id)
+                      return (
+                        <tr key={stats.campaign_id} className="hover:bg-slate-50/70">
+                          <td className="px-5 py-3">
+                            <div className="font-medium text-slate-900">{stats.campaign_name}</div>
+                            <div className="mt-0.5 text-xs text-slate-500">{stats.scan_type === 'exit' ? 'ExitScan' : 'RetentieScan'}</div>
+                          </td>
+                          <td className="px-5 py-3 text-slate-600">{org?.name ?? '—'}</td>
+                          <td className="px-5 py-3 text-center">
+                            <span
+                              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+                                stats.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'
+                              }`}
+                            >
+                              <span className={`h-1.5 w-1.5 rounded-full ${stats.is_active ? 'bg-emerald-600' : 'bg-slate-400'}`} />
+                              {stats.is_active ? 'Actief' : 'Gesloten'}
+                            </span>
+                          </td>
+                          <td className="px-5 py-3 text-right tabular-nums text-slate-700">{stats.total_invited ?? 0}</td>
+                          <td className="px-5 py-3 text-right tabular-nums text-slate-700">{stats.total_completed ?? 0}</td>
+                          <td className="px-5 py-3 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <div className="h-1.5 w-16 overflow-hidden rounded-full bg-slate-100">
+                                <div
+                                  className={`h-full rounded-full ${
+                                    pct >= 60 ? 'bg-emerald-500' : pct >= 30 ? 'bg-amber-400' : 'bg-red-400'
+                                  }`}
+                                  style={{ width: `${Math.min(pct, 100)}%` }}
+                                />
+                              </div>
+                              <span className="w-9 text-xs font-semibold tabular-nums text-slate-700">{pct}%</span>
+                            </div>
+                          </td>
+                          <td className="px-5 py-3 text-right tabular-nums text-slate-700">
+                            {stats.avg_risk_score ? (
+                              <span
+                                className={`font-semibold ${
+                                  stats.avg_risk_score >= 7
+                                    ? 'text-red-600'
+                                    : stats.avg_risk_score >= 4.5
+                                      ? 'text-amber-600'
+                                      : 'text-emerald-700'
+                                }`}
+                              >
+                                {stats.avg_risk_score.toFixed(1)}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-slate-300">—</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3">
+                            <a
+                              href={`/campaigns/${stats.campaign_id}`}
+                              className="rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+                            >
+                              Open campaign
+                            </a>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </details>
+        </DashboardSection>
+      ) : null}
     </div>
   )
 }
 
-function SetupPanel({
-  id,
-  title,
-  summary,
-  children,
-}: {
-  id: string
-  title: string
-  summary: string
-  children: ReactNode
-}) {
-  return (
-    <section
-      id={id}
-      className="rounded-[22px] border border-slate-200 bg-white p-5 shadow-[0_1px_4px_rgba(10,25,47,0.04)]"
-    >
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="text-base font-semibold text-slate-950">{title}</h2>
-          <p className="mt-1 text-sm text-slate-500">{summary}</p>
-        </div>
-      </div>
-      <div className="mt-5 border-t border-slate-200 pt-5">{children}</div>
-    </section>
-  )
-}
-
-function AdminModuleLink({
+function WorkbenchLinkCard({
   href,
-  label,
-  subLabel,
+  eyebrow,
+  title,
+  body,
 }: {
   href: string
-  label: string
-  subLabel: string
+  eyebrow: string
+  title: string
+  body: string
 }) {
   return (
     <Link
       href={href}
-      className="rounded-[20px] border border-slate-200 bg-white px-4 py-4 text-left shadow-[0_1px_4px_rgba(10,25,47,0.04)] transition hover:border-emerald-300 hover:bg-emerald-50"
+      className="rounded-[20px] border border-slate-200 bg-white px-5 py-5 shadow-[0_8px_24px_rgba(19,32,51,0.04)] transition hover:border-slate-300 hover:bg-slate-50"
     >
-      <p className="text-sm font-semibold text-slate-950">{label}</p>
-      <p className="mt-2 text-xs text-slate-500">{subLabel}</p>
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{eyebrow}</p>
+      <p className="mt-3 text-lg font-semibold tracking-[-0.02em] text-slate-950">{title}</p>
+      <p className="mt-3 text-sm leading-6 text-slate-600">{body}</p>
     </Link>
   )
 }
 
-function SectionFallback() {
+function StepCard({
+  done,
+  number,
+  title,
+  children,
+  span = 'half',
+}: {
+  done: boolean
+  number: number
+  title: string
+  children: ReactNode
+  span?: 'half' | 'full'
+}) {
   return (
-    <DashboardPanel
-      surface="ops"
-      title="Niet beschikbaar — data kon niet worden geladen"
-      body="Laad de pagina opnieuw of controleer of de admindata beschikbaar is voor deze gebruiker."
-      tone="amber"
-    />
+    <section
+      className={`rounded-[22px] border bg-white p-5 shadow-[0_8px_24px_rgba(19,32,51,0.04)] ${
+        span === 'full' ? 'lg:col-span-2' : ''
+      } ${done ? 'border-emerald-200' : 'border-slate-200'}`}
+    >
+      <div className="mb-4 flex items-center gap-2">
+        <div
+          className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+            done ? 'bg-emerald-600 text-white' : 'bg-slate-900 text-white'
+          }`}
+        >
+          {done ? '✓' : number}
+        </div>
+        <h2 className="text-base font-semibold text-slate-900">{title}</h2>
+      </div>
+      {children}
+    </section>
   )
 }
 
-function LockedState({ message }: { message: string }) {
-  return (
-    <div className="rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
-      {message}
-    </div>
-  )
+function LockedStep({ message }: { message: string }) {
+  return <div className="rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">{message}</div>
 }

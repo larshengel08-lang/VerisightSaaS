@@ -5975,7 +5975,7 @@ def generate_campaign_report(
         if is_retention
         else ([], {"hoog": 0, "midden": 0, "laag": 0})
     )
-    has_segment_deep_dive = _campaign_has_add_on(camp, SEGMENT_DEEP_DIVE_KEY)
+    has_segment_deep_dive = True
     segment_deep_dive = _build_segment_deep_dive_data(
         responses=responses,
         org_avg_risk=pattern.get("avg_risk_score") if has_pattern else avg_risk,

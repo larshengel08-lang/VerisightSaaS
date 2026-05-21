@@ -6,11 +6,25 @@ interface Props {
   campaignId: string
   campaignName: string
   scanType?: string
+  label?: string
+  loadingLabel?: string
+  buttonClassName?: string
+  containerClassName?: string
+  errorClassName?: string
 }
 
 const UNSUPPORTED_REPORT_MESSAGES: Record<string, string> = {}
 
-export function PdfDownloadButton({ campaignId, campaignName, scanType }: Props) {
+export function PdfDownloadButton({
+  campaignId,
+  campaignName,
+  scanType,
+  label = 'Rapport downloaden',
+  loadingLabel = 'Rapport ophalen...',
+  buttonClassName,
+  containerClassName,
+  errorClassName,
+}: Props) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -45,7 +59,7 @@ export function PdfDownloadButton({ campaignId, campaignName, scanType }: Props)
       const objectUrl = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = objectUrl
-      link.download = `Verisight_${campaignName.replace(/ /g, '_')}.pdf`
+      link.download = `Loep_${campaignName.replace(/ /g, '_')}.pdf`
       link.click()
       URL.revokeObjectURL(objectUrl)
     } catch {
@@ -56,15 +70,20 @@ export function PdfDownloadButton({ campaignId, campaignName, scanType }: Props)
   }
 
   return (
-    <div className="flex flex-col items-start gap-1 sm:items-end">
+    <div className={containerClassName ?? 'flex flex-col items-start gap-1 sm:items-end'}>
       <button
         onClick={handleDownload}
         disabled={loading}
-        className="inline-flex rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+        className={
+          buttonClassName ??
+          'inline-flex rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60'
+        }
       >
-        {loading ? 'Rapport ophalen...' : 'Rapport downloaden'}
+        {loading ? loadingLabel : label}
       </button>
-      {error ? <p className="max-w-48 text-xs text-red-600 sm:text-right">{error}</p> : null}
+      {error ? (
+        <p className={errorClassName ?? 'max-w-48 text-xs text-red-600 sm:text-right'}>{error}</p>
+      ) : null}
     </div>
   )
 }

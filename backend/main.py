@@ -471,9 +471,27 @@ def _build_import_preview(
 
         department_raw = normalized["department"]
         department = str(department_raw).strip() if department_raw not in (None, "") else None
+        if not department:
+            issues.append(
+                RespondentImportIssue(
+                    row_number=row_number,
+                    field="department",
+                    message="Afdeling ontbreekt. Gebruik een ingevulde department-kolom voor elke respondent.",
+                )
+            )
+            continue
 
         role_level = _normalize_role_level(normalized["role_level"])
-        if normalized["role_level"] not in (None, "") and not role_level:
+        if normalized["role_level"] in (None, ""):
+            issues.append(
+                RespondentImportIssue(
+                    row_number=row_number,
+                    field="role_level",
+                    message="Functieniveau ontbreekt. Gebruik uitvoerend, specialist, senior, manager, director of c_level.",
+                )
+            )
+            continue
+        if not role_level:
             issues.append(
                 RespondentImportIssue(
                     row_number=row_number,
