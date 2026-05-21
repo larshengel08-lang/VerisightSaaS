@@ -1,4 +1,5 @@
 from backend.products.shared.registry import get_product_module
+from backend.products.culture_assessment.report_content import OUTPUT_SEQUENCE_NOTE
 
 
 def test_culture_assessment_module_exposes_definition_and_report_payloads():
@@ -13,7 +14,12 @@ def test_culture_assessment_module_exposes_definition_and_report_payloads():
     assert "executive one-pager" in module.get_definition()["optional_outputs"]
     assert module.get_definition()["output_readiness"]["board_report_pdf"] == "pilot_delivery_ready"
     assert module.get_definition()["output_readiness"]["boardroom_deck"] == "pilot_delivery_ready"
-    assert "compacte executive read" in module.get_definition()["output_sequence_note"]
+    assert module.get_definition()["output_sequence_note"] == OUTPUT_SEQUENCE_NOTE
+    assert module.get_management_summary_payload()["output_sequence_note"] == OUTPUT_SEQUENCE_NOTE
+    assert "compacte executive read" in OUTPUT_SEQUENCE_NOTE
+    assert "premium board artifact" in OUTPUT_SEQUENCE_NOTE
+    assert "guided zusterlaag" in OUTPUT_SEQUENCE_NOTE
+    assert "afgeleide van dezelfde visuele grammatica" in OUTPUT_SEQUENCE_NOTE
     assert module.get_definition()["follow_on_outcomes"] == [
         "no immediate next route",
         "deeper governed work",
@@ -34,7 +40,6 @@ def test_culture_assessment_module_exposes_definition_and_report_payloads():
     ]
     assert "Loep Culture Index" in module.get_management_summary_payload()["index_label"]
     assert "domeinbeeld" in module.get_management_summary_payload()["board_attention_scope_note"]
-    assert "premium board artifact" in module.get_management_summary_payload()["output_sequence_note"]
     assert module.get_management_summary_payload()["board_read_delivery"]["always_guided"] is True
     assert module.get_methodology_payload()["benchmark_state"] == "inactive_v1"
     assert module.get_methodology_payload()["named_manager_layer_default"] == "locked"

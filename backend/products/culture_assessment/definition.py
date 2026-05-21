@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from backend.products.culture_assessment.report_content import OUTPUT_SEQUENCE_NOTE
 from backend.products.culture_assessment.scoring import (
     DOMAIN_ITEM_IDS,
     QUESTIONNAIRE_DOMAIN_ORDER,
@@ -156,11 +157,7 @@ SCAN_DEFINITION: dict[str, Any] = {
         "hr_appendix_pdf": "blueprint_ready",
         "segment_summary_export": "commercial_delivery_ready",
     },
-    "output_sequence_note": (
-        "Het board report pdf is in v1 een compacte executive read en premium board artifact. "
-        "Het boardroom pdf deck is de ruimere, guided zusterlaag voor facilitated board-read; "
-        "de executive one-pager blijft een afgeleide van dezelfde visuele grammatica."
-    ),
+    "output_sequence_note": OUTPUT_SEQUENCE_NOTE,
     "follow_on_outcomes": [
         "no immediate next route",
         "deeper governed work",

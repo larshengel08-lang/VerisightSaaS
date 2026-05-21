@@ -4,6 +4,12 @@ from typing import Any
 
 from backend.products.culture_assessment.scoring import get_questionnaire_lock_payload
 
+OUTPUT_SEQUENCE_NOTE = (
+    "Het board report pdf is in v1 een compacte executive read en premium board artifact. "
+    "Het boardroom pdf deck is de ruimere, guided zusterlaag voor facilitated board-read; "
+    "de executive one-pager blijft een afgeleide van dezelfde visuele grammatica."
+)
+
 
 def get_management_summary_payload() -> dict[str, Any]:
     return {
@@ -45,11 +51,7 @@ def get_management_summary_payload() -> dict[str, Any]:
                 "privacy and governance statements",
             ],
         },
-        "output_sequence_note": (
-            "Het board report pdf is in v1 een compacte executive read en premium board artifact. "
-            "Het boardroom pdf deck is de ruimere, guided zusterlaag voor facilitated board-read; "
-            "de executive one-pager blijft een afgeleide van dezelfde visuele grammatica."
-        ),
+        "output_sequence_note": OUTPUT_SEQUENCE_NOTE,
     }
 
 
