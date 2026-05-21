@@ -635,7 +635,7 @@ Compiled successfully for Action Center bounded execution changes; any remaining
 - The build also reported existing ESLint warnings in `app/api/action-center-route-closeouts/route.ts`, `app/producten/[slug]/page.tsx`, `components/marketing/follow-on-route-page.tsx`, `components/marketing/home-insight-action-demo.tsx`, and `lib/action-center-governance.ts`.
 - No Action Center route-family expansion or off-platform write broadening was introduced by this closeout.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git -C 'C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer-structure' add supabase/action_center_constitution_adoption_readiness.sql supabase/schema.sql docs/superpowers/plans/2026-05-20-batch-a-productization-of-execution-implementation.md
