@@ -135,7 +135,7 @@ function shouldFlagRouteStaleDespiteActions(args: {
   scanType: ActionCenterRouteDefaultsEnabledScanType
 }) {
   const defaults = getActionCenterEnabledRouteDefaults(args.scanType)
-  if (!defaults) return false
+  if (!defaults || typeof defaults.staleAfterDays !== 'number') return false
 
   const activeActionCount = getActiveActionCount(args.item)
   if (activeActionCount === 0) return false
@@ -286,7 +286,13 @@ function deriveRawSignalCodes(args: {
     queueCodes.add('HR_review_required')
   }
 
-  if (shouldFlagRouteStaleDespiteActions(args)) {
+  if (
+    shouldFlagRouteStaleDespiteActions({
+      item: args.item,
+      now: args.now,
+      scanType: args.routeFamily,
+    })
+  ) {
     queueCodes.add('route_stale_despite_actions')
   }
 
