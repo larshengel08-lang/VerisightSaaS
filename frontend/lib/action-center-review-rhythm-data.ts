@@ -33,12 +33,12 @@ function getReviewRhythmRouteId(item: Pick<ActionCenterPreviewItem, 'coreSemanti
 function toReviewRhythmConfigFromRouteDefaults(
   routeDefaults: NonNullable<ReturnType<typeof getActionCenterEnabledRouteDefaults>>,
 ): ActionCenterReviewRhythmConfig {
-  return {
-    cadenceDays: routeDefaults.cadenceDays,
-    reminderLeadDays: routeDefaults.reminderLeadDays,
-    escalationLeadDays: routeDefaults.escalationLeadDays,
-    remindersEnabled: routeDefaults.remindersEnabled,
-  }
+  return normalizeActionCenterReviewRhythmConfig({
+    cadence_days: routeDefaults.cadenceDays,
+    reminder_lead_days: routeDefaults.reminderLeadDays,
+    escalation_lead_days: routeDefaults.escalationLeadDays,
+    reminders_enabled: routeDefaults.remindersEnabled,
+  })
 }
 
 function normalizeConfigRow(args: {
@@ -182,12 +182,15 @@ export async function getActionCenterReviewRhythmData(args: {
   const persistedConfigByRouteId = ((data ?? []) as ActionCenterReviewRhythmConfigRow[]).reduce<
     Record<string, ActionCenterReviewRhythmConfig>
   >((acc, row) => {
-    const routeDefaults =
-      getActionCenterEnabledRouteDefaults(args.routeScanTypeByRouteId[row.route_id ?? '']) ??
-      buildDefaultActionCenterReviewRhythmConfig()
+    const enabledRouteDefaults = getActionCenterEnabledRouteDefaults(
+      args.routeScanTypeByRouteId[row.route_id ?? ''],
+    )
+    const routeDefaultConfig = enabledRouteDefaults
+      ? toReviewRhythmConfigFromRouteDefaults(enabledRouteDefaults)
+      : buildDefaultActionCenterReviewRhythmConfig()
     const config = normalizeConfigRow({
       row,
-      routeDefaultConfig: toReviewRhythmConfigFromRouteDefaults(routeDefaults),
+      routeDefaultConfig,
     })
     if (row.route_id && config) {
       acc[row.route_id] = config
@@ -197,10 +200,12 @@ export async function getActionCenterReviewRhythmData(args: {
   const configByRouteId = Object.fromEntries(
     eligibleItems.map((item) => {
       const routeId = getReviewRhythmRouteId(item)
-      const routeDefaults =
-        getActionCenterEnabledRouteDefaults(args.routeScanTypeByRouteId[routeId]) ??
-        buildDefaultActionCenterReviewRhythmConfig()
-      const routeDefaultConfig = toReviewRhythmConfigFromRouteDefaults(routeDefaults)
+      const enabledRouteDefaults = getActionCenterEnabledRouteDefaults(
+        args.routeScanTypeByRouteId[routeId],
+      )
+      const routeDefaultConfig = enabledRouteDefaults
+        ? toReviewRhythmConfigFromRouteDefaults(enabledRouteDefaults)
+        : buildDefaultActionCenterReviewRhythmConfig()
 
       return [routeId, persistedConfigByRouteId[routeId] ?? routeDefaultConfig]
     }),

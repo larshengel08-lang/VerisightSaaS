@@ -136,6 +136,12 @@ interface RouteCloseoutFormState {
 }
 
 type RouteActionValidationDisposition = 'valid' | 'invalid' | 'needs_hr_review'
+
+function isPersistedDraftSubmissionDisposition(
+  disposition: RouteActionValidationDisposition | null | undefined,
+): disposition is Extract<RouteActionValidationDisposition, 'invalid' | 'needs_hr_review'> {
+  return disposition === 'invalid' || disposition === 'needs_hr_review'
+}
 type RouteActionFeedbackTone = 'error' | 'warning'
 
 type ManagerActionPhase =
@@ -537,6 +543,27 @@ function getManagerResponseProjectedStatus(
   return hasPrimaryManagerAction(response) ? 'in-uitvoering' : 'te-bespreken'
 }
 
+function resolveRouteContractStatusFromPreviewStatus(
+  status: ActionCenterPreviewStatus,
+): Exclude<ActionCenterRouteStatus, 'open-verzoek'> {
+  switch (status) {
+    case 'te-bespreken':
+      return 'te-bespreken'
+    case 'in-uitvoering':
+    case 'reviewbaar':
+      return 'in-uitvoering'
+    case 'geblokkeerd':
+      return 'geblokkeerd'
+    case 'afgerond':
+      return 'afgerond'
+    case 'gestopt':
+      return 'gestopt'
+    case 'open-verzoek':
+    default:
+      return 'te-bespreken'
+  }
+}
+
 function getManagerActionPhase(item: ActionCenterPreviewItem | null): ManagerActionPhase {
   if (!item) return 'awaiting-first-move'
   if ((item.coreSemantics.routeActionCards?.length ?? 0) > 0) return 'action-cards'
@@ -879,7 +906,9 @@ function applyManagerResponseToItem(
   response: ActionCenterManagerResponse,
 ): ActionCenterPreviewItem {
   const routeActionGoverned = isRouteActionGoverned(item)
-  const nextStatus = routeActionGoverned ? item.status : getManagerResponseProjectedStatus(item.status, response)
+  const nextStatus: ActionCenterRouteStatus = routeActionGoverned
+    ? item.coreSemantics.route.routeStatus ?? resolveRouteContractStatusFromPreviewStatus(item.status)
+    : getManagerResponseProjectedStatus(item.status, response)
   const followThroughMode =
     routeActionGoverned
       ? item.coreSemantics.route.followThroughMode
@@ -3262,7 +3291,9 @@ export function ActionCenterPreview({
                                 }
                                 feedbackTone={routeActionFeedback?.tone ?? 'error'}
                                 submissionState={
-                                  routeActionFeedback?.validationDisposition &&
+                                  isPersistedDraftSubmissionDisposition(
+                                    routeActionFeedback?.validationDisposition,
+                                  ) &&
                                   routeActionFeedback.validationMessage &&
                                   routeActionFeedback.statusMessage &&
                                   routeActionFeedback.persistedDraftFingerprint

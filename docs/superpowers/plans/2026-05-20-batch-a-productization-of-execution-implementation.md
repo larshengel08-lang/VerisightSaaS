@@ -628,12 +628,11 @@ Compiled successfully for Action Center bounded execution changes; any remaining
 - 2026-05-21: added missing schema parity for `action_center_route_actions` and `action_center_action_reviews` in both owned SQL files, including Batch A `semantic_state` and `validation_disposition` constraints plus compact review evidence fields.
 - Full Batch A regression suite passed with `12` test files and `132` tests green:
   `npx vitest run lib/action-center-constitution.test.ts lib/action-center-route-actions.test.ts lib/action-center-action-reviews.test.ts lib/action-center-route-defaults.test.ts lib/action-center-governance.test.ts lib/action-center-review-rhythm-data.test.ts lib/action-center-route-action-editor.test.ts lib/action-center-action-review-editor.test.ts lib/action-center-bounded-execution-metrics.test.ts app/api/action-center-route-actions/route.test.ts app/api/action-center-action-reviews/route.test.ts components/dashboard/review-rhythm-oversight.test.tsx`
-- Production build check compiled successfully, then failed during type-check on an existing non-owned Action Center file:
-  `components/dashboard/action-center-preview.tsx:891`
-- Build blocker detail:
-  `Type '"afgerond" | "gestopt" | "open-verzoek" | "te-bespreken" | "reviewbaar" | "in-uitvoering" | "geblokkeerd"' is not assignable to type 'ActionCenterRouteStatus | null'.`
-- The build also reported existing ESLint warnings in `app/api/action-center-route-closeouts/route.ts`, `app/producten/[slug]/page.tsx`, `components/marketing/follow-on-route-page.tsx`, `components/marketing/home-insight-action-demo.tsx`, and `lib/action-center-governance.ts`.
-- No Action Center route-family expansion or off-platform write broadening was introduced by this closeout.
+ - Production build check now compiles and type-checks through the Batch A Action Center changes.
+ - The remaining production-build stop is the known Supabase SSR / prerender baseline on `/(auth)/signup`:
+   `@supabase/ssr: Your project's URL and API key are required to create a Supabase client!`
+ - The build also reported existing ESLint warnings in `app/api/action-center-route-closeouts/route.ts`, `app/producten/[slug]/page.tsx`, `components/marketing/follow-on-route-page.tsx`, `components/marketing/home-insight-action-demo.tsx`, and `lib/action-center-governance.ts`.
+ - No Action Center route-family expansion or off-platform write broadening was introduced by this closeout.
 
 - [x] **Step 5: Commit**
 
