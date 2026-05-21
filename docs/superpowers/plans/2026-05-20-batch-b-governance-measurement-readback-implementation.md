@@ -828,6 +828,17 @@ git -C 'C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer
 - buyer-safe vocabulary and scenario readbacks in UI: Task 5
 - route-family scenario coverage, test strategy, and verification hardening: Task 6
 
+## Verification Notes
+
+- Unified HR governance queue verified across route-first severity ordering and false-positive suppression.
+- Bounded HR intervention API verified with auditable write rules and blocked non-HR access.
+- Measurement readback layers and visibility contract verified for route, action, review, governance-signal, and route-family readback.
+- Metric formulas and KPI interpretation rails verified without proof or causal-impact wording in buyer-safe surfaces.
+- ExitScan and RetentieScan scenario readbacks verified without route-specific workflow forks or MTO-light drift.
+- Batch B regression suites passed: `11 files / 49 tests`.
+- `npm run build` compiled and typechecked all Batch B Action Center changes; the only remaining stop is the known unrelated Supabase SSR/prerender auth baseline on `/(auth)/login`.
+- No route-family expansion, off-platform canonical writes, or proof claims were introduced.
+
 ### Placeholder scan
 
 - No `TBD`, `TODO`, or "implement later" placeholders remain.
