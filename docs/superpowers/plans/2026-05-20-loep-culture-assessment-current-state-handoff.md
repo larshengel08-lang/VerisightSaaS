@@ -43,8 +43,8 @@ Compact redesign closeout note:
 - boardroom deck blueprint exists
 - runtime board report and culture sample artifact were rebuilt in the redesign slice
 - scoped verification evidence recorded:
-- backend `py -m pytest tests\test_culture_assessment_report_contract.py tests\test_report_generation_smoke.py tests\test_sample_generator.py -q -k "culture_assessment or sample"` -> `11 passed, 4 deselected`
-- frontend `cmd /c npx vitest run --config vitest.config.ts lib/sample-showcase-assets.test.ts` -> `1 file passed, 6 tests passed`
+  backend `py -m pytest tests\test_culture_assessment_report_contract.py tests\test_report_generation_smoke.py tests\test_sample_generator.py -q -k "culture_assessment or sample"` -> `11 passed, 4 deselected`
+  frontend `cmd /c npx vitest run --config vitest.config.ts lib/sample-showcase-assets.test.ts` -> `1 file passed, 6 tests passed`
 
 ---
 
