@@ -10,7 +10,6 @@ import {
 } from "@/lib/dashboard/open-action-center-route";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { ExitProductDashboard } from "@/components/dashboard/exit-product-dashboard";
 import { CampaignActions } from "./campaign-actions";
 import { PdfDownloadButton } from "./pdf-download-button";
 import {
@@ -37,6 +36,11 @@ import {
   ManagementReadNarratives,
   ManagementReadSection,
 } from "@/components/dashboard/management-read-primitives";
+import {
+  ExitDriversPriorityChart,
+  ExitOrgFactorsChart,
+  ExitSdtNeedsChart,
+} from "@/components/dashboard/exit-dashboard-visuals";
 import { DashboardTabs } from "@/components/dashboard/dashboard-tabs";
 import { FactorTable } from "@/components/dashboard/factor-table";
 import { GuidedSelfServePanel } from "@/components/dashboard/guided-self-serve-panel";
@@ -80,8 +84,6 @@ import {
   getTopContributingReasonLabel,
   getTopExitReasonLabel,
   MethodologyCard,
-  MIN_N_DISPLAY,
-  MIN_N_PATTERNS,
   PulseTrendSection,
   RecommendationList,
   RetentionTrendSection,
@@ -109,13 +111,21 @@ import {
   buildTeamPriorityReadState,
 } from "@/lib/products/team";
 import { getProductModule } from "@/lib/products/shared/registry";
-import { buildResponseActivationState } from "@/lib/response-activation";
+import {
+  buildResponseActivationState,
+  getResponseActivationThresholds,
+} from "@/lib/response-activation";
+import {
+  canAccessCultureAssessmentSegmentSummaryExport,
+  getCultureAssessmentGovernedEntitlement,
+} from "@/lib/products/culture_assessment/contract";
 import { getScanDefinition } from "@/lib/scan-definitions";
 import {
   getDashboardModuleHref,
   getDashboardModuleKeyForScanType,
   getDashboardModuleLabel,
 } from "@/lib/dashboard/shell-navigation";
+import { buildDashboardArchitecture } from "./dashboard-architecture";
 import { loadSuiteAccessContext } from "@/lib/suite-access-server";
 import { FACTOR_LABELS, hasCampaignAddOn } from "@/lib/types";
 import type { CampaignStats, Respondent, SurveyResponse } from "@/lib/types";
@@ -257,8 +267,12 @@ function deriveScopeLabel(respondents: Respondent[]) {
   return `${departments[0]}, ${departments[1]} + ${departments.length - 2} meer`
 }
 
-function buildResponseContextNote(totalCompleted: number, completionRate: number) {
-  if (totalCompleted >= MIN_N_PATTERNS) {
+function buildResponseContextNote(
+  totalCompleted: number,
+  completionRate: number,
+  minPatternThreshold: number,
+) {
+  if (totalCompleted >= minPatternThreshold) {
     return `Responsbasis van ${completionRate}% is stevig genoeg voor een eerste lezing. Lees verschillen nog steeds in samenhang met scope en context.`
   }
 
@@ -294,6 +308,32 @@ function buildExitPictureDistribution(responses: SurveyResponse[]) {
       { label: "Situationele context zichtbaar", value: `${toPercent(counts.situational)}%`, percent: toPercent(counts.situational) },
     ],
   }
+}
+
+function buildExitSurveyVoices(responses: SurveyResponse[]) {
+  const sanitize = (value: string) =>
+    value
+      .replace(/\s+/g, " ")
+      .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[verwijderd]")
+      .replace(/https?:\/\/\S+/gi, "[link verwijderd]")
+      .replace(/\+?\d[\d\s().-]{7,}\d/g, "[verwijderd]")
+      .trim()
+
+  const seen = new Set<string>()
+
+  return responses
+    .map((response) =>
+      sanitize(response.open_text_raw?.trim() || response.open_text_analysis?.trim() || ""),
+    )
+    .filter((text) => text.length >= 24)
+    .filter((text) => {
+      const normalized = text.toLowerCase()
+      if (seen.has(normalized)) return false
+      seen.add(normalized)
+      return true
+    })
+    .slice(0, 2)
+    .map((text) => (text.length > 180 ? `${text.slice(0, 177).trimEnd()}...` : text))
 }
 
 function buildExitNarratives(args: {
@@ -600,6 +640,11 @@ export default async function CampaignPage({ params }: Props) {
     campaignMeta,
     "segment_deep_dive",
   );
+  const dashboardArchitecture = buildDashboardArchitecture({
+    scanType: stats.scan_type,
+    canManageCampaign,
+    hasSegmentDeepDive,
+  });
   const deliveryAdminClient = canExecuteCampaign ? createAdminClient() : null;
   const { data: deliveryVisibilityRecord } = deliveryAdminClient
     ? await deliveryAdminClient
@@ -773,9 +818,10 @@ export default async function CampaignPage({ params }: Props) {
     stats.scan_type === "team" && teamLocalRead
       ? buildTeamPriorityReadState(teamLocalRead)
       : null;
+  const responseThresholds = getResponseActivationThresholds(stats.scan_type);
 
-  const hasEnoughData = responses.length >= MIN_N_PATTERNS;
-  const hasMinDisplay = responses.length >= MIN_N_DISPLAY;
+  const hasEnoughData = responses.length >= responseThresholds.insightMin;
+  const hasMinDisplay = responses.length >= responseThresholds.dashboardMin;
   const scanDefinition = getScanDefinition(stats.scan_type);
   const productModule = getProductModule(stats.scan_type);
   const teamPriorityBand = (signalValue: number) =>
@@ -810,6 +856,8 @@ export default async function CampaignPage({ params }: Props) {
     launchConfirmedAt: deliveryRecord?.launch_confirmed_at ?? null,
   });
   const readinessState = buildCampaignReadinessState({
+    scanType: stats.scan_type,
+    isActive: stats.is_active,
     totalInvited: stats.total_invited,
     totalCompleted: stats.total_completed,
     invitesNotSent,
@@ -823,6 +871,7 @@ export default async function CampaignPage({ params }: Props) {
     launchControlBlockers: launchControlState.blockers,
   });
   const compositionState = getCampaignCompositionState({
+    scanType: stats.scan_type,
     isActive: stats.is_active,
     totalInvited: stats.total_invited,
     totalCompleted: stats.total_completed,
@@ -831,12 +880,44 @@ export default async function CampaignPage({ params }: Props) {
     hasMinDisplay,
     hasEnoughData,
   });
-  const activationState = buildResponseActivationState(stats.total_completed);
-  const showClientExecutionFlow = compositionState !== "closed";
+  const activationState = buildResponseActivationState(stats.total_completed, {
+    scanType: stats.scan_type,
+    isActive: stats.is_active,
+  });
+  const canAccessGovernedSegmentExport =
+    stats.scan_type === "culture_assessment" &&
+    canAccessCultureAssessmentSegmentSummaryExport({
+      isVerisightAdmin,
+      membershipRole: membership?.role ?? null,
+    });
+  const canDownloadGovernedSegmentExport =
+    stats.scan_type === "culture_assessment" &&
+    activationState.reportVisible &&
+    hasSegmentDeepDive &&
+    canAccessGovernedSegmentExport;
+  const showGovernedSegmentExport =
+    stats.scan_type === "culture_assessment" &&
+    canDownloadGovernedSegmentExport;
+  const governedSegmentExportHint =
+    stats.scan_type !== "culture_assessment"
+      ? null
+      : !hasSegmentDeepDive
+        ? "Segment deep dive is in v1 alleen admin/manual-seeded; zonder die inrichting blijft de organisatiebrede read leidend."
+        : !activationState.reportVisible
+          ? "Segment deep dive is in v1 admin/manual-seeded ingericht, maar governed export blijft dicht tot de baseline formeel is vrijgegeven."
+          : canAccessGovernedSegmentExport
+            ? "Governed segmentexport blijft in deze pilotlaag alleen open voor owner/adminrollen na baselinevrijgave."
+            : "Governed segmentexport is na baselinevrijgave alleen beschikbaar voor owner/adminrollen; overige rollen blijven organisatiebreed read-first.";
+  const showClientExecutionFlow =
+      !isVerisightAdmin && compositionState !== "closed";
   const showManagementOutput = isManagementVisibleState(compositionState);
   const showDeeperInsights =
     compositionState === "full" || compositionState === "closed";
   const showDetailedManagementOutput = showDeeperInsights;
+  const demoteFollowThroughLayers =
+    showDetailedManagementOutput &&
+    stats.scan_type !== "exit" &&
+    stats.scan_type !== "retention";
   const showPartialManagementOutput = compositionState === "partial";
   const prefersReportFirst = compositionState === "closed";
   const canOpenActionCenterFromDeliveryRecord = deliveryRecord
@@ -1041,8 +1122,8 @@ export default async function CampaignPage({ params }: Props) {
               ? "Privacy-first"
               : "Rapportcontext";
   const productExperience =
-    stats.scan_type === "retention"
-      ? {
+      stats.scan_type === "retention"
+        ? {
           familyRoleLabel: "Kernroute",
           familyRoleTone: "emerald" as const,
           summaryBarOrder: [
@@ -1180,8 +1261,84 @@ export default async function CampaignPage({ params }: Props) {
             afterSessionDescription:
               "Gebruik het eerste reviewmoment om bewust te kiezen: blijft een lokale vervolgstap logisch, is bredere duiding weer nodig of vraagt dit signaal juist minder lokalisatie dan gedacht?",
           }
-        : stats.scan_type === "onboarding"
-          ? {
+          : stats.scan_type === "culture_assessment"
+            ? {
+                familyRoleLabel: "Primary route",
+                familyRoleTone: "emerald" as const,
+                summaryBarOrder: [
+                  "signal",
+                  "next-step",
+                  "response",
+                  "readiness",
+                ] as const,
+                heroAsideOrder: [
+                  "signal",
+                  "next-step",
+                  "review",
+                  "response",
+                ] as const,
+                summaryFocusLabel: "Bestuurlijke eerste vraag",
+                reviewLabel: "Board-read",
+                evidenceSectionOrder: "management-first" as const,
+                recommendationOrder: "questions-first" as const,
+                trustNotePlacement: "drivers" as const,
+                trustNoteTitle: "Leesgrens van deze route",
+                trustNoteBody: scanDefinition.evidenceStatusText,
+                trustNoteTone: "emerald" as const,
+                summaryTone: "slate" as const,
+                summarySignalLabel: "Loep Culture Index",
+                summaryContextLabel: "Jaarlijkse cultuur- en engagementbaseline",
+                summaryContextTone: "slate" as const,
+                summaryLeadTitle: "Executive culture read",
+                summaryLeadDescription:
+                  "Lees Loep Cultuurbeeld eerst als organisatiebreed cultuur- en engagementbeeld: begin bij responsbasis en index, daarna pas domeinen, segmentcontrasten en governed verdieping.",
+                summaryCardEyebrow: "Board baseline",
+                promotedSummaryCards: 2,
+                driverTitle: "Domeinbeeld en patroonlezing",
+                driverDescription:
+                  "Gebruik deze laag om het organisatiebeeld te verdiepen via domeinen, samenhang en veilige contrasten tussen onderdelen, zonder de index als totaaloordeel te lezen.",
+                driverIntro:
+                  "Start bij de executive read en gebruik daarna pas domeinen, patroonlezing en governed segmentcontrasten om bestuurlijke aandacht te ordenen.",
+                driverAsideLabel: hasEnoughData
+                  ? "Executive read beschikbaar"
+                  : "Wacht op meer data",
+                driverAsideTone: hasEnoughData
+                  ? ("emerald" as const)
+                  : ("amber" as const),
+                driverTabOrder: [
+                  "signalen",
+                  "factoren",
+                  "aanvullend",
+                ],
+                signalTabLabel: "Culture Index",
+                signalTabTitle: "Loep Culture Index als navigatiesignaal",
+                signalTabDescription:
+                  "Laat zien hoe het organisatiebeeld zich op hoofdlijnen tekent, zonder dit als health score, benchmark of individueel oordeel te lezen.",
+                factorTabLabel: "Domeinen",
+                factorTabTitle: "Domeinbeeld op organisatieniveau",
+                factorTabDescription:
+                  "Gebruik het domeinbeeld om te zien waar de breedste patronen en de eerste bestuurlijke aandacht zichtbaar worden.",
+                supplementalTabLabel: "Verdieping",
+                supplementalTitle: "Patronen, governance en vervolglagen",
+                supplementalDescription:
+                  "Deze laag houdt segmentcontrasten, open signalen en vervolggebruik bewust governed: descriptief, threshold-safe en zonder manager ranking.",
+                actionTitle: "Board attention points",
+                focusQuestionTitle: "Bestuurlijke prioriteiten",
+                focusQuestionDescription:
+                  "Start met de brede patronen die op organisatieniveau bestuurlijke aandacht vragen en toets daarna pas waar verschillen tussen onderdelen echt betekenisvol zijn.",
+                playbookTitle: "Board-read en governed vervolg",
+                playbookDescription:
+                  "De uitvoerlaag onder deze baseline helpt om van executive read naar board-read, HR-verdieping en eventueel een bounded follow-on te gaan zonder de baseline te verwarren met Pulse runtime.",
+                routeTitle: "Board-read & vervolgritme",
+                routeDescription:
+                  "Deze laag bundelt board-read, governed drilldown en het expliciete besluit of geen onmiddellijke vervolgrichting, deeper governed work, een bounded Pulse-follow-on of een smallere route zoals RetentieScan of ExitScan logisch is.",
+                routeBadgeLabel: "Jaarlijkse board baseline",
+                afterSessionTitle: "Na de board-read",
+                afterSessionDescription:
+                  "Gebruik de board-read om expliciet te kiezen of geen onmiddellijke vervolgrichting volstaat, welke patronen eerst deeper governed work vragen en of pas daarna een bounded Pulse-follow-on, RetentieScan of ExitScan logisch is.",
+              }
+            : stats.scan_type === "onboarding"
+            ? {
               familyRoleLabel: "Begrensde peer-route",
               familyRoleTone: "blue" as const,
               summaryBarOrder: [
@@ -1476,7 +1633,7 @@ export default async function CampaignPage({ params }: Props) {
                   afterSessionTitle: "Na de eerste managementsessie",
                   afterSessionDescription:
                   "Gebruik het eerste reviewmoment om bewust te kiezen: doe je nog een compacte Pulse-check, verdiep je eerst de vraag verder of vraagt het thema nu een andere productvorm?",
-                };
+                  };
   const presentationMetrics = buildPresentationMetrics({
     productExperience,
     scanDefinition,
@@ -2057,6 +2214,8 @@ export default async function CampaignPage({ params }: Props) {
           <form action={openActionCenterRoute}>
             <button
               type="submit"
+              aria-label="Open in Action Center"
+              title="Open in Action Center"
               className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50"
             >
               {actionCenterBridge.presentation.ctaLabel}
@@ -2065,6 +2224,8 @@ export default async function CampaignPage({ params }: Props) {
         ) : (
           <Link
             href={actionCenterRouteHref}
+            aria-label="Open in Action Center"
+            title="Open in Action Center"
             className="inline-flex rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50"
           >
             {actionCenterBridge.presentation.ctaLabel}
@@ -2091,6 +2252,7 @@ export default async function CampaignPage({ params }: Props) {
             campaignId={id}
             campaignName={stats.campaign_name}
             scanType={stats.scan_type}
+            showSegmentSummaryExport={showGovernedSegmentExport}
           />
         </>
       ) : prefersReportFirst ? (
@@ -2098,6 +2260,7 @@ export default async function CampaignPage({ params }: Props) {
           campaignId={id}
           campaignName={stats.campaign_name}
           scanType={stats.scan_type}
+          showSegmentSummaryExport={showGovernedSegmentExport}
         />
       ) : stats.scan_type === "pulse" ||
         stats.scan_type === "team" ||
@@ -2117,6 +2280,7 @@ export default async function CampaignPage({ params }: Props) {
           campaignId={id}
           campaignName={stats.campaign_name}
           scanType={stats.scan_type}
+          showSegmentSummaryExport={showGovernedSegmentExport}
         />
       )}
     </>
@@ -2132,10 +2296,561 @@ export default async function CampaignPage({ params }: Props) {
   const moduleBackLinkLabel = getDashboardModuleBackLinkLabel(stats.scan_type)
   const factorPriorityRows = buildFactorPriorityRows(factorData.orgAverages)
   const sdtRows = buildSdtRows(factorData.sdtAverages)
-  const responseContextNote = buildResponseContextNote(
-    stats.total_completed,
-    stats.completion_rate_pct ?? 0,
+  const cultureOverviewSections =
+    stats.scan_type === "culture_assessment"
+      ? dashboardArchitecture.overviewSections
+      : []
+  const cultureSectionTitles = new Map(
+    cultureOverviewSections.map((section) => [section.id, section.title]),
   )
+
+  if (showManagementOutput && stats.scan_type === "culture_assessment") {
+    const headerActions = (
+      <PdfDownloadButton
+        campaignId={id}
+        campaignName={stats.campaign_name}
+        scanType={stats.scan_type}
+        showSegmentSummaryExport={showGovernedSegmentExport}
+      />
+    )
+    const cultureAnchors = cultureOverviewSections.map((section) => ({
+      id: section.id,
+      label: section.title,
+    }))
+    const cultureOutputReadiness = scanDefinition.outputReadiness ?? {}
+    const hiddenReasonEntitlement = getCultureAssessmentGovernedEntitlement(
+      {
+        isVerisightAdmin,
+        membershipRole: membership?.role ?? null,
+      },
+      "hiddenReasonVisibility",
+    )
+    const hrGovernedAnalysisEntitlement = getCultureAssessmentGovernedEntitlement(
+      {
+        isVerisightAdmin,
+        membershipRole: membership?.role ?? null,
+      },
+      "hrGovernedAnalysis",
+    )
+    const cultureDeliveryPanels = [
+      {
+        eyebrow: "Pilot deliverable",
+        title: "Boardroom PDF-deck",
+        body:
+          cultureOutputReadiness.boardroomDeck === "pilot_delivery_ready"
+            ? "Pilot delivery-ready. Gebruik deze decklaag als begeleide board-read deliverable binnen dezelfde governance als het boardrapport."
+            : "Decklaag nog niet vrijgegeven als pilot-deliverable.",
+        tone: "blue" as const,
+      },
+      {
+        eyebrow: "Executive samenvatting",
+        title: "Executive one-pager",
+        body:
+          cultureOutputReadiness.executiveOnePager === "blueprint_ready"
+            ? "Blueprint, nog geen standaarddeliverable. Gebruik alleen begeleid totdat de one-pager dezelfde productrail draagt als boardrapport en deck."
+            : "Executive samenvatting volgt de bounded premium deliveryrail.",
+        tone: "amber" as const,
+      },
+      {
+        eyebrow: "Governed verdieping",
+        title: "HR appendix en segmentexport",
+        body:
+          "HR appendix en segmentexport blijven governed outputs: alleen na baselinevrijgave, boven threshold en binnen owner/admin-governance.",
+        tone: "slate" as const,
+      },
+    ]
+    const cultureGovernancePanels = [
+      {
+        eyebrow: "Verborgen laagreden",
+        title: "Drempel, vrijgave of entitlement",
+        body:
+          hiddenReasonEntitlement === "denied"
+            ? "Deze rol leest de organisatiebrede executive laag, maar krijgt geen detailuitleg per verborgen segment of suppressiereden."
+            : "Verborgen lagen mogen alleen verklaard worden als drempel-, vrijgave-, entitlement- of packagegrens. De uitleg mag nooit onveilig lokaal detail verraden.",
+        tone: hiddenReasonEntitlement === "denied" ? ("amber" as const) : ("slate" as const),
+      },
+      {
+        eyebrow: "HR governed analysis",
+        title: "Veilige HR-verdieping",
+        body:
+          hrGovernedAnalysisEntitlement === "allowed" || hrGovernedAnalysisEntitlement === "admin_state_only"
+            ? "HR kan veilige segmentlagen, hidden reasons en exportstatus lezen, maar blijft binnen governed interpretatie en expliciete suppressiegrenzen."
+            : "HR governed analysis opent niet voor deze rol. De executive read blijft leidend totdat een governance-owner veilige verdieping vrijgeeft.",
+        tone:
+          hrGovernedAnalysisEntitlement === "allowed" || hrGovernedAnalysisEntitlement === "admin_state_only"
+            ? ("blue" as const)
+            : ("amber" as const),
+      },
+      {
+        eyebrow: "Analysegrens",
+        title: "Geen vrije slicing of quote browsing of lokale blame-laag",
+        body:
+          "Deze route opent geen analyst-sandbox. Geen vrije slicing, quote browsing of lokale blame-laag; alleen bounded drilldown binnen de canonical suppressie- en releasegrenzen.",
+        tone: "slate" as const,
+      },
+    ]
+    const cultureTextSafetyPanels = [
+      {
+        eyebrow: "Text safety",
+        title: "Niet verzameld of nog niet verwerkt",
+        body:
+          "Open tekst kan bewust uit staan of nog onbewerkt blijven. Tot dat moment hoort deze laag niet mee te sturen in de executive read.",
+        tone: "slate" as const,
+      },
+      {
+        eyebrow: "Text safety",
+        title: "Veilige samenvatting zichtbaar",
+        body:
+          "Alleen veilig geclusterde open signalen mogen als compacte samenvatting terugkomen. Raw quotes of respondentdetails blijven buiten beeld.",
+        tone: "emerald" as const,
+      },
+      {
+        eyebrow: "Text safety",
+        title: "Verborgen door drempel of gevoelige inhoud",
+        body:
+          "Onder drempel, gevoelige inhoud of ontbrekende goedkeuring betekent suppressie. Deze executive laag kiest dan bewust voor geen open-signaaloutput.",
+        tone: "amber" as const,
+      },
+    ]
+    const cultureDeepeningPanels =
+      (
+        [
+          {
+            key: "autonomy_role_clarity",
+            eyebrow: "Verdiepende domeinlaag",
+            body:
+              "Gebruik deze laag om te toetsen of ruimte, rolhelderheid en uitvoerbaarheid het boardbeeld mee dragen zonder naar named manager detail te springen.",
+          },
+          {
+            key: "growth_development",
+            eyebrow: "Verdiepende domeinlaag",
+            body:
+              "Gebruik deze laag om te toetsen of perspectief, feedback en ontwikkeling de bredere cultuurread versterken of juist afremmen.",
+          },
+          {
+            key: "organizational_connection_intent",
+            eyebrow: "Verdiepende domeinlaag",
+            body:
+              "Gebruik deze laag om te lezen hoe verbondenheid, trots en intentie het executive beeld kleuren, zonder er een vertrekvoorspeller van te maken.",
+          },
+        ] as const
+      )
+        .map((panel) => {
+          const score = factorData.orgAverages[panel.key]
+          if (typeof score !== "number") return null
+
+          return {
+            eyebrow: panel.eyebrow,
+            title: FACTOR_LABELS[panel.key] ?? panel.key,
+            body: `Domeinscore ${score.toFixed(1)}/10. ${panel.body}`,
+            tone: (score < 5.5 ? "amber" : "slate") as const,
+          }
+        })
+        .filter(
+          (
+            panel,
+          ): panel is {
+            eyebrow: string
+            title: string
+            body: string
+            tone: "slate" | "amber"
+          } => Boolean(panel),
+        )
+    const cultureAttentionPanels = [
+      {
+        eyebrow: "Bestuurlijke eerste vraag",
+        title: dashboardViewModel.primaryQuestion.title,
+        body: dashboardViewModel.primaryQuestion.body,
+        tone: "blue" as const,
+      },
+      ...factorPriorityRows.slice(0, 4).map((row, index) => ({
+        eyebrow: `Aandachtspunt ${index + 1}`,
+        title: row.factor,
+        body: `${row.note} Domeinscore: ${row.score}.`,
+        tone: index === 0 ? ("amber" as const) : ("slate" as const),
+      })),
+    ].slice(0, 5)
+    const segmentContrastBody = showGovernedSegmentExport
+      ? "Governed segmentcontrasten zijn beschikbaar als veilige aggregatielaag via de segmentexport. Gebruik deze laag descriptief en nooit als ranking."
+      : governedSegmentExportHint ??
+        "Segmentcontrasten horen in deze route alleen thuis als governed drilldown. Zonder segment deep dive blijft de organisatiebrede read leidend."
+
+    return (
+      <div className="space-y-10">
+        <div className="space-y-4 border-b border-slate-200/80 pb-5">
+          <p className="text-[0.78rem] font-medium tracking-[0.01em] text-slate-500">
+            <Link href="/dashboard" className="transition-colors hover:text-slate-700">
+              Overzicht
+            </Link>{" "}
+            /{" "}
+            <Link href={moduleHref} className="transition-colors hover:text-slate-700">
+              {moduleLabel}
+            </Link>{" "}
+            / <span className="text-slate-700">{stats.campaign_name}</span>
+          </p>
+          <Link
+            href={moduleHref}
+            className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-slate-700"
+          >
+            ← {moduleBackLinkLabel}
+          </Link>
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-emerald-800">
+                  Loep Cultuurbeeld
+                </span>
+                <span className="inline-flex rounded-full border border-slate-200 bg-white px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-slate-600">
+                  {compositionStateMeta.label}
+                </span>
+                <span className="inline-flex rounded-full border border-slate-200 bg-white px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-slate-600">
+                  Jaarlijkse board baseline
+                </span>
+              </div>
+              <h1 className="font-serif text-[2.6rem] leading-[0.96] tracking-[-0.055em] text-[color:var(--dashboard-ink)] sm:text-[3.15rem]">
+                {stats.campaign_name}
+              </h1>
+              <p className="text-sm leading-6 text-slate-600">
+                {organizationName} · {routePeriodLabel} · {scopeLabel}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">{headerActions}</div>
+          </div>
+        </div>
+
+        <DashboardSummaryBar
+          items={summaryItems}
+          anchors={cultureAnchors}
+          variant="quiet"
+          actions={summaryActions}
+        />
+
+        <DashboardSection
+          id="response_basis"
+          eyebrow="1. Responsbasis & meetdekking"
+          title={cultureSectionTitles.get("response_basis") ?? "Responsbasis & meetdekking"}
+          description="Lees eerst hoeveel respons en dekking deze baseline draagt voordat het executive cultuurbeeld verder wordt geopend."
+          aside={<DashboardChip label={activationState.readinessLabel} tone={activationState.reportVisible ? "emerald" : "amber"} />}
+          variant="quiet"
+        >
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,0.95fr),minmax(0,1.05fr)] lg:items-start">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {[
+                { label: "Respons", value: `${stats.completion_rate_pct ?? 0}%` },
+                { label: "Uitgenodigd", value: `${stats.total_invited}` },
+                { label: "Ingevuld", value: `${stats.total_completed}` },
+                { label: "Leesmodus", value: "Board baseline" },
+              ].map((item) => (
+                <div key={item.label} className="rounded-[18px] bg-[color:var(--dashboard-soft)]/62 px-4 py-4">
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+                    {item.label}
+                  </p>
+                  <p className="mt-3 text-base font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">
+                    {item.value}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <div className="rounded-[20px] bg-[color:var(--dashboard-soft)]/62 px-5 py-4 text-sm leading-6 text-[color:var(--dashboard-text)]">
+              {activationState.statusDetail}
+            </div>
+          </div>
+        </DashboardSection>
+
+        <DashboardSection
+          id="executive_culture_read"
+          eyebrow="2. Executive culture read"
+          title={cultureSectionTitles.get("executive_culture_read") ?? "Executive culture read"}
+          description="De executive read ordent eerst het organisatiebeeld, daarna pas domeinen, contrasten en governed verdieping."
+          aside={<DashboardChip label="Primary route" tone="emerald" />}
+          variant="quiet"
+        >
+          <div className="space-y-5">
+            <div className="grid gap-4 md:grid-cols-2">
+              {dashboardViewModel.topSummaryCards.map((card) => (
+                <DashboardPanel
+                  key={`${card.title}-${card.value ?? "culture-card"}`}
+                  eyebrow="Board baseline"
+                  title={card.title}
+                  value={card.value}
+                  body={card.body}
+                  tone={normalizeInformationalTone(card.tone)}
+                />
+              ))}
+            </div>
+            {managementBlocksSection}
+          </div>
+        </DashboardSection>
+
+        <DashboardSection
+          id="culture_index"
+          eyebrow="3. Loep Culture Index"
+          title={cultureSectionTitles.get("culture_index") ?? "Loep Culture Index"}
+          description="Gebruik de index als navigatiesignaal boven het organisatiebeeld, nooit als totaaloordeel, health score of individueel oordeel."
+          aside={<DashboardChip label="Navigatiesignaal" tone="slate" />}
+          variant="quiet"
+        >
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,0.8fr),minmax(0,1.2fr)]">
+            <DashboardPanel
+              eyebrow="Index"
+              title={averageRiskScore !== null ? `${averageRiskScore.toFixed(1)}/10` : "Nog niet zichtbaar"}
+              body={dashboardViewModel.signaalbandenText}
+              tone="blue"
+            />
+            <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
+              <h3 className="text-sm font-semibold text-slate-950">Leeswijzer</h3>
+              <p className="mt-1 text-sm leading-6 text-slate-600">
+                Lees de Loep Culture Index altijd samen met domeinen, segmentpatronen, responsbasis en governancegrenzen.
+              </p>
+              <ul className="mt-4 space-y-2 text-sm leading-6 text-slate-700">
+                <li>- Geen eindoordeel over cultuur.</li>
+                <li>- Geen benchmarkclaim in v1.</li>
+                <li>- Geen named manager beoordeling of ranking.</li>
+              </ul>
+            </div>
+          </div>
+        </DashboardSection>
+
+        <DashboardSection
+          id="board_attention_points"
+          eyebrow="4. Board attention points"
+          title={cultureSectionTitles.get("board_attention_points") ?? "Board attention points"}
+          description="Gebruik aandachtspunten om bestuurlijke prioriteit te ordenen op basis van patroonlezing, niet om oorzaak-gevolg of schuld toe te wijzen."
+          aside={<DashboardChip label="Maximaal 5 punten" tone="slate" />}
+          variant="quiet"
+        >
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {cultureAttentionPanels.map((panel) => (
+              <DashboardPanel
+                key={`${panel.eyebrow}-${panel.title}`}
+                eyebrow={panel.eyebrow}
+                title={panel.title}
+                body={panel.body}
+                tone={panel.tone}
+              />
+            ))}
+          </div>
+        </DashboardSection>
+
+        <DashboardSection
+          id="domain_view"
+          eyebrow="5. Domeinbeeld"
+          title={cultureSectionTitles.get("domain_view") ?? "Domeinbeeld"}
+          description="Het domeinbeeld laat zien waar brede cultuur- en engagementpatronen als eerste zichtbaar worden op organisatieniveau."
+          aside={<DashboardChip label="10 vaste domeinen" tone="slate" />}
+          variant="quiet"
+        >
+          <div className="space-y-4">
+            <div className="overflow-hidden rounded-[20px] border border-[color:var(--dashboard-frame-border)] bg-white/78">
+              <div className="border-b border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)]/72 px-5 py-3">
+                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+                  Domeinen
+                </p>
+                <p className="mt-1 text-sm leading-6 text-[color:var(--dashboard-text)]">
+                  Organisatiebreed domeinbeeld in een bestuurlijke leesvolgorde. De volgorde helpt patronen te openen en is geen ranking van teams, managers of domeinen als waardeoordeel.
+                </p>
+              </div>
+              <div className="divide-y divide-[color:var(--dashboard-frame-border)]/80">
+                {factorPriorityRows.map((row, index) => (
+                  <div
+                    key={row.factor}
+                    className="grid gap-3 px-5 py-4 lg:grid-cols-[58px_minmax(0,1.15fr)_180px] lg:items-center lg:gap-5"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)]/72 px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+                        Lees {String(index + 1).padStart(2, "0")}
+                      </span>
+                    </div>
+                    <div className="space-y-1.5">
+                      <p className="text-sm font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">
+                        {row.factor}
+                      </p>
+                      <p className="text-sm leading-6 text-[color:var(--dashboard-text)]">
+                        {row.note}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+                        Domeinscore
+                      </p>
+                      <p className="mt-1 text-sm font-semibold tabular-nums text-[color:var(--dashboard-ink)]">
+                        {row.score}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </DashboardSection>
+
+        <DashboardSection
+          id="pattern_view"
+          eyebrow="6. Patronen in samenhang"
+          title={cultureSectionTitles.get("pattern_view") ?? "Patronen in samenhang"}
+          description="Lees patronen in samenhang tussen domeinen en governancegrenzen, niet als losstaande scoreinterpretaties."
+          aside={<DashboardChip label="Descriptief" tone="slate" />}
+          variant="quiet"
+        >
+          <div className="space-y-5">
+            {profileCardsSection}
+            <div className="grid gap-4 md:grid-cols-3">
+              {dashboardViewModel.followThroughCards.map((card) => (
+                <DashboardPanel
+                  key={card.title}
+                  eyebrow="Patroonlezing"
+                  title={card.title}
+                  body={card.body}
+                  tone={normalizeInformationalTone(card.tone)}
+                />
+              ))}
+            </div>
+          </div>
+        </DashboardSection>
+
+        <DashboardSection
+          id="segment_contrasts"
+          eyebrow="7. Segmentcontrasten"
+          title={cultureSectionTitles.get("segment_contrasts") ?? "Segmentcontrasten"}
+          description="Segmentcontrasten blijven governed: alleen veilige aggregatielagen boven minimum-n en nooit als ranking van teams of managers."
+          aside={<DashboardChip label={showGovernedSegmentExport ? "Governed drilldown beschikbaar" : "Governed drilldown begrensd"} tone={showGovernedSegmentExport ? "emerald" : "amber"} />}
+          variant="quiet"
+        >
+          <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
+            <p className="text-sm leading-6 text-slate-700">{segmentContrastBody}</p>
+          </div>
+        </DashboardSection>
+
+        <DashboardSection
+          id="deepening_layers"
+          eyebrow="8. Verdiepingslagen"
+          title={cultureSectionTitles.get("deepening_layers") ?? "Verdiepingslagen"}
+          description="Gebruik verdiepingslagen om het boardbeeld te verrijken zonder named manager detail of onveilige lokale lezing te openen."
+          aside={<DashboardChip label="Governed" tone="slate" />}
+          variant="quiet"
+        >
+          <div className="grid gap-4 sm:grid-cols-3">
+            {cultureDeepeningPanels.length > 0 ? (
+              cultureDeepeningPanels.map((panel) => (
+                <DashboardPanel
+                  key={panel.title}
+                  eyebrow={panel.eyebrow}
+                  title={panel.title}
+                  body={panel.body}
+                  tone={panel.tone}
+                />
+              ))
+            ) : (
+              <DashboardPanel
+                eyebrow="Governed verdieping"
+                title="Verdiepingslagen openen pas met echte domeindata"
+                body="Deze baseline toont hier alleen echte cultuurdomeinen. Als er geen veilige domeinlaag beschikbaar is, blijft verdieping compact en zonder vervangende gauges of placeholder-scores."
+                tone="amber"
+              />
+            )}
+          </div>
+        </DashboardSection>
+
+        <DashboardSection
+          id="open_signals"
+          eyebrow="9. Open signalen"
+          title={cultureSectionTitles.get("open_signals") ?? "Open signalen"}
+          description="Open signalen openen alleen na veilige clustering en suppressie. Raw quotes of individuele signalen horen niet in deze executive laag."
+          aside={<DashboardChip label="Veilig geclusterd of verborgen" tone="amber" />}
+          variant="quiet"
+        >
+          <div className="space-y-4">
+            <div className="rounded-[22px] border border-dashed border-slate-200 bg-white px-4 py-4 text-sm leading-6 text-slate-600">
+              Open tekst blijft in v1 alleen zichtbaar als veilige clustering bevestigd is. Tot die tijd blijft deze laag bewust compact en zonder ruwe quotes, namen of incidentdetails.
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              {cultureTextSafetyPanels.map((panel) => (
+                <DashboardPanel
+                  key={panel.title}
+                  eyebrow={panel.eyebrow}
+                  title={panel.title}
+                  body={panel.body}
+                  tone={panel.tone}
+                />
+              ))}
+            </div>
+          </div>
+        </DashboardSection>
+
+        <DashboardSection
+          id="board_read_follow_on"
+          eyebrow="10. Board-read & vervolgritme"
+          title={cultureSectionTitles.get("board_read_follow_on") ?? "Board-read & vervolgritme"}
+          description="De baseline eindigt in een guided board-read. Pas daarna wordt expliciet gekozen of een bounded Pulse-follow-on logisch is."
+          aside={<DashboardChip label="Pulse alleen follow-on" tone="slate" />}
+          variant="quiet"
+        >
+          <div className="grid gap-4 md:grid-cols-3">
+            {dashboardViewModel.followThroughCards.map((card) => (
+              <DashboardPanel
+                key={`follow-${card.title}`}
+                eyebrow="Vervolg na baseline"
+                title={card.title}
+                body={card.body}
+                tone={normalizeInformationalTone(card.tone)}
+              />
+            ))}
+          </div>
+        </DashboardSection>
+
+        <DashboardSection
+          id="report_export_methodology"
+          eyebrow="11. Rapport, export & methodiek"
+          title={cultureSectionTitles.get("report_export_methodology") ?? "Rapport, export & methodiek"}
+          description="Gebruik rapport, export en methodiek samen als governed deliverables. Benchmarking blijft in v1 bewust uit."
+          aside={<DashboardChip label="Benchmark inactive" tone="amber" />}
+          variant="quiet"
+        >
+          <div className="space-y-5">
+            <div className="grid gap-4 md:grid-cols-3">
+              {cultureGovernancePanels.map((panel) => (
+                <DashboardPanel
+                  key={panel.title}
+                  eyebrow={panel.eyebrow}
+                  title={panel.title}
+                  body={panel.body}
+                  tone={panel.tone}
+                />
+              ))}
+            </div>
+            <PdfDownloadButton
+              campaignId={id}
+              campaignName={stats.campaign_name}
+              scanType={stats.scan_type}
+              showSegmentSummaryExport={showGovernedSegmentExport}
+            />
+            {governedSegmentExportHint ? (
+              <div className="rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">
+                {governedSegmentExportHint}
+              </div>
+            ) : null}
+            <div className="grid gap-4 md:grid-cols-3">
+              {cultureDeliveryPanels.map((panel) => (
+                <DashboardPanel
+                  key={panel.title}
+                  eyebrow={panel.eyebrow}
+                  title={panel.title}
+                  body={panel.body}
+                  tone={panel.tone}
+                />
+              ))}
+            </div>
+            <MethodologyCard
+              scanType={stats.scan_type}
+              hasSegmentDeepDive={hasSegmentDeepDive}
+              signalLabel={scanDefinition.signalLabel}
+              embedded
+            />
+          </div>
+        </DashboardSection>
+      </div>
+    )
+  }
 
   if (
     showManagementOutput &&
@@ -2148,6 +2863,7 @@ export default async function CampaignPage({ params }: Props) {
         campaignId={id}
         campaignName={stats.campaign_name}
         scanType={stats.scan_type}
+        showSegmentSummaryExport={showGovernedSegmentExport}
       />
     )
 
@@ -2161,99 +2877,459 @@ export default async function CampaignPage({ params }: Props) {
         strongWorkSignalRate,
         distribution: exitDistribution,
       })
-      const distributionSegments = [
-        {
-          label: "Werkfrictie",
-          value: `${exitDistribution.workPercent}%`,
-          percent: exitDistribution.workPercent,
-        },
-        {
-          label: "Trekfactoren",
-          value: `${exitDistribution.pullPercent}%`,
-          percent: exitDistribution.pullPercent,
-        },
-        {
-          label: "Situationele context",
-          value: `${exitDistribution.situationalPercent}%`,
-          percent: exitDistribution.situationalPercent,
-        },
-      ].filter((segment) => segment.percent > 0)
-      const dominantCategory =
-        [...distributionSegments].sort(
-          (left, right) => right.percent - left.percent,
-        )[0] ?? null
-      const contributingItems = [
-        secondFactor
-          ? {
-              label: "Meespelende factor",
-              value: secondFactor,
-              body: `${secondFactor} kleurt het vertrekbeeld mee naast de sterkste factor en hoort daarom in dezelfde analytische lezing thuis.`,
-            }
-          : null,
-        topContributingReasonLabel
-          ? {
-              label: "Meelezende context",
-              value: topContributingReasonLabel,
-              body: `${topContributingReasonLabel} komt als contextlaag terug onder de hoofdreden en helpt de samenhang van het vertrekbeeld te begrijpen.`,
-            }
-          : null,
-      ].filter(
-        (
-          item,
-        ): item is { label: string; value: string; body: string } =>
-          Boolean(item),
+      const remainingFactorRows = factorPriorityRows.slice(2)
+      const contextualFactorRows =
+        remainingFactorRows.length > 0 ? remainingFactorRows : factorPriorityRows.slice(0, 4)
+      const strongWorkSignalLabel =
+        strongWorkSignalRate !== null ? `${strongWorkSignalRate}%` : "Nog niet vrij"
+      const responseContextNote = buildResponseContextNote(
+        stats.total_completed,
+        stats.completion_rate_pct ?? 0,
+        responseThresholds.insightMin,
       )
-      return (
-        <ExitProductDashboard
-          moduleHref={moduleHref}
-          moduleLabel={moduleLabel}
-          moduleBackLinkLabel={moduleBackLinkLabel}
-          campaignName={stats.campaign_name}
-          organizationName={organizationName}
-          routePeriodLabel={routePeriodLabel}
-          scopeLabel={scopeLabel}
-          statusLabel={compositionStateMeta.label}
-          headerActions={headerActions}
-          averageSignalScoreLabel={
-            averageRiskScore !== null
-              ? `${averageRiskScore.toFixed(1)}/10`
-              : "Nog niet beschikbaar"
-          }
-          strongestFactorLabel={topFactor ?? "Nog niet beschikbaar"}
-          strongWorkSignalLabel={
-            responses.some((response) => Boolean(response.preventability))
-              ? `${strongWorkSignalRate}%`
-              : "Nog niet beschikbaar"
-          }
-          primaryReasonTitle={
-            topExitReasonLabel ?? dominantCategory?.label ?? "Nog niet beschikbaar"
-          }
-          primaryReasonBody={
+      const synthesisCards = [
+        {
+          label: "Hoofdredenen",
+          title: topExitReasonLabel ?? "Dominante vertrekreden nog niet vrij",
+          body:
             topExitReasonLabel !== null
-              ? "Deze hoofdreden komt het vaakst terug in de leesbare responses en opent daarom als eerste de analytische lezing van dit vertrekbeeld."
-              : dominantCategory !== null
-                ? `${dominantCategory.value} van het leesbare vertrekbeeld valt in ${dominantCategory.label.toLowerCase()}. Daarmee is dit nu de dominante categorie in deze wave.`
-                : "Onvoldoende data om een hoofdreden of dominante categorie eerlijk vrij te geven."
-          }
-          whyItMattersItems={exitNarratives}
-          contributingItems={contributingItems}
-          totalInvited={String(stats.total_invited)}
-          totalCompleted={String(stats.total_completed)}
-          responseRate={`${stats.completion_rate_pct}%`}
-          responseContextNote={responseContextNote}
-          topFactors={factorPriorityRows}
-          distributionSegments={distributionSegments}
-          factorRows={factorPriorityRows}
-          sdtRows={sdtRows}
-          methodologyContent={
-            <MethodologyCard
-              scanType={stats.scan_type}
-              hasSegmentDeepDive={hasSegmentDeepDive}
-              signalLabel={scanDefinition.signalLabel}
-              embedded
-            />
-          }
-        />
+              ? "Deze reden geeft de bestuurlijke hoofdrichting van het vertrekbeeld."
+              : "De route heeft nog niet genoeg leesbasis om een dominante vertrekreden stevig vrij te geven.",
+        },
+        {
+          label: "Meespelende factoren",
+          title:
+            topContributingReasonLabel ??
+            secondFactor ??
+            "Meespelende factor nog niet scherp genoeg",
+          body:
+            topContributingReasonLabel || secondFactor
+              ? `${topContributingReasonLabel ?? secondFactor} kleurt mee onder de hoofdreden en hoort daarom in dezelfde managementlezing thuis.`
+              : "Gebruik deze laag pas zodra een tweede factor of contextsignaal zichtbaar genoeg terugkomt.",
+        },
+        {
+          label: "Survey-stemmen",
+          title: `${strongWorkSignalLabel} sterk werksignaal`,
+          body:
+            strongWorkSignalRate !== null
+              ? `In ${strongWorkSignalRate}% van de leesbare responses staat werkfrictie vooraan. Daardoor blijven survey-stemmen vooral relevant als intern werkbeeld, niet als losse casuistiek.`
+              : "Gebruik survey-stemmen hier nog voorzichtig. Het groepsbeeld is nog niet stevig genoeg voor een scherp patroon per stemlaag.",
+        },
+        {
+          label: "Context",
+          title: `${organizationName} · ${scopeLabel}`,
+          body:
+            exitDistribution.total > 0
+              ? `Werkfrictie, trekfactoren en situationele context blijven bestuurlijk los relevant binnen deze scope. Lees ze samen, niet als concurrerende verklaringen.`
+              : "De contextlaag blijft op groepsniveau. Lees het patroon pas steviger zodra voldoende vertrekbeeld zichtbaar is.",
+        },
+      ]
+      const exitSurveyVoices = buildExitSurveyVoices(responses)
+
+      return (
+        <div className="space-y-10">
+          <div className="space-y-4 border-b border-slate-200/80 pb-5">
+            <p className="text-[0.78rem] font-medium tracking-[0.01em] text-slate-500">
+              <Link href="/dashboard" className="transition-colors hover:text-slate-700">
+                Overzicht
+              </Link>{" "}
+              /{" "}
+              <Link href={moduleHref} className="transition-colors hover:text-slate-700">
+                {moduleLabel}
+              </Link>{" "}
+              / <span className="text-slate-700">{stats.campaign_name}</span>
+            </p>
+            <Link
+              href={moduleHref}
+              className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-slate-700"
+            >
+              ← {moduleBackLinkLabel}
+            </Link>
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <span className="inline-flex rounded-full border border-[#E7D3BF] bg-[#FBF3E7] px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[#A96026]">
+                    ExitScan
+                  </span>
+                  <span className="inline-flex rounded-full border border-slate-200 bg-white px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-slate-600">
+                    {compositionStateMeta.label}
+                  </span>
+                </div>
+                <h1 className="font-serif text-[2.6rem] leading-[0.96] tracking-[-0.055em] text-[color:var(--dashboard-ink)] sm:text-[3.15rem]">
+                  {stats.campaign_name}
+                </h1>
+                <p className="text-sm leading-6 text-slate-600">
+                  {organizationName} · {routePeriodLabel} · {scopeLabel}
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">{headerActions}</div>
+            </div>
+          </div>
+
+          <section className="space-y-4 border-t border-slate-200/80 pt-6">
+            <div className="space-y-2">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">
+                Respons
+              </p>
+              <h2 className="font-serif text-[1.95rem] leading-[1.02] tracking-[-0.045em] text-[color:var(--dashboard-ink)]">
+                Respons & leescontext
+              </h2>
+            </div>
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,0.95fr),minmax(0,1.05fr)] lg:items-start">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                {[
+                  { label: "Respons", value: `${stats.completion_rate_pct ?? 0}%` },
+                  { label: "Uitgenodigd", value: `${stats.total_invited}` },
+                  { label: "Ingevuld", value: `${stats.total_completed}` },
+                ].map((item) => (
+                  <div key={item.label} className="rounded-[18px] bg-[color:var(--dashboard-soft)]/62 px-4 py-4">
+                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+                      {item.label}
+                    </p>
+                    <p className="mt-3 text-base font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">
+                      {item.value}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <div className="rounded-[20px] bg-[color:var(--dashboard-soft)]/62 px-5 py-4 text-sm leading-6 text-[color:var(--dashboard-text)]">
+                {responseContextNote}
+              </div>
+            </div>
+          </section>
+
+          <section className="rounded-[30px] bg-[linear-gradient(180deg,rgba(255,250,245,0.98),rgba(249,242,235,0.94))] px-6 py-6 shadow-[0_18px_40px_rgba(17,24,39,0.06)] sm:px-7 sm:py-7">
+            <div className="flex flex-col gap-6 xl:grid xl:grid-cols-[minmax(0,1.2fr),minmax(340px,0.8fr)]">
+              <div className="space-y-5">
+                <div className="space-y-1">
+                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[#A96026]">
+                    Kernbeeld nu
+                  </p>
+                </div>
+                <div className="grid gap-3 lg:grid-cols-2">
+                  <div className="rounded-[22px] border border-[#E7D7C6] bg-white/84 px-4 py-4">
+                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                      Wat speelt nu
+                    </p>
+                    <p className="mt-3 text-lg font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">
+                      {topFactor ?? "De scherpste factor is nog niet vrij"}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-[color:var(--dashboard-text)]">
+                      {topFactor
+                        ? `${topFactor} drukt nu het sterkst op het vertrekbeeld en hoort daarom de eerste lezing te openen.`
+                        : "De route is nog niet vrij genoeg om al één dominante factor stevig naar voren te trekken."}
+                    </p>
+                  </div>
+                  <div className="rounded-[22px] border border-[#E7D7C6] bg-white/84 px-4 py-4">
+                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                      Scherpste factor(en)
+                    </p>
+                    <div className="mt-3 space-y-3">
+                      <div>
+                        <p className="text-sm font-semibold text-[color:var(--dashboard-ink)]">
+                          {factorPriorityRows[0]?.factor ?? "Nog niet vrij"}
+                        </p>
+                        <p className="mt-1 text-sm text-slate-600">
+                          {factorPriorityRows[0]
+                            ? `${factorPriorityRows[0].score} · ${factorPriorityRows[0].signal ?? "Geen signaal"}`
+                            : "Nog geen stabiel factorbeeld"}
+                        </p>
+                      </div>
+                      <div className="border-t border-[#EEE4D8] pt-3">
+                        <p className="text-sm font-semibold text-[color:var(--dashboard-ink)]">
+                          {factorPriorityRows[1]?.factor ?? topExitReasonLabel ?? "Tweede laag nog niet scherp genoeg"}
+                        </p>
+                        <p className="mt-1 text-sm text-slate-600">
+                          {factorPriorityRows[1]
+                            ? `${factorPriorityRows[1].score} · ${factorPriorityRows[1].signal ?? "Geen signaal"}`
+                            : topExitReasonLabel
+                              ? `Dominante vertrekreden: ${topExitReasonLabel}`
+                              : "Nog geen tweede dragende factor zichtbaar"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                <div className="rounded-[24px] border border-[#E7D7C6] bg-white/88 px-5 py-5">
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                    Frictiescore
+                  </p>
+                  <p className="dash-number mt-3 text-[2.3rem] leading-none text-[color:var(--dashboard-ink)]">
+                    {averageRiskScore !== null ? `${averageRiskScore.toFixed(1)}/10` : "Nog niet vrij"}
+                  </p>
+                  <p className="mt-3 text-sm leading-6 text-[color:var(--dashboard-text)]">
+                    Dit is het gemiddelde frictieniveau in de leesbare responses. Hoe hoger de score, hoe vaker antwoorden wijzen op spanning of frictie in het werk.
+                  </p>
+                  <div className="mt-3 space-y-2 text-sm leading-6 text-[color:var(--dashboard-text)]">
+                    <p>
+                      Zie dit als de sterkte van het beeld: niet waar het vandaan komt, maar hoe zwaar de frictie gemiddeld naar voren komt.
+                    </p>
+                    <p>
+                      De score is opgebouwd uit patronen in de antwoorden op groepsniveau, niet uit één losse reden of één individuele response.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="space-y-4 border-t border-slate-200/80 pt-6">
+            <div className="space-y-2">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[#2E756E]">
+                Drivers
+              </p>
+              <h2 className="font-serif text-[1.95rem] leading-[1.02] tracking-[-0.045em] text-[color:var(--dashboard-ink)]">
+                Drivers & prioriteitenbeeld
+              </h2>
+              <p className="max-w-4xl text-[1rem] leading-7 text-[color:var(--dashboard-text)]">
+                Deze pagina bundelt SDT-gebaseerde en organisatorische factoren in één prioriteitenbeeld. Daardoor zie je sneller welke thema&apos;s als eerste aandacht vragen.
+              </p>
+            </div>
+            <div className="grid gap-5 xl:grid-cols-[minmax(0,1.08fr),minmax(320px,0.92fr)]">
+              <ExitDriversPriorityChart rows={factorPriorityRows} />
+              <div>
+                <ManagementReadDistribution
+                  tone="exit"
+                  label="Vertrekbeeld"
+                  value={`${exitDistribution.workPercent}% werkfrictie`}
+                  narrative="Werkfrictie laat de richting van het beeld zien. Dit percentage betekent dat de meeste leesbare responses vooral wijzen naar factoren in werk, rol of organisatie, niet naar een externe trekfactor of alleen situatie."
+                  segments={exitDistribution.segments}
+                />
+              </div>
+            </div>
+            <div className="overflow-hidden rounded-[20px] border border-[color:var(--dashboard-frame-border)] bg-white/78">
+              <div className="border-b border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)]/72 px-5 py-3">
+                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+                  Factoren
+                </p>
+                <p className="mt-1 text-sm leading-6 text-[color:var(--dashboard-text)]">
+                  Rangorde op basis van lagere beleving en hoger signaal.
+                </p>
+              </div>
+              <div className="divide-y divide-[color:var(--dashboard-frame-border)]/80">
+                {factorPriorityRows.map((row, index) => {
+                  const severityWidth = Math.max(12, Math.min(100, (row.signalValue / 10) * 100))
+                  const severityTone =
+                    index === 0
+                      ? "bg-[#C36A29]"
+                      : index === 1
+                        ? "bg-[#D19422]"
+                        : index === 2
+                          ? "bg-[#D8A96B]"
+                          : "bg-[#D8CBB8]"
+
+                  return (
+                    <div
+                      key={row.factor}
+                      className="grid gap-3 px-5 py-4 lg:grid-cols-[58px_minmax(0,1.15fr)_180px_180px] lg:items-center lg:gap-5"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-[1.1rem] font-semibold tabular-nums text-[color:var(--dashboard-ink)]">
+                          {String(index + 1).padStart(2, "0")}
+                        </span>
+                        <div className="hidden h-10 w-1.5 overflow-hidden rounded-full bg-[color:var(--dashboard-soft)] lg:block">
+                          <div
+                            className={`w-full rounded-full ${severityTone}`}
+                            style={{ height: `${severityWidth}%`, marginTop: `${100 - severityWidth}%` }}
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <p className="text-sm font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">
+                          {row.factor}
+                        </p>
+                        <p className="text-sm leading-6 text-[color:var(--dashboard-text)]">
+                          {row.note}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+                          Beleving
+                        </p>
+                        <p className="mt-1 text-sm font-semibold tabular-nums text-[color:var(--dashboard-ink)]">
+                          {row.score}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+                          Signaal
+                        </p>
+                        <p className="mt-1 text-sm font-semibold tabular-nums text-[color:var(--dashboard-ink)]">
+                          {row.signal ?? "Nog niet vrij"}
+                        </p>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </section>
+
+          <section className="space-y-4 border-t border-slate-200/80 pt-6">
+            <div className="space-y-2">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">
+                Synthese
+              </p>
+              <h2 className="font-serif text-[1.95rem] leading-[1.02] tracking-[-0.045em] text-[color:var(--dashboard-ink)]">
+                Synthese van vertrekbeeld
+              </h2>
+            </div>
+            <div className="grid gap-4 xl:grid-cols-2">
+              {synthesisCards.map((card) => (
+                <div
+                  key={card.label}
+                  className="rounded-[20px] bg-[color:var(--dashboard-soft)]/52 px-5 py-5"
+                >
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+                    {card.label}
+                  </p>
+                  <h3 className="mt-3 text-[1.08rem] font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">
+                    {card.title}
+                  </h3>
+                  <p className="mt-3 text-sm leading-6 text-[color:var(--dashboard-text)]">
+                    {card.body}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,0.95fr),minmax(0,1.05fr)]">
+              <div className="rounded-[20px] bg-[color:var(--dashboard-soft)]/52 px-5 py-5">
+                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+                  Verdeling van vertrekbeeld
+                </p>
+                <p className="mt-3 text-sm leading-6 text-[color:var(--dashboard-text)]">
+                  Zo zie je hoe het leesbare vertrekbeeld verdeeld is tussen werkfrictie, trekfactoren en situationele context.
+                </p>
+                <div className="mt-4 flex h-3 overflow-hidden rounded-full bg-white/85">
+                  {exitDistribution.segments.map((segment, index) => {
+                    const fillTone =
+                      index === 0 ? "bg-[#C36A29]" : index === 1 ? "bg-[#D7A16B]" : "bg-[#D9D3CA]"
+
+                    return (
+                      <div
+                        key={`stack-${segment.label}`}
+                        className={fillTone}
+                        style={{ width: `${Math.max(0, Math.min(100, segment.percent))}%` }}
+                      />
+                    )
+                  })}
+                </div>
+                <div className="mt-4 space-y-3">
+                  {exitDistribution.segments.map((segment, index) => {
+                    const fillTone =
+                      index === 0 ? "bg-[#C36A29]" : index === 1 ? "bg-[#D7A16B]" : "bg-[#D9D3CA]"
+
+                    return (
+                      <div key={segment.label} className="space-y-1.5">
+                        <div className="flex items-center justify-between gap-3 text-sm text-slate-700">
+                          <span>{segment.label}</span>
+                          <span className="font-semibold text-[color:var(--dashboard-ink)]">
+                            {segment.value}
+                          </span>
+                        </div>
+                        <div className="h-2.5 overflow-hidden rounded-full bg-white/85">
+                          <div
+                            className={`h-full rounded-full ${fillTone}`}
+                            style={{ width: `${Math.max(0, Math.min(100, segment.percent))}%` }}
+                          />
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+              <div className="rounded-[20px] bg-[color:var(--dashboard-soft)]/52 px-5 py-5">
+                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+                  Survey-stemmen
+                </p>
+                <p className="mt-3 text-sm leading-6 text-[color:var(--dashboard-text)]">
+                  Korte anonieme stemmen uit de open antwoorden, zodat zichtbaar blijft dat er echte signalen onder het beeld liggen.
+                </p>
+                <div className="mt-4 space-y-3">
+                  {exitSurveyVoices.length > 0 ? (
+                    exitSurveyVoices.map((voice, index) => (
+                      <div key={`${index}-${voice}`} className="rounded-[16px] bg-white/85 px-4 py-4">
+                        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+                          Anonieme stem {index + 1}
+                        </p>
+                        <p className="mt-2 text-sm italic leading-6 text-[color:var(--dashboard-text)]">
+                          &quot;{voice}&quot;
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="rounded-[16px] bg-white/85 px-4 py-4">
+                      <p className="text-sm leading-6 text-[color:var(--dashboard-text)]">
+                        Nog geen open antwoorden scherp genoeg vrijgegeven voor een compacte stemlaag.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            {exitNarratives.length > 0 ? (
+              <div className="border-t border-slate-200/80 pt-5">
+                <ManagementReadNarratives items={exitNarratives} />
+              </div>
+            ) : null}
+          </section>
+
+          <section className="space-y-4 border-t border-slate-200/80 pt-6">
+            <div className="space-y-2">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">
+                Verdieping
+              </p>
+              <h2 className="font-serif text-[1.95rem] leading-[1.02] tracking-[-0.045em] text-[color:var(--dashboard-ink)]">
+                Verdiepingslagen
+              </h2>
+              <p className="max-w-4xl text-[1rem] leading-7 text-[color:var(--dashboard-text)]">
+                SDT, organisatiefactoren en aanvullende context blijven bewust secundair. Ze zijn nuttig voor verdieping, niet voor de eerste lezing.
+              </p>
+            </div>
+            <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr),minmax(0,1fr),minmax(300px,0.82fr)]">
+              <ExitSdtNeedsChart rows={sdtRows} />
+              <ExitOrgFactorsChart rows={contextualFactorRows} />
+              <div className="rounded-[20px] bg-[color:var(--dashboard-soft)]/52 px-5 py-5">
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">
+                  Aanvullende context
+                </p>
+                <div className="mt-4 space-y-4 text-sm leading-6 text-[color:var(--dashboard-text)]">
+                  <div>
+                    <p className="font-semibold text-[color:var(--dashboard-ink)]">
+                      Dominante vertrekreden
+                    </p>
+                    <p className="mt-1">
+                      {topExitReasonLabel ?? "Nog niet stevig genoeg zichtbaar"}
+                    </p>
+                  </div>
+                  <div className="border-t border-[color:var(--dashboard-frame-border)] pt-4">
+                    <p className="font-semibold text-[color:var(--dashboard-ink)]">
+                      Meelezende context
+                    </p>
+                    <p className="mt-1">
+                      {topContributingReasonLabel ??
+                        "Nog geen meelezende contextcode scherp genoeg vrijgegeven"}
+                    </p>
+                  </div>
+                  <div className="border-t border-[color:var(--dashboard-frame-border)] pt-4">
+                    <p className="font-semibold text-[color:var(--dashboard-ink)]">
+                      Signaalzichtbaarheid
+                    </p>
+                    <p className="mt-1">
+                      {signalVisibilityAverage !== null
+                        ? `${signalVisibilityAverage.toFixed(1)}/10 zichtbaar in deze wave.`
+                        : "Nog niet stevig genoeg om als extra zichtbaarheidssignaal te lezen."}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+        </div>
       )
     }
 
@@ -2459,6 +3535,7 @@ export default async function CampaignPage({ params }: Props) {
                     campaignId={id}
                     campaignName={stats.campaign_name}
                     scanType={stats.scan_type}
+                    showSegmentSummaryExport={showGovernedSegmentExport}
                   />
                 </>
               ) : prefersReportFirst ? (
@@ -2478,6 +3555,7 @@ export default async function CampaignPage({ params }: Props) {
                       campaignId={id}
                       campaignName={stats.campaign_name}
                       scanType={stats.scan_type}
+                      showSegmentSummaryExport={showGovernedSegmentExport}
                     />
                   </div>
                 </>
@@ -2516,6 +3594,7 @@ export default async function CampaignPage({ params }: Props) {
                       campaignId={id}
                       campaignName={stats.campaign_name}
                       scanType={stats.scan_type}
+                      showSegmentSummaryExport={showGovernedSegmentExport}
                     />
                   </div>
                 </>
@@ -2644,17 +3723,6 @@ export default async function CampaignPage({ params }: Props) {
             aside={<DashboardChip label="Klantuitvoering" tone="slate" />}
             variant="quiet"
           >
-            <div className="mb-4 flex flex-wrap items-center gap-3 rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3">
-              <p className="text-sm leading-6 text-slate-700">
-                Gebruik Routebeheer voor livegang, respons, output-readiness en blokkades zonder de analytische dashboardlaag te openen.
-              </p>
-              <Link
-                href={`/campaigns/${id}/beheer`}
-                className="inline-flex items-center rounded-full bg-[#2DD4BF] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-95"
-              >
-                Routebeheer openen
-              </Link>
-            </div>
             <GuidedSelfServePanel
               campaignId={id}
               scanType={stats.scan_type}
@@ -2944,7 +4012,7 @@ export default async function CampaignPage({ params }: Props) {
               </div>
             ) : (
               <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">
-                Verdiepende analyse wordt zichtbaar vanaf {MIN_N_PATTERNS}{" "}
+                Verdiepende analyse wordt zichtbaar vanaf {responseThresholds.insightMin}{" "}
                 ingevulde responses. Tot die tijd blijft het dashboard bewust
                 compact en voorzichtig.
               </div>
@@ -2964,6 +4032,82 @@ export default async function CampaignPage({ params }: Props) {
           >
             {hasEnoughData ? (
               <div className="space-y-5">
+                {demoteFollowThroughLayers ? (
+                  <DashboardDisclosure
+                    title="Open focusvragen en vervolgsturing"
+                    description="Gebruik deze laag pas nadat het hoofdbeeld helder is. Zo blijft deze route eerst leesbaar en pas daarna uitvoerbaar."
+                    badge={<DashboardChip label="Secundaire laag" tone="slate" />}
+                  >
+                    <div className="space-y-5">
+                      {stats.scan_type === "team" && teamPriorityRead ? (
+                        <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
+                          <h3 className="text-sm font-semibold text-slate-950">
+                            {teamPriorityRead.status === "ready"
+                              ? "Eerste lokale verificatie en vervolgstap"
+                              : "Lokale prioriteit blijft compact"}
+                          </h3>
+                          <p className="mt-1 text-sm leading-6 text-slate-600">
+                            {teamPriorityRead.summaryBody}
+                          </p>
+                          {primaryTeamPriority && primaryTeamPlaybook ? (
+                            <div className="mt-4 grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
+                              <DashboardPanel
+                                eyebrow="Afdeling eerst"
+                                title={primaryTeamPriority.label}
+                                value={primaryTeamPriority.priorityTitle}
+                                body={`${primaryTeamPriority.topFactorLabel} is hier nu het scherpste lokale spoor. Gebruik deze afdeling als eerste managementcheck, niet als definitieve eindconclusie.`}
+                                tone="amber"
+                              />
+                              <DashboardPanel
+                                eyebrow="Eerste eigenaar"
+                                title={primaryTeamPlaybook.owner}
+                                body="Deze combinatie trekt de eerste lokale check en bewaakt tegelijk dat TeamScan compact blijft."
+                                tone="slate"
+                              />
+                              <DashboardPanel
+                                eyebrow="Eerste check"
+                                title={primaryTeamPlaybook.validate}
+                                body={
+                                  primaryTeamQuestions[0] ??
+                                  "Gebruik het eerstvolgende afdelingsgesprek om dit lokale spoor expliciet te verifieren."
+                                }
+                                tone="slate"
+                              />
+                              <DashboardPanel
+                                eyebrow="Reviewmoment"
+                                title={
+                                  primaryTeamPlaybook.actions[0] ?? primaryTeamPlaybook.title
+                                }
+                                body={
+                                  primaryTeamPlaybook.review ??
+                                  "Leg direct vast wanneer deze lokale check opnieuw wordt gelezen en of TeamScan daarna nog een tweede stap nodig heeft."
+                                }
+                                tone="slate"
+                              />
+                            </div>
+                          ) : (
+                            <div className="mt-4 rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-4 text-sm leading-6 text-slate-600">
+                              TeamScan toont hier bewust nog geen harde eerste volgorde. Gebruik de lokale read om meerdere afdelingen te bespreken, een eigenaar te benoemen en pas na de eerste check te bepalen of een hardere volgorde nodig is.
+                            </div>
+                          )}
+                        </div>
+                      ) : null}
+
+                      {productExperience.recommendationOrder === "playbooks-first" ? (
+                        <>
+                          {playbooksBlock}
+                          {focusQuestionsBlock}
+                        </>
+                      ) : (
+                        <>
+                          {focusQuestionsBlock}
+                          {playbooksBlock}
+                        </>
+                      )}
+                    </div>
+                  </DashboardDisclosure>
+                ) : (
+                  <>
                 {stats.scan_type === "team" && teamPriorityRead ? (
                   <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
                     <h3 className="text-sm font-semibold text-slate-950">
@@ -3034,11 +4178,13 @@ export default async function CampaignPage({ params }: Props) {
                     {playbooksBlock}
                   </>
                 )}
+                  </>
+                )}
               </div>
             ) : (
               <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">
                 Focusvragen en route-uitvoer worden betekenisvoller zodra het
-                dashboard minstens {MIN_N_PATTERNS} responses heeft.
+                dashboard minstens {responseThresholds.insightMin} responses heeft.
               </div>
             )}
           </DashboardSection>
@@ -3059,6 +4205,134 @@ export default async function CampaignPage({ params }: Props) {
             variant="quiet"
           >
             <div className="space-y-5">
+              {demoteFollowThroughLayers ? (
+                <DashboardDisclosure
+                  title="Open vervolgrichting"
+                  description="Gebruik deze laag pas nadat de eerste lezing en verificatie zijn gedaan. Zo blijft vervolg klein en begrensd."
+                  badge={<DashboardChip label="Secundaire laag" tone="slate" />}
+                >
+                  <div className="space-y-5">
+                    <ManagementReadGuide
+                      scanType={stats.scan_type}
+                      hasMinDisplay={hasMinDisplay}
+                      hasEnoughData={hasEnoughData}
+                    />
+
+                    {dashboardViewModel.followThroughCards.length > 0 ? (
+                      <DashboardTimeline
+                        title={dashboardViewModel.followThroughTitle}
+                        description={dashboardViewModel.followThroughIntro}
+                        items={dashboardViewModel.followThroughCards}
+                      />
+                    ) : null}
+
+                    <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
+                      <h3 className="text-sm font-semibold text-slate-950">
+                        {productExperience.afterSessionTitle}
+                      </h3>
+                      <p className="mt-1 text-sm leading-6 text-slate-700">
+                        {productExperience.afterSessionDescription}
+                      </p>
+                      {stats.scan_type === "team" ? (
+                        <div className="mt-4 grid gap-4 lg:grid-cols-3">
+                          <DashboardPanel
+                            eyebrow="Als de lokale check bevestigt"
+                            title="Blijf op dezelfde route"
+                            body="Doe alleen een volgende lokale check als route, lokale actie en reviewmoment uit deze TeamScan al expliciet zijn gemaakt."
+                            tone="slate"
+                          />
+                          <DashboardPanel
+                            eyebrow="Als de vraag breder wordt"
+                            title="Ga terug naar het bredere beeld"
+                            body="Schakel niet door naar extra lokalisatie als de echte vraag weer organisatieniveau, behoudsbeeld of bredere duiding vraagt."
+                            tone="amber"
+                          />
+                          <DashboardPanel
+                            eyebrow="Als de onderbouwing te smal blijft"
+                            title="Stop met verder lokaliseren"
+                            body="Open geen extra TeamScan-verbreding zolang metadata, groepsgrootte of lokale bevestiging daar nog geen eerlijke basis voor geven."
+                            tone="amber"
+                          />
+                        </div>
+                      ) : null}
+                      {stats.scan_type === "leadership" ? (
+                        <div className="mt-4 grid gap-4 lg:grid-cols-3">
+                          <DashboardPanel
+                            eyebrow="Als de managementcheck bevestigt"
+                            title="Blijf op dezelfde route"
+                            body="Doe alleen een volgende Leadership-check als eigenaar, kleine verificatie of correctie en reviewmoment uit deze samenvatting al expliciet zijn gemaakt."
+                            tone="slate"
+                          />
+                          <DashboardPanel
+                            eyebrow="Als de vraag breder wordt"
+                            title="Ga terug naar het bredere beeld"
+                            body="Schakel niet door naar extra Leadership-verbreding als de echte vraag weer lokale lokalisatie, bredere duiding of een ander productspoor vraagt."
+                            tone="amber"
+                          />
+                          <DashboardPanel
+                            eyebrow="Als de onderbouwing te smal blijft"
+                            title="Open geen named leaders of 360"
+                            body="Maak Leadership Scan niet groter dan deze wave draagt zolang groepsniveau, suppressie en de huidige data nog geen eerlijke basis geven voor named leader of 360-output."
+                            tone="amber"
+                          />
+                        </div>
+                      ) : null}
+                      <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                        {firstNextStepGuidance.cards.map((card) => (
+                          <DashboardPanel
+                            key={card.key}
+                            eyebrow={
+                              card.key === "insight"
+                                ? "Inzicht"
+                                : card.key === "action"
+                                  ? "Eerste actie"
+                                  : "Geen standaard vervolg"
+                            }
+                            title={card.title}
+                            body={card.body}
+                            tone="slate"
+                          />
+                        ))}
+                      </div>
+                      <div className="mt-4 rounded-[24px] border border-white/80 bg-white px-4 py-4 shadow-[0_12px_28px_rgba(19,32,51,0.05)]">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                              Alleen als vervolg echt nodig is
+                            </p>
+                            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-700">
+                              Gebruik deze routes alleen als de eerste stap al expliciet is gemaakt. Zo blijft vervolg gericht, in plaats van automatisch groter te worden.
+                            </p>
+                          </div>
+                          <DashboardChip label="Compacte vervolgroutes" tone="slate" />
+                        </div>
+                        <div className="mt-4 grid gap-4 md:grid-cols-2">
+                          {firstNextStepGuidance.followOnSuggestions.map((suggestion) => (
+                            <div
+                              key={suggestion.productLabel}
+                              className="rounded-[22px] border border-slate-200 bg-slate-50/88 px-4 py-4"
+                            >
+                              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                Alleen als
+                              </p>
+                              <p className="mt-2 text-sm font-semibold text-slate-950">
+                                {suggestion.productLabel}
+                              </p>
+                              <p className="mt-2 text-sm leading-6 text-slate-700">
+                                {suggestion.when}
+                              </p>
+                              <p className="mt-3 text-xs leading-5 text-slate-500">
+                                {suggestion.boundary}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </DashboardDisclosure>
+              ) : (
+                <>
               <ManagementReadGuide
                 scanType={stats.scan_type}
                 hasMinDisplay={hasMinDisplay}
@@ -3179,6 +4453,8 @@ export default async function CampaignPage({ params }: Props) {
                   </div>
                 </div>
               </div>
+              </>
+              )}
             </div>
           </DashboardSection>
         ) : null}
@@ -3228,7 +4504,7 @@ export default async function CampaignPage({ params }: Props) {
             <div className="space-y-4">
               {canManageCampaign ? (
                 <DashboardDisclosure
-                  defaultOpen={!hasEnoughData}
+                  defaultOpen={false}
                   title="Campagnestatus en uitvoercontrole"
                   description="Gebruik deze laag voor lifecycle, readiness, vervolgstappen en foutopvang nadat het managementbeeld helder is."
                   badge={
@@ -3251,6 +4527,7 @@ export default async function CampaignPage({ params }: Props) {
                       canArchiveCampaign={canManageCampaign}
                     />
                     <CampaignHealthIndicator
+                      scanType={stats.scan_type}
                       totalInvited={stats.total_invited}
                       totalCompleted={stats.total_completed}
                       invitesNotSent={invitesNotSent}
@@ -3324,7 +4601,7 @@ export default async function CampaignPage({ params }: Props) {
               ) : null}
 
               <DashboardDisclosure
-                defaultOpen={disclosureDefaults.respondentsOpen}
+                defaultOpen={false}
                 title="Respondenten en uitnodigingen"
                 description="Operationele detailweergave voor import, responsmonitoring en uitnodigingsbeheer."
                 badge={
@@ -3475,5 +4752,4 @@ export default async function CampaignPage({ params }: Props) {
     </div>
   );
 }
-
 

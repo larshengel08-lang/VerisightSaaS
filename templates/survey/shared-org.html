@@ -17,7 +17,7 @@
         <div class="likert-options">
           {% for i in range(1, 6) %}
           <div class="likert-option">
-            <input type="radio" name="{{ item_id }}" id="{{ item_id }}_{{ i }}" value="{{ i }}" required />
+            <input type="radio" name="{{ item_id }}" id="{{ item_id }}_{{ i }}" value="{{ i }}" data-group="org" required />
             <label for="{{ item_id }}_{{ i }}">{{ i }}</label>
           </div>
           {% endfor %}

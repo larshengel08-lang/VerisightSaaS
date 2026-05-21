@@ -2,16 +2,16 @@ from __future__ import annotations
 
 from typing import Any
 
+from backend.products.culture_assessment.definition import SCAN_DEFINITION as CULTURE_ASSESSMENT_SCAN_DEFINITION
 from backend.products.exit.definition import SCAN_DEFINITION as EXIT_SCAN_DEFINITION
 from backend.products.leadership.definition import SCAN_DEFINITION as LEADERSHIP_SCAN_DEFINITION
 from backend.products.onboarding.definition import SCAN_DEFINITION as ONBOARDING_SCAN_DEFINITION
 from backend.products.pulse.definition import SCAN_DEFINITION as PULSE_SCAN_DEFINITION
 from backend.products.retention.definition import SCAN_DEFINITION as RETENTION_SCAN_DEFINITION
 from backend.products.team.definition import SCAN_DEFINITION as TEAM_SCAN_DEFINITION
-from backend.products.shared.definitions import ORG_SECTIONS
-
 
 SCAN_DEFINITIONS: dict[str, dict[str, Any]] = {
+    "culture_assessment": CULTURE_ASSESSMENT_SCAN_DEFINITION,
     "exit": EXIT_SCAN_DEFINITION,
     "leadership": LEADERSHIP_SCAN_DEFINITION,
     "onboarding": ONBOARDING_SCAN_DEFINITION,

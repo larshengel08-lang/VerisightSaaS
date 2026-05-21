@@ -31,7 +31,7 @@ export const CANONICAL_ONBOARDING_PHASES = [
   {
     key: 'route',
     title: 'Route en intake',
-    owner: 'Verisight',
+    owner: 'Loep',
     boundary: 'buyer-facing',
     outcome: 'Heldere productroute, timing en eerste managementvraag.',
     customerAction: 'Deel context, urgentie en beoogde sponsor of contactpersoon.',
@@ -39,7 +39,7 @@ export const CANONICAL_ONBOARDING_PHASES = [
   {
     key: 'implementation',
     title: 'Implementation intake',
-    owner: 'Verisight',
+    owner: 'Loep',
     boundary: 'handoff',
     outcome: 'Datavoorwaarden, scanperiode, metadata en klantverwachting staan scherp.',
     customerAction: 'Bevestig doelgroep, scanmodus, contactpersoon en beschikbare metadata.',
@@ -47,7 +47,7 @@ export const CANONICAL_ONBOARDING_PHASES = [
   {
     key: 'setup',
     title: 'Campagne-opzet',
-    owner: 'Verisight',
+    owner: 'Loep',
     boundary: 'internal',
     outcome: 'Organisatie en campagne staan correct klaar voor uitvoering.',
     customerAction: 'Geen toolsetup; alleen validatie van naam, timing en doelgroep waar nodig.',
@@ -55,7 +55,7 @@ export const CANONICAL_ONBOARDING_PHASES = [
   {
     key: 'import',
     title: 'Respondentimport en uitnodigingen',
-    owner: 'Verisight',
+    owner: 'Loep',
     boundary: 'internal',
     outcome: 'Bestand is gecontroleerd, respondenten staan klaar en de uitnodigingen zijn veilig gestart.',
     customerAction: 'Lever een bruikbaar respondentbestand aan volgens productspecifieke kolommen.',
@@ -63,7 +63,7 @@ export const CANONICAL_ONBOARDING_PHASES = [
   {
     key: 'activation',
     title: 'Klantactivatie',
-    owner: 'Verisight',
+    owner: 'Loep',
     boundary: 'client',
     outcome: 'De klant kan inloggen en krijgt het juiste dashboard en de juiste campaign vrijgegeven voor een eerste read.',
     customerAction: 'Activeer account en open daarna de vrijgegeven campaign of het juiste dashboard voor de eerste read.',
@@ -79,7 +79,7 @@ export const CANONICAL_ONBOARDING_PHASES = [
   {
     key: 'report',
     title: 'Rapportuitleg',
-    owner: 'Verisight',
+    owner: 'Loep',
     boundary: 'shared',
     outcome: 'Rapport en dashboard vertellen hetzelfde managementverhaal.',
     customerAction: 'Gebruik rapport en dashboard samen voor bestuurlijke duiding en terugkoppeling.',
@@ -185,6 +185,26 @@ export type FirstNextStepGuidance = {
 }
 
 export function getLifecycleDecisionCards(scanType: ScanType): LifecycleDecisionCard[] {
+  if (scanType === 'culture_assessment') {
+    return [
+      {
+        title: 'Blijf op dezelfde route',
+        fit: 'Jaarlijkse baseline eerst goed landen',
+        body: 'Houd Loep Culture Assessment eerst als jaarlijkse enterprise baseline vast totdat board-read, eigenaar, eerste vervolgspoor en reviewmoment expliciet zijn gemaakt.',
+      },
+      {
+        title: 'Verdiep bewust',
+        fit: 'Alleen met governed drilldown',
+        body: 'Verdiep alleen vanuit domeinen, segmentpatronen en governed drilldown. De Loep Culture Index blijft een navigatiesignaal, geen benchmark-first oordeel, ranking of causaliteitsclaim.',
+      },
+      {
+        title: 'Open pas een vervolgroute bij een nieuwe vraag',
+        fit: 'Pulse of TeamScan alleen als follow-on',
+        body: 'Kies Pulse, TeamScan of een andere vervolgroute pas wanneer na de jaarlijkse baseline een nieuwe managementvraag ontstaat die niet meer eerlijk in dezelfde board-read of governed vervolgroute past.',
+      },
+    ] as const
+  }
+
   if (scanType === 'retention') {
     return [
       {
@@ -305,6 +325,53 @@ export function getLifecycleDecisionCards(scanType: ScanType): LifecycleDecision
 }
 
 export function getFirstNextStepGuidance(scanType: ScanType): FirstNextStepGuidance {
+  if (scanType === 'culture_assessment') {
+    return {
+      cards: [
+        {
+          key: 'insight',
+          title: 'Inzicht nu',
+          body:
+            'Lees Loep Culture Assessment nu eerst als jaarlijkse enterprise baseline: wat laat de Loep Culture Index op organisatieniveau zien en welke domeinen vragen bestuurlijke aandacht.',
+        },
+        {
+          key: 'action',
+          title: 'Eerste actie',
+          body:
+            'Maak expliciet welk board- of directiespoor nu eerst aandacht vraagt, wie eigenaar wordt en welke eerste verificatiestap binnen governancegrenzen volgt.',
+        },
+        {
+          key: 'follow_on',
+          title: 'Mogelijk vervolgproduct',
+          body:
+            'Na de board-read blijft geen onmiddellijke vervolgrichting een geldige uitkomst. Pas als verdere HR-verdieping niet genoeg is, kies je expliciet tussen deeper governed work, een bounded Pulse-follow-on of een andere Loep-route voor een echt smallere vervolgvraag.',
+        },
+      ],
+      followOnSuggestions: [
+        {
+          productLabel: 'Jaarlijkse Loep Culture Assessment baseline',
+          when: 'Als dezelfde organisatiebrede cultuur- en engagementvraag bij de volgende jaarcyclus opnieuw moet worden gelezen.',
+          boundary: 'Blijft de primaire board-read; open geen extra route zolang dezelfde brede baselinevraag centraal staat.',
+        },
+        {
+          productLabel: 'Pulse',
+          when: 'Als na de baseline een begrensde vervolgroute nodig is om een specifiek werkspoor kort te herchecken.',
+          boundary: 'Gebruik Pulse alleen als follow-on op een nieuwe reviewvraag, niet als vervanging van de jaarlijkse baseline.',
+        },
+        {
+          productLabel: 'RetentieScan',
+          when: 'Als de vervolgvraag niet meer breed cultureel is, maar expliciet verschuift naar actieve behoudsdruk in de huidige populatie.',
+          boundary: 'Open RetentieScan alleen bij een echt smallere behoudsvraag; deeper governed work blijft eerst de default tussenlaag.',
+        },
+        {
+          productLabel: 'ExitScan',
+          when: 'Als de vervolgvraag verschuift naar retrospectieve vertrekduiding en vertrekpatronen in plaats van brede cultuur- en engagementlezing.',
+          boundary: 'Open ExitScan alleen bij een echt nieuwe vertrekvraag, niet als standaard vervolg op iedere baseline.',
+        },
+      ],
+    }
+  }
+
   if (scanType === 'retention') {
     return {
       cards: [
@@ -533,6 +600,14 @@ export function getFirstNextStepGuidance(scanType: ScanType): FirstNextStepGuida
 }
 
 export function getFirstManagementReadSteps(scanType: ScanType) {
+  if (scanType === 'culture_assessment') {
+    return [
+      'Open eerst het beslisoverzicht en lees de Loep Culture Index als navigatiesignaal voor het organisatiebeeld, niet als totaaloordeel of ranking.',
+      'Gebruik de jaarlijkse baseline eerst samen met responsbasis, domeinen en segmentpatronen; de index blijft een navigatiesignaal en benchmark-first of causaliteitsclaims horen hier niet thuis.',
+      'Plan daarna de eerste board-, directie- of HR-read rond de vraag welke bestuurlijke aandacht nu telt, welke managerlaag locked blijft en welk reviewmoment volgt.',
+    ] as const
+  }
+
   if (scanType === 'retention') {
     return [
       'Open eerst het beslisoverzicht en lees het retentiesignaal als groepssignaal, niet als individuele voorspelling.',
@@ -581,6 +656,9 @@ export function getFirstManagementReadSteps(scanType: ScanType) {
 }
 
 export function getAdoptionSuccessDefinition(scanType: ScanType) {
+  if (scanType === 'culture_assessment') {
+    return 'Adoptie is pas geslaagd wanneer de klant de jaarlijkse baseline gebruikt om Loep Culture Index, domeinbeeld en segmentpatronen in een board-, directie- of HR-read te duiden, met expliciete eigenaar, vervolgstap, reviewmoment en een managerlaag die standaard locked blijft.'
+  }
   if (scanType === 'retention') {
     return 'Adoptie is pas geslaagd wanneer de klant niet alleen operationeel draait, maar het vrijgegeven dashboard en rapport gebruikt om een eerste managementsessie over behoud, verificatie, eerste eigenaar, routekeuze en reviewmoment te voeren.'
   }

@@ -1,6 +1,13 @@
 ﻿// Verisight — gedeelde TypeScript types
 
-export type ScanType = 'exit' | 'retention' | 'pulse' | 'team' | 'onboarding' | 'leadership'
+export type ScanType =
+  | 'exit'
+  | 'retention'
+  | 'pulse'
+  | 'team'
+  | 'onboarding'
+  | 'leadership'
+  | 'culture_assessment'
 export type RiskBand = 'HOOG' | 'MIDDEN' | 'LAAG'
 export type CampaignAddOn = 'segment_deep_dive'
 export type DeliveryMode = 'baseline' | 'live'
@@ -17,6 +24,7 @@ export const SCAN_TYPE_LABELS: Record<ScanType, string> = {
   team: 'TeamScan',
   onboarding: 'Onboarding 30-60-90',
   leadership: 'Leadership Scan',
+  culture_assessment: 'Loep Culture Assessment',
 }
 
 // Current tenant boundary and v1 customer account boundary.
@@ -136,6 +144,16 @@ export const FACTOR_LABELS: Record<string, string> = {
   compensation: 'Beloning & voorwaarden',
   workload:     'Werkbelasting',
   role_clarity: 'Rolhelderheid',
+  engagement_involvement: 'Engagement en betrokkenheid',
+  trust_psychological_safety: 'Vertrouwen en psychologische veiligheid',
+  leadership_direction: 'Leiderschap en richting',
+  collaboration_alignment: 'Samenwerking en afstemming',
+  workload_capacity: 'Werkdruk en draagkracht',
+  autonomy_role_clarity: 'Autonomie en rolhelderheid',
+  growth_development: 'Groei en ontwikkeling',
+  change_readiness: 'Veranderbereidheid',
+  reward_conditions: 'Beloning en voorwaarden',
+  organizational_connection_intent: 'Organisatieverbinding en intentie',
   autonomy:     'Autonomie',
   competence:   'Competentie',
   relatedness:  'Verbondenheid',
