@@ -161,7 +161,7 @@ export const SAMPLE_SHOWCASE_ASSETS: SampleShowcaseAsset[] = [
     claimBoundary:
       'Illustratief voorbeeld met fictieve data in dezelfde executive structuur als echte Loep Culture Assessment-output; geen benchmark, causaliteitsclaim of manager ranking.',
     trustFrame:
-      'Board-first organisatiebeeld met index, domeinen, segmentgrenzen en governance-notes in dezelfde volgorde als de live productroute.',
+      'Premium board-first output family met board report-ritme, guided boardroom deck en governance-safe reading order; geen open buyer-facing sample canon.',
   },
   {
     id: 'culture-assessment-board-deck',
@@ -197,7 +197,7 @@ export const SAMPLE_SHOWCASE_ASSETS: SampleShowcaseAsset[] = [
     claimBoundary:
       'One-pager blijft descriptief en governance-first, zonder individuele inference of automatic intervention claims.',
     trustFrame:
-      'Laat zien hoe Loep Cultuurbeeld ook buiten het dashboard bestuurlijk leesbaar blijft.',
+      'Afgeleide van dezelfde premium report + deck family en blijft bestuurlijk leesbaar zonder extra benchmark-, ranking- of interventielogica.',
   },
   {
     id: 'culture-assessment-hr-appendix',

@@ -57,6 +57,8 @@ describe('sample showcase asset registry', () => {
     })
     expect(cultureAsset?.publicHref).toBeUndefined()
     expect(cultureAsset?.claimBoundary.toLowerCase()).toContain('manager ranking')
+    expect(cultureAsset?.trustFrame.toLowerCase()).toContain('guided boardroom deck')
+    expect(cultureAsset?.trustFrame.toLowerCase()).toContain('buyer-facing sample canon')
     expect(getBuyerFacingShowcaseAssets().some((asset) => asset.product === 'culture_assessment')).toBe(false)
   })
 
@@ -82,6 +84,7 @@ describe('sample showcase asset registry', () => {
     expect(boardDeck?.deliveryReadiness).toBe('pilot_delivery_ready')
     expect(executiveOnePager?.deliveryReadiness).toBe('blueprint_ready')
     expect(hrAppendix?.accessMode).toBe('internal_demo_only')
+    expect(executiveOnePager?.trustFrame.toLowerCase()).toContain('premium report + deck family')
   })
 
   it('keeps every docsPath-backed showcase asset resolvable in the repo', () => {
