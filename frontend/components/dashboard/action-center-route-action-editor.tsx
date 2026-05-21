@@ -27,6 +27,8 @@ interface Props {
   error?: string | null
   feedbackTone?: 'error' | 'warning'
   submissionState?: ActionCenterRouteActionEditorSubmissionState | null
+  title?: string
+  description?: string
   submitLabel?: string
 }
 
@@ -57,6 +59,8 @@ export function ActionCenterRouteActionEditor({
   error = null,
   feedbackTone = 'error',
   submissionState = null,
+  title = 'Actie toevoegen',
+  description = 'Houd het bij 1 concrete stap en 1 zichtbare observatie.',
   submitLabel = 'Actie toevoegen',
 }: Props) {
   const [value, setValue] = useState<ActionCenterRouteActionEditorValue>(initialValue)
@@ -78,10 +82,8 @@ export function ActionCenterRouteActionEditor({
   return (
     <form onSubmit={handleSubmit} className="space-y-3 rounded-[24px] border border-[#e4d9cb] bg-white px-5 py-5 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
       <div>
-        <h3 className="text-[1.2rem] font-semibold tracking-[-0.03em] text-[#132033]">Actie toevoegen</h3>
-        <p className="mt-1.5 text-sm leading-6 text-[#4f6175]">
-          Houd het bij 1 concrete stap en 1 zichtbare observatie.
-        </p>
+        <h3 className="text-[1.2rem] font-semibold tracking-[-0.03em] text-[#132033]">{title}</h3>
+        <p className="mt-1.5 text-sm leading-6 text-[#4f6175]">{description}</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
