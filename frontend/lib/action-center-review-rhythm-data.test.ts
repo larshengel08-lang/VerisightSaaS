@@ -4,11 +4,31 @@ const { mockAdminFrom } = vi.hoisted(() => ({
   mockAdminFrom: vi.fn(),
 }))
 
+const { mockRouteDefaultsOverride } = vi.hoisted(() => ({
+  mockRouteDefaultsOverride: vi.fn(),
+}))
+
 vi.mock('@/lib/supabase/admin', () => ({
   createAdminClient: () => ({
     from: mockAdminFrom,
   }),
 }))
+
+vi.mock('@/lib/action-center-route-defaults', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./action-center-route-defaults')>()
+
+  return {
+    ...actual,
+    getActionCenterEnabledRouteDefaults: (scanType: string | null | undefined) => {
+      const override = mockRouteDefaultsOverride(scanType)
+      if (override) {
+        return override
+      }
+
+      return actual.getActionCenterEnabledRouteDefaults(scanType)
+    },
+  }
+})
 
 import { getActionCenterReviewRhythmData } from './action-center-review-rhythm-data'
 
@@ -53,6 +73,7 @@ function buildItem(overrides: Record<string, unknown> = {}) {
 describe('action center review rhythm data', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockRouteDefaultsOverride.mockReset()
   })
 
   it('returns visible Action Center parity-route configs and bounded overview counts', async () => {
@@ -275,6 +296,78 @@ describe('action center review rhythm data', () => {
         },
       }),
     ).rejects.toThrow('database offline')
+  })
+
+  it('fills partial persisted RetentieScan configs from retention defaults instead of the generic baseline path', async () => {
+    mockRouteDefaultsOverride.mockImplementation((scanType: string | null | undefined) => {
+      if (scanType !== 'retention') {
+        return undefined
+      }
+
+      return {
+        scanType: 'retention',
+        actionCenterStatus: 'enabled',
+        routeEnabled: true,
+        cadenceDays: 30,
+        reminderLeadDays: 5,
+        escalationLeadDays: 14,
+        reviewWindowDays: { min: 45, max: 90 },
+        staleAfterDays: 90,
+        stuckActiveWarningDays: { min: 21, max: 30 },
+        reviewDueGraceDays: 7,
+        sprawlRiskCount: 3,
+        repeatedReviewWarningCount: 2,
+        remindersEnabled: false,
+        providerEligible: true,
+      }
+    })
+
+    const configQuery = createRhythmConfigQuery({
+      data: [
+        {
+          route_id: 'route-retention-partial',
+          cadence_days: 7,
+          reminder_lead_days: null,
+          escalation_lead_days: null,
+          reminders_enabled: null,
+        },
+      ],
+    })
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'action_center_review_rhythm_configs') {
+        return configQuery
+      }
+
+      throw new Error(`Unhandled table ${table}`)
+    })
+
+    const result = await getActionCenterReviewRhythmData({
+      items: [
+        buildItem({
+          id: 'route-retention-partial-preview',
+          sourceLabel: 'RetentieScan',
+          coreSemantics: {
+            route: {
+              routeId: 'route-retention-partial',
+              reviewCompletedAt: null,
+              hasFollowUpTarget: false,
+            },
+          },
+        }),
+      ] as never,
+      now: new Date('2026-05-28T12:00:00.000Z'),
+      routeScanTypeByRouteId: {
+        'route-retention-partial': 'retention',
+      },
+    })
+
+    expect(result.configByRouteId['route-retention-partial']).toEqual({
+      cadenceDays: 7,
+      reminderLeadDays: 5,
+      escalationLeadDays: 14,
+      remindersEnabled: false,
+    })
   })
 
   it('merges bounded governance-only routes into the HR oversight feed without broadening beyond exit and retention', async () => {

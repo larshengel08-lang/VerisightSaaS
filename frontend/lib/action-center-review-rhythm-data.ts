@@ -30,16 +30,31 @@ function getReviewRhythmRouteId(item: Pick<ActionCenterPreviewItem, 'coreSemanti
   return item.coreSemantics.route.routeId
 }
 
-function normalizeConfigRow(row: ActionCenterReviewRhythmConfigRow): ActionCenterReviewRhythmConfig | null {
-  if (!row.route_id) {
+function toReviewRhythmConfigFromRouteDefaults(
+  routeDefaults: NonNullable<ReturnType<typeof getActionCenterEnabledRouteDefaults>>,
+): ActionCenterReviewRhythmConfig {
+  return {
+    cadenceDays: routeDefaults.cadenceDays,
+    reminderLeadDays: routeDefaults.reminderLeadDays,
+    escalationLeadDays: routeDefaults.escalationLeadDays,
+    remindersEnabled: routeDefaults.remindersEnabled,
+  }
+}
+
+function normalizeConfigRow(args: {
+  row: ActionCenterReviewRhythmConfigRow
+  routeDefaultConfig: ActionCenterReviewRhythmConfig
+}): ActionCenterReviewRhythmConfig | null {
+  if (!args.row.route_id) {
     return null
   }
 
   return normalizeActionCenterReviewRhythmConfig({
-    cadence_days: row.cadence_days,
-    reminder_lead_days: row.reminder_lead_days,
-    escalation_lead_days: row.escalation_lead_days,
-    reminders_enabled: row.reminders_enabled,
+    cadence_days: args.row.cadence_days ?? args.routeDefaultConfig.cadenceDays,
+    reminder_lead_days: args.row.reminder_lead_days ?? args.routeDefaultConfig.reminderLeadDays,
+    escalation_lead_days:
+      args.row.escalation_lead_days ?? args.routeDefaultConfig.escalationLeadDays,
+    reminders_enabled: args.row.reminders_enabled ?? args.routeDefaultConfig.remindersEnabled,
   })
 }
 
@@ -167,7 +182,13 @@ export async function getActionCenterReviewRhythmData(args: {
   const persistedConfigByRouteId = ((data ?? []) as ActionCenterReviewRhythmConfigRow[]).reduce<
     Record<string, ActionCenterReviewRhythmConfig>
   >((acc, row) => {
-    const config = normalizeConfigRow(row)
+    const routeDefaults =
+      getActionCenterEnabledRouteDefaults(args.routeScanTypeByRouteId[row.route_id ?? '']) ??
+      buildDefaultActionCenterReviewRhythmConfig()
+    const config = normalizeConfigRow({
+      row,
+      routeDefaultConfig: toReviewRhythmConfigFromRouteDefaults(routeDefaults),
+    })
     if (row.route_id && config) {
       acc[row.route_id] = config
     }
@@ -179,12 +200,7 @@ export async function getActionCenterReviewRhythmData(args: {
       const routeDefaults =
         getActionCenterEnabledRouteDefaults(args.routeScanTypeByRouteId[routeId]) ??
         buildDefaultActionCenterReviewRhythmConfig()
-      const routeDefaultConfig: ActionCenterReviewRhythmConfig = {
-        cadenceDays: routeDefaults.cadenceDays,
-        reminderLeadDays: routeDefaults.reminderLeadDays,
-        escalationLeadDays: routeDefaults.escalationLeadDays,
-        remindersEnabled: routeDefaults.remindersEnabled,
-      }
+      const routeDefaultConfig = toReviewRhythmConfigFromRouteDefaults(routeDefaults)
 
       return [routeId, persistedConfigByRouteId[routeId] ?? routeDefaultConfig]
     }),
