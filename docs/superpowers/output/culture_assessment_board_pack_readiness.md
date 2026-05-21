@@ -1,6 +1,6 @@
 # Loep Culture Assessment Board Pack Readiness
 
-**Date:** 2026-05-20  
+**Date:** 2026-05-21  
 **Status:** board pack readiness artifact  
 **Primary scope:** `Loep Culture Assessment / Loep Cultuurbeeld`  
 **Canonical route id:** `culture_assessment`
@@ -28,35 +28,37 @@ Current state:
 
 Reason:
 
-- route-aligned structure exists
-- board-level reading logic exists
-- governance and method boundaries are explicit
+- runtime board report now matches the premium visual redesign blueprint
+- the fixed ten-step board-read sequence is live in the generated report artifact
+- governance and method boundaries remain explicit inside the redesigned reading order
 
 ### 2.2 Boardroom deck
 
 Current state:
 
-- `demo_ready`
+- `pilot_delivery_ready`
 
 Artifact format:
 
 - `PDF deck` for the first bounded pilot
-- supported by markdown blueprint plus guided demo deck structure
+- supported by the canonical markdown reference artifact that now matches the fixed 13-slide guided board-read sequence
 
 V1 pilot minimum:
 
 - a guided `PDF deck` must remain available for board-read use
+- the deck must stay the spacious guided sibling of the compact board report rather than a self-read analytics layer
 
 ### 2.3 Executive one-pager
 
 Current state:
 
-- `pilot_delivery_ready`
+- `blueprint_ready`
 
 Reason:
 
-- stand-alone structure exists
-- bounded product framing exists
+- derivative structure remains aligned to the same premium report + deck family
+- bounded product framing remains explicit
+- it stays intentionally derivative rather than widening into a separate premium artifact claim
 
 ### 2.4 Facilitator script
 
@@ -77,15 +79,16 @@ The board pack is considered usable when:
 
 - a board sponsor can follow the read without becoming a dashboard analyst
 - the deck does not behave like a ranking presentation
-- the one-pager stands alone
+- the one-pager stays derivative, claim-safe, and governance-bounded
 - the script can support a guided board-read
 
 ---
 
 ## 4. Remaining Bounded Gaps
 
-- the board deck remains demo-ready rather than production-ready
-- visual polish may still need later upgrade
+- the board deck is pilot-delivery ready but still not a production automation surface
+- the executive one-pager remains blueprint-ready rather than a separate runtime deliverable
+- visual polish may still need later upgrade beyond the bounded redesign slice
 - live delivery still depends on guided facilitation
 
 These are acceptable within first-pilot scope.
@@ -97,6 +100,6 @@ These are acceptable within first-pilot scope.
 Approved when:
 
 - the board report is pilot-delivery ready
-- the deck is at least demo-ready
-- the one-pager stands alone
+- the deck follows the fixed 13-slide guided board-read sequence
+- the one-pager remains derivative and bounded
 - the facilitator script is pilot-delivery ready
