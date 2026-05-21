@@ -205,6 +205,20 @@ function resolveRouteActionDispositionEventType(
   }
 }
 
+function resolveRouteActionValidationMessage(
+  disposition: 'valid' | 'invalid' | 'needs_hr_review',
+) {
+  switch (disposition) {
+    case 'invalid':
+      return 'Pas deze actie aan zodat hij bounded en route-specifiek is.'
+    case 'needs_hr_review':
+      return 'Deze actie vraagt eerst HR-beoordeling.'
+    case 'valid':
+    default:
+      return null
+  }
+}
+
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as RouteActionRequestBody | null
 
@@ -425,5 +439,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ detail: 'Route action bounded event logging mislukt.' }, { status: 500 })
   }
 
-  return NextResponse.json({ action: data, actionDraft }, { status: 200 })
+  return NextResponse.json(
+    {
+      action: data,
+      actionDraft,
+      validationDisposition: actionDraft.validationDisposition,
+      validationMessage: resolveRouteActionValidationMessage(actionDraft.validationDisposition),
+    },
+    { status: 200 },
+  )
 }

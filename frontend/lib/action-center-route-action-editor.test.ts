@@ -27,4 +27,34 @@ describe('ActionCenterRouteActionEditor', () => {
     expect(shouldResetActionCenterRouteActionEditorAfterSave(true)).toBe(true)
     expect(shouldResetActionCenterRouteActionEditorAfterSave(false)).toBe(false)
   })
+
+  it('shows explicit compact correction feedback for invalid drafts', () => {
+    const html = renderToStaticMarkup(
+      React.createElement(ActionCenterRouteActionEditor, {
+        onSave: vi.fn(),
+        submissionState: {
+          validationDisposition: 'invalid',
+          validationMessage: 'Pas deze actie aan zodat hij bounded en route-specifiek is.',
+        },
+      }),
+    )
+
+    expect(html).toContain('Pas deze actie aan zodat hij bounded en route-specifiek is.')
+    expect(html).not.toContain('Draft opgeslagen.')
+  })
+
+  it('shows explicit hr-review feedback inside the compact editor surface', () => {
+    const html = renderToStaticMarkup(
+      React.createElement(ActionCenterRouteActionEditor, {
+        onSave: vi.fn(),
+        submissionState: {
+          validationDisposition: 'needs_hr_review',
+          validationMessage: 'Deze actie vraagt eerst HR-beoordeling.',
+        },
+      }),
+    )
+
+    expect(html).toContain('Deze actie vraagt eerst HR-beoordeling.')
+    expect(html).not.toContain('Deze actie wacht eerst op HR-review en staat nog niet live in deze route.')
+  })
 })

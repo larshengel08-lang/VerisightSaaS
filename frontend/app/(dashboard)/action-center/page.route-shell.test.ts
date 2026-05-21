@@ -404,6 +404,17 @@ describe("action center landing shell", () => {
     expect(pageSource).toContain("boundedOverviewOnly");
   });
 
+  it("keeps route-action draft feedback inside the compact route preview surface", () => {
+    const previewSource = readFileSync(
+      new URL("../../../components/dashboard/action-center-preview.tsx", import.meta.url),
+      "utf8",
+    );
+
+    expect(previewSource).toContain("validationDisposition?: RouteActionValidationDisposition | null");
+    expect(previewSource).toContain("validationMessage?: string | null");
+    expect(previewSource).toContain("submissionState={");
+  });
+
   it("renders the route as a bounded overview cockpit instead of a broad workflow suite", () => {
     const markup = renderOverviewMarkup();
 

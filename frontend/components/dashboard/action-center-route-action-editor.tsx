@@ -13,11 +13,17 @@ export interface ActionCenterRouteActionEditorValue {
   expectedEffect: string
 }
 
+export interface ActionCenterRouteActionEditorSubmissionState {
+  validationDisposition: 'invalid' | 'needs_hr_review'
+  validationMessage: string
+}
+
 interface Props {
   onSave(value: ActionCenterRouteActionEditorValue): Promise<boolean | void> | boolean | void
   pending?: boolean
   error?: string | null
   feedbackTone?: 'error' | 'warning'
+  submissionState?: ActionCenterRouteActionEditorSubmissionState | null
   submitLabel?: string
 }
 
@@ -37,6 +43,7 @@ export function ActionCenterRouteActionEditor({
   pending = false,
   error = null,
   feedbackTone = 'error',
+  submissionState = null,
   submitLabel = 'Actie toevoegen',
 }: Props) {
   const [value, setValue] = useState<ActionCenterRouteActionEditorValue>(EMPTY_VALUE)
@@ -104,6 +111,18 @@ export function ActionCenterRouteActionEditor({
           className="min-h-[92px] w-full rounded-2xl border border-[#ddd3c7] bg-[#fbf8f4] px-4 py-3 text-sm leading-6 text-[#132033] outline-none transition focus:border-[#ff9b4a]"
         />
       </FormField>
+
+      {submissionState ? (
+        <p
+          className={`text-sm leading-6 ${
+            submissionState.validationDisposition === 'invalid'
+              ? 'text-[#9a5a17]'
+              : 'text-[#7f4b18]'
+          }`}
+        >
+          {submissionState.validationMessage}
+        </p>
+      ) : null}
 
       {error ? (
         <p

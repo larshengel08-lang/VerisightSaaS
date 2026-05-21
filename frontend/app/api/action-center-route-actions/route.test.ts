@@ -309,6 +309,10 @@ describe('action center route actions route', () => {
     ])
 
     const payload = await response.json()
+    expect(payload).toMatchObject({
+      validationDisposition: 'needs_hr_review',
+      validationMessage: 'Deze actie vraagt eerst HR-beoordeling.',
+    })
     expect(payload.actionDraft).toMatchObject({
       semanticState: 'draft',
       validationDisposition: 'needs_hr_review',
@@ -531,6 +535,10 @@ describe('action center route actions route', () => {
     )
 
     const payload = await response.json()
+    expect(payload).toMatchObject({
+      validationDisposition: 'invalid',
+      validationMessage: 'Pas deze actie aan zodat hij bounded en route-specifiek is.',
+    })
     expect(payload.actionDraft).toMatchObject({
       primary_action_theme_key: null,
       primary_action_text: null,

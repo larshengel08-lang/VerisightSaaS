@@ -59,6 +59,7 @@ import {
 } from './action-center-action-review-editor'
 import {
   ActionCenterRouteActionEditor,
+  type ActionCenterRouteActionEditorSubmissionState,
   type ActionCenterRouteActionEditorValue,
 } from './action-center-route-action-editor'
 import React, { useDeferredValue, useEffect, useMemo, useState } from 'react'
@@ -622,9 +623,9 @@ function getActionReviewOutcomeLabel(outcome: ActionCenterActionReviewEditorValu
 function getRouteActionDraftDispositionMessage(disposition: RouteActionValidationDisposition) {
   switch (disposition) {
     case 'needs_hr_review':
-      return 'Draft opgeslagen. Deze actie wacht eerst op HR-review en staat nog niet live in deze route.'
+      return 'Deze actie vraagt eerst HR-beoordeling.'
     case 'invalid':
-      return 'Draft opgeslagen. Deze actie staat nog niet live in deze route. Maak de stap concreter voordat je hem opnieuw indient.'
+      return 'Pas deze actie aan zodat hij bounded en route-specifiek is.'
     case 'valid':
     default:
       return null
@@ -1134,6 +1135,8 @@ export function ActionCenterPreview({
   const [routeActionFeedback, setRouteActionFeedback] = useState<{
     message: string
     tone: RouteActionFeedbackTone
+    validationDisposition?: RouteActionValidationDisposition | null
+    validationMessage?: string | null
   } | null>(null)
   const [openReviewActionId, setOpenReviewActionId] = useState<string | null>(null)
   const [actionReviewPendingActionId, setActionReviewPendingActionId] = useState<string | null>(null)
@@ -1608,6 +1611,8 @@ export function ActionCenterPreview({
         | {
             action?: Record<string, unknown>
             actionDraft?: { validationDisposition?: RouteActionValidationDisposition | null }
+            validationDisposition?: RouteActionValidationDisposition | null
+            validationMessage?: string | null
             detail?: string
           }
         | null
@@ -1616,11 +1621,17 @@ export function ActionCenterPreview({
         throw new Error(result?.detail ?? 'Route action opslaan mislukt.')
       }
 
-      const validationDisposition = result.actionDraft.validationDisposition ?? 'invalid'
+      const validationDisposition =
+        result.validationDisposition ?? result.actionDraft.validationDisposition ?? 'invalid'
+      const validationMessage =
+        result.validationMessage ?? getRouteActionDraftDispositionMessage(validationDisposition)
+
       if (validationDisposition !== 'valid') {
         setRouteActionFeedback({
-          message: getRouteActionDraftDispositionMessage(validationDisposition) ?? 'Route action opslaan mislukt.',
+          message: validationMessage ?? 'Route action opslaan mislukt.',
           tone: 'warning',
+          validationDisposition,
+          validationMessage,
         })
         return false
       }
@@ -1645,6 +1656,8 @@ export function ActionCenterPreview({
       setRouteActionFeedback({
         message: error instanceof Error ? error.message : 'Route action opslaan mislukt.',
         tone: 'error',
+        validationDisposition: null,
+        validationMessage: null,
       })
       return false
     } finally {
@@ -3143,8 +3156,22 @@ export function ActionCenterPreview({
                               <ActionCenterRouteActionEditor
                                 onSave={handleRouteActionSave}
                                 pending={routeActionPending}
-                                error={routeActionFeedback?.message ?? null}
+                                error={
+                                  routeActionFeedback?.validationDisposition
+                                    ? null
+                                    : routeActionFeedback?.message ?? null
+                                }
                                 feedbackTone={routeActionFeedback?.tone ?? 'error'}
+                                submissionState={
+                                  routeActionFeedback?.validationDisposition &&
+                                  routeActionFeedback.validationMessage
+                                    ? ({
+                                        validationDisposition:
+                                          routeActionFeedback.validationDisposition,
+                                        validationMessage: routeActionFeedback.validationMessage,
+                                      } satisfies ActionCenterRouteActionEditorSubmissionState)
+                                    : null
+                                }
                               />
                             </div>
                           ) : routeActionFeedback ? (
