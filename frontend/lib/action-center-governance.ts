@@ -8,7 +8,11 @@ import {
   type ActionCenterConstitutionObject,
   type ActionCenterConstitutionState,
 } from '@/lib/action-center-constitution'
-import { getActionCenterEnabledRouteDefaults, type ActionCenterRouteDefaultsKnownScanType } from '@/lib/action-center-route-defaults'
+import {
+  getActionCenterEnabledRouteDefaults,
+  getActionCenterRouteFamilyLabel,
+  type ActionCenterRouteDefaultsKnownScanType,
+} from '@/lib/action-center-route-defaults'
 import type { ActionCenterPreviewItem } from '@/lib/action-center-preview-model'
 import type {
   ActionCenterWorkspaceMember,
@@ -149,20 +153,6 @@ export function getActionCenterGovernanceSignalLabel(code: ActionCenterGovernanc
     case 'route_ready_for_closeout':
       return 'Klaar voor closeout'
   }
-}
-
-function getGovernanceRouteFamilyLabel(scanType: ActionCenterRouteDefaultsKnownScanType | string | null | undefined) {
-  const routeDefaults = getActionCenterEnabledRouteDefaults(scanType)
-
-  if (routeDefaults?.scanType === 'retention') {
-    return 'RetentieScan'
-  }
-
-  if (routeDefaults?.scanType === 'exit') {
-    return 'ExitScan'
-  }
-
-  return null
 }
 
 function normalizeDateString(value: string | null | undefined) {
@@ -387,7 +377,7 @@ export function deriveActionCenterRouteGovernanceSignals(args: {
   return {
     routeId: args.item.coreSemantics.route.routeId,
     scopeLabel: args.item.teamLabel,
-    sourceLabel: getGovernanceRouteFamilyLabel(args.scanType) ?? args.item.sourceLabel,
+    sourceLabel: getActionCenterRouteFamilyLabel(args.scanType) ?? args.item.sourceLabel,
     reviewDateLabel: args.item.reviewDateLabel,
     signals,
   }

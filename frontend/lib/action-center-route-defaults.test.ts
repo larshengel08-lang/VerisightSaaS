@@ -58,6 +58,16 @@ describe('action center route defaults contract', () => {
     })
   })
 
+  it('keeps ExitScan review window at 60-90 days and RetentieScan review window at 45-90 days', () => {
+    expect(getActionCenterRouteDefaults('exit')).toMatchObject({
+      reviewWindowDays: { min: 60, max: 90 },
+    })
+
+    expect(getActionCenterRouteDefaults('retention')).toMatchObject({
+      reviewWindowDays: { min: 45, max: 90 },
+    })
+  })
+
   it('exposes stricter execution thresholds per approved route family', () => {
     expect(getActionCenterRouteDefaults('exit')).toMatchObject({
       actionCenterStatus: 'enabled',
@@ -77,6 +87,22 @@ describe('action center route defaults contract', () => {
       reviewDueGraceDays: 7,
       sprawlRiskCount: 3,
       repeatedReviewWarningCount: 2,
+    })
+  })
+
+  it('returns isolated RetentieScan threshold objects so callers cannot mutate bounded defaults', () => {
+    const firstRetentionDefaults = getActionCenterRouteDefaults('retention')
+    expect(firstRetentionDefaults).not.toBeNull()
+    expect(firstRetentionDefaults?.stuckActiveWarningDays).toEqual({ min: 21, max: 30 })
+
+    if (!firstRetentionDefaults || typeof firstRetentionDefaults.stuckActiveWarningDays === 'number') {
+      throw new Error('Expected RetentieScan to expose a bounded stuck-action threshold range.')
+    }
+
+    firstRetentionDefaults.stuckActiveWarningDays.min = 999
+
+    expect(getActionCenterRouteDefaults('retention')).toMatchObject({
+      stuckActiveWarningDays: { min: 21, max: 30 },
     })
   })
 

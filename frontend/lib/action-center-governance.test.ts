@@ -3,6 +3,7 @@ import {
   deriveActionCenterRouteGovernanceSignals,
   getActionCenterGovernanceActorRoleLabel,
   isActionCenterGovernanceActorRole,
+  getActionCenterGovernanceSignalLabel,
   resolveActionCenterHrWriteAccess,
   resolveActionCenterReviewRhythmWriteAccess,
   resolveActionCenterTransitionAccess,
@@ -90,6 +91,7 @@ describe('action center governance helpers', () => {
     expect(isActionCenterGovernanceActorRole('hr_member')).toBe(true)
     expect(isActionCenterGovernanceActorRole('unknown')).toBe(false)
     expect(getActionCenterGovernanceActorRoleLabel('hr_owner')).toBe('HR owner')
+    expect(getActionCenterGovernanceSignalLabel('route_ready_for_closeout')).toBe('Klaar voor closeout')
   })
 
   it('prefers verisight admin when resolving HR write access', () => {
@@ -603,5 +605,44 @@ describe('action center governance helpers', () => {
         now: new Date('2026-05-20T12:00:00.000Z'),
       }),
     ).toBeNull()
+  })
+
+  it('derives governance source labels from bounded route family truth when raw labels drift', () => {
+    const signals = deriveActionCenterRouteGovernanceSignals({
+      item: buildGovernanceItem({
+        id: 'route-retention-drifted-label',
+        sourceLabel: 'Pulse',
+        status: 'in-uitvoering',
+        coreSemantics: {
+          route: {
+            routeId: 'route-retention-drifted-label',
+            routeOpenedAt: '2026-05-18T09:00:00.000Z',
+            reviewCompletedAt: null,
+            hasFollowUpTarget: false,
+          },
+          decisionHistory: [],
+          routeActionCards: [],
+          routeCloseout: {
+            closeoutStatus: null,
+            closeoutReason: null,
+            closeoutNote: null,
+            closedAt: null,
+            closedByRole: null,
+            readyForCloseout: false,
+          },
+        },
+      }) as never,
+      scanType: 'retention',
+      now: new Date('2026-05-20T12:00:00.000Z'),
+    })
+
+    expect(signals).toMatchObject({
+      sourceLabel: 'RetentieScan',
+      signals: [
+        {
+          code: 'missing_action_where_execution_is_expected',
+        },
+      ],
+    })
   })
 })

@@ -3,6 +3,7 @@ import { deriveActionCenterRouteGovernanceSignals } from '@/lib/action-center-go
 import { buildActionCenterReviewOversightSummary } from '@/lib/action-center-review-oversight'
 import {
   getActionCenterEnabledRouteDefaults,
+  getActionCenterRouteFamilyLabel,
   type ActionCenterRouteDefaultsKnownScanType,
 } from '@/lib/action-center-route-defaults'
 import {
@@ -62,6 +63,14 @@ function sortOversightAttentionItems(items: GovernanceMergedAttentionItem[]) {
     .slice(0, 5)
 }
 
+function getCanonicalRouteFamilySourceLabel(args: {
+  routeId: string
+  routeScanTypeByRouteId: Record<string, ActionCenterRouteDefaultsKnownScanType>
+  fallbackLabel: string
+}) {
+  return getActionCenterRouteFamilyLabel(args.routeScanTypeByRouteId[args.routeId]) ?? args.fallbackLabel
+}
+
 function mergeGovernanceIntoOversight(args: {
   items: ActionCenterPreviewItem[]
   oversight: ReturnType<typeof buildActionCenterReviewOversightSummary>
@@ -83,12 +92,22 @@ function mergeGovernanceIntoOversight(args: {
 
   const mergedAttentionItems: GovernanceMergedAttentionItem[] = args.oversight.attentionItems.map((item) => {
     const governance = governanceByRouteId.get(item.routeId)
+    const sourceLabel = getCanonicalRouteFamilySourceLabel({
+      routeId: item.routeId,
+      routeScanTypeByRouteId: args.routeScanTypeByRouteId,
+      fallbackLabel: item.sourceLabel,
+    })
+
     if (!governance) {
-      return item
+      return {
+        ...item,
+        sourceLabel,
+      }
     }
 
     return {
       ...item,
+      sourceLabel,
       governanceSignals: governance.signals,
     }
   })
@@ -106,7 +125,11 @@ function mergeGovernanceIntoOversight(args: {
       routeId,
       state: 'stale',
       scopeLabel: governance.scopeLabel,
-      sourceLabel: governance.sourceLabel,
+      sourceLabel: getCanonicalRouteFamilySourceLabel({
+        routeId,
+        routeScanTypeByRouteId: args.routeScanTypeByRouteId,
+        fallbackLabel: governance.sourceLabel,
+      }),
       reviewDateLabel: governance.reviewDateLabel,
       governanceSignals: governance.signals,
     })
@@ -153,7 +176,17 @@ export async function getActionCenterReviewRhythmData(args: {
   const configByRouteId = Object.fromEntries(
     eligibleItems.map((item) => {
       const routeId = getReviewRhythmRouteId(item)
-      return [routeId, persistedConfigByRouteId[routeId] ?? buildDefaultActionCenterReviewRhythmConfig()]
+      const routeDefaults =
+        getActionCenterEnabledRouteDefaults(args.routeScanTypeByRouteId[routeId]) ??
+        buildDefaultActionCenterReviewRhythmConfig()
+      const routeDefaultConfig: ActionCenterReviewRhythmConfig = {
+        cadenceDays: routeDefaults.cadenceDays,
+        reminderLeadDays: routeDefaults.reminderLeadDays,
+        escalationLeadDays: routeDefaults.escalationLeadDays,
+        remindersEnabled: routeDefaults.remindersEnabled,
+      }
+
+      return [routeId, persistedConfigByRouteId[routeId] ?? routeDefaultConfig]
     }),
   )
 
