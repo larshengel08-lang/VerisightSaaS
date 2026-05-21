@@ -64,7 +64,11 @@ import {
   serializeActionCenterRouteActionEditorValue,
   type ActionCenterRouteActionEditorValue,
 } from './action-center-route-action-editor'
+import { ActionCenterGovernanceQueue as ActionCenterGovernanceQueueSection } from './action-center-governance-queue'
+import { ActionCenterMeasurementReadback as ActionCenterMeasurementReadbackSection } from './action-center-measurement-readback'
 import React, { useDeferredValue, useEffect, useMemo, useState } from 'react'
+import type { ActionCenterGovernanceQueue } from '@/lib/action-center-governance-queues'
+import type { ActionCenterMeasurementReadback } from '@/lib/action-center-measurement-readback'
 
 export type {
   ActionCenterPreviewItem,
@@ -101,6 +105,8 @@ interface Props {
   hideSidebar?: boolean
   boundedOverviewOnly?: boolean
   allowEmptyInitialSelection?: boolean
+  governanceQueue?: ActionCenterGovernanceQueue | null
+  measurementReadback?: ActionCenterMeasurementReadback | null
 }
 
 interface CreateActionFormState {
@@ -1216,6 +1222,8 @@ export function ActionCenterPreview({
   hideSidebar = false,
   boundedOverviewOnly = false,
   allowEmptyInitialSelection = false,
+  governanceQueue = null,
+  measurementReadback = null,
 }: Props) {
   const explicitlySelectedInitialItem = initialItems.find((item) => item.id === initialSelectedItemId) ?? null
   const initialSelectedItem =
@@ -2203,6 +2211,8 @@ export function ActionCenterPreview({
                   upcomingReviews={upcomingReviews}
                   overviewStatusCounts={overviewStatusCounts}
                   selectedItem={selectedItem}
+                  governanceQueue={governanceQueue}
+                  measurementReadback={measurementReadback}
                   onSelectItem={(itemId) => {
                     setSelectedItemId(itemId)
                     replaceEntryUrl({ focus: itemId, view: 'overview' })
@@ -4016,6 +4026,8 @@ function ActionCenterBoundedOverview({
   upcomingReviews,
   overviewStatusCounts,
   selectedItem,
+  governanceQueue,
+  measurementReadback,
   onSelectItem,
   selectedItemHref,
   workbenchLabel,
@@ -4031,6 +4043,8 @@ function ActionCenterBoundedOverview({
     closed: number
   }
   selectedItem: ActionCenterPreviewItem | null
+  governanceQueue: ActionCenterGovernanceQueue | null
+  measurementReadback: ActionCenterMeasurementReadback | null
   onSelectItem: (itemId: string) => void
   selectedItemHref: string
   workbenchLabel: string
@@ -4066,6 +4080,11 @@ function ActionCenterBoundedOverview({
         </span>
         <span>{visibleItems.length} zichtbare route{visibleItems.length === 1 ? '' : 's'}</span>
       </div>
+
+      {governanceQueue ? <ActionCenterGovernanceQueueSection queue={governanceQueue} /> : null}
+      {measurementReadback ? (
+        <ActionCenterMeasurementReadbackSection readback={measurementReadback} />
+      ) : null}
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.65fr),minmax(320px,0.95fr)]">
         <section className="rounded-[24px] border border-[#e4d9cb] bg-white">
