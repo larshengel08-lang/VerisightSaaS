@@ -252,8 +252,19 @@ def test_generate_culture_assessment_report_smoke(db_session: Session):
 
     assert pdf_bytes.startswith(b"%PDF")
     assert len(pdf_bytes) > 5000
+    pages = _extract_pdf_pages(pdf_bytes)
+    assert len(pages) == 10
     text = _extract_pdf_text(pdf_bytes)
     assert "Loep Culture Assessment - Board Baseline" in text
+    for heading in (
+        "Executive culture read",
+        "Responsbasis en governancekader",
+        "Loep Culture Index",
+        "Board attention points",
+        "Vervolgrichting na de baseline",
+        "Methodiek en begrenzingen",
+    ):
+        assert heading in text
     assert "Segmentcontrasten zijn niet vrijgegeven binnen deze baseline of blijven onder governancegrenzen verborgen." in text
     assert "Governed drilldown voor HR" not in text
     assert "Afdeling Operatie: n=15, Culture Index" not in text
@@ -309,14 +320,21 @@ def test_generate_culture_assessment_report_smoke_with_governed_drilldown(db_ses
 
     assert pdf_bytes.startswith(b"%PDF")
     assert len(pdf_bytes) > 5000
+    pages = _extract_pdf_pages(pdf_bytes)
+    assert len(pages) == 10
     text = _extract_pdf_text(pdf_bytes)
     assert "Loep Culture Assessment - Board Baseline" in text
-    assert "Executive culture read" in text
-    assert "Loep Culture Index" in text
-    assert "Board attention points" in text
+    for heading in (
+        "Executive culture read",
+        "Responsbasis en governancekader",
+        "Loep Culture Index",
+        "Board attention points",
+        "Vervolgrichting na de baseline",
+        "Methodiek en begrenzingen",
+    ):
+        assert heading in text
     assert "Benchmarking blijft in v1 bewust niet actief." in text
     assert "geen manager ranking tool" in text
-    assert "Governed drilldown voor HR" in text
     assert "Afdeling Operatie: n=15, Culture Index" in text
 
 

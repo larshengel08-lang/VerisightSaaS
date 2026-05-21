@@ -5352,15 +5352,27 @@ def _append_culture_report_section(
     title: str,
     intro: str,
     bullets: list[str],
+    hero_value: str | None = None,
+    closing_note: str | None = None,
+    page_break: bool = False,
 ) -> None:
     story.append(Paragraph(escape(eyebrow.upper()), STYLES["eyebrow"]))
     story.append(Paragraph(title, STYLES["section_title"]))
+    if hero_value:
+        story.append(Spacer(1, 0.18 * cm))
+        story.append(Paragraph(escape(hero_value), STYLES["cover_title"]))
+        story.append(Spacer(1, 0.08 * cm))
     story.append(Paragraph(intro, STYLES["body"]))
     story.append(Spacer(1, 0.25 * cm))
     for bullet in bullets:
         story.append(Paragraph(f"- {escape(bullet)}", STYLES["body"]))
         story.append(Spacer(1, 0.12 * cm))
+    if closing_note:
+        story.append(Spacer(1, 0.12 * cm))
+        story.append(Paragraph(closing_note, STYLES["body"]))
     story.append(Spacer(1, 0.4 * cm))
+    if page_break:
+        story.append(PageBreak())
 
 
 def _generate_culture_assessment_report(
@@ -5465,102 +5477,197 @@ def _generate_culture_assessment_report(
     story.append(NextPageTemplate("body"))
     story.append(PageBreak())
 
+    def _culture_domain_label(domain_id: str) -> str:
+        return CULTURE_DOMAIN_LABELS_NL.get(domain_id, domain_id)
+
+    domains_by_score = sorted(domain_averages.items(), key=lambda item: item[1])
+    low_focus = domains_by_score[:3]
+    high_context = list(reversed(domains_by_score[-2:]))
+    domain_profile_rows = [
+        (domain_id, domain_averages[domain_id])
+        for domain_id in CULTURE_DOMAIN_LABELS_NL
+        if domain_id in domain_averages
+    ]
+
+    low_focus_labels = ", ".join(_culture_domain_label(domain_id) for domain_id, _ in low_focus) or "de laagst scorende domeinen"
+    high_context_labels = ", ".join(_culture_domain_label(domain_id) for domain_id, _ in high_context) or "de stabielere contextdomeinen"
+
     _append_culture_report_section(
         story,
-        eyebrow="1. Responsbasis & meetdekking",
+        eyebrow="1. Executive opener",
         title="Executive culture read",
         intro=(
-            "Gebruik deze baseline om brede cultuur- en engagementpatronen op organisatieniveau zichtbaar te maken. "
-            "De uitkomst is descriptief en governance-first: geen benchmark-first duiding, geen individuele beoordeling en geen causaliteitsclaim."
+            "Deze baseline opent als compacte executive read voor het boardgesprek over brede cultuur- en engagementpatronen. "
+            "Lees de uitkomst descriptief en governance-first: geen benchmark-first duiding, geen individuele beoordeling en geen causaliteitsclaim."
         ),
         bullets=[
-            f"Organisatieniveau is veilig vrijgegeven boven minimum-n {organization_min_n}.",
-            "Open tekst blijft in v1 alleen beschikbaar na aparte veilige clustering; raw quotes openen niet automatisch in boardoutput.",
-            "Named manager detail blijft standaard locked.",
+            management_summary_payload["board_report_editorial_note"],
+            f"Managementvraag: {management_summary_payload['management_question']}",
+            "Deze baseline helpt bestuurlijke aandacht ordenen; zij schrijft geen interventies of cultuurverdicts voor.",
+            "Diepere lagen blijven governed en openen alleen na expliciete vrijgave binnen de productgrenzen van v1.",
         ],
+        page_break=True,
     )
 
-    domain_lines = [
-        f"{CULTURE_DOMAIN_LABELS_NL.get(domain_id, domain_id)}: {score:.1f}/10"
-        for domain_id, score in sorted(domain_averages.items(), key=lambda item: item[1])
-    ]
     _append_culture_report_section(
         story,
-        eyebrow="2. Loep Culture Index",
-        title="Loep Culture Index en domeinbeeld",
-        intro=management_summary_payload["board_attention_frame"],
+        eyebrow="2. Response and governance",
+        title="Responsbasis en governancekader",
+        intro=(
+            "Deze pagina laat zien hoe stevig de datalaag onder de baseline is en welke zichtbaarheid bewust begrensd blijft. "
+            "Governance is hier kwaliteitskader, niet nabrander."
+        ),
         bullets=[
-            f"Loep Culture Index: {culture_index:.1f}/10.",
-            *domain_lines[:6],
+            f"Responsbasis: {len(responses)} ingevuld van {len(camp.respondents)} uitgenodigd ({completion_rate}%).",
+            f"Wat getoond mag worden: organisatieniveau boven minimum-n {organization_min_n}.",
+            "Wat verborgen blijft: named manager detail, individuele respondentdata en raw open-tekstquotes.",
+            "Waarom dat zo is: governance beschermt interpretatiekwaliteit, privacy en bestuurlijke betrouwbaarheid.",
+            "Wat je hier niet uit mag concluderen: niet-zichtbare lagen zijn geen stil bewijs, maar een expliciete governancegrens.",
         ],
+        page_break=True,
+    )
+
+    _append_culture_report_section(
+        story,
+        eyebrow="3. Index hero",
+        title="Loep Culture Index",
+        hero_value=f"{culture_index:.1f}/10",
+        intro=(
+            "De Loep Culture Index is het visuele anker van deze baseline. Lees hem als navigatiesignaal voor het boardgesprek, "
+            "niet als totaalvonnis over cultuurkwaliteit."
+        ),
+        bullets=[
+            "Geen benchmark in v1, geen pass/fail en geen gauge-semantiek.",
+            "Lees de index altijd samen met domeinen, responsbasis en governancekader.",
+            f"Eerste leesspoor: {low_focus_labels}.",
+        ],
+        closing_note="Deze index opent het gesprek; hij sluit het niet af.",
+        page_break=True,
     )
 
     attention_lines = [
         f"{point['label']}: {point['priority_reason']} ({point['confidence_label']}); verifieer: {point['what_to_verify_next']}"
-        for point in board_attention_points
+        for point in board_attention_points[:3]
     ] or ["Nog geen bestuurlijke aandachtspunten beschikbaar."]
-    segment_lines = (
-        [
+    _append_culture_report_section(
+        story,
+        eyebrow="4. Board attention points",
+        title="Board attention points",
+        intro=(
+            "Deze aandachtspunten zijn de bestuurlijke hartslag van het rapport. Gebruik ze om het boardgesprek te ordenen, "
+            "niet als automatische interventielijst of manager-oordeel."
+        ),
+        bullets=attention_lines,
+        closing_note="Confidence beschrijft signaalstabiliteit, niet waarheidscertainty of causaliteit.",
+        page_break=True,
+    )
+
+    domain_lines = [
+        f"{_culture_domain_label(domain_id)}: {score:.1f}/10"
+        for domain_id, score in domain_profile_rows
+    ]
+    _append_culture_report_section(
+        story,
+        eyebrow="5. Domain profile",
+        title="Domeinbeeld",
+        intro=management_summary_payload["domain_reading_rule"],
+        bullets=[
+            f"Start de leesvolgorde bij {low_focus_labels}; gebruik {high_context_labels} als stabiliserende context, niet als tegenbewijs.",
+            *domain_lines,
+        ],
+        closing_note="De volgorde hierboven ondersteunt een bestuurlijke leeslijn en is geen top/bottom-scorebord.",
+        page_break=True,
+    )
+
+    pattern_lines = [
+        (
+            f"Het scherpste samenhangsspoor loopt nu via {_culture_domain_label(low_focus[0][0])} "
+            f"({low_focus[0][1]:.1f}/10) en {_culture_domain_label(low_focus[1][0])} ({low_focus[1][1]:.1f}/10)."
+        )
+        if len(low_focus) >= 2
+        else "Er is nog geen scherp samenhangsspoor beschikbaar boven de huidige governancerandvoorwaarden.",
+        (
+            f"Een tweede leeslijn verbindt {_culture_domain_label(low_focus[1][0])} en {_culture_domain_label(low_focus[2][0])}; "
+            "gebruik deze om te toetsen of het patroon breed terugkomt."
+        )
+        if len(low_focus) >= 3
+        else "Verdiep vervolgvragen altijd over meerdere domeinen tegelijk, niet over een losse score.",
+        f"Sterkere contextdomeinen zoals {high_context_labels} geven richting, maar neutraliseren eerdere aandachtspunten niet.",
+        "Deze patroonpagina blijft descriptief: zij beschrijft samenhang en bewijst geen oorzaak-gevolg.",
+    ]
+    _append_culture_report_section(
+        story,
+        eyebrow="6. Pattern logic",
+        title="Patronen in samenhang",
+        intro=(
+            "Deze pagina tilt de lezing boven losse domeinscores uit. Kijk naar terugkerende combinaties en systeemlogica, "
+            "niet naar een technisch analysetableau."
+        ),
+        bullets=pattern_lines,
+        page_break=True,
+    )
+
+    if has_governed_drilldown and safe_segment_rows:
+        segment_lines = [
             f"{row['segment_type']} {row['label']}: n={row['n']}, Culture Index {row['culture_index']:.1f}/10"
             for row in safe_segment_rows[:4]
         ]
-        if has_governed_drilldown and safe_segment_rows
-        else ["Segmentcontrasten zijn niet vrijgegeven binnen deze baseline of blijven onder governancegrenzen verborgen."]
-    )
+        segment_lines.append(
+            "Verborgen of niet-vrijgegeven segmentlagen blijven gesloten wanneer minimum-n, release state of named-manager lock dat vraagt."
+        )
+    else:
+        segment_lines = [
+            "Segmentcontrasten zijn niet vrijgegeven binnen deze baseline of blijven onder governancegrenzen verborgen.",
+            management_summary_payload["segment_visibility_rule"],
+            "Zonder vrijgave opent deze baseline geen losse segmentranking of aparte HR-appendix.",
+        ]
     _append_culture_report_section(
         story,
-        eyebrow="3. Board attention points",
-        title="Board attention points en segmentcontrasten",
+        eyebrow="7. Segment contrasts",
+        title="Segmentcontrasten",
         intro=(
-            "Deze aandachtspunten zijn navigatiesignalen voor het boardgesprek. Gebruik ze om bestuurlijke aandacht te ordenen, "
-            "niet als automatische interventielijst of manager-oordeel."
+            "Segmentcontrasten blijven een governed leesslag. Alleen veilig vrijgegeven verschillen mogen hier verschijnen, "
+            "en verborgen lagen worden expliciet als governance state getoond."
         ),
-        bullets=attention_lines + segment_lines,
+        bullets=segment_lines,
+        page_break=True,
     )
 
     follow_on_bullets = [
-        "Board-read is altijd begeleid en eindigt in een expliciete bestuurlijke keuzeagenda.",
-        "Pulse blijft follow-on only en hoort niet in deze baseline zelf.",
-        "Benchmarking blijft in v1 bewust niet actief.",
-        "Er wordt geen individuele respondentdata geëxporteerd.",
+        "Geen automatische vervolgstap: eerst board-read, daarna expliciete bestuurlijke keuze.",
+        "Governed verdieping opent alleen wanneer bestuurlijke en HR-afstemming dat bewust vrijgeven.",
+        "Pulse blijft follow-on only en repareert geen onduidelijke baselinelezing.",
+        "Een andere Loep-route kan passender zijn wanneer het vraagstuk breder is dan cultuur alleen.",
+        "Boardkeuzes blijven bounded; geen route opent automatisch vanuit de baseline zelf.",
     ]
     if has_governed_drilldown and safe_segment_rows:
-        follow_on_bullets.append("Governed drilldown is beschikbaar als HR-verdiepingslaag binnen veilige segmentgrenzen.")
+        follow_on_bullets.append("De vrijgegeven segmentlaag kan als HR-verdieping meewegen, maar blijft geen standaard boardoutput.")
 
     _append_culture_report_section(
         story,
-        eyebrow="4. Board-read & vervolgritme",
-        title="Board-read, methodiek en governancegrenzen",
-        intro=(
-            "Lees de index altijd samen met domeinen, segmentpatronen, responsbasis en governancegrenzen. "
-            "Vervolgopties openen pas na deze board-read en binnen de productgrenzen van v1."
-        ),
+        eyebrow="8. Follow-on decision",
+        title="Vervolgrichting na de baseline",
+        intro=management_summary_payload["follow_on_rule"],
         bullets=follow_on_bullets,
+        page_break=True,
     )
-    story.append(Paragraph("Wat je hier expliciet niet uit mag concluderen", STYLES["sub_title"]))
-    story.append(
-        Paragraph(
-            "Cultuur is niet simpelweg goed of slecht, dit rapport bewijst geen oorzaak-gevolg, "
-            "en het is geen manager ranking tool of individuele voorspelmachine.",
-            STYLES["body"],
-        )
+    _append_culture_report_section(
+        story,
+        eyebrow="9. Method and boundaries",
+        title="Methodiek en begrenzingen",
+        intro=(
+            "Deze afsluiting bewaart vertrouwen door methodiek, drempels en interpretatiegrenzen expliciet te maken. "
+            "Governance blijft hier een kwaliteitslaag, geen juridisch restblok."
+        ),
+        bullets=[
+            f"Organisatieweergave vraagt minimaal {organization_min_n} volledige responses; segmentcontrasten vragen minimaal {int(methodology_payload['segment_comparison_min_n'])}.",
+            "Benchmarking blijft in v1 bewust niet actief.",
+            "Cultuur is niet simpelweg goed of slecht, dit rapport bewijst geen oorzaak-gevolg, en het is geen manager ranking tool of individuele voorspelmachine.",
+            "Open tekst opent niet als raw quote browser; alleen veilig geclusterde context kan later governed worden vrijgegeven.",
+            "Er wordt geen individuele respondentdata geexporteerd.",
+        ],
+        closing_note=management_summary_payload["output_sequence_note"],
     )
-
-    if has_governed_drilldown and safe_segment_rows:
-        story.append(PageBreak())
-        _append_culture_report_section(
-            story,
-            eyebrow="HR Appendix",
-            title="Governed drilldown voor HR",
-            intro=(
-                "Deze appendix opent alleen geaggregeerde lagen boven de veilige segmentgrenzen. "
-                "Gebruik deze laag voor HR-verdieping, niet als ranking of named manager output."
-            ),
-            bullets=[
-                f"{row['segment_type']} {row['label']}: n={row['n']}, Culture Index {row['culture_index']:.1f}/10"
-                for row in safe_segment_rows
-            ],
-        )
 
     doc.build(story)
     return buf.getvalue()

@@ -5,7 +5,9 @@ from typing import Any
 from backend.products.culture_assessment.scoring import get_questionnaire_lock_payload
 
 OUTPUT_SEQUENCE_NOTE = (
-    "Het board report pdf is in v1 een compacte executive read en premium board artifact. "
+    "Het board report pdf is in v1 een compacte executive read en premium board artifact met een vaste tien-pagina leesvolgorde: "
+    "cover, executive opener, responsbasis en governancekader, Loep Culture Index, board attention points, domeinbeeld, "
+    "patronen in samenhang, governed segmentcontrasten waar vrijgegeven, vervolgrichting en methodiek/begrenzingen. "
     "Het boardroom pdf deck is de ruimere, guided zusterlaag voor facilitated board-read; "
     "de executive one-pager blijft een afgeleide van dezelfde visuele grammatica."
 )
@@ -39,6 +41,19 @@ def get_management_summary_payload() -> dict[str, Any]:
             "Segmentcontrasten en open signalen blijven aparte governed vervolglagen en tellen niet automatisch als directe attention-input mee."
         ),
         "board_attention_logic": get_questionnaire_lock_payload()["board_attention_logic"],
+        "board_report_editorial_note": (
+            "Lees de eerste pagina's als een compacte board publication: editorial, bounded en governance-first, "
+            "niet als dashboardexport of self-serve analyseomgeving."
+        ),
+        "domain_reading_rule": (
+            "Het domeinbeeld is een bestuurlijke leesvolgorde en geen ranking; gebruik volgorde en samenhang om het gesprek te ordenen."
+        ),
+        "segment_visibility_rule": (
+            "Verborgen of niet vrijgegeven segmentlagen verschijnen expliciet als governance state, niet als stilte of ontbrekende output."
+        ),
+        "follow_on_rule": (
+            "Elke vervolgstap blijft conditioneel en governed: geen automatische doorroute, geen benchmarklaag en geen zelfbedieningslogica."
+        ),
         "board_read_delivery": {
             "facilitator_owner": "Loep / Verisight consultant of founder-led board facilitator",
             "session_length_minutes": "60-90",
