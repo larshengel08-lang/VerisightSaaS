@@ -490,7 +490,11 @@ Run:
 
 ```powershell
 Set-Location 'C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer-structure'
-rg -n "solves retention|proves intervention impact|reduces employee risk|predicts individual turnover|measures manager effectiveness|workflow automation|HR operating system|employee monitoring|personnel dossier|standalone module" docs/superpowers/specs/2026-05-22-action-center-*.md
+$batchCArtifactFiles = @()
+$batchCArtifactFiles += Get-ChildItem -LiteralPath 'docs/superpowers/specs' -File | Where-Object { $_.Name -like '2026-05-22-action-center-*.md' } | ForEach-Object { $_.FullName }
+$batchCArtifactFiles += (Resolve-Path 'docs/superpowers/specs/2026-05-22-batch-c-buyer-readiness-and-controlled-scale-spec.md').Path
+$batchCArtifactFiles += (Resolve-Path 'docs/superpowers/plans/2026-05-22-batch-c-buyer-readiness-and-controlled-scale-implementation.md').Path
+rg -n "solves retention|proves intervention impact|reduces employee risk|predicts individual turnover|measures manager effectiveness|workflow automation|HR operating system|employee monitoring|personnel dossier|standalone module" $batchCArtifactFiles
 ```
 
 Expected:
@@ -505,13 +509,17 @@ Run:
 
 ```powershell
 Set-Location 'C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer-structure'
-rg -n "TODO|TBD|implement later|fill in details" docs/superpowers/specs/2026-05-22-action-center-*.md
+$batchCArtifactFiles = @()
+$batchCArtifactFiles += Get-ChildItem -LiteralPath 'docs/superpowers/specs' -File | Where-Object { $_.Name -like '2026-05-22-action-center-*.md' } | ForEach-Object { $_.FullName }
+$batchCArtifactFiles += (Resolve-Path 'docs/superpowers/specs/2026-05-22-batch-c-buyer-readiness-and-controlled-scale-spec.md').Path
+$batchCArtifactFiles += (Resolve-Path 'docs/superpowers/plans/2026-05-22-batch-c-buyer-readiness-and-controlled-scale-implementation.md').Path
+rg -n "TODO|TBD|implement later|fill in details" $batchCArtifactFiles
 ```
 
 Expected:
 
 ```text
-No placeholder text found.
+Matches may appear only in the implementation plan's literal scan-command or verification-note contexts. No Batch C artifact may contain unresolved placeholder text.
 ```
 
 - [x] **Step 3: Add verification notes to this implementation plan**
@@ -531,7 +539,7 @@ No placeholder text found.
 - [x] **Step 4: Commit**
 
 ```powershell
-git -C 'C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer-structure' add docs/superpowers/plans/2026-05-22-batch-c-buyer-readiness-and-controlled-scale-implementation.md docs/superpowers/specs/2026-05-22-action-center-*.md
+git -C 'C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer-structure' add docs/superpowers/plans/2026-05-22-batch-c-buyer-readiness-and-controlled-scale-implementation.md docs/superpowers/specs/2026-05-22-action-center-governance-one-pager.md docs/superpowers/specs/2026-05-22-action-center-manager-participation-one-pager.md docs/superpowers/specs/2026-05-22-action-center-route-action-review-closeout-explanation.md docs/superpowers/specs/2026-05-22-action-center-privacy-dossier-boundary-note.md docs/superpowers/specs/2026-05-22-action-center-hr-operator-rollout-note.md docs/superpowers/specs/2026-05-22-action-center-product-founder-rollout-note.md docs/superpowers/specs/2026-05-22-action-center-route-fit-matrix.md docs/superpowers/specs/2026-05-22-action-center-activation-gate-framework.md docs/superpowers/specs/2026-05-22-action-center-live-evidence-gate.md docs/superpowers/specs/2026-05-22-action-center-batch-c-review-strategy.md docs/superpowers/specs/2026-05-22-batch-c-buyer-readiness-and-controlled-scale-spec.md
 git -C 'C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer-structure' commit -m "Close out Action Center Batch C buyer readiness artifacts"
 ```
 
@@ -539,10 +547,10 @@ git -C 'C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer
 
 ## Verification Notes
 
-- Full prohibited-language scan run across `docs/superpowers/specs/2026-05-22-action-center-*.md`.
-- Matches appeared only in explicit negative-boundary, rollout-guardrail, post-batch evaluation, or red-team checklist contexts; no Batch C artifact uses prohibited language as a positive claim.
-- Placeholder scan run across `docs/superpowers/specs/2026-05-22-action-center-*.md`.
-- No `TODO`, `TBD`, `implement later`, or `fill in details` placeholders were found.
+- Full prohibited-language scan run across the full Batch C artifact set: resolved `docs/superpowers/specs/2026-05-22-action-center-*.md` files plus the Batch C spec and implementation plan.
+- Matches appeared only in explicit negative-boundary, rollout-guardrail, post-batch evaluation, red-team checklist, or literal scan-command contexts; no Batch C artifact uses prohibited language as a positive claim.
+- Placeholder scan run across the full Batch C artifact set: resolved `docs/superpowers/specs/2026-05-22-action-center-*.md` files plus the Batch C spec and implementation plan.
+- Placeholder-term matches appeared only in the implementation plan's literal scan-command or verification-note contexts; no Batch C artifact contains unresolved placeholder text.
 - Buyer governance framing artifacts completed.
 - Privacy and rollout notes completed.
 - Route-fit, activation-gate, and live-evidence artifacts completed.
