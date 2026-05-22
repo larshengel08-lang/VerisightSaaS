@@ -2,7 +2,7 @@
 
 ## Audience
 
-HR buyer, HR operator, MT sponsor, IT/security reviewer
+HR buyers, HR operators, MT sponsors, IT/security reviewers
 
 ## Purpose
 
@@ -10,7 +10,7 @@ Explain HR governance, closeout authority, escalation boundaries, and Action Cen
 
 ## Acceptance Test
 
-A buyer can explain HR governance and boundaries in under 2 minutes without calling the product workflow software.
+A buyer can explain HR governance, closeout authority, and product boundaries in under 2 minutes. The explanation stays clearly outside workflow-software framing.
 
 ## Sign-Off Owner
 
@@ -22,7 +22,7 @@ product/founder owner
 - route-bound follow-through after an approved scan
 - limited to approved route families: `exit` and `retention`
 - HR-governed from continuation through closeout
-- canonical inside Action Center for route, action, review, and closeout truth
+- canonical inside Action Center for route, action, review, and closeout state
 
 ## What Action Center Is Not
 
@@ -40,14 +40,14 @@ product/founder owner
 - Managers participate through bounded route actions and reviews inside an existing route.
 - Action Center records whether agreed follow-through happened, was reviewed, and needs continuation.
 - Action Center does not judge individual employees and does not claim causal intervention impact.
-- Off-platform channels may notify participants, but they do not canonically change route truth.
+- Off-platform channels may notify participants, but they do not change canonical route state.
 
 ## Operating Boundaries
 
 - Action Center is used only for post-scan follow-through.
 - Every action stays attached to a route and its bounded management question.
 - Review exists to confirm follow-through state, blockers, or the need for continuation.
-- Governance signals point to follow-through pressure and review needs, not to judgment about individual employees.
+- Governance signals highlight stalled follow-through, review backlog, and continuation needs, not judgment about individual employees.
 
 ## Closeout And Escalation
 

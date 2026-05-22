@@ -2,26 +2,27 @@
 
 ## Audience
 
-manager participant, HR operator
+Managers participating in a route, HR operators
 
 ## Purpose
 
-Explain the manager role in bounded route/action/review participation.
+Explain the manager role in bounded route follow-through and review.
 
 ## Acceptance Test
 
-A manager can explain their role in under 60 seconds without assuming dashboard ownership.
+A manager can explain their role in under 60 seconds. The explanation keeps route ownership with HR governance and does not shift into dashboard or workflow ownership.
 
 ## Sign-Off Owner
 
-route owner or product/founder owner
+Primary: route owner
+Fallback: product/founder owner if no separate route owner is assigned
 
 ## Your Role
 
 - you participate inside an existing route
 - you help move route-bound follow-through forward
 - you create, update, and review bounded actions when execution is needed
-- you surface blockers, no-progress, or handoff needs when they appear
+- you surface blockers, lack of progress, or handoff needs when they appear
 
 ## What You Are Expected To Do
 
@@ -33,7 +34,7 @@ route owner or product/founder owner
 ## What You Do Not Own
 
 - you do not own route closeout
-- you do not run the governance queue
+- you do not run HR's governance process around the route
 - you do not decide continuation policy on your own
 - you are not being asked to operate a dashboard, project board, or workflow system
 
