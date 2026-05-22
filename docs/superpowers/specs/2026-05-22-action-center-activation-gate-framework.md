@@ -28,13 +28,15 @@ No route-family activation may happen without a completed decision record. Infor
 
 ## Preconditions Before Review Opens
 
-The activation gate may open only when all of the following are true:
+Formal activation approval review may begin only when all of the following are true:
 
 - the candidate route has been scored through the approved route-fit matrix
 - no must-pass rejection remains unresolved
 - the route can preserve shared Action Center truth around route, action, review, governance, and closeout
-- the proposal explicitly records the live-evidence gate outcome as `not ready`, `partially ready`, or `operating-ready for review`
+- the proposal explicitly records the live-evidence gate outcome as `operating-ready for review`
 - the proposal does not rely on workflow broadening, case-management behavior, or off-platform canonical writes
+
+If the live-evidence gate outcome is `not ready` or `partially ready`, the proposal remains in pre-review status and may not enter formal activation approval review.
 
 ## What The Gate Reviews
 
@@ -92,8 +94,8 @@ The activation decision must review:
 ## Live-Evidence Dependency
 
 - Passing conceptual fit review is still insufficient without live evidence.
-- If the live-evidence gate outcome is `not ready` or `partially ready`, the strongest available activation outcome is normally `parked` or `conditional`, not `approved`.
-- Only a live-evidence gate outcome of `operating-ready for review` allows the activation decision to move into approval review; it does not guarantee approval.
+- A live-evidence gate outcome of `not ready` or `partially ready` is a pre-review status and blocks formal activation approval review.
+- Only a live-evidence gate outcome of `operating-ready for review` allows the activation decision to enter formal activation approval review; it does not guarantee approval.
 - Live evidence is reviewed for operating readiness only. It is not treated as proof of impact, adoption, or intervention effectiveness.
 
 ## Non-Negotiable Interpretation

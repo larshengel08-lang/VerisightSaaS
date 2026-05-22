@@ -63,7 +63,8 @@ Action Center remains embedded inside Loep, route-bound, HR-governed, manager-li
 ## Must-Pass Rules
 
 - Any must-pass dimension scored `0` means the candidate route is rejected.
-- Any must-pass dimension scored `1` means the candidate route cannot advance without an explicit remediation case and should normally be parked.
+- Any unresolved must-pass dimension scored `1` means the candidate route is `parked` and may not advance.
+- A `conditional fit` is allowed only when every must-pass score of `1` is explicitly bounded, explicitly remediable, and recorded with concrete safeguards or defaults in the evaluation record.
 - Workflow-broadening risk scored `0` or `1` means the candidate route is rejected or parked even if other dimensions look strong.
 - Privacy / dossier safety scored below `2` means the candidate route cannot proceed.
 - Evidence grammar fit scored below `2` means the candidate route is incompatible with shared Action Center truth until proven otherwise.
@@ -71,8 +72,8 @@ Action Center remains embedded inside Loep, route-bound, HR-governed, manager-li
 ## Decision Bands
 
 - `rejected`: one or more must-pass dimensions score `0`, or the route would materially broaden Action Center beyond its bounded truth.
-- `parked`: no outright rejection, but the concept still carries unresolved must-pass weakness, workflow-broadening risk, or unclear governance fit.
-- `conditional fit`: the route is conceptually plausible but needs defined defaults, explicit safeguards, and later live evidence before activation can even be considered.
+- `parked`: no outright rejection, but the concept still carries an unresolved must-pass score of `1`, workflow-broadening risk, or unclear governance fit.
+- `conditional fit`: the route is conceptually plausible and any must-pass score of `1` has already been explicitly bounded and explicitly remediated in the record through defined defaults or safeguards; later live evidence is still required before activation can even be considered.
 - `strong conceptual fit`: the route appears compatible with Action Center's bounded model, but it still remains conceptual only until the later activation and live-evidence gates are passed.
 
 ## Required Evaluation Record

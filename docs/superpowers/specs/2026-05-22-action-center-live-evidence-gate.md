@@ -83,8 +83,8 @@ The evidence is insufficient if any required item above is missing. The followin
 
 - The live-evidence gate must produce exactly one documented outcome: `not ready`, `partially ready`, or `operating-ready for review`.
 - That exact outcome must be copied into the activation decision record as the `live-evidence gate outcome`.
-- If the outcome is `not ready` or `partially ready`, the activation decision should normally remain `parked` or `conditional`.
-- If the outcome is `operating-ready for review`, the activation decision may enter approval review, but approval still requires the full activation-gate decision record and explicit sign-off.
+- If the outcome is `not ready` or `partially ready`, the proposal remains in pre-review status and may not enter formal activation approval review.
+- Only an outcome of `operating-ready for review` allows the proposal to enter formal activation approval review, and approval still requires the full activation-gate decision record and explicit sign-off.
 
 ## Non-Negotiable Interpretation
 
