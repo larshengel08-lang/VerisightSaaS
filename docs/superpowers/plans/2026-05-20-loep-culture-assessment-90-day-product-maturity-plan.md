@@ -1,7 +1,7 @@
 # Loep Culture Assessment 90-Day Product Maturity Plan
 
 **Date:** 2026-05-20  
-**Status:** post-first-wave maturity plan  
+**Status:** phased maturity roadmap  
 **Primary scope:** `Loep Culture Assessment / Loep Cultuurbeeld`  
 **Canonical route id:** `culture_assessment`
 
@@ -9,170 +9,461 @@
 
 ## 1. Purpose
 
-This plan translates the first-wave spec stack into a bounded 90-day maturity sequence for `Loep Culture Assessment / Loep Cultuurbeeld`.
+This plan translates the current `culture_assessment` product line into a bounded 90-day maturity roadmap toward a more commercially credible and operationally repeatable enterprise product.
 
-It is not a calendar commitment.
-It is a sequenced execution frame for the next maturity lift.
+It is not a calendar promise.
+It is a phased execution frame that can later be picked up in autonomous work blocks without reopening core strategy.
 
 ---
 
-## 2. 90-Day Goal
+## 2. Mature Product Goal
 
-At the end of this bounded maturity sequence, the route should be able to say:
+At the end of this maturity sequence, `Loep Culture Assessment / Loep Cultuurbeeld` should be able to say:
 
 - the method core is locked and explainable
-- the premium output family is coherent and claim-safe
-- the trust/procurement layer is usable in serious buyer context
-- the admin/access posture is explicit
-- the annual baseline can be run as a bounded pilot program
-- post-baseline continuation can be described without suite drift
+- the premium output family is visually and commercially convincing
+- the runtime and governance model are coherent across docs, code, and delivery
+- the trust/procurement layer is usable in real enterprise buying context
+- the route can be delivered in a repeatable guided enterprise motion
+- live pilot learnings have been folded back into product truth
 
-It should not yet claim:
+It should still not claim:
 
-- benchmark readiness
-- broad enterprise platform parity
-- self-service scale
-- unrestricted governed drilldown maturity
+- benchmark-first maturity
+- broad self-serve analytics maturity
+- unrestricted analyst workspace behavior
+- manager-ranking logic
+- platform-wide enterprise parity outside the bounded route
 
 ---
 
-## 3. Sequence
+## 3. Roadmap Model
 
-The 90-day maturity sequence is split into four bounded blocks.
+This maturity roadmap is split into seven ordered phases.
 
-### Block 1 - Method and output lock
+Each phase has:
 
-Goal:
+- a bounded objective
+- explicit included work
+- dependencies
+- an exit bar
+- an autonomy read
 
-- stabilize the route's core explanatory system
+The autonomy read matters because later execution should be possible in controlled work blocks without repeatedly renegotiating product boundaries.
 
-Artifacts:
+---
 
-- methodology authority implementation plan
-- premium delivery implementation plan
-- output source-of-truth lock
+## 4. Phases
 
-Exit bar:
+### Phase 1 - Premium Output Truth and Artifact Upgrade
 
-- method source locked
-- output family source locked
-- claim-safe language aligned
+**Objective:**
 
-### Block 2 - Trust and control lock
+- make the premium enterprise claim visually and artifact-wise true
 
-Goal:
+**Includes:**
 
-- make buying-context trust and access posture explicit
+- board report PDF redesign execution
+- boardroom PDF deck redesign execution
+- executive one-pager truth alignment
+- sample artifact regeneration
+- output readiness and sample-registry alignment
 
-Artifacts:
+**Primary artifacts:**
 
-- trust/procurement implementation plan
-- buyer FAQ draft
-- OR / works-council explanation draft
-- admin/access control operational mapping
+- premium output visual redesign implementation plan
+- rebuilt board report sample
+- rebuilt boardroom deck reference artifact
+- refreshed output truth/readiness notes
 
-Exit bar:
+**Dependencies:**
 
-- trust pack exists
-- access posture exists
-- release and export ownership exists
+- current product identity and governance stack remain locked
+- no redesign scope expansion into app-wide product surfaces
 
-### Block 3 - Pilot operations lock
+**Exit bar:**
 
-Goal:
+- board report and boardroom deck are genuinely `pilot_delivery_ready`
+- sample outputs feel boardroom-grade
+- no truth mismatch remains between docs, code, sample registry, and reference artifacts
 
-- make the annual baseline operationally executable
+**Autonomy read:**
 
-Artifacts:
+- high
+- this is a closed redesign/execution block and can be picked up autonomously once the visual direction is approved
 
-- listening program operations implementation plan
-- launch readiness checklist
-- closure and release checklist
-- board-read handoff checklist
-- populated pilot-readiness gate
+### Phase 2 - Mainline Merge and Release Stability
 
-Exit bar:
+**Objective:**
 
-- launch-to-close cadence exists
-- pilot gate can be evaluated
-- first pilot constraints are accepted
+- move from scoped branch success to stable product-line integration
 
-### Block 4 - Bounded pilot closeout
+**Includes:**
 
-Goal:
+- PR closeout
+- merge to mainline
+- deploy/check stabilization
+- scoped regression verification on merged code
+- release-path and branch-hygiene cleanup
 
-- confirm the route can run one disciplined pilot without scope drift
+**Primary artifacts:**
 
-Artifacts:
+- merged PR
+- scoped verification record
+- release stabilization note
 
-- pilot review note
+**Dependencies:**
+
+- Phase 1 premium artifact truth should already be settled
+- scoped branch must remain conflict-free and testable
+
+**Exit bar:**
+
+- branch is merged
+- deploys/checks are green or explained and resolved
+- scoped `culture_assessment` line is stable on mainline
+
+**Autonomy read:**
+
+- medium/high
+- technically suitable for autonomous execution, but should happen as a dedicated release block rather than in parallel with strategy work
+
+### Phase 3 - Delivery Ops Productization
+
+**Objective:**
+
+- turn guided pilot knowledge into repeatable delivery operations
+
+**Includes:**
+
+- campaign setup path hardening
+- explicit handling of admin/manual-seeded capabilities
+- release/export governance flow tightening
+- delivery checklist hardening
+- pilot checklist hardening
+- operating model clarification for route execution
+
+**Primary artifacts:**
+
+- updated setup and delivery docs
+- operating owner model
+- release/export operating control note
+- pilot execution checklist
+
+**Dependencies:**
+
+- Phase 2 merge/release stability
+- premium outputs should already be truthful enough for guided use
+
+**Exit bar:**
+
+- the route can be delivered without relying on hidden expert knowledge
+- setup, release, and governed export feel procedural rather than improvised
+- ownership and escalation logic are explicit
+
+**Autonomy read:**
+
+- high
+- suitable as a docs plus runtime-hardening block
+
+### Phase 4 - Enterprise Trust and Procurement Live Pack
+
+**Objective:**
+
+- make the route buyer-ready in real enterprise trust and procurement conversations
+
+**Includes:**
+
+- DPA / processor / subprocessor answer hardening
+- hosting / data-location answer hardening
+- retention / deletion / incident answer hardening
+- buyer FAQ live-proofing
+- OR / works-council note refinement for real conversations
+
+**Primary artifacts:**
+
+- live trust/procurement pack
+- buyer FAQ
+- OR / works-council note
+- data-processing / hosting / incident notes
+
+**Dependencies:**
+
+- current trust/procurement plan and artifacts
+- Phase 3 operating model clarity
+
+**Exit bar:**
+
+- a serious enterprise buyer or procurement call can be handled without improvisation
+- trust answers are live-usable rather than merely documentable
+
+**Autonomy read:**
+
+- medium/high
+- well-suited for autonomous execution as long as legal posture is already directionally accepted
+
+### Phase 5 - Pilot Execution Readiness
+
+**Objective:**
+
+- become fully ready for a real paid or design-partner enterprise pilot
+
+**Includes:**
+
+- pilot handoff pack
+- board-read facilitation material finalization
+- live pilot delivery packet alignment
+- bounded follow-on decision flow hardening in real customer context
+
+**Primary artifacts:**
+
+- pilot handoff pack
+- board-read facilitation pack
+- live delivery readiness note
+
+**Dependencies:**
+
+- Phases 1 through 4
+
+**Exit bar:**
+
+- the first enterprise pilot can start without obvious material, governance, or handoff gaps
+- the team can clearly explain what is live, guided, governed, or intentionally unavailable
+
+**Autonomy read:**
+
+- high
+- suitable as a discrete pilot-readiness block
+
+### Phase 6 - Pilot Learning Integration
+
+**Objective:**
+
+- convert real pilot experience into product maturity
+
+**Includes:**
+
+- live pilot learning capture
+- artifact correction
+- copy and setup refinement
+- governance refinement where pilot reality exposed friction
+- reduction of avoidable manual delivery friction
+
+**Primary artifacts:**
+
+- pilot learning notes
 - bounded fix backlog
-- second-wave readiness recommendations
+- updated artifacts and control notes
 
-Exit bar:
+**Dependencies:**
 
-- route can describe what is proven, what is only demo-ready, and what remains second-wave
+- at least one real enterprise pilot completed
+
+**Exit bar:**
+
+- product truth reflects live delivery, not only internal design intent
+- the most important pilot frictions are either fixed or explicitly contained
+
+**Autonomy read:**
+
+- medium
+- can be executed autonomously after pilot input exists, but not before
+
+### Phase 7 - Mature Enterprise Claim Gate
+
+**Objective:**
+
+- explicitly decide whether the route can be positioned as a mature enterprise product
+
+**Includes:**
+
+- final readiness review
+- commercial claim review
+- trust/governance review
+- premium output review
+- repeatability review
+
+**Primary artifacts:**
+
+- mature enterprise claim gate note
+- final claim classification
+
+**Dependencies:**
+
+- Phases 1 through 6
+
+**Exit bar:**
+
+- explicit answer to whether the route is:
+  - still a premium guided pilot product
+  - or now mature enough to be presented as a repeatable enterprise product
+
+**Autonomy read:**
+
+- medium
+- the review can be autonomous, but the claim decision should be surfaced clearly to human owners
 
 ---
 
-## 4. Critical Dependencies
+## 5. Autonomous Execution Blocks
 
-This 90-day sequence depends on:
+To make later execution efficient, the roadmap should be picked up in the following autonomous blocks.
 
-- methodology before trust copy drift
-- premium outputs before board-read operating claims
-- trust and access before pilot procurement claims
-- listening operations before first pilot
+### Block A - Phase 1
 
-No block should skip these dependencies.
+**Name:**
+
+- Premium Output Truth and Artifact Upgrade
+
+**Why isolated:**
+
+- this is the most self-contained commercial-quality block
+- it upgrades the most visible weakness without depending on live pilot input
+
+### Block B - Phase 2
+
+**Name:**
+
+- Mainline Merge and Release Stability
+
+**Why isolated:**
+
+- this is a release/integration block with a different risk profile than product design
+
+### Block C - Phases 3 and 4
+
+**Name:**
+
+- Delivery Ops Productization plus Enterprise Trust Live Pack
+
+**Why combined:**
+
+- these two blocks share the same operating-model truth
+- they move the route from "strong product line" toward "repeatable enterprise motion"
+
+### Block D - Phase 5
+
+**Name:**
+
+- Pilot Execution Readiness
+
+**Why isolated:**
+
+- it is the last pre-pilot readiness block and should end in a go/no-go style read
+
+### Block E - Phases 6 and 7
+
+**Name:**
+
+- Pilot Learning Integration plus Mature Enterprise Claim Gate
+
+**Why combined:**
+
+- the maturity claim should rest on actual live learnings, not only internal belief
 
 ---
 
-## 5. Risk Controls
+## 6. Decision Gates
 
-The maturity sequence must actively prevent:
+The roadmap should not move forward casually across these gates.
+
+### Gate 1 - Premium truth gate
+
+Move past Phase 1 only if:
+
+- outputs feel premium
+- readiness labels are truthful
+- sample artifacts no longer weaken the commercial story
+
+### Gate 2 - Mainline stability gate
+
+Move past Phase 2 only if:
+
+- mainline is stable
+- deploys/checks are acceptable
+- no scoped regression remains open
+
+### Gate 3 - Repeatable delivery gate
+
+Move past Phases 3 and 4 only if:
+
+- delivery and trust no longer depend on hidden operator knowledge
+- access/export/release ownership is explicit
+- buyer-facing trust answers are usable live
+
+### Gate 4 - Pilot start gate
+
+Move past Phase 5 only if:
+
+- the first pilot can start in a governed and commercially coherent way
+
+### Gate 5 - Mature enterprise claim gate
+
+Move past Phase 7 only if:
+
+- live pilot learnings support the stronger commercial claim
+
+---
+
+## 7. Risk Controls
+
+This roadmap must continue to prevent:
 
 - benchmark creep
 - Pulse creep
 - manager-analytics creep
 - self-serve admin creep
 - custom-question creep
-- delivery overclaiming
+- export/release drift
+- premium-output overclaiming
+
+Visual redesign and operational hardening may improve quality, but they may not silently broaden product scope.
 
 ---
 
-## 6. Success Read
+## 8. Success Read
 
-This 90-day plan is successful if the route becomes:
+This 90-day roadmap is successful if `culture_assessment` becomes:
 
-- methodologically clearer
-- commercially sharper
-- operationally safer
-- more pilot-executable
+- visually premium enough to support enterprise sales
+- operationally repeatable enough for guided enterprise delivery
+- governance-safe enough for real release and export decisions
+- trust-ready enough for serious procurement conversations
+- commercially honest enough to distinguish between pilot-grade and mature-enterprise-grade states
 
 without becoming:
 
-- broader than its scope
-- platform-heavier than intended
-- weaker in governance
+- broader than its bounded route identity
+- more platform-heavy than intended
+- weaker in governance in order to look more scalable
 
 ---
 
-## 7. Immediate Next Step
+## 9. Immediate Next Step
 
-After this plan and the four first implementation plans exist, the next required step should be:
+The first recommended execution block after this roadmap should be:
 
-- execute the methodology and premium delivery plans first
-- execute the trust/procurement and listening operations plans second
-- populate the pilot-readiness gate with real status and bounded risks
+1. **Block A / Phase 1**
+   - premium output truth and artifact upgrade
 
-The agreed next second-wave sequence after this bounded pilot line is:
+After that:
 
-1. `Governed Drilldown & Analysis Environment`
-2. `Text & Open Comment Intelligence`
-3. `Action & Follow-through System`
+2. **Block B / Phase 2**
+   - mainline merge and release stability
 
-The later-wave continuation sequence after those second-wave slices is:
+Then:
 
-4. `Follow-On Architecture`
-5. later benchmark and reference discipline
+3. **Block C / Phases 3 and 4**
+   - delivery ops productization
+   - enterprise trust and procurement live pack
+
+Only after those:
+
+4. **Block D / Phase 5**
+   - pilot execution readiness
+
+And only after real pilot input:
+
+5. **Block E / Phases 6 and 7**
+   - pilot learning integration
+   - mature enterprise claim gate
