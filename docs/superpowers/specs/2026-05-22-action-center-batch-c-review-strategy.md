@@ -26,6 +26,7 @@ Additional required sign-off roles are recorded in the ledger below. If a role i
 
 - Batch C stays embedded inside Loep and preserves Action Center as route-bound, HR-governed, and limited to approved route families only: `exit` and `retention`.
 - Batch C may not broaden Action Center into workflow software, project or task management, case management, employee monitoring, or a standalone module.
+- Batch C may not introduce a Graph dependency or off-platform canonical writes.
 - Batch C may not weaken the live-evidence gate into roadmap optimism or documentation-only approval.
 - Batch C may not reopen Batch A or Batch B semantics unless a blocking inconsistency is discovered outside this review strategy.
 
@@ -118,6 +119,7 @@ Additional required sign-off roles are recorded in the ledger below. If a role i
 - activation-gate framework keeps complete-decision-record discipline intact
 - live-evidence gate keeps operating-readiness-only interpretation intact
 - no route expansion, documentation-only approval, or Batch A/B truth reopening is introduced
+- no unresolved product truth remains around buyer framing, route-fit, activation rules, or boundary semantics
 - sign-off ledger is complete or explicitly assumed by the product/founder owner where needed
 
 ## Plain-Language Summary
