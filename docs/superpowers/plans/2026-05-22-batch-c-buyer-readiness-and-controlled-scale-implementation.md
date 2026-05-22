@@ -78,7 +78,7 @@ Source specs:
 - Create: `C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer-structure\docs\superpowers\specs\2026-05-22-action-center-manager-participation-one-pager.md`
 - Create: `C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer-structure\docs\superpowers\specs\2026-05-22-action-center-route-action-review-closeout-explanation.md`
 
-- [ ] **Step 1: Draft the governance one-pager with bounded language**
+- [x] **Step 1: Draft the governance one-pager with bounded language**
 
 ```md
 # Action Center Governance One-Pager
@@ -107,7 +107,7 @@ Source specs:
 - governance queues point to follow-through pressure, not causal diagnosis
 ```
 
-- [ ] **Step 2: Draft the manager participation one-pager**
+- [x] **Step 2: Draft the manager participation one-pager**
 
 ```md
 # Action Center Manager Participation
@@ -132,7 +132,7 @@ Source specs:
 You help move route-bound follow-through forward through small, reviewable actions. You are not being asked to run a workflow system.
 ```
 
-- [ ] **Step 3: Draft the route -> action -> review -> closeout explainer**
+- [x] **Step 3: Draft the route -> action -> review -> closeout explainer**
 
 ```md
 # Action Center Route To Closeout Flow
@@ -155,7 +155,7 @@ HR decides whether the route is ready for closeout or continuation.
 - not workflow automation
 ```
 
-- [ ] **Step 4: Run a first phrase-safety scan on the three new artifacts**
+- [x] **Step 4: Run a first phrase-safety scan on the three new artifacts**
 
 Run:
 
@@ -170,7 +170,7 @@ Expected:
 Only intentional "not ..." boundary lines may match. No positive or promotional misuse of prohibited phrases appears.
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git -C 'C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer-structure' add docs/superpowers/specs/2026-05-22-action-center-governance-one-pager.md docs/superpowers/specs/2026-05-22-action-center-manager-participation-one-pager.md docs/superpowers/specs/2026-05-22-action-center-route-action-review-closeout-explanation.md
@@ -184,7 +184,7 @@ git -C 'C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer
 - Create: `C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer-structure\docs\superpowers\specs\2026-05-22-action-center-hr-operator-rollout-note.md`
 - Create: `C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer-structure\docs\superpowers\specs\2026-05-22-action-center-product-founder-rollout-note.md`
 
-- [ ] **Step 1: Draft the privacy and dossier boundary note**
+- [x] **Step 1: Draft the privacy and dossier boundary note**
 
 ```md
 # Action Center Privacy And Dossier Boundary Note
@@ -210,7 +210,7 @@ git -C 'C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer
 Action Center records bounded follow-through. It does not judge individual employees or store dossier-like histories.
 ```
 
-- [ ] **Step 2: Draft the HR operator rollout note**
+- [x] **Step 2: Draft the HR operator rollout note**
 
 ```md
 # Action Center HR Operator Rollout Note
@@ -232,7 +232,7 @@ Action Center records bounded follow-through. It does not judge individual emplo
 - a workflow engine
 ```
 
-- [ ] **Step 3: Draft the product / founder rollout note**
+- [x] **Step 3: Draft the product / founder rollout note**
 
 ```md
 # Action Center Product And Founder Rollout Note
@@ -251,7 +251,7 @@ Action Center records bounded follow-through. It does not judge individual emplo
 If buyer language only works by making Action Center sound like workflow software, stop and rewrite the framing.
 ```
 
-- [ ] **Step 4: Run a boundary scan on the three notes**
+- [x] **Step 4: Run a boundary scan on the three notes**
 
 Run:
 
@@ -266,7 +266,7 @@ Expected:
 Matches appear only in explicit "not ..." boundary sections. No artifact uses these phrases as positive framing.
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git -C 'C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer-structure' add docs/superpowers/specs/2026-05-22-action-center-privacy-dossier-boundary-note.md docs/superpowers/specs/2026-05-22-action-center-hr-operator-rollout-note.md docs/superpowers/specs/2026-05-22-action-center-product-founder-rollout-note.md
@@ -280,7 +280,7 @@ git -C 'C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer
 - Create: `C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer-structure\docs\superpowers\specs\2026-05-22-action-center-activation-gate-framework.md`
 - Create: `C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer-structure\docs\superpowers\specs\2026-05-22-action-center-live-evidence-gate.md`
 
-- [ ] **Step 1: Draft the route-fit matrix with scoring**
+- [x] **Step 1: Draft the route-fit matrix with scoring**
 
 ```md
 # Action Center Route-Fit Matrix
@@ -309,7 +309,7 @@ git -C 'C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer
 - conceptual fit alone never activates a route family
 ```
 
-- [ ] **Step 2: Draft the activation-gate framework with decision template**
+- [x] **Step 2: Draft the activation-gate framework with decision template**
 
 ```md
 # Action Center Activation Gate Framework
@@ -336,7 +336,7 @@ No route-family activation may happen without a completed decision record.
 | rationale |  |
 ```
 
-- [ ] **Step 3: Draft the live-evidence gate**
+- [x] **Step 3: Draft the live-evidence gate**
 
 ```md
 # Action Center Live-Evidence Gate
@@ -358,7 +358,7 @@ No route-family activation may happen without a completed decision record.
 - does not authorize expansion without explicit approval
 ```
 
-- [ ] **Step 4: Run a structure check on the three artifacts**
+- [x] **Step 4: Run a structure check on the three artifacts**
 
 Run:
 
@@ -373,7 +373,7 @@ Expected:
 All required structural fields are present in the three artifacts.
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git -C 'C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer-structure' add docs/superpowers/specs/2026-05-22-action-center-route-fit-matrix.md docs/superpowers/specs/2026-05-22-action-center-activation-gate-framework.md docs/superpowers/specs/2026-05-22-action-center-live-evidence-gate.md
@@ -385,7 +385,7 @@ git -C 'C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer
 **Files:**
 - Create: `C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer-structure\docs\superpowers\specs\2026-05-22-action-center-batch-c-review-strategy.md`
 
-- [ ] **Step 1: Draft the review strategy with audience, artifact, and sign-off coverage**
+- [x] **Step 1: Draft the review strategy with audience, artifact, and sign-off coverage**
 
 ```md
 # Action Center Batch C Review Strategy
@@ -411,7 +411,7 @@ git -C 'C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer
 - live-evidence gate
 ```
 
-- [ ] **Step 2: Add the buyer language red-team checklist**
+- [x] **Step 2: Add the buyer language red-team checklist**
 
 ```md
 ## Buyer Language Red-Team Test
@@ -434,7 +434,7 @@ git -C 'C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer
 - does not claim causal impact
 ```
 
-- [ ] **Step 3: Add sign-off ledger and exit checklist**
+- [x] **Step 3: Add sign-off ledger and exit checklist**
 
 ```md
 ## Sign-Off Ledger
@@ -456,7 +456,7 @@ git -C 'C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer
 - sign-off complete
 ```
 
-- [ ] **Step 4: Run a completeness check**
+- [x] **Step 4: Run a completeness check**
 
 Run:
 
@@ -471,7 +471,7 @@ Expected:
 Review strategy contains the red-team checklist, sign-off ledger, and exit checklist headings.
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git -C 'C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer-structure' add docs/superpowers/specs/2026-05-22-action-center-batch-c-review-strategy.md
@@ -484,7 +484,7 @@ git -C 'C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer
 - Modify: `C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer-structure\docs\superpowers\plans\2026-05-22-batch-c-buyer-readiness-and-controlled-scale-implementation.md`
 - Review: all Batch C artifacts created in Tasks 1-4
 
-- [ ] **Step 1: Run the full prohibited-language scan**
+- [x] **Step 1: Run the full prohibited-language scan**
 
 Run:
 
@@ -499,7 +499,7 @@ Expected:
 Only explicit negative-boundary or red-team checklist contexts may match. No artifact uses prohibited language as a positive claim.
 ```
 
-- [ ] **Step 2: Run a placeholder and structure scan**
+- [x] **Step 2: Run a placeholder and structure scan**
 
 Run:
 
@@ -514,7 +514,7 @@ Expected:
 No placeholder text found.
 ```
 
-- [ ] **Step 3: Add verification notes to this implementation plan**
+- [x] **Step 3: Add verification notes to this implementation plan**
 
 ```md
 ## Verification Notes
@@ -528,7 +528,7 @@ No placeholder text found.
 - no route expansion, proof claim, Graph dependency, or off-platform canonical write behavior introduced
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```powershell
 git -C 'C:\Users\larsh\Desktop\Business\Verisight\.worktrees\spec-hr-routebeheer-structure' add docs/superpowers/plans/2026-05-22-batch-c-buyer-readiness-and-controlled-scale-implementation.md docs/superpowers/specs/2026-05-22-action-center-*.md
