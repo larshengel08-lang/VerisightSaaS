@@ -1,8 +1,20 @@
 # Action Center Route -> Action -> Review -> Closeout Explanation
 
+## Audience
+
+HR buyer, manager participant, HR operator, MT sponsor
+
 ## Purpose
 
-This explanation describes the canonical operating flow for Action Center inside Loep.
+Explain the canonical operating flow simply and accurately.
+
+## Acceptance Test
+
+A reader can describe the flow without turning it into project management.
+
+## Sign-Off Owner
+
+product/founder owner
 
 ## 1. Route
 
