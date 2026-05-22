@@ -23,8 +23,10 @@ Product/founder owner
 Approval sequence:
 
 1. Complete the artifact and red-team checks.
-2. Record approvals for the required roles in the ledger.
-3. If a role is not formally assigned, the product/founder owner explicitly assumes that responsibility in the ledger.
+2. Record approvals for the mandatory roles in the ledger: `product/founder owner`, `governance/trust reviewer`, and `buyer-readiness reviewer or sales owner`.
+3. Record approval for `route owner for exit / retention if separate` when route ownership is formally separated from the product/founder owner.
+4. Record approval for `privacy/legal reviewer` when that role is formally assigned in the operating model.
+5. Explicit assumption is allowed only when a conditional role is genuinely unassigned, or when no separate `privacy/legal reviewer` role exists in the operating model. Any assumption must be recorded in the ledger notes with the role assumed, the reason, and the approval date.
 
 ## Fixed Review Rules
 
@@ -53,12 +55,12 @@ Approval sequence:
 | Artifact | Audience | Purpose | Must include | Must not include | Review check | Acceptance rule | Sign-off owner |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `governance one-pager` | HR buyer, HR operator, MT sponsor, IT/security reviewer | Explain HR governance, route-bound scope, closeout authority, and Action Center's role inside Loep. | HR governance model, closeout/continuation rules, bounded intervention framing, route-bound scope, no off-platform writes | workflow-software framing, project-management language, standalone-module framing | Confirms HR governance, route-bound scope, closeout authority, and off-platform boundary language stay intact. | A buyer can explain governance and product boundaries in under 2 minutes without workflow framing. | product/founder owner |
-| `manager participation one-pager` | Manager participant, HR operator | Explain the bounded manager role inside route, action, and review participation. | manager role, bounded actions, review rhythm, what managers do not own | dashboard ownership, workflow ownership, general project-board framing | Confirms manager role stays bounded to route actions and reviews inside an existing route. | A manager can explain the role in under 60 seconds without assuming dashboard or workflow ownership. | product/founder owner or route owner for ExitScan / RetentieScan if separate |
+| `manager participation one-pager` | Manager participant, HR operator | Explain the bounded manager role inside route, action, and review participation. | manager role, bounded actions, review rhythm, what managers do not own | dashboard ownership, workflow ownership, general project-board framing | Confirms manager role stays bounded to route actions and reviews inside an existing route. | A manager can explain the role in under 60 seconds without assuming dashboard or workflow ownership. | product/founder owner or route owner for exit / retention if separate |
 | `privacy / dossier boundary note` | privacy/legal reviewer, HR buyer, HR operator, IT/security reviewer | Define what Action Center stores, what it must never become, and how bounded follow-through stays separate from dossier or surveillance behavior. | not a personnel dossier, not employee monitoring, not employee risk ledger, bounded evidence rules | open employee narratives, surveillance framing, risk scoring framing | Confirms stored content, prohibited content, and plain-language boundary rules are explicit. | A reviewer can point to clear prohibited uses with no dossier, monitoring, or risk-ledger ambiguity. | privacy/legal reviewer |
 | `route -> action -> review -> closeout explanation` | HR buyer, Manager participant, HR operator, MT sponsor | Explain the canonical operating sequence simply and accurately. | route record semantics, action role, review checkpoints, HR closeout role, continuation logic | project-plan framing, task-tree framing, workflow-automation framing | Confirms route record semantics, review rhythm, continuation, and HR closeout semantics stay canonical. | A reader can explain the flow without turning it into project management or workflow automation. | product/founder owner |
 | `HR operator rollout note` | HR operator | Explain day-to-day rollout and operating guidance for bounded Action Center use. | operator responsibilities, queue/governance interpretation, escalation boundaries, what to avoid | ad hoc case-management behavior, broad operating-system framing | Confirms day-to-day operating guidance reinforces queue interpretation, escalation, and bounded rollout behavior. | An HR operator can run the rollout without inventing missing governance behavior. | governance/trust reviewer |
 | `product / founder rollout note` | product/founder owner | Explain claim discipline, route-scope guardrails, and launch-owner limits. | positioning boundaries, live-evidence dependency, route-scope guardrails, sign-off expectations | premature proof claims, automatic route expansion assumptions | Confirms claim discipline, route-scope guardrails, and launch-owner limits remain explicit. | Product/founder owner can state what may and may not be claimed, activated, or expanded. | product/founder owner |
-| `route-fit matrix` | product/founder owner, route owner, governance/trust reviewer, buyer-readiness reviewer | Evaluate whether a future route family conceptually fits Action Center without treating fit as approval. | scored dimensions, must-pass rules, rejection/parking rules, workflow-broadening risk | automatic approval language, unsupported route-family assumptions | Confirms scoring scale, must-pass rules, and non-approval interpretation are complete. | A reviewer can classify a candidate route as rejected, parked, conditional fit, or strong conceptual fit without ambiguity. | product/founder owner or route owner for ExitScan / RetentieScan if separate |
+| `route-fit matrix` | product/founder owner, route owner, governance/trust reviewer, buyer-readiness reviewer | Evaluate whether a future route family conceptually fits Action Center without treating fit as approval. | scored dimensions, must-pass rules, rejection/parking rules, workflow-broadening risk | automatic approval language, unsupported route-family assumptions | Confirms scoring scale, must-pass rules, and non-approval interpretation are complete. | A reviewer can classify a candidate route as rejected, parked, conditional fit, or strong conceptual fit without ambiguity. | product/founder owner or route owner for exit / retention if separate |
 | `activation-gate framework` | product/founder owner, governance/trust reviewer, buyer-readiness reviewer, route owner | Define the decision mechanics required before any future route-family activation can enter approval review. | decision template, owners, required fields, route-fit reference, live-evidence dependency | vague "expand later" language, undocumented approvals | Confirms activation review cannot open without a complete decision record and explicit live-evidence status. | No activation proposal can enter approval review with missing fields or undocumented ownership. | product/founder owner |
 | `live-evidence gate` | product/founder owner, governance/trust reviewer, buyer-readiness reviewer, route owner | Define the minimum live operating evidence required before route-family expansion can be considered operating-ready for review. | usage, review, stale/sprawl/no-progress, HR chasing proxy, operator feedback, privacy/governance incident requirement, interpretation rules | impact-proof claims, route-expansion by document alone | Confirms operating-readiness evidence requirements and interpretation rules remain explicit and bounded. | A reviewer can state what evidence exists, what is missing, and why live evidence is not impact proof. | governance/trust reviewer |
 
@@ -106,13 +108,13 @@ Approval sequence:
 
 ## Sign-Off Ledger
 
-| Role | Name | Date | Approved | Notes |
-| --- | --- | --- | --- | --- |
-| product/founder owner |  |  |  |  |
-| governance/trust reviewer |  |  |  |  |
-| route owner for ExitScan / RetentieScan if separate |  |  |  |  |
-| buyer-readiness reviewer or sales owner |  |  |  |  |
-| privacy/legal reviewer |  |  |  |  |
+| Role | Requirement | Name | Date | Approved | Notes |
+| --- | --- | --- | --- | --- | --- |
+| product/founder owner | mandatory |  |  |  |  |
+| governance/trust reviewer | mandatory |  |  |  |  |
+| route owner for exit / retention if separate | conditional |  |  |  | Required only when route ownership is formally separate. |
+| buyer-readiness reviewer or sales owner | mandatory |  |  |  |  |
+| privacy/legal reviewer | conditional |  |  |  | Required when formally assigned; otherwise any assumption must include recorded rationale. |
 
 ## Exit Checklist
 
@@ -126,7 +128,7 @@ Approval sequence:
 - live-evidence gate keeps operating-readiness-only interpretation intact
 - no route expansion, documentation-only approval, or reopening of approved Batch A/B semantics is introduced
 - no unresolved product semantics remain around buyer framing, route-fit, activation rules, or boundary semantics
-- sign-off ledger is complete or explicitly assumed by the product/founder owner where needed
+- sign-off ledger is complete, and any allowed assumption is explicitly recorded with rationale where a conditional role is unassigned
 
 ## Plain-Language Summary
 
