@@ -33,7 +33,7 @@ The activation gate may open only when all of the following are true:
 - the candidate route has been scored through the approved route-fit matrix
 - no must-pass rejection remains unresolved
 - the route can preserve shared Action Center truth around route, action, review, governance, and closeout
-- the proposal explicitly records whether live evidence is `none`, `partial`, or `sufficient`
+- the proposal explicitly records the live-evidence gate outcome as `not ready`, `partially ready`, or `operating-ready for review`
 - the proposal does not rely on workflow broadening, case-management behavior, or off-platform canonical writes
 
 ## What The Gate Reviews
@@ -67,7 +67,8 @@ The activation decision must review:
 | proposed use case | Bounded description of the route's intended use inside Loep |
 | route-fit scores | Full score set or linked matrix result |
 | must-pass failures | Any `0` or `1` must-pass results, or `none` if not present |
-| live evidence available | `none`, `partial`, or `sufficient`, with short explanation |
+| live-evidence gate outcome | `not ready`, `partially ready`, or `operating-ready for review` |
+| live-evidence gate rationale | Short explanation of why the gate outcome was assigned, including any missing evidence |
 | governance risks | Explicit summary of unresolved governance concerns |
 | privacy / dossier risks | Explicit summary of privacy, dossier, or monitoring concerns |
 | required route defaults | Defaults required to preserve shared Action Center truth |
@@ -85,13 +86,14 @@ The activation decision must review:
 - Every required field must be completed before review begins.
 - Missing fields invalidate the review and return the proposal to draft status.
 - The route-fit matrix must be attached or quoted directly enough that reviewers can verify the scores.
-- The record must say explicitly whether the route is being blocked by missing live evidence.
+- The record must copy the live-evidence gate outcome explicitly and say whether that outcome blocks activation review.
 - Any proposed exception to shared Action Center truth must be treated as a rejection signal unless the product truth itself is re-opened separately.
 
 ## Live-Evidence Dependency
 
 - Passing conceptual fit review is still insufficient without live evidence.
-- If live evidence is `none` or clearly inadequate, the strongest available outcome is normally `parked` or `conditional`, not `approved`.
+- If the live-evidence gate outcome is `not ready` or `partially ready`, the strongest available activation outcome is normally `parked` or `conditional`, not `approved`.
+- Only a live-evidence gate outcome of `operating-ready for review` allows the activation decision to move into approval review; it does not guarantee approval.
 - Live evidence is reviewed for operating readiness only. It is not treated as proof of impact, adoption, or intervention effectiveness.
 
 ## Non-Negotiable Interpretation
