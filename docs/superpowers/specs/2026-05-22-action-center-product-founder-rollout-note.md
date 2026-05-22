@@ -45,6 +45,18 @@ If no separate product owner is assigned, the founder explicitly assumes this si
 - Keep route expansion behind the later route-fit, activation-gate, and live-evidence process.
 - Do not let commercial pressure weaken privacy, dossier, or monitoring boundaries.
 
+## Sign-Off Expectations
+
+Before approving rollout language or any expansion discussion, the founder/product owner must confirm:
+
+- the language keeps Action Center embedded inside Loep and clearly route-bound
+- the language does not reframe Action Center as workflow, project, task, or case-management software
+- the language does not claim proof of adoption, intervention impact, retention impact, or manager effectiveness
+- the language preserves HR governance, manager-light participation, and post-scan follow-through only
+- the language stays consistent with the privacy, dossier, and monitoring boundaries
+- any expansion discussion is framed as gated behind route-fit review, activation approval, and later live evidence
+- no unresolved Batch A or Batch B semantic gap is being hidden by positioning language
+
 ## Launch Rule
 
 If launch language only sounds compelling by making Action Center feel like workflow software, a proof engine, or a broader operating system, stop and rewrite the framing.
