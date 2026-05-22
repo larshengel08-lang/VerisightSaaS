@@ -31,11 +31,13 @@ No route-family activation may happen without a completed decision record. Infor
 Formal activation approval review may begin only when all of the following are true:
 
 - the candidate route has been scored through the approved route-fit matrix
+- the route-fit output is explicitly eligible for review under the matrix rules
 - no must-pass rejection remains unresolved
 - the route can preserve shared Action Center truth around route, action, review, governance, and closeout
 - the proposal explicitly records the live-evidence gate outcome as `operating-ready for review`
 - the proposal does not rely on workflow broadening, case-management behavior, or off-platform canonical writes
 
+If the route-fit output is `parked`, the proposal may not advance to activation review.
 If the live-evidence gate outcome is `not ready` or `partially ready`, the proposal remains in pre-review status and may not enter formal activation approval review.
 
 ## What The Gate Reviews
