@@ -95,7 +95,7 @@ Every scoring session should capture:
 - Conceptual fit is not activation.
 - A strong conceptual score is still not rollout approval.
 - This matrix does not authorize route expansion by itself.
-- Later live evidence is an operating-readiness gate, not a proof-of-impact shortcut.
+- Later live evidence is an operating-readiness gate, not an acceptable substitute for formal activation approval or impact evidence.
 
 ## Plain-Language Summary
 

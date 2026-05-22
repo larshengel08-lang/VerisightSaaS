@@ -14,7 +14,7 @@ Use this framework only after a candidate route has already been evaluated throu
 
 ## Acceptance Test
 
-No activation proposal can be discussed as real unless a complete decision record exists, the required reviewers are named, the route-fit outcome is attached, and the live-evidence position is explicitly stated.
+No activation proposal can enter approval review unless a complete decision record exists, the required reviewers are named, the route-fit outcome is attached, and the live-evidence status is explicitly recorded.
 
 ## Sign-Off Owner
 
@@ -33,7 +33,7 @@ The activation gate may open only when all of the following are true:
 - the candidate route has been scored through the approved route-fit matrix
 - no must-pass rejection remains unresolved
 - the route can preserve shared Action Center truth around route, action, review, governance, and closeout
-- the proposal explicitly states whether live evidence exists, is partial, or is still missing
+- the proposal explicitly records whether live evidence is `none`, `partial`, or `sufficient`
 - the proposal does not rely on workflow broadening, case-management behavior, or off-platform canonical writes
 
 ## What The Gate Reviews
@@ -41,10 +41,11 @@ The activation gate may open only when all of the following are true:
 The activation decision must review:
 
 - route-fit results and unresolved weaknesses
-- bounded management question quality
-- bounded closeout semantics
-- bounded evidence semantics
-- bounded governance semantics
+- whether the route can be governed through one clear management question rather than open-ended case handling
+- whether HR can apply a defined review rhythm without creating a separate workflow layer
+- whether HR can make a clear continuation or closeout decision inside shared Action Center semantics
+- whether route, action, review, and governance state can be expressed through the existing evidence grammar without route-specific exceptions
+- whether the route can remain HR-governed without shifting ownership to a broader departmental operating model
 - privacy / dossier safety
 - buyer-safe route distinction
 - route-default requirements
@@ -96,7 +97,7 @@ The activation decision must review:
 ## Non-Negotiable Interpretation
 
 - Conceptual fit is not activation.
-- A completed decision record is required for every activation conversation that seeks approval.
+- A completed decision record is required for every activation proposal that seeks approval.
 - Approval requires explicit decision ownership and explicit rationale.
 - This framework does not expand Action Center by itself; it exists to make later approval disciplined and auditable.
 

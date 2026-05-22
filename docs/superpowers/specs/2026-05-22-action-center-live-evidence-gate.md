@@ -38,6 +38,10 @@ The evidence set must include at least:
 - buyer or HR-operator feedback from actual usage
 - confirmation that no unresolved governance or privacy incident is tied to action execution
 
+## HR Chasing Proxy Data
+
+For this gate, HR chasing proxy data means plain evidence that HR had to repeatedly prompt, follow up, or re-engage managers because actions or reviews were not moving on their own. Examples include repeated reminders before action updates, repeated HR follow-up before reviews are completed, or recurring HR intervention to prevent a route from stalling. This proxy is used to show operating friction, not to judge individual managers.
+
 ## Evidence Interpretation Rules
 
 - live evidence proves operating readiness only
@@ -48,9 +52,9 @@ The evidence set must include at least:
 - evidence quality depends on seeing both healthy execution and pressure signals such as stale work, sprawl, repeated no-progress, or HR chasing
 - route expansion still requires explicit approval through the activation decision framework
 
-## What Counts As Sufficient Evidence
+## Required Evidence For Operating-Readiness Review
 
-Evidence is closer to sufficient when it shows all of the following:
+Live evidence is sufficient for operating-readiness review only when all of the following are present:
 
 - Action Center is being used in real route instances rather than simulated examples.
 - Managers are completing actions and participating in reviews at a visible operating rhythm.
@@ -58,9 +62,9 @@ Evidence is closer to sufficient when it shows all of the following:
 - Operators can explain the governance model cleanly under real use.
 - No unresolved privacy or governance incident suggests that the operating model is pushing Loep toward dossier, monitoring, or workflow drift.
 
-## What Does Not Count As Sufficient Evidence
+## Insufficient Evidence
 
-The following are not enough on their own:
+The evidence is insufficient if any required item above is missing. The following are also insufficient on their own:
 
 - a strong route-fit score
 - positive buyer reactions to positioning language
