@@ -1,8 +1,20 @@
 # Action Center Manager Participation One-Pager
 
+## Audience
+
+manager participant, HR operator
+
 ## Purpose
 
-This one-pager explains the manager role in Action Center in under a minute.
+Explain the manager role in bounded route/action/review participation.
+
+## Acceptance Test
+
+A manager can explain their role in under 60 seconds without assuming dashboard ownership.
+
+## Sign-Off Owner
+
+route owner or product/founder owner
 
 ## Your Role
 
