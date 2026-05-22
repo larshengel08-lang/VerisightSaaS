@@ -31,6 +31,7 @@ The current pack now includes:
 
 - product identity and primary-route framing
 - operating system, category benchmark, and master roadmap
+- autonomous execution readiness pack
 - first-wave specs, plans, and executed control artifacts
 - second-wave specs, plans, and executed control artifacts for drilldown, text, and follow-through
 - follow-on architecture spec, plan, and execution artifacts

@@ -443,6 +443,9 @@ without becoming:
 
 The first recommended execution block after this roadmap should be:
 
+0. **Autonomy pack**
+   - use the autonomous execution readiness pack as the control layer for later autonomous block execution
+
 1. **Block A / Phase 1**
    - premium output truth and artifact upgrade
 
