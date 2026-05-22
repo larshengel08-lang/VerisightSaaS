@@ -1,6 +1,6 @@
 # Loep Culture Assessment Board Pack Readiness
 
-**Date:** 2026-05-21  
+**Date:** 2026-05-22  
 **Status:** board pack readiness artifact  
 **Primary scope:** `Loep Culture Assessment / Loep Cultuurbeeld`  
 **Canonical route id:** `culture_assessment`
@@ -30,6 +30,7 @@ Reason:
 
 - runtime board report now matches the premium visual redesign blueprint
 - the fixed ten-step board-read sequence is live in the generated report artifact
+- the canonical culture sample PDF was regenerated from the live runtime on 2026-05-22
 - governance and method boundaries remain explicit inside the redesigned reading order
 
 ### 2.2 Boardroom deck
@@ -47,6 +48,7 @@ V1 pilot minimum:
 
 - a guided `PDF deck` must remain available for board-read use
 - the deck must stay the spacious guided sibling of the compact board report rather than a self-read analytics layer
+- the public website does not need an open boardroom deck download because the current `culture_assessment` sample canon remains guided and docs-side
 
 ### 2.3 Executive one-pager
 
@@ -99,6 +101,7 @@ These are acceptable within first-pilot scope.
 
 - backend: `py -m pytest tests\test_culture_assessment_report_contract.py tests\test_report_generation_smoke.py tests\test_sample_generator.py -q -k "culture_assessment or sample"` -> `11 passed, 4 deselected`
 - frontend: `cmd /c npx vitest run --config vitest.config.ts lib/sample-showcase-assets.test.ts` -> `1 file passed, 6 tests passed`
+- regeneration: `py generate_voorbeeldrapport.py culture_assessment` -> `docs/examples/voorbeeldrapport_cultuurbeeld.pdf` regenerated from the current runtime report
 
 ---
 
