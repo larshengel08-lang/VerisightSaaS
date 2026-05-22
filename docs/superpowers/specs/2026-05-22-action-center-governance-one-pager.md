@@ -2,7 +2,7 @@
 
 ## Audience
 
-HR buyers, HR operators, MT sponsors, IT/security reviewers
+HR buyers, HR operators, executive sponsors, IT/security reviewers
 
 ## Purpose
 
@@ -16,7 +16,7 @@ A buyer can explain HR governance, closeout authority, and product boundaries in
 
 Product owner
 
-Fallback: founder owner if no separate product owner is assigned
+If no separate owner is assigned, the founder/product owner explicitly assumes this sign-off responsibility.
 
 ## What Action Center Is
 

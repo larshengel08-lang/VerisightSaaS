@@ -2,7 +2,7 @@
 
 ## Audience
 
-HR buyers, managers participating in a route, HR operators, MT sponsors
+HR buyers, managers participating in a route, HR operators, executive sponsors
 
 ## Purpose
 
@@ -16,7 +16,7 @@ A reader can describe the flow as governed follow-through inside Loep. The expla
 
 Product owner
 
-Fallback: founder owner if no separate product owner is assigned
+If no separate owner is assigned, the founder/product owner explicitly assumes this sign-off responsibility.
 
 ## 1. Route
 
