@@ -2,7 +2,7 @@
 
 ## Audience
 
-HR buyer, manager participant, HR operator, MT sponsor
+HR buyers, managers participating in a route, HR operators, MT sponsors
 
 ## Purpose
 
@@ -10,7 +10,7 @@ Explain the canonical operating flow simply and accurately.
 
 ## Acceptance Test
 
-A reader can describe the flow without turning it into project management.
+A reader can describe the flow as governed follow-through inside Loep. The explanation stays clearly outside project-management framing.
 
 ## Sign-Off Owner
 
@@ -26,7 +26,7 @@ When execution is needed, a manager or approved participant adds a bounded actio
 
 ## 3. Review
 
-Each action is reviewed inside a defined rhythm. Review checks whether follow-through happened, stalled, or needs continuation. Review keeps execution interpretable for both managers and HR.
+Each action is reviewed inside a defined rhythm. Review checks whether follow-through was completed, stalled, or needs continuation. Review keeps execution clear for both managers and HR.
 
 ## 4. Closeout
 
@@ -48,4 +48,4 @@ HR decides whether the route is ready for closeout or should continue. Closeout 
 
 ## Plain-Language Summary
 
-The route defines the follow-through container, actions move it forward, reviews test whether movement happened, and HR decides when the route is complete.
+The route defines the follow-through container, actions move work forward, reviews confirm what was completed or still needs attention, and HR decides when the route is complete.
