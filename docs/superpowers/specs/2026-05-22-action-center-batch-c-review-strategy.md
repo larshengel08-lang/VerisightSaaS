@@ -18,9 +18,9 @@ A reviewer can identify every required artifact, test it against the correct aud
 
 ## Sign-Off Owner
 
-Founder/product owner (`product/founder owner` in Batch C source language)
+Product/founder owner
 
-Additional required sign-off roles are recorded in the ledger below. If a role is not formally assigned, the founder/product owner must explicitly assume that responsibility.
+Additional required sign-off roles are recorded in the ledger below. If a role is not formally assigned, the product/founder owner must explicitly assume that responsibility.
 
 ## Fixed Review Rules
 
@@ -45,14 +45,14 @@ Additional required sign-off roles are recorded in the ledger below. If a role i
 
 | Artifact | Review check | Acceptance rule | Sign-off owner |
 | --- | --- | --- | --- |
-| `governance one-pager` | Confirms HR governance, route-bound scope, closeout authority, and off-platform boundary language stay intact. | A buyer can explain governance and product boundaries in under 2 minutes without workflow framing. | product owner |
-| `manager participation one-pager` | Confirms manager role stays bounded to route actions and reviews inside an existing route. | A manager can explain the role in under 60 seconds without assuming dashboard or workflow ownership. | founder/product owner or route owner |
+| `governance one-pager` | Confirms HR governance, route-bound scope, closeout authority, and off-platform boundary language stay intact. | A buyer can explain governance and product boundaries in under 2 minutes without workflow framing. | product/founder owner |
+| `manager participation one-pager` | Confirms manager role stays bounded to route actions and reviews inside an existing route. | A manager can explain the role in under 60 seconds without assuming dashboard or workflow ownership. | product/founder owner or route owner for ExitScan / RetentieScan if separate |
 | `privacy / dossier boundary note` | Confirms stored content, prohibited content, and plain-language boundary rules are explicit. | A reviewer can point to clear prohibited uses with no dossier, monitoring, or risk-ledger ambiguity. | privacy/legal reviewer |
-| `route -> action -> review -> closeout explanation` | Confirms route truth, review rhythm, continuation, and HR closeout semantics stay canonical. | A reader can explain the flow without turning it into project management or workflow automation. | founder/product owner |
+| `route -> action -> review -> closeout explanation` | Confirms route truth, review rhythm, continuation, and HR closeout semantics stay canonical. | A reader can explain the flow without turning it into project management or workflow automation. | product/founder owner |
 | `HR operator rollout note` | Confirms day-to-day operating guidance reinforces queue interpretation, escalation, and bounded rollout behavior. | An HR operator can run the rollout without inventing missing governance behavior. | governance/trust reviewer |
-| `product / founder rollout note` | Confirms claim discipline, route-scope guardrails, and launch-owner limits remain explicit. | Founder/product owner can state what may and may not be claimed, activated, or expanded. | founder/product owner |
-| `route-fit matrix` | Confirms scoring scale, must-pass rules, and non-approval interpretation are complete. | A reviewer can classify a candidate route as rejected, parked, conditional fit, or strong conceptual fit without ambiguity. | founder/product owner or route owner |
-| `activation-gate framework` | Confirms activation review cannot open without a complete decision record and explicit live-evidence status. | No activation proposal can enter approval review with missing fields or undocumented ownership. | founder/product owner |
+| `product / founder rollout note` | Confirms claim discipline, route-scope guardrails, and launch-owner limits remain explicit. | Product/founder owner can state what may and may not be claimed, activated, or expanded. | product/founder owner |
+| `route-fit matrix` | Confirms scoring scale, must-pass rules, and non-approval interpretation are complete. | A reviewer can classify a candidate route as rejected, parked, conditional fit, or strong conceptual fit without ambiguity. | product/founder owner or route owner for ExitScan / RetentieScan if separate |
+| `activation-gate framework` | Confirms activation review cannot open without a complete decision record and explicit live-evidence status. | No activation proposal can enter approval review with missing fields or undocumented ownership. | product/founder owner |
 | `live-evidence gate` | Confirms operating-readiness evidence requirements and interpretation rules remain explicit and bounded. | A reviewer can state what evidence exists, what is missing, and why live evidence is not impact proof. | governance/trust reviewer |
 
 ## Buyer Language Red-Team Test
@@ -64,8 +64,11 @@ Additional required sign-off roles are recorded in the ledger below. If a role i
 - reduces employee risk
 - predicts individual turnover
 - measures manager effectiveness
+- project management
 - workflow automation
 - HR operating system
+- employee monitoring
+- personnel dossier
 - standalone module
 
 ### Reject if any artifact weakens fixed boundaries
@@ -98,9 +101,9 @@ Additional required sign-off roles are recorded in the ledger below. If a role i
 
 | Role | Name | Date | Approved | Notes |
 | --- | --- | --- | --- | --- |
-| founder/product owner (`product/founder owner`) |  |  |  |  |
+| product/founder owner |  |  |  |  |
 | governance/trust reviewer |  |  |  |  |
-| route owner |  |  |  |  |
+| route owner for ExitScan / RetentieScan if separate |  |  |  |  |
 | buyer-readiness reviewer or sales owner |  |  |  |  |
 | privacy/legal reviewer |  |  |  |  |
 
@@ -115,7 +118,7 @@ Additional required sign-off roles are recorded in the ledger below. If a role i
 - activation-gate framework keeps complete-decision-record discipline intact
 - live-evidence gate keeps operating-readiness-only interpretation intact
 - no route expansion, documentation-only approval, or Batch A/B truth reopening is introduced
-- sign-off ledger is complete or explicitly assumed by the founder/product owner where needed
+- sign-off ledger is complete or explicitly assumed by the product/founder owner where needed
 
 ## Plain-Language Summary
 
