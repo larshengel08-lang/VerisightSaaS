@@ -1,5 +1,8 @@
 import { buildLiveActionCenterItems, getLiveActionCenterSummary } from '@/lib/action-center-live'
+import type { ActionCenterGovernanceQueue } from '@/lib/action-center-governance-queues'
 import type { ActionCenterPreviewManagerOption } from '@/lib/action-center-preview-model'
+import type { ActionCenterMeasurementReadback } from '@/lib/action-center-measurement-readback'
+import { getActionCenterReviewRhythmData } from '@/lib/action-center-review-rhythm-data'
 import {
   isActionCenterRouteDefaultsEnabledScanType,
   isActionCenterRouteDefaultsKnownScanType,
@@ -77,6 +80,8 @@ export interface ActionCenterPageData {
   organizationNames: string[]
   inviteDownloadEligibleRouteIds: string[]
   routeScanTypeByRouteId: Record<string, ActionCenterRouteDefaultsKnownScanType>
+  governanceQueue: ActionCenterGovernanceQueue
+  measurementReadback: ActionCenterMeasurementReadback
 }
 
 function normalizeDepartmentLabel(value: string | null | undefined) {
@@ -469,6 +474,7 @@ export async function getActionCenterPageData({
 
   const items = buildLiveActionCenterItems(liveContexts)
   const summary = getLiveActionCenterSummary(items)
+  const now = new Date()
   const ownerOptions = [...new Set(items.map((item) => item.ownerName).filter((value): value is string => Boolean(value)))].sort(
     (left, right) => left.localeCompare(right),
   )
@@ -486,6 +492,11 @@ export async function getActionCenterPageData({
   const itemHrefs = context.canViewInsights
     ? Object.fromEntries(items.map((item) => [item.id, `/campaigns/${item.coreSemantics.route.campaignId}`]))
     : {}
+  const rhythmData = await getActionCenterReviewRhythmData({
+    items,
+    now,
+    routeScanTypeByRouteId,
+  })
 
   return {
     items,
@@ -496,5 +507,7 @@ export async function getActionCenterPageData({
     organizationNames: [...new Set(organizations.map((organization) => organization.name).filter(Boolean))],
     inviteDownloadEligibleRouteIds,
     routeScanTypeByRouteId,
+    governanceQueue: rhythmData.governanceQueue,
+    measurementReadback: rhythmData.measurementReadback,
   }
 }

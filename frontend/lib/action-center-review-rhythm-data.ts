@@ -1,5 +1,7 @@
 import type { ActionCenterPreviewItem } from '@/lib/action-center-preview-model'
 import { deriveActionCenterRouteGovernanceSignals } from '@/lib/action-center-governance'
+import { buildActionCenterGovernanceQueue } from '@/lib/action-center-governance-queues'
+import { buildActionCenterMeasurementReadback } from '@/lib/action-center-measurement-readback'
 import { buildActionCenterReviewOversightSummary } from '@/lib/action-center-review-oversight'
 import {
   getActionCenterEnabledRouteDefaults,
@@ -248,10 +250,23 @@ export async function getActionCenterReviewRhythmData(args: {
     routeScanTypeByRouteId: args.routeScanTypeByRouteId,
     now: args.now,
   })
+  const governanceQueue = buildActionCenterGovernanceQueue({
+    items: eligibleItems,
+    now: args.now,
+    routeScanTypeByRouteId: args.routeScanTypeByRouteId,
+  })
+  const measurementReadback = buildActionCenterMeasurementReadback({
+    items: eligibleItems,
+    governanceQueue,
+    routeScanTypeByRouteId: args.routeScanTypeByRouteId,
+    now: args.now,
+  })
 
   return {
     configByRouteId,
     summary,
     oversight: governanceAwareOversight,
+    governanceQueue,
+    measurementReadback,
   }
 }

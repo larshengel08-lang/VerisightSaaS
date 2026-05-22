@@ -679,4 +679,78 @@ create policy "service_role_can_insert_action_center_bounded_execution_events"
   to service_role
   with check (true);
 
+create table if not exists public.action_center_governance_interventions (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.organizations(id) on delete cascade,
+  route_id text not null,
+  action_id text null,
+  route_source_id uuid not null,
+  route_scope_value text not null,
+  queue_code text not null
+    check (
+      queue_code in (
+        'needs_owner_or_assignment_issue',
+        'missing_action_where_execution_expected',
+        'action_review_due',
+        'stuck_action',
+        'blocked_action',
+        'action_sprawl_risk',
+        'repeated_review_without_progress',
+        'route_ready_for_closeout',
+        'route_stale_despite_actions',
+        'HR_review_required'
+      )
+    ),
+  intervention_type text not null
+    check (
+      intervention_type in (
+        'observe_only',
+        'request_manager_update',
+        'send_bounded_reminder',
+        'require_action_review',
+        'mark_hr_review_required',
+        'request_action_correction',
+        'suppress_false_signal',
+        'close_route',
+        'continue_route',
+        'reopen_route'
+      )
+    ),
+  reason_code text null,
+  actor_role text not null
+    check (actor_role in ('verisight_admin', 'verisight', 'hr_owner', 'hr_member', 'hr')),
+  actor_user_id uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  constraint action_center_governance_interventions_route_id_text_check
+    check (length(btrim(route_id)) > 0),
+  constraint action_center_governance_interventions_route_scope_value_text_check
+    check (length(btrim(route_scope_value)) > 0),
+  constraint action_center_governance_interventions_route_identity_check
+    check (route_id = ((route_source_id)::text || '::' || route_scope_value)),
+  constraint action_center_governance_interventions_suppression_reason_check
+    check ((intervention_type <> 'suppress_false_signal') or reason_code is not null),
+  constraint action_center_governance_interventions_route_source_campaign_org_fk
+    foreign key (route_source_id, org_id) references public.campaigns(id, organization_id) on delete cascade
+);
+
+create index if not exists idx_action_center_governance_interventions_org
+  on public.action_center_governance_interventions(org_id, created_at desc);
+
+create index if not exists idx_action_center_governance_interventions_route
+  on public.action_center_governance_interventions(route_id, created_at desc);
+
+alter table public.action_center_governance_interventions enable row level security;
+
+drop policy if exists "service_role_can_select_action_center_governance_interventions" on public.action_center_governance_interventions;
+create policy "service_role_can_select_action_center_governance_interventions"
+  on public.action_center_governance_interventions for select
+  to service_role
+  using (true);
+
+drop policy if exists "service_role_can_insert_action_center_governance_interventions" on public.action_center_governance_interventions;
+create policy "service_role_can_insert_action_center_governance_interventions"
+  on public.action_center_governance_interventions for insert
+  to service_role
+  with check (true);
+
 notify pgrst, 'reload schema';

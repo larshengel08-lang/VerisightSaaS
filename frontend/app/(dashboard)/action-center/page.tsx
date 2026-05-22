@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { ActionCenterPreview } from '@/components/dashboard/action-center-preview'
 import { resolveActionCenterEntryParams } from '@/lib/action-center-entry'
 import { buildLiveActionCenterItems, getLiveActionCenterSummary } from '@/lib/action-center-live'
+import { getActionCenterReviewRhythmData } from '@/lib/action-center-review-rhythm-data'
 import { buildActionCenterRouteId } from '@/lib/action-center-route-contract'
 import { projectActionCenterRouteCloseout } from '@/lib/action-center-route-closeout'
 import {
@@ -503,10 +504,20 @@ export default async function ActionCenterPage({
     source === 'campaign-detail'
       ? 'Geopend vanuit campaign detail: hier worden eigenaarschap, eerste managerstap en reviewritme expliciet.'
       : source === 'review-moments'
-        ? 'Geopend vanuit reviewmomenten: hier blijft de gekoppelde opvolging en reviewcontext bij elkaar.'
+      ? 'Geopend vanuit reviewmomenten: hier blijft de gekoppelde opvolging en reviewcontext bij elkaar.'
       : summary.productCount > 0
         ? `Live opvolging over ${summary.productCount} product${summary.productCount === 1 ? '' : 'en'}`
         : 'Live opvolging'
+  const governanceReadback = await getActionCenterReviewRhythmData({
+    items,
+    now: new Date(),
+    routeScanTypeByRouteId: Object.fromEntries(
+      liveContexts.map((context) => [
+        buildActionCenterRouteId(context.campaign.id, context.scopeValue),
+        context.campaign.scan_type,
+      ]),
+    ),
+  })
 
   if (items.length === 0) {
     return (
@@ -572,6 +583,8 @@ export default async function ActionCenterPage({
       hideSidebar
       boundedOverviewOnly={entry.view === 'overview'}
       allowEmptyInitialSelection={hasAmbiguousCampaignFocus}
+      governanceQueue={governanceReadback.governanceQueue}
+      measurementReadback={governanceReadback.measurementReadback}
     />
   )
 }

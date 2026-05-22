@@ -161,6 +161,8 @@ describe('action center review rhythm data', () => {
         state: 'stale',
       },
     ])
+    expect(result.measurementReadback.layers.routeLevel.routesOpen).toBe(2)
+    expect(result.measurementReadback.buyerSafeVocabulary).toContain('bounded execution active')
   })
 
   it('queries and returns only constitution-approved route families by canonical route id', async () => {

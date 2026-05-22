@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   ACTION_CENTER_BOUNDED_EXECUTION_EVENT_TYPES,
   buildActionCenterBoundedExecutionEvent,
+  buildActionCenterMetricCatalog,
 } from './action-center-bounded-execution-metrics'
 
 describe('bounded execution metric events', () => {
@@ -79,5 +80,19 @@ describe('bounded execution metric events', () => {
         },
       }),
     ).toThrow('Bounded execution event metadata must stay an empty object.')
+  })
+
+  it('defines blocked_action_rate and route_ready_for_closeout_rate with bounded semantics', () => {
+    const catalog = buildActionCenterMetricCatalog()
+
+    expect(catalog.blocked_action_rate.visibility).toBe('buyer_safe_reporting')
+    expect(catalog.route_ready_for_closeout_rate.doesNotProve).toContain('route success')
+  })
+
+  it('keeps action completion readback bounded', () => {
+    const catalog = buildActionCenterMetricCatalog()
+
+    expect(catalog.action_completion_rate.interpretation).toContain('completed state')
+    expect(catalog.action_completion_rate.doesNotProve).toContain('route resolution')
   })
 })
