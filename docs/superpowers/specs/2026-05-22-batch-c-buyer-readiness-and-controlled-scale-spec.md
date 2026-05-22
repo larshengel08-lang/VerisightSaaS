@@ -98,6 +98,20 @@ By the end of Batch C:
 - an activation-gate framework exists for any later scale decision
 - Batch C leaves route-family expansion gated behind live evidence instead of roadmap optimism
 
+## 5A. Buyer Audience Matrix
+
+Batch C must define audience-specific understanding instead of relying on one generic buyer story.
+
+| Audience | What they must understand | What they must not misunderstand | Artifact(s) that serve this audience |
+| --- | --- | --- | --- |
+| `HR buyer / HR director` | Action Center is an HR-governed follow-through layer for route-bound post-scan execution, review rhythm, and closeout discipline | It is not workflow software, a task board, or a standalone module | governance one-pager, route -> action -> review -> closeout explanation, route-fit matrix |
+| `Directie / MT sponsor` | Action Center makes follow-through visible and governable without claiming impact proof | It is not an analytics proof engine, intervention-success product, or broad people operating system | governance one-pager, buyer-safe reporting language, live-evidence gate definition |
+| `HR operator` | HR works from bounded governance and rollout rules, not from free-form case management | HR is not expected to operate a broad workflow system or maintain employee dossiers | internal rollout note for HR operators, governance one-pager, privacy / dossier boundary note |
+| `Manager participant` | Managers participate through bounded route/action/review steps inside approved routes | They do not own a dashboard, project board, or workflow system | manager participation one-pager, route -> action -> review -> closeout explanation |
+| `Legal / privacy / OR-style reviewer` | Action Center tracks bounded follow-through history and governance state with explicit privacy boundaries | It is not employee monitoring, a personnel dossier, or an employee risk ledger | privacy / dossier boundary note, governance one-pager |
+| `IT / security reviewer` | Action Center remains canonical inside Loep with no off-platform canonical writes or broad collaboration sprawl | It is not a shadow workflow platform or externally-governed write surface | governance one-pager, privacy / dossier boundary note, activation-gate framework |
+| `Product / founder owner` | Batch C packages stable truth from A and B without reopening core semantics or weakening live-evidence discipline | Batch C is not permission to expand route scope, widen claims, or hide unresolved product truth | internal rollout note for product / founder owner, route-fit matrix, live-evidence gate definition |
+
 ## 6. Workstream C1 - Buyer Governance Framing
 
 Batch C must define a buyer-safe explanation of Action Center.
@@ -149,6 +163,56 @@ Batch C must define the artifacts needed to roll Action Center out safely.
 - rollout materials must not compensate for unresolved product semantics
 - rollout materials must make boundedness easier to understand, not broader to sell
 
+### 7.3 Artifact Acceptance Criteria
+
+Every required artifact must have a clear audience, bounded purpose, acceptance test, and sign-off owner.
+
+| Artifact | Audience | Purpose | Must include | Must not include | Acceptance test | Sign-off owner |
+| --- | --- | --- | --- | --- | --- | --- |
+| `governance one-pager` | HR buyer, HR operator, MT sponsor, IT/security reviewer | Explain HR governance, closeout authority, escalation boundaries, and Action Center role | HR governance model, closeout/continuation rules, bounded intervention framing, route-bound scope, no off-platform writes | workflow-software framing, project-management language, standalone-module framing | A buyer can explain HR governance and boundaries in under 2 minutes without calling the product workflow software | product/founder owner |
+| `manager participation one-pager` | manager participant, HR operator | Explain the manager role in bounded route/action/review participation | manager role, bounded actions, review rhythm, what managers do not own | dashboard ownership, workflow ownership, project-board framing | A manager can explain their role in under 60 seconds without assuming dashboard ownership | route owner or product/founder owner |
+| `privacy / dossier boundary note` | legal/privacy reviewer, HR buyer, HR operator, IT/security reviewer | Define what Action Center stores and what it must never become | not a personnel dossier, not employee monitoring, not employee risk ledger, bounded evidence rules | open employee narratives, surveillance framing, risk scoring framing | A privacy reviewer can point to explicit prohibited uses and no dossier ambiguity remains | privacy/legal reviewer |
+| `route -> action -> review -> closeout explanation` | HR buyer, manager participant, HR operator, MT sponsor | Explain the canonical operating flow simply and accurately | route truth, action role, review checkpoints, HR closeout role, continuation logic | project-plan framing, task-tree framing, workflow-automation framing | A reader can describe the flow without turning it into project management | product/founder owner |
+| `internal rollout note for HR operators` | HR operator | Explain how to roll out and operate Action Center day-to-day | operator responsibilities, queue/governance interpretation, escalation boundaries, what to avoid | ad hoc case-management behavior, broad operating-system framing | An HR operator can run the rollout without inventing missing governance behavior | governance/trust reviewer |
+| `internal rollout note for product / founder owner` | product/founder owner | Explain rollout boundaries, claims discipline, and launch guardrails | positioning boundaries, live-evidence dependency, route-scope guardrails, sign-off expectations | premature proof claims, automatic route expansion assumptions | Founder/product owner can state what may and may not be claimed or expanded | product/founder owner |
+| `route-fit matrix` | product/founder owner, route owner, governance/trust reviewer | Evaluate whether any future route family conceptually fits Action Center | scored dimensions, must-pass rules, rejection/parking rules, workflow-broadening risk | automatic approval language, unsupported route-family assumptions | A candidate route can be scored and either rejected, parked, conditional, or judged strong-fit without ambiguity | route owner or product/founder owner |
+| `activation-gate framework` | product/founder owner, governance/trust reviewer, buyer-readiness reviewer | Define the decision mechanics for any later activation proposal | decision template, owners, required fields, route-fit reference, live-evidence dependency | vague "expand later" language, undocumented approvals | No activation can be discussed without a complete decision record | product/founder owner |
+| `live-evidence gate definition` | product/founder owner, governance/trust reviewer, buyer-readiness reviewer | Define the minimum operating evidence required before any expansion decision | usage, review, stale/sprawl/no-progress, HR chasing proxy, operator feedback, privacy/governance incident requirement, interpretation rules | impact-proof claims, route-expansion by document alone | A reviewer can state exactly what evidence is still missing before expansion | governance/trust reviewer |
+
+### 7.4 Buyer Language Red-Team Test
+
+Every buyer-facing artifact must pass a required language review before Batch C exit.
+
+#### Prohibited phrases or claim types
+
+- solves retention
+- proves intervention impact
+- reduces employee risk
+- predicts individual turnover
+- measures manager effectiveness
+- project management
+- workflow automation
+- HR operating system
+- employee monitoring
+- personnel dossier
+- standalone module
+
+#### Allowed safer language
+
+- makes follow-through visible
+- records ownership and review rhythm
+- shows where rhythm stalls
+- supports HR-governed follow-through
+- tracks whether agreed follow-through happened and was reviewed
+- does not judge individual employees
+- does not claim causal impact
+
+#### Red-team rule
+
+Each buyer-facing artifact must be reviewed as if an external buyer is looking for overclaim, scope drift, or workflow framing.
+
+Batch C may not exit unless all buyer-facing artifacts pass this red-team test.
+
 ## 8. Workstream C3 - Privacy, Dossier, And Monitoring Boundaries
 
 Batch C must make Action Center defensible from a trust and privacy perspective.
@@ -183,12 +247,38 @@ Any future candidate route family must be evaluated against at least:
 - closeout / continuation fit
 - evidence grammar fit
 - HR governance fit
+- privacy / dossier safety
 - buyer-safe route distinction
 - risk of workflow broadening
 
-### 9.2 Route-fit rule
+### 9.2 Route-fit scoring
 
-The route-fit matrix is evaluative only. It does not expand Action Center by itself.
+Each dimension must be scored as:
+
+- `0` = no fit
+- `1` = weak / high risk
+- `2` = conditional fit
+- `3` = strong fit
+
+### 9.3 Must-pass dimensions
+
+The following dimensions are must-pass:
+
+- bounded management question
+- post-scan follow-through fit
+- review rhythm fit
+- closeout / continuation fit
+- evidence grammar fit
+- HR governance fit
+- privacy / dossier safety
+- no workflow broadening
+
+### 9.4 Route-fit rules
+
+- If any must-pass dimension scores `0`, the route is rejected.
+- If workflow-broadening risk is high, the route is rejected or parked.
+- Conceptual route-fit is not enough for activation without live evidence.
+- The route-fit matrix is evaluative only. It does not expand Action Center by itself.
 
 ## 10. Workstream C5 - Activation Gate Framework
 
@@ -207,6 +297,25 @@ Any future expansion proposal must show:
 ### 10.2 Gate rule
 
 Passing a conceptual fit review is still insufficient without live evidence.
+
+### 10.3 Activation Gate Decision Template
+
+No activation may happen without a completed decision record containing at least:
+
+- candidate route family
+- proposed use case
+- route-fit scores
+- must-pass failures, if any
+- live evidence available
+- governance risks
+- privacy / dossier risks
+- required route defaults
+- required evidence grammar
+- required closeout semantics
+- decision owner
+- decision date
+- decision outcome: `approved` / `rejected` / `conditional` / `parked`
+- rationale
 
 ## 11. Workstream C6 - Live Evidence Gate
 
@@ -236,6 +345,13 @@ It still does not prove:
 - intervention effectiveness
 - adoption proof in the broad commercial sense
 
+### 11.3 Live-evidence interpretation rules
+
+- live evidence proves operating readiness only, not causal impact
+- evidence must include usage, review, sprawl/stale/no-progress, HR chasing proxy, and operator feedback
+- absence of governance/privacy incidents is required but not sufficient
+- route expansion after live evidence still requires explicit approval through the activation decision template
+
 ## 12. Required Deliverables
 
 Batch C must produce:
@@ -250,6 +366,18 @@ Batch C must produce:
 - live-evidence gate definition
 - implementation plan for Batch C
 - test / review strategy for buyer-language, route-fit, and boundary consistency
+
+## 12A. Sign-Off Requirements
+
+Batch C output cannot move to rollout or implementation unless approved by:
+
+- product/founder owner
+- governance/trust reviewer
+- route owner for ExitScan / RetentieScan if separate
+- buyer-readiness reviewer or sales owner
+- privacy/legal reviewer, where available
+
+If any role is not formally assigned, the founder/product owner must explicitly assume that sign-off responsibility.
 
 ## 13. Decision Order
 
@@ -284,15 +412,14 @@ Batch C does not do the following:
 
 Batch C may exit only when:
 
-- buyer governance framing is complete
-- governance one-pager is complete
-- manager participation one-pager is complete
-- privacy / dossier boundary note is complete
-- route -> action -> review -> closeout explanation is complete
-- route-fit matrix is complete
-- activation-gate framework is complete
-- live-evidence gate is complete
-- buyer language clearly states that Action Center is not workflow, project management, case management, employee monitoring, or a standalone module
+- all required artifacts meet their acceptance criteria
+- buyer audience matrix is complete
+- buyer language red-team test is passed
+- route-fit matrix includes scoring and must-pass rules
+- activation-gate decision template is complete
+- live-evidence gate definition includes interpretation rules
+- sign-off is complete
+- no buyer-facing language presents Action Center as workflow, project management, monitoring, personnel dossier, standalone module, or causal-impact product
 - no unresolved product truth remains around buyer framing, route-fit, activation rules, or boundary semantics
 
 ## 16. Stop Conditions
