@@ -1,4 +1,4 @@
-# Action Center Route -> Action -> Review -> Closeout Explanation
+# Action Center Follow-Through Operating Model
 
 ## Audience
 
@@ -6,7 +6,7 @@ HR buyers, managers participating in a route, HR operators, MT sponsors
 
 ## Purpose
 
-Explain the canonical operating flow simply and accurately.
+Explain the route-to-action-to-review-to-closeout operating flow simply and accurately.
 
 ## Acceptance Test
 
@@ -14,7 +14,9 @@ A reader can describe the flow as governed follow-through inside Loep. The expla
 
 ## Sign-Off Owner
 
-product/founder owner
+Product owner
+
+Fallback: founder owner if no separate product owner is assigned
 
 ## 1. Route
 
@@ -34,10 +36,10 @@ HR decides whether the route is ready for closeout or should continue. Closeout 
 
 ## Why This Flow Matters
 
-- it keeps execution tied to the route instead of to free-form task sprawl
+- it keeps execution tied to the route instead of drifting into unmanaged task activity
 - it keeps managers involved without making them workflow owners
 - it keeps HR in charge of continuation and closeout decisions
-- it keeps follow-through canonical inside Action Center
+- it keeps Action Center as the system of record for follow-through
 
 ## What This Flow Is Not
 

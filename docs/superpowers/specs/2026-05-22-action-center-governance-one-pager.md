@@ -14,7 +14,9 @@ A buyer can explain HR governance, closeout authority, and product boundaries in
 
 ## Sign-Off Owner
 
-product/founder owner
+Product owner
+
+Fallback: founder owner if no separate product owner is assigned
 
 ## What Action Center Is
 
@@ -22,7 +24,7 @@ product/founder owner
 - route-bound follow-through after an approved scan
 - limited to approved route families: `exit` and `retention`
 - HR-governed from continuation through closeout
-- canonical inside Action Center for route, action, review, and closeout state
+- Action Center remains the system of record for route, action, review, and closeout state
 
 ## What Action Center Is Not
 
@@ -39,8 +41,8 @@ product/founder owner
 - HR owns the operating rhythm, review interpretation, continuation decisions, and closeout authority.
 - Managers participate through bounded route actions and reviews inside an existing route.
 - Action Center records whether agreed follow-through happened, was reviewed, and needs continuation.
-- Action Center does not judge individual employees and does not claim causal intervention impact.
-- Off-platform channels may notify participants, but they do not change canonical route state.
+- Action Center does not judge individual employees and does not present follow-through activity as proof of intervention impact.
+- Off-platform channels may notify participants, but Action Center remains the system of record for route state.
 
 ## Operating Boundaries
 
@@ -58,4 +60,4 @@ product/founder owner
 
 ## Buyer-Safe Summary
 
-Action Center supports HR-governed, route-bound follow-through inside Loep. It makes agreed follow-through visible and reviewable, does not judge individual employees, and does not claim causal intervention impact.
+Action Center supports HR-governed, route-bound follow-through inside Loep. It makes agreed follow-through visible and reviewable, does not judge individual employees, and does not present follow-through activity as proof of intervention impact.

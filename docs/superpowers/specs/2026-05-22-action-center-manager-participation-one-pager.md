@@ -15,34 +15,34 @@ A manager can explain their role in under 60 seconds. The explanation keeps rout
 ## Sign-Off Owner
 
 Primary: route owner
-Fallback: product/founder owner if no separate route owner is assigned
+Fallback: Product owner if no separate route owner is assigned
 
 ## Your Role
 
-- you participate inside an existing route
-- you help move route-bound follow-through forward
-- you create, update, and review bounded actions when execution is needed
-- you surface blockers, lack of progress, or handoff needs when they appear
+- You participate inside an existing route.
+- You help move route-bound follow-through forward.
+- You create, update, and review bounded actions when execution is needed.
+- You surface blockers, lack of progress, or handoff needs when they appear.
 
 ## What You Are Expected To Do
 
-- add a concrete action tied to the route
-- keep the action specific enough to review
-- update action state honestly as follow-through happens
-- review whether follow-through happened, stalled, or needs continuation
+- Add a concrete action tied to the route.
+- Keep the action specific enough to review.
+- Update action state honestly as follow-through happens.
+- Review whether follow-through was completed, stalled, or needs continuation.
 
 ## What You Do Not Own
 
-- you do not own route closeout
-- you do not run HR's governance process around the route
-- you do not decide continuation policy on your own
-- you are not being asked to operate a dashboard, project board, or workflow system
+- You do not own route closeout.
+- You do not run HR's governance process around the route.
+- You do not decide continuation policy on your own.
+- You are not being asked to operate a dashboard, project board, or workflow system.
 
 ## How HR Fits In
 
-- HR governs the operating rhythm around the route
-- HR interprets review outcomes and escalation needs
-- HR decides whether the route continues or closes out
+- HR governs the operating rhythm around the route.
+- HR interprets review outcomes and escalation needs.
+- HR decides whether the route continues or closes out.
 
 ## One-Sentence Summary
 
