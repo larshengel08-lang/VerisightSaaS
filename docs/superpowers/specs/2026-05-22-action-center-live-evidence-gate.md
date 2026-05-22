@@ -30,7 +30,7 @@ No route-family expansion may be approved from roadmap work, conceptual fit, or 
 The evidence set must include at least:
 
 - live Action Center usage across multiple route instances
-- evidence from both ExitScan and RetentieScan contexts, unless one context is explicitly excluded with rationale
+- evidence from both `exit` and `retention` contexts, unless one context is explicitly excluded with rationale
 - manager action completion data
 - action review completion data
 - stale, sprawl, and repeated-review-without-progress data
@@ -78,6 +78,13 @@ The evidence is insufficient if any required item above is missing. The followin
 - `not ready`: live evidence is missing or materially incomplete
 - `partially ready`: some live evidence exists, but the set is not yet strong enough for an approval-grade activation review
 - `operating-ready for review`: the minimum live evidence exists and can support an activation decision discussion, while still not proving impact
+
+## Handoff To Activation Decision
+
+- The live-evidence gate must produce exactly one documented outcome: `not ready`, `partially ready`, or `operating-ready for review`.
+- That exact outcome must be copied into the activation decision record as the `live-evidence gate outcome`.
+- If the outcome is `not ready` or `partially ready`, the activation decision should normally remain `parked` or `conditional`.
+- If the outcome is `operating-ready for review`, the activation decision may enter approval review, but approval still requires the full activation-gate decision record and explicit sign-off.
 
 ## Non-Negotiable Interpretation
 
