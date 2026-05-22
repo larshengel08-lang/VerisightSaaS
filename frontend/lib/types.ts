@@ -208,7 +208,7 @@ export function getResponseDirectionSignalScore(
 }
 
 export function hasCampaignAddOn(
-  campaign: Pick<Campaign, 'enabled_modules'> | null | undefined,
+  campaign: { enabled_modules?: string[] | null } | null | undefined,
   addOn: CampaignAddOn,
 ) {
   if (addOn === 'segment_deep_dive') {

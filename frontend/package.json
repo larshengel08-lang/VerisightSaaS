@@ -16,10 +16,13 @@
     "@sentry/nextjs": "^8.0.0",
     "@supabase/ssr": "^0.10.0",
     "@supabase/supabase-js": "^2.101.1",
+    "gray-matter": "^4.0.3",
     "next": "15.5.14",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "recharts": "^3.8.1"
+    "react-markdown": "^10.1.0",
+    "recharts": "^3.8.1",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

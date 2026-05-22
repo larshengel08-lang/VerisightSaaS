@@ -22,6 +22,7 @@ It is not yet:
 - self-serve platform-ready
 - workflow-platform ready
 - repo-wide merge-clean
+- mature-enterprise claim ready without live pilot evidence
 
 ---
 
@@ -47,6 +48,10 @@ Compact redesign closeout note:
 - scoped verification evidence recorded:
   backend `py -m pytest tests\test_culture_assessment_report_contract.py tests\test_report_generation_smoke.py tests\test_sample_generator.py -q -k "culture_assessment or sample"` -> `11 passed, 4 deselected`
   frontend `cmd /c npx vitest run --config vitest.config.ts lib/sample-showcase-assets.test.ts` -> `1 file passed, 6 tests passed`
+- scoped release-stability note now exists for the clean branch
+- delivery-ops productization note now exists
+- enterprise trust live-pack note now exists
+- pilot handoff pack and pilot go/no-go note now exist
 
 ---
 
@@ -86,8 +91,8 @@ The most sensible next build priorities are:
 If the goal is disciplined progress, the next sequence should be:
 
 1. keep the document pack as the current source of truth
-2. choose the next code-facing implementation slice rather than opening more product scope
-3. only after that, consider a cleaner PR or branch-isolation pass for the `culture_assessment` line
+2. use the autonomous execution readiness pack and phased maturity roadmap as the control layer for further work
+3. keep live pilot and mature-enterprise claims behind the human-only gates
 
 ---
 

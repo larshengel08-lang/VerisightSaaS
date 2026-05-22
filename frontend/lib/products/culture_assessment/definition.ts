@@ -73,5 +73,5 @@ export const cultureAssessmentDefinition: ScanDefinition = {
   followOnDecisionNote:
     'Geen vervolgrichting opent automatisch na de baseline. De board-read sluit expliciet af met een keuze tussen geen onmiddellijke vervolgrichting, deeper governed work, een bounded Pulse-follow-on of een andere Loep-route als de vervolgvraag echt smaller is.',
   governedExportEntitlements: CULTURE_ASSESSMENT_CONTRACT.governedExportEntitlements,
-  textSafetyStates: CULTURE_ASSESSMENT_CONTRACT.textSafetyStates,
+  textSafetyStates: [...CULTURE_ASSESSMENT_CONTRACT.textSafetyStates],
 }

@@ -26,7 +26,7 @@ import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { FACTOR_LABELS, hasCampaignAddOn } from '@/lib/types'
-import type { CampaignStats, MemberRole, Respondent, ScanType, SurveyResponse } from '@/lib/types'
+import type { Campaign, CampaignStats, MemberRole, Respondent, ScanType, SurveyResponse } from '@/lib/types'
 import {
   buildOpenAnswerItems,
   buildOpenAnswersViewModel,
@@ -828,6 +828,7 @@ export default async function CampaignPage({ params }: Props) {
   const stats = statsRow as CampaignStats
 
   const [
+    { data: campaignRow },
     { data: organization },
     { data: responsesRaw },
     { data: respondentsRaw },
@@ -836,6 +837,7 @@ export default async function CampaignPage({ params }: Props) {
     { data: membership },
   ] =
     await Promise.all([
+      supabase.from('campaigns').select('enabled_modules').eq('id', id).maybeSingle(),
       supabase.from('organizations').select('name').eq('id', stats.organization_id).maybeSingle(),
       supabase
         .from('survey_responses')
@@ -883,6 +885,7 @@ export default async function CampaignPage({ params }: Props) {
     respondents: Respondent
   })[]
   const respondents = (respondentsRaw ?? []) as Respondent[]
+  const campaign = (campaignRow ?? null) as Pick<Campaign, 'enabled_modules'> | null
 
   const hasMinDisplay = responses.length >= MIN_N_DISPLAY
   const hasEnoughData = responses.length >= MIN_N_PATTERNS
@@ -917,7 +920,7 @@ export default async function CampaignPage({ params }: Props) {
   const organizationName = organization?.name ?? 'Organisatie'
   const isVerisightAdmin = profile?.is_verisight_admin === true
   const membershipRole = (membership?.role ?? null) as MemberRole | null
-  const hasSegmentDeepDive = hasCampaignAddOn(stats, 'segment_deep_dive')
+  const hasSegmentDeepDive = hasCampaignAddOn(campaign, 'segment_deep_dive')
   const canAccessGovernedSegmentExport =
     stats.scan_type === 'culture_assessment' &&
     canAccessCultureAssessmentSegmentSummaryExport({

@@ -14,7 +14,7 @@ import { createClient } from '@/lib/supabase/server'
 import type { CampaignStats } from '@/lib/types'
 import { buildCockpitIndexRows, buildCockpitSummary, type CockpitAction, type CockpitRow } from './cockpit-index'
 
-const MODULE_ORDER: DashboardCategoryModuleKey[] = ['exit', 'retention', 'onboarding', 'pulse', 'leadership']
+const MODULE_ORDER: DashboardCategoryModuleKey[] = ['exit', 'retention', 'onboarding', 'pulse', 'leadership', 'culture_assessment']
 
 export default async function DashboardHomePage({
   searchParams,

@@ -6,6 +6,7 @@ interface Props {
   campaignId: string
   campaignName: string
   scanType?: string
+  showSegmentSummaryExport?: boolean
   label?: string
   loadingLabel?: string
   buttonClassName?: string
@@ -19,12 +20,14 @@ export function PdfDownloadButton({
   campaignId,
   campaignName,
   scanType,
+  showSegmentSummaryExport,
   label = 'Rapport downloaden',
   loadingLabel = 'Rapport ophalen...',
   buttonClassName,
   containerClassName,
   errorClassName,
 }: Props) {
+  void showSegmentSummaryExport
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 

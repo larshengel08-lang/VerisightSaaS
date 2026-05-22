@@ -9,20 +9,25 @@
 
 ## 1. Launch Readiness Checks
 
-- [ ] method source is locked
-- [ ] domain and index lock exists
-- [ ] validity and release lock exists
-- [ ] buyer FAQ exists
-- [ ] privacy, export, and release pack exists
-- [ ] output registry exists
-- [ ] executive spine map exists
-- [ ] claim-safe copy lock exists
-- [ ] operating owner map is populated
-- [ ] first pilot constraints are accepted
-- [ ] follow-on outcome logic is explicit
+- [x] method source is locked
+- [x] domain and index lock exists
+- [x] validity and release lock exists
+- [x] buyer FAQ exists
+- [x] privacy, export, and release pack exists
+- [x] output registry exists
+- [x] executive spine map exists
+- [x] claim-safe copy lock exists
+- [x] operating owner map is populated for internal pilot preparation
+- [x] first pilot constraints are accepted
+- [x] follow-on outcome logic is explicit
 
 ---
 
 ## 2. Pre-Launch Review Note
 
 The route may not launch if the checklist is materially incomplete or if ownership remains implicit.
+
+Current note:
+
+- internal guided pilot readiness is materially complete
+- external pilot launch still requires replacing the fictive owner placeholders with real named humans

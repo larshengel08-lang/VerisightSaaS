@@ -9,10 +9,10 @@
 
 ## 1. Preparation Checklist
 
-- [ ] board report prepared
-- [ ] board deck prepared
+- [x] board report prepared
+- [x] board deck prepared
 - [ ] executive one-pager prepared
-- [ ] facilitator script ready
+- [x] facilitator script ready
 - [ ] HR appendix prepared where allowed
 
 ---
@@ -29,4 +29,10 @@
 
 The board-read remains guided.
 The handoff must not rely on informal interpretation or ad hoc output rewriting.
+
+V1 note:
+
+- the board report and boardroom PDF deck are sufficient for guided pilot handoff
+- the executive one-pager remains optional and `blueprint_ready`
+- the HR appendix remains governed and is not required for baseline pilot handoff
 

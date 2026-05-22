@@ -1,3 +1,5 @@
+import type { ScanType } from '@/lib/types'
+
 export const FIRST_DASHBOARD_THRESHOLD = 5
 export const FIRST_INSIGHT_THRESHOLD = 10
 
@@ -18,8 +20,21 @@ export interface ResponseActivationState {
   heroActionLabel: string
 }
 
+export interface ResponseActivationThresholds {
+  dashboardMin: number
+  insightMin: number
+}
+
 function formatResponseCount(count: number) {
   return `${count} response${count === 1 ? '' : 's'}`
+}
+
+export function getResponseActivationThresholds(scanType: ScanType): ResponseActivationThresholds {
+  void scanType
+  return {
+    dashboardMin: FIRST_DASHBOARD_THRESHOLD,
+    insightMin: FIRST_INSIGHT_THRESHOLD,
+  }
 }
 
 export function buildResponseActivationState(totalCompleted: number): ResponseActivationState {

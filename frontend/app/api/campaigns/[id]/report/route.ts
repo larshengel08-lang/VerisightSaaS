@@ -7,6 +7,15 @@ interface Context {
   params: Promise<{ id: string }>
 }
 
+function buildFallbackReportFilename(scanType: string, campaignName: string, extension: 'pdf') {
+  const normalizedName = campaignName
+    .trim()
+    .replace(/\s+/g, '_')
+    .replace(/[^A-Za-z0-9_-]/g, '')
+  const normalizedScanType = scanType.trim().replace(/\s+/g, '_')
+  return `Loep_${normalizedScanType}_${normalizedName || 'report'}.${extension}`
+}
+
 export async function GET(_request: Request, { params }: Context) {
   const { id } = await params
   const supabase = await createClient()
@@ -18,7 +27,7 @@ export async function GET(_request: Request, { params }: Context) {
 
   const { data: campaign, error: campaignError } = await supabase
     .from('campaigns')
-    .select('organization_id, name')
+    .select('organization_id, name, scan_type')
     .eq('id', id)
     .single()
 
