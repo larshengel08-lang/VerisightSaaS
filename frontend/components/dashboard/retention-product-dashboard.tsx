@@ -15,7 +15,7 @@ import {
   SignalCompositionRibbon,
 } from '@/components/dashboard/results-boardroom-visuals'
 
-type ExitThemeCard = {
+type RetentionThemeCard = {
   key: string
   title: string
   count: number
@@ -25,7 +25,7 @@ type ExitThemeCard = {
   evidenceLabel: string
 }
 
-interface ExitProductDashboardProps {
+interface RetentionProductDashboardProps {
   moduleHref: string
   moduleLabel: string
   moduleBackLinkLabel: string
@@ -39,8 +39,9 @@ interface ExitProductDashboardProps {
   primarySignalBandLabel: string
   strongestFactorLabel: string
   strongestFactorNote: string
-  strongWorkSignalLabel: string
-  primaryReasonTitle: string
+  engagementLabel: string
+  turnoverIntentionLabel: string
+  stayIntentLabel: string
   firstManagementQuestion: string
   totalInvited: string
   totalCompleted: string
@@ -52,7 +53,7 @@ interface ExitProductDashboardProps {
   compositionHighlights: Array<{ label: string; value: string; body: string }>
   factorRows: BoardroomFactorRow[]
   sdtRows: BoardroomSdtRow[]
-  surveyThemes: ExitThemeCard[]
+  surveyThemes: RetentionThemeCard[]
   verificationTrackLabel: string
   ownerRoleLabel: string
   firstStepLabel: string
@@ -92,7 +93,7 @@ function RankedFactorTable({ rows }: { rows: BoardroomFactorRow[] }) {
   )
 }
 
-export function ExitProductDashboard({
+export function RetentionProductDashboard({
   moduleHref,
   moduleLabel,
   moduleBackLinkLabel,
@@ -106,8 +107,9 @@ export function ExitProductDashboard({
   primarySignalBandLabel,
   strongestFactorLabel,
   strongestFactorNote,
-  strongWorkSignalLabel,
-  primaryReasonTitle,
+  engagementLabel,
+  turnoverIntentionLabel,
+  stayIntentLabel,
   firstManagementQuestion,
   totalInvited,
   totalCompleted,
@@ -124,7 +126,7 @@ export function ExitProductDashboard({
   ownerRoleLabel,
   firstStepLabel,
   reviewMomentLabel,
-}: ExitProductDashboardProps) {
+}: RetentionProductDashboardProps) {
   const topPriorityRows = factorRows.slice(0, 3)
 
   return (
@@ -137,7 +139,7 @@ export function ExitProductDashboard({
         organizationName={organizationName}
         routePeriodLabel={routePeriodLabel}
         scopeLabel={scopeLabel}
-        productLabel="ExitScan"
+        productLabel="RetentieScan"
         statusLabel={statusLabel}
         actions={headerActions}
       />
@@ -145,7 +147,7 @@ export function ExitProductDashboard({
       <ResultsBoardroomSection
         eyebrow="1. Kernsignaal"
         title="Kernsignaal"
-        description="ExitScan opent het vertrekbeeld als terugkijkende managementread. Lees score, hoofdlaag en factoren samen als groepsbeeld en niet als harde vaststelling."
+        description="RetentieScan opent het groepsbeeld als behoudssignaal. Lees score, aanvullende signalen en factorbeeld samen als eerste verificatiehulp."
         aside={
           <span className="border border-[rgba(13,27,42,0.15)] bg-[#FEB234] px-3 py-2 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#132033]">
             {primarySignalBandLabel}
@@ -155,23 +157,29 @@ export function ExitProductDashboard({
         <div className="grid gap-px border border-[rgba(13,27,42,0.15)] bg-[rgba(13,27,42,0.15)] xl:grid-cols-[minmax(0,1.15fr),minmax(320px,0.85fr)]">
           <div className="grid gap-px bg-[rgba(13,27,42,0.15)]">
             <BoardroomMetricTile
-              label="Frictiescore"
+              label="Retentiesignaal"
               value={primarySignalScoreLabel}
-              note="De frictiescore toont hoe scherp vertrekfrictie gemiddeld terugkomt in de leesbare responses."
+              note="Het retentiesignaal laat zien hoe scherp behoudsdruk gemiddeld terugkomt in de leesbare responses."
               tone="white"
               prominent
             />
-            <div className="grid gap-px bg-[rgba(13,27,42,0.15)] sm:grid-cols-2">
+            <div className="grid gap-px bg-[rgba(13,27,42,0.15)] sm:grid-cols-3">
               <BoardroomMetricTile
-                label="Scherpste factor"
-                value={strongestFactorLabel}
-                note={strongestFactorNote}
+                label="Bevlogenheid"
+                value={engagementLabel}
+                note="Lees deze waarde samen met behoudsdruk en aanvullende signalen."
                 tone="chalk"
               />
               <BoardroomMetricTile
-                label="Vertrekladder"
-                value={primaryReasonTitle}
-                note="Deze laag kleurt het vertrekbeeld als eerste en vraagt daarom de eerste bestuurlijke verificatie."
+                label="Vertrekintentie"
+                value={turnoverIntentionLabel}
+                note="Laat zien hoe expliciet vertrekdenken nu op groepsniveau terugkomt."
+                tone="chalk"
+              />
+              <BoardroomMetricTile
+                label="Blijfintentie"
+                value={stayIntentLabel}
+                note="Helpt bepalen of twijfel al richting blijven of juist richting vertrek beweegt."
                 tone="chalk"
               />
             </div>
@@ -185,15 +193,15 @@ export function ExitProductDashboard({
             />
             <div className="grid gap-px bg-[rgba(13,27,42,0.15)] sm:grid-cols-2">
               <BoardroomMetricTile
-                label="Sterk werksignaal"
-                value={strongWorkSignalLabel}
-                note="Laat zien hoeveel responses vooral wijzen op beinvloedbare werkcontext."
+                label="Scherpste factor"
+                value={strongestFactorLabel}
+                note={strongestFactorNote}
                 tone="white"
               />
               <BoardroomMetricTile
                 label="Status"
                 value={statusLabel}
-                note="Gebruik de band als leesdiscipline, niet als bewezen causaliteit."
+                note="Gebruik de band als leesdiscipline, niet als individuele voorspelling."
                 tone="white"
               />
             </div>
@@ -204,7 +212,7 @@ export function ExitProductDashboard({
       <ResultsBoardroomSection
         eyebrow="2. Responsbasis / leessterkte"
         title="Responsbasis / leessterkte"
-        description="Deze laag laat zien hoe stevig het gegroepeerde beeld gelezen mag worden en welke grenzen blijven gelden voor segmenten en open tekst."
+        description="Deze laag laat zien hoe stevig het gegroepeerde beeld gelezen mag worden en welke suppressiegrenzen blijven gelden."
         aside={
           <span className="border border-[rgba(13,27,42,0.15)] bg-white px-3 py-2 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#44505C]">
             Leessterkte — {readStrengthLabel}
@@ -239,10 +247,10 @@ export function ExitProductDashboard({
       <ResultsBoardroomSection
         eyebrow="3. Signaalopbouw"
         title="Signaalopbouw"
-        description="De compositie laat zien welke lagen het vertrekbeeld kleuren. Lees dit als indicatief patroonbeeld en niet als causale verdeling."
+        description="De compositie laat zien hoe de signalen in de groep verdeeld zijn. Lees dit als patroonbeeld en niet als bewezen causaliteit."
       >
         <SignalCompositionRibbon
-          title="Vertrekbeeld in lagen"
+          title="Behoudsbeeld in lagen"
           segments={compositionSegments}
           note="Indicatief patroonbeeld, geen causale verdeling."
         />
@@ -262,7 +270,7 @@ export function ExitProductDashboard({
       <ResultsBoardroomSection
         eyebrow="4. Prioriteitenbeeld"
         title="Prioriteitenbeeld"
-        description="De horizontale as toont beleving, de verticale as bestuurlijke aandacht. Gebruik de topkaarten om het eerste verificatiespoor te kiezen."
+        description="De horizontale as toont beleving, de verticale as bestuurlijke aandacht. Gebruik de topkaarten om het eerste behoudsspoor te kiezen."
       >
         {factorRows.length > 0 ? (
           <div className="space-y-5">
@@ -291,7 +299,7 @@ export function ExitProductDashboard({
       <ResultsBoardroomSection
         eyebrow="5. Basisbehoeften / SDT"
         title="Basisbehoeften / SDT"
-        description="De drie basisbehoeften helpen het vertrekbeeld verdiepen zonder er een losse bewijslaag of harde vaststelling van te maken."
+        description="De basisbehoeften helpen het groepsbeeld verdiepen zonder er losse bewijsvoering van te maken."
       >
         {sdtRows.length > 0 ? (
           <SdtTriangleMap rows={sdtRows} />
@@ -306,7 +314,7 @@ export function ExitProductDashboard({
       <ResultsBoardroomSection
         eyebrow="6. Survey-stemmen"
         title="Survey-stemmen"
-        description="Open signalen verdiepen het beeld waar de anonimiteitsgrens dat toelaat. Quotes blijven geanonimiseerd en worden onderdrukt als de drempel te smal is."
+        description="Open signalen verdiepen het behoudsbeeld waar de anonimiteitsgrens dat toelaat. Quotes blijven geanonimiseerd en worden onderdrukt als de drempel te smal is."
       >
         {surveyThemes.length > 0 ? (
           <div className="grid gap-px border border-[rgba(13,27,42,0.15)] bg-[rgba(13,27,42,0.15)] xl:grid-cols-3">
@@ -354,14 +362,14 @@ export function ExitProductDashboard({
       <ResultsBoardroomSection
         eyebrow="7. Bestuurlijke handoff"
         title="Bestuurlijke handoff"
-        description="Rond de boardroom-read af met een eerste verificatiespoor, een begrensde eigenaar en een reviewmoment. Dit blijft een managementhandoff, geen workflowproduct."
+        description="Rond de boardroom-read af met een eerste verificatiespoor, een begrensde eigenaar en een reviewmoment. Dit blijft een managementhandoff, geen breed workflowproduct."
         tone="ink"
       >
         <div className="grid gap-px border border-[#2B3A4E] bg-[#2B3A4E] lg:grid-cols-2 xl:grid-cols-4">
           <BoardroomMetricTile
             label="Eerste verificatiespoor"
             value={verificationTrackLabel}
-            note="Kies eerst welk spoor bestuurlijk getoetst moet worden voordat bredere actie volgt."
+            note="Kies eerst welk spoor bestuurlijk getoetst moet worden voordat bredere opvolging volgt."
             tone="ink"
           />
           <BoardroomMetricTile
