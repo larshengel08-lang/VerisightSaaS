@@ -21,20 +21,20 @@ Fallback: founder/product owner if no separate governance/trust reviewer is assi
 
 - Use Action Center as the route-bound follow-through layer after an approved scan.
 - Keep work tied to approved route families only: `exit` and `retention`.
-- Treat route, action, review, continuation, and closeout as the operating grammar.
+- Work within the core flow of route, action, review, continuation, and closeout.
 - Keep Action Center as the system of record for follow-through state inside Loep.
 
 ## What HR Owns
 
 - the operating rhythm around active routes
-- interpretation of review outcomes and follow-through pressure
+- interpretation of review outcomes and where follow-through needs attention
 - continuation, escalation, reopen, and closeout decisions
 - keeping Action Center bounded to post-scan follow-through
 
 ## How To Read And Work The Governance Queue
 
 - Read the queue as a route-governance surface, not as a case list about employees.
-- Use queue signals to spot stalled follow-through, overdue review, repeated no-progress, or routes nearing a continuation decision.
+- Use queue signals to spot stalled follow-through, overdue review, repeated lack of progress, or routes nearing a continuation decision.
 - Work from route status, action status, review outcomes, and closeout readiness instead of building side narratives.
 - Use the queue to decide whether HR should nudge, review, continue, reopen, escalate, or close out a route.
 - Keep interventions tied to route integrity and review rhythm, not to open-ended employee handling.
@@ -43,7 +43,7 @@ Fallback: founder/product owner if no separate governance/trust reviewer is assi
 ## What To Watch During Rollout
 
 - stalled actions or review backlog
-- repeated no-progress loops that need intervention
+- repeated lack of progress that needs intervention
 - route sprawl that weakens closeout discipline
 - signs that participants are treating Action Center like a task board or case file
 
@@ -53,7 +53,7 @@ Fallback: founder/product owner if no separate governance/trust reviewer is assi
 - action completion alone does not close a route
 - HR remains the governance owner for continuation and closeout
 - follow-through visibility is not the same as proof of intervention impact
-- queue pressure signals indicate where follow-through needs governance attention, not where HR should create broader employee records
+- queue signals show where follow-through needs HR attention, not where HR should create broader employee records
 
 ## What Not To Turn This Into
 

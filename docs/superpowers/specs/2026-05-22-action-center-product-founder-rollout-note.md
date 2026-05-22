@@ -6,7 +6,7 @@ Founder/product owner and any internal owner shaping positioning, launch languag
 
 ## Purpose
 
-Keep Batch C rollout decisions inside stable Action Center truth from Batches A and B, with clear claim discipline, route-scope discipline, and live-evidence discipline inside Loep.
+Explain how to approve rollout language and discuss possible future scale without overstating what Action Center is, what it proves, or where it can be used.
 
 ## Acceptance Test
 
@@ -55,11 +55,11 @@ Before approving rollout language or any expansion discussion, the founder/produ
 - the language preserves HR governance, manager-light participation, and post-scan follow-through only
 - the language stays consistent with the privacy, dossier, and monitoring boundaries
 - any expansion discussion is framed as gated behind route-fit review, activation approval, and later live evidence
-- no unresolved Batch A or Batch B semantic gap is being hidden by positioning language
+- no unresolved product ambiguity is being covered up by positioning language
 
 ## Launch Rule
 
-If launch language only sounds compelling by making Action Center feel like workflow software, a proof engine, or a broader operating system, stop and rewrite the framing.
+If launch language only sounds compelling by making Action Center feel like workflow software, a validation or impact-proof tool, or a broader operating system, stop and rewrite the framing.
 
 ## Plain-Language Summary
 
