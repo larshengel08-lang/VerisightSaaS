@@ -105,7 +105,7 @@ Batch C must define audience-specific understanding instead of relying on one ge
 | Audience | What they must understand | What they must not misunderstand | Artifact(s) that serve this audience |
 | --- | --- | --- | --- |
 | `HR buyer / HR director` | Action Center is an HR-governed follow-through layer for route-bound post-scan execution, review rhythm, and closeout discipline | It is not workflow software, a task board, or a standalone module | governance one-pager, route -> action -> review -> closeout explanation, route-fit matrix |
-| `Directie / MT sponsor` | Action Center makes follow-through visible and governable without claiming impact proof | It is not an analytics proof engine, intervention-success product, or broad people operating system | governance one-pager, buyer-safe reporting language, live-evidence gate definition |
+| `Directie / MT sponsor` | Action Center makes follow-through visible and governable without claiming impact proof | It is not an analytics proof engine, intervention-success product, or broad people operating system | governance one-pager, route -> action -> review -> closeout explanation, live-evidence gate definition |
 | `HR operator` | HR works from bounded governance and rollout rules, not from free-form case management | HR is not expected to operate a broad workflow system or maintain employee dossiers | internal rollout note for HR operators, governance one-pager, privacy / dossier boundary note |
 | `Manager participant` | Managers participate through bounded route/action/review steps inside approved routes | They do not own a dashboard, project board, or workflow system | manager participation one-pager, route -> action -> review -> closeout explanation |
 | `Legal / privacy / OR-style reviewer` | Action Center tracks bounded follow-through history and governance state with explicit privacy boundaries | It is not employee monitoring, a personnel dossier, or an employee risk ledger | privacy / dossier boundary note, governance one-pager |
@@ -379,7 +379,7 @@ Batch C output cannot move to rollout or implementation unless approved by:
 - buyer-readiness reviewer or sales owner
 - privacy/legal reviewer, where available
 
-If any role is not formally assigned, the founder/product owner must explicitly assume that sign-off responsibility.
+If any Batch C sign-off role is not formally assigned, the founder/product owner must explicitly assume that sign-off responsibility and record the rationale in the relevant sign-off artifact.
 
 ## 13. Decision Order
 

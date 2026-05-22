@@ -26,7 +26,7 @@ Approval sequence:
 2. Record approvals for the mandatory roles in the ledger: `product/founder owner`, `governance/trust reviewer`, and `buyer-readiness reviewer or sales owner`.
 3. Record approval for `route owner for exit / retention if separate` when route ownership is formally separated from the product/founder owner.
 4. Record approval for `privacy/legal reviewer` when that role is formally assigned in the operating model.
-5. Explicit assumption is allowed only when a conditional role is genuinely unassigned, or when no separate `privacy/legal reviewer` role exists in the operating model. Any assumption must be recorded in the ledger notes with the role assumed, the reason, and the approval date.
+5. If any Batch C sign-off role is genuinely unassigned, the founder/product owner may explicitly assume that sign-off responsibility. Any assumption must be recorded in the ledger notes with the role assumed, the reason, and the approval date.
 
 ## Fixed Review Rules
 
@@ -43,7 +43,7 @@ Approval sequence:
 | Audience | What must be clear after review | What must still be impossible to infer | Primary artifacts |
 | --- | --- | --- | --- |
 | `HR buyer / HR director` | Action Center is an HR-governed follow-through layer inside Loep for route-bound post-scan execution, review rhythm, and closeout discipline. | workflow software, task board, standalone module, impact-proof engine | governance one-pager, route -> action -> review -> closeout explanation, route-fit matrix |
-| `Directie / MT sponsor` | Action Center makes follow-through visible and governable without claiming proof of intervention impact. | broad HR operating system, analytics proof engine, route-expansion approval | governance one-pager, product/founder rollout note, live-evidence gate |
+| `Directie / MT sponsor` | Action Center makes follow-through visible and governable without claiming proof of intervention impact. | broad HR operating system, analytics proof engine, route-expansion approval | governance one-pager, route -> action -> review -> closeout explanation, live-evidence gate |
 | `HR operator` | HR works from bounded governance, review rhythm, continuation, and closeout rules. | ad hoc case-management behavior, dossier ownership, workflow-system administration | governance one-pager, HR operator rollout note, privacy / dossier boundary note |
 | `Manager participant` | Managers participate through bounded route, action, and review steps inside an existing route. | dashboard ownership, ownership of a general project-management board, route-closeout authority | manager participation one-pager, route -> action -> review -> closeout explanation |
 | `Legal / privacy / OR-style reviewer` | Action Center stores bounded follow-through history and governance state with explicit privacy boundaries. | employee monitoring, personnel dossier, employee risk ledger | privacy / dossier boundary note, governance one-pager |
@@ -54,6 +54,9 @@ Approval sequence:
 
 | Artifact | Audience | Purpose | Must include | Must not include | Review check | Acceptance rule | Sign-off owner |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| `Batch C buyer readiness and controlled scale spec` | product/founder owner, governance/trust reviewer, buyer-readiness reviewer | Preserve the governing Batch C truth, boundaries, and exit semantics before rollout planning starts. | purpose, role, constraints, acceptance criteria, sign-off requirements, exit criteria, live-evidence gate | implementation-task detail, route-expansion approval, causal or proof claims | Confirms the governing Batch C contract still matches the roadmap, artifact set, and live-evidence boundaries. | A reviewer can explain what Batch C does and does not authorize without reopening Batch A/B truth or implying rollout approval by spec alone. | product/founder owner |
+| `Batch C implementation plan` | product/founder owner, governance/trust reviewer, engineering implementer | Translate the approved Batch C spec into bounded rollout-planning work without inventing new product truth. | sequenced work, bounded deliverables, verification approach, sign-off dependency, non-goals | product-truth rewrites, route-expansion approval, implementation code, off-platform write behavior | Confirms the plan decomposes Batch C safely and does not reinterpret spec-approved semantics. | An implementer can execute the plan without inventing new buyer claims, route rules, or activation semantics. | product/founder owner |
+| `Batch C review strategy` | product/founder owner, governance/trust reviewer, buyer-readiness reviewer | Define the final artifact review, red-team checks, sign-off ledger, and exit checklist for Batch C closeout. | buyer audience checks, artifact checks, red-team method, sign-off ledger, exit checklist | missing artifact coverage, conflicting sign-off rules, implied approval without review | Confirms every required Batch C artifact is reviewed under one consistent acceptance and sign-off framework. | A closer can verify the artifact set, approvals, and red-team checks without inventing extra rules outside Batch C. | governance/trust reviewer |
 | `governance one-pager` | HR buyer, HR operator, MT sponsor, IT/security reviewer | Explain HR governance, route-bound scope, closeout authority, and Action Center's role inside Loep. | HR governance model, closeout/continuation rules, bounded intervention framing, route-bound scope, no off-platform writes | workflow-software framing, project-management language, standalone-module framing | Confirms HR governance, route-bound scope, closeout authority, and off-platform boundary language stay intact. | A buyer can explain governance and product boundaries in under 2 minutes without workflow framing. | product/founder owner |
 | `manager participation one-pager` | Manager participant, HR operator | Explain the bounded manager role inside route, action, and review participation. | manager role, bounded actions, review rhythm, what managers do not own | dashboard ownership, workflow ownership, general project-board framing | Confirms manager role stays bounded to route actions and reviews inside an existing route. | A manager can explain the role in under 60 seconds without assuming dashboard or workflow ownership. | product/founder owner or route owner for exit / retention if separate |
 | `privacy / dossier boundary note` | privacy/legal reviewer, HR buyer, HR operator, IT/security reviewer | Define what Action Center stores, what it must never become, and how bounded follow-through stays separate from dossier or surveillance behavior. | not a personnel dossier, not employee monitoring, not employee risk ledger, bounded evidence rules | open employee narratives, surveillance framing, risk scoring framing | Confirms stored content, prohibited content, and plain-language boundary rules are explicit. | A reviewer can point to clear prohibited uses with no dossier, monitoring, or risk-ledger ambiguity. | privacy/legal reviewer |
@@ -114,7 +117,9 @@ Approval sequence:
 | governance/trust reviewer | mandatory |  |  |  |  |
 | route owner for exit / retention if separate | conditional |  |  |  | Required only when route ownership is formally separate. |
 | buyer-readiness reviewer or sales owner | mandatory |  |  |  |  |
-| privacy/legal reviewer | conditional |  |  |  | Required when formally assigned; otherwise any assumption must include recorded rationale. |
+| privacy/legal reviewer | conditional |  |  |  | Required when formally assigned; otherwise founder/product owner must explicitly assume the sign-off responsibility with recorded rationale. |
+
+If any Batch C sign-off role is not formally assigned, the founder/product owner must explicitly assume that sign-off responsibility and record the rationale in the ledger notes.
 
 ## Exit Checklist
 
@@ -128,7 +133,7 @@ Approval sequence:
 - live-evidence gate keeps operating-readiness-only interpretation intact
 - no route expansion, documentation-only approval, or reopening of approved Batch A/B semantics is introduced
 - no unresolved product semantics remain around buyer framing, route-fit, activation rules, or boundary semantics
-- sign-off ledger is complete, and any allowed assumption is explicitly recorded with rationale where a conditional role is unassigned
+- sign-off ledger is complete, and any unassigned sign-off role is either formally approved or explicitly assumed by the founder/product owner with recorded rationale
 
 ## Plain-Language Summary
 
