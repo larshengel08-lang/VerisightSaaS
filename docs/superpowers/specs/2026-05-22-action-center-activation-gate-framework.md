@@ -60,7 +60,7 @@ The activation decision must review:
 
 - `approved`: activation is permitted because the route meets conceptual, governance, and live-evidence requirements with no blocking risk.
 - `conditional`: activation is not yet approved; specific additional conditions must be met and re-reviewed.
-- `parked`: activation is deferred because the route may conceptually fit but timing, evidence, or governance readiness is still insufficient.
+- `parked`: activation review opened, but the proposal is deferred for another allowed reason such as unresolved governance design, unresolved route defaults, or unresolved workflow-broadening risk.
 - `rejected`: activation is denied because the route breaks bounded Action Center truth or carries unacceptable governance, privacy, or workflow risk.
 
 ## Completed Decision Record Template
