@@ -2,11 +2,10 @@ import { describe, expect, it } from 'vitest'
 import {
   buildDecisionPanels,
   buildHeroDescription,
-  clusterRetentionOpenSignals,
   buildNextStepBody,
+  clusterExitOpenSignals,
   computeAverageRiskScore,
   computeRetentionSupplementalAverages,
-  getLargestDistributionSegment,
 } from './page-helpers'
 import { getScanDefinition } from '@/lib/scan-definitions'
 import type { SurveyResponse } from '@/lib/types'
@@ -129,37 +128,44 @@ describe('dashboard page helpers field semantics', () => {
     expect(nextStep).toContain('werkfrictie')
   })
 
-  it('sanitizes retention open-answer samples before they can surface in synthesis cards', () => {
-    const themes = clusterRetentionOpenSignals([
+  it('clusters exit open signals without inventing extra quotes or factor values', () => {
+    const responses: SurveyResponse[] = [
       {
         id: 'resp-1',
         respondent_id: 'r-1',
-        risk_score: 5.2,
+        risk_score: 6.2,
         risk_band: 'MIDDEN',
         preventability: null,
         exit_reason_code: null,
         sdt_scores: {},
         org_scores: {},
-        open_text_raw:
-          'Mijn leidinggevende is slecht bereikbaar. Mail me op jane@example.com of bel +31 6 12345678.',
+        open_text_raw: 'Mijn leidinggevende gaf weinig feedback en de aansturing bleef onduidelijk.',
         full_result: {},
         submitted_at: '2026-04-18T10:00:00Z',
       },
-    ] as SurveyResponse[])
+      {
+        id: 'resp-2',
+        respondent_id: 'r-2',
+        risk_score: 5.9,
+        risk_band: 'MIDDEN',
+        preventability: null,
+        exit_reason_code: null,
+        sdt_scores: {},
+        org_scores: {},
+        open_text_raw: 'Prioriteiten waren niet helder en verantwoordelijkheden bleven diffuus.',
+        full_result: {},
+        submitted_at: '2026-04-18T10:05:00Z',
+      },
+    ]
 
-    expect(themes[0]?.sample).toContain('[verwijderd]')
-    expect(themes[0]?.sample).not.toContain('jane@example.com')
-    expect(themes[0]?.sample).not.toContain('+31 6 12345678')
-  })
+    const themes = clusterExitOpenSignals(responses)
 
-  it('picks the actual largest distribution segment instead of relying on fixed ordering', () => {
-    const largest = getLargestDistributionSegment([
-      { label: 'Werkgerelateerde redenen', value: '20%', percent: 20 },
-      { label: 'Trekfactoren elders', value: '55%', percent: 55 },
-      { label: 'Situationele redenen', value: '25%', percent: 25 },
-    ])
-
-    expect(largest?.label).toBe('Trekfactoren elders')
-    expect(largest?.percent).toBe(55)
+    expect(themes[0]).toMatchObject({
+      key: 'leadership',
+      title: 'Leiderschap en steun',
+      count: 1,
+    })
+    expect(themes.some((theme) => theme.title === 'Rolhelderheid en prioriteiten')).toBe(true)
+    expect(themes).toHaveLength(2)
   })
 })

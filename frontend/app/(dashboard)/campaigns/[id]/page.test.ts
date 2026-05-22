@@ -8,68 +8,17 @@ const componentSource = () =>
   )
 
 describe('exit dashboard analytics guardrails', () => {
-  it('keeps the shared route shell factual and free from the old exit-only branch', () => {
-    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8').toLowerCase()
-    const forbiddenTerms = [
-      'exitproductdashboard',
-      'managementread',
-      'bestuurlijke',
-      'eerste actie',
-      'reviewmoment',
-    ]
-
-    for (const term of forbiddenTerms) {
-      expect(source).not.toContain(term)
-    }
-  })
-
-  it('removes the old hybrid campaign tabs and keeps results-first blocks visible on the route page', () => {
-    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
-
-    expect(source).toContain('Responsbasis')
-    expect(source).toContain('Kernsignaal')
-    expect(source).toContain('Signalen in samenhang')
-    expect(source).toContain('Drivers & prioriteiten')
-    expect(source).toContain('Verdiepingslagen')
-    expect(source).toContain('Survey-stemmen')
-    expect(source).not.toContain('Samenvatting')
-    expect(source).not.toContain('Methodiek')
-    expect(source).not.toContain('Uitvoering')
-  })
-
-  it('does not keep the old tabs as the primary HR results structure', () => {
-    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
-
-    expect(source).not.toContain('DashboardTabs')
-    expect(source).not.toContain("label: 'Overzicht'")
-    expect(source).not.toContain("label: 'Onderbouwing'")
-    expect(source).not.toContain("label: 'Actie'")
-    expect(source).not.toContain("label: 'Campagne'")
-  })
-
-  it('keeps the ExitScan dashboard free from owner, action, review, workflow and setup language', () => {
+  it('keeps the ExitScan dashboard free from causal, predictive and retention wording', () => {
     const source = componentSource().toLowerCase()
     const forbiddenTerms = [
-      'eerste eigenaar',
-      'route-eigenaar',
-      'eigenaar',
-      'eerste actie',
-      'eerste stap',
-      'reviewmoment',
-      'review plannen',
-      'manager toegewezen',
-      'action center',
-      'workflow',
-      'opvolgactie',
-      'start actie',
-      'maak actie',
-      'follow-on',
-      'uitvoerflow',
-      'livegang',
-      'importeren',
-      'uitnodigingen beheren',
-      'reminderactie',
-      'setup',
+      'gedreven door',
+      'oorzakenanalyse',
+      'diagnose',
+      'predictie',
+      'retention flow',
+      'strong editorial confidence',
+      'high impact',
+      'active risk',
     ]
 
     for (const term of forbiddenTerms) {
@@ -77,20 +26,16 @@ describe('exit dashboard analytics guardrails', () => {
     }
   })
 
-  it('renders the agreed ExitScan analytical IA in the expected order', () => {
+  it('renders the agreed ExitScan boardroom IA in the expected order', () => {
     const source = componentSource()
     const orderedHeadings = [
-      'Sterkste signaal',
-      'Waarom dit telt',
-      'Hoofdreden van vertrekbeeld',
-      'Meespelende factoren',
-      'Responscontext',
-      'Topfactoren',
-      'Verdeling van het vertrekbeeld',
-      'Diepere driverlaag',
-      'SDT-laag',
-      'Uitgebreide factorlaag',
-      'Methodische leesgrenzen',
+      'Kernsignaal',
+      'Responsbasis / leessterkte',
+      'Signaalopbouw',
+      'Prioriteitenbeeld',
+      'Basisbehoeften / SDT',
+      'Survey-stemmen',
+      'Bestuurlijke handoff',
     ]
 
     let previousIndex = -1
@@ -112,21 +57,21 @@ describe('exit dashboard analytics guardrails', () => {
     expect(source).toContain('Onvoldoende data')
   })
 
-  it('keeps the visible ExitScan shell free from mojibake and uses a neutral score label', () => {
+  it('keeps the visible ExitScan shell free from mojibake and uses the product score language', () => {
     const source = componentSource()
 
     expect(source).not.toContain('Ã')
     expect(source).not.toContain('Â')
     expect(source).not.toContain('â')
     expect(source).not.toContain('�')
-    expect(source).toContain('Gemiddelde signaalscore')
-    expect(source).not.toContain('Frictiescore')
+    expect(source).toContain('Frictiescore')
+    expect(source).toContain('Leessterkte')
   })
 
   it('renders the SDT layer only when real rows are available', () => {
     const source = componentSource()
 
     expect(source).toContain('sdtRows.length > 0')
-    expect(source).toContain('ExitSdtNeedsChart')
+    expect(source).toContain('SdtTriangleMap')
   })
 })
