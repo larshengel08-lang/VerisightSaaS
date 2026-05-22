@@ -356,11 +356,13 @@ It still does not prove:
 
 Batch C must produce:
 
-- Action Center Buyer Readiness & Rollout spec
+- Batch C buyer readiness and controlled scale spec
 - governance one-pager
 - manager participation one-pager
 - privacy / dossier boundary note
 - route -> action -> review -> closeout explanation
+- internal rollout note for HR operators
+- internal rollout note for product / founder owner
 - route-fit matrix
 - activation-gate framework
 - live-evidence gate definition
