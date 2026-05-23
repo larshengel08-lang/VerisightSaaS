@@ -1716,6 +1716,7 @@ export default async function CampaignPage({ params }: Props) {
 
             <MethodologyCard
               scanType={stats.scan_type}
+              hasSegmentDeepDive={hasSegmentDeepDive}
               signalLabel={scanDefinition.signalLabel}
               embedded
             />

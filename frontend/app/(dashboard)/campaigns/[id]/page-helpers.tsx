@@ -81,6 +81,16 @@ export type InsightNotice = {
   tone: 'slate' | 'amber' | 'red'
 }
 
+export function getLargestDistributionSegment<T extends { percent: number }>(segments: T[]) {
+  return segments.reduce<T | null>((largest, segment) => {
+    if (!largest || segment.percent > largest.percent) {
+      return segment
+    }
+
+    return largest
+  }, null)
+}
+
 function getOrderedFactorKeys(factorAverages: Record<string, number>) {
   const fallbackKeys = Object.keys(factorAverages)
     .filter((factor) => !ORG_FACTORS.includes(factor))

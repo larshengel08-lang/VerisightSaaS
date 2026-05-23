@@ -81,29 +81,17 @@ describe('campaign detail route shell guardrails', () => {
 })
 
 describe('exit dashboard analytics guardrails', () => {
-  it('keeps the ExitScan dashboard free from owner, action, review, workflow and setup language', () => {
+  it('keeps the ExitScan dashboard free from causal, predictive and retention wording', () => {
     const source = exitDashboardSource().toLowerCase()
     const forbiddenTerms = [
-      'eerste eigenaar',
-      'route-eigenaar',
-      'eigenaar',
-      'eerste actie',
-      'eerste stap',
-      'reviewmoment',
-      'review plannen',
-      'manager toegewezen',
-      'action center',
-      'workflow',
-      'opvolgactie',
-      'start actie',
-      'maak actie',
-      'follow-on',
-      'uitvoerflow',
-      'livegang',
-      'importeren',
-      'uitnodigingen beheren',
-      'reminderactie',
-      'setup',
+      'gedreven door',
+      'oorzakenanalyse',
+      'diagnose',
+      'predictie',
+      'retention flow',
+      'strong editorial confidence',
+      'high impact',
+      'active risk',
     ]
 
     for (const term of forbiddenTerms) {
@@ -111,20 +99,16 @@ describe('exit dashboard analytics guardrails', () => {
     }
   })
 
-  it('renders the agreed ExitScan analytical IA in the expected order', () => {
+  it('renders the agreed ExitScan boardroom IA in the expected order', () => {
     const source = exitDashboardSource()
     const orderedHeadings = [
-      'Sterkste signaal',
-      'Waarom dit telt',
-      'Hoofdreden van vertrekbeeld',
-      'Meespelende factoren',
-      'Responscontext',
-      'Topfactoren',
-      'Verdeling van het vertrekbeeld',
-      'Diepere driverlaag',
-      'SDT-laag',
-      'Uitgebreide factorlaag',
-      'Methodische leesgrenzen',
+      'Kernsignaal',
+      'Responsbasis / leessterkte',
+      'Signaalopbouw',
+      'Prioriteitenbeeld',
+      'Basisbehoeften / SDT',
+      'Survey-stemmen',
+      'Bestuurlijke handoff',
     ]
 
     let previousIndex = -1
@@ -146,21 +130,21 @@ describe('exit dashboard analytics guardrails', () => {
     expect(source).toContain('Onvoldoende data')
   })
 
-  it('keeps the visible ExitScan shell free from mojibake and uses a neutral score label', () => {
+  it('keeps the visible ExitScan shell free from mojibake and uses the product score language', () => {
     const source = exitDashboardSource()
 
     expect(source).not.toContain('Ãƒ')
     expect(source).not.toContain('Ã‚')
     expect(source).not.toContain('Ã¢')
     expect(source).not.toContain('ï¿½')
-    expect(source).toContain('Gemiddelde signaalscore')
-    expect(source).not.toContain('Frictiescore')
+    expect(source).toContain('Frictiescore')
+    expect(source).toContain('Leessterkte')
   })
 
   it('renders the SDT layer only when real rows are available', () => {
     const source = exitDashboardSource()
 
     expect(source).toContain('sdtRows.length > 0')
-    expect(source).toContain('ExitSdtNeedsChart')
+    expect(source).toContain('SdtTriangleMap')
   })
 })

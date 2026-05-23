@@ -1,7 +1,11 @@
 import { redirect } from 'next/navigation'
 import { ActionCenterPreview } from '@/components/dashboard/action-center-preview'
 import { resolveActionCenterEntryParams } from '@/lib/action-center-entry'
-import { buildLiveActionCenterItems, getLiveActionCenterSummary } from '@/lib/action-center-live'
+import {
+  buildLiveActionCenterItems,
+  getLiveActionCenterSummary,
+  isLiveActionCenterScanType,
+} from '@/lib/action-center-live'
 import { getActionCenterReviewRhythmData } from '@/lib/action-center-review-rhythm-data'
 import { buildActionCenterRouteId } from '@/lib/action-center-route-contract'
 import { projectActionCenterRouteCloseout } from '@/lib/action-center-route-closeout'
@@ -512,11 +516,13 @@ export default async function ActionCenterPage({
     items,
     now: new Date(),
     routeScanTypeByRouteId: Object.fromEntries(
-      liveContexts.map((context) => [
-        buildActionCenterRouteId(context.campaign.id, context.scopeValue),
-        context.campaign.scan_type,
-      ]),
-    ),
+      liveContexts
+        .filter((context) => isLiveActionCenterScanType(context.campaign.scan_type))
+        .map((context) => [
+          buildActionCenterRouteId(context.campaign.id, context.scopeValue),
+          context.campaign.scan_type,
+        ]),
+    ) as Record<string, 'exit' | 'retention' | 'leadership' | 'pulse' | 'team' | 'onboarding'>,
   })
 
   if (items.length === 0) {
