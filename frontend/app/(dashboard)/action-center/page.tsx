@@ -212,7 +212,7 @@ export default async function ActionCenterPage({
 
   const organizations = (organizationsRaw ?? []) as Organization[]
   const campaigns = ((campaignsRaw ?? []) as Campaign[]).filter((campaign) =>
-    ['exit', 'retention', 'onboarding', 'pulse', 'leadership'].includes(campaign.scan_type),
+    ['exit', 'retention'].includes(campaign.scan_type),
   )
   const campaignIds = campaigns.map((campaign) => campaign.id)
   const stats = (statsRaw ?? []) as CampaignStats[]
@@ -464,7 +464,7 @@ export default async function ActionCenterPage({
       ? (items.find((item) => item.id === focusItemId)?.id ??
         items.find((item) => item.coreSemantics.route.campaignId === focusItemId)?.id ??
         null)
-      : null
+      : items[0]?.id ?? null
   const workspaceSubtitle =
     source === 'campaign-detail'
       ? 'Geopend vanuit campaign detail: hier worden eigenaarschap, eerste managerstap en reviewritme expliciet.'
@@ -532,6 +532,7 @@ export default async function ActionCenterPage({
       readOnly
       itemHrefs={itemHrefs}
       hideSidebar
+      boundedOverviewOnly
     />
   )
 }

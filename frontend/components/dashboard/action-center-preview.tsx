@@ -71,6 +71,7 @@ interface Props {
   readOnly?: boolean
   itemHrefs?: Record<string, string>
   hideSidebar?: boolean
+  boundedOverviewOnly?: boolean
 }
 
 interface CreateActionFormState {
@@ -855,9 +856,10 @@ export function ActionCenterPreview({
   readOnly = false,
   itemHrefs = {},
   hideSidebar = false,
+  boundedOverviewOnly = false,
 }: Props) {
-  const initialSelectedItem =
-    initialItems.find((item) => item.id === initialSelectedItemId) ?? initialItems[0] ?? null
+  const explicitlySelectedInitialItem = initialItems.find((item) => item.id === initialSelectedItemId) ?? null
+  const initialSelectedItem = explicitlySelectedInitialItem ?? (boundedOverviewOnly ? null : initialItems[0] ?? null)
   const [items, setItems] = useState(() => initialItems.map((item) => finalizeActionCenterPreviewItem(item)))
   const [activeView, setActiveView] = useState<ActionCenterPreviewView>(initialView)
   const [selectedItemId, setSelectedItemId] = useState(initialSelectedItem?.id ?? null)
@@ -880,13 +882,19 @@ export function ActionCenterPreview({
   const deferredSearchQuery = useDeferredValue(searchQuery)
 
   useEffect(() => {
-    if (!selectedItemId && items[0]) {
+    if (!boundedOverviewOnly && !selectedItemId && items[0]) {
       setSelectedItemId(items[0].id)
     }
     if (!selectedTeamId && items[0]) {
       setSelectedTeamId(items[0].teamId)
     }
-  }, [items, selectedItemId, selectedTeamId])
+  }, [boundedOverviewOnly, items, selectedItemId, selectedTeamId])
+
+  useEffect(() => {
+    if (boundedOverviewOnly && activeView !== 'overview') {
+      setActiveView('overview')
+    }
+  }, [activeView, boundedOverviewOnly])
 
   const normalizedQuery = deferredSearchQuery.trim().toLowerCase()
   const filteredItems = items
@@ -920,7 +928,11 @@ export function ActionCenterPreview({
       return compareReviewDate(left.reviewDate, right.reviewDate)
     })
 
-  const selectedItem = filteredItems.find((item) => item.id === selectedItemId) ?? items.find((item) => item.id === selectedItemId) ?? filteredItems[0] ?? items[0] ?? null
+  const selectedItem = selectedItemId
+    ? filteredItems.find((item) => item.id === selectedItemId) ?? items.find((item) => item.id === selectedItemId) ?? null
+    : boundedOverviewOnly
+      ? null
+      : filteredItems[0] ?? items[0] ?? null
   const managerActionSurfaceCopy = getManagerActionSurfaceCopy(selectedItem)
   const selectedRouteSummary = selectedItem ? getRouteSummaryDisplay(selectedItem) : null
   useEffect(() => {
@@ -988,6 +1000,16 @@ export function ActionCenterPreview({
     .slice(0, 3)
   const focusItem = visibleDueItems[0] ?? visibleItems[0] ?? null
   const viewCopy = getViewCopy(activeView, activeView === 'overview' && selectedItem ? null : activeView === 'overview' ? null : selectedItem?.title ?? null)
+  const overviewStatusCounts = useMemo(
+    () => ({
+      activeRoutes: workspaceReadbackSummary.activeRouteCount,
+      reviewReady: items.filter((item) => item.status === 'te-bespreken' || item.status === 'reviewbaar').length,
+      blocked: workspaceReadbackSummary.blockedCount,
+      unavailable: null as number | null,
+      closed: workspaceReadbackSummary.closedRouteCount,
+    }),
+    [items, workspaceReadbackSummary.activeRouteCount, workspaceReadbackSummary.blockedCount, workspaceReadbackSummary.closedRouteCount],
+  )
   const allowLocalDraftEditing = !readOnly && !managerResponseEndpoint
   const canUseManagerResponseFlow =
     Boolean(
@@ -1408,7 +1430,7 @@ export function ActionCenterPreview({
     }
   }, [missingManagerCount, openItems.length, overdueReviews.length, selectedTeam, teamOpenItems.length, thisWeekReviews.length])
 
-  const headerTabs = hideSidebar
+  const headerTabs = hideSidebar && !boundedOverviewOnly
     ? SIDEBAR_ITEMS.map((item) => ({
         key: item.key,
         label: item.label,
@@ -1436,14 +1458,15 @@ export function ActionCenterPreview({
       }
     >
       <div className={`flex flex-col lg:flex-row ${hideSidebar ? '' : 'min-h-[980px]'}`}>
-        <aside className={`flex w-full shrink-0 flex-col bg-[#182231] text-[#f6f1e9] lg:w-[286px] ${hideSidebar ? 'hidden' : ''}`}>
+        {!hideSidebar ? (
+        <aside className="flex w-full shrink-0 flex-col bg-[#182231] text-[#f6f1e9] lg:w-[286px]">
           <div className="border-b border-white/6 px-6 py-6">
             <Link href="/dashboard" className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#ff9b4a] text-base font-semibold text-[#182231]">
                 V
               </div>
               <div>
-                <p className="text-[1.05rem] font-semibold tracking-[-0.02em]">Verisight</p>
+                <p className="text-[1.05rem] font-semibold tracking-[-0.02em]">Loep</p>
                 <p className="text-sm text-white/55">Duiding &amp; opvolging</p>
               </div>
             </Link>
@@ -1507,14 +1530,19 @@ export function ActionCenterPreview({
             </div>
           </div>
         </aside>
+        ) : null}
 
         <div className="min-w-0 flex-1">
           <div className={`border-b border-[#e6ddd2] px-6 py-6 ${hideSidebar ? 'bg-[#fcfaf7]' : 'bg-[#f7f2ea]'}`}>
             <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8b8174]">{viewCopy.eyebrow}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8b8174]">
+                  {boundedOverviewOnly ? 'Action Center' : viewCopy.eyebrow}
+                </p>
                 <p className="mt-3 text-sm text-[#8b8174]">
-                  {activeView === 'overview'
+                  {boundedOverviewOnly
+                    ? 'Action Center / Overzicht'
+                    : activeView === 'overview'
                     ? 'Suite / Action Center'
                     : activeView === 'actions'
                       ? 'Action Center / Acties'
@@ -1526,9 +1554,13 @@ export function ActionCenterPreview({
                   {activeView === 'actions' && selectedItem ? ` / ${selectedItem.code}` : ''}
                 </p>
                 <h1 className="mt-3 text-[2.6rem] font-semibold tracking-[-0.055em] text-[#132033]">
-                  {viewCopy.title}
+                  {boundedOverviewOnly ? 'Action Center' : viewCopy.title}
                 </h1>
-                <p className="mt-4 max-w-3xl text-[1.02rem] leading-8 text-[#42556b]">{viewCopy.description}</p>
+                <p className="mt-4 max-w-3xl text-[1.02rem] leading-8 text-[#42556b]">
+                  {boundedOverviewOnly
+                    ? 'Overzicht van managementopvolging en acties.'
+                    : viewCopy.description}
+                </p>
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -1553,7 +1585,7 @@ export function ActionCenterPreview({
                 ) : null}
               </div>
             </div>
-            {hideSidebar ? (
+            {hideSidebar && headerTabs.length > 0 ? (
               <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-[#eee6da] pt-4">
                 {headerTabs.map((item) => (
                   <button
@@ -1584,18 +1616,30 @@ export function ActionCenterPreview({
 
           <div className="px-6 py-6">
             {activeView === 'overview' ? (
+              boundedOverviewOnly ? (
+                <ActionCenterBoundedOverview
+                  visibleItems={visibleItems}
+                  blockedItems={visibleItems.filter((item) => item.status === 'geblokkeerd').slice(0, 4)}
+                  upcomingReviews={upcomingReviews}
+                  overviewStatusCounts={overviewStatusCounts}
+                  selectedItem={selectedItem}
+                  onSelectItem={setSelectedItemId}
+                  selectedItemHref={selectedItemHref}
+                  workbenchLabel={workbenchLabel}
+                />
+              ) : (
               <div className="space-y-8">
-                <div className="grid gap-6 xl:grid-cols-[minmax(0,1.55fr),minmax(320px,0.95fr)]">
+                <div className="grid gap-6 xl:grid-cols-[minmax(0,1.65fr),minmax(320px,0.85fr)]">
                   <section className="rounded-[28px] border border-[#e4d9cb] bg-[#fcfaf7] px-7 py-7 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
                     <div className="flex flex-col gap-8 xl:flex-row xl:items-end xl:justify-between">
                       <div className="max-w-2xl">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8d8377]">Managementritme</p>
-                        <h2 className="mt-3 text-[2rem] font-semibold tracking-[-0.05em] text-[#132033]">Wat moet nu gelezen en opgepakt worden?</h2>
+                        <h2 className="mt-3 text-[2rem] font-semibold tracking-[-0.05em] text-[#132033]">Wat vraagt nu als eerste opvolging?</h2>
                         <p className="mt-4 max-w-xl text-[1rem] leading-8 text-[#4f6175]">
-                          Action Center bundelt live opvolging uit campagnes en dossiers tot een eerste overzicht van wat nu aandacht vraagt.
+                          Gebruik deze lijst als eerste werklaag. Hier zie je welke routes nu open staan, wie eraan hangt en welke reviewdruk als eerste meespeelt.
                         </p>
                       </div>
-                      <div className="grid gap-3 sm:grid-cols-3 xl:max-w-[34rem] xl:flex-1">
+                      <div className="grid gap-3 sm:grid-cols-2 xl:max-w-[24rem] xl:flex-1">
                         <OverviewStat
                           label="Nu bespreken"
                           value={`${dueItems.length}`}
@@ -1608,26 +1652,20 @@ export function ActionCenterPreview({
                           detail={`${overdueReviews.length} achterstallig`}
                           accent="red"
                         />
-                        <OverviewStat
-                          label="Eigenaarschap gedekt"
-                          value={`${ownerCoverageCount}`}
-                          detail={teamRows.length > 0 ? `van ${teamRows.length} teams expliciet gekoppeld` : 'nog geen teams zichtbaar'}
-                          accent="teal"
-                        />
                       </div>
                     </div>
 
                     <div className="mt-8 flex items-center justify-between gap-3 border-t border-[#ece4d8] pt-6">
                       <div>
                         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Nu in beeld</p>
-                        <h3 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.03em] text-[#132033]">Eerste managementflow</h3>
+                        <h3 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.03em] text-[#132033]">Eerste werklijst</h3>
                       </div>
                       <button
                         type="button"
                         className="text-sm font-semibold text-[#4a5f74] transition hover:text-[#132033]"
                         onClick={() => setActiveView('actions')}
                       >
-                        Open alle acties
+                        Open actielijst
                       </button>
                     </div>
                     <div className="mt-2 divide-y divide-[#ece4d8]">
@@ -1667,7 +1705,7 @@ export function ActionCenterPreview({
                   </section>
 
                   <aside className="rounded-[30px] bg-[#182231] px-7 py-7 text-white shadow-[0_22px_56px_rgba(19,32,51,0.18)]">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/45">Aanbevolen focus</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/45">Nu in focus</p>
                     <h2 className="mt-3 text-[1.8rem] font-semibold tracking-[-0.045em]">
                       {focusItem?.title ?? 'Action Center ritme staat klaar'}
                     </h2>
@@ -1684,10 +1722,11 @@ export function ActionCenterPreview({
                     </div>
 
                     <div className="mt-6 rounded-[24px] border border-white/10 bg-white/[0.04] px-5 py-5">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">Volgende stap</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">Waarom dit nu voorligt</p>
                       <p className="mt-3 text-base leading-7 text-white/86">
-                        {focusItem?.coreSemantics.actionFrame.firstStep ??
-                          'De eerste review en eigenaar worden automatisch zichtbaar zodra een dossier live staat.'}
+                        {focusItem?.coreSemantics.reviewSemantics.reviewReason ??
+                          focusItem?.reason ??
+                          'Zodra live opvolging zichtbaar is, landt hier automatisch de route die het eerst gesprek of verificatie vraagt.'}
                       </p>
                     </div>
 
@@ -1713,82 +1752,46 @@ export function ActionCenterPreview({
                         {workbenchLabel}
                       </Link>
                     </div>
+
+                    <div className="mt-6 border-t border-white/10 pt-6">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">Komende reviews</p>
+                      <div className="mt-4 space-y-2">
+                        {upcomingReviews.length === 0 ? (
+                          <div className="rounded-[16px] border border-white/10 bg-white/[0.03] px-4 py-4 text-sm leading-6 text-white/68">
+                            Nog geen reviewmomenten zichtbaar in deze selectie.
+                          </div>
+                        ) : (
+                          upcomingReviews.slice(0, 3).map((item) => (
+                            <button
+                              key={item.id}
+                              type="button"
+                              className="flex w-full items-start justify-between gap-4 rounded-[16px] border border-white/10 bg-white/[0.03] px-4 py-3.5 text-left transition hover:bg-white/[0.06]"
+                              onClick={() => {
+                                setSelectedItemId(item.id)
+                                setActiveView('reviews')
+                              }}
+                            >
+                              <div className="min-w-0">
+                                <p className="text-sm font-semibold text-white">{item.title}</p>
+                                <p className="mt-1 text-sm text-white/60">{getOwnerDisplayName(item.ownerName)}</p>
+                              </div>
+                              <span className="shrink-0 text-sm font-semibold text-[#ffb16e]">{item.reviewDateLabel}</span>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mt-6 border-t border-white/10 pt-6">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">Leesbeeld in deze selectie</p>
+                      <div className="mt-4 space-y-3">
+                        <SignalRow label="Routebeeld" value={getWorkspaceRouteImageSummary(workspaceReadbackSummary)} dark />
+                        <SignalRow label="Besluitspoor" value={getWorkspaceDecisionTrailSummary(workspaceReadbackSummary)} dark />
+                        <SignalRow label="Vervolg over tijd" value={getWorkspaceContinuationSummary(workspaceReadbackSummary)} dark />
+                        <SignalRow label="Reviewdruk" value={getWorkspaceReviewPressureSummary(workspaceReadbackSummary)} dark />
+                      </div>
+                    </div>
                   </aside>
-                </div>
-
-                <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr),minmax(320px,0.9fr)]">
-                  <section className="rounded-[28px] border border-[#e4d9cb] bg-white px-7 py-7 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
-                    <div className="flex flex-col gap-5 border-b border-[#ece4d8] pb-6 lg:flex-row lg:items-end lg:justify-between">
-                      <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8d8377]">Reviewvenster</p>
-                        <h2 className="mt-2 text-[1.5rem] font-semibold tracking-[-0.04em] text-[#132033]">Komende 14 dagen</h2>
-                      </div>
-                      <div className="grid gap-3 sm:grid-cols-3">
-                        <ReviewWindowStat label="Achterstallig" value={`${overdueReviews.length}`} tone="red" />
-                        <ReviewWindowStat label="Deze week" value={`${thisWeekReviews.length}`} tone="amber" />
-                        <ReviewWindowStat label="Volgende week" value={`${nextWeekReviews.length}`} tone="slate" />
-                      </div>
-                    </div>
-
-                    <div className="mt-6 space-y-4">
-                      {upcomingReviews.length === 0 ? (
-                        <EmptyBlock text="Zodra reviewmomenten gepland zijn, komen ze hier automatisch in Action Center." />
-                      ) : (
-                        upcomingReviews.map((item) => (
-                          <button
-                            key={item.id}
-                            type="button"
-                            className="flex w-full items-start gap-4 rounded-[22px] border border-transparent px-1 py-2 text-left transition hover:border-[#ece4d8] hover:bg-[#fcfaf7]"
-                            onClick={() => {
-                              setSelectedItemId(item.id)
-                              setActiveView('reviews')
-                            }}
-                          >
-                            <div className="min-w-[72px] rounded-[18px] bg-[#fbf3ef] px-3 py-3 text-center text-[#d2574b]">
-                              <p className="text-[11px] font-semibold uppercase tracking-[0.18em]">Review</p>
-                              <p className="mt-1 text-xl font-semibold">{item.reviewDateLabel}</p>
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="text-[1.02rem] font-semibold leading-7 text-[#132033]">{item.title}</p>
-                                <p className="mt-1 text-sm text-[#6d6458]">
-                                  {getOwnerDisplayName(item.ownerName)} / {item.reviewRhythm}
-                                </p>
-                            </div>
-                            <div className="hidden text-right text-sm text-[#8b8174] xl:block">
-                              <p>{item.teamLabel}</p>
-                              <p className="mt-1">{item.sourceLabel}</p>
-                            </div>
-                          </button>
-                        ))
-                      )}
-                    </div>
-                  </section>
-
-                  <section className="rounded-[28px] border border-[#e4d9cb] bg-[#fcfaf7] px-7 py-7 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8d8377]">Bestuurlijke teruglezing</p>
-                    <h2 className="mt-3 text-[1.45rem] font-semibold tracking-[-0.04em] text-[#132033]">
-                      Wat is over deze zichtbare routes al bestuurlijk leesbaar?
-                    </h2>
-                    <p className="mt-4 text-sm leading-8 text-[#4f6175]">
-                      {readOnly
-                        ? 'Deze readback blijft bewust compact: hoeveel routes nog lopen, waar expliciete besluitmomenten zichtbaar zijn en waar vervolg over tijd al in beeld komt.'
-                        : 'Deze readback blijft bewust compact: routebeeld, besluitspoor, reviewdruk en vervolg over tijd blijven in dezelfde Action Center-overview leesbaar.'}
-                    </p>
-
-                    <div className="mt-6 space-y-3">
-                      <SignalRow label="Routebeeld" value={getWorkspaceRouteImageSummary(workspaceReadbackSummary)} />
-                      <SignalRow label="Besluitspoor" value={getWorkspaceDecisionTrailSummary(workspaceReadbackSummary)} />
-                      <SignalRow label="Vervolg over tijd" value={getWorkspaceContinuationSummary(workspaceReadbackSummary)} />
-                      <SignalRow label="Reviewdruk" value={getWorkspaceReviewPressureSummary(workspaceReadbackSummary)} />
-                    </div>
-
-                    <Link
-                      href={workbenchHref}
-                      className="mt-6 inline-flex rounded-full border border-[#ded3c6] bg-white px-4 py-2 text-sm font-semibold text-[#1a2533] transition hover:border-[#1a2533]"
-                    >
-                      {workbenchLabel}
-                    </Link>
-                  </section>
                 </div>
 
                 <section className="rounded-[28px] border border-[#e4d9cb] bg-white shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
@@ -1872,6 +1875,7 @@ export function ActionCenterPreview({
                   </div>
                 </section>
               </div>
+              )
             ) : null}
 
             {activeView === 'actions' ? (
@@ -2040,6 +2044,54 @@ export function ActionCenterPreview({
                           </div>
                         ) : null}
                       </div>
+                      {selectedItem.coreSemantics.routeActionCards.length > 0 ? (
+                        <div className="rounded-[28px] border border-[#e4d9cb] bg-white px-7 py-7 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
+                          <div className="border-b border-[#ece4d8] pb-5">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Actieroute</p>
+                            <h3 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.03em] text-[#132033]">Acties in deze route</h3>
+                          </div>
+                          <div className="mt-6 space-y-4">
+                            {selectedItem.coreSemantics.routeActionCards.map((actionCard) => (
+                              <div
+                                key={actionCard.actionId}
+                                className="rounded-[22px] border border-[#efe7dc] bg-[#fcfaf7] px-5 py-5"
+                              >
+                                <div className="flex flex-wrap items-center gap-3 text-sm text-[#6d6458]">
+                                  <MiniTag>{getActionCardThemeLabel(actionCard.themeKey)}</MiniTag>
+                                  <StatusPill
+                                    status={
+                                      actionCard.status === 'in_review'
+                                        ? 'reviewbaar'
+                                        : actionCard.status === 'open'
+                                          ? 'in-uitvoering'
+                                          : actionCard.status === 'afgerond'
+                                            ? 'afgerond'
+                                            : 'gestopt'
+                                    }
+                                  />
+                                  <span className="ml-auto font-semibold text-[#5a7088]">
+                                    Review {formatShortDate(actionCard.reviewScheduledFor)}
+                                  </span>
+                                </div>
+                                <p className="mt-4 text-[1.02rem] font-semibold leading-7 text-[#132033]">
+                                  {actionCard.actionText}
+                                </p>
+                                <p className="mt-2 text-sm leading-7 text-[#4f6175]">{actionCard.expectedEffect}</p>
+                                {actionCard.latestReview ? (
+                                  <div className="mt-4 rounded-[18px] border border-[#eadfce] bg-white px-4 py-4">
+                                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">
+                                      Laatste review ({getActionReviewOutcomeLabel(actionCard.latestReview.actionOutcome)})
+                                    </p>
+                                    <p className="mt-3 text-sm leading-7 text-[#32465d]">
+                                      {actionCard.latestReview.observation}
+                                    </p>
+                                  </div>
+                                ) : null}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
                     </section>
 
                     <section className="space-y-6">
@@ -2230,7 +2282,7 @@ export function ActionCenterPreview({
                             Route afsluiten
                           </h3>
                           <p className="mt-3 text-sm leading-7 text-[#4f6175]">
-                            Gebruik deze stap als HR of Verisight wanneer deze route bestuurlijk dicht kan, zonder de historische lezing te verliezen.
+                            Gebruik deze stap als HR of Loep wanneer deze route bestuurlijk dicht kan, zonder de historische lezing te verliezen.
                           </p>
 
                           {routeCloseoutPanelOpen ? (
@@ -2334,7 +2386,9 @@ export function ActionCenterPreview({
                         </div>
                       ) : null}
 
-                      {selectedItem && isClosedRouteStatus(selectedItem.status) ? (
+                      {selectedItem &&
+                      (isClosedRouteStatus(selectedItem.status) ||
+                        Boolean(selectedItem.coreSemantics.routeCloseout.closeoutStatus)) ? (
                         <div className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
                           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">
                             Route afgesloten
@@ -3090,7 +3144,7 @@ export function ActionCenterPreview({
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Nieuwe actie</p>
                 <h2 className="mt-2 text-[2rem] font-semibold tracking-[-0.05em] text-[#132033]">Actie aanmaken</h2>
                 <p className="mt-3 text-base leading-8 text-[#4f6175]">
-                  Koppel een concrete vervolgstap aan een Verisight-signaal of bestaand dossier in Action Center.
+                  Koppel een concrete vervolgstap aan een Loep-signaal of bestaand dossier in Action Center.
                 </p>
               </div>
               <button
@@ -3264,28 +3318,290 @@ function SidebarGroup({
   )
 }
 
-function OverviewStat({
+function getActionCardThemeLabel(themeKey: ActionCenterManagerActionThemeKey) {
+  return (
+    ACTION_CENTER_MANAGER_RESPONSE_THEME_OPTIONS.find((option) => option.value === themeKey)?.label ?? themeKey
+  )
+}
+
+function getActionReviewOutcomeLabel(outcome: 'effect-zichtbaar' | 'bijsturen-nodig' | 'nog-te-vroeg' | 'stoppen') {
+  switch (outcome) {
+    case 'effect-zichtbaar':
+      return 'Effect zichtbaar'
+    case 'bijsturen-nodig':
+      return 'Bijsturen nodig'
+    case 'nog-te-vroeg':
+      return 'Nog te vroeg'
+    case 'stoppen':
+    default:
+      return 'Stoppen'
+  }
+}
+
+function ActionCenterBoundedOverview({
+  visibleItems,
+  blockedItems,
+  upcomingReviews,
+  overviewStatusCounts,
+  selectedItem,
+  onSelectItem,
+  selectedItemHref,
+  workbenchLabel,
+}: {
+  visibleItems: ActionCenterPreviewItem[]
+  blockedItems: ActionCenterPreviewItem[]
+  upcomingReviews: ActionCenterPreviewItem[]
+  overviewStatusCounts: {
+    activeRoutes: number
+    reviewReady: number
+    blocked: number
+    unavailable: number | null
+    closed: number
+  }
+  selectedItem: ActionCenterPreviewItem | null
+  onSelectItem: (itemId: string) => void
+  selectedItemHref: string
+  workbenchLabel: string
+}) {
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-3 md:grid-cols-3">
+        <ActionCenterBoundedCounter
+          label="Actieve routes"
+          value={`${overviewStatusCounts.activeRoutes}`}
+          detail="Nog in opvolging"
+          tone="teal"
+        />
+        <ActionCenterBoundedCounter
+          label="Te bespreken / reviewbaar"
+          value={`${overviewStatusCounts.reviewReady + overviewStatusCounts.blocked}`}
+          detail={`${overviewStatusCounts.reviewReady} reviewbaar / ${overviewStatusCounts.blocked} Geblokkeerd`}
+          tone="red"
+        />
+        <ActionCenterBoundedCounter
+          label="Komende reviews"
+          value={`${upcomingReviews.length}`}
+          detail={upcomingReviews.length > 0 ? "In de huidige selectie" : "Nog niets gepland"}
+          tone="slate"
+        />
+      </div>
+
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-[#ebe1d5] pb-4 text-sm text-[#6d6458]">
+        <span>Afgerond: {overviewStatusCounts.closed}</span>
+        <span>Niet beschikbaar: {overviewStatusCounts.unavailable ?? 0}</span>
+        <span>{visibleItems.length} zichtbare route{visibleItems.length === 1 ? '' : 's'}</span>
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.65fr),minmax(320px,0.95fr)]">
+        <section className="rounded-[24px] border border-[#e4d9cb] bg-white">
+          <div className="grid xl:grid-cols-[minmax(0,2.6fr)_minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)] gap-4 border-b border-[#ebe1d5] bg-[#faf6f0] px-6 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">
+            <span>Route</span>
+            <span>Eigenaar</span>
+            <span>Status</span>
+            <span>Volgende review</span>
+          </div>
+          <div className="divide-y divide-[#ebe1d5]">
+            {visibleItems.length === 0 ? (
+              <div className="p-6">
+                <EmptyBlock text="Geen zichtbare follow-through items in deze selectie." />
+              </div>
+            ) : (
+              visibleItems.map((item) => (
+                <ActionCenterBoundedRow
+                  key={item.id}
+                  item={item}
+                  selected={selectedItem?.id === item.id}
+                  onSelect={() => onSelectItem(item.id)}
+                />
+              ))
+            )}
+          </div>
+        </section>
+
+        <div className="space-y-6">
+          <aside className="rounded-[24px] border border-[#e4d9cb] bg-[#fcfaf7] px-6 py-6">
+            <div>
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Nu signalen</p>
+                        <span className="text-xs text-[#7d7368]">{blockedItems.length} geblokkeerd</span>
+                      </div>
+              <div className="mt-4 space-y-3">
+                {blockedItems.length === 0 ? (
+                  <EmptyBlock text="Er staan nu geen geblokkeerde routes in deze selectie." />
+                ) : (
+                  blockedItems.slice(0, 3).map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className="w-full rounded-[16px] border border-[#efe4d9] bg-white px-4 py-4 text-left transition hover:border-[#d2574b]"
+                      onClick={() => onSelectItem(item.id)}
+                    >
+                      <p className="text-sm font-semibold text-[#132033]">{item.title}</p>
+                      <p className="mt-1 text-sm text-[#6d6458]">{item.teamLabel}</p>
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="mt-6 border-t border-[#ebe1d5] pt-6">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Komende reviews</p>
+                <span className="text-xs text-[#7d7368]">{upcomingReviews.length}</span>
+              </div>
+              <div className="mt-4 space-y-2">
+                {upcomingReviews.length === 0 ? (
+                  <EmptyBlock text="Nog geen reviewmomenten zichtbaar in deze selectie." />
+                ) : (
+                  upcomingReviews.slice(0, 4).map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className="flex w-full items-start justify-between gap-4 rounded-[16px] border border-[#ebe1d5] bg-white px-4 py-3.5 text-left transition hover:border-[#cdbfae]"
+                      onClick={() => onSelectItem(item.id)}
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-[#132033]">{item.title}</p>
+                        <p className="mt-1 text-sm text-[#6d6458]">{getOwnerDisplayName(item.ownerName)}</p>
+                      </div>
+                      <span className="shrink-0 text-sm font-semibold text-[#5a7088]">{item.reviewDateLabel}</span>
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
+          </aside>
+
+          <section className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6">
+            {selectedItem ? (
+              <>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Wat vraagt nu aandacht?</p>
+                <div className="flex flex-wrap items-center gap-3">
+                  <StatusPill status={selectedItem.status} />
+                  <span className="text-sm font-semibold text-[#5a7088]">{selectedItem.code}</span>
+                </div>
+                <h2 className="mt-4 text-[1.55rem] font-semibold tracking-[-0.04em] text-[#132033]">{selectedItem.title}</h2>
+                <div className="mt-5 grid gap-3 text-sm text-[#42556b] sm:grid-cols-2">
+                  <BoundedDetailCard label="Eigenaar" value={getOwnerDisplayName(selectedItem.ownerName)} />
+                  <BoundedDetailCard label="Team" value={selectedItem.teamLabel} />
+                  <BoundedDetailCard label="Volgende review" value={selectedItem.reviewDateLabel} />
+                  <BoundedDetailCard label="Mensen" value={`${selectedItem.peopleCount}`} />
+                </div>
+                <div className="mt-6 border-t border-[#ebe1d5] pt-5">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Waarom dit nu aandacht vraagt</p>
+                  <p className="mt-3 text-sm leading-7 text-[#42556b]">
+                    {selectedItem.coreSemantics.reviewSemantics.reviewReason || selectedItem.reason}
+                  </p>
+                </div>
+                <div className="mt-5 border-t border-[#ebe1d5] pt-5">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Volgende stap in deze route</p>
+                  <p className="mt-3 text-sm leading-7 text-[#42556b]">
+                    {selectedItem.coreSemantics.actionFrame.firstStep || selectedItem.nextStep}
+                  </p>
+                </div>
+                <Link
+                  href={selectedItemHref}
+                  className="mt-5 inline-flex min-h-11 items-center rounded-full border border-[#ded3c6] bg-[#fcfaf7] px-4.5 py-2.5 text-sm font-semibold text-[#1a2533] transition hover:border-[#1a2533]"
+                >
+                  {workbenchLabel}
+                </Link>
+              </>
+            ) : (
+              <>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Wat vraagt nu aandacht?</p>
+                <h2 className="mt-3 text-[1.45rem] font-semibold tracking-[-0.04em] text-[#132033]">Kies eerst een route</h2>
+                <p className="mt-3 text-sm leading-7 text-[#42556b]">
+                  Selecteer een item uit de lijst om status, scope, eigenaar en reviewdiscipline in detail te zien.
+                </p>
+              </>
+            )}
+          </section>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ActionCenterBoundedCounter({
   label,
   value,
   detail,
-  accent,
+  tone,
 }: {
   label: string
   value: string
   detail: string
-  accent: 'amber' | 'red' | 'teal'
+  tone: 'teal' | 'amber' | 'red' | 'slate'
 }) {
-  const accentClass =
-    accent === 'amber' ? 'bg-[#ff9b4a]' : accent === 'red' ? 'bg-[#ef6e64]' : 'bg-[#70b7aa]'
+  const toneClass =
+    tone === 'teal'
+      ? 'bg-[#70b7aa]'
+      : tone === 'amber'
+        ? 'bg-[#ff9b4a]'
+        : tone === 'red'
+          ? 'bg-[#ef6e64]'
+          : 'bg-[#9b9387]'
 
   return (
-    <div className="rounded-[18px] border border-[#e6ddd2] bg-white px-4 py-3.5">
+    <div className="rounded-[18px] border border-[#e6ddd2] bg-white px-4 py-4">
       <div className="flex items-center gap-2">
-        <span className={`h-2.5 w-2.5 rounded-full ${accentClass}`} />
+        <span className={`h-2.5 w-2.5 rounded-full ${toneClass}`} />
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#7d7368]">{label}</p>
       </div>
       <p className="dash-number mt-3 text-[1.95rem] font-semibold tracking-[-0.05em] text-[#132033]">{value}</p>
       <p className="mt-1 text-sm text-[#6d6458]">{detail}</p>
+    </div>
+  )
+}
+
+function ActionCenterBoundedRow({
+  item,
+  selected,
+  onSelect,
+}: {
+  item: ActionCenterPreviewItem
+  selected: boolean
+  onSelect: () => void
+}) {
+  return (
+    <button
+      type="button"
+      className={`grid w-full gap-4 px-6 py-4 text-left transition hover:bg-[#fcfaf7] xl:grid-cols-[minmax(0,2.6fr)_minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)] ${
+        item.status === 'geblokkeerd' ? 'border-l-4 border-l-[#d2574b]' : ''
+      } ${selected ? 'bg-[#fcfaf7]' : 'bg-white'}`}
+      onClick={onSelect}
+    >
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2 text-sm text-[#6d6458]">
+          <MiniTag>{item.sourceLabel}</MiniTag>
+          <PriorityInline priority={item.priority} />
+          <span className="text-[#b2a496]">/</span>
+          <span>{item.teamLabel}</span>
+        </div>
+        <p className="mt-3 text-[1.02rem] font-semibold leading-7 text-[#132033]">{item.title}</p>
+        <p className="mt-2 text-sm leading-6 text-[#4f6175]">{item.summary}</p>
+      </div>
+      <div className="text-sm text-[#132033]">
+        <div className="flex items-center gap-3">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f3ece3] text-xs font-semibold text-[#5f564a]">
+            {getInitials(getOwnerDisplayName(item.ownerName))}
+          </span>
+          <span className="font-semibold">{getOwnerDisplayName(item.ownerName)}</span>
+        </div>
+      </div>
+      <div>
+        <StatusPill status={item.status} />
+      </div>
+      <div className="text-sm font-semibold text-[#5a7088]">{item.reviewDateLabel}</div>
+    </button>
+  )
+}
+
+function BoundedDetailCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[16px] bg-[#fcfaf7] px-4 py-4">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">{label}</p>
+      <p className="mt-2 text-sm font-semibold text-[#132033]">{value}</p>
     </div>
   )
 }
@@ -3359,6 +3675,32 @@ function ReviewLane({
   )
 }
 
+function OverviewStat({
+  label,
+  value,
+  detail,
+  accent,
+}: {
+  label: string
+  value: string
+  detail: string
+  accent: 'amber' | 'red' | 'teal'
+}) {
+  const accentClass =
+    accent === 'amber' ? 'bg-[#ff9b4a]' : accent === 'red' ? 'bg-[#ef6e64]' : 'bg-[#70b7aa]'
+
+  return (
+    <div className="rounded-[18px] border border-[#e6ddd2] bg-white px-4 py-3.5">
+      <div className="flex items-center gap-2">
+        <span className={`h-2.5 w-2.5 rounded-full ${accentClass}`} />
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#7d7368]">{label}</p>
+      </div>
+      <p className="dash-number mt-3 text-[1.95rem] font-semibold tracking-[-0.05em] text-[#132033]">{value}</p>
+      <p className="mt-1 text-sm text-[#6d6458]">{detail}</p>
+    </div>
+  )
+}
+
 function PriorityInline({ priority }: { priority: ActionCenterPreviewPriority }) {
   const meta = getPriorityMeta(priority)
   return <span className="text-[#d05f3f]">{meta.label}</span>
@@ -3418,11 +3760,17 @@ function FocusSummaryRow({ label, value }: { label: string; value: string }) {
   )
 }
 
-function SignalRow({ label, value }: { label: string; value: string }) {
+function SignalRow({ label, value, dark = false }: { label: string; value: string; dark?: boolean }) {
   return (
-    <div className="rounded-[18px] border border-[#e6ddd2] bg-white px-4 py-4">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">{label}</p>
-      <p className="mt-2 text-sm leading-7 text-[#42556b]">{value}</p>
+    <div
+      className={
+        dark
+          ? 'rounded-[18px] border border-white/10 bg-white/[0.03] px-4 py-4'
+          : 'rounded-[18px] border border-[#e6ddd2] bg-white px-4 py-4'
+      }
+    >
+      <p className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${dark ? 'text-white/45' : 'text-[#8d8377]'}`}>{label}</p>
+      <p className={`mt-2 text-sm leading-7 ${dark ? 'text-white/78' : 'text-[#42556b]'}`}>{value}</p>
     </div>
   )
 }
@@ -3496,7 +3844,33 @@ function buildDetailLineageEntries(
   item: ActionCenterPreviewItem,
   routeTitlesById: ReadonlyMap<string, string>,
 ): ActionCenterDetailLineageEntry[] {
-  const { backwardLabel, backwardRouteId, forwardLabel, forwardRouteId } = item.coreSemantics.lineageSummary
+  const legacyLineage = (item.coreSemantics as ActionCenterPreviewItem['coreSemantics'] & {
+    lineageSemantics?: {
+      label?: string | null
+      followUpFromRouteId?: string | null
+      followUpTargetRouteId?: string | null
+    }
+  }).lineageSemantics
+  const backwardLabel =
+    item.coreSemantics.lineageSummary.backwardLabel ??
+    (legacyLineage?.label === 'Heropend traject' || legacyLineage?.label === 'Vervolg op eerdere route'
+      ? legacyLineage.label
+      : null) ??
+    (item.coreSemantics.route.lineageLabel === 'Heropend traject' ||
+    item.coreSemantics.route.lineageLabel === 'Vervolg op eerdere route'
+      ? item.coreSemantics.route.lineageLabel
+      : null)
+  const backwardRouteId =
+    item.coreSemantics.lineageSummary.backwardRouteId ??
+    legacyLineage?.followUpFromRouteId ??
+    item.coreSemantics.route.followUpFromRouteId
+  const forwardLabel =
+    item.coreSemantics.lineageSummary.forwardLabel ??
+    (legacyLineage?.label === 'Later opgevolgd' ? legacyLineage.label : null)
+  const forwardRouteId =
+    item.coreSemantics.lineageSummary.forwardRouteId ??
+    legacyLineage?.followUpTargetRouteId ??
+    item.coreSemantics.route.followUpTargetRouteId
   const entries: Array<ActionCenterDetailLineageEntry | null> = [
     backwardLabel
       ? {
