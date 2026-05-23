@@ -166,12 +166,26 @@ Commercially, this means Action Center should be understandable as:
 
 Action Center is most credible in organizations that have:
 
-- multiple people-insight routes or recurring HR / management scans
-- HR teams that already receive insights but struggle with follow-through discipline
-- layered management structures where ownership disappears after reporting
-- a need for governance without rolling out broad project-management tooling
+- recurring people-insight routes or recurring HR / management scans
+- an HR team with clear governance ownership after reporting
+- layered management structures where ownership often disappears after reports or debriefs
+- visible follow-through leakage after insights are delivered
+- a need for governance without rolling out a broad project-management tool
 - sensitivity to privacy-safe, route-bound follow-through
 - a model where HR remains rhythm owner and managers participate lightly
+- enough operating maturity to engage with governance, privacy, and sign-off discipline
+
+### 5.1A ICP qualifiers for near-standalone readiness
+
+Near-standalone Action Center is especially credible where the customer has most of the following:
+
+- multiple management layers
+- recurring route cadence rather than one-off insight work
+- central HR governance ownership
+- a real review rhythm after reporting
+- repeated evidence that insight follow-through leaks into email or meetings
+- low appetite for broad workflow tooling rollout
+- willingness to adopt explicit privacy and governance boundaries
 
 ### 5.2 Non-ICP
 
@@ -182,6 +196,9 @@ Action Center is not a fit for organizations that want:
 - broad HR case management
 - follow-through without clear ownership or review rhythm
 - causal proof of intervention impact as the main promise
+- no clear HR governance owner
+- fully autonomous manager execution without governance checkpoints
+- task administration as the primary user behavior
 
 ## 6. Commercial Packaging Ladder
 
@@ -214,6 +231,17 @@ Action Center is not a fit for organizations that want:
 
 - buyers may mistake it for a light feature instead of a serious operating layer
 
+**Sales motion boundaries**
+
+| Dimension | Embedded Action Center |
+| --- | --- |
+| Buyer | HR buyer, HR route owner, management sponsor tied to the route |
+| Sales motion | route-led or module-led sale |
+| Demo focus | route -> action -> review -> closeout inside one approved route family |
+| Main objection | "Is this just a small follow-up feature?" |
+| Allowed sales language | governed follow-through for approved routes |
+| Must not claim | standalone capability, generic workflow replacement, universal route fit |
+
 ### 6.2 Level 2 - Cross-Route Action Center
 
 **What is sold**
@@ -240,6 +268,17 @@ Action Center is not a fit for organizations that want:
 **Risk if sold too early**
 
 - route families may look artificially compatible when they are not
+
+**Sales motion boundaries**
+
+| Dimension | Cross-Route Action Center |
+| --- | --- |
+| Buyer | HR governance owner, enterprise sponsor, route portfolio owner |
+| Sales motion | multi-route governance sale inside Loep context |
+| Demo focus | one shared follow-through layer across multiple approved route types |
+| Main objection | "Will this become another workflow layer?" |
+| Allowed sales language | governed follow-through across approved structured people routes |
+| Must not claim | generic route support, automatic module fit, standalone product status |
 
 ### 6.3 Level 3 - Standalone Action Center
 
@@ -273,6 +312,25 @@ Action Center is not a fit for organizations that want:
 - insufficient governance/admin readiness
 - standalone promise without live evidence
 
+**Sales motion boundaries**
+
+| Dimension | Standalone Action Center |
+| --- | --- |
+| Buyer | future-gated only |
+| Sales motion | not yet authorized |
+| Demo focus | not yet authorized as a standalone motion |
+| Main objection | "Why is this not just workflow software?" |
+| Allowed sales language | future bounded standalone possibility only |
+| Must not claim | launch readiness, standalone pricing, standalone GTM, universal route support |
+
+### 6.4 Packaging readiness status
+
+| Packaging level | Current status | Allowed use now | Not allowed now |
+| --- | --- | --- | --- |
+| `Embedded Action Center` | usable / near-ready | route-bound embedded or add-on positioning inside approved routes | standalone framing |
+| `Cross-Route Action Center` | strategic direction / partial | internal product direction and controlled enterprise framing | broad buyer promise without route evidence |
+| `Standalone Action Center` | not ready | future gated possibility only | launch, pricing, GTM, universal route promise |
+
 ## 7. Tenant And Admin Readiness
 
 Near-standalone readiness eventually requires tenant-grade governance and administration.
@@ -297,6 +355,24 @@ At minimum, that must include:
 This spec does not implement these controls.
 
 It defines them as **standalone-readiness requirements**.
+
+### 7.1 Tenant/admin readiness matrix
+
+| Capability | Embedded | Near-standalone | Standalone |
+| --- | --- | --- | --- |
+| tenant admin | light / internal | required | full |
+| HR governance admin | required | required | full |
+| manager participant role | required | required | required |
+| executive viewer role | optional / limited | required | required |
+| support operator role | basic | required | governed and logged |
+| role-based visibility | basic | required | advanced |
+| route activation approvals | manual | required | governed |
+| route deactivation / archival controls | partial | required | governed |
+| audit export | optional | required | advanced |
+| support access logging | basic | required | full |
+| retention / deletion controls | documented | required | configurable |
+| incident process | partial | required | mature |
+| environment separation | limited | where relevant required | required |
 
 ## 8. Universal Route Operating Contract
 
@@ -323,7 +399,23 @@ Every route must provide:
 - route activation checklist
 - route deactivation / retirement rule
 
-### 8.1 Key distinction
+### 8.1 Minimum viable route package
+
+Every route family that is allowed to operate inside Action Center must also have a minimum viable route package containing:
+
+- route definition
+- buyer-facing route intent
+- default cadence
+- allowed action focus
+- evidence grammar
+- closeout question
+- governance queues
+- route-specific red flags
+- reporting vocabulary
+- privacy boundary
+- demo scenario
+
+### 8.2 Key distinction
 
 - **Route eligibility** answers: may this route enter?
 - **Route operating contract** answers: how does this route behave once admitted?
@@ -373,6 +465,14 @@ It must eventually define:
 - failed rollout handling
 - customer success review rhythm
 - evidence review after first live cycle
+
+### 10.1 Minimum near-standalone operating requirements
+
+- HR operator onboarding should be repeatable in a short, documented session
+- manager participation onboarding should be explainable through a compact artifact or lightweight intro
+- first route activation should require a checklist rather than tacit knowledge
+- support should distinguish between product issue, governance incident, privacy question, and route-semantics issue
+- failed rollout handling should include containment and next-step logic
 
 Action Center cannot become near-standalone ready if:
 
@@ -444,6 +544,33 @@ Action Center cannot become near-standalone ready if:
 - evidence needed: buyer/operator understanding confirmed in real review
 - status values: `not_ready` / `partial` / `ready`
 - blocking risk: misclassification into the wrong software category
+
+### 11.10 Near-standalone positioning readiness
+
+- requirement: Action Center can be explained as commercially distinct without being misread as a launched standalone product
+- evidence needed: positioning gate passed, buyer-safe artifacts tested, sales boundaries understood
+- status values: `not_ready` / `partial` / `ready`
+- blocking risk: commercial overreach before product and operating maturity
+
+### 11.11 Readiness status by packaging level
+
+| Packaging level | Current status | Required next evidence | Main blocking risk |
+| --- | --- | --- | --- |
+| `Embedded Action Center` | `partial` | repeatable embedded buyer and rollout understanding | seen as a feature instead of a governed layer |
+| `Cross-Route Action Center` | `not_ready` | approved route-fit across more than one family category | workflow drift through false route compatibility |
+| `Standalone Action Center` | `not_ready` | full quantified gate plus tenant/admin/support readiness | category overreach without operating maturity |
+
+## 12A. Gate To Near-Standalone Commercial Positioning
+
+Near-standalone commercial positioning may not begin unless at least the following are true:
+
+- category pitch has been exercised in real buyer or prospect conversations
+- buyers can understand Action Center without workflow or project-management framing
+- ICP and non-ICP are explicit and usable in qualification
+- embedded Action Center buyer story works without founder-only explanation
+- at least one buyer-facing artifact has passed red-team review under live commercial use
+- sales can explain that Action Center is commercially distinct without claiming it is already a standalone product
+- no unresolved privacy or governance incident undermines that positioning
 
 ## 12. Quantified Standalone Gate
 
@@ -522,6 +649,7 @@ Requires:
 - buyer understanding
 - no unresolved privacy/governance incidents
 - category clarity
+- near-standalone commercial positioning gate passed
 
 ### 15.2 Gate to cross-route platform positioning
 
