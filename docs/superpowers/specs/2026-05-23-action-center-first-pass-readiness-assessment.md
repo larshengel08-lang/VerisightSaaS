@@ -170,9 +170,8 @@ Evidence:
 
 What is missing or unstable:
 
-- no fully packaged tenant-admin surface
-- no explicit executive-viewer surface
-- approval, export, and support controls are still API/admin-first rather than a mature operator package
+- tenant-admin and executive-viewer surfaces now exist, but remain bounded scaffolding rather than a fully mature customer package
+- approval, export, and support controls are still governance/readback-first rather than a mature operator package
 - retention/deletion remains policy-backed more than runtime-backed
 
 Blocking risk:
@@ -238,7 +237,7 @@ Blocking risk:
 
 Next step:
 
-- define and test a real support/onboarding path against one current route family end-to-end, using [ACTION_CENTER_SUPPORT_ACCESS_AND_INCIDENT_MATRIX.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/ACTION_CENTER_SUPPORT_ACCESS_AND_INCIDENT_MATRIX.md) as the bounded case/owner/escalation baseline
+- run the bounded rehearsal defined in [ACTION_CENTER_FIRST_ROUTE_ONBOARDING_REHEARSAL.md](/C:/Users/larsh/Desktop/wt/ac-admin-wave/docs/ops/ACTION_CENTER_FIRST_ROUTE_ONBOARDING_REHEARSAL.md) and score it with [ACTION_CENTER_SUPPORT_REHEARSAL_SCORECARD.md](/C:/Users/larsh/Desktop/wt/ac-admin-wave/docs/ops/ACTION_CENTER_SUPPORT_REHEARSAL_SCORECARD.md)
 
 ### 6. Onboarding readiness
 
@@ -432,6 +431,9 @@ This wave also adds shipped runtime controls for:
 - support-access event logging
 - bounded audit-export summaries
 - admin health readback
+- tenant-admin governance surface
+- executive readback surface
+- bounded rehearsal surface
 
 That means the enterprise-operating conversation is now more disciplined and partly shipped, while the remaining gap is the maturity of the customer/admin package around those controls.
 
@@ -450,6 +452,7 @@ The repository now has stronger policy and runtime scaffolding, but not yet:
 1. Use [2026-05-23-action-center-enterprise-operating-verification-sheet.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/superpowers/specs/2026-05-23-action-center-enterprise-operating-verification-sheet.md), [ACTION_CENTER_RETENTION_AND_DELETION_POLICY.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/ACTION_CENTER_RETENTION_AND_DELETION_POLICY.md), and [ACTION_CENTER_SUPPORT_ACCESS_AND_INCIDENT_MATRIX.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/ACTION_CENTER_SUPPORT_ACCESS_AND_INCIDENT_MATRIX.md) to score actual tenant/admin capabilities against an explicit enterprise readiness matrix.
 2. Decide which current capabilities are strong enough to be surfaced as a real tenant/admin package and which must remain internal scaffolding.
 3. Keep route scope bounded to `exit` and `retention` while the enterprise-operating package catches up.
+4. Run one real rehearsal through [ACTION_CENTER_FIRST_ROUTE_ONBOARDING_REHEARSAL.md](/C:/Users/larsh/Desktop/wt/ac-admin-wave/docs/ops/ACTION_CENTER_FIRST_ROUTE_ONBOARDING_REHEARSAL.md) before any stronger near-standalone story.
 
 ### After that
 
