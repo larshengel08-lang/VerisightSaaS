@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { ActionCenterPreview } from '@/components/dashboard/action-center-preview'
 import { buildLiveActionCenterItems, getLiveActionCenterSummary } from '@/lib/action-center-live'
@@ -510,29 +511,51 @@ export default async function ActionCenterPage({
   }
 
   return (
-    <ActionCenterPreview
-      initialItems={items}
-      initialSelectedItemId={initialSelectedItemId}
-      initialView="overview"
-      fallbackOwnerName={getDisplayName(user.email)}
-      ownerOptions={ownerOptions}
-      managerOptions={managerOptions}
-      canAssignManagers={context.canManageActionCenterAssignments}
-      managerAssignmentEndpoint="/api/action-center/workspace-members"
-      canRespondToRequests={context.canUpdateActionCenter}
-      managerResponseEndpoint="/api/action-center-manager-responses"
-      canCloseRoutes={context.canManageActionCenterAssignments}
-      routeCloseoutEndpoint="/api/action-center-route-closeouts"
-      routeFollowUpEndpoint="/api/action-center-route-follow-ups"
-      currentUserId={user.id}
-      workbenchHref={context.canViewInsights ? '/dashboard' : '/action-center'}
-      workbenchLabel={context.canViewInsights ? 'Open broncampagne' : 'Blijf in Action Center'}
-      workspaceName={getDisplayName(user.email)}
-      workspaceSubtitle={workspaceSubtitle}
-      readOnly
-      itemHrefs={itemHrefs}
-      hideSidebar
-      boundedOverviewOnly
-    />
+    <div className="space-y-4">
+      {context.canViewExecutiveReadback ? (
+        <div className="rounded-[1.75rem] border border-slate-200 bg-white px-5 py-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                Executive readback
+              </p>
+              <p className="mt-1 text-sm text-slate-700">
+                Open de bestuurlijke readback voor ritme, closeout en governance-signalen. Geen impactclaim en geen manager-ranking.
+              </p>
+            </div>
+            <Link
+              href="/action-center/executive"
+              className="inline-flex items-center rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+            >
+              Open executive readback
+            </Link>
+          </div>
+        </div>
+      ) : null}
+      <ActionCenterPreview
+        initialItems={items}
+        initialSelectedItemId={initialSelectedItemId}
+        initialView="overview"
+        fallbackOwnerName={getDisplayName(user.email)}
+        ownerOptions={ownerOptions}
+        managerOptions={managerOptions}
+        canAssignManagers={context.canManageActionCenterAssignments}
+        managerAssignmentEndpoint="/api/action-center/workspace-members"
+        canRespondToRequests={context.canUpdateActionCenter}
+        managerResponseEndpoint="/api/action-center-manager-responses"
+        canCloseRoutes={context.canManageActionCenterAssignments}
+        routeCloseoutEndpoint="/api/action-center-route-closeouts"
+        routeFollowUpEndpoint="/api/action-center-route-follow-ups"
+        currentUserId={user.id}
+        workbenchHref={context.canViewInsights ? '/dashboard' : '/action-center'}
+        workbenchLabel={context.canViewInsights ? 'Open broncampagne' : 'Blijf in Action Center'}
+        workspaceName={getDisplayName(user.email)}
+        workspaceSubtitle={workspaceSubtitle}
+        readOnly
+        itemHrefs={itemHrefs}
+        hideSidebar
+        boundedOverviewOnly
+      />
+    </div>
   )
 }

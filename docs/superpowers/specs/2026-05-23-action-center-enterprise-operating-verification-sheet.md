@@ -24,12 +24,13 @@ It does not authorize:
 
 | Capability | Status | Required for near-standalone? | Current runtime evidence | Required owner | Next verification step | Blocking? |
 |---|---|---|---|---|---|---|
-| Tenant admin role | `partial` | yes | explicit admin-governance capabilities now exist in runtime access truth, but not yet as a full customer-facing admin package | product + engineering | verify whether current capability flags are sufficient for a real tenant-admin operating surface | yes |
-| Executive viewer role | `partial` | yes | read-only executive readback capability now exists in runtime access truth, but no separate executive-viewer surface is packaged | product + commercial | verify aggregated readback boundaries and approved sponsor visibility | yes |
+| Tenant admin role | `partial` | yes | explicit admin-governance capabilities plus a bounded tenant-admin governance surface now exist, but not yet as a fully customer-owned admin package | product + engineering | verify whether the current governance surface is strong enough for real tenant-admin operation | yes |
+| Executive viewer role | `partial` | yes | read-only executive readback capability and a dedicated executive page now exist | product + commercial | verify aggregated readback boundaries and approved sponsor visibility | yes |
 | Route activation approvals | `partial` | yes | bounded approval records, schema truth, API write path, and health readback now exist | product + engineering + governance | verify approval review flow beyond direct admin/API use | yes |
 | Audit export | `partial` | yes | bounded audit-export summary and export-request logging now exist | engineering + governance | verify export request review path and acceptable consumer format | yes |
-| Support access logging | `partial` | yes | bounded support-access event logging, schema truth, and health readback now exist | engineering + support + governance | verify operator workflow and review cadence for logged events | yes |
+| Support access logging | `partial` | yes | bounded support-access event logging, schema truth, health readback, and a rehearsal route now exist | engineering + support + governance | verify operator workflow and review cadence for logged events in a real drill | yes |
 | Retention/deletion policy | `partial` | yes | Action Center-specific retention/deletion policy now exists as an owned operating artifact, but not yet as a runtime control package | governance + privacy + engineering | verify record classes, retention rules, and deletion approvals against real admin/runtime handling | yes |
+| Onboarding/support rehearsal pack | `partial` | yes | bounded rehearsal docs and runtime rehearsal page now exist | product + support + governance | run the first real rehearsal and score it against the support scorecard | yes |
 
 ## Activation Approval Controls
 
@@ -122,7 +123,7 @@ It does not authorize:
 | No explicit tenant-admin package | customer-owned administration is still not yet defensible as a complete Action Center truth package | product + engineering | define bounded tenant-admin surface beyond capability flags alone |
 | No explicit executive-viewer package | sponsor/readback visibility is not yet packaged as a safe role | product + commercial | define aggregated readback boundaries and role language |
 | Approval and export flows are still API-first | route activation and audit readback now exist, but are not yet a complete operator-facing control layer | product + governance + engineering | define review/approval/export workflow beyond direct admin endpoints |
-| Support logging lacks operator rhythm | support involvement is now transparently loggable, but not yet embedded in a lived ops rhythm | support + engineering + governance | define support-access review cadence and escalation handling in practice |
+| Support logging lacks operator rhythm | support involvement is now transparently loggable and rehearsable, but not yet embedded in a lived ops rhythm | support + engineering + governance | run the rehearsal and define support-access review cadence in practice |
 | Retention/deletion remains policy-first | record lifecycle can now be explained, but not yet fully defended through visible runtime controls | governance + privacy + engineering | connect policy to explicit runtime deletion/archive handling |
 
 ## Interpretation Notes
