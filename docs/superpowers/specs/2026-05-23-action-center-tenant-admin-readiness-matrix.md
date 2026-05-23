@@ -135,7 +135,7 @@ The near-standalone must-haves are:
 - tenant admin may be partially represented through broader Loep administration rather than a fully separate Action Center governance model
 - HR governance admin remains the primary operating authority
 - manager participant remains tightly bounded to route-linked participation
-- executive viewer remains optional and aggregated where appropriate
+- executive viewer remains optional and limited to aggregated visibility when that visibility is explicitly approved for the customer context
 - Verisight support operator remains exception-based and tightly controlled
 
 ### Near-Standalone
