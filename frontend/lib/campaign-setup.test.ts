@@ -4,6 +4,7 @@ import {
   CAMPAIGN_SCAN_OPTIONS,
   getAllowedDeliveryModes,
   getCampaignNamePlaceholder,
+  getCampaignReportAddOnSetupNote,
   getDefaultModulesForScanType,
   isBaselineOnlyScanType,
   supportsCampaignModuleSelection,
@@ -11,31 +12,24 @@ import {
 } from '@/lib/campaign-setup'
 
 describe('campaign setup rails', () => {
-  it('keeps the supported scan options available in campaign setup', () => {
-    expect(CAMPAIGN_SCAN_OPTIONS.map((option) => option.value)).toEqual([
-      'exit',
-      'retention',
-      'pulse',
-      'team',
-      'onboarding',
-      'leadership',
-    ])
-    expect(getCampaignNamePlaceholder('exit')).toBe('ExitScan Q2 2026')
+  it('registers Loep Culture Assessment as a first-class create option', () => {
+    expect(CAMPAIGN_SCAN_OPTIONS.map((option) => option.value)).toContain('culture_assessment')
+    expect(getCampaignNamePlaceholder('culture_assessment')).toBe('Loep Cultuurbeeld 2026')
   })
 
-  it('keeps pulse, team, onboarding and leadership baseline-only in campaign setup', () => {
-    expect(isBaselineOnlyScanType('pulse')).toBe(true)
-    expect(isBaselineOnlyScanType('team')).toBe(true)
-    expect(isBaselineOnlyScanType('onboarding')).toBe(true)
-    expect(isBaselineOnlyScanType('leadership')).toBe(true)
-    expect(getAllowedDeliveryModes('pulse')).toEqual(['baseline'])
+  it('keeps culture_assessment baseline-only in campaign setup', () => {
+    expect(isBaselineOnlyScanType('culture_assessment')).toBe(true)
+    expect(getAllowedDeliveryModes('culture_assessment')).toEqual(['baseline'])
   })
 
-  it('removes report add-ons from campaign setup now that segment analysis is part of the standard scan layer', () => {
-    expect(getDefaultModulesForScanType('leadership')).toEqual(['leadership', 'role_clarity', 'culture', 'growth'])
-    expect(supportsCampaignModuleSelection('exit')).toBe(true)
+  it('keeps culture_assessment on a fixed instrument and removes report add-on configuration from beheer', () => {
+    expect(getDefaultModulesForScanType('culture_assessment')).toEqual([])
+    expect(supportsCampaignModuleSelection('culture_assessment')).toBe(false)
+    expect(supportsCampaignReportAddOns('culture_assessment')).toBe(false)
+    expect(getCampaignReportAddOnSetupNote('culture_assessment')).toContain('admin/manual-seeded')
+    expect(getCampaignReportAddOnSetupNote('culture_assessment')).toContain('niet klantconfigureerbaar')
     expect(supportsCampaignReportAddOns('exit')).toBe(false)
     expect(supportsCampaignReportAddOns('retention')).toBe(false)
-    expect(supportsCampaignReportAddOns('pulse')).toBe(false)
+    expect(getCampaignReportAddOnSetupNote('retention')).toBeNull()
   })
 })
