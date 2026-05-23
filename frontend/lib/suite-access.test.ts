@@ -20,6 +20,11 @@ describe('suite access context', () => {
     expect(context.canViewReports).toBe(true)
     expect(context.canViewActionCenter).toBe(true)
     expect(context.canManageActionCenterAssignments).toBe(true)
+    expect(context.canManageTenantAdmin).toBe(false)
+    expect(context.canApproveRouteActivation).toBe(false)
+    expect(context.canRequestAuditExport).toBe(false)
+    expect(context.canLogSupportAccess).toBe(false)
+    expect(context.canViewExecutiveReadback).toBe(true)
     expect(context.managerOnly).toBe(false)
     expect(getDefaultSuiteLandingPath(context)).toBe('/dashboard')
   })
@@ -53,6 +58,11 @@ describe('suite access context', () => {
     expect(context.canViewActionCenter).toBe(true)
     expect(context.managerOnly).toBe(true)
     expect(context.managerScopeValues).toEqual(['sales'])
+    expect(context.canManageTenantAdmin).toBe(false)
+    expect(context.canApproveRouteActivation).toBe(false)
+    expect(context.canRequestAuditExport).toBe(false)
+    expect(context.canLogSupportAccess).toBe(false)
+    expect(context.canViewExecutiveReadback).toBe(false)
     expect(getDefaultSuiteLandingPath(context)).toBe('/action-center')
     expect(isScopeVisibleToActionCenterContext(context, 'sales')).toBe(true)
     expect(isScopeVisibleToActionCenterContext(context, 'hr')).toBe(false)
@@ -76,7 +86,42 @@ describe('suite access context', () => {
     expect(context.canViewReports).toBe(true)
     expect(context.canViewActionCenter).toBe(true)
     expect(context.canManageActionCenterAssignments).toBe(true)
+    expect(context.canManageTenantAdmin).toBe(true)
+    expect(context.canApproveRouteActivation).toBe(true)
+    expect(context.canRequestAuditExport).toBe(true)
+    expect(context.canLogSupportAccess).toBe(true)
+    expect(context.canViewExecutiveReadback).toBe(true)
     expect(isScopeVisibleToActionCenterContext(context, 'finance')).toBe(true)
+  })
+
+  it('requires explicit hr-owner workspace capability before customer owners gain admin-governance controls', () => {
+    const context = buildSuiteAccessContext({
+      isVerisightAdmin: false,
+      orgMemberships: [{ org_id: 'org-1', role: 'owner' }],
+      workspaceMemberships: [
+        {
+          org_id: 'org-1',
+          user_id: 'owner-1',
+          display_name: 'HR Owner',
+          login_email: 'owner@example.com',
+          access_role: 'hr_owner',
+          scope_type: 'org',
+          scope_value: 'org-1',
+          can_view: true,
+          can_update: true,
+          can_assign: true,
+          can_schedule_review: true,
+        },
+      ],
+    })
+
+    expect(context.canManageTenantAdmin).toBe(true)
+    expect(context.canApproveRouteActivation).toBe(true)
+    expect(context.canRequestAuditExport).toBe(true)
+    expect(context.canLogSupportAccess).toBe(true)
+    expect(context.canViewExecutiveReadback).toBe(true)
+    expect(context.canViewActionCenter).toBe(true)
+    expect(context.canManageActionCenterAssignments).toBe(true)
   })
 
   it('records owner access confirmation when an owner can enter the insight shell', () => {

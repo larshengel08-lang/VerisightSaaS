@@ -1,12 +1,7 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { ActionCenterPreview } from '@/components/dashboard/action-center-preview'
-import { resolveActionCenterEntryParams } from '@/lib/action-center-entry'
-import {
-  buildLiveActionCenterItems,
-  getLiveActionCenterSummary,
-  isLiveActionCenterScanType,
-} from '@/lib/action-center-live'
-import { getActionCenterReviewRhythmData } from '@/lib/action-center-review-rhythm-data'
+import { buildLiveActionCenterItems, getLiveActionCenterSummary } from '@/lib/action-center-live'
 import { buildActionCenterRouteId } from '@/lib/action-center-route-contract'
 import { projectActionCenterRouteCloseout } from '@/lib/action-center-route-closeout'
 import {
@@ -70,15 +65,9 @@ type ActionCenterScopeRow = {
   peopleCount: number
 }
 
-type ActionCenterPageSearchParams = {
-  focus?: string | string[]
-  source?: string | string[]
-  view?: string | string[]
-}
-
 function getDisplayName(email: string | null | undefined) {
-  if (!email) return 'Loep gebruiker'
-  const localPart = email.split('@')[0] ?? 'loep-gebruiker'
+  if (!email) return 'Verisight gebruiker'
+  const localPart = email.split('@')[0] ?? 'verisight-gebruiker'
   return localPart
     .split(/[._-]/)
     .filter(Boolean)
@@ -90,13 +79,8 @@ function normalizeDepartmentLabel(value: string | null | undefined) {
   return value?.trim() || null
 }
 
-function normalizeDepartmentKey(value: string | null | undefined) {
-  const label = normalizeDepartmentLabel(value)
-  return label ? label.toLowerCase() : null
-}
-
-function buildDepartmentScopeValue(orgId: string, departmentKey: string) {
-  return `${orgId}::department::${departmentKey}`
+function buildDepartmentScopeValue(orgId: string, departmentLabel: string) {
+  return `${orgId}::department::${departmentLabel.toLowerCase()}`
 }
 
 function buildCampaignFallbackScopeValue(orgId: string, campaignId: string) {
@@ -108,32 +92,18 @@ function buildActionCenterScopes(args: {
   departmentLabels: string[]
   fallbackPeopleCount: number
 }) {
-  const departmentCounts = args.departmentLabels.reduce<Record<string, { label: string; peopleCount: number }>>((acc, label) => {
-    const departmentKey = normalizeDepartmentKey(label)
-    if (!departmentKey) {
-      return acc
-    }
-
-    const existing = acc[departmentKey]
-    if (existing) {
-      existing.peopleCount += 1
-      return acc
-    }
-
-    acc[departmentKey] = {
-      label,
-      peopleCount: 1,
-    }
+  const departmentCounts = args.departmentLabels.reduce<Record<string, number>>((acc, label) => {
+    acc[label] = (acc[label] ?? 0) + 1
     return acc
   }, {})
   const departmentEntries = Object.entries(departmentCounts)
 
   if (departmentEntries.length > 0) {
-    return departmentEntries.map<ActionCenterScopeRow>(([departmentKey, department]) => ({
+    return departmentEntries.map<ActionCenterScopeRow>(([departmentLabel, peopleCount]) => ({
       scopeType: 'department',
-      scopeValue: buildDepartmentScopeValue(args.campaign.organization_id, departmentKey),
-      scopeLabel: department.label,
-      peopleCount: department.peopleCount,
+      scopeValue: buildDepartmentScopeValue(args.campaign.organization_id, departmentLabel),
+      scopeLabel: departmentLabel,
+      peopleCount,
     }))
   }
 
@@ -166,16 +136,11 @@ function getManagerAssignment(
 export default async function ActionCenterPage({
   searchParams,
 }: {
-  searchParams?: Promise<ActionCenterPageSearchParams>
+  searchParams?: Promise<{ focus?: string; source?: string }>
 }) {
   const params = (await searchParams) ?? {}
-  const entry = resolveActionCenterEntryParams({
-    focus: typeof params.focus === 'string' ? params.focus : null,
-    view: typeof params.view === 'string' ? params.view : null,
-    source: typeof params.source === 'string' ? params.source : null,
-  })
-  const focusItemId = entry.focus
-  const source = entry.source
+  const focusItemId = typeof params.focus === 'string' ? params.focus : null
+  const source = typeof params.source === 'string' ? params.source : null
   const supabase = await createClient()
   const {
     data: { user },
@@ -248,7 +213,7 @@ export default async function ActionCenterPage({
 
   const organizations = (organizationsRaw ?? []) as Organization[]
   const campaigns = ((campaignsRaw ?? []) as Campaign[]).filter((campaign) =>
-    ['exit', 'retention', 'onboarding', 'pulse', 'leadership'].includes(campaign.scan_type),
+    ['exit', 'retention'].includes(campaign.scan_type),
   )
   const campaignIds = campaigns.map((campaign) => campaign.id)
   const stats = (statsRaw ?? []) as CampaignStats[]
@@ -451,7 +416,7 @@ export default async function ActionCenterPage({
         return {
           campaign,
           stats: statsByCampaignId.get(campaign.id) ?? null,
-          organizationName: organizationById.get(campaign.organization_id)?.name ?? 'Loep organisatie',
+          organizationName: organizationById.get(campaign.organization_id)?.name ?? 'Verisight organisatie',
           memberRole: roleByOrgId[campaign.organization_id] ?? null,
           scopeType: scope.scopeType,
           scopeValue: scope.scopeValue,
@@ -495,35 +460,18 @@ export default async function ActionCenterPage({
   const itemHrefs = context.canViewInsights
     ? Object.fromEntries(items.map((item) => [item.id, `/campaigns/${item.coreSemantics.route.campaignId}`]))
     : {}
-  const focusedItemId = focusItemId ? (items.find((item) => item.id === focusItemId)?.id ?? null) : null
-  const matchingCampaignItems = focusItemId
-    ? items.filter((item) => item.coreSemantics.route.campaignId === focusItemId)
-    : []
-  const hasAmbiguousCampaignFocus = focusedItemId === null && matchingCampaignItems.length > 1
   const initialSelectedItemId =
-    focusedItemId ??
-    (matchingCampaignItems.length === 1 ? (matchingCampaignItems[0]?.id ?? null) : null) ??
-    (hasAmbiguousCampaignFocus ? null : (items[0]?.id ?? null))
+    focusItemId
+      ? (items.find((item) => item.id === focusItemId)?.id ??
+        items.find((item) => item.coreSemantics.route.campaignId === focusItemId)?.id ??
+        null)
+      : items[0]?.id ?? null
   const workspaceSubtitle =
     source === 'campaign-detail'
       ? 'Geopend vanuit campaign detail: hier worden eigenaarschap, eerste managerstap en reviewritme expliciet.'
-      : source === 'review-moments'
-      ? 'Geopend vanuit reviewmomenten: hier blijft de gekoppelde opvolging en reviewcontext bij elkaar.'
       : summary.productCount > 0
         ? `Live opvolging over ${summary.productCount} product${summary.productCount === 1 ? '' : 'en'}`
         : 'Live opvolging'
-  const governanceReadback = await getActionCenterReviewRhythmData({
-    items,
-    now: new Date(),
-    routeScanTypeByRouteId: Object.fromEntries(
-      liveContexts
-        .filter((context) => isLiveActionCenterScanType(context.campaign.scan_type))
-        .map((context) => [
-          buildActionCenterRouteId(context.campaign.id, context.scopeValue),
-          context.campaign.scan_type,
-        ]),
-    ) as Record<string, 'exit' | 'retention' | 'leadership' | 'pulse' | 'team' | 'onboarding'>,
-  })
 
   if (items.length === 0) {
     return (
@@ -563,34 +511,51 @@ export default async function ActionCenterPage({
   }
 
   return (
-    <ActionCenterPreview
-      initialItems={items}
-      initialSelectedItemId={initialSelectedItemId}
-      initialView={entry.view}
-      fallbackOwnerName={getDisplayName(user.email)}
-      ownerOptions={ownerOptions}
-      managerOptions={managerOptions}
-      canAssignManagers={context.canManageActionCenterAssignments}
-      managerAssignmentEndpoint="/api/action-center/workspace-members"
-      canRespondToRequests={context.canUpdateActionCenter}
-      managerResponseEndpoint="/api/action-center-manager-responses"
-      routeActionEndpoint="/api/action-center-route-actions"
-      actionReviewEndpoint="/api/action-center-action-reviews"
-      canCloseRoutes={context.canManageActionCenterAssignments}
-      routeCloseoutEndpoint="/api/action-center-route-closeouts"
-      routeFollowUpEndpoint="/api/action-center-route-follow-ups"
-      currentUserId={user.id}
-      workbenchHref={context.canViewInsights ? '/dashboard' : '/action-center'}
-      workbenchLabel={context.canViewInsights ? 'Open broncampagne' : 'Blijf in Action Center'}
-      workspaceName={getDisplayName(user.email)}
-      workspaceSubtitle={workspaceSubtitle}
-      readOnly
-      itemHrefs={itemHrefs}
-      hideSidebar
-      boundedOverviewOnly={entry.view === 'overview'}
-      allowEmptyInitialSelection={hasAmbiguousCampaignFocus}
-      governanceQueue={governanceReadback.governanceQueue}
-      measurementReadback={governanceReadback.measurementReadback}
-    />
+    <div className="space-y-4">
+      {context.canViewExecutiveReadback ? (
+        <div className="rounded-[1.75rem] border border-slate-200 bg-white px-5 py-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                Executive readback
+              </p>
+              <p className="mt-1 text-sm text-slate-700">
+                Open de bestuurlijke readback voor ritme, closeout en governance-signalen. Geen impactclaim en geen manager-ranking.
+              </p>
+            </div>
+            <Link
+              href="/action-center/executive"
+              className="inline-flex items-center rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+            >
+              Open executive readback
+            </Link>
+          </div>
+        </div>
+      ) : null}
+      <ActionCenterPreview
+        initialItems={items}
+        initialSelectedItemId={initialSelectedItemId}
+        initialView="overview"
+        fallbackOwnerName={getDisplayName(user.email)}
+        ownerOptions={ownerOptions}
+        managerOptions={managerOptions}
+        canAssignManagers={context.canManageActionCenterAssignments}
+        managerAssignmentEndpoint="/api/action-center/workspace-members"
+        canRespondToRequests={context.canUpdateActionCenter}
+        managerResponseEndpoint="/api/action-center-manager-responses"
+        canCloseRoutes={context.canManageActionCenterAssignments}
+        routeCloseoutEndpoint="/api/action-center-route-closeouts"
+        routeFollowUpEndpoint="/api/action-center-route-follow-ups"
+        currentUserId={user.id}
+        workbenchHref={context.canViewInsights ? '/dashboard' : '/action-center'}
+        workbenchLabel={context.canViewInsights ? 'Open broncampagne' : 'Blijf in Action Center'}
+        workspaceName={getDisplayName(user.email)}
+        workspaceSubtitle={workspaceSubtitle}
+        readOnly
+        itemHrefs={itemHrefs}
+        hideSidebar
+        boundedOverviewOnly
+      />
+    </div>
   )
 }

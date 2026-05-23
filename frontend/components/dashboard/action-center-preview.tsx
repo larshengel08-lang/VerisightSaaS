@@ -8,21 +8,11 @@ import type {
   ActionCenterRouteContract,
   ActionCenterRouteStatus,
 } from '@/lib/action-center-route-contract'
-import { summarizeActionCenterRouteActions } from '@/lib/action-center-route-contract'
 import {
   ACTION_CENTER_MANAGER_RESPONSE_THEME_OPTIONS,
   getActionCenterManagerResponseLabel,
   hasPrimaryManagerAction,
 } from '@/lib/action-center-manager-responses'
-import {
-  projectActionCenterRouteActionCard,
-  type ActionCenterRouteActionRecord,
-} from '@/lib/action-center-route-actions'
-import {
-  projectActionCenterActionReview,
-  type ActionCenterActionConfidenceLevel,
-  type ActionCenterActionEvidenceSource,
-} from '@/lib/action-center-action-reviews'
 import type {
   ActionCenterRouteCloseoutReason,
   ActionCenterRouteCloseoutStatus,
@@ -36,11 +26,6 @@ import {
   getLiveActionCenterSummary,
   type ActionCenterWorkspaceReadbackSummary,
 } from '@/lib/action-center-live'
-import {
-  buildActionCenterEntryHref,
-  isActionCenterEntrySource,
-  type ActionCenterEntrySource,
-} from '@/lib/action-center-entry'
 import type {
   ActionCenterPreviewItem,
   ActionCenterPreviewManagerOption,
@@ -50,25 +35,10 @@ import type {
 } from '@/lib/action-center-preview-model'
 import type {
   ActionCenterManagerActionThemeKey,
-  ActionCenterManagerActionStatus,
   ActionCenterManagerResponse,
   ActionCenterManagerResponseType,
 } from '@/lib/pilot-learning'
-import {
-  ActionCenterActionReviewEditor,
-  type ActionCenterActionReviewEditorValue,
-} from './action-center-action-review-editor'
-import {
-  ActionCenterRouteActionEditor,
-  type ActionCenterRouteActionEditorSubmissionState,
-  serializeActionCenterRouteActionEditorValue,
-  type ActionCenterRouteActionEditorValue,
-} from './action-center-route-action-editor'
-import { ActionCenterGovernanceQueue as ActionCenterGovernanceQueueSection } from './action-center-governance-queue'
-import { ActionCenterMeasurementReadback as ActionCenterMeasurementReadbackSection } from './action-center-measurement-readback'
 import React, { useDeferredValue, useEffect, useMemo, useState } from 'react'
-import type { ActionCenterGovernanceQueue } from '@/lib/action-center-governance-queues'
-import type { ActionCenterMeasurementReadback } from '@/lib/action-center-measurement-readback'
 
 export type {
   ActionCenterPreviewItem,
@@ -90,8 +60,6 @@ interface Props {
   managerAssignmentEndpoint?: string
   canRespondToRequests?: boolean
   managerResponseEndpoint?: string
-  routeActionEndpoint?: string
-  actionReviewEndpoint?: string
   canCloseRoutes?: boolean
   routeCloseoutEndpoint?: string
   routeFollowUpEndpoint?: string
@@ -104,9 +72,6 @@ interface Props {
   itemHrefs?: Record<string, string>
   hideSidebar?: boolean
   boundedOverviewOnly?: boolean
-  allowEmptyInitialSelection?: boolean
-  governanceQueue?: ActionCenterGovernanceQueue | null
-  measurementReadback?: ActionCenterMeasurementReadback | null
 }
 
 interface CreateActionFormState {
@@ -140,15 +105,6 @@ interface RouteCloseoutFormState {
   closeoutReason: ActionCenterRouteCloseoutReason
   closeoutNote: string
 }
-
-type RouteActionValidationDisposition = 'valid' | 'invalid' | 'needs_hr_review'
-
-function isPersistedDraftSubmissionDisposition(
-  disposition: RouteActionValidationDisposition | null | undefined,
-): disposition is Extract<RouteActionValidationDisposition, 'invalid' | 'needs_hr_review'> {
-  return disposition === 'invalid' || disposition === 'needs_hr_review'
-}
-type RouteActionFeedbackTone = 'error' | 'warning'
 
 type ManagerActionPhase =
   | 'awaiting-first-move'
@@ -464,8 +420,7 @@ function getCreateDefaults(items: ActionCenterPreviewItem[]) {
 
 function buildManagerResponseDefaults(item: ActionCenterPreviewItem | null): ManagerResponseFormState {
   const response = item?.managerResponse ?? null
-  const routeActionGoverned = isRouteActionGoverned(item)
-  const hasPrimaryAction = !routeActionGoverned && Boolean(
+  const hasPrimaryAction = Boolean(
     response?.primary_action_theme_key &&
       response.primary_action_text &&
       response.primary_action_expected_effect,
@@ -480,49 +435,9 @@ function buildManagerResponseDefaults(item: ActionCenterPreviewItem | null): Man
         : ''),
     reviewScheduledFor: response?.review_scheduled_for ?? item?.reviewDate ?? '',
     includePrimaryAction: hasPrimaryAction,
-    primaryActionThemeKey: routeActionGoverned ? '' : response?.primary_action_theme_key ?? '',
-    primaryActionText: routeActionGoverned ? '' : response?.primary_action_text ?? '',
-    primaryActionExpectedEffect: routeActionGoverned ? '' : response?.primary_action_expected_effect ?? '',
-  }
-}
-
-export function isRouteActionGoverned(item: ActionCenterPreviewItem | null) {
-  return (item?.coreSemantics.routeActionCards.length ?? 0) > 0
-}
-
-export function resolveManagerResponsePrimaryActionPayload(args: {
-  routeActionCardCount: number
-  includePrimaryAction: boolean
-  primaryActionThemeKey: ActionCenterManagerActionThemeKey | ''
-  primaryActionText: string
-  primaryActionExpectedEffect: string
-}): {
-  primary_action_theme_key: ActionCenterManagerActionThemeKey | null
-  primary_action_text: string | null
-  primary_action_expected_effect: string | null
-  primary_action_status: ActionCenterManagerActionStatus | null
-} {
-  if (args.routeActionCardCount > 0 || !args.includePrimaryAction) {
-    return {
-      primary_action_theme_key: null,
-      primary_action_text: null,
-      primary_action_expected_effect: null,
-      primary_action_status: null,
-    }
-  }
-
-  const primaryActionThemeKey = args.primaryActionThemeKey || null
-  const primaryActionText = args.primaryActionText.trim() || null
-  const primaryActionExpectedEffect = args.primaryActionExpectedEffect.trim() || null
-  const hasCompletePrimaryAction = Boolean(
-    primaryActionThemeKey && primaryActionText && primaryActionExpectedEffect,
-  )
-
-  return {
-    primary_action_theme_key: primaryActionThemeKey,
-    primary_action_text: primaryActionText,
-    primary_action_expected_effect: primaryActionExpectedEffect,
-    primary_action_status: hasCompletePrimaryAction ? 'active' : null,
+    primaryActionThemeKey: response?.primary_action_theme_key ?? '',
+    primaryActionText: response?.primary_action_text ?? '',
+    primaryActionExpectedEffect: response?.primary_action_expected_effect ?? '',
   }
 }
 
@@ -547,27 +462,6 @@ function getManagerResponseProjectedStatus(
   }
 
   return hasPrimaryManagerAction(response) ? 'in-uitvoering' : 'te-bespreken'
-}
-
-function resolveRouteContractStatusFromPreviewStatus(
-  status: ActionCenterPreviewStatus,
-): Exclude<ActionCenterRouteStatus, 'open-verzoek'> {
-  switch (status) {
-    case 'te-bespreken':
-      return 'te-bespreken'
-    case 'in-uitvoering':
-    case 'reviewbaar':
-      return 'in-uitvoering'
-    case 'geblokkeerd':
-      return 'geblokkeerd'
-    case 'afgerond':
-      return 'afgerond'
-    case 'gestopt':
-      return 'gestopt'
-    case 'open-verzoek':
-    default:
-      return 'te-bespreken'
-  }
 }
 
 function getManagerActionPhase(item: ActionCenterPreviewItem | null): ManagerActionPhase {
@@ -644,250 +538,6 @@ function getManagerActionSurfaceCopy(item: ActionCenterPreviewItem | null) {
   }
 }
 
-function getRouteActionThemeLabel(themeKey: ActionCenterRouteActionRecord['themeKey']) {
-  return (
-    ACTION_CENTER_MANAGER_RESPONSE_THEME_OPTIONS.find((option) => option.value === themeKey)?.label ??
-    themeKey ??
-    'Nog geen thema'
-  )
-}
-
-function getRouteActionStatusLabel(status: ActionCenterRouteActionRecord['status']) {
-  switch (status) {
-    case 'open':
-      return 'Actief'
-    case 'in_review':
-      return 'Reviewbaar'
-    case 'afgerond':
-      return 'Afgerond'
-    case 'gestopt':
-      return 'Gestopt'
-    default:
-      return 'Nog niet reviewbaar'
-  }
-}
-
-function getRouteActionStatusTone(status: ActionCenterRouteActionRecord['status']) {
-  switch (status) {
-    case 'open':
-      return 'border-[#d7ece8] bg-[#eef9f6] text-[#28776f]'
-    case 'in_review':
-      return 'border-[#ffe1c7] bg-[#fff3e8] text-[#bb6b1f]'
-    case 'afgerond':
-      return 'border-[#d5ebdb] bg-[#edf8f0] text-[#2f8454]'
-    case 'gestopt':
-      return 'border-[#f0d9d4] bg-[#fff1ef] text-[#c4584d]'
-    default:
-      return 'border-[#e3d8ca] bg-[#fbf7f1] text-[#6b6257]'
-  }
-}
-
-function getActionReviewOutcomeLabel(outcome: ActionCenterActionReviewEditorValue['actionOutcome']) {
-  switch (outcome) {
-    case 'effect-zichtbaar':
-      return 'Effect zichtbaar'
-    case 'bijsturen-nodig':
-      return 'Bijsturen nodig'
-    case 'nog-te-vroeg':
-      return 'Nog te vroeg'
-    case 'stoppen':
-    default:
-      return 'Stoppen'
-  }
-}
-
-function getRouteActionDraftDispositionMessage(disposition: RouteActionValidationDisposition) {
-  switch (disposition) {
-    case 'needs_hr_review':
-      return 'Deze actie vraagt eerst HR-beoordeling.'
-    case 'invalid':
-      return 'Pas deze actie aan zodat hij bounded en route-specifiek is.'
-    case 'valid':
-    default:
-      return null
-  }
-}
-
-function getRouteActionPersistedDraftStatusMessage() {
-  return 'Draft opgeslagen, nog niet live in deze route.'
-}
-
-export function buildPersistedRouteActionFeedback(args: {
-  value: ActionCenterRouteActionEditorValue
-  validationDisposition: Extract<RouteActionValidationDisposition, 'invalid' | 'needs_hr_review'>
-  validationMessage: string
-}) {
-  const statusMessage = getRouteActionPersistedDraftStatusMessage()
-
-  return {
-    message: `${statusMessage} ${args.validationMessage}`,
-    tone: 'warning' as const,
-    validationDisposition: args.validationDisposition,
-    validationMessage: args.validationMessage,
-    statusMessage,
-    persistedDraftFingerprint: serializeActionCenterRouteActionEditorValue(args.value),
-  }
-}
-
-function getNextRouteActionStatusFromReviewOutcome(
-  outcome: ActionCenterActionReviewEditorValue['actionOutcome'],
-): Extract<ActionCenterRouteActionRecord['status'], 'open' | 'afgerond' | 'gestopt'> {
-  switch (outcome) {
-    case 'effect-zichtbaar':
-      return 'afgerond'
-    case 'stoppen':
-      return 'gestopt'
-    case 'bijsturen-nodig':
-    case 'nog-te-vroeg':
-    default:
-      return 'open'
-  }
-}
-
-function getRouteActionMutationStateLabel(status: 'reviewbaar' | 'in-uitvoering') {
-  return status === 'reviewbaar' ? 'Reviewbaar' : 'In uitvoering'
-}
-
-function buildRouteActionMutationProgressSummary(args: {
-  status: 'reviewbaar' | 'in-uitvoering'
-  actionCount: number
-  reviewPressureCount: number
-}) {
-  if (args.status === 'reviewbaar') {
-    return args.reviewPressureCount > 0
-      ? `${args.reviewPressureCount} actie${args.reviewPressureCount === 1 ? '' : 's'} of reviewmoment${args.reviewPressureCount === 1 ? '' : 'en'} vragen nu expliciete teruglezing.`
-      : `${args.actionCount} actie${args.actionCount === 1 ? '' : 's'} dragen deze route, maar reviewdruk wint nu van uitvoering.`
-  }
-
-  return `${args.actionCount} actie${args.actionCount === 1 ? '' : 's'} dragen nu de lokale follow-through in deze route.`
-}
-
-function buildRouteActionMutationOverviewSummary(args: {
-  status: 'reviewbaar' | 'in-uitvoering'
-  actionCount: number
-  reviewPressureCount: number
-}) {
-  if (args.status === 'reviewbaar') {
-    return args.reviewPressureCount > 0
-      ? `Actieve route waarbij ${args.reviewPressureCount} reviewmoment${args.reviewPressureCount === 1 ? '' : 'en'} nu aandacht vraagt.`
-      : 'Actieve route die nu expliciete teruglezing en review vraagt.'
-  }
-
-  return `Actieve route met ${args.actionCount} expliciete actie${args.actionCount === 1 ? '' : 's'} in dezelfde follow-through.`
-}
-
-function buildRouteActionMutationSummaryText(args: {
-  actionCount: number
-  reviewPressureCount: number
-  completedCount: number
-}) {
-  const parts = [`${args.actionCount} ${args.actionCount === 1 ? 'actie' : 'acties'}`]
-
-  if (args.reviewPressureCount > 0) {
-    parts.push(`${args.reviewPressureCount} reviewbaar`)
-  } else if (args.completedCount > 0) {
-    parts.push(`${args.completedCount} afgerond`)
-  } else {
-    parts.push('actief in deze route')
-  }
-
-  return parts.join(' - ')
-}
-
-export function synchronizeActionCenterRouteActionSurface(
-  item: ActionCenterPreviewItem,
-  cards: ActionCenterPreviewItem['coreSemantics']['routeActionCards'],
-) {
-  const persistedCards = cards.filter(
-    (card): card is typeof card & { status: NonNullable<typeof card.status>; reviewScheduledFor: string } =>
-      card.status !== null && Boolean(card.reviewScheduledFor),
-  )
-
-  if (persistedCards.length === 0) {
-    return finalizeActionCenterPreviewItem(
-      {
-        ...item,
-        coreSemantics: {
-          ...item.coreSemantics,
-          routeActionCards: cards,
-        },
-      },
-      { recomputeCoreSemantics: false },
-    )
-  }
-
-  const aggregate = summarizeActionCenterRouteActions(
-    persistedCards.map((card) => ({
-      actionId: card.actionId,
-      status: card.status,
-      reviewScheduledFor: card.reviewScheduledFor,
-    })),
-  )
-  const surfaceStatus = aggregate.routeStatus === 'reviewbaar' ? 'reviewbaar' : 'in-uitvoering'
-  const reviewPressureCount = persistedCards.filter(
-    (card) =>
-      card.status === 'in_review' ||
-      (card.status === 'open' && card.reviewScheduledFor <= new Date().toISOString().slice(0, 10)),
-  ).length
-  const completedCount = persistedCards.filter((card) => card.status === 'afgerond').length
-  const nextReviewDate = aggregate.nextReviewScheduledFor ?? item.reviewDate
-
-  return finalizeActionCenterPreviewItem(
-    {
-      ...item,
-      status: surfaceStatus,
-      reviewDate: nextReviewDate,
-      reviewDateLabel: formatShortDate(nextReviewDate),
-      summary: buildRouteActionMutationSummaryText({
-        actionCount: persistedCards.length,
-        reviewPressureCount,
-        completedCount,
-      }),
-      coreSemantics: {
-        ...item.coreSemantics,
-        routeActionCards: cards,
-        routeSummary: {
-          stateLabel: getRouteActionMutationStateLabel(surfaceStatus),
-          overviewSummary: buildRouteActionMutationOverviewSummary({
-            status: surfaceStatus,
-            actionCount: persistedCards.length,
-            reviewPressureCount,
-          }),
-          routeAsk:
-            surfaceStatus === 'reviewbaar'
-              ? 'Kijk nu expliciet terug op de lopende follow-through en bepaal wat de route daarna vraagt.'
-              : 'Houd de actielaag klein en zorg dat review per actie leidend blijft voor verdere uitvoering.',
-          progressSummary: buildRouteActionMutationProgressSummary({
-            status: surfaceStatus,
-            actionCount: persistedCards.length,
-            reviewPressureCount,
-          }),
-        },
-        routeCloseout: {
-          ...item.coreSemantics.routeCloseout,
-          readyForCloseout: aggregate.readyForCloseout,
-        },
-      },
-    },
-    { recomputeCoreSemantics: false },
-  )
-}
-
-function hasExplicitRouteCloseoutMetadata(item: ActionCenterPreviewItem | null) {
-  if (!item) {
-    return false
-  }
-
-  const closeout = item.coreSemantics.routeCloseout
-  return Boolean(
-    closeout.closeoutStatus ||
-      closeout.closeoutReason ||
-      closeout.closeoutNote ||
-      closeout.closedAt ||
-      closeout.closedByRole,
-  )
-}
-
 function getRouteSummaryDisplay(item: ActionCenterPreviewItem) {
   return (
     item.coreSemantics.routeSummary ?? {
@@ -911,29 +561,17 @@ function applyManagerResponseToItem(
   item: ActionCenterPreviewItem,
   response: ActionCenterManagerResponse,
 ): ActionCenterPreviewItem {
-  const routeActionGoverned = isRouteActionGoverned(item)
-  const nextStatus: ActionCenterRouteStatus = routeActionGoverned
-    ? item.coreSemantics.route.routeStatus ?? resolveRouteContractStatusFromPreviewStatus(item.status)
-    : getManagerResponseProjectedStatus(item.status, response)
-  const followThroughMode =
-    routeActionGoverned
-      ? item.coreSemantics.route.followThroughMode
-      : hasPrimaryManagerAction(response)
-        ? 'primary_action'
-        : 'bounded_response'
+  const nextStatus = getManagerResponseProjectedStatus(item.status, response)
+  const followThroughMode = hasPrimaryManagerAction(response) ? 'primary_action' : 'bounded_response'
   const nextRoute: ActionCenterRouteContract = {
     ...item.coreSemantics.route,
     routeStatus: nextStatus,
-    intervention: routeActionGoverned
-      ? item.coreSemantics.route.intervention
-      : response.primary_action_text ?? null,
-    expectedEffect: routeActionGoverned
-      ? item.coreSemantics.route.expectedEffect
-      : response.primary_action_expected_effect ?? null,
+    intervention: response.primary_action_text ?? null,
+    expectedEffect: response.primary_action_expected_effect ?? null,
     reviewScheduledFor: response.review_scheduled_for,
     managerResponseType: response.response_type,
     managerResponseNote: response.response_note,
-    primaryActionThemeKey: routeActionGoverned ? null : response.primary_action_theme_key ?? null,
+    primaryActionThemeKey: response.primary_action_theme_key ?? null,
     followThroughMode,
   }
 
@@ -1207,8 +845,6 @@ export function ActionCenterPreview({
   managerAssignmentEndpoint,
   canRespondToRequests = false,
   managerResponseEndpoint,
-  routeActionEndpoint,
-  actionReviewEndpoint,
   canCloseRoutes = false,
   routeCloseoutEndpoint,
   routeFollowUpEndpoint,
@@ -1221,13 +857,9 @@ export function ActionCenterPreview({
   itemHrefs = {},
   hideSidebar = false,
   boundedOverviewOnly = false,
-  allowEmptyInitialSelection = false,
-  governanceQueue = null,
-  measurementReadback = null,
 }: Props) {
   const explicitlySelectedInitialItem = initialItems.find((item) => item.id === initialSelectedItemId) ?? null
-  const initialSelectedItem =
-    explicitlySelectedInitialItem ?? (boundedOverviewOnly || allowEmptyInitialSelection ? null : initialItems[0] ?? null)
+  const initialSelectedItem = explicitlySelectedInitialItem ?? (boundedOverviewOnly ? null : initialItems[0] ?? null)
   const [items, setItems] = useState(() => initialItems.map((item) => finalizeActionCenterPreviewItem(item)))
   const [activeView, setActiveView] = useState<ActionCenterPreviewView>(initialView)
   const [selectedItemId, setSelectedItemId] = useState(initialSelectedItem?.id ?? null)
@@ -1241,19 +873,6 @@ export function ActionCenterPreview({
   )
   const [managerResponsePending, setManagerResponsePending] = useState(false)
   const [managerResponseError, setManagerResponseError] = useState<string | null>(null)
-  const [routeActionEditorOpen, setRouteActionEditorOpen] = useState(false)
-  const [routeActionPending, setRouteActionPending] = useState(false)
-  const [routeActionFeedback, setRouteActionFeedback] = useState<{
-    message: string
-    tone: RouteActionFeedbackTone
-    validationDisposition?: RouteActionValidationDisposition | null
-    validationMessage?: string | null
-    statusMessage?: string | null
-    persistedDraftFingerprint?: string | null
-  } | null>(null)
-  const [openReviewActionId, setOpenReviewActionId] = useState<string | null>(null)
-  const [actionReviewPendingActionId, setActionReviewPendingActionId] = useState<string | null>(null)
-  const [actionReviewError, setActionReviewError] = useState<string | null>(null)
   const [routeCloseoutForm, setRouteCloseoutForm] = useState<RouteCloseoutFormState>(() => buildRouteCloseoutDefaults())
   const [routeCloseoutPanelOpen, setRouteCloseoutPanelOpen] = useState(false)
   const [routeCloseoutPending, setRouteCloseoutPending] = useState(false)
@@ -1263,13 +882,13 @@ export function ActionCenterPreview({
   const deferredSearchQuery = useDeferredValue(searchQuery)
 
   useEffect(() => {
-    if (!boundedOverviewOnly && !allowEmptyInitialSelection && !selectedItemId && items[0]) {
+    if (!boundedOverviewOnly && !selectedItemId && items[0]) {
       setSelectedItemId(items[0].id)
     }
     if (!selectedTeamId && items[0]) {
       setSelectedTeamId(items[0].teamId)
     }
-  }, [allowEmptyInitialSelection, boundedOverviewOnly, items, selectedItemId, selectedTeamId])
+  }, [boundedOverviewOnly, items, selectedItemId, selectedTeamId])
 
   useEffect(() => {
     if (boundedOverviewOnly && activeView !== 'overview') {
@@ -1311,7 +930,7 @@ export function ActionCenterPreview({
 
   const selectedItem = selectedItemId
     ? filteredItems.find((item) => item.id === selectedItemId) ?? items.find((item) => item.id === selectedItemId) ?? null
-    : boundedOverviewOnly || allowEmptyInitialSelection
+    : boundedOverviewOnly
       ? null
       : filteredItems[0] ?? items[0] ?? null
   const managerActionSurfaceCopy = getManagerActionSurfaceCopy(selectedItem)
@@ -1319,10 +938,6 @@ export function ActionCenterPreview({
   useEffect(() => {
     setManagerResponseForm(buildManagerResponseDefaults(selectedItem))
     setManagerResponseError(null)
-    setRouteActionEditorOpen(false)
-    setRouteActionFeedback(null)
-    setOpenReviewActionId(null)
-    setActionReviewError(null)
   }, [selectedItem])
   useEffect(() => {
     setRouteCloseoutForm(buildRouteCloseoutDefaults())
@@ -1406,27 +1021,6 @@ export function ActionCenterPreview({
         currentUserId &&
         selectedItem.ownerId === currentUserId,
     )
-  const canUseRouteActionFlow =
-    Boolean(
-      routeActionEndpoint &&
-        selectedItem?.orgId &&
-        supportsManagerResponseFlow(selectedItem) &&
-        selectedItem?.managerResponse?.id &&
-        selectedItem?.ownerId &&
-        currentUserId &&
-        selectedItem.ownerId === currentUserId,
-    )
-  const allowInlinePrimaryAction = !isRouteActionGoverned(selectedItem)
-  const canUseActionReviewFlow =
-    Boolean(
-      actionReviewEndpoint &&
-        selectedItem?.orgId &&
-        supportsManagerResponseFlow(selectedItem) &&
-        selectedItem?.managerResponse?.id &&
-        selectedItem?.ownerId &&
-        currentUserId &&
-        selectedItem.ownerId === currentUserId,
-    )
   const canRenderFollowUpRoute = Boolean(
     routeFollowUpEndpoint &&
       canAssignManagers &&
@@ -1473,50 +1067,11 @@ export function ActionCenterPreview({
     : null
   const canShowFollowUpRouteAffordance = Boolean(canRenderFollowUpRoute && !followUpRouteBlockReason)
 
-  function replaceEntryUrl(args: {
-    focus?: string | null
-    view: ActionCenterPreviewView
-  }) {
-    if (typeof window === 'undefined') return
-
-    const nextHref = buildContextualEntryHref(window.location.href, {
-      focus: args.focus ?? selectedItemId,
-      view: args.view,
-    })
-
-    window.history.replaceState(window.history.state, '', nextHref)
-  }
-
-  function setContextualView(
-    nextView: ActionCenterPreviewView,
-    options?: {
-      focus?: string | null
-    },
-  ) {
-    setActiveView(nextView)
-    replaceEntryUrl({ focus: options?.focus ?? selectedItemId, view: nextView })
-  }
-
   function updateItem(itemId: string, updater: (item: ActionCenterPreviewItem) => ActionCenterPreviewItem) {
     setItems((currentItems) =>
       currentItems.map((item) =>
         item.id === itemId ? finalizeActionCenterPreviewItem(updater(item), { recomputeCoreSemantics: true }) : item,
       ),
-    )
-  }
-
-  function updateRouteActionCards(
-    itemId: string,
-    updater: (cards: ActionCenterPreviewItem['coreSemantics']['routeActionCards']) => ActionCenterPreviewItem['coreSemantics']['routeActionCards'],
-  ) {
-    setItems((currentItems) =>
-      currentItems.map((item) => {
-        if (item.id !== itemId) {
-          return item
-        }
-
-        return synchronizeActionCenterRouteActionSurface(item, updater(item.coreSemantics.routeActionCards))
-      }),
     )
   }
 
@@ -1567,8 +1122,9 @@ export function ActionCenterPreview({
     })
 
     setItems((current) => [newItem, ...current])
+    setSelectedItemId(newItem.id)
     setSelectedTeamId(newItem.teamId)
-    focusActionRoute(newItem.id)
+    setActiveView('actions')
     setShowCreateModal(false)
     setCreateForm(getCreateDefaults([newItem, ...items]))
   }
@@ -1629,14 +1185,6 @@ export function ActionCenterPreview({
       return
     }
 
-    const primaryActionPayload = resolveManagerResponsePrimaryActionPayload({
-      routeActionCardCount: selectedItem.coreSemantics.routeActionCards.length,
-      includePrimaryAction: managerResponseForm.includePrimaryAction,
-      primaryActionThemeKey: managerResponseForm.primaryActionThemeKey,
-      primaryActionText: managerResponseForm.primaryActionText,
-      primaryActionExpectedEffect: managerResponseForm.primaryActionExpectedEffect,
-    })
-
     setManagerResponsePending(true)
     setManagerResponseError(null)
 
@@ -1649,7 +1197,19 @@ export function ActionCenterPreview({
       response_type: managerResponseForm.responseType,
       response_note: managerResponseForm.responseNote,
       review_scheduled_for: managerResponseForm.reviewScheduledFor,
-      ...primaryActionPayload,
+      primary_action_theme_key:
+        managerResponseForm.includePrimaryAction && managerResponseForm.primaryActionThemeKey
+          ? managerResponseForm.primaryActionThemeKey
+          : null,
+      primary_action_text:
+        managerResponseForm.includePrimaryAction && managerResponseForm.primaryActionText.trim()
+          ? managerResponseForm.primaryActionText
+          : null,
+      primary_action_expected_effect:
+        managerResponseForm.includePrimaryAction && managerResponseForm.primaryActionExpectedEffect.trim()
+          ? managerResponseForm.primaryActionExpectedEffect
+          : null,
+      primary_action_status: managerResponseForm.includePrimaryAction ? 'active' : null,
     }
 
     try {
@@ -1689,158 +1249,6 @@ export function ActionCenterPreview({
       )
     } finally {
       setManagerResponsePending(false)
-    }
-  }
-
-  async function handleRouteActionSave(value: ActionCenterRouteActionEditorValue) {
-    if (!selectedItem || !routeActionEndpoint || !selectedItem.orgId || !supportsManagerResponseFlow(selectedItem)) {
-      return false
-    }
-
-    setRouteActionPending(true)
-    setRouteActionFeedback(null)
-
-    try {
-      const response = await fetch(routeActionEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          campaign_id: selectedItem.coreSemantics.route.campaignId,
-          route_scope_type: selectedItem.scopeType,
-          route_scope_value: selectedItem.teamId,
-          manager_user_id: selectedItem.ownerId ?? '',
-          primary_action_theme_key: value.themeKey || null,
-          primary_action_text: value.actionText,
-          primary_action_expected_effect: value.expectedEffect,
-          review_scheduled_for: value.reviewScheduledFor,
-        }),
-      })
-      const result = (await response.json().catch(() => null)) as
-        | {
-            action?: Record<string, unknown>
-            actionDraft?: { validationDisposition?: RouteActionValidationDisposition | null }
-            validationDisposition?: RouteActionValidationDisposition | null
-            validationMessage?: string | null
-            detail?: string
-          }
-        | null
-
-      if (!response.ok || !result?.action || !result?.actionDraft) {
-        throw new Error(result?.detail ?? 'Route action opslaan mislukt.')
-      }
-
-      const validationDisposition =
-        result.validationDisposition ?? result.actionDraft.validationDisposition ?? 'invalid'
-      const validationMessage =
-        result.validationMessage ?? getRouteActionDraftDispositionMessage(validationDisposition)
-
-      if (validationDisposition !== 'valid') {
-        setRouteActionFeedback(
-          buildPersistedRouteActionFeedback({
-            value,
-            validationDisposition,
-            validationMessage: validationMessage ?? 'Route action opslaan mislukt.',
-          }),
-        )
-        return false
-      }
-
-      const actionCard = projectActionCenterRouteActionCard(result.action)
-      updateRouteActionCards(selectedItem.id, (cards) => [
-        ...cards,
-        {
-          actionId: actionCard.actionId,
-          themeKey: actionCard.themeKey,
-          actionText: actionCard.actionText ?? '',
-          reviewScheduledFor: actionCard.reviewScheduledFor ?? '',
-          expectedEffect: actionCard.expectedEffect ?? '',
-          status: actionCard.status,
-          latestReview: null,
-        },
-      ])
-      setRouteActionEditorOpen(false)
-      setRouteActionFeedback(null)
-      return true
-    } catch (error) {
-      setRouteActionFeedback({
-        message: error instanceof Error ? error.message : 'Route action opslaan mislukt.',
-        tone: 'error',
-        validationDisposition: null,
-        validationMessage: null,
-        statusMessage: null,
-        persistedDraftFingerprint: null,
-      })
-      return false
-    } finally {
-      setRouteActionPending(false)
-    }
-  }
-
-  async function handleActionReviewSave(
-    actionId: string,
-    value: ActionCenterActionReviewEditorValue,
-  ) {
-    if (!actionReviewEndpoint || !selectedItem) {
-      return
-    }
-
-    setActionReviewPendingActionId(actionId)
-    setActionReviewError(null)
-
-    try {
-      const response = await fetch(actionReviewEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action_id: actionId,
-          reviewed_at: new Date().toISOString(),
-          observation: value.observation,
-          action_outcome: value.actionOutcome,
-          evidence_source: value.evidenceSource,
-          confidence_level: value.confidenceLevel,
-          follow_up_note: value.followUpNote.trim() || null,
-        }),
-      })
-      const result = (await response.json().catch(() => null)) as
-        | {
-            review?: Record<string, unknown>
-            submittedStructuredMetadata?: {
-              evidence_source?: ActionCenterActionEvidenceSource | null
-              confidence_level?: ActionCenterActionConfidenceLevel | null
-            }
-            detail?: string
-          }
-        | null
-
-      if (!response.ok || !result?.review) {
-        throw new Error(result?.detail ?? 'Route action review opslaan mislukt.')
-      }
-
-      const projectedReview = projectActionCenterActionReview({
-        ...result.review,
-        evidence_source: result.submittedStructuredMetadata?.evidence_source ?? null,
-        confidence_level: result.submittedStructuredMetadata?.confidence_level ?? null,
-      })
-      updateRouteActionCards(selectedItem.id, (cards) =>
-        cards.map((card) =>
-          card.actionId === actionId
-            ? {
-                ...card,
-                status: getNextRouteActionStatusFromReviewOutcome(projectedReview.actionOutcome),
-                latestReview: projectedReview,
-              }
-            : card,
-        ),
-      )
-      setOpenReviewActionId(null)
-    } catch (error) {
-      setActionReviewError(error instanceof Error ? error.message : 'Route action review opslaan mislukt.')
-    } finally {
-      setActionReviewPendingActionId(null)
     }
   }
 
@@ -1948,7 +1356,11 @@ export function ActionCenterPreview({
   function focusActionRoute(routeId: string) {
     setSelectedItemId(routeId)
     setActiveView('actions')
-    replaceEntryUrl({ focus: routeId, view: 'actions' })
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href)
+      url.searchParams.set('focus', routeId)
+      window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`)
+    }
   }
 
   function handleStatusChange(nextStatus: ActionCenterPreviewStatus) {
@@ -2033,7 +1445,7 @@ export function ActionCenterPreview({
                 : item.key === 'managers'
                   ? navigationCounts.managers
                   : navigationCounts.teams,
-        onClick: () => setContextualView(item.key),
+        onClick: () => setActiveView(item.key),
       }))
     : []
 
@@ -2069,7 +1481,7 @@ export function ActionCenterPreview({
                   label: 'Overzicht',
                   active: activeView === 'overview',
                   count: 0,
-                  onClick: () => setContextualView('overview'),
+                  onClick: () => setActiveView('overview'),
                 },
               ]}
             />
@@ -2087,7 +1499,7 @@ export function ActionCenterPreview({
                       : item.key === 'managers'
                         ? navigationCounts.managers
                         : navigationCounts.teams,
-                onClick: () => setContextualView(item.key),
+                onClick: () => setActiveView(item.key),
               }))}
             />
 
@@ -2211,12 +1623,7 @@ export function ActionCenterPreview({
                   upcomingReviews={upcomingReviews}
                   overviewStatusCounts={overviewStatusCounts}
                   selectedItem={selectedItem}
-                  governanceQueue={governanceQueue}
-                  measurementReadback={measurementReadback}
-                  onSelectItem={(itemId) => {
-                    setSelectedItemId(itemId)
-                    replaceEntryUrl({ focus: itemId, view: 'overview' })
-                  }}
+                  onSelectItem={setSelectedItemId}
                   selectedItemHref={selectedItemHref}
                   workbenchLabel={workbenchLabel}
                 />
@@ -2256,7 +1663,7 @@ export function ActionCenterPreview({
                       <button
                         type="button"
                         className="text-sm font-semibold text-[#4a5f74] transition hover:text-[#132033]"
-                        onClick={() => setContextualView('actions')}
+                        onClick={() => setActiveView('actions')}
                       >
                         Open actielijst
                       </button>
@@ -2267,7 +1674,10 @@ export function ActionCenterPreview({
                           key={item.id}
                           type="button"
                           className="flex w-full flex-col gap-4 py-5 text-left transition hover:bg-[#f8f2eb]"
-                          onClick={() => focusActionRoute(item.id)}
+                          onClick={() => {
+                            setSelectedItemId(item.id)
+                            setActiveView('actions')
+                          }}
                         >
                           <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                             <div className="min-w-0">
@@ -2326,9 +1736,10 @@ export function ActionCenterPreview({
                         className="inline-flex min-h-11 items-center rounded-full bg-[#ff9b4a] px-4.5 py-2.5 text-sm font-semibold text-[#132033] transition hover:brightness-[0.98]"
                         onClick={() => {
                           if (focusItem) {
-                            focusActionRoute(focusItem.id)
+                            setSelectedItemId(focusItem.id)
+                            setActiveView('actions')
                           } else {
-                            setContextualView('actions')
+                            setActiveView('actions')
                           }
                         }}
                       >
@@ -2357,7 +1768,7 @@ export function ActionCenterPreview({
                               className="flex w-full items-start justify-between gap-4 rounded-[16px] border border-white/10 bg-white/[0.03] px-4 py-3.5 text-left transition hover:bg-white/[0.06]"
                               onClick={() => {
                                 setSelectedItemId(item.id)
-                                setContextualView('reviews', { focus: item.id })
+                                setActiveView('reviews')
                               }}
                             >
                               <div className="min-w-0">
@@ -2396,7 +1807,7 @@ export function ActionCenterPreview({
                       <button
                         type="button"
                         className="min-h-11 rounded-full border border-[#ded3c6] px-4.5 py-2.5 text-sm font-semibold text-[#1a2533] transition hover:border-[#1a2533]"
-                        onClick={() => setContextualView('managers')}
+                        onClick={() => setActiveView('managers')}
                       >
                         Open managers
                       </button>
@@ -2474,7 +1885,7 @@ export function ActionCenterPreview({
                     <button
                       type="button"
                       className="inline-flex min-h-11 items-center rounded-full border border-[#ded3c6] bg-[#fcfaf7] px-4.5 py-2.5 text-sm font-semibold text-[#1a2533] transition hover:border-[#1a2533]"
-                      onClick={() => setContextualView('overview')}
+                      onClick={() => setActiveView('overview')}
                     >
                       Terug naar overzicht
                     </button>
@@ -2633,6 +2044,54 @@ export function ActionCenterPreview({
                           </div>
                         ) : null}
                       </div>
+                      {selectedItem.coreSemantics.routeActionCards.length > 0 ? (
+                        <div className="rounded-[28px] border border-[#e4d9cb] bg-white px-7 py-7 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
+                          <div className="border-b border-[#ece4d8] pb-5">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Actieroute</p>
+                            <h3 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.03em] text-[#132033]">Acties in deze route</h3>
+                          </div>
+                          <div className="mt-6 space-y-4">
+                            {selectedItem.coreSemantics.routeActionCards.map((actionCard) => (
+                              <div
+                                key={actionCard.actionId}
+                                className="rounded-[22px] border border-[#efe7dc] bg-[#fcfaf7] px-5 py-5"
+                              >
+                                <div className="flex flex-wrap items-center gap-3 text-sm text-[#6d6458]">
+                                  <MiniTag>{getActionCardThemeLabel(actionCard.themeKey)}</MiniTag>
+                                  <StatusPill
+                                    status={
+                                      actionCard.status === 'in_review'
+                                        ? 'reviewbaar'
+                                        : actionCard.status === 'open'
+                                          ? 'in-uitvoering'
+                                          : actionCard.status === 'afgerond'
+                                            ? 'afgerond'
+                                            : 'gestopt'
+                                    }
+                                  />
+                                  <span className="ml-auto font-semibold text-[#5a7088]">
+                                    Review {formatShortDate(actionCard.reviewScheduledFor)}
+                                  </span>
+                                </div>
+                                <p className="mt-4 text-[1.02rem] font-semibold leading-7 text-[#132033]">
+                                  {actionCard.actionText}
+                                </p>
+                                <p className="mt-2 text-sm leading-7 text-[#4f6175]">{actionCard.expectedEffect}</p>
+                                {actionCard.latestReview ? (
+                                  <div className="mt-4 rounded-[18px] border border-[#eadfce] bg-white px-4 py-4">
+                                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">
+                                      Laatste review ({getActionReviewOutcomeLabel(actionCard.latestReview.actionOutcome)})
+                                    </p>
+                                    <p className="mt-3 text-sm leading-7 text-[#32465d]">
+                                      {actionCard.latestReview.observation}
+                                    </p>
+                                  </div>
+                                ) : null}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
                     </section>
 
                     <section className="space-y-6">
@@ -2927,7 +2386,9 @@ export function ActionCenterPreview({
                         </div>
                       ) : null}
 
-                      {selectedItem && (isClosedRouteStatus(selectedItem.status) || hasExplicitRouteCloseoutMetadata(selectedItem)) ? (
+                      {selectedItem &&
+                      (isClosedRouteStatus(selectedItem.status) ||
+                        Boolean(selectedItem.coreSemantics.routeCloseout.closeoutStatus)) ? (
                         <div className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
                           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">
                             Route afgesloten
@@ -3103,100 +2564,78 @@ export function ActionCenterPreview({
                                 />
                               </FormField>
 
-                              {allowInlinePrimaryAction ? (
-                                <>
-                                  <label className="flex items-start gap-3 rounded-[18px] border border-[#ece4d8] bg-[#fcfaf7] px-4 py-4 text-sm text-[#42556b]">
-                                    <input
-                                      type="checkbox"
-                                      checked={managerResponseForm.includePrimaryAction}
+                              <label className="flex items-start gap-3 rounded-[18px] border border-[#ece4d8] bg-[#fcfaf7] px-4 py-4 text-sm text-[#42556b]">
+                                <input
+                                  type="checkbox"
+                                  checked={managerResponseForm.includePrimaryAction}
+                                  onChange={(event) =>
+                                    setManagerResponseForm((current) => ({
+                                      ...current,
+                                      includePrimaryAction: event.target.checked,
+                                    }))
+                                  }
+                                  className="mt-1 h-4 w-4 rounded border-[#d6cbbb] text-[#132033]"
+                                />
+                                <span className="leading-7">
+                                  {managerActionSurfaceCopy.primaryActionToggle}
+                                </span>
+                              </label>
+
+                              {managerResponseForm.includePrimaryAction ? (
+                                <div className="space-y-4 rounded-[20px] border border-[#ece4d8] bg-[#fcfaf7] px-4 py-4">
+                                  <p className="text-sm leading-7 text-[#4f6175]">
+                                    Deze extra stap maakt de route concreter, maar houdt de uitvoering nog steeds klein totdat aparte actiekaarten echt helpen.
+                                  </p>
+
+                                  <FormField label="Thema van deze eerste concrete stap">
+                                    <select
+                                      value={managerResponseForm.primaryActionThemeKey}
                                       onChange={(event) =>
                                         setManagerResponseForm((current) => ({
                                           ...current,
-                                          includePrimaryAction: event.target.checked,
+                                          primaryActionThemeKey: event.target.value as ActionCenterManagerActionThemeKey | '',
                                         }))
                                       }
-                                      className="mt-1 h-4 w-4 rounded border-[#d6cbbb] text-[#132033]"
+                                      className="w-full rounded-2xl border border-[#ddd3c7] bg-white px-4 py-3 text-sm text-[#132033] outline-none transition focus:border-[#ff9b4a]"
+                                    >
+                                      <option value="">Kies productthema</option>
+                                      {ACTION_CENTER_MANAGER_RESPONSE_THEME_OPTIONS.map((option) => (
+                                        <option key={option.value} value={option.value}>
+                                          {option.label}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </FormField>
+
+                                  <FormField label="Wat is die eerste concrete stap?">
+                                    <textarea
+                                      value={managerResponseForm.primaryActionText}
+                                      onChange={(event) =>
+                                        setManagerResponseForm((current) => ({
+                                          ...current,
+                                          primaryActionText: event.target.value,
+                                        }))
+                                      }
+                                      placeholder="Bijv. plan deze week een kort teamgesprek over feedbackritme en spreek daar één vaste terugkoppeling af."
+                                      className="min-h-[105px] w-full rounded-2xl border border-[#ddd3c7] bg-white px-4 py-3 text-sm leading-7 text-[#132033] outline-none transition focus:border-[#ff9b4a]"
                                     />
-                                    <span className="leading-7">
-                                      {managerActionSurfaceCopy.primaryActionToggle}
-                                    </span>
-                                  </label>
+                                  </FormField>
 
-                                  {managerResponseForm.includePrimaryAction ? (
-                                    <div className="space-y-4 rounded-[20px] border border-[#ece4d8] bg-[#fcfaf7] px-4 py-4">
-                                      <p className="text-sm leading-7 text-[#4f6175]">
-                                        Deze extra stap maakt de route concreter, maar houdt de uitvoering nog steeds klein totdat aparte actiekaarten echt helpen.
-                                      </p>
-
-                                      <FormField label="Thema van deze eerste concrete stap">
-                                        <select
-                                          value={managerResponseForm.primaryActionThemeKey}
-                                          onChange={(event) =>
-                                            setManagerResponseForm((current) => ({
-                                              ...current,
-                                              primaryActionThemeKey: event.target.value as ActionCenterManagerActionThemeKey | '',
-                                            }))
-                                          }
-                                          className="w-full rounded-2xl border border-[#ddd3c7] bg-white px-4 py-3 text-sm text-[#132033] outline-none transition focus:border-[#ff9b4a]"
-                                        >
-                                          <option value="">Kies productthema</option>
-                                          {ACTION_CENTER_MANAGER_RESPONSE_THEME_OPTIONS.map((option) => (
-                                            <option key={option.value} value={option.value}>
-                                              {option.label}
-                                            </option>
-                                          ))}
-                                        </select>
-                                      </FormField>
-
-                                      <FormField label="Wat is die eerste concrete stap?">
-                                        <textarea
-                                          value={managerResponseForm.primaryActionText}
-                                          onChange={(event) =>
-                                            setManagerResponseForm((current) => ({
-                                              ...current,
-                                              primaryActionText: event.target.value,
-                                            }))
-                                          }
-                                          placeholder="Bijv. plan deze week een kort teamgesprek over feedbackritme en spreek daar één vaste terugkoppeling af."
-                                          className="min-h-[105px] w-full rounded-2xl border border-[#ddd3c7] bg-white px-4 py-3 text-sm leading-7 text-[#132033] outline-none transition focus:border-[#ff9b4a]"
-                                        />
-                                      </FormField>
-
-                                      <FormField label="Wat moet deze stap zichtbaar maken?">
-                                        <textarea
-                                          value={managerResponseForm.primaryActionExpectedEffect}
-                                          onChange={(event) =>
-                                            setManagerResponseForm((current) => ({
-                                              ...current,
-                                              primaryActionExpectedEffect: event.target.value,
-                                            }))
-                                          }
-                                          placeholder="Bijv. binnen twee weken moet duidelijk worden of feedbackafspraken consistenter terugkomen in het team."
-                                          className="min-h-[105px] w-full rounded-2xl border border-[#ddd3c7] bg-white px-4 py-3 text-sm leading-7 text-[#132033] outline-none transition focus:border-[#ff9b4a]"
-                                        />
-                                      </FormField>
-                                    </div>
-                                  ) : null}
-                                </>
-                              ) : (
-                                <div className="space-y-3 rounded-[20px] border border-[#ece4d8] bg-[#fcfaf7] px-4 py-4">
-                                  <p className="text-sm leading-7 text-[#4f6175]">
-                                    Concrete acties voeg je hieronder toe in deze route. Zo blijft dit eerste managerantwoord compact en blijft er maar één primaire actie-ingang over.
-                                  </p>
-                                  {selectedItem.managerResponse?.primary_action_text ? (
-                                    <SignalRow
-                                      label="Eerste managerstap"
-                                      value={selectedItem.managerResponse.primary_action_text}
+                                  <FormField label="Wat moet deze stap zichtbaar maken?">
+                                    <textarea
+                                      value={managerResponseForm.primaryActionExpectedEffect}
+                                      onChange={(event) =>
+                                        setManagerResponseForm((current) => ({
+                                          ...current,
+                                          primaryActionExpectedEffect: event.target.value,
+                                        }))
+                                      }
+                                      placeholder="Bijv. binnen twee weken moet duidelijk worden of feedbackafspraken consistenter terugkomen in het team."
+                                      className="min-h-[105px] w-full rounded-2xl border border-[#ddd3c7] bg-white px-4 py-3 text-sm leading-7 text-[#132033] outline-none transition focus:border-[#ff9b4a]"
                                     />
-                                  ) : null}
-                                  {selectedItem.managerResponse?.primary_action_expected_effect ? (
-                                    <SignalRow
-                                      label="Zichtbaar effect"
-                                      value={selectedItem.managerResponse.primary_action_expected_effect}
-                                    />
-                                  ) : null}
+                                  </FormField>
                                 </div>
-                              )}
+                              ) : null}
 
                               {managerResponseError ? (
                                 <div className="rounded-[18px] border border-[#f3c0bc] bg-[#fff1ef] px-4 py-4 text-sm leading-7 text-[#9c3f36]">
@@ -3260,153 +2699,6 @@ export function ActionCenterPreview({
                         </div>
                       ) : null}
 
-                      {selectedItem.coreSemantics.routeActionCards.length > 0 || canUseRouteActionFlow ? (
-                        <div className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
-                          <div className="flex flex-wrap items-start justify-between gap-4">
-                            <div>
-                              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">
-                                Actieroute
-                              </p>
-                              <h3 className="mt-3 text-[1.35rem] font-semibold tracking-[-0.03em] text-[#132033]">
-                                Acties in deze route
-                              </h3>
-                              <p className="mt-3 text-sm leading-7 text-[#4f6175]">
-                                Houd elke actie klein: 1 concrete stap, 1 reviewdatum, 1 zichtbare observatie.
-                              </p>
-                            </div>
-                            {canUseRouteActionFlow ? (
-                              <button
-                                type="button"
-                                className="inline-flex min-h-11 items-center rounded-full border border-[#ded3c6] bg-[#fcfaf7] px-4.5 py-2.5 text-sm font-semibold text-[#1a2533] transition hover:border-[#1a2533]"
-                                onClick={() => {
-                                  setRouteActionEditorOpen((current) => !current)
-                                }}
-                              >
-                                Actie toevoegen
-                              </button>
-                            ) : null}
-                          </div>
-
-                          {routeActionEditorOpen ? (
-                            <div className="mt-5">
-                              <ActionCenterRouteActionEditor
-                                onSave={handleRouteActionSave}
-                                pending={routeActionPending}
-                                title="Nieuwe routeactie"
-                                description="Houd dit compact: 1 concrete stap, 1 reviewdatum en 1 zichtbaar effect."
-                                error={
-                                  routeActionFeedback?.validationDisposition
-                                    ? null
-                                    : routeActionFeedback?.message ?? null
-                                }
-                                feedbackTone={routeActionFeedback?.tone ?? 'error'}
-                                submissionState={
-                                  isPersistedDraftSubmissionDisposition(
-                                    routeActionFeedback?.validationDisposition,
-                                  ) &&
-                                  routeActionFeedback.validationMessage &&
-                                  routeActionFeedback.statusMessage &&
-                                  routeActionFeedback.persistedDraftFingerprint
-                                    ? ({
-                                        validationDisposition:
-                                          routeActionFeedback.validationDisposition,
-                                        statusMessage: routeActionFeedback.statusMessage,
-                                        validationMessage: routeActionFeedback.validationMessage,
-                                        persistedDraftFingerprint:
-                                          routeActionFeedback.persistedDraftFingerprint,
-                                      } satisfies ActionCenterRouteActionEditorSubmissionState)
-                                    : null
-                                }
-                                submitLabel="Actie opslaan"
-                              />
-                            </div>
-                          ) : routeActionFeedback ? (
-                            <div
-                              className={`mt-5 rounded-[18px] border px-4 py-4 text-sm leading-7 ${
-                                routeActionFeedback.tone === 'warning'
-                                  ? 'border-[#ffe1c7] bg-[#fff8ef] text-[#9a5a17]'
-                                  : 'border-[#f3c0bc] bg-[#fff1ef] text-[#9c3f36]'
-                              }`}
-                            >
-                              {routeActionFeedback.message}
-                            </div>
-                          ) : null}
-
-                          {selectedItem.coreSemantics.routeActionCards.length > 0 ? (
-                            <div className="mt-5 space-y-4">
-                              {selectedItem.coreSemantics.routeActionCards.map((action) => (
-                                <div
-                                  key={action.actionId}
-                                  className="rounded-[18px] border border-[#eadfce] bg-[#fcfaf7] px-4 py-4"
-                                >
-                                  <div className="flex flex-wrap items-center justify-between gap-3">
-                                    <div className="flex flex-wrap items-center gap-2 text-sm text-[#6d6458]">
-                                      <MiniTag>{getRouteActionThemeLabel(action.themeKey)}</MiniTag>
-                                      <span className={`inline-flex items-center rounded-xl border px-3 py-1.5 text-sm font-semibold ${getRouteActionStatusTone(action.status)}`}>
-                                        {getRouteActionStatusLabel(action.status)}
-                                      </span>
-                                    </div>
-                                    <span className="text-sm font-semibold text-[#5a7088]">
-                                      Review {formatLongDate(action.reviewScheduledFor)}
-                                    </span>
-                                  </div>
-
-                                  <p className="mt-4 text-[1rem] font-semibold leading-7 text-[#132033]">
-                                    {action.actionText}
-                                  </p>
-                                  <p className="mt-2 text-sm leading-7 text-[#4f6175]">
-                                    {action.expectedEffect}
-                                  </p>
-
-                                  {action.latestReview ? (
-                                    <div className="mt-4 rounded-[16px] border border-[#e5ddd1] bg-white px-4 py-4">
-                                      <p className="text-sm font-semibold text-[#132033]">
-                                        Laatste review ({getActionReviewOutcomeLabel(action.latestReview.actionOutcome)})
-                                      </p>
-                                      <p className="mt-2 text-sm leading-7 text-[#4f6175]">
-                                        {action.latestReview.observation}
-                                      </p>
-                                      {action.latestReview.followUpNote ? (
-                                        <p className="mt-2 text-sm leading-7 text-[#6d6458]">
-                                          {action.latestReview.followUpNote}
-                                        </p>
-                                      ) : null}
-                                    </div>
-                                  ) : null}
-
-                                  {canUseActionReviewFlow && action.status === 'in_review' && !action.latestReview ? (
-                                    <div className="mt-4">
-                                      {openReviewActionId === action.actionId ? (
-                                        <ActionCenterActionReviewEditor
-                                          onSave={(value) => void handleActionReviewSave(action.actionId, value)}
-                                          pending={actionReviewPendingActionId === action.actionId}
-                                          error={actionReviewError}
-                                        />
-                                      ) : (
-                                        <button
-                                          type="button"
-                                          className="inline-flex min-h-11 items-center rounded-full bg-[#ffb16e] px-4.5 py-2.5 text-sm font-semibold text-[#132033] transition hover:brightness-[0.98]"
-                                          onClick={() => {
-                                            setOpenReviewActionId(action.actionId)
-                                            setActionReviewError(null)
-                                          }}
-                                        >
-                                          Review toevoegen
-                                        </button>
-                                      )}
-                                    </div>
-                                  ) : null}
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="mt-5">
-                              <EmptyBlock text="Nog geen expliciete actiekaart vastgelegd. Houd de route klein tot een concrete actie echt helpt." />
-                            </div>
-                          )}
-                        </div>
-                      ) : null}
-
                       <div className="rounded-[24px] border border-[#e4d9cb] bg-[#fcfaf7] px-6 py-6 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Bespreekvoorbereiding</p>
                         <p className="mt-3 text-sm leading-8 text-[#4f6175]">
@@ -3455,12 +2747,8 @@ export function ActionCenterPreview({
                 </div>
               ) : (
                 <EmptySection
-                  title={allowEmptyInitialSelection ? 'Kies eerst een route' : 'Nog geen acties beschikbaar'}
-                  body={
-                    allowEmptyInitialSelection
-                      ? 'Voor deze campagne zijn meerdere zichtbare routes gevonden. Kies eerst de juiste afdeling of route om de actiecontext te openen.'
-                      : 'Zodra er routes live staan, verschijnt hier automatisch de eerstvolgende managerstap, begrensde reactie of actiekaart.'
-                  }
+                  title="Nog geen acties beschikbaar"
+                  body="Zodra er routes live staan, verschijnt hier automatisch de eerstvolgende managerstap, begrensde reactie of actiekaart."
                 />
               )
             ) : null}
@@ -3492,7 +2780,8 @@ export function ActionCenterPreview({
                       items={overdueReviews}
                       emptyText="In deze selectie staan nu geen achterstallige reviews meer open."
                       onOpen={(item) => {
-                        focusActionRoute(item.id)
+                        setSelectedItemId(item.id)
+                        setActiveView('actions')
                       }}
                     />
                     <ReviewLane
@@ -3500,7 +2789,8 @@ export function ActionCenterPreview({
                       items={thisWeekReviews}
                       emptyText="Voor deze week staat nu geen nieuw reviewgesprek meer open."
                       onOpen={(item) => {
-                        focusActionRoute(item.id)
+                        setSelectedItemId(item.id)
+                        setActiveView('actions')
                       }}
                     />
                     <ReviewLane
@@ -3508,7 +2798,8 @@ export function ActionCenterPreview({
                       items={nextWeekReviews}
                       emptyText="Voor volgende week is nog geen nieuw reviewgesprek ingepland."
                       onOpen={(item) => {
-                        focusActionRoute(item.id)
+                        setSelectedItemId(item.id)
+                        setActiveView('actions')
                       }}
                     />
                   </section>
@@ -3540,7 +2831,8 @@ export function ActionCenterPreview({
                         className="mt-6 inline-flex min-h-11 rounded-full bg-[#ff9b4a] px-4.5 py-2.5 text-sm font-semibold text-[#132033] transition hover:brightness-[0.98]"
                         onClick={() => {
                           if (upcomingReviews[0]) {
-                            focusActionRoute(upcomingReviews[0].id)
+                            setSelectedItemId(upcomingReviews[0].id)
+                            setActiveView('actions')
                           }
                         }}
                       >
@@ -3629,7 +2921,7 @@ export function ActionCenterPreview({
                               className="text-left"
                               onClick={() => {
                                 setSelectedTeamId(team.id)
-                                setContextualView('teams')
+                                setActiveView('teams')
                               }}
                             >
                               <p className="font-semibold">{team.label}</p>
@@ -3755,7 +3047,10 @@ export function ActionCenterPreview({
                               key={item.id}
                               type="button"
                               className="flex w-full items-start justify-between gap-4 rounded-[22px] border border-[#ebe1d5] bg-[#fcfaf7] px-5 py-5 text-left transition hover:border-[#d7cab9]"
-                              onClick={() => focusActionRoute(item.id)}
+                              onClick={() => {
+                                setSelectedItemId(item.id)
+                                setActiveView('actions')
+                              }}
                             >
                               <div className="min-w-0">
                                 <div className="flex flex-wrap items-center gap-2 text-sm text-[#6d6458]">
@@ -3815,7 +3110,10 @@ export function ActionCenterPreview({
                                 key={item.id}
                                 type="button"
                                 className="w-full rounded-[18px] border border-[#efe7dc] bg-[#fcfaf7] px-4 py-4 text-left transition hover:border-[#d7cab9]"
-                                onClick={() => focusActionRoute(item.id)}
+                                onClick={() => {
+                                  setSelectedItemId(item.id)
+                                  setActiveView('actions')
+                                }}
                               >
                                 <p className="font-semibold text-[#132033]">{item.title}</p>
                                 <p className="mt-1 text-sm text-[#5d6f84]">Volgende bespreking {item.reviewDateLabel}</p>
@@ -4020,14 +3318,32 @@ function SidebarGroup({
   )
 }
 
+function getActionCardThemeLabel(themeKey: ActionCenterManagerActionThemeKey) {
+  return (
+    ACTION_CENTER_MANAGER_RESPONSE_THEME_OPTIONS.find((option) => option.value === themeKey)?.label ?? themeKey
+  )
+}
+
+function getActionReviewOutcomeLabel(outcome: 'effect-zichtbaar' | 'bijsturen-nodig' | 'nog-te-vroeg' | 'stoppen') {
+  switch (outcome) {
+    case 'effect-zichtbaar':
+      return 'Effect zichtbaar'
+    case 'bijsturen-nodig':
+      return 'Bijsturen nodig'
+    case 'nog-te-vroeg':
+      return 'Nog te vroeg'
+    case 'stoppen':
+    default:
+      return 'Stoppen'
+  }
+}
+
 function ActionCenterBoundedOverview({
   visibleItems,
   blockedItems,
   upcomingReviews,
   overviewStatusCounts,
   selectedItem,
-  governanceQueue,
-  measurementReadback,
   onSelectItem,
   selectedItemHref,
   workbenchLabel,
@@ -4043,8 +3359,6 @@ function ActionCenterBoundedOverview({
     closed: number
   }
   selectedItem: ActionCenterPreviewItem | null
-  governanceQueue: ActionCenterGovernanceQueue | null
-  measurementReadback: ActionCenterMeasurementReadback | null
   onSelectItem: (itemId: string) => void
   selectedItemHref: string
   workbenchLabel: string
@@ -4061,7 +3375,7 @@ function ActionCenterBoundedOverview({
         <ActionCenterBoundedCounter
           label="Te bespreken / reviewbaar"
           value={`${overviewStatusCounts.reviewReady + overviewStatusCounts.blocked}`}
-          detail={`${overviewStatusCounts.blocked} Geblokkeerd / ${overviewStatusCounts.reviewReady} reviewbaar`}
+          detail={`${overviewStatusCounts.reviewReady} reviewbaar / ${overviewStatusCounts.blocked} Geblokkeerd`}
           tone="red"
         />
         <ActionCenterBoundedCounter
@@ -4073,18 +3387,10 @@ function ActionCenterBoundedOverview({
       </div>
 
       <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-[#ebe1d5] pb-4 text-sm text-[#6d6458]">
-        <span>Afgerond {overviewStatusCounts.closed}</span>
-        <span>
-          Niet beschikbaar{' '}
-          {typeof overviewStatusCounts.unavailable === 'number' ? overviewStatusCounts.unavailable : 'n.v.t.'}
-        </span>
+        <span>Afgerond: {overviewStatusCounts.closed}</span>
+        <span>Niet beschikbaar: {overviewStatusCounts.unavailable ?? 0}</span>
         <span>{visibleItems.length} zichtbare route{visibleItems.length === 1 ? '' : 's'}</span>
       </div>
-
-      {governanceQueue ? <ActionCenterGovernanceQueueSection queue={governanceQueue} /> : null}
-      {measurementReadback ? (
-        <ActionCenterMeasurementReadbackSection readback={measurementReadback} />
-      ) : null}
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.65fr),minmax(320px,0.95fr)]">
         <section className="rounded-[24px] border border-[#e4d9cb] bg-white">
@@ -4115,10 +3421,10 @@ function ActionCenterBoundedOverview({
         <div className="space-y-6">
           <aside className="rounded-[24px] border border-[#e4d9cb] bg-[#fcfaf7] px-6 py-6">
             <div>
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Wat vraagt nu aandacht?</p>
-                <span className="text-xs text-[#7d7368]">{blockedItems.length} Geblokkeerd</span>
-              </div>
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Nu signalen</p>
+                        <span className="text-xs text-[#7d7368]">{blockedItems.length} geblokkeerd</span>
+                      </div>
               <div className="mt-4 space-y-3">
                 {blockedItems.length === 0 ? (
                   <EmptyBlock text="Er staan nu geen geblokkeerde routes in deze selectie." />
@@ -4169,6 +3475,7 @@ function ActionCenterBoundedOverview({
           <section className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6">
             {selectedItem ? (
               <>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Wat vraagt nu aandacht?</p>
                 <div className="flex flex-wrap items-center gap-3">
                   <StatusPill status={selectedItem.status} />
                   <span className="text-sm font-semibold text-[#5a7088]">{selectedItem.code}</span>
@@ -4201,7 +3508,7 @@ function ActionCenterBoundedOverview({
               </>
             ) : (
               <>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Gekozen route</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Wat vraagt nu aandacht?</p>
                 <h2 className="mt-3 text-[1.45rem] font-semibold tracking-[-0.04em] text-[#132033]">Kies eerst een route</h2>
                 <p className="mt-3 text-sm leading-7 text-[#42556b]">
                   Selecteer een item uit de lijst om status, scope, eigenaar en reviewdiscipline in detail te zien.
@@ -4537,21 +3844,40 @@ function buildDetailLineageEntries(
   item: ActionCenterPreviewItem,
   routeTitlesById: ReadonlyMap<string, string>,
 ): ActionCenterDetailLineageEntry[] {
-  const routeLineage = item.coreSemantics.route
-  const { backwardLabel, backwardRouteId, forwardLabel, forwardRouteId } = item.coreSemantics.lineageSummary
-  const fallbackBackwardLabel =
-    backwardLabel ??
-    (routeLineage.lineageLabel === 'Heropend traject' || routeLineage.followUpFromRouteId
-      ? routeLineage.lineageLabel
+  const legacyLineage = (item.coreSemantics as ActionCenterPreviewItem['coreSemantics'] & {
+    lineageSemantics?: {
+      label?: string | null
+      followUpFromRouteId?: string | null
+      followUpTargetRouteId?: string | null
+    }
+  }).lineageSemantics
+  const backwardLabel =
+    item.coreSemantics.lineageSummary.backwardLabel ??
+    (legacyLineage?.label === 'Heropend traject' || legacyLineage?.label === 'Vervolg op eerdere route'
+      ? legacyLineage.label
+      : null) ??
+    (item.coreSemantics.route.lineageLabel === 'Heropend traject' ||
+    item.coreSemantics.route.lineageLabel === 'Vervolg op eerdere route'
+      ? item.coreSemantics.route.lineageLabel
       : null)
-  const fallbackBackwardRouteId = backwardRouteId ?? routeLineage.followUpFromRouteId ?? null
+  const backwardRouteId =
+    item.coreSemantics.lineageSummary.backwardRouteId ??
+    legacyLineage?.followUpFromRouteId ??
+    item.coreSemantics.route.followUpFromRouteId
+  const forwardLabel =
+    item.coreSemantics.lineageSummary.forwardLabel ??
+    (legacyLineage?.label === 'Later opgevolgd' ? legacyLineage.label : null)
+  const forwardRouteId =
+    item.coreSemantics.lineageSummary.forwardRouteId ??
+    legacyLineage?.followUpTargetRouteId ??
+    item.coreSemantics.route.followUpTargetRouteId
   const entries: Array<ActionCenterDetailLineageEntry | null> = [
-    fallbackBackwardLabel
+    backwardLabel
       ? {
           key: 'backward',
-          label: fallbackBackwardLabel,
-          routeId: fallbackBackwardRouteId,
-          routeTitle: fallbackBackwardRouteId ? (routeTitlesById.get(fallbackBackwardRouteId) ?? null) : null,
+          label: backwardLabel,
+          routeId: backwardRouteId,
+          routeTitle: backwardRouteId ? (routeTitlesById.get(backwardRouteId) ?? null) : null,
         }
       : null,
     forwardLabel
@@ -4565,37 +3891,6 @@ function buildDetailLineageEntries(
   ]
 
   return entries.filter((entry): entry is ActionCenterDetailLineageEntry => entry !== null)
-}
-
-export function buildContextualEntryHref(
-  currentHref: string,
-  args: {
-    focus?: string | null
-    view: ActionCenterPreviewView
-  },
-) {
-  const url = new URL(currentHref)
-  const source = url.searchParams.get('source')
-  const nextSource: ActionCenterEntrySource | null = isActionCenterEntrySource(source) ? source : null
-  const canonicalEntryHref = buildActionCenterEntryHref({
-    focus: args.focus ?? null,
-    view: args.view,
-    source: nextSource,
-  })
-  const canonicalEntryUrl = new URL(canonicalEntryHref, url.origin)
-
-  for (const key of ['focus', 'view', 'source'] as const) {
-    const value = canonicalEntryUrl.searchParams.get(key)
-
-    if (value === null) {
-      url.searchParams.delete(key)
-      continue
-    }
-
-    url.searchParams.set(key, value)
-  }
-
-  return `${url.pathname}${url.search}${url.hash}`
 }
 
 function RouteFieldCard({ label, value }: { label: string; value: string }) {
