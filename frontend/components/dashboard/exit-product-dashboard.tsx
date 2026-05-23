@@ -39,8 +39,9 @@ interface ExitProductDashboardProps {
   primarySignalBandLabel: string
   strongestFactorLabel: string
   strongestFactorNote: string
-  strongWorkSignalLabel: string
-  primaryReasonTitle: string
+  dominantThemeLabel: string
+  dominantThemeNote: string
+  executiveSummary: string
   firstManagementQuestion: string
   totalInvited: string
   totalCompleted: string
@@ -62,33 +63,69 @@ interface ExitProductDashboardProps {
 function RankedFactorTable({ rows }: { rows: BoardroomFactorRow[] }) {
   return (
     <div className="overflow-hidden border border-[rgba(13,27,42,0.15)]">
-      <div className="hidden bg-[#F4F1EA] px-4 py-3 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#44505C] lg:grid lg:grid-cols-[72px_minmax(0,1.3fr)_120px_160px_minmax(0,1.4fr)]">
+      <div className="hidden bg-[#F4F1EA] px-4 py-3 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#44505C] lg:grid lg:grid-cols-[72px_minmax(0,1.2fr)_120px_160px_minmax(0,1.2fr)]">
         <span>Rang</span>
         <span>Factor</span>
         <span>Score</span>
-        <span>Band</span>
+        <span>Status</span>
         <span>Leesnotitie</span>
       </div>
       {rows.map((row, index) => (
         <div
           key={`${row.factor}-${index}`}
-          className="grid gap-3 border-t border-[rgba(13,27,42,0.15)] bg-white px-4 py-4 first:border-t-0 lg:grid-cols-[72px_minmax(0,1.3fr)_120px_160px_minmax(0,1.4fr)] lg:items-start"
+          className="grid gap-3 border-t border-[rgba(13,27,42,0.15)] bg-white px-4 py-4 first:border-t-0 lg:grid-cols-[72px_minmax(0,1.2fr)_120px_160px_minmax(0,1.2fr)] lg:items-start"
         >
           <span className="font-mono text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[#44505C]">
             {(index + 1).toString().padStart(2, '0')}
           </span>
-          <div>
+          <div className="space-y-2">
             <p className="text-sm font-semibold text-[#132033]">{row.factor}</p>
-            <p className="mt-1 text-xs leading-5 text-[#44505C] lg:hidden">{row.note}</p>
+            {row.question ? (
+              <p className="text-xs leading-5 text-[#A06D11] lg:hidden">{row.question}</p>
+            ) : null}
+            <p className="text-xs leading-5 text-[#44505C] lg:hidden">{row.note}</p>
           </div>
           <p className="dash-number text-[1.2rem] leading-none text-[#132033]">{row.score}</p>
           <p className="font-mono text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[#44505C]">
             {row.band}
           </p>
-          <p className="hidden text-sm leading-6 text-[#44505C] lg:block">{row.note}</p>
+          <div className="hidden space-y-2 lg:block">
+            <p className="text-sm leading-6 text-[#44505C]">{row.note}</p>
+            {row.question ? (
+              <p className="text-sm leading-6 text-[#A06D11]">Eerste toetsvraag: {row.question}</p>
+            ) : null}
+          </div>
         </div>
       ))}
     </div>
+  )
+}
+
+function SectionMiniNav() {
+  const items = [
+    ['kernsignaal', 'Kernsignaal'],
+    ['responsbasis', 'Responsbasis'],
+    ['signaalopbouw', 'Signaalopbouw'],
+    ['prioriteiten', 'Prioriteiten'],
+    ['survey-stemmen', 'Survey-stemmen'],
+    ['handoff', 'Handoff'],
+  ] as const
+
+  return (
+    <nav className="sticky top-3 z-10 border border-[rgba(13,27,42,0.15)] bg-[#F7F4EE]/95 px-3 py-3 backdrop-blur">
+      <ul className="flex flex-wrap gap-2">
+        {items.map(([href, label]) => (
+          <li key={href}>
+            <a
+              href={`#${href}`}
+              className="inline-flex border border-[rgba(13,27,42,0.15)] bg-white px-3 py-1.5 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[#44505C] transition-colors hover:text-[#132033]"
+            >
+              {label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
   )
 }
 
@@ -106,8 +143,9 @@ export function ExitProductDashboard({
   primarySignalBandLabel,
   strongestFactorLabel,
   strongestFactorNote,
-  strongWorkSignalLabel,
-  primaryReasonTitle,
+  dominantThemeLabel,
+  dominantThemeNote,
+  executiveSummary,
   firstManagementQuestion,
   totalInvited,
   totalCompleted,
@@ -126,9 +164,10 @@ export function ExitProductDashboard({
   reviewMomentLabel,
 }: ExitProductDashboardProps) {
   const topPriorityRows = factorRows.slice(0, 3)
+  const responseBasisLabel = `${totalCompleted} ingevuld · ${responseRate}`
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <ResultsBoardroomHeader
         moduleHref={moduleHref}
         moduleLabel={moduleLabel}
@@ -142,156 +181,186 @@ export function ExitProductDashboard({
         actions={headerActions}
       />
 
-      <ResultsBoardroomSection
-        eyebrow="1. Kernsignaal"
-        title="Kernsignaal"
-        description="ExitScan opent het vertrekbeeld als terugkijkende managementread. Lees score, hoofdlaag en factoren samen als groepsbeeld en niet als harde vaststelling."
-        aside={
-          <span className="border border-[rgba(13,27,42,0.15)] bg-[#FEB234] px-3 py-2 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#132033]">
-            {primarySignalBandLabel}
-          </span>
-        }
-      >
-        <div className="grid gap-px border border-[rgba(13,27,42,0.15)] bg-[rgba(13,27,42,0.15)] xl:grid-cols-[minmax(0,1.15fr),minmax(320px,0.85fr)]">
-          <div className="grid gap-px bg-[rgba(13,27,42,0.15)]">
-            <BoardroomMetricTile
-              label="Frictiescore"
-              value={primarySignalScoreLabel}
-              note="De frictiescore toont hoe scherp vertrekfrictie gemiddeld terugkomt in de leesbare responses."
-              tone="white"
-              prominent
-            />
-            <div className="grid gap-px bg-[rgba(13,27,42,0.15)] sm:grid-cols-2">
-              <BoardroomMetricTile
-                label="Scherpste factor"
-                value={strongestFactorLabel}
-                note={strongestFactorNote}
-                tone="chalk"
-              />
-              <BoardroomMetricTile
-                label="Vertrekladder"
-                value={primaryReasonTitle}
-                note="Deze laag kleurt het vertrekbeeld als eerste en vraagt daarom de eerste bestuurlijke verificatie."
-                tone="chalk"
-              />
-            </div>
-          </div>
-          <div className="grid gap-px bg-[rgba(13,27,42,0.15)]">
-            <BoardroomMetricTile
-              label="Bestuurlijke vraag"
-              value="Eerst toetsen"
-              note={firstManagementQuestion}
-              tone="ink"
-            />
-            <div className="grid gap-px bg-[rgba(13,27,42,0.15)] sm:grid-cols-2">
-              <BoardroomMetricTile
-                label="Sterk werksignaal"
-                value={strongWorkSignalLabel}
-                note="Laat zien hoeveel responses vooral wijzen op beinvloedbare werkcontext."
-                tone="white"
-              />
-              <BoardroomMetricTile
-                label="Status"
-                value={statusLabel}
-                note="Gebruik de band als leesdiscipline, niet als bewezen causaliteit."
-                tone="white"
-              />
-            </div>
-          </div>
-        </div>
-      </ResultsBoardroomSection>
+      <SectionMiniNav />
 
-      <ResultsBoardroomSection
-        eyebrow="2. Responsbasis / leessterkte"
-        title="Responsbasis / leessterkte"
-        description="Deze laag laat zien hoe stevig het gegroepeerde beeld gelezen mag worden en welke grenzen blijven gelden voor segmenten en open tekst."
-        aside={
-          <span className="border border-[rgba(13,27,42,0.15)] bg-white px-3 py-2 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#44505C]">
-            Leessterkte — {readStrengthLabel}
-          </span>
-        }
+      <section
+        aria-label="Executive result strip"
+        className="grid gap-px border border-[rgba(13,27,42,0.15)] bg-[rgba(13,27,42,0.15)] xl:grid-cols-6"
       >
-        <BoardroomKeyValueList
-          items={[
-            { label: 'Uitgenodigd', value: totalInvited },
-            { label: 'Ingevuld', value: totalCompleted },
-            { label: 'Respons', value: responseRate },
-            { label: 'Leessterkte', value: readStrengthLabel },
-          ]}
-        />
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr),minmax(280px,0.9fr)]">
-          <div className="border border-[rgba(13,27,42,0.15)] bg-[#F4F1EA] px-4 py-4 text-sm leading-6 text-[#44505C]">
-            {responseContextNote}
-          </div>
-          <div className="border border-[rgba(13,27,42,0.15)] bg-white px-4 py-4">
-            <p className="font-mono text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#44505C]">
-              Leesgrenzen
-            </p>
-            <ul className="mt-3 space-y-2 text-sm leading-6 text-[#44505C]">
-              {trustNotes.map((note) => (
-                <li key={note}>{note}</li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </ResultsBoardroomSection>
-
-      <ResultsBoardroomSection
-        eyebrow="3. Signaalopbouw"
-        title="Signaalopbouw"
-        description="De compositie laat zien welke lagen het vertrekbeeld kleuren. Lees dit als indicatief patroonbeeld en niet als causale verdeling."
-      >
-        <SignalCompositionRibbon
-          title="Vertrekbeeld in lagen"
-          segments={compositionSegments}
-          note="Indicatief patroonbeeld, geen causale verdeling."
-        />
-        <div className="grid gap-px border border-[rgba(13,27,42,0.15)] bg-[rgba(13,27,42,0.15)] lg:grid-cols-3">
-          {compositionHighlights.map((item) => (
-            <BoardroomMetricTile
-              key={item.label}
-              label={item.label}
-              value={item.value}
-              note={item.body}
-              tone="white"
-            />
-          ))}
-        </div>
-      </ResultsBoardroomSection>
-
-      <ResultsBoardroomSection
-        eyebrow="4. Prioriteitenbeeld"
-        title="Prioriteitenbeeld"
-        description="De horizontale as toont beleving, de verticale as bestuurlijke aandacht. Gebruik de topkaarten om het eerste verificatiespoor te kiezen."
-      >
-        {factorRows.length > 0 ? (
-          <div className="space-y-5">
-            <PriorityScatterPlot rows={factorRows} xLabel="Beleving" yLabel="Bestuurlijke aandacht" />
-            <div className="grid gap-px border border-[rgba(13,27,42,0.15)] bg-[rgba(13,27,42,0.15)] lg:grid-cols-3">
-              {topPriorityRows.map((row, index) => (
-                <BoardroomMetricTile
-                  key={row.factor}
-                  label={`Topprioriteit 0${index + 1}`}
-                  value={row.factor}
-                  note={`${row.band} — ${row.note}`}
-                  tone={index === 0 ? 'amber' : 'white'}
-                />
-              ))}
-            </div>
-            <RankedFactorTable rows={factorRows} />
-          </div>
-        ) : (
-          <BoardroomEmptyState
-            title="Onvoldoende data"
-            body="Nog geen veilige prioriteitenkaart beschikbaar voor organisatiefactoren."
+        {[
+          { label: 'Frictiescore', value: primarySignalScoreLabel, note: 'Primaire groepsscore' },
+          { label: 'Band / status', value: primarySignalBandLabel, note: 'Managementsamenvatting' },
+          { label: 'Dominant thema', value: dominantThemeLabel, note: 'Wat het vertrekbeeld nu kleurt' },
+          { label: 'Scherpste factor', value: strongestFactorLabel, note: 'Eerste factor om te toetsen' },
+          { label: 'Responsbasis', value: responseBasisLabel, note: `${totalInvited} uitgenodigd` },
+          { label: 'Bestuurlijke vraag', value: 'Eerst toetsen', note: firstManagementQuestion },
+        ].map((item, index) => (
+          <BoardroomMetricTile
+            key={item.label}
+            label={item.label}
+            value={item.value}
+            note={item.note}
+            tone={index === 0 ? 'amber' : 'white'}
           />
-        )}
-      </ResultsBoardroomSection>
+        ))}
+      </section>
+
+      <div id="kernsignaal">
+        <ResultsBoardroomSection
+          eyebrow="1. Kernsignaal"
+          title="Kernsignaal"
+          description="Gebruik deze terugkijkende vertrekduiding als managementsamenvatting van wat nu het sterkst terugkomt. Lees het beeld als groepsinterpretatie, niet als harde oorzaakverklaring."
+          aside={
+            <span className="border border-[rgba(13,27,42,0.15)] bg-[#FEB234] px-3 py-2 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#132033]">
+              {primarySignalBandLabel}
+            </span>
+          }
+        >
+          <div className="grid gap-px border border-[rgba(13,27,42,0.15)] bg-[rgba(13,27,42,0.15)] xl:grid-cols-[minmax(0,1.2fr),minmax(320px,0.8fr)]">
+            <div className="space-y-5 bg-white px-5 py-5 sm:px-6 sm:py-6">
+              <p className="font-mono text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#44505C]">
+                Frictiescore
+              </p>
+              <p className="dash-number text-[clamp(3.2rem,9vw,6.5rem)] leading-none tracking-[-0.08em] text-[#132033]">
+                {primarySignalScoreLabel}
+              </p>
+              <p className="max-w-3xl text-base leading-8 text-[#132033]">{executiveSummary}</p>
+              <div className="grid gap-px border border-[rgba(13,27,42,0.15)] bg-[rgba(13,27,42,0.15)] sm:grid-cols-3">
+                <BoardroomMetricTile
+                  label="Dominant thema"
+                  value={dominantThemeLabel}
+                  note={dominantThemeNote}
+                  tone="chalk"
+                />
+                <BoardroomMetricTile
+                  label="Scherpste factor"
+                  value={strongestFactorLabel}
+                  note={strongestFactorNote}
+                  tone="chalk"
+                />
+                <BoardroomMetricTile
+                  label="Resultaten beschikbaar"
+                  value={statusLabel}
+                  note="Gebruik dit als eerste managementsamenvatting; geen harde oorzaakverklaring."
+                  tone="chalk"
+                />
+              </div>
+            </div>
+            <div className="grid gap-px bg-[rgba(13,27,42,0.15)]">
+              <BoardroomMetricTile
+                label="Bestuurlijke vraag"
+                value="Eerst toetsen"
+                note={firstManagementQuestion}
+                tone="ink"
+              />
+              <BoardroomMetricTile
+                label="Interpretatiegrens"
+                value="Resultaten beschikbaar"
+                note="Lees dit vertrekbeeld als vertrekduiding op groepsniveau. Wat samenvalt vraagt verificatie; het bewijst geen oorzaak."
+                tone="white"
+              />
+            </div>
+          </div>
+        </ResultsBoardroomSection>
+      </div>
+
+      <div id="responsbasis">
+        <ResultsBoardroomSection
+          eyebrow="2. Responsbasis / leessterkte"
+          title="Responsbasis / leessterkte"
+          description="Detailinzichten worden alleen getoond bij voldoende respons. Kleine groepen blijven verborgen om anonimiteit te beschermen."
+          aside={
+            <span className="border border-[rgba(13,27,42,0.15)] bg-white px-3 py-2 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#44505C]">
+              Leessterkte — {readStrengthLabel}
+            </span>
+          }
+        >
+          <BoardroomKeyValueList
+            items={[
+              { label: 'Uitgenodigd', value: totalInvited },
+              { label: 'Ingevuld', value: totalCompleted },
+              { label: 'Respons', value: responseRate },
+              { label: 'Leessterkte', value: readStrengthLabel },
+            ]}
+          />
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr),minmax(280px,0.9fr)]">
+            <div className="border border-[rgba(13,27,42,0.15)] bg-[#F4F1EA] px-4 py-4 text-sm leading-6 text-[#44505C]">
+              {responseContextNote}
+            </div>
+            <div className="border border-[rgba(13,27,42,0.15)] bg-white px-4 py-4">
+              <p className="font-mono text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#44505C]">
+                Interpretatiegrens
+              </p>
+              <ul className="mt-3 space-y-2 text-sm leading-6 text-[#44505C]">
+                {trustNotes.map((note) => (
+                  <li key={note}>{note}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </ResultsBoardroomSection>
+      </div>
+
+      <div id="signaalopbouw">
+        <ResultsBoardroomSection
+          eyebrow="3. Signaalopbouw"
+          title="Welke lagen kleuren het vertrekbeeld?"
+          description="De compositie laat zien welke lagen nu het sterkst terugkomen. Lees dit als indicatief patroonbeeld, geen causale verdeling."
+        >
+          <SignalCompositionRibbon
+            title="Vertrekbeeld in lagen"
+            segments={compositionSegments}
+            note="Indicatief patroonbeeld, geen causale verdeling."
+          />
+          <div className="grid gap-px border border-[rgba(13,27,42,0.15)] bg-[rgba(13,27,42,0.15)] lg:grid-cols-3">
+            {compositionHighlights.map((item) => (
+              <BoardroomMetricTile
+                key={item.label}
+                label={item.label}
+                value={item.value}
+                note={item.body}
+                tone="white"
+              />
+            ))}
+          </div>
+        </ResultsBoardroomSection>
+      </div>
+
+      <div id="prioriteiten">
+        <ResultsBoardroomSection
+          eyebrow="4. Prioriteitenbeeld"
+          title="Prioriteitenbeeld"
+          description="De horizontale as toont beleving; de verticale as laat zien welke factoren bestuurlijk eerst aandacht vragen. Gebruik dit voor verificatie en prioritering."
+        >
+          {factorRows.length > 0 ? (
+            <div className="space-y-5">
+              <PriorityScatterPlot rows={factorRows} xLabel="Beleving" yLabel="Bestuurlijke aandacht" />
+              <div className="grid gap-px border border-[rgba(13,27,42,0.15)] bg-[rgba(13,27,42,0.15)] lg:grid-cols-3">
+                {topPriorityRows.map((row, index) => (
+                  <BoardroomMetricTile
+                    key={row.factor}
+                    label={`Topprioriteit 0${index + 1}`}
+                    value={`${row.factor} · ${row.score}`}
+                    note={`${row.band}. ${row.note}${row.question ? ` Eerste toetsvraag: ${row.question}` : ''}`}
+                    tone={index === 0 ? 'amber' : 'white'}
+                  />
+                ))}
+              </div>
+              <RankedFactorTable rows={factorRows} />
+            </div>
+          ) : (
+            <BoardroomEmptyState
+              title="Onvoldoende data"
+              body="Nog geen veilige prioriteitenkaart beschikbaar voor organisatiefactoren."
+            />
+          )}
+        </ResultsBoardroomSection>
+      </div>
 
       <ResultsBoardroomSection
         eyebrow="5. Basisbehoeften / SDT"
         title="Basisbehoeften / SDT"
-        description="De drie basisbehoeften helpen het vertrekbeeld verdiepen zonder er een losse bewijslaag of harde vaststelling van te maken."
+        description="Gebruik deze laag als verdieping op het vertrekbeeld. De positie van de punt laat zien welke basisbehoeften relatief meer onder druk staan."
       >
         {sdtRows.length > 0 ? (
           <SdtTriangleMap rows={sdtRows} />
@@ -303,87 +372,91 @@ export function ExitProductDashboard({
         )}
       </ResultsBoardroomSection>
 
-      <ResultsBoardroomSection
-        eyebrow="6. Survey-stemmen"
-        title="Survey-stemmen"
-        description="Open signalen verdiepen het beeld waar de anonimiteitsgrens dat toelaat. Quotes blijven geanonimiseerd en worden onderdrukt als de drempel te smal is."
-      >
-        {surveyThemes.length > 0 ? (
-          <div className="grid gap-px border border-[rgba(13,27,42,0.15)] bg-[rgba(13,27,42,0.15)] xl:grid-cols-3">
-            {surveyThemes.map((theme) => (
-              <div key={theme.key} className="space-y-4 bg-white px-4 py-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-mono text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#44505C]">
-                      {theme.evidenceLabel}
-                    </p>
-                    <h3 className="mt-2 text-[1.05rem] font-semibold tracking-[-0.03em] text-[#132033]">
-                      {theme.title}
-                    </h3>
+      <div id="survey-stemmen">
+        <ResultsBoardroomSection
+          eyebrow="6. Survey-stemmen"
+          title="Survey-stemmen"
+          description="Open signalen verdiepen het beeld waar de anonimiteitsgrens dat toelaat. Quotes blijven geanonimiseerd en onderdrukt bij te lage n."
+        >
+          {surveyThemes.length > 0 ? (
+            <div className="grid gap-px border border-[rgba(13,27,42,0.15)] bg-[rgba(13,27,42,0.15)] xl:grid-cols-3">
+              {surveyThemes.map((theme) => (
+                <div key={theme.key} className="space-y-4 bg-white px-4 py-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-mono text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#44505C]">
+                        {theme.evidenceLabel}
+                      </p>
+                      <h3 className="mt-2 text-[1.05rem] font-semibold tracking-[-0.03em] text-[#132033]">
+                        {theme.title}
+                      </h3>
+                    </div>
+                    <span className="border border-[rgba(13,27,42,0.15)] bg-[#F4F1EA] px-2 py-1 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[#44505C]">
+                      n={theme.count}
+                    </span>
                   </div>
-                  <span className="border border-[rgba(13,27,42,0.15)] bg-[#F4F1EA] px-2 py-1 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[#44505C]">
-                    {theme.count}
-                  </span>
+                  {theme.relationLabel ? (
+                    <p className="font-mono text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[#A06D11]">
+                      {theme.relationLabel}
+                    </p>
+                  ) : null}
+                  <p className="text-sm leading-6 text-[#44505C]">{theme.implication}</p>
+                  {theme.quote ? (
+                    <blockquote className="border-l border-[#FEB234] pl-3 text-sm italic leading-6 text-[#132033]">
+                      &quot;{theme.quote}&quot;
+                    </blockquote>
+                  ) : (
+                    <p className="text-xs leading-5 text-[#44505C]">
+                      Quote onderdrukt zolang de anonimiteitsgrens voor dit thema te smal blijft.
+                    </p>
+                  )}
                 </div>
-                {theme.relationLabel ? (
-                  <p className="font-mono text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[#A06D11]">
-                    {theme.relationLabel}
-                  </p>
-                ) : null}
-                <p className="text-sm leading-6 text-[#44505C]">{theme.implication}</p>
-                {theme.quote ? (
-                  <blockquote className="border-l border-[#FEB234] pl-3 text-sm italic leading-6 text-[#132033]">
-                    &quot;{theme.quote}&quot;
-                  </blockquote>
-                ) : (
-                  <p className="text-xs leading-5 text-[#44505C]">
-                    Quote onderdrukt zolang de anonimiteitsgrens voor dit thema te smal blijft.
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
-        ) : (
-          <BoardroomEmptyState
-            title="Nog geen open signaallaag"
-            body="Er zijn nog geen bruikbare open antwoorden of themaclusters die veilig op groepsniveau getoond kunnen worden."
-          />
-        )}
-      </ResultsBoardroomSection>
+              ))}
+            </div>
+          ) : (
+            <BoardroomEmptyState
+              title="Nog geen open signaallaag"
+              body="Er zijn nog geen bruikbare open antwoorden of themaclusters die veilig op groepsniveau getoond kunnen worden."
+            />
+          )}
+        </ResultsBoardroomSection>
+      </div>
 
-      <ResultsBoardroomSection
-        eyebrow="7. Bestuurlijke handoff"
-        title="Bestuurlijke handoff"
-        description="Rond de boardroom-read af met een eerste verificatiespoor, een begrensde eigenaar en een reviewmoment. Dit blijft een managementhandoff, geen workflowproduct."
-        tone="ink"
-      >
-        <div className="grid gap-px border border-[#2B3A4E] bg-[#2B3A4E] lg:grid-cols-2 xl:grid-cols-4">
-          <BoardroomMetricTile
-            label="Eerste verificatiespoor"
-            value={verificationTrackLabel}
-            note="Kies eerst welk spoor bestuurlijk getoetst moet worden voordat bredere actie volgt."
-            tone="ink"
-          />
-          <BoardroomMetricTile
-            label="Bestuurlijke vraag"
-            value="Eerst verifiëren"
-            note={firstManagementQuestion}
-            tone="ink"
-          />
-          <BoardroomMetricTile
-            label="Eerste eigenaar"
-            value={ownerRoleLabel}
-            note={firstStepLabel}
-            tone="ink"
-          />
-          <BoardroomMetricTile
-            label="Reviewmoment"
-            value="Vastleggen"
-            note={reviewMomentLabel}
-            tone="ink"
-          />
-        </div>
-      </ResultsBoardroomSection>
+      <div id="handoff">
+        <ResultsBoardroomSection
+          eyebrow="7. Bestuurlijke handoff"
+          title="Bestuurlijke handoff"
+          description="Sluit af met één eerste verificatiespoor, een eigenaar en een concreet reviewmoment. Gebruik dit als bounded managementsamenvatting: eerst toetsen vóór bredere actie."
+          tone="ink"
+        >
+          <div className="grid gap-px border border-[#2B3A4E] bg-[#2B3A4E] lg:grid-cols-2 xl:grid-cols-4">
+            <BoardroomMetricTile
+              label="Eerste verificatiespoor"
+              value={verificationTrackLabel}
+              note="Kies eerst welk spoor bestuurlijk getoetst moet worden."
+              tone="ink"
+            />
+            <BoardroomMetricTile
+              label="Bestuurlijke vraag"
+              value="Eerst toetsen"
+              note={firstManagementQuestion}
+              tone="ink"
+            />
+            <BoardroomMetricTile
+              label="Eerste eigenaar"
+              value={ownerRoleLabel}
+              note={firstStepLabel}
+              tone="ink"
+            />
+            <BoardroomMetricTile
+              label="Reviewmoment"
+              value="Vastleggen"
+              note={reviewMomentLabel}
+              tone="ink"
+            />
+          </div>
+        </ResultsBoardroomSection>
+      </div>
     </div>
   )
 }

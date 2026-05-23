@@ -102,13 +102,13 @@ describe('exit dashboard analytics guardrails', () => {
   it('renders the agreed ExitScan boardroom IA in the expected order', () => {
     const source = exitDashboardSource()
     const orderedHeadings = [
-      'Kernsignaal',
-      'Responsbasis / leessterkte',
-      'Signaalopbouw',
-      'Prioriteitenbeeld',
-      'Basisbehoeften / SDT',
-      'Survey-stemmen',
-      'Bestuurlijke handoff',
+      'eyebrow="1. Kernsignaal"',
+      'eyebrow="2. Responsbasis / leessterkte"',
+      'eyebrow="3. Signaalopbouw"',
+      'eyebrow="4. Prioriteitenbeeld"',
+      'eyebrow="5. Basisbehoeften / SDT"',
+      'eyebrow="6. Survey-stemmen"',
+      'eyebrow="7. Bestuurlijke handoff"',
     ]
 
     let previousIndex = -1
@@ -133,10 +133,10 @@ describe('exit dashboard analytics guardrails', () => {
   it('keeps the visible ExitScan shell free from mojibake and uses the product score language', () => {
     const source = exitDashboardSource()
 
-    expect(source).not.toContain('Ãƒ')
-    expect(source).not.toContain('Ã‚')
-    expect(source).not.toContain('Ã¢')
-    expect(source).not.toContain('ï¿½')
+    expect(source).not.toContain('ÃƒÆ’')
+    expect(source).not.toContain('Ãƒâ€š')
+    expect(source).not.toContain('ÃƒÂ¢')
+    expect(source).not.toContain('Ã¯Â¿Â½')
     expect(source).toContain('Frictiescore')
     expect(source).toContain('Leessterkte')
   })
@@ -146,5 +146,33 @@ describe('exit dashboard analytics guardrails', () => {
 
     expect(source).toContain('sdtRows.length > 0')
     expect(source).toContain('SdtTriangleMap')
+  })
+
+  it('surfaces a compact executive strip and safer customer-facing labels', () => {
+    const source = exitDashboardSource()
+
+    expect(source).toContain('Dominant thema')
+    expect(source).toContain('Scherpste factor')
+    expect(source).toContain('Responsbasis')
+    expect(source).toContain('Bestuurlijke vraag')
+    expect(source).toContain('Resultaten beschikbaar')
+    expect(source).toContain('terugkijkende vertrekduiding')
+    expect(source).not.toContain('Vertrekladder')
+    expect(source).not.toContain('Sterk werksignaal')
+    expect(source).not.toContain('managementread')
+    expect(source).not.toContain('workflowproduct')
+    expect(source).not.toContain('leesdiscipline')
+  })
+
+  it('keeps trust copy bounded and the handoff in customer language', () => {
+    const source = exitDashboardSource()
+
+    expect(source).toContain('Indicatief patroonbeeld, geen causale verdeling.')
+    expect(source).toContain('Detailinzichten worden alleen getoond bij voldoende respons.')
+    expect(source).toContain('anonimiteit te beschermen')
+    expect(source).toContain('Sluit af met één eerste verificatiespoor, een eigenaar en een concreet reviewmoment.')
+    expect(source).toContain('eerst toetsen vóór bredere actie')
+    expect(source).not.toContain('suppressieregels')
+    expect(source).not.toContain('geen workflowproduct')
   })
 })

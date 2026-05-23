@@ -185,7 +185,7 @@ export function buildHeroDescription({
   }
 
   if (scanType === 'exit') {
-    return 'Deze ExitScan laat een bestuurlijke read zien van terugkerende werkfrictie. Gebruik Frictiescore als openingssignaal en lees daarna welke werkfactoren en verschillen het vertrekbeeld nu het sterkst kleuren.'
+    return 'Deze ExitScan laat een terugkijkende vertrekduiding zien van terugkerende werkfrictie. Gebruik Frictiescore als openingssignaal en lees daarna welke werkfactoren en verschillen het vertrekbeeld nu het sterkst kleuren.'
   }
 
   return `Bekijk eerst welke factoren het laagst scoren en waar de grootste verschillen zichtbaar zijn.`
@@ -1214,7 +1214,7 @@ export function clusterExitOpenSignals(responses: SurveyResponse[]): ExitTheme[]
       title: 'Beloning en voorwaarden',
       keywords: ['salaris', 'beloning', 'voorwaarden', 'arbeidsvoorwaarden', 'vergoeding', 'loon'],
       implication:
-        'Dit komt vaak terug als meelezende context en vraagt verificatie naast werkbeleving en perspectief.',
+        'Dit komt vaak terug als aanvullende context en vraagt verificatie naast werkbeleving en perspectief.',
     },
   ] as const
 

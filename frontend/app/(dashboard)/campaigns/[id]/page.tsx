@@ -27,6 +27,10 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { FACTOR_LABELS, hasCampaignAddOn } from '@/lib/types'
 import type { Campaign, CampaignStats, MemberRole, Respondent, ScanType, SurveyResponse } from '@/lib/types'
+import { buildExitDashboardViewModel } from '@/lib/products/exit/dashboard'
+import { buildRetentionDashboardViewModel } from '@/lib/products/retention/dashboard'
+import { ExitProductDashboard } from '@/components/dashboard/exit-product-dashboard'
+import { RetentionProductDashboard } from '@/components/dashboard/retention-product-dashboard'
 import {
   buildOpenAnswerItems,
   buildOpenAnswersViewModel,
@@ -36,8 +40,10 @@ import {
   MethodologyCard,
   MIN_N_DISPLAY,
   MIN_N_PATTERNS,
+  clusterExitOpenSignals,
   clusterRetentionOpenSignals,
   computeAverageSignalScore,
+  computeAverageSignalVisibility,
   computeFactorAverages,
   computeRetentionSupplementalAverages,
   computeStrongWorkSignalRate,
@@ -64,6 +70,7 @@ type FactorRow = {
   signalValue: number
   band: string
   note: string
+  question?: string
 }
 
 type SdtRow = {
@@ -214,9 +221,40 @@ function buildExitPictureDistribution(responses: SurveyResponse[]) {
 }
 
 function buildFactorPriorityRows(factorAverages: Record<string, number>) {
+  const factorGuidance: Record<string, { note: string; question: string }> = {
+    growth: {
+      note: 'Toets of gebrek aan perspectief of ontwikkeling structureel meespeelt in het vertrekbeeld.',
+      question: 'Komt gebrek aan perspectief of doorgroei structureel terug in gesprekken en open signalen?',
+    },
+    leadership: {
+      note: 'Toets of begeleiding, feedback of vertrouwen terugkerend genoemd worden.',
+      question: 'Welke rol spelen begeleiding, feedback of vertrouwen in het huidige vertrekbeeld?',
+    },
+    workload: {
+      note: 'Toets of druk incidenteel of structureel is en waar herstel wegvalt.',
+      question: 'Is werkdruk vooral piekbelasting of terugkerende structurele belasting?',
+    },
+    role_clarity: {
+      note: 'Toets of verwachtingen, prioriteiten en eigenaarschap voldoende helder waren.',
+      question: 'Waar bleven prioriteiten of rolverwachtingen voor vertrekkers te diffuus?',
+    },
+    culture: {
+      note: 'Toets of samenwerking, veiligheid of uitspreken het vertrekbeeld mee kleuren.',
+      question: 'Waar voelt samenwerken of uitspreken nog onvoldoende veilig of consistent?',
+    },
+    compensation: {
+      note: 'Toets of voorwaarden vooral aanvullende context vormen of echt structureel mee kleuren.',
+      question: 'Is beloning vooral aanvullende context, of speelt dit structureel mee in vertrekgesprekken?',
+    },
+  }
+
   return Object.entries(factorAverages)
     .map(([factor, score]) => {
       const signalValue = 11 - score
+      const guidance = factorGuidance[factor] ?? {
+        note: 'Toets of deze factor structureel terugkomt voordat je hier een bredere managementactie aan koppelt.',
+        question: 'Komt deze factor structureel terug, of vraagt het beeld eerst nog extra verificatie?',
+      }
 
       return {
         factor: FACTOR_LABELS[factor] ?? factor,
@@ -225,12 +263,8 @@ function buildFactorPriorityRows(factorAverages: Record<string, number>) {
         signal: `${signalValue.toFixed(1)}/10`,
         signalValue,
         band: getManagementBandLabel(signalValue),
-        note:
-          signalValue >= 7
-            ? 'Laagste ervaren score in deze route.'
-            : signalValue >= 4.5
-              ? 'Zichtbaar in het huidige patroon.'
-              : 'Nu minder uitgesproken dan de bovenste factoren.',
+        note: guidance.note,
+        question: guidance.question,
       } satisfies FactorRow
     })
     .sort((left, right) => right.signalValue - left.signalValue)
@@ -259,10 +293,10 @@ function buildSdtRows(sdtAverages: {
         band: getManagementBandLabel(signalValue),
         note:
           signalValue >= 7
-            ? 'Duidelijk zichtbaar in de verdiepingslaag.'
+            ? 'Deze basisbehoefte vraagt zichtbare verdieping in het vertrekbeeld.'
             : signalValue >= 4.5
-              ? 'Aanwezig als aanvullende context.'
-              : 'Nu minder uitgesproken dan de andere SDT-lagen.',
+              ? 'Aanwezig als aanvullende context op het kernsignaal.'
+              : 'Nu minder uitgesproken dan de andere basisbehoeften.',
       } satisfies SdtRow
     })
 }
@@ -271,6 +305,25 @@ function getResultsStatusLabel(readState: ReturnType<typeof buildResultsViewMode
   if (readState === 'readable') return 'Leesbaar'
   if (readState === 'early-read') return 'Eerste read'
   return 'Nog aan het opbouwen'
+}
+
+function getCustomerResultsStatusLabel(readState: ReturnType<typeof buildResultsViewModel>['readState']) {
+  if (readState === 'readable') return 'Resultaten beschikbaar'
+  if (readState === 'early-read') return 'Eerste resultaten beschikbaar'
+  return 'Nog aan het opbouwen'
+}
+
+function getReadStrengthLabel(readState: ReturnType<typeof buildResultsViewModel>['readState']) {
+  if (readState === 'readable') return 'Stevig leesbaar'
+  if (readState === 'early-read') return 'Voorzichtig leesbaar'
+  return 'Nog in opbouw'
+}
+
+function getFollowThroughCardBody(
+  cards: Array<{ title: string; body: string }>,
+  title: string,
+) {
+  return cards.find((card) => card.title === title)?.body ?? null
 }
 
 function buildSignalHighlights(args: {
@@ -988,6 +1041,67 @@ export default async function CampaignPage({ params }: Props) {
     openAnswerThemes: openAnswersViewModel.themes,
     exitDistribution,
   })
+  const responseContextNote = buildResponseContextNote(
+    stats.total_completed,
+    stats.completion_rate_pct ?? 0,
+  )
+  const customerStatusLabel = getCustomerResultsStatusLabel(resultsViewModel.readState)
+  const readStrengthLabel = getReadStrengthLabel(resultsViewModel.readState)
+  const signalVisibilityAverage =
+    stats.scan_type === 'exit' && hasEnoughData ? computeAverageSignalVisibility(responses) : null
+  const exitThemes =
+    stats.scan_type === 'exit' && hasMinDisplay ? clusterExitOpenSignals(responses) : []
+  const exitDashboardViewModel =
+    stats.scan_type === 'exit'
+      ? buildExitDashboardViewModel({
+          signalLabelLower: scanDefinition.signalLabelLower,
+          averageSignal: averageSignalScore,
+          strongWorkSignalRate,
+          engagement: supplemental.engagement,
+          turnoverIntention: supplemental.turnoverIntention,
+          stayIntent: supplemental.stayIntent,
+          hasEnoughData,
+          hasMinDisplay,
+          pendingCount: Math.max(stats.total_invited - stats.total_completed, 0),
+          factorAverages: factorData.orgAverages,
+          topExitReasonLabel,
+          topContributingReasonLabel,
+          signalVisibilityAverage,
+        })
+      : null
+  const retentionDashboardViewModel =
+    stats.scan_type === 'retention'
+      ? buildRetentionDashboardViewModel({
+          signalLabelLower: scanDefinition.signalLabelLower,
+          averageSignal: averageSignalScore,
+          strongWorkSignalRate,
+          engagement: supplemental.engagement,
+          turnoverIntention: supplemental.turnoverIntention,
+          stayIntent: supplemental.stayIntent,
+          hasEnoughData,
+          hasMinDisplay,
+          pendingCount: Math.max(stats.total_invited - stats.total_completed, 0),
+          factorAverages: factorData.orgAverages,
+        })
+      : null
+  const trustNotes = [
+    'Detailinzichten worden alleen getoond bij voldoende respons.',
+    'Kleine groepen blijven verborgen om anonimiteit te beschermen.',
+    'Open antwoorden blijven geanonimiseerd en worden onderdrukt bij te lage n.',
+    'Gebruik dit vertrekbeeld als vertrekduiding op groepsniveau, niet als individuele beoordeling.',
+  ]
+  const defaultHeaderActions = (
+    <PdfDownloadButton
+      campaignId={id}
+      campaignName={stats.campaign_name}
+      scanType={stats.scan_type}
+      label="Download PDF"
+      loadingLabel="PDF ophalen..."
+      buttonClassName="inline-flex rounded-full border border-slate-950 bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+      containerClassName="flex flex-col items-start gap-2 lg:items-end"
+      errorClassName="max-w-56 text-xs text-red-600 lg:text-right"
+    />
+  )
   const depthNotes = buildDepthNotes({
     scanDefinition,
     responsesLength: responses.length,
@@ -1084,6 +1198,233 @@ export default async function CampaignPage({ params }: Props) {
         </div>
       </div>
     ) : null
+
+  if (stats.scan_type === "exit") {
+    const dominantThemeLabel = topExitReasonLabel ?? 'Nog niet beschikbaar'
+    const dominantThemeNote = topContributingReasonLabel
+      ? `${topContributingReasonLabel} valt geregeld samen met dit vertrekbeeld en vraagt aanvullende verificatie.`
+      : 'Meest terugkerende vertreklaag binnen de huidige batch.'
+    const strongestFactorNote =
+      factorPriorityRows[0]?.note ?? 'Nog geen veilige factorlezing beschikbaar.'
+    const executiveSummary =
+      topFactorLabel && secondFactorLabel
+        ? `${topFactorLabel} komt het sterkst terug. ${topFactorLabel} en ${secondFactorLabel.toLowerCase()} vragen eerst verificatie.`
+        : topFactorLabel
+          ? `${topFactorLabel} komt het sterkst terug en kleurt het vertrekbeeld op dit moment het duidelijkst.`
+          : 'De eerste managementsamenvatting wordt zichtbaar zodra voldoende bruikbare responses beschikbaar zijn.'
+    const compositionHighlights = [
+      {
+        label: 'Dominant thema',
+        value: dominantThemeLabel,
+        body: 'Wat het vertrekbeeld nu het duidelijkst kleurt op groepsniveau.',
+      },
+      {
+        label: 'Aanvullende context',
+        value: topContributingReasonLabel ?? 'Nog niet zichtbaar',
+        body: 'Extra laag die geregeld samenvalt met het hoofdbeeld en dus eerst verificatie vraagt.',
+      },
+      {
+        label: 'Beïnvloedbaar werksignaal',
+        value: hasMinDisplay ? formatPercent(strongWorkSignalRate) : 'Nog niet beschikbaar',
+        body: 'Aandeel responses waarin vooral beïnvloedbare werkcontext terugkomt.',
+      },
+    ]
+    const surveyThemes = exitThemes.map((theme, index) => {
+      const relationLabel =
+        theme.key === 'leadership'
+          ? 'Verdiept leiderschapssignaal'
+          : theme.key === 'growth' || theme.key === 'workload'
+            ? 'Bevestigt topfactor'
+            : 'Nuanceert hoofdbeeld'
+      const evidenceLabel =
+        index === 0 ? 'Bevestigt topfactor' : index === 1 ? 'Nuanceert hoofdbeeld' : 'Aanvullende context'
+
+      return {
+        key: theme.key,
+        title: theme.title,
+        count: theme.count,
+        implication: theme.implication,
+        quote: theme.count >= 3 ? theme.sample : null,
+        relationLabel,
+        evidenceLabel,
+      }
+    })
+    const exitFollowThroughCards = exitDashboardViewModel?.followThroughCards ?? []
+
+    return (
+      <ExitProductDashboard
+        moduleHref={moduleHref}
+        moduleLabel={moduleLabel}
+        moduleBackLinkLabel={moduleBackLinkLabel}
+        campaignName={stats.campaign_name}
+        organizationName={organizationName}
+        routePeriodLabel={routePeriodLabel}
+        scopeLabel={scopeLabel}
+        statusLabel={customerStatusLabel}
+        headerActions={defaultHeaderActions}
+        primarySignalScoreLabel={formatScore(averageSignalScore)}
+        primarySignalBandLabel={
+          averageSignalScore !== null ? getManagementBandLabel(averageSignalScore) : 'Nog niet beschikbaar'
+        }
+        strongestFactorLabel={topFactorLabel ?? 'Nog niet beschikbaar'}
+        strongestFactorNote={strongestFactorNote}
+        dominantThemeLabel={dominantThemeLabel}
+        dominantThemeNote={dominantThemeNote}
+        executiveSummary={executiveSummary}
+        firstManagementQuestion={
+          exitDashboardViewModel?.primaryQuestion.body ??
+          'Welke factor of vertreklaag vraagt als eerste bestuurlijke verificatie?'
+        }
+        totalInvited={String(stats.total_invited)}
+        totalCompleted={String(stats.total_completed)}
+        responseRate={`${stats.completion_rate_pct ?? 0}%`}
+        responseContextNote={responseContextNote}
+        readStrengthLabel={readStrengthLabel}
+        trustNotes={trustNotes}
+        compositionSegments={exitDistribution?.segments ?? []}
+        compositionHighlights={compositionHighlights}
+        factorRows={factorPriorityRows}
+        sdtRows={sdtRows}
+        surveyThemes={surveyThemes}
+        verificationTrackLabel={topFactorLabel ?? 'Nog niet beschikbaar'}
+        ownerRoleLabel={
+          getFollowThroughCardBody(exitFollowThroughCards, 'Eerste eigenaar') ??
+          'HR / verantwoordelijke MT-eigenaar'
+        }
+        firstStepLabel={
+          getFollowThroughCardBody(exitFollowThroughCards, 'Eerste actie') ??
+          exitDashboardViewModel?.nextStep.body ??
+          'Bepaal eerst welke gerichte verificatie of verbeteractie volgt.'
+        }
+        reviewMomentLabel={
+          getFollowThroughCardBody(exitFollowThroughCards, 'Reviewmoment') ??
+          'Leg direct een eerste reviewmoment vast zodra het verificatiespoor gekozen is.'
+        }
+      />
+    )
+  }
+
+  if (stats.scan_type === "retention") {
+    const retentionFollowThroughCards = retentionDashboardViewModel?.followThroughCards ?? []
+
+    return (
+      <RetentionProductDashboard
+        moduleHref={moduleHref}
+        moduleLabel={moduleLabel}
+        moduleBackLinkLabel={moduleBackLinkLabel}
+        campaignName={stats.campaign_name}
+        organizationName={organizationName}
+        routePeriodLabel={routePeriodLabel}
+        scopeLabel={scopeLabel}
+        statusLabel={customerStatusLabel}
+        headerActions={defaultHeaderActions}
+        primarySignalScoreLabel={formatScore(averageSignalScore)}
+        primarySignalBandLabel={
+          averageSignalScore !== null ? getManagementBandLabel(averageSignalScore) : 'Nog niet beschikbaar'
+        }
+        strongestFactorLabel={topFactorLabel ?? 'Nog niet beschikbaar'}
+        strongestFactorNote={
+          factorPriorityRows[0]?.note ?? 'Nog geen veilige factorlezing beschikbaar.'
+        }
+        engagementLabel={formatScore(supplemental.engagement)}
+        turnoverIntentionLabel={formatScore(supplemental.turnoverIntention)}
+        stayIntentLabel={formatScore(supplemental.stayIntent)}
+        firstManagementQuestion={
+          retentionDashboardViewModel?.primaryQuestion.body ??
+          'Welk behoudssignaal vraagt nu als eerste managementtoetsing?'
+        }
+        totalInvited={String(stats.total_invited)}
+        totalCompleted={String(stats.total_completed)}
+        responseRate={`${stats.completion_rate_pct ?? 0}%`}
+        responseContextNote={responseContextNote}
+        readStrengthLabel={readStrengthLabel}
+        trustNotes={[
+          'Detailinzichten worden alleen getoond bij voldoende respons.',
+          'Kleine groepen blijven verborgen om anonimiteit te beschermen.',
+          'Open antwoorden blijven geanonimiseerd en worden onderdrukt bij te lage n.',
+        ]}
+        compositionSegments={
+          [
+            {
+              label: 'Direct prioriteren',
+              value: `${factorPriorityRows.filter((row) => row.band === 'Direct prioriteren').length}`,
+              percent: factorPriorityRows.length
+                ? Math.round(
+                    (factorPriorityRows.filter((row) => row.band === 'Direct prioriteren').length /
+                      factorPriorityRows.length) *
+                      100,
+                  )
+                : 0,
+            },
+            {
+              label: 'Eerst toetsen',
+              value: `${factorPriorityRows.filter((row) => row.band === 'Eerst toetsen').length}`,
+              percent: factorPriorityRows.length
+                ? Math.round(
+                    (factorPriorityRows.filter((row) => row.band === 'Eerst toetsen').length /
+                      factorPriorityRows.length) *
+                      100,
+                  )
+                : 0,
+            },
+            {
+              label: 'Volgen',
+              value: `${factorPriorityRows.filter((row) => row.band === 'Volgen').length}`,
+              percent: factorPriorityRows.length
+                ? Math.round(
+                    (factorPriorityRows.filter((row) => row.band === 'Volgen').length /
+                      factorPriorityRows.length) *
+                      100,
+                  )
+                : 0,
+            },
+          ].filter((segment) => segment.percent > 0)
+        }
+        compositionHighlights={[
+          {
+            label: 'Scherpste factor',
+            value: topFactorLabel ?? 'Nog niet beschikbaar',
+            body: 'Factor die het behoudsbeeld nu het duidelijkst kleurt.',
+          },
+          {
+            label: 'Open signaal',
+            value: retentionThemes[0]?.title ?? 'Nog niet zichtbaar',
+            body: 'Thema dat in de open antwoorden het meest terugkomt.',
+          },
+          {
+            label: 'Bevlogenheid',
+            value: formatScore(supplemental.engagement),
+            body: 'Aanvullende laag om het behoudssignaal beter te duiden.',
+          },
+        ]}
+        factorRows={factorPriorityRows}
+        sdtRows={sdtRows}
+        surveyThemes={retentionThemes.map((theme, index) => ({
+          key: theme.key,
+          title: theme.title,
+          count: theme.count,
+          implication: theme.implication,
+          quote: theme.count >= 3 ? theme.sample : null,
+          relationLabel: index === 0 ? 'Bevestigt topfactor' : 'Nuanceert hoofdbeeld',
+          evidenceLabel: index === 0 ? 'Bevestigt topfactor' : 'Aanvullende context',
+        }))}
+        verificationTrackLabel={topFactorLabel ?? 'Nog niet beschikbaar'}
+        ownerRoleLabel={
+          getFollowThroughCardBody(retentionFollowThroughCards, 'Eerste eigenaar') ??
+          'HR / verantwoordelijke MT-eigenaar'
+        }
+        firstStepLabel={
+          getFollowThroughCardBody(retentionFollowThroughCards, 'Eerste actie') ??
+          retentionDashboardViewModel?.nextStep.body ??
+          'Bepaal eerst welke gerichte verificatie of verbeteractie volgt.'
+        }
+        reviewMomentLabel={
+          getFollowThroughCardBody(retentionFollowThroughCards, 'Reviewmoment') ??
+          'Leg direct een eerste reviewmoment vast zodra het verificatiespoor gekozen is.'
+        }
+      />
+    )
+  }
 
   if (stats.scan_type === 'culture_assessment') {
     const hiddenReasonEntitlement = getCultureAssessmentGovernedEntitlement(
