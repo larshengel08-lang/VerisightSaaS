@@ -65,24 +65,7 @@ export type RetentionTheme = {
   sample: string
 }
 
-export function sanitizeOpenAnswerExcerpt(value: string) {
-  return value
-    .replace(/\s+/g, ' ')
-    .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, '[verwijderd]')
-    .replace(/https?:\/\/\S+/gi, '[link verwijderd]')
-    .replace(/\+?\d[\d\s().-]{7,}\d/g, '[verwijderd]')
-    .trim()
-}
-
-export function getLargestDistributionSegment<T extends { percent: number }>(segments: T[]) {
-  return segments.reduce<T | null>((largest, segment) => {
-    if (!largest || segment.percent > largest.percent) {
-      return segment
-    }
-
-    return largest
-  }, null)
-}
+export type ExitTheme = RetentionTheme
 
 export type DecisionPanel = {
   eyebrow: string
@@ -547,10 +530,12 @@ export function SdtGauge({ label, score }: { label: string; score: number }) {
 
 export function MethodologyCard({
   scanType,
+  hasSegmentDeepDive,
   signalLabel,
   embedded = false,
 }: {
   scanType: ScanType
+  hasSegmentDeepDive: boolean
   signalLabel: string
   embedded?: boolean
 }) {
@@ -584,7 +569,14 @@ export function MethodologyCard({
         <InfoBlock title={signalLabel} body={scanDefinition.signalHelp} />
         <InfoBlock title="Signaalbanden" body={signaalbandenText} />
         <InfoBlock title="Betrouwbaarheid" body={scanDefinition.reliabilityText} />
-        <InfoBlock title="Segmentanalyse" body={scanDefinition.segmentText} />
+        <InfoBlock
+          title="Segment deep dive"
+          body={
+            hasSegmentDeepDive
+              ? `${scanDefinition.segmentText} Deze campagne gebruikt die add-on al.`
+              : scanDefinition.segmentText
+          }
+        />
       </div>
     </div>
   )
@@ -1152,7 +1144,7 @@ export function clusterRetentionOpenSignals(responses: SurveyResponse[]): Retent
   for (const definition of definitions) counts.set(definition.key, { definition, texts: [] })
 
   for (const response of responses) {
-    const text = sanitizeOpenAnswerExcerpt(response.open_text_raw?.trim() ?? '')
+    const text = response.open_text_raw?.trim()
     if (!text) continue
     const normalized = text.toLowerCase()
     for (const definition of definitions) {
@@ -1166,6 +1158,80 @@ export function clusterRetentionOpenSignals(responses: SurveyResponse[]): Retent
   return Array.from(counts.values())
     .filter((entry) => entry.texts.length > 0)
     .map((entry) => ({ key: entry.definition.key, title: entry.definition.title, count: entry.texts.length, implication: entry.definition.implication, sample: entry.texts[0] }))
+    .sort((left, right) => right.count - left.count)
+    .slice(0, 3)
+}
+
+export function clusterExitOpenSignals(responses: SurveyResponse[]): ExitTheme[] {
+  const definitions = [
+    {
+      key: 'leadership',
+      title: 'Leiderschap en steun',
+      keywords: ['leidinggevende', 'manager', 'feedback', 'aansturing', 'coach', 'steun'],
+      implication:
+        'Dit kleurt vaak hoe veilig signalen besproken werden en of vertrek eerder bestuurlijk zichtbaar had kunnen worden.',
+    },
+    {
+      key: 'workload',
+      title: 'Werkdruk en herstel',
+      keywords: ['werkdruk', 'druk', 'belasting', 'uren', 'drukte', 'overwerk', 'pauze'],
+      implication:
+        'Dit wijst vaak op structurele belasting of te weinig herstel, niet automatisch op een eenduidige vertrekoorzaak.',
+    },
+    {
+      key: 'growth',
+      title: 'Groei en perspectief',
+      keywords: ['groei', 'ontwikkeling', 'loopbaan', 'doorgroei', 'perspectief', 'leren'],
+      implication:
+        'Dit signaal valt vaak samen met ervaren stilstand of te weinig geloofwaardig perspectief in de route.',
+    },
+    {
+      key: 'role_clarity',
+      title: 'Rolhelderheid en prioriteiten',
+      keywords: ['rol', 'duidelijk', 'verwachting', 'prioriteit', 'verantwoordelijkheid', 'taak'],
+      implication:
+        'Dit beeld vraagt meestal eerst toetsing van prioriteiten, eigenaarschap en duidelijkheid in het werk.',
+    },
+    {
+      key: 'culture',
+      title: 'Samenwerking en veiligheid',
+      keywords: ['cultuur', 'veilig', 'samenwerking', 'team', 'vertrouwen', 'uitspreken'],
+      implication:
+        'Dit kan duiden op een bredere contextlaag rond samenwerken, uitspreken en ervaren veiligheid.',
+    },
+    {
+      key: 'compensation',
+      title: 'Beloning en voorwaarden',
+      keywords: ['salaris', 'beloning', 'voorwaarden', 'arbeidsvoorwaarden', 'vergoeding', 'loon'],
+      implication:
+        'Dit komt vaak terug als meelezende context en vraagt verificatie naast werkbeleving en perspectief.',
+    },
+  ] as const
+
+  const counts = new Map<string, { definition: (typeof definitions)[number]; texts: string[] }>()
+  for (const definition of definitions) counts.set(definition.key, { definition, texts: [] })
+
+  for (const response of responses) {
+    const text = response.open_text_raw?.trim()
+    if (!text) continue
+    const normalized = text.toLowerCase()
+    for (const definition of definitions) {
+      if (definition.keywords.some((keyword) => normalized.includes(keyword))) {
+        counts.get(definition.key)?.texts.push(text)
+        break
+      }
+    }
+  }
+
+  return Array.from(counts.values())
+    .filter((entry) => entry.texts.length > 0)
+    .map((entry) => ({
+      key: entry.definition.key,
+      title: entry.definition.title,
+      count: entry.texts.length,
+      implication: entry.definition.implication,
+      sample: entry.texts[0],
+    }))
     .sort((left, right) => right.count - left.count)
     .slice(0, 3)
 }

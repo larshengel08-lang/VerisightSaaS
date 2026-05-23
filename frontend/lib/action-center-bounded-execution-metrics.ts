@@ -31,6 +31,27 @@ export type ActionCenterBoundedExecutionObjectAnchor =
 
 export type ActionCenterBoundedExecutionMetadata = Record<string, never>
 
+export type ActionCenterMetricObjectAnchor =
+  | 'route'
+  | 'action'
+  | 'review'
+  | 'governance_signal'
+  | 'action_attempt'
+
+export type ActionCenterMetricVisibility =
+  | 'internal_only'
+  | 'hr_operating_readback'
+  | 'buyer_safe_reporting'
+
+export interface ActionCenterMetricDefinition {
+  formula: string
+  eventSource: string
+  objectAnchor: ActionCenterMetricObjectAnchor
+  visibility: ActionCenterMetricVisibility
+  interpretation: string
+  doesNotProve: string
+}
+
 interface ActionCenterBoundedExecutionEventDefinition {
   eventType: ActionCenterBoundedExecutionEventType
   objectAnchor: ActionCenterBoundedExecutionObjectAnchor
@@ -65,6 +86,121 @@ interface BuildActionCenterBoundedExecutionEventInput {
   metadata?: ActionCenterBoundedExecutionMetadata | null
   occurredAt?: string | null
 }
+
+const ACTION_CENTER_METRIC_CATALOG = Object.freeze({
+  route_to_action_conversion_rate: {
+    formula: 'routes_with_at_least_one_valid_action / routes_where_execution_is_expected',
+    eventSource: 'route_opened + action_draft_validated',
+    objectAnchor: 'route',
+    visibility: 'hr_operating_readback',
+    interpretation: 'Shows how often expected execution becomes an explicit bounded action.',
+    doesNotProve: 'Does not prove that the chosen follow-through was the right response.',
+  },
+  time_to_first_action: {
+    formula: 'median(valid_action_created_at - route_execution_expected_at)',
+    eventSource: 'route_became_execution_expected + action_draft_validated',
+    objectAnchor: 'route',
+    visibility: 'hr_operating_readback',
+    interpretation: 'Shows how quickly execution starts once a route explicitly needs follow-through.',
+    doesNotProve: 'Does not prove urgency quality or outcome impact.',
+  },
+  actions_per_route_distribution: {
+    formula: 'distribution(valid_actions_per_active_route)',
+    eventSource: 'action_draft_validated + action_state_changed',
+    objectAnchor: 'route',
+    visibility: 'buyer_safe_reporting',
+    interpretation: 'Shows whether execution stays sparse, healthy, or starts to sprawl per route.',
+    doesNotProve: 'Does not prove appropriate action quality by itself.',
+  },
+  action_review_completion_rate: {
+    formula: 'actions_reviewed_within_due_window / actions_with_review_due',
+    eventSource: 'action_review_opened + action_review_completed',
+    objectAnchor: 'review',
+    visibility: 'buyer_safe_reporting',
+    interpretation: 'Shows how reliably bounded review rhythm is actually being completed.',
+    doesNotProve: 'Does not prove that the chosen action created the later change being observed.',
+  },
+  action_completion_rate: {
+    formula: 'actions_moved_to_completed / valid_actions_created',
+    eventSource: 'action_state_changed',
+    objectAnchor: 'action',
+    visibility: 'buyer_safe_reporting',
+    interpretation: 'Shows how often bounded actions reach a completed state.',
+    doesNotProve: 'Does not prove route resolution or that later change came from this action alone.',
+  },
+  action_stop_rate: {
+    formula: 'actions_moved_to_stopped / valid_actions_created',
+    eventSource: 'action_state_changed',
+    objectAnchor: 'action',
+    visibility: 'hr_operating_readback',
+    interpretation: 'Shows how often actions are intentionally stopped instead of continuing or completing.',
+    doesNotProve: 'Does not prove failure, success, or bad management by itself.',
+  },
+  time_from_action_creation_to_first_review: {
+    formula: 'median(first_review_at - valid_action_created_at)',
+    eventSource: 'action_draft_validated + action_review_completed',
+    objectAnchor: 'action',
+    visibility: 'hr_operating_readback',
+    interpretation: 'Shows how quickly actions move from creation into reflective review.',
+    doesNotProve: 'Does not prove execution quality or effect size.',
+  },
+  route_stale_rate_with_actions_present: {
+    formula: 'stale_routes_with_actions / routes_with_at_least_one_action',
+    eventSource: 'action_state_changed + route_readback_snapshot',
+    objectAnchor: 'route',
+    visibility: 'buyer_safe_reporting',
+    interpretation: 'Shows how often routes become stale even while actions are present.',
+    doesNotProve: 'Does not prove that actions caused staleness or that intervention failed.',
+  },
+  hr_chasing_reduction_proxy_on_action_routes: {
+    formula: '1 - (hr_follow_up_events / comparable_action_route_baseline)',
+    eventSource: 'hr_chase_event',
+    objectAnchor: 'route',
+    visibility: 'hr_operating_readback',
+    interpretation: 'Shows whether repeated HR chasing burden appears to be decreasing on action routes.',
+    doesNotProve: 'Does not prove productivity gain or adoption proof.',
+  },
+  action_sprawl_rate: {
+    formula: 'routes_with_action_sprawl_signal / active_routes_with_actions',
+    eventSource: 'governance_queue_snapshot',
+    objectAnchor: 'governance_signal',
+    visibility: 'buyer_safe_reporting',
+    interpretation: 'Shows how often bounded execution grows beyond the healthy action limit.',
+    doesNotProve: 'Does not prove route complexity or manager quality.',
+  },
+  action_quality_rejection_rate: {
+    formula: 'invalid_or_hr_review_action_attempts / action_creation_attempts',
+    eventSource: 'action_draft_rejected + action_draft_sent_to_hr_review',
+    objectAnchor: 'action_attempt',
+    visibility: 'hr_operating_readback',
+    interpretation: 'Shows how often action quality guidance still rejects or escalates new action attempts.',
+    doesNotProve: 'Does not prove manager ability or HR effectiveness.',
+  },
+  repeated_review_without_progress_rate: {
+    formula: 'routes_with_repeated_no_progress_signal / routes_with_reviewed_actions',
+    eventSource: 'action_review_completed + governance_queue_snapshot',
+    objectAnchor: 'governance_signal',
+    visibility: 'buyer_safe_reporting',
+    interpretation: 'Shows how often repeated reviews still fail to move execution forward.',
+    doesNotProve: 'Does not prove true lack of impact or route failure.',
+  },
+  blocked_action_rate: {
+    formula: 'actions_with_blocker_signal / active_actions',
+    eventSource: 'governance_queue_snapshot',
+    objectAnchor: 'action',
+    visibility: 'buyer_safe_reporting',
+    interpretation: 'Shows how often execution is blocked inside active bounded actions.',
+    doesNotProve: 'Does not prove root cause or organizational risk level.',
+  },
+  route_ready_for_closeout_rate: {
+    formula: 'routes_marked_closeout_ready / open_routes',
+    eventSource: 'governance_queue_snapshot + route_closeout_projection',
+    objectAnchor: 'route',
+    visibility: 'buyer_safe_reporting',
+    interpretation: 'Shows how often routes are nearing bounded closure.',
+    doesNotProve: 'Does not prove route success or that the underlying issue is fully resolved.',
+  },
+} satisfies Record<string, ActionCenterMetricDefinition>)
 
 const BOUNDED_EXECUTION_EVENT_DEFINITIONS: readonly ActionCenterBoundedExecutionEventDefinition[] =
   Object.freeze([
@@ -225,4 +361,8 @@ export function buildActionCenterBoundedExecutionEvent(
     metadata: {},
     occurred_at: occurredAt,
   }
+}
+
+export function buildActionCenterMetricCatalog() {
+  return ACTION_CENTER_METRIC_CATALOG
 }

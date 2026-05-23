@@ -199,6 +199,8 @@ describe('getActionCenterPageData invite eligibility', () => {
     const retentionRouteId = buildActionCenterRouteId('campaign-retention-1', 'org-1::department::operations')
 
     expect(pageData.inviteDownloadEligibleRouteIds).toEqual([routeId, retentionRouteId])
+    expect(pageData.governanceQueue.items).toHaveLength(0)
+    expect(pageData.measurementReadback.layers.routeFamilyLevel.exit.defaultReviewWindowDays?.max).toBe(90)
 
     const liveContexts = mockBuildLiveActionCenterItems.mock.calls[0]?.[0]
     expect(liveContexts).toHaveLength(3)
