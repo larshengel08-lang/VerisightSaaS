@@ -80,6 +80,12 @@ const SCAN_DEFAULTS: Record<
     fallbackSummary: 'Leadership Scan opent hier geen breed traject, maar een bounded follow-through route met eigenaar en reviewritme.',
     fallbackRhythm: 'Maandelijks',
   },
+  culture_assessment: {
+    managementQuestion: 'Welke bestuurlijke vervolgvraag uit de Culture Assessment-baseline vraagt nu een expliciete eigenaar, reviewdatum en bounded follow-through?',
+    fallbackStep: 'Leg de eerste board-, directie- of HR-vervolgstap vast met eigenaar, governancegrens en reviewmoment.',
+    fallbackSummary: 'Loep Culture Assessment opent hier geen open analytics-workspace, maar een bounded follow-through laag op de jaarlijkse baseline.',
+    fallbackRhythm: 'Maandelijks',
+  },
   team: {
     managementQuestion: 'Welk teamsignaal vraagt nu een eerste lokale managementactie met duidelijke eigenaar en reviewmoment?',
     fallbackStep: 'Kies de eerste lokale teamactie en leg review en eigenaarschap expliciet vast.',

@@ -7,6 +7,7 @@ import {
   IMPLEMENTATION_INTAKE_INPUTS,
   PRODUCT_ROUTE_VARIANTS,
   getAdoptionSuccessDefinition,
+  getFirstNextStepGuidance,
   getFirstManagementReadSteps,
   getLifecycleDecisionCards,
 } from '@/lib/client-onboarding'
@@ -56,8 +57,8 @@ describe('client onboarding defaults', () => {
   })
 
   it('keeps the respondent file specification aligned with assisted import', () => {
-    expect(CLIENT_FILE_SPEC.required).toEqual(['email'])
-    expect(CLIENT_FILE_SPEC.recommended).toEqual(['department', 'role_level'])
+    expect(CLIENT_FILE_SPEC.required).toEqual(['email', 'department', 'role_level'])
+    expect(CLIENT_FILE_SPEC.recommended).toEqual([])
     expect(CLIENT_FILE_SPEC.exitOptional).toContain('exit_month')
   })
 
@@ -83,6 +84,10 @@ describe('client onboarding defaults', () => {
     expect(getFirstManagementReadSteps('leadership')[0]?.toLowerCase()).toContain('named leader')
     expect(getFirstManagementReadSteps('leadership')[2]?.toLowerCase()).toContain('eerste eigenaar')
     expect(getFirstManagementReadSteps('leadership')[2]?.toLowerCase()).toContain('bounded vervolgcheck')
+    expect(getFirstManagementReadSteps('culture_assessment')[0]?.toLowerCase()).toContain('loep culture index')
+    expect(getFirstManagementReadSteps('culture_assessment')[1]?.toLowerCase()).toContain('navigatiesignaal')
+    expect(getFirstManagementReadSteps('culture_assessment')[2]?.toLowerCase()).toContain('managerlaag')
+    expect(getFirstManagementReadSteps('culture_assessment')[2]?.toLowerCase()).toContain('locked')
     expect(getFirstManagementReadSteps('exit')[2]?.toLowerCase()).toContain('reviewmoment')
     expect(getFirstManagementReadSteps('retention')[2]?.toLowerCase()).toContain('eerste eigenaar')
     expect(getAdoptionSuccessDefinition('exit').toLowerCase()).toContain('dashboard en rapport')
@@ -96,6 +101,9 @@ describe('client onboarding defaults', () => {
     expect(getAdoptionSuccessDefinition('onboarding').toLowerCase()).toContain('vrijgegeven')
     expect(getAdoptionSuccessDefinition('leadership').toLowerCase()).toContain('managementduiding')
     expect(getAdoptionSuccessDefinition('leadership').toLowerCase()).toContain('begrensde verificatie')
+    expect(getAdoptionSuccessDefinition('culture_assessment').toLowerCase()).toContain('jaarlijkse')
+    expect(getAdoptionSuccessDefinition('culture_assessment').toLowerCase()).toContain('board')
+    expect(getAdoptionSuccessDefinition('culture_assessment').toLowerCase()).toContain('loep culture index')
     expect(getAdoptionSuccessDefinition('exit').toLowerCase()).toContain('reviewmoment')
     expect(getAdoptionSuccessDefinition('retention').toLowerCase()).toContain('eerste managementsessie')
   })
@@ -104,6 +112,7 @@ describe('client onboarding defaults', () => {
     const exitDecisions = getLifecycleDecisionCards('exit')
     const retentionDecisions = getLifecycleDecisionCards('retention')
     const pulseDecisions = getLifecycleDecisionCards('pulse')
+    const cultureAssessmentDecisions = getLifecycleDecisionCards('culture_assessment')
 
     expect(CANONICAL_CUSTOMER_LIFECYCLE.map((phase) => phase.key)).toEqual([
       'first_route',
@@ -134,5 +143,22 @@ describe('client onboarding defaults', () => {
     expect(leadershipDecisions[2]?.body.toLowerCase()).toContain('teamscan')
     expect(leadershipDecisions[2]?.title.toLowerCase()).toContain('bredere duiding')
     expect(leadershipDecisions[2]?.body.toLowerCase()).not.toContain('diagnose')
+    expect(cultureAssessmentDecisions[0]?.body.toLowerCase()).toContain('jaarlijkse')
+    expect(cultureAssessmentDecisions[1]?.body.toLowerCase()).toContain('loep culture index')
+    expect(cultureAssessmentDecisions[2]?.body.toLowerCase()).toContain('pulse')
+    expect(cultureAssessmentDecisions[2]?.body.toLowerCase()).toContain('vervolgroute')
+  })
+
+  it('keeps culture assessment follow-on guidance bounded and explicit', () => {
+    const guidance = getFirstNextStepGuidance('culture_assessment')
+    const guidanceJson = JSON.stringify(guidance).toLowerCase()
+
+    expect(guidance.cards[2]?.body.toLowerCase()).toContain('geen onmiddellijke vervolgrichting')
+    expect(guidance.cards[2]?.body.toLowerCase()).toContain('deeper governed work')
+    expect(guidance.cards[2]?.body.toLowerCase()).toContain('pulse-follow-on')
+    expect(guidance.followOnSuggestions.some((suggestion) => suggestion.productLabel === 'Pulse')).toBe(true)
+    expect(guidance.followOnSuggestions.some((suggestion) => suggestion.productLabel === 'RetentieScan')).toBe(true)
+    expect(guidance.followOnSuggestions.some((suggestion) => suggestion.productLabel === 'ExitScan')).toBe(true)
+    expect(guidanceJson).not.toContain('teamscan')
   })
 })

@@ -1,5 +1,5 @@
 """
-Verisight — PDF-rapportgenerator
+Loep — PDF-rapportgenerator
 ========================================
 Genereert productspecifieke managementrapporten per campaign.
 
@@ -28,6 +28,7 @@ Gebruik
 
 from __future__ import annotations
 
+import csv
 import io
 import math
 from datetime import datetime, timezone
@@ -112,6 +113,19 @@ MPL_HIGH = MPL_TOKENS["danger"]
 MPL_MED = MPL_TOKENS["warning"]
 MPL_LOW = MPL_TOKENS["success"]
 MPL_MUTED = MPL_TOKENS["muted"]
+
+CULTURE_DOMAIN_LABELS_NL = {
+    "engagement_involvement": "Engagement en betrokkenheid",
+    "trust_psychological_safety": "Vertrouwen en psychologische veiligheid",
+    "leadership_direction": "Leiderschap en richting",
+    "collaboration_alignment": "Samenwerking en afstemming",
+    "workload_capacity": "Werkdruk en draagkracht",
+    "autonomy_role_clarity": "Autonomie en rolhelderheid",
+    "growth_development": "Groei en ontwikkeling",
+    "change_readiness": "Veranderbereidheid",
+    "reward_conditions": "Beloning en voorwaarden",
+    "organizational_connection_intent": "Organisatieverbinding en intentie",
+}
 
 PAGE_W, PAGE_H = A4  # 595 × 842 pt
 
@@ -3214,7 +3228,7 @@ def _append_rebrand_cover(
             ),
         ),
         Paragraph(
-            "<b>Door</b><br/>Verisight",
+            "<b>Door</b><br/>Loep",
             ParagraphStyle(
                 "cover_meta_by_band",
                 fontName=REPORT_FONTS["regular"],
@@ -3262,7 +3276,7 @@ def _append_rebrand_cover(
     story.append(Paragraph(scan_lbl, STYLES["cover_sub"]))
     story.append(Spacer(1, 0.18 * cm))
     story.append(Paragraph(
-        "Door Verisight",
+        "Door Loep",
         ParagraphStyle(
             "cover_byline",
             fontName=REPORT_FONTS["medium"],
@@ -4124,7 +4138,7 @@ def _append_rebrand_technical_appendix(
         "ze staat dus niet los van de managementlezing, maar onder de samengestelde score."
     )
     item_factor_body = (
-        "De vraagblokken in Verisight zijn verkort en pragmatisch aangepast voor compacte managementrapportage. "
+        "De vraagblokken in Loep zijn verkort en pragmatisch aangepast voor compacte managementrapportage. "
         "Ze leunen inhoudelijk onder meer op LMX, psychologische veiligheid, JD-R en tevredenheidsliteratuur, "
         "zonder te claimen dat hier volledige of onverkorte schalen worden gereproduceerd."
     )
@@ -5234,6 +5248,513 @@ def _make_header_footer(
     )
 
 
+def _build_culture_domain_averages(responses: list[SurveyResponse]) -> dict[str, float]:
+    totals: dict[str, list[float]] = {}
+    for response in responses:
+        scores = (response.full_result or {}).get("domain_scores") or response.org_scores or {}
+        if not isinstance(scores, dict):
+            continue
+        for key, value in scores.items():
+            if key not in CULTURE_DOMAIN_LABELS_NL:
+                continue
+            if isinstance(value, (int, float)):
+                totals.setdefault(key, []).append(float(value))
+
+    return {
+        key: round(sum(values) / len(values), 2)
+        for key, values in totals.items()
+        if values
+    }
+
+
+def _build_culture_board_attention_points(domain_averages: dict[str, float]) -> list[dict[str, str]]:
+    lowest = sorted(domain_averages.items(), key=lambda item: item[1])[:5]
+    points: list[dict[str, str]] = []
+
+    for index, (domain_id, score) in enumerate(lowest, start=1):
+        if score <= 5.2:
+            reason = "laag domeinbeeld op organisatieniveau"
+            confidence = "hoog"
+        elif score <= 6.0:
+            reason = "patroon vraagt bestuurlijke verificatie op basis van het domeinbeeld"
+            confidence = "midden"
+        else:
+            reason = "bestuurlijke verificatie op basis van het domeinbeeld"
+            confidence = "voorzichtig"
+
+        verify_next = (
+            "Toets eerst of dit patroon breed terugkomt over meerdere organisatieonderdelen."
+            if index == 1
+            else "Vergelijk dit domein met inhoudelijk aangrenzende domeinen."
+            if index == 2
+            else "Gebruik segmentcontrasten alleen boven veilige minimum-n grenzen."
+            if index == 3
+            else "Lees open signalen alleen als aanvullende, veilig geclusterde context."
+            if index == 4
+            else "Plan pas vervolg na de board-read en binnen governancegrenzen."
+        )
+        points.append(
+            {
+                "label": CULTURE_DOMAIN_LABELS_NL.get(domain_id, domain_id),
+                "priority_reason": reason,
+                "confidence_label": confidence,
+                "what_to_verify_next": verify_next,
+            }
+        )
+
+    return points
+
+
+def _build_culture_safe_segment_summary(
+    responses: list[SurveyResponse],
+    *,
+    minimum_n: int,
+) -> list[dict[str, Any]]:
+    groups: dict[str, dict[str, Any]] = {}
+    for response in responses:
+        respondent = getattr(response, "respondent", None)
+        if respondent is None:
+            continue
+
+        for segment_type, raw_label in (
+            ("Afdeling", respondent.department),
+            ("Functiegroep", respondent.role_level),
+        ):
+            label = (raw_label or "").strip()
+            if not label:
+                continue
+            key = f"{segment_type}:{label}"
+            group = groups.setdefault(key, {"segment_type": segment_type, "label": label, "scores": []})
+            if isinstance(response.risk_score, (int, float)):
+                group["scores"].append(float(response.risk_score))
+
+    rows: list[dict[str, Any]] = []
+    for group in groups.values():
+        if len(group["scores"]) < minimum_n:
+            continue
+        rows.append(
+            {
+                "segment_type": group["segment_type"],
+                "label": group["label"],
+                "n": len(group["scores"]),
+                "culture_index": round(sum(group["scores"]) / len(group["scores"]), 2),
+            }
+        )
+
+    rows.sort(key=lambda row: (row["segment_type"], row["label"]))
+    return rows[:8]
+
+
+def _append_culture_report_section(
+    story: list[Any],
+    *,
+    eyebrow: str,
+    title: str,
+    intro: str,
+    bullets: list[str],
+    hero_value: str | None = None,
+    closing_note: str | None = None,
+    page_break: bool = False,
+) -> None:
+    story.append(Paragraph(escape(eyebrow.upper()), STYLES["eyebrow"]))
+    story.append(Paragraph(title, STYLES["section_title"]))
+    if hero_value:
+        story.append(Spacer(1, 0.18 * cm))
+        story.append(Paragraph(escape(hero_value), STYLES["cover_title"]))
+        story.append(Spacer(1, 0.08 * cm))
+    story.append(Paragraph(intro, STYLES["body"]))
+    story.append(Spacer(1, 0.25 * cm))
+    for bullet in bullets:
+        story.append(Paragraph(f"- {escape(bullet)}", STYLES["body"]))
+        story.append(Spacer(1, 0.12 * cm))
+    if closing_note:
+        story.append(Spacer(1, 0.12 * cm))
+        story.append(Paragraph(closing_note, STYLES["body"]))
+    story.append(Spacer(1, 0.4 * cm))
+    if page_break:
+        story.append(PageBreak())
+
+
+def _culture_domain_label(domain_id: str) -> str:
+    return CULTURE_DOMAIN_LABELS_NL.get(domain_id, domain_id)
+
+
+def _build_culture_story_context(domain_averages: dict[str, float]) -> dict[str, Any]:
+    domains_by_score = sorted(domain_averages.items(), key=lambda item: item[1])
+    low_focus = domains_by_score[:3]
+    high_context = list(reversed(domains_by_score[-2:]))
+    domain_profile_rows = [
+        (domain_id, domain_averages[domain_id])
+        for domain_id in CULTURE_DOMAIN_LABELS_NL
+        if domain_id in domain_averages
+    ]
+    return {
+        "low_focus": low_focus,
+        "high_context": high_context,
+        "domain_profile_rows": domain_profile_rows,
+        "low_focus_labels": ", ".join(_culture_domain_label(domain_id) for domain_id, _ in low_focus) or "de laagst scorende domeinen",
+        "high_context_labels": ", ".join(_culture_domain_label(domain_id) for domain_id, _ in high_context) or "de stabielere contextdomeinen",
+    }
+
+
+def _build_culture_report_section_content(
+    *,
+    management_summary_payload: dict[str, Any],
+    methodology_payload: dict[str, Any],
+    responses: list[SurveyResponse],
+    respondent_count: int,
+    organization_min_n: int,
+    completion_rate: int,
+    culture_index: float,
+    board_attention_points: list[dict[str, str]],
+    safe_segment_rows: list[dict[str, Any]],
+    has_governed_drilldown: bool,
+    story_context: dict[str, Any],
+) -> dict[str, dict[str, Any]]:
+    attention_lines = [
+        f"{point['label']}: {point['priority_reason']} ({point['confidence_label']}); verifieer: {point['what_to_verify_next']}"
+        for point in board_attention_points[:3]
+    ] or ["Nog geen bestuurlijke aandachtspunten beschikbaar."]
+    domain_lines = [
+        f"{_culture_domain_label(domain_id)}: {score:.1f}/10"
+        for domain_id, score in story_context["domain_profile_rows"]
+    ]
+
+    low_focus = story_context["low_focus"]
+    if len(low_focus) >= 2:
+        lead_pattern_line = (
+            f"Het scherpste samenhangsspoor loopt nu via {_culture_domain_label(low_focus[0][0])} "
+            f"({low_focus[0][1]:.1f}/10) en {_culture_domain_label(low_focus[1][0])} ({low_focus[1][1]:.1f}/10)."
+        )
+    else:
+        lead_pattern_line = "Er is nog geen scherp samenhangsspoor beschikbaar boven de huidige governancerandvoorwaarden."
+
+    if len(low_focus) >= 3:
+        secondary_pattern_line = (
+            f"Een tweede leeslijn verbindt {_culture_domain_label(low_focus[1][0])} en {_culture_domain_label(low_focus[2][0])}; "
+            "gebruik deze om te toetsen of het patroon breed terugkomt."
+        )
+    else:
+        secondary_pattern_line = "Verdiep vervolgvragen altijd over meerdere domeinen tegelijk, niet over een losse score."
+
+    if has_governed_drilldown and safe_segment_rows:
+        segment_lines = [
+            f"{row['segment_type']} {row['label']}: n={row['n']}, Culture Index {row['culture_index']:.1f}/10"
+            for row in safe_segment_rows[:4]
+        ]
+        segment_lines.append(
+            "Verborgen of niet-vrijgegeven segmentlagen blijven gesloten wanneer minimum-n, release state of named-manager lock dat vraagt."
+        )
+    else:
+        segment_lines = [
+            "Segmentcontrasten zijn niet vrijgegeven binnen deze baseline of blijven onder governancegrenzen verborgen.",
+            management_summary_payload["segment_visibility_rule"],
+            "Zonder vrijgave opent deze baseline geen losse segmentranking of aparte HR-appendix.",
+        ]
+
+    follow_on_bullets = [
+        "Geen automatische vervolgstap: eerst board-read, daarna expliciete bestuurlijke keuze.",
+        "Governed verdieping opent alleen wanneer bestuurlijke en HR-afstemming dat bewust vrijgeven.",
+        "Pulse blijft follow-on only en repareert geen onduidelijke baselinelezing.",
+        "Een andere Loep-route kan passender zijn wanneer het vraagstuk breder is dan cultuur alleen.",
+        "Boardkeuzes blijven bounded; geen route opent automatisch vanuit de baseline zelf.",
+    ]
+    if has_governed_drilldown and safe_segment_rows:
+        follow_on_bullets.append("De vrijgegeven segmentlaag kan als HR-verdieping meewegen, maar blijft geen standaard boardoutput.")
+
+    return {
+        "executive_opener": {
+            "intro": (
+                "Deze baseline opent als compacte executive read voor het boardgesprek over brede cultuur- en engagementpatronen. "
+                "Lees de uitkomst descriptief en governance-first: geen benchmark-first duiding, geen individuele beoordeling en geen causaliteitsclaim."
+            ),
+            "bullets": [
+                management_summary_payload["board_report_editorial_note"],
+                f"Managementvraag: {management_summary_payload['management_question']}",
+                "Deze baseline helpt bestuurlijke aandacht ordenen; zij schrijft geen interventies of cultuurverdicts voor.",
+                "Diepere lagen blijven governed en openen alleen na expliciete vrijgave binnen de productgrenzen van v1.",
+            ],
+        },
+        "response_governance": {
+            "intro": (
+                "Deze pagina laat zien hoe stevig de datalaag onder de baseline is en welke zichtbaarheid bewust begrensd blijft. "
+                "Governance is hier kwaliteitskader, niet nabrander."
+            ),
+            "bullets": [
+                f"Responsbasis: {len(responses)} ingevuld van {respondent_count} uitgenodigd ({completion_rate}%).",
+                f"Wat getoond mag worden: organisatieniveau boven minimum-n {organization_min_n}.",
+                "Wat verborgen blijft: named manager detail, individuele respondentdata en raw open-tekstquotes.",
+                "Waarom dat zo is: governance beschermt interpretatiekwaliteit, privacy en bestuurlijke betrouwbaarheid.",
+                "Wat je hier niet uit mag concluderen: niet-zichtbare lagen zijn geen stil bewijs, maar een expliciete governancegrens.",
+            ],
+        },
+        "index_hero": {
+            "hero_value": f"{culture_index:.1f}/10",
+            "intro": (
+                "De Loep Culture Index is het visuele anker van deze baseline. Lees hem als navigatiesignaal voor het boardgesprek, "
+                "niet als totaalvonnis over cultuurkwaliteit."
+            ),
+            "bullets": [
+                "Geen benchmark in v1, geen pass/fail en geen gauge-semantiek.",
+                "Lees de index altijd samen met domeinen, responsbasis en governancekader.",
+                f"Eerste leesspoor: {story_context['low_focus_labels']}.",
+            ],
+            "closing_note": "Deze index opent het gesprek; hij sluit het niet af.",
+        },
+        "board_attention": {
+            "intro": (
+                "Deze aandachtspunten zijn de bestuurlijke hartslag van het rapport. Gebruik ze om het boardgesprek te ordenen, "
+                "niet als automatische interventielijst of manager-oordeel."
+            ),
+            "bullets": attention_lines,
+            "closing_note": "Confidence beschrijft signaalstabiliteit, niet waarheidscertainty of causaliteit.",
+        },
+        "domain_profile": {
+            "intro": management_summary_payload["domain_reading_rule"],
+            "bullets": [
+                f"Start de leesvolgorde bij {story_context['low_focus_labels']}; gebruik {story_context['high_context_labels']} als stabiliserende context, niet als tegenbewijs.",
+                *domain_lines,
+            ],
+            "closing_note": "De volgorde hierboven ondersteunt een bestuurlijke leeslijn en is geen top/bottom-scorebord.",
+        },
+        "pattern_logic": {
+            "intro": (
+                "Deze pagina tilt de lezing boven losse domeinscores uit. Kijk naar terugkerende combinaties en systeemlogica, "
+                "niet naar een technisch analysetableau."
+            ),
+            "bullets": [
+                lead_pattern_line,
+                secondary_pattern_line,
+                f"Sterkere contextdomeinen zoals {story_context['high_context_labels']} geven richting, maar neutraliseren eerdere aandachtspunten niet.",
+                "Deze patroonpagina blijft descriptief: zij beschrijft samenhang en bewijst geen oorzaak-gevolg.",
+            ],
+        },
+        "segment_contrasts": {
+            "intro": (
+                "Segmentcontrasten blijven een governed leesslag. Alleen veilig vrijgegeven verschillen mogen hier verschijnen, "
+                "en verborgen lagen worden expliciet als governance state getoond."
+            ),
+            "bullets": segment_lines,
+        },
+        "follow_on_decision": {
+            "intro": management_summary_payload["follow_on_rule"],
+            "bullets": follow_on_bullets,
+        },
+        "method_boundaries": {
+            "intro": (
+                "Deze afsluiting bewaart vertrouwen door methodiek, drempels en interpretatiegrenzen expliciet te maken. "
+                "Governance blijft hier een kwaliteitslaag, geen juridisch restblok."
+            ),
+            "bullets": [
+                f"Organisatieweergave vraagt minimaal {organization_min_n} volledige responses; segmentcontrasten vragen minimaal {int(methodology_payload['segment_comparison_min_n'])}.",
+                "Benchmarking blijft in v1 bewust niet actief.",
+                "Cultuur is niet simpelweg goed of slecht, dit rapport bewijst geen oorzaak-gevolg, en het is geen manager ranking tool of individuele voorspelmachine.",
+                "Open tekst opent niet als raw quote browser; alleen veilig geclusterde context kan later governed worden vrijgegeven.",
+                "Er wordt geen individuele respondentdata geexporteerd.",
+            ],
+            "closing_note": management_summary_payload["output_sequence_note"],
+        },
+    }
+
+
+def _generate_culture_assessment_report(
+    camp: Campaign,
+    *,
+    sample_output_mode: bool = False,
+) -> bytes:
+    product_module = get_product_module("culture_assessment")
+    management_summary_payload = product_module.get_management_summary_payload()
+    methodology_payload = product_module.get_methodology_payload()
+    board_report_sections = management_summary_payload["board_report_sections"]
+    responses = [
+        respondent.response
+        for respondent in camp.respondents
+        if respondent.completed and respondent.response is not None
+    ]
+    if camp.is_active:
+        raise ValueError("Loep Culture Assessment boardrapport komt pas beschikbaar na formele sluiting van de baseline.")
+
+    organization_min_n = int(methodology_payload["organization_min_n"])
+    if len(responses) < organization_min_n:
+        raise ValueError(
+            f"Loep Culture Assessment boardrapport vraagt minimaal {organization_min_n} volledige responses."
+        )
+
+    culture_values = [float(response.risk_score) for response in responses if isinstance(response.risk_score, (int, float))]
+    if not culture_values:
+        raise ValueError("Loep Culture Assessment boardrapport vraagt geldige Culture Index-scoredata.")
+
+    org = camp.organization
+    now_str = datetime.now(timezone.utc).strftime("%d-%m-%Y %H:%M UTC")
+    scan_meta = get_scan_definition(camp.scan_type)
+    domain_averages = _build_culture_domain_averages(responses)
+    board_attention_points = _build_culture_board_attention_points(domain_averages)
+    has_governed_drilldown = _campaign_has_add_on(camp, SEGMENT_DEEP_DIVE_KEY)
+    safe_segment_rows = _build_culture_safe_segment_summary(
+        responses,
+        minimum_n=int(methodology_payload["segment_comparison_min_n"]),
+    )
+    completion_rate = round((len(responses) / max(len(camp.respondents), 1)) * 100)
+    culture_index = round(sum(culture_values) / len(culture_values), 2)
+
+    cover_distribution_note = (
+        "Illustratief voorbeeld - fictieve data in dezelfde executive structuur als live output."
+        if sample_output_mode
+        else "Vertrouwelijk - uitsluitend bestemd voor geautoriseerde board-, directie- en HR-gebruikers."
+    )
+
+    buf = io.BytesIO()
+    first_page_cb, later_pages_cb = _make_header_footer(
+        org.name,
+        camp.name,
+        now_str,
+        scan_meta["product_name"],
+        camp.scan_type,
+        footer_label=("Illustratief voorbeeld - Loep" if sample_output_mode else "Vertrouwelijk - Loep"),
+    )
+
+    content_x = PAGE_MARGINS["left"]
+    content_y = PAGE_MARGINS["bottom"] + BODY_FRAME_GAP
+    content_width = CONTENT_WIDTH
+    content_height = PAGE_H - content_y - PAGE_MARGINS["top"] - HEADER_HEIGHT - BODY_FRAME_GAP
+    cover_frame = Frame(
+        content_x,
+        PAGE_MARGINS["bottom"] + COVER_FRAME_INSET,
+        content_width,
+        PAGE_H - (PAGE_MARGINS["bottom"] + PAGE_MARGINS["top"] + (2 * COVER_FRAME_INSET)),
+        id="cover",
+    )
+    body_frame = Frame(content_x, content_y, content_width, content_height, id="body")
+    doc = BaseDocTemplate(
+        buf,
+        pagesize=A4,
+        title=f"Loep - {camp.name}",
+        author="Loep",
+        subject=scan_meta["report_title"],
+    )
+    doc.addPageTemplates(
+        [
+            PageTemplate(id="cover", frames=[cover_frame], onPage=first_page_cb),
+            PageTemplate(id="body", frames=[body_frame], onPage=later_pages_cb),
+        ]
+    )
+
+    story: list[Any] = []
+    story.append(Paragraph(org.name, STYLES["cover_title"]))
+    story.append(Spacer(1, 0.25 * cm))
+    story.append(Paragraph(camp.name, STYLES["cover_sub"]))
+    story.append(Spacer(1, 0.12 * cm))
+    story.append(Paragraph(board_report_sections[0]["title"], STYLES["cover_sub"]))
+    story.append(Spacer(1, 0.7 * cm))
+    story.append(Paragraph("Jaarlijkse executive baseline voor cultuur en engagement.", STYLES["body"]))
+    story.append(Spacer(1, 0.18 * cm))
+    story.append(Paragraph(cover_distribution_note, STYLES["cover_meta"]))
+    story.append(Spacer(1, 0.18 * cm))
+    story.append(
+        Paragraph(
+            f"Responsbasis: {len(responses)} ingevuld van {len(camp.respondents)} uitgenodigd ({completion_rate}%).",
+            STYLES["cover_meta"],
+        )
+    )
+    story.append(Paragraph(f"Loep Culture Index: {culture_index:.1f}/10", STYLES["cover_meta"]))
+    story.append(NextPageTemplate("body"))
+    story.append(PageBreak())
+
+    story_context = _build_culture_story_context(domain_averages)
+    section_content = _build_culture_report_section_content(
+        management_summary_payload=management_summary_payload,
+        methodology_payload=methodology_payload,
+        responses=responses,
+        respondent_count=len(camp.respondents),
+        organization_min_n=organization_min_n,
+        completion_rate=completion_rate,
+        culture_index=culture_index,
+        board_attention_points=board_attention_points,
+        safe_segment_rows=safe_segment_rows,
+        has_governed_drilldown=has_governed_drilldown,
+        story_context=story_context,
+    )
+
+    body_sections = board_report_sections[1:]
+    for index, section in enumerate(body_sections):
+        content = section_content[section["key"]]
+        _append_culture_report_section(
+            story,
+            eyebrow=section["eyebrow"],
+            title=section["title"],
+            intro=content["intro"],
+            bullets=content["bullets"],
+            hero_value=content.get("hero_value"),
+            closing_note=content.get("closing_note"),
+            page_break=index < len(body_sections) - 1,
+        )
+
+    doc.build(story)
+    return buf.getvalue()
+
+
+def generate_culture_assessment_segment_summary_export(
+    campaign_id: str,
+    db: Session,
+) -> bytes:
+    camp: Campaign = (
+        db.query(Campaign)
+        .options(
+            joinedload(Campaign.organization),
+            selectinload(Campaign.respondents).selectinload(Respondent.response),
+        )
+        .filter(Campaign.id == campaign_id)
+        .first()
+    )
+    if not camp:
+        raise ValueError(f"Campaign niet gevonden: {campaign_id}")
+    if camp.scan_type != "culture_assessment":
+        raise ValueError("Segment summary export is in deze wave alleen beschikbaar voor Loep Culture Assessment.")
+    if not _campaign_has_add_on(camp, SEGMENT_DEEP_DIVE_KEY):
+        raise ValueError("Segment summary export opent alleen binnen governed drilldown met segment deep dive.")
+    if camp.is_active:
+        raise ValueError(
+            "Loep Culture Assessment segment summary export komt pas beschikbaar na formele sluiting van de baseline."
+        )
+
+    product_module = get_product_module("culture_assessment")
+    methodology_payload = product_module.get_methodology_payload()
+    responses = [
+        respondent.response
+        for respondent in camp.respondents
+        if respondent.completed and respondent.response is not None
+    ]
+    organization_min_n = int(methodology_payload["organization_min_n"])
+    if len(responses) < organization_min_n:
+        raise ValueError(
+            f"Loep Culture Assessment segment summary export vraagt minimaal {organization_min_n} volledige responses."
+        )
+
+    safe_segment_rows = _build_culture_safe_segment_summary(
+        responses,
+        minimum_n=int(methodology_payload["segment_comparison_min_n"]),
+    )
+    if not safe_segment_rows:
+        raise ValueError("Geen veilige segmentcontrasten beschikbaar voor export boven de huidige minimum-n grenzen.")
+
+    out = io.StringIO(newline="")
+    writer = csv.DictWriter(
+        out,
+        fieldnames=["segment_type", "segment_label", "n", "culture_index"],
+    )
+    writer.writeheader()
+    for row in safe_segment_rows:
+        writer.writerow(
+            {
+                "segment_type": row["segment_type"],
+                "segment_label": row["label"],
+                "n": row["n"],
+                "culture_index": row["culture_index"],
+            }
+        )
+    return out.getvalue().encode("utf-8")
+
+
 # ---------------------------------------------------------------------------
 # Hoofd-functie
 # ---------------------------------------------------------------------------
@@ -5260,6 +5781,8 @@ def generate_campaign_report(
     )
     if not camp:
         raise ValueError(f"Campaign niet gevonden: {campaign_id}")
+    if camp.scan_type == "culture_assessment":
+        return _generate_culture_assessment_report(camp, sample_output_mode=sample_output_mode)
 
     org      = camp.organization
     now_str  = datetime.now(timezone.utc).strftime("%d-%m-%Y %H:%M UTC")
@@ -5270,8 +5793,11 @@ def generate_campaign_report(
     )
     _mode     = (camp.delivery_mode or "baseline").lower()
     _mode_lbl = "Live" if _mode == "live" else "Baseline"
-    scan_lbl  = f"ExitScan {_mode_lbl}" if camp.scan_type == "exit" else "RetentieScan"
     scan_meta = get_scan_definition(camp.scan_type)
+    scan_lbl = scan_meta.get(
+        "report_title",
+        f"ExitScan {_mode_lbl}" if camp.scan_type == "exit" else scan_meta["product_name"],
+    )
     product_module = get_product_module(camp.scan_type)
     signal_label = scan_meta["signal_label"]
     signal_label_lower = scan_meta["signal_short_label"]
@@ -5628,9 +6154,9 @@ def generate_campaign_report(
         scan_meta["product_name"],
         camp.scan_type,
         footer_label=(
-            "Illustratief voorbeeld - Verisight"
+            "Illustratief voorbeeld - Loep"
             if sample_output_mode
-            else "Vertrouwelijk - Verisight"
+            else "Vertrouwelijk - Loep"
         ),
     )
 
@@ -5657,8 +6183,8 @@ def generate_campaign_report(
     doc = BaseDocTemplate(
         buf,
         pagesize=A4,
-        title=f"Verisight — {camp.name}",
-        author="Verisight",
+        title=f"Loep — {camp.name}",
+        author="Loep",
         subject=scan_lbl,
     )
 

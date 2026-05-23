@@ -46,7 +46,10 @@ class OrganizationRead(OrmBase):
 
 class CampaignCreate(BaseModel):
     name: str = Field(..., min_length=2, max_length=255)
-    scan_type: str = Field(..., pattern=r"^(exit|retention|pulse|team|onboarding|leadership)$")
+    scan_type: str = Field(
+        ...,
+        pattern=r"^(exit|retention|pulse|team|onboarding|leadership|culture_assessment)$",
+    )
     delivery_mode: str = Field(default="baseline", pattern=r"^(baseline|live)$")
     enabled_modules: Optional[list[str]] = None
 
@@ -70,7 +73,7 @@ class CampaignCreate(BaseModel):
 
     @model_validator(mode="after")
     def validate_delivery_mode_for_scan(self) -> "CampaignCreate":
-        if self.scan_type in {"pulse", "team", "onboarding", "leadership"} and self.delivery_mode == "live":
+        if self.scan_type in {"pulse", "team", "onboarding", "leadership", "culture_assessment"} and self.delivery_mode == "live":
             product_name = (
                 "Pulse"
                 if self.scan_type == "pulse"
@@ -79,6 +82,8 @@ class CampaignCreate(BaseModel):
                 else "Onboarding 30-60-90"
                 if self.scan_type == "onboarding"
                 else "Leadership Scan"
+                if self.scan_type == "leadership"
+                else "Loep Culture Assessment"
             )
             raise ValueError(f"{product_name} ondersteunt in deze wave alleen baseline campaigns.")
         return self
@@ -151,12 +156,25 @@ class RespondentImportResponse(BaseModel):
     errors: list[RespondentImportIssue] = Field(default_factory=list)
     imported: int = 0
     emails_sent: int = 0
+    invite_evidence: list["InviteEvidenceItem"] = Field(default_factory=list)
+
+
+class InviteEvidenceItem(BaseModel):
+    token: str
+    email: EmailStr | None = None
+    status: Literal["sent", "failed", "skipped"]
+    invite_url: str | None = None
+    provider: str | None = None
+    provider_email_id: str | None = None
+    provider_message_id: str | None = None
+    failure_reason: str | None = None
 
 
 class InviteSendResult(BaseModel):
     sent: int
     failed: int
     skipped: int  # geen e-mailadres
+    evidence: list[InviteEvidenceItem] = Field(default_factory=list)
 
 
 class SendInviteItem(BaseModel):
@@ -176,6 +194,7 @@ class ContactRequestCreate(BaseModel):
         "teamscan",
         "onboarding",
         "leadership",
+        "culture_assessment",
         "combinatie",
         "nog-onzeker",
     ] = "exitscan"
@@ -251,6 +270,7 @@ class ContactRequestUpdate(BaseModel):
         "teamscan",
         "onboarding",
         "leadership",
+        "culture_assessment",
         "combinatie",
     ] | None = None
     qualification_note: str | None = Field(default=None, max_length=2000)
