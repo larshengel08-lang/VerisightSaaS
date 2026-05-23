@@ -352,3 +352,15 @@ def test_culture_assessment_schema_sql_constraints_include_confirmed_route_contr
 
     assert "qualified_route is null or qualified_route in ('exitscan', 'retentiescan', 'teamscan', 'onboarding', 'leadership', 'combinatie', 'culture_assessment')" in schema_sql
     assert "scan_type in ('exit', 'retention', 'pulse', 'team', 'onboarding', 'leadership', 'culture_assessment')" in schema_sql
+
+
+def test_culture_assessment_runtime_migration_aligns_scan_type_constraints():
+    migration_sql = (
+        Path(__file__).resolve().parents[1] / "migrations/2026_05_23_align_scan_type_constraints.sql"
+    ).read_text(encoding="utf-8").lower()
+
+    assert "campaigns_scan_type_check" in migration_sql
+    assert "pilot_learning_dossiers_scan_type_check" in migration_sql
+    assert "scan_type in (" in migration_sql
+    assert "'culture_assessment'" in migration_sql
+    assert "'leadership'" in migration_sql
