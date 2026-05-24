@@ -14,6 +14,7 @@ import {
 } from '@/lib/types'
 import type { CampaignStats, Respondent, ScanType, SurveyResponse } from '@/lib/types'
 import { DashboardPanel } from '@/components/dashboard/dashboard-primitives'
+import { getResultsProductCopy } from '@/lib/dashboard/results-copy'
 
 const ORG_FACTORS = ['leadership', 'culture', 'growth', 'compensation', 'workload', 'role_clarity']
 
@@ -124,6 +125,8 @@ export function buildHeroDescription({
   averageRiskScore: number | null
   scanDefinition: ReturnType<typeof getScanDefinition>
 }) {
+  const productCopy = getResultsProductCopy(scanType)
+
   if (!hasEnoughData) {
     return isActive
       ? `Deze ${scanDefinition.productName}-campagne bouwt nog op. Met ${completionRate}% respons en ${pendingCount} openstaande respondent(en) is de focus nu vooral: responses laten binnenkomen en pas daarna het patroon lezen.`
@@ -139,19 +142,19 @@ export function buildHeroDescription({
   }
 
   if (scanType === 'pulse') {
-    return `Deze Pulse laat een compacte managementread zien van werkbeleving en geselecteerde werkfactoren. Lees de uitkomst als bounded reviewlaag voor dit meetmoment, met alleen een beperkte vergelijking naar de vorige vergelijkbare Pulse. Huidig ${scanDefinition.signalLabelLower}: ${averageRiskScore?.toFixed(1) ?? '-'} /10.`
+    return `Deze Pulse is een ${productCopy.readLabel} van werkbeleving en geselecteerde werkfactoren. Gebruik de uitkomst om te zien wat nu het meest opvalt, met alleen een beperkte vergelijking naar de vorige vergelijkbare Pulse. Huidig ${scanDefinition.signalLabelLower}: ${averageRiskScore?.toFixed(1) ?? '-'} /10.`
   }
 
   if (scanType === 'team') {
-    return `Deze TeamScan laat een begrensde lokale read zien van het huidige teamsignaal. Gebruik de uitkomst om veilig te bepalen welke afdelingen eerst verificatie vragen, met expliciete onderdrukking zodra metadata of groepsgrootte dat niet dragen. Huidig ${scanDefinition.signalLabelLower}: ${averageRiskScore?.toFixed(1) ?? '-'} /10.`
+    return `Deze TeamScan is een ${productCopy.readLabel} van het huidige teamsignaal. Gebruik de uitkomst om te zien welke afdelingen het duidelijkst opvallen, met expliciete onderdrukking zodra metadata of groepsgrootte dat niet dragen. Huidig ${scanDefinition.signalLabelLower}: ${averageRiskScore?.toFixed(1) ?? '-'} /10.`
   }
 
   if (scanType === 'onboarding') {
-    return `Deze onboarding-campaign laat een begrensde checkpoint-read zien van nieuwe instroom op groepsniveau. Gebruik de uitkomst om te bepalen welke vroege succes- of frictiefactor nu eerst aandacht vraagt, zonder dit al als volledige 30-60-90-journey of individuele voorspelling te lezen. Huidig ${scanDefinition.signalLabelLower}: ${averageRiskScore?.toFixed(1) ?? '-'} /10.`
+    return `Deze onboarding-campagne geeft een ${productCopy.readLabel} op groepsniveau. Gebruik de uitkomst om te zien welke vroege succes- of frictiefactor het meest opvalt, zonder dit te lezen als volledige 30-60-90-journey of individuele voorspelling. Huidig ${scanDefinition.signalLabelLower}: ${averageRiskScore?.toFixed(1) ?? '-'} /10.`
   }
 
   if (scanType === 'leadership') {
-    return `Deze Leadership Scan laat een begrensde support-read zien op groepsniveau. Gebruik de uitkomst om te bepalen welke managementcontext het bestaande people-signaal nu mee kleurt, zonder dit te lezen als named leader view, 360-output of performance-oordeel. Huidig ${scanDefinition.signalLabelLower}: ${averageRiskScore?.toFixed(1) ?? '-'} /10.`
+    return `Deze Leadership Scan geeft een ${productCopy.readLabel} op groepsniveau. Gebruik de uitkomst om te zien welke managementcontext het meest opvalt, zonder dit te lezen als named leader view, 360-output of performance-oordeel. Huidig ${scanDefinition.signalLabelLower}: ${averageRiskScore?.toFixed(1) ?? '-'} /10.`
   }
 
   return `Bekijk eerst welke factoren het laagst scoren en waar de grootste verschillen zichtbaar zijn.`
@@ -286,17 +289,17 @@ export function buildDecisionPanels({
 
   return [
     ...sharedPanels,
-    {
-      eyebrow: 'Beinvloedbaarheid',
-      title: 'Sterk werksignaal',
-      value: strongWorkSignalRate !== null ? `${strongWorkSignalRate}%` : '-',
-      body: topFactorLabel
-        ? `${topFactorLabel} is nu de eerste factor om te valideren. Het werksignaal helpt bepalen of het vertrekverhaal vooral binnen beinvloedbare werkcontexten ligt.`
-        : 'Gebruik dit om te bepalen in hoeverre vertrek vooral samenhangt met beinvloedbare werkfactoren.',
-      tone: strongWorkSignalRate !== null && strongWorkSignalRate >= 50 ? 'amber' : 'slate',
-    },
-  ]
-}
+      {
+        eyebrow: 'Beinvloedbaarheid',
+        title: 'Beïnvloedbaar werksignaal',
+        value: strongWorkSignalRate !== null ? `${strongWorkSignalRate}%` : '-',
+        body: topFactorLabel
+          ? `${topFactorLabel} is nu het duidelijkste aandachtspunt. Dit laat zien in hoeverre vertrek vooral samenhangt met werkfactoren waar de organisatie zelf invloed op heeft.`
+          : 'Gebruik dit om te bepalen in hoeverre vertrek vooral samenhangt met werkfactoren waar de organisatie zelf invloed op heeft.',
+        tone: strongWorkSignalRate !== null && strongWorkSignalRate >= 50 ? 'amber' : 'slate',
+      },
+    ]
+  }
 
 export function buildNextStepTitle(scanType: ScanType, hasEnoughData: boolean, hasMinDisplay: boolean) {
   if (!hasMinDisplay) return 'Eerst respons opbouwen'

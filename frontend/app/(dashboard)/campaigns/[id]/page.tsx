@@ -332,17 +332,17 @@ function buildExitNarratives(args: {
 
   if (args.strongWorkSignalRate !== null) {
     items.push({
-      title: "Beïnvloedbare werkcontext blijft bestuurlijk relevant",
+      title: "Beïnvloedbare werkcontext blijft belangrijk",
       tag: "Werkbaarheid",
-      body: `${args.strongWorkSignalRate}% van de leesbare responses valt in sterk werksignaal. Daardoor blijft deze route bestuurlijk vooral een intern werkvraagstuk, niet alleen een marktvraagstuk.`,
+      body: `${args.strongWorkSignalRate}% van de bruikbare responses valt in beïnvloedbaar werksignaal. Daardoor blijft dit vooral een intern werkvraagstuk, niet alleen een marktvraagstuk.`,
     })
   }
 
   if (items.length < 3) {
     items.push({
-      title: "Werkfrictie blijft de dominante lezing",
+      title: "Werkfrictie valt het meest op",
       tag: "Vertrekbeeld",
-      body: `${args.distribution.workPercent}% van het vertrekbeeld valt in werkfrictie. Andere trekfactoren en situationele context blijven zichtbaar, maar dragen minder hard de eerste managementread.`,
+      body: `${args.distribution.workPercent}% van de bruikbare responses valt in werkfrictie. Andere trekfactoren en situationele context blijven zichtbaar, maar springen minder sterk eruit.`,
     })
   }
 
@@ -2187,14 +2187,14 @@ export default async function CampaignPage({ params }: Props) {
           ? {
               label: "Meespelende factor",
               value: secondFactor,
-              body: `${secondFactor} kleurt het vertrekbeeld mee naast de sterkste factor en hoort daarom in dezelfde analytische lezing thuis.`,
+              body: `${secondFactor} springt naast de sterkste factor ook duidelijk uit in de resultaten en verdient daarom dezelfde aandacht in de bespreking.`,
             }
           : null,
         topContributingReasonLabel
           ? {
-              label: "Meelezende context",
+              label: "Aanvullende context",
               value: topContributingReasonLabel,
-              body: `${topContributingReasonLabel} komt als contextlaag terug onder de hoofdreden en helpt de samenhang van het vertrekbeeld te begrijpen.`,
+              body: `${topContributingReasonLabel} komt terug naast de hoofdreden en helpt de resultaten beter te duiden.`,
             }
           : null,
       ].filter(
@@ -2230,9 +2230,9 @@ export default async function CampaignPage({ params }: Props) {
           }
           primaryReasonBody={
             topExitReasonLabel !== null
-              ? "Deze hoofdreden komt het vaakst terug in de leesbare responses en opent daarom als eerste de analytische lezing van dit vertrekbeeld."
+              ? "Deze hoofdreden komt het vaakst terug in de bruikbare responses en valt daardoor als eerste op in de resultaten."
               : dominantCategory !== null
-                ? `${dominantCategory.value} van het leesbare vertrekbeeld valt in ${dominantCategory.label.toLowerCase()}. Daarmee is dit nu de dominante categorie in deze wave.`
+                ? `${dominantCategory.value} van de bruikbare responses valt in ${dominantCategory.label.toLowerCase()}. Daarmee is dit nu de dominante categorie in deze wave.`
                 : "Onvoldoende data om een hoofdreden of dominante categorie eerlijk vrij te geven."
           }
           whyItMattersItems={exitNarratives}
@@ -2297,14 +2297,14 @@ export default async function CampaignPage({ params }: Props) {
           periodLabel={routePeriodLabel}
           scopeLabel={scopeLabel}
           statusLabel={compositionStateMeta.label}
-          contextLine={`${topFactor ?? "De route"} opent het eerste behoudsbeeld. Behoudsdruk moet hier eerst gelezen worden, niet direct vertaald naar eigenaarschap of actieontwerp.`}
+          contextLine={`${topFactor ?? "De route"} valt in deze resultaten het meest op. Lees eerst waar behoud onder druk staat en bepaal daarna pas wat echt prioriteit krijgt.`}
           actions={headerActions}
         />
 
-        <ManagementReadSection eyebrow="Bestuurlijke handoff" title="Behoudsdruk en responsbeeld">
+        <ManagementReadSection eyebrow="Managementsamenvatting" title="Behoudsdruk en respons">
           <div className="space-y-5">
             <p className="max-w-4xl text-[1rem] leading-7 text-[color:var(--dashboard-text)]">
-              Deze route laat eerst zien waar behoud onder druk staat en welke samenhang daaronder ligt. De pagina bewaakt bewust de grens tussen bestuurlijke duiding en commitment: ze opent de routelezing, maar schuift vervolgstructuur door naar Action Center.
+              Deze route laat zien waar behoud onder druk staat, welke factoren eruit springen en hoe stevig de responsbasis is. Gebruik dit eerst om het beeld te begrijpen en pas daarna om keuzes te maken.
             </p>
             <ManagementReadInfoGrid
               items={[
@@ -2320,7 +2320,7 @@ export default async function CampaignPage({ params }: Props) {
         <ManagementReadSection
           eyebrow="Drivers"
           title="Drivers en prioriteitenbeeld"
-          note={`Driverbeeld op basis van n = ${responses.length}. Groei, belasting, leiderschap en context blijven afzonderlijk bestuurlijk leesbaar.`}
+          note={`Driverbeeld op basis van n = ${responses.length}. Groei, belasting, leiderschap en context blijven hier afzonderlijk en goed vergelijkbaar.`}
         >
           <ManagementReadFactorTable rows={factorPriorityRows} />
         </ManagementReadSection>
@@ -2328,7 +2328,7 @@ export default async function CampaignPage({ params }: Props) {
         <ManagementReadSection
           eyebrow="Synthese"
           title="Kernsignalen in samenhang"
-          note="Kernsignalen blijven samengevat, maar niet opgeblazen tot actieontwerp. Het rapport blijft de inhoudelijke waarheid."
+          note="Deze laag laat zien welke signalen samen opvallen, zonder meer te claimen dan de resultaten dragen."
         >
           <ManagementReadNarratives items={retentionNarratives} />
         </ManagementReadSection>
@@ -2342,14 +2342,14 @@ export default async function CampaignPage({ params }: Props) {
               tone="retention"
               label="Retentiesignaal"
               value={averageRiskScore !== null ? `${averageRiskScore.toFixed(1)}/10` : "Nog niet vrij"}
-              narrative="De verdeling tussen actief vertrekdenkend, latent risico en stabiel blijft bestuurlijk belangrijk. Juist de middengroep is vaak het eerst relevant voor een managementread."
+              narrative="De verdeling tussen actief vertrekdenkend, latent risico en stabiel blijft belangrijk. Juist de middengroep vraagt vaak als eerste aandacht."
               segments={retentionSegments}
             />
             <ManagementReadDistribution
               tone="retention"
               label="Bevlogenheidsverhouding"
               value={retentionSupplemental.engagement !== null ? `${retentionSupplemental.engagement.toFixed(1)}/10` : "Nog niet vrij"}
-              narrative="Bevlogenheid leest hier niet los, maar in verhouding tot behoudsdruk en vertrekintentie. Daardoor blijft de route behoudsdruk-first in plaats van actie-first."
+              narrative="Bevlogenheid lees je hier in verhouding tot behoudsdruk en vertrekintentie. Zo zie je sneller wat sterk is en wat extra aandacht vraagt."
               segments={engagementSegments}
             />
           </div>
@@ -2358,15 +2358,15 @@ export default async function CampaignPage({ params }: Props) {
         <ManagementReadSection
           eyebrow="Verdieping"
           title="SDT en organisatiefactoren"
-          note="Ook hier blijft de verdiepingslaag rapporttrouw: SDT verklaart niet los, maar helpt de primaire organisatiefactoren bestuurlijk scherper te lezen."
+          note="Deze verdiepingslaag helpt om primaire organisatiefactoren beter te begrijpen, zonder ze als losse verklaring te behandelen."
         >
           <ManagementReadFactorTable rows={sdtRows} />
         </ManagementReadSection>
 
         <ManagementReadBridge
           tone="retention"
-          title="Van behoudsdruk naar mogelijke vervolgrichting"
-          body="De routepagina toont wat bestuurlijk als eerste gelezen moet worden. Eventuele eigenaarschap-, actie- en reviewstructuur hoort pas in Action Center thuis."
+          title="Van resultaten naar eerste vervolgstap"
+          body="Op basis van deze resultaten kun je bepalen wat het eerste onderwerp voor management is. Verdere opvolging blijft een aparte stap."
           action={actionCenterRouteAction}
         />
       </div>

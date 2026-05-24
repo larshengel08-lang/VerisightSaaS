@@ -190,14 +190,14 @@ export function ExitProductDashboard({
               {averageSignalScoreLabel}
             </p>
             <p className="mt-3 text-sm leading-6 text-[color:var(--dashboard-text)]">
-              Dit is het sterkste analytische openingssignaal van deze ExitScan. Het laat zien
-              hoe zwaar het gemeten signaal gemiddeld terugkomt in de leesbare responses.
+              Dit laat zien hoe sterk werkfrictie gemiddeld terugkomt in de bruikbare
+              responses.
             </p>
           </div>
           <div className="grid gap-4">
             <div className="rounded-[22px] border border-slate-200 bg-white/88 px-5 py-5">
               <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-slate-500">
-                Sterkste factor
+                Duidelijk aandachtspunt
               </p>
               <p className="mt-3 text-lg font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">
                 {strongestFactorLabel}
@@ -205,7 +205,7 @@ export function ExitProductDashboard({
             </div>
             <div className="rounded-[22px] border border-slate-200 bg-white/88 px-5 py-5">
               <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-slate-500">
-                Sterk werksignaal
+                Beïnvloedbaar werksignaal
               </p>
               <p className="mt-3 text-lg font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">
                 {strongWorkSignalLabel}
@@ -215,7 +215,7 @@ export function ExitProductDashboard({
         </div>
       </SectionShell>
 
-      <SectionShell id="waarom-dit-telt" eyebrow="2. Uitleg" title="Waarom dit telt">
+      <SectionShell id="waarom-dit-telt" eyebrow="2. Inzichten" title="Wat valt op?">
         {whyItMattersItems.length > 0 ? (
           <div className="grid gap-4 xl:grid-cols-3">
             {whyItMattersItems.map((item) => (
@@ -242,8 +242,8 @@ export function ExitProductDashboard({
 
       <SectionShell
         id="hoofdreden-vertrekbeeld"
-        eyebrow="3. Hoofdreden"
-        title="Hoofdreden van vertrekbeeld"
+        eyebrow="3. Dominant thema"
+        title="Meest terugkomend thema"
       >
         <div className="rounded-[22px] border border-slate-200 bg-white px-5 py-5 shadow-[0_12px_28px_rgba(19,32,51,0.05)]">
           <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-slate-500">
@@ -260,8 +260,8 @@ export function ExitProductDashboard({
 
       <SectionShell
         id="meespelende-factoren"
-        eyebrow="4. Samenhang"
-        title="Meespelende factoren"
+        eyebrow="4. Aanvullende signalen"
+        title="Meespelende factoren en context"
       >
         {contributingItems.length > 0 ? (
           <div className="grid gap-4 xl:grid-cols-2">
@@ -287,7 +287,7 @@ export function ExitProductDashboard({
         )}
       </SectionShell>
 
-      <SectionShell id="responscontext" eyebrow="5. Respons" title="Responscontext">
+      <SectionShell id="responscontext" eyebrow="5. Responsbasis" title="Responsbasis en leessterkte">
         <div className="grid gap-4 lg:grid-cols-[minmax(0,0.95fr),minmax(0,1.05fr)] lg:items-start">
           <div className="grid gap-3 sm:grid-cols-3">
             {[
@@ -314,7 +314,7 @@ export function ExitProductDashboard({
         </div>
       </SectionShell>
 
-      <SectionShell id="topfactoren" eyebrow="6. Factoren" title="Topfactoren">
+      <SectionShell id="topfactoren" eyebrow="6. Factoren" title="Belangrijkste factoren">
         {topFactorCards.length > 0 ? (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {topFactorCards.map((row) => (
@@ -355,8 +355,8 @@ export function ExitProductDashboard({
 
       <SectionShell
         id="verdeling-vertrekbeeld"
-        eyebrow="7. Verdeling"
-        title="Verdeling van het vertrekbeeld"
+        eyebrow="7. Signaalopbouw"
+        title="Welke lagen vallen het meest op?"
       >
         {distributionSegments.length > 0 ? (
           <div className="grid gap-4 xl:grid-cols-[minmax(0,0.92fr),minmax(0,1.08fr)]">
@@ -412,17 +412,17 @@ export function ExitProductDashboard({
         )}
       </SectionShell>
 
-      <SectionShell id="driverlaag" eyebrow="8. Drivers" title="Diepere driverlaag">
+        <SectionShell id="driverlaag" eyebrow="8. Prioriteiten" title="Prioriteitenbeeld">
         {factorRows.length > 0 ? <ExitDriversPriorityChart rows={factorRows} /> : <DataGapCard />}
       </SectionShell>
 
       {sdtRows.length > 0 ? (
-        <SectionShell id="sdt-laag" eyebrow="9. SDT" title="SDT-laag">
+        <SectionShell id="sdt-laag" eyebrow="9. SDT" title="Basisbehoeften / SDT">
           <ExitSdtNeedsChart rows={sdtRows} />
         </SectionShell>
       ) : null}
 
-      <SectionShell id="factorlaag" eyebrow="10. Factoren" title="Uitgebreide factorlaag">
+      <SectionShell id="factorlaag" eyebrow="10. Factoren" title="Factoroverzicht">
         {factorRows.length > 0 ? (
           <div className="space-y-5">
             <ExitOrgFactorsChart rows={factorRows} />
@@ -435,8 +435,8 @@ export function ExitProductDashboard({
 
       <SectionShell
         id="methodische-leesgrenzen"
-        eyebrow="11. Methode"
-        title="Methodische leesgrenzen"
+        eyebrow="11. Leesgrenzen"
+        title="Leesgrenzen en privacy"
       >
         {methodologyContent}
       </SectionShell>

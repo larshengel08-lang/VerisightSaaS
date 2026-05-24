@@ -42,16 +42,16 @@ describe('exit dashboard analytics guardrails', () => {
     const source = componentSource()
     const orderedHeadings = [
       'Sterkste signaal',
-      'Waarom dit telt',
-      'Hoofdreden van vertrekbeeld',
-      'Meespelende factoren',
-      'Responscontext',
-      'Topfactoren',
-      'Verdeling van het vertrekbeeld',
-      'Diepere driverlaag',
-      'SDT-laag',
-      'Uitgebreide factorlaag',
-      'Methodische leesgrenzen',
+      'Wat valt op?',
+      'Meest terugkomend thema',
+      'Meespelende factoren en context',
+      'Responsbasis en leessterkte',
+      'Belangrijkste factoren',
+      'Welke lagen vallen het meest op?',
+      'Prioriteitenbeeld',
+      'Basisbehoeften / SDT',
+      'Factoroverzicht',
+      'Leesgrenzen en privacy',
     ]
 
     let previousIndex = -1
@@ -82,6 +82,14 @@ describe('exit dashboard analytics guardrails', () => {
     expect(source).not.toContain('�')
     expect(source).toContain('Gemiddelde signaalscore')
     expect(source).not.toContain('Frictiescore')
+  })
+
+  it('keeps customer-facing ExitScan wording free from internal framing', () => {
+    const source = componentSource().toLowerCase()
+
+    expect(source).not.toContain('kleurt het vertrekbeeld')
+    expect(source).not.toContain('meelezende context')
+    expect(source).not.toContain('terugkijkende managementread')
   })
 
   it('renders the SDT layer only when real rows are available', () => {
