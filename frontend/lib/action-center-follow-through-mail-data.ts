@@ -493,6 +493,11 @@ export async function getActionCenterFollowThroughMailDispatchData() {
     canManageActionCenterAssignments: true,
     canScheduleActionCenterReview: true,
     managerOnly: false,
+    canManageTenantAdmin: true,
+    canApproveRouteActivation: true,
+    canRequestAuditExport: true,
+    canLogSupportAccess: true,
+    canViewExecutiveReadback: true,
   }
 
   return getActionCenterFollowThroughMailData({

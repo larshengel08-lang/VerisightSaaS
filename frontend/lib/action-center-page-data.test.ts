@@ -185,6 +185,11 @@ describe('getActionCenterPageData invite eligibility', () => {
       canManageActionCenterAssignments: false,
       canScheduleActionCenterReview: true,
       managerOnly: false,
+      canManageTenantAdmin: false,
+      canApproveRouteActivation: false,
+      canRequestAuditExport: false,
+      canLogSupportAccess: false,
+      canViewExecutiveReadback: false,
     }
     const orgMemberships: SuiteOrgMembership[] = [{ org_id: 'org-1', role: 'member' }]
     const currentUserWorkspaceMemberships = [buildWorkspaceMember()]
