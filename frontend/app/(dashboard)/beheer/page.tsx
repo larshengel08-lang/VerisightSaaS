@@ -350,20 +350,26 @@ export default async function BeheerPage() {
         title="Secundaire werkbanken"
         description="Alleen na setup."
       >
-        <div className="grid gap-3 lg:grid-cols-2">
-          <WorkbenchLinkCard
-            href="/beheer/contact-aanvragen"
-            eyebrow="Instroom"
-            title="Contact-aanvragen"
+      <div className="grid gap-3 lg:grid-cols-2">
+        <WorkbenchLinkCard
+          href="/beheer/contact-aanvragen"
+          eyebrow="Instroom"
+          title="Contact-aanvragen"
             body="Nieuwe aanvragen."
           />
-          <WorkbenchLinkCard
-            href="/beheer/klantlearnings"
-            eyebrow="Learning"
-            title="Klantlearnings"
-            body="Lessen en proof-context."
-          />
-        </div>
+        <WorkbenchLinkCard
+          href="/beheer/klantlearnings"
+          eyebrow="Learning"
+          title="Klantlearnings"
+          body="Lessen en proof-context."
+        />
+        <WorkbenchLinkCard
+          href="/beheer/action-center-governance"
+          eyebrow="Governance"
+          title="Action Center governance"
+          body="Tenant-admin controls, executive readback en bounded rehearsal."
+        />
+      </div>
       </DashboardSection>
 
       <DashboardSection

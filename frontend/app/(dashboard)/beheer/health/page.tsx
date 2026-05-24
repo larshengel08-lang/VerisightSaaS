@@ -3,11 +3,13 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { DashboardChip, DashboardDisclosure, DashboardHero, DashboardPanel, DashboardSection } from '@/components/dashboard/dashboard-primitives'
 import {
+  getActionCenterAdminControlLabel,
   getActionCenterOpsEventLabel,
   summarizeActionCenterOpsHealth,
 } from '@/lib/action-center-ops-health'
 import { countSuiteTelemetryEventRows, getSuiteTelemetryEventLabel } from '@/lib/telemetry/events'
 import { listSuiteTelemetryEventRows } from '@/lib/telemetry/store'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 
 export default async function HealthPage() {
@@ -32,16 +34,42 @@ export default async function HealthPage() {
 
   const rows = await listSuiteTelemetryEventRows()
   const counts = countSuiteTelemetryEventRows(rows)
-  const actionCenterOps = summarizeActionCenterOpsHealth(rows)
+  const adminClient = createAdminClient()
+  const [
+    { data: routeActivationApprovalsRaw },
+    { data: supportAccessEventsRaw },
+  ] = await Promise.all([
+    adminClient
+      .from('action_center_route_activation_approvals')
+      .select('route_family, approval_status, scope_value, created_at')
+      .order('created_at', { ascending: false }),
+    adminClient
+      .from('action_center_support_access_events')
+      .select('access_kind, access_reason, created_at')
+      .order('created_at', { ascending: false }),
+  ])
+  const actionCenterOps = summarizeActionCenterOpsHealth(rows, {
+    routeActivationApprovals: (routeActivationApprovalsRaw ?? []).map((row) => ({
+      routeFamily: row.route_family,
+      approvalStatus: row.approval_status,
+      scopeValue: row.scope_value,
+      createdAt: row.created_at,
+    })),
+    supportAccessEvents: (supportAccessEventsRaw ?? []).map((row) => ({
+      accessKind: row.access_kind,
+      accessReason: row.access_reason,
+      createdAt: row.created_at,
+    })),
+  })
 
   return (
     <div className="space-y-6">
       <DashboardHero
         surface="ops"
         tone="slate"
-        eyebrow="Transition deep link"
-        title="Health transition registry"
-        description="Gebruik deze route als expert registry voor activatie, denied access en Action Center follow-through zodra een setup- of supportvraag daarom vraagt. Dit is een verdiepingslaag, geen primaire beheerbestemming."
+        eyebrow="Health review"
+        title="Suite health evidence"
+        description="Gebruik deze route als bounded health-check voor activatie, denied access en Action Center follow-through. Geen analytics-stack, wel compacte operations-evidence."
         meta={
           <>
             <DashboardChip surface="ops" label={`${counts.owner_access_confirmed} owner access`} tone="emerald" />
@@ -59,8 +87,8 @@ export default async function HealthPage() {
       />
 
       <DashboardSection
-        title="Expert registry"
-        description="Open deze deep link alleen wanneer activation evidence of follow-through coverage opnieuw gelezen moet worden."
+        title="Kernsignalen"
+        description="Gebruik de minimale signal set om wekelijks snel te zien waar activatie of follow-through begint te schuiven."
       >
         <div className="grid gap-4 lg:grid-cols-3">
           <DashboardPanel title="Owner access confirmed" value={`${counts.owner_access_confirmed}`} body="Owner-toegang bevestigd binnen de insights-shell." tone="emerald" />
@@ -88,6 +116,8 @@ export default async function HealthPage() {
               <DashboardPanel title="Managers toegewezen" value={`${actionCenterOps.ownerAssignedCount}`} body="Eigenaarschap bevestigd via Action Center telemetry." tone="slate" />
               <DashboardPanel title="Reviews gepland" value={`${actionCenterOps.reviewScheduledCount}`} body="Reviewmomenten die operations direct kan terugvinden." tone="emerald" />
               <DashboardPanel title="Closeouts vastgelegd" value={`${actionCenterOps.closeoutRecordedCount}`} body="Routes met expliciet slot in de huidige evidence." tone="slate" />
+              <DashboardPanel title="Route activatie approvals" value={`${actionCenterOps.routeActivationApprovalCount}`} body="Bounded approval truth voor route-activatie per organisatie." tone="slate" />
+              <DashboardPanel title="Support access events" value={`${actionCenterOps.supportAccessEventCount}`} body="Gelogde support-, privacy- en governance-access voor Action Center." tone="amber" />
             </div>
             <div className="rounded-[2rem] border border-slate-200 bg-white p-6">
               <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Kritieke flow coverage</h3>
@@ -106,6 +136,11 @@ export default async function HealthPage() {
                 {actionCenterOps.latestEventAt
                   ? new Date(actionCenterOps.latestEventAt).toLocaleString('nl-NL')
                   : 'nog niet aanwezig'}
+              </p>
+              <p className="mt-2 text-sm text-slate-600">
+                {actionCenterOps.missingControlTypes.length > 0
+                  ? `Nog niet zichtbaar in admin-readback: ${actionCenterOps.missingControlTypes.map(getActionCenterAdminControlLabel).join(', ')}.`
+                  : 'De bounded admin-controls zijn minimaal eenmaal zichtbaar in de huidige readbacklaag.'}
               </p>
             </div>
           </div>
