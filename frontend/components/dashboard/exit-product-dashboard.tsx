@@ -164,7 +164,7 @@ export function ExitProductDashboard({
   reviewMomentLabel,
 }: ExitProductDashboardProps) {
   const topPriorityRows = factorRows.slice(0, 3)
-  const responseBasisLabel = `${totalCompleted} ingevuld · ${responseRate}`
+  const responseBasisLabel = `${totalCompleted} ingevuld / ${responseRate}`
 
   return (
     <div className="space-y-5">
@@ -189,11 +189,11 @@ export function ExitProductDashboard({
       >
         {[
           { label: 'Frictiescore', value: primarySignalScoreLabel, note: 'Primaire groepsscore' },
-          { label: 'Band / status', value: primarySignalBandLabel, note: 'Managementsamenvatting' },
-          { label: 'Dominant thema', value: dominantThemeLabel, note: 'Wat het vertrekbeeld nu kleurt' },
-          { label: 'Scherpste factor', value: strongestFactorLabel, note: 'Eerste factor om te toetsen' },
+          { label: 'Band / status', value: primarySignalBandLabel, note: 'Samenvatting op groepsniveau' },
+          { label: 'Dominant thema', value: dominantThemeLabel, note: 'Wat in de resultaten het meest opvalt' },
+          { label: 'Scherpste factor', value: strongestFactorLabel, note: 'Eerste aandachtspunt om te bespreken' },
           { label: 'Responsbasis', value: responseBasisLabel, note: `${totalInvited} uitgenodigd` },
-          { label: 'Bestuurlijke vraag', value: 'Eerst toetsen', note: firstManagementQuestion },
+          { label: 'Bestuurlijke vraag', value: 'Eerste prioriteit', note: firstManagementQuestion },
         ].map((item, index) => (
           <BoardroomMetricTile
             key={item.label}
@@ -209,7 +209,7 @@ export function ExitProductDashboard({
         <ResultsBoardroomSection
           eyebrow="1. Kernsignaal"
           title="Kernsignaal"
-          description="Gebruik deze terugkijkende vertrekduiding als managementsamenvatting van wat nu het sterkst terugkomt. Lees het beeld als groepsinterpretatie, niet als harde oorzaakverklaring."
+          description="Gebruik deze terugblik op vertrekredenen als compacte samenvatting van wat nu het sterkst terugkomt. Lees het beeld als groepsinterpretatie, niet als harde oorzaakverklaring."
           aside={
             <span className="border border-[rgba(13,27,42,0.15)] bg-[#FEB234] px-3 py-2 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#132033]">
               {primarySignalBandLabel}
@@ -241,7 +241,7 @@ export function ExitProductDashboard({
                 <BoardroomMetricTile
                   label="Resultaten beschikbaar"
                   value={statusLabel}
-                  note="Gebruik dit als eerste managementsamenvatting; geen harde oorzaakverklaring."
+                  note="Gebruik dit als eerste samenvatting op groepsniveau; geen harde oorzaakverklaring."
                   tone="chalk"
                 />
               </div>
@@ -249,7 +249,7 @@ export function ExitProductDashboard({
             <div className="grid gap-px bg-[rgba(13,27,42,0.15)]">
               <BoardroomMetricTile
                 label="Bestuurlijke vraag"
-                value="Eerst toetsen"
+                value="Eerste prioriteit"
                 note={firstManagementQuestion}
                 tone="ink"
               />
@@ -271,7 +271,7 @@ export function ExitProductDashboard({
           description="Detailinzichten worden alleen getoond bij voldoende respons. Kleine groepen blijven verborgen om anonimiteit te beschermen."
           aside={
             <span className="border border-[rgba(13,27,42,0.15)] bg-white px-3 py-2 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#44505C]">
-              Leessterkte — {readStrengthLabel}
+              Leessterkte - {readStrengthLabel}
             </span>
           }
         >
@@ -424,21 +424,21 @@ export function ExitProductDashboard({
 
       <div id="handoff">
         <ResultsBoardroomSection
-          eyebrow="7. Bestuurlijke handoff"
-          title="Bestuurlijke handoff"
-          description="Sluit af met één eerste verificatiespoor, een eigenaar en een concreet reviewmoment. Gebruik dit als bounded managementsamenvatting: eerst toetsen vóór bredere actie."
+          eyebrow="7. Management handoff"
+          title="Management handoff"
+          description="Sluit af met een eerste verificatiespoor, een eigenaar en een concreet reviewmoment. Gebruik dit als bounded managementsamenvatting: eerst bespreken voordat bredere actie volgt."
           tone="ink"
         >
           <div className="grid gap-px border border-[#2B3A4E] bg-[#2B3A4E] lg:grid-cols-2 xl:grid-cols-4">
             <BoardroomMetricTile
               label="Eerste verificatiespoor"
               value={verificationTrackLabel}
-              note="Kies eerst welk spoor bestuurlijk getoetst moet worden."
+              note="Kies eerst welk onderwerp management als eerste moet bespreken."
               tone="ink"
             />
             <BoardroomMetricTile
               label="Bestuurlijke vraag"
-              value="Eerst toetsen"
+              value="Eerste prioriteit"
               note={firstManagementQuestion}
               tone="ink"
             />
@@ -460,3 +460,4 @@ export function ExitProductDashboard({
     </div>
   )
 }
+

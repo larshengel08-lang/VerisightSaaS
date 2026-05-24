@@ -7,6 +7,7 @@ import {
   computeAverageRiskScore,
   computeRetentionSupplementalAverages,
 } from './page-helpers'
+import { getResultsProductCopy } from '@/lib/dashboard/results-copy'
 import { getScanDefinition } from '@/lib/scan-definitions'
 import type { SurveyResponse } from '@/lib/types'
 
@@ -168,5 +169,21 @@ describe('dashboard page helpers field semantics', () => {
     })
     expect(themes.some((theme) => theme.title === 'Rolhelderheid en prioriteiten')).toBe(true)
     expect(themes).toHaveLength(2)
+  })
+
+  it('uses customer-facing product labels instead of internal managementread language', () => {
+    const pulseHero = buildHeroDescription({
+      scanType: 'pulse',
+      isActive: true,
+      completionRate: 61,
+      pendingCount: 2,
+      hasEnoughData: true,
+      averageRiskScore: 5.9,
+      scanDefinition: getScanDefinition('pulse'),
+    })
+
+    expect(pulseHero).toContain(getResultsProductCopy('pulse').readLabel)
+    expect(pulseHero.toLowerCase()).not.toContain('managementread')
+    expect(pulseHero.toLowerCase()).not.toContain('bounded reviewlaag')
   })
 })

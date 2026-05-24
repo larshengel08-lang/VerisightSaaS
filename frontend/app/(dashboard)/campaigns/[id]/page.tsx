@@ -353,9 +353,9 @@ function buildSignalHighlights(args: {
         caption: 'Factor met de laagste gemiddelde belevingsscore in deze route.',
       },
       {
-        label: 'Sterk werksignaal',
+        label: 'Beinvloedbaar werksignaal',
         value: args.isVisible ? formatPercent(args.strongWorkSignalRate) : 'Nog niet beschikbaar',
-        caption: 'Aandeel responses met een sterk werkgerelateerd signaal.',
+        caption: 'Aandeel responses met een duidelijk beinvloedbaar werkgerelateerd signaal.',
       },
     )
 
@@ -1210,13 +1210,13 @@ export default async function CampaignPage({ params }: Props) {
       topFactorLabel && secondFactorLabel
         ? `${topFactorLabel} komt het sterkst terug. ${topFactorLabel} en ${secondFactorLabel.toLowerCase()} vragen eerst verificatie.`
         : topFactorLabel
-          ? `${topFactorLabel} komt het sterkst terug en kleurt het vertrekbeeld op dit moment het duidelijkst.`
-          : 'De eerste managementsamenvatting wordt zichtbaar zodra voldoende bruikbare responses beschikbaar zijn.'
+          ? `${topFactorLabel} komt het sterkst terug en valt in deze resultaten het duidelijkst op.`
+          : 'De eerste samenvatting op groepsniveau wordt zichtbaar zodra voldoende bruikbare responses beschikbaar zijn.'
     const compositionHighlights = [
       {
         label: 'Dominant thema',
         value: dominantThemeLabel,
-        body: 'Wat het vertrekbeeld nu het duidelijkst kleurt op groepsniveau.',
+        body: 'Wat in de resultaten nu het duidelijkst opvalt op groepsniveau.',
       },
       {
         label: 'Aanvullende context',
@@ -2157,3 +2157,4 @@ export default async function CampaignPage({ params }: Props) {
     </div>
   )
 }
+

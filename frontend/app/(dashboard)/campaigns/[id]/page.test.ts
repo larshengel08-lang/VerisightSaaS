@@ -108,7 +108,7 @@ describe('exit dashboard analytics guardrails', () => {
       'eyebrow="4. Prioriteitenbeeld"',
       'eyebrow="5. Basisbehoeften / SDT"',
       'eyebrow="6. Survey-stemmen"',
-      'eyebrow="7. Bestuurlijke handoff"',
+      'eyebrow="7. Management handoff"',
     ]
 
     let previousIndex = -1
@@ -156,7 +156,7 @@ describe('exit dashboard analytics guardrails', () => {
     expect(source).toContain('Responsbasis')
     expect(source).toContain('Bestuurlijke vraag')
     expect(source).toContain('Resultaten beschikbaar')
-    expect(source).toContain('terugkijkende vertrekduiding')
+    expect(source).toContain('terugblik op vertrekredenen')
     expect(source).not.toContain('Vertrekladder')
     expect(source).not.toContain('Sterk werksignaal')
     expect(source).not.toContain('managementread')
@@ -170,9 +170,10 @@ describe('exit dashboard analytics guardrails', () => {
     expect(source).toContain('Indicatief patroonbeeld, geen causale verdeling.')
     expect(source).toContain('Detailinzichten worden alleen getoond bij voldoende respons.')
     expect(source).toContain('anonimiteit te beschermen')
-    expect(source).toContain('Sluit af met één eerste verificatiespoor, een eigenaar en een concreet reviewmoment.')
-    expect(source).toContain('eerst toetsen vóór bredere actie')
+    expect(source).toContain('Sluit af met een eerste verificatiespoor, een eigenaar en een concreet reviewmoment.')
+    expect(source).toContain('eerst bespreken voordat bredere actie volgt')
     expect(source).not.toContain('suppressieregels')
     expect(source).not.toContain('geen workflowproduct')
   })
 })
+
