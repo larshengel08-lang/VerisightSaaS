@@ -56,6 +56,12 @@ const RESULTS_COPY_MAP: Record<ScanType, ResultsProductCopy> = {
     firstDiscussionLabel: 'eerste onderwerp om te bespreken',
     segmentFallback: 'Segmentduiding niet getoond: minimale groepsgrootte niet gehaald.',
   },
+  culture_assessment: {
+    readLabel: 'organisatiebreed cultuurbeeld',
+    focusLabel: 'wat in de cultuurresultaten het meest opvalt',
+    firstDiscussionLabel: 'eerste onderwerp om te bespreken',
+    segmentFallback: 'Segmentduiding niet getoond: minimale groepsgrootte niet gehaald.',
+  },
 }
 
 export function getResultsProductCopy(scanType: ScanType): ResultsProductCopy {

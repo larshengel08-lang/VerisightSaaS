@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  ACTION_CENTER_NAV,
   buildDashboardShellNavigation,
   getActiveModuleFromLocation,
   getDashboardModuleHref,
@@ -43,6 +44,13 @@ describe('dashboard shell navigation', () => {
       is_active: true,
       created_at: '2026-04-15T10:00:00.000Z',
       total_completed: 9,
+    },
+    {
+      campaign_id: 'culture-1',
+      scan_type: 'culture_assessment',
+      is_active: true,
+      created_at: '2026-04-14T10:00:00.000Z',
+      total_completed: 18,
     },
   ] as const
 
@@ -97,6 +105,12 @@ describe('dashboard shell navigation', () => {
         disabled: false,
       },
       {
+        key: 'culture_assessment',
+        label: 'Loep Culture Assessment',
+        href: '/dashboard?module=culture_assessment',
+        disabled: false,
+      },
+      {
         key: 'reports',
         label: 'Rapporten',
         href: '/reports',
@@ -115,7 +129,6 @@ describe('dashboard shell navigation', () => {
   it('keeps admin links separate from buyer overview navigation', () => {
     const navigation = buildDashboardShellNavigation({
       isAdmin: true,
-      canManageActionCenterAssignments: true,
       shellMode: 'full',
       currentCampaignPath: null,
       campaigns: [...campaigns],
@@ -131,32 +144,13 @@ describe('dashboard shell navigation', () => {
       key: 'overview',
       href: '/dashboard',
     })
-    expect(navigation.admin.map((item) => item.label)).toEqual(['Setup', 'Managers', 'Leads', 'Action Center bron'])
+    expect(navigation.admin.map((item) => item.label)).toEqual(['Setup', 'Leads', 'Learnings'])
+    expect(navigation.admin.some((item) => item.href === '/beheer/billing')).toBe(false)
+    expect(navigation.admin.some((item) => item.href === '/beheer/health')).toBe(false)
+    expect(navigation.admin.some((item) => item.href === '/beheer/proof')).toBe(false)
     expect(navigation.modules[3]).toMatchObject({
       key: 'onboarding',
       href: '/dashboard?module=onboarding',
-    })
-  })
-
-  it('shows the managers beheer entry for customer owners who may manage action center assignments', () => {
-    const navigation = buildDashboardShellNavigation({
-      isAdmin: false,
-      canManageActionCenterAssignments: true,
-      shellMode: 'full',
-      currentCampaignPath: null,
-      campaigns: [...campaigns],
-      portfolioCounts: {
-        ready: 3,
-        building: 1,
-        setup: 0,
-        closed: 2,
-      },
-    })
-
-    expect(navigation.admin.map((item) => item.label)).toEqual(['Managers'])
-    expect(navigation.admin[0]).toMatchObject({
-      label: 'Managers',
-      href: '/beheer/managers',
     })
   })
 
@@ -167,6 +161,7 @@ describe('dashboard shell navigation', () => {
     expect(getActiveModuleFromLocation('/campaigns/retention-1', null, [...campaigns])).toBe('retention')
     expect(getActiveModuleFromLocation('/campaigns/pulse-1', null, [...campaigns])).toBe('pulse')
     expect(getActiveModuleFromLocation('/campaigns/leadership-1', null, [...campaigns])).toBe('leadership')
+    expect(getActiveModuleFromLocation('/campaigns/culture-1', null, [...campaigns])).toBe('culture_assessment')
     expect(getActiveModuleFromLocation('/campaigns/unknown', null, [...campaigns])).toBe('overview')
     expect(getActiveModuleFromLocation('/reports', null, [...campaigns])).toBe('reports')
     expect(getActiveModuleFromLocation('/action-center', null, [...campaigns])).toBe('action_center')
@@ -249,9 +244,21 @@ describe('dashboard shell navigation', () => {
   it('normalizes dashboard module filters and exposes stable category hrefs', () => {
     expect(normalizeDashboardModuleFilter('exit')).toBe('exit')
     expect(normalizeDashboardModuleFilter('leadership')).toBe('leadership')
+    expect(normalizeDashboardModuleFilter('culture_assessment')).toBe('culture_assessment')
     expect(normalizeDashboardModuleFilter('unknown')).toBeNull()
     expect(normalizeDashboardModuleFilter(undefined)).toBeNull()
     expect(getDashboardModuleHref('exit')).toBe('/dashboard?module=exit')
     expect(getDashboardModuleHref('retention')).toBe('/dashboard?module=retention')
+    expect(getDashboardModuleHref('culture_assessment')).toBe('/dashboard?module=culture_assessment')
+  })
+
+  it('keeps action center subnavigation inside the single action-center route', () => {
+    expect(ACTION_CENTER_NAV).toEqual([
+      { href: '/action-center', label: 'Overzicht' },
+      { href: '/action-center?view=actions', label: 'Acties' },
+      { href: '/action-center?view=reviews', label: 'Reviewmomenten' },
+      { href: '/action-center?view=managers', label: 'Managers' },
+      { href: '/action-center?view=teams', label: 'Mijn teams' },
+    ])
   })
 })

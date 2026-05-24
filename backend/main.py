@@ -1,5 +1,5 @@
 ﻿"""
-Verisight — FastAPI Backend
+Loep — FastAPI Backend
 ===================================
 Entrypoint: uvicorn backend.main:app --reload
 
@@ -51,9 +51,13 @@ from sqlalchemy import text
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm import Session, selectinload
 
-from backend import database as backend_database
 from backend.database import DATABASE_URL, check_db_connection, get_db, init_db
-from backend.email import send_contact_request_result, send_hr_notification, send_survey_invite
+from backend.email import (
+    send_contact_request_result,
+    send_hr_notification,
+    send_survey_invite,
+    send_survey_invite_result,
+)
 from backend.models import Campaign, ContactRequest, Organization, OrganizationSecret, Respondent, SurveyResponse
 from backend.products.leadership.definition import DEFAULT_LEADERSHIP_MODULES
 from backend.products.onboarding.definition import DEFAULT_ONBOARDING_MODULES
@@ -70,6 +74,7 @@ from backend.schemas import (
     ContactRequestRead,
     ContactRequestResponse,
     ContactRequestUpdate,
+    InviteEvidenceItem,
     InviteSendResult,
     OrganizationCreate,
     OrganizationRead,
@@ -120,6 +125,14 @@ def _resolve_survey_modules(scan_type: str, enabled_modules: list[str] | None) -
     subset is configured, the full default factor set remains active.
     """
     if not enabled_modules:
+        if scan_type == "culture_assessment":
+            return [
+                "autonomy_role_clarity",
+                "growth_development",
+                "change_readiness",
+                "reward_conditions",
+                "organizational_connection_intent",
+            ]
         if scan_type == "leadership":
             return list(DEFAULT_LEADERSHIP_MODULES)
         if scan_type == "onboarding":
@@ -133,6 +146,14 @@ def _resolve_survey_modules(scan_type: str, enabled_modules: list[str] | None) -
     factor_modules = [module for module in enabled_modules if module in ORG_FACTOR_KEYS]
     if factor_modules:
         return factor_modules
+    if scan_type == "culture_assessment":
+        return [
+            "autonomy_role_clarity",
+            "growth_development",
+            "change_readiness",
+            "reward_conditions",
+            "organizational_connection_intent",
+        ]
     if scan_type == "leadership":
         return list(DEFAULT_LEADERSHIP_MODULES)
     if scan_type == "onboarding":
@@ -175,13 +196,11 @@ async def lifespan(app: FastAPI):
     # Bij PostgreSQL/Supabase beheert schema.sql de tabellen
     if _IS_SQLITE:
         init_db()
-    else:
-        backend_database._repair_contact_request_schema()
     yield
 
 
 app = FastAPI(
-    title="Verisight API",
+    title="Loep API",
     version="2.0.0",
     description="HR verloopanalyse platform — ExitScan & RetentieScan",
     lifespan=lifespan,
@@ -280,7 +299,7 @@ ROLE_LEVEL_ALIASES = {
     "mt": "c_level",
 }
 
-BOUNDED_COMMERCE_CORE_ROUTE_INTERESTS = {"exitscan", "retentiescan"}
+BOUNDED_COMMERCE_CORE_ROUTE_INTERESTS = {"exitscan", "retentiescan", "culture_assessment"}
 QUALIFICATION_CONFIRMABLE_ROUTE_INTERESTS = {
     "exitscan",
     "retentiescan",
@@ -288,6 +307,7 @@ QUALIFICATION_CONFIRMABLE_ROUTE_INTERESTS = {
     "teamscan",
     "onboarding",
     "leadership",
+    "culture_assessment",
 }
 
 
@@ -326,6 +346,20 @@ def _supports_bounded_commerce_route(route_interest: str | None) -> bool:
 
 def _supports_confirmable_qualified_route(route_interest: str | None) -> bool:
     return route_interest in QUALIFICATION_CONFIRMABLE_ROUTE_INTERESTS
+
+
+def _get_runtime_locked_product_name(scan_type: str | None) -> str | None:
+    return None
+
+
+def _is_placeholder_primary_route(scan_type: str | None) -> bool:
+    return False
+
+
+def _get_report_unavailable_product_name(scan_type: str) -> str | None:
+    if scan_type == "pulse":
+        return "Pulse"
+    return None
 
 
 def _normalize_optional_text(value: str | None) -> str | None:
@@ -437,9 +471,27 @@ def _build_import_preview(
 
         department_raw = normalized["department"]
         department = str(department_raw).strip() if department_raw not in (None, "") else None
+        if not department:
+            issues.append(
+                RespondentImportIssue(
+                    row_number=row_number,
+                    field="department",
+                    message="Afdeling ontbreekt. Gebruik een ingevulde department-kolom voor elke respondent.",
+                )
+            )
+            continue
 
         role_level = _normalize_role_level(normalized["role_level"])
-        if normalized["role_level"] not in (None, "") and not role_level:
+        if normalized["role_level"] in (None, ""):
+            issues.append(
+                RespondentImportIssue(
+                    row_number=row_number,
+                    field="role_level",
+                    message="Functieniveau ontbreekt. Gebruik uitvoerend, specialist, senior, manager, director of c_level.",
+                )
+            )
+            continue
+        if not role_level:
             issues.append(
                 RespondentImportIssue(
                     row_number=row_number,
@@ -794,7 +846,7 @@ async def update_contact_request(
     if commerce_update_requested and not _supports_bounded_commerce_route(lead.route_interest):
         raise HTTPException(
             status_code=422,
-            detail="Bounded billing/check-out foundation ondersteunt in deze wave alleen ExitScan en RetentieScan.",
+            detail="Bounded billing/check-out foundation ondersteunt in deze wave alleen ExitScan, RetentieScan en Loep Culture Assessment.",
         )
 
     if commerce_update_requested:
@@ -979,6 +1031,20 @@ async def serve_survey(
             hint="Heb je vragen over de uitkomsten of verwerking van je gegevens, neem dan contact op met de HR-afdeling van je organisatie.",
             tone="info",
         )
+    locked_product_name = _get_runtime_locked_product_name(campaign.scan_type)
+    if locked_product_name:
+        return _render_survey_status(
+            request,
+            status_code=423,
+            title=f"{locked_product_name} nog niet open voor respondentinvulling",
+            heading="Deze route staat nog niet open voor respondentinvulling",
+            message=(
+                f"{locked_product_name} is in deze wave al wel als route en board-level baseline zichtbaar, "
+                "maar de respondentenvulling en survey-runtime staan nog bewust dicht."
+            ),
+            hint="Gebruik deze route nu alleen voor intake, routebevestiging en bestuurlijke voorbereiding.",
+            tone="info",
+        )
 
     enabled_modules = _resolve_survey_modules(campaign.scan_type, campaign.enabled_modules)
     scan_definition = get_scan_definition(campaign.scan_type)
@@ -1014,6 +1080,11 @@ async def submit_survey(
         raise HTTPException(status_code=409, detail="Survey al ingevuld.")
     if not respondent.campaign.is_active:
         raise HTTPException(status_code=410, detail="Deze survey is gesloten en accepteert geen nieuwe inzendingen meer.")
+    if _is_placeholder_primary_route(respondent.campaign.scan_type):
+        raise HTTPException(
+            status_code=422,
+            detail="Loep Culture Assessment accepteert in deze wave nog geen survey-inzendingen.",
+        )
     product_module = get_product_module(respondent.campaign.scan_type)
     product_module.validate_submission(payload)
 
@@ -1161,7 +1232,7 @@ async def create_organization(
         if not admin_profile_id:
             raise HTTPException(
                 status_code=503,
-                detail="Geen Verisight admin-profiel beschikbaar om een organisatie aan te maken.",
+                detail="Geen Loep admin-profiel beschikbaar om een organisatie aan te maken.",
             )
 
         # Supabase-triggers gebruiken auth.uid() om org ownership te registreren.
@@ -1255,7 +1326,7 @@ def _create_campaign_respondents(
     respondent_inputs: list[RespondentCreate],
     db: Session,
     send_invites: bool,
-) -> tuple[list[Respondent], int]:
+) -> tuple[list[Respondent], int, list[InviteEvidenceItem]]:
     respondents = [
         Respondent(
             campaign_id=campaign.id,
@@ -1272,21 +1343,34 @@ def _create_campaign_respondents(
     db.commit()
 
     emails_sent = 0
+    invite_evidence: list[InviteEvidenceItem] = []
     if send_invites:
         for respondent, req in zip(respondents, respondent_inputs):
             if req.email:
-                sent = send_survey_invite(
+                send_result = send_survey_invite_result(
                     to_email=req.email,
                     campaign_name=campaign.name,
                     token=respondent.token,
                     scan_type=campaign.scan_type,
                 )
-                if sent:
+                invite_evidence.append(
+                    InviteEvidenceItem(
+                        token=str(respondent.token),
+                        email=req.email,
+                        status="sent" if send_result.ok else "failed",
+                        invite_url=f"{(os.getenv('BACKEND_URL') or 'http://localhost:8000').rstrip('/')}/survey/{respondent.token}",
+                        provider=send_result.provider,
+                        provider_email_id=send_result.provider_email_id,
+                        provider_message_id=send_result.provider_message_id,
+                        failure_reason=send_result.reason,
+                    )
+                )
+                if send_result.ok:
                     respondent.sent_at = datetime.now(timezone.utc)
                     emails_sent += 1
         db.commit()
 
-    return respondents, emails_sent
+    return respondents, emails_sent, invite_evidence
 
 
 @app.post("/api/campaigns", response_model=CampaignRead, status_code=201)
@@ -1341,7 +1425,13 @@ async def add_respondents(
     )
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
-    respondents, _emails_sent = _create_campaign_respondents(
+    locked_product_name = _get_runtime_locked_product_name(campaign.scan_type)
+    if locked_product_name:
+        raise HTTPException(
+            status_code=422,
+            detail=f"{locked_product_name} ondersteunt in deze wave nog geen respondenttoevoeging of uitnodigingen.",
+        )
+    respondents, _emails_sent, _invite_evidence = _create_campaign_respondents(
         campaign=campaign,
         respondent_inputs=body.respondents,
         db=db,
@@ -1366,6 +1456,12 @@ async def import_respondents(
     ).first()
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
+    locked_product_name = _get_runtime_locked_product_name(campaign.scan_type)
+    if locked_product_name:
+        raise HTTPException(
+            status_code=422,
+            detail=f"{locked_product_name} ondersteunt in deze wave nog geen respondentimport of uitnodigingen.",
+        )
 
     content = await upload.read()
     if not content:
@@ -1404,7 +1500,7 @@ async def import_respondents(
     if dry_run or issues:
         return response
 
-    respondents, emails_sent = _create_campaign_respondents(
+    respondents, emails_sent, invite_evidence = _create_campaign_respondents(
         campaign=campaign,
         respondent_inputs=normalized_rows,
         db=db,
@@ -1412,6 +1508,7 @@ async def import_respondents(
     )
     response.imported = len(respondents)
     response.emails_sent = emails_sent
+    response.invite_evidence = invite_evidence
     return response
 
 
@@ -1450,10 +1547,17 @@ async def send_invites(
     ).first()
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
+    locked_product_name = _get_runtime_locked_product_name(campaign.scan_type)
+    if locked_product_name:
+        raise HTTPException(
+            status_code=422,
+            detail=f"{locked_product_name} ondersteunt in deze wave nog geen survey-uitnodigingen.",
+        )
 
     sent = 0
     failed = 0
     skipped = 0
+    evidence: list[InviteEvidenceItem] = []
 
     requested_tokens = [item.token for item in body]
     respondents = (
@@ -1471,20 +1575,49 @@ async def send_invites(
 
         if not respondent or not respondent.email:
             failed += 1
+            evidence.append(
+                InviteEvidenceItem(
+                    token=item.token,
+                    email=item.email,
+                    status="failed",
+                    failure_reason="missing_recipient",
+                )
+            )
             continue
 
         if item.email and item.email != respondent.email:
             skipped += 1
+            evidence.append(
+                InviteEvidenceItem(
+                    token=item.token,
+                    email=respondent.email,
+                    status="skipped",
+                    invite_url=f"{(os.getenv('BACKEND_URL') or 'http://localhost:8000').rstrip('/')}/survey/{item.token}",
+                    failure_reason="email_mismatch",
+                )
+            )
             continue
 
-        ok = send_survey_invite(
+        send_result = send_survey_invite_result(
             to_email=respondent.email,
             campaign_name=campaign.name,
             token=item.token,
             scan_type=campaign.scan_type,
         )
+        evidence.append(
+            InviteEvidenceItem(
+                token=item.token,
+                email=respondent.email,
+                status="sent" if send_result.ok else "failed",
+                invite_url=f"{(os.getenv('BACKEND_URL') or 'http://localhost:8000').rstrip('/')}/survey/{item.token}",
+                provider=send_result.provider,
+                provider_email_id=send_result.provider_email_id,
+                provider_message_id=send_result.provider_message_id,
+                failure_reason=send_result.reason,
+            )
+        )
 
-        if ok:
+        if send_result.ok:
             respondent.sent_at = datetime.now(timezone.utc)
             sent += 1
         else:
@@ -1501,7 +1634,7 @@ async def send_invites(
             campaign_id,
         )
 
-    return InviteSendResult(sent=sent, failed=failed, skipped=skipped)
+    return InviteSendResult(sent=sent, failed=failed, skipped=skipped, evidence=evidence)
 
 
 # ---------------------------------------------------------------------------
@@ -1599,9 +1732,16 @@ async def campaign_stats(
 async def download_report(
     campaign_id: str,
     x_api_key: Annotated[str, Header()],
+    format: str = Query(default="pdf", pattern="^(pdf|segment_summary)$"),
     db: Session = Depends(get_db),
 ) -> Response:
     """Genereer en download een PDF-rapport voor de campaign."""
+    if format == "segment_summary":
+        raise HTTPException(
+            status_code=403,
+            detail="Segment summary export is alleen beschikbaar via de interne governance-proxy.",
+        )
+
     org = _get_org_by_api_key(x_api_key, db)
     campaign = db.query(Campaign).filter(
         Campaign.id == campaign_id,
@@ -1609,30 +1749,29 @@ async def download_report(
     ).first()
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
-    if campaign.scan_type in {"pulse"}:
-        product_name = (
-            "Pulse"
-            if campaign.scan_type == "pulse"
-            else "TeamScan"
-            if campaign.scan_type == "team"
-            else "Leadership Scan"
-        )
+    product_name = _get_report_unavailable_product_name(campaign.scan_type)
+    if product_name:
         raise HTTPException(status_code=422, detail=f"{product_name} ondersteunt in deze wave nog geen PDF-rapport.")
 
     try:
-        from backend.report import generate_campaign_report
-        pdf_bytes = generate_campaign_report(campaign_id, db)
+        from backend.report import generate_campaign_report, generate_culture_assessment_segment_summary_export
+        if format == "segment_summary":
+            export_bytes = generate_culture_assessment_segment_summary_export(campaign_id, db)
+        else:
+            export_bytes = generate_campaign_report(campaign_id, db)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"PDF-generatie mislukt: {e}")
+        raise HTTPException(status_code=500, detail=f"Rapport- of exportgeneratie mislukt: {e}")
 
     # HTTP Content-Disposition headers zijn latin-1; strip alle niet-ASCII tekens
     import re as _re
     safe_name = _re.sub(r"[^\w\s-]", "", campaign.name)   # verwijder em-dash etc.
     safe_name = _re.sub(r"[\s-]+", "_", safe_name).strip("_")  # spaties/streepjes → _
-    filename = f"Verisight_{safe_name}.pdf"
+    filename = f"Loep_{safe_name}.csv" if format == "segment_summary" else f"Loep_{safe_name}.pdf"
     return Response(
-        content=pdf_bytes,
-        media_type="application/pdf",
+        content=export_bytes,
+        media_type="text/csv; charset=utf-8" if format == "segment_summary" else "application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
@@ -1641,6 +1780,7 @@ async def download_report(
 async def download_report_internal(
     campaign_id: str,
     x_admin_token: Annotated[str | None, Header()] = None,
+    format: str = Query(default="pdf", pattern="^(pdf|segment_summary)$"),
     db: Session = Depends(get_db),
 ) -> Response:
     """Interne rapportdownload voor vertrouwde server-side proxy's."""
@@ -1649,29 +1789,28 @@ async def download_report_internal(
     campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
-    if campaign.scan_type in {"pulse"}:
-        product_name = (
-            "Pulse"
-            if campaign.scan_type == "pulse"
-            else "TeamScan"
-            if campaign.scan_type == "team"
-            else "Leadership Scan"
-        )
+    product_name = _get_report_unavailable_product_name(campaign.scan_type)
+    if product_name:
         raise HTTPException(status_code=422, detail=f"{product_name} ondersteunt in deze wave nog geen PDF-rapport.")
 
     try:
-        from backend.report import generate_campaign_report
-        pdf_bytes = generate_campaign_report(campaign_id, db)
+        from backend.report import generate_campaign_report, generate_culture_assessment_segment_summary_export
+        if format == "segment_summary":
+            export_bytes = generate_culture_assessment_segment_summary_export(campaign_id, db)
+        else:
+            export_bytes = generate_campaign_report(campaign_id, db)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"PDF-generatie mislukt: {e}")
+        raise HTTPException(status_code=500, detail=f"Rapport- of exportgeneratie mislukt: {e}")
 
     import re as _re
     safe_name = _re.sub(r"[^\w\s-]", "", campaign.name)
     safe_name = _re.sub(r"[\s-]+", "_", safe_name).strip("_")
-    filename = f"Verisight_{safe_name}.pdf"
+    filename = f"Loep_{safe_name}.csv" if format == "segment_summary" else f"Loep_{safe_name}.pdf"
     return Response(
-        content=pdf_bytes,
-        media_type="application/pdf",
+        content=export_bytes,
+        media_type="text/csv; charset=utf-8" if format == "segment_summary" else "application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 

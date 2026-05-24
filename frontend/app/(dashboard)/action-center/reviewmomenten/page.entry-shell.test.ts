@@ -8,5 +8,43 @@ describe('action center reviewmomenten entry shell', () => {
     expect(source).toContain('ReviewMomentPageClient')
     expect(source).toContain('getActionCenterPageData')
     expect(source).toContain('computeReviewMomentGovernanceCounts')
+    expect(source).toContain('context.canScheduleActionCenterReview')
+    expect(source).toContain('pageData.inviteDownloadEligibleRouteIds')
+    expect(source).toContain('pageData.routeScanTypeByRouteId')
+    expect(source).toContain('canScheduleActionCenterReview={context.canScheduleActionCenterReview}')
+    expect(source).toContain('inviteDownloadEligibleRouteIds={pageData.inviteDownloadEligibleRouteIds}')
+    expect(source).toContain('routeScanTypeByRouteId={pageData.routeScanTypeByRouteId}')
+  })
+
+  it('threads review rhythm data and management permission into the existing reviewmomenten page', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('getActionCenterReviewRhythmData')
+    expect(source).toContain('loadActionCenterGraphCapability')
+    expect(source).toContain('resolveActionCenterReviewRhythmWriteAccess')
+    expect(source).toContain('manageableReviewRhythmRouteIds=')
+    expect(source).toContain('nativeCalendarEligibleRouteIds=')
+    expect(source).toContain('rhythmConfigByRouteId=')
+    expect(source).toContain('oversightSummary={rhythmData.oversight.summary}')
+    expect(source).toContain('oversightAttentionItems={rhythmData.oversight.attentionItems}')
+  })
+
+  it('derives manageable review-rhythm scope from the canonical route id instead of preview item ids', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('const routeId = item.coreSemantics.route.routeId')
+    expect(source).toContain('if (!routeId.startsWith(routePrefix))')
+    expect(source).toContain('return routeId.slice(routePrefix.length)')
+    expect(source).not.toContain('if (!item.id.startsWith(routePrefix))')
+  })
+
+  it('filters reviewmomenten surfaces to constitution-approved route families before wiring the page client', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('const reviewMomentItems = pageData.items.filter')
+    expect(source).toContain('getActionCenterEnabledRouteDefaults(')
+    expect(source).toContain('items={reviewMomentItems}')
+    expect(source).not.toContain("'pulse'")
+    expect(source).not.toContain("'leadership'")
   })
 })

@@ -4,33 +4,33 @@ import { useState, useEffect, useRef } from 'react'
 
 // ── Design tokens ─────────────────────────────────────────────────
 export const T = {
-  paper:      '#F7F5F1',
-  paperSoft:  '#FAF8F4',
-  paperBlush: '#F3E4DA',
+  paper:      '#F4F1EA',
+  paperSoft:  '#EEE8DE',
+  paperBlush: '#F2EBE1',
   white:      '#FFFFFF',
-  navy:       '#132033',
-  ink:        '#132033',
-  inkSoft:    '#4A5563',
-  inkMuted:   '#6B7280',
-  inkFaint:   '#9AA3AE',
-  rule:       '#E5E0D6',
-  ruleLight:  '#F0EBE2',
-  teal:       '#7A908B',
-  tealMid:    '#90A29F',
-  tealSoft:   '#E8F0EE',
-  tealFaint:  '#F4F8F7',
+  navy:       '#0D1B2A',
+  ink:        '#0D1B2A',
+  inkSoft:    '#4A6070',
+  inkMuted:   '#6A7783',
+  inkFaint:   '#8B95A0',
+  rule:       'rgba(13,27,42,0.15)',
+  ruleLight:  'rgba(13,27,42,0.10)',
+  teal:       '#E8A020',
+  tealMid:    '#D3921D',
+  tealSoft:   'rgba(232,160,32,0.12)',
+  tealFaint:  'rgba(232,160,32,0.08)',
 } as const
 
 export const AC = {
-  deep:  '#C96A4B',
-  mid:   '#D9886E',
-  light: '#E8B7A6',
-  soft:  '#F3E4DA',
-  faint: '#FAF1EC',
+  deep:  '#B07A10',
+  mid:   '#E8A020',
+  light: '#F2C76F',
+  soft:  'rgba(232,160,32,0.12)',
+  faint: 'rgba(232,160,32,0.08)',
 } as const
 
-export const FF = 'var(--font-fraunces), serif'
-export const SHELL = { maxWidth: 1200, margin: '0 auto', padding: '0 clamp(20px,4vw,48px)' } as const
+export const FF = 'var(--font-inter-tight), Inter, sans-serif'
+export const SHELL = { maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,3.5vw,48px)' } as const
 
 // ── Hooks ─────────────────────────────────────────────────────────
 export function useInView(threshold = 0.12) {
@@ -65,7 +65,7 @@ export function useInView(threshold = 0.12) {
 export function Reveal({
   children, delay = 0, from = 'up' as 'up' | 'right' | 'none', threshold = 0.1,
 }: {
-  children: React.ReactNode; delay?: number; from?: 'up' | 'right' | 'none'; threshold?: number
+  children?: React.ReactNode; delay?: number; from?: 'up' | 'right' | 'none'; threshold?: number
 }) {
   const [ref, inView] = useInView(threshold)
   const tr = { up: 'translateY(22px)', right: 'translateX(24px)', none: 'none' }

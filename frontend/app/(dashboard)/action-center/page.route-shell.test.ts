@@ -1,5 +1,9 @@
 import { readFileSync } from "node:fs";
-import { ActionCenterPreview } from "@/components/dashboard/action-center-preview";
+import {
+  ActionCenterPreview,
+  buildPersistedRouteActionFeedback,
+} from "@/components/dashboard/action-center-preview";
+import { serializeActionCenterRouteActionEditorValue } from "@/components/dashboard/action-center-route-action-editor";
 import { describe, expect, it } from "vitest";
 import { projectActionCenterCoreSemantics } from "@/lib/action-center-core-semantics";
 import { buildLiveActionCenterItems } from "@/lib/action-center-live";
@@ -55,7 +59,7 @@ function buildDeliveryRecord(overrides: Partial<CampaignDeliveryRecord> = {}): C
     contact_request_id: null,
     lifecycle_stage: "first_management_use",
     exception_status: "none",
-    operator_owner: "Verisight delivery",
+    operator_owner: "Loep delivery",
     next_step: "Leg de eerste bounded opvolgstap vast.",
     operator_notes: "De eerste managementread staat klaar voor follow-through.",
     customer_handoff_note: "De managementread is klaar voor een eerste bounded follow-through.",
@@ -356,13 +360,99 @@ function renderFollowUpAffordanceMarkup(args: {
   return { item, items, markup };
 }
 
+function renderOverviewMarkup() {
+  const contexts = [buildLiveContext(), buildFollowUpTargetContext()];
+  const items = buildLiveActionCenterItems(contexts);
+
+  return renderToStaticMarkup(
+    createElement(ActionCenterPreview, {
+      initialItems: items,
+      initialView: "overview",
+      fallbackOwnerName: "Admin",
+      ownerOptions: ["Manager Operations", "Manager Support"],
+      workbenchHref: "/dashboard",
+      workbenchLabel: "Open broncampagne",
+      workspaceName: "Action Center",
+      workspaceSubtitle: "Live opvolging",
+      hideSidebar: true,
+      readOnly: true,
+      boundedOverviewOnly: true,
+      itemHrefs: Object.fromEntries(items.map((item) => [item.id, `/campaigns/${item.coreSemantics.route.campaignId}`])),
+    }),
+  );
+}
+
 describe("action center landing shell", () => {
+  it("parses contextual entry params and passes the selected view through to the preview", () => {
+    const pageSource = readFileSync(new URL("./page.tsx", import.meta.url), "utf8");
+
+    expect(pageSource).toContain("view?: string");
+    expect(pageSource).toContain("resolveActionCenterEntryParams");
+    expect(pageSource).toContain("initialView={entry.view}");
+    expect(pageSource).toContain("boundedOverviewOnly={entry.view === 'overview'}");
+    expect(pageSource).toContain("allowEmptyInitialSelection={hasAmbiguousCampaignFocus}");
+    expect(pageSource).toContain("source === 'campaign-detail'");
+    expect(pageSource).toContain("source === 'review-moments'");
+  });
+
   it("keeps a thin shell around the preview and route params", () => {
     const pageSource = readFileSync(new URL("./page.tsx", import.meta.url), "utf8");
 
     expect(pageSource).toContain("<ActionCenterPreview");
     expect(pageSource).toContain("searchParams");
     expect(pageSource).toContain('routeFollowUpEndpoint="/api/action-center-route-follow-ups"');
+    expect(pageSource).toContain('routeActionEndpoint="/api/action-center-route-actions"');
+    expect(pageSource).toContain('actionReviewEndpoint="/api/action-center-action-reviews"');
+    expect(pageSource).toContain("hideSidebar");
+    expect(pageSource).toContain("readOnly");
+    expect(pageSource).toContain("boundedOverviewOnly");
+  });
+
+  it("treats a non-valid route-action response as a persisted draft outcome instead of a generic save error", () => {
+    const draftValue = {
+      themeKey: "workload" as const,
+      actionText: "Verbeter overal de cultuur.",
+      reviewScheduledFor: "2026-05-20",
+      expectedEffect: "Iedereen voelt snel verschil.",
+    };
+
+    expect(
+      buildPersistedRouteActionFeedback({
+        value: draftValue,
+        validationDisposition: "invalid",
+        validationMessage: "Pas deze actie aan zodat hij bounded en route-specifiek is.",
+      }),
+    ).toEqual({
+      message:
+        "Draft opgeslagen, nog niet live in deze route. Pas deze actie aan zodat hij bounded en route-specifiek is.",
+      persistedDraftFingerprint: serializeActionCenterRouteActionEditorValue(draftValue),
+      statusMessage: "Draft opgeslagen, nog niet live in deze route.",
+      tone: "warning",
+      validationDisposition: "invalid",
+      validationMessage: "Pas deze actie aan zodat hij bounded en route-specifiek is.",
+    });
+  });
+
+  it("renders the route as a bounded overview cockpit instead of a broad workflow suite", () => {
+    const markup = renderOverviewMarkup();
+
+    expect(markup).toContain("Action Center");
+    expect(markup).toContain("Overzicht van managementopvolging en acties.");
+    expect(markup).toContain("Actieve routes");
+    expect(markup).toContain("Te bespreken / reviewbaar");
+    expect(markup).toContain("Geblokkeerd");
+    expect(markup).toContain("Niet beschikbaar");
+    expect(markup).toContain("Afgerond");
+    expect(markup).toContain("Wat vraagt nu aandacht?");
+    expect(markup).toContain("Komende reviews");
+
+    expect(markup).not.toContain("Bestuurlijke teruglezing");
+    expect(markup).not.toContain("Managers en toewijzing");
+    expect(markup).not.toContain("Open alle acties");
+    expect(markup).not.toContain("Open managers");
+    expect(markup).not.toContain("Actie aanmaken");
+    expect(markup).not.toContain("Action Center / Reviewmomenten");
+    expect(markup).not.toContain("Mijn teams");
   });
 
   it("loads route reopen rows into the live action-center contexts", () => {
@@ -380,7 +470,7 @@ describe("action center landing shell", () => {
       managementActionOutcome: "afronden",
       canAssignManagers: true,
       canRespondToRequests: true,
-      workspaceSubtitle: "Verisight + HR",
+      workspaceSubtitle: "Loep + HR",
     });
 
     expect(item.coreSemantics.route.routeStatus).toBe("afgerond");
@@ -401,7 +491,7 @@ describe("action center landing shell", () => {
       managementActionOutcome: "afronden",
       canAssignManagers: true,
       canRespondToRequests: true,
-      workspaceSubtitle: "Verisight + HR",
+      workspaceSubtitle: "Loep + HR",
       withDirectActiveSuccessor: true,
     });
 
@@ -428,7 +518,7 @@ describe("action center landing shell", () => {
       managementActionOutcome: "afronden",
       canAssignManagers: true,
       canRespondToRequests: true,
-      workspaceSubtitle: "Verisight + HR",
+      workspaceSubtitle: "Loep + HR",
       withTargetCandidate: false,
     });
 
@@ -446,7 +536,7 @@ describe("action center landing shell", () => {
       managementActionOutcome: "afronden",
       canAssignManagers: true,
       canRespondToRequests: true,
-      workspaceSubtitle: "Verisight + HR",
+      workspaceSubtitle: "Loep + HR",
       withAmbiguousTargetCandidates: true,
     });
 
@@ -464,7 +554,7 @@ describe("action center landing shell", () => {
       managementActionOutcome: "afronden",
       canAssignManagers: true,
       canRespondToRequests: true,
-      workspaceSubtitle: "Verisight + HR",
+      workspaceSubtitle: "Loep + HR",
       withOptimisticDirectSuccessor: true,
     });
 
@@ -506,7 +596,7 @@ describe("action center landing shell", () => {
       managementActionOutcome: "bijstellen",
       canAssignManagers: true,
       canRespondToRequests: true,
-      workspaceSubtitle: "Verisight + HR",
+      workspaceSubtitle: "Loep + HR",
     });
 
     expect(item.coreSemantics.route.routeStatus).toBe("in-uitvoering");
@@ -1140,7 +1230,7 @@ describe("action center landing shell", () => {
     expect((markup.match(/Vervolg op eerdere route/g) ?? []).length).toBe(1);
   });
 
-  it("shows the agreed team review labels for upcoming reviews within the next week", () => {
+  it("shows team Review < 7 dagen for upcoming reviews within the next week", () => {
     const context = buildLiveContext();
     const [item] = buildLiveActionCenterItems([
       {
@@ -1164,10 +1254,8 @@ describe("action center landing shell", () => {
       }),
     );
 
-    expect(markup).toContain("Review eerstvolgt");
-    expect(markup).toContain("binnen 7 dagen");
-    expect(markup).toContain("Review deze week");
-    expect(markup).toContain(`Volgende bespreking ${item.reviewDateLabel}`);
+    expect(markup).toContain("Review &lt; 7 dagen");
+    expect(markup).toMatch(/Review &lt; 7 dagen<\/p><\/div><p[^>]*>1<\/p>/);
   });
 
   it("requires preview items to carry canonical core semantics as one grouped field", () => {

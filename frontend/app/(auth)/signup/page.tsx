@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -50,7 +50,7 @@ export default function SignupPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="w-full max-w-sm text-center">
-          <div className="text-5xl mb-4">📧</div>
+          <div className="text-5xl mb-4">ðŸ“§</div>
           <h1 className="text-xl font-bold text-gray-900 mb-2">Controleer je e-mail</h1>
           <p className="text-sm text-gray-500 mb-6">
             We hebben een bevestigingslink gestuurd naar <strong>{email}</strong>.
@@ -71,7 +71,7 @@ export default function SignupPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="text-2xl font-bold text-blue-600 tracking-tight">
-            Verisight
+            Loep
           </Link>
           <p className="mt-2 text-sm text-gray-500">Toegang op uitnodiging</p>
         </div>
@@ -159,3 +159,4 @@ export default function SignupPage() {
     </div>
   )
 }
+

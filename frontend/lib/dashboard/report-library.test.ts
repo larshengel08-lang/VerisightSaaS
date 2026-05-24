@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { buildReportLibraryEntries, filterReportLibraryEntries, getReportEntryBridge } from './report-library'
+import {
+  buildHrReportDownloadRows,
+  buildReportLibraryEntries,
+  filterReportLibraryEntries,
+  getReportEntryBridge,
+} from './report-library'
 import type { CampaignStats } from '@/lib/types'
 
 const campaigns: CampaignStats[] = [
@@ -133,7 +138,7 @@ describe('report library', () => {
     expect(getReportEntryBridge(model.featured!)).toMatchObject({
       href: '/action-center',
       bridge: {
-        ctaLabel: 'Open in Action Center',
+        ctaLabel: 'Open route in Action Center',
       },
     })
   })
@@ -161,7 +166,7 @@ describe('report library', () => {
     expect(getReportEntryBridge(activeEntry!)).toMatchObject({
       href: '/action-center',
       bridge: {
-        ctaLabel: 'Open in Action Center',
+        ctaLabel: 'Open route in Action Center',
       },
     })
   })
@@ -188,6 +193,29 @@ describe('report library', () => {
     })
     expect(model.entries.find((entry) => entry.campaignId === 'pulse-1')?.recommended).toBe(true)
     expect(model.entries.find((entry) => entry.campaignId === 'exit-1')?.recommended).toBe(false)
+  })
+
+  it('keeps report entries rich enough to flatten into a download-only HR list', () => {
+    const model = buildReportLibraryEntries(campaigns)
+    const first = model.entries[0]
+
+    expect(first).toMatchObject({
+      campaignId: 'exit-1',
+      campaignName: 'ExitScan Ops — Q3',
+    })
+    expect(first.metaLeft).toContain('responses')
+    expect(first.metaRight).toBeTruthy()
+  })
+
+  it('can derive unavailable report rows with compact factual reasons', () => {
+    const model = buildHrReportDownloadRows(campaigns)
+
+    expect(model.availableRows.map((row) => row.campaignId)).toEqual(['exit-1', 'onboarding-1', 'pulse-1'])
+    expect(model.unavailableRows.map((row) => row.campaignId)).toEqual(['tiny-1'])
+    expect(model.unavailableRows[0]).toMatchObject({
+      status: 'Nog onvoldoende respons',
+      isAvailable: false,
+    })
   })
 })
 

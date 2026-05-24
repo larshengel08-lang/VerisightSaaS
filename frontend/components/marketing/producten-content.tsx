@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { AC, Arrow, FF, Reveal, SHELL, T } from '@/components/marketing/design-tokens'
-import { FollowOnRoutesAccordion } from '@/components/marketing/follow-on-routes-accordion'
 import { MarketingClosingCta } from '@/components/marketing/marketing-closing-cta'
 import {
   actionCenterStartPositioning,
@@ -11,11 +10,10 @@ import {
   productSecondaryFirstBuyRoute,
 } from '@/components/marketing/site-content'
 import { buildContactHref } from '@/lib/contact-funnel'
-import { FOLLOW_ON_ROUTE_CONTENT } from '@/lib/follow-on-route-content'
 
-const laterFollowOnForms = productFollowOnRouteRows.filter(
-  ([title]) => title === 'ExitScan Live Start' || title === 'Reviewcadans',
-)
+const laterFollowOnForms = productFollowOnRouteRows
+  .filter(([title]) => title === 'ExitScan Live Start')
+  .map(([, body]) => ['Exitscan Live', body] as const)
 
 function HeroSection() {
   const primaryHref = buildContactHref({
@@ -83,19 +81,6 @@ function HeroSection() {
           >
             Kies de route die nu het meeste duidelijkheid geeft.
           </h1>
-          <p
-            style={{
-              color: T.inkSoft,
-              fontSize: 16.5,
-              lineHeight: 1.72,
-              margin: '26px auto 36px',
-              maxWidth: '60ch',
-            }}
-          >
-            ExitScan Baseline en RetentieScan Baseline blijven de twee hoofdinstappen. Onboarding 30-60-90
-            Baseline is een gerichtere startroute. Action Center Start en latere vervolgroutes komen pas daarna in
-            beeld.
-          </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
             <Link
               href={primaryHref}
@@ -261,11 +246,11 @@ function SecondaryFirstBuySection() {
               marginBottom: 12,
             }}
           >
-            Onboarding blijft een gerichte startroute.
+            Nieuwe medewerkers sneller goed laten landen
           </h2>
           <p style={{ color: T.inkSoft, fontSize: 14.5, lineHeight: 1.72, maxWidth: '54ch', margin: '0 auto' }}>
-            Onboarding 30-60-90 Baseline blijft zichtbaar als specifiekere eerste route: gerichter dan ExitScan en
-            RetentieScan, maar wel een volwaardige start wanneer onboarding nu de eerste vraag is.
+            Onboarding 30-60-90 Baseline helpt zichtbaar maken waar nieuwe medewerkers in de eerste maanden vastlopen:
+            in rol, leiding, team of werkcontext. Geschikt wanneer onboarding nu de belangrijkste managementvraag is.
           </p>
           </div>
         </Reveal>
@@ -438,7 +423,7 @@ function ActionCenterStartSection() {
                   textDecoration: 'none',
                 }}
               >
-                Toets of Action Center Start logisch is <Arrow />
+                Bespreek Action Center <Arrow />
               </Link>
             </div>
           </div>
@@ -466,22 +451,23 @@ function LaterRoutesSection() {
               marginBottom: 12,
             }}
           >
-            Vervolg en verdieping komen pas later in beeld.
+            Verder bouwen kan na de eerste Baseline
           </h2>
           <p style={{ color: T.inkSoft, fontSize: 14.5, lineHeight: 1.72, maxWidth: '56ch', margin: '0 auto' }}>
-            Live Start, Reviewcadans en latere vervolgroutes komen pas in beeld nadat de eerste route al richting
-            heeft gegeven.
+            Na de eerste Baseline kunt u gericht kiezen of dezelfde vraag structureel gevolgd, herijkt of verdiept moet
+            worden. Zo blijft de eerste koop licht en wordt vervolg pas toegevoegd wanneer het echt nodig is.
           </p>
           </div>
         </Reveal>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2" style={{ marginBottom: 28 }}>
+        <div style={{ marginBottom: 28, marginLeft: 'auto', marginRight: 'auto', maxWidth: 720 }}>
           {laterFollowOnForms.map(([title, body], index) => (
             <Reveal key={title} delay={index * 0.06}>
               <article
                 style={{
                   background: T.paperSoft,
                   border: `1px solid ${T.rule}`,
+                  borderRadius: 28,
                   padding: '24px 24px 22px',
                 }}
               >
@@ -515,10 +501,6 @@ function LaterRoutesSection() {
             </Reveal>
           ))}
         </div>
-
-        <Reveal delay={0.12}>
-          <FollowOnRoutesAccordion routes={FOLLOW_ON_ROUTE_CONTENT} />
-        </Reveal>
       </div>
     </section>
   )

@@ -1,65 +1,58 @@
 import type { Metadata } from 'next'
-import { IBM_Plex_Sans, Fraunces, Newsreader } from 'next/font/google'
+import { Inter, Inter_Tight } from 'next/font/google'
 import { SiteAnalytics } from '@/components/marketing/site-analytics'
 import './globals.css'
 
-const ibmPlexSans = IBM_Plex_Sans({
+const inter = Inter({
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600'],
+  weight: ['400', '500', '600', '700', '800'],
   display: 'swap',
-  variable: '--font-ibm-plex-sans',
+  variable: '--font-inter',
 })
 
-const fraunces = Fraunces({
+const interTight = Inter_Tight({
   subsets: ['latin'],
-  weight: 'variable',
-  style: ['normal', 'italic'],
-  axes: ['opsz'],
+  weight: ['700', '800', '900'],
   display: 'swap',
-  variable: '--font-fraunces',
-})
-
-const newsreader = Newsreader({
-  subsets: ['latin'],
-  weight: 'variable',
-  style: ['normal', 'italic'],
-  axes: ['opsz'],
-  display: 'swap',
-  variable: '--font-newsreader',
+  variable: '--font-inter-tight',
 })
 
 const googleSiteVerification = process.env.GOOGLE_SITE_VERIFICATION
 
 export const metadata: Metadata = {
   title: {
-    default: 'Verisight',
-    template: '%s | Verisight',
+    default: 'Loep',
+    template: '%s | Loep',
+  },
+  icons: {
+    icon: [{ url: '/icon.png', type: 'image/png' }],
+    shortcut: [{ url: '/icon.png', type: 'image/png' }],
   },
   description:
-    'Verisight helpt HR-teams bij organisaties met 200 tot 1.000 medewerkers om vertrek te duiden met ExitScan en behoud eerder zichtbaar te maken met RetentieScan.',
+    'Loep helpt HR-teams bij organisaties met 200 tot 1.000 medewerkers om vertrek te duiden met ExitScan en behoud eerder zichtbaar te maken met RetentieScan.',
   metadataBase: new URL('https://www.verisight.nl'),
   openGraph: {
     type: 'website',
     locale: 'nl_NL',
     url: 'https://www.verisight.nl',
-    siteName: 'Verisight',
-    title: 'Verisight',
+    siteName: 'Loep',
+    title: 'Loep',
     description:
-      'Begrijp waarom medewerkers vertrekken en zie eerder waar behoud onder druk staat. Verisight levert ExitScan en RetentieScan in een begeleide productvorm.',
+      'Begrijp waarom medewerkers vertrekken en zie eerder waar behoud onder druk staat. Loep levert ExitScan en RetentieScan in een begeleide productvorm.',
     images: [
       {
         url: '/opengraph-image',
         width: 1200,
         height: 630,
-        alt: 'Verisight productportfolio met ExitScan en RetentieScan',
+        alt: 'Loep productportfolio met ExitScan en RetentieScan',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Verisight',
+    title: 'Loep',
     description:
-      'Begrijp waarom medewerkers vertrekken en zie eerder waar behoud onder druk staat. Verisight levert ExitScan en RetentieScan in een begeleide productvorm.',
+      'Begrijp waarom medewerkers vertrekken en zie eerder waar behoud onder druk staat. Loep levert ExitScan en RetentieScan in een begeleide productvorm.',
     images: ['/opengraph-image'],
   },
   robots: {
@@ -77,11 +70,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const organizationSchema = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'Verisight',
+    name: 'Loep',
     url: 'https://www.verisight.nl',
-    logo: 'https://www.verisight.nl/verisight-wordmark.svg',
+    logo: 'https://www.verisight.nl/icon.png',
     description:
-      'Verisight helpt HR-teams bij organisaties met 200 tot 1.000 medewerkers om vertrek te duiden met ExitScan en behoud eerder zichtbaar te maken met RetentieScan.',
+      'Loep helpt HR-teams bij organisaties met 200 tot 1.000 medewerkers om vertrek te duiden met ExitScan en behoud eerder zichtbaar te maken met RetentieScan.',
     areaServed: {
       '@type': 'Country',
       name: 'Nederland',
@@ -90,7 +83,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     contactPoint: {
       '@type': 'ContactPoint',
       contactType: 'sales',
-      email: 'hallo@verisight.nl',
+      email: 'hallo@getloep.nl',
       availableLanguage: 'Dutch',
       url: 'https://www.verisight.nl/#kennismaking',
     },
@@ -98,7 +91,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="nl">
-      <body className={`${ibmPlexSans.variable} ${fraunces.variable} ${newsreader.variable} font-[family-name:var(--font-ibm-plex-sans)] bg-[--bg] antialiased`}>
+      <body className={`${inter.variable} ${interTight.variable} font-[family-name:var(--font-inter)] bg-[--bg] antialiased`}>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}

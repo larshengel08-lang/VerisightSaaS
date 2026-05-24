@@ -42,6 +42,19 @@ export interface BuildReportLibraryEntriesOptions {
   hrDemoArtifact?: Pick<HrDemoPilotArtifact, 'campaignId'> | null
 }
 
+export interface HrReportDownloadRow {
+  campaignId: string
+  campaignName: string
+  scanType: ScanType
+  scanName: string
+  periodLabel: string
+  createdAt: string
+  responseBasis: string
+  status: string
+  isAvailable: boolean
+  extraDisambiguator?: string | null
+}
+
 const MANAGEMENT_SCAN_TYPES: ScanType[] = ['exit', 'retention', 'leadership']
 const MODULE_SCAN_TYPES: ScanType[] = ['pulse', 'team']
 
@@ -116,6 +129,12 @@ function getPriority(campaign: CampaignStats) {
               : 1
 
   return base * 1000 + campaign.total_completed
+}
+
+function getUnavailableStatus(campaign: CampaignStats): string {
+  if (!campaign.is_active) return 'Nog niet vrijgegeven'
+  if (campaign.total_completed < FIRST_DASHBOARD_THRESHOLD) return 'Nog onvoldoende respons'
+  return 'Nog in opbouw'
 }
 
 function getReportBridgeState(args: {
@@ -233,4 +252,49 @@ export function buildReportLibraryEntries(campaigns: CampaignStats[], options: B
 export function filterReportLibraryEntries(entries: ReportLibraryEntry[], category: ReportLibraryCategory) {
   if (category === 'all') return entries
   return entries.filter((entry) => entry.category === category)
+}
+
+export function buildHrReportDownloadRows(campaigns: CampaignStats[]): {
+  availableRows: HrReportDownloadRow[]
+  unavailableRows: HrReportDownloadRow[]
+} {
+  const availableEntries = buildReportLibraryEntries(campaigns).entries
+  const availableIds = new Set(availableEntries.map((entry) => entry.campaignId))
+
+  const availableRows: HrReportDownloadRow[] = availableEntries.map((entry) => {
+    const campaign = campaigns.find((candidate) => candidate.campaign_id === entry.campaignId)
+
+    return {
+      campaignId: entry.campaignId,
+      campaignName: entry.campaignName,
+      scanType: entry.scanType,
+      scanName: SCAN_TYPE_LABELS[entry.scanType],
+      periodLabel: formatDutchQuarter(campaign?.created_at ?? entry.metaRight),
+      createdAt: campaign?.created_at ?? '',
+      responseBasis: entry.metaLeft,
+      status: 'Klaar',
+      isAvailable: true,
+      extraDisambiguator: null,
+    }
+  })
+
+  const unavailableRows: HrReportDownloadRow[] = campaigns
+    .filter((campaign) => !availableIds.has(campaign.campaign_id))
+    .map((campaign) => ({
+      campaignId: campaign.campaign_id,
+      campaignName: campaign.campaign_name,
+      scanType: campaign.scan_type,
+      scanName: SCAN_TYPE_LABELS[campaign.scan_type],
+      periodLabel: formatDutchQuarter(campaign.created_at),
+      createdAt: campaign.created_at,
+      responseBasis: `${campaign.total_completed} responses`,
+      status: getUnavailableStatus(campaign),
+      isAvailable: false,
+      extraDisambiguator: null,
+    }))
+
+  return {
+    availableRows,
+    unavailableRows,
+  }
 }

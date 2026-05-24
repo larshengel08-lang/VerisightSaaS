@@ -1,5 +1,5 @@
 """
-Verisight - e-mailmodule (Resend)
+Loep - e-mailmodule (Resend)
 =================================
 Verzendt uitnodigings- en notificatiemails via Resend.
 Stel RESEND_API_KEY en EMAIL_FROM in als environment variables.
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 _ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
 _RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
-_EMAIL_FROM = os.getenv("EMAIL_FROM", "Verisight <noreply@verisight.nl>")
+_EMAIL_FROM = os.getenv("EMAIL_FROM", "Loep <noreply@verisight.nl>")
 _CONTACT_EMAIL = os.getenv("CONTACT_EMAIL", "hallo@verisight.nl")
 _FRONTEND_URL = os.getenv("FRONTEND_URL", "")
 _BACKEND_URL = os.getenv("BACKEND_URL", "")
@@ -33,6 +33,7 @@ _EMAIL_TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "templates" / "em
 _CONTACT_ROUTE_LABELS = {
     "exitscan": "ExitScan",
     "retentiescan": "RetentieScan",
+    "culture_assessment": "Loep Culture Assessment",
     "teamscan": "TeamScan",
     "onboarding": "Onboarding 30-60-90",
     "leadership": "Leadership Scan",
@@ -60,6 +61,9 @@ except ImportError:
 class EmailSendResult:
     ok: bool
     reason: str | None = None
+    provider: str | None = None
+    provider_email_id: str | None = None
+    provider_message_id: str | None = None
 
 
 def _mask_email(address: str) -> str:
@@ -133,13 +137,22 @@ def _send_result(
         response = _resend.Emails.send(payload)
         if not response:
             logger.warning("E-mailprovider gaf lege respons terug voor %s.", safe_to)
-            return EmailSendResult(ok=False, reason="empty_provider_response")
+            return EmailSendResult(ok=False, reason="empty_provider_response", provider="resend")
+        response_email_id = response.get("id") if isinstance(response, dict) else getattr(response, "id", None)
+        response_message_id = (
+            response.get("message_id") if isinstance(response, dict) else getattr(response, "message_id", None)
+        )
         logger.info("E-mail verzonden naar %s", safe_to)
-        return EmailSendResult(ok=True)
+        return EmailSendResult(
+            ok=True,
+            provider="resend",
+            provider_email_id=str(response_email_id) if response_email_id else None,
+            provider_message_id=str(response_message_id) if response_message_id else None,
+        )
     except Exception as exc:
         reason = _sanitize_error_reason(f"{exc.__class__.__name__}: {exc}")
         logger.error("E-mail verzending mislukt naar %s: %s", safe_to, reason)
-        return EmailSendResult(ok=False, reason=f"provider_error: {reason}")
+        return EmailSendResult(ok=False, reason=f"provider_error: {reason}", provider="resend")
 
 
 def _send(*, to: str, subject: str, html: str) -> bool:
@@ -155,6 +168,21 @@ def send_survey_invite(
     scan_type: str = "exit",
 ) -> bool:
     """Stuur een uitnodigingsmail met de survey-link naar een respondent."""
+    return send_survey_invite_result(
+        to_email=to_email,
+        campaign_name=campaign_name,
+        token=token,
+        scan_type=scan_type,
+    ).ok
+
+
+def send_survey_invite_result(
+    *,
+    to_email: str,
+    campaign_name: str,
+    token: str,
+    scan_type: str = "exit",
+) -> EmailSendResult:
     survey_url = f"{_require_runtime_url(_BACKEND_URL, 'BACKEND_URL')}/survey/{token}"
     scan = get_scan_definition(scan_type)
     html = _render_email_template(
@@ -165,7 +193,7 @@ def send_survey_invite(
         survey_url=survey_url,
     )
 
-    return _send(
+    return _send_result(
         to=to_email,
         subject=f"Uitnodiging {scan['product_name']}: {campaign_name}",
         html=html,
@@ -250,7 +278,7 @@ def send_contact_request_result(
 
     return _send_result(
         to=_CONTACT_EMAIL,
-        subject=f"Kennismakingsaanvraag Verisight - {organization}",
+        subject=f"Kennismakingsaanvraag Loep - {organization}",
         html=html,
         reply_to=work_email,
     )

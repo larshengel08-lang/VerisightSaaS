@@ -1,5 +1,13 @@
 import { buildLiveActionCenterItems, getLiveActionCenterSummary } from '@/lib/action-center-live'
+import type { ActionCenterGovernanceQueue } from '@/lib/action-center-governance-queues'
 import type { ActionCenterPreviewManagerOption } from '@/lib/action-center-preview-model'
+import type { ActionCenterMeasurementReadback } from '@/lib/action-center-measurement-readback'
+import { getActionCenterReviewRhythmData } from '@/lib/action-center-review-rhythm-data'
+import {
+  isActionCenterRouteDefaultsEnabledScanType,
+  isActionCenterRouteDefaultsKnownScanType,
+  type ActionCenterRouteDefaultsKnownScanType,
+} from '@/lib/action-center-route-defaults'
 import { buildActionCenterRouteId } from '@/lib/action-center-route-contract'
 import { projectActionCenterRouteCloseout } from '@/lib/action-center-route-closeout'
 import {
@@ -70,6 +78,10 @@ export interface ActionCenterPageData {
   managerOptions: ActionCenterPreviewManagerOption[]
   itemHrefs: Record<string, string>
   organizationNames: string[]
+  inviteDownloadEligibleRouteIds: string[]
+  routeScanTypeByRouteId: Record<string, ActionCenterRouteDefaultsKnownScanType>
+  governanceQueue: ActionCenterGovernanceQueue
+  measurementReadback: ActionCenterMeasurementReadback
 }
 
 function normalizeDepartmentLabel(value: string | null | undefined) {
@@ -128,6 +140,27 @@ function getManagerAssignment(
         row.can_view,
     ) ?? null
   )
+}
+
+function hasNonEmptyLoginEmail(value: string | null | undefined) {
+  return Boolean(value?.trim())
+}
+
+function isInviteDownloadEligibleRoute(args: {
+  campaign: Campaign
+  routeId: string
+  assignment: ActionCenterWorkspaceMember | null
+  visibleRouteIdSet: Set<string>
+}) {
+  if (!args.visibleRouteIdSet.has(args.routeId)) {
+    return false
+  }
+
+  if (!isActionCenterRouteDefaultsEnabledScanType(args.campaign.scan_type)) {
+    return false
+  }
+
+  return hasNonEmptyLoginEmail(args.assignment?.login_email)
 }
 
 export async function getActionCenterPageData({
@@ -195,6 +228,7 @@ export async function getActionCenterPageData({
   const dossiers = ((dossiersRaw ?? []) as PilotLearningDossier[]).filter((dossier) =>
     dossier.campaign_id ? campaignIds.includes(dossier.campaign_id) : false,
   )
+  const inviteEligibilityWorkspaceRows = (managerWorkspaceRowsRaw ?? []) as ActionCenterWorkspaceMember[]
   const managerWorkspaceRows = (
     context.canManageActionCenterAssignments ? managerWorkspaceRowsRaw ?? [] : currentUserWorkspaceMemberships
   ) as ActionCenterWorkspaceMember[]
@@ -380,17 +414,39 @@ export async function getActionCenterPageData({
     return acc
   }, {})
 
+  const inviteDownloadEligibleRouteIds: string[] = []
+  const routeScanTypeByRouteId: Record<string, ActionCenterRouteDefaultsKnownScanType> = {}
   const liveContexts = campaigns.flatMap((campaign) => {
     return (visibleScopesByCampaignId[campaign.id] ?? []).map((scope) => {
       const deliveryRecord = deliveryRecordByCampaignId.get(campaign.id) ?? null
       const learningDossier = learningDossierByCampaignId.get(campaign.id) ?? null
       const assignment = getManagerAssignment(managerWorkspaceRows, campaign.organization_id, scope.scopeValue)
+      const inviteEligibilityAssignment = getManagerAssignment(
+        inviteEligibilityWorkspaceRows,
+        campaign.organization_id,
+        scope.scopeValue,
+      )
       const routeId = buildActionCenterRouteId(campaign.id, scope.scopeValue)
+
+      if (isActionCenterRouteDefaultsKnownScanType(campaign.scan_type)) {
+        routeScanTypeByRouteId[routeId] = campaign.scan_type
+      }
+
+      if (
+        isInviteDownloadEligibleRoute({
+          campaign,
+          routeId,
+          assignment: inviteEligibilityAssignment,
+          visibleRouteIdSet,
+        })
+      ) {
+        inviteDownloadEligibleRouteIds.push(routeId)
+      }
 
       return {
         campaign,
         stats: statsByCampaignId.get(campaign.id) ?? null,
-        organizationName: organizationById.get(campaign.organization_id)?.name ?? 'Verisight organisatie',
+        organizationName: organizationById.get(campaign.organization_id)?.name ?? 'Loep organisatie',
         memberRole: roleByOrgId[campaign.organization_id] ?? null,
         scopeType: scope.scopeType,
         scopeValue: scope.scopeValue,
@@ -418,6 +474,7 @@ export async function getActionCenterPageData({
 
   const items = buildLiveActionCenterItems(liveContexts)
   const summary = getLiveActionCenterSummary(items)
+  const now = new Date()
   const ownerOptions = [...new Set(items.map((item) => item.ownerName).filter((value): value is string => Boolean(value)))].sort(
     (left, right) => left.localeCompare(right),
   )
@@ -435,6 +492,11 @@ export async function getActionCenterPageData({
   const itemHrefs = context.canViewInsights
     ? Object.fromEntries(items.map((item) => [item.id, `/campaigns/${item.coreSemantics.route.campaignId}`]))
     : {}
+  const rhythmData = await getActionCenterReviewRhythmData({
+    items,
+    now,
+    routeScanTypeByRouteId,
+  })
 
   return {
     items,
@@ -443,5 +505,9 @@ export async function getActionCenterPageData({
     managerOptions,
     itemHrefs,
     organizationNames: [...new Set(organizations.map((organization) => organization.name).filter(Boolean))],
+    inviteDownloadEligibleRouteIds,
+    routeScanTypeByRouteId,
+    governanceQueue: rhythmData.governanceQueue,
+    measurementReadback: rhythmData.measurementReadback,
   }
 }

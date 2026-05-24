@@ -16,6 +16,19 @@ export interface ScanDefinition {
   signalHelp: string
   reliabilityText: string
   segmentText: string
+  launchStatus?: string[]
+  deploymentProfiles?: {
+    enterprise: string
+    mkb: string
+  }
+  standardOutputs?: string[]
+  optionalOutputs?: string[]
+  outputReadiness?: Record<string, string>
+  outputSequenceNote?: string
+  followOnOutcomes?: string[]
+  followOnDecisionNote?: string
+  governedExportEntitlements?: Record<string, Record<string, string>>
+  textSafetyStates?: string[]
 }
 
 export function getScanDefinition(scanType: ScanType): ScanDefinition {

@@ -84,6 +84,14 @@ describe('insight content parsing', () => {
     expect(result.generatedAt).toBe('2026-05-06')
   })
 
+  it('accepts generatedAt timestamps with microseconds', () => {
+    const result = parseInsightDocument(
+      buildInsightSource({ generatedAt: '2026-05-08T09:43:38.085818' }),
+    )
+
+    expect(result.generatedAt).toBe('2026-05-08T09:43:38.085818')
+  })
+
   it('loads markdown insight files from a directory and sorts newest first', () => {
     const directory = createTempDirectory()
 

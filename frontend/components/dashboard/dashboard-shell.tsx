@@ -37,6 +37,7 @@ export function DashboardShellFrame({
   campaigns: DashboardShellCampaignRef[]
   children: React.ReactNode
 }) {
+  void canManageActionCenterAssignments
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
@@ -46,22 +47,33 @@ export function DashboardShellFrame({
     () =>
       buildDashboardShellNavigation({
         isAdmin,
-        canManageActionCenterAssignments,
         shellMode,
         currentCampaignPath,
         campaigns,
         portfolioCounts,
       }),
-    [campaigns, canManageActionCenterAssignments, currentCampaignPath, isAdmin, portfolioCounts, shellMode],
+    [campaigns, currentCampaignPath, isAdmin, portfolioCounts, shellMode],
   )
   const isActionCenter = pathname.startsWith('/action-center')
-  const accountLabel = userEmail.split('@')[1]?.split('.')[0] ?? 'Verisight'
+  const actionCenterView = searchParams.get('view')
+  const accountLabel = userEmail.split('@')[1]?.split('.')[0] ?? 'Loep'
   const accountName = accountLabel.charAt(0).toUpperCase() + accountLabel.slice(1)
   const mobileItems = isActionCenter ? ACTION_CENTER_NAV : [...navigation.modules, ...navigation.admin]
   const showReportsQuickLink = shellMode === 'full' && !isActionCenter
-  const activeAcHref = ACTION_CENTER_NAV.find(
-    (item) => pathname === item.href || pathname.startsWith(item.href + '/'),
-  )?.href ?? '/action-center'
+  const activeAcHref = ACTION_CENTER_NAV.find((item) => {
+    const itemUrl = new URL(item.href, 'http://localhost')
+    const itemView = itemUrl.searchParams.get('view')
+
+    if (!pathname.startsWith('/action-center')) {
+      return false
+    }
+
+    if (!itemView) {
+      return !actionCenterView
+    }
+
+    return actionCenterView === itemView
+  })?.href ?? '/action-center'
 
   return (
     <div className="min-h-screen bg-[color:var(--bg)] text-[color:var(--ink)]">
@@ -73,7 +85,7 @@ export function DashboardShellFrame({
                 <span className="inline-flex h-9 w-9 items-center justify-center rounded-full">
                   <Image
                     src="/brand/verisight-pulse-logo.svg"
-                    alt="Verisight logo"
+                    alt="Loep logo"
                     width={36}
                     height={36}
                     className="h-9 w-9"
@@ -81,9 +93,9 @@ export function DashboardShellFrame({
                   />
                 </span>
                 <span className="block">
-                  <span className="block font-serif text-[1.1rem] leading-5 text-[#f5f2eb]">Verisight</span>
+                  <span className="block font-serif text-[1.1rem] leading-5 text-[#f5f2eb]">Loep</span>
                   <span className="mt-0.5 block text-[0.72rem] uppercase tracking-[0.24em] text-[#8fa1b3]">
-                    People Suite
+                    People, Patterns, Priorities
                   </span>
                 </span>
               </Link>
@@ -198,7 +210,12 @@ export function DashboardShellFrame({
                   {mobileItems.map((item) => {
                     const href = item.href
                     const disabled = 'disabled' in item ? item.disabled : false
-                    const isActive = 'key' in item ? item.key === activeModule : pathname === item.href || pathname.startsWith(item.href + '/')
+                    const isActive =
+                      'key' in item
+                        ? item.key === activeModule
+                        : isActionCenter
+                          ? href === activeAcHref
+                          : pathname === item.href || pathname.startsWith(item.href + '/')
 
                     if (!href || disabled) {
                       return (
@@ -243,8 +260,8 @@ export function DashboardShellFrame({
 
           <footer className="border-t border-[color:var(--dashboard-frame-border)] px-4 py-4 text-xs text-[color:var(--dashboard-muted)] sm:px-6">
             {shellMode === 'action_center_only'
-              ? 'Verisight Action Center voor managers in dezelfde omgeving'
-              : 'Verisight dashboard, rapporten en Action Center in één omgeving'}
+              ? 'Loep Action Center voor managers in dezelfde omgeving'
+              : 'Loep dashboard, rapporten en Action Center in één omgeving'}
           </footer>
         </div>
       </div>

@@ -793,7 +793,7 @@ describe('action center core semantics', () => {
     const context = buildContext({
       deliveryRecord: buildDeliveryRecord({
         next_step: 'Plan het bijgestelde reviewgesprek met HR en operations.',
-        operator_owner: 'Verisight delivery',
+        operator_owner: 'Loep delivery',
         customer_handoff_note: 'De eerste managementread is scherp genoeg om direct bounded op te volgen.',
       }),
       dossier: buildDossier({

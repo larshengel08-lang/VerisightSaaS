@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { PublicHeader } from '@/components/marketing/public-header'
 import { PublicFooter } from '@/components/marketing/public-footer'
 import { ProductenContent } from '@/components/marketing/producten-content'
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     canonical: '/producten',
   },
   openGraph: {
-    title: 'Producten | Verisight',
+    title: 'Producten | Loep',
     description:
       'Kies ExitScan als u vertrek achteraf wilt begrijpen. Kies RetentieScan als u eerder wilt zien waar behoud onder druk staat. Andere routes komen pas in beeld als de volgende vraag echt speelt.',
     url: 'https://www.verisight.nl/producten',
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Producten | Verisight',
+    title: 'Producten | Loep',
     description:
       'Kies ExitScan als u vertrek achteraf wilt begrijpen. Kies RetentieScan als u eerder wilt zien waar behoud onder druk staat. Andere routes komen pas in beeld als de volgende vraag echt speelt.',
     images: ['/opengraph-image'],
@@ -52,3 +52,4 @@ export default function ProductenPage() {
     </>
   )
 }
+

@@ -240,10 +240,10 @@ function buildDashboardAction(
     if (isAdmin) {
       return {
         kind: 'setup',
-        label: 'Naar setup',
-        description: 'Open beheer om respondentimport, launchcontrole en livegang af te ronden.',
+        label: 'Beheer route',
+        description: 'Open de werktafel om doelgroep, communicatie en livegang af te ronden.',
         available: true,
-        href: '/beheer',
+        href: `/campaigns/${campaign.campaign_id}/beheer`,
       }
     }
 

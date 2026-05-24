@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import {
@@ -48,12 +48,12 @@ export async function generateMetadata({ params }: Props) {
   const url = `https://www.verisight.nl${product.href}`
   const imageAlt =
     isActiveMarketingProduct(product)
-      ? product.ogAlt ?? `${product.label} productpagina van Verisight`
-      : `${product.label} als gereserveerde future route bij Verisight`
+      ? product.ogAlt ?? `${product.label} productpagina van Loep`
+      : `${product.label} als gereserveerde future route bij Loep`
   const imageUrl = `${product.href}/opengraph-image`
 
   return {
-    title: product.seoTitle ?? `${product.label} | Verisight`,
+    title: product.seoTitle ?? `${product.label} | Loep`,
     description,
     alternates: {
       canonical: product.href,
@@ -61,13 +61,13 @@ export async function generateMetadata({ params }: Props) {
     openGraph: {
       type: 'website',
       url,
-      title: product.seoTitle ?? `${product.label} | Verisight`,
+      title: product.seoTitle ?? `${product.label} | Loep`,
       description,
       images: [{ url: imageUrl, width: 1200, height: 630, alt: imageAlt }],
     },
     twitter: {
       card: 'summary_large_image',
-      title: product.seoTitle ?? `${product.label} | Verisight`,
+      title: product.seoTitle ?? `${product.label} | Loep`,
       description,
       images: [imageUrl],
     },
@@ -109,12 +109,12 @@ function getProductStructuredData(product: MarketingProduct) {
   const webpageSchema = {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
-    name: product.seoTitle ?? `${product.label} | Verisight`,
+    name: product.seoTitle ?? `${product.label} | Loep`,
     description: product.description,
     url: fullUrl,
     isPartOf: {
       '@type': 'WebSite',
-      name: 'Verisight',
+      name: 'Loep',
       url: 'https://www.verisight.nl',
     },
     primaryImageOfPage: imageUrl,
@@ -145,7 +145,7 @@ function getProductStructuredData(product: MarketingProduct) {
     image: imageUrl,
     provider: {
       '@type': 'Organization',
-      name: 'Verisight',
+      name: 'Loep',
       url: 'https://www.verisight.nl',
     },
     areaServed: { '@type': 'Country', name: 'Nederland' },
@@ -171,23 +171,33 @@ function getProductStructuredData(product: MarketingProduct) {
 function ExitScanPage() {
   const T = {
     paper: 'oklch(0.978 0.010 62)', paperSoft: 'oklch(0.956 0.018 60)',
-    white: '#FFFCF8', navy: 'oklch(0.13 0.032 250)', ink: 'oklch(0.16 0.012 250)',
+    white: '#FFFFFF', page: '#FFFFFF', navy: 'oklch(0.13 0.032 250)', ink: 'oklch(0.16 0.012 250)',
     inkSoft: 'oklch(0.32 0.010 250)', inkMuted: 'oklch(0.52 0.008 250)',
     inkFaint: 'oklch(0.70 0.006 250)', rule: 'oklch(0.875 0.012 62)',
     ruleLight: 'oklch(0.918 0.008 62)',
   }
-  const AC = { deep: 'oklch(0.45 0.18 50)', mid: 'oklch(0.76 0.14 53)', soft: 'oklch(0.95 0.045 50)' }
-  const FF = 'var(--font-fraunces), serif'
-  const SH = { maxWidth: 1200, margin: '0 auto', padding: '0 clamp(20px,4vw,48px)' }
-  const ctaHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'product_exit_hero' })
+    const AC = { deep: 'oklch(0.45 0.18 50)', mid: 'oklch(0.76 0.14 53)', soft: 'oklch(0.95 0.045 50)' }
+const FF = 'var(--font-inter-tight), serif'
+    const SH = { maxWidth: 1200, margin: '0 auto', padding: '0 clamp(20px,4vw,48px)' }
+    const cardShadow = '0 10px 28px rgba(22, 34, 56, 0.06), 0 2px 6px rgba(22, 34, 56, 0.04)'
+    const featureCardStyle = {
+      background: T.white,
+      border: `1px solid ${T.ruleLight}`,
+      borderRadius: 28,
+      boxShadow: cardShadow,
+    } as const
+    const rowCardStyle = {
+      background: T.paper,
+      border: `1px solid ${T.ruleLight}`,
+      borderRadius: 22,
+    } as const
+    const ctaHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'product_exit_hero' })
 
   return (
-    <div style={{ background: T.white, color: T.ink, overflowX: 'hidden' }}>
+    <div style={{ background: T.page, color: T.ink, overflowX: 'hidden' }}>
       <PublicHeader ctaHref={ctaHref} ctaLabel="Plan een kennismaking" />
       <main>
-        <section style={{ background: T.white, padding: 'clamp(52px,6.5vw,80px) 0 clamp(48px,6vw,72px)', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: `linear-gradient(${T.rule}60 1px,transparent 1px),linear-gradient(90deg,${T.rule}60 1px,transparent 1px)`, backgroundSize: '72px 72px', opacity: .35 }} />
-          <div style={{ position: 'absolute', top: -80, right: -60, width: 500, height: 500, background: `radial-gradient(circle,${AC.soft} 0%,transparent 65%)`, pointerEvents: 'none' }} />
+        <section style={{ background: T.page, padding: 'clamp(52px,6.5vw,80px) 0 clamp(48px,6vw,72px)', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
           <div style={{ ...SH, position: 'relative' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 52 }}>
               <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.18em', textTransform: 'uppercase', color: AC.deep }}>ExitScan</span>
@@ -210,20 +220,20 @@ function ExitScanPage() {
                     Bekijk tarieven
                   </Link>
                 </div>
-              </div>
-              <div>
-                <div style={{ padding: '28px', background: T.paperSoft, border: `1px solid ${T.rule}` }}>
-                  <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: AC.deep, marginBottom: 16 }}>EUR 2.950 {'\u2022'} Baseline</div>
-                  {[
-                    'Dashboard met prioriteiten en factoranalyse',
-                    'Managementrapport voor HR, MT en directie',
-                    'Eerste handoff voor opvolging inbegrepen',
-                    'AVG-conforme dataverwerking',
-                  ].map((item, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '9px 0', borderTop: i > 0 ? `1px solid ${T.rule}` : 'none', fontSize: 13, color: T.inkSoft }}>
-                      <div style={{ width: 4, height: 4, background: AC.mid, flexShrink: 0, marginTop: 4 }} />
-                      {item}
-                    </div>
+                </div>
+                <div>
+                  <div style={{ ...featureCardStyle, padding: '28px' }}>
+                    <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: AC.deep, marginBottom: 16 }}>Baseline</div>
+                    {[
+                      'Dashboard met prioriteiten en factoranalyse',
+                      'Managementrapport voor HR, MT en directie',
+                      'Eerste handoff voor opvolging inbegrepen',
+                      'AVG-conforme dataverwerking',
+                    ].map((item, i) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 0', borderTop: i > 0 ? `1px solid ${T.ruleLight}` : 'none', fontSize: 13.5, color: T.inkSoft, lineHeight: 1.65 }}>
+                        <div style={{ width: 4, height: 4, background: AC.mid, flexShrink: 0, marginTop: 4 }} />
+                        {item}
+                      </div>
                   ))}
                 </div>
               </div>
@@ -231,21 +241,21 @@ function ExitScanPage() {
           </div>
         </section>
 
-        <section style={{ background: T.paperSoft, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
+        <section style={{ background: T.page, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
           <div style={{ ...SH }}>
             <div style={{ marginBottom: 36 }}>
               <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.deep, marginBottom: 16 }}>Wanneer ExitScan nu de juiste eerste stap is</div>
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                {[
-                  'Vertrek is al zichtbaar of terugkerend',
-                  'U wilt begrijpen waarom patronen terugkomen',
-                  'U wilt snel zien waar actie of gesprek het eerst telt',
-                  'U zoekt een eerste managementbeeld in plaats van alleen losse exitregistratie',
-                ].map((text) => (
-                  <div key={text} style={{ alignItems: 'flex-start', background: T.white, border: `1px solid ${T.rule}`, display: 'flex', gap: 12, padding: '18px 20px' }}>
-                    <div style={{ width: 6, height: 6, background: AC.deep, borderRadius: '50%', flexShrink: 0, marginTop: 9 }} />
-                    <p style={{ fontSize: 14, lineHeight: 1.65, color: T.inkSoft }}>{text}</p>
-                  </div>
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                  {[
+                    'Vertrek is al zichtbaar of terugkerend',
+                    'U wilt begrijpen waarom patronen terugkomen',
+                    'U wilt snel zien waar actie of gesprek het eerst telt',
+                    'U zoekt een eerste managementbeeld in plaats van alleen losse exitregistratie',
+                  ].map((text) => (
+                    <div key={text} style={{ ...featureCardStyle, alignItems: 'flex-start', display: 'flex', gap: 12, padding: '20px 22px' }}>
+                      <div style={{ width: 6, height: 6, background: AC.deep, borderRadius: '50%', flexShrink: 0, marginTop: 9 }} />
+                      <p style={{ fontSize: 14, lineHeight: 1.65, color: T.inkSoft }}>{text}</p>
+                    </div>
                 ))}
               </div>
             </div>
@@ -274,15 +284,16 @@ function ExitScanPage() {
                       'Houdt dezelfde leeslijn vast in dashboard en rapport',
                     ],
                   },
-                ].map(({ label, accent, points }) => (
-                  <div key={label} style={{ padding: '28px', background: T.white, border: `1px solid ${T.rule}`, borderTop: `3px solid ${accent}` }}>
-                    <div style={{ fontSize: 13.5, fontWeight: 600, color: T.ink, marginBottom: 16 }}>{label}</div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                      {points.map((p, i) => (
-                        <div key={i} style={{ display: 'flex', gap: 10, fontSize: 13, color: T.inkSoft, lineHeight: 1.6 }}>
-                          <div style={{ width: 4, height: 4, background: accent, flexShrink: 0, marginTop: 5 }} />
-                          {p}
-                        </div>
+                  ].map(({ label, accent, points }) => (
+                    <div key={label} style={{ ...featureCardStyle, padding: '28px' }}>
+                      <span style={{ background: accent, borderRadius: 999, display: 'block', height: 4, marginBottom: 18, width: 26 }} />
+                      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: accent, marginBottom: 12 }}>{label}</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {points.map((p, i) => (
+                          <div key={i} style={{ display: 'flex', gap: 10, fontSize: 13.5, color: T.inkSoft, lineHeight: 1.65 }}>
+                            <div style={{ width: 4, height: 4, background: accent, flexShrink: 0, marginTop: 5 }} />
+                            {p}
+                          </div>
                       ))}
                     </div>
                   </div>
@@ -292,7 +303,7 @@ function ExitScanPage() {
           </div>
         </section>
 
-        <section style={{ background: T.white, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
+        <section style={{ background: T.page, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
           <div style={{ ...SH }}>
             <div style={{ maxWidth: '64ch', marginBottom: 30 }}>
               <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.deep, marginBottom: 16 }}>Wat u ontvangt</div>
@@ -309,16 +320,16 @@ function ExitScanPage() {
                     'Eerste managementhouvast voor gesprek, verificatie en vervolg',
                     'Waar relevant: conditionele afdelings- of segmentverdieping bij voldoende respons',
                   ].map((item, i) => (
-                    <div key={i} style={{ display: 'flex', gap: 12, padding: '14px 16px', background: T.paperSoft, border: `1px solid ${T.rule}`, fontSize: 13.5, color: T.inkSoft, lineHeight: 1.6 }}>
+                    <div key={i} style={{ ...rowCardStyle, display: 'flex', gap: 12, padding: '16px 18px', fontSize: 13.5, color: T.inkSoft, lineHeight: 1.6 }}>
                       <div style={{ width: 4, height: 4, background: AC.mid, flexShrink: 0, marginTop: 5 }} />
                       {item}
                     </div>
                   ))}
                 </div>
-                <div id="segment-deep-dive" style={{ marginTop: 22, padding: '18px 20px', border: `1px solid ${T.rule}`, background: T.white }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: T.inkFaint, marginBottom: 8 }}>Afdelings- of segmentverdieping waar relevant</div>
-                  <p style={{ fontSize: 13.5, color: T.inkMuted, lineHeight: 1.65 }}>
-                    Waar voldoende respons en metadata beschikbaar zijn, kan ExitScan het vertrekbeeld ook op afdelings-, functiegroep- of locatieniveau verdiepen.
+                  <div id="segment-deep-dive" style={{ ...featureCardStyle, marginTop: 22, padding: '18px 20px' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: T.inkFaint, marginBottom: 8 }}>Afdelings- of segmentverdieping waar relevant</div>
+                    <p style={{ fontSize: 13.5, color: T.inkMuted, lineHeight: 1.65 }}>
+                      Waar voldoende respons en metadata beschikbaar zijn, kan ExitScan het vertrekbeeld ook op afdelings-, functiegroep- of locatieniveau verdiepen.
                   </p>
                 </div>
               </div>
@@ -353,23 +364,33 @@ function ExitScanPage() {
 function RetentionScanPage() {
   const T = {
     paper: 'oklch(0.978 0.010 62)', paperSoft: 'oklch(0.956 0.018 60)',
-    white: '#FFFCF8', navy: 'oklch(0.13 0.032 250)', ink: 'oklch(0.16 0.012 250)',
+    white: '#FFFFFF', page: '#FFFFFF', navy: 'oklch(0.13 0.032 250)', ink: 'oklch(0.16 0.012 250)',
     inkSoft: 'oklch(0.32 0.010 250)', inkMuted: 'oklch(0.52 0.008 250)',
     inkFaint: 'oklch(0.70 0.006 250)', rule: 'oklch(0.875 0.012 62)',
     ruleLight: 'oklch(0.918 0.008 62)',
     teal: 'oklch(0.50 0.12 188)', tealSoft: 'oklch(0.94 0.04 185)', tealFaint: 'oklch(0.972 0.018 185)',
   }
-  const FF = 'var(--font-fraunces), serif'
-  const SH = { maxWidth: 1200, margin: '0 auto', padding: '0 clamp(20px,4vw,48px)' }
-  const ctaHref = buildContactHref({ routeInterest: 'retentiescan', ctaSource: 'product_retention_hero' })
+const FF = 'var(--font-inter-tight), serif'
+    const SH = { maxWidth: 1200, margin: '0 auto', padding: '0 clamp(20px,4vw,48px)' }
+    const cardShadow = '0 10px 28px rgba(22, 34, 56, 0.06), 0 2px 6px rgba(22, 34, 56, 0.04)'
+    const featureCardStyle = {
+      background: T.white,
+      border: `1px solid ${T.ruleLight}`,
+      borderRadius: 28,
+      boxShadow: cardShadow,
+    } as const
+    const rowCardStyle = {
+      background: T.paper,
+      border: `1px solid ${T.ruleLight}`,
+      borderRadius: 22,
+    } as const
+    const ctaHref = buildContactHref({ routeInterest: 'retentiescan', ctaSource: 'product_retention_hero' })
 
   return (
-    <div style={{ background: T.white, color: T.ink, overflowX: 'hidden' }}>
+    <div style={{ background: T.page, color: T.ink, overflowX: 'hidden' }}>
       <PublicHeader ctaHref={ctaHref} ctaLabel="Plan een kennismaking" />
       <main>
-        <section style={{ background: T.white, padding: 'clamp(52px,6.5vw,80px) 0 clamp(48px,6vw,72px)', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: `linear-gradient(${T.rule}60 1px,transparent 1px),linear-gradient(90deg,${T.rule}60 1px,transparent 1px)`, backgroundSize: '72px 72px', opacity: .35 }} />
-          <div style={{ position: 'absolute', top: -80, right: -60, width: 500, height: 500, background: `radial-gradient(circle,${T.tealFaint} 0%,transparent 65%)`, pointerEvents: 'none' }} />
+        <section style={{ background: T.page, padding: 'clamp(52px,6.5vw,80px) 0 clamp(48px,6vw,72px)', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
           <div style={{ ...SH, position: 'relative' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 52 }}>
               <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.18em', textTransform: 'uppercase', color: T.teal }}>RetentieScan</span>
@@ -392,20 +413,20 @@ function RetentionScanPage() {
                     Bekijk tarieven
                   </Link>
                 </div>
-              </div>
-              <div>
-                <div style={{ padding: '28px', background: T.tealFaint, border: `1px solid ${T.tealSoft}` }}>
-                  <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: T.teal, marginBottom: 16 }}>EUR 3.450 {'\u2022'} Baseline</div>
-                  {[
-                    'Dashboard met retentiesignaal en factoranalyse',
-                    'Managementrapport voor HR, MT en directie',
-                    'Geen individuele signalen, alleen groepsduiding',
-                    'AVG-conforme dataverwerking',
-                  ].map((item, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '9px 0', borderTop: i > 0 ? `1px solid ${T.tealSoft}` : 'none', fontSize: 13, color: T.inkSoft }}>
-                      <div style={{ width: 4, height: 4, background: T.teal, flexShrink: 0, marginTop: 4 }} />
-                      {item}
-                    </div>
+                </div>
+                <div>
+                  <div style={{ ...featureCardStyle, padding: '28px' }}>
+                    <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: T.teal, marginBottom: 16 }}>Baseline</div>
+                    {[
+                      'Dashboard met retentiesignaal en factoranalyse',
+                      'Managementrapport voor HR, MT en directie',
+                      'Geen individuele signalen, alleen groepsduiding',
+                      'AVG-conforme dataverwerking',
+                    ].map((item, i) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 0', borderTop: i > 0 ? `1px solid ${T.ruleLight}` : 'none', fontSize: 13.5, color: T.inkSoft, lineHeight: 1.65 }}>
+                        <div style={{ width: 4, height: 4, background: T.teal, flexShrink: 0, marginTop: 4 }} />
+                        {item}
+                      </div>
                   ))}
                 </div>
               </div>
@@ -413,21 +434,21 @@ function RetentionScanPage() {
           </div>
         </section>
 
-        <section style={{ background: T.paperSoft, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
+        <section style={{ background: T.page, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
           <div style={{ ...SH }}>
             <div style={{ marginBottom: 36 }}>
               <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.teal, marginBottom: 16 }}>Wanneer RetentieScan nu de juiste eerste stap is</div>
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                {[
-                  'U wilt eerder zien waar behoud onder druk staat',
-                  'U wilt niet wachten tot verloop zichtbaar oploopt',
-                  'U vermoedt behoudsdruk maar wilt eerst een scherp groepsbeeld',
-                  'U zoekt vroegsignalering voor gesprek en verificatie, niet alleen terugblik',
-                ].map((text) => (
-                  <div key={text} style={{ alignItems: 'flex-start', background: T.white, border: `1px solid ${T.rule}`, display: 'flex', gap: 12, padding: '18px 20px' }}>
-                    <div style={{ width: 6, height: 6, background: T.teal, borderRadius: '50%', flexShrink: 0, marginTop: 9 }} />
-                    <p style={{ fontSize: 14, lineHeight: 1.65, color: T.inkSoft }}>{text}</p>
-                  </div>
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                  {[
+                    'U wilt eerder zien waar behoud onder druk staat',
+                    'U wilt niet wachten tot verloop zichtbaar oploopt',
+                    'U vermoedt behoudsdruk maar wilt eerst een scherp groepsbeeld',
+                    'U zoekt vroegsignalering voor gesprek en verificatie, niet alleen terugblik',
+                  ].map((text) => (
+                    <div key={text} style={{ ...featureCardStyle, alignItems: 'flex-start', display: 'flex', gap: 12, padding: '20px 22px' }}>
+                      <div style={{ width: 6, height: 6, background: T.teal, borderRadius: '50%', flexShrink: 0, marginTop: 9 }} />
+                      <p style={{ fontSize: 14, lineHeight: 1.65, color: T.inkSoft }}>{text}</p>
+                    </div>
                 ))}
               </div>
             </div>
@@ -456,15 +477,16 @@ function RetentionScanPage() {
                       'Houdt dezelfde leeslijn vast in dashboard en rapport',
                     ],
                   },
-                ].map(({ label, accent, points }) => (
-                  <div key={label} style={{ padding: '28px', background: T.white, border: `1px solid ${T.rule}`, borderTop: `3px solid ${accent}` }}>
-                    <div style={{ fontSize: 13.5, fontWeight: 600, color: T.ink, marginBottom: 16 }}>{label}</div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                      {points.map((p, i) => (
-                        <div key={i} style={{ display: 'flex', gap: 10, fontSize: 13, color: T.inkSoft, lineHeight: 1.6 }}>
-                          <div style={{ width: 4, height: 4, background: accent, flexShrink: 0, marginTop: 5 }} />
-                          {p}
-                        </div>
+                  ].map(({ label, accent, points }) => (
+                    <div key={label} style={{ ...featureCardStyle, padding: '28px' }}>
+                      <span style={{ background: accent, borderRadius: 999, display: 'block', height: 4, marginBottom: 18, width: 26 }} />
+                      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: accent, marginBottom: 12 }}>{label}</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {points.map((p, i) => (
+                          <div key={i} style={{ display: 'flex', gap: 10, fontSize: 13.5, color: T.inkSoft, lineHeight: 1.65 }}>
+                            <div style={{ width: 4, height: 4, background: accent, flexShrink: 0, marginTop: 5 }} />
+                            {p}
+                          </div>
                       ))}
                     </div>
                   </div>
@@ -474,7 +496,7 @@ function RetentionScanPage() {
           </div>
         </section>
 
-        <section style={{ background: T.white, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
+        <section style={{ background: T.page, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
           <div style={{ ...SH }}>
             <div style={{ maxWidth: '64ch', marginBottom: 30 }}>
               <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.teal, marginBottom: 16 }}>Wat u ontvangt</div>
@@ -491,16 +513,16 @@ function RetentionScanPage() {
                     'Eerste managementhouvast voor gesprek, verificatie en vervolg',
                     'Waar relevant: conditionele afdelings- of segmentverdieping bij voldoende respons',
                   ].map((item, i) => (
-                    <div key={i} style={{ display: 'flex', gap: 12, padding: '14px 16px', background: T.paperSoft, border: `1px solid ${T.rule}`, fontSize: 13.5, color: T.inkSoft, lineHeight: 1.6 }}>
+                    <div key={i} style={{ ...rowCardStyle, display: 'flex', gap: 12, padding: '16px 18px', fontSize: 13.5, color: T.inkSoft, lineHeight: 1.6 }}>
                       <div style={{ width: 4, height: 4, background: T.teal, flexShrink: 0, marginTop: 5 }} />
                       {item}
                     </div>
                   ))}
                 </div>
-                <div style={{ marginTop: 22, padding: '18px 20px', border: `1px solid ${T.rule}`, background: T.white }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: T.inkFaint, marginBottom: 8 }}>Afdelings- of segmentverdieping waar relevant</div>
-                  <p style={{ fontSize: 13.5, color: T.inkMuted, lineHeight: 1.65 }}>
-                    Waar voldoende respons en metadata beschikbaar zijn, kan RetentieScan behoudsdruk ook op afdelings-, functiegroep- of locatieniveau verdiepen.
+                  <div style={{ ...featureCardStyle, marginTop: 22, padding: '18px 20px' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: T.inkFaint, marginBottom: 8 }}>Afdelings- of segmentverdieping waar relevant</div>
+                    <p style={{ fontSize: 13.5, color: T.inkMuted, lineHeight: 1.65 }}>
+                      Waar voldoende respons en metadata beschikbaar zijn, kan RetentieScan behoudsdruk ook op afdelings-, functiegroep- of locatieniveau verdiepen.
                   </p>
                 </div>
               </div>
@@ -1116,7 +1138,7 @@ function OnboardingPage() {
                 [
                   'Startpunt',
                   'Wanneer een vroege managementvraag openstaat over hoe nieuwe medewerkers nu landen in een checkpoint.',
-                  'Wanneer Verisight een klant technisch en operationeel live helpt gaan.',
+                  'Wanneer Loep een klant technisch en operationeel live helpt gaan.',
                 ],
                 [
                   'Wat je leest',
@@ -1630,7 +1652,7 @@ function UpcomingProductPage({ slug }: { slug: string }) {
           </span>
           <h2 className="mt-6 text-3xl font-semibold text-slate-950">{product.tagline}</h2>
           <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-slate-600">
-            Deze productpagina is bewust gereserveerd binnen de bredere productstructuur. Daardoor kan Verisight later
+            Deze productpagina is bewust gereserveerd binnen de bredere productstructuur. Daardoor kan Loep later
             groeien zonder dat de huidige kernportfolio opnieuw op de schop hoeft of nu al productverwarring krijgt.
           </p>
         </div>
@@ -1638,3 +1660,4 @@ function UpcomingProductPage({ slug }: { slug: string }) {
     </MarketingPageShell>
   )
 }
+

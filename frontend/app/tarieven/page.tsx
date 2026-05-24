@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { PublicHeader } from '@/components/marketing/public-header'
 import { PublicFooter } from '@/components/marketing/public-footer'
 import { TarievenContent } from '@/components/marketing/tarieven-content'
@@ -10,15 +10,15 @@ export const metadata: Metadata = {
     'Transparante prijzen voor ExitScan, RetentieScan en vervolgstappen. Zo blijft de eerste keuze helder en weet u wat u direct terugkrijgt.',
   alternates: { canonical: '/tarieven' },
   openGraph: {
-    title: 'Tarieven | Verisight',
+    title: 'Tarieven | Loep',
     description:
       'Transparante prijzen voor ExitScan, RetentieScan en vervolgstappen. Zo blijft de eerste keuze helder en weet u wat u direct terugkrijgt.',
     url: 'https://www.verisight.nl/tarieven',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Verisight tarieven voor ExitScan en RetentieScan' }],
+    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Loep tarieven voor ExitScan en RetentieScan' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Tarieven | Verisight',
+    title: 'Tarieven | Loep',
     description:
       'Transparante prijzen voor ExitScan, RetentieScan en vervolgstappen. Zo blijft de eerste keuze helder en weet u wat u direct terugkrijgt.',
     images: ['/opengraph-image'],
@@ -50,3 +50,4 @@ export default function TarievenPage() {
     </>
   )
 }
+

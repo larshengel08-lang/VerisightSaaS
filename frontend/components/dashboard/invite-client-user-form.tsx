@@ -60,7 +60,7 @@ export function InviteClientUserForm({ orgs }: Props) {
         verder naar het dashboard met dit e-mailadres.
       </div>
       <div className="rounded-lg border border-amber-100 bg-amber-50 px-3 py-3 text-xs leading-5 text-amber-900">
-        Verisight faciliteert hiermee toegang en verzending. De klant blijft verantwoordelijk voor interne communicatie,
+        Loep faciliteert hiermee toegang en verzending. De klant blijft verantwoordelijk voor interne communicatie,
         reminders en voldoende respons op de campagne.
       </div>
 

@@ -80,6 +80,12 @@ const SCAN_DEFAULTS: Record<
     fallbackSummary: 'Leadership Scan opent hier geen breed traject, maar een bounded follow-through route met eigenaar en reviewritme.',
     fallbackRhythm: 'Maandelijks',
   },
+  culture_assessment: {
+    managementQuestion: 'Welke bestuurlijke vervolgvraag uit de Culture Assessment-baseline vraagt nu een expliciete eigenaar, reviewdatum en bounded follow-through?',
+    fallbackStep: 'Leg de eerste board-, directie- of HR-vervolgstap vast met eigenaar, governancegrens en reviewmoment.',
+    fallbackSummary: 'Loep Culture Assessment opent hier geen open analytics-workspace, maar een bounded follow-through laag op de jaarlijkse baseline.',
+    fallbackRhythm: 'Maandelijks',
+  },
   team: {
     managementQuestion: 'Welk teamsignaal vraagt nu een eerste lokale managementactie met duidelijke eigenaar en reviewmoment?',
     fallbackStep: 'Kies de eerste lokale teamactie en leg review en eigenaarschap expliciet vast.',
@@ -343,11 +349,19 @@ function summarizeLiveActionCenterRoutes(items: ActionCenterPreviewItem[]) {
       hasFollowUpVisibility: current.hasFollowUpVisibility || hasFollowUpVisibility,
       actions:
         routeActionCards.length > 0
-          ? routeActionCards.map((action) => ({
-              actionId: action.actionId,
-              status: action.status,
-              reviewScheduledFor: action.reviewScheduledFor,
-            }))
+          ? routeActionCards
+              .filter(
+                (
+                  action,
+                ): action is typeof action & {
+                  status: 'open' | 'in_review' | 'afgerond' | 'gestopt'
+                } => action.status !== null,
+              )
+              .map((action) => ({
+                actionId: action.actionId,
+                status: action.status,
+                reviewScheduledFor: action.reviewScheduledFor,
+              }))
           : current.actions,
     })
   }
@@ -392,15 +406,20 @@ function buildRouteActionSummaryText(args: {
 
 function countRouteActionsNeedingReview(
   routeActions: Array<{
-    status: 'open' | 'in_review' | 'afgerond' | 'gestopt'
-    reviewScheduledFor: string
+    status: 'open' | 'in_review' | 'afgerond' | 'gestopt' | null
+    reviewScheduledFor: string | null
   }>,
   today = new Date().toISOString().slice(0, 10),
 ) {
   return routeActions.filter(
-    (action) =>
-      action.status === 'in_review' ||
-      (action.status === 'open' && action.reviewScheduledFor <= today),
+    (action) => {
+      const reviewScheduledFor = action.reviewScheduledFor
+
+      return (
+        action.status === 'in_review' ||
+        (action.status === 'open' && reviewScheduledFor !== null && reviewScheduledFor <= today)
+      )
+    },
   ).length
 }
 
@@ -478,18 +497,25 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
       const definition = getScanDefinition(context.campaign.scan_type)
       const defaults = SCAN_DEFAULTS[context.campaign.scan_type]
       const avgSignal = context.stats?.avg_signal_score ?? context.stats?.avg_risk_score ?? null
-      const fallbackAuthor = context.organizationName || 'Verisight'
+      const fallbackAuthor = context.organizationName || 'Loep'
       const routeActions = context.routeActions ?? []
       const actionReviews = context.actionReviews ?? []
+      const summarizedRouteActions = routeActions
+        .filter(
+          (
+            action,
+          ): action is typeof action & {
+            status: 'open' | 'in_review' | 'afgerond' | 'gestopt'
+          } => action.status !== null,
+        )
+        .map((action) => ({
+          actionId: action.actionId,
+          status: action.status,
+          reviewScheduledFor: action.reviewScheduledFor,
+        }))
       const actionAggregation =
-        routeActions.length > 0
-          ? summarizeActionCenterRouteActions(
-              routeActions.map((action) => ({
-                actionId: action.actionId,
-                status: action.status,
-                reviewScheduledFor: action.reviewScheduledFor,
-              })),
-            )
+        summarizedRouteActions.length > 0
+          ? summarizeActionCenterRouteActions(summarizedRouteActions)
           : null
       const reviewDate = actionAggregation?.nextReviewScheduledFor ?? route.reviewScheduledFor
       const reviewOwnerName = getReviewOwnerName(context.learningCheckpoints, context.deliveryRecord)

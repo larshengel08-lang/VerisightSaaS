@@ -34,9 +34,11 @@ vi.mock('@/lib/proof-registry-server', () => ({
 import ProofPage from './page'
 
 describe('beheer proof page', () => {
-  it('renders the proof ladder and approval headings', async () => {
+  it('renders the proof page as a transition expert registry', async () => {
     const html = renderToString(await ProofPage())
-    expect(html).toContain('Case proof registry')
+    expect(html).toContain('Proof transition registry')
+    expect(html).toContain('Transition deep link')
+    expect(html).toContain('Expert registry')
     expect(html).toContain('sales_usable')
     expect(html).toContain('Publiek bruikbaar')
   })

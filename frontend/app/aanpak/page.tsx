@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { PublicHeader } from '@/components/marketing/public-header'
 import { PublicFooter } from '@/components/marketing/public-footer'
 import { AanpakContent } from '@/components/marketing/aanpak-content'
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     'Van eerste stap naar dashboard, rapport en eerste opvolging. Zo ziet u snel wat speelt en wat als eerste aandacht vraagt.',
   alternates: { canonical: '/aanpak' },
   openGraph: {
-    title: 'Aanpak | Verisight',
+    title: 'Aanpak | Loep',
     description:
       'Van eerste stap naar dashboard, rapport en eerste opvolging. Zo ziet u snel wat speelt en wat als eerste aandacht vraagt.',
     url: 'https://www.verisight.nl/aanpak',
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Aanpak | Verisight',
+    title: 'Aanpak | Loep',
     description:
       'Van eerste stap naar dashboard, rapport en eerste opvolging. Zo ziet u snel wat speelt en wat als eerste aandacht vraagt.',
     images: ['/opengraph-image'],
@@ -50,3 +50,4 @@ export default function AanpakPage() {
     </>
   )
 }
+

@@ -30,15 +30,15 @@ export const CAMPAIGN_AUDIT_ACTIONS: Record<
   },
   grant_client_access: {
     actionLabel: 'Klanttoegang bijgewerkt',
-    ownerLabel: 'Verisight',
+    ownerLabel: 'Loep',
   },
   delivery_lifecycle_changed: {
     actionLabel: 'Uitvoerstatus bijgewerkt',
-    ownerLabel: 'Verisight',
+    ownerLabel: 'Loep',
   },
   delivery_checkpoint_confirmed: {
     actionLabel: 'Uitvoercheck bevestigd',
-    ownerLabel: 'Verisight',
+    ownerLabel: 'Loep',
   },
 }
 
@@ -64,7 +64,7 @@ function getDefaultActorLabel(role: CampaignAuditActorRole | null | undefined) {
     case 'member':
       return 'Member'
     case 'verisight_admin':
-      return 'Verisight beheer'
+      return 'Loep beheer'
     default:
       return 'Onbekende actor'
   }

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { MarketingInlineContactPanel } from '@/components/marketing/marketing-inline-contact-panel'
 import { PublicFooter } from '@/components/marketing/public-footer'
 import { PublicHeader } from '@/components/marketing/public-header'
@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     'Plan een korte intake om te bepalen welke eerste route het best past en welke eerste output daarna logisch is.',
   alternates: { canonical: '/kennismaking' },
   openGraph: {
-    title: 'Kennismaking | Verisight',
+    title: 'Kennismaking | Loep',
     description:
       'Plan een korte intake om te bepalen welke eerste route het best past en welke eerste output daarna logisch is.',
     url: 'https://www.verisight.nl/kennismaking',
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Kennismaking | Verisight',
+    title: 'Kennismaking | Loep',
     description:
       'Plan een korte intake om te bepalen welke eerste route het best past en welke eerste output daarna logisch is.',
     images: ['/opengraph-image'],
@@ -30,18 +30,18 @@ const shellStyle = {
   padding: '0 clamp(20px, 4vw, 48px)',
 } as const
 
-const displayFont = 'var(--font-fraunces), Georgia, serif'
+const displayFont = 'var(--font-inter-tight), Inter, sans-serif'
 
 export default function KennismakingPage() {
   return (
-    <div className="min-h-screen bg-[#FFFCF8]">
+    <div className="min-h-screen bg-[var(--bg)]">
       <PublicHeader ctaHref="#kennismaking" ctaLabel="Plan een kennismaking" />
       <main id="hoofdinhoud">
         <section
           style={{
             background:
-              'radial-gradient(circle at top right, rgba(244, 221, 208, 0.55) 0%, rgba(244, 221, 208, 0) 28%), #FFFCF8',
-            borderBottom: '1px solid #d9cebf',
+              'radial-gradient(circle at top right, rgba(232, 160, 32, 0.16) 0%, rgba(232, 160, 32, 0) 28%), var(--bg)',
+            borderBottom: '1px solid rgba(13,27,42,0.15)',
             overflow: 'hidden',
             position: 'relative',
           }}
@@ -50,26 +50,17 @@ export default function KennismakingPage() {
             <div style={{ maxWidth: 1080, minWidth: 0, margin: '0 auto', textAlign: 'center' }}>
               <h1
                 style={{
-                  color: '#162238',
+                  color: '#0D1B2A',
                   fontFamily: displayFont,
                   fontSize: 'clamp(2.8rem, 4.8vw, 4.7rem)',
                   fontWeight: 400,
                   letterSpacing: '-0.05em',
                   lineHeight: 0.92,
-                  marginBottom: 16,
+                  marginBottom: 0,
                 }}
               >
-                Vertel kort
-                <br />
-                <span style={{ color: '#162238', fontStyle: 'italic', fontWeight: 300 }}>
-                  toets welke eerste route
-                </span>
-                <br />
-                nu past.
+                Plan een kennismaking
               </h1>
-              <p style={{ color: '#4e5d6f', fontSize: 16, lineHeight: 1.8, maxWidth: '33rem', margin: '0 auto' }}>
-                In circa 20 minuten krijgt u helderheid over de juiste route, timing, privacy, prijs en de eerste output die daarbij past.
-              </p>
             </div>
 
             <div style={{ marginTop: 30, maxWidth: 1140 }}>
@@ -90,3 +81,4 @@ export default function KennismakingPage() {
     </div>
   )
 }
+

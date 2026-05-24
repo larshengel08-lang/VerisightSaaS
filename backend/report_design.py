@@ -29,7 +29,7 @@ HEADER_WORDMARK_PADDING = 5 * mm
 HEADER_META_GAP = 4.5 * mm
 FOOTER_RULE_GAP = 5 * mm
 
-CONFIDENTIAL_FOOTER_LABEL = "Vertrouwelijk - Verisight"
+CONFIDENTIAL_FOOTER_LABEL = "Vertrouwelijk - Loep"
 PAGE_LABEL_TEMPLATE = "{campaign} | Pagina {page}"
 
 TOKENS = {
@@ -132,7 +132,7 @@ def ensure_report_fonts() -> None:
 
 
 def get_report_theme(scan_type: str) -> dict[str, colors.Color]:
-    product_label = "ExitScan" if scan_type == "exit" else "RetentieScan" if scan_type == "retention" else "Verisight"
+    product_label = "ExitScan" if scan_type == "exit" else "RetentieScan" if scan_type == "retention" else "Loep"
     return {
         "product_label": product_label,
         "ink": TOKENS["ink"],
@@ -266,7 +266,7 @@ def build_report_styles() -> dict[str, ParagraphStyle]:
 
 
 def _draw_wordmark(canvas, *, x: float, y: float, fill: colors.Color, muted_fill: colors.Color, align: str = "left", scale: float = 1.0, include_tagline: bool = True) -> None:
-    word = "Verisight"
+    word = "Loep"
     word_size = 26 * scale
     tag_size = 6.5 * scale
     word_width = pdfmetrics.stringWidth(word, REPORT_FONTS["bold"], word_size)

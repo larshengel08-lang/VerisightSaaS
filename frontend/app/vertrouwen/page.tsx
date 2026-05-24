@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { PublicHeader } from '@/components/marketing/public-header'
 import { PublicFooter } from '@/components/marketing/public-footer'
 import { VertrouwenContent } from '@/components/marketing/vertrouwen-content'
@@ -7,20 +7,20 @@ import { buildContactHref } from '@/lib/contact-funnel'
 export const metadata: Metadata = {
   title: 'Vertrouwen',
   description:
-    'Wat u publiek kunt toetsen voordat u start. Privacy, rapportage en duidelijke grenzen in wat Verisight laat zien.',
+    'Wat u publiek kunt toetsen voordat u start. Privacy, rapportage en duidelijke grenzen in wat Loep laat zien.',
   alternates: { canonical: '/vertrouwen' },
   openGraph: {
-    title: 'Vertrouwen | Verisight',
+    title: 'Vertrouwen | Loep',
     description:
-      'Wat u publiek kunt toetsen voordat u start. Privacy, rapportage en duidelijke grenzen in wat Verisight laat zien.',
+      'Wat u publiek kunt toetsen voordat u start. Privacy, rapportage en duidelijke grenzen in wat Loep laat zien.',
     url: 'https://www.verisight.nl/vertrouwen',
     images: ['/opengraph-image'],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Vertrouwen | Verisight',
+    title: 'Vertrouwen | Loep',
     description:
-      'Wat u publiek kunt toetsen voordat u start. Privacy, rapportage en duidelijke grenzen in wat Verisight laat zien.',
+      'Wat u publiek kunt toetsen voordat u start. Privacy, rapportage en duidelijke grenzen in wat Loep laat zien.',
     images: ['/opengraph-image'],
   },
 }
@@ -50,3 +50,4 @@ export default function VertrouwenPage() {
     </>
   )
 }
+
