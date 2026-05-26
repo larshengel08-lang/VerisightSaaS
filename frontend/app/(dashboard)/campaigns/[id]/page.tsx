@@ -275,10 +275,43 @@ function buildSdtRows(sdtAverages: {
   competence?: number
   relatedness?: number
 }) {
+  function getSdtDescription(
+    label: 'Autonomie' | 'Competentie & groei' | 'Verbondenheid',
+    scoreValue: number,
+  ) {
+    if (label === 'Autonomie') {
+      if (scoreValue < 5.0) {
+        return 'Medewerkers ervaren beperkte ruimte om eigen keuzes te maken in hun werk. Dit raakt het gevoel van eigenaarschap.'
+      }
+      if (scoreValue <= 6.5) {
+        return 'Autonomie is aanwezig maar niet sterk. Bespreek of medewerkers voldoende zeggenschap ervaren over hun werkinhoud.'
+      }
+      return 'Autonomiebeleving is relatief stabiel. Minder urgent dan de topfactoren.'
+    }
+
+    if (label === 'Competentie & groei') {
+      if (scoreValue < 5.0) {
+        return 'Groeimogelijkheden en competentieontwikkeling worden als onvoldoende ervaren. Sluit aan op het dominante groei-thema.'
+      }
+      if (scoreValue <= 6.5) {
+        return 'Competentie- en groeibeleving vraagt verificatie. Toets of perspectief structureel ontbreekt of situationeel is.'
+      }
+      return 'Competentiebeleving is relatief goed. Gebruik als aanvullende context, niet als eerste prioriteit.'
+    }
+
+    if (scoreValue < 5.0) {
+      return 'Verbondenheid met team of organisatie staat onder druk. Dit versterkt vaak het vertrek- of behoudsrisico.'
+    }
+    if (scoreValue <= 6.5) {
+      return 'Verbondenheid is gemiddeld aanwezig. Bespreek of teamdynamiek of cultuurfit een rol speelt in het hoofdsignaal.'
+    }
+    return 'Verbondenheid is relatief stabiel. Monitoring volstaat op dit moment.'
+  }
+
   return [
-    { label: 'Autonomie', value: sdtAverages.autonomy },
-    { label: 'Competentie & groei', value: sdtAverages.competence },
-    { label: 'Verbondenheid', value: sdtAverages.relatedness },
+    { label: 'Autonomie' as const, value: sdtAverages.autonomy },
+    { label: 'Competentie & groei' as const, value: sdtAverages.competence },
+    { label: 'Verbondenheid' as const, value: sdtAverages.relatedness },
   ]
     .filter((item) => typeof item.value === 'number')
     .map((item) => {
@@ -291,12 +324,7 @@ function buildSdtRows(sdtAverages: {
         scoreValue,
         signal: `${signalValue.toFixed(1)}/10`,
         band: getManagementBandLabel(signalValue),
-        note:
-          signalValue >= 7
-            ? 'Deze basisbehoefte vraagt zichtbare verdieping in het vertrekbeeld.'
-            : signalValue >= 4.5
-              ? 'Aanwezig als aanvullende context op het kernsignaal.'
-              : 'Nu minder uitgesproken dan de andere basisbehoeften.',
+        note: getSdtDescription(item.label, scoreValue),
       } satisfies SdtRow
     })
 }
@@ -1218,17 +1246,28 @@ export default async function CampaignPage({ params }: Props) {
         value: dominantThemeLabel,
         body: 'Wat in de resultaten nu het duidelijkst opvalt op groepsniveau.',
       },
-      {
-        label: 'Aanvullende context',
-        value: topContributingReasonLabel ?? 'Nog niet zichtbaar',
-        body: 'Extra laag die geregeld samenvalt met het hoofdbeeld en dus eerst verificatie vraagt.',
-      },
+      topContributingReasonLabel &&
+      topContributingReasonLabel !== 'Nog niet zichtbaar'
+        ? {
+            label: 'Aanvullende context',
+            value: topContributingReasonLabel,
+            body: 'Extra laag die geregeld samenvalt met het hoofdbeeld en dus eerst verificatie vraagt.',
+          }
+        : null,
       {
         label: 'Beïnvloedbaar werksignaal',
         value: hasMinDisplay ? formatPercent(strongWorkSignalRate) : 'Nog niet beschikbaar',
         body: 'Aandeel responses waarin vooral beïnvloedbare werkcontext terugkomt.',
       },
-    ]
+    ].filter(
+      (
+        item,
+      ): item is {
+        label: string
+        value: string
+        body: string
+      } => Boolean(item),
+    )
     const surveyThemes = exitThemes.map((theme, index) => {
       const relationLabel =
         theme.key === 'leadership'
