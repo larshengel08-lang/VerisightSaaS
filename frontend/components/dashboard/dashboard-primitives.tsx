@@ -91,7 +91,7 @@ function DashboardSectionHeader({
           className={joinClasses(
             surface === "ops"
               ? "mt-1 text-lg text-[color:var(--ink)]"
-              : "mt-2 max-w-4xl text-[1.65rem] text-[color:var(--dashboard-ink)] sm:text-[1.85rem]",
+              : "mt-2 max-w-4xl text-[1.35rem] text-[color:var(--dashboard-ink)] sm:text-[1.5rem]",
             "font-semibold tracking-[-0.04em]",
           )}
         >

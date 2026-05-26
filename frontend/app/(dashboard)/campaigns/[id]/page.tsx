@@ -437,10 +437,43 @@ function buildSdtRows(sdtAverages: {
   competence?: number
   relatedness?: number
 }) {
+  function getSdtDescription(
+    key: "autonomy" | "competence" | "relatedness",
+    value: number,
+  ) {
+    if (key === "autonomy") {
+      if (value < 5.0) {
+        return "Medewerkers ervaren beperkte ruimte om eigen keuzes te maken in hun werk. Dit raakt het gevoel van eigenaarschap."
+      }
+      if (value <= 6.5) {
+        return "Autonomie is aanwezig maar niet sterk. Bespreek of medewerkers voldoende zeggenschap ervaren over hun werkinhoud."
+      }
+      return "Autonomiebeleving is relatief stabiel. Minder urgent dan de topfactoren."
+    }
+
+    if (key === "competence") {
+      if (value < 5.0) {
+        return "Groeimogelijkheden en competentieontwikkeling worden als onvoldoende ervaren. Sluit aan op het dominante groei-thema."
+      }
+      if (value <= 6.5) {
+        return "Competentie- en groeibeleving vraagt verificatie. Toets of perspectief structureel ontbreekt of situationeel is."
+      }
+      return "Competentiebeleving is relatief goed. Gebruik als aanvullende context, niet als eerste prioriteit."
+    }
+
+    if (value < 5.0) {
+      return "Verbondenheid met team of organisatie staat onder druk. Dit versterkt vaak het vertrek- of behoudsrisico."
+    }
+    if (value <= 6.5) {
+      return "Verbondenheid is gemiddeld aanwezig. Bespreek of teamdynamiek of cultuurfit een rol speelt in het hoofdsignaal."
+    }
+    return "Verbondenheid is relatief stabiel. Monitoring volstaat op dit moment."
+  }
+
   return [
-    { key: "autonomy", label: "Autonomie", value: sdtAverages.autonomy },
-    { key: "competence", label: "Competentie & groei", value: sdtAverages.competence },
-    { key: "relatedness", label: "Verbondenheid", value: sdtAverages.relatedness },
+    { key: "autonomy" as const, label: "Autonomie", value: sdtAverages.autonomy },
+    { key: "competence" as const, label: "Competentie & groei", value: sdtAverages.competence },
+    { key: "relatedness" as const, label: "Verbondenheid", value: sdtAverages.relatedness },
   ]
     .filter((item) => typeof item.value === "number")
     .map((item) => {
@@ -451,12 +484,7 @@ function buildSdtRows(sdtAverages: {
         scoreValue: Number(item.value),
         signal: `${signalScore.toFixed(1)}/10`,
         band: getManagementBandLabel(signalScore),
-        note:
-          signalScore >= 7
-            ? "Draagt duidelijk mee aan het vertrekbeeld."
-            : signalScore >= 4.5
-              ? "Relevant als verdiepingslaag naast de organisatiefactoren."
-              : "Ondersteunend, maar niet de eerste driver van dit beeld.",
+        note: getSdtDescription(item.key, Number(item.value)),
       }
     })
 }
@@ -1709,13 +1737,39 @@ export default async function CampaignPage({ params }: Props) {
                 </p>
                 <div className="mt-4 grid gap-4 sm:grid-cols-3">
                   {(["autonomy", "competence", "relatedness"] as const).map(
-                    (dimension) => (
-                      <SdtGauge
-                        key={dimension}
-                        label={FACTOR_LABELS[dimension]}
-                        score={factorData.sdtAverages[dimension] ?? 5.5}
-                      />
-                    ),
+                    (dimension) => {
+                      const score = factorData.sdtAverages[dimension] ?? 5.5
+                      const description =
+                        dimension === "autonomy"
+                          ? score < 5.0
+                            ? "Medewerkers ervaren beperkte ruimte om eigen keuzes te maken in hun werk. Dit raakt het gevoel van eigenaarschap."
+                            : score <= 6.5
+                              ? "Autonomie is aanwezig maar niet sterk. Bespreek of medewerkers voldoende zeggenschap ervaren over hun werkinhoud."
+                              : "Autonomiebeleving is relatief stabiel. Minder urgent dan de topfactoren."
+                          : dimension === "competence"
+                            ? score < 5.0
+                              ? "Groeimogelijkheden en competentieontwikkeling worden als onvoldoende ervaren. Sluit aan op het dominante groei-thema."
+                              : score <= 6.5
+                                ? "Competentie- en groeibeleving vraagt verificatie. Toets of perspectief structureel ontbreekt of situationeel is."
+                                : "Competentiebeleving is relatief goed. Gebruik als aanvullende context, niet als eerste prioriteit."
+                            : score < 5.0
+                              ? "Verbondenheid met team of organisatie staat onder druk. Dit versterkt vaak het vertrek- of behoudsrisico."
+                              : score <= 6.5
+                                ? "Verbondenheid is gemiddeld aanwezig. Bespreek of teamdynamiek of cultuurfit een rol speelt in het hoofdsignaal."
+                                : "Verbondenheid is relatief stabiel. Monitoring volstaat op dit moment."
+
+                      return (
+                        <div key={dimension} className="space-y-2">
+                          <SdtGauge
+                            label={FACTOR_LABELS[dimension]}
+                            score={score}
+                          />
+                          <p className="px-1 text-sm leading-6 text-slate-600">
+                            {description}
+                          </p>
+                        </div>
+                      )
+                    },
                   )}
                 </div>
               </div>
@@ -2190,7 +2244,8 @@ export default async function CampaignPage({ params }: Props) {
               body: `${secondFactor} kleurt het vertrekbeeld mee naast de sterkste factor en hoort daarom in dezelfde analytische lezing thuis.`,
             }
           : null,
-        topContributingReasonLabel
+        topContributingReasonLabel &&
+        topContributingReasonLabel !== "Nog niet zichtbaar"
           ? {
               label: "Meelezende context",
               value: topContributingReasonLabel,
