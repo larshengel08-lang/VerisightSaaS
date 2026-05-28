@@ -2373,7 +2373,14 @@ export default async function CampaignPage({ params }: Props) {
       },
       "hrGovernedAnalysis",
     )
-    const cultureDeliveryPanels = [
+    type CultureInfoPanel = {
+      eyebrow: string
+      title: string
+      body: string
+      tone: PresentationMetric["tone"]
+    }
+
+    const cultureDeliveryPanels: CultureInfoPanel[] = [
       {
         eyebrow: "Pilot deliverable",
         title: "Boardroom PDF-deck",
@@ -2400,7 +2407,7 @@ export default async function CampaignPage({ params }: Props) {
         tone: "slate" as const,
       },
     ]
-    const cultureGovernancePanels = [
+    const cultureGovernancePanels: CultureInfoPanel[] = [
       {
         eyebrow: "Verborgen laagreden",
         title: "Drempel, vrijgave of entitlement",
@@ -2430,7 +2437,7 @@ export default async function CampaignPage({ params }: Props) {
         tone: "slate" as const,
       },
     ]
-    const cultureTextSafetyPanels = [
+    const cultureTextSafetyPanels: CultureInfoPanel[] = [
       {
         eyebrow: "Text safety",
         title: "Niet verzameld of nog niet verwerkt",
@@ -2453,7 +2460,7 @@ export default async function CampaignPage({ params }: Props) {
         tone: "amber" as const,
       },
     ]
-    const cultureDeepeningPanels =
+    const cultureDeepeningPanels: CultureInfoPanel[] =
       (
         [
           {
@@ -2492,12 +2499,7 @@ export default async function CampaignPage({ params }: Props) {
             panel,
           ): panel is NonNullable<typeof panel> => Boolean(panel),
         )
-    const cultureAttentionPanels: Array<{
-      eyebrow: string
-      title: string
-      body: string
-      tone: PresentationMetric["tone"]
-    }> = [
+    const cultureAttentionPanels: CultureInfoPanel[] = [
       {
         eyebrow: "Bestuurlijke eerste vraag",
         title: dashboardViewModel.primaryQuestion.title,
