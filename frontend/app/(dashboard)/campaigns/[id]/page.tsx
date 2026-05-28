@@ -2484,7 +2484,7 @@ export default async function CampaignPage({ params }: Props) {
             eyebrow: panel.eyebrow,
             title: FACTOR_LABELS[panel.key] ?? panel.key,
             body: `Domeinscore ${score.toFixed(1)}/10. ${panel.body}`,
-            tone: (score < 5.5 ? "amber" : "slate") as const,
+            tone: score < 5.5 ? "amber" : "slate",
           }
         })
         .filter(
