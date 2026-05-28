@@ -8,4 +8,3 @@ healthcheckTimeout = 30
 restartPolicyType = "on_failure"
 # Railway pingt elke 30s de healthcheck — dit houdt de container warm
 # en voorkomt cold starts (10-30s vertraging bij survey-openen).
-sleepApplication = false
