@@ -76,6 +76,7 @@ import {
   clusterRetentionOpenSignals,
   computeAverageSignalScore,
   computePulseSignalAverages,
+  computeENPS,
   computeAverageSignalVisibility,
   computeFactorAverages,
   computeRetentionSignalAverages,
@@ -821,6 +822,10 @@ export default async function CampaignPage({ params }: Props) {
   const signalVisibilityAverage =
     stats.scan_type === "exit"
       ? computeAverageSignalVisibility(responses)
+      : null;
+  const enpsScore =
+    stats.scan_type === "exit" || stats.scan_type === "retention"
+      ? computeENPS(responses)
       : null;
   const retentionSupplemental = computeRetentionSupplementalAverages(responses);
   const currentRetentionSignals =
@@ -3130,6 +3135,22 @@ export default async function CampaignPage({ params }: Props) {
                     </p>
                   </div>
                 </div>
+                <div className="rounded-[24px] border border-[#E7D7C6] bg-white/82 px-5 py-5">
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                    eNPS
+                  </p>
+                  <p className="dash-number mt-3 text-[2rem] leading-none text-[color:var(--dashboard-ink)]">
+                    {enpsScore !== null ? `${enpsScore >= 0 ? "+" : ""}${enpsScore}` : "n.b."}
+                  </p>
+                  <p className="mt-3 text-sm leading-6 text-[color:var(--dashboard-text)]">
+                    Informatieve aanbevelingsmetric naast de frictiescore. eNPS telt niet mee in de vertrekduiding of factorweging.
+                  </p>
+                  <p className="mt-3 text-sm leading-6 text-[color:var(--dashboard-text)]">
+                    {enpsScore !== null
+                      ? "Aandeel bevelers minus critici. Schaal -100 tot +100."
+                      : "We tonen eNPS pas zodra minstens 5 responses een geldige aanbevelingsscore bevatten."}
+                  </p>
+                </div>
               </div>
             </div>
           </section>
@@ -3459,6 +3480,7 @@ export default async function CampaignPage({ params }: Props) {
                   { label: "Retentiesignaal", value: averageRiskScore !== null ? `${averageRiskScore.toFixed(1)}/10` : "Nog niet vrij" },
                   { label: "Vertrekintentie", value: retentionSupplemental.turnoverIntention !== null ? `${retentionSupplemental.turnoverIntention.toFixed(1)}/10` : "Nog niet vrij" },
                   { label: "Bevlogenheid", value: retentionSupplemental.engagement !== null ? `${retentionSupplemental.engagement.toFixed(1)}/10` : "Nog niet vrij" },
+                  { label: "eNPS", value: enpsScore !== null ? `${enpsScore >= 0 ? "+" : ""}${enpsScore}` : "n.b." },
                   { label: "Respons", value: `${stats.completion_rate_pct ?? 0}%` },
                 ]}
               />

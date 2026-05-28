@@ -291,7 +291,7 @@ class ContactRequestUpdate(BaseModel):
 class SurveySubmit(BaseModel):
     """
     Body POSTed when a respondent submits the survey.
-    All Likert values: integers 1-5.
+    Likert values: integers 1-5, plus eNPS 0-10.
     Open text is optional.
     """
     token: str
@@ -303,6 +303,7 @@ class SurveySubmit(BaseModel):
     # Shared request field for a product-specific direction/stay item.
     # Product interpretation must come from scan_type and product definition.
     stay_intent_score: Optional[int] = Field(None, ge=1, le=5)
+    enps_score: Optional[int] = Field(None, ge=0, le=10)
     signal_visibility_score: Optional[int] = Field(None, ge=1, le=5)
 
     # Module B — SDT (12 items, required)
