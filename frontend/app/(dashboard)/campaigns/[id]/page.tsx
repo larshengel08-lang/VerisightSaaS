@@ -2492,7 +2492,12 @@ export default async function CampaignPage({ params }: Props) {
             panel,
           ): panel is NonNullable<typeof panel> => Boolean(panel),
         )
-    const cultureAttentionPanels = [
+    const cultureAttentionPanels: Array<{
+      eyebrow: string
+      title: string
+      body: string
+      tone: PresentationMetric["tone"]
+    }> = [
       {
         eyebrow: "Bestuurlijke eerste vraag",
         title: dashboardViewModel.primaryQuestion.title,
