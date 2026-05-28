@@ -39,54 +39,62 @@ const campaigns: CampaignStats[] = [
 ]
 
 describe('dashboard home UX guardrails', () => {
-  it('renders the overview route as a compact cockpit list with visible multi-action controls', () => {
+  it('renders the overview route as a cockpit with explicit triage buckets and sections', () => {
     const pageSource = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
 
+    expect(pageSource).toContain('Goedemorgen,')
+    expect(pageSource).toContain('Overzicht')
     expect(pageSource).toContain('Cockpit')
-    expect(pageSource).toContain('Open scans, download rapporten en beheer instellingen.')
-    expect(pageSource).toContain('Een compact overzicht van alle actieve scans')
-    expect(pageSource).toContain('PdfDownloadButton')
-    expect(pageSource).toContain('primaryAction')
-    expect(pageSource).toContain('secondaryActions')
-    expect(pageSource).toContain('CockpitActionButton')
-    expect(pageSource).not.toContain('ACTIE NODIG')
-    expect(pageSource).not.toContain('BIJNA KLAAR')
-    expect(pageSource).not.toContain('LIVE EN LEESBAAR')
-    expect(pageSource).not.toContain('GEBLOKKEERD / NIET GESTART')
-    expect(pageSource).not.toContain('Nu eerst')
-    expect(pageSource).not.toContain('Geblokkeerd / niet gestart')
-    expect(pageSource).not.toContain('Recente afgeronde routes')
-    expect(pageSource).not.toContain('WAAROM')
-    expect(pageSource).not.toContain('VOLGENDE STAP')
+    expect(pageSource).toContain('Primair signaal')
+    expect(pageSource).toContain('Aandacht nodig')
+    expect(pageSource).toContain('Alles loopt')
+    expect(pageSource).toContain('ACTIE NODIG')
+    expect(pageSource).toContain('BIJNA KLAAR')
+    expect(pageSource).toContain('LIVE EN LEESBAAR')
+    expect(pageSource).toContain('GEBLOKKEERD / NIET GESTART')
+    expect(pageSource).toContain('Nu eerst')
+    expect(pageSource).toContain('Geblokkeerd / niet gestart')
+    expect(pageSource).toContain('Recente afgeronde routes')
+    expect(pageSource).toContain('WAT VRAAGT NU AANDACHT')
+    expect(pageSource).toContain('VOLGENDE STAP')
   })
 
-  it('drops the old bucket-first overview IA and keeps one canonical scan list', () => {
+  it('drops the old flat overview IA and keeps product boundaries sharp', () => {
     const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
 
-    expect(source).toContain('buildCockpitIndexRows')
-    expect(source).toContain('buildCockpitSummary')
-    expect(source).not.toContain('buildTriageItems')
-    expect(source).not.toContain('buildBlockedItems')
-    expect(source).not.toContain('buildRecentClosedItems')
-    expect(source).not.toContain('TriageRouteCard')
-    expect(source).not.toContain('BlockerRouteRow')
-    expect(source).not.toContain('ClosedRouteRow')
+    expect(source).not.toContain('Ook aandacht')
+    expect(source).not.toContain('Actieve routes')
+    expect(source).not.toContain('Wat nu leesbaar is')
+    expect(source).not.toContain('Wat blokkeert')
+    expect(source).not.toContain('OverviewLeadCard')
+    expect(source).not.toContain('Overige actieve routes')
+    expect(source).not.toContain('Portfolio samenvatting')
+    expect(source).not.toContain('Aanbevolen focus')
+    expect(source).not.toContain('factor-breakdown')
+    expect(source).not.toContain('setupwizard')
   })
 
-  it('keeps access boundaries and route scope intact on overview while demoting status filters', () => {
+  it('keeps access boundaries and route scope intact on overview', () => {
     const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
 
     expect(source).toContain("if (context.managerOnly) redirect('/action-center')")
+    expect(source).toContain("['culture_assessment', 'exit', 'retention'].includes(entry.campaign.scan_type)")
     expect(source).toContain("const requestedModuleFilter = normalizeDashboardModuleFilter(")
-    expect(source).not.toContain("const requestedStatusFilter = normalizeDashboardStatusFilter(")
-    expect(source).toContain('Product')
-    expect(source).toContain('FilterPill')
-    expect(source).not.toContain('STATUS_FILTERS')
-    expect(source).not.toContain('Geen routes met deze status.')
+    expect(source).toContain("const requestedStatusFilter = normalizeDashboardStatusFilter(")
+    expect(source).toContain("if (state === 'ready_to_launch' || state === 'running' || state === 'sparse') return 'action_needed'")
+    expect(source).toContain(".filter((entry) => entry.state === 'setup')")
+    expect(source).toContain('Geen routes met deze status.')
     expect(source).not.toContain('Accepteren')
     expect(source).not.toContain('Afwijzen')
     expect(source).not.toContain('Toewijzen')
     expect(source).not.toContain('Reviewmoment')
+  })
+
+  it('sends setup and in-opbouw cockpit routes to campaign-specific routebeheer instead of campaign detail', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain("entry.state === 'setup' || entry.state === 'ready_to_launch' || entry.state === 'running'")
+    expect(source).toContain("`/campaigns/${entry.campaign.campaign_id}/beheer`")
   })
 
   it('does not leak helper exports from the Next.js page module', () => {
@@ -95,14 +103,15 @@ describe('dashboard home UX guardrails', () => {
     expect(source).not.toContain('export function getCtaHrefForState')
   })
 
-  it('keeps the cockpit summary compact instead of score-heavy route cards', () => {
+  it('promotes the primary route signal in the visible overview card metrics', () => {
     const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
 
-    expect(source).toContain('<SummaryCard label="Aantal scans"')
-    expect(source).toContain('<SummaryCard label="Resultaten beschikbaar"')
-    expect(source).toContain('<SummaryCard label="PDF beschikbaar"')
-    expect(source).toContain('<SummaryCard label="Aandacht nodig"')
-    expect(source).not.toContain('getCampaignAverageSignalScore')
+    expect(source).toContain('primaryMetricLabel: primaryMetric.label')
+    expect(source).toContain('primaryMetricValue: primaryMetric.value')
+    expect(source).toContain('formatSignalScore')
+    expect(source).toContain('Open resultaten')
+    expect(source).toContain('Bekijk voortgang')
+    expect(source).toContain('Open instellingen')
   })
 
   it('allows the seeded HR demo campaign to override the default overview focus route', () => {

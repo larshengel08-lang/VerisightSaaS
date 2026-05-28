@@ -1,7 +1,10 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { PdfDownloadButton } from '@/app/(dashboard)/campaigns/[id]/pdf-download-button'
 import { DashboardSection } from '@/components/dashboard/dashboard-primitives'
+import {
+  getCampaignCompositionState,
+  type CampaignCompositionState,
+} from '@/lib/dashboard/dashboard-state-composition'
 import {
   getDashboardModuleKeyForScanType,
   getDashboardModuleLabel,
@@ -9,12 +12,76 @@ import {
   normalizeDashboardModuleFilter,
   type DashboardCategoryModuleKey,
 } from '@/lib/dashboard/shell-navigation'
+import { getScanDefinition } from '@/lib/scan-definitions'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import { createClient } from '@/lib/supabase/server'
-import type { CampaignStats } from '@/lib/types'
-import { buildCockpitIndexRows, buildCockpitSummary, type CockpitAction, type CockpitRow } from './cockpit-index'
+import { getResponseActivationThresholds } from '@/lib/response-activation'
+import { getCampaignAverageSignalScore, type CampaignStats } from '@/lib/types'
 
-const MODULE_ORDER: DashboardCategoryModuleKey[] = ['exit', 'retention', 'onboarding', 'pulse', 'leadership', 'culture_assessment']
+type CampaignHomeEntry = {
+  campaign: CampaignStats
+  state: CampaignCompositionState
+  invitesNotSent: number
+}
+
+type OverviewRouteTone = 'slate' | 'blue' | 'emerald' | 'amber'
+type CockpitBucket =
+  | 'action_needed'
+  | 'nearly_ready'
+  | 'live_readable'
+  | 'blocked_not_started'
+  | 'recent_closed'
+type CockpitStatusFilter = Exclude<CockpitBucket, 'recent_closed'> | 'all'
+
+type CockpitRouteItem = {
+  entry: CampaignHomeEntry
+  bucket: CockpitBucket
+  productLabel: string
+  periodLabel: string
+  stateLabel: string
+  stateTone: OverviewRouteTone
+  why: string
+  nextStep: string
+  ctaLabel: string
+  ctaHref: string
+  responseValue: string
+  primaryMetricLabel: string
+  primaryMetricValue: string
+  primaryMetricContext: string
+}
+
+type CockpitCounter = {
+  key: Exclude<CockpitBucket, 'recent_closed'>
+  label: string
+  tone: OverviewRouteTone
+  count: number
+  body: string
+}
+
+type OverviewSignalBanner = {
+  tone: OverviewRouteTone
+  heading: string
+  subcopy: string
+  ctaLabel: string | null
+  ctaHref: string | null
+  routeLabel: string | null
+}
+
+const STATUS_FILTERS: Array<{ key: CockpitStatusFilter; label: string }> = [
+  { key: 'all', label: 'Alle statussen' },
+  { key: 'action_needed', label: 'Actie nodig' },
+  { key: 'nearly_ready', label: 'Bijna klaar' },
+  { key: 'live_readable', label: 'Live en leesbaar' },
+  { key: 'blocked_not_started', label: 'Geblokkeerd / niet gestart' },
+]
+
+const MODULE_ORDER: DashboardCategoryModuleKey[] = [
+  'exit',
+  'retention',
+  'onboarding',
+  'pulse',
+  'leadership',
+]
 
 export default async function DashboardHomePage({
   searchParams,
@@ -24,6 +91,9 @@ export default async function DashboardHomePage({
   const resolvedSearchParams = searchParams ? await searchParams : undefined
   const requestedModuleFilter = normalizeDashboardModuleFilter(
     typeof resolvedSearchParams?.module === 'string' ? resolvedSearchParams.module : undefined,
+  )
+  const requestedStatusFilter = normalizeDashboardStatusFilter(
+    typeof resolvedSearchParams?.status === 'string' ? resolvedSearchParams.status : undefined,
   )
   const supabase = await createClient()
   const {
@@ -35,13 +105,13 @@ export default async function DashboardHomePage({
   if (context.managerOnly) redirect('/action-center')
 
   const isAdmin = profile?.is_verisight_admin === true
+
   const { data: stats } = await supabase.from('campaign_stats').select('*').order('created_at', { ascending: false })
 
   const allCampaigns = (stats ?? []) as CampaignStats[]
   const campaigns = requestedModuleFilter
     ? allCampaigns.filter((campaign) => campaign.scan_type === getScanTypeForDashboardModule(requestedModuleFilter))
     : allCampaigns
-  const productFilters = buildAvailableModuleFilters(allCampaigns)
   const campaignIds = campaigns.map((campaign) => campaign.campaign_id)
   const { data: respondentStateRowsRaw } =
     campaignIds.length > 0
@@ -56,9 +126,69 @@ export default async function DashboardHomePage({
     completed: boolean
   }>
   const invitesNotSentByCampaign = buildInvitesNotSentByCampaign(campaigns, respondentStateRows)
-  const rows = buildCockpitIndexRows({ campaigns, invitesNotSentByCampaign })
-  const summary = buildCockpitSummary(rows)
-  const contextLabel = requestedModuleFilter ? getDashboardModuleLabel(requestedModuleFilter) : 'Alle routes'
+  const campaignEntries = campaigns.map((campaign) => {
+    const invitesNotSent = invitesNotSentByCampaign.get(campaign.campaign_id)
+    if (invitesNotSent === undefined) {
+      throw new Error(`Missing invite state for campaign ${campaign.campaign_id}`)
+    }
+
+    return {
+      campaign,
+      invitesNotSent,
+      state: getCampaignCompositionState({
+        isActive: campaign.is_active,
+        totalInvited: campaign.total_invited,
+        totalCompleted: campaign.total_completed,
+        invitesNotSent,
+        incompleteScores: 0,
+        hasMinDisplay: campaign.total_completed >= getResponseActivationThresholds(campaign.scan_type).dashboardMin,
+        hasEnoughData: campaign.total_completed >= getResponseActivationThresholds(campaign.scan_type).insightMin,
+      }),
+    }
+  })
+
+  const moduleLabel = requestedModuleFilter ? getDashboardModuleLabel(requestedModuleFilter) : null
+  const productFilters = buildAvailableModuleFilters(allCampaigns)
+  const counters = buildCockpitCounters(campaignEntries)
+  const activeEntries = campaignEntries.filter((entry) => entry.campaign.is_active)
+  const primaryActiveEntries = activeEntries.filter((entry) =>
+    ['exit', 'retention'].includes(entry.campaign.scan_type),
+  )
+  const readableEntries = [...campaignEntries]
+    .filter((entry) => ['full', 'partial', 'closed'].includes(entry.state))
+    .sort(
+      (left, right) =>
+        new Date(right.campaign.created_at).getTime() - new Date(left.campaign.created_at).getTime(),
+    )
+  const primaryLeadEntry = selectPrimaryLeadEntry(primaryActiveEntries, readableEntries)
+  const triageItems = buildTriageItems(campaignEntries, primaryLeadEntry)
+  const blockedItems = buildBlockedItems(campaignEntries)
+  const closedItems = buildRecentClosedItems(campaignEntries).slice(0, 3)
+  const actionNeededItems = triageItems.filter((item) => item.bucket === 'action_needed')
+  const hasStatusFilter = requestedStatusFilter !== 'all'
+  const filteredTriageItems =
+    requestedStatusFilter === 'all'
+      ? triageItems
+      : triageItems.filter((item) => item.bucket === requestedStatusFilter)
+  const showTriageSection =
+    requestedStatusFilter === 'all' ||
+    requestedStatusFilter === 'action_needed' ||
+    requestedStatusFilter === 'nearly_ready' ||
+    requestedStatusFilter === 'live_readable'
+  const showBlockedSection =
+    blockedItems.length > 0 &&
+    (requestedStatusFilter === 'all' || requestedStatusFilter === 'blocked_not_started')
+  const showClosedSection = closedItems.length > 0 && requestedStatusFilter === 'all'
+  const filterEmptyMessage = hasStatusFilter && !showBlockedSection && filteredTriageItems.length === 0
+  const contextLabel = moduleLabel ?? 'Alle routes'
+  const activeStatusLabel = getStatusFilterLabel(requestedStatusFilter)
+  const hasActiveFilters = requestedModuleFilter !== null || requestedStatusFilter !== 'all'
+  const overviewHeading = getOverviewHeading(user.user_metadata)
+  const primarySignalBanner = buildOverviewSignalBanner({
+    attentionItems: [...actionNeededItems, ...blockedItems],
+    activeEntries,
+    fallbackItem: triageItems[0] ?? blockedItems[0] ?? closedItems[0] ?? null,
+  })
 
   return (
     <div className="space-y-8">
@@ -67,7 +197,7 @@ export default async function DashboardHomePage({
       ) : campaigns.length === 0 ? (
         requestedModuleFilter ? (
           <DashboardSection
-            eyebrow={contextLabel}
+            eyebrow={moduleLabel ?? 'Route'}
             title="Nog geen campagnes voor deze route"
             description="Zodra deze route live staat, verschijnt hier automatisch het volledige overzicht."
           >
@@ -85,51 +215,83 @@ export default async function DashboardHomePage({
         )
       ) : (
         <>
-          <header className="space-y-6 border-b border-[color:rgba(13,27,42,0.15)] pb-8">
+          <header className="space-y-5 border-b border-[color:var(--dashboard-frame-border)] pb-6">
             {requestedModuleFilter ? (
               <Link
-                href="/dashboard"
-                className="inline-flex font-mono text-[0.66rem] font-medium uppercase tracking-[0.2em] text-[color:var(--dashboard-text)] transition-colors hover:text-[color:var(--dashboard-ink)]"
+                href={buildDashboardOverviewHref({ statusFilter: requestedStatusFilter })}
+                className="inline-flex text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:text-[color:var(--dashboard-ink)]"
               >
                 Terug naar alle routes
               </Link>
             ) : null}
-            <div className="space-y-6">
-              <div className="space-y-4">
+            <div className="space-y-4">
+              <div className="space-y-2.5">
                 <div className="flex flex-wrap items-center gap-3">
-                  <span className="inline-flex items-center gap-2 font-mono text-[0.68rem] font-medium uppercase tracking-[0.22em] text-[color:var(--dashboard-text)]">
-                    <span className="h-2.5 w-2.5 bg-[color:var(--dashboard-accent-strong)]" />
+                  <span className="inline-flex rounded-full bg-[color:var(--dashboard-accent-soft)] px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--dashboard-accent-strong)]">
                     Cockpit
                   </span>
-                  <span className="font-mono text-[0.68rem] font-medium uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
-                    {contextLabel}
-                  </span>
+                  <span className="text-sm font-medium text-[color:var(--dashboard-muted)]">{contextLabel}</span>
                 </div>
-                <h1 className="font-[family-name:var(--font-inter-tight)] text-[2.45rem] font-extrabold leading-[0.92] tracking-[-0.045em] text-[color:var(--dashboard-ink)] sm:text-[3.15rem]">
-                  Open scans, download rapporten en beheer instellingen.
+                <h1 className="font-serif text-[2.25rem] leading-[0.95] tracking-[-0.05em] text-[color:var(--dashboard-ink)] sm:text-[2.8rem]">
+                  {overviewHeading}
                 </h1>
-                <p className="max-w-3xl text-[0.98rem] leading-7 text-[color:var(--dashboard-text)]">
-                  Een compact overzicht van alle actieve scans, met per scan precies de acties die nu beschikbaar zijn.
+                <p className="max-w-3xl text-sm leading-6 text-[color:var(--dashboard-text)]">
+                  {requestedModuleFilter
+                    ? `Focus op ${contextLabel.toLowerCase()} en open direct de route die nu aandacht vraagt.`
+                    : 'Open direct de route die nu aandacht vraagt.'}
                 </p>
               </div>
-              <div className="grid gap-5 xl:grid-cols-[minmax(0,1.5fr),minmax(20rem,0.9fr)]">
-                <div className="grid gap-px border border-[color:rgba(13,27,42,0.15)] bg-[color:rgba(13,27,42,0.15)] sm:grid-cols-2 xl:grid-cols-4">
-                  <SummaryCard label="Aantal scans" value={summary.total} />
-                  <SummaryCard label="Resultaten beschikbaar" value={summary.resultsAvailable} />
-                  <SummaryCard label="PDF beschikbaar" value={summary.pdfAvailable} />
-                  <SummaryCard label="Aandacht nodig" value={summary.attentionNeeded} highlight />
+              <div className="rounded-[18px] border border-[color:var(--dashboard-frame-border)] bg-[#fcfaf7] px-4 py-4 shadow-[0_1px_3px_rgba(15,23,42,0.03)] sm:px-5">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-sm leading-6 text-[color:var(--dashboard-text)]">
+                    <span className="font-semibold text-[color:var(--dashboard-ink)]">Actief:</span>{' '}
+                    {activeStatusLabel} · {contextLabel}
+                  </p>
+                  {hasActiveFilters ? (
+                    <Link
+                      href="/dashboard"
+                      className="inline-flex text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:text-[color:var(--dashboard-ink)]"
+                    >
+                      Wis filters
+                    </Link>
+                  ) : null}
                 </div>
-                <div className="border border-[color:rgba(13,27,42,0.15)] bg-white px-4 py-4 sm:px-5">
-                  <div className="space-y-3">
-                    <p className="font-mono text-[0.66rem] font-medium uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">
+                <div className="mt-3 grid gap-4 lg:grid-cols-[minmax(0,1.35fr),minmax(0,1fr)]">
+                  <div className="space-y-2">
+                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+                      Status
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {STATUS_FILTERS.map((filter) => (
+                        <FilterPill
+                          key={filter.key}
+                          href={buildDashboardOverviewHref({
+                            moduleFilter: requestedModuleFilter,
+                            statusFilter: filter.key,
+                          })}
+                          active={requestedStatusFilter === filter.key}
+                          label={filter.label}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
                       Product
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      <FilterPill href="/dashboard" active={requestedModuleFilter === null} label="Alle routes" />
+                      <FilterPill
+                        href={buildDashboardOverviewHref({ statusFilter: requestedStatusFilter })}
+                        active={requestedModuleFilter === null}
+                        label="Alle routes"
+                      />
                       {productFilters.map((filterKey) => (
                         <FilterPill
                           key={filterKey}
-                          href={buildDashboardOverviewHref(filterKey)}
+                          href={buildDashboardOverviewHref({
+                            moduleFilter: filterKey,
+                            statusFilter: requestedStatusFilter,
+                          })}
                           active={requestedModuleFilter === filterKey}
                           label={getDashboardModuleLabel(filterKey)}
                         />
@@ -141,21 +303,192 @@ export default async function DashboardHomePage({
             </div>
           </header>
 
-          <section className="space-y-px border-y border-[color:rgba(13,27,42,0.15)] bg-[color:rgba(13,27,42,0.15)]">
-            {rows.map((row) => (
-              <CockpitScanRow key={row.campaign.campaign_id} row={row} />
+          <PrimarySignalBannerCard banner={primarySignalBanner} />
+
+          <section className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
+            {counters.map((counter) => (
+              <StatusCounterCard key={counter.key} counter={counter} />
             ))}
           </section>
+
+          {showTriageSection ? (
+            <section className="space-y-4">
+              <div className="space-y-1.5">
+                <h2 className="text-[1.55rem] font-semibold tracking-[-0.04em] text-[color:var(--dashboard-ink)]">
+                  Nu eerst
+                </h2>
+                <p className="max-w-3xl text-sm leading-6 text-[color:var(--dashboard-text)]">
+                  Open hier de routes die nu het snelst vervolg vragen.
+                </p>
+              </div>
+              {filteredTriageItems.length === 0 ? (
+                <InlineEmptyState message="Geen routes vragen op dit moment actie." />
+              ) : (
+                <div className="space-y-4">
+                  {filteredTriageItems.map((item, index) => (
+                    <TriageRouteCard
+                      key={item.entry.campaign.campaign_id}
+                      item={item}
+                      highlightLabel={index === 0 && requestedStatusFilter === 'all' ? 'Nu eerst' : undefined}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+          ) : null}
+
+          {showBlockedSection ? (
+            <section className="space-y-4">
+              <div className="space-y-1.5">
+                <h2 className="text-[1.35rem] font-semibold tracking-[-0.04em] text-[color:var(--dashboard-ink)]">
+                  Geblokkeerd / niet gestart
+                </h2>
+                <p className="text-sm leading-6 text-[color:var(--dashboard-text)]">
+                  Deze routes missen nog livegang en vragen eerst een operationele startstap.
+                </p>
+              </div>
+              <div className="space-y-3">
+                {blockedItems.map((item) => (
+                  <BlockerRouteRow key={item.entry.campaign.campaign_id} item={item} />
+                ))}
+              </div>
+            </section>
+          ) : null}
+
+          {filterEmptyMessage ? (
+            <InlineEmptyState message="Geen routes met deze status." />
+          ) : null}
+
+          {showClosedSection ? (
+            <section className="space-y-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div className="space-y-1.5">
+                  <h2 className="text-[1.35rem] font-semibold tracking-[-0.04em] text-[color:var(--dashboard-ink)]">
+                    Recente afgeronde routes
+                  </h2>
+                  <p className="text-sm leading-6 text-[color:var(--dashboard-text)]">
+                    Gesloten routes die nu vooral rapport-first gelezen worden.
+                  </p>
+                </div>
+                <Link
+                  href="/reports"
+                  className="text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:text-[color:var(--dashboard-ink)]"
+                >
+                  Open rapporten
+                </Link>
+              </div>
+              <div className="space-y-3">
+                {closedItems.map((item) => (
+                  <ClosedRouteRow key={item.entry.campaign.campaign_id} item={item} />
+                ))}
+              </div>
+            </section>
+          ) : null}
         </>
       )}
     </div>
   )
 }
 
-function buildDashboardOverviewHref(moduleFilter: DashboardCategoryModuleKey) {
+function normalizeDashboardStatusFilter(value: string | undefined): CockpitStatusFilter {
+  if (
+    value === 'action_needed' ||
+    value === 'nearly_ready' ||
+    value === 'live_readable' ||
+    value === 'blocked_not_started'
+  ) {
+    return value
+  }
+
+  return 'all'
+}
+
+function getStatusFilterLabel(filter: CockpitStatusFilter) {
+  return STATUS_FILTERS.find((item) => item.key === filter)?.label ?? 'Alle statussen'
+}
+
+function buildDashboardOverviewHref(args: {
+  moduleFilter?: DashboardCategoryModuleKey | null
+  statusFilter?: CockpitStatusFilter
+}) {
   const params = new URLSearchParams()
-  params.set('module', moduleFilter)
-  return `/dashboard?${params.toString()}`
+  if (args.moduleFilter) {
+    params.set('module', args.moduleFilter)
+  }
+  if (args.statusFilter && args.statusFilter !== 'all') {
+    params.set('status', args.statusFilter)
+  }
+
+  const query = params.toString()
+  return query ? `/dashboard?${query}` : '/dashboard'
+}
+
+function getOverviewHeading(userMetadata: unknown) {
+  const firstName = getFirstNameFromUserMetadata(userMetadata)
+  return firstName ? `Goedemorgen, ${firstName}.` : 'Overzicht'
+}
+
+function getFirstNameFromUserMetadata(userMetadata: unknown) {
+  if (!userMetadata || typeof userMetadata !== 'object') {
+    return null
+  }
+
+  const metadata = userMetadata as Record<string, unknown>
+  const candidateKeys = ['preferred_name', 'first_name', 'full_name', 'name', 'display_name'] as const
+
+  for (const key of candidateKeys) {
+    const value = metadata[key]
+    if (typeof value !== 'string') continue
+
+    const normalized = value.trim().replace(/\s+/g, ' ')
+    if (!normalized) continue
+
+    const firstToken = normalized.split(' ')[0]?.replace(/[.,;:!?]+$/g, '')
+    if (firstToken && firstToken.length >= 2) {
+      return firstToken
+    }
+  }
+
+  return null
+}
+
+function buildOverviewSignalBanner(args: {
+  attentionItems: CockpitRouteItem[]
+  activeEntries: CampaignHomeEntry[]
+  fallbackItem: CockpitRouteItem | null
+}): OverviewSignalBanner {
+  if (args.attentionItems.length > 0) {
+    const firstItem = args.attentionItems[0]
+    const count = args.attentionItems.length
+
+    return {
+      tone: 'amber',
+      heading: 'Aandacht nodig',
+      subcopy: `${count} ${formatRouteCountLabel(count)} vragen nu een vervolgstap.`,
+      ctaLabel: firstItem.ctaLabel,
+      ctaHref: firstItem.ctaHref,
+      routeLabel: firstItem.entry.campaign.campaign_name,
+    }
+  }
+
+  const activeCount = args.activeEntries.length
+
+  return {
+    tone: 'emerald',
+    heading: 'Alles loopt',
+    subcopy: `${activeCount} actieve ${formatRouteWord(activeCount)}, geen directe blokkades zichtbaar.`,
+    ctaLabel: args.fallbackItem?.ctaLabel ?? null,
+    ctaHref: args.fallbackItem?.ctaHref ?? null,
+    routeLabel: args.fallbackItem?.entry.campaign.campaign_name ?? null,
+  }
+}
+
+function formatRouteCountLabel(count: number) {
+  return count === 1 ? 'route' : 'routes'
+}
+
+function formatRouteWord(count: number) {
+  return count === 1 ? 'route' : 'routes'
 }
 
 function buildAvailableModuleFilters(campaigns: CampaignStats[]) {
@@ -167,6 +500,265 @@ function buildAvailableModuleFilters(campaigns: CampaignStats[]) {
   }
 
   return MODULE_ORDER.filter((key) => availableKeys.has(key))
+}
+
+function mapStateToCockpitBucket(state: CampaignCompositionState): CockpitBucket {
+  if (state === 'setup') return 'blocked_not_started'
+  if (state === 'ready_to_launch' || state === 'running' || state === 'sparse') return 'action_needed'
+  if (state === 'partial') return 'nearly_ready'
+  if (state === 'full') return 'live_readable'
+  return 'recent_closed'
+}
+
+function buildCockpitCounters(entries: CampaignHomeEntry[]): CockpitCounter[] {
+  return [
+    {
+      key: 'action_needed',
+      label: 'ACTIE NODIG',
+      tone: 'amber',
+      count: entries.filter((entry) => mapStateToCockpitBucket(entry.state) === 'action_needed').length,
+      body: 'Routes waar livegang of extra respons eerst aandacht vraagt.',
+    },
+    {
+      key: 'nearly_ready',
+      label: 'BIJNA KLAAR',
+      tone: 'blue',
+      count: entries.filter((entry) => mapStateToCockpitBucket(entry.state) === 'nearly_ready').length,
+      body: 'Routes waar de eerste leeslaag al open is.',
+    },
+    {
+      key: 'live_readable',
+      label: 'LIVE EN LEESBAAR',
+      tone: 'emerald',
+      count: entries.filter((entry) => mapStateToCockpitBucket(entry.state) === 'live_readable').length,
+      body: 'Routes die nu leesbaar genoeg zijn voor besluitvorming.',
+    },
+    {
+      key: 'blocked_not_started',
+      label: 'GEBLOKKEERD / NIET GESTART',
+      tone: 'slate',
+      count: entries.filter((entry) => mapStateToCockpitBucket(entry.state) === 'blocked_not_started').length,
+      body: 'Routes die nog niet live staan.',
+    },
+  ]
+}
+
+function buildTriageItems(
+  entries: CampaignHomeEntry[],
+  primaryLeadEntry: CampaignHomeEntry | null,
+) {
+  const activeEntries = entries.filter((entry) => entry.campaign.is_active)
+  const primaryEntries = activeEntries.filter((entry) =>
+    ['culture_assessment', 'exit', 'retention'].includes(entry.campaign.scan_type),
+  )
+  const boundedEntries = activeEntries.filter(
+    (entry) => !['culture_assessment', 'exit', 'retention'].includes(entry.campaign.scan_type),
+  )
+  const orderedEntries = [
+    ...(primaryLeadEntry ? [primaryLeadEntry] : []),
+    ...primaryEntries
+      .filter((entry) => entry.campaign.campaign_id !== primaryLeadEntry?.campaign.campaign_id)
+      .sort(compareOverviewEntries),
+    ...boundedEntries.sort(compareOverviewEntries),
+  ]
+
+  return orderedEntries
+    .filter((entry) => {
+      const bucket = mapStateToCockpitBucket(entry.state)
+      return bucket === 'action_needed' || bucket === 'nearly_ready' || bucket === 'live_readable'
+    })
+    .map(buildCockpitRouteItem)
+}
+
+function buildBlockedItems(entries: CampaignHomeEntry[]) {
+  return entries
+    .filter((entry) => entry.state === 'setup')
+    .sort(compareOverviewEntries)
+    .map(buildCockpitRouteItem)
+}
+
+function buildRecentClosedItems(entries: CampaignHomeEntry[]) {
+  return entries
+    .filter((entry) => entry.state === 'closed')
+    .sort(
+      (left, right) =>
+        new Date(right.campaign.created_at).getTime() - new Date(left.campaign.created_at).getTime(),
+    )
+    .map(buildCockpitRouteItem)
+}
+
+function buildCockpitRouteItem(entry: CampaignHomeEntry): CockpitRouteItem {
+  const scanDefinition = getScanDefinition(entry.campaign.scan_type)
+  const stateMeta = getHomeStateMeta(entry.state)
+  const completionValue = Number.isFinite(entry.campaign.completion_rate_pct)
+    ? `${entry.campaign.completion_rate_pct}%`
+    : '—'
+  const ctaLabel = getCtaLabelForState(entry.state)
+  const bucket = mapStateToCockpitBucket(entry.state)
+  const primaryMetric = getRoutePrimaryMetric(entry, scanDefinition.productName, scanDefinition.signalLabel, completionValue)
+
+  return {
+    entry,
+    bucket,
+    productLabel: scanDefinition.productName,
+    periodLabel: formatCampaignPeriod(entry.campaign),
+    stateLabel: stateMeta.label,
+    stateTone: getToneForBucket(bucket),
+    why: getWhyCopy(entry),
+    nextStep: getNextStepCopy(entry),
+    ctaLabel,
+    ctaHref:
+      entry.state === 'setup' || entry.state === 'ready_to_launch' || entry.state === 'running'
+        ? `/campaigns/${entry.campaign.campaign_id}/beheer`
+        : `/campaigns/${entry.campaign.campaign_id}`,
+    responseValue: completionValue,
+    primaryMetricLabel: primaryMetric.label,
+    primaryMetricValue: primaryMetric.value,
+    primaryMetricContext: primaryMetric.context,
+  }
+}
+
+function getToneForBucket(bucket: CockpitBucket): OverviewRouteTone {
+  if (bucket === 'live_readable') return 'emerald'
+  if (bucket === 'nearly_ready') return 'blue'
+  if (bucket === 'action_needed') return 'amber'
+  return 'slate'
+}
+
+function getCtaLabelForState(state: CampaignCompositionState) {
+  if (state === 'setup' || state === 'ready_to_launch') return 'Open instellingen'
+  if (state === 'running' || state === 'sparse') return 'Bekijk voortgang'
+  return 'Open resultaten'
+}
+
+function getWhyCopy(entry: CampaignHomeEntry) {
+  if (entry.state === 'setup' || entry.state === 'running' || entry.state === 'sparse') {
+    return getOverviewBlockerCopy(entry)
+  }
+
+  return getHomeStateMeta(entry.state).body
+}
+
+function getRoutePrimaryMetric(
+  entry: CampaignHomeEntry,
+  productLabel: string,
+  signalLabel: string,
+  responseValue: string,
+) {
+  if (entry.state === 'partial' || entry.state === 'full' || entry.state === 'closed') {
+    const signalScore = getCampaignAverageSignalScore(entry.campaign)
+    return {
+      label: signalLabel.toUpperCase(),
+      value: formatSignalScore(signalScore),
+      context:
+        entry.state === 'closed'
+          ? `Rapport klaar · ${responseValue} respons`
+          : entry.state === 'full'
+            ? `Resultaten leesbaar · ${responseValue} respons`
+            : `Eerste read open · ${responseValue} respons`,
+    }
+  }
+
+  if (entry.state === 'running' || entry.state === 'sparse' || entry.state === 'ready_to_launch') {
+    return {
+      label: 'RESPONS',
+      value: responseValue,
+      context: `${productLabel} · ${getHomeStateMeta(entry.state).label}`,
+    }
+  }
+
+  return {
+    label: 'EERSTVOLGENDE STAP',
+    value: 'Respondenten toevoegen',
+    context: getHomeStateMeta(entry.state).label,
+  }
+}
+
+function getNextStepCopy(entry: CampaignHomeEntry) {
+  if (entry.state === 'setup') {
+    return 'Voeg respondenten toe en zet de route live.'
+  }
+
+  if (entry.state === 'ready_to_launch') {
+    return entry.invitesNotSent === 1
+      ? 'Verstuur de laatste uitnodiging.'
+      : `Verstuur de ${entry.invitesNotSent} open uitnodigingen.`
+  }
+
+  if (entry.state === 'running' || entry.state === 'sparse') {
+    const responsesNeeded = getResponsesNeededForDashboard(entry)
+    if (responsesNeeded > 0) {
+      return `Nog ${responsesNeeded} respons tot de eerste leeslaag.`
+    }
+
+    return 'Volg de respons tot de eerste read vrijkomt.'
+  }
+
+  if (entry.state === 'partial') {
+    return 'Open de eerste resultaten en bepaal waar extra respons nodig is.'
+  }
+
+  if (entry.state === 'full') {
+    return 'Open de resultaten en kies de eerste managementroute.'
+  }
+
+  return 'Open de resultaten en koppel de vervolgroute.'
+}
+
+function getResponsesNeededForDashboard(entry: CampaignHomeEntry) {
+  const dashboardThreshold = getResponseActivationThresholds(entry.campaign.scan_type).dashboardMin
+  return Math.max(0, dashboardThreshold - entry.campaign.total_completed)
+}
+
+function formatSignalScore(score: number | null) {
+  if (score === null || !Number.isFinite(score)) {
+    return 'Nog niet vrij'
+  }
+
+  return `${new Intl.NumberFormat('nl-NL', {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  }).format(score)}/10`
+}
+
+function compareOverviewEntries(left: CampaignHomeEntry, right: CampaignHomeEntry) {
+  const stateRank: Record<CampaignCompositionState, number> = {
+    full: 0,
+    partial: 1,
+    sparse: 2,
+    ready_to_launch: 3,
+    running: 4,
+    setup: 5,
+    closed: 6,
+  }
+
+  const rankDelta = stateRank[left.state] - stateRank[right.state]
+  if (rankDelta !== 0) return rankDelta
+
+  const scoreDelta =
+    (getCampaignAverageSignalScore(right.campaign) ?? -1) - (getCampaignAverageSignalScore(left.campaign) ?? -1)
+  if (scoreDelta !== 0) return scoreDelta
+
+  return new Date(right.campaign.created_at).getTime() - new Date(left.campaign.created_at).getTime()
+}
+
+function selectPrimaryLeadEntry(
+  primaryActiveEntries: CampaignHomeEntry[],
+  readableEntries: CampaignHomeEntry[],
+) {
+  const readablePrimary = primaryActiveEntries
+    .filter((entry) => ['full', 'partial'].includes(entry.state))
+    .sort(compareOverviewEntries)[0]
+
+  if (readablePrimary) return readablePrimary
+
+  const readableAny = readableEntries
+    .filter((entry) => ['exit', 'retention'].includes(entry.campaign.scan_type))
+    .sort(compareOverviewEntries)[0]
+
+  if (readableAny) return readableAny
+
+  return primaryActiveEntries.sort(compareOverviewEntries)[0] ?? null
 }
 
 function buildInvitesNotSentByCampaign(
@@ -190,6 +782,106 @@ function buildInvitesNotSentByCampaign(
   return counts
 }
 
+function getHomeStateMeta(state: CampaignCompositionState) {
+  const meta = {
+    setup: {
+      label: 'Nog niet live',
+      body: 'Respondentimport of livegang ontbreekt nog.',
+    },
+    ready_to_launch: {
+      label: 'Nog in opbouw',
+      body: 'Uitnodigingen zijn nog niet volledig live gezet.',
+    },
+    running: {
+      label: 'Nog in opbouw',
+      body: 'Er is nog geen eerste veilige responslaag zichtbaar.',
+    },
+    sparse: {
+      label: 'Nog in opbouw',
+      body: 'Meer respons nodig voordat deze route echt leesbaar wordt.',
+    },
+    partial: {
+      label: 'Deels zichtbaar',
+      body: 'Eerste read beschikbaar.',
+    },
+    full: {
+      label: 'Leesbaar',
+      body: 'Dashboard beschikbaar.',
+    },
+    closed: {
+      label: 'Afgerond',
+      body: 'Rapport beschikbaar.',
+    },
+  } satisfies Record<
+    CampaignCompositionState,
+    {
+      label: string
+      body: string
+    }
+  >
+
+  return meta[state]
+}
+
+function getOverviewBlockerCopy(entry: CampaignHomeEntry) {
+  if (entry.state === 'setup') return 'Respondentimport ontbreekt nog.'
+  return 'Meer respons nodig voor een eerste read.'
+}
+
+function formatCampaignPeriod(campaign: CampaignStats) {
+  const quarterMatch = campaign.campaign_name.match(/Q[1-4]\s?\d{4}/i)
+  if (quarterMatch) return quarterMatch[0].replace(/\s+/, ' ')
+
+  return new Intl.DateTimeFormat('nl-NL', {
+    month: 'short',
+    year: 'numeric',
+  }).format(new Date(campaign.created_at))
+}
+
+function getOverviewToneClasses(tone: OverviewRouteTone) {
+  if (tone === 'emerald') {
+    return {
+      border: 'border-[color:var(--dashboard-accent-soft-border)]',
+      accent: 'bg-[color:var(--dashboard-accent-strong)]',
+      rail: 'border-l-[color:var(--dashboard-accent-strong)]',
+      chip:
+        'border-[color:var(--dashboard-accent-soft-border)] bg-[color:var(--dashboard-accent-soft)] text-[color:var(--dashboard-accent-strong)]',
+      button:
+        'bg-[color:var(--dashboard-accent-strong)] text-white hover:bg-[#00584f]',
+    }
+  }
+
+  if (tone === 'blue') {
+    return {
+      border: 'border-[#c7d0dc]',
+      accent: 'bg-[#8292a5]',
+      rail: 'border-l-[#8292a5]',
+      chip: 'border-[#d9e1ea] bg-[#f5f7fa] text-[#506071]',
+      button: 'bg-[#1B2B3A] text-white hover:bg-[#24384b]',
+    }
+  }
+
+  if (tone === 'amber') {
+    return {
+      border: 'border-[#e7d7af]',
+      accent: 'bg-[#C88C20]',
+      rail: 'border-l-[#C88C20]',
+      chip: 'border-[#E7D7AF] bg-[#FBF4DF] text-[#7A5B18]',
+      button: 'bg-[#1B2B3A] text-white hover:bg-[#24384b]',
+    }
+  }
+
+  return {
+    border: 'border-[color:var(--dashboard-frame-border)]',
+    accent: 'bg-slate-300',
+    rail: 'border-l-slate-300',
+    chip:
+      'border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] text-[color:var(--dashboard-text)]',
+    button:
+      'bg-transparent text-[color:var(--dashboard-accent-strong)] hover:text-[color:var(--dashboard-ink)]',
+  }
+}
+
 function FilterPill({
   href,
   active,
@@ -202,10 +894,10 @@ function FilterPill({
   return (
     <Link
       href={href}
-      className={`inline-flex rounded-full border px-3 py-1.5 font-mono text-[0.66rem] font-medium uppercase tracking-[0.18em] transition-colors ${
+      className={`inline-flex rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
         active
           ? 'border-[color:var(--dashboard-accent-soft-border)] bg-[color:var(--dashboard-accent-soft)] text-[color:var(--dashboard-accent-strong)]'
-          : 'border-[color:rgba(13,27,42,0.15)] bg-white text-[color:var(--dashboard-text)] hover:border-[color:var(--dashboard-ink)] hover:text-[color:var(--dashboard-ink)]'
+          : 'border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] text-[color:var(--dashboard-text)] hover:border-[color:var(--dashboard-accent-soft-border)] hover:text-[color:var(--dashboard-ink)]'
       }`}
     >
       {label}
@@ -213,119 +905,212 @@ function FilterPill({
   )
 }
 
-function SummaryCard({ label, value, highlight = false }: { label: string; value: number; highlight?: boolean }) {
+function StatusCounterCard({ counter }: { counter: CockpitCounter }) {
+  const tone = getOverviewToneClasses(counter.tone)
+  const isAttentionCounter = counter.key === 'action_needed' && counter.count > 0
+
   return (
-    <div className={`px-4 py-4 ${highlight ? 'bg-[color:rgba(232,160,32,0.08)]' : 'bg-white'}`}>
-      <p className="font-mono text-[0.62rem] font-medium uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">
-        {label}
+    <div
+      className={`relative overflow-hidden rounded-[16px] border px-4 py-3 ${tone.border} ${
+        isAttentionCounter ? 'bg-[#fffaf0]' : 'bg-white'
+      }`}
+    >
+      <div className={`absolute left-0 top-0 h-full w-[2px] ${tone.accent}`} />
+      <p className="pl-2 text-[0.6rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+        {counter.label}
       </p>
-      <p className="dash-number mt-3 text-[1.9rem] leading-none text-[color:var(--dashboard-ink)]">{value}</p>
+      <div className="mt-2 pl-2">
+        <p className="dash-number text-[1.35rem] leading-none text-[color:var(--dashboard-ink)]">{counter.count}</p>
+        <p className="mt-1.5 text-[0.82rem] leading-5 text-[color:var(--dashboard-text)]">{counter.body}</p>
+      </div>
+      {counter.key === 'blocked_not_started' ? (
+        <span className="absolute right-4 top-4 inline-flex h-2 w-2 rounded-full bg-[#C88C20]" />
+      ) : null}
     </div>
   )
 }
 
-function CockpitScanRow({ row }: { row: CockpitRow }) {
+function PrimarySignalBannerCard({ banner }: { banner: OverviewSignalBanner }) {
+  const tone = getOverviewToneClasses(banner.tone)
+
   return (
-    <article className="bg-white px-5 py-5 transition-colors hover:bg-[color:rgba(13,27,42,0.02)] sm:px-6">
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.55fr)_auto] xl:items-center">
-        <div className="min-w-0 space-y-3">
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="font-mono text-[0.64rem] font-medium uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">
-              {row.productLabel}
-            </span>
-            <span className="font-mono text-[0.64rem] font-medium uppercase tracking-[0.18em] text-[color:var(--dashboard-text)]">
-              {row.periodLabel}
-            </span>
-          </div>
-          <h2 className="font-[family-name:var(--font-inter-tight)] text-[1.28rem] font-bold leading-[1] tracking-[-0.035em] text-[color:var(--dashboard-ink)]">
-            {row.campaign.campaign_name}
-          </h2>
-        </div>
-        <div className="space-y-3 xl:justify-self-start">
-          <span className="inline-flex rounded-full border border-[color:rgba(13,27,42,0.15)] bg-[color:var(--dashboard-soft)] px-3 py-1 font-mono text-[0.64rem] font-medium uppercase tracking-[0.18em] text-[color:var(--dashboard-text)]">
-            {row.statusLabel}
-          </span>
-          <div className="grid gap-2 text-sm text-[color:var(--dashboard-text)] sm:grid-cols-2 xl:grid-cols-1">
-            <div>
-              <p className="font-mono text-[0.62rem] font-medium uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
-                Respons
-              </p>
-              <p className="mt-1 text-[0.95rem] font-medium text-[color:var(--dashboard-ink)]">{row.responseValue}</p>
-            </div>
-            <div>
-              <p className="font-mono text-[0.62rem] font-medium uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
-                Status
-              </p>
-              <p className="mt-1 text-[0.95rem] text-[color:var(--dashboard-ink)]">{row.factualLine}</p>
+    <section className={`overflow-hidden rounded-[24px] border bg-white ${tone.border}`}>
+      <div className={`h-full border-l-4 ${tone.rail}`}>
+        <div className="flex flex-col gap-5 px-5 py-5 lg:flex-row lg:items-end lg:justify-between lg:px-6">
+          <div className="space-y-3">
+            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">
+              Primair signaal
+            </p>
+            <div className="space-y-2">
+              <h2 className="text-[1.8rem] font-semibold tracking-[-0.05em] text-[color:var(--dashboard-ink)] sm:text-[2.15rem]">
+                {banner.heading}
+              </h2>
+              <p className="max-w-3xl text-sm leading-6 text-[color:var(--dashboard-text)]">{banner.subcopy}</p>
+              {banner.routeLabel ? (
+                <p className="text-sm font-medium text-[color:var(--dashboard-muted)]">
+                  Eerste route: <span className="text-[color:var(--dashboard-ink)]">{banner.routeLabel}</span>
+                </p>
+              ) : null}
             </div>
           </div>
+          {banner.ctaHref && banner.ctaLabel ? (
+            <Link
+              href={banner.ctaHref}
+              className={`inline-flex items-center justify-center rounded-lg px-5 py-3 text-sm font-semibold transition-colors lg:min-w-[176px] ${tone.button}`}
+            >
+              {banner.ctaLabel}
+            </Link>
+          ) : null}
         </div>
-        <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap xl:justify-end">
-          <CockpitActionButton
-            action={row.primaryAction}
-            campaignId={row.campaign.campaign_id}
-            campaignName={row.campaign.campaign_name}
-            scanType={row.campaign.scan_type}
-            primary
-          />
-          {row.secondaryActions.map((action) => (
-            <CockpitActionButton
-              key={`${row.campaign.campaign_id}-${action.kind}`}
-              action={action}
-              campaignId={row.campaign.campaign_id}
-              campaignName={row.campaign.campaign_name}
-              scanType={row.campaign.scan_type}
-            />
-          ))}
+      </div>
+    </section>
+  )
+}
+
+function TriageRouteCard({
+  item,
+  highlightLabel,
+}: {
+  item: CockpitRouteItem
+  highlightLabel?: string
+}) {
+  const tone = getOverviewToneClasses(item.stateTone)
+
+  return (
+    <article className={`overflow-hidden rounded-[18px] border bg-white shadow-[0_1px_3px_rgba(17,24,39,0.04)] transition-shadow hover:shadow-[0_12px_24px_rgba(17,24,39,0.08)] ${tone.border}`}>
+      <div className={`h-full border-l-4 ${tone.rail}`}>
+        <div className="flex flex-col gap-5 px-5 py-5 xl:flex-row xl:items-start xl:justify-between">
+          <div className="min-w-0 flex-1 space-y-4">
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                {highlightLabel ? (
+                  <span className="inline-flex rounded-full border border-[color:var(--dashboard-accent-soft-border)] bg-[color:var(--dashboard-accent-soft)] px-2.5 py-1 text-[0.72rem] font-semibold text-[color:var(--dashboard-accent-strong)]">
+                    {highlightLabel}
+                  </span>
+                ) : null}
+                <span className="inline-flex rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-2.5 py-1 text-[0.72rem] font-semibold text-[color:var(--dashboard-ink)]">
+                  {item.productLabel}
+                </span>
+                <span className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+                  {item.periodLabel}
+                </span>
+              </div>
+              <div className="flex flex-wrap items-center gap-2.5">
+                <h3 className="text-[1.08rem] font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">
+                  {item.entry.campaign.campaign_name}
+                </h3>
+                <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[0.78rem] font-semibold ${tone.chip}`}>
+                  <span className={`inline-flex h-2 w-2 rounded-full ${tone.accent}`} />
+                  {item.stateLabel}
+                </span>
+              </div>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1.1fr),minmax(0,1fr),minmax(0,1fr)] xl:items-start">
+              <MetricBlock
+                label={item.primaryMetricLabel}
+                value={item.primaryMetricValue}
+                detail={item.primaryMetricContext}
+                compact
+              />
+              <MetricBlock label="WAT VRAAGT NU AANDACHT" value={item.why} />
+              <MetricBlock label="VOLGENDE STAP" value={item.nextStep} />
+            </div>
+          </div>
+          <div className="xl:pl-6">
+            <Link
+              href={item.ctaHref}
+              className={`inline-flex w-full items-center justify-center rounded-lg px-5 py-3 text-sm font-semibold transition-colors xl:min-w-[158px] ${tone.button}`}
+            >
+              {item.ctaLabel}
+            </Link>
+          </div>
         </div>
       </div>
     </article>
   )
 }
 
-function CockpitActionButton({
-  action,
-  campaignId,
-  campaignName,
-  scanType,
-  primary = false,
-}: {
-  action: CockpitAction
-  campaignId: string
-  campaignName: string
-  scanType: CampaignStats['scan_type']
-  primary?: boolean
-}) {
-  if (action.kind === 'pdf') {
-    return (
-      <PdfDownloadButton
-        campaignId={campaignId}
-        campaignName={campaignName}
-        scanType={scanType}
-        label="Download PDF"
-        loadingLabel="PDF ophalen..."
-        containerClassName="flex flex-col items-stretch gap-1"
-        errorClassName="max-w-52 text-xs text-red-600"
-        buttonClassName={
-          primary
-            ? 'inline-flex items-center justify-center rounded-full bg-[color:var(--dashboard-accent-strong)] px-5 py-3 font-mono text-[0.68rem] font-medium uppercase tracking-[0.18em] text-[color:var(--dashboard-ink)] transition-colors hover:bg-[#c88a18] disabled:cursor-not-allowed disabled:opacity-60'
-            : 'inline-flex items-center justify-center rounded-full border border-[color:rgba(13,27,42,0.15)] bg-white px-4 py-3 font-mono text-[0.68rem] font-medium uppercase tracking-[0.18em] text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-ink)] disabled:cursor-not-allowed disabled:opacity-60'
-        }
-      />
-    )
-  }
-
+function BlockerRouteRow({ item }: { item: CockpitRouteItem }) {
   return (
-    <Link
-      href={action.href}
-      className={
-        primary
-          ? 'inline-flex items-center justify-center rounded-full bg-[color:var(--dashboard-accent-strong)] px-5 py-3 font-mono text-[0.68rem] font-medium uppercase tracking-[0.18em] text-[color:var(--dashboard-ink)] transition-colors hover:bg-[#c88a18]'
-          : 'inline-flex items-center justify-center rounded-full border border-[color:rgba(13,27,42,0.15)] bg-white px-4 py-3 font-mono text-[0.68rem] font-medium uppercase tracking-[0.18em] text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-ink)]'
-      }
-    >
-      {action.label}
-    </Link>
+    <article className="rounded-[18px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-4 py-4 shadow-[0_1px_3px_rgba(10,25,47,0.03)]">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+        <div className="grid gap-4 md:grid-cols-[minmax(0,0.9fr),minmax(0,1fr),180px] xl:flex-1 xl:grid-cols-[minmax(0,0.8fr),minmax(0,1fr),180px]">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">
+              {item.entry.campaign.campaign_name}
+            </p>
+            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--dashboard-muted)]">
+              {item.productLabel} · {item.periodLabel}
+            </p>
+          </div>
+          <MetricBlock label="WAT BLOKKEERT" value={item.why} />
+          <MetricBlock label="VOLGENDE STAP" value={item.nextStep} />
+        </div>
+        <Link
+          href={item.ctaHref}
+          className="text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:text-[color:var(--dashboard-ink)]"
+        >
+          {item.ctaLabel}
+        </Link>
+      </div>
+    </article>
+  )
+}
+
+function ClosedRouteRow({ item }: { item: CockpitRouteItem }) {
+  return (
+    <article className="rounded-[18px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-4 py-4 opacity-70 transition-opacity hover:opacity-100">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">
+            {item.entry.campaign.campaign_name}
+          </p>
+          <p className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--dashboard-muted)]">
+            {item.productLabel} · {item.primaryMetricValue}
+          </p>
+        </div>
+        <Link
+          href={item.ctaHref}
+          className="text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:text-[color:var(--dashboard-ink)]"
+        >
+          {item.ctaLabel}
+        </Link>
+      </div>
+    </article>
+  )
+}
+
+function MetricBlock({
+  label,
+  value,
+  compact = false,
+  detail,
+}: {
+  label: string
+  value: string
+  compact?: boolean
+  detail?: string
+}) {
+  return (
+    <div className="min-w-0">
+      <p className="text-[0.64rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
+        {label}
+      </p>
+      <p
+        className={`mt-1.5 ${compact ? 'dash-number text-[1.02rem] leading-none' : 'text-sm leading-6'} text-[color:var(--dashboard-ink)]`}
+      >
+        {value}
+      </p>
+      {detail ? <p className="mt-1.5 text-xs leading-5 text-[color:var(--dashboard-muted)]">{detail}</p> : null}
+    </div>
+  )
+}
+
+function InlineEmptyState({ message }: { message: string }) {
+  return (
+    <div className="rounded-[18px] border border-dashed border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-6 text-sm leading-6 text-[color:var(--dashboard-text)]">
+      {message}
+    </div>
   )
 }
 
@@ -387,7 +1172,7 @@ function ViewerEmptyState() {
     <DashboardSection
       eyebrow="Wachten op livegang"
       title="Jouw dashboard wordt voorbereid"
-      description="Loep zet de campaign op, controleert de import en activeert daarna automatisch dit overzicht."
+      description="Verisight zet de campaign op, controleert de import en activeert daarna automatisch dit overzicht."
     >
       <div className="space-y-4">
         <div className="rounded-[22px] border border-[color:var(--border)] bg-[color:var(--bg)] px-4 py-5 text-sm leading-6 text-[color:var(--text)]">
@@ -395,7 +1180,7 @@ function ViewerEmptyState() {
         </div>
         <div className="grid gap-3 md:grid-cols-3">
           {[
-            'Loep beheert organisatie, campagne en respondentimport.',
+            'Verisight beheert organisatie, campagne en respondentimport.',
             'Jij krijgt daarna toegang tot het juiste dashboard en rapport.',
             'De eerste managementwaarde zit in lezen, duiden en prioriteren, niet in technische setup.',
           ].map((item, index) => (
