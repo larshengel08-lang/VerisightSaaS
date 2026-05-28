@@ -2487,12 +2487,13 @@ export default async function CampaignPage({ params }: Props) {
           const score = factorData.orgAverages[panel.key]
           if (typeof score !== "number") return null
 
-          return {
+          const mappedPanel: CultureInfoPanel = {
             eyebrow: panel.eyebrow,
             title: FACTOR_LABELS[panel.key] ?? panel.key,
             body: `Domeinscore ${score.toFixed(1)}/10. ${panel.body}`,
-            tone: score < 5.5 ? "amber" : "slate",
+            tone: score < 5.5 ? ("amber" as const) : ("slate" as const),
           }
+          return mappedPanel
         })
         .filter(
           (
