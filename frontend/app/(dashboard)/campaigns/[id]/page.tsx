@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+﻿import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { isLiveActionCenterScanType } from '@/lib/action-center-live'
@@ -43,6 +43,7 @@ import {
   clusterExitOpenSignals,
   clusterRetentionOpenSignals,
   computeAverageSignalScore,
+  computeENPS,
   computeAverageSignalVisibility,
   computeFactorAverages,
   computeRetentionSupplementalAverages,
@@ -1077,6 +1078,10 @@ export default async function CampaignPage({ params }: Props) {
   const readStrengthLabel = getReadStrengthLabel(resultsViewModel.readState)
   const signalVisibilityAverage =
     stats.scan_type === 'exit' && hasEnoughData ? computeAverageSignalVisibility(responses) : null
+  const enpsScore =
+    stats.scan_type === 'exit' || stats.scan_type === 'retention'
+      ? computeENPS(responses)
+      : null
   const exitThemes =
     stats.scan_type === 'exit' && hasMinDisplay ? clusterExitOpenSignals(responses) : []
   const exitDashboardViewModel =
@@ -1259,6 +1264,14 @@ export default async function CampaignPage({ params }: Props) {
         value: hasMinDisplay ? formatPercent(strongWorkSignalRate) : 'Nog niet beschikbaar',
         body: 'Aandeel responses waarin vooral beïnvloedbare werkcontext terugkomt.',
       },
+      {
+        label: 'eNPS',
+        value: enpsScore !== null ? `${enpsScore >= 0 ? '+' : ''}${enpsScore}` : 'n.b.',
+        body:
+          enpsScore !== null
+            ? 'Aandeel bevelers minus critici. Schaal -100 tot +100. Telt niet mee in vertrekduiding of factorweging.'
+            : 'We tonen eNPS pas zodra minstens 5 responses een geldige aanbevelingsscore bevatten.',
+      },
     ].filter(
       (
         item,
@@ -1434,6 +1447,14 @@ export default async function CampaignPage({ params }: Props) {
             label: 'Bevlogenheid',
             value: formatScore(supplemental.engagement),
             body: 'Aanvullende laag om het behoudssignaal beter te duiden.',
+          },
+          {
+            label: 'eNPS',
+            value: enpsScore !== null ? `${enpsScore >= 0 ? '+' : ''}${enpsScore}` : 'n.b.',
+            body:
+              enpsScore !== null
+                ? 'Aandeel bevelers minus critici. Schaal -100 tot +100. Telt niet mee in retentiesignaal of factorweging.'
+                : 'We tonen eNPS pas zodra minstens 5 responses een geldige aanbevelingsscore bevatten.',
           },
         ]}
         factorRows={factorPriorityRows}

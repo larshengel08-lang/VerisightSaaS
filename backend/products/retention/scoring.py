@@ -4,6 +4,7 @@ from typing import Any
 
 from fastapi import HTTPException
 
+from backend.products.shared.enps import build_enps_summary
 from backend.products.shared.org_factors import compute_org_scores
 from backend.products.shared.sdt import compute_sdt_scores, scale_to_ten
 from backend.scoring import get_recommendations
@@ -109,6 +110,8 @@ def validate_submission(payload: Any) -> None:
         raise HTTPException(status_code=422, detail="RetentieScan vereist 3 bevlogenheidsitems.")
     if len(payload.turnover_intention_raw) != 2:
         raise HTTPException(status_code=422, detail="RetentieScan vereist 2 vertrekintentie-items.")
+    if payload.enps_score is None:
+        raise HTTPException(status_code=422, detail="RetentieScan vereist een eNPS-antwoord.")
     if payload.stay_intent_score is None:
         raise HTTPException(status_code=422, detail="RetentieScan vereist een stay-intent antwoord.")
 
@@ -134,6 +137,7 @@ def score_submission(
     stay_signal_score = supplemental_scores["stay_intent_score"]
 
     recommendations = get_recommendations(risk_result["factor_risks"])
+    enps_summary = build_enps_summary(payload.enps_score)
     retention_summary = {
         "retention_signal_score": risk_result["risk_score"],
         "retention_signal_band": risk_result["risk_band"],
@@ -149,6 +153,7 @@ def score_submission(
     }
 
     full_result = {
+        "enps": enps_summary,
         "sdt_scores": sdt_scores,
         "org_scores": org_scores,
         "risk_result": risk_result,

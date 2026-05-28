@@ -37,6 +37,10 @@ SCAN_DEFINITION: dict[str, Any] = {
     "org_intro": "Geef aan in welke mate de volgende uitspraken van toepassing zijn op jouw huidige werksituatie.",
     "stay_intro": "De volgende stelling gaat over jouw bereidheid om te blijven en de kans dat je hier op langere termijn wilt blijven werken.",
     "stay_item": ("stay_intent", "Als het aan mij ligt, werk ik over 12 maanden nog steeds bij deze organisatie."),
+    "enps_item": (
+        "enps_score",
+        "Hoe waarschijnlijk is het dat je deze organisatie als werkgever zou aanraden aan iemand die je kent?",
+    ),
     "open_text_label": "Welke verandering in je werk, leiding of samenwerking zou jouw bereidheid om te blijven het meest versterken?",
     "open_text_placeholder": "Welke verandering zou behoud voor jou het meest versterken?",
     "open_text_help": "Je antwoord wordt geanonimiseerd opgeslagen en alleen als groepssignaal voor verificatie en opvolging gebruikt.",

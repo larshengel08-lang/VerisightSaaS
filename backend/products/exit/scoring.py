@@ -4,6 +4,7 @@ from typing import Any
 
 from fastapi import HTTPException
 
+from backend.products.shared.enps import build_enps_summary
 from backend.products.shared.org_factors import compute_org_scores
 from backend.products.shared.sdt import compute_sdt_scores
 from backend.scoring import compute_preventability, compute_replacement_cost, get_recommendations
@@ -28,6 +29,8 @@ def validate_submission(payload: Any) -> None:
         raise HTTPException(status_code=422, detail="ExitScan vereist een antwoord op diensttijd.")
     if payload.exit_reason_category is None:
         raise HTTPException(status_code=422, detail="ExitScan vereist een hoofdreden voor vertrek.")
+    if payload.enps_score is None:
+        raise HTTPException(status_code=422, detail="ExitScan vereist een eNPS-antwoord.")
     if payload.stay_intent_score is None:
         raise HTTPException(status_code=422, detail="ExitScan vereist een antwoord op beïnvloedbaarheid.")
     if payload.signal_visibility_score is None:
@@ -158,7 +161,9 @@ def score_submission(
         exit_reason_code=exit_reason_code,
         contributing_reason_codes=contributing_reason_codes,
     )
+    enps_summary = build_enps_summary(payload.enps_score)
     full_result = {
+        "enps": enps_summary,
         "sdt_scores": sdt_scores,
         "org_scores": org_scores,
         "risk_result": risk_result,

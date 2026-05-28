@@ -1,9 +1,10 @@
-import { describe, expect, it } from 'vitest'
+﻿import { describe, expect, it } from 'vitest'
 import {
   buildDecisionPanels,
   buildHeroDescription,
   buildNextStepBody,
   clusterExitOpenSignals,
+  computeENPS,
   computeAverageRiskScore,
   computeRetentionSupplementalAverages,
 } from './page-helpers'
@@ -78,6 +79,92 @@ describe('dashboard page helpers field semantics', () => {
     ]
 
     expect(computeRetentionSupplementalAverages(responses).stayIntent).toBe(5.5)
+  })
+
+  it('computes eNPS only when at least five responses expose a raw score', () => {
+    const tooSmall: SurveyResponse[] = Array.from({ length: 4 }, (_, index) => ({
+      id: `resp-small-${index}`,
+      respondent_id: `r-small-${index}`,
+      risk_score: 5.2,
+      risk_band: 'MIDDEN',
+      preventability: null,
+      exit_reason_code: null,
+      sdt_scores: {},
+      org_scores: {},
+      full_result: {
+        enps: {
+          raw_score: 10,
+          band: 'promoter',
+        },
+      },
+      submitted_at: '2026-04-18T10:00:00Z',
+    }))
+
+    const sufficient: SurveyResponse[] = [
+      {
+        id: 'resp-enps-1',
+        respondent_id: 'r-enps-1',
+        risk_score: 5.2,
+        risk_band: 'MIDDEN',
+        preventability: null,
+        exit_reason_code: null,
+        sdt_scores: {},
+        org_scores: {},
+        full_result: { enps: { raw_score: 10, band: 'promoter' } },
+        submitted_at: '2026-04-18T10:00:00Z',
+      },
+      {
+        id: 'resp-enps-2',
+        respondent_id: 'r-enps-2',
+        risk_score: 5.0,
+        risk_band: 'MIDDEN',
+        preventability: null,
+        exit_reason_code: null,
+        sdt_scores: {},
+        org_scores: {},
+        full_result: { enps: { raw_score: 9, band: 'promoter' } },
+        submitted_at: '2026-04-18T10:05:00Z',
+      },
+      {
+        id: 'resp-enps-3',
+        respondent_id: 'r-enps-3',
+        risk_score: 5.1,
+        risk_band: 'MIDDEN',
+        preventability: null,
+        exit_reason_code: null,
+        sdt_scores: {},
+        org_scores: {},
+        full_result: { enps: { raw_score: 8, band: 'passive' } },
+        submitted_at: '2026-04-18T10:10:00Z',
+      },
+      {
+        id: 'resp-enps-4',
+        respondent_id: 'r-enps-4',
+        risk_score: 5.4,
+        risk_band: 'MIDDEN',
+        preventability: null,
+        exit_reason_code: null,
+        sdt_scores: {},
+        org_scores: {},
+        full_result: { enps: { raw_score: 6, band: 'detractor' } },
+        submitted_at: '2026-04-18T10:15:00Z',
+      },
+      {
+        id: 'resp-enps-5',
+        respondent_id: 'r-enps-5',
+        risk_score: 5.3,
+        risk_band: 'MIDDEN',
+        preventability: null,
+        exit_reason_code: null,
+        sdt_scores: {},
+        org_scores: {},
+        full_result: { enps: { raw_score: 0, band: 'detractor' } },
+        submitted_at: '2026-04-18T10:20:00Z',
+      },
+    ]
+
+    expect(computeENPS(tooSmall)).toBeNull()
+    expect(computeENPS(sufficient)).toBe(0)
   })
 
   it('keeps retention helper summaries centered on retentiesignaal instead of stay-intent', () => {

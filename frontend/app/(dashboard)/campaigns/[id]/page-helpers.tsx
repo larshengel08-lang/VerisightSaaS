@@ -799,6 +799,15 @@ function getExitContextSummary(response: SurveyResponse) {
     : null
 }
 
+function getENPSScore(response: SurveyResponse) {
+  const fullResult = response.full_result as Record<string, unknown> | null | undefined
+  const enps = fullResult?.enps
+  if (!enps || typeof enps !== 'object') return null
+
+  const rawScore = (enps as Record<string, unknown>).raw_score
+  return typeof rawScore === 'number' ? rawScore : null
+}
+
 export function getTopExitReasonLabel(responses: SurveyResponse[]) {
   const counts = new Map<string, number>()
 
@@ -837,6 +846,18 @@ export function computeAverageSignalVisibility(responses: SurveyResponse[]) {
 
   if (!values.length) return null
   return values.reduce((sum, value) => sum + value, 0) / values.length
+}
+
+export function computeENPS(responses: SurveyResponse[]) {
+  const scores = responses
+    .map((response) => getENPSScore(response))
+    .filter((value): value is number => typeof value === 'number')
+
+  if (scores.length < 5) return null
+
+  const promoters = scores.filter((score) => score >= 9).length
+  const detractors = scores.filter((score) => score <= 6).length
+  return Math.round(((promoters - detractors) / scores.length) * 100)
 }
 
 export function computeRetentionSupplementalAverages(responses: SurveyResponse[]) {
