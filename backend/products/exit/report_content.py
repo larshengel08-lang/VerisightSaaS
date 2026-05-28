@@ -58,6 +58,7 @@ def get_management_summary_payload(
     top_contributing_reason_label: str | None,
     strong_work_signal_pct: float | None,
     signal_visibility_average: float | None,
+    enps_summary: dict[str, int] | None = None,
     total_replacement_cost_eur: float | None = None,
 ) -> dict[str, Any]:
     top_factor_text = " en ".join(label.lower() for label in top_factor_labels[:2]) if top_factor_labels else "de scherpste werkfactoren"
@@ -220,6 +221,13 @@ def get_management_summary_payload(
             "value": visibility_value,
             "body": visibility_body,
         }
+    enps_card = None
+    if enps_summary is not None:
+        enps_card = {
+            "title": "eNPS",
+            "value": f"{enps_summary['score']:+d}",
+            "body": "Aandeel bevelers minus critici. Schaal -100 tot +100.",
+        }
 
     return {
         "section_title": "Managementsamenvatting",
@@ -238,7 +246,7 @@ def get_management_summary_payload(
         "boardroom_cards": boardroom_cards,
         "boardroom_watchout_title": "Wat je hier niet uit moet concluderen",
         "boardroom_watchout": boardroom_watchout,
-        "highlight_cards": [
+        "highlight_cards": ([
             {
                 "title": "Vertrekbeeld nu",
                 "value": (top_exit_reason_label or "Nog geen duidelijke hoofdreden"),
@@ -271,7 +279,7 @@ def get_management_summary_payload(
                 "value": visibility_value,
                 "body": visibility_body,
             },
-        ],
+        ] + ([enps_card] if enps_card else [])),
         "cards": [
             {
                 "title": "Vertrekbeeld nu",

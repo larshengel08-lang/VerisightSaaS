@@ -94,6 +94,27 @@
       <div class="field-error">Selecteer een antwoord.</div>
     </div>
 
+    <div class="question-block" id="qblock-exit-enps">
+      <div class="question-text">
+        {{ scan.enps_item[1] }}
+      </div>
+      <div class="likert-wrap">
+        <div class="likert-labels">
+          <span>Zeer onwaarschijnlijk</span>
+          <span>Zeer waarschijnlijk</span>
+        </div>
+        <div class="likert-options" style="display:grid;grid-template-columns:repeat(11,minmax(0,1fr));">
+          {% for i in range(0, 11) %}
+          <div class="likert-option">
+            <input type="radio" name="enps_score" id="exit_enps_{{ i }}" value="{{ i }}" required />
+            <label for="exit_enps_{{ i }}">{{ i }}</label>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="field-error">Selecteer een antwoord.</div>
+    </div>
+
     <div class="question-block" id="qblock-contributing-reasons">
       <div class="question-text">
         Welke andere factoren speelden ook mee in je vertrek? <span style="color:var(--muted);font-weight:400;">(optioneel, maximaal 2)</span>

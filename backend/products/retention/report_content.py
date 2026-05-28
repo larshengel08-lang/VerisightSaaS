@@ -59,6 +59,7 @@ def get_management_summary_payload(
     avg_turnover_intention: float | None,
     avg_stay_intent: float | None,
     retention_theme_title: str | None,
+    enps_summary: dict[str, int] | None = None,
 ) -> dict[str, Any]:
     top_factor_text = " en ".join(label.lower() for label in top_factor_labels[:2]) if top_factor_labels else "de laagst scorende werkfactoren"
     top_factor_value = " / ".join(top_factor_labels[:2]) if top_factor_labels else "Nog geen duidelijke topfactor"
@@ -186,6 +187,13 @@ def get_management_summary_payload(
             "value": "Continuiteitsdruk",
             "body": continuity_body,
         }
+    enps_card = None
+    if enps_summary is not None:
+        enps_card = {
+            "title": "eNPS",
+            "value": f"{enps_summary['score']:+d}",
+            "body": "Aandeel bevelers minus critici. Schaal -100 tot +100.",
+        }
 
     return {
         "section_title": "Bestuurlijke handoff",
@@ -230,7 +238,7 @@ def get_management_summary_payload(
         ],
         "boardroom_watchout_title": "Wat je hier niet uit moet concluderen",
         "boardroom_watchout": boardroom_watchout,
-        "highlight_cards": [
+        "highlight_cards": ([
             {
                 "title": "Groepsbeeld nu",
                 "value": signal_profile_value,
@@ -261,7 +269,7 @@ def get_management_summary_payload(
                 "value": signal_profile_value,
                 "body": signal_profile_copy.get(retention_signal_profile, signal_profile_copy["vroegsignaal"]),
             },
-        ],
+        ] + ([enps_card] if enps_card else [])),
         "cards": [
             {
                 "title": "Groepsbeeld nu",

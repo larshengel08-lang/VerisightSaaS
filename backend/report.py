@@ -2553,6 +2553,32 @@ def _compute_retention_signal_averages(responses: list[SurveyResponse]) -> dict[
     }
 
 
+def _compute_enps_summary(responses: list[SurveyResponse]) -> dict[str, int] | None:
+    scores: list[int] = []
+
+    for response in responses:
+        full_result = response.full_result if isinstance(response.full_result, dict) else {}
+        enps = full_result.get("enps") if isinstance(full_result, dict) else None
+        if not isinstance(enps, dict):
+            continue
+        raw_score = enps.get("raw_score")
+        if isinstance(raw_score, (int, float)):
+            score_int = int(raw_score)
+            if 0 <= score_int <= 10:
+                scores.append(score_int)
+
+    if len(scores) < 5:
+        return None
+
+    promoters = sum(1 for score in scores if score >= 9)
+    detractors = sum(1 for score in scores if score <= 6)
+    enps_score = round(((promoters - detractors) / len(scores)) * 100)
+    return {
+        "score": int(enps_score),
+        "sample_size": len(scores),
+    }
+
+
 def _build_retention_trend_rows(
     *,
     current: dict[str, float | None],
@@ -5992,6 +6018,7 @@ def generate_campaign_report(
     total_cost = sum(
         r.replacement_cost_eur for r in responses if r.replacement_cost_eur
     )
+    enps_summary = _compute_enps_summary(responses)
     if is_retention:
         management_summary_payload = product_module.get_management_summary_payload(
             top_factor_labels=top_factor_labels,
@@ -6001,6 +6028,7 @@ def generate_campaign_report(
             avg_turnover_intention=avg_turnover_intention,
             avg_stay_intent=avg_stay_intent,
             retention_theme_title=retention_themes[0]["title"] if retention_themes else None,
+            enps_summary=enps_summary,
         )
     elif camp.scan_type == "team":
         management_summary_payload = product_module.get_management_summary_payload(
@@ -6044,6 +6072,7 @@ def generate_campaign_report(
             top_contributing_reason_label=top_contributing_reason_label,
             strong_work_signal_pct=strong_work_signal_pct,
             signal_visibility_average=signal_visibility_average,
+            enps_summary=enps_summary,
             total_replacement_cost_eur=total_cost,
         )
     hypotheses_payload = product_module.get_hypotheses_payload()

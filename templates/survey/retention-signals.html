@@ -55,4 +55,21 @@
   </div>
   <div class="field-error">Selecteer een antwoord.</div>
 </div>
+
+<p style="font-weight:600;font-size:14px;margin:24px 0 8px;color:var(--text);">eNPS</p>
+<div class="question-block" id="qblock-retention-enps">
+  <div class="question-text"><span class="question-number">â—†</span>{{ scan.enps_item[1] }}</div>
+  <div class="likert-wrap">
+    <div class="likert-labels"><span>Zeer onwaarschijnlijk</span><span>Zeer waarschijnlijk</span></div>
+    <div class="likert-options" style="display:grid;grid-template-columns:repeat(11,minmax(0,1fr));">
+      {% for i in range(0, 11) %}
+      <div class="likert-option">
+        <input type="radio" name="enps_score" id="retention_enps_{{ i }}" value="{{ i }}" required />
+        <label for="retention_enps_{{ i }}">{{ i }}</label>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="field-error">Selecteer een antwoord.</div>
+</div>
 {% endif %}
