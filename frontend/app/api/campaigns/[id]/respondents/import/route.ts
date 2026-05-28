@@ -22,6 +22,7 @@ interface ImportResponsePayload {
   dry_run?: boolean
   valid_rows?: number
   imported?: number
+  emails_sent?: number
   detail?: string
   errors?: ImportIssuePayload[]
   blocking_messages?: string[]
