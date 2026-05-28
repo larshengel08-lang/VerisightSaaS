@@ -2490,12 +2490,7 @@ export default async function CampaignPage({ params }: Props) {
         .filter(
           (
             panel,
-          ): panel is {
-            eyebrow: string
-            title: string
-            body: string
-            tone: "slate" | "amber"
-          } => Boolean(panel),
+          ): panel is NonNullable<typeof panel> => Boolean(panel),
         )
     const cultureAttentionPanels = [
       {
