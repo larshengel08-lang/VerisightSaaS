@@ -20,6 +20,7 @@ import {
   DashboardKeyValue,
   DashboardPanel,
   DashboardRecommendationRail,
+  DashboardScoreBar,
   DashboardSection,
   DashboardSummaryBar,
   DashboardTimeline,
@@ -101,6 +102,7 @@ import {
   buildFactorPresentation,
   getManagementBandLabel,
   getRiskBandFromScore,
+  RISK_COLORS,
 } from "@/lib/management-language";
 import type {
   CampaignDeliveryCheckpoint,
@@ -244,6 +246,34 @@ function normalizeInformationalTone(
   tone: "slate" | "blue" | "emerald" | "amber",
 ) {
   return tone === "blue" ? "slate" : tone;
+}
+
+function DashboardEmptyCard({
+  title,
+  body,
+  eyebrow = "Nog niet zichtbaar",
+  className,
+}: {
+  title: string;
+  body: string;
+  eyebrow?: string;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`rounded-[22px] border border-amber-200 bg-amber-50/70 px-5 py-5 ${
+        className ?? ""
+      }`}
+    >
+      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-amber-900/70">
+        {eyebrow}
+      </p>
+      <h3 className="mt-3 text-[1.05rem] font-semibold tracking-[-0.03em] text-slate-950">
+        {title}
+      </h3>
+      <p className="mt-3 text-sm leading-6 text-slate-700">{body}</p>
+    </div>
+  );
 }
 
 function formatRoutePeriodLabel(campaignName: string, createdAt: string) {
@@ -775,6 +805,10 @@ export default async function CampaignPage({ params }: Props) {
   ).length;
 
   const factorData = computeFactorAverages(responses);
+  const previousFactorData =
+    previousResponses.length > 0
+      ? computeFactorAverages(previousResponses)
+      : null;
   const averageRiskScore = computeAverageSignalScore(responses);
   const strongWorkSignalRate =
     stats.scan_type === "exit" ? computeStrongWorkSignalRate(responses) : null;
@@ -1841,6 +1875,13 @@ export default async function CampaignPage({ params }: Props) {
                 <FactorTable
                   factorAverages={factorData.orgAverages}
                   scanType={stats.scan_type}
+                  previousFactorAverages={
+                    (stats.scan_type === "retention" ||
+                      stats.scan_type === "pulse") &&
+                    previousFactorData
+                      ? previousFactorData.orgAverages
+                      : undefined
+                  }
                 />
               </div>
             </div>
@@ -2591,12 +2632,19 @@ export default async function CampaignPage({ params }: Props) {
           variant="quiet"
         >
           <div className="grid gap-4 lg:grid-cols-[minmax(0,0.8fr),minmax(0,1.2fr)]">
-            <DashboardPanel
-              eyebrow="Index"
-              title={averageRiskScore !== null ? `${averageRiskScore.toFixed(1)}/10` : "Nog niet zichtbaar"}
-              body={dashboardViewModel.signaalbandenText}
-              tone="blue"
-            />
+            {averageRiskScore !== null ? (
+              <DashboardPanel
+                eyebrow="Index"
+                title={`${averageRiskScore.toFixed(1)}/10`}
+                body={dashboardViewModel.signaalbandenText}
+                tone="blue"
+              />
+            ) : (
+              <DashboardEmptyCard
+                title="Loep Culture Index nog niet zichtbaar"
+                body="De index opent pas zodra de jaarlijkse baseline genoeg veilige respons draagt om het organisatiebeeld kalm en bestuurlijk leesbaar te houden."
+              />
+            )}
             <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
               <h3 className="text-sm font-semibold text-slate-950">Leeswijzer</h3>
               <p className="mt-1 text-sm leading-6 text-slate-600">
@@ -3060,6 +3108,13 @@ export default async function CampaignPage({ params }: Props) {
                   <p className="dash-number mt-3 text-[2.3rem] leading-none text-[color:var(--dashboard-ink)]">
                     {averageRiskScore !== null ? `${averageRiskScore.toFixed(1)}/10` : "Nog niet vrij"}
                   </p>
+                  {averageRiskScore !== null ? (
+                    <DashboardScoreBar
+                      score={averageRiskScore}
+                      color={RISK_COLORS[getRiskBandFromScore(averageRiskScore)]}
+                      className="mt-3"
+                    />
+                  ) : null}
                   <p className="mt-3 text-sm leading-6 text-[color:var(--dashboard-text)]">
                     Dit is het gemiddelde frictieniveau in de leesbare responses. Hoe hoger de score, hoe vaker antwoorden wijzen op spanning of frictie in het werk.
                   </p>
@@ -3292,40 +3347,46 @@ export default async function CampaignPage({ params }: Props) {
             <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr),minmax(0,1fr),minmax(300px,0.82fr)]">
               <ExitSdtNeedsChart rows={sdtRows} />
               <ExitOrgFactorsChart rows={contextualFactorRows} />
-              <div className="rounded-[20px] bg-[color:var(--dashboard-soft)]/52 px-5 py-5">
-                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">
-                  Aanvullende context
-                </p>
-                <div className="mt-4 space-y-4 text-sm leading-6 text-[color:var(--dashboard-text)]">
-                  <div>
-                    <p className="font-semibold text-[color:var(--dashboard-ink)]">
-                      Dominante vertrekreden
-                    </p>
-                    <p className="mt-1">
-                      {topExitReasonLabel ?? "Nog niet stevig genoeg zichtbaar"}
-                    </p>
-                  </div>
-                  <div className="border-t border-[color:var(--dashboard-frame-border)] pt-4">
-                    <p className="font-semibold text-[color:var(--dashboard-ink)]">
-                      Meelezende context
-                    </p>
-                    <p className="mt-1">
-                      {topContributingReasonLabel ??
-                        "Nog geen meelezende contextcode scherp genoeg vrijgegeven"}
-                    </p>
-                  </div>
-                  <div className="border-t border-[color:var(--dashboard-frame-border)] pt-4">
-                    <p className="font-semibold text-[color:var(--dashboard-ink)]">
-                      Signaalzichtbaarheid
-                    </p>
-                    <p className="mt-1">
-                      {signalVisibilityAverage !== null
-                        ? `${signalVisibilityAverage.toFixed(1)}/10 zichtbaar in deze wave.`
-                        : "Nog niet stevig genoeg om als extra zichtbaarheidssignaal te lezen."}
-                    </p>
+              {topContributingReasonLabel &&
+              topContributingReasonLabel !== "Nog niet zichtbaar" ? (
+                <div className="rounded-[20px] bg-[color:var(--dashboard-soft)]/52 px-5 py-5">
+                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">
+                    Aanvullende context
+                  </p>
+                  <div className="mt-4 space-y-4 text-sm leading-6 text-[color:var(--dashboard-text)]">
+                    <div>
+                      <p className="font-semibold text-[color:var(--dashboard-ink)]">
+                        Dominante vertrekreden
+                      </p>
+                      <p className="mt-1">
+                        {topExitReasonLabel ?? "Nog niet stevig genoeg zichtbaar"}
+                      </p>
+                    </div>
+                    <div className="border-t border-[color:var(--dashboard-frame-border)] pt-4">
+                      <p className="font-semibold text-[color:var(--dashboard-ink)]">
+                        Meelezende context
+                      </p>
+                      <p className="mt-1">{topContributingReasonLabel}</p>
+                    </div>
+                    <div className="border-t border-[color:var(--dashboard-frame-border)] pt-4">
+                      <p className="font-semibold text-[color:var(--dashboard-ink)]">
+                        Signaalzichtbaarheid
+                      </p>
+                      <p className="mt-1">
+                        {signalVisibilityAverage !== null
+                          ? `${signalVisibilityAverage.toFixed(1)}/10 zichtbaar in deze wave.`
+                          : "Nog niet stevig genoeg om als extra zichtbaarheidssignaal te lezen."}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <DashboardEmptyCard
+                  title="Aanvullende context nog niet zichtbaar"
+                  body="De verdiepende contextlaag blijft dicht zolang er nog geen veilige aanvullende reden- of zichtbaarheidssignalen zijn om het vertrekbeeld verder te openen."
+                  className="bg-[color:var(--dashboard-soft)]/52"
+                />
+              )}
             </div>
           </section>
 
@@ -3382,14 +3443,23 @@ export default async function CampaignPage({ params }: Props) {
             <p className="max-w-4xl text-[1rem] leading-7 text-[color:var(--dashboard-text)]">
               Deze route laat eerst zien waar behoud onder druk staat en welke samenhang daaronder ligt. De pagina bewaakt bewust de grens tussen bestuurlijke duiding en commitment: ze opent de routelezing, maar schuift vervolgstructuur door naar Action Center.
             </p>
-            <ManagementReadInfoGrid
-              items={[
-                { label: "Retentiesignaal", value: averageRiskScore !== null ? `${averageRiskScore.toFixed(1)}/10` : "Nog niet vrij" },
-                { label: "Vertrekintentie", value: retentionSupplemental.turnoverIntention !== null ? `${retentionSupplemental.turnoverIntention.toFixed(1)}/10` : "Nog niet vrij" },
-                { label: "Bevlogenheid", value: retentionSupplemental.engagement !== null ? `${retentionSupplemental.engagement.toFixed(1)}/10` : "Nog niet vrij" },
-                { label: "Respons", value: `${stats.completion_rate_pct ?? 0}%` },
-              ]}
-            />
+            {averageRiskScore === null &&
+            retentionSupplemental.turnoverIntention === null &&
+            retentionSupplemental.engagement === null ? (
+              <DashboardEmptyCard
+                title="Behoudssignalen nog niet vrijgegeven"
+                body="Retentiesignaal, vertrekintentie en bevlogenheid verschijnen hier pas zodra de route genoeg veilige respons draagt om een eerste behoudsread verantwoord te openen."
+              />
+            ) : (
+              <ManagementReadInfoGrid
+                items={[
+                  { label: "Retentiesignaal", value: averageRiskScore !== null ? `${averageRiskScore.toFixed(1)}/10` : "Nog niet vrij" },
+                  { label: "Vertrekintentie", value: retentionSupplemental.turnoverIntention !== null ? `${retentionSupplemental.turnoverIntention.toFixed(1)}/10` : "Nog niet vrij" },
+                  { label: "Bevlogenheid", value: retentionSupplemental.engagement !== null ? `${retentionSupplemental.engagement.toFixed(1)}/10` : "Nog niet vrij" },
+                  { label: "Respons", value: `${stats.completion_rate_pct ?? 0}%` },
+                ]}
+              />
+            )}
           </div>
         </ManagementReadSection>
 
@@ -3667,6 +3737,7 @@ export default async function CampaignPage({ params }: Props) {
                     ? `${averageRiskScore.toFixed(1)}/10`
                     : "-"
                 }
+                scoreBarValue={stats.scan_type === "retention" ? averageRiskScore : undefined}
                 subline={
                   averageRiskScore !== null
                     ? stats.scan_type === "exit"

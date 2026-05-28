@@ -950,16 +950,44 @@ const RISK_ACCENT_COLORS: Record<RiskBand, string> = {
   LAAG: "#2E7C6D",
 };
 
+export function DashboardScoreBar({
+  score,
+  color,
+  className,
+}: {
+  score: number;
+  color: string;
+  className?: string;
+}) {
+  const width = Math.max(0, Math.min(100, (score / 10) * 100));
+
+  return (
+    <div
+      className={joinClasses(
+        "h-1.5 overflow-hidden rounded-full bg-[rgba(19,32,51,0.08)]",
+        className,
+      )}
+    >
+      <div
+        className="h-full rounded-full"
+        style={{ width: `${width}%`, backgroundColor: color }}
+      />
+    </div>
+  );
+}
+
 export function SignalStatCard({
   label,
   value,
   subline,
   band,
+  scoreBarValue,
 }: {
   label: string;
   value: string;
   subline?: string;
   band?: RiskBand | "neutral";
+  scoreBarValue?: number | null;
 }) {
   const accentColor =
     band && band !== "neutral" ? RISK_ACCENT_COLORS[band] : "#8A7D6E";
@@ -978,6 +1006,13 @@ export function SignalStatCard({
       <p className="dash-number mt-3 text-[2rem] leading-none text-[color:var(--dashboard-ink)]">
         {value}
       </p>
+      {typeof scoreBarValue === "number" ? (
+        <DashboardScoreBar
+          score={scoreBarValue}
+          color={accentColor}
+          className="mt-3"
+        />
+      ) : null}
       {subline ? (
         <p className="mt-2 text-[0.8rem] text-[color:var(--dashboard-muted)]">
           {subline}
