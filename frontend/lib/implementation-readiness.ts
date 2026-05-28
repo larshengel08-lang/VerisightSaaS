@@ -52,6 +52,8 @@ export type CampaignReadinessState = {
 }
 
 export function buildCampaignReadinessState({
+  scanType,
+  isActive,
   totalInvited,
   totalCompleted,
   invitesNotSent,
@@ -64,6 +66,8 @@ export function buildCampaignReadinessState({
   launchControlReady = true,
   launchControlBlockers = [],
 }: {
+  scanType: ScanType
+  isActive: boolean
   totalInvited: number
   totalCompleted: number
   invitesNotSent: number
@@ -76,7 +80,10 @@ export function buildCampaignReadinessState({
   launchControlReady?: boolean
   launchControlBlockers?: string[]
 }): CampaignReadinessState {
-  const activationState = buildResponseActivationState(totalCompleted)
+  const activationState = buildResponseActivationState(totalCompleted, {
+    scanType,
+    isActive,
+  })
   const setupComplete = totalInvited > 0
   const invitesLive = setupComplete && invitesNotSent === 0
   const outputReady = hasMinDisplay && incompleteScores === 0
