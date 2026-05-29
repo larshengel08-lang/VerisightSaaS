@@ -63,12 +63,14 @@ from backend.models import Campaign, ContactRequest, Organization, OrganizationS
 from backend.products.leadership.definition import DEFAULT_LEADERSHIP_MODULES
 from backend.products.onboarding.definition import DEFAULT_ONBOARDING_MODULES
 from backend.products.pulse.definition import DEFAULT_PULSE_MODULES
+from backend.products.shared.item_scores import build_campaign_item_scores_payload
 from backend.products.team.definition import DEFAULT_TEAM_MODULES
 from backend.products.shared.registry import get_product_module
 from backend.runtime import require_backend_admin_token, validate_runtime_config
 from backend.scan_definitions import get_scan_definition
 from backend.schemas import (
     CampaignCreate,
+    CampaignItemScoresResponse,
     CampaignRead,
     CampaignStats,
     ContactRequestCreate,
@@ -1803,6 +1805,64 @@ async def campaign_stats(
         "risk_band_distribution":   band_dist,
         "pattern_report":           pattern_report,
     }
+
+
+@app.get("/api/campaigns/{campaign_id}/item-scores", response_model=CampaignItemScoresResponse)
+async def campaign_item_scores(
+    campaign_id: str,
+    x_api_key: Annotated[str, Header()],
+    db: Session = Depends(get_db),
+) -> CampaignItemScoresResponse:
+    org = _get_org_by_api_key(x_api_key, db)
+    campaign = (
+        db.query(Campaign)
+        .options(selectinload(Campaign.respondents).selectinload(Respondent.response))
+        .filter(
+            Campaign.id == campaign_id,
+            Campaign.organization_id == org.id,
+        )
+        .first()
+    )
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
+
+    responses = [
+        respondent.response
+        for respondent in campaign.respondents
+        if respondent.completed and respondent.response
+    ]
+    return build_campaign_item_scores_payload(
+        scan_type=campaign.scan_type,
+        responses=responses,
+    )
+
+
+@app.get("/api/internal/campaigns/{campaign_id}/item-scores", response_model=CampaignItemScoresResponse)
+async def campaign_item_scores_internal(
+    campaign_id: str,
+    x_admin_token: Annotated[str | None, Header()] = None,
+    db: Session = Depends(get_db),
+) -> CampaignItemScoresResponse:
+    require_backend_admin_token(x_admin_token, is_production=_IS_PRODUCTION)
+
+    campaign = (
+        db.query(Campaign)
+        .options(selectinload(Campaign.respondents).selectinload(Respondent.response))
+        .filter(Campaign.id == campaign_id)
+        .first()
+    )
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
+
+    responses = [
+        respondent.response
+        for respondent in campaign.respondents
+        if respondent.completed and respondent.response
+    ]
+    return build_campaign_item_scores_payload(
+        scan_type=campaign.scan_type,
+        responses=responses,
+    )
 
 
 # ---------------------------------------------------------------------------

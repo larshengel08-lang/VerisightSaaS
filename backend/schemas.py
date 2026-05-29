@@ -412,6 +412,42 @@ class CampaignStats(BaseModel):
         return self
 
 
+class ItemScoreDetail(BaseModel):
+    item_key: str
+    label: str
+    avg: float | None = None
+    n: int
+
+
+class ItemScoreGroup(BaseModel):
+    factor_key: str
+    factor_label: str
+    avg_score: float | None = None
+    items: list[ItemScoreDetail] = Field(default_factory=list)
+
+
+class SdtDimensionItemScoreGroup(BaseModel):
+    dimension_key: str
+    dimension_label: str
+    avg_score: float | None = None
+    items: list[ItemScoreDetail] = Field(default_factory=list)
+
+
+class SupplementalItemScoreGroup(BaseModel):
+    section_key: str
+    section_label: str
+    avg_score: float | None = None
+    items: list[ItemScoreDetail] = Field(default_factory=list)
+
+
+class CampaignItemScoresResponse(BaseModel):
+    factors: list[ItemScoreGroup] = Field(default_factory=list)
+    sdt_dimensions: list[SdtDimensionItemScoreGroup] = Field(default_factory=list)
+    supplemental_sections: list[SupplementalItemScoreGroup] = Field(default_factory=list)
+    privacy_suppressed_items: list[str] = Field(default_factory=list)
+    suppressed_items: list[ItemScoreDetail] = Field(default_factory=list)
+
+
 # ---------------------------------------------------------------------------
 # Operator API token
 # ---------------------------------------------------------------------------

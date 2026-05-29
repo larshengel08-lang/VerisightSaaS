@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { FactorTable } from '@/components/dashboard/factor-table'
 import {
   BoardroomEmptyState,
   BoardroomKeyValueList,
@@ -14,6 +15,7 @@ import {
   SdtTriangleMap,
   SignalCompositionRibbon,
 } from '@/components/dashboard/results-boardroom-visuals'
+import type { CampaignItemScoresResponse } from '@/lib/types'
 
 type RetentionThemeCard = {
   key: string
@@ -52,45 +54,14 @@ interface RetentionProductDashboardProps {
   compositionSegments: CompositionSegment[]
   compositionHighlights: Array<{ label: string; value: string; body: string }>
   factorRows: BoardroomFactorRow[]
+  factorAverages: Record<string, number>
   sdtRows: BoardroomSdtRow[]
+  itemScores?: CampaignItemScoresResponse | null
   surveyThemes: RetentionThemeCard[]
   verificationTrackLabel: string
   ownerRoleLabel: string
   firstStepLabel: string
   reviewMomentLabel: string
-}
-
-function RankedFactorTable({ rows }: { rows: BoardroomFactorRow[] }) {
-  return (
-    <div className="overflow-hidden border border-[rgba(13,27,42,0.15)]">
-      <div className="hidden bg-[#F4F1EA] px-4 py-3 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#44505C] lg:grid lg:grid-cols-[72px_minmax(0,1.3fr)_120px_160px_minmax(0,1.4fr)]">
-        <span>Rang</span>
-        <span>Factor</span>
-        <span>Score</span>
-        <span>Band</span>
-        <span>Leesnotitie</span>
-      </div>
-      {rows.map((row, index) => (
-        <div
-          key={`${row.factor}-${index}`}
-          className="grid gap-3 border-t border-[rgba(13,27,42,0.15)] bg-white px-4 py-4 first:border-t-0 lg:grid-cols-[72px_minmax(0,1.3fr)_120px_160px_minmax(0,1.4fr)] lg:items-start"
-        >
-          <span className="font-mono text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[#44505C]">
-            {(index + 1).toString().padStart(2, '0')}
-          </span>
-          <div>
-            <p className="text-sm font-semibold text-[#132033]">{row.factor}</p>
-            <p className="mt-1 text-xs leading-5 text-[#44505C] lg:hidden">{row.note}</p>
-          </div>
-          <p className="dash-number text-[1.2rem] leading-none text-[#132033]">{row.score}</p>
-          <p className="font-mono text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[#44505C]">
-            {row.band}
-          </p>
-          <p className="hidden text-sm leading-6 text-[#44505C] lg:block">{row.note}</p>
-        </div>
-      ))}
-    </div>
-  )
 }
 
 export function RetentionProductDashboard({
@@ -120,7 +91,9 @@ export function RetentionProductDashboard({
   compositionSegments,
   compositionHighlights,
   factorRows,
+  factorAverages,
   sdtRows,
+  itemScores,
   surveyThemes,
   verificationTrackLabel,
   ownerRoleLabel,
@@ -286,7 +259,12 @@ export function RetentionProductDashboard({
                 />
               ))}
             </div>
-            <RankedFactorTable rows={factorRows} />
+            <FactorTable
+              factorAverages={factorAverages}
+              scanType="retention"
+              itemScores={itemScores}
+              showIntro={false}
+            />
           </div>
         ) : (
           <BoardroomEmptyState
