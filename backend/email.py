@@ -310,3 +310,71 @@ def send_hr_notification(
         subject=f"Nieuwe response: {campaign_name} ({total_completed}/{total_invited})",
         html=html,
     )
+
+
+def send_manager_results_notification(
+    *,
+    to_email: str | None,
+    manager_name: str | None,
+    campaign_name: str,
+    scope_label: str,
+    action_center_url: str | None = None,
+    action_center_path: str | None = None,
+    response_count: int | None = None,
+) -> EmailSendResult:
+    """Notificeer een toegewezen manager dat een Action Center-route leesbaar is."""
+    resolved_url = action_center_url
+    if not resolved_url:
+        base_url = _require_runtime_url(_FRONTEND_URL, "FRONTEND_URL")
+        normalized_path = action_center_path or "/action-center"
+        if not normalized_path.startswith("/"):
+            normalized_path = f"/{normalized_path}"
+        resolved_url = f"{base_url}{normalized_path}"
+
+    safe_manager_name = (manager_name or "").strip() or "manager"
+    safe_scope_label = scope_label.strip() or "jouw scope"
+    response_html = (
+        f"""
+        <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#42556b;">
+          Beschikbare responses in deze read: <strong>{int(response_count)}</strong>
+        </p>
+        """
+        if isinstance(response_count, int) and response_count >= 0
+        else ""
+    )
+    html = f"""
+    <div style="font-family:Arial,sans-serif;background:#f7f2ea;padding:32px;color:#132033;">
+      <div style="max-width:640px;margin:0 auto;background:#ffffff;border:1px solid #e6ddd2;border-radius:24px;padding:32px;">
+        <p style="margin:0 0 12px 0;font-size:13px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#8b8174;">
+          Action Center
+        </p>
+        <h1 style="margin:0 0 18px 0;font-size:30px;line-height:1.15;color:#132033;">
+          Resultaten beschikbaar voor jouw team
+        </h1>
+        <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#42556b;">
+          Hallo {escape(safe_manager_name)},
+        </p>
+        <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#42556b;">
+          Voor <strong>{escape(campaign_name)}</strong> is er nu een leesbare en opvolgbare route beschikbaar
+          voor <strong>{escape(safe_scope_label)}</strong>.
+        </p>
+        {response_html}
+        <p style="margin:0 0 24px 0;font-size:15px;line-height:1.6;color:#42556b;">
+          Open direct de relevante route in Action Center om de eerste bounded vervolgstap en het reviewmoment
+          vast te leggen.
+        </p>
+        <a
+          href="{escape(resolved_url, quote=True)}"
+          style="display:inline-block;border-radius:999px;background:#132033;color:#ffffff;text-decoration:none;padding:14px 20px;font-weight:700;"
+        >
+          Open Action Center
+        </a>
+      </div>
+    </div>
+    """
+
+    return _send_result(
+        to=to_email or "",
+        subject=f"Resultaten beschikbaar voor jouw team - {campaign_name}",
+        html=html,
+    )
