@@ -1879,6 +1879,68 @@ async def download_report_internal(
 
 
 # ---------------------------------------------------------------------------
+# HTML→PDF rapport (WeasyPrint) — parallel aan /report, vervangt het nog niet
+# ---------------------------------------------------------------------------
+
+@app.get("/api/campaigns/{campaign_id}/report-preview")
+async def report_html_preview(
+    campaign_id: str,
+    x_admin_token: Annotated[str | None, Header()] = None,
+    db: Session = Depends(get_db),
+) -> Response:
+    """Retourneert het HTML-rapport als text/html voor visuele check in de browser.
+    Geen PDF-generatie. Alleen voor admins."""
+    require_backend_admin_token(x_admin_token, is_production=_IS_PRODUCTION)
+
+    campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
+
+    try:
+        from backend.report_html import build_report_data, render_report_html
+        data = build_report_data(campaign_id, db)
+        html_str = render_report_html(data)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"HTML-rapport generatie mislukt: {e}")
+
+    return Response(content=html_str, media_type="text/html; charset=utf-8")
+
+
+@app.get("/api/campaigns/{campaign_id}/report-html")
+async def report_html_pdf(
+    campaign_id: str,
+    x_admin_token: Annotated[str | None, Header()] = None,
+    db: Session = Depends(get_db),
+) -> Response:
+    """Genereert een PDF via WeasyPrint (HTML→PDF). Parallel aan /report.
+    Vervangt /report nog niet — bedoeld voor vergelijking en validatie."""
+    require_backend_admin_token(x_admin_token, is_production=_IS_PRODUCTION)
+
+    campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
+
+    try:
+        from backend.report_html import generate_campaign_report_html
+        pdf_bytes = generate_campaign_report_html(campaign_id, db)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"WeasyPrint PDF generatie mislukt: {e}")
+
+    import re as _re
+    safe_name = _re.sub(r"[^\w\s-]", "", campaign.name)
+    safe_name = _re.sub(r"[\s-]+", "_", safe_name).strip("_")
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="Loep_{safe_name}_html.pdf"'},
+    )
+
+
+# ---------------------------------------------------------------------------
 # Open text enrichment (internal helper)
 # ---------------------------------------------------------------------------
 
