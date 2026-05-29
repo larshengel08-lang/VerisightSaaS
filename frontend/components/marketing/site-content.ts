@@ -392,6 +392,7 @@ export const included = [
   'Uitnodigingen en respondentflow waar relevant',
   'Dashboard en rapport in dezelfde leeslijn',
   'Samenvatting voor HR, MT of directie',
+  'Begeleide managementbespreking van 60–90 minuten',
   'Privacy en interpretatie in gewone taal',
   'Compacte productvorm zonder extra toolbeheer',
 ] as const
@@ -418,8 +419,8 @@ export const approachSteps = [
     body: 'Zodra het beeld sterk genoeg is, ontvangt u een dashboard en rapport in dezelfde leeslijn, met wat opvalt en wat eerst aandacht vraagt.',
   },
   {
-    title: '6. Eventuele vervolgrichting',
-    body: 'Pas als de volgende vraag echt speelt, wordt een vervolgrichting logisch, zoals een bounded vervolgroute, Action Center of een volgende scan.',
+    title: '6. Managementbespreking',
+    body: 'Na het dashboard en rapport bespreken we de uitkomsten met HR en management in een sessie van 60–90 minuten. Niet om het rapport toe te lichten, maar om samen te bepalen wat aandacht vraagt en wat de eerste keuze moet zijn. Pas als daarna een vervolgvraag ontstaat, wordt opvolging of ritme logisch.',
   },
 ] as const
 
@@ -538,7 +539,7 @@ export const expansionTriggerCards = [
 export const pricingCards = [
   {
     eyebrow: 'ExitScan Baseline',
-    price: 'EUR 2.950',
+    price: 'vanaf €4.500',
     description:
       'De standaard eerste instap voor organisaties die snel een betrouwbaar organisatiebeeld, duidelijke prioriteiten en een professioneel managementrapport over uitstroom willen dat ook in sponsor-, prioriteits- en budgetgesprekken overeind blijft.',
     bullets: [
@@ -549,7 +550,7 @@ export const pricingCards = [
   },
   {
     eyebrow: 'RetentieScan Baseline',
-    price: 'EUR 3.450',
+    price: 'vanaf €4.500',
     description:
       'De standaard eerste instap voor organisaties die eerder willen zien waar behoud onder druk staat, met extra nadruk op privacy, groepsduiding en een gerichte managementscan in plaats van een brede MTO.',
     bullets: [

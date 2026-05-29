@@ -32,7 +32,7 @@ const displayFont = 'var(--font-inter-tight), Inter, sans-serif'
 const bodyFont = 'var(--font-inter), system-ui, sans-serif'
 
 const heroTrustItems = [
-  'Dashboard voor inzicht \u2022 Managementrapport voor duiding \u2022 Action Center voor opvolging',
+  'Dashboard voor inzicht \u2022 Rapport voor duiding \u2022 Managementbespreking voor eerste keuze',
 ]
 
 const suiteFlowPoints = [
@@ -125,23 +125,23 @@ type ManagementFlowStep = {
 const managementFlowSteps: readonly ManagementFlowStep[] = [
   {
     step: '1',
-    label: 'Begrijpen',
+    label: 'Luisteren',
     title: 'Dashboard',
-    body: "Laat direct zien waar signalen terugkomen, welke thema's of afdelingen aandacht vragen en wat nu bestuurlijk het meeste gewicht heeft.",
+    body: 'Met een gerichte baseline halen we signalen op rond vertrek, behoud of vroege landing. Het dashboard laat direct zien waar patronen terugkomen en wat nu het meeste gewicht heeft.',
     cardMinHeight: 432,
   },
   {
     step: '2',
-    label: 'Prioriteren',
-    title: 'Managementrapport',
-    body: 'Maakt de hoofdboodschap, eerste prioriteit en eerste vervolgrichting leesbaar, zodat de organisatie sneller kan wegen wat eerst telt.',
+    label: 'Leren',
+    title: 'Rapport en managementbespreking',
+    body: 'Het rapport laat zien wat opvalt, waar druk zit en welke vraag management eerst moet beantwoorden. In de begeleide managementbespreking vertalen we dat samen naar één eerste keuze.',
     cardMinHeight: 432,
   },
   {
     step: '3',
-    label: 'Handelen',
-    title: 'Action Center',
-    body: 'Maakt opvolging concreet. Van toewijzing aan een manager tot het openen en volgen van acties.',
+    label: 'Kiezen',
+    title: 'Eerste managementkeuze',
+    body: 'Samen bepalen HR en management wat nu aandacht vraagt, wie betrokken moet zijn en welke eerste stap logisch is. Opvolging borgen kan daarna optioneel via Action Center Start.',
     cardMinHeight: 432,
     optionalLabel: 'Optionele uitbreiding',
     optionalMicrocopy: 'Toe te voegen na of naast een eerste scan',
@@ -448,8 +448,8 @@ function ManagementFlowSection() {
                 maxWidth: '54rem',
               }}
             >
-              Loep brengt analyse en vervolg samen in één heldere managementflow. Zo blijft het niet bij losse
-              signalen of losse rapportage, maar wordt ook de stap naar gerichte opvolging ondersteund.
+              Loep stopt niet bij meten. Elke baseline eindigt met een begeleide managementbespreking waarin HR en
+              management de uitkomsten terugbrengen tot één eerste keuze.
             </p>
           </Reveal>
         </div>
@@ -583,7 +583,7 @@ function ManagementFlowSection() {
                     {item.body}
                   </p>
 
-                  {item.title === 'Dashboard' ? (
+                {item.step === '1' ? (
                     <div
                       style={{
                         background: '#f2efe8',
@@ -645,7 +645,7 @@ function ManagementFlowSection() {
                   </div>
                 ) : null}
 
-                {item.title === 'Managementrapport' ? (
+                {item.step === '2' ? (
                   <div
                     style={{
                       background: '#f2efe8',
@@ -703,7 +703,7 @@ function ManagementFlowSection() {
                   </div>
                 ) : null}
 
-                {item.title === 'Action Center' ? (
+                {item.step === '3' ? (
                   <div
                     style={{
                       background: '#f2efe8',
@@ -714,13 +714,26 @@ function ManagementFlowSection() {
                       justifyContent: 'center',
                       height: 116,
                       marginTop: 'auto',
-                      padding: '12px',
+                      padding: '14px',
                     }}
                   >
+                    <div
+                      style={{
+                        color: '#7f7b74',
+                        fontFamily: bodyFont,
+                        fontSize: 10,
+                        fontWeight: 600,
+                        letterSpacing: '.12em',
+                        marginBottom: 10,
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      Eerste keuze
+                    </div>
                     {[
-                      ['Bespreek signalen Sales', '#bfe5c7'],
-                      ['Verifieer onboarding', '#e7ded4'],
-                      ['Plan vervolg met team', '#e7ded4'],
+                      ['Wat vraagt nu aandacht?', '#bfe5c7'],
+                      ['Wie moet hierbij betrokken zijn?', '#e7ded4'],
+                      ['Welke eerste stap is logisch?', '#e7ded4'],
                     ].map(([label, dot], rowIndex) => (
                       <div
                         key={label}
@@ -841,7 +854,8 @@ function HeroSection() {
                   maxWidth: '32rem',
                 }}
               >
-                Loep helpt organisaties signalen zichtbaar maken, prioriteren en opvolging organiseren in het Action Center.
+                Loep helpt organisaties signalen zichtbaar maken, samen terugbrengen tot één eerste keuze en waar
+                nodig opvolging daarna beter borgen.
               </p>
 
               <div
@@ -1322,7 +1336,7 @@ function SuitePreviewSection() {
             <Reveal delay={0.08} from="right">
               <div className="suite-motion-shell">
               <div className="suite-phase-tabs" aria-label="Visual flow">
-                {['Zien', 'Prioriteren', 'Handelen'].map((phase, index) => (
+                {['Luisteren', 'Leren', 'Kiezen'].map((phase, index) => (
                   <span key={phase} className={`suite-phase-tab suite-phase-tab-${index + 1}`}>
                     {phase}
                   </span>
@@ -2091,8 +2105,8 @@ function FirstDeliverySection() {
           </Reveal>
           <Reveal delay={0.05}>
             <p style={{ color: SURFACE.text, fontSize: 16, lineHeight: 1.78, margin: '0 auto 40px', maxWidth: '58rem' }}>
-              Loep geeft u geen losse analyse zonder vervolg, maar een eerste managementflow die helpt om sneller
-              te begrijpen wat speelt, te bepalen wat eerst telt en gerichte opvolging op gang te brengen.
+              Loep levert geen rapport dat blijft liggen. Elke baseline eindigt met een begeleide managementbespreking,
+              zodat HR en management weten waar ze eerst moeten beginnen.
             </p>
           </Reveal>
         </div>

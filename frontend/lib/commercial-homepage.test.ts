@@ -37,14 +37,14 @@ describe('commercial homepage suite opening', () => {
 
     expect(homepageSource).toContain('Zie sneller waar vertrek, behoud of onboarding aandacht vragen')
     expect(homepageSource).toContain(
-      'Loep helpt organisaties signalen zichtbaar maken, prioriteren en opvolging organiseren in het Action Center.',
+      'Loep helpt organisaties signalen zichtbaar maken, samen terugbrengen tot één eerste keuze en waar',
     )
     expect(homepageSource).toContain('Wat vraagt nu aandacht?')
     expect(homepageSource).toContain('Veel signalen. Te weinig scherpte')
     expect(homepageSource).toContain('Organisaties zien signalen rond uitstroom, behoud of vroege landing')
     expect(homepageSource).toContain('heldere prioriteit en concrete opvolging.')
-    expect(homepageSource).toContain('Maakt de hoofdboodschap, eerste prioriteit en eerste vervolgrichting leesbaar')
-    expect(homepageSource).toContain('Maakt opvolging concreet. Van toewijzing aan een manager tot het openen en volgen van acties.')
+    expect(homepageSource).toContain('Het rapport laat zien wat opvalt, waar druk zit en welke vraag management eerst moet beantwoorden.')
+    expect(homepageSource).toContain('Samen bepalen HR en management wat nu aandacht vraagt, wie betrokken moet zijn en welke eerste stap logisch is.')
     expect(homepageSource).not.toContain('Verisight vult interpretatie of eigenaarschap niet automatisch voor u in.')
 
     expect(homepageSource).toContain('Wat u krijgt in de Baseline')
@@ -54,6 +54,7 @@ describe('commercial homepage suite opening', () => {
     expect(homepageSource).toContain('Review')
     expect(homepageSource).toContain('minHeight: item.minHeight ?? 132')
     expect(homepageSource).not.toContain('Vervolgvragen')
+    expect(homepageSource).toContain('Loep levert geen rapport dat blijft liggen. Elke baseline eindigt met een begeleide managementbespreking')
   })
 
   it('marks Action Center as an optional extension in the management flow section', () => {
