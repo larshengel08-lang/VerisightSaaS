@@ -48,11 +48,6 @@ function ReportRow({
           campaignId={campaignId}
           campaignName={campaignName}
           scanType={scanType}
-          label="Download PDF"
-          loadingLabel="PDF ophalen..."
-          buttonClassName="inline-flex items-center justify-center rounded-full bg-[#C36A29] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
-          containerClassName="flex flex-col items-start gap-1 lg:items-end"
-          errorClassName="max-w-48 text-xs text-red-600 lg:text-right"
         />
       </div>
     </article>
