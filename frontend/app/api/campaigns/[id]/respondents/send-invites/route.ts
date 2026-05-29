@@ -180,6 +180,10 @@ export async function POST(request: Request, { params }: Context) {
       sent: payload.sent ?? null,
       failed: payload.failed ?? null,
       skipped: payload.skipped ?? null,
+      invite_evidence_count: Array.isArray(payload.evidence) ? payload.evidence.length : null,
+      provider_evidence_count: Array.isArray(payload.evidence)
+        ? payload.evidence.filter((item: { provider_email_id?: string | null }) => Boolean(item?.provider_email_id)).length
+        : null,
     },
   })
   return NextResponse.json(payload, { status: backendResponse.status })

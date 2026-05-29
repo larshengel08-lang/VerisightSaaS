@@ -18,6 +18,7 @@ export type DashboardModuleKey =
   | 'onboarding'
   | 'pulse'
   | 'leadership'
+  | 'culture_assessment'
   | 'reports'
   | 'action_center'
 
@@ -52,6 +53,7 @@ const MODULE_LABELS: Array<{ key: DashboardModuleKey; label: string; scanType?: 
   { key: 'onboarding', label: 'Onboarding 30-60-90', scanType: 'onboarding' },
   { key: 'pulse', label: 'Pulse', scanType: 'pulse' },
   { key: 'leadership', label: 'Leadership Scan', scanType: 'leadership' },
+  { key: 'culture_assessment', label: 'Loep Culture Assessment', scanType: 'culture_assessment' },
   { key: 'reports', label: 'Rapporten' },
   { key: 'action_center', label: 'Action Center' },
 ]
@@ -70,6 +72,7 @@ const DASHBOARD_MODULE_SCAN_TYPES: Record<DashboardCategoryModuleKey, ScanType> 
   onboarding: 'onboarding',
   pulse: 'pulse',
   leadership: 'leadership',
+  culture_assessment: 'culture_assessment',
 }
 
 const DASHBOARD_MODULE_LABELS: Record<DashboardCategoryModuleKey, string> = {
@@ -78,6 +81,7 @@ const DASHBOARD_MODULE_LABELS: Record<DashboardCategoryModuleKey, string> = {
   onboarding: 'Onboarding 30-60-90',
   pulse: 'Pulse',
   leadership: 'Leadership Scan',
+  culture_assessment: 'Loep Culture Assessment',
 }
 
 export function getScanTypeForDashboardModule(moduleKey: DashboardCategoryModuleKey): ScanType {
@@ -106,6 +110,7 @@ function getModuleKeyForScanType(scanType: ScanType): DashboardModuleKey {
     onboarding: 'onboarding',
     pulse: 'pulse',
     leadership: 'leadership',
+    culture_assessment: 'culture_assessment',
   }
 
   return moduleKeyByScanType[scanType]
@@ -125,7 +130,8 @@ export function normalizeDashboardModuleFilter(
     value === 'retention' ||
     value === 'onboarding' ||
     value === 'pulse' ||
-    value === 'leadership'
+    value === 'leadership' ||
+    value === 'culture_assessment'
   ) {
     return value
   }

@@ -293,7 +293,9 @@ export function getDeliveryOperatingGuide(scanType: ScanType): DeliveryOperating
     {
       title: 'Management-use confirmer',
       owner:
-        scanType === 'exit' || scanType === 'retention'
+        scanType === 'culture_assessment'
+          ? 'Board sponsor, directie-owner of HR-owner'
+          : scanType === 'exit' || scanType === 'retention'
           ? 'Klant sponsor of HR-owner'
           : 'Klant owner van de bounded route',
       responsibility: 'Bevestigt dat output echt in een eerste managementgesprek is gebruikt en dat eigenaar, eerste stap en reviewdatum expliciet zijn.',
@@ -309,7 +311,9 @@ export function getDeliveryOperatingGuide(scanType: ScanType): DeliveryOperating
     {
       title: 'Leg de eerste managementvraag vast',
       detail:
-        scanType === 'onboarding'
+        scanType === 'culture_assessment'
+          ? 'Maak expliciet hoe de Loep Culture Index als navigatiesignaal wordt gelezen, welke domeinen bestuurlijke aandacht vragen en welk vervolg binnen governancegrenzen past.'
+          : scanType === 'onboarding'
           ? 'Maak expliciet waar de vroege landing nu stokt en welk checkpointspoor eerst aandacht vraagt.'
           : scanType === 'leadership'
             ? 'Maak expliciet welke managementcontext nu eerst een begrensde check of correctie vraagt.'
@@ -330,7 +334,25 @@ export function getDeliveryOperatingGuide(scanType: ScanType): DeliveryOperating
   ]
 
   const followUpOutcomes: DeliveryFollowUpOutcome[] =
-    scanType === 'onboarding'
+    scanType === 'culture_assessment'
+      ? [
+          {
+            title: 'Doorgaan op dezelfde primaire route',
+            fit: 'Alleen als jaarlijkse baseline',
+            detail: 'Gebruik dit wanneer dezelfde brede cultuur- en engagementvraag later opnieuw als jaarlijkse baseline moet worden gelezen.',
+          },
+          {
+            title: 'Governed vervolg zonder nieuwe live-route',
+            fit: 'Alleen bij begrensde HR-verdieping',
+            detail: 'Gebruik dit voor bounded vervolgduiding vanuit domeinen of segmenten, terwijl de managerlaag standaard locked blijft en Pulse nog geen primaire route wordt.',
+          },
+          {
+            title: 'Open later een vervolgroute',
+            fit: 'Alleen bij een nieuwe managementvraag',
+            detail: 'Kies Pulse of een andere vervolgroute pas wanneer na de baseline een nieuwe reviewvraag ontstaat die niet meer eerlijk in dezelfde board-read of managerlaag past.',
+          },
+        ]
+      : scanType === 'onboarding'
       ? [
           {
             title: 'Doorgaan op hetzelfde checkpointspoor',

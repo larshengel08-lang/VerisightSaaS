@@ -8,7 +8,7 @@ import { faqSchema } from '@/components/marketing/site-content'
 export const metadata: Metadata = {
   title: 'Verisight',
   description:
-    'Verisight helpt HR en management sneller zien wat speelt, bepalen wat eerst telt en opvolging organiseren - met dashboard, rapport en Action Center in een suite.',
+    'Verisight helpt HR, directie en management sneller zien wat speelt, bepalen wat eerst telt en opvolging organiseren - met ExitScan, RetentieScan, Loep Cultuurbeeld, dashboard, rapport en Action Center in een suite.',
   alternates: { canonical: '/' },
 }
 
@@ -18,7 +18,7 @@ export default function LandingPage() {
     '@type': 'WebPage',
     name: 'Verisight',
     description:
-      'Van people insights naar prioriteit, actie en follow-up voor HR en management. Verisight verbindt dashboard, rapport en Action Center in een suite.',
+      'Van people insights naar prioriteit, actie en follow-up voor HR en management. Verisight verbindt ExitScan, RetentieScan, Loep Cultuurbeeld, dashboard, rapport en Action Center in een suite.',
     url: 'https://www.verisight.nl/',
     inLanguage: 'nl-NL',
     mainEntity: {
@@ -26,7 +26,7 @@ export default function LandingPage() {
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'ExitScan', url: 'https://www.verisight.nl/producten/exitscan' },
         { '@type': 'ListItem', position: 2, name: 'RetentieScan', url: 'https://www.verisight.nl/producten/retentiescan' },
-        { '@type': 'ListItem', position: 3, name: 'Onboarding 30-60-90', url: 'https://www.verisight.nl/producten/onboarding-30-60-90' },
+        { '@type': 'ListItem', position: 3, name: 'Loep Cultuurbeeld', url: 'https://www.verisight.nl/producten/cultuurbeeld' },
       ],
     },
   }

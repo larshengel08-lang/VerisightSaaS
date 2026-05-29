@@ -4,6 +4,7 @@ import {
   buildHeroDescription,
   buildNextStepBody,
   computeAverageRiskScore,
+  computeFactorAverages,
   computeRetentionSupplementalAverages,
 } from './page-helpers'
 import { getScanDefinition } from '@/lib/scan-definitions'
@@ -125,5 +126,89 @@ describe('dashboard page helpers field semantics', () => {
     expect(hero).toContain('werkfrictie')
     expect(nextStep).toContain('gemiddelde signaalscore')
     expect(nextStep).toContain('werkfrictie')
+  })
+
+  it('keeps culture assessment helper copy board-readable and non-ranking', () => {
+    const hero = buildHeroDescription({
+      scanType: 'culture_assessment',
+      isActive: true,
+      completionRate: 38,
+      pendingCount: 14,
+      hasEnoughData: true,
+      averageRiskScore: 6.5,
+      scanDefinition: getScanDefinition('culture_assessment'),
+    })
+    const panels = buildDecisionPanels({
+      stats: {
+        scan_type: 'culture_assessment',
+        completion_rate_pct: 38,
+      } as never,
+      averageRiskScore: 6.5,
+      scanDefinition: getScanDefinition('culture_assessment'),
+      strongWorkSignalRate: null,
+      retentionSupplemental: {
+        engagement: 6.1,
+        turnoverIntention: 4.2,
+        stayIntent: 6.0,
+      },
+      factorAverages: {
+        trust_psychological_safety: 5.7,
+      },
+      hasEnoughData: true,
+      hasMinDisplay: true,
+    })
+    const nextStep = buildNextStepBody({
+      scanType: 'culture_assessment',
+      hasEnoughData: true,
+      hasMinDisplay: true,
+      pendingCount: 0,
+      topFactor: 'Vertrouwen en psychologische veiligheid',
+    })
+
+    expect(hero).toContain('jaarlijkse')
+    expect(hero).toContain('Loep Culture Index')
+    expect(hero.toLowerCase()).not.toContain('ranking')
+    expect(panels[2]?.title.toLowerCase()).toContain('managerlaag')
+    expect(panels[2]?.body.toLowerCase()).toContain('locked')
+    expect(nextStep.toLowerCase()).toContain('navigatiesignaal')
+    expect(nextStep.toLowerCase()).toContain('board')
+  })
+
+  it('aggregates culture assessment domain keys from org_scores', () => {
+    const averages = computeFactorAverages([
+      {
+        id: 'resp-1',
+        respondent_id: 'r-1',
+        risk_score: 6.1,
+        risk_band: 'MIDDEN',
+        preventability: null,
+        exit_reason_code: null,
+        sdt_scores: {},
+        org_scores: {
+          engagement_involvement: 6.2,
+          trust_psychological_safety: 5.6,
+        },
+        full_result: {},
+        submitted_at: '2026-05-18T10:00:00Z',
+      },
+      {
+        id: 'resp-2',
+        respondent_id: 'r-2',
+        risk_score: 6.7,
+        risk_band: 'MIDDEN',
+        preventability: null,
+        exit_reason_code: null,
+        sdt_scores: {},
+        org_scores: {
+          engagement_involvement: 7.2,
+          trust_psychological_safety: 6.4,
+        },
+        full_result: {},
+        submitted_at: '2026-05-18T11:00:00Z',
+      },
+    ])
+
+    expect(averages.orgAverages.engagement_involvement).toBe(6.7)
+    expect(averages.orgAverages.trust_psychological_safety).toBe(6)
   })
 })

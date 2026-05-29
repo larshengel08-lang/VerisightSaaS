@@ -41,6 +41,15 @@ function getTheme(slug: string, product: { status: string } | null) {
     }
   }
 
+  if (slug === 'cultuurbeeld') {
+    return {
+      accent: '#7c3aed',
+      accentSoft: '#ede9fe',
+      panel: '#f5f3ff',
+      badge: 'Cultuurbaseline',
+    }
+  }
+
   if (slug === 'onboarding-30-60-90') {
     return {
       accent: '#ea580c',

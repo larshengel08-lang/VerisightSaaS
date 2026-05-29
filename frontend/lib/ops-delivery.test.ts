@@ -308,10 +308,15 @@ describe('delivery ops governance helpers', () => {
   it('returns bounded operating guidance for non-core routes', () => {
     const onboardingGuide = getDeliveryOperatingGuide('onboarding')
     const leadershipGuide = getDeliveryOperatingGuide('leadership')
+    const cultureGuide = getDeliveryOperatingGuide('culture_assessment')
 
     expect(onboardingGuide.followUpOutcomes.map((item) => item.detail).join(' ')).toContain('geen journey-suite')
     expect(leadershipGuide.followUpOutcomes.map((item) => item.detail).join(' ')).toContain('named-leader')
     expect(leadershipGuide.weeklyReviewRules).toHaveLength(3)
+    expect(cultureGuide.managementUseSteps[0]?.detail.toLowerCase()).toContain('loep culture index')
+    expect(cultureGuide.followUpOutcomes[0]?.detail.toLowerCase()).toContain('jaarlijkse baseline')
+    expect(cultureGuide.followUpOutcomes[1]?.detail.toLowerCase()).toContain('pulse')
+    expect(cultureGuide.followUpOutcomes.map((item) => item.detail).join(' ').toLowerCase()).toContain('managerlaag')
   })
 
   it('keeps import qa hard-blocked until a validated dataset has been imported', () => {

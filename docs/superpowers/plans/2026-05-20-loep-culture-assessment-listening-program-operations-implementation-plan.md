@@ -1,0 +1,276 @@
+# Loep Culture Assessment Listening Program Operations Implementation Plan
+
+**Date:** 2026-05-20  
+**Status:** wave-1.5 implementation plan  
+**Primary scope:** `Loep Culture Assessment / Loep Cultuurbeeld`  
+**Canonical route id:** `culture_assessment`
+
+---
+
+## 1. Purpose
+
+This plan translates the `Listening Program Operations` spec into a bounded execution sequence.
+
+Its purpose is to make the first annual baseline pilot operationally executable from launch preparation through board-read handoff.
+
+It does not create a general survey operations platform.
+
+---
+
+## 2. Execution Rules
+
+1. the route remains one bounded annual baseline
+2. launch, closure, and release are separate controls
+3. first-pilot constraints are enforced, not optional
+4. board-read remains guided
+5. operations stay consistent with method, trust, and output truth
+
+### 2.1 First pilot constraints
+
+- maximum one organization at a time
+- no benchmark
+- no manager layer unlock
+- no custom questions
+- open text only if safely clustered or disabled
+- maximum two segment dimensions
+- board-read always guided
+- no self-serve setup
+
+---
+
+## 3. Work Package Sequence
+
+### WP1 - Operating Owner and Role Lock
+
+Goal:
+
+- make operating ownership explicit before the pilot
+
+Deliverables:
+
+- role owner map
+- launch owner
+- release owner
+- board-read facilitator owner
+
+Dependencies:
+
+- approved listening operations spec
+- trust/procurement implementation plan
+
+Acceptance:
+
+- all required operating roles are named
+- combined ownership is explicit where one person holds multiple roles
+
+### WP2 - Launch Readiness Checklist
+
+Goal:
+
+- turn pre-launch conditions into a real operating checklist
+
+Deliverables:
+
+- launch readiness checklist
+- pre-launch review note
+
+Dependencies:
+
+- methodology implementation plan
+- premium delivery implementation plan
+- trust/procurement implementation plan
+
+Acceptance:
+
+- method lock, trust FAQ, output readiness, role ownership, and first pilot constraints are all checkable
+
+### WP3 - Respondent Preparation and Import Rules
+
+Goal:
+
+- make respondent setup operationally safe
+
+Deliverables:
+
+- respondent preparation checklist
+- organizational metadata requirements note
+- import quality check note
+
+Dependencies:
+
+- WP2
+
+Acceptance:
+
+- required metadata is explicit
+- unsafe or incomplete metadata handling is explicit
+- no custom-question or branching logic is introduced
+
+### WP4 - Invite, Monitoring, and Reminder Cadence
+
+Goal:
+
+- make the live collection phase repeatable
+
+Deliverables:
+
+- invite template set
+- reminder cadence template
+- response monitoring checklist
+
+Dependencies:
+
+- WP3
+
+Acceptance:
+
+- launch message exists
+- reminder rhythm exists
+- insufficient coverage handling is explicit
+
+Default cadence:
+
+- T-3: optional pre-announcement
+- T0: invite
+- T+3 or T+4: first reminder
+- T+7: second reminder
+- T-2 before close: final reminder
+- close date stays fixed unless release owner approves extension
+
+### WP5 - Closure and Release Checklist
+
+Goal:
+
+- separate operational closure from governed release
+
+Deliverables:
+
+- closure checklist
+- release checklist
+- escalation note for unsafe release or threshold disputes
+
+Dependencies:
+
+- WP4
+- admin/access control note
+
+Acceptance:
+
+- closure and release are separate
+- release cannot occur before closure and approval
+- threshold and suppression checks are explicit
+
+### WP6 - Board Output Preparation and Handoff
+
+Goal:
+
+- prepare the post-collection sequence as a real operating handoff
+
+Deliverables:
+
+- board-read preparation checklist
+- board-read handoff checklist
+- follow-up documentation note
+
+Dependencies:
+
+- premium delivery implementation plan
+- WP5
+
+Acceptance:
+
+- preparation time expectation is explicit
+- manual versus semi-automated expectations are explicit
+- guided board-read handoff is operationally defined
+
+Pilot turnaround target:
+
+- survey close to draft board output: explicit business-day target
+- draft to reviewed board pack: explicit business-day target
+- board-read timing after close: explicit week target
+
+### WP7 - Pilot Gate Population
+
+Goal:
+
+- convert the gate from template to real readiness decision
+
+Deliverables:
+
+- populated pilot-readiness gate
+- explicit go / no-go recommendation
+
+Dependencies:
+
+- WP2
+- WP5
+- WP6
+
+Acceptance:
+
+- every launch-critical gate item has a status
+- any accepted risk is explicit and owned
+- no-go is still allowed if readiness is insufficient
+
+Pilot gate input map:
+
+- Methodology WP7 -> method claims and evidence level
+- Premium WP6 -> sample and demo pack status
+- Trust WP5 -> buyer FAQ, OR note, retention and incident basics
+- Admin note -> roles, export permissions, release permissions
+- Listening WP5 and WP6 -> closure, release, and board-read readiness
+
+---
+
+## 3.1 Artifact Lock Table
+
+| WP | Required artifact path | Format | Owner | Reviewer | Acceptance method |
+| --- | --- | --- | --- | --- | --- |
+| WP1 | `docs/superpowers/operations/culture_assessment_operating_owner_map.md` | markdown | delivery owner | product owner | ownership review |
+| WP2 | `docs/superpowers/operations/culture_assessment_launch_readiness_checklist.md` | markdown | delivery owner | governance reviewer | readiness review |
+| WP3 | `docs/superpowers/operations/culture_assessment_respondent_import_rules.md` | markdown | delivery owner | HR reviewer | import-readiness review |
+| WP4 | `docs/superpowers/operations/culture_assessment_invite_reminder_cadence.md` | markdown | delivery owner | sales reviewer | cadence review |
+| WP5 | `docs/superpowers/operations/culture_assessment_closure_release_checklist.md` | markdown | release owner | governance reviewer | release-control review |
+| WP6 | `docs/superpowers/operations/culture_assessment_board_handoff_checklist.md` | markdown | delivery owner | output owner | handoff review |
+| WP7 | `docs/superpowers/operations/culture_assessment_pilot_gate_population.md` | markdown | delivery owner | route owner | go/no-go review |
+
+---
+
+## 4. Cross-Artifact Dependencies
+
+This plan must stay aligned with:
+
+- methodology authority implementation plan
+- premium delivery implementation plan
+- trust/procurement implementation plan
+- admin/access control note
+- pilot-readiness gate
+
+It directly supports:
+
+- 90-day product maturity plan execution
+
+---
+
+## 5. Approval
+
+At minimum, this plan requires:
+
+- delivery owner
+- release owner
+- product owner
+- governance reviewer
+
+---
+
+## 6. Done-When
+
+This implementation plan is complete only when:
+
+1. ownership is explicit
+2. pre-launch readiness is operationalized
+3. respondent preparation is operationalized
+4. invite and reminder cadence is real
+5. closure and release are operationally separated
+6. board-read handoff is operationalized
+7. the pilot gate can be populated without ad hoc invention

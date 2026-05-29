@@ -5,7 +5,7 @@ import {
   prioritizeHrDemoCampaigns,
 } from '@/lib/dashboard/hr-demo-pilot-artifact'
 import { getHrBridgePresentation } from '@/lib/dashboard/hr-bridge-state'
-import { FIRST_DASHBOARD_THRESHOLD } from '@/lib/response-activation'
+import { getResponseActivationThresholds, isDashboardReleaseReady, isInsightReleaseReady } from '@/lib/response-activation'
 import { buildBridgeAssessmentTruth, resolveHrBridgeState } from '@/lib/dashboard/hr-bridge-state'
 import { SCAN_TYPE_LABELS, getCampaignAverageSignalScore, type CampaignStats, type ScanType } from '@/lib/types'
 
@@ -42,7 +42,7 @@ export interface BuildReportLibraryEntriesOptions {
   hrDemoArtifact?: Pick<HrDemoPilotArtifact, 'campaignId'> | null
 }
 
-const MANAGEMENT_SCAN_TYPES: ScanType[] = ['exit', 'retention', 'leadership']
+const MANAGEMENT_SCAN_TYPES: ScanType[] = ['culture_assessment', 'exit', 'retention', 'leadership']
 const MODULE_SCAN_TYPES: ScanType[] = ['pulse', 'team']
 
 function formatDutchDate(dateLike: string) {
@@ -83,6 +83,9 @@ function getEntrySummary(campaign: CampaignStats, category: Exclude<ReportLibrar
   const signalText = signalDisplay !== null ? `${signalDisplay.toFixed(1)}/10 signaal` : 'signaal volgt na voldoende respons'
 
   if (category === 'management') {
+    if (campaign.scan_type === 'culture_assessment') {
+      return 'Loep Culture Assessment als board-read, met Loep Culture Index, domeinbeeld en governed vervolg zonder ranglijsten of benchmark-first duiding.'
+    }
     return `${SCAN_TYPE_LABELS[campaign.scan_type]} voor eerste samenvatting, vervolgstap en reviewmoment.`
   }
 
@@ -103,17 +106,19 @@ function getEntryTitle(campaign: CampaignStats, category: Exclude<ReportLibraryC
 
 function getPriority(campaign: CampaignStats) {
   const base =
-    campaign.scan_type === 'exit'
-      ? 6
-      : campaign.scan_type === 'retention'
-        ? 5
-        : campaign.scan_type === 'leadership'
-          ? 4
-          : campaign.scan_type === 'pulse'
-            ? 3
-            : campaign.scan_type === 'team'
-              ? 2
-              : 1
+    campaign.scan_type === 'culture_assessment'
+      ? 7
+      : campaign.scan_type === 'exit'
+        ? 6
+        : campaign.scan_type === 'retention'
+          ? 5
+          : campaign.scan_type === 'leadership'
+            ? 4
+            : campaign.scan_type === 'pulse'
+              ? 3
+              : campaign.scan_type === 'team'
+                ? 2
+                : 1
 
   return base * 1000 + campaign.total_completed
 }
@@ -124,7 +129,10 @@ function getReportBridgeState(args: {
   routeOpenable: boolean
 }): ReportLibraryEntry['bridgeState'] {
   const { campaign, routeEntryStage, routeOpenable } = args
-  const isReportReady = campaign.total_completed >= FIRST_DASHBOARD_THRESHOLD
+  const isReportReady = isDashboardReleaseReady(campaign.total_completed, {
+    scanType: campaign.scan_type,
+    isActive: campaign.is_active,
+  })
   const assessment = buildBridgeAssessmentTruth({
     sourceType: 'report',
     sourceId: campaign.campaign_id,
@@ -154,7 +162,12 @@ export function getReportEntryBridge(entry: Pick<ReportLibraryEntry, 'campaignId
 
 export function buildReportLibraryEntries(campaigns: CampaignStats[], options: BuildReportLibraryEntriesOptions = {}) {
   const readyCampaigns = campaigns
-    .filter((campaign) => campaign.total_completed >= FIRST_DASHBOARD_THRESHOLD)
+    .filter((campaign) =>
+      isDashboardReleaseReady(campaign.total_completed, {
+        scanType: campaign.scan_type,
+        isActive: campaign.is_active,
+      }),
+    )
     .sort((left, right) => {
       const createdDiff = new Date(right.created_at).getTime() - new Date(left.created_at).getTime()
       if (createdDiff !== 0) return createdDiff
@@ -164,7 +177,12 @@ export function buildReportLibraryEntries(campaigns: CampaignStats[], options: B
   const demoArtifact = options.hrDemoArtifact ?? loadHrDemoPilotArtifact()
   const prioritizedReadyCampaigns = prioritizeHrDemoCampaigns(
     [...readyCampaigns]
-      .filter((campaign) => campaign.total_completed >= 10)
+      .filter((campaign) =>
+        isInsightReleaseReady(campaign.total_completed, {
+          scanType: campaign.scan_type,
+          isActive: campaign.is_active,
+        }),
+      )
       .sort((left, right) => getPriority(right) - getPriority(left))
       .map((campaign) => ({
         campaignId: campaign.campaign_id,
@@ -212,7 +230,9 @@ export function buildReportLibraryEntries(campaigns: CampaignStats[], options: B
           `${SCAN_TYPE_LABELS[featuredCandidate.scan_type]} ${formatDutchQuarter(featuredCandidate.created_at)}`,
         subtitle: `${SCAN_TYPE_LABELS[featuredCandidate.scan_type]} · ${formatDutchQuarter(featuredCandidate.created_at)}`,
         description:
-          'Gebruik dit rapport als eerste samenvatting: wat speelt nu, wat vraagt verificatie en welke eigenaar, eerste stap en reviewmoment horen daarna vastgelegd te worden.',
+          featuredCandidate.scan_type === 'culture_assessment'
+            ? 'Gebruik dit board-read als eerste samenvatting: lees eerst Loep Culture Index, domeinbeeld en segmentpatronen, en leg daarna eigenaar, eerste stap en reviewmoment vast zonder ranglijsten of benchmark-first claims.'
+            : 'Gebruik dit rapport als eerste samenvatting: wat speelt nu, wat vraagt verificatie en welke eigenaar, eerste stap en reviewmoment horen daarna vastgelegd te worden.',
         stats: [
           { label: 'Responses', value: String(featuredCandidate.total_completed) },
           {
@@ -220,6 +240,10 @@ export function buildReportLibraryEntries(campaigns: CampaignStats[], options: B
             value: `${(getCampaignAverageSignalScore(featuredCandidate) ?? 0).toFixed(1)}/10`,
           },
           { label: 'Route', value: SCAN_TYPE_LABELS[featuredCandidate.scan_type] },
+          {
+            label: 'Responsgrens',
+            value: `${getResponseActivationThresholds(featuredCandidate.scan_type).insightMin}+`,
+          },
         ],
       }
     : null

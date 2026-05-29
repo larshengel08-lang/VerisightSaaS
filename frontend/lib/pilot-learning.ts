@@ -22,7 +22,7 @@ import { SCAN_TYPE_LABELS, type CampaignStats, type DeliveryMode, type ScanType 
 export type LearningTriageStatus = 'nieuw' | 'bevestigd' | 'geparkeerd' | 'uitgevoerd' | 'verworpen'
 export type LearningRouteInterest = Extract<
   ContactRouteInterest,
-  'exitscan' | 'retentiescan' | 'teamscan' | 'combinatie' | 'nog-onzeker'
+  'exitscan' | 'retentiescan' | 'culture_assessment' | 'teamscan' | 'combinatie' | 'nog-onzeker'
 >
 export type LearningCheckpointKey =
   | 'lead_route_hypothesis'
@@ -245,6 +245,7 @@ export const LEARNING_STRENGTH_OPTIONS: Array<{ value: LearningStrength; label: 
 export const LEARNING_ROUTE_OPTIONS: Array<{ value: LearningRouteInterest; label: string }> = [
   { value: 'exitscan', label: 'ExitScan' },
   { value: 'retentiescan', label: 'RetentieScan' },
+  { value: 'culture_assessment', label: 'Loep Culture Assessment' },
   { value: 'teamscan', label: 'MTO / TeamScan' },
   { value: 'combinatie', label: 'Combinatie' },
   { value: 'nog-onzeker', label: 'Nog niet zeker' },
@@ -253,12 +254,19 @@ export const LEARNING_ROUTE_OPTIONS: Array<{ value: LearningRouteInterest; label
 export function getLearningRouteInterestForCampaign(scanType: ScanType): LearningRouteInterest {
   if (scanType === 'exit') return 'exitscan'
   if (scanType === 'retention') return 'retentiescan'
+  if (scanType === 'culture_assessment') return 'culture_assessment'
   if (scanType === 'team') return 'teamscan'
   return 'nog-onzeker'
 }
 
 export function normalizeLearningRouteInterest(value: ContactRouteInterest | null | undefined): LearningRouteInterest {
-  if (value === 'exitscan' || value === 'retentiescan' || value === 'teamscan' || value === 'combinatie') {
+  if (
+    value === 'exitscan' ||
+    value === 'retentiescan' ||
+    value === 'culture_assessment' ||
+    value === 'teamscan' ||
+    value === 'combinatie'
+  ) {
     return value
   }
 

@@ -68,6 +68,15 @@ export function buildContactQualificationVisibilitySummary({
   }
 
   switch (guidance.status) {
+    case 'culture_primary':
+      return {
+        tone: 'emerald',
+        headline: 'Loep Culture Assessment mag hier als eerste route worden getoetst.',
+        detail: `${guidance.detail} Gewenste timing: ${timingLabel}.`,
+        recommendationLabel: `Aanbevolen eerste route: ${recommendedRouteLabel}`,
+        routeReviewLabel: `Geselecteerd: ${selectedRouteLabel}`,
+        nextAction: 'Bevestig dat de vraag echt breed organisatiebreed is en niet alsnog primair over behoudsdruk, vertrekduiding of een lokale bounded follow-on route gaat.',
+      }
     case 'retention_primary':
       return {
         tone: 'emerald',

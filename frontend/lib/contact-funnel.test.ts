@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { getContactQualificationGuidance } from '@/lib/contact-funnel'
+import {
+  buildContactHref,
+  getContactQualificationGuidance,
+  getContactRouteLabel,
+  inferRouteInterestFromSource,
+  normalizeContactRouteInterest,
+} from '@/lib/contact-funnel'
 
 describe('contact qualification guidance', () => {
   it('keeps ExitScan as the default route when the intake is still broad or uncertain', () => {
@@ -75,5 +81,28 @@ describe('contact qualification guidance', () => {
     expect(guidance.recommendedCoreRoute).toBe('exitscan')
     expect(guidance.followOnCandidateRoute).toBe('leadership')
     expect(guidance.operatorSummary.toLowerCase()).toContain('exitscan')
+  })
+
+  it('preserves culture_assessment as an explicit route interest instead of remapping it to ExitScan', () => {
+    expect(normalizeContactRouteInterest('culture_assessment')).toBe('culture_assessment')
+    expect(inferRouteInterestFromSource('culture_assessment_primary_cta')).toBe('culture_assessment')
+    expect(getContactRouteLabel('culture_assessment')).toBe('Loep Culture Assessment')
+    expect(buildContactHref({ routeInterest: 'culture_assessment' })).toContain(
+      'route_interest=culture_assessment',
+    )
+  })
+
+  it('allows Loep Culture Assessment to become the primary recommendation for broad culture and engagement questions', () => {
+    const guidance = getContactQualificationGuidance({
+      routeInterest: 'culture_assessment',
+      desiredTiming: 'dit-kwartaal',
+      currentQuestion:
+        'We willen een jaarlijkse brede cultuur- en engagementbaseline met vertrouwen, leiderschap, samenwerking en werkbeleving op organisatieniveau.',
+    })
+
+    expect(guidance.status).toBe('culture_primary')
+    expect(guidance.recommendedCoreRoute).toBe('culture_assessment')
+    expect(guidance.followOnCandidateRoute).toBeNull()
+    expect(guidance.detail.toLowerCase()).toContain('board-read')
   })
 })

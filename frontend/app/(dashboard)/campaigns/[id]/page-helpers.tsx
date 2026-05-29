@@ -4,7 +4,11 @@ import { buildBridgeAssessmentTruth, getHrBridgePresentation, resolveHrBridgeSta
 import { getProductModule } from '@/lib/products/shared/registry'
 import type { SegmentPlaybookEntry, SignalTrendCard } from '@/lib/products/shared/types'
 import { buildFactorPresentation, getManagementBandLabel } from '@/lib/management-language'
-import { FIRST_DASHBOARD_THRESHOLD, FIRST_INSIGHT_THRESHOLD } from '@/lib/response-activation'
+import {
+  FIRST_DASHBOARD_THRESHOLD,
+  FIRST_INSIGHT_THRESHOLD,
+  getResponseActivationThresholds,
+} from '@/lib/response-activation'
 import { getScanDefinition } from '@/lib/scan-definitions'
 import {
   EXIT_REASON_LABELS,
@@ -73,6 +77,20 @@ export type InsightNotice = {
   title: string
   body: string
   tone: 'slate' | 'amber' | 'red'
+}
+
+function getOrderedFactorKeys(factorAverages: Record<string, number>) {
+  const fallbackKeys = Object.keys(factorAverages)
+    .filter((factor) => !ORG_FACTORS.includes(factor))
+    .sort((left, right) => (FACTOR_LABELS[left] ?? left).localeCompare(FACTOR_LABELS[right] ?? right, 'nl'))
+
+  return [...ORG_FACTORS.filter((factor) => factor in factorAverages), ...fallbackKeys]
+}
+
+function getOrderedFactorKeysFromTotals(totals: Record<string, number[]>) {
+  return getOrderedFactorKeys(
+    Object.fromEntries(Object.keys(totals).map((key) => [key, 0])) as Record<string, number>,
+  )
 }
 
 export function buildCampaignDetailActionCenterBridge(args: {
@@ -152,6 +170,14 @@ export function buildHeroDescription({
 
   if (scanType === 'leadership') {
     return `Deze Leadership Scan laat een begrensde support-read zien op groepsniveau. Gebruik de uitkomst om te bepalen welke managementcontext het bestaande people-signaal nu mee kleurt, zonder dit te lezen als named leader view, 360-output of performance-oordeel. Huidig ${scanDefinition.signalLabelLower}: ${averageRiskScore?.toFixed(1) ?? '-'} /10.`
+  }
+
+  if (scanType === 'culture_assessment') {
+    return `Deze Loep Culture Assessment-campaign laat een jaarlijkse enterprise baseline zien voor board, directie en HR. Gebruik de Loep Culture Index als navigatiesignaal, lees daarna domeinen en segmentpatronen, en houd ranglijsten, causaliteitsclaims en benchmark-first duiding bewust buiten beeld. Huidig ${scanDefinition.signalLabelLower}: ${averageRiskScore?.toFixed(1) ?? '-'} /10.`
+  }
+
+  if (scanType === 'exit') {
+    return 'Deze ExitScan laat een bestuurlijke read zien van terugkerende werkfrictie. Gebruik Frictiescore als openingssignaal en lees daarna welke werkfactoren en verschillen het vertrekbeeld nu het sterkst kleuren.'
   }
 
   return `Bekijk eerst welke factoren het laagst scoren en waar de grootste verschillen zichtbaar zijn.`
@@ -284,6 +310,19 @@ export function buildDecisionPanels({
     ]
   }
 
+  if (stats.scan_type === 'culture_assessment') {
+    return [
+      ...sharedPanels,
+      {
+        eyebrow: 'Governancegrens',
+        title: 'Managerlaag blijft locked',
+        value: 'Standaard dicht',
+        body: 'Gebruik Loep Culture Index, domeinen en segmentpatronen eerst op geaggregeerd niveau. Named manager detail blijft standaard locked en opent niet als ranglijst-, causaliteits- of benchmarklaag.',
+        tone: 'slate',
+      },
+    ]
+  }
+
   return [
     ...sharedPanels,
     {
@@ -305,6 +344,7 @@ export function buildNextStepTitle(scanType: ScanType, hasEnoughData: boolean, h
   if (scanType === 'team') return 'Lokaal verifieren'
   if (scanType === 'onboarding') return 'Checkpoint duiden'
   if (scanType === 'leadership') return 'Managementcontext toetsen'
+  if (scanType === 'culture_assessment') return 'Bestuurlijk duiden en begrenzen'
   return scanType === 'retention' ? 'Valideren en prioriteren' : 'Duiden en verbeteren'
 }
 
@@ -321,15 +361,17 @@ export function buildNextStepBody({
   pendingCount: number
   topFactor: string | null
 }) {
+  const thresholds = getResponseActivationThresholds(scanType)
+
   if (!hasMinDisplay) {
     return pendingCount > 0
-      ? `Nodig de resterende ${pendingCount} respondent(en) eerst uit of stuur een reminder. Pas vanaf 5 responses wordt detailweergave veilig zichtbaar.`
+      ? `Nodig de resterende ${pendingCount} respondent(en) eerst uit of stuur een reminder. Pas vanaf ${thresholds.dashboardMin} responses wordt detailweergave veilig zichtbaar.`
       : 'Zorg eerst voor voldoende ingevulde responses voordat je deze campagne als besluitinput gebruikt.'
   }
 
   if (!hasEnoughData) {
     return topFactor
-      ? `Gebruik ${topFactor.toLowerCase()} als eerste gesprekshaak, maar houd conclusies voorlopig indicatief totdat minimaal 10 responses binnen zijn.`
+      ? `Gebruik ${topFactor.toLowerCase()} als eerste gesprekshaak, maar houd conclusies voorlopig indicatief totdat minimaal ${thresholds.insightMin} responses binnen zijn.`
       : 'Lees de huidige signalen nog als richting, niet als vast patroon.'
   }
 
@@ -363,6 +405,12 @@ export function buildNextStepBody({
       : 'Gebruik de compact gemeten werkfactoren om te kiezen welke managementcontext nu als eerste een begrensde check verdient.'
   }
 
+  if (scanType === 'culture_assessment') {
+    return topFactor
+      ? `Gebruik ${topFactor.toLowerCase()} als eerste board-read spoor, lees de Loep Culture Index alleen als navigatiesignaal en bepaal daarna welke bestuurlijke vervolgvraag nu binnen governancegrenzen aandacht vraagt.`
+      : 'Lees de Loep Culture Index eerst als navigatiesignaal en bepaal daarna welke bestuurlijke vervolgvraag nu het scherpst telt voor board, directie of HR.'
+  }
+
   return topFactor
     ? `Gebruik de gemiddelde signaalscore als openingssignaal en ${topFactor.toLowerCase()} als eerste werkfrictiespoor om te bepalen waar management eerst moet doorvragen en welke verbeteractie binnen 30-90 dagen het meest logisch is.`
     : 'Gebruik de gemiddelde signaalscore als openingssignaal en werkfrictie als verklarende laag om het eerstvolgende verbetergesprek te richten.'
@@ -390,7 +438,8 @@ export function getDisclosureDefaults({
       scanType === 'exit' ||
       scanType === 'pulse' ||
       scanType === 'onboarding' ||
-      scanType === 'leadership',
+      scanType === 'leadership' ||
+      scanType === 'culture_assessment',
   }
 }
 
@@ -405,18 +454,19 @@ export function buildInsightWarnings({
   hasEnoughData: boolean
   scanType: ScanType
 }) {
+  const thresholds = getResponseActivationThresholds(scanType)
   const items: InsightNotice[] = []
 
   if (!hasMinDisplay && responsesLength > 0) {
     items.push({
       title: 'Nog onvoldoende responses voor veilige detailweergave',
-      body: `Met minder dan ${MIN_N_DISPLAY} responses blijven individuele details en scores bewust beperkt. Voeg meer responses toe voordat je conclusies trekt.`,
+      body: `Met minder dan ${thresholds.dashboardMin} responses blijven individuele details en scores bewust beperkt. Voeg meer responses toe voordat je conclusies trekt.`,
       tone: 'amber',
     })
   } else if (hasMinDisplay && !hasEnoughData) {
     items.push({
       title: 'Beeld is nog indicatief',
-      body: `Grafieken, patronen en diepere interpretatie worden steviger vanaf ${MIN_N_PATTERNS} responses. Gebruik de huidige inzichten vooral om gerichte vervolgvragen te kiezen.`,
+      body: `Grafieken, patronen en diepere interpretatie worden steviger vanaf ${thresholds.insightMin} responses. Gebruik de huidige inzichten vooral om gerichte vervolgvragen te kiezen.`,
       tone: 'amber',
     })
   }
@@ -433,7 +483,9 @@ export function buildInsightWarnings({
               : scanType === 'onboarding'
                 ? 'Lees onboarding als checkpoint-read'
                 : scanType === 'leadership'
-                ? 'Lees Leadership Scan als bounded support-read'
+                  ? 'Lees Leadership Scan als bounded support-read'
+                  : scanType === 'culture_assessment'
+                    ? 'Lees Loep Culture Assessment als executive baseline'
                 : 'Lees dit als managementinput',
       body:
         scanType === 'retention'
@@ -446,6 +498,8 @@ export function buildInsightWarnings({
                 ? 'Onboarding blijft een checkpoint-read op groepsniveau. Gebruik de uitkomst om vroege integratie en frictie te duiden, niet als performance-oordeel, retentievoorspelling of volledige 30-60-90-journey.'
                 : scanType === 'leadership'
                   ? 'Leadership Scan blijft een geaggregeerde bounded support-read op groepsniveau. Gebruik de uitkomst om managementcontext te duiden, niet om individuele leidinggevenden te beoordelen of named leaders te rangschikken.'
+                  : scanType === 'culture_assessment'
+                    ? 'Loep Culture Assessment blijft een jaarlijkse executive baseline. Gebruik Loep Culture Index, domeinen en segmentpatronen als navigatiesignaal voor bestuurlijke aandacht, niet als benchmark-first oordeel, causaliteitsclaim of manager-ranglijst.'
             : 'ExitScan bundelt vertrekervaringen tot managementpatronen. Gebruik deze uitkomsten om gesprekken te richten, niet om een score als sluitend bewijs te behandelen.',
       tone: 'slate',
     })
@@ -688,8 +742,7 @@ export function computeFactorAverages(responses: SurveyResponse[]) {
   const sdtTotals: Record<string, number[]> = {}
 
   for (const response of responses) {
-    for (const factor of ORG_FACTORS) {
-      const value = response.org_scores?.[factor]
+    for (const [factor, value] of Object.entries(response.org_scores ?? {})) {
       if (typeof value === 'number') {
         orgTotals[factor] = [...(orgTotals[factor] ?? []), value]
       }
@@ -708,7 +761,7 @@ export function computeFactorAverages(responses: SurveyResponse[]) {
 
   return {
     orgAverages: Object.fromEntries(
-      ORG_FACTORS
+      getOrderedFactorKeysFromTotals(orgTotals)
         .filter((factor) => (orgTotals[factor] ?? []).length > 0)
         .map((factor) => [factor, average(orgTotals[factor] ?? [])]),
     ),
@@ -1151,7 +1204,7 @@ export function RecommendationList({
   bandOverride?: 'HOOG' | 'MIDDEN' | 'LAAG' | null
 }) {
   const focusQuestions = getProductModule(scanType).getFocusQuestions()
-  const items = ORG_FACTORS
+  const items = getOrderedFactorKeys(factorAverages)
     .filter((factor) => factor in factorAverages)
       .map((factor) => {
         const score = factorAverages[factor]
@@ -1217,7 +1270,7 @@ export function ActionPlaybookList({
   bandOverride?: 'HOOG' | 'MIDDEN' | 'LAAG' | null
 }) {
   const playbooks = getProductModule(scanType).getActionPlaybooks()
-  const items = ORG_FACTORS
+  const items = getOrderedFactorKeys(factorAverages)
     .filter((factor) => factor in factorAverages)
       .map((factor) => {
         const score = factorAverages[factor]
@@ -1395,6 +1448,7 @@ function CardColumn({
 }
 
 export function CampaignHealthIndicator({
+  scanType,
   totalInvited,
   totalCompleted,
   invitesNotSent,
@@ -1402,6 +1456,7 @@ export function CampaignHealthIndicator({
   hasEnoughData,
   hasMinDisplay,
 }: {
+  scanType: ScanType
   totalInvited: number
   totalCompleted: number
   invitesNotSent: number
@@ -1409,10 +1464,11 @@ export function CampaignHealthIndicator({
   hasEnoughData: boolean
   hasMinDisplay: boolean
 }) {
+  const thresholds = getResponseActivationThresholds(scanType)
   const checks: { label: string; ok: boolean; warn?: boolean; detail?: string }[] = [
     { label: 'Uitnodigingen verstuurd', ok: invitesNotSent === 0, warn: invitesNotSent > 0, detail: invitesNotSent > 0 ? `${invitesNotSent} respondent(en) hebben nog geen uitnodiging ontvangen` : undefined },
-    { label: 'Minimum responses bereikt', ok: hasMinDisplay, warn: !hasMinDisplay && totalCompleted > 0, detail: !hasMinDisplay ? `${totalCompleted} van min. 5 vereist voor weergave` : undefined },
-    { label: 'Voldoende data voor analyse', ok: hasEnoughData, warn: hasMinDisplay && !hasEnoughData, detail: !hasEnoughData ? `${totalCompleted} van min. 10 vereist voor patroonanalyse` : undefined },
+    { label: 'Minimum responses bereikt', ok: hasMinDisplay, warn: !hasMinDisplay && totalCompleted > 0, detail: !hasMinDisplay ? `${totalCompleted} van min. ${thresholds.dashboardMin} vereist voor weergave` : undefined },
+    { label: 'Voldoende data voor analyse', ok: hasEnoughData, warn: hasMinDisplay && !hasEnoughData, detail: !hasEnoughData ? `${totalCompleted} van min. ${thresholds.insightMin} vereist voor patroonanalyse` : undefined },
     { label: 'Alle scores volledig', ok: incompleteScores === 0, warn: incompleteScores > 0, detail: incompleteScores > 0 ? `${incompleteScores} response(s) met ontbrekende scores` : undefined },
   ]
 

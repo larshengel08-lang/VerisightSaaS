@@ -52,6 +52,7 @@ describe('SEO conversion tranche', () => {
     expect(urls).toContain('https://www.verisight.nl/oplossingen/verloop-analyse')
     expect(urls).toContain('https://www.verisight.nl/oplossingen/exitgesprekken-analyse')
     expect(urls).toContain('https://www.verisight.nl/oplossingen/medewerkersbehoud-analyse')
+    expect(urls).toContain('https://www.verisight.nl/producten/cultuurbeeld')
     expect(urls).toContain('https://www.verisight.nl/producten/pulse')
     expect(urls).toContain('https://www.verisight.nl/producten/onboarding-30-60-90')
     expect(urls).toContain('https://www.verisight.nl/producten/leadership-scan')
@@ -88,6 +89,9 @@ describe('SEO conversion tranche', () => {
     const exitProductMetadata = await generateProductMetadata({
       params: Promise.resolve({ slug: 'exitscan' }),
     })
+    const cultureProductMetadata = await generateProductMetadata({
+      params: Promise.resolve({ slug: 'cultuurbeeld' }),
+    })
     const pulseProductMetadata = await generateProductMetadata({
       params: Promise.resolve({ slug: 'pulse' }),
     })
@@ -102,6 +106,10 @@ describe('SEO conversion tranche', () => {
     expect(solutionMetadata.alternates?.canonical).toBe('/oplossingen/verloop-analyse')
     expect(exitProductMetadata.title).toBe('ExitScan | Verloopanalyse en vertrekduiding voor HR-teams')
     expect(exitProductMetadata.alternates?.canonical).toBe('/producten/exitscan')
+    expect(cultureProductMetadata.title).toBe(
+      'Loep Cultuurbeeld | Jaarlijkse cultuur- en engagementbaseline voor directie en HR',
+    )
+    expect(cultureProductMetadata.alternates?.canonical).toBe('/producten/cultuurbeeld')
     expect(pulseProductMetadata.title).toBe('Pulse | Compacte reviewmetingen na eerste baseline of managementread')
     expect(pulseProductMetadata.alternates?.canonical).toBe('/producten/pulse')
     expect(onboardingProductMetadata.title).toBe('Onboarding 30-60-90 | Vroege lifecycle-check voor nieuwe medewerkers')
@@ -128,16 +136,17 @@ describe('SEO conversion tranche', () => {
       'utf8',
     )
 
-    expect(productPageSource).toContain('defaultCtaSource="product_exit_form"')
-    expect(productPageSource).toContain('defaultCtaSource="product_retention_form"')
-    expect(productPageSource).toContain('defaultCtaSource="product_pulse_form"')
-    expect(productPageSource).toContain('defaultCtaSource="product_onboarding_form"')
-    expect(productPageSource).toContain('defaultCtaSource="product_leadership_form"')
+    expect(productPageSource).toContain("ctaSource: 'product_exit_form'")
+    expect(productPageSource).toContain("ctaSource: 'product_retention_form'")
+    expect(productPageSource).toContain("ctaSource: 'product_culture_assessment_form'")
+    expect(productPageSource).toContain("ctaSource: 'product_pulse_form'")
+    expect(productPageSource).toContain("ctaSource: 'product_onboarding_form'")
+    expect(productPageSource).toContain("ctaSource: 'product_leadership_form'")
     expect(productPageSource.includes('ctaHref="#kennismaking"') || productPageSource.includes('href="#kennismaking"')).toBe(true)
     expect(pricingPageSource).toContain("ctaSource: 'pricing_primary_cta'")
     expect(pricingContentSource).toContain("ctaSource: 'pricing_closing_cta'")
-    expect(solutionPageSource).toContain('MarketingInlineContactPanel')
-    expect(solutionPageSource).toContain('defaultCtaSource={solutionPage.ctaSource}')
+    expect(solutionPageSource).toContain('MarketingClosingCta')
+    expect(solutionPageSource).toContain('ctaSource: solutionPage.ctaSource')
   })
 
   it('keeps llms.txt aligned with the current pricing and product routes', () => {
@@ -145,11 +154,14 @@ describe('SEO conversion tranche', () => {
 
     expect(llmsText).toContain('ExitScan Baseline: EUR 2.950')
     expect(llmsText).toContain('RetentieScan Baseline: EUR 3.450')
+    expect(llmsText).toContain('Loep Culture Assessment Baseline: op aanvraag')
     expect(llmsText).toContain('Pulse: op aanvraag')
+    expect(llmsText).toContain('Pulse na Culture Assessment: op aanvraag')
     expect(llmsText).toContain('Onboarding 30-60-90: op aanvraag')
     expect(llmsText).toContain('Leadership Scan: op aanvraag')
     expect(llmsText).toContain('https://www.verisight.nl/producten/exitscan')
     expect(llmsText).toContain('https://www.verisight.nl/producten/retentiescan')
+    expect(llmsText).toContain('https://www.verisight.nl/producten/cultuurbeeld')
     expect(llmsText).toContain('https://www.verisight.nl/producten/pulse')
     expect(llmsText).toContain('https://www.verisight.nl/producten/onboarding-30-60-90')
     expect(llmsText).toContain('https://www.verisight.nl/producten/leadership-scan')

@@ -1,5 +1,9 @@
 import type { MemberRole } from '@/lib/types'
 import { buildSuiteTelemetryEvent, type SuiteTelemetryEvent } from '@/lib/telemetry/events'
+import {
+  resolveActionCenterAdminCapabilities,
+  type ActionCenterAdminCapabilities,
+} from '@/lib/action-center-admin-governance'
 
 export type ActionCenterWorkspaceRole = 'hr_owner' | 'hr_member' | 'manager_assignee'
 export type ActionCenterWorkspaceScopeType = 'org' | 'department' | 'item'
@@ -49,6 +53,11 @@ export interface SuiteAccessContext {
   canManageActionCenterAssignments: boolean
   canScheduleActionCenterReview: boolean
   managerOnly: boolean
+  canManageTenantAdmin: ActionCenterAdminCapabilities['canManageTenantAdmin']
+  canApproveRouteActivation: ActionCenterAdminCapabilities['canApproveRouteActivation']
+  canRequestAuditExport: ActionCenterAdminCapabilities['canRequestAuditExport']
+  canLogSupportAccess: ActionCenterAdminCapabilities['canLogSupportAccess']
+  canViewExecutiveReadback: ActionCenterAdminCapabilities['canViewExecutiveReadback']
 }
 
 function getRoleRank(role: MemberRole) {
@@ -111,6 +120,12 @@ export function buildSuiteAccessContext(args: {
     args.isVerisightAdmin ||
     memberRole === 'owner' ||
     workspaceMemberships.some((membership) => membership.can_schedule_review)
+  const adminCapabilities = resolveActionCenterAdminCapabilities({
+    persona,
+    isVerisightAdmin: args.isVerisightAdmin,
+    memberRole,
+    workspaceRoles: [...new Set(workspaceMemberships.map((membership) => membership.access_role))],
+  })
 
   return {
     persona,
@@ -127,6 +142,7 @@ export function buildSuiteAccessContext(args: {
     canManageActionCenterAssignments,
     canScheduleActionCenterReview,
     managerOnly,
+    ...adminCapabilities,
   }
 }
 
@@ -136,6 +152,26 @@ export function getDefaultSuiteLandingPath(context: Pick<SuiteAccessContext, 'ca
   }
 
   return '/dashboard'
+}
+
+export function shouldUseBoundedActionCenterOverview(
+  context: Pick<
+    SuiteAccessContext,
+    | 'canViewActionCenter'
+    | 'canUpdateActionCenter'
+    | 'canScheduleActionCenterReview'
+    | 'managerScopeValues'
+  >,
+) {
+  if (!context.canViewActionCenter) {
+    return true
+  }
+
+  if (context.managerScopeValues.length === 0) {
+    return true
+  }
+
+  return !(context.canUpdateActionCenter || context.canScheduleActionCenterReview)
 }
 
 export function isScopeVisibleToActionCenterContext(

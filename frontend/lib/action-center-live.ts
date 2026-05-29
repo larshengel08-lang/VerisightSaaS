@@ -80,6 +80,12 @@ const SCAN_DEFAULTS: Record<
     fallbackSummary: 'Leadership Scan opent hier geen breed traject, maar een bounded follow-through route met eigenaar en reviewritme.',
     fallbackRhythm: 'Maandelijks',
   },
+  culture_assessment: {
+    managementQuestion: 'Loep Culture Assessment blijft in deze wave een placeholder zonder live action-center follow-through.',
+    fallbackStep: 'Nog niet beschikbaar: deze placeholder-route opent in deze wave geen live action-center werkstroom.',
+    fallbackSummary: 'Loep Culture Assessment is in opbouw en blijft buiten de live action-center routefamilie totdat de productspecifieke module bestaat.',
+    fallbackRhythm: 'Nog niet actief',
+  },
   team: {
     managementQuestion: 'Welk teamsignaal vraagt nu een eerste lokale managementactie met duidelijke eigenaar en reviewmoment?',
     fallbackStep: 'Kies de eerste lokale teamactie en leg review en eigenaarschap expliciet vast.',

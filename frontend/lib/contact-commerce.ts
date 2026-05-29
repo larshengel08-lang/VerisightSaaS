@@ -14,7 +14,11 @@ export type BoundedCommerceDeliveryReleaseStatus =
   | 'release_ready'
   | 'delivery_linked'
 
-export const BOUNDED_COMMERCE_CORE_ROUTES: ContactRouteInterest[] = ['exitscan', 'retentiescan']
+export const BOUNDED_COMMERCE_CORE_ROUTES: ContactRouteInterest[] = [
+  'exitscan',
+  'retentiescan',
+  'culture_assessment',
+]
 
 type BoundedCommerceVisibilityArgs = {
   routeInterest: ContactRouteInterest | string | null | undefined
@@ -46,8 +50,12 @@ export type BoundedCommerceVisibilitySummary = {
 
 export function supportsBoundedCommerceRoute(
   routeInterest: ContactRouteInterest | string | null | undefined,
-): routeInterest is 'exitscan' | 'retentiescan' {
-  return routeInterest === 'exitscan' || routeInterest === 'retentiescan'
+): routeInterest is 'exitscan' | 'retentiescan' | 'culture_assessment' {
+  return (
+    routeInterest === 'exitscan' ||
+    routeInterest === 'retentiescan' ||
+    routeInterest === 'culture_assessment'
+  )
 }
 
 export function getCommerceAgreementStatusLabel(value: CommerceAgreementStatus | null | undefined) {

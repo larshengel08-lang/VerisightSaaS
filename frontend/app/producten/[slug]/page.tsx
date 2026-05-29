@@ -15,7 +15,6 @@ import { PreviewEvidenceRail } from '@/components/marketing/preview-evidence-rai
 import { PreviewSlider } from '@/components/marketing/preview-slider'
 import { SampleShowcaseCard } from '@/components/marketing/sample-showcase-card'
 import { FollowOnRoutePage } from '@/components/marketing/follow-on-route-page'
-import { OnboardingSecondaryPage } from '@/components/marketing/onboarding-secondary-page'
 import { MarketingSection } from '@/components/marketing/marketing-section'
 import { PublicFooter } from '@/components/marketing/public-footer'
 import { PublicHeader } from '@/components/marketing/public-header'
@@ -93,11 +92,11 @@ export default async function ProductDetailPage({ params }: Props) {
       ))}
       {slug === 'retentiescan' ? <RetentionScanPage /> : null}
       {slug === 'exitscan' ? <ExitScanPage /> : null}
-      {slug === 'onboarding-30-60-90' ? <OnboardingSecondaryPage /> : null}
-      {['pulse', 'leadership-scan', 'combinatie'].includes(slug) ? (
+      {slug === 'cultuurbeeld' ? <CultureAssessmentPage /> : null}
+      {['pulse', 'onboarding-30-60-90', 'leadership-scan', 'combinatie'].includes(slug) ? (
         <FollowOnRoutePage route={getFollowOnRouteContent(slug)!} />
       ) : null}
-      {!['retentiescan', 'exitscan', 'onboarding-30-60-90', 'pulse', 'leadership-scan', 'combinatie'].includes(slug) ? <UpcomingProductPage slug={slug} /> : null}
+      {!['retentiescan', 'exitscan', 'cultuurbeeld', 'pulse', 'onboarding-30-60-90', 'leadership-scan', 'combinatie'].includes(slug) ? <UpcomingProductPage slug={slug} /> : null}
     </>
   )
 }
@@ -168,6 +167,136 @@ function getProductStructuredData(product: MarketingProduct) {
   return [webpageSchema, breadcrumbSchema, serviceSchema]
 }
 
+function CultureAssessmentPage() {
+  const ctaHref = buildContactHref({
+    routeInterest: 'culture_assessment',
+    ctaSource: 'product_culture_assessment_hero',
+  })
+
+  return (
+    <MarketingPageShell
+      theme="support"
+      pageType="product"
+      ctaHref={ctaHref}
+      ctaLabel="Toets Loep Cultuurbeeld"
+      heroIntro={
+        <MarketingHeroIntro>
+          <p className="marketing-hero-eyebrow text-violet-700">Loep Cultuurbeeld</p>
+          <h1 className="marketing-hero-title marketing-hero-title-detail font-display text-slate-950">
+            Lees cultuur en engagement breed op organisatieniveau.
+          </h1>
+          <p className="marketing-hero-copy text-slate-600">
+            Loep Culture Assessment is de jaarlijkse enterprise-baseline voor board, directie en HR. U krijgt een
+            executive culture read, Loep Culture Index, domeinbeeld, board attention points en governed drilldown
+            zonder benchmark-first, manager ranking of individuele voorspellingen.
+          </p>
+          <div className="marketing-hero-actions">
+            <div className="marketing-hero-cta-row">
+              <a href={ctaHref} className="inline-flex items-center justify-center rounded-full bg-violet-700 px-6 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(109,40,217,0.18)] transition-all hover:-translate-y-0.5 hover:bg-violet-800">
+                Toets Loep Cultuurbeeld
+              </a>
+              <Link href="/producten" className="marketing-button-secondary">
+                Bekijk producten
+              </Link>
+            </div>
+          </div>
+        </MarketingHeroIntro>
+      }
+      heroStage={
+        <MarketingHeroStage surface="light">
+          <div className="marketing-preview-shell">
+            <div className="marketing-divider-title">Jaarlijkse enterprise-baseline</div>
+            <div className="marketing-proof-frame">
+              <div className="border-b border-[var(--border)] px-5 py-5 sm:px-6">
+                <span className="marketing-chip">Executive culture read</span>
+                <h2 className="mt-4 marketing-text-title-md">
+                  Begin met responsbasis, lees daarna de Loep Culture Index en verdiep pas dan naar domeinen en segmentcontrasten.
+                </h2>
+                <p className="mt-4 marketing-text-body">
+                  De route is bedoeld voor brede cultuur-, engagement- en werkbelevingsvragen op organisatieniveau.
+                  De output blijft descriptief: geen totaaloordeel over cultuur, geen named manager ranking en geen
+                  bewijs van oorzaak-gevolg.
+                </p>
+              </div>
+              <div className="grid gap-4 px-5 py-5 sm:px-6 lg:grid-cols-3">
+                {[
+                  ['Hoofdlaag', 'Loep Culture Index als navigatiesignaal, niet als eindscore of gezondheidslabel.'],
+                  ['Verdieping', 'Domeinbeeld, patronen in samenhang en segmentcontrasten boven duidelijke minimum-n.'],
+                  ['Vervolg', 'Board-read eerst; Pulse pas later als bounded reviewritme na de baseline.'],
+                ].map(([title, body]) => (
+                  <div key={title} className="marketing-process-card">
+                    <p className="marketing-text-kicker">{title}</p>
+                    <p className="mt-3 text-sm leading-7 text-[var(--text)]">{body}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </MarketingHeroStage>
+      }
+      heroSupport={
+        <MarketingHeroSupport>
+          <div className="marketing-support-note text-sm leading-7 text-slate-600">
+            Dit is geen RetentieScan-variant, geen Pulse, geen TeamScan, geen self-serve surveyplatform en geen manager
+            ranking tool.
+          </div>
+        </MarketingHeroSupport>
+      }
+    >
+      <MarketingSection tone="plain">
+        <div className="grid gap-6 lg:grid-cols-3">
+          {[
+            {
+              title: 'Wanneer dit de juiste eerste route is',
+              body: 'Kies Loep Cultuurbeeld wanneer de vraag breed organisatiebreed is: cultuur, engagement, werkbeleving, vertrouwen, leiderschap en samenwerking.',
+            },
+            {
+              title: 'Wat u ontvangt',
+              body: 'Een executive culture read, Loep Culture Index, domeinbeeld, board attention points, segmentcontrasten en board-read in dezelfde vaste leeslijn.',
+            },
+            {
+              title: 'Wat bewust begrensd blijft',
+              body: 'Benchmarking blijft in v1 uit, named manager detail blijft standaard locked en open tekst verschijnt alleen geclusterd en veilig.',
+            },
+          ].map((item) => (
+            <div key={item.title} className="marketing-panel p-6">
+              <h2 className="text-xl font-semibold text-slate-950">{item.title}</h2>
+              <p className="mt-3 text-sm leading-7 text-slate-600">{item.body}</p>
+            </div>
+          ))}
+        </div>
+      </MarketingSection>
+
+      <MarketingCalloutBand
+        eyebrow="Board-read inbegrepen"
+        title="De baseline eindigt niet in alleen een scoredeck."
+        body="Loep Cultuurbeeld hoort te landen in een vaste board-read waarin de executive read, eerste aandachtspunten en veilige vervolgvraag expliciet worden gemaakt."
+        primaryHref={buildContactHref({
+          routeInterest: 'culture_assessment',
+          ctaSource: 'product_culture_assessment_board_read',
+        })}
+        primaryLabel="Plan een eerste route-inschatting"
+        secondaryHref="/tarieven"
+        secondaryLabel="Bekijk tarieven"
+      />
+
+      <MarketingClosingCta
+        href={buildContactHref({
+          routeInterest: 'culture_assessment',
+          ctaSource: 'product_culture_assessment_form',
+        })}
+        showSectionMark={false}
+        backdropNumber={null}
+        title="Toets of Loep Cultuurbeeld"
+        accentTitle="nu de juiste eerste stap is."
+        body="Beschrijf kort welke brede cultuur- of engagementvraag nu speelt. Dan toetsen we of Loep Culture Assessment past, welke baselinevorm logisch is en wanneer een board-read de meeste waarde geeft."
+        buttonLabel="Plan een eerste route-inschatting"
+        note="Pulse komt pas later in beeld als bounded vervolg na een bestaande baseline."
+      />
+    </MarketingPageShell>
+  )
+}
+
 function ExitScanPage() {
   const T = {
     paper: 'oklch(0.978 0.010 62)', paperSoft: 'oklch(0.956 0.018 60)',
@@ -182,8 +311,8 @@ function ExitScanPage() {
   const ctaHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'product_exit_hero' })
 
   return (
-    <div style={{ background: T.white, color: T.ink, overflowX: 'hidden' }}>
-      <PublicHeader ctaHref={ctaHref} ctaLabel="Plan een kennismaking" />
+    <div style={{ background: T.paper, color: T.ink, overflowX: 'hidden' }}>
+      <PublicHeader ctaHref={ctaHref} ctaLabel="Plan een eerste route-inschatting" />
       <main>
         <section style={{ background: T.white, padding: 'clamp(52px,6.5vw,80px) 0 clamp(48px,6vw,72px)', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: `linear-gradient(${T.rule}60 1px,transparent 1px),linear-gradient(90deg,${T.rule}60 1px,transparent 1px)`, backgroundSize: '72px 72px', opacity: .35 }} />
@@ -204,7 +333,7 @@ function ExitScanPage() {
                 </p>
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 600, padding: '12px 28px', color: '#fff', background: T.ink }}>
-                    Plan een kennismaking
+                    Plan een eerste route-inschatting
                   </a>
                   <Link href="/tarieven" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', fontSize: 14, fontWeight: 500, padding: '11px 24px', color: T.inkSoft, border: `1px solid ${T.rule}` }}>
                     Bekijk tarieven
@@ -324,7 +453,7 @@ function ExitScanPage() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 220 }}>
                 <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontSize: 14, fontWeight: 600, padding: '14px 28px', color: '#fff', background: T.ink, whiteSpace: 'nowrap' }}>
-                  Plan een kennismaking
+                  Plan een eerste route-inschatting
                 </a>
                 <Link href="/tarieven" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 500, padding: '12px 24px', color: T.inkSoft, border: `1px solid ${T.rule}`, whiteSpace: 'nowrap' }}>
                   Bekijk tarieven
@@ -341,7 +470,7 @@ function ExitScanPage() {
           title="Toets of ExitScan"
           accentTitle="nu de juiste eerste stap is."
           body="Beschrijf kort welk vertrekvraagstuk nu speelt. Dan toetsen we of ExitScan past, welke variant logisch is en wat u als eerste terugkrijgt."
-          buttonLabel="Plan een kennismaking"
+          buttonLabel="Plan een eerste route-inschatting"
           note="U krijgt eerst een route-inschatting, geen verplicht uitgebreid traject."
         />
       </main>
@@ -364,8 +493,8 @@ function RetentionScanPage() {
   const ctaHref = buildContactHref({ routeInterest: 'retentiescan', ctaSource: 'product_retention_hero' })
 
   return (
-    <div style={{ background: T.white, color: T.ink, overflowX: 'hidden' }}>
-      <PublicHeader ctaHref={ctaHref} ctaLabel="Plan een kennismaking" />
+    <div style={{ background: T.paper, color: T.ink, overflowX: 'hidden' }}>
+      <PublicHeader ctaHref={ctaHref} ctaLabel="Plan een eerste route-inschatting" />
       <main>
         <section style={{ background: T.white, padding: 'clamp(52px,6.5vw,80px) 0 clamp(48px,6vw,72px)', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: `linear-gradient(${T.rule}60 1px,transparent 1px),linear-gradient(90deg,${T.rule}60 1px,transparent 1px)`, backgroundSize: '72px 72px', opacity: .35 }} />
@@ -386,7 +515,7 @@ function RetentionScanPage() {
                 </p>
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 600, padding: '12px 28px', color: '#fff', background: T.ink }}>
-                    Plan een kennismaking
+                    Plan een eerste route-inschatting
                   </a>
                   <Link href="/tarieven" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', fontSize: 14, fontWeight: 500, padding: '11px 24px', color: T.inkSoft, border: `1px solid ${T.rule}` }}>
                     Bekijk tarieven
@@ -506,7 +635,7 @@ function RetentionScanPage() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 220 }}>
                 <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontSize: 14, fontWeight: 600, padding: '14px 28px', color: '#fff', background: T.ink, whiteSpace: 'nowrap' }}>
-                  Plan een kennismaking
+                  Plan een eerste route-inschatting
                 </a>
                 <Link href="/tarieven" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 500, padding: '12px 24px', color: T.inkSoft, border: `1px solid ${T.rule}`, whiteSpace: 'nowrap' }}>
                   Bekijk tarieven
@@ -523,7 +652,7 @@ function RetentionScanPage() {
           title="Toets of RetentieScan"
           accentTitle="nu de juiste eerste stap is."
           body="Beschrijf kort waar behoud nu onder druk staat. Dan toetsen we of RetentieScan past, welke variant logisch is en wat u als eerste terugkrijgt."
-          buttonLabel="Plan een kennismaking"
+          buttonLabel="Plan een eerste route-inschatting"
           note="U krijgt eerst een route-inschatting, geen verplicht uitgebreid traject."
         />
       </main>
@@ -1403,7 +1532,7 @@ function CombinatiePage() {
                 href={buildContactHref({ routeInterest: 'combinatie', ctaSource: 'product_combination_hero' })}
                 className="inline-flex items-center justify-center rounded-full bg-[#3C8D8A] px-6 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(60,141,138,0.18)] transition-all hover:-translate-y-0.5 hover:bg-[#2d6e6b]"
               >
-                Plan een kennismaking
+                Plan een eerste route-inschatting
               </a>
               <Link
                 href="/producten"
@@ -1561,7 +1690,7 @@ function CombinatiePage() {
           title="Wilt u toetsen of de combinatie logisch is?"
           body="In een kort gesprek kijken we of u vooral met een product moet starten of dat beide vragen pas na de eerste route genoeg onderbouwd zijn voor een combinatieroute in dezelfde omgeving."
           primaryHref={buildContactHref({ routeInterest: 'combinatie', ctaSource: 'product_combination_callout' })}
-          primaryLabel="Plan een kennismaking"
+          primaryLabel="Plan een eerste route-inschatting"
           secondaryHref="/producten"
           secondaryLabel="Bekijk de routes"
         />

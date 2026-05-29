@@ -4,6 +4,38 @@ import type { CampaignStats } from '@/lib/types'
 
 const campaigns: CampaignStats[] = [
   {
+    campaign_id: 'culture-1',
+    campaign_name: 'Loep Cultuurbeeld 2026',
+    scan_type: 'culture_assessment',
+    organization_id: 'org-1',
+    is_active: false,
+    created_at: '2025-10-14T09:00:00Z',
+    total_invited: 220,
+    total_completed: 46,
+    completion_rate_pct: 21,
+    avg_risk_score: 6.7,
+    avg_signal_score: 6.7,
+    band_high: 16,
+    band_medium: 18,
+    band_low: 12,
+  },
+  {
+    campaign_id: 'culture-open-1',
+    campaign_name: 'Loep Cultuurbeeld 2027',
+    scan_type: 'culture_assessment',
+    organization_id: 'org-1',
+    is_active: true,
+    created_at: '2025-10-15T09:00:00Z',
+    total_invited: 240,
+    total_completed: 52,
+    completion_rate_pct: 22,
+    avg_risk_score: 6.9,
+    avg_signal_score: 6.9,
+    band_high: 20,
+    band_medium: 19,
+    band_low: 13,
+  },
+  {
     campaign_id: 'exit-1',
     campaign_name: 'ExitScan Ops — Q3',
     scan_type: 'exit',
@@ -73,12 +105,18 @@ describe('report library', () => {
   it('builds only report-ready entries and marks one featured management report', () => {
     const model = buildReportLibraryEntries(campaigns)
 
-    expect(model.entries.map((entry) => entry.campaignId)).toEqual(['exit-1', 'onboarding-1', 'pulse-1'])
+    expect(model.entries.map((entry) => entry.campaignId)).toEqual(['culture-1', 'exit-1', 'onboarding-1', 'pulse-1'])
     expect(model.featured).toMatchObject({
-      campaignId: 'exit-1',
-      scanType: 'exit',
+      campaignId: 'culture-1',
+      scanType: 'culture_assessment',
     })
-    expect(model.entries.find((entry) => entry.campaignId === 'exit-1')?.recommended).toBe(true)
+    expect(model.entries.find((entry) => entry.campaignId === 'culture-1')?.recommended).toBe(true)
+  })
+
+  it('keeps an open culture assessment baseline out of the report library until close', () => {
+    const model = buildReportLibraryEntries(campaigns)
+
+    expect(model.entries.some((entry) => entry.campaignId === 'culture-open-1')).toBe(false)
   })
 
   it('formats the featured subtitle without encoding artifacts', () => {
@@ -91,9 +129,20 @@ describe('report library', () => {
   it('maps management, module and cohort categories in a bounded way', () => {
     const model = buildReportLibraryEntries(campaigns)
 
+    expect(model.entries.find((entry) => entry.campaignId === 'culture-1')?.category).toBe('management')
     expect(model.entries.find((entry) => entry.campaignId === 'exit-1')?.category).toBe('management')
     expect(model.entries.find((entry) => entry.campaignId === 'pulse-1')?.category).toBe('module')
     expect(model.entries.find((entry) => entry.campaignId === 'onboarding-1')?.category).toBe('cohort')
+  })
+
+  it('keeps culture assessment framed as a board-readable management report instead of a module layer', () => {
+    const model = buildReportLibraryEntries(campaigns)
+    const cultureEntry = model.entries.find((entry) => entry.campaignId === 'culture-1')
+
+    expect(cultureEntry?.categoryLabel).toBe('Managementsamenvatting')
+    expect(cultureEntry?.summary).toContain('Loep Culture Assessment')
+    expect(cultureEntry?.summary.toLowerCase()).not.toContain('modulelaag')
+    expect(model.featured?.description.toLowerCase()).not.toContain('ranking')
   })
 
   it('marks report-ready entries with shared bridge assessment truth', () => {
@@ -125,7 +174,7 @@ describe('report library', () => {
   it('keeps the featured report on the same bridge policy as regular entries', () => {
     const model = buildReportLibraryEntries(campaigns, {
       routeEntryStageByCampaignId: {
-        'exit-1': 'active',
+        'culture-1': 'active',
       },
     })
 
@@ -169,8 +218,8 @@ describe('report library', () => {
   it('filters cards per category without inventing an all-in-one export layer', () => {
     const model = buildReportLibraryEntries(campaigns)
 
-    expect(filterReportLibraryEntries(model.entries, 'all')).toHaveLength(3)
-    expect(filterReportLibraryEntries(model.entries, 'management').map((entry) => entry.campaignId)).toEqual(['exit-1'])
+    expect(filterReportLibraryEntries(model.entries, 'all')).toHaveLength(4)
+    expect(filterReportLibraryEntries(model.entries, 'management').map((entry) => entry.campaignId)).toEqual(['culture-1', 'exit-1'])
     expect(filterReportLibraryEntries(model.entries, 'module').map((entry) => entry.campaignId)).toEqual(['pulse-1'])
     expect(filterReportLibraryEntries(model.entries, 'cohort').map((entry) => entry.campaignId)).toEqual(['onboarding-1'])
   })

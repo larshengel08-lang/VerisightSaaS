@@ -1,5 +1,5 @@
 """
-Verisight - e-mailmodule (Resend)
+Loep - e-mailmodule (Resend)
 =================================
 Verzendt uitnodigings- en notificatiemails via Resend.
 Stel RESEND_API_KEY en EMAIL_FROM in als environment variables.
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 _ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
 _RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
-_EMAIL_FROM = os.getenv("EMAIL_FROM", "Verisight <noreply@verisight.nl>")
+_EMAIL_FROM = os.getenv("EMAIL_FROM", "Loep <noreply@verisight.nl>")
 _CONTACT_EMAIL = os.getenv("CONTACT_EMAIL", "hallo@verisight.nl")
 _FRONTEND_URL = os.getenv("FRONTEND_URL", "")
 _BACKEND_URL = os.getenv("BACKEND_URL", "")
@@ -33,6 +33,7 @@ _EMAIL_TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "templates" / "em
 _CONTACT_ROUTE_LABELS = {
     "exitscan": "ExitScan",
     "retentiescan": "RetentieScan",
+    "culture_assessment": "Loep Culture Assessment",
     "teamscan": "TeamScan",
     "onboarding": "Onboarding 30-60-90",
     "leadership": "Leadership Scan",
@@ -60,6 +61,9 @@ except ImportError:
 class EmailSendResult:
     ok: bool
     reason: str | None = None
+    provider: str | None = None
+    provider_email_id: str | None = None
+    provider_message_id: str | None = None
 
 
 def _mask_email(address: str) -> str:
@@ -133,13 +137,22 @@ def _send_result(
         response = _resend.Emails.send(payload)
         if not response:
             logger.warning("E-mailprovider gaf lege respons terug voor %s.", safe_to)
-            return EmailSendResult(ok=False, reason="empty_provider_response")
+            return EmailSendResult(ok=False, reason="empty_provider_response", provider="resend")
+        response_email_id = response.get("id") if isinstance(response, dict) else getattr(response, "id", None)
+        response_message_id = (
+            response.get("message_id") if isinstance(response, dict) else getattr(response, "message_id", None)
+        )
         logger.info("E-mail verzonden naar %s", safe_to)
-        return EmailSendResult(ok=True)
+        return EmailSendResult(
+            ok=True,
+            provider="resend",
+            provider_email_id=str(response_email_id) if response_email_id else None,
+            provider_message_id=str(response_message_id) if response_message_id else None,
+        )
     except Exception as exc:
         reason = _sanitize_error_reason(f"{exc.__class__.__name__}: {exc}")
         logger.error("E-mail verzending mislukt naar %s: %s", safe_to, reason)
-        return EmailSendResult(ok=False, reason=f"provider_error: {reason}")
+        return EmailSendResult(ok=False, reason=f"provider_error: {reason}", provider="resend")
 
 
 def _send(*, to: str, subject: str, html: str) -> bool:
@@ -155,6 +168,21 @@ def send_survey_invite(
     scan_type: str = "exit",
 ) -> bool:
     """Stuur een uitnodigingsmail met de survey-link naar een respondent."""
+    return send_survey_invite_result(
+        to_email=to_email,
+        campaign_name=campaign_name,
+        token=token,
+        scan_type=scan_type,
+    ).ok
+
+
+def send_survey_invite_result(
+    *,
+    to_email: str,
+    campaign_name: str,
+    token: str,
+    scan_type: str = "exit",
+) -> EmailSendResult:
     survey_url = f"{_require_runtime_url(_BACKEND_URL, 'BACKEND_URL')}/survey/{token}"
     scan = get_scan_definition(scan_type)
     html = _render_email_template(
@@ -165,7 +193,7 @@ def send_survey_invite(
         survey_url=survey_url,
     )
 
-    return _send(
+    return _send_result(
         to=to_email,
         subject=f"Uitnodiging {scan['product_name']}: {campaign_name}",
         html=html,
@@ -250,7 +278,7 @@ def send_contact_request_result(
 
     return _send_result(
         to=_CONTACT_EMAIL,
-        subject=f"Kennismakingsaanvraag Verisight - {organization}",
+        subject=f"Kennismakingsaanvraag Loep - {organization}",
         html=html,
         reply_to=work_email,
     )
@@ -280,5 +308,73 @@ def send_hr_notification(
     return _send(
         to=to_email,
         subject=f"Nieuwe response: {campaign_name} ({total_completed}/{total_invited})",
+        html=html,
+    )
+
+
+def send_manager_results_notification(
+    *,
+    to_email: str | None,
+    manager_name: str | None,
+    campaign_name: str,
+    scope_label: str,
+    action_center_url: str | None = None,
+    action_center_path: str | None = None,
+    response_count: int | None = None,
+) -> EmailSendResult:
+    """Notificeer een toegewezen manager dat een Action Center-route leesbaar is."""
+    resolved_url = action_center_url
+    if not resolved_url:
+        base_url = _require_runtime_url(_FRONTEND_URL, "FRONTEND_URL")
+        normalized_path = action_center_path or "/action-center"
+        if not normalized_path.startswith("/"):
+            normalized_path = f"/{normalized_path}"
+        resolved_url = f"{base_url}{normalized_path}"
+
+    safe_manager_name = (manager_name or "").strip() or "manager"
+    safe_scope_label = scope_label.strip() or "jouw scope"
+    response_html = (
+        f"""
+        <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#42556b;">
+          Beschikbare responses in deze read: <strong>{int(response_count)}</strong>
+        </p>
+        """
+        if isinstance(response_count, int) and response_count >= 0
+        else ""
+    )
+    html = f"""
+    <div style="font-family:Arial,sans-serif;background:#f7f2ea;padding:32px;color:#132033;">
+      <div style="max-width:640px;margin:0 auto;background:#ffffff;border:1px solid #e6ddd2;border-radius:24px;padding:32px;">
+        <p style="margin:0 0 12px 0;font-size:13px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#8b8174;">
+          Action Center
+        </p>
+        <h1 style="margin:0 0 18px 0;font-size:30px;line-height:1.15;color:#132033;">
+          Resultaten beschikbaar voor jouw team
+        </h1>
+        <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#42556b;">
+          Hallo {escape(safe_manager_name)},
+        </p>
+        <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#42556b;">
+          Voor <strong>{escape(campaign_name)}</strong> is er nu een leesbare en opvolgbare route beschikbaar
+          voor <strong>{escape(safe_scope_label)}</strong>.
+        </p>
+        {response_html}
+        <p style="margin:0 0 24px 0;font-size:15px;line-height:1.6;color:#42556b;">
+          Open direct de relevante route in Action Center om de eerste bounded vervolgstap en het reviewmoment
+          vast te leggen.
+        </p>
+        <a
+          href="{escape(resolved_url, quote=True)}"
+          style="display:inline-block;border-radius:999px;background:#132033;color:#ffffff;text-decoration:none;padding:14px 20px;font-weight:700;"
+        >
+          Open Action Center
+        </a>
+      </div>
+    </div>
+    """
+
+    return _send_result(
+        to=to_email or "",
+        subject=f"Resultaten beschikbaar voor jouw team - {campaign_name}",
         html=html,
     )

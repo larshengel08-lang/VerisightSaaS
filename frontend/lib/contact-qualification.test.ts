@@ -26,7 +26,21 @@ describe('contact qualification visibility summary', () => {
     expect(summary.recommendationLabel).toContain('RetentieScan')
   })
 
-  it('treats onboarding as a gerichte eerste route instead of a flat first route', () => {
+  it('surfaces Loep Culture Assessment for broad culture and engagement baseline questions', () => {
+    const summary = buildContactQualificationVisibilitySummary({
+      routeInterest: 'culture_assessment',
+      desiredTiming: 'dit-kwartaal',
+      currentQuestion:
+        'We willen een brede jaarlijkse cultuur- en engagementbaseline met vertrouwen, leiderschap, samenwerking en werkbeleving op organisatieniveau.',
+    })
+
+    expect(summary.tone).toBe('emerald')
+    expect(summary.headline).toContain('Loep Culture Assessment')
+    expect(summary.recommendationLabel).toContain('Loep Culture Assessment')
+    expect(summary.nextAction.toLowerCase()).toContain('organisatiebreed')
+  })
+
+  it('treats onboarding as a bounded peer instead of a flat first route', () => {
     const summary = buildContactQualificationVisibilitySummary({
       routeInterest: 'onboarding',
       desiredTiming: 'dit-kwartaal',
@@ -34,7 +48,7 @@ describe('contact qualification visibility summary', () => {
     })
 
     expect(summary.tone).toBe('amber')
-    expect(summary.headline.toLowerCase()).toContain('gerichte eerste route')
+    expect(summary.headline.toLowerCase()).toContain('bounded peer')
     expect(summary.routeReviewLabel).toContain('Onboarding 30-60-90')
     expect(summary.nextAction.toLowerCase()).toContain('checkpoint')
   })

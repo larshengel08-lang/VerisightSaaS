@@ -8,9 +8,10 @@ import {
 } from '@/lib/contact-commerce'
 
 describe('bounded commerce helpers', () => {
-  it('only allows bounded commerce for ExitScan and RetentieScan', () => {
+  it('allows bounded commerce for the three primary routes only', () => {
     expect(supportsBoundedCommerceRoute('exitscan')).toBe(true)
     expect(supportsBoundedCommerceRoute('retentiescan')).toBe(true)
+    expect(supportsBoundedCommerceRoute('culture_assessment')).toBe(true)
     expect(supportsBoundedCommerceRoute('combinatie')).toBe(false)
     expect(supportsBoundedCommerceRoute('pulse')).toBe(false)
     expect(supportsBoundedCommerceRoute('leadership')).toBe(false)

@@ -1,6 +1,6 @@
-# Verisight Demo And Sample Environment System
+# Loep Demo And Sample Environment System
 
-Intern referentiedocument voor de canonieke demo- en sampleomgeving van Verisight.
+Intern referentiedocument voor de canonieke demo- en sampleomgeving van Loep / Verisight.
 Laatste update: 2026-04-15
 
 ## Doel
@@ -36,7 +36,7 @@ Gebruik bij spanning deze volgorde:
 - Doel: publieke prooflaag voor website, sales en trust
 - Canonieke identiteit: `TechBouw B.V.` / `techbouw-demo`
 - Actieve assets:
-  - `docs/examples/voorbeeldrapport_verisight.pdf`
+  - `docs/examples/voorbeeldrapport_loep.pdf`
   - `docs/examples/voorbeeldrapport_retentiescan.pdf`
   - publieke mirrors in `frontend/public/examples`
   - teaser previews op site
@@ -45,6 +45,26 @@ Gebruik bij spanning deze volgorde:
   - geen vertrouwelijkheidsframing
   - geen case-proof
   - niet rijker dan echte productoutput
+
+### 1b. Internal culture assessment demo pack
+
+- Doel: begeleide sales-, board- en delivery-demo voor `Loep Culture Assessment / Loep Cultuurbeeld`
+- Canonieke assets:
+  - `docs/examples/voorbeeldrapport_cultuurbeeld.pdf`
+  - `docs/reference/CULTURE_ASSESSMENT_BOARDROOM_DECK.md`
+  - `docs/reference/CULTURE_ASSESSMENT_EXECUTIVE_ONE_PAGER.md`
+  - `docs/reference/CULTURE_ASSESSMENT_HR_APPENDIX.md`
+  - `docs/reference/CULTURE_ASSESSMENT_HR_DEEPENING_HANDOUT.md`
+  - `docs/reference/CULTURE_ASSESSMENT_MANAGER_CASCADE_HANDOUT.md`
+  - `docs/reference/CULTURE_ASSESSMENT_BOARD_READ_FACILITATOR_SCRIPT.md`
+  - `docs/reference/CULTURE_ASSESSMENT_BOARD_READ_AGENDA.md`
+  - `docs/reference/CULTURE_ASSESSMENT_SAMPLE_INVITE_MAIL.md`
+  - `docs/reference/CULTURE_ASSESSMENT_WHAT_YOU_RECEIVE.md`
+  - `docs/reference/CULTURE_ASSESSMENT_DEMO_ENVIRONMENT.md`
+- Guardrail:
+  - geen buyer-facing primaire showcase-route
+  - geen benchmark- of rankingbewijs
+  - altijd begeleid en governance-first
 
 ### 2. Internal sales demo
 
@@ -56,7 +76,7 @@ Gebruik bij spanning deze volgorde:
 - Guardrail:
   - live dashboard-demo, niet de publieke prooflaag
   - alleen gebruiken na buyer-facing teaser/sample als dat commercieel logischer is
-  - ExitScan eerst, RetentieScan alleen bij expliciete behoudsvraag
+  - baseline-first in de commerciële uitleg; kies de demo op basis van de eerste managementvraag
 
 ### 3. QA/live fixture
 
@@ -82,7 +102,7 @@ Gebruik bij spanning deze volgorde:
 
 | Scenario | Laag | Org/Pad | Primair gebruik |
 | --- | --- | --- | --- |
-| `sales_demo_exit` | Internal sales demo | `verisight-sales-demo` | ExitScan live laten zien met empty, early, indicative, decision-ready en closed states |
+| `sales_demo_exit` | Internal sales demo | `verisight-sales-demo` | ExitScan-dashboard en latere vervolgstates laten zien met empty, early, indicative, decision-ready en closed states |
 | `sales_demo_retention` | Internal sales demo | `verisight-sales-demo` | RetentieScan trend en verification-first uitleg laten zien |
 | `qa_exit_live_test` | QA/live fixture | `exitscan-live-test` | tokens, access, archive en action-safe checks |
 | `qa_retention_demo` | QA/live fixture | `bakker-partners-demo` | RetentieScan demo/trend en metadata checks |
@@ -131,6 +151,7 @@ Gebruik deze drempels ook in demo-uitleg. Laat geen scenario rijkere patroonclai
 - Start standaard met ExitScan.
 - Gebruik buyer-facing sample-output als eerste prooflaag wanneer een buyer nog oriënteert.
 - Gebruik internal sales demo wanneer live dashboardcontext of campaignstatus helpt.
+- Gebruik het Loep Cultuurbeeld sample pack wanneer de vraag expliciet breed over cultuur en engagement gaat en een board-level baseline-read centraal staat.
 - Gebruik RetentieScan pas als de vraag expliciet over behoud op groepsniveau gaat.
 - Gebruik QA-fixtures en validation-sandboxes nooit als publieke prooflaag.
 

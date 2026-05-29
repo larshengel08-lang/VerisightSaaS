@@ -22,6 +22,7 @@ interface ImportResponsePayload {
   dry_run?: boolean
   valid_rows?: number
   imported?: number
+  emails_sent?: number
   detail?: string
   errors?: ImportIssuePayload[]
   blocking_messages?: string[]
@@ -217,6 +218,10 @@ export async function POST(request: Request, { params }: Context) {
         dry_run: String(incoming.get('dry_run') ?? 'true') === 'true',
         valid_rows: payload.valid_rows ?? null,
         imported: payload.imported ?? null,
+        emails_sent: payload.emails_sent ?? null,
+        invite_evidence_count: Array.isArray((payload as { invite_evidence?: unknown[] }).invite_evidence)
+          ? (payload as { invite_evidence: unknown[] }).invite_evidence.length
+          : null,
       },
     })
     return NextResponse.json(payload, { status: backendResponse.status })

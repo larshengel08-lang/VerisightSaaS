@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { notifyManagersForCampaignAvailability } from '@/lib/action-center-manager-results-notifications'
 import { insertCampaignAuditEvent } from '@/lib/campaign-audit'
 import { createClient } from '@/lib/supabase/server'
 import {
@@ -222,6 +223,12 @@ export async function PATCH(request: Request, context: Context) {
   }
 
   if ('lifecycle_stage' in body && body.lifecycle_stage && body.lifecycle_stage !== record.lifecycle_stage) {
+    await notifyManagersForCampaignAvailability({
+      campaignId: id,
+      previousLifecycleStage: record.lifecycle_stage as DeliveryLifecycleStage | null,
+      nextLifecycleStage: body.lifecycle_stage,
+    })
+
     await insertCampaignAuditEvent({
       supabase: admin.supabase,
       organizationId: record.organization_id,

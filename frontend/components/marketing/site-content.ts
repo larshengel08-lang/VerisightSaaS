@@ -3,7 +3,6 @@ import { buildContactHref } from '@/lib/contact-funnel'
 export const marketingNavLinks = [
   { href: '/producten', label: 'Producten' },
   { href: '/aanpak', label: 'Aanpak' },
-  { href: '/inzichten', label: 'Inzichten' },
   { href: '/tarieven', label: 'Tarieven' },
   { href: '/vertrouwen', label: 'Vertrouwen' },
 ] as const
@@ -21,9 +20,9 @@ export const marketingSecondaryCta = {
 export const marketingFooterLinks = [
   { href: '/', label: 'Home' },
   { href: '/producten', label: 'Producten' },
-  { href: '/inzichten', label: 'Inzichten' },
   { href: '/producten/exitscan', label: 'ExitScan' },
   { href: '/producten/retentiescan', label: 'RetentieScan' },
+  { href: '/producten/cultuurbeeld', label: 'Loep Cultuurbeeld' },
   { href: '/aanpak', label: 'Aanpak' },
   { href: '/tarieven', label: 'Tarieven' },
   { href: '/vertrouwen', label: 'Vertrouwen' },
@@ -54,6 +53,14 @@ export const homepageProductRoutes = [
     accent: 'border-[#DCEFEA] bg-[#F7F5F1]',
     chip: 'Kernroute',
   },
+  {
+    name: 'Loep Cultuurbeeld',
+    title: 'Lees cultuur en engagement breed op organisatieniveau',
+    body: 'Jaarlijkse enterprise-baseline voor board, directie en HR met executive read, Loep Culture Index en governed drilldown.',
+    href: '/producten/cultuurbeeld',
+    accent: 'border-[#E8DEF6] bg-[#F7F5F1]',
+    chip: 'Kernroute',
+  },
 ] as const
 
 // Keep the existing homepage module contract intact for builds that still
@@ -71,12 +78,17 @@ export const homepageComparisonRows = [
     'RetentieScan',
     'Retentiesignaal, stay-intent, bevlogenheid en vertrekintentie op groepsniveau',
   ],
+  [
+    'Je wilt cultuur en engagement breed organisatiebreed begrijpen',
+    'Loep Cultuurbeeld',
+    'Executive culture read, Loep Culture Index, domeinbeeld en board attention points zonder benchmark-first of ranking',
+  ],
 ] as const
 
 export const homepageProofSignals = [
   'Eén suite-login voor dashboard, rapport en Action Center',
   'HR kan managers per afdeling toewijzen zonder survey-inzichten open te zetten',
-  'ExitScan als default route, RetentieScan als volwaardige eerste route bij expliciete behoudsvraag',
+  'Drie duidelijke primary routes: ExitScan, RetentieScan en Loep Cultuurbeeld',
   'Groepsinzichten met expliciete claims- en privacygrenzen',
   'Publieke proof verschijnt pas na expliciete approval en provenance',
 ] as const
@@ -98,22 +110,22 @@ export const homepageUtilityLinks = [
   {
     href: '/producten',
     title: 'Bekijk de productroutes',
-    body: 'Zie snel wanneer ExitScan of RetentieScan logisch wordt.',
+    body: 'Zie snel wanneer ExitScan, RetentieScan of Loep Cultuurbeeld logisch wordt.',
   },
   {
     href: '/aanpak',
     title: 'Bekijk de aanpak',
-    body: 'Lees hoe de eerste stap doorloopt naar dashboard, rapport en eerste opvolging.',
+    body: 'Lees hoe routekeuze, uitvoering en eerste output in een compacte productroute samenkomen.',
   },
   {
     href: '/tarieven',
     title: 'Bekijk tarieven',
-    body: 'Zie hoe eerste stappen, uitbreiding en later vervolg zijn opgebouwd.',
+    body: 'Zie hoe eerste trajecten en vervolgvormen commercieel zijn opgebouwd.',
   },
   {
     href: '/vertrouwen',
     title: 'Bekijk trust en privacy',
-    body: 'Controleer publiek hoe privacy, rapportage en DPA zijn ingericht.',
+    body: 'Controleer publiek hoe methodiek, privacy, rapportlezing en DPA zijn ingericht.',
   },
 ] as const
 
@@ -129,6 +141,12 @@ export const productOverviewComparisonRows = [
     'Vroegsignalering op behoud',
     'Waar staat behoud nu onder druk in de actieve populatie?',
     'Voor vroegsignalering en prioritering',
+  ],
+  [
+    'Loep Cultuurbeeld',
+    'Brede cultuur- en engagementbaseline',
+    'Welke brede cultuur- en engagementpatronen vragen bestuurlijke aandacht en waar zitten de belangrijkste verschillen tussen onderdelen?',
+    'Voor jaarlijkse executive baseline en board-read',
   ],
 ] as const
 
@@ -157,6 +175,7 @@ export const trustItems = [
   'Signalen, geen schijnzekerheid',
   'Rapportage op geaggregeerd niveau',
   'Vraagblokken gebaseerd op relevante literatuur',
+  'Nederlandse dienst met begeleide uitvoering',
   'AVG-conform, primaire dataopslag in een EU-regio',
   'Geen koppeling aan individuen in rapportage.',
 ] as const
@@ -213,14 +232,14 @@ export const trustSignalHighlights = [
 export const trustVerificationCards = [
   {
     title: 'Wat u nu publiek kunt verifiëren',
-    body: 'Verisight laat publiek zien hoe privacy, rapportage en de eerste stap zijn ingericht voordat u een gesprek plant.',
+    body: 'Verisight laat publiek zien hoe productkeuze, privacy en rapportlezing zijn ingericht voordat u een gesprek plant.',
   },
   {
     title: 'Waar publieke voorbeeldoutput stopt',
     body: 'ExitScan en RetentieScan dragen de publieke voorbeeldrapporten. Andere routes worden publiek lichter toegelicht en niet als aparte samplebibliotheek uitgewerkt.',
   },
   {
-    title: 'Wat u in rapport en dashboard terugziet',
+    title: 'Wat management wel ziet',
     body: 'Geaggregeerde inzichten, topfactoren, prioriteiten en een eerste richting voor vervolg.',
   },
   {
@@ -235,8 +254,8 @@ export const trustHubAnswerCards = [
     body: 'De primaire database draait in een EU-regio. Subverwerkers voor hosting en mail staan in privacybeleid en DPA benoemd.',
   },
   {
-    title: 'Wat ziet u precies terug?',
-    body: 'U ziet groeps- en segmentinzichten, geen individuele signalen of persoonsgerichte actieroutes.',
+    title: 'Wat ziet management precies?',
+    body: 'Management ziet groeps- en segmentinzichten, geen individuele signalen of persoonsgerichte actieroutes.',
   },
   {
     title: 'Hoe voorkom je schijnprecisie?',
@@ -248,7 +267,7 @@ export const trustHubAnswerCards = [
   },
   {
     title: 'Wat koopt u precies?',
-    body: 'Geen losse tool, maar een duidelijke aanpak met dashboard, rapport en heldere grenzen in hoe u de uitkomsten gebruikt.',
+    body: 'Geen losse surveytool, maar een afgebakende productvorm met dashboard, rapport en duidelijke interpretatiegrenzen.',
   },
   {
     title: 'Heeft elke route een publiek voorbeeldrapport?',
@@ -259,12 +278,12 @@ export const trustHubAnswerCards = [
 export const trustReadingRows = [
   [
     'Gebruik',
-    'Samenvatting, prioriteiten en gesprek op groepsniveau',
+    'Managementduiding, prioritering en gesprek op groepsniveau',
     'Niet als diagnose, individuele voorspelling of performance-oordeel',
   ],
   [
-    'Wat u terugziet',
-    'Dashboard, samenvatting, topfactoren en eerste vervolgrichting.',
+    'Wat management ziet',
+    'Dashboard, managementsamenvatting, topfactoren en eerste vervolgrichting.',
     'Niet elke ruwe response, geen persoonsprofielen en geen verborgen black-box score',
   ],
   [
@@ -273,9 +292,9 @@ export const trustReadingRows = [
     'Niet doen alsof kleine groepen of open tekst zonder terughoudendheid veilig te lezen zijn',
   ],
   [
-    'Wat de uitkomsten wel en niet zeggen',
+    'Bewijsstatus',
     'Methodisch onderbouwd en begrensd in wat het wel en niet claimt.',
-    'Niet verkopen als volledig diagnostisch instrument of bewezen voorspeller',
+    'Niet verkopen als extern gevalideerd diagnostisch instrument of bewezen predictor',
   ],
 ] as const
 
@@ -283,7 +302,7 @@ export const trustSupportCards = [
   {
     title: 'Trust en privacy',
     href: '/vertrouwen',
-    body: 'Methodiek, privacy en hoe u de uitkomsten leest.',
+    body: 'Methodiek, privacy en interpretatiegrenzen.',
   },
   {
     title: 'Privacybeleid',
@@ -369,39 +388,38 @@ export const processHighlights = [
 ] as const
 
 export const included = [
-  'Intake en compacte baseline-opzet',
-  'Scan en respondentflow waar relevant',
-  'Dashboard en managementrapport',
-  'Samenvatting voor HR en management',
+  'Inrichting van de gekozen route',
+  'Uitnodigingen en respondentflow waar relevant',
+  'Dashboard en rapport in dezelfde leeslijn',
+  'Samenvatting voor HR, MT of directie',
   'Privacy en interpretatie in gewone taal',
-  'Eerste opvolging waar de situatie daarom vraagt',
-  'Geen extra toolbeheer voor uw team',
+  'Compacte productvorm zonder extra toolbeheer',
 ] as const
 
 export const approachSteps = [
   {
-    title: '1. Juiste route kiezen',
-    body: 'We bepalen welke stap nu het meeste duidelijkheid geeft: vertrek, behoud of onboarding.',
+    title: '1. Routekeuze',
+    body: 'We bepalen welke route nu het meest logisch is: ExitScan, RetentieScan of pas later een kleinere vervolgroute.',
   },
   {
-    title: '2. Compact opzetten',
-    body: 'We zetten de gekozen stap op met de timing, groepen en input die nodig zijn voor een betrouwbare eerste uitkomst.',
+    title: '2. Setup',
+    body: 'We zetten de gekozen route strak op met de groepen, timing en input die nodig zijn voor een betrouwbare eerste read.',
   },
   {
-    title: '3. Route laten lopen',
-    body: 'De route gaat live en de basis wordt bewaakt, zonder extra toolbeheer voor uw team.',
+    title: '3. Uitvoering',
+    body: 'De route gaat live, uitnodigingen lopen waar relevant en de basis wordt bewaakt zonder extra toolbeheer voor uw team.',
   },
   {
-    title: '4. Eerste signalen zichtbaar',
-    body: 'Zodra de respons opbouwt, worden de eerste signalen zichtbaar. We blijven terughoudend tot het beeld stevig genoeg is.',
+    title: '4. Eerste signalen',
+    body: 'De eerste signalen worden zichtbaar zodra de respons opbouwt, maar we blijven terughoudend tot het beeld stevig genoeg is.',
   },
   {
-    title: '5. Dashboard en rapport lezen',
-    body: 'Als het beeld sterk genoeg is, ziet u in dashboard en rapport wat opvalt, wat eerst telt en waar gesprek nodig is.',
+    title: '5. Dashboard en rapport',
+    body: 'Zodra het beeld sterk genoeg is, ontvangt u een dashboard en rapport in dezelfde leeslijn, met wat opvalt en wat eerst aandacht vraagt.',
   },
   {
-    title: '6. Eerste opvolging organiseren',
-    body: 'Waar relevant helpt Verisight om de eerste opvolging zichtbaar te maken, met duidelijke acties en verantwoordelijkheden.',
+    title: '6. Eventuele vervolgrichting',
+    body: 'Pas als de volgende vraag echt speelt, wordt een vervolgrichting logisch, zoals een bounded vervolgroute, Action Center of een volgende scan.',
   },
 ] as const
 
@@ -463,38 +481,38 @@ export const approachRoutes = [
 export const customerLifecycleStages = [
   {
     title: '1. Eerste routekeuze',
-    body: 'De eerste stap begint met ExitScan Baseline, RetentieScan Baseline of Onboarding 30-60-90 Baseline, afhankelijk van welke managementvraag nu het eerst geopend moet worden.',
+    body: 'Meestal start je met ExitScan Baseline om vertrek eerst bestuurlijk leesbaar te maken. RetentieScan Baseline is de eerste route als de actieve behoudsvraag nu echt primair is.',
   },
   {
-    title: '2. Baseline als vaste eerste stap',
-    body: 'De eerste stap blijft een afgebakende baseline met intake, scan, dashboard en managementrapport als eerste managementread.',
+    title: '2. Betaald eerste traject',
+    body: 'De eerste koop blijft een afgebakend baseline-traject met dashboard, managementrapport, bestuurlijke handoff en een eerste managementsessie.',
   },
   {
-    title: '3. Review opent de vervolgrichting',
-    body: 'Review hoort inhoudelijk bij de baseline en helpt bepalen wat eerst telt, welke eerste vervolgrichting logisch is en of extra borging nodig wordt.',
+    title: '3. Eerste managementwaarde',
+    body: 'Vanaf een bruikbare responsbasis vertalen dashboard en rapport de scan naar prioriteit nu en een eerste vervolgrichting. Daarna begeleiden we hoe een hercheckmoment en bounded follow-through expliciet worden afgesproken.',
   },
   {
-    title: '4. Action Center Start optioneel',
-    body: 'Action Center Start wordt pas toegevoegd als een gekozen opvolgscope zichtbaar toegewezen en gevolgd moet worden, niet als standaard onderdeel van elke baseline.',
+    title: '4. Zelfde route herhalen of verdiepen',
+    body: 'Pas na die eerste waarde wordt een vervolgvorm logisch: ExitScan ritmeroute als begeleide vervolgroute, RetentieScan ritmeroute als vaste herhaalvorm of segment deep dive als bewuste verdieping.',
   },
   {
-    title: '5. Ritme of tweede route later',
-    body: 'Pas daarna worden Live Start, Reviewcadans, Pulse, Leadership Scan of een tweede productroute logisch als dezelfde of een volgende vraag echt blijft spelen.',
+    title: '5. Uitbreiden naar tweede product',
+    body: 'Expansion volgt alleen wanneer de volgende managementvraag echt op tafel ligt: van ExitScan naar RetentieScan voor vroegsignalering op behoud, of omgekeerd voor terugkijkende vertrekduiding.',
   },
 ] as const
 
 export const pricingLifecycleLadder = [
   {
     route: 'ExitScan',
-    firstSale: 'ExitScan Baseline blijft de standaard eerste stap wanneer vertrek achteraf eerst scherp gemaakt moet worden.',
-    nextStep: 'Action Center Start is de eerste publieke uitbreiding wanneer een gekozen opvolgscope zichtbaar geborgd moet worden.',
-    expansion: 'ExitScan Live Start of een tweede route wordt pas logisch nadat de baseline en review de volgende vraag echt hebben geopend.',
+    firstSale: 'ExitScan Baseline als standaard eerste koop',
+    nextStep: 'ExitScan ritmeroute alleen als quote-only vervolgroute bij voldoende volume, proces en eigenaar.',
+    expansion: 'RetentieScan Baseline wordt logisch zodra dezelfde thema\'s eerder in de actieve populatie moeten worden gesignaleerd.',
   },
   {
     route: 'RetentieScan',
-    firstSale: 'RetentieScan Baseline is de eerste stap wanneer vroeg behoudssignaal nu de primaire vraag is.',
-    nextStep: 'Action Center Start blijft ook hier de eerste publieke uitbreiding zodra een gekozen opvolgscope gevolgd moet worden.',
-    expansion: 'Reviewcadans, Pulse of ExitScan Live Start komen pas in beeld nadat baseline en review voldoende richting hebben gegeven.',
+    firstSale: 'RetentieScan Baseline alleen wanneer de actieve behoudsvraag nu het echte startpunt is.',
+    nextStep: 'RetentieScan ritmeroute blijft de vaste buyer-facing vervolgvorm na baseline en eerste managementwaarde.',
+    expansion: 'ExitScan Baseline wordt pas logisch als retrospectieve vertrekduiding alsnog nodig blijkt.',
   },
 ] as const
 
@@ -520,101 +538,74 @@ export const expansionTriggerCards = [
 export const pricingCards = [
   {
     eyebrow: 'ExitScan Baseline',
-    price: 'vanaf EUR 4.500',
+    price: 'EUR 2.950',
     description:
-      'De standaard eerste stap voor organisaties die vertrek eerst scherp willen begrijpen en daarvoor een compacte managementread nodig hebben.',
+      'De standaard eerste instap voor organisaties die snel een betrouwbaar organisatiebeeld, duidelijke prioriteiten en een professioneel managementrapport over uitstroom willen dat ook in sponsor-, prioriteits- en budgetgesprekken overeind blijft.',
     bullets: [
-      'Intake',
-      'Scan',
-      'Dashboard',
-      'Managementrapport',
+      'Inrichting van de exit-campagne en respondentflow',
+      'Dashboard, managementrapport en bestuurlijke handoff',
+      'Geschikt als eerste nulmeting of start van een begeleide vervolgroute',
     ],
   },
   {
     eyebrow: 'RetentieScan Baseline',
-    price: 'vanaf EUR 4.500',
+    price: 'EUR 3.450',
     description:
-      'De eerste stap voor organisaties die eerder willen zien waar behoud onder druk staat, zonder individuele signalen naar management te trekken.',
+      'De standaard eerste instap voor organisaties die eerder willen zien waar behoud onder druk staat, met extra nadruk op privacy, groepsduiding en een gerichte managementscan in plaats van een brede MTO.',
     bullets: [
-      'Intake',
-      'Scan',
-      'Dashboard',
-      'Managementrapport',
+      'Retentiesignaal, stay-intent, bevlogenheid en vertrekintentie in een managementrapport',
+      'Geen individuele signalen naar management',
+      'Geschikt als basis voor vervolgmeting of een gerichte vervolgronde',
     ],
   },
   {
-    eyebrow: 'Onboarding 30-60-90 Baseline',
-    price: 'vanaf EUR 4.500',
+    eyebrow: 'Loep Culture Assessment Baseline',
+    price: 'op aanvraag',
     description:
-      'Een kleinere, gerichte startroute voor organisaties die juist in de eerste maanden van nieuwe medewerkers sneller helderheid nodig hebben.',
+      'De enterprise-instap voor organisaties die cultuur en engagement breed organisatiebreed willen begrijpen, met executive read, board attention points en een board-level baseline in plaats van een generieke survey of benchmark-first platform.',
     bullets: [
-      'Intake',
-      'Scan',
-      'Dashboard',
-      'Managementrapport',
+      'Executive culture read, Loep Culture Index en domeinbeeld',
+      'Board-read als vast productonderdeel en governed drilldown waar toegestaan',
+      'Pulse blijft pas een optioneel follow-on ritme na de jaarlijkse baseline',
     ],
   },
 ] as const
 
 export const pricingFollowOnRoutes = [
   {
-    title: 'ExitScan Live Start',
+    title: 'ExitScan ritmeroute',
     price: 'op aanvraag',
-    fit: 'Later vervolg na baseline',
+    fit: 'Quote-only vervolg na baseline',
     description:
-      'Voor organisaties die uitstroom niet alleen eenmalig willen duiden, maar daarna doorlopend willen blijven volgen zodra baseline en review al staan.',
+      'Voor organisaties die na een eerste ExitScan Baseline actuele uitstroomsignalen willen blijven volgen. Alleen logisch wanneer proces, volume en eigenaarschap al staan.',
     bullets: [
-      'Geen extra startroute naast de baseline',
-      'Pas logisch als proces en eigenaar al staan',
-      'Blijft een latere vorm en geen losse instap',
+      'Geen concurrerend eerste pakket naast ExitScan Baseline',
+      'Alleen verkopen na nulmeting of bij bestaand structureel exitproces',
+      'Blijft een begeleide vervolgroute en geen self-serve monitoringlaag',
     ],
   },
   {
-    title: 'Reviewcadans',
-    price: 'op aanvraag',
-    fit: 'Later vervolg na baseline',
+    title: 'RetentieScan ritmeroute',
+    price: 'vanaf EUR 4.950',
+    fit: 'Vaste vervolgvorm na baseline',
     description:
-      'Voor organisaties die de gekozen route later in een vast reviewritme willen herijken nadat de eerste baseline en opvolgrichting al staan.',
+      'Voor organisaties die van een eerste RetentieScan willen doorgroeien naar een ritme met herhaalmeting, trendduiding en beter onderbouwde vervolgkeuzes op behoud.',
     bullets: [
-      'Geen hoofdkaart boven de fold',
-      'Past na eerste managementwaarde',
-      'Maakt herijking logisch zonder de eerste stap te verzwaren',
+      'Buyer-facing vervolgvorm na RetentieScan Baseline',
+      'Baseline plus herhaalmeting per kwartaal of halfjaar',
+      'Trendbeeld op retentiesignaal, bevlogenheid en stay-intent',
     ],
   },
   {
-    title: 'Pulse',
+    title: 'Pulse na Culture Assessment',
     price: 'op aanvraag',
-    fit: 'Bounded vervolgroute',
+    fit: 'Optioneel follow-on ritme na jaarlijkse baseline',
     description:
-      'Compacte vervolgronde wanneer een eerste baseline al staat en u een beperkte hercheck wilt doen op dezelfde vraag.',
+      'Voor organisaties die na een eerste Loep Culture Assessment een bounded reviewritme willen openen op bestaande aandachtspunten, niet als onderdeel van de baseline.',
     bullets: [
-      'Niet bedoeld als nieuwe eerste stap',
-      'Kleinere vervolgroute na een bestaand beeld',
-      'Alleen logisch als de eerste route al richting gaf',
-    ],
-  },
-  {
-    title: 'Leadership Scan',
-    price: 'op aanvraag',
-    fit: 'Bounded vervolgroute',
-    description:
-      'Gerichte vervolgronde als een bestaand people-signaal extra duiding vraagt rond managementcontext, niet als brede leiderschapsinstap.',
-    bullets: [
-      'Komt pas na een bestaand signaal in beeld',
-      'Blijft op groepsniveau en beperkt in scope',
-      'Geen eerste stap en geen brede leadership-suite',
-    ],
-  },
-  {
-    title: 'Combinatie',
-    price: 'op aanvraag',
-    fit: 'Portfolioroute',
-    description:
-      'Pas logisch wanneer vertrekduiding en behoudsvraag allebei bestuurlijk spelen en de eerste route al scherp staat.',
-    bullets: [
-      'Geen derde kernproduct',
-      'Pas na een eerste route logisch',
-      'Verbindt twee vragen pas wanneer beide echt spelen',
+      'Alleen logisch na een bestaande Loep Culture Assessment baseline of board-read',
+      'Bounded reviewlaag op gekozen aandachtspunten, niet als nieuwe brede nulmeting',
+      'Blijft een vervolgroute en geen parallel primary route',
     ],
   },
 ] as const
@@ -627,140 +618,97 @@ export const retentionPackages = [
     bullets: ['Eenmalige scan', 'Dashboard en managementrapport', 'Topfactoren en focusvragen'],
   },
   {
-    title: 'Baseline + Action Center Start',
-    fit: 'Voor zichtbare eerste opvolging',
-    body: 'Voor organisaties die na de eerste baseline ook een gekozen opvolgscope zichtbaar willen toewijzen en volgen.',
-    bullets: ['Alles uit Baseline', 'Gekozen opvolgscope', 'Status en reviewmoment zichtbaar'],
+    title: 'Baseline + Segment deep dive',
+    fit: 'Voor scherpere segmentprioritering',
+    body: 'Voor organisaties die na een eerste baseline ook willen zien welke afdelingen of functieniveaus het meest afwijken, mits metadata en minimale n dat dragen.',
+    bullets: ['Alles uit Baseline', 'Segmentanalyse op afdeling en functieniveau', 'Bewuste verdieping, geen standaard inbegrepen laag'],
   },
   {
-    title: 'Reviewcadans',
+    title: 'RetentieScan ritmeroute',
     fit: 'Voor structureel herijken',
-    body: 'Voor organisaties die retentie als terugkerend stuurthema willen benaderen nadat baseline, review en eerste opvolging al staan.',
-    bullets: ['Herhaalmeting en trendduiding', 'Betere bespreking van effect en verschuiving', 'Latere vervolgvorm na de eerste baseline'],
+    body: 'Voor organisaties die retentie als terugkerend stuurthema willen benaderen nadat baseline en eerste managementwaarde staan.',
+    bullets: ['Herhaalmeting en trendduiding', 'Betere bespreking van effect en verschuiving', 'Buyer-facing vervolgvorm na de eerste baseline'],
   },
 ] as const
 
 export const pricingChoiceGuide = [
   [
     'ExitScan Baseline',
-    'De standaard eerste stap wanneer vertrek achteraf eerst scherp gemaakt moet worden.',
+    'Je wilt vertrek achteraf duiden en zoekt meestal het eerste betaalde traject dat losse exitinput bestuurlijk leesbaar maakt.',
   ],
   [
     'RetentieScan Baseline',
-    'De eerste stap wanneer vroeg behoudssignaal nu de echte managementvraag is.',
+    'Je wilt eerder zien waar behoud in de actieve populatie onder druk staat en zoekt daarvoor een gerichte eerste baseline.',
   ],
   [
-    'Onboarding 30-60-90 Baseline',
-    'Een gerichte startroute voor organisaties waar de eerste maanden van nieuwe medewerkers nu de belangrijkste vraag vormen.',
+    'Loep Culture Assessment Baseline',
+    'Je wilt cultuur en engagement breed organisatiebreed begrijpen en zoekt daarvoor een jaarlijkse enterprise-baseline met board-read.',
   ],
-] as const
-
-export const productPrimaryRouteCards = [
-  {
-    title: 'ExitScan',
-    eyebrow: 'ExitScan Baseline',
-    body:
-      'Voor organisaties die scherp willen begrijpen waarom medewerkers vertrekken, welke patronen terugkomen en waar actie het eerst telt.',
-    bullets: [
-      'Vertrek is al zichtbaar of terugkerend',
-      'U wilt begrijpen welke patronen terugkomen',
-      'U wilt een eerste managementbeeld van vertrekredenen en drivers',
-      'U zoekt een compacte eerste managementread',
-    ],
-    href: '/producten/exitscan',
-    accent: '#C96A4B',
-    accentSoft: '#FAF1EC',
-  },
-  {
-    title: 'RetentieScan',
-    eyebrow: 'RetentieScan Baseline',
-    body:
-      'Voor organisaties die eerder willen zien waar behoud onder druk komt te staan, voordat verloop zichtbaar oploopt en het gesprek te laat begint.',
-    bullets: [
-      'U wilt eerder signaleren voordat verloop oploopt',
-      'U vermoedt behoudsdruk maar ziet nog geen volledig vertrekbeeld',
-      'U wilt groepsniveau vroegsignalering in plaats van terugblik',
-      'U wilt eerder zien waar gesprek en verificatie nodig zijn',
-    ],
-    href: '/producten/retentiescan',
-    accent: '#C96A4B',
-    accentSoft: '#FAF1EC',
-  },
-] as const
-
-export const productSecondaryFirstBuyRoute = {
-  title: 'Onboarding 30-60-90',
-  eyebrow: 'Gerichte startroute',
-  body:
-    'Onboarding 30-60-90 Baseline is de kleinere, gerichte startroute wanneer juist de eerste maanden van nieuwe medewerkers nu de belangrijkste managementvraag vormen.',
-  bullets: [
-    'Geen derde kernroute naast ExitScan en RetentieScan',
-    'Wel een volwaardige baseline als onboarding nu de eerste vraag is',
-    'Gericht op vroege landing, eerste frictie en eerste uitval',
+  [
+    'Combinatie op aanvraag',
+    'Je wilt zowel leren van vertrek als eerder kunnen bijsturen op behoud, maar pas nadat de eerste route helder staat.',
   ],
-  href: '/producten/onboarding-30-60-90',
-} as const
-
-export const actionCenterStartPositioning = {
-  eyebrow: 'Optionele uitbreiding',
-  title: 'Voeg Action Center Start pas toe als opvolging zichtbaar geborgd moet worden.',
-  body:
-    'Action Center Start is geen derde kernproduct, maar een optionele opvolglaag na of naast een baseline. U gebruikt het voor een gekozen opvolgscope, een of enkele owners, zichtbare status en een reviewmoment.',
-  bullets: [
-    'Begrensd tot een gekozen opvolgscope',
-    'Voor een of enkele owners of managers',
-    'Geen brede workflowlaag of taakmanagementsysteem',
-  ],
-} as const
-
-export const productFollowOnRouteRows = [
-  ['ExitScan Live Start', 'Later vervolg wanneer dezelfde uitstroomvraag structureel gevolgd moet worden.'],
-  ['Reviewcadans', 'Later vervolg wanneer dezelfde route in een vast reviewritme opnieuw herijkt moet worden.'],
-  ['Pulse', 'Compacte vervolgronde na een eerste baseline.'],
-  ['Leadership Scan', 'Gerichte vervolgronde als managementcontext extra duiding vraagt.'],
-  ['Combinatie', 'Pas logisch wanneer vertrekduiding en behoudsvraag allebei bestuurlijk spelen.'],
 ] as const
 
 export const pricingAddOns = [
   [
-    'Action Center Start',
+    'Segment deep dive',
+    'EUR 950',
+    'Extra segmentanalyse voor ExitScan of RetentieScan, met scherpere uitsplitsing naar afdeling en functieniveau wanneer metadata en minimale n daar geschikt voor zijn.',
+  ],
+  [
+    'Compacte retentie vervolgmeting',
     'vanaf EUR 1.250',
-    'Optionele uitbreiding voor een gekozen opvolgscope, een of enkele owners, beperkte actieopvolging, zichtbare status en een reviewmoment.',
+    'Compacte vervolgcomponent binnen RetentieScan ritmeroute, bijvoorbeeld per kwartaal of halfjaar, om voortgang te volgen zonder daarvan een parallel hoofdpackage te maken.',
+  ],
+  [
+    'Combinatieroute',
+    'op aanvraag',
+    'Voor organisaties die ExitScan en RetentieScan bewust naast elkaar willen inzetten. We prijzen dit niet als korting of bundel, maar als portfolioroute in een gedeelde managementstructuur.',
+  ],
+  [
+    'Governed drilldown voor Cultuurbeeld',
+    'op aanvraag',
+    'Extra governed uitsplitsing voor Loep Culture Assessment naar locatie, afdeling, team en waar expliciet toegestaan named manager read, zonder ranking of individuele export.',
   ],
 ] as const
 
 export const pricingFaqs = [
   [
-    'Waarom hebben de baseline-routes hetzelfde publieke prijsanker?',
-    'Omdat de eerste stap steeds draait om een compacte baseline met intake, scan, dashboard en managementrapport. De route verschilt, maar de eerste managementread blijft het publieke vertrekpunt.',
+    'Wanneer kies je voor Loep Culture Assessment?',
+    'Als de hoofdvraag breed organisatiebreed is: cultuur, engagement, werkbeleving, vertrouwen, leiderschap en samenwerking. Dan past een jaarlijkse Loep Culture Assessment baseline beter dan RetentieScan, ExitScan of Pulse.',
+  ],
+  [
+    'Waarom is RetentieScan niet goedkoper dan ExitScan?',
+    'Omdat RetentieScan geen lichtere algemene survey of MTO-light is. Het product vraagt juist scherpere privacykaders, actieve-medewerkersduiding en een eigen managementverhaal.',
   ],
   [
     'Waarom starten jullie niet met een gratis pilot?',
-    'Omdat Verisight bedoeld is als serieuze eerste stap met een duidelijke baseline, een eerste managementread en een concrete vervolgrichting. Een betaald eerste traject voorkomt vrijblijvende validatie zonder besluitvorming.',
+    'Omdat Verisight bedoeld is als serieus eerste traject met duidelijke scope, deliverables en opvolging. Een betaald baseline-traject test echte urgentie, geeft scherpere samenwerking en voorkomt vrijblijvende validatie zonder besluitvorming.',
   ],
   [
-    'Is Action Center Start standaard onderdeel van elke baseline?',
-    'Nee. Action Center Start is een optionele uitbreiding en komt pas in beeld als een gekozen opvolgscope zichtbaar geborgd moet worden.',
+    'Is RetentieScan een MTO-vervanger?',
+    'Nee. Het product is smaller en scherper: het richt zich op vroegsignalering op behoud via retentiesignaal, stay-intent, vertrekintentie en beinvloedbare werkfactoren.',
   ],
   [
-    'Wanneer wordt ExitScan Live Start logisch?',
-    'Pas nadat een eerste baseline en review al richting hebben gegeven, of wanneer uitstroom al structureel gevolgd moet worden in een later vervolg.',
+    'Wanneer wordt ExitScan ritmeroute logisch?',
+    'Meestal pas na een ExitScan Baseline of wanneer uitstroom al structureel met voldoende volume wordt gevolgd. Daarom houden we ExitScan ritmeroute bewust als vervolgroute op aanvraag.',
   ],
   [
-    'Waarom staat Reviewcadans niet tussen de hoofdkaarten?',
-    'Omdat reviewcadans een latere vervolgvorm is. De eerste stap blijft een baseline; ritme komt pas daarna in beeld als dezelfde vraag opnieuw gevolgd moet worden.',
+    'Hoe verhouden RetentieScan ritmeroute en compacte vervolgmeting zich tot elkaar?',
+    'RetentieScan ritmeroute is de vaste buyer-facing vervolgvorm na baseline. Een compacte retentie vervolgmeting is daarbinnen een lichtere vervolgcomponent, geen parallel eerste pakket.',
   ],
   [
-    'Wanneer kies je voor Onboarding 30-60-90 Baseline?',
-    'Wanneer niet vertrek of behoud, maar juist de eerste maanden van nieuwe medewerkers de eerste managementvraag vormen. Dan blijft onboarding een kleinere, gerichte startroute.',
+    'Wanneer kies je voor de combinatieroute?',
+    'Als je zowel achteraf wilt begrijpen waarom mensen gingen als eerder wilt zien waar behoud nu onder druk staat, en beide managementvragen echt bestaan.',
   ],
   [
     'Wat ziet management wel en niet?',
-    'Management ziet groepsinzichten, dashboard en managementrapport. Bij RetentieScan tonen we geen individuele signalen, geen performance-oordelen en geen persoonsgerichte actieroutes.',
+    'Management ziet groeps- en segmentinzichten. Bij RetentieScan tonen we geen individuele signalen, geen vertrekintentie op persoonsniveau, geen performance-oordelen en geen persoonsgerichte actieroutes.',
   ],
   [
-    'Wanneer worden Pulse en Leadership Scan logisch?',
-    'Pas nadat een eerste baseline al staat en een volgende, begrensde vraag echt speelt. Het zijn latere vervolgroutes, geen eerste stap.',
+    'Hoe vaak herhaal je RetentieScan?',
+    'Voor v1 is een baseline het logische startpunt. Daarna is een ritme per kwartaal of halfjaar het meest logisch als je effect van acties wilt volgen.',
   ],
   [
     'Beloof je hiermee lager verloop?',
@@ -794,6 +742,10 @@ export const faqs = [
     'Voor v1 is een baseline logisch als startpunt. Daarna kun je periodiek herhalen, bijvoorbeeld per kwartaal of halfjaar, als je gericht wilt volgen of acties effect hebben.',
   ],
   [
+    'Is Loep Cultuurbeeld gewoon een MTO of Pulse?',
+    'Nee. Loep Cultuurbeeld is een jaarlijkse board-level cultuur- en engagementbaseline met executive read, board attention points en governed drilldown. Pulse blijft alleen een bounded vervolgritme na een bestaande baseline of actie.',
+  ],
+  [
     'Is Verisight een tool of een dienst?',
     'Het is een begeleide dienst met software. Je krijgt dashboard en rapportage, zonder self-service implementatie of losse consultancy zonder productvorm.',
   ],
@@ -815,4 +767,3 @@ export const faqSchema = {
     acceptedAnswer: { '@type': 'Answer', text: answer },
   })),
 }
-

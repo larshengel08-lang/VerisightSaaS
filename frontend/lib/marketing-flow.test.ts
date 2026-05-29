@@ -52,10 +52,15 @@ describe('marketing flow defaults', () => {
     ])
   })
 
-  it('keeps ExitScan as the first homepage route and RetentieScan as the complement', () => {
-    expect(homepageProductRoutes.map((route) => route.name)).toEqual(['ExitScan', 'RetentieScan'])
+  it('keeps the homepage focused on the three buyer-facing primary routes', () => {
+    expect(homepageProductRoutes.map((route) => route.name)).toEqual([
+      'ExitScan',
+      'RetentieScan',
+      'Loep Cultuurbeeld',
+    ])
     expect(homepageProductRoutes[0]?.chip).toBe('Kernroute')
     expect(homepageProductRoutes[1]?.chip).toBe('Kernroute')
+    expect(homepageProductRoutes[2]?.chip).toBe('Kernroute')
   })
 
   it('keeps homepage utility links aligned with buyer flow and due diligence', () => {
@@ -68,9 +73,9 @@ describe('marketing flow defaults', () => {
   })
 
   it('keeps the approach flow explicit about assisted onboarding and first use', () => {
-    expect(included).toContain('Assisted onboarding van akkoord tot eerste managementread')
-    expect(approachSteps.find((step) => step.title === '5. Dashboard en rapport')?.body.toLowerCase()).toContain('indicatief')
-    expect(approachSteps.find((step) => step.title === '4. Eerste responses')?.body.toLowerCase()).toContain('klantactivatie')
+    expect(included).toContain('Inrichting van de gekozen route')
+    expect(approachSteps.find((step) => step.title === '5. Dashboard en rapport')?.body.toLowerCase()).toContain('dashboard en rapport')
+    expect(approachSteps.find((step) => step.title === '4. Eerste signalen')?.body.toLowerCase()).toContain('respons')
   })
 
   it('keeps preview copy and buyer-facing showcase assets linked to the same proof paths', () => {
@@ -84,16 +89,18 @@ describe('marketing flow defaults', () => {
   it('keeps route labels and first-step defaults aligned with the funnel', () => {
     expect(getContactRouteLabel('exitscan')).toBe('ExitScan')
     expect(getContactRouteLabel('retentiescan')).toBe('RetentieScan')
+    expect(getContactRouteLabel('culture_assessment')).toBe('Loep Culture Assessment')
     expect(getContactFirstStepLabel('combinatie')).toBe('een gefaseerde combinatieroute')
-    expect(getContactFirstStepLabel('onboarding')).toContain('Onboarding 30-60-90 Baseline')
+    expect(getContactFirstStepLabel('onboarding')).toContain('bounded peer')
     expect(getContactFirstStepLabel('pulse')).toContain('na een eerste baseline')
     expect(getContactFirstStepLabel('leadership')).toContain('na een bestaand signaal')
   })
 
-  it('keeps the contact route ordering core-first with onboarding as a gerichte eerste route and pulse plus leadership as follow-up', () => {
+  it('keeps the contact route ordering core-first with culture assessment as a visible primary route', () => {
     expect(CONTACT_ROUTE_OPTIONS.map((option) => option.value)).toEqual([
       'exitscan',
       'retentiescan',
+      'culture_assessment',
       'combinatie',
       'onboarding',
       'pulse',
@@ -109,9 +116,12 @@ describe('marketing flow defaults', () => {
     expect(CONTACT_ROUTE_OPTIONS.find((option) => option.value === 'leadership')?.description.toLowerCase()).toContain(
       'na een bestaand people-signaal',
     )
+    expect(CONTACT_ROUTE_OPTIONS.find((option) => option.value === 'culture_assessment')?.description.toLowerCase()).toContain(
+      'jaarlijkse',
+    )
   })
 
-  it('keeps onboarding qualified as a gerichte eerste route instead of reframing it as a gewone follow-up', () => {
+  it('keeps onboarding qualified as a bounded peer instead of reframing it as a gewone follow-up', () => {
     const onboardingGuidance = getContactQualificationGuidance({
       routeInterest: 'onboarding',
       desiredTiming: 'orienterend',
@@ -121,6 +131,6 @@ describe('marketing flow defaults', () => {
     expect(onboardingGuidance.status).toBe('bounded_peer_review')
     expect(onboardingGuidance.recommendedCoreRoute).toBe('exitscan')
     expect(onboardingGuidance.followOnCandidateRoute).toBe('onboarding')
-    expect(onboardingGuidance.headline.toLowerCase()).toContain('gerichte eerste route')
+    expect(onboardingGuidance.headline.toLowerCase()).toContain('bounded peer')
   })
 })
