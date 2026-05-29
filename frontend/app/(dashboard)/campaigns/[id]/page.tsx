@@ -15,6 +15,7 @@ import {
   getActionCenterRouteOpenableStages,
   hasOpenedActionCenterRoute,
 } from '@/lib/dashboard/open-action-center-route'
+import { notifyManagersForCampaignAvailability } from '@/lib/action-center-manager-results-notifications'
 import { getManagementBandLabel } from '@/lib/management-language'
 import { getScanDefinition } from '@/lib/scan-definitions'
 import {
@@ -1191,6 +1192,14 @@ export default async function CampaignPage({ params }: Props) {
         notFound()
       }
     }
+
+    redirect(actionCenterHref)
+
+    await notifyManagersForCampaignAvailability({
+      campaignId: id,
+      previousLifecycleStage: currentDeliveryRecord.lifecycle_stage,
+      nextLifecycleStage: 'first_management_use',
+    })
 
     redirect(actionCenterHref)
   }

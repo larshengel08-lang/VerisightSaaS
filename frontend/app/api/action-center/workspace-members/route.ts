@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { notifyManagerForAssignmentIfReady } from '@/lib/action-center-manager-results-notifications'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 
@@ -42,6 +43,13 @@ export async function POST(request: Request) {
   }
 
   const adminClient = createAdminClient()
+  const { data: existingAssignments } = await adminClient
+    .from('action_center_workspace_members')
+    .select('user_id')
+    .eq('org_id', body.orgId)
+    .eq('access_role', 'manager_assignee')
+    .eq('scope_type', body.scopeType)
+    .eq('scope_value', body.scopeValue)
 
   if (!body.managerUserId) {
     const { error } = await adminClient
@@ -92,13 +100,25 @@ export async function POST(request: Request) {
       },
     )
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
-  }
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
 
-  return NextResponse.json({
-    ok: true,
-    manager: {
+    const previousManagerUserId = existingAssignments?.[0]?.user_id ?? null
+    const managerChanged = previousManagerUserId !== body.managerUserId
+    if (managerChanged) {
+      await notifyManagerForAssignmentIfReady({
+        orgId: body.orgId,
+        scopeType: body.scopeType,
+        scopeValue: body.scopeValue,
+        managerEmail: managerUser.email ?? null,
+        managerName: managerDisplayName,
+      })
+    }
+
+    return NextResponse.json({
+      ok: true,
+      manager: {
       userId: body.managerUserId,
       label: managerDisplayName,
       email: managerUser.email ?? null,

@@ -154,6 +154,26 @@ export function getDefaultSuiteLandingPath(context: Pick<SuiteAccessContext, 'ca
   return '/dashboard'
 }
 
+export function shouldUseBoundedActionCenterOverview(
+  context: Pick<
+    SuiteAccessContext,
+    | 'canViewActionCenter'
+    | 'canUpdateActionCenter'
+    | 'canScheduleActionCenterReview'
+    | 'managerScopeValues'
+  >,
+) {
+  if (!context.canViewActionCenter) {
+    return true
+  }
+
+  if (context.managerScopeValues.length === 0) {
+    return true
+  }
+
+  return !(context.canUpdateActionCenter || context.canScheduleActionCenterReview)
+}
+
 export function isScopeVisibleToActionCenterContext(
   context: Pick<SuiteAccessContext, 'isVerisightAdmin' | 'memberRole' | 'managerScopeValues'>,
   scopeValue: string,
