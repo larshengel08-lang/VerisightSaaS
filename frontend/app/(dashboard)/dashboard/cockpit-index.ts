@@ -63,6 +63,7 @@ function buildCockpitRow(args: {
 }): CockpitRow {
   const { campaign, invitesNotSent, pdfAvailable } = args
   const state = getCampaignCompositionState({
+    scanType: campaign.scan_type,
     isActive: campaign.is_active,
     totalInvited: campaign.total_invited,
     totalCompleted: campaign.total_completed,
