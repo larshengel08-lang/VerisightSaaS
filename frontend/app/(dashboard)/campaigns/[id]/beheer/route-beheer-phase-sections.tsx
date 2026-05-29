@@ -456,11 +456,6 @@ export function RouteBeheerOutputSummary({ data }: { data: RouteBeheerPageData }
             campaignId={data.campaignId}
             campaignName={data.campaignName}
             scanType={data.scanType}
-            label="Download PDF"
-            loadingLabel="PDF ophalen..."
-            containerClassName="flex flex-col items-start gap-1"
-            buttonClassName="inline-flex items-center justify-center rounded-full border border-[color:var(--border)] bg-white px-4 py-2 text-sm font-semibold text-[color:var(--text)] transition hover:border-[color:var(--teal)] hover:text-[color:var(--ink)]"
-            errorClassName="max-w-48 text-xs text-red-600"
           />
         ) : null}
       </div>
