@@ -2,17 +2,14 @@ import 'server-only'
 
 import { buildActionCenterRouteId } from '@/lib/action-center-route-contract'
 import type { DeliveryLifecycleStage } from '@/lib/ops-delivery'
-import { isDashboardReleaseReady } from '@/lib/response-activation'
+import { buildResponseActivationState } from '@/lib/response-activation'
 import { getBackendApiUrl } from '@/lib/server-env'
 import { createAdminClient } from '@/lib/supabase/admin'
-import type { ScanType } from '@/lib/types'
 
 type CampaignRow = {
   id: string
   organization_id: string
   name: string
-  scan_type: ScanType
-  is_active: boolean
 }
 
 type CampaignStatsRow = {
@@ -97,16 +94,9 @@ function isLifecycleFollowThroughReady(stage: DeliveryLifecycleStage | null | un
 
 function isCampaignReadableForManagers(args: {
   totalCompleted: number
-  scanType: ScanType
-  isActive: boolean
   lifecycleStage: DeliveryLifecycleStage | null | undefined
 }) {
-  return (
-    isDashboardReleaseReady(args.totalCompleted, {
-      scanType: args.scanType,
-      isActive: args.isActive,
-    }) && isLifecycleFollowThroughReady(args.lifecycleStage)
-  )
+  return buildResponseActivationState(args.totalCompleted).reportVisible && isLifecycleFollowThroughReady(args.lifecycleStage)
 }
 
 async function postManagerResultsNotification(args: {
@@ -163,7 +153,7 @@ export async function notifyManagersForCampaignAvailability(args: {
   const [{ data: campaign }, { data: stats }, { data: respondents }, { data: managerAssignments }] = await Promise.all([
     admin
       .from('campaigns')
-      .select('id, organization_id, name, scan_type, is_active')
+      .select('id, organization_id, name')
       .eq('id', args.campaignId)
       .maybeSingle(),
     admin
@@ -188,8 +178,6 @@ export async function notifyManagersForCampaignAvailability(args: {
   if (
     !isCampaignReadableForManagers({
       totalCompleted,
-      scanType: campaign.scan_type,
-      isActive: campaign.is_active,
       lifecycleStage: args.nextLifecycleStage,
     })
   ) {
@@ -239,7 +227,7 @@ export async function notifyManagerForAssignmentIfReady(args: {
   const admin = createAdminClient()
   const { data: campaigns } = await admin
     .from('campaigns')
-    .select('id, organization_id, name, scan_type, is_active')
+    .select('id, organization_id, name')
     .eq('organization_id', args.orgId)
 
   const eligibleCampaigns = ((campaigns ?? []) as CampaignRow[])
@@ -281,8 +269,6 @@ export async function notifyManagerForAssignmentIfReady(args: {
     if (
       !isCampaignReadableForManagers({
         totalCompleted,
-        scanType: campaign.scan_type,
-        isActive: campaign.is_active,
         lifecycleStage,
       })
     ) {

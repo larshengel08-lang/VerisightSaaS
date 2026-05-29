@@ -1193,8 +1193,6 @@ export default async function CampaignPage({ params }: Props) {
       }
     }
 
-    redirect(actionCenterHref)
-
     await notifyManagersForCampaignAvailability({
       campaignId: id,
       previousLifecycleStage: currentDeliveryRecord.lifecycle_stage,
