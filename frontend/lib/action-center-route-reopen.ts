@@ -1,7 +1,21 @@
-import type { ActionCenterGovernanceActorRole } from './action-center-governance'
+import {
+  resolveActionCenterTransitionAccess,
+  type ActionCenterGovernanceActorRole,
+} from './action-center-governance'
 import type { ActionCenterRouteCloseoutRecord } from './action-center-route-closeout'
 
 export type ActionCenterRouteReopenRole = ActionCenterGovernanceActorRole | 'manager'
+
+export class ActionCenterRouteReopenMutationError extends Error {
+  constructor(
+    public readonly code:
+      | 'forbidden_transition'
+      | 'missing_reopen_reason',
+  ) {
+    super(code)
+    this.name = 'ActionCenterRouteReopenMutationError'
+  }
+}
 
 export type ActionCenterRouteReopenReason =
   | 'te-vroeg-afgesloten'
@@ -72,7 +86,6 @@ const FOLLOW_UP_TRIGGER_REASONS = new Set<ActionCenterRouteFollowUpTriggerReason
 const REOPEN_ROLES = new Set<ActionCenterRouteReopenRole>([
   'verisight_admin',
   'hr',
-  'manager',
   'verisight',
   'hr_owner',
   'hr_member',
@@ -190,10 +203,11 @@ export function projectActionCenterRouteReopen(
     !reopenedAt ||
     !isValidIsoTimestamp(reopenedAt) ||
     !reopenedByRole ||
-    !REOPEN_ROLES.has(reopenedByRole)
+    !REOPEN_ROLES.has(reopenedByRole) ||
+    !reopenReason
   ) {
     throw new Error(
-      'Ongeldige action center route reopen input: route_id, reopened_at en reopened_by_role zijn verplicht.',
+      'Ongeldige action center route reopen input: route_id, reopened_at, reopened_by_role en reopen_reason zijn verplicht.',
     )
   }
 
@@ -203,6 +217,27 @@ export function projectActionCenterRouteReopen(
     reopenedAt,
     reopenedByRole,
     reopenReason,
+  }
+}
+
+export function assertActionCenterRouteReopenMutationAllowed(args: {
+  actorRole: ActionCenterGovernanceActorRole
+  currentState: 'open' | 'closed' | 'reopened'
+  reopenReason: string | null | undefined
+}) {
+  if (!normalizeText(args.reopenReason)) {
+    throw new ActionCenterRouteReopenMutationError('missing_reopen_reason')
+  }
+
+  const access = resolveActionCenterTransitionAccess({
+    actorRole: args.actorRole,
+    object: 'follow_through_route',
+    fromState: args.currentState,
+    toState: 'reopened',
+  })
+
+  if (!access.allowed) {
+    throw new ActionCenterRouteReopenMutationError('forbidden_transition')
   }
 }
 

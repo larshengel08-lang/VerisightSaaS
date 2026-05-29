@@ -1,37 +1,35 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import { Reveal } from '@/components/marketing/design-tokens'
 import { buildContactHref } from '@/lib/contact-funnel'
-import { InsightRail } from '@/components/marketing/insight-rail'
-import { getAllInsights } from '@/lib/insights'
 
 const SURFACE = {
-  paper: '#F7F5F1',
-  paperSoft: '#FAF8F4',
+  paper: '#F4F1EA',
+  paperSoft: '#EEE8DE',
   surface: '#FFFFFF',
-  surfaceSoft: '#F7F5F1',
-  border: '#E5E0D6',
-  borderSoft: '#F0EBE2',
-  ink: '#132033',
-  text: '#4A5563',
-  muted: '#6B7280',
-  subtle: '#9AA3AE',
-  teal: '#7A908B',
-  tealSoft: '#E8F0EE',
-  amber: '#C96A4B',
-  amberSoft: '#F3E4DA',
-  amberGlow: '#B85D41',
-  charcoal: '#132033',
-  charcoalSoft: '#1C2A3D',
+  surfaceSoft: '#F7F4EE',
+  border: 'rgba(13,27,42,0.15)',
+  borderSoft: 'rgba(13,27,42,0.10)',
+  ink: '#0D1B2A',
+  text: '#0D1B2A',
+  muted: '#4A6070',
+  subtle: '#6A7783',
+  teal: '#E8A020',
+  tealSoft: 'rgba(232,160,32,0.12)',
+  amber: '#E8A020',
+  amberSoft: 'rgba(232,160,32,0.12)',
+  amberGlow: '#B07A10',
+  charcoal: '#0D1B2A',
+  charcoalSoft: '#1A2D40',
 } as const
 
 const SHELL = {
   margin: '0 auto',
-  maxWidth: 1240,
+  maxWidth: 1280,
   padding: '0 clamp(20px, 4vw, 48px)',
 } as const
 
-const displayFont = 'var(--font-fraunces), Georgia, serif'
-const bodyFont = 'var(--font-ibm-plex-sans), system-ui, sans-serif'
+const displayFont = 'var(--font-inter-tight), Inter, sans-serif'
+const bodyFont = 'var(--font-inter), system-ui, sans-serif'
 
 const heroTrustItems = [
   'Dashboard voor inzicht \u2022 Managementrapport voor duiding \u2022 Action Center voor opvolging',
@@ -109,54 +107,86 @@ const problemSignalPoints = [
   },
   {
     title: 'Opvolging blijft te los',
-    body: 'Opvolging wordt daardoor ad hoc, breed of ongericht, terwijl management juist scherpe keuzes en gedeeld eigenaarschap nodig heeft.',
+    body: 'Opvolging wordt daardoor ad hoc, breed of ongericht, terwijl de organisatie juist scherpe keuzes en gedeeld eigenaarschap nodig heeft.',
     accent: '#98a4b3',
   },
 ]
 
-const managementFlowSteps = [
+type ManagementFlowStep = {
+  step: string
+  label: string
+  title: string
+  body: string
+  cardMinHeight?: number
+  optionalLabel?: string
+  optionalMicrocopy?: string
+}
+
+const managementFlowSteps: readonly ManagementFlowStep[] = [
   {
     step: '1',
     label: 'Begrijpen',
     title: 'Dashboard',
     body: "Laat direct zien waar signalen terugkomen, welke thema's of afdelingen aandacht vragen en wat nu bestuurlijk het meeste gewicht heeft.",
+    cardMinHeight: 432,
   },
   {
     step: '2',
     label: 'Prioriteren',
     title: 'Managementrapport',
-    body: 'Maakt de hoofdboodschap, eerste prioriteit en eerste vervolgrichting bestuurlijk leesbaar, zodat management sneller kan wegen wat eerst telt.',
+    body: 'Maakt de hoofdboodschap, eerste prioriteit en eerste vervolgrichting leesbaar, zodat de organisatie sneller kan wegen wat eerst telt.',
+    cardMinHeight: 432,
   },
   {
     step: '3',
     label: 'Handelen',
     title: 'Action Center',
-    body: 'Maakt opvolging concreet zodra HR of leiding besluit dat een echte vervolgstap nodig is, van toewijzing aan een manager tot het openen en volgen van acties.',
+    body: 'Maakt opvolging concreet. Van toewijzing aan een manager tot het openen en volgen van acties.',
+    cardMinHeight: 432,
+    optionalLabel: 'Optionele uitbreiding',
+    optionalMicrocopy: 'Toe te voegen na of naast een eerste scan',
   },
 ] as const
 
-const firstDeliveryItems = [
+const MANAGEMENT_FLOW_OPTIONAL_SLOT_HEIGHT = 62
+
+type FirstDeliveryItem = {
+  index: string
+  title: string
+  body: string
+  minHeight?: number
+}
+
+const firstDeliveryItems: readonly FirstDeliveryItem[] = [
   {
     index: '01',
-    title: 'Een dashboard met hoofdbeeld en prioriteiten',
-    body: 'Zodat direct zichtbaar wordt waar signalen terugkomen en wat bestuurlijk aandacht vraagt.',
+    title: 'Intake en afbakening',
+    body: 'We bepalen de eerste managementvraag, scope en route.',
   },
   {
     index: '02',
-    title: 'Een managementrapport met duiding en vervolgrichting',
-    body: 'Zodat management sneller begrijpt wat de kern is en welke eerste vraag of keuze voorligt.',
+    title: 'Scan of dataverzameling',
+    body: 'We verzamelen de signalen binnen de gekozen route.',
   },
   {
     index: '03',
-    title: 'Een gerichte bespreking van wat eerst telt',
-    body: 'Zodat signalen niet blijven hangen in interpretatie, maar leiden tot scherpere weging en besluitvorming.',
+    title: 'Dashboard en managementrapport',
+    body: 'U krijgt een zelfstandig leesbaar hoofdbeeld met prioriteit en eerste vervolgrichting.',
+    minHeight: 220,
   },
   {
     index: '04',
-    title: 'Een Action Center voor georganiseerde opvolging',
-    body: 'Zodat vervolg niet in losse afspraken verdwijnt, maar zichtbaar, toegewezen en concreet wordt.',
+    title: 'Review',
+    body: 'We bespreken wat eerst aandacht vraagt en welke vervolgstap logisch is.',
+    minHeight: 220,
   },
 ] as const
+
+const optionalActionCenterItem = {
+  index: '05',
+  title: 'Optioneel: Action Center',
+  body: 'Als na de Baseline een vervolgstap nodig is, kunt u Action Center Start toevoegen voor één gekozen opvolgscope, beperkte manager-/eigenaartoegang, zichtbare status en één reviewmoment.',
+} as const
 
 function SectionLabel({ index, label }: { index: string; label: string }) {
   return (
@@ -289,8 +319,8 @@ function ProblemSection() {
                 maxWidth: '54rem',
               }}
             >
-              Organisaties zien signalen, rond uitstroom, behoud of vroege landing, maar missen de vertaalslag naar
-              een heldere managementprioriteit en concrete opvolging.
+              Organisaties zien signalen rond uitstroom, behoud of vroege landing, maar missen de vertaalslag naar een
+              heldere prioriteit en concrete opvolging.
             </p>
           </Reveal>
         </div>
@@ -418,7 +448,7 @@ function ManagementFlowSection() {
                 maxWidth: '54rem',
               }}
             >
-              Verisight brengt analyse en vervolg samen in één heldere managementflow. Zo blijft het niet bij losse
+              Loep brengt analyse en vervolg samen in één heldere managementflow. Zo blijft het niet bij losse
               signalen of losse rapportage, maar wordt ook de stap naar gerichte opvolging ondersteund.
             </p>
           </Reveal>
@@ -450,18 +480,51 @@ function ManagementFlowSection() {
 
           {managementFlowSteps.map((item, index) => (
             <Reveal key={item.title} delay={0.1 + index * 0.05}>
-              <article
+              <div
                 style={{
-                  background: SURFACE.surface,
-                  border: `1px solid ${SURFACE.borderSoft}`,
-                  borderRadius: 28,
-                  boxShadow: '0 10px 28px rgba(22, 34, 56, 0.06), 0 2px 6px rgba(22, 34, 56, 0.04)',
-                  minHeight: 408,
-                  padding: '22px 24px 24px',
-                  position: 'relative',
-                  zIndex: 1,
+                  display: 'grid',
+                  gap: 10,
+                  gridTemplateRows: `${MANAGEMENT_FLOW_OPTIONAL_SLOT_HEIGHT}px 1fr`,
                 }}
               >
+                <div
+                  aria-hidden={!item.optionalLabel}
+                  style={{
+                    minHeight: MANAGEMENT_FLOW_OPTIONAL_SLOT_HEIGHT,
+                    paddingLeft: 6,
+                    visibility: item.optionalLabel ? 'visible' : 'hidden',
+                  }}
+                >
+                  <p
+                    style={{
+                      color: SURFACE.amber,
+                      fontFamily: bodyFont,
+                      fontSize: 10.5,
+                      fontWeight: 700,
+                      letterSpacing: '.14em',
+                      marginBottom: 6,
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    {item.optionalLabel ?? 'Optionele uitbreiding'}
+                  </p>
+                  <p style={{ color: SURFACE.muted, fontSize: 13.5, lineHeight: 1.55 }}>
+                    {item.optionalMicrocopy ?? 'Toe te voegen na of naast een eerste scan'}
+                  </p>
+                </div>
+
+                <article
+                  style={{
+                    background: SURFACE.surface,
+                    border: `1px solid ${SURFACE.borderSoft}`,
+                    borderRadius: 8,
+                    boxShadow: 'none',
+                    minHeight: item.cardMinHeight ?? 408,
+                    padding: '22px 24px 24px',
+                    position: 'relative',
+                    zIndex: 1,
+                  }}
+                >
                 <div style={{ alignItems: 'center', display: 'flex', gap: 14, marginBottom: 24 }}>
                   <div
                     style={{
@@ -516,14 +579,14 @@ function ManagementFlowSection() {
                     marginBottom: 28,
                     maxWidth: '25rem',
                   }}
-                >
-                  {item.body}
-                </p>
+                  >
+                    {item.body}
+                  </p>
 
-                {item.title === 'Dashboard' ? (
-                  <div
-                    style={{
-                      background: '#f2efe8',
+                  {item.title === 'Dashboard' ? (
+                    <div
+                      style={{
+                        background: '#f2efe8',
                       border: `1px solid ${SURFACE.borderSoft}`,
                       borderRadius: 22,
                       display: 'flex',
@@ -687,28 +750,16 @@ function ManagementFlowSection() {
                         />
                         {label}
                       </div>
-                    ))}
-                  </div>
-                ) : null}
-              </article>
+                      ))}
+                    </div>
+                  ) : null}
+                </article>
+              </div>
             </Reveal>
           ))}
         </div>
 
         <Reveal delay={0.24}>
-          <p
-            style={{
-              color: SURFACE.text,
-              fontSize: 16,
-              lineHeight: 1.72,
-              margin: '46px auto 0',
-              maxWidth: '58rem',
-              textAlign: 'center',
-            }}
-          >
-            Verisight vult interpretatie of eigenaarschap niet automatisch voor u in. Het helpt signalen zichtbaar
-            maken, prioriteiten wegen en opvolging organiseren in een duidelijke managementflow.
-          </p>
         </Reveal>
       </div>
 
@@ -783,14 +834,14 @@ function HeroSection() {
               <p
                 className="marketing-home-hero-reveal-2"
                 style={{
-                  color: SURFACE.text,
-                  fontSize: 17,
-                  lineHeight: 1.6,
+                  color: SURFACE.muted,
+                  fontSize: 18,
+                  lineHeight: 1.72,
                   marginBottom: 28,
                   maxWidth: '32rem',
                 }}
               >
-                Verisight helpt HR en leiding signalen zichtbaar maken, prioriteren wat eerst telt en opvolging organiseren in het Action Center.
+                Loep helpt organisaties signalen zichtbaar maken, prioriteren en opvolging organiseren in het Action Center.
               </p>
 
               <div
@@ -801,7 +852,8 @@ function HeroSection() {
                 href={primaryHref}
                 style={{
                   background: SURFACE.amber,
-                  borderRadius: 2,
+                  border: `1px solid ${SURFACE.amber}`,
+                  borderRadius: 6,
                   color: '#fff',
                   display: 'inline-flex',
                   fontFamily: bodyFont,
@@ -818,7 +870,7 @@ function HeroSection() {
                 style={{
                   background: SURFACE.surface,
                   border: `1px solid ${SURFACE.border}`,
-                  borderRadius: 2,
+                  borderRadius: 6,
                   color: SURFACE.ink,
                   display: 'inline-flex',
                   fontFamily: bodyFont,
@@ -865,8 +917,8 @@ function HeroSection() {
                 style={{
                   background: SURFACE.paper,
                   border: `1px solid ${SURFACE.border}`,
-                  borderRadius: 18,
-                  boxShadow: '0 12px 28px rgba(22, 34, 56, 0.04)',
+                  borderRadius: 8,
+                  boxShadow: 'none',
                   height: 322,
                   overflow: 'hidden',
                   padding: '26px 28px 22px',
@@ -907,7 +959,7 @@ function HeroSection() {
                       style={{
                         background: 'rgba(255,255,255,0.48)',
                         border: `1px solid ${SURFACE.borderSoft}`,
-                        borderRadius: 12,
+                        borderRadius: 8,
                         padding: '8px 10px 7px',
                       }}
                     >
@@ -921,9 +973,9 @@ function HeroSection() {
 
                 <div
                   style={{
-                    background: `linear-gradient(180deg, rgba(255,255,255,0.42) 0%, ${SURFACE.paperSoft} 100%)`,
+                    background: SURFACE.surfaceSoft,
                     border: `1px solid ${SURFACE.border}`,
-                    borderRadius: 16,
+                    borderRadius: 8,
                     height: 186,
                     marginBottom: 16,
                     padding: '18px 18px 16px',
@@ -965,7 +1017,7 @@ function HeroSection() {
                       style={{
                         background: 'rgba(255,255,255,0.56)',
                         border: `1px solid ${SURFACE.borderSoft}`,
-                        borderRadius: 13,
+                        borderRadius: 8,
                         padding: '10px 11px',
                       }}
                     >
@@ -983,8 +1035,8 @@ function HeroSection() {
                 style={{
                   background: SURFACE.surface,
                   border: `1px solid ${SURFACE.border}`,
-                  borderRadius: 18,
-                  boxShadow: '0 16px 34px rgba(22, 34, 56, 0.08)',
+                  borderRadius: 8,
+                  boxShadow: '0 24px 56px rgba(27, 43, 58, 0.06)',
                   minHeight: 264,
                   overflow: 'hidden',
                   padding: '24px 24px 22px',
@@ -1011,7 +1063,7 @@ function HeroSection() {
                       textWrap: 'balance',
                     }}
                   >
-                    Eerste leeslijn voor management
+                    Wat vraagt nu aandacht?
                   </h3>
                   <p style={{ color: SURFACE.text, fontSize: 12.6, lineHeight: 1.58 }}>
                     Wat valt op, wat telt eerst en welke vraag ligt nu voor?
@@ -1048,8 +1100,8 @@ function HeroSection() {
                 style={{
                   background: SURFACE.charcoal,
                   border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: 24,
-                  boxShadow: '0 24px 48px rgba(13, 17, 24, 0.24)',
+                  borderRadius: 12,
+                  boxShadow: '0 24px 56px rgba(5, 22, 37, 0.22)',
                   color: '#fff',
                   padding: '18px 19px 14px',
                   position: 'absolute',
@@ -1065,8 +1117,8 @@ function HeroSection() {
                       style={{
                         alignItems: 'center',
                         background: SURFACE.amber,
-                        borderRadius: 12,
-                        boxShadow: '0 12px 24px rgba(185, 87, 31, 0.2)',
+                        borderRadius: 8,
+                        boxShadow: 'none',
                         display: 'flex',
                         flexShrink: 0,
                         height: 42,
@@ -1239,7 +1291,7 @@ function SuitePreviewSection() {
                   maxWidth: '33rem',
                 }}
               >
-                Verisight brengt signalen samen in dashboard, samenvatting en rapport, en helpt vervolgens om prioriteit, eigenaar en eerste actie vast te leggen.
+                Loep brengt signalen samen in dashboard, samenvatting en rapport, en helpt vervolgens om prioriteit, eigenaar en eerste actie vast te leggen.
               </p>
             </Reveal>
 
@@ -1981,43 +2033,7 @@ function RoutesSection() {
             paddingTop: 26,
           }}
         >
-          <div>
-            <Reveal delay={0.22}>
-              <p
-                style={{
-                  color: SURFACE.muted,
-                  fontSize: 10,
-                  fontWeight: 700,
-                  letterSpacing: '.18em',
-                  marginBottom: 12,
-                  textTransform: 'uppercase',
-                }}
-              >
-                Vervolgvragen
-              </p>
-            </Reveal>
-            <Reveal delay={0.26}>
-              <p style={{ color: SURFACE.text, fontSize: 15, lineHeight: 1.75, maxWidth: '38rem' }}>
-                Pulse voor compacte vervolgmetingen, Leadership Scan voor extra managementcontext en een combinatieroute wanneer meerdere vragen tegelijk spelen.
-              </p>
-            </Reveal>
-          </div>
-
-          <div className="flex flex-wrap gap-8 xl:justify-end">
-            {[
-              ['Pulse', SURFACE.surfaceSoft, SURFACE.text],
-              ['Leadership Scan', SURFACE.paperSoft, SURFACE.text],
-              ['Combinatie', '#ece7df', SURFACE.ink],
-            ].map(([label, bg, color], index) => (
-              <Reveal key={label} delay={0.28 + index * 0.05}>
-                <div style={{ minWidth: 132 }}>
-                <div style={{ background: String(bg), color: String(color), display: 'inline-block', fontFamily: bodyFont, fontSize: 11, fontWeight: 700, letterSpacing: '.14em', marginBottom: 10, padding: '5px 10px', textTransform: 'uppercase' }}>
-                  {label}
-                </div>
-                </div>
-              </Reveal>
-            ))}
-          </div>
+          <div />
         </div>
 
         <div style={{ marginTop: 34 }}>
@@ -2070,30 +2086,30 @@ function FirstDeliverySection() {
                 marginBottom: 22,
               }}
             >
-              Wat u als eerste krijgt
+              Wat u krijgt in de Baseline
             </h2>
           </Reveal>
           <Reveal delay={0.05}>
             <p style={{ color: SURFACE.text, fontSize: 16, lineHeight: 1.78, margin: '0 auto 40px', maxWidth: '58rem' }}>
-              Verisight geeft u geen losse analyse zonder vervolg, maar een eerste managementflow die helpt om sneller
+              Loep geeft u geen losse analyse zonder vervolg, maar een eerste managementflow die helpt om sneller
               te begrijpen wat speelt, te bepalen wat eerst telt en gerichte opvolging op gang te brengen.
             </p>
           </Reveal>
         </div>
 
-        <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
-          {firstDeliveryItems.map((item, index) => (
-            <Reveal key={item.title} delay={0.08 + index * 0.04}>
-              <article
-                style={{
-                  background: SURFACE.surface,
-                  border: `1px solid ${SURFACE.borderSoft}`,
-                  borderRadius: 28,
-                  boxShadow: '0 10px 24px rgba(22, 34, 56, 0.06), 0 2px 5px rgba(22, 34, 56, 0.04)',
-                  minHeight: 132,
-                  padding: '28px 28px 26px',
-                }}
-              >
+          <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+            {firstDeliveryItems.map((item, index) => (
+              <Reveal key={item.title} delay={0.08 + index * 0.04}>
+                <article
+                  style={{
+                    background: SURFACE.surface,
+                    border: `1px solid ${SURFACE.borderSoft}`,
+                    borderRadius: 8,
+                    boxShadow: 'none',
+                    minHeight: item.minHeight ?? 132,
+                    padding: '28px 28px 26px',
+                  }}
+                >
                 <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '56px minmax(0, 1fr)' }}>
                   <span
                     style={{
@@ -2124,13 +2140,61 @@ function FirstDeliverySection() {
                   </div>
                 </div>
               </article>
+              </Reveal>
+            ))}
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: 20 }}>
+            <Reveal delay={0.26}>
+              <article
+                style={{
+                  background: 'transparent',
+                  border: `1.5px dashed ${SURFACE.border}`,
+                  borderRadius: 8,
+                  maxWidth: 760,
+                  minHeight: 132,
+                  padding: '28px 28px 26px',
+                  width: '100%',
+                }}
+              >
+                <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '56px minmax(0, 1fr)' }}>
+                  <span
+                    style={{
+                      color: SURFACE.subtle,
+                      fontFamily: displayFont,
+                      fontSize: 24,
+                      letterSpacing: '-0.03em',
+                      lineHeight: 1,
+                    }}
+                  >
+                    {optionalActionCenterItem.index}
+                  </span>
+                  <div>
+                    <h3
+                      style={{
+                        color: SURFACE.ink,
+                        fontFamily: displayFont,
+                        fontSize: 'clamp(1.7rem, 2.1vw, 2.2rem)',
+                        fontWeight: 400,
+                        letterSpacing: '-0.035em',
+                        lineHeight: 1.08,
+                        marginBottom: 10,
+                      }}
+                    >
+                      {optionalActionCenterItem.title}
+                    </h3>
+                    <p style={{ color: SURFACE.text, fontSize: 15, lineHeight: 1.72, maxWidth: '42rem' }}>
+                      {optionalActionCenterItem.body}
+                    </p>
+                  </div>
+                </div>
+              </article>
             </Reveal>
-          ))}
+          </div>
         </div>
-      </div>
-    </section>
-  )
-}
+      </section>
+    )
+  }
 
 function ContactSection() {
   const kennismakingHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'homepage_final_cta' })
@@ -2149,10 +2213,10 @@ function ContactSection() {
         <Reveal>
           <div
             style={{
-              background:
-                'radial-gradient(circle at left bottom, rgba(21, 101, 88, 0.34) 0%, rgba(21, 101, 88, 0) 28%), linear-gradient(135deg, #0d1724 0%, #122133 56%, #162634 100%)',
-              borderRadius: 38,
-              boxShadow: '0 22px 48px rgba(13, 23, 36, 0.16)',
+              background: SURFACE.charcoal,
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 12,
+              boxShadow: '0 24px 56px rgba(5, 22, 37, 0.22)',
               margin: '0 auto',
               maxWidth: 1200,
               padding: 'clamp(40px, 6vw, 72px) clamp(26px, 5vw, 64px)',
@@ -2184,7 +2248,7 @@ function ContactSection() {
                 maxWidth: '48rem',
               }}
             >
-              Plan een kennismaking en ontdek hoe Verisight helpt om signalen zichtbaar te maken, prioriteiten scherper
+              Plan een kennismaking en ontdek hoe Loep helpt om signalen zichtbaar te maken, prioriteiten scherper
               te wegen en opvolging concreet te faciliteren.
             </p>
 
@@ -2197,7 +2261,7 @@ function ContactSection() {
                 style={{
                   alignItems: 'center',
                   background: SURFACE.amber,
-                  borderRadius: 999,
+                  borderRadius: 6,
                   color: '#fff',
                   display: 'inline-flex',
                   fontFamily: bodyFont,
@@ -2217,7 +2281,7 @@ function ContactSection() {
                   alignItems: 'center',
                   background: 'transparent',
                   border: '1px solid rgba(255, 250, 242, 0.22)',
-                  borderRadius: 999,
+                  borderRadius: 6,
                   color: '#fffdf8',
                   display: 'inline-flex',
                   fontFamily: bodyFont,
@@ -2240,8 +2304,6 @@ function ContactSection() {
 }
 
 export function HomePageContent() {
-  const latestInsights = getAllInsights().slice(0, 3)
-
   return (
     <div style={{ background: SURFACE.surface, color: SURFACE.ink }}>
       <HeroSection />
@@ -2249,16 +2311,10 @@ export function HomePageContent() {
       <ManagementFlowSection />
       <RoutesSection />
       <FirstDeliverySection />
-      <InsightRail
-        posts={latestInsights}
-        title="Laatste inzichten"
-        intro="Korte, inhoudelijke artikelen die onboarding, behoud en uitstroom vertalen naar heldere managementvragen."
-        viewAllHref="/inzichten"
-        viewAllLabel="Bekijk alle inzichten"
-      />
       <ContactSection />
     </div>
   )
 }
+
 
 

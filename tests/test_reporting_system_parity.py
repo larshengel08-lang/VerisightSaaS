@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from types import SimpleNamespace
 
 from backend.products.exit.report_content import (
     get_management_summary_payload as get_exit_management_summary_payload,
@@ -8,7 +9,11 @@ from backend.products.exit.report_content import (
 from backend.products.retention.report_content import (
     get_management_summary_payload as get_retention_management_summary_payload,
 )
-from backend.report import _build_exit_hypotheses, _build_retention_action_hypotheses
+from backend.report import (
+    _compute_enps_summary,
+    _build_exit_hypotheses,
+    _build_retention_action_hypotheses,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -26,6 +31,7 @@ def test_report_management_payloads_expose_executive_contract_fields():
         top_contributing_reason_label="Gebrek aan groei",
         strong_work_signal_pct=62,
         signal_visibility_average=2.6,
+        enps_summary={"score": 14, "sample_size": 8},
     )
     retention_payload = get_retention_management_summary_payload(
         top_factor_labels=["Werkbelasting", "Leiderschap"],
@@ -35,6 +41,7 @@ def test_report_management_payloads_expose_executive_contract_fields():
         avg_turnover_intention=6.1,
         avg_stay_intent=4.8,
         retention_theme_title="Werkdruk en planning",
+        enps_summary={"score": -11, "sample_size": 9},
     )
 
     for payload in (exit_payload, retention_payload):
@@ -47,8 +54,26 @@ def test_report_management_payloads_expose_executive_contract_fields():
         assert payload["boardroom_watchout"]
         assert len(payload["boardroom_cards"]) >= 5
         assert len(payload["highlight_cards"]) >= 3
+        assert any(card["title"] == "eNPS" for card in payload["highlight_cards"])
         assert any(card["title"] == "Eerste besluit" for card in payload["highlight_cards"])
         assert any(card["title"] == "Eerste eigenaar" for card in payload["highlight_cards"])
+
+
+def test_compute_enps_summary_respects_privacy_floor_and_signed_score():
+    insufficient = [
+        SimpleNamespace(full_result={"enps": {"raw_score": 10, "band": "promoter"}})
+        for _ in range(4)
+    ]
+    sufficient = [
+        SimpleNamespace(full_result={"enps": {"raw_score": 10, "band": "promoter"}}),
+        SimpleNamespace(full_result={"enps": {"raw_score": 9, "band": "promoter"}}),
+        SimpleNamespace(full_result={"enps": {"raw_score": 8, "band": "passive"}}),
+        SimpleNamespace(full_result={"enps": {"raw_score": 6, "band": "detractor"}}),
+        SimpleNamespace(full_result={"enps": {"raw_score": 0, "band": "detractor"}}),
+    ]
+
+    assert _compute_enps_summary(insufficient) is None
+    assert _compute_enps_summary(sufficient) == {"score": 0, "sample_size": 5}
 
 
 def test_report_hypotheses_include_owner_and_actionability():

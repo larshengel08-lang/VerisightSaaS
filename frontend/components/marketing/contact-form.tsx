@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
@@ -143,7 +143,7 @@ export function ContactForm({
         setErrorMessage(
           payload.detail === 'Vul alle verplichte velden volledig in.'
             ? 'Vul naam, werk e-mail, organisatie, omvang en een korte vraag of context in.'
-            : payload.detail ?? 'Je aanvraag kon niet worden verzonden. Probeer het later opnieuw of mail naar hallo@verisight.nl.',
+            : payload.detail ?? 'Je aanvraag kon niet worden verzonden. Probeer het later opnieuw of mail naar hallo@getloep.nl.',
         )
         return
       }
@@ -157,7 +157,7 @@ export function ContactForm({
         desiredTiming: current.desiredTiming,
       }))
     } catch {
-      setErrorMessage('Je aanvraag kon niet worden verzonden. Probeer het opnieuw of mail naar hallo@verisight.nl.')
+      setErrorMessage('Je aanvraag kon niet worden verzonden. Probeer het opnieuw of mail naar hallo@getloep.nl.')
     } finally {
       setLoading(false)
     }
@@ -404,3 +404,4 @@ export function ContactForm({
     </form>
   )
 }
+

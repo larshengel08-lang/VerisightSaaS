@@ -9,15 +9,26 @@ describe('campaign detail route shell', () => {
     expect(source).toContain('SuiteAccessDenied')
   })
 
-  it('wires ExitScan through a dedicated analytical component and preserves report + module navigation', () => {
+  it('wires ExitScan and RetentieScan through dedicated boardroom components and preserves report + module navigation', () => {
     const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
 
     expect(source).toContain('ExitProductDashboard')
-    expect(source).toContain('averageSignalScoreLabel')
+    expect(source).toContain('RetentionProductDashboard')
+    expect(source).toContain('primarySignalScoreLabel')
     expect(source).toContain('PdfDownloadButton')
     expect(source).toContain('moduleBackLinkLabel')
     expect(source).toContain('if (stats.scan_type === "exit")')
-    expect(source).not.toContain('return stats.scan_type === "exit" ? (')
+    expect(source).toContain('if (stats.scan_type === "retention")')
+  })
+
+  it('keeps Action Center outside the primary ExitScan and RetentieScan result shells', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('const actionCenterBridgeCard =')
+    expect(source).toMatch(/if \(stats\.scan_type === ['"]exit['"]\)/)
+    expect(source).toMatch(/if \(stats\.scan_type === ['"]retention['"]\)/)
+    expect(source).toContain('{actionCenterBridgeCard}')
+    expect(source).toContain('ResultsLayout')
   })
 
   it('keeps existing module breadcrumbs instead of collapsing to a generic dashboard jump', () => {

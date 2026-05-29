@@ -191,31 +191,31 @@ export const LEARNING_CHECKPOINT_DEFINITIONS: LearningCheckpointDefinition[] = [
   {
     key: 'lead_route_hypothesis',
     title: 'Lead en routehypothese',
-    owner: 'Founder / Verisight',
+    owner: 'Founder / Loep',
     description: 'Leg vast welke route, timing en eerste buyer-vraag nu het meest waarschijnlijk zijn.',
   },
   {
     key: 'implementation_intake',
     title: 'Implementation intake',
-    owner: 'Verisight',
+    owner: 'Loep',
     description: 'Gebruik intake, metadata en setupfrictie als eerste delivery- en onboardingles.',
   },
   {
     key: 'launch_output',
     title: 'Launch en eerste output',
-    owner: 'Verisight',
+    owner: 'Loep',
     description: 'Toets time-to-first-value, response-opbouw en of de eerste output echt bruikbaar wordt.',
   },
   {
     key: 'first_management_use',
     title: 'Eerste managementgebruik',
-    owner: 'Klant + Verisight',
+    owner: 'Klant + Loep',
     description: 'Leg vast of dashboard en rapport echt leiden tot eerste vraag, eigenaar, actie en reviewmoment.',
   },
   {
     key: 'follow_up_review',
     title: '30-90 dagen review',
-    owner: 'Verisight',
+    owner: 'Loep',
     description: 'Capture vervolgactie, vervolgmeting, uitbreidingskans of expliciete stopreden.',
   },
 ] as const

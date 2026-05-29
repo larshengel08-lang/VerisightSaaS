@@ -3,7 +3,12 @@ import 'server-only'
 import { randomUUID } from 'node:crypto'
 import type { EvidenceApprovalStatus } from '@/lib/case-proof-evidence'
 import { createAdminClient } from '@/lib/supabase/admin'
-import type { ProofRegistryEntry, ProofState } from '@/lib/proof-registry'
+import {
+  summarizeProofRegistry,
+  type ProofRegistryEntry,
+  type ProofRegistrySummary,
+  type ProofState,
+} from '@/lib/proof-registry'
 import { isMissingSchemaError, readFallbackRegistryFile, writeFallbackRegistryFile } from '@/lib/runtime-registry-fallback'
 
 type ProofRegistryDbRow = {
@@ -64,6 +69,67 @@ export async function listProofRegistryEntries() {
         createdAt: row.created_at,
       }) satisfies ProofRegistryEntry,
   )
+}
+
+export async function getProofRegistrySummarySnapshot(): Promise<ProofRegistrySummary> {
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from('case_proof_registry')
+    .select('proof_state')
+
+  if (error) {
+    if (isMissingSchemaError(error)) {
+      const fallbackEntries = await readFallbackRegistryFile<ProofRegistryEntry[]>('proof-registry.json', [])
+      return summarizeProofRegistry(fallbackEntries)
+    }
+    throw error
+  }
+
+  const states = (data ?? []) as Array<{ proof_state: string }>
+
+  return {
+    total: states.length,
+    lessonOnlyCount: states.filter((entry) => normalizeProofState(entry.proof_state) === 'lesson_only').length,
+    salesUsableCount: states.filter((entry) => normalizeProofState(entry.proof_state) === 'sales_usable').length,
+    publicUsableCount: states.filter((entry) => normalizeProofState(entry.proof_state) === 'public_usable').length,
+  }
+}
+
+export async function getLatestProofRegistryPreview(): Promise<{
+  proofState: ProofState
+  approvalState: EvidenceApprovalStatus | 'rejected'
+  summary: string
+} | null> {
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from('case_proof_registry')
+    .select('proof_state, approval_state, summary, created_at')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (error) {
+    if (isMissingSchemaError(error)) {
+      const fallbackEntries = await readFallbackRegistryFile<ProofRegistryEntry[]>('proof-registry.json', [])
+      const latest = [...fallbackEntries].sort((left, right) => right.createdAt.localeCompare(left.createdAt))[0]
+      return latest
+        ? {
+            proofState: latest.proofState,
+            approvalState: latest.approvalState,
+            summary: latest.summary,
+          }
+        : null
+    }
+    throw error
+  }
+
+  if (!data) return null
+
+  return {
+    proofState: normalizeProofState(data.proof_state),
+    approvalState: normalizeApprovalState(data.approval_state),
+    summary: data.summary,
+  }
 }
 
 export async function upsertProofRegistryEntry(input: {

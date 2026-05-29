@@ -1,0 +1,333 @@
+import type { ActionCenterActionOutcome } from './action-center-action-reviews'
+
+export const ACTION_CENTER_APPROVED_ROUTE_FAMILIES = ['exit', 'retention'] as const
+
+export type ActionCenterApprovedRouteFamily = (typeof ACTION_CENTER_APPROVED_ROUTE_FAMILIES)[number]
+
+export const ACTION_CENTER_CANONICAL_ROUTE_STATES = [
+  'open',
+  'scheduled',
+  'overdue',
+  'stale',
+  'escalation_sensitive',
+  'closed',
+  'reopened',
+] as const
+
+export type ActionCenterCanonicalRouteState = (typeof ACTION_CENTER_CANONICAL_ROUTE_STATES)[number]
+
+export const ACTION_CENTER_CANONICAL_REVIEW_STATES = [
+  'scheduled',
+  'completed',
+  'missed',
+  'cancelled',
+  'rescheduled',
+] as const
+
+export type ActionCenterCanonicalReviewState = (typeof ACTION_CENTER_CANONICAL_REVIEW_STATES)[number]
+
+export const ACTION_CENTER_ACTION_DRAFT_DISPOSITIONS = ['valid', 'invalid', 'needs_hr_review'] as const
+
+export type ActionCenterActionDraftDisposition = (typeof ACTION_CENTER_ACTION_DRAFT_DISPOSITIONS)[number]
+
+export const ACTION_CENTER_ACTION_SEMANTIC_STATES = [
+  'draft',
+  'active',
+  'review_due',
+  'in_review',
+  'blocked',
+  'completed',
+  'stopped',
+  'superseded',
+] as const
+
+export type ActionCenterActionSemanticState = (typeof ACTION_CENTER_ACTION_SEMANTIC_STATES)[number]
+
+export const ACTION_CENTER_ACTOR_TYPES = [
+  'hr_rhythm_owner',
+  'manager_participant',
+  'system_channel',
+] as const
+
+export type ActionCenterActor = (typeof ACTION_CENTER_ACTOR_TYPES)[number]
+
+export type ActionCenterConstitutionObject = 'follow_through_route' | 'review_moment' | 'route_action'
+
+export type ActionCenterConstitutionState =
+  | ActionCenterCanonicalRouteState
+  | ActionCenterCanonicalReviewState
+  | ActionCenterActionSemanticState
+
+export type ActionCenterTransitionRule = {
+  readonly object: ActionCenterConstitutionObject
+  readonly fromState: ActionCenterConstitutionState
+  readonly toState: ActionCenterConstitutionState
+  actors: readonly ActionCenterActor[]
+  draftValidationDisposition?: Extract<ActionCenterActionDraftDisposition, 'valid'>
+}
+
+export type ActionCenterActionTransitionRule = {
+  readonly fromState: ActionCenterActionSemanticState
+  readonly toState: ActionCenterActionSemanticState
+  readonly phase: 'draft_resolution' | 'execution_lifecycle'
+  actors: readonly ActionCenterActor[]
+  draftValidationDisposition?: Extract<ActionCenterActionDraftDisposition, 'valid'>
+}
+
+function freezeActionCenterTransitionRule(rule: ActionCenterTransitionRule): Readonly<ActionCenterTransitionRule> {
+  return Object.freeze({
+    ...rule,
+    actors: Object.freeze([...rule.actors]),
+  })
+}
+
+function freezeActionCenterActionTransitionRule(
+  rule: ActionCenterActionTransitionRule,
+): Readonly<ActionCenterActionTransitionRule> {
+  return Object.freeze({
+    ...rule,
+    actors: Object.freeze([...rule.actors]),
+  })
+}
+
+export const ACTION_CENTER_TRANSITION_RULES: readonly Readonly<ActionCenterTransitionRule>[] = Object.freeze([
+  freezeActionCenterTransitionRule({
+    object: 'follow_through_route',
+    fromState: 'open',
+    toState: 'closed',
+    actors: ['hr_rhythm_owner'],
+  }),
+  freezeActionCenterTransitionRule({
+    object: 'follow_through_route',
+    fromState: 'closed',
+    toState: 'reopened',
+    actors: ['hr_rhythm_owner'],
+  }),
+  freezeActionCenterTransitionRule({
+    object: 'review_moment',
+    fromState: 'scheduled',
+    toState: 'rescheduled',
+    actors: ['hr_rhythm_owner'],
+  }),
+  freezeActionCenterTransitionRule({
+    object: 'route_action',
+    fromState: 'draft',
+    toState: 'active',
+    actors: ['hr_rhythm_owner'],
+    draftValidationDisposition: 'valid',
+  }),
+])
+
+export const ACTION_CENTER_ACTION_TRANSITION_RULES: readonly Readonly<ActionCenterActionTransitionRule>[] =
+  Object.freeze([
+    freezeActionCenterActionTransitionRule({
+      fromState: 'active',
+      toState: 'review_due',
+      actors: ['system_channel'],
+      phase: 'execution_lifecycle',
+    }),
+    freezeActionCenterActionTransitionRule({
+      fromState: 'active',
+      toState: 'blocked',
+      actors: ['manager_participant', 'hr_rhythm_owner'],
+      phase: 'execution_lifecycle',
+    }),
+    freezeActionCenterActionTransitionRule({
+      fromState: 'active',
+      toState: 'superseded',
+      actors: ['manager_participant', 'hr_rhythm_owner'],
+      phase: 'execution_lifecycle',
+    }),
+    freezeActionCenterActionTransitionRule({
+      fromState: 'review_due',
+      toState: 'in_review',
+      actors: ['manager_participant', 'hr_rhythm_owner'],
+      phase: 'execution_lifecycle',
+    }),
+    freezeActionCenterActionTransitionRule({
+      fromState: 'review_due',
+      toState: 'blocked',
+      actors: ['manager_participant', 'hr_rhythm_owner'],
+      phase: 'execution_lifecycle',
+    }),
+    freezeActionCenterActionTransitionRule({
+      fromState: 'in_review',
+      toState: 'active',
+      actors: ['manager_participant', 'hr_rhythm_owner'],
+      phase: 'execution_lifecycle',
+    }),
+    freezeActionCenterActionTransitionRule({
+      fromState: 'in_review',
+      toState: 'blocked',
+      actors: ['manager_participant', 'hr_rhythm_owner'],
+      phase: 'execution_lifecycle',
+    }),
+    freezeActionCenterActionTransitionRule({
+      fromState: 'in_review',
+      toState: 'completed',
+      actors: ['manager_participant', 'hr_rhythm_owner'],
+      phase: 'execution_lifecycle',
+    }),
+    freezeActionCenterActionTransitionRule({
+      fromState: 'in_review',
+      toState: 'stopped',
+      actors: ['manager_participant', 'hr_rhythm_owner'],
+      phase: 'execution_lifecycle',
+    }),
+    freezeActionCenterActionTransitionRule({
+      fromState: 'blocked',
+      toState: 'in_review',
+      actors: ['manager_participant', 'hr_rhythm_owner'],
+      phase: 'execution_lifecycle',
+    }),
+    freezeActionCenterActionTransitionRule({
+      fromState: 'blocked',
+      toState: 'stopped',
+      actors: ['manager_participant', 'hr_rhythm_owner'],
+      phase: 'execution_lifecycle',
+    }),
+    freezeActionCenterActionTransitionRule({
+      fromState: 'stopped',
+      toState: 'superseded',
+      actors: ['manager_participant', 'hr_rhythm_owner'],
+      phase: 'execution_lifecycle',
+    }),
+  ])
+
+export const ACTION_CENTER_ACTION_DRAFT_TRANSITION_RULES: readonly Readonly<ActionCenterActionTransitionRule>[] =
+  Object.freeze([
+    freezeActionCenterActionTransitionRule({
+      fromState: 'draft',
+      toState: 'active',
+      actors: ['hr_rhythm_owner'],
+      phase: 'draft_resolution',
+      draftValidationDisposition: 'valid',
+    }),
+    freezeActionCenterActionTransitionRule({
+      fromState: 'draft',
+      toState: 'stopped',
+      actors: ['manager_participant', 'hr_rhythm_owner'],
+      phase: 'draft_resolution',
+    }),
+    freezeActionCenterActionTransitionRule({
+      fromState: 'draft',
+      toState: 'superseded',
+      actors: ['manager_participant', 'hr_rhythm_owner'],
+      phase: 'draft_resolution',
+    }),
+  ])
+
+export type ActionCenterApprovedRouteDefault = Readonly<{
+  scanType: ActionCenterApprovedRouteFamily
+  cadenceDays: number
+  reminderLeadDays: number
+  escalationLeadDays: number
+  reviewWindowDays: Readonly<{
+    min: number
+    max: number
+  }>
+  staleAfterDays: number
+}>
+
+function freezeActionCenterApprovedRouteDefault(
+  routeDefault: ActionCenterApprovedRouteDefault,
+): ActionCenterApprovedRouteDefault {
+  return Object.freeze({
+    ...routeDefault,
+    reviewWindowDays: Object.freeze({ ...routeDefault.reviewWindowDays }),
+  })
+}
+
+const ACTION_CENTER_APPROVED_ROUTE_DEFAULTS: Record<ActionCenterApprovedRouteFamily, ActionCenterApprovedRouteDefault> =
+  {
+  exit: freezeActionCenterApprovedRouteDefault({
+    scanType: 'exit',
+    cadenceDays: 14,
+    reminderLeadDays: 3,
+    escalationLeadDays: 7,
+    reviewWindowDays: { min: 60, max: 90 },
+    staleAfterDays: 90,
+  }),
+  retention: freezeActionCenterApprovedRouteDefault({
+    scanType: 'retention',
+    cadenceDays: 14,
+    reminderLeadDays: 3,
+    escalationLeadDays: 7,
+    reviewWindowDays: { min: 45, max: 90 },
+    staleAfterDays: 90,
+  }),
+  }
+
+export function getActionCenterApprovedRouteDefault(
+  scanType: string | null | undefined,
+): ActionCenterApprovedRouteDefault | null {
+  if (scanType !== 'exit' && scanType !== 'retention') {
+    return null
+  }
+
+  return freezeActionCenterApprovedRouteDefault(ACTION_CENTER_APPROVED_ROUTE_DEFAULTS[scanType])
+}
+
+export function isActionCenterCanonicalRouteStateTransitionAllowed(args: {
+  actor: ActionCenterActor
+  object: ActionCenterConstitutionObject
+  fromState: ActionCenterConstitutionState
+  toState: ActionCenterConstitutionState
+  draftValidationDisposition?: ActionCenterActionDraftDisposition | null
+}): boolean {
+  return ACTION_CENTER_TRANSITION_RULES.some(
+    (rule) =>
+      rule.object === args.object &&
+      rule.fromState === args.fromState &&
+      rule.toState === args.toState &&
+      rule.actors.includes(args.actor) &&
+      (rule.draftValidationDisposition ? rule.draftValidationDisposition === args.draftValidationDisposition : true),
+  )
+}
+
+export function isActionCenterActionStateTransitionAllowed(args: {
+  actor: ActionCenterActor
+  fromState: ActionCenterActionSemanticState
+  toState: ActionCenterActionSemanticState
+  phase?: ActionCenterActionTransitionRule['phase']
+}): boolean {
+  return ACTION_CENTER_ACTION_TRANSITION_RULES.some(
+    (rule) =>
+      rule.fromState === args.fromState &&
+      rule.toState === args.toState &&
+      rule.actors.includes(args.actor) &&
+      (!args.phase || rule.phase === args.phase),
+  )
+}
+
+export function isActionCenterActionDraftTransitionAllowed(args: {
+  actor: ActionCenterActor
+  fromState: Extract<ActionCenterActionSemanticState, 'draft'>
+  toState: Extract<ActionCenterActionSemanticState, 'active' | 'stopped' | 'superseded'>
+  draftValidationDisposition?: ActionCenterActionDraftDisposition | null
+}): boolean {
+  return ACTION_CENTER_ACTION_DRAFT_TRANSITION_RULES.some(
+    (rule) =>
+      rule.fromState === args.fromState &&
+      rule.toState === args.toState &&
+      rule.actors.includes(args.actor) &&
+      (rule.draftValidationDisposition ? rule.draftValidationDisposition === args.draftValidationDisposition : true),
+  )
+}
+
+export function resolveActionCenterActionReviewTransition(
+  outcome: ActionCenterActionOutcome,
+): Extract<ActionCenterActionSemanticState, 'active' | 'completed' | 'stopped'> {
+  switch (outcome) {
+    case 'effect-zichtbaar':
+      return 'completed'
+    case 'bijsturen-nodig':
+      return 'active'
+    case 'nog-te-vroeg':
+      return 'active'
+    case 'stoppen':
+      return 'stopped'
+  }
+
+  throw new Error(`Unsupported action review outcome: ${outcome}`)
+}

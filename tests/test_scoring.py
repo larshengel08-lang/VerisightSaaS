@@ -24,7 +24,11 @@ from backend.scoring import (
     RISK_MEDIUM,
     ORG_FACTOR_KEYS,
 )
-from backend.products.exit.scoring import build_exit_context_summary, compute_exit_friction
+from backend.products.exit.scoring import (
+    build_enps_summary,
+    build_exit_context_summary,
+    compute_exit_friction,
+)
 from backend.products.exit.report_content import (
     get_hypotheses_payload as get_exit_hypotheses_payload,
     get_management_summary_payload as get_exit_management_summary_payload,
@@ -340,6 +344,13 @@ class TestExitContextSummary:
         assert summary["signal_visibility_summary"]["label"] == "Signalen bleven grotendeels onder de radar"
 
 
+class TestENPSSummary:
+    def test_enps_summary_maps_raw_scores_to_expected_bands(self):
+        assert build_enps_summary(10) == {"raw_score": 10, "band": "promoter"}
+        assert build_enps_summary(7) == {"raw_score": 7, "band": "passive"}
+        assert build_enps_summary(4) == {"raw_score": 4, "band": "detractor"}
+
+
 class TestExitReportContent:
     def test_exit_methodology_payload_stays_non_causal(self):
         payload = get_methodology_payload()
@@ -370,6 +381,7 @@ class TestExitReportContent:
             top_contributing_reason_label="Gebrek aan groei",
             strong_work_signal_pct=62.0,
             signal_visibility_average=2.4,
+            enps_summary={"score": 12, "sample_size": 6},
         )
 
         assert payload["section_title"] == "Managementsamenvatting"
@@ -383,6 +395,7 @@ class TestExitReportContent:
         assert "welke signalen" in payload["cards"][1]["body"].lower()
         assert payload["cards"][2]["title"] == "Eerste besluit"
         assert payload["cards"][3]["title"] == "Eerste eigenaar"
+        assert any(card["title"] == "eNPS" for card in payload["highlight_cards"])
 
     def test_exit_follow_up_payload_stays_improvement_oriented(self):
         payload = get_exit_next_steps_payload(
@@ -452,6 +465,7 @@ class TestRetentionReportContent:
             avg_turnover_intention=6.2,
             avg_stay_intent=4.8,
             retention_theme_title="Werkdruk en herstel",
+            enps_summary={"score": -8, "sample_size": 7},
         )
 
         assert payload["section_title"] == "Managementsamenvatting"
@@ -464,6 +478,7 @@ class TestRetentionReportContent:
         assert "werkdruk en herstel" in payload["cards"][1]["body"].lower()
         assert payload["cards"][2]["title"] == "Eerste besluit"
         assert payload["cards"][3]["title"] == "Eerste eigenaar"
+        assert any(card["title"] == "eNPS" for card in payload["highlight_cards"])
 
     def test_retention_follow_up_payload_keeps_verification_before_action(self):
         payload = get_retention_next_steps_payload(

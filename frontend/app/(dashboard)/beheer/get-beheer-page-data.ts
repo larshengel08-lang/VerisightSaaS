@@ -1,6 +1,7 @@
 import type { CampaignDeliveryCheckpoint, DeliveryCheckpointKey, DeliveryExceptionStatus } from '@/lib/ops-delivery'
 import { getDeliveryCheckpointTitle } from '@/lib/ops-delivery'
-import type { Campaign, OrgInvite, Organization } from '@/lib/types'
+import type { Campaign, CampaignStats, OrgInvite, Organization } from '@/lib/types'
+import { resolveSetupContext } from './setup-context'
 
 type SupabaseClientLike = Awaited<ReturnType<typeof import('@/lib/supabase/server').createClient>>
 
@@ -39,6 +40,7 @@ export interface BeheerPageData {
   activeOrgs: Organization[]
   archivedOrgs: Organization[]
   campaigns: Campaign[]
+  campaignStats: CampaignStats[]
   topCampaigns: Campaign[]
   remainingCampaignCount: number
   campaignCountByOrg: Record<string, number>
@@ -50,6 +52,16 @@ export interface BeheerPageData {
   blockedDeliveriesCount: number | null
   setupBlockers: SetupBlockerItem[]
   dataImportAlert: SetupBlockerItem | null
+  selectedOrganizationId: string | null
+  selectedCampaignId: string | null
+  selectedOrganization: Organization | null
+  selectedCampaign: Campaign | null
+  respondentsLocked: boolean
+  clientAccessLocked: boolean
+  step1Done: boolean
+  step2Done: boolean
+  step3Done: boolean
+  step4Done: boolean
 }
 
 export function mapExceptionToCategory(checkpointKey: DeliveryCheckpointKey): string | null {
@@ -169,6 +181,10 @@ function buildSetupBlockers(
 export async function getBeheerPageData(
   supabase: SupabaseClientLike,
   userId: string,
+  options?: {
+    selectedOrganizationId?: string | null
+    selectedCampaignId?: string | null
+  },
 ): Promise<BeheerPageData> {
   const membershipsResult = await supabase
     .from('org_members')
@@ -208,6 +224,18 @@ export async function getBeheerPageData(
     : null
 
   const campaignIds = campaigns.map((campaign) => campaign.id)
+  const campaignStatsResult =
+    organizationsAvailable && orgIds.length > 0
+      ? await supabase
+          .from('campaign_stats')
+          .select('*')
+          .in('organization_id', orgIds)
+          .order('created_at', { ascending: false })
+      : null
+  const campaignStats =
+    organizationsAvailable && (!campaignStatsResult || !campaignStatsResult.error)
+      ? ((campaignStatsResult?.data ?? []) as CampaignStats[])
+      : []
 
   const respondentCountResult =
     campaignsAvailable && campaignIds.length > 0
@@ -301,6 +329,16 @@ export async function getBeheerPageData(
   const setupBlockers = deliveryAvailable ? buildSetupBlockers(deliveryRecords, deliveryCheckpoints) : []
   const dataImportAlert =
     setupBlockers.find((item) => item.category === 'DATA & IMPORT') ?? setupBlockers[0] ?? null
+  const step1Done = activeOrgs.length > 0
+  const step2Done = (activeCampaignCount ?? 0) > 0
+  const step3Done = (respondentCount ?? 0) > 0
+  const step4Done = step2Done && ((clientAccessCount ?? 0) > 0 || invites.length > 0)
+  const setupContext = resolveSetupContext({
+    organizations: activeOrgs,
+    campaigns,
+    selectedOrganizationId: options?.selectedOrganizationId ?? null,
+    selectedCampaignId: options?.selectedCampaignId ?? null,
+  })
 
   return {
     organizationsAvailable,
@@ -311,6 +349,7 @@ export async function getBeheerPageData(
     activeOrgs,
     archivedOrgs,
     campaigns,
+    campaignStats,
     topCampaigns,
     remainingCampaignCount,
     campaignCountByOrg,
@@ -322,5 +361,15 @@ export async function getBeheerPageData(
     blockedDeliveriesCount,
     setupBlockers,
     dataImportAlert,
+    selectedOrganizationId: setupContext.selectedOrganizationId,
+    selectedCampaignId: setupContext.selectedCampaignId,
+    selectedOrganization: (setupContext.selectedOrganization as Organization | null) ?? null,
+    selectedCampaign: (setupContext.selectedCampaign as Campaign | null) ?? null,
+    respondentsLocked: setupContext.respondentsLocked,
+    clientAccessLocked: setupContext.clientAccessLocked,
+    step1Done,
+    step2Done,
+    step3Done,
+    step4Done,
   }
 }

@@ -138,7 +138,7 @@ export function CustomerLaunchControl({
                   <p className="mt-1 text-sm font-medium" style={{ color: 'var(--dashboard-ink)' }}>Herstel: {blocker.recovery}</p>
                 </div>
                 <DashboardChip
-                  label={blocker.actor === 'customer' ? 'Jij' : blocker.actor === 'verisight' ? 'Verisight' : 'Samen'}
+                  label={blocker.actor === 'customer' ? 'Jij' : blocker.actor === 'verisight' ? 'Loep' : 'Samen'}
                   tone={getBlockerTone(blocker.actor)}
                 />
               </div>

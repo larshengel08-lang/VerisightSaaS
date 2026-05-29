@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -79,7 +79,7 @@ export default function CompleteAccountPage() {
       <div className="w-full max-w-5xl">
         <div className="mb-8 text-center">
           <Link href="/" className="text-2xl font-bold tracking-tight text-blue-600">
-            Verisight
+            Loep
           </Link>
           <p className="mt-2 text-sm text-gray-500">Account activeren voor dashboardtoegang</p>
         </div>
@@ -185,3 +185,4 @@ export default function CompleteAccountPage() {
     </div>
   )
 }
+

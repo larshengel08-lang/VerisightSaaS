@@ -140,7 +140,7 @@ describe('action center preview route fields render', () => {
       React.createElement(ActionCenterPreview, {
         initialItems: [item],
         initialView: 'actions',
-        fallbackOwnerName: 'Verisight gebruiker',
+        fallbackOwnerName: 'Loep gebruiker',
         ownerOptions: ['Manager Operations'],
         workbenchHref: '/dashboard',
         readOnly: true,
@@ -420,7 +420,7 @@ describe('action center preview route fields render', () => {
     const html = renderToStaticMarkup(
       React.createElement(ActionCenterPreview, {
         initialItems: [activeItem, historicalItem],
-        fallbackOwnerName: 'Verisight gebruiker',
+        fallbackOwnerName: 'Loep gebruiker',
         ownerOptions: ['Sanne de Vries', 'Manager Operations'],
         workbenchHref: '/dashboard',
         readOnly: true,
@@ -558,7 +558,7 @@ describe('action center preview route fields render', () => {
       React.createElement(ActionCenterPreview, {
         initialItems: [item],
         initialView: 'actions',
-        fallbackOwnerName: 'Verisight gebruiker',
+        fallbackOwnerName: 'Loep gebruiker',
         ownerOptions: ['Manager Operations'],
         workbenchHref: '/dashboard',
         readOnly: true,
@@ -664,7 +664,7 @@ describe('action center preview route fields render', () => {
       React.createElement(ActionCenterPreview, {
         initialItems: [item],
         initialView: 'actions',
-        fallbackOwnerName: 'Verisight gebruiker',
+        fallbackOwnerName: 'Loep gebruiker',
         ownerOptions: ['Manager Operations'],
         workbenchHref: '/dashboard',
         readOnly: true,

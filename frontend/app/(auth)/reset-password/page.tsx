@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -56,7 +56,7 @@ export default function ResetPasswordPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="text-2xl font-bold text-blue-600 tracking-tight">
-            Verisight
+            Loep
           </Link>
           <p className="mt-2 text-sm text-gray-500">Nieuw wachtwoord instellen</p>
         </div>
@@ -66,7 +66,7 @@ export default function ResetPasswordPage() {
           {done ? (
             <div className="text-center">
               <div className="w-14 h-14 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
-                ✅
+                âœ…
               </div>
               <h1 className="text-lg font-semibold text-gray-900 mb-2">Wachtwoord opgeslagen</h1>
               <p className="text-sm text-gray-500">Je wordt doorgestuurd naar het dashboard…</p>
@@ -74,7 +74,7 @@ export default function ResetPasswordPage() {
           ) : !ready ? (
             <div className="text-center">
               <div className="w-14 h-14 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
-                ⏳
+                â³
               </div>
               <h1 className="text-lg font-semibold text-gray-900 mb-2">Link verifiëren…</h1>
               <p className="text-sm text-gray-500 mb-4">
@@ -138,3 +138,4 @@ export default function ResetPasswordPage() {
     </div>
   )
 }
+

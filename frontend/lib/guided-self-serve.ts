@@ -212,7 +212,7 @@ function buildGovernanceCarryoverBlockers(args: {
       detail:
         'De survey kan al beweging hebben, maar de administratieve import-QA is nog niet handmatig afgerond.',
       recovery:
-        'Laat Verisight de importbevestiging netjes vastleggen zodat uitvoerstatus en deliverydiscipline gelijklopen.',
+        'Laat Loep de importbevestiging netjes vastleggen zodat uitvoerstatus en deliverydiscipline gelijklopen.',
       actor: 'verisight',
     })
   }
@@ -292,8 +292,8 @@ export function buildGuidedSelfServeState(args: GuidedSelfServeArgs): GuidedSelf
       dashboardVisible: activationState.dashboardVisible,
       deeperInsightsVisible: activationState.deeperInsightsVisible,
       verisightNow: outputReached
-        ? 'Verisight bewaakt nu vooral de nette close-out, rapporttoegang en bounded follow-up van deze campagne.'
-        : 'Verisight bewaakt nu vooral een nette close-out zonder output vrij te geven onder de leesdrempel.',
+        ? 'Loep bewaakt nu vooral de nette close-out, rapporttoegang en bounded follow-up van deze campagne.'
+        : 'Loep bewaakt nu vooral een nette close-out zonder output vrij te geven onder de leesdrempel.',
       customerNow: outputReached
         ? 'Gebruik de output nu voor terugblik, besluitvorming en het expliciet kiezen van een vervolgroute.'
         : 'Beoordeel nu alleen of extra respons nog logisch is; zonder veilige dashboardread blijft deze campagne inhoudelijk bewust beperkt.',
@@ -319,12 +319,12 @@ export function buildGuidedSelfServeState(args: GuidedSelfServeArgs): GuidedSelf
         'Na login zie je direct waar de campagne staat: account en campagne staan klaar, maar zonder deelnemersbestand blijft setup bewust dicht.',
       nextAction: {
         title: 'Lever het deelnemersbestand aan',
-        body: 'Upload een CSV- of Excel-bestand met minimaal e-mailadressen. Pas daarna kan Verisight de importpreview en launchflow veilig vrijgeven.',
+        body: 'Upload een CSV- of Excel-bestand met minimaal e-mailadressen. Pas daarna kan Loep de importpreview en launchflow veilig vrijgeven.',
       },
       dashboardVisible: false,
       deeperInsightsVisible: false,
       verisightNow:
-        'Verisight bewaakt productgrenzen, campagne-opzet en de gesloten launchflow tot er bruikbare deelnemersdata is.',
+        'Loep bewaakt productgrenzen, campagne-opzet en de gesloten launchflow tot er bruikbare deelnemersdata is.',
       customerNow:
         'Lever nu alleen het juiste deelnemersbestand aan. Je hoeft geen surveytool, productsetup of rapportinstellingen te beheren.',
       blockers: [
@@ -341,7 +341,7 @@ export function buildGuidedSelfServeState(args: GuidedSelfServeArgs): GuidedSelf
           detail:
             'Het dashboard gaat pas open als data, importcontrole en launchdiscipline expliciet rond zijn.',
           recovery:
-            'Wacht niet op dashboardoutput; lever eerst het bestand aan zodat Verisight de volgende gate kan vrijgeven.',
+            'Wacht niet op dashboardoutput; lever eerst het bestand aan zodat Loep de volgende gate kan vrijgeven.',
           actor: 'verisight',
         },
       ],
@@ -360,7 +360,7 @@ export function buildGuidedSelfServeState(args: GuidedSelfServeArgs): GuidedSelf
       dashboardVisible: false,
       deeperInsightsVisible: false,
       verisightNow:
-        'Verisight houdt de importgrenzen dicht tot preview, veldkwaliteit en releasecondities methodisch kloppen.',
+        'Loep houdt de importgrenzen dicht tot preview, veldkwaliteit en releasecondities methodisch kloppen.',
       customerNow:
         'Herstel nu alleen het deelnemersbestand en controleer opnieuw; launch en dashboard blijven bewust gesloten.',
       blockers: [
@@ -395,7 +395,7 @@ export function buildGuidedSelfServeState(args: GuidedSelfServeArgs): GuidedSelf
         dashboardVisible: false,
         deeperInsightsVisible: false,
         verisightNow:
-          'Verisight bewaakt de begrensde surveyflow, reminders en deliverykwaliteit terwijl de eerste responses binnenkomen.',
+          'Loep bewaakt de begrensde surveyflow, reminders en deliverykwaliteit terwijl de eerste responses binnenkomen.',
         customerNow:
           'Volg nu alleen respons en wacht met conclusies tot de eerste veilige dashboarddrempel is bereikt.',
         blockers: [
@@ -421,7 +421,7 @@ export function buildGuidedSelfServeState(args: GuidedSelfServeArgs): GuidedSelf
         dashboardVisible: true,
         deeperInsightsVisible: false,
         verisightNow:
-          'Verisight laat nu alleen de veilige eerste dashboardlaag zien en houdt verdiepende patronen nog bewust begrensd.',
+          'Loep laat nu alleen de veilige eerste dashboardlaag zien en houdt verdiepende patronen nog bewust begrensd.',
         customerNow:
           'Gebruik nu de compacte dashboardread voor eerste richting, maar blijf respons opbouwen voordat je bredere managementconclusies trekt.',
         blockers: [
@@ -447,7 +447,7 @@ export function buildGuidedSelfServeState(args: GuidedSelfServeArgs): GuidedSelf
       dashboardVisible: true,
       deeperInsightsVisible: true,
       verisightNow:
-        'Verisight bewaakt nu vooral dat de route bounded blijft en netjes doorloopt naar managementgebruik en follow-up.',
+        'Loep bewaakt nu vooral dat de route bounded blijft en netjes doorloopt naar managementgebruik en follow-up.',
       customerNow:
         'Leg nu vast wat de eerste managementactie is, wie eigenaar wordt en wanneer jullie de vervolgstap reviewen.',
       blockers: governanceCarryoverBlockers,
@@ -465,7 +465,7 @@ export function buildGuidedSelfServeState(args: GuidedSelfServeArgs): GuidedSelf
       dashboardVisible: false,
       deeperInsightsVisible: false,
       verisightNow:
-        'Verisight bewaakt de importgrenzen, previewkwaliteit en foutopvang zodat de launchflow geen vervuilde deelnemerslaag krijgt.',
+        'Loep bewaakt de importgrenzen, previewkwaliteit en foutopvang zodat de launchflow geen vervuilde deelnemerslaag krijgt.',
       customerNow:
         'Controleer nu alleen of het juiste deelnemersbestand is aangeleverd en herstel eventuele importissues in dezelfde flow.',
       blockers: [
@@ -493,7 +493,7 @@ export function buildGuidedSelfServeState(args: GuidedSelfServeArgs): GuidedSelf
       dashboardVisible: false,
       deeperInsightsVisible: false,
       verisightNow:
-        'Verisight houdt de uitnodigingen bewust tegen tot timing, doelgroep en launchdiscipline expliciet zijn bevestigd.',
+        'Loep houdt de uitnodigingen bewust tegen tot timing, doelgroep en launchdiscipline expliciet zijn bevestigd.',
       customerNow:
         'Bevestig nu wanneer de vragenlijst echt mag starten. Nog niet uitnodigen voordat dit launchmoment helder is.',
       blockers: [
@@ -519,7 +519,7 @@ export function buildGuidedSelfServeState(args: GuidedSelfServeArgs): GuidedSelf
       dashboardVisible: false,
       deeperInsightsVisible: false,
       verisightNow:
-        'Verisight bewaakt releasecontrole, invitegrenzen en deliverydiscipline totdat communicatie en timing samen groen zijn.',
+        'Loep bewaakt releasecontrole, invitegrenzen en deliverydiscipline totdat communicatie en timing samen groen zijn.',
       customerNow:
         'Bevestig nu dat de interne communicatie klaarstaat en dat deelnemers het juiste contactmoment krijgen.',
       blockers: [
@@ -546,7 +546,7 @@ export function buildGuidedSelfServeState(args: GuidedSelfServeArgs): GuidedSelf
     dashboardVisible: false,
     deeperInsightsVisible: false,
     verisightNow:
-      'Verisight heeft de veilige launchflow voorbereid en houdt de release begrensd tot deze bewuste startstap.',
+      'Loep heeft de veilige launchflow voorbereid en houdt de release begrensd tot deze bewuste startstap.',
     customerNow:
       'Start nu de uitnodigingen voor deze campagne. Daarna hoef je vooral nog respons te volgen, niet terug naar setup.',
     blockers: [

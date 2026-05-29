@@ -48,7 +48,7 @@ export function getCustomerActionPermission(
 export function getPermissionDeniedMessage(action: Exclude<CustomerCampaignAction, 'view_dashboard' | 'view_report'>) {
   switch (action) {
     case 'import_respondents':
-      return 'Alleen de klant owner kan deelnemers aanleveren. Stem deze stap af met de aangewezen owner of laat Verisight begeleiden.'
+      return 'Alleen de klant owner kan deelnemers aanleveren. Stem deze stap af met de aangewezen owner of laat Loep begeleiden.'
     case 'launch_invites':
       return 'Alleen de klant owner kan de uitnodigingen starten. Controleer eerst wie deze campagne draagt voordat je verdergaat.'
     case 'send_reminders':

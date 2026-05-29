@@ -1,12 +1,15 @@
-import { describe, expect, it } from 'vitest'
+﻿import { describe, expect, it } from 'vitest'
 import {
   buildDecisionPanels,
   buildHeroDescription,
   buildNextStepBody,
+  clusterExitOpenSignals,
+  computeENPS,
   computeAverageRiskScore,
   computeFactorAverages,
   computeRetentionSupplementalAverages,
 } from './page-helpers'
+import { getResultsProductCopy } from '@/lib/dashboard/results-copy'
 import { getScanDefinition } from '@/lib/scan-definitions'
 import type { SurveyResponse } from '@/lib/types'
 
@@ -79,6 +82,92 @@ describe('dashboard page helpers field semantics', () => {
     expect(computeRetentionSupplementalAverages(responses).stayIntent).toBe(5.5)
   })
 
+  it('computes eNPS only when at least five responses expose a raw score', () => {
+    const tooSmall: SurveyResponse[] = Array.from({ length: 4 }, (_, index) => ({
+      id: `resp-small-${index}`,
+      respondent_id: `r-small-${index}`,
+      risk_score: 5.2,
+      risk_band: 'MIDDEN',
+      preventability: null,
+      exit_reason_code: null,
+      sdt_scores: {},
+      org_scores: {},
+      full_result: {
+        enps: {
+          raw_score: 10,
+          band: 'promoter',
+        },
+      },
+      submitted_at: '2026-04-18T10:00:00Z',
+    }))
+
+    const sufficient: SurveyResponse[] = [
+      {
+        id: 'resp-enps-1',
+        respondent_id: 'r-enps-1',
+        risk_score: 5.2,
+        risk_band: 'MIDDEN',
+        preventability: null,
+        exit_reason_code: null,
+        sdt_scores: {},
+        org_scores: {},
+        full_result: { enps: { raw_score: 10, band: 'promoter' } },
+        submitted_at: '2026-04-18T10:00:00Z',
+      },
+      {
+        id: 'resp-enps-2',
+        respondent_id: 'r-enps-2',
+        risk_score: 5.0,
+        risk_band: 'MIDDEN',
+        preventability: null,
+        exit_reason_code: null,
+        sdt_scores: {},
+        org_scores: {},
+        full_result: { enps: { raw_score: 9, band: 'promoter' } },
+        submitted_at: '2026-04-18T10:05:00Z',
+      },
+      {
+        id: 'resp-enps-3',
+        respondent_id: 'r-enps-3',
+        risk_score: 5.1,
+        risk_band: 'MIDDEN',
+        preventability: null,
+        exit_reason_code: null,
+        sdt_scores: {},
+        org_scores: {},
+        full_result: { enps: { raw_score: 8, band: 'passive' } },
+        submitted_at: '2026-04-18T10:10:00Z',
+      },
+      {
+        id: 'resp-enps-4',
+        respondent_id: 'r-enps-4',
+        risk_score: 5.4,
+        risk_band: 'MIDDEN',
+        preventability: null,
+        exit_reason_code: null,
+        sdt_scores: {},
+        org_scores: {},
+        full_result: { enps: { raw_score: 6, band: 'detractor' } },
+        submitted_at: '2026-04-18T10:15:00Z',
+      },
+      {
+        id: 'resp-enps-5',
+        respondent_id: 'r-enps-5',
+        risk_score: 5.3,
+        risk_band: 'MIDDEN',
+        preventability: null,
+        exit_reason_code: null,
+        sdt_scores: {},
+        org_scores: {},
+        full_result: { enps: { raw_score: 0, band: 'detractor' } },
+        submitted_at: '2026-04-18T10:20:00Z',
+      },
+    ]
+
+    expect(computeENPS(tooSmall)).toBeNull()
+    expect(computeENPS(sufficient)).toBe(0)
+  })
+
   it('keeps retention helper summaries centered on retentiesignaal instead of stay-intent', () => {
     const panels = buildDecisionPanels({
       stats: {
@@ -103,7 +192,7 @@ describe('dashboard page helpers field semantics', () => {
     expect(panels[2]?.body).toContain('aanvullende signalen')
   })
 
-  it('keeps exit helper openings centered on average signal language with werkfrictie as duiding', () => {
+  it('keeps exit helper openings centered on vertrekduiding with claim-safe werkfrictie language', () => {
     const hero = buildHeroDescription({
       scanType: 'exit',
       isActive: false,
@@ -122,10 +211,68 @@ describe('dashboard page helpers field semantics', () => {
       topFactor: 'Leiderschap',
     })
 
-    expect(hero).toContain('gemiddelde signaalscore')
+    expect(hero).toContain('terugkijkende vertrekduiding')
     expect(hero).toContain('werkfrictie')
-    expect(nextStep).toContain('gemiddelde signaalscore')
+    expect(nextStep).toContain('Frictiescore')
     expect(nextStep).toContain('werkfrictie')
+    expect(nextStep).not.toContain('oorzaak')
+  })
+
+  it('clusters exit open signals without inventing extra quotes or factor values', () => {
+    const responses: SurveyResponse[] = [
+      {
+        id: 'resp-1',
+        respondent_id: 'r-1',
+        risk_score: 6.2,
+        risk_band: 'MIDDEN',
+        preventability: null,
+        exit_reason_code: null,
+        sdt_scores: {},
+        org_scores: {},
+        open_text_raw: 'Mijn leidinggevende gaf weinig feedback en de aansturing bleef onduidelijk.',
+        full_result: {},
+        submitted_at: '2026-04-18T10:00:00Z',
+      },
+      {
+        id: 'resp-2',
+        respondent_id: 'r-2',
+        risk_score: 5.9,
+        risk_band: 'MIDDEN',
+        preventability: null,
+        exit_reason_code: null,
+        sdt_scores: {},
+        org_scores: {},
+        open_text_raw: 'Prioriteiten waren niet helder en verantwoordelijkheden bleven diffuus.',
+        full_result: {},
+        submitted_at: '2026-04-18T10:05:00Z',
+      },
+    ]
+
+    const themes = clusterExitOpenSignals(responses)
+
+    expect(themes[0]).toMatchObject({
+      key: 'leadership',
+      title: 'Leiderschap en steun',
+      count: 1,
+    })
+    expect(themes.some((theme) => theme.title === 'Rolhelderheid en prioriteiten')).toBe(true)
+    expect(themes).toHaveLength(2)
+  })
+
+  it('uses customer-facing product labels instead of internal managementread language', () => {
+    const pulseHero = buildHeroDescription({
+      scanType: 'pulse',
+      isActive: true,
+      completionRate: 61,
+      pendingCount: 2,
+      hasEnoughData: true,
+      averageRiskScore: 5.9,
+      scanDefinition: getScanDefinition('pulse'),
+    })
+
+    expect(pulseHero).toContain(getResultsProductCopy('pulse').readLabel)
+    expect(pulseHero.toLowerCase()).not.toContain('managementread')
+    expect(pulseHero.toLowerCase()).not.toContain('bounded reviewlaag')
   })
 
   it('keeps culture assessment helper copy board-readable and non-ranking', () => {

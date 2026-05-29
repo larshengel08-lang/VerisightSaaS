@@ -64,6 +64,10 @@ from reportlab.lib.utils import ImageReader
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from backend.models import Campaign, Organization, Respondent, SurveyResponse
+from backend.products.exit.report_content import (
+    EXIT_DECISION_BY_FACTOR,
+    EXIT_OWNER_BY_FACTOR,
+)
 from backend.products.shared.management_language import (
     build_factor_presentation,
     management_band_label,
@@ -1673,6 +1677,293 @@ def _factor_signal_score(factor: str, factor_avgs: dict[str, float]) -> float:
     return round(11.0 - factor_avgs.get(factor, 5.5), 1)
 
 
+def _build_department_overview_row(
+    *,
+    department: str,
+    items: list[SurveyResponse],
+) -> dict[str, Any] | None:
+    scored_items = [
+        item for item in items
+        if isinstance(item.risk_score, (int, float))
+    ]
+    if len(scored_items) < MIN_SEGMENT_N:
+        return None
+
+    avg_score = round(
+        sum(float(item.risk_score) for item in scored_items) / len(scored_items),
+        2,
+    )
+    factor_signal_scores: list[tuple[str, float]] = []
+    for factor in ORG_FACTOR_KEYS:
+        factor_values = [
+            float(item.org_scores[factor])
+            for item in scored_items
+            if item.org_scores and item.org_scores.get(factor) is not None
+        ]
+        if not factor_values:
+            continue
+        factor_signal_scores.append((factor, round(11.0 - (sum(factor_values) / len(factor_values)), 2)))
+
+    top_factor = (
+        FACTOR_LABELS_NL.get(
+            max(factor_signal_scores, key=lambda item: item[1])[0],
+            "Nog geen duidelijke topfactor",
+        )
+        if factor_signal_scores
+        else "Nog geen duidelijke topfactor"
+    )
+
+    return {
+        "department": department,
+        "n": len(scored_items),
+        "avg_score": avg_score,
+        "band": management_band_label(score=avg_score),
+        "top_factor": top_factor,
+    }
+
+
+def _build_department_overview_payload(
+    *,
+    responses: list[SurveyResponse],
+    score_label: str,
+) -> dict[str, Any] | None:
+    grouped: dict[str, list[SurveyResponse]] = {}
+    for response in responses:
+        department = getattr(getattr(response, "respondent", None), "department", None)
+        if not department:
+            continue
+        grouped.setdefault(str(department), []).append(response)
+
+    eligible_groups = {
+        department: items
+        for department, items in grouped.items()
+        if len([item for item in items if isinstance(item.risk_score, (int, float))]) >= MIN_SEGMENT_N
+    }
+    if len(eligible_groups) < 2:
+        return None
+
+    individual_rows = [
+        row
+        for row in (
+            _build_department_overview_row(department=department, items=items)
+            for department, items in eligible_groups.items()
+        )
+        if row is not None
+    ]
+    individual_rows.sort(
+        key=lambda row: (row["avg_score"], row["n"], row["department"]),
+        reverse=True,
+    )
+
+    overflow_departments = {row["department"] for row in individual_rows[7:]} if len(individual_rows) > 8 else set()
+    other_items: list[SurveyResponse] = []
+    for department, items in grouped.items():
+        if department not in eligible_groups or department in overflow_departments:
+            other_items.extend(items)
+
+    other_row = _build_department_overview_row(
+        department="Overige afdelingen",
+        items=other_items,
+    ) if other_items else None
+
+    if other_row is not None:
+        visible_rows = individual_rows[:7]
+        visible_rows.append(other_row)
+    else:
+        visible_rows = individual_rows[:8]
+
+    visible_rows.sort(
+        key=lambda row: (
+            row["department"] == "Overige afdelingen",
+            -row["avg_score"],
+            -row["n"],
+            row["department"],
+        ),
+    )
+    if len([row for row in visible_rows if row["department"] != "Overige afdelingen"]) < 2:
+        return None
+
+    return {
+        "section_title": "Afdelingsoverzicht",
+        "intro": (
+            f"Lees dit overzicht als rustige verdiepingslaag op het organisatieniveau. "
+            f"We tonen alleen afdelingen met minimaal {MIN_SEGMENT_N} responses individueel; kleinere groepen vallen onder "
+            "\"Overige afdelingen\" om privacy en uitlegbaarheid te bewaken. "
+            f"Sorteer de afdelingen op hoogste {score_label} eerst en gebruik dit niet als causale ranking."
+        ),
+        "sections": visible_rows,
+    }
+
+
+def _exit_playbook_copy(factor: str, band: str) -> dict[str, Any] | None:
+    label = FACTOR_LABELS_NL.get(factor, factor)
+    playbooks: dict[str, dict[str, dict[str, Any]]] = {
+        "leadership": {
+            "HOOG": {
+                "title": "Leiderschap vraagt correctieve opvolging",
+                "validate": "Onderzoek in 60-90 dagen of dit vertrekpatroon structureel terugkomt in dezelfde teams, managersituaties of escalatiemomenten.",
+                "actions": [
+                    "Onderzoek of feedback, bereikbaarheid of besluitvorming onder dezelfde leiding vaker terugkomen in exitgesprekken, HR-cases of teamreviews.",
+                    "Bepaal welke 1-2 managementcorrecties nodig zijn om te voorkomen dat dit bij de volgende persoon opnieuw meespeelt.",
+                ],
+                "caution": "Lees dit niet als sluitende toewijzing aan één manager; toets steeds teamcontext en bredere frictie mee.",
+            },
+            "MIDDEN": {
+                "title": "Leiderschap vraagt gerichte terugblik",
+                "validate": "Onderzoek in 60-90 dagen of dit signaal incidenteel was of vaker samenvalt met hetzelfde team, dezelfde leiding of hetzelfde type gesprek.",
+                "actions": [
+                    "Onderzoek of beperkte correcties in feedbackritme, bereikbaarheid of besluitvorming herhaling bij de volgende persoon kunnen verkleinen.",
+                    "Leg vast welk leiderschapsmoment bij een volgende exit eerder getoetst moet worden.",
+                ],
+                "caution": "Maak hier geen generiek leiderschapsprobleem van als het patroon vooral lokaal of situationeel blijkt.",
+            },
+        },
+        "culture": {
+            "HOOG": {
+                "title": "Cultuur- en veiligheidssignalen vragen correctieve duiding",
+                "validate": "Onderzoek in 60-90 dagen of onveiligheid, teamdynamiek of cultuurfrictie vaker terugkomen in dezelfde afdeling of overgangsmomenten.",
+                "actions": [
+                    "Onderzoek welke teamgedragingen of samenwerkingspatronen bij de volgende persoon opnieuw tot frictie kunnen leiden.",
+                    "Bepaal welke gerichte cultuur- of veiligheidsafspraken nodig zijn om herhaling in dezelfde context te voorkomen.",
+                ],
+                "caution": "Gebruik dit niet als bewijs voor een organisatiebreed cultuurprobleem zonder toets op teamniveau.",
+            },
+            "MIDDEN": {
+                "title": "Cultuursignalen vragen gerichte verificatie",
+                "validate": "Onderzoek in 60-90 dagen of dit signaal vooral over psychologische veiligheid, samenwerking of mismatch met de manier van werken ging.",
+                "actions": [
+                    "Onderzoek welke terugkerende teamsituaties of werkafspraken bij een volgende persoon opnieuw kunnen schuren.",
+                    "Leg vast welk deel van de samenwerking eerst gecorrigeerd moet worden voordat het patroon breder wordt.",
+                ],
+                "caution": "Laat losse exits niet te snel uitgroeien tot een brede cultuurclaim.",
+            },
+        },
+        "growth": {
+            "HOOG": {
+                "title": "Groeiperspectief vraagt correctieve herijking",
+                "validate": "Onderzoek in 60-90 dagen of vertrek vaker samenvalt met gebrekkig perspectief, beperkte ontwikkelruimte of een te laat gesprek daarover.",
+                "actions": [
+                    "Onderzoek waar perspectief voor vergelijkbare rollen te laat, te vaag of te weinig geloofwaardig werd gemaakt.",
+                    "Bepaal hoe je voorkomt dat hetzelfde gebrek aan perspectief bij de volgende persoon opnieuw meespeelt.",
+                ],
+                "caution": "Lees dit niet als bewijs dat meer doorgroei op zichzelf elk vertrek had voorkomen.",
+            },
+            "MIDDEN": {
+                "title": "Groeisignalen vragen gerichte terugblik",
+                "validate": "Onderzoek in 60-90 dagen of dit vooral ging om zicht op groei, feitelijke ruimte of het managementgesprek daarover.",
+                "actions": [
+                    "Onderzoek welke ontwikkelverwachting in vergelijkbare rollen eerder expliciet gemaakt moet worden.",
+                    "Leg vast welke kleine correctie nodig is om dit signaal bij de volgende persoon minder snel te laten terugkomen.",
+                ],
+                "caution": "Verwar teleurstelling over groei niet automatisch met één eenduidige vertrekverklaring.",
+            },
+        },
+        "compensation": {
+            "HOOG": {
+                "title": "Beloning vraagt correctieve duiding",
+                "validate": "Onderzoek in 60-90 dagen of dit patroon vooral zit in hoogte, fairness of uitlegbaarheid van voorwaarden voor vergelijkbare groepen.",
+                "actions": [
+                    "Onderzoek of dezelfde belonings- of voorwaardenfrictie vaker terugkomt in vergelijkbare rollen of afdelingen.",
+                    "Bepaal welke correctie nodig is om te voorkomen dat dit bij de volgende persoon opnieuw een vertrekversneller wordt.",
+                ],
+                "caution": "Ga niet uit van een puur salarisverhaal als ervaren eerlijkheid en uitlegbaarheid ook meespelen.",
+            },
+            "MIDDEN": {
+                "title": "Beloningssignalen vragen gecontroleerde terugblik",
+                "validate": "Onderzoek in 60-90 dagen of dit vooral een communicatievraag was of dat de feitelijke voorwaarden structureel frictie geven.",
+                "actions": [
+                    "Onderzoek waar uitleg of verwachtingsmanagement voor vergelijkbare rollen tekortschiet.",
+                    "Leg vast welke beperkte correctie helpt om dit bij de volgende persoon minder snel te laten terugkomen.",
+                ],
+                "caution": "Behandel dit niet te snel als opgelost wanneer alleen de communicatie wordt aangescherpt.",
+            },
+        },
+        "workload": {
+            "HOOG": {
+                "title": "Werkdruk vraagt correctieve opvolging",
+                "validate": "Onderzoek in 60-90 dagen of structurele druk, bezetting of prioritering in dezelfde teams vaker samenvalt met vertrek.",
+                "actions": [
+                    "Onderzoek welke werk- of planningsfrictie in dezelfde context bij de volgende persoon opnieuw kan spelen.",
+                    "Bepaal welke correctie in werkverdeling, bezetting of prioritering nodig is om herhaling te verkleinen.",
+                ],
+                "caution": "Noem dit niet alleen een belevingskwestie als de onderliggende werkdruk feitelijk structureel blijkt.",
+            },
+            "MIDDEN": {
+                "title": "Werkdruksignalen vragen gerichte terugblik",
+                "validate": "Onderzoek in 60-90 dagen of dit vooral piekdruk, structurele overbelasting of beperkte regelruimte in dezelfde context was.",
+                "actions": [
+                    "Onderzoek welk type druk in vergelijkbare teams het vaakst terugkomt vóór vertrek.",
+                    "Leg vast welke beperkte correctie nodig is om dit bij de volgende persoon minder snel te laten escaleren.",
+                ],
+                "caution": "Laat dit signaal niet verdwijnen in algemene drukte als er aanwijzingen zijn voor een terugkerend patroon.",
+            },
+        },
+        "role_clarity": {
+            "HOOG": {
+                "title": "Rolhelderheid vraagt correctieve herordening",
+                "validate": "Onderzoek in 60-90 dagen of onduidelijke prioriteiten, rolgrenzen of besluitvorming vaker samenkomen in dezelfde rol of afdeling.",
+                "actions": [
+                    "Onderzoek waar vergelijkbare rollen opnieuw vastlopen op verwachtingen, tegenstrijdige opdrachten of beslisruimte.",
+                    "Bepaal welke correctie nodig is om te voorkomen dat dezelfde onduidelijkheid bij de volgende persoon opnieuw meespeelt.",
+                ],
+                "caution": "Lees dit niet als bewijs dat een functiebeschrijving alleen het patroon oplost.",
+            },
+            "MIDDEN": {
+                "title": "Rolhelderheid vraagt gerichte terugblik",
+                "validate": "Onderzoek in 60-90 dagen of het vooral ging om prioriteiten, eigenaarschap of dagelijkse besluitvorming.",
+                "actions": [
+                    "Onderzoek welk deel van de rolafbakening voor vergelijkbare functies eerder expliciet gemaakt moet worden.",
+                    "Leg vast welke beperkte correctie nodig is om dit bij de volgende persoon minder snel te laten terugkomen.",
+                ],
+                "caution": "Verwar losse onduidelijkheid niet direct met een volledig organisatiebreed rolontwerpvraagstuk.",
+            },
+        },
+    }
+    base = playbooks.get(factor, {}).get(band)
+    if base is None:
+        return None
+    return {
+        "title": base["title"],
+        "validate": base["validate"],
+        "owner": "HR en betrokken manager samen",
+        "actions": base["actions"],
+        "caution": base["caution"],
+        "label": label,
+    }
+
+
+def _build_exit_playbook_rows(
+    *,
+    top_risks: list[tuple[str, float]],
+) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for factor, signal_value in top_risks:
+        band = "HOOG" if signal_value >= 7 else "MIDDEN" if signal_value >= 4.5 else "LAAG"
+        if band == "LAAG":
+            continue
+        playbook = _exit_playbook_copy(factor, band)
+        if playbook is None:
+            continue
+        rows.append({
+            "factor": factor,
+            "label": playbook["label"],
+            "signal_value": round(float(signal_value), 1),
+            "band": management_band_label(band=band),
+            "title": playbook["title"],
+            "decision": EXIT_DECISION_BY_FACTOR.get(
+                factor,
+                f"Beslis eerst welk deel van {playbook['label'].lower()} in 60-90 dagen het eerst correctieve opvolging vraagt.",
+            ),
+            "validate": playbook["validate"],
+            "owner": playbook["owner"],
+            "actions": playbook["actions"],
+            "caution": playbook["caution"],
+            "review": "Weeg binnen 60-90 dagen opnieuw of dit patroon terugkomt in exitgesprekken, HR-signalen of teamdynamiek.",
+            "owner_basis": EXIT_OWNER_BY_FACTOR.get(factor),
+        })
+    return rows[:2]
+
+
 def _factor_explanation_lookup() -> dict[str, str]:
     lookup: dict[str, str] = {}
     for name, _source, explanation in FACTOR_EXPLANATIONS:
@@ -2550,6 +2841,32 @@ def _compute_retention_signal_averages(responses: list[SurveyResponse]) -> dict[
         "engagement": _avg(engagement_scores),
         "turnover_intention": _avg(turnover_scores),
         "stay_intent": _avg(stay_scores),
+    }
+
+
+def _compute_enps_summary(responses: list[SurveyResponse]) -> dict[str, int] | None:
+    scores: list[int] = []
+
+    for response in responses:
+        full_result = response.full_result if isinstance(response.full_result, dict) else {}
+        enps = full_result.get("enps") if isinstance(full_result, dict) else None
+        if not isinstance(enps, dict):
+            continue
+        raw_score = enps.get("raw_score")
+        if isinstance(raw_score, (int, float)):
+            score_int = int(raw_score)
+            if 0 <= score_int <= 10:
+                scores.append(score_int)
+
+    if len(scores) < 5:
+        return None
+
+    promoters = sum(1 for score in scores if score >= 9)
+    detractors = sum(1 for score in scores if score <= 6)
+    enps_score = round(((promoters - detractors) / len(scores)) * 100)
+    return {
+        "score": int(enps_score),
+        "sample_size": len(scores),
     }
 
 
@@ -3917,6 +4234,90 @@ def _append_rebrand_actions(
     story.append(PageBreak())
 
 
+def _append_department_overview_section(
+    story: list,
+    *,
+    department_overview_payload: dict[str, Any] | None,
+    content_width: float,
+    report_theme: dict[str, colors.Color],
+) -> None:
+    if not department_overview_payload:
+        return
+
+    _append_section_heading(
+        story,
+        eyebrow="Verdieping",
+        title=department_overview_payload["section_title"],
+        intro=department_overview_payload["intro"],
+        content_width=content_width,
+    )
+    table_rows = [["Afdeling", "n", "Score", "Band", "Topfactor"]]
+    for row in department_overview_payload["sections"]:
+        table_rows.append([
+            row["department"],
+            str(row["n"]),
+            f"{row['avg_score']:.1f}/10",
+            row["band"],
+            row["top_factor"],
+        ])
+    story.append(_build_data_table_flowable(
+        rows=table_rows,
+        col_widths=[content_width * 0.30, content_width * 0.08, content_width * 0.14, content_width * 0.18, content_width * 0.30],
+        theme=report_theme,
+        align_columns=[1, 2],
+        bold_columns=[1, 2],
+    ))
+    story.append(PageBreak())
+
+
+def _append_exit_playbooks(
+    story: list,
+    *,
+    exit_playbooks: list[dict[str, Any]],
+    content_width: float,
+    report_theme: dict[str, colors.Color],
+) -> None:
+    if not exit_playbooks:
+        return
+
+    _append_section_heading(
+        story,
+        eyebrow="Wat nu",
+        title="Correctieve exit-playbooks",
+        intro=(
+            "Deze playbooks lezen vertrek retrospectief: de persoon is al weg. "
+            "Gebruik ze om in 60-90 dagen te onderzoeken welk patroon structureel terugkomt en wat gecorrigeerd moet worden "
+            "om herhaling bij de volgende persoon te verkleinen, zonder achteraf één oorzaak te claimen."
+        ),
+        content_width=content_width,
+    )
+    playbook_cards = []
+    for playbook in exit_playbooks[:2]:
+        actions_text = " ".join([f"• {action}" for action in playbook["actions"][:2]])
+        playbook_cards.append({
+            "title": playbook["label"],
+            "badge": _risk_badge(playbook["signal_value"]),
+            "value": f"{playbook['signal_value']:.1f}/10",
+            "body": (
+                f"<b>{playbook['title']}</b><br/>"
+                f"<b>Eerste besluit:</b> {playbook['decision']}<br/>"
+                f"<b>Te onderzoeken in 60-90 dagen:</b> {playbook['validate']}<br/>"
+                f"<b>Gezamenlijke eigenaar:</b> {playbook['owner']}<br/>"
+                f"{actions_text}<br/>"
+                f"<b>Leesgrens:</b> {playbook['caution']}"
+            ),
+            "background": TOKENS["cream"],
+        })
+    _append_highlight_cards(
+        story,
+        playbook_cards,
+        content_width=content_width,
+        theme=report_theme,
+        columns=min(2, len(playbook_cards)),
+    )
+    story.append(PageBreak())
+
+
 def _append_rebrand_retention_playbooks(
     story: list,
     *,
@@ -4899,6 +5300,8 @@ def _build_exit_embedded_story(
     hypotheses_payload: dict[str, str],
     hypotheses: list[dict[str, str]],
     next_steps_payload: dict[str, Any],
+    exit_playbooks: list[dict[str, Any]],
+    department_overview_payload: dict[str, Any] | None,
     signal_visibility_average: float | None,
     top_exit_reason_label: str | None,
     top_contributing_reason_label: str | None,
@@ -4997,6 +5400,12 @@ def _build_exit_embedded_story(
         content_width=content_width,
         report_theme=report_theme,
     )
+    _append_department_overview_section(
+        story,
+        department_overview_payload=department_overview_payload,
+        content_width=content_width,
+        report_theme=report_theme,
+    )
     _append_rebrand_actions(
         story,
         hypotheses_payload=hypotheses_payload,
@@ -5014,6 +5423,12 @@ def _build_exit_embedded_story(
         report_theme=report_theme,
         title="Eerste route & actie",
         intro="Hier komt de vertaalslag van interpretatie naar opvolging samen: eerste route, eerste eigenaar, eerste stap en reviewmoment.",
+    )
+    _append_exit_playbooks(
+        story,
+        exit_playbooks=exit_playbooks,
+        content_width=content_width,
+        report_theme=report_theme,
     )
     _append_exit_methodology_page(
         story,
@@ -5111,6 +5526,7 @@ def _build_shared_non_exit_runtime_story(
     retention_playbook_calibration_note: str | None,
     retention_segment_playbooks: list[dict[str, Any]],
     segment_deep_dive: dict[str, Any],
+    department_overview_payload: dict[str, Any] | None,
     scan_meta: dict[str, Any],
     has_segment_deep_dive: bool,
     cover_distribution_note: str,
@@ -5152,6 +5568,12 @@ def _build_shared_non_exit_runtime_story(
         management_summary_payload=management_summary_payload,
         next_steps_payload=next_steps_payload,
         top_factor_labels=top_factor_labels,
+        content_width=content_width,
+        report_theme=report_theme,
+    )
+    _append_department_overview_section(
+        story,
+        department_overview_payload=department_overview_payload,
         content_width=content_width,
         report_theme=report_theme,
     )
@@ -5916,6 +6338,11 @@ def generate_campaign_report(
         top_risks=top_risks,
         playbooks=product_module.get_action_playbooks_payload(),
     ) if is_retention and has_pattern and hasattr(product_module, "get_action_playbooks_payload") else []
+    exit_playbooks = (
+        _build_exit_playbook_rows(top_risks=top_risks)
+        if camp.scan_type == "exit" and has_pattern
+        else []
+    )
     retention_playbook_calibration_note = (
         product_module.get_action_playbook_calibration_note()
         if is_retention and hasattr(product_module, "get_action_playbook_calibration_note")
@@ -5975,11 +6402,15 @@ def generate_campaign_report(
         if is_retention
         else ([], {"hoog": 0, "midden": 0, "laag": 0})
     )
-    has_segment_deep_dive = _campaign_has_add_on(camp, SEGMENT_DEEP_DIVE_KEY)
+    has_segment_deep_dive = True
     segment_deep_dive = _build_segment_deep_dive_data(
         responses=responses,
         org_avg_risk=pattern.get("avg_risk_score") if has_pattern else avg_risk,
     ) if has_segment_deep_dive else {"coverage": {}, "rows": []}
+    department_overview_payload = _build_department_overview_payload(
+        responses=responses,
+        score_label=scan_meta["signal_short_label"],
+    )
     retention_segment_playbooks = (
         _build_retention_segment_playbook_rows(
             responses=responses,
@@ -5992,6 +6423,7 @@ def generate_campaign_report(
     total_cost = sum(
         r.replacement_cost_eur for r in responses if r.replacement_cost_eur
     )
+    enps_summary = _compute_enps_summary(responses)
     if is_retention:
         management_summary_payload = product_module.get_management_summary_payload(
             top_factor_labels=top_factor_labels,
@@ -6001,6 +6433,7 @@ def generate_campaign_report(
             avg_turnover_intention=avg_turnover_intention,
             avg_stay_intent=avg_stay_intent,
             retention_theme_title=retention_themes[0]["title"] if retention_themes else None,
+            enps_summary=enps_summary,
         )
     elif camp.scan_type == "team":
         management_summary_payload = product_module.get_management_summary_payload(
@@ -6044,6 +6477,7 @@ def generate_campaign_report(
             top_contributing_reason_label=top_contributing_reason_label,
             strong_work_signal_pct=strong_work_signal_pct,
             signal_visibility_average=signal_visibility_average,
+            enps_summary=enps_summary,
             total_replacement_cost_eur=total_cost,
         )
     hypotheses_payload = product_module.get_hypotheses_payload()
@@ -6212,6 +6646,8 @@ def generate_campaign_report(
             hypotheses_payload=hypotheses_payload,
             hypotheses=action_hypotheses,
             next_steps_payload=next_steps_payload,
+            exit_playbooks=exit_playbooks,
+            department_overview_payload=department_overview_payload,
             signal_visibility_average=signal_visibility_average,
             top_exit_reason_label=top_exit_reason_label,
             top_contributing_reason_label=top_contributing_reason_label,
@@ -6267,6 +6703,7 @@ def generate_campaign_report(
             retention_playbook_calibration_note=retention_playbook_calibration_note,
             retention_segment_playbooks=retention_segment_playbooks,
             segment_deep_dive=segment_deep_dive,
+            department_overview_payload=department_overview_payload,
             scan_meta=scan_meta,
             has_segment_deep_dive=has_segment_deep_dive,
             cover_distribution_note=cover_distribution_note,

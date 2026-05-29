@@ -67,23 +67,49 @@ def _create_response(
     *,
     risk_score: float = 5.8,
     risk_band: str = "MIDDEN",
+    stay_intent_score: int = 4,
+    sdt_raw: dict[str, int] | None = None,
+    sdt_scores: dict[str, float] | None = None,
+    org_raw: dict[str, int] | None = None,
+    org_scores: dict[str, float] | None = None,
+    uwes_raw: dict[str, int] | None = None,
+    uwes_score: float | None = None,
+    turnover_intention_raw: dict[str, int] | None = None,
+    turnover_intention_score: float | None = None,
+    full_result: dict[str, object] | None = None,
 ):
+    resolved_sdt_raw = sdt_raw or {f"B{i}": 3 for i in range(1, 13)}
+    resolved_sdt_scores = sdt_scores or {
+        "autonomy": 5.5,
+        "competence": 5.5,
+        "relatedness": 5.5,
+        "sdt_total": 5.5,
+        "sdt_risk": 5.5,
+    }
+    resolved_org_raw = org_raw or {
+        f"{factor}_{idx}": 3 for factor in ORG_FACTOR_KEYS for idx in range(1, 4)
+    }
+    resolved_org_scores = org_scores or {factor: 5.5 for factor in ORG_FACTOR_KEYS}
     response = SurveyResponse(
         respondent_id=respondent.id,
         tenure_years=2.4,
         exit_reason_category="groei",
         exit_reason_code="P3",
-        stay_intent_score=4,
-        sdt_raw={f"B{i}": 3 for i in range(1, 13)},
-        sdt_scores={"autonomy": 5.5, "competence": 5.5, "relatedness": 5.5, "sdt_total": 5.5, "sdt_risk": 5.5},
-        org_raw={f"{factor}_{idx}": 3 for factor in ORG_FACTOR_KEYS for idx in range(1, 4)},
-        org_scores={factor: 5.5 for factor in ORG_FACTOR_KEYS},
+        stay_intent_score=stay_intent_score,
+        sdt_raw=resolved_sdt_raw,
+        sdt_scores=resolved_sdt_scores,
+        org_raw=resolved_org_raw,
+        org_scores=resolved_org_scores,
         pull_factors_raw={"P1": 1},
         open_text_raw="Meer groeiperspectief gewenst.",
+        uwes_raw=uwes_raw or {},
+        uwes_score=uwes_score,
+        turnover_intention_raw=turnover_intention_raw or {},
+        turnover_intention_score=turnover_intention_score,
         risk_score=risk_score,
         risk_band=risk_band,
         preventability="GEMENGD_WERKSIGNAAL",
-        full_result={"risk_result": {"risk_score": risk_score, "risk_band": risk_band}},
+        full_result=full_result or {"risk_result": {"risk_score": risk_score, "risk_band": risk_band}},
     )
     respondent.completed = True
     respondent.completed_at = datetime.now(timezone.utc)
@@ -99,6 +125,7 @@ def _survey_payload(token: str):
         "token": token,
         "tenure_years": 2.0,
         "exit_reason_category": "groei",
+        "enps_score": 8,
         "stay_intent_score": 4,
         "signal_visibility_score": 2,
         "sdt_raw": {f"B{i}": 3 for i in range(1, 13)},
@@ -115,6 +142,7 @@ def _retention_payload(token: str):
         "token": token,
         "tenure_years": None,
         "exit_reason_category": None,
+        "enps_score": 9,
         "stay_intent_score": 4,
         "sdt_raw": {f"B{i}": 4 for i in range(1, 13)},
         "org_raw": {f"{factor}_{idx}": 4 for factor in ORG_FACTOR_KEYS for idx in range(1, 4)},
@@ -418,6 +446,8 @@ def test_survey_submit_persists_response_and_marks_respondent_complete(client, d
     assert respondent.completed is True
     assert stored.risk_score is not None
     assert stored.exit_reason_code == "P3"
+    assert stored.full_result["enps"]["raw_score"] == 8
+    assert stored.full_result["enps"]["band"] == "passive"
     assert stored.full_result["exit_context_summary"]["signal_visibility_score"] == 2
     assert stored.full_result["exit_context_summary"]["primary_reason_label"] == "Gebrek aan groei"
 
@@ -454,6 +484,19 @@ def test_exit_survey_submit_requires_signal_visibility_answer(client, db_session
     assert "eerdere signalering" in response.json()["detail"]
 
 
+def test_exit_survey_submit_requires_enps_answer(client, db_session: Session):
+    org = _create_org(db_session, api_key="missing-enps-key")
+    campaign = _create_campaign(db_session, org, name="Exit zonder eNPS")
+    respondent = _create_respondent(db_session, campaign)
+    payload = _survey_payload(respondent.token)
+    payload["enps_score"] = None
+
+    response = client.post("/survey/submit", json=payload)
+
+    assert response.status_code == 422
+    assert "eNPS" in response.json()["detail"]
+
+
 def test_retention_survey_submit_persists_normalized_scores_and_summary(client, db_session: Session):
     org = _create_org(db_session, api_key="retention-key")
     campaign = _create_campaign(db_session, org, name="Retentie Q2", scan_type="retention")
@@ -469,6 +512,8 @@ def test_retention_survey_submit_persists_normalized_scores_and_summary(client, 
     assert 1.0 <= stored.uwes_score <= 10.0
     assert 1.0 <= stored.turnover_intention_score <= 10.0
     assert stored.preventability is None
+    assert stored.full_result["enps"]["raw_score"] == 9
+    assert stored.full_result["enps"]["band"] == "promoter"
     assert stored.full_result["retention_summary"]["retention_signal_score"] == stored.risk_score
     assert stored.full_result["retention_summary"]["engagement_score"] == stored.uwes_score
     assert stored.full_result["retention_summary"]["turnover_intention_score"] == stored.turnover_intention_score
@@ -509,6 +554,19 @@ def test_retention_survey_submit_rejects_incomplete_signal_blocks(client, db_ses
 
     assert response.status_code == 422
     assert "RetentieScan vereist" in response.json()["detail"]
+
+
+def test_retention_survey_submit_requires_enps_answer(client, db_session: Session):
+    org = _create_org(db_session, api_key="retention-missing-enps-key")
+    campaign = _create_campaign(db_session, org, name="Retentie zonder eNPS", scan_type="retention")
+    respondent = _create_respondent(db_session, campaign, email="retention-missing-enps@example.com", department="People")
+    payload = _retention_payload(respondent.token)
+    payload["enps_score"] = None
+
+    response = client.post("/survey/submit", json=payload)
+
+    assert response.status_code == 422
+    assert "eNPS" in response.json()["detail"]
 
 
 def test_pulse_survey_submit_persists_snapshot_summary(client, db_session: Session):
@@ -713,6 +771,52 @@ def test_respondent_import_dry_run_reports_duplicate_email_without_persisting(cl
     assert len(rows) == 1
 
 
+def test_respondent_import_dry_run_requires_department(client, db_session: Session):
+    org = _create_org(db_session, api_key="required-department-key")
+    campaign = _create_campaign(db_session, org, name="Department vereist")
+    csv_content = (
+        "email,department,role_level,exit_month\n"
+        "missing-department@example.com,,specialist,2026-03\n"
+    )
+
+    response = client.post(
+        f"/api/campaigns/{campaign.id}/respondents/import",
+        headers={"x-api-key": "required-department-key"},
+        data={"dry_run": "true", "send_invites": "false"},
+        files={"upload": ("respondents.csv", io.BytesIO(csv_content.encode("utf-8")), "text/csv")},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["imported"] == 0
+    assert body["invalid_rows"] == 1
+    assert body["errors"][0]["field"] == "department"
+    assert "afdeling" in body["errors"][0]["message"].lower()
+
+
+def test_respondent_import_dry_run_requires_role_level(client, db_session: Session):
+    org = _create_org(db_session, api_key="required-role-level-key")
+    campaign = _create_campaign(db_session, org, name="Niveau vereist")
+    csv_content = (
+        "email,department,role_level,exit_month\n"
+        "missing-level@example.com,Operations,,2026-03\n"
+    )
+
+    response = client.post(
+        f"/api/campaigns/{campaign.id}/respondents/import",
+        headers={"x-api-key": "required-role-level-key"},
+        data={"dry_run": "true", "send_invites": "false"},
+        files={"upload": ("respondents.csv", io.BytesIO(csv_content.encode("utf-8")), "text/csv")},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["imported"] == 0
+    assert body["invalid_rows"] == 1
+    assert body["errors"][0]["field"] == "role_level"
+    assert "functieniveau" in body["errors"][0]["message"].lower()
+
+
 def test_implementation_smoke_flow_imports_sends_invites_and_generates_output(
     client,
     db_session: Session,
@@ -818,6 +922,209 @@ def test_campaign_stats_returns_zero_values_for_empty_campaign(client, db_sessio
     assert body["avg_signal_score"] is None
     assert body["completion_rate_pct"] == 0.0
     assert body["risk_band_distribution"] == {"HOOG": 0, "MIDDEN": 0, "LAAG": 0}
+
+
+def test_campaign_item_scores_returns_exit_factor_and_sdt_item_averages(client, db_session: Session):
+    org = _create_org(db_session, api_key="item-scores-exit-key")
+    campaign = _create_campaign(db_session, org, name="Exit itemlaag", scan_type="exit")
+
+    for index in range(5):
+        respondent = _create_respondent(
+            db_session,
+            campaign,
+            email=f"exit-item-{index}@example.com",
+            department="Operations",
+            completed=True,
+        )
+        _create_response(
+            db_session,
+            respondent,
+            sdt_raw={
+                "B1": 5,
+                "B2": 3,
+                "B3": 3,
+                "B4": 1,
+                "B5": 3,
+                "B6": 3,
+                "B7": 3,
+                "B8": 3,
+                "B9": 3,
+                "B10": 3,
+                "B11": 3,
+                "B12": 3,
+            },
+            sdt_scores={
+                "autonomy": 7.19,
+                "competence": 5.5,
+                "relatedness": 5.5,
+                "sdt_total": 6.06,
+                "sdt_risk": 4.94,
+            },
+            org_raw={
+                **{f"{factor}_{item}": 3 for factor in ORG_FACTOR_KEYS for item in range(1, 4)},
+                "leadership_1": 5,
+            },
+            org_scores={
+                **{factor: 5.5 for factor in ORG_FACTOR_KEYS},
+                "leadership": 7.0,
+            },
+            full_result={"risk_result": {"risk_score": 5.8, "risk_band": "MIDDEN"}},
+        )
+
+    response = client.get(
+        f"/api/campaigns/{campaign.id}/item-scores",
+        headers={"x-api-key": "item-scores-exit-key"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+
+    leadership = next(item for item in body["factors"] if item["factor_key"] == "leadership")
+    assert leadership["factor_label"] == "Leiderschap"
+    assert leadership["avg_score"] == pytest.approx(7.0, abs=0.01)
+    assert leadership["items"][0]["item_key"] == "leadership_1"
+    assert leadership["items"][0]["label"] == "Mijn leidinggevende gaf mij nuttige feedback over mijn functioneren."
+    assert leadership["items"][0]["avg"] == pytest.approx(10.0, abs=0.01)
+    assert leadership["items"][0]["n"] == 5
+
+    autonomy = next(item for item in body["sdt_dimensions"] if item["dimension_key"] == "autonomy")
+    assert autonomy["dimension_label"] == "Autonomie"
+    assert autonomy["items"][0]["item_key"] == "B1"
+    assert autonomy["items"][0]["label"].startswith("In mijn werk had ik het gevoel")
+    reverse_item = next(item for item in autonomy["items"] if item["item_key"] == "B4")
+    assert reverse_item["avg"] == pytest.approx(10.0, abs=0.01)
+    assert body["privacy_suppressed_items"] == []
+
+
+def test_campaign_item_scores_suppresses_items_below_privacy_floor(client, db_session: Session):
+    org = _create_org(db_session, api_key="item-scores-suppressed-key")
+    campaign = _create_campaign(db_session, org, name="Exit suppressie", scan_type="exit")
+
+    for index in range(4):
+        respondent = _create_respondent(
+            db_session,
+            campaign,
+            email=f"exit-suppress-{index}@example.com",
+            department="Operations",
+            completed=True,
+        )
+        _create_response(db_session, respondent)
+
+    response = client.get(
+        f"/api/campaigns/{campaign.id}/item-scores",
+        headers={"x-api-key": "item-scores-suppressed-key"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert "leadership_1" in body["privacy_suppressed_items"]
+    assert "B1" in body["privacy_suppressed_items"]
+
+    leadership = next(item for item in body["factors"] if item["factor_key"] == "leadership")
+    autonomy = next(item for item in body["sdt_dimensions"] if item["dimension_key"] == "autonomy")
+    assert leadership["items"] == []
+    assert autonomy["items"] == []
+
+
+def test_campaign_item_scores_returns_retention_supplemental_sections(client, db_session: Session):
+    org = _create_org(db_session, api_key="item-scores-retention-key")
+    campaign = _create_campaign(db_session, org, name="Retentie itemlaag", scan_type="retention")
+
+    for index in range(5):
+        respondent = _create_respondent(
+            db_session,
+            campaign,
+            email=f"retention-item-{index}@example.com",
+            department="People",
+            completed=True,
+        )
+        _create_response(
+            db_session,
+            respondent,
+            uwes_raw={"uwes_1": 4, "uwes_2": 5, "uwes_3": 4},
+            uwes_score=8.5,
+            turnover_intention_raw={"ti_1": 2, "ti_2": 3},
+            turnover_intention_score=3.25,
+            full_result={"risk_result": {"risk_score": 4.4, "risk_band": "LAAG"}},
+        )
+
+    response = client.get(
+        f"/api/campaigns/{campaign.id}/item-scores",
+        headers={"x-api-key": "item-scores-retention-key"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    sections = {section["section_key"]: section for section in body["supplemental_sections"]}
+
+    assert sections["uwes"]["section_label"] == "Bevlogenheid (UWES-3)"
+    assert sections["uwes"]["avg_score"] == pytest.approx(8.5, abs=0.01)
+    assert sections["uwes"]["items"][0]["item_key"] == "uwes_1"
+    assert sections["uwes"]["items"][0]["label"] == "Op mijn werk bruis ik van energie."
+
+    assert sections["turnover_intention"]["section_label"] == "Vertrekintentie"
+    assert sections["turnover_intention"]["avg_score"] == pytest.approx(3.25, abs=0.01)
+    assert sections["turnover_intention"]["items"][0]["item_key"] == "ti_1"
+    assert sections["turnover_intention"]["items"][0]["label"] == "Ik denk er serieus over na om deze organisatie te verlaten."
+
+
+def test_campaign_item_scores_limits_onboarding_to_active_modules(client, db_session: Session):
+    org = _create_org(db_session, api_key="item-scores-onboarding-key")
+    campaign = _create_campaign(db_session, org, name="Onboarding itemlaag", scan_type="onboarding")
+
+    for index in range(5):
+        respondent = _create_respondent(
+            db_session,
+            campaign,
+            email=f"onboarding-item-{index}@example.com",
+            department="People",
+            exit_month=None,
+            completed=True,
+        )
+        _create_response(
+            db_session,
+            respondent,
+            sdt_raw={"B1": 4, "B5": 4, "B9": 5},
+            sdt_scores={
+                "autonomy": 7.75,
+                "competence": 7.75,
+                "relatedness": 10.0,
+                "sdt_total": 8.5,
+                "sdt_risk": 2.5,
+            },
+            org_raw={
+                "leadership_1": 4,
+                "role_clarity_1": 3,
+            },
+            org_scores={
+                "leadership": 7.75,
+                "role_clarity": 5.5,
+            },
+            full_result={"risk_result": {"risk_score": 4.2, "risk_band": "LAAG"}},
+        )
+
+    response = client.get(
+        f"/api/campaigns/{campaign.id}/item-scores",
+        headers={"x-api-key": "item-scores-onboarding-key"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+
+    factor_keys = [factor["factor_key"] for factor in body["factors"]]
+    assert factor_keys == ["leadership", "role_clarity"]
+
+    sdt_keys = [dimension["dimension_key"] for dimension in body["sdt_dimensions"]]
+    assert sdt_keys == ["autonomy", "competence", "relatedness"]
+
+    labels_by_key = {
+        item["item_key"]: item["label"]
+        for dimension in body["sdt_dimensions"]
+        for item in dimension["items"]
+    }
+    assert labels_by_key["B1"].startswith("Ik voel me in deze eerste periode")
+    assert labels_by_key["B5"].startswith("Ik voel me in deze eerste periode voldoende toegerust")
+    assert labels_by_key["B9"].startswith("Ik voel me in deze eerste periode voldoende verbonden")
 
 
 def test_report_route_returns_pdf(client, db_session: Session):

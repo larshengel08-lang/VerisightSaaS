@@ -11,7 +11,7 @@ describe('campaign audit events', () => {
     expect(CAMPAIGN_AUDIT_ACTIONS.launch_invites.ownerLabel).toBe('Klant owner')
     expect(CAMPAIGN_AUDIT_ACTIONS.import_respondents.actionLabel).toBe('Deelnemersimport')
     expect(CAMPAIGN_AUDIT_ACTIONS.delivery_lifecycle_changed.actionLabel).toBe('Uitvoerstatus bijgewerkt')
-    expect(CAMPAIGN_AUDIT_ACTIONS.delivery_lifecycle_changed.ownerLabel).toBe('Verisight')
+    expect(CAMPAIGN_AUDIT_ACTIONS.delivery_lifecycle_changed.ownerLabel).toBe('Loep')
   })
 
   it('builds a blocked audit event with clear customer-safe language', () => {

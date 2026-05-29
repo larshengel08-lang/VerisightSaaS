@@ -69,6 +69,17 @@ type CheckpointDraft = {
   operator_note: string
 }
 
+type DeliveryTaskItem = {
+  key: string
+  title: string
+  summary: string
+  reasons: string[]
+  href: string
+  ctaLabel: string
+  group: 'do' | 'wait'
+  statusLabel: string
+}
+
 function formatAmsterdamDate(value: string | null | undefined) {
   if (!value) return 'Nog niet bevestigd'
   try {
@@ -84,6 +95,26 @@ function formatAmsterdamDate(value: string | null | undefined) {
 
 function buildLeadLabel(lead: ContactRequestRecord) {
   return `${lead.name} — ${lead.organization} — ${getContactRouteLabel(lead.route_interest)} — ${getContactDesiredTimingLabel(lead.desired_timing)}`
+}
+
+function dedupeTaskReasons(items: string[]) {
+  return Array.from(new Set(items.filter((item) => item.trim().length > 0)))
+}
+
+function buildTaskStatusLabel(args: { reasons: string[]; group: 'do' | 'wait' }) {
+  if (args.group === 'wait') {
+    return 'Wacht op input of drempel'
+  }
+
+  if (args.reasons.some((reason) => reason.includes('nog niet vrijgegeven'))) {
+    return 'Nog vrijgeven'
+  }
+
+  if (args.reasons.some((reason) => reason.includes('nog geen'))) {
+    return 'Nog aanvullen'
+  }
+
+  return 'Nog bevestigen'
 }
 
 export function PreflightChecklist({
@@ -195,6 +226,150 @@ export function PreflightChecklist({
     linkedLearningDossierCount,
     learningCloseoutEvidenceCount,
   })
+  const routeTasks = useMemo<DeliveryTaskItem[]>(() => {
+    const tasks: DeliveryTaskItem[] = []
+    const baseHref = `/campaigns/${campaignId}`
+
+    const pushTask = (task: Omit<DeliveryTaskItem, 'statusLabel'>) => {
+      const reasons = dedupeTaskReasons(task.reasons)
+      if (reasons.length === 0) return
+
+      tasks.push({
+        ...task,
+        reasons,
+        statusLabel: buildTaskStatusLabel({ reasons, group: task.group }),
+      })
+    }
+
+    pushTask({
+      key: 'intake',
+      title: 'Intake bevestigen',
+      summary: 'Lead, routekader en intakeharde handoff zijn nog niet compleet bevestigd.',
+      reasons: [
+        ...governance.globalBlockers,
+        ...governance.intakeBlockers,
+        ...(!linkedLead ? ['Nog geen lead of handoffcontext gekoppeld aan deze route.'] : []),
+      ],
+      href: linkedLead ? `${baseHref}#delivery-checkpoint-implementation_intake` : '/beheer/contact-aanvragen',
+      ctaLabel: linkedLead ? 'Open intake' : 'Open leadlijst',
+      group: 'do',
+    })
+
+    pushTask({
+      key: 'import',
+      title: 'Import & QA afronden',
+      summary: 'Deelnemersbestand en importcontrole moeten nog expliciet vrijgegeven worden.',
+      reasons: governance.importBlockers,
+      href: `${baseHref}#delivery-checkpoint-import_qa`,
+      ctaLabel: 'Open import & QA',
+      group: 'do',
+    })
+
+    pushTask({
+      key: 'launch',
+      title: 'Launch readiness bevestigen',
+      summary: 'Invitevrijgave, startdatum en reminders zijn nog niet helemaal launch-klaar.',
+      reasons: governance.inviteBlockers,
+      href: `${baseHref}#delivery-checkpoint-invite_readiness`,
+      ctaLabel: 'Open launch check',
+      group: 'do',
+    })
+
+    pushTask({
+      key: 'activation',
+      title: 'Klantactivatie afronden',
+      summary: 'Dashboardtoegang of activatie moet nog expliciet rond worden gezet.',
+      reasons: governance.activationBlockers,
+      href: `${baseHref}#delivery-checkpoint-client_activation`,
+      ctaLabel: 'Open klantactivatie',
+      group: 'do',
+    })
+
+    const firstValueWaitReasons = governance.firstValueBlockers.filter(
+      (reason) =>
+        reason.includes('drempel') ||
+        reason.includes('bruikbare responses') ||
+        reason.includes('indicatief beeld') ||
+        reason.includes('onvolledige scoredata'),
+    )
+    const firstValueDoReasons = governance.firstValueBlockers.filter((reason) => !firstValueWaitReasons.includes(reason))
+
+    pushTask({
+      key: 'first-value',
+      title: 'First value bewaken',
+      summary: 'Deze route heeft nog niet genoeg veilige output voor eerste waarde.',
+      reasons: firstValueWaitReasons.length > 0 ? firstValueWaitReasons : firstValueDoReasons,
+      href: `${baseHref}#delivery-checkpoint-first_value`,
+      ctaLabel: firstValueWaitReasons.length > 0 ? 'Bekijk drempel' : 'Open first value',
+      group: firstValueWaitReasons.length > 0 ? 'wait' : 'do',
+    })
+
+    const reportWaitReasons = governance.reportDeliveryBlockers.filter(
+      (reason) => reason.includes('Wacht met rapportdelivery') || reason.includes('bruikbare responses'),
+    )
+    const reportDoReasons = governance.reportDeliveryBlockers.filter((reason) => !reportWaitReasons.includes(reason))
+
+    pushTask({
+      key: 'report',
+      title: scanType === 'exit' || scanType === 'retention' ? 'Rapportdelivery bevestigen' : 'Outputdelivery bevestigen',
+      summary: 'De uitlevering naar HR of klant is nog niet expliciet afgerond.',
+      reasons: reportWaitReasons.length > 0 ? reportWaitReasons : reportDoReasons,
+      href: `${baseHref}#delivery-checkpoint-report_delivery`,
+      ctaLabel: reportWaitReasons.length > 0 ? 'Bekijk rapportdrempel' : 'Open rapportstatus',
+      group: reportWaitReasons.length > 0 ? 'wait' : 'do',
+    })
+
+    pushTask({
+      key: 'management-use',
+      title: 'Eerste managementgebruik vastleggen',
+      summary: 'De route is nog niet expliciet bevestigd als gelezen of gebruikt in managementcontext.',
+      reasons: governance.managementUseBlockers,
+      href: `${baseHref}#delivery-checkpoint-first_management_use`,
+      ctaLabel: 'Open management use',
+      group: 'do',
+    })
+
+    pushTask({
+      key: 'follow-up',
+      title: 'Learning en vervolg afronden',
+      summary: 'Vervolgkeuze en leerbewijs zijn nog niet volledig vastgelegd.',
+      reasons: [
+        ...governance.followUpBlockers,
+        ...governance.learningCloseoutBlockers,
+        ...(linkedLearningDossierCount === 0
+          ? ['Nog geen learningdossier gekoppeld aan deze campaign.']
+          : learningCloseoutEvidenceCount === 0
+            ? ['Learningdossier bestaat, maar mist nog expliciete review-, vervolg- of stopuitkomst.']
+            : []),
+      ],
+      href: `/beheer/klantlearnings?campaign=${campaignId}`,
+      ctaLabel: 'Open leerwerkbank',
+      group: 'do',
+    })
+
+    return tasks.sort((a, b) => {
+      if (a.group !== b.group) {
+        return a.group === 'do' ? -1 : 1
+      }
+      return a.title.localeCompare(b.title, 'nl-NL')
+    })
+  }, [
+    campaignId,
+    governance.activationBlockers,
+    governance.firstValueBlockers,
+    governance.followUpBlockers,
+    governance.globalBlockers,
+    governance.importBlockers,
+    governance.intakeBlockers,
+    governance.inviteBlockers,
+    governance.learningCloseoutBlockers,
+    governance.managementUseBlockers,
+    governance.reportDeliveryBlockers,
+    learningCloseoutEvidenceCount,
+    linkedLead,
+    linkedLearningDossierCount,
+    scanType,
+  ])
 
   function updateRecordDraft<K extends keyof RecordDraft>(key: K, value: RecordDraft[K]) {
     setRecordDraft((current) => ({ ...current, [key]: value }))
@@ -491,7 +666,7 @@ export function PreflightChecklist({
           </div>
 
           <div className="space-y-4">
-            <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+            <div id="delivery-handoff-context" className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
               <p className="text-sm font-semibold text-slate-950">Handoffcontext</p>
               {linkedLead ? (
                 <div className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
@@ -518,28 +693,107 @@ export function PreflightChecklist({
               )}
             </div>
 
-            <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
-              <p className="text-sm font-semibold text-slate-950">Uitvoeringswaarschuwingen</p>
-              {opsWarnings.length === 0 ? (
-                <p className="mt-3 text-sm leading-6 text-slate-600">
-                  Geen directe waarschuwingen. De uitvoering kan nu vooral op voortgang, eerste waarde en opvolging worden gestuurd.
-                </p>
+            <div id="route-tasklist" className="rounded-[22px] border border-amber-200 bg-amber-50/70 p-4">
+              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">Tasklist</p>
+                  <p className="mt-1 text-base font-semibold text-slate-950">Route vraagt nu operationele aandacht</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-700">
+                    Gebruik deze lijst als klikbare werklijst. Elke taak opent direct het checkpoint of beheeronderdeel waar HR of klant nu verder kan.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2 text-xs">
+                  <span className="rounded-full bg-white/90 px-3 py-1 font-semibold text-slate-700">
+                    {routeTasks.filter((task) => task.group === 'do').length} nu doen
+                  </span>
+                  <span className="rounded-full bg-white/90 px-3 py-1 font-semibold text-slate-700">
+                    {routeTasks.filter((task) => task.group === 'wait').length} wacht op input
+                  </span>
+                  <Link
+                    href="#route-status"
+                    className="rounded-full border border-amber-300 bg-white px-3 py-1 font-semibold text-amber-800 transition hover:border-amber-400 hover:bg-amber-50"
+                  >
+                    Bekijk routestatus
+                  </Link>
+                </div>
+              </div>
+
+              {routeTasks.length === 0 ? (
+                <div className="mt-4 rounded-2xl border border-white bg-white px-4 py-4 text-sm leading-6 text-slate-700">
+                  Geen open taken. Deze route kan nu vooral op voortgang, eerste waarde en opvolging worden gestuurd.
+                </div>
               ) : (
-                <ul className="mt-3 space-y-2">
-                  {opsWarnings.map((warning) => (
-                    <li key={warning} className="flex gap-2 text-sm leading-6 text-slate-700">
-                      <span className="text-amber-500">!</span>
-                      <span>{warning}</span>
-                    </li>
-                  ))}
-                </ul>
+                <div className="mt-4 grid gap-4 xl:grid-cols-2">
+                  {(['do', 'wait'] as const).map((group) => {
+                    const items = routeTasks.filter((task) => task.group === group)
+                    if (items.length === 0) return null
+
+                    return (
+                      <div key={group} className="rounded-2xl border border-white bg-white px-4 py-4">
+                        <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                          <div>
+                            <p className="text-sm font-semibold text-slate-950">
+                              {group === 'do' ? 'Nu doen' : 'Wacht op input of drempel'}
+                            </p>
+                            <p className="mt-1 text-xs leading-5 text-slate-500">
+                              {group === 'do'
+                                ? 'Taken die nu rechtstreeks opgepakt of bevestigd kunnen worden.'
+                                : 'Taken die nog wachten op responses, scoredata of klantinput.'}
+                            </p>
+                          </div>
+                          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                            {items.length} taak{items.length === 1 ? '' : 'en'}
+                          </span>
+                        </div>
+
+                        <div className="mt-3 space-y-3">
+                          {items.map((task) => (
+                            <div key={task.key} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                              <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <p className="text-sm font-semibold text-slate-950">{task.title}</p>
+                                    <span
+                                      className={`rounded-full px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.14em] ${
+                                        task.group === 'do'
+                                          ? 'bg-amber-100 text-amber-800'
+                                          : 'bg-slate-200 text-slate-700'
+                                      }`}
+                                    >
+                                      {task.statusLabel}
+                                    </span>
+                                  </div>
+                                  <p className="mt-2 text-sm leading-6 text-slate-700">{task.summary}</p>
+                                  <ul className="mt-2 space-y-1.5">
+                                    {task.reasons.slice(0, 2).map((reason) => (
+                                      <li key={reason} className="flex gap-2 text-sm leading-6 text-slate-600">
+                                        <span className="text-amber-500">•</span>
+                                        <span>{reason}</span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                                <Link
+                                  href={task.href}
+                                  className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-amber-300 hover:text-amber-800"
+                                >
+                                  {task.ctaLabel}
+                                </Link>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
               )}
             </div>
 
-            <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
-              <p className="text-sm font-semibold text-slate-950">Governance per fase</p>
+            <div id="route-status" className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+              <p className="text-sm font-semibold text-slate-950">Routestatus per fase</p>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Deze lanes laten zien welke expliciete blockers nog tussen launch, activation, first value, output en closeout staan.
+                Hier zie je compact welke fases nog open blockers hebben tussen launch, activatie, first value, output en closeout.
               </p>
               <div className="mt-4 space-y-3">
                 <GovernanceLane
@@ -583,6 +837,19 @@ export function PreflightChecklist({
                   ]}
                 />
               </div>
+              {opsWarnings.length > 0 ? (
+                <div className="mt-4 rounded-2xl border border-white bg-white px-4 py-4">
+                  <p className="text-sm font-semibold text-slate-950">Aanvullende signalen</p>
+                  <ul className="mt-3 space-y-2">
+                    {opsWarnings.slice(0, 4).map((warning) => (
+                      <li key={warning} className="flex gap-2 text-sm leading-6 text-slate-700">
+                        <span className="text-amber-500">!</span>
+                        <span>{warning}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
             </div>
 
             <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
@@ -733,7 +1000,11 @@ export function PreflightChecklist({
               const autoSignal = autoSignals[definition.key]
 
               return (
-                <div key={definition.key} className="rounded-[22px] border border-slate-200 bg-slate-50/70 p-4">
+                <div
+                  key={definition.key}
+                  id={`delivery-checkpoint-${definition.key}`}
+                  className="rounded-[22px] border border-slate-200 bg-slate-50/70 p-4 scroll-mt-24"
+                >
                   <div className="flex flex-col gap-3 border-b border-slate-200/70 pb-4 lg:flex-row lg:items-start lg:justify-between">
                     <div>
                       <p className="text-sm font-semibold text-slate-950">{definition.title}</p>

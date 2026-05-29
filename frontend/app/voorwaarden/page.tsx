@@ -1,17 +1,17 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import { LegalPageShell } from '@/components/marketing/legal-page-shell'
 
 export const metadata: Metadata = {
   title: 'Algemene voorwaarden',
-  description: 'Lees de algemene voorwaarden van Verisight voor het gebruik van ExitScan en RetentieScan.',
+  description: 'Lees de algemene voorwaarden van Loep voor het gebruik van ExitScan en RetentieScan.',
 }
 
 export default function VoorwaardenPage() {
   return (
     <LegalPageShell
       title="Algemene voorwaarden"
-      description="Op deze pagina lees je de basisvoorwaarden voor het gebruik van Verisight, ExitScan en RetentieScan. Voor een publieksvriendelijke trustsamenvatting kun je ook de Trust & privacy-pagina bekijken."
+      description="Op deze pagina lees je de basisvoorwaarden voor het gebruik van Loep, ExitScan en RetentieScan. Voor een publieksvriendelijke trustsamenvatting kun je ook de Trust & privacy-pagina bekijken."
       lastUpdated="9 april 2026"
     >
       <section>
@@ -27,16 +27,16 @@ export default function VoorwaardenPage() {
         <h2>1. Definities</h2>
         <ul>
           <li>
-            <strong>Verisight:</strong> de dienst en software voor ExitScan, RetentieScan, rapportage en bijbehorende begeleiding.
+            <strong>Loep:</strong> de dienst en software voor ExitScan, RetentieScan, rapportage en bijbehorende begeleiding.
           </li>
           <li>
-            <strong>Klant:</strong> de organisatie die een of meer Verisight-producten afneemt.
+            <strong>Klant:</strong> de organisatie die een of meer Loep-producten afneemt.
           </li>
           <li>
             <strong>Gebruiker:</strong> een bevoegde medewerker van de klantorganisatie met toegang tot het platform.
           </li>
           <li>
-            <strong>Respondent:</strong> een (voormalig of actief) medewerker die een Verisight-vragenlijst invult.
+            <strong>Respondent:</strong> een (voormalig of actief) medewerker die een Loep-vragenlijst invult.
           </li>
         </ul>
       </section>
@@ -44,15 +44,15 @@ export default function VoorwaardenPage() {
       <section>
         <h2>2. Waarop zijn deze voorwaarden van toepassing?</h2>
         <p>
-          Deze voorwaarden gelden voor iedere overeenkomst tussen Verisight en de klantorganisatie, tenzij schriftelijk
+          Deze voorwaarden gelden voor iedere overeenkomst tussen Loep en de klantorganisatie, tenzij schriftelijk
           iets anders is afgesproken. Door de dienst te gebruiken accepteert de klant deze voorwaarden.
         </p>
       </section>
 
       <section>
-        <h2>3. Wat levert Verisight?</h2>
+        <h2>3. Wat levert Loep?</h2>
         <p>
-          Verisight levert begeleide productvormen met software, uitnodigingen, analyse en rapportage. Dat kan
+          Loep levert begeleide productvormen met software, uitnodigingen, analyse en rapportage. Dat kan
           onder meer bestaan uit ExitScan, RetentieScan of een combinatie daarvan, met:
         </p>
         <ul>
@@ -63,7 +63,7 @@ export default function VoorwaardenPage() {
           <li>persoonlijke toelichting op de uitkomsten.</li>
         </ul>
         <p>
-          De standaarddienst is organisatiegebonden en begeleid van opzet. Verisight biedt op dit moment geen
+          De standaarddienst is organisatiegebonden en begeleid van opzet. Loep biedt op dit moment geen
           publieke self-service checkout, seat- of usageabonnementen, tenzij schriftelijk anders overeengekomen.
         </p>
       </section>
@@ -81,7 +81,7 @@ export default function VoorwaardenPage() {
       <section>
         <h2>5. Persoonsgegevens en rollen</h2>
         <p>
-          Voor de verwerking van persoonsgegevens van respondenten treedt Verisight in beginsel op als verwerker en de
+          Voor de verwerking van persoonsgegevens van respondenten treedt Loep in beginsel op als verwerker en de
           klantorganisatie als verwerkingsverantwoordelijke. Meer hierover lees je in het{' '}
           <Link href="/privacy">privacybeleid</Link>. Op verzoek kan een verwerkersovereenkomst beschikbaar worden
           gesteld.
@@ -91,7 +91,7 @@ export default function VoorwaardenPage() {
       <section>
         <h2>6. Intellectueel eigendom</h2>
         <p>
-          De software, rapportformats, vragenlijsten en methodische opzet van Verisight blijven eigendom van Verisight.
+          De software, rapportformats, vragenlijsten en methodische opzet van Loep blijven eigendom van Loep.
           De klant krijgt een gebruiksrecht voor de duur van de overeenkomst. Klantdata en uitkomsten die specifiek
           voor de klant zijn verzameld, blijven van de klant.
         </p>
@@ -103,7 +103,7 @@ export default function VoorwaardenPage() {
       <section>
         <h2>7. Vertrouwelijkheid</h2>
         <p>
-          Verisight en de klant behandelen vertrouwelijke informatie zorgvuldig en delen die alleen als dat nodig is
+          Loep en de klant behandelen vertrouwelijke informatie zorgvuldig en delen die alleen als dat nodig is
           voor uitvoering van de overeenkomst of als de wet dat vereist.
         </p>
       </section>
@@ -111,7 +111,7 @@ export default function VoorwaardenPage() {
       <section>
         <h2>8. Beschikbaarheid en ondersteuning</h2>
         <p>
-          Verisight streeft naar betrouwbare dienstverlening en communiceert gepland onderhoud waar mogelijk vooraf.
+          Loep streeft naar betrouwbare dienstverlening en communiceert gepland onderhoud waar mogelijk vooraf.
           Omdat het om software en externe infrastructuur gaat, kan volledige ononderbroken beschikbaarheid niet worden
           gegarandeerd.
         </p>
@@ -120,12 +120,12 @@ export default function VoorwaardenPage() {
       <section>
         <h2>9. Aansprakelijkheid</h2>
         <p>
-          De aansprakelijkheid van Verisight is beperkt tot directe schade en maximaal het bedrag dat de klant in de
+          De aansprakelijkheid van Loep is beperkt tot directe schade en maximaal het bedrag dat de klant in de
           drie maanden voorafgaand aan de schadeveroorzakende gebeurtenis voor de dienst heeft betaald, tenzij de wet
           dwingend anders bepaalt.
         </p>
         <p>
-          Verisight is niet aansprakelijk voor indirecte schade, gevolgschade, gemiste omzet of schade die ontstaat
+          Loep is niet aansprakelijk voor indirecte schade, gevolgschade, gemiste omzet of schade die ontstaat
           door onjuiste of onvolledige gegevens die door de klant zijn aangeleverd.
         </p>
       </section>
@@ -133,17 +133,17 @@ export default function VoorwaardenPage() {
       <section>
         <h2>10. Betaling en facturering</h2>
         <p>
-          Verisight stuurt bij aanvang van het traject een factuur voor het overeengekomen bedrag. De betalingstermijn
+          Loep stuurt bij aanvang van het traject een factuur voor het overeengekomen bedrag. De betalingstermijn
           bedraagt 14 dagen na factuurdatum, tenzij schriftelijk anders afgesproken. Bij overschrijding van de
-          betalingstermijn is Verisight gerechtigd de dienst tijdelijk op te schorten totdat betaling is ontvangen.
+          betalingstermijn is Loep gerechtigd de dienst tijdelijk op te schorten totdat betaling is ontvangen.
         </p>
         <p>
-          Verisight werkt in de huidige productvorm met offerte, trajectafspraak en handmatige facturatie. Er geldt
+          Loep werkt in de huidige productvorm met offerte, trajectafspraak en handmatige facturatie. Er geldt
           geen standaard self-serve checkout, seatbilling of automatisch recurring abonnement, tenzij partijen dat
           later schriftelijk expliciet overeenkomen.
         </p>
         <p>
-          Prijzen zijn exclusief btw, tenzij anders vermeld. Verisight behoudt zich het recht voor om bij uitgebreide
+          Prijzen zijn exclusief btw, tenzij anders vermeld. Loep behoudt zich het recht voor om bij uitgebreide
           aanpassingen of meerwerk buiten de overeengekomen scope een aanvullende offerte voor te leggen.
         </p>
       </section>
@@ -152,7 +152,7 @@ export default function VoorwaardenPage() {
         <h2>11. Klachten</h2>
         <p>
           Klachten over de geleverde dienst kunnen worden gemeld via{' '}
-          <a href="mailto:hallo@verisight.nl">hallo@verisight.nl</a>. Verisight streeft ernaar klachten binnen
+          <a href="mailto:hallo@getloep.nl">hallo@getloep.nl</a>. Loep streeft ernaar klachten binnen
           10 werkdagen te beoordelen en te beantwoorden. Klachten schorten de betalingsverplichting niet op.
         </p>
       </section>
@@ -165,7 +165,7 @@ export default function VoorwaardenPage() {
           bewaarbeleid worden verwijderd of geanonimiseerd.
         </p>
         <p>
-          Verisight is gerechtigd de overeenkomst met onmiddellijke ingang te beëindigen als de klant de
+          Loep is gerechtigd de overeenkomst met onmiddellijke ingang te beëindigen als de klant de
           voorwaarden wezenlijk schendt en dit na schriftelijke ingebrekestelling niet binnen 10 werkdagen herstelt.
         </p>
       </section>
@@ -173,7 +173,7 @@ export default function VoorwaardenPage() {
       <section>
         <h2>13. Wijzigingen</h2>
         <p>
-          Verisight kan deze voorwaarden aanpassen. Als een wijziging materieel is, informeren wij actieve klanten
+          Loep kan deze voorwaarden aanpassen. Als een wijziging materieel is, informeren wij actieve klanten
           vooraf. De meest recente versie blijft publiek beschikbaar op deze pagina.
         </p>
       </section>
@@ -190,7 +190,7 @@ export default function VoorwaardenPage() {
         <h2>15. Contact</h2>
         <p>
           Voor vragen over deze voorwaarden kun je mailen naar{' '}
-          <a href="mailto:hallo@verisight.nl">hallo@verisight.nl</a>. Bekijk ook{' '}
+          <a href="mailto:hallo@getloep.nl">hallo@getloep.nl</a>. Bekijk ook{' '}
           <Link href="/vertrouwen">Trust & privacy</Link>, het{' '}
           <Link href="/privacy">privacybeleid</Link> en de{' '}
           <Link href="/dpa">verwerkersovereenkomst</Link>.
@@ -199,3 +199,4 @@ export default function VoorwaardenPage() {
     </LegalPageShell>
   )
 }
+

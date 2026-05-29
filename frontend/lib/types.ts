@@ -104,6 +104,42 @@ export interface SurveyResponse {
   submitted_at: string
 }
 
+export interface ItemScoreDetail {
+  item_key: string
+  label: string
+  avg: number | null
+  n: number
+}
+
+export interface FactorItemScoreGroup {
+  factor_key: string
+  factor_label: string
+  avg_score: number | null
+  items: ItemScoreDetail[]
+}
+
+export interface SdtDimensionItemScoreGroup {
+  dimension_key: string
+  dimension_label: string
+  avg_score: number | null
+  items: ItemScoreDetail[]
+}
+
+export interface SupplementalItemScoreGroup {
+  section_key: string
+  section_label: string
+  avg_score: number | null
+  items: ItemScoreDetail[]
+}
+
+export interface CampaignItemScoresResponse {
+  factors: FactorItemScoreGroup[]
+  sdt_dimensions: SdtDimensionItemScoreGroup[]
+  supplemental_sections: SupplementalItemScoreGroup[]
+  privacy_suppressed_items: string[]
+  suppressed_items: ItemScoreDetail[]
+}
+
 export interface OrgMember {
   id: string
   org_id: string
@@ -208,8 +244,11 @@ export function getResponseDirectionSignalScore(
 }
 
 export function hasCampaignAddOn(
-  campaign: Pick<Campaign, 'enabled_modules'> | null | undefined,
+  campaign: { enabled_modules?: string[] | null } | null | undefined,
   addOn: CampaignAddOn,
 ) {
+  if (addOn === 'segment_deep_dive') {
+    return true
+  }
   return campaign?.enabled_modules?.includes(addOn) ?? false
 }
