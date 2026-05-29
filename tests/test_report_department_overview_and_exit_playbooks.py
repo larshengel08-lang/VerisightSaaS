@@ -6,6 +6,7 @@ from backend.report import (
     _build_department_overview_payload,
     _build_exit_playbook_rows,
 )
+from backend.products.exit.report_content import get_action_playbooks_payload
 
 
 def _fake_response(
@@ -178,3 +179,22 @@ def test_exit_playbooks_use_retrospective_tone_and_hr_manager_joint_owner():
     assert any("volgende persoon" in action.lower() for action in rows[0]["actions"])
     assert any("onderzoek" in action.lower() for action in rows[0]["actions"])
     assert "oorzaak" not in rows[0]["caution"].lower()
+
+
+def test_exit_playbook_payload_only_returns_scored_high_and_middle_factors_in_priority_order():
+    payload = get_action_playbooks_payload(
+        factor_avgs={
+            "leadership": 3.6,
+            "workload": 4.9,
+            "culture": 6.2,
+            "compensation": 8.1,
+            "unknown_factor": 2.8,
+        },
+        top_risks=[],
+    )
+
+    assert [entry["factor_key"] for entry in payload] == ["leadership", "workload", "culture"]
+    assert [entry["band"] for entry in payload] == ["HOOG", "MIDDEN", "MIDDEN"]
+    assert payload[0]["title"] == "Leiderschap als vertrekdriver — directe managementvraag"
+    assert payload[0]["score"] == 3.6
+    assert payload[-1]["score"] == 6.2

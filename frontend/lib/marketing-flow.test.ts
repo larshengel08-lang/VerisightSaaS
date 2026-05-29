@@ -32,13 +32,13 @@ describe('marketing flow defaults', () => {
     })
   })
 
-  it('keeps the contact flow framed as a route-inschatting instead of a generic message send', () => {
+  it('keeps the contact flow framed as a kennismaking instead of a generic message send', () => {
     const contactFormSource = fs.readFileSync(path.join(process.cwd(), 'components', 'marketing', 'contact-form.tsx'), 'utf8')
     const solutionSource = fs.readFileSync(path.join(process.cwd(), 'lib', 'seo-solution-pages.ts'), 'utf8')
 
-    expect(contactFormSource).toContain('Plan een eerste route-inschatting')
-    expect(contactFormSource).toContain('Route-inschatting wordt verstuurd...')
-    expect(contactFormSource).toContain('Route-inschatting aangevraagd.')
+    expect(contactFormSource).toContain('Plan een kennismaking')
+    expect(contactFormSource).toContain('Kennismaking wordt verstuurd...')
+    expect(contactFormSource).toContain('Geslaagd')
     expect(solutionSource).toContain('Plan een suite-demo over verloopanalyse')
     expect(solutionSource).toContain('Plan een suite-demo over medewerkersbehoud analyseren')
   })
@@ -73,9 +73,9 @@ describe('marketing flow defaults', () => {
   })
 
   it('keeps the approach flow explicit about assisted onboarding and first use', () => {
-    expect(included).toContain('Inrichting van de gekozen route')
+    expect(included).toContain('Begeleide managementbespreking van 60–90 minuten')
     expect(approachSteps.find((step) => step.title === '5. Dashboard en rapport')?.body.toLowerCase()).toContain('dashboard en rapport')
-    expect(approachSteps.find((step) => step.title === '4. Eerste signalen')?.body.toLowerCase()).toContain('respons')
+    expect(approachSteps.find((step) => step.title === '6. Managementbespreking')?.body.toLowerCase()).toContain('60–90 minuten')
   })
 
   it('keeps preview copy and buyer-facing showcase assets linked to the same proof paths', () => {
@@ -91,7 +91,7 @@ describe('marketing flow defaults', () => {
     expect(getContactRouteLabel('retentiescan')).toBe('RetentieScan')
     expect(getContactRouteLabel('culture_assessment')).toBe('Loep Culture Assessment')
     expect(getContactFirstStepLabel('combinatie')).toBe('een gefaseerde combinatieroute')
-    expect(getContactFirstStepLabel('onboarding')).toContain('bounded peer')
+    expect(getContactFirstStepLabel('onboarding')).toContain('Onboarding 30-60-90 Baseline')
     expect(getContactFirstStepLabel('pulse')).toContain('na een eerste baseline')
     expect(getContactFirstStepLabel('leadership')).toContain('na een bestaand signaal')
   })
@@ -121,7 +121,7 @@ describe('marketing flow defaults', () => {
     )
   })
 
-  it('keeps onboarding qualified as a bounded peer instead of reframing it as a gewone follow-up', () => {
+  it('keeps onboarding qualified as a gerichte eerste route instead of reframing it as a gewone follow-up', () => {
     const onboardingGuidance = getContactQualificationGuidance({
       routeInterest: 'onboarding',
       desiredTiming: 'orienterend',
@@ -131,6 +131,6 @@ describe('marketing flow defaults', () => {
     expect(onboardingGuidance.status).toBe('bounded_peer_review')
     expect(onboardingGuidance.recommendedCoreRoute).toBe('exitscan')
     expect(onboardingGuidance.followOnCandidateRoute).toBe('onboarding')
-    expect(onboardingGuidance.headline.toLowerCase()).toContain('bounded peer')
+    expect(onboardingGuidance.headline.toLowerCase()).toContain('gerichte eerste route')
   })
 })

@@ -67,6 +67,8 @@ from backend.models import Campaign, Organization, Respondent, SurveyResponse
 from backend.products.exit.report_content import (
     EXIT_DECISION_BY_FACTOR,
     EXIT_OWNER_BY_FACTOR,
+    EXIT_PLAYBOOKS,
+    get_action_playbooks_payload,
 )
 from backend.products.shared.management_language import (
     build_factor_presentation,
@@ -1962,6 +1964,29 @@ def _build_exit_playbook_rows(
             "owner_basis": EXIT_OWNER_BY_FACTOR.get(factor),
         })
     return rows[:2]
+
+
+def _build_exit_playbook_rows_v2(payload: list[dict]) -> list[dict]:
+    """
+    Converteert EXIT_PLAYBOOKS-payload naar render-rows.
+    Volgt hetzelfde patroon als _build_retention_playbook_rows maar
+    met de ExitScan-velden: signal, implication (i.p.v. validate, review).
+    """
+    rows = []
+    for entry in payload:
+        rows.append({
+            "factor": entry["factor_key"],
+            "band": entry["band"],
+            "score": entry["score"],
+            "title": entry["title"],
+            "signal": entry["signal"],
+            "implication": entry["implication"],
+            "decision": entry["decision"],
+            "owner": entry["owner"],
+            "actions": entry["actions"],
+            "caution": entry["caution"],
+        })
+    return rows
 
 
 def _factor_explanation_lookup() -> dict[str, str]:
@@ -4318,6 +4343,81 @@ def _append_exit_playbooks(
     story.append(PageBreak())
 
 
+def _append_exit_management_duiding(story, rows, styles):
+    """
+    Rendert de EXIT_PLAYBOOKS-entries als sectie 'Managementduiding per factor'.
+    Volgt hetzelfde visuele patroon als _append_rebrand_retention_playbooks()
+    maar met de velden signal, implication i.p.v. validate, review.
+    """
+    if not rows:
+        return
+
+    content_width = CONTENT_WIDTH
+    high_hex = _color_to_hex(RISK_HIGH)
+    mid_hex = _color_to_hex(RISK_MED)
+    muted_hex = _color_to_hex(MUTED)
+
+    _append_section_heading(
+        story,
+        eyebrow="Wat nu",
+        title="Managementduiding per factor",
+        content_width=content_width,
+    )
+    for idx, row in enumerate(rows):
+        band_color = high_hex if row["band"] == "HOOG" else mid_hex
+        actions_text = "<br/>".join(
+            f"{index}. {escape(action)}"
+            for index, action in enumerate(row.get("actions", []), start=1)
+        )
+
+        story.append(
+            Paragraph(
+                f"<font color='{band_color}'>{escape(row['title'])}</font>",
+                styles["sub_title"],
+            )
+        )
+        story.append(
+            Paragraph(
+                f"<b>Wat de exitdata laat zien</b><br/>{escape(row['signal'])}",
+                styles["body"],
+            )
+        )
+        story.append(
+            Paragraph(
+                f"<b>Wat dit betekent voor wie er nog is</b><br/>{escape(row['implication'])}",
+                styles["body"],
+            )
+        )
+        story.append(
+            Paragraph(
+                f"<b>Beslissing</b><br/>{escape(row['decision'])}",
+                styles["body"],
+            )
+        )
+        story.append(
+            Paragraph(
+                f"<b>Eigenaar</b><br/>{escape(row['owner'])}",
+                styles["body"],
+            )
+        )
+        if actions_text:
+            story.append(
+                Paragraph(
+                    f"<b>Eerste stappen</b><br/>{actions_text}",
+                    styles["body"],
+                )
+            )
+        story.append(
+            Paragraph(
+                f"<i><font color='{muted_hex}'><b>Let op</b><br/>{escape(row['caution'])}</font></i>",
+                styles["body"],
+            )
+        )
+        if idx < len(rows) - 1:
+            _append_divider_line(story, content_width=content_width, gap_mm=2.5)
+    story.append(PageBreak())
+
+
 def _append_rebrand_retention_playbooks(
     story: list,
     *,
@@ -5400,6 +5500,13 @@ def _build_exit_embedded_story(
         content_width=content_width,
         report_theme=report_theme,
     )
+    playbook_payload = get_action_playbooks_payload(
+        factor_avgs=factor_avgs,
+        top_risks=top_risks,
+    )
+    if playbook_payload:
+        playbook_rows = _build_exit_playbook_rows_v2(playbook_payload)
+        _append_exit_management_duiding(story, playbook_rows, STYLES)
     _append_department_overview_section(
         story,
         department_overview_payload=department_overview_payload,
@@ -5423,12 +5530,6 @@ def _build_exit_embedded_story(
         report_theme=report_theme,
         title="Eerste route & actie",
         intro="Hier komt de vertaalslag van interpretatie naar opvolging samen: eerste route, eerste eigenaar, eerste stap en reviewmoment.",
-    )
-    _append_exit_playbooks(
-        story,
-        exit_playbooks=exit_playbooks,
-        content_width=content_width,
-        report_theme=report_theme,
     )
     _append_exit_methodology_page(
         story,
