@@ -180,7 +180,7 @@ def test_generate_exit_report_smoke(db_session: Session):
     assert pdf_bytes.startswith(b"%PDF")
     assert len(pdf_bytes) > 8000
     pages = _extract_pdf_pages(pdf_bytes)
-    assert len(pages) == 11
+    assert len(pages) == 15
     assert 'Door Loep' in pages[0]
     assert 'Segment deep dive' in pages[0]
     assert 'Opgenomen' in pages[0]
@@ -202,11 +202,16 @@ def test_generate_exit_report_smoke(db_session: Session):
     assert 'Autonomie' in pages[6]
     assert 'Organisatiefactoren' in pages[7]
     assert 'Belevingsscore' in pages[7]
-    assert 'Eerste route & actie' in pages[8]
-    assert 'Review' in pages[8]
-    assert 'Methodiek / leeswijzer' in pages[9]
-    assert 'Technische verantwoording' in pages[10]
-    assert 'Onderliggende psychologische laag (SDT)' in pages[10]
+    assert 'Managementduiding per factor' in pages[8]
+    assert 'Wat de exitdata laat zien' in pages[8]
+    assert 'Wat dit betekent voor wie er nog is' in ' '.join(pages[8:11])
+    assert 'Afdelingsoverzicht' in pages[11]
+    assert 'Eerste route & actie' in pages[12]
+    assert 'Review' in pages[12]
+    assert 'Methodiek / leeswijzer' in pages[13]
+    assert 'Technische verantwoording' in pages[14]
+    assert 'Onderliggende psychologische laag (SDT)' in pages[14]
+    assert 'Correctieve exit-playbooks' not in ' '.join(pages)
     assert 'Vertrouwelijk' in ' '.join(pages)
 
 

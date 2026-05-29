@@ -42,6 +42,379 @@ EXIT_OWNER_BY_FACTOR = {
     "role_clarity": "Betrokken leidinggevende met HR business partner",
 }
 
+EXIT_PLAYBOOKS = {
+
+    # ─── ORGANISATIEFACTOREN ───────────────────────────────────────────
+
+    "leadership": {
+        "HOOG": {
+            "title": "Leiderschap als vertrekdriver — directe managementvraag",
+            "signal": "Vertrekkers ervoeren leiderschap als ontoereikend. Dit was een van de sterkste drivers van hun vertrek.",
+            "implication": "Huidige medewerkers in dezelfde omgeving lopen een vergelijkbaar risico. Dit vraagt een reactie voordat het volgende vertrek plaatsvindt.",
+            "decision": "Beslis welk leiderschapsgedrag structureel anders moet — en wie daarvoor verantwoordelijk is.",
+            "owner": "Directie / HR-directeur",
+            "actions": [
+                "Identificeer in welke teams of lagen het signaal zich concentreert.",
+                "Voer een korte toets met 2–3 huidige medewerkers: wat hebben zij nodig van hun leidinggevende?",
+                "Maak één concrete gedragsafspraak met de betrokken leidinggevende — geen training, maar een eerste zichtbare stap.",
+                "Plan een reviewmoment in over 6–8 weken.",
+            ],
+            "caution": "Gebruik de exitdata niet als aanklacht. Gebruik het als spiegel voor een toekomstgesprek, niet als dossier.",
+        },
+        "MIDDEN": {
+            "title": "Leiderschap als bijdragende factor — toetsen en volgen",
+            "signal": "Leiderschap droeg bij aan vertrek, maar was niet de dominante driver.",
+            "implication": "Het signaal is te aanwezig om te negeren, maar rechtvaardigt geen grote interventie.",
+            "decision": "Toets of dit een structureel of situationeel patroon is voordat je handelt.",
+            "owner": "HR-manager",
+            "actions": [
+                "Check of het signaal bij één team concentreert of breed verspreid is.",
+                "Neem het mee als gespreksthema in het eerstvolgende leiderschaps- of functioneringsgesprek.",
+            ],
+            "caution": "Maak dit niet groter dan het is. Een midden-signaal vraagt aandacht, geen incident.",
+        },
+        "LAAG": {
+            "title": "Leiderschap geen vertrekdriver — bevestig wat werkt",
+            "signal": "Leiderschap was geen relevante factor in het vertrekpatroon.",
+            "implication": "Positief signaal. Leidinggevenden in dit beeld doen iets goed.",
+            "decision": "Geen actie vereist.",
+            "owner": "—",
+            "actions": [
+                "Deel het positieve beeld met betrokken leidinggevenden als erkenning.",
+            ],
+            "caution": "Ga er niet van uit dat dit permanent is. Herhaal de meting bij nieuwe uitstroom.",
+        },
+    },
+
+    "culture": {
+        "HOOG": {
+            "title": "Cultuur als vertrekdriver — breed organisatiesignaal",
+            "signal": "Vertrekkers ervoeren de organisatiecultuur als een reden om te gaan. Dit is geen individuele managementvraag maar een collectief patroon.",
+            "implication": "Cultuur raakt iedereen. Dit signaal is moeilijker te adresseren dan één leidinggevende, maar ook gevaarlijker om te negeren.",
+            "decision": "Beslis of jullie dit actief willen benoemen en aanpakken, of accepteren dat het een structureel vertrekrisico blijft.",
+            "owner": "Directie / MT",
+            "actions": [
+                "Breng het cultuurthema expliciet op in een MT-sessie — niet als probleem maar als strategische vraag.",
+                "Selecteer één concreet cultuuraspect (bijv. feedback, samenwerking, psychologische veiligheid) voor een eerste gesprek.",
+                "Gebruik de RetentieScan als vervolgstap om te toetsen of huidige medewerkers hetzelfde beeld herkennen.",
+            ],
+            "caution": "Vermijd brede cultuurprogramma's als directe reactie. Begin met één benoembaar aspect, niet met een transformatietraject.",
+        },
+        "MIDDEN": {
+            "title": "Cultuur als bijdragende factor — bewust volgen",
+            "signal": "Cultuur speelde een rol bij vertrek, maar was niet de kern.",
+            "implication": "Het signaal is diffuus genoeg om meerdere interpretaties toe te laten. Validatie is nodig voordat je handelt.",
+            "decision": "Houd dit op de radar en toets bij de volgende meting of het signaal sterker wordt.",
+            "owner": "HR-manager",
+            "actions": [
+                "Noteer het als aandachtspunt voor de eerstvolgende teamreview of medewerkersbespreking.",
+            ],
+            "caution": "Cultuur is makkelijk als catch-all te gebruiken. Wees specifiek over welk aspect van cultuur dit signaal raakt.",
+        },
+        "LAAG": {
+            "title": "Cultuur geen vertrekdriver — stabiel beeld",
+            "signal": "Cultuur werd door vertrekkers niet als reden van vertrek benoemd.",
+            "implication": "De beleefde cultuur was voor deze groep geen drempel.",
+            "decision": "Geen actie vereist.",
+            "owner": "—",
+            "actions": [],
+            "caution": "Cultuurbeelden kunnen verschuiven bij teamsamenstelling of leiderschapswisselingen. Monitor bij significante organisatiewijzigingen.",
+        },
+    },
+
+    "growth": {
+        "HOOG": {
+            "title": "Groei en ontwikkeling als vertrekdriver — ambitieuze mensen zagen geen pad",
+            "signal": "Vertrekkers ervoeren onvoldoende ruimte voor groei, ontwikkeling of doorstroom. Ze vertrokken (deels) omdat ze elders meer perspectief zagen.",
+            "implication": "Huidige medewerkers met vergelijkbare ambities zitten in dezelfde situatie. Dit is een actief retentierisico voor je beste mensen.",
+            "decision": "Beslis of jullie groeipad en ontwikkelingsmogelijkheden zichtbaar genoeg zijn voor huidige medewerkers.",
+            "owner": "Directleidinggevende / HR-manager",
+            "actions": [
+                "Voer binnen 4 weken een kort gesprek met 2–3 medewerkers over hun groeiverwachting.",
+                "Inventariseer welke ontwikkelmogelijkheden er zijn — en of die actief worden gecommuniceerd.",
+                "Maak voor ten minste één medewerker een concreet groeigesprek met een eerste zichtbare stap.",
+            ],
+            "caution": "Beloof geen groeipaden die er niet zijn. Een eerlijk gesprek over begrensde mogelijkheden is beter dan een valse belofte.",
+        },
+        "MIDDEN": {
+            "title": "Groei als bijdragende factor — verwachtingsmanagement toetsen",
+            "signal": "Ontwikkeling speelde een rol bij vertrek, maar was niet de dominante reden.",
+            "implication": "Mogelijk is er een kloof tussen wat medewerkers verwachten en wat de organisatie biedt. Dat hoeft geen probleem te zijn als het wordt besproken.",
+            "decision": "Toets of de groeiverwachting van huidige medewerkers realistisch is afgestemd.",
+            "owner": "Direct leidinggevende",
+            "actions": [
+                "Neem groeiverwachting op als vast gespreksthema in functionerings- of ontwikkelgesprekken.",
+            ],
+            "caution": "Niet elk vertrek op groeigebied is te voorkomen. Sommige mensen vertrekken om extern te groeien — dat is geen fout.",
+        },
+        "LAAG": {
+            "title": "Groei geen vertrekdriver — ontwikkelklimaat voldoende",
+            "signal": "Vertrekkers benoemden groei niet als relevante driver.",
+            "implication": "Het ontwikkelklimaat werd niet als drempel ervaren.",
+            "decision": "Geen actie vereist.",
+            "owner": "—",
+            "actions": [],
+            "caution": "Dit zegt niets over de kwaliteit van je ontwikkelaanbod — alleen dat het voor deze vertrekkers geen reden was.",
+        },
+    },
+
+    "compensation": {
+        "HOOG": {
+            "title": "Beloning als vertrekdriver — marktpositie of eerlijkheidsvraag",
+            "signal": "Vertrekkers ervoeren beloning als ontoereikend of niet eerlijk. Dit was een concrete bijdrage aan hun vertrekbeslissing.",
+            "implication": "Als beloning een vertrekdriver is, zijn huidige medewerkers in vergelijkbare functies waarschijnlijk dezelfde marktdruk blootgesteld.",
+            "decision": "Beslis of jullie beloningsbeleid marktconform is én of medewerkers dat als eerlijk ervaren.",
+            "owner": "Directie / HR-directeur",
+            "actions": [
+                "Voer een marktcheck uit voor de functies waar de meeste uitstroom was.",
+                "Onderscheid: is het een absolute beloningsvraag (te laag) of een ervaringsvraag (niet transparant, niet eerlijk)?",
+                "Als er ruimte is: communiceer proactief over beloningssystematiek — transparantie verlaagt de perceptie van oneerlijkheid.",
+            ],
+            "caution": "Verhoog salaris alleen als de marktcheck dit rechtvaardigt. Incidentele correcties zonder beleid creëren nieuwe ongelijkheid.",
+        },
+        "MIDDEN": {
+            "title": "Beloning als bijdragende factor — transparantie toetsen",
+            "signal": "Beloning speelde een rol, maar was niet de primaire vertrekreden.",
+            "implication": "Mogelijk is het geen absolute beloningsvraag maar een perceptievraag: worden medewerkers meegenomen in wat ze kunnen verwachten?",
+            "decision": "Toets of het beloningsgesprek structureel genoeg plaatsvindt.",
+            "owner": "HR-manager / direct leidinggevende",
+            "actions": [
+                "Zorg dat beloning een vast onderdeel is van het jaarlijkse gesprekscyclus.",
+            ],
+            "caution": "Ga niet uit van een marktprobleem als de data dit niet eenduidig aangeeft.",
+        },
+        "LAAG": {
+            "title": "Beloning geen vertrekdriver — beloningsbeleving stabiel",
+            "signal": "Beloning werd door vertrekkers niet als reden van vertrek benoemd.",
+            "implication": "Geen actie vereist op beloningsgebied.",
+            "decision": "Geen actie vereist.",
+            "owner": "—",
+            "actions": [],
+            "caution": "Beloningsbeleving is conjunctuurgevoelig. Monitor bij arbeidsmarktverschuivingen of functieherwaarderingen.",
+        },
+    },
+
+    "workload": {
+        "HOOG": {
+            "title": "Werkbelasting als vertrekdriver — duurzaamheidsvraag",
+            "signal": "Vertrekkers ervoeren de werkbelasting als te hoog of structureel onhoudbaar. Dit was een directe bijdrage aan hun vertrek.",
+            "implication": "Dit is een urgent signaal. Huidige medewerkers in dezelfde context zitten waarschijnlijk in dezelfde situatie — nu.",
+            "decision": "Beslis of de huidige werkdruk duurzaam is en wie er nu al aan het einde van zijn of haar belastbaarheid zit.",
+            "owner": "Direct leidinggevende / directie",
+            "actions": [
+                "Voer binnen twee weken een korte check met het team: hoe ervaren zij de huidige werkdruk?",
+                "Inventariseer of de hoge belasting structureel is (te weinig mensen) of situationeel (tijdelijke piek).",
+                "Maak één concrete keuze: wat laten we los, wat verdelen we anders, of wat vragen we extra capaciteit voor?",
+            ],
+            "caution": "Zeg niet 'het gaat beter worden' zonder dat er een concrete verandering op tafel ligt. Medewerkers herkennen holle beloftes.",
+        },
+        "MIDDEN": {
+            "title": "Werkbelasting als bijdragende factor — duurzaamheid volgen",
+            "signal": "Werkbelasting speelde een rol bij vertrek maar was niet de dominante driver.",
+            "implication": "Mogelijk is het een grensgebied-situatie: het werkt, maar er is weinig marge.",
+            "decision": "Houd de belastbaarheid actief in beeld bij de betrokken teams.",
+            "owner": "Direct leidinggevende",
+            "actions": [
+                "Maak werkdruk een terugkerend bespreekpunt in teamoverleg — niet als klachtkanaal maar als managementinformatie.",
+            ],
+            "caution": "Negeer midden-signalen op werkbelasting niet. Ze escaleren sneller dan andere factoren.",
+        },
+        "LAAG": {
+            "title": "Werkbelasting geen vertrekdriver — belastbaarheid in balans",
+            "signal": "Werkbelasting werd niet als vertrekreden benoemd.",
+            "implication": "De werkdruk werd als hanteerbaar ervaren.",
+            "decision": "Geen actie vereist.",
+            "owner": "—",
+            "actions": [],
+            "caution": "Werkbelasting kan snel omslaan bij bezettingswijzigingen of pieken. Monitor actief.",
+        },
+    },
+
+    "role_clarity": {
+        "HOOG": {
+            "title": "Rolhelderheid als vertrekdriver — verwachtingen niet gedeeld",
+            "signal": "Vertrekkers waren onvoldoende helder over hun rol, mandaat of wat er van hen verwacht werd. Dit droeg bij aan hun vertrek.",
+            "implication": "Onduidelijkheid over rollen is een managementprocesvraag, geen persoonsvraag. Huidige medewerkers ervaren waarschijnlijk dezelfde onduidelijkheid.",
+            "decision": "Beslis of rollen en verwachtingen expliciet genoeg zijn belegd — en of dat actief wordt bijgehouden bij functiewijzigingen.",
+            "owner": "Direct leidinggevende / HR-manager",
+            "actions": [
+                "Selecteer 2–3 sleutelfuncties en toets per gesprek: zijn rol, mandaat en verwachting helder?",
+                "Maak een eenvoudige check: kan de medewerker in eigen woorden zeggen wat succes er in zijn of haar rol uitziet?",
+                "Voer bij nieuwe medewerkers of functiewijzigingen een standaard rolverduidelijkingsgesprek in.",
+            ],
+            "caution": "Rolhelderheid is geen document. Een functiebeschrijving lost dit niet op — een gesprek wel.",
+        },
+        "MIDDEN": {
+            "title": "Rolhelderheid als bijdragende factor — verwachtingscheck",
+            "signal": "Rolonduidelijkheid speelde mee bij vertrek, maar was niet de kern.",
+            "implication": "Mogelijk was het rolhelderheid als symptoom van iets anders: veranderende organisatie, wisselende prioriteiten.",
+            "decision": "Toets of verwachtingen bij huidige medewerkers voldoende zijn afgestemd.",
+            "owner": "Direct leidinggevende",
+            "actions": [
+                "Neem rolhelderheid op als standaard gespreksonderwerp bij elk functioneringsgesprek.",
+            ],
+            "caution": "Niet elk rolprobleem is op te lossen met een gesprek. Soms vraagt het een organisatorische keuze.",
+        },
+        "LAAG": {
+            "title": "Rolhelderheid geen vertrekdriver — verwachtingen helder",
+            "signal": "Rolonduidelijkheid was geen relevante factor in het vertrekpatroon.",
+            "implication": "Verwachtingen werden als voldoende helder ervaren.",
+            "decision": "Geen actie vereist.",
+            "owner": "—",
+            "actions": [],
+            "caution": "Rolhelderheid verslechtert bij reorganisaties en groei. Houd het actief bij grote veranderingen.",
+        },
+    },
+
+    # ─── SDT-DIMENSIES ─────────────────────────────────────────────────
+
+    "autonomy": {
+        "HOOG": {
+            "title": "Autonomie als vertrekdriver — ruimte ontbrak",
+            "signal": "Vertrekkers ervoeren onvoldoende ruimte om zelf beslissingen te nemen, hun werk in te richten of eigen inbreng te hebben.",
+            "implication": "Laag autonomiegevoel correleert sterk met uitstroom bij medewerkers die zichzelf kunnen redden. Wie dit mist, zoekt het elders.",
+            "decision": "Beslis of de huidige mate van controle en afstemming past bij het niveau en de ambitie van je mensen.",
+            "owner": "Direct leidinggevende / directie",
+            "actions": [
+                "Vraag huidige medewerkers expliciet: in welk onderdeel van je werk zou je meer ruimte willen?",
+                "Identificeer één beslissingsdomein waar je als leidinggevende stap terug kunt doen.",
+            ],
+            "caution": "Meer autonomie zonder kader werkt averechts. Geef ruimte binnen heldere verwachtingen.",
+        },
+        "MIDDEN": {
+            "title": "Autonomie als bijdragende factor — balans toetsen",
+            "signal": "Autonomiegevoel speelde mee maar was niet dominant.",
+            "implication": "Mogelijk zit er een perceptiekloof tussen wat de leidinggevende denkt te geven en wat de medewerker ervaart.",
+            "decision": "Toets de perceptie bij huidige medewerkers in een open gesprek.",
+            "owner": "Direct leidinggevende",
+            "actions": [
+                "Neem autonomie op als gespreksthema in het eerstvolgende ontwikkelgesprek.",
+            ],
+            "caution": "Niet elke behoefte aan autonomie is even groot. Differentieer per medewerker.",
+        },
+        "LAAG": {
+            "title": "Autonomie geen vertrekdriver — ruimte als voldoende ervaren",
+            "signal": "Autonomiegebrek was geen vertrekreden.",
+            "implication": "De huidige mate van zelfbeschikking werd als toereikend ervaren.",
+            "decision": "Geen actie vereist.",
+            "owner": "—",
+            "actions": [],
+            "caution": "Autonomiebehoefte groeit met senioriteit. Monitor bij doorgroeiers.",
+        },
+    },
+
+    "competence": {
+        "HOOG": {
+            "title": "Competentiebenutting als vertrekdriver — talent niet ingezet",
+            "signal": "Vertrekkers ervoeren dat hun competenties onvoldoende werden benut of erkend. Ze vertrokken naar een plek waar ze meer konden laten zien.",
+            "implication": "Dit is een signaal dat je talent verliest niet aan salaris maar aan onderbenutte capaciteit. Huidige topmedewerkers lopen hetzelfde risico.",
+            "decision": "Beslis of de huidige rolverdeling de beste inzet van beschikbare talenten mogelijk maakt.",
+            "owner": "Direct leidinggevende / HR-manager",
+            "actions": [
+                "Voer een 'sterktecheck' met je team: in welk deel van hun werk voelen mensen zich het meest competent?",
+                "Zoek naar ten minste één aanpassing in takenpakket of project waarmee iemand meer van zijn of haar sterktes kan inzetten.",
+            ],
+            "caution": "Niet elk competentietekort is op te lossen zonder roldefinitie of budget. Wees eerlijk over de ruimte die er is.",
+        },
+        "MIDDEN": {
+            "title": "Competentiebenutting als bijdragende factor — erkenning toetsen",
+            "signal": "Competentiebenutting speelde een rol maar was niet de kern van het vertrek.",
+            "implication": "Mogelijk is het een erkenningsvraag: worden bijdragen gezien en benoemd?",
+            "decision": "Toets of erkenning en talentontwikkeling voldoende zichtbaar zijn.",
+            "owner": "Direct leidinggevende",
+            "actions": [
+                "Neem bewuste erkenning van individuele bijdragen op als terugkerend aandachtspunt.",
+            ],
+            "caution": "Erkenning werkt alleen als het specifiek en oprecht is — niet als ritueel compliment.",
+        },
+        "LAAG": {
+            "title": "Competentiebenutting geen vertrekdriver — talent ingezet",
+            "signal": "Vertrekkers ervoeren competentiebenutting niet als pijnpunt.",
+            "implication": "Talent werd als voldoende ingezet en erkend ervaren.",
+            "decision": "Geen actie vereist.",
+            "owner": "—",
+            "actions": [],
+            "caution": "Competentiebehoefte evolueert. Houd het in beeld bij functiegroei en senioriteit.",
+        },
+    },
+
+    "relatedness": {
+        "HOOG": {
+            "title": "Verbondenheid als vertrekdriver — sociale basis onvoldoende",
+            "signal": "Vertrekkers ervoeren onvoldoende verbondenheid met collega's of de organisatie. Ze voelden zich niet echt onderdeel van het geheel.",
+            "implication": "Verbondenheid is de meest onderschatte retentiefactor. Als mensen niet voelen dat ze erbij horen, zoeken ze dat gevoel elders — ook zonder concreet vertrekplan.",
+            "decision": "Beslis of de sociale cohesie in het team voldoende aandacht krijgt als managementtaak.",
+            "owner": "Direct leidinggevende",
+            "actions": [
+                "Voer individuele korte check-ins in (10–15 min) — niet over werk maar over hoe iemand zich voelt in het team.",
+                "Creëer ten minste één moment van teamverbinding per maand dat niet werkinhoudelijk is.",
+            ],
+            "caution": "Verbondenheid forceer je niet met teamuitjes. Het gaat om dagelijkse micro-erkenning en echte interesse in de persoon achter de functie.",
+        },
+        "MIDDEN": {
+            "title": "Verbondenheid als bijdragende factor — sociale cohesie volgen",
+            "signal": "Verbondenheid speelde een rol maar was niet dominant.",
+            "implication": "Mogelijk is er een subgroep die minder goed is geïntegreerd of geïsoleerd begint te raken.",
+            "decision": "Let bewust op wie in het team minder zichtbaar of betrokken lijkt.",
+            "owner": "Direct leidinggevende",
+            "actions": [
+                "Identificeer of er medewerkers zijn die opvallend weinig sociaal contact hebben in het team.",
+            ],
+            "caution": "Introversie is geen gebrek aan verbondenheid. Kijk naar gedragsverandering, niet naar persoonlijkheid.",
+        },
+        "LAAG": {
+            "title": "Verbondenheid geen vertrekdriver — sociale basis stabiel",
+            "signal": "Vertrekkers benoemden gebrek aan verbondenheid niet als reden.",
+            "implication": "De sociale basis van het team werd als voldoende ervaren.",
+            "decision": "Geen actie vereist.",
+            "owner": "—",
+            "actions": [],
+            "caution": "Verbondenheid is kwetsbaar bij snelle groei of hybride werk. Monitor actief bij teamwijzigingen.",
+        },
+    },
+}
+
+
+def _derive_band(avg: float) -> str:
+    signal_value = 11.0 - float(avg)
+    if signal_value >= 7:
+        return "HOOG"
+    if signal_value >= 4.5:
+        return "MIDDEN"
+    return "LAAG"
+
+
+def get_action_playbooks_payload(
+    factor_avgs: dict,
+    top_risks: list,
+) -> list[dict]:
+    """
+    Retourneert een lijst van playbook-entries voor factoren met
+    band HOOG of MIDDEN. Alleen factoren die gescoord zijn (aanwezig
+    in factor_avgs) worden meegenomen.
+
+    Banddrempels volgen exact de bestaande logica in report.py via een
+    omrekening van belevingsscore naar signaalwaarde voor ExitScan.
+    """
+    _ = top_risks
+    result = []
+    for factor_key, avg in factor_avgs.items():
+        if factor_key not in EXIT_PLAYBOOKS:
+            continue
+
+        band = _derive_band(avg)
+        if band == "LAAG":
+            continue
+
+        entry = EXIT_PLAYBOOKS[factor_key][band].copy()
+        entry["factor_key"] = factor_key
+        entry["band"] = band
+        entry["score"] = round(float(avg), 1)
+        result.append(entry)
+
+    result.sort(key=lambda x: (0 if x["band"] == "HOOG" else 1, x["score"]))
+    return result
+
 
 def _exit_review_moment_text(focus_text: str) -> str:
     return (
