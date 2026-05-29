@@ -26,11 +26,22 @@ import {
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
+import { getOrganizationApiKey } from '@/lib/organization-secrets'
+import { getBackendApiUrl } from '@/lib/server-env'
 import { FACTOR_LABELS, hasCampaignAddOn } from '@/lib/types'
-import type { Campaign, CampaignStats, MemberRole, Respondent, ScanType, SurveyResponse } from '@/lib/types'
+import type {
+  Campaign,
+  CampaignItemScoresResponse,
+  CampaignStats,
+  MemberRole,
+  Respondent,
+  ScanType,
+  SurveyResponse,
+} from '@/lib/types'
 import { buildExitDashboardViewModel } from '@/lib/products/exit/dashboard'
 import { buildRetentionDashboardViewModel } from '@/lib/products/retention/dashboard'
 import { ExitProductDashboard } from '@/components/dashboard/exit-product-dashboard'
+import { FactorTable } from '@/components/dashboard/factor-table'
 import { RetentionProductDashboard } from '@/components/dashboard/retention-product-dashboard'
 import {
   buildOpenAnswerItems,
@@ -879,6 +890,54 @@ function ResultsShellHeader({
   )
 }
 
+async function fetchCampaignItemScores(args: {
+  campaignId: string
+  organizationId: string
+  supabase: Awaited<ReturnType<typeof createClient>>
+}) {
+  try {
+    const backendBaseUrl = getBackendApiUrl()
+    const adminToken = process.env.BACKEND_ADMIN_TOKEN?.trim()
+
+    async function fetchWithAdminFallback() {
+      if (!adminToken) return null
+
+      return fetch(`${backendBaseUrl}/api/internal/campaigns/${args.campaignId}/item-scores`, {
+        headers: {
+          'x-admin-token': adminToken,
+        },
+        cache: 'no-store',
+      })
+    }
+
+    let backendResponse: globalThis.Response | null = null
+
+    try {
+      const apiKey = await getOrganizationApiKey(args.organizationId, { supabase: args.supabase })
+      backendResponse = await fetch(`${backendBaseUrl}/api/campaigns/${args.campaignId}/item-scores`, {
+        headers: {
+          'x-api-key': apiKey,
+        },
+        cache: 'no-store',
+      })
+
+      if ((backendResponse.status === 401 || backendResponse.status === 403) && adminToken) {
+        backendResponse = await fetchWithAdminFallback()
+      }
+    } catch {
+      backendResponse = await fetchWithAdminFallback()
+    }
+
+    if (!backendResponse?.ok) {
+      return null
+    }
+
+    return (await backendResponse.json()) as CampaignItemScoresResponse
+  } catch {
+    return null
+  }
+}
+
 export default async function CampaignPage({ params }: Props) {
   const { id } = await params
   const supabase = await createClient()
@@ -918,6 +977,7 @@ export default async function CampaignPage({ params }: Props) {
     { data: deliveryRecord },
     { data: profile },
     { data: membership },
+    itemScores,
   ] =
     await Promise.all([
       supabase.from('campaigns').select('enabled_modules').eq('id', id).maybeSingle(),
@@ -962,6 +1022,11 @@ export default async function CampaignPage({ params }: Props) {
         .eq('org_id', stats.organization_id)
         .eq('user_id', user.id)
         .maybeSingle(),
+      fetchCampaignItemScores({
+        campaignId: id,
+        organizationId: stats.organization_id,
+        supabase,
+      }),
     ])
 
   const responses = (responsesRaw ?? []) as unknown as (SurveyResponse & {
@@ -1343,7 +1408,9 @@ export default async function CampaignPage({ params }: Props) {
         compositionSegments={exitDistribution?.segments ?? []}
         compositionHighlights={compositionHighlights}
         factorRows={factorPriorityRows}
+        factorAverages={factorData.orgAverages}
         sdtRows={sdtRows}
+        itemScores={itemScores}
         surveyThemes={surveyThemes}
         verificationTrackLabel={topFactorLabel ?? 'Nog niet beschikbaar'}
         ownerRoleLabel={
@@ -1465,7 +1532,9 @@ export default async function CampaignPage({ params }: Props) {
           },
         ]}
         factorRows={factorPriorityRows}
+        factorAverages={factorData.orgAverages}
         sdtRows={sdtRows}
+        itemScores={itemScores}
         surveyThemes={retentionThemes.map((theme, index) => ({
           key: theme.key,
           title: theme.title,
@@ -2103,21 +2172,12 @@ export default async function CampaignPage({ params }: Props) {
                     Rangorde van de sterkst zichtbare factoren binnen deze route.
                   </p>
                 </div>
-                <div className="mt-4 space-y-4">
-                  {factorPriorityRows.slice(0, 5).map((row) => (
-                    <div key={row.factor} className="space-y-2">
-                      <div className="flex items-center justify-between gap-3 text-sm">
-                        <span className="font-medium text-[color:var(--dashboard-ink)]">{row.factor}</span>
-                        <span className="font-semibold text-[color:var(--dashboard-ink)]">{row.signal}</span>
-                      </div>
-                      <div className="h-2 overflow-hidden rounded-full bg-[color:var(--dashboard-soft)]">
-                        <div
-                          className="h-full rounded-full bg-[linear-gradient(90deg,#C36A29,#D9985D)]"
-                          style={{ width: `${Math.max(10, Math.min(100, row.signalValue * 10))}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
+                <div className="mt-4">
+                  <FactorTable
+                    factorAverages={factorData.orgAverages}
+                    scanType={stats.scan_type}
+                    itemScores={itemScores}
+                  />
                 </div>
               </div>
             ) : null}
