@@ -55,6 +55,7 @@ from backend.database import DATABASE_URL, check_db_connection, get_db, init_db
 from backend.email import (
     send_contact_request_result,
     send_hr_notification,
+    send_manager_results_notification,
     send_survey_invite,
     send_survey_invite_result,
 )
@@ -187,6 +188,50 @@ def _send_hr_notification_safe(
             f"HR-notificatie mislukt na survey-submit: {exc}",
             level="warning",
         )
+
+
+def _send_manager_results_notification_safe(
+    *,
+    to_email: str | None,
+    manager_name: str | None,
+    campaign_name: str,
+    scope_label: str,
+    action_center_url: str | None = None,
+    action_center_path: str | None = None,
+    response_count: int | None = None,
+) -> dict[str, Any]:
+    try:
+        result = send_manager_results_notification(
+            to_email=to_email,
+            manager_name=manager_name,
+            campaign_name=campaign_name,
+            scope_label=scope_label,
+            action_center_url=action_center_url,
+            action_center_path=action_center_path,
+            response_count=response_count,
+        )
+    except Exception as exc:
+        logger.warning("Manager-resultaatnotificatie crashte: %s", exc)
+        sentry_sdk.capture_exception(exc)
+        return {"ok": False, "reason": "unexpected_error"}
+
+    if result.ok:
+        return {"ok": True, "reason": None}
+
+    log_level = logging.INFO if result.reason == "missing_recipient" else logging.WARNING
+    logger.log(
+        log_level,
+        "Manager-resultaatnotificatie niet verzonden voor %s / %s: %s",
+        campaign_name,
+        scope_label,
+        result.reason,
+    )
+    if result.reason != "missing_recipient":
+        sentry_sdk.capture_message(
+            f"Manager-resultaatnotificatie niet verzonden voor {campaign_name} / {scope_label}: {result.reason}",
+            level="warning",
+        )
+    return {"ok": False, "reason": result.reason}
 
 
 @asynccontextmanager
@@ -947,6 +992,42 @@ async def update_contact_request(
     db.commit()
     db.refresh(lead)
     return lead
+
+
+@app.post("/api/internal/action-center/manager-results-notification")
+async def send_manager_results_notification_internal(
+    request: Request,
+    x_admin_token: Annotated[str | None, Header()] = None,
+) -> JSONResponse:
+    require_backend_admin_token(x_admin_token, is_production=_IS_PRODUCTION)
+
+    payload = await request.json()
+    if not isinstance(payload, dict):
+        raise HTTPException(status_code=400, detail="Ongeldige notificatiepayload.")
+
+    campaign_name = _normalize_optional_text(payload.get("campaign_name"))
+    scope_label = _normalize_optional_text(payload.get("scope_label"))
+    action_center_url = _normalize_optional_text(payload.get("action_center_url"))
+    action_center_path = _normalize_optional_text(payload.get("action_center_path"))
+    response_count_raw = payload.get("response_count")
+    response_count = response_count_raw if isinstance(response_count_raw, int) else None
+
+    if not campaign_name or not scope_label or (not action_center_url and not action_center_path):
+        raise HTTPException(
+            status_code=400,
+            detail="campagnenaam, scopelabel en Action Center-link zijn verplicht.",
+        )
+
+    result = _send_manager_results_notification_safe(
+        to_email=_normalize_optional_text(payload.get("to_email")),
+        manager_name=_normalize_optional_text(payload.get("manager_name")),
+        campaign_name=campaign_name,
+        scope_label=scope_label,
+        action_center_url=action_center_url,
+        action_center_path=action_center_path,
+        response_count=response_count,
+    )
+    return JSONResponse(result)
 
 
 @app.get("/survey/complete", response_class=HTMLResponse)

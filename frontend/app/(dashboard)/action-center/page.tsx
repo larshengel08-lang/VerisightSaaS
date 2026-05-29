@@ -10,6 +10,7 @@ import {
 import { createAdminClient } from '@/lib/supabase/admin'
 import {
   isScopeVisibleToActionCenterContext,
+  shouldUseBoundedActionCenterOverview,
   type ActionCenterWorkspaceMember,
 } from '@/lib/suite-access'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
@@ -532,7 +533,7 @@ export default async function ActionCenterPage({
       readOnly
       itemHrefs={itemHrefs}
       hideSidebar
-      boundedOverviewOnly
+      boundedOverviewOnly={shouldUseBoundedActionCenterOverview(context)}
     />
   )
 }

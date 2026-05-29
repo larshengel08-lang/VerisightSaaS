@@ -8,6 +8,7 @@ import {
   getActionCenterRouteOpenableStages,
   hasOpenedActionCenterRoute,
 } from "@/lib/dashboard/open-action-center-route";
+import { notifyManagersForCampaignAvailability } from "@/lib/action-center-manager-results-notifications";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { CampaignActions } from "./campaign-actions";
@@ -2245,6 +2246,12 @@ export default async function CampaignPage({ params }: Props) {
 
       redirect(`/campaigns/${id}?bridge=open-unavailable`);
     }
+
+    await notifyManagersForCampaignAvailability({
+      campaignId: id,
+      previousLifecycleStage: currentDeliveryRecord.lifecycle_stage,
+      nextLifecycleStage: "first_management_use",
+    });
 
     redirect(actionCenterHref);
   }
