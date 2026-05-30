@@ -418,7 +418,7 @@ function ManagementFlowSection() {
                 maxWidth: '54rem',
               }}
             >
-              Verisight brengt analyse en vervolg samen in één heldere managementflow. Zo blijft het niet bij losse
+              Loep brengt analyse en vervolg samen in één heldere managementflow. Zo blijft het niet bij losse
               signalen of losse rapportage, maar wordt ook de stap naar gerichte opvolging ondersteund.
             </p>
           </Reveal>
@@ -718,7 +718,7 @@ function ManagementFlowSection() {
               textAlign: 'center',
             }}
           >
-            Verisight vult interpretatie of eigenaarschap niet automatisch voor u in. Het helpt signalen zichtbaar
+            Loep vult interpretatie of eigenaarschap niet automatisch voor u in. Het helpt signalen zichtbaar
             maken, prioriteiten wegen en opvolging organiseren in een duidelijke managementflow.
           </p>
         </Reveal>
@@ -801,7 +801,7 @@ function HeroSection() {
                   maxWidth: '32rem',
                 }}
               >
-                Verisight helpt HR en leiding signalen zichtbaar maken, prioriteren wat eerst telt en opvolging organiseren in het Action Center.
+                Loep helpt HR en leiding signalen zichtbaar maken, prioriteren wat eerst telt en opvolging organiseren in het Action Center.
               </p>
 
               <div
@@ -1196,7 +1196,7 @@ function SuitePreviewSection() {
                   maxWidth: '33rem',
                 }}
               >
-                Verisight brengt signalen samen in dashboard, samenvatting en rapport, en helpt vervolgens om prioriteit, eigenaar en eerste actie vast te leggen.
+                Loep brengt signalen samen in dashboard, samenvatting en rapport, en helpt vervolgens om prioriteit, eigenaar en eerste actie vast te leggen.
               </p>
             </Reveal>
 
@@ -2032,7 +2032,7 @@ function FirstDeliverySection() {
           </Reveal>
           <Reveal delay={0.05}>
             <p style={{ color: SURFACE.text, fontSize: 16, lineHeight: 1.78, margin: '0 auto 40px', maxWidth: '58rem' }}>
-              Verisight geeft u geen losse analyse zonder vervolg, maar een eerste managementflow die helpt om sneller
+              Loep geeft u geen losse analyse zonder vervolg, maar een eerste managementflow die helpt om sneller
               te begrijpen wat speelt, te bepalen wat eerst telt en gerichte opvolging op gang te brengen.
             </p>
           </Reveal>
@@ -2141,7 +2141,7 @@ function ContactSection() {
                 maxWidth: '48rem',
               }}
             >
-              Plan een kennismaking en ontdek hoe Verisight helpt om signalen zichtbaar te maken, prioriteiten scherper
+              Plan een kennismaking en ontdek hoe Loep helpt om signalen zichtbaar te maken, prioriteiten scherper
               te wegen en opvolging concreet te faciliteren.
             </p>
 

@@ -6,9 +6,9 @@ import { buildContactHref } from '@/lib/contact-funnel'
 import { faqSchema } from '@/components/marketing/site-content'
 
 export const metadata: Metadata = {
-  title: 'Verisight',
+  title: 'Loep',
   description:
-    'Verisight helpt HR, directie en management sneller zien wat speelt, bepalen wat eerst telt en opvolging organiseren - met ExitScan, RetentieScan, Loep Cultuurbeeld, dashboard, rapport en Action Center in een suite.',
+    'Loep helpt HR, directie en management sneller zien wat speelt, bepalen wat eerst telt en opvolging organiseren - met ExitScan, RetentieScan, Loep Cultuurbeeld, dashboard, rapport en Action Center in een suite.',
   alternates: { canonical: '/' },
 }
 
@@ -16,9 +16,9 @@ export default function LandingPage() {
   const homepageSchema = {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
-    name: 'Verisight',
+    name: 'Loep',
     description:
-      'Van people insights naar prioriteit, actie en follow-up voor HR en management. Verisight verbindt ExitScan, RetentieScan, Loep Cultuurbeeld, dashboard, rapport en Action Center in een suite.',
+      'Van people insights naar prioriteit, actie en follow-up voor HR en management. Loep verbindt ExitScan, RetentieScan, Loep Cultuurbeeld, dashboard, rapport en Action Center in een suite.',
     url: 'https://www.verisight.nl/',
     inLanguage: 'nl-NL',
     mainEntity: {
