@@ -30,8 +30,8 @@ const SHELL = {
   padding: '0 clamp(20px, 4vw, 48px)',
 } as const
 
-const displayFont = 'var(--font-fraunces), Georgia, serif'
-const bodyFont = 'var(--font-ibm-plex-sans), system-ui, sans-serif'
+const displayFont = "'Fraunces', Georgia, serif"
+const bodyFont = "'IBM Plex Sans', system-ui, sans-serif"
 
 const heroTrustItems = [
   'Dashboard voor inzicht \u2022 Managementrapport voor duiding \u2022 Action Center voor opvolging',
@@ -89,10 +89,10 @@ const routeCards = [
   },
   {
     index: '03',
-    eyebrow: 'Als brede cultuur en engagement de vraag zijn',
-    title: 'Loep Cultuurbeeld',
-    body: 'Jaarlijkse executive baseline voor cultuur, engagement, werkbeleving en bestuurlijke aandachtspunten.',
-    accent: '#7c3aed',
+    eyebrow: 'Als vroege landing aandacht vraagt',
+    title: 'Onboarding 30-60-90',
+    body: 'Zie vroeg hoe nieuwe medewerkers landen en waar uitval kan ontstaan.',
+    accent: '#9b5f1e',
   },
 ]
 
