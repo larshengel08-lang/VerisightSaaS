@@ -330,7 +330,7 @@ function ExitScanPage() {
                   Begrijp waarom medewerkers vertrekken en waar actie het eerst telt.
                 </h1>
                 <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '48ch', margin: '26px 0 36px' }}>
-                  Voor organisaties die vertrek niet alleen willen registreren, maar scherp willen begrijpen waar patronen terugkomen en waar actie het eerst effect heeft.
+                  Voor organisaties die willen begrijpen waarom mensen vertrekken en waar één gerichte actie het meeste oplevert.
                 </p>
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 600, padding: '12px 28px', color: '#fff', background: T.ink }}>
@@ -345,9 +345,9 @@ function ExitScanPage() {
                 <div style={{ padding: '28px', background: T.paperSoft, border: `1px solid ${T.rule}` }}>
                   <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: AC.deep, marginBottom: 16 }}>vanaf €4.500 {'\u2022'} Baseline</div>
                   {[
-                    'Dashboard met prioriteiten en factoranalyse',
-                    'Managementrapport voor HR, MT en directie',
-                    'Eerste handoff voor opvolging inbegrepen',
+                    'Rapport met factoranalyse en prioriteiten',
+                    'Begeleide managementbespreking (60–90 min)',
+                    'Eerste keuze en vervolgrichting vastgesteld',
                     'AVG-conforme dataverwerking',
                   ].map((item, i) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '9px 0', borderTop: i > 0 ? `1px solid ${T.rule}` : 'none', fontSize: 13, color: T.inkSoft }}>
@@ -401,7 +401,7 @@ function ExitScanPage() {
                     points: [
                       'Voor organisaties die vertrek structureel willen blijven volgen',
                       'Logisch als baseline, proces en ritme al staan',
-                      'Houdt dezelfde leeslijn vast in dashboard en rapport',
+                      'Zelfde structuur in dashboard en rapport als de eerste baseline',
                     ],
                   },
                 ].map(({ label, accent, points }) => (
@@ -427,17 +427,17 @@ function ExitScanPage() {
             <div style={{ maxWidth: '64ch', marginBottom: 30 }}>
               <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.deep, marginBottom: 16 }}>Wat u ontvangt</div>
               <p style={{ fontSize: 15, lineHeight: 1.72, color: T.inkSoft }}>
-                U krijgt een leeslijn voor dashboard, rapport en eerste managementbespreking.
+                Na de scan ontvangt u rapport, dashboard en een begeleide managementbespreking.
               </p>
             </div>
             <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_auto]" style={{ alignItems: 'start' }}>
               <div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {[
-                    'Dashboard met eerste vertrekbeeld en prioriteiten',
-                    'Managementrapport met hoofdredenen, drivers en duiding',
-                    'Eerste managementhouvast voor gesprek, verificatie en vervolg',
-                    'Waar relevant: conditionele afdelings- of segmentverdieping bij voldoende respons',
+                    'Rapport met vertrekpatronen, factoranalyse en prioriteiten',
+                    'Dashboard voor intern gebruik tijdens en na de scan',
+                    'Begeleide managementbespreking: samen bepalen wat nu het eerst aandacht vraagt',
+                    'Segmentverdieping op afdeling of functieniveau waar respons en metadata dat dragen',
                   ].map((item, i) => (
                     <div key={i} style={{ display: 'flex', gap: 12, padding: '14px 16px', background: T.paperSoft, border: `1px solid ${T.rule}`, fontSize: 13.5, color: T.inkSoft, lineHeight: 1.6 }}>
                       <div style={{ width: 4, height: 4, background: AC.mid, flexShrink: 0, marginTop: 5 }} />
@@ -512,7 +512,7 @@ function RetentionScanPage() {
                   Zie eerder waar behoud onder druk komt te staan en wat nu aandacht vraagt.
                 </h1>
                 <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '48ch', margin: '26px 0 36px' }}>
-                  Voor organisaties die behoudsdruk eerder willen zien, voordat verloop zichtbaar oploopt en het gesprek te laat begint.
+                  Voor organisaties die eerder willen zien waar behoud risico loopt — voordat het te laat is om nog bij te sturen.
                 </p>
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 600, padding: '12px 28px', color: '#fff', background: T.ink }}>
@@ -527,9 +527,9 @@ function RetentionScanPage() {
                 <div style={{ padding: '28px', background: T.tealFaint, border: `1px solid ${T.tealSoft}` }}>
                   <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: T.teal, marginBottom: 16 }}>vanaf €4.500 {'\u2022'} Baseline</div>
                   {[
-                    'Dashboard met retentiesignaal en factoranalyse',
-                    'Managementrapport voor HR, MT en directie',
-                    'Geen individuele signalen, alleen groepsduiding',
+                    'Rapport met retentiesignaal, factoranalyse en prioriteiten',
+                    'Begeleide managementbespreking (60–90 min)',
+                    'Geen individuele signalen — alleen groepsniveau',
                     'AVG-conforme dataverwerking',
                   ].map((item, i) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '9px 0', borderTop: i > 0 ? `1px solid ${T.tealSoft}` : 'none', fontSize: 13, color: T.inkSoft }}>
@@ -583,7 +583,7 @@ function RetentionScanPage() {
                     points: [
                       'Voor organisaties die behoudsdruk structureel willen blijven volgen',
                       'Logisch als baseline en eerste opvolging al staan',
-                      'Houdt dezelfde leeslijn vast in dashboard en rapport',
+                      'Zelfde structuur in dashboard en rapport als de eerste baseline',
                     ],
                   },
                 ].map(({ label, accent, points }) => (
@@ -609,17 +609,17 @@ function RetentionScanPage() {
             <div style={{ maxWidth: '64ch', marginBottom: 30 }}>
               <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.teal, marginBottom: 16 }}>Wat u ontvangt</div>
               <p style={{ fontSize: 15, lineHeight: 1.72, color: T.inkSoft }}>
-                U krijgt een leeslijn voor retentiesignaal, rapport en eerste managementbespreking.
+                Na de scan ontvangt u rapport, retentiesignaal en een begeleide managementbespreking.
               </p>
             </div>
             <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_auto]" style={{ alignItems: 'start' }}>
               <div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {[
-                    'Dashboard met retentiesignaal en eerste prioriteiten',
-                    'Managementrapport met factoranalyse en duiding',
-                    'Eerste managementhouvast voor gesprek, verificatie en vervolg',
-                    'Waar relevant: conditionele afdelings- of segmentverdieping bij voldoende respons',
+                    'Rapport met retentiesignaal, factoranalyse en prioriteiten',
+                    'Dashboard voor intern gebruik tijdens en na de scan',
+                    'Begeleide managementbespreking: samen bepalen welk risico nu eerst aandacht vraagt',
+                    'Segmentverdieping op afdeling of functieniveau waar respons en metadata dat dragen',
                   ].map((item, i) => (
                     <div key={i} style={{ display: 'flex', gap: 12, padding: '14px 16px', background: T.paperSoft, border: `1px solid ${T.rule}`, fontSize: 13.5, color: T.inkSoft, lineHeight: 1.6 }}>
                       <div style={{ width: 4, height: 4, background: T.teal, flexShrink: 0, marginTop: 5 }} />
