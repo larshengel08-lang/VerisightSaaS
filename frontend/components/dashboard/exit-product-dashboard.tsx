@@ -314,8 +314,6 @@ export function ExitProductDashboard({
               <FactorTable
                 factorAverages={factorAverages}
                 scanType="exit"
-                itemScores={itemScores}
-                showIntro={false}
               />
             </div>
           ) : (

@@ -3318,7 +3318,11 @@ function SidebarGroup({
   )
 }
 
-function getActionCardThemeLabel(themeKey: ActionCenterManagerActionThemeKey) {
+function getActionCardThemeLabel(themeKey: ActionCenterManagerActionThemeKey | null) {
+  if (!themeKey) {
+    return 'Thema'
+  }
+
   return (
     ACTION_CENTER_MANAGER_RESPONSE_THEME_OPTIONS.find((option) => option.value === themeKey)?.label ?? themeKey
   )

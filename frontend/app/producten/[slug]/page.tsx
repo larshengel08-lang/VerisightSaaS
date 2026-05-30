@@ -93,7 +93,8 @@ export default async function ProductDetailPage({ params }: Props) {
       {slug === 'retentiescan' ? <RetentionScanPage /> : null}
       {slug === 'exitscan' ? <ExitScanPage /> : null}
       {slug === 'cultuurbeeld' ? <CultureAssessmentPage /> : null}
-      {['pulse', 'onboarding-30-60-90', 'leadership-scan', 'combinatie'].includes(slug) ? (
+      {slug === 'onboarding-30-60-90' ? <OnboardingPage /> : null}
+      {['pulse', 'leadership-scan', 'combinatie'].includes(slug) ? (
         <FollowOnRoutePage route={getFollowOnRouteContent(slug)!} />
       ) : null}
       {!['retentiescan', 'exitscan', 'cultuurbeeld', 'pulse', 'onboarding-30-60-90', 'leadership-scan', 'combinatie'].includes(slug) ? <UpcomingProductPage slug={slug} /> : null}

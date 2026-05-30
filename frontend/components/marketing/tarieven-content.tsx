@@ -5,8 +5,17 @@ import { AC, Arrow, FF, Reveal, SHELL, T } from '@/components/marketing/design-t
 import { buildContactHref } from '@/lib/contact-funnel'
 import { pricingAddOns, pricingCards, pricingFollowOnRoutes } from '@/components/marketing/site-content'
 
-const primaryPricingCards = pricingCards.filter((card) => card.eyebrow !== 'Onboarding 30-60-90 Baseline')
-const onboardingPricingCard = pricingCards.find((card) => card.eyebrow === 'Onboarding 30-60-90 Baseline')!
+const primaryPricingCards = pricingCards
+const onboardingPricingCard = {
+  eyebrow: 'Onboarding 30-60-90',
+  price: 'op aanvraag',
+  description: 'Gerichte lifecycle-check wanneer vroege landing van nieuwe medewerkers centraal staat.',
+  bullets: [
+    'Vroege lifecycle-check op groepsniveau',
+    'Gerichte eerste route voor nieuwe instroom',
+    'Alleen logisch wanneer onboarding de eerste managementvraag is',
+  ],
+} as const
 const actionCenterStartCard = pricingAddOns[0]
 const actionCenterLabel = actionCenterStartCard[0].replace(' Start', '')
 

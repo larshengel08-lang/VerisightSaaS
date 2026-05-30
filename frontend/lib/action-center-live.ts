@@ -351,7 +351,7 @@ function summarizeLiveActionCenterRoutes(items: ActionCenterPreviewItem[]) {
         routeActionCards.length > 0
           ? routeActionCards.map((action) => ({
               actionId: action.actionId,
-              status: action.status,
+              status: action.status ?? 'open',
               reviewScheduledFor: action.reviewScheduledFor,
             }))
           : current.actions,
@@ -398,15 +398,15 @@ function buildRouteActionSummaryText(args: {
 
 function countRouteActionsNeedingReview(
   routeActions: Array<{
-    status: 'open' | 'in_review' | 'afgerond' | 'gestopt'
-    reviewScheduledFor: string
+    status: 'open' | 'in_review' | 'afgerond' | 'gestopt' | null
+    reviewScheduledFor: string | null
   }>,
   today = new Date().toISOString().slice(0, 10),
 ) {
   return routeActions.filter(
     (action) =>
       action.status === 'in_review' ||
-      (action.status === 'open' && action.reviewScheduledFor <= today),
+      (action.status === 'open' && typeof action.reviewScheduledFor === 'string' && action.reviewScheduledFor <= today),
   ).length
 }
 
@@ -492,7 +492,7 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
           ? summarizeActionCenterRouteActions(
               routeActions.map((action) => ({
                 actionId: action.actionId,
-                status: action.status,
+                status: action.status ?? 'open',
                 reviewScheduledFor: action.reviewScheduledFor,
               })),
             )

@@ -262,8 +262,6 @@ export function RetentionProductDashboard({
             <FactorTable
               factorAverages={factorAverages}
               scanType="retention"
-              itemScores={itemScores}
-              showIntro={false}
             />
           </div>
         ) : (
