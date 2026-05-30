@@ -1,38 +1,40 @@
-﻿import Link from 'next/link'
+﻿'use client'
+
+import Link from 'next/link'
 import { Reveal } from '@/components/marketing/design-tokens'
 import { buildContactHref } from '@/lib/contact-funnel'
 
 const SURFACE = {
-  paper: '#F4F1EA',
-  paperSoft: '#EEE8DE',
-  surface: '#FFFFFF',
-  surfaceSoft: '#F7F4EE',
-  border: 'rgba(13,27,42,0.15)',
-  borderSoft: 'rgba(13,27,42,0.10)',
-  ink: '#0D1B2A',
-  text: '#0D1B2A',
-  muted: '#4A6070',
-  subtle: '#6A7783',
-  teal: '#E8A020',
-  tealSoft: 'rgba(232,160,32,0.12)',
-  amber: '#E8A020',
-  amberSoft: 'rgba(232,160,32,0.12)',
-  amberGlow: '#B07A10',
-  charcoal: '#0D1B2A',
-  charcoalSoft: '#1A2D40',
+  paper: '#f4e8df',
+  paperSoft: '#f7eee7',
+  surface: '#fffdf9',
+  surfaceSoft: '#fbf7f2',
+  border: '#d9cebf',
+  borderSoft: '#e8ddd0',
+  ink: '#162238',
+  text: '#4e5d6f',
+  muted: '#78818a',
+  subtle: '#97a0ab',
+  teal: '#1f958a',
+  tealSoft: '#dff2ef',
+  amber: '#b9571f',
+  amberSoft: '#f4ddd0',
+  amberGlow: '#e39a63',
+  charcoal: '#0d1118',
+  charcoalSoft: '#181e27',
 } as const
 
 const SHELL = {
   margin: '0 auto',
-  maxWidth: 1280,
+  maxWidth: 1240,
   padding: '0 clamp(20px, 4vw, 48px)',
 } as const
 
-const displayFont = 'var(--font-inter-tight), Inter, sans-serif'
-const bodyFont = 'var(--font-inter), system-ui, sans-serif'
+const displayFont = 'var(--font-fraunces), Georgia, serif'
+const bodyFont = 'var(--font-ibm-plex-sans), system-ui, sans-serif'
 
 const heroTrustItems = [
-  'Dashboard voor inzicht \u2022 Rapport voor duiding \u2022 Managementbespreking voor eerste keuze',
+  'Dashboard voor inzicht \u2022 Managementrapport voor duiding \u2022 Action Center voor opvolging',
 ]
 
 const suiteFlowPoints = [
@@ -107,86 +109,54 @@ const problemSignalPoints = [
   },
   {
     title: 'Opvolging blijft te los',
-    body: 'Opvolging wordt daardoor ad hoc, breed of ongericht, terwijl de organisatie juist scherpe keuzes en gedeeld eigenaarschap nodig heeft.',
+    body: 'Opvolging wordt daardoor ad hoc, breed of ongericht, terwijl management juist scherpe keuzes en gedeeld eigenaarschap nodig heeft.',
     accent: '#98a4b3',
   },
 ]
 
-type ManagementFlowStep = {
-  step: string
-  label: string
-  title: string
-  body: string
-  cardMinHeight?: number
-  optionalLabel?: string
-  optionalMicrocopy?: string
-}
-
-const managementFlowSteps: readonly ManagementFlowStep[] = [
+const managementFlowSteps = [
   {
     step: '1',
-    label: 'Luisteren',
+    label: 'Begrijpen',
     title: 'Dashboard',
-    body: 'Met een gerichte baseline halen we signalen op rond vertrek, behoud of vroege landing. Het dashboard laat direct zien waar patronen terugkomen en wat nu het meeste gewicht heeft.',
-    cardMinHeight: 432,
+    body: "Laat direct zien waar signalen terugkomen, welke thema's of afdelingen aandacht vragen en wat nu bestuurlijk het meeste gewicht heeft.",
   },
   {
     step: '2',
-    label: 'Leren',
-    title: 'Rapport en managementbespreking',
-    body: 'Het rapport laat zien wat opvalt, waar druk zit en welke vraag management eerst moet beantwoorden. In de begeleide managementbespreking vertalen we dat samen naar één eerste keuze.',
-    cardMinHeight: 432,
+    label: 'Prioriteren',
+    title: 'Managementrapport',
+    body: 'Maakt de hoofdboodschap, eerste prioriteit en eerste vervolgrichting bestuurlijk leesbaar, zodat management sneller kan wegen wat eerst telt.',
   },
   {
     step: '3',
-    label: 'Kiezen',
-    title: 'Eerste managementkeuze',
-    body: 'Samen bepalen HR en management wat nu aandacht vraagt, wie betrokken moet zijn en welke eerste stap logisch is. Opvolging borgen kan daarna optioneel via Action Center Start.',
-    cardMinHeight: 432,
-    optionalLabel: 'Optionele uitbreiding',
-    optionalMicrocopy: 'Toe te voegen na of naast een eerste scan',
+    label: 'Handelen',
+    title: 'Action Center',
+    body: 'Maakt opvolging concreet zodra HR of leiding besluit dat een echte vervolgstap nodig is, van toewijzing aan een manager tot het openen en volgen van acties.',
   },
 ] as const
 
-const MANAGEMENT_FLOW_OPTIONAL_SLOT_HEIGHT = 62
-
-type FirstDeliveryItem = {
-  index: string
-  title: string
-  body: string
-  minHeight?: number
-}
-
-const firstDeliveryItems: readonly FirstDeliveryItem[] = [
+const firstDeliveryItems = [
   {
     index: '01',
-    title: 'Intake en afbakening',
-    body: 'We bepalen de eerste managementvraag, scope en route.',
+    title: 'Een dashboard met hoofdbeeld en prioriteiten',
+    body: 'Zodat direct zichtbaar wordt waar signalen terugkomen en wat bestuurlijk aandacht vraagt.',
   },
   {
     index: '02',
-    title: 'Scan of dataverzameling',
-    body: 'We verzamelen de signalen binnen de gekozen route.',
+    title: 'Een managementrapport met duiding en vervolgrichting',
+    body: 'Zodat management sneller begrijpt wat de kern is en welke eerste vraag of keuze voorligt.',
   },
   {
     index: '03',
-    title: 'Dashboard en managementrapport',
-    body: 'U krijgt een zelfstandig leesbaar hoofdbeeld met prioriteit en eerste vervolgrichting.',
-    minHeight: 220,
+    title: 'Een gerichte bespreking van wat eerst telt',
+    body: 'Zodat signalen niet blijven hangen in interpretatie, maar leiden tot scherpere weging en besluitvorming.',
   },
   {
     index: '04',
-    title: 'Review',
-    body: 'We bespreken wat eerst aandacht vraagt en welke vervolgstap logisch is.',
-    minHeight: 220,
+    title: 'Een Action Center voor georganiseerde opvolging',
+    body: 'Zodat vervolg niet in losse afspraken verdwijnt, maar zichtbaar, toegewezen en concreet wordt.',
   },
 ] as const
-
-const optionalActionCenterItem = {
-  index: '05',
-  title: 'Optioneel: Action Center',
-  body: 'Als na de Baseline een vervolgstap nodig is, kunt u Action Center Start toevoegen voor één gekozen opvolgscope, beperkte manager-/eigenaartoegang, zichtbare status en één reviewmoment.',
-} as const
 
 function SectionLabel({ index, label }: { index: string; label: string }) {
   return (
@@ -319,8 +289,8 @@ function ProblemSection() {
                 maxWidth: '54rem',
               }}
             >
-              Organisaties zien signalen rond uitstroom, behoud of vroege landing, maar missen de vertaalslag naar een
-              heldere prioriteit en concrete opvolging.
+              Organisaties zien signalen, rond uitstroom, behoud of vroege landing, maar missen de vertaalslag naar
+              een heldere managementprioriteit en concrete opvolging.
             </p>
           </Reveal>
         </div>
@@ -448,8 +418,8 @@ function ManagementFlowSection() {
                 maxWidth: '54rem',
               }}
             >
-              Loep stopt niet bij meten. Elke baseline eindigt met een begeleide managementbespreking waarin HR en
-              management de uitkomsten terugbrengen tot één eerste keuze.
+              Verisight brengt analyse en vervolg samen in één heldere managementflow. Zo blijft het niet bij losse
+              signalen of losse rapportage, maar wordt ook de stap naar gerichte opvolging ondersteund.
             </p>
           </Reveal>
         </div>
@@ -480,51 +450,18 @@ function ManagementFlowSection() {
 
           {managementFlowSteps.map((item, index) => (
             <Reveal key={item.title} delay={0.1 + index * 0.05}>
-              <div
+              <article
                 style={{
-                  display: 'grid',
-                  gap: 10,
-                  gridTemplateRows: `${MANAGEMENT_FLOW_OPTIONAL_SLOT_HEIGHT}px 1fr`,
+                  background: SURFACE.surface,
+                  border: `1px solid ${SURFACE.borderSoft}`,
+                  borderRadius: 28,
+                  boxShadow: '0 10px 28px rgba(22, 34, 56, 0.06), 0 2px 6px rgba(22, 34, 56, 0.04)',
+                  minHeight: 408,
+                  padding: '22px 24px 24px',
+                  position: 'relative',
+                  zIndex: 1,
                 }}
               >
-                <div
-                  aria-hidden={!item.optionalLabel}
-                  style={{
-                    minHeight: MANAGEMENT_FLOW_OPTIONAL_SLOT_HEIGHT,
-                    paddingLeft: 6,
-                    visibility: item.optionalLabel ? 'visible' : 'hidden',
-                  }}
-                >
-                  <p
-                    style={{
-                      color: SURFACE.amber,
-                      fontFamily: bodyFont,
-                      fontSize: 10.5,
-                      fontWeight: 700,
-                      letterSpacing: '.14em',
-                      marginBottom: 6,
-                      textTransform: 'uppercase',
-                    }}
-                  >
-                    {item.optionalLabel ?? 'Optionele uitbreiding'}
-                  </p>
-                  <p style={{ color: SURFACE.muted, fontSize: 13.5, lineHeight: 1.55 }}>
-                    {item.optionalMicrocopy ?? 'Toe te voegen na of naast een eerste scan'}
-                  </p>
-                </div>
-
-                <article
-                  style={{
-                    background: SURFACE.surface,
-                    border: `1px solid ${SURFACE.borderSoft}`,
-                    borderRadius: 8,
-                    boxShadow: 'none',
-                    minHeight: item.cardMinHeight ?? 408,
-                    padding: '22px 24px 24px',
-                    position: 'relative',
-                    zIndex: 1,
-                  }}
-                >
                 <div style={{ alignItems: 'center', display: 'flex', gap: 14, marginBottom: 24 }}>
                   <div
                     style={{
@@ -579,73 +516,85 @@ function ManagementFlowSection() {
                     marginBottom: 28,
                     maxWidth: '25rem',
                   }}
-                  >
-                    {item.body}
-                  </p>
+                >
+                  {item.body}
+                </p>
 
-                {item.step === '1' ? (
+                {item.title === 'Dashboard' ? (
+                  <div style={{ marginTop: 'auto' }}>
                     <div
                       style={{
                         background: '#f2efe8',
-                      border: `1px solid ${SURFACE.borderSoft}`,
-                      borderRadius: 22,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'center',
-                      marginTop: 'auto',
-                      minHeight: 116,
-                      padding: '18px 16px 16px',
-                    }}
-                  >
-                    <div style={{ display: 'grid', gap: 8, gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', marginBottom: 16 }}>
-                      {[
-                        ['Behoud', '#cfe7dd'],
-                        ['Onboarding', '#d8e4ea'],
-                        ['Vertrek', '#eaded6'],
-                      ].map(([label, accent]) => (
-                        <div
-                          key={label}
-                          style={{
-                            background: SURFACE.surface,
-                            borderRadius: 14,
-                            padding: '10px 10px 8px',
-                          }}
-                        >
+                        border: `1px solid ${SURFACE.borderSoft}`,
+                        borderRadius: 22,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        minHeight: 116,
+                        padding: '18px 16px 16px',
+                      }}
+                    >
+                      <div style={{ display: 'grid', gap: 8, gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', marginBottom: 16 }}>
+                        {[
+                          ['Behoud', '#cfe7dd'],
+                          ['Onboarding', '#d8e4ea'],
+                          ['Vertrek', '#eaded6'],
+                        ].map(([label, accent]) => (
                           <div
+                            key={label}
                             style={{
-                              color: SURFACE.muted,
-                              fontFamily: bodyFont,
-                              fontSize: 10,
-                              fontWeight: 500,
-                              letterSpacing: '.08em',
-                              marginBottom: 10,
-                              textTransform: 'uppercase',
+                              background: SURFACE.surface,
+                              borderRadius: 14,
+                              padding: '10px 10px 8px',
                             }}
                           >
-                            {label}
+                            <div
+                              style={{
+                                color: SURFACE.muted,
+                                fontFamily: bodyFont,
+                                fontSize: 10,
+                                fontWeight: 500,
+                                letterSpacing: '.08em',
+                                marginBottom: 10,
+                                textTransform: 'uppercase',
+                              }}
+                            >
+                              {label}
+                            </div>
+                            <div style={{ background: String(accent), borderRadius: 999, height: 4, width: '100%' }} />
                           </div>
-                          <div style={{ background: String(accent), borderRadius: 999, height: 4, width: '100%' }} />
-                        </div>
-                      ))}
+                        ))}
+                      </div>
+                      <div style={{ alignItems: 'end', display: 'grid', gap: 6, gridTemplateColumns: 'repeat(8, minmax(0, 1fr))' }}>
+                        {[
+                          20, 34, 26, 42, 30, 50, 38, 40,
+                        ].map((height, chartIndex) => (
+                          <div
+                            key={chartIndex}
+                            style={{
+                              background: '#597b74',
+                              borderRadius: '4px 4px 0 0',
+                              height,
+                            }}
+                          />
+                        ))}
+                      </div>
                     </div>
-                    <div style={{ alignItems: 'end', display: 'grid', gap: 6, gridTemplateColumns: 'repeat(8, minmax(0, 1fr))' }}>
-                      {[
-                        20, 34, 26, 42, 30, 50, 38, 40,
-                      ].map((height, chartIndex) => (
-                        <div
-                          key={chartIndex}
-                          style={{
-                            background: '#597b74',
-                            borderRadius: '4px 4px 0 0',
-                            height,
-                          }}
-                        />
-                      ))}
-                    </div>
+                    <p
+                      style={{
+                        color: SURFACE.muted,
+                        fontSize: 11.5,
+                        lineHeight: 1.55,
+                        marginTop: 12,
+                      }}
+                    >
+                      Dit is het managementdashboard dat Loep beheert en aanlevert — u ontvangt het rapport en de
+                      bespreking.
+                    </p>
                   </div>
                 ) : null}
 
-                {item.step === '2' ? (
+                {item.title === 'Managementrapport' ? (
                   <div
                     style={{
                       background: '#f2efe8',
@@ -703,7 +652,7 @@ function ManagementFlowSection() {
                   </div>
                 ) : null}
 
-                {item.step === '3' ? (
+                {item.title === 'Action Center' ? (
                   <div
                     style={{
                       background: '#f2efe8',
@@ -714,26 +663,13 @@ function ManagementFlowSection() {
                       justifyContent: 'center',
                       height: 116,
                       marginTop: 'auto',
-                      padding: '14px',
+                      padding: '12px',
                     }}
                   >
-                    <div
-                      style={{
-                        color: '#7f7b74',
-                        fontFamily: bodyFont,
-                        fontSize: 10,
-                        fontWeight: 600,
-                        letterSpacing: '.12em',
-                        marginBottom: 10,
-                        textTransform: 'uppercase',
-                      }}
-                    >
-                      Eerste keuze
-                    </div>
                     {[
-                      ['Wat vraagt nu aandacht?', '#bfe5c7'],
-                      ['Wie moet hierbij betrokken zijn?', '#e7ded4'],
-                      ['Welke eerste stap is logisch?', '#e7ded4'],
+                      ['Bespreek signalen Sales', '#bfe5c7'],
+                      ['Verifieer onboarding', '#e7ded4'],
+                      ['Plan vervolg met team', '#e7ded4'],
                     ].map(([label, dot], rowIndex) => (
                       <div
                         key={label}
@@ -763,16 +699,28 @@ function ManagementFlowSection() {
                         />
                         {label}
                       </div>
-                      ))}
-                    </div>
-                  ) : null}
-                </article>
-              </div>
+                    ))}
+                  </div>
+                ) : null}
+              </article>
             </Reveal>
           ))}
         </div>
 
         <Reveal delay={0.24}>
+          <p
+            style={{
+              color: SURFACE.text,
+              fontSize: 16,
+              lineHeight: 1.72,
+              margin: '46px auto 0',
+              maxWidth: '58rem',
+              textAlign: 'center',
+            }}
+          >
+            Verisight vult interpretatie of eigenaarschap niet automatisch voor u in. Het helpt signalen zichtbaar
+            maken, prioriteiten wegen en opvolging organiseren in een duidelijke managementflow.
+          </p>
         </Reveal>
       </div>
 
@@ -795,13 +743,13 @@ function HeroSection() {
   const primaryHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'homepage_hero_primary' })
   const secondaryHref = '/#first-delivery'
   const dashboardBars = [
-    { height: '36%', color: SURFACE.surfaceSoft },
-    { height: '52%', color: '#d7cdbf' },
-    { height: '44%', color: '#e6cdb9' },
-    { height: '72%', color: '#d9e9e5' },
-    { height: '88%', color: '#c98d54' },
-    { height: '76%', color: '#d0c3b1' },
-    { height: '58%', color: '#efe4d8' },
+    { height: '45%', color: SURFACE.surfaceSoft },
+    { height: '62%', color: SURFACE.borderSoft },
+    { height: '54%', color: SURFACE.amberSoft },
+    { height: '84%', color: SURFACE.tealSoft },
+    { height: '100%', color: SURFACE.amber },
+    { height: '88%', color: SURFACE.border },
+    { height: '70%', color: SURFACE.paperSoft },
   ]
   const reportRows = [
     ['Groei en ontwikkeling', '82%', SURFACE.amber],
@@ -809,9 +757,8 @@ function HeroSection() {
     ['Loopbaanperspectief', '28%', SURFACE.border],
   ] as const
   const actionItems = [
-    ['Herzie mentorshipprogramma', 'Na lage onboarding-score', 'Critical', '#d45a51', '#ffdad6'],
-    ['Verifieer werkdruk in Operations', 'Eerste teamreview', 'Deze week', SURFACE.tealSoft, SURFACE.text],
-    ['Plan leiderschapsgesprek', 'Wijs eigenaar toe', 'In review', '#d6c3ab', '#f7e7d4'],
+    ['Herzie mentorshipprogramma', 'Gevolg van: lage onboarding-score', 'Critical', '#d45a51', '#ffdad6'],
+    ['Verifieer werkdruk in Operations', 'Besluit: eerste teamreview', 'Deze week', SURFACE.tealSoft, SURFACE.text],
   ] as const
 
   return (
@@ -824,7 +771,7 @@ function HeroSection() {
       }}
     >
       <div style={{ ...SHELL, paddingTop: 'clamp(74px, 8vw, 120px)', paddingBottom: 'clamp(70px, 8vw, 104px)', position: 'relative' }}>
-        <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,560px)] lg:gap-10">
+        <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,1fr)_640px]">
           <div style={{ maxWidth: 560 }}>
               <div className="marketing-home-hero-reveal-1" style={{ marginBottom: 18 }}>
               <h1
@@ -847,15 +794,14 @@ function HeroSection() {
               <p
                 className="marketing-home-hero-reveal-2"
                 style={{
-                  color: SURFACE.muted,
-                  fontSize: 18,
-                  lineHeight: 1.72,
+                  color: SURFACE.text,
+                  fontSize: 17,
+                  lineHeight: 1.6,
                   marginBottom: 28,
                   maxWidth: '32rem',
                 }}
               >
-                Loep helpt organisaties signalen zichtbaar maken, samen terugbrengen tot één eerste keuze en waar
-                nodig opvolging daarna beter borgen.
+                Verisight helpt HR en leiding signalen zichtbaar maken, prioriteren wat eerst telt en opvolging organiseren in het Action Center.
               </p>
 
               <div
@@ -866,8 +812,7 @@ function HeroSection() {
                 href={primaryHref}
                 style={{
                   background: SURFACE.amber,
-                  border: `1px solid ${SURFACE.amber}`,
-                  borderRadius: 6,
+                  borderRadius: 2,
                   color: '#fff',
                   display: 'inline-flex',
                   fontFamily: bodyFont,
@@ -884,7 +829,7 @@ function HeroSection() {
                 style={{
                   background: SURFACE.surface,
                   border: `1px solid ${SURFACE.border}`,
-                  borderRadius: 6,
+                  borderRadius: 2,
                   color: SURFACE.ink,
                   display: 'inline-flex',
                   fontFamily: bodyFont,
@@ -925,326 +870,272 @@ function HeroSection() {
               </div>
           </div>
 
-            <div className="marketing-home-hero-reveal-visual relative hidden h-[532px] select-none lg:block">
-
-              <div
-                style={{
-                  background: SURFACE.paper,
-                  border: `1px solid ${SURFACE.border}`,
-                  borderRadius: 8,
-                  boxShadow: 'none',
-                  height: 322,
-                  overflow: 'hidden',
-                  padding: '26px 28px 22px',
-                  position: 'absolute',
-                  right: 12,
-                  top: 8,
-                  width: 500,
-                  zIndex: 10,
-                }}
-              >
-                <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-                  <p style={{ color: '#9ca29b', fontSize: 8.4, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase' }}>
-                    Dashboard
-                  </p>
-                  <span
-                    style={{
-                      background: SURFACE.paperSoft,
-                      border: `1px solid ${SURFACE.borderSoft}`,
-                      borderRadius: 999,
-                      color: SURFACE.text,
-                      fontSize: 8.6,
-                      fontWeight: 700,
-                      padding: '4px 8px',
-                    }}
-                  >
-                    Trendbeeld
-                  </span>
-                </div>
-
-                <div style={{ display: 'grid', gap: 8, gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', marginBottom: 12 }}>
-                  {[
-                    ['Behoud', '+3,1'],
-                    ['Werkdruk', '6,1'],
-                    ['Groei', '7,8'],
-                  ].map(([label, value]) => (
-                    <div
-                      key={label}
-                      style={{
-                        background: 'rgba(255,255,255,0.48)',
-                        border: `1px solid ${SURFACE.borderSoft}`,
-                        borderRadius: 8,
-                        padding: '8px 10px 7px',
-                      }}
-                    >
-                      <p style={{ color: '#a4aaa4', fontSize: 8, fontWeight: 700, letterSpacing: '.11em', marginBottom: 3, textTransform: 'uppercase' }}>
-                        {label}
-                      </p>
-                      <p style={{ color: SURFACE.ink, fontSize: 12.4, fontWeight: 600 }}>{value}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <div
+            <div className="marketing-home-hero-reveal-visual relative hidden h-[620px] translate-x-[42px] select-none lg:block">
+            <div
+              style={{
+                background: SURFACE.surface,
+                border: `1px solid ${SURFACE.borderSoft}`,
+                borderRadius: 8,
+                boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.02)',
+                height: 286,
+                padding: '24px 28px',
+                position: 'absolute',
+                right: -6,
+                top: 0,
+                width: 452,
+                zIndex: 10,
+              }}
+            >
+              <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginBottom: 28 }}>
+                <span />
+                <span
                   style={{
                     background: SURFACE.surfaceSoft,
-                    border: `1px solid ${SURFACE.border}`,
-                    borderRadius: 8,
-                    height: 186,
-                    marginBottom: 16,
-                    padding: '18px 18px 16px',
-                  }}
-                >
-                  <div style={{ color: '#9ca29b', fontSize: 8.2, fontWeight: 700, letterSpacing: '.1em', marginBottom: 10, textTransform: 'uppercase' }}>
-                    Behoud · trend
-                  </div>
-                  <div style={{ alignItems: 'flex-end', display: 'flex', gap: 9, height: 106, marginBottom: 18, opacity: 0.72 }}>
-                    {dashboardBars.map((bar) => (
-                      <div
-                        key={`${bar.height}-${bar.color}`}
-                        style={{
-                          background: bar.color,
-                          borderRadius: '6px 6px 0 0',
-                          flex: 1,
-                          height: bar.height,
-                        }}
-                      />
-                    ))}
-                  </div>
-
-                  <div style={{ display: 'grid', gap: 10, gridTemplateColumns: '1.2fr .8fr' }}>
-                    <div style={{ background: '#efe5d9', borderRadius: 999, height: 9 }} />
-                    <div style={{ background: '#efe5d9', borderRadius: 999, height: 9, width: '74%' }} />
-                    <div style={{ background: '#f1e8de', borderRadius: 999, height: 9, width: '88%' }} />
-                    <div style={{ background: '#f1e8de', borderRadius: 999, height: 9, width: '58%' }} />
-                  </div>
-                </div>
-
-                <div style={{ display: 'grid', gap: 10, gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}>
-                  {[
-                    ['Groei', '7,8', 'Prioriteit'],
-                    ['Werkdruk', '6,1', 'Verhoogd'],
-                    ['Behoud', '+3,1', 'Volgen'],
-                  ].map(([label, value, note]) => (
-                    <div
-                      key={label}
-                      style={{
-                        background: 'rgba(255,255,255,0.56)',
-                        border: `1px solid ${SURFACE.borderSoft}`,
-                        borderRadius: 8,
-                        padding: '10px 11px',
-                      }}
-                    >
-                      <p style={{ color: '#9ca29b', fontSize: 8.4, fontWeight: 700, letterSpacing: '.12em', marginBottom: 4, textTransform: 'uppercase' }}>
-                        {label}
-                      </p>
-                      <p style={{ color: SURFACE.ink, fontSize: 14, fontWeight: 600, marginBottom: 2 }}>{value}</p>
-                      <p style={{ color: SURFACE.muted, fontSize: 10.5 }}>{note}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div
-                style={{
-                  background: SURFACE.surface,
-                  border: `1px solid ${SURFACE.border}`,
-                  borderRadius: 8,
-                  boxShadow: '0 24px 56px rgba(27, 43, 58, 0.06)',
-                  minHeight: 264,
-                  overflow: 'hidden',
-                  padding: '24px 24px 22px',
-                  position: 'absolute',
-                  left: 28,
-                  top: 130,
-                  width: 350,
-                  zIndex: 20,
-                }}
-              >
-                <div style={{ borderBottom: `1px solid ${SURFACE.border}`, marginBottom: 18, paddingBottom: 12 }}>
-                  <p style={{ color: '#9ca29b', fontSize: 8.4, fontWeight: 700, letterSpacing: '.12em', marginBottom: 8, textTransform: 'uppercase' }}>
-                    Managementrapport
-                  </p>
-                  <h3
-                    style={{
-                      color: SURFACE.ink,
-                      fontFamily: displayFont,
-                      fontSize: 'clamp(1.62rem, 2.1vw, 2.12rem)',
-                      fontWeight: 600,
-                      letterSpacing: '-0.04em',
-                      lineHeight: 1.06,
-                      marginBottom: 5,
-                      textWrap: 'balance',
-                    }}
-                  >
-                    Wat vraagt nu aandacht?
-                  </h3>
-                  <p style={{ color: SURFACE.text, fontSize: 12.6, lineHeight: 1.58 }}>
-                    Wat valt op, wat telt eerst en welke vraag ligt nu voor?
-                  </p>
-                </div>
-
-                <div style={{ display: 'grid', gap: 12 }}>
-                  {reportRows.map(([label, value, color]) => (
-                    <div key={label} style={{ alignItems: 'center', display: 'grid', gap: 12, gridTemplateColumns: 'minmax(0,1fr) 110px' }}>
-                      <span style={{ color: SURFACE.ink, fontSize: 13.5, fontWeight: 500 }}>{label}</span>
-                      <div style={{ background: color === SURFACE.border ? SURFACE.borderSoft : `${color}20`, borderRadius: 999, height: 4, overflow: 'hidden' }}>
-                        <div style={{ background: color, borderRadius: 999, height: '100%', width: value }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div
-                  style={{
-                    borderTop: `1px solid ${SURFACE.borderSoft}`,
+                    border: `1px solid ${SURFACE.borderSoft}`,
+                    borderRadius: 4,
                     color: SURFACE.text,
-                    fontSize: 12.5,
-                    fontWeight: 500,
-                    lineHeight: 1.55,
-                    marginTop: 14,
-                    paddingTop: 11,
+                    fontSize: 10,
+                    fontWeight: 700,
+                    padding: '3px 8px',
                   }}
                 >
-                  Wat valt op, wat telt eerst, welke stap ligt nu voor?
-                </div>
+                  +12%
+                </span>
               </div>
 
-              <div
-                style={{
-                  background: SURFACE.charcoal,
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: 12,
-                  boxShadow: '0 24px 56px rgba(5, 22, 37, 0.22)',
-                  color: '#fff',
-                  padding: '18px 19px 14px',
-                  position: 'absolute',
-                  right: 26,
-                  top: 302,
-                  width: 372,
-                  zIndex: 30,
-                }}
-              >
-                <div style={{ alignItems: 'flex-start', display: 'flex', justifyContent: 'space-between', gap: 16, marginBottom: 14 }}>
-                  <div style={{ alignItems: 'center', display: 'flex', gap: 12 }}>
-                    <div
-                      style={{
-                        alignItems: 'center',
-                        background: SURFACE.amber,
-                        borderRadius: 8,
-                        boxShadow: 'none',
-                        display: 'flex',
-                        flexShrink: 0,
-                        height: 42,
-                        justifyContent: 'center',
-                        width: 42,
-                      }}
-                    >
-                      <svg width="17" height="21" viewBox="0 0 17 21" fill="none" aria-hidden>
-                        <path
-                          d="M9.911 0.75L3.489 10.197H7.653L6.723 20.25L13.145 10.803H8.981L9.911 0.75Z"
-                          fill="white"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <h4 style={{ color: '#fff', fontSize: 17, fontWeight: 700, letterSpacing: '.01em', marginBottom: 3 }}>
-                        Action Center
-                      </h4>
-                      <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10.4, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase' }}>
-                        Van prioriteit naar opvolging
-                      </p>
-                    </div>
-                  </div>
-                  <span
+              <div style={{ alignItems: 'flex-end', display: 'flex', gap: 10, height: 132, marginBottom: 28 }}>
+                {dashboardBars.map((bar) => (
+                  <div
+                    key={`${bar.height}-${bar.color}`}
                     style={{
-                      background: 'rgba(255,255,255,0.08)',
-                      border: '1px solid rgba(255,255,255,0.14)',
-                      borderRadius: 999,
-                      color: '#fff',
-                      fontSize: 9.2,
-                      fontWeight: 700,
-                      padding: '4px 9px',
-                      textTransform: 'uppercase',
-                      whiteSpace: 'nowrap',
+                      background: bar.color,
+                      borderRadius: '2px 2px 0 0',
+                      flex: 1,
+                      height: bar.height,
                     }}
-                  >
-                    3 acties open
-                  </span>
-                </div>
+                  />
+                ))}
+              </div>
 
-                <div style={{ display: 'grid', gap: 7, marginBottom: 10 }}>
-                  {actionItems.map(([title, body, badge, dotColor, badgeBg]) => (
-                    <div
-                      key={title}
-                      style={{
-                        alignItems: 'center',
-                        background: 'rgba(255,255,255,0.02)',
-                        border: '1px solid rgba(255,255,255,0.045)',
-                        borderRadius: 11,
-                        display: 'grid',
-                        gap: 6,
-                        gridTemplateColumns: 'minmax(0,1fr) auto',
-                        padding: '8px 10px',
-                      }}
-                    >
-                      <div style={{ alignItems: 'center', display: 'flex', gap: 10, minWidth: 0 }}>
-                        <span style={{ background: dotColor, borderRadius: 999, flexShrink: 0, height: 7, width: 7 }} />
-                        <div style={{ minWidth: 0 }}>
-                          <p style={{ color: '#fff', fontSize: 13.1, fontWeight: 600, marginBottom: 1 }}>{title}</p>
-                          <p style={{ color: 'rgba(255,255,255,0.42)', fontSize: 9.8, lineHeight: 1.25 }}>{body}</p>
-                        </div>
-                      </div>
-                      <span
-                        style={{
-                          background: 'rgba(255,255,255,0.07)',
-                          border: `1px solid ${badgeBg}52`,
-                          borderRadius: 999,
-                          color: badgeBg === SURFACE.text ? '#f3eee7' : badgeBg,
-                          fontSize: 8.4,
-                          fontWeight: 700,
-                          padding: '3px 7px',
-                          textTransform: 'uppercase',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {badge}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div style={{ background: SURFACE.paperSoft, borderRadius: 999, height: 10, width: '100%' }} />
+                <div style={{ background: SURFACE.paperSoft, borderRadius: 999, height: 10, width: '68%' }} />
+              </div>
+            </div>
 
-                <div
+            <div
+              style={{
+                background: '#fef8f1',
+                border: `1px solid ${SURFACE.borderSoft}`,
+                borderRadius: 4,
+                boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.02)',
+                height: 360,
+                overflow: 'hidden',
+                padding: '30px 32px',
+                position: 'absolute',
+                left: 30,
+                top: 118,
+                width: 438,
+                zIndex: 20,
+              }}
+            >
+              <div style={{ borderBottom: `1px solid ${SURFACE.border}`, marginBottom: 22, paddingBottom: 14 }}>
+                <h3
                   style={{
-                    alignItems: 'center',
-                    background: 'rgba(255,255,255,0.04)',
-                    border: '1px solid rgba(255,255,255,0.06)',
-                    borderRadius: 14,
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    padding: '9px 11px',
+                    color: SURFACE.ink,
+                    fontFamily: displayFont,
+                    fontSize: 'clamp(2.2rem, 2.7vw, 3rem)',
+                    fontWeight: 600,
+                    letterSpacing: '-0.035em',
+                    lineHeight: 0.98,
+                    marginBottom: 6,
+                    textWrap: 'balance',
                   }}
                 >
-                  <div>
-                    <p style={{ color: 'rgba(255,255,255,0.46)', fontSize: 9, fontWeight: 700, letterSpacing: '.12em', marginBottom: 4, textTransform: 'uppercase' }}>
-                      Status
-                    </p>
-                    <p style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>2 acties toegewezen, 1 in review</p>
+                  Exit-analyse Q3
+                </h3>
+                <p style={{ color: SURFACE.muted, fontSize: 12.5, lineHeight: 1.5 }}>
+                  Redenen van Vertrek - Senior Staff
+                </p>
+              </div>
+
+              <div style={{ display: 'grid', gap: 14 }}>
+                {reportRows.map(([label, value, color]) => (
+                  <div key={label} style={{ alignItems: 'center', display: 'grid', gap: 14, gridTemplateColumns: 'minmax(0,1fr) 132px' }}>
+                    <span style={{ color: SURFACE.ink, fontSize: 14, fontWeight: 500 }}>{label}</span>
+                    <div style={{ background: color === SURFACE.border ? SURFACE.borderSoft : `${color}20`, borderRadius: 999, height: 4, overflow: 'hidden' }}>
+                      <div style={{ background: color, borderRadius: 999, height: '100%', width: value }} />
+                    </div>
                   </div>
+                ))}
+              </div>
+
+              <p
+                style={{
+                  borderLeft: `2px solid ${SURFACE.amber}`,
+                  color: SURFACE.ink,
+                  fontFamily: displayFont,
+                  fontSize: 18,
+                  fontStyle: 'italic',
+                  lineHeight: 1.65,
+                  marginTop: 32,
+                  paddingLeft: 16,
+                }}
+              >
+                &ldquo;Op groepsniveau wordt zichtbaar wat nu prioriteit vraagt, zodat opvolging bestuurlijk eenvoudiger wordt.&rdquo;
+              </p>
+            </div>
+
+            <div
+              style={{
+                background: SURFACE.charcoal,
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 18,
+                boxShadow: '0 14px 34px rgba(13, 17, 24, 0.18)',
+                color: '#fff',
+                left: -28,
+                padding: '24px 28px 22px',
+                position: 'absolute',
+                top: 346,
+                width: 470,
+                zIndex: 30,
+              }}
+            >
+              <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
+                <div style={{ alignItems: 'center', display: 'flex', gap: 14 }}>
                   <div
                     style={{
-                      background: '#fff',
-                      borderRadius: 999,
-                      color: SURFACE.ink,
-                      fontSize: 10.5,
-                      fontWeight: 700,
-                      padding: '8px 12px',
+                      alignItems: 'center',
+                      background: SURFACE.amber,
+                      borderRadius: 10,
+                      boxShadow: '0 10px 22px rgba(185, 87, 31, 0.18)',
+                      display: 'flex',
+                      height: 40,
+                      justifyContent: 'center',
+                      width: 40,
                     }}
                   >
-                    Open opvolging
+                    <svg width="17" height="21" viewBox="0 0 17 21" fill="none" aria-hidden>
+                      <path
+                        d="M9.911 0.75L3.489 10.197H7.653L6.723 20.25L13.145 10.803H8.981L9.911 0.75Z"
+                        fill="white"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 style={{ color: '#fff', fontSize: 15, fontWeight: 700, letterSpacing: '.02em', marginBottom: 2, textTransform: 'uppercase' }}>
+                      Action Center
+                    </h4>
+                    <p style={{ color: 'rgba(255,255,255,0.42)', fontSize: 10, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase' }}>
+                      Prioriteit-gestuurde opvolging
+                    </p>
                   </div>
                 </div>
+                <span
+                  style={{
+                    background: 'rgba(255,255,255,0.08)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: 6,
+                    color: '#fff',
+                    fontSize: 10,
+                    fontWeight: 700,
+                    padding: '4px 8px',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  3 taken
+                </span>
               </div>
+
+              <div style={{ display: 'grid', gap: 2, marginBottom: 18 }}>
+                {actionItems.map(([title, body, badge, dotColor, badgeBg]) => (
+                  <div
+                    key={title}
+                    style={{
+                      alignItems: 'center',
+                      borderBottom: '1px solid rgba(255,255,255,0.08)',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      padding: '14px 0',
+                    }}
+                  >
+                    <div style={{ alignItems: 'center', display: 'flex', gap: 12 }}>
+                      <span style={{ background: dotColor, borderRadius: 999, flexShrink: 0, height: 6, width: 6 }} />
+                      <div>
+                        <p style={{ color: '#fff', fontSize: 14, fontWeight: 600, marginBottom: 2 }}>{title}</p>
+                        <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11.5 }}>{body}</p>
+                      </div>
+                    </div>
+                    <span
+                      style={{
+                        background: 'rgba(255,255,255,0.08)',
+                        border: `1px solid ${badgeBg}30`,
+                        borderRadius: 6,
+                        color: badgeBg,
+                        fontSize: 10,
+                        fontWeight: 700,
+                        padding: '4px 8px',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      {badge}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', paddingTop: 4 }}>
+                <div style={{ alignItems: 'center', display: 'flex', gap: 12 }}>
+                  <div
+                    style={{
+                      alignItems: 'center',
+                      background: SURFACE.teal,
+                      borderRadius: 999,
+                      color: '#fff',
+                      display: 'flex',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      height: 28,
+                      justifyContent: 'center',
+                      width: 28,
+                    }}
+                  >
+                    JD
+                  </div>
+                  <p style={{ color: 'rgba(255,255,255,0.78)', fontSize: 12 }}>
+                    J. de Wit <span style={{ color: 'rgba(255,255,255,0.38)' }}>Â· VP Talent</span>
+                  </p>
+                </div>
+                <div
+                  style={{
+                    background: '#fff',
+                    borderRadius: 8,
+                    color: SURFACE.ink,
+                    fontSize: 11.5,
+                    fontWeight: 700,
+                    padding: '10px 16px',
+                  }}
+                >
+                  Beheer opvolging
+                </div>
+              </div>
+            </div>
+
+            <div
+              aria-hidden
+              style={{
+                background: 'rgba(245, 232, 220, 0.6)',
+                borderRadius: '999px',
+                filter: 'blur(100px)',
+                height: '120%',
+                left: '50%',
+                position: 'absolute',
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: '120%',
+                zIndex: 0,
+              }}
+            />
             </div>
         </div>
       </div>
@@ -1305,7 +1196,7 @@ function SuitePreviewSection() {
                   maxWidth: '33rem',
                 }}
               >
-                Loep brengt signalen samen in dashboard, samenvatting en rapport, en helpt vervolgens om prioriteit, eigenaar en eerste actie vast te leggen.
+                Verisight brengt signalen samen in dashboard, samenvatting en rapport, en helpt vervolgens om prioriteit, eigenaar en eerste actie vast te leggen.
               </p>
             </Reveal>
 
@@ -1336,7 +1227,7 @@ function SuitePreviewSection() {
             <Reveal delay={0.08} from="right">
               <div className="suite-motion-shell">
               <div className="suite-phase-tabs" aria-label="Visual flow">
-                {['Luisteren', 'Leren', 'Kiezen'].map((phase, index) => (
+                {['Zien', 'Prioriteren', 'Handelen'].map((phase, index) => (
                   <span key={phase} className={`suite-phase-tab suite-phase-tab-${index + 1}`}>
                     {phase}
                   </span>
@@ -2047,7 +1938,43 @@ function RoutesSection() {
             paddingTop: 26,
           }}
         >
-          <div />
+          <div>
+            <Reveal delay={0.22}>
+              <p
+                style={{
+                  color: SURFACE.muted,
+                  fontSize: 10,
+                  fontWeight: 700,
+                  letterSpacing: '.18em',
+                  marginBottom: 12,
+                  textTransform: 'uppercase',
+                }}
+              >
+                Vervolgvragen
+              </p>
+            </Reveal>
+            <Reveal delay={0.26}>
+              <p style={{ color: SURFACE.text, fontSize: 15, lineHeight: 1.75, maxWidth: '38rem' }}>
+                Pulse voor compacte vervolgmetingen, Leadership Scan voor extra managementcontext en een combinatieroute wanneer meerdere vragen tegelijk spelen.
+              </p>
+            </Reveal>
+          </div>
+
+          <div className="flex flex-wrap gap-8 xl:justify-end">
+            {[
+              ['Pulse', SURFACE.surfaceSoft, SURFACE.text],
+              ['Leadership Scan', SURFACE.paperSoft, SURFACE.text],
+              ['Combinatie', '#ece7df', SURFACE.ink],
+            ].map(([label, bg, color], index) => (
+              <Reveal key={label} delay={0.28 + index * 0.05}>
+                <div style={{ minWidth: 132 }}>
+                <div style={{ background: String(bg), color: String(color), display: 'inline-block', fontFamily: bodyFont, fontSize: 11, fontWeight: 700, letterSpacing: '.14em', marginBottom: 10, padding: '5px 10px', textTransform: 'uppercase' }}>
+                  {label}
+                </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
         </div>
 
         <div style={{ marginTop: 34 }}>
@@ -2100,30 +2027,30 @@ function FirstDeliverySection() {
                 marginBottom: 22,
               }}
             >
-              Wat u krijgt in de Baseline
+              Wat u als eerste krijgt
             </h2>
           </Reveal>
           <Reveal delay={0.05}>
             <p style={{ color: SURFACE.text, fontSize: 16, lineHeight: 1.78, margin: '0 auto 40px', maxWidth: '58rem' }}>
-              Loep levert geen rapport dat blijft liggen. Elke baseline eindigt met een begeleide managementbespreking,
-              zodat HR en management weten waar ze eerst moeten beginnen.
+              Verisight geeft u geen losse analyse zonder vervolg, maar een eerste managementflow die helpt om sneller
+              te begrijpen wat speelt, te bepalen wat eerst telt en gerichte opvolging op gang te brengen.
             </p>
           </Reveal>
         </div>
 
-          <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
-            {firstDeliveryItems.map((item, index) => (
-              <Reveal key={item.title} delay={0.08 + index * 0.04}>
-                <article
-                  style={{
-                    background: SURFACE.surface,
-                    border: `1px solid ${SURFACE.borderSoft}`,
-                    borderRadius: 8,
-                    boxShadow: 'none',
-                    minHeight: item.minHeight ?? 132,
-                    padding: '28px 28px 26px',
-                  }}
-                >
+        <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+          {firstDeliveryItems.map((item, index) => (
+            <Reveal key={item.title} delay={0.08 + index * 0.04}>
+              <article
+                style={{
+                  background: SURFACE.surface,
+                  border: `1px solid ${SURFACE.borderSoft}`,
+                  borderRadius: 28,
+                  boxShadow: '0 10px 24px rgba(22, 34, 56, 0.06), 0 2px 5px rgba(22, 34, 56, 0.04)',
+                  minHeight: 132,
+                  padding: '28px 28px 26px',
+                }}
+              >
                 <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '56px minmax(0, 1fr)' }}>
                   <span
                     style={{
@@ -2154,61 +2081,13 @@ function FirstDeliverySection() {
                   </div>
                 </div>
               </article>
-              </Reveal>
-            ))}
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: 20 }}>
-            <Reveal delay={0.26}>
-              <article
-                style={{
-                  background: 'transparent',
-                  border: `1.5px dashed ${SURFACE.border}`,
-                  borderRadius: 8,
-                  maxWidth: 760,
-                  minHeight: 132,
-                  padding: '28px 28px 26px',
-                  width: '100%',
-                }}
-              >
-                <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '56px minmax(0, 1fr)' }}>
-                  <span
-                    style={{
-                      color: SURFACE.subtle,
-                      fontFamily: displayFont,
-                      fontSize: 24,
-                      letterSpacing: '-0.03em',
-                      lineHeight: 1,
-                    }}
-                  >
-                    {optionalActionCenterItem.index}
-                  </span>
-                  <div>
-                    <h3
-                      style={{
-                        color: SURFACE.ink,
-                        fontFamily: displayFont,
-                        fontSize: 'clamp(1.7rem, 2.1vw, 2.2rem)',
-                        fontWeight: 400,
-                        letterSpacing: '-0.035em',
-                        lineHeight: 1.08,
-                        marginBottom: 10,
-                      }}
-                    >
-                      {optionalActionCenterItem.title}
-                    </h3>
-                    <p style={{ color: SURFACE.text, fontSize: 15, lineHeight: 1.72, maxWidth: '42rem' }}>
-                      {optionalActionCenterItem.body}
-                    </p>
-                  </div>
-                </div>
-              </article>
             </Reveal>
-          </div>
+          ))}
         </div>
-      </section>
-    )
-  }
+      </div>
+    </section>
+  )
+}
 
 function ContactSection() {
   const kennismakingHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'homepage_final_cta' })
@@ -2227,10 +2106,10 @@ function ContactSection() {
         <Reveal>
           <div
             style={{
-              background: SURFACE.charcoal,
-              border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: 12,
-              boxShadow: '0 24px 56px rgba(5, 22, 37, 0.22)',
+              background:
+                'radial-gradient(circle at left bottom, rgba(21, 101, 88, 0.34) 0%, rgba(21, 101, 88, 0) 28%), linear-gradient(135deg, #0d1724 0%, #122133 56%, #162634 100%)',
+              borderRadius: 38,
+              boxShadow: '0 22px 48px rgba(13, 23, 36, 0.16)',
               margin: '0 auto',
               maxWidth: 1200,
               padding: 'clamp(40px, 6vw, 72px) clamp(26px, 5vw, 64px)',
@@ -2262,7 +2141,7 @@ function ContactSection() {
                 maxWidth: '48rem',
               }}
             >
-              Plan een kennismaking en ontdek hoe Loep helpt om signalen zichtbaar te maken, prioriteiten scherper
+              Plan een kennismaking en ontdek hoe Verisight helpt om signalen zichtbaar te maken, prioriteiten scherper
               te wegen en opvolging concreet te faciliteren.
             </p>
 
@@ -2274,9 +2153,9 @@ function ContactSection() {
                 href={kennismakingHref}
                 style={{
                   alignItems: 'center',
-                  background: SURFACE.amber,
-                  borderRadius: 6,
-                  color: '#fff',
+                  background: '#fffdf8',
+                  borderRadius: 999,
+                  color: SURFACE.ink,
                   display: 'inline-flex',
                   fontFamily: bodyFont,
                   fontSize: 15,
@@ -2295,7 +2174,7 @@ function ContactSection() {
                   alignItems: 'center',
                   background: 'transparent',
                   border: '1px solid rgba(255, 250, 242, 0.22)',
-                  borderRadius: 6,
+                  borderRadius: 999,
                   color: '#fffdf8',
                   display: 'inline-flex',
                   fontFamily: bodyFont,
@@ -2329,6 +2208,5 @@ export function HomePageContent() {
     </div>
   )
 }
-
 
 
