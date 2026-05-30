@@ -175,10 +175,10 @@ def _bar_chart_svg(items: list[tuple[str, float, str]], max_val: float = 10.0,
 
 
 def _reason_chart_svg(items: list[tuple[str, int]], total: int,
-                      width: int = 380, bar_h: int = 18, gap: int = 8) -> str:
+                      width: int = 400, bar_h: int = 18, gap: int = 8) -> str:
     """Horizontale barchart voor vertrekredenen. items = [(label, count)]"""
-    lbl_w  = 195
-    pct_w  = 55
+    lbl_w  = 170
+    pct_w  = 65
     bar_w  = width - lbl_w - pct_w - 10
     total_h = len(items) * (bar_h + gap) + 4
     rows   = ""
@@ -488,21 +488,33 @@ def _playbook_card(row: dict) -> str:
 
 
 def _step_cards(nsp: dict) -> str:
+    import re as _re
     cards = nsp.get("session_cards") or [
         {"title": "Prioriteit",   "body": nsp.get("first_decision","")},
         {"title": "Eigenaar",     "body": nsp.get("first_owner","")},
         {"title": "Eerste stap",  "body": nsp.get("first_action","")},
         {"title": "Reviewmoment", "body": nsp.get("review_moment","")},
     ]
-    # Saniteer actietaal in card bodies
-    def _clean(s: str) -> str:
-        return (s.replace("gerichte verbeteractie","eerste vervolgstap")
-                 .replace("verbeteractie","eerste vervolgstap")
-                 .replace("vertrekspoor om bestuurlijk te wegen",
-                          "eerste spoor om te bespreken"))
+
+    def _clean(title: str, s: str) -> str:
+        # Vervang volledig de "Vertaal X binnen 30 dagen naar..."-formule
+        s = _re.sub(
+            r'Vertaal .{0,100}binnen \d+ dagen naar [^.]+\.',
+            'Kies één managementgesprek of data-check om het beeld te verduidelijken. Bepaal daarna pas of een gerichte stap nodig is.',
+            s
+        )
+        # Vervang "vormen nu het eerste vertrekspoor om bestuurlijk te wegen"
+        s = s.replace("vormen nu het eerste vertrekspoor om bestuurlijk te wegen",
+                      "zijn de eerste factoren om gericht te bespreken")
+        # Vervang overige actietaal
+        s = (s.replace("gerichte verbeteractie", "managementgesprek of data-check")
+               .replace("verbeteractie", "eerste vervolgstap")
+               .replace("met duidelijke eigenaar en zichtbare opvolging", ""))
+        return s.strip()
+
     tds = "".join(
         f'<td class="step"><div class="step-no">{_h(c.get("title",""))}</div>'
-        f'<div class="step-body">{_h(_clean(c.get("body","")))}</div></td>'
+        f'<div class="step-body">{_h(_clean(c.get("title",""), c.get("body","")))}</div></td>'
         for c in cards[:4])
     return f'<table class="steps"><tr>{tds}</tr></table>'
 
@@ -760,10 +772,11 @@ def render_exit_report_html(data: dict) -> str:
 
     gauge_html = _gauge_svg(avg_risk, fl, fcol, width=200)
     bc = data["band_counts"]
+    # Respondentverdeling: gebruik frictielabels, niet factorlabels
     stacked = _stacked_bar_svg([
-        ("Kwetsbaar punt", bc.get("HOOG",0), "#EF4444"),
-        ("Gemengd beeld",  bc.get("MIDDEN",0), "#F59E0B"),
-        ("Relatief sterk", bc.get("LAAG",0), "#22C55E"),
+        ("Sterk frictiebeeld",   bc.get("HOOG",0),   "#EF4444"),
+        ("Gemengd vertrekbeeld", bc.get("MIDDEN",0), "#F59E0B"),
+        ("Laag frictiebeeld",    bc.get("LAAG",0),   "#22C55E"),
     ], total=n, width=320, height=22)
 
     stat_cards = [
@@ -782,9 +795,9 @@ def render_exit_report_html(data: dict) -> str:
         <p style="font-size:12px;font-weight:700;color:#243247;line-height:1.5;margin-bottom:10px;">{_h(exec_line)}</p>
         <div style="margin-bottom:10px;">{stacked}</div>
         <div style="font-size:9px;color:#64748B;margin-top:5px;">
-          <span class="legend-dot" style="background:#EF4444;"></span>Kwetsbaar: {bc.get("HOOG",0)}&times;&nbsp;&nbsp;
-          <span class="legend-dot" style="background:#F59E0B;"></span>Gemengd: {bc.get("MIDDEN",0)}&times;&nbsp;&nbsp;
-          <span class="legend-dot" style="background:#22C55E;"></span>Relatief sterk: {bc.get("LAAG",0)}&times;
+          <span class="legend-dot" style="background:#EF4444;"></span>Sterk frictiebeeld: {bc.get("HOOG",0)}&times;&nbsp;&nbsp;
+          <span class="legend-dot" style="background:#F59E0B;"></span>Gemengd vertrekbeeld: {bc.get("MIDDEN",0)}&times;&nbsp;&nbsp;
+          <span class="legend-dot" style="background:#22C55E;"></span>Laag frictiebeeld: {bc.get("LAAG",0)}&times;
         </div>
       </div>
       <div class="tc-r" style="text-align:center;">{gauge_html}</div>
@@ -822,7 +835,7 @@ def render_exit_report_html(data: dict) -> str:
         if low_item:
             why_cells += (f'<td class="why-cell"><div class="why-l">Laagste item</div>'
                           f'<div class="why-v" style="color:{_factor_color(low_item[2])};">{low_item[2]:.1f}/10</div>'
-                          f'<div class="why-b">{_h(low_item[1][:50])}</div></td>')
+                          f'<div class="why-b">{_h(low_item[1])}</div></td>')
         if cont_n:
             why_cells += f'<td class="why-cell"><div class="why-l">Speelt ook mee</div><div class="why-v">{cont_n}&times;</div><div class="why-b">als meespelende context</div></td>'
 
@@ -863,7 +876,7 @@ def render_exit_report_html(data: dict) -> str:
             SDT_LABELS.get(low_sdt_key, "&#x2014;") if low_sdt_key else "&#x2014;",
             f"{_score_str(sdt_a.get(low_sdt_key))} — {SDT_HELP.get(low_sdt_key,'')}" if low_sdt_key else ""),
         _ig("Open toelichting",
-            f"'{data['open_texts'][0][:50]}...'" if data["open_texts"] else "Geen open antwoorden",
+            f'"{data["open_texts"][0][:60]}"' if data["open_texts"] else "Geen open antwoorden",
             "Zie open toelichtingen verderop"),
         _ig("Eerste managementvraag",
             FACTOR_MGMT_QUESTION.get(top_fkeys[0], "Zie managementduiding") if top_fkeys else "Zie managementduiding",
@@ -879,9 +892,9 @@ def render_exit_report_html(data: dict) -> str:
 </div>"""
 
     # ── Vertrekcontext ────────────────────────────────────────────────────────
-    exit_chart = _reason_chart_svg([(r["label"], r["count"]) for r in data["exit_r_dist"]], n, width=320) \
+    exit_chart = _reason_chart_svg([(r["label"], r["count"]) for r in data["exit_r_dist"]], n, width=340) \
         if data["exit_r_dist"] else '<div class="empty-state">Geen vertrekredenen geregistreerd</div>'
-    cont_chart = _reason_chart_svg([(r["label"], r["count"]) for r in data["cont_dist"]], n, width=260) \
+    cont_chart = _reason_chart_svg([(r["label"], r["count"]) for r in data["cont_dist"]], n, width=300) \
         if data["cont_dist"] else '<div class="empty-state">Geen meespelende redenen</div>'
 
     sv = data["sig_vis"]
@@ -944,21 +957,28 @@ def render_exit_report_html(data: dict) -> str:
     ]
     factor_chart = _bar_chart_svg(factor_chart_items, max_val=10.0, width=420, bar_h=26, gap=10)
 
-    attention  = [FACTOR_LABELS_NL.get(fk, fk) for fk in bottom_2]
-    strengths  = [FACTOR_LABELS_NL.get(fk, fk) for fk in top_2]
+    # Splits factoren op werkelijk label — niet als groep behandelen
+    kwetsbaar_f = [FACTOR_LABELS_NL.get(fk, fk) for fk, sc in sorted_f if sc is not None and sc < 5.0]
+    aandacht_f  = [FACTOR_LABELS_NL.get(fk, fk) for fk, sc in sorted_f if sc is not None and 5.0 <= sc < 6.5]
+    sterk_f     = [FACTOR_LABELS_NL.get(fk, fk) for fk, sc in sorted_f if sc is not None and sc >= 6.5]
+
+    def _factor_summary_card(title: str, color: str, css_cls: str, labels: list[str]) -> str:
+        if not labels:
+            return ""
+        return (f'<div class="card {css_cls}" style="margin-bottom:9px;">'
+                f'<div style="font-size:8.5px;font-weight:700;color:{color};letter-spacing:0.07em;text-transform:uppercase;margin-bottom:3px;">{_h(title)}</div>'
+                f'<div style="font-size:11px;font-weight:700;color:#243247;">{" &middot; ".join(_h(l) for l in labels)}</div>'
+                f'</div>')
+
+    factor_summary_html = (
+        _factor_summary_card("Kwetsbaar punt",  "#EF4444", "cr", kwetsbaar_f) +
+        _factor_summary_card("Aandachtspunt",   "#F59E0B", "",   aandacht_f) +
+        _factor_summary_card("Relatief sterk",  "#22C55E", "cg", sterk_f)
+    )
 
     s += f"""<div class="pb sec">
   <span class="slabel">Factoranalyse</span>
-  <div class="tcol" style="margin-bottom:12px;">
-    <div class="tc-l"><div class="card cr">
-      <div style="font-size:8.5px;font-weight:700;color:#EF4444;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:3px;">Kwetsbaar punt</div>
-      <div style="font-size:12px;font-weight:700;color:#243247;">{" &middot; ".join(_h(l) for l in attention) or "&#x2014;"}</div>
-    </div></div>
-    <div class="tc-r"><div class="card cg">
-      <div style="font-size:8.5px;font-weight:700;color:#22C55E;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:3px;">Relatief sterk</div>
-      <div style="font-size:12px;font-weight:700;color:#243247;">{" &middot; ".join(_h(l) for l in strengths) or "&#x2014;"}</div>
-    </div></div>
-  </div>
+  <div style="margin-bottom:12px;">{factor_summary_html}</div>
   <div class="card">
     <p style="font-size:9.5px;color:#64748B;margin-bottom:14px;">Score 1&ndash;10 — hoger is beter. Kleur geeft het beeld per factor: rood = kwetsbaar punt, geel = gemengd beeld, groen = relatief sterk.</p>
     {factor_chart}
@@ -979,7 +999,7 @@ def render_exit_report_html(data: dict) -> str:
         rows = "".join(
             f'<tr><td class="iq">{_h(q)}</td>'
             f'<td class="is" style="color:{_factor_color(isc)};">{isc:.1f}</td>'
-            f'<td class="ib">{_mini_bar_svg(isc, _factor_color(isc), width=80, height=7)}</td></tr>'
+            f'<td class="ib">{_bar_chart_svg([(str(round(isc,1)), isc, _factor_color(isc))], max_val=10.0, width=100, bar_h=8, gap=0)}</td></tr>'
             for _, q, isc in i_sc
         ) or '<tr><td colspan="3" style="color:#94A3B8;font-style:italic;">Itemscores niet beschikbaar in deze wave.</td></tr>'
         return f"""<div class="card no-break" style="margin-bottom:14px;">
@@ -1065,32 +1085,74 @@ def render_exit_report_html(data: dict) -> str:
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]
     if len(texts) >= MIN_QUOTES_N:
-        used = set()
+        # Tel n per thema over alle teksten
+        theme_counts: dict[str, int] = {}
+        for t in texts:
+            tl = t.lower()
+            matched = next((k for k, kws in THEME_KEYWORDS.items()
+                            if any(kw in tl for kw in kws)), None)
+            if matched is None:
+                if any(kw in tl for kw in ["persoonlijk","omstandigh","verhuis","studie","gezin"]):
+                    matched = "Persoonlijke omstandigheid"
+                elif any(kw in tl for kw in ["aanbod","andere baan","concurrent","extern"]):
+                    matched = "Beter aanbod elders"
+                else:
+                    matched = "Overige toelichting"
+            theme_counts[matched] = theme_counts.get(matched, 0) + 1
+
+        # Themaverdeling bovenaan
+        tc_sorted = sorted(theme_counts.items(), key=lambda x: -x[1])
+        theme_summary = (
+            '<div style="font-size:10px;color:#374151;margin-bottom:12px;">'
+            '<strong>Thema\'s in open toelichtingen:</strong>&nbsp;&nbsp;' +
+            " &middot; ".join(f"<strong>{_h(k)}</strong> ({v}&times;)" for k, v in tc_sorted) +
+            '</div>'
+        )
+
+        used: set[str] = set()
         theme_html = ""
         for t in texts[:MAX_QUOTES]:
             if t in used: continue
             used.add(t)
             tl = t.lower()
             theme_name = next((k for k, kws in THEME_KEYWORDS.items()
-                               if any(kw in tl for kw in kws)), "Open toelichting")
-            if top_fkeys and any(kw in tl for kw in THEME_KEYWORDS.get(
-                    next((k for k in THEME_KEYWORDS if top_fkeys[0] in k.lower()), ""), [])):
+                               if any(kw in tl for kw in kws)), None)
+            if theme_name is None:
+                if any(kw in tl for kw in ["persoonlijk","omstandigh","verhuis","studie","gezin"]):
+                    theme_name = "Persoonlijke omstandigheid"
+                elif any(kw in tl for kw in ["aanbod","andere baan","concurrent","extern"]):
+                    theme_name = "Beter aanbod elders"
+                else:
+                    theme_name = "Overige toelichting"
+            theme_n = theme_counts.get(theme_name, 1)
+
+            # Evidence label
+            tf_kws = THEME_KEYWORDS.get(
+                next((k for k in THEME_KEYWORDS
+                      if top_fkeys and top_fkeys[0] in k.lower()), ""), [])
+            if tf_kws and any(kw in tl for kw in tf_kws):
                 ev = "bevestigt topfactor"; ev_bg = "#FEF2F2"; ev_tc = "#DC2626"
-            elif any(kw in tl for kw in ["niet", "maar", "hoewel", "toch", "echter"]):
+            elif any(kw in tl for kw in ["niet","maar","hoewel","toch","echter"]):
                 ev = "nuanceert beeld"; ev_bg = "#EFF6FF"; ev_tc = "#1D4ED8"
             else:
                 ev = "verdiept signaal"; ev_bg = "#F0FDF4"; ev_tc = "#15803D"
-            theme_html += (f'<div class="theme-card">'
-                           f'<span class="theme-badge">{_h(theme_name)}</span>'
-                           f'<span class="ev-badge" style="background:{ev_bg};color:{ev_tc};">{_h(ev)}</span>'
-                           f'<div class="quote-txt">{_h(t)}'
-                           f'<div class="quote-anon">Geanonimiseerd — namen en contactgegevens verwijderd</div></div>'
-                           f'</div>')
+
+            theme_html += (
+                f'<div class="theme-card">'
+                f'<span class="theme-badge">{_h(theme_name)}</span>'
+                f'<span style="font-size:8px;color:#94A3B8;margin-left:5px;">{theme_n}&times;</span>'
+                f'<span class="ev-badge" style="background:{ev_bg};color:{ev_tc};">{_h(ev)}</span>'
+                f'<div class="quote-txt">{_h(t)}'
+                f'<div class="quote-anon">Geanonimiseerd &mdash; namen en contactgegevens verwijderd</div></div>'
+                f'</div>'
+            )
+
         s += f"""<div class="pb sec">
-  <span class="slabel">Open toelichtingen — {len(texts)} respondentstemmen</span>
+  <span class="slabel">Open toelichtingen &mdash; {len(texts)} respondentstemmen</span>
+  {theme_summary}
   <div class="cbox" style="margin-bottom:12px;font-size:10px;color:#374151;">
-    Getoond: {min(len(texts),MAX_QUOTES)} van {len(texts)} geanonimiseerde toelichtingen.
-    Thema-indeling is indicatief. Gebruik als kwalitatieve aanvulling op de factoranalyse.
+    Getoond: {min(len(texts),MAX_QUOTES)} van {len(texts)} toelichtingen.
+    Thema-indeling op basis van trefwoorden &mdash; indicatief. Aanvulling op de factoranalyse.
   </div>
   {theme_html}
 </div>"""
@@ -1113,7 +1175,6 @@ def render_exit_report_html(data: dict) -> str:
     tf_lbl = top_flabels[0] if top_flabels else "het leidende thema"
     s += f"""<div class="pb sec">
   <span class="slabel">Eerste managementspoor</span>
-  <div class="card" style="margin-bottom:14px;"><p style="font-size:11px;">{_h(nsp.get("intro_text",""))}</p></div>
   {_step_cards(nsp)}
   <div class="cbox" style="margin-top:14px;">
     <p style="font-size:10.5px;color:#243247;font-weight:700;margin-bottom:4px;">Eerste stap</p>
