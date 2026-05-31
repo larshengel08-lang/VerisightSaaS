@@ -77,21 +77,21 @@ const routeCards = [
     index: '01',
     eyebrow: 'Als vertrek de vraag is',
     title: 'ExitScan',
-    body: 'Begrijp waarom medewerkers vertrekken en welke patronen terugkomen. Helder beeld in weken, niet maanden.',
+    body: 'Wij brengen vertrekpatronen scherp in beeld en leveren een rapport met prioriteiten. Begeleide bespreking inbegrepen.',
     accent: SURFACE.amber,
   },
   {
     index: '02',
     eyebrow: 'Als behoud in actieve teams de vraag is',
     title: 'RetentieScan',
-    body: 'Zie waar behoud onder druk staat voordat het te laat is. Vroege signalering op groepsniveau.',
+    body: 'Wij laten zien waar behoud onder druk staat — voordat uitstroom zichtbaar wordt. Rapport en bespreking inbegrepen.',
     accent: SURFACE.teal,
   },
   {
     index: '03',
     eyebrow: 'Als vroege landing aandacht vraagt',
     title: 'Onboarding 30-60-90',
-    body: 'Zie vroeg hoe nieuwe medewerkers landen en waar uitval kan ontstaan.',
+    body: 'Wij meten vroeg hoe nieuwe medewerkers landen. Helder groepsbeeld, geen individuele beoordeling.',
     accent: '#9b5f1e',
   },
 ]
@@ -117,44 +117,54 @@ const problemSignalPoints = [
 const managementFlowSteps = [
   {
     step: '1',
-    label: 'Begrijpen',
-    title: 'Dashboard',
-    body: "Laat direct zien waar signalen terugkomen, welke thema's of afdelingen aandacht vragen en wat nu bestuurlijk het meeste gewicht heeft.",
+    label: 'Luisteren',
+    title: 'Wij sturen de scan uit',
+    body: 'Na een korte intake sturen wij de vragenlijst. U levert de doelgroep aan. Wij bewaken de uitvoering — zonder toolbeheer voor uw team.',
   },
   {
     step: '2',
-    label: 'Prioriteren',
-    title: 'Managementrapport',
-    body: 'Maakt de hoofdboodschap, eerste prioriteit en eerste vervolgrichting bestuurlijk leesbaar, zodat management sneller kan wegen wat eerst telt.',
+    label: 'Leren',
+    title: 'U ontvangt het rapport',
+    body: 'We analyseren de uitkomsten en leveren een managementrapport met patronen, prioriteiten en de eerste managementvraag. In weken, niet maanden.',
   },
   {
     step: '3',
-    label: 'Handelen',
-    title: 'Action Center',
-    body: 'Maakt opvolging concreet zodra HR of leiding besluit dat een echte vervolgstap nodig is, van toewijzing aan een manager tot het openen en volgen van acties.',
+    label: 'Kiezen',
+    title: 'Samen de eerste keuze',
+    body: 'In de begeleide managementbespreking bespreken we de uitkomsten met HR en management. Één keuze, één eigenaar, één eerste stap.',
   },
 ] as const
 
 const firstDeliveryItems = [
   {
     index: '01',
-    title: 'Een dashboard met hoofdbeeld en prioriteiten',
-    body: 'Zodat direct zichtbaar wordt waar signalen terugkomen en wat bestuurlijk aandacht vraagt.',
+    title: 'Intake en scopebepaling',
+    body: 'We bakenen samen de vraag, doelgroep en route af voordat de scan vertrekt.',
   },
   {
     index: '02',
-    title: 'Een managementrapport met duiding en vervolgrichting',
-    body: 'Zodat management sneller begrijpt wat de kern is en welke eerste vraag of keuze voorligt.',
+    title: 'Scan uitsturen en bewaken',
+    body: 'Wij verzorgen de uitvoering en houden de respons in de gaten, zonder toolbeheer bij uw team.',
   },
   {
     index: '03',
-    title: 'Een gerichte bespreking van wat eerst telt',
-    body: 'Zodat signalen niet blijven hangen in interpretatie, maar leiden tot scherpere weging en besluitvorming.',
+    title: 'Managementrapport met factoranalyse en prioriteiten',
+    body: 'U ontvangt een scherp rapport met patronen, prioriteiten en de eerste managementvraag.',
   },
   {
     index: '04',
-    title: 'Een Action Center voor georganiseerde opvolging',
-    body: 'Zodat vervolg niet in losse afspraken verdwijnt, maar zichtbaar, toegewezen en concreet wordt.',
+    title: 'Begeleide managementbespreking (60–90 min)',
+    body: 'Samen brengen we de uitkomsten terug tot wat nu echt aandacht vraagt en welke keuze eerst telt.',
+  },
+  {
+    index: '05',
+    title: 'Eerste keuze en vervolgrichting vastgesteld',
+    body: 'Na de bespreking is duidelijk wat eerst moet gebeuren, wie eigenaar is en welke route logisch is.',
+  },
+  {
+    index: '06',
+    title: 'AVG-conforme dataverwerking',
+    body: 'De scan en rapportage blijven ingericht op groepsniveau en binnen de afgesproken privacygrenzen.',
   },
 ] as const
 
@@ -405,7 +415,7 @@ function ManagementFlowSection() {
                 textWrap: 'balance',
               }}
             >
-              Van signaal naar gerichte opvolging
+              Zo werkt een Loep baseline
             </h2>
           </Reveal>
           <Reveal delay={0.06}>
@@ -418,8 +428,7 @@ function ManagementFlowSection() {
                 maxWidth: '54rem',
               }}
             >
-              Loep brengt analyse en vervolg samen in één heldere managementflow. Zo blijft het niet bij losse
-              signalen of losse rapportage, maar wordt ook de stap naar gerichte opvolging ondersteund.
+              Drie stappen. Wij doen het werk. U maakt de eerste keuze.
             </p>
           </Reveal>
         </div>
@@ -588,8 +597,7 @@ function ManagementFlowSection() {
                         marginTop: 12,
                       }}
                     >
-                      Dit is het managementdashboard dat Loep beheert en aanlevert — u ontvangt het rapport en de
-                      bespreking.
+                      Dit managementrapport leveren wij aan — u beheert niets zelf.
                     </p>
                   </div>
                 ) : null}
@@ -757,7 +765,7 @@ function HeroSection() {
     ['Loopbaanperspectief', '28%', SURFACE.border],
   ] as const
   const actionItems = [
-    ['Herzie mentorshipprogramma', 'Gevolg van: lage onboarding-score', 'Critical', '#d45a51', '#ffdad6'],
+    ['Groei en ontwikkeling bespreken', 'Op basis van exitpatroon Q3', 'EERSTE STAP', '#d45a51', '#ffdad6'],
     ['Verifieer werkdruk in Operations', 'Besluit: eerste teamreview', 'Deze week', SURFACE.tealSoft, SURFACE.text],
   ] as const
 
@@ -787,7 +795,7 @@ function HeroSection() {
                   textWrap: 'balance',
                 }}
               >
-                Zie sneller waar vertrek, behoud of onboarding aandacht vragen
+                Weet waarom mensen vertrekken. Weet wat u als eerste kunt aanpakken.
               </h1>
               </div>
 
@@ -801,7 +809,7 @@ function HeroSection() {
                   maxWidth: '32rem',
                 }}
               >
-                Loep helpt HR en leiding signalen zichtbaar maken, prioriteren wat eerst telt en opvolging organiseren in het Action Center.
+                Loep levert een scherp rapport en begeleidt u naar één eerste managementkeuze. Geen platform om zelf te beheren. Wel een beslissing.
               </p>
 
               <div
@@ -1227,7 +1235,7 @@ function SuitePreviewSection() {
             <Reveal delay={0.08} from="right">
               <div className="suite-motion-shell">
               <div className="suite-phase-tabs" aria-label="Visual flow">
-                {['Zien', 'Prioriteren', 'Handelen'].map((phase, index) => (
+                {['Luisteren', 'Leren', 'Kiezen'].map((phase, index) => (
                   <span key={phase} className={`suite-phase-tab suite-phase-tab-${index + 1}`}>
                     {phase}
                   </span>
@@ -2032,8 +2040,8 @@ function FirstDeliverySection() {
           </Reveal>
           <Reveal delay={0.05}>
             <p style={{ color: SURFACE.text, fontSize: 16, lineHeight: 1.78, margin: '0 auto 40px', maxWidth: '58rem' }}>
-              Loep geeft u geen losse analyse zonder vervolg, maar een eerste managementflow die helpt om sneller
-              te begrijpen wat speelt, te bepalen wat eerst telt en gerichte opvolging op gang te brengen.
+              Loep levert geen rapport dat blijft liggen. Elke baseline eindigt met een begeleide managementbespreking,
+              zodat u weet waar u eerst moet beginnen.
             </p>
           </Reveal>
         </div>
