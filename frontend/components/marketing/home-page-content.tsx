@@ -529,7 +529,7 @@ function ManagementFlowSection() {
                   {item.body}
                 </p>
 
-                {item.title === 'Dashboard' ? (
+                {item.step === '1' ? (
                   <div style={{ marginTop: 'auto' }}>
                     <div
                       style={{
@@ -602,7 +602,7 @@ function ManagementFlowSection() {
                   </div>
                 ) : null}
 
-                {item.title === 'Managementrapport' ? (
+                {item.step === '2' ? (
                   <div
                     style={{
                       background: '#f2efe8',
@@ -660,7 +660,7 @@ function ManagementFlowSection() {
                   </div>
                 ) : null}
 
-                {item.title === 'Action Center' ? (
+                {item.step === '3' ? (
                   <div
                     style={{
                       background: '#f2efe8',
