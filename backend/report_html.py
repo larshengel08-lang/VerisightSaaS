@@ -503,6 +503,13 @@ def _step_cards(nsp: dict) -> str:
             'Kies één managementgesprek of data-check om het beeld te verduidelijken. Bepaal daarna pas of een gerichte stap nodig is.',
             s
         )
+        # Prioriteit-kaart: maak hiërarchisch als er twee factoren zijn
+        if title in ("Prioriteit nu", "Prioriteit"):
+            # "X en Y vormen nu..." → "Start met X. Neem Y mee als tweede aandachtspunt."
+            m = _re.match(r'(\w[\w\s&]+?) en ([\w\s&]+?) (vormen|zijn)', s)
+            if m:
+                s = (f'Start met {m.group(1).strip()}. '
+                     f'Neem {m.group(2).strip()} mee als tweede aandachtspunt.')
         # Vervang "vormen nu het eerste vertrekspoor om bestuurlijk te wegen"
         s = s.replace("vormen nu het eerste vertrekspoor om bestuurlijk te wegen",
                       "zijn de eerste factoren om gericht te bespreken")
@@ -996,10 +1003,16 @@ def render_exit_report_html(data: dict) -> str:
         low_i   = min(i_sc, key=lambda x: x[2]) if i_sc else None
         high_i  = max(i_sc, key=lambda x: x[2]) if i_sc else None
         mgmt_q  = FACTOR_MGMT_QUESTION.get(fk, "")
+        def _item_bar(isc: float, col: str) -> str:
+            w = max(2, round(isc / 10.0 * 90))
+            return (f'<div style="display:inline-block;width:90px;height:7px;'
+                    f'background:#E8E0D0;border-radius:3px;vertical-align:middle;">'
+                    f'<div style="width:{w}px;height:7px;background:{col};border-radius:3px;"></div>'
+                    f'</div>')
         rows = "".join(
             f'<tr><td class="iq">{_h(q)}</td>'
             f'<td class="is" style="color:{_factor_color(isc)};">{isc:.1f}</td>'
-            f'<td class="ib">{_bar_chart_svg([(str(round(isc,1)), isc, _factor_color(isc))], max_val=10.0, width=100, bar_h=8, gap=0)}</td></tr>'
+            f'<td class="ib">{_item_bar(isc, _factor_color(isc))}</td></tr>'
             for _, q, isc in i_sc
         ) or '<tr><td colspan="3" style="color:#94A3B8;font-style:italic;">Itemscores niet beschikbaar in deze wave.</td></tr>'
         return f"""<div class="card no-break" style="margin-bottom:14px;">
@@ -1029,9 +1042,10 @@ def render_exit_report_html(data: dict) -> str:
 
     def _sdt_item_tbl(dim: str) -> str:
         keys = SDT_DIMENSION_ITEMS.get(dim, [])
+        REV_LABEL = '<span style="font-size:8px;color:#94A3B8;">&nbsp;(omgekeerd)</span>'
         rows = "".join(
             f'<tr><td class="iq">{_h(q)}'
-            f'{"&nbsp;<span style=\\'font-size:8px;color:#94A3B8;\\'>(omgekeerd)</span>" if ik in SDT_REVERSE_ITEMS else ""}'
+            f'{REV_LABEL if ik in SDT_REVERSE_ITEMS else ""}'
             f'</td><td class="is" style="color:{_factor_color(sim.get(ik))};">{sim[ik]:.1f}</td>'
             f'<td class="ib">{_mini_bar_svg(sim.get(ik), _factor_color(sim.get(ik)), width=80, height=6)}</td></tr>'
             for ik in keys
@@ -1324,7 +1338,7 @@ def render_retention_report_html(data: dict) -> str:
 </div>
 <div class="pb sec">
   <span class="slabel">Eerste managementspoor</span>
-  <div class="card" style="margin-bottom:14px;"><p style="font-size:11px;">{_h(nsp.get("intro_text",""))}</p></div>
+  <div class="card" style="margin-bottom:14px;"><p style="font-size:11px;">Gebruik dit rapport om het vertrekbeeld gericht te bespreken: wat valt op, waar zit de eerste managementvraag en welke vervolgstap past daarbij?</p></div>
   {_step_cards(nsp)}
   <div class="cbox" style="margin-top:14px;font-size:10px;color:#374151;">
     Kies binnen 30 dagen &eacute;&eacute;n managementgesprek om het beeld rond {_h(tf_lbl)} te verduidelijken.
@@ -1390,7 +1404,7 @@ def render_onboarding_report_html(data: dict) -> str:
 </div>
 <div class="pb sec">
   <span class="slabel">Eerste managementspoor</span>
-  <div class="card" style="margin-bottom:14px;"><p style="font-size:11px;">{_h(nsp.get("intro_text",""))}</p></div>
+  <div class="card" style="margin-bottom:14px;"><p style="font-size:11px;">Gebruik dit rapport om het vertrekbeeld gericht te bespreken: wat valt op, waar zit de eerste managementvraag en welke vervolgstap past daarbij?</p></div>
   {_step_cards(nsp)}
   <div class="cbox" style="margin-top:14px;font-size:10px;">
     Kies binnen 30 dagen &eacute;&eacute;n managementgesprek om het beeld rond {_h(tf_lbl)} te verduidelijken.
