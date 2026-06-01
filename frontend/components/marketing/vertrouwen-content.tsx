@@ -76,8 +76,8 @@ function HeroSection() {
                   margin: '28px 0 0',
                 }}
               >
-                Loep laat publiek zien hoe privacy, rapportage en wat u wel en niet terugziet zijn ingericht, zodat
-                u de basis kunt toetsen voordat een traject start.
+                Loep laat publiek zien hoe privacy, rapportlezing en productgrenzen zijn ingericht, zodat u de basis
+                kunt toetsen voordat een traject start.
               </p>
             </div>
           </div>
@@ -147,7 +147,7 @@ function VerificationSection() {
               lineHeight: 1.06,
             }}
           >
-            Zo weet u vooraf waar u aan toe bent
+            Wat u publiek kunt verifiëren
           </h2>
         </Reveal>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -191,12 +191,12 @@ function ReadingGuideSection() {
               lineHeight: 1.1,
             }}
           >
-            Loep helpt gesprekken scherper maken,
+            Gebruik Loep als gespreksinput,
             <br />
-            <em style={{ fontStyle: 'italic', color: AC.deep }}>zonder automatisch oordeel.</em>
+            <em style={{ fontStyle: 'italic', color: AC.deep }}>niet als diagnose.</em>
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, marginBottom: 36, maxWidth: '50ch' }}>
-            Deze pagina laat zien hoe u rapport en dashboard verstandig leest.
+            Deze pagina laat dezelfde interpretatiegrenzen zien als rapport en dashboard.
           </p>
         </Reveal>
         <Reveal delay={0.1}>
@@ -209,7 +209,7 @@ function ReadingGuideSection() {
                 borderBottom: `1px solid ${T.rule}`,
               }}
             >
-              {['Thema', 'Wat u kunt gebruiken', 'Waar de grens ligt'].map((h, i) => (
+              {['Thema', 'Wat u wel ziet', 'Wat u er niet van moet maken'].map((h, i) => (
                 <div
                   key={i}
                   style={{
@@ -279,7 +279,7 @@ function PrivacySection() {
             <em style={{ fontStyle: 'italic', color: AC.deep }}>voorspelbare vragen.</em>
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, marginBottom: 32, maxWidth: '50ch' }}>
-            Zo ziet u vooraf hoe Loep met data, privacy en output omgaat.
+            Zo kunt u de basis toetsen voordat er een gesprek plaatsvindt.
           </p>
         </Reveal>
         <div className="grid grid-cols-1 gap-0 md:grid-cols-2 xl:grid-cols-3">
@@ -338,10 +338,10 @@ function ContactSection() {
       sectionIndex="05"
       sectionLabel="Eerste route-inschatting"
       backdropNumber={null}
-      title="Ontdek of Loep"
-      accentTitle="past bij uw vraag."
+      title="Toets of Loep"
+      accentTitle="nu past."
       body="In een kort gesprek toetsen we productkeuze, privacy, timing en wat u als eerste terugkrijgt."
-      buttonLabel="Plan een kennismaking"
+      buttonLabel="Plan een eerste route-inschatting"
       showSectionMark={false}
     />
   )

@@ -154,7 +154,7 @@ export const comparisonCards = [
   {
     title: 'Gerichte scan, geen brede vragenlijst',
     description:
-      'Verisight is opgebouwd rondom een specifieke managementvraag — niet een generieke tool die achteraf betekenis moet krijgen.',
+      'Loep is opgebouwd rondom een specifieke managementvraag — niet een generieke vragenlijst die achteraf nog betekenis moet krijgen.',
     outcome: 'U koopt een gerichte route, geen open instrument.',
   },
   {
@@ -184,7 +184,7 @@ export const trustQuickLinks = [
   {
     href: '/vertrouwen',
     label: 'Methodiek en vertrouwelijkheid',
-    body: 'Hoe Verisight is opgebouwd en wat u ervan kunt verwachten.',
+    body: 'Hoe Loep is opgebouwd en wat u ervan kunt verwachten.',
   },
   {
     href: '/privacy',
@@ -213,7 +213,7 @@ export const trustSignalHighlights = [
   },
   {
     title: 'Manager-scope blijft bounded',
-    body: 'HR kan managers per afdeling toewijzen. Zij loggen in via dezelfde omgeving, maar zien alleen Action Center en geen dashboard- of rapportinzichten.',
+    body: 'HR kan managers per afdeling toewijzen. Zij krijgen toegang via dezelfde beveiligde inlog, maar zien alleen de opvolglaag en geen dashboard- of rapportinzichten.',
   },
   {
     title: 'Core proof blijft expliciet',
@@ -221,7 +221,7 @@ export const trustSignalHighlights = [
   },
   {
     title: 'Begeleide productvorm',
-    body: 'Verisight biedt een strakke productvorm met intake, uitvoering, rapportage en begeleide vervolgstappen, in plaats van losse surveysoftware of open consultancy.',
+    body: 'Loep biedt een strakke productvorm met intake, uitvoering, rapportage en begeleide vervolgstappen, in plaats van losse vragenlijstsoftware of open adviestrajecten.',
   },
   {
     title: 'Publiek verifieerbare basis',
@@ -232,7 +232,7 @@ export const trustSignalHighlights = [
 export const trustVerificationCards = [
   {
     title: 'Wat u nu publiek kunt verifiëren',
-    body: 'Verisight laat publiek zien hoe productkeuze, privacy en rapportlezing zijn ingericht voordat u een gesprek plant.',
+    body: 'Loep laat publiek zien hoe productkeuze, privacy en rapportlezing zijn ingericht voordat u een gesprek plant.',
   },
   {
     title: 'Waar publieke voorbeeldoutput stopt',
@@ -267,7 +267,7 @@ export const trustHubAnswerCards = [
   },
   {
     title: 'Wat koopt u precies?',
-    body: 'Geen losse surveytool, maar een afgebakende productvorm met dashboard, rapport en duidelijke interpretatiegrenzen.',
+    body: 'Geen los instrument, maar een afgebakende productvorm met dashboard, rapport en duidelijke interpretatiegrenzen.',
   },
   {
     title: 'Heeft elke route een publiek voorbeeldrapport?',
@@ -331,12 +331,12 @@ export const statCards = [
   {
     value: '1 suite-login',
     label: 'voor inzicht + opvolging',
-    detail: 'Dashboard, rapport en Action Center blijven bereikbaar in dezelfde omgeving.',
+    detail: 'Dashboard, rapport en opvolging blijven bereikbaar via dezelfde beveiligde toegang.',
   },
   {
     value: '2 modules',
     label: 'insights en follow-through',
-    detail: 'HR en klant zien dashboard plus Action Center; managers kunnen bounded alleen de opvolglaag in.',
+    detail: 'HR en klant zien dashboard plus de opvolglaag; managers kunnen bounded alleen de opvolglaag in.',
   },
   {
     value: 'Afdelingstoewijzing',
@@ -360,7 +360,7 @@ export const outcomeCards = [
   ],
   [
     'Geen extra toolbeheer',
-    'Verisight begeleidt de uitvoering, zodat jouw team niet ook nog een nieuwe surveytool hoeft in te richten of te beheren.',
+    'Loep begeleidt de uitvoering, zodat jouw team niet ook nog een nieuw instrument hoeft in te richten of te beheren.',
   ],
   [
     'Privacy by design',
@@ -394,33 +394,33 @@ export const included = [
   'Samenvatting voor HR, MT of directie',
   'Begeleide managementbespreking van 60–90 minuten',
   'Privacy en interpretatie in gewone taal',
-  'Compacte productvorm zonder extra toolbeheer',
+  'Compacte productvorm zonder extra inrichting of beheer',
 ] as const
 
 export const approachSteps = [
   {
-    title: '1. Routekeuze',
-    body: 'We bepalen welke route nu het meest logisch is: ExitScan, RetentieScan of pas later een kleinere vervolgroute.',
+    title: '1. Intake',
+    body: 'We bepalen samen welke scan past, voor welke doelgroep en op welke tijdlijn. U levert de input. Wij regelen de rest.',
   },
   {
-    title: '2. Setup',
-    body: 'We zetten de gekozen route strak op met de groepen, timing en input die nodig zijn voor een betrouwbare eerste read.',
+    title: '2. Wij richten de scan in',
+    body: 'Wij zetten de scan op en stellen uitnodigingen in. Geen toolbeheer voor uw team.',
   },
   {
-    title: '3. Uitvoering',
-    body: 'De route gaat live, uitnodigingen lopen waar relevant en de basis wordt bewaakt zonder extra toolbeheer voor uw team.',
+    title: '3. U verstuurt de uitnodigingen',
+    body: 'U nodigt uit via uw eigen kanaal — e-mail, Teams of HR-systeem. Wij bewaken de voortgang en geven aan waar bijsturing nodig is.',
   },
   {
-    title: '4. Eerste signalen',
-    body: 'De eerste signalen worden zichtbaar zodra de respons opbouwt, maar we blijven terughoudend tot het beeld stevig genoeg is.',
+    title: '4. Wij houden u op de hoogte',
+    body: 'Zodra de respons opbouwt, ontvangt u een update. Geen dashboard te bewaken — wij doen dat voor u.',
   },
   {
-    title: '5. Dashboard en rapport',
-    body: 'Zodra het beeld sterk genoeg is, ontvangt u een dashboard en rapport in dezelfde leeslijn, met wat opvalt en wat eerst aandacht vraagt.',
+    title: '5. U ontvangt het rapport',
+    body: 'Zodra het beeld stabiel is, leveren wij een managementrapport: patronen, factoranalyse, prioriteiten en de eerste managementvraag.',
   },
   {
     title: '6. Managementbespreking',
-    body: 'Na het dashboard en rapport bespreken we de uitkomsten met HR en management in een sessie van 60–90 minuten. Niet om het rapport toe te lichten, maar om samen te bepalen wat aandacht vraagt en wat de eerste keuze moet zijn. Pas als daarna een vervolgvraag ontstaat, wordt opvolging of ritme logisch.',
+    body: 'We bespreken de uitkomsten met HR en management in 60–90 minuten. Samen bepalen we wat aandacht vraagt en wat de eerste keuze is.',
   },
 ] as const
 
@@ -543,9 +543,10 @@ export const pricingCards = [
     description:
       'De standaard eerste instap voor organisaties die snel een betrouwbaar organisatiebeeld, duidelijke prioriteiten en een professioneel managementrapport over uitstroom willen dat ook in sponsor-, prioriteits- en budgetgesprekken overeind blijft.',
     bullets: [
-      'Inrichting van de exit-campagne en respondentflow',
-      'Dashboard, managementrapport en bestuurlijke handoff',
-      'Geschikt als eerste nulmeting of start van een begeleide vervolgroute',
+      'Scan uitsturen en bewaken door Loep',
+      'Managementrapport met factoranalyse en prioriteiten',
+      'Begeleide managementbespreking (60–90 min)',
+      'Eerste keuze en vervolgrichting vastgesteld',
     ],
   },
   {
@@ -554,9 +555,10 @@ export const pricingCards = [
     description:
       'De standaard eerste instap voor organisaties die eerder willen zien waar behoud onder druk staat, met extra nadruk op privacy, groepsduiding en een gerichte managementscan in plaats van een brede MTO.',
     bullets: [
-      'Retentiesignaal, stay-intent, bevlogenheid en vertrekintentie in een managementrapport',
-      'Geen individuele signalen naar management',
-      'Geschikt als basis voor vervolgmeting of een gerichte vervolgronde',
+      'Scan uitsturen en bewaken door Loep',
+      'Managementrapport met retentiesignaal en prioriteiten',
+      'Begeleide managementbespreking (60–90 min)',
+      'Geen individuele signalen — alleen groepsniveau',
     ],
   },
   {
@@ -685,7 +687,7 @@ export const pricingFaqs = [
   ],
   [
     'Waarom starten jullie niet met een gratis pilot?',
-    'Omdat Verisight bedoeld is als serieus eerste traject met duidelijke scope, deliverables en opvolging. Een betaald baseline-traject test echte urgentie, geeft scherpere samenwerking en voorkomt vrijblijvende validatie zonder besluitvorming.',
+    'Omdat Loep bedoeld is als serieus eerste traject met duidelijke scope, deliverables en opvolging. Een betaald baseline-traject test echte urgentie, geeft scherpere samenwerking en voorkomt vrijblijvende validatie zonder besluitvorming.',
   ],
   [
     'Is RetentieScan een MTO-vervanger?',
@@ -713,7 +715,7 @@ export const pricingFaqs = [
   ],
   [
     'Beloof je hiermee lager verloop?',
-    'Nee. Verisight verkoopt geen garantie op lager verloop, maar scherpere duiding, betere prioritering en een sterkere basis voor managementbeslissingen op groepsniveau.',
+    'Nee. Loep verkoopt geen garantie op lager verloop, maar scherpere duiding, betere prioritering en een sterkere basis voor managementbeslissingen op groepsniveau.',
   ],
 ] as const
 
@@ -747,8 +749,8 @@ export const faqs = [
     'Nee. Loep Cultuurbeeld is een jaarlijkse board-level cultuur- en engagementbaseline met executive read, board attention points en governed drilldown. Pulse blijft alleen een bounded vervolgritme na een bestaande baseline of actie.',
   ],
   [
-    'Is Verisight een tool of een dienst?',
-    'Het is een begeleide dienst met software. Je krijgt dashboard en rapportage, zonder self-service implementatie of losse consultancy zonder productvorm.',
+    'Is Loep een instrument of een dienst?',
+    'Loep is een begeleide dienst. Wij voeren de scan uit, leveren het rapport en begeleiden de managementbespreking. U hoeft niets zelf in te richten of te beheren.',
   ],
 ] as const
 

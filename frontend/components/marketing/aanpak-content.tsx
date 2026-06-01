@@ -6,14 +6,7 @@ import { MarketingClosingCta } from '@/components/marketing/marketing-closing-ct
 import { buildContactHref } from '@/lib/contact-funnel'
 import { approachSteps, included } from '@/components/marketing/site-content'
 
-const normalizedApproachSteps = approachSteps.map((step, index) =>
-  index === 5
-    ? {
-        ...step,
-        body: 'Pas daarna worden reviewcadans, Live Start of een latere vervolgronde logisch als dezelfde vraag opnieuw gevolgd moet worden.',
-      }
-    : step,
-)
+const normalizedApproachSteps = approachSteps
 
 function HeroSection() {
   const ctaHref = buildContactHref({ routeInterest: 'nog-onzeker', ctaSource: 'approach_hero_primary' })
@@ -75,16 +68,15 @@ function HeroSection() {
                 color: T.ink,
               }}
             >
-              Van eerste stap naar
+              Wij doen het werk.
               <br />
               <em className="shimmer-text" style={{ fontStyle: 'italic' }}>
-                bruikbare uitkomst.
+                U maakt de keuze.
               </em>
             </h1>
             <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '48ch', margin: '28px 0 36px' }}>
-              Loep helpt eerst bepalen welke eerste stap nu het meeste duidelijkheid geeft. Daarna volgt een
-              compacte route naar dashboard, rapport en eerste opvolging, zodat snel zichtbaar wordt wat speelt en wat
-              als eerste aandacht vraagt.
+              Loep voert de scan uit, analyseert de uitkomsten en begeleidt u naar één eerste managementkeuze.
+              U hoeft geen tool in te richten of te beheren.
             </p>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
               <Link
@@ -262,7 +254,7 @@ function RolesSection() {
               },
               {
                 title: 'Uitkomsten gebruiken',
-                body: 'U gebruikt dashboard, rapport en waar relevant Action Center om te zien wat opvalt, wat eerst telt en wie wat oppakt.',
+                body: 'U ontvangt het rapport en neemt deel aan de managementbespreking. Samen bepalen we de eerste keuze.',
               },
             ].map((item, index) => (
               <div key={item.title} style={{ display: 'flex', gap: 18, padding: '20px 0', borderTop: `1px solid ${T.rule}` }}>

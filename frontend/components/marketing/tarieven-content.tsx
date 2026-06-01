@@ -92,8 +92,7 @@ function HeroSection() {
               </em>
             </h1>
           <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '48ch', margin: '28px 0 0' }}>
-            U start met een duidelijke Baseline: intake, scan, dashboard en managementrapport. Daarna kiest u pas of
-            opvolging of ritme nodig is. Zo blijft de eerste koop overzichtelijk en direct bruikbaar.
+            U koopt geen licentie. U koopt een uitgevoerde scan, een scherp managementrapport met prioriteiten en een begeleide managementbespreking.
           </p>
             </div>
           </Reveal>

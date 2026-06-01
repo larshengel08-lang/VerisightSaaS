@@ -509,10 +509,10 @@ function RetentionScanPage() {
             <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_360px] items-start">
               <div>
                 <h1 style={{ fontFamily: FF, fontWeight: 400, fontSize: 'clamp(42px,5.5vw,76px)', lineHeight: .97, letterSpacing: '-.032em', color: T.ink, maxWidth: '12ch' }}>
-                  Zie eerder waar behoud onder druk komt te staan en wat nu aandacht vraagt.
+                  Wij laten zien waar behoud onder druk staat. U weet wat u als eerste kunt aanpakken.
                 </h1>
                 <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '48ch', margin: '26px 0 36px' }}>
-                  Voor organisaties die eerder willen zien waar behoud risico loopt — voordat het te laat is om nog bij te sturen.
+                  Loep voert de RetentionScan uit bij uw actieve medewerkers, levert het rapport en begeleidt u naar één eerste managementkeuze.
                 </p>
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 600, padding: '12px 28px', color: '#fff', background: T.ink }}>
@@ -549,10 +549,10 @@ function RetentionScanPage() {
               <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.teal, marginBottom: 16 }}>Wanneer RetentieScan nu de juiste eerste stap is</div>
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 {[
-                  'U wilt eerder zien waar behoud onder druk staat',
-                  'U wilt niet wachten tot verloop zichtbaar oploopt',
-                  'U vermoedt behoudsdruk maar wilt eerst een scherp groepsbeeld',
-                  'U zoekt vroegsignalering voor gesprek en verificatie, niet alleen terugblik',
+                  'Verloop loopt op maar de oorzaak is onduidelijk',
+                  'U wilt bijsturen vóór mensen vertrekbesluiten hebben genomen',
+                  'Management wil weten waar het risico zit, niet alleen een gevoel',
+                  'U wilt een eerste keuze, geen breed MTO-project',
                 ].map((text) => (
                   <div key={text} style={{ alignItems: 'flex-start', background: T.white, border: `1px solid ${T.rule}`, display: 'flex', gap: 12, padding: '18px 20px' }}>
                     <div style={{ width: 6, height: 6, background: T.teal, borderRadius: '50%', flexShrink: 0, marginTop: 9 }} />
@@ -583,7 +583,7 @@ function RetentionScanPage() {
                     points: [
                       'Voor organisaties die behoudsdruk structureel willen blijven volgen',
                       'Logisch als baseline en eerste opvolging al staan',
-                      'Zelfde structuur in dashboard en rapport als de eerste baseline',
+                      'Zelfde structuur als de eerste baseline',
                     ],
                   },
                 ].map(({ label, accent, points }) => (
@@ -609,7 +609,7 @@ function RetentionScanPage() {
             <div style={{ maxWidth: '64ch', marginBottom: 30 }}>
               <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.teal, marginBottom: 16 }}>Wat u ontvangt</div>
               <p style={{ fontSize: 15, lineHeight: 1.72, color: T.inkSoft }}>
-                Na de scan ontvangt u rapport, retentiesignaal en een begeleide managementbespreking.
+                Loep levert het volgende:
               </p>
             </div>
             <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_auto]" style={{ alignItems: 'start' }}>

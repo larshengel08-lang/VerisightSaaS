@@ -7,12 +7,12 @@ import { buildContactHref } from '@/lib/contact-funnel'
 export const metadata: Metadata = {
   title: 'Vertrouwen',
   description:
-    'Wat u publiek kunt toetsen voordat u start. Privacy, rapportage en duidelijke grenzen in wat Loep laat zien.',
+    'Wat u publiek kunt toetsen voordat u start. Privacy, rapportlezing, DPA beschikbaar en productgrenzen van Loep in een publieke trustlaag.',
   alternates: { canonical: '/vertrouwen' },
   openGraph: {
     title: 'Vertrouwen | Loep',
     description:
-      'Wat u publiek kunt toetsen voordat u start. Privacy, rapportage en duidelijke grenzen in wat Loep laat zien.',
+      'Wat u publiek kunt toetsen voordat u start. Privacy, rapportlezing, DPA beschikbaar en productgrenzen van Loep in een publieke trustlaag.',
     url: 'https://www.verisight.nl/vertrouwen',
     images: ['/opengraph-image'],
   },
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Vertrouwen | Loep',
     description:
-      'Wat u publiek kunt toetsen voordat u start. Privacy, rapportage en duidelijke grenzen in wat Loep laat zien.',
+      'Wat u publiek kunt toetsen voordat u start. Privacy, rapportlezing, DPA beschikbaar en productgrenzen van Loep in een publieke trustlaag.',
     images: ['/opengraph-image'],
   },
 }
@@ -41,7 +41,7 @@ export default function VertrouwenPage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       <div className="min-h-screen">
-      <PublicHeader ctaHref={ctaHref} ctaLabel="Plan een kennismaking" />
+      <PublicHeader ctaHref={ctaHref} ctaLabel="Plan een eerste route-inschatting" />
         <main id="hoofdinhoud">
           <VertrouwenContent />
         </main>
