@@ -529,7 +529,7 @@ function ManagementFlowSection() {
                   {item.body}
                 </p>
 
-                {item.step === '1' ? (
+                {item.title === 'Dashboard' ? (
                   <div style={{ marginTop: 'auto' }}>
                     <div
                       style={{
@@ -602,7 +602,7 @@ function ManagementFlowSection() {
                   </div>
                 ) : null}
 
-                {item.step === '2' ? (
+                {item.title === 'Managementrapport' ? (
                   <div
                     style={{
                       background: '#f2efe8',
@@ -660,7 +660,7 @@ function ManagementFlowSection() {
                   </div>
                 ) : null}
 
-                {item.step === '3' ? (
+                {item.title === 'Action Center' ? (
                   <div
                     style={{
                       background: '#f2efe8',
@@ -765,8 +765,8 @@ function HeroSection() {
     ['Loopbaanperspectief', '28%', SURFACE.border],
   ] as const
   const actionItems = [
-    ['Groei en ontwikkeling bespreken', 'Op basis van exitpatroon Q3', 'EERSTE STAP', '#d45a51', '#ffdad6'],
-    ['Verifieer werkdruk in Operations', 'Besluit: eerste teamreview', 'Deze week', SURFACE.tealSoft, SURFACE.text],
+    ['Prioriteit: Groei en ontwikkeling', 'Sterkste driver in vertrekpatroon Q3', 'Eigenaar', SURFACE.amber, '#ffdad6'],
+    ['Eerste stap: teamgesprek plannen', 'Reviewmoment: over 6 weken', 'Vastgesteld', SURFACE.tealSoft, SURFACE.text],
   ] as const
 
   return (
@@ -1032,10 +1032,10 @@ function HeroSection() {
                   </div>
                   <div>
                     <h4 style={{ color: '#fff', fontSize: 15, fontWeight: 700, letterSpacing: '.02em', marginBottom: 2, textTransform: 'uppercase' }}>
-                      Action Center
+                      Managementkeuze
                     </h4>
                     <p style={{ color: 'rgba(255,255,255,0.42)', fontSize: 10, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase' }}>
-                      Prioriteit-gestuurde opvolging
+                      Uitkomst van de bespreking
                     </p>
                   </div>
                 </div>
@@ -1051,7 +1051,7 @@ function HeroSection() {
                     textTransform: 'uppercase',
                   }}
                 >
-                  3 taken
+                  Vastgesteld
                 </span>
               </div>
 
