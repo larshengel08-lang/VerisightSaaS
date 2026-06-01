@@ -327,10 +327,10 @@ function ExitScanPage() {
             <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_360px] items-start">
               <div>
                 <h1 style={{ fontFamily: FF, fontWeight: 400, fontSize: 'clamp(42px,5.5vw,76px)', lineHeight: .97, letterSpacing: '-.032em', color: T.ink, maxWidth: '12ch' }}>
-                  Begrijp waarom medewerkers vertrekken en waar actie het eerst telt.
+                  Wij brengen vertrekpatronen scherp in beeld. U weet wat u als eerste kunt aanpakken.
                 </h1>
                 <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '48ch', margin: '26px 0 36px' }}>
-                  Voor organisaties die willen begrijpen waarom mensen vertrekken en waar één gerichte actie het meeste oplevert.
+                  Loep voert de ExitScan uit, analyseert de uitkomsten en begeleidt u naar één eerste managementkeuze. U hoeft niets zelf in te richten.
                 </p>
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 600, padding: '12px 28px', color: '#fff', background: T.ink }}>
@@ -367,10 +367,10 @@ function ExitScanPage() {
               <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.deep, marginBottom: 16 }}>Wanneer ExitScan nu de juiste eerste stap is</div>
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 {[
-                  'Vertrek is al zichtbaar of terugkerend',
-                  'U wilt begrijpen waarom patronen terugkomen',
-                  'U wilt snel zien waar actie of gesprek het eerst telt',
-                  'U zoekt een eerste managementbeeld in plaats van alleen losse exitregistratie',
+                  'Vertrek is zichtbaar maar de reden is onduidelijk',
+                  'Management vraagt om een onderbouwd beeld',
+                  'U wilt van losse exitgesprekken naar een structureel patroon',
+                  'U heeft een eerste keuze nodig, geen breed onderzoeksproject',
                 ].map((text) => (
                   <div key={text} style={{ alignItems: 'flex-start', background: T.white, border: `1px solid ${T.rule}`, display: 'flex', gap: 12, padding: '18px 20px' }}>
                     <div style={{ width: 6, height: 6, background: AC.deep, borderRadius: '50%', flexShrink: 0, marginTop: 9 }} />
@@ -427,7 +427,7 @@ function ExitScanPage() {
             <div style={{ maxWidth: '64ch', marginBottom: 30 }}>
               <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.deep, marginBottom: 16 }}>Wat u ontvangt</div>
               <p style={{ fontSize: 15, lineHeight: 1.72, color: T.inkSoft }}>
-                Na de scan ontvangt u rapport, dashboard en een begeleide managementbespreking.
+                Loep levert het volgende:
               </p>
             </div>
             <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_auto]" style={{ alignItems: 'start' }}>
