@@ -74,7 +74,7 @@ export function FollowOnRoutePage({ route }: FollowOnRoutePageProps) {
                 <h1
                   style={{
                     fontFamily: FF,
-                    fontWeight: 400,
+                    fontWeight: 800,
                     fontSize: 'clamp(42px,5.5vw,76px)',
                     lineHeight: 0.97,
                     letterSpacing: '-.032em',
@@ -343,7 +343,7 @@ export function FollowOnRoutePage({ route }: FollowOnRoutePageProps) {
   )
 }
 
-const FF = 'var(--font-inter-tight), serif'
+const FF = "var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
 const SHELL = { maxWidth: 1200, margin: '0 auto', padding: '0 clamp(20px,4vw,48px)' }
 
 function getRoutePalette(slug: FollowOnRouteContent['slug']) {

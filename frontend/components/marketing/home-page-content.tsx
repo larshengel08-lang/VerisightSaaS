@@ -30,8 +30,8 @@ const SHELL = {
   padding: '0 clamp(20px, 4vw, 48px)',
 } as const
 
-const displayFont = "'Fraunces', Georgia, serif"
-const bodyFont = "'IBM Plex Sans', system-ui, sans-serif"
+const displayFont = "var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+const bodyFont = "var(--font-ibm-plex-sans), system-ui, sans-serif"
 
 const heroTrustItems = [
   'Dashboard voor inzicht \u2022 Managementrapport voor duiding \u2022 Action Center voor opvolging',
@@ -272,7 +272,7 @@ function ProblemSection() {
                 color: SURFACE.ink,
                 fontFamily: displayFont,
                 fontSize: 'clamp(3rem, 5vw, 5.45rem)',
-                fontWeight: 400,
+                fontWeight: 700,
                 letterSpacing: '-0.055em',
                 lineHeight: 0.93,
                 marginBottom: 28,
@@ -408,7 +408,7 @@ function ManagementFlowSection() {
                 color: SURFACE.ink,
                 fontFamily: displayFont,
                 fontSize: 'clamp(3rem, 5vw, 5rem)',
-                fontWeight: 400,
+                fontWeight: 700,
                 letterSpacing: '-0.05em',
                 lineHeight: 0.94,
                 marginBottom: 30,
@@ -508,7 +508,7 @@ function ManagementFlowSection() {
                     color: SURFACE.ink,
                     fontFamily: displayFont,
                     fontSize: 'clamp(2rem, 2.35vw, 2.6rem)',
-                    fontWeight: 400,
+                    fontWeight: 600,
                     letterSpacing: '-0.035em',
                     lineHeight: 1.03,
                     marginBottom: 16,
@@ -787,7 +787,7 @@ function HeroSection() {
                   color: SURFACE.ink,
                   fontFamily: displayFont,
                   fontSize: 'clamp(3rem, 4.8vw, 5.2rem)',
-                  fontWeight: 400,
+                  fontWeight: 800,
                   letterSpacing: '-0.045em',
                   lineHeight: 0.98,
                   marginBottom: 0,
@@ -1178,7 +1178,7 @@ function SuitePreviewSection() {
                   color: SURFACE.ink,
                   fontFamily: displayFont,
                   fontSize: 'clamp(3rem, 5vw, 4.9rem)',
-                  fontWeight: 400,
+                  fontWeight: 700,
                   letterSpacing: '-0.05em',
                   lineHeight: 0.95,
                   marginBottom: 22,
@@ -1866,7 +1866,7 @@ function RoutesSection() {
                 color: SURFACE.ink,
                 fontFamily: displayFont,
                 fontSize: 'clamp(3rem, 5vw, 4.85rem)',
-                fontWeight: 400,
+                fontWeight: 700,
                 letterSpacing: '-0.05em',
                 lineHeight: 0.95,
                 marginBottom: 0,
@@ -2029,7 +2029,7 @@ function FirstDeliverySection() {
                 color: SURFACE.ink,
                 fontFamily: displayFont,
                 fontSize: 'clamp(2.8rem, 4.7vw, 4.55rem)',
-                fontWeight: 400,
+                fontWeight: 700,
                 letterSpacing: '-0.05em',
                 lineHeight: 0.95,
                 marginBottom: 22,
@@ -2077,7 +2077,7 @@ function FirstDeliverySection() {
                         color: SURFACE.ink,
                         fontFamily: displayFont,
                         fontSize: 'clamp(1.7rem, 2.1vw, 2.2rem)',
-                        fontWeight: 400,
+                        fontWeight: 600,
                         letterSpacing: '-0.035em',
                         lineHeight: 1.08,
                         marginBottom: 10,
@@ -2129,7 +2129,7 @@ function ContactSection() {
                 color: '#fffdf8',
                 fontFamily: displayFont,
                 fontSize: 'clamp(2.05rem, 3vw, 2.9rem)',
-                fontWeight: 400,
+                fontWeight: 700,
                 letterSpacing: '-0.05em',
                 lineHeight: 1.02,
                 margin: '0 auto 22px',

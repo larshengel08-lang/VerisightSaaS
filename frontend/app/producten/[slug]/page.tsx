@@ -307,7 +307,7 @@ function ExitScanPage() {
     ruleLight: 'oklch(0.918 0.008 62)',
   }
   const AC = { deep: 'oklch(0.45 0.18 50)', mid: 'oklch(0.76 0.14 53)', soft: 'oklch(0.95 0.045 50)' }
-  const FF = 'var(--font-fraunces), serif'
+  const FF = "var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
   const SH = { maxWidth: 1200, margin: '0 auto', padding: '0 clamp(20px,4vw,48px)' }
   const ctaHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'product_exit_hero' })
 
@@ -326,7 +326,7 @@ function ExitScanPage() {
             </div>
             <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_360px] items-start">
               <div>
-                <h1 style={{ fontFamily: FF, fontWeight: 400, fontSize: 'clamp(42px,5.5vw,76px)', lineHeight: .97, letterSpacing: '-.032em', color: T.ink, maxWidth: '12ch' }}>
+                <h1 style={{ fontFamily: FF, fontWeight: 800, fontSize: 'clamp(42px,5.5vw,76px)', lineHeight: .97, letterSpacing: '-.032em', color: T.ink, maxWidth: '12ch' }}>
                   Wij brengen vertrekpatronen scherp in beeld. U weet wat u als eerste kunt aanpakken.
                 </h1>
                 <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '48ch', margin: '26px 0 36px' }}>
@@ -489,7 +489,7 @@ function RetentionScanPage() {
     ruleLight: 'oklch(0.918 0.008 62)',
     teal: 'oklch(0.50 0.12 188)', tealSoft: 'oklch(0.94 0.04 185)', tealFaint: 'oklch(0.972 0.018 185)',
   }
-  const FF = 'var(--font-fraunces), serif'
+  const FF = "var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
   const SH = { maxWidth: 1200, margin: '0 auto', padding: '0 clamp(20px,4vw,48px)' }
   const ctaHref = buildContactHref({ routeInterest: 'retentiescan', ctaSource: 'product_retention_hero' })
 
@@ -508,7 +508,7 @@ function RetentionScanPage() {
             </div>
             <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_360px] items-start">
               <div>
-                <h1 style={{ fontFamily: FF, fontWeight: 400, fontSize: 'clamp(42px,5.5vw,76px)', lineHeight: .97, letterSpacing: '-.032em', color: T.ink, maxWidth: '12ch' }}>
+                <h1 style={{ fontFamily: FF, fontWeight: 800, fontSize: 'clamp(42px,5.5vw,76px)', lineHeight: .97, letterSpacing: '-.032em', color: T.ink, maxWidth: '12ch' }}>
                   Wij laten zien waar behoud onder druk staat. U weet wat u als eerste kunt aanpakken.
                 </h1>
                 <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '48ch', margin: '26px 0 36px' }}>
@@ -838,7 +838,7 @@ function PulsePage() {
 
           <div className="marketing-panel-dark p-8 md:p-10">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-amber-300">Wat Pulse wel belooft</p>
-            <h2 className="mt-4 font-display text-[clamp(2rem,3.7vw,3rem)] leading-[1.02] text-white">
+            <h2 className="mt-4 font-display text-[clamp(2rem,3.7vw,3rem)] font-bold leading-[1.02] text-white">
               Een compacte managementcheck, geen brede trendbelofte.
             </h2>
             <p className="mt-5 text-base leading-8 text-slate-300">
@@ -1037,7 +1037,7 @@ function TeamScanPage() {
 
           <div className="marketing-panel-dark p-8">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-sky-300">Wat TeamScan wel belooft</p>
-            <h2 className="mt-4 font-display text-4xl text-white">
+            <h2 className="mt-4 font-display text-4xl font-bold text-white">
               Een veilige lokale handoff, geen oordeel over teams of managers.
             </h2>
             <p className="mt-5 text-base leading-8 text-slate-300">
@@ -1269,7 +1269,7 @@ function OnboardingPage() {
 
           <div className="marketing-panel-dark p-8 md:p-10">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-amber-300">Wat onboarding wel belooft</p>
-            <h2 className="mt-4 font-display text-[clamp(2rem,3.7vw,3rem)] leading-[1.02] text-white">
+            <h2 className="mt-4 font-display text-[clamp(2rem,3.7vw,3rem)] font-bold leading-[1.02] text-white">
               Een vroege onboardingread met een eerste vervolgstap, niet meer dan nodig.
             </h2>
             <p className="mt-5 text-base leading-8 text-slate-300">
@@ -1466,7 +1466,7 @@ function LeadershipScanPage() {
 
           <div className="marketing-panel-dark p-8 md:p-10">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#9AD0D0]">Wat Leadership Scan wel belooft</p>
-            <h2 className="mt-4 font-display text-[clamp(2rem,3.7vw,3rem)] leading-[1.02] text-white">
+            <h2 className="mt-4 font-display text-[clamp(2rem,3.7vw,3rem)] font-bold leading-[1.02] text-white">
               Een compacte managementread, niet bedoeld voor beoordeling van individuele leiders.
             </h2>
             <p className="mt-5 text-base leading-8 text-slate-300">
@@ -1668,7 +1668,7 @@ function CombinatiePage() {
 
             <div className="marketing-panel-dark p-8">
               <p className="text-xs font-bold uppercase tracking-[0.22em] text-sky-300">Hoe je het verkoopt</p>
-              <h2 className="font-display mt-4 text-4xl text-white">
+              <h2 className="font-display mt-4 text-4xl font-bold text-white">
                 Start vaak met een product, maar houd de tweede route bewust klaar.
               </h2>
               <p className="mt-5 text-base leading-8 text-slate-300">

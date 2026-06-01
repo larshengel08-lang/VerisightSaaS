@@ -29,7 +29,7 @@ export const AC = {
   faint: 'rgba(232,160,32,0.08)',
 } as const
 
-export const FF = 'var(--font-inter-tight), Inter, sans-serif'
+export const FF = "var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
 export const SHELL = { maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,3.5vw,48px)' } as const
 
 // ── Hooks ─────────────────────────────────────────────────────────

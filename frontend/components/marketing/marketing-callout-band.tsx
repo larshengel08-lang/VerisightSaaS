@@ -26,7 +26,7 @@ export function MarketingCalloutBand({
       className={`marketing-panel-soft overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[linear-gradient(135deg,rgba(243,228,218,0.72),rgba(247,245,241,0.96)_34%,#ffffff_100%)] p-7 md:p-9 ${className}`.trim()}
     >
       <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[var(--teal)]">{eyebrow}</p>
-      <h2 className="mt-4 max-w-[24ch] text-[clamp(1.9rem,3vw,2.9rem)] font-light leading-[1.06] tracking-[-0.03em] text-[var(--ink)]">
+      <h2 className="mt-4 max-w-[24ch] text-[clamp(1.9rem,3vw,2.9rem)] font-bold leading-[1.06] tracking-[-0.03em] text-[var(--ink)]">
         {title}
       </h2>
       <p className="mt-5 max-w-3xl text-[1rem] leading-8 text-[var(--text)]">{body}</p>

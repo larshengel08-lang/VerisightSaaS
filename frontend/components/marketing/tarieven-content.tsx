@@ -78,7 +78,7 @@ function HeroSection() {
             <h1
               style={{
                 fontFamily: FF,
-                fontWeight: 400,
+                fontWeight: 800,
                 fontSize: 'clamp(42px,5.5vw,76px)',
                 lineHeight: 0.97,
                 letterSpacing: '-.032em',
@@ -145,7 +145,7 @@ function FirstBuySection() {
             style={{
               fontFamily: FF,
               fontSize: 'clamp(28px,3.5vw,42px)',
-              fontWeight: 400,
+              fontWeight: 700,
               letterSpacing: '-.026em',
               color: T.ink,
               marginBottom: 14,
@@ -212,7 +212,7 @@ function FirstBuySection() {
                 style={{
                   fontFamily: FF,
                   fontSize: 'clamp(24px,2.8vw,34px)',
-                  fontWeight: 400,
+                  fontWeight: 600,
                   letterSpacing: '-.022em',
                   color: T.ink,
                   lineHeight: 1.08,
@@ -262,7 +262,7 @@ function OptionalExpansionSection() {
             style={{
               fontFamily: FF,
               fontSize: 'clamp(26px,3vw,38px)',
-              fontWeight: 400,
+              fontWeight: 700,
               letterSpacing: '-.022em',
               color: T.ink,
               marginBottom: 14,
@@ -339,7 +339,7 @@ function FollowOnSection() {
             style={{
               fontFamily: FF,
               fontSize: 'clamp(26px,3vw,38px)',
-              fontWeight: 400,
+              fontWeight: 700,
               letterSpacing: '-.022em',
               color: T.ink,
               marginBottom: 14,

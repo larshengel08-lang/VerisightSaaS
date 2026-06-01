@@ -27,7 +27,7 @@ export function Wordmark({
           alignItems: 'baseline',
           color: textColor,
           display: 'inline-flex',
-          fontFamily: 'var(--font-inter-tight), Inter, sans-serif',
+          fontFamily: "var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
           fontSize: textSize,
           fontWeight: 800,
           letterSpacing: '-0.06em',

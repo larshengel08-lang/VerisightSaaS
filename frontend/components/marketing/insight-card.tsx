@@ -31,7 +31,7 @@ export function InsightCard({ post }: { post: InsightPost }) {
         <span>{post.readingMinutes} min leestijd</span>
       </div>
 
-      <h3 className="mt-5 font-display text-[clamp(1.5rem,2vw,1.9rem)] leading-[1.08] text-[var(--ink)]">
+      <h3 className="mt-5 font-display text-[clamp(1.5rem,2vw,1.9rem)] font-semibold leading-[1.08] text-[var(--ink)]">
         {post.title}
       </h3>
 

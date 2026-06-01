@@ -44,7 +44,7 @@ export function LegalPageShell({
               <p className="text-[0.68rem] font-bold uppercase tracking-[0.22em] text-[var(--teal)]">
                 Publieke informatie
               </p>
-              <h1 className="font-display mt-4 max-w-[14ch] text-[clamp(2.3rem,6vw,4.35rem)] leading-[0.94] tracking-[-0.04em] text-[var(--ink)]">
+              <h1 className="font-display mt-4 max-w-[14ch] text-[clamp(2.3rem,6vw,4.35rem)] font-extrabold leading-[0.94] tracking-[-0.04em] text-[var(--ink)]">
                 {title}
               </h1>
               <p className="mt-6 max-w-[44rem] text-[1rem] leading-[1.9] text-[var(--text)]">
@@ -71,7 +71,7 @@ export function LegalPageShell({
                 className="
                   space-y-10 text-[0.98rem] leading-[1.9] text-[var(--text)]
                   [&_section]:space-y-4
-                  [&_h2]:font-display [&_h2]:text-[clamp(1.65rem,3vw,2.25rem)] [&_h2]:font-normal [&_h2]:leading-[1.04] [&_h2]:tracking-[-0.03em] [&_h2]:text-[var(--ink)]
+                  [&_h2]:font-display [&_h2]:text-[clamp(1.65rem,3vw,2.25rem)] [&_h2]:font-bold [&_h2]:leading-[1.04] [&_h2]:tracking-[-0.03em] [&_h2]:text-[var(--ink)]
                   [&_p]:m-0
                   [&_ul]:m-0 [&_ul]:list-disc [&_ul]:space-y-3 [&_ul]:pl-5
                   [&_li]:pl-1

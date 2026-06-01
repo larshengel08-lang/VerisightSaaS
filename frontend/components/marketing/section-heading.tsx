@@ -24,7 +24,7 @@ export function SectionHeading({
         {eyebrow}
       </p>
       <h2
-        className={`mt-4 max-w-[18ch] font-display text-[clamp(1.9rem,3.6vw,2.65rem)] font-semibold leading-[1.08] tracking-[-0.03em] ${
+        className={`mt-4 max-w-[18ch] font-display text-[clamp(1.9rem,3.6vw,2.65rem)] font-bold leading-[1.08] tracking-[-0.03em] ${
           align === 'center' ? 'mx-auto' : ''
         } ${titleColor}`}
       >

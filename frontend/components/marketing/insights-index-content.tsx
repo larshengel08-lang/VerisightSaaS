@@ -12,7 +12,7 @@ export function InsightsIndexContent({ posts }: { posts: InsightPost[] }) {
         <div className="marketing-shell py-16 md:py-20">
           <div className="max-w-3xl rounded-[8px] border border-[var(--border)] bg-[var(--surface-low)] p-8 md:p-10">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--meta)]">Inzichten</p>
-            <h2 className="mt-4 font-display text-[clamp(2.1rem,4vw,3.2rem)] leading-[1.02] text-[var(--ink)]">
+            <h2 className="mt-4 font-display text-[clamp(2.1rem,4vw,3.2rem)] font-bold leading-[1.02] text-[var(--ink)]">
               Nog geen inzichten gepubliceerd.
             </h2>
             <p className="mt-5 max-w-2xl text-base leading-[1.75] text-[var(--muted)]">
@@ -36,7 +36,7 @@ export function InsightsIndexContent({ posts }: { posts: InsightPost[] }) {
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--meta)]">
                 Uitgelicht inzicht
               </p>
-              <h2 className="mt-5 max-w-4xl font-display text-[clamp(2.4rem,4.2vw,4.25rem)] leading-[0.98] text-[var(--ink)]">
+              <h2 className="mt-5 max-w-4xl font-display text-[clamp(2.4rem,4.2vw,4.25rem)] font-bold leading-[0.98] text-[var(--ink)]">
                 {featured.title}
               </h2>
               <p className="mt-5 max-w-2xl text-base leading-[1.8] text-[var(--muted)]">{featured.metaDescription}</p>
@@ -92,7 +92,7 @@ export function InsightsIndexContent({ posts }: { posts: InsightPost[] }) {
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--meta)]">
                   Meer inzichten
                 </p>
-                <h2 className="mt-4 font-display text-[clamp(2.1rem,3.6vw,3.2rem)] leading-[1.02] text-[var(--ink)]">
+                <h2 className="mt-4 font-display text-[clamp(2.1rem,3.6vw,3.2rem)] font-bold leading-[1.02] text-[var(--ink)]">
                   Verdere duiding, rustiger geordend
                 </h2>
                 <p className="mt-4 max-w-2xl text-base leading-[1.75] text-[var(--muted)]">
@@ -128,7 +128,7 @@ export function InsightsIndexContent({ posts }: { posts: InsightPost[] }) {
                           {post.readingMinutes} min leestijd
                         </span>
                       </div>
-                      <h3 className="mt-3 font-display text-[clamp(1.45rem,2vw,1.95rem)] leading-[1.1] text-[var(--ink)]">
+                      <h3 className="mt-3 font-display text-[clamp(1.45rem,2vw,1.95rem)] font-semibold leading-[1.1] text-[var(--ink)]">
                         {post.title}
                       </h3>
                       <p className="mt-3 max-w-3xl text-sm leading-[1.75] text-[var(--muted)]">{post.metaDescription}</p>

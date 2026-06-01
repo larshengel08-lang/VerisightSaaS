@@ -23,13 +23,13 @@ export function InsightArticleContent({ post, relatedPosts }: InsightArticleCont
                   remarkPlugins={[remarkGfm]}
                   components={{
                     h1: ({ ...props }) => (
-                      <h1 className="mt-10 font-display text-[clamp(2.2rem,4vw,3.5rem)] leading-[1.02] text-[var(--ink)] first:mt-0" {...props} />
+                      <h1 className="mt-10 font-display text-[clamp(2.2rem,4vw,3.5rem)] font-extrabold leading-[1.02] text-[var(--ink)] first:mt-0" {...props} />
                     ),
                     h2: ({ ...props }) => (
-                      <h2 className="mt-12 font-display text-[clamp(1.9rem,3vw,2.7rem)] leading-[1.08] text-[var(--ink)]" {...props} />
+                      <h2 className="mt-12 font-display text-[clamp(1.9rem,3vw,2.7rem)] font-bold leading-[1.08] text-[var(--ink)]" {...props} />
                     ),
                     h3: ({ ...props }) => (
-                      <h3 className="mt-8 font-display text-[clamp(1.4rem,2.1vw,1.85rem)] leading-[1.12] text-[var(--ink)]" {...props} />
+                      <h3 className="mt-8 font-display text-[clamp(1.4rem,2.1vw,1.85rem)] font-semibold leading-[1.12] text-[var(--ink)]" {...props} />
                     ),
                     p: ({ ...props }) => <p className="mt-5 text-[1.02rem] leading-[1.85] text-[var(--text)]" {...props} />,
                     ul: ({ ...props }) => <ul className="mt-5 space-y-3 pl-5 text-[1.02rem] leading-[1.85] text-[var(--text)]" {...props} />,

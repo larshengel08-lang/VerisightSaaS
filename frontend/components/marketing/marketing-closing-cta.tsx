@@ -54,7 +54,7 @@ export function MarketingClosingCta({
                 color: T.ink,
                 fontFamily: FF,
                 fontSize: 'clamp(3rem, 5vw, 4.9rem)',
-                fontWeight: 400,
+                fontWeight: 700,
                 letterSpacing: '-0.05em',
                 lineHeight: 0.95,
                 marginBottom: 18,

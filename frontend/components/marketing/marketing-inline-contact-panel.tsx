@@ -44,7 +44,7 @@ export function MarketingInlineContactPanel({
               )}
             </div>
             {title.trim().length > 0 ? (
-              <h2 className="mt-3 text-[clamp(1.85rem,2.6vw,2.65rem)] font-light leading-[1.04] tracking-[-0.03em] text-[var(--ink)]">
+              <h2 className="mt-3 text-[clamp(1.85rem,2.6vw,2.65rem)] font-bold leading-[1.04] tracking-[-0.03em] text-[var(--ink)]">
                 {title}
               </h2>
             ) : null}

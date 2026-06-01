@@ -50,7 +50,7 @@ export function OnboardingSecondaryPage() {
                 <h1
                   style={{
                     fontFamily: FF,
-                    fontWeight: 400,
+                    fontWeight: 800,
                     fontSize: 'clamp(42px,5.5vw,76px)',
                     lineHeight: 0.97,
                     letterSpacing: '-.032em',

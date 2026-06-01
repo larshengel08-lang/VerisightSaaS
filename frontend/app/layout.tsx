@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter, Inter_Tight } from 'next/font/google'
+import { IBM_Plex_Sans, Inter } from 'next/font/google'
 import { SiteAnalytics } from '@/components/marketing/site-analytics'
 import './globals.css'
 
@@ -10,11 +10,11 @@ const inter = Inter({
   variable: '--font-inter',
 })
 
-const interTight = Inter_Tight({
+const ibmPlexSans = IBM_Plex_Sans({
   subsets: ['latin'],
-  weight: ['700', '800', '900'],
+  weight: ['300', '400', '500', '600', '700'],
   display: 'swap',
-  variable: '--font-inter-tight',
+  variable: '--font-ibm-plex-sans',
 })
 
 const googleSiteVerification = process.env.GOOGLE_SITE_VERIFICATION
@@ -91,7 +91,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="nl">
-      <body className={`${inter.variable} ${interTight.variable} font-[family-name:var(--font-inter)] bg-[--bg] antialiased`}>
+      <body
+        className={`${inter.variable} ${ibmPlexSans.variable} font-[family-name:var(--font-ibm-plex-sans)] bg-[--bg] antialiased`}
+      >
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}

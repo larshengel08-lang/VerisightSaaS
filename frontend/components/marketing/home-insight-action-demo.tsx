@@ -23,7 +23,7 @@ const C = {
   tealLine:  '#E8B7A6',
 } as const
 
-const FF  = 'var(--font-inter-tight), Georgia, serif'
+const FF  = "var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
 const FN  = 'var(--font-inter), system-ui, sans-serif'
 const SH  = { margin: '0 auto', maxWidth: 1240, padding: '0 clamp(20px, 4vw, 48px)' } as const
 
@@ -407,7 +407,7 @@ function State3({ goTo }: { goTo: (v: DemoView) => void }) {
 
         <div style={{ padding: PAD }}>
           <h3 style={{
-            color: C.ink, fontFamily: FF, fontWeight: 400,
+            color: C.ink, fontFamily: FF, fontWeight: 600,
             fontSize: 'clamp(1.9rem, 3vw, 2.7rem)',
             letterSpacing: '-.05em', lineHeight: .93,
             margin: '0 0 20px',
