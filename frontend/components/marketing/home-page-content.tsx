@@ -750,15 +750,6 @@ function ManagementFlowSection() {
 function HeroSection() {
   const primaryHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'homepage_hero_primary' })
   const secondaryHref = '/#first-delivery'
-  const dashboardBars = [
-    { height: '45%', color: SURFACE.surfaceSoft },
-    { height: '62%', color: SURFACE.borderSoft },
-    { height: '54%', color: SURFACE.amberSoft },
-    { height: '84%', color: SURFACE.tealSoft },
-    { height: '100%', color: SURFACE.amber },
-    { height: '88%', color: SURFACE.border },
-    { height: '70%', color: SURFACE.paperSoft },
-  ]
   const reportRows = [
     ['Groei en ontwikkeling', '82%', SURFACE.amber],
     ['Werkdruk in operatie', '54%', SURFACE.text],
@@ -778,9 +769,9 @@ function HeroSection() {
         position: 'relative',
       }}
     >
-      <div style={{ ...SHELL, paddingTop: 'clamp(74px, 8vw, 120px)', paddingBottom: 'clamp(70px, 8vw, 104px)', position: 'relative' }}>
-        <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,1fr)_640px]">
-          <div style={{ maxWidth: 560 }}>
+      <div style={{ ...SHELL, paddingTop: 'clamp(80px, 9vw, 120px)', paddingBottom: 'clamp(80px, 9vw, 120px)', position: 'relative' }}>
+        <div>
+          <div style={{ maxWidth: 760, margin: '0 auto', textAlign: 'center' }}>
               <div className="marketing-home-hero-reveal-1" style={{ marginBottom: 18 }}>
               <h1
                 style={{
@@ -791,7 +782,9 @@ function HeroSection() {
                   letterSpacing: '-0.045em',
                   lineHeight: 0.98,
                   marginBottom: 0,
-                  maxWidth: '12ch',
+                  margin: '0 auto',
+                  maxWidth: '18ch',
+                  textAlign: 'center',
                   textWrap: 'balance',
                 }}
               >
@@ -805,8 +798,9 @@ function HeroSection() {
                   color: SURFACE.text,
                   fontSize: 17,
                   lineHeight: 1.6,
-                  marginBottom: 28,
+                  margin: '0 auto 28px',
                   maxWidth: '32rem',
+                  textAlign: 'center',
                 }}
               >
                 Loep levert een scherp rapport en begeleidt u naar één eerste managementkeuze. Geen platform om zelf te beheren. Wel een beslissing.
@@ -814,7 +808,7 @@ function HeroSection() {
 
               <div
                 className="marketing-home-hero-reveal-4 flex flex-wrap items-center gap-4"
-                style={{ marginBottom: 34 }}
+                style={{ justifyContent: 'center', marginBottom: 34 }}
               >
               <Link
                 href={primaryHref}
@@ -857,7 +851,9 @@ function HeroSection() {
                   borderTop: `1px solid ${SURFACE.border}`,
                   display: 'grid',
                   gap: 10,
+                  justifyItems: 'center',
                   paddingTop: 22,
+                  textAlign: 'center',
                 }}
               >
                 {heroTrustItems.map((item) => (
@@ -870,6 +866,7 @@ function HeroSection() {
                       fontSize: 13,
                       fontWeight: 500,
                       lineHeight: 1.7,
+                      maxWidth: '42rem',
                     }}
                   >
                     <span>{item}</span>
@@ -878,72 +875,26 @@ function HeroSection() {
               </div>
           </div>
 
-            <div className="marketing-home-hero-reveal-visual relative hidden h-[620px] translate-x-[42px] select-none lg:block">
             <div
+              className="marketing-home-hero-reveal-visual select-none"
               style={{
-                background: SURFACE.surface,
-                border: `1px solid ${SURFACE.borderSoft}`,
-                borderRadius: 8,
-                boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.02)',
-                height: 286,
-                padding: '24px 28px',
-                position: 'absolute',
-                right: -6,
-                top: 0,
-                width: 452,
-                zIndex: 10,
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: 20,
+                maxWidth: 900,
+                margin: '52px auto 0',
               }}
             >
-              <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginBottom: 28 }}>
-                <span />
-                <span
-                  style={{
-                    background: SURFACE.surfaceSoft,
-                    border: `1px solid ${SURFACE.borderSoft}`,
-                    borderRadius: 4,
-                    color: SURFACE.text,
-                    fontSize: 10,
-                    fontWeight: 700,
-                    padding: '3px 8px',
-                  }}
-                >
-                  +12%
-                </span>
-              </div>
-
-              <div style={{ alignItems: 'flex-end', display: 'flex', gap: 10, height: 132, marginBottom: 28 }}>
-                {dashboardBars.map((bar) => (
-                  <div
-                    key={`${bar.height}-${bar.color}`}
-                    style={{
-                      background: bar.color,
-                      borderRadius: '2px 2px 0 0',
-                      flex: 1,
-                      height: bar.height,
-                    }}
-                  />
-                ))}
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div style={{ background: SURFACE.paperSoft, borderRadius: 999, height: 10, width: '100%' }} />
-                <div style={{ background: SURFACE.paperSoft, borderRadius: 999, height: 10, width: '68%' }} />
-              </div>
-            </div>
-
             <div
               style={{
                 background: '#fef8f1',
                 border: `1px solid ${SURFACE.borderSoft}`,
                 borderRadius: 4,
                 boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.02)',
-                height: 360,
                 overflow: 'hidden',
                 padding: '30px 32px',
-                position: 'absolute',
-                left: 30,
-                top: 118,
-                width: 438,
+                width: '100%',
+                height: 'auto',
                 zIndex: 20,
               }}
             >
@@ -1001,11 +952,8 @@ function HeroSection() {
                 borderRadius: 18,
                 boxShadow: '0 14px 34px rgba(13, 17, 24, 0.18)',
                 color: '#fff',
-                left: -28,
                 padding: '24px 28px 22px',
-                position: 'absolute',
-                top: 346,
-                width: 470,
+                width: '100%',
                 zIndex: 30,
               }}
             >
@@ -1128,22 +1076,6 @@ function HeroSection() {
                 </div>
               </div>
             </div>
-
-            <div
-              aria-hidden
-              style={{
-                background: 'rgba(245, 232, 220, 0.6)',
-                borderRadius: '999px',
-                filter: 'blur(100px)',
-                height: '120%',
-                left: '50%',
-                position: 'absolute',
-                top: '50%',
-                transform: 'translate(-50%, -50%)',
-                width: '120%',
-                zIndex: 0,
-              }}
-            />
             </div>
         </div>
       </div>
