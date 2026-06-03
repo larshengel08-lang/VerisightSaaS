@@ -154,7 +154,7 @@ const firstDeliveryItems = [
   {
     index: '04',
     title: 'Begeleide managementbespreking (60–90 min)',
-    body: 'Samen brengen we de uitkomsten terug tot wat nu echt aandacht vraagt en welke keuze eerst telt.',
+    body: 'Samen brengen we de uitkomsten terug tot wat nu echt aandacht vraagt en welke keuze als eerste logisch is.',
   },
   {
     index: '05',
@@ -715,21 +715,6 @@ function ManagementFlowSection() {
           ))}
         </div>
 
-        <Reveal delay={0.24}>
-          <p
-            style={{
-              color: SURFACE.text,
-              fontSize: 16,
-              lineHeight: 1.72,
-              margin: '46px auto 0',
-              maxWidth: '58rem',
-              textAlign: 'center',
-            }}
-          >
-            Loep vult interpretatie of eigenaarschap niet automatisch voor u in. Het helpt signalen zichtbaar
-            maken, prioriteiten wegen en opvolging organiseren in een duidelijke managementflow.
-          </p>
-        </Reveal>
       </div>
 
       <style>{`
@@ -829,21 +814,36 @@ function HeroSection() {
               <Link
                 href={secondaryHref}
                 style={{
-                  background: SURFACE.surface,
-                  border: `1px solid ${SURFACE.border}`,
+                  background: 'transparent',
+                  border: 'none',
                   borderRadius: 2,
                   color: SURFACE.ink,
                   display: 'inline-flex',
                   fontFamily: bodyFont,
-                  fontSize: 15,
-                  fontWeight: 600,
-                  padding: '16px 28px',
+                  fontSize: 14,
+                  fontWeight: 500,
+                  padding: '8px 0',
                   textDecoration: 'none',
                 }}
               >
                 Bekijk voorbeeldoutput
               </Link>
               </div>
+
+              <p
+                style={{
+                  color: SURFACE.muted,
+                  fontFamily: bodyFont,
+                  fontSize: 12.5,
+                  fontWeight: 500,
+                  lineHeight: 1.6,
+                  margin: '0 auto 22px',
+                  maxWidth: '32rem',
+                  textAlign: 'center',
+                }}
+              >
+                Reactie binnen 1 werkdag · Vrijblijvend gesprek van 20 min.
+              </p>
 
               <div
                 className="marketing-home-hero-reveal-5"
@@ -941,7 +941,7 @@ function HeroSection() {
                   paddingLeft: 16,
                 }}
               >
-                &ldquo;Op groepsniveau wordt zichtbaar wat nu prioriteit vraagt, zodat opvolging bestuurlijk eenvoudiger wordt.&rdquo;
+                &ldquo;Op groepsniveau wordt zichtbaar wat nu prioriteit vraagt, zodat opvolging eenvoudiger wordt.&rdquo;
               </p>
             </div>
 
@@ -1059,20 +1059,19 @@ function HeroSection() {
                     JD
                   </div>
                   <p style={{ color: 'rgba(255,255,255,0.78)', fontSize: 12 }}>
-                    J. de Wit <span style={{ color: 'rgba(255,255,255,0.38)' }}>Â· VP Talent</span>
+                    J. de Wit <span style={{ color: 'rgba(255,255,255,0.38)' }}>· VP Talent</span>
                   </p>
                 </div>
                 <div
                   style={{
-                    background: '#fff',
-                    borderRadius: 8,
-                    color: SURFACE.ink,
-                    fontSize: 11.5,
+                    color: 'rgba(255,255,255,0.66)',
+                    fontSize: 11,
                     fontWeight: 700,
-                    padding: '10px 16px',
+                    letterSpacing: '.12em',
+                    textTransform: 'uppercase',
                   }}
                 >
-                  Beheer opvolging
+                  Eerste stap vastgesteld
                 </div>
               </div>
             </div>
@@ -1945,6 +1944,8 @@ function RoutesSection() {
 }
 
 function FirstDeliverySection() {
+  const kennismakingHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'homepage_first_delivery_cta' })
+
   return (
     <section
       id="first-delivery"
@@ -2024,6 +2025,26 @@ function FirstDeliverySection() {
             </Reveal>
           ))}
         </div>
+
+        <div style={{ marginTop: 34, textAlign: 'center' }}>
+          <Reveal delay={0.32}>
+            <Link
+              href={kennismakingHref}
+              style={{
+                alignItems: 'center',
+                color: SURFACE.ink,
+                display: 'inline-flex',
+                fontFamily: bodyFont,
+                fontSize: 15,
+                fontWeight: 600,
+                gap: 10,
+                textDecoration: 'none',
+              }}
+            >
+              Plan een kennismaking <Arrow />
+            </Link>
+          </Reveal>
+        </div>
       </div>
     </section>
   )
@@ -2031,7 +2052,6 @@ function FirstDeliverySection() {
 
 function ContactSection() {
   const kennismakingHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'homepage_final_cta' })
-  const exampleHref = '/#first-delivery'
 
   return (
     <section
@@ -2069,7 +2089,7 @@ function ContactSection() {
                 textWrap: 'balance',
               }}
             >
-              Wilt u scherper zien wat aandacht vraagt, en opvolging beter organiseren?
+              Klaar voor een eerste keuze in weken, niet maanden?
             </h2>
 
             <p
@@ -2081,8 +2101,7 @@ function ContactSection() {
                 maxWidth: '48rem',
               }}
             >
-              Plan een kennismaking en ontdek hoe Loep helpt om signalen zichtbaar te maken, prioriteiten scherper
-              te wegen en opvolging concreet te faciliteren.
+              Plan een kennismaking en ontdek welke route nu het meeste duidelijkheid geeft.
             </p>
 
             <div
@@ -2107,26 +2126,6 @@ function ContactSection() {
                 }}
               >
                 Plan een kennismaking
-              </Link>
-              <Link
-                href={exampleHref}
-                style={{
-                  alignItems: 'center',
-                  background: 'transparent',
-                  border: '1px solid rgba(255, 250, 242, 0.22)',
-                  borderRadius: 999,
-                  color: '#fffdf8',
-                  display: 'inline-flex',
-                  fontFamily: bodyFont,
-                  fontSize: 15,
-                  fontWeight: 600,
-                  justifyContent: 'center',
-                  minWidth: 204,
-                  padding: '16px 28px',
-                  textDecoration: 'none',
-                }}
-              >
-                Bekijk voorbeeldoutput
               </Link>
             </div>
           </div>
