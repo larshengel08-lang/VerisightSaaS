@@ -128,12 +128,12 @@ function HeroSection() {
                   marginBottom: 18,
                 }}
               >
-                Compacte eerste stap
+                Wat u als eerste ontvangt
               </div>
               {[
                 { step: 'Stap 1', label: 'Juiste route kiezen' },
                 { step: 'Stap 2', label: 'Eerste signalen zichtbaar' },
-                { step: 'Stap 3', label: 'Dashboard, rapport en eerste opvolging' },
+                { step: 'Stap 3', label: 'Rapport en managementbespreking' },
               ].map((item, index) => (
                 <div
                   key={item.step}
@@ -181,8 +181,8 @@ function ProcessSection() {
             Zo loopt de route baseline-first.
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, maxWidth: '52ch' }}>
-            U kiest eerst de juiste stap. Daarna loopt die compact door naar dashboard, rapport en waar relevant
-            eerste opvolging.
+            U kiest eerst de juiste route. Daarna voert Loep de scan uit en levert een rapport met prioriteiten en een begeleide
+            managementbespreking.
           </p>
           </div>
         </Reveal>
@@ -239,8 +239,8 @@ function RolesSection() {
               Uw rol blijft compact.
             </h2>
             <p style={{ fontSize: 14, lineHeight: 1.72, color: T.inkSoft, marginBottom: 28 }}>
-              U bevestigt de timing, levert de benodigde input aan en gebruikt dashboard, rapport en eerste opvolging
-              als compacte leeslijn voor HR en management.
+              U bevestigt route en timing, levert de respondentbasis aan en neemt deel aan de managementbespreking. Loep houdt de
+              uitvoering compact en bewaakt de kwaliteit.
             </p>
 
             {[
@@ -250,10 +250,10 @@ function RolesSection() {
               },
               {
                 title: 'Benodigde input aanleveren',
-                body: 'U levert de input aan die nodig is om de route zorgvuldig en compact te laten lopen.',
+                body: 'U levert de respondentbasis aan. Loep houdt daarna de opzet compact en zorgvuldig.',
               },
               {
-                title: 'Uitkomsten gebruiken',
+                title: 'Rapport ontvangen en keuze maken',
                 body: 'U ontvangt het rapport en neemt deel aan de managementbespreking. Samen bepalen we de eerste keuze.',
               },
             ].map((item, index) => (
@@ -307,16 +307,16 @@ function RolesSection() {
 function FirstValueSection() {
   const items = [
     {
-      threshold: 'Baseline',
-      text: 'De route loopt en de eerste signalen worden zichtbaar, maar we trekken nog geen harde conclusies.',
+      threshold: 'Scan loopt',
+      text: 'De vragenlijst is verstuurd. Wij bewaken de respons en houden u op de hoogte zonder dat u iets hoeft te monitoren.',
     },
     {
-      threshold: 'Dashboard en rapport',
-      text: 'De eerste bruikbare weergave wordt zichtbaar in dashboard en rapport.',
+      threshold: 'Beeld bouwt op',
+      text: 'Zodra voldoende respons binnen is, worden de eerste patronen zichtbaar. We wachten op een stabiel beeld voordat we het rapport opleveren.',
     },
     {
-      threshold: 'Review',
-      text: 'Het beeld wordt stevig genoeg om te zien wat opvalt, wat eerst telt en of eerste opvolging nodig is.',
+      threshold: 'Rapport en bespreking',
+      text: 'U ontvangt het managementrapport. Daarna volgt de begeleide managementbespreking: samen bepalen we de eerste keuze.',
     },
   ]
 
@@ -337,15 +337,14 @@ function FirstValueSection() {
                 marginBottom: 16,
               }}
             >
-              Eerste waarde
+              Eerste keuze
               <br />
               <em className="shimmer-text" style={{ fontStyle: 'italic' }}>
-                zonder brede uitrol.
+                in weken, niet maanden.
               </em>
             </h2>
             <p style={{ fontSize: 13.5, lineHeight: 1.7, color: T.inkSoft }}>
-              De eerste waarde zit in dashboard, rapport en een eerste leesbare vervolgstap. Pas als de volgende vraag
-              echt speelt, wordt extra verdieping breder nodig.
+              Loep levert snel een bruikbaar beeld. Verdieping of vervolgmeting komen pas als de volgende vraag echt speelt — niet eerder.
             </p>
             </div>
           </Reveal>
