@@ -187,8 +187,21 @@ function FirstBuySection() {
                   </div>
                 ))}
               </div>
-              <Link href={item.eyebrow.startsWith('ExitScan') ? '/producten/exitscan' : '/producten/retentiescan'} style={{ fontSize: 13, fontWeight: 600, color: AC.deep, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                {item.eyebrow.startsWith('ExitScan') ? 'Meer over ExitScan' : 'Meer over RetentieScan'} <Arrow />
+              <Link
+                href={
+                  item.eyebrow.startsWith('ExitScan')
+                    ? '/producten/exitscan'
+                    : item.eyebrow.startsWith('RetentieScan')
+                      ? '/producten/retentiescan'
+                      : '/producten/cultuurbeeld'
+                }
+                style={{ fontSize: 13, fontWeight: 600, color: AC.deep, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              >
+                {item.eyebrow.startsWith('ExitScan')
+                  ? 'Meer over ExitScan'
+                  : item.eyebrow.startsWith('RetentieScan')
+                    ? 'Meer over RetentieScan'
+                    : 'Meer over Loep Cultuurbeeld'} <Arrow />
               </Link>
               </article>
             </Reveal>

@@ -569,7 +569,7 @@ export const pricingCards = [
     bullets: [
       'Executive culture read, Loep Culture Index en domeinbeeld',
       'Board-read als vast productonderdeel en governed drilldown waar toegestaan',
-      'Pulse blijft pas een optioneel follow-on ritme na de jaarlijkse baseline',
+      'Board-read als vast onderdeel van de baseline',
     ],
   },
 ] as const
