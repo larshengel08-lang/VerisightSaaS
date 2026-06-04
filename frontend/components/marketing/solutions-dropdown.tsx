@@ -2,7 +2,12 @@
 
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
-import { CORE_MARKETING_PRODUCTS } from '@/lib/marketing-products'
+import { BOUNDED_PEER_MARKETING_PRODUCTS, CORE_MARKETING_PRODUCTS } from '@/lib/marketing-products'
+
+const dropdownProducts = [
+  ...CORE_MARKETING_PRODUCTS.filter((product) => product.slug !== 'cultuurbeeld'),
+  ...BOUNDED_PEER_MARKETING_PRODUCTS.filter((product) => product.slug === 'onboarding-30-60-90'),
+]
 
 export function SolutionsDropdown() {
   const [open, setOpen] = useState(false)
@@ -51,7 +56,7 @@ export function SolutionsDropdown() {
             <div className="px-3 pb-2 pt-1">
               <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#9CA3AF]">Kernproducten</p>
             </div>
-            {CORE_MARKETING_PRODUCTS.map((product) => (
+            {dropdownProducts.map((product) => (
               <Link
                 key={product.href}
                 href={product.href}

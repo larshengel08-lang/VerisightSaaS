@@ -41,19 +41,19 @@ const primaryRoutes = [
     accentSoft: 'oklch(0.972 0.018 185)' as string,
   },
   {
-    title: 'Loep Cultuurbeeld',
-    eyebrow: 'Als brede cultuur en engagement de vraag is',
+    title: 'Onboarding 30-60-90',
+    eyebrow: 'Als vroege landing aandacht vraagt',
     body:
-      'Jaarlijkse cultuur- en engagement-baseline met board-read. Op aanvraag.',
+      'Wij meten vroeg hoe nieuwe medewerkers landen. Helder groepsbeeld, geen individuele beoordeling.',
     bullets: [
-      'U wilt een brede jaarlijkse cultuur- en engagementbaseline',
-      'U wilt executive read en board-read in plaats van een generieke surveytool',
-      'U wilt verschillen tussen onderdelen veilig kunnen lezen zonder rankinglogica',
-      'U wilt Pulse pas later als optioneel follow-on ritme openen',
+      'U wilt vroeg zien hoe nieuwe medewerkers landen',
+      'U wilt een groepsbeeld, geen individuele beoordeling',
+      'U wilt sneller weten waar onboarding frictie geeft',
+      'U wilt een eerste managementstap op basis van de eerste 90 dagen',
     ],
-    href: '/producten/cultuurbeeld',
-    accent: 'oklch(0.55 0.10 305)' as string,
-    accentSoft: 'oklch(0.97 0.02 305)' as string,
+    href: '/producten/onboarding-30-60-90',
+    accent: '#9b5f1e' as string,
+    accentSoft: 'oklch(0.97 0.03 70)' as string,
   },
 ] as const
 
@@ -133,8 +133,8 @@ function HeroSection() {
               marginRight: 'auto',
             }}
           >
-            ExitScan als vertrek de vraag is. RetentieScan als behoud eerder zichtbaar moet zijn. Voor bredere
-            cultuur- en engagementvragen: Loep Cultuurbeeld op aanvraag.
+            ExitScan als vertrek de vraag is. RetentieScan als behoud eerder zichtbaar moet zijn. Onboarding 30-60-90
+            als vroege landing aandacht vraagt.
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
             <Link
@@ -202,7 +202,7 @@ function PrimaryRoutesSection() {
           </h2>
           <p style={{ color: T.inkSoft, fontSize: 15, lineHeight: 1.74, maxWidth: '58ch', margin: '0 auto' }}>
             Kies ExitScan als u vertrek wilt duiden. Kies RetentieScan als u eerder wilt zien waar behoud onder druk
-            staat. Kies Loep Cultuurbeeld als u een brede jaarlijkse cultuur- en engagementbaseline zoekt.
+            staat. Kies Onboarding 30-60-90 als vroege landing van nieuwe medewerkers de vraag is.
           </p>
         </div>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

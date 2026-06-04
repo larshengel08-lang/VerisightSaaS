@@ -7,14 +7,14 @@ import { buildContactHref } from '@/lib/contact-funnel'
 export const metadata: Metadata = {
   title: 'Producten',
   description:
-    'ExitScan als vertrek de vraag is. RetentieScan als behoud eerder zichtbaar moet zijn. Voor bredere cultuur- en engagementvragen: Loep Cultuurbeeld op aanvraag.',
+    'ExitScan als vertrek de vraag is. RetentieScan als behoud eerder zichtbaar moet zijn. Onboarding 30-60-90 als vroege landing aandacht vraagt.',
   alternates: {
     canonical: '/producten',
   },
   openGraph: {
     title: 'Producten | Loep',
     description:
-      'ExitScan als vertrek de vraag is. RetentieScan als behoud eerder zichtbaar moet zijn. Voor bredere cultuur- en engagementvragen: Loep Cultuurbeeld op aanvraag.',
+      'ExitScan als vertrek de vraag is. RetentieScan als behoud eerder zichtbaar moet zijn. Onboarding 30-60-90 als vroege landing aandacht vraagt.',
     url: 'https://www.verisight.nl/producten',
     images: ['/opengraph-image'],
   },
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Producten | Loep',
     description:
-      'ExitScan als vertrek de vraag is. RetentieScan als behoud eerder zichtbaar moet zijn. Voor bredere cultuur- en engagementvragen: Loep Cultuurbeeld op aanvraag.',
+      'ExitScan als vertrek de vraag is. RetentieScan als behoud eerder zichtbaar moet zijn. Onboarding 30-60-90 als vroege landing aandacht vraagt.',
     images: ['/opengraph-image'],
   },
 }
