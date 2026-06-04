@@ -2,6 +2,7 @@ import type { ContactRouteInterest } from '@/lib/contact-funnel'
 import { getMarketingProductBySlug } from '@/lib/marketing-products'
 
 export type FollowOnRouteSlug =
+  | 'onboarding-30-60-90'
   | 'leadership-scan'
   | 'pulse'
   | 'combinatie'
@@ -33,11 +34,43 @@ function resolveProduct(slug: FollowOnRouteSlug) {
   return product
 }
 
+const onboardingProduct = resolveProduct('onboarding-30-60-90')
 const leadershipProduct = resolveProduct('leadership-scan')
 const pulseProduct = resolveProduct('pulse')
 const combinationProduct = resolveProduct('combinatie')
 
 export const FOLLOW_ON_ROUTE_CONTENT: readonly FollowOnRouteContent[] = [
+  {
+    slug: 'onboarding-30-60-90',
+    title: onboardingProduct.label,
+    rowSummary: 'Als vroege landing of eerste uitval extra aandacht vraagt.',
+    positioning:
+      'Onboarding 30-60-90 is een gerichte vroege landingsroute die pas logisch wordt wanneer de eerste 90 dagen van nieuwe medewerkers de volgende echte vraag zijn.',
+    whenLogical: [
+      'Er al een eerste people-read of managementbeeld staat en vroege landing nu extra aandacht vraagt.',
+      'Nieuwe cohorten, groei of vroege uitval vragen om scherpere onboardingduiding.',
+      'De volgende vraag gaat over de eerste 30, 60 en 90 dagen in plaats van brede uitstroom of behoudsdruk.',
+    ],
+    whatYouGet: [
+      'Rapport met wat opvalt in landing, rol, leiding en team op groepsniveau',
+      'Begeleide managementbespreking: samen bepalen welke eerste stap logisch is',
+      'Eerste eigenaar en hercheckmoment vastgesteld',
+    ],
+    whyLater:
+      'Dit is geen brede eerste people-route, maar een gerichte vervolgronde zodra vroege landing de volgende managementvraag is.',
+    detailHref: onboardingProduct.href,
+    routeInterest: 'onboarding',
+    ctaSource: 'products_follow_on_onboarding',
+    heroTitle: 'Wij meten vroeg hoe nieuwe medewerkers landen. U weet wat als eerste aandacht vraagt.',
+    heroBody:
+      'Loep voert de checkpoint-read uit en levert een rapport met wat opvalt in de eerste 90 dagen. U bepaalt daarna de eerste stap.',
+    receiveIntro:
+      'U ontvangt een compacte onboardingread die laat zien wat in de eerste 90 dagen opvalt en waar eerst actie logisch is.',
+    ctaBody:
+      'Beschrijf kort waarom vroege landing nu aandacht vraagt en welk eerste beeld er al ligt. Dan toetsen we of Onboarding 30-60-90 nu de volgende logische route is.',
+    relatedRouteHref: '/producten/retentiescan',
+    relatedRouteLabel: 'Bekijk RetentieScan',
+  },
   {
     slug: 'leadership-scan',
     title: leadershipProduct.label,

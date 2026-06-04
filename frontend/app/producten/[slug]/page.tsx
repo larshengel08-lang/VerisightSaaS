@@ -184,12 +184,11 @@ function CultureAssessmentPage() {
         <MarketingHeroIntro>
           <p className="marketing-hero-eyebrow text-violet-700">Loep Cultuurbeeld</p>
           <h1 className="marketing-hero-title marketing-hero-title-detail font-display text-slate-950">
-            Lees cultuur en engagement breed op organisatieniveau.
+            Wij brengen cultuur en engagement in beeld. U weet waar bestuurlijke aandacht nodig is.
           </h1>
           <p className="marketing-hero-copy text-slate-600">
-            Loep Culture Assessment is de jaarlijkse enterprise-baseline voor board, directie en HR. U krijgt een
-            executive culture read, Loep Culture Index, domeinbeeld, board attention points en governed drilldown
-            zonder benchmark-first, manager ranking of individuele voorspellingen.
+            Loep voert de cultuur- en engagementbaseline uit, analyseert de uitkomsten en levert een board-read met
+            aandachtspunten en eerste prioritering. Geen survey-platform — een begeleid traject.
           </p>
           <div className="marketing-hero-actions">
             <div className="marketing-hero-cta-row">
@@ -248,16 +247,16 @@ function CultureAssessmentPage() {
         <div className="grid gap-6 lg:grid-cols-3">
           {[
             {
-              title: 'Wanneer dit de juiste eerste route is',
-              body: 'Kies Loep Cultuurbeeld wanneer de vraag breed organisatiebreed is: cultuur, engagement, werkbeleving, vertrouwen, leiderschap en samenwerking.',
+              title: 'Wanneer Cultuurbeeld logisch is',
+              body: 'Als de vraag breed organisatiebreed is: cultuur, engagement, werkbeleving, vertrouwen, leiderschap en samenwerking. Niet als vervanging van ExitScan of RetentionScan.',
             },
             {
               title: 'Wat u ontvangt',
-              body: 'Een executive culture read, Loep Culture Index, domeinbeeld, board attention points, segmentcontrasten en board-read in dezelfde vaste leeslijn.',
+              body: 'Een board-read met executive samenvatting, Loep Culture Index, domeinanalyse en board attention points. Geleverd door Loep, inclusief begeleide board-read sessie.',
             },
             {
               title: 'Wat bewust begrensd blijft',
-              body: 'Benchmarking blijft in v1 uit, named manager detail blijft standaard locked en open tekst verschijnt alleen geclusterd en veilig.',
+              body: 'Geen benchmarking in v1, geen named manager detail standaard, geen individuele voorspellingen. Wel veilige segmentcontrasten boven minimum-n.',
             },
           ].map((item) => (
             <div key={item.title} className="marketing-panel p-6">
@@ -270,7 +269,7 @@ function CultureAssessmentPage() {
 
       <MarketingCalloutBand
         eyebrow="Board-read inbegrepen"
-        title="De baseline eindigt niet in alleen een scoredeck."
+        title="Wij leveren geen rapport dat blijft liggen. De board-read zit standaard inbegrepen."
         body="Loep Cultuurbeeld hoort te landen in een vaste board-read waarin de executive read, eerste aandachtspunten en veilige vervolgvraag expliciet worden gemaakt."
         primaryHref={buildContactHref({
           routeInterest: 'culture_assessment',
@@ -290,7 +289,7 @@ function CultureAssessmentPage() {
         backdropNumber={null}
         title="Toets of Loep Cultuurbeeld"
         accentTitle="nu de juiste eerste stap is."
-        body="Beschrijf kort welke brede cultuur- of engagementvraag nu speelt. Dan toetsen we of Loep Culture Assessment past, welke baselinevorm logisch is en wanneer een board-read de meeste waarde geeft."
+        body="Beschrijf kort welke cultuur- of engagementvraag nu speelt. Dan toetsen we of Loep Cultuurbeeld past en wanneer een board-read de meeste waarde geeft."
         buttonLabel="Plan een eerste route-inschatting"
         note="Pulse komt pas later in beeld als bounded vervolg na een bestaande baseline."
       />
@@ -345,7 +344,7 @@ function ExitScanPage() {
                 <div style={{ padding: '28px', background: T.paperSoft, border: `1px solid ${T.rule}` }}>
                   <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: AC.deep, marginBottom: 16 }}>vanaf €4.500 {'\u2022'} Baseline</div>
                   {[
-                    'Rapport met factoranalyse en prioriteiten',
+                    'Managementrapport met factoranalyse en prioriteiten',
                     'Begeleide managementbespreking (60–90 min)',
                     'Eerste keuze en vervolgrichting vastgesteld',
                     'AVG-conforme dataverwerking',
@@ -364,13 +363,13 @@ function ExitScanPage() {
         <section style={{ background: T.paperSoft, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
           <div style={{ ...SH }}>
             <div style={{ marginBottom: 36 }}>
-              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.deep, marginBottom: 16 }}>Wanneer ExitScan nu de juiste eerste stap is</div>
+              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.deep, marginBottom: 16 }}>Dit is het juiste moment voor ExitScan</div>
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 {[
                   'Vertrek is zichtbaar maar de reden is onduidelijk',
                   'Management vraagt om een onderbouwd beeld',
                   'U wilt van losse exitgesprekken naar een structureel patroon',
-                  'U heeft een eerste keuze nodig, geen breed onderzoeksproject',
+                  'U wilt een eerste keuze, geen breed onderzoeksproject',
                 ].map((text) => (
                   <div key={text} style={{ alignItems: 'flex-start', background: T.white, border: `1px solid ${T.rule}`, display: 'flex', gap: 12, padding: '18px 20px' }}>
                     <div style={{ width: 6, height: 6, background: AC.deep, borderRadius: '50%', flexShrink: 0, marginTop: 9 }} />
@@ -401,7 +400,7 @@ function ExitScanPage() {
                     points: [
                       'Voor organisaties die vertrek structureel willen blijven volgen',
                       'Logisch als baseline, proces en ritme al staan',
-                      'Zelfde structuur in dashboard en rapport als de eerste baseline',
+                      'Zelfde structuur als de eerste baseline',
                     ],
                   },
                 ].map(({ label, accent, points }) => (
@@ -434,10 +433,9 @@ function ExitScanPage() {
               <div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {[
-                    'Rapport met vertrekpatronen, factoranalyse en prioriteiten',
-                    'Dashboard voor intern gebruik tijdens en na de scan',
+                    'Managementrapport met vertrekpatronen, factoranalyse en prioriteiten',
                     'Begeleide managementbespreking: samen bepalen wat nu het eerst aandacht vraagt',
-                    'Segmentverdieping op afdeling of functieniveau waar respons en metadata dat dragen',
+                    'Segmentverdieping waar respons en metadata dat dragen',
                   ].map((item, i) => (
                     <div key={i} style={{ display: 'flex', gap: 12, padding: '14px 16px', background: T.paperSoft, border: `1px solid ${T.rule}`, fontSize: 13.5, color: T.inkSoft, lineHeight: 1.6 }}>
                       <div style={{ width: 4, height: 4, background: AC.mid, flexShrink: 0, marginTop: 5 }} />
@@ -527,7 +525,7 @@ function RetentionScanPage() {
                 <div style={{ padding: '28px', background: T.tealFaint, border: `1px solid ${T.tealSoft}` }}>
                   <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: T.teal, marginBottom: 16 }}>vanaf €4.500 {'\u2022'} Baseline</div>
                   {[
-                    'Rapport met retentiesignaal, factoranalyse en prioriteiten',
+                    'Managementrapport met retentiesignaal en prioriteiten',
                     'Begeleide managementbespreking (60–90 min)',
                     'Geen individuele signalen — alleen groepsniveau',
                     'AVG-conforme dataverwerking',
@@ -616,10 +614,9 @@ function RetentionScanPage() {
               <div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {[
-                    'Rapport met retentiesignaal, factoranalyse en prioriteiten',
-                    'Dashboard voor intern gebruik tijdens en na de scan',
+                    'Managementrapport met retentiesignaal, factoranalyse en prioriteiten',
                     'Begeleide managementbespreking: samen bepalen welk risico nu eerst aandacht vraagt',
-                    'Segmentverdieping op afdeling of functieniveau waar respons en metadata dat dragen',
+                    'Segmentverdieping waar respons en metadata dat dragen',
                   ].map((item, i) => (
                     <div key={i} style={{ display: 'flex', gap: 12, padding: '14px 16px', background: T.paperSoft, border: `1px solid ${T.rule}`, fontSize: 13.5, color: T.inkSoft, lineHeight: 1.6 }}>
                       <div style={{ width: 4, height: 4, background: T.teal, flexShrink: 0, marginTop: 5 }} />

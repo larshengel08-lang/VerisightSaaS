@@ -175,7 +175,7 @@ export const trustItems = [
   'Signalen, geen schijnzekerheid',
   'Rapportage op geaggregeerd niveau',
   'Vraagblokken gebaseerd op relevante literatuur',
-  'Nederlandse dienst met begeleide uitvoering',
+  'Loep voert uit — u beheert geen tool',
   'AVG-conform, primaire dataopslag in een EU-regio',
   'Geen koppeling aan individuen in rapportage.',
 ] as const
@@ -267,7 +267,7 @@ export const trustHubAnswerCards = [
   },
   {
     title: 'Wat koopt u precies?',
-    body: 'Geen los instrument, maar een afgebakende productvorm met dashboard, rapport en duidelijke interpretatiegrenzen.',
+    body: 'Een begeleide dienst: Loep voert de scan uit, levert een managementrapport met prioriteiten en begeleidt HR en management naar één eerste keuze. Geen platform om zelf te beheren.',
   },
   {
     title: 'Heeft elke route een publiek voorbeeldrapport?',

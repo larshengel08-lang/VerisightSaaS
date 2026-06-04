@@ -14,7 +14,7 @@ const primaryRoutes = [
     title: 'ExitScan',
     eyebrow: 'Als vertrek de vraag is',
     body:
-      'Voor organisaties die scherp willen begrijpen waarom medewerkers vertrekken, welke patronen terugkomen en waar actie het eerst telt.',
+      'Wij brengen vertrekpatronen in beeld en leveren een rapport met prioriteiten. Begeleide bespreking inbegrepen.',
     bullets: [
       'Vertrek is al zichtbaar of terugkerend',
       'U wilt begrijpen welke patronen terugkomen',
@@ -29,7 +29,7 @@ const primaryRoutes = [
     title: 'RetentieScan',
     eyebrow: 'Als behoud de vraag is',
     body:
-      'Voor organisaties die eerder willen zien waar behoud onder druk komt te staan, voordat verloop zichtbaar oploopt en het gesprek te laat begint.',
+      'Wij laten zien waar behoud onder druk staat — voordat uitstroom zichtbaar wordt. Rapport en bespreking inbegrepen.',
     bullets: [
       'U wilt eerder signaleren voordat verloop oploopt',
       'U vermoedt behoudsdruk maar ziet nog geen volledig vertrekbeeld',
@@ -44,7 +44,7 @@ const primaryRoutes = [
     title: 'Loep Cultuurbeeld',
     eyebrow: 'Als brede cultuur en engagement de vraag is',
     body:
-      'Voor organisaties die een jaarlijkse board-level baseline willen op cultuur, engagement, werkbeleving, vertrouwen, leiderschap en samenwerking.',
+      'Jaarlijkse cultuur- en engagement-baseline met board-read. Op aanvraag.',
     bullets: [
       'U wilt een brede jaarlijkse cultuur- en engagementbaseline',
       'U wilt executive read en board-read in plaats van een generieke surveytool',
@@ -120,7 +120,7 @@ function HeroSection() {
               margin: '0 auto',
             }}
           >
-            Kies de route die nu het meeste duidelijkheid geeft.
+            Welke vraag speelt nu het sterkst?
           </h1>
           <p
             style={{
@@ -133,9 +133,8 @@ function HeroSection() {
               marginRight: 'auto',
             }}
           >
-            Kies ExitScan als u vertrek achteraf wilt begrijpen. Kies RetentieScan als u eerder wilt zien waar
-            behoud onder druk staat. Kies Loep Cultuurbeeld als u cultuur en engagement breed organisatiebreed wilt
-            lezen. Andere routes komen pas in beeld als de volgende vraag echt speelt.
+            ExitScan als vertrek de vraag is. RetentieScan als behoud eerder zichtbaar moet zijn. Voor bredere
+            cultuur- en engagementvragen: Loep Cultuurbeeld op aanvraag.
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
             <Link
