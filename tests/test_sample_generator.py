@@ -75,3 +75,9 @@ def test_resolved_output_paths_keep_culture_assessment_sample_docs_only():
 
     assert len(normalized_paths) == 1
     assert normalized_paths[0].endswith('/docs/examples/voorbeeldrapport_cultuurbeeld.pdf')
+
+
+def test_culture_assessment_sample_config_uses_noordhaven_and_governed_drilldown():
+    assert sample_generator.CULTURE_CONFIG["org_name"] == "Noordhaven Industrie Groep"
+    assert sample_generator.CULTURE_CONFIG["org_slug"] == "noordhaven-industrie-groep-demo"
+    assert sample_generator.CULTURE_CONFIG["enabled_modules"] == ["segment_deep_dive"]

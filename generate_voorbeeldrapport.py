@@ -88,7 +88,11 @@ RETENTION_CONFIG = {
 CULTURE_CONFIG = {
     "scan_type": "culture_assessment",
     "campaign_name": "Loep Cultuurbeeld 2026",
+    "org_name": "Noordhaven Industrie Groep",
+    "org_slug": "noordhaven-industrie-groep-demo",
+    "org_email": "board@noordhaven-industrie-groep.demo",
     "docs_output_name": "voorbeeldrapport_cultuurbeeld.pdf",
+    "enabled_modules": ["segment_deep_dive"],
     "invited": 120,
     "responses": 48,
 }
@@ -387,24 +391,27 @@ def _stay_intent(turnover_base: float) -> int:
     return _likert(max(1.2, 5.4 - turnover_base))
 
 
-def _get_or_create_demo_org(db) -> tuple[Organization, bool]:
+def _get_or_create_demo_org(db, config: dict[str, str | int] | None = None) -> tuple[Organization, bool]:
+    org_name = str((config or {}).get("org_name") or DEMO_ORG_NAME)
+    org_slug = str((config or {}).get("org_slug") or DEMO_ORG_SLUG)
+    org_email = str((config or {}).get("org_email") or DEMO_ORG_EMAIL)
     org = (
         db.query(Organization)
-        .filter(Organization.slug == DEMO_ORG_SLUG)
+        .filter(Organization.slug == org_slug)
         .one_or_none()
     )
     if org:
-        org.name = DEMO_ORG_NAME
-        org.contact_email = DEMO_ORG_EMAIL
+        org.name = org_name
+        org.contact_email = org_email
         org.is_active = True
         db.flush()
         return org, False
 
     org = Organization(
         id=str(uuid.uuid4()),
-        name=DEMO_ORG_NAME,
-        slug=DEMO_ORG_SLUG,
-        contact_email=DEMO_ORG_EMAIL,
+        name=org_name,
+        slug=org_slug,
+        contact_email=org_email,
         is_active=True,
     )
     db.add(org)
@@ -695,7 +702,7 @@ def main() -> None:
         print(f"Gebruik geisoleerde demo-database: {isolated_database_url}")
         print("")
 
-    org, created_org = _get_or_create_demo_org(db)
+    org, created_org = _get_or_create_demo_org(db, config)
     existing_demo_campaigns = (
         db.query(Campaign)
         .filter(
@@ -714,6 +721,7 @@ def main() -> None:
         name=config["campaign_name"],
         scan_type=config["scan_type"],
         is_active=False,
+        enabled_modules=list(config.get("enabled_modules", [])) or None,
     )
     db.add(campaign)
     db.flush()
