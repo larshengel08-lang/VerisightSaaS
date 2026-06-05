@@ -54,3 +54,36 @@ def test_culture_assessment_module_exposes_definition_and_report_payloads():
     ]
     assert module.get_methodology_payload()["allows_individual_export"] is False
     assert module.get_methodology_payload()["delivery_readiness"]["target_turnaround_from_close_to_board_output"] == "5 business days"
+
+
+def test_culture_assessment_sample_output_contract_stays_bounded():
+    module = get_product_module("culture_assessment")
+    summary = module.get_management_summary_payload()
+    sample_output_note = summary["sample_output_note"].lower()
+    follow_on_rule = summary["follow_on_rule"].lower()
+    domain_reading_rule = summary["domain_reading_rule"].lower()
+    forbidden_claims = [claim.lower() for claim in summary["forbidden_claims"]]
+
+    assert "genuanceerd" in sample_output_note
+    assert "gematigd" in sample_output_note
+    assert "pulse" in sample_output_note
+    assert "voorwaardelijk" in sample_output_note
+    assert "geen benchmark" in sample_output_note
+    assert "geen ranking" in sample_output_note
+    assert "geen" in sample_output_note and "causal" in sample_output_note
+    assert "geen" in sample_output_note and "predictie" in sample_output_note
+    assert "pass/fail" not in sample_output_note
+
+    assert "voorwaardelijk" in follow_on_rule
+    assert "pulse" in follow_on_rule
+    assert "automatische doorroute" in follow_on_rule
+    assert "geen benchmark" in follow_on_rule
+    assert "geen" in follow_on_rule and "ranking" in follow_on_rule
+    assert "pass/fail" not in follow_on_rule
+
+    assert "geen ranking" in domain_reading_rule
+
+    assert "geen verklarende conclusies" in forbidden_claims
+    assert "geen voorspellende conclusies" in forbidden_claims
+    assert "geen vergelijkende league-table taal" in forbidden_claims
+    assert all("manager score" not in claim for claim in forbidden_claims)

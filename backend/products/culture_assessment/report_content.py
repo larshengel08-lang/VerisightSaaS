@@ -48,15 +48,20 @@ def get_management_summary_payload() -> dict[str, Any]:
             "patroonlezing over domeinen en segmenten",
         ],
         "forbidden_claims": [
-            "cultuur is goed/slecht",
-            "manager X functioneert slecht",
-            "dit verklaart oorzaak-gevolg",
-            "individuele voorspellingen",
-            "benchmarkclaims in v1",
+            "geen goed/slecht eindoordeel",
+            "geen oordeel over individuen of managers",
+            "geen verklarende conclusies",
+            "geen voorspellende conclusies",
+            "geen vergelijkende league-table taal",
         ],
+        "sample_output_note": (
+            "Voorbeeldoutput gebruikt fictieve data, toont een genuanceerd en gematigd signaal, "
+            "houdt Pulse voorwaardelijk, en gebruikt geen benchmarktaal, geen rankingtaal, "
+            "geen causaliteitstaal of predictietaal."
+        ),
         "board_attention_frame": (
             "Gebruik de executive read om eerste bestuurlijke aandachtspunten te ordenen op basis van patroonlogica, "
-            "niet op basis van ranking, causaliteit of een totaaloordeel."
+            "als genuanceerd gesprekssignaal en niet als totaaloordeel."
         ),
         "board_attention_scope_note": (
             "V1 gebruikt board attention points primair op basis van domeinbeeld en terugkerende thematische samenhang. "
@@ -75,7 +80,8 @@ def get_management_summary_payload() -> dict[str, Any]:
             "Verborgen of niet vrijgegeven segmentlagen verschijnen expliciet als governance state, niet als stilte of ontbrekende output."
         ),
         "follow_on_rule": (
-            "Elke vervolgstap blijft conditioneel en governed: geen automatische doorroute, geen benchmarklaag en geen zelfbedieningslogica."
+            "Elke vervolgstap blijft voorwaardelijk en governed: geen automatische doorroute, geen benchmark- of rankinglogica, "
+            "alleen een Pulse-vervolg als die keuze bestuurlijk past, en geen zelfbedieningslogica."
         ),
         "board_read_delivery": {
             "facilitator_owner": "Loep / Verisight consultant of founder-led board facilitator",
