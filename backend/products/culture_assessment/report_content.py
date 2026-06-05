@@ -6,15 +6,20 @@ from backend.products.culture_assessment.scoring import get_questionnaire_lock_p
 
 CULTURE_BOARD_REPORT_SECTIONS: tuple[dict[str, str], ...] = (
     {"key": "cover", "title": "Loep Culture Assessment - Board Baseline", "eyebrow": "Cover", "anchor": "Loep Culture Assessment - Board Baseline"},
-    {"key": "executive_opener", "title": "Executive culture read", "eyebrow": "1. Executive opener", "anchor": "1. EXECUTIVE OPENER"},
-    {"key": "response_governance", "title": "Responsbasis en governancekader", "eyebrow": "2. Response and governance", "anchor": "2. RESPONSE AND GOVERNANCE"},
+    {"key": "response_governance", "title": "Wat is gemeten en hoe stevig is de responsbasis", "eyebrow": "1. Response and governance", "anchor": "1. RESPONSE AND GOVERNANCE"},
+    {"key": "executive_opener", "title": "Executive culture read", "eyebrow": "2. Executive opener", "anchor": "2. EXECUTIVE OPENER"},
     {"key": "index_hero", "title": "Loep Culture Index", "eyebrow": "3. Index hero", "anchor": "3. INDEX HERO"},
     {"key": "board_attention", "title": "Board attention points", "eyebrow": "4. Board attention points", "anchor": "4. BOARD ATTENTION POINTS"},
-    {"key": "domain_profile", "title": "Domeinbeeld", "eyebrow": "5. Domain profile", "anchor": "5. DOMAIN PROFILE"},
+    {"key": "domain_profile", "title": "Domeinbeeld en bestuurlijke leesvolgorde", "eyebrow": "5. Domain profile", "anchor": "5. DOMAIN PROFILE"},
     {"key": "pattern_logic", "title": "Patronen in samenhang", "eyebrow": "6. Pattern logic", "anchor": "6. PATTERN LOGIC"},
     {"key": "segment_contrasts", "title": "Segmentcontrasten", "eyebrow": "7. Segment contrasts", "anchor": "7. SEGMENT CONTRASTS"},
-    {"key": "follow_on_decision", "title": "Vervolgrichting na de baseline", "eyebrow": "8. Follow-on decision", "anchor": "8. FOLLOW-ON DECISION"},
-    {"key": "method_boundaries", "title": "Methodiek en begrenzingen", "eyebrow": "9. Method and boundaries", "anchor": "9. METHOD AND BOUNDARIES"},
+    {
+        "key": "method_boundaries",
+        "title": "Wat je hier niet uit mag concluderen",
+        "eyebrow": "8. Reading boundaries",
+        "anchor": "8. READING BOUNDARIES",
+    },
+    {"key": "follow_on_decision", "title": "Board-read en vervolgrichting", "eyebrow": "9. Follow-on decision", "anchor": "9. FOLLOW-ON DECISION"},
 )
 
 
@@ -48,15 +53,20 @@ def get_management_summary_payload() -> dict[str, Any]:
             "patroonlezing over domeinen en segmenten",
         ],
         "forbidden_claims": [
-            "cultuur is goed/slecht",
-            "manager X functioneert slecht",
-            "dit verklaart oorzaak-gevolg",
-            "individuele voorspellingen",
-            "benchmarkclaims in v1",
+            "geen goed/slecht eindoordeel",
+            "geen oordeel over individuen of managers",
+            "geen verklarende conclusies",
+            "geen voorspellende conclusies",
+            "geen vergelijkende league-table taal",
         ],
+        "sample_output_note": (
+            "Voorbeeldoutput gebruikt fictieve data, toont een genuanceerd en gematigd signaal, "
+            "houdt Pulse voorwaardelijk, en gebruikt geen benchmarktaal, geen rankingtaal, "
+            "geen causaliteitstaal of predictietaal."
+        ),
         "board_attention_frame": (
             "Gebruik de executive read om eerste bestuurlijke aandachtspunten te ordenen op basis van patroonlogica, "
-            "niet op basis van ranking, causaliteit of een totaaloordeel."
+            "als genuanceerd gesprekssignaal en niet als totaaloordeel."
         ),
         "board_attention_scope_note": (
             "V1 gebruikt board attention points primair op basis van domeinbeeld en terugkerende thematische samenhang. "
@@ -75,7 +85,8 @@ def get_management_summary_payload() -> dict[str, Any]:
             "Verborgen of niet vrijgegeven segmentlagen verschijnen expliciet als governance state, niet als stilte of ontbrekende output."
         ),
         "follow_on_rule": (
-            "Elke vervolgstap blijft conditioneel en governed: geen automatische doorroute, geen benchmarklaag en geen zelfbedieningslogica."
+            "Elke vervolgstap blijft voorwaardelijk en governed: geen automatische doorroute, geen benchmark- of rankinglogica, "
+            "alleen een Pulse-vervolg als die keuze bestuurlijk past, en geen zelfbedieningslogica."
         ),
         "board_read_delivery": {
             "facilitator_owner": "Loep / Verisight consultant of founder-led board facilitator",

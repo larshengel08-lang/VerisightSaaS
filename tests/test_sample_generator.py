@@ -75,3 +75,22 @@ def test_resolved_output_paths_keep_culture_assessment_sample_docs_only():
 
     assert len(normalized_paths) == 1
     assert normalized_paths[0].endswith('/docs/examples/voorbeeldrapport_cultuurbeeld.pdf')
+
+
+def test_culture_assessment_sample_config_uses_noordhaven_and_governed_drilldown():
+    assert sample_generator.CULTURE_CONFIG["org_name"] == "Noordhaven Industrie Groep"
+    assert sample_generator.CULTURE_CONFIG["org_slug"] == "noordhaven-industrie-groep-demo"
+    assert sample_generator.CULTURE_CONFIG["enabled_modules"] == ["segment_deep_dive"]
+    assert "Operatie" in sample_generator.CULTURE_DEPARTMENTS
+    assert "Support" in sample_generator.CULTURE_DEPARTMENTS
+    assert "Staf" in sample_generator.CULTURE_DEPARTMENTS
+    assert "Operations" not in sample_generator.CULTURE_DEPARTMENTS
+    assert "Sales" not in sample_generator.CULTURE_DEPARTMENTS
+
+
+def test_culture_department_assignment_keeps_two_safe_segments_and_one_hidden_group():
+    assignments = [sample_generator._culture_department_for_index(idx, 48) for idx in range(48)]
+
+    assert assignments.count("Operatie") == 20
+    assert assignments.count("Support") == 20
+    assert assignments.count("Staf") == 8

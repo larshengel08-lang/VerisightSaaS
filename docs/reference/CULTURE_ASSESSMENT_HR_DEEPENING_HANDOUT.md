@@ -20,3 +20,26 @@ HR is the implementation partner, not the owner of isolated score defense.
 - segment comparison opens only above threshold
 - open text appears only when clustering is safe
 - no individual respondent export
+
+## Sample page candidate: Noordhaven Industrie Groep
+
+Page title:
+- `Veilige HR-verdieping na de baseline`
+
+Designed page intent:
+- one page that shows how governed deepening may look without leaking hidden layers
+
+Page elements:
+- two safe segment cards
+  - `Operatie`
+  - `Support`
+- one hidden-layer governance card
+  - `Aanvullende segmentlaag blijft gesloten`
+- one short HR reading line
+  - `Gebruik dit alleen om vervolgvragen te ordenen, niet om lokaal te beoordelen.`
+
+Page must not contain:
+- team ranking
+- manager comparison
+- raw comments
+- local score defense prompts
