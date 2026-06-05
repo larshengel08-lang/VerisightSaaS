@@ -34,7 +34,7 @@ const displayFont = "var(--font-inter), -apple-system, BlinkMacSystemFont, 'Sego
 const bodyFont = "var(--font-ibm-plex-sans), system-ui, sans-serif"
 
 const heroTrustItems = [
-  'Dashboard voor inzicht \u2022 Managementrapport voor duiding \u2022 Action Center voor opvolging',
+  'Rapport \u2022 Managementbespreking \u2022 Eerste keuze',
 ]
 
 const suiteFlowPoints = [
@@ -299,8 +299,8 @@ function ProblemSection() {
                 maxWidth: '54rem',
               }}
             >
-              Organisaties zien signalen, rond uitstroom, behoud of vroege landing, maar missen de vertaalslag naar
-              een heldere managementprioriteit en concrete opvolging.
+              Organisaties zien signalen, rond uitstroom, behoud of vroege landing, maar missen de stap naar een
+              heldere eerste keuze en concrete opvolging.
             </p>
           </Reveal>
         </div>
@@ -529,187 +529,6 @@ function ManagementFlowSection() {
                   {item.body}
                 </p>
 
-                {item.step === '1' ? (
-                  <div style={{ marginTop: 'auto' }}>
-                    <div
-                      style={{
-                        background: '#f2efe8',
-                        border: `1px solid ${SURFACE.borderSoft}`,
-                        borderRadius: 22,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        minHeight: 116,
-                        padding: '18px 16px 16px',
-                      }}
-                    >
-                      <div style={{ display: 'grid', gap: 8, gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', marginBottom: 16 }}>
-                        {[
-                          ['Behoud', '#cfe7dd'],
-                          ['Onboarding', '#d8e4ea'],
-                          ['Vertrek', '#eaded6'],
-                        ].map(([label, accent]) => (
-                          <div
-                            key={label}
-                            style={{
-                              background: SURFACE.surface,
-                              borderRadius: 14,
-                              padding: '10px 10px 8px',
-                            }}
-                          >
-                            <div
-                              style={{
-                                color: SURFACE.muted,
-                                fontFamily: bodyFont,
-                                fontSize: 10,
-                                fontWeight: 500,
-                                letterSpacing: '.08em',
-                                marginBottom: 10,
-                                textTransform: 'uppercase',
-                              }}
-                            >
-                              {label}
-                            </div>
-                            <div style={{ background: String(accent), borderRadius: 999, height: 4, width: '100%' }} />
-                          </div>
-                        ))}
-                      </div>
-                      <div style={{ alignItems: 'end', display: 'grid', gap: 6, gridTemplateColumns: 'repeat(8, minmax(0, 1fr))' }}>
-                        {[
-                          20, 34, 26, 42, 30, 50, 38, 40,
-                        ].map((height, chartIndex) => (
-                          <div
-                            key={chartIndex}
-                            style={{
-                              background: '#597b74',
-                              borderRadius: '4px 4px 0 0',
-                              height,
-                            }}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                    <p
-                      style={{
-                        color: SURFACE.muted,
-                        fontSize: 11.5,
-                        lineHeight: 1.55,
-                        marginTop: 12,
-                      }}
-                    >
-                      Dit managementrapport leveren wij aan — u beheert niets zelf.
-                    </p>
-                  </div>
-                ) : null}
-
-                {item.step === '2' ? (
-                  <div
-                    style={{
-                      background: '#f2efe8',
-                      border: `1px solid ${SURFACE.borderSoft}`,
-                      borderRadius: 22,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'center',
-                      marginTop: 'auto',
-                      minHeight: 116,
-                      padding: '16px 18px',
-                    }}
-                  >
-                    <div
-                      style={{
-                        color: '#7f7b74',
-                        fontFamily: bodyFont,
-                        fontSize: 10,
-                        fontWeight: 500,
-                        letterSpacing: '.12em',
-                        marginBottom: 10,
-                        textTransform: 'uppercase',
-                      }}
-                    >
-                      Hoofdboodschap
-                    </div>
-                    <div style={{ background: '#59626d', borderRadius: 999, height: 6, marginBottom: 10, width: '100%' }} />
-                    <div style={{ background: '#cfc9bf', borderRadius: 999, height: 5, marginBottom: 8, width: '86%' }} />
-                    <div style={{ background: '#dcd5cb', borderRadius: 999, height: 5, marginBottom: 16, width: '71%' }} />
-                    <div
-                      style={{
-                        alignItems: 'center',
-                        background: SURFACE.surface,
-                        borderRadius: 16,
-                        color: SURFACE.text,
-                        display: 'flex',
-                        fontFamily: bodyFont,
-                        fontSize: 14,
-                        gap: 10,
-                        padding: '9px 14px',
-                      }}
-                    >
-                      <span
-                        aria-hidden
-                        style={{
-                          background: '#bfe5c7',
-                          borderRadius: 999,
-                          display: 'inline-block',
-                          height: 8,
-                          width: 8,
-                        }}
-                      />
-                      Eerste prioriteit
-                    </div>
-                  </div>
-                ) : null}
-
-                {item.step === '3' ? (
-                  <div
-                    style={{
-                      background: '#f2efe8',
-                      border: `1px solid ${SURFACE.borderSoft}`,
-                      borderRadius: 22,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'center',
-                      height: 116,
-                      marginTop: 'auto',
-                      padding: '12px',
-                    }}
-                  >
-                    {[
-                      ['Bespreek signalen Sales', '#bfe5c7'],
-                      ['Verifieer onboarding', '#e7ded4'],
-                      ['Plan vervolg met team', '#e7ded4'],
-                    ].map(([label, dot], rowIndex) => (
-                      <div
-                        key={label}
-                        style={{
-                          alignItems: 'center',
-                          background: SURFACE.surface,
-                          borderRadius: 16,
-                          color: SURFACE.ink,
-                          display: 'flex',
-                          fontFamily: bodyFont,
-                          fontSize: 13.5,
-                          gap: 10,
-                          marginTop: rowIndex === 0 ? 0 : 8,
-                          padding: '8px 10px',
-                        }}
-                      >
-                        <span
-                          aria-hidden
-                          style={{
-                            background: String(dot),
-                            border: `1px solid ${rowIndex === 0 ? '#82bb8e' : SURFACE.border}`,
-                            borderRadius: 999,
-                            display: 'inline-block',
-                            height: 12,
-                            width: 12,
-                          }}
-                        />
-                        {label}
-                      </div>
-                    ))}
-                  </div>
-                ) : null}
               </article>
             </Reveal>
           ))}
@@ -941,7 +760,7 @@ function HeroSection() {
                   paddingLeft: 16,
                 }}
               >
-                &ldquo;Op groepsniveau wordt zichtbaar wat nu prioriteit vraagt, zodat opvolging eenvoudiger wordt.&rdquo;
+                &ldquo;Op groepsniveau wordt zichtbaar wat nu prioriteit vraagt en welke eerste keuze logisch is.&rdquo;
               </p>
             </div>
 
