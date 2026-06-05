@@ -276,7 +276,11 @@ def test_generate_culture_assessment_report_smoke(db_session: Session):
 
 
 def test_generate_culture_assessment_report_smoke_with_governed_drilldown(db_session: Session):
-    org = Organization(name="Cultuurgroep", slug="cultuurgroep", contact_email="board@cultuurgroep.nl")
+    org = Organization(
+        name="Noordhaven Industrie Groep",
+        slug="noordhaven-industrie-groep",
+        contact_email="board@noordhaven.nl",
+    )
     db_session.add(org)
     db_session.flush()
 
@@ -326,14 +330,21 @@ def test_generate_culture_assessment_report_smoke_with_governed_drilldown(db_ses
     assert pdf_bytes.startswith(b"%PDF")
     assert len(pdf_bytes) > 5000
     sections, pages = _culture_board_pages(pdf_bytes)
+    joined = " ".join(pages)
     assert len(pages) == 10
     assert len(sections) == 10
+    assert "Noordhaven Industrie Groep" in joined
     assert "Loep Culture Assessment - Board Baseline" in pages[0]
+    assert "Board attention points" in joined
+    assert "Patronen in samenhang" in joined
+    assert "Wat je hier niet uit mag concluderen" in joined
+    assert "Board-read en vervolgrichting" in joined
     for page_text, section in zip(pages[1:], sections[1:]):
         assert section["title"] in page_text
         assert section["anchor"] in page_text
     assert "Afdeling Operatie: n=15, Culture Index" in pages[7]
-    assert "Benchmarking blijft in v1 bewust niet actief." in pages[9]
+    assert "benchmark" not in joined.lower()
+    assert "manager score" not in joined.lower()
 
 
 def test_generate_culture_assessment_segment_summary_export_smoke(db_session: Session):

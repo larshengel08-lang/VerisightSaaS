@@ -6,15 +6,20 @@ from backend.products.culture_assessment.scoring import get_questionnaire_lock_p
 
 CULTURE_BOARD_REPORT_SECTIONS: tuple[dict[str, str], ...] = (
     {"key": "cover", "title": "Loep Culture Assessment - Board Baseline", "eyebrow": "Cover", "anchor": "Loep Culture Assessment - Board Baseline"},
-    {"key": "executive_opener", "title": "Executive culture read", "eyebrow": "1. Executive opener", "anchor": "1. EXECUTIVE OPENER"},
-    {"key": "response_governance", "title": "Responsbasis en governancekader", "eyebrow": "2. Response and governance", "anchor": "2. RESPONSE AND GOVERNANCE"},
+    {"key": "response_governance", "title": "Wat is gemeten en hoe stevig is de responsbasis", "eyebrow": "1. Response and governance", "anchor": "1. RESPONSE AND GOVERNANCE"},
+    {"key": "executive_opener", "title": "Executive culture read", "eyebrow": "2. Executive opener", "anchor": "2. EXECUTIVE OPENER"},
     {"key": "index_hero", "title": "Loep Culture Index", "eyebrow": "3. Index hero", "anchor": "3. INDEX HERO"},
     {"key": "board_attention", "title": "Board attention points", "eyebrow": "4. Board attention points", "anchor": "4. BOARD ATTENTION POINTS"},
-    {"key": "domain_profile", "title": "Domeinbeeld", "eyebrow": "5. Domain profile", "anchor": "5. DOMAIN PROFILE"},
+    {"key": "domain_profile", "title": "Domeinbeeld en bestuurlijke leesvolgorde", "eyebrow": "5. Domain profile", "anchor": "5. DOMAIN PROFILE"},
     {"key": "pattern_logic", "title": "Patronen in samenhang", "eyebrow": "6. Pattern logic", "anchor": "6. PATTERN LOGIC"},
     {"key": "segment_contrasts", "title": "Segmentcontrasten", "eyebrow": "7. Segment contrasts", "anchor": "7. SEGMENT CONTRASTS"},
-    {"key": "follow_on_decision", "title": "Vervolgrichting na de baseline", "eyebrow": "8. Follow-on decision", "anchor": "8. FOLLOW-ON DECISION"},
-    {"key": "method_boundaries", "title": "Methodiek en begrenzingen", "eyebrow": "9. Method and boundaries", "anchor": "9. METHOD AND BOUNDARIES"},
+    {
+        "key": "method_boundaries",
+        "title": "Wat je hier niet uit mag concluderen",
+        "eyebrow": "9. Reading boundaries",
+        "anchor": "9. READING BOUNDARIES",
+    },
+    {"key": "follow_on_decision", "title": "Board-read en vervolgrichting", "eyebrow": "10. Follow-on decision", "anchor": "10. FOLLOW-ON DECISION"},
 )
 
 
