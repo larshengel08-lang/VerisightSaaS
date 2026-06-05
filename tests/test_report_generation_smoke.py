@@ -8,7 +8,11 @@ from sqlalchemy.orm import Session
 
 from backend.models import Campaign, Organization, Respondent, SurveyResponse
 from backend.products.culture_assessment.report_content import get_board_report_sections
-from backend.report import generate_campaign_report, generate_culture_assessment_segment_summary_export
+from backend.report import (
+    _build_culture_story_context,
+    generate_campaign_report,
+    generate_culture_assessment_segment_summary_export,
+)
 
 
 def _org_scores(base: float) -> dict[str, float]:
@@ -267,10 +271,14 @@ def test_generate_culture_assessment_report_smoke(db_session: Session):
     sections, pages = _culture_board_pages(pdf_bytes)
     assert len(pages) == 10
     assert len(sections) == 10
+    assert sections[8]["anchor"] == "8. READING BOUNDARIES"
+    assert sections[9]["anchor"] == "9. FOLLOW-ON DECISION"
     assert "Loep Culture Assessment - Board Baseline" in pages[0]
     for page_text, section in zip(pages[1:], sections[1:]):
         assert section["title"] in page_text
         assert section["anchor"] in page_text
+    assert "Open tekst blijft in deze baseline gesloten" in pages[6]
+    assert "Veilige tekstsamenvatting is beperkt zichtbaar" not in " ".join(pages)
     assert "Governed drilldown voor HR" not in " ".join(pages)
     assert "Afdeling Operatie: n=15, Culture Index" not in pages[7]
 
@@ -339,12 +347,39 @@ def test_generate_culture_assessment_report_smoke_with_governed_drilldown(db_ses
     assert "Patronen in samenhang" in joined
     assert "Wat je hier niet uit mag concluderen" in joined
     assert "Board-read en vervolgrichting" in joined
+    assert "Leespaar 1 op basis van de laagst scorende domeinen" in joined
+    assert "Terugkerend themapaar" not in joined
+    assert "Open tekst blijft in deze baseline gesloten" in joined
+    assert "Veilige tekstsamenvatting is beperkt zichtbaar" not in joined
     for page_text, section in zip(pages[1:], sections[1:]):
         assert section["title"] in page_text
         assert section["anchor"] in page_text
     assert "Afdeling Operatie: n=15, Culture Index" in pages[7]
+    assert "Afdeling Support: n=15, Culture Index" in pages[7]
     assert "benchmark" not in joined.lower()
     assert "manager score" not in joined.lower()
+
+
+def test_culture_story_context_uses_bounded_reading_pairs() -> None:
+    story_context = _build_culture_story_context(
+        {
+            "engagement_involvement": 6.2,
+            "trust_psychological_safety": 5.3,
+            "leadership_direction": 5.1,
+            "collaboration_alignment": 5.4,
+            "workload_capacity": 5.0,
+            "autonomy_role_clarity": 5.8,
+            "growth_development": 5.6,
+            "change_readiness": 5.9,
+            "reward_conditions": 6.0,
+            "organizational_connection_intent": 6.1,
+        }
+    )
+
+    assert story_context["reading_pairs"] == [
+        (("workload_capacity", 5.0), ("leadership_direction", 5.1)),
+        (("leadership_direction", 5.1), ("trust_psychological_safety", 5.3)),
+    ]
 
 
 def test_generate_culture_assessment_segment_summary_export_smoke(db_session: Session):

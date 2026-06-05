@@ -42,10 +42,10 @@ The first upgraded sample package is built for the fictive organization `Noordha
 - a moderate and nuanced Culture Index
 - ten domains in bestuurlijke leesvolgorde
 - three board attention points
-- two recurring theme pairs
+- two bounded reading pairs based on the lowest-scoring domains
 - two safe released segment contrasts
 - one hidden segment shown as governance state
-- only safe text cluster summary, never raw quotes
+- open text stays disabled unless a later safe summary is explicitly released
 - Pulse only as a conditional follow-on
 
 ## Buyer-facing promise

@@ -60,6 +60,11 @@ DEPARTMENTS = [
     "Marketing",
     "Customer Success",
 ]
+CULTURE_DEPARTMENTS = [
+    "Operatie", "Operatie", "Operatie", "Operatie", "Operatie",
+    "Support", "Support", "Support", "Support", "Support",
+    "Staf",
+]
 ROLE_LEVELS = [
     "specialist", "specialist", "senior",
     "manager", "uitvoerend", "uitvoerend",
@@ -389,6 +394,15 @@ def _turnover_items(base: float) -> dict[str, int]:
 
 def _stay_intent(turnover_base: float) -> int:
     return _likert(max(1.2, 5.4 - turnover_base))
+
+
+def _culture_department_for_index(index: int, total_responses: int) -> str:
+    safe_segment_size = max(10, total_responses // 2 - 4)
+    if index < safe_segment_size:
+        return "Operatie"
+    if index < safe_segment_size * 2:
+        return "Support"
+    return "Staf"
 
 
 def _get_or_create_demo_org(db, config: dict[str, str | int] | None = None) -> tuple[Organization, bool]:
@@ -763,7 +777,11 @@ def main() -> None:
 
     for index in range(responses):
         profile = _pick_profile(profiles)
-        department = random.choice(DEPARTMENTS)
+        department = (
+            _culture_department_for_index(index, responses)
+            if campaign.scan_type == "culture_assessment"
+            else random.choice(DEPARTMENTS)
+        )
         role = random.choice(ROLE_LEVELS)
         salary = random.choice(SALARIES)
 

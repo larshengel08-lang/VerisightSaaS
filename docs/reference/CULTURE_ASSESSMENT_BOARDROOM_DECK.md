@@ -123,10 +123,10 @@ Use this fictive sample scenario as the first production-grade deck remake:
 - Culture Index: moderate and nuanced rather than extreme
 - 10 fixed domains in bestuurlijke leesvolgorde
 - 3 board attention points
-- 2 recurring theme pairs
+- 2 leesparen op basis van de laagst scorende domeinen
 - 2 released safe segment contrasts
 - 1 hidden segment shown as governance state
-- open text shown only as safe cluster summary
+- open text explicitly disabled in the baseline sample
 - Pulse shown only as conditional follow-on
 
 ## Slide-by-slide v1 sample notes

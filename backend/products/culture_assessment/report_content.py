@@ -16,10 +16,10 @@ CULTURE_BOARD_REPORT_SECTIONS: tuple[dict[str, str], ...] = (
     {
         "key": "method_boundaries",
         "title": "Wat je hier niet uit mag concluderen",
-        "eyebrow": "9. Reading boundaries",
-        "anchor": "9. READING BOUNDARIES",
+        "eyebrow": "8. Reading boundaries",
+        "anchor": "8. READING BOUNDARIES",
     },
-    {"key": "follow_on_decision", "title": "Board-read en vervolgrichting", "eyebrow": "10. Follow-on decision", "anchor": "10. FOLLOW-ON DECISION"},
+    {"key": "follow_on_decision", "title": "Board-read en vervolgrichting", "eyebrow": "9. Follow-on decision", "anchor": "9. FOLLOW-ON DECISION"},
 )
 
 

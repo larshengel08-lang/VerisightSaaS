@@ -5812,7 +5812,7 @@ def _build_culture_board_attention_points(domain_averages: dict[str, float]) -> 
             if index == 2
             else "Gebruik segmentcontrasten alleen boven veilige minimum-n grenzen."
             if index == 3
-            else "Lees open signalen alleen als aanvullende, veilig geclusterde context."
+            else "Open tekst mag pas meewegen als later een expliciet vrijgegeven veilige samenvatting bestaat."
             if index == 4
             else "Plan pas vervolg na de board-read en binnen governancegrenzen."
         )
@@ -5911,16 +5911,16 @@ def _build_culture_story_context(domain_averages: dict[str, float]) -> dict[str,
         for domain_id in CULTURE_DOMAIN_LABELS_NL
         if domain_id in domain_averages
     ]
-    recurring_theme_pairs: list[tuple[tuple[str, float], tuple[str, float]]] = []
+    reading_pairs: list[tuple[tuple[str, float], tuple[str, float]]] = []
     if len(low_focus) >= 2:
-        recurring_theme_pairs.append((low_focus[0], low_focus[1]))
+        reading_pairs.append((low_focus[0], low_focus[1]))
     if len(low_focus) >= 3:
-        recurring_theme_pairs.append((low_focus[1], low_focus[2]))
+        reading_pairs.append((low_focus[1], low_focus[2]))
     return {
         "low_focus": low_focus,
         "high_context": high_context,
         "domain_profile_rows": domain_profile_rows,
-        "recurring_theme_pairs": recurring_theme_pairs,
+        "reading_pairs": reading_pairs,
         "low_focus_labels": ", ".join(_culture_domain_label(domain_id) for domain_id, _ in low_focus) or "de laagst scorende domeinen",
         "high_context_labels": ", ".join(_culture_domain_label(domain_id) for domain_id, _ in high_context) or "de stabielere contextdomeinen",
     }
@@ -5940,16 +5940,9 @@ def _build_culture_report_section_content(
     has_governed_drilldown: bool,
     story_context: dict[str, Any],
 ) -> dict[str, dict[str, Any]]:
-    open_text_count = sum(
-        1
-        for response in responses
-        if isinstance(response.open_text_raw, str) and response.open_text_raw.strip()
-    )
-    text_summary_threshold = int(methodology_payload["open_text_cluster_min_n"])
     text_layer_line = (
-        "Tekstlaag: veilige samenvatting wijst herhaald op behoefte aan meer duidelijkheid, vertrouwen en betere samenwerking; losse quotes blijven gesloten."
-        if open_text_count >= text_summary_threshold
-        else "Tekstlaag: uitgeschakeld in deze baseline omdat er nog geen veilige samenvatting boven de huidige governancedrempel beschikbaar is."
+        "Tekstlaag: blijft in deze baseline gesloten totdat een expliciet vrijgegeven en veilig verwerkte samenvatting beschikbaar is; "
+        "losse quotes blijven altijd gesloten."
     )
     domain_intro = (
         "Het domeinbeeld volgt een bestuurlijke leesvolgorde; gebruik volgorde en samenhang om het gesprek te ordenen."
@@ -5967,30 +5960,27 @@ def _build_culture_report_section_content(
         for domain_id, score in story_context["domain_profile_rows"]
     ]
 
-    recurring_theme_pairs = story_context["recurring_theme_pairs"]
-    if recurring_theme_pairs:
-        first_pair = recurring_theme_pairs[0]
+    reading_pairs = story_context["reading_pairs"]
+    if reading_pairs:
+        first_pair = reading_pairs[0]
         lead_pattern_line = (
-            f"Terugkerend themapaar 1: {_culture_domain_label(first_pair[0][0])} ({first_pair[0][1]:.1f}/10) "
+            f"Leespaar 1 op basis van de laagst scorende domeinen: {_culture_domain_label(first_pair[0][0])} ({first_pair[0][1]:.1f}/10) "
             f"in relatie tot {_culture_domain_label(first_pair[1][0])} ({first_pair[1][1]:.1f}/10)."
         )
     else:
         lead_pattern_line = "Er is nog geen scherp samenhangsspoor beschikbaar boven de huidige governancerandvoorwaarden."
 
-    if len(recurring_theme_pairs) >= 2:
-        second_pair = recurring_theme_pairs[1]
+    if len(reading_pairs) >= 2:
+        second_pair = reading_pairs[1]
         secondary_pattern_line = (
-            f"Terugkerend themapaar 2: {_culture_domain_label(second_pair[0][0])} "
-            f"in relatie tot {_culture_domain_label(second_pair[1][0])}; gebruik deze combinatie voor bestuurlijke verificatie."
+            f"Leespaar 2 op basis van dezelfde leesregel: {_culture_domain_label(second_pair[0][0])} "
+            f"in relatie tot {_culture_domain_label(second_pair[1][0])}; gebruik deze combinatie alleen als bounded verificatiehint."
         )
     else:
         secondary_pattern_line = "Verdiep vervolgvragen altijd over meerdere domeinen tegelijk, niet over een losse score."
 
     safe_open_text_line = (
-        "Veilige tekstsamenvatting is beperkt zichtbaar via geclusterde thema's rond "
-        f"{story_context['low_focus_labels']}; ruwe quotes blijven gesloten."
-        if open_text_count >= text_summary_threshold
-        else "Open tekst blijft in deze baseline gesloten of alleen als veilige clusterlaag beschikbaar."
+        "Open tekst blijft in deze baseline gesloten totdat een expliciet vrijgegeven veilige samenvatting beschikbaar is."
     )
 
     if has_governed_drilldown and safe_segment_rows:

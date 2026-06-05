@@ -32,7 +32,7 @@ Gebruik voor de eerste governed sample dezelfde fictieve organisatie als het boa
 - status: governed, niet standaard
 - vrijgegeven segmenten: `Afdeling Operatie`, `Afdeling Support`
 - verborgen laag: één aanvullende segmentdoorsnede blijft gesloten als governance state
-- open tekst: alleen veilige cluster-samenvatting, geen quotes
+- open tekst: blijft gesloten in dit baseline-sample; geen quotes
 
 ### Sample governed-detail page
 
