@@ -22,7 +22,7 @@ export const marketingFooterLinks = [
   { href: '/producten', label: 'Producten' },
   { href: '/producten/exitscan', label: 'ExitScan' },
   { href: '/producten/retentiescan', label: 'RetentieScan' },
-  { href: '/producten/cultuurbeeld', label: 'Loep Cultuurbeeld' },
+  { href: '/producten/onboarding-30-60-90', label: 'Onboarding 30-60-90' },
   { href: '/aanpak', label: 'Aanpak' },
   { href: '/tarieven', label: 'Tarieven' },
   { href: '/vertrouwen', label: 'Vertrouwen' },
@@ -54,11 +54,11 @@ export const homepageProductRoutes = [
     chip: 'Kernroute',
   },
   {
-    name: 'Loep Cultuurbeeld',
-    title: 'Lees cultuur en engagement breed op organisatieniveau',
-    body: 'Jaarlijkse enterprise-baseline voor board, directie en HR met executive read, Loep Culture Index en governed drilldown.',
-    href: '/producten/cultuurbeeld',
-    accent: 'border-[#E8DEF6] bg-[#F7F5F1]',
+    name: 'Onboarding 30-60-90',
+    title: 'Zie vroeg hoe nieuwe medewerkers landen',
+    body: 'Wij meten vroeg hoe nieuwe medewerkers landen in rol, leiding en team. Helder groepsbeeld, begeleide bespreking inbegrepen.',
+    href: '/producten/onboarding-30-60-90',
+    accent: 'border-[#DCF0E8] bg-[#F7F5F1]',
     chip: 'Kernroute',
   },
 ] as const
@@ -79,16 +79,16 @@ export const homepageComparisonRows = [
     'Retentiesignaal, stay-intent, bevlogenheid en vertrekintentie op groepsniveau',
   ],
   [
-    'Je wilt cultuur en engagement breed organisatiebreed begrijpen',
-    'Loep Cultuurbeeld',
-    'Executive culture read, Loep Culture Index, domeinbeeld en board attention points zonder benchmark-first of ranking',
+    'Je wilt vroeg zien hoe nieuwe medewerkers landen',
+    'Onboarding 30-60-90',
+    'Vroege checkpoint-read op landing, rol en team. Begeleide bespreking inbegrepen.',
   ],
 ] as const
 
 export const homepageProofSignals = [
   'Eén suite-login voor dashboard, rapport en Action Center',
   'HR kan managers per afdeling toewijzen zonder survey-inzichten open te zetten',
-  'Drie duidelijke primary routes: ExitScan, RetentieScan en Loep Cultuurbeeld',
+  'Drie routes: ExitScan, RetentieScan en Onboarding 30-60-90',
   'Groepsinzichten met expliciete claims- en privacygrenzen',
   'Publieke proof verschijnt pas na expliciete approval en provenance',
 ] as const
@@ -110,7 +110,7 @@ export const homepageUtilityLinks = [
   {
     href: '/producten',
     title: 'Bekijk de productroutes',
-    body: 'Zie snel wanneer ExitScan, RetentieScan of Loep Cultuurbeeld logisch wordt.',
+    body: 'Zie snel wanneer ExitScan, RetentieScan of Onboarding 30-60-90 de juiste eerste stap is.',
   },
   {
     href: '/aanpak',
@@ -143,10 +143,10 @@ export const productOverviewComparisonRows = [
     'Voor vroegsignalering en prioritering',
   ],
   [
-    'Loep Cultuurbeeld',
-    'Brede cultuur- en engagementbaseline',
-    'Welke brede cultuur- en engagementpatronen vragen bestuurlijke aandacht en waar zitten de belangrijkste verschillen tussen onderdelen?',
-    'Voor jaarlijkse executive baseline en board-read',
+    'Onboarding 30-60-90',
+    'Vroege lifecycle-check',
+    'Hoe landen nieuwe medewerkers in de eerste 90 dagen?',
+    'Voor vroege signalering bij nieuwe instroom',
   ],
 ] as const
 
@@ -745,8 +745,8 @@ export const faqs = [
     'Voor v1 is een baseline logisch als startpunt. Daarna kun je periodiek herhalen, bijvoorbeeld per kwartaal of halfjaar, als je gericht wilt volgen of acties effect hebben.',
   ],
   [
-    'Is Loep Cultuurbeeld gewoon een MTO of Pulse?',
-    'Nee. Loep Cultuurbeeld is een jaarlijkse board-level cultuur- en engagementbaseline met executive read, board attention points en governed drilldown. Pulse blijft alleen een bounded vervolgritme na een bestaande baseline of actie.',
+    'Wanneer is Onboarding 30-60-90 de juiste route?',
+    'Als de vraag gaat over hoe nieuwe medewerkers de eerste 90 dagen landen in rol, leiding en team. Loep voert de checkpoint-read uit en levert een rapport met begeleide bespreking.',
   ],
   [
     'Is Loep een instrument of een dienst?',
