@@ -112,3 +112,73 @@ This deck must not introduce:
 - dashboard screenshot behavior
 - self-serve workspace cues
 - intervention theater disguised as insight
+
+## Sample Output v2: Noordhaven Industrie Groep
+
+Use this fictive sample scenario as the first production-grade deck remake:
+
+- fictive organization: `Noordhaven Industrie Groep`
+- annual baseline: `mei 2026`
+- response basis: `120 invited / 48 completed / 40% response`
+- Culture Index: moderate and nuanced rather than extreme
+- 10 fixed domains in bestuurlijke leesvolgorde
+- 3 board attention points
+- 2 recurring theme pairs
+- 2 released safe segment contrasts
+- 1 hidden segment shown as governance state
+- open text shown only as safe cluster summary
+- Pulse shown only as conditional follow-on
+
+## Slide-by-slide v1 sample notes
+
+1. Opening / purpose
+- visual center: calm title spread with `Noordhaven Industrie Groep`
+- speaking line: annual board baseline for culture and engagement, not a verdict
+
+2. What was measured
+- visual center: fixed-method overview of the ten domains
+- speaking line: one bounded baseline, no custom modules, no benchmark layer
+
+3. Response and governance
+- visual center: response basis strip plus governance boundary block
+- speaking line: what may be shown, what remains hidden, and why
+
+4. Executive read
+- visual center: one integrated reading line with the core management question
+- speaking line: broad pattern signal, descriptive and bounded
+
+5. Culture Index hero
+- visual center: large editorial index treatment with interpretation line
+- speaking line: navigation signal, no pass/fail and no gauge semantics
+
+6. Domain picture
+- visual center: ten-domain profile in bestuurlijke leesvolgorde
+- speaking line: read low-focus domains first, then stabilizing context
+
+7. Board attention point 1
+- visual center: vertrouwen en richting
+- speaking line: trust and leadership direction form the first board discussion line
+
+8. Board attention point 2
+- visual center: werkdruk en draagkracht
+- speaking line: workload and capacity require verification before any follow-on decision
+
+9. Board attention point 3
+- visual center: groei en ontwikkeling
+- speaking line: development themes stay relevant but do not override earlier attention points
+
+10. Segment contrast, if released
+- visual center: two safe contrasts plus one hidden governance state
+- speaking line: only released differences may appear; one additional layer remains closed
+
+11. What not to conclude
+- visual center: negative boundaries on one calm slide
+- speaking line: no causal proof, no manager ranking, no benchmark claim, no individual inference
+
+12. Decision questions
+- visual center: three bounded board questions
+- speaking line: what should the board verify, protect, or hold before opening a follow-on route
+
+13. Follow-on route options
+- visual center: bounded route choices
+- speaking line: first board-read, then explicit choice between no immediate next route, governed deepening, or conditional Pulse
