@@ -151,17 +151,36 @@ export const SAMPLE_SHOWCASE_ASSETS: SampleShowcaseAsset[] = [
     kind: 'pdf',
     status: 'internal demo support',
     accessMode: 'guided_sales_demo',
-    deliveryReadiness: 'demo_asset_ready',
+    deliveryReadiness: 'pilot_delivery_ready',
     docsPath: 'docs/examples/voorbeeldrapport_cultuurbeeld.pdf',
     intendedUse:
-      'Interne sales- en board-demo prooflaag voor Loep Culture Assessment zolang de route nog niet benchmark-first of self-serve wordt gepositioneerd.',
+      'Interne sales- en board-demo prooflaag voor Loep Culture Assessment in de Noordhaven-samplefamilie met board-first baseline, governed segmentlaag en bounded follow-on.',
     evidenceTier: 'deliverable_proof',
     buyerUse:
-      'Gebruik in begeleide sales- en boardcontext vanaf het docs-side sample om de jaarlijkse baseline, board-read en governancegrenzen te laten zien; niet als web-served website-prooflaag.',
+      'Gebruik in begeleide sales- en boardcontext om de jaarlijkse baseline, board-read en governancegrenzen te laten zien; niet als web-served website-prooflaag.',
     claimBoundary:
       'Illustratief voorbeeld met fictieve data in dezelfde executive structuur als echte Loep Culture Assessment-output; geen benchmark, causaliteitsclaim of manager ranking.',
     trustFrame:
-      'Premium board-first output family met board report-ritme, guided boardroom deck en governance-safe reading order; docs-only sample en geen open buyer-facing sample canon.',
+      'Premium board-first output family met board report-ritme, guided boardroom deck, twee veilige segmentcontrasten en expliciete governance state; docs-only sample en geen open buyer-facing sample canon.',
+  },
+  {
+    id: 'culture-assessment-board-deck-sample',
+    label: 'Loep Cultuurbeeld boardroom deck sample',
+    product: 'culture_assessment',
+    kind: 'pdf',
+    status: 'internal demo support',
+    accessMode: 'guided_sales_demo',
+    deliveryReadiness: 'pilot_delivery_ready',
+    docsPath: 'docs/examples/voorbeelddeck_cultuurbeeld.pdf',
+    intendedUse:
+      'Visuele, boardroom-paced sampledeck voor begeleide sales, board-read rehearsal en pilotdelivery zonder live dashboardafhankelijkheid.',
+    evidenceTier: 'deliverable_proof',
+    buyerUse:
+      'Gebruik begeleid in sales of board context als visuele zusterlaag van het sample report; niet als benchmarkbewijs of los websiteartifact.',
+    claimBoundary:
+      'Sampledeck blijft descriptief en bounded: geen manager ranking, geen causaliteitsclaim en geen benchmark-first framing.',
+    trustFrame:
+      'Laat de premium board family zien in een presentatieritme met één visueel centrum per slide en zonder dashboard-exportesthetiek.',
   },
   {
     id: 'culture-assessment-board-deck',
@@ -236,6 +255,24 @@ export const SAMPLE_SHOWCASE_ASSETS: SampleShowcaseAsset[] = [
       'Helpt HR verdiepen zonder de centrale board-read of governancegrenzen te omzeilen.',
   },
   {
+    id: 'culture-assessment-hr-appendix-sample-page',
+    label: 'Loep Cultuurbeeld HR appendix sample page',
+    product: 'culture_assessment',
+    kind: 'pdf',
+    status: 'internal demo support',
+    accessMode: 'internal_demo_only',
+    deliveryReadiness: 'demo_asset_ready',
+    docsPath: 'docs/examples/voorbeeld_hr_appendix_cultuurbeeld.pdf',
+    intendedUse:
+      'Eén ontworpen governed samplepagina die laat zien hoe veilige HR-verdieping eruitziet zonder verborgen segmenten te lekken.',
+    evidenceTier: 'trust_proof',
+    buyerUse: 'Alleen begeleid tonen in governed of enterprise context; niet als standaard baseline-output verkopen.',
+    claimBoundary:
+      'Toont twee veilige segmentkaarten en één verborgen governance state; geen named-manager output of respondentniveau.',
+    trustFrame:
+      'Maakt governed verdieping tastbaar zonder rankinggedrag, hidden-layer leakage of lokale scoreverdediging.',
+  },
+  {
     id: 'culture-assessment-manager-cascade',
     label: 'Loep Cultuurbeeld manager cascade handout',
     product: 'culture_assessment',
@@ -252,6 +289,24 @@ export const SAMPLE_SHOWCASE_ASSETS: SampleShowcaseAsset[] = [
       'Verbiedt teamranking, scoreverdediging, individuele signalen en onveilige lokale scoreweergave.',
     trustFrame:
       'Ondersteunt rustige follow-up communicatie zonder performance- of blamegedrag.',
+  },
+  {
+    id: 'culture-assessment-manager-cascade-sample-page',
+    label: 'Loep Cultuurbeeld manager cascade sample page',
+    product: 'culture_assessment',
+    kind: 'pdf',
+    status: 'internal demo support',
+    accessMode: 'internal_demo_only',
+    deliveryReadiness: 'demo_asset_ready',
+    docsPath: 'docs/examples/voorbeeld_manager_cascade_cultuurbeeld.pdf',
+    intendedUse:
+      'Één cascade-safe samplepagina die managers helpt communiceren zonder analyse- of verdedigingsrol te openen.',
+    evidenceTier: 'trust_proof',
+    buyerUse: 'Alleen gebruiken als begeleide communicatiehulp; niet als ranking- of scorebewijs.',
+    claimBoundary:
+      'Geen teamranking, geen managervergelijking, geen hidden segment data en geen prompts om lage scores te verdedigen.',
+    trustFrame:
+      'Laat zien hoe lokale communicatie bounded blijft onder dezelfde board-first governancegrenzen.',
   },
   {
     id: 'culture-assessment-facilitator-script',
