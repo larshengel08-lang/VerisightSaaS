@@ -1798,25 +1798,6 @@ function FirstDeliverySection() {
           ))}
         </div>
 
-        <div style={{ marginTop: 34, textAlign: 'center' }}>
-          <Reveal delay={0.32}>
-            <Link
-              href={kennismakingHref}
-              style={{
-                alignItems: 'center',
-                color: SURFACE.ink,
-                display: 'inline-flex',
-                fontFamily: bodyFont,
-                fontSize: 15,
-                fontWeight: 600,
-                gap: 10,
-                textDecoration: 'none',
-              }}
-            >
-              Plan een kennismaking <Arrow />
-            </Link>
-          </Reveal>
-        </div>
       </div>
     </section>
   )
