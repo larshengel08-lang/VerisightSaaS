@@ -1688,53 +1688,6 @@ function RoutesSection() {
           ))}
         </div>
 
-        <div
-          className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,0.88fr)] xl:items-center"
-          style={{
-            borderTop: `1px solid ${SURFACE.border}`,
-            marginTop: 40,
-            paddingTop: 26,
-          }}
-        >
-          <div>
-            <Reveal delay={0.22}>
-              <p
-                style={{
-                  color: SURFACE.muted,
-                  fontSize: 10,
-                  fontWeight: 700,
-                  letterSpacing: '.18em',
-                  marginBottom: 12,
-                  textTransform: 'uppercase',
-                }}
-              >
-                Vervolgvragen
-              </p>
-            </Reveal>
-            <Reveal delay={0.26}>
-              <p style={{ color: SURFACE.text, fontSize: 15, lineHeight: 1.75, maxWidth: '38rem' }}>
-                Pulse voor compacte vervolgmetingen, Leadership Scan voor extra managementcontext en een combinatieroute wanneer meerdere vragen tegelijk spelen.
-              </p>
-            </Reveal>
-          </div>
-
-          <div className="flex flex-wrap gap-8 xl:justify-end">
-            {[
-              ['Pulse', SURFACE.surfaceSoft, SURFACE.text],
-              ['Leadership Scan', SURFACE.paperSoft, SURFACE.text],
-              ['Combinatie', '#ece7df', SURFACE.ink],
-            ].map(([label, bg, color], index) => (
-              <Reveal key={label} delay={0.28 + index * 0.05}>
-                <div style={{ minWidth: 132 }}>
-                <div style={{ background: String(bg), color: String(color), display: 'inline-block', fontFamily: bodyFont, fontSize: 11, fontWeight: 700, letterSpacing: '.14em', marginBottom: 10, padding: '5px 10px', textTransform: 'uppercase' }}>
-                  {label}
-                </div>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-
         <div style={{ marginTop: 34 }}>
           <Reveal delay={0.34}>
             <Link
