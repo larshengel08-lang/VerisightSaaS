@@ -1842,7 +1842,7 @@ function ContactSection() {
                 textWrap: 'balance',
               }}
             >
-              Klaar voor een eerste keuze in weken, niet maanden?
+              Wilt u weten waar u moet beginnen?
             </h2>
 
             <p
@@ -1854,7 +1854,7 @@ function ContactSection() {
                 maxWidth: '48rem',
               }}
             >
-              Plan een kennismaking en ontdek welke route nu het meeste duidelijkheid geeft.
+              Plan een kennismaking. We bespreken welk vraagstuk nu speelt: vertrek, behoud of onboarding en welke Loep-baseline daar het beste bij past.
             </p>
 
             <div
