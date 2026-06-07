@@ -5,19 +5,35 @@ import { AC, Arrow, FF, Reveal, SHELL, T } from '@/components/marketing/design-t
 import { buildContactHref } from '@/lib/contact-funnel'
 import { pricingAddOns, pricingCards, pricingFollowOnRoutes } from '@/components/marketing/site-content'
 
-const primaryPricingCards = pricingCards
-const onboardingPricingCard = {
-  eyebrow: 'Onboarding 30-60-90',
-  price: 'op aanvraag',
-  description: 'Gerichte lifecycle-check wanneer vroege landing van nieuwe medewerkers centraal staat.',
-  bullets: [
-    'Vroege lifecycle-check op groepsniveau',
-    'Gerichte eerste route voor nieuwe instroom',
-    'Alleen logisch wanneer onboarding de eerste managementvraag is',
-  ],
-} as const
-const actionCenterStartCard = pricingAddOns[0]
-const actionCenterLabel = actionCenterStartCard[0].replace(' Start', '')
+const primaryPricingCards = pricingCards.filter(
+  (item) => item.eyebrow === 'ExitScan Baseline' || item.eyebrow === 'RetentieScan Baseline',
+)
+const actionCenterStartCard = [
+  'Action Center Start',
+  'vanaf EUR 1.250',
+  'Begrensde opvolglaag voor een gekozen vervolgrichting na een baseline, met eigenaar, status en een afgesproken reviewmoment.',
+] as const
+const restOnRequestRows = [
+  {
+    title: 'Onboarding 30-60-90 Baseline',
+    price: 'op aanvraag',
+    description: 'Gerichte lifecycle-check wanneer vroege landing van nieuwe medewerkers centraal staat.',
+  },
+  ...pricingFollowOnRoutes
+    .filter((route) => !route.title.includes('Culture Assessment'))
+    .map((route) => ({
+      title: formatFollowOnTitle(route.title),
+      price: 'op aanvraag',
+      description: route.description,
+    })),
+  ...pricingAddOns
+    .filter((item) => item[0] !== 'Governed drilldown voor Cultuurbeeld')
+    .map(([title, price, description]) => ({
+      title,
+      price: 'op aanvraag',
+      description,
+    })),
+] as const
 
 function formatFollowOnTitle(title: string) {
   return title === 'ExitScan Live Start' ? 'Exitscan Live' : title
@@ -99,7 +115,7 @@ function HeroSection() {
           <Reveal delay={0.08} from="right">
             <div>
             <div style={{ display: 'grid', gap: 10 }}>
-              {pricingCards.map((item, index) => (
+              {primaryPricingCards.map((item, index) => (
                 <Reveal key={item.eyebrow} delay={index * 0.05}>
                   <div style={{ padding: '18px 20px', background: T.paperSoft, border: `1px solid ${T.rule}` }}>
                     <div
@@ -155,8 +171,8 @@ function FirstBuySection() {
             Start met één duidelijke Baseline.
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, maxWidth: '56ch' }}>
-            U kiest eerst de managementvraag: vertrek, behoud of onboarding. Loep vertaalt die vraag naar een
-            Baseline met dashboard, managementrapport en een compacte review van de eerste vervolgrichting.
+            U kiest eerst of de managementvraag over vertrek of behoud gaat. Loep vertaalt die vraag naar een
+            Baseline met managementrapport, prioriteiten en een begeleide managementbespreking.
           </p>
           </div>
         </Reveal>
@@ -191,70 +207,18 @@ function FirstBuySection() {
                 href={
                   item.eyebrow.startsWith('ExitScan')
                     ? '/producten/exitscan'
-                    : item.eyebrow.startsWith('RetentieScan')
-                      ? '/producten/retentiescan'
-                      : '/producten/cultuurbeeld'
+                    : '/producten/retentiescan'
                 }
                 style={{ fontSize: 13, fontWeight: 600, color: AC.deep, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}
               >
                 {item.eyebrow.startsWith('ExitScan')
                   ? 'Meer over ExitScan'
-                  : item.eyebrow.startsWith('RetentieScan')
-                    ? 'Meer over RetentieScan'
-                    : 'Meer over Loep Cultuurbeeld'} <Arrow />
+                  : 'Meer over RetentieScan'} <Arrow />
               </Link>
               </article>
             </Reveal>
           ))}
         </div>
-
-        <Reveal delay={0.1}>
-          <article
-            style={{
-              background: T.paperSoft,
-              border: `1px solid ${T.rule}`,
-              padding: '30px 32px',
-            }}
-          >
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:items-start">
-            <div>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.deep, marginBottom: 12 }}>
-                Gerichte eerste route
-              </div>
-              <h3
-                style={{
-                  fontFamily: FF,
-                  fontSize: 'clamp(24px,2.8vw,34px)',
-                  fontWeight: 600,
-                  letterSpacing: '-.022em',
-                  color: T.ink,
-                  lineHeight: 1.08,
-                  marginBottom: 12,
-                }}
-              >
-                {onboardingPricingCard.eyebrow}
-              </h3>
-              <div style={{ fontFamily: FF, fontSize: 'clamp(1.7rem,3vw,2.4rem)', fontWeight: 400, color: T.ink, marginBottom: 14 }}>
-                {formatPricingPrice(onboardingPricingCard.price)}
-              </div>
-              <p style={{ fontSize: 14.5, lineHeight: 1.72, color: T.inkSoft, marginBottom: 16 }}>
-                {onboardingPricingCard.description}
-              </p>
-              <Link href="/producten/onboarding-30-60-90" style={{ fontSize: 13, fontWeight: 600, color: AC.deep, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                Meer over Onboarding 30-60-90 <Arrow />
-              </Link>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {onboardingPricingCard.bullets.map((bullet) => (
-                <div key={bullet} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, color: T.inkSoft, padding: '10px 14px', background: T.white, border: `1px solid ${T.rule}` }}>
-                  <div style={{ width: 4, height: 4, background: AC.deep, flexShrink: 0, marginTop: 5 }} />
-                  {bullet}
-                </div>
-              ))}
-            </div>
-          </div>
-          </article>
-        </Reveal>
       </div>
     </section>
   )
@@ -285,7 +249,7 @@ function OptionalExpansionSection() {
             Borg opvolging alleen als daar aanleiding voor is.
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, maxWidth: '54ch' }}>
-            Na een Baseline kunt u {actionCenterLabel} toevoegen om één gekozen vervolgrichting zichtbaar te houden:
+            Na een Baseline kunt u {actionCenterStartCard[0]} toevoegen om één gekozen vervolgrichting zichtbaar te houden:
             wie pakt dit op, wat loopt er en wanneer kijken we terug? Het blijft begrensd en is geen breed
             workflowplatform.
           </p>
@@ -304,13 +268,13 @@ function OptionalExpansionSection() {
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-start">
             <div>
               <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.mid, marginBottom: 12 }}>
-                {actionCenterLabel}
+                {actionCenterStartCard[0]}
               </div>
               <div style={{ fontFamily: FF, fontSize: 'clamp(2rem,3vw,2.8rem)', fontWeight: 400, letterSpacing: '-.025em', marginBottom: 12 }}>
                 {actionCenterStartCard[1]}
               </div>
               <p style={{ fontSize: 14.5, lineHeight: 1.72, color: 'rgba(255,255,255,0.8)', maxWidth: '46ch' }}>
-                {actionCenterStartCard[2].replace('Action Center Start', actionCenterLabel)}
+                {actionCenterStartCard[2]}
               </p>
             </div>
             <div>
@@ -328,7 +292,7 @@ function OptionalExpansionSection() {
                 ))}
               </div>
               <Link href={href} style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14, fontWeight: 600, padding: '12px 24px', color: '#fff', background: AC.deep }}>
-                Bespreek {actionCenterLabel} <Arrow />
+                Bespreek {actionCenterStartCard[0]} <Arrow />
               </Link>
             </div>
           </div>
@@ -359,11 +323,11 @@ function FollowOnSection() {
               lineHeight: 1.1,
             }}
           >
-            Verder bouwen kan, maar pas na de eerste Baseline.
+            Rest op aanvraag.
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, maxWidth: '54ch' }}>
-            Na de eerste Baseline kunt u gericht kiezen of dezelfde vraag structureel gevolgd, herijkt of verdiept moet
-            worden. Zo blijft de eerste koop licht.
+            Verdere verdieping, onboarding, ritmeroutes en aanvullende uitbreidingen bespreken we pas nadat de eerste
+            Baseline helder staat. Zo blijft de eerste koop licht en geloofwaardig.
           </p>
           </div>
         </Reveal>
@@ -377,9 +341,9 @@ function FollowOnSection() {
               </div>
             ))}
           </div>
-          {pricingFollowOnRoutes.map((route, index) => (
-            <div key={formatFollowOnTitle(route.title)} style={{ display: 'grid', gridTemplateColumns: '220px 140px 1fr', borderTop: index > 0 ? `1px solid ${T.rule}` : 'none' }}>
-              <div style={{ padding: '14px 18px', fontSize: 13.5, fontWeight: 600, color: T.ink }}>{formatFollowOnTitle(route.title)}</div>
+          {restOnRequestRows.map((route, index) => (
+            <div key={route.title} style={{ display: 'grid', gridTemplateColumns: '220px 140px 1fr', borderTop: index > 0 ? `1px solid ${T.rule}` : 'none' }}>
+              <div style={{ padding: '14px 18px', fontSize: 13.5, fontWeight: 600, color: T.ink }}>{route.title}</div>
               <div style={{ padding: '14px 18px', fontSize: 13, color: T.inkMuted }}>{route.price}</div>
               <div style={{ padding: '14px 18px', fontSize: 13, color: T.inkSoft, lineHeight: 1.6 }}>{route.description}</div>
             </div>
