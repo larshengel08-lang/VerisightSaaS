@@ -14,7 +14,6 @@ import { MarketingProofStrip } from '@/components/marketing/marketing-proof-stri
 import { PreviewEvidenceRail } from '@/components/marketing/preview-evidence-rail'
 import { PreviewSlider } from '@/components/marketing/preview-slider'
 import { SampleShowcaseCard } from '@/components/marketing/sample-showcase-card'
-import { FollowOnRoutePage } from '@/components/marketing/follow-on-route-page'
 import { MarketingSection } from '@/components/marketing/marketing-section'
 import { PublicFooter } from '@/components/marketing/public-footer'
 import { PublicHeader } from '@/components/marketing/public-header'
@@ -94,10 +93,10 @@ export default async function ProductDetailPage({ params }: Props) {
       {slug === 'exitscan' ? <ExitScanPage /> : null}
       {slug === 'cultuurbeeld' ? <CultureAssessmentPage /> : null}
       {slug === 'onboarding-30-60-90' ? <OnboardingPage /> : null}
-      {['pulse', 'leadership-scan', 'combinatie'].includes(slug) ? (
-        <FollowOnRoutePage route={getFollowOnRouteContent(slug)!} />
-      ) : null}
-      {!['retentiescan', 'exitscan', 'cultuurbeeld', 'pulse', 'onboarding-30-60-90', 'leadership-scan', 'combinatie'].includes(slug) ? <UpcomingProductPage slug={slug} /> : null}
+      {slug === 'pulse' ? <PulsePage /> : null}
+      {slug === 'leadership-scan' ? <LeadershipScanPage /> : null}
+      {slug === 'combinatie' ? <CombinatiePage /> : null}
+      {!['retentiescan', 'exitscan', 'cultuurbeeld', 'onboarding-30-60-90', 'pulse', 'leadership-scan', 'combinatie'].includes(slug) ? <UpcomingProductPage slug={slug} /> : null}
     </>
   )
 }
@@ -169,131 +168,230 @@ function getProductStructuredData(product: MarketingProduct) {
 }
 
 function CultureAssessmentPage() {
-  const ctaHref = buildContactHref({
-    routeInterest: 'culture_assessment',
-    ctaSource: 'product_culture_assessment_hero',
-  })
+  const T = {
+    paper: 'oklch(0.978 0.010 62)', paperSoft: 'oklch(0.956 0.018 60)',
+    white: '#FFFCF8', ink: 'oklch(0.16 0.012 250)',
+    inkSoft: 'oklch(0.32 0.010 250)', inkMuted: 'oklch(0.52 0.008 250)',
+    inkFaint: 'oklch(0.70 0.006 250)', rule: 'oklch(0.875 0.012 62)',
+    ruleLight: 'oklch(0.918 0.008 62)',
+    violet: 'oklch(0.48 0.20 290)', violetSoft: 'oklch(0.95 0.045 290)', violetFaint: 'oklch(0.975 0.018 290)',
+  }
+  const FF = "var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+  const SH = { maxWidth: 1200, margin: '0 auto', padding: '0 clamp(20px,4vw,48px)' }
+  const ctaHref = buildContactHref({ routeInterest: 'culture_assessment', ctaSource: 'product_culture_assessment_hero' })
 
   return (
-    <MarketingPageShell
-      theme="support"
-      pageType="product"
-      ctaHref={ctaHref}
-      ctaLabel="Toets Loep Cultuurbeeld"
-      heroIntro={
-        <MarketingHeroIntro>
-          <p className="marketing-hero-eyebrow text-violet-700">Loep Cultuurbeeld</p>
-          <h1 className="marketing-hero-title marketing-hero-title-detail font-display text-slate-950">
-            Wij brengen cultuur en engagement in beeld. U weet waar bestuurlijke aandacht nodig is.
-          </h1>
-          <p className="marketing-hero-copy text-slate-600">
-            Loep voert de cultuur- en engagementbaseline uit, analyseert de uitkomsten en levert een board-read met
-            aandachtspunten en eerste prioritering. Geen survey-platform — een begeleid traject.
-          </p>
-          <div className="marketing-hero-actions">
-            <div className="marketing-hero-cta-row">
-              <a href={ctaHref} className="inline-flex items-center justify-center rounded-full bg-violet-700 px-6 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(109,40,217,0.18)] transition-all hover:-translate-y-0.5 hover:bg-violet-800">
-                Toets Loep Cultuurbeeld
-              </a>
-              <Link href="/producten" className="marketing-button-secondary">
-                Bekijk producten
-              </Link>
+    <div style={{ background: T.paper, color: T.ink, overflowX: 'hidden' }}>
+      <PublicHeader ctaHref={ctaHref} ctaLabel="Toets Loep Cultuurbeeld" />
+      <main>
+        {/* ── Hero ── */}
+        <section style={{ background: T.white, padding: 'clamp(52px,6.5vw,80px) 0 clamp(48px,6vw,72px)', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: `linear-gradient(${T.rule}60 1px,transparent 1px),linear-gradient(90deg,${T.rule}60 1px,transparent 1px)`, backgroundSize: '72px 72px', opacity: .35 }} />
+          <div style={{ position: 'absolute', top: -80, right: -60, width: 500, height: 500, background: `radial-gradient(circle,${T.violetFaint} 0%,transparent 65%)`, pointerEvents: 'none' }} />
+          <div style={{ ...SH, position: 'relative' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 52 }}>
+              <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.18em', textTransform: 'uppercase' as const, color: T.violet }}>Loep Cultuurbeeld</span>
+              <div style={{ flex: 1, height: '1px', background: T.rule, maxWidth: 200 }} />
+              <Link href="/producten" style={{ fontSize: 11, color: T.inkMuted, textDecoration: 'none' }}>Terug naar producten</Link>
+            </div>
+            <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_360px] items-start">
+              <div>
+                <h1 style={{ fontFamily: FF, fontWeight: 800, fontSize: 'clamp(42px,5.5vw,76px)', lineHeight: .97, letterSpacing: '-.032em', color: T.ink, maxWidth: '14ch' }}>
+                  Wij brengen cultuur en engagement in beeld. U weet wat bestuurlijk aandacht vraagt.
+                </h1>
+                <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '48ch', margin: '26px 0 36px' }}>
+                  Loep voert de jaarlijkse cultuur- en engagementbaseline uit, analyseert de uitkomsten en levert een board-read met eerste aandachtspunten. Geen survey-platform — een begeleid traject.
+                </p>
+                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' as const }}>
+                  <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 600, padding: '12px 28px', color: '#fff', background: T.violet }}>
+                    Toets Loep Cultuurbeeld
+                  </a>
+                  <Link href="/tarieven" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', fontSize: 14, fontWeight: 500, padding: '11px 24px', color: T.inkSoft, border: `1px solid ${T.rule}` }}>
+                    Bekijk tarieven
+                  </Link>
+                </div>
+              </div>
+              <div>
+                <div style={{ padding: '28px', background: T.violetFaint, border: `1px solid ${T.violetSoft}` }}>
+                  <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase' as const, color: T.violet, marginBottom: 16 }}>vanaf €6.500 {'•'} Baseline</div>
+                  {[
+                    'Board-read rapport met Loep Culture Index en domeinanalyse',
+                    'Begeleide directie-read sessie (60–90 min)',
+                    'Top/bottom items en bestuurlijke aandachtspunten',
+                    'AVG-conforme dataverwerking en minimum-n-waarborgen',
+                  ].map((item, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '9px 0', borderTop: i > 0 ? `1px solid ${T.violetSoft}` : 'none', fontSize: 13, color: T.inkSoft }}>
+                      <div style={{ width: 4, height: 4, background: T.violet, flexShrink: 0, marginTop: 4 }} />
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
-        </MarketingHeroIntro>
-      }
-      heroStage={
-        <MarketingHeroStage surface="light">
-          <div className="marketing-preview-shell">
-            <div className="marketing-divider-title">Jaarlijkse enterprise-baseline</div>
-            <div className="marketing-proof-frame">
-              <div className="border-b border-[var(--border)] px-5 py-5 sm:px-6">
-                <span className="marketing-chip">Executive culture read</span>
-                <h2 className="mt-4 marketing-text-title-md">
-                  Begin met responsbasis, lees daarna de Loep Culture Index en verdiep pas dan naar domeinen en segmentcontrasten.
-                </h2>
-                <p className="mt-4 marketing-text-body">
-                  De route is bedoeld voor brede cultuur-, engagement- en werkbelevingsvragen op organisatieniveau.
-                  De output blijft descriptief: geen totaaloordeel over cultuur, geen named manager ranking en geen
-                  bewijs van oorzaak-gevolg.
-                </p>
-              </div>
-              <div className="grid gap-4 px-5 py-5 sm:px-6 lg:grid-cols-3">
+        </section>
+
+        {/* ── Wanneer logisch ── */}
+        <section style={{ background: T.paperSoft, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
+          <div style={{ ...SH }}>
+            <div style={{ marginBottom: 36 }}>
+              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase' as const, color: T.violet, marginBottom: 16 }}>Wanneer Loep Cultuurbeeld nu de juiste stap is</div>
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 {[
-                  ['Hoofdlaag', 'Loep Culture Index als navigatiesignaal, niet als eindscore of gezondheidslabel.'],
-                  ['Verdieping', 'Domeinbeeld, patronen in samenhang en segmentcontrasten boven duidelijke minimum-n.'],
-                  ['Vervolg', 'Board-read eerst; Pulse pas later als bounded reviewritme na de baseline.'],
-                ].map(([title, body]) => (
-                  <div key={title} className="marketing-process-card">
-                    <p className="marketing-text-kicker">{title}</p>
-                    <p className="mt-3 text-sm leading-7 text-[var(--text)]">{body}</p>
+                  'De vraag gaat organisatiebreed over cultuur, engagement of werkbeleving — niet over één team of één factor',
+                  'Directie of board wil een eerste patroonlezing voordat er interventies worden gestart',
+                  'Er is geen actueel breed medewerkeronderzoek en de vraag is: waar moeten we het gesprek beginnen?',
+                  'U wil snel een eerste beeld zonder een groot MTO-traject op te starten',
+                ].map((text) => (
+                  <div key={text} style={{ alignItems: 'flex-start', background: T.white, border: `1px solid ${T.rule}`, display: 'flex', gap: 12, padding: '18px 20px' }}>
+                    <div style={{ width: 6, height: 6, background: T.violet, borderRadius: '50%', flexShrink: 0, marginTop: 9 }} />
+                    <p style={{ fontSize: 14, lineHeight: 1.65, color: T.inkSoft }}>{text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{ borderTop: `1px solid ${T.rule}`, paddingTop: 28 }}>
+              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase' as const, color: T.violet, marginBottom: 14 }}>Baseline of herhaalritme</div>
+              <p style={{ fontSize: 15, lineHeight: 1.72, color: T.inkSoft, marginBottom: 26, maxWidth: '54ch' }}>
+                Kies eerst of u een eerste organisatiebreed cultuurbeeld nodig heeft, of een terugkerend ritme om cultuur en engagement structureel te volgen.
+              </p>
+              <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                {[
+                  {
+                    label: 'Baseline',
+                    accent: T.violet,
+                    points: [
+                      'Eerste brede read van cultuur, engagement en werkbeleving op organisatieniveau',
+                      'Geschikt als er nog geen recent breed cultuurbeeld is',
+                      'Levert board-read met aandachtspunten en eerste prioritering',
+                    ],
+                  },
+                  {
+                    label: 'Herhaalritme',
+                    accent: T.inkMuted,
+                    points: [
+                      'Voor organisaties die cultuur en engagement structureel willen blijven volgen',
+                      'Logisch als baseline al staat en directie jaarlijks wil toetsen wat verandert',
+                      'Zelfde vragenlijst — zo zijn metingen vergelijkbaar over de tijd',
+                    ],
+                  },
+                ].map(({ label, accent, points }) => (
+                  <div key={label} style={{ padding: '28px', background: T.white, border: `1px solid ${T.rule}`, borderTop: `3px solid ${accent}` }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 600, color: T.ink, marginBottom: 16 }}>{label}</div>
+                    <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 10 }}>
+                      {points.map((p, i) => (
+                        <div key={i} style={{ display: 'flex', gap: 10, fontSize: 13, color: T.inkSoft, lineHeight: 1.6 }}>
+                          <div style={{ width: 4, height: 4, background: accent, flexShrink: 0, marginTop: 5 }} />
+                          {p}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
           </div>
-        </MarketingHeroStage>
-      }
-      heroSupport={
-        <MarketingHeroSupport>
-          <div className="marketing-support-note text-sm leading-7 text-slate-600">
-            Dit is geen RetentieScan-variant, geen Pulse, geen TeamScan, geen self-serve surveyplatform en geen manager
-            ranking tool.
-          </div>
-        </MarketingHeroSupport>
-      }
-    >
-      <MarketingSection tone="plain">
-        <div className="grid gap-6 lg:grid-cols-3">
-          {[
-            {
-              title: 'Wanneer Cultuurbeeld logisch is',
-              body: 'Als de vraag breed organisatiebreed is: cultuur, engagement, werkbeleving, vertrouwen, leiderschap en samenwerking. Niet als vervanging van ExitScan of RetentionScan.',
-            },
-            {
-              title: 'Wat u ontvangt',
-              body: 'Een board-read met executive samenvatting, Loep Culture Index, domeinanalyse en board attention points. Geleverd door Loep, inclusief begeleide board-read sessie.',
-            },
-            {
-              title: 'Wat bewust begrensd blijft',
-              body: 'Geen benchmarking in v1, geen named manager detail standaard, geen individuele voorspellingen. Wel veilige segmentcontrasten boven minimum-n.',
-            },
-          ].map((item) => (
-            <div key={item.title} className="marketing-panel p-6">
-              <h2 className="text-xl font-semibold text-slate-950">{item.title}</h2>
-              <p className="mt-3 text-sm leading-7 text-slate-600">{item.body}</p>
+        </section>
+
+        {/* ── Wat u ontvangt ── */}
+        <section style={{ background: T.white, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
+          <div style={{ ...SH }}>
+            <div style={{ maxWidth: '64ch', marginBottom: 30 }}>
+              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase' as const, color: T.violet, marginBottom: 16 }}>Wat u ontvangt</div>
+              <p style={{ fontSize: 15, lineHeight: 1.72, color: T.inkSoft }}>
+                Loep levert het volgende — allemaal inbegrepen, niets los te bestellen:
+              </p>
             </div>
-          ))}
-        </div>
-      </MarketingSection>
+            <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_auto]" style={{ alignItems: 'start' }}>
+              <div>
+                <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 10 }}>
+                  {[
+                    'Board-read rapport met Loep Culture Index, domeinprofiel en bestuurlijke aandachtspunten',
+                    'Begeleide directie-read sessie (60–90 min): samen de eerste managementvraag kiezen',
+                    'Top/bottom itemranking en sterktes & aandachtspunten per domein',
+                    'Segmentinzicht per afdeling waar respons dat toelaat (boven minimum-n)',
+                    'HR-bijlage met itemscores per domein voor HR-partner',
+                  ].map((item, i) => (
+                    <div key={i} style={{ display: 'flex', gap: 12, padding: '14px 16px', background: T.paperSoft, border: `1px solid ${T.rule}`, fontSize: 13.5, color: T.inkSoft, lineHeight: 1.6 }}>
+                      <div style={{ width: 4, height: 4, background: T.violet, flexShrink: 0, marginTop: 5 }} />
+                      {item}
+                    </div>
+                  ))}
+                </div>
+                <div style={{ marginTop: 22, padding: '18px 20px', border: `1px solid ${T.rule}`, background: T.white }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase' as const, color: T.inkFaint, marginBottom: 8 }}>Wat bewust begrensd blijft</div>
+                  <p style={{ fontSize: 13.5, color: T.inkMuted, lineHeight: 1.65 }}>
+                    Geen benchmarking met externe normen in v1 · Geen named manager detail standaard · Geen individuele voorspellingen · Geen automatische interventie · Geen self-serve platform.
+                  </p>
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 12, minWidth: 220 }}>
+                <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontSize: 14, fontWeight: 600, padding: '14px 28px', color: '#fff', background: T.violet, whiteSpace: 'nowrap' as const }}>
+                  Toets Loep Cultuurbeeld
+                </a>
+                <Link href="/tarieven" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 500, padding: '12px 24px', color: T.inkSoft, border: `1px solid ${T.rule}`, whiteSpace: 'nowrap' as const }}>
+                  Bekijk tarieven
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
 
-      <MarketingCalloutBand
-        eyebrow="Board-read inbegrepen"
-        title="Wij leveren geen rapport dat blijft liggen. De board-read zit standaard inbegrepen."
-        body="Loep Cultuurbeeld hoort te landen in een vaste board-read waarin de executive read, eerste aandachtspunten en veilige vervolgvraag expliciet worden gemaakt."
-        primaryHref={buildContactHref({
-          routeInterest: 'culture_assessment',
-          ctaSource: 'product_culture_assessment_board_read',
-        })}
-        primaryLabel="Plan een eerste route-inschatting"
-        secondaryHref="/tarieven"
-        secondaryLabel="Bekijk tarieven"
-      />
+        {/* ── Vergelijking ── */}
+        <section style={{ background: T.paperSoft, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
+          <div style={{ ...SH }}>
+            <div style={{ maxWidth: '52ch', marginBottom: 32 }}>
+              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase' as const, color: T.violet, marginBottom: 14 }}>Loep Cultuurbeeld versus de alternatieven</div>
+              <p style={{ fontSize: 15, lineHeight: 1.72, color: T.inkSoft }}>
+                Wat maakt Loep Cultuurbeeld anders dan een groot MTO-traject of een generiek survey-platform?
+              </p>
+            </div>
+            <div style={{ overflowX: 'auto' as const }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' as const, fontSize: 13 }}>
+                <thead>
+                  <tr style={{ background: T.white, borderBottom: `2px solid ${T.rule}` }}>
+                    {['Thema', 'Loep Cultuurbeeld', 'Groot MTO-bureau', 'DIY survey-platform'].map((col, i) => (
+                      <th key={col} style={{ textAlign: 'left', padding: '10px 14px', fontSize: 9.5, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase' as const, color: i === 1 ? T.violet : T.inkMuted }}>
+                        {col}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    ['Doorlooptijd', '5 werkdagen na sluiting', '6–12 weken', 'Onbepaald — u doet het zelf'],
+                    ['Begeleiding', 'Inbegrepen — board-read sessie door Loep', 'Consultancydag apart geprijsd', 'Geen — u interpreteert zelf'],
+                    ['Vragenlijst', 'Vaste 40-item enterprise-baseline', 'Op maat, lang traject', 'Zelf bouwen, geen validatie'],
+                    ['Governance', 'Minimum-n hardcoded, manager detail standaard locked', 'Afhankelijk van afspraken', 'Niet ingebouwd'],
+                    ['Prijs', 'Vanaf €6.500', '€25.000–€100.000+', 'Laag instap, hoge tijdsinvestering'],
+                    ['Geschikt voor', 'MKB 50–1000 fte, directie als koper', 'Enterprise 1000+ fte', 'Teams die zelf willen bouwen'],
+                  ].map(([thema, ...cols]) => (
+                    <tr key={thema} style={{ borderBottom: `1px solid ${T.rule}`, background: T.white }}>
+                      <td style={{ padding: '12px 14px', fontWeight: 600, color: T.ink, verticalAlign: 'top' }}>{thema}</td>
+                      {cols.map((c, i) => (
+                        <td key={i} style={{ padding: '12px 14px', color: i === 0 ? T.inkSoft : T.inkMuted, verticalAlign: 'top', fontWeight: i === 0 ? 500 : 400 }}>{c}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
 
-      <MarketingClosingCta
-        href={buildContactHref({
-          routeInterest: 'culture_assessment',
-          ctaSource: 'product_culture_assessment_form',
-        })}
-        showSectionMark={false}
-        backdropNumber={null}
-        title="Toets of Loep Cultuurbeeld"
-        accentTitle="nu de juiste eerste stap is."
-        body="Beschrijf kort welke cultuur- of engagementvraag nu speelt. Dan toetsen we of Loep Cultuurbeeld past en wanneer een board-read de meeste waarde geeft."
-        buttonLabel="Plan een eerste route-inschatting"
-        note="Pulse komt pas later in beeld als bounded vervolg na een bestaande baseline."
-      />
-    </MarketingPageShell>
+        <MarketingClosingCta
+          href={buildContactHref({ routeInterest: 'culture_assessment', ctaSource: 'product_culture_assessment_form' })}
+          showSectionMark={false}
+          backdropNumber={null}
+          title="Toets of Loep Cultuurbeeld"
+          accentTitle="nu de juiste eerste stap is."
+          body="Beschrijf kort welke cultuur- of engagementvraag nu speelt. Dan toetsen we of Loep Cultuurbeeld past en wanneer een board-read de meeste waarde geeft."
+          buttonLabel="Toets Loep Cultuurbeeld"
+          note="U krijgt eerst een route-inschatting, geen verplicht uitgebreid traject."
+        />
+      </main>
+      <PublicFooter />
+    </div>
   )
 }
 
@@ -510,7 +608,7 @@ function RetentionScanPage() {
                   Wij laten zien waar behoud onder druk staat. U weet wat u als eerste kunt aanpakken.
                 </h1>
                 <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '48ch', margin: '26px 0 36px' }}>
-                  Loep voert de RetentionScan uit bij uw actieve medewerkers, levert het rapport en begeleidt u naar één eerste managementkeuze.
+                  Loep voert de RetentieScan uit bij uw actieve medewerkers, levert het rapport en begeleidt u naar één eerste managementkeuze.
                 </p>
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 600, padding: '12px 28px', color: '#fff', background: T.ink }}>
@@ -1078,8 +1176,6 @@ function TeamScanPage() {
   )
 }
 
-void TeamScanPage
-
 function OnboardingPage() {
   return (
     <MarketingPageShell
@@ -1231,34 +1327,35 @@ function OnboardingPage() {
       <MarketingSection tone="plain">
         <div className="grid gap-8 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
           <div className="space-y-5">
-            <div className="marketing-divider-title">Onboarding naast implementatie</div>
-            <h2 className="marketing-text-title-md">Verwar deze route niet met implementatiebegeleiding.</h2>
+            <div className="marketing-divider-title">Onboarding naast RetentieScan</div>
+            <h2 className="marketing-text-title-md">Onboarding 30-60-90 is geen RetentieScan voor nieuwe medewerkers.</h2>
             <p className="marketing-text-body">
-              Deze vergelijking houdt de route eerlijk. Onboarding 30-60-90 is een vroege managementread voor nieuwe
-              medewerkers, niet dezelfde laag als implementatie, adoptie of deliverybegeleiding.
+              Beide routes kijken naar mensen-patronen, maar het tijdstip en de vraag zijn anders.
+              Onboarding is een vroege checkpoint-read in de eerste 90 dagen.
+              RetentieScan is een behoudsread voor actieve medewerkers die al langer in dienst zijn.
             </p>
             <MarketingComparisonTable
-              columns={['Thema', 'Onboarding 30-60-90', 'Client onboarding']}
+              columns={['Thema', 'Onboarding 30-60-90', 'RetentieScan']}
               rows={[
                 [
-                  'Startpunt',
-                  'Wanneer een vroege managementvraag openstaat over hoe nieuwe medewerkers nu landen in een checkpoint.',
-                  'Wanneer Verisight een klant technisch en operationeel live helpt gaan.',
+                  'Doelgroep',
+                  'Nieuwe medewerkers — eerste 30, 60 of 90 dagen in dienst.',
+                  'Actieve medewerkers — al langer in dienst, risico op vertrek nog niet zichtbaar.',
                 ],
                 [
-                  'Wat je leest',
-                  'Groepssignalen, eerste vervolgrichting, eerste kleine vervolgstap en hercheckmoment op dit meetmoment.',
-                  'Implementatievoortgang, adoptie, support en deliveryafstemming.',
+                  'Hoofdvraag',
+                  'Hoe landen nieuwe medewerkers in rol, leiding, team en werkcontext?',
+                  'Waar staat behoud onder druk voordat mensen een vertrekbesluit nemen?',
                 ],
                 [
-                  'Waar het voor dient',
-                  'Vroege lifecycle-duiding en eerste managementhuddle voor nieuwe instroom.',
-                  'Zorgen dat de klant goed gestart is met de dienst en eerste waarde bereikt.',
+                  'Tijdstip',
+                  'Vroeg — in de eerste kwartalen na instroom, bij elk nieuw cohort.',
+                  'Ongoing — als verloop oploopt of management eerder wil signaleren.',
                 ],
                 [
                   'Niet bedoeld als',
-                  'Volledige 30-60-90 suite, retentiepredictie of brede journey-automation.',
-                  'Employee lifecycle-meetproduct of surveyroute voor nieuwe medewerkers.',
+                  'Brede retentiemeting, journey-engine of predictiemodel voor uitstroom.',
+                  'Onboardingcheck, introductiebegeleidingstool of lifecycle-suite.',
                 ],
               ]}
             />
