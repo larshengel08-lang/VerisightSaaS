@@ -1,5 +1,5 @@
 """
-Verisight — Pydantic Schemas
+Verisight â€” Pydantic Schemas
 ===================================
 Request / response models for the FastAPI layer.
 Keeps API contract separate from ORM models.
@@ -178,7 +178,7 @@ class InviteSendResult(BaseModel):
 
 
 class SendInviteItem(BaseModel):
-    """Één token + e-mailadres voor de send-invites route."""
+    """Ã‰Ã©n token + e-mailadres voor de send-invites route."""
     token: str
     email: Optional[EmailStr] = None
 
@@ -296,7 +296,7 @@ class SurveySubmit(BaseModel):
     """
     token: str
 
-    # Module A — exit context (optional for retention surveys)
+    # Module A â€” exit context (optional for retention surveys)
     tenure_years: Optional[float] = Field(None, ge=0, le=60)
     exit_reason_category: Optional[str] = None
     exit_reason_code: Optional[str] = None
@@ -306,16 +306,16 @@ class SurveySubmit(BaseModel):
     enps_score: Optional[int] = Field(None, ge=0, le=10)
     signal_visibility_score: Optional[int] = Field(None, ge=1, le=5)
 
-    # Module B — SDT (12 items, required)
+    # Module B â€” SDT (12 items, required)
     sdt_raw: dict[str, int] = Field(default_factory=dict)
 
-    # Module C — org factors (dict of all answered items)
+    # Module C â€” org factors (dict of all answered items)
     org_raw: dict[str, int] = Field(default_factory=dict)
 
-    # Module D — meespelende redenen naast de hoofdreden (optional)
+    # Module D â€” meespelende redenen naast de hoofdreden (optional)
     pull_factors_raw: dict[str, int] = Field(default_factory=dict)
 
-    # Module E — open text
+    # Module E â€” open text
     open_text: Optional[str] = Field(None, max_length=3000)
 
     # UWES-3 (retention only)
@@ -454,4 +454,4 @@ class CampaignItemScoresResponse(BaseModel):
 
 class ApiKeyResponse(BaseModel):
     api_key: str
-    message: str = "Bewaar deze sleutel veilig — wordt niet opnieuw getoond."
+    message: str = "Bewaar deze sleutel veilig â€” wordt niet opnieuw getoond."

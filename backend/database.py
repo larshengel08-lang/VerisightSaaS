@@ -1,5 +1,5 @@
 """
-Verisight — Database Setup
+Verisight â€” Database Setup
 =================================
 SQLAlchemy engine + session factory.
 
