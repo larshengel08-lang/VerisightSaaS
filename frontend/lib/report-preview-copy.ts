@@ -241,7 +241,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     nuance:
       'RetentieScan is bedoeld voor groeps- en segmentduiding. De output is nadrukkelijk geen individuele voorspeller of performance-instrument, maar een v1-werkmodel voor verificatie en prioritering.',
     factorLead:
-      'De factoranalyse laat eerst zien hoe medewerkers de thema’s ervaren, en vertaalt dat daarna naar een managementduiding. Signaalsterkte blijft alleen verdiepende logica.',
+      'De factoranalyse laat eerst zien hoe medewerkers de themaâ€™s ervaren, en vertaalt dat daarna naar een managementduiding. Signaalsterkte blijft alleen verdiepende logica.',
     factorCards: [
       { label: 'Groei', scoreDisplay: '4,8/10', signalDisplay: '5,9/10', showSignal: true, band: MANAGEMENT_BAND_LABELS.MIDDEN, tone: 'amber' },
       { label: 'Werkbelasting', scoreDisplay: '5,0/10', signalDisplay: '5,6/10', showSignal: true, band: MANAGEMENT_BAND_LABELS.MIDDEN, tone: 'amber' },

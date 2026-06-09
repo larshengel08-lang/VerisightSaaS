@@ -1,4 +1,4 @@
-// Loep — gedeelde TypeScript types
+// Loep â€” gedeelde TypeScript types
 
 export type ScanType =
   | 'exit'
@@ -209,7 +209,7 @@ export const EXIT_REASON_LABELS: Record<string, string> = {
   P5:  'Werkdruk / stress',
   P6:  'Rolonduidelijkheid',
   PL1: 'Beter aanbod elders',
-  PL2: 'Carrièreswitch',
+  PL2: 'CarriÃ¨reswitch',
   PL3: 'Ondernemerschap',
   S1:  'Persoonlijke omstandigheid',
   S2:  'Verhuizing / partner',
