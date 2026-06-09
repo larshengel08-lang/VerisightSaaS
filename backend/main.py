@@ -1,4 +1,4 @@
-﻿"""
+"""
 Loep — FastAPI Backend
 ===================================
 Entrypoint: uvicorn backend.main:app --reload
