@@ -135,39 +135,6 @@ const managementFlowSteps = [
   },
 ] as const
 
-const firstDeliveryItems = [
-  {
-    index: '01',
-    title: 'Intake en scopebepaling',
-    body: 'We bakenen samen de vraag, doelgroep en route af voordat de scan vertrekt.',
-  },
-  {
-    index: '02',
-    title: 'Scan uitsturen en bewaken',
-    body: 'Wij verzorgen de uitvoering en houden de respons in de gaten, zonder toolbeheer bij uw team.',
-  },
-  {
-    index: '03',
-    title: 'Managementrapport met factoranalyse en prioriteiten',
-    body: 'U ontvangt een scherp rapport met patronen, prioriteiten en de eerste managementvraag.',
-  },
-  {
-    index: '04',
-    title: 'Begeleide managementbespreking (60–90 min)',
-    body: 'Samen brengen we de uitkomsten terug tot wat nu echt aandacht vraagt en welke keuze als eerste logisch is.',
-  },
-  {
-    index: '05',
-    title: 'Eerste keuze en vervolgrichting vastgesteld',
-    body: 'Na de bespreking is duidelijk wat eerst moet gebeuren, wie eigenaar is en welke route logisch is.',
-  },
-  {
-    index: '06',
-    title: 'AVG-conforme dataverwerking',
-    body: 'De scan en rapportage blijven ingericht op groepsniveau en binnen de afgesproken privacygrenzen.',
-  },
-] as const
-
 function SectionLabel({ index, label }: { index: string; label: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 26 }}>
@@ -201,6 +168,188 @@ function Arrow() {
     <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden>
       <path d="M2.5 7h9M7.5 3.5L11 7l-3.5 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
+  )
+}
+
+function ManagementFlowVisual({ step }: { step: string }) {
+  if (step === '1') {
+    return (
+      <div
+        style={{
+          background: '#f5f0e9',
+          border: `1px solid ${SURFACE.borderSoft}`,
+          borderRadius: 22,
+          marginTop: 'auto',
+          minHeight: 126,
+          padding: '18px 18px 16px',
+        }}
+      >
+        <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
+          {['Doelgroep', 'Vragenlijst', 'Planning'].map((label, index) => (
+            <span
+              key={label}
+              style={{
+                background: index === 1 ? SURFACE.amberSoft : SURFACE.surface,
+                border: `1px solid ${index === 1 ? '#ebc7b0' : SURFACE.borderSoft}`,
+                borderRadius: 999,
+                color: SURFACE.ink,
+                fontSize: 10,
+                fontWeight: 600,
+                letterSpacing: '.08em',
+                padding: '6px 10px',
+                textTransform: 'uppercase',
+              }}
+            >
+              {label}
+            </span>
+          ))}
+        </div>
+        <div style={{ display: 'grid', gap: 8 }}>
+          {[72, 88, 64].map((width, index) => (
+            <div
+              key={width}
+              style={{
+                alignItems: 'center',
+                display: 'grid',
+                gap: 10,
+                gridTemplateColumns: '18px minmax(0, 1fr)',
+              }}
+            >
+              <div
+                style={{
+                  background: index === 0 ? SURFACE.amber : SURFACE.tealSoft,
+                  borderRadius: 999,
+                  height: 18,
+                  width: 18,
+                }}
+              />
+              <div style={{ background: SURFACE.surface, borderRadius: 999, height: 8, overflow: 'hidden' }}>
+                <div
+                  style={{
+                    background: index === 0 ? SURFACE.amber : '#92b0aa',
+                    borderRadius: 999,
+                    height: '100%',
+                    width: `${width}%`,
+                  }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (step === '2') {
+    return (
+      <div
+        style={{
+          background: '#f5f0e9',
+          border: `1px solid ${SURFACE.borderSoft}`,
+          borderRadius: 22,
+          marginTop: 'auto',
+          minHeight: 126,
+          padding: '18px 18px 16px',
+        }}
+      >
+        <div
+          style={{
+            color: SURFACE.muted,
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: '.16em',
+            marginBottom: 10,
+            textTransform: 'uppercase',
+          }}
+        >
+          Managementrapport
+        </div>
+        <div style={{ display: 'grid', gap: 10 }}>
+          <div style={{ background: SURFACE.surface, borderRadius: 16, padding: '12px 14px' }}>
+            <div style={{ color: SURFACE.ink, fontSize: 12.5, fontWeight: 700, marginBottom: 8 }}>
+              Eerste managementvraag
+            </div>
+            <div style={{ background: SURFACE.borderSoft, borderRadius: 999, height: 7, marginBottom: 8, overflow: 'hidden' }}>
+              <div style={{ background: SURFACE.teal, borderRadius: 999, height: '100%', width: '78%' }} />
+            </div>
+            <div style={{ background: SURFACE.borderSoft, borderRadius: 999, height: 7, overflow: 'hidden', width: '62%' }}>
+              <div style={{ background: SURFACE.amber, borderRadius: 999, height: '100%', width: '100%' }} />
+            </div>
+          </div>
+          <div style={{ display: 'grid', gap: 8, gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}>
+            {['Patronen', 'Prioriteiten', 'Segmenten'].map((label) => (
+              <div key={label} style={{ background: SURFACE.surface, borderRadius: 14, padding: '10px 10px 12px' }}>
+                <div style={{ color: SURFACE.muted, fontSize: 9.5, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase' }}>
+                  {label}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div
+      style={{
+        background: '#f5f0e9',
+        border: `1px solid ${SURFACE.borderSoft}`,
+        borderRadius: 22,
+        marginTop: 'auto',
+        minHeight: 126,
+        padding: '18px 18px 16px',
+      }}
+    >
+      <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
+        <div>
+          <div style={{ color: SURFACE.muted, fontSize: 9.5, fontWeight: 700, letterSpacing: '.14em', marginBottom: 6, textTransform: 'uppercase' }}>
+            Besluit
+          </div>
+          <div style={{ color: SURFACE.ink, fontSize: 14, fontWeight: 700 }}>Eerste keuze vastgesteld</div>
+        </div>
+        <span
+          style={{
+            background: SURFACE.surface,
+            border: `1px solid ${SURFACE.borderSoft}`,
+            borderRadius: 999,
+            color: SURFACE.ink,
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: '.12em',
+            padding: '6px 10px',
+            textTransform: 'uppercase',
+          }}
+        >
+          Gereed
+        </span>
+      </div>
+      <div style={{ display: 'grid', gap: 8 }}>
+        {[
+          ['Prioriteit', 'Groei en ontwikkeling'],
+          ['Eigenaar', 'HR + management'],
+          ['Volgende stap', 'Bespreking ingepland'],
+        ].map(([label, value]) => (
+          <div
+            key={label}
+            style={{
+              alignItems: 'center',
+              background: SURFACE.surface,
+              borderRadius: 14,
+              display: 'grid',
+              gap: 8,
+              gridTemplateColumns: '104px minmax(0, 1fr)',
+              padding: '10px 12px',
+            }}
+          >
+            <span style={{ color: SURFACE.muted, fontSize: 9.5, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase' }}>
+              {label}
+            </span>
+            <span style={{ color: SURFACE.ink, fontSize: 12.5, fontWeight: 600 }}>{value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -528,7 +677,7 @@ function ManagementFlowSection() {
                 >
                   {item.body}
                 </p>
-
+                <ManagementFlowVisual step={item.step} />
               </article>
             </Reveal>
           ))}
@@ -553,7 +702,7 @@ function ManagementFlowSection() {
 
 function HeroSection() {
   const primaryHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'homepage_hero_primary' })
-  const secondaryHref = '/#first-delivery'
+  const secondaryHref = '/producten/exitscan'
   const reportRows = [
     ['Groei en ontwikkeling', '82%', SURFACE.amber],
     ['Werkdruk in operatie', '54%', SURFACE.text],
@@ -1715,94 +1864,6 @@ function RoutesSection() {
   )
 }
 
-function FirstDeliverySection() {
-  const kennismakingHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'homepage_first_delivery_cta' })
-
-  return (
-    <section
-      id="first-delivery"
-      style={{
-        background: SURFACE.surface,
-        borderBottom: `1px solid ${SURFACE.border}`,
-      }}
-    >
-      <div style={{ ...SHELL, paddingTop: 'clamp(56px, 7vw, 90px)', paddingBottom: 'clamp(56px, 7vw, 92px)' }}>
-        <div style={{ margin: '0 auto', maxWidth: 1040, textAlign: 'center' }}>
-          <Reveal>
-            <h2
-              style={{
-                color: SURFACE.ink,
-                fontFamily: displayFont,
-                fontSize: 'clamp(2.8rem, 4.7vw, 4.55rem)',
-                fontWeight: 700,
-                letterSpacing: '-0.05em',
-                lineHeight: 0.95,
-                marginBottom: 22,
-              }}
-            >
-              Wat u als eerste krijgt
-            </h2>
-          </Reveal>
-          <Reveal delay={0.05}>
-            <p style={{ color: SURFACE.text, fontSize: 16, lineHeight: 1.78, margin: '0 auto 40px', maxWidth: '58rem' }}>
-              Loep levert geen rapport dat blijft liggen. Elke baseline eindigt met een begeleide managementbespreking,
-              zodat u weet waar u eerst moet beginnen.
-            </p>
-          </Reveal>
-        </div>
-
-        <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
-          {firstDeliveryItems.map((item, index) => (
-            <Reveal key={item.title} delay={0.08 + index * 0.04}>
-              <article
-                style={{
-                  background: SURFACE.surface,
-                  border: `1px solid ${SURFACE.borderSoft}`,
-                  borderRadius: 28,
-                  boxShadow: '0 10px 24px rgba(22, 34, 56, 0.06), 0 2px 5px rgba(22, 34, 56, 0.04)',
-                  minHeight: 132,
-                  padding: '28px 28px 26px',
-                }}
-              >
-                <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '56px minmax(0, 1fr)' }}>
-                  <span
-                    style={{
-                      color: SURFACE.subtle,
-                      fontFamily: displayFont,
-                      fontSize: 24,
-                      letterSpacing: '-0.03em',
-                      lineHeight: 1,
-                    }}
-                  >
-                    {item.index}
-                  </span>
-                  <div>
-                    <h3
-                      style={{
-                        color: SURFACE.ink,
-                        fontFamily: displayFont,
-                        fontSize: 'clamp(1.7rem, 2.1vw, 2.2rem)',
-                        fontWeight: 600,
-                        letterSpacing: '-0.035em',
-                        lineHeight: 1.08,
-                        marginBottom: 10,
-                      }}
-                    >
-                      {item.title}
-                    </h3>
-                    <p style={{ color: SURFACE.text, fontSize: 15, lineHeight: 1.72, maxWidth: '34rem' }}>{item.body}</p>
-                  </div>
-                </div>
-              </article>
-            </Reveal>
-          ))}
-        </div>
-
-      </div>
-    </section>
-  )
-}
-
 function ContactSection() {
   const kennismakingHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'homepage_final_cta' })
 
@@ -1895,7 +1956,6 @@ export function HomePageContent() {
       <ProblemSection />
       <ManagementFlowSection />
       <RoutesSection />
-      <FirstDeliverySection />
       <ContactSection />
     </div>
   )
