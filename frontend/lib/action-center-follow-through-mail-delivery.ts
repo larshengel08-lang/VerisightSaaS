@@ -18,7 +18,7 @@ export type ActionCenterFollowThroughMailDeliveryResult =
 export function getActionCenterFollowThroughMailEnv() {
   return {
     resendApiKey: process.env.RESEND_API_KEY?.trim() ?? '',
-    emailFrom: process.env.EMAIL_FROM?.trim() ?? 'Verisight <noreply@verisight.nl>',
+    emailFrom: process.env.EMAIL_FROM?.trim() ?? 'Loep <noreply@verisight.nl>',
   }
 }
 

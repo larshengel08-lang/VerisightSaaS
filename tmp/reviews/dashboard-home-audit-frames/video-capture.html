@@ -1,0 +1,12 @@
+<!doctype html><html><body style="margin:0;background:#111;display:flex;align-items:center;justify-content:center;height:100vh"><video id="v" src="file:///C:/Users/larsh/Videos/Dashboardhome.mp4" controls style="max-width:100%;max-height:100%"></video><script>
+const v = document.getElementById('v');
+window.ready = new Promise((resolve,reject)=>{
+ v.addEventListener('loadedmetadata',()=>resolve({duration:v.duration,width:v.videoWidth,height:v.videoHeight}),{once:true});
+ v.addEventListener('error',()=>reject(new Error('video error')),{once:true});
+});
+window.captureAt = async (time) => new Promise((resolve,reject)=>{
+ const onSeeked = () => resolve({currentTime:v.currentTime,duration:v.duration,width:v.videoWidth,height:v.videoHeight});
+ v.addEventListener('seeked', onSeeked, { once:true });
+ v.currentTime = Math.max(0, Math.min(time, v.duration - 0.05));
+});
+</script></body></html>

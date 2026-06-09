@@ -1,0 +1,50 @@
+[
+  {
+    "id": "26b85e72-2f92-4995-b995-2f435830ebcf-billing",
+    "orgId": "26b85e72-2f92-4995-b995-2f435830ebcf",
+    "organizationName": "Pulse Smoke 8afc",
+    "legalCustomerName": "Pulse Smoke 8afc",
+    "contractState": "signed",
+    "billingState": "active_manual",
+    "paymentMethodConfirmed": true,
+    "notes": "Semireële assisted registryseed voor Pulse Smoke 8afc.",
+    "createdAt": "2026-04-27T08:07:04.767Z",
+    "updatedAt": "2026-04-27T08:07:04.769Z"
+  },
+  {
+    "id": "6487223a-b61c-402b-8fa0-c1d5bb551938-billing",
+    "orgId": "6487223a-b61c-402b-8fa0-c1d5bb551938",
+    "organizationName": "Pulse Smoke 955e",
+    "legalCustomerName": "Pulse Smoke 955e",
+    "contractState": "pending_signature",
+    "billingState": "draft",
+    "paymentMethodConfirmed": false,
+    "notes": "Semireële assisted registryseed voor Pulse Smoke 955e.",
+    "createdAt": "2026-04-27T08:07:04.769Z",
+    "updatedAt": "2026-04-27T08:07:04.769Z"
+  },
+  {
+    "id": "43165d75-08b2-497b-a52c-e566d47d1bfc-billing",
+    "orgId": "43165d75-08b2-497b-a52c-e566d47d1bfc",
+    "organizationName": "Pulse Smoke 134b",
+    "legalCustomerName": "Pulse Smoke 134b",
+    "contractState": "signed",
+    "billingState": "paused",
+    "paymentMethodConfirmed": true,
+    "notes": "Semireële assisted registryseed voor Pulse Smoke 134b.",
+    "createdAt": "2026-04-27T08:07:04.769Z",
+    "updatedAt": "2026-04-27T08:07:04.769Z"
+  },
+  {
+    "id": "9d476aa5-9e79-4b5e-9dab-112265a6fae7-billing",
+    "orgId": "9d476aa5-9e79-4b5e-9dab-112265a6fae7",
+    "organizationName": "Verisight Guided Self-Serve Acceptance",
+    "legalCustomerName": "Verisight Guided Self-Serve Acceptance",
+    "contractState": "signed",
+    "billingState": "active_manual",
+    "paymentMethodConfirmed": false,
+    "notes": "Semireële assisted registryseed voor Verisight Guided Self-Serve Acceptance.",
+    "createdAt": "2026-04-27T08:07:04.769Z",
+    "updatedAt": "2026-04-27T08:07:04.769Z"
+  }
+]

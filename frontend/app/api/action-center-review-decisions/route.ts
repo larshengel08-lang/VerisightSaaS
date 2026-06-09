@@ -26,7 +26,7 @@ async function requireVerisightAdmin() {
       supabase,
       user: null,
       error: NextResponse.json(
-        { detail: 'Alleen Verisight-beheerders kunnen authored review decisions beheren.' },
+        { detail: 'Alleen Loep-beheerders kunnen authored review decisions beheren.' },
         { status: 403 },
       ),
     }

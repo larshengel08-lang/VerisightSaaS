@@ -1,0 +1,374 @@
+export const CONTACT_ROUTE_OPTIONS = [
+  {
+    value: 'exitscan',
+    label: 'ExitScan',
+    description: 'We willen vertrek achteraf beter duiden.',
+    firstStepLabel: 'ExitScan Baseline',
+  },
+  {
+    value: 'retentiescan',
+    label: 'RetentieScan',
+    description: 'We willen eerder zien waar behoud onder druk staat.',
+    firstStepLabel: 'RetentieScan Baseline',
+  },
+  {
+    value: 'combinatie',
+    label: 'Combinatie',
+    description: 'We willen beide kernvragen bewust naast elkaar organiseren.',
+    firstStepLabel: 'een gefaseerde combinatieroute',
+  },
+  {
+    value: 'onboarding',
+    label: 'Onboarding 30-60-90',
+    description: 'We willen de eerste maanden van nieuwe medewerkers als eerste managementvraag openen.',
+    firstStepLabel: 'Onboarding 30-60-90 Baseline',
+  },
+  {
+    value: 'pulse',
+    label: 'Pulse',
+    description: 'Na een eerste baseline of managementread willen we compact herchecken wat nu verschuift.',
+    firstStepLabel: 'een compacte Pulse-vervolgroute na een eerste baseline of managementread',
+  },
+  {
+    value: 'leadership',
+    label: 'Leadership Scan',
+    description: 'Na een bestaand people-signaal willen we bepalen welke managementcontext eerst duiding vraagt.',
+    firstStepLabel: 'een gerichte Leadership Scan-vervolgroute na een bestaand signaal',
+  },
+  {
+    value: 'nog-onzeker',
+    label: 'Nog niet zeker',
+    description: 'We willen eerst de juiste route bepalen.',
+    firstStepLabel: 'de logischste eerste route',
+  },
+] as const
+
+const LEGACY_HIDDEN_CONTACT_ROUTE_OPTIONS = [
+  {
+    value: 'teamscan',
+    label: 'TeamScan',
+    description: 'Verborgen legacy route voor interne of historische teamreads.',
+    firstStepLabel: 'een legacy TeamScan-route na een bestaand signaal',
+  },
+] as const
+
+export const CONTACT_DESIRED_TIMING_OPTIONS = [
+  {
+    value: 'zo-snel-mogelijk',
+    label: 'Zo snel mogelijk',
+    description: 'Er is nu al urgentie rond uitstroom of behoud.',
+  },
+  {
+    value: 'deze-maand',
+    label: 'Deze maand',
+    description: 'We willen op korte termijn een eerste traject starten.',
+  },
+  {
+    value: 'dit-kwartaal',
+    label: 'Dit kwartaal',
+    description: 'We verkennen nu de eerstvolgende logische stap.',
+  },
+  {
+    value: 'orienterend',
+    label: 'Orienterend',
+    description: 'We willen eerst richting, aanpak en fit toetsen.',
+  },
+] as const
+
+export type ContactRouteInterest =
+  | (typeof CONTACT_ROUTE_OPTIONS)[number]['value']
+  | (typeof LEGACY_HIDDEN_CONTACT_ROUTE_OPTIONS)[number]['value']
+export type ContactDesiredTiming = (typeof CONTACT_DESIRED_TIMING_OPTIONS)[number]['value']
+export type CoreContactRouteInterest = Extract<ContactRouteInterest, 'exitscan' | 'retentiescan' | 'combinatie'>
+export type FollowOnContactRouteInterest = Extract<ContactRouteInterest, 'teamscan' | 'onboarding' | 'pulse' | 'leadership'>
+export type ContactQualificationStatus =
+  | 'core_default'
+  | 'retention_primary'
+  | 'combination_candidate'
+  | 'bounded_peer_review'
+  | 'bounded_follow_on_review'
+  | 'follow_on_reframe'
+  | 'uncertain_core_review'
+
+type BuildContactHrefOptions = {
+  routeInterest?: ContactRouteInterest
+  ctaSource?: string
+  desiredTiming?: ContactDesiredTiming
+}
+
+type ContactQualificationInput = {
+  routeInterest?: string | null | undefined
+  desiredTiming?: string | null | undefined
+  currentQuestion?: string | null | undefined
+}
+
+export type ContactQualificationGuidance = {
+  status: ContactQualificationStatus
+  recommendedCoreRoute: CoreContactRouteInterest
+  followOnCandidateRoute: FollowOnContactRouteInterest | null
+  headline: string
+  detail: string
+  operatorSummary: string
+}
+
+const routeOptionMap = new Map([...CONTACT_ROUTE_OPTIONS, ...LEGACY_HIDDEN_CONTACT_ROUTE_OPTIONS].map((option) => [option.value, option]))
+const timingOptionMap = new Map(CONTACT_DESIRED_TIMING_OPTIONS.map((option) => [option.value, option]))
+const followOnRoutes = new Set<FollowOnContactRouteInterest>(['pulse', 'leadership'])
+
+const EXIT_SIGNAL_KEYWORDS = [
+  'exit',
+  'vertrek',
+  'uitstroom',
+  'vertrekreden',
+  'vertrekredenen',
+  'leaver',
+  'achteraf',
+]
+
+const RETENTION_SIGNAL_KEYWORDS = [
+  'retentie',
+  'behoud',
+  'behouden',
+  'vroegsignaal',
+  'vroeg signaal',
+  'stay',
+  'blijven',
+  'verloop voorkomen',
+]
+
+const PULSE_SIGNAL_KEYWORDS = [
+  'pulse',
+  'hercheck',
+  'hermeting',
+  'vervolgmeting',
+  'effectcheck',
+  'ritme',
+]
+const TEAM_SIGNAL_KEYWORDS = ['team', 'teams', 'afdeling', 'afdelingen', 'lokaal', 'leidingcontext']
+const ONBOARDING_SIGNAL_KEYWORDS = [
+  'onboarding',
+  'nieuwe medewerker',
+  'nieuwe medewerkers',
+  'eerste 30',
+  'eerste 60',
+  'eerste 90',
+  'eerste weken',
+]
+const LEADERSHIP_SIGNAL_KEYWORDS = ['leadership', 'leiderschap', 'leiding', 'managementcontext', 'managementlaag']
+const FOLLOW_ON_EVIDENCE_KEYWORDS = [
+  'bestaand signaal',
+  'eerste signaal',
+  'baseline',
+  'bestaand beeld',
+  'vervolg',
+  'vervolgmeting',
+  'verdieping',
+  'opvolging',
+  'hercheck',
+  'hermeting',
+  'review',
+  'na een',
+  'na het',
+  'na de',
+]
+
+export function isContactRouteInterest(value: string | null | undefined): value is ContactRouteInterest {
+  return !!value && routeOptionMap.has(value as ContactRouteInterest)
+}
+
+export function isContactDesiredTiming(value: string | null | undefined): value is ContactDesiredTiming {
+  return !!value && timingOptionMap.has(value as ContactDesiredTiming)
+}
+
+export function normalizeContactRouteInterest(value: string | null | undefined): ContactRouteInterest {
+  if (isContactRouteInterest(value)) {
+    return value
+  }
+  return 'exitscan'
+}
+
+export function normalizeContactDesiredTiming(value: string | null | undefined): ContactDesiredTiming {
+  if (isContactDesiredTiming(value)) {
+    return value
+  }
+  return 'orienterend'
+}
+
+export function inferRouteInterestFromSource(source: string | null | undefined): ContactRouteInterest {
+  const normalizedSource = (source ?? '').toLowerCase()
+  if (normalizedSource.includes('retentie')) {
+    return 'retentiescan'
+  }
+  if (normalizedSource.includes('combin')) {
+    return 'combinatie'
+  }
+  if (normalizedSource.includes('team')) {
+    return 'teamscan'
+  }
+  if (normalizedSource.includes('onboarding')) {
+    return 'onboarding'
+  }
+  if (normalizedSource.includes('pulse')) {
+    return 'pulse'
+  }
+  if (normalizedSource.includes('leadership')) {
+    return 'leadership'
+  }
+  if (normalizedSource.includes('onzeker')) {
+    return 'nog-onzeker'
+  }
+  return 'exitscan'
+}
+
+export function getContactRouteLabel(value: string | null | undefined) {
+  return routeOptionMap.get(normalizeContactRouteInterest(value))?.label ?? 'ExitScan'
+}
+
+export function getContactDesiredTimingLabel(value: string | null | undefined) {
+  return timingOptionMap.get(normalizeContactDesiredTiming(value))?.label ?? 'Orienterend'
+}
+
+export function getContactFirstStepLabel(value: string | null | undefined) {
+  return routeOptionMap.get(normalizeContactRouteInterest(value))?.firstStepLabel ?? 'ExitScan Baseline'
+}
+
+export function normalizeContactCtaSource(value: string | null | undefined) {
+  const normalized = typeof value === 'string' ? value.trim() : ''
+  return normalized.length > 0 ? normalized.slice(0, 120) : 'website_primary_cta'
+}
+
+function includesAnyKeyword(text: string, keywords: string[]) {
+  return keywords.some((keyword) => text.includes(keyword))
+}
+
+function detectFollowOnCandidateRoute(text: string): FollowOnContactRouteInterest | null {
+  if (includesAnyKeyword(text, TEAM_SIGNAL_KEYWORDS)) {
+    return 'teamscan'
+  }
+  if (includesAnyKeyword(text, ONBOARDING_SIGNAL_KEYWORDS)) {
+    return 'onboarding'
+  }
+  if (includesAnyKeyword(text, PULSE_SIGNAL_KEYWORDS)) {
+    return 'pulse'
+  }
+  if (includesAnyKeyword(text, LEADERSHIP_SIGNAL_KEYWORDS)) {
+    return 'leadership'
+  }
+  return null
+}
+
+export function getContactQualificationGuidance({
+  routeInterest,
+  desiredTiming,
+  currentQuestion,
+}: ContactQualificationInput): ContactQualificationGuidance {
+  const normalizedRoute = normalizeContactRouteInterest(routeInterest)
+  const normalizedTiming = normalizeContactDesiredTiming(desiredTiming)
+  const normalizedQuestion = (currentQuestion ?? '').trim().toLowerCase()
+  const hasExitSignal = includesAnyKeyword(normalizedQuestion, EXIT_SIGNAL_KEYWORDS)
+  const hasRetentionSignal = includesAnyKeyword(normalizedQuestion, RETENTION_SIGNAL_KEYWORDS)
+  const followOnEvidence = includesAnyKeyword(normalizedQuestion, FOLLOW_ON_EVIDENCE_KEYWORDS)
+  const explicitFollowOnCandidate = followOnRoutes.has(normalizedRoute as FollowOnContactRouteInterest)
+    ? (normalizedRoute as FollowOnContactRouteInterest)
+    : null
+  const inferredFollowOnCandidate = detectFollowOnCandidateRoute(normalizedQuestion)
+  const followOnCandidateRoute = explicitFollowOnCandidate ?? inferredFollowOnCandidate
+  const onboardingCandidate =
+    normalizedRoute === 'onboarding' || inferredFollowOnCandidate === 'onboarding' ? 'onboarding' : null
+
+  let recommendedCoreRoute: CoreContactRouteInterest = 'exitscan'
+  if (hasExitSignal && hasRetentionSignal) {
+    recommendedCoreRoute = 'combinatie'
+  } else if (hasRetentionSignal && !hasExitSignal) {
+    recommendedCoreRoute = 'retentiescan'
+  }
+
+  if (onboardingCandidate) {
+    return {
+      status: 'bounded_peer_review',
+      recommendedCoreRoute,
+      followOnCandidateRoute: 'onboarding',
+      headline: 'Onboarding 30-60-90 blijft een gerichte eerste route naast de kernroutes.',
+      detail: `We behandelen onboarding als een specifiekere eerste route voor nieuwe medewerkers. De route hoeft niet eerst te worden teruggeduwd naar een gewone follow-up, maar we toetsen wel bewust of onboarding nu echt de eerste managementvraag is of dat ${getContactRouteLabel(recommendedCoreRoute)} inhoudelijk logischer blijft.`,
+      operatorSummary: `Onboarding is genoemd als gerichte eerste route; toets direct of de eerste maanden van nieuwe medewerkers nu echt de eerste managementvraag zijn, en check anders of ${getContactRouteLabel(recommendedCoreRoute)} sterker past.`,
+    }
+  }
+
+  if (followOnCandidateRoute && followOnEvidence) {
+    return {
+      status: 'bounded_follow_on_review',
+      recommendedCoreRoute,
+      followOnCandidateRoute,
+      headline: `${getContactRouteLabel(followOnCandidateRoute)} blijft een gerichte vervolgrichting.`,
+      detail: `We behandelen dit pas als logische vervolgstap nadat intake bevestigt dat er al een bestaand signaal, baseline of eerdere managementread staat. Tot die bevestiging blijft ${getContactRouteLabel(recommendedCoreRoute)} de veiligste eerste routekaderschets.`,
+      operatorSummary: `${getContactRouteLabel(followOnCandidateRoute)} is genoemd als gerichte vervolgrichting; verifieer bestaand signaal en toets eerst of ${getContactRouteLabel(recommendedCoreRoute)} al stevig staat.`,
+    }
+  }
+
+  if (followOnCandidateRoute) {
+    return {
+      status: 'follow_on_reframe',
+      recommendedCoreRoute,
+      followOnCandidateRoute,
+      headline: `${getContactRouteLabel(followOnCandidateRoute)} openen we niet als vlakke eerste intake-route.`,
+      detail: `Zonder expliciet bestaand signaal of eerdere baseline vernauwen we deze aanvraag eerst richting ${getContactRouteLabel(recommendedCoreRoute)}. Daarna bepalen we pas of ${getContactRouteLabel(followOnCandidateRoute)} echt logisch is als vervolgrichting.`,
+      operatorSummary: `${getContactRouteLabel(followOnCandidateRoute)} is nog te vroeg als eerste route; vernauw de intake eerst richting ${getContactRouteLabel(recommendedCoreRoute)} en leg daarna pas een eventuele follow-on vast.`,
+    }
+  }
+
+  if (recommendedCoreRoute === 'combinatie') {
+    return {
+      status: 'combination_candidate',
+      recommendedCoreRoute,
+      followOnCandidateRoute: null,
+      headline: 'Combinatie is alleen logisch als beide kernvragen echt tegelijk spelen.',
+      detail: `De huidige vraag wijst zowel op vertrekduiding als op vroeg behoudssignaal. Daarom mag een gefaseerde combinatieroute in intake getoetst worden, maar alleen als beide managementvragen echt actief zijn en niet als losse bundel.`,
+      operatorSummary: 'Dubbele kernvraag zichtbaar; toets of vertrekduiding en vroeg behoudssignaal echt allebei direct nodig zijn voordat combinatie wordt bevestigd.',
+    }
+  }
+
+  if (recommendedCoreRoute === 'retentiescan') {
+    return {
+      status: 'retention_primary',
+      recommendedCoreRoute,
+      followOnCandidateRoute: null,
+      headline: 'RetentieScan lijkt nu de logische eerste route.',
+      detail: `De vraag leest als een vroeg behouds- of stay-intent vraagstuk op groepsniveau. Daardoor mag RetentieScan in intake als eerste route worden getoetst, met ${normalizedTiming === 'zo-snel-mogelijk' ? 'hoge urgentie' : 'een gerichte eerste verificatie'} als uitgangspunt.`,
+      operatorSummary: 'Vroege behoudsvraag zichtbaar; toets RetentieScan als primaire route en bevestig dat het niet alsnog vooral om vertrekduiding achteraf gaat.',
+    }
+  }
+
+  if (normalizedRoute === 'nog-onzeker') {
+    return {
+      status: 'uncertain_core_review',
+      recommendedCoreRoute,
+      followOnCandidateRoute: null,
+      headline: `${getContactRouteLabel(recommendedCoreRoute)} is nu de veiligste eerste routehypothese.`,
+      detail: `De keuze stond nog open. Op basis van de huidige intake vernauwen we daarom eerst richting ${getContactRouteLabel(recommendedCoreRoute)} en maken we van 'nog niet zeker' geen eindstation.`,
+      operatorSummary: `'Nog niet zeker' blijft niet openstaan; vernauw de intake actief richting ${getContactRouteLabel(recommendedCoreRoute)} en bevestig daarna pas de route.`,
+    }
+  }
+
+  return {
+    status: 'core_default',
+    recommendedCoreRoute,
+    followOnCandidateRoute: null,
+    headline: `${getContactRouteLabel(recommendedCoreRoute)} blijft de logische eerste route.`,
+    detail: `De huidige intake geeft nog geen reden om van de core-first default af te wijken. Daarom behandelen we ${getContactRouteLabel(recommendedCoreRoute)} als eerste route en schuiven we vervolgroutes of combinaties pas later naar voren als de intake dat echt onderbouwt.`,
+    operatorSummary: `Behoud de core-first start: behandel ${getContactRouteLabel(recommendedCoreRoute)} als eerste route tenzij intake expliciet een sterkere uitzondering onderbouwt.`,
+  }
+}
+
+export function buildContactHref({
+  routeInterest = 'exitscan',
+  ctaSource = 'website_primary_cta',
+  desiredTiming,
+}: BuildContactHrefOptions = {}) {
+  const params = new URLSearchParams()
+  params.set('route_interest', routeInterest)
+  params.set('cta_source', normalizeContactCtaSource(ctaSource))
+  if (desiredTiming) {
+    params.set('desired_timing', desiredTiming)
+  }
+  return `/kennismaking?${params.toString()}#kennismaking`
+}

@@ -82,7 +82,7 @@ export default function OpenGraphImage() {
               Begrijp waarom mensen gingen, zie eerder waar behoud onder druk staat of lees cultuur en engagement breed.
             </div>
             <div style={{ fontSize: '26px', lineHeight: 1.5, color: '#475569' }}>
-              Verisight levert drie duidelijke primary routes met dashboard, rapport en managementduiding in dezelfde taal.
+              Loep levert drie duidelijke primary routes met dashboard, rapport en managementduiding in dezelfde taal.
             </div>
           </div>
 

@@ -1,0 +1,86 @@
+{
+  "public": [
+    {
+      "route": "/",
+      "url": "http://localhost:3021/",
+      "h1": "Zie sneller waar vertrek, behoud of onboarding aandacht vragen"
+    },
+    {
+      "route": "/producten",
+      "url": "http://localhost:3021/producten",
+      "h1": "Kies de route die nu het meeste duidelijkheid geeft."
+    },
+    {
+      "route": "/producten/exitscan",
+      "url": "http://localhost:3021/producten/exitscan",
+      "h1": "Begrijp waarom medewerkers vertrekken en waar actie het eerst telt."
+    },
+    {
+      "route": "/producten/retentiescan",
+      "url": "http://localhost:3021/producten/retentiescan",
+      "h1": "Zie eerder waar behoud onder druk komt te staan en wat nu aandacht vraagt."
+    },
+    {
+      "route": "/tarieven",
+      "url": "http://localhost:3021/tarieven",
+      "h1": "Transparante prijs.Heldere scope."
+    },
+    {
+      "route": "/aanpak",
+      "url": "http://localhost:3021/aanpak",
+      "h1": "Van eerste routekeuzetot dashboard en rapport."
+    },
+    {
+      "route": "/vertrouwen",
+      "url": "http://localhost:3021/vertrouwen",
+      "h1": "Wat u publiek kunt toetsenvoordat u start."
+    },
+    {
+      "route": "/kennismaking",
+      "url": "http://localhost:3021/kennismaking",
+      "h1": "Vertel korttoets welke eerste routenu past."
+    }
+  ],
+  "app": [
+    {
+      "route": "/dashboard",
+      "url": "http://localhost:3021/dashboard",
+      "h1": "Dashboard overview"
+    },
+    {
+      "route": "/reports",
+      "url": "http://localhost:3021/reports",
+      "h1": "Klaar voor het overleg."
+    },
+    {
+      "route": "/action-center",
+      "url": "http://localhost:3021/action-center",
+      "h1": "Action Center"
+    },
+    {
+      "route": "/beheer",
+      "url": "http://localhost:3021/dashboard",
+      "h1": "Dashboard overview"
+    },
+    {
+      "route": "/campaigns/fc363990-7c15-4117-b119-0fdfb7c50497",
+      "url": "http://localhost:3021/campaigns/fc363990-7c15-4117-b119-0fdfb7c50497",
+      "h1": "Guided Self-Serve - Threshold Journey"
+    },
+    {
+      "route": "/campaigns/069ee28a-2038-46ba-9d37-6a38d0fd8691",
+      "url": "http://localhost:3021/campaigns/069ee28a-2038-46ba-9d37-6a38d0fd8691",
+      "h1": "Guided Self-Serve - Setup Journey"
+    }
+  ],
+  "links": [
+    {
+      "href": "/campaigns/fc363990-7c15-4117-b119-0fdfb7c50497",
+      "text": "Beheer route"
+    },
+    {
+      "href": "/campaigns/069ee28a-2038-46ba-9d37-6a38d0fd8691",
+      "text": "Beheer route"
+    }
+  ]
+}

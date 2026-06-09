@@ -252,7 +252,7 @@ async function resolveFollowUpWriteAccess(args: { supabase: SupabaseClient; user
   return {
     access: null,
     error: NextResponse.json(
-      { detail: 'Alleen HR of Verisight kan een follow-up route-trigger vastleggen.' },
+      { detail: 'Alleen HR of Loep kan een follow-up route-trigger vastleggen.' },
       { status: 403 },
     ),
   }

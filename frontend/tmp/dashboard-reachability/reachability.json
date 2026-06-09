@@ -1,0 +1,2628 @@
+{
+  "generatedAt": "2026-05-10T13:20:28.036Z",
+  "results": [
+    {
+      "path": "/dashboard",
+      "finalUrl": "http://localhost:3021/dashboard",
+      "headings": [
+        "Dashboard overview",
+        "Nu eerst",
+        "Geblokkeerd / niet gestart"
+      ],
+      "buttons": [
+        {
+          "text": "Uitloggen",
+          "aria": ""
+        },
+        {
+          "text": "",
+          "aria": "Navigatie openen"
+        }
+      ],
+      "links": [
+        {
+          "path": "/dashboard",
+          "text": "VerisightPeople Suite"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Overzicht"
+        },
+        {
+          "path": "/dashboard?module=exit",
+          "text": "ExitScan"
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center→"
+        },
+        {
+          "path": "/beheer",
+          "text": "SetupOrganisaties, campaignsetup en launchdiscipline."
+        },
+        {
+          "path": "/beheer/contact-aanvragen",
+          "text": "LeadsSales-to-delivery context en contactaanvragen."
+        },
+        {
+          "path": "/beheer/klantlearnings",
+          "text": "Action Center bronBroncampagnes en opvolging beheren."
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Alle statussen"
+        },
+        {
+          "path": "/dashboard?status=action_needed",
+          "text": "Actie nodig"
+        },
+        {
+          "path": "/dashboard?status=nearly_ready",
+          "text": "Bijna klaar"
+        },
+        {
+          "path": "/dashboard?status=live_readable",
+          "text": "Live en leesbaar"
+        },
+        {
+          "path": "/dashboard?status=blocked_not_started",
+          "text": "Geblokkeerd / niet gestart"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Alle routes"
+        },
+        {
+          "path": "/dashboard?module=exit",
+          "text": "ExitScan"
+        },
+        {
+          "path": "/campaigns/fc363990-7c15-4117-b119-0fdfb7c50497",
+          "text": "Beheer route"
+        },
+        {
+          "path": "/campaigns/069ee28a-2038-46ba-9d37-6a38d0fd8691",
+          "text": "Beheer route"
+        }
+      ],
+      "screenshot": "C:\\Users\\larsh\\Desktop\\Business\\Verisight\\frontend\\tmp\\dashboard-reachability\\dashboard.png",
+      "error": null
+    },
+    {
+      "path": "/reports",
+      "finalUrl": "http://localhost:3021/reports",
+      "headings": [
+        "Klaar voor het overleg.",
+        "Rapporten klaar voor bespreking",
+        "Van rapport naar opvolging"
+      ],
+      "buttons": [
+        {
+          "text": "Uitloggen",
+          "aria": ""
+        },
+        {
+          "text": "",
+          "aria": "Navigatie openen"
+        }
+      ],
+      "links": [
+        {
+          "path": "/dashboard",
+          "text": "VerisightPeople Suite"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Overzicht"
+        },
+        {
+          "path": "/dashboard?module=exit",
+          "text": "ExitScan"
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center→"
+        },
+        {
+          "path": "/beheer",
+          "text": "SetupOrganisaties, campaignsetup en launchdiscipline."
+        },
+        {
+          "path": "/beheer/contact-aanvragen",
+          "text": "LeadsSales-to-delivery context en contactaanvragen."
+        },
+        {
+          "path": "/beheer/klantlearnings",
+          "text": "Action Center bronBroncampagnes en opvolging beheren."
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center"
+        },
+        {
+          "path": "/reports",
+          "text": "Alle"
+        },
+        {
+          "path": "/reports?kind=management",
+          "text": "Management"
+        },
+        {
+          "path": "/reports?kind=module",
+          "text": "Module"
+        },
+        {
+          "path": "/reports?kind=cohort",
+          "text": "Cohort"
+        }
+      ],
+      "screenshot": "C:\\Users\\larsh\\Desktop\\Business\\Verisight\\frontend\\tmp\\dashboard-reachability\\reports.png",
+      "error": null
+    },
+    {
+      "path": "/action-center",
+      "finalUrl": "http://localhost:3021/action-center",
+      "headings": [
+        "Action Center",
+        "Kies eerst een route"
+      ],
+      "buttons": [
+        {
+          "text": "Uitloggen",
+          "aria": ""
+        },
+        {
+          "text": "",
+          "aria": "Navigatie openen"
+        },
+        {
+          "text": "ExitScanLaagExitScan: Guided Self-Serve - Setup JourneyExitScan opent hier de follow-through laag: welke vertrekduiding telt nu, wie pakt die op en wanneer komt dit terug?Guided Self-Serve - Setup JourneyNNNog niet toegewezenTe besprekenNog niet gepland",
+          "aria": ""
+        }
+      ],
+      "links": [
+        {
+          "path": "/dashboard",
+          "text": "VerisightPeople Suite"
+        },
+        {
+          "path": "/action-center",
+          "text": "Overzicht"
+        },
+        {
+          "path": "/action-center/acties",
+          "text": "Acties"
+        },
+        {
+          "path": "/action-center/reviewmomenten",
+          "text": "Reviewmomenten"
+        },
+        {
+          "path": "/action-center/managers",
+          "text": "Managers"
+        },
+        {
+          "path": "/action-center/mijn-teams",
+          "text": "Mijn teams"
+        },
+        {
+          "path": "/action-center",
+          "text": "Naar Action Center-overzicht"
+        },
+        {
+          "path": "/action-center/acties/nieuw",
+          "text": "Actie aanmaken"
+        }
+      ],
+      "screenshot": "C:\\Users\\larsh\\Desktop\\Business\\Verisight\\frontend\\tmp\\dashboard-reachability\\action-center.png",
+      "error": null
+    },
+    {
+      "path": "/beheer",
+      "finalUrl": "http://localhost:3021/beheer",
+      "headings": [
+        "Operationele setup",
+        "Open delivery- en activatiewerk",
+        "Werkvolgorde voor Verisight",
+        "Organisatie, campaign, import en klanttoegang",
+        "Organisatie aanmaken",
+        "Campaign aanmaken",
+        "Respondenten importeren en uitnodigen",
+        "Klantdashboard activeren",
+        "Campagne-statusoverzicht"
+      ],
+      "buttons": [
+        {
+          "text": "Uitloggen",
+          "aria": ""
+        },
+        {
+          "text": "",
+          "aria": "Navigatie openen"
+        },
+        {
+          "text": "Archiveren",
+          "aria": ""
+        },
+        {
+          "text": "Verwijderen",
+          "aria": ""
+        },
+        {
+          "text": "+ Aanmaken",
+          "aria": ""
+        },
+        {
+          "text": "ExitScanTerugkijken op vertrek, frictie en beinvloedbare werkfactoren.",
+          "aria": ""
+        },
+        {
+          "text": "RetentieScanVroeg signaleren waar behoud onder druk komt te staan.",
+          "aria": ""
+        },
+        {
+          "text": "PulseKorte check-in om te zien of signalen of acties nu bijsturing vragen.",
+          "aria": ""
+        },
+        {
+          "text": "TeamScanLokaliseren waar een al zichtbaar signaal lokaal het scherpst speelt.",
+          "aria": ""
+        },
+        {
+          "text": "Onboarding 30-60-90Vroege lifecycle-check voor nieuwe medewerkers op een enkel checkpoint.",
+          "aria": ""
+        },
+        {
+          "text": "Leadership ScanGeaggregeerde managementread over leidingcontext, prioritering en werkbaarheid.",
+          "aria": ""
+        },
+        {
+          "text": "BaselineStandaard eerste route voor gecontroleerde setup, import en eerste managementwaarde.",
+          "aria": ""
+        },
+        {
+          "text": "Live / vervolgrouteBewuste vervolgroute voor doorlopend of ritmisch gebruik nadat baseline en eigenaarschap staan.",
+          "aria": ""
+        },
+        {
+          "text": "+ Aanmaken",
+          "aria": ""
+        },
+        {
+          "text": "Via e-mail",
+          "aria": ""
+        },
+        {
+          "text": "Anonieme links",
+          "aria": ""
+        },
+        {
+          "text": "Bestand uploaden",
+          "aria": ""
+        },
+        {
+          "text": "Uitnodigingen versturen (?)",
+          "aria": ""
+        },
+        {
+          "text": "Klanttoegang versturen",
+          "aria": ""
+        }
+      ],
+      "links": [
+        {
+          "path": "/dashboard",
+          "text": "VerisightPeople Suite"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Overzicht"
+        },
+        {
+          "path": "/dashboard?module=exit",
+          "text": "ExitScan"
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center→"
+        },
+        {
+          "path": "/beheer",
+          "text": "SetupOrganisaties, campaignsetup en launchdiscipline."
+        },
+        {
+          "path": "/beheer/contact-aanvragen",
+          "text": "LeadsSales-to-delivery context en contactaanvragen."
+        },
+        {
+          "path": "/beheer/klantlearnings",
+          "text": "Action Center bronBroncampagnes en opvolging beheren."
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center"
+        },
+        {
+          "path": "/beheer/contact-aanvragen",
+          "text": "Open contactaanvragen"
+        },
+        {
+          "path": "/beheer/klantlearnings",
+          "text": "Open klantlearnings"
+        },
+        {
+          "path": "/beheer/billing",
+          "text": "Open billing registry"
+        },
+        {
+          "path": "/beheer/health",
+          "text": "Open health review"
+        },
+        {
+          "path": "/beheer/proof",
+          "text": "Open case proof registry"
+        },
+        {
+          "path": "/campaigns/fc363990-7c15-4117-b119-0fdfb7c50497",
+          "text": "Open deliverylaag"
+        },
+        {
+          "path": "/campaigns/069ee28a-2038-46ba-9d37-6a38d0fd8691",
+          "text": "Open checkpoint"
+        },
+        {
+          "path": "/campaigns/069ee28a-2038-46ba-9d37-6a38d0fd8691",
+          "text": "Open checkpoint"
+        },
+        {
+          "path": "/campaigns/069ee28a-2038-46ba-9d37-6a38d0fd8691",
+          "text": "Open checkpoint"
+        },
+        {
+          "path": "/campaigns/069ee28a-2038-46ba-9d37-6a38d0fd8691",
+          "text": "Open checkpoint"
+        },
+        {
+          "path": "/campaigns/069ee28a-2038-46ba-9d37-6a38d0fd8691",
+          "text": "Open checkpoint"
+        },
+        {
+          "path": "/campaigns/069ee28a-2038-46ba-9d37-6a38d0fd8691",
+          "text": "Open checkpoint"
+        },
+        {
+          "path": "/campaigns/069ee28a-2038-46ba-9d37-6a38d0fd8691",
+          "text": "Open campaign"
+        },
+        {
+          "path": "/campaigns/fc363990-7c15-4117-b119-0fdfb7c50497",
+          "text": "Open campaign"
+        },
+        {
+          "path": "/campaigns/069ee28a-2038-46ba-9d37-6a38d0fd8691",
+          "text": "Open campaign"
+        },
+        {
+          "path": "/campaigns/fc363990-7c15-4117-b119-0fdfb7c50497",
+          "text": "Open campaign"
+        }
+      ],
+      "screenshot": "C:\\Users\\larsh\\Desktop\\Business\\Verisight\\frontend\\tmp\\dashboard-reachability\\beheer.png",
+      "error": null
+    },
+    {
+      "path": "/dashboard?module=exit",
+      "finalUrl": "http://localhost:3021/dashboard?module=exit",
+      "headings": [
+        "Dashboard overview",
+        "Nu eerst",
+        "Geblokkeerd / niet gestart"
+      ],
+      "buttons": [
+        {
+          "text": "Uitloggen",
+          "aria": ""
+        },
+        {
+          "text": "",
+          "aria": "Navigatie openen"
+        }
+      ],
+      "links": [
+        {
+          "path": "/dashboard",
+          "text": "VerisightPeople Suite"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Overzicht"
+        },
+        {
+          "path": "/dashboard?module=exit",
+          "text": "ExitScan"
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center→"
+        },
+        {
+          "path": "/beheer",
+          "text": "SetupOrganisaties, campaignsetup en launchdiscipline."
+        },
+        {
+          "path": "/beheer/contact-aanvragen",
+          "text": "LeadsSales-to-delivery context en contactaanvragen."
+        },
+        {
+          "path": "/beheer/klantlearnings",
+          "text": "Action Center bronBroncampagnes en opvolging beheren."
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Terug naar alle routes"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Wis filters"
+        },
+        {
+          "path": "/dashboard?module=exit",
+          "text": "Alle statussen"
+        },
+        {
+          "path": "/dashboard?module=exit&status=action_needed",
+          "text": "Actie nodig"
+        },
+        {
+          "path": "/dashboard?module=exit&status=nearly_ready",
+          "text": "Bijna klaar"
+        },
+        {
+          "path": "/dashboard?module=exit&status=live_readable",
+          "text": "Live en leesbaar"
+        },
+        {
+          "path": "/dashboard?module=exit&status=blocked_not_started",
+          "text": "Geblokkeerd / niet gestart"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Alle routes"
+        },
+        {
+          "path": "/dashboard?module=exit",
+          "text": "ExitScan"
+        },
+        {
+          "path": "/campaigns/fc363990-7c15-4117-b119-0fdfb7c50497",
+          "text": "Beheer route"
+        },
+        {
+          "path": "/campaigns/069ee28a-2038-46ba-9d37-6a38d0fd8691",
+          "text": "Beheer route"
+        }
+      ],
+      "screenshot": "C:\\Users\\larsh\\Desktop\\Business\\Verisight\\frontend\\tmp\\dashboard-reachability\\dashboard-module-exit.png",
+      "error": null
+    },
+    {
+      "path": "/beheer/contact-aanvragen",
+      "finalUrl": "http://localhost:3021/beheer/contact-aanvragen",
+      "headings": [
+        "Operationele leadtriage",
+        "Leadinput niet beschikbaar",
+        "Leadtriage en handoff"
+      ],
+      "buttons": [
+        {
+          "text": "Uitloggen",
+          "aria": ""
+        },
+        {
+          "text": "",
+          "aria": "Navigatie openen"
+        }
+      ],
+      "links": [
+        {
+          "path": "/dashboard",
+          "text": "VerisightPeople Suite"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Overzicht"
+        },
+        {
+          "path": "/dashboard?module=exit",
+          "text": "ExitScan"
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center→"
+        },
+        {
+          "path": "/beheer",
+          "text": "SetupOrganisaties, campaignsetup en launchdiscipline."
+        },
+        {
+          "path": "/beheer/contact-aanvragen",
+          "text": "LeadsSales-to-delivery context en contactaanvragen."
+        },
+        {
+          "path": "/beheer/klantlearnings",
+          "text": "Action Center bronBroncampagnes en opvolging beheren."
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center"
+        },
+        {
+          "path": "/beheer",
+          "text": "Terug naar setup"
+        },
+        {
+          "path": "/beheer/contact-aanvragen",
+          "text": "Vernieuwen"
+        },
+        {
+          "path": "/beheer/klantlearnings",
+          "text": "Open learning-workbench"
+        }
+      ],
+      "screenshot": "C:\\Users\\larsh\\Desktop\\Business\\Verisight\\frontend\\tmp\\dashboard-reachability\\beheer-contact-aanvragen.png",
+      "error": null
+    },
+    {
+      "path": "/beheer/klantlearnings",
+      "finalUrl": "http://localhost:3021/beheer/klantlearnings",
+      "headings": [
+        "Action Center",
+        "Wat moet nu gelezen en opgepakt worden?",
+        "Open HR doelroute - ExitScan Live Test - Decision Ready",
+        "Komende 14 dagen",
+        "Wat is over deze zichtbare routes al bestuurlijk leesbaar?",
+        "Managers en toewijzing",
+        "Leadinput is niet volledig beschikbaar",
+        "Dossierlog en bounded opvolging",
+        "Start vanuit lead of campaign"
+      ],
+      "buttons": [
+        {
+          "text": "Uitloggen",
+          "aria": ""
+        },
+        {
+          "text": "",
+          "aria": "Navigatie openen"
+        },
+        {
+          "text": "Overzicht",
+          "aria": ""
+        },
+        {
+          "text": "Acties",
+          "aria": ""
+        },
+        {
+          "text": "Reviewmomenten",
+          "aria": ""
+        },
+        {
+          "text": "Managers",
+          "aria": ""
+        },
+        {
+          "text": "Mijn teams",
+          "aria": ""
+        },
+        {
+          "text": "+Actie aanmaken",
+          "aria": ""
+        },
+        {
+          "text": "Open alle acties",
+          "aria": ""
+        },
+        {
+          "text": "ExitScanDossier 3/HROpen HR doelroute - ExitScan Live Test - Decision ReadyNog niet gestart; HR kiest eerst de manager en aanleiding voor deze follow-up route.Laatste route-readRouteIn uitvoeringLezingActieve route waarin de eerste bounded managerstap nu loopt.In uitvoeringreview 14 meiRitme Wekelijks",
+          "aria": ""
+        },
+        {
+          "text": "ExitScanDossier 1/HROpen HR doelroute - ExitScan Live Test - Action SafeNog niet gestart; HR kiest eerst de manager en aanleiding voor deze follow-up route.Laatste route-readRouteIn uitvoeringLezingActieve route waarin de eerste bounded managerstap nu loopt.In uitvoeringreview 16 meiRitme Wekelijks",
+          "aria": ""
+        },
+        {
+          "text": "ExitScanDossier 2/HRGesloten HR bronroute - ExitScan Live Test - IndicativeDe vorige manageractie is uitgevoerd en geëvalueerd.Historische route-readRouteAfgerondLezingHistorische route die voor nu bestuurlijk is afgerond.Afgerondreview Nog niet geplandRitme Tweewekelijks",
+          "aria": ""
+        },
+        {
+          "text": "ExitScanDossier 4/HRGesloten HR bronroute - ExitScan Live Test - ClosedDe vorige manageractie is uitgevoerd en geëvalueerd.Historische route-readRouteAfgerondLezingHistorische route die voor nu bestuurlijk is afgerond.Afgerondreview Nog niet geplandRitme Tweewekelijks",
+          "aria": ""
+        },
+        {
+          "text": "Open focusactie",
+          "aria": ""
+        },
+        {
+          "text": "Review14 meiOpen HR doelroute - ExitScan Live Test - Decision ReadyHR / WekelijksDossier 3ExitScan",
+          "aria": ""
+        },
+        {
+          "text": "Review16 meiOpen HR doelroute - ExitScan Live Test - Action SafeHR / WekelijksDossier 1ExitScan",
+          "aria": ""
+        },
+        {
+          "text": "Open managers",
+          "aria": ""
+        },
+        {
+          "text": "Learningdossier starten",
+          "aria": ""
+        },
+        {
+          "text": "Dossier opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Checkpoint opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Decision vastleggen",
+          "aria": ""
+        },
+        {
+          "text": "Dossier opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Checkpoint opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Decision vastleggen",
+          "aria": ""
+        },
+        {
+          "text": "Checkpoint opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Decision vastleggen",
+          "aria": ""
+        },
+        {
+          "text": "Dossier opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Checkpoint opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Decision vastleggen",
+          "aria": ""
+        },
+        {
+          "text": "Checkpoint opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Decision vastleggen",
+          "aria": ""
+        },
+        {
+          "text": "Dossier opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Checkpoint opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Decision vastleggen",
+          "aria": ""
+        },
+        {
+          "text": "Checkpoint opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Decision vastleggen",
+          "aria": ""
+        }
+      ],
+      "links": [
+        {
+          "path": "/dashboard",
+          "text": "VerisightPeople Suite"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Overzicht"
+        },
+        {
+          "path": "/dashboard?module=exit",
+          "text": "ExitScan"
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center→"
+        },
+        {
+          "path": "/beheer",
+          "text": "SetupOrganisaties, campaignsetup en launchdiscipline."
+        },
+        {
+          "path": "/beheer/contact-aanvragen",
+          "text": "LeadsSales-to-delivery context en contactaanvragen."
+        },
+        {
+          "path": "/beheer/klantlearnings",
+          "text": "Action Center bronBroncampagnes en opvolging beheren."
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center"
+        },
+        {
+          "path": "/dashboard",
+          "text": "VVerisightDuiding & opvolging"
+        },
+        {
+          "path": "/beheer/contact-aanvragen",
+          "text": "Open leadlijst"
+        }
+      ],
+      "screenshot": "C:\\Users\\larsh\\Desktop\\Business\\Verisight\\frontend\\tmp\\dashboard-reachability\\beheer-klantlearnings.png",
+      "error": null
+    },
+    {
+      "path": "/dashboard?status=action_needed",
+      "finalUrl": "http://localhost:3021/dashboard?status=action_needed",
+      "headings": [
+        "Dashboard overview",
+        "Nu eerst"
+      ],
+      "buttons": [
+        {
+          "text": "Uitloggen",
+          "aria": ""
+        },
+        {
+          "text": "",
+          "aria": "Navigatie openen"
+        }
+      ],
+      "links": [
+        {
+          "path": "/dashboard",
+          "text": "VerisightPeople Suite"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Overzicht"
+        },
+        {
+          "path": "/dashboard?module=exit",
+          "text": "ExitScan"
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center→"
+        },
+        {
+          "path": "/beheer",
+          "text": "SetupOrganisaties, campaignsetup en launchdiscipline."
+        },
+        {
+          "path": "/beheer/contact-aanvragen",
+          "text": "LeadsSales-to-delivery context en contactaanvragen."
+        },
+        {
+          "path": "/beheer/klantlearnings",
+          "text": "Action Center bronBroncampagnes en opvolging beheren."
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Wis filters"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Alle statussen"
+        },
+        {
+          "path": "/dashboard?status=action_needed",
+          "text": "Actie nodig"
+        },
+        {
+          "path": "/dashboard?status=nearly_ready",
+          "text": "Bijna klaar"
+        },
+        {
+          "path": "/dashboard?status=live_readable",
+          "text": "Live en leesbaar"
+        },
+        {
+          "path": "/dashboard?status=blocked_not_started",
+          "text": "Geblokkeerd / niet gestart"
+        },
+        {
+          "path": "/dashboard?status=action_needed",
+          "text": "Alle routes"
+        },
+        {
+          "path": "/dashboard?module=exit&status=action_needed",
+          "text": "ExitScan"
+        },
+        {
+          "path": "/campaigns/fc363990-7c15-4117-b119-0fdfb7c50497",
+          "text": "Beheer route"
+        }
+      ],
+      "screenshot": "C:\\Users\\larsh\\Desktop\\Business\\Verisight\\frontend\\tmp\\dashboard-reachability\\dashboard-status-action_needed.png",
+      "error": null
+    },
+    {
+      "path": "/dashboard?status=nearly_ready",
+      "finalUrl": "http://localhost:3021/dashboard?status=nearly_ready",
+      "headings": [
+        "Dashboard overview",
+        "Nu eerst"
+      ],
+      "buttons": [
+        {
+          "text": "Uitloggen",
+          "aria": ""
+        },
+        {
+          "text": "",
+          "aria": "Navigatie openen"
+        }
+      ],
+      "links": [
+        {
+          "path": "/dashboard",
+          "text": "VerisightPeople Suite"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Overzicht"
+        },
+        {
+          "path": "/dashboard?module=exit",
+          "text": "ExitScan"
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center→"
+        },
+        {
+          "path": "/beheer",
+          "text": "SetupOrganisaties, campaignsetup en launchdiscipline."
+        },
+        {
+          "path": "/beheer/contact-aanvragen",
+          "text": "LeadsSales-to-delivery context en contactaanvragen."
+        },
+        {
+          "path": "/beheer/klantlearnings",
+          "text": "Action Center bronBroncampagnes en opvolging beheren."
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Wis filters"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Alle statussen"
+        },
+        {
+          "path": "/dashboard?status=action_needed",
+          "text": "Actie nodig"
+        },
+        {
+          "path": "/dashboard?status=nearly_ready",
+          "text": "Bijna klaar"
+        },
+        {
+          "path": "/dashboard?status=live_readable",
+          "text": "Live en leesbaar"
+        },
+        {
+          "path": "/dashboard?status=blocked_not_started",
+          "text": "Geblokkeerd / niet gestart"
+        },
+        {
+          "path": "/dashboard?status=nearly_ready",
+          "text": "Alle routes"
+        },
+        {
+          "path": "/dashboard?module=exit&status=nearly_ready",
+          "text": "ExitScan"
+        }
+      ],
+      "screenshot": "C:\\Users\\larsh\\Desktop\\Business\\Verisight\\frontend\\tmp\\dashboard-reachability\\dashboard-status-nearly_ready.png",
+      "error": null
+    },
+    {
+      "path": "/dashboard?status=live_readable",
+      "finalUrl": "http://localhost:3021/dashboard?status=live_readable",
+      "headings": [
+        "Dashboard overview",
+        "Nu eerst"
+      ],
+      "buttons": [
+        {
+          "text": "Uitloggen",
+          "aria": ""
+        },
+        {
+          "text": "",
+          "aria": "Navigatie openen"
+        }
+      ],
+      "links": [
+        {
+          "path": "/dashboard",
+          "text": "VerisightPeople Suite"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Overzicht"
+        },
+        {
+          "path": "/dashboard?module=exit",
+          "text": "ExitScan"
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center→"
+        },
+        {
+          "path": "/beheer",
+          "text": "SetupOrganisaties, campaignsetup en launchdiscipline."
+        },
+        {
+          "path": "/beheer/contact-aanvragen",
+          "text": "LeadsSales-to-delivery context en contactaanvragen."
+        },
+        {
+          "path": "/beheer/klantlearnings",
+          "text": "Action Center bronBroncampagnes en opvolging beheren."
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Wis filters"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Alle statussen"
+        },
+        {
+          "path": "/dashboard?status=action_needed",
+          "text": "Actie nodig"
+        },
+        {
+          "path": "/dashboard?status=nearly_ready",
+          "text": "Bijna klaar"
+        },
+        {
+          "path": "/dashboard?status=live_readable",
+          "text": "Live en leesbaar"
+        },
+        {
+          "path": "/dashboard?status=blocked_not_started",
+          "text": "Geblokkeerd / niet gestart"
+        },
+        {
+          "path": "/dashboard?status=live_readable",
+          "text": "Alle routes"
+        },
+        {
+          "path": "/dashboard?module=exit&status=live_readable",
+          "text": "ExitScan"
+        }
+      ],
+      "screenshot": "C:\\Users\\larsh\\Desktop\\Business\\Verisight\\frontend\\tmp\\dashboard-reachability\\dashboard-status-live_readable.png",
+      "error": null
+    },
+    {
+      "path": "/dashboard?status=blocked_not_started",
+      "finalUrl": "http://localhost:3021/dashboard?status=blocked_not_started",
+      "headings": [
+        "Dashboard overview",
+        "Geblokkeerd / niet gestart"
+      ],
+      "buttons": [
+        {
+          "text": "Uitloggen",
+          "aria": ""
+        },
+        {
+          "text": "",
+          "aria": "Navigatie openen"
+        }
+      ],
+      "links": [
+        {
+          "path": "/dashboard",
+          "text": "VerisightPeople Suite"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Overzicht"
+        },
+        {
+          "path": "/dashboard?module=exit",
+          "text": "ExitScan"
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center→"
+        },
+        {
+          "path": "/beheer",
+          "text": "SetupOrganisaties, campaignsetup en launchdiscipline."
+        },
+        {
+          "path": "/beheer/contact-aanvragen",
+          "text": "LeadsSales-to-delivery context en contactaanvragen."
+        },
+        {
+          "path": "/beheer/klantlearnings",
+          "text": "Action Center bronBroncampagnes en opvolging beheren."
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Wis filters"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Alle statussen"
+        },
+        {
+          "path": "/dashboard?status=action_needed",
+          "text": "Actie nodig"
+        },
+        {
+          "path": "/dashboard?status=nearly_ready",
+          "text": "Bijna klaar"
+        },
+        {
+          "path": "/dashboard?status=live_readable",
+          "text": "Live en leesbaar"
+        },
+        {
+          "path": "/dashboard?status=blocked_not_started",
+          "text": "Geblokkeerd / niet gestart"
+        },
+        {
+          "path": "/dashboard?status=blocked_not_started",
+          "text": "Alle routes"
+        },
+        {
+          "path": "/dashboard?module=exit&status=blocked_not_started",
+          "text": "ExitScan"
+        },
+        {
+          "path": "/campaigns/069ee28a-2038-46ba-9d37-6a38d0fd8691",
+          "text": "Beheer route"
+        }
+      ],
+      "screenshot": "C:\\Users\\larsh\\Desktop\\Business\\Verisight\\frontend\\tmp\\dashboard-reachability\\dashboard-status-blocked_not_started.png",
+      "error": null
+    },
+    {
+      "path": "/campaigns/fc363990-7c15-4117-b119-0fdfb7c50497",
+      "finalUrl": "http://localhost:3021/campaigns/fc363990-7c15-4117-b119-0fdfb7c50497",
+      "headings": [
+        "Guided Self-Serve - Threshold Journey",
+        "Operatie, respondenten en uitvoering"
+      ],
+      "buttons": [
+        {
+          "text": "Uitloggen",
+          "aria": ""
+        },
+        {
+          "text": "",
+          "aria": "Navigatie openen"
+        },
+        {
+          "text": "i",
+          "aria": "Meer informatie"
+        },
+        {
+          "text": "Herinnering (4)",
+          "aria": ""
+        },
+        {
+          "text": "Archiveer campaign",
+          "aria": ""
+        },
+        {
+          "text": "Uitvoering opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Checkpoint opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Checkpoint opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Checkpoint opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Checkpoint opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Checkpoint opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Checkpoint opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Checkpoint opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Kopieer alle links",
+          "aria": ""
+        }
+      ],
+      "links": [
+        {
+          "path": "/dashboard",
+          "text": "VerisightPeople Suite"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Overzicht"
+        },
+        {
+          "path": "/dashboard?module=exit",
+          "text": "ExitScan"
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center→"
+        },
+        {
+          "path": "/beheer",
+          "text": "SetupOrganisaties, campaignsetup en launchdiscipline."
+        },
+        {
+          "path": "/beheer/contact-aanvragen",
+          "text": "LeadsSales-to-delivery context en contactaanvragen."
+        },
+        {
+          "path": "/beheer/klantlearnings",
+          "text": "Action Center bronBroncampagnes en opvolging beheren."
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Overzicht"
+        },
+        {
+          "path": "/dashboard?module=exit",
+          "text": "ExitScan"
+        },
+        {
+          "path": "/dashboard?module=exit",
+          "text": "← Terug naar alle ExitScans"
+        },
+        {
+          "path": "/beheer/contact-aanvragen",
+          "text": "Open leadlijst"
+        },
+        {
+          "path": "/beheer/klantlearnings?campaign=fc363990-7c15-4117-b119-0fdfb7c50497",
+          "text": "Open leerwerkbank"
+        },
+        {
+          "path": "/beheer/klantlearnings?campaign=fc363990-7c15-4117-b119-0fdfb7c50497",
+          "text": "Open dossierbron"
+        }
+      ],
+      "screenshot": "C:\\Users\\larsh\\Desktop\\Business\\Verisight\\frontend\\tmp\\dashboard-reachability\\campaigns-fc363990-7c15-4117-b119-0fdfb7c50497.png",
+      "error": null
+    },
+    {
+      "path": "/campaigns/069ee28a-2038-46ba-9d37-6a38d0fd8691",
+      "finalUrl": "http://localhost:3021/campaigns/069ee28a-2038-46ba-9d37-6a38d0fd8691",
+      "headings": [
+        "Guided Self-Serve - Setup Journey",
+        "Operatie, respondenten en uitvoering"
+      ],
+      "buttons": [
+        {
+          "text": "Uitloggen",
+          "aria": ""
+        },
+        {
+          "text": "",
+          "aria": "Navigatie openen"
+        },
+        {
+          "text": "i",
+          "aria": "Meer informatie"
+        },
+        {
+          "text": "Archiveer campaign",
+          "aria": ""
+        },
+        {
+          "text": "Uitvoering opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Checkpoint opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Checkpoint opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Checkpoint opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Checkpoint opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Checkpoint opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Checkpoint opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Checkpoint opslaan",
+          "aria": ""
+        }
+      ],
+      "links": [
+        {
+          "path": "/dashboard",
+          "text": "VerisightPeople Suite"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Overzicht"
+        },
+        {
+          "path": "/dashboard?module=exit",
+          "text": "ExitScan"
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center→"
+        },
+        {
+          "path": "/beheer",
+          "text": "SetupOrganisaties, campaignsetup en launchdiscipline."
+        },
+        {
+          "path": "/beheer/contact-aanvragen",
+          "text": "LeadsSales-to-delivery context en contactaanvragen."
+        },
+        {
+          "path": "/beheer/klantlearnings",
+          "text": "Action Center bronBroncampagnes en opvolging beheren."
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Overzicht"
+        },
+        {
+          "path": "/dashboard?module=exit",
+          "text": "ExitScan"
+        },
+        {
+          "path": "/dashboard?module=exit",
+          "text": "← Terug naar alle ExitScans"
+        },
+        {
+          "path": "/action-center?focus=069ee28a-2038-46ba-9d37-6a38d0fd8691&source=campaign-detail",
+          "text": "Open route in Action Center"
+        },
+        {
+          "path": "/beheer/contact-aanvragen",
+          "text": "Open leadlijst"
+        },
+        {
+          "path": "/beheer/klantlearnings?campaign=069ee28a-2038-46ba-9d37-6a38d0fd8691",
+          "text": "Open leerwerkbank"
+        },
+        {
+          "path": "/beheer",
+          "text": "Naar setup"
+        },
+        {
+          "path": "/beheer/klantlearnings?campaign=069ee28a-2038-46ba-9d37-6a38d0fd8691",
+          "text": "Open dossierbron"
+        }
+      ],
+      "screenshot": "C:\\Users\\larsh\\Desktop\\Business\\Verisight\\frontend\\tmp\\dashboard-reachability\\campaigns-069ee28a-2038-46ba-9d37-6a38d0fd8691.png",
+      "error": null
+    },
+    {
+      "path": "/reports?kind=management",
+      "finalUrl": "http://localhost:3021/reports?kind=management",
+      "headings": [
+        "Klaar voor het overleg.",
+        "Rapporten klaar voor bespreking",
+        "Van rapport naar opvolging"
+      ],
+      "buttons": [
+        {
+          "text": "Uitloggen",
+          "aria": ""
+        },
+        {
+          "text": "",
+          "aria": "Navigatie openen"
+        }
+      ],
+      "links": [
+        {
+          "path": "/dashboard",
+          "text": "VerisightPeople Suite"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Overzicht"
+        },
+        {
+          "path": "/dashboard?module=exit",
+          "text": "ExitScan"
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center→"
+        },
+        {
+          "path": "/beheer",
+          "text": "SetupOrganisaties, campaignsetup en launchdiscipline."
+        },
+        {
+          "path": "/beheer/contact-aanvragen",
+          "text": "LeadsSales-to-delivery context en contactaanvragen."
+        },
+        {
+          "path": "/beheer/klantlearnings",
+          "text": "Action Center bronBroncampagnes en opvolging beheren."
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center"
+        },
+        {
+          "path": "/reports",
+          "text": "Alle"
+        },
+        {
+          "path": "/reports?kind=management",
+          "text": "Management"
+        },
+        {
+          "path": "/reports?kind=module",
+          "text": "Module"
+        },
+        {
+          "path": "/reports?kind=cohort",
+          "text": "Cohort"
+        }
+      ],
+      "screenshot": "C:\\Users\\larsh\\Desktop\\Business\\Verisight\\frontend\\tmp\\dashboard-reachability\\reports-kind-management.png",
+      "error": null
+    },
+    {
+      "path": "/reports?kind=module",
+      "finalUrl": "http://localhost:3021/reports?kind=module",
+      "headings": [
+        "Klaar voor het overleg.",
+        "Rapporten klaar voor bespreking",
+        "Van rapport naar opvolging"
+      ],
+      "buttons": [
+        {
+          "text": "Uitloggen",
+          "aria": ""
+        },
+        {
+          "text": "",
+          "aria": "Navigatie openen"
+        }
+      ],
+      "links": [
+        {
+          "path": "/dashboard",
+          "text": "VerisightPeople Suite"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Overzicht"
+        },
+        {
+          "path": "/dashboard?module=exit",
+          "text": "ExitScan"
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center→"
+        },
+        {
+          "path": "/beheer",
+          "text": "SetupOrganisaties, campaignsetup en launchdiscipline."
+        },
+        {
+          "path": "/beheer/contact-aanvragen",
+          "text": "LeadsSales-to-delivery context en contactaanvragen."
+        },
+        {
+          "path": "/beheer/klantlearnings",
+          "text": "Action Center bronBroncampagnes en opvolging beheren."
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center"
+        },
+        {
+          "path": "/reports",
+          "text": "Alle"
+        },
+        {
+          "path": "/reports?kind=management",
+          "text": "Management"
+        },
+        {
+          "path": "/reports?kind=module",
+          "text": "Module"
+        },
+        {
+          "path": "/reports?kind=cohort",
+          "text": "Cohort"
+        }
+      ],
+      "screenshot": "C:\\Users\\larsh\\Desktop\\Business\\Verisight\\frontend\\tmp\\dashboard-reachability\\reports-kind-module.png",
+      "error": null
+    },
+    {
+      "path": "/reports?kind=cohort",
+      "finalUrl": "http://localhost:3021/reports?kind=cohort",
+      "headings": [
+        "Klaar voor het overleg.",
+        "Rapporten klaar voor bespreking",
+        "Van rapport naar opvolging"
+      ],
+      "buttons": [
+        {
+          "text": "Uitloggen",
+          "aria": ""
+        },
+        {
+          "text": "",
+          "aria": "Navigatie openen"
+        }
+      ],
+      "links": [
+        {
+          "path": "/dashboard",
+          "text": "VerisightPeople Suite"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Overzicht"
+        },
+        {
+          "path": "/dashboard?module=exit",
+          "text": "ExitScan"
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center→"
+        },
+        {
+          "path": "/beheer",
+          "text": "SetupOrganisaties, campaignsetup en launchdiscipline."
+        },
+        {
+          "path": "/beheer/contact-aanvragen",
+          "text": "LeadsSales-to-delivery context en contactaanvragen."
+        },
+        {
+          "path": "/beheer/klantlearnings",
+          "text": "Action Center bronBroncampagnes en opvolging beheren."
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center"
+        },
+        {
+          "path": "/reports",
+          "text": "Alle"
+        },
+        {
+          "path": "/reports?kind=management",
+          "text": "Management"
+        },
+        {
+          "path": "/reports?kind=module",
+          "text": "Module"
+        },
+        {
+          "path": "/reports?kind=cohort",
+          "text": "Cohort"
+        }
+      ],
+      "screenshot": "C:\\Users\\larsh\\Desktop\\Business\\Verisight\\frontend\\tmp\\dashboard-reachability\\reports-kind-cohort.png",
+      "error": null
+    },
+    {
+      "path": "/action-center/acties",
+      "finalUrl": "http://localhost:3021/reports?kind=cohort",
+      "headings": [],
+      "buttons": [],
+      "links": [],
+      "screenshot": "C:\\Users\\larsh\\Desktop\\Business\\Verisight\\frontend\\tmp\\dashboard-reachability\\action-center-acties.png",
+      "error": "page.goto: net::ERR_ABORTED at http://localhost:3021/action-center/acties\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3021/action-center/acties\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "path": "/action-center/reviewmomenten",
+      "finalUrl": "http://localhost:3021/action-center/reviewmomenten",
+      "headings": [
+        "Pagina niet gevonden"
+      ],
+      "buttons": [],
+      "links": [
+        {
+          "path": "/dashboard",
+          "text": "← Naar dashboard"
+        }
+      ],
+      "screenshot": "C:\\Users\\larsh\\Desktop\\Business\\Verisight\\frontend\\tmp\\dashboard-reachability\\action-center-reviewmomenten.png",
+      "error": null
+    },
+    {
+      "path": "/action-center/managers",
+      "finalUrl": "http://localhost:3021/action-center/managers",
+      "headings": [
+        "Pagina niet gevonden"
+      ],
+      "buttons": [],
+      "links": [
+        {
+          "path": "/dashboard",
+          "text": "← Naar dashboard"
+        }
+      ],
+      "screenshot": "C:\\Users\\larsh\\Desktop\\Business\\Verisight\\frontend\\tmp\\dashboard-reachability\\action-center-managers.png",
+      "error": null
+    },
+    {
+      "path": "/action-center/mijn-teams",
+      "finalUrl": "http://localhost:3021/action-center/mijn-teams",
+      "headings": [
+        "Pagina niet gevonden"
+      ],
+      "buttons": [],
+      "links": [
+        {
+          "path": "/dashboard",
+          "text": "← Naar dashboard"
+        }
+      ],
+      "screenshot": "C:\\Users\\larsh\\Desktop\\Business\\Verisight\\frontend\\tmp\\dashboard-reachability\\action-center-mijn-teams.png",
+      "error": null
+    },
+    {
+      "path": "/action-center/acties/nieuw",
+      "finalUrl": "http://localhost:3021/action-center/acties/nieuw",
+      "headings": [
+        "Pagina niet gevonden"
+      ],
+      "buttons": [],
+      "links": [
+        {
+          "path": "/dashboard",
+          "text": "← Naar dashboard"
+        }
+      ],
+      "screenshot": "C:\\Users\\larsh\\Desktop\\Business\\Verisight\\frontend\\tmp\\dashboard-reachability\\action-center-acties-nieuw.png",
+      "error": null
+    },
+    {
+      "path": "/beheer/billing",
+      "finalUrl": "http://localhost:3021/action-center/acties/nieuw",
+      "headings": [],
+      "buttons": [],
+      "links": [],
+      "screenshot": "C:\\Users\\larsh\\Desktop\\Business\\Verisight\\frontend\\tmp\\dashboard-reachability\\beheer-billing.png",
+      "error": "page.goto: net::ERR_ABORTED at http://localhost:3021/beheer/billing\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3021/beheer/billing\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "path": "/beheer/health",
+      "finalUrl": "http://localhost:3021/beheer/health",
+      "headings": [
+        "Suite health evidence",
+        "Kernsignalen",
+        "Action Center pilot-ops",
+        "Pilot operationalisering",
+        "Recente evidence"
+      ],
+      "buttons": [
+        {
+          "text": "Uitloggen",
+          "aria": ""
+        },
+        {
+          "text": "",
+          "aria": "Navigatie openen"
+        }
+      ],
+      "links": [
+        {
+          "path": "/dashboard",
+          "text": "VerisightPeople Suite"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Overzicht"
+        },
+        {
+          "path": "/dashboard?module=exit",
+          "text": "ExitScan"
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center→"
+        },
+        {
+          "path": "/beheer",
+          "text": "SetupOrganisaties, campaignsetup en launchdiscipline."
+        },
+        {
+          "path": "/beheer/contact-aanvragen",
+          "text": "LeadsSales-to-delivery context en contactaanvragen."
+        },
+        {
+          "path": "/beheer/klantlearnings",
+          "text": "Action Center bronBroncampagnes en opvolging beheren."
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center"
+        },
+        {
+          "path": "/beheer",
+          "text": "Terug naar beheer"
+        }
+      ],
+      "screenshot": "C:\\Users\\larsh\\Desktop\\Business\\Verisight\\frontend\\tmp\\dashboard-reachability\\beheer-health.png",
+      "error": null
+    },
+    {
+      "path": "/beheer/proof",
+      "finalUrl": "http://localhost:3021/beheer/proof",
+      "headings": [
+        "Case proof registry",
+        "Approval ladder",
+        "Actuele registry"
+      ],
+      "buttons": [
+        {
+          "text": "Uitloggen",
+          "aria": ""
+        },
+        {
+          "text": "",
+          "aria": "Navigatie openen"
+        }
+      ],
+      "links": [
+        {
+          "path": "/dashboard",
+          "text": "VerisightPeople Suite"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Overzicht"
+        },
+        {
+          "path": "/dashboard?module=exit",
+          "text": "ExitScan"
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center→"
+        },
+        {
+          "path": "/beheer",
+          "text": "SetupOrganisaties, campaignsetup en launchdiscipline."
+        },
+        {
+          "path": "/beheer/contact-aanvragen",
+          "text": "LeadsSales-to-delivery context en contactaanvragen."
+        },
+        {
+          "path": "/beheer/klantlearnings",
+          "text": "Action Center bronBroncampagnes en opvolging beheren."
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center"
+        },
+        {
+          "path": "/beheer",
+          "text": "Terug naar beheer"
+        }
+      ],
+      "screenshot": "C:\\Users\\larsh\\Desktop\\Business\\Verisight\\frontend\\tmp\\dashboard-reachability\\beheer-proof.png",
+      "error": null
+    },
+    {
+      "path": "/dashboard?module=exit&status=action_needed",
+      "finalUrl": "http://localhost:3021/dashboard?module=exit&status=action_needed",
+      "headings": [
+        "Dashboard overview",
+        "Nu eerst"
+      ],
+      "buttons": [
+        {
+          "text": "Uitloggen",
+          "aria": ""
+        },
+        {
+          "text": "",
+          "aria": "Navigatie openen"
+        }
+      ],
+      "links": [
+        {
+          "path": "/dashboard",
+          "text": "VerisightPeople Suite"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Overzicht"
+        },
+        {
+          "path": "/dashboard?module=exit",
+          "text": "ExitScan"
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center→"
+        },
+        {
+          "path": "/beheer",
+          "text": "SetupOrganisaties, campaignsetup en launchdiscipline."
+        },
+        {
+          "path": "/beheer/contact-aanvragen",
+          "text": "LeadsSales-to-delivery context en contactaanvragen."
+        },
+        {
+          "path": "/beheer/klantlearnings",
+          "text": "Action Center bronBroncampagnes en opvolging beheren."
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center"
+        },
+        {
+          "path": "/dashboard?status=action_needed",
+          "text": "Terug naar alle routes"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Wis filters"
+        },
+        {
+          "path": "/dashboard?module=exit",
+          "text": "Alle statussen"
+        },
+        {
+          "path": "/dashboard?module=exit&status=action_needed",
+          "text": "Actie nodig"
+        },
+        {
+          "path": "/dashboard?module=exit&status=nearly_ready",
+          "text": "Bijna klaar"
+        },
+        {
+          "path": "/dashboard?module=exit&status=live_readable",
+          "text": "Live en leesbaar"
+        },
+        {
+          "path": "/dashboard?module=exit&status=blocked_not_started",
+          "text": "Geblokkeerd / niet gestart"
+        },
+        {
+          "path": "/dashboard?status=action_needed",
+          "text": "Alle routes"
+        },
+        {
+          "path": "/dashboard?module=exit&status=action_needed",
+          "text": "ExitScan"
+        },
+        {
+          "path": "/campaigns/fc363990-7c15-4117-b119-0fdfb7c50497",
+          "text": "Beheer route"
+        }
+      ],
+      "screenshot": "C:\\Users\\larsh\\Desktop\\Business\\Verisight\\frontend\\tmp\\dashboard-reachability\\dashboard-module-exit-status-action_needed.png",
+      "error": null
+    },
+    {
+      "path": "/dashboard?module=exit&status=nearly_ready",
+      "finalUrl": "http://localhost:3021/dashboard?module=exit&status=nearly_ready",
+      "headings": [
+        "Dashboard overview",
+        "Nu eerst"
+      ],
+      "buttons": [
+        {
+          "text": "Uitloggen",
+          "aria": ""
+        },
+        {
+          "text": "",
+          "aria": "Navigatie openen"
+        }
+      ],
+      "links": [
+        {
+          "path": "/dashboard",
+          "text": "VerisightPeople Suite"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Overzicht"
+        },
+        {
+          "path": "/dashboard?module=exit",
+          "text": "ExitScan"
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center→"
+        },
+        {
+          "path": "/beheer",
+          "text": "SetupOrganisaties, campaignsetup en launchdiscipline."
+        },
+        {
+          "path": "/beheer/contact-aanvragen",
+          "text": "LeadsSales-to-delivery context en contactaanvragen."
+        },
+        {
+          "path": "/beheer/klantlearnings",
+          "text": "Action Center bronBroncampagnes en opvolging beheren."
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center"
+        },
+        {
+          "path": "/dashboard?status=nearly_ready",
+          "text": "Terug naar alle routes"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Wis filters"
+        },
+        {
+          "path": "/dashboard?module=exit",
+          "text": "Alle statussen"
+        },
+        {
+          "path": "/dashboard?module=exit&status=action_needed",
+          "text": "Actie nodig"
+        },
+        {
+          "path": "/dashboard?module=exit&status=nearly_ready",
+          "text": "Bijna klaar"
+        },
+        {
+          "path": "/dashboard?module=exit&status=live_readable",
+          "text": "Live en leesbaar"
+        },
+        {
+          "path": "/dashboard?module=exit&status=blocked_not_started",
+          "text": "Geblokkeerd / niet gestart"
+        },
+        {
+          "path": "/dashboard?status=nearly_ready",
+          "text": "Alle routes"
+        },
+        {
+          "path": "/dashboard?module=exit&status=nearly_ready",
+          "text": "ExitScan"
+        }
+      ],
+      "screenshot": "C:\\Users\\larsh\\Desktop\\Business\\Verisight\\frontend\\tmp\\dashboard-reachability\\dashboard-module-exit-status-nearly_ready.png",
+      "error": null
+    },
+    {
+      "path": "/dashboard?module=exit&status=live_readable",
+      "finalUrl": "http://localhost:3021/dashboard?module=exit&status=live_readable",
+      "headings": [
+        "Dashboard overview",
+        "Nu eerst"
+      ],
+      "buttons": [
+        {
+          "text": "Uitloggen",
+          "aria": ""
+        },
+        {
+          "text": "",
+          "aria": "Navigatie openen"
+        }
+      ],
+      "links": [
+        {
+          "path": "/dashboard",
+          "text": "VerisightPeople Suite"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Overzicht"
+        },
+        {
+          "path": "/dashboard?module=exit",
+          "text": "ExitScan"
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center→"
+        },
+        {
+          "path": "/beheer",
+          "text": "SetupOrganisaties, campaignsetup en launchdiscipline."
+        },
+        {
+          "path": "/beheer/contact-aanvragen",
+          "text": "LeadsSales-to-delivery context en contactaanvragen."
+        },
+        {
+          "path": "/beheer/klantlearnings",
+          "text": "Action Center bronBroncampagnes en opvolging beheren."
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center"
+        },
+        {
+          "path": "/dashboard?status=live_readable",
+          "text": "Terug naar alle routes"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Wis filters"
+        },
+        {
+          "path": "/dashboard?module=exit",
+          "text": "Alle statussen"
+        },
+        {
+          "path": "/dashboard?module=exit&status=action_needed",
+          "text": "Actie nodig"
+        },
+        {
+          "path": "/dashboard?module=exit&status=nearly_ready",
+          "text": "Bijna klaar"
+        },
+        {
+          "path": "/dashboard?module=exit&status=live_readable",
+          "text": "Live en leesbaar"
+        },
+        {
+          "path": "/dashboard?module=exit&status=blocked_not_started",
+          "text": "Geblokkeerd / niet gestart"
+        },
+        {
+          "path": "/dashboard?status=live_readable",
+          "text": "Alle routes"
+        },
+        {
+          "path": "/dashboard?module=exit&status=live_readable",
+          "text": "ExitScan"
+        }
+      ],
+      "screenshot": "C:\\Users\\larsh\\Desktop\\Business\\Verisight\\frontend\\tmp\\dashboard-reachability\\dashboard-module-exit-status-live_readable.png",
+      "error": null
+    },
+    {
+      "path": "/dashboard?module=exit&status=blocked_not_started",
+      "finalUrl": "http://localhost:3021/dashboard?module=exit&status=blocked_not_started",
+      "headings": [
+        "Dashboard overview",
+        "Geblokkeerd / niet gestart"
+      ],
+      "buttons": [
+        {
+          "text": "Uitloggen",
+          "aria": ""
+        },
+        {
+          "text": "",
+          "aria": "Navigatie openen"
+        }
+      ],
+      "links": [
+        {
+          "path": "/dashboard",
+          "text": "VerisightPeople Suite"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Overzicht"
+        },
+        {
+          "path": "/dashboard?module=exit",
+          "text": "ExitScan"
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center→"
+        },
+        {
+          "path": "/beheer",
+          "text": "SetupOrganisaties, campaignsetup en launchdiscipline."
+        },
+        {
+          "path": "/beheer/contact-aanvragen",
+          "text": "LeadsSales-to-delivery context en contactaanvragen."
+        },
+        {
+          "path": "/beheer/klantlearnings",
+          "text": "Action Center bronBroncampagnes en opvolging beheren."
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center"
+        },
+        {
+          "path": "/dashboard?status=blocked_not_started",
+          "text": "Terug naar alle routes"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Wis filters"
+        },
+        {
+          "path": "/dashboard?module=exit",
+          "text": "Alle statussen"
+        },
+        {
+          "path": "/dashboard?module=exit&status=action_needed",
+          "text": "Actie nodig"
+        },
+        {
+          "path": "/dashboard?module=exit&status=nearly_ready",
+          "text": "Bijna klaar"
+        },
+        {
+          "path": "/dashboard?module=exit&status=live_readable",
+          "text": "Live en leesbaar"
+        },
+        {
+          "path": "/dashboard?module=exit&status=blocked_not_started",
+          "text": "Geblokkeerd / niet gestart"
+        },
+        {
+          "path": "/dashboard?status=blocked_not_started",
+          "text": "Alle routes"
+        },
+        {
+          "path": "/dashboard?module=exit&status=blocked_not_started",
+          "text": "ExitScan"
+        },
+        {
+          "path": "/campaigns/069ee28a-2038-46ba-9d37-6a38d0fd8691",
+          "text": "Beheer route"
+        }
+      ],
+      "screenshot": "C:\\Users\\larsh\\Desktop\\Business\\Verisight\\frontend\\tmp\\dashboard-reachability\\dashboard-module-exit-status-blocked_not_started.png",
+      "error": null
+    },
+    {
+      "path": "/beheer/klantlearnings?campaign=fc363990-7c15-4117-b119-0fdfb7c50497",
+      "finalUrl": "http://localhost:3021/dashboard?module=exit&status=blocked_not_started",
+      "headings": [],
+      "buttons": [],
+      "links": [],
+      "screenshot": "C:\\Users\\larsh\\Desktop\\Business\\Verisight\\frontend\\tmp\\dashboard-reachability\\beheer-klantlearnings-campaign-fc363990-7c15-4117-b119-0fdfb7c50497.png",
+      "error": "page.goto: net::ERR_ABORTED at http://localhost:3021/beheer/klantlearnings?campaign=fc363990-7c15-4117-b119-0fdfb7c50497\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3021/beheer/klantlearnings?campaign=fc363990-7c15-4117-b119-0fdfb7c50497\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "path": "/action-center?focus=069ee28a-2038-46ba-9d37-6a38d0fd8691&source=campaign-detail",
+      "finalUrl": "http://localhost:3021/action-center?focus=069ee28a-2038-46ba-9d37-6a38d0fd8691&source=campaign-detail",
+      "headings": [
+        "Action Center",
+        "ExitScan: Guided Self-Serve - Setup Journey"
+      ],
+      "buttons": [
+        {
+          "text": "Uitloggen",
+          "aria": ""
+        },
+        {
+          "text": "",
+          "aria": "Navigatie openen"
+        },
+        {
+          "text": "ExitScanLaagExitScan: Guided Self-Serve - Setup JourneyExitScan opent hier de follow-through laag: welke vertrekduiding telt nu, wie pakt die op en wanneer komt dit terug?Guided Self-Serve - Setup JourneyNNNog niet toegewezenTe besprekenNog niet gepland",
+          "aria": ""
+        }
+      ],
+      "links": [
+        {
+          "path": "/dashboard",
+          "text": "VerisightPeople Suite"
+        },
+        {
+          "path": "/action-center",
+          "text": "Overzicht"
+        },
+        {
+          "path": "/action-center/acties",
+          "text": "Acties"
+        },
+        {
+          "path": "/action-center/reviewmomenten",
+          "text": "Reviewmomenten"
+        },
+        {
+          "path": "/action-center/managers",
+          "text": "Managers"
+        },
+        {
+          "path": "/action-center/mijn-teams",
+          "text": "Mijn teams"
+        },
+        {
+          "path": "/action-center",
+          "text": "Naar Action Center-overzicht"
+        },
+        {
+          "path": "/action-center/acties/nieuw",
+          "text": "Actie aanmaken"
+        },
+        {
+          "path": "/campaigns/069ee28a-2038-46ba-9d37-6a38d0fd8691",
+          "text": "Open broncampagne"
+        }
+      ],
+      "screenshot": "C:\\Users\\larsh\\Desktop\\Business\\Verisight\\frontend\\tmp\\dashboard-reachability\\action-center-focus-069ee28a-2038-46ba-9d37-6a38d0fd8691-source-campaign-detail.png",
+      "error": null
+    },
+    {
+      "path": "/beheer/klantlearnings?campaign=069ee28a-2038-46ba-9d37-6a38d0fd8691",
+      "finalUrl": "http://localhost:3021/beheer/klantlearnings?campaign=069ee28a-2038-46ba-9d37-6a38d0fd8691",
+      "headings": [
+        "Action Center",
+        "Wat moet nu gelezen en opgepakt worden?",
+        "Open HR doelroute - ExitScan Live Test - Decision Ready",
+        "Komende 14 dagen",
+        "Wat is over deze zichtbare routes al bestuurlijk leesbaar?",
+        "Managers en toewijzing",
+        "Leadinput is niet volledig beschikbaar",
+        "Dossierlog en bounded opvolging",
+        "Start vanuit lead of campaign"
+      ],
+      "buttons": [
+        {
+          "text": "Uitloggen",
+          "aria": ""
+        },
+        {
+          "text": "",
+          "aria": "Navigatie openen"
+        },
+        {
+          "text": "Overzicht",
+          "aria": ""
+        },
+        {
+          "text": "Acties",
+          "aria": ""
+        },
+        {
+          "text": "Reviewmomenten",
+          "aria": ""
+        },
+        {
+          "text": "Managers",
+          "aria": ""
+        },
+        {
+          "text": "Mijn teams",
+          "aria": ""
+        },
+        {
+          "text": "+Actie aanmaken",
+          "aria": ""
+        },
+        {
+          "text": "Open alle acties",
+          "aria": ""
+        },
+        {
+          "text": "ExitScanDossier 3/HROpen HR doelroute - ExitScan Live Test - Decision ReadyNog niet gestart; HR kiest eerst de manager en aanleiding voor deze follow-up route.Laatste route-readRouteIn uitvoeringLezingActieve route waarin de eerste bounded managerstap nu loopt.In uitvoeringreview 14 meiRitme Wekelijks",
+          "aria": ""
+        },
+        {
+          "text": "ExitScanDossier 1/HROpen HR doelroute - ExitScan Live Test - Action SafeNog niet gestart; HR kiest eerst de manager en aanleiding voor deze follow-up route.Laatste route-readRouteIn uitvoeringLezingActieve route waarin de eerste bounded managerstap nu loopt.In uitvoeringreview 16 meiRitme Wekelijks",
+          "aria": ""
+        },
+        {
+          "text": "ExitScanDossier 2/HRGesloten HR bronroute - ExitScan Live Test - IndicativeDe vorige manageractie is uitgevoerd en geëvalueerd.Historische route-readRouteAfgerondLezingHistorische route die voor nu bestuurlijk is afgerond.Afgerondreview Nog niet geplandRitme Tweewekelijks",
+          "aria": ""
+        },
+        {
+          "text": "ExitScanDossier 4/HRGesloten HR bronroute - ExitScan Live Test - ClosedDe vorige manageractie is uitgevoerd en geëvalueerd.Historische route-readRouteAfgerondLezingHistorische route die voor nu bestuurlijk is afgerond.Afgerondreview Nog niet geplandRitme Tweewekelijks",
+          "aria": ""
+        },
+        {
+          "text": "Open focusactie",
+          "aria": ""
+        },
+        {
+          "text": "Review14 meiOpen HR doelroute - ExitScan Live Test - Decision ReadyHR / WekelijksDossier 3ExitScan",
+          "aria": ""
+        },
+        {
+          "text": "Review16 meiOpen HR doelroute - ExitScan Live Test - Action SafeHR / WekelijksDossier 1ExitScan",
+          "aria": ""
+        },
+        {
+          "text": "Open managers",
+          "aria": ""
+        },
+        {
+          "text": "Learningdossier starten",
+          "aria": ""
+        },
+        {
+          "text": "Dossier opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Checkpoint opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Decision vastleggen",
+          "aria": ""
+        },
+        {
+          "text": "Dossier opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Checkpoint opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Decision vastleggen",
+          "aria": ""
+        },
+        {
+          "text": "Checkpoint opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Decision vastleggen",
+          "aria": ""
+        },
+        {
+          "text": "Dossier opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Checkpoint opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Decision vastleggen",
+          "aria": ""
+        },
+        {
+          "text": "Checkpoint opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Decision vastleggen",
+          "aria": ""
+        },
+        {
+          "text": "Dossier opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Checkpoint opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Decision vastleggen",
+          "aria": ""
+        },
+        {
+          "text": "Checkpoint opslaan",
+          "aria": ""
+        },
+        {
+          "text": "Decision vastleggen",
+          "aria": ""
+        }
+      ],
+      "links": [
+        {
+          "path": "/dashboard",
+          "text": "VerisightPeople Suite"
+        },
+        {
+          "path": "/dashboard",
+          "text": "Overzicht"
+        },
+        {
+          "path": "/dashboard?module=exit",
+          "text": "ExitScan"
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center→"
+        },
+        {
+          "path": "/beheer",
+          "text": "SetupOrganisaties, campaignsetup en launchdiscipline."
+        },
+        {
+          "path": "/beheer/contact-aanvragen",
+          "text": "LeadsSales-to-delivery context en contactaanvragen."
+        },
+        {
+          "path": "/beheer/klantlearnings",
+          "text": "Action Center bronBroncampagnes en opvolging beheren."
+        },
+        {
+          "path": "/reports",
+          "text": "Rapporten"
+        },
+        {
+          "path": "/action-center",
+          "text": "Action Center"
+        },
+        {
+          "path": "/dashboard",
+          "text": "VVerisightDuiding & opvolging"
+        },
+        {
+          "path": "/beheer/contact-aanvragen",
+          "text": "Open leadlijst"
+        }
+      ],
+      "screenshot": "C:\\Users\\larsh\\Desktop\\Business\\Verisight\\frontend\\tmp\\dashboard-reachability\\beheer-klantlearnings-campaign-069ee28a-2038-46ba-9d37-6a38d0fd8691.png",
+      "error": null
+    }
+  ]
+}

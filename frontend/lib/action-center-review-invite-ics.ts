@@ -81,7 +81,7 @@ export function renderActionCenterReviewInviteIcs(args: {
   return [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Verisight//Action Center//NL',
+    'PRODID:-//Loep//Action Center//NL',
     `METHOD:${method}`,
     'BEGIN:VEVENT',
     `UID:${buildReviewInviteUid(draft.routeId)}`,

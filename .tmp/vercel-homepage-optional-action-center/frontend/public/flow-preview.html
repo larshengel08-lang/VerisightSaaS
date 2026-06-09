@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verisight — Klant onboarding flow</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; color: #1e293b; padding: 32px; }
+
+  h1 { font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 6px; }
+  .subtitle { font-size: 13px; color: #64748b; margin-bottom: 32px; }
+
+  .columns { display: grid; grid-template-columns: 1fr 40px 1fr; gap: 0; align-items: start; }
+
+  .col-header { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; padding: 6px 12px; border-radius: 6px; margin-bottom: 16px; display: inline-block; }
+  .col-lars .col-header { background: #eff6ff; color: #2563eb; }
+  .col-client .col-header { background: #f0fdf4; color: #16a34a; }
+
+  .step {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    position: relative;
+  }
+  .step-num {
+    font-size: 10px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: 3px;
+  }
+  .step-title { font-size: 13.5px; font-weight: 600; color: #1e293b; margin-bottom: 2px; }
+  .step-detail { font-size: 12px; color: #64748b; line-height: 1.5; }
+  .step-where {
+    display: inline-block;
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-top: 6px;
+  }
+
+  .col-lars .step { border-left: 3px solid #3b82f6; }
+  .col-lars .step-where { background: #eff6ff; color: #1d4ed8; }
+
+  .col-client .step { border-left: 3px solid #22c55e; }
+  .col-client .step-where { background: #f0fdf4; color: #15803d; }
+
+  .step.manual { border-left-color: #f59e0b; }
+  .step.manual .step-where { background: #fffbeb; color: #b45309; }
+
+  .step.gap {
+    background: #fff7ed;
+    border: 1px dashed #fed7aa;
+    border-left: 3px solid #f97316;
+  }
+  .step.gap .step-title { color: #c2410c; }
+  .step.gap .step-detail { color: #9a3412; }
+
+  .connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-top: 42px;
+  }
+  .connector-line {
+    width: 1px;
+    background: #cbd5e1;
+    flex: 1;
+  }
+  .connector-arrow {
+    font-size: 16px;
+    color: #94a3b8;
+    margin: 4px 0;
+  }
+  .connector-label {
+    font-size: 10px;
+    color: #94a3b8;
+    text-align: center;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    letter-spacing: .04em;
+  }
+
+  .bridge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 8px 0;
+  }
+  .bridge-line {
+    flex: 1;
+    height: 1px;
+    border-top: 2px dashed #94a3b8;
+  }
+  .bridge-label {
+    font-size: 11px;
+    color: #64748b;
+    white-space: nowrap;
+    background: #f1f5f9;
+    padding: 2px 8px;
+    border-radius: 12px;
+  }
+
+  .legend {
+    display: flex;
+    gap: 20px;
+    margin-top: 28px;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    color: #475569;
+  }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: #94a3b8;
+    margin: 16px 0 8px;
+  }
+
+  .gap-box {
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-top: 24px;
+  }
+  .gap-box h3 { font-size: 12px; font-weight: 700; color: #c2410c; margin-bottom: 6px; }
+  .gap-box ul { list-style: none; padding: 0; }
+  .gap-box li { font-size: 12px; color: #9a3412; padding: 2px 0; }
+  .gap-box li::before { content: '⚠ '; }
+</style>
+</head>
+<body>
+
+<h1>Verisight ExitScan — Onboarding flow (huidig)</h1>
+<p class="subtitle">Van offerte-akkoord tot HR-manager in het dashboard</p>
+
+<div class="columns">
+
+  <!-- Lars kolom -->
+  <div class="col-lars">
+    <span class="col-header">Lars (Verisight)</span>
+
+    <div class="section-label">Setup — handmatig</div>
+
+    <div class="step manual">
+      <div class="step-num">Stap 1</div>
+      <div class="step-title">Organisatie aanmaken</div>
+      <div class="step-detail">Naam, slug, contact-e-mail invullen. API-key wordt automatisch aangemaakt.</div>
+      <span class="step-where">⚙ /beheer — NewOrgForm</span>
+    </div>
+
+    <div class="step manual">
+      <div class="step-num">Stap 2</div>
+      <div class="step-title">Campagne aanmaken</div>
+      <div class="step-detail">Naam, scan type (exit), eventueel modules instellen.</div>
+      <span class="step-where">⚙ /beheer — NewCampaignForm</span>
+    </div>
+
+    <div class="step manual">
+      <div class="step-num">Stap 3</div>
+      <div class="step-title">Respondenten importeren</div>
+      <div class="step-detail">CSV/XLSX uploaden met naam, e-mailadres, uitdienstdatum. Systeem stuurt direct uitnodigingen.</div>
+      <span class="step-where">⚙ /beheer — AddRespondentsForm</span>
+    </div>
+
+    <div class="step manual">
+      <div class="step-num">Stap 4</div>
+      <div class="step-title">HR-manager uitnodigen</div>
+      <div class="step-detail">E-mailadres + naam invullen. Supabase stuurt invite-mail met activatielink.</div>
+      <span class="step-where">⚙ /beheer — InviteClientUserForm</span>
+    </div>
+
+    <div class="section-label" style="margin-top:24px;">Na invulperiode</div>
+
+    <div class="step">
+      <div class="step-num">Stap 7</div>
+      <div class="step-title">Campagne sluiten (optioneel)</div>
+      <div class="step-detail">Zet campagne op inactief. Rapport kan dan worden gegenereerd.</div>
+      <span class="step-where">⚙ /beheer of Dashboard</span>
+    </div>
+
+  </div>
+
+  <!-- Midden connector -->
+  <div class="connector">
+    <div class="connector-line"></div>
+  </div>
+
+  <!-- Client kolom -->
+  <div class="col-client">
+    <span class="col-header">HR-manager (klant)</span>
+
+    <div class="section-label">Onboarding</div>
+
+    <div class="step">
+      <div class="step-num">Stap 5</div>
+      <div class="step-title">Invite-mail ontvangen</div>
+      <div class="step-detail">Van: Supabase (noreply). Onderwerp: activatielink Verisight dashboard.</div>
+      <span class="step-where">📧 E-mail inbox</span>
+    </div>
+
+    <div class="step">
+      <div class="step-num">Stap 5b</div>
+      <div class="step-title">Account activeren</div>
+      <div class="step-detail">Klikt op link → /complete-account. Wachtwoord instellen (of overslaan). Automatisch doorgestuurd naar dashboard.</div>
+      <span class="step-where">🌐 verisight.nl/complete-account</span>
+    </div>
+
+    <div class="section-label" style="margin-top:24px;">Gebruik</div>
+
+    <div class="step">
+      <div class="step-num">Stap 6</div>
+      <div class="step-title">Dashboard bekijken</div>
+      <div class="step-detail">Ziet campagne-overzicht, responsgraad, risicoverdeling. Kan doorklikken naar factoranalyse.</div>
+      <span class="step-where">🌐 /dashboard → /campaigns/[id]</span>
+    </div>
+
+    <div class="step">
+      <div class="step-num">Stap 8</div>
+      <div class="step-title">PDF rapport downloaden</div>
+      <div class="step-detail">Knop in campagnepagina. Rapport gegenereerd on-the-fly door backend.</div>
+      <span class="step-where">🌐 /campaigns/[id] — PDF knop</span>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Verbindingspijlen tussen kolommen -->
+<div style="margin-top: 16px; padding: 12px 16px; background: white; border-radius: 8px; border: 1px solid #e2e8f0;">
+  <div style="font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 8px;">Automatische acties (systeem)</div>
+  <div style="display: flex; flex-direction: column; gap: 6px;">
+    <div style="font-size: 12px; color: #64748b;">📤 Na respondenten-import → systeem stuurt uitnodiging per e-mail met unieke survey-link</div>
+    <div style="font-size: 12px; color: #64748b;">🔁 Na 7 en 14 dagen → automatische herinneringen (2x) per respondent die nog niet ingevuld heeft</div>
+    <div style="font-size: 12px; color: #64748b;">📧 Na elke ingevulde survey → notificatie naar contact-e-mail van de organisatie</div>
+  </div>
+</div>
+
+<div class="gap-box">
+  <h3>Knelpunten in de huidige flow</h3>
+  <ul>
+    <li>Stap 1–4 zijn volledig handmatig voor Lars — geen self-service mogelijk</li>
+    <li>Invite-mail komt van Supabase (noreply) — niet van hallo@verisight.nl</li>
+    <li>HR-manager heeft geen begeleiding na login — ziet direct het dashboard zonder uitleg</li>
+    <li>Geen statusoverzicht voor Lars: hoeveel herinneringen zijn verstuurd, hoeveel bounces?</li>
+    <li>Rapport-knop is niet prominent genoeg — klant kan hem missen</li>
+  </ul>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#3b82f6;"></div> Lars-actie (normaal)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#f59e0b;"></div> Lars-actie (handmatig, tijdrovend)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#22c55e;"></div> Klant-actie</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#f97316;"></div> Knelpunt</div>
+</div>
+
+</body>
+</html>

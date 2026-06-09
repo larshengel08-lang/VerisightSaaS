@@ -90,7 +90,7 @@ function renderContactRequestEmail(payload: ContactPayload) {
           <tr>
             <td style="padding:28px;">
               <p style="margin:0 0 18px;font-size:15px;color:#334155;line-height:1.7;">
-                Via de marketing-site is een nieuwe aanvraag binnengekomen voor een verkennend gesprek over Verisight.
+                Via de marketing-site is een nieuwe aanvraag binnengekomen voor een verkennend gesprek over Loep.
               </p>
               <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
                 <tr>
@@ -140,7 +140,7 @@ function renderContactRequestEmail(payload: ContactPayload) {
 
 async function sendContactRequestEmail(payload: ContactPayload): Promise<EmailSendResult> {
   const apiKey = process.env.RESEND_API_KEY
-  const emailFrom = process.env.EMAIL_FROM ?? 'Verisight <noreply@verisight.nl>'
+  const emailFrom = process.env.EMAIL_FROM ?? 'Loep <noreply@verisight.nl>'
   const contactEmail = process.env.CONTACT_EMAIL ?? 'hallo@verisight.nl'
 
   if (!apiKey) {
@@ -160,7 +160,7 @@ async function sendContactRequestEmail(payload: ContactPayload): Promise<EmailSe
     body: JSON.stringify({
       from: emailFrom,
       to: [contactEmail],
-      subject: `Kennismakingsaanvraag Verisight - ${payload.organization}`,
+      subject: `Kennismakingsaanvraag Loep - ${payload.organization}`,
       html: renderContactRequestEmail(payload),
       reply_to: payload.work_email,
     }),

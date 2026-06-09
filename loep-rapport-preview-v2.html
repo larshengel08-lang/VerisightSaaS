@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<title>ExitScan — ExitScan Demo - 35 respondenten</title>
+<style>
+@page {
+  size: A4;
+  margin: 18mm 16mm 22mm 16mm;
+  @bottom-left {
+    content: "Vertrouwelijk — Loep — Groepsoutput";
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 7.5px;
+    color: #94A3B8;
+  }
+  @bottom-right {
+    content: counter(page) " / " counter(pages);
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 7.5px;
+    color: #94A3B8;
+  }
+}
+@page cover { margin: 0; }
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 10.5px;
+  line-height: 1.6;
+  color: #374151;
+  background: #F5F0E8;
+}
+
+/* ── Page breaks ── */
+.page-break  { break-before: page; }
+.no-break    { break-inside: avoid; }
+
+/* ── Typography ── */
+.report-title  { font-size: 22px; font-weight: 700; color: #243247; }
+.section-label {
+  font-size: 10px; font-weight: 700; color: #64748B;
+  letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px;
+  display: block;
+}
+h3 { font-size: 11.5px; font-weight: 700; color: #243247; margin-bottom: 4px; }
+p  { margin-bottom: 6px; }
+
+/* ── Cover ── */
+.cover {
+  page: cover;
+  background: #1E293B;
+  min-height: 297mm;
+  padding: 48px 44px 36px;
+  display: block;
+  position: relative;
+}
+.cover-badge {
+  display: inline-block;
+  background: #D19422;
+  color: #FFFFFF;
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  padding: 4px 12px; border-radius: 3px;
+  margin-bottom: 32px;
+}
+.cover-org   { font-size: 13px; color: #64748B; margin-bottom: 8px; }
+.cover-title { font-size: 30px; font-weight: 700; color: #FFFFFF; line-height: 1.2; margin-bottom: 12px; }
+.cover-sub   { font-size: 11px; color: #94A3B8; }
+.cover-meta {
+  margin-top: 60px;
+  display: table; width: 100%;
+  border-top: 1px solid #334155;
+  padding-top: 20px;
+}
+.cover-meta-cell {
+  display: table-cell; width: 25%;
+  padding-right: 12px;
+}
+.cover-meta-label { font-size: 8px; font-weight: 700; color: #475569; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 3px; }
+.cover-meta-value { font-size: 13px; font-weight: 700; color: #E2E8F0; }
+
+/* ── Cards ── */
+.card {
+  background: #FFFFFF;
+  border: 1px solid #E8E0D0;
+  border-radius: 6px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+.card-accent {
+  border-left: 4px solid #D19422;
+}
+
+/* ── Stat grid ── */
+.stat-grid { display: table; width: 100%; border-collapse: separate; border-spacing: 8px 0; margin-bottom: 14px; }
+.stat-row  { display: table-row; }
+.stat-cell {
+  display: table-cell;
+  background: #FFFFFF;
+  border: 1px solid #E8E0D0;
+  border-radius: 6px;
+  padding: 10px 12px;
+  vertical-align: top;
+}
+.stat-label { font-size: 8.5px; font-weight: 700; color: #64748B; letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 3px; }
+.stat-value { font-size: 20px; font-weight: 700; color: #243247; margin-bottom: 2px; line-height: 1.1; }
+.stat-body  { font-size: 8.5px; color: #6B7280; line-height: 1.4; }
+
+/* ── Score large ── */
+.score-large { font-size: 40px; font-weight: 700; line-height: 1; }
+.score-band-badge {
+  display: inline-block;
+  font-size: 10px; font-weight: 700;
+  padding: 3px 10px; border-radius: 4px;
+  color: #FFFFFF; margin-left: 8px; vertical-align: middle;
+}
+
+/* ── Factor bar ── */
+.factor-row     { margin-bottom: 13px; }
+.factor-name    { font-size: 10.5px; font-weight: 600; color: #243247; margin-bottom: 4px; }
+.factor-items   { font-size: 8.5px; color: #6B7280; margin-bottom: 4px; font-style: italic; }
+.bar-table      { display: table; width: 100%; }
+.bar-track-cell { display: table-cell; vertical-align: middle; padding-right: 8px; }
+.bar-track      { height: 8px; background: #E8E0D0; border-radius: 4px; overflow: hidden; }
+.bar-fill       { height: 8px; border-radius: 4px; }
+.bar-score-cell { display: table-cell; vertical-align: middle; white-space: nowrap; font-size: 11px; font-weight: 700; color: #374151; padding-right: 6px; width: 32px; }
+.bar-band-cell  { display: table-cell; vertical-align: middle; white-space: nowrap; font-size: 9.5px; font-weight: 700; width: 110px; }
+
+/* ── Top/Bottom highlight ── */
+.factor-highlight-top    { background: #F0FDF4; border: 1px solid #86EFAC; border-radius: 5px; padding: 8px 10px; margin-bottom: 8px; }
+.factor-highlight-bottom { background: #FEF2F2; border: 1px solid #FCA5A5; border-radius: 5px; padding: 8px 10px; margin-bottom: 8px; }
+
+/* ── Exit reason bar ── */
+.reason-row    { margin-bottom: 8px; }
+.reason-label  { font-size: 9.5px; color: #374151; margin-bottom: 2px; }
+.reason-bar-wrap { display: table; width: 100%; }
+.reason-bar-cell { display: table-cell; vertical-align: middle; padding-right: 8px; }
+.reason-count-cell { display: table-cell; vertical-align: middle; white-space: nowrap; font-size: 9px; font-weight: 600; color: #6B7280; width: 70px; }
+.reason-track { height: 6px; background: #E8E0D0; border-radius: 3px; overflow: hidden; }
+.reason-fill  { height: 6px; border-radius: 3px; background: #475569; }
+
+/* ── SDT ── */
+.sdt-row    { margin-bottom: 10px; }
+.sdt-label  { font-size: 10.5px; font-weight: 600; color: #243247; margin-bottom: 2px; }
+.sdt-help   { font-size: 8.5px; color: #6B7280; margin-bottom: 3px; }
+
+/* ── Quote ── */
+.quote-card {
+  background: #FAFAF9;
+  border: 1px solid #E8E0D0;
+  border-left: 3px solid #D19422;
+  border-radius: 4px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  font-size: 10px;
+  color: #374151;
+  font-style: italic;
+  line-height: 1.6;
+}
+.quote-anon { font-size: 8px; color: #94A3B8; font-style: normal; margin-top: 4px; }
+
+/* ── Playbook ── */
+.playbook-card {
+  background: #FFFFFF;
+  border: 1px solid #E8E0D0;
+  border-left: 4px solid #D19422;
+  border-radius: 6px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+.playbook-header    { display: table; width: 100%; margin-bottom: 8px; }
+.playbook-badge-cell{ display: table-cell; vertical-align: middle; padding-right: 8px; width: 1%; white-space: nowrap; }
+.playbook-badge span{ display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 8px; border-radius: 3px; color: #FFFFFF; }
+.playbook-title     { display: table-cell; vertical-align: middle; font-size: 11px; font-weight: 700; color: #243247; }
+.subsection-label   { font-size: 8.5px; font-weight: 700; color: #64748B; letter-spacing: 0.06em; text-transform: uppercase; margin-top: 8px; margin-bottom: 2px; }
+.action-list        { margin-left: 14px; margin-bottom: 4px; }
+.action-list li     { margin-bottom: 2px; }
+.caution-box        { background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 4px; padding: 6px 10px; font-size: 9px; color: #92400E; margin-top: 6px; }
+
+/* ── Step grid ── */
+.step-grid { display: table; width: 100%; border-collapse: separate; border-spacing: 8px 0; }
+.step-cell { display: table-cell; background: #FFFFFF; border: 1px solid #E8E0D0; border-radius: 6px; padding: 12px 14px; vertical-align: top; width: 25%; }
+.step-number{ font-size: 8.5px; font-weight: 700; color: #D19422; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 3px; }
+.step-body  { font-size: 9.5px; color: #374151; line-height: 1.5; }
+
+/* ── Trust page ── */
+.trust-grid { display: table; width: 100%; border-collapse: separate; border-spacing: 8px 0; }
+.trust-cell { display: table-cell; background: #FFFFFF; border: 1px solid #E8E0D0; border-radius: 6px; padding: 12px 14px; vertical-align: top; width: 33%; }
+.trust-icon { font-size: 16px; margin-bottom: 6px; }
+.trust-title{ font-size: 10px; font-weight: 700; color: #243247; margin-bottom: 4px; }
+.trust-body { font-size: 9px; color: #374151; line-height: 1.5; }
+
+/* ── Empty state ── */
+.empty-state { background: #FFFFFF; border: 1px dashed #E8E0D0; border-radius: 6px; padding: 16px; text-align: center; color: #94A3B8; font-size: 9.5px; }
+
+/* ── Two-column ── */
+.two-col { display: table; width: 100%; border-collapse: separate; border-spacing: 12px 0; }
+.col-left  { display: table-cell; vertical-align: top; width: 55%; }
+.col-right { display: table-cell; vertical-align: top; width: 45%; }
+
+/* ── Section spacing ── */
+.section { margin-bottom: 22px; }
+</style>
+</head>
+<body>
+
+
+<div class="cover">
+  <div class="cover-badge">ExitScan Baseline</div>
+  <div class="cover-org">Lars ExitScan Demo</div>
+  <div class="cover-title">ExitScan Demo - 35 respondenten</div>
+  <div class="cover-sub">Managementrapport &bull; Groepsoutput &bull; Vertrouwelijk</div>
+  <div class="cover-meta">
+    <div class="cover-meta-cell">
+      <div class="cover-meta-label">Respondenten</div>
+      <div class="cover-meta-value">35</div>
+    </div>
+    <div class="cover-meta-cell">
+      <div class="cover-meta-label">Type</div>
+      <div class="cover-meta-value">Baseline</div>
+    </div>
+    <div class="cover-meta-cell">
+      <div class="cover-meta-label">Datum</div>
+      <div class="cover-meta-value" style="font-size:10px;">30-05-2026</div>
+    </div>
+    <div class="cover-meta-cell">
+      <div class="cover-meta-label">Status</div>
+      <div class="cover-meta-value" style="font-size:10px;">Vertrouwelijk</div>
+    </div>
+  </div>
+</div>
+
+<div class="page-break section">
+  <span class="section-label">Executive at-a-glance</span>
+  <div class="card card-accent" style="margin-bottom:12px;">
+    <div style="margin-bottom:8px;">
+      <span class="score-large" style="color:#F59E0B;">5.2/10</span>
+      <span class="score-band-badge" style="background:#F59E0B;">Eerst toetsen</span>
+    </div>
+    <p style='font-size:10px;color:#374151;'>ExitScan maakt het vertrekbeeld bestuurlijk leesbaar: leiderschap / management is nu het eerste vertrekhaakje, terwijl leiderschap en groeiperspectief laten zien waar management het meeste kan toetsen en verbeteren. De antwoorden wijzen daarbij relatief breed op beïnvloedbare werkfrictie, wat het rapport vooral bruikbaar maakt voor prioritering, eigenaarschap en een gericht managementgesprek.</p>
+    <p style="margin-top:6px;font-size:9.5px;color:#64748B;">
+      Scherpste factoren: <strong>Leiderschap &amp;amp; Groeiperspectief</strong>
+      &nbsp;&bull;&nbsp;Meest genoemde reden: <strong>Leiderschap / management</strong>
+    </p>
+  </div>
+  <table class="stat-grid"><tr><td class="stat-cell"><div class="stat-label">Frictiescore</div><div class="stat-value">5.2/10</div><div class="stat-body">Gemiddelde over alle respondenten (1–10).</div></td><td class="stat-cell"><div class="stat-label">Signaal</div><div class="stat-value">Eerst toetsen</div><div class="stat-body">Indicatieve duiding op groepsniveau.</div></td><td class="stat-cell"><div class="stat-label">Respons</div><div class="stat-value">35 / 35</div><div class="stat-body">100.0% ingevuld.</div></td><td class="stat-cell"><div class="stat-label">Eerste aandachtspunt</div><div class="stat-value">Leiderschap</div><div class="stat-body">Factor met hoogste frictiebijdrage.</div></td></tr></table>
+</div>
+
+<div class="section">
+  <span class="section-label">Responsbasis &amp; leessterkte</span>
+  <div class="two-col">
+    <div class="col-left">
+      <div class="card">
+        <div style="margin-bottom:8px;">
+          <strong style="font-size:11px;">Uitgenodigd:</strong> 35&nbsp;&nbsp;
+          <strong style="font-size:11px;">Ingevuld:</strong> 35&nbsp;&nbsp;
+          <strong style="font-size:11px;">Respons:</strong> 100.0%
+        </div>
+        <div style="font-size:9px;color:#64748B;">
+          Leessterkte: <strong>Stevig</strong> &bull;
+          Patroonlaag actief &bull;
+          Segmenten zichtbaar bij 5+ per groep
+        </div>
+      </div>
+    </div>
+    <div class="col-right">
+      <div class="card">
+        <div class="stat-label" style="margin-bottom:6px;">Verdeling frictieband</div>
+        <div class="reason-row">
+  <div class="reason-label">Vraagt aandacht (hoog)</div>
+  <table class="reason-bar-wrap"><tr>
+    <td class="reason-bar-cell">
+      <div class="reason-track">
+        <div class="reason-fill" style="width:0.0%;background:#EF4444;"></div>
+      </div>
+    </td>
+    <td class="reason-count-cell">0% (0×)</td>
+  </tr></table>
+</div>
+        <div class="reason-row">
+  <div class="reason-label">Eerst toetsen (midden)</div>
+  <table class="reason-bar-wrap"><tr>
+    <td class="reason-bar-cell">
+      <div class="reason-track">
+        <div class="reason-fill" style="width:82.9%;background:#F59E0B;"></div>
+      </div>
+    </td>
+    <td class="reason-count-cell">83% (29×)</td>
+  </tr></table>
+</div>
+        <div class="reason-row">
+  <div class="reason-label">Relatief sterk (laag)</div>
+  <table class="reason-bar-wrap"><tr>
+    <td class="reason-bar-cell">
+      <div class="reason-track">
+        <div class="reason-fill" style="width:17.1%;background:#22C55E;"></div>
+      </div>
+    </td>
+    <td class="reason-count-cell">17% (6×)</td>
+  </tr></table>
+</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section page-break">
+  <span class="section-label">Vertrekcontext</span>
+  <div class="two-col">
+    <div class="col-left">
+      <div class="card">
+        <h3 style="margin-bottom:8px;">Hoofdredenen van vertrek</h3>
+        <p style="font-size:9px;color:#64748B;margin-bottom:8px;">
+          Wat respondenten als primaire reden noemden. Lees als vertrekcontext, niet als causale verklaring.
+        </p>
+        <div class="reason-row">
+  <div class="reason-label">Leiderschap / management</div>
+  <table class="reason-bar-wrap"><tr>
+    <td class="reason-bar-cell">
+      <div class="reason-track">
+        <div class="reason-fill" style="width:34.3%;background:#1E293B;"></div>
+      </div>
+    </td>
+    <td class="reason-count-cell">34% (12×)</td>
+  </tr></table>
+</div><div class="reason-row">
+  <div class="reason-label">Werkdruk / stress</div>
+  <table class="reason-bar-wrap"><tr>
+    <td class="reason-bar-cell">
+      <div class="reason-track">
+        <div class="reason-fill" style="width:31.4%;background:#1E293B;"></div>
+      </div>
+    </td>
+    <td class="reason-count-cell">31% (11×)</td>
+  </tr></table>
+</div><div class="reason-row">
+  <div class="reason-label">Gebrek aan groei</div>
+  <table class="reason-bar-wrap"><tr>
+    <td class="reason-bar-cell">
+      <div class="reason-track">
+        <div class="reason-fill" style="width:20.0%;background:#1E293B;"></div>
+      </div>
+    </td>
+    <td class="reason-count-cell">20% (7×)</td>
+  </tr></table>
+</div><div class="reason-row">
+  <div class="reason-label">Persoonlijke omstandigheid</div>
+  <table class="reason-bar-wrap"><tr>
+    <td class="reason-bar-cell">
+      <div class="reason-track">
+        <div class="reason-fill" style="width:11.4%;background:#1E293B;"></div>
+      </div>
+    </td>
+    <td class="reason-count-cell">11% (4×)</td>
+  </tr></table>
+</div><div class="reason-row">
+  <div class="reason-label">Beter aanbod elders</div>
+  <table class="reason-bar-wrap"><tr>
+    <td class="reason-bar-cell">
+      <div class="reason-track">
+        <div class="reason-fill" style="width:2.9%;background:#1E293B;"></div>
+      </div>
+    </td>
+    <td class="reason-count-cell">3% (1×)</td>
+  </tr></table>
+</div>
+      </div>
+    </div>
+    <div class="col-right">
+      <div class="card">
+        <h3 style="margin-bottom:8px;">Meespelende factoren</h3>
+        <p style="font-size:9px;color:#64748B;margin-bottom:8px;">
+          Factoren die naast de hoofdreden meespeelden. Geeft breedte van het vertrekverhaalt.
+        </p>
+        <div class="reason-row">
+  <div class="reason-label">Rolonduidelijkheid</div>
+  <table class="reason-bar-wrap"><tr>
+    <td class="reason-bar-cell">
+      <div class="reason-track">
+        <div class="reason-fill" style="width:65.7%;background:#475569;"></div>
+      </div>
+    </td>
+    <td class="reason-count-cell">66% (23×)</td>
+  </tr></table>
+</div><div class="reason-row">
+  <div class="reason-label">Leiderschap / management</div>
+  <table class="reason-bar-wrap"><tr>
+    <td class="reason-bar-cell">
+      <div class="reason-track">
+        <div class="reason-fill" style="width:51.4%;background:#475569;"></div>
+      </div>
+    </td>
+    <td class="reason-count-cell">51% (18×)</td>
+  </tr></table>
+</div><div class="reason-row">
+  <div class="reason-label">Gebrek aan groei</div>
+  <table class="reason-bar-wrap"><tr>
+    <td class="reason-bar-cell">
+      <div class="reason-track">
+        <div class="reason-fill" style="width:37.1%;background:#475569;"></div>
+      </div>
+    </td>
+    <td class="reason-count-cell">37% (13×)</td>
+  </tr></table>
+</div><div class="reason-row">
+  <div class="reason-label">Beloning</div>
+  <table class="reason-bar-wrap"><tr>
+    <td class="reason-bar-cell">
+      <div class="reason-track">
+        <div class="reason-fill" style="width:22.9%;background:#475569;"></div>
+      </div>
+    </td>
+    <td class="reason-count-cell">23% (8×)</td>
+  </tr></table>
+</div>
+      </div>
+      
+    </div>
+  </div>
+</div>
+
+<div class="section page-break">
+  <span class="section-label">Factoranalyse</span>
+  <div class="two-col" style="margin-bottom:10px;">
+    <div class="col-left">
+      <div class="card" style="border-left:3px solid #EF4444;">
+        <div style="font-size:9px;font-weight:700;color:#EF4444;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:4px;">Vraagt eerst aandacht</div>
+        <div style="font-size:10.5px;font-weight:600;color:#243247;">Leiderschap · Groeiperspectief</div>
+      </div>
+    </div>
+    <div class="col-right">
+      <div class="card" style="border-left:3px solid #22C55E;">
+        <div style="font-size:9px;font-weight:700;color:#22C55E;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:4px;">Relatief sterk</div>
+        <div style="font-size:10.5px;font-weight:600;color:#243247;">Beloning &amp; voorwaarden · Psychologische veiligheid &amp; cultuurmatch</div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <p style="font-size:9px;color:#64748B;margin-bottom:10px;">
+      Score 1–10 (hoger = minder frictie). Kleur geeft indicatieve band: rood = eerst toetsen, geel = gemengd beeld, groen = relatief sterk.
+      Gearceerde rijen: meest opvallende uitschieters in dit beeld.
+    </p>
+    <div class="factor-highlight-top">
+  <div class="factor-row">
+    <div class="factor-name">Psychologische veiligheid &amp; cultuurmatch</div>
+    <div class="factor-items">Ik voelde me vrij om fouten toe te geven in dit team. · Ik kon moeilijke vragen stellen of afwijkende meningen uiten… · De organisatiecultuur sloot aan bij mijn persoonlijke waarde…</div>
+    <table class="bar-table"><tr>
+      <td class="bar-track-cell">
+        <div class="bar-track">
+          <div class="bar-fill" style="width:73.9%;background:#22C55E;"></div>
+        </div>
+      </td>
+      <td class="bar-score-cell">7.4</td>
+      <td class="bar-band-cell" style="color:#22C55E;">Relatief sterk</td>
+    </tr></table>
+  </div>
+</div><div class="factor-highlight-top">
+  <div class="factor-row">
+    <div class="factor-name">Beloning &amp; voorwaarden</div>
+    <div class="factor-items">Mijn salaris was marktconform voor de werkzaamheden die ik u… · De totale arbeidsvoorwaarden (inclusief secundaire) sloten a… · Ik ervoer de beloning als eerlijk ten opzichte van collega&#x27;s…</div>
+    <table class="bar-table"><tr>
+      <td class="bar-track-cell">
+        <div class="bar-track">
+          <div class="bar-fill" style="width:68.9%;background:#22C55E;"></div>
+        </div>
+      </td>
+      <td class="bar-score-cell">6.9</td>
+      <td class="bar-band-cell" style="color:#22C55E;">Relatief sterk</td>
+    </tr></table>
+  </div>
+</div><div>
+  <div class="factor-row">
+    <div class="factor-name">Rolhelderheid</div>
+    <div class="factor-items">Mijn taken en verantwoordelijkheden waren duidelijk omschrev… · Ik wist wat er van mij werd verwacht in mijn functie. · Er was weinig tegenstrijdigheid in de opdrachten die ik ontv…</div>
+    <table class="bar-table"><tr>
+      <td class="bar-track-cell">
+        <div class="bar-track">
+          <div class="bar-fill" style="width:68.5%;background:#22C55E;"></div>
+        </div>
+      </td>
+      <td class="bar-score-cell">6.8</td>
+      <td class="bar-band-cell" style="color:#22C55E;">Relatief sterk</td>
+    </tr></table>
+  </div>
+</div><div>
+  <div class="factor-row">
+    <div class="factor-name">Werkbelasting</div>
+    <div class="factor-items">De hoeveelheid werk die ik moest verzetten was haalbaar binn… · Ik ervoer mijn werkdruk als acceptabel. · Ik had voldoende hersteltijd na intensieve werkperioden.</div>
+    <table class="bar-table"><tr>
+      <td class="bar-track-cell">
+        <div class="bar-track">
+          <div class="bar-fill" style="width:53.7%;background:#F59E0B;"></div>
+        </div>
+      </td>
+      <td class="bar-score-cell">5.4</td>
+      <td class="bar-band-cell" style="color:#F59E0B;">Eerst toetsen</td>
+    </tr></table>
+  </div>
+</div><div class="factor-highlight-bottom">
+  <div class="factor-row">
+    <div class="factor-name">Groeiperspectief</div>
+    <div class="factor-items">Er waren voldoende mogelijkheden om te leren en te groeien b… · De organisatie investeerde in mijn persoonlijke en professio… · Ik zag voor mijzelf een duidelijk loopbaanperspectief binnen…</div>
+    <table class="bar-table"><tr>
+      <td class="bar-track-cell">
+        <div class="bar-track">
+          <div class="bar-fill" style="width:51.4%;background:#F59E0B;"></div>
+        </div>
+      </td>
+      <td class="bar-score-cell">5.1</td>
+      <td class="bar-band-cell" style="color:#F59E0B;">Eerst toetsen</td>
+    </tr></table>
+  </div>
+</div><div class="factor-highlight-bottom">
+  <div class="factor-row">
+    <div class="factor-name">Leiderschap</div>
+    <div class="factor-items">Mijn leidinggevende gaf mij nuttige feedback over mijn funct… · Mijn leidinggevende toonde oprechte interesse in mijn persoo… · Ik had een vertrouwensband met mijn directe leidinggevende.</div>
+    <table class="bar-table"><tr>
+      <td class="bar-track-cell">
+        <div class="bar-track">
+          <div class="bar-fill" style="width:48.6%;background:#F59E0B;"></div>
+        </div>
+      </td>
+      <td class="bar-score-cell">4.9</td>
+      <td class="bar-band-cell" style="color:#F59E0B;">Eerst toetsen</td>
+    </tr></table>
+  </div>
+</div>
+  </div>
+</div>
+
+<div class="section page-break">
+  <span class="section-label">Werkbeleving — SDT Basisbehoeften</span>
+  <div class="card">
+    <p style="font-size:9px;color:#64748B;margin-bottom:10px;">
+      De drie basisbehoeften (SDT: Self-Determination Theory) meten ervaren autonomie,
+      competentiegevoel en verbondenheid. Ze geven de onderliggende werkbeleving weer,
+      los van de organisatiefactoren.
+    </p>
+    <div class="sdt-row">
+  <div class="sdt-label">Autonomie</div>
+  <div class="sdt-help">Mate waarin medewerkers regie ervoeren over hun eigen werkwijze.</div>
+  <table class="bar-table"><tr>
+    <td class="bar-track-cell">
+      <div class="bar-track">
+        <div class="bar-fill" style="width:48.2%;background:#F59E0B;"></div>
+      </div>
+    </td>
+    <td class="bar-score-cell">4.8</td>
+    <td class="bar-band-cell" style="color:#F59E0B;">Eerst toetsen</td>
+  </tr></table>
+</div>
+    <div class="sdt-row">
+  <div class="sdt-label">Competentie</div>
+  <div class="sdt-help">Mate waarin medewerkers zich bekwaam en effectief voelden.</div>
+  <table class="bar-table"><tr>
+    <td class="bar-track-cell">
+      <div class="bar-track">
+        <div class="bar-fill" style="width:58.9%;background:#F59E0B;"></div>
+      </div>
+    </td>
+    <td class="bar-score-cell">5.9</td>
+    <td class="bar-band-cell" style="color:#F59E0B;">Eerst toetsen</td>
+  </tr></table>
+</div>
+    <div class="sdt-row">
+  <div class="sdt-label">Verbondenheid</div>
+  <div class="sdt-help">Mate van verbondenheid met collega&#x27;s en de organisatie.</div>
+  <table class="bar-table"><tr>
+    <td class="bar-track-cell">
+      <div class="bar-track">
+        <div class="bar-fill" style="width:53.7%;background:#F59E0B;"></div>
+      </div>
+    </td>
+    <td class="bar-score-cell">5.4</td>
+    <td class="bar-band-cell" style="color:#F59E0B;">Eerst toetsen</td>
+  </tr></table>
+</div>
+  </div>
+</div>
+
+<div class="section page-break">
+  <span class="section-label">Survey-stemmen (29 open antwoorden)</span>
+  <div class="card" style="margin-bottom:10px;">
+    <p style="font-size:9px;color:#64748B;">
+      Geanonimiseerde uitspraken. Gebruik als kwalitatieve verificatielaag —
+      niet als representatief bewijs. Getoond: 4 van 29 antwoorden.
+    </p>
+  </div>
+  <div class="quote-card">Mooie organisatie, maar voor mij geen zichtbare doorgroeimogelijkheden.<div class="quote-anon">Geanonimiseerd — namen, contactgegevens en locaties verwijderd</div></div><div class="quote-card">Persoonlijke omstandigheden maakten de huidige functie niet meer haalbaar.<div class="quote-anon">Geanonimiseerd — namen, contactgegevens en locaties verwijderd</div></div><div class="quote-card">Ik miste erkenning voor mijn bijdrage, ook bij goede resultaten.<div class="quote-anon">Geanonimiseerd — namen, contactgegevens en locaties verwijderd</div></div><div class="quote-card">Ik miste erkenning voor mijn bijdrage, ook bij goede resultaten.<div class="quote-anon">Geanonimiseerd — namen, contactgegevens en locaties verwijderd</div></div>
+</div>
+
+<div class="section page-break">
+  <span class="section-label">Managementduiding</span>
+  <div class="card" style="margin-bottom:12px;background:#FFFBEB;border-color:#FDE68A;">
+    <p style="font-size:9px;color:#92400E;">
+      <strong>Leesgrens:</strong> Onderstaande duiding is afgeleid uit scorepatronen en vertrekredenen.
+      Gebruik het als eerste verificatiespoor — niet als definitieve diagnose.
+      Toets altijd met direct betrokken managers en HR voordat conclusies worden getrokken.
+    </p>
+  </div>
+  <div class="playbook-card" style="border-left-color:#F59E0B;">
+  <div class="playbook-header">
+    <div class="playbook-badge-cell"><div class="playbook-badge"><span style="background:#F59E0B;">Eerst toetsen</span></div></div>
+    <div class="playbook-title">Leiderschap &mdash; Leiderschap vraagt gerichte terugblik</div>
+  </div>
+  <div class='subsection-label'>Eerste verificatiespoor</div><p>Beslis eerst of dit vooral een leidinggevend patroon in enkele teams is of een breder MT-thema dat gezamenlijke opvolging vraagt.</p>
+  <div class='subsection-label'>Wat toetsen</div><p>Onderzoek in 60-90 dagen of dit signaal incidenteel was of vaker samenvalt met hetzelfde team, dezelfde leiding of hetzelfde type gesprek.</p>
+  <div class='subsection-label'>Mogelijke stappen</div><ul class='action-list'><li>Onderzoek of beperkte correcties in feedbackritme, bereikbaarheid of besluitvorming herhaling bij de volgende persoon kunnen verkleinen.</li><li>Leg vast welk leiderschapsmoment bij een volgende exit eerder getoetst moet worden.</li></ul>
+  <div class='subsection-label'>Eigenaar</div><p>HR en betrokken manager samen</p>
+  <div class='subsection-label'>Reviewmoment</div><p>Weeg binnen 60-90 dagen opnieuw of dit patroon terugkomt in exitgesprekken, HR-signalen of teamdynamiek.</p>
+  <div class='caution-box'>Leesgrens: Maak hier geen generiek leiderschapsprobleem van als het patroon vooral lokaal of situationeel blijkt.</div>
+</div><div class="playbook-card" style="border-left-color:#F59E0B;">
+  <div class="playbook-header">
+    <div class="playbook-badge-cell"><div class="playbook-badge"><span style="background:#F59E0B;">Eerst toetsen</span></div></div>
+    <div class="playbook-title">Groeiperspectief &mdash; Groeisignalen vragen gerichte terugblik</div>
+  </div>
+  <div class='subsection-label'>Eerste verificatiespoor</div><p>Beslis of de grootste ingreep nu moet zitten in zicht op perspectief, het gesprek daarover of feitelijke ontwikkelruimte.</p>
+  <div class='subsection-label'>Wat toetsen</div><p>Onderzoek in 60-90 dagen of dit vooral ging om zicht op groei, feitelijke ruimte of het managementgesprek daarover.</p>
+  <div class='subsection-label'>Mogelijke stappen</div><ul class='action-list'><li>Onderzoek welke ontwikkelverwachting in vergelijkbare rollen eerder expliciet gemaakt moet worden.</li><li>Leg vast welke kleine correctie nodig is om dit signaal bij de volgende persoon minder snel te laten terugkomen.</li></ul>
+  <div class='subsection-label'>Eigenaar</div><p>HR en betrokken manager samen</p>
+  <div class='subsection-label'>Reviewmoment</div><p>Weeg binnen 60-90 dagen opnieuw of dit patroon terugkomt in exitgesprekken, HR-signalen of teamdynamiek.</p>
+  <div class='caution-box'>Leesgrens: Verwar teleurstelling over groei niet automatisch met één eenduidige vertrekverklaring.</div>
+</div>
+</div>
+
+<div class="section page-break">
+  <span class="section-label">Bestuurlijke handoff &amp; vervolgrichting</span>
+  <div class="card" style="margin-bottom:12px;">
+    <p style="font-size:10px;color:#374151;">
+      Gebruik ExitScan niet alleen als terugblik, maar als managementinstrument om het vertrekbeeld te toetsen, te prioriteren en te vertalen naar zichtbare verbeteracties.
+    </p>
+  </div>
+  <table class="step-grid"><tr><td class="step-cell"><div class="step-number">Prioriteit nu</div><div class="step-body">Leiderschap en Groeiperspectief vormen nu het eerste vertrekspoor om bestuurlijk te wegen.</div></td><td class="step-cell"><div class="step-number">Eerste eigenaar</div><div class="step-body">HR business partner met betrokken leidinggevende</div></td><td class="step-cell"><div class="step-number">Eerste stap</div><div class="step-body">Vertaal leiderschap en groeiperspectief binnen 30 dagen naar één gerichte verbeteractie met duidelijke eigenaar en zichtbare opvolging.</div></td><td class="step-cell"><div class="step-number">Reviewmoment</div><div class="step-body">Plan binnen 60-90 dagen een review op leiderschap en groeiperspectief: wat is gekozen, wat is uitgevoerd en welke signalen keren terug in de volgende exitbatch of in managementgesprekken.</div></td></tr></table>
+  <div class="card" style="margin-top:12px;background:#F8FAFC;border-color:#E2E8F0;">
+    <p style="font-size:9px;color:#475569;">
+      <strong>Eerste stap:</strong> Kies één verificatiespoor en bleg eigenaar,
+      eerste stap en reviewmoment vast — vóórdat bredere interventies worden gestart.
+    </p>
+  </div>
+</div>
+
+<div class="page-break section">
+  <span class="section-label">Segmentanalyse</span>
+  <div class="empty-state" style="padding:24px;">
+    <strong style="font-size:10px;color:#64748B;">Segmentduiding niet beschikbaar</strong><br><br>
+    Segmentresultaten worden alleen getoond bij minimaal 5 responses per segment
+    (functieniveau, afdeling). Voor deze meetronde is de grens nog niet bereikt.
+  </div>
+</div>
+
+<div class="page-break">
+  <span class="section-label">Methodiek &amp; interpretatiegrenzen</span>
+  <div class="card" style="margin-bottom:14px;">
+    <p style="font-size:10px;color:#374151;">
+      Loep-output is een gegroepeerde managementsamenvatting op groepsniveau.
+      Het rapport is bedoeld als startpunt voor verificatie, gesprek en prioritering —
+      niet als sluitend bewijs van oorzaak, diagnose of individuele beoordeling.
+    </p>
+  </div>
+  <table class="trust-grid"><tr>
+    <td class="trust-cell">
+      <div class="trust-title">Groepsniveau</div>
+      <div class="trust-body">
+        Alle uitkomsten zijn groepsgemiddelden. Er zijn geen individuele scores,
+        namen of herleidbare gegevens opgenomen.
+      </div>
+    </td>
+    <td class="trust-cell">
+      <div class="trust-title">n-grenzen</div>
+      <div class="trust-body">
+        Indicatief beeld: 5+ responses.<br>
+        Patroonlaag actief: 10+ responses.<br>
+        Segmenten zichtbaar: 5+ per segment.<br>
+        Onder drempel: sectie niet getoond.
+      </div>
+    </td>
+    <td class="trust-cell">
+      <div class="trust-title">Geen diagnose</div>
+      <div class="trust-body">
+        Loep stelt geen diagnose, doet geen causale claims en produceert
+        geen voorspellingen. Scores zijn indicatief en methodisch
+        verdedigbaar, maar niet extern gevalideerd.
+      </div>
+    </td>
+  </tr></table>
+  <table class="trust-grid" style="margin-top:8px;"><tr>
+    <td class="trust-cell">
+      <div class="trust-title">Open tekst</div>
+      <div class="trust-body">
+        Open antwoorden zijn geanonimiseerd (namen, e-mail, telefoon, postcodes
+        verwijderd). Thema&rsquo;s en quotes worden alleen getoond bij voldoende n.
+      </div>
+    </td>
+    <td class="trust-cell">
+      <div class="trust-title">Claimgrens</div>
+      <div class="trust-body">
+        Vermeld altijd n en leessterkte bij interne presentatie.
+        Gebruik output als eerste toetsingsvraag, niet als definitieve uitkomst.
+      </div>
+    </td>
+    <td class="trust-cell">
+      <div class="trust-title">Privacywaarborg</div>
+      <div class="trust-body">
+        Verwerking conform AVG. Individuele antwoorden zijn niet
+        herleidbaar. Rapport is uitsluitend voor geautoriseerde gebruikers.
+      </div>
+    </td>
+  </tr></table>
+</div>
+
+</body>
+</html>

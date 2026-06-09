@@ -39,7 +39,7 @@ export async function POST(request: Request) {
   const isOwner = membership?.role === 'owner'
 
   if (!isAdmin && !isOwner) {
-    return NextResponse.json({ error: 'Alleen Verisight of klant owners mogen managers toewijzen.' }, { status: 403 })
+    return NextResponse.json({ error: 'Alleen Loep of klant owners mogen managers toewijzen.' }, { status: 403 })
   }
 
   const adminClient = createAdminClient()

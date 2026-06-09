@@ -1,0 +1,53 @@
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[warning] ./components/dashboard/factor-table.tsx
+Attempted import error: 'RISK_COLORS' is not exported from '@/lib/management-language' (imported as 'RISK_COLORS').
+[warning] ./components/dashboard/factor-table.tsx
+Attempted import error: 'RISK_BG_COLORS' is not exported from '@/lib/management-language' (imported as 'RISK_BG_COLORS').
+[warning] ./components/dashboard/factor-table.tsx
+Attempted import error: 'RISK_COLORS' is not exported from '@/lib/management-language' (imported as 'RISK_COLORS').
+[warning] ./components/dashboard/risk-charts.tsx
+Attempted import error: 'RISK_COLORS' is not exported from '@/lib/management-language' (imported as 'RISK_COLORS').
+[warning] ./components/dashboard/risk-charts.tsx
+Attempted import error: 'RISK_COLORS' is not exported from '@/lib/management-language' (imported as 'RISK_COLORS').
+[warning] There were more warnings in other files.
+You can find a complete log in the terminal.
+[warning] Detected `scroll-behavior: smooth` on the `<html>` element. In a future version, Next.js will no longer automatically disable smooth scrolling during route transitions. To prepare for this change, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[warning] ./components/dashboard/factor-table.tsx
+Attempted import error: 'RISK_COLORS' is not exported from '@/lib/management-language' (imported as 'RISK_COLORS').
+[warning] ./components/dashboard/factor-table.tsx
+Attempted import error: 'RISK_BG_COLORS' is not exported from '@/lib/management-language' (imported as 'RISK_BG_COLORS').
+[warning] ./components/dashboard/factor-table.tsx
+Attempted import error: 'RISK_COLORS' is not exported from '@/lib/management-language' (imported as 'RISK_COLORS').
+[warning] ./components/dashboard/risk-charts.tsx
+Attempted import error: 'RISK_COLORS' is not exported from '@/lib/management-language' (imported as 'RISK_COLORS').
+[warning] ./components/dashboard/risk-charts.tsx
+Attempted import error: 'RISK_COLORS' is not exported from '@/lib/management-language' (imported as 'RISK_COLORS').
+[warning] There were more warnings in other files.
+You can find a complete log in the terminal.
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[warning] ./components/dashboard/factor-table.tsx
+Attempted import error: 'RISK_COLORS' is not exported from '@/lib/management-language' (imported as 'RISK_COLORS').
+[warning] ./components/dashboard/factor-table.tsx
+Attempted import error: 'RISK_BG_COLORS' is not exported from '@/lib/management-language' (imported as 'RISK_BG_COLORS').
+[warning] ./components/dashboard/factor-table.tsx
+Attempted import error: 'RISK_COLORS' is not exported from '@/lib/management-language' (imported as 'RISK_COLORS').
+[warning] ./components/dashboard/risk-charts.tsx
+Attempted import error: 'RISK_COLORS' is not exported from '@/lib/management-language' (imported as 'RISK_COLORS').
+[warning] ./components/dashboard/risk-charts.tsx
+Attempted import error: 'RISK_COLORS' is not exported from '@/lib/management-language' (imported as 'RISK_COLORS').
+[warning] There were more warnings in other files.
+You can find a complete log in the terminal.
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[warning] ./components/dashboard/factor-table.tsx
+Attempted import error: 'RISK_COLORS' is not exported from '@/lib/management-language' (imported as 'RISK_COLORS').
+[warning] ./components/dashboard/factor-table.tsx
+Attempted import error: 'RISK_BG_COLORS' is not exported from '@/lib/management-language' (imported as 'RISK_BG_COLORS').
+[warning] ./components/dashboard/factor-table.tsx
+Attempted import error: 'RISK_COLORS' is not exported from '@/lib/management-language' (imported as 'RISK_COLORS').
+[warning] ./components/dashboard/risk-charts.tsx
+Attempted import error: 'RISK_COLORS' is not exported from '@/lib/management-language' (imported as 'RISK_COLORS').
+[warning] ./components/dashboard/risk-charts.tsx
+Attempted import error: 'RISK_COLORS' is not exported from '@/lib/management-language' (imported as 'RISK_COLORS').
+[warning] There were more warnings in other files.
+You can find a complete log in the terminal.

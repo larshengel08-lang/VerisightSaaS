@@ -1,14 +1,14 @@
-ï»¿"""
-Verisight â€” ORM Models
+"""
+Verisight — ORM Models
 =============================
 SQLAlchemy ORM definitions for all database tables.
 
 Tables
 ------
-  organizations   â€” operator accounts / tenants
-  campaigns       â€” survey campaigns per organisation
-  respondents     â€” individual survey tokens (one per invite)
-  survey_responses â€” completed survey data + computed scores
+  organizations   — operator accounts / tenants
+  campaigns       — survey campaigns per organisation
+  respondents     — individual survey tokens (one per invite)
+  survey_responses — completed survey data + computed scores
 """
 
 from __future__ import annotations
@@ -130,11 +130,11 @@ class Campaign(Base):
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     scan_type: Mapped[str] = mapped_column(String(20), nullable=False)  # "exit" | "retention" | "pulse" | "team" | "onboarding" | "leadership"
-    delivery_mode: Mapped[str | None] = mapped_column(String(20), nullable=True)  # "baseline" | "live" â€” null behandeld als baseline
+    delivery_mode: Mapped[str | None] = mapped_column(String(20), nullable=True)  # "baseline" | "live" — null behandeld als baseline
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
     # Optional: which Module C blocks to include (JSON list of factor keys)
-    # e.g. ["leadership", "culture", "growth"]  â€” null means all
+    # e.g. ["leadership", "culture", "growth"]  — null means all
     enabled_modules: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
@@ -183,7 +183,7 @@ class Respondent(Base):
     id: Mapped[str] = mapped_column(GUID(), primary_key=True, default=_uuid)
     campaign_id: Mapped[str] = mapped_column(GUID(), ForeignKey("campaigns.id"), nullable=False)
 
-    # UUID token embedded in survey URL â€” no PII in token itself
+    # UUID token embedded in survey URL — no PII in token itself
     token: Mapped[str] = mapped_column(GUID(), unique=True, default=_uuid, index=True)
 
     # Minimal metadata for segmentation (operator-supplied, optional)
@@ -192,7 +192,7 @@ class Respondent(Base):
     exit_month: Mapped[str | None] = mapped_column(String(7), nullable=True)  # YYYY-MM, vooral voor retrospectieve batches
     annual_salary_eur: Mapped[float | None] = mapped_column(Float, nullable=True)
 
-    # E-mailadres voor uitnodiging (optioneel â€” nooit getoond in dashboard)
+    # E-mailadres voor uitnodiging (optioneel — nooit getoond in dashboard)
     email: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # Tracking
@@ -206,11 +206,11 @@ class Respondent(Base):
     response: Mapped["SurveyResponse | None"] = relationship(back_populates="respondent", uselist=False)
 
     def __repr__(self) -> str:
-        return f"<Respondent token={self.token[:8]}â€¦ completed={self.completed}>"
+        return f"<Respondent token={self.token[:8]}… completed={self.completed}>"
 
 
 # ---------------------------------------------------------------------------
-# SurveyResponse â€” all answers + computed scores
+# SurveyResponse — all answers + computed scores
 # ---------------------------------------------------------------------------
 
 class SurveyResponse(Base):
@@ -220,7 +220,7 @@ class SurveyResponse(Base):
     respondent_id: Mapped[str] = mapped_column(GUID(), ForeignKey("respondents.id"), unique=True, nullable=False)
 
     # ------------------------------------------------------------------
-    # Module A â€” Exit context (exit surveys only)
+    # Module A — Exit context (exit surveys only)
     # ------------------------------------------------------------------
     tenure_years: Mapped[float | None] = mapped_column(Float, nullable=True)
     exit_reason_category: Mapped[str | None] = mapped_column(String(50), nullable=True)   # push/pull/situational key
@@ -230,7 +230,7 @@ class SurveyResponse(Base):
     stay_intent_score: Mapped[int | None] = mapped_column(Integer, nullable=True)         # 1-5
 
     # ------------------------------------------------------------------
-    # Module B â€” SDT raw items (JSON: {"B1": 4, "B2": 3, ...})
+    # Module B — SDT raw items (JSON: {"B1": 4, "B2": 3, ...})
     # ------------------------------------------------------------------
     sdt_raw: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
 
@@ -238,7 +238,7 @@ class SurveyResponse(Base):
     sdt_scores: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
 
     # ------------------------------------------------------------------
-    # Module C â€” Org factor raw items (JSON: {"leadership_1": 4, ...})
+    # Module C — Org factor raw items (JSON: {"leadership_1": 4, ...})
     # ------------------------------------------------------------------
     org_raw: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
 
@@ -246,12 +246,12 @@ class SurveyResponse(Base):
     org_scores: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
 
     # ------------------------------------------------------------------
-    # Module D â€” Pull factors (exit only)
+    # Module D — Pull factors (exit only)
     # ------------------------------------------------------------------
     pull_factors_raw: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
 
     # ------------------------------------------------------------------
-    # Module E â€” Open text (anonymised before storage)
+    # Module E — Open text (anonymised before storage)
     # ------------------------------------------------------------------
     open_text_raw: Mapped[str | None] = mapped_column(Text, nullable=True)
     open_text_analysis: Mapped[str | None] = mapped_column(Text, nullable=True)   # LLM output
@@ -281,7 +281,7 @@ class SurveyResponse(Base):
 
     submitted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
-    # Scoring model version â€” allows comparison when weights/formulas change
+    # Scoring model version — allows comparison when weights/formulas change
     scoring_version: Mapped[str] = mapped_column(String(10), nullable=False, default="v1.0")
 
     respondent: Mapped["Respondent"] = relationship(back_populates="response")
@@ -291,7 +291,7 @@ class SurveyResponse(Base):
 
 
 # ---------------------------------------------------------------------------
-# ContactRequest â€” website lead capture
+# ContactRequest — website lead capture
 # ---------------------------------------------------------------------------
 
 class ContactRequest(Base):
@@ -341,7 +341,7 @@ class ContactRequest(Base):
 
 
 # ---------------------------------------------------------------------------
-# CampaignDeliveryRecord / CampaignDeliveryCheckpoint â€” persistent ops control
+# CampaignDeliveryRecord / CampaignDeliveryCheckpoint — persistent ops control
 # ---------------------------------------------------------------------------
 
 class CampaignDeliveryRecord(Base):
@@ -417,7 +417,7 @@ class CampaignDeliveryCheckpoint(Base):
 
 
 # ---------------------------------------------------------------------------
-# PilotLearningDossier / PilotLearningCheckpoint â€” internal learning system
+# PilotLearningDossier / PilotLearningCheckpoint — internal learning system
 # ---------------------------------------------------------------------------
 
 class PilotLearningDossier(Base):

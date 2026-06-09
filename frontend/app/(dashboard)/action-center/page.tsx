@@ -66,7 +66,7 @@ type ActionCenterScopeRow = {
 }
 
 function getDisplayName(email: string | null | undefined) {
-  if (!email) return 'Verisight gebruiker'
+  if (!email) return 'Loep gebruiker'
   const localPart = email.split('@')[0] ?? 'verisight-gebruiker'
   return localPart
     .split(/[._-]/)
@@ -416,7 +416,7 @@ export default async function ActionCenterPage({
         return {
           campaign,
           stats: statsByCampaignId.get(campaign.id) ?? null,
-          organizationName: organizationById.get(campaign.organization_id)?.name ?? 'Verisight organisatie',
+          organizationName: organizationById.get(campaign.organization_id)?.name ?? 'Loep organisatie',
           memberRole: roleByOrgId[campaign.organization_id] ?? null,
           scopeType: scope.scopeType,
           scopeValue: scope.scopeValue,

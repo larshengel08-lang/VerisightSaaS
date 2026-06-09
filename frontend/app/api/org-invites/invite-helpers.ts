@@ -31,7 +31,7 @@ export async function requireAdminContext() {
     .single()
 
   if (profile?.is_verisight_admin !== true) {
-    return { error: NextResponse.json({ detail: 'Alleen Verisight-beheerders kunnen klanttoegang beheren.' }, { status: 403 }) }
+    return { error: NextResponse.json({ detail: 'Alleen Loep-beheerders kunnen klanttoegang beheren.' }, { status: 403 }) }
   }
 
   return { supabase, user }

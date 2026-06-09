@@ -1,0 +1,11 @@
+﻿README.md
+REVIEW_PROMPT.md
+docs/superpowers/specs/2026-05-19-loep-culture-assessment-operating-system-design.md
+docs/superpowers/methodology/culture_assessment_method_source_map.md
+docs/superpowers/methodology/culture_assessment_domain_index_lock.md
+docs/superpowers/methodology/culture_assessment_validity_release_lock.md
+docs/superpowers/trust/culture_assessment_buyer_faq.md
+docs/superpowers/trust/culture_assessment_privacy_export_release_pack.md
+docs/superpowers/output/culture_assessment_output_registry.md
+docs/superpowers/output/culture_assessment_board_pack_readiness.md
+docs/examples/voorbeeldrapport_cultuurbeeld.pdf

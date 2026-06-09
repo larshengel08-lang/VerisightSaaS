@@ -32,7 +32,7 @@ export const CORE_MARKETING_PRODUCTS: MarketingProduct[] = [
     description:
       'Voor organisaties die vertrek niet alleen willen registreren, maar scherp willen begrijpen waar patronen terugkomen en waar actie het eerst effect heeft.',
     seoTitle: 'ExitScan | Verloopanalyse en vertrekduiding voor HR-teams',
-    ogAlt: 'ExitScan productpagina van Verisight',
+    ogAlt: 'ExitScan productpagina van Loep',
     serviceType: 'Vertrekduiding en managementrapportage',
     serviceAudience: 'HR-teams en directies die uitstroom achteraf willen duiden',
     serviceOutput:
@@ -49,7 +49,7 @@ export const CORE_MARKETING_PRODUCTS: MarketingProduct[] = [
     description:
       'Voor organisaties die behoudsdruk eerder willen zien, voordat verloop zichtbaar oploopt en het gesprek te laat begint.',
     seoTitle: 'RetentieScan | Medewerkersbehoud en vroegsignalering voor HR-teams',
-    ogAlt: 'RetentieScan productpagina van Verisight',
+    ogAlt: 'RetentieScan productpagina van Loep',
     serviceType: 'Vroegsignalering op behoud met retentiesignaal',
     serviceAudience: 'HR-teams en directies die behoud eerder zichtbaar willen maken',
     serviceOutput:
@@ -66,7 +66,7 @@ export const CORE_MARKETING_PRODUCTS: MarketingProduct[] = [
     description:
       'Voor organisaties die cultuur en engagement breed organisatiebreed willen begrijpen, met een scherpe executive read, bestuurlijke aandachtspunten en governed drilldown zonder externe ranglijsten als startpunt of individuele managers tegen elkaar af te zetten.',
     seoTitle: 'Loep Cultuurbeeld | Jaarlijkse cultuur- en engagementbaseline voor directie en HR',
-    ogAlt: 'Loep Cultuurbeeld productpagina van Verisight',
+    ogAlt: 'Loep Cultuurbeeld productpagina van Loep',
     serviceType: 'Jaarlijkse cultuur- en engagementbaseline',
     serviceAudience: 'Directie, board en HR-teams die cultuur en engagement breed willen lezen',
     serviceOutput:
@@ -89,7 +89,7 @@ export const SECONDARY_FIRST_BUY_MARKETING_PRODUCTS: MarketingProduct[] = [
     description:
       'Gerichte startroute voor organisaties die juist in de eerste maanden van nieuwe medewerkers sneller helderheid nodig hebben, zonder Onboarding tot derde kernroute te maken.',
     seoTitle: 'Onboarding 30-60-90 | Vroege lifecycle-check voor nieuwe medewerkers',
-    ogAlt: 'Onboarding 30-60-90 productpagina van Verisight',
+    ogAlt: 'Onboarding 30-60-90 productpagina van Loep',
     serviceType: 'Onboarding baseline voor vroege landing en eerste uitval',
     serviceAudience: 'HR-teams en directies die onboarding als eerste managementvraag willen openen',
     serviceOutput:
@@ -111,7 +111,7 @@ export const FOLLOW_ON_MARKETING_PRODUCTS: MarketingProduct[] = [
     description:
       'Gerichte vervolgronde voor organisaties waar vertrekduiding en behoudsvraag tegelijk bestuurlijk spelen. Bedoeld als gefaseerde combinatie van ExitScan en RetentieScan, niet als derde eerste instap.',
     seoTitle: 'Combinatie | Gefaseerde vervolglijn voor ExitScan en RetentieScan',
-    ogAlt: 'Combinatie productpagina van Verisight',
+    ogAlt: 'Combinatie productpagina van Loep',
     serviceType: 'Gefaseerde vervolglijn voor vertrekduiding en behoudsvraag',
     serviceAudience: 'HR-teams en directies die vertrekduiding en behoudsvraag bewust in één lijn willen verbinden',
     serviceOutput:
@@ -128,7 +128,7 @@ export const FOLLOW_ON_MARKETING_PRODUCTS: MarketingProduct[] = [
     description:
       'Compacte vervolgronde voor kortere reviewmetingen nadat een eerste baseline, managementread of eerste actie al staat. Bedoeld voor ritme, effectcheck en managementreview, niet als derde brede instap.',
     seoTitle: 'Pulse | Compacte reviewmetingen na eerste baseline of managementread',
-    ogAlt: 'Pulse productpagina van Verisight',
+    ogAlt: 'Pulse productpagina van Loep',
     serviceType: 'Compacte reviewmeting na eerste baseline of managementread',
     serviceAudience: 'HR-teams en directies die na een eerste scan gericht willen blijven volgen',
     serviceOutput:
@@ -145,7 +145,7 @@ export const FOLLOW_ON_MARKETING_PRODUCTS: MarketingProduct[] = [
     description:
       'Gerichte vervolgronde voor een group-level leadershipread nadat een bestaand people-signaal al zichtbaar is. Bedoeld voor managementcontext en eerste verificatie, niet voor named leaders, 360 of performanceframing.',
     seoTitle: 'Leadership Scan | Begrensde managementread na een bestaand signaal',
-    ogAlt: 'Leadership Scan productpagina van Verisight',
+    ogAlt: 'Leadership Scan productpagina van Loep',
     serviceType: 'Group-level leadershipread na een bestaand signaal',
     serviceAudience: 'HR-teams en directies die managementcontext gericht willen duiden',
     serviceOutput:

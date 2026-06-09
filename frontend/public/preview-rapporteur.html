@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verisight — De Rapporteur [Preview]</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Inter:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: oklch(0.978 0.012 62);
+  color: oklch(0.14 0.008 50);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ── Keyframes ── */
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideDownFade {
+  from { opacity: 0; transform: translateY(-16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideRightFade {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes scaleXIn {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes floatY {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
+}
+@keyframes marqueeScroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+@keyframes gradFlow {
+  0%, 100% { background-position: 0% 50%; }
+  50%       { background-position: 100% 50%; }
+}
+@keyframes ctaPulse {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50%       { opacity: 0.85; transform: scale(1.04); }
+}
+@keyframes barGrow {
+  from { height: 0; }
+  to   { height: var(--bar-h); }
+}
+@keyframes progressFill {
+  from { width: 0%; }
+}
+@keyframes borderPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+  50%       { box-shadow: 0 0 0 8px rgba(255,255,255,0.06); }
+}
+
+/* ── Hero entrance cascade ── */
+.h-sm   { animation: slideDownFade 0.6s cubic-bezier(0.16,1,0.3,1) 0.05s both; }
+.h-1    { animation: slideUpFade   0.9s cubic-bezier(0.16,1,0.3,1) 0.15s both; }
+.h-2    { animation: slideUpFade   0.9s cubic-bezier(0.16,1,0.3,1) 0.28s both; }
+.h-rule { animation: scaleXIn     0.7s cubic-bezier(0.4,0,0,1)    0.52s both; transform-origin: left; }
+.h-body { animation: slideUpFade  0.8s cubic-bezier(0.16,1,0.3,1) 0.60s both; }
+.h-cta  { animation: slideUpFade  0.8s cubic-bezier(0.16,1,0.3,1) 0.72s both; }
+.h-trust{ animation: fadeIn       0.8s ease                        0.88s both; }
+.h-dash { animation: slideRightFade 1.0s cubic-bezier(0.16,1,0.3,1) 0.22s both; }
+
+/* ── Shimmer text for accent italic ── */
+.shimmer-text {
+  background: linear-gradient(90deg, var(--ac-deep) 20%, var(--ac-light) 50%, var(--ac-deep) 80%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 4s linear infinite;
+}
+
+/* ── Float animation for dashboard ── */
+.float-anim { animation: floatY 6s ease-in-out infinite; }
+
+/* ── Scroll progress bar ── */
+#scroll-progress {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 2px; z-index: 300; pointer-events: none;
+}
+#scroll-progress-bar {
+  height: 100%;
+  background: var(--ac-mid);
+  transition: width 0.08s linear;
+}
+
+/* ── Marquee mask ── */
+.marquee-wrap {
+  -webkit-mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+  mask-image:         linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+}
+
+/* ── Animated underline for links ── */
+.link-underline {
+  position: relative;
+  text-decoration: none;
+}
+.link-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; left: 0;
+  width: 0; height: 1px;
+  background: currentColor;
+  transition: width 0.22s cubic-bezier(0.4,0,0,1);
+}
+.link-underline:hover::after { width: 100%; }
+
+/* ── Route card hover strip ── */
+.route-strip {
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 0.3s cubic-bezier(0.4,0,0,1);
+}
+.route-card:hover .route-strip { transform: scaleX(1); }
+
+/* ── CTA button glow ── */
+.cta-btn-primary { animation: borderPulse 2.5s ease-in-out 1s infinite; }
+</style>
+</head>
+<body>
+
+<div id="scroll-progress"><div id="scroll-progress-bar" style="width:0%"></div></div>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{ "accentHue": 52 }/*EDITMODE-END*/;
+
+/* ── Tokens ── */
+const T = {
+  paper:     'oklch(0.978 0.012 62)',
+  paperSoft: 'oklch(0.956 0.020 60)',
+  white:     '#FFFCF8',
+  ink:       'oklch(0.14 0.008 50)',
+  inkSoft:   'oklch(0.30 0.008 50)',
+  inkMuted:  'oklch(0.52 0.008 50)',
+  inkFaint:  'oklch(0.70 0.006 50)',
+  rule:      'oklch(0.875 0.016 62)',
+  ruleLight: 'oklch(0.918 0.010 62)',
+};
+
+function ac(hue) {
+  return {
+    deep:  `oklch(0.42 0.18  ${hue})`,
+    mid:   `oklch(0.78 0.133 ${hue + 3})`,
+    light: `oklch(0.88 0.09  ${hue + 5})`,
+    soft:  `oklch(0.95 0.055 ${hue})`,
+    faint: `oklch(0.976 0.022 ${hue})`,
+  };
+}
+
+/* ── Scroll progress (vanilla DOM, zero re-renders) ── */
+function mountScrollProgress() {
+  const bar = document.getElementById('scroll-progress-bar');
+  if (!bar) return;
+  const fn = () => {
+    const s = window.scrollY;
+    const h = document.documentElement.scrollHeight - window.innerHeight;
+    bar.style.width = (h > 0 ? (s / h) * 100 : 0) + '%';
+  };
+  window.addEventListener('scroll', fn, { passive: true });
+  return () => window.removeEventListener('scroll', fn);
+}
+
+/* ── useInView ── */
+function useInView(threshold = 0.12) {
+  const ref = useRef(null);
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { setInView(true); obs.disconnect(); }
+    }, { threshold });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [threshold]);
+  return [ref, inView];
+}
+
+/* ── useCountUp ── */
+function useCountUp(target, inView, duration = 1100) {
+  const [val, setVal] = useState(0);
+  useEffect(() => {
+    if (!inView) return;
+    let raf, start;
+    raf = requestAnimationFrame(function step(ts) {
+      if (!start) start = ts;
+      const p = Math.min((ts - start) / duration, 1);
+      const e = 1 - Math.pow(1 - p, 3);
+      setVal(Math.round(e * target));
+      if (p < 1) raf = requestAnimationFrame(step);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [inView, target, duration]);
+  return val;
+}
+
+/* ── Reveal wrapper (scroll-triggered) ── */
+function Reveal({ children, delay = 0, from = 'up', threshold = 0.1 }) {
+  const [ref, inView] = useInView(threshold);
+  const transforms = { up: 'translateY(22px)', right: 'translateX(24px)', none: 'none' };
+  return (
+    <div ref={ref} style={{
+      opacity:    inView ? 1 : 0,
+      transform:  inView ? 'none' : transforms[from],
+      transition: `opacity 0.75s ease ${delay}s, transform 0.75s cubic-bezier(0.16,1,0.3,1) ${delay}s`,
+      willChange: 'transform, opacity',
+    }}>
+      {children}
+    </div>
+  );
+}
+
+/* ── Section mark ── */
+function SectionMark({ num, label, inView = true }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 52 }}>
+      <span style={{ fontFamily: "'Fraunces', serif", fontSize: 11, fontWeight: 400, color: T.inkFaint, letterSpacing: '0.03em', minWidth: 18 }}>{num}</span>
+      <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.18em', textTransform: 'uppercase', color: T.inkMuted, whiteSpace: 'nowrap' }}>{label}</span>
+      <div style={{
+        flex: 1, height: '1px', background: T.rule, transformOrigin: 'left',
+        transform: inView ? 'scaleX(1)' : 'scaleX(0)',
+        opacity:   inView ? 1 : 0,
+        transition: 'transform 0.9s cubic-bezier(0.4,0,0,1) 0.1s, opacity 0.4s ease 0.1s',
+      }} />
+    </div>
+  );
+}
+
+/* ── Arrow ── */
+function Arrow() {
+  return <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+    <path d="M2.5 7h9M7.5 3.5L11 7l-3.5 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>;
+}
+
+/* ── Buttons ── */
+function PrimaryBtn({ accent, children, large, ghost, glowPulse }) {
+  const [hov, setHov] = useState(false);
+  const base = {
+    textDecoration: 'none', display: 'inline-flex', alignItems: 'center',
+    gap: 7, cursor: 'pointer',
+    fontSize: large ? 14.5 : 13, fontWeight: ghost ? 500 : 600,
+    padding: large ? '12px 28px' : '7px 16px',
+    transition: 'all 0.18s cubic-bezier(0.4,0,0,1)',
+  };
+  if (ghost) return (
+    <a href="#" onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      style={{ ...base, color: hov ? T.ink : T.inkSoft,
+        border: `1px solid ${hov ? T.inkMuted : T.rule}`,
+        background: hov ? T.paperSoft : 'transparent',
+        transform: hov ? 'translateY(-1px)' : 'none',
+      }}>
+      {children}
+    </a>
+  );
+  return (
+    <a href="#" onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      className={glowPulse ? 'cta-btn-primary' : ''}
+      style={{ ...base, color: '#fff',
+        background: hov ? accent.deep : T.ink,
+        transform: hov ? 'translateY(-2px)' : 'none',
+        boxShadow: hov ? `0 8px 24px -4px ${accent.deep}55` : 'none',
+      }}>
+      {children}<Arrow />
+    </a>
+  );
+}
+
+/* ── Nav ── */
+function Nav({ accent }) {
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const fn = () => setScrolled(window.scrollY > 10);
+    window.addEventListener('scroll', fn, { passive: true });
+    return () => window.removeEventListener('scroll', fn);
+  }, []);
+  return (
+    <nav style={{
+      position: 'sticky', top: 0, zIndex: 200,
+      background: scrolled ? 'rgba(250,249,246,0.92)' : T.white,
+      backdropFilter: scrolled ? 'blur(20px) saturate(150%)' : 'none',
+      borderBottom: `1px solid ${scrolled ? T.rule : T.ruleLight}`,
+      transition: 'all 0.3s ease',
+    }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 48px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 32 }}>
+        <a href="#" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', flexShrink: 0 }}>
+          <span style={{ fontFamily: "'Fraunces', serif", fontSize: 9, color: accent.mid, lineHeight: 1, position: 'relative', top: -1 }}>◆</span>
+          <span style={{ fontFamily: "'Fraunces', serif", fontSize: 17, fontWeight: 400, color: T.ink, letterSpacing: '-0.02em' }}>Verisight</span>
+        </a>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          {['Producten', 'Aanpak', 'Tarieven', 'Vertrouwen'].map(l => <NavLink key={l} label={l} />)}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          <a href="#" className="link-underline" style={{ fontSize: 13, fontWeight: 500, color: T.inkMuted, textDecoration: 'none', padding: '7px 14px', transition: 'color 0.15s' }}
+            onMouseEnter={e => e.target.style.color = T.ink}
+            onMouseLeave={e => e.target.style.color = T.inkMuted}>
+            Inloggen
+          </a>
+          <PrimaryBtn accent={accent}>Plan een kennismaking</PrimaryBtn>
+        </div>
+      </div>
+    </nav>
+  );
+}
+
+function NavLink({ label }) {
+  const [hov, setHov] = useState(false);
+  return (
+    <a href="#" onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      style={{ fontSize: 13.5, color: hov ? T.ink : T.inkMuted, textDecoration: 'none', padding: '7px 13px', transition: 'color 0.15s', position: 'relative' }}>
+      {label}
+      <span style={{
+        position: 'absolute', bottom: 2, left: '50%', transform: 'translateX(-50%)',
+        width: hov ? 14 : 0, height: 2, background: T.ink, borderRadius: 1,
+        transition: 'width 0.2s cubic-bezier(0.4,0,0,1)',
+      }} />
+    </a>
+  );
+}
+
+/* ── Hero ── */
+function Hero({ accent }) {
+  const [tab, setTab] = useState('samenvatting');
+
+  return (
+    <section style={{
+      background: T.white, padding: '72px 0 80px',
+      borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden',
+    }}>
+      {/* Subtle blueprint grid */}
+      <div style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
+        backgroundImage: `linear-gradient(${T.rule}88 1px, transparent 1px), linear-gradient(90deg, ${T.rule}88 1px, transparent 1px)`,
+        backgroundSize: '72px 72px',
+        opacity: 0.45,
+      }} />
+      {/* Animated radial glow top-right */}
+      <div style={{
+        position: 'absolute', top: -120, right: -80, width: 600, height: 600,
+        background: `radial-gradient(circle, ${accent.soft} 0%, transparent 65%)`,
+        pointerEvents: 'none', zIndex: 0,
+        animation: 'ctaPulse 6s ease-in-out infinite',
+      }} />
+
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 48px', position: 'relative', zIndex: 1 }}>
+        {/* Section mark — always visible in hero */}
+        <div className="h-sm">
+          <SectionMark num="01" label="People insight · HR & management" inView={true} />
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 572px', gap: 80, alignItems: 'start' }}>
+          <div>
+            {/* Headline — split into two Reveal lines */}
+            <div className="h-1">
+              <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 400, fontSize: 88, lineHeight: 0.95, letterSpacing: '-0.034em', color: T.ink, textWrap: 'balance' }}>
+                Van losse<br />signalen
+              </div>
+            </div>
+            <div className="h-2" style={{ marginBottom: 28 }}>
+              <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 300, fontSize: 88, lineHeight: 0.95, letterSpacing: '-0.034em', textWrap: 'balance' }}>
+                <em className="shimmer-text" style={{ fontStyle: 'italic' }}>naar een eerste<br />helder beeld.</em>
+              </div>
+            </div>
+
+            <div className="h-rule" style={{ width: 40, height: 3, background: accent.deep, marginBottom: 28, display: 'block' }} />
+
+            <div className="h-body">
+              <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '46ch', marginBottom: 36 }}>
+                Verisight helpt HR en MT sneller zien waar vertrek, behoud en vroege medewerkerservaring aandacht vragen. Gegroepeerde output die direct bruikbaar is voor gesprek en prioritering.
+              </p>
+            </div>
+
+            <div className="h-cta" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+              <PrimaryBtn accent={accent} large>Plan een kennismaking</PrimaryBtn>
+              <PrimaryBtn accent={accent} large ghost>Bekijk voorbeeldoutput</PrimaryBtn>
+            </div>
+
+            <div className="h-trust" style={{ marginTop: 44, paddingTop: 28, borderTop: `1px solid ${T.rule}`, display: 'flex', alignItems: 'center', gap: 28, flexWrap: 'wrap' }}>
+              {[
+                { icon: 'shield', label: 'Geen individuele data' },
+                { icon: 'lock',   label: 'AVG-conform' },
+                { icon: 'clock',  label: 'Resultaat binnen weken' },
+              ].map(p => <TrustPill key={p.label} icon={p.icon}>{p.label}</TrustPill>)}
+            </div>
+          </div>
+
+          {/* Dashboard — floats gently */}
+          <div className="h-dash float-anim">
+            <DashboardPreview accent={accent} tab={tab} setTab={setTab} />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function TrustPill({ icon, children }) {
+  const paths = {
+    shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" strokeWidth="1.5" fill="none"/>,
+    lock:   <><rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" strokeWidth="1.5" fill="none"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" strokeWidth="1.5" fill="none"/></>,
+    clock:  <><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" fill="none"/><path d="M12 6v6l4 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none"/></>,
+  };
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, color: T.inkMuted }}>
+      <svg width="13" height="13" viewBox="0 0 24 24">{paths[icon]}</svg>
+      {children}
+    </div>
+  );
+}
+
+/* ── Dashboard Preview ── */
+function DashboardPreview({ accent, tab, setTab }) {
+  const tabs = [
+    { id: 'samenvatting', label: 'Samenvatting' },
+    { id: 'themas',       label: "Thema's" },
+    { id: 'rapportage',   label: 'Rapportage' },
+  ];
+  return (
+    <div style={{
+      background: T.white, border: `1px solid ${T.rule}`, borderRadius: 14,
+      overflow: 'hidden',
+      boxShadow: `0 2px 4px rgba(0,0,0,.04), 0 32px 72px -16px rgba(20,18,12,.2), 0 0 0 1px ${accent.soft}`,
+    }}>
+      <div style={{ display: 'flex', gap: 2, padding: '10px 14px', background: T.paperSoft, borderBottom: `1px solid ${T.rule}` }}>
+        {tabs.map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)} style={{
+            fontSize: 12, fontWeight: t.id === tab ? 600 : 400,
+            padding: '6px 14px', border: 'none', cursor: 'pointer', borderRadius: 5,
+            background: t.id === tab ? T.white : 'transparent',
+            color: t.id === tab ? T.ink : T.inkMuted,
+            boxShadow: t.id === tab ? '0 1px 3px rgba(0,0,0,.08)' : 'none',
+            transition: 'all 0.15s',
+          }}>
+            {t.label}
+          </button>
+        ))}
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ width: 6, height: 6, borderRadius: '50%', background: accent.mid, boxShadow: `0 0 0 3px ${accent.soft}` }} />
+          <span style={{ fontSize: 10.5, color: T.inkMuted, fontWeight: 500 }}>ExitScan · Q2</span>
+        </div>
+      </div>
+      <div style={{ padding: '26px 28px', animation: 'scaleIn 0.3s ease both' }} key={tab}>
+        {tab === 'samenvatting' && <SamenvattingTab accent={accent} />}
+        {tab === 'themas'       && <ThemasTab accent={accent} />}
+        {tab === 'rapportage'   && <RapportageTab accent={accent} />}
+      </div>
+    </div>
+  );
+}
+
+function SamenvattingTab({ accent }) {
+  const [ready, setReady] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setReady(true), 120); return () => clearTimeout(t); }, []);
+
+  return (
+    <div>
+      <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: T.inkMuted, marginBottom: 5 }}>Voorbeeldoutput · Q2 2025</div>
+      <div style={{ fontFamily: "'Fraunces', serif", fontSize: 17, fontWeight: 400, color: T.ink, marginBottom: 22, lineHeight: 1.25, letterSpacing: '-0.01em' }}>
+        Managementsamenvatting. Topprioriteiten, trend en eerste actie.
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginBottom: 22 }}>
+        {[
+          { label: 'Groei en ontwikkeling', tag: 'Hoog',     tagBg: 'oklch(0.85 0.05 25 / 0.28)', tagColor: 'oklch(0.35 0.15 25)', delay: 0 },
+          { label: 'Werkdruk in operatie',  tag: 'Verhoogd', tagBg: 'oklch(0.88 0.06 75 / 0.32)', tagColor: 'oklch(0.40 0.12 65)', delay: 0.07 },
+          { label: 'Loopbaanperspectief',   tag: 'Aandacht', tagBg: accent.soft,                   tagColor: accent.deep,           delay: 0.14 },
+        ].map((item, i) => (
+          <div key={i} style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '10px 13px', background: T.paperSoft, fontSize: 13,
+            opacity: ready ? 1 : 0, transform: ready ? 'none' : 'translateX(-8px)',
+            transition: `opacity 0.5s ease ${item.delay}s, transform 0.5s cubic-bezier(0.16,1,0.3,1) ${item.delay}s`,
+          }}>
+            <span style={{ color: T.ink, fontWeight: 500 }}>{item.label}</span>
+            <span style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', padding: '2px 8px', background: item.tagBg, color: item.tagColor }}>{item.tag}</span>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 20 }}>
+        {[
+          { label: 'Vertrekrisico',  disp: '12%',  sub: '+1.4 pp',         subColor: T.inkMuted },
+          { label: 'Engagement',     disp: '7,4',  sub: 'Stabiel',         subColor: T.inkMuted },
+          { label: 'Behoud +12 mnd', disp: '+3,1', sub: 'Positief signaal', subColor: accent.deep },
+        ].map((k, i) => (
+          <div key={i} style={{
+            padding: '12px 14px', background: T.paperSoft,
+            opacity: ready ? 1 : 0, transform: ready ? 'none' : 'translateY(8px)',
+            transition: `opacity 0.5s ease ${0.25 + i * 0.07}s, transform 0.5s cubic-bezier(0.16,1,0.3,1) ${0.25 + i * 0.07}s`,
+          }}>
+            <div style={{ fontSize: 9.5, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', color: T.inkMuted, marginBottom: 5 }}>{k.label}</div>
+            <div style={{ fontFamily: "'Fraunces', serif", fontSize: 24, color: T.ink, lineHeight: 1, letterSpacing: '-0.02em' }}>{k.disp}</div>
+            <div style={{ fontSize: 9.5, color: k.subColor, marginTop: 3 }}>{k.sub}</div>
+          </div>
+        ))}
+      </div>
+      <div>
+        <div style={{ fontSize: 9.5, color: T.inkMuted, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 7 }}>Trend afgelopen 4 kwartalen</div>
+        <div style={{ height: 52, background: T.paperSoft, display: 'flex', alignItems: 'flex-end', padding: '8px 12px', gap: 6, overflow: 'hidden' }}>
+          {[42, 55, 50, 63, 78].map((h, i) => (
+            <div key={i} style={{
+              flex: 1, background: accent.mid,
+              height: ready ? `${h}%` : '0%',
+              opacity: 0.28 + i * 0.18,
+              transition: `height 0.7s cubic-bezier(0.4,0,0,1) ${0.35 + i * 0.06}s`,
+            }} />
+          ))}
+        </div>
+        <div style={{ fontSize: 9.5, color: T.inkMuted, marginTop: 6, fontStyle: 'italic' }}>Resultaten op groepsniveau · n ≥ 8 per categorie</div>
+      </div>
+    </div>
+  );
+}
+
+function ThemasTab({ accent }) {
+  const [ready, setReady] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setReady(true), 100); return () => clearTimeout(t); }, []);
+
+  const themes = [
+    { label: 'Groei & ontwikkeling', pct: 68, color: 'oklch(0.58 0.14 25)' },
+    { label: 'Werkdruk',             pct: 54, color: 'oklch(0.60 0.12 65)' },
+    { label: 'Loopbaan',             pct: 47, color: accent.mid },
+    { label: 'Samenwerking',         pct: 32, color: T.inkFaint },
+    { label: 'Leiderschap',          pct: 28, color: T.inkFaint },
+  ];
+  return (
+    <div>
+      <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: T.inkMuted, marginBottom: 5 }}>Thema-analyse · ExitScan</div>
+      <div style={{ fontFamily: "'Fraunces', serif", fontSize: 17, fontWeight: 400, color: T.ink, marginBottom: 24, lineHeight: 1.25 }}>Vertrekthema's op frequentie.</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {themes.map((t, i) => (
+          <div key={i} style={{
+            opacity: ready ? 1 : 0, transform: ready ? 'none' : 'translateY(6px)',
+            transition: `opacity 0.5s ease ${i * 0.07}s, transform 0.5s cubic-bezier(0.16,1,0.3,1) ${i * 0.07}s`,
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 13 }}>
+              <span style={{ color: T.ink, fontWeight: 500 }}>{t.label}</span>
+              <span style={{ color: T.inkMuted, fontVariantNumeric: 'tabular-nums' }}>{t.pct}%</span>
+            </div>
+            <div style={{ height: 5, background: T.paperSoft, overflow: 'hidden' }}>
+              <div style={{ height: '100%', background: t.color, width: ready ? `${t.pct}%` : '0%', transition: `width 0.8s cubic-bezier(0.4,0,0,1) ${0.1 + i * 0.08}s` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{ marginTop: 22, padding: '13px 15px', background: accent.faint, borderLeft: `2px solid ${accent.deep}`, opacity: ready ? 1 : 0, transition: 'opacity 0.5s ease 0.5s' }}>
+        <div style={{ fontSize: 10, fontWeight: 600, color: accent.deep, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>Eerste prioriteit</div>
+        <div style={{ fontSize: 13, color: T.ink, lineHeight: 1.62 }}>Verifieer werkdruk-patroon Operations. Groei en ontwikkeling vraagt in drie teams tegelijkertijd aandacht.</div>
+      </div>
+      <div style={{ fontSize: 9.5, color: T.inkMuted, marginTop: 12, fontStyle: 'italic' }}>Groepsdata · n ≥ 8 · geen individuele herleidbaarheid</div>
+    </div>
+  );
+}
+
+function RapportageTab({ accent }) {
+  const [ready, setReady] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setReady(true), 80); return () => clearTimeout(t); }, []);
+
+  return (
+    <div>
+      <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: T.inkMuted, marginBottom: 5 }}>Rapportage-output</div>
+      <div style={{ fontFamily: "'Fraunces', serif", fontSize: 17, fontWeight: 400, color: T.ink, marginBottom: 22, lineHeight: 1.25 }}>Leesbaar, gegroepeerd en direct bruikbaar.</div>
+      <div style={{ background: T.paperSoft, padding: 16, border: `1px solid ${T.rule}`, opacity: ready ? 1 : 0, transform: ready ? 'none' : 'translateY(10px)', transition: 'opacity 0.5s ease, transform 0.5s cubic-bezier(0.16,1,0.3,1)' }}>
+        <div style={{ background: T.ink, padding: '16px 18px', marginBottom: 12 }}>
+          <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: accent.soft, marginBottom: 10 }}>Verisight · ExitScan · Q2 2025</div>
+          <div style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 400, color: '#fff', lineHeight: 1.2, letterSpacing: '-0.015em' }}>
+            Managementrapport.<br />
+            <em style={{ fontStyle: 'italic', fontWeight: 300, color: accent.soft, opacity: 0.85 }}>Eerste beeld en prioriteiten.</em>
+          </div>
+        </div>
+        {['Executive samenvatting', 'Thema-analyse', 'Teamoverzicht', 'Eerste acties'].map((s, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: i < 3 ? `1px solid ${T.rule}` : 'none', opacity: ready ? 1 : 0, transition: `opacity 0.4s ease ${0.15 + i * 0.07}s` }}>
+            <div style={{ width: 18, height: 18, background: i === 0 ? accent.mid : T.rule, flexShrink: 0, transition: 'background 0.3s' }} />
+            <span style={{ fontSize: 12.5, color: T.ink }}>{s}</span>
+            <span style={{ marginLeft: 'auto', fontSize: 10.5, color: T.inkMuted, fontVariantNumeric: 'tabular-nums' }}>p.{i + 2}</span>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+        {[
+          { label: 'PDF-rapport',  bg: T.paperSoft, color: T.inkSoft,  bold: false },
+          { label: 'Dashboard',    bg: accent.faint, color: accent.deep, bold: true  },
+          { label: 'Presentatie',  bg: T.paperSoft,  color: T.inkSoft,  bold: false },
+        ].map((b, i) => (
+          <div key={i} style={{ flex: 1, padding: '9px 12px', background: b.bg, fontSize: 12, color: b.color, fontWeight: b.bold ? 600 : 400, opacity: ready ? 1 : 0, transition: `opacity 0.4s ease ${0.45 + i * 0.06}s` }}>{b.label}</div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── Marquee ── */
+function Marquee({ accent }) {
+  const items = [
+    { text: 'ExitScan',                        serif: true  },
+    { text: '·  Vertrek & Uitstroom  ·',       serif: false },
+    { text: 'RetentieScan',                    serif: true  },
+    { text: '·  Behoud & Vroegsignalering  ·', serif: false },
+    { text: 'Onboarding 30·60·90',             serif: true  },
+    { text: '·  Pulse  ·',                     serif: false },
+    { text: 'Leadership Scan',                 serif: true  },
+    { text: '·  People Insight · HR & MT  ·',  serif: false },
+  ];
+  const full = [...items, ...items];
+  return (
+    <div style={{ background: T.ink, padding: '13px 0', overflow: 'hidden', borderTop: `1px solid ${T.rule}40`, borderBottom: `1px solid ${T.rule}40` }}>
+      <div className="marquee-wrap" style={{ overflow: 'hidden' }}>
+        <div style={{ display: 'flex', animation: 'marqueeScroll 32s linear infinite', willChange: 'transform' }}>
+          {full.map((item, i) => (
+            <span key={i} style={{
+              whiteSpace: 'nowrap', padding: '0 18px',
+              fontSize: item.serif ? 16 : 10,
+              fontFamily: item.serif ? "'Fraunces', serif" : "'Inter', sans-serif",
+              fontWeight: item.serif ? 400 : 700,
+              fontStyle: item.serif ? 'italic' : 'normal',
+              letterSpacing: item.serif ? '-0.01em' : '0.16em',
+              textTransform: item.serif ? 'none' : 'uppercase',
+              color: item.serif ? accent.light : 'rgba(255,255,255,0.28)',
+            }}>
+              {item.text}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Proof section ── */
+function ProofSection({ accent }) {
+  const [sRef, sInView] = useInView(0.1);
+  const [statsRef, statsInView] = useInView(0.2);
+
+  const c1 = useCountUp(12,  statsInView, 900);
+  const c2 = useCountUp(74,  statsInView, 1000);
+  const c3 = useCountUp(31,  statsInView, 1100);
+
+  return (
+    <section style={{ background: T.paperSoft, padding: '96px 0', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
+      {/* Big watermark number */}
+      <div style={{ position: 'absolute', right: -20, top: '50%', transform: 'translateY(-50%)', fontFamily: "'Fraunces', serif", fontSize: 280, fontWeight: 400, color: T.rule, lineHeight: 1, pointerEvents: 'none', userSelect: 'none', opacity: 0.5 }}>02</div>
+
+      <div ref={sRef} style={{ maxWidth: 1200, margin: '0 auto', padding: '0 48px', position: 'relative' }}>
+        <SectionMark num="02" label="Wat u ontvangt" inView={sInView} />
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 96, alignItems: 'start' }}>
+          <div>
+            <Reveal delay={0.05}>
+              <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 52, fontWeight: 400, letterSpacing: '-0.028em', color: T.ink, marginBottom: 20, lineHeight: 1.04, textWrap: 'balance' }}>
+                Geen datadump.<br />
+                <em className="shimmer-text" style={{ fontStyle: 'italic' }}>Een eerste helder beeld.</em>
+              </h2>
+            </Reveal>
+            <Reveal delay={0.15}>
+              <p style={{ fontSize: 15.5, lineHeight: 1.72, color: T.inkSoft, marginBottom: 44 }}>
+                De output is gemaakt om prioriteiten te stellen, niet om alleen te rapporteren. U ontvangt een dashboard, samenvatting en rapport die samen één ding doen: management helpen bepalen wat nu logisch is.
+              </p>
+            </Reveal>
+
+            <div>
+              {[
+                { num: '01', label: 'Gegroepeerd en leesbaar',   body: 'Signalen op themaniveau, geen individuele data. Patronen die echt terugkomen zijn zichtbaar — de rest valt weg.' },
+                { num: '02', label: 'Bruikbaar voor gesprek',     body: 'Gemaakt voor HR-directeuren en MT — niet voor data-analisten. Scherp, actiegericht, met eerste stap.' },
+                { num: '03', label: 'Geen causaliteitsclaim',     body: 'Verisight duidt patronen, geen oorzaken. Methodologische zorgvuldigheid is expliciet zichtbaar in de output.' },
+              ].map((item, i) => (
+                <Reveal key={i} delay={0.2 + i * 0.1}>
+                  <div style={{ display: 'flex', gap: 24, padding: '24px 0', borderTop: `1px solid ${T.rule}` }}>
+                    <span style={{ fontFamily: "'Fraunces', serif", fontSize: 12, color: T.inkFaint, fontWeight: 400, minWidth: 24, paddingTop: 2, flexShrink: 0 }}>{item.num}</span>
+                    <div>
+                      <div style={{ fontSize: 14.5, fontWeight: 600, color: T.ink, marginBottom: 6 }}>{item.label}</div>
+                      <div style={{ fontSize: 13.5, color: T.inkSoft, lineHeight: 1.66 }}>{item.body}</div>
+                    </div>
+                  </div>
+                </Reveal>
+              ))}
+              <div style={{ borderTop: `1px solid ${T.rule}` }} />
+            </div>
+          </div>
+
+          <div style={{ paddingTop: 6 }}>
+            <Reveal delay={0.1} from="right">
+              <OutputCard accent={accent} statsRef={statsRef} statsInView={statsInView} c1={c1} c2={c2} c3={c3} />
+            </Reveal>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function OutputCard({ accent, statsRef, statsInView, c1, c2, c3 }) {
+  const [barsReady, setBarsReady] = useState(false);
+  useEffect(() => {
+    if (!statsInView) return;
+    const t = setTimeout(() => setBarsReady(true), 400);
+    return () => clearTimeout(t);
+  }, [statsInView]);
+
+  return (
+    <div ref={statsRef} style={{
+      background: T.white, border: `1px solid ${T.rule}`, overflow: 'hidden',
+      boxShadow: `0 2px 8px rgba(0,0,0,.04), 0 28px 56px -8px rgba(20,18,12,.12), 0 0 0 1px ${accent.soft}`,
+    }}>
+      <div style={{ background: T.ink, padding: '26px 28px 22px' }}>
+        <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: accent.soft, marginBottom: 12, opacity: 0.88 }}>Managementsamenvatting · ExitScan</div>
+        <div style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 400, color: '#fff', lineHeight: 1.15, letterSpacing: '-0.015em' }}>
+          Drie aandachtspunten.<br />
+          <em style={{ fontStyle: 'italic', fontWeight: 300, color: accent.soft, opacity: 0.8 }}>Één eerste stap.</em>
+        </div>
+        <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,.36)', marginTop: 10 }}>Verwerkt op groepsniveau · geen individuele herleidbaarheid</div>
+      </div>
+
+      <div style={{ padding: '24px 28px' }}>
+        {/* Animated stats */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 24 }}>
+          {[
+            { label: 'Vertrekrisico',  val: statsInView ? `${c1}%` : '—',   sub: '+1.4 pp',         subColor: T.inkMuted },
+            { label: 'Engagement',     val: statsInView ? (c2 / 10).toFixed(1).replace('.', ',') : '—', sub: 'Stabiel', subColor: T.inkMuted },
+            { label: 'Behoud +12 mnd', val: statsInView ? `+${(c3 / 10).toFixed(1).replace('.', ',')}` : '—', sub: 'Positief signaal', subColor: accent.deep },
+          ].map((k, i) => (
+            <div key={i} style={{ padding: '12px 14px', background: T.paperSoft }}>
+              <div style={{ fontSize: 9.5, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', color: T.inkMuted, marginBottom: 5 }}>{k.label}</div>
+              <div style={{ fontFamily: "'Fraunces', serif", fontSize: 26, color: T.ink, lineHeight: 1, letterSpacing: '-0.025em', transition: 'all 0.1s' }}>{k.val}</div>
+              <div style={{ fontSize: 9.5, color: k.subColor, marginTop: 3 }}>{k.sub}</div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.inkMuted, marginBottom: 12 }}>Topprioriteiten</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginBottom: 24 }}>
+          {[
+            { num: '01', label: 'Groei en ontwikkeling', sub: 'Operations, Finance · 3 teams', tag: 'Direct',    tagBg: 'oklch(0.85 0.05 25 / 0.25)', tagColor: 'oklch(0.35 0.15 22)' },
+            { num: '02', label: 'Werkdruk',              sub: 'Operations · piekperiode',      tag: 'Verhoogd', tagBg: 'oklch(0.88 0.06 75 / 0.32)', tagColor: 'oklch(0.40 0.12 65)' },
+            { num: '03', label: 'Loopbaanperspectief',   sub: 'Organisatiebreed signaal',      tag: 'Aandacht', tagBg: accent.faint,                   tagColor: accent.deep },
+          ].map((item, i) => (
+            <div key={i} style={{
+              display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', background: T.paperSoft,
+              transition: 'background 0.2s',
+            }}
+              onMouseEnter={e => e.currentTarget.style.background = accent.faint}
+              onMouseLeave={e => e.currentTarget.style.background = T.paperSoft}>
+              <span style={{ fontFamily: "'Fraunces', serif", fontSize: 13, color: T.inkFaint, fontWeight: 400, minWidth: 24 }}>{item.num}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 600, color: T.ink }}>{item.label}</div>
+                <div style={{ fontSize: 11.5, color: T.inkMuted, marginTop: 2 }}>{item.sub}</div>
+              </div>
+              <span style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', padding: '3px 9px', background: item.tagBg, color: item.tagColor, flexShrink: 0 }}>{item.tag}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Animated mini bar chart */}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 9.5, color: T.inkMuted, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 7 }}>Trend afgelopen 4 kwartalen</div>
+          <div style={{ height: 44, background: T.paperSoft, display: 'flex', alignItems: 'flex-end', padding: '6px 10px', gap: 5, overflow: 'hidden' }}>
+            {[42, 55, 50, 63, 78].map((h, i) => (
+              <div key={i} style={{
+                flex: 1, background: accent.mid,
+                height: barsReady ? `${h}%` : '0%',
+                opacity: 0.28 + i * 0.18,
+                transition: `height 0.75s cubic-bezier(0.4,0,0,1) ${i * 0.07}s`,
+              }} />
+            ))}
+          </div>
+        </div>
+
+        <div style={{ padding: '16px 18px', background: accent.faint, borderLeft: `2px solid ${accent.deep}` }}>
+          <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: accent.deep, marginBottom: 9 }}>Eerste actie</div>
+          <div style={{ fontSize: 13.5, color: T.ink, lineHeight: 1.65 }}>
+            Verifieer het werkdruk-patroon in Operations vóór het volgende teamoverleg. Groei en ontwikkeling vraagt in drie teams aandacht — prioriteer de twee met de hoogste uitstroom.
+          </div>
+        </div>
+        <div style={{ marginTop: 14, fontSize: 11, color: T.inkMuted, fontStyle: 'italic' }}>
+          Dit is een illustratief voorbeeld. Echte output varieert naar organisatie en route.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Routes section ── */
+function RoutesSection({ accent }) {
+  const [sRef, sInView] = useInView(0.1);
+  return (
+    <section style={{ background: T.white, padding: '96px 0', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', left: -20, top: '50%', transform: 'translateY(-50%)', fontFamily: "'Fraunces', serif", fontSize: 280, fontWeight: 400, color: T.rule, lineHeight: 1, pointerEvents: 'none', userSelect: 'none', opacity: 0.5 }}>03</div>
+
+      <div ref={sRef} style={{ maxWidth: 1200, margin: '0 auto', padding: '0 48px', position: 'relative' }}>
+        <SectionMark num="03" label="Routes" inView={sInView} />
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'end', marginBottom: 64, gap: 40 }}>
+          <Reveal delay={0.05}>
+            <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 52, fontWeight: 400, letterSpacing: '-0.028em', color: T.ink, lineHeight: 1.04, textWrap: 'balance', maxWidth: '18ch' }}>
+              Kies de route<br />
+              <em className="shimmer-text" style={{ fontStyle: 'italic' }}>die past bij uw vraagstuk.</em>
+            </h2>
+          </Reveal>
+          <Reveal delay={0.15}>
+            <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, maxWidth: '34ch', marginBottom: 4 }}>
+              Twee hoofdroutes voor de meeste vragen. Andere routes sluiten later aan.
+            </p>
+          </Reveal>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1px 1fr', gap: '0 56px', marginBottom: 0 }}>
+          <Reveal delay={0.1}>
+            <RouteColumn
+              num="01" tag="Vertrek & uitstroom" title="ExitScan"
+              accentColor={accent.deep} accentMid={accent.mid} accentFaint={accent.faint}
+              desc="Begrijp waarom medewerkers vertrekken en welke patronen terugkomen. Helder beeld in weken, niet maanden."
+              bullets={['Vertrekredenen op themaniveau', 'Patronen per team of afdeling', 'Duidelijke eerste verbeterpunten']}
+            />
+          </Reveal>
+          <div style={{ background: T.rule }} />
+          <Reveal delay={0.2}>
+            <RouteColumn
+              num="02" tag="Behoud & vroegsignalering" title="RetentieScan"
+              accentColor="oklch(0.34 0.11 158)" accentMid="oklch(0.48 0.11 158)" accentFaint="oklch(0.965 0.028 158)"
+              desc="Zie waar behoud onder druk staat en waar eerst aandacht nodig is. Vroeg signaleren voordat het te laat is."
+              bullets={['Risicozones per team', 'Drijfveren voor blijven', 'Prioriteiten voor HR en MT']}
+            />
+          </Reveal>
+        </div>
+
+        <div style={{ marginTop: 56 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 0 }}>
+            <div style={{ flex: 1, height: '1px', background: T.rule }} />
+            <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.18em', textTransform: 'uppercase', color: T.inkFaint, whiteSpace: 'nowrap', padding: '0 4px' }}>Aanvullende routes</span>
+            <div style={{ flex: 1, height: '1px', background: T.rule }} />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}>
+            {[
+              { tag: 'Onboarding',        title: 'Onboarding 30·60·90', desc: 'Zie vroeg hoe nieuwe medewerkers landen in hun eerste weken en maanden.',             color: 'oklch(0.40 0.10 82)'  },
+              { tag: 'Vervolgstap',       title: 'Pulse',               desc: 'Korte hercheck na een eerste traject of actie. Snel zichtbaar of de beweging zet.',   color: accent.mid              },
+              { tag: 'Managementcontext', title: 'Leadership Scan',     desc: 'Extra duiding zodra een eerste beeld al op tafel ligt. Geen standalone product.',      color: 'oklch(0.40 0.12 290)' },
+            ].map((r, i) => (
+              <Reveal key={i} delay={0.1 + i * 0.1}>
+                <AddonItem route={r} last={i === 2} />
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function RouteColumn({ num, tag, title, accentColor, accentMid, accentFaint, desc, bullets }) {
+  const [hov, setHov] = useState(false);
+  return (
+    <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 26 }}>
+        <span style={{ fontFamily: "'Fraunces', serif", fontSize: 11, fontWeight: 400, color: T.inkFaint, letterSpacing: '0.03em' }}>{num}</span>
+        <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase', color: accentColor }}>{tag}</span>
+      </div>
+
+      <div style={{ display: 'flex', gap: 18, paddingBottom: 26, borderBottom: `1px solid ${T.rule}`, marginBottom: 26 }}>
+        <div style={{ width: 3, background: accentColor, flexShrink: 0, borderRadius: 1.5, transition: 'width 0.2s' }} />
+        <div>
+          <div style={{ fontFamily: "'Fraunces', serif", fontSize: 40, fontWeight: 400, color: T.ink, letterSpacing: '-0.022em', lineHeight: 1.08, marginBottom: 14, transition: 'color 0.2s' }}>{title}</div>
+          <p style={{ fontSize: 14, lineHeight: 1.72, color: T.inkSoft }}>{desc}</p>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 30 }}>
+        {bullets.map((b, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 13.5, color: T.inkSoft,
+            opacity: hov ? 1 : 0.85, transform: hov ? `translateX(${i === 0 ? 4 : 0}px)` : 'none',
+            transition: `opacity 0.2s ease ${i * 0.05}s, transform 0.3s cubic-bezier(0.16,1,0.3,1) ${i * 0.05}s`,
+          }}>
+            <div style={{ width: 5, height: 5, background: accentColor, flexShrink: 0 }} />
+            {b}
+          </div>
+        ))}
+      </div>
+
+      <a href="#" className="link-underline" style={{ fontSize: 13.5, fontWeight: 600, color: accentColor, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+        Bekijk {title} <Arrow />
+      </a>
+    </div>
+  );
+}
+
+function AddonItem({ route, last }) {
+  const [hov, setHov] = useState(false);
+  return (
+    <div
+      onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      style={{
+        padding: '26px 28px',
+        borderTop: `1px solid ${T.rule}`,
+        borderRight: last ? 'none' : `1px solid ${T.rule}`,
+        background: hov ? T.paperSoft : 'transparent',
+        transition: 'background 0.2s',
+      }}>
+      <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: T.inkMuted, marginBottom: 9 }}>{route.tag}</div>
+      <div style={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 400, color: T.ink, marginBottom: 9, letterSpacing: '-0.015em', transition: 'color 0.2s' }}>{route.title}</div>
+      <p style={{ fontSize: 13.5, lineHeight: 1.65, color: T.inkSoft, marginBottom: 16 }}>{route.desc}</p>
+      <a href="#" className="link-underline" style={{ fontSize: 13, fontWeight: 600, color: route.color, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+        Bekijk route <Arrow />
+      </a>
+    </div>
+  );
+}
+
+/* ── Trust section ── */
+function TrustSection({ accent }) {
+  const [sRef, sInView] = useInView(0.1);
+  const items = [
+    { num: '01', title: 'Groepsniveau',                    body: 'Uitkomsten zijn bedoeld voor teams en groepen, niet voor personen. Drempelwaarden zijn standaard ingebouwd.' },
+    { num: '02', title: 'Geen individuele voorspellingen',  body: 'Verisight ondersteunt prioritering en gesprek, niet diagnose op persoonsniveau.' },
+    { num: '03', title: 'AVG-conform',                     body: 'Zorgvuldige verwerking met drempels en gegroepeerde output. Formele documenten beschikbaar op aanvraag.' },
+    { num: '04', title: 'Begeleid traject',                body: 'Geen self-service tool. Een professional begeleidt het traject van start tot de eerste bespreking.' },
+  ];
+
+  return (
+    <section style={{ background: T.paper, padding: '88px 0', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', right: -20, top: '50%', transform: 'translateY(-50%)', fontFamily: "'Fraunces', serif", fontSize: 280, fontWeight: 400, color: T.rule, lineHeight: 1, pointerEvents: 'none', userSelect: 'none', opacity: 0.5 }}>04</div>
+
+      <div ref={sRef} style={{ maxWidth: 1200, margin: '0 auto', padding: '0 48px', position: 'relative' }}>
+        <SectionMark num="04" label="Methodologische zorgvuldigheid" inView={sInView} />
+
+        <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: 96, alignItems: 'start' }}>
+          <Reveal delay={0.05}>
+            <div>
+              <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 38, fontWeight: 400, letterSpacing: '-0.022em', color: T.ink, lineHeight: 1.15, marginBottom: 20, textWrap: 'balance' }}>
+                Controleerbaar<br />
+                <em className="shimmer-text" style={{ fontStyle: 'italic' }}>en zonder ruis.</em>
+              </h2>
+              <p style={{ fontSize: 14, lineHeight: 1.72, color: T.inkSoft, marginBottom: 26 }}>
+                Hoe we omgaan met data en privacy is geen bijlage — het is onderdeel van de methode.
+              </p>
+              <a href="#" className="link-underline" style={{ fontSize: 13.5, fontWeight: 500, color: T.inkMuted, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                Meer over privacy <Arrow />
+              </a>
+            </div>
+          </Reveal>
+
+          <div>
+            {items.map((item, i) => (
+              <Reveal key={i} delay={0.1 + i * 0.09}>
+                <div style={{ display: 'flex', gap: 24, padding: '22px 0', borderTop: `1px solid ${T.rule}` }}>
+                  <span style={{ fontFamily: "'Fraunces', serif", fontSize: 12, color: T.inkFaint, fontWeight: 400, minWidth: 24, paddingTop: 2, flexShrink: 0 }}>{item.num}</span>
+                  <div>
+                    <div style={{ fontSize: 14.5, fontWeight: 600, color: T.ink, marginBottom: 6 }}>{item.title}</div>
+                    <p style={{ fontSize: 13.5, color: T.inkSoft, lineHeight: 1.65 }}>{item.body}</p>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+            <div style={{ borderTop: `1px solid ${T.rule}` }} />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ── CTA section ── */
+function CTASection({ accent }) {
+  const [sRef, sInView] = useInView(0.15);
+  const [btn1, setBtn1] = useState(false);
+  const [btn2, setBtn2] = useState(false);
+
+  return (
+    <section ref={sRef} style={{
+      padding: '104px 0', position: 'relative', overflow: 'hidden',
+      background: `linear-gradient(135deg, oklch(0.13 0.030 248) 0%, oklch(0.10 0.022 242) 50%, oklch(0.13 0.030 248) 100%)`,
+      backgroundSize: '300% 300%',
+      animation: 'gradFlow 10s ease infinite',
+    }}>
+      {/* Floating orange glow orbs */}
+      <div style={{ position: 'absolute', top: -100, right: '15%', width: 480, height: 480, background: `radial-gradient(circle, ${accent.mid}28 0%, transparent 65%)`, pointerEvents: 'none', animation: 'ctaPulse 5s ease-in-out infinite' }} />
+      <div style={{ position: 'absolute', bottom: -80, left: '10%', width: 360, height: 360, background: `radial-gradient(circle, ${accent.soft}40 0%, transparent 65%)`, pointerEvents: 'none', animation: 'ctaPulse 7s ease-in-out 1.5s infinite' }} />
+
+      {/* Blueprint grid overlay */}
+      <div style={{ position: 'absolute', inset: 0, backgroundImage: `linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)`, backgroundSize: '72px 72px', pointerEvents: 'none' }} />
+
+      <div style={{ maxWidth: 760, margin: '0 auto', padding: '0 48px', textAlign: 'center', position: 'relative', zIndex: 1 }}>
+        <Reveal threshold={0.2}>
+          <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', marginBottom: 26 }}>05 · Volgende stap</div>
+        </Reveal>
+        <Reveal delay={0.08} threshold={0.2}>
+          <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 58, fontWeight: 400, letterSpacing: '-0.03em', color: '#fff', lineHeight: 1.02, marginBottom: 22, textWrap: 'balance' }}>
+            Plan een kennismaking<br />
+            <em style={{ fontStyle: 'italic', fontWeight: 300, color: `oklch(0.78 0.133 55)` }}>en ontdek welke route past.</em>
+          </h2>
+        </Reveal>
+        <Reveal delay={0.18} threshold={0.2}>
+          <p style={{ fontSize: 15.5, lineHeight: 1.72, color: 'rgba(255,255,255,0.55)', marginBottom: 44, maxWidth: '44ch', margin: '0 auto 44px' }}>
+            In 30 minuten wordt duidelijk welke eerste stap logisch is. Geen intake, geen demo-aanvraag — een gesprek.
+          </p>
+        </Reveal>
+        <Reveal delay={0.26} threshold={0.2}>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <a href="#"
+              onMouseEnter={() => setBtn1(true)} onMouseLeave={() => setBtn1(false)}
+              className="cta-btn-primary"
+              style={{
+                fontSize: 14.5, fontWeight: 700, color: 'oklch(0.13 0.030 248)',
+                textDecoration: 'none', padding: '14px 32px',
+                background: btn1 ? accent.mid : `oklch(0.78 0.133 55)`,
+                borderRadius: 999,
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                transform: btn1 ? 'translateY(-2px) scale(1.03)' : 'none',
+                boxShadow: btn1 ? `0 12px 36px -4px ${accent.mid}88` : `0 4px 16px -2px ${accent.mid}44`,
+                transition: 'all 0.2s cubic-bezier(0.16,1,0.3,1)',
+              }}>
+              Plan een kennismaking <Arrow />
+            </a>
+            <a href="#"
+              onMouseEnter={() => setBtn2(true)} onMouseLeave={() => setBtn2(false)}
+              style={{
+                fontSize: 14.5, fontWeight: 500, borderRadius: 999,
+                color: btn2 ? '#fff' : 'rgba(255,255,255,0.72)',
+                textDecoration: 'none', padding: '14px 28px',
+                border: `1.5px solid ${btn2 ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.25)'}`,
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                transform: btn2 ? 'translateY(-1px)' : 'none',
+                transition: 'all 0.18s ease',
+              }}>
+              Bekijk de routes
+            </a>
+          </div>
+        </Reveal>
+        <Reveal delay={0.36} threshold={0.2}>
+          <div style={{ marginTop: 40, paddingTop: 30, borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            {['Geen verplichtingen', '30 minuten', 'Direct antwoord op uw vraag'].map((s, i) => (
+              <span key={i} style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.30)', letterSpacing: '0.03em' }}>
+                {i > 0 && <span style={{ marginRight: 8, opacity: 0.4 }}>·</span>}{s}
+              </span>
+            ))}
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+/* ── Footer ── */
+function Footer({ accent }) {
+  return (
+    <footer style={{ background: 'oklch(0.12 0.012 50)', padding: '56px 0 40px' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 48px', display: 'grid', gridTemplateColumns: '240px 1fr 1fr 1fr', gap: 48 }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+            <span style={{ fontFamily: "'Fraunces', serif", fontSize: 8, color: accent.mid }}>◆</span>
+            <span style={{ fontFamily: "'Fraunces', serif", fontSize: 16, color: 'rgba(255,255,255,.72)', letterSpacing: '-0.015em' }}>Verisight</span>
+          </div>
+          <p style={{ fontSize: 13, lineHeight: 1.65, color: 'rgba(255,255,255,.30)', maxWidth: '22ch' }}>People insight voor HR en management.</p>
+        </div>
+        {[
+          { title: 'Producten',  links: ['ExitScan', 'RetentieScan', 'Onboarding 30·60·90', 'Pulse', 'Leadership Scan'] },
+          { title: 'Navigatie', links: ['Aanpak', 'Tarieven', 'Vertrouwen', 'Kennismaking'] },
+          { title: 'Legal',     links: ['Privacybeleid', 'Algemene voorwaarden', 'Verwerkersovereenkomst', 'hallo@verisight.nl'] },
+        ].map((col, i) => (
+          <div key={i}>
+            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,.18)', marginBottom: 16 }}>{col.title}</div>
+            {col.links.map(l => (
+              <a key={l} href="#" style={{ display: 'block', fontSize: 13.5, color: 'rgba(255,255,255,.40)', textDecoration: 'none', marginBottom: 9, transition: 'color 0.15s' }}
+                onMouseEnter={e => e.target.style.color = 'rgba(255,255,255,.82)'}
+                onMouseLeave={e => e.target.style.color = 'rgba(255,255,255,.40)'}>{l}</a>
+            ))}
+          </div>
+        ))}
+      </div>
+      <div style={{ maxWidth: 1200, margin: '36px auto 0', padding: '24px 48px 0', borderTop: '1px solid rgba(255,255,255,.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11.5 }}>
+        <span style={{ color: 'rgba(255,255,255,.18)' }}>© 2026 Verisight. Alle rechten voorbehouden.</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'rgba(255,255,255,.18)' }}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+          Geen trackingcookies
+        </span>
+      </div>
+    </footer>
+  );
+}
+
+/* ── Tweaks ── */
+function TweaksApp({ tweaks, setTweak }) {
+  return (
+    <TweaksPanel title="De Rapporteur · Tweaks">
+      <TweakSection title="Accentkleur">
+        <TweakSlider label="Oranje tint" id="accentHue" value={tweaks.accentHue} min={28} max={78} step={2} onChange={v => setTweak('accentHue', v)} />
+      </TweakSection>
+    </TweaksPanel>
+  );
+}
+
+/* ── App ── */
+function App() {
+  const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const accent = ac(tweaks.accentHue);
+
+  /* Sync CSS custom props for shimmer + scroll bar */
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty('--ac-deep',  accent.deep);
+    root.style.setProperty('--ac-mid',   accent.mid);
+    root.style.setProperty('--ac-light', accent.light);
+  }, [accent.deep, accent.mid, accent.light]);
+
+  /* Mount scroll progress (vanilla, no re-renders) */
+  useEffect(() => mountScrollProgress(), []);
+
+  return (
+    <>
+      <Nav accent={accent} />
+      <Hero accent={accent} />
+      <Marquee accent={accent} />
+      <ProofSection accent={accent} />
+      <RoutesSection accent={accent} />
+      <TrustSection accent={accent} />
+      <CTASection accent={accent} />
+      <Footer accent={accent} />
+      <TweaksApp tweaks={tweaks} setTweak={setTweak} />
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

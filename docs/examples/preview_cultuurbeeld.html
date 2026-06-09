@@ -1,0 +1,461 @@
+<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>Loep Culture Assessment — Cultuurmeting 2026</title><style>
+@page {
+  size: A4;
+  margin: 18mm 16mm 22mm 16mm;
+  @bottom-left {
+    content: "Vertrouwelijk - Loep - Groepsoutput";
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 7.5px; color: #94A3B8;
+  }
+  @bottom-right {
+    content: counter(page) " / " counter(pages);
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 7.5px; color: #94A3B8;
+  }
+}
+@page cover-page { margin: 0; }
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12px; line-height: 1.65; color: #374151;
+  background: #F5F0E8;
+}
+
+.pb       { break-before: page; min-height: 260mm; padding-top: 32px; }
+.no-break { break-inside: avoid; }
+
+/* ── Type ── */
+.slabel {
+  display: block; font-size: 10.5px; font-weight: 700; color: #1E293B;
+  letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 20px;
+  background: #E2D9CC; border-left: 5px solid #1E293B;
+  padding: 10px 20px 10px 18px; border-radius: 2px; border-bottom: none;
+}
+h3 { font-size: 14px; font-weight: 700; color: #243247; margin-bottom: 6px; }
+p  { margin-bottom: 6px; font-size: 12px; }
+
+/* ── Cover ── */
+.cover { page: cover-page; background: #1E293B; min-height: 297mm; padding: 56px 52px 44px; display: flex; flex-direction: column; }
+.cbadge { display: inline-block; background: #D19422; color: #FFF; font-size: 10px;
+  font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  padding: 6px 16px; border-radius: 3px; margin-bottom: 36px; align-self: flex-start; }
+.corg   { font-size: 14px; color: #64748B; margin-bottom: 12px; letter-spacing: 0.02em; }
+.ctitle { font-size: 48px; font-weight: 700; color: #FFF; line-height: 1.1; margin-bottom: 8px; }
+.ctitle-sub { font-size: 17px; color: #475569; font-weight: 400; margin-bottom: 0; }
+.csub   { font-size: 12px; color: #64748B; margin-top: 14px; }
+.cover-signal { margin-top: 52px; padding: 26px 0 22px; border-top: 2px solid #D19422; border-bottom: 1px solid #2D3F52; }
+.cover-signal-label { font-size: 11px; font-weight: 700; color: #D19422; letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 10px; }
+.cover-signal-value { font-size: 46px; font-weight: 700; color: #FFF; line-height: 1.05; margin-bottom: 8px; }
+.cover-signal-sub { font-size: 12px; color: #64748B; }
+.cmeta  { margin-top: auto; padding-top: 28px; display: table; width: 100%;
+  border-top: 1px solid #334155; }
+.cmc    { display: table-cell; width: 25%; padding-right: 12px; }
+.cml    { font-size: 8.5px; font-weight: 700; color: #475569; letter-spacing: 0.1em;
+  text-transform: uppercase; margin-bottom: 4px; }
+.cmv    { font-size: 15px; font-weight: 700; color: #E2E8F0; }
+
+/* ── Cards ── */
+.card  { background: #FFF; border: 1px solid #DDD6CC; border-radius: 8px;
+  padding: 20px 22px; margin-bottom: 16px; }
+.ca    { border-left: 5px solid #D19422; }
+.cr    { border-left: 5px solid #EF4444; }
+.cg    { border-left: 5px solid #22C55E; }
+.cn    { border-left: 5px solid #1E293B; }
+.cbox  { background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px;
+  padding: 14px 16px; margin-bottom: 12px; }
+
+/* ── Score hero ── */
+.score-hero { font-size: 44px; font-weight: 700; line-height: 1; }
+.rbadge { display: inline-block; font-size: 11px; font-weight: 700;
+  padding: 4px 12px; border-radius: 4px; color: #FFF;
+  margin-left: 10px; vertical-align: middle; }
+
+/* ── Stat grid ── */
+.sg { display: table; width: 100%; border-collapse: separate;
+  border-spacing: 9px 0; margin-bottom: 14px; }
+.sg tr { display: table-row; }
+.sg td { display: table-cell; background: #FFF; border: 1px solid #E8E0D0;
+  border-radius: 7px; padding: 12px 14px; vertical-align: top; }
+.sc-l { font-size: 8.5px; font-weight: 700; color: #64748B; letter-spacing: 0.07em;
+  text-transform: uppercase; margin-bottom: 4px; }
+.sc-v { font-size: 26px; font-weight: 700; color: #1E293B; line-height: 1.1; margin-bottom: 3px; }
+.sc-b { font-size: 9.5px; color: #6B7280; line-height: 1.45; }
+
+/* ── Insight grid ── */
+.ig    { display: table; width: 100%; border-collapse: separate;
+  border-spacing: 9px 0; margin-bottom: 9px; }
+.ig tr { display: table-row; }
+.ig td { display: table-cell; background: #F4F7FB; border: 1px solid #DDE5EF;
+  border-radius: 7px; padding: 12px 14px; vertical-align: top; }
+.ig-k  { font-size: 8px; font-weight: 700; color: #94A3B8; letter-spacing: 0.1em;
+  text-transform: uppercase; margin-bottom: 4px; }
+.ig-v  { font-size: 12px; font-weight: 700; color: #243247; margin-bottom: 3px; line-height: 1.3; }
+.ig-n  { font-size: 9px; color: #64748B; line-height: 1.45; }
+
+/* ── Why-block ── */
+.why { background: #1E293B; border: none; border-left: 5px solid #D19422;
+  border-radius: 8px; padding: 22px 22px; margin-bottom: 14px; }
+.why-title { font-size: 14px; font-weight: 700; color: #E2E8F0; margin-bottom: 18px; line-height: 1.5; }
+.why-grid  { display: table; width: 100%; border-collapse: separate; border-spacing: 9px 0; margin-bottom: 12px; }
+.why-cell  { display: table-cell; vertical-align: top; background: #243247;
+  border: 1px solid #334155; border-radius: 6px; padding: 14px 16px; width: 25%; }
+.why-l     { font-size: 8.5px; font-weight: 700; color: #64748B; letter-spacing: 0.08em;
+  text-transform: uppercase; margin-bottom: 4px; }
+.why-v     { font-size: 22px; font-weight: 700; line-height: 1.1; margin-bottom: 2px; }
+.why-b     { font-size: 10px; color: #94A3B8; line-height: 1.4; }
+.why-quote { font-size: 10px; color: #94A3B8; font-style: italic; line-height: 1.55;
+  border-top: 1px solid #334155; padding-top: 11px; margin-top: 2px; }
+
+/* ── Factor row ── */
+.frow  { margin-bottom: 14px; }
+.fname { font-size: 11px; font-weight: 700; color: #243247; }
+.fdesc { font-size: 9px; color: #9CA3AF; margin-bottom: 4px; }
+.flabel-row { display: table; width: 100%; margin-top: 4px; }
+.flabel-score { display: table-cell; vertical-align: middle; font-size: 13px;
+  font-weight: 700; color: #243247; width: 50px; }
+.flabel-txt   { display: table-cell; vertical-align: middle; font-size: 10px; font-weight: 700; }
+.fhi-bot { background: #FEF2F2; border: 1px solid #FECACA;
+  border-radius: 6px; padding: 10px 12px; margin-bottom: 8px; }
+.fhi-top { background: #F0FDF4; border: 1px solid #A7F3D0;
+  border-radius: 6px; padding: 10px 12px; margin-bottom: 8px; }
+
+/* ── Item table ── */
+.item-tbl { width: 100%; border-collapse: collapse; }
+.item-tbl td { padding: 6px 8px; vertical-align: middle; font-size: 10px;
+  color: #374151; border-bottom: 1px solid #F1F5F9; }
+.item-tbl .iq { width: 55%; }
+.item-tbl .is { width: 10%; font-weight: 700; text-align: right; padding-right: 10px; }
+.item-tbl .ib { width: 35%; }
+
+/* ── Theme / Quote ── */
+.theme-card { background: #FFF9F4; border: 1px solid #E5D9CC;
+  border-radius: 7px; padding: 14px 16px; margin-bottom: 10px; }
+.theme-badge { display: inline-block; font-size: 8.5px; font-weight: 700;
+  background: #F1F5F9; color: #475569; padding: 2px 8px; border-radius: 3px;
+  letter-spacing: 0.05em; }
+.ev-badge { display: inline-block; font-size: 8.5px; font-weight: 700;
+  padding: 2px 8px; border-radius: 3px; margin-left: 6px; }
+.quote-txt { font-size: 11px; color: #374151; font-style: italic; line-height: 1.65;
+  margin-top: 8px; padding-left: 10px; border-left: 3px solid #D19422; }
+.quote-anon { font-size: 8.5px; color: #94A3B8; font-style: normal; margin-top: 4px; }
+
+/* ── Playbook ── */
+.play { background: #FFF; border: 1px solid #E8E0D0; border-left: 5px solid #D19422;
+  border-radius: 8px; padding: 16px 18px; margin-bottom: 16px; }
+.play-hdr { display: table; width: 100%; margin-bottom: 10px; }
+.play-bdg { display: table-cell; vertical-align: middle; padding-right: 10px;
+  width: 1%; white-space: nowrap; }
+.play-bdg span { display: inline-block; font-size: 9px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 9px;
+  border-radius: 3px; color: #FFF; }
+.play-ttl { display: table-cell; vertical-align: middle; font-size: 13px;
+  font-weight: 700; color: #1E293B; }
+.sub-l    { font-size: 9px; font-weight: 700; color: #475569; letter-spacing: 0.06em;
+  text-transform: uppercase; margin-top: 12px; margin-bottom: 3px; }
+.act-lst  { margin-left: 16px; margin-bottom: 6px; }
+.act-lst li { margin-bottom: 5px; font-size: 11px; }
+
+/* ── Steps ── */
+.steps { display: table; width: 100%; border-collapse: separate; border-spacing: 9px 0; }
+.step  { display: table-cell; background: #FFF; border: 1px solid #E8E0D0;
+  border-radius: 7px; padding: 13px 15px; vertical-align: top; width: 25%; }
+.step-no   { font-size: 8.5px; font-weight: 700; color: #D19422; letter-spacing: 0.08em;
+  text-transform: uppercase; margin-bottom: 3px; }
+.step-body { font-size: 10px; color: #374151; line-height: 1.55; }
+
+/* ── Trust ── */
+.tg  { display: table; width: 100%; border-collapse: separate; border-spacing: 9px 0; }
+.tc  { display: table-cell; background: #FFF; border: 1px solid #E8E0D0;
+  border-radius: 6px; padding: 13px 15px; vertical-align: top; width: 33%; }
+.tt  { font-size: 10px; font-weight: 700; color: #243247; margin-bottom: 4px; }
+.tb  { font-size: 9px; color: #374151; line-height: 1.55; }
+
+/* ── Two-col ── */
+.tcol { display: table; width: 100%; border-collapse: separate; border-spacing: 14px 0; }
+.tc-l { display: table-cell; vertical-align: top; width: 55%; }
+.tc-r { display: table-cell; vertical-align: top; width: 45%; }
+
+/* ── Appendix ── */
+.app-tbl { width: 100%; border-collapse: collapse; font-size: 9px; }
+.app-tbl th { background: #F1F5F9; color: #475569; font-weight: 700;
+  padding: 5px 8px; text-align: left; border-bottom: 1px solid #E2E8F0; }
+.app-tbl td { padding: 4px 8px; border-bottom: 1px solid #F1F5F9; vertical-align: middle; }
+.app-tbl .aq { width: 58%; color: #374151; }
+.app-tbl .as { width: 10%; font-weight: 700; text-align: right; padding-right: 10px; }
+.app-tbl .ab { width: 32%; }
+
+/* ── Misc ── */
+.sec { margin-bottom: 32px; }
+.empty-state { background: #FFF; border: 1px dashed #E8E0D0; border-radius: 6px;
+  padding: 18px; text-align: center; color: #94A3B8; font-size: 10px; }
+.seg-badge { display: inline-block; font-size: 8.5px; font-weight: 700;
+  padding: 2px 8px; border-radius: 3px; margin-right: 5px; }
+.legend-dot { display: inline-block; width: 10px; height: 10px;
+  border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+</style></head><body><div class="cover">
+  <div class="cbadge">Loep Culture Assessment</div>
+  <div class="corg">Loep Demo BV</div>
+  <div class="ctitle">Cultuurmeting 2026</div>
+  <div class="ctitle-sub">48 respondenten &middot; 06-06-2026</div>
+  <div class="csub">Managementrapport &bull; Groepsoutput &bull; Vertrouwelijk</div>
+  <div class="cover-signal">
+    <div class="cover-signal-label">Primair signaal</div>
+    <div class="cover-signal-value">Werkdruk en draagkracht</div>
+    <div class='cover-signal-sub'>5.6/10 — Aandachtspunt · Eerste bestuurlijk aandachtspunt</div>
+  </div>
+  <div class="cmeta">
+    <div class="cmc"><div class="cml">Respondenten</div><div class="cmv">48</div></div>
+    <div class="cmc"><div class="cml">Type scan</div><div class="cmv">Baseline</div></div>
+    <div class="cmc"><div class="cml">Responsbasis</div><div class="cmv">Stevig</div></div>
+    <div class="cmc"><div class="cml">Datum</div><div class="cmv" style="font-size:12px;">06-06-2026</div></div>
+  </div>
+</div><div class="pb sec"><span class="slabel">Leeswijzer</span><p style="font-size:12px;color:#374151;margin-bottom:16px;">Dit rapport vertaalt de Loep Culture Assessment naar een bestuurlijk leesbaar cultuurbeeld. Lees het als navigatiedocument voor het directiegesprek — niet als eindoordeel of interventieplan.</p><div style="display:table;width:100%;border-collapse:separate;border-spacing:8px 0;margin-bottom:10px;"><div style="display:table-row;"><div style="display:table-cell;background:#FFF;border:1px solid #E8E0D0;border-top:3px solid #D19422;border-radius:6px;padding:13px 14px;vertical-align:top;width:33%;"><div style="font-size:8px;font-weight:700;color:#D19422;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;">01</div><div style="font-size:11px;font-weight:700;color:#243247;margin-bottom:4px;">Respons &amp; Culture Index</div><div style="font-size:9px;color:#64748B;">Responsbasis, totaalscore en eerste directielezing.</div></div><div style="display:table-cell;background:#FFF;border:1px solid #E8E0D0;border-top:3px solid #D19422;border-radius:6px;padding:13px 14px;vertical-align:top;width:33%;"><div style="font-size:8px;font-weight:700;color:#D19422;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;">02</div><div style="font-size:11px;font-weight:700;color:#243247;margin-bottom:4px;">Bestuurlijke aandachtspunten</div><div style="font-size:9px;color:#64748B;">De drie domeinen die nu het eerst besproken worden.</div></div><div style="display:table-cell;background:#FFF;border:1px solid #E8E0D0;border-top:3px solid #D19422;border-radius:6px;padding:13px 14px;vertical-align:top;width:33%;"><div style="font-size:8px;font-weight:700;color:#D19422;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;">03</div><div style="font-size:11px;font-weight:700;color:#243247;margin-bottom:4px;">Domeinprofiel &amp; prioriteitenmatrix</div><div style="font-size:9px;color:#64748B;">Alle 10 domeinen en hun onderlinge prioriteitvolgorde.</div></div></div></div><div style="display:table;width:100%;border-collapse:separate;border-spacing:8px 0;"><div style="display:table-row;"><div style="display:table-cell;background:#FFF;border:1px solid #E8E0D0;border-top:3px solid #1E293B;border-radius:6px;padding:13px 14px;vertical-align:top;width:33%;"><div style="font-size:8px;font-weight:700;color:#1E293B;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;">04</div><div style="font-size:11px;font-weight:700;color:#243247;margin-bottom:4px;">Verdieping &amp; open toelichtingen</div><div style="font-size:9px;color:#64748B;">Itemniveau en gegroepeerde observaties van respondenten.</div></div><div style="display:table-cell;background:#FFF;border:1px solid #E8E0D0;border-top:3px solid #1E293B;border-radius:6px;padding:13px 14px;vertical-align:top;width:33%;"><div style="font-size:8px;font-weight:700;color:#1E293B;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;">05</div><div style="font-size:11px;font-weight:700;color:#243247;margin-bottom:4px;">Segmentstatus</div><div style="font-size:9px;color:#64748B;">Welke verdiepingslagen zijn getoond, welke niet.</div></div><div style="display:table-cell;background:#FFF;border:1px solid #E8E0D0;border-top:3px solid #1E293B;border-radius:6px;padding:13px 14px;vertical-align:top;width:33%;"><div style="font-size:8px;font-weight:700;color:#1E293B;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;">06</div><div style="font-size:11px;font-weight:700;color:#243247;margin-bottom:4px;">Vervolgrichting &amp; methodiek</div><div style="font-size:9px;color:#64748B;">Mogelijke vervolgstappen en interpretatiegrenzen.</div></div></div></div></div><div class="pb sec">
+  <span class="slabel">Loep Culture Index</span>
+  <div class="card ca" style="margin-bottom:14px;">
+    <div class="tcol">
+      <div class="tc-l" style="padding-right:12px;">
+        <p style="font-size:12px;font-weight:700;color:#243247;line-height:1.5;margin-bottom:10px;">
+          Cultuurmeting 2026 toont <strong style="color:#22C55E;">een relatief sterk cultuurbeeld</strong> over tien cultuur- en engagementdomeinen.
+          Het eerste aandachtspunt voor het directiegesprek is <strong>Werkdruk en draagkracht</strong>.
+        </p>
+        <p style="font-size:10px;color:#64748B;">Loep Culture Index — groepsgemiddelde op schaal 1–10. Lager = meer aandacht nodig.</p>
+      </div>
+      <div class="tc-r" style="text-align:center;background:#1E293B;border-radius:8px;padding:16px 8px 10px;"><svg width="200" height="132" xmlns="http://www.w3.org/2000/svg"><path d="M 34 88 A 66 66 0 0 1 166 88" fill="none" stroke="#334155" stroke-width="20" stroke-linecap="round"/><path d="M 34 88 A 66 66 0 0 1 122.6 26.0" fill="none" stroke="#22C55E" stroke-width="20" stroke-linecap="round"/><text x="100" y="82" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="36" font-weight="700" fill="#FFFFFF">6.5</text><text x="100" y="101" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="11" fill="#64748B">/10</text><text x="100" y="122" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="12" font-weight="700" fill="#22C55E">Relatief sterk</text><text x="30" y="94" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="8" fill="#475569">1</text><text x="170" y="94" text-anchor="start" font-family="Arial,Helvetica,sans-serif" font-size="8" fill="#475569">10</text></svg></div>
+    </div>
+  </div>
+  <table class="sg"><tr><td><div class="sc-l">Loep Culture Index</div><div class="sc-v">6.5/10</div><div class="sc-b">Relatief sterk</div></td><td><div class="sc-l">Laagst scorend domein</div><div class="sc-v">Werkdruk</div><div class="sc-b">5.6/10 — Aandachtspunt</div></td><td><div class="sc-l">Sterkst scorend domein</div><div class="sc-v">Verbondenheid</div><div class="sc-b">7.6/10 — Relatief sterk</div></td><td><div class="sc-l">Responsbasis</div><div class="sc-v">48/48</div><div class="sc-b">100.0% — Stevig</div></td></tr></table>
+</div><div class="sec">
+  <span class="slabel">Respons en representativiteit</span>
+  <table class="sg"><tr>
+    <td><div class="sc-l">Uitgenodigd</div><div class="sc-v">48</div><div class="sc-b">Totaal aangeschreven</div></td>
+    <td><div class="sc-l">Respondenten</div><div class="sc-v">48</div><div class="sc-b">100% responspercentage</div></td>
+    <td><div class="sc-l">Responsbasis</div><div class="sc-v" style="font-size:14px;color:#22C55E;">Stevig</div><div class="sc-b">Stevig — voldoende voor organisatiebrede patronen</div></td>
+    <td><div class="sc-l">Representativiteit</div><div class="sc-v" style="font-size:13px;color:#94A3B8;">Onbekend</div><div class="sc-b">Segmentverdeling niet geverifieerd in v1</div></td>
+  </tr></table>
+  <div style="margin-top:10px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:5px;padding:8px 14px;font-size:9px;color:#64748B;">
+    Representativiteit per segment (afdeling, functiegroep, locatie) is in deze versie nog niet geverifieerd.
+    Interpreteer patronen als organisatiebrede indicatie, niet als statistische steekproef.
+  </div>
+</div><div class="sec">
+  <span class="slabel">Bestuurlijke aandachtspunten</span>
+  <div class="why">
+    <div class="why-title">Deze drie domeinen vormen de eerste leeslijn voor het directiegesprek. Ze vragen bespreking — geen automatische interventie.</div>
+    <table class="why-grid"><tr><td class="why-cell"><div class="why-l">Aandachtspunt 1</div><div class="why-v" style="color:#F59E0B;">5.6/10</div><div class="why-b">Werkdruk en draagkracht — Aandachtspunt</div></td><td class="why-cell"><div class="why-l">Aandachtspunt 2</div><div class="why-v" style="color:#F59E0B;">5.8/10</div><div class="why-b">Beloning en voorwaarden — Aandachtspunt</div></td><td class="why-cell"><div class="why-l">Aandachtspunt 3</div><div class="why-v" style="color:#84CC16;">6.0/10</div><div class="why-b">Vertrouwen en psychologische veiligheid — Gemengd beeld</div></td></tr></table>
+    <div style='font-size:10px;color:#94A3B8;border-top:1px solid #334155;padding-top:10px;margin-top:4px;'>
+      <strong style="color:#CBD5E1;">Eerste managementvraag:</strong> Welke van deze domeinen vraagt als eerste verificatie op team- of afdelingsniveau?
+    </div>
+  </div>
+</div><div class="pb sec">
+  <span class="slabel">Domeinprofiel</span>
+  <div style="margin-bottom:12px;"><div class="card " style="margin-bottom:9px;"><div style="font-size:8.5px;font-weight:700;color:#F59E0B;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:3px;">Aandachtspunt (5.0–5.7)</div><div style="font-size:11px;font-weight:700;color:#243247;">Werkdruk en draagkracht &middot; Beloning en voorwaarden</div></div><div class="card " style="margin-bottom:9px;"><div style="font-size:8.5px;font-weight:700;color:#84CC16;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:3px;">Gemengd beeld (5.8–6.4)</div><div style="font-size:11px;font-weight:700;color:#243247;">Vertrouwen en psychologische veiligheid &middot; Groei en ontwikkeling &middot; Leiderschap en richting</div></div><div class="card cg" style="margin-bottom:9px;"><div style="font-size:8.5px;font-weight:700;color:#22C55E;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:3px;">Relatief sterk (&amp;ge;6.5)</div><div style="font-size:11px;font-weight:700;color:#243247;">Veranderbereidheid &middot; Samenwerking en afstemming &middot; Engagement en betrokkenheid &middot; Autonomie en rolhelderheid &middot; Organisatieverbinding en intentie</div></div></div>
+  <div class="card">
+    <p style="font-size:9.5px;color:#64748B;margin-bottom:14px;">Score 1–10 — hoger is beter. Volgorde is managementleeslijn, geen absolute rangschikking.</p>
+    <svg width="440" height="304" xmlns="http://www.w3.org/2000/svg"><text x="160" y="15" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="10.5" fill="#374151">Verbondenheid</text><rect x="170" y="0" width="206" height="22" rx="4" fill="#EDE6DA"/><rect x="170" y="0" width="156" height="22" rx="4" fill="#22C55E"/><text x="384" y="15" font-family="Arial,Helvetica,sans-serif" font-size="11" font-weight="700" fill="#22C55E">7.6</text><text x="160" y="45" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="10.5" fill="#374151">Autonomie &amp; rol</text><rect x="170" y="30" width="206" height="22" rx="4" fill="#EDE6DA"/><rect x="170" y="30" width="146" height="22" rx="4" fill="#22C55E"/><text x="384" y="45" font-family="Arial,Helvetica,sans-serif" font-size="11" font-weight="700" fill="#22C55E">7.1</text><text x="160" y="75" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="10.5" fill="#374151">Engagement</text><rect x="170" y="60" width="206" height="22" rx="4" fill="#EDE6DA"/><rect x="170" y="60" width="144" height="22" rx="4" fill="#22C55E"/><text x="384" y="75" font-family="Arial,Helvetica,sans-serif" font-size="11" font-weight="700" fill="#22C55E">7.0</text><text x="160" y="105" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="10.5" fill="#374151">Samenwerking</text><rect x="170" y="90" width="206" height="22" rx="4" fill="#EDE6DA"/><rect x="170" y="90" width="140" height="22" rx="4" fill="#22C55E"/><text x="384" y="105" font-family="Arial,Helvetica,sans-serif" font-size="11" font-weight="700" fill="#22C55E">6.8</text><text x="160" y="135" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="10.5" fill="#374151">Veranderbereidheid</text><rect x="170" y="120" width="206" height="22" rx="4" fill="#EDE6DA"/><rect x="170" y="120" width="136" height="22" rx="4" fill="#22C55E"/><text x="384" y="135" font-family="Arial,Helvetica,sans-serif" font-size="11" font-weight="700" fill="#22C55E">6.6</text><text x="160" y="165" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="10.5" fill="#374151">Leiderschap</text><rect x="170" y="150" width="206" height="22" rx="4" fill="#EDE6DA"/><rect x="170" y="150" width="131" height="22" rx="4" fill="#84CC16"/><text x="384" y="165" font-family="Arial,Helvetica,sans-serif" font-size="11" font-weight="700" fill="#84CC16">6.4</text><text x="160" y="195" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="10.5" fill="#374151">Groei &amp; ontwikkeling</text><rect x="170" y="180" width="206" height="22" rx="4" fill="#EDE6DA"/><rect x="170" y="180" width="129" height="22" rx="4" fill="#84CC16"/><text x="384" y="195" font-family="Arial,Helvetica,sans-serif" font-size="11" font-weight="700" fill="#84CC16">6.2</text><text x="160" y="225" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="10.5" fill="#374151">Psych. veiligheid</text><rect x="170" y="210" width="206" height="22" rx="4" fill="#EDE6DA"/><rect x="170" y="210" width="124" height="22" rx="4" fill="#84CC16"/><text x="384" y="225" font-family="Arial,Helvetica,sans-serif" font-size="11" font-weight="700" fill="#84CC16">6.0</text><text x="160" y="255" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="10.5" fill="#374151">Beloning</text><rect x="170" y="240" width="206" height="22" rx="4" fill="#EDE6DA"/><rect x="170" y="240" width="118" height="22" rx="4" fill="#F59E0B"/><text x="384" y="255" font-family="Arial,Helvetica,sans-serif" font-size="11" font-weight="700" fill="#F59E0B">5.8</text><text x="160" y="285" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="10.5" fill="#374151">Werkdruk</text><rect x="170" y="270" width="206" height="22" rx="4" fill="#EDE6DA"/><rect x="170" y="270" width="115" height="22" rx="4" fill="#F59E0B"/><text x="384" y="285" font-family="Arial,Helvetica,sans-serif" font-size="11" font-weight="700" fill="#F59E0B">5.6</text></svg>
+    <div style="margin-top:10px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:5px;padding:7px 12px;font-size:9px;color:#64748B;">
+      <strong style="color:#243247;">Trendvergelijking:</strong> Geen trendvergelijking beschikbaar — dit is de eerste meting (baseline). Vanaf meting 2 toont Loep ontwikkeling t.o.v. deze meting. &nbsp;&middot;&nbsp;
+      <strong style="color:#243247;">Benchmark:</strong> Geen externe benchmark in v1. Absolute scores vormen het uitgangspunt voor het eerste directiegesprek.
+    </div>
+  </div>
+</div>
+<div class="pb sec">
+  <span class="slabel">Prioriteitenmatrix — relevantie voor managementgesprek</span>
+  <div class="card">
+    <p style="font-size:9.5px;color:#64748B;margin-bottom:6px;">Domeinen geplotterd op score (x-as) en bestuurlijke urgentie (y-as). Linksboven = eerste aandacht in directiegesprek.</p>
+    <p style="font-size:8.5px;color:#94A3B8;margin-bottom:12px;">Urgentie is bepaald op basis van domeinscore — geen statistische driveranalyse. Gebruik als managementduiding voor het eerste gesprek, niet als causale prioriteitstelling.</p>
+    <svg width="440" height="300" xmlns="http://www.w3.org/2000/svg"><rect x="120" y="20" width="150" height="147" rx="2" fill="#FEF2F2"/><rect x="270" y="20" width="150" height="147" rx="2" fill="#FFFBEB"/><rect x="120" y="167" width="150" height="98" rx="2" fill="#F8FAFC"/><rect x="270" y="167" width="150" height="98" rx="2" fill="#F0FDF4"/><text x="195" y="37" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="8" font-weight="700" fill="#EF4444">PRIORITEIT</text><text x="345" y="37" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="8" font-weight="700" fill="#D19422">BEWAKEN</text><text x="195" y="181" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="8" font-weight="700" fill="#94A3B8">MINDER URGENT</text><text x="345" y="181" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="8" font-weight="700" fill="#22C55E">RELATIEF STERK</text><line x1="270" y1="20" x2="270" y2="265" stroke="#CBD5E1" stroke-width="1.5" stroke-dasharray="4,3"/><line x1="120" y1="167" x2="420" y2="167" stroke="#CBD5E1" stroke-width="1.5" stroke-dasharray="4,3"/><line x1="120" y1="265" x2="420" y2="265" stroke="#94A3B8" stroke-width="1"/><line x1="120" y1="20" x2="120" y2="265" stroke="#94A3B8" stroke-width="1"/><text x="270" y="293" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="9" fill="#64748B">Domainscore (1–10, hoger is beter)</text><text transform="rotate(-90 22 142)" x="22" y="142" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="8.5" fill="#64748B">Bestuurlijke urgentie</text><text x="120" y="279" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="8" fill="#94A3B8">3</text><text x="170" y="279" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="8" fill="#94A3B8">4</text><text x="220" y="279" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="8" fill="#94A3B8">5</text><text x="270" y="279" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="8" fill="#94A3B8">6</text><text x="320" y="279" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="8" fill="#94A3B8">7</text><text x="370" y="279" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="8" fill="#94A3B8">8</text><text x="420" y="279" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="8" fill="#94A3B8">9</text><circle cx="249" cy="144" r="9" fill="#F59E0B"/><text x="249" y="148" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="8" font-weight="700" fill="#FFF">1</text><circle cx="258" cy="149" r="9" fill="#F59E0B"/><text x="258" y="153" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="8" font-weight="700" fill="#FFF">2</text><circle cx="270" cy="156" r="9" fill="#84CC16"/><text x="270" y="160" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="8" font-weight="700" fill="#FFF">3</text><circle cx="282" cy="163" r="9" fill="#84CC16"/><text x="282" y="167" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="8" font-weight="700" fill="#FFF">4</text><circle cx="288" cy="166" r="9" fill="#84CC16"/><text x="288" y="170" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="8" font-weight="700" fill="#FFF">5</text><circle cx="300" cy="172" r="9" fill="#22C55E"/><text x="300" y="176" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="8" font-weight="700" fill="#FFF">6</text><circle cx="310" cy="178" r="9" fill="#22C55E"/><text x="310" y="182" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="8" font-weight="700" fill="#FFF">7</text><circle cx="320" cy="184" r="9" fill="#22C55E"/><text x="320" y="188" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="8" font-weight="700" fill="#FFF">8</text><circle cx="324" cy="186" r="9" fill="#22C55E"/><text x="324" y="190" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="8" font-weight="700" fill="#FFF">9</text><circle cx="348" cy="199" r="9" fill="#22C55E"/><text x="348" y="203" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="8" font-weight="700" fill="#FFF">10</text></svg>
+    <div style="margin-top:12px;"><div style="font-size:8.5px;color:#374151;padding:2px 6px 2px 0;vertical-align:middle;white-space:nowrap;display:inline-block;margin-right:10px;margin-bottom:4px;"><span style="display:inline-block;width:15px;height:15px;border-radius:50%;background:#F59E0B;color:#fff;text-align:center;line-height:15px;font-size:8px;font-weight:700;margin-right:3px;vertical-align:middle;">1</span>Werkdruk</div><div style="font-size:8.5px;color:#374151;padding:2px 6px 2px 0;vertical-align:middle;white-space:nowrap;display:inline-block;margin-right:10px;margin-bottom:4px;"><span style="display:inline-block;width:15px;height:15px;border-radius:50%;background:#F59E0B;color:#fff;text-align:center;line-height:15px;font-size:8px;font-weight:700;margin-right:3px;vertical-align:middle;">2</span>Beloning</div><div style="font-size:8.5px;color:#374151;padding:2px 6px 2px 0;vertical-align:middle;white-space:nowrap;display:inline-block;margin-right:10px;margin-bottom:4px;"><span style="display:inline-block;width:15px;height:15px;border-radius:50%;background:#84CC16;color:#fff;text-align:center;line-height:15px;font-size:8px;font-weight:700;margin-right:3px;vertical-align:middle;">3</span>Psych. veiligheid</div><div style="font-size:8.5px;color:#374151;padding:2px 6px 2px 0;vertical-align:middle;white-space:nowrap;display:inline-block;margin-right:10px;margin-bottom:4px;"><span style="display:inline-block;width:15px;height:15px;border-radius:50%;background:#84CC16;color:#fff;text-align:center;line-height:15px;font-size:8px;font-weight:700;margin-right:3px;vertical-align:middle;">4</span>Groei &amp; ontwikkeling</div><div style="font-size:8.5px;color:#374151;padding:2px 6px 2px 0;vertical-align:middle;white-space:nowrap;display:inline-block;margin-right:10px;margin-bottom:4px;"><span style="display:inline-block;width:15px;height:15px;border-radius:50%;background:#84CC16;color:#fff;text-align:center;line-height:15px;font-size:8px;font-weight:700;margin-right:3px;vertical-align:middle;">5</span>Leiderschap</div><div style="font-size:8.5px;color:#374151;padding:2px 6px 2px 0;vertical-align:middle;white-space:nowrap;display:inline-block;margin-right:10px;margin-bottom:4px;"><span style="display:inline-block;width:15px;height:15px;border-radius:50%;background:#22C55E;color:#fff;text-align:center;line-height:15px;font-size:8px;font-weight:700;margin-right:3px;vertical-align:middle;">6</span>Veranderbereidheid</div><div style="font-size:8.5px;color:#374151;padding:2px 6px 2px 0;vertical-align:middle;white-space:nowrap;display:inline-block;margin-right:10px;margin-bottom:4px;"><span style="display:inline-block;width:15px;height:15px;border-radius:50%;background:#22C55E;color:#fff;text-align:center;line-height:15px;font-size:8px;font-weight:700;margin-right:3px;vertical-align:middle;">7</span>Samenwerking</div><div style="font-size:8.5px;color:#374151;padding:2px 6px 2px 0;vertical-align:middle;white-space:nowrap;display:inline-block;margin-right:10px;margin-bottom:4px;"><span style="display:inline-block;width:15px;height:15px;border-radius:50%;background:#22C55E;color:#fff;text-align:center;line-height:15px;font-size:8px;font-weight:700;margin-right:3px;vertical-align:middle;">8</span>Engagement</div><div style="font-size:8.5px;color:#374151;padding:2px 6px 2px 0;vertical-align:middle;white-space:nowrap;display:inline-block;margin-right:10px;margin-bottom:4px;"><span style="display:inline-block;width:15px;height:15px;border-radius:50%;background:#22C55E;color:#fff;text-align:center;line-height:15px;font-size:8px;font-weight:700;margin-right:3px;vertical-align:middle;">9</span>Autonomie &amp; rol</div><div style="font-size:8.5px;color:#374151;padding:2px 6px 2px 0;vertical-align:middle;white-space:nowrap;display:inline-block;margin-right:10px;margin-bottom:4px;"><span style="display:inline-block;width:15px;height:15px;border-radius:50%;background:#22C55E;color:#fff;text-align:center;line-height:15px;font-size:8px;font-weight:700;margin-right:3px;vertical-align:middle;">10</span>Verbondenheid</div></div>
+  </div>
+</div><div class="sec">
+  <span class="slabel">Patronen in samenhang</span>
+  <div class="card cn">
+    <p style="font-size:11px;color:#374151;line-height:1.7;">Het scherpste samenhangsspoor loopt nu via <strong>Werkdruk en draagkracht</strong> (5.6/10) en <strong>Beloning en voorwaarden</strong> (5.8/10). Gebruik dit als eerste leeslijn voor het directiegesprek. <strong>Organisatieverbinding en intentie</strong> biedt een relatief stabiele context en neutraliseert de aandachtspunten niet, maar geeft wel aan waar de organisatie steviger staat.</p>
+    <p style="font-size:9.5px;color:#94A3B8;margin-top:8px;">Deze patroonlezing is descriptief. Zij beschrijft samenhang en bewijst geen oorzaak-gevolg.</p>
+  </div>
+</div><div class="sec">
+  <span class="slabel">Segmentstatus</span>
+  <table style="width:100%;border-collapse:collapse;font-size:10px;">
+    <thead>
+      <tr style="background:#F1F5F9;">
+        <th style="text-align:left;padding:6px 10px;border-bottom:2px solid #E2E8F0;color:#475569;font-size:8.5px;letter-spacing:0.06em;text-transform:uppercase;">Segmentlaag</th>
+        <th style="text-align:left;padding:6px 10px;border-bottom:2px solid #E2E8F0;color:#475569;font-size:8.5px;letter-spacing:0.06em;text-transform:uppercase;">Status</th>
+        <th style="text-align:left;padding:6px 10px;border-bottom:2px solid #E2E8F0;color:#475569;font-size:8.5px;letter-spacing:0.06em;text-transform:uppercase;">Toelichting</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="background:#FFF;">
+        <td style="padding:6px 10px;border-bottom:1px solid #F1F5F9;font-weight:600;color:#243247;">Organisatiebreed</td>
+        <td style="padding:6px 10px;border-bottom:1px solid #F1F5F9;"><span style="color:#22C55E;font-weight:700;">✓ Getoond</span></td>
+        <td style="padding:6px 10px;border-bottom:1px solid #F1F5F9;color:#64748B;">n=48 — voldoende voor organisatiebreed beeld</td>
+      </tr>
+      <tr style="background:#FFF;">
+        <td style="padding:6px 10px;border-bottom:1px solid #F1F5F9;font-weight:600;color:#243247;">Team / afdeling</td>
+        <td style="padding:6px 10px;border-bottom:1px solid #F1F5F9;"><span style="color:#94A3B8;font-weight:700;">— Niet getoond</span></td>
+        <td style="padding:6px 10px;border-bottom:1px solid #F1F5F9;color:#64748B;">Vrijgave of n-grens niet bereikt</td>
+      </tr>
+      <tr style="background:#FFF;">
+        <td style="padding:6px 10px;border-bottom:1px solid #F1F5F9;font-weight:600;color:#243247;">Functiegroep</td>
+        <td style="padding:6px 10px;border-bottom:1px solid #F1F5F9;"><span style="color:#94A3B8;font-weight:700;">— Niet getoond</span></td>
+        <td style="padding:6px 10px;border-bottom:1px solid #F1F5F9;color:#64748B;">Vrijgave of n-grens niet bereikt</td>
+      </tr>
+      <tr style="background:#FFF;">
+        <td style="padding:6px 10px;font-weight:600;color:#243247;">Locatie</td>
+        <td style="padding:6px 10px;"><span style="color:#94A3B8;font-weight:700;">— Niet getoond</span></td>
+        <td style="padding:6px 10px;color:#64748B;">Vrijgave of n-grens niet bereikt</td>
+      </tr>
+    </tbody>
+  </table>
+  <div style="margin-top:10px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:5px;padding:8px 14px;font-size:9px;color:#64748B;">
+    Segmentverschillen zijn niet getoond om herleidbaarheid te voorkomen.
+    Verdieping per team, locatie of functiegroep wordt alleen vrijgegeven bij voldoende respons en expliciete toestemming.
+  </div>
+</div><div class="pb sec">
+  <span class="slabel">Verdieping — laagste drie domeinen</span>
+  <div class="card no-break" style="margin-bottom:14px;">
+  <div style="margin-bottom:10px;">
+    <span style="font-size:13px;font-weight:700;color:#243247;">Werkdruk en draagkracht</span>
+    <span style="font-size:12px;font-weight:700;color:#F59E0B;margin-left:10px;">5.6/10</span>
+    <span style="font-size:10px;color:#F59E0B;margin-left:6px;">— Aandachtspunt</span>
+  </div>
+  <div style="background:#FEF2F2;border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:10px;"><strong>Laagste item:</strong> Mijn werk is in de praktijk meestal goed vol te houden. — <strong style="color:#EF4444;">5.5/10</strong></div>
+  <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:10px;"><strong>Hoogste item binnen dit domein:</strong> Ik heb meestal genoeg ruimte om mijn werk goed af te ronden. — <strong style="color:#64748B;">5.6/10</strong></div>
+  <table class="item-tbl" style="margin-bottom:10px;"><tr><td class="iq">Mijn werk is in de praktijk meestal goed vol te houden.</td><td class="is" style="color:#F59E0B;">5.5</td><td class="ib"><div style="display:inline-block;width:90px;height:10px;background:#EDE6DA;border-radius:3px;vertical-align:middle;"><div style="width:49px;height:10px;background:#F59E0B;border-radius:3px;"></div></div></td></tr><tr><td class="iq">Ik heb meestal genoeg ruimte om mijn werk goed af te ronden.</td><td class="is" style="color:#F59E0B;">5.6</td><td class="ib"><div style="display:inline-block;width:90px;height:10px;background:#EDE6DA;border-radius:3px;vertical-align:middle;"><div style="width:51px;height:10px;background:#F59E0B;border-radius:3px;"></div></div></td></tr><tr><td class="iq">Ik kan mijn werk meestal doen zonder dat herstel structureel in de knel komt.</td><td class="is" style="color:#F59E0B;">5.5</td><td class="ib"><div style="display:inline-block;width:90px;height:10px;background:#EDE6DA;border-radius:3px;vertical-align:middle;"><div style="width:50px;height:10px;background:#F59E0B;border-radius:3px;"></div></div></td></tr><tr><td class="iq">Mijn werkdruk is meestal niet lang vol te houden.</td><td class="is" style="color:#F59E0B;">5.6</td><td class="ib"><div style="display:inline-block;width:90px;height:10px;background:#EDE6DA;border-radius:3px;vertical-align:middle;"><div style="width:51px;height:10px;background:#F59E0B;border-radius:3px;"></div></div></td></tr></table>
+</div><div class="card no-break" style="margin-bottom:14px;">
+  <div style="margin-bottom:10px;">
+    <span style="font-size:13px;font-weight:700;color:#243247;">Beloning en voorwaarden</span>
+    <span style="font-size:12px;font-weight:700;color:#F59E0B;margin-left:10px;">5.8/10</span>
+    <span style="font-size:10px;color:#F59E0B;margin-left:6px;">— Aandachtspunt</span>
+  </div>
+  <div style="background:#FEF2F2;border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:10px;"><strong>Laagste item:</strong> De voorwaarden om mijn werk goed te doen zijn meestal op orde. — <strong style="color:#EF4444;">5.6/10</strong></div>
+  <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:10px;"><strong>Hoogste item binnen dit domein:</strong> Beloning en voorwaarden voelen voor mij niet in verhouding tot wat er gevraagd wordt. — <strong style="color:#64748B;">5.9/10</strong></div>
+  <table class="item-tbl" style="margin-bottom:10px;"><tr><td class="iq">De voorwaarden om mijn werk goed te doen zijn meestal op orde.</td><td class="is" style="color:#F59E0B;">5.6</td><td class="ib"><div style="display:inline-block;width:90px;height:10px;background:#EDE6DA;border-radius:3px;vertical-align:middle;"><div style="width:51px;height:10px;background:#F59E0B;border-radius:3px;"></div></div></td></tr><tr><td class="iq">Beloning en waardering voelen voor mij in hoofdlijnen eerlijk.</td><td class="is" style="color:#F59E0B;">5.6</td><td class="ib"><div style="display:inline-block;width:90px;height:10px;background:#EDE6DA;border-radius:3px;vertical-align:middle;"><div style="width:51px;height:10px;background:#F59E0B;border-radius:3px;"></div></div></td></tr><tr><td class="iq">De organisatie biedt mij voorwaarden die passen bij wat het werk vraagt.</td><td class="is" style="color:#F59E0B;">5.8</td><td class="ib"><div style="display:inline-block;width:90px;height:10px;background:#EDE6DA;border-radius:3px;vertical-align:middle;"><div style="width:52px;height:10px;background:#F59E0B;border-radius:3px;"></div></div></td></tr><tr><td class="iq">Beloning en voorwaarden voelen voor mij niet in verhouding tot wat er gevraagd wordt.</td><td class="is" style="color:#F59E0B;">5.9</td><td class="ib"><div style="display:inline-block;width:90px;height:10px;background:#EDE6DA;border-radius:3px;vertical-align:middle;"><div style="width:53px;height:10px;background:#F59E0B;border-radius:3px;"></div></div></td></tr></table>
+</div><div class="card no-break" style="margin-bottom:14px;">
+  <div style="margin-bottom:10px;">
+    <span style="font-size:13px;font-weight:700;color:#243247;">Vertrouwen en psychologische veiligheid</span>
+    <span style="font-size:12px;font-weight:700;color:#84CC16;margin-left:10px;">6.0/10</span>
+    <span style="font-size:10px;color:#84CC16;margin-left:6px;">— Gemengd beeld</span>
+  </div>
+  <div style="background:#FEF2F2;border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:10px;"><strong>Laagste item:</strong> Mensen luisteren hier serieus naar een afwijkend geluid. — <strong style="color:#EF4444;">5.6/10</strong></div>
+  <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:10px;"><strong>Hoogste item binnen dit domein:</strong> Ik houd belangrijke zorgen hier liever voor mezelf. — <strong style="color:#64748B;">6.4/10</strong></div>
+  <table class="item-tbl" style="margin-bottom:10px;"><tr><td class="iq">Ik kan zorgen of fouten hier bespreekbaar maken zonder onnodig risico te voelen.</td><td class="is" style="color:#F59E0B;">6.1</td><td class="ib"><div style="display:inline-block;width:90px;height:10px;background:#EDE6DA;border-radius:3px;vertical-align:middle;"><div style="width:55px;height:10px;background:#F59E0B;border-radius:3px;"></div></div></td></tr><tr><td class="iq">Mensen luisteren hier serieus naar een afwijkend geluid.</td><td class="is" style="color:#F59E0B;">5.6</td><td class="ib"><div style="display:inline-block;width:90px;height:10px;background:#EDE6DA;border-radius:3px;vertical-align:middle;"><div style="width:50px;height:10px;background:#F59E0B;border-radius:3px;"></div></div></td></tr><tr><td class="iq">Ik ervaar voldoende vertrouwen tussen collega&#x27;s en leiding.</td><td class="is" style="color:#F59E0B;">6.0</td><td class="ib"><div style="display:inline-block;width:90px;height:10px;background:#EDE6DA;border-radius:3px;vertical-align:middle;"><div style="width:54px;height:10px;background:#F59E0B;border-radius:3px;"></div></div></td></tr><tr><td class="iq">Ik houd belangrijke zorgen hier liever voor mezelf.</td><td class="is" style="color:#F59E0B;">6.4</td><td class="ib"><div style="display:inline-block;width:90px;height:10px;background:#EDE6DA;border-radius:3px;vertical-align:middle;"><div style="width:58px;height:10px;background:#F59E0B;border-radius:3px;"></div></div></td></tr></table>
+</div>
+</div><div class="pb sec">
+  <span class="slabel">Wat valt op op itemniveau?</span>
+  <div style="display:table;width:100%;border-collapse:separate;border-spacing:12px 0;">
+    <div style="display:table-cell;vertical-align:top;width:50%;">
+      <div style="font-size:9px;font-weight:700;color:#EF4444;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">5 laagst scorende stellingen</div>
+      <table style="width:100%;border-collapse:collapse;">
+        <thead><tr>
+          <th style="font-size:8px;color:#94A3B8;text-align:left;padding:3px 8px;border-bottom:1px solid #E2E8F0;">Stelling</th>
+          <th style="font-size:8px;color:#94A3B8;text-align:left;padding:3px 8px;border-bottom:1px solid #E2E8F0;">Domein</th>
+          <th style="font-size:8px;color:#94A3B8;text-align:right;padding:3px 8px;border-bottom:1px solid #E2E8F0;">Score</th>
+        </tr></thead>
+        <tbody><tr><td style="padding:5px 8px;border-bottom:1px solid #F1F5F9;font-size:9.5px;color:#374151;">Mijn werk is in de praktijk meestal goed vol te houden.</td><td style="padding:5px 8px;border-bottom:1px solid #F1F5F9;font-size:9px;color:#64748B;white-space:nowrap;">Werkdruk</td><td style="padding:5px 8px;border-bottom:1px solid #F1F5F9;font-size:11px;font-weight:700;color:#F59E0B;text-align:right;white-space:nowrap;">5.5</td></tr><tr><td style="padding:5px 8px;border-bottom:1px solid #F1F5F9;font-size:9.5px;color:#374151;">Ik kan mijn werk meestal doen zonder dat herstel structureel in de knel komt.</td><td style="padding:5px 8px;border-bottom:1px solid #F1F5F9;font-size:9px;color:#64748B;white-space:nowrap;">Werkdruk</td><td style="padding:5px 8px;border-bottom:1px solid #F1F5F9;font-size:11px;font-weight:700;color:#F59E0B;text-align:right;white-space:nowrap;">5.5</td></tr><tr><td style="padding:5px 8px;border-bottom:1px solid #F1F5F9;font-size:9.5px;color:#374151;">Mensen luisteren hier serieus naar een afwijkend geluid.</td><td style="padding:5px 8px;border-bottom:1px solid #F1F5F9;font-size:9px;color:#64748B;white-space:nowrap;">Psych. veiligheid</td><td style="padding:5px 8px;border-bottom:1px solid #F1F5F9;font-size:11px;font-weight:700;color:#F59E0B;text-align:right;white-space:nowrap;">5.6</td></tr><tr><td style="padding:5px 8px;border-bottom:1px solid #F1F5F9;font-size:9.5px;color:#374151;">Ik heb meestal genoeg ruimte om mijn werk goed af te ronden.</td><td style="padding:5px 8px;border-bottom:1px solid #F1F5F9;font-size:9px;color:#64748B;white-space:nowrap;">Werkdruk</td><td style="padding:5px 8px;border-bottom:1px solid #F1F5F9;font-size:11px;font-weight:700;color:#F59E0B;text-align:right;white-space:nowrap;">5.6</td></tr><tr><td style="padding:5px 8px;border-bottom:1px solid #F1F5F9;font-size:9.5px;color:#374151;">Mijn werkdruk is meestal niet lang vol te houden. <span style="font-size:7.5px;color:#94A3B8;font-style:italic;">↩ omgekeerd gecodeerd</span></td><td style="padding:5px 8px;border-bottom:1px solid #F1F5F9;font-size:9px;color:#64748B;white-space:nowrap;">Werkdruk</td><td style="padding:5px 8px;border-bottom:1px solid #F1F5F9;font-size:11px;font-weight:700;color:#F59E0B;text-align:right;white-space:nowrap;">5.6</td></tr></tbody>
+      </table>
+    </div>
+    <div style="display:table-cell;vertical-align:top;width:50%;">
+      <div style="font-size:9px;font-weight:700;color:#22C55E;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">5 hoogst scorende stellingen</div>
+      <table style="width:100%;border-collapse:collapse;">
+        <thead><tr>
+          <th style="font-size:8px;color:#94A3B8;text-align:left;padding:3px 8px;border-bottom:1px solid #E2E8F0;">Stelling</th>
+          <th style="font-size:8px;color:#94A3B8;text-align:left;padding:3px 8px;border-bottom:1px solid #E2E8F0;">Domein</th>
+          <th style="font-size:8px;color:#94A3B8;text-align:right;padding:3px 8px;border-bottom:1px solid #E2E8F0;">Score</th>
+        </tr></thead>
+        <tbody><tr><td style="padding:5px 8px;border-bottom:1px solid #F1F5F9;font-size:9.5px;color:#374151;">Ik ben er trots op om voor deze organisatie te werken.</td><td style="padding:5px 8px;border-bottom:1px solid #F1F5F9;font-size:9px;color:#64748B;white-space:nowrap;">Verbondenheid</td><td style="padding:5px 8px;border-bottom:1px solid #F1F5F9;font-size:11px;font-weight:700;color:#22C55E;text-align:right;white-space:nowrap;">7.8</td></tr><tr><td style="padding:5px 8px;border-bottom:1px solid #F1F5F9;font-size:9.5px;color:#374151;">Ik kan mij goed vinden in waar deze organisatie voor staat.</td><td style="padding:5px 8px;border-bottom:1px solid #F1F5F9;font-size:9px;color:#64748B;white-space:nowrap;">Verbondenheid</td><td style="padding:5px 8px;border-bottom:1px solid #F1F5F9;font-size:11px;font-weight:700;color:#22C55E;text-align:right;white-space:nowrap;">7.6</td></tr><tr><td style="padding:5px 8px;border-bottom:1px solid #F1F5F9;font-size:9.5px;color:#374151;">Ik kan me moeilijk voorstellen dat ik hier over een jaar nog graag werk. <span style="font-size:7.5px;color:#94A3B8;font-style:italic;">↩ omgekeerd gecodeerd</span></td><td style="padding:5px 8px;border-bottom:1px solid #F1F5F9;font-size:9px;color:#64748B;white-space:nowrap;">Verbondenheid</td><td style="padding:5px 8px;border-bottom:1px solid #F1F5F9;font-size:11px;font-weight:700;color:#22C55E;text-align:right;white-space:nowrap;">7.5</td></tr><tr><td style="padding:5px 8px;border-bottom:1px solid #F1F5F9;font-size:9.5px;color:#374151;">Ik voel mij verbonden met deze organisatie.</td><td style="padding:5px 8px;border-bottom:1px solid #F1F5F9;font-size:9px;color:#64748B;white-space:nowrap;">Verbondenheid</td><td style="padding:5px 8px;border-bottom:1px solid #F1F5F9;font-size:11px;font-weight:700;color:#22C55E;text-align:right;white-space:nowrap;">7.5</td></tr><tr><td style="padding:5px 8px;border-bottom:1px solid #F1F5F9;font-size:9.5px;color:#374151;">Taken, verantwoordelijkheden en beslissingsruimte zijn voor mij meestal helder.</td><td style="padding:5px 8px;border-bottom:1px solid #F1F5F9;font-size:9px;color:#64748B;white-space:nowrap;">Autonomie &amp; rol</td><td style="padding:5px 8px;border-bottom:1px solid #F1F5F9;font-size:11px;font-weight:700;color:#22C55E;text-align:right;white-space:nowrap;">7.3</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div><div class="sec">
+  <span class="slabel">Sterke punten en aandachtspunten</span>
+  <div style="display:table;width:100%;border-collapse:separate;border-spacing:12px 0;">
+    <div style="display:table-cell;vertical-align:top;width:50%;background:#F0FDF4;border:1px solid #A7F3D0;border-radius:7px;padding:14px 16px;">
+      <div style="font-size:9px;font-weight:700;color:#16A34A;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:10px;">Relatief sterk — stabiele basis</div>
+      <div style="display:flex;align-items:baseline;margin-bottom:7px;"><span style="min-width:8px;font-size:14px;color:#22C55E;margin-right:8px;">●</span><div><div style="font-size:10.5px;font-weight:700;color:#243247;">Organisatieverbinding en intentie</div><div style="font-size:9px;color:#22C55E;">7.6/10 &mdash; Relatief sterk</div></div></div><div style="display:flex;align-items:baseline;margin-bottom:7px;"><span style="min-width:8px;font-size:14px;color:#22C55E;margin-right:8px;">●</span><div><div style="font-size:10.5px;font-weight:700;color:#243247;">Autonomie en rolhelderheid</div><div style="font-size:9px;color:#22C55E;">7.1/10 &mdash; Relatief sterk</div></div></div><div style="display:flex;align-items:baseline;margin-bottom:7px;"><span style="min-width:8px;font-size:14px;color:#22C55E;margin-right:8px;">●</span><div><div style="font-size:10.5px;font-weight:700;color:#243247;">Engagement en betrokkenheid</div><div style="font-size:9px;color:#22C55E;">7.0/10 &mdash; Relatief sterk</div></div></div>
+    </div>
+    <div style="display:table-cell;vertical-align:top;width:50%;background:#FEF2F2;border:1px solid #FECACA;border-radius:7px;padding:14px 16px;">
+      <div style="font-size:9px;font-weight:700;color:#DC2626;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:10px;">Vraagt aandacht — eerste bespreking</div>
+      <div style="display:flex;align-items:baseline;margin-bottom:7px;"><span style="min-width:8px;font-size:14px;color:#F59E0B;margin-right:8px;">●</span><div><div style="font-size:10.5px;font-weight:700;color:#243247;">Werkdruk en draagkracht</div><div style="font-size:9px;color:#F59E0B;">5.6/10 &mdash; Aandachtspunt</div></div></div><div style="display:flex;align-items:baseline;margin-bottom:7px;"><span style="min-width:8px;font-size:14px;color:#F59E0B;margin-right:8px;">●</span><div><div style="font-size:10.5px;font-weight:700;color:#243247;">Beloning en voorwaarden</div><div style="font-size:9px;color:#F59E0B;">5.8/10 &mdash; Aandachtspunt</div></div></div>
+    </div>
+  </div>
+</div><div class="pb sec">
+  <span class="slabel">Open toelichtingen &mdash; observaties van respondenten</span>
+  <div class="cbox" style="margin-bottom:12px;font-size:10px;color:#374151;">
+    7 toelichtingen ontvangen. Gegroepeerd per thema — één voorbeeldquote per thema.
+    Geanonimiseerd; namen en contactgegevens zijn verwijderd.
+  </div>
+  <div class="theme-card"><div style="margin-bottom:6px;"><span class="theme-badge">Samenwerking en afstemming</span><span style="font-size:8px;color:#94A3B8;margin-left:4px;">(2×)</span><span style="font-size:8px;font-weight:700;background:#E2E8F0;color:#475569;padding:2px 7px;border-radius:3px;margin-left:6px;">Samenwerking</span></div><div class="quote-txt">Samenwerking tussen afdelingen verloopt stroef.<div class="quote-anon">Geanonimiseerd &mdash; namen en contactgegevens verwijderd</div></div></div><div class="theme-card"><div style="margin-bottom:6px;"><span class="theme-badge">Werkdruk en herstel</span><span style="font-size:8px;color:#94A3B8;margin-left:4px;">(1×)</span><span style="font-size:8px;font-weight:700;background:#E2E8F0;color:#475569;padding:2px 7px;border-radius:3px;margin-left:6px;">Werkdruk</span></div><div class="quote-txt">De werkdruk is structureel te hoog in meerdere teams.<div class="quote-anon">Geanonimiseerd &mdash; namen en contactgegevens verwijderd</div></div></div><div class="theme-card"><div style="margin-bottom:6px;"><span class="theme-badge">Leiderschap en richting</span><span style="font-size:8px;color:#94A3B8;margin-left:4px;">(1×)</span><span style="font-size:8px;font-weight:700;background:#E2E8F0;color:#475569;padding:2px 7px;border-radius:3px;margin-left:6px;">Leiderschap</span></div><div class="quote-txt">Leidinggevenden geven weinig concrete feedback.<div class="quote-anon">Geanonimiseerd &mdash; namen en contactgegevens verwijderd</div></div></div><div class="theme-card"><div style="margin-bottom:6px;"><span class="theme-badge">Groei en ontwikkeling</span><span style="font-size:8px;color:#94A3B8;margin-left:4px;">(1×)</span><span style="font-size:8px;font-weight:700;background:#E2E8F0;color:#475569;padding:2px 7px;border-radius:3px;margin-left:6px;">Groei &amp; ontwikkeling</span></div><div class="quote-txt">Er is weinig perspectief op doorgroei binnen de organisatie.<div class="quote-anon">Geanonimiseerd &mdash; namen en contactgegevens verwijderd</div></div></div><div class="theme-card"><div style="margin-bottom:6px;"><span class="theme-badge">Verandering en aanpassing</span><span style="font-size:8px;color:#94A3B8;margin-left:4px;">(1×)</span><span style="font-size:8px;font-weight:700;background:#E2E8F0;color:#475569;padding:2px 7px;border-radius:3px;margin-left:6px;">Veranderbereidheid</span></div><div class="quote-txt">Veranderingen worden onvoldoende uitgelegd aan medewerkers.<div class="quote-anon">Geanonimiseerd &mdash; namen en contactgegevens verwijderd</div></div></div>
+</div><div class="pb sec">
+  <span class="slabel">Vervolgrichting na de baseline</span>
+  <div class="card ca">
+    <p style="font-size:12px;font-weight:700;color:#243247;margin-bottom:10px;">Geen vervolgstap opent automatisch vanuit deze baseline.</p>
+    <p style="font-size:11px;color:#374151;">Het directiegesprek sluit af met een expliciete keuze: geen onmiddellijke vervolgrichting, een verdiepingsanalyse na vrijgave op specifieke domeinen, een korte vervolgmeting, of een andere Loep-route als het vraagstuk smaller is.</p>
+  </div>
+  <table class="tg" style="margin-top:14px;"><tr>
+    <td class="tc"><div class="tt">Geen actie nu</div><div class="tb">Directie bespreekt, concludeert en kiest bewust voor geen onmiddellijk vervolg. Dat is een geldige uitkomst.</div></td>
+    <td class="tc"><div class="tt">Verdiepingsanalyse na vrijgave</div><div class="tb">Specifieke domeinen of segmenten dieper bekijken na expliciete vrijgave. Altijd begeleid door Loep.</div></td>
+    <td class="tc"><div class="tt">Korte vervolgmeting</div><div class="tb">Periodieke check op dezelfde kernvragen. Opent pas na baseline-read — niet automatisch.</div></td>
+  </tr></table>
+
+  <div style="margin-top:20px;">
+    <div style="font-size:9px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">Van directie naar management</div>
+    <table class="tg"><tr>
+      <td class="tc"><div class="tt" style="color:#1E293B;">Directie</div><div class="tb">Kiest één managementvraag op basis van dit rapport. Bepaalt of verdieping of vervolgmeting zinvol is.</div></td>
+      <td class="tc"><div class="tt" style="color:#1E293B;">HR / HRBP</div><div class="tb">Bereidt verdiepingsanalyse voor na vrijgave. Bewaakt segmentdrempels en privacygrenzen.</div></td>
+      <td class="tc"><div class="tt" style="color:#1E293B;">Management / teams</div><div class="tb">Alleen bespreken waar voldoende groepsbasis is. Geen individuele signalen verspreiden.</div></td>
+    </tr></table>
+  </div>
+</div><div class="pb sec">
+  <span class="slabel">Appendix &mdash; volledige vraagresultaten</span>
+  <p style="font-size:9.5px;color:#64748B;margin-bottom:14px;">
+    Verdieping &mdash; niet nodig voor de eerste boardread. Scores zijn groepsgemiddelden (n=48), geschaald 1&ndash;10.
+  </p>
+  <div class="no-break" style="margin-bottom:14px;">
+  <div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">Engagement en betrokkenheid&nbsp;&mdash;&nbsp;7.0/10</div>
+  <table class="app-tbl"><tr><th class="aq">Vraag</th><th class="as">Gem.</th><th class="ab">Beeld</th></tr><tr><td class="aq">Ik zet mij actief in om mijn werk goed en zorgvuldig te doen.</td><td class="as" style="color:#22C55E;">7.2</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="50" height="5" rx="2" fill="#22C55E"/></svg></td></tr><tr><td class="aq">Mijn werk geeft mij meestal energie om betrokken te blijven.</td><td class="as" style="color:#22C55E;">7.2</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="51" height="5" rx="2" fill="#22C55E"/></svg></td></tr><tr><td class="aq">Ik voel mij verantwoordelijk voor het gezamenlijke resultaat.</td><td class="as" style="color:#22C55E;">6.8</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="48" height="5" rx="2" fill="#22C55E"/></svg></td></tr><tr><td class="aq">Ik zie in mijn werk weinig reden om extra inzet te tonen. <span style="font-size:7px;color:#94A3B8;font-style:italic;">↩ omgekeerd</span></td><td class="as" style="color:#22C55E;">6.8</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="48" height="5" rx="2" fill="#22C55E"/></svg></td></tr></table>
+</div><div class="no-break" style="margin-bottom:14px;">
+  <div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">Vertrouwen en psychologische veiligheid&nbsp;&mdash;&nbsp;6.0/10</div>
+  <table class="app-tbl"><tr><th class="aq">Vraag</th><th class="as">Gem.</th><th class="ab">Beeld</th></tr><tr><td class="aq">Ik kan zorgen of fouten hier bespreekbaar maken zonder onnodig risico te voelen.</td><td class="as" style="color:#84CC16;">6.1</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="42" height="5" rx="2" fill="#84CC16"/></svg></td></tr><tr><td class="aq">Mensen luisteren hier serieus naar een afwijkend geluid.</td><td class="as" style="color:#F59E0B;">5.6</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="39" height="5" rx="2" fill="#F59E0B"/></svg></td></tr><tr><td class="aq">Ik ervaar voldoende vertrouwen tussen collega&#x27;s en leiding.</td><td class="as" style="color:#84CC16;">6.0</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="42" height="5" rx="2" fill="#84CC16"/></svg></td></tr><tr><td class="aq">Ik houd belangrijke zorgen hier liever voor mezelf. <span style="font-size:7px;color:#94A3B8;font-style:italic;">↩ omgekeerd</span></td><td class="as" style="color:#84CC16;">6.4</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="45" height="5" rx="2" fill="#84CC16"/></svg></td></tr></table>
+</div><div class="no-break" style="margin-bottom:14px;">
+  <div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">Leiderschap en richting&nbsp;&mdash;&nbsp;6.4/10</div>
+  <table class="app-tbl"><tr><th class="aq">Vraag</th><th class="as">Gem.</th><th class="ab">Beeld</th></tr><tr><td class="aq">De organisatie geeft mij voldoende duidelijke richting over wat nu belangrijk is.</td><td class="as" style="color:#84CC16;">6.2</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="44" height="5" rx="2" fill="#84CC16"/></svg></td></tr><tr><td class="aq">Besluiten van leiding of directie zijn voor mij meestal goed te volgen.</td><td class="as" style="color:#84CC16;">6.4</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="45" height="5" rx="2" fill="#84CC16"/></svg></td></tr><tr><td class="aq">Ik weet voldoende waar de organisatie naartoe wil bewegen.</td><td class="as" style="color:#84CC16;">6.3</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="44" height="5" rx="2" fill="#84CC16"/></svg></td></tr><tr><td class="aq">Besluiten van bovenaf voelen voor mij vaak onduidelijk of tegenstrijdig. <span style="font-size:7px;color:#94A3B8;font-style:italic;">↩ omgekeerd</span></td><td class="as" style="color:#84CC16;">6.5</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="45" height="5" rx="2" fill="#84CC16"/></svg></td></tr></table>
+</div><div class="no-break" style="margin-bottom:14px;">
+  <div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">Samenwerking en afstemming&nbsp;&mdash;&nbsp;6.8/10</div>
+  <table class="app-tbl"><tr><th class="aq">Vraag</th><th class="as">Gem.</th><th class="ab">Beeld</th></tr><tr><td class="aq">Samenwerking tussen teams of onderdelen werkt voor mijn werk meestal goed.</td><td class="as" style="color:#22C55E;">6.9</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="48" height="5" rx="2" fill="#22C55E"/></svg></td></tr><tr><td class="aq">Afspraken tussen teams worden meestal nagekomen.</td><td class="as" style="color:#22C55E;">6.8</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="47" height="5" rx="2" fill="#22C55E"/></svg></td></tr><tr><td class="aq">Ik ervaar voldoende afstemming tussen wat verschillende onderdelen van elkaar vragen.</td><td class="as" style="color:#22C55E;">6.9</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="48" height="5" rx="2" fill="#22C55E"/></svg></td></tr><tr><td class="aq">Samenwerking tussen teams kost ons onnodig veel energie. <span style="font-size:7px;color:#94A3B8;font-style:italic;">↩ omgekeerd</span></td><td class="as" style="color:#22C55E;">6.7</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="47" height="5" rx="2" fill="#22C55E"/></svg></td></tr></table>
+</div><div class="no-break" style="margin-bottom:14px;">
+  <div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">Werkdruk en draagkracht&nbsp;&mdash;&nbsp;5.6/10</div>
+  <table class="app-tbl"><tr><th class="aq">Vraag</th><th class="as">Gem.</th><th class="ab">Beeld</th></tr><tr><td class="aq">Mijn werk is in de praktijk meestal goed vol te houden.</td><td class="as" style="color:#F59E0B;">5.5</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="38" height="5" rx="2" fill="#F59E0B"/></svg></td></tr><tr><td class="aq">Ik heb meestal genoeg ruimte om mijn werk goed af te ronden.</td><td class="as" style="color:#F59E0B;">5.6</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="39" height="5" rx="2" fill="#F59E0B"/></svg></td></tr><tr><td class="aq">Ik kan mijn werk meestal doen zonder dat herstel structureel in de knel komt.</td><td class="as" style="color:#F59E0B;">5.5</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="39" height="5" rx="2" fill="#F59E0B"/></svg></td></tr><tr><td class="aq">Mijn werkdruk is meestal niet lang vol te houden. <span style="font-size:7px;color:#94A3B8;font-style:italic;">↩ omgekeerd</span></td><td class="as" style="color:#F59E0B;">5.6</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="39" height="5" rx="2" fill="#F59E0B"/></svg></td></tr></table>
+</div><div class="no-break" style="margin-bottom:14px;">
+  <div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">Autonomie en rolhelderheid&nbsp;&mdash;&nbsp;7.1/10</div>
+  <table class="app-tbl"><tr><th class="aq">Vraag</th><th class="as">Gem.</th><th class="ab">Beeld</th></tr><tr><td class="aq">Ik weet goed wat er in mijn rol van mij verwacht wordt.</td><td class="as" style="color:#22C55E;">7.2</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="51" height="5" rx="2" fill="#22C55E"/></svg></td></tr><tr><td class="aq">Ik heb voldoende ruimte om mijn werk op een passende manier uit te voeren.</td><td class="as" style="color:#22C55E;">6.8</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="47" height="5" rx="2" fill="#22C55E"/></svg></td></tr><tr><td class="aq">Taken, verantwoordelijkheden en beslissingsruimte zijn voor mij meestal helder.</td><td class="as" style="color:#22C55E;">7.3</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="51" height="5" rx="2" fill="#22C55E"/></svg></td></tr><tr><td class="aq">Ik moet te vaak zelf uitzoeken wat precies van mij verwacht wordt. <span style="font-size:7px;color:#94A3B8;font-style:italic;">↩ omgekeerd</span></td><td class="as" style="color:#22C55E;">7.0</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="49" height="5" rx="2" fill="#22C55E"/></svg></td></tr></table>
+</div><div class="no-break" style="margin-bottom:14px;">
+  <div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">Groei en ontwikkeling&nbsp;&mdash;&nbsp;6.2/10</div>
+  <table class="app-tbl"><tr><th class="aq">Vraag</th><th class="as">Gem.</th><th class="ab">Beeld</th></tr><tr><td class="aq">Ik zie voldoende mogelijkheden om mij in mijn werk verder te ontwikkelen.</td><td class="as" style="color:#84CC16;">6.2</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="43" height="5" rx="2" fill="#84CC16"/></svg></td></tr><tr><td class="aq">Ik krijg feedback die mij helpt beter te worden in mijn werk.</td><td class="as" style="color:#22C55E;">6.6</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="46" height="5" rx="2" fill="#22C55E"/></svg></td></tr><tr><td class="aq">Ik ervaar voldoende perspectief om in deze organisatie te groeien.</td><td class="as" style="color:#84CC16;">6.3</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="44" height="5" rx="2" fill="#84CC16"/></svg></td></tr><tr><td class="aq">Ik zie voor mezelf weinig ontwikkelperspectief binnen deze organisatie. <span style="font-size:7px;color:#94A3B8;font-style:italic;">↩ omgekeerd</span></td><td class="as" style="color:#84CC16;">5.9</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="41" height="5" rx="2" fill="#84CC16"/></svg></td></tr></table>
+</div><div class="no-break" style="margin-bottom:14px;">
+  <div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">Veranderbereidheid&nbsp;&mdash;&nbsp;6.6/10</div>
+  <table class="app-tbl"><tr><th class="aq">Vraag</th><th class="as">Gem.</th><th class="ab">Beeld</th></tr><tr><td class="aq">De organisatie kan veranderingen meestal werkbaar vertalen naar de praktijk.</td><td class="as" style="color:#84CC16;">6.4</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="45" height="5" rx="2" fill="#84CC16"/></svg></td></tr><tr><td class="aq">Ik ervaar voldoende ruimte om mee te bewegen met verandering.</td><td class="as" style="color:#22C55E;">7.0</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="49" height="5" rx="2" fill="#22C55E"/></svg></td></tr><tr><td class="aq">Veranderingen worden meestal duidelijk genoeg uitgelegd om ermee te kunnen werken.</td><td class="as" style="color:#84CC16;">6.5</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="45" height="5" rx="2" fill="#84CC16"/></svg></td></tr><tr><td class="aq">Veranderingen voelen hier vaak als extra last zonder duidelijke richting. <span style="font-size:7px;color:#94A3B8;font-style:italic;">↩ omgekeerd</span></td><td class="as" style="color:#84CC16;">6.5</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="45" height="5" rx="2" fill="#84CC16"/></svg></td></tr></table>
+</div><div class="no-break" style="margin-bottom:14px;">
+  <div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">Beloning en voorwaarden&nbsp;&mdash;&nbsp;5.8/10</div>
+  <table class="app-tbl"><tr><th class="aq">Vraag</th><th class="as">Gem.</th><th class="ab">Beeld</th></tr><tr><td class="aq">De voorwaarden om mijn werk goed te doen zijn meestal op orde.</td><td class="as" style="color:#F59E0B;">5.6</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="39" height="5" rx="2" fill="#F59E0B"/></svg></td></tr><tr><td class="aq">Beloning en waardering voelen voor mij in hoofdlijnen eerlijk.</td><td class="as" style="color:#F59E0B;">5.6</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="39" height="5" rx="2" fill="#F59E0B"/></svg></td></tr><tr><td class="aq">De organisatie biedt mij voorwaarden die passen bij wat het werk vraagt.</td><td class="as" style="color:#84CC16;">5.8</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="41" height="5" rx="2" fill="#84CC16"/></svg></td></tr><tr><td class="aq">Beloning en voorwaarden voelen voor mij niet in verhouding tot wat er gevraagd wordt. <span style="font-size:7px;color:#94A3B8;font-style:italic;">↩ omgekeerd</span></td><td class="as" style="color:#84CC16;">5.9</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="41" height="5" rx="2" fill="#84CC16"/></svg></td></tr></table>
+</div><div class="no-break" style="margin-bottom:14px;">
+  <div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">Organisatieverbinding en intentie&nbsp;&mdash;&nbsp;7.6/10</div>
+  <table class="app-tbl"><tr><th class="aq">Vraag</th><th class="as">Gem.</th><th class="ab">Beeld</th></tr><tr><td class="aq">Ik voel mij verbonden met deze organisatie.</td><td class="as" style="color:#22C55E;">7.5</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="52" height="5" rx="2" fill="#22C55E"/></svg></td></tr><tr><td class="aq">Ik ben er trots op om voor deze organisatie te werken.</td><td class="as" style="color:#22C55E;">7.8</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="54" height="5" rx="2" fill="#22C55E"/></svg></td></tr><tr><td class="aq">Ik kan mij goed vinden in waar deze organisatie voor staat.</td><td class="as" style="color:#22C55E;">7.6</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="53" height="5" rx="2" fill="#22C55E"/></svg></td></tr><tr><td class="aq">Ik kan me moeilijk voorstellen dat ik hier over een jaar nog graag werk. <span style="font-size:7px;color:#94A3B8;font-style:italic;">↩ omgekeerd</span></td><td class="as" style="color:#22C55E;">7.5</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#EDE6DA"/><rect x="0" y="0" width="52" height="5" rx="2" fill="#22C55E"/></svg></td></tr></table>
+</div>
+</div><div class="pb">
+  <span class="slabel">Methodiek en begrenzingen</span>
+  <div class="card" style="margin-bottom:14px;">
+    <p style="font-size:12px;color:#374151;">
+      Dit rapport bundelt cultuur- en engagementpatronen in een direct leesbaar boardbeeld. Gebruik het als startpunt voor het bestuursgesprek — niet als diagnose, manager-ranking of interventiescript.
+    </p>
+  </div>
+  <table class="tg"><tr>
+    <td class="tc"><div class="tt">Groepsniveau</div><div class="tb">Alle scores zijn groepsgemiddelden. Minimaal n = 30 voor organisatieweergave. Geen individuele gegevens.</div></td>
+    <td class="tc"><div class="tt">Geen benchmark in v1</div><div class="tb">Absolute scores zijn het uitgangspunt. Externe vergelijking volgt in latere versies.</div></td>
+    <td class="tc"><div class="tt">Geen diagnose</div><div class="tb">Scores zijn directie-input, geen oordeel over cultuurkwaliteit. Combineer altijd met het directiegesprek.</div></td>
+  </tr></table>
+  <table class="tg" style="margin-top:10px;"><tr>
+    <td class="tc"><div class="tt">Open toelichtingen</div><div class="tb">Geanonimiseerd. Namen, contactgegevens en locaties zijn verwijderd. Alleen bij voldoende n getoond.</div></td>
+    <td class="tc"><div class="tt">Claimgrenzen</div><div class="tb">Geen causaliteitsclaims, geen manager-ranking, geen individuele voorspellingen.</div></td>
+    <td class="tc"><div class="tt">Privacywaarborg</div><div class="tb">Verwerking conform AVG. Segmentlagen openen alleen boven minimum-n grenzen.</div></td>
+  </tr></table>
+</div></body></html>

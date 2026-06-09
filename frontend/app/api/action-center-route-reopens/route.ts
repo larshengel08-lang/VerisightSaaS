@@ -235,7 +235,7 @@ export async function POST(request: Request) {
   })
 
   if (!writeAccess.allowed || !writeAccess.auditRole) {
-    return NextResponse.json({ detail: 'Alleen HR of Verisight kan deze route heropenen.' }, { status: 403 })
+    return NextResponse.json({ detail: 'Alleen HR of Loep kan deze route heropenen.' }, { status: 403 })
   }
 
   let identity

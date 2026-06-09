@@ -69,7 +69,7 @@ async function requireVerisightAdmin() {
     return {
       supabase,
       user: null,
-      error: NextResponse.json({ detail: 'Alleen Verisight-beheerders kunnen learningdossiers beheren.' }, { status: 403 }),
+      error: NextResponse.json({ detail: 'Alleen Loep-beheerders kunnen learningdossiers beheren.' }, { status: 403 }),
     }
   }
 

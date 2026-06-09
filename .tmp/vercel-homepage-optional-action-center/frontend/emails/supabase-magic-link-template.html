@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboardtoegang activeren</title>
+</head>
+<body style="margin:0;padding:0;background:#f3f6fb;font-family:Segoe UI,Arial,sans-serif;color:#0f172a;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f6fb;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:620px;background:#ffffff;border:1px solid #dbe4f0;border-radius:18px;overflow:hidden;">
+          <tr>
+            <td style="padding:28px 32px;border-bottom:1px solid #e5edf6;">
+              <div style="font-size:28px;font-weight:700;letter-spacing:-0.03em;color:#2563eb;">Verisight</div>
+              <div style="margin-top:6px;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;color:#64748b;">People, patterns, priorities</div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px;">
+              <p style="margin:0 0 8px;font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#2563eb;">
+                Dashboardtoegang
+              </p>
+              <h1 style="margin:0 0 16px;font-size:28px;line-height:1.2;color:#0f172a;">
+                Activeer je Verisight-account
+              </h1>
+              <p style="margin:0 0 18px;font-size:16px;line-height:1.7;color:#334155;">
+                {{ if .Data.full_name }}Hallo {{ .Data.full_name }},{{ else }}Hallo,{{ end }}
+              </p>
+              <p style="margin:0 0 18px;font-size:16px;line-height:1.7;color:#334155;">
+                Je bent uitgenodigd voor dashboardtoegang tot Verisight{{ if .Data.organization_name }} voor <strong>{{ .Data.organization_name }}</strong>{{ end }}.
+                Via onderstaande knop rond je je account af en kies je direct een wachtwoord.
+              </p>
+              <p style="margin:0 0 26px;font-size:16px;line-height:1.7;color:#334155;">
+                Daarna kun je inloggen en het dashboard en de rapportage bekijken.
+              </p>
+              <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+                <tr>
+                  <td style="border-radius:12px;background:#2563eb;">
+                    <a
+                      href="{{ .ConfirmationURL }}"
+                      style="display:inline-block;padding:15px 24px;font-size:16px;font-weight:700;color:#ffffff;text-decoration:none;"
+                    >
+                      Account activeren
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:0 0 10px;font-size:13px;color:#64748b;">
+                Werkt de knop niet? Gebruik dan deze link:
+              </p>
+              <p style="margin:0 0 26px;font-size:13px;line-height:1.6;color:#64748b;word-break:break-all;">
+                {{ .ConfirmationURL }}
+              </p>
+              <div style="padding:16px 18px;border:1px solid #dbe4f0;border-radius:14px;background:#f8fbff;">
+                <p style="margin:0;font-size:14px;line-height:1.7;color:#334155;">
+                  Deze mail is verstuurd omdat Verisight dashboardtoegang voor je heeft klaargezet.
+                  Heb je hier vragen over, reageer dan op deze mail of neem contact op via
+                  <a href="mailto:hallo@verisight.nl" style="color:#2563eb;text-decoration:none;">hallo@verisight.nl</a>.
+                </p>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

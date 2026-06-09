@@ -61,7 +61,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
   portfolio: {
     label: 'Portfolio-overzicht',
     intro:
-      'Verisight vertaalt scans naar dezelfde boardroom-structuur: eerst wat nu speelt, daarna waarom dat beeld ontstaat, vervolgens wat eerst getoetst moet worden en pas daarna welke route logisch is. Gebruik dit overzicht om eerst de juiste managementroute te kiezen, niet om meteen alles tegelijk te verkopen.',
+      'Loep vertaalt scans naar dezelfde boardroom-structuur: eerst wat nu speelt, daarna waarom dat beeld ontstaat, vervolgens wat eerst getoetst moet worden en pas daarna welke route logisch is. Gebruik dit overzicht om eerst de juiste managementroute te kiezen, niet om meteen alles tegelijk te verkopen.',
     kpis: [
       ['Actieve campagnes', '2 scans actief', 'ExitScan en RetentieScan'],
       ['Gemiddeld hoofdsignaal', '5,4 op 10', 'Bespreek met HR, sponsor en MT'],
@@ -74,7 +74,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     boardroomPoints: [
       ['Wat speelt nu', 'Per product zie je het hoofdbeeld in een compacte sponsor- en directieread.'],
       ['Waarom telt dit nu', 'De toplaag maakt zichtbaar waarom dit een bestuurlijk prioriteitsspoor is en niet alleen een HR-observatie.'],
-      ['Wat niet concluderen', 'Verisight versnelt weging en gesprek, maar verkoopt geen diagnose, individuele voorspeller of sluitende causaliteit.'],
+      ['Wat niet concluderen', 'Loep versnelt weging en gesprek, maar verkoopt geen diagnose, individuele voorspeller of sluitende causaliteit.'],
     ],
     focusTitle: 'Welke managementroute past nu het best?',
     dashboardRows: [
@@ -83,7 +83,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       { label: 'Combinatie', value: 'Bewuste portfolioroute', band: 'Pas daarna', width: '45%', tone: 'emerald' },
     ],
     nuance:
-      'De output helpt kiezen waar gesprek, verificatie of actie het meeste oplevert. Verisight claimt geen individuele voorspelling of sluitende diagnose.',
+      'De output helpt kiezen waar gesprek, verificatie of actie het meeste oplevert. Loep claimt geen individuele voorspelling of sluitende diagnose.',
     factorLead:
       'Per factor zie je eerst de belevingsscore en daarna de managementduiding. De signaallogica blijft ondersteunend en verschijnt alleen waar extra verdieping echt helpt.',
     factorCards: [
@@ -95,7 +95,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       { label: 'Rolhelderheid', scoreDisplay: '7,1/10', signalDisplay: '3,9/10', showSignal: true, band: MANAGEMENT_CONTEXT_LABELS.stabilizing, tone: 'emerald' },
     ],
     hypothesisLead:
-      'Verisight vertaalt uitkomsten niet naar absolute conclusies, maar naar een managementgesprek met duidelijke verificatievragen en een bewuste keuze voor de eerstvolgende route.',
+      'Loep vertaalt uitkomsten niet naar absolute conclusies, maar naar een managementgesprek met duidelijke verificatievragen en een bewuste keuze voor de eerstvolgende route.',
     hypotheses: [
       {
         title: 'Kies eerst de juiste managementvraag',
@@ -126,9 +126,9 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     ],
     demoLabel: 'Illustratief',
     demoBody:
-      'Fictieve data. De managementstructuur, trustnotities en leesvolgorde volgen dezelfde lijn als de echte Verisight-output.',
+      'Fictieve data. De managementstructuur, trustnotities en leesvolgorde volgen dezelfde lijn als de echte Loep-output.',
     supportVisualTitle: 'Segment deep dive preview',
-    supportVisualAlt: 'Voorbeeld van een Verisight segment deep dive',
+    supportVisualAlt: 'Voorbeeld van een Loep segment deep dive',
     sampleReportTitle: 'Waar je het volledige voorbeeld ziet',
     sampleReportBody:
       'Gebruik de portfolio-preview als routekiezer. De publieke deliverable-proof blijft bewust core-first: het volledige buyer-facing voorbeeldrapport open je daarna op de productspecifieke ExitScan- of RetentieScan-pagina, terwijl bounded follow-on routes hun bewijs vooral via productpagina en trustlaag dragen.',

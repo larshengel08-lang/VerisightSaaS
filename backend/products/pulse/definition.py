@@ -28,7 +28,7 @@ SCAN_DEFINITION: dict[str, Any] = {
             "open tekst wordt alleen als geanonimiseerde groepsinput gebruikt."
         ),
         "evidence_status": (
-            "Pulse is in deze eerste wave een compacte signaleringslaag bovenop de bestaande Verisight-methodiek. "
+            "Pulse is in deze eerste wave een compacte signaleringslaag bovenop de bestaande Loep-methodiek. "
             "De output is bedoeld voor review en koerscorrectie, niet als zelfstandig gevalideerd trend- of predictiemodel."
         ),
     },

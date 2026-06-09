@@ -1,0 +1,306 @@
+[
+  {
+    "id": "telemetry-1",
+    "eventType": "owner_access_confirmed",
+    "orgId": "9d476aa5-9e79-4b5e-9dab-112265a6fae7",
+    "campaignId": "069ee28a-2038-46ba-9d37-6a38d0fd8691",
+    "actorId": null,
+    "payload": {
+      "seeded_by": "real_usage_wave",
+      "source": "semireal_suite_run",
+      "organization_name": "Verisight Guided Self-Serve Acceptance",
+      "route": "ExitScan",
+      "step": "owner_access"
+    },
+    "createdAt": "2026-04-27T08:07:04.842Z"
+  },
+  {
+    "id": "telemetry-2",
+    "eventType": "first_value_confirmed",
+    "orgId": "9d476aa5-9e79-4b5e-9dab-112265a6fae7",
+    "campaignId": "069ee28a-2038-46ba-9d37-6a38d0fd8691",
+    "actorId": null,
+    "payload": {
+      "seeded_by": "real_usage_wave",
+      "source": "semireal_suite_run",
+      "organization_name": "Verisight Guided Self-Serve Acceptance",
+      "route": "ExitScan",
+      "step": "first_value",
+      "completion_rate_pct": null
+    },
+    "createdAt": "2026-04-27T08:06:04.842Z"
+  },
+  {
+    "id": "telemetry-3",
+    "eventType": "first_management_use_confirmed",
+    "orgId": "9d476aa5-9e79-4b5e-9dab-112265a6fae7",
+    "campaignId": "069ee28a-2038-46ba-9d37-6a38d0fd8691",
+    "actorId": null,
+    "payload": {
+      "seeded_by": "real_usage_wave",
+      "source": "semireal_suite_run",
+      "organization_name": "Verisight Guided Self-Serve Acceptance",
+      "route": "ExitScan",
+      "step": "management_use"
+    },
+    "createdAt": "2026-04-27T08:05:04.842Z"
+  },
+  {
+    "id": "telemetry-4",
+    "eventType": "action_center_review_scheduled",
+    "orgId": "9d476aa5-9e79-4b5e-9dab-112265a6fae7",
+    "campaignId": "069ee28a-2038-46ba-9d37-6a38d0fd8691",
+    "actorId": null,
+    "payload": {
+      "seeded_by": "real_usage_wave",
+      "source": "semireal_suite_run",
+      "organization_name": "Verisight Guided Self-Serve Acceptance",
+      "route": "ExitScan",
+      "review_window": "14_dagen"
+    },
+    "createdAt": "2026-04-27T08:04:04.842Z"
+  },
+  {
+    "id": "telemetry-5",
+    "eventType": "action_center_closeout_recorded",
+    "orgId": "9d476aa5-9e79-4b5e-9dab-112265a6fae7",
+    "campaignId": "069ee28a-2038-46ba-9d37-6a38d0fd8691",
+    "actorId": null,
+    "payload": {
+      "seeded_by": "real_usage_wave",
+      "source": "semireal_suite_run",
+      "organization_name": "Verisight Guided Self-Serve Acceptance",
+      "route": "ExitScan",
+      "closeout_state": "bounded_next_step"
+    },
+    "createdAt": "2026-04-27T08:03:04.842Z"
+  },
+  {
+    "id": "telemetry-6",
+    "eventType": "owner_access_confirmed",
+    "orgId": "43165d75-08b2-497b-a52c-e566d47d1bfc",
+    "campaignId": "7e74e0f8-48e1-4ca7-acc0-63e4f679c51a",
+    "actorId": null,
+    "payload": {
+      "seeded_by": "real_usage_wave",
+      "source": "semireal_suite_run",
+      "organization_name": "Pulse Smoke 134b",
+      "route": "Pulse",
+      "step": "owner_access"
+    },
+    "createdAt": "2026-04-27T08:02:04.842Z"
+  },
+  {
+    "id": "telemetry-7",
+    "eventType": "first_value_confirmed",
+    "orgId": "43165d75-08b2-497b-a52c-e566d47d1bfc",
+    "campaignId": "7e74e0f8-48e1-4ca7-acc0-63e4f679c51a",
+    "actorId": null,
+    "payload": {
+      "seeded_by": "real_usage_wave",
+      "source": "semireal_suite_run",
+      "organization_name": "Pulse Smoke 134b",
+      "route": "Pulse",
+      "step": "first_value",
+      "completion_rate_pct": 100
+    },
+    "createdAt": "2026-04-27T08:01:04.842Z"
+  },
+  {
+    "id": "telemetry-8",
+    "eventType": "first_management_use_confirmed",
+    "orgId": "43165d75-08b2-497b-a52c-e566d47d1bfc",
+    "campaignId": "7e74e0f8-48e1-4ca7-acc0-63e4f679c51a",
+    "actorId": null,
+    "payload": {
+      "seeded_by": "real_usage_wave",
+      "source": "semireal_suite_run",
+      "organization_name": "Pulse Smoke 134b",
+      "route": "Pulse",
+      "step": "management_use"
+    },
+    "createdAt": "2026-04-27T08:00:04.842Z"
+  },
+  {
+    "id": "telemetry-9",
+    "eventType": "action_center_review_scheduled",
+    "orgId": "43165d75-08b2-497b-a52c-e566d47d1bfc",
+    "campaignId": "7e74e0f8-48e1-4ca7-acc0-63e4f679c51a",
+    "actorId": null,
+    "payload": {
+      "seeded_by": "real_usage_wave",
+      "source": "semireal_suite_run",
+      "organization_name": "Pulse Smoke 134b",
+      "route": "Pulse",
+      "review_window": "14_dagen"
+    },
+    "createdAt": "2026-04-27T07:59:04.842Z"
+  },
+  {
+    "id": "telemetry-10",
+    "eventType": "action_center_closeout_recorded",
+    "orgId": "43165d75-08b2-497b-a52c-e566d47d1bfc",
+    "campaignId": "7e74e0f8-48e1-4ca7-acc0-63e4f679c51a",
+    "actorId": null,
+    "payload": {
+      "seeded_by": "real_usage_wave",
+      "source": "semireal_suite_run",
+      "organization_name": "Pulse Smoke 134b",
+      "route": "Pulse",
+      "closeout_state": "bounded_next_step"
+    },
+    "createdAt": "2026-04-27T07:58:04.842Z"
+  },
+  {
+    "id": "telemetry-11",
+    "eventType": "owner_access_confirmed",
+    "orgId": "6487223a-b61c-402b-8fa0-c1d5bb551938",
+    "campaignId": "535a57d2-b0b5-4acb-9f12-8cf18c8fb359",
+    "actorId": null,
+    "payload": {
+      "seeded_by": "real_usage_wave",
+      "source": "semireal_suite_run",
+      "organization_name": "Pulse Smoke 955e",
+      "route": "Pulse",
+      "step": "owner_access"
+    },
+    "createdAt": "2026-04-27T07:57:04.842Z"
+  },
+  {
+    "id": "telemetry-12",
+    "eventType": "first_value_confirmed",
+    "orgId": "6487223a-b61c-402b-8fa0-c1d5bb551938",
+    "campaignId": "535a57d2-b0b5-4acb-9f12-8cf18c8fb359",
+    "actorId": null,
+    "payload": {
+      "seeded_by": "real_usage_wave",
+      "source": "semireal_suite_run",
+      "organization_name": "Pulse Smoke 955e",
+      "route": "Pulse",
+      "step": "first_value",
+      "completion_rate_pct": 100
+    },
+    "createdAt": "2026-04-27T07:56:04.842Z"
+  },
+  {
+    "id": "telemetry-13",
+    "eventType": "first_management_use_confirmed",
+    "orgId": "6487223a-b61c-402b-8fa0-c1d5bb551938",
+    "campaignId": "535a57d2-b0b5-4acb-9f12-8cf18c8fb359",
+    "actorId": null,
+    "payload": {
+      "seeded_by": "real_usage_wave",
+      "source": "semireal_suite_run",
+      "organization_name": "Pulse Smoke 955e",
+      "route": "Pulse",
+      "step": "management_use"
+    },
+    "createdAt": "2026-04-27T07:55:04.842Z"
+  },
+  {
+    "id": "telemetry-14",
+    "eventType": "action_center_review_scheduled",
+    "orgId": "6487223a-b61c-402b-8fa0-c1d5bb551938",
+    "campaignId": "535a57d2-b0b5-4acb-9f12-8cf18c8fb359",
+    "actorId": null,
+    "payload": {
+      "seeded_by": "real_usage_wave",
+      "source": "semireal_suite_run",
+      "organization_name": "Pulse Smoke 955e",
+      "route": "Pulse",
+      "review_window": "14_dagen"
+    },
+    "createdAt": "2026-04-27T07:54:04.842Z"
+  },
+  {
+    "id": "telemetry-15",
+    "eventType": "action_center_closeout_recorded",
+    "orgId": "6487223a-b61c-402b-8fa0-c1d5bb551938",
+    "campaignId": "535a57d2-b0b5-4acb-9f12-8cf18c8fb359",
+    "actorId": null,
+    "payload": {
+      "seeded_by": "real_usage_wave",
+      "source": "semireal_suite_run",
+      "organization_name": "Pulse Smoke 955e",
+      "route": "Pulse",
+      "closeout_state": "bounded_next_step"
+    },
+    "createdAt": "2026-04-27T07:53:04.842Z"
+  },
+  {
+    "id": "telemetry-16",
+    "eventType": "owner_access_confirmed",
+    "orgId": "26b85e72-2f92-4995-b995-2f435830ebcf",
+    "campaignId": "2f452cfe-bc3e-4afc-aedc-b3344d369464",
+    "actorId": null,
+    "payload": {
+      "seeded_by": "real_usage_wave",
+      "source": "semireal_suite_run",
+      "organization_name": "Pulse Smoke 8afc",
+      "route": "Pulse",
+      "step": "owner_access"
+    },
+    "createdAt": "2026-04-27T07:52:04.842Z"
+  },
+  {
+    "id": "telemetry-17",
+    "eventType": "first_value_confirmed",
+    "orgId": "26b85e72-2f92-4995-b995-2f435830ebcf",
+    "campaignId": "2f452cfe-bc3e-4afc-aedc-b3344d369464",
+    "actorId": null,
+    "payload": {
+      "seeded_by": "real_usage_wave",
+      "source": "semireal_suite_run",
+      "organization_name": "Pulse Smoke 8afc",
+      "route": "Pulse",
+      "step": "first_value",
+      "completion_rate_pct": 100
+    },
+    "createdAt": "2026-04-27T07:51:04.842Z"
+  },
+  {
+    "id": "telemetry-18",
+    "eventType": "first_management_use_confirmed",
+    "orgId": "26b85e72-2f92-4995-b995-2f435830ebcf",
+    "campaignId": "2f452cfe-bc3e-4afc-aedc-b3344d369464",
+    "actorId": null,
+    "payload": {
+      "seeded_by": "real_usage_wave",
+      "source": "semireal_suite_run",
+      "organization_name": "Pulse Smoke 8afc",
+      "route": "Pulse",
+      "step": "management_use"
+    },
+    "createdAt": "2026-04-27T07:50:04.842Z"
+  },
+  {
+    "id": "telemetry-19",
+    "eventType": "action_center_review_scheduled",
+    "orgId": "26b85e72-2f92-4995-b995-2f435830ebcf",
+    "campaignId": "2f452cfe-bc3e-4afc-aedc-b3344d369464",
+    "actorId": null,
+    "payload": {
+      "seeded_by": "real_usage_wave",
+      "source": "semireal_suite_run",
+      "organization_name": "Pulse Smoke 8afc",
+      "route": "Pulse",
+      "review_window": "14_dagen"
+    },
+    "createdAt": "2026-04-27T07:49:04.842Z"
+  },
+  {
+    "id": "telemetry-20",
+    "eventType": "action_center_closeout_recorded",
+    "orgId": "26b85e72-2f92-4995-b995-2f435830ebcf",
+    "campaignId": "2f452cfe-bc3e-4afc-aedc-b3344d369464",
+    "actorId": null,
+    "payload": {
+      "seeded_by": "real_usage_wave",
+      "source": "semireal_suite_run",
+      "organization_name": "Pulse Smoke 8afc",
+      "route": "Pulse",
+      "closeout_state": "bounded_next_step"
+    },
+    "createdAt": "2026-04-27T07:48:04.842Z"
+  }
+]

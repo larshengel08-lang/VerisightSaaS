@@ -1,15 +1,15 @@
-﻿"""
-Verisight — Database Setup
+"""
+Verisight � Database Setup
 =================================
 SQLAlchemy engine + session factory.
 
-Default: SQLite at data/Verisight.db  (file auto-created on first run)
+Default: SQLite at data/Loep.db  (file auto-created on first run)
 Production: set DATABASE_URL env var to a PostgreSQL/Supabase connection string.
 
 Pool strategy:
-- SQLite  → StaticPool (single thread-safe connection, local dev)
-- Postgres → NullPool   (no SQLAlchemy-side pooling; Supabase has pgbouncer)
-  Using SQLAlchemy pool + Supabase pooler = double pooling → stale connections
+- SQLite  ? StaticPool (single thread-safe connection, local dev)
+- Postgres ? NullPool   (no SQLAlchemy-side pooling; Supabase has pgbouncer)
+  Using SQLAlchemy pool + Supabase pooler = double pooling ? stale connections
   and circuit-breaker triggers. NullPool opens/closes per request which is
   safe and correct for Supabase Session mode on port 5432.
 """
@@ -35,7 +35,7 @@ load_dotenv(_ROOT / ".env")
 # Config
 # ---------------------------------------------------------------------------
 
-_DEFAULT_DB_PATH = _ROOT / "data" / "Verisight.db"
+_DEFAULT_DB_PATH = _ROOT / "data" / "Loep.db"
 _DEFAULT_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 DATABASE_URL: str = os.getenv(
@@ -55,10 +55,10 @@ if _IS_SQLITE:
     )
 else:
     # PostgreSQL / Supabase:
-    # - NullPool → geen SQLAlchemy pool; elke request opent/sluit z'n eigen
+    # - NullPool ? geen SQLAlchemy pool; elke request opent/sluit z'n eigen
     #   verbinding via Supabase's pgbouncer (Session mode, port 5432).
     # - pool_pre_ping niet nodig bij NullPool (verbinding is altijd vers).
-    # - connect_timeout=10 → snelle fout ipv lang hangen bij netwerkproblemen.
+    # - connect_timeout=10 ? snelle fout ipv lang hangen bij netwerkproblemen.
     engine = create_engine(
         DATABASE_URL,
         poolclass=NullPool,

@@ -1,0 +1,230 @@
+function OnboardingPage() {
+  return (
+    <MarketingPageShell
+      theme="support"
+      pageType="product"
+      ctaHref={buildContactHref({ routeInterest: 'onboarding', ctaSource: 'product_onboarding_hero' })}
+      ctaLabel="Toets onboarding"
+      heroIntro={
+        <MarketingHeroIntro>
+          <p className="marketing-hero-eyebrow text-amber-700">Onboarding 30-60-90</p>
+          <h1 className="marketing-hero-title marketing-hero-title-detail font-display text-slate-950">
+            Zie vroeg hoe nieuwe medewerkers landen.
+          </h1>
+          <p className="marketing-hero-copy text-slate-600">
+            Onboarding 30-60-90 helpt vroeg zichtbaar maken hoe nieuwe medewerkers nu landen in rol, leiding, team en
+            werkcontext. U krijgt een compacte groepsread met een eerste vervolgrichting, eigenaar en hercheckmoment,
+            zonder daar meteen een brede onboarding-suite van te maken.
+          </p>
+          <div className="marketing-hero-actions">
+            <div className="marketing-hero-cta-row">
+              <a
+                href={buildContactHref({ routeInterest: 'onboarding', ctaSource: 'product_onboarding_hero' })}
+                className="marketing-button-primary-warm"
+              >
+                Toets onboarding
+              </a>
+              <Link href="/producten" className="marketing-button-secondary">
+                Bekijk producten
+              </Link>
+            </div>
+          </div>
+        </MarketingHeroIntro>
+      }
+      heroStage={
+        <MarketingHeroStage surface="light">
+          <div className="marketing-preview-shell">
+            <div className="marketing-divider-title">Lifecycle-check</div>
+            <div className="marketing-proof-frame">
+              <div className="border-b border-[var(--border)] px-5 py-5 sm:px-6">
+                <span className="marketing-chip">Checkpoint-read</span>
+                <h2 className="mt-4 marketing-text-title-md">
+                  Maak vroeg zichtbaar waar onboarding al goed landt en waar eerste frictie ontstaat.
+                </h2>
+                <p className="mt-4 marketing-text-body">
+                  De route blijft bewust smal: precies een checkpoint per campaign, een assisted managementread,
+                  een eerste vervolgrichting, een begrensde vervolgstap en een expliciet hercheckmoment.
+                </p>
+              </div>
+              <div className="grid gap-4 px-5 py-5 sm:px-6 lg:grid-cols-3">
+                {[
+                  ['Waar u naar kijkt', 'Landing in rol, leiding, team en werkcontext op groepsniveau.'],
+                  ['Waar het op eindigt', 'Eerste managementhuddle, kleine borg- of correctiestap en een hercheckmoment.'],
+                  ['Wat het niet wordt', 'Geen journey-automation, geen individuele beoordeling en geen brede onboardingmachine.'],
+                ].map(([title, body]) => (
+                  <div key={title} className="marketing-process-card">
+                    <p className="marketing-text-kicker">{title}</p>
+                    <p className="mt-3 text-sm leading-7 text-[var(--text)]">{body}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </MarketingHeroStage>
+      }
+      heroSupport={
+        <MarketingHeroSupport>
+          <div className="marketing-support-note text-sm leading-7 text-slate-600">
+            Deze route blijft bewust compact: één meetmoment, groepsniveau en een eerste opvolgstap. Geen
+            journey-automation of individuele beoordeling.
+          </div>
+          <div className="marketing-link-grid">
+            <Link
+              href="/producten/retentiescan"
+              className="marketing-link-card text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-950"
+            >
+              Bekijk RetentieScan
+            </Link>
+            <Link
+              href="/vertrouwen"
+              className="marketing-link-card text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-950"
+            >
+              Bekijk trustgrenzen
+            </Link>
+          </div>
+        </MarketingHeroSupport>
+      }
+    >
+      <MarketingSection tone="surface">
+        <div className="grid gap-10 xl:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)]">
+          <div className="space-y-5">
+            <div className="marketing-divider-title">Waarom onboarding vroeg helpt</div>
+            <h2 className="marketing-text-title-lg">Een vroege checkpoint-read voor nieuwe instroom.</h2>
+            <p className="marketing-text-body-lg">
+              Onboarding opent alleen als de vraag echt gaat over de eerste landing van nieuwe medewerkers in deze fase.
+              De route helpt vroeg duiden, een eerste borg- of correctiestap kiezen en het vervolgmoment vastleggen,
+              zonder onboarding om te bouwen tot brede people-suite.
+            </p>
+          </div>
+          <div className="marketing-flow-stack">
+            {[
+              {
+                title: 'Vroege landing zichtbaar',
+                body: 'U ziet vroeg hoe nieuwe medewerkers landen in rol, leiding, team en werkcontext, zonder te wachten tot bredere uitval zichtbaar wordt.',
+              },
+              {
+                title: 'Eerste eigenaar en gesprek',
+                body: 'De output helpt kiezen wie het eerste gesprek trekt en welke kleine borg- of correctiestap nu logisch is.',
+              },
+              {
+                title: 'Hercheck zonder brede rollout',
+                body: 'De route eindigt bij een compact hercheckmoment, niet bij een grote onboardingmachine of open actielijst.',
+              },
+            ].map((item, index) => (
+              <div key={item.title} className="marketing-process-card">
+                <p className="marketing-text-kicker">{String(index + 1).padStart(2, '0')}</p>
+                <h3 className="mt-3 marketing-detail-heading">{item.title}</h3>
+                <p className="mt-4 text-sm leading-7 text-[var(--text)]">{item.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </MarketingSection>
+
+      <MarketingSection tone="plain">
+        <div className="grid gap-6 lg:grid-cols-3">
+          {[
+            {
+              title: 'Wanneer deze route logisch wordt',
+              body: 'Gebruik onboarding wanneer management vroeg wil toetsen hoe nieuwe medewerkers nu landen en die vraag smaller is dan een bredere retentiescan of combinatieroute.',
+            },
+            {
+              title: 'Wat je nu krijgt',
+              body: 'Een assisted single-checkpoint read met vroege lifecycle-signalen, eerste vervolgrichting, begrensde vervolgstap en een helder hercheckmoment.',
+            },
+            {
+              title: 'Wat het nadrukkelijk niet is',
+              body: 'Geen client onboarding-tool, geen journey-engine, geen performance-instrument en geen brede employee lifecycle-suite.',
+            },
+          ].map((card, index) => (
+            <div key={card.title} className="marketing-route-card">
+              <p className="marketing-text-kicker">{String(index + 1).padStart(2, '0')}</p>
+              <h2 className="mt-3 marketing-detail-heading">{card.title}</h2>
+              <p className="mt-4 text-sm leading-7 text-[var(--text)]">{card.body}</p>
+            </div>
+          ))}
+        </div>
+      </MarketingSection>
+
+      <MarketingSection tone="plain">
+        <div className="grid gap-8 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+          <div className="space-y-5">
+            <div className="marketing-divider-title">Onboarding naast RetentieScan</div>
+            <h2 className="marketing-text-title-md">Onboarding 30-60-90 is geen RetentieScan voor nieuwe medewerkers.</h2>
+            <p className="marketing-text-body">
+              Beide routes kijken naar mensen-patronen, maar het tijdstip en de vraag zijn anders.
+              Onboarding is een vroege checkpoint-read in de eerste 90 dagen.
+              RetentieScan is een behoudsread voor actieve medewerkers die al langer in dienst zijn.
+            </p>
+            <MarketingComparisonTable
+              columns={['Thema', 'Onboarding 30-60-90', 'RetentieScan']}
+              rows={[
+                [
+                  'Doelgroep',
+                  'Nieuwe medewerkers — eerste 30, 60 of 90 dagen in dienst.',
+                  'Actieve medewerkers — al langer in dienst, risico op vertrek nog niet zichtbaar.',
+                ],
+                [
+                  'Hoofdvraag',
+                  'Hoe landen nieuwe medewerkers in rol, leiding, team en werkcontext?',
+                  'Waar staat behoud onder druk voordat mensen een vertrekbesluit nemen?',
+                ],
+                [
+                  'Tijdstip',
+                  'Vroeg — in de eerste kwartalen na instroom, bij elk nieuw cohort.',
+                  'Ongoing — als verloop oploopt of management eerder wil signaleren.',
+                ],
+                [
+                  'Niet bedoeld als',
+                  'Brede retentiemeting, journey-engine of predictiemodel voor uitstroom.',
+                  'Onboardingcheck, introductiebegeleidingstool of lifecycle-suite.',
+                ],
+              ]}
+            />
+          </div>
+
+          <div className="marketing-panel-dark p-8 md:p-10">
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-amber-300">Wat onboarding wel belooft</p>
+            <h2 className="mt-4 font-display text-[clamp(2rem,3.7vw,3rem)] font-bold leading-[1.02] text-white">
+              Een vroege onboardingread met een eerste vervolgstap, niet meer dan nodig.
+            </h2>
+            <p className="mt-5 text-base leading-8 text-slate-300">
+              Onboarding 30-60-90 verkoopt geen volledige employee journey. Het product helpt vooral om vroeg te zien
+              hoe nieuwe medewerkers nu landen, welke frictie of borging als eerste aandacht vraagt en welke
+              vervolgrichting daar logisch uit volgt.
+            </p>
+            <div className="mt-6 space-y-3">
+              {[
+                'Geen hire-date engine of multi-checkpoint orchestration in deze wave.',
+                'Geen individuele onboardingbeoordeling of manageroordeel.',
+                'Wel een compacte route om HR, onboardingverantwoordelijke en leiding sneller op een lijn te krijgen.',
+              ].map((item) => (
+                <div key={item} className="marketing-detail-dark-card text-sm leading-7 text-slate-200">
+                  {item}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </MarketingSection>
+
+      <MarketingClosingCta
+        href={buildContactHref({ routeInterest: 'onboarding', ctaSource: 'product_onboarding_form' })}
+        showSectionMark={false}
+        backdropNumber={null}
+      />
+
+      <MarketingSection tone="plain">
+        <MarketingCalloutBand
+          eyebrow="Lifecyclegrens"
+          title="Twijfel je of onboarding nu de juiste eerste route is?"
+          body="We helpen je kiezen tussen een vroege onboardingcheck, een bredere retentie- of teamroute of terug naar implementatiebegeleiding. Zo blijft de vervolgstap kleiner en eerlijker dan nodig."
+          primaryHref={buildContactHref({ routeInterest: 'onboarding', ctaSource: 'product_onboarding_callout' })}
+          primaryLabel="Toets onboarding"
+          secondaryHref="/tarieven"
+          secondaryLabel="Bekijk tarieven"
+        />
+      </MarketingSection>
+    </MarketingPageShell>
+  )
+}
