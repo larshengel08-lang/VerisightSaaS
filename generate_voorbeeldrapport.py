@@ -210,6 +210,37 @@ CULTURE_PROFILES = [
     ),
 ]
 
+ONBOARDING_CONFIG = {
+    "scan_type": "onboarding",
+    "campaign_name": "Onboarding Checkpoint Q1 2026",
+    "docs_output_name": "voorbeeldrapport_onboarding.html",
+    "public_output_name": "voorbeeldrapport_onboarding.html",
+    "invited": 42,
+    "responses": 28,
+}
+
+# Onboarding profielen: (naam, gewicht, sdt_bias, lead_bias, growth_bias, work_bias, culture_bias, comp_bias, role_bias, stay_intent_base)
+ONBOARDING_PROFILES = [
+    ("goede_landing",         0.28, 0.6,  0.5,  0.3,  0.2,  0.6,  0.3,  0.4,  4),
+    ("rolhelderheid_frictie", 0.27, 0.0, -0.8,  0.0, -0.1,  0.2,  0.0, -1.6,  3),
+    ("werkdruk_vroeg",        0.22, 0.1, -0.2, -0.1, -1.7,  0.1,  0.0, -0.3,  3),
+    ("cultuur_onzeker",       0.15, -0.3, -0.3, -0.1,  0.0, -1.5,  0.0, -0.2,  2),
+    ("snelle_twijfel",        0.08, -0.8, -1.2, -0.6, -0.8, -0.8,  0.0, -0.9,  1),
+]
+
+ONBOARDING_OPEN_TEXTS = [
+    "Ik weet nog niet precies wat er van mij verwacht wordt in de eerste maanden.",
+    "De inwerkperiode gaat goed, maar wat meer structuur in de eerste weken zou helpen.",
+    "Mijn manager is bereikbaar maar geeft weinig concrete terugkoppeling over mijn aanpak.",
+    "Er is veel informatie tegelijk. Prioriteiten zijn niet altijd even helder.",
+    "Ik voel me welkom in het team, maar de cultuur is nog lastig te lezen.",
+    "De werkdruk viel me hoger uit dan verwacht in deze eerste fase.",
+    "Duidelijkere doelen voor de eerste 90 dagen zouden mij helpen om sneller bij te dragen.",
+    "Goed gevoel over de organisatie, maar het duurt even voor je weet hoe dingen echt werken.",
+    "",
+    "",
+]
+
 CULTURE_OPEN_TEXTS = [
     "Meer richting en voorspelbaarheid vanuit de top zou helpen om vertrouwen vast te houden.",
     "Samenwerking tussen teams voelt stroperig wanneer prioriteiten niet scherp genoeg zijn.",
@@ -271,6 +302,23 @@ def _pick_profile(profiles: list[tuple]) -> dict[str, float | str]:
                     "change_readiness": change_readiness,
                     "reward_conditions": reward_conditions,
                     "organizational_connection_intent": organizational_connection_intent,
+                }
+            if len(profile) == 10:
+                (
+                    name, _weight,
+                    sdt_b, lead_b, growth_b, work_b, culture_b, comp_b, role_b,
+                    stay_intent_b,
+                ) = profile
+                return {
+                    "name": name,
+                    "sdt_bias": sdt_b,
+                    "lead_bias": lead_b,
+                    "growth_bias": growth_b,
+                    "work_bias": work_b,
+                    "culture_bias": culture_b,
+                    "compensation_bias": comp_b,
+                    "role_bias": role_b,
+                    "stay_intent_base": stay_intent_b,
                 }
             if isinstance(profile[-1], (int, float)) and isinstance(profile[-2], (int, float)):
                 (
@@ -496,7 +544,7 @@ def _parse_args() -> argparse.Namespace:
         "scan_type",
         nargs="?",
         default="exit",
-        choices=["exit", "retention", "culture_assessment"],
+        choices=["exit", "retention", "onboarding", "culture_assessment"],
         help="Welk rapporttype je wilt genereren.",
     )
     parser.add_argument(
@@ -697,10 +745,78 @@ def _build_culture_response(profile: dict[str, float | str]) -> dict:
     }
 
 
+def _build_onboarding_response(profile: dict[str, float | str | int]) -> dict:
+    from backend.products.onboarding.scoring import compute_onboarding_risk
+
+    # Onboarding gebruikt alleen B1, B5, B9 als SDT-checkpoint items
+    base_sdt = 3.3 + float(profile["sdt_bias"])
+    sdt_raw = {
+        "B1": _likert(base_sdt),
+        "B5": _likert(base_sdt + 0.4),
+        "B9": _likert(base_sdt + 0.2),
+    }
+    org_raw = _org_items(
+        float(profile["lead_bias"]),
+        float(profile["growth_bias"]),
+        float(profile["work_bias"]),
+        float(profile["culture_bias"]),
+        float(profile["compensation_bias"]),
+        float(profile["role_bias"]),
+    )
+    sdt_scores = compute_sdt_scores(sdt_raw)
+    org_scores = compute_org_scores(org_raw)
+    active_factors = list(org_scores.keys())
+    risk_result = compute_onboarding_risk(sdt_scores, org_scores, active_factors)
+
+    stay_intent_raw = max(1, min(5, int(profile.get("stay_intent_base", 3)) + random.randint(-1, 1)))
+    stay_intent_raw = max(1, min(5, stay_intent_raw))
+
+    onboarding_summary = {
+        "onboarding_signal_score": risk_result["risk_score"],
+        "onboarding_signal_band": risk_result["risk_band"],
+        "checkpoint_direction_score": stay_intent_raw,
+        "active_factors": active_factors,
+        "snapshot_type": "single_checkpoint",
+    }
+
+    text = random.choice(ONBOARDING_OPEN_TEXTS)
+
+    return {
+        "tenure_years": None,
+        "exit_reason_category": None,
+        "exit_reason_code": None,
+        "stay_intent_score": stay_intent_raw,
+        "sdt_raw": sdt_raw,
+        "sdt_scores": sdt_scores,
+        "org_raw": org_raw,
+        "org_scores": org_scores,
+        "pull_factors_raw": {},
+        "open_text_raw": anonymize_text(text) if text else None,
+        "uwes_raw": {},
+        "uwes_score": None,
+        "turnover_intention_raw": {},
+        "turnover_intention_score": None,
+        "risk_score": risk_result["risk_score"],
+        "risk_band": risk_result["risk_band"],
+        "preventability": None,
+        "replacement_cost_eur": None,
+        "full_result": {
+            "sdt_scores": sdt_scores,
+            "org_scores": org_scores,
+            "risk_result": risk_result,
+            "onboarding_summary": onboarding_summary,
+            "recommendations": get_recommendations(risk_result["factor_risks"]),
+            "active_factors": active_factors,
+        },
+    }
+
+
 def main() -> None:
     args = _parse_args()
     if args.scan_type == "retention":
         config = RETENTION_CONFIG
+    elif args.scan_type == "onboarding":
+        config = ONBOARDING_CONFIG
     elif args.scan_type == "culture_assessment":
         config = CULTURE_CONFIG
     else:
@@ -770,6 +886,8 @@ def main() -> None:
 
     if campaign.scan_type == "retention":
         profiles = RETENTION_PROFILES
+    elif campaign.scan_type == "onboarding":
+        profiles = ONBOARDING_PROFILES
     elif campaign.scan_type == "culture_assessment":
         profiles = CULTURE_PROFILES
     else:
@@ -807,6 +925,14 @@ def main() -> None:
                 f"bevlogenheid {response_payload['uwes_score']:.1f}  "
                 f"vertrekintentie {response_payload['turnover_intention_score']:.1f}  "
                 f"stay-intent {response_payload['full_result']['retention_summary']['stay_intent_score']:.1f}"
+            )
+        elif campaign.scan_type == "onboarding":
+            response_payload = _build_onboarding_response(profile)
+            print(
+                f"  [{index + 1:02d}] {department:<16} {role:<12} "
+                f"onboarding {response_payload['risk_score']:.1f}  "
+                f"stay-intent {response_payload['stay_intent_score']}  "
+                f"profiel={profile.get('name','?')}"
             )
         elif campaign.scan_type == "culture_assessment":
             response_payload = _build_culture_response(profile)
@@ -854,13 +980,41 @@ def main() -> None:
     print("")
     print(f"{invited} respondenten totaal opgeslagen ({responses} ingevuld). Rapport genereren...")
 
-    pdf_bytes = generate_campaign_report(campaign.id, db, sample_output_mode=True)
-    output_paths = _write_pdf_outputs(pdf_bytes, config)
+    if config["scan_type"] in ("exit", "retention", "onboarding"):
+        # Gebruik de verfijnde WeasyPrint-gebaseerde HTML-renderer (report_html.py)
+        from backend.report_html import build_report_data, render_report_html
+        html_content = render_report_html(build_report_data(campaign.id, db))
+        html_bytes = html_content.encode("utf-8")
 
-    print("Rapport opgeslagen:")
+        # Sla op als .html (vervang .pdf extensie)
+        html_config = dict(config)
+        html_config["docs_output_name"] = str(config["docs_output_name"]).replace(".pdf", ".html")
+        html_config["public_output_name"] = str(config.get("public_output_name", "")).replace(".pdf", ".html") or None
+
+        output_paths = []
+        docs_path = Path(__file__).parent / DOCS_EXAMPLES_DIR / html_config["docs_output_name"]
+        docs_path.parent.mkdir(parents=True, exist_ok=True)
+        docs_path.write_bytes(html_bytes)
+        output_paths.append(docs_path)
+
+        if html_config.get("public_output_name"):
+            pub_path = Path(__file__).parent / PUBLIC_EXAMPLES_DIR / html_config["public_output_name"]
+            pub_path.parent.mkdir(parents=True, exist_ok=True)
+            pub_path.write_bytes(html_bytes)
+            output_paths.append(pub_path)
+
+        size_kb = len(html_bytes) / 1024
+        file_type = "HTML"
+    else:
+        pdf_bytes = generate_campaign_report(campaign.id, db, sample_output_mode=True)
+        output_paths = _write_pdf_outputs(pdf_bytes, config)
+        size_kb = len(pdf_bytes) / 1024
+        file_type = "PDF"
+
+    print(f"Rapport opgeslagen ({file_type}):")
     for output_path in output_paths:
         print(f"  - {output_path}")
-    print(f"Grootte: {len(pdf_bytes) / 1024:.1f} KB")
+    print(f"Grootte: {size_kb:.1f} KB")
 
     if args.keep_data:
         print("Demo-data behouden in de database.")

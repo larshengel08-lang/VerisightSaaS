@@ -1,0 +1,393 @@
+<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>ExitScan — ExitScan Q1 2026</title><style>
+@page {
+  size: A4;
+  margin: 18mm 16mm 22mm 16mm;
+  @bottom-left {
+    content: "Vertrouwelijk - Loep - Groepsoutput";
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 7.5px; color: #94A3B8;
+  }
+  @bottom-right {
+    content: counter(page) " / " counter(pages);
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 7.5px; color: #94A3B8;
+  }
+}
+@page cover-page { margin: 0; }
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 11px; line-height: 1.65; color: #374151;
+  background: #F5F0E8;
+}
+
+.pb       { break-before: page; }
+.no-break { break-inside: avoid; }
+
+/* ── Type ── */
+.slabel {
+  display: block; font-size: 9.5px; font-weight: 700; color: #64748B;
+  letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 12px;
+  border-bottom: 1px solid #E8E0D0; padding-bottom: 6px;
+}
+h3 { font-size: 12px; font-weight: 700; color: #243247; margin-bottom: 5px; }
+p  { margin-bottom: 6px; font-size: 11px; }
+
+/* ── Cover ── */
+.cover { page: cover-page; background: #1E293B; min-height: 297mm; padding: 52px 48px 40px; }
+.cbadge { display: inline-block; background: #D19422; color: #FFF; font-size: 9px;
+  font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  padding: 5px 14px; border-radius: 3px; margin-bottom: 30px; }
+.corg   { font-size: 13px; color: #64748B; margin-bottom: 10px; }
+.ctitle { font-size: 32px; font-weight: 700; color: #FFF; line-height: 1.2; margin-bottom: 10px; }
+.csub   { font-size: 11px; color: #94A3B8; }
+.cmeta  { margin-top: 60px; display: table; width: 100%;
+  border-top: 1px solid #334155; padding-top: 22px; }
+.cmc    { display: table-cell; width: 25%; padding-right: 12px; }
+.cml    { font-size: 8.5px; font-weight: 700; color: #475569; letter-spacing: 0.1em;
+  text-transform: uppercase; margin-bottom: 3px; }
+.cmv    { font-size: 14px; font-weight: 700; color: #E2E8F0; }
+
+/* ── Cards ── */
+.card  { background: #FFF; border: 1px solid #E8E0D0; border-radius: 8px;
+  padding: 18px 20px; margin-bottom: 14px; }
+.ca    { border-left: 5px solid #D19422; }
+.cr    { border-left: 5px solid #EF4444; }
+.cg    { border-left: 5px solid #22C55E; }
+.cn    { border-left: 5px solid #1E293B; }
+.cbox  { background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px;
+  padding: 14px 16px; margin-bottom: 12px; }
+
+/* ── Score hero ── */
+.score-hero { font-size: 44px; font-weight: 700; line-height: 1; }
+.rbadge { display: inline-block; font-size: 11px; font-weight: 700;
+  padding: 4px 12px; border-radius: 4px; color: #FFF;
+  margin-left: 10px; vertical-align: middle; }
+
+/* ── Stat grid ── */
+.sg { display: table; width: 100%; border-collapse: separate;
+  border-spacing: 9px 0; margin-bottom: 14px; }
+.sg tr { display: table-row; }
+.sg td { display: table-cell; background: #FFF; border: 1px solid #E8E0D0;
+  border-radius: 7px; padding: 12px 14px; vertical-align: top; }
+.sc-l { font-size: 8.5px; font-weight: 700; color: #64748B; letter-spacing: 0.07em;
+  text-transform: uppercase; margin-bottom: 3px; }
+.sc-v { font-size: 20px; font-weight: 700; color: #243247; line-height: 1.15; margin-bottom: 2px; }
+.sc-b { font-size: 9px; color: #6B7280; line-height: 1.45; }
+
+/* ── Insight grid ── */
+.ig    { display: table; width: 100%; border-collapse: separate;
+  border-spacing: 9px 0; margin-bottom: 9px; }
+.ig tr { display: table-row; }
+.ig td { display: table-cell; background: #FFF; border: 1px solid #E8E0D0;
+  border-radius: 7px; padding: 12px 14px; vertical-align: top; }
+.ig-k  { font-size: 8px; font-weight: 700; color: #94A3B8; letter-spacing: 0.1em;
+  text-transform: uppercase; margin-bottom: 4px; }
+.ig-v  { font-size: 12px; font-weight: 700; color: #243247; margin-bottom: 3px; line-height: 1.3; }
+.ig-n  { font-size: 9px; color: #64748B; line-height: 1.45; }
+
+/* ── Why-block ── */
+.why { background: #FFF; border: 1px solid #E8E0D0; border-left: 5px solid #1E293B;
+  border-radius: 8px; padding: 18px 20px; margin-bottom: 14px; }
+.why-title { font-size: 13px; font-weight: 700; color: #243247; margin-bottom: 14px; }
+.why-grid  { display: table; width: 100%; border-collapse: separate; border-spacing: 9px 0; margin-bottom: 12px; }
+.why-cell  { display: table-cell; vertical-align: top; background: #F8FAFC;
+  border: 1px solid #E2E8F0; border-radius: 6px; padding: 11px 13px; width: 25%; }
+.why-l     { font-size: 8px; font-weight: 700; color: #94A3B8; letter-spacing: 0.08em;
+  text-transform: uppercase; margin-bottom: 3px; }
+.why-v     { font-size: 18px; font-weight: 700; line-height: 1.1; margin-bottom: 1px; }
+.why-b     { font-size: 9px; color: #6B7280; line-height: 1.4; }
+.why-quote { font-size: 10px; color: #475569; font-style: italic; line-height: 1.55;
+  border-top: 1px solid #E2E8F0; padding-top: 11px; margin-top: 2px; }
+
+/* ── Factor row ── */
+.frow  { margin-bottom: 14px; }
+.fname { font-size: 11px; font-weight: 700; color: #243247; }
+.fdesc { font-size: 9px; color: #9CA3AF; margin-bottom: 4px; }
+.flabel-row { display: table; width: 100%; margin-top: 4px; }
+.flabel-score { display: table-cell; vertical-align: middle; font-size: 13px;
+  font-weight: 700; color: #243247; width: 50px; }
+.flabel-txt   { display: table-cell; vertical-align: middle; font-size: 10px; font-weight: 700; }
+.fhi-bot { background: #FEF2F2; border: 1px solid #FECACA;
+  border-radius: 6px; padding: 10px 12px; margin-bottom: 8px; }
+.fhi-top { background: #F0FDF4; border: 1px solid #A7F3D0;
+  border-radius: 6px; padding: 10px 12px; margin-bottom: 8px; }
+
+/* ── Item table ── */
+.item-tbl { width: 100%; border-collapse: collapse; }
+.item-tbl td { padding: 6px 8px; vertical-align: middle; font-size: 10px;
+  color: #374151; border-bottom: 1px solid #F1F5F9; }
+.item-tbl .iq { width: 55%; }
+.item-tbl .is { width: 10%; font-weight: 700; text-align: right; padding-right: 10px; }
+.item-tbl .ib { width: 35%; }
+
+/* ── Theme / Quote ── */
+.theme-card { background: #FFF; border: 1px solid #E8E0D0;
+  border-radius: 7px; padding: 14px 16px; margin-bottom: 10px; }
+.theme-badge { display: inline-block; font-size: 8.5px; font-weight: 700;
+  background: #F1F5F9; color: #475569; padding: 2px 8px; border-radius: 3px;
+  letter-spacing: 0.05em; }
+.ev-badge { display: inline-block; font-size: 8.5px; font-weight: 700;
+  padding: 2px 8px; border-radius: 3px; margin-left: 6px; }
+.quote-txt { font-size: 11px; color: #374151; font-style: italic; line-height: 1.65;
+  margin-top: 8px; padding-left: 10px; border-left: 3px solid #D19422; }
+.quote-anon { font-size: 8.5px; color: #94A3B8; font-style: normal; margin-top: 4px; }
+
+/* ── Playbook ── */
+.play { background: #FFF; border: 1px solid #E8E0D0; border-left: 5px solid #D19422;
+  border-radius: 8px; padding: 16px 18px; margin-bottom: 16px; }
+.play-hdr { display: table; width: 100%; margin-bottom: 10px; }
+.play-bdg { display: table-cell; vertical-align: middle; padding-right: 10px;
+  width: 1%; white-space: nowrap; }
+.play-bdg span { display: inline-block; font-size: 9px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 9px;
+  border-radius: 3px; color: #FFF; }
+.play-ttl { display: table-cell; vertical-align: middle; font-size: 12px;
+  font-weight: 700; color: #243247; }
+.sub-l    { font-size: 8.5px; font-weight: 700; color: #64748B; letter-spacing: 0.06em;
+  text-transform: uppercase; margin-top: 9px; margin-bottom: 2px; }
+.act-lst  { margin-left: 16px; margin-bottom: 4px; }
+.act-lst li { margin-bottom: 3px; font-size: 10.5px; }
+
+/* ── Steps ── */
+.steps { display: table; width: 100%; border-collapse: separate; border-spacing: 9px 0; }
+.step  { display: table-cell; background: #FFF; border: 1px solid #E8E0D0;
+  border-radius: 7px; padding: 13px 15px; vertical-align: top; width: 25%; }
+.step-no   { font-size: 8.5px; font-weight: 700; color: #D19422; letter-spacing: 0.08em;
+  text-transform: uppercase; margin-bottom: 3px; }
+.step-body { font-size: 10px; color: #374151; line-height: 1.55; }
+
+/* ── Trust ── */
+.tg  { display: table; width: 100%; border-collapse: separate; border-spacing: 9px 0; }
+.tc  { display: table-cell; background: #FFF; border: 1px solid #E8E0D0;
+  border-radius: 6px; padding: 13px 15px; vertical-align: top; width: 33%; }
+.tt  { font-size: 10px; font-weight: 700; color: #243247; margin-bottom: 4px; }
+.tb  { font-size: 9px; color: #374151; line-height: 1.55; }
+
+/* ── Two-col ── */
+.tcol { display: table; width: 100%; border-collapse: separate; border-spacing: 14px 0; }
+.tc-l { display: table-cell; vertical-align: top; width: 55%; }
+.tc-r { display: table-cell; vertical-align: top; width: 45%; }
+
+/* ── Appendix ── */
+.app-tbl { width: 100%; border-collapse: collapse; font-size: 9px; }
+.app-tbl th { background: #F1F5F9; color: #475569; font-weight: 700;
+  padding: 5px 8px; text-align: left; border-bottom: 1px solid #E2E8F0; }
+.app-tbl td { padding: 4px 8px; border-bottom: 1px solid #F1F5F9; vertical-align: middle; }
+.app-tbl .aq { width: 58%; color: #374151; }
+.app-tbl .as { width: 10%; font-weight: 700; text-align: right; padding-right: 10px; }
+.app-tbl .ab { width: 32%; }
+
+/* ── Misc ── */
+.sec { margin-bottom: 24px; }
+.empty-state { background: #FFF; border: 1px dashed #E8E0D0; border-radius: 6px;
+  padding: 18px; text-align: center; color: #94A3B8; font-size: 10px; }
+.seg-badge { display: inline-block; font-size: 8.5px; font-weight: 700;
+  padding: 2px 8px; border-radius: 3px; margin-right: 5px; }
+.legend-dot { display: inline-block; width: 10px; height: 10px;
+  border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+</style></head><body><div class="cover">
+  <div class="cbadge">ExitScan Baseline</div>
+  <div class="corg">TechBouw B.V.</div>
+  <div class="ctitle">ExitScan Q1 2026</div>
+  <div class="csub">Managementrapport &bull; Groepsoutput &bull; Vertrouwelijk</div>
+  <div class="cmeta">
+    <div class="cmc"><div class="cml">Respondenten</div><div class="cmv">35</div></div>
+    <div class="cmc"><div class="cml">Type scan</div><div class="cmv">Baseline</div></div>
+    <div class="cmc"><div class="cml">Datum</div><div class="cmv" style="font-size:11px;">10-06-2026</div></div>
+    <div class="cmc"><div class="cml">Responsbasis</div><div class="cmv" style="font-size:11px;">Stevig</div></div>
+  </div>
+</div><div class="pb sec">
+  <span class="slabel">Samenvatting</span>
+  <div class="card ca" style="margin-bottom:14px;">
+    <div class="tcol">
+      <div class="tc-l" style="padding-right:10px;">
+        <p style="font-size:12px;font-weight:700;color:#243247;line-height:1.5;margin-bottom:10px;">Het vertrekbeeld is gemengd. Groeiperspectief scoort het laagst (4.2/10); Gebrek aan groei is de meest genoemde vertrekreden. Psychologische veiligheid &amp; cultuurmatch scoort relatief sterk (7.7/10).</p>
+        <div style="margin-bottom:10px;"><svg width="320" height="22" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="320" height="22" rx="4" fill="#E8E0D0"/><rect x="0" y="0" width="238" height="22" fill="#F59E0B"/><text x="119" y="15" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="9" font-weight="700" fill="#FFF">74%</text><rect x="238" y="0" width="82" height="22" fill="#22C55E"/><text x="279" y="15" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="9" font-weight="700" fill="#FFF">26%</text></svg></div>
+        <div style="font-size:9px;color:#64748B;margin-top:5px;">
+          <span class="legend-dot" style="background:#EF4444;"></span>Sterk frictiebeeld: 0&times;&nbsp;&nbsp;
+          <span class="legend-dot" style="background:#F59E0B;"></span>Gemengd vertrekbeeld: 26&times;&nbsp;&nbsp;
+          <span class="legend-dot" style="background:#22C55E;"></span>Laag frictiebeeld: 9&times;
+        </div>
+      </div>
+      <div class="tc-r" style="text-align:center;"><svg width="200" height="122" xmlns="http://www.w3.org/2000/svg"><path d="M 38 84 A 62 62 0 0 1 162 84" fill="none" stroke="#E8E0D0" stroke-width="16" stroke-linecap="round"/><path d="M 38 84 A 62 62 0 0 1 92.4 22.5" fill="none" stroke="#F59E0B" stroke-width="16" stroke-linecap="round"/><text x="100" y="76" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="30" font-weight="700" fill="#243247">5.2</text><text x="100" y="94" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="10" fill="#94A3B8">/10</text><text x="100" y="114" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="11" font-weight="700" fill="#F59E0B">Gemengd vertrekbeeld</text><text x="34" y="89" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="8" fill="#CBD5E1">1</text><text x="166" y="89" text-anchor="start" font-family="Arial,Helvetica,sans-serif" font-size="8" fill="#CBD5E1">10</text></svg></div>
+    </div>
+  </div>
+  <table class="sg"><tr><td><div class="sc-l">Laagste factor</div><div class="sc-v">Groeiperspectief</div><div class="sc-b">4.2/10 — Kwetsbaar punt</div></td><td><div class="sc-l">Relatief sterk</div><div class="sc-v">Psychologische veiligheid &amp; cultuurmatch</div><div class="sc-b">7.7/10 — Relatief sterk</div></td><td><div class="sc-l">Meest genoemde reden</div><div class="sc-v">Gebrek aan groei</div><div class="sc-b">13x genoemd</div></td><td><div class="sc-l">Respons</div><div class="sc-v">35/51</div><div class="sc-b">68.6%</div></td></tr></table>
+</div><div class="sec">
+  <span class="slabel">Waarom Groeiperspectief bovenaan staat</span>
+  <div class="why">
+    <div class="why-title">Groeiperspectief komt in meerdere lagen terug: als vertrekreden, als factorscore, op itemniveau en in open toelichtingen.</div>
+    <table class="why-grid"><tr><td class="why-cell"><div class="why-l">Hoofdreden</div><div class="why-v" style="color:#EF4444;">13&times;</div><div class="why-b">meest genoemde vertrekreden</div></td><td class="why-cell"><div class="why-l">Factorscore</div><div class="why-v" style="color:#EF4444;">4.2/10</div><div class="why-b">Kwetsbaar punt</div></td><td class="why-cell"><div class="why-l">Laagste item</div><div class="why-v" style="color:#EF4444;">3.9/10</div><div class="why-b">De organisatie investeerde in mijn persoonlijke en professionele ontwikkeling.</div></td><td class="why-cell"><div class="why-l">Speelt ook mee</div><div class="why-v">15&times;</div><div class="why-b">als meespelende context</div></td></tr></table>
+    
+    <div style='font-size:10px;color:#475569;border-top:1px solid #E2E8F0;padding-top:10px;margin-top:4px;'><strong>Eerste managementvraag:</strong> Gaat het over concrete kansen, zichtbaar perspectief of gebrek aan erkenning?</div>
+  </div>
+</div><div class="sec">
+  <span class="slabel">Wat valt op?</span>
+  <table class="ig" style="margin-bottom:9px;"><tr><td><div class="ig-k">Laagste factor</div><div class="ig-v">Groeiperspectief</div><div class="ig-n">4.2/10 — Kwetsbaar punt</div></td><td><div class="ig-k">Relatief sterk</div><div class="ig-v">Psychologische veiligheid &amp; cultuurmatch</div><div class="ig-n">7.7/10 — minder leidend in dit beeld</div></td><td><div class="ig-k">Meest genoemde vertrekreden</div><div class="ig-v">Gebrek aan groei</div><div class="ig-n">13x in deze batch</div></td><td><div class="ig-k">Wat speelde daarnaast mee</div><div class="ig-v">Beloning</div><div class="ig-n">18x als meespelende context</div></td></tr></table>
+  <table class="ig"><tr><td><div class="ig-k">Laagste basisbehoefte</div><div class="ig-v">Verbondenheid</div><div class="ig-n">5.2/10 — Mate van verbondenheid met collega&#x27;s en organisatie</div></td><td><div class="ig-k">Open toelichting</div><div class="ig-v">&quot;Ik heb een betere kans gekregen elders met meer verantwoorde&quot;</div><div class="ig-n">Zie open toelichtingen verderop</div></td><td><div class="ig-k">Eerste managementvraag</div><div class="ig-v">Gaat het over concrete kansen, zichtbaar perspectief of gebrek aan erkenning?</div><div class="ig-n">Startpunt voor het managementgesprek</div></td><td><div class="ig-k">Hoe stevig is dit beeld?</div><div class="ig-v">Stevig</div><div class="ig-n">35 responses — voldoende voor patroonduiding</div></td></tr></table>
+</div><div class="pb sec">
+  <span class="slabel">Vertrekcontext</span>
+  <div class="tcol">
+    <div class="tc-l">
+      <div class="card">
+        <h3 style="margin-bottom:10px;">Hoofdredenen van vertrek</h3>
+        <svg width="340" height="134" xmlns="http://www.w3.org/2000/svg"><text x="162" y="13" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="10" fill="#374151">Gebrek aan groei</text><rect x="170" y="0" width="95" height="18" rx="3" fill="#F1F5F9"/><rect x="170" y="0" width="95" height="18" rx="3" fill="#1E293B"/><text x="271" y="13" font-family="Arial,Helvetica,sans-serif" font-size="9" fill="#64748B">37% (13x)</text><text x="162" y="39" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="10" fill="#374151">Leiderschap / management</text><rect x="170" y="26" width="95" height="18" rx="3" fill="#F1F5F9"/><rect x="170" y="26" width="73" height="18" rx="3" fill="#1E293B"/><text x="271" y="39" font-family="Arial,Helvetica,sans-serif" font-size="9" fill="#64748B">29% (10x)</text><text x="162" y="65" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="10" fill="#374151">Persoonlijke omstandigheid</text><rect x="170" y="52" width="95" height="18" rx="3" fill="#F1F5F9"/><rect x="170" y="52" width="37" height="18" rx="3" fill="#1E293B"/><text x="271" y="65" font-family="Arial,Helvetica,sans-serif" font-size="9" fill="#64748B">14% (5x)</text><text x="162" y="91" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="10" fill="#374151">Beter aanbod elders</text><rect x="170" y="78" width="95" height="18" rx="3" fill="#F1F5F9"/><rect x="170" y="78" width="37" height="18" rx="3" fill="#1E293B"/><text x="271" y="91" font-family="Arial,Helvetica,sans-serif" font-size="9" fill="#64748B">14% (5x)</text><text x="162" y="117" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="10" fill="#374151">Werkdruk / stress</text><rect x="170" y="104" width="95" height="18" rx="3" fill="#F1F5F9"/><rect x="170" y="104" width="15" height="18" rx="3" fill="#1E293B"/><text x="271" y="117" font-family="Arial,Helvetica,sans-serif" font-size="9" fill="#64748B">6% (2x)</text></svg>
+      </div>
+    </div>
+    <div class="tc-r">
+      <div class="card">
+        <h3 style="margin-bottom:10px;">Wat speelde daarnaast mee</h3>
+        <svg width="300" height="108" xmlns="http://www.w3.org/2000/svg"><text x="162" y="13" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="10" fill="#374151">Beloning</text><rect x="170" y="0" width="55" height="18" rx="3" fill="#F1F5F9"/><rect x="170" y="0" width="55" height="18" rx="3" fill="#1E293B"/><text x="231" y="13" font-family="Arial,Helvetica,sans-serif" font-size="9" fill="#64748B">51% (18x)</text><text x="162" y="39" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="10" fill="#374151">Leiderschap / management</text><rect x="170" y="26" width="55" height="18" rx="3" fill="#F1F5F9"/><rect x="170" y="26" width="46" height="18" rx="3" fill="#1E293B"/><text x="231" y="39" font-family="Arial,Helvetica,sans-serif" font-size="9" fill="#64748B">43% (15x)</text><text x="162" y="65" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="10" fill="#374151">Gebrek aan groei</text><rect x="170" y="52" width="55" height="18" rx="3" fill="#F1F5F9"/><rect x="170" y="52" width="46" height="18" rx="3" fill="#1E293B"/><text x="231" y="65" font-family="Arial,Helvetica,sans-serif" font-size="9" fill="#64748B">43% (15x)</text><text x="162" y="91" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="10" fill="#374151">Rolonduidelijkheid</text><rect x="170" y="78" width="55" height="18" rx="3" fill="#F1F5F9"/><rect x="170" y="78" width="37" height="18" rx="3" fill="#1E293B"/><text x="231" y="91" font-family="Arial,Helvetica,sans-serif" font-size="9" fill="#64748B">34% (12x)</text></svg>
+      </div>
+      <div class="cbox" style="margin-top:12px;"><div style="font-size:10px;color:#94A3B8;">Eerdere signalering: niet beschikbaar in deze wave.</div></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:0;">
+    <h3 style="margin-bottom:10px;">Waaruit bestaat het vertrekbeeld?</h3>
+    <div style="margin-bottom:10px;"><svg width="420" height="24" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="420" height="24" rx="4" fill="#E8E0D0"/><rect x="0" y="0" width="300" height="24" fill="#1E293B"/><text x="150" y="16" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="9" font-weight="700" fill="#FFF">71%</text><rect x="300" y="0" width="120" height="24" fill="#94A3B8"/><text x="360" y="16" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="9" font-weight="700" fill="#FFF">29%</text></svg></div>
+    <div style="font-size:9.5px;color:#374151;">
+      <span class="legend-dot" style="background:#1E293B;"></span>Werkfactoren spelen een duidelijke rol: 25&times; (71%)&nbsp;&nbsp;&nbsp;
+      <span class="legend-dot" style="background:#64748B;"></span>Gemengd beeld: 0&times; (0%)&nbsp;&nbsp;&nbsp;
+      <span class="legend-dot" style="background:#94A3B8;"></span>Werkfactoren beperkt zichtbaar: 10&times; (29%)
+    </div>
+  </div>
+</div><div class="pb sec">
+  <span class="slabel">Factoranalyse</span>
+  <div style="margin-bottom:12px;"><div class="card cr" style="margin-bottom:9px;"><div style="font-size:8.5px;font-weight:700;color:#EF4444;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:3px;">Kwetsbaar punt</div><div style="font-size:11px;font-weight:700;color:#243247;">Groeiperspectief</div></div><div class="card " style="margin-bottom:9px;"><div style="font-size:8.5px;font-weight:700;color:#F59E0B;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:3px;">Aandachtspunt</div><div style="font-size:11px;font-weight:700;color:#243247;">Leiderschap &middot; Werkbelasting</div></div><div class="card cg" style="margin-bottom:9px;"><div style="font-size:8.5px;font-weight:700;color:#22C55E;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:3px;">Relatief sterk</div><div style="font-size:11px;font-weight:700;color:#243247;">Beloning &amp; voorwaarden &middot; Rolhelderheid &middot; Psychologische veiligheid &amp; cultuurmatch</div></div></div>
+  <div class="card">
+    <p style="font-size:9.5px;color:#64748B;margin-bottom:14px;">Score 1&ndash;10 — hoger is beter. Kleur geeft het beeld per factor: rood = kwetsbaar punt, geel = gemengd beeld, groen = relatief sterk.</p>
+    <svg width="420" height="220" xmlns="http://www.w3.org/2000/svg"><text x="152" y="18" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="10" fill="#374151">Psychologische veiligheid &amp; </text><rect x="160" y="0" width="200" height="26" rx="3" fill="#F1F5F9"/><rect x="160" y="0" width="155" height="26" rx="3" fill="#22C55E"/><text x="366" y="18" font-family="Arial,Helvetica,sans-serif" font-size="10" font-weight="700" fill="#22C55E">7.7</text><text x="152" y="54" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="10" fill="#374151">Rolhelderheid</text><rect x="160" y="36" width="200" height="26" rx="3" fill="#F1F5F9"/><rect x="160" y="36" width="140" height="26" rx="3" fill="#22C55E"/><text x="366" y="54" font-family="Arial,Helvetica,sans-serif" font-size="10" font-weight="700" fill="#22C55E">7.0</text><text x="152" y="90" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="10" fill="#374151">Beloning &amp; voorwaarden</text><rect x="160" y="72" width="200" height="26" rx="3" fill="#F1F5F9"/><rect x="160" y="72" width="133" height="26" rx="3" fill="#22C55E"/><text x="366" y="90" font-family="Arial,Helvetica,sans-serif" font-size="10" font-weight="700" fill="#22C55E">6.7</text><text x="152" y="126" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="10" fill="#374151">Werkbelasting</text><rect x="160" y="108" width="200" height="26" rx="3" fill="#F1F5F9"/><rect x="160" y="108" width="128" height="26" rx="3" fill="#F59E0B"/><text x="366" y="126" font-family="Arial,Helvetica,sans-serif" font-size="10" font-weight="700" fill="#F59E0B">6.4</text><text x="152" y="162" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="10" fill="#374151">Leiderschap</text><rect x="160" y="144" width="200" height="26" rx="3" fill="#F1F5F9"/><rect x="160" y="144" width="102" height="26" rx="3" fill="#F59E0B"/><text x="366" y="162" font-family="Arial,Helvetica,sans-serif" font-size="10" font-weight="700" fill="#F59E0B">5.1</text><text x="152" y="198" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="10" fill="#374151">Groeiperspectief</text><rect x="160" y="180" width="200" height="26" rx="3" fill="#F1F5F9"/><rect x="160" y="180" width="83" height="26" rx="3" fill="#EF4444"/><text x="366" y="198" font-family="Arial,Helvetica,sans-serif" font-size="10" font-weight="700" fill="#EF4444">4.2</text></svg>
+  </div>
+</div><div class="pb sec">
+  <span class="slabel">Factor detail — itemniveau</span>
+  <div class="card no-break" style="margin-bottom:14px;">
+  <div style="margin-bottom:10px;">
+    <span style="font-size:13px;font-weight:700;color:#243247;">Groeiperspectief</span>
+    <span style="font-size:12px;font-weight:700;color:#EF4444;margin-left:10px;">4.2/10</span>
+    <span style="font-size:10px;color:#EF4444;margin-left:6px;">— Kwetsbaar punt</span>
+  </div>
+  <div style="background:#FEF2F2;border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:10px;"><strong>Laagste item:</strong> De organisatie investeerde in mijn persoonlijke en professionele ontwikkeling. — <strong style="color:#EF4444;">3.9/10</strong></div>
+  <div style="background:#F0FDF4;border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:10px;"><strong>Sterkste item:</strong> Ik zag voor mijzelf een duidelijk loopbaanperspectief binnen deze organisatie. — <strong style="color:#22C55E;">4.3/10</strong></div>
+  <table class="item-tbl" style="margin-bottom:10px;"><tr><td class="iq">Er waren voldoende mogelijkheden om te leren en te groeien binnen mijn functie.</td><td class="is" style="color:#EF4444;">4.2</td><td class="ib"><div style="display:inline-block;width:90px;height:7px;background:#E8E0D0;border-radius:3px;vertical-align:middle;"><div style="width:38px;height:7px;background:#EF4444;border-radius:3px;"></div></div></td></tr><tr><td class="iq">De organisatie investeerde in mijn persoonlijke en professionele ontwikkeling.</td><td class="is" style="color:#EF4444;">3.9</td><td class="ib"><div style="display:inline-block;width:90px;height:7px;background:#E8E0D0;border-radius:3px;vertical-align:middle;"><div style="width:35px;height:7px;background:#EF4444;border-radius:3px;"></div></div></td></tr><tr><td class="iq">Ik zag voor mijzelf een duidelijk loopbaanperspectief binnen deze organisatie.</td><td class="is" style="color:#EF4444;">4.3</td><td class="ib"><div style="display:inline-block;width:90px;height:7px;background:#E8E0D0;border-radius:3px;vertical-align:middle;"><div style="width:39px;height:7px;background:#EF4444;border-radius:3px;"></div></div></td></tr></table>
+  <div class="cbox"><strong style="font-size:10px;">Eerste managementvraag:</strong> <span style="font-size:10px;">Gaat het over concrete kansen, zichtbaar perspectief of gebrek aan erkenning?</span></div>
+</div><div class="card no-break" style="margin-bottom:14px;">
+  <div style="margin-bottom:10px;">
+    <span style="font-size:13px;font-weight:700;color:#243247;">Leiderschap</span>
+    <span style="font-size:12px;font-weight:700;color:#F59E0B;margin-left:10px;">5.1/10</span>
+    <span style="font-size:10px;color:#F59E0B;margin-left:6px;">— Aandachtspunt</span>
+  </div>
+  <div style="background:#FEF2F2;border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:10px;"><strong>Laagste item:</strong> Mijn leidinggevende gaf mij nuttige feedback over mijn functioneren. — <strong style="color:#EF4444;">5.0/10</strong></div>
+  <div style="background:#F0FDF4;border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:10px;"><strong>Sterkste item:</strong> Ik had een vertrouwensband met mijn directe leidinggevende. — <strong style="color:#22C55E;">5.2/10</strong></div>
+  <table class="item-tbl" style="margin-bottom:10px;"><tr><td class="iq">Mijn leidinggevende gaf mij nuttige feedback over mijn functioneren.</td><td class="is" style="color:#EF4444;">5.0</td><td class="ib"><div style="display:inline-block;width:90px;height:7px;background:#E8E0D0;border-radius:3px;vertical-align:middle;"><div style="width:45px;height:7px;background:#EF4444;border-radius:3px;"></div></div></td></tr><tr><td class="iq">Mijn leidinggevende toonde oprechte interesse in mijn persoonlijke ontwikkeling.</td><td class="is" style="color:#F59E0B;">5.1</td><td class="ib"><div style="display:inline-block;width:90px;height:7px;background:#E8E0D0;border-radius:3px;vertical-align:middle;"><div style="width:46px;height:7px;background:#F59E0B;border-radius:3px;"></div></div></td></tr><tr><td class="iq">Ik had een vertrouwensband met mijn directe leidinggevende.</td><td class="is" style="color:#F59E0B;">5.2</td><td class="ib"><div style="display:inline-block;width:90px;height:7px;background:#E8E0D0;border-radius:3px;vertical-align:middle;"><div style="width:47px;height:7px;background:#F59E0B;border-radius:3px;"></div></div></td></tr></table>
+  <div class="cbox"><strong style="font-size:10px;">Eerste managementvraag:</strong> <span style="font-size:10px;">Gaat het signaal vooral over feedback, ontwikkelgesprekken of vertrouwen?</span></div>
+</div>
+</div><div class="pb sec">
+  <span class="slabel">Werkbeleving — autonomie, competentie en verbondenheid</span>
+  <div class="card" style="margin-bottom:14px;">
+    <p style="font-size:11px;color:#374151;margin-bottom:14px;">Drie basisbehoeften die de onderliggende werkbeleving meten, onafhankelijk van de organisatiefactoren.</p>
+    <svg width="380" height="112" xmlns="http://www.w3.org/2000/svg"><text x="152" y="16" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="10" fill="#374151">Autonomie</text><rect x="160" y="0" width="160" height="24" rx="3" fill="#F1F5F9"/><rect x="160" y="0" width="83" height="24" rx="3" fill="#F59E0B"/><text x="326" y="16" font-family="Arial,Helvetica,sans-serif" font-size="10" font-weight="700" fill="#F59E0B">5.2</text><text x="152" y="52" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="10" fill="#374151">Competentie</text><rect x="160" y="36" width="160" height="24" rx="3" fill="#F1F5F9"/><rect x="160" y="36" width="94" height="24" rx="3" fill="#F59E0B"/><text x="326" y="52" font-family="Arial,Helvetica,sans-serif" font-size="10" font-weight="700" fill="#F59E0B">5.9</text><text x="152" y="88" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="10" fill="#374151">Verbondenheid</text><rect x="160" y="72" width="160" height="24" rx="3" fill="#F1F5F9"/><rect x="160" y="72" width="83" height="24" rx="3" fill="#F59E0B"/><text x="326" y="88" font-family="Arial,Helvetica,sans-serif" font-size="10" font-weight="700" fill="#F59E0B">5.2</text></svg>
+  </div><div class="card no-break" style="margin-bottom:12px;">
+  <div style="margin-bottom:8px;">
+    <span style="font-size:12px;font-weight:700;color:#243247;">Autonomie</span>
+    <span style="font-size:11px;font-weight:700;color:#F59E0B;margin-left:10px;">5.2/10</span>
+    <span style="font-size:10px;color:#F59E0B;margin-left:6px;">— Aandachtspunt</span>
+  </div>
+  <div style="font-size:9.5px;color:#6B7280;margin-bottom:8px;">Mate van ervaren regie over de eigen werkwijze</div>
+  <table class="item-tbl"><tr><td class="iq">In mijn werk had ik het gevoel dat ik zelf keuzes kon maken over hoe ik mijn taken uitvoerde.</td><td class="is" style="color:#F59E0B;">5.5</td><td class="ib"><svg width="80" height="6" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="80" height="6" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="44" height="6" rx="2" fill="#F59E0B"/></svg></td></tr><tr><td class="iq">Ik had de vrijheid om mijn werkzaamheden op mijn eigen manier aan te pakken.</td><td class="is" style="color:#EF4444;">5.0</td><td class="ib"><svg width="80" height="6" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="80" height="6" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="40" height="6" rx="2" fill="#EF4444"/></svg></td></tr><tr><td class="iq">Mijn werksituatie liet mij toe om initiatieven te nemen in mijn functie.</td><td class="is" style="color:#F59E0B;">5.2</td><td class="ib"><svg width="80" height="6" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="80" height="6" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="42" height="6" rx="2" fill="#F59E0B"/></svg></td></tr><tr><td class="iq">Ik ervoer mijn werk als opgelegd - ik had weinig inspraak over hoe ik taken uitvoerde.<span style="font-size:8px;color:#94A3B8;">&nbsp;(omgekeerd)</span></td><td class="is" style="color:#F59E0B;">5.0</td><td class="ib"><svg width="80" height="6" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="80" height="6" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="40" height="6" rx="2" fill="#F59E0B"/></svg></td></tr></table>
+</div><div class="card no-break" style="margin-bottom:12px;">
+  <div style="margin-bottom:8px;">
+    <span style="font-size:12px;font-weight:700;color:#243247;">Competentie</span>
+    <span style="font-size:11px;font-weight:700;color:#F59E0B;margin-left:10px;">5.9/10</span>
+    <span style="font-size:10px;color:#F59E0B;margin-left:6px;">— Aandachtspunt</span>
+  </div>
+  <div style="font-size:9.5px;color:#6B7280;margin-bottom:8px;">Mate van ervaren bekwaamheid en effectiviteit</div>
+  <table class="item-tbl"><tr><td class="iq">Ik voelde me competent in mijn werk.</td><td class="is" style="color:#F59E0B;">5.0</td><td class="ib"><svg width="80" height="6" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="80" height="6" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="40" height="6" rx="2" fill="#F59E0B"/></svg></td></tr><tr><td class="iq">Ik had het gevoel dat ik mijn vaardigheden en talenten goed kon inzetten.</td><td class="is" style="color:#F59E0B;">6.0</td><td class="ib"><svg width="80" height="6" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="80" height="6" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="48" height="6" rx="2" fill="#F59E0B"/></svg></td></tr><tr><td class="iq">Ik was in staat effectief te zijn in mijn werk.</td><td class="is" style="color:#F59E0B;">6.0</td><td class="ib"><svg width="80" height="6" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="80" height="6" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="48" height="6" rx="2" fill="#F59E0B"/></svg></td></tr><tr><td class="iq">Ik twijfelde regelmatig aan mijn vermogen om mijn werkzaamheden goed uit te voeren.<span style="font-size:8px;color:#94A3B8;">&nbsp;(omgekeerd)</span></td><td class="is" style="color:#F59E0B;">6.4</td><td class="ib"><svg width="80" height="6" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="80" height="6" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="51" height="6" rx="2" fill="#F59E0B"/></svg></td></tr></table>
+</div><div class="card no-break" style="margin-bottom:12px;">
+  <div style="margin-bottom:8px;">
+    <span style="font-size:12px;font-weight:700;color:#243247;">Verbondenheid</span>
+    <span style="font-size:11px;font-weight:700;color:#F59E0B;margin-left:10px;">5.2/10</span>
+    <span style="font-size:10px;color:#F59E0B;margin-left:6px;">— Aandachtspunt</span>
+  </div>
+  <div style="font-size:9.5px;color:#6B7280;margin-bottom:8px;">Mate van verbondenheid met collega&#x27;s en organisatie</div>
+  <table class="item-tbl"><tr><td class="iq">Ik had een goede band met mijn collega&#x27;s.</td><td class="is" style="color:#F59E0B;">5.1</td><td class="ib"><svg width="80" height="6" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="80" height="6" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="41" height="6" rx="2" fill="#F59E0B"/></svg></td></tr><tr><td class="iq">Ik voelde me verbonden met de mensen waarmee ik samenwerkte.</td><td class="is" style="color:#EF4444;">5.0</td><td class="ib"><svg width="80" height="6" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="80" height="6" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="40" height="6" rx="2" fill="#EF4444"/></svg></td></tr><tr><td class="iq">Ik voelde me geaccepteerd door de mensen in mijn directe werkomgeving.</td><td class="is" style="color:#F59E0B;">5.4</td><td class="ib"><svg width="80" height="6" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="80" height="6" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="44" height="6" rx="2" fill="#F59E0B"/></svg></td></tr><tr><td class="iq">Ik had het gevoel dat collega&#x27;s niet echt in mij geinteresseerd waren.<span style="font-size:8px;color:#94A3B8;">&nbsp;(omgekeerd)</span></td><td class="is" style="color:#F59E0B;">5.2</td><td class="ib"><svg width="80" height="6" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="80" height="6" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="41" height="6" rx="2" fill="#F59E0B"/></svg></td></tr></table>
+</div></div><div class="sec">
+  <span class="slabel">Werkgeversaanbeveling</span>
+  <div class="empty-state">Niet gemeten in deze wave.</div>
+</div><div class="pb sec">
+  <span class="slabel">Open toelichtingen &mdash; 10 respondentstemmen</span>
+  <div style="font-size:10px;color:#374151;margin-bottom:12px;"><strong>Thema's:</strong>&nbsp;&nbsp;<strong>Erkenning en beloning</strong>&nbsp;(2&times;) &middot; <strong>Groeiperspectief</strong>&nbsp;(2&times;) &middot; <strong>Leiderschap en feedback</strong>&nbsp;(2&times;) &middot; <strong>Overige toelichting</strong>&nbsp;(1&times;) &middot; <strong>Werkdruk en balans</strong>&nbsp;(1&times;) &middot; <strong>Psychologische veiligheid</strong>&nbsp;(1&times;) &middot; <strong>Persoonlijke omstandigheid</strong>&nbsp;(1&times;)</div><div class="cbox" style="margin-bottom:12px;font-size:10px;color:#374151;">Getoond: 5 van 10 toelichtingen. Thema-indeling op trefwoorden &mdash; indicatief.</div><div class="theme-card"><span class="theme-badge">Erkenning en beloning</span><span style="font-size:8px;color:#94A3B8;margin-left:5px;">2&times;</span><span class="ev-badge" style="background:#F0FDF4;color:#15803D;">verdiept signaal</span><div class="quote-txt">Ik heb een betere kans gekregen elders met meer verantwoordelijkheid en salaris.<div class="quote-anon">Geanonimiseerd &mdash; namen en contactgegevens verwijderd</div></div></div><div class="theme-card"><span class="theme-badge">Groeiperspectief</span><span style="font-size:8px;color:#94A3B8;margin-left:5px;">2&times;</span><span class="ev-badge" style="background:#EFF6FF;color:#1D4ED8;">nuanceert beeld</span><div class="quote-txt">Mooie organisatie, maar voor mij geen zichtbare doorgroeimogelijkheden.<div class="quote-anon">Geanonimiseerd &mdash; namen en contactgegevens verwijderd</div></div></div><div class="theme-card"><span class="theme-badge">Overige toelichting</span><span style="font-size:8px;color:#94A3B8;margin-left:5px;">1&times;</span><span class="ev-badge" style="background:#F0FDF4;color:#15803D;">verdiept signaal</span><div class="quote-txt">Weinig transparantie over beslissingen. Ik wist nooit waar ik aan toe was.<div class="quote-anon">Geanonimiseerd &mdash; namen en contactgegevens verwijderd</div></div></div><div class="theme-card"><span class="theme-badge">Werkdruk en balans</span><span style="font-size:8px;color:#94A3B8;margin-left:5px;">1&times;</span><span class="ev-badge" style="background:#F0FDF4;color:#15803D;">verdiept signaal</span><div class="quote-txt">De werkdruk was structureel te hoog. Na drukke periodes was er geen herstelruimte.<div class="quote-anon">Geanonimiseerd &mdash; namen en contactgegevens verwijderd</div></div></div><div class="theme-card"><span class="theme-badge">Groeiperspectief</span><span style="font-size:8px;color:#94A3B8;margin-left:5px;">2&times;</span><span class="ev-badge" style="background:#EFF6FF;color:#1D4ED8;">nuanceert beeld</span><div class="quote-txt">Ik had het gevoel dat mijn ontwikkeling er niet toe deed voor de organisatie.<div class="quote-anon">Geanonimiseerd &mdash; namen en contactgegevens verwijderd</div></div></div>
+</div><div class="pb sec">
+  <span class="slabel">Wat betekent dit voor management?</span>
+  <div class="play" style="border-left-color:#F59E0B;">
+  <div class="play-hdr">
+    <div class="play-bdg"><span style="background:#F59E0B;">Gemengd beeld</span></div>
+    <div class="play-ttl">Groeiperspectief — Groeisignalen vragen gerichte terugblik</div>
+  </div>
+  <div class='sub-l'>Eerste managementvraag</div><p style='font-size:10.5px;'>Beslis of de grootste ingreep nu moet zitten in zicht op perspectief, het gesprek daarover of feitelijke ontwikkelruimte.</p>
+  <div class='sub-l'>Waar te beginnen</div><p style='font-size:10.5px;'>Onderzoek in 60-90 dagen of dit vooral ging om zicht op groei, feitelijke ruimte of het managementgesprek daarover.</p>
+  <div class='sub-l'>Mogelijke stappen</div><ul class='act-lst'><li>Onderzoek welke ontwikkelverwachting in vergelijkbare rollen eerder expliciet gemaakt moet worden.</li><li>Leg vast welke kleine correctie nodig is om dit signaal bij de volgende persoon minder snel te laten terugkomen.</li></ul>
+  <div class='sub-l'>Eigenaar</div><p style='font-size:10.5px;'>HR en betrokken manager samen</p>
+  <div class='sub-l'>Reviewmoment</div><p style='font-size:10.5px;'>Weeg binnen 60-90 dagen opnieuw of dit patroon terugkomt in exitgesprekken, HR-signalen of teamdynamiek.</p>
+</div><div class="play" style="border-left-color:#F59E0B;">
+  <div class="play-hdr">
+    <div class="play-bdg"><span style="background:#F59E0B;">Gemengd beeld</span></div>
+    <div class="play-ttl">Leiderschap — Leiderschap vraagt gerichte terugblik</div>
+  </div>
+  <div class='sub-l'>Eerste managementvraag</div><p style='font-size:10.5px;'>Beslis eerst of dit vooral een leidinggevend patroon in enkele teams is of een breder MT-thema dat gezamenlijke opvolging vraagt.</p>
+  <div class='sub-l'>Waar te beginnen</div><p style='font-size:10.5px;'>Onderzoek in 60-90 dagen of dit signaal incidenteel was of vaker samenvalt met hetzelfde team, dezelfde leiding of hetzelfde type gesprek.</p>
+  <div class='sub-l'>Mogelijke stappen</div><ul class='act-lst'><li>Onderzoek of beperkte correcties in feedbackritme, bereikbaarheid of besluitvorming herhaling bij de volgende persoon kunnen verkleinen.</li><li>Leg vast welk leiderschapsmoment bij een volgende exit eerder getoetst moet worden.</li></ul>
+  <div class='sub-l'>Eigenaar</div><p style='font-size:10.5px;'>HR en betrokken manager samen</p>
+  <div class='sub-l'>Reviewmoment</div><p style='font-size:10.5px;'>Weeg binnen 60-90 dagen opnieuw of dit patroon terugkomt in exitgesprekken, HR-signalen of teamdynamiek.</p>
+</div>
+</div><div class="pb sec">
+  <span class="slabel">Eerste managementspoor</span>
+  <table class="steps"><tr><td class="step"><div class="step-no">Prioriteit nu</div><div class="step-body">Start met Groeiperspectief. Neem Leiderschap mee als tweede aandachtspunt.</div></td><td class="step"><div class="step-no">Eerste eigenaar</div><div class="step-body">HR development-owner met betrokken leidinggevende</div></td><td class="step"><div class="step-no">Eerste stap</div><div class="step-body">Kies één managementgesprek of data-check om het beeld te verduidelijken. Bepaal daarna pas of een gerichte stap nodig is.</div></td><td class="step"><div class="step-no">Reviewmoment</div><div class="step-body">Plan binnen 60-90 dagen een review op groeiperspectief en leiderschap: wat is gekozen, wat is uitgevoerd en welke signalen keren terug in de volgende exitbatch of in managementgesprekken.</div></td></tr></table>
+  <div class="cbox" style="margin-top:14px;">
+    <p style="font-size:10.5px;color:#243247;font-weight:700;margin-bottom:4px;">Eerste stap</p>
+    <p style="font-size:10px;color:#374151;">
+      Kies binnen 30 dagen &eacute;&eacute;n managementgesprek of data-check
+      om het beeld rond Groeiperspectief te verduidelijken.
+      Bepaal daarna pas of een gerichte verbetering nodig is.
+      Beleg eigenaar en reviewmoment voordat bredere stappen worden gezet.
+    </p>
+  </div>
+</div><div class="pb sec">
+  <span class="slabel">Appendix — volledige vraagresultaten</span>
+  <p style="font-size:9.5px;color:#64748B;margin-bottom:14px;">
+    Technische onderbouwing. Scores zijn groepsgemiddelden (n=35), geschaald 1&ndash;10.
+    &#x21a9;&nbsp;= omgekeerd gecodeerd item.
+  </p>
+  <div class="no-break" style="margin-bottom:14px;"><div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">Leiderschap&nbsp;&mdash;&nbsp;5.1/10</div><table class="app-tbl"><tr><th class="aq">Vraag</th><th class="as">Gem.</th><th class="ab">Beeld</th></tr><tr><td class="aq">Mijn leidinggevende gaf mij nuttige feedback over mijn functioneren.</td><td class="as" style="color:#EF4444;">5.0</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="35" height="5" rx="2" fill="#EF4444"/></svg></td></tr><tr><td class="aq">Mijn leidinggevende toonde oprechte interesse in mijn persoonlijke ontwikkeling.</td><td class="as" style="color:#F59E0B;">5.1</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="36" height="5" rx="2" fill="#F59E0B"/></svg></td></tr><tr><td class="aq">Ik had een vertrouwensband met mijn directe leidinggevende.</td><td class="as" style="color:#F59E0B;">5.2</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="36" height="5" rx="2" fill="#F59E0B"/></svg></td></tr></table></div><div class="no-break" style="margin-bottom:14px;"><div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">Psychologische veiligheid &amp; cultuurmatch&nbsp;&mdash;&nbsp;7.7/10</div><table class="app-tbl"><tr><th class="aq">Vraag</th><th class="as">Gem.</th><th class="ab">Beeld</th></tr><tr><td class="aq">Ik voelde me vrij om fouten toe te geven in dit team.</td><td class="as" style="color:#22C55E;">8.1</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="56" height="5" rx="2" fill="#22C55E"/></svg></td></tr><tr><td class="aq">Ik kon moeilijke vragen stellen of afwijkende meningen uiten zonder negatieve gevolgen.</td><td class="as" style="color:#22C55E;">7.6</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="53" height="5" rx="2" fill="#22C55E"/></svg></td></tr><tr><td class="aq">De organisatiecultuur sloot aan bij mijn persoonlijke waarden.</td><td class="as" style="color:#22C55E;">7.6</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="53" height="5" rx="2" fill="#22C55E"/></svg></td></tr></table></div><div class="no-break" style="margin-bottom:14px;"><div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">Groeiperspectief&nbsp;&mdash;&nbsp;4.2/10</div><table class="app-tbl"><tr><th class="aq">Vraag</th><th class="as">Gem.</th><th class="ab">Beeld</th></tr><tr><td class="aq">Er waren voldoende mogelijkheden om te leren en te groeien binnen mijn functie.</td><td class="as" style="color:#EF4444;">4.2</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="29" height="5" rx="2" fill="#EF4444"/></svg></td></tr><tr><td class="aq">De organisatie investeerde in mijn persoonlijke en professionele ontwikkeling.</td><td class="as" style="color:#EF4444;">3.9</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="27" height="5" rx="2" fill="#EF4444"/></svg></td></tr><tr><td class="aq">Ik zag voor mijzelf een duidelijk loopbaanperspectief binnen deze organisatie.</td><td class="as" style="color:#EF4444;">4.3</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="30" height="5" rx="2" fill="#EF4444"/></svg></td></tr></table></div><div class="no-break" style="margin-bottom:14px;"><div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">Beloning &amp; voorwaarden&nbsp;&mdash;&nbsp;6.7/10</div><table class="app-tbl"><tr><th class="aq">Vraag</th><th class="as">Gem.</th><th class="ab">Beeld</th></tr><tr><td class="aq">Mijn salaris was marktconform voor de werkzaamheden die ik uitvoerde.</td><td class="as" style="color:#22C55E;">6.8</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="48" height="5" rx="2" fill="#22C55E"/></svg></td></tr><tr><td class="aq">De totale arbeidsvoorwaarden (inclusief secundaire) sloten aan bij mijn verwachtingen.</td><td class="as" style="color:#22C55E;">6.8</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="48" height="5" rx="2" fill="#22C55E"/></svg></td></tr><tr><td class="aq">Ik ervoer de beloning als eerlijk ten opzichte van collega&#x27;s in vergelijkbare functies.</td><td class="as" style="color:#F59E0B;">6.4</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="45" height="5" rx="2" fill="#F59E0B"/></svg></td></tr></table></div><div class="no-break" style="margin-bottom:14px;"><div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">Werkbelasting&nbsp;&mdash;&nbsp;6.4/10</div><table class="app-tbl"><tr><th class="aq">Vraag</th><th class="as">Gem.</th><th class="ab">Beeld</th></tr><tr><td class="aq">De hoeveelheid werk die ik moest verzetten was haalbaar binnen mijn werktijd.</td><td class="as" style="color:#22C55E;">6.7</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="47" height="5" rx="2" fill="#22C55E"/></svg></td></tr><tr><td class="aq">Ik ervoer mijn werkdruk als acceptabel.</td><td class="as" style="color:#F59E0B;">6.4</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="45" height="5" rx="2" fill="#F59E0B"/></svg></td></tr><tr><td class="aq">Ik had voldoende hersteltijd na intensieve werkperioden.</td><td class="as" style="color:#F59E0B;">6.1</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="43" height="5" rx="2" fill="#F59E0B"/></svg></td></tr></table></div><div class="no-break" style="margin-bottom:14px;"><div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">Rolhelderheid&nbsp;&mdash;&nbsp;7.0/10</div><table class="app-tbl"><tr><th class="aq">Vraag</th><th class="as">Gem.</th><th class="ab">Beeld</th></tr><tr><td class="aq">Mijn taken en verantwoordelijkheden waren duidelijk omschreven.</td><td class="as" style="color:#22C55E;">7.4</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="52" height="5" rx="2" fill="#22C55E"/></svg></td></tr><tr><td class="aq">Ik wist wat er van mij werd verwacht in mijn functie.</td><td class="as" style="color:#22C55E;">6.7</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="47" height="5" rx="2" fill="#22C55E"/></svg></td></tr><tr><td class="aq">Er was weinig tegenstrijdigheid in de opdrachten die ik ontving.</td><td class="as" style="color:#22C55E;">6.9</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="48" height="5" rx="2" fill="#22C55E"/></svg></td></tr></table></div>
+  <div class="no-break" style="margin-bottom:14px;">
+    <div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">Werkbeleving (SDT) — B1 t/m B12</div>
+    <table class="app-tbl"><tr><th class="aq">Vraag</th><th class="as">Gem.</th><th class="ab">Beeld</th></tr><tr><td class="aq">In mijn werk had ik het gevoel dat ik zelf keuzes kon maken over hoe ik mijn taken uitvoerde.</td><td class="as" style="color:#F59E0B;">5.5</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="38" height="5" rx="2" fill="#F59E0B"/></svg></td></tr><tr><td class="aq">Ik had de vrijheid om mijn werkzaamheden op mijn eigen manier aan te pakken.</td><td class="as" style="color:#EF4444;">5.0</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="35" height="5" rx="2" fill="#EF4444"/></svg></td></tr><tr><td class="aq">Mijn werksituatie liet mij toe om initiatieven te nemen in mijn functie.</td><td class="as" style="color:#F59E0B;">5.2</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="37" height="5" rx="2" fill="#F59E0B"/></svg></td></tr><tr><td class="aq">Ik ervoer mijn werk als opgelegd - ik had weinig inspraak over hoe ik taken uitvoerde.&nbsp;&#x21a9;</td><td class="as" style="color:#F59E0B;">5.0</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="35" height="5" rx="2" fill="#F59E0B"/></svg></td></tr><tr><td class="aq">Ik voelde me competent in mijn werk.</td><td class="as" style="color:#F59E0B;">5.0</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="35" height="5" rx="2" fill="#F59E0B"/></svg></td></tr><tr><td class="aq">Ik had het gevoel dat ik mijn vaardigheden en talenten goed kon inzetten.</td><td class="as" style="color:#F59E0B;">6.0</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="42" height="5" rx="2" fill="#F59E0B"/></svg></td></tr><tr><td class="aq">Ik was in staat effectief te zijn in mijn werk.</td><td class="as" style="color:#F59E0B;">6.0</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="42" height="5" rx="2" fill="#F59E0B"/></svg></td></tr><tr><td class="aq">Ik twijfelde regelmatig aan mijn vermogen om mijn werkzaamheden goed uit te voeren.&nbsp;&#x21a9;</td><td class="as" style="color:#F59E0B;">6.4</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="45" height="5" rx="2" fill="#F59E0B"/></svg></td></tr><tr><td class="aq">Ik had een goede band met mijn collega&#x27;s.</td><td class="as" style="color:#F59E0B;">5.1</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="36" height="5" rx="2" fill="#F59E0B"/></svg></td></tr><tr><td class="aq">Ik voelde me verbonden met de mensen waarmee ik samenwerkte.</td><td class="as" style="color:#EF4444;">5.0</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="35" height="5" rx="2" fill="#EF4444"/></svg></td></tr><tr><td class="aq">Ik voelde me geaccepteerd door de mensen in mijn directe werkomgeving.</td><td class="as" style="color:#F59E0B;">5.4</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="38" height="5" rx="2" fill="#F59E0B"/></svg></td></tr><tr><td class="aq">Ik had het gevoel dat collega&#x27;s niet echt in mij geinteresseerd waren.&nbsp;&#x21a9;</td><td class="as" style="color:#F59E0B;">5.2</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="36" height="5" rx="2" fill="#F59E0B"/></svg></td></tr></table>
+  </div>
+  <div class="empty-state" style="margin-top:8px;">
+    Werkgeversaanbeveling (eNPS): niet gemeten in deze wave
+  </div>
+</div><div class="sec">
+  <span class="slabel">Segmentanalyse</span>
+  <div class="card" style="border-left:4px solid #94A3B8;">
+    <div style="display:table;width:100%;">
+      <div style="display:table-cell;vertical-align:middle;width:1%;white-space:nowrap;padding-right:14px;">
+        <span style="font-size:9px;font-weight:700;background:#94A3B8;color:#FFF;
+          padding:3px 9px;border-radius:3px;letter-spacing:0.08em;text-transform:uppercase;">Niet getoond</span>
+      </div>
+      <div style="display:table-cell;vertical-align:middle;font-size:10px;color:#374151;">
+        Onvoldoende responses per groep (minimaal 5 per segment).&nbsp;
+        Segmentweergave verschijnt automatisch zodra voldoende responses per groep beschikbaar zijn (n&nbsp;&ge;&nbsp;5).
+        Geen individuele of kleine-groep output.
+      </div>
+    </div>
+  </div>
+</div><div class="pb">
+  <span class="slabel">Hoe dit rapport te lezen</span>
+  <div class="card" style="margin-bottom:14px;">
+    <p style="font-size:11px;color:#374151;">Dit rapport bundelt patronen uit exitvragenlijsten tot een groepsbeeld van vertrek. Geen diagnose, geen individuele beoordeling, geen causaliteitsclaim en geen voorspelling.</p>
+  </div>
+  <table class="tg"><tr><td class="tc"><div class="tt">Groepsniveau</div><div class="tb">Alle scores zijn groepsgemiddelden. Geen individuele gegevens in dit rapport.</div></td><td class="tc"><div class="tt">Drempelwaarden</div><div class="tb">5+ responses indicatief · 10+ voor patroonduiding · 5+ per groep voor segmenten</div></td><td class="tc"><div class="tt">Geen diagnose</div><div class="tb">Scores zijn methodisch verantwoord maar niet extern gevalideerd. Altijd combineren met managementgesprek.</div></td></tr></table>
+  <table class="tg" style="margin-top:10px;"><tr><td class="tc"><div class="tt">Open toelichtingen</div><div class="tb">Geanonimiseerd. Namen, contactgegevens en locaties verwijderd. Alleen bij voldoende n getoond.</div></td><td class="tc"><div class="tt">Claimgrenzen</div><div class="tb">ExitScan is een terugkijkende groepsmeting op uitstroom. Geen causale claims, geen oordeel over vermijdbaarheid, geen verlooppredicties.</div></td><td class="tc"><div class="tt">Privacywaarborg</div><div class="tb">Verwerking conform AVG. Uitsluitend bestemd voor geautoriseerde gebruikers.</div></td></tr></table>
+</div></body></html>
