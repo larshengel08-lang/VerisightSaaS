@@ -509,7 +509,7 @@ function buildCockpitRouteItem(entry: CampaignHomeEntry): CockpitRouteItem {
   const stateMeta = getHomeStateMeta(entry.state)
   const completionValue = Number.isFinite(entry.campaign.completion_rate_pct)
     ? `${entry.campaign.completion_rate_pct}%`
-    : '—'
+    : 'â€”'
   const ctaLabel = getCtaLabelForState(entry.state)
   const bucket = mapStateToCockpitBucket(entry.state)
 

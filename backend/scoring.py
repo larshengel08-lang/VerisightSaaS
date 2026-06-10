@@ -1,4 +1,4 @@
-﻿"""
+"""
 Verisight — Scoring Engine
 ================================
 All HR-methodological logic lives here. No I/O, no DB, no web framework.
