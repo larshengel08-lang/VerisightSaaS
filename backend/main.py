@@ -1036,6 +1036,132 @@ async def survey_complete(request: Request) -> HTMLResponse:
 
 
 # ---------------------------------------------------------------------------
+# Open survey flow — gedeelde link zonder respondent-voorkennis
+# ---------------------------------------------------------------------------
+# Patroon: static "/survey/open/..." routes staan BOVEN "/survey/{token}"
+# zodat FastAPI de juiste route kiest.
+
+@app.get("/survey/open/{public_survey_token}", response_class=HTMLResponse)
+async def open_survey_intro(
+    request: Request,
+    public_survey_token: str,
+    db: Session = Depends(get_db),
+) -> HTMLResponse:
+    """
+    Toont een intropagina voor de open survey flow.
+    Geen DB-schrijfactie hier — respondent wordt pas aangemaakt bij POST /start.
+    """
+    campaign = (
+        db.query(Campaign)
+        .filter(Campaign.public_survey_token == public_survey_token)
+        .first()
+    )
+
+    if not campaign:
+        return _render_survey_status(
+            request,
+            status_code=404,
+            title="Survey-link ongeldig",
+            heading="Deze survey-link klopt niet",
+            message="De link is ongeldig. Controleer of je de volledige link hebt geopend.",
+            tone="warning",
+        )
+
+    if not campaign.is_active:
+        return _render_survey_status(
+            request,
+            status_code=410,
+            title="Survey gesloten",
+            heading="Deze survey is gesloten",
+            message="De campagne accepteert geen nieuwe inzendingen meer.",
+            tone="info",
+        )
+
+    locked_product_name = _get_runtime_locked_product_name(campaign.scan_type)
+    if locked_product_name:
+        return _render_survey_status(
+            request,
+            status_code=423,
+            title=f"{locked_product_name} nog niet open",
+            heading="Deze route staat nog niet open voor invulling",
+            message=(
+                f"{locked_product_name} is in deze wave nog niet opengesteld voor respondentinvulling."
+            ),
+            tone="info",
+        )
+
+    scan = get_scan_definition(campaign.scan_type)
+    product_name = scan.product_name if scan else "Survey"
+
+    return templates.TemplateResponse(
+        request,
+        "survey-intro.html",
+        context={
+            "product_name": product_name,
+            "public_survey_token": public_survey_token,
+        },
+    )
+
+
+@app.post("/survey/open/{public_survey_token}/start")
+async def open_survey_start(
+    request: Request,
+    public_survey_token: str,
+    db: Session = Depends(get_db),
+) -> Response:
+    """
+    Maakt een anonieme respondent aan en redirect naar de persoonlijke survey-URL.
+    Alle metadata (email, department, role_level, exit_month, annual_salary_eur) = None.
+    token_expires_at = 90 dagen vanaf nu (via database default in Respondent).
+    """
+    from datetime import timedelta
+
+    campaign = (
+        db.query(Campaign)
+        .filter(Campaign.public_survey_token == public_survey_token)
+        .first()
+    )
+
+    if not campaign:
+        return _render_survey_status(
+            request,
+            status_code=404,
+            title="Survey-link ongeldig",
+            heading="Deze survey-link klopt niet",
+            message="De link is ongeldig. Controleer of je de volledige link hebt geopend.",
+            tone="warning",
+        )
+
+    if not campaign.is_active:
+        return _render_survey_status(
+            request,
+            status_code=410,
+            title="Survey gesloten",
+            heading="Deze survey is gesloten",
+            message="De campagne accepteert geen nieuwe inzendingen meer.",
+            tone="info",
+        )
+
+    # Maak anonieme respondent aan — geen PII, geen metadata
+    respondent = Respondent(
+        campaign_id=campaign.id,
+        email=None,
+        department=None,
+        role_level=None,
+        exit_month=None,
+        annual_salary_eur=None,  # AVG — nooit opslaan in open flow
+        token_expires_at=datetime.now(timezone.utc) + timedelta(days=90),
+    )
+    db.add(respondent)
+    db.commit()
+    db.refresh(respondent)
+
+    # 303 See Other → browser stuurt GET naar survey-URL
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url=f"/survey/{respondent.token}", status_code=303)
+
+
+# ---------------------------------------------------------------------------
 # Survey — serve HTML form
 # ---------------------------------------------------------------------------
 

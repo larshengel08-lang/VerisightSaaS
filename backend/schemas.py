@@ -95,6 +95,7 @@ class CampaignRead(OrmBase):
     name: str
     scan_type: str
     delivery_mode: Optional[str]
+    public_survey_token: UUID | str  # read-only; nooit in CampaignCreate; vereist x-api-key om te bereiken
     is_active: bool
     enabled_modules: Optional[list[str]]
     created_at: datetime

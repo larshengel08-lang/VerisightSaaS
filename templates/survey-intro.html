@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>{{ product_name }} — Loep</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --brand: #2563EB;
+      --text: #111827;
+      --muted: #6B7280;
+      --border: #E5E7EB;
+      --bg: #F9FAFB;
+      --white: #FFFFFF;
+      --info-bg: #DBEAFE;
+      --info-text: #1D4ED8;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      color: var(--text);
+    }
+    .card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 48px 40px;
+      max-width: 560px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,.08);
+    }
+    .logo {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--brand);
+      letter-spacing: -.5px;
+      margin-bottom: 28px;
+    }
+    .icon-wrap {
+      width: 78px;
+      height: 78px;
+      border-radius: 50%;
+      background: var(--info-bg);
+      color: var(--info-text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      font-size: 34px;
+    }
+    h1 {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      line-height: 1.3;
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.7;
+      margin-bottom: 28px;
+    }
+    .privacy-block {
+      background: var(--info-bg);
+      border-radius: 10px;
+      padding: 16px 18px;
+      text-align: left;
+      margin-bottom: 28px;
+    }
+    .privacy-block p {
+      color: var(--info-text);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .start-btn {
+      display: inline-block;
+      background: var(--brand);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      padding: 14px 40px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background .15s;
+      width: 100%;
+    }
+    .start-btn:hover { background: #1d4ed8; }
+    .start-btn:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+    .duration-hint {
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    @media (max-width: 480px) {
+      .card { padding: 36px 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">Loep</div>
+
+    <div class="icon-wrap">
+      <!-- shield icon -->
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      </svg>
+    </div>
+
+    <h1>{{ product_name }}</h1>
+    <p class="subtitle">
+      Je werkgever heeft Loep gevraagd dit onderzoek uit te voeren.<br>
+      Het invullen duurt ongeveer 10–15 minuten.
+    </p>
+
+    <div class="privacy-block">
+      <p>
+        Je antwoorden worden anoniem verwerkt en alleen op groepsniveau gerapporteerd.
+        Open antwoorden worden gecontroleerd op herleidbare informatie voordat ze in een rapport komen.
+      </p>
+    </div>
+
+    <form method="POST" action="/survey/open/{{ public_survey_token }}/start" id="start-form">
+      <button type="submit" class="start-btn" id="start-btn">
+        Survey starten
+      </button>
+    </form>
+
+    <p class="duration-hint">Eenmaal gestart kun je de link 90 dagen opnieuw openen.</p>
+  </div>
+
+  <script>
+    // Voorkom dubbele submit bij trage verbinding
+    document.getElementById('start-form').addEventListener('submit', function () {
+      const btn = document.getElementById('start-btn');
+      btn.disabled = true;
+      btn.textContent = 'Wordt geladen…';
+    });
+  </script>
+</body>
+</html>

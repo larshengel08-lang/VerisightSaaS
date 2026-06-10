@@ -131,6 +131,8 @@ class Campaign(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     scan_type: Mapped[str] = mapped_column(String(20), nullable=False)  # "exit" | "retention" | "pulse" | "team" | "onboarding" | "leadership"
     delivery_mode: Mapped[str | None] = mapped_column(String(20), nullable=True)  # "baseline" | "live" — null behandeld als baseline
+    # Gedeelde survey-ingang voor de open (concierge) flow — nooit publiek via API zonder x-api-key
+    public_survey_token: Mapped[str] = mapped_column(GUID(), unique=True, default=_uuid)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
     # Optional: which Module C blocks to include (JSON list of factor keys)

@@ -107,6 +107,19 @@ do $$ begin
 exception when duplicate_object then null;
 end $$;
 
+-- Voeg public_survey_token toe aan bestaande campaigns indien nog niet aanwezig
+do $$ begin
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'campaigns' and column_name = 'public_survey_token'
+  ) then
+    alter table public.campaigns
+      add column public_survey_token uuid not null default gen_random_uuid();
+    create unique index if not exists idx_campaigns_public_survey_token
+      on public.campaigns(public_survey_token);
+  end if;
+end $$;
+
 -- Backfill geheime org-sleutels uit oude organizations.api_key, indien nog aanwezig
 do $$ begin
   if exists (

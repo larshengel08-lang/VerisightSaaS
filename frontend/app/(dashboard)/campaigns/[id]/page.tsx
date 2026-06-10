@@ -640,7 +640,7 @@ export default async function CampaignPage({ params }: Props) {
       .maybeSingle(),
     supabase
       .from("campaigns")
-      .select("enabled_modules, delivery_mode")
+      .select("enabled_modules, delivery_mode, public_survey_token")
       .eq("id", id)
       .maybeSingle(),
     supabase
@@ -4676,6 +4676,67 @@ export default async function CampaignPage({ params }: Props) {
                         blijven beschikbaar, maar respondenten kunnen niet meer
                         invullen.
                       </div>
+                    )}
+                  </div>
+                </DashboardDisclosure>
+              ) : null}
+
+              {isVerisightAdmin && campaignMeta?.public_survey_token ? (
+                <DashboardDisclosure
+                  defaultOpen={stats.is_active}
+                  title="Open survey-link (concierge)"
+                  description="Kopieer deze link en stuur hem mee in het launchpakket naar de HR-contactpersoon. Elke klik start een nieuwe anonieme respondent."
+                  badge={
+                    <DashboardChip
+                      label={
+                        stats.total_completed >= 5
+                          ? `${stats.total_completed} ingevuld — drempel bereikt`
+                          : `${stats.total_completed} ingevuld — nog onder drempel`
+                      }
+                      tone={stats.total_completed >= 5 ? "emerald" : "amber"}
+                    />
+                  }
+                >
+                  <div className="space-y-3">
+                    <div className="rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3">
+                      <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                        Survey-link voor HR-contactpersoon
+                      </p>
+                      <p className="mt-1 break-all font-mono text-sm text-slate-800 select-all">
+                        {`/survey/open/${campaignMeta.public_survey_token}`}
+                      </p>
+                      <p className="mt-2 text-xs leading-5 text-slate-500">
+                        Volledig pad: <span className="font-mono">https://getloep.nl/survey/open/{campaignMeta.public_survey_token}</span>
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="rounded-[16px] bg-[color:var(--dashboard-soft)]/60 px-3 py-3 text-center">
+                        <p className="text-lg font-bold text-slate-900">{stats.total_completed}</p>
+                        <p className="text-xs text-slate-500">Ingevuld</p>
+                      </div>
+                      <div className="rounded-[16px] bg-[color:var(--dashboard-soft)]/60 px-3 py-3 text-center">
+                        <p className="text-lg font-bold text-slate-900">{respondents.length}</p>
+                        <p className="text-xs text-slate-500">Gestart</p>
+                      </div>
+                      <div className="rounded-[16px] bg-[color:var(--dashboard-soft)]/60 px-3 py-3 text-center">
+                        <p className={`text-lg font-bold ${stats.total_completed >= 5 ? "text-emerald-700" : "text-amber-700"}`}>
+                          {stats.total_completed >= 5 ? "Ja" : `Nog ${5 - stats.total_completed}`}
+                        </p>
+                        <p className="text-xs text-slate-500">Min. n=5</p>
+                      </div>
+                    </div>
+                    {stats.total_completed < 5 ? (
+                      <p className="rounded-[14px] bg-amber-50 px-3 py-2.5 text-xs leading-5 text-amber-800">
+                        Nog geen rapport mogelijk: minimaal 5 ingevulde responses vereist. Stuur een herinnering als de deadline nadert.
+                      </p>
+                    ) : stats.total_completed < 10 ? (
+                      <p className="rounded-[14px] bg-blue-50 px-3 py-2.5 text-xs leading-5 text-blue-800">
+                        Drempel bereikt — groepsrapportage mogelijk. Geen segmentatie zolang n &lt; 10.
+                      </p>
+                    ) : (
+                      <p className="rounded-[14px] bg-emerald-50 px-3 py-2.5 text-xs leading-5 text-emerald-800">
+                        Voldoende respons voor een volledig groepsrapport. Segmentatie beschikbaar als n ≥ 5 per segment.
+                      </p>
                     )}
                   </div>
                 </DashboardDisclosure>
