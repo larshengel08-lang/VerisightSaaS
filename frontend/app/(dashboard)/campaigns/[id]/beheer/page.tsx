@@ -64,6 +64,15 @@ export default async function RouteBeheerPage({ params, searchParams }: Props) {
 
   return (
     <div className="space-y-6">
+      {data.selfSend.isSelfSend && data.selfSend.dueReminderToday ? (
+        <div className="border border-amber-200 bg-amber-50 px-5 py-4">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-amber-800">Reminderdag</p>
+          <p className="mt-2 text-sm text-amber-900">
+            Vandaag staat een herinnering gepland. Open de stap &ldquo;Voorbeeld &amp; kopieer&rdquo; om de
+            reminder-tekst te kopiëren en opnieuw naar dezelfde BCC-lijst te sturen.
+          </p>
+        </div>
+      ) : null}
       <RouteBeheerHeader data={data} />
       <RouteBeheerStructuredBody
         data={data}
