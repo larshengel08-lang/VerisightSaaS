@@ -2,7 +2,7 @@
 import { redirect } from 'next/navigation'
 import { DashboardStateCard } from '@/components/dashboard/dashboard-state-card'
 import { resolveDashboardState } from '@/lib/dashboard/dashboard-state-resolver'
-import { normalizeReminderConfig, buildReminderPreview } from '@/lib/launch-controls'
+import { normalizeReminderConfig, buildParticipantCommunicationPreview } from '@/lib/launch-controls'
 import { isDashboardReleaseReady } from '@/lib/response-activation'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import { createClient } from '@/lib/supabase/server'
@@ -20,11 +20,12 @@ export default async function DashboardHomePage() {
   const { context } = await loadSuiteAccessContext(supabase, user.id)
   if (context.managerOnly) redirect('/action-center')
 
-  const { data: stats } = await supabase
+  const { data: stats, error: statsError } = await supabase
     .from('campaign_stats')
     .select('*')
     .order('created_at', { ascending: false })
     .limit(1)
+  if (statsError) throw new Error(`Kon campagne-overzicht niet laden: ${statsError.message}`)
 
   const campaign = (stats?.[0] as CampaignStats | undefined) ?? null
 
@@ -46,10 +47,10 @@ export default async function DashboardHomePage() {
     )
   }
 
-  const [{ data: deliveryRecord }, { data: reminderEvents }] = await Promise.all([
+  const [{ data: deliveryRecord }, { data: reminderEvents }, { data: campaignRow }] = await Promise.all([
     supabase
       .from('campaign_delivery_records')
-      .select('launch_date, launch_confirmed_at, reminder_config')
+      .select('launch_date, launch_confirmed_at, reminder_config, participant_comms_config')
       .eq('campaign_id', campaign.campaign_id)
       .maybeSingle(),
     supabase
@@ -60,6 +61,11 @@ export default async function DashboardHomePage() {
       .eq('outcome', 'completed')
       .order('created_at', { ascending: false })
       .limit(1),
+    supabase
+      .from('campaigns')
+      .select('delivery_mode')
+      .eq('id', campaign.campaign_id)
+      .maybeSingle(),
   ])
 
   const reminderConfig = normalizeReminderConfig(deliveryRecord?.reminder_config ?? null)
@@ -76,7 +82,7 @@ export default async function DashboardHomePage() {
       isActive: campaign.is_active,
       totalInvited: campaign.total_invited,
       totalCompleted: campaign.total_completed,
-      completionRatePct: campaign.completion_rate_pct,
+      completionRatePct: campaign.completion_rate_pct ?? 0,
       closedAt: null,
     },
     launchConfirmedAt: deliveryRecord?.launch_confirmed_at ?? null,
@@ -88,7 +94,13 @@ export default async function DashboardHomePage() {
     today: todayIso(),
   })
 
-  const reminderText = buildReminderPreview(reminderConfig)
+  const reminderPreview = buildParticipantCommunicationPreview({
+    scanType: campaign.scan_type,
+    deliveryMode: campaignRow?.delivery_mode ?? null,
+    launchDate: deliveryRecord?.launch_date ?? null,
+    participantCommsConfig: deliveryRecord?.participant_comms_config ?? null,
+  })
+  const reminderText = `${reminderPreview.subject}\n\n${reminderPreview.body.join('\n\n')}`
 
   return (
     <div className="space-y-8">
