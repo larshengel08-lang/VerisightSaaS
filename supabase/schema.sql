@@ -56,6 +56,7 @@ create table if not exists public.campaigns (
   name            text not null,
   scan_type       text not null check (scan_type in ('exit', 'retention', 'pulse', 'team', 'onboarding', 'leadership', 'culture_assessment')),
   delivery_mode   text check (delivery_mode in ('baseline', 'live')),
+  comms_mode      text not null default 'managed',
   is_active       boolean default true,
   enabled_modules jsonb,
   created_at      timestamptz default now(),
@@ -79,7 +80,8 @@ create table if not exists public.respondents (
   -- Token vervalt 90 dagen na aanmaken (AVG opslagbeperking + security)
   token_expires_at  timestamptz default (now() + interval '90 days'),
   -- E-mailadres voor uitnodigingsmail (optioneel, nooit zichtbaar in dashboard)
-  email             text
+  email             text,
+  dedup_key_hash    text
 );
 
 -- Voeg 'viewer' toe aan de role-constraint als die er nog niet in zit
@@ -433,6 +435,9 @@ create table if not exists public.campaign_delivery_records (
   launch_confirmed_at             timestamptz,
   participant_comms_config        jsonb not null default '{}'::jsonb,
   reminder_config                 jsonb not null default '{}'::jsonb,
+  invited_count                   integer,
+  self_send_config                jsonb not null default '{}'::jsonb,
+  self_send_reminders             jsonb not null default '[]'::jsonb,
   first_management_use_confirmed_at timestamptz,
   follow_up_decided_at            timestamptz,
   learning_closed_at              timestamptz,

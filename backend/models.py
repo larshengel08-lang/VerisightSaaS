@@ -131,6 +131,9 @@ class Campaign(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     scan_type: Mapped[str] = mapped_column(String(20), nullable=False)  # "exit" | "retention" | "pulse" | "team" | "onboarding" | "leadership"
     delivery_mode: Mapped[str | None] = mapped_column(String(20), nullable=True)  # "baseline" | "live" — null behandeld als baseline
+    # Comms mode: "managed" = platform stuurt uitnodigingen/herinneringen (CSV-import flow).
+    # "self_send" = HR verstuurt zelf vanuit eigen mailbox; platform slaat geen deelnemer-e-mails op.
+    comms_mode: Mapped[str] = mapped_column(String(20), nullable=False, default="managed")
     # Gedeelde survey-ingang voor de open (concierge) flow — nooit publiek via API zonder x-api-key
     public_survey_token: Mapped[str] = mapped_column(GUID(), unique=True, default=_uuid)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
@@ -203,6 +206,8 @@ class Respondent(Base):
     completed: Mapped[bool] = mapped_column(Boolean, default=False)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     token_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # Self-send single-fill dedup: sha256 van de client-UUID (geen PII). Scoped per campagne.
+    dedup_key_hash: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
 
     campaign: Mapped["Campaign"] = relationship(back_populates="respondents")
     response: Mapped["SurveyResponse | None"] = relationship(back_populates="respondent", uselist=False)
@@ -376,6 +381,12 @@ class CampaignDeliveryRecord(Base):
     launch_confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     participant_comms_config: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     reminder_config: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    # Self-send mode only — handmatig ingevoerd aantal uitgenodigde deelnemers (de noemer voor respons%).
+    invited_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # Self-send communicatie: { senderName, endDate, inviteSubject, inviteBody, reminderSubject, reminderBody }
+    self_send_config: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    # Self-send reminders: list of { id, kind, daysBeforeEnd, date, notifiedAt }
+    self_send_reminders: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
     first_management_use_confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     follow_up_decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     learning_closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

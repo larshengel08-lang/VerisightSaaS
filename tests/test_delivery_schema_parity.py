@@ -35,6 +35,18 @@ def test_launch_date_type_stays_aligned_between_schema_and_backend_model():
     assert re.search(r"launch_date:\s*mapped\[date\s*\|\s*none\]\s*=\s*mapped_column\(date,", models)
 
 
+def test_self_send_columns_present_in_schema_and_model():
+    schema = _read("supabase/schema.sql")
+    models = _read("backend/models.py")
+
+    for token in ("comms_mode", "invited_count", "self_send_config", "self_send_reminders"):
+        assert token in schema, f"{token} missing from schema.sql"
+        assert token in models, f"{token} missing from models.py"
+
+    assert "dedup_key_hash" in schema
+    assert "dedup_key_hash" in models
+
+
 def test_live_hardening_patch_keeps_organization_secret_api_key_type_aligned():
     schema = _read("supabase/schema.sql")
     patch = _read("supabase/live_hardening_patch.sql")
