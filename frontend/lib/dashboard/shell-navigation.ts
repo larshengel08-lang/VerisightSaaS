@@ -187,57 +187,20 @@ export function buildDashboardShellNavigation({
     }
   }
 
-  const modules = MODULE_LABELS.flatMap<DashboardModuleNavItem>((item) => {
-    if (item.key === 'overview') {
-      return [
-        {
-          key: item.key,
-          label: item.label,
-          href: '/dashboard',
-          disabled: false,
-        },
-      ]
-    }
-
-    if (item.key === 'reports') {
-      return [
-        {
-          key: item.key,
-          label: item.label,
-          href: '/reports',
-          disabled: false,
-        },
-      ]
-    }
-
-    if (item.key === 'action_center') {
-      return [
-        {
-          key: item.key,
-          label: item.label,
-          href: '/action-center',
-          disabled: false,
-        },
-      ]
-    }
-
-    const hasAnyCampaignForScanType = item.scanType
-      ? campaigns.some((campaign) => campaign.scan_type === item.scanType)
-      : false
-
-    if (!hasAnyCampaignForScanType || !item.scanType) {
-      return []
-    }
-
-    return [
-      {
-        key: item.key,
-        label: item.label,
-        href: getDashboardModuleHref(item.key as DashboardCategoryModuleKey),
-        disabled: false,
-      },
-    ]
-  })
+  const modules: DashboardModuleNavItem[] = [
+    {
+      key: 'overview',
+      label: 'Overzicht',
+      href: '/dashboard',
+      disabled: false,
+    },
+    {
+      key: 'reports',
+      label: 'Rapporten',
+      href: '/reports',
+      disabled: false,
+    },
+  ]
 
   const admin: DashboardShellNavItem[] = isAdmin
     ? [
@@ -287,4 +250,21 @@ export function getDashboardShellCurrentLabel(pathname: string) {
   if (pathname.startsWith('/beheer')) return 'Setup en beheer'
 
   return 'Overzicht'
+}
+
+export type ClosedCampaignNavItem = {
+  campaignId: string
+  href: string
+  scanType: ScanType
+}
+
+export function buildClosedCampaignNavItems(campaigns: DashboardShellCampaignRef[]): ClosedCampaignNavItem[] {
+  return campaigns
+    .filter((campaign) => !campaign.is_active)
+    .sort((left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime())
+    .map((campaign) => ({
+      campaignId: campaign.campaign_id,
+      href: `/campaigns/${campaign.campaign_id}`,
+      scanType: campaign.scan_type,
+    }))
 }

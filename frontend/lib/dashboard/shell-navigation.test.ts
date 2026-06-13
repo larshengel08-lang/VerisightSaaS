@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import {
+  buildClosedCampaignNavItems,
   buildDashboardShellNavigation,
   getActiveModuleFromLocation,
   getDashboardModuleHref,
   normalizeDashboardModuleFilter,
   normalizeDashboardPortfolioView,
+  type DashboardShellCampaignRef,
 } from './shell-navigation'
 
 describe('dashboard shell navigation', () => {
@@ -53,7 +55,7 @@ describe('dashboard shell navigation', () => {
     },
   ] as const
 
-  it('maps product rail items onto category overview routes instead of a single campaign detail', () => {
+  it('maps product rail to only overview and reports entries', () => {
     const navigation = buildDashboardShellNavigation({
       isAdmin: false,
       currentCampaignPath: '/campaigns/campaign-123',
@@ -74,51 +76,9 @@ describe('dashboard shell navigation', () => {
         disabled: false,
       },
       {
-        key: 'exit',
-        label: 'ExitScan',
-        href: '/dashboard?module=exit',
-        disabled: false,
-      },
-      {
-        key: 'retention',
-        label: 'RetentieScan',
-        href: '/dashboard?module=retention',
-        disabled: false,
-      },
-      {
-        key: 'onboarding',
-        label: 'Onboarding 30-60-90',
-        href: '/dashboard?module=onboarding',
-        disabled: false,
-      },
-      {
-        key: 'pulse',
-        label: 'Pulse',
-        href: '/dashboard?module=pulse',
-        disabled: false,
-      },
-      {
-        key: 'leadership',
-        label: 'Leadership Scan',
-        href: '/dashboard?module=leadership',
-        disabled: false,
-      },
-      {
-        key: 'culture_assessment',
-        label: 'Loep Culture Assessment',
-        href: '/dashboard?module=culture_assessment',
-        disabled: false,
-      },
-      {
         key: 'reports',
         label: 'Rapporten',
         href: '/reports',
-        disabled: false,
-      },
-      {
-        key: 'action_center',
-        label: 'Action Center',
-        href: '/action-center',
         disabled: false,
       },
     ])
@@ -128,7 +88,6 @@ describe('dashboard shell navigation', () => {
   it('keeps admin links separate from buyer overview navigation', () => {
     const navigation = buildDashboardShellNavigation({
       isAdmin: true,
-      canManageActionCenterAssignments: true,
       shellMode: 'full',
       currentCampaignPath: null,
       campaigns: [...campaigns],
@@ -144,17 +103,12 @@ describe('dashboard shell navigation', () => {
       key: 'overview',
       href: '/dashboard',
     })
-    expect(navigation.admin.map((item) => item.label)).toEqual(['Setup', 'Managers', 'Leads', 'Action Center bron'])
-    expect(navigation.modules[3]).toMatchObject({
-      key: 'onboarding',
-      href: '/dashboard?module=onboarding',
-    })
+    expect(navigation.admin.map((item) => item.label)).toEqual(['Setup', 'Leads', 'Learnings'])
   })
 
-  it('shows the managers beheer entry for customer owners who may manage action center assignments', () => {
+  it('returns empty admin for non-admin users', () => {
     const navigation = buildDashboardShellNavigation({
       isAdmin: false,
-      canManageActionCenterAssignments: true,
       shellMode: 'full',
       currentCampaignPath: null,
       campaigns: [...campaigns],
@@ -166,11 +120,7 @@ describe('dashboard shell navigation', () => {
       },
     })
 
-    expect(navigation.admin.map((item) => item.label)).toEqual(['Managers'])
-    expect(navigation.admin[0]).toMatchObject({
-      label: 'Managers',
-      href: '/beheer/managers',
-    })
+    expect(navigation.admin).toEqual([])
   })
 
   it('derives the active module from category filters and real campaign routes', () => {
@@ -219,12 +169,6 @@ describe('dashboard shell navigation', () => {
         href: '/reports',
         disabled: false,
       },
-      {
-        key: 'action_center',
-        label: 'Action Center',
-        href: '/action-center',
-        disabled: false,
-      },
     ])
   })
 
@@ -269,5 +213,19 @@ describe('dashboard shell navigation', () => {
     expect(getDashboardModuleHref('exit')).toBe('/dashboard?module=exit')
     expect(getDashboardModuleHref('retention')).toBe('/dashboard?module=retention')
     expect(getDashboardModuleHref('culture_assessment')).toBe('/dashboard?module=culture_assessment')
+  })
+})
+
+describe('closed campaign sidebar list', () => {
+  const refs: DashboardShellCampaignRef[] = [
+    { campaign_id: 'c1', scan_type: 'exit', is_active: false, created_at: '2026-05-01T00:00:00Z', total_completed: 14 },
+    { campaign_id: 'c2', scan_type: 'retention', is_active: true, created_at: '2026-06-01T00:00:00Z', total_completed: 8 },
+    { campaign_id: 'c3', scan_type: 'exit', is_active: false, created_at: '2026-06-10T00:00:00Z', total_completed: 20 },
+  ]
+
+  it('lists only closed campaigns, newest first, linking to their report', () => {
+    const items = buildClosedCampaignNavItems(refs)
+    expect(items.map((item) => item.campaignId)).toEqual(['c3', 'c1'])
+    expect(items[0].href).toBe('/campaigns/c3')
   })
 })
