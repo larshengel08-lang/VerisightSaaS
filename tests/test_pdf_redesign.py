@@ -20,14 +20,15 @@ def test_build_css_injects_scan_accent_and_sharp_corners():
     assert "border-radius: 0" in css
     assert "'Inter Tight'" in css
     assert "@font-face" in css
-    assert "#3C8D8A" in build_css("retention")
 
 
-def test_accents_defined_for_all_products():
-    for st in ("exit", "retention", "onboarding"):
-        assert st in ACCENTS
-        assert ACCENTS[st]["accent"].startswith("#")
-        assert ACCENTS[st]["accent_lo"].startswith("#")
+def test_accent_is_amber_for_all_products():
+    # Beslissing 2026-06-13: amber is het enige accent; producten verschillen
+    # alleen via eyebrow-tekst, niet via kleur.
+    for st in ("exit", "retention", "onboarding", "culture_assessment"):
+        assert ACCENTS[st]["accent"] == "#E8A020"
+        assert ACCENTS[st]["accent_lo"] == "#B07A10"
+        assert "#E8A020" in build_css(st)
 
 
 from backend.report_html import _cover

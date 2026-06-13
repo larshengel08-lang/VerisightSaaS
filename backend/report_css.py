@@ -2,12 +2,16 @@ from __future__ import annotations
 
 from backend.report_fonts import font_face_css
 
-# Per-scan accent. teal/bruin zijn voorlopig — bevestig visueel in Task 3.
+# Amber is het enige accent (huisaccent, conform homepage-design system).
+# Onderscheid tussen producten loopt via de eyebrow-tekst, niet via kleur.
+# Beslissing 2026-06-13: "amber overal" gekozen na visuele vergelijking van
+# amber/teal/bruin covers — teal/bruin oogden gedempt tegen navy.
+_AMBER = {"accent": "#E8A020", "accent_lo": "#B07A10"}
 ACCENTS: dict[str, dict[str, str]] = {
-    "exit":       {"accent": "#E8A020", "accent_lo": "#B07A10"},
-    "retention":  {"accent": "#3C8D8A", "accent_lo": "#2F6F6C"},
-    "onboarding": {"accent": "#9A6B3F", "accent_lo": "#7A5430"},
-    "culture_assessment": {"accent": "#E8A020", "accent_lo": "#B07A10"},
+    "exit":               dict(_AMBER),
+    "retention":          dict(_AMBER),
+    "onboarding":         dict(_AMBER),
+    "culture_assessment": dict(_AMBER),
 }
 
 # Gedeelde merkkleuren (design system)
