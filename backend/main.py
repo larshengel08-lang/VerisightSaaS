@@ -1142,6 +1142,34 @@ async def open_survey_start(
             tone="info",
         )
 
+    # Single-fill bescherming: als een afgeronde respondent met deze dedup-hash
+    # al bestaat voor deze campagne, geen nieuwe respondent aanmaken.
+    from backend.self_send import hash_dedup_key
+
+    form = await request.form()
+    raw_dedup_key = (form.get("dedup_key") or "").strip()
+    dedup_hash = hash_dedup_key(raw_dedup_key)
+
+    if dedup_hash:
+        already = (
+            db.query(Respondent)
+            .filter(
+                Respondent.campaign_id == campaign.id,
+                Respondent.dedup_key_hash == dedup_hash,
+                Respondent.completed.is_(True),
+            )
+            .first()
+        )
+        if already:
+            return _render_survey_status(
+                request,
+                status_code=409,
+                title="Al ingevuld",
+                heading="U heeft deze vragenlijst al ingevuld",
+                message="Bedankt — uw eerdere antwoorden zijn al meegenomen. Een tweede invulling is niet nodig.",
+                tone="info",
+            )
+
     # Maak anonieme respondent aan — geen PII, geen metadata
     respondent = Respondent(
         campaign_id=campaign.id,
@@ -1150,6 +1178,7 @@ async def open_survey_start(
         role_level=None,
         exit_month=None,
         annual_salary_eur=None,  # AVG — nooit opslaan in open flow
+        dedup_key_hash=dedup_hash or None,
         token_expires_at=datetime.now(timezone.utc) + timedelta(days=90),
     )
     db.add(respondent)

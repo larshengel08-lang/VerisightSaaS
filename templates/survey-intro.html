@@ -137,21 +137,51 @@
     </div>
 
     <form method="POST" action="/survey/open/{{ public_survey_token }}/start" id="start-form">
+      <input type="hidden" name="dedup_key" id="dedup-key" value="" />
       <button type="submit" class="start-btn" id="start-btn">
         Survey starten
       </button>
     </form>
 
+    <div id="already-done" class="privacy-block" style="display:none;">
+      <p><strong>U heeft deze vragenlijst al ingevuld.</strong> Bedankt — een tweede invulling is niet nodig.</p>
+    </div>
+
     <p class="duration-hint">Eenmaal gestart kun je de link 90 dagen opnieuw openen.</p>
   </div>
 
   <script>
-    // Voorkom dubbele submit bij trage verbinding
-    document.getElementById('start-form').addEventListener('submit', function () {
-      const btn = document.getElementById('start-btn');
-      btn.disabled = true;
-      btn.textContent = 'Wordt geladen…';
-    });
+    (function () {
+      var token = "{{ public_survey_token }}";
+      var doneKey = "loep_survey_done_" + token;
+      var idKey = "loep_survey_uuid_" + token;
+      var form = document.getElementById('start-form');
+      var btn = document.getElementById('start-btn');
+
+      // Reeds ingevuld op dit device? Verberg de startknop.
+      if (localStorage.getItem(doneKey)) {
+        form.style.display = 'none';
+        document.getElementById('already-done').style.display = 'block';
+        return;
+      }
+
+      // Genereer/hergebruik een device-UUID; pas vastleggen bij 'Start'.
+      function getUuid() {
+        var existing = localStorage.getItem(idKey);
+        if (existing) return existing;
+        var uuid = (crypto && crypto.randomUUID)
+          ? crypto.randomUUID()
+          : 'u-' + Date.now() + '-' + Math.random().toString(16).slice(2);
+        localStorage.setItem(idKey, uuid);
+        return uuid;
+      }
+
+      form.addEventListener('submit', function () {
+        document.getElementById('dedup-key').value = getUuid();
+        btn.disabled = true;
+        btn.textContent = 'Wordt geladen…';
+      });
+    })();
   </script>
 </body>
 </html>
