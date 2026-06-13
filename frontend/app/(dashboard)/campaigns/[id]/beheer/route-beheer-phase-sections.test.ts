@@ -19,6 +19,10 @@ vi.mock('@/components/dashboard/guided-self-serve-panel', () => ({
   GuidedSelfServePanel: () => createElement('div', null, 'GuidedSelfServePanel'),
 }))
 
+vi.mock('@/components/dashboard/self-send-setup-panel', () => ({
+  SelfSendSetupPanel: () => createElement('div', null, 'SelfSendSetupPanel'),
+}))
+
 import {
   RouteBeheerNowDoingRow,
   RouteBeheerOutputSummary,
@@ -154,6 +158,7 @@ const routeBeheerData: RouteBeheerPageData = {
     launchConfirmedAt: null,
     dueReminderToday: null,
   },
+  publicSurveyToken: null,
 }
 
 describe('routebeheer phase sections', () => {

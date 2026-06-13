@@ -141,6 +141,7 @@ export interface RouteBeheerPageData {
     reminderConfig: unknown
   }
   selfSend: SelfSendBlock
+  publicSurveyToken: string | null
 }
 
 export type RouteBeeheerPageData = RouteBeheerPageData
@@ -752,7 +753,7 @@ export async function fetchRouteBeheerData(args: {
     supabase.from('organizations').select('name').eq('id', stats.organization_id).maybeSingle(),
     supabase
       .from('campaigns')
-      .select('delivery_mode, created_at, enabled_modules, comms_mode')
+      .select('delivery_mode, created_at, enabled_modules, comms_mode, public_survey_token')
       .eq('id', campaignId)
       .maybeSingle(),
     supabase
@@ -809,10 +810,11 @@ export async function fetchRouteBeheerData(args: {
   >[]
   const responseRows = (responsesRaw ?? []) as Array<{ id: string; org_scores: unknown; sdt_scores: unknown }>
   const auditEvents = (auditEventsRaw ?? []) as CampaignAuditEventRecord[]
-  const campaign = (campaignMeta ?? null) as Pick<
-    Campaign,
-    'delivery_mode' | 'created_at' | 'enabled_modules' | 'comms_mode'
-  > | null
+  const campaign = (campaignMeta ?? null) as
+    | (Pick<Campaign, 'delivery_mode' | 'created_at' | 'enabled_modules' | 'comms_mode'> & {
+        public_survey_token: string
+      })
+    | null
 
   const pendingCount = stats.total_invited - stats.total_completed
   const invitesNotSent = respondents.filter((respondent) => !respondent.sent_at && !respondent.completed).length
@@ -1025,6 +1027,7 @@ export async function fetchRouteBeheerData(args: {
       reminderConfig: deliveryRecord?.reminder_config ?? null,
     },
     selfSend,
+    publicSurveyToken: campaign?.public_survey_token ?? null,
   } satisfies RouteBeheerPageData
 }
 

@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import React, { useState } from 'react'
 import { GuidedSelfServePanel } from '@/components/dashboard/guided-self-serve-panel'
+import { SelfSendSetupPanel } from '@/components/dashboard/self-send-setup-panel'
 import { CampaignActions } from '../campaign-actions'
 import { PdfDownloadButton } from '../pdf-download-button'
 import type {
@@ -232,30 +233,46 @@ function RouteBeheerPhaseDetailContent({ data, detail }: { data: RouteBeheerPage
             />
           ) : null}
           {showSelfServeWorkspace ? (
-            <GuidedSelfServePanel
-              campaignId={data.campaignId}
-              scanType={data.scanType}
-              isActive={data.isActive}
-              deliveryMode={data.selfServe.deliveryMode}
-              importReady={data.selfServe.importReady}
-              hasSegmentDeepDive={data.selfServe.hasSegmentDeepDive}
-              totalInvited={data.totalInvited}
-              totalCompleted={data.totalCompleted}
-              invitesNotSent={data.invitesNotSent}
-              hasMinDisplay={data.hasMinDisplay}
-              hasEnoughData={data.hasEnoughData}
-              pendingCount={data.pendingCount}
-              importQaConfirmed={data.selfServe.importQaConfirmed}
-              launchTimingConfirmed={data.selfServe.launchTimingConfirmed}
-              communicationReady={data.selfServe.communicationReady}
-              remindableCount={data.selfServe.remindableCount}
-              unsentRespondents={data.selfServe.unsentRespondents}
-              launchDate={data.launchDate}
-              launchConfirmedAt={data.selfServe.launchConfirmedAt}
-              participantCommsConfig={data.selfServe.participantCommsConfig}
-              reminderConfig={data.selfServe.reminderConfig}
-              memberRole={data.membershipRole}
-            />
+            data.selfSend.isSelfSend ? (
+              <SelfSendSetupPanel
+                campaignId={data.campaignId}
+                scanType={data.scanType}
+                organizationName={data.organizationName ?? 'je organisatie'}
+                publicSurveyToken={data.publicSurveyToken ?? ''}
+                frontendBaseUrl={process.env.NEXT_PUBLIC_SITE_URL ?? ''}
+                invitedCount={data.selfSend.invitedCount}
+                config={data.selfSend.config}
+                reminders={data.selfSend.reminders}
+                launchConfirmedAt={data.selfSend.launchConfirmedAt}
+                totalCompleted={data.totalCompleted}
+                isActive={data.isActive}
+              />
+            ) : (
+              <GuidedSelfServePanel
+                campaignId={data.campaignId}
+                scanType={data.scanType}
+                isActive={data.isActive}
+                deliveryMode={data.selfServe.deliveryMode}
+                importReady={data.selfServe.importReady}
+                hasSegmentDeepDive={data.selfServe.hasSegmentDeepDive}
+                totalInvited={data.totalInvited}
+                totalCompleted={data.totalCompleted}
+                invitesNotSent={data.invitesNotSent}
+                hasMinDisplay={data.hasMinDisplay}
+                hasEnoughData={data.hasEnoughData}
+                pendingCount={data.pendingCount}
+                importQaConfirmed={data.selfServe.importQaConfirmed}
+                launchTimingConfirmed={data.selfServe.launchTimingConfirmed}
+                communicationReady={data.selfServe.communicationReady}
+                remindableCount={data.selfServe.remindableCount}
+                unsentRespondents={data.selfServe.unsentRespondents}
+                launchDate={data.launchDate}
+                launchConfirmedAt={data.selfServe.launchConfirmedAt}
+                participantCommsConfig={data.selfServe.participantCommsConfig}
+                reminderConfig={data.selfServe.reminderConfig}
+                memberRole={data.membershipRole}
+              />
+            )
           ) : null}
         </div>
       ) : detail.key === 'output' ? (
@@ -292,30 +309,46 @@ function RouteBeheerPhaseDetailContent({ data, detail }: { data: RouteBeheerPage
             })}
           </div>
           {showSelfServeWorkspace ? (
-            <GuidedSelfServePanel
-              campaignId={data.campaignId}
-              scanType={data.scanType}
-              isActive={data.isActive}
-              deliveryMode={data.selfServe.deliveryMode}
-              importReady={data.selfServe.importReady}
-              hasSegmentDeepDive={data.selfServe.hasSegmentDeepDive}
-              totalInvited={data.totalInvited}
-              totalCompleted={data.totalCompleted}
-              invitesNotSent={data.invitesNotSent}
-              hasMinDisplay={data.hasMinDisplay}
-              hasEnoughData={data.hasEnoughData}
-              pendingCount={data.pendingCount}
-              importQaConfirmed={data.selfServe.importQaConfirmed}
-              launchTimingConfirmed={data.selfServe.launchTimingConfirmed}
-              communicationReady={data.selfServe.communicationReady}
-              remindableCount={data.selfServe.remindableCount}
-              unsentRespondents={data.selfServe.unsentRespondents}
-              launchDate={data.launchDate}
-              launchConfirmedAt={data.selfServe.launchConfirmedAt}
-              participantCommsConfig={data.selfServe.participantCommsConfig}
-              reminderConfig={data.selfServe.reminderConfig}
-              memberRole={data.membershipRole}
-            />
+            data.selfSend.isSelfSend ? (
+              <SelfSendSetupPanel
+                campaignId={data.campaignId}
+                scanType={data.scanType}
+                organizationName={data.organizationName ?? 'je organisatie'}
+                publicSurveyToken={data.publicSurveyToken ?? ''}
+                frontendBaseUrl={process.env.NEXT_PUBLIC_SITE_URL ?? ''}
+                invitedCount={data.selfSend.invitedCount}
+                config={data.selfSend.config}
+                reminders={data.selfSend.reminders}
+                launchConfirmedAt={data.selfSend.launchConfirmedAt}
+                totalCompleted={data.totalCompleted}
+                isActive={data.isActive}
+              />
+            ) : (
+              <GuidedSelfServePanel
+                campaignId={data.campaignId}
+                scanType={data.scanType}
+                isActive={data.isActive}
+                deliveryMode={data.selfServe.deliveryMode}
+                importReady={data.selfServe.importReady}
+                hasSegmentDeepDive={data.selfServe.hasSegmentDeepDive}
+                totalInvited={data.totalInvited}
+                totalCompleted={data.totalCompleted}
+                invitesNotSent={data.invitesNotSent}
+                hasMinDisplay={data.hasMinDisplay}
+                hasEnoughData={data.hasEnoughData}
+                pendingCount={data.pendingCount}
+                importQaConfirmed={data.selfServe.importQaConfirmed}
+                launchTimingConfirmed={data.selfServe.launchTimingConfirmed}
+                communicationReady={data.selfServe.communicationReady}
+                remindableCount={data.selfServe.remindableCount}
+                unsentRespondents={data.selfServe.unsentRespondents}
+                launchDate={data.launchDate}
+                launchConfirmedAt={data.selfServe.launchConfirmedAt}
+                participantCommsConfig={data.selfServe.participantCommsConfig}
+                reminderConfig={data.selfServe.reminderConfig}
+                memberRole={data.membershipRole}
+              />
+            )
           ) : null}
         </div>
       )}

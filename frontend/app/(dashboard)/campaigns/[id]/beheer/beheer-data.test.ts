@@ -34,7 +34,7 @@ function createSupabaseMock() {
     ['profiles|is_verisight_admin', { data: { is_verisight_admin: false } }],
     ['org_members|role', { data: { role: 'owner' } }],
     ['organizations|name', { data: { name: 'Acme HR' } }],
-    ['campaigns|delivery_mode, created_at, enabled_modules, comms_mode', { data: { delivery_mode: 'guided_self_serve', created_at: '2026-05-01T08:00:00.000Z', enabled_modules: null, comms_mode: 'managed' } }],
+    ['campaigns|delivery_mode, created_at, enabled_modules, comms_mode, public_survey_token', { data: { delivery_mode: 'guided_self_serve', created_at: '2026-05-01T08:00:00.000Z', enabled_modules: null, comms_mode: 'managed', public_survey_token: null } }],
     ['org_members|id', { count: 4 }],
     ['org_invites|id', { count: 1 }],
     [
