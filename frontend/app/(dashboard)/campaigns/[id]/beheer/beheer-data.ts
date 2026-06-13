@@ -17,9 +17,18 @@ import {
   type MemberRole,
   type Respondent,
   type ScanType,
+  type CommsMode,
 } from '@/lib/types'
 import type { CampaignAuditEventRecord } from '@/lib/campaign-audit'
 import { getCustomerActionPermission } from '@/lib/customer-permissions'
+import {
+  computeResponseRatePct,
+  getDueReminders,
+  normalizeSelfSendConfig,
+  normalizeSelfSendReminders,
+  type SelfSendConfig,
+  type SelfSendReminder,
+} from '@/lib/self-send-comms'
 
 type SupabaseLike = Pick<SupabaseClient, 'from'>
 type GuidedSelfServePhase = ReturnType<typeof buildGuidedSelfServeState>['phase']
@@ -131,6 +140,7 @@ export interface RouteBeheerPageData {
     participantCommsConfig: unknown
     reminderConfig: unknown
   }
+  selfSend: SelfSendBlock
 }
 
 export type RouteBeeheerPageData = RouteBeheerPageData
@@ -181,6 +191,41 @@ export function formatRoutePeriodLabel(campaignName: string, createdAt: string) 
     }).format(new Date(createdAt))
   } catch {
     return createdAt
+  }
+}
+
+export interface SelfSendBlock {
+  isSelfSend: boolean
+  invitedCount: number | null
+  responseRatePct: number | null
+  config: SelfSendConfig
+  reminders: SelfSendReminder[]
+  launchConfirmedAt: string | null
+  dueReminderToday: SelfSendReminder | null
+}
+
+export function buildSelfSendBlock(args: {
+  commsMode: CommsMode
+  invitedCount: number | null
+  totalCompleted: number
+  config: unknown
+  reminders: unknown
+  launchConfirmedAt: string | null
+  today: string
+}): SelfSendBlock {
+  const config = normalizeSelfSendConfig(args.config)
+  const reminders = normalizeSelfSendReminders(args.reminders)
+  const isSelfSend = args.commsMode === 'self_send'
+  const due = isSelfSend ? getDueReminders(reminders, config.endDate, args.today) : []
+
+  return {
+    isSelfSend,
+    invitedCount: args.invitedCount,
+    responseRatePct: isSelfSend ? computeResponseRatePct(args.totalCompleted, args.invitedCount) : null,
+    config,
+    reminders,
+    launchConfirmedAt: args.launchConfirmedAt,
+    dueReminderToday: due[0] ?? null,
   }
 }
 
@@ -707,7 +752,7 @@ export async function fetchRouteBeheerData(args: {
     supabase.from('organizations').select('name').eq('id', stats.organization_id).maybeSingle(),
     supabase
       .from('campaigns')
-      .select('delivery_mode, created_at, enabled_modules')
+      .select('delivery_mode, created_at, enabled_modules, comms_mode')
       .eq('id', campaignId)
       .maybeSingle(),
     supabase
@@ -766,7 +811,7 @@ export async function fetchRouteBeheerData(args: {
   const auditEvents = (auditEventsRaw ?? []) as CampaignAuditEventRecord[]
   const campaign = (campaignMeta ?? null) as Pick<
     Campaign,
-    'delivery_mode' | 'created_at' | 'enabled_modules'
+    'delivery_mode' | 'created_at' | 'enabled_modules' | 'comms_mode'
   > | null
 
   const pendingCount = stats.total_invited - stats.total_completed
@@ -907,6 +952,16 @@ export async function fetchRouteBeheerData(args: {
     }),
   )
 
+  const selfSend = buildSelfSendBlock({
+    commsMode: campaign?.comms_mode ?? 'managed',
+    invitedCount: (deliveryRecord?.invited_count as number | null) ?? null,
+    totalCompleted: stats.total_completed,
+    config: deliveryRecord?.self_send_config ?? null,
+    reminders: deliveryRecord?.self_send_reminders ?? null,
+    launchConfirmedAt: deliveryRecord?.launch_confirmed_at ?? null,
+    today: new Date().toISOString().slice(0, 10),
+  })
+
   return {
     campaignId,
     campaignName: stats.campaign_name,
@@ -969,6 +1024,7 @@ export async function fetchRouteBeheerData(args: {
       participantCommsConfig: deliveryRecord?.participant_comms_config ?? null,
       reminderConfig: deliveryRecord?.reminder_config ?? null,
     },
+    selfSend,
   } satisfies RouteBeheerPageData
 }
 

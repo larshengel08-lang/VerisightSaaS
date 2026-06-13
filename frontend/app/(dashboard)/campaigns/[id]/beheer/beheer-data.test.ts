@@ -5,6 +5,7 @@ import { buildDeliveryAutoSignals } from '@/lib/ops-delivery'
 import {
   buildHrRouteBeheerNowDoing,
   buildRouteBeheerLifecycleSteps,
+  buildSelfSendBlock,
   fetchRouteBeheerData,
   formatLatestActivityLabel,
   formatRoutePeriodLabel,
@@ -33,7 +34,7 @@ function createSupabaseMock() {
     ['profiles|is_verisight_admin', { data: { is_verisight_admin: false } }],
     ['org_members|role', { data: { role: 'owner' } }],
     ['organizations|name', { data: { name: 'Acme HR' } }],
-    ['campaigns|delivery_mode, created_at, enabled_modules', { data: { delivery_mode: 'guided_self_serve', created_at: '2026-05-01T08:00:00.000Z', enabled_modules: null } }],
+    ['campaigns|delivery_mode, created_at, enabled_modules, comms_mode', { data: { delivery_mode: 'guided_self_serve', created_at: '2026-05-01T08:00:00.000Z', enabled_modules: null, comms_mode: 'managed' } }],
     ['org_members|id', { count: 4 }],
     ['org_invites|id', { count: 1 }],
     [
@@ -441,5 +442,49 @@ describe('routebeheer source integration', () => {
         { label: 'Startdatum', value: '10 mei 2026' },
       ],
     })
+  })
+})
+
+describe('buildSelfSendBlock', () => {
+  it('returns inactive block for managed campaigns', () => {
+    const block = buildSelfSendBlock({
+      commsMode: 'managed',
+      invitedCount: null,
+      totalCompleted: 0,
+      config: null,
+      reminders: null,
+      launchConfirmedAt: null,
+      today: '2026-06-17',
+    })
+    expect(block.isSelfSend).toBe(false)
+    expect(block.responseRatePct).toBeNull()
+  })
+
+  it('computes response rate against the manual invited count', () => {
+    const block = buildSelfSendBlock({
+      commsMode: 'self_send',
+      invitedCount: 34,
+      totalCompleted: 17,
+      config: { endDate: '2026-06-20', senderName: 'HR' },
+      reminders: [],
+      launchConfirmedAt: '2026-06-15T10:00:00Z',
+      today: '2026-06-17',
+    })
+    expect(block.isSelfSend).toBe(true)
+    expect(block.responseRatePct).toBe(50)
+    expect(block.invitedCount).toBe(34)
+  })
+
+  it('surfaces a reminder that is due today and not yet notified', () => {
+    const block = buildSelfSendBlock({
+      commsMode: 'self_send',
+      invitedCount: 10,
+      totalCompleted: 1,
+      config: { endDate: '2026-06-20' },
+      reminders: [{ id: 'r1', kind: 'relative', daysBeforeEnd: 3, date: null, notifiedAt: null }],
+      launchConfirmedAt: '2026-06-10T10:00:00Z',
+      today: '2026-06-17',
+    })
+    expect(block.dueReminderToday?.id).toBe('r1')
   })
 })

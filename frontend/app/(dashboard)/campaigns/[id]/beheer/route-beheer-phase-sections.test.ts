@@ -138,6 +138,22 @@ const routeBeheerData: RouteBeheerPageData = {
     participantCommsConfig: null,
     reminderConfig: null,
   },
+  selfSend: {
+    isSelfSend: false,
+    invitedCount: null,
+    responseRatePct: null,
+    config: {
+      senderName: '',
+      endDate: null,
+      inviteSubject: '',
+      inviteBody: '',
+      reminderSubject: '',
+      reminderBody: '',
+    },
+    reminders: [],
+    launchConfirmedAt: null,
+    dueReminderToday: null,
+  },
 }
 
 describe('routebeheer phase sections', () => {

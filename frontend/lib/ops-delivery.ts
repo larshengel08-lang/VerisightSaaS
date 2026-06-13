@@ -51,6 +51,9 @@ export interface CampaignDeliveryRecord {
   learning_closed_at: string | null
   created_at: string
   updated_at: string
+  invited_count?: number | null
+  self_send_config?: unknown
+  self_send_reminders?: unknown
 }
 
 export interface CampaignDeliveryCheckpoint {
