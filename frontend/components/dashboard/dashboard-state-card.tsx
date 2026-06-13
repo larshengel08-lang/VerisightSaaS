@@ -29,7 +29,13 @@ export function DashboardStateCard({ state, reminderText }: { state: DashboardSt
 
       {state.showProgress ? (
         <div className="mt-6 max-w-md">
-          <div className="h-2 w-full overflow-hidden rounded-full bg-[color:var(--dashboard-soft)]">
+          <div
+            className="h-2 w-full overflow-hidden rounded-full bg-[color:var(--dashboard-soft)]"
+            role="progressbar"
+            aria-valuenow={Math.min(100, Math.max(0, state.progressPct))}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          >
             <div className="h-full rounded-full bg-[color:var(--dashboard-accent-strong)]" style={{ width: `${Math.min(100, Math.max(0, state.progressPct))}%` }} />
           </div>
           <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--dashboard-muted)]">

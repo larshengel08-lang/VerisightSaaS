@@ -1,10 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { confirmReminderSentAction, closeCampaignAction } from '@/app/(dashboard)/dashboard/dashboard-actions'
 import type { DashboardState } from '@/lib/dashboard/dashboard-state-resolver'
 
 export function DashboardStateActions({ state, reminderText }: { state: DashboardState; reminderText: string }) {
+  const router = useRouter()
   const [phase, setPhase] = useState<'idle' | 'copied' | 'busy'>('idle')
   const [error, setError] = useState<string | null>(null)
 
@@ -21,6 +23,7 @@ export function DashboardStateActions({ state, reminderText }: { state: Dashboar
   }
 
   async function handleConfirmReminder() {
+    setError(null)
     setPhase('busy')
     const result = await confirmReminderSentAction(state.campaignId!)
     if (!result.ok) {
@@ -28,10 +31,11 @@ export function DashboardStateActions({ state, reminderText }: { state: Dashboar
       setPhase('copied')
       return
     }
-    window.location.reload()
+    router.refresh()
   }
 
   async function handleClose() {
+    setError(null)
     const confirmed = confirm('Weet je zeker dat je deze campagne wilt sluiten?\n\nRespondenten kunnen daarna niet meer invullen. Resultaten en het rapport blijven beschikbaar.')
     if (!confirmed) return
     setPhase('busy')
@@ -41,7 +45,7 @@ export function DashboardStateActions({ state, reminderText }: { state: Dashboar
       setPhase('idle')
       return
     }
-    window.location.reload()
+    router.refresh()
   }
 
   const primaryButtonClass =
@@ -59,7 +63,7 @@ export function DashboardStateActions({ state, reminderText }: { state: Dashboar
             {phase === 'busy' ? 'Bevestigen…' : 'Ik heb de herinnering verstuurd'}
           </button>
         )}
-        {error ? <p className="text-xs text-red-600">{error}</p> : null}
+        {error ? <p role="alert" className="text-xs text-red-600">{error}</p> : null}
       </div>
     )
   }
@@ -70,7 +74,7 @@ export function DashboardStateActions({ state, reminderText }: { state: Dashboar
         <button type="button" onClick={handleClose} disabled={phase === 'busy'} className={primaryButtonClass}>
           {phase === 'busy' ? 'Sluiten…' : (state.ctaLabel ?? 'Campagne sluiten')}
         </button>
-        {error ? <p className="text-xs text-red-600">{error}</p> : null}
+        {error ? <p role="alert" className="text-xs text-red-600">{error}</p> : null}
       </div>
     )
   }
