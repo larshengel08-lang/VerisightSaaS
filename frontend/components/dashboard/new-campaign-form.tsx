@@ -11,7 +11,7 @@ import {
   supportsCampaignReportAddOns,
 } from '@/lib/campaign-setup'
 import { createClient } from '@/lib/supabase/client'
-import type { DeliveryMode, Organization, ScanType } from '@/lib/types'
+import type { CommsMode, DeliveryMode, Organization, ScanType } from '@/lib/types'
 import { FACTOR_LABELS, REPORT_ADD_ON_LABELS } from '@/lib/types'
 
 const ORG_FACTORS = ['leadership', 'culture', 'growth', 'compensation', 'workload', 'role_clarity']
@@ -26,6 +26,7 @@ export function NewCampaignForm({ orgs }: Props) {
   const [name, setName] = useState('')
   const [scanType, setScanType] = useState<ScanType>('exit')
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>('baseline')
+  const [commsMode, setCommsMode] = useState<CommsMode>('managed')
   const [modules, setModules] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -58,6 +59,7 @@ export function NewCampaignForm({ orgs }: Props) {
       name,
       scan_type: scanType,
       delivery_mode: deliveryMode,
+      comms_mode: commsMode,
       enabled_modules: modules.length > 0 ? modules : null,
     })
 
@@ -70,6 +72,7 @@ export function NewCampaignForm({ orgs }: Props) {
     setSuccess(true)
     setName('')
     setDeliveryMode('baseline')
+    setCommsMode('managed')
     setTimeout(() => {
       setSuccess(false)
       router.refresh()
@@ -168,6 +171,28 @@ export function NewCampaignForm({ orgs }: Props) {
         }`}
       >
         <p className="font-semibold">{deliveryMode === 'baseline' ? 'Baseline is de standaardroute.' : 'Live alleen na een stabiele baseline.'}</p>
+      </div>
+
+      <div className="border-t border-slate-200 pt-2">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">E-mail &amp; deelnemers</p>
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2">
+        {([
+          { value: 'managed', title: 'Platform verstuurt', body: 'Loep stuurt uitnodigingen via geüploade lijst.' },
+          { value: 'self_send', title: 'HR verstuurt zelf', body: 'Kopieer-sjablonen, één campagnelink, geen e-mailopslag.' },
+        ] as const).map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => setCommsMode(option.value)}
+            className={`rounded-[22px] border p-4 text-left transition-colors ${
+              commsMode === option.value ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-200 bg-white text-slate-700 hover:border-blue-300'
+            }`}
+          >
+            <p className="text-sm font-semibold">{option.title}</p>
+            <p className={`mt-1 text-sm ${commsMode === option.value ? 'text-blue-100' : 'text-slate-500'}`}>{option.body}</p>
+          </button>
+        ))}
       </div>
 
       {supportsCampaignModuleSelection(scanType) ? (
