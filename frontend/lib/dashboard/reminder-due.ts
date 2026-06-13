@@ -1,6 +1,7 @@
 /** Returns the YYYY-MM-DD on which the first reminder becomes due, or null if no launch date. */
 export function getReminderDueDate(launchDate: string | null, delayDays: number): string | null {
   if (!launchDate) return null
+  if (!Number.isFinite(delayDays)) return null
   const base = new Date(`${launchDate}T00:00:00Z`)
   if (Number.isNaN(base.getTime())) return null
   base.setUTCDate(base.getUTCDate() + delayDays)

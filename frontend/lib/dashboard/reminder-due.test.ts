@@ -26,4 +26,16 @@ describe('reminder-due helpers', () => {
   it('ignores a stale reminder sent before the current due date', () => {
     expect(isReminderDue({ launchDate: '2026-06-01', delayDays: 5, today: '2026-06-09', alreadySentAt: '2026-06-03T10:00:00Z' })).toBe(true)
   })
+
+  it('returns null for a non-finite delay', () => {
+    expect(getReminderDueDate('2026-06-01', Number.NaN)).toBeNull()
+  })
+
+  it('handles month rollover when adding the delay', () => {
+    expect(getReminderDueDate('2026-06-28', 5)).toBe('2026-07-03')
+  })
+
+  it('is not due when there is no launch date', () => {
+    expect(isReminderDue({ launchDate: null, delayDays: 5, today: '2026-06-09', alreadySentAt: null })).toBe(false)
+  })
 })
