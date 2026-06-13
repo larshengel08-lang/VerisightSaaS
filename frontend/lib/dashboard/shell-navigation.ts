@@ -46,18 +46,6 @@ export type DashboardShellNavigation = {
 
 export type DashboardShellMode = 'full' | 'action_center_only'
 
-const MODULE_LABELS: Array<{ key: DashboardModuleKey; label: string; scanType?: ScanType }> = [
-  { key: 'overview', label: 'Overzicht' },
-  { key: 'exit', label: 'ExitScan', scanType: 'exit' },
-  { key: 'retention', label: 'RetentieScan', scanType: 'retention' },
-  { key: 'onboarding', label: 'Onboarding 30-60-90', scanType: 'onboarding' },
-  { key: 'pulse', label: 'Pulse', scanType: 'pulse' },
-  { key: 'leadership', label: 'Leadership Scan', scanType: 'leadership' },
-  { key: 'culture_assessment', label: 'Loep Culture Assessment', scanType: 'culture_assessment' },
-  { key: 'reports', label: 'Rapporten' },
-  { key: 'action_center', label: 'Action Center' },
-]
-
 export function normalizeDashboardPortfolioView(view: string | undefined): DashboardPortfolioView {
   if (view === 'building' || view === 'setup' || view === 'closed') {
     return view
@@ -256,6 +244,7 @@ export type ClosedCampaignNavItem = {
   campaignId: string
   href: string
   scanType: ScanType
+  periodLabel: string
 }
 
 export function buildClosedCampaignNavItems(campaigns: DashboardShellCampaignRef[]): ClosedCampaignNavItem[] {
@@ -266,5 +255,6 @@ export function buildClosedCampaignNavItems(campaigns: DashboardShellCampaignRef
       campaignId: campaign.campaign_id,
       href: `/campaigns/${campaign.campaign_id}`,
       scanType: campaign.scan_type,
+      periodLabel: new Intl.DateTimeFormat('nl-NL', { month: 'short', year: 'numeric' }).format(new Date(campaign.created_at)),
     }))
 }

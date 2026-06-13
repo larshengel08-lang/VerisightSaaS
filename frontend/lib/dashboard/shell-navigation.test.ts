@@ -227,5 +227,6 @@ describe('closed campaign sidebar list', () => {
     const items = buildClosedCampaignNavItems(refs)
     expect(items.map((item) => item.campaignId)).toEqual(['c3', 'c1'])
     expect(items[0].href).toBe('/campaigns/c3')
+    expect(items[0].periodLabel).toBe('jun 2026')
   })
 })

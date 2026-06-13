@@ -134,7 +134,7 @@ export function DashboardShellFrame({
                     </div>
                   ) : null}
                   {closedCampaigns.length > 0 ? (
-                    <div className="mt-6 space-y-2 px-2">
+                    <div className="mt-6 space-y-2 px-2" aria-label="Afgesloten campagnes">
                       <p className="px-3 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#66758a]">
                         Afgesloten
                       </p>
@@ -144,7 +144,8 @@ export function DashboardShellFrame({
                           href={item.href}
                           className="block rounded-xl px-4 py-3 text-sm text-[#c8d2dd] transition-colors hover:bg-white/4 hover:text-[#f5f2eb]"
                         >
-                          {SCAN_TYPE_LABELS[item.scanType]}
+                          <p className="font-medium">{SCAN_TYPE_LABELS[item.scanType]}</p>
+                          <p className="mt-1 text-xs leading-5 text-[#8fa1b3]">{item.periodLabel}</p>
                         </Link>
                       ))}
                     </div>
