@@ -2,6 +2,7 @@ import { DashboardShellFrame } from '@/components/dashboard/dashboard-shell'
 import { createClient } from '@/lib/supabase/server'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import { syncPendingOrgInvitesForUser } from '@/lib/supabase/sync-org-invites'
+import { buildClosedCampaignNavItems } from '@/lib/dashboard/shell-navigation'
 import { redirect } from 'next/navigation'
 
 export default async function DashboardLayout({
@@ -37,6 +38,7 @@ export default async function DashboardLayout({
     created_at: campaign.created_at,
     total_completed: campaign.total_completed ?? 0,
   }))
+  const closedCampaigns = buildClosedCampaignNavItems(shellCampaigns)
 
   return (
     <DashboardShellFrame
@@ -47,6 +49,7 @@ export default async function DashboardLayout({
       acceptedCount={acceptedCount}
       portfolioCounts={portfolioCounts}
       campaigns={shellCampaigns}
+      closedCampaigns={closedCampaigns}
     >
       {children}
     </DashboardShellFrame>

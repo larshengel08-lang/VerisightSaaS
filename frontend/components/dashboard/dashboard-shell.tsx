@@ -9,12 +9,14 @@ import {
   buildDashboardShellNavigation,
   getActiveModuleFromLocation,
   ACTION_CENTER_NAV,
+  type ClosedCampaignNavItem,
   type DashboardModuleKey,
   type DashboardModuleNavItem,
   type DashboardPortfolioView,
   type DashboardShellCampaignRef,
   type DashboardShellMode,
 } from '@/lib/dashboard/shell-navigation'
+import { SCAN_TYPE_LABELS } from '@/lib/types'
 
 type PortfolioCounts = Record<DashboardPortfolioView, number>
 
@@ -26,6 +28,7 @@ export function DashboardShellFrame({
   acceptedCount,
   portfolioCounts,
   campaigns,
+  closedCampaigns,
   children,
 }: {
   isAdmin: boolean
@@ -35,6 +38,7 @@ export function DashboardShellFrame({
   acceptedCount: number
   portfolioCounts: PortfolioCounts
   campaigns: DashboardShellCampaignRef[]
+  closedCampaigns: ClosedCampaignNavItem[]
   children: React.ReactNode
 }) {
   void canManageActionCenterAssignments
@@ -129,6 +133,23 @@ export function DashboardShellFrame({
                       ))}
                     </div>
                   ) : null}
+                  {closedCampaigns.length > 0 ? (
+                    <div className="mt-6 space-y-2 px-2" aria-label="Afgesloten campagnes">
+                      <p className="px-3 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#66758a]">
+                        Afgesloten
+                      </p>
+                      {closedCampaigns.map((item) => (
+                        <Link
+                          key={item.campaignId}
+                          href={item.href}
+                          className="block rounded-xl px-4 py-3 text-sm text-[#c8d2dd] transition-colors hover:bg-white/4 hover:text-[#f5f2eb]"
+                        >
+                          <p className="font-medium">{SCAN_TYPE_LABELS[item.scanType]}</p>
+                          <p className="mt-1 text-xs leading-5 text-[#8fa1b3]">{item.periodLabel}</p>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : null}
                 </>
               )}
             </nav>
@@ -193,12 +214,6 @@ export function DashboardShellFrame({
                         Rapporten
                       </Link>
                     ) : null}
-                    <Link
-                      href="/action-center"
-                      className="rounded-full border border-[color:var(--dashboard-ink)] bg-[color:var(--dashboard-ink)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1B2E45]"
-                    >
-                      Action Center
-                    </Link>
                   </>
                 )}
               </div>

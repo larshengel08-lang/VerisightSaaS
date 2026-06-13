@@ -14,4 +14,9 @@ describe('reports overview guardrails', () => {
     expect(source).not.toContain('Wanneer deze bibliotheek opent.')
     expect(source).not.toContain('Bekijk resultaten')
   })
+
+  it('orders available reports newest-first', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+    expect(source).toContain("order('created_at', { ascending: false })")
+  })
 })
