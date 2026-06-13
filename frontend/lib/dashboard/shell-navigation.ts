@@ -160,6 +160,7 @@ export function buildDashboardShellNavigation({
 }): DashboardShellNavigation {
   void currentCampaignPath
   void portfolioCounts
+  void campaigns
 
   if (shellMode === 'action_center_only') {
     return {
