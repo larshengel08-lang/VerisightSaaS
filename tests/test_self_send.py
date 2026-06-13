@@ -84,3 +84,14 @@ def test_open_start_without_dedup_key_still_works(client, db_session):
     _, campaign = _org_with_campaign(db_session)
     r = client.post(f"/survey/open/{campaign.public_survey_token}/start", follow_redirects=False)
     assert r.status_code == 303
+
+
+def test_send_reminder_day_notice_renders_and_reports_missing_recipient():
+    from backend.email import send_reminder_day_notice
+
+    # No recipient -> ok=False, never raises
+    result = send_reminder_day_notice(
+        to_email="", campaign_name="Exit Q2", campaign_id="camp-1", reminder_label="3 dagen voor sluiting"
+    )
+    assert result.ok is False
+    assert result.reason == "missing_recipient"

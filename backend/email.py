@@ -312,6 +312,31 @@ def send_hr_notification(
     )
 
 
+def send_reminder_day_notice(
+    *,
+    to_email: str,
+    campaign_name: str,
+    campaign_id: str,
+    reminder_label: str,
+) -> EmailSendResult:
+    """Operationele nudge naar de HR-beheerder op de geplande reminderdag.
+
+    Stuurt NOOIT naar respondenten — alleen naar de bekende beheerder.
+    """
+    dashboard_url = f"{_require_runtime_url(_FRONTEND_URL, 'FRONTEND_URL')}/campaigns/{campaign_id}/beheer"
+    html = _render_email_template(
+        "reminder_day.html",
+        campaign_name=campaign_name,
+        reminder_label=reminder_label,
+        dashboard_url=dashboard_url,
+    )
+    return _send_result(
+        to=to_email,
+        subject=f"Reminderdag vandaag: {campaign_name}",
+        html=html,
+    )
+
+
 def send_manager_results_notification(
     *,
     to_email: str | None,
