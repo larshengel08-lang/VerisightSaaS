@@ -2,7 +2,13 @@ from __future__ import annotations
 
 from datetime import date, datetime, timezone
 
-from backend.models import Campaign, Organization, OrganizationSecret, Respondent
+from backend.models import (
+    Campaign,
+    CampaignDeliveryRecord,
+    Organization,
+    OrganizationSecret,
+    Respondent,
+)
 from backend.self_send import due_reminders, hash_dedup_key, resolve_reminder_date
 
 
@@ -95,3 +101,41 @@ def test_send_reminder_day_notice_renders_and_reports_missing_recipient():
     )
     assert result.ok is False
     assert result.reason == "missing_recipient"
+
+
+def test_reminder_dispatch_marks_due_reminders_and_calls_email(client, db_session, monkeypatch):
+    org, campaign = _org_with_campaign(db_session)
+    today = date.today().isoformat()
+    db_session.add(
+        CampaignDeliveryRecord(
+            organization_id=org.id,
+            campaign_id=campaign.id,
+            lifecycle_stage="invites_live",
+            launch_confirmed_at=datetime.now(timezone.utc),
+            invited_count=34,
+            self_send_config={"endDate": None},
+            self_send_reminders=[
+                {"id": "r1", "kind": "absolute", "daysBeforeEnd": None, "date": today, "notifiedAt": None}
+            ],
+        )
+    )
+    db_session.commit()
+
+    sent: list[str] = []
+    from backend.email import EmailSendResult
+
+    monkeypatch.setattr(
+        "backend.main.send_reminder_day_notice",
+        lambda **kwargs: sent.append(kwargs["campaign_id"]) or EmailSendResult(ok=True),
+    )
+
+    resp = client.post("/api/internal/reminders/dispatch", headers={"x-admin-token": "test-admin-token"})
+    assert resp.status_code == 200
+    assert resp.json()["notified"] == 1
+    assert sent == [campaign.id]
+
+    # Idempotent: the reminder is now marked notified, second run sends nothing.
+    sent.clear()
+    resp2 = client.post("/api/internal/reminders/dispatch", headers={"x-admin-token": "test-admin-token"})
+    assert resp2.json()["notified"] == 0
+    assert sent == []

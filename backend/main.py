@@ -56,10 +56,19 @@ from backend.email import (
     send_contact_request_result,
     send_hr_notification,
     send_manager_results_notification,
+    send_reminder_day_notice,
     send_survey_invite,
     send_survey_invite_result,
 )
-from backend.models import Campaign, ContactRequest, Organization, OrganizationSecret, Respondent, SurveyResponse
+from backend.models import (
+    Campaign,
+    CampaignDeliveryRecord,
+    ContactRequest,
+    Organization,
+    OrganizationSecret,
+    Respondent,
+    SurveyResponse,
+)
 from backend.products.leadership.definition import DEFAULT_LEADERSHIP_MODULES
 from backend.products.onboarding.definition import DEFAULT_ONBOARDING_MODULES
 from backend.products.pulse.definition import DEFAULT_PULSE_MODULES
@@ -2031,6 +2040,70 @@ async def download_report_internal(
         media_type="text/csv; charset=utf-8" if format == "segment_summary" else "application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+@app.post("/api/internal/reminders/dispatch")
+async def dispatch_self_send_reminders(
+    x_admin_token: Annotated[str | None, Header()] = None,
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    """Stuurt reminderdag-nudges naar HR-beheerders voor self-send campagnes.
+
+    Idempotent: markeert elke gemelde reminder met notifiedAt zodat een tweede
+    run niets opnieuw verstuurt. Bedoeld om periodiek door een externe cron/pinger
+    te worden aangeroepen — er draait geen interne scheduler.
+    """
+    require_backend_admin_token(x_admin_token, is_production=_IS_PRODUCTION)
+
+    from datetime import date as _date
+
+    from sqlalchemy.orm.attributes import flag_modified
+
+    from backend.self_send import due_reminders
+
+    today = _date.today()
+    notified = 0
+
+    records = (
+        db.query(CampaignDeliveryRecord)
+        .filter(CampaignDeliveryRecord.launch_confirmed_at.isnot(None))
+        .all()
+    )
+
+    for record in records:
+        campaign = record.campaign
+        if campaign is None or campaign.comms_mode != "self_send" or not campaign.is_active:
+            continue
+
+        config = record.self_send_config or {}
+        end_value = config.get("endDate")
+        end_date = _date.fromisoformat(end_value) if isinstance(end_value, str) and len(end_value) == 10 else None
+        reminders = record.self_send_reminders or []
+
+        due = due_reminders(reminders, end_date, today)
+        if not due:
+            continue
+
+        org = record.organization
+        to_email = org.contact_email if org else None
+        if not to_email:
+            continue
+
+        for reminder in due:
+            result = send_reminder_day_notice(
+                to_email=to_email,
+                campaign_name=campaign.name,
+                campaign_id=campaign.id,
+                reminder_label=str(reminder.get("label") or "geplande herinnering"),
+            )
+            if result.ok:
+                reminder["notifiedAt"] = datetime.now(timezone.utc).isoformat()
+                notified += 1
+
+        flag_modified(record, "self_send_reminders")
+
+    db.commit()
+    return {"notified": notified}
 
 
 # ---------------------------------------------------------------------------
