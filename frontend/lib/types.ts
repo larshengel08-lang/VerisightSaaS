@@ -11,6 +11,7 @@ export type ScanType =
 export type RiskBand = 'HOOG' | 'MIDDEN' | 'LAAG'
 export type CampaignAddOn = 'segment_deep_dive'
 export type DeliveryMode = 'baseline' | 'live'
+export type CommsMode = 'managed' | 'self_send'
 // Access roles only. These are not billable seats or plan licenses.
 // owner  = klant owner voor launchkritieke klantuitvoering
 // member = interne / ondersteunende rol binnen assisted uitvoering
@@ -46,6 +47,7 @@ export interface Campaign {
   name: string
   scan_type: ScanType
   delivery_mode: DeliveryMode | null
+  comms_mode: CommsMode
   is_active: boolean
   enabled_modules: string[] | null
   created_at: string

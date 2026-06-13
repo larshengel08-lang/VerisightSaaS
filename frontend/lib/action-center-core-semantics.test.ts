@@ -23,6 +23,7 @@ function buildCampaign(overrides: Partial<Campaign> = {}): Campaign {
     name: 'Exit voorjaar',
     scan_type: 'exit',
     delivery_mode: 'live',
+    comms_mode: 'managed',
     is_active: true,
     enabled_modules: null,
     created_at: '2026-04-10T10:00:00.000Z',
