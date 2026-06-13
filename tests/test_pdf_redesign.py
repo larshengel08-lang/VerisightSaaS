@@ -48,7 +48,19 @@ def test_cover_shows_opening_question_and_value_stats_not_metadata():
     assert "Gemiddelde score" not in html
 
 
-from backend.report_html import _bestuurlijke_read
+from backend.report_html import _bestuurlijke_read, _responsbasis
+
+
+def test_responsbasis_shows_counts_and_trustline():
+    html = _responsbasis(invited=45, completed=34, pct=76, period="apr–mei 2026",
+                         population="Alle medewerkers", segment_available=False,
+                         segment_reason="te weinig responses per groep")
+    assert "45" in html and "34" in html and "76" in html
+    assert "Individuen zijn niet herleidbaar" in html
+    assert "te weinig responses per groep" in html
+
+
+
 
 
 def test_bestuurlijke_read_contains_core_blocks():

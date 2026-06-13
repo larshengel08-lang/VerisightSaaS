@@ -373,6 +373,24 @@ def _bestuurlijke_read(*, kernzin: str, totaalbeeld: str,
 </div>"""
 
 
+def _responsbasis(*, invited: int, completed: int, pct: int, period: str,
+                  population: str, segment_available: bool, segment_reason: str = "") -> str:
+    seg = ("Beschikbaar — segmentbeeld verderop in dit rapport." if segment_available
+           else f"Niet beschikbaar — {_h(segment_reason)}.")
+    return f"""<div class="pb sec">
+  <span class="slabel">Responsbasis &amp; reikwijdte</span>
+  <table class="sg"><tr>
+    <td><div class="sc-l">Uitgenodigd</div><div class="sc-v">{invited}</div></td>
+    <td><div class="sc-l">Afgerond</div><div class="sc-v">{completed}</div></td>
+    <td><div class="sc-l">Respons</div><div class="sc-v">{pct}%</div></td>
+    <td><div class="sc-l">Meetperiode</div><div class="sc-v" style="font-size:14px;">{_h(period)}</div></td>
+  </tr></table>
+  <div class="card"><h3>Populatie</h3><p>{_h(population)}</p>
+    <h3 style="margin-top:10px;">Segmentstatus</h3><p style="margin-bottom:0;">{seg}</p></div>
+  <p class="trustline">Dit rapport toont groepspatronen. Individuen zijn niet herleidbaar.</p>
+</div>"""
+
+
 def _stat4(cards: list[dict]) -> str:
     tds = "".join(
         f'<td><div class="sc-l">{_h(c["title"])}</div>'
@@ -902,6 +920,17 @@ def render_exit_report_html(data: dict) -> str:
         strong_label=high_lbl,
         strong_score=high_sc,
         mgmt_q=br_mgmt_q,
+    )
+
+    # ── Responsbasis & reikwijdte (p.03) ──────────────────────────────────────
+    s += _responsbasis(
+        invited=data["n_invited"],
+        completed=data["n_completed"],
+        pct=int(data["completion_pct"]),
+        period=data["campaign_name"],
+        population="Alle medewerkers",
+        segment_available=False,
+        segment_reason="te weinig responses per groep voor herleidbaarheid",
     )
 
     # ── Vertrekcontext ────────────────────────────────────────────────────────
