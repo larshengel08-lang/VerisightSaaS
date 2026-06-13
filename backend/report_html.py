@@ -20,6 +20,7 @@ from typing import Any
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from backend.models import Campaign, Respondent, SurveyResponse
+from backend.report_css import build_css
 from backend.products.shared.registry import get_product_module
 from backend.scan_definitions import get_scan_definition
 from backend.scoring import (
@@ -321,206 +322,11 @@ def _mini_bar_svg(score: float | None, color: str, width: int = 70, height: int 
             f'</svg>')
 
 
-# ─── CSS ──────────────────────────────────────────────────────────────────────
-
-_CSS = r"""
-@page {
-  size: A4;
-  margin: 18mm 16mm 22mm 16mm;
-  @bottom-left {
-    content: "Vertrouwelijk - Loep - Groepsoutput";
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 7.5px; color: #94A3B8;
-  }
-  @bottom-right {
-    content: counter(page) " / " counter(pages);
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 7.5px; color: #94A3B8;
-  }
-}
-@page cover-page { margin: 0; }
-
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 11px; line-height: 1.65; color: #374151;
-  background: #F5F0E8;
-}
-
-.pb       { break-before: page; }
-.no-break { break-inside: avoid; }
-
-/* ── Type ── */
-.slabel {
-  display: block; font-size: 9.5px; font-weight: 700; color: #64748B;
-  letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 12px;
-  border-bottom: 1px solid #E8E0D0; padding-bottom: 6px;
-}
-h3 { font-size: 12px; font-weight: 700; color: #243247; margin-bottom: 5px; }
-p  { margin-bottom: 6px; font-size: 11px; }
-
-/* ── Cover ── */
-.cover { page: cover-page; background: #1E293B; min-height: 297mm; padding: 52px 48px 40px; }
-.cbadge { display: inline-block; background: #D19422; color: #FFF; font-size: 9px;
-  font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
-  padding: 5px 14px; border-radius: 3px; margin-bottom: 30px; }
-.corg   { font-size: 13px; color: #64748B; margin-bottom: 10px; }
-.ctitle { font-size: 32px; font-weight: 700; color: #FFF; line-height: 1.2; margin-bottom: 10px; }
-.csub   { font-size: 11px; color: #94A3B8; }
-.cmeta  { margin-top: 60px; display: table; width: 100%;
-  border-top: 1px solid #334155; padding-top: 22px; }
-.cmc    { display: table-cell; width: 25%; padding-right: 12px; }
-.cml    { font-size: 8.5px; font-weight: 700; color: #475569; letter-spacing: 0.1em;
-  text-transform: uppercase; margin-bottom: 3px; }
-.cmv    { font-size: 14px; font-weight: 700; color: #E2E8F0; }
-
-/* ── Cards ── */
-.card  { background: #FFF; border: 1px solid #E8E0D0; border-radius: 8px;
-  padding: 18px 20px; margin-bottom: 14px; }
-.ca    { border-left: 5px solid #D19422; }
-.cr    { border-left: 5px solid #EF4444; }
-.cg    { border-left: 5px solid #22C55E; }
-.cn    { border-left: 5px solid #1E293B; }
-.cbox  { background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px;
-  padding: 14px 16px; margin-bottom: 12px; }
-
-/* ── Score hero ── */
-.score-hero { font-size: 44px; font-weight: 700; line-height: 1; }
-.rbadge { display: inline-block; font-size: 11px; font-weight: 700;
-  padding: 4px 12px; border-radius: 4px; color: #FFF;
-  margin-left: 10px; vertical-align: middle; }
-
-/* ── Stat grid ── */
-.sg { display: table; width: 100%; border-collapse: separate;
-  border-spacing: 9px 0; margin-bottom: 14px; }
-.sg tr { display: table-row; }
-.sg td { display: table-cell; background: #FFF; border: 1px solid #E8E0D0;
-  border-radius: 7px; padding: 12px 14px; vertical-align: top; }
-.sc-l { font-size: 8.5px; font-weight: 700; color: #64748B; letter-spacing: 0.07em;
-  text-transform: uppercase; margin-bottom: 3px; }
-.sc-v { font-size: 20px; font-weight: 700; color: #243247; line-height: 1.15; margin-bottom: 2px; }
-.sc-b { font-size: 9px; color: #6B7280; line-height: 1.45; }
-
-/* ── Insight grid ── */
-.ig    { display: table; width: 100%; border-collapse: separate;
-  border-spacing: 9px 0; margin-bottom: 9px; }
-.ig tr { display: table-row; }
-.ig td { display: table-cell; background: #FFF; border: 1px solid #E8E0D0;
-  border-radius: 7px; padding: 12px 14px; vertical-align: top; }
-.ig-k  { font-size: 8px; font-weight: 700; color: #94A3B8; letter-spacing: 0.1em;
-  text-transform: uppercase; margin-bottom: 4px; }
-.ig-v  { font-size: 12px; font-weight: 700; color: #243247; margin-bottom: 3px; line-height: 1.3; }
-.ig-n  { font-size: 9px; color: #64748B; line-height: 1.45; }
-
-/* ── Why-block ── */
-.why { background: #FFF; border: 1px solid #E8E0D0; border-left: 5px solid #1E293B;
-  border-radius: 8px; padding: 18px 20px; margin-bottom: 14px; }
-.why-title { font-size: 13px; font-weight: 700; color: #243247; margin-bottom: 14px; }
-.why-grid  { display: table; width: 100%; border-collapse: separate; border-spacing: 9px 0; margin-bottom: 12px; }
-.why-cell  { display: table-cell; vertical-align: top; background: #F8FAFC;
-  border: 1px solid #E2E8F0; border-radius: 6px; padding: 11px 13px; width: 25%; }
-.why-l     { font-size: 8px; font-weight: 700; color: #94A3B8; letter-spacing: 0.08em;
-  text-transform: uppercase; margin-bottom: 3px; }
-.why-v     { font-size: 18px; font-weight: 700; line-height: 1.1; margin-bottom: 1px; }
-.why-b     { font-size: 9px; color: #6B7280; line-height: 1.4; }
-.why-quote { font-size: 10px; color: #475569; font-style: italic; line-height: 1.55;
-  border-top: 1px solid #E2E8F0; padding-top: 11px; margin-top: 2px; }
-
-/* ── Factor row ── */
-.frow  { margin-bottom: 14px; }
-.fname { font-size: 11px; font-weight: 700; color: #243247; }
-.fdesc { font-size: 9px; color: #9CA3AF; margin-bottom: 4px; }
-.flabel-row { display: table; width: 100%; margin-top: 4px; }
-.flabel-score { display: table-cell; vertical-align: middle; font-size: 13px;
-  font-weight: 700; color: #243247; width: 50px; }
-.flabel-txt   { display: table-cell; vertical-align: middle; font-size: 10px; font-weight: 700; }
-.fhi-bot { background: #FEF2F2; border: 1px solid #FECACA;
-  border-radius: 6px; padding: 10px 12px; margin-bottom: 8px; }
-.fhi-top { background: #F0FDF4; border: 1px solid #A7F3D0;
-  border-radius: 6px; padding: 10px 12px; margin-bottom: 8px; }
-
-/* ── Item table ── */
-.item-tbl { width: 100%; border-collapse: collapse; }
-.item-tbl td { padding: 6px 8px; vertical-align: middle; font-size: 10px;
-  color: #374151; border-bottom: 1px solid #F1F5F9; }
-.item-tbl .iq { width: 55%; }
-.item-tbl .is { width: 10%; font-weight: 700; text-align: right; padding-right: 10px; }
-.item-tbl .ib { width: 35%; }
-
-/* ── Theme / Quote ── */
-.theme-card { background: #FFF; border: 1px solid #E8E0D0;
-  border-radius: 7px; padding: 14px 16px; margin-bottom: 10px; }
-.theme-badge { display: inline-block; font-size: 8.5px; font-weight: 700;
-  background: #F1F5F9; color: #475569; padding: 2px 8px; border-radius: 3px;
-  letter-spacing: 0.05em; }
-.ev-badge { display: inline-block; font-size: 8.5px; font-weight: 700;
-  padding: 2px 8px; border-radius: 3px; margin-left: 6px; }
-.quote-txt { font-size: 11px; color: #374151; font-style: italic; line-height: 1.65;
-  margin-top: 8px; padding-left: 10px; border-left: 3px solid #D19422; }
-.quote-anon { font-size: 8.5px; color: #94A3B8; font-style: normal; margin-top: 4px; }
-
-/* ── Playbook ── */
-.play { background: #FFF; border: 1px solid #E8E0D0; border-left: 5px solid #D19422;
-  border-radius: 8px; padding: 16px 18px; margin-bottom: 16px; }
-.play-hdr { display: table; width: 100%; margin-bottom: 10px; }
-.play-bdg { display: table-cell; vertical-align: middle; padding-right: 10px;
-  width: 1%; white-space: nowrap; }
-.play-bdg span { display: inline-block; font-size: 9px; font-weight: 700;
-  letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 9px;
-  border-radius: 3px; color: #FFF; }
-.play-ttl { display: table-cell; vertical-align: middle; font-size: 12px;
-  font-weight: 700; color: #243247; }
-.sub-l    { font-size: 8.5px; font-weight: 700; color: #64748B; letter-spacing: 0.06em;
-  text-transform: uppercase; margin-top: 9px; margin-bottom: 2px; }
-.act-lst  { margin-left: 16px; margin-bottom: 4px; }
-.act-lst li { margin-bottom: 3px; font-size: 10.5px; }
-
-/* ── Steps ── */
-.steps { display: table; width: 100%; border-collapse: separate; border-spacing: 9px 0; }
-.step  { display: table-cell; background: #FFF; border: 1px solid #E8E0D0;
-  border-radius: 7px; padding: 13px 15px; vertical-align: top; width: 25%; }
-.step-no   { font-size: 8.5px; font-weight: 700; color: #D19422; letter-spacing: 0.08em;
-  text-transform: uppercase; margin-bottom: 3px; }
-.step-body { font-size: 10px; color: #374151; line-height: 1.55; }
-
-/* ── Trust ── */
-.tg  { display: table; width: 100%; border-collapse: separate; border-spacing: 9px 0; }
-.tc  { display: table-cell; background: #FFF; border: 1px solid #E8E0D0;
-  border-radius: 6px; padding: 13px 15px; vertical-align: top; width: 33%; }
-.tt  { font-size: 10px; font-weight: 700; color: #243247; margin-bottom: 4px; }
-.tb  { font-size: 9px; color: #374151; line-height: 1.55; }
-
-/* ── Two-col ── */
-.tcol { display: table; width: 100%; border-collapse: separate; border-spacing: 14px 0; }
-.tc-l { display: table-cell; vertical-align: top; width: 55%; }
-.tc-r { display: table-cell; vertical-align: top; width: 45%; }
-
-/* ── Appendix ── */
-.app-tbl { width: 100%; border-collapse: collapse; font-size: 9px; }
-.app-tbl th { background: #F1F5F9; color: #475569; font-weight: 700;
-  padding: 5px 8px; text-align: left; border-bottom: 1px solid #E2E8F0; }
-.app-tbl td { padding: 4px 8px; border-bottom: 1px solid #F1F5F9; vertical-align: middle; }
-.app-tbl .aq { width: 58%; color: #374151; }
-.app-tbl .as { width: 10%; font-weight: 700; text-align: right; padding-right: 10px; }
-.app-tbl .ab { width: 32%; }
-
-/* ── Misc ── */
-.sec { margin-bottom: 24px; }
-.empty-state { background: #FFF; border: 1px dashed #E8E0D0; border-radius: 6px;
-  padding: 18px; text-align: center; color: #94A3B8; font-size: 10px; }
-.seg-badge { display: inline-block; font-size: 8.5px; font-weight: 700;
-  padding: 2px 8px; border-radius: 3px; margin-right: 5px; }
-.legend-dot { display: inline-block; width: 10px; height: 10px;
-  border-radius: 2px; margin-right: 5px; vertical-align: middle; }
-"""
-
-
 # ─── Document wrapper ─────────────────────────────────────────────────────────
 
-def _doc(title: str, body: str) -> str:
+def _doc(title: str, body: str, scan_type: str = "exit") -> str:
     return (f'<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8">'
-            f'<title>{_h(title)}</title><style>{_CSS}</style></head>'
+            f'<title>{_h(title)}</title><style>{build_css(scan_type)}</style></head>'
             f'<body>{body}</body></html>')
 
 
@@ -1408,7 +1214,7 @@ def render_exit_report_html(data: dict) -> str:
 
     # ── Methodiek ─────────────────────────────────────────────────────────────
     s += _trust_page("exit")
-    return _doc(f"ExitScan — {data['campaign_name']}", s)
+    return _doc(f"ExitScan — {data['campaign_name']}", s, scan_type="exit")
 
 
 # ─── RetentieScan renderer ───────────────────────────────────────────────────
@@ -1764,7 +1570,7 @@ def render_retention_report_html(data: dict) -> str:
 
     # ── 12. Methodiek actieve populatie ───────────────────────────────────────
     body += _trust_page(ST)
-    return _doc(f"RetentieScan — {data['campaign_name']}", body)
+    return _doc(f"RetentieScan — {data['campaign_name']}", body, scan_type="retention")
 
 
 # ─── OnboardingScan renderer ──────────────────────────────────────────────────
@@ -2037,7 +1843,7 @@ def render_onboarding_report_html(data: dict) -> str:
 
     # ── 11. Methodiek onboarding ──────────────────────────────────────────────
     body += _trust_page(ST)
-    return _doc(f"Onboarding — {data['campaign_name']}", body)
+    return _doc(f"Onboarding — {data['campaign_name']}", body, scan_type="onboarding")
 
 
 # ─── Dispatcher + PDF ────────────────────────────────────────────────────────
