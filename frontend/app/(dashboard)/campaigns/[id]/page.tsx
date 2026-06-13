@@ -66,9 +66,12 @@ export default async function CampaignPage({ params }: Props) {
   ])
 
   const reminderConfig = normalizeReminderConfig(deliveryRecord?.reminder_config ?? null)
+  // reportReady = "response threshold met". Pass isActive:false so the threshold is
+  // checked independent of the live-campaign gate — this lets State 3 "Voldoende respons —
+  // sluit de campagne" fire for culture_assessment too (its report releases only on close).
   const reportReady = isDashboardReleaseReady(stats.total_completed, {
     scanType: stats.scan_type,
-    isActive: stats.is_active,
+    isActive: false,
   })
 
   const state = resolveDashboardState({
