@@ -46,3 +46,22 @@ def test_cover_shows_opening_question_and_value_stats_not_metadata():
     assert "VERTROUWELIJK" in html
     assert "Pagina" not in html
     assert "Gemiddelde score" not in html
+
+
+from backend.report_html import _bestuurlijke_read
+
+
+def test_bestuurlijke_read_contains_core_blocks():
+    html = _bestuurlijke_read(
+        kernzin="Het vertrekbeeld is gemengd; groeiperspectief springt eruit.",
+        totaalbeeld="Drie factoren scoren laag. Eén factor is relatief sterk.",
+        primary_label="Groeiperspectief", primary_score=4.2, primary_color="#C0392B",
+        why_cells_html="<td class='why-cell'><div class='why-l'>Score</div><div class='why-v'>4.2</div></td>",
+        strong_label="Werksfeer", strong_score=7.1,
+        mgmt_q="Welke loopbaanstappen ontbreken voor deze groep?",
+    )
+    assert "Groeiperspectief" in html
+    assert 'class="why"' in html
+    assert "Werksfeer" in html
+    assert "Welke loopbaanstappen" in html
+    assert "p.03" in html or "responsbasis" in html.lower()

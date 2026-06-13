@@ -352,6 +352,27 @@ def _cover(*, scan_label: str, scan_type: str, org_name: str, period: str,
 </div>"""
 
 
+def _bestuurlijke_read(*, kernzin: str, totaalbeeld: str,
+                       primary_label: str, primary_score: float | None, primary_color: str,
+                       why_cells_html: str, strong_label: str, strong_score: float | None,
+                       mgmt_q: str) -> str:
+    return f"""<div class="pb sec">
+  <span class="slabel">Bestuurlijke read</span>
+  <h2 style="margin-bottom:14px;">{_h(kernzin)}</h2>
+  <p style="font-size:11.5px;color:#374151;max-width:62ch;margin-bottom:18px;">{_h(totaalbeeld)}</p>
+  <div class="why">
+    <div class="why-title">Waarom {_h(primary_label)} bovenaan staat</div>
+    <table class="why-grid"><tr>{why_cells_html}</tr></table>
+  </div>
+  <table class="sg"><tr>
+    <td><div class="sc-l">Primaire factor</div><div class="sc-v" style="color:{primary_color};">{_score_str(primary_score)}</div><div class="sc-b">{_h(primary_label)}</div></td>
+    <td><div class="sc-l">Relatief sterk</div><div class="sc-v">{_score_str(strong_score)}</div><div class="sc-b">{_h(strong_label)} — wat w&eacute;l werkt</div></td>
+    <td><div class="sc-l">Responsbasis</div><div class="sc-v">Zie p.03</div><div class="sc-b">reikwijdte &amp; betrouwbaarheid</div></td>
+  </tr></table>
+  <div class="card accent"><h3>Eerste managementvraag</h3><p style="margin-bottom:0;">{_h(mgmt_q)}</p></div>
+</div>"""
+
+
 def _stat4(cards: list[dict]) -> str:
     tds = "".join(
         f'<td><div class="sc-l">{_h(c["title"])}</div>'
@@ -822,43 +843,8 @@ def render_exit_report_html(data: dict) -> str:
     if high_lbl and high_lbl != low_lbl:
         exec_line += f" {high_lbl} scoort relatief sterk ({_score_str(high_sc)})."
 
-    gauge_html = _gauge_svg(avg_risk, fl, fcol, width=200)
-    bc = data["band_counts"]
-    # Respondentverdeling: gebruik frictielabels, niet factorlabels
-    stacked = _stacked_bar_svg([
-        ("Sterk frictiebeeld",   bc.get("HOOG",0),   "#EF4444"),
-        ("Gemengd vertrekbeeld", bc.get("MIDDEN",0), "#F59E0B"),
-        ("Laag frictiebeeld",    bc.get("LAAG",0),   "#22C55E"),
-    ], total=n, width=320, height=22)
-
-    stat_cards = [
-        {"title": "Laagste factor",   "value": low_lbl or "&#x2014;",  "body": _score_str(low_sc) + " — " + _factor_label(low_sc)},
-        {"title": "Relatief sterk",   "value": high_lbl or "&#x2014;", "body": _score_str(high_sc) + " — " + _factor_label(high_sc)},
-        {"title": "Meest genoemde reden", "value": er_top or "&#x2014;",
-         "body": f"{data['exit_r_dist'][0]['count']}x genoemd" if data["exit_r_dist"] else ""},
-        {"title": "Respons",          "value": f"{n}/{data['n_invited']}", "body": f"{data['completion_pct']}%"},
-    ]
-
-    s += f"""<div class="pb sec">
-  <span class="slabel">Samenvatting</span>
-  <div class="card ca" style="margin-bottom:14px;">
-    <div class="tcol">
-      <div class="tc-l" style="padding-right:10px;">
-        <p style="font-size:12px;font-weight:700;color:#243247;line-height:1.5;margin-bottom:10px;">{_h(exec_line)}</p>
-        <div style="margin-bottom:10px;">{stacked}</div>
-        <div style="font-size:9px;color:#64748B;margin-top:5px;">
-          <span class="legend-dot" style="background:#EF4444;"></span>Sterk frictiebeeld: {bc.get("HOOG",0)}&times;&nbsp;&nbsp;
-          <span class="legend-dot" style="background:#F59E0B;"></span>Gemengd vertrekbeeld: {bc.get("MIDDEN",0)}&times;&nbsp;&nbsp;
-          <span class="legend-dot" style="background:#22C55E;"></span>Laag frictiebeeld: {bc.get("LAAG",0)}&times;
-        </div>
-      </div>
-      <div class="tc-r" style="text-align:center;">{gauge_html}</div>
-    </div>
-  </div>
-  {_stat4(stat_cards)}
-</div>"""
-
-    # ── Waarom topfactor bovenaan staat ───────────────────────────────────────
+    # ── Bestuurlijke read ─────────────────────────────────────────────────────
+    # Build why_cells for the primary (lowest-scoring) factor
     if top_fkeys:
         tf      = top_fkeys[0]
         tf_lbl  = FACTOR_LABELS_NL.get(tf, tf)
@@ -872,12 +858,6 @@ def render_exit_report_html(data: dict) -> str:
         items_in   = fim.get(tf, [])
         i_scores   = [(ik, q, oim.get(ik)) for ik, q in items_in if oim.get(ik) is not None]
         low_item   = min(i_scores, key=lambda x: x[2]) if i_scores else None
-        mgmt_q     = _mgmt_q(tf, "exit")
-
-        open_match = next((t for t in data["open_texts"]
-                           if any(kw in t.lower() for kw in
-                                  THEME_KEYWORDS.get(next((k for k in THEME_KEYWORDS
-                                                           if tf in k.lower()), ""), []))), None)
 
         why_cells = ""
         if er_n:
@@ -891,57 +871,38 @@ def render_exit_report_html(data: dict) -> str:
         if cont_n:
             why_cells += f'<td class="why-cell"><div class="why-l">Speelt ook mee</div><div class="why-v">{cont_n}&times;</div><div class="why-b">als meespelende context</div></td>'
 
-        s += f"""<div class="sec">
-  <span class="slabel">Waarom {_h(tf_lbl)} bovenaan staat</span>
-  <div class="why">
-    <div class="why-title">{_h(tf_lbl)} komt in meerdere lagen terug: als vertrekreden, als factorscore, op itemniveau en in open toelichtingen.</div>
-    <table class="why-grid"><tr>{why_cells}</tr></table>
-    {"<div class='why-quote'>\"" + _h(open_match) + "\"<div class='quote-anon'>Geanonimiseerde toelichting</div></div>" if open_match else ""}
-    {"<div style='font-size:10px;color:#475569;border-top:1px solid #E2E8F0;padding-top:10px;margin-top:4px;'><strong>Eerste managementvraag:</strong> " + _h(mgmt_q) + "</div>" if mgmt_q else ""}
-  </div>
-</div>"""
+        primary_fkey  = tf
+        primary_label = tf_lbl
+        primary_sc    = low_sc
+        primary_col   = _factor_color(low_sc)
+        br_mgmt_q     = _mgmt_q(tf, "exit")
+    else:
+        why_cells     = ""
+        primary_fkey  = low_f[0] if low_f else None
+        primary_label = low_lbl
+        primary_sc    = low_sc
+        primary_col   = _factor_color(low_sc)
+        br_mgmt_q     = _mgmt_q(low_f[0], "exit") if low_f else ""
 
-    # ── Wat valt op? ──────────────────────────────────────────────────────────
-    low_sdt_key = min(sdt_a, key=sdt_a.get) if sdt_a else None
-    er0         = data["exit_r_dist"][0] if data["exit_r_dist"] else None
-    ct0         = data["cont_dist"][0]   if data["cont_dist"]   else None
+    totaalbeeld = (
+        f"{low_lbl} vraagt als eerste aandacht. "
+        f"{high_lbl} laat zien wat wél werkt. "
+        f"De responsbasis bepaalt hoe stevig dit beeld is — zie p.03."
+    ) if low_lbl and high_lbl and low_lbl != high_lbl else (
+        f"{low_lbl} vraagt als eerste aandacht. De responsbasis bepaalt hoe stevig dit beeld is — zie p.03."
+    ) if low_lbl else "Zie factoranalyse voor details — zie p.03 voor de responsbasis."
 
-    def _ig(kicker: str, value: str, note: str) -> str:
-        return (f'<td><div class="ig-k">{_h(kicker)}</div>'
-                f'<div class="ig-v">{_h(value)}</div>'
-                f'<div class="ig-n">{_h(note)}</div></td>')
-
-    row1 = "".join([
-        _ig("Laagste factor", f"{low_lbl}" if low_lbl else "&#x2014;",
-            f"{_score_str(low_sc)} — {_factor_label(low_sc)}"),
-        _ig("Relatief sterk",  f"{high_lbl}" if high_lbl else "&#x2014;",
-            f"{_score_str(high_sc)} — minder leidend in dit beeld"),
-        _ig("Meest genoemde vertrekreden",
-            f"{er0['label']}" if er0 else "&#x2014;",
-            f"{er0['count']}x in deze batch" if er0 else ""),
-        _ig("Wat speelde daarnaast mee",
-            f"{ct0['label']}" if ct0 else "&#x2014;",
-            f"{ct0['count']}x als meespelende context" if ct0 else ""),
-    ])
-    row2 = "".join([
-        _ig("Laagste basisbehoefte",
-            SDT_LABELS.get(low_sdt_key, "&#x2014;") if low_sdt_key else "&#x2014;",
-            f"{_score_str(sdt_a.get(low_sdt_key))} — {SDT_HELP.get(low_sdt_key,'')}" if low_sdt_key else ""),
-        _ig("Open toelichting",
-            f'"{data["open_texts"][0][:60]}"' if data["open_texts"] else "Geen open antwoorden",
-            "Zie open toelichtingen verderop"),
-        _ig("Eerste managementvraag",
-            _mgmt_q(top_fkeys[0], "exit") if top_fkeys else "Zie managementduiding",
-            "Startpunt voor het managementgesprek"),
-        _ig("Hoe stevig is dit beeld?",
-            "Stevig" if n >= 20 else "Opbouwend" if n >= 10 else "Indicatief",
-            f"{n} responses — {'voldoende voor patroonduiding' if n >= 10 else 'patroonduiding beperkt'}"),
-    ])
-    s += f"""<div class="sec">
-  <span class="slabel">Wat valt op?</span>
-  <table class="ig" style="margin-bottom:9px;"><tr>{row1}</tr></table>
-  <table class="ig"><tr>{row2}</tr></table>
-</div>"""
+    s += _bestuurlijke_read(
+        kernzin=exec_line,
+        totaalbeeld=totaalbeeld,
+        primary_label=primary_label,
+        primary_score=primary_sc,
+        primary_color=primary_col,
+        why_cells_html=why_cells,
+        strong_label=high_lbl,
+        strong_score=high_sc,
+        mgmt_q=br_mgmt_q,
+    )
 
     # ── Vertrekcontext ────────────────────────────────────────────────────────
     exit_chart = _reason_chart_svg([(r["label"], r["count"]) for r in data["exit_r_dist"]], n, width=340) \
