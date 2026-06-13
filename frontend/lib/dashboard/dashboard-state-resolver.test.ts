@@ -98,6 +98,18 @@ describe('resolveDashboardState', () => {
     expect(state.primaryMessage).toBe('Campagne is verlopen — sluit nu af')
   })
 
+  it('State 3 — expired fires even when closesAt is a full ISO timestamp', () => {
+    const state = resolveDashboardState(
+      baseInput({
+        campaign: { ...baseInput().campaign!, totalCompleted: 12 },
+        closesAt: '2026-06-05T22:00:00Z',
+        today: '2026-06-06',
+      }),
+    )
+    expect(state.kind).toBe('action')
+    expect(state.actionVariant).toBe('expired')
+  })
+
   it('State 3b — processing/generating when closed and enough responses but report not yet ready', () => {
     const state = resolveDashboardState(
       baseInput({

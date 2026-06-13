@@ -172,7 +172,8 @@ export function resolveDashboardState(input: DashboardStateInput): DashboardStat
   }
 
   // Priority 3 — expired (close date reached). Disabled while closesAt is null.
-  const expired = Boolean(input.closesAt) && input.today >= (input.closesAt as string)
+  // Compare date-only portions so a full ISO closesAt timestamp still fires on the close day.
+  const expired = input.closesAt !== null && input.today.slice(0, 10) >= input.closesAt.slice(0, 10)
   if (expired) {
     const enough = campaign.totalCompleted >= thresholds.dashboardMin
     return {
