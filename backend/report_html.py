@@ -332,20 +332,23 @@ def _doc(title: str, body: str, scan_type: str = "exit") -> str:
 
 # ─── Shared blocks ────────────────────────────────────────────────────────────
 
-def _cover(scan_label: str, org_name: str, campaign_name: str,
-           generated_at: str, n: int, mode: str) -> str:
-    r_basis = "Stevig" if n >= 20 else "Opbouwend" if n >= 10 else "Indicatief"
+def _cover(*, scan_label: str, scan_type: str, org_name: str, period: str,
+           opening_question: str, stats: list[tuple[str, str]]) -> str:
+    cells = "".join(
+        f'<div class="cmc"><div class="cml">{_h(label)}</div><div class="cmv">{_h(value)}</div></div>'
+        for label, value in stats[:3]
+    )
     return f"""<div class="cover">
-  <div class="cbadge">{_h(scan_label)}</div>
-  <div class="corg">{_h(org_name)}</div>
-  <div class="ctitle">{_h(campaign_name)}</div>
-  <div class="csub">Managementrapport &bull; Groepsoutput &bull; Vertrouwelijk</div>
-  <div class="cmeta">
-    <div class="cmc"><div class="cml">Respondenten</div><div class="cmv">{n}</div></div>
-    <div class="cmc"><div class="cml">Type scan</div><div class="cmv">{_h(mode)}</div></div>
-    <div class="cmc"><div class="cml">Datum</div><div class="cmv" style="font-size:11px;">{_h(generated_at)}</div></div>
-    <div class="cmc"><div class="cml">Responsbasis</div><div class="cmv" style="font-size:11px;">{r_basis}</div></div>
+  <div class="cover-rings"></div>
+  <div class="cover-top">
+    <div class="cwm">Loep<span class="dot">.</span></div>
+    <div class="cconf">VERTROUWELIJK</div>
   </div>
+  <div class="ceyebrow">{_h(scan_label)}</div>
+  <div class="cbar"></div>
+  <h1 class="ctitle">{_h(opening_question)}</h1>
+  <div class="csub">{_h(org_name)} &nbsp;&middot;&nbsp; {_h(period)} &nbsp;&middot;&nbsp; Managementrapport</div>
+  <div class="cmeta">{cells}</div>
 </div>"""
 
 
@@ -789,15 +792,22 @@ def render_exit_report_html(data: dict) -> str:
     low_f    = sorted_f[0]  if sorted_f else None
     high_f   = sorted_f[-1] if sorted_f else None
 
-    # ── Cover ─────────────────────────────────────────────────────────────────
-    s = _cover(data["scan_lbl"], data["org_name"], data["campaign_name"],
-               data["generated_at"], n, data["delivery_mode"])
-
     # ── Executive summary ─────────────────────────────────────────────────────
     low_lbl  = FACTOR_LABELS_NL.get(low_f[0], "")  if low_f  else ""
     low_sc   = low_f[1]                             if low_f  else None
     high_lbl = FACTOR_LABELS_NL.get(high_f[0], "") if high_f else ""
     high_sc  = high_f[1]                            if high_f else None
+
+    # ── Cover ─────────────────────────────────────────────────────────────────
+    opening_q = "Wat speelde mee bij vertrek?"
+    primary_signal = high_lbl or low_lbl or "—"
+    cover_stats = [
+        ("Respondenten", str(n)),
+        ("Respons", f"{data['completion_pct']}%"),
+        ("Primair signaal", primary_signal),
+    ]
+    s = _cover(scan_label=data["scan_lbl"], scan_type="exit", org_name=data["org_name"],
+               period=data["campaign_name"], opening_question=opening_q, stats=cover_stats)
     er_top   = data["exit_r_dist"][0]["label"] if data["exit_r_dist"] else ""
 
     # Directe executive copy
@@ -1262,8 +1272,18 @@ def render_retention_report_html(data: dict) -> str:
         ("Stabiel behoudsbeeld",     bc.get("LAAG",0),   "#22C55E"),
     ], total=n, width=320, height=22)
 
+    _ret_primary = high_lbl or low_lbl or "—"
+    _ret_cover = _cover(
+        scan_label=data["scan_lbl"], scan_type="retention", org_name=data["org_name"],
+        period=data["campaign_name"], opening_question="Waar staat behoud nu onder druk?",
+        stats=[
+            ("Respondenten", str(n)),
+            ("Respons", f"{data['completion_pct']}%"),
+            ("Primair signaal", _ret_primary),
+        ],
+    )
     body = f"""
-{_cover(data["scan_lbl"], data["org_name"], data["campaign_name"], data["generated_at"], n, data["delivery_mode"])}
+{_ret_cover}
 <div class="pb sec">
   <span class="slabel">Samenvatting behoudsbeeld</span>
   <div class="card ca" style="margin-bottom:14px;">
@@ -1607,8 +1627,20 @@ def render_onboarding_report_html(data: dict) -> str:
         {"title": "Stay-intent",       "value": _score_str(avg_si),          "body": "Verblijfsintentie early-stage"},
         {"title": "Responsbasis",      "value": f"{n}/{data['n_invited']}",  "body": f"{data['completion_pct']}% voltooid"},
     ]
+    _ob_high_lbl = _fl(high_f[0], ST) if high_f else ""
+    _ob_low_lbl  = _fl(low_f[0], ST)  if low_f  else ""
+    _ob_primary  = _ob_high_lbl or _ob_low_lbl or "—"
+    _ob_cover = _cover(
+        scan_label=data["scan_lbl"], scan_type="onboarding", org_name=data["org_name"],
+        period=data["campaign_name"], opening_question="Hoe landen uw nieuwe medewerkers?",
+        stats=[
+            ("Respondenten", str(n)),
+            ("Respons", f"{data['completion_pct']}%"),
+            ("Primair signaal", _ob_primary),
+        ],
+    )
     body = f"""
-{_cover(data["scan_lbl"], data["org_name"], data["campaign_name"], data["generated_at"], n, data["delivery_mode"])}
+{_ob_cover}
 <div class="pb sec">
   <span class="slabel">Samenvatting onboardingsbeeld</span>
   <div class="card ca" style="margin-bottom:14px;">

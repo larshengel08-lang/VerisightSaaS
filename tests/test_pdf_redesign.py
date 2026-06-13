@@ -28,3 +28,20 @@ def test_accents_defined_for_all_products():
         assert st in ACCENTS
         assert ACCENTS[st]["accent"].startswith("#")
         assert ACCENTS[st]["accent_lo"].startswith("#")
+
+
+from backend.report_html import _cover
+
+
+def test_cover_shows_opening_question_and_value_stats_not_metadata():
+    html = _cover(
+        scan_label="ExitScan", scan_type="exit", org_name="Acme BV",
+        period="Q2 2026", opening_question="Wat speelde mee bij vertrek?",
+        stats=[("Respondenten", "34"), ("Respons", "76%"), ("Primair signaal", "Groeiperspectief")],
+    )
+    assert "Wat speelde mee bij vertrek?" in html
+    assert "Groeiperspectief" in html
+    assert "ExitScan" in html
+    assert "VERTROUWELIJK" in html
+    assert "Pagina" not in html
+    assert "Gemiddelde score" not in html
