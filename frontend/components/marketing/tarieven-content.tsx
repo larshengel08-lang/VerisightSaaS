@@ -217,10 +217,10 @@ function CtaBand() {
               Prijs in context
             </div>
             <h2 style={{ fontFamily: FF, fontSize: 'clamp(22px,2.8vw,32px)', fontWeight: 400, letterSpacing: '-.02em', color: T.ink, lineHeight: 1.15, marginBottom: 12 }}>
-              Twijfelt u welke eerste route nu het best past?
+              Twijfelt u welke scan nu het best past?
             </h2>
             <p style={{ fontSize: 14, lineHeight: 1.7, color: T.inkSoft, maxWidth: '52ch' }}>
-              Gebruik het kennismakingsgesprek om route, timing en privacy kort te toetsen. Zo blijft de eerste stap
+              Gebruik het kennismakingsgesprek om scan, timing en privacy kort te toetsen. Zo blijft de eerste stap
               overzichtelijk en weet u wat u direct terugkrijgt.
             </p>
             </div>
@@ -228,10 +228,10 @@ function CtaBand() {
           <Reveal delay={0.08} from="right">
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <Link href={ctaHref} style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14, fontWeight: 600, padding: '12px 26px', color: '#fff', background: AC.deep }}>
-              Plan een kennismaking <Arrow />
+              Bespreek uw vraagstuk <Arrow />
             </Link>
-            <Link href="/aanpak" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14, fontWeight: 500, padding: '11px 24px', color: T.inkSoft, border: `1px solid ${T.rule}` }}>
-              Bekijk de aanpak
+            <Link href="/producten" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14, fontWeight: 500, padding: '11px 24px', color: T.inkSoft, border: `1px solid ${T.rule}` }}>
+              Bekijk de scans
             </Link>
             </div>
           </Reveal>
