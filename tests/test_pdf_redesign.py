@@ -119,9 +119,9 @@ from backend.report_html import _behoudscontext
 
 
 def test_behoudscontext_shows_stay_intent_and_signal():
-    html = _behoudscontext(retention_score=6.4, stay_pct=72, leave_pct=18,
+    html = _behoudscontext(retention_score=6.4, stay_intent=7.2, turnover=1.8,
                            engagement=5.9, primary_factor="Autonomie")
-    assert "72" in html and "Autonomie" in html
+    assert "7.2" in html and "Autonomie" in html
     assert "behoud" in html.lower()
 
 

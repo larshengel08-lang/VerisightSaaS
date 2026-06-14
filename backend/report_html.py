@@ -918,8 +918,8 @@ def _vertrekcontext(*, exit_reasons: list[tuple[str, int]],
 
 # ─── Behoudscontext (T7-retention) ───────────────────────────────────────────
 
-def _behoudscontext(*, retention_score: float | None, stay_pct: int | None,
-                    leave_pct: int | None, engagement: float | None,
+def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
+                    turnover: float | None, engagement: float | None,
                     primary_factor: str) -> str:
     """Retention-exclusive section: actuele behoudscontext op groepsniveau."""
     def _stat_cell(label: str, value: str, note: str = "") -> str:
@@ -931,11 +931,12 @@ def _behoudscontext(*, retention_score: float | None, stay_pct: int | None,
     if retention_score is not None:
         col = _factor_color(retention_score)
         cells += f'<td><div class="sc-l">Behoudssignaal</div><div class="sc-v" style="color:{col};">{retention_score:.1f}/10</div><div class="sc-b">groepsgemiddelde actieve populatie</div></td>'
-    if stay_pct is not None:
-        cells += _stat_cell("Blijfintentie", f"{stay_pct}%", "overweegt te blijven")
-    if leave_pct is not None:
-        lcol = "#EF4444" if leave_pct >= 30 else "#F59E0B" if leave_pct >= 15 else "#22C55E"
-        cells += f'<td><div class="sc-l">Vertrekintentie</div><div class="sc-v" style="color:{lcol};">{leave_pct}%</div><div class="sc-b">overweegt te vertrekken</div></td>'
+    if stay_intent is not None:
+        scol = _rag_color(stay_intent)
+        cells += f'<td><div class="sc-l">Blijfintentie</div><div class="sc-v" style="color:{scol};">{stay_intent:.1f}/10</div><div class="sc-b">verblijfsintentie actieve groep</div></td>'
+    if turnover is not None:
+        tcol = _rag_color(10 - turnover)
+        cells += f'<td><div class="sc-l">Vertrekintentie</div><div class="sc-v" style="color:{tcol};">{turnover:.1f}/10</div><div class="sc-b">vertrekintentie actieve groep</div></td>'
     if engagement is not None:
         ecol = _factor_color(engagement)
         cells += f'<td><div class="sc-l">Bevlogenheid</div><div class="sc-v" style="color:{ecol};">{engagement:.1f}/10</div><div class="sc-b">UWES-groepsgemiddelde</div></td>'
@@ -1376,10 +1377,10 @@ def render_retention_report_html(data: dict) -> str:
         br_mgmt_q     = _mgmt_q(low_f[0], ST) if low_f else ""
 
     if avg_risk and band_lbl and low_lbl and high_lbl and low_lbl != high_lbl:
-        exec_line = (f"Het behoudssignaal is {band_lbl.lower()} ({_score_str(avg_risk)}). "
+        exec_line = (f"{band_lbl} ({_score_str(avg_risk)}). "
                      f"{low_lbl} vraagt als eerste aandacht; {high_lbl} staat relatief sterk.")
     elif avg_risk and band_lbl and low_lbl:
-        exec_line = f"Het behoudssignaal is {band_lbl.lower()} ({_score_str(avg_risk)}). {low_lbl} vraagt als eerste aandacht."
+        exec_line = f"{band_lbl} ({_score_str(avg_risk)}). {low_lbl} vraagt als eerste aandacht."
     else:
         exec_line = "Zie factoranalyse en behoudscontext voor details."
 
@@ -1420,18 +1421,12 @@ def render_retention_report_html(data: dict) -> str:
     s += _overzichtsprofiel(profile_factors)
 
     # ── Behoudscontext (retention-exclusive) ──────────────────────────────────
-    # Derive stay_pct / leave_pct from avg_si (stay intent 1-10 scale).
-    # avg_si >= 6.5 = staying, avg_to >= 6.5 = leaving (both 1-10).
-    # We use band_counts for a rough stay/leave split from the retention signal bands.
-    bc = data["band_counts"]
-    bc_total = sum(bc.values()) or 1
-    # "Stabiel behoudsbeeld" respondents map to staying; "Verhoogd" to considering leaving
-    _stay_pct_approx  = round(bc.get("LAAG", 0)   / bc_total * 100) if bc_total else None
-    _leave_pct_approx = round(bc.get("HOOG", 0)   / bc_total * 100) if bc_total else None
+    # Toon de directe groepsscores (1-10): blijfintentie (avg_si) en
+    # vertrekintentie (avg_to) i.p.v. uit band-counts afgeleide percentages.
     s += _behoudscontext(
         retention_score=avg_risk,
-        stay_pct=_stay_pct_approx,
-        leave_pct=_leave_pct_approx,
+        stay_intent=avg_si,
+        turnover=avg_to,
         engagement=avg_eng,
         primary_factor=low_lbl or primary_label or "—",
     )
@@ -1750,10 +1745,10 @@ def render_onboarding_report_html(data: dict) -> str:
         br_mgmt_q     = _mgmt_q(low_f[0], ST) if low_f else ""
 
     if avg_risk and band_lbl and low_lbl and high_lbl and low_lbl != high_lbl:
-        exec_line = (f"Het onboardingssignaal is {band_lbl.lower()} ({_score_str(avg_risk)}). "
+        exec_line = (f"{band_lbl} ({_score_str(avg_risk)}). "
                      f"{low_lbl} vraagt als eerste aandacht; {high_lbl} staat relatief sterk.")
     elif avg_risk and band_lbl and low_lbl:
-        exec_line = f"Het onboardingssignaal is {band_lbl.lower()} ({_score_str(avg_risk)}). {low_lbl} vraagt als eerste aandacht."
+        exec_line = f"{band_lbl} ({_score_str(avg_risk)}). {low_lbl} vraagt als eerste aandacht."
     else:
         exec_line = "Zie factordiepte en checkpointoverzicht voor details."
 
