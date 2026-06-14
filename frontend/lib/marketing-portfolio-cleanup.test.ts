@@ -44,6 +44,15 @@ describe('Portfolio cleanup — browsable surface is free of removed products an
   it('Cultuurbeeld is not referenced on /tarieven', () => {
     expect(read('components/marketing/tarieven-content.tsx')).not.toContain('Cultuurbeeld')
   })
+
+  // Homepage SEO metadata/JSON-LD and the public login page must not name the
+  // removed Action Center product. (Note: out of scope here and tracked
+  // separately — the proof/positioning data in site-content.ts still references
+  // it; rewording that touches the suite narrative.)
+  it('homepage metadata and login page do not name Action Center', () => {
+    expect(read('app/page.tsx')).not.toContain('Action Center')
+    expect(read('app/(auth)/login/page.tsx')).not.toContain('Action Center')
+  })
 })
 
 describe('Portfolio cleanup — /producten routekiezer', () => {

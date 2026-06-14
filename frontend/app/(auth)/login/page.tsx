@@ -39,7 +39,7 @@ export default function LoginPage() {
           <Link href="/" className="text-2xl font-bold text-blue-600 tracking-tight">
             Loep
           </Link>
-          <p className="mt-2 text-sm text-gray-500">Toegang voor klanten, beheerders en managers in Action Center</p>
+          <p className="mt-2 text-sm text-gray-500">Toegang voor klanten, beheerders en managers</p>
         </div>
 
         {/* Card */}
@@ -108,7 +108,7 @@ export default function LoginPage() {
           Uitgenodigd voor dashboardtoegang? Open eerst de activatiemail, kies daar je wachtwoord en log daarna in met hetzelfde e-mailadres zodra je account is vrijgegeven voor je eerste overzicht.
         </p>
         <p className="text-center text-xs text-gray-400 mt-2">
-          Uitgenodigd als manager voor Action Center? Dan opent dezelfde login alleen jouw Action Center, zonder survey-inzichten of rapporten.
+          Uitgenodigd als manager? Dan opent dezelfde login alleen jouw eigen werkomgeving, zonder survey-inzichten of rapporten.
         </p>
         <p className="text-center text-xs text-gray-400 mt-2">
           Activatie betekent hier niet alleen je mail openen of een wachtwoord kiezen, maar ook dat het juiste dashboard en de juiste campagne voor jou klaarstaan.
