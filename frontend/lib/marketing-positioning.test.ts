@@ -98,7 +98,7 @@ describe('ExitScan positioning copy', () => {
     const combinationRoute = pricingChoiceGuide.find(([title]) => title === 'Combinatie op aanvraag')
     const exitLifecycle = pricingLifecycleLadder.find((route) => route.route === 'ExitScan')
 
-    expect(exitBaselineCard?.price).toBe('EUR 2.950')
+    expect(exitBaselineCard?.price).toBe('vanaf €4.500')
     expect(exitLiveRoute?.fit.toLowerCase()).toContain('quote-only')
     expect(exitLiveRoute?.bullets.join(' ').toLowerCase()).toContain('geen self-serve')
     expect(combinationRoute?.[1].toLowerCase()).toContain('eerste route helder staat')
