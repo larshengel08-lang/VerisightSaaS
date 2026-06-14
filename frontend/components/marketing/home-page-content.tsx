@@ -1205,7 +1205,7 @@ function SuitePreviewSection() {
                       <section className="suite-motion-screen suite-motion-screen-act">
                         <div className="suite-action-panel">
                           <div className="suite-screen-head">
-                            <p className="suite-phase-eyebrow">Action Center</p>
+                            <p className="suite-phase-eyebrow">Eerste actie</p>
                           </div>
 
                           <div className="suite-action-head">
