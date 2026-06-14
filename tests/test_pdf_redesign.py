@@ -88,3 +88,17 @@ def test_overzichtsprofiel_ranks_all_factors_with_rag():
     assert "Groeiperspectief" in html and "Werksfeer" in html
     assert html.index("Groeiperspectief") < html.index("Werksfeer")
     assert "4.2" in html and "7.3" in html
+
+
+from backend.report_html import _vertrekcontext
+
+
+def test_vertrekcontext_separates_hoofdreden_from_meespelend():
+    html = _vertrekcontext(
+        exit_reasons=[("Groeiperspectief", 12), ("Beloning", 7), ("Leiding", 4)],
+        contributing=[("Werkdruk", 9), ("Werksfeer", 5)],
+        n=34, primary_factor_label="Groeiperspectief",
+    )
+    assert "Groeiperspectief" in html and "12" in html
+    assert "Werkdruk" in html
+    assert "meespeel" in html.lower() or "hoofdreden" in html.lower()

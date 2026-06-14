@@ -840,6 +840,45 @@ def _overzichtsprofiel(factors: list[tuple[str, float | None]]) -> str:
 </div>"""
 
 
+# ─── Vertrekcontext (T7) ──────────────────────────────────────────────────────
+
+def _vertrekcontext(*, exit_reasons: list[tuple[str, int]],
+                    contributing: list[tuple[str, int]], n: int,
+                    primary_factor_label: str) -> str:
+    def _reason_rows(items: list[tuple[str, int]]) -> str:
+        return "".join(
+            f'<tr><td class="iq">{_h(lbl)}</td>'
+            f'<td class="is">{cnt}&times;</td></tr>'
+            for lbl, cnt in items[:3]
+        ) or '<tr><td class="iq" style="color:#94A3B8;">Geen reden geregistreerd</td><td class="is"></td></tr>'
+
+    rel = ""
+    if exit_reasons and primary_factor_label and \
+       primary_factor_label.lower() in exit_reasons[0][0].lower():
+        rel = (f"<p style='margin-bottom:0;'>{_h(primary_factor_label)} is zowel de meest "
+               f"genoemde vertrekreden als de laagste factor in het overzichtsprofiel — "
+               f"daarom staat het bovenaan.</p>")
+    else:
+        rel = (f"<p style='margin-bottom:0;'>De meest genoemde reden en de laagste factor "
+               f"versterken elkaar in de factordiepte hierna.</p>")
+
+    return f"""<div class="pb sec">
+  <span class="slabel">Vertrekcontext</span>
+  <h2 style="margin-bottom:6px;">Wat speelde mee bij vertrek?</h2>
+  <p style="font-size:10.5px;color:#64748B;max-width:60ch;margin-bottom:18px;">
+    Een <strong>hoofdreden</strong> is de doorslaggevende aanleiding om te vertrekken.
+    Een <strong>meespelende factor</strong> droeg bij maar gaf niet de doorslag.
+    Beide samen geven het vertrekbeeld.</p>
+  <div class="tcol">
+    <div class="tc-l"><div class="card accent"><h3>Hoofdredenen van vertrek (top 3)</h3>
+      <table class="item-tbl">{_reason_rows(exit_reasons)}</table></div></div>
+    <div class="tc-r"><div class="card"><h3>Speelde ook mee</h3>
+      <table class="item-tbl">{_reason_rows(contributing)}</table></div></div>
+  </div>
+  <div class="card navy" style="background:#fff;"><h3>Relatie met het overzichtsprofiel</h3>{rel}</div>
+</div>"""
+
+
 # ─── ExitScan renderer ────────────────────────────────────────────────────────
 
 def render_exit_report_html(data: dict) -> str:
@@ -971,63 +1010,11 @@ def render_exit_report_html(data: dict) -> str:
                        for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
     s += _overzichtsprofiel(profile_factors)
 
-    # ── Vertrekcontext ────────────────────────────────────────────────────────
-    exit_chart = _reason_chart_svg([(r["label"], r["count"]) for r in data["exit_r_dist"]], n, width=340) \
-        if data["exit_r_dist"] else '<div class="empty-state">Geen vertrekredenen geregistreerd</div>'
-    cont_chart = _reason_chart_svg([(r["label"], r["count"]) for r in data["cont_dist"]], n, width=300) \
-        if data["cont_dist"] else '<div class="empty-state">Geen meespelende redenen</div>'
-
-    sv = data["sig_vis"]
-    if sv is not None:
-        sv_lbl = "Signalen waren grotendeels zichtbaar" if sv >= 4 else "Signalen waren deels zichtbaar" if sv >= 3 else "Signalen bleven grotendeels onder de radar"
-        sv_col = "#22C55E" if sv >= 4 else "#F59E0B" if sv >= 3 else "#EF4444"
-        sv_block = (f'<div class="card" style="margin-top:12px;border-left:4px solid {sv_col};">'
-                    f'<div style="font-size:12px;font-weight:700;color:{sv_col};margin-bottom:4px;">{_h(sv_lbl)}</div>'
-                    f'<div style="font-size:10px;color:#374151;">Eerdere signalering: {sv:.1f}/5. '
-                    f'In hoeverre was twijfel of vertrek vooraf zichtbaar of bespreekbaar geweest.'
-                    f'</div></div>')
-    else:
-        sv_block = ('<div class="cbox" style="margin-top:12px;">'
-                    '<div style="font-size:10px;color:#94A3B8;">Eerdere signalering: niet beschikbaar in deze wave.</div></div>')
-
-    # Signaalopbouw visual
-    total_prev = sum(data["prev_dist"].values()) or 1
-    sterk   = data["prev_dist"].get("STERK_WERKSIGNAAL", 0)
-    gemeng  = data["prev_dist"].get("GEMENGD_WERKSIGNAAL", 0)
-    beperkt = data["prev_dist"].get("BEPERKT_WERKSIGNAAL", 0)
-    comp_svg = _stacked_bar_svg([
-        ("Werkfactoren duidelijk", sterk,   "#1E293B"),
-        ("Gemengd beeld",          gemeng,  "#64748B"),
-        ("Beperkt werkfactor",     beperkt, "#94A3B8"),
-    ], total=total_prev, width=420, height=24)
-
-    s += f"""<div class="pb sec">
-  <span class="slabel">Vertrekcontext</span>
-  <div class="tcol">
-    <div class="tc-l">
-      <div class="card">
-        <h3 style="margin-bottom:10px;">Hoofdredenen van vertrek</h3>
-        {exit_chart}
-      </div>
-    </div>
-    <div class="tc-r">
-      <div class="card">
-        <h3 style="margin-bottom:10px;">Wat speelde daarnaast mee</h3>
-        {cont_chart}
-      </div>
-      {sv_block}
-    </div>
-  </div>
-  <div class="card" style="margin-top:0;">
-    <h3 style="margin-bottom:10px;">Waaruit bestaat het vertrekbeeld?</h3>
-    <div style="margin-bottom:10px;">{comp_svg}</div>
-    <div style="font-size:9.5px;color:#374151;">
-      <span class="legend-dot" style="background:#1E293B;"></span>Werkfactoren spelen een duidelijke rol: {sterk}&times; ({round(sterk/total_prev*100) if total_prev else 0}%)&nbsp;&nbsp;&nbsp;
-      <span class="legend-dot" style="background:#64748B;"></span>Gemengd beeld: {gemeng}&times; ({round(gemeng/total_prev*100) if total_prev else 0}%)&nbsp;&nbsp;&nbsp;
-      <span class="legend-dot" style="background:#94A3B8;"></span>Werkfactoren beperkt zichtbaar: {beperkt}&times; ({round(beperkt/total_prev*100) if total_prev else 0}%)
-    </div>
-  </div>
-</div>"""
+    # ── Vertrekcontext (T7) ───────────────────────────────────────────────────
+    exit_reasons = [(r["label"], r["count"]) for r in data["exit_r_dist"]]
+    contributing = [(r["label"], r["count"]) for r in data["cont_dist"]]
+    s += _vertrekcontext(exit_reasons=exit_reasons, contributing=contributing,
+                         n=n, primary_factor_label=low_lbl)
 
     # ── Factoranalyse ─────────────────────────────────────────────────────────
     sorted_desc = list(reversed(sorted_f))
