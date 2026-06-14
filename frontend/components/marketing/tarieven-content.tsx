@@ -12,6 +12,8 @@ const primaryPricingCards = pricingCards.filter(
     item.eyebrow === 'Onboarding 30-60-90 Baseline',
 )
 
+// Identity pass-through: prices are display-ready in site-content; kept as the
+// single seam for any future formatting. Do not inline at call sites.
 function formatPricingPrice(price: string) {
   return price
 }
