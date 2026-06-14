@@ -410,7 +410,7 @@ function ExitScanPage() {
 
   return (
     <div style={{ background: T.paper, color: T.ink, overflowX: 'hidden' }}>
-      <PublicHeader ctaHref={ctaHref} ctaLabel="Plan een eerste route-inschatting" />
+      <PublicHeader ctaHref={ctaHref} ctaLabel="Bespreek of deze scan past" />
       <main>
         <section style={{ background: T.white, padding: 'clamp(52px,6.5vw,80px) 0 clamp(48px,6vw,72px)', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: `linear-gradient(${T.rule}60 1px,transparent 1px),linear-gradient(90deg,${T.rule}60 1px,transparent 1px)`, backgroundSize: '72px 72px', opacity: .35 }} />
@@ -431,7 +431,7 @@ function ExitScanPage() {
                 </p>
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 600, padding: '12px 28px', color: '#fff', background: T.ink }}>
-                    Plan een eerste route-inschatting
+                    Bespreek of deze scan past
                   </a>
                   <Link href="/tarieven" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', fontSize: 14, fontWeight: 500, padding: '11px 24px', color: T.inkSoft, border: `1px solid ${T.rule}` }}>
                     Bekijk tarieven
@@ -476,46 +476,6 @@ function ExitScanPage() {
                 ))}
               </div>
             </div>
-            <div style={{ borderTop: `1px solid ${T.rule}`, paddingTop: 28 }}>
-              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.deep, marginBottom: 14 }}>Kies baseline of ritmeroute</div>
-              <p style={{ fontSize: 15, lineHeight: 1.72, color: T.inkSoft, marginBottom: 26, maxWidth: '54ch' }}>
-                Kies eerst of u een scherp vertrekbeeld nodig heeft of juist een terugkerend ritme om vertrek structureel te volgen.
-              </p>
-              <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-                {[
-                  {
-                    label: 'Baseline',
-                    accent: AC.deep,
-                    points: [
-                      'Een scherp vertrekbeeld van recent vertrek',
-                      'Geschikt als vertrek al zichtbaar of terugkerend is',
-                      'Geeft een eerste managementbeeld van redenen, drivers en prioriteiten',
-                    ],
-                  },
-                  {
-                    label: 'Ritmeroute',
-                    accent: T.inkMuted,
-                    points: [
-                      'Voor organisaties die vertrek structureel willen blijven volgen',
-                      'Logisch als baseline, proces en ritme al staan',
-                      'Zelfde structuur als de eerste baseline',
-                    ],
-                  },
-                ].map(({ label, accent, points }) => (
-                  <div key={label} style={{ padding: '28px', background: T.white, border: `1px solid ${T.rule}`, borderTop: `3px solid ${accent}` }}>
-                    <div style={{ fontSize: 13.5, fontWeight: 600, color: T.ink, marginBottom: 16 }}>{label}</div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                      {points.map((p, i) => (
-                        <div key={i} style={{ display: 'flex', gap: 10, fontSize: 13, color: T.inkSoft, lineHeight: 1.6 }}>
-                          <div style={{ width: 4, height: 4, background: accent, flexShrink: 0, marginTop: 5 }} />
-                          {p}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         </section>
 
@@ -531,9 +491,12 @@ function ExitScanPage() {
               <div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {[
-                    'Managementrapport met vertrekpatronen, factoranalyse en prioriteiten',
-                    'Begeleide managementbespreking: samen bepalen wat nu het eerst aandacht vraagt',
-                    'Segmentverdieping waar respons en metadata dat dragen',
+                    'Intake en scopebepaling',
+                    'Survey klaarzetten en launchpakket leveren (uitnodigingslink + tekst)',
+                    'Respons monitoren op campagneniveau',
+                    'Managementrapport met patronen en prioriteiten',
+                    'Begeleide managementbespreking (60–90 min)',
+                    'Eerste vervolgrichting vastgelegd',
                   ].map((item, i) => (
                     <div key={i} style={{ display: 'flex', gap: 12, padding: '14px 16px', background: T.paperSoft, border: `1px solid ${T.rule}`, fontSize: 13.5, color: T.inkSoft, lineHeight: 1.6 }}>
                       <div style={{ width: 4, height: 4, background: AC.mid, flexShrink: 0, marginTop: 5 }} />
@@ -550,7 +513,7 @@ function ExitScanPage() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 220 }}>
                 <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontSize: 14, fontWeight: 600, padding: '14px 28px', color: '#fff', background: T.ink, whiteSpace: 'nowrap' }}>
-                  Plan een eerste route-inschatting
+                  Bespreek of deze scan past
                 </a>
                 <Link href="/tarieven" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 500, padding: '12px 24px', color: T.inkSoft, border: `1px solid ${T.rule}`, whiteSpace: 'nowrap' }}>
                   Bekijk tarieven
@@ -567,8 +530,8 @@ function ExitScanPage() {
           title="Toets of ExitScan"
           accentTitle="nu de juiste eerste stap is."
           body="Beschrijf kort welk vertrekvraagstuk nu speelt. Dan toetsen we of ExitScan past, welke variant logisch is en wat u als eerste terugkrijgt."
-          buttonLabel="Plan een eerste route-inschatting"
-          note="U krijgt eerst een route-inschatting, geen verplicht uitgebreid traject."
+          buttonLabel="Bespreek of deze scan past"
+          note="U krijgt eerst een korte kennismaking, geen verplicht uitgebreid traject."
         />
       </main>
       <PublicFooter />
@@ -591,7 +554,7 @@ function RetentionScanPage() {
 
   return (
     <div style={{ background: T.paper, color: T.ink, overflowX: 'hidden' }}>
-      <PublicHeader ctaHref={ctaHref} ctaLabel="Plan een eerste route-inschatting" />
+      <PublicHeader ctaHref={ctaHref} ctaLabel="Bespreek of deze scan past" />
       <main>
         <section style={{ background: T.white, padding: 'clamp(52px,6.5vw,80px) 0 clamp(48px,6vw,72px)', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: `linear-gradient(${T.rule}60 1px,transparent 1px),linear-gradient(90deg,${T.rule}60 1px,transparent 1px)`, backgroundSize: '72px 72px', opacity: .35 }} />
@@ -605,14 +568,14 @@ function RetentionScanPage() {
             <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_360px] items-start">
               <div>
                 <h1 style={{ fontFamily: FF, fontWeight: 800, fontSize: 'clamp(42px,5.5vw,76px)', lineHeight: .97, letterSpacing: '-.032em', color: T.ink, maxWidth: '12ch' }}>
-                  Wij laten zien waar behoud onder druk staat. U weet wat u als eerste kunt aanpakken.
+                  Wij laten vooraf zien waar behoud onder druk komt te staan, voordat uitstroom zichtbaar wordt. U weet wat u als eerste kunt aanpakken.
                 </h1>
                 <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '48ch', margin: '26px 0 36px' }}>
                   Loep voert de RetentieScan uit bij uw actieve medewerkers, levert het rapport en begeleidt u naar één eerste managementkeuze.
                 </p>
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 600, padding: '12px 28px', color: '#fff', background: T.ink }}>
-                    Plan een eerste route-inschatting
+                    Bespreek of deze scan past
                   </a>
                   <Link href="/tarieven" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', fontSize: 14, fontWeight: 500, padding: '11px 24px', color: T.inkSoft, border: `1px solid ${T.rule}` }}>
                     Bekijk tarieven
@@ -657,46 +620,6 @@ function RetentionScanPage() {
                 ))}
               </div>
             </div>
-            <div style={{ borderTop: `1px solid ${T.rule}`, paddingTop: 28 }}>
-              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.teal, marginBottom: 14 }}>Kies baseline of ritmeroute</div>
-              <p style={{ fontSize: 15, lineHeight: 1.72, color: T.inkSoft, marginBottom: 26, maxWidth: '56ch' }}>
-                Kies eerst of u nu een scherp vroegsignaal nodig heeft of een ritme om behoudsdruk structureel te volgen.
-              </p>
-              <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-                {[
-                  {
-                    label: 'Baseline',
-                    accent: T.teal,
-                    points: [
-                      'Een scherp behoudsbeeld voor actieve teams',
-                      'Geschikt als u nu eerst wilt zien waar behoud onder druk staat',
-                      'Geeft een eerste managementbeeld van signalen, drivers en prioriteiten',
-                    ],
-                  },
-                  {
-                    label: 'Ritmeroute',
-                    accent: T.inkMuted,
-                    points: [
-                      'Voor organisaties die behoudsdruk structureel willen blijven volgen',
-                      'Logisch als baseline en eerste opvolging al staan',
-                      'Zelfde structuur als de eerste baseline',
-                    ],
-                  },
-                ].map(({ label, accent, points }) => (
-                  <div key={label} style={{ padding: '28px', background: T.white, border: `1px solid ${T.rule}`, borderTop: `3px solid ${accent}` }}>
-                    <div style={{ fontSize: 13.5, fontWeight: 600, color: T.ink, marginBottom: 16 }}>{label}</div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                      {points.map((p, i) => (
-                        <div key={i} style={{ display: 'flex', gap: 10, fontSize: 13, color: T.inkSoft, lineHeight: 1.6 }}>
-                          <div style={{ width: 4, height: 4, background: accent, flexShrink: 0, marginTop: 5 }} />
-                          {p}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         </section>
 
@@ -712,9 +635,12 @@ function RetentionScanPage() {
               <div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {[
-                    'Managementrapport met retentiesignaal, factoranalyse en prioriteiten',
-                    'Begeleide managementbespreking: samen bepalen welk risico nu eerst aandacht vraagt',
-                    'Segmentverdieping waar respons en metadata dat dragen',
+                    'Intake en scopebepaling',
+                    'Survey klaarzetten en launchpakket leveren (uitnodigingslink + tekst)',
+                    'Respons monitoren op campagneniveau',
+                    'Managementrapport met patronen en prioriteiten',
+                    'Begeleide managementbespreking (60–90 min)',
+                    'Eerste vervolgrichting vastgelegd',
                   ].map((item, i) => (
                     <div key={i} style={{ display: 'flex', gap: 12, padding: '14px 16px', background: T.paperSoft, border: `1px solid ${T.rule}`, fontSize: 13.5, color: T.inkSoft, lineHeight: 1.6 }}>
                       <div style={{ width: 4, height: 4, background: T.teal, flexShrink: 0, marginTop: 5 }} />
@@ -731,7 +657,7 @@ function RetentionScanPage() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 220 }}>
                 <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontSize: 14, fontWeight: 600, padding: '14px 28px', color: '#fff', background: T.ink, whiteSpace: 'nowrap' }}>
-                  Plan een eerste route-inschatting
+                  Bespreek of deze scan past
                 </a>
                 <Link href="/tarieven" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 500, padding: '12px 24px', color: T.inkSoft, border: `1px solid ${T.rule}`, whiteSpace: 'nowrap' }}>
                   Bekijk tarieven
@@ -748,8 +674,8 @@ function RetentionScanPage() {
           title="Toets of RetentieScan"
           accentTitle="nu de juiste eerste stap is."
           body="Beschrijf kort waar behoud nu onder druk staat. Dan toetsen we of RetentieScan past, welke variant logisch is en wat u als eerste terugkrijgt."
-          buttonLabel="Plan een eerste route-inschatting"
-          note="U krijgt eerst een route-inschatting, geen verplicht uitgebreid traject."
+          buttonLabel="Bespreek of deze scan past"
+          note="U krijgt eerst een korte kennismaking, geen verplicht uitgebreid traject."
         />
       </main>
       <PublicFooter />
