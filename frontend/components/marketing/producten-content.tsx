@@ -137,10 +137,7 @@ function HeroSection() {
 
 function PrimaryRoutesSection() {
   return (
-    <section
-      id="route-vergelijking"
-      style={{ background: T.white, borderBottom: `1px solid ${T.rule}`, padding: 'clamp(52px,6vw,82px) 0' }}
-    >
+    <section style={{ background: T.white, borderBottom: `1px solid ${T.rule}`, padding: 'clamp(52px,6vw,82px) 0' }}>
       <div style={SHELL}>
         <div style={{ marginBottom: 30, textAlign: 'center' }}>
           <h2
@@ -160,8 +157,8 @@ function PrimaryRoutesSection() {
             Welke scan past bij uw vraag?
           </h2>
           <p style={{ color: T.inkSoft, fontSize: 15, lineHeight: 1.74, maxWidth: '58ch', margin: '0 auto' }}>
-            ExitScan als vertrek de vraag is. RetentieScan als behoud eerder zichtbaar moet zijn. Onboarding 30-60-90
-            als de vroege landing van nieuwe medewerkers aandacht vraagt.
+            Drie gelijkwaardige scans, elk met managementrapport en begeleide bespreking. Kies de vraag die nu het
+            sterkst speelt.
           </p>
         </div>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
