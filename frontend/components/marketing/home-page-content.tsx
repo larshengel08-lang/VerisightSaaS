@@ -75,23 +75,26 @@ const suitePriorityRows = [
 const routeCards = [
   {
     index: '01',
-    eyebrow: 'Als vertrek de vraag is',
+    eyebrow: 'Vertrek begrijpen',
     title: 'ExitScan',
     body: 'Wij brengen vertrekpatronen scherp in beeld en leveren een rapport met prioriteiten. Begeleide bespreking inbegrepen.',
+    href: '/producten/exitscan',
     accent: SURFACE.amber,
   },
   {
     index: '02',
-    eyebrow: 'Als behoud in actieve teams de vraag is',
+    eyebrow: 'Behoud onder druk',
     title: 'RetentieScan',
     body: 'Wij laten zien waar behoud onder druk staat — voordat uitstroom zichtbaar wordt. Rapport en bespreking inbegrepen.',
+    href: '/producten/retentiescan',
     accent: SURFACE.teal,
   },
   {
     index: '03',
-    eyebrow: 'Als vroege landing aandacht vraagt',
+    eyebrow: 'Nieuwe medewerkers laten landen',
     title: 'Onboarding 30-60-90',
     body: 'Wij meten vroeg hoe nieuwe medewerkers landen. Helder groepsbeeld, geen individuele beoordeling.',
+    href: '/producten/onboarding-30-60-90',
     accent: '#9b5f1e',
   },
 ]
@@ -118,20 +121,20 @@ const managementFlowSteps = [
   {
     step: '1',
     label: 'Luisteren',
-    title: 'Wij sturen de scan uit',
-    body: 'Na een korte intake sturen wij de vragenlijst. U levert de doelgroep aan. Wij bewaken de uitvoering — zonder toolbeheer voor uw team.',
+    title: 'Medewerkers vullen de scan in',
+    body: 'Anoniem en op groepsniveau. U levert de doelgroep aan; wij sturen de scan uit en bewaken de uitvoering — zonder toolbeheer voor uw team.',
   },
   {
     step: '2',
-    label: 'Leren',
-    title: 'U ontvangt het rapport',
-    body: 'We analyseren de uitkomsten en leveren een managementrapport met patronen, prioriteiten en de eerste managementvraag. In weken, niet maanden.',
+    label: 'Begrijpen',
+    title: 'Loep levert een bestuurlijke read',
+    body: 'We duiden de belangrijkste patronen en leveren een managementrapport met prioriteiten en de eerste managementvraag. In weken, niet maanden.',
   },
   {
     step: '3',
     label: 'Kiezen',
-    title: 'Samen de eerste keuze',
-    body: 'In de begeleide managementbespreking bespreken we de uitkomsten met HR en management. Één keuze, één eigenaar, één eerste stap.',
+    title: 'Samen de eerste gerichte keuze',
+    body: 'De managementbespreking met HR en management leidt tot één eerste gerichte keuze: één eigenaar, één eerste stap.',
   },
 ] as const
 
@@ -564,7 +567,7 @@ function ManagementFlowSection() {
                 textWrap: 'balance',
               }}
             >
-              Zo werkt een Loep baseline
+              Luisteren. Begrijpen. Kiezen.
             </h2>
           </Reveal>
           <Reveal delay={0.06}>
@@ -577,7 +580,7 @@ function ManagementFlowSection() {
                 maxWidth: '54rem',
               }}
             >
-              Drie stappen. Wij doen het werk. U maakt de eerste keuze.
+              Loep meet niet alleen — Loep begeleidt management naar één eerste keuze.
             </p>
           </Reveal>
         </div>
@@ -702,7 +705,7 @@ function ManagementFlowSection() {
 
 function HeroSection() {
   const primaryHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'homepage_hero_primary' })
-  const secondaryHref = '/producten/exitscan'
+  const secondaryHref = '#scans'
   const reportRows = [
     ['Groei en ontwikkeling', '82%', SURFACE.amber],
     ['Werkdruk in operatie', '54%', SURFACE.text],
@@ -741,7 +744,7 @@ function HeroSection() {
                   textWrap: 'balance',
                 }}
               >
-                Weet waarom mensen vertrekken. Weet wat u als eerste kunt aanpakken.
+                U ziet dat mensen vertrekken, afhaken of moeilijk landen. Maar niet altijd welke patronen erachter zitten.
               </h1>
               </div>
 
@@ -756,7 +759,7 @@ function HeroSection() {
                   textAlign: 'center',
                 }}
               >
-                Loep levert een scherp rapport en begeleidt u naar één eerste managementkeuze. Geen platform om zelf te beheren. Wel een beslissing.
+                Loep voert de scan uit, levert een bestuurlijke read en begeleidt HR en management naar één eerste gerichte keuze.
               </p>
 
               <div
@@ -777,7 +780,7 @@ function HeroSection() {
                   textDecoration: 'none',
                 }}
               >
-                Plan een kennismaking
+                Bespreek uw vraagstuk
               </Link>
               <Link
                 href={secondaryHref}
@@ -794,7 +797,7 @@ function HeroSection() {
                   textDecoration: 'none',
                 }}
               >
-                Bekijk voorbeeldoutput
+                Bekijk welke scan past
               </Link>
               </div>
 
@@ -1750,6 +1753,7 @@ function RoutesSection() {
 
   return (
     <section
+      id="scans"
       style={{
         background: SURFACE.surface,
         borderBottom: `1px solid ${SURFACE.border}`,
@@ -1771,7 +1775,7 @@ function RoutesSection() {
                 marginBottom: 0,
               }}
             >
-              Welke route past het best bij uw situatie?
+              Welke scan past het best bij uw situatie?
             </h2>
           </Reveal>
         </div>
@@ -1830,6 +1834,22 @@ function RoutesSection() {
                     {route.title}
                   </h3>
                   <p style={{ color: SURFACE.text, fontSize: 15, lineHeight: 1.75, maxWidth: '18rem' }}>{route.body}</p>
+                  <Link
+                    href={route.href}
+                    style={{
+                      alignItems: 'center',
+                      color: route.accent,
+                      display: 'inline-flex',
+                      fontFamily: bodyFont,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      gap: 6,
+                      marginTop: 16,
+                      textDecoration: 'none',
+                    }}
+                  >
+                    Meer over {route.title} <Arrow />
+                  </Link>
                 </div>
               </div>
               </article>
@@ -1855,8 +1875,132 @@ function RoutesSection() {
                 textDecoration: 'none',
               }}
             >
-              Bespreek de juiste eerste route <Arrow />
+              Bespreek welke scan past <Arrow />
             </Link>
+          </Reveal>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+const proofPoints = [
+  'Rapportage alleen op groepsniveau — geen individuele data',
+  'Minimum aantal respondenten vereist voor veilige rapportage',
+  'Geen individuele voorspellingen of profielen',
+  'Managementbespreking standaard inbegrepen',
+] as const
+
+function ProofSection() {
+  return (
+    <section
+      style={{
+        background: SURFACE.surface,
+        borderBottom: `1px solid ${SURFACE.border}`,
+        overflow: 'hidden',
+        position: 'relative',
+      }}
+    >
+      <div style={{ ...SHELL, paddingTop: 'clamp(56px, 7vw, 88px)', paddingBottom: 'clamp(56px, 7vw, 88px)' }}>
+        <div className="grid grid-cols-1 gap-12 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] xl:items-center">
+          <div style={{ minWidth: 0 }}>
+            <Reveal>
+              <h2
+                style={{
+                  color: SURFACE.ink,
+                  fontFamily: displayFont,
+                  fontSize: 'clamp(2.4rem, 4vw, 4rem)',
+                  fontWeight: 700,
+                  letterSpacing: '-0.05em',
+                  lineHeight: 0.96,
+                  marginBottom: 28,
+                  maxWidth: '14ch',
+                }}
+              >
+                Veilig op groepsniveau. Niets op de persoon.
+              </h2>
+            </Reveal>
+            <div style={{ borderTop: `1px solid ${SURFACE.border}`, display: 'grid', gap: 0 }}>
+              {proofPoints.map((point, index) => (
+                <Reveal key={point} delay={0.08 + index * 0.05}>
+                  <div
+                    style={{
+                      alignItems: 'flex-start',
+                      borderBottom: `1px solid ${SURFACE.border}`,
+                      display: 'grid',
+                      gap: 14,
+                      gridTemplateColumns: '20px 1fr',
+                      padding: '18px 0',
+                    }}
+                  >
+                    <span
+                      aria-hidden
+                      style={{ background: SURFACE.teal, borderRadius: 999, height: 8, marginTop: 8, width: 8 }}
+                    />
+                    <p style={{ color: SURFACE.ink, fontSize: 16, lineHeight: 1.6 }}>{point}</p>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+            <div style={{ marginTop: 28 }}>
+              <Reveal delay={0.3}>
+                <a
+                  href="/examples/voorbeeldrapport_loep.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    alignItems: 'center',
+                    background: SURFACE.charcoal,
+                    color: '#fff',
+                    display: 'inline-flex',
+                    fontFamily: bodyFont,
+                    fontSize: 15,
+                    fontWeight: 600,
+                    gap: 10,
+                    padding: '16px 24px',
+                    textDecoration: 'none',
+                  }}
+                >
+                  Bekijk een voorbeeldrapport <Arrow />
+                </a>
+              </Reveal>
+            </div>
+          </div>
+
+          {/* PLACEHOLDER: visuele rapport-showcase volgt via design tool (buiten scope dit plan). */}
+          <Reveal delay={0.12} from="right">
+            <div
+              style={{
+                alignItems: 'center',
+                background: SURFACE.surfaceSoft,
+                border: `1px dashed ${SURFACE.border}`,
+                borderRadius: 16,
+                display: 'flex',
+                justifyContent: 'center',
+                minHeight: 320,
+                padding: '40px',
+                textAlign: 'center',
+              }}
+            >
+              <div>
+                <p
+                  style={{
+                    color: SURFACE.muted,
+                    fontFamily: bodyFont,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    letterSpacing: '.16em',
+                    marginBottom: 10,
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Voorbeeldrapport
+                </p>
+                <p style={{ color: SURFACE.text, fontSize: 14.5, lineHeight: 1.6, maxWidth: '26ch' }}>
+                  Visuele showcase volgt. Bekijk nu het volledige voorbeeldrapport via de knop hiernaast.
+                </p>
+              </div>
+            </div>
           </Reveal>
         </div>
       </div>
@@ -1903,7 +2047,7 @@ function ContactSection() {
                 textWrap: 'balance',
               }}
             >
-              Wilt u weten waar u moet beginnen?
+              Weet u nog niet welke scan past?
             </h2>
 
             <p
@@ -1915,7 +2059,7 @@ function ContactSection() {
                 maxWidth: '48rem',
               }}
             >
-              Plan een kennismaking. We bespreken welk vraagstuk nu speelt: vertrek, behoud of onboarding en welke Loep-baseline daar het beste bij past.
+              Bespreek uw situatie. We bekijken samen welk vraagstuk nu speelt — vertrek, behoud of onboarding — en welke scan daar het beste bij past.
             </p>
 
             <div
@@ -1939,7 +2083,7 @@ function ContactSection() {
                   textDecoration: 'none',
                 }}
               >
-                Plan een kennismaking
+                Bespreek uw situatie
               </Link>
             </div>
           </div>
@@ -1956,6 +2100,7 @@ export function HomePageContent() {
       <ProblemSection />
       <ManagementFlowSection />
       <RoutesSection />
+      <ProofSection />
       <ContactSection />
     </div>
   )
