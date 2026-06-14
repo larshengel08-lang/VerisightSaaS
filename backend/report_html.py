@@ -20,7 +20,7 @@ from typing import Any
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from backend.models import Campaign, Respondent, SurveyResponse
-from backend.report_css import build_css
+from backend.report_css import build_css, RAG_HIGH, RAG_MID, RAG_LOW
 from backend.products.shared.registry import get_product_module
 from backend.scan_definitions import get_scan_definition
 from backend.scoring import (
@@ -807,6 +807,39 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
     )
 
 
+# ─── Overzichtsprofiel (T6) ──────────────────────────────────────────────────
+
+def _rag_color(score: float | None) -> str:
+    if score is None: return "#CBD5E1"
+    if score < 5.0:  return RAG_HIGH
+    if score < 6.5:  return RAG_MID
+    return RAG_LOW
+
+
+def _factor_bar_row(label: str, score: float | None) -> str:
+    pct = int((score or 0) / 10 * 100)
+    col = _rag_color(score)
+    track = (f'<svg width="100%" height="14" viewBox="0 0 200 14" preserveAspectRatio="none">'
+             f'<rect x="0" y="3" width="200" height="8" fill="#EDE6DA"/>'
+             f'<rect x="0" y="3" width="{pct*2}" height="8" fill="{col}"/></svg>')
+    return (f'<div class="fbar-row"><div class="fbar-name">{_h(label)}</div>'
+            f'<div class="fbar-track">{track}</div>'
+            f'<div class="fbar-score" style="color:{col};">{_score_str(score)}</div></div>')
+
+
+def _overzichtsprofiel(factors: list[tuple[str, float | None]]) -> str:
+    ranked = sorted(factors, key=lambda x: (x[1] is None, x[1]))
+    rows = "".join(_factor_bar_row(lbl, sc) for lbl, sc in ranked)
+    legend = (f'<p style="font-size:9px;color:#64748B;margin-top:12px;">'
+              f'<span style="color:{RAG_HIGH};">&#9632;</span> aandachtspunt &nbsp; '
+              f'<span style="color:{RAG_MID};">&#9632;</span> gemengd &nbsp; '
+              f'<span style="color:{RAG_LOW};">&#9632;</span> relatief sterk</p>')
+    return f"""<div class="pb sec">
+  <span class="slabel">Overzichtsprofiel</span>
+  <div class="card">{rows}{legend}</div>
+</div>"""
+
+
 # ─── ExitScan renderer ────────────────────────────────────────────────────────
 
 def render_exit_report_html(data: dict) -> str:
@@ -932,6 +965,11 @@ def render_exit_report_html(data: dict) -> str:
         segment_available=False,
         segment_reason="te weinig responses per groep voor herleidbaarheid",
     )
+
+    # ── Overzichtsprofiel ─────────────────────────────────────────────────────
+    profile_factors = [(FACTOR_LABELS_NL.get(fk, fk), fa.get(fk))
+                       for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
+    s += _overzichtsprofiel(profile_factors)
 
     # ── Vertrekcontext ────────────────────────────────────────────────────────
     exit_chart = _reason_chart_svg([(r["label"], r["count"]) for r in data["exit_r_dist"]], n, width=340) \
