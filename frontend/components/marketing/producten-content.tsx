@@ -2,55 +2,30 @@
 
 import Link from 'next/link'
 import { AC, Arrow, FF, SHELL, T } from '@/components/marketing/design-tokens'
-import { FollowOnRoutesAccordion } from '@/components/marketing/follow-on-routes-accordion'
 import { MarketingClosingCta } from '@/components/marketing/marketing-closing-cta'
 import { buildContactHref } from '@/lib/contact-funnel'
-import { FOLLOW_ON_ROUTE_CONTENT } from '@/lib/follow-on-route-content'
-
-const EXPANDABLE_FOLLOW_ON_ROUTE_CONTENT = FOLLOW_ON_ROUTE_CONTENT.filter((route) => route.slug !== 'combinatie')
 
 const primaryRoutes = [
   {
     title: 'ExitScan',
-    eyebrow: 'Als vertrek de vraag is',
-    body:
-      'Wij brengen vertrekpatronen in beeld en leveren een rapport met prioriteiten. Begeleide bespreking inbegrepen.',
-    bullets: [
-      'Vertrek is al zichtbaar of terugkerend',
-      'U wilt begrijpen welke patronen terugkomen',
-      'U wilt een eerste managementbeeld van vertrekredenen en drivers',
-      'U zoekt een eerste handoff voor gesprek en vervolgsturing',
-    ],
+    eyebrow: 'Vertrek begrijpen',
+    body: 'Wij brengen vertrekpatronen in beeld en leveren een managementrapport met prioriteiten en een begeleide bespreking.',
     href: '/producten/exitscan',
     accent: AC.deep,
     accentSoft: AC.faint,
   },
   {
     title: 'RetentieScan',
-    eyebrow: 'Als behoud de vraag is',
-    body:
-      'Wij laten zien waar behoud onder druk staat — voordat uitstroom zichtbaar wordt. Rapport en bespreking inbegrepen.',
-    bullets: [
-      'U wilt eerder signaleren voordat verloop oploopt',
-      'U vermoedt behoudsdruk maar ziet nog geen volledig vertrekbeeld',
-      'U wilt groepsniveau vroegsignalering in plaats van terugblik',
-      'U wilt eerder zien waar gesprek en verificatie nodig zijn',
-    ],
+    eyebrow: 'Behoud versterken',
+    body: 'Wij laten zien waar behoud onder druk komt te staan voordat uitstroom zichtbaar wordt — met rapport en bespreking.',
     href: '/producten/retentiescan',
     accent: 'oklch(0.50 0.12 188)' as string,
     accentSoft: 'oklch(0.972 0.018 185)' as string,
   },
   {
     title: 'Onboarding 30-60-90',
-    eyebrow: 'Als vroege landing aandacht vraagt',
-    body:
-      'Wij meten vroeg hoe nieuwe medewerkers landen. Helder groepsbeeld, geen individuele beoordeling.',
-    bullets: [
-      'U wilt vroeg zien hoe nieuwe medewerkers landen',
-      'U wilt een groepsbeeld, geen individuele beoordeling',
-      'U wilt sneller weten waar onboarding frictie geeft',
-      'U wilt een eerste managementstap op basis van de eerste 90 dagen',
-    ],
+    eyebrow: 'Goed landen',
+    body: 'Wij meten vroeg hoe nieuwe medewerkers landen en leveren een groepsbeeld met een eerste vervolgrichting.',
     href: '/producten/onboarding-30-60-90',
     accent: '#9b5f1e' as string,
     accentSoft: 'oklch(0.97 0.03 70)' as string,
@@ -151,23 +126,7 @@ function HeroSection() {
                 textDecoration: 'none',
               }}
             >
-              Toets uw eerste route <Arrow />
-            </Link>
-            <Link
-              href="#route-vergelijking"
-              style={{
-                alignItems: 'center',
-                border: `1px solid ${T.rule}`,
-                color: T.inkSoft,
-                display: 'inline-flex',
-                fontSize: 14.5,
-                fontWeight: 500,
-                gap: 8,
-                padding: '11px 26px',
-                textDecoration: 'none',
-              }}
-            >
-              Bekijk de primary routes
+              Plan een kennismaking <Arrow />
             </Link>
           </div>
         </div>
@@ -198,11 +157,11 @@ function PrimaryRoutesSection() {
               marginRight: 'auto',
             }}
           >
-            Welke route past bij uw vraag?
+            Welke scan past bij uw vraag?
           </h2>
           <p style={{ color: T.inkSoft, fontSize: 15, lineHeight: 1.74, maxWidth: '58ch', margin: '0 auto' }}>
-            Kies ExitScan als u vertrek wilt duiden. Kies RetentieScan als u eerder wilt zien waar behoud onder druk
-            staat. Kies Onboarding 30-60-90 als vroege landing van nieuwe medewerkers de vraag is.
+            ExitScan als vertrek de vraag is. RetentieScan als behoud eerder zichtbaar moet zijn. Onboarding 30-60-90
+            als de vroege landing van nieuwe medewerkers aandacht vraagt.
           </p>
         </div>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -246,15 +205,7 @@ function PrimaryRoutesSection() {
               >
                 {route.title}
               </h2>
-              <p style={{ color: T.inkSoft, fontSize: 14.5, lineHeight: 1.72, marginBottom: 22 }}>{route.body}</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
-                {route.bullets.map((bullet) => (
-                  <div key={bullet} style={{ alignItems: 'center', color: T.inkSoft, display: 'flex', fontSize: 13.5, gap: 10 }}>
-                    <div style={{ width: 4, height: 4, background: route.accent, flexShrink: 0 }} />
-                    {bullet}
-                  </div>
-                ))}
-              </div>
+              <p style={{ color: T.inkSoft, fontSize: 14.5, lineHeight: 1.72, marginBottom: 24 }}>{route.body}</p>
               <Link
                 href={route.href}
                 style={{
@@ -277,37 +228,6 @@ function PrimaryRoutesSection() {
   )
 }
 
-function UtilityRoutesSection() {
-  return (
-    <section style={{ background: T.white, borderBottom: `1px solid ${T.rule}`, padding: 'clamp(50px,5.8vw,76px) 0' }}>
-      <div style={SHELL}>
-        <div style={{ marginBottom: 26, textAlign: 'center' }}>
-          <h2
-            style={{
-              color: T.ink,
-              fontFamily: FF,
-              fontSize: 'clamp(26px,3vw,36px)',
-              fontWeight: 700,
-              letterSpacing: '-.022em',
-              lineHeight: 1.08,
-              marginBottom: 12,
-              marginLeft: 'auto',
-              marginRight: 'auto',
-            }}
-          >
-            Andere routes komen later in beeld
-          </h2>
-          <p style={{ color: T.inkSoft, fontSize: 14.5, lineHeight: 1.72, maxWidth: '52ch', margin: '0 auto' }}>
-            Pas als de volgende vraag echt speelt, komen kleinere vervolgroutes in beeld.
-          </p>
-        </div>
-
-        <FollowOnRoutesAccordion routes={EXPANDABLE_FOLLOW_ON_ROUTE_CONTENT} />
-      </div>
-    </section>
-  )
-}
-
 function ContactSection() {
   const href = buildContactHref({
     routeInterest: 'exitscan',
@@ -317,14 +237,14 @@ function ContactSection() {
   return (
     <MarketingClosingCta
       href={href}
-      accentTitle="en RetentieScan?"
+      accentTitle="scan nu past?"
       backdropNumber={null}
-      body="In een eerste gesprek toetsen we welke route nu de juiste eerste stap is en welke vervolgstap pas later nodig is."
-      buttonLabel="Plan een eerste route-inschatting"
+      body="In een eerste kennismaking toetsen we welke scan nu de juiste eerste stap is en wat u als eerste terugkrijgt."
+      buttonLabel="Plan een kennismaking"
       sectionIndex=""
       sectionLabel=""
       showSectionMark={false}
-      title="Twijfelt u tussen ExitScan"
+      title="Twijfelt u welke"
     />
   )
 }
@@ -334,7 +254,6 @@ export function ProductenContent() {
     <div style={{ background: T.paper, color: T.ink, overflowX: 'hidden' }}>
       <HeroSection />
       <PrimaryRoutesSection />
-      <UtilityRoutesSection />
       <ContactSection />
     </div>
   )
