@@ -1042,42 +1042,6 @@ def render_exit_report_html(data: dict) -> str:
     s += _vertrekcontext(exit_reasons=exit_reasons, contributing=contributing,
                          n=n, primary_factor_label=low_lbl)
 
-    # ── Factoranalyse ─────────────────────────────────────────────────────────
-    sorted_desc = list(reversed(sorted_f))
-    factor_chart_items = [
-        (FACTOR_LABELS_NL.get(fk, fk), sc, _factor_color(sc))
-        for fk, sc in sorted_desc
-    ]
-    factor_chart = _bar_chart_svg(factor_chart_items, max_val=10.0, width=420, bar_h=26, gap=10)
-
-    # Splits factoren op werkelijk label — niet als groep behandelen
-    kwetsbaar_f = [FACTOR_LABELS_NL.get(fk, fk) for fk, sc in sorted_f if sc is not None and sc < 5.0]
-    aandacht_f  = [FACTOR_LABELS_NL.get(fk, fk) for fk, sc in sorted_f if sc is not None and 5.0 <= sc < 6.5]
-    sterk_f     = [FACTOR_LABELS_NL.get(fk, fk) for fk, sc in sorted_f if sc is not None and sc >= 6.5]
-
-    def _factor_summary_card(title: str, color: str, css_cls: str, labels: list[str]) -> str:
-        if not labels:
-            return ""
-        return (f'<div class="card {css_cls}" style="margin-bottom:9px;">'
-                f'<div style="font-size:8.5px;font-weight:700;color:{color};letter-spacing:0.07em;text-transform:uppercase;margin-bottom:3px;">{_h(title)}</div>'
-                f'<div style="font-size:11px;font-weight:700;color:#243247;">{" &middot; ".join(_h(l) for l in labels)}</div>'
-                f'</div>')
-
-    factor_summary_html = (
-        _factor_summary_card("Kwetsbaar punt",  "#EF4444", "cr", kwetsbaar_f) +
-        _factor_summary_card("Aandachtspunt",   "#F59E0B", "",   aandacht_f) +
-        _factor_summary_card("Relatief sterk",  "#22C55E", "cg", sterk_f)
-    )
-
-    s += f"""<div class="pb sec">
-  <span class="slabel">Factoranalyse</span>
-  <div style="margin-bottom:12px;">{factor_summary_html}</div>
-  <div class="card">
-    <p style="font-size:9.5px;color:#64748B;margin-bottom:14px;">Score 1&ndash;10 — hoger is beter. Kleur geeft het beeld per factor: rood = kwetsbaar punt, geel = gemengd beeld, groen = relatief sterk.</p>
-    {factor_chart}
-  </div>
-</div>"""
-
     # ── Factor detail (itemniveau prioritaire factoren) ──────────────────────
     _code_to_count = {r["code"]: r["count"] for r in data["exit_r_dist"]}
     exit_code_counts = {fk: _code_to_count.get(FACTOR_EXIT_CODE.get(fk), 0) for fk in fa}
@@ -1151,35 +1115,34 @@ def render_exit_report_html(data: dict) -> str:
         s += '<div class="pb sec"><span class="slabel">Verdieping &mdash; prioritaire factoren</span><div class="card">Factor detail beschikbaar na voldoende patroonduiding.</div></div>'
 
     # ── SDT basisbehoeften ────────────────────────────────────────────────────
-    sdt_chart = _bar_chart_svg([
-        (SDT_LABELS.get(dim,""), sdt_a.get(dim,0), _factor_color(sdt_a.get(dim)))
-        for dim in ("autonomy","competence","relatedness") if dim in sdt_a
-    ], max_val=10.0, width=380, bar_h=24, gap=12)
-
     def _sdt_item_tbl(dim: str) -> str:
         keys = SDT_DIMENSION_ITEMS.get(dim, [])
         REV_LABEL = '<span style="font-size:8px;color:#94A3B8;">&nbsp;(omgekeerd)</span>'
         rows = "".join(
             f'<tr><td class="iq">{_h(q)}'
             f'{REV_LABEL if ik in SDT_REVERSE_ITEMS else ""}'
-            f'</td><td class="is" style="color:{_factor_color(sim.get(ik))};">{sim[ik]:.1f}</td>'
-            f'<td class="ib">{_mini_bar_svg(sim.get(ik), _factor_color(sim.get(ik)), width=80, height=6)}</td></tr>'
+            f'</td><td class="is" style="color:{_rag_color(sim.get(ik))};">{sim[ik]:.1f}</td>'
+            f'<td class="ib">{_mini_bar_svg(sim.get(ik), _rag_color(sim.get(ik)), width=80, height=6)}</td></tr>'
             for ik in keys
             for q in [next((t for k, t in data["sdt_items"] if k == ik), ik)]
             if ik in sim
         )
         return f'<table class="item-tbl">{rows}</table>' if rows else ""
 
+    sdt_overview_rows = "".join(
+        _factor_bar_row(SDT_LABELS.get(dim, ""), sdt_a.get(dim))
+        for dim in ("autonomy", "competence", "relatedness")
+        if sdt_a.get(dim) is not None
+    )
+
     s += f"""<div class="pb sec">
-  <span class="slabel">Werkbeleving — autonomie, competentie en verbondenheid</span>
-  <div class="card" style="margin-bottom:14px;">
-    <p style="font-size:11px;color:#374151;margin-bottom:14px;">Drie basisbehoeften die de onderliggende werkbeleving meten, onafhankelijk van de organisatiefactoren.</p>
-    {sdt_chart}
-  </div>"""
+  <span class="slabel">Werkbeleving — autonomie, competentie &amp; verbondenheid</span>
+  <p>Drie basisbehoeften die de onderliggende werkbeleving meten, onafhankelijk van de organisatiefactoren.</p>
+  <div class="card" style="margin-bottom:14px;">{sdt_overview_rows}</div>"""
 
     for dim in ("autonomy", "competence", "relatedness"):
         sc    = sdt_a.get(dim)
-        col   = _factor_color(sc)
+        col   = _rag_color(sc)
         fl_   = _factor_label(sc)
         tbl   = _sdt_item_tbl(dim)
         if not tbl: continue
@@ -1197,19 +1160,18 @@ def render_exit_report_html(data: dict) -> str:
     # ── eNPS ─────────────────────────────────────────────────────────────────
     if data["enps_available"] and data["enps_score"] is not None:
         es   = data["enps_score"]
-        ecol = "#22C55E" if es >= 20 else "#F59E0B" if es >= 0 else "#EF4444"
-        s += f"""<div class="sec">
+        ecol = _rag_color(10.0 if es >= 20 else 6.0 if es >= 0 else 4.0)
+        s += f"""<div class="pb sec">
   <span class="slabel">Werkgeversaanbeveling</span>
-  <div class="card">
-    <span style="font-size:40px;font-weight:700;color:{ecol};">{es:+d}</span>
-    <span style="font-size:10px;color:#64748B;margin-left:10px;">eNPS-score (&minus;100 tot +100)</span>
-    <p style="font-size:10px;color:#64748B;margin-top:8px;">Aanvullende context naast de factoranalyse.</p>
-  </div>
+  <table class="sg"><tr>
+    <td><div class="sc-l">Aanbevelingsscore</div><div class="sc-v" style="color:{ecol};">{es:+d}</div><div class="sc-b">eNPS (&minus;100 tot +100)</div></td>
+  </tr></table>
+  <div class="card"><p style="margin-bottom:0;">Aanvullende context naast het overzichtsprofiel. Een positieve score betekent meer promotors dan criticasters.</p></div>
 </div>"""
     else:
-        s += """<div class="sec">
+        s += """<div class="pb sec">
   <span class="slabel">Werkgeversaanbeveling</span>
-  <div class="empty-state">Niet gemeten in deze wave.</div>
+  <div class="card"><p style="margin-bottom:0;color:#64748B;">Niet gemeten in deze wave.</p></div>
 </div>"""
 
     # ── Segmentstatus ─────────────────────────────────────────────────────────
