@@ -3,41 +3,14 @@
 import Link from 'next/link'
 import { AC, Arrow, FF, Reveal, SHELL, T } from '@/components/marketing/design-tokens'
 import { buildContactHref } from '@/lib/contact-funnel'
-import { pricingAddOns, pricingCards, pricingFollowOnRoutes } from '@/components/marketing/site-content'
+import { pricingCards } from '@/components/marketing/site-content'
 
 const primaryPricingCards = pricingCards.filter(
-  (item) => item.eyebrow === 'ExitScan Baseline' || item.eyebrow === 'RetentieScan Baseline',
+  (item) =>
+    item.eyebrow === 'ExitScan Baseline' ||
+    item.eyebrow === 'RetentieScan Baseline' ||
+    item.eyebrow === 'Onboarding 30-60-90 Baseline',
 )
-const actionCenterStartCard = [
-  'Action Center Start',
-  'vanaf EUR 1.250',
-  'Begrensde opvolglaag voor een gekozen vervolgrichting na een baseline, met eigenaar, status en een afgesproken reviewmoment.',
-] as const
-const restOnRequestRows = [
-  {
-    title: 'Onboarding 30-60-90 Baseline',
-    price: 'op aanvraag',
-    description: 'Gerichte lifecycle-check wanneer vroege landing van nieuwe medewerkers centraal staat.',
-  },
-  ...pricingFollowOnRoutes
-    .filter((route) => !route.title.includes('Culture Assessment'))
-    .map((route) => ({
-      title: formatFollowOnTitle(route.title),
-      price: 'op aanvraag',
-      description: route.description,
-    })),
-  ...pricingAddOns
-    .filter((item) => item[0] !== 'Governed drilldown voor Cultuurbeeld')
-    .map(([title, price, description]) => ({
-      title,
-      price: 'op aanvraag',
-      description,
-    })),
-] as const
-
-function formatFollowOnTitle(title: string) {
-  return title === 'ExitScan Live Start' ? 'Exitscan Live' : title
-}
 
 function formatPricingPrice(price: string) {
   return price
@@ -171,13 +144,14 @@ function FirstBuySection() {
             Start met één duidelijke Baseline.
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, maxWidth: '56ch' }}>
-            U kiest eerst of de managementvraag over vertrek of behoud gaat. Loep vertaalt die vraag naar een
-            Baseline met managementrapport, prioriteiten en een begeleide managementbespreking.
+            U kiest eerst of de managementvraag over vertrek, behoud of de vroege landing van nieuwe medewerkers gaat.
+            Loep vertaalt die vraag naar een Baseline met managementrapport, prioriteiten en een begeleide
+            managementbespreking.
           </p>
           </div>
         </Reveal>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2" style={{ marginBottom: 24 }}>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3" style={{ marginBottom: 24 }}>
           {primaryPricingCards.map((item, index) => (
             <Reveal key={item.eyebrow} delay={index * 0.06}>
               <article
@@ -207,149 +181,22 @@ function FirstBuySection() {
                 href={
                   item.eyebrow.startsWith('ExitScan')
                     ? '/producten/exitscan'
-                    : '/producten/retentiescan'
+                    : item.eyebrow.startsWith('RetentieScan')
+                      ? '/producten/retentiescan'
+                      : '/producten/onboarding-30-60-90'
                 }
                 style={{ fontSize: 13, fontWeight: 600, color: AC.deep, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}
               >
                 {item.eyebrow.startsWith('ExitScan')
                   ? 'Meer over ExitScan'
-                  : 'Meer over RetentieScan'} <Arrow />
+                  : item.eyebrow.startsWith('RetentieScan')
+                    ? 'Meer over RetentieScan'
+                    : 'Meer over Onboarding 30-60-90'} <Arrow />
               </Link>
               </article>
             </Reveal>
           ))}
         </div>
-      </div>
-    </section>
-  )
-}
-
-function OptionalExpansionSection() {
-  const href = buildContactHref({ routeInterest: 'nog-onzeker', ctaSource: 'pricing_action_center_start' })
-
-  return (
-    <section style={{ background: T.white, padding: 'clamp(50px,5.8vw,76px) 0', borderBottom: `1px solid ${T.rule}` }}>
-      <div style={SHELL}>
-        <Reveal>
-          <div style={{ marginBottom: 28 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: T.inkMuted, marginBottom: 12 }}>
-            Optionele uitbreiding
-          </div>
-          <h2
-            style={{
-              fontFamily: FF,
-              fontSize: 'clamp(26px,3vw,38px)',
-              fontWeight: 700,
-              letterSpacing: '-.022em',
-              color: T.ink,
-              marginBottom: 14,
-              lineHeight: 1.08,
-            }}
-          >
-            Borg opvolging alleen als daar aanleiding voor is.
-          </h2>
-          <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, maxWidth: '54ch' }}>
-            Na een Baseline kunt u {actionCenterStartCard[0]} toevoegen om één gekozen vervolgrichting zichtbaar te houden:
-            wie pakt dit op, wat loopt er en wanneer kijken we terug? Het blijft begrensd en is geen breed
-            workflowplatform.
-          </p>
-          </div>
-        </Reveal>
-
-        <Reveal delay={0.08}>
-          <article
-            style={{
-              background: T.ink,
-              border: `1px solid ${T.ink}`,
-              color: '#fff',
-              padding: '34px',
-            }}
-          >
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-start">
-            <div>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.mid, marginBottom: 12 }}>
-                {actionCenterStartCard[0]}
-              </div>
-              <div style={{ fontFamily: FF, fontSize: 'clamp(2rem,3vw,2.8rem)', fontWeight: 400, letterSpacing: '-.025em', marginBottom: 12 }}>
-                {actionCenterStartCard[1]}
-              </div>
-              <p style={{ fontSize: 14.5, lineHeight: 1.72, color: 'rgba(255,255,255,0.8)', maxWidth: '46ch' }}>
-                {actionCenterStartCard[2]}
-              </p>
-            </div>
-            <div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 22 }}>
-                {[
-                  'Eén gekozen vervolgrichting',
-                  'Beperkte manager- of eigenaartoegang',
-                  'Zichtbare status en één reviewmoment',
-                  'Geen breed workflowplatform',
-                ].map((bullet) => (
-                  <div key={bullet} style={{ display: 'flex', gap: 10, fontSize: 13.5, lineHeight: 1.65, color: 'rgba(255,255,255,0.82)', padding: '12px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}>
-                    <div style={{ width: 4, height: 4, background: AC.mid, flexShrink: 0, marginTop: 7 }} />
-                    {bullet}
-                  </div>
-                ))}
-              </div>
-              <Link href={href} style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14, fontWeight: 600, padding: '12px 24px', color: '#fff', background: AC.deep }}>
-                Bespreek {actionCenterStartCard[0]} <Arrow />
-              </Link>
-            </div>
-          </div>
-          </article>
-        </Reveal>
-      </div>
-    </section>
-  )
-}
-
-function FollowOnSection() {
-  return (
-    <section style={{ background: T.white, padding: 'clamp(52px,6vw,80px) 0', borderBottom: `1px solid ${T.rule}` }}>
-      <div style={SHELL}>
-        <Reveal>
-          <div style={{ marginBottom: 28 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: T.inkMuted, marginBottom: 12 }}>
-            Vervolg op aanvraag
-          </div>
-          <h2
-            style={{
-              fontFamily: FF,
-              fontSize: 'clamp(26px,3vw,38px)',
-              fontWeight: 700,
-              letterSpacing: '-.022em',
-              color: T.ink,
-              marginBottom: 14,
-              lineHeight: 1.1,
-            }}
-          >
-            Rest op aanvraag.
-          </h2>
-          <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, maxWidth: '54ch' }}>
-            Verdere verdieping, onboarding, ritmeroutes en aanvullende uitbreidingen bespreken we pas nadat de eerste
-            Baseline helder staat. Zo blijft de eerste koop licht en geloofwaardig.
-          </p>
-          </div>
-        </Reveal>
-
-        <Reveal delay={0.08}>
-          <div style={{ border: `1px solid ${T.rule}`, overflow: 'hidden' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '220px 140px 1fr', background: T.paperSoft, borderBottom: `1px solid ${T.rule}` }}>
-            {['Route', 'Prijs', 'Wanneer logisch'].map((heading) => (
-              <div key={heading} style={{ padding: '12px 18px', fontSize: 10, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: T.inkMuted }}>
-                {heading}
-              </div>
-            ))}
-          </div>
-          {restOnRequestRows.map((route, index) => (
-            <div key={route.title} style={{ display: 'grid', gridTemplateColumns: '220px 140px 1fr', borderTop: index > 0 ? `1px solid ${T.rule}` : 'none' }}>
-              <div style={{ padding: '14px 18px', fontSize: 13.5, fontWeight: 600, color: T.ink }}>{route.title}</div>
-              <div style={{ padding: '14px 18px', fontSize: 13, color: T.inkMuted }}>{route.price}</div>
-              <div style={{ padding: '14px 18px', fontSize: 13, color: T.inkSoft, lineHeight: 1.6 }}>{route.description}</div>
-            </div>
-          ))}
-          </div>
-        </Reveal>
       </div>
     </section>
   )
@@ -379,7 +226,7 @@ function CtaBand() {
           <Reveal delay={0.08} from="right">
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <Link href={ctaHref} style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14, fontWeight: 600, padding: '12px 26px', color: '#fff', background: AC.deep }}>
-              Plan een eerste route-inschatting <Arrow />
+              Plan een kennismaking <Arrow />
             </Link>
             <Link href="/aanpak" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14, fontWeight: 500, padding: '11px 24px', color: T.inkSoft, border: `1px solid ${T.rule}` }}>
               Bekijk de aanpak
@@ -397,8 +244,6 @@ export function TarievenContent() {
     <div style={{ background: T.white, color: T.ink, overflowX: 'hidden' }}>
       <HeroSection />
       <FirstBuySection />
-      <OptionalExpansionSection />
-      <FollowOnSection />
       <CtaBand />
     </div>
   )

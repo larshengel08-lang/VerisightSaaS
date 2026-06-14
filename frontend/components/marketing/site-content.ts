@@ -562,6 +562,18 @@ export const pricingCards = [
     ],
   },
   {
+    eyebrow: 'Onboarding 30-60-90 Baseline',
+    price: 'vanaf €4.500',
+    description:
+      'De gerichte eerste instap voor organisaties die vroeg willen zien hoe nieuwe medewerkers landen, met een groepsbeeld op de eerste 30, 60 en 90 dagen en een begeleide managementbespreking.',
+    bullets: [
+      'Scan uitsturen en bewaken door Loep',
+      'Managementrapport met patronen en prioriteiten',
+      'Begeleide managementbespreking (60–90 min)',
+      'Eerste vervolgrichting vastgelegd',
+    ],
+  },
+  {
     eyebrow: 'Loep Culture Assessment Baseline',
     price: 'op aanvraag',
     description:
