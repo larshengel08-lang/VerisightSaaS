@@ -24,11 +24,11 @@ describe('marketing flow defaults', () => {
   it('keeps the primary and secondary CTA labels aligned with the redesign', () => {
     expect(marketingPrimaryCta).toEqual({
       href: buildContactHref({ routeInterest: 'exitscan', ctaSource: 'global_primary_cta' }),
-      label: 'Plan een kennismaking',
+      label: 'Bespreek uw vraagstuk',
     })
     expect(marketingSecondaryCta).toEqual({
-      href: '/#suite',
-      label: 'Bekijk de suite',
+      href: '/#scans',
+      label: 'Bekijk welke scan past',
     })
   })
 
@@ -43,10 +43,9 @@ describe('marketing flow defaults', () => {
     expect(solutionSource).toContain('Plan een suite-demo over medewerkersbehoud analyseren')
   })
 
-  it('keeps the top navigation focused on products, process, pricing and trust', () => {
+  it('keeps the top navigation focused on products, pricing and trust', () => {
     expect(marketingNavLinks).toEqual([
       { href: '/producten', label: 'Producten' },
-      { href: '/aanpak', label: 'Aanpak' },
       { href: '/tarieven', label: 'Tarieven' },
       { href: '/vertrouwen', label: 'Vertrouwen' },
     ])

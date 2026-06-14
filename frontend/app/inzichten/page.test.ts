@@ -91,15 +91,10 @@ describe('inzichten index route', () => {
     expect(markup).toContain('onboarding-frictie-eerder-signaleren|retentiesignalen-op-tijd-zien')
   })
 
-  it('derives the inzichten sitemap hub lastModified from the newest published insight', async () => {
-    vi.doMock('@/lib/insights', () => ({
-      getAllInsights: () => [olderPost, newerPost],
-    }))
-
+  it('excludes the inzichten hub and articles from the sitemap (inzichten is noindex)', async () => {
     const { default: sitemap } = await import('../sitemap')
-    const hubEntry = sitemap().find((entry) => entry.url === 'https://www.verisight.nl/inzichten')
+    const entries = sitemap()
 
-    expect(hubEntry).toBeDefined()
-    expect(hubEntry?.lastModified?.toISOString()).toBe('2026-05-09T00:00:00.000Z')
+    expect(entries.some((entry) => entry.url.includes('/inzichten'))).toBe(false)
   })
 })

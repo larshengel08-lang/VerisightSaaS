@@ -66,8 +66,9 @@ describe('Portfolio cleanup — /producten routekiezer', () => {
     expect(source()).not.toContain('UtilityRoutesSection')
   })
 
-  it('uses the kennismaking CTA, not the internal route-inschatting CTA', () => {
-    expect(source()).toContain('Plan een kennismaking')
+  it('uses a buyer-facing scan CTA, not the internal route-inschatting CTA', () => {
+    expect(source()).toContain('Bespreek of deze scan past')
+    expect(source()).not.toContain('route-inschatting')
   })
 })
 
