@@ -2,19 +2,18 @@ import { buildContactHref } from '@/lib/contact-funnel'
 
 export const marketingNavLinks = [
   { href: '/producten', label: 'Producten' },
-  { href: '/aanpak', label: 'Aanpak' },
   { href: '/tarieven', label: 'Tarieven' },
   { href: '/vertrouwen', label: 'Vertrouwen' },
 ] as const
 
 export const marketingPrimaryCta = {
   href: buildContactHref({ routeInterest: 'exitscan', ctaSource: 'global_primary_cta' }),
-  label: 'Plan een kennismaking',
+  label: 'Bespreek uw vraagstuk',
 } as const
 
 export const marketingSecondaryCta = {
-  href: '/#suite',
-  label: 'Bekijk de suite',
+  href: '/#scans',
+  label: 'Bekijk welke scan past',
 } as const
 
 export const marketingFooterLinks = [
@@ -23,7 +22,6 @@ export const marketingFooterLinks = [
   { href: '/producten/exitscan', label: 'ExitScan' },
   { href: '/producten/retentiescan', label: 'RetentieScan' },
   { href: '/producten/onboarding-30-60-90', label: 'Onboarding 30-60-90' },
-  { href: '/aanpak', label: 'Aanpak' },
   { href: '/tarieven', label: 'Tarieven' },
   { href: '/vertrouwen', label: 'Vertrouwen' },
 ] as const
