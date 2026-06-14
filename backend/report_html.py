@@ -479,6 +479,25 @@ def _step_cards(nsp: dict) -> str:
     return f'<table class="steps"><tr>{tds}</tr></table>'
 
 
+def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: str,
+                            owner: str, review_when: str) -> str:
+    """Gespreksagenda voor eerste managementbespreking — geen actieplan, agenda."""
+    return f"""<div class="pb sec">
+  <span class="slabel">Eerste managementspoor</span>
+  <h2 style="margin-bottom:6px;">Gespreksagenda</h2>
+  <p style="font-size:10.5px;color:#64748B;max-width:60ch;margin-bottom:16px;">
+    Geen kant-en-klaar plan &mdash; een agenda voor de begeleide managementbespreking.</p>
+  <table class="steps"><tr>
+    <td class="step"><div class="step-no">Primair thema</div><div class="step-body">{_h(primary_theme)}</div></td>
+    <td class="step"><div class="step-no">Tweede aandachtspunt</div><div class="step-body">{_h(second_point)}</div></td>
+    <td class="step"><div class="step-no">Eigenaarschap</div><div class="step-body">{_h(owner)}</div></td>
+    <td class="step"><div class="step-no">Opnieuw bespreken</div><div class="step-body">{_h(review_when)}</div></td>
+  </tr></table>
+  <div class="card accent"><h3>Gespreksopener</h3><p style="margin-bottom:0;">{_h(mgmt_q)}</p></div>
+  <p class="trustline">Nog niet besluiten: of een verdieping of kortere vervolgmeting nodig is &mdash; dat volgt uit het gesprek.</p>
+</div>"""
+
+
 def _trust_page(scan_type: str = "exit") -> str:
     """Product-specifieke methodiekpagina — nooit gedeelde ExitScan-copy buiten ExitScan."""
     if scan_type == "retention":
@@ -527,8 +546,8 @@ def _trust_page(scan_type: str = "exit") -> str:
             f'<td class="tc"><div class="tt">{_h(t)}</div><div class="tb">{_h(b)}</div></td>'
             for t, b in pairs)
 
-    return f"""<div class="pb">
-  <span class="slabel">Hoe dit rapport te lezen</span>
+    return f"""<div class="pb sec">
+  <span class="slabel">Methodiek, privacy &amp; interpretatiegrenzen</span>
   <div class="card" style="margin-bottom:14px;">
     <p style="font-size:11px;color:#374151;">{_h(intro)}</p>
   </div>
@@ -541,32 +560,26 @@ def _segment_status_block(n: int, has_segment_data: bool = False,
                            reason: str = "n-grens") -> str:
     """Segmentstatus — altijd zichtbaar, ook als segmenten niet worden getoond."""
     if has_segment_data:
-        status_txt = "Segmentanalyse beschikbaar — zie uitgebreide versie."
-        col, lbl = "#22C55E", "Beschikbaar"
-    else:
-        reasons = {
-            "n-grens":    "Onvoldoende responses per groep (minimaal 5 per segment).",
-            "privacy":    "Herleidbaar naar individuen — niet weergegeven.",
-            "nvt":        "Niet van toepassing voor dit meetmoment.",
-            "vrijgegeven":"Nog niet vrijgegeven door HR.",
-        }
-        status_txt = reasons.get(reason, "Niet beschikbaar.")
-        col, lbl = "#94A3B8", "Niet getoond"
-
-    return f"""<div class="sec">
+        return f"""<div class="pb sec">
   <span class="slabel">Segmentanalyse</span>
-  <div class="card" style="border-left:4px solid {col};">
+  <div class="card" style="border-left:4px solid #22C55E;">
     <div style="display:table;width:100%;">
       <div style="display:table-cell;vertical-align:middle;width:1%;white-space:nowrap;padding-right:14px;">
-        <span style="font-size:9px;font-weight:700;background:{col};color:#FFF;
-          padding:3px 9px;border-radius:3px;letter-spacing:0.08em;text-transform:uppercase;">{_h(lbl)}</span>
+        <span style="font-size:9px;font-weight:700;background:#22C55E;color:#FFF;
+          padding:3px 9px;border-radius:3px;letter-spacing:0.08em;text-transform:uppercase;">Beschikbaar</span>
       </div>
       <div style="display:table-cell;vertical-align:middle;font-size:10px;color:#374151;">
-        {_h(status_txt)}&nbsp;
-        Segmentweergave verschijnt automatisch zodra voldoende responses per groep beschikbaar zijn (n&nbsp;&ge;&nbsp;5).
-        Geen individuele of kleine-groep output.
+        Segmentanalyse beschikbaar &mdash; zie uitgebreide versie.
       </div>
     </div>
+  </div>
+</div>"""
+    else:
+        return f"""<div class="pb sec">
+  <span class="slabel">Segmentanalyse</span>
+  <div class="empty-state">
+    <p style="margin-bottom:4px;">Segmentverschillen zijn niet getoond om herleidbaarheid te voorkomen.</p>
+    <p style="margin-bottom:0;">Verdieping opent zodra voldoende responses per groep beschikbaar zijn.</p>
   </div>
 </div>"""
 
@@ -1199,6 +1212,9 @@ def render_exit_report_html(data: dict) -> str:
   <div class="empty-state">Niet gemeten in deze wave.</div>
 </div>"""
 
+    # ── Segmentstatus ─────────────────────────────────────────────────────────
+    s += _segment_status_block(n, has_segment_data=False, reason="n-grens")
+
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]
     s += f"""<div class="pb sec">
@@ -1206,30 +1222,14 @@ def render_exit_report_html(data: dict) -> str:
   {_themed_quotes(texts, "exit", top_fkeys, n)}
 </div>"""
 
-    # ── Wat betekent dit voor management? ─────────────────────────────────────
-    pbs_html = ("".join(_playbook_card(r) for r in data["exit_pbs"])
-                if data["exit_pbs"]
-                else '<div class="empty-state">Managementduiding beschikbaar bij voldoende responses met patroon.</div>')
-    s += f"""<div class="pb sec">
-  <span class="slabel">Wat betekent dit voor management?</span>
-  {pbs_html}
-</div>"""
-
-    # ── Eerste managementspoor ────────────────────────────────────────────────
-    tf_lbl = top_flabels[0] if top_flabels else "het leidende thema"
-    s += f"""<div class="pb sec">
-  <span class="slabel">Eerste managementspoor</span>
-  {_step_cards(nsp)}
-  <div class="cbox" style="margin-top:14px;">
-    <p style="font-size:10.5px;color:#243247;font-weight:700;margin-bottom:4px;">Eerste stap</p>
-    <p style="font-size:10px;color:#374151;">
-      Kies binnen 30 dagen &eacute;&eacute;n managementgesprek of data-check
-      om het beeld rond {_h(tf_lbl)} te verduidelijken.
-      Bepaal daarna pas of een gerichte verbetering nodig is.
-      Beleg eigenaar en reviewmoment voordat bredere stappen worden gezet.
-    </p>
-  </div>
-</div>"""
+    # ── Eerste managementspoor (gespreksagenda) ───────────────────────────────
+    s += _eerste_managementspoor(
+        primary_theme=nsp.get("first_decision") or (top_flabels[0] if top_flabels else "het leidende thema"),
+        second_point=top_flabels[1] if len(top_flabels) > 1 else "",
+        mgmt_q=_mgmt_q(priority_fkeys[0], "exit") if priority_fkeys else (nsp.get("first_decision") or ""),
+        owner=nsp.get("first_owner") or "HR + verantwoordelijk management",
+        review_when=nsp.get("review_moment") or "bij de volgende meting",
+    )
 
     # ── Appendix ─────────────────────────────────────────────────────────────
     app_sections = ""
@@ -1277,10 +1277,7 @@ def render_exit_report_html(data: dict) -> str:
   </div>
 </div>"""
 
-    # ── Segmentstatus ─────────────────────────────────────────────────────────
-    s += _segment_status_block(n, has_segment_data=False, reason="n-grens")
-
-    # ── Methodiek ─────────────────────────────────────────────────────────────
+    # ── Methodiek (LAST) ──────────────────────────────────────────────────────
     s += _trust_page("exit")
     return _doc(f"ExitScan — {data['campaign_name']}", s, scan_type="exit")
 

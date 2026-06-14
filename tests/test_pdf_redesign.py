@@ -113,3 +113,23 @@ def test_priority_factors_weighs_exit_reason_not_only_score():
     out = _select_priority_factors(factor_avgs, exit_codes, max_n=3)
     assert out[0] == "growth"
     assert len(out) <= 3
+
+
+from backend.report_html import _segment_status_block, _eerste_managementspoor
+
+
+def test_segment_state_b_uses_spec_copy():
+    html = _segment_status_block(n=8, has_segment_data=False)
+    assert "herleidbaarheid te voorkomen" in html
+    assert "zodra voldoende responses" in html
+
+
+def test_managementspoor_avoids_hard_language():
+    html = _eerste_managementspoor(
+        primary_theme="Groeiperspectief + vertrekcontext", second_point="Beloning",
+        mgmt_q="Welke loopbaanstappen ontbreken?", owner="HR + directie",
+        review_when="over 1 kwartaal")
+    low = html.lower()
+    assert "risicofactor" not in low
+    assert "interventie" not in low
+    assert "gespreksopener" in low or "aandachtspunt" in low
