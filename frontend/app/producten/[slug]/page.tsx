@@ -44,7 +44,7 @@ export async function generateStaticParams() {
   ).map((product) => ({ slug: product.slug }))
 }
 
-export async function generateMetadata({ params }: Props) {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   if (PUBLICLY_REMOVED_PRODUCT_SLUGS.has(slug)) return {}
   const product = getMarketingProductBySlug(slug)

@@ -10,7 +10,10 @@ const primaryRoutes = [
     title: 'ExitScan',
     eyebrow: 'Vertrek begrijpen',
     body: 'Wij brengen vertrekpatronen in beeld en leveren een managementrapport met prioriteiten en een begeleide bespreking.',
+    gets: 'Managementrapport met vertrekduiding en prioriteiten + begeleide managementbespreking.',
+    price: 'Vanaf €4.500',
     href: '/producten/exitscan',
+    contactRoute: 'exitscan',
     accent: AC.deep,
     accentSoft: AC.faint,
   },
@@ -18,7 +21,10 @@ const primaryRoutes = [
     title: 'RetentieScan',
     eyebrow: 'Behoud versterken',
     body: 'Wij laten zien waar behoud onder druk komt te staan voordat uitstroom zichtbaar wordt — met rapport en bespreking.',
+    gets: 'Managementrapport met retentiesignaal en prioriteiten + begeleide managementbespreking.',
+    price: 'Vanaf €4.500',
     href: '/producten/retentiescan',
+    contactRoute: 'retentiescan',
     accent: 'oklch(0.50 0.12 188)' as string,
     accentSoft: 'oklch(0.972 0.018 185)' as string,
   },
@@ -26,7 +32,10 @@ const primaryRoutes = [
     title: 'Onboarding 30-60-90',
     eyebrow: 'Goed landen',
     body: 'Wij meten vroeg hoe nieuwe medewerkers landen en leveren een groepsbeeld met een eerste vervolgrichting.',
+    gets: 'Managementrapport met vroege landingsduiding + begeleide managementbespreking.',
+    price: 'Vanaf €4.500',
     href: '/producten/onboarding-30-60-90',
+    contactRoute: 'onboarding',
     accent: '#9b5f1e' as string,
     accentSoft: 'oklch(0.97 0.03 70)' as string,
   },
@@ -126,7 +135,7 @@ function HeroSection() {
                 textDecoration: 'none',
               }}
             >
-              Plan een kennismaking <Arrow />
+              Bespreek uw vraagstuk <Arrow />
             </Link>
           </div>
         </div>
@@ -202,21 +211,47 @@ function PrimaryRoutesSection() {
               >
                 {route.title}
               </h2>
-              <p style={{ color: T.inkSoft, fontSize: 14.5, lineHeight: 1.72, marginBottom: 24 }}>{route.body}</p>
-              <Link
-                href={route.href}
-                style={{
-                  alignItems: 'center',
-                  color: route.accent,
-                  display: 'inline-flex',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  gap: 6,
-                  textDecoration: 'none',
-                }}
-              >
-                Bekijk {route.title} <Arrow />
-              </Link>
+              <p style={{ color: T.inkSoft, fontSize: 14.5, lineHeight: 1.72, marginBottom: 18 }}>{route.body}</p>
+              <p style={{ color: T.inkSoft, fontSize: 13.5, lineHeight: 1.7, marginBottom: 18 }}>
+                <span style={{ fontWeight: 600, color: T.ink }}>Wat HR en management krijgen: </span>
+                {route.gets}
+              </p>
+              <div style={{ color: T.ink, fontFamily: FF, fontSize: 22, fontWeight: 600, letterSpacing: '-.02em', marginBottom: 22 }}>
+                {route.price}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <Link
+                  href={buildContactHref({ routeInterest: route.contactRoute, ctaSource: `products_card_${route.contactRoute}` })}
+                  style={{
+                    alignItems: 'center',
+                    background: T.ink,
+                    color: '#fff',
+                    display: 'inline-flex',
+                    fontSize: 13.5,
+                    fontWeight: 600,
+                    gap: 6,
+                    justifyContent: 'center',
+                    padding: '12px 20px',
+                    textDecoration: 'none',
+                  }}
+                >
+                  Bespreek of deze scan past <Arrow />
+                </Link>
+                <Link
+                  href={route.href}
+                  style={{
+                    alignItems: 'center',
+                    color: route.accent,
+                    display: 'inline-flex',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    gap: 6,
+                    textDecoration: 'none',
+                  }}
+                >
+                  Bekijk {route.title} <Arrow />
+                </Link>
+              </div>
             </article>
           ))}
         </div>
@@ -237,7 +272,7 @@ function ContactSection() {
       accentTitle="scan nu past?"
       backdropNumber={null}
       body="In een eerste kennismaking toetsen we welke scan nu de juiste eerste stap is en wat u als eerste terugkrijgt."
-      buttonLabel="Plan een kennismaking"
+      buttonLabel="Bespreek uw vraagstuk"
       sectionIndex=""
       sectionLabel=""
       showSectionMark={false}
