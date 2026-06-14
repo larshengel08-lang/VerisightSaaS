@@ -568,7 +568,7 @@ function RetentionScanPage() {
             <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_360px] items-start">
               <div>
                 <h1 style={{ fontFamily: FF, fontWeight: 800, fontSize: 'clamp(42px,5.5vw,76px)', lineHeight: .97, letterSpacing: '-.032em', color: T.ink, maxWidth: '12ch' }}>
-                  Wij laten vooraf zien waar behoud onder druk komt te staan, voordat uitstroom zichtbaar wordt. U weet wat u als eerste kunt aanpakken.
+                  Wij laten zien waar behoud onder druk staat, voordat uitstroom zichtbaar wordt. U weet wat u als eerste kunt aanpakken.
                 </h1>
                 <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '48ch', margin: '26px 0 36px' }}>
                   Loep voert de RetentieScan uit bij uw actieve medewerkers, levert het rapport en begeleidt u naar één eerste managementkeuze.
