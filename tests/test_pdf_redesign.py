@@ -125,6 +125,33 @@ def test_behoudscontext_shows_stay_intent_and_signal():
     assert "behoud" in html.lower()
 
 
+from backend.report_html import _checkpointoverzicht, _landingskwaliteit
+
+
+def test_checkpointoverzicht_shows_three_phases():
+    html = _checkpointoverzicht(checkpoints=[("30 dagen", 6.8), ("60 dagen", 6.1), ("90 dagen", 5.7)])
+    assert "30 dagen" in html and "90 dagen" in html
+    assert "6.8" in html and "5.7" in html
+
+
+def test_checkpointoverzicht_single_measurement_degraded():
+    html = _checkpointoverzicht(checkpoints=[("Huidig checkpoint", 6.5)])
+    assert "6.5" in html
+    assert "herhaalde meting" in html.lower()
+
+
+def test_landingskwaliteit_renders_domains():
+    domains = [
+        ("Rolhelderheid en verwachtingen", 5.2),
+        ("Begeleiding en bereikbaarheid", 6.8),
+        ("Sociale landing en cultuurbegrip", 4.9),
+    ]
+    html = _landingskwaliteit(domains)
+    assert "Rolhelderheid" in html
+    assert "5.2" in html and "6.8" in html
+    assert "Landingskwaliteit" in html
+
+
 from backend.report_html import _segment_status_block, _eerste_managementspoor
 
 

@@ -1608,45 +1608,90 @@ def render_retention_report_html(data: dict) -> str:
     return _doc(f"RetentieScan — {data['campaign_name']}", s, scan_type="retention")
 
 
+# ─── Onboarding-exclusive helpers ────────────────────────────────────────────
+
+def _checkpointoverzicht(checkpoints: list[tuple[str, float | None]]) -> str:
+    """Checkpoint-fasevergelijking (30/60/90 dagen) of eerlijke single-measurement degraded view.
+
+    checkpoints — lijst van (fase-label, score | None).
+    Als < 2 fasen: render de enkele meting met een .trustline die fasevergelijking benoemt.
+    """
+    if len(checkpoints) >= 2:
+        cells = "".join(
+            f'<td><div class="sc-l">{_h(label)}</div>'
+            f'<div class="sc-v" style="color:{_rag_color(score)};">{_score_str(score)}</div>'
+            f'<div class="sc-b">{_h("Aandachtspunt" if score is not None and score < 5.0 else "Gemengd" if score is not None and score < 6.5 else "Stabiel")}</div></td>'
+            for label, score in checkpoints
+        )
+        body = f'<table class="sg"><tr>{cells}</tr></table>'
+    else:
+        # Single measurement — honest degraded view
+        label, score = checkpoints[0] if checkpoints else ("Huidig checkpoint", None)
+        body = (
+            f'<table class="sg"><tr>'
+            f'<td><div class="sc-l">{_h(label)}</div>'
+            f'<div class="sc-v" style="color:{_rag_color(score)};">{_score_str(score)}</div>'
+            f'<div class="sc-b">Enkelvoudig meetmoment</div></td>'
+            f'</tr></table>'
+            f'<p class="trustline">Eén meetmoment — fasevergelijking opent bij herhaalde meting.</p>'
+        )
+
+    return f"""<div class="pb sec">
+  <span class="slabel">Checkpointoverzicht</span>
+  <h2 style="margin-bottom:14px;">Onboardingfases</h2>
+  {body}
+</div>"""
+
+
+def _landingskwaliteit(domains: list[tuple[str, float | None]]) -> str:
+    """Landingskwaliteit per domein — factor bar rows in een card, analoog aan _overzichtsprofiel."""
+    rows = "".join(
+        _factor_bar_row(label, score)
+        for label, score in domains
+        if score is not None
+    )
+    if not rows:
+        rows = '<div class="empty-state">Domeinscores beschikbaar bij voldoende patroonduiding.</div>'
+    legend = (f'<p style="font-size:9px;color:#64748B;margin-top:12px;">'
+              f'<span style="color:{RAG_HIGH};">&#9632;</span> aandachtspunt &nbsp; '
+              f'<span style="color:{RAG_MID};">&#9632;</span> gemengd &nbsp; '
+              f'<span style="color:{RAG_LOW};">&#9632;</span> goed geland</p>')
+    return f"""<div class="pb sec">
+  <span class="slabel">Landingskwaliteit per domein</span>
+  <div class="card">{rows}{legend}</div>
+</div>"""
+
+
 # ─── OnboardingScan renderer ──────────────────────────────────────────────────
 
 def render_onboarding_report_html(data: dict) -> str:
     ST          = "onboarding"
     n           = data["n_completed"]
     avg_risk    = data["avg_risk"]
+    avg_si      = data["avg_si"]
     band_lbl, band_col = _band(avg_risk, ST)
     fa          = data["factor_avgs"]
+    sdt_a       = data["sdt_avgs"]
     nsp         = data["nsp"]
     top_fkeys   = data["top_fkeys"]
+    top_flabels = data["top_flabels"]
     fim         = data["factor_items_map"]
     oim         = data["org_item_avgs"]
-    avg_si      = data["avg_si"]
+    sim         = data["sdt_item_avgs"]
 
-    sorted_f    = sorted([(fk, fa.get(fk)) for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None], key=lambda x: x[1])
-    sorted_desc = list(reversed(sorted_f))
-    low_f       = sorted_f[0]  if sorted_f else None
-    high_f      = sorted_f[-1] if sorted_f else None
-    gauge       = _gauge_svg(avg_risk, band_lbl, band_col, width=200)
+    sorted_f = sorted([(fk, fa.get(fk)) for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None],
+                      key=lambda x: x[1])
+    low_f    = sorted_f[0]  if sorted_f else None
+    high_f   = sorted_f[-1] if sorted_f else None
+    low_lbl  = _fl(low_f[0], ST)  if low_f  else ""
+    high_lbl = _fl(high_f[0], ST) if high_f else ""
+    low_sc   = low_f[1]  if low_f  else None
+    high_sc  = high_f[1] if high_f else None
 
-    # ── 1. Samenvatting onboardingsbeeld ──────────────────────────────────────
-    top_lbl_str = " · ".join(_fl(fk, ST) for fk in top_fkeys) or "—"
-    bc  = data["band_counts"]
-    stacked = _stacked_bar_svg([
-        ("Onboardingbasis vraagt aandacht", bc.get("HOOG",0),   "#EF4444"),
-        ("Gemengd onboardingsbeeld",         bc.get("MIDDEN",0), "#F59E0B"),
-        ("Onboardingbasis stabiel",           bc.get("LAAG",0),   "#22C55E"),
-    ], total=n, width=320, height=22)
-    stat_cards = [
-        {"title": "Onboardingsignaal", "value": band_lbl,                    "body": "Groepsbeeld eerste werkperiode"},
-        {"title": "Signaalsterkte",    "value": _score_str(avg_risk),        "body": "1–10, hoger = meer frictie"},
-        {"title": "Stay-intent",       "value": _score_str(avg_si),          "body": "Verblijfsintentie early-stage"},
-        {"title": "Responsbasis",      "value": f"{n}/{data['n_invited']}",  "body": f"{data['completion_pct']}% voltooid"},
-    ]
-    _ob_high_lbl = _fl(high_f[0], ST) if high_f else ""
-    _ob_low_lbl  = _fl(low_f[0], ST)  if low_f  else ""
-    _ob_primary  = _ob_high_lbl or _ob_low_lbl or "—"
-    _ob_cover = _cover(
-        scan_label=data["scan_lbl"], scan_type="onboarding", org_name=data["org_name"],
+    # ── Cover ─────────────────────────────────────────────────────────────────
+    _ob_primary = low_lbl or high_lbl or "—"
+    s = _cover(
+        scan_label=data["scan_lbl"], scan_type=ST, org_name=data["org_name"],
         period=data["campaign_name"], opening_question="Hoe landen uw nieuwe medewerkers?",
         stats=[
             ("Respondenten", str(n)),
@@ -1654,243 +1699,268 @@ def render_onboarding_report_html(data: dict) -> str:
             ("Primair signaal", _ob_primary),
         ],
     )
-    body = f"""
-{_ob_cover}
-<div class="pb sec">
-  <span class="slabel">Samenvatting onboardingsbeeld</span>
-  <div class="card ca" style="margin-bottom:14px;">
-    <div class="tcol">
-      <div class="tc-l" style="padding-right:10px;">
-        <p style="font-size:12px;font-weight:700;color:#243247;line-height:1.5;margin-bottom:10px;">
-          Onboardingsignaal: <span style="color:{band_col};">{_h(band_lbl)}</span>.
-          Eerste aandachtspunten: <strong>{_h(top_lbl_str)}</strong>.
-        </p>
-        <div style="margin-bottom:10px;">{stacked}</div>
-        <div style="font-size:9px;color:#64748B;margin-top:5px;">
-          <span class="legend-dot" style="background:#EF4444;"></span>Vraagt aandacht: {bc.get("HOOG",0)}&times;&nbsp;&nbsp;
-          <span class="legend-dot" style="background:#F59E0B;"></span>Gemengd: {bc.get("MIDDEN",0)}&times;&nbsp;&nbsp;
-          <span class="legend-dot" style="background:#22C55E;"></span>Stabiel: {bc.get("LAAG",0)}&times;
-        </div>
-      </div>
-      <div class="tc-r" style="text-align:center;">{gauge}</div>
-    </div>
-  </div>
-  {_stat4(stat_cards)}
-</div>"""
 
-    # ── 2. Responsbasis ───────────────────────────────────────────────────────
-    r_basis = "Stevig" if n >= 20 else "Opbouwend" if n >= 10 else "Indicatief"
-    r_note  = ("Patroonduiding is betrouwbaar" if n >= 20
-               else "Patronen zijn indicatief — versterk met vervolgmeting" if n >= 10
-               else "Beperkt voor patroonduiding — gebruik als eerste signaal")
-    body += f"""<div class="sec">
-  <span class="slabel">Responsbasis</span>
-  <div class="card cn">
-    <table class="sg"><tr>
-      <td><div class="sc-l">Uitgenodigd</div><div class="sc-v">{data["n_invited"]}</div><div class="sc-b">medewerkers voor dit checkpoint</div></td>
-      <td><div class="sc-l">Ingevuld</div><div class="sc-v">{n}</div><div class="sc-b">responses in dit beeld</div></td>
-      <td><div class="sc-l">Responsgraad</div><div class="sc-v">{data["completion_pct"]}%</div><div class="sc-b">voltooide responses</div></td>
-      <td><div class="sc-l">Beeldbasis</div><div class="sc-v" style="font-size:14px;">{r_basis}</div><div class="sc-b">{r_note}</div></td>
-    </tr></table>
-  </div>
-</div>"""
+    # ── Bestuurlijke read ─────────────────────────────────────────────────────
+    if top_fkeys:
+        tf       = top_fkeys[0]
+        tf_lbl_  = _fl(tf, ST)
+        tf_sc    = fa.get(tf)
+        tf_col   = _factor_color(tf_sc)
+        items_in = fim.get(tf, [])
+        i_scores = [(ik, q, oim.get(ik)) for ik, q in items_in if oim.get(ik) is not None]
+        low_item = min(i_scores, key=lambda x: x[2]) if i_scores else None
 
-    # ── 3. 30/60/90 checkpoint-context ───────────────────────────────────────
-    body += f"""<div class="sec">
-  <span class="slabel">30/60/90 onboarding-checkpoint</span>
-  <div class="card cn" style="margin-bottom:10px;">
-    <p style="font-size:11px;color:#374151;margin-bottom:10px;">
-      Dit rapport is een enkelvoudig checkpointmeting van de eerste werkperiode.
-      Onboarding-checkpoints worden afgenomen op dag 30, 60 of 90 — afhankelijk van het gekozen inrichtingsmodel.
-    </p>
-    <table style="width:100%;border-collapse:collapse;">
-      <tr>
-        <td style="width:33%;padding:8px;border:1px solid #E8E0D0;border-radius:6px;text-align:center;background:#F8FAFC;">
-          <div style="font-size:9px;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:3px;">Dag 30</div>
-          <div style="font-size:10.5px;color:#243247;">Eerste indruk &amp; praktische landing</div>
-        </td>
-        <td style="width:4%;"></td>
-        <td style="width:33%;padding:8px;border:1px solid #D19422;border-radius:6px;text-align:center;background:#FFFBF0;">
-          <div style="font-size:9px;font-weight:700;color:#D19422;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:3px;">Actief checkpoint</div>
-          <div style="font-size:10.5px;color:#243247;">{_h(data["campaign_name"])}</div>
-        </td>
-        <td style="width:4%;"></td>
-        <td style="width:33%;padding:8px;border:1px solid #E8E0D0;border-radius:6px;text-align:center;background:#F8FAFC;">
-          <div style="font-size:9px;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:3px;">Dag 90</div>
-          <div style="font-size:10.5px;color:#243247;">Integratie en eerste bijdrage</div>
-        </td>
-      </tr>
-    </table>
-    <p style="font-size:9px;color:#94A3B8;margin-top:10px;">
-      Trends worden zichtbaar bij herhaalde meting. Dit is geen beoordeling van individuen of managers.
-    </p>
-  </div>
-</div>"""
+        why_cells = ""
+        if tf_sc is not None:
+            why_cells += f'<td class="why-cell"><div class="why-l">Factorscore</div><div class="why-v" style="color:{tf_col};">{tf_sc:.1f}/10</div><div class="why-b">{_h(_factor_label(tf_sc))}</div></td>'
+        if low_item:
+            why_cells += (f'<td class="why-cell"><div class="why-l">Laagste item</div>'
+                          f'<div class="why-v" style="color:{_factor_color(low_item[2])};">{low_item[2]:.1f}/10</div>'
+                          f'<div class="why-b">{_h(low_item[1])}</div></td>')
+        if avg_si is not None:
+            si_col = _factor_color(avg_si)
+            why_cells += f'<td class="why-cell"><div class="why-l">Stay-intent</div><div class="why-v" style="color:{si_col};">{avg_si:.1f}/10</div><div class="why-b">verblijfsintentie vroege fase</div></td>'
 
-    # ── 4. Wat valt op in de eerste werkperiode ───────────────────────────────
-    low_lbl  = _fl(low_f[0], ST)  if low_f  else ""
-    low_sc   = low_f[1]           if low_f  else None
-    high_lbl = _fl(high_f[0], ST) if high_f else ""
-    high_sc  = high_f[1]          if high_f else None
+        primary_label = tf_lbl_
+        primary_sc    = tf_sc
+        primary_col   = tf_col
+        br_mgmt_q     = _mgmt_q(tf, ST)
+    else:
+        why_cells     = ""
+        primary_label = low_lbl
+        primary_sc    = low_sc
+        primary_col   = _factor_color(low_sc)
+        br_mgmt_q     = _mgmt_q(low_f[0], ST) if low_f else ""
 
-    def _ig(kicker: str, value: str, note: str) -> str:
-        return (f'<td><div class="ig-k">{_h(kicker)}</div>'
-                f'<div class="ig-v">{_h(value)}</div>'
-                f'<div class="ig-n">{_h(note)}</div></td>')
+    if avg_risk and band_lbl and low_lbl and high_lbl and low_lbl != high_lbl:
+        exec_line = (f"Het onboardingssignaal is {band_lbl.lower()} ({_score_str(avg_risk)}). "
+                     f"{low_lbl} vraagt als eerste aandacht; {high_lbl} staat relatief sterk.")
+    elif avg_risk and band_lbl and low_lbl:
+        exec_line = f"Het onboardingssignaal is {band_lbl.lower()} ({_score_str(avg_risk)}). {low_lbl} vraagt als eerste aandacht."
+    else:
+        exec_line = "Zie factordiepte en checkpointoverzicht voor details."
 
-    row1 = "".join([
-        _ig("Meeste frictie in",   low_lbl or "—",  f"{_score_str(low_sc)} — {_factor_label(low_sc)}"),
-        _ig("Relatief sterk",      high_lbl or "—", f"{_score_str(high_sc)} — minder leidend in dit beeld"),
-        _ig("Stay-intent", _score_str(avg_si),
-            "Verblijfsintentie vroege fase — lager = verhoogd risico op vroeg verloop"),
-        _ig("Beeldbasis",
-            r_basis, f"{n} responses — {r_note}"),
-    ])
-    first_onboard_q = _mgmt_q(top_fkeys[0], ST) if top_fkeys else ""
-    row2 = "".join([
-        _ig("Eerste onboardingvraag",
-            first_onboard_q[:55] + "…" if len(first_onboard_q) > 55 else first_onboard_q,
-            "Startpunt voor het managementgesprek"),
-        _ig("Open toelichting",
-            f'"{data["open_texts"][0][:55]}"' if data["open_texts"] else "Geen open antwoorden",
-            "Zie open thema's verderop"),
-        _ig("Respons",            f'{n}/{data["n_invited"]}', f'{data["completion_pct"]}%'),
-        _ig("Type checkpoint",    "Enkelvoudig", "Trends volgen bij herhaalde meting"),
-    ])
-    body += f"""<div class="pb sec">
-  <span class="slabel">Wat valt op in de eerste werkperiode?</span>
-  <table class="ig" style="margin-bottom:9px;"><tr>{row1}</tr></table>
-  <table class="ig"><tr>{row2}</tr></table>
-</div>"""
+    totaalbeeld = (
+        f"{low_lbl} vraagt als eerste aandacht in de onboardingfase. "
+        f"{high_lbl} laat zien wat wél goed landt. "
+        f"De responsbasis bepaalt hoe stevig dit beeld is — zie p.03."
+    ) if low_lbl and high_lbl and low_lbl != high_lbl else (
+        f"{low_lbl} vraagt als eerste aandacht. De responsbasis bepaalt hoe stevig dit beeld is — zie p.03."
+    ) if low_lbl else "Zie factordiepte voor details — zie p.03 voor de responsbasis."
 
-    # ── 5. Factoranalyse ──────────────────────────────────────────────────────
-    factor_items = [(_fl(fk, ST), sc, _factor_color(sc)) for fk, sc in sorted_desc]
-    factor_chart = _bar_chart_svg(factor_items, max_val=10.0, width=420, bar_h=26, gap=10)
-    kwetsbaar = [_fl(fk, ST) for fk, sc in sorted_f if sc is not None and sc < 5.0]
-    aandacht  = [_fl(fk, ST) for fk, sc in sorted_f if sc is not None and 5.0 <= sc < 6.5]
-    sterk_f   = [_fl(fk, ST) for fk, sc in sorted_f if sc is not None and sc >= 6.5]
+    s += _bestuurlijke_read(
+        kernzin=exec_line,
+        totaalbeeld=totaalbeeld,
+        primary_label=primary_label,
+        primary_score=primary_sc,
+        primary_color=primary_col,
+        why_cells_html=why_cells,
+        strong_label=high_lbl,
+        strong_score=high_sc,
+        mgmt_q=br_mgmt_q,
+    )
 
-    def _fscard(title: str, color: str, css_cls: str, labels: list[str]) -> str:
-        if not labels: return ""
-        return (f'<div class="card {css_cls}" style="margin-bottom:9px;">'
-                f'<div style="font-size:8.5px;font-weight:700;color:{color};letter-spacing:0.07em;text-transform:uppercase;margin-bottom:3px;">{_h(title)}</div>'
-                f'<div style="font-size:11px;font-weight:700;color:#243247;">{" &middot; ".join(_h(l) for l in labels)}</div>'
-                f'</div>')
+    # ── Responsbasis & reikwijdte (p.03) ──────────────────────────────────────
+    s += _responsbasis(
+        invited=data["n_invited"],
+        completed=data["n_completed"],
+        pct=int(data["completion_pct"]),
+        period=data["campaign_name"],
+        population="Nieuwe medewerkers — eerste werkperiode",
+        segment_available=False,
+        segment_reason="te weinig responses per groep voor herleidbaarheid",
+    )
 
-    body += f"""<div class="pb sec">
-  <span class="slabel">Factoranalyse — onboarding-domeinen</span>
-  <div style="margin-bottom:12px;">
-    {_fscard("Kwetsbaar punt", "#EF4444", "cr", kwetsbaar)}
-    {_fscard("Aandachtspunt",  "#F59E0B", "",   aandacht)}
-    {_fscard("Relatief sterk", "#22C55E", "cg", sterk_f)}
-  </div>
-  <div class="card">
-    <p style="font-size:9.5px;color:#64748B;margin-bottom:14px;">
-      Score 1–10 — hoger is beter. Labels zijn onboarding-specifiek: rood = vraagt direct aandacht, geel = nader te verdiepen, groen = goed geland.
-    </p>
-    {factor_chart}
-  </div>
-</div>"""
+    # ── Overzichtsprofiel ─────────────────────────────────────────────────────
+    profile_factors = [(_fl(fk, ST), fa.get(fk))
+                       for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
+    s += _overzichtsprofiel(profile_factors)
 
-    # ── 6. Verdieping topfactoren op itemniveau ───────────────────────────────
+    # ── Checkpointoverzicht (onboarding-exclusive) ────────────────────────────
+    # Product is single_checkpoint per campaign — no real 30/60/90 phase scores.
+    # Render honest single-measurement degraded view.
+    s += _checkpointoverzicht(checkpoints=[("Huidig checkpoint", avg_risk)])
+
+    # ── Landingskwaliteit per domein (onboarding-exclusive) ───────────────────
+    # Domain scores = factor_avgs with onboarding-specific labels.
+    domain_scores = [(_fl(fk, ST), fa.get(fk))
+                     for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
+    s += _landingskwaliteit(domain_scores)
+
+    # ── Factordiepte ×≤3 (prioriteit = laagste score, geen vertrekredenen) ────
+    priority_fkeys = _select_priority_factors(fa, {}, max_n=3)
+
     def _ob_factor_detail(fk: str) -> str:
-        lbl     = _fl(fk, ST)
-        fsc     = fa.get(fk)
-        col     = _factor_color(fsc)
-        fl_     = _factor_label(fsc)
-        items   = fim.get(fk, [])
-        i_sc    = [(ik, q, oim.get(ik)) for ik, q in items if oim.get(ik) is not None]
-        low_i   = min(i_sc, key=lambda x: x[2]) if i_sc else None
-        high_i  = max(i_sc, key=lambda x: x[2]) if i_sc else None
-        mq      = _mgmt_q(fk, ST)
-        def _ibar(v: float, c: str) -> str:
-            w = max(2, round(v / 10.0 * 90))
-            return (f'<div style="display:inline-block;width:90px;height:7px;background:#E8E0D0;border-radius:3px;vertical-align:middle;">'
-                    f'<div style="width:{w}px;height:7px;background:{c};border-radius:3px;"></div></div>')
+        lbl    = _fl(fk, ST)
+        fsc    = fa.get(fk)
+        col    = _factor_color(fsc)
+        fl_    = _factor_label(fsc)
+        items  = fim.get(fk, [])
+        i_sc   = [(ik, q, oim.get(ik)) for ik, q in items if oim.get(ik) is not None]
+        low_i  = min(i_sc, key=lambda x: x[2]) if i_sc else None
+        high_i = max(i_sc, key=lambda x: x[2]) if i_sc else None
+        mq     = _mgmt_q(fk, ST)
         rows = "".join(
             f'<tr><td class="iq">{_h(q)}</td>'
-            f'<td class="is" style="color:{_factor_color(isc)};">{isc:.1f}</td>'
-            f'<td class="ib">{_ibar(isc, _factor_color(isc))}</td></tr>'
+            f'<td class="is" style="color:{_factor_color(isc)};">{isc:.1f}</td></tr>'
             for _, q, isc in i_sc
-        ) or '<tr><td colspan="3" style="color:#94A3B8;font-style:italic;">Itemscores niet beschikbaar.</td></tr>'
-        high_display = ""
-        if high_i and fsc is not None and fsc >= 6.5:
-            high_display = f'<div style="background:#F0FDF4;border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:10px;"><strong>Sterkste item:</strong> {_h(high_i[1])} — <strong style="color:#22C55E;">{high_i[2]:.1f}/10</strong></div>'
-        elif high_i:
-            high_display = f'<div style="background:#F8FAFC;border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:10px;"><strong>Relatief hoogste item:</strong> {_h(high_i[1])} — <strong style="color:#64748B;">{high_i[2]:.1f}/10</strong></div>'
-        return f"""<div class="card no-break" style="margin-bottom:14px;">
-  <div style="margin-bottom:10px;">
-    <span style="font-size:13px;font-weight:700;color:#243247;">{_h(lbl)}</span>
-    <span style="font-size:12px;font-weight:700;color:{col};margin-left:10px;">{_score_str(fsc)}</span>
+        ) or '<tr><td colspan="2" style="color:#94A3B8;font-style:italic;">Itemscores niet beschikbaar in deze wave.</td></tr>'
+        fk_keywords = _ONBOARDING_THEME_KEYWORDS.get(lbl, [])
+        quote_txt: str | None = None
+        for t in data["open_texts"]:
+            if any(kw in t.lower() for kw in fk_keywords):
+                quote_txt = t
+                break
+        low_card  = (f'<div class="card"><span class="eyebrow">Kwetsbaarste item</span>'
+                     f'<p>{_h(low_i[1])}</p>'
+                     f'<strong style="color:{_factor_color(low_i[2])};">{low_i[2]:.1f}/10</strong></div>'
+                     if low_i else "")
+        high_card = (f'<div class="card"><span class="eyebrow">Relatief sterkste item</span>'
+                     f'<p>{_h(high_i[1])}</p>'
+                     f'<strong style="color:{_factor_color(high_i[2])};">{high_i[2]:.1f}/10</strong></div>'
+                     if high_i else "")
+        quote_block = (f'<div class="quote-txt">{_h(quote_txt)}'
+                       f'<div class="quote-anon">Geanonimiseerd &mdash; namen en contactgegevens verwijderd</div>'
+                       f'</div>' if quote_txt else "")
+        mgmt_block = (f'<div class="card accent"><span class="eyebrow">Eerste onboardingvraag</span>'
+                      f'<p>{_h(mq)}</p></div>' if mq else "")
+        return f"""<div class="pb sec">
+  <span class="slabel">Verdieping &mdash; {_h(lbl)}</span>
+  <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&mdash; {_h(fl_)}</span></h2>
+  <p style="font-size:10px;color:#64748B;margin-bottom:12px;">Lager op deze factor = meer frictie in de onboardingfase.</p>
+  {low_card}
+  {high_card}
+  <h3>Alle items in deze factor</h3>
+  <table class="item-tbl">{rows}</table>
+  {quote_block}
+  {mgmt_block}
+</div>"""
+
+    if priority_fkeys:
+        for _pfk in priority_fkeys:
+            s += _ob_factor_detail(_pfk)
+    else:
+        s += '<div class="pb sec"><span class="slabel">Verdieping &mdash; prioritaire factoren</span><div class="card">Factor detail beschikbaar na voldoende patroonduiding.</div></div>'
+
+    # ── Werkbeleving (SDT) — if present ──────────────────────────────────────
+    def _sdt_item_tbl(dim: str) -> str:
+        keys = SDT_DIMENSION_ITEMS.get(dim, [])
+        REV_LABEL = '<span style="font-size:8px;color:#94A3B8;">&nbsp;(omgekeerd)</span>'
+        rows = "".join(
+            f'<tr><td class="iq">{_h(q)}'
+            f'{REV_LABEL if ik in SDT_REVERSE_ITEMS else ""}'
+            f'</td><td class="is" style="color:{_rag_color(sim.get(ik))};">{sim[ik]:.1f}</td>'
+            f'<td class="ib">{_mini_bar_svg(sim.get(ik), _rag_color(sim.get(ik)), width=80, height=6)}</td></tr>'
+            for ik in keys
+            for q in [next((t for k, t in data["sdt_items"] if k == ik), ik)]
+            if ik in sim
+        )
+        return f'<table class="item-tbl">{rows}</table>' if rows else ""
+
+    sdt_overview_rows = "".join(
+        _factor_bar_row(SDT_LABELS.get(dim, ""), sdt_a.get(dim))
+        for dim in ("autonomy", "competence", "relatedness")
+        if sdt_a.get(dim) is not None
+    )
+
+    if sdt_overview_rows:
+        s += f"""<div class="pb sec">
+  <span class="slabel">Werkbeleving — autonomie, competentie &amp; verbondenheid</span>
+  <p>Drie basisbehoeften die de onderliggende werkbeleving meten, onafhankelijk van de organisatiefactoren.</p>
+  <div class="card" style="margin-bottom:14px;">{sdt_overview_rows}</div>"""
+
+        for dim in ("autonomy", "competence", "relatedness"):
+            sc    = sdt_a.get(dim)
+            col   = _rag_color(sc)
+            fl_   = _factor_label(sc)
+            tbl   = _sdt_item_tbl(dim)
+            if not tbl: continue
+            s += f"""<div class="card no-break" style="margin-bottom:12px;">
+  <div style="margin-bottom:8px;">
+    <span style="font-size:12px;font-weight:700;color:#243247;">{_h(SDT_LABELS.get(dim,""))}</span>
+    <span style="font-size:11px;font-weight:700;color:{col};margin-left:10px;">{_score_str(sc)}</span>
     <span style="font-size:10px;color:{col};margin-left:6px;">— {_h(fl_)}</span>
   </div>
-  {f'<div style="background:#FEF2F2;border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:10px;"><strong>Kwetsbaarste item:</strong> {_h(low_i[1])} — <strong style="color:#EF4444;">{low_i[2]:.1f}/10</strong></div>' if low_i else ""}
-  {high_display}
-  <table class="item-tbl" style="margin-bottom:10px;">{rows}</table>
-  {f'<div class="cbox"><strong style="font-size:10px;">Eerste onboardingvraag:</strong> <span style="font-size:10px;">{_h(mq)}</span></div>' if mq else ""}
+  <div style="font-size:9.5px;color:#6B7280;margin-bottom:8px;">{_h(SDT_HELP.get(dim,""))}</div>
+  {tbl}
+</div>"""
+        s += "</div>"
+
+    # ── eNPS (if present) ────────────────────────────────────────────────────
+    if data["enps_available"] and data["enps_score"] is not None:
+        es   = data["enps_score"]
+        ecol = _rag_color(10.0 if es >= 20 else 6.0 if es >= 0 else 4.0)
+        s += f"""<div class="pb sec">
+  <span class="slabel">Werkgeversaanbeveling</span>
+  <table class="sg"><tr>
+    <td><div class="sc-l">Aanbevelingsscore</div><div class="sc-v" style="color:{ecol};">{es:+d}</div><div class="sc-b">eNPS (&minus;100 tot +100)</div></td>
+  </tr></table>
+  <div class="card"><p style="margin-bottom:0;">Aanvullende context naast het overzichtsprofiel. Een positieve score betekent meer promotors dan criticasters.</p></div>
 </div>"""
 
-    if top_fkeys:
-        detail_html = "".join(_ob_factor_detail(fk) for fk in top_fkeys[:2])
-    else:
-        detail_html = '<div class="empty-state">Factor detail beschikbaar bij voldoende patroonduiding.</div>'
-    body += f"""<div class="pb sec">
-  <span class="slabel">Factor detail — itemniveau eerste werkperiode</span>
-  {detail_html}
+    # ── Segmentstatus ─────────────────────────────────────────────────────────
+    s += _segment_status_block(n, has_segment_data=False, reason="n-grens")
+
+    # ── Open toelichtingen ────────────────────────────────────────────────────
+    texts = data["open_texts"]
+    s += f"""<div class="pb sec">
+  <span class="slabel">Open toelichtingen &mdash; {len(texts)} medewerkersstemmen</span>
+  {_themed_quotes(texts, ST, top_fkeys, n)}
 </div>"""
 
-    # ── 7. Open thema's ───────────────────────────────────────────────────────
-    body += f"""<div class="pb sec">
-  <span class="slabel">Open thema's uit de eerste werkperiode &mdash; {len(data["open_texts"])} antwoorden</span>
-  {_themed_quotes(data["open_texts"], ST, top_fkeys, n)}
-</div>"""
+    # ── Eerste managementspoor ────────────────────────────────────────────────
+    s += _eerste_managementspoor(
+        primary_theme=nsp.get("first_decision") or (low_lbl if low_lbl else "het leidende onboardingthema"),
+        second_point=_fl(sorted_f[1][0], ST) if len(sorted_f) > 1 else "",
+        mgmt_q=_mgmt_q(priority_fkeys[0], ST) if priority_fkeys else (nsp.get("first_decision") or ""),
+        owner=nsp.get("first_owner") or "HR + verantwoordelijk leidinggevende",
+        review_when=nsp.get("review_moment") or "bij het volgende checkpoint",
+    )
 
-    # ── 8. Eerste onboardingvraag ─────────────────────────────────────────────
-    tf_lbl_ = _fl(top_fkeys[0], ST) if top_fkeys else "het eerste aandachtspunt"
-    first_q = _mgmt_q(top_fkeys[0], ST) if top_fkeys else ""
-    body += f"""<div class="pb sec">
-  <span class="slabel">Eerste onboardingvraag — managementspoor</span>
-  {_step_cards(nsp)}
-  <div class="cbox" style="margin-top:14px;">
-    <p style="font-size:10.5px;color:#243247;font-weight:700;margin-bottom:4px;">Eerste stap</p>
-    <p style="font-size:10px;color:#374151;">
-      Kies binnen 2 weken &eacute;&eacute;n gerichte check op {_h(tf_lbl_)} om het beeld te verduidelijken.
-      {_h(first_q)}
-      Beleg eigenaar en reviewmoment voordat bredere stappen worden gezet.
-    </p>
-  </div>
-</div>"""
-
-    # ── 9. Segmentstatus ──────────────────────────────────────────────────────
-    body += _segment_status_block(n, has_segment_data=False, reason="n-grens")
-
-    # ── 10. Appendix ──────────────────────────────────────────────────────────
-    app_secs = ""
+    # ── Appendix ─────────────────────────────────────────────────────────────
+    app_sections = ""
     for fk, items in data["factor_items_map"].items():
         lbl_f = _fl(fk, ST)
         fsc_a = fa.get(fk)
         rows  = "".join(
             (f'<tr><td class="aq">{_h(q)}</td>'
              f'<td class="as" style="color:{_factor_color(oim.get(ik))};">{oim[ik]:.1f}</td>'
-             f'<td class="ab">{_mini_bar_svg(oim.get(ik), _factor_color(oim.get(ik)), 70, 5)}</td></tr>')
+             f'<td class="ab">{_mini_bar_svg(oim.get(ik), _factor_color(oim.get(ik)), width=70, height=5)}</td></tr>')
             if oim.get(ik) is not None else
             f'<tr><td class="aq">{_h(q)}</td><td class="as" style="color:#94A3B8;">n.b.</td><td class="ab"></td></tr>'
             for ik, q in items
         )
-        app_secs += (f'<div class="no-break" style="margin-bottom:14px;">'
-                     f'<div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">'
-                     f'{_h(lbl_f)}{"&nbsp;&mdash;&nbsp;" + _score_str(fsc_a) if fsc_a else ""}</div>'
-                     f'<table class="app-tbl"><tr><th class="aq">Vraag</th>'
-                     f'<th class="as">Gem.</th><th class="ab">Beeld</th></tr>{rows}</table></div>')
-    body += f"""<div class="pb sec">
+        app_sections += (f'<div class="no-break" style="margin-bottom:14px;">'
+                         f'<div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">'
+                         f'{_h(lbl_f)}'
+                         f'{"&nbsp;&mdash;&nbsp;" + _score_str(fsc_a) if fsc_a else ""}</div>'
+                         f'<table class="app-tbl"><tr><th class="aq">Vraag</th>'
+                         f'<th class="as">Gem.</th><th class="ab">Beeld</th></tr>{rows}</table></div>')
+
+    sdt_rows = "".join(
+        (f'<tr><td class="aq">{_h(q)}{"&nbsp;&#x21a9;" if ik in SDT_REVERSE_ITEMS else ""}</td>'
+         f'<td class="as" style="color:{_factor_color(sim.get(ik))};">{sim[ik]:.1f}</td>'
+         f'<td class="ab">{_mini_bar_svg(sim.get(ik), _factor_color(sim.get(ik)), width=70, height=5)}</td></tr>')
+        if sim.get(ik) is not None else
+        f'<tr><td class="aq">{_h(q)}{"&nbsp;&#x21a9;" if ik in SDT_REVERSE_ITEMS else ""}</td>'
+        f'<td class="as" style="color:#94A3B8;">n.b.</td><td class="ab"></td></tr>'
+        for ik, q in data["sdt_items"]
+    )
+
+    if app_sections or sdt_rows:
+        s += f"""<div class="pb sec">
   <span class="slabel">Appendix — volledige vraagresultaten</span>
-  <p style="font-size:9.5px;color:#64748B;margin-bottom:14px;">Technische onderbouwing. Scores zijn groepsgemiddelden (n={n}), geschaald 1–10.</p>
-  {app_secs if app_secs else '<div class="empty-state">Itemscores beschikbaar bij voldoende patroonduiding.</div>'}
+  <p style="font-size:9.5px;color:#64748B;margin-bottom:14px;">
+    Technische onderbouwing. Scores zijn groepsgemiddelden (n={n}), geschaald 1&ndash;10.
+    &#x21a9;&nbsp;= omgekeerd gecodeerd item.
+  </p>
+  {app_sections}
+  {"<div class='no-break' style='margin-bottom:14px;'><div style='font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;'>Werkbeleving (SDT) — checkpoint-items</div><table class='app-tbl'><tr><th class='aq'>Vraag</th><th class='as'>Gem.</th><th class='ab'>Beeld</th></tr>" + sdt_rows + "</table></div>" if sdt_rows else ""}
 </div>"""
 
-    # ── 11. Methodiek onboarding ──────────────────────────────────────────────
-    body += _trust_page(ST)
-    return _doc(f"Onboarding — {data['campaign_name']}", body, scan_type="onboarding")
+    # ── Methodiek (LAST) ──────────────────────────────────────────────────────
+    s += _trust_page(ST)
+    return _doc(f"Onboarding — {data['campaign_name']}", s, scan_type="onboarding")
 
 
 # ─── Dispatcher + PDF ────────────────────────────────────────────────────────
