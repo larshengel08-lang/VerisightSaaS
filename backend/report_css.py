@@ -86,8 +86,8 @@ h3 { font-family: 'Inter Tight', sans-serif; font-weight: 700;
 p  { margin-bottom: 6px; font-size: 11px; }
 
 /* ── Cover ── */
-.cover { page: cover-page; background: """ + NAVY + r"""; min-height: 297mm;
-  padding: 64px 56px 48px; position: relative; color: #fff; }
+.cover { page: cover-page; background: """ + NAVY + r"""; height: 297mm; min-height: 297mm;
+  padding: 64px 56px 48px; position: relative; color: #fff; overflow: hidden; }
 .cover-rings { position: absolute; top: -120px; right: -120px; width: 420px; height: 420px;
   border: 1px solid rgba(232,160,32,0.10); border-radius: 9999px; }
 .cover-rings::before { content: ""; position: absolute; inset: 60px;
