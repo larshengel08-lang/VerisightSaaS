@@ -208,6 +208,69 @@ Het cultuurrapport toonde alleen domein-niveau scores — geen item-detail, geen
 
 ---
 
+## 2026-06-14 — PDF-redesign "Bold & Statement" (subsysteem 3/5)
+
+Volledige visuele herpositionering + refactor van `report_html.py` naar het Loep
+design system (navy `#0D1B2A`, amber `#E8A020`, chalk `#F4F1EA`). Branch
+`feature/pdf-redesign`. Plan: `docs/superpowers/plans/2026-06-13-pdf-redesign.md`.
+
+### Nieuwe modules
+- **`backend/report_fonts.py`** — embed Inter / Inter Tight / JetBrains Mono als
+  base64 `@font-face` (data-URI). Werkt identiek in WeasyPrint én Chromium; geen
+  pad/base_url-afhankelijkheid. Static gewichten ge-instanced uit de variable fonts.
+- **`backend/report_css.py`** — `build_css(scan_type)` + design-tokens. Scherpe
+  hoeken (`border-radius: 0`), Inter Tight koppen, JetBrains Mono eyebrows,
+  table-gebaseerde kolommen (WeasyPrint-veilig).
+
+### Kernkeuzes
+- **Amber is het enige accent** voor alle scans (homepage-design system: "the
+  single accent, use sparingly"). Producten verschillen via eyebrow-tekst, niet
+  kleur. (Visuele vergelijking amber/teal/bruin → teal/bruin oogden gedempt.)
+- **Gedeeld skelet + product-modules.** Eén set sectie-helpers (`_cover`,
+  `_bestuurlijke_read`, `_responsbasis`, `_overzichtsprofiel`, `_factor_bar_row`,
+  `_select_priority_factors`, `_eerste_managementspoor`, `_segment_status_block`,
+  `_themed_quotes`, `_trust_page`) die alle drie renderers aanroepen. Product-kern
+  apart: `_vertrekcontext` (exit), `_behoudscontext` (retention),
+  `_checkpointoverzicht`+`_landingskwaliteit` (onboarding).
+- **Macrostructuur (spec):** cover → bestuurlijke read → responsbasis →
+  overzichtsprofiel → product-kern → factordiepte (≤3, data-gedreven prioriteit:
+  score + vertrekreden, niet puur laagste) → Werkbeleving (SDT) → Werkgevers-
+  aanbeveling (eNPS) → segment → open toelichtingen → managementspoor
+  (gespreksagenda, geen "risico"/"interventie") → appendix (conditioneel) →
+  methodiek (laatste).
+- **Verwijderd:** "Factoranalyse" (dupliceerde overzichtsprofiel), leeswijzer,
+  actiematrix/prioriteitenmatrix. **Behouden + herstijld:** SDT + eNPS.
+- **Conditionele modules:** quotes ≥5 open teksten; appendix n>20 én factoren>5.
+  Segment toont altijd eerlijke State A/B (nooit nep-visualisatie). Paginatelling
+  data-gedreven (8–18; samples 15–16).
+- **Onboarding** is `single_checkpoint`: geen nep 30/60/90 — eerlijke degraded
+  weergave ("Eén meetmoment — fasevergelijking opent bij herhaalde meting").
+- **Behoudscontext** toont blijf-/vertrekintentie als directe groepsscores
+  (`avg_si`/`avg_to`, 1-10), niet als uit band-counts afgeleide percentages.
+
+### Cover (`_cover`)
+Donker voorblad, openingsvraag per product als h1, mono-eyebrow, amber-lijn,
+concentrische ringen, onderbalk met 3 klantwaarde-stats (respondenten, respons%,
+primair signaal — géén documentmetadata). WeasyPrint-fix: `.cover height: 297mm`
+(definite height) zodat de absoluut-gepositioneerde onderbalk (`bottom`) onderaan
+pint i.p.v. tegen de titel.
+
+### WeasyPrint-validatie (productie-engine, via Docker)
+Alle 3 renderen foutloos; paginatelling identiek aan Chromium (16/16/15); PDF's
+klein (81/80/75 KB — fonts gesubset); nette doorzoekbare tekstlaag. Table-layouts
+houden stand. (Lokaal rendert Windows alleen HTML; de 3,4MB HTML-intermediates
+worden NIET gecommit — de PDF is het canonieke sample.)
+
+### Tests & samples
+- `tests/test_pdf_redesign.py` — 16 tests (fonts, css, cover, secties, prioriteit,
+  gating). 0 nieuwe regressies t.o.v. de pré-existerende baseline (5 content-layer
+  fails in `test_scoring.py`/parity, los van deze redesign).
+- Samples geregenereerd via WeasyPrint: `voorbeeldrapport_loep.pdf` (exit, 81KB),
+  `voorbeeldrapport_retentiescan.pdf` (80KB). `voorbeeldrapport_onboarding.pdf`
+  + enkele frontend-varianten zijn gitignored (onboarding = toekomstige module).
+
+---
+
 ## Onderhoud
 - Wijzig dit bestand bij elke niet-triviale aanpassing aan `report_html.py`
 - Noteer altijd: wat, waarom, en welke commerciële/visuele rationale
