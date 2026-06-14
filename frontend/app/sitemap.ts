@@ -60,19 +60,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
-      url: 'https://www.verisight.nl/producten/pulse',
-      lastModified: new Date('2026-04-17'),
-      changeFrequency: 'monthly',
-      priority: 0.6,
-    },
-    {
       url: 'https://www.verisight.nl/producten/onboarding-30-60-90',
-      lastModified: new Date('2026-04-17'),
-      changeFrequency: 'monthly',
-      priority: 0.6,
-    },
-    {
-      url: 'https://www.verisight.nl/producten/leadership-scan',
       lastModified: new Date('2026-04-17'),
       changeFrequency: 'monthly',
       priority: 0.6,

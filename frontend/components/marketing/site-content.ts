@@ -86,7 +86,7 @@ export const homepageComparisonRows = [
 ] as const
 
 export const homepageProofSignals = [
-  'Eén suite-login voor dashboard, rapport en Action Center',
+  'Eén suite-login voor dashboard, rapport en de beheeromgeving',
   'HR kan managers per afdeling toewijzen zonder survey-inzichten open te zetten',
   'Drie routes: ExitScan, RetentieScan en Onboarding 30-60-90',
   'Groepsinzichten met expliciete claims- en privacygrenzen',
@@ -96,12 +96,12 @@ export const homepageProofSignals = [
 export const publicProofCards = [
   {
     title: 'Van signaal naar opvolging',
-    body: 'Goedgekeurde proof laat zien hoe dashboard, rapport en Action Center samen worden gebruikt zonder brede workflowclaims.',
+    body: 'Goedgekeurde proof laat zien hoe dashboard, rapport en de beheeromgeving samen worden gebruikt zonder brede workflowclaims.',
     approval: 'public_usable',
   },
   {
     title: 'Bounded manager-toegang',
-    body: 'Proof blijft expliciet over manager-only Action Center toegang en zet geen surveyinzichten open in publieke claims.',
+    body: 'Proof blijft expliciet over begrensde manager-toegang en zet geen surveyinzichten open in publieke claims.',
     approval: 'public_usable',
   },
 ] as const
@@ -517,25 +517,6 @@ export const pricingLifecycleLadder = [
   },
 ] as const
 
-export const expansionTriggerCards = [
-  {
-    title: 'Eerste managementwaarde is bewezen',
-    body: 'Expansion hoort pas op tafel nadat de eerste route al heeft geleid tot een bruikbare managementread in plaats van alleen respons of nieuwsgierigheid.',
-  },
-  {
-    title: 'Er ligt een eerste vervolgrichting',
-    body: 'Een vervolgstap voelt geloofwaardig wanneer prioriteit en eerste vervolgrichting al expliciet zijn benoemd in de eerste managementsessie.',
-  },
-  {
-    title: 'Er is een hercheckmoment afgesproken',
-    body: 'Repeat en expansion worden verkoopbaar zodra duidelijk is wanneer de organisatie terugkijkt op voortgang, effect of nieuwe signalen.',
-  },
-  {
-    title: 'De volgende route vult een echte vraag aan',
-    body: 'Combinatie of productdoorstroom is alleen logisch als de huidige route de volgende managementvraag niet volledig afdekt, zodat expansion niet voelt als losse upsell.',
-  },
-] as const
-
 export const pricingCards = [
   {
     eyebrow: 'ExitScan Baseline',
@@ -586,112 +567,10 @@ export const pricingCards = [
   },
 ] as const
 
-export const pricingFollowOnRoutes = [
-  {
-    title: 'ExitScan ritmeroute',
-    price: 'op aanvraag',
-    fit: 'Quote-only vervolg na baseline',
-    description:
-      'Voor organisaties die na een eerste ExitScan Baseline actuele uitstroomsignalen willen blijven volgen. Alleen logisch wanneer proces, volume en eigenaarschap al staan.',
-    bullets: [
-      'Geen concurrerend eerste pakket naast ExitScan Baseline',
-      'Alleen verkopen na nulmeting of bij bestaand structureel exitproces',
-      'Blijft een begeleide vervolgroute en geen self-serve monitoringlaag',
-    ],
-  },
-  {
-    title: 'RetentieScan ritmeroute',
-    price: 'vanaf EUR 4.950',
-    fit: 'Vaste vervolgvorm na baseline',
-    description:
-      'Voor organisaties die van een eerste RetentieScan willen doorgroeien naar een ritme met herhaalmeting, trendduiding en beter onderbouwde vervolgkeuzes op behoud.',
-    bullets: [
-      'Buyer-facing vervolgvorm na RetentieScan Baseline',
-      'Baseline plus herhaalmeting per kwartaal of halfjaar',
-      'Trendbeeld op retentiesignaal, bevlogenheid en stay-intent',
-    ],
-  },
-  {
-    title: 'Pulse na Culture Assessment',
-    price: 'op aanvraag',
-    fit: 'Optioneel follow-on ritme na jaarlijkse baseline',
-    description:
-      'Voor organisaties die na een eerste Loep Culture Assessment een bounded reviewritme willen openen op bestaande aandachtspunten, niet als onderdeel van de baseline.',
-    bullets: [
-      'Alleen logisch na een bestaande Loep Culture Assessment baseline of board-read',
-      'Bounded reviewlaag op gekozen aandachtspunten, niet als nieuwe brede nulmeting',
-      'Blijft een vervolgroute en geen parallel primary route',
-    ],
-  },
-] as const
-
-export const retentionPackages = [
-  {
-    title: 'Baseline',
-    fit: 'Voor een eerste groepsbeeld',
-    body: 'Een compacte retentie-baseline voor organisaties die snel willen zien waar behoud aandacht vraagt.',
-    bullets: ['Eenmalige scan', 'Dashboard en managementrapport', 'Topfactoren en focusvragen'],
-  },
-  {
-    title: 'Baseline + Segment deep dive',
-    fit: 'Voor scherpere segmentprioritering',
-    body: 'Voor organisaties die na een eerste baseline ook willen zien welke afdelingen of functieniveaus het meest afwijken, mits metadata en minimale n dat dragen.',
-    bullets: ['Alles uit Baseline', 'Segmentanalyse op afdeling en functieniveau', 'Bewuste verdieping, geen standaard inbegrepen laag'],
-  },
-  {
-    title: 'RetentieScan ritmeroute',
-    fit: 'Voor structureel herijken',
-    body: 'Voor organisaties die retentie als terugkerend stuurthema willen benaderen nadat baseline en eerste managementwaarde staan.',
-    bullets: ['Herhaalmeting en trendduiding', 'Betere bespreking van effect en verschuiving', 'Buyer-facing vervolgvorm na de eerste baseline'],
-  },
-] as const
-
-export const pricingChoiceGuide = [
-  [
-    'ExitScan Baseline',
-    'Je wilt vertrek achteraf duiden en zoekt meestal het eerste betaalde traject dat losse exitinput bestuurlijk leesbaar maakt.',
-  ],
-  [
-    'RetentieScan Baseline',
-    'Je wilt eerder zien waar behoud in de actieve populatie onder druk staat en zoekt daarvoor een gerichte eerste baseline.',
-  ],
-  [
-    'Loep Culture Assessment Baseline',
-    'Je wilt cultuur en engagement breed organisatiebreed begrijpen en zoekt daarvoor een jaarlijkse enterprise-baseline met board-read.',
-  ],
-  [
-    'Combinatie op aanvraag',
-    'Je wilt zowel leren van vertrek als eerder kunnen bijsturen op behoud, maar pas nadat de eerste route helder staat.',
-  ],
-] as const
-
-export const pricingAddOns = [
-  [
-    'Segment deep dive',
-    'EUR 950',
-    'Extra segmentanalyse voor ExitScan of RetentieScan, met scherpere uitsplitsing naar afdeling en functieniveau wanneer metadata en minimale n daar geschikt voor zijn.',
-  ],
-  [
-    'Compacte retentie vervolgmeting',
-    'vanaf EUR 1.250',
-    'Compacte vervolgcomponent binnen RetentieScan ritmeroute, bijvoorbeeld per kwartaal of halfjaar, om voortgang te volgen zonder daarvan een parallel hoofdpackage te maken.',
-  ],
-  [
-    'Combinatieroute',
-    'op aanvraag',
-    'Voor organisaties die ExitScan en RetentieScan bewust naast elkaar willen inzetten. We prijzen dit niet als korting of bundel, maar als portfolioroute in een gedeelde managementstructuur.',
-  ],
-  [
-    'Governed drilldown voor Cultuurbeeld',
-    'op aanvraag',
-    'Extra governed uitsplitsing voor Loep Culture Assessment naar locatie, afdeling, team en waar expliciet toegestaan named manager read, zonder ranking of individuele export.',
-  ],
-] as const
-
 export const pricingFaqs = [
   [
     'Wanneer kies je voor Loep Culture Assessment?',
-    'Als de hoofdvraag breed organisatiebreed is: cultuur, engagement, werkbeleving, vertrouwen, leiderschap en samenwerking. Dan past een jaarlijkse Loep Culture Assessment baseline beter dan RetentieScan, ExitScan of Pulse.',
+    'Als de hoofdvraag breed organisatiebreed is: cultuur, engagement, werkbeleving, vertrouwen, leiderschap en samenwerking. Dan past een jaarlijkse Loep Culture Assessment baseline beter dan RetentieScan of ExitScan.',
   ],
   [
     'Waarom is RetentieScan niet goedkoper dan ExitScan?',

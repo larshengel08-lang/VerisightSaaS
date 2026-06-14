@@ -11,7 +11,7 @@ import {
 
 describe('Marketing proof layer', () => {
   it('anchors public proof on the live suite and bounded manager access model', () => {
-    expect(homepageProofSignals).toContain('Eén suite-login voor dashboard, rapport en Action Center')
+    expect(homepageProofSignals).toContain('Eén suite-login voor dashboard, rapport en de beheeromgeving')
     expect(homepageProofSignals).toContain('HR kan managers per afdeling toewijzen zonder survey-inzichten open te zetten')
     expect(homepageProofSignals).toContain('Publieke proof verschijnt pas na expliciete approval en provenance')
     expect(statCards.some((card) => card.value === '1 suite-login')).toBe(true)

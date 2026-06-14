@@ -89,7 +89,7 @@ describe('Portfolio cleanup — three equal product pages', () => {
   })
 
   it('RetentieScan ships the six bullets, no ritme section, and a sharpened h1', () => {
-    const retention = slice('function RetentionScanPage()', 'function PulsePage()')
+    const retention = slice('function RetentionScanPage()', 'function OnboardingModernPage()')
     expect(retention).toContain('Intake en scopebepaling')
     expect(retention).toContain('Eerste vervolgrichting vastgelegd')
     expect(retention).not.toContain('Kies baseline of ritmeroute')
@@ -105,6 +105,41 @@ describe('Portfolio cleanup — three equal product pages', () => {
     expect(onboarding).toContain('Eerste vervolgrichting vastgelegd')
     expect(onboarding).not.toContain('Kies baseline of hercheckmoment')
     expect(onboarding).toContain('Bespreek of deze scan past')
+  })
+})
+
+describe('Portfolio cleanup — deferred public Action Center / removed-product references', () => {
+  it('site-content proof layer no longer names the removed Action Center product', () => {
+    expect(read('components/marketing/site-content.ts')).not.toContain('Action Center')
+  })
+
+  it('the orphaned Action Center homepage demo component is deleted', () => {
+    expect(
+      fs.existsSync(path.join(process.cwd(), 'components/marketing/home-insight-action-demo.tsx')),
+    ).toBe(false)
+  })
+
+  it('the removed follow-on product routes return 404 instead of rendering', () => {
+    const page = read('app/producten/[slug]/page.tsx')
+    expect(page).toContain('PUBLICLY_REMOVED_PRODUCT_SLUGS')
+    expect(page).toContain('PUBLICLY_REMOVED_PRODUCT_SLUGS.has(slug)) notFound()')
+    for (const slug of ['pulse', 'leadership-scan', 'combinatie']) {
+      expect(page).toContain(`'${slug}'`)
+    }
+  })
+
+  it('the sitemap no longer advertises the removed product routes', () => {
+    const sitemap = read('app/sitemap.ts')
+    expect(sitemap).not.toContain('/producten/pulse')
+    expect(sitemap).not.toContain('/producten/leadership-scan')
+    expect(sitemap).not.toContain('/producten/combinatie')
+  })
+
+  it('the homepage Open Graph image does not name a removed product', () => {
+    const og = read('app/opengraph-image.tsx')
+    expect(og).not.toContain('Combinatie')
+    expect(og).not.toContain('Pulse')
+    expect(og).not.toContain('Leadership')
   })
 })
 

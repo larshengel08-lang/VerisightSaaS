@@ -10,14 +10,10 @@ import {
 import { exitScanDefinition } from '@/lib/products/exit/definition'
 import { retentionScanDefinition } from '@/lib/products/retention/definition'
 import {
-  expansionTriggerCards,
   faqs,
   homepageUtilityLinks,
   marketingLegalLinks,
   marketingNavLinks,
-  pricingAddOns,
-  pricingChoiceGuide,
-  pricingFollowOnRoutes,
   pricingFaqs,
   pricingCards,
   pricingLifecycleLadder,
@@ -94,14 +90,9 @@ describe('ExitScan positioning copy', () => {
   it('keeps ExitScan framed as the default first route in commercial conversations', () => {
     const freePilotFaq = pricingFaqs.find(([question]) => question === 'Waarom starten jullie niet met een gratis pilot?')
     const exitBaselineCard = pricingCards.find((card) => card.eyebrow === 'ExitScan Baseline')
-    const exitLiveRoute = pricingFollowOnRoutes.find((route) => route.title === 'ExitScan ritmeroute')
-    const combinationRoute = pricingChoiceGuide.find(([title]) => title === 'Combinatie op aanvraag')
     const exitLifecycle = pricingLifecycleLadder.find((route) => route.route === 'ExitScan')
 
     expect(exitBaselineCard?.price).toBe('vanaf €4.500')
-    expect(exitLiveRoute?.fit.toLowerCase()).toContain('quote-only')
-    expect(exitLiveRoute?.bullets.join(' ').toLowerCase()).toContain('geen self-serve')
-    expect(combinationRoute?.[1].toLowerCase()).toContain('eerste route helder staat')
     expect(exitLifecycle?.firstSale.toLowerCase()).toContain('standaard eerste koop')
     expect(exitLifecycle?.expansion.toLowerCase()).toContain('retentiescan baseline')
     expect(freePilotFaq?.[1].toLowerCase()).toContain('betaald baseline-traject')
@@ -112,7 +103,6 @@ describe('ExitScan positioning copy', () => {
     const cultureProduct = LIVE_MARKETING_PRODUCTS.find((product) => product.slug === 'cultuurbeeld')
     const cultureBaselineCard = pricingCards.find((card) => card.eyebrow === 'Loep Culture Assessment Baseline')
     const cultureFaq = pricingFaqs.find(([question]) => question === 'Wanneer kies je voor Loep Culture Assessment?')
-    const pulseFollowOn = pricingFollowOnRoutes.find((route) => route.title === 'Pulse na Culture Assessment')
     const cultureRow = productOverviewComparisonRows.find((row) => row[0] === 'Loep Cultuurbeeld')
 
     expect(cultureProduct).toBeTruthy()
@@ -124,15 +114,7 @@ describe('ExitScan positioning copy', () => {
     expect(cultureBaselineCard?.bullets.join(' ').toLowerCase()).toContain('board-read')
     expect(cultureFaq?.[1].toLowerCase()).toContain('cultuur')
     expect(cultureFaq?.[1].toLowerCase()).toContain('engagement')
-    expect(pulseFollowOn?.description.toLowerCase()).toContain('niet als onderdeel van de baseline')
     expect(cultureRow?.[2].toLowerCase()).toContain('cultuur- en engagementpatronen')
-  })
-
-  it('keeps expansion framed as a value-based follow-up instead of a loose upsell', () => {
-    expect(expansionTriggerCards.some((card) => card.body.toLowerCase().includes('eerste route al heeft geleid'))).toBe(true)
-    expect(expansionTriggerCards.some((card) => card.body.toLowerCase().includes('eerste vervolgrichting'))).toBe(true)
-    expect(expansionTriggerCards.some((card) => card.body.toLowerCase().includes('terugkijkt op voortgang'))).toBe(true)
-    expect(expansionTriggerCards.some((card) => card.body.toLowerCase().includes('upsell'))).toBe(true)
   })
 
   it('keeps Pulse framed as a bounded review route instead of a diagnostic layer', () => {
@@ -176,8 +158,6 @@ describe('RetentieScan positioning copy', () => {
     const rhythmFaq = pricingFaqs.find(
       ([question]) => question === 'Hoe verhouden RetentieScan ritmeroute en compacte vervolgmeting zich tot elkaar?',
     )
-    const retentionRhythm = pricingFollowOnRoutes.find((route) => route.title === 'RetentieScan ritmeroute')
-    const compactFollowUp = pricingAddOns.find(([title]) => title === 'Compacte retentie vervolgmeting')
 
     expect(mtoFaq?.[1].toLowerCase()).toContain('smaller en scherper')
     expect(mtoFaq?.[1].toLowerCase()).toContain('groeps- en segmentniveau')
@@ -187,8 +167,6 @@ describe('RetentieScan positioning copy', () => {
     expect(predictorFaq?.[1].toLowerCase()).toContain('verificatie en prioritering')
     expect(pricingFaq?.[1].toLowerCase()).toContain('eigen managementverhaal')
     expect(rhythmFaq?.[1].toLowerCase()).toContain('vaste buyer-facing vervolgvorm')
-    expect(retentionRhythm?.price).toBe('vanaf EUR 4.950')
-    expect(compactFollowUp?.[2].toLowerCase()).toContain('parallel hoofdpackage')
   })
 
   it('keeps RetentieScan repeat and ExitScan expansion paths explicit', () => {

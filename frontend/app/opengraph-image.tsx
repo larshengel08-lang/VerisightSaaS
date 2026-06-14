@@ -131,7 +131,7 @@ export default function OpenGraphImage() {
                 Loep Cultuurbeeld
               </div>
               <div style={{ fontSize: '22px', lineHeight: 1.3, color: '#0284c7' }}>
-                Combinatie
+                Onboarding 30-60-90
               </div>
             </div>
           </div>
