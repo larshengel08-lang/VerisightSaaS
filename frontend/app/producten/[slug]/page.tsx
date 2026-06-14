@@ -1116,7 +1116,7 @@ function OnboardingModernPage() {
 
   return (
     <div style={{ background: T.paper, color: T.ink, overflowX: 'hidden' }}>
-      <PublicHeader ctaHref={ctaHref} ctaLabel="Plan een eerste route-inschatting" />
+      <PublicHeader ctaHref={ctaHref} ctaLabel="Bespreek of deze scan past" />
       <main>
         <section style={{ background: T.white, padding: 'clamp(52px,6.5vw,80px) 0 clamp(48px,6vw,72px)', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: `linear-gradient(${T.rule}60 1px,transparent 1px),linear-gradient(90deg,${T.rule}60 1px,transparent 1px)`, backgroundSize: '72px 72px', opacity: 0.35 }} />
@@ -1137,7 +1137,7 @@ function OnboardingModernPage() {
                 </p>
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 600, padding: '12px 28px', color: '#fff', background: T.ink }}>
-                    Plan een eerste route-inschatting
+                    Bespreek of deze scan past
                   </a>
                   <Link href="/tarieven" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', fontSize: 14, fontWeight: 500, padding: '11px 24px', color: T.inkSoft, border: `1px solid ${T.rule}` }}>
                     Bekijk tarieven
@@ -1146,7 +1146,7 @@ function OnboardingModernPage() {
               </div>
               <div>
                 <div style={{ padding: '28px', background: T.amberFaint, border: `1px solid ${T.amberSoft}` }}>
-                  <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: T.amber, marginBottom: 16 }}>op aanvraag {'\u2022'} Baseline</div>
+                  <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: T.amber, marginBottom: 16 }}>vanaf €4.500 {'\u2022'} Baseline</div>
                   {[
                     'Rapport met wat opvalt in landing, rol, leiding en team op groepsniveau',
                     'Begeleide managementbespreking (60-90 min)',
@@ -1182,46 +1182,6 @@ function OnboardingModernPage() {
                 ))}
               </div>
             </div>
-            <div style={{ borderTop: `1px solid ${T.rule}`, paddingTop: 28 }}>
-              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.amber, marginBottom: 14 }}>Kies baseline of hercheckmoment</div>
-              <p style={{ fontSize: 15, lineHeight: 1.72, color: T.inkSoft, marginBottom: 26, maxWidth: '56ch' }}>
-                Kies eerst of u nu een eerste checkpoint-read nodig heeft of een compact terugkijkmoment nadat de eerste keuze al is gemaakt.
-              </p>
-              <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-                {[
-                  {
-                    label: 'Baseline',
-                    accent: T.amber,
-                    points: [
-                      'Een vroege checkpoint-read voor nieuwe instroom',
-                      'Geschikt als de vraag gaat over de eerste 30, 60 of 90 dagen',
-                      'Geeft een eerste managementbeeld van landing, frictie en prioriteiten',
-                    ],
-                  },
-                  {
-                    label: 'Hercheckmoment',
-                    accent: T.inkMuted,
-                    points: [
-                      'Voor organisaties die na de eerste bespreking compact willen terugkijken',
-                      'Logisch als eerste eigenaar en borgstap al vaststaan',
-                      'Zelfde structuur als de eerste baseline',
-                    ],
-                  },
-                ].map(({ label, accent, points }) => (
-                  <div key={label} style={{ padding: '28px', background: T.white, border: `1px solid ${T.rule}`, borderTop: `3px solid ${accent}` }}>
-                    <div style={{ fontSize: 13.5, fontWeight: 600, color: T.ink, marginBottom: 16 }}>{label}</div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                      {points.map((p, i) => (
-                        <div key={i} style={{ display: 'flex', gap: 10, fontSize: 13, color: T.inkSoft, lineHeight: 1.6 }}>
-                          <div style={{ width: 4, height: 4, background: accent, flexShrink: 0, marginTop: 5 }} />
-                          {p}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         </section>
 
@@ -1237,9 +1197,12 @@ function OnboardingModernPage() {
               <div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {[
+                    'Intake en scopebepaling',
+                    'Survey klaarzetten en launchpakket leveren (uitnodigingslink + tekst)',
+                    'Respons monitoren op campagneniveau',
                     'Rapport met wat opvalt in landing, rol, leiding en team op groepsniveau',
-                    'Begeleide managementbespreking: samen bepalen welke eerste stap logisch is',
-                    'Eerste eigenaar en hercheckmoment vastgesteld',
+                    'Begeleide managementbespreking (60–90 min)',
+                    'Eerste vervolgrichting vastgelegd',
                   ].map((item, i) => (
                     <div key={i} style={{ display: 'flex', gap: 12, padding: '14px 16px', background: T.paperSoft, border: `1px solid ${T.rule}`, fontSize: 13.5, color: T.inkSoft, lineHeight: 1.6 }}>
                       <div style={{ width: 4, height: 4, background: T.amber, flexShrink: 0, marginTop: 5 }} />
@@ -1256,63 +1219,11 @@ function OnboardingModernPage() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 220 }}>
                 <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontSize: 14, fontWeight: 600, padding: '14px 28px', color: '#fff', background: T.ink, whiteSpace: 'nowrap' }}>
-                  Plan een eerste route-inschatting
+                  Bespreek of deze scan past
                 </a>
-                <Link href="/producten/retentiescan" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 500, padding: '12px 24px', color: T.inkSoft, border: `1px solid ${T.rule}`, whiteSpace: 'nowrap' }}>
-                  Bekijk RetentieScan
+                <Link href="/tarieven" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 500, padding: '12px 24px', color: T.inkSoft, border: `1px solid ${T.rule}`, whiteSpace: 'nowrap' }}>
+                  Bekijk tarieven
                 </Link>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section style={{ background: T.paperSoft, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
-          <div style={{ ...SH }}>
-            <div className="grid grid-cols-1 gap-8 xl:grid-cols-[1.05fr_0.95fr]">
-              <div>
-                <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.amber, marginBottom: 16 }}>Onboarding naast RetentieScan</div>
-                <h2 style={{ fontFamily: FF, fontWeight: 700, fontSize: 'clamp(30px,3.6vw,46px)', lineHeight: 1.02, letterSpacing: '-.028em', color: T.ink, maxWidth: '15ch', marginBottom: 18 }}>
-                  Onboarding 30-60-90 is geen RetentieScan voor nieuwe medewerkers.
-                </h2>
-                <p style={{ fontSize: 15, lineHeight: 1.72, color: T.inkSoft, maxWidth: '58ch', marginBottom: 22 }}>
-                  Beide routes kijken naar mensenpatronen, maar het moment en de managementvraag zijn anders. Onboarding is een vroege checkpoint-read in de eerste 90 dagen. RetentieScan kijkt naar behoudsdruk bij actieve medewerkers die al langer in dienst zijn.
-                </p>
-                <div style={{ border: `1px solid ${T.rule}`, background: T.white }}>
-                  {[
-                    ['Doelgroep', 'Nieuwe medewerkers in de eerste 30, 60 of 90 dagen.', 'Actieve medewerkers die al langer in dienst zijn.'],
-                    ['Hoofdvraag', 'Hoe landen nieuwe medewerkers in rol, leiding, team en werkcontext?', 'Waar staat behoud onder druk voordat uitstroom zichtbaar wordt?'],
-                    ['Tijdstip', 'Vroeg, rond de eerste landingsfase van een nieuw cohort.', 'Wanneer verloop oploopt of management eerder wil signaleren.'],
-                    ['Niet bedoeld als', 'Brede retentiemeting of lifecycle-suite.', 'Onboardingcheck of introductiebegeleiding.'],
-                  ].map(([label, onboarding, retention], index) => (
-                    <div key={label} className="grid grid-cols-1 gap-0 md:grid-cols-[160px_1fr_1fr]" style={{ borderTop: index > 0 ? `1px solid ${T.rule}` : 'none' }}>
-                      <div style={{ padding: '16px 18px', fontSize: 11, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: T.inkFaint, background: T.paperSoft }}>{label}</div>
-                      <div style={{ padding: '16px 18px', fontSize: 13.5, lineHeight: 1.65, color: T.inkSoft }}>{onboarding}</div>
-                      <div style={{ padding: '16px 18px', fontSize: 13.5, lineHeight: 1.65, color: T.inkSoft, borderLeft: `1px solid ${T.rule}` }}>{retention}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div style={{ padding: '28px', background: T.white, border: `1px solid ${T.rule}` }}>
-                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: T.amber, marginBottom: 12 }}>Wat onboarding wel belooft</div>
-                <h3 style={{ fontFamily: FF, fontWeight: 700, fontSize: 'clamp(28px,3vw,40px)', lineHeight: 1.04, letterSpacing: '-.028em', color: T.ink, marginBottom: 18 }}>
-                  Een vroege onboardingread met een eerste vervolgstap, niet meer dan nodig.
-                </h3>
-                <p style={{ fontSize: 14.5, lineHeight: 1.72, color: T.inkSoft, marginBottom: 20 }}>
-                  Loep helpt vooral om vroeg te zien hoe nieuwe medewerkers nu landen, welke frictie of borging als eerste aandacht vraagt en welke vervolgrichting daar logisch uit volgt.
-                </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {[
-                    'Geen journey-engine of multi-checkpoint orchestration.',
-                    'Geen individuele onboardingbeoordeling of manageroordeel.',
-                    'Wel een compacte route om HR en leiding sneller op een lijn te krijgen.',
-                  ].map((item, index) => (
-                    <div key={index} style={{ display: 'flex', gap: 10, padding: '12px 14px', background: T.paperSoft, border: `1px solid ${T.rule}`, fontSize: 13, lineHeight: 1.6, color: T.inkSoft }}>
-                      <div style={{ width: 4, height: 4, background: T.amber, flexShrink: 0, marginTop: 5 }} />
-                      {item}
-                    </div>
-                  ))}
-                </div>
               </div>
             </div>
           </div>
@@ -1325,8 +1236,8 @@ function OnboardingModernPage() {
           title="Toets of Onboarding 30-60-90"
           accentTitle="nu de juiste eerste stap is."
           body="Beschrijf kort waarom de eerste maanden van nieuwe medewerkers nu als eerste managementvraag spelen. Dan toetsen we of Onboarding 30-60-90 past en wat u als eerste terugkrijgt."
-          buttonLabel="Plan een eerste route-inschatting"
-          note="U krijgt eerst een route-inschatting, geen verplicht uitgebreid traject."
+          buttonLabel="Bespreek of deze scan past"
+          note="U krijgt eerst een korte kennismaking, geen verplicht uitgebreid traject."
         />
       </main>
       <PublicFooter />
