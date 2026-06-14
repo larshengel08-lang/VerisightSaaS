@@ -115,6 +115,16 @@ def test_priority_factors_weighs_exit_reason_not_only_score():
     assert len(out) <= 3
 
 
+from backend.report_html import _behoudscontext
+
+
+def test_behoudscontext_shows_stay_intent_and_signal():
+    html = _behoudscontext(retention_score=6.4, stay_pct=72, leave_pct=18,
+                           engagement=5.9, primary_factor="Autonomie")
+    assert "72" in html and "Autonomie" in html
+    assert "behoud" in html.lower()
+
+
 from backend.report_html import _segment_status_block, _eerste_managementspoor
 
 

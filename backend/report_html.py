@@ -905,6 +905,47 @@ def _vertrekcontext(*, exit_reasons: list[tuple[str, int]],
 </div>"""
 
 
+# ─── Behoudscontext (T7-retention) ───────────────────────────────────────────
+
+def _behoudscontext(*, retention_score: float | None, stay_pct: int | None,
+                    leave_pct: int | None, engagement: float | None,
+                    primary_factor: str) -> str:
+    """Retention-exclusive section: actuele behoudscontext op groepsniveau."""
+    def _stat_cell(label: str, value: str, note: str = "") -> str:
+        return (f'<td><div class="sc-l">{_h(label)}</div>'
+                f'<div class="sc-v">{_h(value)}</div>'
+                f'{"<div class=\'sc-b\'>" + _h(note) + "</div>" if note else ""}</td>')
+
+    cells = ""
+    if retention_score is not None:
+        col = _factor_color(retention_score)
+        cells += f'<td><div class="sc-l">Behoudssignaal</div><div class="sc-v" style="color:{col};">{retention_score:.1f}/10</div><div class="sc-b">groepsgemiddelde actieve populatie</div></td>'
+    if stay_pct is not None:
+        cells += _stat_cell("Blijfintentie", f"{stay_pct}%", "overweegt te blijven")
+    if leave_pct is not None:
+        lcol = "#EF4444" if leave_pct >= 30 else "#F59E0B" if leave_pct >= 15 else "#22C55E"
+        cells += f'<td><div class="sc-l">Vertrekintentie</div><div class="sc-v" style="color:{lcol};">{leave_pct}%</div><div class="sc-b">overweegt te vertrekken</div></td>'
+    if engagement is not None:
+        ecol = _factor_color(engagement)
+        cells += f'<td><div class="sc-l">Bevlogenheid</div><div class="sc-v" style="color:{ecol};">{engagement:.1f}/10</div><div class="sc-b">UWES-groepsgemiddelde</div></td>'
+
+    stat_grid = f'<table class="sg"><tr>{cells}</tr></table>' if cells else ""
+
+    return f"""<div class="pb sec">
+  <span class="slabel">Behoudscontext</span>
+  <h2 style="margin-bottom:6px;">Waar staat behoud onder druk?</h2>
+  <p style="font-size:10.5px;color:#64748B;max-width:60ch;margin-bottom:18px;">
+    Drie actieve behoudsignalen samengebracht op groepsniveau.
+    Geen individuele risicobeoordeling &mdash; patronen zijn leidend.
+  </p>
+  {stat_grid}
+  <div class="card accent" style="margin-top:14px;">
+    <h3>Primaire behoudsfactor</h3>
+    <p style="margin-bottom:0;">{_h(primary_factor)} vraagt als eerste aandacht in het behoudsklimaat.</p>
+  </div>
+</div>"""
+
+
 # ─── ExitScan renderer ────────────────────────────────────────────────────────
 
 def render_exit_report_html(data: dict) -> str:
@@ -1253,45 +1294,28 @@ def render_retention_report_html(data: dict) -> str:
     avg_eng     = data["avg_eng"]
     avg_to      = data["avg_to"]
     avg_si      = data["avg_si"]
-    rp_key      = data["retention_profile"] or "MIDDEN"
     band_lbl, band_col = _band(avg_risk, ST)
     fa          = data["factor_avgs"]
     sdt_a       = data["sdt_avgs"]
     nsp         = data["nsp"]
-    msp         = data["msp"] or {}
     top_fkeys   = data["top_fkeys"]
+    top_flabels = data["top_flabels"]
     fim         = data["factor_items_map"]
     oim         = data["org_item_avgs"]
     sim         = data["sdt_item_avgs"]
 
     sorted_f    = sorted([(fk, fa.get(fk)) for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None], key=lambda x: x[1])
-    sorted_desc = list(reversed(sorted_f))
     low_f       = sorted_f[0]  if sorted_f else None
     high_f      = sorted_f[-1] if sorted_f else None
     low_lbl     = _fl(low_f[0], ST)  if low_f  else ""
     high_lbl    = _fl(high_f[0], ST) if high_f else ""
-    gauge       = _gauge_svg(avg_risk, band_lbl, band_col, width=200)
+    low_sc      = low_f[1]  if low_f  else None
+    high_sc     = high_f[1] if high_f else None
 
-    # ── 1. Samenvatting behoudsbeeld ──────────────────────────────────────────
-    exec_copy = (msp.get("executive_intro") or
-                 f"Behoudsbeeld: {band_lbl}. "
-                 f"Factoren die het meest spelen: {', '.join(_fl(fk, ST) for fk in top_fkeys) or '—'}.")
-    stat_cards = [
-        {"title": "Behoudsbeeld",    "value": band_lbl,                "body": "Indicatief groepssignaal"},
-        {"title": "Signaalsterkte",  "value": _score_str(avg_risk),    "body": "1–10, hoger = meer signaal"},
-        {"title": "Bevlogenheid",    "value": _score_str(avg_eng),     "body": "UWES-gemiddelde"},
-        {"title": "Vertrekintentie", "value": _score_str(avg_to),      "body": "Gem. vertrekintentie"},
-    ]
-    bc = data["band_counts"]
-    stacked = _stacked_bar_svg([
-        ("Verhoogd behoudssignaal",  bc.get("HOOG",0),   "#EF4444"),
-        ("Behoudssignaal zichtbaar", bc.get("MIDDEN",0), "#F59E0B"),
-        ("Stabiel behoudsbeeld",     bc.get("LAAG",0),   "#22C55E"),
-    ], total=n, width=320, height=22)
-
-    _ret_primary = high_lbl or low_lbl or "—"
-    _ret_cover = _cover(
-        scan_label=data["scan_lbl"], scan_type="retention", org_name=data["org_name"],
+    # ── Cover ─────────────────────────────────────────────────────────────────
+    _ret_primary = low_lbl or "—"   # lowest = primary behoudsdruk
+    s = _cover(
+        scan_label=data["scan_lbl"], scan_type=ST, org_name=data["org_name"],
         period=data["campaign_name"], opening_question="Waar staat behoud nu onder druk?",
         stats=[
             ("Respondenten", str(n)),
@@ -1299,58 +1323,8 @@ def render_retention_report_html(data: dict) -> str:
             ("Primair signaal", _ret_primary),
         ],
     )
-    body = f"""
-{_ret_cover}
-<div class="pb sec">
-  <span class="slabel">Samenvatting behoudsbeeld</span>
-  <div class="card ca" style="margin-bottom:14px;">
-    <div class="tcol">
-      <div class="tc-l" style="padding-right:10px;">
-        <p style="font-size:12px;font-weight:700;color:#243247;line-height:1.5;margin-bottom:10px;">{_h(exec_copy)}</p>
-        <div style="margin-bottom:10px;">{stacked}</div>
-        <div style="font-size:9px;color:#64748B;margin-top:5px;">
-          <span class="legend-dot" style="background:#EF4444;"></span>Verhoogd behoudssignaal: {bc.get("HOOG",0)}&times;&nbsp;&nbsp;
-          <span class="legend-dot" style="background:#F59E0B;"></span>Behoudssignaal zichtbaar: {bc.get("MIDDEN",0)}&times;&nbsp;&nbsp;
-          <span class="legend-dot" style="background:#22C55E;"></span>Stabiel behoudsbeeld: {bc.get("LAAG",0)}&times;
-        </div>
-      </div>
-      <div class="tc-r" style="text-align:center;">{gauge}</div>
-    </div>
-  </div>
-  {_stat4(stat_cards)}
-</div>"""
 
-    # ── 2. Vertrekintentie / stay-intent / bevlogenheid ───────────────────────
-    si_lbl = "Sterke verblijfsintenties" if (avg_si or 0) >= 7 else \
-             "Gemengde verblijfsintenties" if (avg_si or 0) >= 5 else "Zwakke verblijfsintenties"
-    to_lbl = "Laag" if (avg_to or 0) < 4 else "Gemiddeld" if (avg_to or 0) < 6.5 else "Hoog"
-    eng_lbl = "Sterk bevlogen" if (avg_eng or 0) >= 7 else \
-              "Matig bevlogen" if (avg_eng or 0) >= 5 else "Beperkte bevlogenheid"
-
-    body += f"""<div class="pb sec">
-  <span class="slabel">Vertrekintentie, verblijfsintentie en bevlogenheid</span>
-  <div class="card ca">
-    <p style="font-size:10.5px;color:#374151;margin-bottom:14px;">
-      Drie signalen die samen het behoudsklimaat duiden. Elk signaal staat op zichzelf — combineer ze voor het volledige beeld.
-    </p>
-    <table class="sg"><tr>
-      <td><div class="sc-l">Bevlogenheid</div>
-        <div class="sc-v" style="color:{_factor_color(avg_eng)};">{_score_str(avg_eng)}</div>
-        <div class="sc-b">{_h(eng_lbl)}</div></td>
-      <td><div class="sc-l">Vertrekintentie</div>
-        <div class="sc-v" style="color:{"#EF4444" if (avg_to or 0)>=6.5 else "#F59E0B" if (avg_to or 0)>=4 else "#22C55E"};">{_score_str(avg_to)}</div>
-        <div class="sc-b">{_h(to_lbl)} — 1-10, hoger = meer intentie</div></td>
-      <td><div class="sc-l">Stay-intent</div>
-        <div class="sc-v" style="color:{_factor_color(avg_si)};">{_score_str(avg_si)}</div>
-        <div class="sc-b">{_h(si_lbl)}</div></td>
-      <td><div class="sc-l">Responsbasis</div>
-        <div class="sc-v">{n}/{data["n_invited"]}</div>
-        <div class="sc-b">{data["completion_pct"]}% voltooid</div></td>
-    </tr></table>
-  </div>
-</div>"""
-
-    # ── 3. Waarom primaire behoudsfactor bovenaan staat ───────────────────────
+    # ── Bestuurlijke read ─────────────────────────────────────────────────────
     if top_fkeys:
         tf       = top_fkeys[0]
         tf_lbl_  = _fl(tf, ST)
@@ -1359,255 +1333,279 @@ def render_retention_report_html(data: dict) -> str:
         items_in = fim.get(tf, [])
         i_scores = [(ik, q, oim.get(ik)) for ik, q in items_in if oim.get(ik) is not None]
         low_item = min(i_scores, key=lambda x: x[2]) if i_scores else None
-        open_match = next((t for t in data["open_texts"]
-                           if any(kw in t.lower() for kw in
-                                  next((v for k,v in THEME_KEYWORDS.items()
-                                        if tf in k.lower()), []))), None)
+
         why_cells = ""
-        why_cells += f'<td class="why-cell"><div class="why-l">Behoudssignaal</div><div class="why-v" style="color:{band_col};">{_h(band_lbl)}</div><div class="why-b">totaalband actieve populatie</div></td>'
-        if avg_to is not None:
-            to_col = "#EF4444" if avg_to >= 6.5 else "#F59E0B" if avg_to >= 4 else "#22C55E"
-            why_cells += f'<td class="why-cell"><div class="why-l">Vertrekintentie</div><div class="why-v" style="color:{to_col};">{avg_to:.1f}/10</div><div class="why-b">{_h(to_lbl)}</div></td>'
         if tf_sc is not None:
             why_cells += f'<td class="why-cell"><div class="why-l">Factorscore</div><div class="why-v" style="color:{tf_col};">{tf_sc:.1f}/10</div><div class="why-b">{_h(_factor_label(tf_sc))}</div></td>'
         if low_item:
             why_cells += (f'<td class="why-cell"><div class="why-l">Laagste item</div>'
                           f'<div class="why-v" style="color:{_factor_color(low_item[2])};">{low_item[2]:.1f}/10</div>'
                           f'<div class="why-b">{_h(low_item[1])}</div></td>')
-        mq = _mgmt_q(tf, ST)
-        body += f"""<div class="sec">
-  <span class="slabel">Waarom {_h(tf_lbl_)} het eerst vraagt om aandacht</span>
-  <div class="why">
-    <div class="why-title">{_h(tf_lbl_)} komt terug in meerdere lagen van het behoudsbeeld: signaalsterkte, vertrekintentie, factorscore en itemniveau.</div>
-    <table class="why-grid"><tr>{why_cells}</tr></table>
-    {"<div class='why-quote'>\"" + _h(open_match) + "\"<div class='quote-anon'>Geanonimiseerde toelichting</div></div>" if open_match else ""}
-    {"<div style='font-size:10px;color:#475569;border-top:1px solid #E2E8F0;padding-top:10px;margin-top:4px;'><strong>Eerste managementvraag:</strong> " + _h(mq) + "</div>" if mq else ""}
-  </div>
-</div>"""
+        if avg_eng is not None:
+            ecol = _factor_color(avg_eng)
+            why_cells += f'<td class="why-cell"><div class="why-l">Bevlogenheid</div><div class="why-v" style="color:{ecol};">{avg_eng:.1f}/10</div><div class="why-b">UWES-groepsgemiddelde</div></td>'
+        if avg_si is not None:
+            si_col = _factor_color(avg_si)
+            why_cells += f'<td class="why-cell"><div class="why-l">Stay-intent</div><div class="why-v" style="color:{si_col};">{avg_si:.1f}/10</div><div class="why-b">verblijfsintentie actieve groep</div></td>'
 
-    # ── 4. Factoranalyse ──────────────────────────────────────────────────────
-    factor_items = [((_fl(fk, ST)), sc, _factor_color(sc)) for fk, sc in sorted_desc]
-    factor_chart = _bar_chart_svg(factor_items, max_val=10.0, width=420, bar_h=26, gap=10)
-    kwetsbaar = [_fl(fk, ST) for fk, sc in sorted_f if sc is not None and sc < 5.0]
-    aandacht  = [_fl(fk, ST) for fk, sc in sorted_f if sc is not None and 5.0 <= sc < 6.5]
-    sterk_f   = [_fl(fk, ST) for fk, sc in sorted_f if sc is not None and sc >= 6.5]
+        primary_fkey  = tf
+        primary_label = tf_lbl_
+        primary_sc    = tf_sc
+        primary_col   = tf_col
+        br_mgmt_q     = _mgmt_q(tf, ST)
+    else:
+        why_cells     = ""
+        primary_fkey  = low_f[0] if low_f else None
+        primary_label = low_lbl
+        primary_sc    = low_sc
+        primary_col   = _factor_color(low_sc)
+        br_mgmt_q     = _mgmt_q(low_f[0], ST) if low_f else ""
 
-    def _fscard(title: str, color: str, css_cls: str, labels: list[str]) -> str:
-        if not labels: return ""
-        return (f'<div class="card {css_cls}" style="margin-bottom:9px;">'
-                f'<div style="font-size:8.5px;font-weight:700;color:{color};letter-spacing:0.07em;text-transform:uppercase;margin-bottom:3px;">{_h(title)}</div>'
-                f'<div style="font-size:11px;font-weight:700;color:#243247;">{" &middot; ".join(_h(l) for l in labels)}</div>'
-                f'</div>')
+    if avg_risk and band_lbl and low_lbl and high_lbl and low_lbl != high_lbl:
+        exec_line = (f"Het behoudssignaal is {band_lbl.lower()} ({_score_str(avg_risk)}). "
+                     f"{low_lbl} vraagt als eerste aandacht; {high_lbl} staat relatief sterk.")
+    elif avg_risk and band_lbl and low_lbl:
+        exec_line = f"Het behoudssignaal is {band_lbl.lower()} ({_score_str(avg_risk)}). {low_lbl} vraagt als eerste aandacht."
+    else:
+        exec_line = "Zie factoranalyse en behoudscontext voor details."
 
-    body += f"""<div class="pb sec">
-  <span class="slabel">Factoranalyse — behoudsrelevantie</span>
-  <div style="margin-bottom:12px;">
-    {_fscard("Kwetsbaar punt", "#EF4444", "cr", kwetsbaar)}
-    {_fscard("Aandachtspunt",  "#F59E0B", "",   aandacht)}
-    {_fscard("Relatief sterk", "#22C55E", "cg", sterk_f)}
-  </div>
-  <div class="card">
-    <p style="font-size:9.5px;color:#64748B;margin-bottom:14px;">Score 1–10 — hoger is beter. Kleur per factor: rood = kwetsbaar punt, geel = aandachtspunt, groen = relatief sterk.</p>
-    {factor_chart}
-  </div>
-</div>"""
+    totaalbeeld = (
+        f"{low_lbl} vraagt als eerste aandacht voor behoud. "
+        f"{high_lbl} laat zien wat wél werkt. "
+        f"De responsbasis bepaalt hoe stevig dit beeld is — zie p.03."
+    ) if low_lbl and high_lbl and low_lbl != high_lbl else (
+        f"{low_lbl} vraagt als eerste aandacht. De responsbasis bepaalt hoe stevig dit beeld is — zie p.03."
+    ) if low_lbl else "Zie factoranalyse voor details — zie p.03 voor de responsbasis."
 
-    # ── 5. Prioriteitenmatrix score × behoudsrelevantie ───────────────────────
-    prio_items = []
-    for fk, sc in sorted_f:
-        if sc is None: continue
-        rel  = _RETENTION_RELEVANCE.get(fk, 0.5)
-        prio = round((11.0 - sc) * rel, 2)  # hoge frictie × hoge relevantie = hoge prioriteit
-        prio_items.append((fk, sc, rel, prio))
-    prio_items.sort(key=lambda x: -x[3])
+    s += _bestuurlijke_read(
+        kernzin=exec_line,
+        totaalbeeld=totaalbeeld,
+        primary_label=primary_label,
+        primary_score=primary_sc,
+        primary_color=primary_col,
+        why_cells_html=why_cells,
+        strong_label=high_lbl,
+        strong_score=high_sc,
+        mgmt_q=br_mgmt_q,
+    )
 
-    prio_rows = ""
-    for fk, sc, rel, prio in prio_items:
-        col = _factor_color(sc)
-        rel_bar_w = round(rel * 60)
-        prio_bar_w = round(min(prio, 8) / 8 * 80)
-        prio_rows += (
-            f'<tr>'
-            f'<td style="font-size:10px;color:#243247;font-weight:700;padding:6px 8px;">{_h(_fl(fk, ST))}</td>'
-            f'<td style="font-size:10px;font-weight:700;color:{col};text-align:right;padding:6px 8px;">{sc:.1f}</td>'
-            f'<td style="padding:6px 8px;"><svg width="60" height="8"><rect width="60" height="8" rx="2" fill="#E8E0D0"/>'
-            f'<rect width="{rel_bar_w}" height="8" rx="2" fill="#64748B"/></svg></td>'
-            f'<td style="padding:6px 8px;"><svg width="80" height="8"><rect width="80" height="8" rx="2" fill="#E8E0D0"/>'
-            f'<rect width="{prio_bar_w}" height="8" rx="2" fill="{col}"/></svg></td>'
-            f'</tr>'
-        )
+    # ── Responsbasis & reikwijdte (p.03) ──────────────────────────────────────
+    s += _responsbasis(
+        invited=data["n_invited"],
+        completed=data["n_completed"],
+        pct=int(data["completion_pct"]),
+        period=data["campaign_name"],
+        population="Actieve medewerkers",
+        segment_available=False,
+        segment_reason="te weinig responses per groep voor herleidbaarheid",
+    )
 
-    body += f"""<div class="pb sec">
-  <span class="slabel">Prioriteitenmatrix — score &times; behoudsrelevantie</span>
-  <div class="card">
-    <p style="font-size:9.5px;color:#64748B;margin-bottom:12px;">
-      Sortering op gecombineerde prioriteit: factorscore (lager = meer frictie) &times; behoudsrelevantie.
-      Eerste rij verdient het eerst aandacht in het managementgesprek.
-    </p>
-    <table style="width:100%;border-collapse:collapse;">
-      <tr style="background:#F8FAFC;">
-        <th style="font-size:8.5px;font-weight:700;color:#64748B;text-align:left;padding:6px 8px;border-bottom:1px solid #E2E8F0;">Factor</th>
-        <th style="font-size:8.5px;font-weight:700;color:#64748B;text-align:right;padding:6px 8px;border-bottom:1px solid #E2E8F0;">Score</th>
-        <th style="font-size:8.5px;font-weight:700;color:#64748B;padding:6px 8px;border-bottom:1px solid #E2E8F0;">Behoudsrelevantie</th>
-        <th style="font-size:8.5px;font-weight:700;color:#64748B;padding:6px 8px;border-bottom:1px solid #E2E8F0;">Gecomb. prioriteit</th>
-      </tr>
-      {prio_rows}
-    </table>
-  </div>
-</div>"""
+    # ── Overzichtsprofiel ─────────────────────────────────────────────────────
+    profile_factors = [(_fl(fk, ST), fa.get(fk))
+                       for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
+    s += _overzichtsprofiel(profile_factors)
 
-    # ── 6. Verdieping topfactoren op itemniveau ───────────────────────────────
+    # ── Behoudscontext (retention-exclusive) ──────────────────────────────────
+    # Derive stay_pct / leave_pct from avg_si (stay intent 1-10 scale).
+    # avg_si >= 6.5 = staying, avg_to >= 6.5 = leaving (both 1-10).
+    # We use band_counts for a rough stay/leave split from the retention signal bands.
+    bc = data["band_counts"]
+    bc_total = sum(bc.values()) or 1
+    # "Stabiel behoudsbeeld" respondents map to staying; "Verhoogd" to considering leaving
+    _stay_pct_approx  = round(bc.get("LAAG", 0)   / bc_total * 100) if bc_total else None
+    _leave_pct_approx = round(bc.get("HOOG", 0)   / bc_total * 100) if bc_total else None
+    s += _behoudscontext(
+        retention_score=avg_risk,
+        stay_pct=_stay_pct_approx,
+        leave_pct=_leave_pct_approx,
+        engagement=avg_eng,
+        primary_factor=low_lbl or primary_label or "—",
+    )
+
+    # ── Factor detail (itemniveau prioritaire factoren) ──────────────────────
+    # Priority = (10-score) — no exit-reason counts exist for retention, pass {}
+    priority_fkeys = _select_priority_factors(fa, {}, max_n=3)
+
     def _ret_factor_detail(fk: str) -> str:
-        lbl     = _fl(fk, ST)
-        fsc     = fa.get(fk)
-        col     = _factor_color(fsc)
-        fl_     = _factor_label(fsc)
-        items   = fim.get(fk, [])
-        i_sc    = [(ik, q, oim.get(ik)) for ik, q in items if oim.get(ik) is not None]
-        low_i   = min(i_sc, key=lambda x: x[2]) if i_sc else None
-        high_i  = max(i_sc, key=lambda x: x[2]) if i_sc else None
-        mq      = _mgmt_q(fk, ST)
-        def _ibar(v: float, c: str) -> str:
-            w = max(2, round(v / 10.0 * 90))
-            return (f'<div style="display:inline-block;width:90px;height:7px;background:#E8E0D0;border-radius:3px;vertical-align:middle;">'
-                    f'<div style="width:{w}px;height:7px;background:{c};border-radius:3px;"></div></div>')
+        lbl    = _fl(fk, ST)
+        fsc    = fa.get(fk)
+        col    = _factor_color(fsc)
+        fl_    = _factor_label(fsc)
+        items  = fim.get(fk, [])
+        i_sc   = [(ik, q, oim.get(ik)) for ik, q in items if oim.get(ik) is not None]
+        low_i  = min(i_sc, key=lambda x: x[2]) if i_sc else None
+        high_i = max(i_sc, key=lambda x: x[2]) if i_sc else None
+        mq_    = _mgmt_q(fk, ST)
         rows = "".join(
             f'<tr><td class="iq">{_h(q)}</td>'
-            f'<td class="is" style="color:{_factor_color(isc)};">{isc:.1f}</td>'
-            f'<td class="ib">{_ibar(isc, _factor_color(isc))}</td></tr>'
+            f'<td class="is" style="color:{_factor_color(isc)};">{isc:.1f}</td></tr>'
             for _, q, isc in i_sc
-        ) or '<tr><td colspan="3" style="color:#94A3B8;font-style:italic;">Itemscores niet beschikbaar.</td></tr>'
-        # Hoogste item mag niet als groen tonen als factor niet relatief sterk is
-        high_display = ""
-        if high_i and fsc is not None and fsc >= 6.5:
-            high_display = f'<div style="background:#F0FDF4;border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:10px;"><strong>Sterkste item:</strong> {_h(high_i[1])} — <strong style="color:#22C55E;">{high_i[2]:.1f}/10</strong></div>'
-        elif high_i:
-            high_display = f'<div style="background:#F8FAFC;border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:10px;"><strong>Relatief hoogste item:</strong> {_h(high_i[1])} — <strong style="color:#64748B;">{high_i[2]:.1f}/10</strong></div>'
-        return f"""<div class="card no-break" style="margin-bottom:14px;">
-  <div style="margin-bottom:10px;">
-    <span style="font-size:13px;font-weight:700;color:#243247;">{_h(lbl)}</span>
-    <span style="font-size:12px;font-weight:700;color:{col};margin-left:10px;">{_score_str(fsc)}</span>
-    <span style="font-size:10px;color:{col};margin-left:6px;">— {_h(fl_)}</span>
-  </div>
-  {f'<div style="background:#FEF2F2;border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:10px;"><strong>Laagste item:</strong> {_h(low_i[1])} — <strong style="color:#EF4444;">{low_i[2]:.1f}/10</strong></div>' if low_i else ""}
-  {high_display}
-  <table class="item-tbl" style="margin-bottom:10px;">{rows}</table>
-  {f'<div class="cbox"><strong style="font-size:10px;">Eerste managementvraag:</strong> <span style="font-size:10px;">{_h(mq)}</span></div>' if mq else ""}
+        ) or '<tr><td colspan="2" style="color:#94A3B8;font-style:italic;">Itemscores niet beschikbaar in deze wave.</td></tr>'
+        fk_keywords = THEME_KEYWORDS.get(FACTOR_LABELS_NL.get(fk, ""), [])
+        quote_txt: str | None = None
+        for t in data["open_texts"]:
+            if any(kw in t.lower() for kw in fk_keywords):
+                quote_txt = t
+                break
+        low_card  = (f'<div class="card"><span class="eyebrow">Laagste item</span>'
+                     f'<p>{_h(low_i[1])}</p>'
+                     f'<strong style="color:{_factor_color(low_i[2])};">{low_i[2]:.1f}/10</strong></div>'
+                     if low_i else "")
+        high_card = (f'<div class="card"><span class="eyebrow">Hoogste item binnen deze factor</span>'
+                     f'<p>{_h(high_i[1])}</p>'
+                     f'<strong style="color:{_factor_color(high_i[2])};">{high_i[2]:.1f}/10</strong></div>'
+                     if high_i else "")
+        quote_block = (f'<div class="quote-txt">{_h(quote_txt)}'
+                       f'<div class="quote-anon">Geanonimiseerd &mdash; namen en contactgegevens verwijderd</div>'
+                       f'</div>' if quote_txt else "")
+        mgmt_block  = (f'<div class="card accent"><span class="eyebrow">Eerste managementvraag</span>'
+                       f'<p>{_h(mq_)}</p></div>' if mq_ else "")
+        return f"""<div class="pb sec">
+  <span class="slabel">Verdieping &mdash; {_h(lbl)}</span>
+  <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&mdash; {_h(fl_)}</span></h2>
+  <p style="font-size:10px;color:#64748B;margin-bottom:12px;">Behoudsrelevantie: lager op deze factor = hogere behoudsdruk.</p>
+  {low_card}
+  {high_card}
+  <h3>Alle items in deze factor</h3>
+  <table class="item-tbl">{rows}</table>
+  {quote_block}
+  {mgmt_block}
 </div>"""
 
-    if top_fkeys:
-        detail_html = "".join(_ret_factor_detail(fk) for fk in top_fkeys[:2])
+    if priority_fkeys:
+        for _pfk in priority_fkeys:
+            s += _ret_factor_detail(_pfk)
     else:
-        detail_html = '<div class="empty-state">Factor detail beschikbaar bij voldoende patroonduiding.</div>'
-    body += f"""<div class="pb sec">
-  <span class="slabel">Factor detail — itemniveau topfactoren</span>
-  {detail_html}
-</div>"""
+        s += '<div class="pb sec"><span class="slabel">Verdieping &mdash; prioritaire factoren</span><div class="card">Factor detail beschikbaar na voldoende patroonduiding.</div></div>'
 
-    # ── 7. SDT ────────────────────────────────────────────────────────────────
-    sdt_chart = _bar_chart_svg(
-        [(SDT_LABELS.get(dim,""), sdt_a.get(dim,0), _factor_color(sdt_a.get(dim)))
-         for dim in ("autonomy","competence","relatedness") if dim in sdt_a],
-        max_val=10.0, width=380, bar_h=24, gap=12)
-
-    def _sdt_tbl(dim: str) -> str:
+    # ── Werkbeleving (SDT) ────────────────────────────────────────────────────
+    def _sdt_item_tbl(dim: str) -> str:
         keys = SDT_DIMENSION_ITEMS.get(dim, [])
-        REV  = '<span style="font-size:8px;color:#94A3B8;">&nbsp;(omgekeerd)</span>'
+        REV_LABEL = '<span style="font-size:8px;color:#94A3B8;">&nbsp;(omgekeerd)</span>'
         rows = "".join(
-            f'<tr><td class="iq">{_h(q)}{REV if ik in SDT_REVERSE_ITEMS else ""}</td>'
-            f'<td class="is" style="color:{_factor_color(sim.get(ik))};">{sim[ik]:.1f}</td>'
-            f'<td class="ib">{_mini_bar_svg(sim.get(ik), _factor_color(sim.get(ik)), 80, 6)}</td></tr>'
+            f'<tr><td class="iq">{_h(q)}'
+            f'{REV_LABEL if ik in SDT_REVERSE_ITEMS else ""}'
+            f'</td><td class="is" style="color:{_rag_color(sim.get(ik))};">{sim[ik]:.1f}</td>'
+            f'<td class="ib">{_mini_bar_svg(sim.get(ik), _rag_color(sim.get(ik)), width=80, height=6)}</td></tr>'
             for ik in keys
-            for q in [next((t for k,t in data["sdt_items"] if k == ik), ik)]
+            for q in [next((t for k, t in data["sdt_items"] if k == ik), ik)]
             if ik in sim
         )
         return f'<table class="item-tbl">{rows}</table>' if rows else ""
 
-    sdt_sec = f'<div class="card" style="margin-bottom:14px;"><p style="font-size:11px;color:#374151;margin-bottom:14px;">Drie basisbehoeften die de onderliggende werkbeleving meten, onafhankelijk van de werkfactoren.</p>{sdt_chart}</div>'
-    for dim in ("autonomy","competence","relatedness"):
-        sc  = sdt_a.get(dim)
-        col = _factor_color(sc)
-        tbl = _sdt_tbl(dim)
+    sdt_overview_rows = "".join(
+        _factor_bar_row(SDT_LABELS.get(dim, ""), sdt_a.get(dim))
+        for dim in ("autonomy", "competence", "relatedness")
+        if sdt_a.get(dim) is not None
+    )
+
+    s += f"""<div class="pb sec">
+  <span class="slabel">Werkbeleving — autonomie, competentie &amp; verbondenheid</span>
+  <p>Drie basisbehoeften die de onderliggende werkbeleving meten, onafhankelijk van de organisatiefactoren.</p>
+  <div class="card" style="margin-bottom:14px;">{sdt_overview_rows}</div>"""
+
+    for dim in ("autonomy", "competence", "relatedness"):
+        sc    = sdt_a.get(dim)
+        col   = _rag_color(sc)
+        fl_   = _factor_label(sc)
+        tbl   = _sdt_item_tbl(dim)
         if not tbl: continue
-        sdt_sec += f"""<div class="card no-break" style="margin-bottom:12px;">
+        s += f"""<div class="card no-break" style="margin-bottom:12px;">
   <div style="margin-bottom:8px;">
     <span style="font-size:12px;font-weight:700;color:#243247;">{_h(SDT_LABELS.get(dim,""))}</span>
     <span style="font-size:11px;font-weight:700;color:{col};margin-left:10px;">{_score_str(sc)}</span>
-    <span style="font-size:10px;color:{col};margin-left:6px;">— {_h(_factor_label(sc))}</span>
+    <span style="font-size:10px;color:{col};margin-left:6px;">— {_h(fl_)}</span>
   </div>
   <div style="font-size:9.5px;color:#6B7280;margin-bottom:8px;">{_h(SDT_HELP.get(dim,""))}</div>
   {tbl}
 </div>"""
+    s += "</div>"
 
-    body += f"""<div class="pb sec">
-  <span class="slabel">Werkbeleving — autonomie, competentie en verbondenheid</span>
-  {sdt_sec}
+    # ── eNPS (if available) ───────────────────────────────────────────────────
+    if data["enps_available"] and data["enps_score"] is not None:
+        es   = data["enps_score"]
+        ecol = _rag_color(10.0 if es >= 20 else 6.0 if es >= 0 else 4.0)
+        s += f"""<div class="pb sec">
+  <span class="slabel">Werkgeversaanbeveling</span>
+  <table class="sg"><tr>
+    <td><div class="sc-l">Aanbevelingsscore</div><div class="sc-v" style="color:{ecol};">{es:+d}</div><div class="sc-b">eNPS (&minus;100 tot +100)</div></td>
+  </tr></table>
+  <div class="card"><p style="margin-bottom:0;">Aanvullende context naast het overzichtsprofiel. Een positieve score betekent meer promotors dan criticasters.</p></div>
+</div>"""
+    else:
+        s += """<div class="pb sec">
+  <span class="slabel">Werkgeversaanbeveling</span>
+  <div class="card"><p style="margin-bottom:0;color:#64748B;">Niet gemeten in deze wave.</p></div>
 </div>"""
 
-    # ── 8. Open thema's ───────────────────────────────────────────────────────
-    body += f"""<div class="pb sec">
-  <span class="slabel">Open toelichtingen &mdash; {len(data["open_texts"])} medewerkersstemmen</span>
-  {_themed_quotes(data["open_texts"], ST, top_fkeys, n)}
+    # ── Segmentstatus ─────────────────────────────────────────────────────────
+    s += _segment_status_block(n, has_segment_data=False, reason="n-grens")
+
+    # ── Open toelichtingen ────────────────────────────────────────────────────
+    texts = data["open_texts"]
+    s += f"""<div class="pb sec">
+  <span class="slabel">Open toelichtingen &mdash; {len(texts)} medewerkersstemmen</span>
+  {_themed_quotes(texts, ST, top_fkeys, n)}
 </div>"""
 
-    # ── 9. Segmentstatus ──────────────────────────────────────────────────────
-    body += _segment_status_block(n, has_segment_data=False, reason="n-grens")
+    # ── Eerste managementspoor ────────────────────────────────────────────────
+    s += _eerste_managementspoor(
+        primary_theme=nsp.get("first_decision") or (low_lbl if low_lbl else "het leidende behoudsthema"),
+        second_point=_fl(sorted_f[1][0], ST) if len(sorted_f) > 1 else "",
+        mgmt_q=_mgmt_q(priority_fkeys[0], ST) if priority_fkeys else (nsp.get("first_decision") or ""),
+        owner=nsp.get("first_owner") or "HR + verantwoordelijk management",
+        review_when=nsp.get("review_moment") or "bij de volgende meting",
+    )
 
-    # ── 10. Eerste managementvraag ────────────────────────────────────────────
-    tf_lbl_ = _fl(top_fkeys[0], ST) if top_fkeys else "het leidende thema"
-    body += f"""<div class="pb sec">
-  <span class="slabel">Eerste managementspoor</span>
-  {_step_cards(nsp)}
-  <div class="cbox" style="margin-top:14px;">
-    <p style="font-size:10.5px;color:#243247;font-weight:700;margin-bottom:4px;">Eerste stap</p>
-    <p style="font-size:10px;color:#374151;">
-      Kies binnen 30 dagen &eacute;&eacute;n managementgesprek of data-check om het beeld
-      rond {_h(tf_lbl_)} te verduidelijken. Bepaal daarna pas welke gerichte vervolgstap past.
-      Beleg eigenaar en reviewmoment voordat bredere stappen worden gezet.
-    </p>
-  </div>
-</div>"""
-
-    # ── 11. Appendix ──────────────────────────────────────────────────────────
-    app_secs = ""
+    # ── Appendix ─────────────────────────────────────────────────────────────
+    app_sections = ""
     for fk, items in data["factor_items_map"].items():
         lbl_f = _fl(fk, ST)
         fsc_a = fa.get(fk)
         rows  = "".join(
             (f'<tr><td class="aq">{_h(q)}</td>'
              f'<td class="as" style="color:{_factor_color(oim.get(ik))};">{oim[ik]:.1f}</td>'
-             f'<td class="ab">{_mini_bar_svg(oim.get(ik), _factor_color(oim.get(ik)), 70, 5)}</td></tr>')
+             f'<td class="ab">{_mini_bar_svg(oim.get(ik), _factor_color(oim.get(ik)), width=70, height=5)}</td></tr>')
             if oim.get(ik) is not None else
             f'<tr><td class="aq">{_h(q)}</td><td class="as" style="color:#94A3B8;">n.b.</td><td class="ab"></td></tr>'
             for ik, q in items
         )
-        app_secs += (f'<div class="no-break" style="margin-bottom:14px;">'
-                     f'<div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">'
-                     f'{_h(lbl_f)}{"&nbsp;&mdash;&nbsp;" + _score_str(fsc_a) if fsc_a else ""}</div>'
-                     f'<table class="app-tbl"><tr><th class="aq">Vraag</th>'
-                     f'<th class="as">Gem.</th><th class="ab">Beeld</th></tr>{rows}</table></div>')
+        app_sections += (f'<div class="no-break" style="margin-bottom:14px;">'
+                         f'<div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">'
+                         f'{_h(lbl_f)}'
+                         f'{"&nbsp;&mdash;&nbsp;" + _score_str(fsc_a) if fsc_a else ""}</div>'
+                         f'<table class="app-tbl"><tr><th class="aq">Vraag</th>'
+                         f'<th class="as">Gem.</th><th class="ab">Beeld</th></tr>{rows}</table></div>')
+
     sdt_rows = "".join(
         (f'<tr><td class="aq">{_h(q)}{"&nbsp;&#x21a9;" if ik in SDT_REVERSE_ITEMS else ""}</td>'
          f'<td class="as" style="color:{_factor_color(sim.get(ik))};">{sim[ik]:.1f}</td>'
-         f'<td class="ab">{_mini_bar_svg(sim.get(ik), _factor_color(sim.get(ik)), 70, 5)}</td></tr>')
+         f'<td class="ab">{_mini_bar_svg(sim.get(ik), _factor_color(sim.get(ik)), width=70, height=5)}</td></tr>')
         if sim.get(ik) is not None else
         f'<tr><td class="aq">{_h(q)}{"&nbsp;&#x21a9;" if ik in SDT_REVERSE_ITEMS else ""}</td>'
         f'<td class="as" style="color:#94A3B8;">n.b.</td><td class="ab"></td></tr>'
         for ik, q in data["sdt_items"]
     )
-    body += f"""<div class="pb sec">
+
+    s += f"""<div class="pb sec">
   <span class="slabel">Appendix — volledige vraagresultaten</span>
-  <p style="font-size:9.5px;color:#64748B;margin-bottom:14px;">Technische onderbouwing. Scores zijn groepsgemiddelden (n={n}), geschaald 1–10.</p>
-  {app_secs}
+  <p style="font-size:9.5px;color:#64748B;margin-bottom:14px;">
+    Technische onderbouwing. Scores zijn groepsgemiddelden (n={n}), geschaald 1&ndash;10.
+    &#x21a9;&nbsp;= omgekeerd gecodeerd item.
+  </p>
+  {app_sections}
   <div class="no-break" style="margin-bottom:14px;">
-    <div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">Werkbeleving (SDT)</div>
+    <div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">Werkbeleving (SDT) — B1 t/m B12</div>
     <table class="app-tbl"><tr><th class="aq">Vraag</th><th class="as">Gem.</th><th class="ab">Beeld</th></tr>{sdt_rows}</table>
+  </div>
+  <div class="empty-state" style="margin-top:8px;">
+    Werkgeversaanbeveling (eNPS): {"beschikbaar, zie hoofdrapport" if data["enps_available"] else "niet gemeten in deze wave"}
   </div>
 </div>"""
 
-    # ── 12. Methodiek actieve populatie ───────────────────────────────────────
-    body += _trust_page(ST)
-    return _doc(f"RetentieScan — {data['campaign_name']}", body, scan_type="retention")
+    # ── Methodiek (LAST) ──────────────────────────────────────────────────────
+    s += _trust_page(ST)
+    return _doc(f"RetentieScan — {data['campaign_name']}", s, scan_type="retention")
 
 
 # ─── OnboardingScan renderer ──────────────────────────────────────────────────
