@@ -152,6 +152,17 @@ def test_landingskwaliteit_renders_domains():
     assert "Landingskwaliteit" in html
 
 
+from backend.report_html import _should_show_appendix, _should_show_quotes
+
+
+def test_module_gating():
+    assert _should_show_appendix(n=25, n_factors=6) is True
+    assert _should_show_appendix(n=15, n_factors=6) is False
+    assert _should_show_appendix(n=25, n_factors=4) is False
+    assert _should_show_quotes(["a", "b", "c", "d", "e"]) is True
+    assert _should_show_quotes(["a", "b"]) is False
+
+
 from backend.report_html import _segment_status_block, _eerste_managementspoor
 
 

@@ -43,6 +43,17 @@ from backend.scoring_config import (
 MIN_QUOTES_N = 5
 MAX_QUOTES   = 5
 
+
+def _should_show_quotes(open_texts: list[str]) -> bool:
+    """Gate: toon Open toelichtingen alleen als ≥ MIN_QUOTES_N niet-lege teksten."""
+    return len([t for t in open_texts if t and t.strip()]) >= MIN_QUOTES_N
+
+
+def _should_show_appendix(n: int, n_factors: int) -> bool:
+    """Gate: toon Appendix alleen bij dataset > 20 respondenten EN > 5 factoren."""
+    return n > 20 and n_factors > 5
+
+
 # ── Product-specifieke factor labels ─────────────────────────────────────────
 
 _FACTOR_EXIT_LABEL: dict[str, str] = {
@@ -1220,7 +1231,8 @@ def render_exit_report_html(data: dict) -> str:
 
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]
-    s += f"""<div class="pb sec">
+    if _should_show_quotes(texts):
+        s += f"""<div class="pb sec">
   <span class="slabel">Open toelichtingen &mdash; {len(texts)} respondentstemmen</span>
   {_themed_quotes(texts, "exit", top_fkeys, n)}
 </div>"""
@@ -1235,36 +1247,38 @@ def render_exit_report_html(data: dict) -> str:
     )
 
     # ── Appendix ─────────────────────────────────────────────────────────────
-    app_sections = ""
-    for fk, items in data["factor_items_map"].items():
-        lbl_f = FACTOR_LABELS_NL.get(fk, fk)
-        fsc_a = fa.get(fk)
-        rows  = "".join(
-            (f'<tr><td class="aq">{_h(q)}</td>'
-             f'<td class="as" style="color:{_factor_color(oim.get(ik))};">{oim[ik]:.1f}</td>'
-             f'<td class="ab">{_mini_bar_svg(oim.get(ik), _factor_color(oim.get(ik)), width=70, height=5)}</td></tr>')
-            if oim.get(ik) is not None else
-            f'<tr><td class="aq">{_h(q)}</td><td class="as" style="color:#94A3B8;">n.b.</td><td class="ab"></td></tr>'
-            for ik, q in items
+    n_factors = len([fk for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None])
+    if _should_show_appendix(n, n_factors):
+        app_sections = ""
+        for fk, items in data["factor_items_map"].items():
+            lbl_f = FACTOR_LABELS_NL.get(fk, fk)
+            fsc_a = fa.get(fk)
+            rows  = "".join(
+                (f'<tr><td class="aq">{_h(q)}</td>'
+                 f'<td class="as" style="color:{_factor_color(oim.get(ik))};">{oim[ik]:.1f}</td>'
+                 f'<td class="ab">{_mini_bar_svg(oim.get(ik), _factor_color(oim.get(ik)), width=70, height=5)}</td></tr>')
+                if oim.get(ik) is not None else
+                f'<tr><td class="aq">{_h(q)}</td><td class="as" style="color:#94A3B8;">n.b.</td><td class="ab"></td></tr>'
+                for ik, q in items
+            )
+            app_sections += (f'<div class="no-break" style="margin-bottom:14px;">'
+                             f'<div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">'
+                             f'{_h(lbl_f)}'
+                             f'{"&nbsp;&mdash;&nbsp;" + _score_str(fsc_a) if fsc_a else ""}</div>'
+                             f'<table class="app-tbl"><tr><th class="aq">Vraag</th>'
+                             f'<th class="as">Gem.</th><th class="ab">Beeld</th></tr>{rows}</table></div>')
+
+        sdt_rows = "".join(
+            (f'<tr><td class="aq">{_h(q)}{"&nbsp;&#x21a9;" if ik in SDT_REVERSE_ITEMS else ""}</td>'
+             f'<td class="as" style="color:{_factor_color(sim.get(ik))};">{sim[ik]:.1f}</td>'
+             f'<td class="ab">{_mini_bar_svg(sim.get(ik), _factor_color(sim.get(ik)), width=70, height=5)}</td></tr>')
+            if sim.get(ik) is not None else
+            f'<tr><td class="aq">{_h(q)}{"&nbsp;&#x21a9;" if ik in SDT_REVERSE_ITEMS else ""}</td>'
+            f'<td class="as" style="color:#94A3B8;">n.b.</td><td class="ab"></td></tr>'
+            for ik, q in data["sdt_items"]
         )
-        app_sections += (f'<div class="no-break" style="margin-bottom:14px;">'
-                         f'<div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">'
-                         f'{_h(lbl_f)}'
-                         f'{"&nbsp;&mdash;&nbsp;" + _score_str(fsc_a) if fsc_a else ""}</div>'
-                         f'<table class="app-tbl"><tr><th class="aq">Vraag</th>'
-                         f'<th class="as">Gem.</th><th class="ab">Beeld</th></tr>{rows}</table></div>')
 
-    sdt_rows = "".join(
-        (f'<tr><td class="aq">{_h(q)}{"&nbsp;&#x21a9;" if ik in SDT_REVERSE_ITEMS else ""}</td>'
-         f'<td class="as" style="color:{_factor_color(sim.get(ik))};">{sim[ik]:.1f}</td>'
-         f'<td class="ab">{_mini_bar_svg(sim.get(ik), _factor_color(sim.get(ik)), width=70, height=5)}</td></tr>')
-        if sim.get(ik) is not None else
-        f'<tr><td class="aq">{_h(q)}{"&nbsp;&#x21a9;" if ik in SDT_REVERSE_ITEMS else ""}</td>'
-        f'<td class="as" style="color:#94A3B8;">n.b.</td><td class="ab"></td></tr>'
-        for ik, q in data["sdt_items"]
-    )
-
-    s += f"""<div class="pb sec">
+        s += f"""<div class="pb sec">
   <span class="slabel">Appendix — volledige vraagresultaten</span>
   <p style="font-size:9.5px;color:#64748B;margin-bottom:14px;">
     Technische onderbouwing. Scores zijn groepsgemiddelden (n={n}), geschaald 1&ndash;10.
@@ -1543,7 +1557,8 @@ def render_retention_report_html(data: dict) -> str:
 
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]
-    s += f"""<div class="pb sec">
+    if _should_show_quotes(texts):
+        s += f"""<div class="pb sec">
   <span class="slabel">Open toelichtingen &mdash; {len(texts)} medewerkersstemmen</span>
   {_themed_quotes(texts, ST, top_fkeys, n)}
 </div>"""
@@ -1558,36 +1573,38 @@ def render_retention_report_html(data: dict) -> str:
     )
 
     # ── Appendix ─────────────────────────────────────────────────────────────
-    app_sections = ""
-    for fk, items in data["factor_items_map"].items():
-        lbl_f = _fl(fk, ST)
-        fsc_a = fa.get(fk)
-        rows  = "".join(
-            (f'<tr><td class="aq">{_h(q)}</td>'
-             f'<td class="as" style="color:{_factor_color(oim.get(ik))};">{oim[ik]:.1f}</td>'
-             f'<td class="ab">{_mini_bar_svg(oim.get(ik), _factor_color(oim.get(ik)), width=70, height=5)}</td></tr>')
-            if oim.get(ik) is not None else
-            f'<tr><td class="aq">{_h(q)}</td><td class="as" style="color:#94A3B8;">n.b.</td><td class="ab"></td></tr>'
-            for ik, q in items
+    n_factors = len([fk for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None])
+    if _should_show_appendix(n, n_factors):
+        app_sections = ""
+        for fk, items in data["factor_items_map"].items():
+            lbl_f = _fl(fk, ST)
+            fsc_a = fa.get(fk)
+            rows  = "".join(
+                (f'<tr><td class="aq">{_h(q)}</td>'
+                 f'<td class="as" style="color:{_factor_color(oim.get(ik))};">{oim[ik]:.1f}</td>'
+                 f'<td class="ab">{_mini_bar_svg(oim.get(ik), _factor_color(oim.get(ik)), width=70, height=5)}</td></tr>')
+                if oim.get(ik) is not None else
+                f'<tr><td class="aq">{_h(q)}</td><td class="as" style="color:#94A3B8;">n.b.</td><td class="ab"></td></tr>'
+                for ik, q in items
+            )
+            app_sections += (f'<div class="no-break" style="margin-bottom:14px;">'
+                             f'<div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">'
+                             f'{_h(lbl_f)}'
+                             f'{"&nbsp;&mdash;&nbsp;" + _score_str(fsc_a) if fsc_a else ""}</div>'
+                             f'<table class="app-tbl"><tr><th class="aq">Vraag</th>'
+                             f'<th class="as">Gem.</th><th class="ab">Beeld</th></tr>{rows}</table></div>')
+
+        sdt_rows = "".join(
+            (f'<tr><td class="aq">{_h(q)}{"&nbsp;&#x21a9;" if ik in SDT_REVERSE_ITEMS else ""}</td>'
+             f'<td class="as" style="color:{_factor_color(sim.get(ik))};">{sim[ik]:.1f}</td>'
+             f'<td class="ab">{_mini_bar_svg(sim.get(ik), _factor_color(sim.get(ik)), width=70, height=5)}</td></tr>')
+            if sim.get(ik) is not None else
+            f'<tr><td class="aq">{_h(q)}{"&nbsp;&#x21a9;" if ik in SDT_REVERSE_ITEMS else ""}</td>'
+            f'<td class="as" style="color:#94A3B8;">n.b.</td><td class="ab"></td></tr>'
+            for ik, q in data["sdt_items"]
         )
-        app_sections += (f'<div class="no-break" style="margin-bottom:14px;">'
-                         f'<div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">'
-                         f'{_h(lbl_f)}'
-                         f'{"&nbsp;&mdash;&nbsp;" + _score_str(fsc_a) if fsc_a else ""}</div>'
-                         f'<table class="app-tbl"><tr><th class="aq">Vraag</th>'
-                         f'<th class="as">Gem.</th><th class="ab">Beeld</th></tr>{rows}</table></div>')
 
-    sdt_rows = "".join(
-        (f'<tr><td class="aq">{_h(q)}{"&nbsp;&#x21a9;" if ik in SDT_REVERSE_ITEMS else ""}</td>'
-         f'<td class="as" style="color:{_factor_color(sim.get(ik))};">{sim[ik]:.1f}</td>'
-         f'<td class="ab">{_mini_bar_svg(sim.get(ik), _factor_color(sim.get(ik)), width=70, height=5)}</td></tr>')
-        if sim.get(ik) is not None else
-        f'<tr><td class="aq">{_h(q)}{"&nbsp;&#x21a9;" if ik in SDT_REVERSE_ITEMS else ""}</td>'
-        f'<td class="as" style="color:#94A3B8;">n.b.</td><td class="ab"></td></tr>'
-        for ik, q in data["sdt_items"]
-    )
-
-    s += f"""<div class="pb sec">
+        s += f"""<div class="pb sec">
   <span class="slabel">Appendix — volledige vraagresultaten</span>
   <p style="font-size:9.5px;color:#64748B;margin-bottom:14px;">
     Technische onderbouwing. Scores zijn groepsgemiddelden (n={n}), geschaald 1&ndash;10.
@@ -1903,7 +1920,8 @@ def render_onboarding_report_html(data: dict) -> str:
 
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]
-    s += f"""<div class="pb sec">
+    if _should_show_quotes(texts):
+        s += f"""<div class="pb sec">
   <span class="slabel">Open toelichtingen &mdash; {len(texts)} medewerkersstemmen</span>
   {_themed_quotes(texts, ST, top_fkeys, n)}
 </div>"""
@@ -1918,36 +1936,37 @@ def render_onboarding_report_html(data: dict) -> str:
     )
 
     # ── Appendix ─────────────────────────────────────────────────────────────
-    app_sections = ""
-    for fk, items in data["factor_items_map"].items():
-        lbl_f = _fl(fk, ST)
-        fsc_a = fa.get(fk)
-        rows  = "".join(
-            (f'<tr><td class="aq">{_h(q)}</td>'
-             f'<td class="as" style="color:{_factor_color(oim.get(ik))};">{oim[ik]:.1f}</td>'
-             f'<td class="ab">{_mini_bar_svg(oim.get(ik), _factor_color(oim.get(ik)), width=70, height=5)}</td></tr>')
-            if oim.get(ik) is not None else
-            f'<tr><td class="aq">{_h(q)}</td><td class="as" style="color:#94A3B8;">n.b.</td><td class="ab"></td></tr>'
-            for ik, q in items
+    n_factors = len([fk for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None])
+    if _should_show_appendix(n, n_factors):
+        app_sections = ""
+        for fk, items in data["factor_items_map"].items():
+            lbl_f = _fl(fk, ST)
+            fsc_a = fa.get(fk)
+            rows  = "".join(
+                (f'<tr><td class="aq">{_h(q)}</td>'
+                 f'<td class="as" style="color:{_factor_color(oim.get(ik))};">{oim[ik]:.1f}</td>'
+                 f'<td class="ab">{_mini_bar_svg(oim.get(ik), _factor_color(oim.get(ik)), width=70, height=5)}</td></tr>')
+                if oim.get(ik) is not None else
+                f'<tr><td class="aq">{_h(q)}</td><td class="as" style="color:#94A3B8;">n.b.</td><td class="ab"></td></tr>'
+                for ik, q in items
+            )
+            app_sections += (f'<div class="no-break" style="margin-bottom:14px;">'
+                             f'<div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">'
+                             f'{_h(lbl_f)}'
+                             f'{"&nbsp;&mdash;&nbsp;" + _score_str(fsc_a) if fsc_a else ""}</div>'
+                             f'<table class="app-tbl"><tr><th class="aq">Vraag</th>'
+                             f'<th class="as">Gem.</th><th class="ab">Beeld</th></tr>{rows}</table></div>')
+
+        sdt_rows = "".join(
+            (f'<tr><td class="aq">{_h(q)}{"&nbsp;&#x21a9;" if ik in SDT_REVERSE_ITEMS else ""}</td>'
+             f'<td class="as" style="color:{_factor_color(sim.get(ik))};">{sim[ik]:.1f}</td>'
+             f'<td class="ab">{_mini_bar_svg(sim.get(ik), _factor_color(sim.get(ik)), width=70, height=5)}</td></tr>')
+            if sim.get(ik) is not None else
+            f'<tr><td class="aq">{_h(q)}{"&nbsp;&#x21a9;" if ik in SDT_REVERSE_ITEMS else ""}</td>'
+            f'<td class="as" style="color:#94A3B8;">n.b.</td><td class="ab"></td></tr>'
+            for ik, q in data["sdt_items"]
         )
-        app_sections += (f'<div class="no-break" style="margin-bottom:14px;">'
-                         f'<div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">'
-                         f'{_h(lbl_f)}'
-                         f'{"&nbsp;&mdash;&nbsp;" + _score_str(fsc_a) if fsc_a else ""}</div>'
-                         f'<table class="app-tbl"><tr><th class="aq">Vraag</th>'
-                         f'<th class="as">Gem.</th><th class="ab">Beeld</th></tr>{rows}</table></div>')
 
-    sdt_rows = "".join(
-        (f'<tr><td class="aq">{_h(q)}{"&nbsp;&#x21a9;" if ik in SDT_REVERSE_ITEMS else ""}</td>'
-         f'<td class="as" style="color:{_factor_color(sim.get(ik))};">{sim[ik]:.1f}</td>'
-         f'<td class="ab">{_mini_bar_svg(sim.get(ik), _factor_color(sim.get(ik)), width=70, height=5)}</td></tr>')
-        if sim.get(ik) is not None else
-        f'<tr><td class="aq">{_h(q)}{"&nbsp;&#x21a9;" if ik in SDT_REVERSE_ITEMS else ""}</td>'
-        f'<td class="as" style="color:#94A3B8;">n.b.</td><td class="ab"></td></tr>'
-        for ik, q in data["sdt_items"]
-    )
-
-    if app_sections or sdt_rows:
         s += f"""<div class="pb sec">
   <span class="slabel">Appendix — volledige vraagresultaten</span>
   <p style="font-size:9.5px;color:#64748B;margin-bottom:14px;">
