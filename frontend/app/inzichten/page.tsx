@@ -12,6 +12,7 @@ export const metadata: Metadata = {
   alternates: {
     canonical: '/inzichten',
   },
+  robots: { index: false, follow: true },
   openGraph: {
     type: 'website',
     title: 'Inzichten | Loep',

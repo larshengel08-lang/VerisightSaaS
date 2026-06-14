@@ -58,6 +58,18 @@ const nextConfig: NextConfig = {
     // Silences the "multiple lockfiles" workspace root warning
     root: path.resolve(__dirname),
   },
+  async redirects() {
+    return [
+      { source: '/oplossingen/verloop-analyse', destination: '/producten/exitscan', permanent: true },
+      { source: '/oplossingen/exitgesprekken-analyse', destination: '/producten/exitscan', permanent: true },
+      { source: '/oplossingen/medewerkersbehoud-analyse', destination: '/producten/retentiescan', permanent: true },
+      { source: '/oplossingen/:slug(exit.*)', destination: '/producten/exitscan', permanent: true },
+      { source: '/oplossingen/:slug(retentie.*)', destination: '/producten/retentiescan', permanent: true },
+      { source: '/oplossingen/:slug(onboarding.*)', destination: '/producten/onboarding-30-60-90', permanent: true },
+      { source: '/oplossingen', destination: '/producten', permanent: true },
+      { source: '/oplossingen/:slug*', destination: '/producten', permanent: true },
+    ]
+  },
   async headers() {
     return [
       {

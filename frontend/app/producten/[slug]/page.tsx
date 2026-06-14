@@ -64,6 +64,7 @@ export async function generateMetadata({ params }: Props) {
     alternates: {
       canonical: product.href,
     },
+    ...(slug === 'cultuurbeeld' ? { robots: { index: false, follow: false } } : {}),
     openGraph: {
       type: 'website',
       url,
