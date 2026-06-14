@@ -1200,7 +1200,7 @@ function OnboardingModernPage() {
                     'Intake en scopebepaling',
                     'Survey klaarzetten en launchpakket leveren (uitnodigingslink + tekst)',
                     'Respons monitoren op campagneniveau',
-                    'Rapport met wat opvalt in landing, rol, leiding en team op groepsniveau',
+                    'Managementrapport met patronen en prioriteiten',
                     'Begeleide managementbespreking (60–90 min)',
                     'Eerste vervolgrichting vastgelegd',
                   ].map((item, i) => (
