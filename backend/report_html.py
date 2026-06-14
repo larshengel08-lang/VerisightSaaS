@@ -145,6 +145,19 @@ FACTOR_EXIT_CODE: dict[str, str] = {
     "compensation": "P4", "workload": "P5", "role_clarity": "P6",
 }
 
+
+def _select_priority_factors(factor_avgs: dict[str, float],
+                             exit_reason_counts: dict[str, int],
+                             max_n: int = 3) -> list[str]:
+    """Prioriteit = lage score + frequentie als vertrekreden. Niet puur laagste."""
+    def _priority(fk: str) -> float:
+        score = factor_avgs.get(fk, 10.0)
+        reason = exit_reason_counts.get(fk, 0)
+        return (10.0 - score) * 1.0 + reason * 0.4
+    keys = [fk for fk in factor_avgs if factor_avgs.get(fk) is not None]
+    return sorted(keys, key=_priority, reverse=True)[:max_n]
+
+
 # Behoudsrelevantie per factor (voor retention prioriteitenmatrix)
 _RETENTION_RELEVANCE: dict[str, float] = {
     "workload": 0.85, "leadership": 0.82, "growth": 0.78,
@@ -1052,47 +1065,77 @@ def render_exit_report_html(data: dict) -> str:
   </div>
 </div>"""
 
-    # ── Factor detail (itemniveau topfactoren) ────────────────────────────────
+    # ── Factor detail (itemniveau prioritaire factoren) ──────────────────────
+    _code_to_count = {r["code"]: r["count"] for r in data["exit_r_dist"]}
+    exit_code_counts = {fk: _code_to_count.get(FACTOR_EXIT_CODE.get(fk), 0) for fk in fa}
+    priority_fkeys = _select_priority_factors(fa, exit_code_counts, max_n=3)
+
     def _factor_detail(fk: str) -> str:
-        lbl     = FACTOR_LABELS_NL.get(fk, fk)
-        fsc     = fa.get(fk)
-        col     = _factor_color(fsc)
-        fl_     = _factor_label(fsc)
-        items   = fim.get(fk, [])
-        i_sc    = [(ik, q, oim.get(ik)) for ik, q in items if oim.get(ik) is not None]
-        low_i   = min(i_sc, key=lambda x: x[2]) if i_sc else None
-        high_i  = max(i_sc, key=lambda x: x[2]) if i_sc else None
-        mgmt_q  = _mgmt_q(fk, "exit")
-        def _item_bar(isc: float, col: str) -> str:
-            w = max(2, round(isc / 10.0 * 90))
-            return (f'<div style="display:inline-block;width:90px;height:7px;'
-                    f'background:#E8E0D0;border-radius:3px;vertical-align:middle;">'
-                    f'<div style="width:{w}px;height:7px;background:{col};border-radius:3px;"></div>'
-                    f'</div>')
+        # ── Data logic (preserved from old helper) ──
+        lbl    = FACTOR_LABELS_NL.get(fk, fk)
+        fsc    = fa.get(fk)
+        col    = _factor_color(fsc)
+        fl_    = _factor_label(fsc)
+        items  = fim.get(fk, [])
+        i_sc   = [(ik, q, oim.get(ik)) for ik, q in items if oim.get(ik) is not None]
+        low_i  = min(i_sc, key=lambda x: x[2]) if i_sc else None
+        high_i = max(i_sc, key=lambda x: x[2]) if i_sc else None
+        mgmt_q = _mgmt_q(fk, "exit")
+        # Item table rows (keep .iq/.is/.ib classes — those are in new CSS)
         rows = "".join(
             f'<tr><td class="iq">{_h(q)}</td>'
-            f'<td class="is" style="color:{_factor_color(isc)};">{isc:.1f}</td>'
-            f'<td class="ib">{_item_bar(isc, _factor_color(isc))}</td></tr>'
+            f'<td class="is" style="color:{_factor_color(isc)};">{isc:.1f}</td></tr>'
             for _, q, isc in i_sc
-        ) or '<tr><td colspan="3" style="color:#94A3B8;font-style:italic;">Itemscores niet beschikbaar in deze wave.</td></tr>'
-        return f"""<div class="card no-break" style="margin-bottom:14px;">
-  <div style="margin-bottom:10px;">
-    <span style="font-size:13px;font-weight:700;color:#243247;">{_h(lbl)}</span>
-    <span style="font-size:12px;font-weight:700;color:{col};margin-left:10px;">{_score_str(fsc)}</span>
-    <span style="font-size:10px;color:{col};margin-left:6px;">— {_h(fl_)}</span>
-  </div>
-  {f'<div style="background:#FEF2F2;border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:10px;"><strong>Laagste item:</strong> {_h(low_i[1])} — <strong style="color:#EF4444;">{low_i[2]:.1f}/10</strong></div>' if low_i else ""}
-  {f'<div style="background:#F0FDF4;border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:10px;"><strong>Sterkste item:</strong> {_h(high_i[1])} — <strong style="color:#22C55E;">{high_i[2]:.1f}/10</strong></div>' if high_i else ""}
-  <table class="item-tbl" style="margin-bottom:10px;">{rows}</table>
-  {f'<div class="cbox"><strong style="font-size:10px;">Eerste managementvraag:</strong> <span style="font-size:10px;">{_h(mgmt_q)}</span></div>' if mgmt_q else ""}
+        ) or '<tr><td colspan="2" style="color:#94A3B8;font-style:italic;">Itemscores niet beschikbaar in deze wave.</td></tr>'
+        # Optional quote: pick first open text that mentions a keyword of this factor
+        fk_keywords = THEME_KEYWORDS.get(lbl, [])
+        quote_txt: str | None = None
+        for t in data["open_texts"]:
+            t_low = t.lower()
+            if any(kw in t_low for kw in fk_keywords):
+                quote_txt = t
+                break
+        # ── Exit reason context block ──
+        er_count = exit_code_counts.get(fk, 0)
+        if er_count > 0:
+            er_context = f'<div class="card accent">{er_count}&times; genoemd als vertrekreden &mdash; directe link met vertrekcontext.</div>'
+        else:
+            er_context = ""
+        # ── Lowest / highest item cards ──
+        low_card  = (f'<div class="card"><span class="eyebrow">Laagste item</span>'
+                     f'<p>{_h(low_i[1])}</p>'
+                     f'<strong style="color:{_factor_color(low_i[2])};">{low_i[2]:.1f}/10</strong></div>'
+                     if low_i else "")
+        high_card = (f'<div class="card"><span class="eyebrow">Hoogste item binnen deze factor</span>'
+                     f'<p>{_h(high_i[1])}</p>'
+                     f'<strong style="color:{_factor_color(high_i[2])};">{high_i[2]:.1f}/10</strong></div>'
+                     if high_i else "")
+        # ── Quote block ──
+        quote_block = (f'<div class="quote-txt">{_h(quote_txt)}'
+                       f'<div class="quote-anon">Geanonimiseerd &mdash; namen en contactgegevens verwijderd</div>'
+                       f'</div>'
+                       if quote_txt else "")
+        # ── Management question ──
+        mgmt_block = (f'<div class="card accent"><span class="eyebrow">Eerste managementvraag</span>'
+                      f'<p>{_h(mgmt_q)}</p></div>'
+                      if mgmt_q else "")
+        return f"""<div class="pb sec">
+  <span class="slabel">Verdieping &mdash; {_h(lbl)}</span>
+  <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&mdash; {_h(fl_)}</span></h2>
+  {er_context}
+  {low_card}
+  {high_card}
+  <h3>Alle items in deze factor</h3>
+  <table class="item-tbl">{rows}</table>
+  {quote_block}
+  {mgmt_block}
 </div>"""
 
-    detail_html = "".join(_factor_detail(fk) for fk in top_fkeys[:2]) if top_fkeys else \
-        '<div class="empty-state">Factor detail beschikbaar na voldoende patroonduiding.</div>'
-    s += f"""<div class="pb sec">
-  <span class="slabel">Factor detail — itemniveau</span>
-  {detail_html}
-</div>"""
+    if priority_fkeys:
+        for _pfk in priority_fkeys:
+            s += _factor_detail(_pfk)
+    else:
+        s += '<div class="pb sec"><span class="slabel">Verdieping &mdash; prioritaire factoren</span><div class="card">Factor detail beschikbaar na voldoende patroonduiding.</div></div>'
 
     # ── SDT basisbehoeften ────────────────────────────────────────────────────
     sdt_chart = _bar_chart_svg([

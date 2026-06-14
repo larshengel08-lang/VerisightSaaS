@@ -102,3 +102,14 @@ def test_vertrekcontext_separates_hoofdreden_from_meespelend():
     assert "Groeiperspectief" in html and "12" in html
     assert "Werkdruk" in html
     assert "meespeel" in html.lower() or "hoofdreden" in html.lower()
+
+
+from backend.report_html import _select_priority_factors
+
+
+def test_priority_factors_weighs_exit_reason_not_only_score():
+    factor_avgs = {"growth": 4.2, "pay": 4.0, "workload": 4.5}
+    exit_codes = {"growth": 12, "pay": 2, "workload": 3}
+    out = _select_priority_factors(factor_avgs, exit_codes, max_n=3)
+    assert out[0] == "growth"
+    assert len(out) <= 3
