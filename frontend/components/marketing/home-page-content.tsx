@@ -759,7 +759,7 @@ function HeroSection() {
                   textAlign: 'center',
                 }}
               >
-                Loep voert de scan uit, levert een bestuurlijke read en begeleidt HR en management naar één eerste gerichte keuze.
+                Het rapport is het product. Loep levert een bestuurlijke read en begeleidt HR en management naar één eerste gerichte keuze — geen zelfbedieninstrument, maar een begeleide analyse.
               </p>
 
               <div
@@ -1891,6 +1891,60 @@ const proofPoints = [
   'Managementbespreking standaard inbegrepen',
 ] as const
 
+function PositioningCalloutSection() {
+  return (
+    <section
+      style={{
+        background: SURFACE.charcoal,
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+      }}
+    >
+      <div
+        style={{
+          ...SHELL,
+          paddingBottom: 'clamp(48px, 5vw, 68px)',
+          paddingTop: 'clamp(48px, 5vw, 68px)',
+          textAlign: 'center',
+        }}
+      >
+        <Reveal>
+          <p
+            style={{
+              color: 'rgba(255,255,255,0.42)',
+              fontFamily: bodyFont,
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: '.22em',
+              marginBottom: 22,
+              textTransform: 'uppercase',
+            }}
+          >
+            Begeleide analyse · Geen zelfbedieningstool
+          </p>
+          <p
+            style={{
+              color: '#fffdf8',
+              fontFamily: displayFont,
+              fontSize: 'clamp(1.9rem, 3.6vw, 3.1rem)',
+              fontWeight: 700,
+              letterSpacing: '-0.045em',
+              lineHeight: 1.05,
+              margin: '0 auto',
+              maxWidth: '28ch',
+              textWrap: 'balance',
+            }}
+          >
+            Een tool geeft u grafieken. Loep geeft u de conclusie{' '}
+            <span style={{ color: SURFACE.amberGlow, fontStyle: 'italic', fontWeight: 300 }}>
+              — en het directiegesprek.
+            </span>
+          </p>
+        </Reveal>
+      </div>
+    </section>
+  )
+}
+
 function ProofSection() {
   return (
     <section
@@ -1942,6 +1996,36 @@ function ProofSection() {
                 </Reveal>
               ))}
             </div>
+            <Reveal delay={0.28}>
+              <div
+                style={{
+                  background: SURFACE.surfaceSoft,
+                  border: `1px solid ${SURFACE.border}`,
+                  marginTop: 24,
+                  padding: '16px 20px',
+                }}
+              >
+                <p
+                  style={{
+                    color: SURFACE.muted,
+                    fontFamily: bodyFont,
+                    fontSize: 10,
+                    fontWeight: 700,
+                    letterSpacing: '.16em',
+                    marginBottom: 8,
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Methode
+                </p>
+                <p style={{ color: SURFACE.text, fontSize: 14.5, lineHeight: 1.7 }}>
+                  Loep gebruikt gevalideerde vragenlijsten, geduid door HR-specialisten — geen
+                  geautomatiseerde software-output. Elke rapportage is contextgebonden en wordt
+                  begeleid met een managementbespreking.
+                </p>
+              </div>
+            </Reveal>
+
             <div style={{ marginTop: 28 }}>
               <Reveal delay={0.3}>
                 <a
@@ -2099,6 +2183,7 @@ export function HomePageContent() {
       <HeroSection />
       <ProblemSection />
       <ManagementFlowSection />
+      <PositioningCalloutSection />
       <RoutesSection />
       <ProofSection />
       <ContactSection />
