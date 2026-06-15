@@ -1955,6 +1955,37 @@ async def campaign_stats(
 # PDF-rapport
 # ---------------------------------------------------------------------------
 
+import logging as _logging
+_report_log = _logging.getLogger("loep.report")
+
+
+def _generate_report_pdf(campaign_id: str, db: "Session") -> tuple[bytes, str]:
+    """Probeer WeasyPrint (nieuw design); val terug op ReportLab met logged warning.
+
+    Returns (pdf_bytes, design_label) waarbij design_label 'loep-v6' of 'legacy' is.
+    De label wordt als X-Report-Design header meegestuurd zodat afwijkingen zichtbaar zijn.
+    """
+    try:
+        from backend.report_html import generate_campaign_report_html
+        pdf_bytes = generate_campaign_report_html(campaign_id, db)
+        return pdf_bytes, "loep-v6"
+    except Exception as e:
+        _report_log.warning(
+            "WeasyPrint PDF generatie mislukt voor campagne %s — fallback naar legacy ReportLab. Fout: %s",
+            campaign_id,
+            e,
+        )
+
+    try:
+        from backend.report import generate_campaign_report
+        pdf_bytes = generate_campaign_report(campaign_id, db)
+        return pdf_bytes, "legacy"
+    except ValueError as e:
+        raise e
+    except Exception as e:
+        raise RuntimeError(f"Rapport generatie mislukt (beide designs): {e}") from e
+
+
 @app.get("/api/campaigns/{campaign_id}/report")
 async def download_report(
     campaign_id: str,
@@ -1980,26 +2011,32 @@ async def download_report(
     if product_name:
         raise HTTPException(status_code=422, detail=f"{product_name} ondersteunt in deze wave nog geen PDF-rapport.")
 
-    try:
-        from backend.report import generate_campaign_report, generate_culture_assessment_segment_summary_export
-        if format == "segment_summary":
-            export_bytes = generate_culture_assessment_segment_summary_export(campaign_id, db)
-        else:
-            export_bytes = generate_campaign_report(campaign_id, db)
-    except ValueError as e:
-        raise HTTPException(status_code=422, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Rapport- of exportgeneratie mislukt: {e}")
-
-    # HTTP Content-Disposition headers zijn latin-1; strip alle niet-ASCII tekens
     import re as _re
-    safe_name = _re.sub(r"[^\w\s-]", "", campaign.name)   # verwijder em-dash etc.
-    safe_name = _re.sub(r"[\s-]+", "_", safe_name).strip("_")  # spaties/streepjes → _
-    filename = f"Loep_{safe_name}.csv" if format == "segment_summary" else f"Loep_{safe_name}.pdf"
+    safe_name = _re.sub(r"[^\w\s-]", "", campaign.name)
+    safe_name = _re.sub(r"[\s-]+", "_", safe_name).strip("_")
+
+    if format == "segment_summary":
+        try:
+            from backend.report import generate_culture_assessment_segment_summary_export
+            export_bytes = generate_culture_assessment_segment_summary_export(campaign_id, db)
+        except ValueError as e:
+            raise HTTPException(status_code=422, detail=str(e))
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Exportgeneratie mislukt: {e}")
+        return Response(
+            content=export_bytes,
+            media_type="text/csv; charset=utf-8",
+            headers={"Content-Disposition": f'attachment; filename="Loep_{safe_name}.csv"'},
+        )
+
+    export_bytes, design = _generate_report_pdf(campaign_id, db)
     return Response(
         content=export_bytes,
-        media_type="text/csv; charset=utf-8" if format == "segment_summary" else "application/pdf",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="Loep_{safe_name}.pdf"',
+            "X-Report-Design": design,
+        },
     )
 
 
@@ -2020,25 +2057,32 @@ async def download_report_internal(
     if product_name:
         raise HTTPException(status_code=422, detail=f"{product_name} ondersteunt in deze wave nog geen PDF-rapport.")
 
-    try:
-        from backend.report import generate_campaign_report, generate_culture_assessment_segment_summary_export
-        if format == "segment_summary":
-            export_bytes = generate_culture_assessment_segment_summary_export(campaign_id, db)
-        else:
-            export_bytes = generate_campaign_report(campaign_id, db)
-    except ValueError as e:
-        raise HTTPException(status_code=422, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Rapport- of exportgeneratie mislukt: {e}")
-
     import re as _re
     safe_name = _re.sub(r"[^\w\s-]", "", campaign.name)
     safe_name = _re.sub(r"[\s-]+", "_", safe_name).strip("_")
-    filename = f"Loep_{safe_name}.csv" if format == "segment_summary" else f"Loep_{safe_name}.pdf"
+
+    if format == "segment_summary":
+        try:
+            from backend.report import generate_culture_assessment_segment_summary_export
+            export_bytes = generate_culture_assessment_segment_summary_export(campaign_id, db)
+        except ValueError as e:
+            raise HTTPException(status_code=422, detail=str(e))
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Exportgeneratie mislukt: {e}")
+        return Response(
+            content=export_bytes,
+            media_type="text/csv; charset=utf-8",
+            headers={"Content-Disposition": f'attachment; filename="Loep_{safe_name}.csv"'},
+        )
+
+    export_bytes, design = _generate_report_pdf(campaign_id, db)
     return Response(
         content=export_bytes,
-        media_type="text/csv; charset=utf-8" if format == "segment_summary" else "application/pdf",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="Loep_{safe_name}.pdf"',
+            "X-Report-Design": design,
+        },
     )
 
 

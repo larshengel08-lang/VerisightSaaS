@@ -64,6 +64,7 @@ export function SelfSendSetupPanel({
   const [busy, setBusy] = useState(false)
 
   const scanLabel = SCAN_TYPE_LABELS[scanType]
+  const hasValidToken = Boolean(publicSurveyToken?.trim())
   const surveyLink = useMemo(
     () => buildSurveyLink(frontendBaseUrl, publicSurveyToken),
     [frontendBaseUrl, publicSurveyToken],
@@ -130,6 +131,22 @@ export function SelfSendSetupPanel({
 
   const fieldClass =
     'w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-100'
+
+  if (!hasValidToken) {
+    return (
+      <div className="rounded-[24px] border border-amber-200 bg-amber-50 p-5">
+        <p className="mb-1 text-sm font-semibold text-amber-800">Campagne nog niet volledig ingericht</p>
+        <p className="text-sm text-amber-700">
+          Er is nog geen survey-token aan deze campagne gekoppeld. Loep moet dit instellen voordat u
+          de uitnodigingslink kunt kopiëren. Neem contact op via{' '}
+          <a href="mailto:hallo@verisight.nl" className="underline">
+            hallo@verisight.nl
+          </a>
+          .
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4 rounded-[24px] border border-slate-200 bg-white p-5">

@@ -49,10 +49,10 @@ export default async function CampaignPage({ params }: Props) {
   const stats = statsRow as CampaignStats
 
   const [{ data: campaignMeta }, { data: deliveryRecord }, { data: reminderEvents }] = await Promise.all([
-    supabase.from('campaigns').select('closed_at, delivery_mode').eq('id', id).maybeSingle(),
+    supabase.from('campaigns').select('closed_at, delivery_mode, comms_mode').eq('id', id).maybeSingle(),
     supabase
       .from('campaign_delivery_records')
-      .select('launch_date, launch_confirmed_at, reminder_config, participant_comms_config')
+      .select('launch_date, launch_confirmed_at, reminder_config, participant_comms_config, invited_count')
       .eq('campaign_id', id)
       .maybeSingle(),
     supabase
@@ -66,6 +66,18 @@ export default async function CampaignPage({ params }: Props) {
   ])
 
   const reminderConfig = normalizeReminderConfig(deliveryRecord?.reminder_config ?? null)
+
+  // Bij self_send is total_invited in de stats view 0 (geen pre-aangemaakte respondenten).
+  // Gebruik invited_count van het delivery record als noemer wanneer comms_mode = 'self_send'.
+  const isSelfSend = campaignMeta?.comms_mode === 'self_send'
+  const manualInvitedCount = deliveryRecord?.invited_count ?? null
+  const effectiveTotalInvited = isSelfSend && manualInvitedCount != null
+    ? manualInvitedCount
+    : stats.total_invited
+  const effectiveCompletionRatePct = effectiveTotalInvited > 0
+    ? Math.round((stats.total_completed / effectiveTotalInvited) * 100)
+    : (stats.completion_rate_pct ?? 0)
+
   // reportReady = "response threshold met". Pass isActive:false so the threshold is
   // checked independent of the live-campaign gate — this lets State 3 "Voldoende respons —
   // sluit de campagne" fire for culture_assessment too (its report releases only on close).
@@ -80,9 +92,9 @@ export default async function CampaignPage({ params }: Props) {
       name: stats.campaign_name,
       scanType: stats.scan_type,
       isActive: stats.is_active,
-      totalInvited: stats.total_invited,
+      totalInvited: effectiveTotalInvited,
       totalCompleted: stats.total_completed,
-      completionRatePct: stats.completion_rate_pct ?? 0,
+      completionRatePct: effectiveCompletionRatePct,
       closedAt: campaignMeta?.closed_at ?? null,
     },
     launchConfirmedAt: deliveryRecord?.launch_confirmed_at ?? null,
