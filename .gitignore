@@ -26,8 +26,10 @@ data/retention_validation_report/
 !Verisight_Demo_Rapport.pdf
 !docs/examples/voorbeeldrapport_verisight.pdf
 !docs/examples/voorbeeldrapport_retentiescan.pdf
+!docs/examples/voorbeeldrapport_loep.pdf
 !frontend/public/examples/voorbeeldrapport_verisight.pdf
 !frontend/public/examples/voorbeeldrapport_retentiescan.pdf
+!frontend/public/examples/voorbeeldrapport_loep.pdf
 
 # OS
 .DS_Store

@@ -26,7 +26,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from backend.database import Base, DATABASE_URL, SessionLocal, init_db
 from backend.models import Campaign, Organization, Respondent, SurveyResponse
-from backend.report import generate_campaign_report
+from backend.report_html import generate_campaign_report_html as generate_campaign_report_html
+from backend.report import generate_campaign_report as _generate_campaign_report_legacy
 from backend.scoring import (
     anonymize_text,
     compute_org_scores,
@@ -1006,7 +1007,7 @@ def main() -> None:
         size_kb = len(html_bytes) / 1024
         file_type = "HTML"
     else:
-        pdf_bytes = generate_campaign_report(campaign.id, db, sample_output_mode=True)
+        pdf_bytes = generate_campaign_report_html(campaign.id, db)
         output_paths = _write_pdf_outputs(pdf_bytes, config)
         size_kb = len(pdf_bytes) / 1024
         file_type = "PDF"
