@@ -8,6 +8,7 @@ export type CampaignAuditActionKey =
   | 'grant_client_access'
   | 'delivery_lifecycle_changed'
   | 'delivery_checkpoint_confirmed'
+  | 'progress_nudge_sent'
 
 export type CampaignAuditOutcome = 'completed' | 'blocked'
 export type CampaignAuditActorRole = MemberRole | 'verisight_admin' | 'unknown'
@@ -38,6 +39,10 @@ export const CAMPAIGN_AUDIT_ACTIONS: Record<
   },
   delivery_checkpoint_confirmed: {
     actionLabel: 'Uitvoercheck bevestigd',
+    ownerLabel: 'Loep',
+  },
+  progress_nudge_sent: {
+    actionLabel: 'Voortgangsmail verstuurd',
     ownerLabel: 'Loep',
   },
 }
