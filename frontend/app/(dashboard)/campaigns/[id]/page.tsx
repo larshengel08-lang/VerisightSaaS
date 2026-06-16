@@ -129,7 +129,7 @@ export default async function CampaignPage({ params }: Props) {
             <PdfDownloadButton campaignId={stats.campaign_id} campaignName={stats.campaign_name} scanType={stats.scan_type} />
           </div>
           {process.env.NEXT_PUBLIC_CALENDLY_URL ? (
-            <div className="rounded-[22px] border border-[color:var(--dashboard-frame-border)] bg-white px-6 py-5">
+            <div className="rounded-[22px] border border-[color:var(--dashboard-frame-border)] bg-white px-6 py-6">
               <p className="mb-3 text-sm font-semibold text-[color:var(--dashboard-ink)]">
                 Volgende stap: managementbespreking
               </p>
