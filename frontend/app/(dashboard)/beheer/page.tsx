@@ -352,6 +352,12 @@ export default async function BeheerPage() {
       >
       <div className="grid gap-3 lg:grid-cols-2">
         <WorkbenchLinkCard
+          href="/beheer/campagnes"
+          eyebrow="Overzicht"
+          title="Campagne-overzicht"
+          body="Alle campagnes, respons en rapporten per organisatie."
+        />
+        <WorkbenchLinkCard
           href="/beheer/contact-aanvragen"
           eyebrow="Instroom"
           title="Contact-aanvragen"
