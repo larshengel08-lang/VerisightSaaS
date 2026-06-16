@@ -52,7 +52,6 @@ export default async function BeheerCampagnesPage() {
 
   const stats = (statsRaw ?? []) as CampaignStats[]
 
-  // Fetch all organizations to map organization_id → name
   const orgIds = [...new Set(stats.map((s) => s.organization_id))]
   const { data: orgsRaw } = orgIds.length
     ? await supabase.from('organizations').select('id, name').in('id', orgIds)
@@ -146,7 +145,7 @@ export default async function BeheerCampagnesPage() {
                       <td className="px-5 py-3">
                         <Link
                           href={`/campaigns/${row.campaign_id}`}
-                          className="font-medium text-slate-900 underline-offset-2 hover:text-[#0D1B2A] hover:underline"
+                          className="font-medium text-slate-900 underline-offset-2 hover:text-slate-950 hover:underline"
                         >
                           {row.campaign_name}
                         </Link>
@@ -203,7 +202,7 @@ export default async function BeheerCampagnesPage() {
                             href={`/api/campaigns/${row.campaign_id}/report`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 rounded-full border border-[#E8A020] bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-900 transition hover:bg-amber-100"
+                            className="inline-flex items-center gap-1 rounded-full border border-amber-400 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-900 transition hover:bg-amber-100"
                           >
                             ↓ PDF
                           </a>
