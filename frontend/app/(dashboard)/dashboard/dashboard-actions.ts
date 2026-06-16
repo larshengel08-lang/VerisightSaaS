@@ -11,6 +11,8 @@ import { insertCampaignAuditEvent } from '@/lib/campaign-audit'
 import type { CampaignAuditActorRole } from '@/lib/campaign-audit'
 import { getCustomerActionPermission, getPermissionDeniedMessage } from '@/lib/customer-permissions'
 import type { MemberRole } from '@/lib/types'
+import { sendLoepEmail } from '@/lib/email'
+import { rapportGereedHtml } from '@/lib/email-templates/rapport-gereed'
 
 export interface DashboardActionResult {
   ok: boolean
@@ -100,6 +102,18 @@ export async function closeCampaignAction(campaignId: string): Promise<Dashboard
   const canArchive = ctx.isAdmin || getCustomerActionPermission(ctx.role, 'review_launch')
   if (!canArchive) return { ok: false, error: getPermissionDeniedMessage('review_launch') }
 
+  // Fetch campaign name and org name for the notification email
+  const { data: campaignMeta } = await ctx.supabase
+    .from('campaigns')
+    .select('name, organizations(name)')
+    .eq('id', campaignId)
+    .single()
+
+  const campaignName = (campaignMeta as { name?: string } | null)?.name ?? 'Onbekende campagne'
+  const orgName =
+    (campaignMeta as { organizations?: { name?: string } | null } | null)?.organizations?.name ??
+    'Onbekende organisatie'
+
   const { data: updatedRows, error } = await ctx.supabase
     .from('campaigns')
     .update({ is_active: false, closed_at: new Date().toISOString() })
@@ -122,6 +136,46 @@ export async function closeCampaignAction(campaignId: string): Promise<Dashboard
     summary: 'Campagne gesloten vanuit het dashboard.',
   })
   if (auditError) return { ok: false, error: `Sluiten gelukt, maar loggen mislukt: ${auditError.message}` }
+
+  // Stuur rapport-gereed notificatie naar HR-managers
+  try {
+    const { data: members } = await ctx.supabase
+      .from('org_members')
+      .select('user_id, role')
+      .eq('org_id', ctx.organizationId)
+      .in('role', ['owner', 'admin', 'hr_manager'])
+
+    const memberIds = (members ?? []).map((m: { user_id: string }) => m.user_id)
+
+    if (memberIds.length > 0) {
+      const { data: profiles } = await ctx.supabase
+        .from('profiles')
+        .select('email')
+        .in('id', memberIds)
+
+      const dashboardUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://verisight.nl'}/campaigns/${campaignId}`
+      const calendlyUrl = process.env.NEXT_PUBLIC_CALENDLY_URL ?? null
+
+      for (const profile of profiles ?? []) {
+        const email = (profile as { email?: string }).email
+        if (!email) continue
+        await sendLoepEmail({
+          to: email,
+          subject: `Je rapport is beschikbaar — ${campaignName}`,
+          html: rapportGereedHtml({
+            organizationName: orgName,
+            campaignName,
+            dashboardUrl,
+            calendlyUrl,
+          }),
+        }).catch((err: unknown) => {
+          console.error('[closeCampaignAction] rapport-gereed mail mislukt:', err)
+        })
+      }
+    }
+  } catch (err) {
+    console.error('[closeCampaignAction] rapport-gereed notificatie mislukt:', err)
+  }
 
   return { ok: true }
 }
