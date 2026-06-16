@@ -124,9 +124,29 @@ export default async function CampaignPage({ params }: Props) {
       </Link>
       <DashboardStateCard state={state} reminderText={reminderText} />
       {state.kind === 'report_ready' ? (
-        <div className="rounded-[22px] border border-[color:var(--dashboard-frame-border)] bg-white px-6 py-6">
-          <PdfDownloadButton campaignId={stats.campaign_id} campaignName={stats.campaign_name} scanType={stats.scan_type} />
-        </div>
+        <>
+          <div className="rounded-[22px] border border-[color:var(--dashboard-frame-border)] bg-white px-6 py-6">
+            <PdfDownloadButton campaignId={stats.campaign_id} campaignName={stats.campaign_name} scanType={stats.scan_type} />
+          </div>
+          {process.env.NEXT_PUBLIC_CALENDLY_URL ? (
+            <div className="rounded-[22px] border border-[color:var(--dashboard-frame-border)] bg-white px-6 py-5">
+              <p className="mb-3 text-sm font-semibold text-[color:var(--dashboard-ink)]">
+                Volgende stap: managementbespreking
+              </p>
+              <a
+                href={process.env.NEXT_PUBLIC_CALENDLY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-lg border border-[color:var(--dashboard-frame-border)] px-4 py-2.5 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:bg-[color:var(--dashboard-soft)]"
+              >
+                Plan de managementbespreking →
+              </a>
+              <p className="mt-2 text-xs text-[color:var(--dashboard-muted)]">
+                Kies een moment dat uitkomt voor HR en management.
+              </p>
+            </div>
+          ) : null}
+        </>
       ) : null}
     </div>
   )
