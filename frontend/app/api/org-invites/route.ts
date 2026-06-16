@@ -7,6 +7,8 @@ import {
   sendActivationLink,
   type InviteBody,
 } from './invite-helpers'
+import { sendLoepEmail } from '@/lib/email'
+import { welkomHtml } from '@/lib/email-templates/welkom'
 
 export async function POST(request: Request) {
   try {
@@ -118,6 +120,17 @@ export async function POST(request: Request) {
         )
       }
       return NextResponse.json({ detail: `Uitnodiging versturen mislukt: ${authResult.error.message}` }, { status: 500 })
+    }
+
+    if (action === 'invite') {
+      const dashboardUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://verisight.nl'}/dashboard`
+      await sendLoepEmail({
+        to: email,
+        subject: `Welkom bij Loep — je account voor ${organization.name} staat klaar`,
+        html: welkomHtml({ organizationName: organization.name, dashboardUrl }),
+      }).catch((err: unknown) => {
+        console.error('[invite] welkomstmail mislukt:', err)
+      })
     }
 
     return NextResponse.json({
