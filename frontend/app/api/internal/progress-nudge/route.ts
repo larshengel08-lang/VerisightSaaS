@@ -109,11 +109,16 @@ export async function POST(request: Request) {
       dashboardUrl: buildDashboardUrl(stats.campaign_id),
     })
 
-    await sendLoepEmail({
-      to: org.contact_email,
-      subject: `Voortgangsupdate: ${stats.campaign_name} (${responsePct}% respons)`,
-      html,
-    })
+    try {
+      await sendLoepEmail({
+        to: org.contact_email,
+        subject: `Voortgangsupdate: ${stats.campaign_name} (${responsePct}% respons)`,
+        html,
+      })
+    } catch (mailErr) {
+      console.error(`[progress-nudge] Mail mislukt voor campagne ${stats.campaign_id}:`, mailErr)
+      continue
+    }
 
     const { error: auditError } = await insertCampaignAuditEvent({
       supabase,
