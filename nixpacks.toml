@@ -1,5 +1,9 @@
 [phases.setup]
+# python311 MOET hier staan: deze nixPkgs-lijst vervangt de auto-gedetecteerde
+# set van de Nixpacks Python-provider. Zonder python311 valt `python` weg uit de
+# build-omgeving en faalt `python -m venv` met "command not found" (exit 127).
 nixPkgs = [
+  "python311",
   "cairo",
   "pango",
   "gobject-introspection",
