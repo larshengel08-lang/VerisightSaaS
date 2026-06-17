@@ -1,14 +1,17 @@
 -- Migration: voeg closes_at toe aan campaigns + update campaign_stats view
 -- Datum: 2026-06-17
--- Uitvoeren in: Supabase Dashboard → SQL Editor
+-- Uitgevoerd in: Supabase Dashboard → SQL Editor
 -- Additief en idempotent.
 
--- 1. Voeg geplande sluitdatum toe aan campaigns
+-- 1. Verwijder bestaande view (volgorde verandert)
+DROP VIEW IF EXISTS public.campaign_stats;
+
+-- 2. Voeg geplande sluitdatum toe aan campaigns
 ALTER TABLE public.campaigns
   ADD COLUMN IF NOT EXISTS closes_at date;
 
--- 2. Herdefinieer campaign_stats view met closed_at + closes_at
-CREATE OR REPLACE VIEW public.campaign_stats WITH (security_invoker = true) AS
+-- 3. Maak view opnieuw aan met closed_at + closes_at
+CREATE VIEW public.campaign_stats WITH (security_invoker = true) AS
 SELECT
   c.id                                                AS campaign_id,
   c.name                                              AS campaign_name,
