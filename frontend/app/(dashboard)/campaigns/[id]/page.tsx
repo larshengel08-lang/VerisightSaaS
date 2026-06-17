@@ -50,7 +50,7 @@ export default async function CampaignPage({ params }: Props) {
   const stats = statsRow as CampaignStats
 
   const [{ data: campaignMeta }, { data: deliveryRecord }, { data: reminderEvents }] = await Promise.all([
-    supabase.from('campaigns').select('closed_at, delivery_mode, comms_mode').eq('id', id).maybeSingle(),
+    supabase.from('campaigns').select('closed_at, closes_at, delivery_mode, comms_mode').eq('id', id).maybeSingle(),
     supabase
       .from('campaign_delivery_records')
       .select('launch_date, launch_confirmed_at, reminder_config, participant_comms_config, invited_count')
@@ -100,7 +100,7 @@ export default async function CampaignPage({ params }: Props) {
     },
     launchConfirmedAt: deliveryRecord?.launch_confirmed_at ?? null,
     launchDate: deliveryRecord?.launch_date ?? null,
-    closesAt: null,
+    closesAt: campaignMeta?.closes_at ?? null,
     reminderConfig,
     reminderAlreadySentAt: reminderEvents?.[0]?.created_at ?? null,
     reportReady,

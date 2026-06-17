@@ -19,11 +19,11 @@ export type CommsMode = 'managed' | 'self_send'
 export type MemberRole = 'owner' | 'member' | 'viewer'
 export type Preventability = 'STERK_WERKSIGNAAL' | 'GEMENGD_WERKSIGNAAL' | 'BEPERKT_WERKSIGNAAL'
 export const SCAN_TYPE_LABELS: Record<ScanType, string> = {
-  exit: 'ExitScan',
-  retention: 'RetentieScan',
+  exit: 'Loep Vertrek',
+  retention: 'Loep Behoud',
   pulse: 'Pulse',
   team: 'TeamScan',
-  onboarding: 'Onboarding 30-60-90',
+  onboarding: 'Loep Start',
   leadership: 'Leadership Scan',
   culture_assessment: 'Loep Culture Assessment',
 }
@@ -61,6 +61,8 @@ export interface CampaignStats {
   organization_id: string
   is_active: boolean
   created_at: string
+  closed_at: string | null
+  closes_at: string | null
   total_invited: number
   total_completed: number
   completion_rate_pct: number

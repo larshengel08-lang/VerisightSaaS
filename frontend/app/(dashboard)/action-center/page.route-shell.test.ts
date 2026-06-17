@@ -47,6 +47,8 @@ function buildStats(overrides: Partial<CampaignStats> = {}): CampaignStats {
     avg_signal_score: 6.8,
     band_high: 12,
     band_medium: 9,
+    closed_at: null,
+    closes_at: null,
     band_low: 5,
     ...overrides,
   };

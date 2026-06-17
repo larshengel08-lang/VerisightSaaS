@@ -9,7 +9,7 @@ import {
 function buildCampaign(overrides: Partial<CampaignStats>): CampaignStats {
   return {
     campaign_id: overrides.campaign_id ?? 'campaign-1',
-    campaign_name: overrides.campaign_name ?? 'Q1 ExitScan',
+    campaign_name: overrides.campaign_name ?? 'Q1 Loep Vertrek',
     scan_type: overrides.scan_type ?? 'exit',
     organization_id: overrides.organization_id ?? 'org-1',
     is_active: overrides.is_active ?? true,
@@ -21,6 +21,8 @@ function buildCampaign(overrides: Partial<CampaignStats>): CampaignStats {
     avg_signal_score: overrides.avg_signal_score ?? overrides.avg_risk_score ?? 6.4,
     band_high: overrides.band_high ?? 5,
     band_medium: overrides.band_medium ?? 8,
+    closed_at: null,
+    closes_at: null,
     band_low: overrides.band_low ?? 3,
   }
 }
@@ -30,7 +32,7 @@ describe('dashboard home launcher buckets', () => {
     const campaigns = [
       buildCampaign({
         campaign_id: 'ready-1',
-        campaign_name: 'ExitScan voorjaar',
+        campaign_name: 'Loep Vertrek voorjaar',
         scan_type: 'exit',
         is_active: true,
         total_invited: 55,
@@ -40,7 +42,7 @@ describe('dashboard home launcher buckets', () => {
       }),
       buildCampaign({
         campaign_id: 'building-1',
-        campaign_name: 'RetentieScan april',
+        campaign_name: 'Loep Behoud april',
         scan_type: 'retention',
         is_active: true,
         total_invited: 60,
@@ -52,7 +54,7 @@ describe('dashboard home launcher buckets', () => {
       }),
       buildCampaign({
         campaign_id: 'closed-current',
-        campaign_name: 'ExitScan Q4',
+        campaign_name: 'Loep Vertrek Q4',
         scan_type: 'exit',
         is_active: false,
         total_invited: 52,
@@ -62,7 +64,7 @@ describe('dashboard home launcher buckets', () => {
       }),
       buildCampaign({
         campaign_id: 'closed-archive',
-        campaign_name: 'ExitScan Q3',
+        campaign_name: 'Loep Vertrek Q3',
         scan_type: 'exit',
         is_active: false,
         total_invited: 48,
@@ -84,7 +86,7 @@ describe('dashboard home recommendation logic', () => {
     const campaigns = [
       buildCampaign({
         campaign_id: 'exit-1',
-        campaign_name: 'ExitScan voorjaar',
+        campaign_name: 'Loep Vertrek voorjaar',
         scan_type: 'exit',
         total_completed: 24,
         completion_rate_pct: 52,
@@ -119,7 +121,7 @@ describe('dashboard home recommendation logic', () => {
     const campaigns = [
       buildCampaign({
         campaign_id: 'ready-1',
-        campaign_name: 'ExitScan voorjaar',
+        campaign_name: 'Loep Vertrek voorjaar',
         scan_type: 'exit',
         total_completed: 18,
         completion_rate_pct: 33,
@@ -127,7 +129,7 @@ describe('dashboard home recommendation logic', () => {
       }),
       buildCampaign({
         campaign_id: 'ready-2',
-        campaign_name: 'RetentieScan april',
+        campaign_name: 'Loep Behoud april',
         scan_type: 'retention',
         total_completed: 14,
         completion_rate_pct: 28,
@@ -148,7 +150,7 @@ describe('dashboard home recommendation logic', () => {
     const campaigns = [
       buildCampaign({
         campaign_id: 'building-1',
-        campaign_name: 'RetentieScan mei',
+        campaign_name: 'Loep Behoud mei',
         scan_type: 'retention',
         is_active: true,
         total_completed: 4,
@@ -159,7 +161,7 @@ describe('dashboard home recommendation logic', () => {
       }),
       buildCampaign({
         campaign_id: 'closed-current',
-        campaign_name: 'ExitScan Q4',
+        campaign_name: 'Loep Vertrek Q4',
         scan_type: 'exit',
         is_active: false,
         total_completed: 21,
@@ -187,7 +189,7 @@ describe('dashboard and pdf availability', () => {
     })
     const setupCampaign = buildCampaign({
       campaign_id: 'setup-1',
-      campaign_name: 'ExitScan nieuw',
+      campaign_name: 'Loep Vertrek nieuw',
       total_invited: 0,
       total_completed: 0,
       completion_rate_pct: 0,
@@ -209,7 +211,7 @@ describe('dashboard and pdf availability', () => {
   it('sends admin setup campaigns directly to the campaign-specific routebeheer page', () => {
     const setupCampaign = buildCampaign({
       campaign_id: 'setup-1',
-      campaign_name: 'ExitScan nieuw',
+      campaign_name: 'Loep Vertrek nieuw',
       total_invited: 0,
       total_completed: 0,
       completion_rate_pct: 0,

@@ -134,11 +134,13 @@ describe('pilot learning defaults', () => {
       },
       campaignStats: {
         campaign_id: 'cmp-1',
-        campaign_name: 'ExitScan Q2',
+        campaign_name: 'Loep Vertrek Q2',
         scan_type: 'exit',
         organization_id: 'org-1',
         is_active: true,
         created_at: '2026-04-15T10:00:00Z',
+        closed_at: null,
+        closes_at: null,
         total_invited: 20,
         total_completed: 12,
         completion_rate_pct: 60,
@@ -167,7 +169,7 @@ describe('pilot learning defaults', () => {
         first_management_value: 'MT ziet voor het eerst welke vertrekredenen bestuurlijk prioriteit vragen.',
         first_action_taken: 'Eerste handoff naar leidinggevenden ingepland.',
         review_moment: 'Review over 45 dagen.',
-        next_route: 'RetentieScan Baseline',
+        next_route: 'Loep Behoud Baseline',
         stop_reason: null,
         management_action_outcome: 'MT heeft eigenaar, eerste actie en reviewmoment vastgelegd.',
         adoption_outcome: 'Eerste managementsessie succesvol gevoerd.',
@@ -175,7 +177,7 @@ describe('pilot learning defaults', () => {
       },
     })
 
-    expect(signals.join(' ')).toContain('Gekozen vervolgroute: RetentieScan Baseline.')
+    expect(signals.join(' ')).toContain('Gekozen vervolgroute: Loep Behoud Baseline.')
     expect(signals.join(' ')).toContain('Reviewmoment vastgelegd: Review over 45 dagen.')
     expect(signals.join(' ')).toContain('Adoptionuitkomst is expliciet vastgelegd.')
     expect(signals.join(' ')).toContain('eerste managementactie of reviewuitkomst')

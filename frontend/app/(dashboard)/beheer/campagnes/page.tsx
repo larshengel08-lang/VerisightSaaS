@@ -3,11 +3,12 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { type CampaignStats, type Organization } from '@/lib/types'
 import { isDashboardReleaseReady } from '@/lib/response-activation'
+import { ClosesAtForm } from './closes-at-form'
 
 const SCAN_LABELS: Record<string, string> = {
-  exit: 'ExitScan',
-  retention: 'RetentieScan',
-  onboarding: 'Onboarding 30-60-90',
+  exit: 'Loep Vertrek',
+  retention: 'Loep Behoud',
+  onboarding: 'Loep Start',
   culture_assessment: 'Cultuurbeeld',
 }
 
@@ -112,6 +113,7 @@ export default async function BeheerCampagnesPage() {
                   <th className="px-5 py-3 text-left">Scan</th>
                   <th className="px-5 py-3 text-center">Status</th>
                   <th className="px-5 py-3 text-right">Respons</th>
+                  <th className="px-5 py-3 text-left">Sluitdatum</th>
                   <th className="px-5 py-3 text-right">Rapport</th>
                 </tr>
               </thead>
@@ -193,6 +195,11 @@ export default async function BeheerCampagnesPage() {
                             {pct}% ({row.total_completed}/{row.total_invited ?? '—'})
                           </span>
                         </div>
+                      </td>
+
+                      {/* Sluitdatum */}
+                      <td className="px-5 py-3">
+                        <ClosesAtForm campaignId={row.campaign_id} currentValue={row.closes_at ?? null} />
                       </td>
 
                       {/* Rapport */}

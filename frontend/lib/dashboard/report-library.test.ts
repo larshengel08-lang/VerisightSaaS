@@ -17,6 +17,8 @@ const campaigns: CampaignStats[] = [
     avg_signal_score: 6.7,
     band_high: 16,
     band_medium: 18,
+    closed_at: null,
+    closes_at: null,
     band_low: 12,
   },
   {
@@ -33,11 +35,13 @@ const campaigns: CampaignStats[] = [
     avg_signal_score: 6.9,
     band_high: 20,
     band_medium: 19,
+    closed_at: null,
+    closes_at: null,
     band_low: 13,
   },
   {
     campaign_id: 'exit-1',
-    campaign_name: 'ExitScan Ops — Q3',
+    campaign_name: 'Loep Vertrek Ops — Q3',
     scan_type: 'exit',
     organization_id: 'org-1',
     is_active: true,
@@ -49,6 +53,8 @@ const campaigns: CampaignStats[] = [
     avg_signal_score: 6.1,
     band_high: 6,
     band_medium: 5,
+    closed_at: null,
+    closes_at: null,
     band_low: 3,
   },
   {
@@ -65,6 +71,8 @@ const campaigns: CampaignStats[] = [
     avg_signal_score: 4.8,
     band_high: 2,
     band_medium: 6,
+    closed_at: null,
+    closes_at: null,
     band_low: 3,
   },
   {
@@ -81,6 +89,8 @@ const campaigns: CampaignStats[] = [
     avg_signal_score: 5.1,
     band_high: 2,
     band_medium: 3,
+    closed_at: null,
+    closes_at: null,
     band_low: 2,
   },
   {
@@ -97,6 +107,8 @@ const campaigns: CampaignStats[] = [
     avg_signal_score: 5.2,
     band_high: 1,
     band_medium: 2,
+    closed_at: null,
+    closes_at: null,
     band_low: 1,
   },
 ]

@@ -9,7 +9,7 @@ import {
 function buildCampaign(overrides: Partial<CampaignStats>): CampaignStats {
   return {
     campaign_id: overrides.campaign_id ?? 'campaign-1',
-    campaign_name: overrides.campaign_name ?? 'RetentieScan voorjaar',
+    campaign_name: overrides.campaign_name ?? 'Loep Behoud voorjaar',
     scan_type: overrides.scan_type ?? 'retention',
     organization_id: overrides.organization_id ?? 'org-1',
     is_active: overrides.is_active ?? true,
@@ -21,6 +21,8 @@ function buildCampaign(overrides: Partial<CampaignStats>): CampaignStats {
     avg_signal_score: overrides.avg_signal_score ?? 6.4,
     band_high: overrides.band_high ?? 5,
     band_medium: overrides.band_medium ?? 8,
+    closed_at: null,
+    closes_at: null,
     band_low: overrides.band_low ?? 3,
   }
 }
@@ -154,7 +156,7 @@ describe('cockpit row mapping', () => {
     const rows: CockpitRow[] = [
       {
         campaign: buildCampaign({ campaign_id: 'full-1' }),
-        productLabel: 'RetentieScan',
+        productLabel: 'Loep Behoud',
         periodLabel: 'apr 2026',
         responseValue: '40%',
         statusLabel: 'Leesbaar',
@@ -171,7 +173,7 @@ describe('cockpit row mapping', () => {
           avg_risk_score: null,
           avg_signal_score: null,
         }),
-        productLabel: 'ExitScan',
+        productLabel: 'Loep Vertrek',
         periodLabel: 'apr 2026',
         responseValue: '0%',
         statusLabel: 'Nog niet live',

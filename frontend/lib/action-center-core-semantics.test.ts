@@ -47,6 +47,8 @@ function buildStats(overrides: Partial<CampaignStats> = {}): CampaignStats {
     avg_signal_score: 6.8,
     band_high: 12,
     band_medium: 9,
+    closed_at: null,
+    closes_at: null,
     band_low: 5,
     ...overrides,
   }
@@ -242,7 +244,7 @@ describe('action center core semantics', () => {
 
     it('prefers canonical decision truth over legacy review outcome when both exist', () => {
       const semantics = projectActionCenterCoreSemantics({
-        campaign: { id: 'campaign-1', name: 'ExitScan april' } as never,
+        campaign: { id: 'campaign-1', name: 'Loep Vertrek april' } as never,
         assignedManager: { displayName: 'Sanne de Vries' } as never,
         deliveryRecord: { next_step: 'Herplan de teamreview voor volgende week.' } as never,
         learningDossier: {
@@ -304,7 +306,7 @@ describe('action center core semantics', () => {
             },
           ],
         }),
-        campaign: { id: 'campaign-1', name: 'ExitScan april' } as never,
+        campaign: { id: 'campaign-1', name: 'Loep Vertrek april' } as never,
         route: baseRoute,
       })
 
@@ -366,7 +368,7 @@ describe('action center core semantics', () => {
             },
           ],
         }),
-        campaign: { id: 'campaign-1', name: 'ExitScan april' } as never,
+        campaign: { id: 'campaign-1', name: 'Loep Vertrek april' } as never,
         route: baseRoute,
       })
 
@@ -393,7 +395,7 @@ describe('action center core semantics', () => {
 
     it('falls back to legacy truth when no canonical decision records exist', () => {
       const semantics = projectActionCenterCoreSemantics({
-        campaign: { id: 'campaign-1', name: 'ExitScan april' } as never,
+        campaign: { id: 'campaign-1', name: 'Loep Vertrek april' } as never,
         assignedManager: { displayName: 'Sanne de Vries' } as never,
         deliveryRecord: { next_step: null } as never,
         learningDossier: {
@@ -414,7 +416,7 @@ describe('action center core semantics', () => {
 
     it('does not synthesize a legacy decision history when completion truth is missing', () => {
       const semantics = projectActionCenterCoreSemantics({
-        campaign: { id: 'campaign-1', name: 'ExitScan april' } as never,
+        campaign: { id: 'campaign-1', name: 'Loep Vertrek april' } as never,
         assignedManager: { displayName: 'Sanne de Vries' } as never,
         deliveryRecord: { next_step: null } as never,
         learningDossier: {
