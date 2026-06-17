@@ -938,28 +938,33 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
                 "voldoende" if retention_score >= 6.0 else
                 "vraagt aandacht" if retention_score >= 4.5 else
                 "onder druk")
-        cells += f'<td><div class="sc-l">Behoudssignaal</div><div class="sc-v" style="color:{col};">{retention_score:.1f}/10</div><div class="sc-b">condities voor behoud &mdash; {note}</div></td>'
+        cells += f'<td><div class="sc-l">Behoudssignaal</div><div class="sc-v" style="color:{col};">{retention_score:.1f}/10</div><div class="sc-b">werkfactoren &amp; werkbeleving samengebracht &mdash; {note}</div></td>'
     if stay_intent is not None:
         scol = _rag_color(stay_intent)
-        note = ("sterk" if stay_intent >= 7.5 else
-                "gemiddeld" if stay_intent >= 6.0 else
-                "laag voor actieve groep" if stay_intent >= 4.5 else
-                "zorgelijk laag")
-        cells += f'<td><div class="sc-l">Blijfintentie</div><div class="sc-v" style="color:{scol};">{stay_intent:.1f}/10</div><div class="sc-b">intentie om te blijven &mdash; {note}</div></td>'
+        cells += (f'<td><div class="sc-l">Blijfintentie</div>'
+                  f'<div class="sc-v" style="color:{scol};">{stay_intent:.1f}/10</div>'
+                  f'<div class="sc-b">&ldquo;Als het aan mij ligt, werk ik over 12 maanden nog steeds hier.&rdquo;'
+                  f'<br><span style="font-size:8px;color:#94A3B8;">enkelvoudige richtingsvraag &mdash; indicatief</span></div></td>')
     if turnover is not None:
         tcol = _rag_color(10 - turnover)
         note = ("laag" if turnover <= 3.0 else
                 "beperkt" if turnover <= 5.0 else
                 "zichtbaar" if turnover <= 6.5 else
                 "hoog &mdash; actief vertrekrisico")
-        cells += f'<td><div class="sc-l">Vertrekintentie</div><div class="sc-v" style="color:{tcol};">{turnover:.1f}/10</div><div class="sc-b">gedachte aan vertrek &mdash; {note}</div></td>'
+        cells += (f'<td><div class="sc-l">Vertrekintentie</div>'
+                  f'<div class="sc-v" style="color:{tcol};">{turnover:.1f}/10</div>'
+                  f'<div class="sc-b">&ldquo;Ik denk er serieus over na te vertrekken&rdquo; + &ldquo;Ik zoek actief.&rdquo;'
+                  f'<br><span style="font-size:8px;color:#94A3B8;">gemiddelde van 2 stellingen &mdash; {note}</span></div></td>')
     if engagement is not None:
         ecol = _factor_color(engagement)
         note = ("hoog" if engagement >= 7.5 else
                 "gemiddeld" if engagement >= 6.0 else
                 "laag &mdash; geen buffer" if engagement >= 4.5 else
                 "zorgelijk laag")
-        cells += f'<td><div class="sc-l">Bevlogenheid</div><div class="sc-v" style="color:{ecol};">{engagement:.1f}/10</div><div class="sc-b">werkbetrokkenheid en energie &mdash; {note}</div></td>'
+        cells += (f'<td><div class="sc-l">Bevlogenheid</div>'
+                  f'<div class="sc-v" style="color:{ecol};">{engagement:.1f}/10</div>'
+                  f'<div class="sc-b">Energie &middot; Inspiratie &middot; Zin om te gaan &mdash; UWES'
+                  f'<br><span style="font-size:8px;color:#94A3B8;">gemiddelde van 3 stellingen &mdash; {note}</span></div></td>')
 
     stat_grid = f'<table class="sg"><tr>{cells}</tr></table>' if cells else ""
     legend = (
