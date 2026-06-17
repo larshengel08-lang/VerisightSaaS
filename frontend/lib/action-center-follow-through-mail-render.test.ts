@@ -6,7 +6,7 @@ describe('action center follow-through mail render', () => {
     const rendered = renderActionCenterFollowThroughMail({
       triggerType: 'review_upcoming',
       recipientRole: 'manager',
-      campaignName: 'ExitScan Q2',
+      campaignName: 'Loep Vertrek Q2',
       scopeLabel: 'Sales',
       actionCenterHref: 'https://app.verisight.nl/dashboard/action-center?focus=review-1&view=reviews&source=notification',
       inviteArtifactHref: 'https://app.verisight.nl/api/action-center-review-invites?reviewItemId=review-1&format=ics',
@@ -22,7 +22,7 @@ describe('action center follow-through mail render', () => {
     const rendered = renderActionCenterFollowThroughMail({
       triggerType: 'review_overdue',
       recipientRole: 'manager',
-      campaignName: 'ExitScan Q2',
+      campaignName: 'Loep Vertrek Q2',
       scopeLabel: 'Sales',
       actionCenterHref: 'https://app.verisight.nl/dashboard/action-center?focus=review-1&view=reviews&source=notification',
     })

@@ -22,7 +22,7 @@ describe('action center route defaults contract', () => {
     expect(ACTION_CENTER_ROUTE_DEFAULTS_ENABLED_SCAN_TYPES).toEqual(ACTION_CENTER_APPROVED_ROUTE_FAMILIES)
   })
 
-  it('keeps ExitScan as the enabled baseline and unlocks RetentieScan with the same defaults', () => {
+  it('keeps Loep Vertrek as the enabled baseline and unlocks Loep Behoud with the same defaults', () => {
     expect(getActionCenterRouteDefaults('exit')).toEqual({
       scanType: 'exit',
       actionCenterStatus: 'enabled',
@@ -58,7 +58,7 @@ describe('action center route defaults contract', () => {
     })
   })
 
-  it('keeps ExitScan review window at 60-90 days and RetentieScan review window at 45-90 days', () => {
+  it('keeps Loep Vertrek review window at 60-90 days and Loep Behoud review window at 45-90 days', () => {
     expect(getActionCenterRouteDefaults('exit')).toMatchObject({
       reviewWindowDays: { min: 60, max: 90 },
     })
@@ -90,13 +90,13 @@ describe('action center route defaults contract', () => {
     })
   })
 
-  it('returns isolated RetentieScan threshold objects so callers cannot mutate bounded defaults', () => {
+  it('returns isolated Loep Behoud threshold objects so callers cannot mutate bounded defaults', () => {
     const firstRetentionDefaults = getActionCenterRouteDefaults('retention')
     expect(firstRetentionDefaults).not.toBeNull()
     expect(firstRetentionDefaults?.stuckActiveWarningDays).toEqual({ min: 21, max: 30 })
 
     if (!firstRetentionDefaults || typeof firstRetentionDefaults.stuckActiveWarningDays === 'number') {
-      throw new Error('Expected RetentieScan to expose a bounded stuck-action threshold range.')
+      throw new Error('Expected Loep Behoud to expose a bounded stuck-action threshold range.')
     }
 
     firstRetentionDefaults.stuckActiveWarningDays.min = 999

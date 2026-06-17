@@ -14,7 +14,7 @@ export interface FutureActionCenterAdapter {
 }
 
 const FUTURE_ADAPTERS: Record<FutureActionCenterAdapterKey, FutureActionCenterAdapter> = {
-  retention: { key: 'retention', label: 'RetentieScan-adapter', status: 'inactive', liveEntryEnabled: false },
+  retention: { key: 'retention', label: 'Loep Behoud-adapter', status: 'inactive', liveEntryEnabled: false },
   onboarding: { key: 'onboarding', label: 'Onboarding-adapter', status: 'inactive', liveEntryEnabled: false },
   pulse: { key: 'pulse', label: 'Pulse-adapter', status: 'inactive', liveEntryEnabled: false },
   leadership: { key: 'leadership', label: 'Leadership-adapter', status: 'inactive', liveEntryEnabled: false },

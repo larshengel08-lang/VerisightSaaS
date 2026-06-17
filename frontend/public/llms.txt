@@ -1,8 +1,8 @@
 # Verisight
 
 > Verisight helpt HR-teams bij organisaties vanaf circa 200 medewerkers om
-> eerst de juiste managementroute te kiezen: ExitScan voor vertrekduiding en
-> verloopanalyse, RetentieScan voor vroegsignalering op behoud, Loep
+> eerst de juiste managementroute te kiezen: Loep Vertrek voor vertrekduiding en
+> verloopanalyse, Loep Behoud voor vroegsignalering op behoud, Loep
 > Cultuurbeeld voor een brede jaarlijkse cultuur- en engagementbaseline, Pulse als
 > compacte vervolgroute na diagnose of baseline, onboarding als bounded
 > peer-route voor nieuwe medewerkers, Leadership Scan als bounded
@@ -11,12 +11,12 @@
 ## Publieke routes
 
 - [Homepage](https://www.verisight.nl): routekeuze, proof en kennismaking
-- [Producten](https://www.verisight.nl/producten): overzicht van ExitScan, RetentieScan, Loep Cultuurbeeld, Combinatie, Onboarding 30-60-90, Pulse en Leadership Scan
-- [ExitScan](https://www.verisight.nl/producten/exitscan): primaire route voor vertrekduiding en verloopanalyse
-- [RetentieScan](https://www.verisight.nl/producten/retentiescan): gerichte route voor medewerkersbehoud en vroegsignalering
+- [Producten](https://www.verisight.nl/producten): overzicht van Loep Vertrek, Loep Behoud, Loep Cultuurbeeld, Combinatie, Loep Start, Pulse en Leadership Scan
+- [Loep Vertrek](https://www.verisight.nl/producten/exitscan): primaire route voor vertrekduiding en verloopanalyse
+- [Loep Behoud](https://www.verisight.nl/producten/retentiescan): gerichte route voor medewerkersbehoud en vroegsignalering
 - [Loep Cultuurbeeld](https://www.verisight.nl/producten/cultuurbeeld): jaarlijkse primary route voor brede cultuur- en engagementbaseline met board-read
 - [Combinatie](https://www.verisight.nl/producten/combinatie): portfolioroute wanneer vertrekduiding en vroegsignalering bewust in dezelfde managementlijn moeten samenkomen
-- [Onboarding 30-60-90](https://www.verisight.nl/producten/onboarding-30-60-90): bounded peer-route voor een vroege checkpoint-read bij nieuwe medewerkers
+- [Loep Start](https://www.verisight.nl/producten/onboarding-30-60-90): bounded peer-route voor een vroege checkpoint-read bij nieuwe medewerkers
 - [Pulse](https://www.verisight.nl/producten/pulse): compacte vervolgroute voor bounded managementreviews na diagnose of baseline
 - [Leadership Scan](https://www.verisight.nl/producten/leadership-scan): bounded group-level managementread zonder named leaders, manager ranking of 360-logica
 - [Tarieven](https://www.verisight.nl/tarieven): eerste trajecten, vervolgvormen en add-ons
@@ -25,23 +25,23 @@
 
 ## Pricing
 
-- ExitScan Baseline: EUR 2.950
-- RetentieScan Baseline: EUR 3.450
+- Loep Vertrek Baseline: EUR 2.950
+- Loep Behoud Baseline: EUR 3.450
 - Loep Culture Assessment Baseline: op aanvraag
-- ExitScan Live: op aanvraag
-- RetentieScan ritme: vanaf EUR 4.950
+- Loep Vertrek Live: op aanvraag
+- Loep Behoud ritme: vanaf EUR 4.950
 - Pulse na Culture Assessment: op aanvraag
 - Combinatie: op aanvraag
-- Onboarding 30-60-90: op aanvraag
+- Loep Start: op aanvraag
 - Pulse: op aanvraag
 - Leadership Scan: op aanvraag
 - Segment deep dive: EUR 950
 
 ## Proof en documenten
 
-- Publieke deliverable-proof blijft bewust core-first op ExitScan en RetentieScan; Onboarding wordt publiek als bounded peer uitgelegd en Pulse plus Leadership Scan vooral via productpagina en trustlaag gekaderd.
-- [ExitScan voorbeeldrapport](https://www.verisight.nl/examples/voorbeeldrapport_verisight.pdf)
-- [RetentieScan voorbeeldrapport](https://www.verisight.nl/examples/voorbeeldrapport_retentiescan.pdf)
+- Publieke deliverable-proof blijft bewust core-first op Loep Vertrek en Loep Behoud; Onboarding wordt publiek als bounded peer uitgelegd en Pulse plus Leadership Scan vooral via productpagina en trustlaag gekaderd.
+- [Loep Vertrek voorbeeldrapport](https://www.verisight.nl/examples/voorbeeldrapport_verisight.pdf)
+- [Loep Behoud voorbeeldrapport](https://www.verisight.nl/examples/voorbeeldrapport_retentiescan.pdf)
 - [Privacybeleid](https://www.verisight.nl/privacy)
 - [Algemene voorwaarden](https://www.verisight.nl/voorwaarden)
 - [Verwerkersovereenkomst](https://www.verisight.nl/dpa)

@@ -48,7 +48,7 @@ describe('action center review reschedule data', () => {
     vi.clearAllMocks()
   })
 
-  it('returns the canonical review truth with the latest revision state for an ExitScan route', async () => {
+  it('returns the canonical review truth with the latest revision state for an Loep Vertrek route', async () => {
     mockAdminFrom.mockImplementation((table: string) => {
       if (table === 'campaigns') {
         return createCampaignQuery({
@@ -109,7 +109,7 @@ describe('action center review reschedule data', () => {
     })
   })
 
-  it('returns the canonical review truth for a RetentieScan route when the shared route contract enables it', async () => {
+  it('returns the canonical review truth for a Loep Behoud route when the shared route contract enables it', async () => {
     mockAdminFrom.mockImplementation((table: string) => {
       if (table === 'campaigns') {
         return createCampaignQuery({

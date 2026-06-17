@@ -187,7 +187,7 @@ export function buildParticipantCommunicationPreview(args: {
   const launchDateLabel = formatLaunchDate(args.launchDate)
 
   return {
-    subject: `Uitnodiging voor de Loep ${SCAN_TYPE_LABELS[args.scanType]}`,
+    subject: `Uitnodiging voor de ${SCAN_TYPE_LABELS[args.scanType]}`,
     senderName: config.senderName,
     replyToEmail: config.replyToEmail,
     body: [

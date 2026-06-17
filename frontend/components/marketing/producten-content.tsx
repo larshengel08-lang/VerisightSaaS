@@ -7,7 +7,7 @@ import { buildContactHref } from '@/lib/contact-funnel'
 
 const primaryRoutes = [
   {
-    title: 'ExitScan',
+    title: 'Loep Vertrek',
     eyebrow: 'Vertrek begrijpen',
     body: 'Wij brengen vertrekpatronen in beeld en leveren een managementrapport met prioriteiten en een begeleide bespreking.',
     gets: 'Managementrapport met vertrekduiding en prioriteiten + begeleide managementbespreking.',
@@ -18,9 +18,9 @@ const primaryRoutes = [
     accentSoft: AC.faint,
   },
   {
-    title: 'RetentieScan',
+    title: 'Loep Behoud',
     eyebrow: 'Behoud versterken',
-    body: 'Wij laten zien waar behoud onder druk komt te staan voordat uitstroom zichtbaar wordt — met rapport en bespreking.',
+    body: 'Wij laten zien waar behoud onder druk komt te staan voordat uitstroom zichtbaar wordt, met rapport en bespreking.',
     gets: 'Managementrapport met retentiesignaal en prioriteiten + begeleide managementbespreking.',
     price: 'Vanaf €4.500',
     href: '/producten/retentiescan',
@@ -29,7 +29,7 @@ const primaryRoutes = [
     accentSoft: 'oklch(0.972 0.018 185)' as string,
   },
   {
-    title: 'Onboarding 30-60-90',
+    title: 'Loep Start',
     eyebrow: 'Goed landen',
     body: 'Wij meten vroeg hoe nieuwe medewerkers landen en leveren een groepsbeeld met een eerste vervolgrichting.',
     gets: 'Managementrapport met vroege landingsduiding + begeleide managementbespreking.',
@@ -117,7 +117,7 @@ function HeroSection() {
               marginRight: 'auto',
             }}
           >
-            ExitScan als vertrek de vraag is. RetentieScan als behoud eerder zichtbaar moet zijn. Onboarding 30-60-90
+            Loep Vertrek als vertrek de vraag is. Loep Behoud als behoud eerder zichtbaar moet zijn. Loep Start
             als vroege landing aandacht vraagt.
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
@@ -135,7 +135,7 @@ function HeroSection() {
                 textDecoration: 'none',
               }}
             >
-              Bespreek uw vraagstuk <Arrow />
+              Bespreek je vraagstuk <Arrow />
             </Link>
           </div>
         </div>
@@ -163,7 +163,7 @@ function PrimaryRoutesSection() {
               marginRight: 'auto',
             }}
           >
-            Welke scan past bij uw vraag?
+            Welke scan past bij jouw vraag?
           </h2>
           <p style={{ color: T.inkSoft, fontSize: 15, lineHeight: 1.74, maxWidth: '58ch', margin: '0 auto' }}>
             Drie gelijkwaardige scans, elk met managementrapport en begeleide bespreking. Kies de vraag die nu het
@@ -271,12 +271,12 @@ function ContactSection() {
       href={href}
       accentTitle="scan nu past?"
       backdropNumber={null}
-      body="In een eerste kennismaking toetsen we welke scan nu de juiste eerste stap is en wat u als eerste terugkrijgt."
-      buttonLabel="Bespreek uw vraagstuk"
+      body="In een eerste kennismaking toetsen we welke scan nu de juiste eerste stap is en wat je als eerste terugkrijgt."
+      buttonLabel="Bespreek je vraagstuk"
       sectionIndex=""
       sectionLabel=""
       showSectionMark={false}
-      title="Twijfelt u welke"
+      title="Twijfel je welke"
     />
   )
 }

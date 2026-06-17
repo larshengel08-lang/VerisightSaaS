@@ -243,8 +243,8 @@ export const LEARNING_STRENGTH_OPTIONS: Array<{ value: LearningStrength; label: 
 ]
 
 export const LEARNING_ROUTE_OPTIONS: Array<{ value: LearningRouteInterest; label: string }> = [
-  { value: 'exitscan', label: 'ExitScan' },
-  { value: 'retentiescan', label: 'RetentieScan' },
+  { value: 'exitscan', label: 'Loep Vertrek' },
+  { value: 'retentiescan', label: 'Loep Behoud' },
   { value: 'culture_assessment', label: 'Loep Culture Assessment' },
   { value: 'teamscan', label: 'MTO / TeamScan' },
   { value: 'combinatie', label: 'Combinatie' },

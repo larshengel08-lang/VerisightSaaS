@@ -61,7 +61,7 @@ export interface ExitActionCenterCandidateDossier {
 
 const EXIT_ACTION_CENTER_CARRIER: ExitActionCenterCarrier = {
   key: 'exit',
-  label: 'ExitScan-adapter',
+  label: 'Loep Vertrek-adapter',
   status: 'active',
   workspaceKind: 'follow_through',
   routeScope: 'exit_only',
@@ -156,7 +156,7 @@ export function buildExitActionCenterWorkspace(args: {
     assignments.push({
       id: `asg-${dossier.id}`,
       dossierId: dossier.id,
-      title: dossier.firstActionTaken ?? 'Leg eerste ExitScan follow-up stap vast',
+      title: dossier.firstActionTaken ?? 'Leg eerste Loep Vertrek follow-up stap vast',
       state: assignmentState,
       kind: assignmentKind,
       ownerId,

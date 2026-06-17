@@ -55,7 +55,7 @@ export const CONTENT_SYSTEM_LAYERS: readonly ContentLayerContract[] = [
     id: 'route_content',
     label: 'Route content',
     intendedUse: 'Help buyers choose which management question counts first.',
-    primaryAudience: 'First-time buyers comparing ExitScan, RetentieScan and the combination route.',
+    primaryAudience: 'First-time buyers comparing Loep Vertrek, Loep Behoud and the combination route.',
     claimBoundary: 'Must accelerate route choice without collapsing into pricing, trust or broad proof overload.',
     updateSources: ['docs/strategy/STRATEGY.md', 'frontend/lib/marketing-products.ts', 'frontend/components/marketing/site-content.ts'],
     allowedSurfaces: ['home', 'producten', 'oplossingen'],

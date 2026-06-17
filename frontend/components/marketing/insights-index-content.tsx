@@ -71,7 +71,7 @@ export function InsightsIndexContent({ posts }: { posts: InsightPost[] }) {
                   stijl of agenda.
                 </p>
                 <p>
-                  U leest hier compacte artikelen die helpen vragen rond vertrek, behoud, prioriteiten en opvolging
+                  Je leest hier compacte artikelen die helpen vragen rond vertrek, behoud, prioriteiten en opvolging
                   helderder te maken.
                 </p>
                 <p>

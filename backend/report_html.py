@@ -97,9 +97,9 @@ _EXIT_BANDS = {
     "LAAG":   ("Laag frictiebeeld",         "#22C55E"),
 }
 _RETENTION_BANDS = {
-    "HOOG":   ("Verhoogd behoudssignaal",   "#EF4444"),
-    "MIDDEN": ("Behoudssignaal zichtbaar",  "#F59E0B"),
-    "LAAG":   ("Stabiel behoudsbeeld",      "#22C55E"),
+    "HOOG":   ("Behoud onder druk",          "#EF4444"),
+    "MIDDEN": ("Behoud vraagt aandacht",    "#F59E0B"),
+    "LAAG":   ("Behoudsklimaat stabiel",    "#22C55E"),
 }
 _ONBOARDING_BANDS = {
     "HOOG":   ("Onboardingbasis vraagt aandacht", "#EF4444"),
@@ -927,30 +927,58 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
                 f'<div class="sc-v">{_h(value)}</div>'
                 f'{"<div class=\'sc-b\'>" + _h(note) + "</div>" if note else ""}</td>')
 
+    def _ret_note(label: str, score: float | None, interpretation: str) -> str:
+        """Interpretief label onder een score: toont wat de score betekent, niet wat het is."""
+        return interpretation
+
     cells = ""
     if retention_score is not None:
         col = _factor_color(retention_score)
-        cells += f'<td><div class="sc-l">Behoudssignaal</div><div class="sc-v" style="color:{col};">{retention_score:.1f}/10</div><div class="sc-b">groepsgemiddelde actieve populatie</div></td>'
+        note = ("sterk" if retention_score >= 7.5 else
+                "voldoende" if retention_score >= 6.0 else
+                "vraagt aandacht" if retention_score >= 4.5 else
+                "onder druk")
+        cells += f'<td><div class="sc-l">Behoudssignaal</div><div class="sc-v" style="color:{col};">{retention_score:.1f}/10</div><div class="sc-b">condities voor behoud &mdash; {note}</div></td>'
     if stay_intent is not None:
         scol = _rag_color(stay_intent)
-        cells += f'<td><div class="sc-l">Blijfintentie</div><div class="sc-v" style="color:{scol};">{stay_intent:.1f}/10</div><div class="sc-b">verblijfsintentie actieve groep</div></td>'
+        note = ("sterk" if stay_intent >= 7.5 else
+                "gemiddeld" if stay_intent >= 6.0 else
+                "laag voor actieve groep" if stay_intent >= 4.5 else
+                "zorgelijk laag")
+        cells += f'<td><div class="sc-l">Blijfintentie</div><div class="sc-v" style="color:{scol};">{stay_intent:.1f}/10</div><div class="sc-b">intentie om te blijven &mdash; {note}</div></td>'
     if turnover is not None:
         tcol = _rag_color(10 - turnover)
-        cells += f'<td><div class="sc-l">Vertrekintentie</div><div class="sc-v" style="color:{tcol};">{turnover:.1f}/10</div><div class="sc-b">vertrekintentie actieve groep</div></td>'
+        note = ("laag" if turnover <= 3.0 else
+                "beperkt" if turnover <= 5.0 else
+                "zichtbaar" if turnover <= 6.5 else
+                "hoog &mdash; actief vertrekrisico")
+        cells += f'<td><div class="sc-l">Vertrekintentie</div><div class="sc-v" style="color:{tcol};">{turnover:.1f}/10</div><div class="sc-b">gedachte aan vertrek &mdash; {note}</div></td>'
     if engagement is not None:
         ecol = _factor_color(engagement)
-        cells += f'<td><div class="sc-l">Bevlogenheid</div><div class="sc-v" style="color:{ecol};">{engagement:.1f}/10</div><div class="sc-b">UWES-groepsgemiddelde</div></td>'
+        note = ("hoog" if engagement >= 7.5 else
+                "gemiddeld" if engagement >= 6.0 else
+                "laag &mdash; geen buffer" if engagement >= 4.5 else
+                "zorgelijk laag")
+        cells += f'<td><div class="sc-l">Bevlogenheid</div><div class="sc-v" style="color:{ecol};">{engagement:.1f}/10</div><div class="sc-b">werkbetrokkenheid en energie &mdash; {note}</div></td>'
 
     stat_grid = f'<table class="sg"><tr>{cells}</tr></table>' if cells else ""
+    legend = (
+        '<p style="font-size:9px;color:#94A3B8;margin-top:10px;margin-bottom:0;">'
+        'Behoudssignaal meet condities (factorscores). '
+        'Blijf&shy;intentie en vertrekintentie zijn geen inverse van elkaar &mdash; '
+        'iemand kan beide tegelijk voelen. '
+        'Bevlogenheid is onafhankelijk: betrokken medewerkers vertrekken soms toch.</p>'
+    )
 
     return f"""<div class="pb sec">
   <span class="slabel">Behoudscontext</span>
   <h2 style="margin-bottom:6px;">Waar staat behoud onder druk?</h2>
   <p style="font-size:10.5px;color:#64748B;max-width:60ch;margin-bottom:18px;">
-    Drie actieve behoudsignalen samengebracht op groepsniveau.
+    Vier signalen op groepsniveau &mdash; condities, intentie en werkbeleving samengebracht.
     Geen individuele risicobeoordeling &mdash; patronen zijn leidend.
   </p>
   {stat_grid}
+  {legend}
   <div class="card accent" style="margin-top:14px;">
     <h3>Primaire behoudsfactor</h3>
     <p style="margin-bottom:0;">{_h(primary_factor)} vraagt als eerste aandacht in het behoudsklimaat.</p>
@@ -1358,10 +1386,12 @@ def render_retention_report_html(data: dict) -> str:
                           f'<div class="why-b">{_h(low_item[1])}</div></td>')
         if avg_eng is not None:
             ecol = _factor_color(avg_eng)
-            why_cells += f'<td class="why-cell"><div class="why-l">Bevlogenheid</div><div class="why-v" style="color:{ecol};">{avg_eng:.1f}/10</div><div class="why-b">UWES-groepsgemiddelde</div></td>'
+            eng_note = ("hoog" if avg_eng >= 7.5 else "gemiddeld" if avg_eng >= 6.0 else "laag — geen buffer" if avg_eng >= 4.5 else "zorgelijk laag")
+            why_cells += f'<td class="why-cell"><div class="why-l">Bevlogenheid</div><div class="why-v" style="color:{ecol};">{avg_eng:.1f}/10</div><div class="why-b">werkbetrokkenheid — {eng_note}</div></td>'
         if avg_si is not None:
             si_col = _factor_color(avg_si)
-            why_cells += f'<td class="why-cell"><div class="why-l">Stay-intent</div><div class="why-v" style="color:{si_col};">{avg_si:.1f}/10</div><div class="why-b">verblijfsintentie actieve groep</div></td>'
+            si_note = ("sterk" if avg_si >= 7.5 else "gemiddeld" if avg_si >= 6.0 else "laag voor actieve groep" if avg_si >= 4.5 else "zorgelijk laag")
+            why_cells += f'<td class="why-cell"><div class="why-l">Blijfintentie</div><div class="why-v" style="color:{si_col};">{avg_si:.1f}/10</div><div class="why-b">intentie om te blijven — {si_note}</div></td>'
 
         primary_fkey  = tf
         primary_label = tf_lbl_
@@ -1472,7 +1502,6 @@ def render_retention_report_html(data: dict) -> str:
         return f"""<div class="pb sec">
   <span class="slabel">Verdieping &mdash; {_h(lbl)}</span>
   <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&mdash; {_h(fl_)}</span></h2>
-  <p style="font-size:10px;color:#64748B;margin-bottom:12px;">Behoudsrelevantie: lager op deze factor = hogere behoudsdruk.</p>
   {low_card}
   {high_card}
   <h3>Alle items in deze factor</h3>

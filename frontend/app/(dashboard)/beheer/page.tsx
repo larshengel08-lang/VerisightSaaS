@@ -154,7 +154,7 @@ export default async function BeheerPage() {
                 <p className="mt-2 text-base font-semibold text-white">{selectedCampaign?.name ?? 'Nog geen campaign gekozen'}</p>
                 <p className="mt-1 text-sm text-slate-300">
                   {selectedCampaign
-                    ? `${selectedCampaign.scan_type === 'exit' ? 'ExitScan' : 'RetentieScan'} · ${selectedCampaign.is_active ? 'Actief' : 'Gearchiveerd'}`
+                    ? `${selectedCampaign.scan_type === 'exit' ? 'Loep Vertrek' : 'Loep Behoud'} · ${selectedCampaign.is_active ? 'Actief' : 'Gearchiveerd'}`
                     : 'Respondenten en klanttoegang worden actief na campaign-keuze'}
                 </p>
               </div>
@@ -246,7 +246,7 @@ export default async function BeheerPage() {
               <div className="space-y-4">
                 <div className="flex flex-wrap items-center gap-2">
                   <DashboardChip surface="ops" label={selectedCampaign.name} tone="slate" />
-                  <DashboardChip surface="ops" label={selectedCampaign.scan_type === 'exit' ? 'ExitScan' : 'RetentieScan'} tone="slate" />
+                  <DashboardChip surface="ops" label={selectedCampaign.scan_type === 'exit' ? 'Loep Vertrek' : 'Loep Behoud'} tone="slate" />
                 </div>
 
                 {campaigns.filter((campaign) => campaign.is_active).length === 0 ? (
@@ -275,7 +275,7 @@ export default async function BeheerPage() {
                       >
                         <div className="min-w-0 flex-1">
                           <div className="mb-1 flex flex-wrap items-center gap-2">
-                            <DashboardChip surface="ops" label={campaign.scan_type === 'exit' ? 'ExitScan' : 'RetentieScan'} />
+                            <DashboardChip surface="ops" label={campaign.scan_type === 'exit' ? 'Loep Vertrek' : 'Loep Behoud'} />
                             <DashboardChip surface="ops" label={getDeliveryModeLabel(campaign.delivery_mode, campaign.scan_type)} />
                             <span className={`text-xs font-medium ${campaign.is_active ? 'text-emerald-700' : 'text-slate-400'}`}>
                               {campaign.is_active ? '● Actief' : '○ Archief'}
@@ -454,7 +454,7 @@ export default async function BeheerPage() {
                         <tr key={stats.campaign_id} className="hover:bg-slate-50/70">
                           <td className="px-5 py-3">
                             <div className="font-medium text-slate-900">{stats.campaign_name}</div>
-                            <div className="mt-0.5 text-xs text-slate-500">{stats.scan_type === 'exit' ? 'ExitScan' : 'RetentieScan'}</div>
+                            <div className="mt-0.5 text-xs text-slate-500">{stats.scan_type === 'exit' ? 'Loep Vertrek' : 'Loep Behoud'}</div>
                           </td>
                           <td className="px-5 py-3 text-slate-600">{org?.name ?? '—'}</td>
                           <td className="px-5 py-3 text-center">

@@ -68,7 +68,7 @@ describe('REPORT_PREVIEW_COPY', () => {
     expect(portfolioCopy.proofNotes.map(([title]) => title)).toContain('Core proof blijft leidend')
     expect(
       portfolioCopy.proofNotes.find(([title]) => title === 'Core proof blijft leidend')?.[1].toLowerCase(),
-    ).toContain('exitscan en retentiescan')
+    ).toContain('loep vertrek en loep behoud')
     expect(portfolioCopy.proofNotes.map(([title]) => title)).toContain('Bestuurlijke read')
     expect(portfolioCopy.sampleReportBody?.toLowerCase()).toContain('core-first')
     expect(portfolioCopy.sampleReportHref).toBe('/producten')

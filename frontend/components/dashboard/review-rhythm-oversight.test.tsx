@@ -19,14 +19,14 @@ describe('review rhythm oversight', () => {
             routeId: 'route-1',
             state: 'escalation-sensitive',
             scopeLabel: 'Operations',
-            sourceLabel: 'RetentieScan',
+            sourceLabel: 'Loep Behoud',
             reviewDateLabel: '20 mei',
           },
           {
             routeId: 'route-2',
             state: 'stale',
             scopeLabel: 'Support',
-            sourceLabel: 'ExitScan',
+            sourceLabel: 'Loep Vertrek',
             reviewDateLabel: 'Nog niet gepland',
             governanceSignals: [
               {
@@ -52,7 +52,7 @@ describe('review rhythm oversight', () => {
     expect(markup).toContain('Actie blijft hangen')
     expect(markup).toContain('Actiereview ontbreekt')
     expect(markup).toContain('Operations')
-    expect(markup).toContain('RetentieScan')
+    expect(markup).toContain('Loep Behoud')
     expect(markup).not.toContain('workflow')
     expect(markup).not.toContain('task board')
     expect(markup).not.toContain('project planning')
@@ -101,7 +101,7 @@ describe('review rhythm oversight', () => {
             routeId: 'route-exec-gap',
             state: 'stale',
             scopeLabel: 'Operations',
-            sourceLabel: 'ExitScan',
+            sourceLabel: 'Loep Vertrek',
             reviewDateLabel: '5 jun',
             governanceSignals: [
               {
@@ -114,7 +114,7 @@ describe('review rhythm oversight', () => {
             routeId: 'route-closeout-ready',
             state: 'overdue',
             scopeLabel: 'Finance',
-            sourceLabel: 'RetentieScan',
+            sourceLabel: 'Loep Behoud',
             reviewDateLabel: '8 jun',
             governanceSignals: [
               {

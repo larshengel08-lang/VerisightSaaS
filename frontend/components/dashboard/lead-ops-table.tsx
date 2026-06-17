@@ -95,12 +95,12 @@ const QUALIFICATION_STATUS_OPTIONS: Array<{ value: ContactRequestRecord['qualifi
 ]
 
 const QUALIFIED_ROUTE_OPTIONS: Array<{ value: ContactRouteInterest; label: string }> = [
-  { value: 'exitscan', label: 'ExitScan' },
-  { value: 'retentiescan', label: 'RetentieScan' },
+  { value: 'exitscan', label: 'Loep Vertrek' },
+  { value: 'retentiescan', label: 'Loep Behoud' },
   { value: 'culture_assessment', label: 'Loep Culture Assessment' },
   { value: 'combinatie', label: 'Combinatie' },
   { value: 'teamscan', label: 'TeamScan' },
-  { value: 'onboarding', label: 'Onboarding 30-60-90' },
+  { value: 'onboarding', label: 'Loep Start' },
   { value: 'leadership', label: 'Leadership Scan' },
 ]
 
@@ -535,7 +535,7 @@ export function LeadOpsTable({ rows, linkedCampaignsByLead }: Props) {
                           </div>
                         ) : (
                           <p className="mt-2 text-xs leading-5 text-slate-500">
-                            In deze wave is bounded commerce alleen beschikbaar voor ExitScan, RetentieScan en Loep Culture Assessment.
+                            In deze wave is bounded commerce alleen beschikbaar voor Loep Vertrek, Loep Behoud en Loep Culture Assessment.
                           </p>
                         )}
                       </div>

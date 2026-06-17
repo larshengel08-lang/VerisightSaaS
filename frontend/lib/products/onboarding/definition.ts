@@ -2,12 +2,12 @@ import type { ScanDefinition } from '@/lib/scan-definitions'
 
 export const onboardingScanDefinition: ScanDefinition = {
   scanType: 'onboarding',
-  productName: 'Onboarding 30-60-90',
+  productName: 'Loep Start',
   signalLabel: 'Onboardingsignaal',
   signalLabelLower: 'onboardingsignaal',
   summaryLabel: 'Checkpoint nu',
   methodologyText:
-    'Onboarding 30-60-90 is een vroege lifecycle-scan voor nieuwe medewerkers op groepsniveau. Het product bundelt een compacte werkbelevingscheck, geselecteerde vroege werkfactoren en een checkpoint-richtingsvraag tot een single-checkpoint lifecycle triage: een managementread die helpt bepalen waar nieuwe instroom in deze fase goed landt, wie de eerste handoff trekt en welke kleine borg- of correctiestap nu eerst aandacht vraagt. In deze eerste waves blijft onboarding bewust begrensd tot precies een checkpoint per campaign.',
+    'Loep Start is een vroege lifecycle-scan voor nieuwe medewerkers op groepsniveau. Het product bundelt een compacte werkbelevingscheck, geselecteerde vroege werkfactoren en een checkpoint-richtingsvraag tot een single-checkpoint lifecycle triage: een managementread die helpt bepalen waar nieuwe instroom in deze fase goed landt, wie de eerste handoff trekt en welke kleine borg- of correctiestap nu eerst aandacht vraagt. In deze eerste waves blijft onboarding bewust begrensd tot precies een checkpoint per campaign.',
   whatItIsText:
     'Een compacte checkpoint-scan op groepsniveau die laat zien hoe nieuwe medewerkers in een enkele fase landen in rol, leiding, team en werkcontext.',
   whatItIsNotText:

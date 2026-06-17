@@ -12,7 +12,7 @@ describe('action center governance queue', () => {
             {
               routeId: 'route-1',
               routeFamily: 'retention',
-              sourceLabel: 'RetentieScan',
+              sourceLabel: 'Loep Behoud',
               scopeLabel: 'Support',
               managerOwner: 'Manager Support',
               primarySignal: 'HR_review_required',

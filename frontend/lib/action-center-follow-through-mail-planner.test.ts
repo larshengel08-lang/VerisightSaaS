@@ -24,7 +24,7 @@ describe('action center follow-through mail planner', () => {
     routeScopeValue: 'org-1::department::sales',
     orgId: 'org-1',
     campaignId: 'camp-1',
-    campaignName: 'ExitScan Q2',
+    campaignName: 'Loep Vertrek Q2',
     scopeLabel: 'Sales',
     scanType: 'exit',
     routeStatus: 'reviewbaar',
@@ -151,7 +151,7 @@ describe('action center follow-through mail planner', () => {
       items: [
         {
           id: 'camp-1::org-1::department::sales',
-          sourceLabel: 'ExitScan',
+          sourceLabel: 'Loep Vertrek',
           orgId: 'org-1',
           teamId: 'org-1::department::sales',
           teamLabel: 'Sales',
@@ -220,7 +220,7 @@ describe('action center follow-through mail planner', () => {
             data: [
               {
                 id: 'camp-1',
-                name: 'ExitScan Q2',
+                name: 'Loep Vertrek Q2',
                 organization_id: 'org-1',
                 scan_type: 'exit',
               },
@@ -299,12 +299,12 @@ describe('action center follow-through mail planner', () => {
     )
   })
 
-  it('keeps RetentieScan routes in the shared follow-through loader when route defaults enable them', async () => {
+  it('keeps Loep Behoud routes in the shared follow-through loader when route defaults enable them', async () => {
     mockGetActionCenterPageData.mockResolvedValue({
       items: [
         {
           id: 'camp-2::org-1::department::sales',
-          sourceLabel: 'RetentieScan',
+          sourceLabel: 'Loep Behoud',
           orgId: 'org-1',
           teamId: 'org-1::department::sales',
           teamLabel: 'Sales',
@@ -441,7 +441,7 @@ describe('action center follow-through mail planner', () => {
       items: [
         {
           id: 'camp-1::org-1::department::sales',
-          sourceLabel: 'ExitScan',
+          sourceLabel: 'Loep Vertrek',
           orgId: 'org-1',
           teamId: 'org-1::department::sales',
           teamLabel: 'Sales',
@@ -510,7 +510,7 @@ describe('action center follow-through mail planner', () => {
             data: [
               {
                 id: 'camp-1',
-                name: 'ExitScan Q2',
+                name: 'Loep Vertrek Q2',
                 organization_id: 'org-1',
                 scan_type: 'exit',
               },

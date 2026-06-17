@@ -7,12 +7,12 @@ import { buildContactHref } from '@/lib/contact-funnel'
 export const metadata: Metadata = {
   title: 'Vertrouwen',
   description:
-    'Wat u publiek kunt toetsen voordat u start. Privacy, rapportlezing, DPA beschikbaar en productgrenzen van Loep in een publieke trustlaag.',
+    'Wat je publiek kunt toetsen voordat je start. Privacy, rapportlezing, DPA beschikbaar en productgrenzen van Loep in een publieke trustlaag.',
   alternates: { canonical: '/vertrouwen' },
   openGraph: {
     title: 'Vertrouwen | Loep',
     description:
-      'Wat u publiek kunt toetsen voordat u start. Privacy, rapportlezing, DPA beschikbaar en productgrenzen van Loep in een publieke trustlaag.',
+      'Wat je publiek kunt toetsen voordat je start. Privacy, rapportlezing, DPA beschikbaar en productgrenzen van Loep in een publieke trustlaag.',
     url: 'https://www.verisight.nl/vertrouwen',
     images: ['/opengraph-image'],
   },
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Vertrouwen | Loep',
     description:
-      'Wat u publiek kunt toetsen voordat u start. Privacy, rapportlezing, DPA beschikbaar en productgrenzen van Loep in een publieke trustlaag.',
+      'Wat je publiek kunt toetsen voordat je start. Privacy, rapportlezing, DPA beschikbaar en productgrenzen van Loep in een publieke trustlaag.',
     images: ['/opengraph-image'],
   },
 }

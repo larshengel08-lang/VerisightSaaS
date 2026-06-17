@@ -64,7 +64,7 @@ describe('self-send-comms', () => {
     const tpl = buildInviteTemplate({
       senderName: 'Sarah de Vries, HR',
       organizationName: 'Acme BV',
-      scanLabel: 'ExitScan',
+      scanLabel: 'Loep Vertrek',
       surveyLink: 'https://verisight.nl/survey/open/tok-123',
     })
     expect(tpl.subject).toContain('Acme BV')
@@ -76,7 +76,7 @@ describe('self-send-comms', () => {
     const tpl = buildReminderTemplate({
       senderName: 'Sarah',
       organizationName: 'Acme BV',
-      scanLabel: 'ExitScan',
+      scanLabel: 'Loep Vertrek',
       surveyLink: 'https://verisight.nl/survey/open/tok-123',
     })
     expect(tpl.subject.toLowerCase()).toContain('herinnering')

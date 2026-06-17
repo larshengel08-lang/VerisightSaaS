@@ -102,9 +102,9 @@ describe('SEO conversion tranche', () => {
       params: Promise.resolve({ slug: 'leadership-scan' }),
     })
 
-    expect(solutionMetadata.title).toBe('Verloopanalyse | ExitScan voor vertrekduiding bij HR-teams')
+    expect(solutionMetadata.title).toBe('Verloopanalyse | Loep Vertrek voor vertrekduiding bij HR-teams')
     expect(solutionMetadata.alternates?.canonical).toBe('/oplossingen/verloop-analyse')
-    expect(exitProductMetadata.title).toBe('ExitScan | Verloopanalyse en vertrekduiding voor HR-teams')
+    expect(exitProductMetadata.title).toBe('Loep Vertrek | Verloopanalyse en vertrekduiding voor HR-teams')
     expect(exitProductMetadata.alternates?.canonical).toBe('/producten/exitscan')
     expect(cultureProductMetadata.title).toBe(
       'Loep Cultuurbeeld | Jaarlijkse cultuur- en engagementbaseline voor directie en HR',
@@ -112,7 +112,7 @@ describe('SEO conversion tranche', () => {
     expect(cultureProductMetadata.alternates?.canonical).toBe('/producten/cultuurbeeld')
     expect(pulseProductMetadata.title).toBe('Pulse | Compacte reviewmetingen na eerste baseline of managementread')
     expect(pulseProductMetadata.alternates?.canonical).toBe('/producten/pulse')
-    expect(onboardingProductMetadata.title).toBe('Onboarding 30-60-90 | Vroege lifecycle-check voor nieuwe medewerkers')
+    expect(onboardingProductMetadata.title).toBe('Loep Start | Vroege lifecycle-check voor nieuwe medewerkers')
     expect(onboardingProductMetadata.alternates?.canonical).toBe('/producten/onboarding-30-60-90')
     expect(leadershipProductMetadata.title).toBe('Leadership Scan | Begrensde managementread na een bestaand signaal')
     expect(leadershipProductMetadata.alternates?.canonical).toBe('/producten/leadership-scan')
@@ -152,12 +152,12 @@ describe('SEO conversion tranche', () => {
   it('keeps llms.txt aligned with the current pricing and product routes', () => {
     const llmsText = fs.readFileSync(path.join(process.cwd(), 'public', 'llms.txt'), 'utf8')
 
-    expect(llmsText).toContain('ExitScan Baseline: EUR 2.950')
-    expect(llmsText).toContain('RetentieScan Baseline: EUR 3.450')
+    expect(llmsText).toContain('Loep Vertrek Baseline: EUR 2.950')
+    expect(llmsText).toContain('Loep Behoud Baseline: EUR 3.450')
     expect(llmsText).toContain('Loep Culture Assessment Baseline: op aanvraag')
     expect(llmsText).toContain('Pulse: op aanvraag')
     expect(llmsText).toContain('Pulse na Culture Assessment: op aanvraag')
-    expect(llmsText).toContain('Onboarding 30-60-90: op aanvraag')
+    expect(llmsText).toContain('Loep Start: op aanvraag')
     expect(llmsText).toContain('Leadership Scan: op aanvraag')
     expect(llmsText).toContain('https://www.verisight.nl/producten/exitscan')
     expect(llmsText).toContain('https://www.verisight.nl/producten/retentiescan')

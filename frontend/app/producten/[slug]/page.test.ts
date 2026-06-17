@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-describe('ExitScan product page background treatment', () => {
+describe('Loep Vertrek product page background treatment', () => {
   it('uses one single page background tone instead of alternating section backgrounds', () => {
     const pageSource = fs.readFileSync(
       path.join(process.cwd(), 'app', 'producten', '[slug]', 'page.tsx'),
@@ -19,7 +19,7 @@ describe('ExitScan product page background treatment', () => {
     expect(exitScanSource).not.toContain("background: `radial-gradient(circle,${AC.soft} 0%,transparent 65%)`")
   })
 
-  it('keeps pricing off the ExitScan hero card so tarieven stays the only public price surface', () => {
+  it('keeps pricing off the Loep Vertrek hero card so tarieven stays the only public price surface', () => {
     const pageSource = fs.readFileSync(
       path.join(process.cwd(), 'app', 'producten', '[slug]', 'page.tsx'),
       'utf8',
@@ -32,7 +32,7 @@ describe('ExitScan product page background treatment', () => {
   })
 })
 
-describe('RetentieScan product page background treatment', () => {
+describe('Loep Behoud product page background treatment', () => {
   it('uses the same single homepage canvas tone instead of warmer section backgrounds', () => {
     const pageSource = fs.readFileSync(
       path.join(process.cwd(), 'app', 'producten', '[slug]', 'page.tsx'),
@@ -52,7 +52,7 @@ describe('RetentieScan product page background treatment', () => {
     expect(retentionScanSource).not.toContain("background: `radial-gradient(circle,${T.tealFaint} 0%,transparent 65%)`")
   })
 
-  it('keeps pricing off the RetentieScan hero card so tarieven stays the only public price surface', () => {
+  it('keeps pricing off the Loep Behoud hero card so tarieven stays the only public price surface', () => {
     const pageSource = fs.readFileSync(
       path.join(process.cwd(), 'app', 'producten', '[slug]', 'page.tsx'),
       'utf8',
@@ -67,7 +67,7 @@ describe('RetentieScan product page background treatment', () => {
   })
 })
 
-describe('ExitScan and RetentieScan card treatment', () => {
+describe('Loep Vertrek and Loep Behoud card treatment', () => {
   it('uses the newer homepage-like card system instead of old top-stripe comparison cards', () => {
     const pageSource = fs.readFileSync(
       path.join(process.cwd(), 'app', 'producten', '[slug]', 'page.tsx'),

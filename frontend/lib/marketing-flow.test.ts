@@ -24,7 +24,7 @@ describe('marketing flow defaults', () => {
   it('keeps the primary and secondary CTA labels aligned with the redesign', () => {
     expect(marketingPrimaryCta).toEqual({
       href: buildContactHref({ routeInterest: 'exitscan', ctaSource: 'global_primary_cta' }),
-      label: 'Bespreek uw vraagstuk',
+      label: 'Bespreek je vraagstuk',
     })
     expect(marketingSecondaryCta).toEqual({
       href: '/#scans',
@@ -53,8 +53,8 @@ describe('marketing flow defaults', () => {
 
   it('keeps the homepage focused on the three buyer-facing primary routes', () => {
     expect(homepageProductRoutes.map((route) => route.name)).toEqual([
-      'ExitScan',
-      'RetentieScan',
+      'Loep Vertrek',
+      'Loep Behoud',
       'Loep Cultuurbeeld',
     ])
     expect(homepageProductRoutes[0]?.chip).toBe('Kernroute')
@@ -86,11 +86,11 @@ describe('marketing flow defaults', () => {
   })
 
   it('keeps route labels and first-step defaults aligned with the funnel', () => {
-    expect(getContactRouteLabel('exitscan')).toBe('ExitScan')
-    expect(getContactRouteLabel('retentiescan')).toBe('RetentieScan')
+    expect(getContactRouteLabel('exitscan')).toBe('Loep Vertrek')
+    expect(getContactRouteLabel('retentiescan')).toBe('Loep Behoud')
     expect(getContactRouteLabel('culture_assessment')).toBe('Loep Culture Assessment')
     expect(getContactFirstStepLabel('combinatie')).toBe('een gefaseerde combinatieroute')
-    expect(getContactFirstStepLabel('onboarding')).toContain('Onboarding 30-60-90 Baseline')
+    expect(getContactFirstStepLabel('onboarding')).toContain('Loep Start Baseline')
     expect(getContactFirstStepLabel('pulse')).toContain('na een eerste baseline')
     expect(getContactFirstStepLabel('leadership')).toContain('na een bestaand signaal')
   })

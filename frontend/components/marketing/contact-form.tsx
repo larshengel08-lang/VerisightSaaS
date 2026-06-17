@@ -348,7 +348,7 @@ export function ContactForm({
               ? 'Optioneel: licht kort toe wat nu bestuurlijke aandacht vraagt.'
               : isSimplified
                 ? 'Beschrijf kort wat nu het eerst aandacht of duidelijkheid vraagt.'
-              : (questionPlaceholder ?? 'Beschrijf kort wat u nu vooral wilt begrijpen of waar de vraag vastloopt.')
+              : (questionPlaceholder ?? 'Beschrijf kort wat je nu vooral wilt begrijpen of waar de vraag vastloopt.')
           }
         />
       </div>

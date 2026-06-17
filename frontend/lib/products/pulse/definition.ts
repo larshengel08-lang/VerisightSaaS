@@ -11,7 +11,7 @@ export const pulseScanDefinition: ScanDefinition = {
   whatItIsText:
     'Een korte reviewscan op groepsniveau die laat zien hoe werkbeleving en gekozen prioriteitsfactoren er nu voor staan, plus wat dat bestuurlijk als eerste vraagt.',
   whatItIsNotText:
-    'Geen brede MTO, geen vervanging van RetentieScan, geen individuele voorspeller, geen brede trendmachine en geen hard effectbewijs op zichzelf.',
+    'Geen brede MTO, geen vervanging van Loep Behoud, geen individuele voorspeller, geen brede trendmachine en geen hard effectbewijs op zichzelf.',
   howToReadText:
     'Lees Pulse als bounded managementread van dit moment: wat vraagt nu review, welke factor moet als eerste besproken worden, welke kleine correctie hoort daarbij en wanneer is een volgende check logisch.',
   privacyBoundaryText:

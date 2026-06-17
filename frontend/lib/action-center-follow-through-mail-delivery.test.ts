@@ -11,7 +11,7 @@ describe('action center follow-through mail delivery', () => {
     const result = await deliverActionCenterFollowThroughMail(
       {
         recipientEmail: 'manager@example.com',
-        subject: 'Reviewmoment ExitScan Q2 / Sales',
+        subject: 'Reviewmoment Loep Vertrek Q2 / Sales',
         emailText: 'Open Action Center',
         emailHtml: '<p>Open Action Center</p>',
       },

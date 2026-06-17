@@ -58,8 +58,8 @@ export function OperatorOnboardingBlueprint() {
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Klantaanlevering</p>
             <ul className="mt-3 space-y-2 text-sm leading-6 text-amber-950">
               <li>Verplicht: <code className="font-mono">email</code>, <code className="font-mono">department</code>, <code className="font-mono">role_level</code></li>
-              <li>ExitScan extra: <code className="font-mono">exit_month</code>, <code className="font-mono">annual_salary_eur</code></li>
-              <li>RetentieScan extra: <code className="font-mono">annual_salary_eur</code></li>
+              <li>Loep Vertrek extra: <code className="font-mono">exit_month</code>, <code className="font-mono">annual_salary_eur</code></li>
+              <li>Loep Behoud extra: <code className="font-mono">annual_salary_eur</code></li>
             </ul>
             <p className="mt-3 text-xs leading-5 text-amber-900">
               Zonder afdeling en functieniveau blijft segmentatie te grof voor een betrouwbare managementread.

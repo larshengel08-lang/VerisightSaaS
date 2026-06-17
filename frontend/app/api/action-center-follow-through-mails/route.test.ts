@@ -77,7 +77,7 @@ describe('POST /api/action-center-follow-through-mails', () => {
           routeScopeValue: 'org-1::department::sales',
           orgId: 'org-1',
           campaignId: 'camp-1',
-          campaignName: 'ExitScan Q2',
+          campaignName: 'Loep Vertrek Q2',
           scopeLabel: 'Sales',
           scanType: 'exit',
           routeStatus: 'reviewbaar',
@@ -103,7 +103,7 @@ describe('POST /api/action-center-follow-through-mails', () => {
           routeId: 'camp-1::org::sales',
           orgId: 'org-1',
           campaignId: 'camp-1',
-          campaignName: 'ExitScan Q2',
+          campaignName: 'Loep Vertrek Q2',
           scopeLabel: 'Sales',
           routeScopeValue: 'org-1::department::sales',
           triggerType: 'review_upcoming',
@@ -119,7 +119,7 @@ describe('POST /api/action-center-follow-through-mails', () => {
     })
 
     mockRenderMail.mockReturnValue({
-      subject: 'Reviewmoment ExitScan Q2 / Sales',
+      subject: 'Reviewmoment Loep Vertrek Q2 / Sales',
       emailText: 'Open Action Center',
       emailHtml: '<p>Open Action Center</p>',
     })
@@ -211,7 +211,7 @@ describe('POST /api/action-center-follow-through-mails', () => {
     })
   })
 
-  it('records RetentieScan sends with the canonical retention scan type in the ledger', async () => {
+  it('records Loep Behoud sends with the canonical retention scan type in the ledger', async () => {
     const insertSpy = vi.fn().mockResolvedValue({ error: null })
 
     mockGetDispatchData.mockResolvedValue({
@@ -221,7 +221,7 @@ describe('POST /api/action-center-follow-through-mails', () => {
           routeScopeValue: 'org-1::department::support',
           orgId: 'org-1',
           campaignId: 'camp-2',
-          campaignName: 'RetentieScan Q2',
+          campaignName: 'Loep Behoud Q2',
           scopeLabel: 'Support',
           scanType: 'retention',
           routeStatus: 'reviewbaar',
@@ -247,7 +247,7 @@ describe('POST /api/action-center-follow-through-mails', () => {
           routeId: 'camp-2::org::support',
           orgId: 'org-1',
           campaignId: 'camp-2',
-          campaignName: 'RetentieScan Q2',
+          campaignName: 'Loep Behoud Q2',
           scopeLabel: 'Support',
           routeScopeValue: 'org-1::department::support',
           triggerType: 'review_upcoming',
@@ -291,7 +291,7 @@ describe('POST /api/action-center-follow-through-mails', () => {
     )
   })
 
-  it('records RetentieScan suppressions with the canonical retention scan type in the ledger', async () => {
+  it('records Loep Behoud suppressions with the canonical retention scan type in the ledger', async () => {
     const insertSpy = vi.fn().mockResolvedValue({ error: null })
 
     mockGetDispatchData.mockResolvedValue({
@@ -301,7 +301,7 @@ describe('POST /api/action-center-follow-through-mails', () => {
           routeScopeValue: 'org-1::department::support',
           orgId: 'org-1',
           campaignId: 'camp-2',
-          campaignName: 'RetentieScan Q2',
+          campaignName: 'Loep Behoud Q2',
           scopeLabel: 'Support',
           scanType: 'retention',
           routeStatus: 'reviewbaar',
@@ -328,7 +328,7 @@ describe('POST /api/action-center-follow-through-mails', () => {
           routeId: 'camp-2::org::support',
           orgId: 'org-1',
           campaignId: 'camp-2',
-          campaignName: 'RetentieScan Q2',
+          campaignName: 'Loep Behoud Q2',
           scopeLabel: 'Support',
           routeScopeValue: 'org-1::department::support',
           triggerType: 'review_upcoming',

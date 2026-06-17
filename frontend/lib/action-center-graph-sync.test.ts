@@ -81,7 +81,7 @@ function buildInput(overrides: Partial<Parameters<typeof syncActionCenterGraphRe
     revision: 3,
     method: 'REQUEST' as const,
     inviteDraft: {
-      subject: 'Reviewmoment ExitScan / Operations',
+      subject: 'Reviewmoment Loep Vertrek / Operations',
       emailHtml: '<p>Open Action Center.</p>',
       reviewDate: '2026-05-28',
       recipientEmail: 'manager@example.com',
@@ -158,7 +158,7 @@ describe('action center graph sync orchestration', () => {
       buildActionCenterGraphCalendarSyncPayload({
         method: 'REQUEST',
         reviewDate: '2026-05-28',
-        subject: 'Reviewmoment ExitScan / Operations',
+        subject: 'Reviewmoment Loep Vertrek / Operations',
         bodyHtml: '<p>Open Action Center.</p>',
       }),
     ).toMatchObject({

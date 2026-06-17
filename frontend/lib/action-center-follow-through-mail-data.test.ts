@@ -9,7 +9,7 @@ vi.mock('@/lib/supabase/admin', () => ({
 import { buildActionCenterFollowThroughMailRouteSnapshot } from './action-center-follow-through-mail-data'
 
 describe('action center follow-through mail data', () => {
-  it('accepts RetentieScan routes and still rejects blocked route families before they enter the mail planner', () => {
+  it('accepts Loep Behoud routes and still rejects blocked route families before they enter the mail planner', () => {
     expect(
       buildActionCenterFollowThroughMailRouteSnapshot({
         routeId: 'camp-2::org::support',

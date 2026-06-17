@@ -10,7 +10,7 @@ function makeMeasurementReadbackFixture() {
   const items = [
     {
       id: 'route-exit-1',
-      sourceLabel: 'ExitScan',
+      sourceLabel: 'Loep Vertrek',
       teamLabel: 'Operations',
       status: 'reviewbaar',
       reviewDate: '2026-05-10',
@@ -40,7 +40,7 @@ function makeMeasurementReadbackFixture() {
       {
         routeId: 'route-exit-1',
         routeFamily: 'exit',
-        sourceLabel: 'ExitScan',
+        sourceLabel: 'Loep Vertrek',
         scopeLabel: 'Operations',
         managerOwner: 'Manager Operations',
         primarySignal: 'action_review_due',

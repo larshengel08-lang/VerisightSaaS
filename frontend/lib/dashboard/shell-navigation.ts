@@ -64,9 +64,9 @@ const DASHBOARD_MODULE_SCAN_TYPES: Record<DashboardCategoryModuleKey, ScanType> 
 }
 
 const DASHBOARD_MODULE_LABELS: Record<DashboardCategoryModuleKey, string> = {
-  exit: 'ExitScan',
-  retention: 'RetentieScan',
-  onboarding: 'Onboarding 30-60-90',
+  exit: 'Loep Vertrek',
+  retention: 'Loep Behoud',
+  onboarding: 'Loep Start',
   pulse: 'Pulse',
   leadership: 'Leadership Scan',
   culture_assessment: 'Loep Culture Assessment',

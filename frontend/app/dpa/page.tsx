@@ -5,7 +5,7 @@ import { LegalPageShell } from '@/components/marketing/legal-page-shell'
 export const metadata: Metadata = {
   title: 'Verwerkersovereenkomst',
   description:
-    'Standaard verwerkersovereenkomst (DPA) van Loep voor klantorganisaties - AVG-conform en afgestemd op ExitScan en RetentieScan.',
+    'Standaard verwerkersovereenkomst (DPA) van Loep voor klantorganisaties - AVG-conform en afgestemd op Loep Vertrek en Loep Behoud.',
 }
 
 export default function DpaPage() {
@@ -60,8 +60,8 @@ export default function DpaPage() {
       <section>
         <h2>1. Dienst en reikwijdte</h2>
         <p>
-          Deze overeenkomst heeft betrekking op de verwerking van persoonsgegevens in het kader van de ExitScan-
-          en/of RetentieScan-dienstverlening van Verwerker. De overeenkomst loopt gelijk met de looptijd van de
+          Deze overeenkomst heeft betrekking op de verwerking van persoonsgegevens in het kader van de Loep Vertrek-
+          en/of Loep Behoud-dienstverlening van Verwerker. De overeenkomst loopt gelijk met de looptijd van de
           onderliggende dienstverleningsovereenkomst, tenzij Partijen schriftelijk anders overeenkomen.
         </p>
       </section>
@@ -92,12 +92,12 @@ export default function DpaPage() {
       <section>
         <h2>3. Doel van de verwerking</h2>
         <p>
-          Verwerker verwerkt persoonsgegevens uitsluitend ten behoeve van de uitvoering van ExitScan en/of
-          RetentieScan, inclusief uitnodigingen, herinneringen, dashboardtoegang, rapportage en noodzakelijke
+          Verwerker verwerkt persoonsgegevens uitsluitend ten behoeve van de uitvoering van Loep Vertrek en/of
+          Loep Behoud, inclusief uitnodigingen, herinneringen, dashboardtoegang, rapportage en noodzakelijke
           technische beveiliging.
         </p>
         <p>
-          Wanneer RetentieScan wordt ingezet op actieve medewerkers, zijn de uitkomsten nadrukkelijk bedoeld voor
+          Wanneer Loep Behoud wordt ingezet op actieve medewerkers, zijn de uitkomsten nadrukkelijk bedoeld voor
           groeps- en segmentinzichten. Individuele signalen, individuele vertrekintentie op persoonsniveau en
           persoonsgerichte actieroutes worden niet als managementoutput verstrekt.
         </p>

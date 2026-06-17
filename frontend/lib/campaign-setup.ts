@@ -1,12 +1,12 @@
 import type { DeliveryMode, ScanType } from '@/lib/types'
 
 export const CAMPAIGN_SCAN_OPTIONS: Array<{ value: ScanType; title: string; short: string }> = [
-  { value: 'exit', title: 'ExitScan', short: 'Vertrek en frictie' },
-  { value: 'retention', title: 'RetentieScan', short: 'Behoud onder druk' },
+  { value: 'exit', title: 'Loep Vertrek', short: 'Vertrek en frictie' },
+  { value: 'retention', title: 'Loep Behoud', short: 'Behoud onder druk' },
   { value: 'culture_assessment', title: 'Loep Culture Assessment', short: 'Jaarlijkse cultuur- en engagementbaseline' },
   { value: 'pulse', title: 'Pulse', short: 'Korte momentcheck' },
   { value: 'team', title: 'TeamScan', short: 'Lokaal teambeeld' },
-  { value: 'onboarding', title: 'Onboarding 30-60-90', short: 'Vroege instroomcheck' },
+  { value: 'onboarding', title: 'Loep Start', short: 'Vroege instroomcheck' },
   { value: 'leadership', title: 'Leadership Scan', short: 'Geaggregeerde managementread' },
 ]
 
@@ -20,8 +20,8 @@ export function isBaselineOnlyScanType(scanType: ScanType) {
 }
 
 export function getCampaignNamePlaceholder(scanType: ScanType) {
-  if (scanType === 'exit') return 'ExitScan Q2 2026'
-  if (scanType === 'retention') return 'RetentieScan Voorjaar 2026'
+  if (scanType === 'exit') return 'Loep Vertrek Q2 2026'
+  if (scanType === 'retention') return 'Loep Behoud Voorjaar 2026'
   if (scanType === 'culture_assessment') return 'Loep Cultuurbeeld 2026'
   if (scanType === 'pulse') return 'Pulse April 2026'
   if (scanType === 'team') return 'TeamScan Operations Q2 2026'

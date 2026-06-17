@@ -59,9 +59,9 @@ describe('Portfolio cleanup — /producten routekiezer', () => {
   const source = () => read('components/marketing/producten-content.tsx')
 
   it('keeps the three scans and drops the follow-on accordion', () => {
-    expect(source()).toContain("title: 'ExitScan'")
-    expect(source()).toContain("title: 'RetentieScan'")
-    expect(source()).toContain("title: 'Onboarding 30-60-90'")
+    expect(source()).toContain("title: 'Loep Vertrek'")
+    expect(source()).toContain("title: 'Loep Behoud'")
+    expect(source()).toContain("title: 'Loep Start'")
     expect(source()).not.toContain('FollowOnRoutesAccordion')
     expect(source()).not.toContain('UtilityRoutesSection')
   })
@@ -79,7 +79,7 @@ describe('Portfolio cleanup — three equal product pages', () => {
     return page().split(from)[1].split(to)[0]
   }
 
-  it('ExitScan ships the six service bullets and no ritme choice section', () => {
+  it('Loep Vertrek ships the six service bullets and no ritme choice section', () => {
     const exit = page().split('function RetentionScanPage()')[0]
     expect(exit).toContain('Intake en scopebepaling')
     expect(exit).toContain('Survey klaarzetten en launchpakket leveren')
@@ -89,7 +89,7 @@ describe('Portfolio cleanup — three equal product pages', () => {
     expect(exit).toContain('Bespreek of deze scan past')
   })
 
-  it('RetentieScan ships the six bullets, no ritme section, and a sharpened h1', () => {
+  it('Loep Behoud ships the six bullets, no ritme section, and a sharpened h1', () => {
     const retention = slice('function RetentionScanPage()', 'function OnboardingModernPage()')
     expect(retention).toContain('Intake en scopebepaling')
     expect(retention).toContain('Eerste vervolgrichting vastgelegd')
@@ -148,7 +148,7 @@ describe('Portfolio cleanup — /tarieven shows three equal baselines', () => {
   const source = () => read('components/marketing/tarieven-content.tsx')
 
   it('renders Onboarding as a third €4.500 baseline card', () => {
-    expect(source()).toContain('Onboarding 30-60-90 Baseline')
+    expect(source()).toContain('Loep Start Baseline')
     expect(source()).not.toContain('Action Center Start')
     expect(source()).not.toContain('Rest op aanvraag')
   })

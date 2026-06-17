@@ -14,7 +14,7 @@ describe('action center review invite draft contract', () => {
   const baseContext: ActionCenterReviewInviteContext = {
     actionCenterOrigin: 'https://app.verisight.nl',
     campaignId: 'campaign-exit-q2',
-    campaignName: 'ExitScan Q2',
+    campaignName: 'Loep Vertrek Q2',
     managerEmail: 'manager@example.com',
     managerName: 'M. Manager',
     phase: 1,
@@ -26,20 +26,20 @@ describe('action center review invite draft contract', () => {
     scopeLabel: 'Operations',
   }
 
-  it('reports an eligible ExitScan review invite context', () => {
+  it('reports an eligible Loep Vertrek review invite context', () => {
     expect(getActionCenterReviewInviteEligibility(baseContext)).toEqual({
       ok: true,
       reason: null,
     })
   })
 
-  it('reports an eligible RetentieScan review invite context in the bounded parity slice', () => {
+  it('reports an eligible Loep Behoud review invite context in the bounded parity slice', () => {
     expect(
       getActionCenterReviewInviteEligibility({
         ...baseContext,
         scanType: 'retention',
         campaignId: 'campaign-retention-q2',
-        campaignName: 'RetentieScan Q2',
+        campaignName: 'Loep Behoud Q2',
       }),
     ).toEqual({
       ok: true,
@@ -68,7 +68,7 @@ describe('action center review invite draft contract', () => {
       campaignId: 'campaign-exit-q2',
       recipientEmail: 'manager@example.com',
       recipientName: 'M. Manager',
-      subject: 'Reviewmoment ExitScan Q2 / Operations',
+      subject: 'Reviewmoment Loep Vertrek Q2 / Operations',
       actionCenterHref: `${actionCenterBaseUrl('https://app.verisight.nl')}${buildActionCenterEntryHref({
         focus: 'review-item-42',
         view: 'reviews',
@@ -138,7 +138,7 @@ describe('action center review invite draft contract', () => {
       reason: 'unsupported-scan-type',
     },
     {
-      name: 'non-phase-1 ExitScan',
+      name: 'non-phase-1 Loep Vertrek',
       override: { phase: 2 },
       reason: 'unsupported-scan-type',
     },

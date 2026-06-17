@@ -17,7 +17,7 @@ function describeSignalVisibility(score: number | null) {
   if (score === null) {
     return {
       label: 'Nog geen signaal',
-      body: 'Zodra antwoorden binnen zijn laat ExitScan zien of twijfels vooraf zichtbaar of bespreekbaar waren.',
+      body: 'Zodra antwoorden binnen zijn laat Loep Vertrek zien of twijfels vooraf zichtbaar of bespreekbaar waren.',
     }
   }
 
@@ -96,7 +96,7 @@ export function buildExitDashboardViewModel(args: {
     ? `Een breed werksignaal rond ${topFactorLabel.toLowerCase()} maakt dit relevant voor sponsor, MT en directie: hier zit beinvloedbare organisatiefrictie die je niet alleen als HR-nazorg wilt lezen.`
     : `Ook zonder breed werksignaal is ${topFactorLabel.toLowerCase()} scherp genoeg om bestuurlijk te wegen welk spoor nu eerst verificatie en eigenaarschap vraagt.`
   const boardroomWatchout =
-    'Gebruik ExitScan om sneller te wegen welk managementspoor eerst telt, niet om achteraf de ene oorzaak van vertrek te bewijzen of een ROI-garantie te suggereren.'
+    'Gebruik Loep Vertrek om sneller te wegen welk managementspoor eerst telt, niet om achteraf de ene oorzaak van vertrek te bewijzen of een ROI-garantie te suggereren.'
 
   if (!args.hasMinDisplay) {
     return {
@@ -109,7 +109,7 @@ export function buildExitDashboardViewModel(args: {
         title: 'Eerste managementvraag',
         body:
           args.pendingCount > 0
-            ? `Welke respondenten ontbreken nog om een eerste veilig vertrekbeeld op te bouwen? Met minder dan 5 responses blijft ExitScan bewust terughoudend.`
+            ? `Welke respondenten ontbreken nog om een eerste veilig vertrekbeeld op te bouwen? Met minder dan 5 responses blijft Loep Vertrek bewust terughoudend.`
             : 'Welke extra responses zijn nog nodig voordat vertrekduiding veilig op groepsniveau kan worden gelezen?',
         tone: 'amber',
       },
@@ -117,7 +117,7 @@ export function buildExitDashboardViewModel(args: {
         title: 'Eerst respons opbouwen',
         body:
           args.pendingCount > 0
-            ? `Stuur eerst de resterende ${args.pendingCount} respondent(en) een reminder of uitnodiging. Daarna kan ExitScan pas verschuiven van operationele monitoring naar vertrekduiding.`
+            ? `Stuur eerst de resterende ${args.pendingCount} respondent(en) een reminder of uitnodiging. Daarna kan Loep Vertrek pas verschuiven van operationele monitoring naar vertrekduiding.`
             : 'Gebruik deze campagne nog niet als managementinput. Bouw eerst voldoende responses op voor veilige groepsduiding.',
         tone: 'amber',
       },

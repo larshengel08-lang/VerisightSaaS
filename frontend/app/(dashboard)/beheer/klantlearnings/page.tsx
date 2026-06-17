@@ -353,16 +353,16 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
       `Dossier ${index + 1}`
     const sourceLabel =
       dossier.route_interest === 'exitscan'
-        ? 'ExitScan'
+        ? 'Loep Vertrek'
         : dossier.route_interest === 'retentiescan'
-          ? 'RetentieScan'
+          ? 'Loep Behoud'
           : dossier.route_interest === 'combinatie'
             ? 'Combinatie'
             : dossier.route_interest === 'teamscan'
               ? 'TeamScan'
               : dossier.scan_type
                 ? SCAN_TYPE_LABELS[dossier.scan_type]
-                : 'ExitScan'
+                : 'Loep Vertrek'
     const priority =
       dossierSignals.some((signal) => signal.severity === 'critical')
         ? 'hoog'
@@ -512,7 +512,7 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
           surface="ops"
           eyebrow="Config"
           title="Leadinput is niet volledig beschikbaar"
-          description="De ExitScan-workbench werkt wel, maar kan de server-side leadlijst nog niet ophalen."
+          description="De Loep Vertrek-workbench werkt wel, maar kan de server-side leadlijst nog niet ophalen."
         >
           <DashboardPanel surface="ops" title="Ontbrekende configuratie" body={configError} tone="amber" />
         </DashboardSection>
@@ -524,7 +524,7 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
           surface="ops"
           eyebrow="Load"
           title="Leadlijst kon niet worden geladen"
-          description="De ExitScan-workbench blijft bruikbaar, maar recente contactaanvragen konden niet worden opgehaald voor triage."
+          description="De Loep Vertrek-workbench blijft bruikbaar, maar recente contactaanvragen konden niet worden opgehaald voor triage."
         >
           <DashboardPanel surface="ops" title="Backendfout" body={loadError} tone="amber" />
         </DashboardSection>

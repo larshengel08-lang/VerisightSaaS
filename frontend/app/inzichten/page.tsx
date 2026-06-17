@@ -43,7 +43,7 @@ export default function InsightsIndexPage() {
             Scherpere duiding bij vertrek, behoud en opvolging
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-[1.8] text-[var(--muted)]">
-            Hier leest u verdiepende artikelen die helpen scherper te kijken naar vertrek, behoud, prioriteiten en
+            Hier lees je verdiepende artikelen die helpen scherper te kijken naar vertrek, behoud, prioriteiten en
             eerste opvolging. Rustige duiding, compact gebracht en duidelijk verbonden aan dezelfde wereld als
             Loep.
           </p>
@@ -51,7 +51,7 @@ export default function InsightsIndexPage() {
       }
       heroSupport={
         <div className="rounded-[8px] border border-[var(--border)] bg-[var(--surface-low)] p-6">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--meta)]">Waarover u hier leest</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--meta)]">Waarover je hier leest</p>
           <div className="mt-4 space-y-3 text-sm leading-[1.75] text-[var(--muted)]">
             <p>Vertrek begrijpen voordat patronen zich blijven herhalen.</p>
             <p>Behoud eerder zien voordat signalen pas in uitstroom zichtbaar worden.</p>

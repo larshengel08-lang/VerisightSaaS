@@ -578,8 +578,8 @@ export function buildDeliveryAutoSignals({
                 autoState: 'not_ready',
                 summary:
                   scanType === 'retention'
-                    ? 'RetentieScan zit nog onder de veilige first-value drempel van 5 responses.'
-                    : 'ExitScan zit nog onder de veilige first-value drempel van 5 responses.',
+                    ? 'Loep Behoud zit nog onder de veilige first-value drempel van 5 responses.'
+                    : 'Loep Vertrek zit nog onder de veilige first-value drempel van 5 responses.',
               },
     report_delivery:
       incompleteScores > 0

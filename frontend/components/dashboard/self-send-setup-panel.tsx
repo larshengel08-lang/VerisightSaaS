@@ -137,7 +137,7 @@ export function SelfSendSetupPanel({
       <div className="rounded-[24px] border border-amber-200 bg-amber-50 p-5">
         <p className="mb-1 text-sm font-semibold text-amber-800">Campagne nog niet volledig ingericht</p>
         <p className="text-sm text-amber-700">
-          Er is nog geen survey-token aan deze campagne gekoppeld. Loep moet dit instellen voordat u
+          Er is nog geen survey-token aan deze campagne gekoppeld. Loep moet dit instellen voordat je
           de uitnodigingslink kunt kopiëren. Neem contact op via{' '}
           <a href="mailto:hallo@verisight.nl" className="underline">
             hallo@verisight.nl
@@ -172,7 +172,7 @@ export function SelfSendSetupPanel({
           <p className="text-sm text-slate-600">Afgesproken scan voor deze organisatie:</p>
           <div className="rounded-2xl border border-blue-600 bg-blue-50 p-4">
             <p className="text-sm font-semibold text-blue-900">{scanLabel}</p>
-            <p className="mt-1 text-xs text-blue-700">Actief voor uw organisatie.</p>
+            <p className="mt-1 text-xs text-blue-700">Actief voor je organisatie.</p>
           </div>
         </div>
       ) : null}

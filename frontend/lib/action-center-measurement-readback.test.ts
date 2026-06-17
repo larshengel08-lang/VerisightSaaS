@@ -39,7 +39,7 @@ function buildItem(overrides: Record<string, unknown> = {}) {
     title: 'Exit route',
     summary: 'Bounded exit route',
     reason: 'Welke bounded vervolgstap vraagt deze route nu?',
-    sourceLabel: 'ExitScan',
+    sourceLabel: 'Loep Vertrek',
     teamId: 'operations',
     teamLabel: 'Operations',
     ownerId: 'manager-1',
@@ -55,7 +55,7 @@ function buildItem(overrides: Record<string, unknown> = {}) {
     reviewOutcome: 'bijstellen',
     reviewDateLabel: '10 mei',
     reviewRhythm: 'Maandelijks',
-    signalLabel: 'ExitScan - Operations',
+    signalLabel: 'Loep Vertrek - Operations',
     signalBody: 'De route blijft binnen exit governance.',
     nextStep: 'Plan het volgende reviewmoment.',
     peopleCount: 22,
@@ -91,7 +91,7 @@ function makeReadbackFixture() {
     buildItem(),
     buildItem({
       id: 'route-retention-1',
-      sourceLabel: 'RetentieScan',
+      sourceLabel: 'Loep Behoud',
       teamLabel: 'Support',
       status: 'geblokkeerd',
       reviewDate: '2026-05-01',
@@ -141,7 +141,7 @@ function makeReadbackFixture() {
       {
         routeId: 'route-retention-1',
         routeFamily: 'retention',
-        sourceLabel: 'RetentieScan',
+        sourceLabel: 'Loep Behoud',
         scopeLabel: 'Support',
         managerOwner: 'Manager Support',
         primarySignal: 'blocked_action',
@@ -184,7 +184,7 @@ describe('buildActionCenterMeasurementReadback', () => {
     expect(readback.buyerSafeVocabulary).not.toContain('impact achieved')
   })
 
-  it('keeps ExitScan completed-action readback non-causal', () => {
+  it('keeps Loep Vertrek completed-action readback non-causal', () => {
     const readback = buildActionCenterMeasurementReadback(makeReadbackFixture())
 
     expect(readback.layers.routeFamilyLevel.exit.closeoutQuestion).toContain('what was chosen')
@@ -194,7 +194,7 @@ describe('buildActionCenterMeasurementReadback', () => {
     ).toContain('route resolution')
   })
 
-  it('keeps RetentieScan repeated-no-progress readback out of MTO-light framing', () => {
+  it('keeps Loep Behoud repeated-no-progress readback out of MTO-light framing', () => {
     const readback = buildActionCenterMeasurementReadback(makeReadbackFixture())
 
     expect(readback.layers.routeFamilyLevel.retention.confidenceFraming).toContain('stay-intent')

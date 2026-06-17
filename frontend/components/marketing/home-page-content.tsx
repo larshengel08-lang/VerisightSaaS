@@ -34,7 +34,7 @@ const displayFont = "var(--font-inter), -apple-system, BlinkMacSystemFont, 'Sego
 const bodyFont = "var(--font-ibm-plex-sans), system-ui, sans-serif"
 
 const heroTrustItems = [
-  'Rapport \u2022 Managementbespreking \u2022 Eerste keuze',
+  'Rapportage op groepsniveau \u2022 Managementbespreking inbegrepen \u2022 AVG-conform',
 ]
 
 const suiteFlowPoints = [
@@ -75,24 +75,24 @@ const suitePriorityRows = [
 const routeCards = [
   {
     index: '01',
+    eyebrow: 'Behoud onder druk',
+    title: 'Loep Behoud',
+    body: 'Wij laten zien waar behoud onder druk staat, voordat uitstroom zichtbaar wordt. Rapport en bespreking inbegrepen.',
+    href: '/producten/retentiescan',
+    accent: SURFACE.teal,
+  },
+  {
+    index: '02',
     eyebrow: 'Vertrek begrijpen',
-    title: 'ExitScan',
+    title: 'Loep Vertrek',
     body: 'Wij brengen vertrekpatronen scherp in beeld en leveren een rapport met prioriteiten. Begeleide bespreking inbegrepen.',
     href: '/producten/exitscan',
     accent: SURFACE.amber,
   },
   {
-    index: '02',
-    eyebrow: 'Behoud onder druk',
-    title: 'RetentieScan',
-    body: 'Wij laten zien waar behoud onder druk staat — voordat uitstroom zichtbaar wordt. Rapport en bespreking inbegrepen.',
-    href: '/producten/retentiescan',
-    accent: SURFACE.teal,
-  },
-  {
     index: '03',
     eyebrow: 'Nieuwe medewerkers laten landen',
-    title: 'Onboarding 30-60-90',
+    title: 'Loep Start',
     body: 'Wij meten vroeg hoe nieuwe medewerkers landen. Helder groepsbeeld, geen individuele beoordeling.',
     href: '/producten/onboarding-30-60-90',
     accent: '#9b5f1e',
@@ -122,12 +122,12 @@ const managementFlowSteps = [
     step: '1',
     label: 'Luisteren',
     title: 'Medewerkers vullen de scan in',
-    body: 'Anoniem en op groepsniveau. U levert de doelgroep aan; wij sturen de scan uit en bewaken de uitvoering — zonder toolbeheer voor uw team.',
+    body: 'Anoniem en op groepsniveau. Je levert de doelgroep aan; wij sturen de scan uit en bewaken de uitvoering, zonder toolbeheer voor je team.',
   },
   {
     step: '2',
     label: 'Begrijpen',
-    title: 'Loep levert een bestuurlijke read',
+    title: 'Loep levert een rapport waar je mee aan tafel kunt',
     body: 'We duiden de belangrijkste patronen en leveren een managementrapport met prioriteiten en de eerste managementvraag. In weken, niet maanden.',
   },
   {
@@ -580,7 +580,7 @@ function ManagementFlowSection() {
                 maxWidth: '54rem',
               }}
             >
-              Loep meet niet alleen — Loep begeleidt management naar één eerste keuze.
+              Loep meet niet alleen. Loep begeleidt management naar één eerste keuze.
             </p>
           </Reveal>
         </div>
@@ -704,17 +704,8 @@ function ManagementFlowSection() {
 }
 
 function HeroSection() {
-  const primaryHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'homepage_hero_primary' })
-  const secondaryHref = '#scans'
-  const reportRows = [
-    ['Groei en ontwikkeling', '82%', SURFACE.amber],
-    ['Werkdruk in operatie', '54%', SURFACE.text],
-    ['Loopbaanperspectief', '28%', SURFACE.border],
-  ] as const
-  const actionItems = [
-    ['Prioriteit: Groei en ontwikkeling', 'Sterkste driver in vertrekpatroon Q3', 'Eigenaar', SURFACE.amber, '#ffdad6'],
-    ['Eerste stap: teamgesprek plannen', 'Reviewmoment: over 6 weken', 'Vastgesteld', SURFACE.tealSoft, SURFACE.text],
-  ] as const
+  const primaryHref = buildContactHref({ routeInterest: 'retentiescan', ctaSource: 'homepage_hero_primary' })
+  const secondaryHref = '/producten/retentiescan'
 
   return (
     <section
@@ -729,6 +720,19 @@ function HeroSection() {
         <div>
           <div style={{ maxWidth: 760, margin: '0 auto', textAlign: 'center' }}>
               <div className="marketing-home-hero-reveal-1" style={{ marginBottom: 18 }}>
+              <p
+                style={{
+                  color: SURFACE.amber,
+                  fontFamily: bodyFont,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: '.18em',
+                  marginBottom: 16,
+                  textTransform: 'uppercase',
+                }}
+              >
+                Begeleide retentie-analyse
+              </p>
               <h1
                 style={{
                   color: SURFACE.ink,
@@ -744,7 +748,7 @@ function HeroSection() {
                   textWrap: 'balance',
                 }}
               >
-                U ziet dat mensen vertrekken, afhaken of moeilijk landen. Maar niet altijd welke patronen erachter zitten.
+                Wacht niet tot vertrek het signaal is.
               </h1>
               </div>
 
@@ -759,7 +763,7 @@ function HeroSection() {
                   textAlign: 'center',
                 }}
               >
-                Het rapport is het product. Loep levert een bestuurlijke read en begeleidt HR en management naar één eerste gerichte keuze — geen zelfbedieninstrument, maar een begeleide analyse.
+                Loep brengt vroeg in beeld waar behoud onder druk staat, welke patronen aandacht vragen en waar je als organisatie als eerste kunt bijsturen.
               </p>
 
               <div
@@ -780,7 +784,7 @@ function HeroSection() {
                   textDecoration: 'none',
                 }}
               >
-                Bespreek uw vraagstuk
+                Bespreek je vraagstuk
               </Link>
               <Link
                 href={secondaryHref}
@@ -797,7 +801,7 @@ function HeroSection() {
                   textDecoration: 'none',
                 }}
               >
-                Bekijk welke scan past
+                Bekijk de Loep Behoud
               </Link>
               </div>
 
@@ -848,204 +852,75 @@ function HeroSection() {
 
             <div
               className="marketing-home-hero-reveal-visual select-none"
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: 20,
-                maxWidth: 900,
-                margin: '52px auto 0',
-              }}
+              style={{ margin: '52px auto 0', maxWidth: 480, position: 'relative', width: '100%' }}
             >
-            <div
-              style={{
-                background: '#fef8f1',
-                border: `1px solid ${SURFACE.borderSoft}`,
-                borderRadius: 4,
-                boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.02)',
-                overflow: 'hidden',
-                padding: '30px 32px',
-                width: '100%',
-                height: 'auto',
-                zIndex: 20,
-              }}
-            >
-              <div style={{ borderBottom: `1px solid ${SURFACE.border}`, marginBottom: 22, paddingBottom: 14 }}>
-                <h3
-                  style={{
-                    color: SURFACE.ink,
-                    fontFamily: displayFont,
-                    fontSize: 'clamp(2.2rem, 2.7vw, 3rem)',
-                    fontWeight: 600,
-                    letterSpacing: '-0.035em',
-                    lineHeight: 0.98,
-                    marginBottom: 6,
-                    textWrap: 'balance',
-                  }}
-                >
-                  Exit-analyse Q3
-                </h3>
-                <p style={{ color: SURFACE.muted, fontSize: 12.5, lineHeight: 1.5 }}>
-                  Redenen van Vertrek - Senior Staff
-                </p>
-              </div>
-
-              <div style={{ display: 'grid', gap: 14 }}>
-                {reportRows.map(([label, value, color]) => (
-                  <div key={label} style={{ alignItems: 'center', display: 'grid', gap: 14, gridTemplateColumns: 'minmax(0,1fr) 132px' }}>
-                    <span style={{ color: SURFACE.ink, fontSize: 14, fontWeight: 500 }}>{label}</span>
-                    <div style={{ background: color === SURFACE.border ? SURFACE.borderSoft : `${color}20`, borderRadius: 999, height: 4, overflow: 'hidden' }}>
-                      <div style={{ background: color, borderRadius: 999, height: '100%', width: value }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <p
+              <div
+                aria-hidden
                 style={{
-                  borderLeft: `2px solid ${SURFACE.amber}`,
-                  color: SURFACE.ink,
-                  fontFamily: displayFont,
-                  fontSize: 18,
-                  fontStyle: 'italic',
-                  lineHeight: 1.65,
-                  marginTop: 32,
-                  paddingLeft: 16,
+                  position: 'absolute',
+                  inset: 0,
+                  transform: 'translate(14px, 14px)',
+                  background: '#16263a',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                }}
+              />
+              <div
+                style={{
+                  background: '#0d1b2a',
+                  border: '1px solid rgba(255,255,255,0.07)',
+                  boxShadow: '0 30px 70px rgba(13, 27, 42, 0.28)',
+                  color: '#f4ece0',
+                  padding: '36px 38px 30px',
+                  position: 'relative',
                 }}
               >
-                &ldquo;Op groepsniveau wordt zichtbaar wat nu prioriteit vraagt en welke eerste keuze logisch is.&rdquo;
-              </p>
-            </div>
-
-            <div
-              style={{
-                background: SURFACE.charcoal,
-                border: '1px solid rgba(255,255,255,0.08)',
-                borderRadius: 18,
-                boxShadow: '0 14px 34px rgba(13, 17, 24, 0.18)',
-                color: '#fff',
-                padding: '24px 28px 22px',
-                width: '100%',
-                zIndex: 30,
-              }}
-            >
-              <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
-                <div style={{ alignItems: 'center', display: 'flex', gap: 14 }}>
-                  <div
-                    style={{
-                      alignItems: 'center',
-                      background: SURFACE.amber,
-                      borderRadius: 10,
-                      boxShadow: '0 10px 22px rgba(185, 87, 31, 0.18)',
-                      display: 'flex',
-                      height: 40,
-                      justifyContent: 'center',
-                      width: 40,
-                    }}
-                  >
-                    <svg width="17" height="21" viewBox="0 0 17 21" fill="none" aria-hidden>
-                      <path
-                        d="M9.911 0.75L3.489 10.197H7.653L6.723 20.25L13.145 10.803H8.981L9.911 0.75Z"
-                        fill="white"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 style={{ color: '#fff', fontSize: 15, fontWeight: 700, letterSpacing: '.02em', marginBottom: 2, textTransform: 'uppercase' }}>
-                      Managementkeuze
-                    </h4>
-                    <p style={{ color: 'rgba(255,255,255,0.42)', fontSize: 10, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase' }}>
-                      Uitkomst van de bespreking
-                    </p>
-                  </div>
+                <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginBottom: 32 }}>
+                  <span style={{ color: '#e8a020', fontFamily: bodyFont, fontSize: 10, fontWeight: 700, letterSpacing: '.22em', textTransform: 'uppercase' }}>
+                    Managementrapport
+                  </span>
+                  <span style={{ color: 'rgba(244,237,226,0.6)', fontFamily: bodyFont, fontSize: 10, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase' }}>
+                    Loep Behoud · Q3
+                  </span>
                 </div>
-                <span
-                  style={{
-                    background: 'rgba(255,255,255,0.08)',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    borderRadius: 6,
-                    color: '#fff',
-                    fontSize: 10,
-                    fontWeight: 700,
-                    padding: '4px 8px',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  Vastgesteld
-                </span>
-              </div>
 
-              <div style={{ display: 'grid', gap: 2, marginBottom: 18 }}>
-                {actionItems.map(([title, body, badge, dotColor, badgeBg]) => (
-                  <div
-                    key={title}
-                    style={{
-                      alignItems: 'center',
-                      borderBottom: '1px solid rgba(255,255,255,0.08)',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      padding: '14px 0',
-                    }}
-                  >
-                    <div style={{ alignItems: 'center', display: 'flex', gap: 12 }}>
-                      <span style={{ background: dotColor, borderRadius: 999, flexShrink: 0, height: 6, width: 6 }} />
-                      <div>
-                        <p style={{ color: '#fff', fontSize: 14, fontWeight: 600, marginBottom: 2 }}>{title}</p>
-                        <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11.5 }}>{body}</p>
-                      </div>
+                <h3 style={{ fontFamily: displayFont, fontSize: 'clamp(2rem, 2.8vw, 2.7rem)', fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1.0, marginBottom: 24, maxWidth: '15ch' }}>
+                  Waar staat behoud onder druk?
+                </h3>
+                <div style={{ background: '#e8a020', height: 2, marginBottom: 28, width: 54 }} />
+
+                <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: 28 }}>
+                  {[
+                    ['Respons', '78%'],
+                    ['Behoudssignaal', '6,4'],
+                    ['Aandachtspunten', '3'],
+                  ].map(([label, value]) => (
+                    <div key={label}>
+                      <div className="dash-number" style={{ fontFamily: displayFont, fontSize: 28, lineHeight: 1, marginBottom: 6 }}>{value}</div>
+                      <div style={{ color: 'rgba(244,237,226,0.55)', fontFamily: bodyFont, fontSize: 9.5, fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase' }}>{label}</div>
                     </div>
-                    <span
-                      style={{
-                        background: 'rgba(255,255,255,0.08)',
-                        border: `1px solid ${badgeBg}30`,
-                        borderRadius: 6,
-                        color: badgeBg,
-                        fontSize: 10,
-                        fontWeight: 700,
-                        padding: '4px 8px',
-                        textTransform: 'uppercase',
-                      }}
-                    >
-                      {badge}
-                    </span>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
 
-              <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', paddingTop: 4 }}>
-                <div style={{ alignItems: 'center', display: 'flex', gap: 12 }}>
-                  <div
-                    style={{
-                      alignItems: 'center',
-                      background: SURFACE.teal,
-                      borderRadius: 999,
-                      color: '#fff',
-                      display: 'flex',
-                      fontSize: 11,
-                      fontWeight: 700,
-                      height: 28,
-                      justifyContent: 'center',
-                      width: 28,
-                    }}
-                  >
-                    JD
-                  </div>
-                  <p style={{ color: 'rgba(255,255,255,0.78)', fontSize: 12 }}>
-                    J. de Wit <span style={{ color: 'rgba(255,255,255,0.38)' }}>· VP Talent</span>
-                  </p>
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', display: 'grid', gap: 0 }}>
+                  {[
+                    ['Werkdruk en herstelruimte', 'Vraagt aandacht', '#e8a020'],
+                    ['Loopbaanperspectief', 'Gemengd beeld', 'rgba(244,237,226,0.5)'],
+                    ['Waardering en erkenning', 'Relatief sterk', '#4db6a8'],
+                  ].map(([label, status, color]) => (
+                    <div key={label} style={{ alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', gap: 14, justifyContent: 'space-between', padding: '13px 0' }}>
+                      <span style={{ fontFamily: bodyFont, fontSize: 13.5 }}>{label}</span>
+                      <span style={{ alignItems: 'center', color, display: 'inline-flex', fontFamily: bodyFont, fontSize: 11.5, fontWeight: 600, gap: 7, whiteSpace: 'nowrap' }}>
+                        <span aria-hidden style={{ background: color, borderRadius: 999, flexShrink: 0, height: 6, width: 6 }} />
+                        {status}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-                <div
-                  style={{
-                    color: 'rgba(255,255,255,0.66)',
-                    fontSize: 11,
-                    fontWeight: 700,
-                    letterSpacing: '.12em',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  Eerste stap vastgesteld
+
+                <div style={{ color: 'rgba(244,237,226,0.42)', fontFamily: bodyFont, fontSize: 9.5, fontWeight: 600, letterSpacing: '.12em', marginTop: 24, textTransform: 'uppercase' }}>
+                  Vertrouwelijk · Rapportage op groepsniveau
                 </div>
               </div>
-            </div>
             </div>
         </div>
       </div>
@@ -1775,7 +1650,7 @@ function RoutesSection() {
                 marginBottom: 0,
               }}
             >
-              Welke scan past het best bij uw situatie?
+              Welke scan past het best bij jouw situatie?
             </h2>
           </Reveal>
         </div>
@@ -1885,7 +1760,7 @@ function RoutesSection() {
 }
 
 const proofPoints = [
-  'Rapportage alleen op groepsniveau — geen individuele data',
+  'Rapportage alleen op groepsniveau, geen individuele data',
   'Minimum aantal respondenten vereist voor veilige rapportage',
   'Geen individuele voorspellingen of profielen',
   'Managementbespreking standaard inbegrepen',
@@ -1934,9 +1809,9 @@ function PositioningCalloutSection() {
               textWrap: 'balance',
             }}
           >
-            Een tool geeft u grafieken. Loep geeft u de conclusie{' '}
+            Een tool geeft je grafieken. Loep geeft je de conclusie{' '}
             <span style={{ color: SURFACE.amberGlow, fontStyle: 'italic', fontWeight: 300 }}>
-              — en het directiegesprek.
+              én het directiegesprek.
             </span>
           </p>
         </Reveal>
@@ -2019,54 +1894,49 @@ function ProofSection() {
                   Methode
                 </p>
                 <p style={{ color: SURFACE.text, fontSize: 14.5, lineHeight: 1.7 }}>
-                  Loep gebruikt gevalideerde vragenlijsten, geduid door HR-specialisten — geen
+                  Loep gebruikt gevalideerde vragenlijsten, geduid door HR-specialisten, geen
                   geautomatiseerde software-output. Elke rapportage is contextgebonden en wordt
                   begeleid met een managementbespreking.
                 </p>
               </div>
             </Reveal>
 
-            <div style={{ marginTop: 28 }}>
-              <Reveal delay={0.3}>
-                <a
-                  href="/examples/voorbeeldrapport_loep.pdf"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    alignItems: 'center',
-                    background: SURFACE.charcoal,
-                    color: '#fff',
-                    display: 'inline-flex',
-                    fontFamily: bodyFont,
-                    fontSize: 15,
-                    fontWeight: 600,
-                    gap: 10,
-                    padding: '16px 24px',
-                    textDecoration: 'none',
-                  }}
-                >
-                  Bekijk een voorbeeldrapport <Arrow />
-                </a>
-              </Reveal>
-            </div>
           </div>
 
-          {/* PLACEHOLDER: visuele rapport-showcase volgt via design tool (buiten scope dit plan). */}
+          {/* Expert-slot. Vervang de "Foto volgt"-placeholder door de <img> (zie TODO) zodra de foto klaar is,
+              en vul [Naam] + rol + regel in. Bestand verwacht onder /public/images/. */}
           <Reveal delay={0.12} from="right">
-            <div
-              style={{
-                alignItems: 'center',
-                background: SURFACE.surfaceSoft,
-                border: `1px dashed ${SURFACE.border}`,
-                borderRadius: 16,
-                display: 'flex',
-                justifyContent: 'center',
-                minHeight: 320,
-                padding: '40px',
-                textAlign: 'center',
-              }}
-            >
-              <div>
+            <div style={{ marginLeft: 'auto', maxWidth: 400, width: '100%' }}>
+              <div
+                style={{
+                  alignItems: 'center',
+                  aspectRatio: '4 / 5',
+                  background: SURFACE.surfaceSoft,
+                  border: `1px solid ${SURFACE.border}`,
+                  display: 'flex',
+                  justifyContent: 'center',
+                  overflow: 'hidden',
+                  width: '100%',
+                }}
+              >
+                {/* TODO: <img src="/images/lars.jpg" alt="Naam, HR-specialist bij Loep" style={{ height: '100%', objectFit: 'cover', width: '100%' }} /> */}
+                <span
+                  style={{
+                    color: SURFACE.muted,
+                    fontFamily: bodyFont,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    letterSpacing: '.16em',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Foto volgt
+                </span>
+              </div>
+              <div style={{ borderLeft: `2px solid ${SURFACE.amber}`, marginTop: 22, paddingLeft: 18 }}>
+                <p style={{ color: SURFACE.ink, fontFamily: displayFont, fontSize: 21, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+                  [Naam]
+                </p>
                 <p
                   style={{
                     color: SURFACE.muted,
@@ -2074,14 +1944,14 @@ function ProofSection() {
                     fontSize: 11,
                     fontWeight: 700,
                     letterSpacing: '.16em',
-                    marginBottom: 10,
+                    margin: '6px 0 14px',
                     textTransform: 'uppercase',
                   }}
                 >
-                  Voorbeeldrapport
+                  HR-specialist · Loep
                 </p>
-                <p style={{ color: SURFACE.text, fontSize: 14.5, lineHeight: 1.6, maxWidth: '26ch' }}>
-                  Visuele showcase volgt. Bekijk nu het volledige voorbeeldrapport via de knop hiernaast.
+                <p style={{ color: SURFACE.text, fontSize: 15.5, lineHeight: 1.65 }}>
+                  &ldquo;Ik voer elke scan zelf uit en bespreek het rapport met je management.&rdquo;
                 </p>
               </div>
             </div>
@@ -2131,7 +2001,7 @@ function ContactSection() {
                 textWrap: 'balance',
               }}
             >
-              Weet u nog niet welke scan past?
+              Weet je nog niet welke scan past?
             </h2>
 
             <p
@@ -2143,7 +2013,7 @@ function ContactSection() {
                 maxWidth: '48rem',
               }}
             >
-              Bespreek uw situatie. We bekijken samen welk vraagstuk nu speelt — vertrek, behoud of onboarding — en welke scan daar het beste bij past.
+              Bespreek je situatie. We bekijken samen welk vraagstuk nu speelt (vertrek, behoud of onboarding) en welke scan daar het beste bij past.
             </p>
 
             <div
@@ -2167,7 +2037,7 @@ function ContactSection() {
                   textDecoration: 'none',
                 }}
               >
-                Bespreek uw situatie
+                Bespreek je situatie
               </Link>
             </div>
           </div>

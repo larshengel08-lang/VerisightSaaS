@@ -46,12 +46,12 @@ import { GET, POST } from './route'
 const mockItem = {
   id: 'cmp-exit-1::org-1::department::operations',
   orgId: 'org-1',
-  title: 'ExitScan: Operations',
+  title: 'Loep Vertrek: Operations',
   teamLabel: 'Operations',
   reviewDate: '2026-05-28',
   reviewReason: 'Toets of de eerste managementactie effect laat zien.',
   status: 'reviewbaar',
-  sourceLabel: 'ExitScan',
+  sourceLabel: 'Loep Vertrek',
   coreSemantics: {
     route: {
       routeId: 'cmp-exit-1::org-1::department::operations',
@@ -188,7 +188,7 @@ describe('action center review invite route', () => {
         return createMaybeSingleQuery({
           data: {
             id: 'cmp-exit-1',
-            name: 'ExitScan Q2',
+            name: 'Loep Vertrek Q2',
             scan_type: 'exit',
             organization_id: 'org-1',
           },
@@ -380,7 +380,7 @@ describe('action center review invite route', () => {
 
     expect(response.status).toBe(200)
     const payload = await response.json()
-    expect(payload.subject).toBe('Reviewmoment ExitScan Q2 / Operations')
+    expect(payload.subject).toBe('Reviewmoment Loep Vertrek Q2 / Operations')
     expect(payload.deliveryModel).toEqual({
       channel: 'email-ics',
       organizerMode: 'organizer',
@@ -430,7 +430,7 @@ describe('action center review invite route', () => {
       revision: 2,
       method: 'REQUEST',
       inviteDraft: {
-        subject: 'Reviewmoment ExitScan Q2 / Operations',
+        subject: 'Reviewmoment Loep Vertrek Q2 / Operations',
         emailHtml: expect.stringContaining('Action Center'),
         reviewDate: '2026-05-28',
         recipientEmail: 'mila@northwind.example',
@@ -503,7 +503,7 @@ describe('action center review invite route', () => {
         return createMaybeSingleQuery({
           data: {
             id: 'cmp-exit-1',
-            name: 'ExitScan Q2',
+            name: 'Loep Vertrek Q2',
             scan_type: 'exit',
             organization_id: 'org-1',
           },
@@ -575,7 +575,7 @@ describe('action center review invite route', () => {
         return createMaybeSingleQuery({
           data: {
             id: 'cmp-exit-1',
-            name: 'ExitScan Q2',
+            name: 'Loep Vertrek Q2',
             scan_type: 'exit',
             organization_id: 'org-1',
           },
@@ -645,7 +645,7 @@ describe('action center review invite route', () => {
         return createMaybeSingleQuery({
           data: {
             id: 'cmp-exit-1',
-            name: 'ExitScan Q2',
+            name: 'Loep Vertrek Q2',
             scan_type: 'exit',
             organization_id: 'org-1',
           },
@@ -714,7 +714,7 @@ describe('action center review invite route', () => {
         return createMaybeSingleQuery({
           data: {
             id: 'cmp-exit-1',
-            name: 'ExitScan Q2',
+            name: 'Loep Vertrek Q2',
             scan_type: 'exit',
             organization_id: 'org-1',
           },
@@ -786,7 +786,7 @@ describe('action center review invite route', () => {
         return createMaybeSingleQuery({
           data: {
             id: 'cmp-exit-1',
-            name: 'ExitScan Q2',
+            name: 'Loep Vertrek Q2',
             scan_type: 'exit',
             organization_id: 'org-1',
           },
@@ -860,7 +860,7 @@ describe('action center review invite route', () => {
         return createMaybeSingleQuery({
           data: {
             id: 'cmp-exit-1',
-            name: 'ExitScan Q2',
+            name: 'Loep Vertrek Q2',
             scan_type: 'exit',
             organization_id: 'org-1',
           },
@@ -929,7 +929,7 @@ describe('action center review invite route', () => {
         return createMaybeSingleQuery({
           data: {
             id: 'cmp-exit-1',
-            name: 'ExitScan Q2',
+            name: 'Loep Vertrek Q2',
             scan_type: 'exit',
             organization_id: 'org-2',
           },
@@ -979,7 +979,7 @@ describe('action center review invite route', () => {
         return createMaybeSingleQuery({
           data: {
             id: 'cmp-exit-1',
-            name: 'ExitScan Q2',
+            name: 'Loep Vertrek Q2',
             scan_type: 'exit',
             organization_id: 'org-1',
           },
@@ -1043,7 +1043,7 @@ describe('action center review invite route', () => {
         return createMaybeSingleQuery({
           data: {
             id: 'cmp-exit-1',
-            name: 'ExitScan Q2',
+            name: 'Loep Vertrek Q2',
             scan_type: 'exit',
             organization_id: 'org-1',
           },
@@ -1198,7 +1198,7 @@ describe('action center review invite route', () => {
         return createMaybeSingleQuery({
           data: {
             id: 'cmp-exit-1',
-            name: 'ExitScan Q2',
+            name: 'Loep Vertrek Q2',
             scan_type: 'exit',
             organization_id: 'org-1',
           },

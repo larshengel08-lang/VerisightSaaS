@@ -49,11 +49,11 @@ function getOverdueDayDiff(reviewDate: string | null, now: Date) {
 function getConstitutionRouteFamilyLabel(scanType: ActionCenterRouteDefaultsKnownScanType | string | null | undefined) {
   const routeDefaults = getActionCenterEnabledRouteDefaults(scanType)
   if (routeDefaults?.scanType === 'retention') {
-    return 'RetentieScan'
+    return 'Loep Behoud'
   }
 
   if (routeDefaults?.scanType === 'exit') {
-    return 'ExitScan'
+    return 'Loep Vertrek'
   }
 
   return null

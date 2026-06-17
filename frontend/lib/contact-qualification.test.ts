@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { buildContactQualificationVisibilitySummary } from '@/lib/contact-qualification'
 
 describe('contact qualification visibility summary', () => {
-  it('keeps core-default leads pointed at ExitScan', () => {
+  it('keeps core-default leads pointed at Loep Vertrek', () => {
     const summary = buildContactQualificationVisibilitySummary({
       routeInterest: 'exitscan',
       desiredTiming: 'orienterend',
@@ -10,11 +10,11 @@ describe('contact qualification visibility summary', () => {
     })
 
     expect(summary.tone).toBe('blue')
-    expect(summary.recommendationLabel).toContain('ExitScan')
-    expect(summary.nextAction.toLowerCase()).toContain('exitscan')
+    expect(summary.recommendationLabel).toContain('Loep Vertrek')
+    expect(summary.nextAction.toLowerCase()).toContain('loep vertrek')
   })
 
-  it('surfaces RetentieScan as the only primary exception when the question clearly fits', () => {
+  it('surfaces Loep Behoud as the only primary exception when the question clearly fits', () => {
     const summary = buildContactQualificationVisibilitySummary({
       routeInterest: 'retentiescan',
       desiredTiming: 'deze-maand',
@@ -22,8 +22,8 @@ describe('contact qualification visibility summary', () => {
     })
 
     expect(summary.tone).toBe('emerald')
-    expect(summary.headline).toContain('RetentieScan')
-    expect(summary.recommendationLabel).toContain('RetentieScan')
+    expect(summary.headline).toContain('Loep Behoud')
+    expect(summary.recommendationLabel).toContain('Loep Behoud')
   })
 
   it('surfaces Loep Culture Assessment for broad culture and engagement baseline questions', () => {
@@ -49,7 +49,7 @@ describe('contact qualification visibility summary', () => {
 
     expect(summary.tone).toBe('amber')
     expect(summary.headline.toLowerCase()).toContain('bounded peer')
-    expect(summary.routeReviewLabel).toContain('Onboarding 30-60-90')
+    expect(summary.routeReviewLabel).toContain('Loep Start')
     expect(summary.nextAction.toLowerCase()).toContain('checkpoint')
   })
 

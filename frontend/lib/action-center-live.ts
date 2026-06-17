@@ -53,19 +53,19 @@ const SCAN_DEFAULTS: Record<
   exit: {
     managementQuestion: 'Welk vertrekpatroon vraagt nu als eerste een expliciet managementgesprek, eigenaar en bounded vervolg?',
     fallbackStep: 'Leg de eerste managementreactie, eigenaar en reviewdatum vast op basis van de huidige vertrekduiding.',
-    fallbackSummary: 'ExitScan opent hier de follow-through laag: welke vertrekduiding telt nu, wie pakt die op en wanneer komt dit terug?',
+    fallbackSummary: 'Loep Vertrek opent hier de follow-through laag: welke vertrekduiding telt nu, wie pakt die op en wanneer komt dit terug?',
     fallbackRhythm: 'Maandelijks',
   },
   retention: {
     managementQuestion: 'Welk behoudssignaal verdient nu als eerste een zichtbare behoudsactie en welke eigenaar trekt die follow-through?',
     fallbackStep: 'Kies de eerste behoudsactie, expliciteer de eigenaar en plan een bounded reviewmoment.',
-    fallbackSummary: 'RetentieScan vertaalt hier signalen naar een eerste behoudsactie met eigenaar en reviewritme.',
+    fallbackSummary: 'Loep Behoud vertaalt hier signalen naar een eerste behoudsactie met eigenaar en reviewritme.',
     fallbackRhythm: 'Maandelijks',
   },
   onboarding: {
     managementQuestion: 'Welke vroege landingsfrictie vraagt nu als eerste een checkpoint-correctie en wie bevestigt het volgende reviewmoment?',
     fallbackStep: 'Kies de eerstvolgende checkpoint-correctie en leg vast wie de stabiele landing bewaakt.',
-    fallbackSummary: 'Onboarding 30-60-90 gebruikt Action Center hier voor eigenaarschap, checkpoint-correctie en expliciete reviewmomenten.',
+    fallbackSummary: 'Loep Start gebruikt Action Center hier voor eigenaarschap, checkpoint-correctie en expliciete reviewmomenten.',
     fallbackRhythm: 'Tweewekelijks',
   },
   pulse: {

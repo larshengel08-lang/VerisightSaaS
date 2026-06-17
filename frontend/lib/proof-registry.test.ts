@@ -12,7 +12,7 @@ describe('proof registry helpers', () => {
           id: 'proof_1',
           orgId: null,
           campaignId: null,
-          route: 'ExitScan',
+          route: 'Loep Vertrek',
           proofState: 'sales_usable',
           approvalState: 'claim_check',
           summary: 'test',

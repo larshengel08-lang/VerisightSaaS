@@ -188,7 +188,7 @@ export function buildRetentionDashboardViewModel(args: {
       ? `Dit beeld vraagt bestuurlijke weging omdat ${topFactorLabel.toLowerCase()} samenvalt met signalen die teamcontinuiteit, leiding en uitvoerbaarheid kunnen raken.`
       : `Dit blijft vooral een vroegsignaal, maar wel een vroegsignaal dat sponsor, MT en HR moeten wegen voordat het breder oploopt.`
   const boardroomWatchout =
-    'Lees RetentieScan niet als individuele risicolijst, predictor of performance-oordeel. Het is een verification-first groepssignaal dat sneller helpt kiezen waar behoud nu aandacht vraagt.'
+    'Lees Loep Behoud niet als individuele risicolijst, predictor of performance-oordeel. Het is een verification-first groepssignaal dat sneller helpt kiezen waar behoud nu aandacht vraagt.'
 
   if (!args.hasMinDisplay) {
     return {
@@ -216,7 +216,7 @@ export function buildRetentionDashboardViewModel(args: {
         'Zodra genoeg responses binnen zijn helpt deze laag om van retentiesignaal naar verificatie en opvolging te gaan.',
       followThroughTitle: 'Van rapport naar managementactie',
       followThroughIntro:
-        'De vaste opvolgroute verschijnt zodra RetentieScan veilig genoeg is om als groepsinput voor management te worden gebruikt.',
+        'De vaste opvolgroute verschijnt zodra Loep Behoud veilig genoeg is om als groepsinput voor management te worden gebruikt.',
       followThroughCards: [],
     }
   }
@@ -351,7 +351,7 @@ export function buildRetentionDashboardViewModel(args: {
       {
         title: 'Eerste eigenaar',
         value: firstOwner,
-        body: 'Beleg meteen wie verificatie en eerste opvolging trekt, zodat RetentieScan niet blijft hangen in alleen signalering.',
+        body: 'Beleg meteen wie verificatie en eerste opvolging trekt, zodat Loep Behoud niet blijft hangen in alleen signalering.',
         tone: 'emerald',
       },
       {
@@ -413,10 +413,10 @@ export function buildRetentionDashboardViewModel(args: {
       tone: signalProfile === 'scherp_aandachtssignaal' ? 'amber' : 'emerald',
     },
     focusSectionIntro:
-      'Gebruik de vragen en playbooks hieronder om RetentieScan niet bij signalering te laten stoppen, maar eerst naar keuze en eigenaar te brengen en pas daarna naar gerichte actie.',
+      'Gebruik de vragen en playbooks hieronder om Loep Behoud niet bij signalering te laten stoppen, maar eerst naar keuze en eigenaar te brengen en pas daarna naar gerichte actie.',
     followThroughTitle: 'Van retentiesignaal naar managementactie',
     followThroughIntro:
-      'Gebruik deze route om RetentieScan te laten landen in een eerste managementsessie met verificatie, eigenaar, interventie en reviewmoment in dezelfde lijn.',
+      'Gebruik deze route om Loep Behoud te laten landen in een eerste managementsessie met verificatie, eigenaar, interventie en reviewmoment in dezelfde lijn.',
     followThroughCards: [
       {
         title: 'Prioriteit nu',

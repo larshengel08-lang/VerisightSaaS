@@ -51,8 +51,8 @@ describe('Portfolio architecture marketing model', () => {
   })
 })
 
-describe('ExitScan positioning copy', () => {
-  it('keeps ExitScan framed as vertrekduiding instead of a hard diagnosis', () => {
+describe('Loep Vertrek positioning copy', () => {
+  it('keeps Loep Vertrek framed as vertrekduiding instead of a hard diagnosis', () => {
     const exitProduct = LIVE_MARKETING_PRODUCTS.find((product) => product.slug === 'exitscan')
 
     expect(exitProduct).toBeTruthy()
@@ -68,9 +68,9 @@ describe('ExitScan positioning copy', () => {
     expect(exitScanDefinition.signalHelp.toLowerCase()).toContain('managementsamenvatting')
   })
 
-  it('keeps the portfolio distinction between ExitScan and RetentieScan explicit', () => {
-    const exitRow = productOverviewComparisonRows.find((row) => row[0] === 'ExitScan')
-    const differenceFaq = faqs.find(([question]) => question === 'Wat is het verschil tussen ExitScan en RetentieScan?')
+  it('keeps the portfolio distinction between Loep Vertrek and Loep Behoud explicit', () => {
+    const exitRow = productOverviewComparisonRows.find((row) => row[0] === 'Loep Vertrek')
+    const differenceFaq = faqs.find(([question]) => question === 'Wat is het verschil tussen Loep Vertrek en Loep Behoud?')
 
     expect(exitRow?.[2].toLowerCase()).toContain('vertrekbeeld')
     expect(exitRow?.[2].toLowerCase()).toContain('werkfactoren')
@@ -87,14 +87,14 @@ describe('ExitScan positioning copy', () => {
     expect(trustItems.some((item) => item.toLowerCase().includes('nederlandse dienst'))).toBe(true)
   })
 
-  it('keeps ExitScan framed as the default first route in commercial conversations', () => {
+  it('keeps Loep Vertrek framed as the default first route in commercial conversations', () => {
     const freePilotFaq = pricingFaqs.find(([question]) => question === 'Waarom starten jullie niet met een gratis pilot?')
-    const exitBaselineCard = pricingCards.find((card) => card.eyebrow === 'ExitScan Baseline')
-    const exitLifecycle = pricingLifecycleLadder.find((route) => route.route === 'ExitScan')
+    const exitBaselineCard = pricingCards.find((card) => card.eyebrow === 'Loep Vertrek Baseline')
+    const exitLifecycle = pricingLifecycleLadder.find((route) => route.route === 'Loep Vertrek')
 
     expect(exitBaselineCard?.price).toBe('vanaf €4.500')
     expect(exitLifecycle?.firstSale.toLowerCase()).toContain('standaard eerste koop')
-    expect(exitLifecycle?.expansion.toLowerCase()).toContain('retentiescan baseline')
+    expect(exitLifecycle?.expansion.toLowerCase()).toContain('loep behoud baseline')
     expect(freePilotFaq?.[1].toLowerCase()).toContain('betaald baseline-traject')
     expect(freePilotFaq?.[1].toLowerCase()).toContain('echte urgentie')
   })
@@ -130,8 +130,8 @@ describe('ExitScan positioning copy', () => {
   })
 })
 
-describe('RetentieScan positioning copy', () => {
-  it('keeps RetentieScan framed as a group-level early signal instead of an MTO or predictor', () => {
+describe('Loep Behoud positioning copy', () => {
+  it('keeps Loep Behoud framed as a group-level early signal instead of an MTO or predictor', () => {
     const retentionProduct = LIVE_MARKETING_PRODUCTS.find((product) => product.slug === 'retentiescan')
 
     expect(retentionProduct).toBeTruthy()
@@ -151,12 +151,12 @@ describe('RetentieScan positioning copy', () => {
   })
 
   it('keeps retention faq copy explicit about group insight and non-predictive use', () => {
-    const mtoFaq = faqs.find(([question]) => question === 'Is RetentieScan gewoon een MTO?')
+    const mtoFaq = faqs.find(([question]) => question === 'Is Loep Behoud gewoon een MTO?')
     const scoreFaq = faqs.find(([question]) => question === 'Ziet management individuele retention-scores?')
-    const predictorFaq = faqs.find(([question]) => question === 'Is RetentieScan een gevalideerde vertrekvoorspeller?')
-    const pricingFaq = pricingFaqs.find(([question]) => question === 'Waarom is RetentieScan niet goedkoper dan ExitScan?')
+    const predictorFaq = faqs.find(([question]) => question === 'Is Loep Behoud een gevalideerde vertrekvoorspeller?')
+    const pricingFaq = pricingFaqs.find(([question]) => question === 'Waarom is Loep Behoud niet goedkoper dan Loep Vertrek?')
     const rhythmFaq = pricingFaqs.find(
-      ([question]) => question === 'Hoe verhouden RetentieScan ritmeroute en compacte vervolgmeting zich tot elkaar?',
+      ([question]) => question === 'Hoe verhouden Loep Behoud ritmeroute en compacte vervolgmeting zich tot elkaar?',
     )
 
     expect(mtoFaq?.[1].toLowerCase()).toContain('smaller en scherper')
@@ -169,11 +169,11 @@ describe('RetentieScan positioning copy', () => {
     expect(rhythmFaq?.[1].toLowerCase()).toContain('vaste buyer-facing vervolgvorm')
   })
 
-  it('keeps RetentieScan repeat and ExitScan expansion paths explicit', () => {
-    const retentionLifecycle = pricingLifecycleLadder.find((route) => route.route === 'RetentieScan')
+  it('keeps Loep Behoud repeat and Loep Vertrek expansion paths explicit', () => {
+    const retentionLifecycle = pricingLifecycleLadder.find((route) => route.route === 'Loep Behoud')
 
     expect(retentionLifecycle?.firstSale.toLowerCase()).toContain('actieve behoudsvraag')
     expect(retentionLifecycle?.nextStep.toLowerCase()).toContain('vaste buyer-facing vervolgvorm')
-    expect(retentionLifecycle?.expansion.toLowerCase()).toContain('exitscan baseline')
+    expect(retentionLifecycle?.expansion.toLowerCase()).toContain('loep vertrek baseline')
   })
 })

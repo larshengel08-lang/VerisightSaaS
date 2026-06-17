@@ -130,7 +130,7 @@ describe('action center review oversight contract', () => {
         {
           id: 'route-upcoming',
           title: 'Upcoming',
-          sourceLabel: 'ExitScan',
+          sourceLabel: 'Loep Vertrek',
           teamLabel: 'Operations',
           status: 'reviewbaar',
           reviewDate: '2026-05-20',
@@ -147,7 +147,7 @@ describe('action center review oversight contract', () => {
         {
           id: 'route-stale',
           title: 'Stale',
-          sourceLabel: 'RetentieScan',
+          sourceLabel: 'Loep Behoud',
           teamLabel: 'Support',
           status: 'reviewbaar',
           reviewDate: null,
@@ -234,7 +234,7 @@ describe('action center review oversight contract', () => {
     expect(summary.attentionItems).toMatchObject([
       {
         routeId: 'route-retention',
-        sourceLabel: 'RetentieScan',
+        sourceLabel: 'Loep Behoud',
       },
     ])
   })

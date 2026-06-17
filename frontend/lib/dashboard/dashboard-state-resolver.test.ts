@@ -6,7 +6,7 @@ function baseInput(overrides: Partial<DashboardStateInput> = {}): DashboardState
   return {
     campaign: {
       id: 'camp-1',
-      name: 'ExitScan Q2 2026',
+      name: 'Loep Vertrek Q2 2026',
       scanType: 'exit',
       isActive: true,
       totalInvited: 20,
@@ -36,7 +36,7 @@ describe('resolveDashboardState', () => {
   it('State 1 — setup when invites are not launched yet', () => {
     const state = resolveDashboardState(baseInput({ launchConfirmedAt: null }))
     expect(state.kind).toBe('setup')
-    expect(state.primaryMessage).toBe('Uw campagne staat klaar')
+    expect(state.primaryMessage).toBe('Je campagne staat klaar')
     expect(state.ctaLabel).toBe('Campagne klaarzetten →')
     expect(state.ctaHref).toBe('/campaigns/camp-1/setup')
   })
@@ -142,7 +142,7 @@ describe('resolveDashboardState', () => {
       }),
     )
     expect(state.kind).toBe('report_ready')
-    expect(state.primaryMessage).toBe('Uw rapport is beschikbaar')
+    expect(state.primaryMessage).toBe('Je rapport is beschikbaar')
     expect(state.ctaLabel).toBe('Open rapport')
     expect(state.ctaHref).toBe('/campaigns/camp-1')
   })

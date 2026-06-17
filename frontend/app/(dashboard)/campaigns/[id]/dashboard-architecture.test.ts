@@ -145,7 +145,7 @@ describe('dashboard architecture', () => {
 })
 
 describe('score interpretation titles', () => {
-  it('keeps frictiescore language only on ExitScan', () => {
+  it('keeps frictiescore language only on Loep Vertrek', () => {
     expect(getScoreInterpretationTitle('exit')).toContain('Frictiescore')
     expect(getScoreInterpretationTitle('retention')).not.toContain('Frictiescore')
     expect(getScoreInterpretationTitle('retention')).toContain('Retentiesignaal')

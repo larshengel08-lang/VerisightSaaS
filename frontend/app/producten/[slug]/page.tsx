@@ -205,10 +205,10 @@ function CultureAssessmentPage() {
             <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_360px] items-start">
               <div>
                 <h1 style={{ fontFamily: FF, fontWeight: 800, fontSize: 'clamp(42px,5.5vw,76px)', lineHeight: .97, letterSpacing: '-.032em', color: T.ink, maxWidth: '14ch' }}>
-                  Wij brengen cultuur en engagement in beeld. U weet wat bestuurlijk aandacht vraagt.
+                  Wij brengen cultuur en engagement in beeld. Jij weet wat bestuurlijk aandacht vraagt.
                 </h1>
                 <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '48ch', margin: '26px 0 36px' }}>
-                  Loep voert de jaarlijkse cultuur- en engagementbaseline uit, analyseert de uitkomsten en levert een board-read met eerste aandachtspunten. Geen survey-platform — een begeleid traject.
+                  Loep voert de jaarlijkse cultuur- en engagementbaseline uit, analyseert de uitkomsten en levert een board-read met eerste aandachtspunten. Geen survey-platform, maar een begeleid traject.
                 </p>
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' as const }}>
                   <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 600, padding: '12px 28px', color: '#fff', background: T.violet }}>
@@ -246,10 +246,10 @@ function CultureAssessmentPage() {
               <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase' as const, color: T.violet, marginBottom: 16 }}>Wanneer Loep Cultuurbeeld nu de juiste stap is</div>
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 {[
-                  'De vraag gaat organisatiebreed over cultuur, engagement of werkbeleving — niet over één team of één factor',
+                  'De vraag gaat organisatiebreed over cultuur, engagement of werkbeleving, niet over één team of één factor',
                   'Directie of board wil een eerste patroonlezing voordat er interventies worden gestart',
                   'Er is geen actueel breed medewerkeronderzoek en de vraag is: waar moeten we het gesprek beginnen?',
-                  'U wil snel een eerste beeld zonder een groot MTO-traject op te starten',
+                  'Je wil snel een eerste beeld zonder een groot MTO-traject op te starten',
                 ].map((text) => (
                   <div key={text} style={{ alignItems: 'flex-start', background: T.white, border: `1px solid ${T.rule}`, display: 'flex', gap: 12, padding: '18px 20px' }}>
                     <div style={{ width: 6, height: 6, background: T.violet, borderRadius: '50%', flexShrink: 0, marginTop: 9 }} />
@@ -261,7 +261,7 @@ function CultureAssessmentPage() {
             <div style={{ borderTop: `1px solid ${T.rule}`, paddingTop: 28 }}>
               <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase' as const, color: T.violet, marginBottom: 14 }}>Baseline of herhaalritme</div>
               <p style={{ fontSize: 15, lineHeight: 1.72, color: T.inkSoft, marginBottom: 26, maxWidth: '54ch' }}>
-                Kies eerst of u een eerste organisatiebreed cultuurbeeld nodig heeft, of een terugkerend ritme om cultuur en engagement structureel te volgen.
+                Kies eerst of je een eerste organisatiebreed cultuurbeeld nodig hebt, of een terugkerend ritme om cultuur en engagement structureel te volgen.
               </p>
               <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
                 {[
@@ -280,7 +280,7 @@ function CultureAssessmentPage() {
                     points: [
                       'Voor organisaties die cultuur en engagement structureel willen blijven volgen',
                       'Logisch als baseline al staat en directie jaarlijks wil toetsen wat verandert',
-                      'Zelfde vragenlijst — zo zijn metingen vergelijkbaar over de tijd',
+                      'Zelfde vragenlijst, zo zijn metingen vergelijkbaar over de tijd',
                     ],
                   },
                 ].map(({ label, accent, points }) => (
@@ -301,13 +301,13 @@ function CultureAssessmentPage() {
           </div>
         </section>
 
-        {/* ── Wat u ontvangt ── */}
+        {/* ── Wat je ontvangt ── */}
         <section style={{ background: T.white, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
           <div style={{ ...SH }}>
             <div style={{ maxWidth: '64ch', marginBottom: 30 }}>
-              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase' as const, color: T.violet, marginBottom: 16 }}>Wat u ontvangt</div>
+              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase' as const, color: T.violet, marginBottom: 16 }}>Wat je ontvangt</div>
               <p style={{ fontSize: 15, lineHeight: 1.72, color: T.inkSoft }}>
-                Loep levert het volgende — allemaal inbegrepen, niets los te bestellen:
+                Loep levert het volgende, allemaal inbegrepen en niets los te bestellen:
               </p>
             </div>
             <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_auto]" style={{ alignItems: 'start' }}>
@@ -367,8 +367,8 @@ function CultureAssessmentPage() {
                 </thead>
                 <tbody>
                   {[
-                    ['Doorlooptijd', '5 werkdagen na sluiting', '6–12 weken', 'Onbepaald — u doet het zelf'],
-                    ['Begeleiding', 'Inbegrepen — board-read sessie door Loep', 'Consultancydag apart geprijsd', 'Geen — u interpreteert zelf'],
+                    ['Doorlooptijd', '5 werkdagen na sluiting', '6–12 weken', 'Onbepaald, je doet het zelf'],
+                    ['Begeleiding', 'Inbegrepen, board-read sessie door Loep', 'Consultancydag apart geprijsd', 'Geen, je interpreteert zelf'],
                     ['Vragenlijst', 'Vaste 40-item enterprise-baseline', 'Op maat, lang traject', 'Zelf bouwen, geen validatie'],
                     ['Governance', 'Minimum-n hardcoded, manager detail standaard locked', 'Afhankelijk van afspraken', 'Niet ingebouwd'],
                     ['Prijs', 'Vanaf €6.500', '€25.000–€100.000+', 'Laag instap, hoge tijdsinvestering'],
@@ -395,7 +395,7 @@ function CultureAssessmentPage() {
           accentTitle="nu de juiste eerste stap is."
           body="Beschrijf kort welke cultuur- of engagementvraag nu speelt. Dan toetsen we of Loep Cultuurbeeld past en wanneer een board-read de meeste waarde geeft."
           buttonLabel="Toets Loep Cultuurbeeld"
-          note="U krijgt eerst een route-inschatting, geen verplicht uitgebreid traject."
+          note="Je krijgt eerst een route-inschatting, geen verplicht uitgebreid traject."
         />
       </main>
       <PublicFooter />
@@ -425,17 +425,17 @@ function ExitScanPage() {
           <div style={{ position: 'absolute', top: -80, right: -60, width: 500, height: 500, background: `radial-gradient(circle,${AC.soft} 0%,transparent 65%)`, pointerEvents: 'none' }} />
           <div style={{ ...SH, position: 'relative' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 52 }}>
-              <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.18em', textTransform: 'uppercase', color: AC.deep }}>ExitScan</span>
+              <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.18em', textTransform: 'uppercase', color: AC.deep }}>Loep Vertrek</span>
               <div style={{ flex: 1, height: '1px', background: T.rule, maxWidth: 200 }} />
               <Link href="/producten" style={{ fontSize: 11, color: T.inkMuted, textDecoration: 'none' }}>Terug naar producten</Link>
             </div>
             <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_360px] items-start">
               <div>
                 <h1 style={{ fontFamily: FF, fontWeight: 800, fontSize: 'clamp(42px,5.5vw,76px)', lineHeight: .97, letterSpacing: '-.032em', color: T.ink, maxWidth: '12ch' }}>
-                  Wij brengen vertrekpatronen scherp in beeld. U weet wat u als eerste kunt aanpakken.
+                  Wij brengen vertrekpatronen scherp in beeld. Jij weet wat je als eerste kunt aanpakken.
                 </h1>
                 <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '48ch', margin: '26px 0 36px' }}>
-                  Loep voert de ExitScan uit, analyseert de uitkomsten en begeleidt u naar één eerste managementkeuze. U hoeft niets zelf in te richten.
+                  Loep voert de Loep Vertrek uit, analyseert de uitkomsten en begeleidt je naar één eerste managementkeuze. Je hoeft niets zelf in te richten.
                 </p>
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 600, padding: '12px 28px', color: '#fff', background: T.ink }}>
@@ -469,13 +469,13 @@ function ExitScanPage() {
         <section style={{ background: T.paperSoft, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
           <div style={{ ...SH }}>
             <div style={{ marginBottom: 36 }}>
-              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.deep, marginBottom: 16 }}>Dit is het juiste moment voor ExitScan</div>
+              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.deep, marginBottom: 16 }}>Dit is het juiste moment voor Loep Vertrek</div>
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 {[
                   'Vertrek is zichtbaar maar de reden is onduidelijk',
                   'Management vraagt om een onderbouwd beeld',
-                  'U wilt van losse exitgesprekken naar een structureel patroon',
-                  'U wilt een eerste keuze, geen breed onderzoeksproject',
+                  'Je wilt van losse exitgesprekken naar een structureel patroon',
+                  'Je wilt een eerste keuze, geen breed onderzoeksproject',
                 ].map((text) => (
                   <div key={text} style={{ alignItems: 'flex-start', background: T.white, border: `1px solid ${T.rule}`, display: 'flex', gap: 12, padding: '18px 20px' }}>
                     <div style={{ width: 6, height: 6, background: AC.deep, borderRadius: '50%', flexShrink: 0, marginTop: 9 }} />
@@ -490,7 +490,7 @@ function ExitScanPage() {
         <section style={{ background: T.white, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
           <div style={{ ...SH }}>
             <div style={{ maxWidth: '64ch', marginBottom: 30 }}>
-              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.deep, marginBottom: 16 }}>Wat u ontvangt</div>
+              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.deep, marginBottom: 16 }}>Wat je ontvangt</div>
               <p style={{ fontSize: 15, lineHeight: 1.72, color: T.inkSoft }}>
                 Loep levert het volgende:
               </p>
@@ -515,7 +515,7 @@ function ExitScanPage() {
                 <div id="segment-deep-dive" style={{ marginTop: 22, padding: '18px 20px', border: `1px solid ${T.rule}`, background: T.white }}>
                   <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: T.inkFaint, marginBottom: 8 }}>Afdelings- of segmentverdieping waar relevant</div>
                   <p style={{ fontSize: 13.5, color: T.inkMuted, lineHeight: 1.65 }}>
-                    Waar voldoende respons en metadata beschikbaar zijn, kan ExitScan het vertrekbeeld ook op afdelings-, functiegroep- of locatieniveau verdiepen.
+                    Waar voldoende respons en metadata beschikbaar zijn, kan Loep Vertrek het vertrekbeeld ook op afdelings-, functiegroep- of locatieniveau verdiepen.
                   </p>
                 </div>
               </div>
@@ -535,11 +535,11 @@ function ExitScanPage() {
           href={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'product_exit_form' })}
           showSectionMark={false}
           backdropNumber={null}
-          title="Toets of ExitScan"
+          title="Toets of Loep Vertrek"
           accentTitle="nu de juiste eerste stap is."
-          body="Beschrijf kort welk vertrekvraagstuk nu speelt. Dan toetsen we of ExitScan past, welke variant logisch is en wat u als eerste terugkrijgt."
+          body="Beschrijf kort welk vertrekvraagstuk nu speelt. Dan toetsen we of Loep Vertrek past, welke variant logisch is en wat je als eerste terugkrijgt."
           buttonLabel="Bespreek of deze scan past"
-          note="U krijgt eerst een korte kennismaking, geen verplicht uitgebreid traject."
+          note="Je krijgt eerst een korte kennismaking, geen verplicht uitgebreid traject."
         />
       </main>
       <PublicFooter />
@@ -569,17 +569,17 @@ function RetentionScanPage() {
           <div style={{ position: 'absolute', top: -80, right: -60, width: 500, height: 500, background: `radial-gradient(circle,${T.tealFaint} 0%,transparent 65%)`, pointerEvents: 'none' }} />
           <div style={{ ...SH, position: 'relative' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 52 }}>
-              <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.18em', textTransform: 'uppercase', color: T.teal }}>RetentieScan</span>
+              <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.18em', textTransform: 'uppercase', color: T.teal }}>Loep Behoud</span>
               <div style={{ flex: 1, height: '1px', background: T.rule, maxWidth: 200 }} />
               <Link href="/producten" style={{ fontSize: 11, color: T.inkMuted, textDecoration: 'none' }}>Terug naar producten</Link>
             </div>
             <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_360px] items-start">
               <div>
                 <h1 style={{ fontFamily: FF, fontWeight: 800, fontSize: 'clamp(42px,5.5vw,76px)', lineHeight: .97, letterSpacing: '-.032em', color: T.ink, maxWidth: '12ch' }}>
-                  Wij laten zien waar behoud onder druk staat, voordat uitstroom zichtbaar wordt. U weet wat u als eerste kunt aanpakken.
+                  Wij laten zien waar behoud onder druk staat, voordat uitstroom zichtbaar wordt. Jij weet wat je als eerste kunt aanpakken.
                 </h1>
                 <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '48ch', margin: '26px 0 36px' }}>
-                  Loep voert de RetentieScan uit bij uw actieve medewerkers, levert het rapport en begeleidt u naar één eerste managementkeuze.
+                  Loep voert de Loep Behoud uit bij je actieve medewerkers, levert het rapport en begeleidt je naar één eerste managementkeuze.
                 </p>
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 600, padding: '12px 28px', color: '#fff', background: T.ink }}>
@@ -596,7 +596,7 @@ function RetentionScanPage() {
                   {[
                     'Managementrapport met retentiesignaal en prioriteiten',
                     'Begeleide managementbespreking (60–90 min)',
-                    'Geen individuele signalen — alleen groepsniveau',
+                    'Geen individuele signalen, alleen groepsniveau',
                     'AVG-conforme dataverwerking',
                   ].map((item, i) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '9px 0', borderTop: i > 0 ? `1px solid ${T.tealSoft}` : 'none', fontSize: 13, color: T.inkSoft }}>
@@ -613,13 +613,13 @@ function RetentionScanPage() {
         <section style={{ background: T.paperSoft, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
           <div style={{ ...SH }}>
             <div style={{ marginBottom: 36 }}>
-              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.teal, marginBottom: 16 }}>Wanneer RetentieScan nu de juiste eerste stap is</div>
+              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.teal, marginBottom: 16 }}>Wanneer Loep Behoud nu de juiste eerste stap is</div>
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 {[
                   'Verloop loopt op maar de oorzaak is onduidelijk',
-                  'U wilt bijsturen vóór mensen vertrekbesluiten hebben genomen',
+                  'Je wilt bijsturen vóór mensen vertrekbesluiten hebben genomen',
                   'Management wil weten waar het risico zit, niet alleen een gevoel',
-                  'U wilt een eerste keuze, geen breed MTO-project',
+                  'Je wilt een eerste keuze, geen breed MTO-project',
                 ].map((text) => (
                   <div key={text} style={{ alignItems: 'flex-start', background: T.white, border: `1px solid ${T.rule}`, display: 'flex', gap: 12, padding: '18px 20px' }}>
                     <div style={{ width: 6, height: 6, background: T.teal, borderRadius: '50%', flexShrink: 0, marginTop: 9 }} />
@@ -634,7 +634,7 @@ function RetentionScanPage() {
         <section style={{ background: T.white, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
           <div style={{ ...SH }}>
             <div style={{ maxWidth: '64ch', marginBottom: 30 }}>
-              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.teal, marginBottom: 16 }}>Wat u ontvangt</div>
+              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.teal, marginBottom: 16 }}>Wat je ontvangt</div>
               <p style={{ fontSize: 15, lineHeight: 1.72, color: T.inkSoft }}>
                 Loep levert het volgende:
               </p>
@@ -659,7 +659,7 @@ function RetentionScanPage() {
                 <div style={{ marginTop: 22, padding: '18px 20px', border: `1px solid ${T.rule}`, background: T.white }}>
                   <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: T.inkFaint, marginBottom: 8 }}>Afdelings- of segmentverdieping waar relevant</div>
                   <p style={{ fontSize: 13.5, color: T.inkMuted, lineHeight: 1.65 }}>
-                    Waar voldoende respons en metadata beschikbaar zijn, kan RetentieScan behoudsdruk ook op afdelings-, functiegroep- of locatieniveau verdiepen.
+                    Waar voldoende respons en metadata beschikbaar zijn, kan Loep Behoud behoudsdruk ook op afdelings-, functiegroep- of locatieniveau verdiepen.
                   </p>
                 </div>
               </div>
@@ -679,11 +679,11 @@ function RetentionScanPage() {
           href={buildContactHref({ routeInterest: 'retentiescan', ctaSource: 'product_retention_form' })}
           showSectionMark={false}
           backdropNumber={null}
-          title="Toets of RetentieScan"
+          title="Toets of Loep Behoud"
           accentTitle="nu de juiste eerste stap is."
-          body="Beschrijf kort waar behoud nu onder druk staat. Dan toetsen we of RetentieScan past, welke variant logisch is en wat u als eerste terugkrijgt."
+          body="Beschrijf kort waar behoud nu onder druk staat. Dan toetsen we of Loep Behoud past, welke variant logisch is en wat je als eerste terugkrijgt."
           buttonLabel="Bespreek of deze scan past"
-          note="U krijgt eerst een korte kennismaking, geen verplicht uitgebreid traject."
+          note="Je krijgt eerst een korte kennismaking, geen verplicht uitgebreid traject."
         />
       </main>
       <PublicFooter />
@@ -712,17 +712,17 @@ function OnboardingModernPage() {
           <div style={{ position: 'absolute', top: -80, right: -60, width: 500, height: 500, background: `radial-gradient(circle,${T.amberFaint} 0%,transparent 65%)`, pointerEvents: 'none' }} />
           <div style={{ ...SH, position: 'relative' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 52 }}>
-              <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.18em', textTransform: 'uppercase', color: T.amber }}>Onboarding 30-60-90</span>
+              <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.18em', textTransform: 'uppercase', color: T.amber }}>Loep Start</span>
               <div style={{ flex: 1, height: '1px', background: T.rule, maxWidth: 200 }} />
               <Link href="/producten" style={{ fontSize: 11, color: T.inkMuted, textDecoration: 'none' }}>Terug naar producten</Link>
             </div>
             <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_360px] items-start">
               <div>
                 <h1 style={{ fontFamily: FF, fontWeight: 800, fontSize: 'clamp(42px,5.5vw,76px)', lineHeight: 0.97, letterSpacing: '-.032em', color: T.ink, maxWidth: '12ch' }}>
-                  Wij meten vroeg hoe nieuwe medewerkers landen. U weet wat als eerste aandacht vraagt.
+                  Wij meten vroeg hoe nieuwe medewerkers landen. Jij weet wat als eerste aandacht vraagt.
                 </h1>
                 <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '48ch', margin: '26px 0 36px' }}>
-                  Loep voert de checkpoint-read uit en levert een rapport met wat opvalt in de eerste 90 dagen. U bepaalt daarna de eerste stap.
+                  Loep voert de checkpoint-read uit en levert een rapport met wat opvalt in de eerste 90 dagen. Je bepaalt daarna de eerste stap.
                 </p>
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 600, padding: '12px 28px', color: '#fff', background: T.ink }}>
@@ -756,13 +756,13 @@ function OnboardingModernPage() {
         <section style={{ background: T.paperSoft, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
           <div style={{ ...SH }}>
             <div style={{ marginBottom: 36 }}>
-              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.amber, marginBottom: 16 }}>Wanneer Onboarding 30-60-90 nu de juiste eerste stap is</div>
+              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.amber, marginBottom: 16 }}>Wanneer Loep Start nu de juiste eerste stap is</div>
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 {[
                   'Nieuwe medewerkers landen ongelijk of haken vroeg af',
-                  'U wilt vroeg toetsen hoe rol, leiding en team nu landen',
+                  'Je wilt vroeg toetsen hoe rol, leiding en team nu landen',
                   'Management wil een eerste beeld zonder brede retentiescan',
-                  'U wilt eerst een kleine borg- of correctiestap bepalen',
+                  'Je wilt eerst een kleine borg- of correctiestap bepalen',
                 ].map((text) => (
                   <div key={text} style={{ alignItems: 'flex-start', background: T.white, border: `1px solid ${T.rule}`, display: 'flex', gap: 12, padding: '18px 20px' }}>
                     <div style={{ width: 6, height: 6, background: T.amber, borderRadius: '50%', flexShrink: 0, marginTop: 9 }} />
@@ -777,7 +777,7 @@ function OnboardingModernPage() {
         <section style={{ background: T.white, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
           <div style={{ ...SH }}>
             <div style={{ maxWidth: '64ch', marginBottom: 30 }}>
-              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.amber, marginBottom: 16 }}>Wat u ontvangt</div>
+              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.amber, marginBottom: 16 }}>Wat je ontvangt</div>
               <p style={{ fontSize: 15, lineHeight: 1.72, color: T.inkSoft }}>
                 Loep levert het volgende:
               </p>
@@ -822,11 +822,11 @@ function OnboardingModernPage() {
           href={buildContactHref({ routeInterest: 'onboarding', ctaSource: 'product_onboarding_form' })}
           showSectionMark={false}
           backdropNumber={null}
-          title="Toets of Onboarding 30-60-90"
+          title="Toets of Loep Start"
           accentTitle="nu de juiste eerste stap is."
-          body="Beschrijf kort waarom de eerste maanden van nieuwe medewerkers nu als eerste managementvraag spelen. Dan toetsen we of Onboarding 30-60-90 past en wat u als eerste terugkrijgt."
+          body="Beschrijf kort waarom de eerste maanden van nieuwe medewerkers nu als eerste managementvraag spelen. Dan toetsen we of Loep Start past en wat je als eerste terugkrijgt."
           buttonLabel="Bespreek of deze scan past"
-          note="U krijgt eerst een korte kennismaking, geen verplicht uitgebreid traject."
+          note="Je krijgt eerst een korte kennismaking, geen verplicht uitgebreid traject."
         />
       </main>
       <PublicFooter />
@@ -843,13 +843,13 @@ function OnboardingPage() {
       ctaLabel="Toets onboarding"
       heroIntro={
         <MarketingHeroIntro>
-          <p className="marketing-hero-eyebrow text-amber-700">Onboarding 30-60-90</p>
+          <p className="marketing-hero-eyebrow text-amber-700">Loep Start</p>
           <h1 className="marketing-hero-title marketing-hero-title-detail font-display text-slate-950">
             Zie vroeg hoe nieuwe medewerkers landen.
           </h1>
           <p className="marketing-hero-copy text-slate-600">
-            Onboarding 30-60-90 helpt vroeg zichtbaar maken hoe nieuwe medewerkers nu landen in rol, leiding, team en
-            werkcontext. U krijgt een compacte groepsread met een eerste vervolgrichting, eigenaar en hercheckmoment,
+            Loep Start helpt vroeg zichtbaar maken hoe nieuwe medewerkers nu landen in rol, leiding, team en
+            werkcontext. Je krijgt een compacte groepsread met een eerste vervolgrichting, eigenaar en hercheckmoment,
             zonder daar meteen een brede onboarding-suite van te maken.
           </p>
           <div className="marketing-hero-actions">
@@ -884,7 +884,7 @@ function OnboardingPage() {
               </div>
               <div className="grid gap-4 px-5 py-5 sm:px-6 lg:grid-cols-3">
                 {[
-                  ['Waar u naar kijkt', 'Landing in rol, leiding, team en werkcontext op groepsniveau.'],
+                  ['Waar je naar kijkt', 'Landing in rol, leiding, team en werkcontext op groepsniveau.'],
                   ['Waar het op eindigt', 'Eerste managementhuddle, kleine borg- of correctiestap en een hercheckmoment.'],
                   ['Wat het niet wordt', 'Geen journey-automation, geen individuele beoordeling en geen brede onboardingmachine.'],
                 ].map(([title, body]) => (
@@ -909,7 +909,7 @@ function OnboardingPage() {
               href="/producten/retentiescan"
               className="marketing-link-card text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-950"
             >
-              Bekijk RetentieScan
+              Bekijk Loep Behoud
             </Link>
             <Link
               href="/vertrouwen"
@@ -936,7 +936,7 @@ function OnboardingPage() {
             {[
               {
                 title: 'Vroege landing zichtbaar',
-                body: 'U ziet vroeg hoe nieuwe medewerkers landen in rol, leiding, team en werkcontext, zonder te wachten tot bredere uitval zichtbaar wordt.',
+                body: 'Je ziet vroeg hoe nieuwe medewerkers landen in rol, leiding, team en werkcontext, zonder te wachten tot bredere uitval zichtbaar wordt.',
               },
               {
                 title: 'Eerste eigenaar en gesprek',
@@ -985,20 +985,20 @@ function OnboardingPage() {
       <MarketingSection tone="plain">
         <div className="grid gap-8 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
           <div className="space-y-5">
-            <div className="marketing-divider-title">Onboarding naast RetentieScan</div>
-            <h2 className="marketing-text-title-md">Onboarding 30-60-90 is geen RetentieScan voor nieuwe medewerkers.</h2>
+            <div className="marketing-divider-title">Onboarding naast Loep Behoud</div>
+            <h2 className="marketing-text-title-md">Loep Start is geen Loep Behoud voor nieuwe medewerkers.</h2>
             <p className="marketing-text-body">
               Beide routes kijken naar mensen-patronen, maar het tijdstip en de vraag zijn anders.
               Onboarding is een vroege checkpoint-read in de eerste 90 dagen.
-              RetentieScan is een behoudsread voor actieve medewerkers die al langer in dienst zijn.
+              Loep Behoud is een behoudsread voor actieve medewerkers die al langer in dienst zijn.
             </p>
             <MarketingComparisonTable
-              columns={['Thema', 'Onboarding 30-60-90', 'RetentieScan']}
+              columns={['Thema', 'Loep Start', 'Loep Behoud']}
               rows={[
                 [
                   'Doelgroep',
-                  'Nieuwe medewerkers — eerste 30, 60 of 90 dagen in dienst.',
-                  'Actieve medewerkers — al langer in dienst, risico op vertrek nog niet zichtbaar.',
+                  'Nieuwe medewerkers: eerste 30, 60 of 90 dagen in dienst.',
+                  'Actieve medewerkers: al langer in dienst, risico op vertrek nog niet zichtbaar.',
                 ],
                 [
                   'Hoofdvraag',
@@ -1007,8 +1007,8 @@ function OnboardingPage() {
                 ],
                 [
                   'Tijdstip',
-                  'Vroeg — in de eerste kwartalen na instroom, bij elk nieuw cohort.',
-                  'Ongoing — als verloop oploopt of management eerder wil signaleren.',
+                  'Vroeg: in de eerste kwartalen na instroom, bij elk nieuw cohort.',
+                  'Ongoing: als verloop oploopt of management eerder wil signaleren.',
                 ],
                 [
                   'Niet bedoeld als',
@@ -1025,7 +1025,7 @@ function OnboardingPage() {
               Een vroege onboardingread met een eerste vervolgstap, niet meer dan nodig.
             </h2>
             <p className="mt-5 text-base leading-8 text-slate-300">
-              Onboarding 30-60-90 verkoopt geen volledige employee journey. Het product helpt vooral om vroeg te zien
+              Loep Start verkoopt geen volledige employee journey. Het product helpt vooral om vroeg te zien
               hoe nieuwe medewerkers nu landen, welke frictie of borging als eerste aandacht vraagt en welke
               vervolgrichting daar logisch uit volgt.
             </p>
@@ -1103,7 +1103,7 @@ function UpcomingProductPage({ slug }: { slug: string }) {
           <div className="space-y-5">
             <span className="marketing-stage-tag bg-white/10 text-slate-200">Gereserveerde future route</span>
             <h2 className="marketing-stage-title font-display text-white">
-              Deze productroute blijft ondersteunend zolang ExitScan en RetentieScan de live propositie dragen.
+              Deze productroute blijft ondersteunend zolang Loep Vertrek en Loep Behoud de live propositie dragen.
             </h2>
             <p className="marketing-stage-copy text-slate-300">
               Zo kan het portfolio later groeien zonder dat de huidige publieke navigatie of verkoopflow

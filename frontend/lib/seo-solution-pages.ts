@@ -38,13 +38,13 @@ export const SEO_SOLUTION_PAGES: readonly SeoSolutionPage[] = [
   {
     slug: 'verloop-analyse',
     title: 'Verloopanalyse',
-    seoTitle: 'Verloopanalyse | ExitScan voor vertrekduiding bij HR-teams',
+    seoTitle: 'Verloopanalyse | Loep Vertrek voor vertrekduiding bij HR-teams',
     description:
-      'Gebruik ExitScan als compacte verloopanalyse voor HR-teams die vertrekpatronen bestuurlijk leesbaar willen maken met dashboard, managementrapport en bestuurlijke handoff.',
+      'Gebruik Loep Vertrek als compacte verloopanalyse voor HR-teams die vertrekpatronen bestuurlijk leesbaar willen maken met dashboard, managementrapport en bestuurlijke handoff.',
     canonical: '/oplossingen/verloop-analyse',
     routeInterest: 'exitscan',
     productHref: '/producten/exitscan',
-    productLabel: 'ExitScan',
+    productLabel: 'Loep Vertrek',
     productTheme: 'exit',
     ctaSource: 'solution_turnover_analysis_form',
     eyebrow: 'Oplossing',
@@ -53,7 +53,7 @@ export const SEO_SOLUTION_PAGES: readonly SeoSolutionPage[] = [
       'Voor organisaties die niet alleen willen tellen hoeveel mensen vertrekken, maar bestuurlijk willen begrijpen welke terugkerende werkfactoren en vertrekpatronen aandacht vragen.',
     contextTitle: 'Gebruik deze pagina wanneer de vraag niet is of uitstroom bestaat, maar hoe je die bestuurlijk duidt.',
     contextBody:
-      'ExitScan is hier de primaire route: geen generieke survey, maar een eerste traject dat vertrekduiding, proof en managementhulp in dezelfde leeslijn zet.',
+      'Loep Vertrek is hier de primaire route: geen generieke survey, maar een eerste traject dat vertrekduiding, proof en managementhulp in dezelfde leeslijn zet.',
     problemCards: [
       [
         'Veel exitinput, weinig lijn',
@@ -68,9 +68,9 @@ export const SEO_SOLUTION_PAGES: readonly SeoSolutionPage[] = [
         'Zonder bestuurlijke handoff blijft uitstroom te snel een HR-observatie in plaats van een managementvraag met eigenaarschap.',
       ],
     ],
-    whyNowTitle: 'Waarom ExitScan hier de juiste route is',
+    whyNowTitle: 'Waarom Loep Vertrek hier de juiste route is',
     whyNowBody:
-      'ExitScan maakt vertrekduiding bestuurlijk leesbaar op groepsniveau. Je krijgt een eerste managementbeeld van terugkerende werkfactoren, vertrekredenen en signalen van werkfrictie zonder diagnose-, predictor- of causaliteitsclaim.',
+      'Loep Vertrek maakt vertrekduiding bestuurlijk leesbaar op groepsniveau. Je krijgt een eerste managementbeeld van terugkerende werkfactoren, vertrekredenen en signalen van werkfrictie zonder diagnose-, predictor- of causaliteitsclaim.',
     deliverableTitle: 'Wat je als deliverable terugkrijgt',
     deliverableBody:
       'De route combineert dashboard, managementrapport en bestuurlijke handoff in één professionele leeslijn die direct bruikbaar is voor HR, sponsor, MT en directie.',
@@ -81,27 +81,27 @@ export const SEO_SOLUTION_PAGES: readonly SeoSolutionPage[] = [
       'Publiek toetsbare claims-, privacy- en interpretatiegrenzen',
     ],
     routeCards: [
-      ['Productroute', 'Start bij ExitScan als primaire wedge voor vertrekduiding en vergelijkbare managementoutput.'],
+      ['Productroute', 'Start bij Loep Vertrek als primaire wedge voor vertrekduiding en vergelijkbare managementoutput.'],
       ['Kooprust', 'Gebruik tarieven en aanpak om te zien hoe een eerste traject, vervolgvorm en livegang logisch worden opgebouwd.'],
       ['Due diligence', 'Gebruik vertrouwen, privacy en DPA pas als reassurance nadat de productfit en output helder zijn.'],
     ],
     proofTitle: 'Laat eerst de deliverable zien, daarna pas de uitleg.',
     proofBody:
-      'De voorbeeldoutput op de ExitScan-productpagina laat zien hoe bestuurlijke read, topfactoren en bestuurlijke handoff werkelijk samenkomen.',
+      'De voorbeeldoutput op de Loep Vertrek-productpagina laat zien hoe bestuurlijke read, topfactoren en bestuurlijke handoff werkelijk samenkomen.',
     contactTitle: 'Plan een suite-demo over verloopanalyse',
     contactBody:
-      'Beschrijf kort waar jullie verloopvraag nu vastloopt. Dan toetsen we of ExitScan Baseline de juiste eerste stap is en welke databasis nodig is om snel naar een geloofwaardige eerste managementread te komen.',
+      'Beschrijf kort waar jullie verloopvraag nu vastloopt. Dan toetsen we of Loep Vertrek Baseline de juiste eerste stap is en welke databasis nodig is om snel naar een geloofwaardige eerste managementread te komen.',
   },
   {
     slug: 'exitgesprekken-analyse',
     title: 'Exitgesprekken analyseren',
-    seoTitle: 'Exitgesprekken analyseren | ExitScan voor HR-teams',
+    seoTitle: 'Exitgesprekken analyseren | Loep Vertrek voor HR-teams',
     description:
-      'Gebruik ExitScan om exitgesprekken en vertrekinput te vertalen naar een vergelijkbaar managementbeeld met dashboard, rapport en bestuurlijke handoff.',
+      'Gebruik Loep Vertrek om exitgesprekken en vertrekinput te vertalen naar een vergelijkbaar managementbeeld met dashboard, rapport en bestuurlijke handoff.',
     canonical: '/oplossingen/exitgesprekken-analyse',
     routeInterest: 'exitscan',
     productHref: '/producten/exitscan',
-    productLabel: 'ExitScan',
+    productLabel: 'Loep Vertrek',
     productTheme: 'exit',
     ctaSource: 'solution_exit_interviews_form',
     eyebrow: 'Oplossing',
@@ -110,7 +110,7 @@ export const SEO_SOLUTION_PAGES: readonly SeoSolutionPage[] = [
       'Voor organisaties die al exitgesprekken voeren maar nog geen compacte, vergelijkbare en bestuurlijk leesbare route hebben om die input te duiden.',
     contextTitle: 'Gebruik deze pagina wanneer exitgesprekken al bestaan, maar het managementbeeld ontbreekt.',
     contextBody:
-      'ExitScan vervangt losse interpretatie door een begeleide productroute die patronen, werkfactoren en vervolgvraag in dezelfde managementtaal bundelt.',
+      'Loep Vertrek vervangt losse interpretatie door een begeleide productroute die patronen, werkfactoren en vervolgvraag in dezelfde managementtaal bundelt.',
     problemCards: [
       [
         'Rijke input, weinig vergelijkbaarheid',
@@ -125,9 +125,9 @@ export const SEO_SOLUTION_PAGES: readonly SeoSolutionPage[] = [
         'Wat HR ziet, landt niet automatisch bruikbaar bij sponsor, MT of directie wanneer er geen duidelijke executive leeslijn is.',
       ],
     ],
-    whyNowTitle: 'Waarom ExitScan hier sterker is dan losse gespreksduiding',
+    whyNowTitle: 'Waarom Loep Vertrek hier sterker is dan losse gespreksduiding',
     whyNowBody:
-      'ExitScan helpt organisaties de stap te maken van losse exitgesprekken naar gegroepeerde vertrekduiding op managementniveau. Dat maakt vervolgvragen, prioritering en eigenaarschap sneller intern bespreekbaar.',
+      'Loep Vertrek helpt organisaties de stap te maken van losse exitgesprekken naar gegroepeerde vertrekduiding op managementniveau. Dat maakt vervolgvragen, prioritering en eigenaarschap sneller intern bespreekbaar.',
     deliverableTitle: 'Wat de route oplevert',
     deliverableBody:
       'Je koopt geen tool om ruwe notities op te slaan, maar een eerste traject dat exitinput vertaalt naar een compact dashboard- en rapportspoor met bestuurlijke handoff.',
@@ -138,27 +138,27 @@ export const SEO_SOLUTION_PAGES: readonly SeoSolutionPage[] = [
       'Methodische en privacygrenzen die overclaiming voorkomen',
     ],
     routeCards: [
-      ['Productroute', 'De natuurlijke vervolgstap is ExitScan, niet een bredere knowledge base of losse researchlaag.'],
-      ['Kooprust', 'Via tarieven zie je hoe ExitScan Baseline en eventuele vervolgvormen commercieel zijn opgebouwd.'],
+      ['Productroute', 'De natuurlijke vervolgstap is Loep Vertrek, niet een bredere knowledge base of losse researchlaag.'],
+      ['Kooprust', 'Via tarieven zie je hoe Loep Vertrek Baseline en eventuele vervolgvormen commercieel zijn opgebouwd.'],
       ['Due diligence', 'Via vertrouwen toets je publiek hoe privacy, groepsgrenzen en rapportlezing zijn ingericht.'],
     ],
     proofTitle: 'Voorbeeldrapporten maken de stap van gesprek naar managementbeeld tastbaar.',
     proofBody:
-      'De ExitScan showcase laat zien hoe vertrekredenen, signalen van werkfrictie en eerste managementvragen in één executive leeslijn landen.',
+      'De Loep Vertrek showcase laat zien hoe vertrekredenen, signalen van werkfrictie en eerste managementvragen in één executive leeslijn landen.',
     contactTitle: 'Plan een suite-demo over exitgesprekken analyseren',
     contactBody:
-      'Beschrijf kort hoe exitgesprekken nu worden verzameld en waar interpretatie of besluitvorming vastloopt. Dan toetsen we of ExitScan Baseline de juiste eerste structuur biedt.',
+      'Beschrijf kort hoe exitgesprekken nu worden verzameld en waar interpretatie of besluitvorming vastloopt. Dan toetsen we of Loep Vertrek Baseline de juiste eerste structuur biedt.',
   },
   {
     slug: 'medewerkersbehoud-analyse',
     title: 'Medewerkersbehoud analyseren',
-    seoTitle: 'Medewerkersbehoud analyseren | RetentieScan voor vroegsignalering',
+    seoTitle: 'Medewerkersbehoud analyseren | Loep Behoud voor vroegsignalering',
     description:
-      'Gebruik RetentieScan om eerder te zien waar medewerkersbehoud op groepsniveau onder druk staat, met groepsgerichte managementoutput voor HR-teams en directie.',
+      'Gebruik Loep Behoud om eerder te zien waar medewerkersbehoud op groepsniveau onder druk staat, met groepsgerichte managementoutput voor HR-teams en directie.',
     canonical: '/oplossingen/medewerkersbehoud-analyse',
     routeInterest: 'retentiescan',
     productHref: '/producten/retentiescan',
-    productLabel: 'RetentieScan',
+    productLabel: 'Loep Behoud',
     productTheme: 'retention',
     ctaSource: 'solution_retention_analysis_form',
     eyebrow: 'Oplossing',
@@ -167,7 +167,7 @@ export const SEO_SOLUTION_PAGES: readonly SeoSolutionPage[] = [
       'Voor organisaties die eerder willen zien waar behoud op groepsniveau onder druk staat en een gerichte managementroute zoeken in plaats van een brede tevredenheidsmeting.',
     contextTitle: 'Gebruik deze pagina wanneer de actieve behoudsvraag al expliciet op tafel ligt.',
     contextBody:
-      'RetentieScan is hier de juiste route: een volwaardige eerste route wanneer de actieve behoudsvraag primair is, groepsgericht en bedoeld om prioritering en vervolggesprek te ondersteunen zonder individuele signalen naar management te sturen.',
+      'Loep Behoud is hier de juiste route: een volwaardige eerste route wanneer de actieve behoudsvraag primair is, groepsgericht en bedoeld om prioritering en vervolggesprek te ondersteunen zonder individuele signalen naar management te sturen.',
     problemCards: [
       [
         'Behoudsdruk is voelbaar, maar niet scherp',
@@ -182,9 +182,9 @@ export const SEO_SOLUTION_PAGES: readonly SeoSolutionPage[] = [
         'De behoefte zit meestal in groepsduiding en prioritering, niet in persoonsgerichte voorspelling, performance-oordeel of interventies op individueel niveau.',
       ],
     ],
-    whyNowTitle: 'Waarom RetentieScan hier de passende route is',
+    whyNowTitle: 'Waarom Loep Behoud hier de passende route is',
     whyNowBody:
-      'RetentieScan maakt zichtbaar waar behoud op groeps- en segmentniveau onder druk staat via retentiesignaal, stay-intent, bevlogenheid, vertrekintentie en beinvloedbare werkfactoren. Het product blijft expliciet groepsgericht en niet-predictief, zonder RetentieScan kleiner te maken dan de managementvraag vraagt.',
+      'Loep Behoud maakt zichtbaar waar behoud op groeps- en segmentniveau onder druk staat via retentiesignaal, stay-intent, bevlogenheid, vertrekintentie en beinvloedbare werkfactoren. Het product blijft expliciet groepsgericht en niet-predictief, zonder Loep Behoud kleiner te maken dan de managementvraag vraagt.',
     deliverableTitle: 'Wat je als deliverable terugkrijgt',
     deliverableBody:
       'De route levert een managementweergave op die behoudsdruk bespreekbaar maakt voor HR, sponsor, MT en directie, met duidelijke grenzen rond privacy, bewijsstatus en interpretatie.',
@@ -195,16 +195,16 @@ export const SEO_SOLUTION_PAGES: readonly SeoSolutionPage[] = [
       'Publieke trustlaag die privacy-, claims- en bewijsstatus begrijpelijk maakt',
     ],
     routeCards: [
-      ['Productroute', 'De natuurlijke vervolgstap is RetentieScan als gerichte route voor behoudsvraagstukken op groepsniveau.'],
-      ['Kooprust', 'Via tarieven zie je hoe RetentieScan Baseline en ritmevormen commercieel zijn opgebouwd.'],
+      ['Productroute', 'De natuurlijke vervolgstap is Loep Behoud als gerichte route voor behoudsvraagstukken op groepsniveau.'],
+      ['Kooprust', 'Via tarieven zie je hoe Loep Behoud Baseline en ritmevormen commercieel zijn opgebouwd.'],
       ['Due diligence', 'Via vertrouwen toets je hoe privacygrenzen, groepsduiding en methodische claims publiek zijn ingericht.'],
     ],
     proofTitle: 'Laat eerst de groepsgerichte output zien.',
     proofBody:
-      'De RetentieScan showcase laat zien hoe retentiesignaal, topfactoren en bestuurlijke handoff samenkomen zonder brede MTO- of predictorclaim.',
+      'De Loep Behoud showcase laat zien hoe retentiesignaal, topfactoren en bestuurlijke handoff samenkomen zonder brede MTO- of predictorclaim.',
     contactTitle: 'Plan een suite-demo over medewerkersbehoud analyseren',
     contactBody:
-      'Beschrijf kort waar de actieve behoudsvraag nu zit. Dan toetsen we of RetentieScan Baseline de juiste eerste stap is en hoe een geloofwaardige eerste meetroute eruitziet.',
+      'Beschrijf kort waar de actieve behoudsvraag nu zit. Dan toetsen we of Loep Behoud Baseline de juiste eerste stap is en hoe een geloofwaardige eerste meetroute eruitziet.',
   },
 ] as const
 

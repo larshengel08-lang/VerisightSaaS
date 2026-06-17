@@ -9,10 +9,10 @@ import { getBackendApiUrl } from '@/lib/server-env'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 const CONTACT_ROUTE_LABELS: Record<string, string> = {
-  exitscan: 'ExitScan',
-  retentiescan: 'RetentieScan',
+  exitscan: 'Loep Vertrek',
+  retentiescan: 'Loep Behoud',
   teamscan: 'TeamScan',
-  onboarding: 'Onboarding 30-60-90',
+  onboarding: 'Loep Start',
   leadership: 'Leadership Scan',
   combinatie: 'Combinatie',
   'nog-onzeker': 'Nog niet zeker',

@@ -177,7 +177,7 @@ export function buildHeroDescription({
   }
 
   if (scanType === 'exit') {
-    return 'Deze ExitScan laat een bestuurlijke read zien van terugkerende werkfrictie. Gebruik Frictiescore als openingssignaal en lees daarna welke werkfactoren en verschillen het vertrekbeeld nu het sterkst kleuren.'
+    return 'Deze Loep Vertrek laat een bestuurlijke read zien van terugkerende werkfrictie. Gebruik Frictiescore als openingssignaal en lees daarna welke werkfactoren en verschillen het vertrekbeeld nu het sterkst kleuren.'
   }
 
   return `Bekijk eerst welke factoren het laagst scoren en waar de grootste verschillen zichtbaar zijn.`
@@ -489,7 +489,7 @@ export function buildInsightWarnings({
                 : 'Lees dit als managementinput',
       body:
         scanType === 'retention'
-          ? 'RetentieScan blijft een groeps- en segmentinstrument. Gebruik signalen voor prioritering en verificatie, niet als individuele voorspelling.'
+          ? 'Loep Behoud blijft een groeps- en segmentinstrument. Gebruik signalen voor prioritering en verificatie, niet als individuele voorspelling.'
           : scanType === 'pulse'
             ? 'Pulse blijft een compacte groepsread. Gebruik de uitkomst voor review, bijsturing en een bounded hercheck op dit meetmoment, niet als breed trendbewijs of individuele score.'
             : scanType === 'team'
@@ -500,7 +500,7 @@ export function buildInsightWarnings({
                   ? 'Leadership Scan blijft een geaggregeerde bounded support-read op groepsniveau. Gebruik de uitkomst om managementcontext te duiden, niet om individuele leidinggevenden te beoordelen of named leaders te rangschikken.'
                   : scanType === 'culture_assessment'
                     ? 'Loep Culture Assessment blijft een jaarlijkse executive baseline. Gebruik Loep Culture Index, domeinen en segmentpatronen als navigatiesignaal voor bestuurlijke aandacht, niet als benchmark-first oordeel, causaliteitsclaim of manager-ranglijst.'
-            : 'ExitScan bundelt vertrekervaringen tot managementpatronen. Gebruik deze uitkomsten om gesprekken te richten, niet om een score als sluitend bewijs te behandelen.',
+            : 'Loep Vertrek bundelt vertrekervaringen tot managementpatronen. Gebruik deze uitkomsten om gesprekken te richten, niet om een score als sluitend bewijs te behandelen.',
       tone: 'slate',
     })
   }

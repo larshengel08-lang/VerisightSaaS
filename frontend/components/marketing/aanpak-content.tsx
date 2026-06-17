@@ -71,12 +71,12 @@ function HeroSection() {
               Wij doen het werk.
               <br />
               <em className="shimmer-text" style={{ fontStyle: 'italic' }}>
-                U maakt de keuze.
+                Jij maakt de keuze.
               </em>
             </h1>
             <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '48ch', margin: '28px 0 36px' }}>
-              Loep voert de scan uit, analyseert de uitkomsten en begeleidt u naar één eerste managementkeuze.
-              U hoeft geen tool in te richten of te beheren.
+              Loep voert de scan uit, analyseert de uitkomsten en begeleidt je naar één eerste managementkeuze.
+              Je hoeft geen tool in te richten of te beheren.
             </p>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
               <Link
@@ -93,7 +93,7 @@ function HeroSection() {
                   background: AC.deep,
                 }}
               >
-                Toets uw eerste route <Arrow />
+                Toets je eerste route <Arrow />
               </Link>
               <Link
                 href="/producten"
@@ -128,7 +128,7 @@ function HeroSection() {
                   marginBottom: 18,
                 }}
               >
-                Wat u als eerste ontvangt
+                Wat je als eerste ontvangt
               </div>
               {[
                 { step: 'Stap 1', label: 'Juiste route kiezen' },
@@ -181,7 +181,7 @@ function ProcessSection() {
             Zo loopt de route baseline-first.
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, maxWidth: '52ch' }}>
-            U kiest eerst de juiste route. Daarna voert Loep de scan uit en levert een rapport met prioriteiten en een begeleide
+            Je kiest eerst de juiste route. Daarna voert Loep de scan uit en levert een rapport met prioriteiten en een begeleide
             managementbespreking.
           </p>
           </div>
@@ -236,25 +236,25 @@ function RolesSection() {
                 marginBottom: 18,
               }}
             >
-              Uw rol blijft compact.
+              Jouw rol blijft compact.
             </h2>
             <p style={{ fontSize: 14, lineHeight: 1.72, color: T.inkSoft, marginBottom: 28 }}>
-              U bevestigt route en timing, levert de respondentbasis aan en neemt deel aan de managementbespreking. Loep houdt de
+              Je bevestigt route en timing, levert de respondentbasis aan en neemt deel aan de managementbespreking. Loep houdt de
               uitvoering compact en bewaakt de kwaliteit.
             </p>
 
             {[
               {
                 title: 'Route en timing bevestigen',
-                body: 'U bevestigt welke stap nu loopt, voor welke groepen en wanneer de eerste lezing wordt opgebouwd.',
+                body: 'Je bevestigt welke stap nu loopt, voor welke groepen en wanneer de eerste lezing wordt opgebouwd.',
               },
               {
                 title: 'Benodigde input aanleveren',
-                body: 'U levert de respondentbasis aan. Loep houdt daarna de opzet compact en zorgvuldig.',
+                body: 'Je levert de respondentbasis aan. Loep houdt daarna de opzet compact en zorgvuldig.',
               },
               {
                 title: 'Rapport ontvangen en keuze maken',
-                body: 'U ontvangt het rapport en neemt deel aan de managementbespreking. Samen bepalen we de eerste keuze.',
+                body: 'Je ontvangt het rapport en neemt deel aan de managementbespreking. Samen bepalen we de eerste keuze.',
               },
             ].map((item, index) => (
               <div key={item.title} style={{ display: 'flex', gap: 18, padding: '20px 0', borderTop: `1px solid ${T.rule}` }}>
@@ -308,7 +308,7 @@ function FirstValueSection() {
   const items = [
     {
       threshold: 'Scan loopt',
-      text: 'De vragenlijst is verstuurd. Wij bewaken de respons en houden u op de hoogte zonder dat u iets hoeft te monitoren.',
+      text: 'De vragenlijst is verstuurd. Wij bewaken de respons en houden je op de hoogte zonder dat je iets hoeft te monitoren.',
     },
     {
       threshold: 'Beeld bouwt op',
@@ -316,7 +316,7 @@ function FirstValueSection() {
     },
     {
       threshold: 'Rapport en bespreking',
-      text: 'U ontvangt het managementrapport. Daarna volgt de begeleide managementbespreking: samen bepalen we de eerste keuze.',
+      text: 'Je ontvangt het managementrapport. Daarna volgt de begeleide managementbespreking: samen bepalen we de eerste keuze.',
     },
   ]
 
@@ -344,7 +344,7 @@ function FirstValueSection() {
               </em>
             </h2>
             <p style={{ fontSize: 13.5, lineHeight: 1.7, color: T.inkSoft }}>
-              Loep levert snel een bruikbaar beeld. Verdieping of vervolgmeting komen pas als de volgende vraag echt speelt — niet eerder.
+              Loep levert snel een bruikbaar beeld. Verdieping of vervolgmeting komen pas als de volgende vraag echt speelt, niet eerder.
             </p>
             </div>
           </Reveal>
@@ -393,7 +393,7 @@ function ContactSection() {
       showSectionMark={false}
       title="Toets welke eerste route"
       accentTitle="nu het meeste duidelijkheid geeft."
-      body="In een korte kennismaking toetsen we welke stap past, welke eerste uitkomst u krijgt en wanneer vervolg logisch wordt."
+      body="In een korte kennismaking toetsen we welke stap past, welke eerste uitkomst je krijgt en wanneer vervolg logisch wordt."
       buttonLabel="Plan een eerste route-inschatting"
     />
   )

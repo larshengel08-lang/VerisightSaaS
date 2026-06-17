@@ -23,7 +23,7 @@ function getOversightStateLabel(state: ActionCenterReviewOversightAttentionItem[
 }
 
 function isBoundedSourceLabel(sourceLabel: string) {
-  return sourceLabel === 'ExitScan' || sourceLabel === 'RetentieScan'
+  return sourceLabel === 'Loep Vertrek' || sourceLabel === 'Loep Behoud'
 }
 
 function getGovernanceSignals(item: ActionCenterReviewOversightAttentionItem) {

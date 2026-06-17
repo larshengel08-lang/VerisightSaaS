@@ -276,7 +276,7 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
           <code className="font-mono">role_level</code>.
           {isExitCampaign ? (
             <>
-              {' '}Voor ExitScan kun je daarnaast <code className="font-mono">exit_month</code> en{' '}
+              {' '}Voor Loep Vertrek kun je daarnaast <code className="font-mono">exit_month</code> en{' '}
               <code className="font-mono">annual_salary_eur</code> meesturen.
             </>
           ) : (
@@ -342,9 +342,9 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
 
         {selectedCampaign?.scan_type === 'retention' ? (
           <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
-            <p className="mb-1 font-semibold">RetentieScan: standaard metadata</p>
+            <p className="mb-1 font-semibold">Loep Behoud: standaard metadata</p>
             <p className="text-emerald-900">
-              Lever voor RetentieScan altijd <code className="font-mono">email</code>, <code className="font-mono">department</code> en{' '}
+              Lever voor Loep Behoud altijd <code className="font-mono">email</code>, <code className="font-mono">department</code> en{' '}
               <code className="font-mono">role_level</code> aan. Zonder afdeling en functieniveau wordt segmentatie direct te grof.
             </p>
             <p className="mt-2 text-emerald-900">
@@ -474,7 +474,7 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
             </p>
             {selectedCampaign?.scan_type === 'retention' ? (
               <p className="mt-2 text-xs leading-relaxed text-emerald-800">
-                Voor RetentieScan horen <code className="font-mono">department</code> en <code className="font-mono">role_level</code> standaard in elk bestand.
+                Voor Loep Behoud horen <code className="font-mono">department</code> en <code className="font-mono">role_level</code> standaard in elk bestand.
               </p>
             ) : null}
             <div className="mt-3 flex flex-wrap gap-3 text-xs font-medium">

@@ -42,8 +42,8 @@ function getSaveStatusTone(status: 'idle' | 'success' | 'error') {
 function getRouteProductLabel(scanType: string | null | undefined) {
   const routeDefaults = getActionCenterEnabledRouteDefaults(scanType)
 
-  if (routeDefaults?.scanType === 'retention') return 'RetentieScan'
-  if (routeDefaults?.scanType === 'exit') return 'ExitScan'
+  if (routeDefaults?.scanType === 'retention') return 'Loep Behoud'
+  if (routeDefaults?.scanType === 'exit') return 'Loep Vertrek'
   return 'Follow-through'
 }
 

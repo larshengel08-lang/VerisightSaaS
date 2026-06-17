@@ -409,7 +409,7 @@ function getCreateDefaults(items: ActionCenterPreviewItem[]) {
   return {
     title: '',
     summary: '',
-    sourceLabel: firstItem?.sourceLabel ?? 'ExitScan',
+    sourceLabel: firstItem?.sourceLabel ?? 'Loep Vertrek',
     teamId: firstItem?.teamId ?? '',
     ownerName: firstItem?.ownerName ?? '',
     priority: 'hoog' as ActionCenterPreviewPriority,
@@ -3128,7 +3128,7 @@ export function ActionCenterPreview({
               ) : (
                 <EmptySection
                   title="Nog geen teamcontext beschikbaar"
-                  body="Zodra ExitScan-dossiers aan een teamcontext zijn gekoppeld, verschijnt hier de compacte teamweergave."
+                  body="Zodra Loep Vertrek-dossiers aan een teamcontext zijn gekoppeld, verschijnt hier de compacte teamweergave."
                 />
               )
             ) : null}

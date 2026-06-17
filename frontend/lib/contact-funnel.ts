@@ -1,15 +1,15 @@
 export const CONTACT_ROUTE_OPTIONS = [
   {
     value: 'exitscan',
-    label: 'ExitScan',
+    label: 'Loep Vertrek',
     description: 'We willen vertrek achteraf beter duiden.',
-    firstStepLabel: 'ExitScan Baseline',
+    firstStepLabel: 'Loep Vertrek Baseline',
   },
   {
     value: 'retentiescan',
-    label: 'RetentieScan',
+    label: 'Loep Behoud',
     description: 'We willen eerder zien waar behoud onder druk staat.',
-    firstStepLabel: 'RetentieScan Baseline',
+    firstStepLabel: 'Loep Behoud Baseline',
   },
   {
     value: 'culture_assessment',
@@ -25,9 +25,9 @@ export const CONTACT_ROUTE_OPTIONS = [
   },
   {
     value: 'onboarding',
-    label: 'Onboarding 30-60-90',
+    label: 'Loep Start',
     description: 'We willen de eerste maanden van nieuwe medewerkers als eerste managementvraag openen.',
-    firstStepLabel: 'Onboarding 30-60-90 Baseline',
+    firstStepLabel: 'Loep Start Baseline',
   },
   {
     value: 'pulse',
@@ -256,7 +256,7 @@ export function inferRouteInterestFromSource(source: string | null | undefined):
 }
 
 export function getContactRouteLabel(value: string | null | undefined) {
-  return routeOptionMap.get(normalizeContactRouteInterest(value))?.label ?? 'ExitScan'
+  return routeOptionMap.get(normalizeContactRouteInterest(value))?.label ?? 'Loep Vertrek'
 }
 
 export function getContactDesiredTimingLabel(value: string | null | undefined) {
@@ -264,7 +264,7 @@ export function getContactDesiredTimingLabel(value: string | null | undefined) {
 }
 
 export function getContactFirstStepLabel(value: string | null | undefined) {
-  return routeOptionMap.get(normalizeContactRouteInterest(value))?.firstStepLabel ?? 'ExitScan Baseline'
+  return routeOptionMap.get(normalizeContactRouteInterest(value))?.firstStepLabel ?? 'Loep Vertrek Baseline'
 }
 
 export function normalizeContactCtaSource(value: string | null | undefined) {
@@ -331,7 +331,7 @@ export function getContactQualificationGuidance({
       status: 'bounded_peer_review',
       recommendedCoreRoute,
       followOnCandidateRoute: 'onboarding',
-      headline: 'Onboarding 30-60-90 blijft een gerichte eerste route naast de kernroutes.',
+      headline: 'Loep Start blijft een gerichte eerste route naast de kernroutes.',
       detail: `We behandelen onboarding als een specifiekere eerste route voor nieuwe medewerkers. De route hoeft niet eerst te worden teruggeduwd naar een gewone follow-up, maar we toetsen wel bewust of onboarding nu echt de eerste managementvraag is of dat ${getContactRouteLabel(recommendedCoreRoute)} inhoudelijk logischer blijft.`,
       operatorSummary: `Onboarding is genoemd als gerichte eerste route; toets direct of de eerste maanden van nieuwe medewerkers nu echt de eerste managementvraag zijn, en check anders of ${getContactRouteLabel(recommendedCoreRoute)} sterker past.`,
     }
@@ -375,9 +375,9 @@ export function getContactQualificationGuidance({
       status: 'retention_primary',
       recommendedCoreRoute,
       followOnCandidateRoute: null,
-      headline: 'RetentieScan lijkt nu de logische eerste route.',
-      detail: `De vraag leest als een vroeg behouds- of stay-intent vraagstuk op groepsniveau. Daardoor mag RetentieScan in intake als eerste route worden getoetst, met ${normalizedTiming === 'zo-snel-mogelijk' ? 'hoge urgentie' : 'een gerichte eerste verificatie'} als uitgangspunt.`,
-      operatorSummary: 'Vroege behoudsvraag zichtbaar; toets RetentieScan als primaire route en bevestig dat het niet alsnog vooral om vertrekduiding achteraf gaat.',
+      headline: 'Loep Behoud lijkt nu de logische eerste route.',
+      detail: `De vraag leest als een vroeg behouds- of stay-intent vraagstuk op groepsniveau. Daardoor mag Loep Behoud in intake als eerste route worden getoetst, met ${normalizedTiming === 'zo-snel-mogelijk' ? 'hoge urgentie' : 'een gerichte eerste verificatie'} als uitgangspunt.`,
+      operatorSummary: 'Vroege behoudsvraag zichtbaar; toets Loep Behoud als primaire route en bevestig dat het niet alsnog vooral om vertrekduiding achteraf gaat.',
     }
   }
 

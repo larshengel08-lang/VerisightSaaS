@@ -33,7 +33,7 @@ describe('review rhythm console', () => {
     expect(markup).toContain('Cadans')
     expect(markup).toContain('Herinnering')
     expect(markup).toContain('Escalatie')
-    expect(markup).toContain('RetentieScan')
+    expect(markup).toContain('Loep Behoud')
     expect(markup).not.toContain('workflow')
   })
 

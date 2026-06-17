@@ -38,7 +38,7 @@ function buildGovernanceItem(overrides: Record<string, unknown> = {}) {
     title: 'Retention follow-through',
     summary: 'Bounded retention route',
     reason: 'Welke bounded vervolgstap vraagt deze route nu?',
-    sourceLabel: 'RetentieScan',
+    sourceLabel: 'Loep Behoud',
     teamId: 'support',
     teamLabel: 'Support',
     ownerId: 'manager-1',
@@ -54,7 +54,7 @@ function buildGovernanceItem(overrides: Record<string, unknown> = {}) {
     reviewOutcome: 'bijstellen',
     reviewDateLabel: '10 mei',
     reviewRhythm: 'Maandelijks',
-    signalLabel: 'RetentieScan - Support',
+    signalLabel: 'Loep Behoud - Support',
     signalBody: 'De route blijft binnen retention governance.',
     nextStep: 'Plan het volgende reviewmoment.',
     peopleCount: 22,
@@ -91,7 +91,7 @@ describe('buildActionCenterGovernanceQueue', () => {
       items: [
         buildGovernanceItem({
           id: 'route-closeout-ready',
-          sourceLabel: 'ExitScan',
+          sourceLabel: 'Loep Vertrek',
           teamLabel: 'Operations',
           coreSemantics: {
             route: {

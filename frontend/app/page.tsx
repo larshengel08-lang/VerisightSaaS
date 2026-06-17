@@ -8,7 +8,7 @@ import { faqSchema } from '@/components/marketing/site-content'
 export const metadata: Metadata = {
   title: 'Loep',
   description:
-    'Loep helpt HR, directie en management sneller zien wat speelt, bepalen wat eerst telt en opvolging organiseren - met ExitScan, RetentieScan, dashboard en rapport in een suite.',
+    'Loep helpt HR, directie en management sneller zien wat speelt, bepalen wat eerst telt en opvolging organiseren - met Loep Vertrek, Loep Behoud, dashboard en rapport in een suite.',
   alternates: { canonical: '/' },
 }
 
@@ -18,15 +18,15 @@ export default function LandingPage() {
     '@type': 'WebPage',
     name: 'Loep',
     description:
-      'Van people insights naar prioriteit, actie en follow-up voor HR en management. Loep verbindt ExitScan, RetentieScan, dashboard en rapport in een suite.',
+      'Van people insights naar prioriteit, actie en follow-up voor HR en management. Loep verbindt Loep Vertrek, Loep Behoud, dashboard en rapport in een suite.',
     url: 'https://www.verisight.nl/',
     inLanguage: 'nl-NL',
     mainEntity: {
       '@type': 'ItemList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'ExitScan', url: 'https://www.verisight.nl/producten/exitscan' },
-        { '@type': 'ListItem', position: 2, name: 'RetentieScan', url: 'https://www.verisight.nl/producten/retentiescan' },
-        { '@type': 'ListItem', position: 3, name: 'Onboarding 30-60-90', url: 'https://www.verisight.nl/producten/onboarding-30-60-90' },
+        { '@type': 'ListItem', position: 1, name: 'Loep Vertrek', url: 'https://www.verisight.nl/producten/exitscan' },
+        { '@type': 'ListItem', position: 2, name: 'Loep Behoud', url: 'https://www.verisight.nl/producten/retentiescan' },
+        { '@type': 'ListItem', position: 3, name: 'Loep Start', url: 'https://www.verisight.nl/producten/onboarding-30-60-90' },
       ],
     },
   }
@@ -46,7 +46,7 @@ export default function LandingPage() {
       </a>
 
       <div className="min-h-screen">
-        <PublicHeader ctaHref={ctaHref} ctaLabel="Bespreek uw vraagstuk" />
+        <PublicHeader ctaHref={ctaHref} ctaLabel="Bespreek je vraagstuk" />
         <main id="hoofdinhoud">
           <HomePageContent />
         </main>

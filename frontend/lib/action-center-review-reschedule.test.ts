@@ -28,7 +28,7 @@ describe('action center review reschedule contract', () => {
     })
   })
 
-  it('accepts RetentieScan as the only non-exit parity unlock in the shared reschedule contract', async () => {
+  it('accepts Loep Behoud as the only non-exit parity unlock in the shared reschedule contract', async () => {
     const { validateActionCenterReviewRescheduleInput } = await import('./action-center-review-reschedule') as {
       validateActionCenterReviewRescheduleInput: (input: Record<string, unknown>) => Record<string, unknown>
     }

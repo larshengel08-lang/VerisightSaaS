@@ -23,7 +23,7 @@ function createReviewMomentItem(overrides: Partial<ActionCenterPreviewItem> = {}
     title: 'Begrens verloop in operations',
     summary: 'Compacte route',
     reason: 'Lees terug',
-    sourceLabel: 'ExitScan',
+    sourceLabel: 'Loep Vertrek',
     orgId: 'org-1',
     scopeType: 'department',
     teamId: 'operations',
@@ -74,7 +74,7 @@ describe('review moment detail panel entry links', () => {
       title: 'Reviewmoment voor Operations',
       summary: 'Samenvatting',
       reason: 'Reden',
-      sourceLabel: 'ExitScan',
+      sourceLabel: 'Loep Vertrek',
       scopeType: 'department',
       teamId: 'team-operations',
       teamLabel: 'Operations',
@@ -288,12 +288,12 @@ describe('review moment detail panel reschedule controls', () => {
     expect(markup).not.toContain('Annuleer review')
   })
 
-  it('allows the same bounded reschedule controls for RetentieScan when the server-derived gate enables them', () => {
+  it('allows the same bounded reschedule controls for Loep Behoud when the server-derived gate enables them', () => {
     const markup = renderToStaticMarkup(
       createElement(ReviewMomentDetailPanel, {
         urgency: 'this-week',
         item: createReviewMomentItem({
-          sourceLabel: 'RetentieScan',
+          sourceLabel: 'Loep Behoud',
         }),
         canDownloadInviteArtifact: true,
         canScheduleReviewControls: true,

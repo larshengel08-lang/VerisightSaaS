@@ -16,7 +16,7 @@ describe('action center review invite ics', () => {
     return buildActionCenterReviewInviteDraft({
       actionCenterOrigin: 'https://app.verisight.nl',
       campaignId: 'campaign-exit-q2',
-      campaignName: 'ExitScan Q2',
+      campaignName: 'Loep Vertrek Q2',
       managerEmail: 'manager@example.com',
       managerName: 'M. Manager',
       phase: 1,

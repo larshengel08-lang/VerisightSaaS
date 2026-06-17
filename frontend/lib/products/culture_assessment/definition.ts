@@ -16,7 +16,7 @@ export const cultureAssessmentDefinition: ScanDefinition = {
   whatItIsText:
     'Een primaire enterprise route voor een brede jaarlijkse cultuur- en engagementbaseline met executive read, domeinbeeld, segmentcontrasten en board-read als productonderdeel.',
   whatItIsNotText:
-    'Geen RetentieScan-variant, geen Pulse, geen TeamScan, geen manager ranking tool, geen self-serve survey platform en geen benchmark-first product.',
+    'Geen Loep Behoud-variant, geen Pulse, geen TeamScan, geen manager ranking tool, geen self-serve survey platform en geen benchmark-first product.',
   howToReadText:
     'Lees het executive culture read descriptief: eerst responsbasis, dan Loep Culture Index, daarna domeinen, segmentcontrasten en governed verdiepingslagen.',
   privacyBoundaryText:

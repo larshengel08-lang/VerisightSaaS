@@ -8,7 +8,7 @@ import {
 } from '@/lib/contact-funnel'
 
 describe('contact qualification guidance', () => {
-  it('keeps ExitScan as the default route when the intake is still broad or uncertain', () => {
+  it('keeps Loep Vertrek as the default route when the intake is still broad or uncertain', () => {
     const guidance = getContactQualificationGuidance({
       routeInterest: 'nog-onzeker',
       desiredTiming: 'orienterend',
@@ -18,10 +18,10 @@ describe('contact qualification guidance', () => {
     expect(guidance.status).toBe('uncertain_core_review')
     expect(guidance.recommendedCoreRoute).toBe('exitscan')
     expect(guidance.followOnCandidateRoute).toBeNull()
-    expect(guidance.headline.toLowerCase()).toContain('exitscan')
+    expect(guidance.headline.toLowerCase()).toContain('loep vertrek')
   })
 
-  it('allows RetentieScan to become the primary recommendation for clear early-signal retention questions', () => {
+  it('allows Loep Behoud to become the primary recommendation for clear early-signal retention questions', () => {
     const guidance = getContactQualificationGuidance({
       routeInterest: 'retentiescan',
       desiredTiming: 'deze-maand',
@@ -80,10 +80,10 @@ describe('contact qualification guidance', () => {
     expect(guidance.status).toBe('follow_on_reframe')
     expect(guidance.recommendedCoreRoute).toBe('exitscan')
     expect(guidance.followOnCandidateRoute).toBe('leadership')
-    expect(guidance.operatorSummary.toLowerCase()).toContain('exitscan')
+    expect(guidance.operatorSummary.toLowerCase()).toContain('loep vertrek')
   })
 
-  it('preserves culture_assessment as an explicit route interest instead of remapping it to ExitScan', () => {
+  it('preserves culture_assessment as an explicit route interest instead of remapping it to Loep Vertrek', () => {
     expect(normalizeContactRouteInterest('culture_assessment')).toBe('culture_assessment')
     expect(inferRouteInterestFromSource('culture_assessment_primary_cta')).toBe('culture_assessment')
     expect(getContactRouteLabel('culture_assessment')).toBe('Loep Culture Assessment')

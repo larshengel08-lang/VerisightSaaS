@@ -38,7 +38,7 @@ export function OnboardingSecondaryPage() {
           <div style={{ ...SHELL, position: 'relative' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 52 }}>
               <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.18em', textTransform: 'uppercase', color: AC.deep }}>
-                Onboarding 30-60-90
+                Loep Start
               </span>
               <div style={{ flex: 1, height: '1px', background: T.rule, maxWidth: 200 }} />
               <Link href="/producten" style={{ fontSize: 11, color: T.inkMuted, textDecoration: 'none' }}>
@@ -140,9 +140,9 @@ export function OnboardingSecondaryPage() {
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 {[
                   'De eerste maanden van nieuwe medewerkers vragen nu als eerste managementvraag aandacht.',
-                  'U wilt onboarding scherper openen zonder meteen een brede people-route te starten.',
+                  'Je wilt onboarding scherper openen zonder meteen een brede people-route te starten.',
                   'Vroege landing, eerste frictie of eerste uitval zijn nu urgenter dan brede uitstroom of behoudsdruk.',
-                  'U zoekt een volwaardige baseline, maar wel kleiner en specifieker dan de twee kernroutes.',
+                  'Je zoekt een volwaardige baseline, maar wel kleiner en specifieker dan de twee kernroutes.',
                 ].map((text) => (
                   <div key={text} style={{ ...featureCardStyle, alignItems: 'flex-start', display: 'flex', gap: 12, padding: '20px 22px' }}>
                     <div style={{ width: 6, height: 6, background: AC.deep, borderRadius: '50%', flexShrink: 0, marginTop: 9 }} />
@@ -153,10 +153,10 @@ export function OnboardingSecondaryPage() {
             </div>
             <div style={{ borderTop: `1px solid ${T.rule}`, paddingTop: 28 }}>
               <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.deep, marginBottom: 14 }}>
-                Wat u ontvangt
+                Wat je ontvangt
               </div>
               <p style={{ fontSize: 15, lineHeight: 1.72, color: T.inkSoft, marginBottom: 26, maxWidth: '56ch' }}>
-                U ontvangt een compacte onboarding baseline met dashboard, managementrapport en een eerste
+                Je ontvangt een compacte onboarding baseline met dashboard, managementrapport en een eerste
                 vervolgrichting voor wat in de eerste 30, 60 en 90 dagen nu aandacht vraagt.
               </p>
               <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
@@ -180,11 +180,11 @@ export function OnboardingSecondaryPage() {
           href={buildContactHref({ routeInterest: 'onboarding', ctaSource: 'product_onboarding_form' })}
           showSectionMark={false}
           backdropNumber={null}
-          title="Toets of Onboarding 30-60-90"
+          title="Toets of Loep Start"
           accentTitle="nu de juiste eerste route is."
-          body="Beschrijf kort waarom de eerste maanden van nieuwe medewerkers nu als eerste managementvraag spelen. Dan toetsen we of Onboarding 30-60-90 Baseline de juiste eerste route is."
+          body="Beschrijf kort waarom de eerste maanden van nieuwe medewerkers nu als eerste managementvraag spelen. Dan toetsen we of Loep Start Baseline de juiste eerste route is."
           buttonLabel="Plan een eerste route-inschatting"
-          note="U krijgt eerst een route-inschatting, geen verplicht uitgebreid traject."
+          note="Je krijgt eerst een route-inschatting, geen verplicht uitgebreid traject."
         />
       </main>
       <PublicFooter />

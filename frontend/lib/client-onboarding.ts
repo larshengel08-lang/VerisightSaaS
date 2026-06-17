@@ -114,25 +114,25 @@ export const CLIENT_FILE_SPEC = {
 
 export const PRODUCT_ROUTE_VARIANTS = [
   {
-    title: 'ExitScan Baseline',
+    title: 'Loep Vertrek Baseline',
     fit: 'Primaire eerste route',
     body:
       'Start meestal met een baseline op ex-medewerkers. Geschikt om vertrek eerst bestuurlijk leesbaar te maken voordat een ritmeroute logisch wordt.',
   },
   {
-    title: 'ExitScan ritmeroute',
+    title: 'Loep Vertrek ritmeroute',
     fit: 'Vervolgroute na baseline',
     body:
       'Past pas zodra proces, volume en eigenaarschap staan. Geen concurrerend eerste pakket, maar een begeleide ritmeroute op actuele uitstroom.',
   },
   {
-    title: 'RetentieScan Baseline',
+    title: 'Loep Behoud Baseline',
     fit: 'Complementaire eerste baseline',
     body:
       'Eerste retentieroute voor actieve medewerkers. Gericht op vroegsignalering, groepsduiding en een privacy-first managementbeeld.',
   },
   {
-    title: 'RetentieScan ritmeroute',
+    title: 'Loep Behoud ritmeroute',
     fit: 'Vervolgroute na baseline',
     body:
       'Herhaalmeting per kwartaal of halfjaar nadat baseline en eerste opvolging staan. Gericht op trendduiding en betere managementopvolging.',
@@ -143,7 +143,7 @@ export const CANONICAL_CUSTOMER_LIFECYCLE = [
   {
     key: 'first_route',
     title: 'Eerste route',
-    body: 'Kies eerst welke managementvraag nu telt: meestal ExitScan Baseline, en alleen RetentieScan Baseline als de actieve behoudsvraag echt voorop staat.',
+    body: 'Kies eerst welke managementvraag nu telt: meestal Loep Vertrek Baseline, en alleen Loep Behoud Baseline als de actieve behoudsvraag echt voorop staat.',
   },
   {
     key: 'first_value',
@@ -208,7 +208,7 @@ export function getLifecycleDecisionCards(scanType: ScanType): LifecycleDecision
       {
         title: 'Blijf op dezelfde route',
         fit: 'Standaard vervolg',
-        body: 'RetentieScan ritmeroute is de logische vervolgvorm zodra baseline, eerste managementroute en een reviewmoment al staan.',
+        body: 'Loep Behoud ritmeroute is de logische vervolgvorm zodra baseline, eerste managementroute en een reviewmoment al staan.',
       },
       {
         title: 'Verdiep bewust',
@@ -216,9 +216,9 @@ export function getLifecycleDecisionCards(scanType: ScanType): LifecycleDecision
         body: 'Segment deep dive past alleen wanneer metadata op orde zijn en extra segmentduiding echt helpt bij prioritering of interventiekeuze.',
       },
       {
-        title: 'Breid uit naar ExitScan',
+        title: 'Breid uit naar Loep Vertrek',
         fit: 'Tweede product pas bij nieuwe vraag',
-        body: 'Ga pas naar ExitScan wanneer retrospectieve vertrekduiding nodig blijkt om dezelfde behoudsthema\'s achteraf scherper te begrijpen.',
+        body: 'Ga pas naar Loep Vertrek wanneer retrospectieve vertrekduiding nodig blijkt om dezelfde behoudsthema\'s achteraf scherper te begrijpen.',
       },
     ] as const
   }
@@ -236,7 +236,7 @@ export function getLifecycleDecisionCards(scanType: ScanType): LifecycleDecision
         body: 'Ga pas naar meer verfijning of extra verificatie wanneer dezelfde signalen echt om lokalisatie, bredere duiding of scherper bewijs vragen.',
       },
       {
-        title: 'Breid uit naar RetentieScan of bredere duiding',
+        title: 'Breid uit naar Loep Behoud of bredere duiding',
         fit: 'Tweede product bij nieuwe managementvraag',
         body: 'Kies pas een ander product wanneer dezelfde thema\'s niet meer alleen een reviewvraag zijn, maar een bredere behouds- of duidingsvraag worden die Pulse niet eerlijk kan dragen.',
       },
@@ -278,7 +278,7 @@ export function getLifecycleDecisionCards(scanType: ScanType): LifecycleDecision
       {
         title: 'Ga naar een andere productvorm',
         fit: 'Andere vraag, ander product',
-        body: 'Kies pas een ander product wanneer de vraag niet meer over vroege instroom gaat, maar over bredere behoudsdruk in RetentieScan, lokale lokalisatie in TeamScan of retrospectieve vertrekduiding in ExitScan die onboarding niet eerlijk kan dragen.',
+        body: 'Kies pas een ander product wanneer de vraag niet meer over vroege instroom gaat, maar over bredere behoudsdruk in Loep Behoud, lokale lokalisatie in TeamScan of retrospectieve vertrekduiding in Loep Vertrek die onboarding niet eerlijk kan dragen.',
       },
     ] as const
   }
@@ -307,7 +307,7 @@ export function getLifecycleDecisionCards(scanType: ScanType): LifecycleDecision
     {
       title: 'Blijf op dezelfde route',
       fit: 'Quote-only vervolg',
-      body: 'ExitScan ritmeroute wordt pas logisch wanneer proces, volume en eigenaarschap al staan en een begeleide vervolgroute op actuele uitstroom echt meerwaarde geeft.',
+      body: 'Loep Vertrek ritmeroute wordt pas logisch wanneer proces, volume en eigenaarschap al staan en een begeleide vervolgroute op actuele uitstroom echt meerwaarde geeft.',
     },
     {
       title: 'Verdiep bewust',
@@ -315,9 +315,9 @@ export function getLifecycleDecisionCards(scanType: ScanType): LifecycleDecision
       body: 'Segment deep dive hoort alleen bij de route wanneer afdeling, functieniveau en minimale n sterk genoeg zijn om extra segmentduiding geloofwaardig te maken.',
     },
     {
-      title: 'Breid uit naar RetentieScan',
+      title: 'Breid uit naar Loep Behoud',
       fit: 'Tweede product pas na eerste waarde',
-      body: 'RetentieScan Baseline wordt logisch zodra dezelfde thema\'s niet alleen achteraf moeten worden geduid, maar ook eerder in de actieve populatie moeten worden gesignaleerd.',
+      body: 'Loep Behoud Baseline wordt logisch zodra dezelfde thema\'s niet alleen achteraf moeten worden geduid, maar ook eerder in de actieve populatie moeten worden gesignaleerd.',
     },
   ] as const
 }
@@ -357,14 +357,14 @@ export function getFirstNextStepGuidance(scanType: ScanType): FirstNextStepGuida
           boundary: 'Gebruik Pulse alleen als follow-on op een nieuwe reviewvraag, niet als vervanging van de jaarlijkse baseline.',
         },
         {
-          productLabel: 'RetentieScan',
+          productLabel: 'Loep Behoud',
           when: 'Als de vervolgvraag niet meer breed cultureel is, maar expliciet verschuift naar actieve behoudsdruk in de huidige populatie.',
-          boundary: 'Open RetentieScan alleen bij een echt smallere behoudsvraag; deeper governed work blijft eerst de default tussenlaag.',
+          boundary: 'Open Loep Behoud alleen bij een echt smallere behoudsvraag; deeper governed work blijft eerst de default tussenlaag.',
         },
         {
-          productLabel: 'ExitScan',
+          productLabel: 'Loep Vertrek',
           when: 'Als de vervolgvraag verschuift naar retrospectieve vertrekduiding en vertrekpatronen in plaats van brede cultuur- en engagementlezing.',
-          boundary: 'Open ExitScan alleen bij een echt nieuwe vertrekvraag, niet als standaard vervolg op iedere baseline.',
+          boundary: 'Open Loep Vertrek alleen bij een echt nieuwe vertrekvraag, niet als standaard vervolg op iedere baseline.',
         },
       ],
     }
@@ -377,7 +377,7 @@ export function getFirstNextStepGuidance(scanType: ScanType): FirstNextStepGuida
           key: 'insight',
           title: 'Inzicht nu',
           body:
-            'Lees RetentieScan nu eerst als verification-first groepssignaal: waar staat behoud onder druk en welk spoor vraagt als eerste verificatie.',
+            'Lees Loep Behoud nu eerst als verification-first groepssignaal: waar staat behoud onder druk en welk spoor vraagt als eerste verificatie.',
         },
         {
           key: 'action',
@@ -394,15 +394,15 @@ export function getFirstNextStepGuidance(scanType: ScanType): FirstNextStepGuida
       ],
       followOnSuggestions: [
         {
-          productLabel: 'RetentieScan ritmeroute',
+          productLabel: 'Loep Behoud ritmeroute',
           when: 'Als baseline, eerste eigenaar en reviewmoment al staan en dezelfde behoudsvraag later opnieuw moet worden gelezen.',
           boundary: 'Blijft op dezelfde kernroute; geen extra product zolang het nog om dezelfde behoudsvraag gaat.',
         },
         {
-          productLabel: 'ExitScan',
+          productLabel: 'Loep Vertrek',
           when: 'Als de vraag verschuift van actieve behoudsdruk naar retrospectieve vertrekduiding op ex-medewerkers.',
           boundary:
-            'Gebruik ExitScan alleen bij een echt nieuwe managementvraag, niet als standaard vervolg na iedere RetentieScan.',
+            'Gebruik Loep Vertrek alleen bij een echt nieuwe managementvraag, niet als standaard vervolg na iedere Loep Behoud.',
         },
       ],
     }
@@ -437,9 +437,9 @@ export function getFirstNextStepGuidance(scanType: ScanType): FirstNextStepGuida
           boundary: 'Blijft een bounded repeat motion; gebruik dit niet als breed trend- of bewijsverhaal.',
         },
         {
-          productLabel: 'RetentieScan',
+          productLabel: 'Loep Behoud',
           when: 'Als de vraag verschuift naar bredere behoudsdruk op groepsniveau in plaats van een compacte review op dit meetmoment.',
-          boundary: 'Open RetentieScan alleen bij een bredere behoudsvraag, niet als automatische verbreding van elke Pulse.',
+          boundary: 'Open Loep Behoud alleen bij een bredere behoudsvraag, niet als automatische verbreding van elke Pulse.',
         },
       ],
     }
@@ -474,7 +474,7 @@ export function getFirstNextStepGuidance(scanType: ScanType): FirstNextStepGuida
           boundary: 'Blijft lokaal en begrensd; maak TeamScan niet groter dan deze lokale vraag draagt.',
         },
         {
-          productLabel: 'RetentieScan',
+          productLabel: 'Loep Behoud',
           when: 'Als de vraag weer breder wordt en je groepsniveau of meerdere segmenten opnieuw moet wegen.',
           boundary: 'Ga alleen terug naar bredere duiding als de lokale vraag niet meer leidend is.',
         },
@@ -511,9 +511,9 @@ export function getFirstNextStepGuidance(scanType: ScanType): FirstNextStepGuida
           boundary: 'Blijft bounded op checkpointniveau; maak er geen volledige journey-laag van.',
         },
         {
-          productLabel: 'RetentieScan',
+          productLabel: 'Loep Behoud',
           when: 'Als de vraag verschuift van vroege landing naar bredere behoudsdruk in de actieve populatie.',
-          boundary: 'Open RetentieScan pas bij bredere behoudsdruk, niet als standaard vervolg op elk onboarding-signaal.',
+          boundary: 'Open Loep Behoud pas bij bredere behoudsdruk, niet als standaard vervolg op elk onboarding-signaal.',
         },
         {
           productLabel: 'TeamScan',
@@ -567,7 +567,7 @@ export function getFirstNextStepGuidance(scanType: ScanType): FirstNextStepGuida
         key: 'insight',
         title: 'Inzicht nu',
         body:
-          'Lees ExitScan nu eerst als managementread van terugkerende vertrekfrictie: welk patroon keert terug en waar lijkt werkfrictie als eerste beinvloedbaar.',
+          'Lees Loep Vertrek nu eerst als managementread van terugkerende vertrekfrictie: welk patroon keert terug en waar lijkt werkfrictie als eerste beinvloedbaar.',
       },
       {
         key: 'action',
@@ -579,19 +579,19 @@ export function getFirstNextStepGuidance(scanType: ScanType): FirstNextStepGuida
         key: 'follow_on',
         title: 'Mogelijk vervolgproduct',
         body:
-          'Een vervolgproduct wordt pas logisch bij een nieuwe managementvraag. Blijf eerst op ExitScan zolang dezelfde vertrekduiding nog centraal staat.',
+          'Een vervolgproduct wordt pas logisch bij een nieuwe managementvraag. Blijf eerst op Loep Vertrek zolang dezelfde vertrekduiding nog centraal staat.',
       },
     ],
     followOnSuggestions: [
       {
-        productLabel: 'ExitScan ritmeroute',
+        productLabel: 'Loep Vertrek ritmeroute',
         when: 'Als proces, volume en eigenaarschap staan en dezelfde vertrekvraag periodiek opnieuw moet worden gelezen.',
         boundary: 'Blijft op dezelfde kernroute; geen tweede product zolang dezelfde vertrekduiding centraal staat.',
       },
       {
-        productLabel: 'RetentieScan',
+        productLabel: 'Loep Behoud',
         when: 'Als dezelfde thema\'s nu ook in de actieve populatie moeten worden getoetst en vroege behoudsdruk zichtbaar moet worden.',
-        boundary: 'Open RetentieScan pas bij een nieuwe managementvraag in de actieve populatie, niet als standaard upsell na ExitScan.',
+        boundary: 'Open Loep Behoud pas bij een nieuwe managementvraag in de actieve populatie, niet als standaard upsell na Loep Vertrek.',
       },
     ],
   }

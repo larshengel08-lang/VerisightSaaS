@@ -26,13 +26,13 @@ export interface MarketingProduct {
 export const CORE_MARKETING_PRODUCTS: MarketingProduct[] = [
   {
     slug: 'exitscan',
-    label: 'ExitScan',
-    shortLabel: 'ExitScan',
+    label: 'Loep Vertrek',
+    shortLabel: 'Loep Vertrek',
     tagline: 'Begrijp waarom medewerkers vertrekken en waar actie het eerst telt',
     description:
       'Voor organisaties die vertrek niet alleen willen registreren, maar scherp willen begrijpen waar patronen terugkomen en waar actie het eerst effect heeft.',
-    seoTitle: 'ExitScan | Verloopanalyse en vertrekduiding voor HR-teams',
-    ogAlt: 'ExitScan productpagina van Loep',
+    seoTitle: 'Loep Vertrek | Verloopanalyse en vertrekduiding voor HR-teams',
+    ogAlt: 'Loep Vertrek productpagina van Loep',
     serviceType: 'Vertrekduiding en managementrapportage',
     serviceAudience: 'HR-teams en directies die uitstroom achteraf willen duiden',
     serviceOutput:
@@ -43,13 +43,13 @@ export const CORE_MARKETING_PRODUCTS: MarketingProduct[] = [
   },
   {
     slug: 'retentiescan',
-    label: 'RetentieScan',
-    shortLabel: 'RetentieScan',
+    label: 'Loep Behoud',
+    shortLabel: 'Loep Behoud',
     tagline: 'Zie eerder waar behoud onder druk komt te staan en wat nu aandacht vraagt',
     description:
       'Voor organisaties die behoudsdruk eerder willen zien, voordat verloop zichtbaar oploopt en het gesprek te laat begint.',
-    seoTitle: 'RetentieScan | Medewerkersbehoud en vroegsignalering voor HR-teams',
-    ogAlt: 'RetentieScan productpagina van Loep',
+    seoTitle: 'Loep Behoud | Medewerkersbehoud en vroegsignalering voor HR-teams',
+    ogAlt: 'Loep Behoud productpagina van Loep',
     serviceType: 'Vroegsignalering op behoud met retentiesignaal',
     serviceAudience: 'HR-teams en directies die behoud eerder zichtbaar willen maken',
     serviceOutput:
@@ -83,13 +83,13 @@ export const PORTFOLIO_ROUTE_MARKETING_PRODUCTS: MarketingProduct[] = [
 export const SECONDARY_FIRST_BUY_MARKETING_PRODUCTS: MarketingProduct[] = [
   {
     slug: 'onboarding-30-60-90',
-    label: 'Onboarding 30-60-90',
-    shortLabel: 'Onboarding 30-60-90',
+    label: 'Loep Start',
+    shortLabel: 'Loep Start',
     tagline: 'Gerichte startroute voor de eerste maanden van nieuwe medewerkers',
     description:
       'Gerichte startroute voor organisaties die juist in de eerste maanden van nieuwe medewerkers sneller helderheid nodig hebben, zonder Onboarding tot derde kernroute te maken.',
-    seoTitle: 'Onboarding 30-60-90 | Vroege lifecycle-check voor nieuwe medewerkers',
-    ogAlt: 'Onboarding 30-60-90 productpagina van Loep',
+    seoTitle: 'Loep Start | Vroege lifecycle-check voor nieuwe medewerkers',
+    ogAlt: 'Loep Start productpagina van Loep',
     serviceType: 'Onboarding baseline voor vroege landing en eerste uitval',
     serviceAudience: 'HR-teams en directies die onboarding als eerste managementvraag willen openen',
     serviceOutput:
@@ -109,8 +109,8 @@ export const FOLLOW_ON_MARKETING_PRODUCTS: MarketingProduct[] = [
     shortLabel: 'Combinatie',
     tagline: 'Gedeelde vervolglijn voor vertrekduiding en behoudsvraag',
     description:
-      'Gerichte vervolgronde voor organisaties waar vertrekduiding en behoudsvraag tegelijk bestuurlijk spelen. Bedoeld als gefaseerde combinatie van ExitScan en RetentieScan, niet als derde eerste instap.',
-    seoTitle: 'Combinatie | Gefaseerde vervolglijn voor ExitScan en RetentieScan',
+      'Gerichte vervolgronde voor organisaties waar vertrekduiding en behoudsvraag tegelijk bestuurlijk spelen. Bedoeld als gefaseerde combinatie van Loep Vertrek en Loep Behoud, niet als derde eerste instap.',
+    seoTitle: 'Combinatie | Gefaseerde vervolglijn voor Loep Vertrek en Loep Behoud',
     ogAlt: 'Combinatie productpagina van Loep',
     serviceType: 'Gefaseerde vervolglijn voor vertrekduiding en behoudsvraag',
     serviceAudience: 'HR-teams en directies die vertrekduiding en behoudsvraag bewust in één lijn willen verbinden',

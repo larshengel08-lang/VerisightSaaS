@@ -4,14 +4,14 @@ import { LegalPageShell } from '@/components/marketing/legal-page-shell'
 
 export const metadata: Metadata = {
   title: 'Privacybeleid',
-  description: 'Lees hoe Loep omgaat met persoonsgegevens, hosting en rechten onder de AVG voor ExitScan en RetentieScan.',
+  description: 'Lees hoe Loep omgaat met persoonsgegevens, hosting en rechten onder de AVG voor Loep Vertrek en Loep Behoud.',
 }
 
 export default function PrivacyPage() {
   return (
     <LegalPageShell
       title="Privacybeleid"
-      description="Op deze pagina lees je hoe Loep omgaat met persoonsgegevens van klantgebruikers en respondenten binnen ExitScan en RetentieScan. Voor een publieksvriendelijke samenvatting in gewone taal kun je ook de Trust & privacy-pagina bekijken."
+      description="Op deze pagina lees je hoe Loep omgaat met persoonsgegevens van klantgebruikers en respondenten binnen Loep Vertrek en Loep Behoud. Voor een publieksvriendelijke samenvatting in gewone taal kun je ook de Trust & privacy-pagina bekijken."
       lastUpdated="9 april 2026"
     >
       <section>
@@ -27,12 +27,12 @@ export default function PrivacyPage() {
         <h2>1. Wie is Loep?</h2>
         <p>
           Loep is een in Nederland gevestigde dienst voor begeleide HR-signalering en rapportage.
-          Loep helpt HR-teams om vertrekredenen beter te begrijpen via ExitScan en om eerder te zien waar
-          behoud onder druk staat via RetentieScan.
+          Loep helpt HR-teams om vertrekredenen beter te begrijpen via Loep Vertrek en om eerder te zien waar
+          behoud onder druk staat via Loep Behoud.
         </p>
         <p>
           Privacy staat daarbij niet los als juridisch blok, maar hoort bij de manier waarop het product is ingericht.
-          ExitScan en RetentieScan zijn daarom ingericht voor groepsinzichten, managementsamenvatting en duidelijke
+          Loep Vertrek en Loep Behoud zijn daarom ingericht voor groepsinzichten, managementsamenvatting en duidelijke
           interpretatiegrenzen, niet voor individuele oordelen of black-box voorspellingen.
         </p>
         <p>
@@ -63,10 +63,10 @@ export default function PrivacyPage() {
       <section>
         <h2>3. Waarom verwerken wij deze gegevens?</h2>
         <ul>
-          <li>Om ExitScan en RetentieScan uit te voeren en rapportages beschikbaar te maken voor de klantorganisatie.</li>
+          <li>Om Loep Vertrek en Loep Behoud uit te voeren en rapportages beschikbaar te maken voor de klantorganisatie.</li>
           <li>Om uitnodigingen en herinneringen te versturen aan respondenten.</li>
           <li>Om de veiligheid, betrouwbaarheid en beschikbaarheid van het platform te bewaken.</li>
-          <li>Om klantorganisaties te helpen hun uitstroom te duiden en behoud eerder op groepsniveau te signaleren via RetentieScan.</li>
+          <li>Om klantorganisaties te helpen hun uitstroom te duiden en behoud eerder op groepsniveau te signaleren via Loep Behoud.</li>
         </ul>
       </section>
 
@@ -121,7 +121,7 @@ export default function PrivacyPage() {
           schijnprecisie te beperken.
         </p>
         <p>
-          Voor RetentieScan geldt aanvullend dat de uitkomsten zijn bedoeld voor groeps- en segmentinzichten over
+          Voor Loep Behoud geldt aanvullend dat de uitkomsten zijn bedoeld voor groeps- en segmentinzichten over
           actieve medewerkers. Individuele signalen, individuele vertrekintentie en persoonsgerichte actieroutes worden
           niet als managementoutput gepresenteerd.
         </p>

@@ -97,11 +97,11 @@ describe('action center shared core', () => {
     expect(retentionAdapter.liveEntryEnabled).toBe(false)
   })
 
-  it('keeps ExitScan as the only live action center consumer in this slice', () => {
+  it('keeps Loep Vertrek as the only live action center consumer in this slice', () => {
     const carrier = getExitActionCenterCarrier()
     const retentionAdapter = getFutureActionCenterAdapter('retention')
 
-    expect(carrier.label).toBe('ExitScan-adapter')
+    expect(carrier.label).toBe('Loep Vertrek-adapter')
     expect(carrier.status).toBe('active')
     expect(carrier.workspaceKind).toBe('follow_through')
     expect(carrier.routeScope).toBe('exit_only')
@@ -163,7 +163,7 @@ describe('action center shared core', () => {
       dossiers: [
         {
           id: 'dos-1',
-          title: 'ExitScan - Support closeout',
+          title: 'Loep Vertrek - Support closeout',
           triageStatus: 'bevestigd',
           deliveryMode: 'live',
           managementOwnerLabel: 'Sanne',
@@ -192,7 +192,7 @@ describe('action center shared core', () => {
       dossiers: [
         {
           id: 'dos-1',
-          title: 'ExitScan - Support closeout',
+          title: 'Loep Vertrek - Support closeout',
           triageStatus: 'bevestigd',
           deliveryMode: 'live',
           managementOwnerLabel: 'Sanne',

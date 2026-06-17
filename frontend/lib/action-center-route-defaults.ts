@@ -16,8 +16,8 @@ export const ACTION_CENTER_ROUTE_DEFAULTS_SCAN_TYPES = [
 
 export const ACTION_CENTER_ROUTE_DEFAULTS_ENABLED_SCAN_TYPES = ACTION_CENTER_APPROVED_ROUTE_FAMILIES
 export const ACTION_CENTER_ROUTE_FAMILY_LABELS = {
-  exit: 'ExitScan',
-  retention: 'RetentieScan',
+  exit: 'Loep Vertrek',
+  retention: 'Loep Behoud',
 } as const
 
 export type ActionCenterRouteDefaultsKnownScanType =

@@ -8,7 +8,7 @@ export const marketingNavLinks = [
 
 export const marketingPrimaryCta = {
   href: buildContactHref({ routeInterest: 'exitscan', ctaSource: 'global_primary_cta' }),
-  label: 'Bespreek uw vraagstuk',
+  label: 'Bespreek je vraagstuk',
 } as const
 
 export const marketingSecondaryCta = {
@@ -19,9 +19,9 @@ export const marketingSecondaryCta = {
 export const marketingFooterLinks = [
   { href: '/', label: 'Home' },
   { href: '/producten', label: 'Producten' },
-  { href: '/producten/exitscan', label: 'ExitScan' },
-  { href: '/producten/retentiescan', label: 'RetentieScan' },
-  { href: '/producten/onboarding-30-60-90', label: 'Onboarding 30-60-90' },
+  { href: '/producten/exitscan', label: 'Loep Vertrek' },
+  { href: '/producten/retentiescan', label: 'Loep Behoud' },
+  { href: '/producten/onboarding-30-60-90', label: 'Loep Start' },
   { href: '/tarieven', label: 'Tarieven' },
   { href: '/vertrouwen', label: 'Vertrouwen' },
 ] as const
@@ -36,7 +36,7 @@ export const marketingLegalLinks = [
 
 export const homepageProductRoutes = [
   {
-    name: 'ExitScan',
+    name: 'Loep Vertrek',
     title: 'Breng scherp in beeld waarom medewerkers vertrekken',
     body: 'Terugkijkende analyse van vertrek op groepsniveau, met een eerste handoff voor opvolging en een heldere eerste route.',
     href: '/producten/exitscan',
@@ -44,7 +44,7 @@ export const homepageProductRoutes = [
     chip: 'Kernroute',
   },
   {
-    name: 'RetentieScan',
+    name: 'Loep Behoud',
     title: 'Zie waar behoud onder druk staat',
     body: 'Vroegsignalering op behoud op groeps- en segmentniveau, met retentiesignaal en een heldere eerste managementroute.',
     href: '/producten/retentiescan',
@@ -52,7 +52,7 @@ export const homepageProductRoutes = [
     chip: 'Kernroute',
   },
   {
-    name: 'Onboarding 30-60-90',
+    name: 'Loep Start',
     title: 'Zie vroeg hoe nieuwe medewerkers landen',
     body: 'Wij meten vroeg hoe nieuwe medewerkers landen in rol, leiding en team. Helder groepsbeeld, begeleide bespreking inbegrepen.',
     href: '/producten/onboarding-30-60-90',
@@ -68,17 +68,17 @@ export const homepageCoreProductRoutes = homepageProductRoutes
 export const homepageComparisonRows = [
   [
     'Je wilt begrijpen waarom mensen zijn gegaan',
-    'ExitScan',
+    'Loep Vertrek',
     'Vertrekduiding, werkfactoren en bestuurlijke handoff in een eerste managementrapport',
   ],
   [
     'Je wilt eerder zien waar behoud onder druk staat',
-    'RetentieScan',
+    'Loep Behoud',
     'Retentiesignaal, stay-intent, bevlogenheid en vertrekintentie op groepsniveau',
   ],
   [
     'Je wilt vroeg zien hoe nieuwe medewerkers landen',
-    'Onboarding 30-60-90',
+    'Loep Start',
     'Vroege checkpoint-read op landing, rol en team. Begeleide bespreking inbegrepen.',
   ],
 ] as const
@@ -86,7 +86,7 @@ export const homepageComparisonRows = [
 export const homepageProofSignals = [
   'Eén suite-login voor dashboard, rapport en de beheeromgeving',
   'HR kan managers per afdeling toewijzen zonder survey-inzichten open te zetten',
-  'Drie routes: ExitScan, RetentieScan en Onboarding 30-60-90',
+  'Drie routes: Loep Vertrek, Loep Behoud en Loep Start',
   'Groepsinzichten met expliciete claims- en privacygrenzen',
   'Publieke proof verschijnt pas na expliciete approval en provenance',
 ] as const
@@ -108,7 +108,7 @@ export const homepageUtilityLinks = [
   {
     href: '/producten',
     title: 'Bekijk de productroutes',
-    body: 'Zie snel wanneer ExitScan, RetentieScan of Onboarding 30-60-90 de juiste eerste stap is.',
+    body: 'Zie snel wanneer Loep Vertrek, Loep Behoud of Loep Start de juiste eerste stap is.',
   },
   {
     href: '/aanpak',
@@ -129,19 +129,19 @@ export const homepageUtilityLinks = [
 
 export const productOverviewComparisonRows = [
   [
-    'ExitScan',
+    'Loep Vertrek',
     'Vertrekduiding',
     'Welk vertrekbeeld keert terug en welke werkfactoren wegen daarin mee?',
     'Voor terugkijkende analyse op uitstroom',
   ],
   [
-    'RetentieScan',
+    'Loep Behoud',
     'Vroegsignalering op behoud',
     'Waar staat behoud nu onder druk in de actieve populatie?',
     'Voor vroegsignalering en prioritering',
   ],
   [
-    'Onboarding 30-60-90',
+    'Loep Start',
     'Vroege lifecycle-check',
     'Hoe landen nieuwe medewerkers in de eerste 90 dagen?',
     'Voor vroege signalering bij nieuwe instroom',
@@ -152,14 +152,14 @@ export const comparisonCards = [
   {
     title: 'Gerichte scan, geen brede vragenlijst',
     description:
-      'Loep is opgebouwd rondom een specifieke managementvraag — niet een generieke vragenlijst die achteraf nog betekenis moet krijgen.',
-    outcome: 'U koopt een gerichte route, geen open instrument.',
+      'Loep is opgebouwd rondom een specifieke managementvraag, niet een generieke vragenlijst die achteraf nog betekenis moet krijgen.',
+    outcome: 'Je koopt een gerichte route, geen open instrument.',
   },
   {
-    title: 'Output die u intern kunt gebruiken',
+    title: 'Output die je intern kunt gebruiken',
     description:
       'Dashboard, bestuurlijke read en factoranalyse zijn direct deelbaar met HR, MT en directie.',
-    outcome: 'Geen losse datadump — een leesbaar rapport dat intern doorverteld kan worden.',
+    outcome: 'Geen losse datadump, maar een leesbaar rapport dat intern doorverteld kan worden.',
   },
   {
     title: 'Methodisch onderbouwd, heldere grenzen',
@@ -173,7 +173,7 @@ export const trustItems = [
   'Signalen, geen schijnzekerheid',
   'Rapportage op geaggregeerd niveau',
   'Vraagblokken gebaseerd op relevante literatuur',
-  'Loep voert uit — u beheert geen tool',
+  'Loep voert uit, je beheert geen tool',
   'AVG-conform, primaire dataopslag in een EU-regio',
   'Geen koppeling aan individuen in rapportage.',
 ] as const
@@ -182,7 +182,7 @@ export const trustQuickLinks = [
   {
     href: '/vertrouwen',
     label: 'Methodiek en vertrouwelijkheid',
-    body: 'Hoe Loep is opgebouwd en wat u ervan kunt verwachten.',
+    body: 'Hoe Loep is opgebouwd en wat je ervan kunt verwachten.',
   },
   {
     href: '/privacy',
@@ -199,7 +199,7 @@ export const trustQuickLinks = [
 export const trustSignalHighlights = [
   {
     title: 'Methodische duidelijkheid',
-    body: 'ExitScan en RetentieScan worden helder uitgelegd als managementinstrumenten met duidelijke grenzen, niet als diagnose of black-box voorspeller.',
+    body: 'Loep Vertrek en Loep Behoud worden helder uitgelegd als managementinstrumenten met duidelijke grenzen, niet als diagnose of black-box voorspeller.',
   },
   {
     title: 'Privacy op groepsniveau',
@@ -215,7 +215,7 @@ export const trustSignalHighlights = [
   },
   {
     title: 'Core proof blijft expliciet',
-    body: 'Publiek bewijs blijft bewust gekoppeld aan ExitScan en RetentieScan. Vervolgroutes zijn formeel uitgewerkt, maar krijgen publiek vooral bewijs via productpagina en trustlaag.',
+    body: 'Publiek bewijs blijft bewust gekoppeld aan Loep Vertrek en Loep Behoud. Vervolgroutes zijn formeel uitgewerkt, maar krijgen publiek vooral bewijs via productpagina en trustlaag.',
   },
   {
     title: 'Begeleide productvorm',
@@ -229,12 +229,12 @@ export const trustSignalHighlights = [
 
 export const trustVerificationCards = [
   {
-    title: 'Wat u nu publiek kunt verifiëren',
-    body: 'Loep laat publiek zien hoe productkeuze, privacy en rapportlezing zijn ingericht voordat u een gesprek plant.',
+    title: 'Wat je nu publiek kunt verifiëren',
+    body: 'Loep laat publiek zien hoe productkeuze, privacy en rapportlezing zijn ingericht voordat je een gesprek plant.',
   },
   {
     title: 'Waar publieke voorbeeldoutput stopt',
-    body: 'ExitScan en RetentieScan dragen de publieke voorbeeldrapporten. Andere routes worden publiek lichter toegelicht en niet als aparte samplebibliotheek uitgewerkt.',
+    body: 'Loep Vertrek en Loep Behoud dragen de publieke voorbeeldrapporten. Andere routes worden publiek lichter toegelicht en niet als aparte samplebibliotheek uitgewerkt.',
   },
   {
     title: 'Wat management wel ziet',
@@ -264,12 +264,12 @@ export const trustHubAnswerCards = [
     body: 'Er zijn publieke pagina\'s voor trust en privacy, privacybeleid, voorwaarden en een standaard DPA-template.',
   },
   {
-    title: 'Wat koopt u precies?',
+    title: 'Wat koop je precies?',
     body: 'Een begeleide dienst: Loep voert de scan uit, levert een managementrapport met prioriteiten en begeleidt HR en management naar één eerste keuze. Geen platform om zelf te beheren.',
   },
   {
     title: 'Heeft elke route een publiek voorbeeldrapport?',
-    body: 'Nee. Publieke voorbeeldoutput blijft bewust beperkt tot ExitScan en RetentieScan.',
+    body: 'Nee. Publieke voorbeeldoutput blijft bewust beperkt tot Loep Vertrek en Loep Behoud.',
   },
 ] as const
 
@@ -346,7 +346,7 @@ export const statCards = [
 export const outcomeCards = [
   [
     'Sneller kiezen welke vraag eerst telt',
-    'Je voorkomt dat ExitScan en RetentieScan door elkaar gaan lopen: meestal start je met vertrekduiding en voeg je behoudsignalering pas toe wanneer die vraag echt op tafel ligt.',
+    'Je voorkomt dat Loep Vertrek en Loep Behoud door elkaar gaan lopen: meestal start je met vertrekduiding en voeg je behoudsignalering pas toe wanneer die vraag echt op tafel ligt.',
   ],
   [
     'Beter intern doorvertellen',
@@ -362,7 +362,7 @@ export const outcomeCards = [
   ],
   [
     'Privacy by design',
-    'Output blijft bedoeld voor groepsinzichten en managementduiding, met extra terughoudendheid bij actieve medewerkers en zonder individuele managementoutput in RetentieScan.',
+    'Output blijft bedoeld voor groepsinzichten en managementduiding, met extra terughoudendheid bij actieve medewerkers en zonder individuele managementoutput in Loep Behoud.',
   ],
   [
     'Herhaalbaar zonder productverwarring',
@@ -398,22 +398,22 @@ export const included = [
 export const approachSteps = [
   {
     title: '1. Intake',
-    body: 'We bepalen samen welke scan past, voor welke doelgroep en op welke tijdlijn. U levert de input. Wij regelen de rest.',
+    body: 'We bepalen samen welke scan past, voor welke doelgroep en op welke tijdlijn. Jij levert de input. Wij regelen de rest.',
   },
   {
     title: '2. Wij richten de scan in',
-    body: 'Wij zetten de scan op en stellen uitnodigingen in. Geen toolbeheer voor uw team.',
+    body: 'Wij zetten de scan op en stellen uitnodigingen in. Geen toolbeheer voor je team.',
   },
   {
-    title: '3. U verstuurt de uitnodigingen',
-    body: 'U nodigt uit via uw eigen kanaal — e-mail, Teams of HR-systeem. Wij bewaken de voortgang en geven aan waar bijsturing nodig is.',
+    title: '3. Je verstuurt de uitnodigingen',
+    body: 'Je nodigt uit via je eigen kanaal: e-mail, Teams of HR-systeem. Wij bewaken de voortgang en geven aan waar bijsturing nodig is.',
   },
   {
-    title: '4. Wij houden u op de hoogte',
-    body: 'Zodra de respons opbouwt, ontvangt u een update. Geen dashboard te bewaken — wij doen dat voor u.',
+    title: '4. Wij houden je op de hoogte',
+    body: 'Zodra de respons opbouwt, ontvang je een update. Geen dashboard te bewaken, wij doen dat voor je.',
   },
   {
-    title: '5. U ontvangt het rapport',
+    title: '5. Je ontvangt het rapport',
     body: 'Zodra het beeld stabiel is, leveren wij een managementrapport: patronen, factoranalyse, prioriteiten en de eerste managementvraag.',
   },
   {
@@ -424,7 +424,7 @@ export const approachSteps = [
 
 export const approachRoutes = [
   {
-    eyebrow: 'ExitScan Baseline',
+    eyebrow: 'Loep Vertrek Baseline',
     title: 'De standaard eerste instap voor vertrekduiding',
     body: 'Baseline op recente vertrekkers, bijvoorbeeld over de afgelopen 12 maanden. Dit is meestal de logische eerste commerciële instap wanneer organisaties wel exitinput hebben, maar nog geen bestuurbaar patroonbeeld.',
     bullets: [
@@ -437,9 +437,9 @@ export const approachRoutes = [
     bodyClass: 'text-slate-700',
   },
   {
-    eyebrow: 'ExitScan ritmeroute',
+    eyebrow: 'Loep Vertrek ritmeroute',
     title: 'Voor organisaties die uitstroom doorlopend willen volgen',
-    body: 'Doorlopende ExitScan voor nieuwe vertrekkers. Past vooral als quote-only vervolg op een eerste baseline of wanneer uitstroom al structureel en met voldoende volume wordt gevolgd.',
+    body: 'Doorlopende Loep Vertrek voor nieuwe vertrekkers. Past vooral als quote-only vervolg op een eerste baseline of wanneer uitstroom al structureel en met voldoende volume wordt gevolgd.',
     bullets: [
       'Vast proces met HR voor nieuwe vertrekkers',
       'Actuelere signalen, trends pas zinvol bij voldoende volume',
@@ -450,9 +450,9 @@ export const approachRoutes = [
     bodyClass: 'text-slate-700',
   },
   {
-    eyebrow: 'RetentieScan Baseline',
+    eyebrow: 'Loep Behoud Baseline',
     title: 'De eerste meetvorm voor actieve medewerkers',
-    body: 'Een eenmalige RetentieScan om te zien waar behoud op groepsniveau onder druk staat, welke werkfactoren prioriteit vragen en hoe bevlogenheid, stay-intent en vertrekintentie zich verhouden.',
+    body: 'Een eenmalige Loep Behoud om te zien waar behoud op groepsniveau onder druk staat, welke werkfactoren prioriteit vragen en hoe bevlogenheid, stay-intent en vertrekintentie zich verhouden.',
     bullets: [
       'Actieve medewerkers in plaats van ex-medewerkers',
       'Groepsinzichten, geen brede MTO en geen individuele signalen naar management',
@@ -463,7 +463,7 @@ export const approachRoutes = [
     bodyClass: 'text-slate-700',
   },
   {
-    eyebrow: 'RetentieScan ritmeroute',
+    eyebrow: 'Loep Behoud ritmeroute',
     title: 'De vaste vervolgvorm na een baseline',
     body: 'Herhaalmeting per kwartaal of halfjaar om te zien of het retentiesignaal, stay-intent, bevlogenheid en prioritaire werkfactoren verbeteren. Dit is de buyer-facing vervolgvorm nadat de eerste baseline en opvolging staan.',
     bullets: [
@@ -480,7 +480,7 @@ export const approachRoutes = [
 export const customerLifecycleStages = [
   {
     title: '1. Eerste routekeuze',
-    body: 'Meestal start je met ExitScan Baseline om vertrek eerst bestuurlijk leesbaar te maken. RetentieScan Baseline is de eerste route als de actieve behoudsvraag nu echt primair is.',
+    body: 'Meestal start je met Loep Vertrek Baseline om vertrek eerst bestuurlijk leesbaar te maken. Loep Behoud Baseline is de eerste route als de actieve behoudsvraag nu echt primair is.',
   },
   {
     title: '2. Betaald eerste traject',
@@ -492,32 +492,32 @@ export const customerLifecycleStages = [
   },
   {
     title: '4. Zelfde route herhalen of verdiepen',
-    body: 'Pas na die eerste waarde wordt een vervolgvorm logisch: ExitScan ritmeroute als begeleide vervolgroute, RetentieScan ritmeroute als vaste herhaalvorm of segment deep dive als bewuste verdieping.',
+    body: 'Pas na die eerste waarde wordt een vervolgvorm logisch: Loep Vertrek ritmeroute als begeleide vervolgroute, Loep Behoud ritmeroute als vaste herhaalvorm of segment deep dive als bewuste verdieping.',
   },
   {
     title: '5. Uitbreiden naar tweede product',
-    body: 'Expansion volgt alleen wanneer de volgende managementvraag echt op tafel ligt: van ExitScan naar RetentieScan voor vroegsignalering op behoud, of omgekeerd voor terugkijkende vertrekduiding.',
+    body: 'Expansion volgt alleen wanneer de volgende managementvraag echt op tafel ligt: van Loep Vertrek naar Loep Behoud voor vroegsignalering op behoud, of omgekeerd voor terugkijkende vertrekduiding.',
   },
 ] as const
 
 export const pricingLifecycleLadder = [
   {
-    route: 'ExitScan',
-    firstSale: 'ExitScan Baseline als standaard eerste koop',
-    nextStep: 'ExitScan ritmeroute alleen als quote-only vervolgroute bij voldoende volume, proces en eigenaar.',
-    expansion: 'RetentieScan Baseline wordt logisch zodra dezelfde thema\'s eerder in de actieve populatie moeten worden gesignaleerd.',
+    route: 'Loep Vertrek',
+    firstSale: 'Loep Vertrek Baseline als standaard eerste koop',
+    nextStep: 'Loep Vertrek ritmeroute alleen als quote-only vervolgroute bij voldoende volume, proces en eigenaar.',
+    expansion: 'Loep Behoud Baseline wordt logisch zodra dezelfde thema\'s eerder in de actieve populatie moeten worden gesignaleerd.',
   },
   {
-    route: 'RetentieScan',
-    firstSale: 'RetentieScan Baseline alleen wanneer de actieve behoudsvraag nu het echte startpunt is.',
-    nextStep: 'RetentieScan ritmeroute blijft de vaste buyer-facing vervolgvorm na baseline en eerste managementwaarde.',
-    expansion: 'ExitScan Baseline wordt pas logisch als retrospectieve vertrekduiding alsnog nodig blijkt.',
+    route: 'Loep Behoud',
+    firstSale: 'Loep Behoud Baseline alleen wanneer de actieve behoudsvraag nu het echte startpunt is.',
+    nextStep: 'Loep Behoud ritmeroute blijft de vaste buyer-facing vervolgvorm na baseline en eerste managementwaarde.',
+    expansion: 'Loep Vertrek Baseline wordt pas logisch als retrospectieve vertrekduiding alsnog nodig blijkt.',
   },
 ] as const
 
 export const pricingCards = [
   {
-    eyebrow: 'ExitScan Baseline',
+    eyebrow: 'Loep Vertrek Baseline',
     price: 'vanaf €4.500',
     description:
       'De standaard eerste instap voor organisaties die snel een betrouwbaar organisatiebeeld, duidelijke prioriteiten en een professioneel managementrapport over uitstroom willen dat ook in sponsor-, prioriteits- en budgetgesprekken overeind blijft.',
@@ -529,7 +529,7 @@ export const pricingCards = [
     ],
   },
   {
-    eyebrow: 'RetentieScan Baseline',
+    eyebrow: 'Loep Behoud Baseline',
     price: 'vanaf €4.500',
     description:
       'De standaard eerste instap voor organisaties die eerder willen zien waar behoud onder druk staat, met extra nadruk op privacy, groepsduiding en een gerichte managementscan in plaats van een brede MTO.',
@@ -537,11 +537,11 @@ export const pricingCards = [
       'Scan uitsturen en bewaken door Loep',
       'Managementrapport met retentiesignaal en prioriteiten',
       'Begeleide managementbespreking (60–90 min)',
-      'Geen individuele signalen — alleen groepsniveau',
+      'Geen individuele signalen, alleen groepsniveau',
     ],
   },
   {
-    eyebrow: 'Onboarding 30-60-90 Baseline',
+    eyebrow: 'Loep Start Baseline',
     price: 'vanaf €4.500',
     description:
       'De gerichte eerste instap voor organisaties die vroeg willen zien hoe nieuwe medewerkers landen, met een groepsbeeld op de eerste 30, 60 en 90 dagen en een begeleide managementbespreking.',
@@ -568,27 +568,27 @@ export const pricingCards = [
 export const pricingFaqs = [
   [
     'Wanneer kies je voor Loep Culture Assessment?',
-    'Als de hoofdvraag breed organisatiebreed is: cultuur, engagement, werkbeleving, vertrouwen, leiderschap en samenwerking. Dan past een jaarlijkse Loep Culture Assessment baseline beter dan RetentieScan of ExitScan.',
+    'Als de hoofdvraag breed organisatiebreed is: cultuur, engagement, werkbeleving, vertrouwen, leiderschap en samenwerking. Dan past een jaarlijkse Loep Culture Assessment baseline beter dan Loep Behoud of Loep Vertrek.',
   ],
   [
-    'Waarom is RetentieScan niet goedkoper dan ExitScan?',
-    'Omdat RetentieScan geen lichtere algemene survey of MTO-light is. Het product vraagt juist scherpere privacykaders, actieve-medewerkersduiding en een eigen managementverhaal.',
+    'Waarom is Loep Behoud niet goedkoper dan Loep Vertrek?',
+    'Omdat Loep Behoud geen lichtere algemene survey of MTO-light is. Het product vraagt juist scherpere privacykaders, actieve-medewerkersduiding en een eigen managementverhaal.',
   ],
   [
     'Waarom starten jullie niet met een gratis pilot?',
     'Omdat Loep bedoeld is als serieus eerste traject met duidelijke scope, deliverables en opvolging. Een betaald baseline-traject test echte urgentie, geeft scherpere samenwerking en voorkomt vrijblijvende validatie zonder besluitvorming.',
   ],
   [
-    'Is RetentieScan een MTO-vervanger?',
+    'Is Loep Behoud een MTO-vervanger?',
     'Nee. Het product is smaller en scherper: het richt zich op vroegsignalering op behoud via retentiesignaal, stay-intent, vertrekintentie en beinvloedbare werkfactoren.',
   ],
   [
-    'Wanneer wordt ExitScan ritmeroute logisch?',
-    'Meestal pas na een ExitScan Baseline of wanneer uitstroom al structureel met voldoende volume wordt gevolgd. Daarom houden we ExitScan ritmeroute bewust als vervolgroute op aanvraag.',
+    'Wanneer wordt Loep Vertrek ritmeroute logisch?',
+    'Meestal pas na een Loep Vertrek Baseline of wanneer uitstroom al structureel met voldoende volume wordt gevolgd. Daarom houden we Loep Vertrek ritmeroute bewust als vervolgroute op aanvraag.',
   ],
   [
-    'Hoe verhouden RetentieScan ritmeroute en compacte vervolgmeting zich tot elkaar?',
-    'RetentieScan ritmeroute is de vaste buyer-facing vervolgvorm na baseline. Een compacte retentie vervolgmeting is daarbinnen een lichtere vervolgcomponent, geen parallel eerste pakket.',
+    'Hoe verhouden Loep Behoud ritmeroute en compacte vervolgmeting zich tot elkaar?',
+    'Loep Behoud ritmeroute is de vaste buyer-facing vervolgvorm na baseline. Een compacte retentie vervolgmeting is daarbinnen een lichtere vervolgcomponent, geen parallel eerste pakket.',
   ],
   [
     'Wanneer kies je voor de combinatieroute?',
@@ -596,10 +596,10 @@ export const pricingFaqs = [
   ],
   [
     'Wat ziet management wel en niet?',
-    'Management ziet groeps- en segmentinzichten. Bij RetentieScan tonen we geen individuele signalen, geen vertrekintentie op persoonsniveau, geen performance-oordelen en geen persoonsgerichte actieroutes.',
+    'Management ziet groeps- en segmentinzichten. Bij Loep Behoud tonen we geen individuele signalen, geen vertrekintentie op persoonsniveau, geen performance-oordelen en geen persoonsgerichte actieroutes.',
   ],
   [
-    'Hoe vaak herhaal je RetentieScan?',
+    'Hoe vaak herhaal je Loep Behoud?',
     'Voor v1 is een baseline het logische startpunt. Daarna is een ritme per kwartaal of halfjaar het meest logisch als je effect van acties wilt volgen.',
   ],
   [
@@ -610,12 +610,12 @@ export const pricingFaqs = [
 
 export const faqs = [
   [
-    'Wat is het verschil tussen ExitScan en RetentieScan?',
-    'ExitScan helpt vertrek achteraf duiden op basis van terugkerende werkfactoren, vertrekredenen en signalen van werkfrictie. RetentieScan helpt eerder zien waar behoud op groepsniveau onder druk staat bij actieve medewerkers.',
+    'Wat is het verschil tussen Loep Vertrek en Loep Behoud?',
+    'Loep Vertrek helpt vertrek achteraf duiden op basis van terugkerende werkfactoren, vertrekredenen en signalen van werkfrictie. Loep Behoud helpt eerder zien waar behoud op groepsniveau onder druk staat bij actieve medewerkers.',
   ],
   [
-    'Is RetentieScan gewoon een MTO?',
-    'Nee. RetentieScan is smaller en scherper gepositioneerd: het is een compacte scan voor vroegsignalering op behoud op groeps- en segmentniveau rond retentiesignaal, stay-intent, vertrekintentie en beinvloedbare werkfactoren.',
+    'Is Loep Behoud gewoon een MTO?',
+    'Nee. Loep Behoud is smaller en scherper gepositioneerd: het is een compacte scan voor vroegsignalering op behoud op groeps- en segmentniveau rond retentiesignaal, stay-intent, vertrekintentie en beinvloedbare werkfactoren.',
   ],
   [
     'Wanneer kies je voor de combinatie?',
@@ -623,23 +623,23 @@ export const faqs = [
   ],
   [
     'Ziet management individuele retention-scores?',
-    'Nee. RetentieScan is bedoeld voor groeps- en segmentinzichten, niet voor beoordeling, performance-sturing of voorspelling op persoonsniveau.',
+    'Nee. Loep Behoud is bedoeld voor groeps- en segmentinzichten, niet voor beoordeling, performance-sturing of voorspelling op persoonsniveau.',
   ],
   [
-    'Is RetentieScan een gevalideerde vertrekvoorspeller?',
-    'Nee. Voor v1 positioneren we RetentieScan als SDT-gebaseerde managementscan voor vroegsignalering op behoud, verificatie en prioritering: inhoudelijk plausibel en testmatig beschermd, maar niet als wetenschappelijk gevalideerde voorspeller van vrijwillig vertrek.',
+    'Is Loep Behoud een gevalideerde vertrekvoorspeller?',
+    'Nee. Voor v1 positioneren we Loep Behoud als SDT-gebaseerde managementscan voor vroegsignalering op behoud, verificatie en prioritering: inhoudelijk plausibel en testmatig beschermd, maar niet als wetenschappelijk gevalideerde voorspeller van vrijwillig vertrek.',
   ],
   [
-    'Hoe vaak herhaal je RetentieScan?',
+    'Hoe vaak herhaal je Loep Behoud?',
     'Voor v1 is een baseline logisch als startpunt. Daarna kun je periodiek herhalen, bijvoorbeeld per kwartaal of halfjaar, als je gericht wilt volgen of acties effect hebben.',
   ],
   [
-    'Wanneer is Onboarding 30-60-90 de juiste route?',
+    'Wanneer is Loep Start de juiste route?',
     'Als de vraag gaat over hoe nieuwe medewerkers de eerste 90 dagen landen in rol, leiding en team. Loep voert de checkpoint-read uit en levert een rapport met begeleide bespreking.',
   ],
   [
     'Is Loep een instrument of een dienst?',
-    'Loep is een begeleide dienst. Wij voeren de scan uit, leveren het rapport en begeleiden de managementbespreking. U hoeft niets zelf in te richten of te beheren.',
+    'Loep is een begeleide dienst. Wij voeren de scan uit, leveren het rapport en begeleiden de managementbespreking. Je hoeft niets zelf in te richten of te beheren.',
   ],
 ] as const
 

@@ -39,7 +39,7 @@ import {
 function routeLabel(scanType) {
   switch (scanType) {
     case 'retention':
-      return 'RetentieScan'
+      return 'Loep Behoud'
     case 'pulse':
       return 'Pulse'
     case 'team':
@@ -49,7 +49,7 @@ function routeLabel(scanType) {
     case 'leadership':
       return 'Leadership'
     default:
-      return 'ExitScan'
+      return 'Loep Vertrek'
   }
 }
 

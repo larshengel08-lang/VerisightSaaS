@@ -139,7 +139,7 @@ function getQueueSignalCount(
 function getRouteFamilyTemplate(routeFamily: ActionCenterRouteDefaultsEnabledScanType) {
   if (routeFamily === 'exit') {
     return {
-      label: getActionCenterRouteFamilyLabel('exit') ?? 'ExitScan',
+      label: getActionCenterRouteFamilyLabel('exit') ?? 'Loep Vertrek',
       routeIntent: 'retrospective departure/work-friction follow-through',
       actionFocus: 'verify and act on the selected departure pattern / work-friction route',
       evidenceExpectation: 'bounded review evidence from management observation, team conversation, HR check, or operational indicator',
@@ -153,7 +153,7 @@ function getRouteFamilyTemplate(routeFamily: ActionCenterRouteDefaultsEnabledSca
   }
 
   return {
-    label: getActionCenterRouteFamilyLabel('retention') ?? 'RetentieScan',
+    label: getActionCenterRouteFamilyLabel('retention') ?? 'Loep Behoud',
     routeIntent: 'active retention-pressure follow-through',
     actionFocus: 'verify and act on selected retention pressure / work-factor route',
     evidenceExpectation:

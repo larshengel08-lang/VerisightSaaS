@@ -7,20 +7,20 @@ import { buildContactHref } from '@/lib/contact-funnel'
 export const metadata: Metadata = {
   title: 'Tarieven',
   description:
-    'Transparante prijzen voor ExitScan, RetentieScan en vervolgstappen. Zo blijft de eerste keuze helder en weet u wat u direct terugkrijgt.',
+    'Transparante prijzen voor Loep Vertrek, Loep Behoud en vervolgstappen. Zo blijft de eerste keuze helder en weet je wat je direct terugkrijgt.',
   alternates: { canonical: '/tarieven' },
   openGraph: {
     title: 'Tarieven | Loep',
     description:
-      'Transparante prijzen voor ExitScan, RetentieScan en vervolgstappen. Zo blijft de eerste keuze helder en weet u wat u direct terugkrijgt.',
+      'Transparante prijzen voor Loep Vertrek, Loep Behoud en vervolgstappen. Zo blijft de eerste keuze helder en weet je wat je direct terugkrijgt.',
     url: 'https://www.verisight.nl/tarieven',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Loep tarieven voor ExitScan en RetentieScan' }],
+    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Loep tarieven voor Loep Vertrek en Loep Behoud' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Tarieven | Loep',
     description:
-      'Transparante prijzen voor ExitScan, RetentieScan en vervolgstappen. Zo blijft de eerste keuze helder en weet u wat u direct terugkrijgt.',
+      'Transparante prijzen voor Loep Vertrek, Loep Behoud en vervolgstappen. Zo blijft de eerste keuze helder en weet je wat je direct terugkrijgt.',
     images: ['/opengraph-image'],
   },
 }
@@ -41,7 +41,7 @@ export default function TarievenPage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       <div className="min-h-screen">
-        <PublicHeader ctaHref={ctaHref} ctaLabel="Bespreek uw vraagstuk" />
+        <PublicHeader ctaHref={ctaHref} ctaLabel="Bespreek je vraagstuk" />
         <main id="hoofdinhoud">
           <TarievenContent />
         </main>

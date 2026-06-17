@@ -63,7 +63,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     intro:
       'Loep vertaalt scans naar dezelfde boardroom-structuur: eerst wat nu speelt, daarna waarom dat beeld ontstaat, vervolgens wat eerst getoetst moet worden en pas daarna welke route logisch is. Gebruik dit overzicht om eerst de juiste managementroute te kiezen, niet om meteen alles tegelijk te verkopen.',
     kpis: [
-      ['Actieve campagnes', '2 scans actief', 'ExitScan en RetentieScan'],
+      ['Actieve campagnes', '2 scans actief', 'Loep Vertrek en Loep Behoud'],
       ['Gemiddeld hoofdsignaal', '5,4 op 10', 'Bespreek met HR, sponsor en MT'],
       ['Belangrijkste aandachtspunt', 'Groei', 'Hier is het meeste te winnen'],
       ['Stuurvraag', 'Vertrek of behoud?', 'Kies de juiste scanvorm'],
@@ -78,8 +78,8 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     ],
     focusTitle: 'Welke managementroute past nu het best?',
     dashboardRows: [
-      { label: 'ExitScan', value: 'Vertrekduiding', band: 'Eerste route', width: '64%', tone: 'red' },
-      { label: 'RetentieScan', value: 'Behoud eerst signaleren', band: 'Specifieke route', width: '52%', tone: 'amber' },
+      { label: 'Loep Vertrek', value: 'Vertrekduiding', band: 'Eerste route', width: '64%', tone: 'red' },
+      { label: 'Loep Behoud', value: 'Behoud eerst signaleren', band: 'Specifieke route', width: '52%', tone: 'amber' },
       { label: 'Combinatie', value: 'Bewuste portfolioroute', band: 'Pas daarna', width: '45%', tone: 'emerald' },
     ],
     nuance:
@@ -110,9 +110,9 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     ],
     proofNotes: [
       ['Bestuurlijke read', 'Dashboard en rapport openen met dezelfde bestuurlijke leesvolgorde'],
-      ['Productspecifieke duiding', 'ExitScan en RetentieScan krijgen een eigen managementverhaal binnen een platform'],
-      ['Routekeuze eerst', 'ExitScan is meestal de eerste demo; RetentieScan volgt wanneer de actieve behoudsvraag echt centraal staat'],
-      ['Core proof blijft leidend', 'Publieke deliverable-proof blijft bewust bij ExitScan en RetentieScan; bounded follow-on routes worden publiek vooral via productpagina en trustlaag gekaderd.'],
+      ['Productspecifieke duiding', 'Loep Vertrek en Loep Behoud krijgen een eigen managementverhaal binnen een platform'],
+      ['Routekeuze eerst', 'Loep Vertrek is meestal de eerste demo; Loep Behoud volgt wanneer de actieve behoudsvraag echt centraal staat'],
+      ['Core proof blijft leidend', 'Publieke deliverable-proof blijft bewust bij Loep Vertrek en Loep Behoud; bounded follow-on routes worden publiek vooral via productpagina en trustlaag gekaderd.'],
       ['Begeleide output', 'Geen losse survey-export of self-serve tool'],
     ],
     trustTitle: 'Hoe je deze voorbeeldoutput leest',
@@ -131,14 +131,14 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     supportVisualAlt: 'Voorbeeld van een Loep segment deep dive',
     sampleReportTitle: 'Waar je het volledige voorbeeld ziet',
     sampleReportBody:
-      'Gebruik de portfolio-preview als routekiezer. De publieke deliverable-proof blijft bewust core-first: het volledige buyer-facing voorbeeldrapport open je daarna op de productspecifieke ExitScan- of RetentieScan-pagina, terwijl bounded follow-on routes hun bewijs vooral via productpagina en trustlaag dragen.',
+      'Gebruik de portfolio-preview als routekiezer. De publieke deliverable-proof blijft bewust core-first: het volledige buyer-facing voorbeeldrapport open je daarna op de productspecifieke Loep Vertrek- of Loep Behoud-pagina, terwijl bounded follow-on routes hun bewijs vooral via productpagina en trustlaag dragen.',
     sampleReportHref: '/producten',
     sampleReportLabel: 'Bekijk productspecifieke voorbeelden',
   },
   exit: {
-    label: 'ExitScan-voorbeeld',
+    label: 'Loep Vertrek-voorbeeld',
     intro:
-      'ExitScan begint met een rustige cover en een expliciete responslaag. Daarna volgt de bestuurlijke handoff die het vertrekbeeld terugbrengt tot hoofdreden, bestuurlijke relevantie, eerste managementvraag, eerste managementsessie en compacte handoff voor sponsor of directie. Dit is meestal de logischste eerste demo voor nieuwe buyers.',
+      'Loep Vertrek begint met een rustige cover en een expliciete responslaag. Daarna volgt de bestuurlijke handoff die het vertrekbeeld terugbrengt tot hoofdreden, bestuurlijke relevantie, eerste managementvraag, eerste managementsessie en compacte handoff voor sponsor of directie. Dit is meestal de logischste eerste demo voor nieuwe buyers.',
     kpis: [
       ['Reacties', '14 van 18', '78% respons'],
       ['Gemiddelde frictiescore', '5,8 op 10', 'Vergt nadere duiding'],
@@ -147,7 +147,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     ],
     boardroomTitle: 'Bestuurlijke handoff',
     boardroomIntro:
-      'ExitScan vat de top van het rapport samen in een compacte sponsor-read: wat speelt nu, waarom is dit bestuurlijk relevant en welke factoren kleuren dat beeld het sterkst.',
+      'Loep Vertrek vat de top van het rapport samen in een compacte sponsor-read: wat speelt nu, waarom is dit bestuurlijk relevant en welke factoren kleuren dat beeld het sterkst.',
     boardroomPoints: [
       ['Wat speelt nu', 'Leiderschap en groeiperspectief kleuren het terugkerende vertrekbeeld.'],
       ['Waarom telt dit nu', 'Een breed werksignaal maakt dit relevant voor managementprioritering en niet alleen voor HR-nazorg.'],
@@ -161,7 +161,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       { label: 'Werkbelasting', value: '4,6', band: MANAGEMENT_BAND_LABELS.MIDDEN, width: '46%', tone: 'amber' },
     ],
     nuance:
-      'ExitScan maakt patronen zichtbaar en helpt bepalen waar vervolgactie het meeste oplevert. Het blijft gegroepeerde vertrekduiding: geen individueel oordeel, geen diagnose, geen harde voorspelling en geen geforceerde ROI-claim.',
+      'Loep Vertrek maakt patronen zichtbaar en helpt bepalen waar vervolgactie het meeste oplevert. Het blijft gegroepeerde vertrekduiding: geen individueel oordeel, geen diagnose, geen harde voorspelling en geen geforceerde ROI-claim.',
     factorLead:
       'Per factor zie je eerst de belevingsscore en daarna de managementduiding. Signaalsterkte blijft alleen ondersteunend waar extra verdieping helpt verklaren waarom dit vertrekbeeld ontstaat.',
     factorCards: [
@@ -195,7 +195,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     ],
     trustTitle: 'Trust & interpretatie',
     trustIntro:
-      'Ook in de preview blijft ExitScan zichtbaar begrensd: gegroepeerde vertrekduiding voor management, met expliciete leeswijzers over claims, privacy en bewijsstatus.',
+      'Ook in de preview blijft Loep Vertrek zichtbaar begrensd: gegroepeerde vertrekduiding voor management, met expliciete leeswijzers over claims, privacy en bewijsstatus.',
     trustPoints: [
       ['Intended use', 'Terugkijkende vertrekduiding op groepsniveau voor HR, MT en directie.'],
       ['Wat management ziet', 'Frictiescore, vertrekbeeld, topfactoren, hypotheses en een gekozen vervolgrichting.'],
@@ -204,19 +204,19 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     ],
     demoLabel: 'Illustratief voorbeeld',
     demoBody:
-      'Fictieve voorbeelddata. De trustopbouw, managementtaal en rapportvolgorde volgen de huidige ExitScan-presentatie: cover, respons, bestuurlijke handoff, verdiepende factorlagen en daarna pas actie en methodiek.',
+      'Fictieve voorbeelddata. De trustopbouw, managementtaal en rapportvolgorde volgen de huidige Loep Vertrek-presentatie: cover, respons, bestuurlijke handoff, verdiepende factorlagen en daarna pas actie en methodiek.',
     supportVisualTitle: 'Segment deep dive preview',
-    supportVisualAlt: 'Voorbeeld van een ExitScan segment deep dive',
+    supportVisualAlt: 'Voorbeeld van een Loep Vertrek segment deep dive',
     sampleReportTitle: 'Volledig buyer-facing voorbeeldrapport',
     sampleReportBody:
-      'Open hier het actuele ExitScan-voorbeeldrapport met fictieve data, zonder vertrouwelijke klantframing en in dezelfde managementstructuur als de echte output.',
+      'Open hier het actuele Loep Vertrek-voorbeeldrapport met fictieve data, zonder vertrouwelijke klantframing en in dezelfde managementstructuur als de echte output.',
     sampleReportHref: exitSampleAsset?.publicHref,
-    sampleReportLabel: 'Open ExitScan-voorbeeldrapport',
+    sampleReportLabel: 'Open Loep Vertrek-voorbeeldrapport',
   },
   retention: {
-    label: 'RetentieScan-voorbeeld',
+    label: 'Loep Behoud-voorbeeld',
     intro:
-      'RetentieScan begint met een cover waarin executive context en kerncijfers al zichtbaar worden. Daarna volgt de bestuurlijke handoff met respons, eerste verificatiespoor en bestuurlijke weging. Vervolgens lopen signaalbeeld, eerste stap en eerste managementsessie in een eerst-toetsen lijn door. In demo\'s komt deze route meestal na ExitScan, tenzij de buyer-vraag expliciet over actieve medewerkers gaat.',
+      'Loep Behoud begint met een cover waarin executive context en kerncijfers al zichtbaar worden. Daarna volgt de bestuurlijke handoff met respons, eerste verificatiespoor en bestuurlijke weging. Vervolgens lopen signaalbeeld, eerste stap en eerste managementsessie in een eerst-toetsen lijn door. In demo\'s komt deze route meestal na Loep Vertrek, tenzij de buyer-vraag expliciet over actieve medewerkers gaat.',
     kpis: [
       ['Reacties', '63 van 92', '68% respons'],
       ['Gemiddeld retentiesignaal', '5,6 op 10', MANAGEMENT_BAND_LABELS.MIDDEN],
@@ -225,7 +225,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     ],
     boardroomTitle: 'Bestuurlijke handoff',
     boardroomIntro:
-      'RetentieScan vat de top van het rapport samen in een compacte sponsor-read: waar staat behoud onder druk, waarom moet dit nu gewogen worden en welke werkfactoren kleuren dat beeld het sterkst.',
+      'Loep Behoud vat de top van het rapport samen in een compacte sponsor-read: waar staat behoud onder druk, waarom moet dit nu gewogen worden en welke werkfactoren kleuren dat beeld het sterkst.',
     boardroomPoints: [
       ['Wat speelt nu', 'Het groepsbeeld laat zien waar behoudsdruk oploopt en welke werkfactoren dat het scherpst kleuren.'],
       ['Waarom telt dit nu', 'Zichtbare vertrekintentie of stille behoudsdruk raken teamcontinuiteit, leiding en uitvoerbaarheid.'],
@@ -239,7 +239,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       { label: 'Psychologische veiligheid', value: '4,7', band: MANAGEMENT_BAND_LABELS.MIDDEN, width: '47%', tone: 'amber' },
     ],
     nuance:
-      'RetentieScan is bedoeld voor groeps- en segmentduiding. De output is nadrukkelijk geen individuele voorspeller of performance-instrument, maar een v1-werkmodel voor verificatie en prioritering.',
+      'Loep Behoud is bedoeld voor groeps- en segmentduiding. De output is nadrukkelijk geen individuele voorspeller of performance-instrument, maar een v1-werkmodel voor verificatie en prioritering.',
     factorLead:
       'De factoranalyse laat eerst zien hoe medewerkers de themaâ€™s ervaren, en vertaalt dat daarna naar een managementduiding. Signaalsterkte blijft alleen verdiepende logica.',
     factorCards: [
@@ -282,13 +282,13 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     ],
     demoLabel: 'Illustratief voorbeeld',
     demoBody:
-      'Fictieve voorbeelddata. De huidige RetentieScan-output gebruikt een cover, daarna een compacte bestuurslaag met respons en handoff, gevolgd door productspecifieke leeswijzers voor behoudsduiding.',
+      'Fictieve voorbeelddata. De huidige Loep Behoud-output gebruikt een cover, daarna een compacte bestuurslaag met respons en handoff, gevolgd door productspecifieke leeswijzers voor behoudsduiding.',
     supportVisualTitle: 'Segment deep dive preview',
-    supportVisualAlt: 'Voorbeeld van een RetentieScan segment deep dive',
+    supportVisualAlt: 'Voorbeeld van een Loep Behoud segment deep dive',
     sampleReportTitle: 'Volledig buyer-facing voorbeeldrapport',
     sampleReportBody:
-      'Open hier het actuele RetentieScan-voorbeeldrapport met fictieve data, eerst-toetsen lezing en dezelfde trustgrenzen als de echte output.',
+      'Open hier het actuele Loep Behoud-voorbeeldrapport met fictieve data, eerst-toetsen lezing en dezelfde trustgrenzen als de echte output.',
     sampleReportHref: retentionSampleAsset?.publicHref,
-    sampleReportLabel: 'Open RetentieScan-voorbeeldrapport',
+    sampleReportLabel: 'Open Loep Behoud-voorbeeldrapport',
   },
 }

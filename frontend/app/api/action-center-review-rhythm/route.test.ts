@@ -233,7 +233,7 @@ describe('action center review rhythm route', () => {
     })
   })
 
-  it('persists a bounded ExitScan rhythm config payload', async () => {
+  it('persists a bounded Loep Vertrek rhythm config payload', async () => {
     const upsertQuery = createUpsertQuery({
       data: {
         route_id: 'cmp-exit-1::org-1::department::operations',
@@ -300,7 +300,7 @@ describe('action center review rhythm route', () => {
     })
   })
 
-  it('persists the same bounded rhythm config payload for RetentieScan routes', async () => {
+  it('persists the same bounded rhythm config payload for Loep Behoud routes', async () => {
     const upsertQuery = createUpsertQuery({
       data: {
         route_id: 'cmp-retention-1::org-1::department::operations',

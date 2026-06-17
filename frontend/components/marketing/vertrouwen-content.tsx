@@ -61,9 +61,9 @@ function HeroSection() {
                   color: T.ink,
                 }}
               >
-                Wat u publiek kunt toetsen
+                Wat je publiek kunt toetsen
                 <br />
-                <em style={{ fontStyle: 'italic', color: AC.deep }}>voordat u start.</em>
+                <em style={{ fontStyle: 'italic', color: AC.deep }}>voordat je start.</em>
               </h1>
             </div>
             <div style={{ animation: 'slideUpFade .8s cubic-bezier(.16,1,.3,1) .3s both' }}>
@@ -76,7 +76,7 @@ function HeroSection() {
                   margin: '28px 0 0',
                 }}
               >
-                Loep laat publiek zien hoe privacy, rapportlezing en productgrenzen zijn ingericht, zodat u de basis
+                Loep laat publiek zien hoe privacy, rapportlezing en productgrenzen zijn ingericht, zodat je de basis
                 kunt toetsen voordat een traject start.
               </p>
             </div>
@@ -147,7 +147,7 @@ function VerificationSection() {
               lineHeight: 1.06,
             }}
           >
-            Wat u publiek kunt verifiëren
+            Wat je publiek kunt verifiëren
           </h2>
         </Reveal>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -209,7 +209,7 @@ function ReadingGuideSection() {
                 borderBottom: `1px solid ${T.rule}`,
               }}
             >
-              {['Thema', 'Wat u wel ziet', 'Wat u er niet van moet maken'].map((h, i) => (
+              {['Thema', 'Wat je wel ziet', 'Wat je er niet van moet maken'].map((h, i) => (
                 <div
                   key={i}
                   style={{
@@ -279,7 +279,7 @@ function PrivacySection() {
             <em style={{ fontStyle: 'italic', color: AC.deep }}>voorspelbare vragen.</em>
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, marginBottom: 32, maxWidth: '50ch' }}>
-            Zo kunt u de basis toetsen voordat er een gesprek plaatsvindt.
+            Zo kun je de basis toetsen voordat er een gesprek plaatsvindt.
           </p>
         </Reveal>
         <div className="grid grid-cols-1 gap-0 md:grid-cols-2 xl:grid-cols-3">
@@ -340,7 +340,7 @@ function ContactSection() {
       backdropNumber={null}
       title="Toets of Loep"
       accentTitle="nu past."
-      body="In een kort gesprek toetsen we productkeuze, privacy, timing en wat u als eerste terugkrijgt."
+      body="In een kort gesprek toetsen we productkeuze, privacy, timing en wat je als eerste terugkrijgt."
       buttonLabel="Plan een eerste route-inschatting"
       showSectionMark={false}
     />

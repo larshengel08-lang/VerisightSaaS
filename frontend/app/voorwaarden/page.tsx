@@ -4,14 +4,14 @@ import { LegalPageShell } from '@/components/marketing/legal-page-shell'
 
 export const metadata: Metadata = {
   title: 'Algemene voorwaarden',
-  description: 'Lees de algemene voorwaarden van Loep voor het gebruik van ExitScan en RetentieScan.',
+  description: 'Lees de algemene voorwaarden van Loep voor het gebruik van Loep Vertrek en Loep Behoud.',
 }
 
 export default function VoorwaardenPage() {
   return (
     <LegalPageShell
       title="Algemene voorwaarden"
-      description="Op deze pagina lees je de basisvoorwaarden voor het gebruik van Loep, ExitScan en RetentieScan. Voor een publieksvriendelijke trustsamenvatting kun je ook de Trust & privacy-pagina bekijken."
+      description="Op deze pagina lees je de basisvoorwaarden voor het gebruik van Loep, Loep Vertrek en Loep Behoud. Voor een publieksvriendelijke trustsamenvatting kun je ook de Trust & privacy-pagina bekijken."
       lastUpdated="9 april 2026"
     >
       <section>
@@ -27,7 +27,7 @@ export default function VoorwaardenPage() {
         <h2>1. Definities</h2>
         <ul>
           <li>
-            <strong>Loep:</strong> de dienst en software voor ExitScan, RetentieScan, rapportage en bijbehorende begeleiding.
+            <strong>Loep:</strong> de dienst en software voor Loep Vertrek, Loep Behoud, rapportage en bijbehorende begeleiding.
           </li>
           <li>
             <strong>Klant:</strong> de organisatie die een of meer Loep-producten afneemt.
@@ -53,7 +53,7 @@ export default function VoorwaardenPage() {
         <h2>3. Wat levert Loep?</h2>
         <p>
           Loep levert begeleide productvormen met software, uitnodigingen, analyse en rapportage. Dat kan
-          onder meer bestaan uit ExitScan, RetentieScan of een combinatie daarvan, met:
+          onder meer bestaan uit Loep Vertrek, Loep Behoud of een combinatie daarvan, met:
         </p>
         <ul>
           <li>inrichting van de campagne;</li>
@@ -96,7 +96,7 @@ export default function VoorwaardenPage() {
           voor de klant zijn verzameld, blijven van de klant.
         </p>
         <p>
-          RetentieScan mag niet worden gebruikt als individueel beoordelings-, performance- of beslisinstrument op persoonsniveau.
+          Loep Behoud mag niet worden gebruikt als individueel beoordelings-, performance- of beslisinstrument op persoonsniveau.
         </p>
       </section>
 

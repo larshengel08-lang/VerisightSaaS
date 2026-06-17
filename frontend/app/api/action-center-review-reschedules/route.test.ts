@@ -312,7 +312,7 @@ describe('action center review reschedules route', () => {
     })
   })
 
-  it('allows RetentieScan routes through the same bounded reschedule route', async () => {
+  it('allows Loep Behoud routes through the same bounded reschedule route', async () => {
     const updateQuery = createUpdateManagerResponseQuery({
       data: {
         review_scheduled_for: '2099-06-03',

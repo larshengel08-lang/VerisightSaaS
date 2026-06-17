@@ -75,7 +75,7 @@ export function InsightArticleContent({ post, relatedPosts }: InsightArticleCont
                   Gerelateerde oplossingspagina
                 </p>
                 <p className="mt-4 text-base leading-[1.75] text-[var(--muted)]">
-                  Wilt u dit onderwerp vertalen naar een concretere managementvraag? Bekijk dan de bijpassende
+                  Wil je dit onderwerp vertalen naar een concretere managementvraag? Bekijk dan de bijpassende
                   oplossingsroute.
                 </p>
                 <Link

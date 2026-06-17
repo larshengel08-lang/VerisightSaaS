@@ -62,12 +62,12 @@ describe('client onboarding defaults', () => {
     expect(CLIENT_FILE_SPEC.exitOptional).toContain('exit_month')
   })
 
-  it('keeps ExitScan first and follow-on variants explicit', () => {
+  it('keeps Loep Vertrek first and follow-on variants explicit', () => {
     expect(PRODUCT_ROUTE_VARIANTS.map((route) => route.title)).toEqual([
-      'ExitScan Baseline',
-      'ExitScan ritmeroute',
-      'RetentieScan Baseline',
-      'RetentieScan ritmeroute',
+      'Loep Vertrek Baseline',
+      'Loep Vertrek ritmeroute',
+      'Loep Behoud Baseline',
+      'Loep Behoud ritmeroute',
     ])
   })
 
@@ -119,12 +119,12 @@ describe('client onboarding defaults', () => {
       'first_value',
       'repeat_or_expand',
     ])
-    expect(exitDecisions[0]?.body.toLowerCase()).toContain('exitscan ritmeroute')
-    expect(exitDecisions[2]?.body.toLowerCase()).toContain('retentiescan baseline')
-    expect(retentionDecisions[0]?.body.toLowerCase()).toContain('retentiescan ritmeroute')
-    expect(retentionDecisions[2]?.body.toLowerCase()).toContain('exitscan')
+    expect(exitDecisions[0]?.body.toLowerCase()).toContain('loep vertrek ritmeroute')
+    expect(exitDecisions[2]?.body.toLowerCase()).toContain('loep behoud baseline')
+    expect(retentionDecisions[0]?.body.toLowerCase()).toContain('loep behoud ritmeroute')
+    expect(retentionDecisions[2]?.body.toLowerCase()).toContain('loep vertrek')
     expect(pulseDecisions[0]?.body.toLowerCase()).toContain('kleine correctie')
-    expect(pulseDecisions[2]?.title.toLowerCase()).toContain('retentiescan')
+    expect(pulseDecisions[2]?.title.toLowerCase()).toContain('loep behoud')
     expect(pulseDecisions[2]?.body.toLowerCase()).toContain('pulse niet eerlijk kan dragen')
     expect(pulseDecisions[1]?.body.toLowerCase()).toContain('bredere duiding')
     expect(pulseDecisions[2]?.title.toLowerCase()).not.toContain('diagnose')
@@ -137,7 +137,7 @@ describe('client onboarding defaults', () => {
     expect(teamDecisions[2]?.title.toLowerCase()).toContain('bredere duiding')
     expect(teamDecisions[2]?.body.toLowerCase()).not.toContain('diagnose')
     expect(onboardingDecisions[0]?.body.toLowerCase()).toContain('onboardingcheckpoint')
-    expect(onboardingDecisions[2]?.body.toLowerCase()).toContain('retentiescan')
+    expect(onboardingDecisions[2]?.body.toLowerCase()).toContain('loep behoud')
     expect(leadershipDecisions[0]?.body.toLowerCase()).toContain('eerste managementread')
     expect(leadershipDecisions[1]?.body.toLowerCase()).toContain('named leaders')
     expect(leadershipDecisions[2]?.body.toLowerCase()).toContain('teamscan')
@@ -157,8 +157,8 @@ describe('client onboarding defaults', () => {
     expect(guidance.cards[2]?.body.toLowerCase()).toContain('deeper governed work')
     expect(guidance.cards[2]?.body.toLowerCase()).toContain('pulse-follow-on')
     expect(guidance.followOnSuggestions.some((suggestion) => suggestion.productLabel === 'Pulse')).toBe(true)
-    expect(guidance.followOnSuggestions.some((suggestion) => suggestion.productLabel === 'RetentieScan')).toBe(true)
-    expect(guidance.followOnSuggestions.some((suggestion) => suggestion.productLabel === 'ExitScan')).toBe(true)
+    expect(guidance.followOnSuggestions.some((suggestion) => suggestion.productLabel === 'Loep Behoud')).toBe(true)
+    expect(guidance.followOnSuggestions.some((suggestion) => suggestion.productLabel === 'Loep Vertrek')).toBe(true)
     expect(guidanceJson).not.toContain('teamscan')
   })
 })

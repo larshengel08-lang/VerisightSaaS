@@ -10,7 +10,7 @@ import {
 } from '@/lib/content-operating-system'
 
 describe('content operating system defaults', () => {
-  it('keeps ExitScan as the primary wedge and RetentieScan as the complement', () => {
+  it('keeps Loep Vertrek as the primary wedge and Loep Behoud as the complement', () => {
     expect(CONTENT_OPERATING_DEFAULTS.primaryContentWedge).toBe('exitscan')
     expect(CONTENT_OPERATING_DEFAULTS.complementaryRoute).toBe('retentiescan')
     expect(CONTENT_OPERATING_DEFAULTS.publicProofMode).toBe('sample-first')

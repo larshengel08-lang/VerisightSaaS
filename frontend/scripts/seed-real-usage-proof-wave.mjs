@@ -38,11 +38,11 @@ function loadEnv(filePath) {
 function getRouteLabel(scanType) {
   switch (scanType) {
     case 'exit':
-      return 'ExitScan'
+      return 'Loep Vertrek'
     case 'retention':
-      return 'RetentieScan'
+      return 'Loep Behoud'
     case 'onboarding':
-      return 'Onboarding 30-60-90'
+      return 'Loep Start'
     case 'pulse':
       return 'Pulse'
     case 'leadership':

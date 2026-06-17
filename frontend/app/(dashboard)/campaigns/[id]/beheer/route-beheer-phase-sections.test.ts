@@ -54,7 +54,7 @@ const phaseDetails: HrRouteBeheerPhaseDetail[] = [
     status: 'open',
     body: 'Route en startdatum',
     items: [
-      { label: 'Route', value: 'ExitScan / Baseline / Q3 2026' },
+      { label: 'Route', value: 'Loep Vertrek / Baseline / Q3 2026' },
       { label: 'Startdatum', value: '10 mei 2026' },
     ],
     links: [
@@ -69,7 +69,7 @@ const routeBeheerData: RouteBeheerPageData = {
   campaignName: 'RetentionScan Demo',
   organizationName: 'Acme',
   scanType: 'retention',
-  scanTypeLabel: 'RetentieScan',
+  scanTypeLabel: 'Loep Behoud',
   deliveryModeLabel: 'Baseline',
   routePeriodLabel: 'Q2 2026',
   isActive: true,
@@ -119,7 +119,7 @@ const routeBeheerData: RouteBeheerPageData = {
     label: 'Dashboard / rapportstatus',
   },
   respondentCount: 12,
-  routeSettingsLabel: 'RetentieScan / Baseline / Q2 2026',
+  routeSettingsLabel: 'Loep Behoud / Baseline / Q2 2026',
   routeSettingsBody: 'Startdatum: 10 mei 2026',
   outputStatusLabel: 'Dashboard / rapportstatus',
   latestAuditSummary: 'Invites verstuurd',

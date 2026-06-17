@@ -5,11 +5,11 @@ describe('rapportGereedHtml', () => {
   it('bevat campagnenaam, org-naam en dashboard-link', () => {
     const html = rapportGereedHtml({
       organizationName: 'TechBouw B.V.',
-      campaignName: 'ExitScan Q1 2026',
+      campaignName: 'Loep Vertrek Q1 2026',
       dashboardUrl: 'https://loep.nl/campaigns/abc',
       calendlyUrl: null,
     })
-    expect(html).toContain('ExitScan Q1 2026')
+    expect(html).toContain('Loep Vertrek Q1 2026')
     expect(html).toContain('TechBouw B.V.')
     expect(html).toContain('https://loep.nl/campaigns/abc')
   })

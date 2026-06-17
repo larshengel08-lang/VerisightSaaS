@@ -10,12 +10,12 @@ describe('public proof feed', () => {
   it('maps approved proof rows into public card shape', () => {
     expect(
       mapPublicProofCard({
-        route: 'ExitScan',
+        route: 'Loep Vertrek',
         summary: 'Bounded summary',
         claimableObservation: 'Claimable approved observation',
       }),
     ).toEqual({
-      title: 'ExitScan in gebruik',
+      title: 'Loep Vertrek in gebruik',
       body: 'Claimable approved observation',
       approval: 'public_usable',
     })

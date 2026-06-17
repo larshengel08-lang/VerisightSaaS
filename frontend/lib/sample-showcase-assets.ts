@@ -37,7 +37,7 @@ export interface SampleShowcaseAsset {
 export const SAMPLE_SHOWCASE_ASSETS: SampleShowcaseAsset[] = [
   {
     id: 'exit-sample-report',
-    label: 'ExitScan buyer-facing voorbeeldrapport',
+    label: 'Loep Vertrek buyer-facing voorbeeldrapport',
     product: 'exit',
     kind: 'pdf',
     status: 'buyer-facing active',
@@ -46,17 +46,17 @@ export const SAMPLE_SHOWCASE_ASSETS: SampleShowcaseAsset[] = [
     docsPath: 'docs/examples/voorbeeldrapport_loep.pdf',
     publicHref: '/examples/voorbeeldrapport_loep.pdf',
     intendedUse:
-      'Primaire buyer-facing prooflaag voor ExitScan op productpagina, in sales en als deliverable-preview.',
+      'Primaire buyer-facing prooflaag voor Loep Vertrek op productpagina, in sales en als deliverable-preview.',
     evidenceTier: 'deliverable_proof',
     buyerUse: 'Gebruik als deliverable-proof en trustproof; nooit als klantcase of effectbewijs.',
     claimBoundary:
-      'Illustratief voorbeeld met fictieve data in dezelfde managementstructuur als echte ExitScan-output; geen diagnose of causale bewijsclaim.',
+      'Illustratief voorbeeld met fictieve data in dezelfde managementstructuur als echte Loep Vertrek-output; geen diagnose of causale bewijsclaim.',
     trustFrame:
       'Gegroepeerde managementduiding met claims-, privacy- en interpretatiegrenzen in dezelfde leesvolgorde als live output.',
   },
   {
     id: 'retention-sample-report',
-    label: 'RetentieScan buyer-facing voorbeeldrapport',
+    label: 'Loep Behoud buyer-facing voorbeeldrapport',
     product: 'retention',
     kind: 'pdf',
     status: 'buyer-facing active',
@@ -65,11 +65,11 @@ export const SAMPLE_SHOWCASE_ASSETS: SampleShowcaseAsset[] = [
     docsPath: 'docs/examples/voorbeeldrapport_retentiescan.pdf',
     publicHref: '/examples/voorbeeldrapport_retentiescan.pdf',
     intendedUse:
-      'Buyer-facing prooflaag voor RetentieScan wanneer de vraag expliciet over actieve-populatie behoud gaat.',
+      'Buyer-facing prooflaag voor Loep Behoud wanneer de vraag expliciet over actieve-populatie behoud gaat.',
     evidenceTier: 'deliverable_proof',
     buyerUse: 'Gebruik als deliverable-proof en trustproof; nooit als klantcase of effectbewijs.',
     claimBoundary:
-      'Illustratief voorbeeld met fictieve data in dezelfde managementstructuur als echte RetentieScan-output; geen brede MTO of individuele predictor.',
+      'Illustratief voorbeeld met fictieve data in dezelfde managementstructuur als echte Loep Behoud-output; geen brede MTO of individuele predictor.',
     trustFrame:
       'Verification-first groepsduiding met privacygrenzen, v1-bewijsstatus en productspecifieke leeswijzers.',
   },
@@ -87,41 +87,41 @@ export const SAMPLE_SHOWCASE_ASSETS: SampleShowcaseAsset[] = [
     buyerUse:
       'Gebruik als teaser naar de kernroute-sample-rapporten; bounded follow-on routes krijgen hiermee geen impliciete eigen sample-pdf status.',
     claimBoundary:
-      'Illustratieve preview, geen volwaardig rapport en geen rijkere output dan de echte voorbeeldrapporten van ExitScan en RetentieScan.',
+      'Illustratieve preview, geen volwaardig rapport en geen rijkere output dan de echte voorbeeldrapporten van Loep Vertrek en Loep Behoud.',
     trustFrame:
       'Gebruikt fictieve data maar volgt dezelfde managementstructuur, trustnotes en routekeuze-logica als de actieve core sample-rapporten.',
   },
   {
     id: 'exit-preview',
-    label: 'ExitScan productspecifieke preview',
+    label: 'Loep Vertrek productspecifieke preview',
     product: 'exit',
     kind: 'preview',
     status: 'buyer-facing active',
     accessMode: 'public_buyer_sample',
     deliveryReadiness: 'commercial_delivery_ready',
     intendedUse:
-      'Teaserlaag op de ExitScan-productpagina om de buyer vanaf preview door te leiden naar het volledige ExitScan-voorbeeldrapport.',
+      'Teaserlaag op de Loep Vertrek-productpagina om de buyer vanaf preview door te leiden naar het volledige Loep Vertrek-voorbeeldrapport.',
     evidenceTier: 'deliverable_proof',
-    buyerUse: 'Gebruik als teaser naar het primaire ExitScan sample, niet als case-proof.',
+    buyerUse: 'Gebruik als teaser naar het primaire Loep Vertrek sample, niet als case-proof.',
     claimBoundary:
-      'Preview op basis van dezelfde managementtaal en voorbeeldstructuur als het actieve ExitScan-sample-pdf.',
+      'Preview op basis van dezelfde managementtaal en voorbeeldstructuur als het actieve Loep Vertrek-sample-pdf.',
     trustFrame:
       'Benadrukt bestuurlijke read, bestuurlijke handoff, eerste besluit en claimsgrens zonder vertrouwelijke klantframing.',
   },
   {
     id: 'retention-preview',
-    label: 'RetentieScan productspecifieke preview',
+    label: 'Loep Behoud productspecifieke preview',
     product: 'retention',
     kind: 'preview',
     status: 'buyer-facing active',
     accessMode: 'public_buyer_sample',
     deliveryReadiness: 'commercial_delivery_ready',
     intendedUse:
-      'Teaserlaag op de RetentieScan-productpagina om de buyer vanaf preview door te leiden naar het volledige RetentieScan-voorbeeldrapport.',
+      'Teaserlaag op de Loep Behoud-productpagina om de buyer vanaf preview door te leiden naar het volledige Loep Behoud-voorbeeldrapport.',
     evidenceTier: 'deliverable_proof',
-    buyerUse: 'Gebruik als teaser naar het RetentieScan sample, niet als case-proof.',
+    buyerUse: 'Gebruik als teaser naar het Loep Behoud sample, niet als case-proof.',
     claimBoundary:
-      'Preview op basis van dezelfde managementtaal en voorbeeldstructuur als het actieve RetentieScan-sample-pdf.',
+      'Preview op basis van dezelfde managementtaal en voorbeeldstructuur als het actieve Loep Behoud-sample-pdf.',
     trustFrame:
       'Benadrukt verification-first lezing, groepsgrenzen en v1-bewijsstatus zonder predictorframing.',
   },
@@ -400,7 +400,7 @@ export const SAMPLE_SHOWCASE_ASSETS: SampleShowcaseAsset[] = [
   },
   {
     id: 'exit-legacy-sample',
-    label: 'Legacy ExitScan 35 fictief',
+    label: 'Legacy Loep Vertrek 35 fictief',
     product: 'exit',
     kind: 'pdf',
     status: 'legacy archive',
@@ -418,7 +418,7 @@ export const SAMPLE_SHOWCASE_ASSETS: SampleShowcaseAsset[] = [
   },
   {
     id: 'retention-legacy-sample',
-    label: 'Legacy RetentieScan 35 fictief',
+    label: 'Legacy Loep Behoud 35 fictief',
     product: 'retention',
     kind: 'pdf',
     status: 'legacy archive',

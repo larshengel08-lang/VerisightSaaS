@@ -96,7 +96,7 @@ describe('action center graph calendar capability', () => {
     })
   })
 
-  it('enables Graph for RetentieScan when the shared route contract marks the route as provider-eligible', () => {
+  it('enables Graph for Loep Behoud when the shared route contract marks the route as provider-eligible', () => {
     expect(
       getActionCenterGraphCalendarCapability({
         scanType: 'retention',

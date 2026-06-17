@@ -9,7 +9,7 @@ describe('/producten later vervolg section', () => {
       'utf8',
     )
 
-    expect(source).toContain(".filter(([title]) => title === 'ExitScan Live Start')")
+    expect(source).toContain(".filter(([title]) => title === 'Loep Vertrek Live Start')")
     expect(source).toContain("['Exitscan Live', body] as const")
     expect(source).not.toContain("title === 'Reviewcadans'")
     expect(source).toContain('maxWidth: 720')

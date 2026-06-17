@@ -48,7 +48,7 @@ export function RespondentTable({ respondents, responses, scanType, hasMinDispla
 
       {scanType === 'retention' && responses.length > 0 ? (
         <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
-          Bij RetentieScan tonen we in deze tabel bewust geen individuele scores of vertrekintentie. De tabel blijft operationeel, terwijl de interpretatie op groepsniveau plaatsvindt.
+          Bij Loep Behoud tonen we in deze tabel bewust geen individuele scores of vertrekintentie. De tabel blijft operationeel, terwijl de interpretatie op groepsniveau plaatsvindt.
         </div>
       ) : null}
 

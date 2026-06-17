@@ -73,7 +73,7 @@ export default function OpenGraphImage() {
                   background: '#2563eb',
                 }}
               />
-              ExitScan + RetentieScan + Loep Cultuurbeeld
+              Loep Vertrek + Loep Behoud + Loep Cultuurbeeld
             </div>
             <div style={{ fontSize: '74px', fontWeight: 700, lineHeight: 1.02 }}>
               Kies eerst de juiste route.
@@ -122,16 +122,16 @@ export default function OpenGraphImage() {
                 Live routes
               </div>
               <div style={{ fontSize: '24px', lineHeight: 1.3, color: '#0f172a' }}>
-                ExitScan
+                Loep Vertrek
               </div>
               <div style={{ fontSize: '24px', lineHeight: 1.3, color: '#059669' }}>
-                RetentieScan
+                Loep Behoud
               </div>
               <div style={{ fontSize: '24px', lineHeight: 1.3, color: '#7c3aed' }}>
                 Loep Cultuurbeeld
               </div>
               <div style={{ fontSize: '22px', lineHeight: 1.3, color: '#0284c7' }}>
-                Onboarding 30-60-90
+                Loep Start
               </div>
             </div>
           </div>
@@ -156,7 +156,7 @@ export default function OpenGraphImage() {
             />
             <div style={{ fontSize: '28px', fontWeight: 700, color: '#0f172a' }}>www.verisight.nl</div>
           </div>
-          <div style={{ fontSize: '24px', color: '#334155' }}>ExitScan en RetentieScan voor HR-teams</div>
+          <div style={{ fontSize: '24px', color: '#334155' }}>Loep Vertrek en Loep Behoud voor HR-teams</div>
         </div>
       </div>
     ),

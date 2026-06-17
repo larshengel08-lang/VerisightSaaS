@@ -110,7 +110,7 @@ describe('action center graph client', () => {
         organizerUserId: 'hr-organizer@tenant.example',
       },
       {
-        subject: 'Reviewmoment ExitScan / Operations',
+        subject: 'Reviewmoment Loep Vertrek / Operations',
         bodyHtml: '<p>Open Action Center.</p>',
         start: { dateTime: '2026-05-20T09:00:00', timeZone: 'W. Europe Standard Time' },
         end: { dateTime: '2026-05-20T09:30:00', timeZone: 'W. Europe Standard Time' },
@@ -132,7 +132,7 @@ describe('action center graph client', () => {
     const createInit = createCall?.[1] as RequestInit
     expect(createInit.method).toBe('POST')
     expect((createInit.headers as Record<string, string>).Authorization).toBe('Bearer graph-token')
-    expect(String(createInit.body)).toContain('"subject":"Reviewmoment ExitScan / Operations"')
+    expect(String(createInit.body)).toContain('"subject":"Reviewmoment Loep Vertrek / Operations"')
     expect(String(createInit.body)).toContain('"allowNewTimeProposals":false')
     expect(String(createInit.body)).toContain('"transactionId":"route-1::revision-3"')
   })
@@ -152,7 +152,7 @@ describe('action center graph client', () => {
       },
       {
         eventId: 'graph-event-1',
-        subject: 'Reviewmoment ExitScan / Operations',
+        subject: 'Reviewmoment Loep Vertrek / Operations',
         bodyHtml: '<p>Bijgewerkt reviewmoment.</p>',
         start: { dateTime: '2026-05-27T09:00:00', timeZone: 'W. Europe Standard Time' },
         end: { dateTime: '2026-05-27T09:30:00', timeZone: 'W. Europe Standard Time' },
@@ -215,7 +215,7 @@ describe('action center graph client', () => {
         organizerUserId: 'hr-organizer@tenant.example',
       },
       {
-        subject: 'Reviewmoment ExitScan / Operations',
+        subject: 'Reviewmoment Loep Vertrek / Operations',
         bodyHtml: '<p>Open Action Center.</p>',
         start: { dateTime: '2026-05-20T09:00:00', timeZone: 'W. Europe Standard Time' },
         end: { dateTime: '2026-05-20T09:30:00', timeZone: 'W. Europe Standard Time' },
@@ -243,7 +243,7 @@ describe('action center graph client', () => {
         organizerUserId: 'hr-organizer@tenant.example',
       },
       {
-        subject: 'Reviewmoment ExitScan / Operations',
+        subject: 'Reviewmoment Loep Vertrek / Operations',
         bodyHtml: '<p>Open Action Center.</p>',
         start: { dateTime: '2026-05-20T09:00:00', timeZone: 'W. Europe Standard Time' },
         end: { dateTime: '2026-05-20T09:30:00', timeZone: 'W. Europe Standard Time' },

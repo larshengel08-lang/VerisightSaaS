@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     shortcut: [{ url: '/icon.png', type: 'image/png' }],
   },
   description:
-    'Loep helpt HR-teams bij organisaties met 200 tot 1.000 medewerkers om vertrek te duiden met ExitScan en behoud eerder zichtbaar te maken met RetentieScan.',
+    'Loep helpt HR-teams bij organisaties met 200 tot 1.000 medewerkers om vertrek te duiden met Loep Vertrek en behoud eerder zichtbaar te maken met Loep Behoud.',
   metadataBase: new URL('https://www.verisight.nl'),
   openGraph: {
     type: 'website',
@@ -38,13 +38,13 @@ export const metadata: Metadata = {
     siteName: 'Loep',
     title: 'Loep',
     description:
-      'Begrijp waarom medewerkers vertrekken en zie eerder waar behoud onder druk staat. Loep levert ExitScan en RetentieScan in een begeleide productvorm.',
+      'Begrijp waarom medewerkers vertrekken en zie eerder waar behoud onder druk staat. Loep levert Loep Vertrek en Loep Behoud in een begeleide productvorm.',
     images: [
       {
         url: '/opengraph-image',
         width: 1200,
         height: 630,
-        alt: 'Loep productportfolio met ExitScan en RetentieScan',
+        alt: 'Loep productportfolio met Loep Vertrek en Loep Behoud',
       },
     ],
   },
@@ -52,7 +52,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Loep',
     description:
-      'Begrijp waarom medewerkers vertrekken en zie eerder waar behoud onder druk staat. Loep levert ExitScan en RetentieScan in een begeleide productvorm.',
+      'Begrijp waarom medewerkers vertrekken en zie eerder waar behoud onder druk staat. Loep levert Loep Vertrek en Loep Behoud in een begeleide productvorm.',
     images: ['/opengraph-image'],
   },
   robots: {
@@ -74,7 +74,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     url: 'https://www.verisight.nl',
     logo: 'https://www.verisight.nl/icon.png',
     description:
-      'Loep helpt HR-teams bij organisaties met 200 tot 1.000 medewerkers om vertrek te duiden met ExitScan en behoud eerder zichtbaar te maken met RetentieScan.',
+      'Loep helpt HR-teams bij organisaties met 200 tot 1.000 medewerkers om vertrek te duiden met Loep Vertrek en behoud eerder zichtbaar te maken met Loep Behoud.',
     areaServed: {
       '@type': 'Country',
       name: 'Nederland',

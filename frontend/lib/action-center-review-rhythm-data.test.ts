@@ -44,7 +44,7 @@ function buildItem(overrides: Record<string, unknown> = {}) {
     id: 'cmp-exit-1::org-1::department::operations',
     status: 'reviewbaar',
     reviewDate: '2026-05-01',
-    sourceLabel: 'ExitScan',
+    sourceLabel: 'Loep Vertrek',
     teamLabel: 'Operations',
     reviewDateLabel: '1 mei',
     reviewOutcome: 'geen-uitkomst',
@@ -104,7 +104,7 @@ describe('action center review rhythm data', () => {
           id: 'cmp-exit-2::org-1::department::finance',
           reviewDate: '2026-05-20',
           reviewDateLabel: '20 mei',
-          sourceLabel: 'RetentieScan',
+          sourceLabel: 'Loep Behoud',
           teamLabel: 'Finance',
           coreSemantics: {
             route: {
@@ -190,7 +190,7 @@ describe('action center review rhythm data', () => {
       items: [
         buildItem({
           id: 'preview-retention-1',
-          sourceLabel: 'RetentieScan',
+          sourceLabel: 'Loep Behoud',
           coreSemantics: {
             route: {
               routeId: 'route-retention-1',
@@ -300,7 +300,7 @@ describe('action center review rhythm data', () => {
     ).rejects.toThrow('database offline')
   })
 
-  it('fills partial persisted RetentieScan configs from retention defaults instead of the generic baseline path', async () => {
+  it('fills partial persisted Loep Behoud configs from retention defaults instead of the generic baseline path', async () => {
     mockRouteDefaultsOverride.mockImplementation((scanType: string | null | undefined) => {
       if (scanType !== 'retention') {
         return undefined
@@ -348,7 +348,7 @@ describe('action center review rhythm data', () => {
       items: [
         buildItem({
           id: 'route-retention-partial-preview',
-          sourceLabel: 'RetentieScan',
+          sourceLabel: 'Loep Behoud',
           coreSemantics: {
             route: {
               routeId: 'route-retention-partial',
@@ -613,7 +613,7 @@ describe('action center review rhythm data', () => {
       expect.arrayContaining([
         expect.objectContaining({
           routeId: 'route-label-canonical',
-          sourceLabel: 'ExitScan',
+          sourceLabel: 'Loep Vertrek',
         }),
       ]),
     )
@@ -857,7 +857,7 @@ describe('action center review rhythm data', () => {
     ])
     expect(result.oversight.attentionItems[0]).toMatchObject({
       routeId: 'route-stale-governance-priority',
-      sourceLabel: 'RetentieScan',
+      sourceLabel: 'Loep Behoud',
     })
   })
 })

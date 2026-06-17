@@ -36,7 +36,7 @@ describe('reporting architecture v3', () => {
     expect(resolvePageOrder(retentionMissingData as ReportSceneV3).at(-1)).toBe('B1')
   })
 
-  it('preserves terminology separation between ExitScan and RetentieScan', () => {
+  it('preserves terminology separation between Loep Vertrek and Loep Behoud', () => {
     expect(validateTerminologySeparation(exitStandard as ReportSceneV3)).toEqual([])
     expect(validateTerminologySeparation(retentionStandard as ReportSceneV3)).toEqual([])
 

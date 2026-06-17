@@ -43,7 +43,7 @@ function buildGovernanceItem(overrides: Record<string, unknown> = {}) {
     title: 'Retention follow-through',
     summary: 'Bounded retention route',
     reason: 'Welke bounded vervolgstap vraagt deze route nu?',
-    sourceLabel: 'RetentieScan',
+    sourceLabel: 'Loep Behoud',
     teamId: 'support',
     teamLabel: 'Support',
     ownerName: 'Manager Support',
@@ -58,7 +58,7 @@ function buildGovernanceItem(overrides: Record<string, unknown> = {}) {
     reviewOutcome: 'bijstellen',
     reviewDateLabel: '10 mei',
     reviewRhythm: 'Maandelijks',
-    signalLabel: 'RetentieScan - Support',
+    signalLabel: 'Loep Behoud - Support',
     signalBody: 'De route blijft binnen retention governance.',
     nextStep: 'Plan het volgende reviewmoment.',
     peopleCount: 22,
@@ -637,7 +637,7 @@ describe('action center governance helpers', () => {
     })
 
     expect(signals).toMatchObject({
-      sourceLabel: 'RetentieScan',
+      sourceLabel: 'Loep Behoud',
       signals: [
         {
           code: 'missing_action_where_execution_is_expected',

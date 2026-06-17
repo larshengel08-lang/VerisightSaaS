@@ -119,7 +119,7 @@ describe('culture assessment product module', () => {
       true,
     )
     expect(view.followThroughCards.some((card) => card.body.toLowerCase().includes('deeper governed work'))).toBe(true)
-    expect(view.followThroughCards.some((card) => card.body.includes('RetentieScan') || card.body.includes('ExitScan'))).toBe(
+    expect(view.followThroughCards.some((card) => card.body.includes('Loep Behoud') || card.body.includes('Loep Vertrek'))).toBe(
       true,
     )
   })
