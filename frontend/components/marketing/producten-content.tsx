@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { AC, Arrow, FF, Reveal, SHELL, T } from '@/components/marketing/design-tokens'
 import { MarketingClosingCta } from '@/components/marketing/marketing-closing-cta'
 import { buildContactHref } from '@/lib/contact-funnel'
-import { pricingCards } from '@/components/marketing/site-content'
 
 const TEAL = 'oklch(0.50 0.12 188)'
 const TEAL_SOFT = 'oklch(0.972 0.018 185)'
@@ -75,13 +74,6 @@ const scans = [
   },
 ] as const
 
-const primaryPricingCards = pricingCards.filter(
-  (item) =>
-    item.eyebrow === 'Loep Vertrek Baseline' ||
-    item.eyebrow === 'Loep Behoud Baseline' ||
-    item.eyebrow === 'Loep Start Baseline',
-)
-
 function HeroSection() {
   const primaryHref = buildContactHref({ routeInterest: 'nog-onzeker', ctaSource: 'products_hero_primary' })
 
@@ -121,8 +113,8 @@ function HeroSection() {
           <p style={{ color: AC.deep, fontSize: 11, fontWeight: 700, letterSpacing: '.18em', marginBottom: 18, textTransform: 'uppercase' }}>
             Producten
           </p>
-          <h1 style={{ color: T.ink, fontFamily: FF, fontSize: 'clamp(42px,5.5vw,76px)', fontWeight: 800, letterSpacing: '-.032em', lineHeight: 0.97, maxWidth: '12ch', margin: '0 auto' }}>
-            Welke vraag speelt nu het sterkst?
+          <h1 style={{ color: T.ink, fontFamily: FF, fontSize: 'clamp(42px,5.5vw,76px)', fontWeight: 800, letterSpacing: '-.032em', lineHeight: 0.97, maxWidth: '16ch', margin: '0 auto' }}>
+            Vertrek, behoud of de eerste 90 dagen.
           </h1>
           <p style={{ color: T.inkSoft, fontSize: 16.5, lineHeight: 1.72, margin: '26px auto 36px', maxWidth: '58ch' }}>
             Drie gelijkwaardige scans, elk met een begeleide uitvoering, een scherp managementrapport en een
@@ -245,82 +237,23 @@ function ScanSection({ scan, alt }: { scan: (typeof scans)[number]; alt: boolean
   )
 }
 
-function TrustSection() {
-  const points = [
-    'Rapportage alleen op groepsniveau, geen individuele data',
-    'Minimum aantal respondenten vereist voor veilige rapportage',
-    'Geen individuele voorspellingen of profielen',
-    'AVG-conforme dataverwerking',
-  ]
-  return (
-    <section style={{ background: T.paperSoft, borderBottom: `1px solid ${T.rule}`, padding: 'clamp(48px,5.5vw,72px) 0' }}>
-      <div style={SHELL}>
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[0.9fr_1.1fr]">
-          <Reveal>
-            <h2 style={{ color: T.ink, fontFamily: FF, fontSize: 'clamp(26px,3vw,40px)', fontWeight: 700, letterSpacing: '-.03em', lineHeight: 1.0, maxWidth: '14ch' }}>
-              Veilig op groepsniveau. Niets op de persoon.
-            </h2>
-          </Reveal>
-          <Reveal delay={0.08} from="right">
-            <div>
-              <div style={{ borderTop: `1px solid ${T.rule}`, display: 'grid', gap: 0 }}>
-                {points.map((point) => (
-                  <div key={point} style={{ alignItems: 'flex-start', borderBottom: `1px solid ${T.rule}`, display: 'grid', gap: 14, gridTemplateColumns: '18px 1fr', padding: '16px 0' }}>
-                    <span aria-hidden style={{ background: TEAL, borderRadius: '50%', height: 8, marginTop: 7, width: 8 }} />
-                    <p style={{ color: T.ink, fontSize: 15.5, lineHeight: 1.6 }}>{point}</p>
-                  </div>
-                ))}
-              </div>
-              <div style={{ background: T.paperSoft, border: `1px solid ${T.rule}`, marginTop: 22, padding: '16px 20px' }}>
-                <div style={{ color: T.inkMuted, fontSize: 10, fontWeight: 700, letterSpacing: '.16em', marginBottom: 8, textTransform: 'uppercase' }}>Methode</div>
-                <p style={{ color: T.inkSoft, fontSize: 14.5, lineHeight: 1.7 }}>
-                  Loep gebruikt gevalideerde vragenlijsten, geduid door HR-specialisten, geen geautomatiseerde
-                  software-output. Elke rapportage is contextgebonden en wordt begeleid met een managementbespreking.
-                </p>
-              </div>
-            </div>
-          </Reveal>
-        </div>
-      </div>
-    </section>
-  )
-}
-
 function PricingSection() {
   return (
-    <section id="tarieven" style={{ background: T.white, borderBottom: `1px solid ${T.rule}`, padding: 'clamp(52px,6vw,82px) 0', scrollMarginTop: 80 }}>
+    <section id="tarieven" style={{ background: T.paperSoft, borderBottom: `1px solid ${T.rule}`, padding: 'clamp(52px,6vw,82px) 0', scrollMarginTop: 80 }}>
       <div style={SHELL}>
         <Reveal>
-          <div style={{ marginBottom: 34, maxWidth: '60ch' }}>
+          <div style={{ maxWidth: '64ch' }}>
             <div style={{ color: AC.deep, fontSize: 10, fontWeight: 700, letterSpacing: '.16em', marginBottom: 12, textTransform: 'uppercase' }}>Tarieven</div>
-            <h2 style={{ color: T.ink, fontFamily: FF, fontSize: 'clamp(28px,3.5vw,42px)', fontWeight: 700, letterSpacing: '-.026em', lineHeight: 1.06, marginBottom: 14 }}>
-              Transparante prijs. Heldere eerste stap.
+            <h2 style={{ color: T.ink, fontFamily: FF, fontSize: 'clamp(28px,3.5vw,42px)', fontWeight: 700, letterSpacing: '-.026em', lineHeight: 1.06, marginBottom: 16 }}>
+              Eén heldere prijs per scan.
             </h2>
-            <p style={{ color: T.inkSoft, fontSize: 15, lineHeight: 1.7 }}>
-              Je koopt geen licentie, maar een uitgevoerde scan, een scherp managementrapport met prioriteiten en een
-              begeleide managementbespreking. Maatwerk op aanvraag.
+            <p style={{ color: T.inkSoft, fontSize: 16, lineHeight: 1.72 }}>
+              Elke scan kost <strong style={{ color: T.ink, fontWeight: 600 }}>€4.500</strong> en is een volledig traject:
+              uitvoering, een scherp managementrapport met prioriteiten en een begeleide managementbespreking. Je koopt
+              geen licentie. Maatwerk en doorlooptijd op aanvraag.
             </p>
           </div>
         </Reveal>
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {primaryPricingCards.map((item, index) => (
-            <Reveal key={item.eyebrow} delay={index * 0.06}>
-              <article style={{ background: T.white, border: `1px solid ${T.rule}`, borderTop: `3px solid ${AC.deep}`, padding: '34px' }}>
-                <div style={{ color: AC.deep, fontSize: 10, fontWeight: 700, letterSpacing: '.16em', marginBottom: 12, textTransform: 'uppercase' }}>{item.eyebrow}</div>
-                <div style={{ color: T.ink, fontFamily: FF, fontSize: 'clamp(2rem,4vw,3rem)', fontWeight: 400, letterSpacing: '-.03em', lineHeight: 1, marginBottom: 14 }}>{item.price}</div>
-                <p style={{ color: T.inkSoft, fontSize: 13.5, lineHeight: 1.7, marginBottom: 24 }}>{item.description}</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {item.bullets.map((bullet) => (
-                    <div key={bullet} style={{ alignItems: 'flex-start', background: T.paperSoft, color: T.inkSoft, display: 'flex', fontSize: 13, gap: 10, padding: '10px 14px' }}>
-                      <div style={{ background: AC.deep, flexShrink: 0, height: 4, marginTop: 5, width: 4 }} />
-                      {bullet}
-                    </div>
-                  ))}
-                </div>
-              </article>
-            </Reveal>
-          ))}
-        </div>
       </div>
     </section>
   )
@@ -352,7 +285,6 @@ export function ProductenContent() {
         <ScanSection key={scan.id} scan={scan} alt={index % 2 === 0} />
       ))}
       <SharedDeliverySection />
-      <TrustSection />
       <PricingSection />
       <ContactSection />
     </div>

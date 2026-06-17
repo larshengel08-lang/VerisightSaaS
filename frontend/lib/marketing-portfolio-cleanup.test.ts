@@ -67,7 +67,9 @@ describe('Portfolio cleanup — /producten routekiezer', () => {
   })
 
   it('uses a buyer-facing scan CTA, not the internal route-inschatting CTA', () => {
-    expect(source()).toContain('Bespreek of deze scan past')
+    // Geconsolideerde pagina gebruikt een per-scan CTA ("Bespreek of {scan.title} past").
+    expect(source()).toContain('Bespreek of ')
+    expect(source()).toContain(' past')
     expect(source()).not.toContain('route-inschatting')
   })
 })

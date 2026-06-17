@@ -47,7 +47,7 @@ describe('marketing flow defaults', () => {
     expect(marketingNavLinks).toEqual([
       { href: '/producten', label: 'Producten' },
       { href: '/producten#tarieven', label: 'Tarieven' },
-      { href: '/vertrouwen', label: 'Vertrouwen' },
+      { href: '/vertrouwen', label: 'Privacy' },
     ])
   })
 

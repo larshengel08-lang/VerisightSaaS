@@ -1827,24 +1827,23 @@ function ProofSection() {
       }}
     >
       <div style={{ ...SHELL, paddingTop: 'clamp(56px, 7vw, 88px)', paddingBottom: 'clamp(56px, 7vw, 88px)' }}>
-        <div style={{ margin: '0 auto', maxWidth: 760 }}>
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+          <Reveal>
+            <h2
+              style={{
+                color: SURFACE.ink,
+                fontFamily: displayFont,
+                fontSize: 'clamp(2.6rem, 4.2vw, 4.4rem)',
+                fontWeight: 700,
+                letterSpacing: '-0.05em',
+                lineHeight: 0.96,
+                maxWidth: '16ch',
+              }}
+            >
+              Veilig op groepsniveau. Niets op de persoon.
+            </h2>
+          </Reveal>
           <div style={{ minWidth: 0 }}>
-            <Reveal>
-              <h2
-                style={{
-                  color: SURFACE.ink,
-                  fontFamily: displayFont,
-                  fontSize: 'clamp(2.4rem, 4vw, 4rem)',
-                  fontWeight: 700,
-                  letterSpacing: '-0.05em',
-                  lineHeight: 0.96,
-                  marginBottom: 28,
-                  maxWidth: '14ch',
-                }}
-              >
-                Veilig op groepsniveau. Niets op de persoon.
-              </h2>
-            </Reveal>
             <div style={{ borderTop: `1px solid ${SURFACE.border}`, display: 'grid', gap: 0 }}>
               {proofPoints.map((point, index) => (
                 <Reveal key={point} delay={0.08 + index * 0.05}>
@@ -1896,12 +1895,7 @@ function ProofSection() {
                 </p>
               </div>
             </Reveal>
-
           </div>
-
-          {/* Expert-foto-sectie tijdelijk uit productie tot de echte foto + naam/rol klaar zijn.
-              Herstellen: zet de grid terug op 2 koloms (xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)])
-              en plaats hier de foto-slot (portret 4:5 + amber credential-blok). Code in chat/git-historie. */}
         </div>
       </div>
     </section>

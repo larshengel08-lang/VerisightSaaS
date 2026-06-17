@@ -12,7 +12,7 @@ describe('commercial homepage suite opening', () => {
 
     expect(siteContentSource).toContain("export const marketingNavLinks = [")
     expect(siteContentSource).toContain("{ href: '/producten', label: 'Producten' }")
-    expect(siteContentSource).toContain("{ href: '/vertrouwen', label: 'Vertrouwen' }")
+    expect(siteContentSource).toContain("{ href: '/vertrouwen', label: 'Privacy' }")
     expect(homepageSource.toLowerCase()).toContain('action center')
     expect(homepageSource.toLowerCase()).toContain('opvolging')
   })

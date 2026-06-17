@@ -11,7 +11,7 @@ export function PublicFooter() {
 
   const navLinks = [
     { href: '/producten#tarieven', label: 'Tarieven' },
-    { href: '/vertrouwen', label: 'Vertrouwen' },
+    { href: '/vertrouwen', label: 'Privacy' },
   ]
 
   return (

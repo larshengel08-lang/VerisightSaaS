@@ -46,7 +46,7 @@ function HeroSection() {
       />
       <div style={{ ...SHELL, position: 'relative' }}>
         <div style={{ animation: 'slideDownFade .55s cubic-bezier(.16,1,.3,1) .05s both' }}>
-          <SectionMark num="01" label="Vertrouwen" inView />
+          <SectionMark num="01" label="Privacy" inView />
         </div>
         <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-[1fr_360px] lg:gap-16">
           <div>
@@ -61,9 +61,9 @@ function HeroSection() {
                   color: T.ink,
                 }}
               >
-                Wat je publiek kunt toetsen
+                Zo gaan we met
                 <br />
-                <em style={{ fontStyle: 'italic', color: AC.deep }}>voordat je start.</em>
+                <em style={{ fontStyle: 'italic', color: AC.deep }}>jullie data om.</em>
               </h1>
             </div>
             <div style={{ animation: 'slideUpFade .8s cubic-bezier(.16,1,.3,1) .3s both' }}>
@@ -76,8 +76,8 @@ function HeroSection() {
                   margin: '28px 0 0',
                 }}
               >
-                Loep laat publiek zien hoe privacy, rapportlezing en productgrenzen zijn ingericht, zodat je de basis
-                kunt toetsen voordat een traject start.
+                Privacy, rapportlezing en productgrenzen liggen publiek vast, zodat je de basis kunt controleren
+                voordat je begint.
               </p>
             </div>
           </div>

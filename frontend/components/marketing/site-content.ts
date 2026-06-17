@@ -3,7 +3,7 @@ import { buildContactHref } from '@/lib/contact-funnel'
 export const marketingNavLinks = [
   { href: '/producten', label: 'Producten' },
   { href: '/producten#tarieven', label: 'Tarieven' },
-  { href: '/vertrouwen', label: 'Vertrouwen' },
+  { href: '/vertrouwen', label: 'Privacy' },
 ] as const
 
 export const marketingPrimaryCta = {
@@ -23,7 +23,7 @@ export const marketingFooterLinks = [
   { href: '/producten#loep-behoud', label: 'Loep Behoud' },
   { href: '/producten#loep-start', label: 'Loep Start' },
   { href: '/producten#tarieven', label: 'Tarieven' },
-  { href: '/vertrouwen', label: 'Vertrouwen' },
+  { href: '/vertrouwen', label: 'Privacy' },
 ] as const
 
 export const marketingLegalLinks = [

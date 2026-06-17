@@ -5,22 +5,22 @@ import { VertrouwenContent } from '@/components/marketing/vertrouwen-content'
 import { buildContactHref } from '@/lib/contact-funnel'
 
 export const metadata: Metadata = {
-  title: 'Vertrouwen',
+  title: 'Privacy & dataveiligheid',
   description:
-    'Wat je publiek kunt toetsen voordat je start. Privacy, rapportlezing, DPA beschikbaar en productgrenzen van Loep in een publieke trustlaag.',
+    'Zo gaat Loep met jullie data om: privacy, rapportlezing, DPA en productgrenzen, publiek te controleren voordat je begint.',
   alternates: { canonical: '/vertrouwen' },
   openGraph: {
-    title: 'Vertrouwen | Loep',
+    title: 'Privacy & dataveiligheid | Loep',
     description:
-      'Wat je publiek kunt toetsen voordat je start. Privacy, rapportlezing, DPA beschikbaar en productgrenzen van Loep in een publieke trustlaag.',
+      'Zo gaat Loep met jullie data om: privacy, rapportlezing, DPA en productgrenzen, publiek te controleren voordat je begint.',
     url: 'https://www.verisight.nl/vertrouwen',
     images: ['/opengraph-image'],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Vertrouwen | Loep',
+    title: 'Privacy & dataveiligheid | Loep',
     description:
-      'Wat je publiek kunt toetsen voordat je start. Privacy, rapportlezing, DPA beschikbaar en productgrenzen van Loep in een publieke trustlaag.',
+      'Zo gaat Loep met jullie data om: privacy, rapportlezing, DPA en productgrenzen, publiek te controleren voordat je begint.',
     images: ['/opengraph-image'],
   },
 }
@@ -31,7 +31,7 @@ export default function VertrouwenPage() {
     '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.verisight.nl/' },
-      { '@type': 'ListItem', position: 2, name: 'Vertrouwen', item: 'https://www.verisight.nl/vertrouwen' },
+      { '@type': 'ListItem', position: 2, name: 'Privacy', item: 'https://www.verisight.nl/vertrouwen' },
     ],
   }
 

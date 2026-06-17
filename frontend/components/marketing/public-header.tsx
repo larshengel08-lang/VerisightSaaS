@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
-import { SolutionsDropdown } from '@/components/marketing/solutions-dropdown'
 import { marketingNavLinks, marketingPrimaryCta } from '@/components/marketing/site-content'
 import { Wordmark } from '@/components/marketing/wordmark'
 
@@ -18,7 +17,7 @@ export function PublicHeader({
 }: PublicHeaderProps) {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
-  const secondaryNavLinks = marketingNavLinks.filter((link) => link.href !== '/producten')
+  const navLinks = marketingNavLinks
 
   function closeMenu() {
     setMobileOpen(false)
@@ -46,10 +45,7 @@ export function PublicHeader({
           </div>
 
           <nav className="hidden items-center gap-1 lg:flex">
-            <div className="px-2">
-              <SolutionsDropdown />
-            </div>
-            {secondaryNavLinks.map((link) => (
+            {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -96,17 +92,7 @@ export function PublicHeader({
         {mobileOpen ? (
           <div id="public-mobile-menu" className="marketing-mobile-menu lg:hidden">
             <div className="space-y-1">
-              <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-4 py-3">
-                <SolutionsDropdown />
-              </div>
-              <Link
-                href="/producten"
-                onClick={closeMenu}
-                className={`marketing-mobile-nav-link ${pathname === '/producten' ? 'marketing-mobile-nav-link-active' : ''}`}
-              >
-                Producten
-              </Link>
-              {secondaryNavLinks.map((link) => (
+              {navLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
