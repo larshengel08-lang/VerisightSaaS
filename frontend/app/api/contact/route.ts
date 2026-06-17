@@ -141,7 +141,7 @@ function renderContactRequestEmail(payload: ContactPayload) {
 async function sendContactRequestEmail(payload: ContactPayload): Promise<EmailSendResult> {
   const apiKey = process.env.RESEND_API_KEY
   const emailFrom = process.env.EMAIL_FROM ?? 'Loep <noreply@verisight.nl>'
-  const contactEmail = process.env.CONTACT_EMAIL ?? 'hallo@verisight.nl'
+  const contactEmail = process.env.CONTACT_EMAIL ?? 'hallo@getloep.nl'
 
   if (!apiKey) {
     return { ok: false, reason: 'missing_resend_api_key' }
