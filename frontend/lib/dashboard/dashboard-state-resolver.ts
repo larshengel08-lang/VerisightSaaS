@@ -109,8 +109,8 @@ export function resolveDashboardState(input: DashboardStateInput): DashboardStat
     return {
       ...EMPTY_STATE,
       kind: 'no_campaign',
-      primaryMessage: 'Er staat momenteel geen scan voor u klaar',
-      subtext: 'Loep richt uw campagne in. U ontvangt een bericht wanneer u kunt beginnen.',
+      primaryMessage: 'Er staat momenteel geen scan voor je klaar',
+      subtext: 'Loep richt je campagne in. Je ontvangt een bericht wanneer je kunt beginnen.',
       tone: 'neutral',
     }
   }
@@ -126,7 +126,7 @@ export function resolveDashboardState(input: DashboardStateInput): DashboardStat
         ...EMPTY_STATE,
         kind: 'report_ready',
         campaignId: campaign.id,
-        primaryMessage: 'Uw rapport is beschikbaar',
+        primaryMessage: 'Je rapport is beschikbaar',
         subtext: `${campaign.totalCompleted} respondenten · Gesloten ${formatDutchDate(campaign.closedAt) ?? 'recent'}`,
         tone: 'neutral',
         ctaLabel: 'Open rapport',
@@ -145,7 +145,7 @@ export function resolveDashboardState(input: DashboardStateInput): DashboardStat
       campaignId: campaign.id,
       primaryMessage: enough ? 'Rapport wordt voorbereid' : 'Rapport nog niet beschikbaar',
       subtext: enough
-        ? 'U ontvangt een e-mail zodra het rapport gereed is. Dit duurt doorgaans minder dan een dag.'
+        ? 'Je ontvangt een e-mail zodra het rapport gereed is. Dit duurt doorgaans minder dan een dag.'
         : `Deze campagne is gesloten met ${campaign.totalCompleted} ingevulde reacties. Dat is te weinig voor een veilig rapport.`,
       tone: 'neutral',
       closeDateLabel: close.label,
@@ -160,7 +160,7 @@ export function resolveDashboardState(input: DashboardStateInput): DashboardStat
       ...EMPTY_STATE,
       kind: 'setup',
       campaignId: campaign.id,
-      primaryMessage: 'Uw campagne staat klaar',
+      primaryMessage: 'Je campagne staat klaar',
       subtext: 'Controleer de planning en bereid de uitnodiging voor.',
       tone: 'calm',
       ctaLabel: 'Campagne klaarzetten →',

@@ -8,6 +8,7 @@ import { normalizeReminderConfig, buildParticipantCommunicationPreview } from '@
 import { isDashboardReleaseReady } from '@/lib/response-activation'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import { createClient } from '@/lib/supabase/server'
+import { CAMPAIGN_SCAN_OPTIONS } from '@/lib/campaign-setup'
 import type { CampaignStats } from '@/lib/types'
 
 interface Props {
@@ -114,6 +115,8 @@ export default async function CampaignPage({ params }: Props) {
   })
   const reminderText = `${reminderPreview.subject}\n\n${reminderPreview.body.join('\n\n')}`
 
+  const scanOption = CAMPAIGN_SCAN_OPTIONS.find((o) => o.value === stats.scan_type)
+
   return (
     <div className="space-y-6">
       <Link
@@ -122,6 +125,16 @@ export default async function CampaignPage({ params }: Props) {
       >
         ← Terug naar dashboard
       </Link>
+      <div className="flex flex-wrap items-baseline gap-3">
+        <h2 className="text-xl font-semibold tracking-tight text-[color:var(--dashboard-ink)]">
+          {stats.campaign_name}
+        </h2>
+        {scanOption ? (
+          <span className="text-sm text-[color:var(--dashboard-muted)]">
+            {scanOption.title} · {scanOption.short}
+          </span>
+        ) : null}
+      </div>
       <DashboardStateCard state={state} reminderText={reminderText} />
       {state.kind === 'report_ready' ? (
         <>
