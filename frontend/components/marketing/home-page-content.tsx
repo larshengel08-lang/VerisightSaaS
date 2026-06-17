@@ -870,51 +870,48 @@ function HeroSection() {
                   position: 'relative',
                 }}
               >
-                <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginBottom: 32 }}>
-                  <span style={{ color: '#e8a020', fontFamily: bodyFont, fontSize: 10, fontWeight: 700, letterSpacing: '.22em', textTransform: 'uppercase' }}>
-                    Managementrapport
+                <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginBottom: 28 }}>
+                  <span style={{ color: '#e8a020', fontFamily: bodyFont, fontSize: 10, fontWeight: 700, letterSpacing: '.18em', textTransform: 'uppercase' }}>
+                    Loep Behoud
                   </span>
-                  <span style={{ color: 'rgba(244,237,226,0.6)', fontFamily: bodyFont, fontSize: 10, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase' }}>
-                    Loep Behoud · Q3
+                  <span style={{ color: 'rgba(244,237,226,0.5)', fontFamily: bodyFont, fontSize: 9.5, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase' }}>
+                    Illustratief voorbeeld
                   </span>
                 </div>
 
-                <h3 style={{ fontFamily: displayFont, fontSize: 'clamp(2rem, 2.8vw, 2.7rem)', fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1.0, marginBottom: 24, maxWidth: '15ch' }}>
-                  Waar staat behoud onder druk?
+                <h3 style={{ fontFamily: displayFont, fontSize: 'clamp(1.9rem, 2.7vw, 2.6rem)', fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1.02, marginBottom: 22, maxWidth: '16ch' }}>
+                  Groeiperspectief scoort veruit het laagst.
                 </h3>
-                <div style={{ background: '#e8a020', height: 2, marginBottom: 28, width: 54 }} />
+                <div style={{ background: '#e8a020', height: 2, marginBottom: 24, width: 54 }} />
 
-                <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: 28 }}>
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', display: 'grid', gap: 0, marginBottom: 24 }}>
                   {[
-                    ['Respons', '78%'],
-                    ['Behoudssignaal', '6,4'],
-                    ['Aandachtspunten', '3'],
-                  ].map(([label, value]) => (
-                    <div key={label}>
-                      <div className="dash-number" style={{ fontFamily: displayFont, fontSize: 28, lineHeight: 1, marginBottom: 6 }}>{value}</div>
-                      <div style={{ color: 'rgba(244,237,226,0.55)', fontFamily: bodyFont, fontSize: 9.5, fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase' }}>{label}</div>
+                    { factor: 'Groeiperspectief', score: '4,8', duiding: 'Grootste uitschieter', color: '#e8a020', dominant: true },
+                    { factor: 'Werkbelasting', score: '5,0', duiding: 'Speelt mee', color: 'rgba(244,237,226,0.55)', dominant: false },
+                    { factor: 'Waardering en erkenning', score: '7,1', duiding: 'Relatief sterk', color: '#4db6a8', dominant: false },
+                  ].map((row) => (
+                    <div
+                      key={row.factor}
+                      style={{ alignItems: 'baseline', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'grid', gap: 12, gridTemplateColumns: 'minmax(0,1fr) auto auto', padding: '13px 0' }}
+                    >
+                      <span style={{ color: row.dominant ? '#f4ece0' : 'rgba(244,237,226,0.82)', fontFamily: bodyFont, fontSize: 13.5, fontWeight: row.dominant ? 600 : 500 }}>{row.factor}</span>
+                      <span className="dash-number" style={{ color: row.color, fontFamily: displayFont, fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em' }}>{row.score}</span>
+                      <span style={{ color: row.color, fontFamily: bodyFont, fontSize: 10.5, fontWeight: 600, letterSpacing: '.04em', textAlign: 'right', whiteSpace: 'nowrap' }}>{row.duiding}</span>
                     </div>
                   ))}
                 </div>
 
-                <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', display: 'grid', gap: 0 }}>
-                  {[
-                    ['Werkdruk en herstelruimte', 'Vraagt aandacht', '#e8a020'],
-                    ['Loopbaanperspectief', 'Gemengd beeld', 'rgba(244,237,226,0.5)'],
-                    ['Waardering en erkenning', 'Relatief sterk', '#4db6a8'],
-                  ].map(([label, status, color]) => (
-                    <div key={label} style={{ alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', gap: 14, justifyContent: 'space-between', padding: '13px 0' }}>
-                      <span style={{ fontFamily: bodyFont, fontSize: 13.5 }}>{label}</span>
-                      <span style={{ alignItems: 'center', color, display: 'inline-flex', fontFamily: bodyFont, fontSize: 11.5, fontWeight: 600, gap: 7, whiteSpace: 'nowrap' }}>
-                        <span aria-hidden style={{ background: color, borderRadius: 999, flexShrink: 0, height: 6, width: 6 }} />
-                        {status}
-                      </span>
-                    </div>
-                  ))}
+                <div style={{ background: 'rgba(232,160,32,0.1)', border: '1px solid rgba(232,160,32,0.28)', padding: '14px 16px' }}>
+                  <div style={{ color: '#e8a020', fontFamily: bodyFont, fontSize: 9.5, fontWeight: 700, letterSpacing: '.16em', marginBottom: 7, textTransform: 'uppercase' }}>
+                    Eerste managementvraag
+                  </div>
+                  <p style={{ color: '#f4ece0', fontFamily: bodyFont, fontSize: 13.5, lineHeight: 1.5 }}>
+                    Meer zicht op mogelijkheden, een beter ontwikkelgesprek, of echte ontwikkelruimte?
+                  </p>
                 </div>
 
-                <div style={{ color: 'rgba(244,237,226,0.42)', fontFamily: bodyFont, fontSize: 9.5, fontWeight: 600, letterSpacing: '.12em', marginTop: 24, textTransform: 'uppercase' }}>
-                  Vertrouwelijk · Rapportage op groepsniveau
+                <div style={{ color: 'rgba(244,237,226,0.42)', fontFamily: bodyFont, fontSize: 9.5, fontWeight: 600, letterSpacing: '.1em', marginTop: 22, textTransform: 'uppercase' }}>
+                  39 responses · Groepsniveau · Geen individuele risicolijst
                 </div>
               </div>
             </div>
