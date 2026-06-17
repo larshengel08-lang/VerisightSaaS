@@ -60,14 +60,22 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
-      { source: '/oplossingen/verloop-analyse', destination: '/producten/exitscan', permanent: true },
-      { source: '/oplossingen/exitgesprekken-analyse', destination: '/producten/exitscan', permanent: true },
-      { source: '/oplossingen/medewerkersbehoud-analyse', destination: '/producten/retentiescan', permanent: true },
-      { source: '/oplossingen/:slug(exit.*)', destination: '/producten/exitscan', permanent: true },
-      { source: '/oplossingen/:slug(retentie.*)', destination: '/producten/retentiescan', permanent: true },
-      { source: '/oplossingen/:slug(onboarding.*)', destination: '/producten/onboarding-30-60-90', permanent: true },
+      // Oude /oplossingen-routes → direct naar de juiste scan-sectie op /producten (geen dubbele hop)
+      { source: '/oplossingen/verloop-analyse', destination: '/producten#loep-vertrek', permanent: true },
+      { source: '/oplossingen/exitgesprekken-analyse', destination: '/producten#loep-vertrek', permanent: true },
+      { source: '/oplossingen/medewerkersbehoud-analyse', destination: '/producten#loep-behoud', permanent: true },
+      { source: '/oplossingen/:slug(exit.*)', destination: '/producten#loep-vertrek', permanent: true },
+      { source: '/oplossingen/:slug(retentie.*)', destination: '/producten#loep-behoud', permanent: true },
+      { source: '/oplossingen/:slug(onboarding.*)', destination: '/producten#loep-start', permanent: true },
       { source: '/oplossingen', destination: '/producten', permanent: true },
       { source: '/oplossingen/:slug*', destination: '/producten', permanent: true },
+      // Losse productpagina's geconsolideerd onder één /producten-pagina.
+      // Loep Cultuurbeeld blijft bewust een eigen (stille) pagina en redirect NIET.
+      { source: '/producten/exitscan', destination: '/producten#loep-vertrek', permanent: true },
+      { source: '/producten/retentiescan', destination: '/producten#loep-behoud', permanent: true },
+      { source: '/producten/onboarding-30-60-90', destination: '/producten#loep-start', permanent: true },
+      // Tarieven gevouwen in /producten
+      { source: '/tarieven', destination: '/producten#tarieven', permanent: true },
     ]
   },
   async headers() {

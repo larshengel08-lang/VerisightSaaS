@@ -46,7 +46,7 @@ describe('marketing flow defaults', () => {
   it('keeps the top navigation focused on products, pricing and trust', () => {
     expect(marketingNavLinks).toEqual([
       { href: '/producten', label: 'Producten' },
-      { href: '/tarieven', label: 'Tarieven' },
+      { href: '/producten#tarieven', label: 'Tarieven' },
       { href: '/vertrouwen', label: 'Vertrouwen' },
     ])
   })
@@ -66,7 +66,7 @@ describe('marketing flow defaults', () => {
     expect(homepageUtilityLinks.map((link) => link.href)).toEqual([
       '/producten',
       '/aanpak',
-      '/tarieven',
+      '/producten#tarieven',
       '/vertrouwen',
     ])
   })

@@ -24,9 +24,9 @@ export default function LandingPage() {
     mainEntity: {
       '@type': 'ItemList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Loep Vertrek', url: 'https://www.verisight.nl/producten/exitscan' },
-        { '@type': 'ListItem', position: 2, name: 'Loep Behoud', url: 'https://www.verisight.nl/producten/retentiescan' },
-        { '@type': 'ListItem', position: 3, name: 'Loep Start', url: 'https://www.verisight.nl/producten/onboarding-30-60-90' },
+        { '@type': 'ListItem', position: 1, name: 'Loep Vertrek', url: 'https://www.verisight.nl/producten#loep-vertrek' },
+        { '@type': 'ListItem', position: 2, name: 'Loep Behoud', url: 'https://www.verisight.nl/producten#loep-behoud' },
+        { '@type': 'ListItem', position: 3, name: 'Loep Start', url: 'https://www.verisight.nl/producten#loep-start' },
       ],
     },
   }

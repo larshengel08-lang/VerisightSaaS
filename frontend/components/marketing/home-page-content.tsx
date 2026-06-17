@@ -78,7 +78,7 @@ const routeCards = [
     eyebrow: 'Behoud onder druk',
     title: 'Loep Behoud',
     body: 'Wij laten zien waar behoud onder druk staat, voordat uitstroom zichtbaar wordt. Rapport en bespreking inbegrepen.',
-    href: '/producten/retentiescan',
+    href: '/producten#loep-behoud',
     accent: SURFACE.teal,
   },
   {
@@ -86,7 +86,7 @@ const routeCards = [
     eyebrow: 'Vertrek begrijpen',
     title: 'Loep Vertrek',
     body: 'Wij brengen vertrekpatronen scherp in beeld en leveren een rapport met prioriteiten. Begeleide bespreking inbegrepen.',
-    href: '/producten/exitscan',
+    href: '/producten#loep-vertrek',
     accent: SURFACE.amber,
   },
   {
@@ -94,7 +94,7 @@ const routeCards = [
     eyebrow: 'Nieuwe medewerkers laten landen',
     title: 'Loep Start',
     body: 'Wij meten vroeg hoe nieuwe medewerkers landen. Helder groepsbeeld, geen individuele beoordeling.',
-    href: '/producten/onboarding-30-60-90',
+    href: '/producten#loep-start',
     accent: '#9b5f1e',
   },
 ]
@@ -705,7 +705,7 @@ function ManagementFlowSection() {
 
 function HeroSection() {
   const primaryHref = buildContactHref({ routeInterest: 'retentiescan', ctaSource: 'homepage_hero_primary' })
-  const secondaryHref = '/producten/retentiescan'
+  const secondaryHref = '/producten#loep-behoud'
 
   return (
     <section
@@ -717,8 +717,8 @@ function HeroSection() {
       }}
     >
       <div style={{ ...SHELL, paddingTop: 'clamp(80px, 9vw, 120px)', paddingBottom: 'clamp(80px, 9vw, 120px)', position: 'relative' }}>
-        <div>
-          <div style={{ maxWidth: 760, margin: '0 auto', textAlign: 'center' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] lg:items-center" style={{ gap: 'clamp(40px, 5vw, 72px)' }}>
+          <div style={{ textAlign: 'left' }}>
               <div className="marketing-home-hero-reveal-1" style={{ marginBottom: 18 }}>
               <p
                 style={{
@@ -737,14 +737,12 @@ function HeroSection() {
                 style={{
                   color: SURFACE.ink,
                   fontFamily: displayFont,
-                  fontSize: 'clamp(3rem, 4.8vw, 5.2rem)',
+                  fontSize: 'clamp(2.6rem, 4vw, 4.6rem)',
                   fontWeight: 800,
                   letterSpacing: '-0.045em',
                   lineHeight: 0.98,
-                  marginBottom: 0,
-                  margin: '0 auto',
-                  maxWidth: '18ch',
-                  textAlign: 'center',
+                  margin: 0,
+                  maxWidth: '15ch',
                   textWrap: 'balance',
                 }}
               >
@@ -758,17 +756,16 @@ function HeroSection() {
                   color: SURFACE.text,
                   fontSize: 17,
                   lineHeight: 1.6,
-                  margin: '0 auto 28px',
-                  maxWidth: '32rem',
-                  textAlign: 'center',
+                  margin: '0 0 28px',
+                  maxWidth: '34rem',
                 }}
               >
-                Loep brengt vroeg in beeld waar behoud onder druk staat, welke patronen aandacht vragen en waar je als organisatie als eerste kunt bijsturen.
+                Loep brengt vroeg in beeld waar behoud onder druk staat, welke patronen terugkomen en welke managementvraag als eerste op tafel moet.
               </p>
 
               <div
                 className="marketing-home-hero-reveal-4 flex flex-wrap items-center gap-4"
-                style={{ justifyContent: 'center', marginBottom: 34 }}
+                style={{ justifyContent: 'flex-start', marginBottom: 34 }}
               >
               <Link
                 href={primaryHref}
@@ -801,7 +798,7 @@ function HeroSection() {
                   textDecoration: 'none',
                 }}
               >
-                Bekijk de Loep Behoud
+                Bekijk de retentie-analyse
               </Link>
               </div>
 
@@ -812,9 +809,8 @@ function HeroSection() {
                   fontSize: 12.5,
                   fontWeight: 500,
                   lineHeight: 1.6,
-                  margin: '0 auto 22px',
-                  maxWidth: '32rem',
-                  textAlign: 'center',
+                  margin: '0 0 22px',
+                  maxWidth: '34rem',
                 }}
               >
                 Reactie binnen 1 werkdag · Vrijblijvend gesprek van 20 min.
@@ -826,9 +822,9 @@ function HeroSection() {
                   borderTop: `1px solid ${SURFACE.border}`,
                   display: 'grid',
                   gap: 10,
-                  justifyItems: 'center',
+                  justifyItems: 'start',
                   paddingTop: 22,
-                  textAlign: 'center',
+                  textAlign: 'left',
                 }}
               >
                 {heroTrustItems.map((item) => (
@@ -852,7 +848,7 @@ function HeroSection() {
 
             <div
               className="marketing-home-hero-reveal-visual select-none"
-              style={{ margin: '52px auto 0', maxWidth: 480, position: 'relative', width: '100%' }}
+              style={{ margin: '0 auto', maxWidth: 480, position: 'relative', width: '100%' }}
             >
               <div
                 aria-hidden

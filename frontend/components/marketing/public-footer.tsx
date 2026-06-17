@@ -4,13 +4,13 @@ import { Wordmark } from '@/components/marketing/wordmark'
 
 export function PublicFooter() {
   const productLinks = [
-    { href: '/producten/exitscan', label: 'Loep Vertrek' },
-    { href: '/producten/retentiescan', label: 'Loep Behoud' },
-    { href: '/producten/onboarding-30-60-90', label: 'Loep Start' },
+    { href: '/producten#loep-vertrek', label: 'Loep Vertrek' },
+    { href: '/producten#loep-behoud', label: 'Loep Behoud' },
+    { href: '/producten#loep-start', label: 'Loep Start' },
   ]
 
   const navLinks = [
-    { href: '/tarieven', label: 'Tarieven' },
+    { href: '/producten#tarieven', label: 'Tarieven' },
     { href: '/vertrouwen', label: 'Vertrouwen' },
   ]
 

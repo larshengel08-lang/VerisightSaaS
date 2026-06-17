@@ -2,7 +2,7 @@ import { buildContactHref } from '@/lib/contact-funnel'
 
 export const marketingNavLinks = [
   { href: '/producten', label: 'Producten' },
-  { href: '/tarieven', label: 'Tarieven' },
+  { href: '/producten#tarieven', label: 'Tarieven' },
   { href: '/vertrouwen', label: 'Vertrouwen' },
 ] as const
 
@@ -19,10 +19,10 @@ export const marketingSecondaryCta = {
 export const marketingFooterLinks = [
   { href: '/', label: 'Home' },
   { href: '/producten', label: 'Producten' },
-  { href: '/producten/exitscan', label: 'Loep Vertrek' },
-  { href: '/producten/retentiescan', label: 'Loep Behoud' },
-  { href: '/producten/onboarding-30-60-90', label: 'Loep Start' },
-  { href: '/tarieven', label: 'Tarieven' },
+  { href: '/producten#loep-vertrek', label: 'Loep Vertrek' },
+  { href: '/producten#loep-behoud', label: 'Loep Behoud' },
+  { href: '/producten#loep-start', label: 'Loep Start' },
+  { href: '/producten#tarieven', label: 'Tarieven' },
   { href: '/vertrouwen', label: 'Vertrouwen' },
 ] as const
 
@@ -39,7 +39,7 @@ export const homepageProductRoutes = [
     name: 'Loep Vertrek',
     title: 'Breng scherp in beeld waarom medewerkers vertrekken',
     body: 'Terugkijkende analyse van vertrek op groepsniveau, met een eerste handoff voor opvolging en een heldere eerste route.',
-    href: '/producten/exitscan',
+    href: '/producten#loep-vertrek',
     accent: 'border-[#E5E0D6] bg-[#F7F5F1]',
     chip: 'Kernroute',
   },
@@ -47,7 +47,7 @@ export const homepageProductRoutes = [
     name: 'Loep Behoud',
     title: 'Zie waar behoud onder druk staat',
     body: 'Vroegsignalering op behoud op groeps- en segmentniveau, met retentiesignaal en een heldere eerste managementroute.',
-    href: '/producten/retentiescan',
+    href: '/producten#loep-behoud',
     accent: 'border-[#DCEFEA] bg-[#F7F5F1]',
     chip: 'Kernroute',
   },
@@ -55,7 +55,7 @@ export const homepageProductRoutes = [
     name: 'Loep Start',
     title: 'Zie vroeg hoe nieuwe medewerkers landen',
     body: 'Wij meten vroeg hoe nieuwe medewerkers landen in rol, leiding en team. Helder groepsbeeld, begeleide bespreking inbegrepen.',
-    href: '/producten/onboarding-30-60-90',
+    href: '/producten#loep-start',
     accent: 'border-[#DCF0E8] bg-[#F7F5F1]',
     chip: 'Kernroute',
   },
@@ -116,7 +116,7 @@ export const homepageUtilityLinks = [
     body: 'Lees hoe routekeuze, uitvoering en eerste output in een compacte productroute samenkomen.',
   },
   {
-    href: '/tarieven',
+    href: '/producten#tarieven',
     title: 'Bekijk tarieven',
     body: 'Zie hoe eerste trajecten en vervolgvormen commercieel zijn opgebouwd.',
   },
