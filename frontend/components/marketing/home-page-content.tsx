@@ -1831,7 +1831,7 @@ function ProofSection() {
       }}
     >
       <div style={{ ...SHELL, paddingTop: 'clamp(56px, 7vw, 88px)', paddingBottom: 'clamp(56px, 7vw, 88px)' }}>
-        <div className="grid grid-cols-1 gap-12 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] xl:items-center">
+        <div style={{ margin: '0 auto', maxWidth: 760 }}>
           <div style={{ minWidth: 0 }}>
             <Reveal>
               <h2
@@ -1903,59 +1903,9 @@ function ProofSection() {
 
           </div>
 
-          {/* Expert-slot. Vervang de "Foto volgt"-placeholder door de <img> (zie TODO) zodra de foto klaar is,
-              en vul [Naam] + rol + regel in. Bestand verwacht onder /public/images/. */}
-          <Reveal delay={0.12} from="right">
-            <div style={{ marginLeft: 'auto', maxWidth: 400, width: '100%' }}>
-              <div
-                style={{
-                  alignItems: 'center',
-                  aspectRatio: '4 / 5',
-                  background: SURFACE.surfaceSoft,
-                  border: `1px solid ${SURFACE.border}`,
-                  display: 'flex',
-                  justifyContent: 'center',
-                  overflow: 'hidden',
-                  width: '100%',
-                }}
-              >
-                {/* TODO: <img src="/images/lars.jpg" alt="Naam, HR-specialist bij Loep" style={{ height: '100%', objectFit: 'cover', width: '100%' }} /> */}
-                <span
-                  style={{
-                    color: SURFACE.muted,
-                    fontFamily: bodyFont,
-                    fontSize: 11,
-                    fontWeight: 700,
-                    letterSpacing: '.16em',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  Foto volgt
-                </span>
-              </div>
-              <div style={{ borderLeft: `2px solid ${SURFACE.amber}`, marginTop: 22, paddingLeft: 18 }}>
-                <p style={{ color: SURFACE.ink, fontFamily: displayFont, fontSize: 21, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.1 }}>
-                  [Naam]
-                </p>
-                <p
-                  style={{
-                    color: SURFACE.muted,
-                    fontFamily: bodyFont,
-                    fontSize: 11,
-                    fontWeight: 700,
-                    letterSpacing: '.16em',
-                    margin: '6px 0 14px',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  HR-specialist · Loep
-                </p>
-                <p style={{ color: SURFACE.text, fontSize: 15.5, lineHeight: 1.65 }}>
-                  &ldquo;Ik voer elke scan zelf uit en bespreek het rapport met je management.&rdquo;
-                </p>
-              </div>
-            </div>
-          </Reveal>
+          {/* Expert-foto-sectie tijdelijk uit productie tot de echte foto + naam/rol klaar zijn.
+              Herstellen: zet de grid terug op 2 koloms (xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)])
+              en plaats hier de foto-slot (portret 4:5 + amber credential-blok). Code in chat/git-historie. */}
         </div>
       </div>
     </section>
