@@ -1100,7 +1100,7 @@ async def open_survey_intro(
         )
 
     scan = get_scan_definition(campaign.scan_type)
-    product_name = scan.product_name if scan else "Survey"
+    product_name = scan.get("product_name", "Survey") if scan else "Survey"
 
     return templates.TemplateResponse(
         request,
