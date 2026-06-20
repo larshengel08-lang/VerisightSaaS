@@ -36,8 +36,8 @@ describe('resolveDashboardState', () => {
   it('State 1 — setup when invites are not launched yet', () => {
     const state = resolveDashboardState(baseInput({ launchConfirmedAt: null }))
     expect(state.kind).toBe('setup')
-    expect(state.primaryMessage).toBe('Je campagne staat klaar')
-    expect(state.ctaLabel).toBe('Campagne klaarzetten →')
+    expect(state.primaryMessage).toBe('Stap 1: stel de startdatum in')
+    expect(state.ctaLabel).toBe('Start de setup →')
     expect(state.ctaHref).toBe('/campaigns/camp-1/setup')
   })
 
