@@ -35,6 +35,9 @@ export async function saveLaunchSetupAction(
   invitedCount: number,
 ): Promise<ActionResult> {
   if (!launchDate) return { ok: false, error: 'Startdatum is verplicht.' }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(launchDate) || isNaN(new Date(launchDate).getTime())) {
+    return { ok: false, error: 'Ongeldige datum.' }
+  }
   if (!invitedCount || invitedCount < 1) return { ok: false, error: 'Aantal deelnemers moet minimaal 1 zijn.' }
 
   const { supabase, authorized } = await getAuthAndMembership(campaignId)
@@ -56,11 +59,12 @@ export async function confirmLaunchAction(campaignId: string): Promise<ActionRes
   if (!authorized) return { ok: false, error: 'Niet gemachtigd.' }
 
   const now = new Date().toISOString()
-  const { error } = await supabase
+  const { error, count } = await supabase
     .from('campaign_delivery_records')
-    .update({ launch_confirmed_at: now })
+    .update({ launch_confirmed_at: now }, { count: 'exact' })
     .eq('campaign_id', campaignId)
 
   if (error) throw new Error(`Bevestigen mislukt: ${error.message}`)
+  if (count === 0) throw new Error('Geen delivery record gevonden — sla eerst de startdatum op.')
   return { ok: true }
 }

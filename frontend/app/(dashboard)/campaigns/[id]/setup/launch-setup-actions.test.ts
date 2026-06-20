@@ -39,8 +39,8 @@ vi.mock('@/lib/supabase/server', () => ({
       if (table === 'campaign_delivery_records') {
         return {
           upsert: () => Promise.resolve({ error: null }),
-          update: () => ({
-            eq: () => Promise.resolve({ error: null }),
+          update: (_data: unknown, _opts?: unknown) => ({
+            eq: () => Promise.resolve({ error: null, count: 1 }),
           }),
         }
       }
@@ -65,6 +65,16 @@ describe('saveLaunchSetupAction', () => {
   it('returns error when invitedCount is negative', async () => {
     const result = await saveLaunchSetupAction('campaign-1', '2026-07-01', -5)
     expect(result).toEqual({ ok: false, error: 'Aantal deelnemers moet minimaal 1 zijn.' })
+  })
+
+  it('returns error for invalid date format', async () => {
+    const result = await saveLaunchSetupAction('campaign-1', 'not-a-date', 25)
+    expect(result).toEqual({ ok: false, error: 'Ongeldige datum.' })
+  })
+
+  it('returns error for impossible date', async () => {
+    const result = await saveLaunchSetupAction('campaign-1', '2026-13-01', 25)
+    expect(result).toEqual({ ok: false, error: 'Ongeldige datum.' })
   })
 
   it('returns ok: true for valid input', async () => {
