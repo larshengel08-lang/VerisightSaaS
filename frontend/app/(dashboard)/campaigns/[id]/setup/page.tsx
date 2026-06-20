@@ -13,21 +13,16 @@ export default async function CampaignSetupPage({ params }: Props) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) notFound()
 
-  const [{ data: campaign }, { data: delivery }, { data: orgData }] = await Promise.all([
+  const [{ data: campaign }, { data: delivery }] = await Promise.all([
     supabase
       .from('campaigns')
-      .select('id, public_survey_token, scan_type, name, closes_at, comms_mode')
+      .select('id, public_survey_token, scan_type, name, closes_at, comms_mode, organization_id')
       .eq('id', id)
       .maybeSingle(),
     supabase
       .from('campaign_delivery_records')
       .select('launch_date, invited_count, launch_confirmed_at')
       .eq('campaign_id', id)
-      .maybeSingle(),
-    supabase
-      .from('org_members')
-      .select('organizations(name)')
-      .eq('user_id', user.id)
       .maybeSingle(),
   ])
 
@@ -38,9 +33,13 @@ export default async function CampaignSetupPage({ params }: Props) {
     redirect(`/campaigns/${id}`)
   }
 
-  const organizationName =
-    (orgData as { organizations?: { name?: string } | null } | null)
-      ?.organizations?.name ?? 'je organisatie'
+  const { data: orgData } = await supabase
+    .from('organizations')
+    .select('name')
+    .eq('id', (campaign as Record<string, unknown>).organization_id as string)
+    .maybeSingle()
+
+  const organizationName = orgData?.name ?? 'je organisatie'
   const frontendBaseUrl =
     process.env.NEXT_PUBLIC_FRONTEND_URL ?? 'https://getloep.nl'
 
