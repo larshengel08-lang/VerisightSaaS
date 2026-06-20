@@ -49,8 +49,8 @@ export default async function CampaignPage({ params }: Props) {
   if (!statsRow) notFound()
   const stats = statsRow as CampaignStats
 
-  const [{ data: campaignMeta }, { data: deliveryRecord }, { data: reminderEvents }] = await Promise.all([
-    supabase.from('campaigns').select('closed_at, closes_at, delivery_mode, comms_mode').eq('id', id).maybeSingle(),
+  const [{ data: campaignMeta }, { data: deliveryRecord }, { data: reminderEvents }, { data: profile }] = await Promise.all([
+    supabase.from('campaigns').select('closed_at, closes_at, delivery_mode, comms_mode, public_survey_token').eq('id', id).maybeSingle(),
     supabase
       .from('campaign_delivery_records')
       .select('launch_date, launch_confirmed_at, reminder_config, participant_comms_config, invited_count')
@@ -64,7 +64,9 @@ export default async function CampaignPage({ params }: Props) {
       .eq('outcome', 'completed')
       .order('created_at', { ascending: false })
       .limit(1),
+    supabase.from('profiles').select('is_verisight_admin').eq('id', user.id).maybeSingle(),
   ])
+  const isAdmin = profile?.is_verisight_admin === true
 
   const reminderConfig = normalizeReminderConfig(deliveryRecord?.reminder_config ?? null)
 
@@ -139,9 +141,20 @@ export default async function CampaignPage({ params }: Props) {
       {state.kind === 'report_ready' ? (
         <>
           <div className="rounded-[22px] border border-[color:var(--dashboard-frame-border)] bg-white px-6 py-6">
-            <PdfDownloadButton campaignId={stats.campaign_id} campaignName={stats.campaign_name} scanType={stats.scan_type} />
+            {isAdmin ? (
+              <PdfDownloadButton campaignId={stats.campaign_id} campaignName={stats.campaign_name} scanType={stats.scan_type} />
+            ) : (
+              <div>
+                <p className="mb-1 text-sm font-semibold text-[color:var(--dashboard-ink)]">
+                  Volgende stap
+                </p>
+                <p className="text-sm text-[color:var(--dashboard-text)]">
+                  Je rapport is in voorbereiding. Loep neemt contact met je op om de vervolgstap te bespreken.
+                </p>
+              </div>
+            )}
           </div>
-          {process.env.NEXT_PUBLIC_CALENDLY_URL ? (
+          {isAdmin && process.env.NEXT_PUBLIC_CALENDLY_URL ? (
             <div className="rounded-[22px] border border-[color:var(--dashboard-frame-border)] bg-white px-6 py-6">
               <p className="mb-3 text-sm font-semibold text-[color:var(--dashboard-ink)]">
                 Volgende stap: managementbespreking
