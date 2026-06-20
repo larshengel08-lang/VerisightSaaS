@@ -26,7 +26,7 @@ export function NewCampaignForm({ orgs }: Props) {
   const [name, setName] = useState('')
   const [scanType, setScanType] = useState<ScanType>('exit')
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>('baseline')
-  const [commsMode, setCommsMode] = useState<CommsMode>('managed')
+  const [commsMode, setCommsMode] = useState<CommsMode>('self_send')
   const [modules, setModules] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -72,7 +72,7 @@ export function NewCampaignForm({ orgs }: Props) {
     setSuccess(true)
     setName('')
     setDeliveryMode('baseline')
-    setCommsMode('managed')
+    setCommsMode('self_send')
     setTimeout(() => {
       setSuccess(false)
       router.refresh()
