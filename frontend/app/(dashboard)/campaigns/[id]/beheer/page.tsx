@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { SuiteAccessDenied } from '@/components/dashboard/suite-access-denied'
 import { createClient } from '@/lib/supabase/server'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
@@ -41,7 +41,11 @@ export default async function RouteBeheerPage({ params, searchParams }: Props) {
     notFound()
   }
 
-  const { context } = await loadSuiteAccessContext(supabase, user.id)
+  const { context, profile } = await loadSuiteAccessContext(supabase, user.id)
+
+  if (profile?.is_verisight_admin !== true) {
+    redirect(`/campaigns/${id}`)
+  }
 
   if (!context.canViewInsights) {
     return (

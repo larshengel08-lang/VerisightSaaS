@@ -1,6 +1,16 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
+describe('routebeheer admin-guard', () => {
+  it('redirects niet-admins naar /campaigns/[id]', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain("profile?.is_verisight_admin !== true")
+    expect(source).toContain('redirect(`/campaigns/${id}`)')
+    expect(source).toContain("import { notFound, redirect } from 'next/navigation'")
+  })
+})
+
 describe('routebeheer page guardrails', () => {
   it('keeps routebeheer as a compact worktable instead of a stack of interpretation-heavy status surfaces', () => {
     const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
