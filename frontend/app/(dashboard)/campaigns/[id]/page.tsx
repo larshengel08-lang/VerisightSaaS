@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { DashboardStateCard } from '@/components/dashboard/dashboard-state-card'
+import { RunningStateCard } from '@/components/dashboard/running-state-card'
 import { WelcomeGate } from '@/components/dashboard/welcome-gate'
 import { PdfDownloadButton } from './pdf-download-button'
 import { SuiteAccessDenied } from '@/components/dashboard/suite-access-denied'
@@ -11,6 +12,7 @@ import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import { createClient } from '@/lib/supabase/server'
 import { CAMPAIGN_SCAN_OPTIONS } from '@/lib/campaign-setup'
 import type { CampaignStats } from '@/lib/types'
+import { SCAN_TYPE_LABELS } from '@/lib/types'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -148,6 +150,12 @@ export default async function CampaignPage({ params }: Props) {
           frontendBaseUrl={process.env.NEXT_PUBLIC_FRONTEND_URL ?? 'https://getloep.nl'}
           initialLaunchDate={deliveryRecord?.launch_date ?? null}
           initialInvitedCount={deliveryRecord?.invited_count ?? null}
+        />
+      ) : state.kind === 'running' ? (
+        <RunningStateCard
+          state={state}
+          reminderText={reminderText}
+          scanLabel={SCAN_TYPE_LABELS[stats.scan_type] ?? stats.scan_type}
         />
       ) : (
         <DashboardStateCard state={state} reminderText={reminderText} />

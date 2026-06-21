@@ -1,6 +1,7 @@
 // frontend/app/(dashboard)/dashboard/page.tsx
 import { redirect } from 'next/navigation'
 import { DashboardStateCard } from '@/components/dashboard/dashboard-state-card'
+import { RunningStateCard } from '@/components/dashboard/running-state-card'
 import { WelcomeGate } from '@/components/dashboard/welcome-gate'
 import { resolveDashboardState } from '@/lib/dashboard/dashboard-state-resolver'
 import { normalizeReminderConfig, buildParticipantCommunicationPreview } from '@/lib/launch-controls'
@@ -8,6 +9,7 @@ import { isDashboardReleaseReady } from '@/lib/response-activation'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import { createClient } from '@/lib/supabase/server'
 import type { CampaignStats } from '@/lib/types'
+import { SCAN_TYPE_LABELS } from '@/lib/types'
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10)
@@ -126,6 +128,12 @@ export default async function DashboardHomePage() {
           frontendBaseUrl={process.env.NEXT_PUBLIC_FRONTEND_URL ?? 'https://getloep.nl'}
           initialLaunchDate={deliveryRecord?.launch_date ?? null}
           initialInvitedCount={deliveryRecord?.invited_count ?? null}
+        />
+      ) : state.kind === 'running' ? (
+        <RunningStateCard
+          state={state}
+          reminderText={reminderText}
+          scanLabel={SCAN_TYPE_LABELS[campaign.scan_type] ?? campaign.scan_type}
         />
       ) : (
         <DashboardStateCard state={state} reminderText={reminderText} />
