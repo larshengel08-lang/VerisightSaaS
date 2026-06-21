@@ -10,15 +10,21 @@ interface Props {
 }
 
 export function RunningStateCard({ state, reminderText, scanLabel }: Props) {
-  const [copied, setCopied] = useState(false)
-  const [everCopied, setEverCopied] = useState(false)
+  // Split reminderText (built as `subject\n\nbody`) back into parts
+  const firstBreak = reminderText.indexOf('\n\n')
+  const defaultSubject = firstBreak >= 0 ? reminderText.slice(0, firstBreak) : reminderText
+  const defaultBody = firstBreak >= 0 ? reminderText.slice(firstBreak + 2) : ''
 
-  async function handleCopyReminder() {
+  const [editableSubject, setEditableSubject] = useState(defaultSubject)
+  const [editableBody, setEditableBody] = useState(defaultBody)
+  const [copiedSubject, setCopiedSubject] = useState(false)
+  const [copiedBody, setCopiedBody] = useState(false)
+
+  async function handleCopy(text: string, which: 'subject' | 'body') {
     try {
-      await navigator.clipboard.writeText(reminderText)
-      setEverCopied(true)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      await navigator.clipboard.writeText(text)
+      if (which === 'subject') { setCopiedSubject(true); setTimeout(() => setCopiedSubject(false), 2000) }
+      else { setCopiedBody(true); setTimeout(() => setCopiedBody(false), 2000) }
     } catch { /* clipboard unavailable */ }
   }
 
@@ -61,18 +67,55 @@ export function RunningStateCard({ state, reminderText, scanLabel }: Props) {
         <TimelineItem label="Campagne sluiten" date={state.closeDateLabel || 'Nog niet gepland'} last />
       </div>
 
-      {/* Reminder CTA */}
-      <div className="mt-8 flex items-center gap-3">
-        <button
-          type="button"
-          onClick={handleCopyReminder}
-          className="inline-flex items-center gap-2 rounded-lg border border-[color:var(--dashboard-frame-border)] bg-white px-4 py-2.5 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:bg-[color:var(--dashboard-soft)]"
-        >
-          {copied ? 'Gekopieerd ✓' : 'Kopieer herinneringstekst →'}
-        </button>
-        {everCopied && (
-          <p className="text-xs text-[color:var(--dashboard-muted)]">Plak en stuur vanuit je eigen e-mail</p>
-        )}
+      {/* Reminder block */}
+      <div className="mt-8 max-w-lg rounded-[16px] border border-[color:var(--dashboard-frame-border)] bg-white p-5">
+        <p className="mb-4 text-xs font-semibold uppercase tracking-[0.1em] text-[color:var(--dashboard-muted)]">
+          Herinneringsmail — pas aan en stuur vanuit je eigen e-mail
+        </p>
+
+        {/* Subject */}
+        <div className="mb-3">
+          <div className="mb-1 flex items-center justify-between">
+            <label className="text-[10px] font-semibold uppercase tracking-wide text-[color:var(--dashboard-muted)]">Onderwerp</label>
+            <button
+              type="button"
+              onClick={() => handleCopy(editableSubject, 'subject')}
+              className="text-[10px] font-semibold text-[#E8A020] hover:opacity-75"
+            >
+              {copiedSubject ? 'Gekopieerd ✓' : 'Kopieer'}
+            </button>
+          </div>
+          <textarea
+            value={editableSubject}
+            onChange={(e) => setEditableSubject(e.target.value)}
+            rows={1}
+            className="w-full resize-none rounded-lg border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-3 py-2 text-xs text-[color:var(--dashboard-ink)] focus:outline-none focus:ring-1 focus:ring-[#E8A020]/50"
+          />
+        </div>
+
+        {/* Body */}
+        <div>
+          <div className="mb-1 flex items-center justify-between">
+            <label className="text-[10px] font-semibold uppercase tracking-wide text-[color:var(--dashboard-muted)]">Bericht</label>
+            <button
+              type="button"
+              onClick={() => handleCopy(editableBody, 'body')}
+              className="text-[10px] font-semibold text-[#E8A020] hover:opacity-75"
+            >
+              {copiedBody ? 'Gekopieerd ✓' : 'Kopieer'}
+            </button>
+          </div>
+          <textarea
+            value={editableBody}
+            onChange={(e) => setEditableBody(e.target.value)}
+            rows={10}
+            className="w-full resize-none rounded-lg border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-3 py-2 text-xs leading-relaxed text-[color:var(--dashboard-ink)] focus:outline-none focus:ring-1 focus:ring-[#E8A020]/50"
+          />
+        </div>
+
+        <p className="mt-2 text-[10px] text-[color:var(--dashboard-muted)]">
+          Je kunt de tekst aanpassen voor je kopieert. Vergeet niet je naam in te vullen bij &ldquo;Met vriendelijke groet&rdquo;.
+        </p>
       </div>
     </section>
   )
@@ -91,11 +134,9 @@ function TimelineItem({
 }) {
   return (
     <div className="relative flex-1 pl-4">
-      {/* Dot */}
       <div
         className={`absolute left-0 top-[5px] h-2 w-2 rounded-full ${done ? 'bg-[#0D1B2A]' : 'bg-[color:var(--dashboard-soft)]'}`}
       />
-      {/* Connector line (not on last) */}
       {!last && (
         <div className="absolute left-2 top-[8px] right-0 h-px bg-[color:var(--dashboard-frame-border)]" />
       )}
