@@ -127,7 +127,7 @@ interface TemplateArgs {
 export function buildInviteTemplate(args: TemplateArgs): EmailTemplate {
   const sender = args.senderName || 'HR'
   return {
-    subject: `Uitnodiging: korte vragenlijst — ${args.organizationName}`,
+    subject: `Uitnodiging: korte vragenlijst - ${args.organizationName}`,
     body: [
       'Beste collega,',
       '',
@@ -146,7 +146,7 @@ export function buildInviteTemplate(args: TemplateArgs): EmailTemplate {
 export function buildReminderTemplate(args: TemplateArgs): EmailTemplate {
   const sender = args.senderName || 'HR'
   return {
-    subject: `Herinnering: korte vragenlijst — ${args.organizationName}`,
+    subject: `Herinnering: korte vragenlijst - ${args.organizationName}`,
     body: [
       'Beste collega,',
       '',
