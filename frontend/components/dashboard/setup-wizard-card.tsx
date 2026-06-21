@@ -197,6 +197,9 @@ export function SetupWizardCard({
                     Test link →
                   </a>
                 </div>
+                <p className="mt-2 text-xs text-[color:var(--dashboard-muted)]">
+                  Let op: open de link alleen om te controleren of hij werkt. Vul de survey niet volledig in — jouw antwoorden tellen anders mee in de resultaten.
+                </p>
                 <label className="mt-2 flex cursor-pointer items-center gap-2 text-xs text-[color:var(--dashboard-muted)]">
                   <input
                     type="checkbox"
