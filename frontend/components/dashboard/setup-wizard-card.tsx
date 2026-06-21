@@ -225,9 +225,7 @@ export function SetupWizardCard({
 
               {/* Tip sticky */}
               {tip && (
-                <div style={{ animation: 'sway-tip 3s ease-in-out infinite' }}
-                  className="rounded-xl bg-[#E8A020]/15 border border-[#E8A020]/30 px-3 py-2.5">
-                  <style>{`@keyframes sway-tip { 0%,100%{transform:rotate(-0.8deg)} 50%{transform:rotate(0.8deg)} }`}</style>
+                <div className="rounded-xl bg-[#E8A020]/15 border border-[#E8A020]/30 px-3 py-2.5">
                   <p className="text-[10px] font-semibold text-[#E8A020] mb-0.5">Advies</p>
                   <p className="text-[11px] leading-relaxed text-white/70">{tip}</p>
                 </div>
