@@ -40,13 +40,18 @@ export async function saveLaunchSetupAction(
   }
   if (!invitedCount || invitedCount < 1) return { ok: false, error: 'Aantal deelnemers moet minimaal 1 zijn.' }
 
-  const { supabase, authorized } = await getAuthAndMembership(campaignId)
-  if (!authorized) return { ok: false, error: 'Niet gemachtigd.' }
+  const { supabase, campaign, authorized } = await getAuthAndMembership(campaignId)
+  if (!authorized || !campaign) return { ok: false, error: 'Niet gemachtigd.' }
 
   const { error } = await supabase
     .from('campaign_delivery_records')
     .upsert(
-      { campaign_id: campaignId, launch_date: launchDate, invited_count: invitedCount },
+      {
+        campaign_id: campaignId,
+        organization_id: campaign.organization_id,
+        launch_date: launchDate,
+        invited_count: invitedCount,
+      },
       { onConflict: 'campaign_id' },
     )
 
