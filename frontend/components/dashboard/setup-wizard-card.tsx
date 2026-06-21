@@ -78,7 +78,7 @@ export function SetupWizardCard({
   const [step2Error, setStep2Error] = useState<string | null>(null)
   const [copiedSubject, setCopiedSubject] = useState(false)
   const [copiedBody, setCopiedBody] = useState(false)
-  const hasCopied = copiedSubject || copiedBody
+  const [everCopied, setEverCopied] = useState(false)
 
   const surveyLink = buildSurveyLink(frontendBaseUrl, publicSurveyToken)
   const scanLabel = SCAN_TYPE_LABELS[scanType] ?? scanType
@@ -110,6 +110,7 @@ export function SetupWizardCard({
   async function handleCopy(text: string, which: 'subject' | 'body') {
     try {
       await navigator.clipboard.writeText(text)
+      setEverCopied(true)
       if (which === 'subject') { setCopiedSubject(true); setTimeout(() => setCopiedSubject(false), 2000) }
       else { setCopiedBody(true); setTimeout(() => setCopiedBody(false), 2000) }
     } catch { /* clipboard unavailable */ }
@@ -270,11 +271,11 @@ export function SetupWizardCard({
                 {step2Error && (
                   <p className="mb-2 rounded-lg bg-red-500/20 px-3 py-2 text-xs font-semibold text-red-300">{step2Error}</p>
                 )}
-                <button type="button" onClick={handleConfirmLaunch} disabled={isPending || !hasCopied}
-                  className={`w-full rounded-lg px-4 py-2.5 text-sm font-semibold transition-opacity ${hasCopied ? 'bg-[#E8A020] text-[#0D1B2A] hover:opacity-90' : 'bg-white/10 text-white/30 cursor-not-allowed'} disabled:opacity-50`}>
+                <button type="button" onClick={handleConfirmLaunch} disabled={isPending || !everCopied}
+                  className={`w-full rounded-lg px-4 py-2.5 text-sm font-semibold transition-opacity ${everCopied ? 'bg-[#E8A020] text-[#0D1B2A] hover:opacity-90' : 'bg-white/10 text-white/30 cursor-not-allowed'} disabled:opacity-50`}>
                   {isPending ? 'Bezig…' : 'Ja, verstuurd →'}
                 </button>
-                {!hasCopied && (
+                {!everCopied && (
                   <p className="mt-1.5 text-center text-[10px] text-white/30">Kopieer eerst de tekst hierboven</p>
                 )}
               </div>
