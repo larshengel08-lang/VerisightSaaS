@@ -88,7 +88,7 @@ export function DashboardShellFrame({
               <Link href="/dashboard" className="flex items-start gap-4">
                 <span className="inline-flex h-9 w-9 items-center justify-center rounded-full">
                   <Image
-                    src="/brand/verisight-pulse-logo.svg"
+                    src="/brand/loep-pulse-logo.svg"
                     alt="Loep logo"
                     width={36}
                     height={36}
