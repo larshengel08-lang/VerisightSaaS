@@ -1,6 +1,7 @@
 // frontend/app/(dashboard)/dashboard/page.tsx
 import { redirect } from 'next/navigation'
 import { DashboardStateCard } from '@/components/dashboard/dashboard-state-card'
+import { SetupWizardCard } from '@/components/dashboard/setup-wizard-card'
 import { resolveDashboardState } from '@/lib/dashboard/dashboard-state-resolver'
 import { normalizeReminderConfig, buildParticipantCommunicationPreview } from '@/lib/launch-controls'
 import { isDashboardReleaseReady } from '@/lib/response-activation'
@@ -47,10 +48,10 @@ export default async function DashboardHomePage() {
     )
   }
 
-  const [{ data: deliveryRecord }, { data: reminderEvents }, { data: campaignRow }] = await Promise.all([
+  const [{ data: deliveryRecord }, { data: reminderEvents }, { data: campaignRow }, { data: orgData }] = await Promise.all([
     supabase
       .from('campaign_delivery_records')
-      .select('launch_date, launch_confirmed_at, reminder_config, participant_comms_config')
+      .select('launch_date, launch_confirmed_at, reminder_config, participant_comms_config, invited_count')
       .eq('campaign_id', campaign.campaign_id)
       .maybeSingle(),
     supabase
@@ -63,15 +64,24 @@ export default async function DashboardHomePage() {
       .limit(1),
     supabase
       .from('campaigns')
-      .select('delivery_mode')
+      .select('delivery_mode, comms_mode, public_survey_token')
       .eq('id', campaign.campaign_id)
+      .maybeSingle(),
+    supabase
+      .from('organizations')
+      .select('name')
+      .eq('id', campaign.organization_id)
       .maybeSingle(),
   ])
 
   const reminderConfig = normalizeReminderConfig(deliveryRecord?.reminder_config ?? null)
-  // reportReady = "response threshold met". Pass isActive:false so the threshold is
-  // checked independent of the live-campaign gate — this lets State 3 "Voldoende respons —
-  // sluit de campagne" fire for culture_assessment too (its report releases only on close).
+
+  const isSelfSend = campaignRow?.comms_mode === 'self_send'
+  const manualInvitedCount = deliveryRecord?.invited_count ?? null
+  const effectiveTotalInvited = isSelfSend && manualInvitedCount != null
+    ? manualInvitedCount
+    : campaign.total_invited
+
   const reportReady = isDashboardReleaseReady(campaign.total_completed, {
     scanType: campaign.scan_type,
     isActive: false,
@@ -83,7 +93,7 @@ export default async function DashboardHomePage() {
       name: campaign.campaign_name,
       scanType: campaign.scan_type,
       isActive: campaign.is_active,
-      totalInvited: campaign.total_invited,
+      totalInvited: effectiveTotalInvited,
       totalCompleted: campaign.total_completed,
       completionRatePct: campaign.completion_rate_pct ?? 0,
       closedAt: campaign.closed_at ?? null,
@@ -107,7 +117,19 @@ export default async function DashboardHomePage() {
 
   return (
     <div className="space-y-8">
-      <DashboardStateCard state={state} reminderText={reminderText} />
+      {state.kind === 'setup' ? (
+        <SetupWizardCard
+          campaignId={campaign.campaign_id}
+          scanType={campaign.scan_type}
+          organizationName={orgData?.name ?? 'je organisatie'}
+          publicSurveyToken={(campaignRow as Record<string, unknown>)?.public_survey_token as string ?? ''}
+          frontendBaseUrl={process.env.NEXT_PUBLIC_FRONTEND_URL ?? 'https://getloep.nl'}
+          initialLaunchDate={deliveryRecord?.launch_date ?? null}
+          initialInvitedCount={deliveryRecord?.invited_count ?? null}
+        />
+      ) : (
+        <DashboardStateCard state={state} reminderText={reminderText} />
+      )}
     </div>
   )
 }
