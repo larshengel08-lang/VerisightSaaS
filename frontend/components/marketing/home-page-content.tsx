@@ -1825,21 +1825,54 @@ function ProofSection() {
     >
       <div style={{ ...SHELL, paddingTop: 'clamp(56px, 7vw, 88px)', paddingBottom: 'clamp(56px, 7vw, 88px)' }}>
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
-          <Reveal>
-            <h2
-              style={{
-                color: SURFACE.ink,
-                fontFamily: displayFont,
-                fontSize: 'clamp(2.6rem, 4.2vw, 4.4rem)',
-                fontWeight: 700,
-                letterSpacing: '-0.05em',
-                lineHeight: 0.96,
-                maxWidth: '16ch',
-              }}
-            >
-              Veilig op groepsniveau. Niets op de persoon.
-            </h2>
-          </Reveal>
+          <div>
+            <Reveal>
+              <h2
+                style={{
+                  color: SURFACE.ink,
+                  fontFamily: displayFont,
+                  fontSize: 'clamp(2.6rem, 4.2vw, 4.4rem)',
+                  fontWeight: 700,
+                  letterSpacing: '-0.05em',
+                  lineHeight: 0.96,
+                  maxWidth: '16ch',
+                }}
+              >
+                Veilig op groepsniveau. Niets op de persoon.
+              </h2>
+            </Reveal>
+            <Reveal delay={0.12}>
+              <div style={{ marginTop: 'clamp(28px, 4vw, 44px)', maxWidth: 380 }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/images/lars-loep.jpg"
+                  alt="Lars van den Hengel, oprichter en HR-specialist bij Loep"
+                  style={{ aspectRatio: '1 / 1', border: `1px solid ${SURFACE.border}`, display: 'block', objectFit: 'cover', objectPosition: 'center 78%', width: '100%' }}
+                />
+                <div style={{ borderLeft: `2px solid ${SURFACE.amber}`, marginTop: 20, paddingLeft: 18 }}>
+                  <p style={{ color: SURFACE.ink, fontFamily: displayFont, fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+                    Lars van den Hengel
+                  </p>
+                  <p
+                    style={{
+                      color: SURFACE.muted,
+                      fontFamily: bodyFont,
+                      fontSize: 11,
+                      fontWeight: 700,
+                      letterSpacing: '.16em',
+                      margin: '6px 0 12px',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    Oprichter &amp; HR-specialist · Loep
+                  </p>
+                  <p style={{ color: SURFACE.text, fontSize: 15, lineHeight: 1.6 }}>
+                    &ldquo;Ik duid elke scan zelf. Geen dashboard, maar een gesprek dat tot een keuze leidt.&rdquo;
+                  </p>
+                </div>
+              </div>
+            </Reveal>
+          </div>
           <div style={{ minWidth: 0 }}>
             <div style={{ borderTop: `1px solid ${SURFACE.border}`, display: 'grid', gap: 0 }}>
               {proofPoints.map((point, index) => (
