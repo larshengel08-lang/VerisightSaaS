@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { SCAN_TYPE_LABELS, type ScanType } from '@/lib/types'
-import { buildInviteTemplate, buildSurveyLink } from '@/lib/self-send-comms'
+import { buildSurveyLink } from '@/lib/self-send-comms'
 import { saveLaunchSetupAction, confirmLaunchAction } from '@/app/(dashboard)/campaigns/[id]/setup/launch-setup-actions'
 
 interface Props {
@@ -266,7 +266,7 @@ export function SetupWizardCard({
                   className="w-full resize-none rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-xs leading-relaxed text-white/90 focus:outline-none focus:ring-1 focus:ring-[#E8A020]/50"
                 />
               </div>
-              <p className="text-[10px] text-white/40">Je kunt de tekst aanpassen voor je kopieert. Vergeet niet je naam in te vullen bij "Met vriendelijke groet".</p>
+              <p className="text-[10px] text-white/40">Je kunt de tekst aanpassen voor je kopieert. Vergeet niet je naam in te vullen bij &ldquo;Met vriendelijke groet&rdquo;.</p>
 
               <div className="border-t border-white/15 pt-3">
                 {step2Error && (
