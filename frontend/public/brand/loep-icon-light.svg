@@ -1,0 +1,8 @@
+<svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- magnifying glass circle -->
+  <circle cx="15" cy="15" r="9.5" stroke="white" stroke-width="2.5"/>
+  <!-- handle -->
+  <line x1="22.5" y1="22.5" x2="30" y2="30" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- amber dot -->
+  <circle cx="15" cy="15" r="3.5" fill="#E8A020"/>
+</svg>
