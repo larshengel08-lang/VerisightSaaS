@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { DashboardStateCard } from '@/components/dashboard/dashboard-state-card'
+import { SetupWizardCard } from '@/components/dashboard/setup-wizard-card'
 import { PdfDownloadButton } from './pdf-download-button'
 import { SuiteAccessDenied } from '@/components/dashboard/suite-access-denied'
 import { resolveDashboardState } from '@/lib/dashboard/dashboard-state-resolver'
@@ -49,8 +50,8 @@ export default async function CampaignPage({ params }: Props) {
   if (!statsRow) notFound()
   const stats = statsRow as CampaignStats
 
-  const [{ data: campaignMeta }, { data: deliveryRecord }, { data: reminderEvents }, { data: profile }] = await Promise.all([
-    supabase.from('campaigns').select('closed_at, closes_at, delivery_mode, comms_mode, public_survey_token').eq('id', id).maybeSingle(),
+  const [{ data: campaignMeta }, { data: deliveryRecord }, { data: reminderEvents }, { data: profile }, { data: orgData }] = await Promise.all([
+    supabase.from('campaigns').select('closed_at, closes_at, delivery_mode, comms_mode, public_survey_token, organization_id').eq('id', id).maybeSingle(),
     supabase
       .from('campaign_delivery_records')
       .select('launch_date, launch_confirmed_at, reminder_config, participant_comms_config, invited_count')
@@ -65,6 +66,7 @@ export default async function CampaignPage({ params }: Props) {
       .order('created_at', { ascending: false })
       .limit(1),
     supabase.from('profiles').select('is_verisight_admin').eq('id', user.id).maybeSingle(),
+    supabase.from('organizations').select('name').eq('id', stats.organization_id ?? '').maybeSingle(),
   ])
   const isAdmin = profile?.is_verisight_admin === true
 
@@ -137,7 +139,19 @@ export default async function CampaignPage({ params }: Props) {
           </span>
         ) : null}
       </div>
-      <DashboardStateCard state={state} reminderText={reminderText} />
+      {state.kind === 'setup' ? (
+        <SetupWizardCard
+          campaignId={id}
+          scanType={stats.scan_type}
+          organizationName={orgData?.name ?? 'je organisatie'}
+          publicSurveyToken={(campaignMeta as Record<string, unknown>)?.public_survey_token as string ?? ''}
+          frontendBaseUrl={process.env.NEXT_PUBLIC_FRONTEND_URL ?? 'https://getloep.nl'}
+          initialLaunchDate={deliveryRecord?.launch_date ?? null}
+          initialInvitedCount={deliveryRecord?.invited_count ?? null}
+        />
+      ) : (
+        <DashboardStateCard state={state} reminderText={reminderText} />
+      )}
       {state.kind === 'report_ready' ? (
         <>
           <div className="rounded-[22px] border border-[color:var(--dashboard-frame-border)] bg-white px-6 py-6">
