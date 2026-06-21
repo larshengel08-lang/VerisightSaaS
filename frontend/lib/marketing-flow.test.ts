@@ -24,7 +24,7 @@ describe('marketing flow defaults', () => {
   it('keeps the primary and secondary CTA labels aligned with the redesign', () => {
     expect(marketingPrimaryCta).toEqual({
       href: buildContactHref({ routeInterest: 'exitscan', ctaSource: 'global_primary_cta' }),
-      label: 'Bespreek je vraagstuk',
+      label: 'Plan een kennismaking',
     })
     expect(marketingSecondaryCta).toEqual({
       href: '/#scans',

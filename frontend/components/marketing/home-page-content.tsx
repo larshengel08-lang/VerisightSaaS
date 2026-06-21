@@ -781,7 +781,7 @@ function HeroSection() {
                   textDecoration: 'none',
                 }}
               >
-                Bespreek je vraagstuk
+                Plan een kennismaking
               </Link>
               <Link
                 href={secondaryHref}
@@ -1983,7 +1983,7 @@ function ContactSection() {
                 maxWidth: '48rem',
               }}
             >
-              Bespreek je situatie. We bekijken samen welk vraagstuk nu speelt (vertrek, behoud of onboarding) en welke scan daar het beste bij past.
+              We bekijken samen welk vraagstuk nu speelt (vertrek, behoud of onboarding) en welke scan daar het beste bij past.
             </p>
 
             <div
@@ -2007,7 +2007,7 @@ function ContactSection() {
                   textDecoration: 'none',
                 }}
               >
-                Bespreek je situatie
+                Plan een kennismaking
               </Link>
             </div>
           </div>

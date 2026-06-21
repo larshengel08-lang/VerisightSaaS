@@ -228,7 +228,7 @@ function CtaBand() {
           <Reveal delay={0.08} from="right">
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <Link href={ctaHref} style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14, fontWeight: 600, padding: '12px 26px', color: '#fff', background: AC.deep }}>
-              Bespreek je vraagstuk <Arrow />
+              Plan een kennismaking <Arrow />
             </Link>
             <Link href="/producten" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14, fontWeight: 500, padding: '11px 24px', color: T.inkSoft, border: `1px solid ${T.rule}` }}>
               Bekijk de scans

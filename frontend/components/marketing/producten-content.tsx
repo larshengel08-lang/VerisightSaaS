@@ -137,7 +137,7 @@ function HeroSection() {
               href={primaryHref}
               style={{ alignItems: 'center', background: T.ink, color: '#fff', display: 'inline-flex', fontSize: 14.5, fontWeight: 600, gap: 8, padding: '12px 28px', textDecoration: 'none' }}
             >
-              Bespreek je vraagstuk <Arrow />
+              Plan een kennismaking <Arrow />
             </Link>
           </div>
         </div>
@@ -268,7 +268,7 @@ function ContactSection() {
       accentTitle="scan nu past?"
       backdropNumber={null}
       body="In een eerste kennismaking toetsen we welke scan nu de juiste eerste stap is en wat je als eerste terugkrijgt."
-      buttonLabel="Bespreek je vraagstuk"
+      buttonLabel="Plan een kennismaking"
       sectionIndex=""
       sectionLabel=""
       showSectionMark={false}

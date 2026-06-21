@@ -41,7 +41,7 @@ export default function TarievenPage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       <div className="min-h-screen">
-        <PublicHeader ctaHref={ctaHref} ctaLabel="Bespreek je vraagstuk" />
+        <PublicHeader ctaHref={ctaHref} ctaLabel="Plan een kennismaking" />
         <main id="hoofdinhoud">
           <TarievenContent />
         </main>

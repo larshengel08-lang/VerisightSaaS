@@ -46,7 +46,7 @@ export default function LandingPage() {
       </a>
 
       <div className="min-h-screen">
-        <PublicHeader ctaHref={ctaHref} ctaLabel="Bespreek je vraagstuk" />
+        <PublicHeader ctaHref={ctaHref} ctaLabel="Plan een kennismaking" />
         <main id="hoofdinhoud">
           <HomePageContent />
         </main>
