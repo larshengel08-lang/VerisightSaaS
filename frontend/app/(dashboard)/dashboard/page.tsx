@@ -1,7 +1,7 @@
 // frontend/app/(dashboard)/dashboard/page.tsx
 import { redirect } from 'next/navigation'
 import { DashboardStateCard } from '@/components/dashboard/dashboard-state-card'
-import { SetupWizardCard } from '@/components/dashboard/setup-wizard-card'
+import { WelcomeGate } from '@/components/dashboard/welcome-gate'
 import { resolveDashboardState } from '@/lib/dashboard/dashboard-state-resolver'
 import { normalizeReminderConfig, buildParticipantCommunicationPreview } from '@/lib/launch-controls'
 import { isDashboardReleaseReady } from '@/lib/response-activation'
@@ -118,7 +118,7 @@ export default async function DashboardHomePage() {
   return (
     <div className="space-y-8">
       {state.kind === 'setup' ? (
-        <SetupWizardCard
+        <WelcomeGate
           campaignId={campaign.campaign_id}
           scanType={campaign.scan_type}
           organizationName={orgData?.name ?? 'je organisatie'}

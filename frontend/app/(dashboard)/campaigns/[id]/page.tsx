@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { DashboardStateCard } from '@/components/dashboard/dashboard-state-card'
-import { SetupWizardCard } from '@/components/dashboard/setup-wizard-card'
+import { WelcomeGate } from '@/components/dashboard/welcome-gate'
 import { PdfDownloadButton } from './pdf-download-button'
 import { SuiteAccessDenied } from '@/components/dashboard/suite-access-denied'
 import { resolveDashboardState } from '@/lib/dashboard/dashboard-state-resolver'
@@ -140,7 +140,7 @@ export default async function CampaignPage({ params }: Props) {
         ) : null}
       </div>
       {state.kind === 'setup' ? (
-        <SetupWizardCard
+        <WelcomeGate
           campaignId={id}
           scanType={stats.scan_type}
           organizationName={orgData?.name ?? 'je organisatie'}
