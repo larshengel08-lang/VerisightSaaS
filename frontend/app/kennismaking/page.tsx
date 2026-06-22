@@ -61,6 +61,22 @@ export default function KennismakingPage() {
               >
                 Plan een kennismaking
               </h1>
+              <div style={{ alignItems: 'center', display: 'inline-flex', gap: 14, marginTop: 24 }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/images/lars-kennismaking.png"
+                  alt="Lars van den Hengel, oprichter van Loep"
+                  style={{ borderRadius: '50%', flexShrink: 0, height: 120, objectFit: 'cover', objectPosition: 'center 28%', width: 120 }}
+                />
+                <div style={{ textAlign: 'left' }}>
+                  <p style={{ color: '#0D1B2A', fontSize: 14, fontWeight: 600, lineHeight: 1.3 }}>
+                    Je spreekt met Lars van den Hengel
+                  </p>
+                  <p style={{ color: 'rgba(13,27,42,0.55)', fontSize: 12.5, lineHeight: 1.4, marginTop: 2 }}>
+                    Oprichter &amp; HR-specialist · Reactie binnen 1 werkdag
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div style={{ marginTop: 30, maxWidth: 1140 }}>
