@@ -185,7 +185,7 @@ export function buildDashboardShellNavigation({
     },
     {
       key: 'reports',
-      label: 'Rapporten',
+      label: 'Bespreking',
       href: '/reports',
       disabled: false,
     },
@@ -231,7 +231,7 @@ export const ACTION_CENTER_NAV = [
 export type ActionCenterNavItem = (typeof ACTION_CENTER_NAV)[number]
 
 export function getDashboardShellCurrentLabel(pathname: string) {
-  if (pathname.startsWith('/reports')) return 'Rapporten'
+  if (pathname.startsWith('/reports')) return 'Bespreking'
   if (pathname.startsWith('/action-center')) return 'Action Center'
   if (pathname.startsWith('/campaigns/')) return 'Campagnedetail'
   if (pathname.startsWith('/beheer/contact-aanvragen')) return 'Leadcontext'
