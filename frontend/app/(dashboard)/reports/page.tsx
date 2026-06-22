@@ -132,8 +132,7 @@ export default async function ReportsPage() {
           Managementbespreking plannen
         </h1>
         <p className="max-w-3xl text-sm leading-6 text-[color:var(--dashboard-text)]">
-          Zodra de respons binnen is, bespreek je de uitkomsten samen met Loep. De resultaten
-          zijn alvast zichtbaar in het dashboard.
+          Zodra de respons voldoende is, plan je hier een bespreking met Loep. De uitkomsten worden tijdens die sessie toegelicht.
         </p>
       </section>
 
