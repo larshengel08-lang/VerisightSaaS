@@ -856,12 +856,14 @@ def _rag_color(score: float | None) -> str:
 def _factor_bar_row(label: str, score: float | None) -> str:
     pct = int((score or 0) / 10 * 100)
     col = _rag_color(score)
+    interp = _factor_label(score)
     track = (f'<svg width="100%" height="14" viewBox="0 0 200 14" preserveAspectRatio="none">'
              f'<rect x="0" y="3" width="200" height="8" fill="#EDE6DA"/>'
              f'<rect x="0" y="3" width="{pct*2}" height="8" fill="{col}"/></svg>')
     return (f'<div class="fbar-row"><div class="fbar-name">{_h(label)}</div>'
             f'<div class="fbar-track">{track}</div>'
-            f'<div class="fbar-score" style="color:{col};">{_score_str(score)}</div></div>')
+            f'<div class="fbar-score" style="color:{col};">{_score_str(score)}</div>'
+            f'<div class="fbar-label" style="color:{col};">{_h(interp)}</div></div>')
 
 
 def _overzichtsprofiel(factors: list[tuple[str, float | None]]) -> str:

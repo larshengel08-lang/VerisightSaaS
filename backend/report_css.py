@@ -125,10 +125,10 @@ p  { margin-bottom: 6px; font-size: 11px; }
 
 /* ── Factor bars ── */
 .fbar-row { display: table; width: 100%; margin-bottom: 9px; }
-.fbar-name { display: table-cell; width: 34%; font-size: 11px; font-weight: 600; color: """ + INK + r"""; vertical-align: middle; padding-right: 10px; }
-.fbar-track { display: table-cell; width: 52%; vertical-align: middle; }
-.fbar-score { display: table-cell; width: 14%; text-align: right; vertical-align: middle;
-  font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 13px; color: """ + INK + r"""; }
+.fbar-name { display: table-cell; width: 32%; font-size: 11px; font-weight: 600; color: """ + INK + r"""; vertical-align: middle; padding-right: 10px; }
+.fbar-track { display: table-cell; width: 40%; vertical-align: middle; }
+.fbar-score { display: table-cell; width: 10%; text-align: right; vertical-align: middle;
+  font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 13px; }
 
 /* ── Item table ── */
 .item-tbl { width: 100%; border-collapse: collapse; }

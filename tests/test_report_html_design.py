@@ -47,3 +47,19 @@ def test_bestuurlijke_read_mgmt_q_visible():
         mgmt_q="Is de werkdruk structureel of tijdelijk?",
     )
     assert "Is de werkdruk structureel of tijdelijk?" in html
+
+
+from backend.report_html import _factor_bar_row
+
+def test_factor_bar_row_shows_interpretation_label():
+    html = _factor_bar_row("Werkdruk en balans", 4.5)
+    assert "fbar-label" in html
+    assert "Kwetsbaar punt" in html  # score 4.5 < 5.0
+
+def test_factor_bar_row_aandachtspunt():
+    html = _factor_bar_row("Leiderschap", 5.8)
+    assert "Aandachtspunt" in html  # 5.0 <= 5.8 < 6.5
+
+def test_factor_bar_row_relatief_sterk():
+    html = _factor_bar_row("Cultuur", 7.1)
+    assert "Relatief sterk" in html  # >= 6.5
