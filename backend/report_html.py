@@ -1119,7 +1119,18 @@ def render_exit_report_html(data: dict) -> str:
         segment_reason="te weinig responses per groep voor herleidbaarheid",
     )
 
-    # ── Eerste managementspoor (gespreksagenda) — p.04 ───────────────────────
+    # ── Vertrekcontext (p.04 — vóór factorprofiel) ───────────────────────────
+    exit_reasons = [(r["label"], r["count"]) for r in data["exit_r_dist"]]
+    contributing = [(r["label"], r["count"]) for r in data["cont_dist"]]
+    s += _vertrekcontext(exit_reasons=exit_reasons, contributing=contributing,
+                         n=n, primary_factor_label=low_lbl)
+
+    # ── Overzichtsprofiel (p.05) ──────────────────────────────────────────────
+    profile_factors = [(FACTOR_LABELS_NL.get(fk, fk), fa.get(fk))
+                       for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
+    s += _overzichtsprofiel(profile_factors)
+
+    # ── Eerste managementspoor (p.06 — na data, vóór verdieping) ─────────────
     _code_to_count = {r["code"]: r["count"] for r in data["exit_r_dist"]}
     exit_code_counts = {fk: _code_to_count.get(FACTOR_EXIT_CODE.get(fk), 0) for fk in fa}
     priority_fkeys = _select_priority_factors(fa, exit_code_counts, max_n=3)
@@ -1131,17 +1142,6 @@ def render_exit_report_html(data: dict) -> str:
         owner=nsp.get("first_owner") or "HR + verantwoordelijk management",
         review_when=nsp.get("review_moment") or "bij de volgende meting",
     )
-
-    # ── Overzichtsprofiel ─────────────────────────────────────────────────────
-    profile_factors = [(FACTOR_LABELS_NL.get(fk, fk), fa.get(fk))
-                       for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
-    s += _overzichtsprofiel(profile_factors)
-
-    # ── Vertrekcontext (T7) ───────────────────────────────────────────────────
-    exit_reasons = [(r["label"], r["count"]) for r in data["exit_r_dist"]]
-    contributing = [(r["label"], r["count"]) for r in data["cont_dist"]]
-    s += _vertrekcontext(exit_reasons=exit_reasons, contributing=contributing,
-                         n=n, primary_factor_label=low_lbl)
 
     # ── Factor detail (itemniveau prioritaire factoren) ──────────────────────
     def _factor_detail(fk: str) -> str:
@@ -1452,8 +1452,21 @@ def render_retention_report_html(data: dict) -> str:
         segment_reason="te weinig responses per groep voor herleidbaarheid",
     )
 
-    # ── Eerste managementspoor (gespreksagenda) — p.04 ───────────────────────
-    # priority_fkeys defined below before factor detail loop — compute here too
+    # ── Behoudscontext (p.04 — vóór factorprofiel) ───────────────────────────
+    s += _behoudscontext(
+        retention_score=avg_risk,
+        stay_intent=avg_si,
+        turnover=avg_to,
+        engagement=avg_eng,
+        primary_factor=low_lbl or primary_label or "—",
+    )
+
+    # ── Overzichtsprofiel (p.05) ──────────────────────────────────────────────
+    profile_factors = [(_fl(fk, ST), fa.get(fk))
+                       for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
+    s += _overzichtsprofiel(profile_factors)
+
+    # ── Eerste managementspoor (p.06 — na data, vóór verdieping) ─────────────
     _ret_priority_fkeys = _select_priority_factors(fa, {}, max_n=3)
     s += _eerste_managementspoor(
         primary_theme=nsp.get("first_decision") or (low_lbl if low_lbl else "het leidende behoudsthema"),
@@ -1461,22 +1474,6 @@ def render_retention_report_html(data: dict) -> str:
         mgmt_q=_mgmt_q(_ret_priority_fkeys[0], ST) if _ret_priority_fkeys else (nsp.get("first_decision") or ""),
         owner=nsp.get("first_owner") or "HR + verantwoordelijk management",
         review_when=nsp.get("review_moment") or "bij de volgende meting",
-    )
-
-    # ── Overzichtsprofiel ─────────────────────────────────────────────────────
-    profile_factors = [(_fl(fk, ST), fa.get(fk))
-                       for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
-    s += _overzichtsprofiel(profile_factors)
-
-    # ── Behoudscontext (retention-exclusive) ──────────────────────────────────
-    # Toon de directe groepsscores (1-10): blijfintentie (avg_si) en
-    # vertrekintentie (avg_to) i.p.v. uit band-counts afgeleide percentages.
-    s += _behoudscontext(
-        retention_score=avg_risk,
-        stay_intent=avg_si,
-        turnover=avg_to,
-        engagement=avg_eng,
-        primary_factor=low_lbl or primary_label or "—",
     )
 
     # ── Factor detail (itemniveau prioritaire factoren) ──────────────────────
@@ -1821,8 +1818,20 @@ def render_onboarding_report_html(data: dict) -> str:
         segment_reason="te weinig responses per groep voor herleidbaarheid",
     )
 
-    # ── Eerste managementspoor (gespreksagenda) — p.04 ───────────────────────
-    # priority_fkeys defined below before factor detail loop — compute here too
+    # ── Overzichtsprofiel (p.04) ──────────────────────────────────────────────
+    profile_factors = [(_fl(fk, ST), fa.get(fk))
+                       for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
+    s += _overzichtsprofiel(profile_factors)
+
+    # ── Checkpointoverzicht (p.05 — onboarding-exclusive) ────────────────────
+    s += _checkpointoverzicht(checkpoints=[("Huidig checkpoint", avg_risk)])
+
+    # ── Landingskwaliteit per domein (onboarding-exclusive) ───────────────────
+    domain_scores = [(_fl(fk, ST), fa.get(fk))
+                     for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
+    s += _landingskwaliteit(domain_scores)
+
+    # ── Eerste managementspoor (p.06 — na data, vóór verdieping) ─────────────
     _ob_priority_fkeys = _select_priority_factors(fa, {}, max_n=3)
     s += _eerste_managementspoor(
         primary_theme=nsp.get("first_decision") or (low_lbl if low_lbl else "het leidende onboardingthema"),
@@ -1831,22 +1840,6 @@ def render_onboarding_report_html(data: dict) -> str:
         owner=nsp.get("first_owner") or "HR + verantwoordelijk leidinggevende",
         review_when=nsp.get("review_moment") or "bij het volgende checkpoint",
     )
-
-    # ── Overzichtsprofiel ─────────────────────────────────────────────────────
-    profile_factors = [(_fl(fk, ST), fa.get(fk))
-                       for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
-    s += _overzichtsprofiel(profile_factors)
-
-    # ── Checkpointoverzicht (onboarding-exclusive) ────────────────────────────
-    # Product is single_checkpoint per campaign — no real 30/60/90 phase scores.
-    # Render honest single-measurement degraded view.
-    s += _checkpointoverzicht(checkpoints=[("Huidig checkpoint", avg_risk)])
-
-    # ── Landingskwaliteit per domein (onboarding-exclusive) ───────────────────
-    # Domain scores = factor_avgs with onboarding-specific labels.
-    domain_scores = [(_fl(fk, ST), fa.get(fk))
-                     for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
-    s += _landingskwaliteit(domain_scores)
 
     # ── Factordiepte ×≤3 (prioriteit = laagste score, geen vertrekredenen) ────
     priority_fkeys = _select_priority_factors(fa, {}, max_n=3)

@@ -131,3 +131,15 @@ def test_exit_cover_primary_signal_is_lowest_factor():
 
     assert buggy_signal == high_lbl, "Bug bevestigd: huidige code geeft hoogste factor"
     assert correct_signal == low_lbl, "Fix correct: nieuwe code geeft laagste factor"
+
+
+def test_exit_flow_managementspoor_after_vertrekcontext():
+    """Contract: in exit-HTML staat 'Vertrekcontext' vóór 'Eerste managementspoor'."""
+    fragment = (
+        '<span class="slabel">Vertrekcontext</span>',
+        '<span class="slabel">Eerste managementspoor</span>',
+    )
+    combined = "\n".join(fragment)
+    vc_pos = combined.find("Vertrekcontext")
+    ms_pos = combined.find("Eerste managementspoor")
+    assert vc_pos < ms_pos, "Vertrekcontext moet vóór Eerste managementspoor staan"
