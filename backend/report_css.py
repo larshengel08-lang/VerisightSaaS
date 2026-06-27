@@ -72,8 +72,8 @@ body {
 /* ── Section label ── */
 .slabel {
   display: flex; align-items: center; gap: 12px;
-  font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 500;
-  letter-spacing: 0.16em; text-transform: uppercase; color: """ + STEEL + r""";
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase; color: """ + INK + r""";
   margin-bottom: 18px;
 }
 .slabel::after { content: ""; flex: 1; height: 1px; background: """ + HAIRLINE + r"""; }
@@ -116,8 +116,9 @@ p  { margin-bottom: 6px; font-size: 11px; }
 /* .card, .why, h3, .slabel — see bottom of file (overrides with more whitespace) */
 
 /* ── Stat grid ── */
-.sg { display: table; width: 100%; border-collapse: separate; border-spacing: 10px 0; margin-bottom: 14px; }
-.sg td { display: table-cell; background: #fff; border: 1px solid """ + HAIRLINE + r"""; padding: 13px 15px; vertical-align: top; width: 25%; }
+.sg { display: table; width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 14px; }
+.sg td { display: table-cell; background: transparent; border: none; border-right: 1px solid """ + HAIRLINE + r"""; padding: 0 22px 0 0; margin-right: 22px; vertical-align: top; width: 25%; }
+.sg td:last-child { border-right: none; padding-right: 0; }
 .sc-l { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.1em;
   text-transform: uppercase; color: """ + STEEL + r"""; margin-bottom: 4px; }
 .sc-v { font-family: 'Inter Tight', sans-serif; font-weight: 800; font-size: 24px; color: """ + INK + r"""; line-height: 1.1; }
@@ -252,8 +253,8 @@ p  { margin-bottom: 6px; font-size: 11px; }
   border-top: 1px solid rgba(255,255,255,0.12); padding-top: 14px; margin-top: 4px;
 }
 
-/* ── Cards — meer lucht ── */
-.card { background: #fff; border: 1px solid """ + HAIRLINE + r"""; padding: 20px 22px; margin-bottom: 16px; }
+/* ── Cards — geen witte vlakken, alleen left-border ── */
+.card { background: transparent; border: none; border-left: 2px solid """ + HAIRLINE + r"""; padding: 14px 0 14px 18px; margin-bottom: 16px; }
 .card.accent { border-left: 4px solid var(--accent); }
 .card.risk   { border-left: 4px solid """ + RAG_HIGH + r"""; }
 .card.strong { border-left: 4px solid """ + RAG_LOW + r"""; }
