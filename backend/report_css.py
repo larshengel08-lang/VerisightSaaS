@@ -172,6 +172,34 @@ p  { margin-bottom: 6px; font-size: 11px; }
   text-align: center; color: #94A3B8; font-size: 10px; }
 .trustline { font-size: 9.5px; color: """ + STEEL + r"""; font-style: italic; margin-top: 8px; }
 
+/* ── Brand kernzin ── */
+.br-kernzin {
+  font-family: 'Inter Tight', sans-serif; font-weight: 800;
+  font-size: 28px; letter-spacing: -0.035em; line-height: 1.1;
+  color: #0D1B2A; max-width: 48ch;
+  margin-bottom: 28px; margin-top: 8px;
+}
+
+/* ── Factor bar label ── */
+.fbar-label {
+  display: table-cell; width: 22%; text-align: right; vertical-align: middle;
+  font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase; padding-left: 8px;
+}
+
+/* ── Management anchor ── */
+.mgmt-anchor {
+  background: #0D1B2A; color: #fff;
+  border-left: 4px solid var(--accent);
+  padding: 18px 20px; margin-bottom: 20px; break-inside: avoid;
+}
+.mgmt-anchor .ma-label {
+  font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent);
+  margin-bottom: 6px;
+}
+.mgmt-anchor p { font-size: 12px; color: rgba(255,255,255,0.88); margin-bottom: 0; }
+
 /* ── Playbook cards (management section) ── */
 .play {
   background: #fff; border: 1px solid """ + HAIRLINE + r""";
