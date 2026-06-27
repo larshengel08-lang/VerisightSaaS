@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     title: 'Kennismaking | Loep',
     description:
       'Plan een korte intake om te bepalen welke eerste route het best past en welke eerste output daarna logisch is.',
-    url: 'https://www.verisight.nl/kennismaking',
+    url: 'https://www.getloep.nl/kennismaking',
     images: ['/opengraph-image'],
   },
   twitter: {

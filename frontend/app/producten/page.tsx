@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     title: 'Producten | Loep',
     description:
       'Loep Vertrek als vertrek de vraag is. Loep Behoud als behoud eerder zichtbaar moet zijn. Loep Start als vroege landing aandacht vraagt.',
-    url: 'https://www.verisight.nl/producten',
+    url: 'https://www.getloep.nl/producten',
     images: ['/opengraph-image'],
   },
   twitter: {
@@ -32,8 +32,8 @@ export default function ProductenPage() {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.verisight.nl/' },
-      { '@type': 'ListItem', position: 2, name: 'Producten', item: 'https://www.verisight.nl/producten' },
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.getloep.nl/' },
+      { '@type': 'ListItem', position: 2, name: 'Producten', item: 'https://www.getloep.nl/producten' },
     ],
   }
 

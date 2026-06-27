@@ -11,7 +11,7 @@ vi.mock('resend', () => ({
 describe('sendLoepEmail', () => {
   beforeEach(() => {
     process.env.RESEND_API_KEY = 're_test'
-    process.env.LOEP_FROM_EMAIL = 'hallo@verisight.nl'
+    process.env.LOEP_FROM_EMAIL = 'hallo@getloep.nl'
     vi.resetModules()
   })
 

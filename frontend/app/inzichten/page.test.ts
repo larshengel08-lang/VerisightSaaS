@@ -81,7 +81,7 @@ describe('inzichten index route', () => {
     const route = await loadIndexRoute([newerPost, olderPost])
 
     expect(route.metadata.alternates?.canonical).toBe('/inzichten')
-    expect(route.metadata.openGraph?.url).toBe('https://www.verisight.nl/inzichten')
+    expect(route.metadata.openGraph?.url).toBe('https://www.getloep.nl/inzichten')
 
     const markup = renderToStaticMarkup(route.default())
 

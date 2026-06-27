@@ -9,5 +9,5 @@ export function getCanonicalHostRedirectUrl(args: {
     return null
   }
 
-  return `https://www.verisight.nl${args.pathname}${args.search}`
+  return `https://www.getloep.nl${args.pathname}${args.search}`
 }

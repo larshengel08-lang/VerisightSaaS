@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     title: 'Privacy & dataveiligheid | Loep',
     description:
       'Zo gaat Loep met jullie data om: privacy, rapportlezing, DPA en productgrenzen, publiek te controleren voordat je begint.',
-    url: 'https://www.verisight.nl/vertrouwen',
+    url: 'https://www.getloep.nl/vertrouwen',
     images: ['/opengraph-image'],
   },
   twitter: {
@@ -30,8 +30,8 @@ export default function VertrouwenPage() {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.verisight.nl/' },
-      { '@type': 'ListItem', position: 2, name: 'Privacy', item: 'https://www.verisight.nl/vertrouwen' },
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.getloep.nl/' },
+      { '@type': 'ListItem', position: 2, name: 'Privacy', item: 'https://www.getloep.nl/vertrouwen' },
     ],
   }
 

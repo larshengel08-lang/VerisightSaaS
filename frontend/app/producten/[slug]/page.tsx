@@ -51,7 +51,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!product) return {}
 
   const description = product.description
-  const url = `https://www.verisight.nl${product.href}`
+  const url = `https://www.getloep.nl${product.href}`
   const imageAlt =
     isActiveMarketingProduct(product)
       ? product.ogAlt ?? `${product.label} productpagina van Verisight`
@@ -110,8 +110,8 @@ export default async function ProductDetailPage({ params }: Props) {
 }
 
 function getProductStructuredData(product: MarketingProduct) {
-  const fullUrl = `https://www.verisight.nl${product.href}`
-  const imageUrl = `https://www.verisight.nl${product.href}/opengraph-image`
+  const fullUrl = `https://www.getloep.nl${product.href}`
+  const imageUrl = `https://www.getloep.nl${product.href}/opengraph-image`
 
   const webpageSchema = {
     '@context': 'https://schema.org',
@@ -122,7 +122,7 @@ function getProductStructuredData(product: MarketingProduct) {
     isPartOf: {
       '@type': 'WebSite',
       name: 'Verisight',
-      url: 'https://www.verisight.nl',
+      url: 'https://www.getloep.nl',
     },
     primaryImageOfPage: imageUrl,
     inLanguage: 'nl-NL',
@@ -132,8 +132,8 @@ function getProductStructuredData(product: MarketingProduct) {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.verisight.nl/' },
-      { '@type': 'ListItem', position: 2, name: 'Producten', item: 'https://www.verisight.nl/producten' },
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.getloep.nl/' },
+      { '@type': 'ListItem', position: 2, name: 'Producten', item: 'https://www.getloep.nl/producten' },
       { '@type': 'ListItem', position: 3, name: product.label, item: fullUrl },
     ],
   }
@@ -153,7 +153,7 @@ function getProductStructuredData(product: MarketingProduct) {
     provider: {
       '@type': 'Organization',
       name: 'Verisight',
-      url: 'https://www.verisight.nl',
+      url: 'https://www.getloep.nl',
     },
     areaServed: { '@type': 'Country', name: 'Nederland' },
     audience: {

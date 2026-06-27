@@ -11,6 +11,7 @@ export const PUBLIC_ROUTES = [
   '/dpa',
   '/vertrouwen',
   '/kennismaking',
+  '/pilot',
   '/survey',
   '/product',
   '/producten',

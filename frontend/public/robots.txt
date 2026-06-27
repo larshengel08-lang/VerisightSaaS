@@ -22,4 +22,4 @@ Disallow: /campaigns
 Disallow: /login
 Disallow: /api/
 
-Sitemap: https://www.verisight.nl/sitemap.xml
+Sitemap: https://www.getloep.nl/sitemap.xml

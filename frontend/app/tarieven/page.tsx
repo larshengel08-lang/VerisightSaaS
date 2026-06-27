@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     title: 'Tarieven | Loep',
     description:
       'Transparante prijzen voor Loep Vertrek, Loep Behoud en vervolgstappen. Zo blijft de eerste keuze helder en weet je wat je direct terugkrijgt.',
-    url: 'https://www.verisight.nl/tarieven',
+    url: 'https://www.getloep.nl/tarieven',
     images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Loep tarieven voor Loep Vertrek en Loep Behoud' }],
   },
   twitter: {
@@ -30,8 +30,8 @@ export default function TarievenPage() {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.verisight.nl/' },
-      { '@type': 'ListItem', position: 2, name: 'Tarieven', item: 'https://www.verisight.nl/tarieven' },
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.getloep.nl/' },
+      { '@type': 'ListItem', position: 2, name: 'Tarieven', item: 'https://www.getloep.nl/tarieven' },
     ],
   }
 

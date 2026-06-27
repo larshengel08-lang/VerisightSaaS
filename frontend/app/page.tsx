@@ -19,14 +19,14 @@ export default function LandingPage() {
     name: 'Loep',
     description:
       'Van people insights naar prioriteit, actie en follow-up voor HR en management. Loep verbindt Loep Vertrek, Loep Behoud, dashboard en rapport in een suite.',
-    url: 'https://www.verisight.nl/',
+    url: 'https://www.getloep.nl/',
     inLanguage: 'nl-NL',
     mainEntity: {
       '@type': 'ItemList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Loep Vertrek', url: 'https://www.verisight.nl/producten#loep-vertrek' },
-        { '@type': 'ListItem', position: 2, name: 'Loep Behoud', url: 'https://www.verisight.nl/producten#loep-behoud' },
-        { '@type': 'ListItem', position: 3, name: 'Loep Start', url: 'https://www.verisight.nl/producten#loep-start' },
+        { '@type': 'ListItem', position: 1, name: 'Loep Vertrek', url: 'https://www.getloep.nl/producten#loep-vertrek' },
+        { '@type': 'ListItem', position: 2, name: 'Loep Behoud', url: 'https://www.getloep.nl/producten#loep-behoud' },
+        { '@type': 'ListItem', position: 3, name: 'Loep Start', url: 'https://www.getloep.nl/producten#loep-start' },
       ],
     },
   }

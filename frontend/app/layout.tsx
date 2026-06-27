@@ -30,11 +30,11 @@ export const metadata: Metadata = {
   },
   description:
     'Loep helpt HR-teams bij organisaties met 200 tot 1.000 medewerkers om vertrek te duiden met Loep Vertrek en behoud eerder zichtbaar te maken met Loep Behoud.',
-  metadataBase: new URL('https://www.verisight.nl'),
+  metadataBase: new URL('https://www.getloep.nl'),
   openGraph: {
     type: 'website',
     locale: 'nl_NL',
-    url: 'https://www.verisight.nl',
+    url: 'https://www.getloep.nl',
     siteName: 'Loep',
     title: 'Loep',
     description:
@@ -71,8 +71,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: 'Loep',
-    url: 'https://www.verisight.nl',
-    logo: 'https://www.verisight.nl/icon.png',
+    url: 'https://www.getloep.nl',
+    logo: 'https://www.getloep.nl/icon.png',
     description:
       'Loep helpt HR-teams bij organisaties met 200 tot 1.000 medewerkers om vertrek te duiden met Loep Vertrek en behoud eerder zichtbaar te maken met Loep Behoud.',
     areaServed: {
@@ -85,7 +85,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       contactType: 'sales',
       email: 'hallo@getloep.nl',
       availableLanguage: 'Dutch',
-      url: 'https://www.verisight.nl/#kennismaking',
+      url: 'https://www.getloep.nl/#kennismaking',
     },
   }
 

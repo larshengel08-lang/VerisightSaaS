@@ -1932,7 +1932,7 @@ def test_send_contact_request_result_uses_buyer_facing_leadership_label(monkeypa
         captured["reply_to"] = reply_to or ""
         return EmailSendResult(ok=True)
 
-    monkeypatch.setattr("backend.email._CONTACT_EMAIL", "hallo@verisight.nl")
+    monkeypatch.setattr("backend.email._CONTACT_EMAIL", "hallo@getloep.nl")
     monkeypatch.setattr("backend.email._send_result", _fake_send_result)
 
     result = send_contact_request_result(
@@ -1947,7 +1947,7 @@ def test_send_contact_request_result_uses_buyer_facing_leadership_label(monkeypa
     )
 
     assert result.ok is True
-    assert captured["to"] == "hallo@verisight.nl"
+    assert captured["to"] == "hallo@getloep.nl"
     assert captured["reply_to"] == "lars@verisight.nl"
     assert "Leadership Scan" in captured["html"]
     assert "route_interest=leadership" not in captured["html"]

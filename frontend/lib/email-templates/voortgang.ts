@@ -40,7 +40,7 @@ export function voortgangHtml({
     Bekijk dashboard →
   </a>
   <hr style="border:none;border-top:1px solid #e8ddd0;margin:24px 0">
-  <p style="font-size:12px;color:#97a0ab">Loep · hallo@verisight.nl</p>
+  <p style="font-size:12px;color:#97a0ab">Loep · hallo@getloep.nl</p>
 </body>
 </html>`
 }

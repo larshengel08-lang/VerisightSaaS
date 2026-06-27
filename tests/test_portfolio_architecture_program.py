@@ -65,8 +65,8 @@ def test_public_surfaces_keep_core_first_hierarchy_with_live_follow_on_routes():
     assert "slug: 'cultuurbeeld'" in marketing_products
     assert "kernproducten" in dropdown
     assert "niet als derde kernproduct" in combination_memo
-    assert "https://www.verisight.nl/producten/cultuurbeeld" in sitemap
-    assert "https://www.verisight.nl/producten/pulse" in sitemap
-    assert "https://www.verisight.nl/producten/teamscan" not in sitemap
-    assert "https://www.verisight.nl/producten/onboarding-30-60-90" in sitemap
-    assert "https://www.verisight.nl/producten/leadership-scan" in sitemap
+    assert "https://www.getloep.nl/producten/cultuurbeeld" in sitemap
+    assert "https://www.getloep.nl/producten/pulse" in sitemap
+    assert "https://www.getloep.nl/producten/teamscan" not in sitemap
+    assert "https://www.getloep.nl/producten/onboarding-30-60-90" in sitemap
+    assert "https://www.getloep.nl/producten/leadership-scan" in sitemap

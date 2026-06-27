@@ -9,13 +9,13 @@ describe('canonical host redirect', () => {
         pathname: '/producten/exitscan',
         search: '?utm_source=google',
       }),
-    ).toBe('https://www.verisight.nl/producten/exitscan?utm_source=google')
+    ).toBe('https://www.getloep.nl/producten/exitscan?utm_source=google')
   })
 
   it('keeps the www host untouched', () => {
     expect(
       getCanonicalHostRedirectUrl({
-        hostname: 'www.verisight.nl',
+        hostname: 'www.getloep.nl',
         pathname: '/',
         search: '',
       }),
@@ -29,6 +29,6 @@ describe('canonical host redirect', () => {
         pathname: '/',
         search: '',
       }),
-    ).toBe('https://www.verisight.nl/')
+    ).toBe('https://www.getloep.nl/')
   })
 })

@@ -2684,7 +2684,7 @@ def _build_boardroom_story(
     contact_table = Table([[
         Paragraph(
             "<b>Vragen over dit rapport?</b><br/>"
-            "Neem contact op via <font color='#234B57'>hallo@verisight.nl</font>. "
+            "Neem contact op via <font color='#234B57'>hallo@getloep.nl</font>. "
             "We lopen de bevindingen graag door en helpen bij de vertaling naar een eerstvolgende stap.",
             ParagraphStyle(
                 "contact_note_boardroom",
@@ -4537,7 +4537,7 @@ def _append_rebrand_methodology(
             ["Wat dit product wel is", product_is],
             ["Wat het niet is", product_not_for],
             ["Privacy & rapportagegrenzen", privacy_boundary],
-            ["Contact", "hallo@verisight.nl"],
+            ["Contact", "hallo@getloep.nl"],
         ],
         col_widths=[content_width * 0.30, content_width * 0.70],
         theme=report_theme,
@@ -4546,7 +4546,7 @@ def _append_rebrand_methodology(
     contact_table = Table([[
         Paragraph(
             "<b>Vragen over dit rapport?</b><br/>"
-            f"Neem contact op via <font color='{_color_to_hex(report_theme['accent'])}'>hallo@verisight.nl</font>. "
+            f"Neem contact op via <font color='{_color_to_hex(report_theme['accent'])}'>hallo@getloep.nl</font>. "
             "We lopen de bevindingen graag door en helpen bij de vertaling naar een eerstvolgende stap.",
                 ParagraphStyle(
                     "contact_note_rebrand",

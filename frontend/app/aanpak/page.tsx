@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     title: 'Aanpak | Loep',
     description:
       'Van eerste stap naar dashboard, rapport en eerste opvolging. Zo zie je snel wat speelt en wat als eerste aandacht vraagt.',
-    url: 'https://www.verisight.nl/aanpak',
+    url: 'https://www.getloep.nl/aanpak',
     images: ['/opengraph-image'],
   },
   twitter: {
@@ -30,8 +30,8 @@ export default function AanpakPage() {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.verisight.nl/' },
-      { '@type': 'ListItem', position: 2, name: 'Aanpak', item: 'https://www.verisight.nl/aanpak' },
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.getloep.nl/' },
+      { '@type': 'ListItem', position: 2, name: 'Aanpak', item: 'https://www.getloep.nl/aanpak' },
     ],
   }
 

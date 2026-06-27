@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: 'article',
       title,
       description,
-      url: `https://www.verisight.nl${canonical}`,
+      url: `https://www.getloep.nl${canonical}`,
       images: ['/opengraph-image'],
     },
     twitter: {
@@ -64,7 +64,7 @@ export default async function InsightArticlePage({ params }: Props) {
     description: post.metaDescription,
     datePublished: post.publishedAt ?? post.generatedAt,
     dateModified: post.publishedAt ?? post.generatedAt,
-    mainEntityOfPage: `https://www.verisight.nl/inzichten/${post.slug}`,
+    mainEntityOfPage: `https://www.getloep.nl/inzichten/${post.slug}`,
     author: {
       '@type': 'Organization',
       name: 'Loep',

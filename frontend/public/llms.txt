@@ -10,18 +10,18 @@
 
 ## Publieke routes
 
-- [Homepage](https://www.verisight.nl): routekeuze, proof en kennismaking
-- [Producten](https://www.verisight.nl/producten): overzicht van Loep Vertrek, Loep Behoud, Loep Cultuurbeeld, Combinatie, Loep Start, Pulse en Leadership Scan
-- [Loep Vertrek](https://www.verisight.nl/producten#loep-vertrek): primaire route voor vertrekduiding en verloopanalyse
-- [Loep Behoud](https://www.verisight.nl/producten#loep-behoud): gerichte route voor medewerkersbehoud en vroegsignalering
-- [Loep Cultuurbeeld](https://www.verisight.nl/producten/cultuurbeeld): jaarlijkse primary route voor brede cultuur- en engagementbaseline met board-read
-- [Combinatie](https://www.verisight.nl/producten/combinatie): portfolioroute wanneer vertrekduiding en vroegsignalering bewust in dezelfde managementlijn moeten samenkomen
-- [Loep Start](https://www.verisight.nl/producten#loep-start): bounded peer-route voor een vroege checkpoint-read bij nieuwe medewerkers
-- [Pulse](https://www.verisight.nl/producten/pulse): compacte vervolgroute voor bounded managementreviews na diagnose of baseline
-- [Leadership Scan](https://www.verisight.nl/producten/leadership-scan): bounded group-level managementread zonder named leaders, manager ranking of 360-logica
-- [Tarieven](https://www.verisight.nl/producten#tarieven): eerste trajecten, vervolgvormen en add-ons
-- [Aanpak](https://www.verisight.nl/aanpak): intake, setup, livegang en eerste managementwaarde
-- [Vertrouwen](https://www.verisight.nl/vertrouwen): methodiek, privacy, rapportlezing en DPA
+- [Homepage](https://www.getloep.nl): routekeuze, proof en kennismaking
+- [Producten](https://www.getloep.nl/producten): overzicht van Loep Vertrek, Loep Behoud, Loep Cultuurbeeld, Combinatie, Loep Start, Pulse en Leadership Scan
+- [Loep Vertrek](https://www.getloep.nl/producten#loep-vertrek): primaire route voor vertrekduiding en verloopanalyse
+- [Loep Behoud](https://www.getloep.nl/producten#loep-behoud): gerichte route voor medewerkersbehoud en vroegsignalering
+- [Loep Cultuurbeeld](https://www.getloep.nl/producten/cultuurbeeld): jaarlijkse primary route voor brede cultuur- en engagementbaseline met board-read
+- [Combinatie](https://www.getloep.nl/producten/combinatie): portfolioroute wanneer vertrekduiding en vroegsignalering bewust in dezelfde managementlijn moeten samenkomen
+- [Loep Start](https://www.getloep.nl/producten#loep-start): bounded peer-route voor een vroege checkpoint-read bij nieuwe medewerkers
+- [Pulse](https://www.getloep.nl/producten/pulse): compacte vervolgroute voor bounded managementreviews na diagnose of baseline
+- [Leadership Scan](https://www.getloep.nl/producten/leadership-scan): bounded group-level managementread zonder named leaders, manager ranking of 360-logica
+- [Tarieven](https://www.getloep.nl/producten#tarieven): eerste trajecten, vervolgvormen en add-ons
+- [Aanpak](https://www.getloep.nl/aanpak): intake, setup, livegang en eerste managementwaarde
+- [Vertrouwen](https://www.getloep.nl/vertrouwen): methodiek, privacy, rapportlezing en DPA
 
 ## Pricing
 
@@ -40,12 +40,12 @@
 ## Proof en documenten
 
 - Publieke deliverable-proof blijft bewust core-first op Loep Vertrek en Loep Behoud; Onboarding wordt publiek als bounded peer uitgelegd en Pulse plus Leadership Scan vooral via productpagina en trustlaag gekaderd.
-- [Loep Vertrek voorbeeldrapport](https://www.verisight.nl/examples/voorbeeldrapport_verisight.pdf)
-- [Loep Behoud voorbeeldrapport](https://www.verisight.nl/examples/voorbeeldrapport_retentiescan.pdf)
-- [Privacybeleid](https://www.verisight.nl/privacy)
-- [Algemene voorwaarden](https://www.verisight.nl/voorwaarden)
-- [Verwerkersovereenkomst](https://www.verisight.nl/dpa)
+- [Loep Vertrek voorbeeldrapport](https://www.getloep.nl/examples/voorbeeldrapport_verisight.pdf)
+- [Loep Behoud voorbeeldrapport](https://www.getloep.nl/examples/voorbeeldrapport_retentiescan.pdf)
+- [Privacybeleid](https://www.getloep.nl/privacy)
+- [Algemene voorwaarden](https://www.getloep.nl/voorwaarden)
+- [Verwerkersovereenkomst](https://www.getloep.nl/dpa)
 
 ## Contact
 
-- E-mail: hallo@verisight.nl
+- E-mail: hallo@getloep.nl

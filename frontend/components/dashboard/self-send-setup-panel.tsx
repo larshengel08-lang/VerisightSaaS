@@ -139,8 +139,8 @@ export function SelfSendSetupPanel({
         <p className="text-sm text-amber-700">
           Er is nog geen survey-token aan deze campagne gekoppeld. Loep moet dit instellen voordat je
           de uitnodigingslink kunt kopiëren. Neem contact op via{' '}
-          <a href="mailto:hallo@verisight.nl" className="underline">
-            hallo@verisight.nl
+          <a href="mailto:hallo@getloep.nl" className="underline">
+            hallo@getloep.nl
           </a>
           .
         </p>

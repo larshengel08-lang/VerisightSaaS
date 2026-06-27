@@ -37,7 +37,7 @@ export function rapportGereedHtml({
   ` : ''}
   <hr style="border:none;border-top:1px solid #e8ddd0;margin:24px 0">
   <p style="font-size:12px;color:#97a0ab">
-    Loep · hallo@verisight.nl<br>
+    Loep · hallo@getloep.nl<br>
     Je ontvangt dit bericht omdat je HR-beheerder bent van ${escHtml(organizationName)}.
   </p>
 </body>

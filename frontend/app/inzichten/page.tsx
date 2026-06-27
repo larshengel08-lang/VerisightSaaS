@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     type: 'website',
     title: 'Inzichten | Loep',
     description: 'Verdiepende inzichten over vertrek, behoud, duiding en opvolging binnen dezelfde wereld als Loep.',
-    url: 'https://www.verisight.nl/inzichten',
+    url: 'https://www.getloep.nl/inzichten',
     images: ['/opengraph-image'],
   },
   twitter: {

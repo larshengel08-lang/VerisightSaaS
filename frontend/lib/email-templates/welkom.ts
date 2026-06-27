@@ -27,10 +27,10 @@ export function welkomHtml({
     Ga naar het dashboard →
   </a>
   <p style="color:#4e5d6f;line-height:1.7">
-    Vragen? Stuur een bericht via <a href="mailto:hallo@verisight.nl" style="color:#b9571f">hallo@verisight.nl</a>.
+    Vragen? Stuur een bericht via <a href="mailto:hallo@getloep.nl" style="color:#b9571f">hallo@getloep.nl</a>.
   </p>
   <hr style="border:none;border-top:1px solid #e8ddd0;margin:24px 0">
-  <p style="font-size:12px;color:#97a0ab">Loep · hallo@verisight.nl</p>
+  <p style="font-size:12px;color:#97a0ab">Loep · hallo@getloep.nl</p>
 </body>
 </html>`
 }

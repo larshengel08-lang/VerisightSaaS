@@ -234,7 +234,7 @@ export default async function OpenGraphImage({ params }: Props) {
                 background: theme.accent,
               }}
             />
-            <div style={{ fontSize: '28px', fontWeight: 700, color: '#0f172a' }}>www.verisight.nl</div>
+            <div style={{ fontSize: '28px', fontWeight: 700, color: '#0f172a' }}>www.getloep.nl</div>
           </div>
           <div style={{ fontSize: '24px', color: '#334155' }}>Loep productroutes voor HR-teams</div>
         </div>

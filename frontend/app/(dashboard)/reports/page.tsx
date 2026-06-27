@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import { buildReportDownloadIndex } from './report-download-index'
 
-const CONTACT_EMAIL = 'hallo@verisight.nl'
+const CONTACT_EMAIL = 'hallo@getloep.nl'
 
 function BesprekingRow({
   campaignName,
