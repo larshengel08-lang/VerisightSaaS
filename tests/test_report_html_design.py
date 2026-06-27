@@ -63,3 +63,38 @@ def test_factor_bar_row_aandachtspunt():
 def test_factor_bar_row_relatief_sterk():
     html = _factor_bar_row("Cultuur", 7.1)
     assert "Relatief sterk" in html  # >= 6.5
+
+
+import re
+
+def _make_exit_factor_detail_html() -> str:
+    """Minimale stub om het contract van _factor_detail te testen."""
+    from backend.report_html import _mgmt_q, _factor_label, _factor_color, _score_str, _h
+    from backend.scoring_config import FACTOR_LABELS_NL
+    fk = "workload"
+    fsc = 4.8
+    col = _factor_color(fsc)
+    fl_ = _factor_label(fsc)
+    mgmt_q = _mgmt_q(fk, "exit")
+    mgmt_block = (f'<div class="mgmt-anchor"><div class="ma-label">Eerste managementvraag</div>'
+                  f'<p>{_h(mgmt_q)}</p></div>'
+                  if mgmt_q else "")
+    lbl = FACTOR_LABELS_NL.get(fk, fk)
+    return f"""<div class="pb sec">
+  <span class="slabel">Verdieping — {_h(lbl)}</span>
+  <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span></h2>
+  {mgmt_block}
+  <table class="item-tbl"><tr><td class="iq">Testitem</td><td class="is">4.8</td></tr></table>
+</div>"""
+
+def test_factor_detail_mgmt_q_precedes_item_table():
+    html = _make_exit_factor_detail_html()
+    mgmt_pos = html.find("mgmt-anchor")
+    table_pos = html.find("item-tbl")
+    assert mgmt_pos != -1, "mgmt-anchor block ontbreekt"
+    assert table_pos != -1, "item-tbl ontbreekt"
+    assert mgmt_pos < table_pos, "managementvraag moet VOOR de itemtabel staan"
+
+def test_factor_detail_uses_mgmt_anchor_class():
+    html = _make_exit_factor_detail_html()
+    assert "mgmt-anchor" in html

@@ -1181,19 +1181,19 @@ def render_exit_report_html(data: dict) -> str:
                        f'</div>'
                        if quote_txt else "")
         # ── Management question ──
-        mgmt_block = (f'<div class="card accent"><span class="eyebrow">Eerste managementvraag</span>'
+        mgmt_block = (f'<div class="mgmt-anchor"><div class="ma-label">Eerste managementvraag</div>'
                       f'<p>{_h(mgmt_q)}</p></div>'
                       if mgmt_q else "")
         return f"""<div class="pb sec">
   <span class="slabel">Verdieping &mdash; {_h(lbl)}</span>
   <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&mdash; {_h(fl_)}</span></h2>
+  {mgmt_block}
   {er_context}
   {low_card}
   {high_card}
   <h3>Alle items in deze factor</h3>
   <table class="item-tbl">{rows}</table>
   {quote_block}
-  {mgmt_block}
 </div>"""
 
     if priority_fkeys:
@@ -1504,17 +1504,17 @@ def render_retention_report_html(data: dict) -> str:
         quote_block = (f'<div class="quote-txt">{_h(quote_txt)}'
                        f'<div class="quote-anon">Geanonimiseerd &mdash; namen en contactgegevens verwijderd</div>'
                        f'</div>' if quote_txt else "")
-        mgmt_block  = (f'<div class="card accent"><span class="eyebrow">Eerste managementvraag</span>'
+        mgmt_block  = (f'<div class="mgmt-anchor"><div class="ma-label">Eerste managementvraag</div>'
                        f'<p>{_h(mq_)}</p></div>' if mq_ else "")
         return f"""<div class="pb sec">
   <span class="slabel">Verdieping &mdash; {_h(lbl)}</span>
   <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&mdash; {_h(fl_)}</span></h2>
+  {mgmt_block}
   {low_card}
   {high_card}
   <h3>Alle items in deze factor</h3>
   <table class="item-tbl">{rows}</table>
   {quote_block}
-  {mgmt_block}
 </div>"""
 
     if priority_fkeys:
@@ -1870,18 +1870,18 @@ def render_onboarding_report_html(data: dict) -> str:
         quote_block = (f'<div class="quote-txt">{_h(quote_txt)}'
                        f'<div class="quote-anon">Geanonimiseerd &mdash; namen en contactgegevens verwijderd</div>'
                        f'</div>' if quote_txt else "")
-        mgmt_block = (f'<div class="card accent"><span class="eyebrow">Eerste onboardingvraag</span>'
+        mgmt_block = (f'<div class="mgmt-anchor"><div class="ma-label">Eerste managementvraag</div>'
                       f'<p>{_h(mq)}</p></div>' if mq else "")
         return f"""<div class="pb sec">
   <span class="slabel">Verdieping &mdash; {_h(lbl)}</span>
   <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&mdash; {_h(fl_)}</span></h2>
+  {mgmt_block}
   <p style="font-size:10px;color:#64748B;margin-bottom:12px;">Lager op deze factor = meer frictie in de onboardingfase.</p>
   {low_card}
   {high_card}
   <h3>Alle items in deze factor</h3>
   <table class="item-tbl">{rows}</table>
   {quote_block}
-  {mgmt_block}
 </div>"""
 
     if priority_fkeys:
