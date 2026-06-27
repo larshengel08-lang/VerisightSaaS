@@ -1025,7 +1025,7 @@ def render_exit_report_html(data: dict) -> str:
 
     # ── Cover ─────────────────────────────────────────────────────────────────
     opening_q = "Wat speelde mee bij vertrek?"
-    primary_signal = high_lbl or low_lbl or "—"
+    primary_signal = low_lbl or high_lbl or "—"
     cover_stats = [
         ("Respondenten", str(n)),
         ("Respons", f"{data['completion_pct']}%"),

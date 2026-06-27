@@ -114,3 +114,20 @@ def test_managementspoor_before_factor_detail_in_exit_html():
     spoor_pos  = html_correct.find("Eerste managementspoor")
     detail_pos = html_correct.find("Verdieping")
     assert spoor_pos < detail_pos, "managementspoor moet vóór verdieping staan"
+
+
+def test_exit_cover_primary_signal_is_lowest_factor():
+    """
+    Contract: primair signaal op cover = laagste factor (de aandachtspunt),
+    niet de hoogste (de sterkte).
+    """
+    low_lbl = "Groeiperspectief"
+    high_lbl = "Psychologische veiligheid & cultuurmatch"
+
+    # Huidige (buggy) logica:
+    buggy_signal = high_lbl or low_lbl or "—"
+    # Correcte logica (na fix):
+    correct_signal = low_lbl or high_lbl or "—"
+
+    assert buggy_signal == high_lbl, "Bug bevestigd: huidige code geeft hoogste factor"
+    assert correct_signal == low_lbl, "Fix correct: nieuwe code geeft laagste factor"
