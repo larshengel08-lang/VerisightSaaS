@@ -5,30 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboardtoegang activeren</title>
 </head>
-<body style="margin:0;padding:0;background:#f3f6fb;font-family:Segoe UI,Arial,sans-serif;color:#0f172a;">
+<body style="margin:0;padding:0;background:#f3f6fb;font-family:Segoe UI,Arial,sans-serif;color:#0D1B2A;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f6fb;padding:32px 16px;">
     <tr>
       <td align="center">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:620px;background:#ffffff;border:1px solid #dbe4f0;border-radius:18px;overflow:hidden;">
           <tr>
             <td style="padding:28px 32px;border-bottom:1px solid #e5edf6;">
-              <div style="font-size:28px;font-weight:700;letter-spacing:-0.03em;color:#2563eb;">Verisight</div>
-              <div style="margin-top:6px;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;color:#64748b;">People, patterns, priorities</div>
+              <div style="font-size:28px;font-weight:800;letter-spacing:-0.04em;color:#0D1B2A;">Loep <span style="color:#E8A020;">&bull;</span></div>
+              <div style="margin-top:6px;font-size:13px;letter-spacing:0.16em;text-transform:uppercase;color:#64748b;">Scherper zien wat telt</div>
             </td>
           </tr>
           <tr>
             <td style="padding:32px;">
-              <p style="margin:0 0 8px;font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#2563eb;">
+              <p style="margin:0 0 8px;font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#b9571f;">
                 Dashboardtoegang
               </p>
-              <h1 style="margin:0 0 16px;font-size:28px;line-height:1.2;color:#0f172a;">
-                Activeer je Verisight-account
+              <h1 style="margin:0 0 16px;font-size:28px;line-height:1.2;color:#0D1B2A;">
+                Activeer je Loep-account
               </h1>
               <p style="margin:0 0 18px;font-size:16px;line-height:1.7;color:#334155;">
                 {{ if .Data.full_name }}Hallo {{ .Data.full_name }},{{ else }}Hallo,{{ end }}
               </p>
               <p style="margin:0 0 18px;font-size:16px;line-height:1.7;color:#334155;">
-                Je bent uitgenodigd voor dashboardtoegang tot Verisight{{ if .Data.organization_name }} voor <strong>{{ .Data.organization_name }}</strong>{{ end }}.
+                Je bent uitgenodigd voor dashboardtoegang tot Loep{{ if .Data.organization_name }} voor <strong>{{ .Data.organization_name }}</strong>{{ end }}.
                 Via onderstaande knop rond je je account af en kies je direct een wachtwoord.
               </p>
               <p style="margin:0 0 26px;font-size:16px;line-height:1.7;color:#334155;">
@@ -36,7 +36,7 @@
               </p>
               <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
                 <tr>
-                  <td style="border-radius:12px;background:#2563eb;">
+                  <td style="border-radius:12px;background:#0D1B2A;">
                     <a
                       href="{{ .ConfirmationURL }}"
                       style="display:inline-block;padding:15px 24px;font-size:16px;font-weight:700;color:#ffffff;text-decoration:none;"
@@ -54,9 +54,9 @@
               </p>
               <div style="padding:16px 18px;border:1px solid #dbe4f0;border-radius:14px;background:#f8fbff;">
                 <p style="margin:0;font-size:14px;line-height:1.7;color:#334155;">
-                  Deze mail is verstuurd omdat Verisight dashboardtoegang voor je heeft klaargezet.
+                  Deze mail is verstuurd omdat Loep dashboardtoegang voor je heeft klaargezet.
                   Heb je hier vragen over, reageer dan op deze mail of neem contact op via
-                  <a href="mailto:hallo@getloep.nl" style="color:#2563eb;text-decoration:none;">hallo@getloep.nl</a>.
+                  <a href="mailto:hallo@getloep.nl" style="color:#0D1B2A;text-decoration:none;font-weight:600;">hallo@getloep.nl</a>.
                 </p>
               </div>
             </td>

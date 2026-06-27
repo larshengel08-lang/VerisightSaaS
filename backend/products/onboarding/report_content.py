@@ -109,7 +109,7 @@ def get_management_summary_payload(
     )
 
     executive_intro = (
-        f"Onboarding 30-60-90 vertaalt dit ene meetmoment naar een compacte managementread. "
+        f"Loep Start vertaalt dit ene meetmoment naar een compacte managementread. "
         f"Op dit checkpoint ligt het eerste werkspoor vooral in {top_factor_text}. "
         "Gebruik het rapport om de eerste managementhuddle te richten, een eigenaar te benoemen en een kleine bounded stap te kiezen."
     )
@@ -221,7 +221,7 @@ def get_management_summary_payload(
 def get_methodology_payload() -> dict[str, Any]:
     return {
         "intro_text": (
-            "Dit rapport vertaalt Onboarding 30-60-90 naar een formeel leesbare checkpoint-handoff. "
+            "Dit rapport vertaalt Loep Start naar een formeel leesbare checkpoint-handoff. "
             "De methodiek blijft compact en bounded: onboarding helpt een vroege lifecycle-read te structureren, "
             "niet om een journey-engine, retentievoorspelling of client onboarding-route te vervangen. "
             f"{CHECKPOINT_THRESHOLD_NOTE}"

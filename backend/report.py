@@ -3453,16 +3453,16 @@ def _append_methodology_section(
 def _cover_pill_text(*, scan_type: str, scan_lbl: str, is_retention: bool) -> str:
     if "Live" in scan_lbl:
         if is_retention:
-            return "RetentieScan Live"
+            return "Loep Behoud Live"
         if scan_type == "exit":
-            return "ExitScan Live"
+            return "Loep Vertrek Live"
         if scan_type == "team":
             return "TeamScan Lokale Read"
         return scan_lbl
     if is_retention:
-        return "RetentieScan Momentopname"
+        return "Loep Behoud Momentopname"
     if scan_type == "exit":
-        return "ExitScan Retrospectief"
+        return "Loep Vertrek Retrospectief"
     if scan_type == "team":
         return "TeamScan Formele Output"
     return scan_lbl
@@ -6346,7 +6346,7 @@ def generate_campaign_report(
     scan_meta = get_scan_definition(camp.scan_type)
     scan_lbl = scan_meta.get(
         "report_title",
-        f"ExitScan {_mode_lbl}" if camp.scan_type == "exit" else scan_meta["product_name"],
+        f"Loep Vertrek {_mode_lbl}" if camp.scan_type == "exit" else scan_meta["product_name"],
     )
     product_module = get_product_module(camp.scan_type)
     signal_label = scan_meta["signal_label"]

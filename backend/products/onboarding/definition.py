@@ -7,7 +7,7 @@ from backend.products.shared.definitions import build_org_sections
 DEFAULT_ONBOARDING_MODULES = ["leadership", "role_clarity", "culture", "growth"]
 
 SCAN_DEFINITION: dict[str, Any] = {
-    "product_name": "Onboarding 30-60-90",
+    "product_name": "Loep Start",
     "signal_label": "Onboardingsignaal",
     "signal_short_label": "onboardingsignaal",
     "trust_contract": {

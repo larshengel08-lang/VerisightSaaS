@@ -6,7 +6,7 @@ from backend.products.shared.definitions import build_org_sections
 
 
 SCAN_DEFINITION: dict[str, Any] = {
-    "product_name": "ExitScan",
+    "product_name": "Loep Vertrek",
     "signal_label": "Frictiescore",
     "signal_short_label": "frictiescore",
     "trust_contract": {
@@ -47,7 +47,7 @@ SCAN_DEFINITION: dict[str, Any] = {
     "invite_duration": "8-12 minuten",
     "contact_subject": "Kennismakingsaanvraag ExitScan",
     "dashboard_signal_help": "Frictieschaal 1-10: hogere score = sterker signaal van ervaren werkfrictie rondom vertrek. Gebruik deze score als managementsamenvatting, niet als causale verklaring, en lees hem samen met signalen van werkfrictie.",
-    "report_repeat_title": "Herhaal de ExitScan - elk kwartaal of halfjaarlijks",
+    "report_repeat_title": "Herhaal de Loep Vertrek - elk kwartaal of halfjaarlijks",
     "report_repeat_body": "Eenmalige data is een momentopname. Patroonherkenning ontstaat pas bij meerdere metingen. Continuiteit maakt de investering rendabel.",
     "sdt_items": [
         ("B1", "In mijn werk had ik het gevoel dat ik zelf keuzes kon maken over hoe ik mijn taken uitvoerde."),

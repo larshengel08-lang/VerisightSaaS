@@ -6,7 +6,7 @@ from backend.products.shared.definitions import build_org_sections
 
 
 SCAN_DEFINITION: dict[str, Any] = {
-    "product_name": "RetentieScan",
+    "product_name": "Loep Behoud",
     "signal_label": "Retentiesignaal",
     "signal_short_label": "retentiesignaal",
     "trust_contract": {

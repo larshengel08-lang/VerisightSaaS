@@ -75,7 +75,7 @@ TENURES = [0.5, 1.0, 1.5, 2.0, 2.0, 3.0, 4.0, 5.5, 7.0]
 
 EXIT_CONFIG = {
     "scan_type": "exit",
-    "campaign_name": "ExitScan Q1 2026",
+    "campaign_name": "Loep Vertrek Q1 2026",
     "docs_output_name": "voorbeeldrapport_loep.pdf",
     "public_output_name": "voorbeeldrapport_loep.pdf",
     "invited": 51,
@@ -84,7 +84,7 @@ EXIT_CONFIG = {
 
 RETENTION_CONFIG = {
     "scan_type": "retention",
-    "campaign_name": "RetentieScan Voorjaar 2026",
+    "campaign_name": "Loep Behoud Voorjaar 2026",
     "docs_output_name": "voorbeeldrapport_retentiescan.pdf",
     "public_output_name": "voorbeeldrapport_retentiescan.pdf",
     "invited": 58,

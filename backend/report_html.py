@@ -543,7 +543,7 @@ def _trust_page(scan_type: str = "exit") -> str:
         ]
         cells_r2 = [
             ("Open toelichtingen","Geanonimiseerd. Namen, contactgegevens en locaties verwijderd. Alleen bij voldoende n getoond."),
-            ("Claimgrenzen",     "RetentieScan is een actieve-populatie groepssignaal. Geen causale claims, geen interventieprescriptie."),
+            ("Claimgrenzen",     "Loep Behoud is een actieve-populatie groepssignaal. Geen causale claims, geen interventieprescriptie."),
             ("Privacywaarborg",  "Verwerking conform AVG. Uitsluitend bestemd voor geautoriseerde gebruikers."),
         ]
     elif scan_type == "onboarding":
@@ -569,7 +569,7 @@ def _trust_page(scan_type: str = "exit") -> str:
         ]
         cells_r2 = [
             ("Open toelichtingen","Geanonimiseerd. Namen, contactgegevens en locaties verwijderd. Alleen bij voldoende n getoond."),
-            ("Claimgrenzen",     "ExitScan is een terugkijkende groepsmeting op uitstroom. Geen causale claims, geen oordeel over vermijdbaarheid, geen verlooppredicties."),
+            ("Claimgrenzen",     "Loep Vertrek is een terugkijkende groepsmeting op uitstroom. Geen causale claims, geen oordeel over vermijdbaarheid, geen verlooppredicties."),
             ("Privacywaarborg",  "Verwerking conform AVG. Uitsluitend bestemd voor geautoriseerde gebruikers."),
         ]
 
@@ -710,7 +710,7 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
     _mode    = (camp.delivery_mode or "baseline").lower()
     mode_lbl = "Live" if _mode == "live" else "Baseline"
     scan_lbl = scan_meta.get("report_title",
-        f"ExitScan {mode_lbl}" if scan_type == "exit" else scan_meta["product_name"])
+        f"Loep Vertrek {mode_lbl}" if scan_type == "exit" else scan_meta["product_name"])
     now_str  = datetime.now(timezone.utc).strftime("%d-%m-%Y")
 
     respondents = camp.respondents
@@ -1374,7 +1374,7 @@ def render_exit_report_html(data: dict) -> str:
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────
     s += _trust_page("exit")
-    return _doc(f"ExitScan — {data['campaign_name']}", s, scan_type="exit")
+    return _doc(f"Loep Vertrek — {data['campaign_name']}", s, scan_type="exit")
 
 
 # ─── RetentieScan renderer ───────────────────────────────────────────────────
@@ -1709,7 +1709,7 @@ def render_retention_report_html(data: dict) -> str:
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────
     s += _trust_page(ST)
-    return _doc(f"RetentieScan — {data['campaign_name']}", s, scan_type="retention")
+    return _doc(f"Loep Behoud — {data['campaign_name']}", s, scan_type="retention")
 
 
 # ─── Onboarding-exclusive helpers ────────────────────────────────────────────
@@ -2079,7 +2079,7 @@ def render_onboarding_report_html(data: dict) -> str:
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────
     s += _trust_page(ST)
-    return _doc(f"Onboarding — {data['campaign_name']}", s, scan_type="onboarding")
+    return _doc(f"Loep Start — {data['campaign_name']}", s, scan_type="onboarding")
 
 
 # ─── Dispatcher + PDF ────────────────────────────────────────────────────────
