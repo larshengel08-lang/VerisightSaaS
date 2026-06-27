@@ -398,9 +398,29 @@ def _bestuurlijke_read(*, kernzin: str, totaalbeeld: str,
 
 
 def _responsbasis(*, invited: int, completed: int, pct: int, period: str,
-                  population: str, segment_available: bool, segment_reason: str = "") -> str:
+                  population: str, segment_available: bool, segment_reason: str = "",
+                  enps_available: bool = True) -> str:
     seg = ("Beschikbaar — segmentbeeld verderop in dit rapport." if segment_available
            else f"Niet beschikbaar — {_h(segment_reason)}.")
+
+    not_available: list[str] = []
+    if not segment_available:
+        not_available.append("segmentcontrasten")
+    if not enps_available:
+        not_available.append("werkgeversaanbeveling (eNPS)")
+
+    if not_available:
+        items_html = " &middot; ".join(_h(x) for x in not_available)
+        datastatus_html = (
+            f'<div class="card" style="margin-top:14px;">'
+            f'<span class="eyebrow">Datastatus</span>'
+            f'<p style="margin-top:4px;margin-bottom:0;">Niet beschikbaar in deze wave: {items_html}. '
+            f'Verdieping opent zodra voldoende responses beschikbaar zijn.</p>'
+            f'</div>'
+        )
+    else:
+        datastatus_html = ""
+
     return f"""<div class="pb sec">
   <span class="slabel">Responsbasis &amp; reikwijdte</span>
   <table class="sg"><tr>
@@ -411,6 +431,7 @@ def _responsbasis(*, invited: int, completed: int, pct: int, period: str,
   </tr></table>
   <div class="card"><h3>Populatie</h3><p>{_h(population)}</p>
     <h3 style="margin-top:10px;">Segmentstatus</h3><p style="margin-bottom:0;">{seg}</p></div>
+  {datastatus_html}
   <p class="trustline">Dit rapport toont groepspatronen. Individuen zijn niet herleidbaar.</p>
 </div>"""
 
@@ -866,15 +887,21 @@ def _factor_bar_row(label: str, score: float | None) -> str:
             f'<div class="fbar-label" style="color:{col};">{_h(interp)}</div></div>')
 
 
-def _overzichtsprofiel(factors: list[tuple[str, float | None]]) -> str:
+def _overzichtsprofiel(factors: list[tuple[str, float | None]],
+                       summary: str = "") -> str:
     ranked = sorted(factors, key=lambda x: (x[1] is None, x[1]))
     rows = "".join(_factor_bar_row(lbl, sc) for lbl, sc in ranked)
     legend = (f'<p style="font-size:9px;color:#64748B;margin-top:12px;">'
               f'<span style="color:{RAG_HIGH};">&#9632;</span> aandachtspunt &nbsp; '
               f'<span style="color:{RAG_MID};">&#9632;</span> gemengd &nbsp; '
               f'<span style="color:{RAG_LOW};">&#9632;</span> relatief sterk</p>')
+    summary_html = (
+        f'<p style="font-size:11px;color:#374151;max-width:66ch;margin-bottom:18px;">{_h(summary)}</p>'
+        if summary else ""
+    )
     return f"""<div class="pb sec">
   <span class="slabel">Overzichtsprofiel</span>
+  {summary_html}
   <div class="card">{rows}{legend}</div>
 </div>"""
 
@@ -1117,6 +1144,7 @@ def render_exit_report_html(data: dict) -> str:
         population="Alle medewerkers",
         segment_available=False,
         segment_reason="te weinig responses per groep voor herleidbaarheid",
+        enps_available=data["enps_available"],
     )
 
     # ── Vertrekcontext (p.04 — vóór factorprofiel) ───────────────────────────
@@ -1128,7 +1156,21 @@ def render_exit_report_html(data: dict) -> str:
     # ── Overzichtsprofiel (p.05) ──────────────────────────────────────────────
     profile_factors = [(FACTOR_LABELS_NL.get(fk, fk), fa.get(fk))
                        for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
-    s += _overzichtsprofiel(profile_factors)
+    _kwetsbaar = [lbl for lbl, sc in profile_factors if sc is not None and sc < 5.0]
+    _aandacht  = [lbl for lbl, sc in profile_factors if sc is not None and 5.0 <= sc < 6.5]
+    _sterk     = [lbl for lbl, sc in profile_factors if sc is not None and sc >= 6.5]
+    if _kwetsbaar and _sterk:
+        _overzicht_summary = (
+            f"{_kwetsbaar[0]} is het {'enige' if len(_kwetsbaar) == 1 else 'duidelijkste'} "
+            f"kwetsbare punt. {_sterk[0]} vormt een relatief sterke basis."
+        )
+    elif _kwetsbaar:
+        _overzicht_summary = f"{_kwetsbaar[0]} vraagt als eerste aandacht. De overige factoren zijn gemengd."
+    elif _aandacht:
+        _overzicht_summary = f"Geen factor scoort kritisch. {_aandacht[0]} vraagt als eerste aandacht."
+    else:
+        _overzicht_summary = "Factorprofiel toont een overwegend relatief sterk beeld."
+    s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary)
 
     # ── Eerste managementspoor (p.06 — na data, vóór verdieping) ─────────────
     _code_to_count = {r["code"]: r["count"] for r in data["exit_r_dist"]}
@@ -1450,6 +1492,7 @@ def render_retention_report_html(data: dict) -> str:
         population="Actieve medewerkers",
         segment_available=False,
         segment_reason="te weinig responses per groep voor herleidbaarheid",
+        enps_available=data["enps_available"],
     )
 
     # ── Behoudscontext (p.04 — vóór factorprofiel) ───────────────────────────
@@ -1816,6 +1859,7 @@ def render_onboarding_report_html(data: dict) -> str:
         population="Nieuwe medewerkers — eerste werkperiode",
         segment_available=False,
         segment_reason="te weinig responses per groep voor herleidbaarheid",
+        enps_available=data["enps_available"],
     )
 
     # ── Overzichtsprofiel (p.04) ──────────────────────────────────────────────

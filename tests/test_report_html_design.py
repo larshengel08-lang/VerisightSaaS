@@ -143,3 +143,29 @@ def test_exit_flow_managementspoor_after_vertrekcontext():
     vc_pos = combined.find("Vertrekcontext")
     ms_pos = combined.find("Eerste managementspoor")
     assert vc_pos < ms_pos, "Vertrekcontext moet vóór Eerste managementspoor staan"
+
+
+def test_responsbasis_datastatus_block_when_unavailable():
+    from backend.report_html import _responsbasis
+    html = _responsbasis(
+        invited=51, completed=35, pct=69, period="Q1 2026",
+        population="Alle medewerkers",
+        segment_available=False,
+        segment_reason="te weinig responses per groep",
+        enps_available=False,
+    )
+    assert "Datastatus" in html
+    assert "segmentcontrasten" in html
+    assert "werkgeversaanbeveling" in html
+
+
+def test_responsbasis_no_datastatus_when_all_available():
+    from backend.report_html import _responsbasis
+    html = _responsbasis(
+        invited=51, completed=35, pct=69, period="Q1 2026",
+        population="Alle medewerkers",
+        segment_available=True,
+        segment_reason="",
+        enps_available=True,
+    )
+    assert "Datastatus" not in html
