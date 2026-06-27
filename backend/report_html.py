@@ -382,18 +382,18 @@ def _bestuurlijke_read(*, kernzin: str, totaalbeeld: str,
                        mgmt_q: str) -> str:
     return f"""<div class="pb sec">
   <span class="slabel">Bestuurlijke read</span>
-  <h2 style="margin-bottom:14px;">{_h(kernzin)}</h2>
-  <p style="font-size:11.5px;color:#374151;max-width:62ch;margin-bottom:18px;">{_h(totaalbeeld)}</p>
-  <div class="why">
-    <div class="why-title">Waarom {_h(primary_label)} bovenaan staat</div>
+  <p class="br-kernzin">{_h(kernzin)}</p>
+  <p style="font-size:11px;color:#374151;max-width:62ch;margin-bottom:22px;">{_h(totaalbeeld)}</p>
+  <div class="why" style="padding:18px 22px 14px;">
+    <div class="why-title" style="font-size:13px;margin-bottom:14px;">Waarom {_h(primary_label)} bovenaan staat</div>
     <table class="why-grid"><tr>{why_cells_html}</tr></table>
   </div>
-  <table class="sg"><tr>
+  <table class="sg" style="margin-top:16px;"><tr>
     <td><div class="sc-l">Primaire factor</div><div class="sc-v" style="color:{primary_color};">{_score_str(primary_score)}</div><div class="sc-b">{_h(primary_label)}</div></td>
     <td><div class="sc-l">Relatief sterk</div><div class="sc-v">{_score_str(strong_score)}</div><div class="sc-b">{_h(strong_label)} — wat w&eacute;l werkt</div></td>
     <td><div class="sc-l">Responsbasis</div><div class="sc-v">Zie p.03</div><div class="sc-b">reikwijdte &amp; betrouwbaarheid</div></td>
   </tr></table>
-  <div class="card accent"><h3>Eerste managementvraag</h3><p style="margin-bottom:0;">{_h(mgmt_q)}</p></div>
+  <div class="card accent" style="margin-top:0;"><h3>Eerste managementvraag</h3><p style="margin-bottom:0;">{_h(mgmt_q)}</p></div>
 </div>"""
 
 
