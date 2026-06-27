@@ -169,3 +169,18 @@ def test_responsbasis_no_datastatus_when_all_available():
         enps_available=True,
     )
     assert "Datastatus" not in html
+
+
+def test_overzichtsprofiel_shows_summary_when_provided():
+    from backend.report_html import _overzichtsprofiel
+    html = _overzichtsprofiel(
+        factors=[("Groeiperspectief", 4.2), ("Leiderschap", 7.0)],
+        summary="Groeiperspectief is het enige kwetsbare punt.",
+    )
+    assert "Groeiperspectief is het enige kwetsbare punt." in html
+
+
+def test_overzichtsprofiel_no_error_when_summary_omitted():
+    from backend.report_html import _overzichtsprofiel
+    html = _overzichtsprofiel(factors=[("Groeiperspectief", 4.2)])
+    assert "Overzichtsprofiel" in html

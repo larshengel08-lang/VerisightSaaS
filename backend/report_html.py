@@ -1507,7 +1507,21 @@ def render_retention_report_html(data: dict) -> str:
     # ── Overzichtsprofiel (p.05) ──────────────────────────────────────────────
     profile_factors = [(_fl(fk, ST), fa.get(fk))
                        for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
-    s += _overzichtsprofiel(profile_factors)
+    _kwetsbaar = [lbl for lbl, sc in profile_factors if sc is not None and sc < 5.0]
+    _aandacht  = [lbl for lbl, sc in profile_factors if sc is not None and 5.0 <= sc < 6.5]
+    _sterk     = [lbl for lbl, sc in profile_factors if sc is not None and sc >= 6.5]
+    if _kwetsbaar and _sterk:
+        _overzicht_summary = (
+            f"{_kwetsbaar[0]} is het {'enige' if len(_kwetsbaar) == 1 else 'duidelijkste'} "
+            f"kwetsbare punt. {_sterk[0]} vormt een relatief sterke basis."
+        )
+    elif _kwetsbaar:
+        _overzicht_summary = f"{_kwetsbaar[0]} vraagt als eerste aandacht. De overige factoren zijn gemengd."
+    elif _aandacht:
+        _overzicht_summary = f"Geen factor scoort kritisch. {_aandacht[0]} vraagt als eerste aandacht."
+    else:
+        _overzicht_summary = "Factorprofiel toont een overwegend relatief sterk beeld."
+    s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary)
 
     # ── Eerste managementspoor (p.06 — na data, vóór verdieping) ─────────────
     _ret_priority_fkeys = _select_priority_factors(fa, {}, max_n=3)
@@ -1865,7 +1879,21 @@ def render_onboarding_report_html(data: dict) -> str:
     # ── Overzichtsprofiel (p.04) ──────────────────────────────────────────────
     profile_factors = [(_fl(fk, ST), fa.get(fk))
                        for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
-    s += _overzichtsprofiel(profile_factors)
+    _kwetsbaar = [lbl for lbl, sc in profile_factors if sc is not None and sc < 5.0]
+    _aandacht  = [lbl for lbl, sc in profile_factors if sc is not None and 5.0 <= sc < 6.5]
+    _sterk     = [lbl for lbl, sc in profile_factors if sc is not None and sc >= 6.5]
+    if _kwetsbaar and _sterk:
+        _overzicht_summary = (
+            f"{_kwetsbaar[0]} is het {'enige' if len(_kwetsbaar) == 1 else 'duidelijkste'} "
+            f"kwetsbare punt. {_sterk[0]} vormt een relatief sterke basis."
+        )
+    elif _kwetsbaar:
+        _overzicht_summary = f"{_kwetsbaar[0]} vraagt als eerste aandacht. De overige factoren zijn gemengd."
+    elif _aandacht:
+        _overzicht_summary = f"Geen factor scoort kritisch. {_aandacht[0]} vraagt als eerste aandacht."
+    else:
+        _overzicht_summary = "Factorprofiel toont een overwegend relatief sterk beeld."
+    s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary)
 
     # ── Checkpointoverzicht (p.05 — onboarding-exclusive) ────────────────────
     s += _checkpointoverzicht(checkpoints=[("Huidig checkpoint", avg_risk)])
