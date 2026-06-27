@@ -98,3 +98,19 @@ def test_factor_detail_mgmt_q_precedes_item_table():
 def test_factor_detail_uses_mgmt_anchor_class():
     html = _make_exit_factor_detail_html()
     assert "mgmt-anchor" in html
+
+
+def test_managementspoor_before_factor_detail_in_exit_html():
+    """
+    Contract-test: gespreksagenda (managementspoor) staat vóór factordetail.
+    Gebruikt een minimale gesimuleerde HTML-string.
+    """
+    html_correct = """
+    <span class="slabel">Responsbasis &amp; reikwijdte</span>
+    <span class="slabel">Eerste managementspoor</span>
+    <span class="slabel">Overzichtsprofiel</span>
+    <span class="slabel">Verdieping &mdash; Werkdruk en balans</span>
+    """
+    spoor_pos  = html_correct.find("Eerste managementspoor")
+    detail_pos = html_correct.find("Verdieping")
+    assert spoor_pos < detail_pos, "managementspoor moet vóór verdieping staan"

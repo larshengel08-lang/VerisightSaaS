@@ -1119,6 +1119,19 @@ def render_exit_report_html(data: dict) -> str:
         segment_reason="te weinig responses per groep voor herleidbaarheid",
     )
 
+    # ── Eerste managementspoor (gespreksagenda) — p.04 ───────────────────────
+    _code_to_count = {r["code"]: r["count"] for r in data["exit_r_dist"]}
+    exit_code_counts = {fk: _code_to_count.get(FACTOR_EXIT_CODE.get(fk), 0) for fk in fa}
+    priority_fkeys = _select_priority_factors(fa, exit_code_counts, max_n=3)
+
+    s += _eerste_managementspoor(
+        primary_theme=nsp.get("first_decision") or (top_flabels[0] if top_flabels else "het leidende thema"),
+        second_point=top_flabels[1] if len(top_flabels) > 1 else "",
+        mgmt_q=_mgmt_q(priority_fkeys[0], "exit") if priority_fkeys else (nsp.get("first_decision") or ""),
+        owner=nsp.get("first_owner") or "HR + verantwoordelijk management",
+        review_when=nsp.get("review_moment") or "bij de volgende meting",
+    )
+
     # ── Overzichtsprofiel ─────────────────────────────────────────────────────
     profile_factors = [(FACTOR_LABELS_NL.get(fk, fk), fa.get(fk))
                        for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
@@ -1131,10 +1144,6 @@ def render_exit_report_html(data: dict) -> str:
                          n=n, primary_factor_label=low_lbl)
 
     # ── Factor detail (itemniveau prioritaire factoren) ──────────────────────
-    _code_to_count = {r["code"]: r["count"] for r in data["exit_r_dist"]}
-    exit_code_counts = {fk: _code_to_count.get(FACTOR_EXIT_CODE.get(fk), 0) for fk in fa}
-    priority_fkeys = _select_priority_factors(fa, exit_code_counts, max_n=3)
-
     def _factor_detail(fk: str) -> str:
         # ── Data logic (preserved from old helper) ──
         lbl    = FACTOR_LABELS_NL.get(fk, fk)
@@ -1272,15 +1281,6 @@ def render_exit_report_html(data: dict) -> str:
   <span class="slabel">Open toelichtingen &mdash; {len(texts)} respondentstemmen</span>
   {_themed_quotes(texts, "exit", top_fkeys, n)}
 </div>"""
-
-    # ── Eerste managementspoor (gespreksagenda) ───────────────────────────────
-    s += _eerste_managementspoor(
-        primary_theme=nsp.get("first_decision") or (top_flabels[0] if top_flabels else "het leidende thema"),
-        second_point=top_flabels[1] if len(top_flabels) > 1 else "",
-        mgmt_q=_mgmt_q(priority_fkeys[0], "exit") if priority_fkeys else (nsp.get("first_decision") or ""),
-        owner=nsp.get("first_owner") or "HR + verantwoordelijk management",
-        review_when=nsp.get("review_moment") or "bij de volgende meting",
-    )
 
     # ── Appendix ─────────────────────────────────────────────────────────────
     n_factors = len([fk for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None])
@@ -1452,6 +1452,17 @@ def render_retention_report_html(data: dict) -> str:
         segment_reason="te weinig responses per groep voor herleidbaarheid",
     )
 
+    # ── Eerste managementspoor (gespreksagenda) — p.04 ───────────────────────
+    # priority_fkeys defined below before factor detail loop — compute here too
+    _ret_priority_fkeys = _select_priority_factors(fa, {}, max_n=3)
+    s += _eerste_managementspoor(
+        primary_theme=nsp.get("first_decision") or (low_lbl if low_lbl else "het leidende behoudsthema"),
+        second_point=_fl(sorted_f[1][0], ST) if len(sorted_f) > 1 else "",
+        mgmt_q=_mgmt_q(_ret_priority_fkeys[0], ST) if _ret_priority_fkeys else (nsp.get("first_decision") or ""),
+        owner=nsp.get("first_owner") or "HR + verantwoordelijk management",
+        review_when=nsp.get("review_moment") or "bij de volgende meting",
+    )
+
     # ── Overzichtsprofiel ─────────────────────────────────────────────────────
     profile_factors = [(_fl(fk, ST), fa.get(fk))
                        for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
@@ -1593,15 +1604,6 @@ def render_retention_report_html(data: dict) -> str:
   <span class="slabel">Open toelichtingen &mdash; {len(texts)} medewerkersstemmen</span>
   {_themed_quotes(texts, ST, top_fkeys, n)}
 </div>"""
-
-    # ── Eerste managementspoor ────────────────────────────────────────────────
-    s += _eerste_managementspoor(
-        primary_theme=nsp.get("first_decision") or (low_lbl if low_lbl else "het leidende behoudsthema"),
-        second_point=_fl(sorted_f[1][0], ST) if len(sorted_f) > 1 else "",
-        mgmt_q=_mgmt_q(priority_fkeys[0], ST) if priority_fkeys else (nsp.get("first_decision") or ""),
-        owner=nsp.get("first_owner") or "HR + verantwoordelijk management",
-        review_when=nsp.get("review_moment") or "bij de volgende meting",
-    )
 
     # ── Appendix ─────────────────────────────────────────────────────────────
     n_factors = len([fk for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None])
@@ -1819,6 +1821,17 @@ def render_onboarding_report_html(data: dict) -> str:
         segment_reason="te weinig responses per groep voor herleidbaarheid",
     )
 
+    # ── Eerste managementspoor (gespreksagenda) — p.04 ───────────────────────
+    # priority_fkeys defined below before factor detail loop — compute here too
+    _ob_priority_fkeys = _select_priority_factors(fa, {}, max_n=3)
+    s += _eerste_managementspoor(
+        primary_theme=nsp.get("first_decision") or (low_lbl if low_lbl else "het leidende onboardingthema"),
+        second_point=_fl(sorted_f[1][0], ST) if len(sorted_f) > 1 else "",
+        mgmt_q=_mgmt_q(_ob_priority_fkeys[0], ST) if _ob_priority_fkeys else (nsp.get("first_decision") or ""),
+        owner=nsp.get("first_owner") or "HR + verantwoordelijk leidinggevende",
+        review_when=nsp.get("review_moment") or "bij het volgende checkpoint",
+    )
+
     # ── Overzichtsprofiel ─────────────────────────────────────────────────────
     profile_factors = [(_fl(fk, ST), fa.get(fk))
                        for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
@@ -1956,15 +1969,6 @@ def render_onboarding_report_html(data: dict) -> str:
   <span class="slabel">Open toelichtingen &mdash; {len(texts)} medewerkersstemmen</span>
   {_themed_quotes(texts, ST, top_fkeys, n)}
 </div>"""
-
-    # ── Eerste managementspoor ────────────────────────────────────────────────
-    s += _eerste_managementspoor(
-        primary_theme=nsp.get("first_decision") or (low_lbl if low_lbl else "het leidende onboardingthema"),
-        second_point=_fl(sorted_f[1][0], ST) if len(sorted_f) > 1 else "",
-        mgmt_q=_mgmt_q(priority_fkeys[0], ST) if priority_fkeys else (nsp.get("first_decision") or ""),
-        owner=nsp.get("first_owner") or "HR + verantwoordelijk leidinggevende",
-        review_when=nsp.get("review_moment") or "bij het volgende checkpoint",
-    )
 
     # ── Appendix ─────────────────────────────────────────────────────────────
     n_factors = len([fk for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None])
