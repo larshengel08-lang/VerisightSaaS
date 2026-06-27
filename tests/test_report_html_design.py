@@ -184,3 +184,28 @@ def test_overzichtsprofiel_no_error_when_summary_omitted():
     from backend.report_html import _overzichtsprofiel
     html = _overzichtsprofiel(factors=[("Groeiperspectief", 4.2)])
     assert "Overzichtsprofiel" in html
+
+
+def test_why_block_not_navy_background():
+    from backend.report_css import build_css
+    import re
+    css = build_css("exit")
+    why_match = re.search(r'\.why\s*\{([^}]+)\}', css)
+    assert why_match is not None, ".why rule not found in CSS"
+    why_body = why_match.group(1)
+    # background moet chalk (#F4F1EA) zijn, niet navy
+    bg_match = re.search(r'background\s*:\s*([^;]+)', why_body)
+    assert bg_match is not None, "background property not found in .why"
+    bg_value = bg_match.group(1).strip()
+    assert "#0D1B2A" not in bg_value, ".why mag geen navy (#0D1B2A) als achtergrond hebben"
+    assert "#F4F1EA" in bg_value, ".why achtergrond moet chalk (#F4F1EA) zijn"
+
+
+def test_why_block_has_border_left():
+    from backend.report_css import build_css
+    import re
+    css = build_css("exit")
+    why_match = re.search(r'\.why\s*\{([^}]+)\}', css)
+    assert why_match is not None
+    why_body = why_match.group(1)
+    assert "border-left" in why_body, ".why moet een amber left-border hebben"

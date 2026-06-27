@@ -226,31 +226,31 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .act-lst { margin: 4px 0 0 16px; }
 .act-lst li { font-size: 10.5px; color: #374151; line-height: 1.6; margin-bottom: 3px; }
 
-/* ── Anchor block (why / summary) — versterkt als visueel ankerpunt ── */
-.why { background: """ + NAVY + r"""; color: #fff; padding: 28px 28px 24px; margin-bottom: 20px; }
+/* ── Anchor block (why / summary) — licht, amber left-border ── */
+.why { background: """ + CHALK + r"""; color: """ + INK + r"""; border-left: 4px solid var(--accent);
+  padding: 22px 24px 18px; margin-bottom: 20px; }
 .why-title {
-  font-family: 'Inter Tight', sans-serif; font-weight: 800; font-size: 17px;
-  color: #fff; margin-bottom: 20px; line-height: 1.35;
-  border-left: 3px solid var(--accent); padding-left: 12px;
+  font-family: 'Inter Tight', sans-serif; font-weight: 800; font-size: 15px;
+  color: """ + INK + r"""; margin-bottom: 16px; line-height: 1.35;
 }
-.why-grid { display: table; width: 100%; border-collapse: separate; border-spacing: 10px 0; margin-bottom: 18px; }
+.why-grid { display: table; width: 100%; border-collapse: separate; border-spacing: 10px 0; margin-bottom: 14px; }
 .why-cell {
   display: table-cell; vertical-align: top; width: 25%;
-  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10);
-  padding: 14px 14px;
+  background: #fff; border: 1px solid """ + HAIRLINE + r""";
+  padding: 12px 14px;
 }
 .why-l {
   font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.12em;
-  text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 6px;
+  text-transform: uppercase; color: """ + STEEL + r"""; margin-bottom: 6px;
 }
 .why-v {
-  font-family: 'Inter Tight', sans-serif; font-weight: 800; font-size: 26px;
-  line-height: 1.0; color: #fff;
+  font-family: 'Inter Tight', sans-serif; font-weight: 800; font-size: 24px;
+  line-height: 1.0; color: """ + INK + r""";
 }
-.why-b { font-size: 9px; color: rgba(255,255,255,0.6); line-height: 1.45; margin-top: 4px; }
+.why-b { font-size: 9px; color: """ + STEEL + r"""; line-height: 1.45; margin-top: 4px; }
 .why-quote {
-  font-size: 10.5px; color: rgba(255,255,255,0.80); font-style: italic; line-height: 1.6;
-  border-top: 1px solid rgba(255,255,255,0.12); padding-top: 14px; margin-top: 4px;
+  font-size: 10.5px; color: #374151; font-style: italic; line-height: 1.6;
+  border-top: 1px solid """ + HAIRLINE + r"""; padding-top: 12px; margin-top: 4px;
 }
 
 /* ── Cards — geen witte vlakken, alleen left-border ── */
