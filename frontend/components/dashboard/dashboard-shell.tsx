@@ -99,7 +99,7 @@ export function DashboardShellFrame({
                 <span className="block">
                   <span className="block font-serif text-[1.1rem] leading-5 text-[#f5f2eb]">Loep</span>
                   <span className="mt-0.5 block text-[0.72rem] uppercase tracking-[0.24em] text-[#8fa1b3]">
-                    People, Patterns, Priorities
+                    Scherper zien wat telt
                   </span>
                 </span>
               </Link>

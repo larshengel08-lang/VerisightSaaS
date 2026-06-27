@@ -270,7 +270,7 @@ def _draw_wordmark(canvas, *, x: float, y: float, fill: colors.Color, muted_fill
     word_size = 26 * scale
     tag_size = 6.5 * scale
     word_width = pdfmetrics.stringWidth(word, REPORT_FONTS["bold"], word_size)
-    tag = "PEOPLE, PATTERNS, PRIORITIES"
+    tag = "SCHERPER ZIEN WAT TELT"
     tag_width = pdfmetrics.stringWidth(tag, REPORT_FONTS["semibold"], tag_size)
     max_width = max(word_width, tag_width)
 

@@ -20,7 +20,7 @@ export function PublicFooter() {
         <div>
           <Wordmark size="sm" showTagline={false} light />
           <p className="mt-2 text-[8px] font-bold tracking-[0.18em] uppercase text-[rgba(247,245,241,0.32)]">
-            People, Patterns, Priorities
+            Scherper zien wat telt
           </p>
           <p className="marketing-footer-copy mt-4 max-w-sm text-sm leading-7">
             Loep helpt organisaties sneller zien wat speelt, wat eerst aandacht vraagt en hoe eerste opvolging concreet

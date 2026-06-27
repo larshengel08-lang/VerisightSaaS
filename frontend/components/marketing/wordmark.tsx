@@ -59,7 +59,7 @@ export function Wordmark({
             textTransform: 'uppercase',
           }}
         >
-          People, Patterns, Priorities
+          Scherper zien wat telt
         </span>
       ) : null}
     </Link>

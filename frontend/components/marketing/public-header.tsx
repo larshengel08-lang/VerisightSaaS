@@ -39,7 +39,7 @@ export function PublicHeader({
             <div className="flex flex-col gap-0.5">
               <Wordmark size="md" showTagline={false} />
               <span className="pl-px text-[8px] font-bold tracking-[0.18em] uppercase text-[rgba(13,27,42,0.42)] [font-family:var(--font-inter)]">
-                People, Patterns, Priorities
+                Scherper zien wat telt
               </span>
             </div>
           </div>
