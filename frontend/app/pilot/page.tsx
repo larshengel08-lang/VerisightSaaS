@@ -12,6 +12,12 @@ export const metadata: Metadata = {
   description:
     'Een beperkt aantal founding pilots: een volwaardig Loep-traject in ruil voor actieve feedback.',
   robots: { index: false, follow: false },
+  openGraph: {
+    title: 'Founding pilot · Loep',
+    description:
+      'Word een van de eerste organisaties die met Loep werkt. Een volwaardig traject rond behoud, vertrek of onboarding in ruil voor je eerlijke feedback.',
+    type: 'website',
+  },
 }
 
 const T = {
@@ -115,6 +121,54 @@ export default function PilotPage() {
                     Een volwaardig traject binnen een duidelijke scope, geen uitgeklede versie.
                   </p>
                 </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Voorbeeld van de uitkomst ── */}
+        <section style={{ background: T.white, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
+          <div style={SH}>
+            <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_1fr] items-center">
+              <div>
+                <div style={eyebrow}>Wat je in handen krijgt</div>
+                <h2 style={{ fontFamily: FF, fontWeight: 800, fontSize: 'clamp(26px,3.2vw,38px)', lineHeight: 1.08, letterSpacing: '-.02em', color: T.ink, maxWidth: '18ch' }}>
+                  Geen dashboard. Een rapport met één heldere eerste managementvraag.
+                </h2>
+                <p style={{ fontSize: 15, lineHeight: 1.72, color: T.inkSoft, maxWidth: '46ch', marginTop: 20 }}>
+                  Elke scan eindigt met de factor die de meeste aandacht vraagt en de vraag die als eerste op tafel hoort.
+                  Altijd op groepsniveau, nooit op de persoon. Hieronder een illustratief voorbeeld met gesynthetiseerde cijfers.
+                </p>
+              </div>
+              <div style={{ background: '#0D1B2A', border: '1px solid #1c2c40', padding: '26px 26px 22px' }}>
+                <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: '#E8A020', marginBottom: 18 }}>
+                  Illustratief voorbeeld · gesynthetiseerde data
+                </div>
+                <div style={{ fontFamily: FF, fontWeight: 700, fontSize: 'clamp(19px,2vw,23px)', lineHeight: 1.2, letterSpacing: '-.015em', color: '#f5f2eb', marginBottom: 20 }}>
+                  Groeiperspectief scoort veruit het laagst.
+                </div>
+                {[
+                  ['Groeiperspectief', '4,8', 'Grootste uitschieter', true],
+                  ['Werkbelasting', '5,0', 'Speelt mee', false],
+                  ['Waardering en erkenning', '7,1', 'Relatief sterk', false],
+                ].map(([factor, score, label, hot]) => (
+                  <div key={factor as string} style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, padding: '10px 0', borderTop: '1px solid #1c2c40' }}>
+                    <span style={{ fontSize: 13, color: '#cdd8e4' }}>{factor}</span>
+                    <span style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexShrink: 0 }}>
+                      <span style={{ fontSize: 11.5, color: hot ? '#E8A020' : '#8fa1b3' }}>{label}</span>
+                      <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 700, fontSize: 14.5, color: hot ? '#E8A020' : '#f5f2eb', minWidth: 32, textAlign: 'right' }}>{score}</span>
+                    </span>
+                  </div>
+                ))}
+                <div style={{ marginTop: 18, padding: '14px 16px', background: '#132033', borderLeft: '2px solid #E8A020' }}>
+                  <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: '#8fa1b3', marginBottom: 6 }}>Eerste managementvraag</div>
+                  <p style={{ fontSize: 13, lineHeight: 1.5, color: '#e7edf4' }}>
+                    Wat houdt mensen tegen om hier door te groeien, en wat kunnen we daar als eerste aan doen?
+                  </p>
+                </div>
+                <p style={{ marginTop: 16, fontSize: 11, color: '#6f8197', letterSpacing: '.02em' }}>
+                  n = 39 · groepsniveau · geen individuele risicolijst
+                </p>
               </div>
             </div>
           </div>
