@@ -383,6 +383,43 @@ DEEPENING_SETS: dict[str, dict[str, Any]] = {
 }
 
 
+def _factor_items(org_raw: dict[str, int], factor_key: str) -> list[int]:
+    return [v for k, v in org_raw.items()
+            if k.startswith(f"{factor_key}_") and isinstance(v, int)]
+
+
+def _is_triggered(items: list[int]) -> bool:
+    if not items:
+        return False
+    avg = sum(items) / len(items)
+    if avg <= 2.5:
+        return True
+    if min(items) == 1 and avg <= 3.5:
+        return True
+    if sum(1 for v in items if v <= 2) >= 2:
+        return True
+    return False
+
+
+def compute_deepening_offers(org_raw: dict[str, int], scan_type: str) -> list[str]:
+    """Getriggerde factoren, geprioriteerd en afgekapt op de scan-cap.
+
+    Prioritering: (1) laagste gemiddelde, (2) meeste items <= 2, (3) laagste
+    minimumscore, (4) DEEPENING_FACTOR_KEYS-volgorde (deterministisch).
+    """
+    if scan_type not in DEEPENING_CAP:
+        raise ValueError(f"unknown scan_type {scan_type!r}")
+    triggered: list[tuple[float, int, int, int, str]] = []
+    for idx, fk in enumerate(DEEPENING_FACTOR_KEYS):
+        items = _factor_items(org_raw, fk)
+        if _is_triggered(items):
+            avg = sum(items) / len(items)
+            low_count = sum(1 for v in items if v <= 2)
+            triggered.append((avg, -low_count, min(items), idx, fk))
+    triggered.sort()
+    return [t[4] for t in triggered[:DEEPENING_CAP[scan_type]]]
+
+
 def get_deepening_sets(scan_type: str) -> dict[str, dict[str, Any]]:
     """Per factor: question_set_version, question, options (scan-specific text)."""
     if scan_type not in DEEPENING_CAP:
