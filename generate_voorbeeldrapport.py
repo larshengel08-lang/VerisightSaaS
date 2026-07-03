@@ -26,6 +26,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from backend.database import Base, DATABASE_URL, SessionLocal, init_db
 from backend.models import Campaign, Organization, Respondent, SurveyResponse
+from backend.products.shared.deepening import compute_deepening_offers
 from backend.report_html import generate_campaign_report_html as generate_campaign_report_html
 from backend.report import generate_campaign_report as _generate_campaign_report_legacy
 from backend.scoring import (
@@ -269,6 +270,69 @@ CONTRIBUTING_REASON_MAP = {
     "pull_aanbod": ["P3", "P4"],
     "persoonlijk": [],
 }
+
+
+# Verdiepingsvragen: gewogen keuzeverdelingen voor de fictieve respondenten.
+# Alleen gebruikt voor factoren die daadwerkelijk triggeren via
+# compute_deepening_offers(org_raw) — er worden geen entries gefabriceerd.
+DEEPENING_PRIMARY_WEIGHTS: dict[str, dict[str, float]] = {
+    "workload": {"wl_recovery": 0.60, "wl_volume": 0.15, "wl_capacity": 0.15, "wl_priorities": 0.10},
+    "leadership": {"ld_feedback": 0.45, "ld_availability": 0.25, "ld_recognition": 0.20, "ld_support": 0.10},
+    "growth": {"gr_visibility": 0.40, "gr_conversation": 0.30, "gr_follow_through": 0.20, "gr_time": 0.10},
+    "culture": {"cu_cross_team": 0.50, "cu_exclusion": 0.30, "cu_conflict": 0.20},
+    "compensation": {"cp_external": 0.40, "cp_growth": 0.35, "cp_clarity": 0.25},
+    "role_clarity": {"rc_priorities": 0.40, "rc_conflicting": 0.35, "rc_scope": 0.25},
+}
+DEEPENING_SECONDARY_WEIGHTS: dict[str, dict[str, float]] = {
+    "workload": {"wl_capacity": 0.55, "wl_priorities": 0.45},
+    "leadership": {"ld_recognition": 0.55, "ld_availability": 0.45},
+    "growth": {"gr_conversation": 0.55, "gr_time": 0.45},
+}
+DEEPENING_SKIP_RATE = 0.12
+DEEPENING_SECONDARY_RATE = 0.55
+
+
+def _weighted_choice(weights: dict[str, float]) -> str:
+    r = random.random() * sum(weights.values())
+    cumulative = 0.0
+    for key, weight in weights.items():
+        cumulative += weight
+        if r <= cumulative:
+            return key
+    return next(iter(weights))
+
+
+def _build_deepening_entries(org_raw: dict[str, int], scan_type: str) -> list[dict] | None:
+    entries: list[dict] = []
+    for factor_key in compute_deepening_offers(org_raw, scan_type):
+        version = f"{scan_type}_{factor_key}_v1"
+        if random.random() < DEEPENING_SKIP_RATE:
+            entries.append({
+                "factor_key": factor_key,
+                "question_set_version": version,
+                "status": "skipped",
+                "primary": None,
+                "secondary": None,
+                "other_text": None,
+            })
+            continue
+        primary = _weighted_choice(DEEPENING_PRIMARY_WEIGHTS[factor_key])
+        secondary = None
+        if random.random() < DEEPENING_SECONDARY_RATE:
+            candidate = _weighted_choice(
+                DEEPENING_SECONDARY_WEIGHTS.get(factor_key, DEEPENING_PRIMARY_WEIGHTS[factor_key])
+            )
+            if candidate != primary:
+                secondary = candidate
+        entries.append({
+            "factor_key": factor_key,
+            "question_set_version": version,
+            "status": "answered",
+            "primary": primary,
+            "secondary": secondary,
+            "other_text": None,
+        })
+    return entries or None
 
 
 def _pick_profile(profiles: list[tuple]) -> dict[str, float | str]:
@@ -610,6 +674,7 @@ def _build_exit_response(profile: dict[str, float | str], salary: int, role: str
         "preventability": prev_result["preventability"],
         "replacement_cost_eur": replacement_cost["cost_per_employee"],
         "full_result": full_result,
+        "deepening_responses": _build_deepening_entries(org_raw, "exit"),
     }
 
 
@@ -679,6 +744,7 @@ def _build_retention_response(profile: dict[str, float | str]) -> dict:
         "preventability": None,
         "replacement_cost_eur": None,
         "full_result": full_result,
+        "deepening_responses": _build_deepening_entries(org_raw, "retention"),
     }
 
 
@@ -974,6 +1040,7 @@ def main() -> None:
             preventability=response_payload["preventability"],
             replacement_cost_eur=response_payload["replacement_cost_eur"],
             full_result=response_payload["full_result"],
+            deepening_responses=response_payload.get("deepening_responses"),
         )
         db.add(response)
 
