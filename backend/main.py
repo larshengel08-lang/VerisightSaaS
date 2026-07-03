@@ -73,6 +73,7 @@ from backend.products.leadership.definition import DEFAULT_LEADERSHIP_MODULES
 from backend.products.onboarding.definition import DEFAULT_ONBOARDING_MODULES
 from backend.products.pulse.definition import DEFAULT_PULSE_MODULES
 from backend.products.team.definition import DEFAULT_TEAM_MODULES
+from backend.products.shared.deepening import compute_deepening_offers, get_deepening_sets
 from backend.products.shared.registry import get_product_module
 from backend.runtime import require_backend_admin_token, validate_runtime_config
 from backend.scan_definitions import get_scan_definition
@@ -1315,6 +1316,38 @@ async def submit_survey(
     product_module = get_product_module(respondent.campaign.scan_type)
     product_module.validate_submission(payload)
 
+    # --- Verdiepingsvragen: server-side semantische validatie (client is untrusted) ---
+    if payload.deepening_responses:
+        scan_type = respondent.campaign.scan_type
+        if scan_type not in ("exit", "retention"):
+            raise HTTPException(
+                status_code=422,
+                detail="Verdieping wordt niet ondersteund voor dit scantype.",
+            )
+        offered_factors = compute_deepening_offers(payload.org_raw, scan_type)
+        deepening_sets = get_deepening_sets(scan_type)
+        seen_factors: set[str] = set()
+        for entry in payload.deepening_responses:
+            if entry.factor_key not in offered_factors:
+                raise HTTPException(status_code=422, detail="Verdieping hoort niet bij deze inzending.")
+            if entry.factor_key in seen_factors:
+                raise HTTPException(status_code=422, detail="Dubbele verdieping voor dezelfde factor.")
+            seen_factors.add(entry.factor_key)
+            factor_set = deepening_sets[entry.factor_key]
+            valid_option_keys = {option["key"] for option in factor_set["options"]}
+            for choice in (entry.primary, entry.secondary):
+                if choice is not None and choice not in valid_option_keys:
+                    raise HTTPException(status_code=422, detail="Onbekende verdiepingsoptie.")
+            if entry.question_set_version != factor_set["question_set_version"]:
+                raise HTTPException(status_code=422, detail="Verouderde vragenset-versie.")
+
+    deepening_clean: list[dict] = []
+    for entry in payload.deepening_responses:
+        d = entry.model_dump()
+        if d.get("other_text"):
+            d["other_text"] = anonymize_text(d["other_text"])
+        deepening_clean.append(d)
+
     exit_reason_code = payload.exit_reason_code
     if not exit_reason_code and payload.exit_reason_category:
         exit_reason_code = EXIT_REASON_CODE_MAP.get(payload.exit_reason_category)
@@ -1388,6 +1421,7 @@ async def submit_survey(
         replacement_cost_eur  = replacement_cost_eur,
         full_result           = full_result,
         scoring_version       = scoring_version,
+        deepening_responses   = deepening_clean or None,
     )
 
     # AVG data minimalisatie: jaarlijks salaris is niet langer nodig na scoring.
