@@ -884,14 +884,14 @@ const raw = sessionStorage.getItem(key);
       // met quotes mag nooit in deze attribute-selectors belanden.
       if (name.indexOf("dp_") === 0) return;
       if (Array.isArray(val)) {
-        val.forEach(entry => {
-          const checkbox = form.querySelector(`input[type="checkbox"][name="${name}"][value="${entry}"]`);
-          if (checkbox) checkbox.checked = true;
+        form.querySelectorAll(`input[type="checkbox"][name="${name}"]`).forEach(checkbox => {
+          if (val.indexOf(checkbox.value) !== -1) checkbox.checked = true;
         });
         return;
       }
-      const radio = form.querySelector(`input[type="radio"][name="${name}"][value="${val}"]`);
-      if (radio) radio.checked = true;
+      form.querySelectorAll(`input[type="radio"][name="${name}"]`).forEach(radio => {
+        if (radio.value === val) radio.checked = true;
+      });
       // Restore selects
       const sel = form.querySelector(`select[name="${name}"]`);
       if (sel) sel.value = val;
