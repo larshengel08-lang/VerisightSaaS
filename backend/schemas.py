@@ -289,6 +289,29 @@ class ContactRequestUpdate(BaseModel):
 # Survey submission (from the HTML survey form)
 # ---------------------------------------------------------------------------
 
+class DeepeningEntry(BaseModel):
+    """Eén verdiepingsantwoord (spec: docs/superpowers/specs/2026-07-03-verdiepingsvragen-design.md §5)."""
+    factor_key: str
+    question_set_version: str
+    status: Literal["answered", "skipped"]
+    primary: Optional[str] = None
+    secondary: Optional[str] = None
+    other_text: Optional[str] = Field(None, max_length=200)
+
+    @model_validator(mode="after")
+    def _validate_choices(self) -> "DeepeningEntry":
+        if self.status == "answered" and not self.primary:
+            raise ValueError("answered vereist een hoofdkeuze")
+        if self.status == "skipped" and (self.primary or self.secondary or self.other_text):
+            raise ValueError("skipped mag geen keuzes bevatten")
+        if self.secondary and self.secondary == self.primary:
+            raise ValueError("meespelende keuze moet verschillen van hoofdkeuze")
+        if self.other_text:
+            if not any(k and k.endswith("_other") for k in (self.primary, self.secondary)):
+                raise ValueError("other_text alleen bij een *_other keuze")
+        return self
+
+
 class SurveySubmit(BaseModel):
     """
     Body POSTed when a respondent submits the survey.
@@ -324,6 +347,9 @@ class SurveySubmit(BaseModel):
 
     # Turnover intention (retention only)
     turnover_intention_raw: dict[str, int] = Field(default_factory=dict)
+
+    # Module F — verdiepingsvragen (optioneel; alleen exit/retention)
+    deepening_responses: list[DeepeningEntry] = Field(default_factory=list)
 
     @field_validator("sdt_raw")
     @classmethod

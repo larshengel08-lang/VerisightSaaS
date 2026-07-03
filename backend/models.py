@@ -263,6 +263,9 @@ class SurveyResponse(Base):
     open_text_raw: Mapped[str | None] = mapped_column(Text, nullable=True)
     open_text_analysis: Mapped[str | None] = mapped_column(Text, nullable=True)   # LLM output
 
+    # Verdiepingsvragen (spec 2026-07-03): [{factor_key, question_set_version, status, primary, secondary, other_text}]
+    deepening_responses: Mapped[list | None] = mapped_column(JSON, nullable=True)
+
     # ------------------------------------------------------------------
     # UWES-3 (retention surveys only)
     # ------------------------------------------------------------------

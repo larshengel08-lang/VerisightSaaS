@@ -10,6 +10,7 @@ Parallel pad naast report.py. report.py blijft onaangeroerd.
 
 from __future__ import annotations
 
+import logging
 import math
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
@@ -21,6 +22,11 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 
 from backend.models import Campaign, Respondent, SurveyResponse
 from backend.report_css import build_css, RAG_HIGH, RAG_MID, RAG_LOW
+from backend.products.shared.deepening import (
+    agenda_enrichment,
+    aggregate_deepening,
+    get_deepening_sets,
+)
 from backend.products.shared.registry import get_product_module
 from backend.scan_definitions import get_scan_definition
 from backend.scoring import (
@@ -39,6 +45,8 @@ from backend.scoring_config import (
 )
 
 # ─── Constanten ───────────────────────────────────────────────────────────────
+
+logger = logging.getLogger(__name__)
 
 MIN_QUOTES_N = 5
 MAX_QUOTES   = 5
@@ -530,6 +538,96 @@ def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: st
 </div>"""
 
 
+def _deepening_campaign_active(deepening_agg: dict) -> bool:
+    """Campagne-niveau gate: alleen campagnes waar de verdiepingsfeature echt
+    draaide (ergens offered > 0) tonen verdiepingsblokken. Historische
+    (pre-feature) rapporten blijven zo ongewijzigd; binnen een actieve
+    campagne blijft de keten per factor volledig, ook bij offered=0
+    (cap-verdrongen) — dat is de 6.1-transparantie."""
+    return any(agg.get("offered", 0) > 0 for agg in deepening_agg.values())
+
+
+def _deepening_option_texts(scan_type: str, factor_key: str) -> dict[str, str]:
+    return {o["key"]: o["text"]
+            for o in get_deepening_sets(scan_type)[factor_key]["options"]}
+
+
+def _lc(label: str) -> str:
+    """Factorlabel mid-zin: eerste letter lowercase."""
+    return label[:1].lower() + label[1:] if label else label
+
+
+def _deepening_chain(agg: dict, scan_type: str, factor_key: str) -> str:
+    """Noemer-keten (spec 6.1): getriggerd -> aangeboden -> beantwoord."""
+    return (f"Van de {agg['triggered']} respondenten met een verdieptrigger op "
+            f"{_lc(_fl(factor_key, scan_type))} kregen {agg['offered']} de "
+            f"verdiepingsvraag; {agg['answered']} beantwoordden die.")
+
+
+def _deepening_block(agg: dict, scan_type: str, factor_key: str) -> str:
+    """Toelichtingsblok onder een factor (spec 6.1 + 6.2), gestaffeld op n=answered."""
+    if not agg.get("triggered"):
+        return ""
+    answered = agg.get("answered", 0)
+    opt_text = _deepening_option_texts(scan_type, factor_key)
+    chain = _deepening_chain(agg, scan_type, factor_key)
+
+    if answered < 5:
+        body = ('<p style="font-size:9px;color:#64748B;margin:6px 0 0;">'
+                'Te weinig verdiepingsantwoorden om een verdeling te tonen. '
+                'Bespreek dit onderwerp in de managementbespreking.</p>')
+    else:
+        ranked = sorted((agg.get("primary_counts") or {}).items(),
+                        key=lambda kv: (-kv[1], kv[0]))
+        rows = "".join(
+            f'<tr><td class="iq">{_h(opt_text.get(key, key))}</td>'
+            f'<td class="is" style="color:#0D1B2A;">'
+            f'{f"{round(cnt / answered * 100)}% ({cnt})" if answered >= 10 else cnt}'
+            f'</td></tr>'
+            for key, cnt in ranked)
+        body = f'<table class="item-tbl" style="margin-top:6px;">{rows}</table>'
+        if answered <= 9:
+            body += ('<p style="font-size:9px;color:#92400E;margin:4px 0 0;">'
+                     'Beperkte antwoordbasis &mdash; gebruik dit als gesprekshaakje, '
+                     'niet als conclusie.</p>')
+
+    sec = agg.get("secondary_counts") or {}
+    sec_line = ""
+    if sum(sec.values()) >= 5:
+        top2 = sorted(sec.items(), key=lambda kv: (-kv[1], kv[0]))[:2]
+        texts = [opt_text.get(k, k) for k, _ in top2]
+        joined = texts[0] if len(texts) == 1 else f"{texts[0]} en {texts[1]}"
+        sec_line = (f'<p style="font-size:9px;color:#64748B;margin:6px 0 0;">'
+                    f'Daarnaast werden vooral {_h(joined)} genoemd.</p>')
+
+    return (f'<div class="card"><span class="eyebrow">Welke toelichting respondenten kozen</span>'
+            f'<p style="font-size:9.5px;margin:4px 0 0;">{_h(chain)}</p>'
+            f'{body}{sec_line}</div>')
+
+
+def _deepening_mgmt_q(deep_agg: dict, scan_type: str, factor_key: str) -> str | None:
+    """Verrijkte gespreksagenda-regel (spec 6.3); None -> generieke regel blijft staan."""
+    agg = deep_agg.get(factor_key)
+    if not agg:
+        return None
+    enr = agenda_enrichment(agg, scan_type, factor_key)
+    if enr is None:
+        counts = agg.get("primary_counts") or {}
+        if counts and agg.get("answered", 0) >= 8:
+            top_key = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))[0][0]
+            if top_key.endswith("_other"):
+                logger.warning(
+                    "deepening: *_other is topoptie voor %s - optieset review nodig",
+                    factor_key)
+        return None
+    opt_text = _deepening_option_texts(scan_type, factor_key)
+    return (f"Van de {agg['triggered']} respondenten met een verdieptrigger op "
+            f"{_lc(_fl(factor_key, scan_type))} beantwoordden {enr['answered']} de "
+            f"verdieping; {enr['count']} kozen "
+            f"'{opt_text.get(enr['option_key'], enr['option_key'])}' als belangrijkste "
+            f"toelichting. Gespreksvraag: {enr['agenda_question']}")
+
+
 def _trust_page(scan_type: str = "exit") -> str:
     """Product-specifieke methodiekpagina — nooit gedeelde ExitScan-copy buiten ExitScan."""
     if scan_type == "retention":
@@ -794,6 +892,16 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
     raw_texts  = [r.open_text_raw for r in responses if r.open_text_raw and r.open_text_raw.strip()]
     open_texts = list(dict.fromkeys(anonymize_text(t) for t in raw_texts))
 
+    # Verdiepingsvragen (spec 6): alleen exit/retention hebben verdiepingsdata.
+    deepening_agg: dict[str, Any] = {}
+    if scan_type in ("exit", "retention"):
+        deepening_agg = aggregate_deepening(
+            [(r.org_raw or {}, r.deepening_responses or []) for r in responses],
+            scan_type)
+        if not _deepening_campaign_active(deepening_agg):
+            # Pre-feature campagne: nergens een verdieping aangeboden -> geen blokken.
+            deepening_agg = {}
+
     is_retention      = scan_type == "retention"
     retention_profile = None
     if is_retention and avg_risk is not None:
@@ -858,6 +966,7 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
         sdt_item_avgs=sdt_item_avgs, org_item_avgs=org_item_avgs,
         exit_r_dist=exit_r_dist, cont_dist=cont_dist,
         prev_dist=prev_dist, open_texts=open_texts,
+        deepening_agg=deepening_agg,
         retention_profile=retention_profile,
         exit_pbs=exit_pbs, ret_pbs=ret_pbs, msp=msp, nsp=nsp,
         factor_items_map=factor_items_map, sdt_items=sdt_items,
@@ -1176,11 +1285,14 @@ def render_exit_report_html(data: dict) -> str:
     _code_to_count = {r["code"]: r["count"] for r in data["exit_r_dist"]}
     exit_code_counts = {fk: _code_to_count.get(FACTOR_EXIT_CODE.get(fk), 0) for fk in fa}
     priority_fkeys = _select_priority_factors(fa, exit_code_counts, max_n=3)
+    deep_agg = data.get("deepening_agg") or {}
+    _enriched_q = (_deepening_mgmt_q(deep_agg, "exit", priority_fkeys[0])
+                   if priority_fkeys else None)
 
     s += _eerste_managementspoor(
         primary_theme=nsp.get("first_decision") or (top_flabels[0] if top_flabels else "het leidende thema"),
         second_point=top_flabels[1] if len(top_flabels) > 1 else "",
-        mgmt_q=_mgmt_q(priority_fkeys[0], "exit") if priority_fkeys else (nsp.get("first_decision") or ""),
+        mgmt_q=_enriched_q or (_mgmt_q(priority_fkeys[0], "exit") if priority_fkeys else (nsp.get("first_decision") or "")),
         owner=nsp.get("first_owner") or "HR + verantwoordelijk management",
         review_when=nsp.get("review_moment") or "bij de volgende meting",
     )
@@ -1235,6 +1347,9 @@ def render_exit_report_html(data: dict) -> str:
         mgmt_block = (f'<div class="mgmt-anchor"><div class="ma-label">Eerste managementvraag</div>'
                       f'<p>{_h(mgmt_q)}</p></div>'
                       if mgmt_q else "")
+        # ── Toelichtingsblok verdiepingsvragen (spec 6.2) ──
+        deep_block = (_deepening_block(deep_agg[fk], "exit", fk)
+                      if fk in deep_agg else "")
         return f"""<div class="pb sec">
   <span class="slabel">Verdieping &mdash; {_h(lbl)}</span>
   <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&mdash; {_h(fl_)}</span></h2>
@@ -1244,6 +1359,7 @@ def render_exit_report_html(data: dict) -> str:
   {high_card}
   <h3>Alle items in deze factor</h3>
   <table class="item-tbl">{rows}</table>
+  {deep_block}
   {quote_block}
 </div>"""
 
@@ -1525,10 +1641,13 @@ def render_retention_report_html(data: dict) -> str:
 
     # ── Eerste managementspoor (p.06 — na data, vóór verdieping) ─────────────
     _ret_priority_fkeys = _select_priority_factors(fa, {}, max_n=3)
+    deep_agg = data.get("deepening_agg") or {}
+    _enriched_q = (_deepening_mgmt_q(deep_agg, ST, _ret_priority_fkeys[0])
+                   if _ret_priority_fkeys else None)
     s += _eerste_managementspoor(
         primary_theme=nsp.get("first_decision") or (low_lbl if low_lbl else "het leidende behoudsthema"),
         second_point=_fl(sorted_f[1][0], ST) if len(sorted_f) > 1 else "",
-        mgmt_q=_mgmt_q(_ret_priority_fkeys[0], ST) if _ret_priority_fkeys else (nsp.get("first_decision") or ""),
+        mgmt_q=_enriched_q or (_mgmt_q(_ret_priority_fkeys[0], ST) if _ret_priority_fkeys else (nsp.get("first_decision") or "")),
         owner=nsp.get("first_owner") or "HR + verantwoordelijk management",
         review_when=nsp.get("review_moment") or "bij de volgende meting",
     )
@@ -1571,6 +1690,9 @@ def render_retention_report_html(data: dict) -> str:
                        f'</div>' if quote_txt else "")
         mgmt_block  = (f'<div class="mgmt-anchor"><div class="ma-label">Eerste managementvraag</div>'
                        f'<p>{_h(mq_)}</p></div>' if mq_ else "")
+        # ── Toelichtingsblok verdiepingsvragen (spec 6.2) ──
+        deep_block = (_deepening_block(deep_agg[fk], ST, fk)
+                      if fk in deep_agg else "")
         return f"""<div class="pb sec">
   <span class="slabel">Verdieping &mdash; {_h(lbl)}</span>
   <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&mdash; {_h(fl_)}</span></h2>
@@ -1579,6 +1701,7 @@ def render_retention_report_html(data: dict) -> str:
   {high_card}
   <h3>Alle items in deze factor</h3>
   <table class="item-tbl">{rows}</table>
+  {deep_block}
   {quote_block}
 </div>"""
 
