@@ -1,4 +1,6 @@
 {% if deepening_sets %}
+{# step_dp loopt in lockstep met dp_offset/step_d in survey.html: deze stap volgt
+   direct op de org-stap (3 bij exit, 2 anders); latere stappen schuiven daar +1 op. #}
 {% set step_dp = 4 if scan_type == "exit" else 3 %}
 <div class="step" data-step="{{ step_dp }}" data-label="Verduidelijking" id="deepening-step">
   <div class="card">

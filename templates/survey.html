@@ -742,11 +742,18 @@
   }
 
   function applyDeepeningValue (name, val) {
+    // Vrije tekst (other_text) kan quotes/backslashes bevatten; nooit in een
+    // attribute-selector interpoleren — match waarden in JS.
     if (!deepBlocks) return;
-    const radio = deepBlocks.querySelector(`input[type="radio"][name="${name}"][value="${val}"]`);
-    if (radio) { radio.checked = true; return; }
-    const inp = deepBlocks.querySelector(`input[type="text"][name="${name}"], input[type="hidden"][name="${name}"]`);
-    if (inp) inp.value = val;
+    for (const inp of deepBlocks.querySelectorAll("input")) {
+      if (inp.name !== name) continue;
+      if (inp.type === "radio") {
+        if (inp.value === val) { inp.checked = true; return; }
+      } else {
+        inp.value = val;
+        return;
+      }
+    }
   }
 
   function syncDeepeningBlock (block) {
@@ -849,7 +856,10 @@
       if (ta.name && ta.value) saved.data[ta.name] = ta.value;
     });
     // Collect text inputs + persistente hidden velden (verduidelijkingsstap)
-    form.querySelectorAll('input[type="text"], input[type="hidden"][data-persist]').forEach(inp => {
+    form.querySelectorAll('input[type="text"]').forEach(inp => {
+      if (inp.name && inp.value) saved.data[inp.name] = inp.value;
+    });
+    form.querySelectorAll('input[type="hidden"][data-persist]').forEach(inp => {
       if (inp.name) saved.data[inp.name] = inp.value;
     });
 try { sessionStorage.setItem(key, JSON.stringify(saved)); } catch (e) {}
@@ -870,6 +880,9 @@ const raw = sessionStorage.getItem(key);
 
     // Restore radio buttons
     Object.entries(data).forEach(([name, val]) => {
+      // Verdiepingsvelden (dp_*) worden hieronder apart hersteld; vrije tekst
+      // met quotes mag nooit in deze attribute-selectors belanden.
+      if (name.indexOf("dp_") === 0) return;
       if (Array.isArray(val)) {
         val.forEach(entry => {
           const checkbox = form.querySelector(`input[type="checkbox"][name="${name}"][value="${entry}"]`);
