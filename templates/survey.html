@@ -518,10 +518,23 @@
     return -1;
   }
 
+  function syncCardTitles (vis) {
+    // Server rendert vaste "Stap X"-prefixen in kaarttitels; wanneer de
+    // verduidelijkingsstap wordt overgeslagen, hernummeren we op zichtbare volgorde
+    // zodat kaarttitel en voortgangslabel altijd overeenkomen.
+    vis.forEach((stepEl, i) => {
+      const title = stepEl.querySelector(".card-title");
+      if (!title) return;
+      const renumbered = title.textContent.replace(/Stap \d+/, "Stap " + (i + 1));
+      if (renumbered !== title.textContent) title.textContent = renumbered;
+    });
+  }
+
   function updateProgress () {
     const vis = visibleSteps();
     const total = vis.length;
     totalSpan.textContent = total;
+    syncCardTitles(vis);
     const visIdx = Math.max(0, vis.indexOf(steps[currentStep]));
     const pct = Math.round((visIdx / total) * 100);
     fillBar.style.width = pct + "%";
