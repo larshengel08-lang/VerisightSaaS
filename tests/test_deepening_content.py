@@ -49,3 +49,19 @@ def test_exit_uses_past_tense_sample():
     exit_wl = get_deepening_sets("exit")["workload"]
     texts = " ".join(o["text"] for o in exit_wl["options"])
     assert "lag" in texts or "was" in texts or "maakten" in texts or "kostten" in texts
+
+
+def test_unknown_option_key_raises():
+    with pytest.raises(KeyError):
+        get_agenda_question("retention", "workload", "wl_bestaat_niet")
+
+
+def test_unknown_scan_type_raises():
+    with pytest.raises(ValueError):
+        get_deepening_sets("bogus")
+    with pytest.raises(ValueError):
+        get_agenda_question("bogus", "workload", "wl_volume")
+
+
+def test_other_option_agenda_is_none():
+    assert get_agenda_question("retention", "workload", "wl_other") is None

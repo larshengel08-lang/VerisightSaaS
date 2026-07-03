@@ -10,6 +10,7 @@ DEEPENING_FACTOR_KEYS = [
     "leadership", "culture", "growth", "compensation", "workload", "role_clarity",
 ]
 
+# Cap op aantal verdiepingen per respondent; gebruikt door triggerlogica (Task 2).
 DEEPENING_CAP = {"exit": 3, "retention": 2}
 
 DEEPENING_SETS: dict[str, dict[str, Any]] = {
@@ -384,6 +385,8 @@ DEEPENING_SETS: dict[str, dict[str, Any]] = {
 
 def get_deepening_sets(scan_type: str) -> dict[str, dict[str, Any]]:
     """Per factor: question_set_version, question, options (scan-specific text)."""
+    if scan_type not in DEEPENING_CAP:
+        raise ValueError(f"unknown scan_type {scan_type!r}")
     out: dict[str, dict[str, Any]] = {}
     for fk in DEEPENING_FACTOR_KEYS:
         raw = DEEPENING_SETS[fk]
@@ -396,7 +399,9 @@ def get_deepening_sets(scan_type: str) -> dict[str, dict[str, Any]]:
 
 
 def get_agenda_question(scan_type: str, factor_key: str, option_key: str) -> str | None:
-    for o in DEEPENING_SETS[factor_key]["options"]:
-        if o["key"] == option_key:
-            return o["agenda"]
-    return None
+    if scan_type not in DEEPENING_CAP:
+        raise ValueError(f"unknown scan_type {scan_type!r}")
+    options = {o["key"]: o["agenda"] for o in DEEPENING_SETS[factor_key]["options"]}
+    if option_key not in options:
+        raise KeyError(f"unknown option_key {option_key!r} for factor {factor_key!r}")
+    return options[option_key]
