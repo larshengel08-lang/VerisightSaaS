@@ -93,6 +93,13 @@ def test_enrichment_lead_of_exactly_2_passes():
     assert e is not None
 
 
+def test_enrichment_boundary_n8_top4_exact_50pct_lead2_passes():
+    # n=8: top 4 (exact 50%), second 2 (voorsprong exact 2) -> alle grenzen inclusief
+    e = agenda_enrichment(_agg({"wl_recovery": 4, "wl_volume": 2}, answered=8), "retention", "workload")
+    assert e is not None
+    assert e["option_key"] == "wl_recovery" and e["count"] == 4 and e["answered"] == 8
+
+
 def test_enrichment_blocked_when_other_is_top():
     assert agenda_enrichment(_agg({"wl_other": 6, "wl_volume": 2}), "retention", "workload") is None
 

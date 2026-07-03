@@ -444,6 +444,9 @@ def aggregate_deepening(
     rows: per respondent (org_raw, deepening_responses).
     triggered = trigger vuurde (ongeacht cap); offered = entry aanwezig;
     answered/skipped = status; counts alleen over answered.
+
+    NB: offered > triggered is mogelijk bij historische data (bijv. gewijzigde
+    triggerregels of optiesets) en wordt bewust getolereerd.
     """
     if scan_type not in DEEPENING_CAP:
         raise ValueError(f"unknown scan_type {scan_type!r}")
@@ -483,6 +486,8 @@ def agenda_enrichment(agg: dict[str, Any], scan_type: str, factor_key: str) -> d
     second_n = ranked[1][1] if len(ranked) > 1 else 0
     if top_key.endswith("_other"):
         return None
+    # Deler is `answered` per spec 6.1 ("percentages altijd over beantwoorders"),
+    # bewust conservatiever dan de "hoofdkeuzes"-formulering in spec 6.3.
     if top_n < 4 or top_n / n < 0.5 or top_n - second_n < 2:
         return None
     return {
