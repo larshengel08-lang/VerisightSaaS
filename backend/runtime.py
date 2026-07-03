@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hmac
 import logging
 import os
 
@@ -31,11 +32,15 @@ def validate_runtime_config(*, is_production: bool) -> None:
 
 
 def require_backend_admin_token(x_admin_token: str | None, *, is_production: bool) -> None:
-    if not is_production:
-        return
-
     configured = os.getenv("BACKEND_ADMIN_TOKEN")
     if not configured:
-        raise HTTPException(status_code=503, detail="Backend adminactie niet geconfigureerd.")
-    if x_admin_token != configured:
+        # Geen token geconfigureerd: buiten productie toegestaan (dev-gemak),
+        # in productie een misconfiguratie die fail-closed moet zijn.
+        if is_production:
+            raise HTTPException(status_code=503, detail="Backend adminactie niet geconfigureerd.")
+        return
+
+    # Token geconfigureerd: altijd afdwingen, ongeacht environment (fail-closed).
+    # Zo blijft auth actief zelfs als ENVIRONMENT ontbreekt/verkeerd gespeld is.
+    if not x_admin_token or not hmac.compare_digest(x_admin_token, configured):
         raise HTTPException(status_code=403, detail="Admin-token ontbreekt of is ongeldig.")
