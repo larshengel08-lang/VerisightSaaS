@@ -1,5 +1,5 @@
 """Rendering van het toelichtingsblok + agenda-verrijking in het HTML-rapport (spec 6.1-6.3)."""
-from backend.report_html import _deepening_block, _deepening_mgmt_q
+from backend.report_html import _deepening_block, _deepening_campaign_active, _deepening_mgmt_q
 
 
 def _agg(triggered=14, offered=13, answered=12, skipped=1, primary=None, secondary=None):
@@ -86,3 +86,21 @@ def test_mgmt_q_none_and_warning_when_other_is_top(caplog):
 
 def test_mgmt_q_none_for_missing_factor():
     assert _deepening_mgmt_q({}, "retention", "workload") is None
+
+
+# ── campagne-niveau gate (historische pre-feature campagnes) ─────────────────
+
+def test_campaign_gate_inactive_when_nothing_offered():
+    # Historische campagne: triggers uit org-scores maar nergens een verdieping
+    # aangeboden -> gate dicht, rapport blijft ongewijzigd.
+    agg = {"workload": _agg(5, 0, 0, 0), "growth": _agg(0, 0, 0, 0)}
+    assert _deepening_campaign_active(agg) is False
+
+
+def test_campaign_gate_active_block_renders_for_capped_factor():
+    # Feature-actieve campagne (offered>0 op growth): workload-blok met
+    # triggered>0/offered=0 (cap-verdrongen) rendert wel — volledige keten.
+    agg = {"workload": _agg(5, 0, 0, 0), "growth": _agg(6, 6, 6, 0, {"gr_time": 6})}
+    assert _deepening_campaign_active(agg) is True
+    html = _deepening_block(agg["workload"], "retention", "workload")
+    assert "Van de 5 respondenten" in html and "kregen 0" in html

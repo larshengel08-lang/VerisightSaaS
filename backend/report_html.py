@@ -538,6 +538,15 @@ def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: st
 </div>"""
 
 
+def _deepening_campaign_active(deepening_agg: dict) -> bool:
+    """Campagne-niveau gate: alleen campagnes waar de verdiepingsfeature echt
+    draaide (ergens offered > 0) tonen verdiepingsblokken. Historische
+    (pre-feature) rapporten blijven zo ongewijzigd; binnen een actieve
+    campagne blijft de keten per factor volledig, ook bij offered=0
+    (cap-verdrongen) — dat is de 6.1-transparantie."""
+    return any(agg.get("offered", 0) > 0 for agg in deepening_agg.values())
+
+
 def _deepening_option_texts(scan_type: str, factor_key: str) -> dict[str, str]:
     return {o["key"]: o["text"]
             for o in get_deepening_sets(scan_type)[factor_key]["options"]}
@@ -889,6 +898,9 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
         deepening_agg = aggregate_deepening(
             [(r.org_raw or {}, r.deepening_responses or []) for r in responses],
             scan_type)
+        if not _deepening_campaign_active(deepening_agg):
+            # Pre-feature campagne: nergens een verdieping aangeboden -> geen blokken.
+            deepening_agg = {}
 
     is_retention      = scan_type == "retention"
     retention_profile = None
