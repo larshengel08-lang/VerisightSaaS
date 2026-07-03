@@ -73,7 +73,7 @@ from backend.products.leadership.definition import DEFAULT_LEADERSHIP_MODULES
 from backend.products.onboarding.definition import DEFAULT_ONBOARDING_MODULES
 from backend.products.pulse.definition import DEFAULT_PULSE_MODULES
 from backend.products.team.definition import DEFAULT_TEAM_MODULES
-from backend.products.shared.deepening import compute_deepening_offers, get_deepening_sets
+from backend.products.shared.deepening import DEEPENING_CAP, compute_deepening_offers, get_deepening_sets
 from backend.products.shared.registry import get_product_module
 from backend.runtime import require_backend_admin_token, validate_runtime_config
 from backend.scan_definitions import get_scan_definition
@@ -1286,6 +1286,8 @@ async def serve_survey(
             "scan_type":       campaign.scan_type,
             "campaign_name":   campaign.name,
             "enabled_modules": enabled_modules,
+            "deepening_sets":  get_deepening_sets(campaign.scan_type) if campaign.scan_type in ("exit", "retention") else {},
+            "deepening_cap":   DEEPENING_CAP.get(campaign.scan_type, 0),
         },
     )
 

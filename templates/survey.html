@@ -341,6 +341,48 @@
       text-decoration: underline;
     }
 
+    /* ── Verduidelijkingsstap ────────────────────────────────── */
+    .checkbox-option input[type="radio"] {
+      margin-top: 3px;
+      accent-color: var(--brand);
+    }
+    .dp-subquestion {
+      font-size: 15px;
+      font-weight: 500;
+      margin: 18px 0 8px;
+    }
+    .dp-other { margin-top: 12px; }
+    .dp-other input[type="text"] {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--white);
+      transition: border-color var(--transition);
+    }
+    .dp-other input[type="text"]:focus {
+      outline: none;
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+    }
+    .dp-skip {
+      margin-top: 12px;
+      color: var(--muted);
+      background: transparent;
+      border: none;
+      padding: 0;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    .dp-skip:hover { color: var(--text); }
+    .dp-block { padding-bottom: 8px; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+    .dp-block:last-child { border-bottom: none; margin-bottom: 0; }
+
     /* ── Submit spinner ──────────────────────────────────────── */
     #submit-spinner {
       display: none;
@@ -413,8 +455,10 @@
     {% include "survey/exit-context.html" %}
     {% include "survey/shared-sdt.html" %}
     {% include "survey/shared-org.html" %}
+    {% include "survey/shared-deepening.html" %}
 
-    {% set step_d = 4 if scan_type == "exit" else 3 %}
+    {% set dp_offset = 1 if deepening_sets else 0 %}
+    {% set step_d = (4 if scan_type == "exit" else 3) + dp_offset %}
     <div class="step" data-step="{{ step_d }}" data-label="{% if scan_type == "retention" %}Behoudssignalen{% elif scan_type == "pulse" %}Pulse check-in{% else %}Afsluiting{% endif %}">
       <div class="card">
         <div class="card-title">Stap {{ step_d }} — {% if scan_type == "retention" %}Behoudssignalen{% elif scan_type == "pulse" %}Pulse check-in{% else %}Afsluiting{% endif %}</div>
@@ -456,13 +500,34 @@
   const totalSteps = steps.length;
   totalSpan.textContent = totalSteps;
 
+  function visibleSteps () {
+    return steps.filter(s => s.dataset.skipped !== "1");
+  }
+
+  function nextVisibleIndex (from) {
+    for (let i = from + 1; i < steps.length; i++) {
+      if (steps[i].dataset.skipped !== "1") return i;
+    }
+    return -1;
+  }
+
+  function prevVisibleIndex (from) {
+    for (let i = from - 1; i >= 0; i--) {
+      if (steps[i].dataset.skipped !== "1") return i;
+    }
+    return -1;
+  }
+
   function updateProgress () {
-    const pct = Math.round(((currentStep) / totalSteps) * 100);
+    const vis = visibleSteps();
+    const total = vis.length;
+    totalSpan.textContent = total;
+    const visIdx = Math.max(0, vis.indexOf(steps[currentStep]));
+    const pct = Math.round((visIdx / total) * 100);
     fillBar.style.width = pct + "%";
     pctLabel.textContent = pct + "% voortgang";
-    const stepNum = currentStep + 1;
-    const label   = steps[currentStep]?.dataset.label || "";
-    stepLabel.textContent = `Stap ${stepNum} van ${totalSteps}${label ? " — " + label : ""}`;
+    const label = steps[currentStep]?.dataset.label || "";
+    stepLabel.textContent = `Stap ${visIdx + 1} van ${total}${label ? " — " + label : ""}`;
   }
 
   function setFormStatus(message, type = "error") {
@@ -528,6 +593,216 @@
     return valid;
   }
 
+  function collectRadioGroup (groupName) {
+    const values = {};
+    form.querySelectorAll(`input[type="radio"][data-group="${groupName}"]:checked`).forEach((field) => {
+      if (field.name && field.value) {
+        values[field.name] = parseInt(field.value, 10);
+      }
+    });
+    return values;
+  }
+
+  // ── Verduidelijkingsstap (conditionele vervolgvragen) ───────────────────
+  // Poort 1:1 van backend/products/shared/deepening.py (server valideert opnieuw).
+
+  const DEEPENING_FACTOR_ORDER = ["leadership","culture","growth","compensation","workload","role_clarity"];
+  const deepStep   = document.getElementById("deepening-step");
+  const deepBlocks = document.getElementById("deepening-blocks");
+
+  function computeDeepeningOffers() {
+    if (!window.__DEEPENING_SETS || !Object.keys(window.__DEEPENING_SETS).length) return [];
+    const orgRaw = collectRadioGroup("org");
+    const triggered = [];
+    DEEPENING_FACTOR_ORDER.forEach((fk, idx) => {
+      const items = Object.entries(orgRaw)
+        .filter(([k]) => k.startsWith(fk + "_")).map(([, v]) => v);
+      if (!items.length) return;
+      const avg = items.reduce((a, b) => a + b, 0) / items.length;
+      const lowCount = items.filter(v => v <= 2).length;
+      const minV = Math.min(...items);
+      const trig = avg <= 2.5 || (minV === 1 && avg <= 3.5) || lowCount >= 2;
+      if (trig) triggered.push({ avg, lowCount, minV, idx, fk });
+    });
+    triggered.sort((a, b) => a.avg - b.avg || b.lowCount - a.lowCount || a.minV - b.minV || a.idx - b.idx);
+    return triggered.slice(0, window.__DEEPENING_CAP).map(t => t.fk);
+  }
+
+  function _dpOptionRow (name, key, text, checked) {
+    const label = document.createElement("label");
+    label.className = "checkbox-option";
+    label.dataset.optionKey = key;
+    const input = document.createElement("input");
+    input.type = "radio";
+    input.name = name;
+    input.value = key;
+    input.checked = !!checked;
+    const span = document.createElement("span");
+    span.textContent = text;
+    label.appendChild(input);
+    label.appendChild(span);
+    return label;
+  }
+
+  function renderDeepeningBlocks (offers) {
+    if (!deepBlocks) return;
+    // Bewaar eerder ingevulde waarden voor factoren die aangeboden blijven.
+    const prev = {};
+    deepBlocks.querySelectorAll("input").forEach(inp => {
+      if (!inp.name) return;
+      if (inp.type === "radio") { if (inp.checked) prev[inp.name] = inp.value; }
+      else prev[inp.name] = inp.value;
+    });
+    deepBlocks.innerHTML = "";
+
+    offers.forEach(fk => {
+      const set = window.__DEEPENING_SETS[fk];
+      if (!set) return;
+      const block = document.createElement("div");
+      block.className = "question-block dp-block";
+      block.dataset.factor = fk;
+
+      const q = document.createElement("div");
+      q.className = "question-text";
+      q.textContent = set.question;
+      block.appendChild(q);
+
+      const body = document.createElement("div");
+      body.className = "dp-body";
+
+      const primaryList = document.createElement("div");
+      primaryList.className = "checkbox-grid dp-primary";
+      set.options.forEach(opt => {
+        primaryList.appendChild(_dpOptionRow(`dp_${fk}_primary`, opt.key, opt.text, false));
+      });
+      body.appendChild(primaryList);
+
+      const subQ = document.createElement("div");
+      subQ.className = "dp-subquestion";
+      subQ.textContent = "Speelt er daarnaast nog iets mee?";
+      body.appendChild(subQ);
+
+      const secondaryList = document.createElement("div");
+      secondaryList.className = "checkbox-grid dp-secondary";
+      secondaryList.appendChild(_dpOptionRow(`dp_${fk}_secondary`, "", "Nee, dit was het", true));
+      set.options.forEach(opt => {
+        secondaryList.appendChild(_dpOptionRow(`dp_${fk}_secondary`, opt.key, opt.text, false));
+      });
+      body.appendChild(secondaryList);
+
+      const other = document.createElement("div");
+      other.className = "dp-other";
+      other.style.display = "none";
+      const otherInput = document.createElement("input");
+      otherInput.type = "text";
+      otherInput.name = `dp_${fk}_other`;
+      otherInput.maxLength = 200;
+      otherInput.placeholder = "Licht kort toe…";
+      const otherHelp = document.createElement("div");
+      otherHelp.className = "helper-text";
+      otherHelp.textContent = "Noem liever geen namen, functietitels, teams of herkenbare situaties.";
+      other.appendChild(otherInput);
+      other.appendChild(otherHelp);
+      body.appendChild(other);
+
+      block.appendChild(body);
+
+      const skipBtn = document.createElement("button");
+      skipBtn.type = "button";
+      skipBtn.className = "dp-skip";
+      skipBtn.textContent = "Deze vraag liever overslaan";
+      block.appendChild(skipBtn);
+
+      const skippedFlag = document.createElement("input");
+      skippedFlag.type = "hidden";
+      skippedFlag.name = `dp_${fk}_skipped`;
+      skippedFlag.value = "0";
+      skippedFlag.dataset.persist = "1";
+      block.appendChild(skippedFlag);
+
+      deepBlocks.appendChild(block);
+    });
+
+    // Eerdere waarden terugzetten (alleen voor nog bestaande velden).
+    Object.entries(prev).forEach(([name, val]) => applyDeepeningValue(name, val));
+    deepBlocks.querySelectorAll(".dp-block").forEach(syncDeepeningBlock);
+  }
+
+  function applyDeepeningValue (name, val) {
+    if (!deepBlocks) return;
+    const radio = deepBlocks.querySelector(`input[type="radio"][name="${name}"][value="${val}"]`);
+    if (radio) { radio.checked = true; return; }
+    const inp = deepBlocks.querySelector(`input[type="text"][name="${name}"], input[type="hidden"][name="${name}"]`);
+    if (inp) inp.value = val;
+  }
+
+  function syncDeepeningBlock (block) {
+    const fk = block.dataset.factor;
+    const primary = block.querySelector(`input[name="dp_${fk}_primary"]:checked`);
+    const primaryVal = primary ? primary.value : null;
+
+    // Secundair: de gekozen hoofdoptie verbergen (mag niet gelijk zijn).
+    block.querySelectorAll(".dp-secondary label").forEach(label => {
+      const key = label.dataset.optionKey;
+      const same = key && key === primaryVal;
+      label.style.display = same ? "none" : "";
+      const inp = label.querySelector("input");
+      if (same && inp.checked) {
+        inp.checked = false;
+        const none = block.querySelector(`input[name="dp_${fk}_secondary"][value=""]`);
+        if (none) none.checked = true;
+      }
+    });
+
+    const secondary = block.querySelector(`input[name="dp_${fk}_secondary"]:checked`);
+    const secondaryVal = secondary ? secondary.value : "";
+    const otherSelected = (primaryVal && primaryVal.endsWith("_other")) || secondaryVal.endsWith("_other");
+    const otherWrap = block.querySelector(".dp-other");
+    if (otherWrap) otherWrap.style.display = otherSelected ? "" : "none";
+
+    // Overslaan-status
+    const flag = block.querySelector(`input[name="dp_${fk}_skipped"]`);
+    const skipped = flag && flag.value === "1";
+    const body = block.querySelector(".dp-body");
+    const skipBtn = block.querySelector(".dp-skip");
+    if (body) body.style.display = skipped ? "none" : "";
+    if (skipBtn) skipBtn.textContent = skipped ? "Toch beantwoorden" : "Deze vraag liever overslaan";
+  }
+
+  function updateDeepeningFromOrg () {
+    if (!deepStep) return;
+    const offers = computeDeepeningOffers();
+    if (offers.length) {
+      renderDeepeningBlocks(offers);
+      deepStep.dataset.skipped = "0";
+    } else {
+      if (deepBlocks) deepBlocks.innerHTML = "";
+      deepStep.dataset.skipped = "1";
+    }
+  }
+
+  if (deepStep) deepStep.dataset.skipped = "1";
+
+  if (deepBlocks) {
+    deepBlocks.addEventListener("change", (e) => {
+      const block = e.target.closest(".dp-block");
+      if (block) syncDeepeningBlock(block);
+      saveToStorage();
+    });
+    deepBlocks.addEventListener("input", () => saveToStorage());
+    deepBlocks.addEventListener("click", (e) => {
+      const btn = e.target.closest(".dp-skip");
+      if (!btn) return;
+      const block = btn.closest(".dp-block");
+      const fk = block.dataset.factor;
+      const flag = block.querySelector(`input[name="dp_${fk}_skipped"]`);
+      flag.value = flag.value === "1" ? "0" : "1";
+      syncDeepeningBlock(block);
+      saveToStorage();
+    });
+  }
+  // ─────────────────────────────────────────────────────────────────────────
+
 // ── sessionStorage persistence ───────────────────────────────────────────
   // Slaat antwoorden en huidige stap op bij elke navigatie.
   // Herstelt automatisch bij herbezoek (bijv. na refresh).
@@ -559,6 +834,10 @@
     // Collect textarea
     form.querySelectorAll('textarea').forEach(ta => {
       if (ta.name && ta.value) saved.data[ta.name] = ta.value;
+    });
+    // Collect text inputs + persistente hidden velden (verduidelijkingsstap)
+    form.querySelectorAll('input[type="text"], input[type="hidden"][data-persist]').forEach(inp => {
+      if (inp.name) saved.data[inp.name] = inp.value;
     });
 try { sessionStorage.setItem(key, JSON.stringify(saved)); } catch (e) {}
   }
@@ -595,6 +874,16 @@ const raw = sessionStorage.getItem(key);
       if (ta) ta.value = val;
     });
 
+    // Verduidelijkingsstap: eerst blokken opnieuw afleiden uit de org-antwoorden,
+    // daarna de opgeslagen verdiepingsvelden terugzetten.
+    if (deepStep) {
+      updateDeepeningFromOrg();
+      Object.entries(data).forEach(([name, val]) => {
+        if (name.indexOf("dp_") === 0 && !Array.isArray(val)) applyDeepeningValue(name, val);
+      });
+      deepBlocks?.querySelectorAll(".dp-block").forEach(syncDeepeningBlock);
+    }
+
     // Jump to saved step (only if valid index)
     if (typeof step === 'number' && step > 0 && step < totalSteps) {
       showStep(step);
@@ -610,6 +899,10 @@ try { sessionStorage.removeItem(key); } catch (e) {}
   // ─────────────────────────────────────────────────────────────────────────
 
   function showStep (idx) {
+    if (steps[idx]?.dataset.skipped === "1") {
+      const fallback = nextVisibleIndex(idx);
+      idx = fallback !== -1 ? fallback : Math.max(0, prevVisibleIndex(idx));
+    }
     steps.forEach((s, i) => s.classList.toggle("active", i === idx));
     currentStep = idx;
     updateProgress();
@@ -621,11 +914,17 @@ try { sessionStorage.removeItem(key); } catch (e) {}
   document.querySelectorAll(".next-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       clearFormStatus();
-      if (validateStep(getActiveStep()) && currentStep < totalSteps - 1) {
-        showStep(currentStep + 1);
-      } else {
+      const active = getActiveStep();
+      if (!validateStep(active)) {
         setFormStatus("Controleer de gemarkeerde vragen voordat je doorgaat.");
+        return;
       }
+      // Verlaat de organisatiefactoren-stap: bepaal welke verduidelijkingen we tonen.
+      if (active.querySelector('input[type="radio"][data-group="org"]')) {
+        updateDeepeningFromOrg();
+      }
+      const ni = nextVisibleIndex(currentStep);
+      if (ni !== -1) showStep(ni);
     });
   });
 
@@ -633,7 +932,8 @@ try { sessionStorage.removeItem(key); } catch (e) {}
   document.querySelectorAll(".prev-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       clearFormStatus();
-      if (currentStep > 0) showStep(currentStep - 1);
+      const pi = prevVisibleIndex(currentStep);
+      if (pi !== -1) showStep(pi);
     });
   });
 
@@ -673,16 +973,6 @@ try { sessionStorage.removeItem(key); } catch (e) {}
     const data = Object.fromEntries(fd.entries());
     const contributingReasons = fd.getAll("contributing_reasons").filter(Boolean);
 
-    const collectRadioGroup = (groupName) => {
-      const values = {};
-      form.querySelectorAll(`input[type="radio"][data-group="${groupName}"]:checked`).forEach((field) => {
-        if (field.name && field.value) {
-          values[field.name] = parseInt(field.value, 10);
-        }
-      });
-      return values;
-    };
-
     const sdt_raw = collectRadioGroup("sdt");
     const org_raw = collectRadioGroup("org");
     const uwes_raw = collectRadioGroup("uwes");
@@ -709,6 +999,38 @@ try { sessionStorage.removeItem(key); } catch (e) {}
       uwes_raw,
       turnover_intention_raw:   ti_raw,
     };
+
+    // Verduidelijkingsantwoorden: één entry per gerenderd blok.
+    const deepening_responses = [];
+    deepBlocks?.querySelectorAll(".dp-block").forEach(block => {
+      const fk = block.dataset.factor;
+      const set = window.__DEEPENING_SETS?.[fk];
+      if (!set) return;
+      const flag = block.querySelector(`input[name="dp_${fk}_skipped"]`);
+      const primaryEl = block.querySelector(`input[name="dp_${fk}_primary"]:checked`);
+      const primaryVal = primaryEl ? primaryEl.value : null;
+      const base = {
+        factor_key: fk,
+        question_set_version: set.question_set_version,
+      };
+      if ((flag && flag.value === "1") || !primaryVal) {
+        // Expliciet overgeslagen, of doorgegaan zonder keuze → overgeslagen.
+        deepening_responses.push({ ...base, status: "skipped", primary: null, secondary: null, other_text: null });
+        return;
+      }
+      const secondaryEl = block.querySelector(`input[name="dp_${fk}_secondary"]:checked`);
+      const secondaryVal = secondaryEl && secondaryEl.value ? secondaryEl.value : null;
+      const otherSelected = primaryVal.endsWith("_other") || (secondaryVal ? secondaryVal.endsWith("_other") : false);
+      const otherRaw = block.querySelector(`input[name="dp_${fk}_other"]`)?.value.trim() || "";
+      deepening_responses.push({
+        ...base,
+        status: "answered",
+        primary: primaryVal,
+        secondary: secondaryVal,
+        other_text: otherSelected && otherRaw ? otherRaw : null,
+      });
+    });
+    if (deepening_responses.length) payload.deepening_responses = deepening_responses;
 
     try {
       const resp = await fetch("/survey/submit", {

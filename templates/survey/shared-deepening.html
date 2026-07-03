@@ -1,0 +1,21 @@
+{% if deepening_sets %}
+{% set step_dp = 4 if scan_type == "exit" else 3 %}
+<div class="step" data-step="{{ step_dp }}" data-label="Verduidelijking" id="deepening-step">
+  <div class="card">
+    <div class="card-title">Stap {{ step_dp }} — Korte verduidelijking</div>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:24px;">
+      Soms stellen we een korte verduidelijkingsvraag bij enkele onderwerpen. Je antwoord wordt
+      niet individueel teruggekoppeld; we tonen alleen groepsuitkomsten bij voldoende antwoorden.
+    </p>
+    <div id="deepening-blocks"></div>
+  </div>
+  <div class="nav-row">
+    <button type="button" class="btn btn-secondary prev-btn">← Vorige</button>
+    <button type="button" class="btn btn-primary next-btn">Volgende →</button>
+  </div>
+</div>
+<script>
+  window.__DEEPENING_SETS = {{ deepening_sets | tojson }};
+  window.__DEEPENING_CAP = {{ deepening_cap }};
+</script>
+{% endif %}
