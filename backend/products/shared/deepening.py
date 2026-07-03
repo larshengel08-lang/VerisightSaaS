@@ -435,6 +435,64 @@ def get_deepening_sets(scan_type: str) -> dict[str, dict[str, Any]]:
     return out
 
 
+def aggregate_deepening(
+    rows: list[tuple[dict[str, int], list[dict] | None]],
+    scan_type: str,
+) -> dict[str, dict[str, Any]]:
+    """Per factor de volledige noemer-keten (spec 6.1) + keuze-verdelingen.
+
+    rows: per respondent (org_raw, deepening_responses).
+    triggered = trigger vuurde (ongeacht cap); offered = entry aanwezig;
+    answered/skipped = status; counts alleen over answered.
+    """
+    if scan_type not in DEEPENING_CAP:
+        raise ValueError(f"unknown scan_type {scan_type!r}")
+    out: dict[str, dict[str, Any]] = {
+        fk: {"triggered": 0, "offered": 0, "answered": 0, "skipped": 0,
+             "primary_counts": {}, "secondary_counts": {}}
+        for fk in DEEPENING_FACTOR_KEYS
+    }
+    for org_raw, entries in rows:
+        for fk in DEEPENING_FACTOR_KEYS:
+            if _is_triggered(_factor_items(org_raw, fk)):
+                out[fk]["triggered"] += 1
+        for e in entries or []:
+            agg = out.get(e["factor_key"])
+            if agg is None:
+                continue
+            agg["offered"] += 1
+            if e["status"] == "answered":
+                agg["answered"] += 1
+                if e.get("primary"):
+                    agg["primary_counts"][e["primary"]] = agg["primary_counts"].get(e["primary"], 0) + 1
+                if e.get("secondary"):
+                    agg["secondary_counts"][e["secondary"]] = agg["secondary_counts"].get(e["secondary"], 0) + 1
+            else:
+                agg["skipped"] += 1
+    return out
+
+
+def agenda_enrichment(agg: dict[str, Any], scan_type: str, factor_key: str) -> dict[str, Any] | None:
+    """Spec 6.3: verrijking alleen bij n>=8, top >=50%, top >=4, voorsprong >=2, top niet *_other."""
+    n = agg["answered"]
+    counts = agg["primary_counts"]
+    if n < 8 or not counts:
+        return None
+    ranked = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
+    top_key, top_n = ranked[0]
+    second_n = ranked[1][1] if len(ranked) > 1 else 0
+    if top_key.endswith("_other"):
+        return None
+    if top_n < 4 or top_n / n < 0.5 or top_n - second_n < 2:
+        return None
+    return {
+        "option_key": top_key,
+        "count": top_n,
+        "answered": n,
+        "agenda_question": get_agenda_question(scan_type, factor_key, top_key),
+    }
+
+
 def get_agenda_question(scan_type: str, factor_key: str, option_key: str) -> str | None:
     if scan_type not in DEEPENING_CAP:
         raise ValueError(f"unknown scan_type {scan_type!r}")
