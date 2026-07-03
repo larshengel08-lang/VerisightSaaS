@@ -211,3 +211,22 @@ create policy "workspace_owners_and_admins_can_update_rows"
 create policy "workspace_owners_and_admins_can_delete_rows"
   on public.action_center_workspace_members for delete
   using (public.is_org_owner(org_id) or public.is_verisight_admin_user());
+
+-- ============================================================
+-- 7. contact_requests afdichten (lead-PII lek via anon key)
+-- ============================================================
+-- Zonder RLS is public.contact_requests met de publieke anon-key volledig
+-- leesbaar/schrijfbaar (default PostgREST-grants). De tabel bevat lead-PII
+-- (naam, work_email, organisatie, vrije-tekst vraag) + interne ops/commercie-
+-- velden. De contactform schrijft via de service-role admin-client en admin-
+-- views lezen via de FastAPI-backend (x-admin-token) — geen client-rol heeft
+-- toegang nodig. RLS aan zonder policy = deny-all voor anon/authenticated.
+do $$ begin
+  if exists (
+    select 1 from information_schema.tables
+    where table_schema = 'public' and table_name = 'contact_requests'
+  ) then
+    alter table public.contact_requests enable row level security;
+    revoke all on public.contact_requests from anon, authenticated;
+  end if;
+end $$;

@@ -1159,6 +1159,15 @@ alter table public.action_center_follow_through_mail_events enable row level sec
 alter table public.action_center_adoption_events enable row level security;
 alter table public.action_center_bounded_execution_events enable row level security;
 
+-- contact_requests bevat lead-PII (naam, work_email, organisatie, vrije-tekst
+-- vraag) + interne ops/commercie-velden. Geen enkele client-rol mag erbij: de
+-- contactform schrijft via de service-role admin-client (omzeilt RLS) en admin-
+-- views lezen via de FastAPI-backend met x-admin-token. RLS aan + géén policy =
+-- deny-all voor anon/authenticated. De revoke is belt-and-braces tegen de
+-- default PostgREST-grants op public-tabellen.
+alter table public.contact_requests enable row level security;
+revoke all on public.contact_requests from anon, authenticated;
+
 -- ── Hulpfuncties ─────────────────────────────────────────────────────────────
 
 -- is_org_member: iedereen die lid is van de org (owner, member, viewer)
