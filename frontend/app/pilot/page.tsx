@@ -52,9 +52,7 @@ export default function PilotPage() {
         {/* ── Hero ── */}
         <section
           style={{
-            background: T.white,
             padding: 'clamp(52px,6.5vw,80px) 0 clamp(48px,6vw,72px)',
-            borderBottom: `1px solid ${T.rule}`,
             position: 'relative',
             overflow: 'hidden',
           }}
@@ -101,7 +99,7 @@ export default function PilotPage() {
                 </a>
               </div>
               <div>
-                <div style={{ padding: '28px', background: T.paperSoft, border: `1px solid ${T.rule}` }}>
+                <div style={{ padding: '28px', background: T.white, borderTop: `3px solid ${AC.mid}` }}>
                   <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: AC.deep, marginBottom: 16 }}>
                     Founding pilot · kosteloos
                   </div>
@@ -111,8 +109,8 @@ export default function PilotPage() {
                     'Managementrapport met prioriteiten',
                     'Begeleide managementbespreking (60–90 min)',
                     'Eerste managementvraag en vervolgstap',
-                  ].map((item, i) => (
-                    <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '9px 0', borderTop: i > 0 ? `1px solid ${T.rule}` : 'none', fontSize: 13, color: T.inkSoft }}>
+                  ].map((item) => (
+                    <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '6px 0', fontSize: 13, color: T.inkSoft }}>
                       <div style={{ width: 4, height: 4, background: AC.mid, flexShrink: 0, marginTop: 5 }} />
                       {item}
                     </div>
@@ -127,7 +125,7 @@ export default function PilotPage() {
         </section>
 
         {/* ── Voorbeeld van de uitkomst ── */}
-        <section style={{ background: T.white, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
+        <section style={{ padding: 'clamp(56px,6vw,84px) 0' }}>
           <div style={SH}>
             <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_1fr] items-center">
               <div>
@@ -175,23 +173,23 @@ export default function PilotPage() {
         </section>
 
         {/* ── Wat we samen afspreken ── */}
-        <section style={{ background: T.paperSoft, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
+        <section style={{ padding: 'clamp(56px,6vw,84px) 0' }}>
           <div style={SH}>
-            <div style={{ maxWidth: '60ch', marginBottom: 28 }}>
+            <div style={{ maxWidth: '60ch', marginBottom: 24 }}>
               <div style={eyebrow}>Wat we samen afspreken</div>
               <p style={{ fontSize: 15, lineHeight: 1.72, color: T.inkSoft }}>
                 In ruil voor een volwaardig traject vragen we vooral je eerlijke blik. De rest is voorwaardelijk en altijd
                 met jouw expliciete goedkeuring.
               </p>
             </div>
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-x-12 gap-y-4 lg:grid-cols-2" style={{ maxWidth: 940 }}>
               {[
                 'Een eerlijk evaluatiegesprek na afloop.',
                 'Gerichte feedback op proces, rapport en de managementbespreking.',
                 'Toestemming om leerpunten geanonimiseerd te gebruiken voor verbetering.',
                 'Bij een positieve ervaring: toestemming voor een korte quote of geanonimiseerde case, altijd pas na expliciete goedkeuring.',
               ].map((text) => (
-                <div key={text} style={{ alignItems: 'flex-start', background: T.white, border: `1px solid ${T.rule}`, display: 'flex', gap: 12, padding: '18px 20px' }}>
+                <div key={text} style={{ alignItems: 'flex-start', display: 'flex', gap: 12 }}>
                   <div style={{ width: 6, height: 6, background: AC.deep, borderRadius: '50%', flexShrink: 0, marginTop: 8 }} />
                   <p style={{ fontSize: 14, lineHeight: 1.65, color: T.inkSoft }}>{text}</p>
                 </div>
@@ -201,14 +199,14 @@ export default function PilotPage() {
         </section>
 
         {/* ── Voor wie wel / niet ── */}
-        <section style={{ background: T.white, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
+        <section style={{ padding: 'clamp(56px,6vw,84px) 0' }}>
           <div style={SH}>
-            <div style={{ marginBottom: 28 }}>
+            <div style={{ marginBottom: 24 }}>
               <div style={eyebrow}>Voor wie deze pilot past</div>
             </div>
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <div style={{ padding: '28px', background: T.paperSoft, border: `1px solid ${T.rule}`, borderTop: `3px solid ${AC.mid}` }}>
-                <div style={{ fontSize: 13.5, fontWeight: 600, color: T.ink, marginBottom: 16 }}>Past wel</div>
+            <div className="grid grid-cols-1 gap-10 lg:grid-cols-2" style={{ maxWidth: 940 }}>
+              <div style={{ borderTop: `3px solid ${AC.mid}`, paddingTop: 18 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 600, color: T.ink, marginBottom: 12 }}>Past wel</div>
                 {[
                   'Een concreet vraagstuk rond behoud, vertrek of onboarding',
                   'Een interne sponsor in HR of directie',
@@ -222,8 +220,8 @@ export default function PilotPage() {
                   </div>
                 ))}
               </div>
-              <div style={{ padding: '28px', background: T.paperSoft, border: `1px solid ${T.rule}`, borderTop: `3px solid ${T.inkFaint}` }}>
-                <div style={{ fontSize: 13.5, fontWeight: 600, color: T.ink, marginBottom: 16 }}>Past niet</div>
+              <div style={{ borderTop: `3px solid ${T.inkFaint}`, paddingTop: 18 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 600, color: T.ink, marginBottom: 12 }}>Past niet</div>
                 {[
                   'Je zoekt vooral een gratis MTO',
                   'Je wilt individuele medewerkers beoordelen',
@@ -242,15 +240,15 @@ export default function PilotPage() {
         </section>
 
         {/* ── Scope & privacy ── */}
-        <section style={{ background: T.paperSoft, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
+        <section style={{ padding: 'clamp(56px,6vw,84px) 0 clamp(64px,7vw,96px)' }}>
           <div style={SH}>
-            <div style={{ maxWidth: '64ch', marginBottom: 22 }}>
+            <div style={{ maxWidth: '64ch', marginBottom: 24 }}>
               <div style={eyebrow}>Scope en spelregels</div>
               <p style={{ fontSize: 15, lineHeight: 1.72, color: T.inkSoft }}>
                 Een duidelijke afbakening houdt de pilot scherp voor ons allebei: één scan, geen open consultancytraject.
               </p>
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 22 }}>
+            <div className="grid grid-cols-1 gap-x-12 gap-y-2 lg:grid-cols-2" style={{ maxWidth: 940, marginBottom: 28 }}>
               {[
                 'Eén scan',
                 'Eén doelgroep / campagne',
@@ -261,12 +259,13 @@ export default function PilotPage() {
                 'Geen brede maatwerk-consultancy',
                 'Geen garantie op een specifieke uitkomst',
               ].map((text) => (
-                <span key={text} style={{ background: T.white, border: `1px solid ${T.rule}`, color: T.inkSoft, fontSize: 13, padding: '8px 14px' }}>
+                <div key={text} style={{ display: 'flex', gap: 10, fontSize: 13.5, color: T.inkSoft, lineHeight: 1.6, padding: '4px 0' }}>
+                  <div style={{ width: 4, height: 4, background: text.startsWith('Geen') ? T.inkFaint : AC.mid, flexShrink: 0, marginTop: 7 }} />
                   {text}
-                </span>
+                </div>
               ))}
             </div>
-            <div style={{ background: T.white, border: `1px solid ${T.rule}`, padding: '18px 20px', maxWidth: '70ch' }}>
+            <div style={{ borderLeft: `2px solid ${AC.mid}`, padding: '4px 0 4px 20px', maxWidth: '70ch' }}>
               <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: T.inkFaint, marginBottom: 8 }}>Privacy</div>
               <p style={{ fontSize: 13.5, color: T.inkMuted, lineHeight: 1.65 }}>
                 Rapportage blijft op groepsniveau. Voorbeeldcases of citaten gebruiken we alleen volledig geanonimiseerd of

@@ -38,10 +38,11 @@ const securityHeaders = [
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
-      // Supabase API + auth
-      `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://verisight-production.up.railway.app ${localSupabaseConnectSources.join(' ')}`.trim(),
+      // Supabase API + auth; GA4 collect-endpoints (incl. regionale hosts)
+      `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://verisight-production.up.railway.app https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com ${localSupabaseConnectSources.join(' ')}`.trim(),
       // Next.js dev runtime needs unsafe-eval for fast refresh and client hydration.
-      `script-src 'self' 'unsafe-inline'${isProduction ? '' : " 'unsafe-eval'"}`,
+      // googletagmanager.com is nodig voor het gtag.js-script (GA4).
+      `script-src 'self' 'unsafe-inline' https://www.googletagmanager.com${isProduction ? '' : " 'unsafe-eval'"}`,
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob:",
