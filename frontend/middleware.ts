@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { getCanonicalHostRedirectUrl } from '@/lib/canonical-host'
 import { shouldBypassSupabaseForRequest } from '@/lib/middleware-auth'
 import {
+  isProtectedAppRoutePath,
   isPublicApiRoutePath,
   isPublicRoutePath,
 } from '@/lib/public-route-access'
@@ -109,9 +110,13 @@ export async function middleware(request: NextRequest) {
 
   const isPublicRoute = isPublicRoutePath(pathname)
   const isPublicApiRoute = isPublicApiRoutePath(pathname)
+  const isProtectedAppRoute = isProtectedAppRoutePath(pathname) && !isPublicRoute
+  const isApiRoute = pathname.startsWith('/api')
 
-  // Niet ingelogd + beveiligde route -> login
-  if (!user && !isPublicRoute && !isPublicApiRoute) {
+  // Niet ingelogd + beveiligde route -> login. Onbekende paden vallen door naar
+  // Next, dat de 404-pagina rendert; metadata-routes zoals /opengraph-image
+  // blijven zo bereikbaar voor link-previews.
+  if (!user && (isProtectedAppRoute || (isApiRoute && !isPublicApiRoute))) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)

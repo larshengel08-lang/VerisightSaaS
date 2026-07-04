@@ -16,6 +16,7 @@
     "@sentry/nextjs": "^8.0.0",
     "@supabase/ssr": "^0.10.0",
     "@supabase/supabase-js": "^2.101.1",
+    "@vercel/analytics": "^2.0.1",
     "gray-matter": "^4.0.3",
     "next": "15.5.14",
     "react": "19.1.0",

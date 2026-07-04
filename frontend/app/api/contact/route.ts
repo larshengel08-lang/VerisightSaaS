@@ -22,7 +22,7 @@ const CONTACT_TIMING_LABELS: Record<string, string> = {
   'zo-snel-mogelijk': 'Zo snel mogelijk',
   'deze-maand': 'Deze maand',
   'dit-kwartaal': 'Dit kwartaal',
-  orienterend: 'Orienterend',
+  orienterend: 'Oriënterend',
 }
 
 function isNonEmptyString(value: unknown, min = 1) {

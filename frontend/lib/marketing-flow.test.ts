@@ -22,8 +22,9 @@ import {
 
 describe('marketing flow defaults', () => {
   it('keeps the primary and secondary CTA labels aligned with the redesign', () => {
+    // retentiescan: lead-labeling volgt de retentie-geleide positionering (2026-07-04)
     expect(marketingPrimaryCta).toEqual({
-      href: buildContactHref({ routeInterest: 'exitscan', ctaSource: 'global_primary_cta' }),
+      href: buildContactHref({ routeInterest: 'retentiescan', ctaSource: 'global_primary_cta' }),
       label: 'Plan een kennismaking',
     })
     expect(marketingSecondaryCta).toEqual({
@@ -47,7 +48,7 @@ describe('marketing flow defaults', () => {
     expect(marketingNavLinks).toEqual([
       { href: '/producten', label: 'Producten' },
       { href: '/producten#tarieven', label: 'Tarieven' },
-      { href: '/vertrouwen', label: 'Privacy' },
+      { href: '/vertrouwen', label: 'Vertrouwen' },
     ])
   })
 

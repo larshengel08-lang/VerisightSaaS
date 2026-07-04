@@ -21,7 +21,7 @@ const googleSiteVerification = process.env.GOOGLE_SITE_VERIFICATION
 
 export const metadata: Metadata = {
   title: {
-    default: 'Loep',
+    default: 'Loep | Begeleide analyse van behoud, vertrek en onboarding',
     template: '%s | Loep',
   },
   icons: {
@@ -29,30 +29,30 @@ export const metadata: Metadata = {
     shortcut: [{ url: '/icon.png', type: 'image/png' }],
   },
   description:
-    'Loep helpt HR-teams bij organisaties met 200 tot 1.000 medewerkers om vertrek te duiden met Loep Vertrek en behoud eerder zichtbaar te maken met Loep Behoud.',
+    'Loep helpt HR-teams bij organisaties met 100 tot 1.000 medewerkers zien waar behoud onder druk staat, waarom mensen vertrekken en hoe nieuwe medewerkers landen. Met Loep Behoud, Loep Vertrek en Loep Start: rapport en managementbespreking inbegrepen.',
   metadataBase: new URL('https://www.getloep.nl'),
   openGraph: {
     type: 'website',
     locale: 'nl_NL',
     url: 'https://www.getloep.nl',
     siteName: 'Loep',
-    title: 'Loep',
+    title: 'Loep | Begeleide analyse van behoud, vertrek en onboarding',
     description:
-      'Begrijp waarom medewerkers vertrekken en zie eerder waar behoud onder druk staat. Loep levert Loep Vertrek en Loep Behoud in een begeleide productvorm.',
+      'Zie eerder waar behoud onder druk staat, begrijp waarom medewerkers vertrekken en volg hoe nieuwe mensen landen. Begeleide analyse met rapport en managementbespreking.',
     images: [
       {
         url: '/opengraph-image',
         width: 1200,
         height: 630,
-        alt: 'Loep productportfolio met Loep Vertrek en Loep Behoud',
+        alt: 'Loep productportfolio met Loep Behoud, Loep Vertrek en Loep Start',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Loep',
+    title: 'Loep | Begeleide analyse van behoud, vertrek en onboarding',
     description:
-      'Begrijp waarom medewerkers vertrekken en zie eerder waar behoud onder druk staat. Loep levert Loep Vertrek en Loep Behoud in een begeleide productvorm.',
+      'Zie eerder waar behoud onder druk staat, begrijp waarom medewerkers vertrekken en volg hoe nieuwe mensen landen. Begeleide analyse met rapport en managementbespreking.',
     images: ['/opengraph-image'],
   },
   robots: {
@@ -74,7 +74,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     url: 'https://www.getloep.nl',
     logo: 'https://www.getloep.nl/icon.png',
     description:
-      'Loep helpt HR-teams bij organisaties met 200 tot 1.000 medewerkers om vertrek te duiden met Loep Vertrek en behoud eerder zichtbaar te maken met Loep Behoud.',
+      'Loep helpt HR-teams bij organisaties met 100 tot 1.000 medewerkers zien waar behoud onder druk staat, waarom mensen vertrekken en hoe nieuwe medewerkers landen.',
     areaServed: {
       '@type': 'Country',
       name: 'Nederland',

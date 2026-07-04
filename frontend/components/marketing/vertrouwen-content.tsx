@@ -330,18 +330,18 @@ function PrivacySection() {
 }
 
 function ContactSection() {
-  const kennismakingHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'trust_closing_cta' })
+  const kennismakingHref = buildContactHref({ routeInterest: 'nog-onzeker', ctaSource: 'trust_closing_cta' })
 
   return (
     <MarketingClosingCta
       href={kennismakingHref}
       sectionIndex="05"
-      sectionLabel="Eerste route-inschatting"
+      sectionLabel="Kennismaking"
       backdropNumber={null}
       title="Toets of Loep"
       accentTitle="nu past."
       body="In een kort gesprek toetsen we productkeuze, privacy, timing en wat je als eerste terugkrijgt."
-      buttonLabel="Plan een eerste route-inschatting"
+      buttonLabel="Plan een kennismaking"
       showSectionMark={false}
     />
   )

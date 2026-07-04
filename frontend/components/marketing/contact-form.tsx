@@ -169,8 +169,8 @@ export function ContactForm({
 
   const labelClass = isLight ? 'text-slate-700' : 'text-slate-200'
   const inputClass = isLight
-    ? 'border-[#E5E0D6] bg-white text-slate-950 placeholder:text-slate-400 focus:border-[#C96A4B] focus:ring-[#C96A4B]/20'
-    : 'border-white/10 bg-slate-950/40 text-white placeholder:text-slate-400 focus:border-[#F3E4DA] focus:ring-[#C96A4B]/30'
+    ? 'border-[#E5E0D6] bg-white text-slate-950 placeholder:text-slate-400 focus:border-[#B9571F] focus:ring-[#B9571F]/20'
+    : 'border-white/10 bg-slate-950/40 text-white placeholder:text-slate-400 focus:border-[#F3E4DA] focus:ring-[#B9571F]/30'
   const helperClass = isLight ? 'text-slate-500' : 'text-slate-300'
   const successClass = isLight
     ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
@@ -179,8 +179,8 @@ export function ContactForm({
     ? 'border-red-200 bg-red-50 text-red-800'
     : 'border-red-400/30 bg-red-400/10 text-red-100'
   const buttonClass = isLight
-    ? 'bg-[#C96A4B] hover:bg-[#B85D41]'
-    : 'bg-[#C96A4B] hover:bg-[#B85D41]'
+    ? 'bg-[#B9571F] hover:bg-[#A34C1B]'
+    : 'bg-[#B9571F] hover:bg-[#A34C1B]'
   const panelSpacingClass = isCompact
     ? 'mb-5 rounded-[1.35rem] px-4 py-4 leading-6 sm:px-5 sm:py-5 sm:leading-7'
     : isSimplified
@@ -278,6 +278,7 @@ export function ContactForm({
             <option value="" disabled>
               Kies een range
             </option>
+            <option value="100 - 200 medewerkers">100 - 200 medewerkers</option>
             <option value="200 - 400 medewerkers">200 - 400 medewerkers</option>
             <option value="400 - 700 medewerkers">400 - 700 medewerkers</option>
             <option value="700 - 1.000 medewerkers">700 - 1.000 medewerkers</option>

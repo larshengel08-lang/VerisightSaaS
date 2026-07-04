@@ -76,7 +76,7 @@ export const CONTACT_DESIRED_TIMING_OPTIONS = [
   },
   {
     value: 'orienterend',
-    label: 'Orienterend',
+    label: 'Oriënterend',
     description: 'We willen eerst richting, aanpak en fit toetsen.',
   },
 ] as const
@@ -260,7 +260,7 @@ export function getContactRouteLabel(value: string | null | undefined) {
 }
 
 export function getContactDesiredTimingLabel(value: string | null | undefined) {
-  return timingOptionMap.get(normalizeContactDesiredTiming(value))?.label ?? 'Orienterend'
+  return timingOptionMap.get(normalizeContactDesiredTiming(value))?.label ?? 'Oriënterend'
 }
 
 export function getContactFirstStepLabel(value: string | null | undefined) {

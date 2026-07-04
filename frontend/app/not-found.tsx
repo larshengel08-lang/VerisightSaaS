@@ -1,46 +1,126 @@
-﻿import Link from 'next/link'
+import Link from 'next/link'
+
+const displayFont = "var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+const bodyFont = 'var(--font-ibm-plex-sans), system-ui, sans-serif'
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md text-center">
-
-        {/* Logo */}
-        <Link href="/" className="inline-block text-2xl font-bold text-blue-600 tracking-tight mb-10">
-          Loep
+    <div
+      style={{
+        minHeight: '100vh',
+        background: '#F4F1EA',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+      }}
+    >
+      <div style={{ width: '100%', maxWidth: 520, textAlign: 'center' }}>
+        <Link
+          href="/"
+          style={{
+            display: 'inline-block',
+            fontFamily: displayFont,
+            fontWeight: 800,
+            fontSize: 28,
+            letterSpacing: '-0.02em',
+            color: '#0D1B2A',
+            textDecoration: 'none',
+            marginBottom: 40,
+          }}
+        >
+          Loep<span style={{ color: '#E8A020' }}>.</span>
         </Link>
 
-        {/* Icon */}
-        <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">
-          ðŸ”
-        </div>
-
-        <h1 className="text-2xl font-bold text-gray-900 mb-3">Pagina niet gevonden</h1>
-        <p className="text-gray-500 mb-8 leading-relaxed">
-          De pagina die je zoekt bestaat niet of is verplaatst.
-          Controleer de URL of ga terug naar het dashboard.
+        <p
+          style={{
+            fontFamily: displayFont,
+            fontSize: 12,
+            fontWeight: 700,
+            letterSpacing: '0.14em',
+            textTransform: 'uppercase',
+            color: '#B9571F',
+            marginBottom: 14,
+          }}
+        >
+          Pagina niet gevonden
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+        <h1
+          style={{
+            fontFamily: displayFont,
+            fontWeight: 800,
+            fontSize: 'clamp(28px, 4.5vw, 40px)',
+            lineHeight: 1.05,
+            letterSpacing: '-0.025em',
+            color: '#0D1B2A',
+            marginBottom: 16,
+          }}
+        >
+          Deze pagina bestaat niet of is verplaatst.
+        </h1>
+
+        <p
+          style={{
+            fontFamily: bodyFont,
+            fontSize: 16,
+            lineHeight: 1.6,
+            color: '#4A6070',
+            marginBottom: 32,
+          }}
+        >
+          Controleer de URL, of bekijk welke scan bij je vraagstuk past.
+        </p>
+
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 12,
+            justifyContent: 'center',
+            marginBottom: 40,
+          }}
+        >
           <Link
-            href="/dashboard"
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-lg text-sm transition-colors"
+            href="/producten"
+            style={{
+              fontFamily: displayFont,
+              fontWeight: 700,
+              fontSize: 15,
+              color: '#FFFFFF',
+              background: '#B9571F',
+              borderRadius: 6,
+              padding: '13px 22px',
+              textDecoration: 'none',
+            }}
           >
-            â† Naar dashboard
+            Bekijk de producten
           </Link>
-          <a
-            href="mailto:hallo@getloep.nl"
-            className="bg-white hover:bg-gray-50 text-gray-700 font-semibold px-6 py-2.5 rounded-lg text-sm border border-gray-200 transition-colors"
+          <Link
+            href="/kennismaking"
+            style={{
+              fontFamily: displayFont,
+              fontWeight: 700,
+              fontSize: 15,
+              color: '#0D1B2A',
+              background: 'transparent',
+              border: '1px solid rgba(13,27,42,0.25)',
+              borderRadius: 6,
+              padding: '12px 22px',
+              textDecoration: 'none',
+            }}
           >
-            Contact opnemen
-          </a>
+            Plan een kennismaking
+          </Link>
         </div>
 
-        <p className="text-xs text-gray-400 mt-10">
-          Foutcode 404 · <Link href="/" className="hover:text-gray-600 transition-colors">Loep</Link>
+        <p style={{ fontFamily: bodyFont, fontSize: 13, color: '#8B95A0' }}>
+          Foutcode 404 ·{' '}
+          <a href="mailto:hallo@getloep.nl" style={{ color: '#4A6070' }}>
+            hallo@getloep.nl
+          </a>
         </p>
       </div>
     </div>
   )
 }
-

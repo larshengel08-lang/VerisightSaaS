@@ -6,12 +6,12 @@ import { PublicHeader } from '@/components/marketing/public-header'
 export const metadata: Metadata = {
   title: 'Kennismaking',
   description:
-    'Plan een korte intake om te bepalen welke eerste route het best past en welke eerste output daarna logisch is.',
+    'Plan een vrijblijvend gesprek van 20 minuten. We bekijken samen welk vraagstuk nu speelt en welke scan daar het beste bij past. Reactie binnen 1 werkdag.',
   alternates: { canonical: '/kennismaking' },
   openGraph: {
     title: 'Kennismaking | Loep',
     description:
-      'Plan een korte intake om te bepalen welke eerste route het best past en welke eerste output daarna logisch is.',
+      'Plan een vrijblijvend gesprek van 20 minuten. We bekijken samen welk vraagstuk nu speelt en welke scan daar het beste bij past. Reactie binnen 1 werkdag.',
     url: 'https://www.getloep.nl/kennismaking',
     images: ['/opengraph-image'],
   },
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Kennismaking | Loep',
     description:
-      'Plan een korte intake om te bepalen welke eerste route het best past en welke eerste output daarna logisch is.',
+      'Plan een vrijblijvend gesprek van 20 minuten. We bekijken samen welk vraagstuk nu speelt en welke scan daar het beste bij past. Reactie binnen 1 werkdag.',
     images: ['/opengraph-image'],
   },
 }

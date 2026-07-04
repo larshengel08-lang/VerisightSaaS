@@ -3,11 +3,11 @@ import { buildContactHref } from '@/lib/contact-funnel'
 export const marketingNavLinks = [
   { href: '/producten', label: 'Producten' },
   { href: '/producten#tarieven', label: 'Tarieven' },
-  { href: '/vertrouwen', label: 'Privacy' },
+  { href: '/vertrouwen', label: 'Vertrouwen' },
 ] as const
 
 export const marketingPrimaryCta = {
-  href: buildContactHref({ routeInterest: 'exitscan', ctaSource: 'global_primary_cta' }),
+  href: buildContactHref({ routeInterest: 'retentiescan', ctaSource: 'global_primary_cta' }),
   label: 'Plan een kennismaking',
 } as const
 
@@ -26,8 +26,10 @@ export const marketingFooterLinks = [
   { href: '/vertrouwen', label: 'Privacy' },
 ] as const
 
+// /vertrouwen staat als "Vertrouwen" in de navigatiekolom van de footer;
+// hier niet nogmaals onder een derde label ("Trust en privacy") om
+// naamsverwarring met "Privacybeleid" te voorkomen.
 export const marketingLegalLinks = [
-  { href: '/vertrouwen', label: 'Trust en privacy' },
   { href: '/privacy', label: 'Privacybeleid' },
   { href: '/voorwaarden', label: 'Algemene voorwaarden' },
   { href: '/dpa', label: 'Verwerkersovereenkomst' },
@@ -234,7 +236,7 @@ export const trustVerificationCards = [
   },
   {
     title: 'Waar publieke voorbeeldoutput stopt',
-    body: 'Loep Vertrek en Loep Behoud dragen de publieke voorbeeldrapporten. Andere routes worden publiek lichter toegelicht en niet als aparte samplebibliotheek uitgewerkt.',
+    body: 'Loep Vertrek en Loep Behoud hebben een publiek voorbeeldrapport. Loep Start wordt publiek lichter toegelicht en heeft nog geen eigen voorbeeldrapport.',
   },
   {
     title: 'Wat management wel ziet',
@@ -268,8 +270,8 @@ export const trustHubAnswerCards = [
     body: 'Een begeleide dienst: Loep voert de scan uit, levert een managementrapport met prioriteiten en begeleidt HR en management naar één eerste keuze. Geen platform om zelf te beheren.',
   },
   {
-    title: 'Heeft elke route een publiek voorbeeldrapport?',
-    body: 'Nee. Publieke voorbeeldoutput blijft bewust beperkt tot Loep Vertrek en Loep Behoud.',
+    title: 'Heeft elke scan een publiek voorbeeldrapport?',
+    body: 'Nee. Publieke voorbeeldoutput blijft bewust beperkt tot Loep Vertrek en Loep Behoud. Beide voorbeeldrapporten staan op de productenpagina en in de footer.',
   },
 ] as const
 

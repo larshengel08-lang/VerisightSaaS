@@ -1,46 +1,33 @@
-# Verisight
+# Loep
 
-> Verisight helpt HR-teams bij organisaties vanaf circa 200 medewerkers om
-> eerst de juiste managementroute te kiezen: Loep Vertrek voor vertrekduiding en
-> verloopanalyse, Loep Behoud voor vroegsignalering op behoud, Loep
-> Cultuurbeeld voor een brede jaarlijkse cultuur- en engagementbaseline, Pulse als
-> compacte vervolgroute na diagnose of baseline, onboarding als bounded
-> peer-route voor nieuwe medewerkers, Leadership Scan als bounded
-> managementread na een bestaand people-signaal, of een bewuste combinatie van beide.
+> Loep helpt HR-teams bij organisaties met 100 tot 1.000 medewerkers scherper
+> zien wat telt: Loep Behoud laat zien waar behoud onder druk staat, Loep
+> Vertrek brengt vertrekpatronen in beeld en Loep Start volgt hoe nieuwe
+> medewerkers landen. Elke scan is een begeleide analyse (geen
+> zelfbedieningstool): uitvoering, managementrapport met prioriteiten en een
+> begeleide managementbespreking zijn inbegrepen. Rapportage is altijd op
+> groepsniveau, zonder individuele voorspellingen of profielen.
 
 ## Publieke routes
 
-- [Homepage](https://www.getloep.nl): routekeuze, proof en kennismaking
-- [Producten](https://www.getloep.nl/producten): overzicht van Loep Vertrek, Loep Behoud, Loep Cultuurbeeld, Combinatie, Loep Start, Pulse en Leadership Scan
-- [Loep Vertrek](https://www.getloep.nl/producten#loep-vertrek): primaire route voor vertrekduiding en verloopanalyse
-- [Loep Behoud](https://www.getloep.nl/producten#loep-behoud): gerichte route voor medewerkersbehoud en vroegsignalering
-- [Loep Cultuurbeeld](https://www.getloep.nl/producten/cultuurbeeld): jaarlijkse primary route voor brede cultuur- en engagementbaseline met board-read
-- [Combinatie](https://www.getloep.nl/producten/combinatie): portfolioroute wanneer vertrekduiding en vroegsignalering bewust in dezelfde managementlijn moeten samenkomen
-- [Loep Start](https://www.getloep.nl/producten#loep-start): bounded peer-route voor een vroege checkpoint-read bij nieuwe medewerkers
-- [Pulse](https://www.getloep.nl/producten/pulse): compacte vervolgroute voor bounded managementreviews na diagnose of baseline
-- [Leadership Scan](https://www.getloep.nl/producten/leadership-scan): bounded group-level managementread zonder named leaders, manager ranking of 360-logica
-- [Tarieven](https://www.getloep.nl/producten#tarieven): eerste trajecten, vervolgvormen en add-ons
-- [Aanpak](https://www.getloep.nl/aanpak): intake, setup, livegang en eerste managementwaarde
+- [Homepage](https://www.getloep.nl): positionering, werkwijze en kennismaking
+- [Producten](https://www.getloep.nl/producten): overzicht van Loep Behoud, Loep Vertrek en Loep Start, plus werkwijze en tarieven
+- [Loep Behoud](https://www.getloep.nl/producten#loep-behoud): zien waar behoud onder druk staat, voor uitstroom zichtbaar wordt
+- [Loep Vertrek](https://www.getloep.nl/producten#loep-vertrek): vertrekpatronen scherp in beeld met prioriteiten
+- [Loep Start](https://www.getloep.nl/producten#loep-start): vroege meting van hoe nieuwe medewerkers landen
+- [Tarieven](https://www.getloep.nl/producten#tarieven): een heldere prijs per scan
 - [Vertrouwen](https://www.getloep.nl/vertrouwen): methodiek, privacy, rapportlezing en DPA
+- [Kennismaking](https://www.getloep.nl/kennismaking): plan een vrijblijvend gesprek van 20 minuten
 
 ## Pricing
 
-- Loep Vertrek Baseline: EUR 2.950
-- Loep Behoud Baseline: EUR 3.450
-- Loep Culture Assessment Baseline: op aanvraag
-- Loep Vertrek Live: op aanvraag
-- Loep Behoud ritme: vanaf EUR 4.950
-- Pulse na Culture Assessment: op aanvraag
-- Combinatie: op aanvraag
-- Loep Start: op aanvraag
-- Pulse: op aanvraag
-- Leadership Scan: op aanvraag
-- Segment deep dive: EUR 950
+- Elke scan (Loep Behoud, Loep Vertrek of Loep Start) kost EUR 4.500 excl. btw
+  als volledig traject: uitvoering, managementrapport en begeleide
+  managementbespreking. Geen licentie. Maatwerk en doorlooptijd op aanvraag.
 
 ## Proof en documenten
 
-- Publieke deliverable-proof blijft bewust core-first op Loep Vertrek en Loep Behoud; Onboarding wordt publiek als bounded peer uitgelegd en Pulse plus Leadership Scan vooral via productpagina en trustlaag gekaderd.
-- [Loep Vertrek voorbeeldrapport](https://www.getloep.nl/examples/voorbeeldrapport_verisight.pdf)
+- [Loep Vertrek voorbeeldrapport](https://www.getloep.nl/examples/voorbeeldrapport_loep.pdf)
 - [Loep Behoud voorbeeldrapport](https://www.getloep.nl/examples/voorbeeldrapport_retentiescan.pdf)
 - [Privacybeleid](https://www.getloep.nl/privacy)
 - [Algemene voorwaarden](https://www.getloep.nl/voorwaarden)

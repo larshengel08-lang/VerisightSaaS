@@ -691,7 +691,9 @@ function ManagementFlowSection() {
       <style>{`
         @media (max-width: 1120px) {
           .management-flow-grid {
-            grid-template-columns: 1fr !important;
+            /* minmax(0,1fr) i.p.v. 1fr: anders rekt de min-content van de
+               kaart-mockups de kolom breder dan de viewport (17px overflow op 375px). */
+            grid-template-columns: minmax(0, 1fr) !important;
           }
 
           .management-flow-grid > div[aria-hidden="true"] {
@@ -911,7 +913,7 @@ function HeroSection() {
                 </div>
 
                 <div style={{ color: 'rgba(244,237,226,0.42)', fontFamily: bodyFont, fontSize: 9.5, fontWeight: 600, letterSpacing: '.1em', marginTop: 22, textTransform: 'uppercase' }}>
-                  39 responses · Groepsniveau · Geen individuele risicolijst
+                  n = 39 · Groepsniveau · Geen individuele risicolijst
                 </div>
               </div>
             </div>
@@ -1617,7 +1619,7 @@ function SuitePreviewSection() {
 }
 
 function RoutesSection() {
-  const primaryHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'homepage_routes_primary' })
+  const primaryHref = buildContactHref({ routeInterest: 'retentiescan', ctaSource: 'homepage_routes_primary' })
 
   return (
     <section
@@ -1925,6 +1927,33 @@ function ProofSection() {
                 </p>
               </div>
             </Reveal>
+            <Reveal delay={0.34}>
+              <div style={{ marginTop: 24 }}>
+                <a
+                  href="/examples/voorbeeldrapport_loep.pdf"
+                  target="_blank"
+                  rel="noopener"
+                  style={{
+                    alignItems: 'center',
+                    background: SURFACE.amber,
+                    borderRadius: 6,
+                    color: '#FFFFFF',
+                    display: 'inline-flex',
+                    fontFamily: displayFont,
+                    fontSize: 15,
+                    fontWeight: 700,
+                    gap: 10,
+                    padding: '13px 22px',
+                    textDecoration: 'none',
+                  }}
+                >
+                  Bekijk een voorbeeldrapport (pdf)
+                </a>
+                <p style={{ color: SURFACE.muted, fontSize: 13, lineHeight: 1.6, marginTop: 10 }}>
+                  Gesynthetiseerde cijfers, zelfde opbouw als het echte managementrapport.
+                </p>
+              </div>
+            </Reveal>
           </div>
         </div>
       </div>
@@ -1933,7 +1962,7 @@ function ProofSection() {
 }
 
 function ContactSection() {
-  const kennismakingHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'homepage_final_cta' })
+  const kennismakingHref = buildContactHref({ routeInterest: 'retentiescan', ctaSource: 'homepage_final_cta' })
 
   return (
     <section

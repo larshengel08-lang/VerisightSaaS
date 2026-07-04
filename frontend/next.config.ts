@@ -38,11 +38,11 @@ const securityHeaders = [
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
-      // Supabase API + auth; GA4 collect-endpoints (incl. regionale hosts)
-      `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://verisight-production.up.railway.app https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com ${localSupabaseConnectSources.join(' ')}`.trim(),
+      // Supabase API + auth. Analytics loopt via Vercel Web Analytics
+      // (same-origin /_vercel/insights/*), dus de CSP blijft bewust dicht.
+      `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://verisight-production.up.railway.app ${localSupabaseConnectSources.join(' ')}`.trim(),
       // Next.js dev runtime needs unsafe-eval for fast refresh and client hydration.
-      // googletagmanager.com is nodig voor het gtag.js-script (GA4).
-      `script-src 'self' 'unsafe-inline' https://www.googletagmanager.com${isProduction ? '' : " 'unsafe-eval'"}`,
+      `script-src 'self' 'unsafe-inline'${isProduction ? '' : " 'unsafe-eval'"}`,
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob:",
@@ -77,6 +77,9 @@ const nextConfig: NextConfig = {
       { source: '/producten/onboarding-30-60-90', destination: '/producten#loep-start', permanent: true },
       // Tarieven gevouwen in /producten
       { source: '/tarieven', destination: '/producten#tarieven', permanent: true },
+      // /aanpak was een wees-pagina met verouderde terminologie; de werkwijze
+      // staat nu in de "zo werkt elke scan"-sectie op /producten (keuze 2026-07-04).
+      { source: '/aanpak', destination: '/producten', permanent: true },
     ]
   },
   async headers() {

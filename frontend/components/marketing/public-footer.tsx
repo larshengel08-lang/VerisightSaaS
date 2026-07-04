@@ -11,7 +11,8 @@ export function PublicFooter() {
 
   const navLinks = [
     { href: '/producten#tarieven', label: 'Tarieven' },
-    { href: '/vertrouwen', label: 'Privacy' },
+    { href: '/vertrouwen', label: 'Vertrouwen' },
+    { href: '/examples/voorbeeldrapport_loep.pdf', label: 'Voorbeeldrapport' },
   ]
 
   return (
@@ -27,7 +28,7 @@ export function PublicFooter() {
             wordt.
           </p>
           <p className="mt-5 text-xs uppercase tracking-[0.12em] text-[rgba(247,245,241,0.5)]">
-            Voor organisaties met 200+ medewerkers
+            Voor organisaties met 100+ medewerkers
           </p>
           <div className="marketing-footer-chip mt-6">Van eerste inzicht naar concrete opvolging</div>
         </div>

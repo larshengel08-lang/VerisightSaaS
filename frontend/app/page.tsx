@@ -6,9 +6,9 @@ import { buildContactHref } from '@/lib/contact-funnel'
 import { faqSchema } from '@/components/marketing/site-content'
 
 export const metadata: Metadata = {
-  title: 'Loep',
+  title: 'Loep | Begeleide analyse van behoud, vertrek en onboarding',
   description:
-    'Loep helpt HR, directie en management sneller zien wat speelt, bepalen wat eerst telt en opvolging organiseren - met Loep Vertrek, Loep Behoud, dashboard en rapport in een suite.',
+    'Zie eerder waar behoud onder druk staat, waarom medewerkers vertrekken en hoe nieuwe mensen landen. Begeleide analyse voor HR en management, met rapport en managementbespreking inbegrepen.',
   alternates: { canonical: '/' },
 }
 
@@ -18,7 +18,7 @@ export default function LandingPage() {
     '@type': 'WebPage',
     name: 'Loep',
     description:
-      'Van people insights naar prioriteit, actie en follow-up voor HR en management. Loep verbindt Loep Vertrek, Loep Behoud, dashboard en rapport in een suite.',
+      'Begeleide analyse van behoud, vertrek en onboarding voor HR en management, met managementrapport en begeleide bespreking per scan.',
     url: 'https://www.getloep.nl/',
     inLanguage: 'nl-NL',
     mainEntity: {
@@ -31,7 +31,8 @@ export default function LandingPage() {
     },
   }
 
-  const ctaHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'homepage_primary_cta' })
+  // retentiescan: de lead-labeling volgt de retentie-geleide homepage-hero
+  const ctaHref = buildContactHref({ routeInterest: 'retentiescan', ctaSource: 'homepage_primary_cta' })
 
   return (
     <>

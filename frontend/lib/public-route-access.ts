@@ -25,6 +25,19 @@ export const PUBLIC_ROUTES = [
 
 export const PUBLIC_API_ROUTES = ['/api/contact'] as const
 
+// Alleen deze app-gebieden vereisen een sessie. Al het andere valt door naar
+// Next zelf, dat publieke pagina's of de 404-pagina rendert. Een onbekend pad
+// mag nooit op /login uitkomen (dat gebeurde eerder ook met /opengraph-image,
+// waardoor alle link-previews kapot waren).
+export const PROTECTED_APP_ROUTES = [
+  '/dashboard',
+  '/beheer',
+  '/campaigns',
+  '/reports',
+  '/action-center',
+  '/dev',
+] as const
+
 export const PUBLIC_STATIC_ASSET_EXTENSIONS = [
   'svg',
   'png',
@@ -45,6 +58,12 @@ export function isPublicRoutePath(pathname: string): boolean {
 
 export function isPublicApiRoutePath(pathname: string): boolean {
   return PUBLIC_API_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`))
+}
+
+export function isProtectedAppRoutePath(pathname: string): boolean {
+  return PROTECTED_APP_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
+  )
 }
 
 export function isPublicStaticAssetPath(pathname: string): boolean {

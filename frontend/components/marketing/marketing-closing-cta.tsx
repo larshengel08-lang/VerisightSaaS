@@ -96,5 +96,5 @@ export function MarketingClosingCta({
     </section>
   )
 }
-const ACcent = '#C96A4B'
+const ACcent = '#B9571F'
 

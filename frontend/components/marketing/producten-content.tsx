@@ -34,6 +34,7 @@ const scans = [
       'Je wilt een eerste keuze, geen breed onderzoeksproject',
     ],
     output: 'Managementrapport met vertrekduiding, factoranalyse en prioriteiten.',
+    samplePdf: '/examples/voorbeeldrapport_loep.pdf',
     contactRoute: 'exitscan',
     accent: AC.deep,
     accentSoft: AC.faint,
@@ -51,6 +52,7 @@ const scans = [
       'Je wilt een eerste keuze, geen breed MTO-project',
     ],
     output: 'Managementrapport met retentiesignaal, stay-intent en prioriteiten op groepsniveau.',
+    samplePdf: '/examples/voorbeeldrapport_retentiescan.pdf',
     contactRoute: 'retentiescan',
     accent: TEAL,
     accentSoft: TEAL_SOFT,
@@ -68,6 +70,7 @@ const scans = [
       'Je wilt eerst een kleine borg- of correctiestap bepalen',
     ],
     output: 'Rapport met de vroege landing in rol, leiding en team op groepsniveau.',
+    samplePdf: null,
     contactRoute: 'onboarding',
     accent: AMBER,
     accentSoft: AMBER_SOFT,
@@ -135,7 +138,7 @@ function HeroSection() {
           <div style={{ marginTop: 30 }}>
             <Link
               href={primaryHref}
-              style={{ alignItems: 'center', background: T.ink, color: '#fff', display: 'inline-flex', fontSize: 14.5, fontWeight: 600, gap: 8, padding: '12px 28px', textDecoration: 'none' }}
+              style={{ alignItems: 'center', background: 'var(--brand-cta)', borderRadius: 6, color: '#fff', display: 'inline-flex', fontSize: 14.5, fontWeight: 600, gap: 8, padding: '12px 28px', textDecoration: 'none' }}
             >
               Plan een kennismaking <Arrow />
             </Link>
@@ -199,8 +202,9 @@ function ScanSection({ scan, alt }: { scan: (typeof scans)[number]; alt: boolean
                 {scan.title}
               </h2>
               <p style={{ color: T.inkSoft, fontSize: 16, lineHeight: 1.7, marginBottom: 24, maxWidth: '40ch' }}>{scan.lead}</p>
-              <div style={{ color: T.ink, fontFamily: FF, fontSize: 22, fontWeight: 600, letterSpacing: '-.02em', marginBottom: 22 }}>
-                Vanaf €4.500
+              <div style={{ alignItems: 'baseline', display: 'flex', gap: 8, marginBottom: 22 }}>
+                <span style={{ color: T.ink, fontFamily: FF, fontSize: 22, fontWeight: 600, letterSpacing: '-.02em' }}>€4.500</span>
+                <span style={{ color: T.inkMuted, fontSize: 13 }}>excl. btw · volledig traject</span>
               </div>
               <Link
                 href={buildContactHref({ routeInterest: scan.contactRoute, ctaSource: `products_scan_${scan.contactRoute}` })}
@@ -228,6 +232,16 @@ function ScanSection({ scan, alt }: { scan: (typeof scans)[number]; alt: boolean
                   Wat je terugkrijgt
                 </div>
                 <p style={{ color: T.inkSoft, fontSize: 14, lineHeight: 1.6 }}>{scan.output}</p>
+                {scan.samplePdf ? (
+                  <a
+                    href={scan.samplePdf}
+                    target="_blank"
+                    rel="noopener"
+                    style={{ alignItems: 'center', color: scan.accent, display: 'inline-flex', fontSize: 13.5, fontWeight: 600, gap: 6, marginTop: 12, textDecoration: 'none' }}
+                  >
+                    Bekijk een voorbeeldrapport (pdf) <Arrow />
+                  </a>
+                ) : null}
               </div>
             </div>
           </Reveal>
@@ -238,22 +252,110 @@ function ScanSection({ scan, alt }: { scan: (typeof scans)[number]; alt: boolean
 }
 
 function PricingSection() {
+  const included = [
+    'Intake en scopebepaling',
+    'Uitvoering van de survey, zonder toolbeheer voor je team',
+    'Managementrapport met patronen en prioriteiten',
+    'Begeleide managementbespreking (60–90 min)',
+    'Eerste vervolgrichting vastgelegd',
+  ] as const
+
   return (
     <section id="tarieven" style={{ background: T.paperSoft, borderBottom: `1px solid ${T.rule}`, padding: 'clamp(52px,6vw,82px) 0', scrollMarginTop: 80 }}>
       <div style={SHELL}>
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_1fr] lg:gap-16 items-start">
+          <Reveal>
+            <div>
+              <div style={{ color: AC.deep, fontSize: 10, fontWeight: 700, letterSpacing: '.16em', marginBottom: 12, textTransform: 'uppercase' }}>Tarieven</div>
+              <h2 style={{ color: T.ink, fontFamily: FF, fontSize: 'clamp(28px,3.5vw,42px)', fontWeight: 700, letterSpacing: '-.026em', lineHeight: 1.06, marginBottom: 16 }}>
+                Eén heldere prijs per scan.
+              </h2>
+              <p style={{ color: T.inkSoft, fontSize: 16, lineHeight: 1.72, maxWidth: '52ch' }}>
+                Elke scan kost <strong style={{ color: T.ink, fontWeight: 600 }}>€4.500 excl. btw</strong> en is een
+                volledig traject, van intake tot en met de begeleide managementbespreking. Je koopt geen licentie en
+                beheert geen tool. Doorlooptijd: weken, geen maanden; het precieze ritme stemmen we af in de intake.
+                Maatwerk op aanvraag.
+              </p>
+            </div>
+          </Reveal>
+          <Reveal delay={0.08} from="right">
+            <div style={{ background: T.white, border: `1px solid ${T.rule}`, padding: '22px 24px' }}>
+              <div style={{ color: T.inkMuted, fontSize: 10, fontWeight: 700, letterSpacing: '.16em', marginBottom: 14, textTransform: 'uppercase' }}>
+                Inbegrepen bij elke scan
+              </div>
+              <div style={{ borderTop: `1px solid ${T.rule}` }}>
+                {included.map((item) => (
+                  <div key={item} style={{ alignItems: 'flex-start', borderBottom: `1px solid ${T.rule}`, display: 'grid', gap: 12, gridTemplateColumns: '16px 1fr', padding: '12px 0' }}>
+                    <span aria-hidden style={{ background: AC.mid, borderRadius: '50%', height: 6, marginTop: 8, width: 6 }} />
+                    <p style={{ color: T.inkSoft, fontSize: 14.5, lineHeight: 1.6 }}>{item}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function MtoComparisonSection() {
+  const mtoFits = [
+    'Je wilt een organisatiebrede baseline over alle thema’s tegelijk',
+    'Je zoekt een terugkerend meetritme dat een intern team zelf beheert',
+    'De vraag is "hoe staat het overal?", zonder acuut vraagstuk',
+  ] as const
+  const loepFits = [
+    'Er speelt nu een concreet vraagstuk rond vertrek, behoud of onboarding',
+    'Je wilt één scherpe eerste keuze, geen breed dashboard',
+    'Je wilt duiding en een managementbespreking, geen zelfbeheer',
+  ] as const
+
+  return (
+    <section style={{ background: T.white, borderBottom: `1px solid ${T.rule}`, padding: 'clamp(48px,5.5vw,72px) 0' }}>
+      <div style={SHELL}>
         <Reveal>
-          <div style={{ maxWidth: '64ch' }}>
-            <div style={{ color: AC.deep, fontSize: 10, fontWeight: 700, letterSpacing: '.16em', marginBottom: 12, textTransform: 'uppercase' }}>Tarieven</div>
-            <h2 style={{ color: T.ink, fontFamily: FF, fontSize: 'clamp(28px,3.5vw,42px)', fontWeight: 700, letterSpacing: '-.026em', lineHeight: 1.06, marginBottom: 16 }}>
-              Eén heldere prijs per scan.
+          <div style={{ marginBottom: 32, maxWidth: '64ch' }}>
+            <div style={{ color: AC.deep, fontSize: 10, fontWeight: 700, letterSpacing: '.16em', marginBottom: 12, textTransform: 'uppercase' }}>
+              Eerlijk over de keuze
+            </div>
+            <h2 style={{ color: T.ink, fontFamily: FF, fontSize: 'clamp(26px,3vw,38px)', fontWeight: 700, letterSpacing: '-.026em', lineHeight: 1.06, marginBottom: 14 }}>
+              Wanneer past een breed MTO beter?
             </h2>
-            <p style={{ color: T.inkSoft, fontSize: 16, lineHeight: 1.72 }}>
-              Elke scan kost <strong style={{ color: T.ink, fontWeight: 600 }}>€4.500</strong> en is een volledig traject:
-              uitvoering, een scherp managementrapport met prioriteiten en een begeleide managementbespreking. Je koopt
-              geen licentie. Maatwerk en doorlooptijd op aanvraag.
+            <p style={{ color: T.inkSoft, fontSize: 15.5, lineHeight: 1.72 }}>
+              Een Loep-scan vervangt geen breed medewerkersonderzoek, en dat hoeft ook niet. Het zijn verschillende
+              instrumenten voor verschillende vragen.
             </p>
           </div>
         </Reveal>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <Reveal delay={0.06}>
+            <div style={{ border: `1px solid ${T.rule}`, padding: '20px 22px' }}>
+              <p style={{ color: T.ink, fontFamily: FF, fontSize: 16, fontWeight: 700, marginBottom: 12 }}>
+                Kies een breed MTO als
+              </p>
+              {mtoFits.map((item) => (
+                <div key={item} style={{ alignItems: 'flex-start', display: 'grid', gap: 12, gridTemplateColumns: '16px 1fr', padding: '7px 0' }}>
+                  <span aria-hidden style={{ background: T.inkFaint, borderRadius: '50%', height: 6, marginTop: 8, width: 6 }} />
+                  <p style={{ color: T.inkSoft, fontSize: 14.5, lineHeight: 1.6 }}>{item}</p>
+                </div>
+              ))}
+            </div>
+          </Reveal>
+          <Reveal delay={0.12}>
+            <div style={{ background: T.paperSoft, border: `1px solid ${T.rule}`, borderLeft: `3px solid ${AC.mid}`, padding: '20px 22px' }}>
+              <p style={{ color: T.ink, fontFamily: FF, fontSize: 16, fontWeight: 700, marginBottom: 12 }}>
+                Kies een Loep-scan als
+              </p>
+              {loepFits.map((item) => (
+                <div key={item} style={{ alignItems: 'flex-start', display: 'grid', gap: 12, gridTemplateColumns: '16px 1fr', padding: '7px 0' }}>
+                  <span aria-hidden style={{ background: AC.mid, borderRadius: '50%', height: 6, marginTop: 8, width: 6 }} />
+                  <p style={{ color: T.inkSoft, fontSize: 14.5, lineHeight: 1.6 }}>{item}</p>
+                </div>
+              ))}
+            </div>
+          </Reveal>
+        </div>
       </div>
     </section>
   )
@@ -285,6 +387,7 @@ export function ProductenContent() {
         <ScanSection key={scan.id} scan={scan} alt={index % 2 === 0} />
       ))}
       <SharedDeliverySection />
+      <MtoComparisonSection />
       <PricingSection />
       <ContactSection />
     </div>
