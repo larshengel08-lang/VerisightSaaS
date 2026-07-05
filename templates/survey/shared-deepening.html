@@ -20,4 +20,30 @@
   window.__DEEPENING_SETS = {{ deepening_sets | tojson }};
   window.__DEEPENING_CAP = {{ deepening_cap }};
 </script>
+{% if direction_sets %}
+{# Gespreksrichting-stap: volgt direct op de verduidelijkingsstap (alleen retention).
+   step_dir loopt in lockstep met dir_offset/step_d in survey.html. #}
+{% set step_dir = step_dp + 1 %}
+<div class="step" data-step="{{ step_dir }}" data-label="Gespreksrichting" id="direction-step">
+  <div class="card">
+    <div class="card-title">Stap {{ step_dir }} — Gespreksrichting</div>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:8px;">
+      Deze vraag helpt het gesprek te richten. Het is geen toezegging dat deze richting
+      wordt uitgevoerd.
+    </p>
+    <p style="color:var(--muted);font-size:12px;margin-bottom:24px;">
+      Nog één korte vraag per onderwerp. Kies wat als eerste gesprekspunt het meest zou
+      helpen; andere punten kunnen ook meespelen.
+    </p>
+    <div id="direction-blocks"></div>
+  </div>
+  <div class="nav-row">
+    <button type="button" class="btn btn-secondary prev-btn">← Vorige</button>
+    <button type="button" class="btn btn-primary next-btn">Volgende →</button>
+  </div>
+</div>
+<script>
+  window.__DIRECTION_SETS = {{ direction_sets | tojson }};
+</script>
+{% endif %}
 {% endif %}
