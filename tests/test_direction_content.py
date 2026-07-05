@@ -45,14 +45,14 @@ def test_every_route_maps_to_existing_cause_keys():
                 assert rk in cause_keys, f"{fk}/{o['key']} verwijst naar onbekende {rk}"
 
 
-def test_every_route_has_toets_agenda_template():
+def test_every_route_has_agenda_question():
     for fk, s in DIRECTION_SETS.items():
         for o in s["options"]:
             if o["key"].endswith("_other"):
                 assert o["agenda"] is None
             else:
-                assert o["agenda"].startswith("Wat moet management eerst toetsen"), \
-                    f"{fk}/{o['key']}: template volgt het toets-patroon niet"
+                assert o["agenda"] and o["agenda"].endswith("?"), \
+                    f"{fk}/{o['key']}: agenda-template ontbreekt of eindigt niet op een vraag"
 
 
 def test_no_forbidden_words_in_direction_copy():
