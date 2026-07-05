@@ -394,16 +394,16 @@ def _bestuurlijke_read(*, kernzin: str, totaalbeeld: str,
   <span class="slabel">Bestuurlijke read</span>
   <p class="br-kernzin">{_h(kernzin)}</p>
   <p style="font-size:11px;color:#374151;max-width:62ch;margin-bottom:22px;">{_h(totaalbeeld)}</p>
-  <div class="why" style="padding:18px 22px 14px;">
-    <div class="why-title" style="font-size:13px;margin-bottom:14px;">Waarom {_h(primary_label)} bovenaan staat</div>
+  <div class="why">
+    <div class="why-title">Waarom {_h(primary_label)} bovenaan staat</div>
     <table class="why-grid"><tr>{why_cells_html}</tr></table>
+    <table class="sg"><tr>
+      <td><div class="sc-l">Primaire factor</div><div class="sc-v" style="color:{primary_color};">{_score_str(primary_score)}</div><div class="sc-b">{_h(primary_label)}</div></td>
+      <td><div class="sc-l">Relatief sterk</div><div class="sc-v">{_score_str(strong_score)}</div><div class="sc-b">{_h(strong_label)} — wat w&eacute;l werkt</div></td>
+      <td><div class="sc-l">Responsbasis</div><div class="sc-v">Zie p.03</div><div class="sc-b">reikwijdte &amp; betrouwbaarheid</div></td>
+    </tr></table>
+    <div class="mq-line"><span class="mq-label">Eerste managementvraag</span><p>{_h(mgmt_q)}</p></div>
   </div>
-  <table class="sg" style="margin-top:16px;"><tr>
-    <td><div class="sc-l">Primaire factor</div><div class="sc-v" style="color:{primary_color};">{_score_str(primary_score)}</div><div class="sc-b">{_h(primary_label)}</div></td>
-    <td><div class="sc-l">Relatief sterk</div><div class="sc-v">{_score_str(strong_score)}</div><div class="sc-b">{_h(strong_label)} — wat w&eacute;l werkt</div></td>
-    <td><div class="sc-l">Responsbasis</div><div class="sc-v">Zie p.03</div><div class="sc-b">reikwijdte &amp; betrouwbaarheid</div></td>
-  </tr></table>
-  <div class="card accent" style="margin-top:0;"><h3>Eerste managementvraag</h3><p style="margin-bottom:0;">{_h(mgmt_q)}</p></div>
 </div>"""
 
 
@@ -467,7 +467,8 @@ def _playbook_card(row: dict) -> str:
     decision = row.get("decision","").replace("gerichte verbeteractie","managementgesprek of data-check")
     validate = row.get("validate","")
     review   = row.get("review","").replace("gerichte verbeteractie","eerste vervolgstap")
-    owner    = row.get("owner") or row.get("owner_basis","")
+    # Eigenaarschap is bewust geen Loep-suggestie (geen aanname wie dit oppakt) —
+    # altijd een invulbare lege regel, ongeacht wat er berekend is in de row-data.
 
     return f"""<div class="play" style="border-left-color:{col};">
   <div class="play-hdr">
@@ -477,7 +478,7 @@ def _playbook_card(row: dict) -> str:
   {"<div class='sub-l'>Eerste managementvraag</div><p style='font-size:10.5px;'>" + _h(decision) + "</p>" if decision else ""}
   {"<div class='sub-l'>Waar te beginnen</div><p style='font-size:10.5px;'>" + _h(validate) + "</p>" if validate else ""}
   {"<div class='sub-l'>Mogelijke stappen</div><ul class='act-lst'>" + acts + "</ul>" if acts else ""}
-  {"<div class='sub-l'>Eigenaar</div><p style='font-size:10.5px;'>" + _h(owner) + "</p>" if owner else ""}
+  <div class='sub-l'>Eigenaar</div><div class="step-fill"></div><div class="step-fill-hint">In te vullen tijdens de bespreking</div>
   {"<div class='sub-l'>Reviewmoment</div><p style='font-size:10.5px;'>" + _h(review) + "</p>" if review else ""}
 </div>"""
 
@@ -486,7 +487,8 @@ def _step_cards(nsp: dict) -> str:
     import re as _re
     cards = nsp.get("session_cards") or [
         {"title": "Prioriteit",   "body": nsp.get("first_decision","")},
-        {"title": "Eigenaar",     "body": nsp.get("first_owner","")},
+        # Eigenaar: geen Loep-suggestie — bewust altijd een invulbare lege regel (zie _clean/render hieronder).
+        {"title": "Eigenaar",     "body": ""},
         {"title": "Eerste stap",  "body": nsp.get("first_action","")},
         {"title": "Reviewmoment", "body": nsp.get("review_moment","")},
     ]
@@ -514,16 +516,26 @@ def _step_cards(nsp: dict) -> str:
                .replace("met duidelijke eigenaar en zichtbare opvolging", ""))
         return s.strip()
 
+    def _card_body_html(title: str, body: str) -> str:
+        if title == "Eigenaar":
+            return '<div class="step-fill"></div><div class="step-fill-hint">In te vullen tijdens de bespreking</div>'
+        return f'<div class="step-body">{_h(_clean(title, body))}</div>'
+
     tds = "".join(
         f'<td class="step"><div class="step-no">{_h(c.get("title",""))}</div>'
-        f'<div class="step-body">{_h(_clean(c.get("title",""), c.get("body","")))}</div></td>'
+        f'{_card_body_html(c.get("title",""), c.get("body",""))}</td>'
         for c in cards[:4])
     return f'<table class="steps"><tr>{tds}</tr></table>'
 
 
 def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: str,
-                            owner: str, review_when: str) -> str:
-    """Gespreksagenda voor eerste managementbespreking — geen actieplan, agenda."""
+                            review_when: str) -> str:
+    """Gespreksagenda voor eerste managementbespreking — geen actieplan, agenda.
+
+    Eigenaarschap wordt bewust niet door Loep gesuggereerd (geen aanname wie dit
+    oppakt): het "Eigenaarschap"-vak is een invulbare lege regel voor tijdens de
+    bespreking, geen algoritmisch geschatte rol.
+    """
     return f"""<div class="pb sec">
   <span class="slabel">Eerste managementspoor</span>
   <h2 style="margin-bottom:6px;">Gespreksagenda</h2>
@@ -532,7 +544,7 @@ def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: st
   <table class="steps"><tr>
     <td class="step"><div class="step-no">Primair thema</div><div class="step-body">{_h(primary_theme)}</div></td>
     <td class="step"><div class="step-no">Tweede aandachtspunt</div><div class="step-body">{_h(second_point)}</div></td>
-    <td class="step"><div class="step-no">Eigenaarschap</div><div class="step-body">{_h(owner)}</div></td>
+    <td class="step"><div class="step-no">Eigenaarschap</div><div class="step-fill"></div><div class="step-fill-hint">In te vullen tijdens de bespreking</div></td>
     <td class="step"><div class="step-no">Opnieuw bespreken</div><div class="step-body">{_h(review_when)}</div></td>
   </tr></table>
   <div class="card accent"><h3>Gespreksopener</h3><p style="margin-bottom:0;">{_h(mgmt_q)}</p></div>
@@ -1365,7 +1377,6 @@ def render_exit_report_html(data: dict) -> str:
         primary_theme=nsp.get("first_decision") or (top_flabels[0] if top_flabels else "het leidende thema"),
         second_point=top_flabels[1] if len(top_flabels) > 1 else "",
         mgmt_q=_enriched_q or (_mgmt_q(priority_fkeys[0], "exit") if priority_fkeys else (nsp.get("first_decision") or "")),
-        owner=nsp.get("first_owner") or "HR + verantwoordelijk management",
         review_when=nsp.get("review_moment") or "bij de volgende meting",
     )
 
@@ -1723,7 +1734,6 @@ def render_retention_report_html(data: dict) -> str:
         primary_theme=nsp.get("first_decision") or (low_lbl if low_lbl else "het leidende behoudsthema"),
         second_point=_fl(sorted_f[1][0], ST) if len(sorted_f) > 1 else "",
         mgmt_q=_enriched_q or (_mgmt_q(_ret_priority_fkeys[0], ST) if _ret_priority_fkeys else (nsp.get("first_decision") or "")),
-        owner=nsp.get("first_owner") or "HR + verantwoordelijk management",
         review_when=nsp.get("review_moment") or "bij de volgende meting",
     )
 
@@ -2110,7 +2120,6 @@ def render_onboarding_report_html(data: dict) -> str:
         primary_theme=nsp.get("first_decision") or (low_lbl if low_lbl else "het leidende onboardingthema"),
         second_point=_fl(sorted_f[1][0], ST) if len(sorted_f) > 1 else "",
         mgmt_q=_mgmt_q(_ob_priority_fkeys[0], ST) if _ob_priority_fkeys else (nsp.get("first_decision") or ""),
-        owner=nsp.get("first_owner") or "HR + verantwoordelijk leidinggevende",
         review_when=nsp.get("review_moment") or "bij het volgende checkpoint",
     )
 

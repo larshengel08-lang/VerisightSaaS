@@ -209,3 +209,44 @@ def test_why_block_has_border_left():
     assert why_match is not None
     why_body = why_match.group(1)
     assert "border-left" in why_body, ".why moet een amber left-border hebben"
+
+
+def test_why_cell_has_no_individual_box():
+    """Geen dubbele nesting: de 4 mini-statistieken in .why-grid krijgen geen
+    eigen witte kaart (achtergrond + volledige rand) meer — alleen een dunne
+    scheidingslijn tussen kolommen, net als de al-nette .sg/.sc-* rij."""
+    from backend.report_css import build_css
+    import re
+    css = build_css("exit")
+    cell_match = re.search(r'\.why-cell\s*\{([^}]+)\}', css)
+    assert cell_match is not None, ".why-cell rule not found in CSS"
+    cell_body = cell_match.group(1)
+    assert "#fff" not in cell_body and "#ffffff" not in cell_body.lower(), \
+        ".why-cell mag geen eigen witte achtergrond meer hebben"
+    assert re.search(r'border\s*:\s*1px solid', cell_body) is None, \
+        ".why-cell mag geen volledige rand meer hebben (alleen border-right)"
+
+
+def test_bestuurlijke_read_folds_stats_and_mgmt_q_into_why_panel():
+    """De statistiekenrij (Primaire factor/Relatief sterk/Responsbasis) en de
+    eerste managementvraag zijn onderdeel van hetzelfde .why-paneel i.p.v.
+    los-uitgelijnde siblings — één samenhangend kader i.p.v. drie."""
+    html = _bestuurlijke_read(
+        kernzin="Test kernzin.",
+        totaalbeeld="Test totaalbeeld.",
+        primary_label="Werkdruk en balans",
+        primary_score=4.8,
+        primary_color="#EF4444",
+        why_cells_html="<td class='why-cell'><div>test</div></td>",
+        strong_label="Leiderschap",
+        strong_score=7.2,
+        mgmt_q="Speelt de werkdruk in bepaalde teams?",
+    )
+    assert 'class="card accent"' not in html, "oude losstaande managementvraag-kaart moet weg zijn"
+    assert 'class="mq-line"' in html
+    why_open = html.index('class="why"')
+    why_close = html.index("</div>\n</div>")  # sluiting van .why, gevolgd door sluiting van .pb.sec
+    assert why_open < html.index("Primaire factor") < why_close, \
+        "statistiekenrij moet binnen het .why-paneel vallen"
+    assert why_open < html.index("Speelt de werkdruk in bepaalde teams?") < why_close, \
+        "eerste managementvraag moet binnen het .why-paneel vallen"

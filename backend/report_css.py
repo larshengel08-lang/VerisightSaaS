@@ -152,6 +152,10 @@ p  { margin-bottom: 6px; font-size: 11px; }
   text-transform: uppercase; color: """ + accent_lo + r"""; margin-bottom: 4px; }
 .step-body { font-size: 10px; color: #374151; line-height: 1.55; }
 
+/* ── Invulbaar veld (eigenaarschap wordt in de bespreking bepaald, niet door Loep) ── */
+.step-fill { border-bottom: 1px dashed #94A3B8; height: 15px; margin-bottom: 4px; }
+.step-fill-hint { font-size: 7.5px; font-style: italic; color: #94A3B8; line-height: 1.4; }
+
 /* ── Trust / methodiek ── */
 .tg { display: table; width: 100%; border-collapse: separate; border-spacing: 10px 0; }
 .tc { display: table-cell; background: #fff; border: 1px solid """ + HAIRLINE + r"""; padding: 14px 15px; vertical-align: top; width: 33%; }
@@ -225,19 +229,22 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .act-lst { margin: 4px 0 0 16px; }
 .act-lst li { font-size: 10.5px; color: #374151; line-height: 1.6; margin-bottom: 3px; }
 
-/* ── Anchor block (why / summary) — licht, amber left-border ── */
+/* ── Anchor block (why / summary) — licht, amber left-border.
+   Eén paneel: titel + statistiekenrij + (evt.) sg-rij + eerste managementvraag
+   delen allemaal dezelfde padding-context i.p.v. los-uitgelijnde siblings. ── */
 .why { background: """ + CHALK + r"""; color: """ + INK + r"""; border-left: 4px solid """ + accent + r""";
-  padding: 22px 24px 18px; margin-bottom: 20px; }
+  padding: 20px 22px 18px; margin-bottom: 20px; }
 .why-title {
   font-family: 'Inter Tight', sans-serif; font-weight: 800; font-size: 15px;
-  color: """ + INK + r"""; margin-bottom: 16px; line-height: 1.35;
+  color: """ + INK + r"""; margin-bottom: 14px; line-height: 1.35;
 }
-.why-grid { display: table; width: 100%; border-collapse: separate; border-spacing: 10px 0; margin-bottom: 14px; }
+.why-grid { display: table; width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 16px; }
 .why-cell {
   display: table-cell; vertical-align: top; width: 25%;
-  background: #fff; border: 1px solid """ + HAIRLINE + r""";
-  padding: 12px 14px;
+  background: transparent; border: none; border-right: 1px solid """ + HAIRLINE + r""";
+  padding: 0 20px 0 0;
 }
+.why-cell:last-child { border-right: none; padding-right: 0; }
 .why-l {
   font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.12em;
   text-transform: uppercase; color: """ + STEEL + r"""; margin-bottom: 6px;
@@ -251,6 +258,18 @@ p  { margin-bottom: 6px; font-size: 11px; }
   font-size: 10.5px; color: #374151; font-style: italic; line-height: 1.6;
   border-top: 1px solid """ + HAIRLINE + r"""; padding-top: 12px; margin-top: 4px;
 }
+/* .sg genest in .why (primaire factor/relatief sterk/responsbasis) deelt de
+   paneel-padding; alleen een scheidingslijn, geen eigen inset. */
+.why .sg { border-top: 1px solid """ + HAIRLINE + r"""; padding-top: 16px; margin-top: 2px; margin-bottom: 0; }
+/* eerste-managementvraag-regel: geen apart kader, alleen scheidingslijn +
+   typografisch gewicht (amber eyebrow + vetgedrukte vraag) als afsluitregel
+   van hetzelfde paneel. */
+.mq-line { border-top: 1px solid """ + HAIRLINE + r"""; padding-top: 14px; margin-top: 16px; }
+.mq-line .mq-label {
+  font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; color: """ + accent + r"""; margin-bottom: 6px; display: block;
+}
+.mq-line p { font-size: 13px; font-weight: 700; color: """ + INK + r"""; margin-bottom: 0; line-height: 1.4; }
 
 /* ── Cards — geen witte vlakken, alleen left-border ── */
 .card { background: transparent; border: none; border-left: 2px solid """ + HAIRLINE + r"""; padding: 14px 0 14px 18px; margin-bottom: 16px; }
