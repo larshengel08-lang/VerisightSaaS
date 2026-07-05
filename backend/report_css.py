@@ -51,8 +51,6 @@ def build_css(scan_type: str = "exit") -> str:
 
 * { box-sizing: border-box; margin: 0; padding: 0; border-radius: 0; }
 
-:root { --accent: """ + accent + r"""; --accent-lo: """ + accent_lo + r"""; }
-
 body {
   font-family: 'Inter', Arial, sans-serif;
   font-size: 11px; line-height: 1.6; color: #243247;
@@ -65,18 +63,18 @@ body {
 /* ── Eyebrow (mono) ── */
 .eyebrow {
   font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 500;
-  letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent-lo);
+  letter-spacing: 0.18em; text-transform: uppercase; color: """ + accent_lo + r""";
 }
-.eyebrow.on-dark { color: var(--accent); }
+.eyebrow.on-dark { color: """ + accent + r"""; }
 
 /* ── Section label ── */
 .slabel {
-  display: flex; align-items: center; gap: 12px;
+  display: flex; align-items: center;
   font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600;
   letter-spacing: 0.12em; text-transform: uppercase; color: """ + INK + r""";
   margin-bottom: 18px;
 }
-.slabel::after { content: ""; flex: 1; height: 1px; background: """ + HAIRLINE + r"""; }
+.slabel::after { content: ""; flex: 1; height: 1px; margin-left: 12px; background: """ + HAIRLINE + r"""; }
 
 /* ── Headings ── */
 h2 { font-family: 'Inter Tight', sans-serif; font-weight: 800;
@@ -89,19 +87,19 @@ p  { margin-bottom: 6px; font-size: 11px; }
   padding: 64px 56px 48px; position: relative; color: #fff; overflow: hidden; }
 .cover-rings { position: absolute; top: -120px; right: -120px; width: 420px; height: 420px;
   border: 1px solid rgba(232,160,32,0.10); border-radius: 9999px; }
-.cover-rings::before { content: ""; position: absolute; inset: 60px;
+.cover-rings::before { content: ""; position: absolute; top: 60px; right: 60px; bottom: 60px; left: 60px;
   border: 1px solid rgba(232,160,32,0.07); border-radius: 9999px; }
-.cover-rings::after { content: ""; position: absolute; inset: 130px;
+.cover-rings::after { content: ""; position: absolute; top: 130px; right: 130px; bottom: 130px; left: 130px;
   border: 1px solid rgba(232,160,32,0.05); border-radius: 9999px; }
 .cover-top { display: flex; justify-content: space-between; align-items: baseline; }
 .cwm { font-family: 'Inter Tight', sans-serif; font-weight: 800; font-size: 17px;
   letter-spacing: -0.02em; color: #fff; }
-.cwm .dot { color: var(--accent); }
+.cwm .dot { color: """ + accent + r"""; }
 .cconf { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.16em;
   text-transform: uppercase; color: rgba(255,255,255,0.55); }
 .ceyebrow { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.20em;
-  text-transform: uppercase; color: var(--accent); margin-top: 150px; }
-.cbar { width: 56px; height: 3px; background: var(--accent); margin: 22px 0 26px; }
+  text-transform: uppercase; color: """ + accent + r"""; margin-top: 150px; }
+.cbar { width: 56px; height: 3px; background: """ + accent + r"""; margin: 22px 0 26px; }
 .ctitle { font-family: 'Inter Tight', sans-serif; font-weight: 800; font-size: 46px;
   letter-spacing: -0.04em; line-height: 0.98; color: #fff; max-width: 16ch; }
 .csub { font-family: 'Inter', sans-serif; font-size: 13px; color: rgba(255,255,255,0.62);
@@ -141,9 +139,9 @@ p  { margin-bottom: 6px; font-size: 11px; }
 /* ── Quote / theme ── */
 .theme-card { background: #fff; border: 1px solid """ + HAIRLINE + r"""; padding: 14px 16px; margin-bottom: 10px; }
 .theme-badge { font-family: 'JetBrains Mono', monospace; font-size: 8.5px; font-weight: 500;
-  letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-lo); }
+  letter-spacing: 0.08em; text-transform: uppercase; color: """ + accent_lo + r"""; }
 .quote-txt { font-size: 11px; color: #374151; font-style: italic; line-height: 1.6;
-  margin-top: 8px; padding-left: 12px; border-left: 2px solid var(--accent); }
+  margin-top: 8px; padding-left: 12px; border-left: 2px solid """ + accent + r"""; }
 .quote-anon { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.1em;
   text-transform: uppercase; color: #94A3B8; margin-top: 5px; }
 
@@ -151,7 +149,7 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .steps { display: table; width: 100%; border-collapse: separate; border-spacing: 10px 0; }
 .step { display: table-cell; background: #fff; border: 1px solid """ + HAIRLINE + r"""; padding: 14px 16px; vertical-align: top; width: 25%; }
 .step-no { font-family: 'JetBrains Mono', monospace; font-size: 8.5px; letter-spacing: 0.1em;
-  text-transform: uppercase; color: var(--accent-lo); margin-bottom: 4px; }
+  text-transform: uppercase; color: """ + accent_lo + r"""; margin-bottom: 4px; }
 .step-body { font-size: 10px; color: #374151; line-height: 1.55; }
 
 /* ── Trust / methodiek ── */
@@ -191,12 +189,12 @@ p  { margin-bottom: 6px; font-size: 11px; }
 /* ── Management anchor ── */
 .mgmt-anchor {
   background: #0D1B2A; color: #fff;
-  border-left: 4px solid var(--accent);
+  border-left: 4px solid """ + accent + r""";
   padding: 18px 20px; margin-bottom: 20px; break-inside: avoid;
 }
 .mgmt-anchor .ma-label {
   font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 600;
-  letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent);
+  letter-spacing: 0.14em; text-transform: uppercase; color: """ + accent + r""";
   margin-bottom: 6px;
 }
 .mgmt-anchor p { font-size: 12px; color: rgba(255,255,255,0.88); margin-bottom: 0; }
@@ -204,11 +202,11 @@ p  { margin-bottom: 6px; font-size: 11px; }
 /* ── Playbook cards (management section) ── */
 .play {
   background: #fff; border: 1px solid """ + HAIRLINE + r""";
-  border-left: 4px solid var(--accent);
+  border-left: 4px solid """ + accent + r""";
   padding: 20px 22px; margin-bottom: 16px;
   break-inside: avoid;
 }
-.play-hdr { display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; }
+.play-hdr { display: flex; align-items: baseline; margin-bottom: 14px; }
 .play-bdg span {
   font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 600;
   letter-spacing: 0.12em; text-transform: uppercase;
@@ -217,6 +215,7 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .play-ttl {
   font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 14px;
   color: """ + INK + r"""; line-height: 1.3;
+  margin-left: 10px;
 }
 .sub-l {
   font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 600;
@@ -227,7 +226,7 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .act-lst li { font-size: 10.5px; color: #374151; line-height: 1.6; margin-bottom: 3px; }
 
 /* ── Anchor block (why / summary) — licht, amber left-border ── */
-.why { background: """ + CHALK + r"""; color: """ + INK + r"""; border-left: 4px solid var(--accent);
+.why { background: """ + CHALK + r"""; color: """ + INK + r"""; border-left: 4px solid """ + accent + r""";
   padding: 22px 24px 18px; margin-bottom: 20px; }
 .why-title {
   font-family: 'Inter Tight', sans-serif; font-weight: 800; font-size: 15px;
@@ -255,7 +254,7 @@ p  { margin-bottom: 6px; font-size: 11px; }
 
 /* ── Cards — geen witte vlakken, alleen left-border ── */
 .card { background: transparent; border: none; border-left: 2px solid """ + HAIRLINE + r"""; padding: 14px 0 14px 18px; margin-bottom: 16px; }
-.card.accent { border-left: 4px solid var(--accent); }
+.card.accent { border-left: 4px solid """ + accent + r"""; }
 .card.risk   { border-left: 4px solid """ + RAG_HIGH + r"""; }
 .card.strong { border-left: 4px solid """ + RAG_LOW + r"""; }
 .card.navy   { border-left: 4px solid """ + NAVY + r"""; }
