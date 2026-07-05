@@ -33,10 +33,6 @@ const SHELL = {
 const displayFont = "var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
 const bodyFont = "var(--font-ibm-plex-sans), system-ui, sans-serif"
 
-const heroTrustItems = [
-  'Rapportage op groepsniveau \u2022 Managementbespreking inbegrepen \u2022 AVG-conform',
-]
-
 const suiteFlowPoints = [
   {
     index: '01',
@@ -811,41 +807,12 @@ function HeroSection() {
                   fontSize: 12.5,
                   fontWeight: 500,
                   lineHeight: 1.6,
-                  margin: '0 0 22px',
+                  margin: 0,
                   maxWidth: '34rem',
                 }}
               >
                 Reactie binnen 1 werkdag · Vrijblijvend gesprek van 20 min.
               </p>
-
-              <div
-                className="marketing-home-hero-reveal-5"
-                style={{
-                  borderTop: `1px solid ${SURFACE.border}`,
-                  display: 'grid',
-                  gap: 10,
-                  justifyItems: 'start',
-                  paddingTop: 22,
-                  textAlign: 'left',
-                }}
-              >
-                {heroTrustItems.map((item) => (
-                  <div
-                    key={item}
-                    style={{
-                      color: SURFACE.muted,
-                      display: 'block',
-                      fontFamily: bodyFont,
-                      fontSize: 13,
-                      fontWeight: 500,
-                      lineHeight: 1.7,
-                      maxWidth: '42rem',
-                    }}
-                  >
-                    <span>{item}</span>
-                  </div>
-                ))}
-              </div>
           </div>
 
             <div
