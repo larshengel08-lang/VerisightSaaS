@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from backend.email import EmailSendResult, send_contact_request_result
 from backend.models import Campaign, ContactRequest, Organization, OrganizationSecret, Respondent, SurveyResponse
 from backend.scoring import ORG_FACTOR_KEYS
+from tests.conftest import requires_weasyprint
 
 
 def _create_org(db: Session, *, name: str = "Acme BV", slug: str = "acme-bv", api_key: str = "org-test-key"):
@@ -526,6 +527,7 @@ def test_retention_survey_submit_persists_normalized_scores_and_summary(client, 
     }
 
 
+@requires_weasyprint
 def test_retention_report_route_returns_pdf(client, db_session: Session):
     org = _create_org(db_session, api_key="retention-report-key")
     campaign = _create_campaign(db_session, org, name="Retentie Rapport", scan_type="retention")
@@ -657,6 +659,7 @@ def test_onboarding_survey_submit_persists_checkpoint_summary(client, db_session
     assert stored.full_result["onboarding_summary"]["onboarding_signal_score"] == stored.risk_score
 
 
+@requires_weasyprint
 def test_onboarding_report_route_returns_pdf(client, db_session: Session):
     org = _create_org(db_session, api_key="onboarding-report-key")
     campaign = _create_campaign(db_session, org, name="Onboarding Report", scan_type="onboarding")
@@ -817,6 +820,7 @@ def test_respondent_import_dry_run_requires_role_level(client, db_session: Sessi
     assert "functieniveau" in body["errors"][0]["message"].lower()
 
 
+@requires_weasyprint
 def test_implementation_smoke_flow_imports_sends_invites_and_generates_output(
     client,
     db_session: Session,
@@ -1127,6 +1131,7 @@ def test_campaign_item_scores_limits_onboarding_to_active_modules(client, db_ses
     assert labels_by_key["B9"].startswith("Ik voel me in deze eerste periode voldoende verbonden")
 
 
+@requires_weasyprint
 def test_report_route_returns_pdf(client, db_session: Session):
     org = _create_org(db_session, api_key="report-key")
     campaign = _create_campaign(db_session, org, name="Rapportcampagne")
@@ -1143,6 +1148,7 @@ def test_report_route_returns_pdf(client, db_session: Session):
     assert response.content.startswith(b"%PDF")
 
 
+@requires_weasyprint
 def test_exit_smoke_flow_covers_submit_stats_and_report(client, db_session: Session):
     org = _create_org(db_session, api_key="exit-smoke-key")
     campaign = _create_campaign(db_session, org, name="Exit Smoke")

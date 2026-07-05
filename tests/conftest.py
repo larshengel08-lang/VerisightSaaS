@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Generator
+from functools import lru_cache
 
 import pytest
 from fastapi.testclient import TestClient
@@ -11,6 +12,33 @@ from sqlalchemy.pool import StaticPool
 from backend.database import Base
 from backend.email import EmailSendResult
 from backend.main import _contact_request_buckets, app, get_db
+
+
+@lru_cache(maxsize=1)
+def _weasyprint_can_render() -> bool:
+    """Doet een echte render, niet alleen een import-check.
+
+    WeasyPrint importeert soms zonder fout maar faalt pas bij het laden van
+    GTK/Pango (libgobject e.d.) — met name op Windows zonder GTK3-runtime.
+    Tests die een echt "loep-v6" PDF verwachten, slaan over als dit False is,
+    i.p.v. vals te slagen tegen de legacy ReportLab-fallback (die sinds de
+    Fail-Loud-fix niet meer stilzwijgend inspringt). Zie CLAUDE.md: lokale
+    PDF-validatie op Windows via de WeasyPrint-Docker-image
+    (ghcr.io/weasyprint/weasyprint), productie via Railway/nixpacks-GTK.
+    """
+    try:
+        from weasyprint import HTML
+        HTML(string="<html><body>weasyprint-check</body></html>").write_pdf()
+        return True
+    except Exception:
+        return False
+
+
+requires_weasyprint = pytest.mark.skipif(
+    not _weasyprint_can_render(),
+    reason="WeasyPrint (GTK/Pango) kan hier niet renderen — valideer lokaal via "
+           "de WeasyPrint-Docker-image, zie CLAUDE.md.",
+)
 
 
 @pytest.fixture()

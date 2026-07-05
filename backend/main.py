@@ -2008,31 +2008,51 @@ import logging as _logging
 _report_log = _logging.getLogger("loep.report")
 
 
+# Scan-types waarvoor report_html.py (WeasyPrint, "loep-v6") het enige juiste
+# ontwerp is. De legacy ReportLab-renderer (backend/report.py) kent voor deze
+# types geen verdiepingsvragen of gespreksrichting meer — een stille terugval
+# zou een klant een verouderd rapport geven zonder dat dit zichtbaar is in het
+# document zelf. Fail Loud i.p.v. Fake (zie CLAUDE.md-architectuurprincipe).
+_LOEP_V6_SCAN_TYPES = {"exit", "retention", "onboarding"}
+
+
 def _generate_report_pdf(campaign_id: str, db: "Session") -> tuple[bytes, str]:
-    """Probeer WeasyPrint (nieuw design); val terug op ReportLab met logged warning.
+    """Genereert het PDF-rapport voor een campagne.
+
+    Voor exit/retention/onboarding is WeasyPrint ("loep-v6") de enige geldige
+    renderer: bij falen faalt dit hard in plaats van stilzwijgend terug te
+    vallen op de verouderde ReportLab-weergave. Overige scan-types
+    (team/leadership/culture_assessment) hebben geen report_html.py-
+    implementatie en gebruiken ReportLab rechtstreeks als hun primaire
+    (niet-fallback) renderer — daar verandert niets.
 
     Returns (pdf_bytes, design_label) waarbij design_label 'loep-v6' of 'legacy' is.
-    De label wordt als X-Report-Design header meegestuurd zodat afwijkingen zichtbaar zijn.
     """
-    try:
-        from backend.report_html import generate_campaign_report_html
-        pdf_bytes = generate_campaign_report_html(campaign_id, db)
-        return pdf_bytes, "loep-v6"
-    except Exception as e:
-        _report_log.warning(
-            "WeasyPrint PDF generatie mislukt voor campagne %s — fallback naar legacy ReportLab. Fout: %s",
-            campaign_id,
-            e,
-        )
+    campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
+    if campaign is None:
+        raise ValueError(f"Campagne {campaign_id} niet gevonden.")
 
-    try:
-        from backend.report import generate_campaign_report
-        pdf_bytes = generate_campaign_report(campaign_id, db)
-        return pdf_bytes, "legacy"
-    except ValueError as e:
-        raise e
-    except Exception as e:
-        raise RuntimeError(f"Rapport generatie mislukt (beide designs): {e}") from e
+    if campaign.scan_type in _LOEP_V6_SCAN_TYPES:
+        from backend.report_html import generate_campaign_report_html
+        try:
+            pdf_bytes = generate_campaign_report_html(campaign_id, db)
+        except Exception as e:
+            _report_log.error(
+                "WeasyPrint PDF generatie mislukt voor campagne %s (scan_type=%s) — "
+                "GEEN fallback naar legacy ReportLab (verouderd, mist verdiepingsvragen/"
+                "gespreksrichting). Fout: %s",
+                campaign_id,
+                campaign.scan_type,
+                e,
+            )
+            raise RuntimeError(
+                f"PDF-rapport kon niet worden gegenereerd voor campagne {campaign_id}: {e}"
+            ) from e
+        return pdf_bytes, "loep-v6"
+
+    from backend.report import generate_campaign_report
+    pdf_bytes = generate_campaign_report(campaign_id, db)
+    return pdf_bytes, "legacy"
 
 
 @app.get("/api/campaigns/{campaign_id}/report")
