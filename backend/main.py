@@ -73,7 +73,7 @@ from backend.products.leadership.definition import DEFAULT_LEADERSHIP_MODULES
 from backend.products.onboarding.definition import DEFAULT_ONBOARDING_MODULES
 from backend.products.pulse.definition import DEFAULT_PULSE_MODULES
 from backend.products.team.definition import DEFAULT_TEAM_MODULES
-from backend.products.shared.deepening import DEEPENING_CAP, compute_deepening_offers, get_deepening_sets
+from backend.products.shared.deepening import DEEPENING_CAP, compute_deepening_offers, get_deepening_sets, get_direction_sets
 from backend.products.shared.registry import get_product_module
 from backend.runtime import require_backend_admin_token, validate_runtime_config
 from backend.scan_definitions import get_scan_definition
@@ -1288,6 +1288,7 @@ async def serve_survey(
             "enabled_modules": enabled_modules,
             "deepening_sets":  get_deepening_sets(campaign.scan_type) if campaign.scan_type in ("exit", "retention") else {},
             "deepening_cap":   DEEPENING_CAP.get(campaign.scan_type, 0),
+            "direction_sets":  get_direction_sets(campaign.scan_type) if campaign.scan_type == "retention" else {},
         },
     )
 
@@ -1342,12 +1343,24 @@ async def submit_survey(
                     raise HTTPException(status_code=422, detail="Onbekende verdiepingsoptie.")
             if entry.question_set_version != factor_set["question_set_version"]:
                 raise HTTPException(status_code=422, detail="Verouderde vragenset-versie.")
+            if entry.direction is not None:
+                if scan_type != "retention":
+                    raise HTTPException(status_code=422, detail="Gespreksrichting wordt niet ondersteund voor dit scantype.")
+                direction_set = get_direction_sets(scan_type)[entry.factor_key]
+                valid_route_keys = {o["key"] for o in direction_set["options"]}
+                if entry.direction.choice is not None and entry.direction.choice not in valid_route_keys:
+                    raise HTTPException(status_code=422, detail="Onbekende gespreksrichting-optie.")
+                if entry.direction.question_set_version != direction_set["question_set_version"]:
+                    raise HTTPException(status_code=422, detail="Verouderde gespreksrichting-versie.")
 
     deepening_clean: list[dict] = []
     for entry in payload.deepening_responses:
         d = entry.model_dump()
         if d.get("other_text"):
             d["other_text"] = anonymize_text(d["other_text"])
+        d_dir = d.get("direction")
+        if d_dir and d_dir.get("other_text"):
+            d_dir["other_text"] = anonymize_text(d_dir["other_text"])
         deepening_clean.append(d)
 
     exit_reason_code = payload.exit_reason_code
