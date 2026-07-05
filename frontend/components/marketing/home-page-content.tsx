@@ -715,7 +715,7 @@ function HeroSection() {
       }}
     >
       <div style={{ ...SHELL, paddingTop: 'clamp(80px, 9vw, 120px)', paddingBottom: 'clamp(80px, 9vw, 120px)', position: 'relative' }}>
-        <div className="grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] lg:items-center" style={{ gap: 'clamp(40px, 5vw, 72px)' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] lg:items-start" style={{ gap: 'clamp(40px, 5vw, 72px)' }}>
           <div style={{ textAlign: 'left' }}>
               <div className="marketing-home-hero-reveal-1" style={{ marginBottom: 18 }}>
               <p

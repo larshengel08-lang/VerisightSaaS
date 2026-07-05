@@ -163,6 +163,12 @@ export default function PilotPage() {
                   <p style={{ fontSize: 13, lineHeight: 1.5, color: '#e7edf4' }}>
                     Wat houdt mensen tegen om hier door te groeien, en wat kunnen we daar als eerste aan doen?
                   </p>
+                  <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #1c2c40' }}>
+                    <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: '#8fa1b3', marginBottom: 6 }}>Gespreksrichting uit de groep</div>
+                    <p style={{ fontSize: 12.5, lineHeight: 1.5, color: '#cdd8e4' }}>
+                      Vooral concretere ontwikkelafspraken en beter zicht op groeimogelijkheden — input van respondenten, geen uitvoeringsadvies.
+                    </p>
+                  </div>
                 </div>
                 <p style={{ marginTop: 16, fontSize: 11, color: '#6f8197', letterSpacing: '.02em' }}>
                   n = 39 · groepsniveau · geen individuele risicolijst
