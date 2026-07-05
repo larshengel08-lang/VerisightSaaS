@@ -438,7 +438,7 @@ def get_next_steps_payload(*, top_focus_labels: list[str], top_focus_keys: list[
                 "number": "2",
                 "title": "Beleg direct een bounded eigenaar",
                 "body": (
-                    f"Benoem expliciet wie dit checkpointspoor trekt: {first_owner}. "
+                    "Bepaal in de managementbespreking expliciet wie dit checkpointspoor trekt. "
                     "Zo blijft onboarding een bestuurlijke handoff in plaats van alleen een nette momentopname."
                 ),
             },

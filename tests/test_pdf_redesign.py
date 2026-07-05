@@ -175,9 +175,23 @@ def test_segment_state_b_uses_spec_copy():
 def test_managementspoor_avoids_hard_language():
     html = _eerste_managementspoor(
         primary_theme="Groeiperspectief + vertrekcontext", second_point="Beloning",
-        mgmt_q="Welke loopbaanstappen ontbreken?", owner="HR + directie",
+        mgmt_q="Welke loopbaanstappen ontbreken?",
         review_when="over 1 kwartaal")
     low = html.lower()
     assert "risicofactor" not in low
     assert "interventie" not in low
     assert "gespreksopener" in low or "aandachtspunt" in low
+
+
+def test_managementspoor_eigenaarschap_is_blank_not_ai_suggested():
+    """Eigenaarschap wordt bewust niet door Loep gesuggereerd (geen aanname wie
+    dit oppakt) — het vak is een invulbare lege regel voor tijdens de
+    bespreking, met een uitleghint, geen algoritmisch geschatte rol.
+    """
+    html = _eerste_managementspoor(
+        primary_theme="Groeiperspectief + vertrekcontext", second_point="Beloning",
+        mgmt_q="Welke loopbaanstappen ontbreken?",
+        review_when="over 1 kwartaal")
+    assert "step-fill" in html
+    assert "in te vullen tijdens de bespreking" in html.lower()
+    assert "hr " not in html.lower().split("eigenaarschap")[1].split("</td>")[0]

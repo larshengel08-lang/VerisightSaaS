@@ -430,7 +430,7 @@ def get_next_steps_payload(*, top_focus_labels: list[str], top_focus_keys: list[
                 "number": "2",
                 "title": "Koppel elk aandachtspunt aan een eerste eigenaar",
                 "body": (
-                    f"Wijs {first_owner.lower()} aan als eerste eigenaar van {focus_text.lower()}. "
+                    f"Bepaal in de managementbespreking wie eerste eigenaar wordt van {focus_text.lower()}. "
                     "Zo voorkom je dat RetentieScan blijft hangen in observatie zonder vervolg."
                 ),
             },
