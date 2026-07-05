@@ -72,3 +72,33 @@ def test_scenario_stopregel_hoge_overslag():
     s = direction_agenda_scenario(agg, "retention", "workload")
     assert s["scenario"] == "cause_only"
     assert s["direction_suppressed_by_skip"] is True
+
+
+def test_scenario_none_when_cause_weak_even_with_strong_direction():
+    # Sterke richting maar zwakke oorzaak (primary versnipperd, geen top >= 50%):
+    # richting vuurt nooit solo -> scenario "none".
+    causes = ["wl_recovery", "wl_capacity", "wl_priorities", "wl_volume"] * 3
+    rows = [_row(primary=causes[i]) for i in range(12)]
+    agg = aggregate_deepening(rows, "retention")["workload"]
+    s = direction_agenda_scenario(agg, "retention", "workload")
+    assert s["scenario"] == "none"
+
+
+def test_stopregel_boundary_exactly_40_percent_not_suppressed():
+    # Grens is strikt >40%: 8 van 20 aangeboden geskipt (40,0%) onderdrukt NIET;
+    # 12 beantwoorders houden de richting-top boven de n>=8-voorwaarde.
+    rows = [_row() for _ in range(12)] + \
+           [_row(dir_status="skipped", choice=None) for _ in range(8)]
+    agg = aggregate_deepening(rows, "retention")["workload"]
+    s = direction_agenda_scenario(agg, "retention", "workload")
+    assert s["direction_suppressed_by_skip"] is False
+    assert s["scenario"] in ("concordant", "discrepant")
+
+
+def test_direction_top_requires_lead_of_two():
+    # Voorsprong-voorwaarde: top 5 vs runner-up 4 (voorsprong 1) -> geen richting-top.
+    rows = [_row(choice="wld_recovery") for _ in range(5)] + \
+           [_row(choice="wld_priorities") for _ in range(4)]
+    agg = aggregate_deepening(rows, "retention")["workload"]
+    s = direction_agenda_scenario(agg, "retention", "workload")
+    assert s["scenario"] == "cause_only"

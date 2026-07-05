@@ -45,6 +45,29 @@ def test_direction_block_hidden_below_privacy_floor():
     assert "Te weinig" in html and "wld" not in html
 
 
+def test_direction_block_labels_high_skip_ratio():
+    # Spec par. 7.3 stopregel: >40% van de aangeboden richtingen overgeslagen
+    # -> zichtbaar label; de agenda-suppressie zelf zit in direction_agenda_scenario.
+    agg = dict(AGG_OK, direction_offered=14, direction_answered=8, direction_skipped=6,
+               direction_counts={"wld_recovery": 8})
+    html = _direction_block(agg, "retention", "workload")
+    assert "beperkt door overslag" in html
+    # en niet bij lage skip-ratio's:
+    assert "beperkt door overslag" not in _direction_block(AGG_OK, "retention", "workload")
+
+
+def test_direction_block_other_top_neutral_line(caplog):
+    # Spec par. 7.2: richting-top *_other -> neutrale regel + interne reviewvlag.
+    import logging
+    agg = dict(AGG_OK, direction_counts={"wld_other": 6, "wld_recovery": 4})
+    with caplog.at_level(logging.WARNING):
+        html = _direction_block(agg, "retention", "workload")
+    assert "buiten de vaste opties" in html
+    assert any("routeset review" in r.message for r in caplog.records)
+    # geen agenda-verrijking op other-top (bestaand gedrag, blijft):
+    assert _direction_agenda_line(agg, "retention", "workload") is None
+
+
 def test_agenda_line_concordant_compact():
     line = _direction_agenda_line(AGG_OK, "retention", "workload")
     assert "sluit daarbij aan" in line

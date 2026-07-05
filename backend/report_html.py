@@ -634,6 +634,21 @@ def _direction_block(agg: dict, scan_type: str, factor_key: str) -> str:
             body += ('<p style="font-size:9px;color:#92400E;margin:4px 0 0;">'
                      'Beperkte antwoordbasis &mdash; gebruik dit als gesprekshaakje, '
                      'niet als conclusie.</p>')
+        # Spec par. 7.2: veel respondenten buiten de vaste opties -> neutrale
+        # regel + interne reviewvlag (spiegelt het trede-1-gedrag in _deepening_mgmt_q).
+        top_key = max(agg["direction_counts"].items(), key=lambda kv: (kv[1], kv[0]))[0]
+        if top_key.endswith("_other"):
+            logger.warning(
+                "direction: *_other is topoptie voor %s - routeset review nodig",
+                factor_key)
+            body += ('<p style="font-size:9px;color:#64748B;margin:4px 0 0;">'
+                     'Veel antwoorden vielen buiten de vaste opties.</p>')
+    # Spec par. 7.3 stopregel: >40% van de aangeboden richtingen overgeslagen
+    # -> zichtbaar label; de bijbehorende agenda-suppressie zit in
+    # direction_agenda_scenario (deepening.py).
+    if agg.get("direction_skipped", 0) / offered > 0.4:
+        body += ('<p style="font-size:9px;color:#92400E;margin:4px 0 0;">'
+                 'Gespreksrichting-basis beperkt door overslag.</p>')
     footer = ('<p style="font-size:8.5px;color:#94A3B8;margin:8px 0 0;">'
               'Gespreksrichting uit de groep is input van respondenten, geen uitvoeringsadvies. '
               'Haalbaarheid, rechtvaardigheid en passendheid binnen bestaand beleid wegen mee '
