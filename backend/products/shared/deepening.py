@@ -10,8 +10,9 @@ DEEPENING_FACTOR_KEYS = [
     "leadership", "culture", "growth", "compensation", "workload", "role_clarity",
 ]
 
-# Cap op aantal verdiepingen per respondent; gebruikt door triggerlogica (Task 2).
-DEEPENING_CAP = {"exit": 3, "retention": 2}
+# Cap op aantal verdiepingen per respondent; gebruikt door triggerlogica.
+# Retention 2->3 per spec 2026-07-05 (gespreksrichting-ronde).
+DEEPENING_CAP = {"exit": 3, "retention": 3}
 
 DEEPENING_SETS: dict[str, dict[str, Any]] = {
     "workload": {
@@ -381,6 +382,173 @@ DEEPENING_SETS: dict[str, dict[str, Any]] = {
         ],
     },
 }
+
+# Gespreksrichting-sets (spec: docs/superpowers/specs/2026-07-05-richtingsvraag-behoud-design.md par. 4).
+# GEEN 1-op-1-spiegeling van de oorzaakset: routes zijn managementrichtingen; `related`
+# is een losse verwantschaps-mapping, uitsluitend voor concordantie-analyse.
+DIRECTION_SETS: dict[str, dict[str, Any]] = {
+    "workload": {
+        "question": "Welke richting zou het gesprek over werkbelasting het meest helpen?",
+        "options": [
+            {"key": "wld_scope", "text": "Takenpakket en werkvolume beter afbakenen",
+             "related": ["wl_volume"],
+             "agenda": "Wat moet management eerst toetsen om te bepalen of het afbakenen van takenpakketten passend en haalbaar is?"},
+            {"key": "wld_planning", "text": "Planning en bezetting beter laten aansluiten op het werk dat er ligt",
+             "related": ["wl_capacity"],
+             "agenda": "Wat moet management eerst toetsen om te bepalen of planning en bezetting beter kunnen aansluiten op het werkaanbod?"},
+            {"key": "wld_peaks", "text": "Piekmomenten en spoedwerk eerder plannen, verdelen of begrenzen",
+             "related": ["wl_peaks_adhoc"],
+             "agenda": "Wat moet management eerst toetsen om piek- en spoeddruk eerder te kunnen plannen, verdelen of begrenzen?"},
+            {"key": "wld_recovery", "text": "Meer ruimte om te herstellen en werk goed af te ronden",
+             "related": ["wl_recovery"],
+             "agenda": "Wat moet management eerst toetsen om te bepalen of meer herstel- en afrondingsruimte passend en haalbaar is?"},
+            {"key": "wld_priorities", "text": "Duidelijkere keuzes over wat voorrang heeft en wat kan wachten",
+             "related": ["wl_priorities"],
+             "agenda": "Wat moet management eerst toetsen om prioriteiten explicieter te kunnen maken?"},
+            {"key": "wld_friction", "text": "Minder dubbel werk, systeemfrictie of overdrachtsverlies",
+             "related": ["wl_process"],
+             "agenda": "Wat moet management eerst toetsen om te bepalen waar dubbel werk of systeemfrictie het meest knelt?"},
+            {"key": "wld_other", "text": "Anders, namelijk…", "related": [], "agenda": None},
+        ],
+    },
+    "leadership": {
+        "question": "Welke richting zou het gesprek over de aansturing het meest helpen?",
+        "options": [
+            {"key": "ldd_feedback", "text": "Meer bruikbare feedback en richting",
+             "related": ["ld_feedback"],
+             "agenda": "Wat moet management eerst toetsen om te bepalen of medewerkers meer bruikbare feedback en richting kunnen krijgen?"},
+            {"key": "ldd_mandate", "text": "Duidelijker mandaat om binnen mijn werk zelfstandig keuzes te maken",
+             "related": ["ld_autonomy"],
+             "agenda": "Wat moet management eerst toetsen om mandaten binnen het werk te verduidelijken?"},
+            {"key": "ldd_escalation", "text": "Duidelijkere hulp bij escalaties, spanningen of vastlopende situaties",
+             "related": ["ld_support"],
+             "agenda": "Wat moet management eerst toetsen om hulp bij escalaties en spanningen te verduidelijken?"},
+            {"key": "ldd_recognition", "text": "Concretere terugkoppeling op wat goed gaat en wat wordt gewaardeerd",
+             "related": ["ld_recognition"],
+             "agenda": "Wat moet management eerst toetsen om terugkoppeling op wat goed gaat concreter te maken?"},
+            {"key": "ldd_availability", "text": "Meer beschikbaarheid en zichtbaarheid van mijn leidinggevende",
+             "related": ["ld_availability"],
+             "agenda": "Wat moet management eerst toetsen om te bepalen of de beschikbaarheid van leidinggevenden past bij de omvang van hun teams?"},
+            {"key": "ldd_consistency", "text": "Stabielere en beter uitlegbare besluiten en verwachtingen",
+             "related": ["ld_consistency"],
+             "agenda": "Wat moet management eerst toetsen om besluiten en verwachtingen stabieler en beter uitlegbaar te maken?"},
+            {"key": "ldd_other", "text": "Anders, namelijk…", "related": [], "agenda": None},
+        ],
+    },
+    "culture": {
+        "question": "Welke richting zou het gesprek over de samenwerking in het team het meest helpen?",
+        "options": [
+            {"key": "cud_safety", "text": "Fouten of twijfels makkelijker kunnen bespreken zonder negatieve gevolgen",
+             "related": ["cu_mistakes"],
+             "agenda": "Wat moet management eerst toetsen om het bespreken van fouten en twijfels veiliger te maken?"},
+            {"key": "cud_dissent", "text": "Meer ruimte voor kritische vragen en afwijkende meningen",
+             "related": ["cu_dissent"],
+             "agenda": "Wat moet management eerst toetsen om kritische vragen en afwijkende meningen meer ruimte te geven?"},
+            {"key": "cud_conflict", "text": "Spanningen of conflicten eerder bespreekbaar maken",
+             "related": ["cu_conflict"],
+             "agenda": "Wat moet management eerst toetsen om spanningen eerder bespreekbaar te maken?"},
+            {"key": "cud_agreements", "text": "Duidelijkere teamafspraken over gedrag, samenwerking en opvolging",
+             "related": ["cu_behavior"],
+             "agenda": "Wat moet management eerst toetsen om teamafspraken over gedrag en opvolging te verduidelijken?"},
+            {"key": "cud_involvement", "text": "Eerder betrokken worden bij besluiten of veranderingen die het team raken",
+             "related": ["cu_exclusion"],
+             "agenda": "Wat moet management eerst toetsen om medewerkers eerder te betrekken bij besluiten die het team raken?"},
+            {"key": "cud_crossteam", "text": "Betere samenwerking tussen teams of afdelingen",
+             "related": ["cu_cross_team"],
+             "agenda": "Wat moet management eerst toetsen om de samenwerking tussen teams of afdelingen te verbeteren?"},
+            {"key": "cud_other", "text": "Anders, namelijk…", "related": [], "agenda": None},
+        ],
+    },
+    "growth": {
+        "question": "Welke richting zou het gesprek over groeiperspectief het meest helpen?",
+        "options": [
+            {"key": "grd_visibility", "text": "Beter zicht op welke mogelijkheden er voor mij zijn",
+             "related": ["gr_visibility"],
+             "agenda": "Wat moet management eerst toetsen om ontwikkelmogelijkheden zichtbaarder te maken?"},
+            {"key": "grd_conversation", "text": "Een concreter gesprek over mijn ontwikkeling",
+             "related": ["gr_conversation"],
+             "agenda": "Wat moet management eerst toetsen om ontwikkelgesprekken concreter te maken?"},
+            {"key": "grd_followthrough", "text": "Ontwikkelafspraken concreter vastleggen en zichtbaar opvolgen",
+             "related": ["gr_follow_through"],
+             "agenda": "Wat moet management eerst toetsen om ontwikkelafspraken zichtbaar op te volgen?"},
+            {"key": "grd_time", "text": "Ontwikkeling beter inplannen naast het reguliere werk",
+             "related": ["gr_time"],
+             "agenda": "Wat moet management eerst toetsen om ontwikkeling beter in te plannen naast het reguliere werk?"},
+            {"key": "grd_criteria", "text": "Duidelijkere criteria voor hoe doorgroei wordt bepaald",
+             "related": ["gr_criteria"],
+             "agenda": "Wat moet management eerst toetsen om doorgroeicriteria te verduidelijken?"},
+            {"key": "grd_nextstep", "text": "Een open en concreet gesprek over realistische vervolgstappen, binnen of buiten mijn huidige rol",
+             "related": ["gr_ceiling"],
+             "agenda": "Wat moet management eerst toetsen om realistische vervolgstappen bespreekbaar te maken?"},
+            {"key": "grd_other", "text": "Anders, namelijk…", "related": [], "agenda": None},
+        ],
+    },
+    "compensation": {
+        "question": "Welke richting zou het gesprek over beloning en voorwaarden het meest helpen?",
+        "options": [
+            {"key": "cpd_insight", "text": "Beter inzicht in hoe beloning zich verhoudt tot vergelijkbaar werk elders",
+             "related": ["cp_external"],
+             "agenda": "Wat moet management eerst toetsen om inzicht te geven in hoe de beloning zich verhoudt tot vergelijkbaar werk elders?"},
+            {"key": "cpd_explain", "text": "Meer uitlegbaarheid van verschillen tussen vergelijkbare functies",
+             "related": ["cp_internal"],
+             "agenda": "Wat moet management eerst toetsen om verschillen tussen vergelijkbare functies uitlegbaar te maken?"},
+            {"key": "cpd_review", "text": "Beloning en rolzwaarte opnieuw tegen elkaar houden",
+             "related": ["cp_responsibility"],
+             "agenda": "Wat moet management eerst toetsen om beloning en rolzwaarte opnieuw tegen elkaar te houden?"},
+            {"key": "cpd_path", "text": "Duidelijker groeipad in beloning, inclusief voorwaarden en timing",
+             "related": ["cp_growth"],
+             "agenda": "Wat moet management eerst toetsen om het groeipad in beloning te verduidelijken?"},
+            {"key": "cpd_clarity", "text": "Meer duidelijkheid over hoe beloning en groei worden bepaald",
+             "related": ["cp_clarity"],
+             "agenda": "Wat moet management eerst toetsen om uitlegbaar te maken hoe beloning en groei worden bepaald?"},
+            {"key": "cpd_flex", "text": "Rooster, werktijden of flexibiliteit die beter aansluiten",
+             "related": ["cp_flexibility"],
+             "agenda": "Wat moet management eerst toetsen om te bepalen of rooster, werktijden of flexibiliteit beter kunnen aansluiten?"},
+            {"key": "cpd_other", "text": "Anders, namelijk…", "related": [], "agenda": None},
+        ],
+    },
+    "role_clarity": {
+        "question": "Welke richting zou het gesprek over rolhelderheid het meest helpen?",
+        "options": [
+            {"key": "rcd_priorities", "text": "Duidelijkere prioriteiten binnen mijn rol",
+             "related": ["rc_priorities"],
+             "agenda": "Wat moet management eerst toetsen om prioriteiten binnen rollen te verduidelijken?"},
+            {"key": "rcd_expectations", "text": "Duidelijkheid over verwachtingen en waarop ik word aangesproken",
+             "related": ["rc_expectations"],
+             "agenda": "Wat moet management eerst toetsen om verwachtingen en aanspreekcriteria te verduidelijken?"},
+            {"key": "rcd_alignment", "text": "Eenduidigere opdrachten en betere afstemming tussen betrokkenen",
+             "related": ["rc_conflicting"],
+             "agenda": "Wat moet management eerst toetsen om opdrachten eenduidiger te maken en afstemming te verbeteren?"},
+            {"key": "rcd_scope", "text": "Duidelijke afspraken als mijn takenpakket verandert",
+             "related": ["rc_scope"],
+             "agenda": "Wat moet management eerst toetsen om afspraken bij veranderende takenpakketten te borgen?"},
+            {"key": "rcd_mandate", "text": "Duidelijkheid over wat ik zelf mag beslissen",
+             "related": ["rc_mandate"],
+             "agenda": "Wat moet management eerst toetsen om beslisruimte te verduidelijken?"},
+            {"key": "rcd_information", "text": "Betere informatie, context en overdracht voor mijn werk",
+             "related": ["rc_information"],
+             "agenda": "Wat moet management eerst toetsen om informatie en overdracht rond het werk te verbeteren?"},
+            {"key": "rcd_other", "text": "Anders, namelijk…", "related": [], "agenda": None},
+        ],
+    },
+}
+
+
+def get_direction_sets(scan_type: str) -> dict[str, dict[str, Any]]:
+    """Per factor: question_set_version, question, options. Alleen retention in v1."""
+    if scan_type not in DEEPENING_CAP:
+        raise ValueError(f"unknown scan_type {scan_type!r}")
+    if scan_type != "retention":
+        return {}
+    out: dict[str, dict[str, Any]] = {}
+    for fk in DEEPENING_FACTOR_KEYS:
+        raw = DIRECTION_SETS[fk]
+        out[fk] = {
+            "question_set_version": f"retention_{fk}_direction_v1",
+            "question": raw["question"],
+            "options": [{"key": o["key"], "text": o["text"]} for o in raw["options"]],
+        }
+    return out
 
 
 def _factor_items(org_raw: dict[str, int], factor_key: str) -> list[int]:
