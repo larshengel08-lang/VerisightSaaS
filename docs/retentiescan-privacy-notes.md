@@ -38,3 +38,20 @@ Deze notitie legt de minimale privacyafspraken vast voor RetentieScan v1.
 - bevlogenheid en vertrekintentie worden alleen gemiddeld gepresenteerd
 - open tekst wordt geanonimiseerd en alleen in groepsduiding gebruikt
 - documentatie en salescopy blijven expliciet over deze grenzen
+
+## Verdieping en gespreksrichting — doelbinding (2026-07-05)
+
+Spec: `docs/superpowers/specs/2026-07-05-richtingsvraag-behoud-design.md` §8.
+
+- **Doel:** groepsduiding ten behoeve van het managementgesprek. De oorzaak-
+  verdieping en de gespreksrichting-vraag leveren uitsluitend input voor de
+  gespreksagenda op groepsniveau.
+- **Geen individuele opvolging:** antwoorden worden nooit gebruikt om
+  individuele respondenten te identificeren, te benaderen of op te volgen.
+- **Geen besluitvorming op persoonsniveau:** gespreksrichting-data (waaronder
+  richtingen rond beloning en voorwaarden) vormt geen grondslag voor
+  arbeidsrechtelijke of beloningsbesluiten jegens individuen.
+- **Weergavegrenzen:** verdieping- en richtingdata worden in v1 uitsluitend
+  op campagne-totaalniveau getoond (geen segmenten), met de bestaande
+  n-drempels; "Anders"-teksten worden geanonimiseerd opgeslagen en komen
+  nooit ongereviewd in een rapport.
