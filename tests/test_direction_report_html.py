@@ -15,6 +15,30 @@ def test_direction_block_shows_full_chain_and_footer():
         assert verboden not in html.lower()
 
 
+def test_direction_block_uses_item_tbl_with_percentage_first():
+    # n>=10: zelfde visuele grammatica en waardeformaat als _deepening_block.
+    html = _direction_block(AGG_OK, "retention", "workload")
+    assert 'class="item-tbl"' in html and "<ul" not in html
+    assert "60% (6)" in html and "40% (4)" in html
+
+
+def test_direction_block_middle_band_counts_without_percentages():
+    # n=7 (5-9): alleen aantallen, met gesprekshaakje-caveat.
+    agg = dict(AGG_OK, direction_answered=7,
+               direction_counts={"wld_recovery": 4, "wld_priorities": 3})
+    html = _direction_block(agg, "retention", "workload")
+    assert 'class="item-tbl"' in html
+    assert "%" not in html.split("item-tbl")[1].split("</table>")[0]
+    assert "Beperkte antwoordbasis" in html
+
+
+def test_direction_block_empty_when_not_offered():
+    # Byte-gate: campagnes zonder direction-data renderen niets.
+    agg = dict(AGG_OK, direction_offered=0, direction_answered=0,
+               direction_skipped=0, direction_counts={})
+    assert _direction_block(agg, "retention", "workload") == ""
+
+
 def test_direction_block_hidden_below_privacy_floor():
     agg = dict(AGG_OK, direction_answered=4, direction_counts={"wld_recovery": 4})
     html = _direction_block(agg, "retention", "workload")

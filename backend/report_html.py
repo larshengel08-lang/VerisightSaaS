@@ -623,19 +623,17 @@ def _direction_block(agg: dict, scan_type: str, factor_key: str) -> str:
                 'in de managementbespreking.</p>')
     else:
         ranked = sorted(agg["direction_counts"].items(), key=lambda kv: (-kv[1], kv[0]))
-        rows = []
-        for key, cnt in ranked:
-            label = _h(opt_text.get(key, key))
-            if n >= 10:
-                rows.append(f"<li>{label} &mdash; {cnt} ({round(cnt / n * 100)}%)</li>")
-            else:
-                rows.append(f"<li>{label} &mdash; {cnt}</li>")
-        caveat = ""
-        if n < 10:
-            caveat = ('<p style="font-size:9px;color:#92400E;margin:4px 0 0;">'
-                      'Beperkte antwoordbasis &mdash; gebruik dit als gesprekshaakje, '
-                      'niet als conclusie.</p>')
-        body = f'<ul style="font-size:9.5px;margin:4px 0 0;">{"".join(rows)}</ul>{caveat}'
+        rows = "".join(
+            f'<tr><td class="iq">{_h(opt_text.get(key, key))}</td>'
+            f'<td class="is" style="color:#0D1B2A;">'
+            f'{f"{round(cnt / n * 100)}% ({cnt})" if n >= 10 else cnt}'
+            f'</td></tr>'
+            for key, cnt in ranked)
+        body = f'<table class="item-tbl" style="margin-top:6px;">{rows}</table>'
+        if n <= 9:
+            body += ('<p style="font-size:9px;color:#92400E;margin:4px 0 0;">'
+                     'Beperkte antwoordbasis &mdash; gebruik dit als gesprekshaakje, '
+                     'niet als conclusie.</p>')
     footer = ('<p style="font-size:8.5px;color:#94A3B8;margin:8px 0 0;">'
               'Gespreksrichting uit de groep is input van respondenten, geen uitvoeringsadvies. '
               'Haalbaarheid, rechtvaardigheid en passendheid binnen bestaand beleid wegen mee '
