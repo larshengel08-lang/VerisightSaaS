@@ -10,8 +10,9 @@ DEEPENING_FACTOR_KEYS = [
     "leadership", "culture", "growth", "compensation", "workload", "role_clarity",
 ]
 
-# Cap op aantal verdiepingen per respondent; gebruikt door triggerlogica (Task 2).
-DEEPENING_CAP = {"exit": 3, "retention": 2}
+# Cap op aantal verdiepingen per respondent; gebruikt door triggerlogica.
+# Retention 2->3 per spec 2026-07-05 (gespreksrichting-ronde).
+DEEPENING_CAP = {"exit": 3, "retention": 3}
 
 DEEPENING_SETS: dict[str, dict[str, Any]] = {
     "workload": {
@@ -382,6 +383,173 @@ DEEPENING_SETS: dict[str, dict[str, Any]] = {
     },
 }
 
+# Gespreksrichting-sets (spec: docs/superpowers/specs/2026-07-05-richtingsvraag-behoud-design.md par. 4).
+# GEEN 1-op-1-spiegeling van de oorzaakset: routes zijn managementrichtingen; `related`
+# is een losse verwantschaps-mapping, uitsluitend voor concordantie-analyse.
+DIRECTION_SETS: dict[str, dict[str, Any]] = {
+    "workload": {
+        "question": "Welke richting zou het gesprek over werkbelasting het meest helpen?",
+        "options": [
+            {"key": "wld_scope", "text": "Takenpakket en werkvolume beter afbakenen",
+             "related": ["wl_volume"],
+             "agenda": "Waar moet het takenpakket scherper worden afgebakend?"},
+            {"key": "wld_planning", "text": "Planning en bezetting beter laten aansluiten op het werk dat er ligt",
+             "related": ["wl_capacity"],
+             "agenda": "Hoe laten we planning en bezetting beter aansluiten op het werk dat er ligt?"},
+            {"key": "wld_peaks", "text": "Piekmomenten en spoedwerk eerder plannen, verdelen of begrenzen",
+             "related": ["wl_peaks_adhoc"],
+             "agenda": "Hoe plannen, verdelen of begrenzen we piek- en spoeddruk eerder?"},
+            {"key": "wld_recovery", "text": "Meer ruimte om te herstellen en werk goed af te ronden",
+             "related": ["wl_recovery"],
+             "agenda": "Hoe maken we meer ruimte voor herstel en het goed afronden van werk?"},
+            {"key": "wld_priorities", "text": "Duidelijkere keuzes over wat voorrang heeft en wat kan wachten",
+             "related": ["wl_priorities"],
+             "agenda": "Hoe maken we explicieter wat voorrang heeft en wat kan wachten?"},
+            {"key": "wld_friction", "text": "Minder dubbel werk, systeemgedoe of fouten in overdracht",
+             "related": ["wl_process"],
+             "agenda": "Waar belemmeren dubbel werk, systeemgedoe of overdracht het werk het meest?"},
+            {"key": "wld_other", "text": "Anders, namelijk…", "related": [], "agenda": None},
+        ],
+    },
+    "leadership": {
+        "question": "Welke richting zou het gesprek over de aansturing het meest helpen?",
+        "options": [
+            {"key": "ldd_feedback", "text": "Meer bruikbare feedback en richting",
+             "related": ["ld_feedback"],
+             "agenda": "Hoe krijgen medewerkers meer bruikbare feedback en richting?"},
+            {"key": "ldd_mandate", "text": "Duidelijker wat ik zelf mag beslissen in mijn werk",
+             "related": ["ld_autonomy"],
+             "agenda": "Waar hebben medewerkers meer duidelijkheid nodig over wat zij zelf mogen beslissen?"},
+            {"key": "ldd_escalation", "text": "Duidelijkere steun als er spanningen zijn of situaties vastlopen",
+             "related": ["ld_support"],
+             "agenda": "Welke steun missen medewerkers als spanningen oplopen of situaties vastlopen?"},
+            {"key": "ldd_recognition", "text": "Concretere terugkoppeling op wat goed gaat en wat wordt gewaardeerd",
+             "related": ["ld_recognition"],
+             "agenda": "Waar missen medewerkers concrete terugkoppeling of waardering?"},
+            {"key": "ldd_availability", "text": "Meer beschikbaarheid en zichtbaarheid van mijn leidinggevende",
+             "related": ["ld_availability"],
+             "agenda": "Past de beschikbaarheid en zichtbaarheid van leidinggevenden bij de omvang van hun teams?"},
+            {"key": "ldd_consistency", "text": "Stabielere en beter uitlegbare besluiten en verwachtingen",
+             "related": ["ld_consistency"],
+             "agenda": "Hoe maken we besluiten en verwachtingen stabieler en beter uitlegbaar?"},
+            {"key": "ldd_other", "text": "Anders, namelijk…", "related": [], "agenda": None},
+        ],
+    },
+    "culture": {
+        "question": "Welke richting zou het gesprek over de samenwerking in het team het meest helpen?",
+        "options": [
+            {"key": "cud_safety", "text": "Fouten of twijfels makkelijker en veiliger kunnen bespreken",
+             "related": ["cu_mistakes"],
+             "agenda": "Wat maakt het bespreken van fouten of twijfels nu lastig?"},
+            {"key": "cud_dissent", "text": "Meer ruimte voor kritische vragen en afwijkende meningen",
+             "related": ["cu_dissent"],
+             "agenda": "Hoe geven we kritische vragen en afwijkende meningen meer ruimte?"},
+            {"key": "cud_conflict", "text": "Spanningen of conflicten eerder bespreekbaar maken",
+             "related": ["cu_conflict"],
+             "agenda": "Hoe maken we spanningen of conflicten eerder bespreekbaar?"},
+            {"key": "cud_agreements", "text": "Duidelijkere teamafspraken over gedrag, samenwerking en opvolging",
+             "related": ["cu_behavior"],
+             "agenda": "Welke teamafspraken over gedrag, samenwerking en opvolging vragen aanscherping?"},
+            {"key": "cud_involvement", "text": "Eerder betrokken worden bij besluiten of veranderingen die het team raken",
+             "related": ["cu_exclusion"],
+             "agenda": "Hoe betrekken we medewerkers eerder bij besluiten die het team raken?"},
+            {"key": "cud_crossteam", "text": "Betere samenwerking tussen teams of afdelingen",
+             "related": ["cu_cross_team"],
+             "agenda": "Waar loopt de samenwerking tussen teams of afdelingen het meest vast?"},
+            {"key": "cud_other", "text": "Anders, namelijk…", "related": [], "agenda": None},
+        ],
+    },
+    "growth": {
+        "question": "Welke richting zou het gesprek over groeiperspectief het meest helpen?",
+        "options": [
+            {"key": "grd_visibility", "text": "Beter zicht op welke mogelijkheden er voor mij zijn",
+             "related": ["gr_visibility"],
+             "agenda": "Hoe maken we ontwikkelmogelijkheden zichtbaarder?"},
+            {"key": "grd_conversation", "text": "Een concreter gesprek over mijn ontwikkeling",
+             "related": ["gr_conversation"],
+             "agenda": "Hoe maken we ontwikkelgesprekken concreter?"},
+            {"key": "grd_followthrough", "text": "Ontwikkelafspraken concreter vastleggen en zichtbaar opvolgen",
+             "related": ["gr_follow_through"],
+             "agenda": "Hoe leggen we ontwikkelafspraken vast en volgen we ze zichtbaar op?"},
+            {"key": "grd_time", "text": "Ontwikkeling beter inplannen naast het reguliere werk",
+             "related": ["gr_time"],
+             "agenda": "Hoe krijgt ontwikkeling een vaste plek naast het reguliere werk?"},
+            {"key": "grd_criteria", "text": "Duidelijkere criteria voor hoe doorgroei wordt bepaald",
+             "related": ["gr_criteria"],
+             "agenda": "Hoe maken we de criteria voor doorgroei duidelijker?"},
+            {"key": "grd_nextstep", "text": "Een open en concreet gesprek over realistische vervolgstappen binnen de organisatie",
+             "related": ["gr_ceiling"],
+             "agenda": "Welke realistische vervolgstappen binnen de organisatie zien of missen medewerkers?"},
+            {"key": "grd_other", "text": "Anders, namelijk…", "related": [], "agenda": None},
+        ],
+    },
+    "compensation": {
+        "question": "Welke richting zou het gesprek over beloning en voorwaarden het meest helpen?",
+        "options": [
+            {"key": "cpd_insight", "text": "Beter inzicht in hoe beloning zich verhoudt tot vergelijkbaar werk elders",
+             "related": ["cp_external"],
+             "agenda": "Welke behoefte leeft er aan uitleg over hoe de beloning zich verhoudt tot vergelijkbaar werk elders?"},
+            {"key": "cpd_explain", "text": "Meer uitlegbaarheid van verschillen tussen vergelijkbare functies",
+             "related": ["cp_internal"],
+             "agenda": "Waar voelen verschillen tussen vergelijkbare functies onvoldoende uitlegbaar?"},
+            {"key": "cpd_review", "text": "Beter kijken of beloning past bij de zwaarte en verantwoordelijkheid van mijn werk",
+             "related": ["cp_responsibility"],
+             "agenda": "Waar leven vragen over de verhouding tussen beloning, zwaarte en verantwoordelijkheid van het werk?"},
+            {"key": "cpd_path", "text": "Meer duidelijkheid over mogelijke salarisgroei, voorwaarden en timing",
+             "related": ["cp_growth"],
+             "agenda": "Waar is meer duidelijkheid nodig over mogelijke salarisgroei, voorwaarden en timing?"},
+            {"key": "cpd_clarity", "text": "Meer duidelijkheid over hoe beloning en groei worden bepaald",
+             "related": ["cp_clarity"],
+             "agenda": "Hoe maken we uitlegbaar hoe beloning en groei worden bepaald?"},
+            {"key": "cpd_flex", "text": "Meer duidelijkheid of ruimte rond rooster, werktijden of flexibiliteit",
+             "related": ["cp_flexibility"],
+             "agenda": "Waar knellen rooster, werktijden of flexibiliteit het meest?"},
+            {"key": "cpd_other", "text": "Anders, namelijk…", "related": [], "agenda": None},
+        ],
+    },
+    "role_clarity": {
+        "question": "Welke richting zou het gesprek over rolhelderheid het meest helpen?",
+        "options": [
+            {"key": "rcd_priorities", "text": "Duidelijkere prioriteiten binnen mijn rol",
+             "related": ["rc_priorities"],
+             "agenda": "Hoe maken we prioriteiten binnen rollen duidelijker?"},
+            {"key": "rcd_expectations", "text": "Duidelijkheid over verwachtingen en waarop ik word aangesproken",
+             "related": ["rc_expectations"],
+             "agenda": "Hoe verduidelijken we verwachtingen en waar medewerkers op worden aangesproken?"},
+            {"key": "rcd_alignment", "text": "Eenduidigere opdrachten en betere afstemming tussen betrokkenen",
+             "related": ["rc_conflicting"],
+             "agenda": "Hoe maken we opdrachten eenduidiger en de afstemming tussen betrokkenen beter?"},
+            {"key": "rcd_scope", "text": "Duidelijke afspraken als mijn takenpakket verandert",
+             "related": ["rc_scope"],
+             "agenda": "Hoe leggen we afspraken duidelijker vast wanneer takenpakketten veranderen?"},
+            {"key": "rcd_mandate", "text": "Duidelijkheid over wat ik zelf mag beslissen",
+             "related": ["rc_mandate"],
+             "agenda": "Hoe maken we duidelijker wat medewerkers zelf mogen beslissen?"},
+            {"key": "rcd_information", "text": "Betere informatie, context en overdracht voor mijn werk",
+             "related": ["rc_information"],
+             "agenda": "Hoe zorgen we dat informatie, context en overdracht aansluiten op het werk?"},
+            {"key": "rcd_other", "text": "Anders, namelijk…", "related": [], "agenda": None},
+        ],
+    },
+}
+
+
+def get_direction_sets(scan_type: str) -> dict[str, dict[str, Any]]:
+    """Per factor: question_set_version, question, options. Alleen retention in v1."""
+    if scan_type not in DEEPENING_CAP:
+        raise ValueError(f"unknown scan_type {scan_type!r}")
+    if scan_type != "retention":
+        return {}
+    out: dict[str, dict[str, Any]] = {}
+    for fk in DEEPENING_FACTOR_KEYS:
+        raw = DIRECTION_SETS[fk]
+        out[fk] = {
+            "question_set_version": f"retention_{fk}_direction_v1",
+            "question": raw["question"],
+            "options": [{"key": o["key"], "text": o["text"]} for o in raw["options"]],
+        }
+    return out
+
 
 def _factor_items(org_raw: dict[str, int], factor_key: str) -> list[int]:
     return [v for k, v in org_raw.items()
@@ -452,7 +620,9 @@ def aggregate_deepening(
         raise ValueError(f"unknown scan_type {scan_type!r}")
     out: dict[str, dict[str, Any]] = {
         fk: {"triggered": 0, "offered": 0, "answered": 0, "skipped": 0,
-             "primary_counts": {}, "secondary_counts": {}}
+             "primary_counts": {}, "secondary_counts": {},
+             "direction_offered": 0, "direction_answered": 0,
+             "direction_skipped": 0, "direction_counts": {}}
         for fk in DEEPENING_FACTOR_KEYS
     }
     for org_raw, entries in rows:
@@ -470,6 +640,14 @@ def aggregate_deepening(
                     agg["primary_counts"][e["primary"]] = agg["primary_counts"].get(e["primary"], 0) + 1
                 if e.get("secondary"):
                     agg["secondary_counts"][e["secondary"]] = agg["secondary_counts"].get(e["secondary"], 0) + 1
+                d = e.get("direction")
+                if d is not None:
+                    agg["direction_offered"] += 1
+                    if d.get("status") == "answered" and d.get("choice"):
+                        agg["direction_answered"] += 1
+                        agg["direction_counts"][d["choice"]] = agg["direction_counts"].get(d["choice"], 0) + 1
+                    else:
+                        agg["direction_skipped"] += 1
             else:
                 agg["skipped"] += 1
     return out
@@ -505,3 +683,66 @@ def get_agenda_question(scan_type: str, factor_key: str, option_key: str) -> str
     if option_key not in options:
         raise KeyError(f"unknown option_key {option_key!r} for factor {factor_key!r}")
     return options[option_key]
+
+
+def is_concordant(factor_key: str, primary: str, direction_choice: str) -> bool:
+    """Concordantie via de verwantschaps-mapping (spec par. 5): niet opgeslagen, afgeleid."""
+    for o in DIRECTION_SETS[factor_key]["options"]:
+        if o["key"] == direction_choice:
+            return primary in o["related"]
+    return False
+
+
+def _direction_top(agg: dict[str, Any]) -> tuple[str, int, int] | None:
+    """Topoptie over direction_answered met dezelfde vijf voorwaarden als trede 1."""
+    n = agg["direction_answered"]
+    counts = agg["direction_counts"]
+    if n < 8 or not counts:
+        return None
+    ranked = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
+    top_key, top_n = ranked[0]
+    second_n = ranked[1][1] if len(ranked) > 1 else 0
+    if top_key.endswith("_other"):
+        return None
+    if top_n < 4 or top_n / n < 0.5 or top_n - second_n < 2:
+        return None
+    return top_key, top_n, n
+
+
+def get_direction_agenda_question(factor_key: str, route_key: str) -> str | None:
+    options = {o["key"]: o["agenda"] for o in DIRECTION_SETS[factor_key]["options"]}
+    if route_key not in options:
+        raise KeyError(f"unknown route_key {route_key!r} for factor {factor_key!r}")
+    return options[route_key]
+
+
+def direction_agenda_scenario(agg: dict[str, Any], scan_type: str, factor_key: str) -> dict[str, Any]:
+    """Spec par. 7.2/7.3: bepaal het agendascenario voor een factor.
+
+    Retourneert altijd een dict met `scenario` in
+    {"cause_only", "concordant", "discrepant", "none"} + velden voor rendering.
+    - "none": ook de oorzaak-verrijking vuurt niet (render de generieke regel).
+    - Stopregel: >40% van de aangeboden richtingen geskipt -> richting onderdrukt.
+    """
+    cause = agenda_enrichment(agg, scan_type, factor_key)
+    suppressed = False
+    offered = agg.get("direction_offered", 0)
+    if offered > 0 and agg.get("direction_skipped", 0) / offered > 0.4:
+        suppressed = True
+    top = None if suppressed else _direction_top(agg)
+    if cause is None:
+        return {"scenario": "none", "direction_suppressed_by_skip": suppressed}
+    if top is None:
+        return {"scenario": "cause_only", "cause": cause,
+                "direction_suppressed_by_skip": suppressed}
+    route_key, route_n, dir_n = top
+    concordant = is_concordant(factor_key, cause["option_key"], route_key)
+    return {
+        "scenario": "concordant" if concordant else "discrepant",
+        "cause": cause,
+        "direction_suppressed_by_skip": False,
+        "route_key": route_key,
+        "route_count": route_n,
+        "direction_answered": dir_n,
+        "agenda_question": get_direction_agenda_question(factor_key, route_key),
+    }

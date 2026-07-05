@@ -40,10 +40,11 @@ def test_missing_items_no_trigger():
     assert compute_deepening_offers({}, "retention") == []
 
 
-def test_cap_retention_2_exit_3():
+def test_cap_retention_3_exit_3():
+    # Retention-cap 2->3 per spec 2026-07-05 (gespreksrichting-ronde).
     org = {**_org("workload", 1, 1, 1), **_org("growth", 2, 2, 2),
            **_org("culture", 2, 2, 3), **_org("leadership", 1, 2, 2)}
-    assert len(compute_deepening_offers(org, "retention")) == 2
+    assert len(compute_deepening_offers(org, "retention")) == 3
     assert len(compute_deepening_offers(org, "exit")) == 3
 
 
@@ -61,7 +62,7 @@ def test_cap_tiebreak_most_low_items_then_lowest_min():
     offers = compute_deepening_offers(org, "retention")
     # equal avg -> workload wins on most low items; growth vs culture: equal lowcount,
     # equal min -> DEEPENING_FACTOR_KEYS order decides (culture before growth)
-    assert offers == ["workload", "culture"]
+    assert offers == ["workload", "culture", "growth"]
 
 
 def test_unknown_scan_type_raises():

@@ -185,13 +185,13 @@ Basisvoorwaarden per verrijking: de bestaande vijf trede-1-voorwaarden, voor ric
 |---|---|
 | **Alleen oorzaak voldoet** | Huidige trede-1-regel blijft; geen richting-vermelding |
 | **Alleen richting voldoet** | Géén verrijking — richting zonder oorzaakcontext is niet duidbaar |
-| **Beide voldoen, concordant** (oorzaak-top ∈ verwant_aan(richting-top)) | Eén compacte gecombineerde zin, géén aparte richting-alinea (tautologie-rem): *"…8 kozen hersteltijd als belangrijkste toelichting; de meest gekozen gespreksrichting sluit daarbij aan. Gespreksvraag: wat moet management eerst toetsen om te bepalen of meer herstelruimte passend en haalbaar is?"* |
+| **Beide voldoen, concordant** (oorzaak-top ∈ verwant_aan(richting-top)) | Eén compacte gecombineerde zin, géén aparte richting-alinea (tautologie-rem): *"…8 kozen hersteltijd als belangrijkste toelichting; de meest gekozen gespreksrichting sluit daarbij aan. Gespreksvraag: hoe maken we meer ruimte voor herstel en het goed afronden van werk?"* |
 | **Beide voldoen, discrepant** | Expliciete uiteenloop-regel: *"Respondenten kozen vooral [oorzaak] als toelichting, maar [gespreksrichting] als richting voor het gesprek. Bespreek eerst waar dit verschil vandaan komt."* |
 
 Aanvullende regels:
 - Oorzaak-top = `*_other` → géén richting-verrijking; optieset-reviewvlag (bestaand trede-1-gedrag).
 - Richting-top = `*_other` → nooit template-verrijking; alleen bij voldoende n de neutrale regel *"veel antwoorden vielen buiten de vaste opties"* + interne reviewvlag.
-- **Gespreksvraag-templates:** patroon *"wat moet management eerst toetsen om te bepalen of [gespreksroute] passend en haalbaar is?"* — per route-key één vaste template. De 36 templates worden in het implementatieplan voluit uitgeschreven en krijgen daar een **eigen reviewgate** (Lars) vóór bouw, getoetst door de content-guard (verboden woorden, belofte-taal, causale suggestie).
+- **Gespreksvraag-templates:** per route-key één vaste, doelgerichte gespreksvraag in dezelfde directe stem als de trede-1-agendavragen (besluit Lars 2026-07-05, reviewgate: geen 'eerst toetsen'-frame — de vraagvorm zelf plus de voetregel uit §7.1 bewaken de geen-prescriptie-grens). De 36 templates zijn bij de reviewgate goedgekeurd en staan in `DIRECTION_SETS`.
 
 ### 7.3 Kwaliteits- en claimregels
 

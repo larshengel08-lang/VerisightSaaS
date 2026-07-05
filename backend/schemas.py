@@ -289,6 +289,26 @@ class ContactRequestUpdate(BaseModel):
 # Survey submission (from the HTML survey form)
 # ---------------------------------------------------------------------------
 
+class DeepeningDirection(BaseModel):
+    """Gespreksrichting-antwoord bij een beantwoorde verdieping (spec 2026-07-05 par. 5/6)."""
+    question_set_version: str
+    status: Literal["answered", "skipped"]
+    choice: Optional[str] = None
+    other_text: Optional[str] = Field(None, max_length=200)
+
+    @model_validator(mode="after")
+    def _validate(self) -> "DeepeningDirection":
+        if self.status == "answered" and not self.choice:
+            raise ValueError("answered vereist een keuze")
+        if self.status == "skipped" and (self.choice or self.other_text):
+            raise ValueError("skipped mag geen keuze of toelichting bevatten")
+        if self.choice and self.choice.endswith("_other") and not (self.other_text and self.other_text.strip()):
+            raise ValueError("other-keuze vereist een toelichting")
+        if self.other_text and not (self.choice and self.choice.endswith("_other")):
+            raise ValueError("other_text alleen bij een *_other keuze")
+        return self
+
+
 class DeepeningEntry(BaseModel):
     """Eén verdiepingsantwoord (spec: docs/superpowers/specs/2026-07-03-verdiepingsvragen-design.md §5)."""
     factor_key: str
@@ -297,6 +317,7 @@ class DeepeningEntry(BaseModel):
     primary: Optional[str] = None
     secondary: Optional[str] = None
     other_text: Optional[str] = Field(None, max_length=200)
+    direction: Optional[DeepeningDirection] = None
 
     @model_validator(mode="after")
     def _validate_choices(self) -> "DeepeningEntry":
@@ -309,6 +330,8 @@ class DeepeningEntry(BaseModel):
         if self.other_text:
             if not any(k and k.endswith("_other") for k in (self.primary, self.secondary)):
                 raise ValueError("other_text alleen bij een *_other keuze")
+        if self.direction is not None and self.status != "answered":
+            raise ValueError("gespreksrichting alleen bij een beantwoorde verdieping")
         return self
 
 

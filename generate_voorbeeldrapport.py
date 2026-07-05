@@ -278,7 +278,7 @@ CONTRIBUTING_REASON_MAP = {
 DEEPENING_PRIMARY_WEIGHTS: dict[str, dict[str, float]] = {
     "workload": {"wl_recovery": 0.60, "wl_volume": 0.15, "wl_capacity": 0.15, "wl_priorities": 0.10},
     "leadership": {"ld_feedback": 0.45, "ld_availability": 0.25, "ld_recognition": 0.20, "ld_support": 0.10},
-    "growth": {"gr_visibility": 0.40, "gr_conversation": 0.30, "gr_follow_through": 0.20, "gr_time": 0.10},
+    "growth": {"gr_visibility": 0.60, "gr_conversation": 0.20, "gr_follow_through": 0.10, "gr_time": 0.10},
     "culture": {"cu_cross_team": 0.50, "cu_exclusion": 0.30, "cu_conflict": 0.20},
     "compensation": {"cp_external": 0.40, "cp_growth": 0.35, "cp_clarity": 0.25},
     "role_clarity": {"rc_priorities": 0.40, "rc_conflicting": 0.35, "rc_scope": 0.25},
@@ -290,6 +290,20 @@ DEEPENING_SECONDARY_WEIGHTS: dict[str, dict[str, float]] = {
 }
 DEEPENING_SKIP_RATE = 0.12
 DEEPENING_SECONDARY_RATE = 0.55
+
+# Gespreksrichting (alleen retention): gewichten zo gekozen dat de sample
+# minimaal één concordant scenario toont (workload: oorzaak-top wl_recovery,
+# richting-top wld_recovery) en één discrepant (growth: oorzaak-top
+# gr_visibility, richting-top grd_followthrough) — spec 2026-07-05 par. 7.4.
+DIRECTION_WEIGHTS: dict[str, dict[str, float]] = {
+    "workload": {"wld_recovery": 0.85, "wld_priorities": 0.15},
+    "leadership": {"ldd_feedback": 0.50, "ldd_recognition": 0.30, "ldd_availability": 0.20},
+    "growth": {"grd_followthrough": 0.65, "grd_visibility": 0.15, "grd_conversation": 0.10, "grd_time": 0.10},
+    "culture": {"cud_crossteam": 0.50, "cud_involvement": 0.30, "cud_conflict": 0.20},
+    "compensation": {"cpd_insight": 0.40, "cpd_path": 0.35, "cpd_clarity": 0.25},
+    "role_clarity": {"rcd_priorities": 0.40, "rcd_alignment": 0.35, "rcd_scope": 0.25},
+}
+DIRECTION_SKIP_RATE = 0.10
 
 
 def _weighted_choice(weights: dict[str, float]) -> str:
@@ -324,14 +338,33 @@ def _build_deepening_entries(org_raw: dict[str, int], scan_type: str) -> list[di
             )
             if candidate != primary:
                 secondary = candidate
-        entries.append({
+        entry = {
             "factor_key": factor_key,
             "question_set_version": version,
             "status": "answered",
             "primary": primary,
             "secondary": secondary,
             "other_text": None,
-        })
+        }
+        # Gespreksrichting alleen bij beantwoorde retention-verdiepingen,
+        # via dezelfde echte flow als de survey (niets gefabriceerd).
+        if scan_type == "retention":
+            direction_version = f"retention_{factor_key}_direction_v1"
+            if random.random() < DIRECTION_SKIP_RATE:
+                entry["direction"] = {
+                    "question_set_version": direction_version,
+                    "status": "skipped",
+                    "choice": None,
+                    "other_text": None,
+                }
+            else:
+                entry["direction"] = {
+                    "question_set_version": direction_version,
+                    "status": "answered",
+                    "choice": _weighted_choice(DIRECTION_WEIGHTS[factor_key]),
+                    "other_text": None,
+                }
+        entries.append(entry)
     return entries or None
 
 
