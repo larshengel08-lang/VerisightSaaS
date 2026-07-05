@@ -1,21 +1,22 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bedankt — Verisight</title>
+  <title>Bedankt — Loep</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Inter+Tight:wght@700;800&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --brand: #2563EB;
-      --success: #16A34A;
-      --text: #111827;
-      --muted: #6B7280;
-      --border: #E5E7EB;
-      --bg: #F9FAFB;
+      --navy: #0D1B2A;
+      --amber: #E8A020;
+      --amber-soft: rgba(232,160,32,0.12);
+      --text: #0D1B2A;
+      --muted: #4A6070;
+      --border: rgba(13,27,42,0.15);
+      --bg: #F4F1EA;
       --white: #FFFFFF;
     }
     body {
@@ -30,19 +31,27 @@
     .card {
       background: var(--white);
       border: 1px solid var(--border);
-      border-radius: 16px;
       padding: 60px 48px;
       max-width: 520px;
       width: 100%;
       text-align: center;
-      box-shadow: 0 8px 32px rgba(0,0,0,.08);
+      box-shadow: 0 8px 32px rgba(13,27,42,.08);
     }
     .logo {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--brand);
-      letter-spacing: -.5px;
-      margin-bottom: 32px;
+      font-family: 'Inter Tight', 'Inter', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--navy);
+      letter-spacing: -.04em;
+    }
+    .logo .dot { color: var(--amber); }
+    .payoff {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 6px 0 32px;
     }
     .icon-wrap {
       width: 80px;
@@ -52,15 +61,19 @@
       align-items: center;
       justify-content: center;
       margin: 0 auto 28px;
-      font-size: 36px;
+      font-size: 34px;
+      font-weight: 700;
+      color: var(--navy);
     }
-    .icon-wrap.success { background: #DCFCE7; }
-    .icon-wrap.already { background: #FEF9C3; }
+    .icon-wrap.success { background: var(--amber-soft); }
+    .icon-wrap.already { background: rgba(13,27,42,0.06); }
 
     h1 {
+      font-family: 'Inter Tight', 'Inter', sans-serif;
       font-size: 26px;
       font-weight: 700;
       color: var(--text);
+      letter-spacing: -.02em;
       margin-bottom: 14px;
     }
     p {
@@ -75,15 +88,16 @@
     }
     .footer-note {
       font-size: 12px;
-      color: #9CA3AF;
+      color: var(--muted);
     }
+    .footer-note strong { color: var(--navy); }
     .close-hint {
       margin-top: 24px;
       font-size: 13px;
-      color: #9CA3AF;
+      color: var(--muted);
     }
     .close-hint strong {
-      color: #6B7280;
+      color: var(--navy);
     }
     @media (max-width: 480px) {
       .card { padding: 40px 24px; }
@@ -92,10 +106,11 @@
 </head>
 <body>
   <div class="card">
-    <div class="logo">Verisight</div>
+    <div class="logo">Loep <span class="dot">&bull;</span></div>
+    <div class="payoff">Scherper zien wat telt</div>
 
     {% if already_done %}
-    <div class="icon-wrap already">ℹ️</div>
+    <div class="icon-wrap already">i</div>
     <h1>Al ingevuld</h1>
     <p>
       Je hebt deze survey al eerder ingevuld — je antwoorden zijn al meegenomen in de analyse.
@@ -104,7 +119,7 @@
       Neem contact op met de HR-afdeling van je organisatie.
     </p>
     {% else %}
-    <div class="icon-wrap success">✅</div>
+    <div class="icon-wrap success">&#10003;</div>
     <h1>Bedankt voor je deelname!</h1>
     <p>
       Je antwoorden zijn vertrouwelijk opgeslagen en worden alleen op gegroepeerd niveau meegenomen in de organisatieanalyse.
@@ -120,7 +135,7 @@
     <p class="footer-note">
       🔒 Alle antwoorden worden vertrouwelijk verwerkt. Resultaten worden uitsluitend gedeeld op
       gegroepeerd niveau, conform de AVG-privacywetgeving. Individuele antwoorden worden niet als zelfstandig oordeel gebruikt.<br />
-      Aangeboden door <strong>Verisight</strong> — HR-verloopanalyse.
+      Aangeboden door <strong>Loep</strong> — Scherper zien wat telt.
     </p>
   </div>
 </body>

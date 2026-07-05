@@ -10,18 +10,20 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --brand:      #2563EB;
-      --brand-dark: #1D4ED8;
-      --brand-light:#EFF6FF;
+      --brand:      #0D1B2A;
+      --brand-dark: #081420;
+      --brand-light:rgba(232,160,32,0.12);
+      --accent:     #E8A020;
+      --accent-deep:#B07A10;
       --success:    #16A34A;
       --danger:     #DC2626;
-      --text:       #111827;
-      --muted:      #6B7280;
-      --border:     #E5E7EB;
-      --bg:         #F9FAFB;
+      --text:       #0D1B2A;
+      --muted:      #4A6070;
+      --border:     rgba(13,27,42,0.15);
+      --bg:         #F4F1EA;
       --white:      #FFFFFF;
       --radius:     10px;
-      --shadow:     0 4px 24px rgba(0,0,0,.08);
+      --shadow:     0 4px 24px rgba(13,27,42,.08);
       --transition: 180ms ease;
     }
 
@@ -81,9 +83,12 @@
     }
     .page-header .logo {
       font-size: 20px;
-      font-weight: 700;
+      font-weight: 800;
       color: var(--brand);
       letter-spacing: -.5px;
+    }
+    .page-header .logo .logo-dot {
+      color: var(--accent);
     }
     .page-header h1 {
       font-size: 26px;
@@ -191,7 +196,7 @@
       border-color: var(--brand);
       background: var(--brand);
       color: var(--white);
-      box-shadow: 0 2px 8px rgba(37,99,235,.3);
+      box-shadow: 0 2px 8px rgba(13,27,42,.3);
     }
 
     .checkbox-grid {
@@ -210,8 +215,8 @@
       transition: border-color var(--transition), background var(--transition);
     }
     .checkbox-option:hover {
-      border-color: #93C5FD;
-      background: #F8FBFF;
+      border-color: rgba(232,160,32,0.5);
+      background: rgba(232,160,32,0.06);
     }
     .checkbox-option input[type="checkbox"] {
       margin-top: 3px;
@@ -239,10 +244,10 @@
     select:focus, input[type="number"]:focus, textarea:focus {
       outline: none;
       border-color: var(--brand);
-      box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+      box-shadow: 0 0 0 3px rgba(232,160,32,.18);
     }
     select {
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%234A6070' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
       background-position: right 12px center;
       background-size: 20px;
@@ -304,11 +309,11 @@
     /* ── Privacy notice ──────────────────────────────────────── */
     .privacy-note {
       background: var(--brand-light);
-      border: 1px solid #BFDBFE;
+      border: 1px solid rgba(232,160,32,0.35);
       border-radius: var(--radius);
       padding: 14px 18px;
       font-size: 13px;
-      color: #1E40AF;
+      color: var(--brand);
       margin-bottom: 28px;
       display: flex;
       gap: 10px;
@@ -366,7 +371,7 @@
     .dp-other input[type="text"]:focus {
       outline: none;
       border-color: var(--brand);
-      box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+      box-shadow: 0 0 0 3px rgba(232,160,32,.18);
     }
     .dp-skip {
       margin-top: 12px;
@@ -404,9 +409,9 @@
       color: #991B1B;
     }
     .form-status.info {
-      background: #EFF6FF;
-      border: 1px solid #BFDBFE;
-      color: #1D4ED8;
+      background: rgba(13,27,42,0.05);
+      border: 1px solid rgba(13,27,42,0.15);
+      color: var(--brand);
     }
 
     /* ── Responsive ──────────────────────────────────────────── */
@@ -434,7 +439,7 @@
 
 <div class="container">
   <div class="page-header">
-    <div class="logo">Loep</div>
+    <div class="logo">Loep <span class="logo-dot">&bull;</span></div>
     <h1>{{ campaign_name }}</h1>
     <p>{{ scan.survey_intro }}</p>
   </div>

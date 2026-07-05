@@ -3,23 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{{ title }} — Verisight</title>
+  <title>{{ title }} — Loep</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Inter+Tight:wght@700;800&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --brand: #2563EB;
-      --text: #111827;
-      --muted: #6B7280;
-      --border: #E5E7EB;
-      --bg: #F9FAFB;
+      --navy: #0D1B2A;
+      --amber: #E8A020;
+      --amber-deep: #B07A10;
+      --text: #0D1B2A;
+      --muted: #4A6070;
+      --border: rgba(13,27,42,0.15);
+      --bg: #F4F1EA;
       --white: #FFFFFF;
-      --info-bg: #DBEAFE;
-      --info-text: #1D4ED8;
-      --warning-bg: #FEF3C7;
-      --warning-text: #B45309;
+      --info-bg: rgba(13,27,42,0.06);
+      --info-text: #0D1B2A;
+      --warning-bg: rgba(232,160,32,0.18);
+      --warning-text: #B07A10;
     }
     body {
       font-family: 'Inter', sans-serif;
@@ -34,19 +36,27 @@
     .card {
       background: var(--white);
       border: 1px solid var(--border);
-      border-radius: 16px;
       padding: 48px 40px;
       max-width: 560px;
       width: 100%;
       text-align: center;
-      box-shadow: 0 8px 32px rgba(0,0,0,.08);
+      box-shadow: 0 8px 32px rgba(13,27,42,.08);
     }
     .logo {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--brand);
-      letter-spacing: -.5px;
-      margin-bottom: 28px;
+      font-family: 'Inter Tight', 'Inter', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--navy);
+      letter-spacing: -.04em;
+    }
+    .logo .dot { color: var(--amber); }
+    .payoff {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 6px 0 28px;
     }
     .icon-wrap {
       width: 78px;
@@ -68,8 +78,10 @@
       color: var(--warning-text);
     }
     h1 {
+      font-family: 'Inter Tight', 'Inter', sans-serif;
       font-size: 26px;
       font-weight: 700;
+      letter-spacing: -.02em;
       margin-bottom: 14px;
     }
     p {
@@ -90,7 +102,8 @@
 </head>
 <body>
   <div class="card">
-    <div class="logo">Verisight</div>
+    <div class="logo">Loep <span class="dot">&bull;</span></div>
+    <div class="payoff">Scherper zien wat telt</div>
     <div class="icon-wrap {{ tone }}">{{ "!" if tone == "warning" else "i" }}</div>
     <h1>{{ heading }}</h1>
     <p>{{ message }}</p>
