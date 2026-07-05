@@ -36,6 +36,11 @@ const scans = [
     output: 'Managementrapport met vertrekduiding, factoranalyse en prioriteiten.',
     // afgerond vanaf de officiële invite_duration (8-12 min) in backend/products/exit
     duration: '± 10 minuten',
+    // Eerlijke verwachting (Fail Loud): patroonanalyse in het rapport vraagt
+    // minimaal 10 responses (backend/report.py); bij kleinere organisaties
+    // betekent dat een langere meetperiode. Behoud/Start meten de hele
+    // populatie en hebben deze kanttekening niet.
+    note: 'Patroonanalyse vraagt minimaal 10 respondenten. Bij kleinere organisaties stemmen we de meetperiode daarop af in de intake.',
     samplePdf: '/examples/voorbeeldrapport_loep.pdf',
     contactRoute: 'exitscan',
     accent: AC.deep,
@@ -56,6 +61,7 @@ const scans = [
     output: 'Managementrapport met retentiesignaal, stay-intent en prioriteiten op groepsniveau.',
     // afgerond vanaf de officiële invite_duration (6-10 min) in backend/products/retention
     duration: '± 8 minuten',
+    note: null,
     samplePdf: '/examples/voorbeeldrapport_retentiescan.pdf',
     contactRoute: 'retentiescan',
     accent: TEAL,
@@ -76,6 +82,7 @@ const scans = [
     output: 'Rapport met de vroege landing in rol, leiding en team op groepsniveau.',
     // afgerond vanaf de officiële invite_duration (3-5 min) in backend/products/onboarding
     duration: '± 5 minuten',
+    note: null,
     samplePdf: null,
     contactRoute: 'onboarding',
     accent: AMBER,
@@ -241,6 +248,11 @@ function ScanSection({ scan, alt }: { scan: (typeof scans)[number]; alt: boolean
                 <p style={{ color: T.inkMuted, fontSize: 13, lineHeight: 1.6, marginTop: 8 }}>
                   Invultijd voor medewerkers: {scan.duration}.
                 </p>
+                {scan.note ? (
+                  <p style={{ color: T.inkMuted, fontSize: 13, lineHeight: 1.6, marginTop: 8 }}>
+                    {scan.note}
+                  </p>
+                ) : null}
                 {scan.samplePdf ? (
                   <a
                     href={scan.samplePdf}
