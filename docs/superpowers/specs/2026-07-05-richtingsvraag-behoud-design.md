@@ -52,6 +52,8 @@ Framing overal: **"gespreksrichting uit de groep — input van respondenten, het
 
 ## 4. Gespreksroute-sets v1 (`retention_<factor>_direction_v1`)
 
+> **NB (reviewgate 2026-07-05):** de tabellen hieronder tonen de v2-conceptteksten. De definitieve, door Lars goedgekeurde route- en gespreksvraag-teksten (jargonfixes + directe trede-1-stem) staan in `DIRECTION_SETS` in `backend/products/shared/deepening.py` - die is de bron van waarheid; wijzigingen gepind door tests/test_direction_content.py.
+
 Kolom "verwant aan" = verwantschaps-mapping voor concordantie-analyse (géén key-gelijkheid vereist; meerdere oorzaken mogen naar dezelfde route wijzen). Guard-test: elke set compleet (6 + other), elke route heeft ≥1 verwante oorzaak-key, mapping-keys bestaan in de oorzaakset.
 
 ### 4.1 Werkbelasting
