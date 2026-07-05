@@ -620,7 +620,9 @@ def aggregate_deepening(
         raise ValueError(f"unknown scan_type {scan_type!r}")
     out: dict[str, dict[str, Any]] = {
         fk: {"triggered": 0, "offered": 0, "answered": 0, "skipped": 0,
-             "primary_counts": {}, "secondary_counts": {}}
+             "primary_counts": {}, "secondary_counts": {},
+             "direction_offered": 0, "direction_answered": 0,
+             "direction_skipped": 0, "direction_counts": {}}
         for fk in DEEPENING_FACTOR_KEYS
     }
     for org_raw, entries in rows:
@@ -638,6 +640,14 @@ def aggregate_deepening(
                     agg["primary_counts"][e["primary"]] = agg["primary_counts"].get(e["primary"], 0) + 1
                 if e.get("secondary"):
                     agg["secondary_counts"][e["secondary"]] = agg["secondary_counts"].get(e["secondary"], 0) + 1
+                d = e.get("direction")
+                if d is not None:
+                    agg["direction_offered"] += 1
+                    if d.get("status") == "answered" and d.get("choice"):
+                        agg["direction_answered"] += 1
+                        agg["direction_counts"][d["choice"]] = agg["direction_counts"].get(d["choice"], 0) + 1
+                    else:
+                        agg["direction_skipped"] += 1
             else:
                 agg["skipped"] += 1
     return out
@@ -673,3 +683,66 @@ def get_agenda_question(scan_type: str, factor_key: str, option_key: str) -> str
     if option_key not in options:
         raise KeyError(f"unknown option_key {option_key!r} for factor {factor_key!r}")
     return options[option_key]
+
+
+def is_concordant(factor_key: str, primary: str, direction_choice: str) -> bool:
+    """Concordantie via de verwantschaps-mapping (spec par. 5): niet opgeslagen, afgeleid."""
+    for o in DIRECTION_SETS[factor_key]["options"]:
+        if o["key"] == direction_choice:
+            return primary in o["related"]
+    return False
+
+
+def _direction_top(agg: dict[str, Any]) -> tuple[str, int, int] | None:
+    """Topoptie over direction_answered met dezelfde vijf voorwaarden als trede 1."""
+    n = agg["direction_answered"]
+    counts = agg["direction_counts"]
+    if n < 8 or not counts:
+        return None
+    ranked = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
+    top_key, top_n = ranked[0]
+    second_n = ranked[1][1] if len(ranked) > 1 else 0
+    if top_key.endswith("_other"):
+        return None
+    if top_n < 4 or top_n / n < 0.5 or top_n - second_n < 2:
+        return None
+    return top_key, top_n, n
+
+
+def get_direction_agenda_question(factor_key: str, route_key: str) -> str | None:
+    options = {o["key"]: o["agenda"] for o in DIRECTION_SETS[factor_key]["options"]}
+    if route_key not in options:
+        raise KeyError(f"unknown route_key {route_key!r} for factor {factor_key!r}")
+    return options[route_key]
+
+
+def direction_agenda_scenario(agg: dict[str, Any], scan_type: str, factor_key: str) -> dict[str, Any]:
+    """Spec par. 7.2/7.3: bepaal het agendascenario voor een factor.
+
+    Retourneert altijd een dict met `scenario` in
+    {"cause_only", "concordant", "discrepant", "none"} + velden voor rendering.
+    - "none": ook de oorzaak-verrijking vuurt niet (render de generieke regel).
+    - Stopregel: >40% van de aangeboden richtingen geskipt -> richting onderdrukt.
+    """
+    cause = agenda_enrichment(agg, scan_type, factor_key)
+    suppressed = False
+    offered = agg.get("direction_offered", 0)
+    if offered > 0 and agg.get("direction_skipped", 0) / offered > 0.4:
+        suppressed = True
+    top = None if suppressed else _direction_top(agg)
+    if cause is None:
+        return {"scenario": "none", "direction_suppressed_by_skip": suppressed}
+    if top is None:
+        return {"scenario": "cause_only", "cause": cause,
+                "direction_suppressed_by_skip": suppressed}
+    route_key, route_n, dir_n = top
+    concordant = is_concordant(factor_key, cause["option_key"], route_key)
+    return {
+        "scenario": "concordant" if concordant else "discrepant",
+        "cause": cause,
+        "direction_suppressed_by_skip": False,
+        "route_key": route_key,
+        "route_count": route_n,
+        "direction_answered": dir_n,
+        "agenda_question": get_direction_agenda_question(factor_key, route_key),
+    }
