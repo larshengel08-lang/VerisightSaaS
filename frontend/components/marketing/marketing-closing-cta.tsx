@@ -25,7 +25,7 @@ export function MarketingClosingCta({
   backdropNumber = sectionIndex,
   title = 'Wil je zien',
   accentTitle = 'welke route nu het meest logisch is?',
-  body = 'Plan een korte kennismaking. Dan zie je of Loep past, welke eerste route logisch is en hoe de output er in jouw situatie uit kan zien.',
+  body = 'Plan een korte kennismaking. Dan zie je of Loep past en wat het rapport je in jouw situatie oplevert.',
   buttonLabel = 'Plan een kennismaking',
   note,
   showSectionMark = true,

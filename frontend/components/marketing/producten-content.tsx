@@ -17,7 +17,7 @@ const sharedDelivery = [
   'Respons monitoren op campagneniveau',
   'Managementrapport met patronen en prioriteiten',
   'Begeleide managementbespreking (60–90 min)',
-  'Eerste vervolgrichting vastgelegd',
+  'Vervolgstap vastgelegd',
 ] as const
 
 const scans = [
@@ -26,7 +26,7 @@ const scans = [
     index: '01',
     eyebrow: 'Vertrek begrijpen',
     title: 'Loep Vertrek',
-    lead: 'Wij brengen vertrekpatronen scherp in beeld en begeleiden je naar één eerste managementkeuze.',
+    lead: 'Wij brengen vertrekpatronen scherp in beeld en begeleiden je naar één duidelijke managementkeuze.',
     when: [
       'Vertrek is zichtbaar maar de reden is onduidelijk',
       'Management vraagt om een onderbouwd beeld',
@@ -34,6 +34,8 @@ const scans = [
       'Je wilt een eerste keuze, geen breed onderzoeksproject',
     ],
     output: 'Managementrapport met vertrekduiding, factoranalyse en prioriteiten.',
+    // afgerond vanaf de officiële invite_duration (8-12 min) in backend/products/exit
+    duration: '± 10 minuten',
     samplePdf: '/examples/voorbeeldrapport_loep.pdf',
     contactRoute: 'exitscan',
     accent: AC.deep,
@@ -52,6 +54,8 @@ const scans = [
       'Je wilt een eerste keuze, geen breed MTO-project',
     ],
     output: 'Managementrapport met retentiesignaal, stay-intent en prioriteiten op groepsniveau.',
+    // afgerond vanaf de officiële invite_duration (6-10 min) in backend/products/retention
+    duration: '± 8 minuten',
     samplePdf: '/examples/voorbeeldrapport_retentiescan.pdf',
     contactRoute: 'retentiescan',
     accent: TEAL,
@@ -62,7 +66,7 @@ const scans = [
     index: '03',
     eyebrow: 'Goed landen',
     title: 'Loep Start',
-    lead: 'Wij meten vroeg hoe nieuwe medewerkers landen en leveren een helder groepsbeeld met een eerste vervolgrichting.',
+    lead: 'Wij meten vroeg hoe nieuwe medewerkers landen en leveren een helder groepsbeeld en een concreet vervolg.',
     when: [
       'Nieuwe medewerkers landen ongelijk of haken vroeg af',
       'Je wilt vroeg toetsen hoe rol, leiding en team nu landen',
@@ -70,6 +74,8 @@ const scans = [
       'Je wilt eerst een kleine borg- of correctiestap bepalen',
     ],
     output: 'Rapport met de vroege landing in rol, leiding en team op groepsniveau.',
+    // afgerond vanaf de officiële invite_duration (3-5 min) in backend/products/onboarding
+    duration: '± 5 minuten',
     samplePdf: null,
     contactRoute: 'onboarding',
     accent: AMBER,
@@ -232,6 +238,9 @@ function ScanSection({ scan, alt }: { scan: (typeof scans)[number]; alt: boolean
                   Wat je terugkrijgt
                 </div>
                 <p style={{ color: T.inkSoft, fontSize: 14, lineHeight: 1.6 }}>{scan.output}</p>
+                <p style={{ color: T.inkMuted, fontSize: 13, lineHeight: 1.6, marginTop: 8 }}>
+                  Invultijd voor medewerkers: {scan.duration}.
+                </p>
                 {scan.samplePdf ? (
                   <a
                     href={scan.samplePdf}
@@ -257,7 +266,7 @@ function PricingSection() {
     'Uitvoering van de survey, zonder toolbeheer voor je team',
     'Managementrapport met patronen en prioriteiten',
     'Begeleide managementbespreking (60–90 min)',
-    'Eerste vervolgrichting vastgelegd',
+    'Vervolgstap vastgelegd',
   ] as const
 
   return (
@@ -369,7 +378,7 @@ function ContactSection() {
       href={href}
       accentTitle="scan nu past?"
       backdropNumber={null}
-      body="In een eerste kennismaking toetsen we welke scan nu de juiste eerste stap is en wat je als eerste terugkrijgt."
+      body="In een gesprek van 20 minuten bepalen we samen welke scan past en wat het rapport je oplevert."
       buttonLabel="Plan een kennismaking"
       sectionIndex=""
       sectionLabel=""

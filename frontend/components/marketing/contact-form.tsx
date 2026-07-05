@@ -132,7 +132,7 @@ export function ContactForm({
           desired_timing: form.desiredTiming,
           current_question:
             form.currentQuestion.trim() ||
-            `We willen de juiste eerste managementroute bepalen voor ${getContactRouteLabel(form.routeInterest)}.`,
+            `We willen bepalen of ${getContactRouteLabel(form.routeInterest)} past bij ons vraagstuk.`,
           website: form.website,
         }),
       })
@@ -199,8 +199,8 @@ export function ContactForm({
         <div className={panelSpacingClass}>
           <p className={`text-sm ${isLight ? 'text-slate-700' : 'text-slate-200'} ${isCompact ? 'leading-6' : 'leading-7'}`}>
             {isCompact
-              ? 'Gebruik dit formulier om snel te bepalen welke eerste route nu het best past en welke eerste output daarna logisch is.'
-              : 'Gebruik dit formulier om te bepalen welke eerste route nu het best past en welke eerste output daarna logisch is.'}
+              ? 'Vertel kort wat er speelt. Je krijgt binnen 1 werkdag reactie.'
+              : 'Vertel kort wat er speelt. Je krijgt binnen 1 werkdag reactie en we plannen een vrijblijvend gesprek van 20 minuten.'}
           </p>
         </div>
       ) : null}

@@ -122,7 +122,7 @@ const managementFlowSteps = [
     step: '1',
     label: 'Luisteren',
     title: 'Medewerkers vullen de scan in',
-    body: 'Anoniem en op groepsniveau. Je levert de doelgroep aan; wij sturen de scan uit en bewaken de uitvoering, zonder toolbeheer voor je team.',
+    body: 'Anoniem, op groepsniveau en in ongeveer 10 minuten ingevuld. Je levert de doelgroep aan; wij sturen de scan uit en bewaken de uitvoering, zonder toolbeheer voor je team.',
   },
   {
     step: '2',
@@ -134,7 +134,7 @@ const managementFlowSteps = [
     step: '3',
     label: 'Kiezen',
     title: 'Samen de eerste gerichte keuze',
-    body: 'De managementbespreking met HR en management leidt tot één eerste gerichte keuze: één eigenaar, één eerste stap.',
+    body: 'De managementbespreking met HR en management leidt tot één eerste keuze: wat pak je aan, en wie is eigenaar.',
   },
 ] as const
 
@@ -976,7 +976,7 @@ function SuitePreviewSection() {
                   maxWidth: '33rem',
                 }}
               >
-                Loep brengt signalen samen in dashboard, samenvatting en rapport, en helpt vervolgens om prioriteit, eigenaar en eerste actie vast te leggen.
+                Loep brengt signalen samen in dashboard, samenvatting en rapport, en helpt vervolgens om prioriteit, eigenaar en actie vast te leggen.
               </p>
             </Reveal>
 
@@ -1020,7 +1020,7 @@ function SuitePreviewSection() {
                 <div className="suite-motion-frame">
                   <div className="suite-motion-frame-head">
                     <div>
-                      <p className="suite-motion-frame-title">Van eerste signalen naar eerste actie</p>
+                      <p className="suite-motion-frame-title">Van signaal naar actie</p>
                     </div>
 
                     <div className="suite-motion-progress" aria-hidden>

@@ -231,8 +231,10 @@ export const trustSignalHighlights = [
 
 export const trustVerificationCards = [
   {
-    title: 'Wat je nu publiek kunt verifiëren',
-    body: 'Loep laat publiek zien hoe productkeuze, privacy en rapportlezing zijn ingericht voordat je een gesprek plant.',
+    title: 'Bekijk het voordat je belt',
+    body: 'Voorbeeldrapport, privacybeleid en DPA staan open. Je kunt alles lezen voordat er een gesprek plaatsvindt.',
+    href: '/examples/voorbeeldrapport_loep.pdf',
+    linkLabel: 'Bekijk een voorbeeldrapport (pdf)',
   },
   {
     title: 'Waar publieke voorbeeldoutput stopt',
@@ -283,18 +285,18 @@ export const trustReadingRows = [
   ],
   [
     'Wat management ziet',
-    'Dashboard, managementsamenvatting, topfactoren en eerste vervolgrichting.',
-    'Niet elke ruwe response, geen persoonsprofielen en geen verborgen black-box score',
+    'Dashboard, managementsamenvatting, topfactoren en de vervolgstap.',
+    'Geen losse antwoorden, geen persoonsprofielen, geen verborgen scores',
   ],
   [
     'Privacygrens',
     'Minimale n-grenzen, segmentonderdrukking en geanonimiseerde open tekst',
-    'Niet doen alsof kleine groepen of open tekst zonder terughoudendheid veilig te lezen zijn',
+    'Kleine groepen en open antwoorden tonen we bewust niet, of alleen geanonimiseerd',
   ],
   [
     'Bewijsstatus',
     'Methodisch onderbouwd en begrensd in wat het wel en niet claimt.',
-    'Niet verkopen als extern gevalideerd diagnostisch instrument of bewezen predictor',
+    'Geen gecertificeerde diagnose of voorspeller, wel onderbouwde input voor het gesprek',
   ],
 ] as const
 

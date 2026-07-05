@@ -156,6 +156,16 @@ function VerificationSection() {
               <div style={{ padding: '24px 24px 22px', border: `1px solid ${T.rule}`, background: T.white }}>
                 <div style={{ fontSize: 13.5, fontWeight: 600, color: T.ink, marginBottom: 8 }}>{card.title}</div>
                 <p style={{ fontSize: 13, color: T.inkSoft, lineHeight: 1.65 }}>{card.body}</p>
+                {'href' in card && card.href ? (
+                  <a
+                    href={card.href}
+                    target="_blank"
+                    rel="noopener"
+                    style={{ alignItems: 'center', color: AC.deep, display: 'inline-flex', fontSize: 12.5, fontWeight: 600, gap: 5, marginTop: 10, textDecoration: 'none' }}
+                  >
+                    {card.linkLabel} <Arrow />
+                  </a>
+                ) : null}
               </div>
             </Reveal>
           ))}
@@ -209,7 +219,7 @@ function ReadingGuideSection() {
                 borderBottom: `1px solid ${T.rule}`,
               }}
             >
-              {['Thema', 'Wat je wel ziet', 'Wat je er niet van moet maken'].map((h, i) => (
+              {['Thema', 'Wat je wel ziet', 'Wat het niet is'].map((h, i) => (
                 <div
                   key={i}
                   style={{
