@@ -123,7 +123,7 @@ export async function POST(request: Request) {
     }
 
     if (action === 'invite') {
-      const dashboardUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://verisight.nl'}/dashboard`
+      const dashboardUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.getloep.nl'}/dashboard`
       await sendLoepEmail({
         to: email,
         subject: `Welkom bij Loep — je account voor ${organization.name} staat klaar`,

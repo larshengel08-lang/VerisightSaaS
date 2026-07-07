@@ -2,6 +2,7 @@ import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createPublicClient } from '@/lib/supabase/public'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export interface InviteBody {
   action?: 'invite' | 'resend'
@@ -53,6 +54,32 @@ export async function ensureManagerAccess(
   return membership
 }
 
+/**
+ * Zorgt dat er al een (bevestigde) auth-user bestaat vóór de OTP-mail wordt
+ * verstuurd. Reden: Supabase's signInWithOtp gebruikt voor een gloednieuwe
+ * gebruiker de "Confirm signup"-template i.p.v. "Magic Link" — en die eerste
+ * template is nooit meegenomen in de Loep-rebrand (alleen magic-link en
+ * reset-password zijn herplakt in Supabase Dashboard). Door de user hier
+ * expliciet (en bevestigd) aan te maken, ziet Supabase 'm bij signInWithOtp
+ * altijd als bestaand, en wordt consequent de al-gebrande Magic Link-mail
+ * gebruikt — voor zowel nieuwe als herhaalde uitnodigingen.
+ */
+async function ensureAuthUserExists(email: string, fullName: string | null, orgName: string) {
+  const admin = createAdminClient()
+  const { error } = await admin.auth.admin.createUser({
+    email,
+    email_confirm: true,
+    user_metadata: {
+      full_name: fullName ?? undefined,
+      organization_name: orgName,
+    },
+  })
+
+  if (error && error.code !== 'email_exists') {
+    throw error
+  }
+}
+
 export async function sendActivationLink({
   email,
   fullName,
@@ -64,6 +91,8 @@ export async function sendActivationLink({
   orgName: string
   origin: string
 }) {
+  await ensureAuthUserExists(email, fullName, orgName)
+
   const authClient = createPublicClient()
 
   return authClient.auth.signInWithOtp({
