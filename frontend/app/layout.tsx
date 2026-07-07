@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { IBM_Plex_Sans, Inter } from 'next/font/google'
 import { SiteAnalytics } from '@/components/marketing/site-analytics'
+import { AuthLinkErrorBanner } from '@/components/marketing/auth-link-error-banner'
 import './globals.css'
 
 const inter = Inter({
@@ -98,6 +99,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
         />
+        <AuthLinkErrorBanner />
         {children}
         <SiteAnalytics />
       </body>
