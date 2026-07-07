@@ -54,6 +54,30 @@ export async function ensureManagerAccess(
   return membership
 }
 
+const MAX_USER_LOOKUP_PAGES = 20
+
+/**
+ * Zoekt een bestaande auth-user op e-mail. De JS admin-SDK biedt hiervoor
+ * geen directe getUserByEmail (alleen gepagineerde listUsers), dus we
+ * doorlopen de pagina's client-side. Ruim voldoende voor het aantal
+ * org-uitnodigingen dat Loep verstuurt; begrensd als veiligheidsklep tegen
+ * een oneindige loop bij een onverwacht grote userbase.
+ */
+async function findAuthUserByEmail(
+  admin: ReturnType<typeof createAdminClient>,
+  email: string,
+) {
+  const target = email.toLowerCase()
+  for (let page = 1; page <= MAX_USER_LOOKUP_PAGES; page++) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 })
+    if (error) throw error
+    const match = data.users.find((u) => u.email?.toLowerCase() === target)
+    if (match) return match
+    if (data.users.length < 200) break // laatste pagina bereikt
+  }
+  return null
+}
+
 /**
  * Zorgt dat er al een (bevestigde) auth-user bestaat vóór de OTP-mail wordt
  * verstuurd. Reden: Supabase's signInWithOtp gebruikt voor een gloednieuwe
@@ -63,21 +87,43 @@ export async function ensureManagerAccess(
  * expliciet (en bevestigd) aan te maken, ziet Supabase 'm bij signInWithOtp
  * altijd als bestaand, en wordt consequent de al-gebrande Magic Link-mail
  * gebruikt — voor zowel nieuwe als herhaalde uitnodigingen.
+ *
+ * Bestaat de user al (bijv. een eerdere, ongeconfirmde poging van vóór deze
+ * fix) dan volstaat "genegeerd doorgaan" niet: die user is dan nog steeds
+ * onbevestigd, en Supabase blijft 'm dan als nieuwe signup behandelen. Die
+ * user wordt daarom hier alsnog expliciet bevestigd.
  */
 async function ensureAuthUserExists(email: string, fullName: string | null, orgName: string) {
   const admin = createAdminClient()
+  const metadata = {
+    full_name: fullName ?? undefined,
+    organization_name: orgName,
+  }
+
   const { error } = await admin.auth.admin.createUser({
     email,
     email_confirm: true,
-    user_metadata: {
-      full_name: fullName ?? undefined,
-      organization_name: orgName,
-    },
+    user_metadata: metadata,
   })
 
-  if (error && error.code !== 'email_exists') {
-    throw error
+  if (!error) return
+  if (error.code !== 'email_exists') throw error
+
+  const existing = await findAuthUserByEmail(admin, email)
+  if (!existing) {
+    // Race condition (net aangemaakt door een gelijktijdig verzoek) of een
+    // e-mailadres met een andere identity-provider — signInWithOtp mag dan
+    // gewoon zijn eigen (mogelijk minder mooie) pad volgen i.p.v. hier hard
+    // te falen op iets wat geen fout van deze aanvraag is.
+    return
   }
+  if (existing.email_confirmed_at) return // al bevestigd, niets te doen
+
+  const { error: updateError } = await admin.auth.admin.updateUserById(existing.id, {
+    email_confirm: true,
+    user_metadata: { ...existing.user_metadata, ...metadata },
+  })
+  if (updateError) throw updateError
 }
 
 export async function sendActivationLink({
