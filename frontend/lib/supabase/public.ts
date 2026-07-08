@@ -14,6 +14,14 @@ export function createPublicClient() {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
+      // Zonder expliciete pkce-flow gebruikt de kale supabase-js-client
+      // 'implicit' als default: dan komt de OTP-link terug met tokens in de
+      // URL-hash (#access_token=...), die nooit de server bereiken. Elders
+      // in de app (lib/supabase/client.ts, server.ts) draait alles al op
+      // @supabase/ssr, dat standaard pkce gebruikt — /auth/callback/route.ts
+      // verwacht dan ook alleen een ?code=-param. Zonder deze regel matcht
+      // de link die sendActivationLink verstuurt dus nooit die callback-route.
+      flowType: 'pkce',
     },
   })
 }
