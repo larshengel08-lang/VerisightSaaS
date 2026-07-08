@@ -17,4 +17,14 @@ describe('new campaign form clarity', () => {
     expect(source).not.toContain('Deze setup blijft assisted')
     expect(source).not.toContain('Hier bepaal je of de campagne als Loep Vertrek, Loep Behoud, Pulse, TeamScan, Loep Start of Leadership Scan wordt opgezet')
   })
+
+  it('biedt bij het aanmaken geen "Platform verstuurt"-keuze meer aan (2026-07-08) — alleen self_send', () => {
+    const source = readFileSync(new URL('../../../components/dashboard/new-campaign-form.tsx', import.meta.url), 'utf8')
+
+    expect(source).not.toContain('Platform verstuurt')
+    expect(source).not.toContain("value: 'managed'")
+    expect(source).not.toContain('setCommsMode')
+    expect(source).toContain('HR verstuurt zelf')
+    expect(source).toContain("commsMode: CommsMode = 'self_send'")
+  })
 })

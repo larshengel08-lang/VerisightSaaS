@@ -26,7 +26,11 @@ export function NewCampaignForm({ orgs }: Props) {
   const [name, setName] = useState('')
   const [scanType, setScanType] = useState<ScanType>('exit')
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>('baseline')
-  const [commsMode, setCommsMode] = useState<CommsMode>('self_send')
+  // Alleen self_send: platform slaat bewust geen deelnemer-e-mailadressen op.
+  // De platform-verzendkeuze is uit de aanmaakflow gehaald (2026-07-08) — bestaande
+  // campagnes met de oude modus blijven elders gewoon werken, dit is puur de keuze
+  // bij het aanmaken van een nieuwe campagne.
+  const commsMode: CommsMode = 'self_send'
   const [modules, setModules] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -72,7 +76,6 @@ export function NewCampaignForm({ orgs }: Props) {
     setSuccess(true)
     setName('')
     setDeliveryMode('baseline')
-    setCommsMode('self_send')
     setTimeout(() => {
       setSuccess(false)
       router.refresh()
@@ -176,23 +179,11 @@ export function NewCampaignForm({ orgs }: Props) {
       <div className="border-t border-slate-200 pt-2">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">E-mail &amp; deelnemers</p>
       </div>
-      <div className="grid gap-2 sm:grid-cols-2">
-        {([
-          { value: 'managed', title: 'Platform verstuurt', body: 'Loep stuurt uitnodigingen via geüploade lijst.' },
-          { value: 'self_send', title: 'HR verstuurt zelf', body: 'Kopieer-sjablonen, één campagnelink, geen e-mailopslag.' },
-        ] as const).map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            onClick={() => setCommsMode(option.value)}
-            className={`rounded-[22px] border p-4 text-left transition-colors ${
-              commsMode === option.value ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-200 bg-white text-slate-700 hover:border-blue-300'
-            }`}
-          >
-            <p className="text-sm font-semibold">{option.title}</p>
-            <p className={`mt-1 text-sm ${commsMode === option.value ? 'text-blue-100' : 'text-slate-500'}`}>{option.body}</p>
-          </button>
-        ))}
+      <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+        <p className="font-semibold text-slate-900">HR verstuurt zelf</p>
+        <p className="mt-2 text-xs leading-5 text-slate-600">
+          Kopieer-sjablonen, één campagnelink, geen e-mailopslag op het platform.
+        </p>
       </div>
 
       {supportsCampaignModuleSelection(scanType) ? (
