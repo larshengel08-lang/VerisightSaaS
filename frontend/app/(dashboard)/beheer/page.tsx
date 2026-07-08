@@ -243,66 +243,77 @@ export default async function BeheerPage() {
             {!selectedCampaign ? (
               <LockedStep message="Import wordt actief nadat je een campaign hebt gekozen." />
             ) : (
-              <div className="space-y-4">
-                <div className="flex flex-wrap items-center gap-2">
-                  <DashboardChip surface="ops" label={selectedCampaign.name} tone="slate" />
-                  <DashboardChip surface="ops" label={selectedCampaign.scan_type === 'exit' ? 'Loep Vertrek' : 'Loep Behoud'} tone="slate" />
-                </div>
-
-                {campaigns.filter((campaign) => campaign.is_active).length === 0 ? (
-                  <div className="rounded-[18px] border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
-                    Geen actieve campaigns. Maak eerst een nieuwe campaign aan of gebruik archiefcampagnes alleen voor inzage.
-                  </div>
-                ) : null}
-
-                <AddRespondentsForm campaigns={campaigns} organizations={orgs} />
-
-                <details className="rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3">
-                  <summary className="cursor-pointer list-none">
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Bestaande campaigns</p>
-                        <p className="mt-1 text-sm text-slate-600">{campaigns.length} campaign{campaigns.length === 1 ? '' : 's'}</p>
-                      </div>
-                      <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Overzicht</span>
+              <details className="rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3">
+                <summary className="cursor-pointer list-none">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">CSV-import (alleen bestaande managed-campagnes)</p>
+                      <p className="mt-1 text-sm text-slate-600">Nieuwe campagnes gebruiken HR-verstuurt-zelf; import is alleen nog nodig voor oudere platform-verstuurt-campagnes.</p>
                     </div>
-                  </summary>
-                  <div className="mt-4 space-y-2 border-t border-slate-200 pt-4">
-                    {campaigns.map((campaign) => (
-                      <div
-                        key={campaign.id}
-                        className="flex flex-col gap-3 rounded-[16px] border border-slate-200 bg-white px-4 py-3 lg:flex-row lg:items-center lg:justify-between"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <div className="mb-1 flex flex-wrap items-center gap-2">
-                            <DashboardChip surface="ops" label={campaign.scan_type === 'exit' ? 'Loep Vertrek' : 'Loep Behoud'} />
-                            <DashboardChip surface="ops" label={getDeliveryModeLabel(campaign.delivery_mode, campaign.scan_type)} />
-                            <span className={`text-xs font-medium ${campaign.is_active ? 'text-emerald-700' : 'text-slate-400'}`}>
-                              {campaign.is_active ? '● Actief' : '○ Archief'}
-                            </span>
-                          </div>
-                          <p className="truncate text-sm font-medium text-slate-900">{campaign.name}</p>
-                          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
-                            <span>
-                              {new Date(campaign.created_at).toLocaleDateString('nl-NL', {
-                                day: 'numeric',
-                                month: 'short',
-                                year: 'numeric',
-                              })}
-                            </span>
-                          </div>
-                        </div>
-                        <a
-                          href={`/campaigns/${campaign.id}`}
-                          className="flex-shrink-0 rounded-full border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
-                        >
-                          {campaign.is_active ? 'Open' : 'Archief'}
-                        </a>
-                      </div>
-                    ))}
+                    <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Openklappen</span>
                   </div>
-                </details>
-              </div>
+                </summary>
+                <div className="mt-4 space-y-4 border-t border-slate-200 pt-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <DashboardChip surface="ops" label={selectedCampaign.name} tone="slate" />
+                    <DashboardChip surface="ops" label={selectedCampaign.scan_type === 'exit' ? 'Loep Vertrek' : 'Loep Behoud'} tone="slate" />
+                  </div>
+
+                  {campaigns.filter((campaign) => campaign.is_active).length === 0 ? (
+                    <div className="rounded-[18px] border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                      Geen actieve campaigns. Maak eerst een nieuwe campaign aan of gebruik archiefcampagnes alleen voor inzage.
+                    </div>
+                  ) : null}
+
+                  <AddRespondentsForm campaigns={campaigns} organizations={orgs} />
+
+                  <details className="rounded-[18px] border border-slate-200 bg-white px-4 py-3">
+                    <summary className="cursor-pointer list-none">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Bestaande campaigns</p>
+                          <p className="mt-1 text-sm text-slate-600">{campaigns.length} campaign{campaigns.length === 1 ? '' : 's'}</p>
+                        </div>
+                        <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Overzicht</span>
+                      </div>
+                    </summary>
+                    <div className="mt-4 space-y-2 border-t border-slate-200 pt-4">
+                      {campaigns.map((campaign) => (
+                        <div
+                          key={campaign.id}
+                          className="flex flex-col gap-3 rounded-[16px] border border-slate-200 bg-white px-4 py-3 lg:flex-row lg:items-center lg:justify-between"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="mb-1 flex flex-wrap items-center gap-2">
+                              <DashboardChip surface="ops" label={campaign.scan_type === 'exit' ? 'Loep Vertrek' : 'Loep Behoud'} />
+                              <DashboardChip surface="ops" label={getDeliveryModeLabel(campaign.delivery_mode, campaign.scan_type)} />
+                              <span className={`text-xs font-medium ${campaign.is_active ? 'text-emerald-700' : 'text-slate-400'}`}>
+                                {campaign.is_active ? '● Actief' : '○ Archief'}
+                              </span>
+                            </div>
+                            <p className="truncate text-sm font-medium text-slate-900">{campaign.name}</p>
+                            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
+                              <span>
+                                {new Date(campaign.created_at).toLocaleDateString('nl-NL', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: 'numeric',
+                                })}
+                              </span>
+                            </div>
+                          </div>
+                          <a
+                            href={`/campaigns/${campaign.id}`}
+                            className="flex-shrink-0 rounded-full border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+                          >
+                            {campaign.is_active ? 'Open' : 'Archief'}
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                </div>
+              </details>
             )}
           </StepCard>
 
