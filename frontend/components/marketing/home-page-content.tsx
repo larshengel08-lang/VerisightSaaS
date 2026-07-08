@@ -1897,7 +1897,7 @@ function ProofSection() {
             <Reveal delay={0.34}>
               <div style={{ marginTop: 24 }}>
                 <a
-                  href="/examples/voorbeeldrapport_loep.pdf"
+                  href="/examples/voorbeeldrapport_retentiescan.pdf"
                   target="_blank"
                   rel="noopener"
                   style={{
