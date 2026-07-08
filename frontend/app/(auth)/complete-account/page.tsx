@@ -20,26 +20,38 @@ export default function CompleteAccountPage() {
   useEffect(() => {
     let mounted = true
 
-    async function loadSession() {
-      const { data } = await supabase.auth.getUser()
+    const timeout = setTimeout(() => {
+      if (mounted) router.replace('/login?error=invite')
+    }, 5000)
 
-      if (!mounted) {
-        return
-      }
-
-      if (!data.user) {
-        router.replace('/login?error=invite')
-        return
-      }
-
-      setEmail(data.user.email ?? null)
+    function applySession(userEmail: string | null | undefined) {
+      if (!mounted) return
+      clearTimeout(timeout)
+      setEmail(userEmail ?? null)
       setChecking(false)
     }
 
-    void loadSession()
+    // De activatielink levert de sessie via implicit-flow-tokens in de
+    // URL-hash (zie createPublicClient) — @supabase/ssr's browserclient
+    // detecteert die async bij het laden en vuurt dan SIGNED_IN. Daarnaast
+    // blijft een directe getUser()-check nodig voor het geval er al een
+    // bestaande sessie is (geen hash, gewoon terugkerende gebruiker).
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) applySession(session.user.email)
+    })
+
+    async function loadExistingSession() {
+      const { data } = await supabase.auth.getUser()
+      if (data.user) applySession(data.user.email)
+    }
+    void loadExistingSession()
 
     return () => {
       mounted = false
+      clearTimeout(timeout)
+      subscription.unsubscribe()
     }
   }, [router, supabase])
 

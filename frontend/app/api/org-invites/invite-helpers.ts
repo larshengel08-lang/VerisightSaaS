@@ -145,7 +145,11 @@ export async function sendActivationLink({
     email,
     options: {
       shouldCreateUser: true,
-      emailRedirectTo: `${origin}/auth/callback?next=/complete-account`,
+      // Rechtstreeks naar /complete-account, NIET via /auth/callback: die route
+      // is een server-route en kan de URL-hash niet lezen (fragments bereiken
+      // de server nooit). /complete-account is een client-pagina die de
+      // implicit-flow-tokens zelf uit de hash haalt (zie createPublicClient).
+      emailRedirectTo: `${origin}/complete-account`,
       data: {
         full_name: fullName ?? undefined,
         organization_name: orgName,

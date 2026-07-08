@@ -14,14 +14,17 @@ export function createPublicClient() {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
-      // Zonder expliciete pkce-flow gebruikt de kale supabase-js-client
-      // 'implicit' als default: dan komt de OTP-link terug met tokens in de
-      // URL-hash (#access_token=...), die nooit de server bereiken. Elders
-      // in de app (lib/supabase/client.ts, server.ts) draait alles al op
-      // @supabase/ssr, dat standaard pkce gebruikt — /auth/callback/route.ts
-      // verwacht dan ook alleen een ?code=-param. Zonder deze regel matcht
-      // de link die sendActivationLink verstuurt dus nooit die callback-route.
-      flowType: 'pkce',
+      // Bewust 'implicit', NIET 'pkce' (2026-07-08, na een live test die alsnog
+      // vastliep op /login?error=auth). PKCE vereist dat dezelfde browser die
+      // signInWithOtp aanroept ook de code_verifier bewaart om 'm later bij de
+      // exchange te kunnen aanleveren. Deze client wordt server-side aangeroepen
+      // (sendActivationLink, een API-route) — er is geen browser die een
+      // code_verifier kan bewaren, en de ontvanger die de mail opent zit toch
+      // altijd in een andere browser/sessie dan degene die de uitnodiging
+      // verstuurde. Implicit-tokens (#access_token=... in de hash) zijn
+      // self-contained en hebben die continuïteit niet nodig — hetzelfde
+      // patroon als resetPasswordForEmail/reset-password al gebruikt.
+      flowType: 'implicit',
     },
   })
 }
