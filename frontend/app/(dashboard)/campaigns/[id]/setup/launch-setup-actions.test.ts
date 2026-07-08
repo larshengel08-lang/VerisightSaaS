@@ -1,6 +1,8 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 // Mock must be declared before importing the module under test
+let orgMemberRole: string | null = 'owner'
+
 vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({
     auth: {
@@ -30,7 +32,7 @@ vi.mock('@/lib/supabase/server', () => ({
           select: () => ({
             eq: () => ({
               eq: () => ({
-                maybeSingle: async () => ({ data: { role: 'owner' } }),
+                maybeSingle: async () => ({ data: orgMemberRole ? { role: orgMemberRole } : null }),
               }),
             }),
           }),
@@ -52,6 +54,10 @@ vi.mock('@/lib/supabase/server', () => ({
 import { confirmLaunchAction, saveLaunchSetupAction } from './launch-setup-actions'
 
 describe('saveLaunchSetupAction', () => {
+  afterEach(() => {
+    orgMemberRole = 'owner'
+  })
+
   it('returns error when launchDate is empty', async () => {
     const result = await saveLaunchSetupAction('campaign-1', '', 10)
     expect(result).toEqual({ ok: false, error: 'Startdatum is verplicht.' })
@@ -81,11 +87,33 @@ describe('saveLaunchSetupAction', () => {
     const result = await saveLaunchSetupAction('campaign-1', '2026-07-01', 25)
     expect(result).toEqual({ ok: true })
   })
+
+  it('geeft "Niet gemachtigd" terug voor een viewer i.p.v. te crashen op de RLS-afwijzing (2026-07-08 regressie)', async () => {
+    orgMemberRole = 'viewer'
+    const result = await saveLaunchSetupAction('campaign-1', '2026-07-01', 25)
+    expect(result).toEqual({ ok: false, error: 'Niet gemachtigd.' })
+  })
+
+  it('geeft "Niet gemachtigd" terug zonder org_members-record', async () => {
+    orgMemberRole = null
+    const result = await saveLaunchSetupAction('campaign-1', '2026-07-01', 25)
+    expect(result).toEqual({ ok: false, error: 'Niet gemachtigd.' })
+  })
 })
 
 describe('confirmLaunchAction', () => {
+  afterEach(() => {
+    orgMemberRole = 'owner'
+  })
+
   it('returns ok: true for authorized user', async () => {
     const result = await confirmLaunchAction('campaign-1')
     expect(result).toEqual({ ok: true })
+  })
+
+  it('geeft "Niet gemachtigd" terug voor een viewer i.p.v. te crashen op de RLS-afwijzing (2026-07-08 regressie)', async () => {
+    orgMemberRole = 'viewer'
+    const result = await confirmLaunchAction('campaign-1')
+    expect(result).toEqual({ ok: false, error: 'Niet gemachtigd.' })
   })
 })

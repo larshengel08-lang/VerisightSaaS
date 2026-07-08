@@ -25,7 +25,13 @@ async function getAuthAndMembership(campaignId: string) {
     supabase.from('org_members').select('role').eq('org_id', campaign.organization_id).eq('user_id', user.id).maybeSingle(),
   ])
 
-  const authorized = profile?.is_verisight_admin === true || membership !== null
+  // Moet in sync blijven met is_org_manager() in schema.sql (owner/member,
+  // geen viewer) — anders passeert een viewer deze check terwijl de RLS-
+  // insert/update-policy op campaign_delivery_records 'm alsnog blokkeert,
+  // wat hier als een onbehandelde 500 naar buiten komt i.p.v. een nette
+  // 'Niet gemachtigd'.
+  const isManager = membership?.role === 'owner' || membership?.role === 'member'
+  const authorized = profile?.is_verisight_admin === true || isManager
   return { supabase, user, campaign, authorized }
 }
 
