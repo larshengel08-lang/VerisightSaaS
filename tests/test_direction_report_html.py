@@ -7,9 +7,14 @@ AGG_OK = {"triggered": 18, "offered": 15, "answered": 12, "skipped": 3,
           "direction_counts": {"wld_recovery": 6, "wld_priorities": 4}}
 
 
-def test_direction_block_shows_full_chain_and_footer():
+def test_direction_block_shows_delta_chain_and_footer():
+    # De volledige keten (getriggerd -> aangeboden -> beantwoord) staat al in het
+    # toelichtingsblok erboven; het richting-blok toont alleen nog de delta
+    # (beantwoorders -> richting gegeven) om woordelijke herhaling op dezelfde
+    # pagina te voorkomen (rapportreview 2026-07-09).
     html = _direction_block(AGG_OK, "retention", "workload")
-    assert "18" in html and "12" in html and "10" in html and "6" in html   # keten
+    assert "Van de 12 respondenten die de verdieping beantwoordden, gaven 10 ook een gespreksrichting." in html
+    assert "18 respondenten hadden een verdieptrigger" not in html           # geen dubbele keten
     assert "input van respondenten" in html                                  # voetregel
     for verboden in ("aanbeveling", "actieplan", "verschilmaker"):
         assert verboden not in html.lower()

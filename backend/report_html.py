@@ -624,9 +624,10 @@ def _direction_block(agg: dict, scan_type: str, factor_key: str) -> str:
     if offered == 0:
         return ""
     opt_text = {o["key"]: o["text"] for o in DIRECTION_SETS[factor_key]["options"]}
-    chain = (f"{agg['triggered']} respondenten hadden een verdieptrigger op "
-             f"{_lc(_fl(factor_key, scan_type))}; {agg['offered']} kregen de verdieping, "
-             f"{agg['answered']} beantwoordden die. Van hen gaven {n} een gespreksrichting.")
+    # Alleen de delta t.o.v. het toelichtingsblok erboven: de volledige keten
+    # (getriggerd -> aangeboden -> beantwoord) staat daar al — die hier woordelijk
+    # herhalen maakte de pagina onnodig vol.
+    chain = f"Van de {agg['answered']} respondenten die de verdieping beantwoordden, gaven {n} ook een gespreksrichting."
     if n < 5:
         body = ('<p style="font-size:9.5px;color:#64748B;margin:4px 0 0;">'
                 'Te weinig antwoorden om een verdeling te tonen. Bespreek dit onderwerp '
@@ -685,6 +686,20 @@ def _direction_agenda_line(agg: dict, scan_type: str, factor_key: str) -> str | 
             f"'{cause_text}' als toelichting, maar '{route_text}' als richting voor het gesprek "
             f"({s['route_count']} van {s['direction_answered']}). "
             f"Bespreek eerst waar dit verschil vandaan komt.")
+
+
+def _short_mgmt_q(deep_agg: dict, scan_type: str, factor_key: str) -> str | None:
+    """Korte, datagedreven managementvraag voor de bestuurlijke read (p.02).
+
+    Gebruikt de agenda_question die hoort bij de meest gekozen verdiepings-
+    toelichting — inhoud die respondenten zelf kozen, geen vaste template.
+    None -> valt terug op de generieke per-factor vraag.
+    """
+    agg = deep_agg.get(factor_key)
+    if not agg:
+        return None
+    enr = agenda_enrichment(agg, scan_type, factor_key)
+    return enr["agenda_question"] if enr else None
 
 
 def _deepening_mgmt_q(deep_agg: dict, scan_type: str, factor_key: str) -> str | None:
@@ -787,7 +802,10 @@ def _segment_status_block(n: int, has_segment_data: bool = False,
   </div>
 </div>"""
     else:
-        return f"""<div class="pb sec">
+        # Bewust GEEN eigen pagina (.pb): de melding is twee regels en sluit aan
+        # onder de vorige sectie — voorheen stonden hier twee bijna-lege pagina's
+        # achter elkaar (eNPS "niet gemeten" + deze), elk met één zin.
+        return f"""<div class="sec">
   <span class="slabel">Segmentanalyse</span>
   <div class="empty-state">
     <p style="margin-bottom:4px;">Segmentverschillen zijn niet getoond om herleidbaarheid te voorkomen.</p>
@@ -830,36 +848,21 @@ def _themed_quotes(texts: list[str], scan_type: str = "exit",
         '</div>'
     )
 
-    # Top factor keywords voor evidence label
-    tf_kws: list[str] = []
-    for tfk in top_fkeys[:1]:
-        for kws in keywords.values():
-            for kw in kws:
-                if tfk in kw.lower():
-                    tf_kws.extend(kws)
-                    break
-
+    # Bewust GEEN evidence-badges ("bevestigt topfactor"/"nuanceert beeld") meer:
+    # die waren trefwoord-heuristiek verpakt als duiding, in strijd met de
+    # vastgelegde beslissing (2026-04-09) om geen geautomatiseerde analyse op
+    # open tekst te doen. Ook de per-kaart themacount is weg — die stond al in
+    # de themasamenvatting bovenaan en las per kaart alsof elke quote 5x voorkwam.
     used: set[str] = set()
     cards = ""
     for t in texts[:MAX_QUOTES]:
         if t in used: continue
         used.add(t)
-        tl   = t.lower()
         theme = _classify(t)
-        n_th  = theme_counts.get(theme, 1)
-
-        if tf_kws and any(kw in tl for kw in tf_kws):
-            ev, ev_bg, ev_tc = "bevestigt topfactor", "#FEF2F2", "#DC2626"
-        elif any(kw in tl for kw in ["niet","maar","hoewel","toch","echter","juist"]):
-            ev, ev_bg, ev_tc = "nuanceert beeld", "#EFF6FF", "#1D4ED8"
-        else:
-            ev, ev_bg, ev_tc = "verdiept signaal", "#F0FDF4", "#15803D"
 
         cards += (
             f'<div class="theme-card">'
             f'<span class="theme-badge">{_h(theme)}</span>'
-            f'<span style="font-size:8px;color:#94A3B8;margin-left:5px;">{n_th}&times;</span>'
-            f'<span class="ev-badge" style="background:{ev_bg};color:{ev_tc};">{_h(ev)}</span>'
             f'<div class="quote-txt">{_h(t)}'
             f'<div class="quote-anon">Geanonimiseerd &mdash; namen en contactgegevens verwijderd</div>'
             f'</div></div>'
@@ -1078,13 +1081,40 @@ def _factor_bar_row(label: str, score: float | None) -> str:
             f'<div class="fbar-label" style="color:{col};">{_h(interp)}</div></div>')
 
 
+def _overzicht_summary_and_bands(profile_factors: list[tuple[str, float | None]]) -> tuple[str, dict[str, list[str]]]:
+    """Bouwt de samenvattingszin + band-indeling voor het overzichtsprofiel.
+
+    Sorteert eerst op score: voorheen werd de eerste factor in kolomvolgorde
+    genoemd ("Leiderschap vraagt als eerste aandacht") terwijl de rest van het
+    rapport de laagst scorende factor vooropzet — het rapport sprak zichzelf tegen.
+    """
+    ranked = sorted([(l, s) for l, s in profile_factors if s is not None], key=lambda x: x[1])
+    kwetsbaar = [l for l, s in ranked if s < 5.0]
+    aandacht  = [l for l, s in ranked if 5.0 <= s < 6.5]
+    sterk     = [l for l, s in ranked if s >= 6.5]
+    if kwetsbaar and sterk:
+        summary = (f"{kwetsbaar[0]} is het {'enige' if len(kwetsbaar) == 1 else 'duidelijkste'} "
+                   f"kwetsbare punt. {sterk[-1]} vormt een relatief sterke basis.")
+    elif kwetsbaar:
+        summary = f"{kwetsbaar[0]} is het duidelijkste kwetsbare punt; geen enkele factor scoort relatief sterk."
+    elif aandacht:
+        summary = f"Geen factor scoort kritisch. De laagste score zit bij {aandacht[0]}."
+    else:
+        summary = "Factorprofiel toont een overwegend relatief sterk beeld."
+    return summary, {"kwetsbaar": kwetsbaar, "aandacht": aandacht, "sterk": list(reversed(sterk))}
+
+
 def _overzichtsprofiel(factors: list[tuple[str, float | None]],
                        summary: str = "", bands: dict[str, list[str]] | None = None) -> str:
     ranked = sorted(factors, key=lambda x: (x[1] is None, x[1]))
     rows = "".join(_factor_bar_row(lbl, sc) for lbl, sc in ranked)
+    # Legendatermen = exact dezelfde woorden als _factor_label (rijlabels, p.02,
+    # verdieping-titels). Voorheen zei de legenda "aandachtspunt/gemengd" waar de
+    # rijen "Kwetsbaar punt/Aandachtspunt" zeiden — drie labelsets voor dezelfde
+    # drempels op één pagina.
     legend = (f'<p style="font-size:9px;color:#64748B;margin-top:12px;">'
-              f'<span style="color:{RAG_HIGH};">&#9632;</span> aandachtspunt &nbsp; '
-              f'<span style="color:{RAG_MID};">&#9632;</span> gemengd &nbsp; '
+              f'<span style="color:{RAG_HIGH};">&#9632;</span> kwetsbaar punt &nbsp; '
+              f'<span style="color:{RAG_MID};">&#9632;</span> aandachtspunt &nbsp; '
               f'<span style="color:{RAG_LOW};">&#9632;</span> relatief sterk</p>')
     summary_html = (
         f'<p style="font-size:11px;color:#374151;max-width:66ch;margin-bottom:18px;">{_h(summary)}</p>'
@@ -1097,9 +1127,9 @@ def _overzichtsprofiel(factors: list[tuple[str, float | None]],
     if bands:
         cols = ""
         band_meta = [
-            ("aandachtspunt", bands.get("aandachtspunt") or [], RAG_HIGH),
-            ("gemengd", bands.get("gemengd") or [], RAG_MID),
-            ("relatief sterk", bands.get("relatief_sterk") or [], RAG_LOW),
+            ("kwetsbaar punt", bands.get("kwetsbaar") or [], RAG_HIGH),
+            ("aandachtspunt", bands.get("aandacht") or [], RAG_MID),
+            ("relatief sterk", bands.get("sterk") or [], RAG_LOW),
         ]
         for title, labels, color in band_meta:
             if not labels:
@@ -1265,8 +1295,8 @@ def render_exit_report_html(data: dict) -> str:
     primary_signal = low_lbl or high_lbl or "—"
     cover_stats = [
         ("Respondenten", str(n)),
-        ("Respons", f"{data['completion_pct']}%"),
-        ("Primair signaal", primary_signal),
+        ("Respons", f"{int(data['completion_pct'])}%"),  # afgerond — p.03 toont hetzelfde getal
+        ("Eerste aandachtspunt", primary_signal),
     ]
     s = _cover(scan_label=data["scan_lbl"], scan_type="exit", org_name=data["org_name"],
                period=data["campaign_name"], opening_question=opening_q, stats=cover_stats)
@@ -1281,8 +1311,8 @@ def render_exit_report_html(data: dict) -> str:
         exec_line = f"De frictiescore van {rdsp} wijst op een {fl.lower()}."
     else:
         exec_line = "Zie factoranalyse en vertrekcontext voor details."
-    if high_lbl and high_lbl != low_lbl:
-        exec_line += f" {high_lbl} scoort relatief sterk ({_score_str(high_sc)})."
+    # Sterke factor bewust NIET in de titel: die staat al in de subtekst
+    # (totaalbeeld) — voorheen stond dezelfde observatie 2x binnen 4 regels.
 
     # ── Bestuurlijke read ─────────────────────────────────────────────────────
     # Build why_cells for the primary (lowest-scoring) factor
@@ -1300,11 +1330,12 @@ def render_exit_report_html(data: dict) -> str:
         i_scores   = [(ik, q, oim.get(ik)) for ik, q in items_in if oim.get(ik) is not None]
         low_item   = min(i_scores, key=lambda x: x[2]) if i_scores else None
 
+        _deep_agg_early = data.get("deepening_agg") or {}
         why_cells = ""
         if er_n:
-            why_cells += f'<td class="why-cell"><div class="why-l">Hoofdreden</div><div class="why-v" style="color:{tf_col};">{er_n}&times;</div><div class="why-b">meest genoemde vertrekreden</div></td>'
+            why_cells += f'<td class="why-cell"><div class="why-l">Hoofdreden</div><div class="why-v" style="color:{tf_col};">{er_n}&times;</div><div class="why-b">van {n} vertrekkers de meest genoemde reden</div></td>'
         if tf_sc:
-            why_cells += f'<td class="why-cell"><div class="why-l">Factorscore</div><div class="why-v" style="color:{tf_col};">{tf_sc:.1f}/10</div><div class="why-b">{_h(tf_fl)}</div></td>'
+            why_cells += f'<td class="why-cell"><div class="why-l">Factorscore</div><div class="why-v" style="color:{tf_col};">{tf_sc:.1f}/10</div><div class="why-b">gemiddelde van {len(i_scores)} stellingen — {_h(tf_fl.lower())}</div></td>'
         if low_item:
             why_cells += (f'<td class="why-cell"><div class="why-l">Laagste item</div>'
                           f'<div class="why-v" style="color:{_factor_color(low_item[2])};">{low_item[2]:.1f}/10</div>'
@@ -1316,7 +1347,9 @@ def render_exit_report_html(data: dict) -> str:
         primary_label = tf_lbl
         primary_sc    = low_sc
         primary_col   = _factor_color(low_sc)
-        br_mgmt_q     = _mgmt_q(tf, "exit")
+        # Datagedreven vraag (uit de meest gekozen verdiepings-toelichting)
+        # wanneer beschikbaar; anders de generieke per-factor vraag.
+        br_mgmt_q     = _short_mgmt_q(_deep_agg_early, "exit", tf) or _mgmt_q(tf, "exit")
     else:
         why_cells     = ""
         primary_fkey  = low_f[0] if low_f else None
@@ -1325,13 +1358,12 @@ def render_exit_report_html(data: dict) -> str:
         primary_col   = _factor_color(low_sc)
         br_mgmt_q     = _mgmt_q(low_f[0], "exit") if low_f else ""
 
+    # Subtekst herhaalt de titel niet meer (daar staat de laagste factor al):
+    # alleen wat NIEUW is — de sterke factor mét score, plus de p.03-verwijzing.
     totaalbeeld = (
-        f"{low_lbl} vraagt als eerste aandacht. "
-        f"{high_lbl} laat zien wat wél werkt. "
-        f"De responsbasis bepaalt hoe stevig dit beeld is — zie p.03."
-    ) if low_lbl and high_lbl and low_lbl != high_lbl else (
-        f"{low_lbl} vraagt als eerste aandacht. De responsbasis bepaalt hoe stevig dit beeld is — zie p.03."
-    ) if low_lbl else "Zie factoranalyse voor details — zie p.03 voor de responsbasis."
+        f"{high_lbl} ({_score_str(high_sc)}) laat zien wat wél werkt. "
+        f"Hoe stevig dit beeld is, hangt af van de responsbasis — zie p.03."
+    ) if high_lbl and low_lbl != high_lbl else "Reikwijdte en betrouwbaarheid van dit beeld: zie p.03."
 
     s += _bestuurlijke_read(
         kernzin=exec_line,
@@ -1366,23 +1398,8 @@ def render_exit_report_html(data: dict) -> str:
     # ── Overzichtsprofiel (p.05) ──────────────────────────────────────────────
     profile_factors = [(FACTOR_LABELS_NL.get(fk, fk), fa.get(fk))
                        for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
-    _kwetsbaar = [lbl for lbl, sc in profile_factors if sc is not None and sc < 5.0]
-    _aandacht  = [lbl for lbl, sc in profile_factors if sc is not None and 5.0 <= sc < 6.5]
-    _sterk     = [lbl for lbl, sc in profile_factors if sc is not None and sc >= 6.5]
-    if _kwetsbaar and _sterk:
-        _overzicht_summary = (
-            f"{_kwetsbaar[0]} is het {'enige' if len(_kwetsbaar) == 1 else 'duidelijkste'} "
-            f"kwetsbare punt. {_sterk[0]} vormt een relatief sterke basis."
-        )
-    elif _kwetsbaar:
-        _overzicht_summary = f"{_kwetsbaar[0]} vraagt als eerste aandacht. De overige factoren zijn gemengd."
-    elif _aandacht:
-        _overzicht_summary = f"Geen factor scoort kritisch. {_aandacht[0]} vraagt als eerste aandacht."
-    else:
-        _overzicht_summary = "Factorprofiel toont een overwegend relatief sterk beeld."
-    s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary, bands={
-        "aandachtspunt": _kwetsbaar, "gemengd": _aandacht, "relatief_sterk": _sterk,
-    })
+    _overzicht_summary, _overzicht_bands = _overzicht_summary_and_bands(profile_factors)
+    s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary, bands=_overzicht_bands)
 
     # ── Eerste managementspoor (p.06 — na data, vóór verdieping) ─────────────
     _code_to_count = {r["code"]: r["count"] for r in data["exit_r_dist"]}
@@ -1392,11 +1409,21 @@ def render_exit_report_html(data: dict) -> str:
     _enriched_q = (_deepening_mgmt_q(deep_agg, "exit", priority_fkeys[0])
                    if priority_fkeys else None)
 
+    # Primair thema grounded in het laagst scorende item (zelfde aanpak als
+    # retention): geen vaste per-factor beslistekst die nooit meebeweegt met data.
+    _ex_primary_fk = priority_fkeys[0] if priority_fkeys else None
+    _ex_primary_items = ([(ik, q, oim.get(ik)) for ik, q in fim.get(_ex_primary_fk, []) if oim.get(ik) is not None]
+                          if _ex_primary_fk else [])
+    _ex_primary_low = min(_ex_primary_items, key=lambda x: x[2]) if _ex_primary_items else None
+    _ex_primary_theme = (
+        f"Bespreek eerst ‘{_ex_primary_low[1]}’ binnen {FACTOR_LABELS_NL.get(_ex_primary_fk, _ex_primary_fk).lower()} "
+        f"({_ex_primary_low[2]:.1f}/10) — de scherpste losse waarneming in het cijferbeeld."
+    ) if _ex_primary_low else (top_flabels[0] if top_flabels else "het leidende thema")
     s += _eerste_managementspoor(
-        primary_theme=nsp.get("first_decision") or (top_flabels[0] if top_flabels else "het leidende thema"),
-        second_point=top_flabels[1] if len(top_flabels) > 1 else "",
+        primary_theme=_ex_primary_theme,
+        second_point=f"{FACTOR_LABELS_NL.get(sorted_f[1][0], sorted_f[1][0])} ({_score_str(sorted_f[1][1])})" if len(sorted_f) > 1 else "",
         mgmt_q=_enriched_q or (_mgmt_q(priority_fkeys[0], "exit") if priority_fkeys else (nsp.get("first_decision") or "")),
-        review_when=nsp.get("review_moment") or "bij de volgende meting",
+        review_when="Plan binnen 45-90 dagen een vervolgmoment: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.",
     )
 
     # ── Factor detail (itemniveau prioritaire factoren) ──────────────────────
@@ -1410,12 +1437,12 @@ def render_exit_report_html(data: dict) -> str:
         i_sc   = [(ik, q, oim.get(ik)) for ik, q in items if oim.get(ik) is not None]
         low_i  = min(i_sc, key=lambda x: x[2]) if i_sc else None
         high_i = max(i_sc, key=lambda x: x[2]) if i_sc else None
-        mgmt_q = _mgmt_q(fk, "exit")
-        # Item table rows (keep .iq/.is/.ib classes — those are in new CSS)
+        # Item table rows; het laagste item wordt vet — dat vervangt de aparte
+        # "Laagste item"-kaart die bij 3 items pure herhaling van deze tabel was.
         rows = "".join(
-            f'<tr><td class="iq">{_h(q)}</td>'
+            f'<tr><td class="iq"{" style=\"font-weight:700;\"" if low_i and ik == low_i[0] else ""}>{_h(q)}</td>'
             f'<td class="is" style="color:{_factor_color(isc)};">{isc:.1f}</td></tr>'
-            for _, q, isc in i_sc
+            for ik, q, isc in i_sc
         ) or '<tr><td colspan="2" style="color:#94A3B8;font-style:italic;">Itemscores niet beschikbaar in deze wave.</td></tr>'
         # Optional quote: pick first open text that mentions a keyword of this factor
         fk_keywords = THEME_KEYWORDS.get(lbl, [])
@@ -1431,35 +1458,35 @@ def render_exit_report_html(data: dict) -> str:
             er_context = f'<div class="card accent">{er_count}&times; genoemd als vertrekreden &mdash; directe link met vertrekcontext.</div>'
         else:
             er_context = ""
-        # ── Lowest / highest item cards ──
+        # ── Lowest / highest item cards — alleen bij >3 items; bij 3 items zijn
+        # ze pure herhaling van de itemtabel (2 van de 3 rijen stonden dubbel) ──
+        show_cards = len(i_sc) > 3
         low_card  = (f'<div class="card"><span class="eyebrow">Laagste item</span>'
                      f'<p>{_h(low_i[1])}</p>'
                      f'<strong style="color:{_factor_color(low_i[2])};">{low_i[2]:.1f}/10</strong></div>'
-                     if low_i else "")
+                     if show_cards and low_i else "")
         high_card = (f'<div class="card"><span class="eyebrow">Hoogste item binnen deze factor</span>'
                      f'<p>{_h(high_i[1])}</p>'
                      f'<strong style="color:{_factor_color(high_i[2])};">{high_i[2]:.1f}/10</strong></div>'
-                     if high_i else "")
+                     if show_cards and high_i else "")
         # ── Quote block ──
         quote_block = (f'<div class="quote-txt">{_h(quote_txt)}'
                        f'<div class="quote-anon">Geanonimiseerd &mdash; namen en contactgegevens verwijderd</div>'
                        f'</div>'
                        if quote_txt else "")
-        # ── Management question ──
-        mgmt_block = (f'<div class="mgmt-anchor"><div class="ma-label">Eerste managementvraag</div>'
-                      f'<p>{_h(mgmt_q)}</p></div>'
-                      if mgmt_q else "")
         # ── Toelichtingsblok verdiepingsvragen (spec 6.2) ──
+        # NB: het statische "Eerste managementvraag"-navy-blok is hier bewust weg —
+        # dezelfde template-vraag stond al op p.02 en 3x op de verdiepingspagina's;
+        # de data (items + toelichting + quote) draagt deze pagina zelf.
         deep_block = (_deepening_block(deep_agg[fk], "exit", fk)
                       if fk in deep_agg else "")
         return f"""<div class="pb sec">
   <span class="slabel">Verdieping &mdash; {_h(lbl)}</span>
   <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&mdash; {_h(fl_)}</span></h2>
-  {mgmt_block}
   {er_context}
   {low_card}
   {high_card}
-  <h3>Alle items in deze factor</h3>
+  <h3 style="margin-top:14px;">Alle items in deze factor</h3>
   <table class="item-tbl">{rows}</table>
   {deep_block}
   {quote_block}
@@ -1629,8 +1656,8 @@ def render_retention_report_html(data: dict) -> str:
         period=data["campaign_name"], opening_question="Waar staat behoud nu onder druk?",
         stats=[
             ("Respondenten", str(n)),
-            ("Respons", f"{data['completion_pct']}%"),
-            ("Primair signaal", _ret_primary),
+            ("Respons", f"{int(data['completion_pct'])}%"),  # afgerond — p.03 toont hetzelfde getal
+            ("Eerste aandachtspunt", _ret_primary),
         ],
     )
 
@@ -1644,27 +1671,24 @@ def render_retention_report_html(data: dict) -> str:
         i_scores = [(ik, q, oim.get(ik)) for ik, q in items_in if oim.get(ik) is not None]
         low_item = min(i_scores, key=lambda x: x[2]) if i_scores else None
 
+        _deep_agg_early = data.get("deepening_agg") or {}
+        # Alleen cellen die écht verklaren waarom deze factor bovenaan staat.
+        # Bevlogenheid en blijfintentie zijn contextsignalen, geen verklaring —
+        # die staan volledig uitgelegd op p.04 (behoudscontext); hier stonden ze
+        # als vierde/vijfde losse score op een toch al dichte pagina.
         why_cells = ""
         if tf_sc is not None:
-            why_cells += f'<td class="why-cell"><div class="why-l">Factorscore</div><div class="why-v" style="color:{tf_col};">{tf_sc:.1f}/10</div><div class="why-b">{_h(_factor_label(tf_sc))}</div></td>'
+            why_cells += f'<td class="why-cell"><div class="why-l">Factorscore</div><div class="why-v" style="color:{tf_col};">{tf_sc:.1f}/10</div><div class="why-b">gemiddelde van {len(i_scores)} stellingen — {_h(_factor_label(tf_sc).lower())}</div></td>'
         if low_item:
             why_cells += (f'<td class="why-cell"><div class="why-l">Laagste item</div>'
                           f'<div class="why-v" style="color:{_factor_color(low_item[2])};">{low_item[2]:.1f}/10</div>'
                           f'<div class="why-b">{_h(low_item[1])}</div></td>')
-        if avg_eng is not None:
-            ecol = _factor_color(avg_eng)
-            eng_note = ("hoog" if avg_eng >= 7.5 else "gemiddeld" if avg_eng >= 6.0 else "laag — geen buffer" if avg_eng >= 4.5 else "zorgelijk laag")
-            why_cells += f'<td class="why-cell"><div class="why-l">Bevlogenheid</div><div class="why-v" style="color:{ecol};">{avg_eng:.1f}/10</div><div class="why-b">energie &amp; inspiratie — {eng_note}</div></td>'
-        if avg_si is not None:
-            si_col = _factor_color(avg_si)
-            si_note = ("sterk" if avg_si >= 7.5 else "gemiddeld" if avg_si >= 6.0 else "laag voor actieve groep" if avg_si >= 4.5 else "zorgelijk laag")
-            why_cells += f'<td class="why-cell"><div class="why-l">Blijfintentie</div><div class="why-v" style="color:{si_col};">{avg_si:.1f}/10</div><div class="why-b">intentie om te blijven — {si_note}</div></td>'
 
         primary_fkey  = tf
         primary_label = tf_lbl_
         primary_sc    = tf_sc
         primary_col   = tf_col
-        br_mgmt_q     = _mgmt_q(tf, ST)
+        br_mgmt_q     = _short_mgmt_q(_deep_agg_early, ST, tf) or _mgmt_q(tf, ST)
     else:
         why_cells     = ""
         primary_fkey  = low_f[0] if low_f else None
@@ -1673,21 +1697,19 @@ def render_retention_report_html(data: dict) -> str:
         primary_col   = _factor_color(low_sc)
         br_mgmt_q     = _mgmt_q(low_f[0], ST) if low_f else ""
 
-    # Kernzin blijft kort: alleen band + score + laagste factor. De hoogste factor
-    # ("staat relatief sterk") komt al terug in totaalbeeld hieronder — niet twee
-    # keer dezelfde twee factoren in titel én subtekst noemen.
+    # Kernzin: band + geduid getal + laagste factor. "behoudssignaal" bij het
+    # cijfer, zodat de lezer weet WAT er 4.7 scoort (de factorscore ernaast is
+    # een ander getal — dat onderscheid was eerder onzichtbaar).
     if avg_risk and band_lbl and low_lbl:
-        exec_line = f"{band_lbl} ({_score_str(avg_risk)}). {low_lbl} vraagt als eerste aandacht."
+        exec_line = f"{band_lbl} (behoudssignaal {_score_str(avg_risk)}). {low_lbl} vraagt als eerste aandacht."
     else:
         exec_line = "Zie factoranalyse en behoudscontext voor details."
 
+    # Subtekst herhaalt de titel niet meer: alleen wat nieuw is.
     totaalbeeld = (
-        f"{low_lbl} vraagt als eerste aandacht voor behoud. "
-        f"{high_lbl} laat zien wat wél werkt. "
-        f"De responsbasis bepaalt hoe stevig dit beeld is — zie p.03."
-    ) if low_lbl and high_lbl and low_lbl != high_lbl else (
-        f"{low_lbl} vraagt als eerste aandacht. De responsbasis bepaalt hoe stevig dit beeld is — zie p.03."
-    ) if low_lbl else "Zie factoranalyse voor details — zie p.03 voor de responsbasis."
+        f"{high_lbl} ({_score_str(high_sc)}) laat zien wat wél werkt. "
+        f"Hoe stevig dit beeld is, hangt af van de responsbasis — zie p.03."
+    ) if high_lbl and low_lbl != high_lbl else "Reikwijdte en betrouwbaarheid van dit beeld: zie p.03."
 
     s += _bestuurlijke_read(
         kernzin=exec_line,
@@ -1725,23 +1747,8 @@ def render_retention_report_html(data: dict) -> str:
     # ── Overzichtsprofiel (p.05) ──────────────────────────────────────────────
     profile_factors = [(_fl(fk, ST), fa.get(fk))
                        for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
-    _kwetsbaar = [lbl for lbl, sc in profile_factors if sc is not None and sc < 5.0]
-    _aandacht  = [lbl for lbl, sc in profile_factors if sc is not None and 5.0 <= sc < 6.5]
-    _sterk     = [lbl for lbl, sc in profile_factors if sc is not None and sc >= 6.5]
-    if _kwetsbaar and _sterk:
-        _overzicht_summary = (
-            f"{_kwetsbaar[0]} is het {'enige' if len(_kwetsbaar) == 1 else 'duidelijkste'} "
-            f"kwetsbare punt. {_sterk[0]} vormt een relatief sterke basis."
-        )
-    elif _kwetsbaar:
-        _overzicht_summary = f"{_kwetsbaar[0]} vraagt als eerste aandacht. De overige factoren zijn gemengd."
-    elif _aandacht:
-        _overzicht_summary = f"Geen factor scoort kritisch. {_aandacht[0]} vraagt als eerste aandacht."
-    else:
-        _overzicht_summary = "Factorprofiel toont een overwegend relatief sterk beeld."
-    s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary, bands={
-        "aandachtspunt": _kwetsbaar, "gemengd": _aandacht, "relatief_sterk": _sterk,
-    })
+    _overzicht_summary, _overzicht_bands = _overzicht_summary_and_bands(profile_factors)
+    s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary, bands=_overzicht_bands)
 
     # ── Eerste managementspoor (p.06 — na data, vóór verdieping) ─────────────
     _ret_priority_fkeys = _select_priority_factors(fa, {}, max_n=3)
@@ -1765,7 +1772,7 @@ def render_retention_report_html(data: dict) -> str:
     ) if _primary_low_item else (low_lbl or "het leidende behoudsthema")
     s += _eerste_managementspoor(
         primary_theme=_primary_theme_grounded,
-        second_point=_fl(sorted_f[1][0], ST) if len(sorted_f) > 1 else "",
+        second_point=f"{_fl(sorted_f[1][0], ST)} ({_score_str(sorted_f[1][1])})" if len(sorted_f) > 1 else "",
         mgmt_q=_enriched_q or (_mgmt_q(_ret_priority_fkeys[0], ST) if _ret_priority_fkeys else (nsp.get("first_decision") or "")),
         # Opnieuw bespreken: neutrale cadans i.p.v. de vaste "wat is geverifieerd,
         # welke eerste interventie loopt"-formule, die een vervolg claimde dat er
@@ -1786,11 +1793,12 @@ def render_retention_report_html(data: dict) -> str:
         i_sc   = [(ik, q, oim.get(ik)) for ik, q in items if oim.get(ik) is not None]
         low_i  = min(i_sc, key=lambda x: x[2]) if i_sc else None
         high_i = max(i_sc, key=lambda x: x[2]) if i_sc else None
-        mq_    = _mgmt_q(fk, ST)
+        # Laagste item vet in de tabel i.p.v. losse laagste/hoogste-kaarten:
+        # bij 3 items per factor waren die kaarten pure herhaling van de tabel.
         rows = "".join(
-            f'<tr><td class="iq">{_h(q)}</td>'
+            f'<tr><td class="iq"{" style=\"font-weight:700;\"" if low_i and ik == low_i[0] else ""}>{_h(q)}</td>'
             f'<td class="is" style="color:{_factor_color(isc)};">{isc:.1f}</td></tr>'
-            for _, q, isc in i_sc
+            for ik, q, isc in i_sc
         ) or '<tr><td colspan="2" style="color:#94A3B8;font-style:italic;">Itemscores niet beschikbaar in deze wave.</td></tr>'
         fk_keywords = THEME_KEYWORDS.get(FACTOR_LABELS_NL.get(fk, ""), [])
         quote_txt: str | None = None
@@ -1798,19 +1806,20 @@ def render_retention_report_html(data: dict) -> str:
             if any(kw in t.lower() for kw in fk_keywords):
                 quote_txt = t
                 break
+        show_cards = len(i_sc) > 3
         low_card  = (f'<div class="card"><span class="eyebrow">Laagste item</span>'
                      f'<p>{_h(low_i[1])}</p>'
                      f'<strong style="color:{_factor_color(low_i[2])};">{low_i[2]:.1f}/10</strong></div>'
-                     if low_i else "")
+                     if show_cards and low_i else "")
         high_card = (f'<div class="card"><span class="eyebrow">Hoogste item binnen deze factor</span>'
                      f'<p>{_h(high_i[1])}</p>'
                      f'<strong style="color:{_factor_color(high_i[2])};">{high_i[2]:.1f}/10</strong></div>'
-                     if high_i else "")
+                     if show_cards and high_i else "")
         quote_block = (f'<div class="quote-txt">{_h(quote_txt)}'
                        f'<div class="quote-anon">Geanonimiseerd &mdash; namen en contactgegevens verwijderd</div>'
                        f'</div>' if quote_txt else "")
-        mgmt_block  = (f'<div class="mgmt-anchor"><div class="ma-label">Eerste managementvraag</div>'
-                       f'<p>{_h(mq_)}</p></div>' if mq_ else "")
+        # Statisch "Eerste managementvraag"-blok bewust verwijderd (template-taal;
+        # stond ook al op p.02) — de toelichting/richting-blokken dragen de duiding.
         # ── Toelichtingsblok verdiepingsvragen (spec 6.2) ──
         deep_block = (_deepening_block(deep_agg[fk], ST, fk)
                       if fk in deep_agg else "")
@@ -1820,10 +1829,9 @@ def render_retention_report_html(data: dict) -> str:
         return f"""<div class="pb sec">
   <span class="slabel">Verdieping &mdash; {_h(lbl)}</span>
   <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&mdash; {_h(fl_)}</span></h2>
-  {mgmt_block}
   {low_card}
   {high_card}
-  <h3>Alle items in deze factor</h3>
+  <h3 style="margin-top:14px;">Alle items in deze factor</h3>
   <table class="item-tbl">{rows}</table>
   {deep_block}{dir_block}
   {quote_block}
@@ -1971,7 +1979,7 @@ def _checkpointoverzicht(checkpoints: list[tuple[str, float | None]]) -> str:
         cells = "".join(
             f'<td><div class="sc-l">{_h(label)}</div>'
             f'<div class="sc-v" style="color:{_rag_color(score)};">{_score_str(score)}</div>'
-            f'<div class="sc-b">{_h("Aandachtspunt" if score is not None and score < 5.0 else "Gemengd" if score is not None and score < 6.5 else "Stabiel")}</div></td>'
+            f'<div class="sc-b">{_h(_factor_label(score))}</div></td>'
             for label, score in checkpoints
         )
         body = f'<table class="sg"><tr>{cells}</tr></table>'
@@ -1995,7 +2003,12 @@ def _checkpointoverzicht(checkpoints: list[tuple[str, float | None]]) -> str:
 
 
 def _landingskwaliteit(domains: list[tuple[str, float | None]]) -> str:
-    """Landingskwaliteit per domein — factor bar rows in een card, analoog aan _overzichtsprofiel."""
+    """Landingskwaliteit per domein — factor bar rows in een card.
+
+    Geen eigen pagina (.pb): sluit aan onder het checkpointoverzicht, dat bij een
+    enkelvoudige meting maar één getal bevat — samen vullen ze één pagina i.p.v.
+    twee halflege.
+    """
     rows = "".join(
         _factor_bar_row(label, score)
         for label, score in domains
@@ -2004,10 +2017,10 @@ def _landingskwaliteit(domains: list[tuple[str, float | None]]) -> str:
     if not rows:
         rows = '<div class="empty-state">Domeinscores beschikbaar bij voldoende patroonduiding.</div>'
     legend = (f'<p style="font-size:9px;color:#64748B;margin-top:12px;">'
-              f'<span style="color:{RAG_HIGH};">&#9632;</span> aandachtspunt &nbsp; '
-              f'<span style="color:{RAG_MID};">&#9632;</span> gemengd &nbsp; '
+              f'<span style="color:{RAG_HIGH};">&#9632;</span> kwetsbaar punt &nbsp; '
+              f'<span style="color:{RAG_MID};">&#9632;</span> aandachtspunt &nbsp; '
               f'<span style="color:{RAG_LOW};">&#9632;</span> goed geland</p>')
-    return f"""<div class="pb sec">
+    return f"""<div class="sec">
   <span class="slabel">Landingskwaliteit per domein</span>
   <div class="card">{rows}{legend}</div>
 </div>"""
@@ -2046,8 +2059,8 @@ def render_onboarding_report_html(data: dict) -> str:
         period=data["campaign_name"], opening_question="Hoe landen uw nieuwe medewerkers?",
         stats=[
             ("Respondenten", str(n)),
-            ("Respons", f"{data['completion_pct']}%"),
-            ("Primair signaal", _ob_primary),
+            ("Respons", f"{int(data['completion_pct'])}%"),  # afgerond — p.03 toont hetzelfde getal
+            ("Eerste aandachtspunt", _ob_primary),
         ],
     )
 
@@ -2063,14 +2076,11 @@ def render_onboarding_report_html(data: dict) -> str:
 
         why_cells = ""
         if tf_sc is not None:
-            why_cells += f'<td class="why-cell"><div class="why-l">Factorscore</div><div class="why-v" style="color:{tf_col};">{tf_sc:.1f}/10</div><div class="why-b">{_h(_factor_label(tf_sc))}</div></td>'
+            why_cells += f'<td class="why-cell"><div class="why-l">Factorscore</div><div class="why-v" style="color:{tf_col};">{tf_sc:.1f}/10</div><div class="why-b">gemiddelde van {len(i_scores)} stellingen — {_h(_factor_label(tf_sc).lower())}</div></td>'
         if low_item:
             why_cells += (f'<td class="why-cell"><div class="why-l">Laagste item</div>'
                           f'<div class="why-v" style="color:{_factor_color(low_item[2])};">{low_item[2]:.1f}/10</div>'
                           f'<div class="why-b">{_h(low_item[1])}</div></td>')
-        if avg_si is not None:
-            si_col = _factor_color(avg_si)
-            why_cells += f'<td class="why-cell"><div class="why-l">Stay-intent</div><div class="why-v" style="color:{si_col};">{avg_si:.1f}/10</div><div class="why-b">verblijfsintentie vroege fase</div></td>'
 
         primary_label = tf_lbl_
         primary_sc    = tf_sc
@@ -2083,20 +2093,18 @@ def render_onboarding_report_html(data: dict) -> str:
         primary_col   = _factor_color(low_sc)
         br_mgmt_q     = _mgmt_q(low_f[0], ST) if low_f else ""
 
-    # Kernzin blijft kort: alleen band + score + laagste factor — de hoogste factor
-    # komt al terug in totaalbeeld hieronder, niet dubbel in titel én subtekst.
+    # Kernzin: band + geduid getal + laagste factor ("checkpointscore" zodat de
+    # lezer weet wat het getal is; de factorscore ernaast is een ander getal).
     if avg_risk and band_lbl and low_lbl:
-        exec_line = f"{band_lbl} ({_score_str(avg_risk)}). {low_lbl} vraagt als eerste aandacht."
+        exec_line = f"{band_lbl} (checkpointscore {_score_str(avg_risk)}). {low_lbl} vraagt als eerste aandacht."
     else:
         exec_line = "Zie factordiepte en checkpointoverzicht voor details."
 
+    # Subtekst herhaalt de titel niet meer: alleen wat nieuw is.
     totaalbeeld = (
-        f"{low_lbl} vraagt als eerste aandacht in de onboardingfase. "
-        f"{high_lbl} laat zien wat wél goed landt. "
-        f"De responsbasis bepaalt hoe stevig dit beeld is — zie p.03."
-    ) if low_lbl and high_lbl and low_lbl != high_lbl else (
-        f"{low_lbl} vraagt als eerste aandacht. De responsbasis bepaalt hoe stevig dit beeld is — zie p.03."
-    ) if low_lbl else "Zie factordiepte voor details — zie p.03 voor de responsbasis."
+        f"{high_lbl} ({_score_str(high_sc)}) laat zien wat wél goed landt. "
+        f"Hoe stevig dit beeld is, hangt af van de responsbasis — zie p.03."
+    ) if high_lbl and low_lbl != high_lbl else "Reikwijdte en betrouwbaarheid van dit beeld: zie p.03."
 
     s += _bestuurlijke_read(
         kernzin=exec_line,
@@ -2125,23 +2133,8 @@ def render_onboarding_report_html(data: dict) -> str:
     # ── Overzichtsprofiel (p.04) ──────────────────────────────────────────────
     profile_factors = [(_fl(fk, ST), fa.get(fk))
                        for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
-    _kwetsbaar = [lbl for lbl, sc in profile_factors if sc is not None and sc < 5.0]
-    _aandacht  = [lbl for lbl, sc in profile_factors if sc is not None and 5.0 <= sc < 6.5]
-    _sterk     = [lbl for lbl, sc in profile_factors if sc is not None and sc >= 6.5]
-    if _kwetsbaar and _sterk:
-        _overzicht_summary = (
-            f"{_kwetsbaar[0]} is het {'enige' if len(_kwetsbaar) == 1 else 'duidelijkste'} "
-            f"kwetsbare punt. {_sterk[0]} vormt een relatief sterke basis."
-        )
-    elif _kwetsbaar:
-        _overzicht_summary = f"{_kwetsbaar[0]} vraagt als eerste aandacht. De overige factoren zijn gemengd."
-    elif _aandacht:
-        _overzicht_summary = f"Geen factor scoort kritisch. {_aandacht[0]} vraagt als eerste aandacht."
-    else:
-        _overzicht_summary = "Factorprofiel toont een overwegend relatief sterk beeld."
-    s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary, bands={
-        "aandachtspunt": _kwetsbaar, "gemengd": _aandacht, "relatief_sterk": _sterk,
-    })
+    _overzicht_summary, _overzicht_bands = _overzicht_summary_and_bands(profile_factors)
+    s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary, bands=_overzicht_bands)
 
     # ── Checkpointoverzicht (p.05 — onboarding-exclusive) ────────────────────
     s += _checkpointoverzicht(checkpoints=[("Huidig checkpoint", avg_risk)])
@@ -2152,12 +2145,22 @@ def render_onboarding_report_html(data: dict) -> str:
     s += _landingskwaliteit(domain_scores)
 
     # ── Eerste managementspoor (p.06 — na data, vóór verdieping) ─────────────
+    # Primair thema grounded in het laagst scorende item (zelfde aanpak als
+    # exit/retention): geen vaste per-factor beslistekst die nooit meebeweegt.
     _ob_priority_fkeys = _select_priority_factors(fa, {}, max_n=3)
+    _ob_primary_fk = _ob_priority_fkeys[0] if _ob_priority_fkeys else None
+    _ob_primary_items = ([(ik, q, oim.get(ik)) for ik, q in fim.get(_ob_primary_fk, []) if oim.get(ik) is not None]
+                          if _ob_primary_fk else [])
+    _ob_primary_low = min(_ob_primary_items, key=lambda x: x[2]) if _ob_primary_items else None
+    _ob_primary_theme = (
+        f"Bespreek eerst ‘{_ob_primary_low[1]}’ binnen {_fl(_ob_primary_fk, ST).lower()} "
+        f"({_ob_primary_low[2]:.1f}/10) — de scherpste losse waarneming in het cijferbeeld."
+    ) if _ob_primary_low else (low_lbl if low_lbl else "het leidende onboardingthema")
     s += _eerste_managementspoor(
-        primary_theme=nsp.get("first_decision") or (low_lbl if low_lbl else "het leidende onboardingthema"),
-        second_point=_fl(sorted_f[1][0], ST) if len(sorted_f) > 1 else "",
+        primary_theme=_ob_primary_theme,
+        second_point=f"{_fl(sorted_f[1][0], ST)} ({_score_str(sorted_f[1][1])})" if len(sorted_f) > 1 else "",
         mgmt_q=_mgmt_q(_ob_priority_fkeys[0], ST) if _ob_priority_fkeys else (nsp.get("first_decision") or ""),
-        review_when=nsp.get("review_moment") or "bij het volgende checkpoint",
+        review_when="Plan een vervolgmoment rond het volgende checkpoint: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.",
     )
 
     # ── Factordiepte ×≤3 (prioriteit = laagste score, geen vertrekredenen) ────
@@ -2172,11 +2175,13 @@ def render_onboarding_report_html(data: dict) -> str:
         i_sc   = [(ik, q, oim.get(ik)) for ik, q in items if oim.get(ik) is not None]
         low_i  = min(i_sc, key=lambda x: x[2]) if i_sc else None
         high_i = max(i_sc, key=lambda x: x[2]) if i_sc else None
-        mq     = _mgmt_q(fk, ST)
+        # Laagste item vet in de tabel; losse kaarten alleen bij >3 items
+        # (bij 3 items waren ze herhaling van de tabel). Het statische
+        # "Eerste managementvraag"-blok is bewust weg — template-taal.
         rows = "".join(
-            f'<tr><td class="iq">{_h(q)}</td>'
+            f'<tr><td class="iq"{" style=\"font-weight:700;\"" if low_i and ik == low_i[0] else ""}>{_h(q)}</td>'
             f'<td class="is" style="color:{_factor_color(isc)};">{isc:.1f}</td></tr>'
-            for _, q, isc in i_sc
+            for ik, q, isc in i_sc
         ) or '<tr><td colspan="2" style="color:#94A3B8;font-style:italic;">Itemscores niet beschikbaar in deze wave.</td></tr>'
         fk_keywords = _ONBOARDING_THEME_KEYWORDS.get(lbl, [])
         quote_txt: str | None = None
@@ -2184,27 +2189,25 @@ def render_onboarding_report_html(data: dict) -> str:
             if any(kw in t.lower() for kw in fk_keywords):
                 quote_txt = t
                 break
+        show_cards = len(i_sc) > 3
         low_card  = (f'<div class="card"><span class="eyebrow">Kwetsbaarste item</span>'
                      f'<p>{_h(low_i[1])}</p>'
                      f'<strong style="color:{_factor_color(low_i[2])};">{low_i[2]:.1f}/10</strong></div>'
-                     if low_i else "")
+                     if show_cards and low_i else "")
         high_card = (f'<div class="card"><span class="eyebrow">Relatief sterkste item</span>'
                      f'<p>{_h(high_i[1])}</p>'
                      f'<strong style="color:{_factor_color(high_i[2])};">{high_i[2]:.1f}/10</strong></div>'
-                     if high_i else "")
+                     if show_cards and high_i else "")
         quote_block = (f'<div class="quote-txt">{_h(quote_txt)}'
                        f'<div class="quote-anon">Geanonimiseerd &mdash; namen en contactgegevens verwijderd</div>'
                        f'</div>' if quote_txt else "")
-        mgmt_block = (f'<div class="mgmt-anchor"><div class="ma-label">Eerste managementvraag</div>'
-                      f'<p>{_h(mq)}</p></div>' if mq else "")
         return f"""<div class="pb sec">
   <span class="slabel">Verdieping &mdash; {_h(lbl)}</span>
   <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&mdash; {_h(fl_)}</span></h2>
-  {mgmt_block}
   <p style="font-size:10px;color:#64748B;margin-bottom:12px;">Lager op deze factor = meer frictie in de onboardingfase.</p>
   {low_card}
   {high_card}
-  <h3>Alle items in deze factor</h3>
+  <h3 style="margin-top:14px;">Alle items in deze factor</h3>
   <table class="item-tbl">{rows}</table>
   {quote_block}
 </div>"""
