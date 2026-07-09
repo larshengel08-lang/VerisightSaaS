@@ -102,19 +102,19 @@ def _fl(fk: str, scan_type: str = "exit") -> str:
 # ── Product-specifieke band labels ────────────────────────────────────────────
 
 _EXIT_BANDS = {
-    "HOOG":   ("Sterk frictiebeeld",       "#EF4444"),
-    "MIDDEN": ("Gemengd vertrekbeeld",      "#F59E0B"),
-    "LAAG":   ("Laag frictiebeeld",         "#22C55E"),
+    "HOOG":   ("Sterk frictiebeeld",       "#C0392B"),
+    "MIDDEN": ("Gemengd vertrekbeeld",      "#C17C00"),
+    "LAAG":   ("Laag frictiebeeld",         "#3C8D8A"),
 }
 _RETENTION_BANDS = {
-    "HOOG":   ("Behoud onder druk",          "#EF4444"),
-    "MIDDEN": ("Behoud vraagt aandacht",    "#F59E0B"),
-    "LAAG":   ("Behoudsklimaat stabiel",    "#22C55E"),
+    "HOOG":   ("Behoud onder druk",          "#C0392B"),
+    "MIDDEN": ("Behoud vraagt aandacht",    "#C17C00"),
+    "LAAG":   ("Behoudsklimaat stabiel",    "#3C8D8A"),
 }
 _ONBOARDING_BANDS = {
-    "HOOG":   ("Onboardingbasis vraagt aandacht", "#EF4444"),
-    "MIDDEN": ("Gemengd onboardingsbeeld",         "#F59E0B"),
-    "LAAG":   ("Onboardingbasis stabiel",           "#22C55E"),
+    "HOOG":   ("Onboardingbasis vraagt aandacht", "#C0392B"),
+    "MIDDEN": ("Gemengd onboardingsbeeld",         "#C17C00"),
+    "LAAG":   ("Onboardingbasis stabiel",           "#3C8D8A"),
 }
 
 def _band(score: float | None, scan_type: str = "exit") -> tuple[str, str]:
@@ -226,10 +226,15 @@ def _factor_label(score: float | None) -> str:
     return "Relatief sterk"
 
 def _factor_color(score: float | None) -> str:
+    # Zelfde gedempte RAG-set als de balken (_rag_color): voorheen gebruikte deze
+    # functie felle tailwind-tinten (#EF4444/#F59E0B/#22C55E), waardoor er drie
+    # ambers in het rapport zaten (merk #E8A020, fel #F59E0B, RAG #C17C00) en een
+    # waarschuwingskleur eerder als huisstijl las. Eén betekenis-set, visueel
+    # onderscheiden van het merkaccent.
     if score is None:  return "#94A3B8"
-    if score < 5.0:    return "#EF4444"
-    if score < 6.5:    return "#F59E0B"
-    return "#22C55E"
+    if score < 5.0:    return RAG_HIGH
+    if score < 6.5:    return RAG_MID
+    return RAG_LOW
 
 def _h(s: Any) -> str:
     return "" if s is None else _esc(str(s))
@@ -545,7 +550,10 @@ def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: st
     <td class="step"><div class="step-no">Eigenaarschap</div><div class="step-fill"></div><div class="step-fill-hint">In te vullen tijdens de bespreking</div></td>
     <td class="step"><div class="step-no">Opnieuw bespreken</div><div class="step-body">{_h(review_when)}</div></td>
   </tr></table>
-  <div class="card accent"><h3>Gespreksopener</h3><p style="margin-bottom:0;">{_h(mgmt_q)}</p></div>
+  <div style="background:#0D1B2A;border-left:3px solid #E8A020;padding:18px 20px;margin-top:14px;">
+    <div style="font-family:'JetBrains Mono', monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#E8A020;margin-bottom:7px;">Gespreksopener</div>
+    <p style="margin-bottom:0;font-size:12.5px;line-height:1.6;color:#F4F1EA;">{_h(mgmt_q)}</p>
+  </div>
   <p class="trustline">Nog niet besluiten: of een verdieping of kortere vervolgmeting nodig is &mdash; dat volgt uit het gesprek.</p>
 </div>"""
 
@@ -599,7 +607,7 @@ def _deepening_block(agg: dict, scan_type: str, factor_key: str) -> str:
             for key, cnt in ranked)
         body = f'<table class="item-tbl" style="margin-top:6px;">{rows}</table>'
         if answered <= 9:
-            body += ('<p style="font-size:9px;color:#92400E;margin:4px 0 0;">'
+            body += ('<p style="font-size:10px;color:#92400E;margin:4px 0 0;">'
                      'Beperkte antwoordbasis &mdash; gebruik dit als gesprekshaakje, '
                      'niet als conclusie.</p>')
 
@@ -613,7 +621,7 @@ def _deepening_block(agg: dict, scan_type: str, factor_key: str) -> str:
                     f'Daarnaast werden vooral {_h(joined)} genoemd.</p>')
 
     return (f'<div class="card"><span class="eyebrow">Welke toelichting respondenten kozen</span>'
-            f'<p style="font-size:9.5px;margin:4px 0 0;">{_h(chain)}</p>'
+            f'<p style="font-size:10px;margin:4px 0 0;">{_h(chain)}</p>'
             f'{body}{sec_line}</div>')
 
 
@@ -629,7 +637,7 @@ def _direction_block(agg: dict, scan_type: str, factor_key: str) -> str:
     # herhalen maakte de pagina onnodig vol.
     chain = f"Van de {agg['answered']} respondenten die de verdieping beantwoordden, gaven {n} ook een gespreksrichting."
     if n < 5:
-        body = ('<p style="font-size:9.5px;color:#64748B;margin:4px 0 0;">'
+        body = ('<p style="font-size:10px;color:#64748B;margin:4px 0 0;">'
                 'Te weinig antwoorden om een verdeling te tonen. Bespreek dit onderwerp '
                 'in de managementbespreking.</p>')
     else:
@@ -642,7 +650,7 @@ def _direction_block(agg: dict, scan_type: str, factor_key: str) -> str:
             for key, cnt in ranked)
         body = f'<table class="item-tbl" style="margin-top:6px;">{rows}</table>'
         if n <= 9:
-            body += ('<p style="font-size:9px;color:#92400E;margin:4px 0 0;">'
+            body += ('<p style="font-size:10px;color:#92400E;margin:4px 0 0;">'
                      'Beperkte antwoordbasis &mdash; gebruik dit als gesprekshaakje, '
                      'niet als conclusie.</p>')
         # Spec par. 7.2: veel respondenten buiten de vaste opties -> neutrale
@@ -652,21 +660,21 @@ def _direction_block(agg: dict, scan_type: str, factor_key: str) -> str:
             logger.warning(
                 "direction: *_other is topoptie voor %s - routeset review nodig",
                 factor_key)
-            body += ('<p style="font-size:9px;color:#64748B;margin:4px 0 0;">'
+            body += ('<p style="font-size:10px;color:#64748B;margin:4px 0 0;">'
                      'Veel antwoorden vielen buiten de vaste opties.</p>')
     # Spec par. 7.3 stopregel: >40% van de aangeboden richtingen overgeslagen
     # -> zichtbaar label; de bijbehorende agenda-suppressie zit in
     # direction_agenda_scenario (deepening.py).
     if agg.get("direction_skipped", 0) / offered > 0.4:
-        body += ('<p style="font-size:9px;color:#92400E;margin:4px 0 0;">'
+        body += ('<p style="font-size:10px;color:#92400E;margin:4px 0 0;">'
                  'Gespreksrichting-basis beperkt door overslag.</p>')
-    footer = ('<p style="font-size:8.5px;color:#94A3B8;margin:8px 0 0;">'
+    footer = ('<p style="font-size:10px;color:#64748B;margin:8px 0 0;">'
               'Gespreksrichting uit de groep is input van respondenten, geen uitvoeringsadvies. '
               'Haalbaarheid, rechtvaardigheid en passendheid binnen bestaand beleid wegen mee '
               'in de managementbespreking. Uitkomst van &eacute;&eacute;n meting: een '
               'gesprekshaakje, geen benchmark of trend.</p>')
     return (f'<div class="card"><span class="eyebrow">Welke gespreksrichting respondenten kozen</span>'
-            f'<p style="font-size:9.5px;margin:4px 0 0;">{_h(chain)}</p>{body}{footer}</div>')
+            f'<p style="font-size:10px;margin:4px 0 0;">{_h(chain)}</p>{body}{footer}</div>')
 
 
 def _direction_agenda_line(agg: dict, scan_type: str, factor_key: str) -> str | None:
@@ -789,10 +797,10 @@ def _segment_status_block(n: int, has_segment_data: bool = False,
     if has_segment_data:
         return f"""<div class="pb sec">
   <span class="slabel">Segmentanalyse</span>
-  <div class="card" style="border-left:4px solid #22C55E;">
+  <div class="card" style="border-left:4px solid #3C8D8A;">
     <div style="display:table;width:100%;">
       <div style="display:table-cell;vertical-align:middle;width:1%;white-space:nowrap;padding-right:14px;">
-        <span style="font-size:9px;font-weight:700;background:#22C55E;color:#FFF;
+        <span style="font-size:9px;font-weight:700;background:#3C8D8A;color:#FFF;
           padding:3px 9px;border-radius:3px;letter-spacing:0.08em;text-transform:uppercase;">Beschikbaar</span>
       </div>
       <div style="display:table-cell;vertical-align:middle;font-size:10px;color:#374151;">
@@ -1241,7 +1249,7 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
 
     stat_rows = f'<div class="card">{rows}</div>' if rows else ""
     legend = (
-        '<p style="font-size:9px;color:#94A3B8;margin-top:10px;margin-bottom:0;">'
+        '<p style="font-size:10px;color:#64748B;margin-top:10px;margin-bottom:0;">'
         'Behoudssignaal meet condities (factorscores). '
         'Blijf&shy;intentie en vertrekintentie zijn geen inverse van elkaar &mdash; '
         'iemand kan beide tegelijk voelen. '

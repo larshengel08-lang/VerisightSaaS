@@ -188,7 +188,7 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .sec { margin-bottom: 44px; }
 .empty-state { background: #fff; border: 1px dashed """ + HAIRLINE + r"""; padding: 18px;
   text-align: center; color: #94A3B8; font-size: 10px; }
-.trustline { font-size: 9.5px; color: """ + STEEL + r"""; font-style: italic; margin-top: 8px; }
+.trustline { font-size: 10px; color: """ + STEEL + r"""; font-style: italic; margin-top: 8px; }
 
 /* ── Brand kernzin ── */
 .br-kernzin {
