@@ -246,7 +246,10 @@ def test_bestuurlijke_read_folds_stats_and_mgmt_q_into_why_panel():
     assert 'class="mq-line"' in html
     why_open = html.index('class="why"')
     why_close = html.index("</div>\n</div>")  # sluiting van .why, gevolgd door sluiting van .pb.sec
-    assert why_open < html.index("Primaire factor") < why_close, \
+    # "Primaire factor" is verwijderd: dezelfde score/label stond al in de
+    # why-cell (Factorscore) erboven — pure dubbeling (feedback P2/P4).
+    assert "Primaire factor" not in html
+    assert why_open < html.index("Relatief sterk") < why_close, \
         "statistiekenrij moet binnen het .why-paneel vallen"
     assert why_open < html.index("Speelt de werkdruk in bepaalde teams?") < why_close, \
         "eerste managementvraag moet binnen het .why-paneel vallen"

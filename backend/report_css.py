@@ -122,6 +122,15 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .sc-v { font-family: 'Inter Tight', sans-serif; font-weight: 800; font-size: 24px; color: """ + INK + r"""; line-height: 1.1; }
 .sc-b { font-size: 9px; color: """ + STEEL + r"""; margin-top: 2px; line-height: 1.4; }
 
+/* ── Signaalrijen (behoudscontext e.d.): titel -> uitleg -> score, onder elkaar
+   i.p.v. naast elkaar, zodat de uitleg niet wegvalt onder de score ── */
+.sigrow { border-top: 1px solid """ + HAIRLINE + r"""; padding: 12px 0; }
+.sigrow:first-child { border-top: none; padding-top: 0; }
+.sigrow-title { font-family: 'Inter Tight', sans-serif; font-weight: 800; font-size: 14px; color: """ + INK + r"""; margin-bottom: 4px; }
+.sigrow-body { font-size: 10.5px; color: #374151; line-height: 1.5; margin-bottom: 6px; }
+.sigrow-score { font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 15px; }
+.sigrow-note { font-size: 9px; color: """ + STEEL + r"""; font-weight: 500; margin-left: 6px; }
+
 /* ── Factor bars ── */
 .fbar-row { display: table; width: 100%; margin-bottom: 9px; }
 .fbar-name { display: table-cell; width: 32%; font-size: 11px; font-weight: 600; color: """ + INK + r"""; vertical-align: middle; padding-right: 10px; }
@@ -166,10 +175,16 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .tcol { display: table; width: 100%; border-collapse: separate; border-spacing: 14px 0; }
 .tc-l { display: table-cell; vertical-align: top; width: 55%; }
 .tc-r { display: table-cell; vertical-align: top; width: 45%; }
-.app-tbl { width: 100%; border-collapse: collapse; font-size: 9px; }
+/* table-layout: fixed + expliciete kolombreedtes: elke factortabel in de
+   appendix is een los <table>-element, dus zonder vaste breedtes schuiven
+   Gem./Beeld per sectie mee met de langste vraagtekst in díé tabel. */
+.app-tbl { width: 100%; border-collapse: collapse; font-size: 9px; table-layout: fixed; }
 .app-tbl th { background: #EFE9DD; color: """ + STEEL + r"""; font-weight: 700; padding: 5px 8px;
   text-align: left; border-bottom: 1px solid """ + HAIRLINE + r"""; }
-.app-tbl td { padding: 4px 8px; border-bottom: 1px solid """ + HAIRLINE + r"""; }
+.app-tbl td { padding: 4px 8px; border-bottom: 1px solid """ + HAIRLINE + r"""; overflow-wrap: break-word; }
+.app-tbl .aq { width: 62%; }
+.app-tbl .as { width: 10%; }
+.app-tbl .ab { width: 28%; }
 .sec { margin-bottom: 44px; }
 .empty-state { background: #fff; border: 1px dashed """ + HAIRLINE + r"""; padding: 18px;
   text-align: center; color: #94A3B8; font-size: 10px; }

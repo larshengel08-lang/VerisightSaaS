@@ -51,13 +51,15 @@ def test_cover_shows_opening_question_and_value_stats_not_metadata():
 from backend.report_html import _bestuurlijke_read, _responsbasis
 
 
-def test_responsbasis_shows_counts_and_trustline():
+def test_responsbasis_shows_counts_and_segment_reason():
     html = _responsbasis(invited=45, completed=34, pct=76, period="apr–mei 2026",
                          population="Alle medewerkers", segment_available=False,
                          segment_reason="te weinig responses per groep")
     assert "45" in html and "34" in html and "76" in html
-    assert "Individuen zijn niet herleidbaar" in html
     assert "te weinig responses per groep" in html
+    # "Dit rapport toont groepspatronen. Individuen zijn niet herleidbaar." is
+    # verwijderd (feedback: overbodige regel) — bewaakt dat hij niet terugkomt.
+    assert "Individuen zijn niet herleidbaar" not in html
 
 
 
@@ -121,8 +123,26 @@ from backend.report_html import _behoudscontext
 def test_behoudscontext_shows_stay_intent_and_signal():
     html = _behoudscontext(retention_score=6.4, stay_intent=7.2, turnover=1.8,
                            engagement=5.9, primary_factor="Autonomie")
-    assert "7.2" in html and "Autonomie" in html
+    assert "7.2" in html
     assert "behoud" in html.lower()
+    # "Primaire behoudsfactor"-kaart verwijderd (feedback: dezelfde laagste-factor
+    # claim stond al op p.02 — nu geen dubbele/onduidelijke herhaling meer).
+    assert "Primaire behoudsfactor" not in html
+    assert "Autonomie" not in html
+
+
+def test_behoudscontext_signals_stacked_not_side_by_side():
+    """Titel -> uitleg -> score, onder elkaar (feedback: Behoudssignaal en
+    Blijfintentie waren nauwelijks te onderscheiden toen ze naast elkaar in
+    één balk stonden met de uitleg nauwelijks zichtbaar eronder)."""
+    html = _behoudscontext(retention_score=4.7, stay_intent=4.2, turnover=5.4,
+                           engagement=6.4, primary_factor="Groeiperspectief")
+    assert html.count('class="sigrow"') == 4
+    # Titel staat vóór de uitleg, uitleg vóór de score binnen elke rij.
+    behoudssignaal_idx = html.index("Behoudssignaal")
+    uitleg_idx = html.index("Werkfactoren en werkbeleving")
+    score_idx = html.index("4.7/10")
+    assert behoudssignaal_idx < uitleg_idx < score_idx
 
 
 from backend.report_html import _checkpointoverzicht, _landingskwaliteit
