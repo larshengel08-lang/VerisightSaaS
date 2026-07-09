@@ -215,10 +215,13 @@ function ScanSection({ scan, alt }: { scan: (typeof scans)[number]; alt: boolean
                 {scan.title}
               </h2>
               <p style={{ color: T.inkSoft, fontSize: 16, lineHeight: 1.7, marginBottom: 24, maxWidth: '40ch' }}>{scan.lead}</p>
-              <div style={{ alignItems: 'baseline', display: 'flex', gap: 8, marginBottom: 22 }}>
+              <div style={{ alignItems: 'baseline', display: 'flex', gap: 8, marginBottom: 6 }}>
                 <span style={{ color: T.ink, fontFamily: FF, fontSize: 22, fontWeight: 600, letterSpacing: '-.02em' }}>€4.500</span>
                 <span style={{ color: T.inkMuted, fontSize: 13 }}>excl. btw · volledig traject</span>
               </div>
+              <p style={{ color: T.inkMuted, fontSize: 13, lineHeight: 1.5, marginBottom: 22 }}>
+                Vervolgmeting daarna: €1.250 excl. btw
+              </p>
               <Link
                 href={buildContactHref({ routeInterest: scan.contactRoute, ctaSource: `products_scan_${scan.contactRoute}` })}
                 style={{ alignItems: 'center', background: T.ink, color: '#fff', display: 'inline-flex', fontSize: 13.5, fontWeight: 600, gap: 6, padding: '12px 24px', textDecoration: 'none' }}
@@ -291,11 +294,40 @@ function PricingSection() {
               <h2 style={{ color: T.ink, fontFamily: FF, fontSize: 'clamp(28px,3.5vw,42px)', fontWeight: 700, letterSpacing: '-.026em', lineHeight: 1.06, marginBottom: 16 }}>
                 Eén heldere prijs per scan.
               </h2>
-              <p style={{ color: T.inkSoft, fontSize: 16, lineHeight: 1.72, maxWidth: '52ch' }}>
+              <p style={{ color: T.inkSoft, fontSize: 16, lineHeight: 1.72, marginBottom: 16, maxWidth: '52ch' }}>
                 Elke scan kost <strong style={{ color: T.ink, fontWeight: 600 }}>€4.500 excl. btw</strong> en is een
-                volledig traject, van intake tot en met de begeleide managementbespreking. Je koopt geen licentie en
-                beheert geen tool. Doorlooptijd: weken, geen maanden; het precieze ritme stemmen we af in de intake.
-                Maatwerk op aanvraag.
+                volledig traject, van intake tot en met de begeleide managementbespreking. Geen licenties per
+                medewerker, geen jaarlijkse verhogingen, geen add-ons achteraf. Doorlooptijd: weken, geen maanden;
+                het precieze ritme stemmen we af in de intake. Maatwerk op aanvraag.
+              </p>
+              <p style={{ color: T.inkSoft, fontSize: 15, lineHeight: 1.72, marginBottom: 24, maxWidth: '52ch' }}>
+                Ter vergelijking: een volledig uitbesteed onderzoekstraject kost al snel drie tot vier keer zoveel.
+                Bij een organisatie van 150 medewerkers komt een scan neer op zo'n €30 per medewerker, inclusief de
+                bespreking.
+              </p>
+              <div style={{ borderTop: `1px solid ${T.rule}` }}>
+                <div style={{ borderBottom: `1px solid ${T.rule}`, padding: '14px 0' }}>
+                  <div style={{ alignItems: 'baseline', display: 'flex', gap: 8, marginBottom: 4 }}>
+                    <span style={{ color: T.ink, fontFamily: FF, fontSize: 17, fontWeight: 700 }}>Eerste scan</span>
+                    <span style={{ color: T.ink, fontFamily: FF, fontSize: 17, fontWeight: 600, marginLeft: 'auto' }}>€4.500</span>
+                  </div>
+                  <p style={{ color: T.inkMuted, fontSize: 13.5, lineHeight: 1.6 }}>
+                    Eenmalig en alles inbegrepen: inrichting, uitvoering, managementrapport en begeleide bespreking.
+                  </p>
+                </div>
+                <div style={{ borderBottom: `1px solid ${T.rule}`, padding: '14px 0' }}>
+                  <div style={{ alignItems: 'baseline', display: 'flex', gap: 8, marginBottom: 4 }}>
+                    <span style={{ color: T.ink, fontFamily: FF, fontSize: 17, fontWeight: 700 }}>Vervolgmeting</span>
+                    <span style={{ color: T.ink, fontFamily: FF, fontSize: 17, fontWeight: 600, marginLeft: 'auto' }}>€1.250</span>
+                  </div>
+                  <p style={{ color: T.inkMuted, fontSize: 13.5, lineHeight: 1.6 }}>
+                    Dezelfde meting opnieuw, wanneer je wilt zien of het signaal beweegt. De inrichting staat er al;
+                    de vergelijking met je eerste meting nemen we door in een compacte bespreking.
+                  </p>
+                </div>
+              </div>
+              <p style={{ color: T.inkSoft, fontSize: 14, fontWeight: 600, marginTop: 14 }}>
+                Zo wordt Loep goedkoper naarmate je het langer gebruikt, niet duurder.
               </p>
             </div>
           </Reveal>
