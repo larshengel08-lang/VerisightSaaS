@@ -302,7 +302,7 @@ function PricingSection() {
               </p>
               <p style={{ color: T.inkSoft, fontSize: 15, lineHeight: 1.72, marginBottom: 24, maxWidth: '52ch' }}>
                 Ter vergelijking: een volledig uitbesteed onderzoekstraject kost al snel drie tot vier keer zoveel.
-                Bij een organisatie van 150 medewerkers komt een scan neer op zo'n €30 per medewerker, inclusief de
+                Bij een organisatie van 150 medewerkers komt een scan neer op zo&rsquo;n €30 per medewerker, inclusief de
                 bespreking.
               </p>
               <div style={{ borderTop: `1px solid ${T.rule}` }}>

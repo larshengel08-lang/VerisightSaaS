@@ -449,7 +449,7 @@ function ProblemSection() {
             >
               Organisaties zien signalen, rond uitstroom, behoud of vroege landing, maar missen de stap naar een
               heldere eerste keuze en concrete opvolging. Intussen loopt de teller: de vervanging van één vertrokken
-              medewerker kost al snel tienduizenden euro's aan werving, inwerktijd en verloren kennis, nog los van de
+              medewerker kost al snel tienduizenden euro&rsquo;s aan werving, inwerktijd en verloren kennis, nog los van de
               druk op het team dat achterblijft.
             </p>
           </Reveal>
