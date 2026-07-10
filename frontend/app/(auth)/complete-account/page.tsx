@@ -31,18 +31,46 @@ export default function CompleteAccountPage() {
       setChecking(false)
     }
 
-    // De activatielink levert de sessie via implicit-flow-tokens in de
-    // URL-hash (zie createPublicClient) — @supabase/ssr's browserclient
-    // detecteert die async bij het laden en vuurt dan SIGNED_IN. Daarnaast
-    // blijft een directe getUser()-check nodig voor het geval er al een
-    // bestaande sessie is (geen hash, gewoon terugkerende gebruiker).
+    // @supabase/ssr's createBrowserClient forceert altijd flowType 'pkce'
+    // (hardcoded in de library, niet via options te overschrijven) — die
+    // client herkent dus alleen een ?code=-param, nooit een #access_token-
+    // hash. Een server-verstuurde activatielink (sendActivationLink) kan
+    // echter geen geldige pkce-code leveren: de code_verifier hoort thuis in
+    // dezelfde browser die de link verstuurt, en dat is nooit de browser van
+    // de ontvanger. Daarom stuurt de activatiemail nu een token_hash mee
+    // (Supabase-template aangepast) die hier expliciet met verifyOtp wordt
+    // ingewisseld — dat werkt ongeacht flowType. Bestaat er geen token_hash
+    // (bv. een teruggekeerde, al ingelogde gebruiker), dan valt dit terug op
+    // de gewone getUser()-check.
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) applySession(session.user.email)
     })
 
+    async function verifyFromTokenHash(): Promise<boolean> {
+      const params = new URLSearchParams(window.location.search)
+      const tokenHash = params.get('token_hash')
+      const type = params.get('type')
+      if (!tokenHash || !type) return false
+
+      const { data, error } = await supabase.auth.verifyOtp({
+        token_hash: tokenHash,
+        type: type as 'magiclink' | 'invite' | 'recovery' | 'email' | 'signup' | 'email_change',
+      })
+      if (!mounted) return true
+      if (error || !data.user) {
+        router.replace('/login?error=invite')
+        return true
+      }
+      applySession(data.user.email)
+      return true
+    }
+
     async function loadExistingSession() {
+      const handledViaTokenHash = await verifyFromTokenHash()
+      if (handledViaTokenHash) return
+
       const { data } = await supabase.auth.getUser()
       if (data.user) applySession(data.user.email)
     }

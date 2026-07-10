@@ -38,7 +38,7 @@
                 <tr>
                   <td style="border-radius:12px;background:#0D1B2A;">
                     <a
-                      href="{{ .ConfirmationURL }}"
+                      href="{{ .SiteURL }}/complete-account?token_hash={{ .TokenHash }}&type=magiclink"
                       style="display:inline-block;padding:15px 24px;font-size:16px;font-weight:700;color:#ffffff;text-decoration:none;"
                     >
                       Account activeren
@@ -50,7 +50,7 @@
                 Werkt de knop niet? Gebruik dan deze link:
               </p>
               <p style="margin:0 0 26px;font-size:13px;line-height:1.6;color:#64748b;word-break:break-all;">
-                {{ .ConfirmationURL }}
+                {{ .SiteURL }}/complete-account?token_hash={{ .TokenHash }}&type=magiclink
               </p>
               <div style="padding:16px 18px;border:1px solid #dbe4f0;border-radius:14px;background:#f8fbff;">
                 <p style="margin:0;font-size:14px;line-height:1.7;color:#334155;">
