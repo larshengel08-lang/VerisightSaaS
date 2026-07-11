@@ -883,6 +883,22 @@ def _themed_quotes(texts: list[str], scan_type: str = "exit",
 
 # ─── Data builder ─────────────────────────────────────────────────────────────
 
+def _per_respondent_factor_scores(
+        factor_items_map: dict[str, list], org_raws: list[dict]) -> dict[str, list[float]]:
+    """Per factor: de individuele factorscore (gem. van de items, geschaald 1-10)
+    per respondent. Basis voor de spreidingsweergave; geen invloed op scoring."""
+    out: dict[str, list[float]] = {}
+    for fk, items in factor_items_map.items():
+        keys = [ik for ik, _q in items]
+        scores: list[float] = []
+        for raw in org_raws:
+            vals = [float(raw[k]) for k in keys if raw.get(k) is not None]
+            if vals:
+                scores.append(_scale_to_10(sum(vals) / len(vals)))
+        out[fk] = scores
+    return out
+
+
 def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
     camp: Campaign = (
         db.query(Campaign)
@@ -1034,6 +1050,8 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
     org_sections: list[dict] = scan_meta.get("org_sections", [])
     factor_items_map = {sec["key"]: sec["items"] for sec in org_sections
                         if "key" in sec and "items" in sec}
+    factor_resp_scores = _per_respondent_factor_scores(
+        factor_items_map, [r.org_raw or {} for r in responses])
     sdt_items: list[tuple[str, str]] = scan_meta.get("sdt_items", [])
 
     enps_vals = [float(fr.get("enps_score")) for r in responses
@@ -1064,6 +1082,8 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
         exit_pbs=exit_pbs, ret_pbs=ret_pbs, msp=msp, nsp=nsp,
         factor_items_map=factor_items_map, sdt_items=sdt_items,
         enps_available=enps_available, enps_score=enps_score,
+        factor_resp_scores=factor_resp_scores,
+        intent_resp={"stay": si_sc, "turnover": to_sc, "engagement": eng_sc},
     )
 
 

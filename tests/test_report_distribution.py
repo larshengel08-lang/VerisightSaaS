@@ -68,3 +68,18 @@ def test_distribution_svg_kleine_hoogte_geen_crash():
     # height=15 -> band_h - 8 <= 0; moet niet crashen (zero-guard).
     svg = distribution_svg([5.0] * 10, height=15)
     assert "<svg" in svg
+
+
+from backend.report_html import _per_respondent_factor_scores
+
+
+def test_per_respondent_factor_scores():
+    factor_items_map = {"workload": [("W1", "vraag 1"), ("W2", "vraag 2")]}
+    org_raws = [
+        {"W1": 1, "W2": 2},   # gem raw 1.5 -> _scale_to_10 -> 2.12 (Python banker's rounding op 2.125)
+        {"W1": 5, "W2": 5},   # gem raw 5.0 -> 10.0
+        {"W1": 3},            # gem raw 3.0 -> 5.5 (ontbrekend item overslaan)
+        {},                   # geen data -> geen bijdrage
+    ]
+    out = _per_respondent_factor_scores(factor_items_map, org_raws)
+    assert [round(v, 2) for v in out["workload"]] == [2.12, 10.0, 5.5]
