@@ -79,6 +79,8 @@ export interface SegmentDepartment {
   slug: string
 }
 
+// Zelfde regels als backend/segments.py's _slugify (Python), maar zonder gedeeld
+// codepad (Python-backend + TS-frontend). Bij aanpassing hier: ook daar bijwerken.
 function slugify(label: string): string {
   return label
     .normalize('NFKD')
