@@ -866,7 +866,7 @@ def _segment_block(segment_rows: list[dict], scan_type: str) -> str:
     for row in segment_rows:
         dept, n_, avg, scores = row["department"], row["n"], row["avg"], row["scores"]
         col = _factor_color(avg)
-        is_rest = dept == "Overige afdelingen"
+        is_rest = row.get("is_pooled", False)
         if is_rest:
             strip = '<span class="rm-mono" style="font-family:\'JetBrains Mono\', monospace;font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:#94A3B8;">spreiding niet getoond &mdash; samengestelde restgroep</span>'
         elif len(scores) >= MIN_DISTRIBUTION_N:
@@ -884,7 +884,7 @@ def _segment_block(segment_rows: list[dict], scan_type: str) -> str:
 
     lowest = segment_rows[0]
     low_note = ""
-    if lowest["department"] != "Overige afdelingen":
+    if not lowest.get("is_pooled", False):
         low_note = (f'<p style="font-size:10.5px;color:#374151;margin-top:10px;margin-bottom:0;">'
                     f'<strong>{_h(lowest["department"])}</strong> scoort het laagst '
                     f'({lowest["avg"]:.1f}/10) &mdash; logisch startpunt voor de bespreking.</p>')
@@ -978,7 +978,7 @@ def _department_segment_rows(respondents: list[dict]) -> list[dict]:
         return []
 
     rows = [{"department": d, "n": len(v), "avg": round(sum(v) / len(v), 2),
-             "scores": sorted(v)} for d, v in eligible.items()]
+             "scores": sorted(v), "is_pooled": False} for d, v in eligible.items()]
     rows.sort(key=lambda r: (r["avg"], -r["n"], r["department"]))
 
     visible, overflow = rows[:8], rows[8:]
@@ -991,7 +991,8 @@ def _department_segment_rows(respondents: list[dict]) -> list[dict]:
     if len(rest) >= MIN_SEGMENT_N:
         visible = visible[:7]
         visible.append({"department": "Overige afdelingen", "n": len(rest),
-                        "avg": round(sum(rest) / len(rest), 2), "scores": sorted(rest)})
+                        "avg": round(sum(rest) / len(rest), 2), "scores": sorted(rest),
+                        "is_pooled": True})
     return visible
 
 

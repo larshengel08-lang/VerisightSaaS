@@ -90,9 +90,27 @@ def test_strip_alleen_vanaf_n10():
 def test_overige_zonder_strip():
     html = render_retention_report_html(_with_segments([
         {"department": "Operations", "n": 14, "avg": 4.1, "scores": [4.0] * 14},
-        {"department": "Overige afdelingen", "n": 11, "avg": 5.6, "scores": [5.6] * 11},
+        {"department": "Overige afdelingen", "n": 11, "avg": 5.6, "scores": [5.6] * 11,
+         "is_pooled": True},
     ]))
     assert "samengestelde restgroep" in html
+
+
+def test_afdeling_met_naam_overige_wordt_niet_verward_met_pool():
+    # Regressietest: een ECHTE afdeling die toevallig "Overige afdelingen" heet
+    # (geen gereserveerd token) moet normaal behandeld worden -- niet verward
+    # met de samengestelde restgroep die _department_segment_rows zelf bouwt.
+    from backend.report_html import _segment_block
+    rows = [
+        {"department": "Sales", "n": 12, "avg": 6.5, "scores": [6.5] * 12, "is_pooled": False},
+        {"department": "Overige afdelingen", "n": 10, "avg": 3.9, "scores": [3.9] * 10,
+         "is_pooled": False},
+    ]
+    html = _segment_block(rows, "retention")
+    # De echte afdeling "Overige afdelingen" (n=10, is_pooled=False) moet WEL
+    # een spreidingsstrip krijgen (SVG), niet de "samengestelde restgroep"-tekst.
+    assert "samengestelde restgroep" not in html
+    assert "<svg" in html
 
 
 def test_degraded_state_blijft_zonder_segmentdata():
