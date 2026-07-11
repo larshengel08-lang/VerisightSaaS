@@ -19,7 +19,7 @@ interface Props {
 type WizardStep = 1 | 2
 
 const SCAN_WHY: Partial<Record<ScanType, string>> = {
-  retention: 'Jouw inzicht helpt ons begrijpen waar behoud onder druk staat, zodat we als organisatie gericht kunnen bijsturen.',
+  retention: 'Jouw eerlijke inzicht helpt ons gericht te verbeteren wat jij en je collega\'s dagelijks ervaren.',
   exit:      'Jouw eerlijke inzicht helpt ons begrijpen wat er speelt bij vertrek — voor de mensen die blijven.',
   onboarding: 'Jouw ervaring helpt ons de eerste maanden beter vorm te geven voor nieuwe collega\'s.',
 }
