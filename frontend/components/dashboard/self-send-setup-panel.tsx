@@ -7,10 +7,12 @@ import {
   MIN_INVITED_COUNT,
   buildInviteTemplate,
   buildReminderTemplate,
+  buildSegmentSurveyLinks,
   buildSurveyLink,
   computeResponseRatePct,
   normalizeSelfSendConfig,
   normalizeSelfSendReminders,
+  type SegmentDepartment,
   type SelfSendConfig,
   type SelfSendReminder,
 } from '@/lib/self-send-comms'
@@ -27,6 +29,7 @@ interface Props {
   launchConfirmedAt: string | null
   totalCompleted: number
   isActive: boolean
+  segmentDepartments?: SegmentDepartment[] | null
 }
 
 const STEP_LABELS = ['Scan', 'Deelnemers', 'E-mailinstellingen', 'Voorbeeld & kopieer', 'Bevestiging'] as const
@@ -52,6 +55,7 @@ export function SelfSendSetupPanel({
   launchConfirmedAt,
   totalCompleted,
   isActive,
+  segmentDepartments,
 }: Props) {
   const router = useRouter()
   const [step, setStep] = useState(launchConfirmedAt ? 4 : 0)
@@ -68,6 +72,14 @@ export function SelfSendSetupPanel({
   const surveyLink = useMemo(
     () => buildSurveyLink(frontendBaseUrl, publicSurveyToken),
     [frontendBaseUrl, publicSurveyToken],
+  )
+  const hasSegments = Boolean(segmentDepartments && segmentDepartments.length > 0)
+  const segmentLinks = useMemo(
+    () =>
+      segmentDepartments && segmentDepartments.length > 0
+        ? buildSegmentSurveyLinks(frontendBaseUrl, publicSurveyToken, segmentDepartments)
+        : [],
+    [frontendBaseUrl, publicSurveyToken, segmentDepartments],
   )
   const inviteTpl = useMemo(
     () => buildInviteTemplate({ senderName: config.senderName, organizationName, scanLabel, surveyLink }),
@@ -335,16 +347,47 @@ export function SelfSendSetupPanel({
                 >
                   Kopieer tekst
                 </button>
-                <button
-                  type="button"
-                  onClick={() => copy(surveyLink, () => flash('Link gekopieerd.'))}
-                  className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-blue-300"
-                >
-                  Kopieer link
-                </button>
+                {hasSegments ? null : (
+                  <button
+                    type="button"
+                    onClick={() => copy(surveyLink, () => flash('Link gekopieerd.'))}
+                    className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-blue-300"
+                  >
+                    Kopieer link
+                  </button>
+                )}
               </div>
             </div>
           ))}
+
+          {hasSegments ? (
+            <div className="space-y-2 rounded-2xl border border-slate-200 p-3">
+              <p className="text-sm font-semibold text-slate-900">Links per afdeling</p>
+              <p className="text-xs leading-5 text-slate-600">
+                Deel per afdeling de eigen link — er is bewust geen algemene link.
+              </p>
+              <div className="space-y-2">
+                {segmentLinks.map((link) => (
+                  <div
+                    key={link.url}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 px-3 py-2"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-slate-900">{link.label}</p>
+                      <p className="truncate text-xs text-slate-500">{link.url}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => copy(link.url, () => flash(`Link voor ${link.label} gekopieerd.`))}
+                      className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-blue-300"
+                    >
+                      Kopieer link
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
       ) : null}
 

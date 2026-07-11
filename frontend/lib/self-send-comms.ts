@@ -74,6 +74,45 @@ export function buildSurveyLink(frontendBaseUrl: string, publicSurveyToken: stri
   return `${frontendBaseUrl.replace(/\/+$/, '')}/survey/open/${publicSurveyToken}`
 }
 
+export interface SegmentDepartment {
+  label: string
+  slug: string
+}
+
+function slugify(label: string): string {
+  return label
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
+// Zelfde regels als backend/segments.py: lege labels en slug-botsingen weigeren.
+export function buildSegmentDepartments(labels: string[]): SegmentDepartment[] {
+  const out: SegmentDepartment[] = []
+  const seen = new Set<string>()
+  for (const raw of labels) {
+    const label = (raw ?? '').trim()
+    if (!label) throw new Error('Lege afdelingsnaam is niet toegestaan.')
+    const slug = slugify(label)
+    if (!slug) throw new Error(`Afdelingsnaam '${label}' levert geen bruikbare slug op.`)
+    if (seen.has(slug)) throw new Error(`Dubbele afdeling (zelfde slug): '${label}'.`)
+    seen.add(slug)
+    out.push({ label, slug })
+  }
+  return out
+}
+
+export function buildSegmentSurveyLinks(
+  frontendBaseUrl: string,
+  publicSurveyToken: string,
+  departments: SegmentDepartment[],
+): Array<{ label: string; url: string }> {
+  const base = buildSurveyLink(frontendBaseUrl, publicSurveyToken)
+  return departments.map((d) => ({ label: d.label, url: `${base}?afd=${d.slug}` }))
+}
+
 export function normalizeSelfSendReminders(value: unknown): SelfSendReminder[] {
   if (!Array.isArray(value)) return []
   return value.map((raw, index) => {

@@ -26,9 +26,22 @@ import {
   getDueReminders,
   normalizeSelfSendConfig,
   normalizeSelfSendReminders,
+  type SegmentDepartment,
   type SelfSendConfig,
   type SelfSendReminder,
 } from '@/lib/self-send-comms'
+
+function normalizeSegmentDepartments(value: unknown): SegmentDepartment[] | null {
+  if (!Array.isArray(value)) return null
+  const departments = value.filter(
+    (entry): entry is SegmentDepartment =>
+      Boolean(entry) &&
+      typeof entry === 'object' &&
+      typeof (entry as Record<string, unknown>).label === 'string' &&
+      typeof (entry as Record<string, unknown>).slug === 'string',
+  )
+  return departments.length > 0 ? departments : null
+}
 
 type SupabaseLike = Pick<SupabaseClient, 'from'>
 type GuidedSelfServePhase = ReturnType<typeof buildGuidedSelfServeState>['phase']
@@ -142,6 +155,7 @@ export interface RouteBeheerPageData {
   }
   selfSend: SelfSendBlock
   publicSurveyToken: string | null
+  segmentDepartments: SegmentDepartment[] | null
 }
 
 export type RouteBeeheerPageData = RouteBeheerPageData
@@ -753,7 +767,7 @@ export async function fetchRouteBeheerData(args: {
     supabase.from('organizations').select('name').eq('id', stats.organization_id).maybeSingle(),
     supabase
       .from('campaigns')
-      .select('delivery_mode, created_at, enabled_modules, comms_mode, public_survey_token')
+      .select('delivery_mode, created_at, enabled_modules, comms_mode, public_survey_token, segment_departments')
       .eq('id', campaignId)
       .maybeSingle(),
     supabase
@@ -813,6 +827,7 @@ export async function fetchRouteBeheerData(args: {
   const campaign = (campaignMeta ?? null) as
     | (Pick<Campaign, 'delivery_mode' | 'created_at' | 'enabled_modules' | 'comms_mode'> & {
         public_survey_token: string
+        segment_departments: unknown
       })
     | null
 
@@ -1028,6 +1043,7 @@ export async function fetchRouteBeheerData(args: {
     },
     selfSend,
     publicSurveyToken: campaign?.public_survey_token ?? null,
+    segmentDepartments: normalizeSegmentDepartments(campaign?.segment_departments ?? null),
   } satisfies RouteBeheerPageData
 }
 

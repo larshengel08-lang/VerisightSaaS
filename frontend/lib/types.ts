@@ -52,6 +52,7 @@ export interface Campaign {
   enabled_modules: string[] | null
   created_at: string
   closed_at: string | null
+  segment_departments?: Array<{ label: string; slug: string }> | null
 }
 
 export interface CampaignStats {

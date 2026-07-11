@@ -10,6 +10,7 @@ import {
   supportsCampaignModuleSelection,
   supportsCampaignReportAddOns,
 } from '@/lib/campaign-setup'
+import { buildSegmentDepartments, type SegmentDepartment } from '@/lib/self-send-comms'
 import { createClient } from '@/lib/supabase/client'
 import type { CommsMode, DeliveryMode, Organization, ScanType } from '@/lib/types'
 import { FACTOR_LABELS, REPORT_ADD_ON_LABELS } from '@/lib/types'
@@ -32,6 +33,8 @@ export function NewCampaignForm({ orgs }: Props) {
   // bij het aanmaken van een nieuwe campagne.
   const commsMode: CommsMode = 'self_send'
   const [modules, setModules] = useState<string[]>([])
+  const [useSegments, setUseSegments] = useState(false)
+  const [segmentLabels, setSegmentLabels] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -58,6 +61,24 @@ export function NewCampaignForm({ orgs }: Props) {
     setLoading(true)
     setError(null)
 
+    let segmentDepartments: SegmentDepartment[] | null = null
+    if (useSegments) {
+      try {
+        segmentDepartments = buildSegmentDepartments(
+          segmentLabels.split('\n').filter((l) => l.trim()),
+        )
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Ongeldige afdelingslijst')
+        setLoading(false)
+        return
+      }
+      if (segmentDepartments.length < 2) {
+        setError('Segmentrapportage vraagt minimaal 2 afdelingen.')
+        setLoading(false)
+        return
+      }
+    }
+
     const { error: insertError } = await supabase.from('campaigns').insert({
       organization_id: orgId,
       name,
@@ -65,6 +86,7 @@ export function NewCampaignForm({ orgs }: Props) {
       delivery_mode: deliveryMode,
       comms_mode: commsMode,
       enabled_modules: modules.length > 0 ? modules : null,
+      segment_departments: segmentDepartments,
     })
 
     if (insertError) {
@@ -184,6 +206,51 @@ export function NewCampaignForm({ orgs }: Props) {
         <p className="mt-2 text-xs leading-5 text-slate-600">
           Kopieer-sjablonen, één campagnelink, geen e-mailopslag op het platform.
         </p>
+      </div>
+
+      <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+        <label className="flex items-center gap-2 font-semibold text-slate-900">
+          <input
+            type="checkbox"
+            checked={useSegments}
+            onChange={(event) => setUseSegments(event.target.checked)}
+            className="rounded"
+          />
+          Rapporteren op afdelingsniveau
+        </label>
+        <p className="mt-2 text-xs leading-5 text-slate-600">
+          Elke afdeling krijgt een eigen variant van de campagnelink. Er is dan bewust géén
+          algemene link — elke deelnemer komt binnen via de link van zijn afdeling.
+        </p>
+        {useSegments ? (
+          <div className="mt-3 space-y-2">
+            <label className="mb-1 block text-xs font-medium text-slate-700">
+              Afdelingen (één per regel, minimaal 2)
+            </label>
+            <textarea
+              value={segmentLabels}
+              onChange={(event) => setSegmentLabels(event.target.value)}
+              rows={4}
+              placeholder={'Sales\nOperations\nKantoor'}
+              className={fieldClass}
+            />
+            <button
+              type="button"
+              onClick={() =>
+                setSegmentLabels((prev) =>
+                  prev.trim() ? `${prev.trimEnd()}\nGeen afdeling / overig` : 'Geen afdeling / overig',
+                )
+              }
+              className="text-xs font-medium text-blue-700 underline underline-offset-2"
+            >
+              Voeg &ldquo;Geen afdeling / overig&rdquo; toe
+            </button>
+            <p className="text-xs leading-5 text-slate-500">
+              Aanbevolen voor iedereen die nergens onder valt (bijv. directie) — anders klikken
+              zij mogelijk willekeurig een afdeling aan.
+            </p>
+          </div>
+        ) : null}
       </div>
 
       {supportsCampaignModuleSelection(scanType) ? (

@@ -159,6 +159,7 @@ const routeBeheerData: RouteBeheerPageData = {
     dueReminderToday: null,
   },
   publicSurveyToken: null,
+  segmentDepartments: null,
 }
 
 describe('routebeheer phase sections', () => {

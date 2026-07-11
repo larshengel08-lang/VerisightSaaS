@@ -4,6 +4,8 @@ import {
   buildSurveyLink,
   buildInviteTemplate,
   buildReminderTemplate,
+  buildSegmentDepartments,
+  buildSegmentSurveyLinks,
   computeResponseRatePct,
   createDefaultSelfSendConfig,
   getDueReminders,
@@ -88,5 +90,30 @@ describe('self-send-comms', () => {
     expect(config.senderName).toBe('HR')
     expect(config.inviteSubject).toBe('Custom')
     expect(config.reminderSubject).toBe('')
+  })
+})
+
+describe('segment-links', () => {
+  it('bouwt per afdeling een link met slug-parameter', () => {
+    const links = buildSegmentSurveyLinks('https://www.getloep.nl', 'tok-123', [
+      { label: 'Sales', slug: 'sales' },
+      { label: 'Customer Success', slug: 'customer-success' },
+    ])
+    expect(links).toEqual([
+      { label: 'Sales', url: 'https://www.getloep.nl/survey/open/tok-123?afd=sales' },
+      { label: 'Customer Success', url: 'https://www.getloep.nl/survey/open/tok-123?afd=customer-success' },
+    ])
+  })
+
+  it('genereert slugs uit labels (zelfde regels als backend)', () => {
+    expect(buildSegmentDepartments(['Sales', '  Customer Success '])).toEqual([
+      { label: 'Sales', slug: 'sales' },
+      { label: 'Customer Success', slug: 'customer-success' },
+    ])
+  })
+
+  it('weigert duplicaten en lege labels', () => {
+    expect(() => buildSegmentDepartments(['Sales', 'sales'])).toThrow()
+    expect(() => buildSegmentDepartments(['  '])).toThrow()
   })
 })
