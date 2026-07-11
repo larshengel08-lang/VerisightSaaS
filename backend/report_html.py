@@ -43,6 +43,7 @@ from backend.scoring_config import (
     FACTOR_LABELS_NL,
     RISK_HIGH,
     RISK_MEDIUM,
+    MIN_SEGMENT_N,
     SDT_DIMENSION_ITEMS,
     SDT_REVERSE_ITEMS,
 )
@@ -904,6 +905,45 @@ def _per_respondent_factor_scores(
     return out
 
 
+def _department_segment_rows(respondents: list[dict]) -> list[dict]:
+    """Segmentrijen voor het rapport (regels geport uit legacy report.py:1680-1795).
+
+    Input: [{"department": str|None, "signal_score": float}] per afgeronde respondent.
+    Kwalificatie: n >= MIN_SEGMENT_N per afdeling; minimaal 2 kwalificerende
+    afdelingen (anders []); max 8 rijen, kleinere groepen samen als "Overige
+    afdelingen" (alleen als die bucket zelf ook n >= MIN_SEGMENT_N haalt).
+    Sortering: laagste gemiddelde eerst (grootste aandachtspunt bovenaan);
+    "Overige afdelingen" altijd onderaan.
+    """
+    grouped: dict[str, list[float]] = {}
+    for r in respondents:
+        dept, score = r.get("department"), r.get("signal_score")
+        if not dept or score is None:
+            continue
+        grouped.setdefault(str(dept), []).append(float(score))
+
+    eligible = {d: v for d, v in grouped.items() if len(v) >= MIN_SEGMENT_N}
+    if len(eligible) < 2:
+        return []
+
+    rows = [{"department": d, "n": len(v), "avg": round(sum(v) / len(v), 2),
+             "scores": sorted(v)} for d, v in eligible.items()]
+    rows.sort(key=lambda r: (r["avg"], -r["n"], r["department"]))
+
+    visible, overflow = rows[:8], rows[8:]
+    rest: list[float] = []
+    for d, v in grouped.items():
+        if d not in eligible:
+            rest.extend(v)
+    for row in overflow:
+        rest.extend(row["scores"])
+    if len(rest) >= MIN_SEGMENT_N:
+        visible = visible[:7] if overflow else visible
+        visible.append({"department": "Overige afdelingen", "n": len(rest),
+                        "avg": round(sum(rest) / len(rest), 2), "scores": sorted(rest)})
+    return visible
+
+
 def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
     camp: Campaign = (
         db.query(Campaign)
@@ -1059,6 +1099,11 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
         factor_items_map, [r.org_raw or {} for r in responses])
     sdt_items: list[tuple[str, str]] = scan_meta.get("sdt_items", [])
 
+    segment_rows = _department_segment_rows([
+        {"department": r.department, "signal_score": r.response.risk_score}
+        for r in completed
+    ])
+
     enps_vals = [float(fr.get("enps_score")) for r in responses
                  if (fr := (r.full_result or {})) and fr.get("enps_score") is not None]
     enps_available = len(enps_vals) >= MIN_QUOTES_N
@@ -1089,6 +1134,7 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
         enps_available=enps_available, enps_score=enps_score,
         factor_resp_scores=factor_resp_scores,
         intent_resp={"stay": si_sc, "turnover": to_sc, "engagement": eng_sc},
+        segment_rows=segment_rows,
     )
 
 
