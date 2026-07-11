@@ -163,3 +163,14 @@ def test_methodiek_legt_banden_uit():
     html = render_retention_report_html(_min_retention_data())
     assert "Hoe de banden werken" in html
     assert "5,0" in html or "5.0" in html
+
+
+def test_methodiek_banden_cel_is_niet_33_procent_breed():
+    # De "Hoe de banden werken"-rij heeft maar 1 cel (i.p.v. de gebruikelijke
+    # 3), dus mag niet de standaard .tc-klasse (width:33%) krijgen - anders
+    # rendert de kaart als een smalle 33%-box met dode witruimte ernaast.
+    html = render_retention_report_html(_min_retention_data())
+    idx = html.find("Hoe de banden werken")
+    assert idx != -1
+    cell_start = html.rfind("<td", 0, idx)
+    assert 'class="tc-full"' in html[cell_start:idx]

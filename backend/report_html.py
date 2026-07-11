@@ -801,9 +801,10 @@ def _trust_page(scan_type: str = "exit") -> str:
              "meting en vervolgmeting een-op-een vergelijkbaar."),
         ]
 
-    def _cells(pairs: list[tuple[str, str]]) -> str:
+    def _cells(pairs: list[tuple[str, str]], full: bool = False) -> str:
+        cls = "tc-full" if full else "tc"
         return "".join(
-            f'<td class="tc"><div class="tt">{_h(t)}</div><div class="tb">{_h(b)}</div></td>'
+            f'<td class="{cls}"><div class="tt">{_h(t)}</div><div class="tb">{_h(b)}</div></td>'
             for t, b in pairs)
 
     return f"""<div class="pb sec">
@@ -813,7 +814,7 @@ def _trust_page(scan_type: str = "exit") -> str:
   </div>
   <table class="tg"><tr>{_cells(cells_r1)}</tr></table>
   <table class="tg" style="margin-top:10px;"><tr>{_cells(cells_r2)}</tr></table>
-  <table class="tg" style="margin-top:10px;"><tr>{_cells(cells_r3)}</tr></table>
+  <table class="tg" style="margin-top:10px;"><tr>{_cells(cells_r3, full=True)}</tr></table>
 </div>"""
 
 
