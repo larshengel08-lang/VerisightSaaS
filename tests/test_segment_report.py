@@ -37,6 +37,25 @@ def test_row_bevat_score_scores_en_sortering_laagste_eerst():
     assert rows[0]["scores"] == [4.0] * 5              # per-respondent scores voor de strip
 
 
+def test_max_8_rijen_ook_bij_overige_zonder_overflow():
+    # 8 kwalificerende afdelingen (n=5, elk), dus geen overflow uit `rows[:8]`.
+    # Plus 2 sub-drempel afdelingen (n=3 elk) die samen n=6 >= MIN_SEGMENT_N poolen
+    # in "Overige afdelingen" -- dit moet zelfstandig (zonder overflow) ook trimmen
+    # naar max 8 totale rijen i.p.v. 9.
+    respondents = []
+    for i, avg in enumerate([4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5]):
+        respondents += [_resp(f"Afd{i}", avg)] * 5
+    respondents += [_resp("Klein1", 5.0)] * 3
+    respondents += [_resp("Klein2", 5.0)] * 3
+
+    rows = _department_segment_rows(respondents)
+
+    assert len(rows) == 8
+    overige = [r for r in rows if r["department"] == "Overige afdelingen"]
+    assert len(overige) == 1
+    assert overige[0]["n"] == 6
+
+
 def test_respondenten_zonder_department_tellen_niet_mee():
     rows = _department_segment_rows(
         [_resp("Sales", 6.0)] * 5 + [_resp("Ops", 4.0)] * 5 + [_resp(None, 9.0)] * 4)

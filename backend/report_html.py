@@ -938,7 +938,7 @@ def _department_segment_rows(respondents: list[dict]) -> list[dict]:
     for row in overflow:
         rest.extend(row["scores"])
     if len(rest) >= MIN_SEGMENT_N:
-        visible = visible[:7] if overflow else visible
+        visible = visible[:7]
         visible.append({"department": "Overige afdelingen", "n": len(rest),
                         "avg": round(sum(rest) / len(rest), 2), "scores": sorted(rest)})
     return visible
