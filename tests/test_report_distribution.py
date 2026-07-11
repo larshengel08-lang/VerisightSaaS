@@ -83,3 +83,71 @@ def test_per_respondent_factor_scores():
     ]
     out = _per_respondent_factor_scores(factor_items_map, org_raws)
     assert [round(v, 2) for v in out["workload"]] == [2.12, 10.0, 5.5]
+
+
+# ── Task 4: wiring van distribution_block in de renderers ──────────────────
+
+from backend.report_html import render_retention_report_html
+
+
+def _min_retention_data(factor_resp_scores=None, intent_resp=None, n=12):
+    """Minimale data-dict voor de retention-renderer.
+
+    Alle keys die render_retention_report_html() aanspreekt (via data[...] of
+    data.get(...)) zijn hier aanwezig — zie backend/report_html.py rond regel
+    1656 voor de volledige lijst.
+    """
+    fa = {"workload": 5.0}
+    return dict(
+        campaign_id="c1", scan_type="retention", scan_lbl="Loep Behoud",
+        org_name="TestOrg", campaign_name="Wave 1", generated_at="11-07-2026",
+        delivery_mode="Baseline", n_invited=n + 3, n_completed=n,
+        completion_pct=80.0, avg_risk=5.0, avg_eng=6.0, avg_to=5.0, avg_si=5.0,
+        band_counts={"HOOG": 0, "MIDDEN": n, "LAAG": 0}, has_pattern=True,
+        factor_avgs=fa, top_risks=[("workload", 5.0)],
+        top_fkeys=["workload"], top_flabels=["Werkdruk en herstelruimte"],
+        strong_work=None, top_exit_lbl=None, top_cont_lbl=None, sig_vis=None,
+        sdt_avgs={}, sdt_item_avgs={}, org_item_avgs={"W1": 5.0},
+        exit_r_dist=[], cont_dist=[], prev_dist={}, open_texts=[],
+        deepening_agg={}, retention_profile=None, exit_pbs=[], ret_pbs=[],
+        msp=None, nsp={},
+        factor_items_map={"workload": [("W1", "Testvraag werkdruk")]},
+        sdt_items=[], enps_available=False, enps_score=None,
+        factor_resp_scores=factor_resp_scores or {"workload": [2.0] * 6 + [8.0] * 6},
+        intent_resp=intent_resp or {"stay": [2.0] * 6 + [8.0] * 6,
+                                    "turnover": [5.0] * 12, "engagement": [6.0] * 12},
+    )
+
+
+_DIST_MARKER = 'class="no-break" style="margin:10px 0 4px;"'  # distribution_block wrapper (uniek genoeg — GEM alleen komt ook toevallig voor in base64-fontdata)
+
+
+def test_retention_factorverdieping_toont_spreiding():
+    html = render_retention_report_html(_min_retention_data())
+    assert html.count(_DIST_MARKER) >= 2  # minstens factor + een intentiescore
+    assert "Verdeeld beeld" in html  # fixture is gepolariseerd
+
+
+def test_geen_spreiding_onder_n10():
+    d = _min_retention_data(
+        factor_resp_scores={"workload": [5.0] * 6},
+        intent_resp={"stay": [5.0] * 6, "turnover": [5.0] * 6, "engagement": [5.0] * 6},
+        n=6)
+    html = render_retention_report_html(d)
+    assert _DIST_MARKER not in html
+
+
+def test_spreiding_verschijnt_pas_vanaf_n10():
+    # Zelfde als hierboven maar met precies n=10 -> moet nu WEL verschijnen.
+    d = _min_retention_data(
+        factor_resp_scores={"workload": [2.0] * 5 + [8.0] * 5},
+        intent_resp={"stay": [2.0] * 5 + [8.0] * 5,
+                     "turnover": [5.0] * 10, "engagement": [5.0] * 10},
+        n=10)
+    html = render_retention_report_html(d)
+    assert _DIST_MARKER in html
+
+
+def test_vertrekintentie_label_heeft_duidingssuffix():
+    html = render_retention_report_html(_min_retention_data())
+    assert "hoger = meer vertrekgedachten" in html

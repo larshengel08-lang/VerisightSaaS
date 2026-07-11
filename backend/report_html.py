@@ -22,6 +22,7 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 
 from backend.models import Campaign, Respondent, SurveyResponse
 from backend.report_css import build_css, RAG_HIGH, RAG_MID, RAG_LOW
+from backend.report_distribution import distribution_block
 from backend.products.shared.deepening import (
     DIRECTION_SETS,
     agenda_enrichment,
@@ -1221,7 +1222,7 @@ def _vertrekcontext(*, exit_reasons: list[tuple[str, int]],
 
 def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
                     turnover: float | None, engagement: float | None,
-                    primary_factor: str) -> str:
+                    primary_factor: str, intent_resp: dict | None = None) -> str:
     """Retention-exclusive section: actuele behoudscontext op groepsniveau.
 
     Signalen staan bewust onder elkaar (niet naast elkaar in één balk): titel
@@ -1269,6 +1270,18 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
                   f'<span class="sigrow-note">{note}</span></div></div>')
 
     stat_rows = f'<div class="card">{rows}</div>' if rows else ""
+
+    strips = ""
+    for key, label in (
+        ("stay", "Blijfintentie &mdash; spreiding"),
+        ("turnover", "Vertrekintentie &mdash; spreiding (hoger = meer vertrekgedachten)"),
+        ("engagement", "Bevlogenheid &mdash; spreiding"),
+    ):
+        blk = distribution_block((intent_resp or {}).get(key, []))
+        if blk:
+            strips += (f'<div style="margin-top:10px;"><div class="sc-l">'
+                       f'{label}</div>{blk}</div>')
+
     legend = (
         '<p style="font-size:10px;color:#64748B;margin-top:10px;margin-bottom:0;">'
         'Behoudssignaal meet condities (factorscores). '
@@ -1285,6 +1298,7 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
     Geen individuele risicobeoordeling &mdash; patronen zijn leidend.
   </p>
   {stat_rows}
+  {strips}
   {legend}
 </div>"""
 
@@ -1509,9 +1523,11 @@ def render_exit_report_html(data: dict) -> str:
         # de data (items + toelichting + quote) draagt deze pagina zelf.
         deep_block = (_deepening_block(deep_agg[fk], "exit", fk)
                       if fk in deep_agg else "")
+        spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []))
         return f"""<div class="pb sec">
   <span class="slabel">Verdieping &mdash; {_h(lbl)}</span>
   <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&mdash; {_h(fl_)}</span></h2>
+  {spread}
   {er_context}
   {low_card}
   {high_card}
@@ -1771,6 +1787,7 @@ def render_retention_report_html(data: dict) -> str:
         turnover=avg_to,
         engagement=avg_eng,
         primary_factor=low_lbl or primary_label or "—",
+        intent_resp=data.get("intent_resp"),
     )
 
     # ── Overzichtsprofiel (p.05) ──────────────────────────────────────────────
@@ -1855,9 +1872,11 @@ def render_retention_report_html(data: dict) -> str:
         # ── Gespreksrichting-blok (spec 7.1) — direct na de toelichting ──
         dir_block = (_direction_block(deep_agg[fk], ST, fk)
                      if fk in deep_agg else "")
+        spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []))
         return f"""<div class="pb sec">
   <span class="slabel">Verdieping &mdash; {_h(lbl)}</span>
   <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&mdash; {_h(fl_)}</span></h2>
+  {spread}
   {low_card}
   {high_card}
   <h3 style="margin-top:14px;">Alle items in deze factor</h3>
@@ -2230,10 +2249,12 @@ def render_onboarding_report_html(data: dict) -> str:
         quote_block = (f'<div class="quote-txt">{_h(quote_txt)}'
                        f'<div class="quote-anon">Geanonimiseerd &mdash; namen en contactgegevens verwijderd</div>'
                        f'</div>' if quote_txt else "")
+        spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []))
         return f"""<div class="pb sec">
   <span class="slabel">Verdieping &mdash; {_h(lbl)}</span>
   <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&mdash; {_h(fl_)}</span></h2>
   <p style="font-size:10px;color:#64748B;margin-bottom:12px;">Lager op deze factor = meer frictie in de onboardingfase.</p>
+  {spread}
   {low_card}
   {high_card}
   <h3 style="margin-top:14px;">Alle items in deze factor</h3>
