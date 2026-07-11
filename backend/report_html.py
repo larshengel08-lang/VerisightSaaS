@@ -52,7 +52,7 @@ from backend.scoring_config import (
 logger = logging.getLogger(__name__)
 
 MIN_QUOTES_N = 5
-MAX_QUOTES   = 5
+MAX_QUOTES   = 12
 
 
 def _should_show_quotes(open_texts: list[str]) -> bool:
@@ -851,61 +851,36 @@ def _segment_status_block(n: int, has_segment_data: bool = False,
 
 def _themed_quotes(texts: list[str], scan_type: str = "exit",
                    top_fkeys: list[str] | None = None, n_total: int = 0) -> str:
-    """Thematische open toelichtingen — geen quote dump, altijd met thema + evidence label."""
-    top_fkeys = top_fkeys or []
-    keywords = _ONBOARDING_THEME_KEYWORDS if scan_type == "onboarding" else THEME_KEYWORDS
+    """Open toelichtingen: alles tonen t/m MAX_QUOTES, geen thema-indeling.
 
-    def _classify(t: str) -> str:
-        tl = t.lower()
-        for theme, kws in keywords.items():
-            if any(kw in tl for kw in kws):
-                return theme
-        if any(kw in tl for kw in ["persoonlijk","omstandigh","verhuis","studie","gezin"]):
-            return "Persoonlijke omstandigheid"
-        if any(kw in tl for kw in ["aanbod","andere baan","extern","concurrent"]):
-            return "Beter aanbod elders"
-        return "Overige toelichting"
-
+    Trefwoord-classificatie is bewust verwijderd (besluit 2026-04-09 + spec
+    2026-07-11): trefwoorden onderscheiden geen negatie ("met mijn leidinggevende
+    was niets mis" kreeg het label Leiderschap). Duiding gebeurt in de
+    begeleide managementbespreking, niet geautomatiseerd in het rapport.
+    """
     if len(texts) < MIN_QUOTES_N:
         return (f'<div class="empty-state">Open toelichtingen worden getoond bij minimaal '
                 f'{MIN_QUOTES_N} antwoorden. Huidig: {len(texts)}.</div>')
 
-    theme_counts: dict[str, int] = {}
-    for t in texts:
-        th = _classify(t)
-        theme_counts[th] = theme_counts.get(th, 0) + 1
+    note = ""
+    if len(texts) > MAX_QUOTES:
+        note = (f'<div class="cbox" style="margin-bottom:12px;font-size:10px;color:#374151;">'
+                f'Getoond: de eerste {MAX_QUOTES} van {len(texts)} in ontvangstvolgorde &mdash; '
+                f'geen inhoudelijke selectie.</div>')
 
-    tc_sorted = sorted(theme_counts.items(), key=lambda x: -x[1])
-    summary = (
-        '<div style="font-size:10px;color:#374151;margin-bottom:12px;">'
-        '<strong>Thema\'s:</strong>&nbsp;&nbsp;' +
-        " &middot; ".join(f"<strong>{_h(k)}</strong>&nbsp;({v}&times;)" for k, v in tc_sorted) +
-        '</div>'
-    )
-
-    # Bewust GEEN evidence-badges ("bevestigt topfactor"/"nuanceert beeld") meer:
-    # die waren trefwoord-heuristiek verpakt als duiding, in strijd met de
-    # vastgelegde beslissing (2026-04-09) om geen geautomatiseerde analyse op
-    # open tekst te doen. Ook de per-kaart themacount is weg — die stond al in
-    # de themasamenvatting bovenaan en las per kaart alsof elke quote 5x voorkwam.
-    used: set[str] = set()
+    seen: set[str] = set()
     cards = ""
     for t in texts[:MAX_QUOTES]:
-        if t in used: continue
-        used.add(t)
-        theme = _classify(t)
-
+        if t in seen:
+            continue
+        seen.add(t)
         cards += (
             f'<div class="theme-card">'
-            f'<span class="theme-badge">{_h(theme)}</span>'
             f'<div class="quote-txt">{_h(t)}'
             f'<div class="quote-anon">Geanonimiseerd &mdash; namen en contactgegevens verwijderd</div>'
             f'</div></div>'
         )
-
-    note = (f'Getoond: {min(len(texts),MAX_QUOTES)} van {len(texts)} toelichtingen. '
-            f'Thema-indeling op trefwoorden &mdash; indicatief.')
-    return f'{summary}<div class="cbox" style="margin-bottom:12px;font-size:10px;color:#374151;">{note}</div>{cards}'
+    return f'{note}{cards}'
 
 
 # ─── Data builder ─────────────────────────────────────────────────────────────
@@ -2132,7 +2107,7 @@ def render_onboarding_report_html(data: dict) -> str:
     _ob_primary = low_lbl or high_lbl or "—"
     s = _cover(
         scan_label=data["scan_lbl"], scan_type=ST, org_name=data["org_name"],
-        period=data["campaign_name"], opening_question="Hoe landen uw nieuwe medewerkers?",
+        period=data["campaign_name"], opening_question="Hoe landen nieuwe medewerkers?",
         stats=[
             ("Respondenten", str(n)),
             ("Respons", f"{int(data['completion_pct'])}%"),  # afgerond — p.03 toont hetzelfde getal

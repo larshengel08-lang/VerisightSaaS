@@ -174,3 +174,37 @@ def test_methodiek_banden_cel_is_niet_33_procent_breed():
     assert idx != -1
     cell_start = html.rfind("<td", 0, idx)
     assert 'class="tc-full"' in html[cell_start:idx]
+
+
+from backend.report_html import _themed_quotes
+
+
+def test_quotes_alles_getoond_tot_12():
+    texts = [f"Toelichting nummer {i}" for i in range(8)]
+    html = _themed_quotes(texts, "retention")
+    for t in texts:
+        assert t in html
+    assert "Getoond" not in html  # niets weggelaten -> geen weglatingsregel
+
+
+def test_quotes_cap_12_met_expliciete_regel():
+    texts = [f"Toelichting nummer {i}" for i in range(15)]
+    html = _themed_quotes(texts, "retention")
+    assert "Toelichting nummer 11" in html
+    assert "Toelichting nummer 12" not in html
+    assert "eerste 12 van 15 in ontvangstvolgorde" in html
+
+
+def test_quotes_geen_thema_indeling():
+    texts = ["Mijn leidinggevende was prima, het zat 'm in de werkdruk"] * 6
+    html = _themed_quotes(texts, "retention")
+    assert "Thema" not in html
+    assert "theme-badge" not in html
+    assert "Leiderschap" not in html  # het negatie-voorbeeld mag geen label krijgen
+
+
+def test_onboarding_cover_zonder_uw():
+    import backend.report_html as rh
+    import inspect
+    src = inspect.getsource(rh)
+    assert "Hoe landen uw nieuwe medewerkers" not in src
