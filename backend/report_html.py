@@ -1143,13 +1143,14 @@ def _overzichtsprofiel(factors: list[tuple[str, float | None]],
             if not labels:
                 continue
             items = "".join(f"<li>{_h(lbl)}</li>" for lbl in labels)
-            cols += (f'<div style="flex:1;min-width:0;">'
+            # padding-right i.p.v. flex-gap: WeasyPrint ondersteunt gap niet
+            cols += (f'<div style="flex:1;min-width:0;padding-right:24px;">'
                      f'<div style="font-family:\'JetBrains Mono\', monospace;font-size:8px;letter-spacing:0.1em;'
                      f'text-transform:uppercase;color:{color};margin-bottom:6px;">{_h(title)} ({len(labels)})</div>'
                      f'<ul style="font-size:10px;color:#374151;line-height:1.7;margin:0;padding-left:14px;">{items}</ul>'
                      f'</div>')
         if cols:
-            breakdown_html = f'<div style="display:flex;gap:24px;margin-top:20px;">{cols}</div>'
+            breakdown_html = f'<div style="display:flex;margin-top:20px;">{cols}</div>'
     return f"""<div class="pb sec">
   <span class="slabel">Overzichtsprofiel</span>
   {summary_html}
