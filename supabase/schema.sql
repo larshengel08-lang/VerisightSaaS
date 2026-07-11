@@ -43,7 +43,7 @@ create table if not exists public.org_invites (
   org_id      uuid references public.organizations(id) on delete cascade not null,
   email       text not null,
   full_name   text,
-  role        text not null default 'viewer' check (role in ('member', 'viewer')),
+  role        text not null default 'viewer' check (role in ('owner', 'member', 'viewer')),
   invited_by  uuid references auth.users(id) on delete set null,
   invited_at  timestamptz default now(),
   accepted_at timestamptz,
@@ -91,6 +91,17 @@ do $$ begin
     drop constraint if exists org_members_role_check;
   alter table public.org_members
     add constraint org_members_role_check
+    check (role in ('owner', 'member', 'viewer'));
+exception when others then null;
+end $$;
+
+-- Voeg 'owner' toe aan org_invites.role — ontbrak hier terwijl org_members.role
+-- (waar org_invites uiteindelijk naar gekopieerd wordt) 'owner' al wel toestond.
+do $$ begin
+  alter table public.org_invites
+    drop constraint if exists org_invites_role_check;
+  alter table public.org_invites
+    add constraint org_invites_role_check
     check (role in ('owner', 'member', 'viewer'));
 exception when others then null;
 end $$;
