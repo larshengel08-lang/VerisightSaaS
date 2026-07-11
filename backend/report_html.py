@@ -750,6 +750,14 @@ def _trust_page(scan_type: str = "exit") -> str:
             ("Claimgrenzen",     "Loep Behoud is een actieve-populatie groepssignaal. Geen causale claims, geen interventieprescriptie."),
             ("Privacywaarborg",  "Verwerking conform AVG. Uitsluitend bestemd voor geautoriseerde gebruikers."),
         ]
+        cells_r3 = [
+            ("Hoe de banden werken",
+             "Kwetsbaar punt (onder 5,0), aandachtspunt (5,0 tot 6,5) en relatief "
+             "sterk (vanaf 6,5) zijn vaste schaaldrempels, geen vergelijking met "
+             "andere organisaties. De rangorde tussen de eigen factoren weegt "
+             "zwaarder dan de absolute kleur. Doordat de meetlat vast is, zijn "
+             "meting en vervolgmeting een-op-een vergelijkbaar."),
+        ]
     elif scan_type == "onboarding":
         intro = ("Dit rapport bundelt patronen uit onboarding-checkpoints tot een groepsbeeld van de eerste "
                  "werkperiode. Geen prestatiebeoordeling, geen individuele beoordeling en geen voorspelling van uitval.")
@@ -762,6 +770,14 @@ def _trust_page(scan_type: str = "exit") -> str:
             ("Open toelichtingen", "Geanonimiseerd. Namen, contactgegevens en locaties verwijderd. Alleen bij voldoende n getoond."),
             ("Claimgrenzen",       "Onboarding is een groepscheck op de eerste werkperiode. Geen causale claims, geen uitvalpredicties."),
             ("Privacywaarborg",    "Verwerking conform AVG. Uitsluitend bestemd voor geautoriseerde gebruikers."),
+        ]
+        cells_r3 = [
+            ("Hoe de banden werken",
+             "Kwetsbaar punt (onder 5,0), aandachtspunt (5,0 tot 6,5) en relatief "
+             "sterk (vanaf 6,5) zijn vaste schaaldrempels, geen vergelijking met "
+             "andere organisaties. De rangorde tussen de eigen factoren weegt "
+             "zwaarder dan de absolute kleur. Doordat de meetlat vast is, zijn "
+             "meting en vervolgmeting een-op-een vergelijkbaar."),
         ]
     else:  # exit
         intro = ("Dit rapport bundelt patronen uit exitvragenlijsten tot een groepsbeeld van vertrek. "
@@ -776,6 +792,14 @@ def _trust_page(scan_type: str = "exit") -> str:
             ("Claimgrenzen",     "Loep Vertrek is een terugkijkende groepsmeting op uitstroom. Geen causale claims, geen oordeel over vermijdbaarheid, geen verlooppredicties."),
             ("Privacywaarborg",  "Verwerking conform AVG. Uitsluitend bestemd voor geautoriseerde gebruikers."),
         ]
+        cells_r3 = [
+            ("Hoe de banden werken",
+             "Kwetsbaar punt (onder 5,0), aandachtspunt (5,0 tot 6,5) en relatief "
+             "sterk (vanaf 6,5) zijn vaste schaaldrempels, geen vergelijking met "
+             "andere organisaties. De rangorde tussen de eigen factoren weegt "
+             "zwaarder dan de absolute kleur. Doordat de meetlat vast is, zijn "
+             "meting en vervolgmeting een-op-een vergelijkbaar."),
+        ]
 
     def _cells(pairs: list[tuple[str, str]]) -> str:
         return "".join(
@@ -789,6 +813,7 @@ def _trust_page(scan_type: str = "exit") -> str:
   </div>
   <table class="tg"><tr>{_cells(cells_r1)}</tr></table>
   <table class="tg" style="margin-top:10px;"><tr>{_cells(cells_r2)}</tr></table>
+  <table class="tg" style="margin-top:10px;"><tr>{_cells(cells_r3)}</tr></table>
 </div>"""
 
 
@@ -1176,6 +1201,8 @@ def _overzichtsprofiel(factors: list[tuple[str, float | None]],
   <span class="slabel">Overzichtsprofiel</span>
   {summary_html}
   <div class="card">{rows}{legend}{breakdown_html}</div>
+  <p class="trustline">Banden zijn vaste schaaldrempels, geen benchmark.
+  De rangorde tussen factoren weegt zwaarder dan de kleur &mdash; zie Methodiek.</p>
 </div>"""
 
 

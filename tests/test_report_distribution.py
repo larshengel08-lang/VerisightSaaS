@@ -151,3 +151,15 @@ def test_spreiding_verschijnt_pas_vanaf_n10():
 def test_vertrekintentie_label_heeft_duidingssuffix():
     html = render_retention_report_html(_min_retention_data())
     assert "hoger = meer vertrekgedachten" in html
+
+
+def test_overzichtsprofiel_heeft_drempelvoetregel():
+    html = render_retention_report_html(_min_retention_data())
+    assert "vaste schaaldrempels" in html
+    assert "rangorde" in html.lower()
+
+
+def test_methodiek_legt_banden_uit():
+    html = render_retention_report_html(_min_retention_data())
+    assert "Hoe de banden werken" in html
+    assert "5,0" in html or "5.0" in html
