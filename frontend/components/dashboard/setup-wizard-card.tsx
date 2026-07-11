@@ -271,12 +271,12 @@ export function SetupWizardCard({
                 {step2Error && (
                   <p className="mb-2 rounded-lg bg-red-500/20 px-3 py-2 text-xs font-semibold text-red-300">{step2Error}</p>
                 )}
-                <button type="button" onClick={handleConfirmLaunch} disabled={isPending || !everCopied}
-                  className={`w-full rounded-lg px-4 py-2.5 text-sm font-semibold transition-opacity ${everCopied ? 'bg-[#E8A020] text-[#0D1B2A] hover:opacity-90' : 'bg-white/10 text-white/30 cursor-not-allowed'} disabled:opacity-50`}>
+                <button type="button" onClick={handleConfirmLaunch} disabled={isPending}
+                  className="w-full rounded-lg bg-[#E8A020] px-4 py-2.5 text-sm font-semibold text-[#0D1B2A] transition-opacity hover:opacity-90 disabled:opacity-50">
                   {isPending ? 'Bezig…' : 'Ja, verstuurd →'}
                 </button>
                 {!everCopied && (
-                  <p className="mt-1.5 text-center text-[10px] text-white/30">Kopieer eerst de tekst hierboven</p>
+                  <p className="mt-1.5 text-center text-[10px] text-white/30">Tip: kopieer de tekst hierboven voor je verstuurt</p>
                 )}
               </div>
             </div>
