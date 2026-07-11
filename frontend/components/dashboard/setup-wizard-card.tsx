@@ -131,7 +131,7 @@ export function SetupWizardCard({
         {scanLabel}
       </p>
       <h1 className="font-serif text-[2rem] leading-[1.05] tracking-[-0.04em] text-[color:var(--dashboard-ink)]">
-        Welkom bij {organizationName}
+        Welkom {organizationName} bij Loep
       </h1>
       <p className="mt-2 text-[0.95rem] text-[color:var(--dashboard-text)]">
         Doorloop drie stappen om je scan te lanceren.

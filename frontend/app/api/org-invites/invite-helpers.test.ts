@@ -25,7 +25,22 @@ vi.mock('@/lib/supabase/public', () => ({
   }),
 }))
 
-import { sendActivationLink } from './invite-helpers'
+import { resolveInviteRole, sendActivationLink } from './invite-helpers'
+
+describe('resolveInviteRole', () => {
+  it('geeft owner terug voor owner (2026-07-09 regressie: viel eerder stilzwijgend terug op viewer)', () => {
+    expect(resolveInviteRole('owner')).toBe('owner')
+  })
+
+  it('geeft member terug voor member', () => {
+    expect(resolveInviteRole('member')).toBe('member')
+  })
+
+  it('valt terug op viewer voor viewer of ontbrekende waarde', () => {
+    expect(resolveInviteRole('viewer')).toBe('viewer')
+    expect(resolveInviteRole(undefined)).toBe('viewer')
+  })
+})
 
 const BASE_ARGS = {
   email: 'hr@julitestbv.nl',

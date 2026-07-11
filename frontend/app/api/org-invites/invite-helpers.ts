@@ -9,10 +9,22 @@ export interface InviteBody {
   orgId?: string
   email?: string
   fullName?: string
-  role?: 'viewer' | 'member'
+  role?: 'owner' | 'member' | 'viewer'
 }
 
 export const RESEND_COOLDOWN_MINUTES = 10
+
+/**
+ * Bug tot 2026-07-09: alleen 'member' werd herkend, elke andere waarde
+ * (inclusief 'owner') viel stilzwijgend terug op 'viewer' — een in het
+ * admin-formulier gekozen 'owner' werd zo altijd gedegradeerd, zonder
+ * enige foutmelding.
+ */
+export function resolveInviteRole(bodyRole: InviteBody['role']): 'owner' | 'member' | 'viewer' {
+  if (bodyRole === 'owner') return 'owner'
+  if (bodyRole === 'member') return 'member'
+  return 'viewer'
+}
 
 export async function requireAdminContext() {
   const supabase = await createClient()
