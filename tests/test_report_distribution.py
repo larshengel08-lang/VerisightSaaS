@@ -1,5 +1,5 @@
 """Spreidingsaggregatie (spec: docs/superpowers/specs/2026-07-11-rapport-spreiding-design.md)."""
-from backend.report_distribution import score_distribution
+from backend.report_distribution import score_distribution, distribution_block
 
 
 def test_zones_volgen_factor_label_drempels():
@@ -37,3 +37,28 @@ def test_mean_en_dots():
     d = score_distribution([2.0, 8.0])
     assert d["mean"] == 5.0
     assert d["dots"] == [2.0, 8.0]
+
+
+def test_block_leeg_onder_n10():
+    assert distribution_block([5.0] * 9) == ""
+
+
+def test_block_bevat_svg_en_aantallen_vanaf_n10():
+    html = distribution_block([2.0] * 5 + [8.0] * 5)
+    assert "<svg" in html
+    assert "Kwetsbaar 5" in html
+    assert "Sterk 5" in html
+    assert "GEM 5.0" in html
+
+
+def test_duidingszin_alleen_bij_polarisatie():
+    gepolariseerd = distribution_block([2.0] * 5 + [8.0] * 5)
+    assert "Verdeeld beeld" in gepolariseerd
+    normaal = distribution_block([5.5] * 10)
+    assert "Verdeeld beeld" not in normaal
+
+
+def test_jitter_deterministisch():
+    # Zelfde input -> byte-identieke output (geen random; WeasyPrint-stabiel).
+    vals = [2.0, 3.0, 5.5, 7.0, 8.0] * 2
+    assert distribution_block(vals) == distribution_block(vals)
