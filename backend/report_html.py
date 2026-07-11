@@ -857,6 +857,9 @@ def _themed_quotes(texts: list[str], scan_type: str = "exit",
     2026-07-11): trefwoorden onderscheiden geen negatie ("met mijn leidinggevende
     was niets mis" kreeg het label Leiderschap). Duiding gebeurt in de
     begeleide managementbespreking, niet geautomatiseerd in het rapport.
+
+    top_fkeys/n_total: ongebruikt, alleen behouden voor call-site-compatibiliteit
+    (bestaande aanroepen geven ze positioneel door). Niet nodig voor nieuwe callers.
     """
     if len(texts) < MIN_QUOTES_N:
         return (f'<div class="empty-state">Open toelichtingen worden getoond bij minimaal '
