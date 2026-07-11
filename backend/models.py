@@ -142,6 +142,10 @@ class Campaign(Base):
     # e.g. ["leadership", "culture", "growth"]  — null means all
     enabled_modules: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
+    # Afdelingssegmentatie (spec 2026-07-11): JSON-lijst [{label, slug}].
+    # NULL/leeg = campagne zonder segmenten (open flow ongewijzigd).
+    segment_departments: Mapped[list | None] = mapped_column(JSON, nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
     closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
