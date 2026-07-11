@@ -14,7 +14,7 @@ interface Params {
 
 export async function GET(req: NextRequest, { params }: Params) {
   const { token } = await params
-  const res = await fetch(`${BACKEND}/survey/open/${token}`, {
+  const res = await fetch(`${BACKEND}/survey/open/${token}${req.nextUrl.search}`, {
     headers: { 'Accept': 'text/html' },
     cache: 'no-store',
   })
