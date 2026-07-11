@@ -1494,6 +1494,12 @@ def render_exit_report_html(data: dict) -> str:
             for ik, q, isc in i_sc
         ) or '<tr><td colspan="2" style="color:#94A3B8;font-style:italic;">Itemscores niet beschikbaar in deze wave.</td></tr>'
         # Optional quote: pick first open text that mentions a keyword of this factor
+        # BEKENDE BEPERKING (2026-07-11): dezelfde negatie-blindheid als de trefwoord-
+        # classificatie die uit _themed_quotes is verwijderd (besluit 2026-04-09) -
+        # een quote als "met mijn leidinggevende was niets mis, het zat 'm in de
+        # werkdruk" kan hier alsnog als representatieve quote voor "Leiderschap"
+        # verschijnen. Nog niet gefixt hier; zie docs/superpowers/specs/2026-07-11-
+        # rapport-spreiding-design.md voor de bredere quote-transparantie-ronde.
         fk_keywords = THEME_KEYWORDS.get(lbl, [])
         quote_txt: str | None = None
         for t in data["open_texts"]:
@@ -1852,6 +1858,8 @@ def render_retention_report_html(data: dict) -> str:
             f'<td class="is" style="color:{_factor_color(isc)};">{isc:.1f}</td></tr>'
             for ik, q, isc in i_sc
         ) or '<tr><td colspan="2" style="color:#94A3B8;font-style:italic;">Itemscores niet beschikbaar in deze wave.</td></tr>'
+        # BEKENDE BEPERKING (2026-07-11): zie de identieke noot bij _factor_detail
+        # hierboven - dezelfde negatie-blinde trefwoordselectie, nog niet gefixt.
         fk_keywords = THEME_KEYWORDS.get(FACTOR_LABELS_NL.get(fk, ""), [])
         quote_txt: str | None = None
         for t in data["open_texts"]:
@@ -2237,6 +2245,8 @@ def render_onboarding_report_html(data: dict) -> str:
             f'<td class="is" style="color:{_factor_color(isc)};">{isc:.1f}</td></tr>'
             for ik, q, isc in i_sc
         ) or '<tr><td colspan="2" style="color:#94A3B8;font-style:italic;">Itemscores niet beschikbaar in deze wave.</td></tr>'
+        # BEKENDE BEPERKING (2026-07-11): zie de identieke noot bij _factor_detail
+        # (exit-renderer) - dezelfde negatie-blinde trefwoordselectie, nog niet gefixt.
         fk_keywords = _ONBOARDING_THEME_KEYWORDS.get(lbl, [])
         quote_txt: str | None = None
         for t in data["open_texts"]:

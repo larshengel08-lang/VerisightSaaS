@@ -65,6 +65,22 @@ Zelfde drempel als de bestaande patroonanalyse-grens. Onder n=10: geen spreiding
 - Segmentanalyse-verbetering en vervolgmeting-rapportlaag (aparte blokken uit de gap-analyse).
 - Survey- of schemawijzigingen (niets nodig).
 
+## Bevinding tijdens implementatie: zelfde negatie-beperking elders (niet gefixt, uitgesteld)
+
+Bij het herschrijven van `_themed_quotes` (punt 6) bleek dezelfde negatie-blinde
+trefwoordselectie nog op drie andere plekken te bestaan in `backend/report_html.py`
+(`_factor_detail`, `_ret_factor_detail`, `_ob_factor_detail` — de "representatieve
+quote per factor"-selectie via `THEME_KEYWORDS`/`_ONBOARDING_THEME_KEYWORDS`).
+Een quote als "met mijn leidinggevende was niets mis, het zat 'm in de werkdruk"
+kan daar nog steeds als representatieve quote voor "Leiderschap" verschijnen —
+exact het probleem dat het 2026-04-09-besluit voor de quotes-sectie verbood.
+
+Bewust **niet meegenomen** in deze ronde (scope was `_themed_quotes`, niet de
+per-factor quote-selectie) — code-comments toegevoegd op de drie locaties zodat
+dit niet stilzwijgend verloren gaat. Volgende stap: apart besluiten of de
+per-factor-quote helemaal vervalt, of een eigen (niet-keyword-gebaseerde)
+selectielogica krijgt.
+
 ## Datastroom
 
 `build_report_data` levert al `pattern_input` met per-respondent `org_scores` (per item) en `sdt_scores`, plus per-respondent intentiescores. Toe te voegen: een aggregatiefunctie `score_distribution(values) -> {zones: (n_laag, n_midden, n_hoog), dots: [scores], polarized: bool}` (pure functie, unit-testbaar) en per factor de individuele factorscores per respondent (gemiddelde van de items van die factor per respondent — al beschikbaar in `pattern_input`).
