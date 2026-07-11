@@ -52,6 +52,25 @@ def _x(v: float, width: int) -> float:
     return round((v - 1.0) / 9.0 * width, 1)
 
 
+def _jitter_offset(i: int, denom: int) -> int:
+    """Deterministische, goed gespreide verticale jitter (bit-reversal / van der Corput).
+
+    Simpele modulo-cycli (bv. (i*7) % 14) botsen op een klein aantal y-waarden
+    zodra denom en de stap een gemeenschappelijke deler hebben (gcd(7,14)=7 ->
+    slechts 2 waarden). Bit-reversal spreidt elke opeenvolgende i zo ver
+    mogelijk uit over [0, denom), onafhankelijk van de factoren van denom, en
+    blijft volledig deterministisch (geen random, geen seed).
+    """
+    denom = max(1, denom)
+    bits = 16
+    reversed_bits = 0
+    for b in range(bits):
+        if i & (1 << b):
+            reversed_bits |= 1 << (bits - 1 - b)
+    frac = reversed_bits / (1 << bits)
+    return int(frac * denom) % denom
+
+
 def distribution_svg(values: list[float], width: int = 440, height: int = 34) -> str:
     """Stippen-op-zone-as: zone-tinten, stippen, gemiddelde-marker."""
     dist = score_distribution(values)
@@ -70,8 +89,9 @@ def distribution_svg(values: list[float], width: int = 440, height: int = 34) ->
         f'<rect x="{x_high}" y="{band_y + band_h}" width="{width - x_high}" height="2" fill="{_C_HIGH}"/>',
     ]
     # stippen: deterministische verticale jitter op index (geen random)
+    jitter_range = max(1, band_h - 8)
     for i, v in enumerate(dist["dots"]):
-        cy = band_y + 5 + (i * 7) % (band_h - 8)
+        cy = band_y + 5 + _jitter_offset(i, jitter_range)
         parts.append(f'<circle cx="{_x(v, width)}" cy="{cy}" r="3.5" '
                      f'fill="{_zone_color(v)}" fill-opacity="0.9"/>')
     # gemiddelde-marker: navy lijn + mono-label

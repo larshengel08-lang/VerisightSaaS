@@ -1,5 +1,5 @@
 """Spreidingsaggregatie (spec: docs/superpowers/specs/2026-07-11-rapport-spreiding-design.md)."""
-from backend.report_distribution import score_distribution, distribution_block
+from backend.report_distribution import score_distribution, distribution_block, distribution_svg
 
 
 def test_zones_volgen_factor_label_drempels():
@@ -62,3 +62,9 @@ def test_jitter_deterministisch():
     # Zelfde input -> byte-identieke output (geen random; WeasyPrint-stabiel).
     vals = [2.0, 3.0, 5.5, 7.0, 8.0] * 2
     assert distribution_block(vals) == distribution_block(vals)
+
+
+def test_distribution_svg_kleine_hoogte_geen_crash():
+    # height=15 -> band_h - 8 <= 0; moet niet crashen (zero-guard).
+    svg = distribution_svg([5.0] * 10, height=15)
+    assert "<svg" in svg
