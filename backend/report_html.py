@@ -850,6 +850,57 @@ def _segment_status_block(n: int, has_segment_data: bool = False,
 </div>"""
 
 
+def _segment_block(segment_rows: list[dict], scan_type: str) -> str:
+    """Segmentanalyse per afdeling: tabel + spreidingsstrip (spec 2026-07-11).
+
+    Strip-gate n>=10 (MIN_DISTRIBUTION_N): rapportbreed EEN regel — bij 5-9
+    responses wel de rij (score/band), geen stippen. "Overige afdelingen"
+    krijgt nooit een strip (samengestelde restgroep).
+    """
+    from backend.report_distribution import MIN_DISTRIBUTION_N, distribution_svg
+
+    if not segment_rows:
+        return _segment_status_block(0, has_segment_data=False)
+
+    rows_html = ""
+    for row in segment_rows:
+        dept, n_, avg, scores = row["department"], row["n"], row["avg"], row["scores"]
+        col = _factor_color(avg)
+        is_rest = dept == "Overige afdelingen"
+        if is_rest:
+            strip = '<span class="rm-mono" style="font-family:\'JetBrains Mono\', monospace;font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:#94A3B8;">spreiding niet getoond &mdash; samengestelde restgroep</span>'
+        elif len(scores) >= MIN_DISTRIBUTION_N:
+            strip = distribution_svg(scores, width=240, height=22)
+        else:
+            strip = '<span style="font-family:\'JetBrains Mono\', monospace;font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:#94A3B8;">spreiding vanaf 10 responses</span>'
+        name_html = _h(dept) if is_rest else f"<strong>{_h(dept)}</strong>"
+        rows_html += (
+            f'<tr><td class="iq" style="width:24%;">{name_html}</td>'
+            f'<td style="width:6%;">{n_}</td>'
+            f'<td class="is" style="width:12%;text-align:left;color:{col};">{avg:.1f}</td>'
+            f'<td style="width:16%;color:{col};font-size:9.5px;">{_h(_factor_label(avg))}</td>'
+            f'<td>{strip}</td></tr>'
+        )
+
+    lowest = segment_rows[0]
+    low_note = ""
+    if lowest["department"] != "Overige afdelingen":
+        low_note = (f'<p style="font-size:10.5px;color:#374151;margin-top:10px;margin-bottom:0;">'
+                    f'<strong>{_h(lowest["department"])}</strong> scoort het laagst '
+                    f'({lowest["avg"]:.1f}/10) &mdash; logisch startpunt voor de bespreking.</p>')
+
+    return f"""<div class="pb sec">
+  <span class="slabel">Segmentanalyse &mdash; per afdeling</span>
+  <div class="card">
+    <table class="item-tbl">{rows_html}</table>
+    {low_note}
+  </div>
+  <p class="trustline">Alleen afdelingen met minimaal 5 responses worden individueel getoond;
+  kleinere groepen vallen onder &ldquo;Overige afdelingen&rdquo;. Spreiding vanaf 10 responses
+  per afdeling. Geen causale ranking &mdash; verschillen zijn gesprekstof, geen oordeel.</p>
+</div>"""
+
+
 def _themed_quotes(texts: list[str], scan_type: str = "exit",
                    top_fkeys: list[str] | None = None, n_total: int = 0) -> str:
     """Open toelichtingen: alles tonen t/m MAX_QUOTES, geen thema-indeling.
@@ -1479,7 +1530,7 @@ def render_exit_report_html(data: dict) -> str:
         pct=int(data["completion_pct"]),
         period=data["campaign_name"],
         population="Alle medewerkers",
-        segment_available=False,
+        segment_available=bool(data.get("segment_rows")),
         segment_reason="te weinig responses per groep voor herleidbaarheid",
         enps_available=data["enps_available"],
     )
@@ -1662,7 +1713,7 @@ def render_exit_report_html(data: dict) -> str:
 </div>"""
 
     # ── Segmentstatus ─────────────────────────────────────────────────────────
-    s += _segment_status_block(n, has_segment_data=False, reason="n-grens")
+    s += _segment_block(data.get("segment_rows") or [], "exit")
 
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]
@@ -1833,7 +1884,7 @@ def render_retention_report_html(data: dict) -> str:
         pct=int(data["completion_pct"]),
         period=data["campaign_name"],
         population="Actieve medewerkers",
-        segment_available=False,
+        segment_available=bool(data.get("segment_rows")),
         segment_reason="te weinig responses per groep voor herleidbaarheid",
         enps_available=data["enps_available"],
     )
@@ -2012,7 +2063,7 @@ def render_retention_report_html(data: dict) -> str:
 </div>"""
 
     # ── Segmentstatus ─────────────────────────────────────────────────────────
-    s += _segment_status_block(n, has_segment_data=False, reason="n-grens")
+    s += _segment_block(data.get("segment_rows") or [], ST)
 
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]
@@ -2233,7 +2284,7 @@ def render_onboarding_report_html(data: dict) -> str:
         pct=int(data["completion_pct"]),
         period=data["campaign_name"],
         population="Nieuwe medewerkers — eerste werkperiode",
-        segment_available=False,
+        segment_available=bool(data.get("segment_rows")),
         segment_reason="te weinig responses per groep voor herleidbaarheid",
         enps_available=data["enps_available"],
     )
@@ -2387,7 +2438,7 @@ def render_onboarding_report_html(data: dict) -> str:
 </div>"""
 
     # ── Segmentstatus ─────────────────────────────────────────────────────────
-    s += _segment_status_block(n, has_segment_data=False, reason="n-grens")
+    s += _segment_block(data.get("segment_rows") or [], ST)
 
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]

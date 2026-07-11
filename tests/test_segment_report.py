@@ -1,5 +1,6 @@
 """Segmentblok rapport-v6 (spec: 2026-07-11-segmentanalyse-afdelingen-design.md)."""
-from backend.report_html import _department_segment_rows
+from backend.report_html import _department_segment_rows, render_retention_report_html
+from tests.test_report_distribution import _min_retention_data
 
 
 def _resp(dept, score):
@@ -60,3 +61,40 @@ def test_respondenten_zonder_department_tellen_niet_mee():
     rows = _department_segment_rows(
         [_resp("Sales", 6.0)] * 5 + [_resp("Ops", 4.0)] * 5 + [_resp(None, 9.0)] * 4)
     assert all(r["n"] in (5,) for r in rows)
+
+
+def _with_segments(rows):
+    d = _min_retention_data()
+    d["segment_rows"] = rows
+    return d
+
+
+def test_segmentblok_gerenderd_bij_data():
+    html = render_retention_report_html(_with_segments([
+        {"department": "Operations", "n": 14, "avg": 4.1, "scores": [4.0] * 14},
+        {"department": "Sales", "n": 9, "avg": 6.8, "scores": [6.8] * 9},
+    ]))
+    assert "Operations" in html and "Sales" in html
+    assert "minimaal 5 responses" in html            # voetregel
+    assert "causale ranking" in html.lower() or "causale" in html
+
+
+def test_strip_alleen_vanaf_n10():
+    html = render_retention_report_html(_with_segments([
+        {"department": "Operations", "n": 14, "avg": 4.1, "scores": [4.0] * 14},
+        {"department": "Sales", "n": 9, "avg": 6.8, "scores": [6.8] * 9},
+    ]))
+    assert "spreiding vanaf 10 responses" in html    # Sales n=9: geen strip
+
+
+def test_overige_zonder_strip():
+    html = render_retention_report_html(_with_segments([
+        {"department": "Operations", "n": 14, "avg": 4.1, "scores": [4.0] * 14},
+        {"department": "Overige afdelingen", "n": 11, "avg": 5.6, "scores": [5.6] * 11},
+    ]))
+    assert "samengestelde restgroep" in html
+
+
+def test_degraded_state_blijft_zonder_segmentdata():
+    html = render_retention_report_html(_with_segments([]))
+    assert "Segmentverschillen zijn niet getoond" in html
