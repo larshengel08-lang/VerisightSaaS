@@ -7,18 +7,18 @@
   <title>{{ product_name }} — Loep</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Inter+Tight:wght@700;800&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --brand: #2563EB;
-      --text: #111827;
-      --muted: #6B7280;
-      --border: #E5E7EB;
-      --bg: #F9FAFB;
+      --navy: #0D1B2A;
+      --amber: #E8A020;
+      --amber-soft: rgba(232,160,32,0.12);
+      --text: #0D1B2A;
+      --muted: #4A6070;
+      --border: rgba(13,27,42,0.15);
+      --bg: #F4F1EA;
       --white: #FFFFFF;
-      --info-bg: #DBEAFE;
-      --info-text: #1D4ED8;
     }
     body {
       font-family: 'Inter', sans-serif;
@@ -33,26 +33,35 @@
     .card {
       background: var(--white);
       border: 1px solid var(--border);
-      border-radius: 16px;
       padding: 48px 40px;
       max-width: 560px;
       width: 100%;
       text-align: center;
-      box-shadow: 0 8px 32px rgba(0,0,0,.08);
+      box-shadow: 0 8px 32px rgba(13,27,42,.08);
     }
     .logo {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--brand);
-      letter-spacing: -.5px;
+      font-family: 'Inter Tight', 'Inter', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--navy);
+      letter-spacing: -.04em;
+      margin-bottom: 6px;
+    }
+    .logo .dot { color: var(--amber); }
+    .payoff {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--muted);
       margin-bottom: 28px;
     }
     .icon-wrap {
       width: 78px;
       height: 78px;
       border-radius: 50%;
-      background: var(--info-bg);
-      color: var(--info-text);
+      background: var(--amber-soft);
+      color: var(--navy);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -60,10 +69,12 @@
       font-size: 34px;
     }
     h1 {
+      font-family: 'Inter Tight', 'Inter', sans-serif;
       font-size: 24px;
       font-weight: 700;
       margin-bottom: 12px;
       line-height: 1.3;
+      letter-spacing: -.02em;
     }
     .subtitle {
       color: var(--muted);
@@ -72,32 +83,77 @@
       margin-bottom: 28px;
     }
     .privacy-block {
-      background: var(--info-bg);
-      border-radius: 10px;
+      background: var(--amber-soft);
       padding: 16px 18px;
       text-align: left;
       margin-bottom: 28px;
     }
     .privacy-block p {
-      color: var(--info-text);
+      color: var(--navy);
       font-size: 13px;
       line-height: 1.6;
     }
+    .afd-chooser {
+      border: 1px solid var(--border);
+      padding: 18px 18px 20px;
+      text-align: left;
+      margin-bottom: 24px;
+    }
+    .afd-chooser legend {
+      font-family: 'Inter Tight', 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--navy);
+      padding: 0 4px;
+    }
+    .afd-note {
+      color: var(--muted);
+      font-size: 12.5px;
+      line-height: 1.6;
+      margin: 6px 0 16px;
+    }
+    .afd-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: background .15s, border-color .15s;
+    }
+    .afd-option:last-child { margin-bottom: 0; }
+    .afd-option input[type="radio"] {
+      accent-color: var(--navy);
+      width: 16px;
+      height: 16px;
+    }
+    .afd-option input[type="radio"]:focus-visible {
+      outline: 2px solid var(--navy);
+      outline-offset: 2px;
+    }
+    .afd-option:has(input:checked) {
+      background: var(--amber-soft);
+      border-color: var(--amber);
+    }
+    .afd-option span {
+      font-size: 14px;
+      color: var(--text);
+    }
     .start-btn {
       display: inline-block;
-      background: var(--brand);
+      background: var(--navy);
       color: #fff;
       font-size: 16px;
       font-weight: 600;
       padding: 14px 40px;
-      border-radius: 10px;
       border: none;
       cursor: pointer;
       text-decoration: none;
-      transition: background .15s;
+      transition: opacity .15s;
       width: 100%;
     }
-    .start-btn:hover { background: #1d4ed8; }
+    .start-btn:hover { opacity: .9; }
     .start-btn:disabled {
       opacity: .6;
       cursor: not-allowed;
@@ -114,7 +170,8 @@
 </head>
 <body>
   <div class="card">
-    <div class="logo">Loep</div>
+    <div class="logo">Loep <span class="dot">&bull;</span></div>
+    <div class="payoff">Scherper zien wat telt</div>
 
     <div class="icon-wrap">
       <!-- shield icon -->
@@ -137,14 +194,31 @@
     </div>
 
     <form method="POST" action="/survey/open/{{ public_survey_token }}/start" id="start-form">
+      {% if not show_chooser %}
+      <input type="hidden" name="afd" value="{{ afd_slug }}" id="afd-field" />
+      {% endif %}
       <input type="hidden" name="dedup_key" id="dedup-key" value="" />
+
+      {% if show_chooser %}
+      <fieldset class="afd-chooser">
+        <legend>Bij welke afdeling werk je?</legend>
+        <p class="afd-note">Alleen gebruikt om resultaten op afdelingsniveau te groeperen (minimaal 5 personen per groep). Nooit individueel zichtbaar.</p>
+        {% for dep in segment_departments %}
+        <label class="afd-option">
+          <input type="radio" name="afd" value="{{ dep.slug }}" required />
+          <span>{{ dep.label }}</span>
+        </label>
+        {% endfor %}
+      </fieldset>
+      {% endif %}
+
       <button type="submit" class="start-btn" id="start-btn">
         Survey starten
       </button>
     </form>
 
     <div id="already-done" class="privacy-block" style="display:none;">
-      <p><strong>U heeft deze vragenlijst al ingevuld.</strong> Bedankt — een tweede invulling is niet nodig.</p>
+      <p><strong>Je hebt deze vragenlijst al ingevuld.</strong> Bedankt — een tweede invulling is niet nodig.</p>
     </div>
 
     <p class="duration-hint">Eenmaal gestart kun je de link 90 dagen opnieuw openen.</p>

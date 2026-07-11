@@ -1103,12 +1103,22 @@ async def open_survey_intro(
     scan = get_scan_definition(campaign.scan_type)
     product_name = scan.get("product_name", "Survey") if scan else "Survey"
 
+    from backend.segments import has_segments, resolve_department
+
+    segment_departments = campaign.segment_departments or None
+    afd_slug = request.query_params.get("afd")
+    resolved_label = resolve_department(segment_departments, afd_slug)
+    show_chooser = has_segments(segment_departments) and resolved_label is None
+
     return templates.TemplateResponse(
         request,
         "survey-intro.html",
         context={
             "product_name": product_name,
             "public_survey_token": public_survey_token,
+            "afd_slug": afd_slug if resolved_label else "",
+            "show_chooser": show_chooser,
+            "segment_departments": segment_departments or [],
         },
     )
 
@@ -1157,6 +1167,24 @@ async def open_survey_start(
     from backend.self_send import hash_dedup_key
 
     form = await request.form()
+
+    from backend.segments import has_segments, resolve_department
+
+    department_label = None
+    if has_segments(campaign.segment_departments):
+        afd_slug = (form.get("afd") or "").strip()
+        department_label = resolve_department(campaign.segment_departments, afd_slug)
+        if department_label is None:
+            # Fail Loud: verplicht kiezen in segment-modus; onbekende slug is nooit een nieuw segment.
+            return _render_survey_status(
+                request,
+                status_code=422,
+                title="Kies je afdeling",
+                heading="Kies eerst je afdeling",
+                message="Open de link opnieuw en kies je afdeling om te starten.",
+                tone="info",
+            )
+
     raw_dedup_key = (form.get("dedup_key") or "").strip()
     dedup_hash = hash_dedup_key(raw_dedup_key)
 
@@ -1184,7 +1212,7 @@ async def open_survey_start(
     respondent = Respondent(
         campaign_id=campaign.id,
         email=None,
-        department=None,
+        department=department_label,
         role_level=None,
         exit_month=None,
         annual_salary_eur=None,  # AVG — nooit opslaan in open flow
