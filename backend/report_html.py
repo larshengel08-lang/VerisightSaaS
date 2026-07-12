@@ -850,12 +850,15 @@ def _segment_status_block(n: int, has_segment_data: bool = False,
 </div>"""
 
 
-def _segment_block(segment_rows: list[dict], scan_type: str) -> str:
+def _segment_block(segment_rows: list[dict]) -> str:
     """Segmentanalyse per afdeling: tabel + spreidingsstrip (spec 2026-07-11).
 
     Strip-gate n>=10 (MIN_DISTRIBUTION_N): rapportbreed EEN regel — bij 5-9
     responses wel de rij (score/band), geen stippen. "Overige afdelingen"
     krijgt nooit een strip (samengestelde restgroep).
+
+    Geen scan_type-parameter: de tabel is scanbreed identiek, geen
+    product-specifieke koppen/labels nodig in v1.
     """
     from backend.report_distribution import MIN_DISTRIBUTION_N, distribution_svg
 
@@ -868,7 +871,7 @@ def _segment_block(segment_rows: list[dict], scan_type: str) -> str:
         col = _factor_color(avg)
         is_rest = row.get("is_pooled", False)
         if is_rest:
-            strip = '<span class="rm-mono" style="font-family:\'JetBrains Mono\', monospace;font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:#94A3B8;">spreiding niet getoond &mdash; samengestelde restgroep</span>'
+            strip = '<span style="font-family:\'JetBrains Mono\', monospace;font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:#94A3B8;">spreiding niet getoond &mdash; samengestelde restgroep</span>'
         elif len(scores) >= MIN_DISTRIBUTION_N:
             strip = distribution_svg(scores, width=240, height=22)
         else:
@@ -1714,7 +1717,7 @@ def render_exit_report_html(data: dict) -> str:
 </div>"""
 
     # ── Segmentstatus ─────────────────────────────────────────────────────────
-    s += _segment_block(data.get("segment_rows") or [], "exit")
+    s += _segment_block(data.get("segment_rows") or [])
 
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]
@@ -2064,7 +2067,7 @@ def render_retention_report_html(data: dict) -> str:
 </div>"""
 
     # ── Segmentstatus ─────────────────────────────────────────────────────────
-    s += _segment_block(data.get("segment_rows") or [], ST)
+    s += _segment_block(data.get("segment_rows") or [])
 
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]
@@ -2439,7 +2442,7 @@ def render_onboarding_report_html(data: dict) -> str:
 </div>"""
 
     # ── Segmentstatus ─────────────────────────────────────────────────────────
-    s += _segment_block(data.get("segment_rows") or [], ST)
+    s += _segment_block(data.get("segment_rows") or [])
 
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]

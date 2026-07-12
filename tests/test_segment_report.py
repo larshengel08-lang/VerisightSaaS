@@ -106,7 +106,7 @@ def test_afdeling_met_naam_overige_wordt_niet_verward_met_pool():
         {"department": "Overige afdelingen", "n": 10, "avg": 3.9, "scores": [3.9] * 10,
          "is_pooled": False},
     ]
-    html = _segment_block(rows, "retention")
+    html = _segment_block(rows)
     # De echte afdeling "Overige afdelingen" (n=10, is_pooled=False) moet WEL
     # een spreidingsstrip krijgen (SVG), niet de "samengestelde restgroep"-tekst.
     assert "samengestelde restgroep" not in html
