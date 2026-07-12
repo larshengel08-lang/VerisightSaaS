@@ -1699,11 +1699,8 @@ def render_exit_report_html(data: dict) -> str:
   </tr></table>
   <div class="card"><p style="margin-bottom:0;">Aanvullende context naast het overzichtsprofiel. Een positieve score betekent meer promotors dan criticasters.</p></div>
 </div>"""
-    else:
-        s += """<div class="pb sec">
-  <span class="slabel">Werkgeversaanbeveling</span>
-  <div class="card"><p style="margin-bottom:0;color:#64748B;">Niet gemeten in deze wave.</p></div>
-</div>"""
+    # Niet gemeten: geen eigen (vrijwel lege) pagina — de Datastatus op de
+    # responsbasis-pagina en de appendix-notitie melden dit al (fail-loud blijft).
 
     # ── Segmentstatus ─────────────────────────────────────────────────────────
     s += _segment_block(data.get("segment_rows") or [])
@@ -2039,11 +2036,8 @@ def render_retention_report_html(data: dict) -> str:
   </tr></table>
   <div class="card"><p style="margin-bottom:0;">Aanvullende context naast het overzichtsprofiel. Een positieve score betekent meer promotors dan criticasters.</p></div>
 </div>"""
-    else:
-        s += """<div class="pb sec">
-  <span class="slabel">Werkgeversaanbeveling</span>
-  <div class="card"><p style="margin-bottom:0;color:#64748B;">Niet gemeten in deze wave.</p></div>
-</div>"""
+    # Niet gemeten: geen eigen (vrijwel lege) pagina — de Datastatus op de
+    # responsbasis-pagina en de appendix-notitie melden dit al (fail-loud blijft).
 
     # ── Segmentstatus ─────────────────────────────────────────────────────────
     s += _segment_block(data.get("segment_rows") or [])

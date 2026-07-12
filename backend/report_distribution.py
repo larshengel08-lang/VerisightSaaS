@@ -48,8 +48,13 @@ def _zone_color(v: float) -> str:
     return _C_HIGH
 
 
+# Inset zodat stippen (r=3.5) en de gemiddelde-marker op de schaaluitersten
+# (score 1.0 / 10.0) niet half buiten de SVG-viewport vallen.
+_X_PAD = 5
+
+
 def _x(v: float, width: int) -> float:
-    return round((v - 1.0) / 9.0 * width, 1)
+    return round(_X_PAD + (v - 1.0) / 9.0 * (width - 2 * _X_PAD), 1)
 
 
 def _jitter_offset(i: int, denom: int) -> int:
