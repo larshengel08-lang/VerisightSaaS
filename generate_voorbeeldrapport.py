@@ -27,6 +27,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from backend.database import Base, DATABASE_URL, SessionLocal, init_db
 from backend.models import Campaign, Organization, Respondent, SurveyResponse
 from backend.products.shared.deepening import compute_deepening_offers
+from backend.segments import _slugify as slugify_department
 from backend.report_html import generate_campaign_report_html as generate_campaign_report_html
 from backend.report import generate_campaign_report as _generate_campaign_report_legacy
 from backend.scoring import (
@@ -966,11 +967,14 @@ def main() -> None:
     print(f"Uitgenodigden: {invited}  |  Ingevuld: {responses}  |  Respons: {responses / invited * 100:.1f}%")
     print("")
 
+    department_invited_counts: dict[str, int] = {}
+
     for _ in range(non_responders):
+        dept = random.choice(DEPARTMENTS)
         respondent = Respondent(
             id=str(uuid.uuid4()),
             campaign_id=campaign.id,
-            department=random.choice(DEPARTMENTS),
+            department=dept,
             role_level=random.choice(ROLE_LEVELS),
             annual_salary_eur=float(random.choice(SALARIES)),
             sent_at=datetime.now(timezone.utc),
@@ -979,6 +983,7 @@ def main() -> None:
             completed_at=None,
         )
         db.add(respondent)
+        department_invited_counts[dept] = department_invited_counts.get(dept, 0) + 1
 
     print(f"  {non_responders} non-responders aangemaakt")
     print(f"  Genereer {responses} ingevulde responses...")
@@ -1016,6 +1021,7 @@ def main() -> None:
         )
         db.add(respondent)
         db.flush()
+        department_invited_counts[department] = department_invited_counts.get(department, 0) + 1
 
         if campaign.scan_type == "retention":
             response_payload = _build_retention_response(profile)
@@ -1076,6 +1082,15 @@ def main() -> None:
             deepening_responses=response_payload.get("deepening_responses"),
         )
         db.add(response)
+
+    if campaign.scan_type != "culture_assessment":
+        # Noemer per afdeling voor de responskolom in het segmentblok (spec
+        # 2026-07-12 §6) -- gelijk aan het daadwerkelijk geseede aantal
+        # respondenten (completed + non-responders) per afdeling.
+        campaign.segment_departments = [
+            {"label": label, "slug": slugify_department(label), "invited_count": count}
+            for label, count in sorted(department_invited_counts.items())
+        ]
 
     db.commit()
     print("")
