@@ -891,9 +891,13 @@ def _segment_block(segment_rows: list[dict]) -> str:
     lowest = segment_rows[0]
     low_note = ""
     if not lowest.get("is_pooled", False):
-        low_note = (f'<p style="font-size:10.5px;color:#374151;margin-top:10px;margin-bottom:0;">'
-                    f'<strong>{_h(lowest["department"])}</strong> scoort het laagst '
-                    f'({lowest["avg"]:.1f}/10) &mdash; logisch startpunt voor de bespreking.</p>')
+        low_note = (
+            f'<div style="background:#0D1B2A;border-left:3px solid #E8A020;padding:14px 16px;margin-top:12px;">'
+            f'<div style="font-family:\'JetBrains Mono\', monospace;font-size:9px;letter-spacing:0.14em;'
+            f'text-transform:uppercase;color:#E8A020;margin-bottom:6px;">Startpunt voor de bespreking</div>'
+            f'<p style="margin:0;font-size:11px;line-height:1.55;color:#F4F1EA;">'
+            f'<strong>{_h(lowest["department"])}</strong> scoort het laagst '
+            f'({lowest["avg"]:.1f}/10). Verschillen zijn gesprekstof, geen oordeel.</p></div>')
 
     return f"""<div class="pb sec">
   <span class="slabel">Segmentanalyse &mdash; per afdeling</span>

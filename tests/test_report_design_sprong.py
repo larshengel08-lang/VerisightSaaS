@@ -55,3 +55,20 @@ def test_agenda_waarom_regels_alleen_bij_dataclaim():
     html2 = _eerste_managementspoor(
         primary_theme="X", second_point="Y", mgmt_q="Q?", review_when="R.")
     assert 'class="agenda-why"' not in html2
+
+
+def test_segmentconclusie_navy_blok():
+    from backend.report_html import _segment_block
+    rows = [
+        {"department": "Marketing", "n": 5, "avg": 4.4, "scores": [4.4] * 5, "is_pooled": False},
+        {"department": "Sales", "n": 6, "avg": 6.8, "scores": [6.8] * 6, "is_pooled": False},
+    ]
+    html = _segment_block(rows)
+    assert "Startpunt voor de bespreking" in html
+    assert "#0D1B2A" in html.split("Startpunt voor de bespreking")[0][-400:]
+    # Pooled laagste rij: geen conclusieblok (bestaande voorwaarde blijft)
+    rows_pooled = [
+        {"department": "Overige afdelingen", "n": 6, "avg": 4.0, "scores": [4.0] * 6, "is_pooled": True},
+        {"department": "Sales", "n": 6, "avg": 6.8, "scores": [6.8] * 6, "is_pooled": False},
+    ]
+    assert "Startpunt voor de bespreking" not in _segment_block(rows_pooled)
