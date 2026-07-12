@@ -165,6 +165,18 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .step-fill { border-bottom: 1px dashed #94A3B8; height: 15px; margin-bottom: 4px; }
 .step-fill-hint { font-size: 7.5px; font-style: italic; color: #94A3B8; line-height: 1.4; }
 
+/* ── Navy agenda-anker (designsprong §2a): het hele agendablok als donker vlak ── */
+.agenda-dark { background: #0D1B2A; padding: 18px 20px; margin-top: 4px; }
+.agenda-dark .step { background: transparent; border: 1px solid #2A3D52; }
+.agenda-dark .step-no { color: #E8A020; }
+.agenda-dark .step-body { color: #E7E2D6; }
+.agenda-dark .step-fill { border-bottom: 1px dashed #5B6B7C; }
+.agenda-dark .step-fill-hint { color: #8CA0B3; }
+.agenda-why { display: block; font-family: 'JetBrains Mono', monospace; font-size: 8px;
+  letter-spacing: 0.04em; color: #9FB0C0; margin-top: 7px; line-height: 1.5; }
+.agenda-opener { border-left: 3px solid #E8A020; border-top: 1px solid #2A3D52;
+  padding: 14px 0 0 16px; margin-top: 16px; }
+
 /* ── Trust / methodiek ── */
 .tg { display: table; width: 100%; border-collapse: separate; border-spacing: 10px 0; }
 .tc { display: table-cell; background: #fff; border: 1px solid """ + HAIRLINE + r"""; padding: 14px 15px; vertical-align: top; width: 33%; }

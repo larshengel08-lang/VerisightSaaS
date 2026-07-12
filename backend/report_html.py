@@ -521,27 +521,35 @@ def _step_cards(nsp: dict) -> str:
 
 
 def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: str,
-                            review_when: str) -> str:
+                            review_when: str,
+                            primary_why: str | None = None,
+                            second_why: str | None = None) -> str:
     """Gespreksagenda voor eerste managementbespreking — geen actieplan, agenda.
 
-    Eigenaarschap wordt bewust niet door Loep gesuggereerd (geen aanname wie dit
-    oppakt): het "Eigenaarschap"-vak is een invulbare lege regel voor tijdens de
-    bespreking, geen algoritmisch geschatte rol.
+    Navy anker (designsprong §2a): kaarten + gespreksopener vormen één donker
+    vlak. primary_why/second_why (designsprong §3) zijn feitelijke
+    onderbouwingsregels uit bestaande berekeningen — geen nieuwe duiding.
+    Eigenaarschap blijft bewust een invulbare lege regel.
     """
+    def _why(txt: str | None) -> str:
+        return f'<span class="agenda-why">{_h(txt)}</span>' if txt else ""
+
     return f"""<div class="pb sec">
   <span class="slabel">Eerste managementspoor</span>
   <h2 style="margin-bottom:6px;">Gespreksagenda</h2>
   <p style="font-size:10.5px;color:#64748B;max-width:60ch;margin-bottom:16px;">
     Geen kant-en-klaar plan &mdash; een agenda voor de begeleide managementbespreking.</p>
+  <div class="agenda-dark">
   <table class="steps"><tr>
-    <td class="step"><div class="step-no">Primair thema</div><div class="step-body">{_h(primary_theme)}</div></td>
-    <td class="step"><div class="step-no">Tweede aandachtspunt</div><div class="step-body">{_h(second_point)}</div></td>
+    <td class="step"><div class="step-no">Primair thema</div><div class="step-body">{_h(primary_theme)}</div>{_why(primary_why)}</td>
+    <td class="step"><div class="step-no">Tweede aandachtspunt</div><div class="step-body">{_h(second_point)}</div>{_why(second_why)}</td>
     <td class="step"><div class="step-no">Eigenaarschap</div><div class="step-fill"></div><div class="step-fill-hint">In te vullen tijdens de bespreking</div></td>
     <td class="step"><div class="step-no">Opnieuw bespreken</div><div class="step-body">{_h(review_when)}</div></td>
   </tr></table>
-  <div style="background:#0D1B2A;border-left:3px solid #E8A020;padding:18px 20px;margin-top:14px;">
+  <div class="agenda-opener">
     <div style="font-family:'JetBrains Mono', monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#E8A020;margin-bottom:7px;">Gespreksopener</div>
     <p style="margin-bottom:0;font-size:12.5px;line-height:1.6;color:#F4F1EA;">{_h(mgmt_q)}</p>
+  </div>
   </div>
   <p class="trustline">Nog niet besluiten: of een verdieping of kortere vervolgmeting nodig is &mdash; dat volgt uit het gesprek.</p>
 </div>"""
@@ -1580,11 +1588,28 @@ def render_exit_report_html(data: dict) -> str:
         f"Bespreek eerst ‘{_ex_primary_low[1]}’ binnen {FACTOR_LABELS_NL.get(_ex_primary_fk, _ex_primary_fk).lower()} "
         f"({_ex_primary_low[2]:.1f}/10) — de scherpste losse waarneming in het cijferbeeld."
     ) if _ex_primary_low else (top_flabels[0] if top_flabels else "het leidende thema")
+
+    _agg_p = deep_agg.get(_ex_primary_fk) or {}
+    _answered_p = _agg_p.get("answered", 0)
+    _top_p = max((_agg_p.get("primary_counts") or {}).items(),
+                 key=lambda kv: (kv[1], kv[0]), default=None)
+    _primary_why = None
+    if _ex_primary_low:
+        _primary_why = f"Laagste item in het cijferbeeld ({_ex_primary_low[2]:.1f}/10)."
+        if _top_p and _answered_p >= 5:
+            _primary_why = (f"Laagste item in het cijferbeeld ({_ex_primary_low[2]:.1f}/10); "
+                            f"{_top_p[1]} van de {_answered_p} respondenten met verdieping "
+                            f"kozen de meest gekozen toelichting.")
+    _second_why = ("Tweede laagste factorscore in het overzichtsprofiel."
+                   if len(sorted_f) > 1 else None)
+
     s += _eerste_managementspoor(
         primary_theme=_ex_primary_theme,
         second_point=f"{FACTOR_LABELS_NL.get(sorted_f[1][0], sorted_f[1][0])} ({_score_str(sorted_f[1][1])})" if len(sorted_f) > 1 else "",
         mgmt_q=_enriched_q or (_mgmt_q(priority_fkeys[0], "exit") if priority_fkeys else (nsp.get("first_decision") or "")),
         review_when="Plan binnen 45-90 dagen een vervolgmoment: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.",
+        primary_why=_primary_why,
+        second_why=_second_why,
     )
 
     # ── Factor detail (itemniveau prioritaire factoren) ──────────────────────
@@ -1924,6 +1949,21 @@ def render_retention_report_html(data: dict) -> str:
         f"Bespreek eerst ‘{_primary_low_item[1]}’ binnen {_fl(_primary_fk, ST).lower()} "
         f"({_primary_low_item[2]:.1f}/10) — de scherpste losse waarneming in het cijferbeeld."
     ) if _primary_low_item else (low_lbl or "het leidende behoudsthema")
+
+    _agg_p = deep_agg.get(_primary_fk) or {}
+    _answered_p = _agg_p.get("answered", 0)
+    _top_p = max((_agg_p.get("primary_counts") or {}).items(),
+                 key=lambda kv: (kv[1], kv[0]), default=None)
+    _primary_why = None
+    if _primary_low_item:
+        _primary_why = f"Laagste item in het cijferbeeld ({_primary_low_item[2]:.1f}/10)."
+        if _top_p and _answered_p >= 5:
+            _primary_why = (f"Laagste item in het cijferbeeld ({_primary_low_item[2]:.1f}/10); "
+                            f"{_top_p[1]} van de {_answered_p} respondenten met verdieping "
+                            f"kozen de meest gekozen toelichting.")
+    _second_why = ("Tweede laagste factorscore in het overzichtsprofiel."
+                   if len(sorted_f) > 1 else None)
+
     s += _eerste_managementspoor(
         primary_theme=_primary_theme_grounded,
         second_point=f"{_fl(sorted_f[1][0], ST)} ({_score_str(sorted_f[1][1])})" if len(sorted_f) > 1 else "",
@@ -1932,6 +1972,8 @@ def render_retention_report_html(data: dict) -> str:
         # welke eerste interventie loopt"-formule, die een vervolg claimde dat er
         # voor de bespreking nog niet is.
         review_when="Plan binnen 45-90 dagen een vervolgmoment: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.",
+        primary_why=_primary_why,
+        second_why=_second_why,
     )
 
     # ── Factor detail (itemniveau prioritaire factoren) ──────────────────────
@@ -2304,11 +2346,28 @@ def render_onboarding_report_html(data: dict) -> str:
         f"Bespreek eerst ‘{_ob_primary_low[1]}’ binnen {_fl(_ob_primary_fk, ST).lower()} "
         f"({_ob_primary_low[2]:.1f}/10) — de scherpste losse waarneming in het cijferbeeld."
     ) if _ob_primary_low else (low_lbl if low_lbl else "het leidende onboardingthema")
+
+    _agg_p = (data.get("deepening_agg") or {}).get(_ob_primary_fk) or {}
+    _answered_p = _agg_p.get("answered", 0)
+    _top_p = max((_agg_p.get("primary_counts") or {}).items(),
+                 key=lambda kv: (kv[1], kv[0]), default=None)
+    _primary_why = None
+    if _ob_primary_low:
+        _primary_why = f"Laagste item in het cijferbeeld ({_ob_primary_low[2]:.1f}/10)."
+        if _top_p and _answered_p >= 5:
+            _primary_why = (f"Laagste item in het cijferbeeld ({_ob_primary_low[2]:.1f}/10); "
+                            f"{_top_p[1]} van de {_answered_p} respondenten met verdieping "
+                            f"kozen de meest gekozen toelichting.")
+    _second_why = ("Tweede laagste factorscore in het overzichtsprofiel."
+                   if len(sorted_f) > 1 else None)
+
     s += _eerste_managementspoor(
         primary_theme=_ob_primary_theme,
         second_point=f"{_fl(sorted_f[1][0], ST)} ({_score_str(sorted_f[1][1])})" if len(sorted_f) > 1 else "",
         mgmt_q=_mgmt_q(_ob_priority_fkeys[0], ST) if _ob_priority_fkeys else (nsp.get("first_decision") or ""),
         review_when="Plan een vervolgmoment rond het volgende checkpoint: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.",
+        primary_why=_primary_why,
+        second_why=_second_why,
     )
 
     # ── Factordiepte ×≤3 (prioriteit = laagste score, geen vertrekredenen) ────
