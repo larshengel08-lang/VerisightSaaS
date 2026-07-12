@@ -860,9 +860,17 @@ def _segment_block(segment_rows: list[dict]) -> str:
         else:
             strip = '<span style="font-family:\'JetBrains Mono\', monospace;font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:#94A3B8;">spreiding vanaf 10 responses</span>'
         name_html = _h(dept) if is_rest else f"<strong>{_h(dept)}</strong>"
+        invited = row.get("invited")
+        if invited:
+            pct = min(100, round(n_ / invited * 100))
+            n_cell = (f'{n_}/{invited}<br>'
+                      f'<span style="font-family:\'JetBrains Mono\', monospace;font-size:8px;'
+                      f'color:#4A6070;">{pct}%</span>')
+        else:
+            n_cell = str(n_)
         rows_html += (
-            f'<tr><td class="iq" style="width:24%;">{name_html}</td>'
-            f'<td style="width:6%;">{n_}</td>'
+            f'<tr><td class="iq" style="width:21%;">{name_html}</td>'
+            f'<td style="width:9%;">{n_cell}</td>'
             f'<td class="is" style="width:12%;text-align:left;color:{col};">{avg:.1f}</td>'
             f'<td style="width:16%;color:{col};font-size:9.5px;">{_h(_factor_label(avg))}</td>'
             f'<td>{strip}</td></tr>'
@@ -940,6 +948,19 @@ def _per_respondent_factor_scores(
                 scores.append(_scale_to_10(sum(vals) / len(vals)))
         out[fk] = scores
     return out
+
+
+def _enrich_segment_rows_with_invited(segment_rows: list[dict],
+                                      segment_departments: list[dict] | None) -> list[dict]:
+    """Voegt per rij de noemer (invited) toe via label-match op de campagnelijst
+    (spec 2026-07-12 §6). Ontbrekende noemer of pooled rij -> invited=None
+    (eerlijke degradatie: alleen n tonen, geen fake percentage)."""
+    invited_by_label = {d.get("label"): d.get("invited_count")
+                        for d in (segment_departments or [])}
+    for row in segment_rows:
+        row["invited"] = (None if row.get("is_pooled")
+                          else invited_by_label.get(row["department"]))
+    return segment_rows
 
 
 def _department_segment_rows(respondents: list[dict]) -> list[dict]:
@@ -1141,6 +1162,7 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
         {"department": r.department, "signal_score": r.response.risk_score}
         for r in completed
     ])
+    segment_rows = _enrich_segment_rows_with_invited(segment_rows, camp.segment_departments)
 
     enps_vals = [float(fr.get("enps_score")) for r in responses
                  if (fr := (r.full_result or {})) and fr.get("enps_score") is not None]

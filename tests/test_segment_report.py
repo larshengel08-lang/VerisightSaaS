@@ -116,3 +116,36 @@ def test_afdeling_met_naam_overige_wordt_niet_verward_met_pool():
 def test_degraded_state_blijft_zonder_segmentdata():
     html = render_retention_report_html(_with_segments([]))
     assert "Segmentverschillen zijn niet getoond" in html
+
+
+def test_invited_gematcht_op_label():
+    from backend.report_html import _enrich_segment_rows_with_invited
+    rows = [{"department": "Sales", "n": 5, "avg": 6.0, "scores": [6.0] * 5, "is_pooled": False}]
+    out = _enrich_segment_rows_with_invited(rows, [
+        {"label": "Sales", "slug": "sales", "invited_count": 8}])
+    assert out[0]["invited"] == 8
+
+
+def test_invited_ontbreekt_bij_oude_shape_of_pool():
+    from backend.report_html import _enrich_segment_rows_with_invited
+    rows = [
+        {"department": "Sales", "n": 5, "avg": 6.0, "scores": [6.0] * 5, "is_pooled": False},
+        {"department": "Overige afdelingen", "n": 6, "avg": 5.0, "scores": [5.0] * 6, "is_pooled": True},
+    ]
+    out = _enrich_segment_rows_with_invited(rows, [
+        {"label": "Sales", "slug": "sales"}])          # oude shape zonder invited_count
+    assert out[0].get("invited") is None
+    assert out[1].get("invited") is None               # pool krijgt geen noemer (v1)
+
+
+def test_responskolom_gerenderd_bij_bekende_noemer():
+    d = _min_retention_data()
+    d["segment_rows"] = [
+        {"department": "Operations", "n": 11, "avg": 4.1, "scores": [4.0] * 11,
+         "is_pooled": False, "invited": 14},
+        {"department": "Sales", "n": 5, "avg": 6.8, "scores": [6.8] * 5,
+         "is_pooled": False, "invited": None},
+    ]
+    html = render_retention_report_html(d)
+    assert "11/14" in html and "79%" in html            # bekende noemer
+    # Sales zonder noemer: alleen n, geen percentage op die rij
