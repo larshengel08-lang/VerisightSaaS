@@ -379,7 +379,7 @@ def _cover(*, scan_label: str, scan_type: str, org_name: str, period: str,
 def _bestuurlijke_read(*, kernzin: str, totaalbeeld: str,
                        primary_label: str, primary_score: float | None, primary_color: str,
                        why_cells_html: str, strong_label: str, strong_score: float | None,
-                       mgmt_q: str) -> str:
+                       mgmt_q: str, responsbasis_html: str = "") -> str:
     return f"""<div class="pb sec">
   <span class="slabel">Bestuurlijke read</span>
   <p class="br-kernzin">{_h(kernzin)}</p>
@@ -389,16 +389,16 @@ def _bestuurlijke_read(*, kernzin: str, totaalbeeld: str,
     <table class="why-grid"><tr>{why_cells_html}</tr></table>
     {("<table class='sg'><tr>"
       f"<td><div class='sc-l'>Relatief sterk</div><div class='sc-v'>{_score_str(strong_score)}</div><div class='sc-b'>{_h(strong_label)} — wat w&eacute;l werkt</div></td>"
-      "<td><div class='sc-l'>Responsbasis</div><div class='sc-v'>Zie p.03</div><div class='sc-b'>reikwijdte &amp; betrouwbaarheid</div></td>"
       "</tr></table>") if strong_label else ""}
     <div class="mq-line"><span class="mq-label">Eerste managementvraag</span><p>{_h(mgmt_q)}</p></div>
   </div>
+  {responsbasis_html}
 </div>"""
 
 
 def _responsbasis(*, invited: int, completed: int, pct: int, period: str,
                   population: str, segment_available: bool, segment_reason: str = "",
-                  enps_available: bool = True) -> str:
+                  enps_available: bool = True, compact: bool = False) -> str:
     seg = ("Beschikbaar — segmentbeeld verderop in dit rapport." if segment_available
            else f"Niet beschikbaar — {_h(segment_reason)}.")
 
@@ -420,9 +420,10 @@ def _responsbasis(*, invited: int, completed: int, pct: int, period: str,
     else:
         datastatus_html = ""
 
-    return f"""<div class="pb sec">
-  <span class="slabel">Responsbasis &amp; reikwijdte</span>
-  <table class="sg"><tr>
+    # De statregel blijft als geheel bij elkaar; de band als geheel mag wél
+    # doorbreken naar de volgende pagina (spec §1 randgeval).
+    body = f"""<span class="slabel">Responsbasis &amp; reikwijdte</span>
+  <table class="sg no-break"><tr>
     <td><div class="sc-l">Uitgenodigd</div><div class="sc-v">{invited}</div></td>
     <td><div class="sc-l">Afgerond</div><div class="sc-v">{completed}</div></td>
     <td><div class="sc-l">Respons</div><div class="sc-v">{pct}%</div></td>
@@ -430,8 +431,11 @@ def _responsbasis(*, invited: int, completed: int, pct: int, period: str,
   </tr></table>
   <div class="card"><h3>Populatie</h3><p>{_h(population)}</p>
     <h3 style="margin-top:10px;">Segmentstatus</h3><p style="margin-bottom:0;">{seg}</p></div>
-  {datastatus_html}
-</div>"""
+  {datastatus_html}"""
+
+    if compact:
+        return f'<div style="margin-top:28px;">{body}</div>'
+    return f'<div class="pb sec">\n  {body}\n</div>'
 
 
 def _stat4(cards: list[dict]) -> str:
@@ -1513,12 +1517,25 @@ def render_exit_report_html(data: dict) -> str:
         primary_col   = _factor_color(low_sc)
         br_mgmt_q     = _mgmt_q(low_f[0], "exit") if low_f else ""
 
-    # Subtekst herhaalt de titel niet meer (daar staat de laagste factor al):
-    # alleen wat NIEUW is — de sterke factor mét score, plus de p.03-verwijzing.
+    # Subtekst herhaalt de titel niet meer: alleen wat NIEUW is — de sterke
+    # factor mét score. De responsbasis staat nu onderaan dezelfde pagina.
     totaalbeeld = (
         f"{high_lbl} ({_score_str(high_sc)}) laat zien wat wél werkt. "
-        f"Hoe stevig dit beeld is, hangt af van de responsbasis — zie p.03."
-    ) if high_lbl and low_lbl != high_lbl else "Reikwijdte en betrouwbaarheid van dit beeld: zie p.03."
+        f"Hoe stevig dit beeld is, hangt af van de responsbasis onderaan deze pagina."
+    ) if high_lbl and low_lbl != high_lbl else \
+        "Reikwijdte en betrouwbaarheid van dit beeld: zie de responsbasis onderaan deze pagina."
+
+    _responsbasis_band = _responsbasis(
+        invited=data["n_invited"],
+        completed=data["n_completed"],
+        pct=int(data["completion_pct"]),
+        period=data["campaign_name"],
+        population="Alle medewerkers",
+        segment_available=bool(data.get("segment_rows")),
+        segment_reason="te weinig responses per groep voor herleidbaarheid",
+        enps_available=data["enps_available"],
+        compact=True,
+    )
 
     s += _bestuurlijke_read(
         kernzin=exec_line,
@@ -1530,18 +1547,7 @@ def render_exit_report_html(data: dict) -> str:
         strong_label=high_lbl,
         strong_score=high_sc,
         mgmt_q=br_mgmt_q,
-    )
-
-    # ── Responsbasis & reikwijdte (p.03) ──────────────────────────────────────
-    s += _responsbasis(
-        invited=data["n_invited"],
-        completed=data["n_completed"],
-        pct=int(data["completion_pct"]),
-        period=data["campaign_name"],
-        population="Alle medewerkers",
-        segment_available=bool(data.get("segment_rows")),
-        segment_reason="te weinig responses per groep voor herleidbaarheid",
-        enps_available=data["enps_available"],
+        responsbasis_html=_responsbasis_band,
     )
 
     # ── Vertrekcontext (p.04 — vóór factorprofiel) ───────────────────────────
@@ -1849,11 +1855,25 @@ def render_retention_report_html(data: dict) -> str:
     else:
         exec_line = "Zie factoranalyse en behoudscontext voor details."
 
-    # Subtekst herhaalt de titel niet meer: alleen wat nieuw is.
+    # Subtekst herhaalt de titel niet meer: alleen wat nieuw is. De
+    # responsbasis staat nu onderaan dezelfde pagina.
     totaalbeeld = (
         f"{high_lbl} ({_score_str(high_sc)}) laat zien wat wél werkt. "
-        f"Hoe stevig dit beeld is, hangt af van de responsbasis — zie p.03."
-    ) if high_lbl and low_lbl != high_lbl else "Reikwijdte en betrouwbaarheid van dit beeld: zie p.03."
+        f"Hoe stevig dit beeld is, hangt af van de responsbasis onderaan deze pagina."
+    ) if high_lbl and low_lbl != high_lbl else \
+        "Reikwijdte en betrouwbaarheid van dit beeld: zie de responsbasis onderaan deze pagina."
+
+    _responsbasis_band = _responsbasis(
+        invited=data["n_invited"],
+        completed=data["n_completed"],
+        pct=int(data["completion_pct"]),
+        period=data["campaign_name"],
+        population="Actieve medewerkers",
+        segment_available=bool(data.get("segment_rows")),
+        segment_reason="te weinig responses per groep voor herleidbaarheid",
+        enps_available=data["enps_available"],
+        compact=True,
+    )
 
     s += _bestuurlijke_read(
         kernzin=exec_line,
@@ -1865,18 +1885,7 @@ def render_retention_report_html(data: dict) -> str:
         strong_label=high_lbl,
         strong_score=high_sc,
         mgmt_q=br_mgmt_q,
-    )
-
-    # ── Responsbasis & reikwijdte (p.03) ──────────────────────────────────────
-    s += _responsbasis(
-        invited=data["n_invited"],
-        completed=data["n_completed"],
-        pct=int(data["completion_pct"]),
-        period=data["campaign_name"],
-        population="Actieve medewerkers",
-        segment_available=bool(data.get("segment_rows")),
-        segment_reason="te weinig responses per groep voor herleidbaarheid",
-        enps_available=data["enps_available"],
+        responsbasis_html=_responsbasis_band,
     )
 
     # ── Behoudscontext (p.04 — vóór factorprofiel) ───────────────────────────
@@ -2236,11 +2245,25 @@ def render_onboarding_report_html(data: dict) -> str:
     else:
         exec_line = "Zie factordiepte en checkpointoverzicht voor details."
 
-    # Subtekst herhaalt de titel niet meer: alleen wat nieuw is.
+    # Subtekst herhaalt de titel niet meer: alleen wat nieuw is. De
+    # responsbasis staat nu onderaan dezelfde pagina.
     totaalbeeld = (
         f"{high_lbl} ({_score_str(high_sc)}) laat zien wat wél goed landt. "
-        f"Hoe stevig dit beeld is, hangt af van de responsbasis — zie p.03."
-    ) if high_lbl and low_lbl != high_lbl else "Reikwijdte en betrouwbaarheid van dit beeld: zie p.03."
+        f"Hoe stevig dit beeld is, hangt af van de responsbasis onderaan deze pagina."
+    ) if high_lbl and low_lbl != high_lbl else \
+        "Reikwijdte en betrouwbaarheid van dit beeld: zie de responsbasis onderaan deze pagina."
+
+    _responsbasis_band = _responsbasis(
+        invited=data["n_invited"],
+        completed=data["n_completed"],
+        pct=int(data["completion_pct"]),
+        period=data["campaign_name"],
+        population="Nieuwe medewerkers — eerste werkperiode",
+        segment_available=bool(data.get("segment_rows")),
+        segment_reason="te weinig responses per groep voor herleidbaarheid",
+        enps_available=data["enps_available"],
+        compact=True,
+    )
 
     s += _bestuurlijke_read(
         kernzin=exec_line,
@@ -2252,18 +2275,7 @@ def render_onboarding_report_html(data: dict) -> str:
         strong_label=high_lbl,
         strong_score=high_sc,
         mgmt_q=br_mgmt_q,
-    )
-
-    # ── Responsbasis & reikwijdte (p.03) ──────────────────────────────────────
-    s += _responsbasis(
-        invited=data["n_invited"],
-        completed=data["n_completed"],
-        pct=int(data["completion_pct"]),
-        period=data["campaign_name"],
-        population="Nieuwe medewerkers — eerste werkperiode",
-        segment_available=bool(data.get("segment_rows")),
-        segment_reason="te weinig responses per groep voor herleidbaarheid",
-        enps_available=data["enps_available"],
+        responsbasis_html=_responsbasis_band,
     )
 
     # ── Overzichtsprofiel (p.04) ──────────────────────────────────────────────

@@ -78,7 +78,9 @@ def test_bestuurlijke_read_contains_core_blocks():
     assert 'class="why"' in html
     assert "Werksfeer" in html
     assert "Welke loopbaanstappen" in html
-    assert "p.03" in html or "responsbasis" in html.lower()
+    # De p.03-kruisverwijzing is verwijderd (designsprong §1): de responsbasis
+    # wordt nu als band meegegeven i.p.v. verwezen via een paginanummer.
+    assert "p.03" not in html
 
 
 from backend.report_html import _overzichtsprofiel
