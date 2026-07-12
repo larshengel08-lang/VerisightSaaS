@@ -65,7 +65,13 @@ Zelfde drempel als de bestaande patroonanalyse-grens. Onder n=10: geen spreiding
 - Segmentanalyse-verbetering en vervolgmeting-rapportlaag (aparte blokken uit de gap-analyse).
 - Survey- of schemawijzigingen (niets nodig).
 
-## Bevinding tijdens implementatie: zelfde negatie-beperking elders (niet gefixt, uitgesteld)
+## Bevinding tijdens implementatie: zelfde negatie-beperking elders (OPGELOST 2026-07-12)
+
+**Update 2026-07-12:** besluit Lars — de per-factor quote is volledig **geschrapt**
+uit alle drie de renderers (incl. de nu ongebruikte `THEME_KEYWORDS`/
+`_ONBOARDING_THEME_KEYWORDS`-constanten). Alle quotes staan integraal en
+geanonimiseerd in de quotes-sectie; duiding gebeurt in de bespreking.
+Oorspronkelijke bevinding hieronder ter context.
 
 Bij het herschrijven van `_themed_quotes` (punt 6) bleek dezelfde negatie-blinde
 trefwoordselectie nog op drie andere plekken te bestaan in `backend/report_html.py`

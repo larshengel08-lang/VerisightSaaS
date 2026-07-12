@@ -187,23 +187,6 @@ _RETENTION_RELEVANCE: dict[str, float] = {
     "role_clarity": 0.72, "culture": 0.68, "compensation": 0.62,
 }
 
-THEME_KEYWORDS: dict[str, list[str]] = {
-    "Leiderschap en feedback":   ["leiding", "manager", "feedback", "coacht", "vertrouw", "leidinggevende"],
-    "Groeiperspectief":          ["groei", "ontwikkel", "perspectief", "loopbaan", "doorgroei", "promotie"],
-    "Werkdruk en balans":        ["werkdruk", "druk", "stress", "overwerk", "balans", "hersteltijd"],
-    "Erkenning en beloning":     ["erkenning", "waardering", "salaris", "beloning", "beloond"],
-    "Psychologische veiligheid": ["veilig", "fouten", "vragen", "cultuur", "sfeer"],
-    "Rolhelderheid":             ["onduidelijk", "verwachting", "rol", "verantwoordelijkheid", "prioriteit"],
-}
-_ONBOARDING_THEME_KEYWORDS: dict[str, list[str]] = {
-    "Rolhelderheid en verwachtingen": ["verwachting", "rol", "doel", "prioriteit", "onduidelijk"],
-    "Begeleiding en steun":           ["manager", "begeleiding", "buddy", "steun", "bereikbaar", "feedback"],
-    "Werkdruk en tempo":              ["druk", "tempo", "informatie", "snel", "overweldigend", "werkdruk"],
-    "Sociale landing":                ["team", "welkom", "collega", "cultuur", "plek", "erbij"],
-    "Praktische start":               ["tools", "toegang", "systeem", "inwerken", "regelen"],
-    "Eerste succeservaring":          ["bijdragen", "succes", "resultaat", "zichtbaar", "bereikt", "groei"],
-}
-
 SDT_LABELS = {"autonomy": "Autonomie", "competence": "Competentie", "relatedness": "Verbondenheid"}
 SDT_HELP   = {
     "autonomy":    "Mate van ervaren regie over de eigen werkwijze",
@@ -1594,20 +1577,10 @@ def render_exit_report_html(data: dict) -> str:
             f'<td class="is" style="color:{_factor_color(isc)};">{isc:.1f}</td></tr>'
             for ik, q, isc in i_sc
         ) or '<tr><td colspan="2" style="color:#94A3B8;font-style:italic;">Itemscores niet beschikbaar in deze wave.</td></tr>'
-        # Optional quote: pick first open text that mentions a keyword of this factor
-        # BEKENDE BEPERKING (2026-07-11): dezelfde negatie-blindheid als de trefwoord-
-        # classificatie die uit _themed_quotes is verwijderd (besluit 2026-04-09) -
-        # een quote als "met mijn leidinggevende was niets mis, het zat 'm in de
-        # werkdruk" kan hier alsnog als representatieve quote voor "Leiderschap"
-        # verschijnen. Nog niet gefixt hier; zie docs/superpowers/specs/2026-07-11-
-        # rapport-spreiding-design.md voor de bredere quote-transparantie-ronde.
-        fk_keywords = THEME_KEYWORDS.get(lbl, [])
-        quote_txt: str | None = None
-        for t in data["open_texts"]:
-            t_low = t.lower()
-            if any(kw in t_low for kw in fk_keywords):
-                quote_txt = t
-                break
+        # Per-factor quote bewust geschrapt (besluit 2026-07-12): de trefwoord-
+        # selectie had dezelfde negatie-blindheid als de classificatie die eerder
+        # uit _themed_quotes is verwijderd (besluit 2026-04-09). Alle quotes staan
+        # integraal (geanonimiseerd) in de quotes-sectie; duiding in de bespreking.
         # ── Exit reason context block ──
         er_count = exit_code_counts.get(fk, 0)
         if er_count > 0:
@@ -1625,11 +1598,6 @@ def render_exit_report_html(data: dict) -> str:
                      f'<p>{_h(high_i[1])}</p>'
                      f'<strong style="color:{_factor_color(high_i[2])};">{high_i[2]:.1f}/10</strong></div>'
                      if show_cards and high_i else "")
-        # ── Quote block ──
-        quote_block = (f'<div class="quote-txt">{_h(quote_txt)}'
-                       f'<div class="quote-anon">Geanonimiseerd &mdash; namen en contactgegevens verwijderd</div>'
-                       f'</div>'
-                       if quote_txt else "")
         # ── Toelichtingsblok verdiepingsvragen (spec 6.2) ──
         # NB: het statische "Eerste managementvraag"-navy-blok is hier bewust weg —
         # dezelfde template-vraag stond al op p.02 en 3x op de verdiepingspagina's;
@@ -1647,7 +1615,6 @@ def render_exit_report_html(data: dict) -> str:
   <h3 style="margin-top:14px;">Alle items in deze factor</h3>
   <table class="item-tbl">{rows}</table>
   {deep_block}
-  {quote_block}
 </div>"""
 
     if priority_fkeys:
@@ -1959,14 +1926,8 @@ def render_retention_report_html(data: dict) -> str:
             f'<td class="is" style="color:{_factor_color(isc)};">{isc:.1f}</td></tr>'
             for ik, q, isc in i_sc
         ) or '<tr><td colspan="2" style="color:#94A3B8;font-style:italic;">Itemscores niet beschikbaar in deze wave.</td></tr>'
-        # BEKENDE BEPERKING (2026-07-11): zie de identieke noot bij _factor_detail
-        # hierboven - dezelfde negatie-blinde trefwoordselectie, nog niet gefixt.
-        fk_keywords = THEME_KEYWORDS.get(FACTOR_LABELS_NL.get(fk, ""), [])
-        quote_txt: str | None = None
-        for t in data["open_texts"]:
-            if any(kw in t.lower() for kw in fk_keywords):
-                quote_txt = t
-                break
+        # Per-factor quote bewust geschrapt (besluit 2026-07-12): zie de
+        # identieke noot bij _factor_detail hierboven.
         show_cards = len(i_sc) > 3
         low_card  = (f'<div class="card"><span class="eyebrow">Laagste item</span>'
                      f'<p>{_h(low_i[1])}</p>'
@@ -1976,9 +1937,6 @@ def render_retention_report_html(data: dict) -> str:
                      f'<p>{_h(high_i[1])}</p>'
                      f'<strong style="color:{_factor_color(high_i[2])};">{high_i[2]:.1f}/10</strong></div>'
                      if show_cards and high_i else "")
-        quote_block = (f'<div class="quote-txt">{_h(quote_txt)}'
-                       f'<div class="quote-anon">Geanonimiseerd &mdash; namen en contactgegevens verwijderd</div>'
-                       f'</div>' if quote_txt else "")
         # Statisch "Eerste managementvraag"-blok bewust verwijderd (template-taal;
         # stond ook al op p.02) — de toelichting/richting-blokken dragen de duiding.
         # ── Toelichtingsblok verdiepingsvragen (spec 6.2) ──
@@ -1997,7 +1955,6 @@ def render_retention_report_html(data: dict) -> str:
   <h3 style="margin-top:14px;">Alle items in deze factor</h3>
   <table class="item-tbl">{rows}</table>
   {deep_block}{dir_block}
-  {quote_block}
 </div>"""
 
     if priority_fkeys:
@@ -2346,14 +2303,8 @@ def render_onboarding_report_html(data: dict) -> str:
             f'<td class="is" style="color:{_factor_color(isc)};">{isc:.1f}</td></tr>'
             for ik, q, isc in i_sc
         ) or '<tr><td colspan="2" style="color:#94A3B8;font-style:italic;">Itemscores niet beschikbaar in deze wave.</td></tr>'
-        # BEKENDE BEPERKING (2026-07-11): zie de identieke noot bij _factor_detail
-        # (exit-renderer) - dezelfde negatie-blinde trefwoordselectie, nog niet gefixt.
-        fk_keywords = _ONBOARDING_THEME_KEYWORDS.get(lbl, [])
-        quote_txt: str | None = None
-        for t in data["open_texts"]:
-            if any(kw in t.lower() for kw in fk_keywords):
-                quote_txt = t
-                break
+        # Per-factor quote bewust geschrapt (besluit 2026-07-12): zie de
+        # identieke noot bij _factor_detail (exit-renderer).
         show_cards = len(i_sc) > 3
         low_card  = (f'<div class="card"><span class="eyebrow">Kwetsbaarste item</span>'
                      f'<p>{_h(low_i[1])}</p>'
@@ -2363,9 +2314,6 @@ def render_onboarding_report_html(data: dict) -> str:
                      f'<p>{_h(high_i[1])}</p>'
                      f'<strong style="color:{_factor_color(high_i[2])};">{high_i[2]:.1f}/10</strong></div>'
                      if show_cards and high_i else "")
-        quote_block = (f'<div class="quote-txt">{_h(quote_txt)}'
-                       f'<div class="quote-anon">Geanonimiseerd &mdash; namen en contactgegevens verwijderd</div>'
-                       f'</div>' if quote_txt else "")
         spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []))
         return f"""<div class="pb sec">
   <span class="slabel">Verdieping &mdash; {_h(lbl)}</span>
@@ -2376,7 +2324,6 @@ def render_onboarding_report_html(data: dict) -> str:
   {high_card}
   <h3 style="margin-top:14px;">Alle items in deze factor</h3>
   <table class="item-tbl">{rows}</table>
-  {quote_block}
 </div>"""
 
     if priority_fkeys:
