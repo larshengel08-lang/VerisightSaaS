@@ -83,8 +83,20 @@ def test_hoofdstuknummers_oplopend_zonder_gaten():
 
 
 def test_verdieping_vervolg_label():
+    # Fixture met 2 factoren zodat priority_fkeys > 1: de vorige versie van
+    # deze test gebruikte de 1-factor _min_retention_data() en verifieerde
+    # daardoor niets (vervolg() werd nooit aangeroepen) — code review Task 4.
     d = _min_retention_data()
+    d["factor_avgs"] = {"workload": 4.0, "growth": 5.0}
+    d["top_fkeys"] = ["workload"]
+    d["factor_items_map"] = {
+        "workload": [("W1", "Testvraag werkdruk")],
+        "growth": [("G1", "Testvraag groei")],
+    }
+    d["org_item_avgs"] = {"W1": 4.0, "G1": 5.0}
     html = render_retention_report_html(d)
     # Bij >1 verdiepingsfactor: eerste = hoofdstukstart, volgende = vervolg.
-    if html.count("Verdieping &mdash;") > 1:
-        assert "VERDIEPING — VERVOLG" in html.upper() or "vervolg" in html
+    # Let op: de renderer emit een letterlijk em-dash-teken (—), geen
+    # HTML-entity &mdash; — vandaar het echte teken hier, niet de entity.
+    assert html.count("Verdieping —") > 1, "fixture levert geen 2e verdiepingsfactor"
+    assert "VERVOLG" in html.upper()
