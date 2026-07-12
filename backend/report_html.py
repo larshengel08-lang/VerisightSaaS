@@ -861,7 +861,7 @@ def _segment_block(segment_rows: list[dict]) -> str:
             strip = '<span style="font-family:\'JetBrains Mono\', monospace;font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:#94A3B8;">spreiding vanaf 10 responses</span>'
         name_html = _h(dept) if is_rest else f"<strong>{_h(dept)}</strong>"
         invited = row.get("invited")
-        if invited:
+        if invited:  # 0 behandeld als "geen noemer" -- voorkomt 0/0, valt terug op alleen n
             pct = min(100, round(n_ / invited * 100))
             n_cell = (f'{n_}/{invited}<br>'
                       f'<span style="font-family:\'JetBrains Mono\', monospace;font-size:8px;'
