@@ -160,6 +160,7 @@ const routeBeheerData: RouteBeheerPageData = {
   },
   publicSurveyToken: null,
   segmentDepartments: null,
+  departmentCompletedCounts: {},
 }
 
 describe('routebeheer phase sections', () => {

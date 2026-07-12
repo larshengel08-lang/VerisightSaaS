@@ -52,7 +52,7 @@ function createSupabaseMock() {
       },
     ],
     [
-      'respondents|id, token, email, sent_at, completed, completed_at',
+      'respondents|id, token, email, sent_at, completed, completed_at, department',
       {
         data: [
           { id: 'r1', token: 't1', email: 'r1@example.com', sent_at: '2026-05-10T10:00:00.000Z', completed: true, completed_at: '2026-05-11T10:00:00.000Z' },

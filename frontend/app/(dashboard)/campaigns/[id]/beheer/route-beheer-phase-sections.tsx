@@ -247,6 +247,7 @@ function RouteBeheerPhaseDetailContent({ data, detail }: { data: RouteBeheerPage
                 totalCompleted={data.totalCompleted}
                 isActive={data.isActive}
                 segmentDepartments={data.segmentDepartments}
+                departmentCompletedCounts={data.departmentCompletedCounts}
               />
             ) : (
               <GuidedSelfServePanel
@@ -324,6 +325,7 @@ function RouteBeheerPhaseDetailContent({ data, detail }: { data: RouteBeheerPage
                 totalCompleted={data.totalCompleted}
                 isActive={data.isActive}
                 segmentDepartments={data.segmentDepartments}
+                departmentCompletedCounts={data.departmentCompletedCounts}
               />
             ) : (
               <GuidedSelfServePanel

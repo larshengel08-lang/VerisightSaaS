@@ -70,6 +70,14 @@ export function computeResponseRatePct(completed: number, invitedCount: number |
   return Math.min(100, Math.round((completed / invitedCount) * 100))
 }
 
+// Eerlijke degradatie (spec 2026-07-12 §6): zonder bekende noemer alleen het
+// aantal, geen fake percentage.
+export function formatDepartmentProgress(completed: number, invited?: number | null): string {
+  if (!invited || invited <= 0) return `${completed} ingevuld`
+  const pct = computeResponseRatePct(completed, invited)
+  return `${completed} van ${invited} ingevuld (${pct}%)`
+}
+
 export function buildSurveyLink(frontendBaseUrl: string, publicSurveyToken: string): string {
   return `${frontendBaseUrl.replace(/\/+$/, '')}/survey/open/${publicSurveyToken}`
 }

@@ -10,9 +10,10 @@ import {
   buildSegmentSurveyLinks,
   buildSurveyLink,
   computeResponseRatePct,
+  formatDepartmentProgress,
   normalizeSelfSendConfig,
   normalizeSelfSendReminders,
-  type SegmentDepartment,
+  type SegmentDepartmentStored,
   type SelfSendConfig,
   type SelfSendReminder,
 } from '@/lib/self-send-comms'
@@ -29,7 +30,8 @@ interface Props {
   launchConfirmedAt: string | null
   totalCompleted: number
   isActive: boolean
-  segmentDepartments?: SegmentDepartment[] | null
+  segmentDepartments?: SegmentDepartmentStored[] | null
+  departmentCompletedCounts?: Record<string, number>
 }
 
 const STEP_LABELS = ['Scan', 'Deelnemers', 'E-mailinstellingen', 'Voorbeeld & kopieer', 'Bevestiging'] as const
@@ -56,6 +58,7 @@ export function SelfSendSetupPanel({
   totalCompleted,
   isActive,
   segmentDepartments,
+  departmentCompletedCounts,
 }: Props) {
   const router = useRouter()
   const [step, setStep] = useState(launchConfirmedAt ? 4 : 0)
@@ -367,24 +370,31 @@ export function SelfSendSetupPanel({
                 Deel per afdeling de eigen link — er is bewust geen algemene link.
               </p>
               <div className="space-y-2">
-                {segmentLinks.map((link) => (
-                  <div
-                    key={link.url}
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 px-3 py-2"
-                  >
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-slate-900">{link.label}</p>
-                      <p className="truncate text-xs text-slate-500">{link.url}</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => copy(link.url, () => flash(`Link voor ${link.label} gekopieerd.`))}
-                      className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-blue-300"
+                {segmentLinks.map((link) => {
+                  const dep = segmentDepartments?.find((d) => d.label === link.label)
+                  const completed = departmentCompletedCounts?.[link.label] ?? 0
+                  return (
+                    <div
+                      key={link.url}
+                      className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 px-3 py-2"
                     >
-                      Kopieer link
-                    </button>
-                  </div>
-                ))}
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-slate-900">{link.label}</p>
+                        <p className="truncate text-xs text-slate-500">{link.url}</p>
+                        <p className="mt-0.5 text-xs text-slate-500">
+                          {formatDepartmentProgress(completed, dep?.invited_count)}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => copy(link.url, () => flash(`Link voor ${link.label} gekopieerd.`))}
+                        className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-blue-300"
+                      >
+                        Kopieer link
+                      </button>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           ) : null}

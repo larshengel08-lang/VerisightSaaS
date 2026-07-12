@@ -8,6 +8,7 @@ import {
   buildSegmentSurveyLinks,
   computeResponseRatePct,
   createDefaultSelfSendConfig,
+  formatDepartmentProgress,
   getDueReminders,
   normalizeSelfSendConfig,
   prepareSegmentDepartmentsUpdate,
@@ -175,5 +176,18 @@ describe('prepareSegmentDepartmentsUpdate', () => {
         [{ label: 'Sales', invited_count: 0 }, { label: 'Ops', invited_count: 5 }],
         new Set()),
     ).toThrow(/aantal/i)
+  })
+})
+
+describe('formatDepartmentProgress', () => {
+  it('toont X van Y met percentage bij bekende noemer', () => {
+    expect(formatDepartmentProgress(11, 14)).toBe('11 van 14 ingevuld (79%)')
+  })
+  it('degradeert eerlijk zonder noemer', () => {
+    expect(formatDepartmentProgress(11, null)).toBe('11 ingevuld')
+    expect(formatDepartmentProgress(11, undefined)).toBe('11 ingevuld')
+  })
+  it('cap op 100%', () => {
+    expect(formatDepartmentProgress(16, 14)).toBe('16 van 14 ingevuld (100%)')
   })
 })

@@ -26,20 +26,26 @@ import {
   getDueReminders,
   normalizeSelfSendConfig,
   normalizeSelfSendReminders,
-  type SegmentDepartment,
+  type SegmentDepartmentStored,
   type SelfSendConfig,
   type SelfSendReminder,
 } from '@/lib/self-send-comms'
 
-function normalizeSegmentDepartments(value: unknown): SegmentDepartment[] | null {
+function normalizeSegmentDepartments(value: unknown): SegmentDepartmentStored[] | null {
   if (!Array.isArray(value)) return null
-  const departments = value.filter(
-    (entry): entry is SegmentDepartment =>
-      Boolean(entry) &&
-      typeof entry === 'object' &&
-      typeof (entry as Record<string, unknown>).label === 'string' &&
-      typeof (entry as Record<string, unknown>).slug === 'string',
-  )
+  const departments = value
+    .filter(
+      (entry): entry is Record<string, unknown> =>
+        Boolean(entry) &&
+        typeof entry === 'object' &&
+        typeof (entry as Record<string, unknown>).label === 'string' &&
+        typeof (entry as Record<string, unknown>).slug === 'string',
+    )
+    .map((entry) => ({
+      label: entry.label as string,
+      slug: entry.slug as string,
+      invited_count: typeof entry.invited_count === 'number' ? entry.invited_count : undefined,
+    }))
   return departments.length > 0 ? departments : null
 }
 
@@ -155,7 +161,8 @@ export interface RouteBeheerPageData {
   }
   selfSend: SelfSendBlock
   publicSurveyToken: string | null
-  segmentDepartments: SegmentDepartment[] | null
+  segmentDepartments: SegmentDepartmentStored[] | null
+  departmentCompletedCounts: Record<string, number>
 }
 
 export type RouteBeeheerPageData = RouteBeheerPageData
@@ -783,7 +790,7 @@ export async function fetchRouteBeheerData(args: {
     supabase.from('campaign_delivery_records').select('*').eq('campaign_id', campaignId).maybeSingle(),
     supabase
       .from('respondents')
-      .select('id, token, email, sent_at, completed, completed_at')
+      .select('id, token, email, sent_at, completed, completed_at, department')
       .eq('campaign_id', campaignId)
       .order('completed_at', { ascending: false, nullsFirst: false }),
     supabase
@@ -818,10 +825,19 @@ export async function fetchRouteBeheerData(args: {
     : { data: [] }
   const deliveryCheckpoints = (deliveryCheckpointsRaw ?? []) as CampaignDeliveryCheckpoint[]
 
-  const respondents = (respondentsRaw ?? []) as Pick<
-    Respondent,
-    'id' | 'token' | 'email' | 'sent_at' | 'completed' | 'completed_at'
-  >[]
+  const respondents = (respondentsRaw ?? []) as Array<
+    Pick<Respondent, 'id' | 'token' | 'email' | 'sent_at' | 'completed' | 'completed_at'> & {
+      department: string | null
+    }
+  >
+  // Afgeronde respondenten per afdeling — noemer voor de responsvoortgang per
+  // afdelingslink in het setup-panel (spec 2026-07-12 §6).
+  const departmentCompletedCounts: Record<string, number> = {}
+  for (const r of respondents) {
+    if (r.completed && r.department) {
+      departmentCompletedCounts[r.department] = (departmentCompletedCounts[r.department] ?? 0) + 1
+    }
+  }
   const responseRows = (responsesRaw ?? []) as Array<{ id: string; org_scores: unknown; sdt_scores: unknown }>
   const auditEvents = (auditEventsRaw ?? []) as CampaignAuditEventRecord[]
   const campaign = (campaignMeta ?? null) as
@@ -1044,6 +1060,7 @@ export async function fetchRouteBeheerData(args: {
     selfSend,
     publicSurveyToken: campaign?.public_survey_token ?? null,
     segmentDepartments: normalizeSegmentDepartments(campaign?.segment_departments ?? null),
+    departmentCompletedCounts,
   } satisfies RouteBeheerPageData
 }
 
