@@ -10,6 +10,7 @@ import {
   createDefaultSelfSendConfig,
   getDueReminders,
   normalizeSelfSendConfig,
+  prepareSegmentDepartmentsUpdate,
   resolveReminderDate,
   validateInvitedCount,
 } from './self-send-comms'
@@ -115,5 +116,64 @@ describe('segment-links', () => {
   it('weigert duplicaten en lege labels', () => {
     expect(() => buildSegmentDepartments(['Sales', 'sales'])).toThrow()
     expect(() => buildSegmentDepartments(['  '])).toThrow()
+  })
+})
+
+describe('prepareSegmentDepartmentsUpdate', () => {
+  const existing = [
+    { label: 'Sales', slug: 'sales', invited_count: 10 },
+    { label: 'Operations', slug: 'operations', invited_count: 14 },
+  ]
+
+  it('staat toevoegen en aantal-wijziging altijd toe', () => {
+    const out = prepareSegmentDepartmentsUpdate(
+      existing,
+      [
+        { label: 'Sales', invited_count: 12 },
+        { label: 'Operations', invited_count: 14 },
+        { label: 'Kantoor', invited_count: 8 },
+      ],
+      new Set(['Sales', 'Operations']),
+    )
+    expect(out.departments.map((d) => d.slug)).toEqual(['sales', 'operations', 'kantoor'])
+    expect(out.departments[0].invited_count).toBe(12)
+    expect(out.totalInvited).toBe(34)
+  })
+
+  it('weigert hernoemen/verwijderen van een vergrendelde afdeling', () => {
+    // Sales (vergrendeld) ontbreekt in de nieuwe lijst -> verwijdering -> fout.
+    // Tweede afdeling (Kantoor) erbij zodat de min-2-check niet eerder triggert.
+    expect(() =>
+      prepareSegmentDepartmentsUpdate(existing,
+        [{ label: 'Operations', invited_count: 14 }, { label: 'Kantoor', invited_count: 6 }],
+        new Set(['Sales'])),
+    ).toThrow(/Sales/)
+  })
+
+  it('staat hernoemen/verwijderen van een onvergrendelde afdeling toe', () => {
+    const out = prepareSegmentDepartmentsUpdate(
+      existing,
+      [
+        { label: 'Sales & Accountmanagement', invited_count: 10 },
+        { label: 'Operations', invited_count: 14 },
+      ],
+      new Set(['Operations']),
+    )
+    expect(out.departments[0].slug).toBe('sales-accountmanagement')
+  })
+
+  it('eist minimaal 2 afdelingen', () => {
+    expect(() =>
+      prepareSegmentDepartmentsUpdate(existing, [{ label: 'Sales', invited_count: 10 }],
+        new Set()),
+    ).toThrow(/minimaal 2/)
+  })
+
+  it('eist een positief aantal per afdeling', () => {
+    expect(() =>
+      prepareSegmentDepartmentsUpdate(existing,
+        [{ label: 'Sales', invited_count: 0 }, { label: 'Ops', invited_count: 5 }],
+        new Set()),
+    ).toThrow(/aantal/i)
   })
 })

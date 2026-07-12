@@ -115,6 +115,61 @@ export function buildSegmentSurveyLinks(
   return departments.map((d) => ({ label: d.label, url: `${base}?afd=${d.slug}` }))
 }
 
+export interface SegmentDepartmentInput {
+  label: string
+  invited_count: number
+}
+
+// Shape-uitbreiding (spec 2026-07-12): invited_count is optioneel op bestaande
+// data (oude campagnes hebben alleen {label, slug}); nieuwe writes zetten hem altijd.
+export interface SegmentDepartmentStored extends SegmentDepartment {
+  invited_count?: number
+}
+
+export interface SegmentDepartmentsUpdate {
+  departments: Array<{ label: string; slug: string; invited_count: number }>
+  totalInvited: number
+}
+
+/**
+ * Valideert een volledige nieuwe afdelingslijst tegen de vergrendelregels
+ * (spec 2026-07-12 §3): toevoegen altijd; hernoemen/verwijderen alleen als
+ * de afdeling niet vergrendeld is (lockedLabels = labels met >=1 respondent);
+ * aantallen altijd aanpasbaar. Pure functie — de server action levert
+ * lockedLabels uit de database en is de echte grens.
+ */
+export function prepareSegmentDepartmentsUpdate(
+  existing: SegmentDepartmentStored[],
+  incoming: SegmentDepartmentInput[],
+  lockedLabels: Set<string>,
+): SegmentDepartmentsUpdate {
+  if (incoming.length < 2) throw new Error('Segmentrapportage vraagt minimaal 2 afdelingen.')
+  for (const item of incoming) {
+    if (!Number.isInteger(item.invited_count) || item.invited_count < 1) {
+      throw new Error(`Vul een geldig aantal deelnemers in voor '${(item.label ?? '').trim() || '?'}' (minimaal 1).`)
+    }
+  }
+  // Hergebruik de bestaande label/slug-validatie (leeg, duplicaat):
+  const validated = buildSegmentDepartments(incoming.map((i) => i.label))
+  const incomingLabels = new Set(validated.map((d) => d.label))
+  // Vergrendelde afdelingen moeten ongewijzigd (zelfde label) terugkomen:
+  for (const label of lockedLabels) {
+    if (!incomingLabels.has(label)) {
+      throw new Error(
+        `Afdeling '${label}' heeft al responses en kan niet hernoemd of verwijderd worden.`,
+      )
+    }
+  }
+  const departments = validated.map((d, i) => ({
+    ...d,
+    invited_count: incoming[i].invited_count,
+  }))
+  return {
+    departments,
+    totalInvited: departments.reduce((sum, d) => sum + d.invited_count, 0),
+  }
+}
+
 export function normalizeSelfSendReminders(value: unknown): SelfSendReminder[] {
   if (!Array.isArray(value)) return []
   return value.map((raw, index) => {
