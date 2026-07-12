@@ -81,7 +81,9 @@ export interface SegmentDepartment {
 
 // Zelfde regels als backend/segments.py's _slugify (Python), maar zonder gedeeld
 // codepad (Python-backend + TS-frontend). Bij aanpassing hier: ook daar bijwerken.
-function slugify(label: string): string {
+// Geëxporteerd zodat andere TS-callers (bijv. een live link-preview tijdens
+// typen) deze niet opnieuw hoeven te implementeren — één TS-kopie i.p.v. twee.
+export function slugify(label: string): string {
   return label
     .normalize('NFKD')
     .replace(/[̀-ͯ]/g, '')

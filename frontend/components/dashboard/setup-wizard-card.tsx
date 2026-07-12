@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { SCAN_TYPE_LABELS, type ScanType } from '@/lib/types'
-import { buildSegmentSurveyLinks, buildSurveyLink, type SegmentDepartmentStored } from '@/lib/self-send-comms'
+import { buildSegmentSurveyLinks, buildSurveyLink, slugify, type SegmentDepartmentStored } from '@/lib/self-send-comms'
 import { saveLaunchSetupAction, confirmLaunchAction } from '@/app/(dashboard)/campaigns/[id]/setup/launch-setup-actions'
 import { saveSegmentDepartmentsAction } from '@/app/(dashboard)/campaigns/[id]/setup/segment-actions'
 
@@ -118,10 +118,13 @@ export function SetupWizardCard({
     ),
   )
 
-  const totalInvited = deptRows.reduce(
-    (sum, row) => sum + (typeof row.invitedCount === 'number' ? row.invitedCount : 0),
-    0,
-  )
+  // Alleen rijen met een ingevulde naam tellen mee — een leeg-genaamde rij
+  // wordt bij opslaan sowieso niet meegenomen in segment_departments, dus het
+  // getoonde totaal moet daarmee overeenkomen (anders wijkt het weergegeven
+  // totaal af van wat straks daadwerkelijk wordt opgeslagen).
+  const totalInvited = deptRows
+    .filter((row) => row.label.trim())
+    .reduce((sum, row) => sum + (typeof row.invitedCount === 'number' ? row.invitedCount : 0), 0)
 
   const surveyLink = buildSurveyLink(frontendBaseUrl, publicSurveyToken)
   const scanLabel = SCAN_TYPE_LABELS[scanType] ?? scanType
@@ -178,8 +181,16 @@ export function SetupWizardCard({
       startTransition(async () => {
         const segResult = await saveSegmentDepartmentsAction(campaignId, incoming)
         if (!segResult.ok) { setStep1Error(segResult.error ?? 'Er ging iets mis.'); return }
+        // totalInvited is al afgeleid van dezelfde gefilterde (naam-ingevulde)
+        // rijen als `incoming` hierboven — komt dus overeen met wat
+        // saveSegmentDepartmentsAction zojuist als som heeft opgeslagen.
         const launchResult = await saveLaunchSetupAction(campaignId, launchDate, totalInvited)
-        if (!launchResult.ok) { setStep1Error(launchResult.error ?? 'Er ging iets mis.'); return }
+        if (!launchResult.ok) {
+          setStep1Error(
+            `Afdelingen zijn opgeslagen, maar de startdatum niet: ${launchResult.error ?? 'er ging iets mis.'} Probeer opnieuw.`,
+          )
+          return
+        }
         setStep(2)
       })
       return
@@ -487,23 +498,16 @@ export function SetupWizardCard({
 // geldige/unieke slug (leeg, dubbel met een andere rij) — de echte validatie
 // (incl. duplicaatcheck) gebeurt server-side bij opslaan via
 // saveSegmentDepartmentsAction. Deze functie geeft alleen een voorlopige
-// link, gebaseerd op dezelfde slugify-regels als buildSegmentDepartments.
+// link, op basis van de gedeelde slugify() uit self-send-comms.ts (geen
+// eigen kopie — anders drie plekken i.p.v. twee om in sync te houden met
+// backend/segments.py's _slugify).
 function buildSegmentSurveyLinksSafe(
   frontendBaseUrl: string,
   publicSurveyToken: string,
   label: string,
 ): { slug: string; url: string } | null {
-  const slug = slugifyPreview(label)
+  const slug = slugify(label)
   if (!slug) return null
   const [dep] = buildSegmentSurveyLinks(frontendBaseUrl, publicSurveyToken, [{ label, slug }])
   return dep ? { slug, url: dep.url } : null
-}
-
-function slugifyPreview(label: string): string {
-  return label
-    .normalize('NFKD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
 }
