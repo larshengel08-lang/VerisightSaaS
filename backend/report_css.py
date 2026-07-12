@@ -76,6 +76,12 @@ body {
 }
 .slabel::after { content: ""; flex: 1; height: 1px; margin-left: 12px; background: """ + HAIRLINE + r"""; }
 
+/* ── Hoofdstuknummering (designsprong §4) ── */
+.ch-idx { font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 700;
+  color: #E8A020; line-height: 1; margin-bottom: 6px; }
+.ch-rule { border: none; border-top: 3px solid #0D1B2A; width: 48px;
+  margin: 0 0 12px 0; }
+
 /* ── Headings ── */
 h2 { font-family: 'Inter Tight', sans-serif; font-weight: 800;
      letter-spacing: -0.03em; font-size: 22px; color: """ + INK + r"""; line-height: 1.05; }

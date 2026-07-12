@@ -376,12 +376,31 @@ def _cover(*, scan_label: str, scan_type: str, org_name: str, period: str,
 </div>"""
 
 
+class _ChapterCounter:
+    """Afgeleide hoofdstuknummering (designsprong §4): elke renderer maakt één
+    instantie en roept opener() aan op het moment dat een sectie daadwerkelijk
+    wordt geëmit — conditionele secties schuiven zo op zonder gaten.
+    vervolg() geeft het compacte label voor doorlooppagina's (verdieping 2+)."""
+
+    def __init__(self) -> None:
+        self.n = 0
+
+    def opener(self, eyebrow: str) -> str:
+        self.n += 1
+        return (f'<div class="ch-idx">{self.n:02d}</div><hr class="ch-rule">'
+                f'<span class="slabel">{eyebrow}</span>')
+
+    @staticmethod
+    def vervolg(eyebrow: str) -> str:
+        return f'<span class="slabel">{eyebrow} &mdash; vervolg</span>'
+
+
 def _bestuurlijke_read(*, kernzin: str, totaalbeeld: str,
                        primary_label: str, primary_score: float | None, primary_color: str,
                        why_cells_html: str, strong_label: str, strong_score: float | None,
-                       mgmt_q: str, responsbasis_html: str = "") -> str:
+                       mgmt_q: str, responsbasis_html: str = "", opener_html: str = "") -> str:
     return f"""<div class="pb sec">
-  <span class="slabel">Bestuurlijke read</span>
+  {opener_html or '<span class="slabel">Bestuurlijke read</span>'}
   <p class="br-kernzin">{_h(kernzin)}</p>
   <p style="font-size:11px;color:#374151;max-width:62ch;margin-bottom:22px;">{_h(totaalbeeld)}</p>
   <div class="why">
@@ -523,7 +542,8 @@ def _step_cards(nsp: dict) -> str:
 def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: str,
                             review_when: str,
                             primary_why: str | None = None,
-                            second_why: str | None = None) -> str:
+                            second_why: str | None = None,
+                            opener_html: str = "") -> str:
     """Gespreksagenda voor eerste managementbespreking — geen actieplan, agenda.
 
     Navy anker (designsprong §2a): kaarten + gespreksopener vormen één donker
@@ -535,7 +555,7 @@ def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: st
         return f'<span class="agenda-why">{_h(txt)}</span>' if txt else ""
 
     return f"""<div class="pb sec">
-  <span class="slabel">Eerste managementspoor</span>
+  {opener_html or '<span class="slabel">Eerste managementspoor</span>'}
   <h2 style="margin-bottom:6px;">Gespreksagenda</h2>
   <p style="font-size:10.5px;color:#64748B;max-width:60ch;margin-bottom:16px;">
     Geen kant-en-klaar plan &mdash; een agenda voor de begeleide managementbespreking.</p>
@@ -730,7 +750,7 @@ def _deepening_mgmt_q(deep_agg: dict, scan_type: str, factor_key: str) -> str | 
             f"toelichting. Gespreksvraag: {enr['agenda_question']}")
 
 
-def _trust_page(scan_type: str = "exit") -> str:
+def _trust_page(scan_type: str = "exit", opener_html: str = "") -> str:
     """Product-specifieke methodiekpagina — nooit gedeelde ExitScan-copy buiten ExitScan."""
     if scan_type == "retention":
         intro = ("Dit rapport bundelt patronen uit actieve-medewerkerresponses tot een groepsbeeld van "
@@ -804,7 +824,7 @@ def _trust_page(scan_type: str = "exit") -> str:
             for t, b in pairs)
 
     return f"""<div class="pb sec">
-  <span class="slabel">Methodiek, privacy &amp; interpretatiegrenzen</span>
+  {opener_html or '<span class="slabel">Methodiek, privacy &amp; interpretatiegrenzen</span>'}
   <div class="card" style="margin-bottom:14px;">
     <p style="font-size:11px;color:#374151;">{_h(intro)}</p>
   </div>
@@ -815,11 +835,11 @@ def _trust_page(scan_type: str = "exit") -> str:
 
 
 def _segment_status_block(n: int, has_segment_data: bool = False,
-                           reason: str = "n-grens") -> str:
+                           reason: str = "n-grens", opener_html: str = "") -> str:
     """Segmentstatus — altijd zichtbaar, ook als segmenten niet worden getoond."""
     if has_segment_data:
         return f"""<div class="pb sec">
-  <span class="slabel">Segmentanalyse</span>
+  {opener_html or '<span class="slabel">Segmentanalyse</span>'}
   <div class="card" style="border-left:4px solid #3C8D8A;">
     <div style="display:table;width:100%;">
       <div style="display:table-cell;vertical-align:middle;width:1%;white-space:nowrap;padding-right:14px;">
@@ -837,7 +857,7 @@ def _segment_status_block(n: int, has_segment_data: bool = False,
         # onder de vorige sectie — voorheen stonden hier twee bijna-lege pagina's
         # achter elkaar (eNPS "niet gemeten" + deze), elk met één zin.
         return f"""<div class="sec">
-  <span class="slabel">Segmentanalyse</span>
+  {opener_html or '<span class="slabel">Segmentanalyse</span>'}
   <div class="empty-state">
     <p style="margin-bottom:4px;">Segmentverschillen zijn niet getoond om herleidbaarheid te voorkomen.</p>
     <p style="margin-bottom:0;">Verdieping opent zodra voldoende responses per groep beschikbaar zijn.</p>
@@ -845,7 +865,7 @@ def _segment_status_block(n: int, has_segment_data: bool = False,
 </div>"""
 
 
-def _segment_block(segment_rows: list[dict]) -> str:
+def _segment_block(segment_rows: list[dict], opener_html: str = "") -> str:
     """Segmentanalyse per afdeling: tabel + spreidingsstrip (spec 2026-07-11).
 
     Strip-gate n>=10 (MIN_DISTRIBUTION_N): rapportbreed EEN regel — bij 5-9
@@ -858,7 +878,7 @@ def _segment_block(segment_rows: list[dict]) -> str:
     from backend.report_distribution import MIN_DISTRIBUTION_N, distribution_svg
 
     if not segment_rows:
-        return _segment_status_block(0, has_segment_data=False)
+        return _segment_status_block(0, has_segment_data=False, opener_html=opener_html)
 
     rows_html = ""
     for row in segment_rows:
@@ -898,7 +918,7 @@ def _segment_block(segment_rows: list[dict]) -> str:
             f'({lowest["avg"]:.1f}/10). Verschillen zijn gesprekstof, geen oordeel.</p></div>')
 
     return f"""<div class="pb sec">
-  <span class="slabel">Segmentanalyse &mdash; per afdeling</span>
+  {opener_html or '<span class="slabel">Segmentanalyse &mdash; per afdeling</span>'}
   <div class="card">
     <table class="item-tbl">{rows_html}</table>
     {low_note}
@@ -1258,7 +1278,8 @@ def _overzicht_summary_and_bands(profile_factors: list[tuple[str, float | None]]
 
 
 def _overzichtsprofiel(factors: list[tuple[str, float | None]],
-                       summary: str = "", bands: dict[str, list[str]] | None = None) -> str:
+                       summary: str = "", bands: dict[str, list[str]] | None = None,
+                       opener_html: str = "") -> str:
     ranked = sorted(factors, key=lambda x: (x[1] is None, x[1]))
     rows = "".join(_factor_bar_row(lbl, sc) for lbl, sc in ranked)
     # Legendatermen = exact dezelfde woorden als _factor_label (rijlabels, p.02,
@@ -1297,7 +1318,7 @@ def _overzichtsprofiel(factors: list[tuple[str, float | None]],
         if cols:
             breakdown_html = f'<div style="display:flex;margin-top:20px;">{cols}</div>'
     return f"""<div class="pb sec">
-  <span class="slabel">Overzichtsprofiel</span>
+  {opener_html or '<span class="slabel">Overzichtsprofiel</span>'}
   {summary_html}
   <div class="card">{rows}{legend}{breakdown_html}</div>
   <p class="trustline">Banden zijn vaste schaaldrempels, geen benchmark.
@@ -1309,7 +1330,7 @@ def _overzichtsprofiel(factors: list[tuple[str, float | None]],
 
 def _vertrekcontext(*, exit_reasons: list[tuple[str, int]],
                     contributing: list[tuple[str, int]], n: int,
-                    primary_factor_label: str) -> str:
+                    primary_factor_label: str, opener_html: str = "") -> str:
     def _reason_rows(items: list[tuple[str, int]]) -> str:
         return "".join(
             f'<tr><td class="iq">{_h(lbl)}</td>'
@@ -1328,7 +1349,7 @@ def _vertrekcontext(*, exit_reasons: list[tuple[str, int]],
                f"versterken elkaar in de factordiepte hierna.</p>")
 
     return f"""<div class="pb sec">
-  <span class="slabel">Vertrekcontext</span>
+  {opener_html or '<span class="slabel">Vertrekcontext</span>'}
   <h2 style="margin-bottom:6px;">Wat speelde mee bij vertrek?</h2>
   <p style="font-size:10.5px;color:#64748B;max-width:60ch;margin-bottom:18px;">
     Een <strong>hoofdreden</strong> is de doorslaggevende aanleiding om te vertrekken.
@@ -1348,7 +1369,8 @@ def _vertrekcontext(*, exit_reasons: list[tuple[str, int]],
 
 def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
                     turnover: float | None, engagement: float | None,
-                    primary_factor: str, intent_resp: dict | None = None) -> str:
+                    primary_factor: str, intent_resp: dict | None = None,
+                    opener_html: str = "") -> str:
     """Retention-exclusive section: actuele behoudscontext op groepsniveau.
 
     Signalen staan bewust onder elkaar (niet naast elkaar in één balk): titel
@@ -1417,7 +1439,7 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
     )
 
     return f"""<div class="pb sec">
-  <span class="slabel">Behoudscontext</span>
+  {opener_html or '<span class="slabel">Behoudscontext</span>'}
   <h2 style="margin-bottom:6px;">Waar staat behoud onder druk?</h2>
   <p style="font-size:10.5px;color:#64748B;max-width:60ch;margin-bottom:18px;">
     Vier signalen op groepsniveau &mdash; condities, intentie en werkbeleving samengebracht.
@@ -1445,6 +1467,7 @@ def render_exit_report_html(data: dict) -> str:
     sim         = data["sdt_item_avgs"]
     sdt_a       = data["sdt_avgs"]
     nsp         = data["nsp"]
+    ch          = _ChapterCounter()
 
     sorted_f = sorted([(fk, fa.get(fk)) for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None],
                       key=lambda x: x[1])
@@ -1558,19 +1581,22 @@ def render_exit_report_html(data: dict) -> str:
         strong_score=high_sc,
         mgmt_q=br_mgmt_q,
         responsbasis_html=_responsbasis_band,
+        opener_html=ch.opener("Bestuurlijke read"),
     )
 
     # ── Vertrekcontext (p.04 — vóór factorprofiel) ───────────────────────────
     exit_reasons = [(r["label"], r["count"]) for r in data["exit_r_dist"]]
     contributing = [(r["label"], r["count"]) for r in data["cont_dist"]]
     s += _vertrekcontext(exit_reasons=exit_reasons, contributing=contributing,
-                         n=n, primary_factor_label=low_lbl)
+                         n=n, primary_factor_label=low_lbl,
+                         opener_html=ch.opener("Vertrekcontext"))
 
     # ── Overzichtsprofiel (p.05) ──────────────────────────────────────────────
     profile_factors = [(FACTOR_LABELS_NL.get(fk, fk), fa.get(fk))
                        for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
     _overzicht_summary, _overzicht_bands = _overzicht_summary_and_bands(profile_factors)
-    s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary, bands=_overzicht_bands)
+    s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary, bands=_overzicht_bands,
+                            opener_html=ch.opener("Overzichtsprofiel"))
 
     # ── Eerste managementspoor (p.06 — na data, vóór verdieping) ─────────────
     _code_to_count = {r["code"]: r["count"] for r in data["exit_r_dist"]}
@@ -1612,10 +1638,11 @@ def render_exit_report_html(data: dict) -> str:
         review_when="Plan binnen 45-90 dagen een vervolgmoment: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.",
         primary_why=_primary_why,
         second_why=_second_why,
+        opener_html=ch.opener("Eerste managementspoor"),
     )
 
     # ── Factor detail (itemniveau prioritaire factoren) ──────────────────────
-    def _factor_detail(fk: str) -> str:
+    def _factor_detail(fk: str, opener_html: str = "") -> str:
         # ── Data logic (preserved from old helper) ──
         lbl    = FACTOR_LABELS_NL.get(fk, fk)
         fsc    = fa.get(fk)
@@ -1661,7 +1688,7 @@ def render_exit_report_html(data: dict) -> str:
                       if fk in deep_agg else "")
         spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []))
         return f"""<div class="pb sec">
-  <span class="slabel">Verdieping &mdash; {_h(lbl)}</span>
+  {opener_html or f'<span class="slabel">Verdieping &mdash; {_h(lbl)}</span>'}
   <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&mdash; {_h(fl_)}</span></h2>
   {spread}
   {er_context}
@@ -1673,10 +1700,12 @@ def render_exit_report_html(data: dict) -> str:
 </div>"""
 
     if priority_fkeys:
-        for _pfk in priority_fkeys:
-            s += _factor_detail(_pfk)
+        for _i, _pfk in enumerate(priority_fkeys):
+            _lbl = FACTOR_LABELS_NL.get(_pfk, _pfk)
+            _opener = ch.opener(f"Verdieping — {_lbl}") if _i == 0 else _ChapterCounter.vervolg(f"Verdieping — {_lbl}")
+            s += _factor_detail(_pfk, opener_html=_opener)
     else:
-        s += '<div class="pb sec"><span class="slabel">Verdieping &mdash; prioritaire factoren</span><div class="card">Factor detail beschikbaar na voldoende patroonduiding.</div></div>'
+        s += f'<div class="pb sec">{ch.opener("Verdieping — prioritaire factoren")}<div class="card">Factor detail beschikbaar na voldoende patroonduiding.</div></div>'
 
     # ── SDT basisbehoeften ────────────────────────────────────────────────────
     def _sdt_item_tbl(dim: str) -> str:
@@ -1700,7 +1729,7 @@ def render_exit_report_html(data: dict) -> str:
     )
 
     s += f"""<div class="pb sec">
-  <span class="slabel">Werkbeleving — autonomie, competentie &amp; verbondenheid</span>
+  {ch.opener("Werkbeleving — autonomie, competentie &amp; verbondenheid")}
   <p>Drie basisbehoeften die de onderliggende werkbeleving meten, onafhankelijk van de organisatiefactoren.</p>
   <div class="card" style="margin-bottom:14px;">{sdt_overview_rows}</div>"""
 
@@ -1726,7 +1755,7 @@ def render_exit_report_html(data: dict) -> str:
         es   = data["enps_score"]
         ecol = _rag_color(10.0 if es >= 20 else 6.0 if es >= 0 else 4.0)
         s += f"""<div class="pb sec">
-  <span class="slabel">Werkgeversaanbeveling</span>
+  {ch.opener("Werkgeversaanbeveling")}
   <table class="sg"><tr>
     <td><div class="sc-l">Aanbevelingsscore</div><div class="sc-v" style="color:{ecol};">{es:+d}</div><div class="sc-b">eNPS (&minus;100 tot +100)</div></td>
   </tr></table>
@@ -1736,13 +1765,15 @@ def render_exit_report_html(data: dict) -> str:
     # responsbasis-pagina en de appendix-notitie melden dit al (fail-loud blijft).
 
     # ── Segmentstatus ─────────────────────────────────────────────────────────
-    s += _segment_block(data.get("segment_rows") or [])
+    _seg_rows = data.get("segment_rows") or []
+    _seg_opener = ch.opener("Segmentanalyse &mdash; per afdeling") if _seg_rows else ch.opener("Segmentanalyse")
+    s += _segment_block(_seg_rows, opener_html=_seg_opener)
 
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]
     if _should_show_quotes(texts):
         s += f"""<div class="pb sec">
-  <span class="slabel">Open toelichtingen &mdash; {len(texts)} respondentstemmen</span>
+  {ch.opener(f"Open toelichtingen &mdash; {len(texts)} respondentstemmen")}
   {_themed_quotes(texts, "exit", top_fkeys, n)}
 </div>"""
 
@@ -1779,7 +1810,7 @@ def render_exit_report_html(data: dict) -> str:
         )
 
         s += f"""<div class="pb sec">
-  <span class="slabel">Appendix — volledige vraagresultaten</span>
+  {ch.opener("Appendix — volledige vraagresultaten")}
   <p style="font-size:9.5px;color:#64748B;margin-bottom:14px;">
     Technische onderbouwing. Scores zijn groepsgemiddelden (n={n}), geschaald 1&ndash;10.
     &#x21a9;&nbsp;= omgekeerd gecodeerd item.
@@ -1795,7 +1826,7 @@ def render_exit_report_html(data: dict) -> str:
 </div>"""
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────
-    s += _trust_page("exit")
+    s += _trust_page("exit", opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen"))
     return _doc(f"Loep Vertrek — {data['campaign_name']}", s, scan_type="exit")
 
 
@@ -1817,6 +1848,7 @@ def render_retention_report_html(data: dict) -> str:
     fim         = data["factor_items_map"]
     oim         = data["org_item_avgs"]
     sim         = data["sdt_item_avgs"]
+    ch          = _ChapterCounter()
 
     sorted_f    = sorted([(fk, fa.get(fk)) for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None], key=lambda x: x[1])
     low_f       = sorted_f[0]  if sorted_f else None
@@ -1913,6 +1945,7 @@ def render_retention_report_html(data: dict) -> str:
         strong_score=high_sc,
         mgmt_q=br_mgmt_q,
         responsbasis_html=_responsbasis_band,
+        opener_html=ch.opener("Bestuurlijke read"),
     )
 
     # ── Behoudscontext (p.04 — vóór factorprofiel) ───────────────────────────
@@ -1923,13 +1956,15 @@ def render_retention_report_html(data: dict) -> str:
         engagement=avg_eng,
         primary_factor=low_lbl or primary_label or "—",
         intent_resp=data.get("intent_resp"),
+        opener_html=ch.opener("Behoudscontext"),
     )
 
     # ── Overzichtsprofiel (p.05) ──────────────────────────────────────────────
     profile_factors = [(_fl(fk, ST), fa.get(fk))
                        for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
     _overzicht_summary, _overzicht_bands = _overzicht_summary_and_bands(profile_factors)
-    s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary, bands=_overzicht_bands)
+    s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary, bands=_overzicht_bands,
+                            opener_html=ch.opener("Overzichtsprofiel"))
 
     # ── Eerste managementspoor (p.06 — na data, vóór verdieping) ─────────────
     _ret_priority_fkeys = _select_priority_factors(fa, {}, max_n=3)
@@ -1976,13 +2011,14 @@ def render_retention_report_html(data: dict) -> str:
         review_when="Plan binnen 45-90 dagen een vervolgmoment: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.",
         primary_why=_primary_why,
         second_why=_second_why,
+        opener_html=ch.opener("Eerste managementspoor"),
     )
 
     # ── Factor detail (itemniveau prioritaire factoren) ──────────────────────
     # Priority = (10-score) — no exit-reason counts exist for retention, pass {}
     priority_fkeys = _select_priority_factors(fa, {}, max_n=3)
 
-    def _ret_factor_detail(fk: str) -> str:
+    def _ret_factor_detail(fk: str, opener_html: str = "") -> str:
         lbl    = _fl(fk, ST)
         fsc    = fa.get(fk)
         col    = _factor_color(fsc)
@@ -2019,7 +2055,7 @@ def render_retention_report_html(data: dict) -> str:
                      if fk in deep_agg else "")
         spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []))
         return f"""<div class="pb sec">
-  <span class="slabel">Verdieping &mdash; {_h(lbl)}</span>
+  {opener_html or f'<span class="slabel">Verdieping &mdash; {_h(lbl)}</span>'}
   <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&mdash; {_h(fl_)}</span></h2>
   {spread}
   {low_card}
@@ -2030,10 +2066,12 @@ def render_retention_report_html(data: dict) -> str:
 </div>"""
 
     if priority_fkeys:
-        for _pfk in priority_fkeys:
-            s += _ret_factor_detail(_pfk)
+        for _i, _pfk in enumerate(priority_fkeys):
+            _lbl = _fl(_pfk, ST)
+            _opener = ch.opener(f"Verdieping — {_lbl}") if _i == 0 else _ChapterCounter.vervolg(f"Verdieping — {_lbl}")
+            s += _ret_factor_detail(_pfk, opener_html=_opener)
     else:
-        s += '<div class="pb sec"><span class="slabel">Verdieping &mdash; prioritaire factoren</span><div class="card">Factor detail beschikbaar na voldoende patroonduiding.</div></div>'
+        s += f'<div class="pb sec">{ch.opener("Verdieping — prioritaire factoren")}<div class="card">Factor detail beschikbaar na voldoende patroonduiding.</div></div>'
 
     # ── Werkbeleving (SDT) ────────────────────────────────────────────────────
     def _sdt_item_tbl(dim: str) -> str:
@@ -2057,7 +2095,7 @@ def render_retention_report_html(data: dict) -> str:
     )
 
     s += f"""<div class="pb sec">
-  <span class="slabel">Werkbeleving — autonomie, competentie &amp; verbondenheid</span>
+  {ch.opener("Werkbeleving — autonomie, competentie &amp; verbondenheid")}
   <p>Drie basisbehoeften die de onderliggende werkbeleving meten, onafhankelijk van de organisatiefactoren.</p>
   <div class="card" style="margin-bottom:14px;">{sdt_overview_rows}</div>"""
 
@@ -2083,7 +2121,7 @@ def render_retention_report_html(data: dict) -> str:
         es   = data["enps_score"]
         ecol = _rag_color(10.0 if es >= 20 else 6.0 if es >= 0 else 4.0)
         s += f"""<div class="pb sec">
-  <span class="slabel">Werkgeversaanbeveling</span>
+  {ch.opener("Werkgeversaanbeveling")}
   <table class="sg"><tr>
     <td><div class="sc-l">Aanbevelingsscore</div><div class="sc-v" style="color:{ecol};">{es:+d}</div><div class="sc-b">eNPS (&minus;100 tot +100)</div></td>
   </tr></table>
@@ -2093,13 +2131,15 @@ def render_retention_report_html(data: dict) -> str:
     # responsbasis-pagina en de appendix-notitie melden dit al (fail-loud blijft).
 
     # ── Segmentstatus ─────────────────────────────────────────────────────────
-    s += _segment_block(data.get("segment_rows") or [])
+    _seg_rows = data.get("segment_rows") or []
+    _seg_opener = ch.opener("Segmentanalyse &mdash; per afdeling") if _seg_rows else ch.opener("Segmentanalyse")
+    s += _segment_block(_seg_rows, opener_html=_seg_opener)
 
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]
     if _should_show_quotes(texts):
         s += f"""<div class="pb sec">
-  <span class="slabel">Open toelichtingen &mdash; {len(texts)} medewerkersstemmen</span>
+  {ch.opener(f"Open toelichtingen &mdash; {len(texts)} medewerkersstemmen")}
   {_themed_quotes(texts, ST, top_fkeys, n)}
 </div>"""
 
@@ -2136,7 +2176,7 @@ def render_retention_report_html(data: dict) -> str:
         )
 
         s += f"""<div class="pb sec">
-  <span class="slabel">Appendix — volledige vraagresultaten</span>
+  {ch.opener("Appendix — volledige vraagresultaten")}
   <p style="font-size:9.5px;color:#64748B;margin-bottom:14px;">
     Technische onderbouwing. Scores zijn groepsgemiddelden (n={n}), geschaald 1&ndash;10.
     &#x21a9;&nbsp;= omgekeerd gecodeerd item.
@@ -2152,13 +2192,13 @@ def render_retention_report_html(data: dict) -> str:
 </div>"""
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────
-    s += _trust_page(ST)
+    s += _trust_page(ST, opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen"))
     return _doc(f"Loep Behoud — {data['campaign_name']}", s, scan_type="retention")
 
 
 # ─── Onboarding-exclusive helpers ────────────────────────────────────────────
 
-def _checkpointoverzicht(checkpoints: list[tuple[str, float | None]]) -> str:
+def _checkpointoverzicht(checkpoints: list[tuple[str, float | None]], opener_html: str = "") -> str:
     """Checkpoint-fasevergelijking (30/60/90 dagen) of eerlijke single-measurement degraded view.
 
     checkpoints — lijst van (fase-label, score | None).
@@ -2185,7 +2225,7 @@ def _checkpointoverzicht(checkpoints: list[tuple[str, float | None]]) -> str:
         )
 
     return f"""<div class="pb sec">
-  <span class="slabel">Checkpointoverzicht</span>
+  {opener_html or '<span class="slabel">Checkpointoverzicht</span>'}
   <h2 style="margin-bottom:14px;">Onboardingfases</h2>
   {body}
 </div>"""
@@ -2231,6 +2271,7 @@ def render_onboarding_report_html(data: dict) -> str:
     fim         = data["factor_items_map"]
     oim         = data["org_item_avgs"]
     sim         = data["sdt_item_avgs"]
+    ch          = _ChapterCounter()
 
     sorted_f = sorted([(fk, fa.get(fk)) for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None],
                       key=lambda x: x[1])
@@ -2320,16 +2361,19 @@ def render_onboarding_report_html(data: dict) -> str:
         strong_score=high_sc,
         mgmt_q=br_mgmt_q,
         responsbasis_html=_responsbasis_band,
+        opener_html=ch.opener("Bestuurlijke read"),
     )
 
     # ── Overzichtsprofiel (p.04) ──────────────────────────────────────────────
     profile_factors = [(_fl(fk, ST), fa.get(fk))
                        for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
     _overzicht_summary, _overzicht_bands = _overzicht_summary_and_bands(profile_factors)
-    s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary, bands=_overzicht_bands)
+    s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary, bands=_overzicht_bands,
+                            opener_html=ch.opener("Overzichtsprofiel"))
 
     # ── Checkpointoverzicht (p.05 — onboarding-exclusive) ────────────────────
-    s += _checkpointoverzicht(checkpoints=[("Huidig checkpoint", avg_risk)])
+    s += _checkpointoverzicht(checkpoints=[("Huidig checkpoint", avg_risk)],
+                              opener_html=ch.opener("Checkpointoverzicht"))
 
     # ── Landingskwaliteit per domein (onboarding-exclusive) ───────────────────
     domain_scores = [(_fl(fk, ST), fa.get(fk))
@@ -2370,12 +2414,13 @@ def render_onboarding_report_html(data: dict) -> str:
         review_when="Plan een vervolgmoment rond het volgende checkpoint: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.",
         primary_why=_primary_why,
         second_why=_second_why,
+        opener_html=ch.opener("Eerste managementspoor"),
     )
 
     # ── Factordiepte ×≤3 (prioriteit = laagste score, geen vertrekredenen) ────
     priority_fkeys = _select_priority_factors(fa, {}, max_n=3)
 
-    def _ob_factor_detail(fk: str) -> str:
+    def _ob_factor_detail(fk: str, opener_html: str = "") -> str:
         lbl    = _fl(fk, ST)
         fsc    = fa.get(fk)
         col    = _factor_color(fsc)
@@ -2405,7 +2450,7 @@ def render_onboarding_report_html(data: dict) -> str:
                      if show_cards and high_i else "")
         spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []))
         return f"""<div class="pb sec">
-  <span class="slabel">Verdieping &mdash; {_h(lbl)}</span>
+  {opener_html or f'<span class="slabel">Verdieping &mdash; {_h(lbl)}</span>'}
   <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&mdash; {_h(fl_)}</span></h2>
   <p style="font-size:10px;color:#64748B;margin-bottom:12px;">Lager op deze factor = meer frictie in de onboardingfase.</p>
   {spread}
@@ -2416,10 +2461,12 @@ def render_onboarding_report_html(data: dict) -> str:
 </div>"""
 
     if priority_fkeys:
-        for _pfk in priority_fkeys:
-            s += _ob_factor_detail(_pfk)
+        for _i, _pfk in enumerate(priority_fkeys):
+            _lbl = _fl(_pfk, ST)
+            _opener = ch.opener(f"Verdieping — {_lbl}") if _i == 0 else _ChapterCounter.vervolg(f"Verdieping — {_lbl}")
+            s += _ob_factor_detail(_pfk, opener_html=_opener)
     else:
-        s += '<div class="pb sec"><span class="slabel">Verdieping &mdash; prioritaire factoren</span><div class="card">Factor detail beschikbaar na voldoende patroonduiding.</div></div>'
+        s += f'<div class="pb sec">{ch.opener("Verdieping — prioritaire factoren")}<div class="card">Factor detail beschikbaar na voldoende patroonduiding.</div></div>'
 
     # ── Werkbeleving (SDT) — if present ──────────────────────────────────────
     def _sdt_item_tbl(dim: str) -> str:
@@ -2444,7 +2491,7 @@ def render_onboarding_report_html(data: dict) -> str:
 
     if sdt_overview_rows:
         s += f"""<div class="pb sec">
-  <span class="slabel">Werkbeleving — autonomie, competentie &amp; verbondenheid</span>
+  {ch.opener("Werkbeleving — autonomie, competentie &amp; verbondenheid")}
   <p>Drie basisbehoeften die de onderliggende werkbeleving meten, onafhankelijk van de organisatiefactoren.</p>
   <div class="card" style="margin-bottom:14px;">{sdt_overview_rows}</div>"""
 
@@ -2470,7 +2517,7 @@ def render_onboarding_report_html(data: dict) -> str:
         es   = data["enps_score"]
         ecol = _rag_color(10.0 if es >= 20 else 6.0 if es >= 0 else 4.0)
         s += f"""<div class="pb sec">
-  <span class="slabel">Werkgeversaanbeveling</span>
+  {ch.opener("Werkgeversaanbeveling")}
   <table class="sg"><tr>
     <td><div class="sc-l">Aanbevelingsscore</div><div class="sc-v" style="color:{ecol};">{es:+d}</div><div class="sc-b">eNPS (&minus;100 tot +100)</div></td>
   </tr></table>
@@ -2478,13 +2525,15 @@ def render_onboarding_report_html(data: dict) -> str:
 </div>"""
 
     # ── Segmentstatus ─────────────────────────────────────────────────────────
-    s += _segment_block(data.get("segment_rows") or [])
+    _seg_rows = data.get("segment_rows") or []
+    _seg_opener = ch.opener("Segmentanalyse &mdash; per afdeling") if _seg_rows else ch.opener("Segmentanalyse")
+    s += _segment_block(_seg_rows, opener_html=_seg_opener)
 
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]
     if _should_show_quotes(texts):
         s += f"""<div class="pb sec">
-  <span class="slabel">Open toelichtingen &mdash; {len(texts)} medewerkersstemmen</span>
+  {ch.opener(f"Open toelichtingen &mdash; {len(texts)} medewerkersstemmen")}
   {_themed_quotes(texts, ST, top_fkeys, n)}
 </div>"""
 
@@ -2521,7 +2570,7 @@ def render_onboarding_report_html(data: dict) -> str:
         )
 
         s += f"""<div class="pb sec">
-  <span class="slabel">Appendix — volledige vraagresultaten</span>
+  {ch.opener("Appendix — volledige vraagresultaten")}
   <p style="font-size:9.5px;color:#64748B;margin-bottom:14px;">
     Technische onderbouwing. Scores zijn groepsgemiddelden (n={n}), geschaald 1&ndash;10.
     &#x21a9;&nbsp;= omgekeerd gecodeerd item.
@@ -2531,7 +2580,7 @@ def render_onboarding_report_html(data: dict) -> str:
 </div>"""
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────
-    s += _trust_page(ST)
+    s += _trust_page(ST, opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen"))
     return _doc(f"Loep Start — {data['campaign_name']}", s, scan_type="onboarding")
 
 

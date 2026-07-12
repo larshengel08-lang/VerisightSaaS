@@ -72,3 +72,19 @@ def test_segmentconclusie_navy_blok():
         {"department": "Sales", "n": 6, "avg": 6.8, "scores": [6.8] * 6, "is_pooled": False},
     ]
     assert "Startpunt voor de bespreking" not in _segment_block(rows_pooled)
+
+
+def test_hoofdstuknummers_oplopend_zonder_gaten():
+    import re
+    html = render_retention_report_html(_min_retention_data())
+    nums = [int(m) for m in re.findall(r'class="ch-idx">(\d{2})<', html)]
+    assert nums == list(range(1, len(nums) + 1)), f"nummering met gaten: {nums}"
+    assert nums, "geen hoofdstuknummers gevonden"
+
+
+def test_verdieping_vervolg_label():
+    d = _min_retention_data()
+    html = render_retention_report_html(d)
+    # Bij >1 verdiepingsfactor: eerste = hoofdstukstart, volgende = vervolg.
+    if html.count("Verdieping &mdash;") > 1:
+        assert "VERDIEPING — VERVOLG" in html.upper() or "vervolg" in html
