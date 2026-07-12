@@ -18,7 +18,18 @@ def _slugify(label: str) -> str:
 
 
 def build_segment_departments(labels: list[str]) -> list[dict]:
-    """Labels (HR-invoer) -> [{label, slug}]. ValueError bij lege labels of slug-botsing."""
+    """Labels (HR-invoer) -> [{label, slug}]. ValueError bij lege labels of slug-botsing.
+
+    Let op (2026-07-11): campagnes worden vanuit de admin-UI rechtstreeks via
+    Supabase aangemaakt, niet via een backend-endpoint — deze functie wordt
+    dus vandaag NIET aangeroepen in de campagne-aanmaakflow. De frontend
+    (`frontend/lib/self-send-comms.ts::buildSegmentDepartments`, dezelfde
+    regels) is momenteel de enige plek die deze validatie afdwingt. Dit is
+    consistent met hoe andere campagnevelden (scan_type, delivery_mode) al
+    werken — geen nieuw risico, maar wel iets om te heroverwegen zodra er
+    een tweede schrijver van `segment_departments` bijkomt (bewerk-endpoint,
+    script, handmatige DB-wijziging): die zou deze validatie moeten aanroepen.
+    """
     out: list[dict] = []
     seen: set[str] = set()
     for raw in labels:
