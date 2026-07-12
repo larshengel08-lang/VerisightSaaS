@@ -65,7 +65,7 @@ def test_segmentconclusie_navy_blok():
     ]
     html = _segment_block(rows)
     assert "Startpunt voor de bespreking" in html
-    assert "#0D1B2A" in html.split("Startpunt voor de bespreking")[0][-400:]
+    assert 'class="navy-anchor"' in html.split("Startpunt voor de bespreking")[0][-200:]
     # Pooled laagste rij: geen conclusieblok (bestaande voorwaarde blijft)
     rows_pooled = [
         {"department": "Overige afdelingen", "n": 6, "avg": 4.0, "scores": [4.0] * 6, "is_pooled": True},

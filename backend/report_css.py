@@ -177,6 +177,13 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .agenda-opener { border-left: 3px solid #E8A020; border-top: 1px solid #2A3D52;
   padding: 14px 0 0 16px; margin-top: 16px; }
 
+/* ── Navy conclusie-anker (designsprong §2b): zelfde taal als .agenda-opener,
+   herbruikt buiten de agenda (bijv. segmentconclusie) ── */
+.navy-anchor { background: #0D1B2A; border-left: 3px solid #E8A020; padding: 14px 16px; margin-top: 12px; }
+.navy-anchor-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: #E8A020; margin-bottom: 6px; }
+.navy-anchor p { margin: 0; font-size: 11px; line-height: 1.55; color: #F4F1EA; }
+
 /* ── Trust / methodiek ── */
 .tg { display: table; width: 100%; border-collapse: separate; border-spacing: 10px 0; }
 .tc { display: table-cell; background: #fff; border: 1px solid """ + HAIRLINE + r"""; padding: 14px 15px; vertical-align: top; width: 33%; }
