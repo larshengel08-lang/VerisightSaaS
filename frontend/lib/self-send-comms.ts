@@ -160,9 +160,14 @@ export function prepareSegmentDepartmentsUpdate(
       )
     }
   }
-  const departments = validated.map((d, i) => ({
+  // Koppel invited_count via label (niet index): buildSegmentDepartments gooit
+  // vandaag bij lege/dubbele labels i.p.v. stil te filteren/herordenen, maar
+  // een index-zip zou bij toekomstig ander gedrag stilzwijgend aantallen aan
+  // de verkeerde afdeling toekennen. Label-lookup is even goedkoop en robuust.
+  const invitedByLabel = new Map(incoming.map((i) => [i.label.trim(), i.invited_count]))
+  const departments = validated.map((d) => ({
     ...d,
-    invited_count: incoming[i].invited_count,
+    invited_count: invitedByLabel.get(d.label)!,
   }))
   return {
     departments,
