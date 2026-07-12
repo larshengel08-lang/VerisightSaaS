@@ -13,10 +13,10 @@ export default async function CampaignSetupPage({ params }: Props) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) notFound()
 
-  const [{ data: campaign }, { data: delivery }] = await Promise.all([
+  const [{ data: campaign }, { data: delivery }, { data: respondentDepts }] = await Promise.all([
     supabase
       .from('campaigns')
-      .select('id, public_survey_token, scan_type, name, closes_at, comms_mode, organization_id')
+      .select('id, public_survey_token, scan_type, name, closes_at, comms_mode, organization_id, segment_departments')
       .eq('id', id)
       .maybeSingle(),
     supabase
@@ -24,9 +24,20 @@ export default async function CampaignSetupPage({ params }: Props) {
       .select('launch_date, invited_count, launch_confirmed_at')
       .eq('campaign_id', id)
       .maybeSingle(),
+    supabase
+      .from('respondents')
+      .select('department')
+      .eq('campaign_id', id)
+      .not('department', 'is', null),
   ])
 
   if (!campaign) notFound()
+
+  const departmentResponseCounts: Record<string, number> = {}
+  for (const r of respondentDepts ?? []) {
+    const dept = r.department as string | null
+    if (dept) departmentResponseCounts[dept] = (departmentResponseCounts[dept] ?? 0) + 1
+  }
 
   // Al gelanceerd — wizard niet meer nodig
   if (delivery?.launch_confirmed_at) {
@@ -53,6 +64,10 @@ export default async function CampaignSetupPage({ params }: Props) {
         frontendBaseUrl={frontendBaseUrl}
         initialLaunchDate={delivery?.launch_date ?? null}
         initialInvitedCount={delivery?.invited_count ?? null}
+        segmentDepartments={(campaign as Record<string, unknown>).segment_departments as
+          | { label: string; slug: string; invited_count?: number }[]
+          | null}
+        departmentResponseCounts={departmentResponseCounts}
       />
     </div>
   )

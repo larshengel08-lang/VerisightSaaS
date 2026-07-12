@@ -52,8 +52,8 @@ export default async function CampaignPage({ params }: Props) {
   if (!statsRow) notFound()
   const stats = statsRow as CampaignStats
 
-  const [{ data: campaignMeta }, { data: deliveryRecord }, { data: reminderEvents }, { data: profile }, { data: orgData }] = await Promise.all([
-    supabase.from('campaigns').select('closed_at, closes_at, delivery_mode, comms_mode, public_survey_token, organization_id').eq('id', id).maybeSingle(),
+  const [{ data: campaignMeta }, { data: deliveryRecord }, { data: reminderEvents }, { data: profile }, { data: orgData }, { data: respondentDepts }] = await Promise.all([
+    supabase.from('campaigns').select('closed_at, closes_at, delivery_mode, comms_mode, public_survey_token, organization_id, segment_departments').eq('id', id).maybeSingle(),
     supabase
       .from('campaign_delivery_records')
       .select('launch_date, launch_confirmed_at, reminder_config, participant_comms_config, invited_count')
@@ -69,7 +69,14 @@ export default async function CampaignPage({ params }: Props) {
       .limit(1),
     supabase.from('profiles').select('is_verisight_admin').eq('id', user.id).maybeSingle(),
     supabase.from('organizations').select('name').eq('id', stats.organization_id ?? '').maybeSingle(),
+    supabase.from('respondents').select('department').eq('campaign_id', id).not('department', 'is', null),
   ])
+
+  const departmentResponseCounts: Record<string, number> = {}
+  for (const r of respondentDepts ?? []) {
+    const dept = r.department as string | null
+    if (dept) departmentResponseCounts[dept] = (departmentResponseCounts[dept] ?? 0) + 1
+  }
   const isAdmin = profile?.is_verisight_admin === true
 
   const reminderConfig = normalizeReminderConfig(deliveryRecord?.reminder_config ?? null)
@@ -150,6 +157,10 @@ export default async function CampaignPage({ params }: Props) {
           frontendBaseUrl={process.env.NEXT_PUBLIC_FRONTEND_URL ?? 'https://getloep.nl'}
           initialLaunchDate={deliveryRecord?.launch_date ?? null}
           initialInvitedCount={deliveryRecord?.invited_count ?? null}
+          segmentDepartments={(campaignMeta as Record<string, unknown>)?.segment_departments as
+            | { label: string; slug: string; invited_count?: number }[]
+            | null}
+          departmentResponseCounts={departmentResponseCounts}
         />
       ) : state.kind === 'running' ? (
         <RunningStateCard

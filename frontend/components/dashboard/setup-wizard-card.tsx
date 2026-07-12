@@ -3,8 +3,9 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { SCAN_TYPE_LABELS, type ScanType } from '@/lib/types'
-import { buildSurveyLink } from '@/lib/self-send-comms'
+import { buildSegmentSurveyLinks, buildSurveyLink, type SegmentDepartmentStored } from '@/lib/self-send-comms'
 import { saveLaunchSetupAction, confirmLaunchAction } from '@/app/(dashboard)/campaigns/[id]/setup/launch-setup-actions'
+import { saveSegmentDepartmentsAction } from '@/app/(dashboard)/campaigns/[id]/setup/segment-actions'
 
 interface Props {
   campaignId: string
@@ -14,9 +15,16 @@ interface Props {
   frontendBaseUrl: string
   initialLaunchDate: string | null
   initialInvitedCount: number | null
+  segmentDepartments?: SegmentDepartmentStored[] | null
+  departmentResponseCounts?: Record<string, number>
 }
 
 type WizardStep = 1 | 2
+
+interface DeptRow {
+  label: string
+  invitedCount: number | ''
+}
 
 const SCAN_WHY: Partial<Record<ScanType, string>> = {
   retention: 'Jouw eerlijke inzicht helpt ons gericht te verbeteren wat jij en je collega\'s dagelijks ervaren.',
@@ -65,9 +73,17 @@ export function SetupWizardCard({
   frontendBaseUrl,
   initialLaunchDate,
   initialInvitedCount,
+  segmentDepartments,
+  departmentResponseCounts,
 }: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+
+  // Segment-modus: de campagne heeft een (evt. lege) afdelingslijst (spec
+  // 2026-07-12 §1/§5). Een lege lijst betekent "modus aan, klant moet nog
+  // vullen" — géén algemene link wordt dan getoond, wel het afdelingenblok.
+  const segmentMode = Boolean(segmentDepartments)
+
   const [step, setStep] = useState<WizardStep>(
     initialLaunchDate && initialInvitedCount ? 2 : 1,
   )
@@ -79,6 +95,33 @@ export function SetupWizardCard({
   const [copiedSubject, setCopiedSubject] = useState(false)
   const [copiedBody, setCopiedBody] = useState(false)
   const [everCopied, setEverCopied] = useState(false)
+  const [copiedDeptSlug, setCopiedDeptSlug] = useState<string | null>(null)
+
+  // Rijen voor het afdelingenblok. Startpunt: bestaande afdelingen, of — als
+  // de lijst nog leeg is (modus net aangezet) — twee lege rijen zodat de
+  // minimaal-2-eis meteen zichtbaar is.
+  const [deptRows, setDeptRows] = useState<DeptRow[]>(() => {
+    if (segmentDepartments && segmentDepartments.length > 0) {
+      return segmentDepartments.map((d) => ({
+        label: d.label,
+        invitedCount: d.invited_count ?? '',
+      }))
+    }
+    return [{ label: '', invitedCount: '' }, { label: '', invitedCount: '' }]
+  })
+
+  // Afdelingen met >=1 respondent: naam-wijziging/verwijdering niet meer
+  // toegestaan — de link is al in omloop (spec §3).
+  const lockedDepartments = new Set(
+    Object.keys(departmentResponseCounts ?? {}).filter(
+      (label) => (departmentResponseCounts![label] ?? 0) > 0,
+    ),
+  )
+
+  const totalInvited = deptRows.reduce(
+    (sum, row) => sum + (typeof row.invitedCount === 'number' ? row.invitedCount : 0),
+    0,
+  )
 
   const surveyLink = buildSurveyLink(frontendBaseUrl, publicSurveyToken)
   const scanLabel = SCAN_TYPE_LABELS[scanType] ?? scanType
@@ -95,10 +138,53 @@ export function SetupWizardCard({
   const today = new Date().toISOString().slice(0, 10)
   const tip = SCAN_TIP[scanType]
 
+  function updateDeptRow(index: number, patch: Partial<DeptRow>) {
+    setDeptRows((prev) => prev.map((row, i) => (i === index ? { ...row, ...patch } : row)))
+  }
+
+  function addDeptRow() {
+    setDeptRows((prev) => [...prev, { label: '', invitedCount: '' }])
+  }
+
+  function removeDeptRow(index: number) {
+    setDeptRows((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  async function handleCopyDeptLink(slug: string, url: string) {
+    try {
+      await navigator.clipboard.writeText(url)
+      setEverCopied(true)
+      setCopiedDeptSlug(slug)
+      setTimeout(() => setCopiedDeptSlug(null), 2000)
+    } catch { /* clipboard unavailable */ }
+  }
+
   async function handleStep1Submit(e: React.FormEvent) {
     e.preventDefault()
     setStep1Error(null)
     if (!launchDate) { setStep1Error('Vul een startdatum in.'); return }
+
+    if (segmentMode) {
+      const incoming = deptRows
+        .filter((row) => row.label.trim())
+        .map((row) => ({
+          label: row.label.trim(),
+          invited_count: typeof row.invitedCount === 'number' ? row.invitedCount : 0,
+        }))
+      if (incoming.length < 2) {
+        setStep1Error('Vul minimaal 2 afdelingen in (naam + aantal deelnemers).')
+        return
+      }
+      startTransition(async () => {
+        const segResult = await saveSegmentDepartmentsAction(campaignId, incoming)
+        if (!segResult.ok) { setStep1Error(segResult.error ?? 'Er ging iets mis.'); return }
+        const launchResult = await saveLaunchSetupAction(campaignId, launchDate, totalInvited)
+        if (!launchResult.ok) { setStep1Error(launchResult.error ?? 'Er ging iets mis.'); return }
+        setStep(2)
+      })
+      return
+    }
+
     if (!invitedCount || Number(invitedCount) < 1) { setStep1Error('Vul het aantal deelnemers in (minimaal 1).'); return }
     startTransition(async () => {
       const result = await saveLaunchSetupAction(campaignId, launchDate, Number(invitedCount))
@@ -153,44 +239,133 @@ export function SetupWizardCard({
 
           {step === 1 && (
             <form onSubmit={handleStep1Submit} className="mt-5 space-y-4">
-              <div className="grid grid-cols-1 gap-3">
-                <div>
-                  <label className="mb-1 block text-xs font-semibold text-white/50">Startdatum</label>
-                  <input
-                    type="date" min={today} value={launchDate} required
-                    onChange={(e) => setLaunchDate(e.target.value)}
-                    className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#E8A020]/50"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs font-semibold text-white/50">Aantal deelnemers</label>
-                  <input
-                    type="number" min={1} value={invitedCount} placeholder="bijv. 40" required
-                    onChange={(e) => setInvitedCount(e.target.value === '' ? '' : Number(e.target.value))}
-                    className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#E8A020]/50"
-                  />
-                </div>
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-white/50">Startdatum</label>
+                <input
+                  type="date" min={today} value={launchDate} required
+                  onChange={(e) => setLaunchDate(e.target.value)}
+                  className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#E8A020]/50"
+                />
               </div>
 
-              <div>
-                <p className="mb-1 text-xs font-semibold text-white/50">Survey-link</p>
-                <div className="flex items-center gap-2">
-                  <code className="flex-1 truncate rounded-lg border border-white/15 bg-white/10 px-2 py-1.5 text-[10px] text-white/70">
-                    {surveyLink}
-                  </code>
-                  <a href={surveyLink} target="_blank" rel="noopener noreferrer"
-                    className="whitespace-nowrap rounded-lg border border-white/20 px-2.5 py-1.5 text-xs font-semibold text-white/80 hover:bg-white/10">
-                    Test →
-                  </a>
+              {segmentMode ? (
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-xs font-semibold text-white/50">Afdelingen &amp; links</p>
+                    <p className="mt-1 text-[10px] leading-relaxed text-white/40">
+                      Elke afdeling krijgt een eigen link — minimaal 5 deelnemers per afdeling
+                      voor zichtbaarheid in het rapport.
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    {deptRows.map((row, index) => {
+                      const isLocked = lockedDepartments.has(row.label)
+                      const links = row.label.trim()
+                        ? buildSegmentSurveyLinksSafe(frontendBaseUrl, publicSurveyToken, row.label)
+                        : null
+                      return (
+                        <div key={index} className="rounded-lg border border-white/15 bg-white/5 p-3">
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={row.label}
+                              disabled={isLocked}
+                              placeholder="Afdelingsnaam"
+                              onChange={(e) => updateDeptRow(index, { label: e.target.value })}
+                              className="flex-1 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#E8A020]/50 disabled:opacity-50"
+                            />
+                            <input
+                              type="number" min={1}
+                              value={row.invitedCount}
+                              placeholder="aantal"
+                              onChange={(e) =>
+                                updateDeptRow(index, {
+                                  invitedCount: e.target.value === '' ? '' : Number(e.target.value),
+                                })
+                              }
+                              className="w-24 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#E8A020]/50"
+                            />
+                            {!isLocked && deptRows.length > 2 && (
+                              <button
+                                type="button"
+                                onClick={() => removeDeptRow(index)}
+                                className="rounded-lg border border-white/15 px-2 text-xs text-white/50 hover:bg-white/10"
+                                aria-label="Verwijder afdeling"
+                              >
+                                ×
+                              </button>
+                            )}
+                          </div>
+                          {isLocked && (
+                            <p className="mt-1.5 text-[10px] text-white/40">
+                              🔒 naam vergrendeld — er zijn al responses op deze link
+                            </p>
+                          )}
+                          {links && (
+                            <div className="mt-2 flex items-center gap-2">
+                              <code className="flex-1 truncate rounded border border-white/10 bg-white/5 px-2 py-1 text-[9px] text-white/50">
+                                {links.url}
+                              </code>
+                              <button
+                                type="button"
+                                onClick={() => handleCopyDeptLink(links.slug, links.url)}
+                                className="whitespace-nowrap rounded border border-white/20 px-2 py-1 text-[10px] font-semibold text-white/80 hover:bg-white/10"
+                              >
+                                {copiedDeptSlug === links.slug ? 'Gekopieerd ✓' : 'Kopieer link'}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={addDeptRow}
+                    className="w-full rounded-lg border border-dashed border-white/30 px-3 py-2 text-xs text-white/70 hover:bg-white/5"
+                  >
+                    + Afdeling toevoegen
+                  </button>
+
+                  <div className="flex items-center justify-between border-t border-white/15 pt-2 text-xs text-white/70">
+                    <span>Totaal deelnemers</span>
+                    <strong className="text-white">{totalInvited}</strong>
+                  </div>
                 </div>
-                <p className="mt-2 text-[10px] leading-relaxed text-white/40">
-                  Alleen openen om te controleren — niet volledig invullen, anders tellen jouw antwoorden mee.
-                </p>
-                <label className="mt-2 flex cursor-pointer items-center gap-2 text-[10px] text-white/50">
-                  <input type="checkbox" checked={linkTested} onChange={(e) => setLinkTested(e.target.checked)} className="h-3.5 w-3.5 rounded" />
-                  Link getest en werkt
-                </label>
-              </div>
+              ) : (
+                <>
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-white/50">Aantal deelnemers</label>
+                    <input
+                      type="number" min={1} value={invitedCount} placeholder="bijv. 40" required
+                      onChange={(e) => setInvitedCount(e.target.value === '' ? '' : Number(e.target.value))}
+                      className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#E8A020]/50"
+                    />
+                  </div>
+
+                  <div>
+                    <p className="mb-1 text-xs font-semibold text-white/50">Survey-link</p>
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 truncate rounded-lg border border-white/15 bg-white/10 px-2 py-1.5 text-[10px] text-white/70">
+                        {surveyLink}
+                      </code>
+                      <a href={surveyLink} target="_blank" rel="noopener noreferrer"
+                        className="whitespace-nowrap rounded-lg border border-white/20 px-2.5 py-1.5 text-xs font-semibold text-white/80 hover:bg-white/10">
+                        Test →
+                      </a>
+                    </div>
+                    <p className="mt-2 text-[10px] leading-relaxed text-white/40">
+                      Alleen openen om te controleren — niet volledig invullen, anders tellen jouw antwoorden mee.
+                    </p>
+                    <label className="mt-2 flex cursor-pointer items-center gap-2 text-[10px] text-white/50">
+                      <input type="checkbox" checked={linkTested} onChange={(e) => setLinkTested(e.target.checked)} className="h-3.5 w-3.5 rounded" />
+                      Link getest en werkt
+                    </label>
+                  </div>
+                </>
+              )}
 
               {step1Error && (
                 <p className="rounded-lg bg-red-500/20 px-3 py-2 text-xs font-semibold text-red-300">{step1Error}</p>
@@ -229,6 +404,15 @@ export function SetupWizardCard({
                 <div className="rounded-xl bg-[#E8A020]/15 border border-[#E8A020]/30 px-3 py-2.5">
                   <p className="text-[10px] font-semibold text-[#E8A020] mb-0.5">Advies</p>
                   <p className="text-[11px] leading-relaxed text-white/70">{tip}</p>
+                </div>
+              )}
+
+              {segmentMode && (
+                <div className="rounded-xl bg-white/5 border border-white/10 px-3 py-2.5">
+                  <p className="text-[10px] font-semibold text-white/50 mb-1">Deel per afdeling de eigen link</p>
+                  <p className="text-[11px] leading-relaxed text-white/60">
+                    Er is bewust géén algemene link — gebruik de links uit stap 1 per afdeling.
+                  </p>
                 </div>
               )}
 
@@ -297,4 +481,29 @@ export function SetupWizardCard({
       </div>
     </section>
   )
+}
+
+// Live link-preview tijdens het intypen: de naam is dan nog niet per se een
+// geldige/unieke slug (leeg, dubbel met een andere rij) — de echte validatie
+// (incl. duplicaatcheck) gebeurt server-side bij opslaan via
+// saveSegmentDepartmentsAction. Deze functie geeft alleen een voorlopige
+// link, gebaseerd op dezelfde slugify-regels als buildSegmentDepartments.
+function buildSegmentSurveyLinksSafe(
+  frontendBaseUrl: string,
+  publicSurveyToken: string,
+  label: string,
+): { slug: string; url: string } | null {
+  const slug = slugifyPreview(label)
+  if (!slug) return null
+  const [dep] = buildSegmentSurveyLinks(frontendBaseUrl, publicSurveyToken, [{ label, slug }])
+  return dep ? { slug, url: dep.url } : null
+}
+
+function slugifyPreview(label: string): string {
+  return label
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
 }

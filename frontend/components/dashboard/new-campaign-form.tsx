@@ -61,21 +61,29 @@ export function NewCampaignForm({ orgs }: Props) {
     setLoading(true)
     setError(null)
 
+    // Segment-modus mag met een lege lijst opgeslagen worden (spec 2026-07-12
+    // §1): de klant vult de afdelingen zelf in via de setup-wizard. Alleen
+    // wanneer er al labels zijn ingevoerd, gelden de validatieregels (min. 2,
+    // geen dubbele/lege labels) — een half ingevulde lijst mag niet stil
+    // worden opgeslagen alsof die compleet is.
     let segmentDepartments: SegmentDepartment[] | null = null
     if (useSegments) {
-      try {
-        segmentDepartments = buildSegmentDepartments(
-          segmentLabels.split('\n').filter((l) => l.trim()),
-        )
-      } catch (e) {
-        setError(e instanceof Error ? e.message : 'Ongeldige afdelingslijst')
-        setLoading(false)
-        return
-      }
-      if (segmentDepartments.length < 2) {
-        setError('Segmentrapportage vraagt minimaal 2 afdelingen.')
-        setLoading(false)
-        return
+      const labels = segmentLabels.split('\n').filter((l) => l.trim())
+      if (labels.length > 0) {
+        try {
+          segmentDepartments = buildSegmentDepartments(labels)
+        } catch (e) {
+          setError(e instanceof Error ? e.message : 'Ongeldige afdelingslijst')
+          setLoading(false)
+          return
+        }
+        if (segmentDepartments.length < 2) {
+          setError('Segmentrapportage vraagt minimaal 2 afdelingen.')
+          setLoading(false)
+          return
+        }
+      } else {
+        segmentDepartments = []
       }
     }
 
@@ -225,7 +233,8 @@ export function NewCampaignForm({ orgs }: Props) {
         {useSegments ? (
           <div className="mt-3 space-y-2">
             <label className="mb-1 block text-xs font-medium text-slate-700">
-              Afdelingen (één per regel, minimaal 2)
+              Afdelingen (één per regel, minimaal 2 — of leeg laten zodat de klant dit zelf
+              invult bij de setup)
             </label>
             <textarea
               value={segmentLabels}

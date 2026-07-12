@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { SetupWizardCard } from './setup-wizard-card'
 import type { ScanType } from '@/lib/types'
+import type { SegmentDepartmentStored } from '@/lib/self-send-comms'
 
 interface Props {
   campaignId: string
@@ -12,6 +13,8 @@ interface Props {
   frontendBaseUrl: string
   initialLaunchDate: string | null
   initialInvitedCount: number | null
+  segmentDepartments?: SegmentDepartmentStored[] | null
+  departmentResponseCounts?: Record<string, number>
 }
 
 const BALLOONS = [

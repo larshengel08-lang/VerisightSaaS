@@ -50,7 +50,7 @@ export default async function DashboardHomePage() {
     )
   }
 
-  const [{ data: deliveryRecord }, { data: reminderEvents }, { data: campaignRow }, { data: orgData }] = await Promise.all([
+  const [{ data: deliveryRecord }, { data: reminderEvents }, { data: campaignRow }, { data: orgData }, { data: respondentDepts }] = await Promise.all([
     supabase
       .from('campaign_delivery_records')
       .select('launch_date, launch_confirmed_at, reminder_config, participant_comms_config, invited_count')
@@ -66,7 +66,7 @@ export default async function DashboardHomePage() {
       .limit(1),
     supabase
       .from('campaigns')
-      .select('delivery_mode, comms_mode, public_survey_token')
+      .select('delivery_mode, comms_mode, public_survey_token, segment_departments')
       .eq('id', campaign.campaign_id)
       .maybeSingle(),
     supabase
@@ -74,7 +74,18 @@ export default async function DashboardHomePage() {
       .select('name')
       .eq('id', campaign.organization_id)
       .maybeSingle(),
+    supabase
+      .from('respondents')
+      .select('department')
+      .eq('campaign_id', campaign.campaign_id)
+      .not('department', 'is', null),
   ])
+
+  const departmentResponseCounts: Record<string, number> = {}
+  for (const r of respondentDepts ?? []) {
+    const dept = r.department as string | null
+    if (dept) departmentResponseCounts[dept] = (departmentResponseCounts[dept] ?? 0) + 1
+  }
 
   const reminderConfig = normalizeReminderConfig(deliveryRecord?.reminder_config ?? null)
 
@@ -128,6 +139,10 @@ export default async function DashboardHomePage() {
           frontendBaseUrl={process.env.NEXT_PUBLIC_FRONTEND_URL ?? 'https://getloep.nl'}
           initialLaunchDate={deliveryRecord?.launch_date ?? null}
           initialInvitedCount={deliveryRecord?.invited_count ?? null}
+          segmentDepartments={(campaignRow as Record<string, unknown>)?.segment_departments as
+            | { label: string; slug: string; invited_count?: number }[]
+            | null}
+          departmentResponseCounts={departmentResponseCounts}
         />
       ) : state.kind === 'running' ? (
         <RunningStateCard
