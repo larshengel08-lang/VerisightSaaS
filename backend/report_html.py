@@ -1748,13 +1748,13 @@ def render_exit_report_html(data: dict) -> str:
 
     # ── Eerste managementspoor / Gespreksagenda (naar het slot — na het bewijs,
     # vóór de appendix) ────────────────────────────────────────────────────────
-    _ag_priority_fkeys = _select_priority_factors(fa, exit_code_counts, max_n=3)
-    _enriched_q = (_deepening_mgmt_q(deep_agg, "exit", _ag_priority_fkeys[0])
-                   if _ag_priority_fkeys else None)
+    _ex_priority_fkeys = _select_priority_factors(fa, exit_code_counts, max_n=3)
+    _enriched_q = (_deepening_mgmt_q(deep_agg, "exit", _ex_priority_fkeys[0])
+                   if _ex_priority_fkeys else None)
 
     # Primair thema grounded in het laagst scorende item (zelfde aanpak als
     # retention): geen vaste per-factor beslistekst die nooit meebeweegt met data.
-    _ex_primary_fk = _ag_priority_fkeys[0] if _ag_priority_fkeys else None
+    _ex_primary_fk = _ex_priority_fkeys[0] if _ex_priority_fkeys else None
     _ex_primary_items = ([(ik, q, oim.get(ik)) for ik, q in fim.get(_ex_primary_fk, []) if oim.get(ik) is not None]
                           if _ex_primary_fk else [])
     _ex_primary_low = min(_ex_primary_items, key=lambda x: x[2]) if _ex_primary_items else None
@@ -1780,7 +1780,7 @@ def render_exit_report_html(data: dict) -> str:
     s += _eerste_managementspoor(
         primary_theme=_ex_primary_theme,
         second_point=f"{FACTOR_LABELS_NL.get(sorted_f[1][0], sorted_f[1][0])} ({_score_str(sorted_f[1][1])})" if len(sorted_f) > 1 else "",
-        mgmt_q=_enriched_q or (_mgmt_q(_ag_priority_fkeys[0], "exit") if _ag_priority_fkeys else (nsp.get("first_decision") or "")),
+        mgmt_q=_enriched_q or (_mgmt_q(_ex_priority_fkeys[0], "exit") if _ex_priority_fkeys else (nsp.get("first_decision") or "")),
         review_when="Plan binnen 45-90 dagen een vervolgmoment: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.",
         primary_why=_primary_why,
         second_why=_second_why,
