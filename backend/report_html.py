@@ -79,7 +79,7 @@ _FACTOR_EXIT_LABEL: dict[str, str] = {
 _FACTOR_RETENTION_LABEL: dict[str, str] = {
     "leadership":   "Leiderschap en vertrouwen",
     "culture":      "Cultuur en psychologische veiligheid",
-    "growth":       "Groeiperspectief en erkenning",
+    "growth":       "Groeiperspectief",
     "compensation": "Beloning en eerlijkheid",
     "workload":     "Werkdruk en herstelruimte",
     "role_clarity": "Rolhelderheid en eigenaarschap",

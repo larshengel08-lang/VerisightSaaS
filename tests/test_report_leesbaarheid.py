@@ -42,3 +42,20 @@ def test_agenda_na_bewijs_voor_appendix():
     werkbeleving = html.find("Werkbeleving")
     assert -1 not in (agenda, appendix, werkbeleving)
     assert werkbeleving < agenda < appendix, "agenda moet na het bewijs en voor de appendix staan"
+
+
+def test_geen_erkenning_label_meer():
+    # _min_retention_data() heeft maar 1 factor (workload) — verrijk met
+    # growth zodat het label daadwerkelijk rendert (zelfde patroon als
+    # test_report_design_sprong.py::test_verdieping_vervolg_label).
+    d = _min_retention_data()
+    d["factor_avgs"] = {"workload": 4.0, "growth": 5.0}
+    d["top_fkeys"] = ["growth"]
+    d["factor_items_map"] = {
+        "workload": [("W1", "Testvraag werkdruk")],
+        "growth": [("G1", "Testvraag groei")],
+    }
+    d["org_item_avgs"] = {"W1": 4.0, "G1": 5.0}
+    html = render_retention_report_html(d)
+    assert "Groeiperspectief en erkenning" not in html
+    assert "Groeiperspectief" in html
