@@ -63,6 +63,9 @@ export default function CompleteAccountPage() {
         router.replace('/login?error=invite')
         return true
       }
+      // L5: strip het (nu verbruikte) token_hash uit de URL zodat het niet in de
+      // browser-history/adresbalk blijft staan op een gedeeld apparaat.
+      window.history.replaceState({}, '', window.location.pathname)
       applySession(data.user.email)
       return true
     }
