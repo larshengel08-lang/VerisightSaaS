@@ -15,7 +15,7 @@ def test_direction_block_shows_delta_chain_and_footer():
     html = _direction_block(AGG_OK, "retention", "workload")
     assert "Van de 12 respondenten die de verdieping beantwoordden, gaven 10 ook een gespreksrichting." in html
     assert "18 respondenten hadden een verdieptrigger" not in html           # geen dubbele keten
-    assert "input van respondenten" in html                                  # voetregel
+    assert "wat de groep aandraagt voor het gesprek" in html                 # voetregel (herschreven 2026-07-13)
     for verboden in ("aanbeveling", "actieplan", "verschilmaker"):
         assert verboden not in html.lower()
 

@@ -685,11 +685,11 @@ def _direction_block(agg: dict, scan_type: str, factor_key: str) -> str:
     if agg.get("direction_skipped", 0) / offered > 0.4:
         body += ('<p style="font-size:10px;color:#92400E;margin:4px 0 0;">'
                  'Gespreksrichting-basis beperkt door overslag.</p>')
+    # Eén zelfverzekerde zin i.p.v. drie disclaimers (feedbackronde 2026-07-13):
+    # de claimgrens (input, geen uitvoeringsadvies) blijft, de verdedigende toon niet.
     footer = ('<p style="font-size:10px;color:#64748B;margin:8px 0 0;">'
-              'Gespreksrichting uit de groep is input van respondenten, geen uitvoeringsadvies. '
-              'Haalbaarheid, rechtvaardigheid en passendheid binnen bestaand beleid wegen mee '
-              'in de managementbespreking. Uitkomst van &eacute;&eacute;n meting: een '
-              'gesprekshaakje, geen benchmark of trend.</p>')
+              'Dit is wat de groep aandraagt voor het gesprek &mdash; de weging '
+              '(haalbaarheid, passendheid) gebeurt in de managementbespreking.</p>')
     return (f'<div class="card"><span class="eyebrow">Welke gespreksrichting respondenten kozen</span>'
             f'<p style="font-size:10px;margin:4px 0 0;">{_h(chain)}</p>{body}{footer}</div>')
 
@@ -911,11 +911,18 @@ def _segment_block(segment_rows: list[dict], opener_html: str = "") -> str:
     lowest = segment_rows[0]
     low_note = ""
     if not lowest.get("is_pooled", False):
+        # Noemer in de conclusie zelf (feedbackronde 2026-07-13): een manager
+        # met een lage score moet niet zelf hoeven ontdekken dat n klein is —
+        # het rapport is de "n=5"-discussie voor, i.p.v. er munitie voor te zijn.
+        _low_inv = lowest.get("invited")
+        _low_basis = (f'{lowest["n"]} van de {_low_inv} uitgenodigden vulden in'
+                      if _low_inv else f'{lowest["n"]} responses')
         low_note = (
             f'<div class="navy-anchor">'
             f'<div class="navy-anchor-eyebrow">Startpunt voor de bespreking</div>'
-            f'<p><strong>{_h(lowest["department"])}</strong> scoort het laagst '
-            f'({lowest["avg"]:.1f}/10). Verschillen zijn gesprekstof, geen oordeel.</p></div>')
+            f'<p><strong>{_h(lowest["department"])}</strong> laat het laagste signaal zien '
+            f'({lowest["avg"]:.1f}/10; {_low_basis}). Gebruik dit om te toetsen wat hier '
+            f'speelt &mdash; geen ranking of oordeel.</p></div>')
 
     return f"""<div class="pb sec">
   {opener_html or '<span class="slabel">Segmentanalyse &mdash; per afdeling</span>'}
@@ -1527,9 +1534,9 @@ def render_exit_report_html(data: dict) -> str:
         if er_n:
             why_cells += f'<td class="why-cell"><div class="why-l">Hoofdreden</div><div class="why-v" style="color:{tf_col};">{er_n}&times;</div><div class="why-b">van {n} vertrekkers de meest genoemde reden</div></td>'
         if tf_sc:
-            why_cells += f'<td class="why-cell"><div class="why-l">Factorscore</div><div class="why-v" style="color:{tf_col};">{tf_sc:.1f}/10</div><div class="why-b">gemiddelde van {len(i_scores)} stellingen — {_h(tf_fl.lower())}</div></td>'
+            why_cells += f'<td class="why-cell"><div class="why-l">Gemiddelde score</div><div class="why-v" style="color:{tf_col};">{tf_sc:.1f}/10</div><div class="why-b">van de {len(i_scores)} stellingen over dit thema — {_h(tf_fl.lower())}</div></td>'
         if low_item:
-            why_cells += (f'<td class="why-cell"><div class="why-l">Laagste item</div>'
+            why_cells += (f'<td class="why-cell"><div class="why-l">Laagst scorende stelling</div>'
                           f'<div class="why-v" style="color:{_factor_color(low_item[2])};">{low_item[2]:.1f}/10</div>'
                           f'<div class="why-b">{_h(low_item[1])}</div></td>')
         if cont_n:
@@ -1623,9 +1630,9 @@ def render_exit_report_html(data: dict) -> str:
                  key=lambda kv: (kv[1], kv[0]), default=None)
     _primary_why = None
     if _ex_primary_low:
-        _primary_why = f"Laagste item in het cijferbeeld ({_ex_primary_low[2]:.1f}/10)."
+        _primary_why = f"Laagst scorende stelling in het cijferbeeld ({_ex_primary_low[2]:.1f}/10)."
         if _top_p and _answered_p >= 5:
-            _primary_why = (f"Laagste item in het cijferbeeld ({_ex_primary_low[2]:.1f}/10); "
+            _primary_why = (f"Laagst scorende stelling in het cijferbeeld ({_ex_primary_low[2]:.1f}/10); "
                             f"{_top_p[1]} van de {_answered_p} respondenten met verdieping "
                             f"kozen de meest gekozen toelichting.")
     _second_why = ("Tweede laagste factorscore in het overzichtsprofiel."
@@ -1672,7 +1679,7 @@ def render_exit_report_html(data: dict) -> str:
         # ── Lowest / highest item cards — alleen bij >3 items; bij 3 items zijn
         # ze pure herhaling van de itemtabel (2 van de 3 rijen stonden dubbel) ──
         show_cards = len(i_sc) > 3
-        low_card  = (f'<div class="card"><span class="eyebrow">Laagste item</span>'
+        low_card  = (f'<div class="card"><span class="eyebrow">Laagst scorende stelling</span>'
                      f'<p>{_h(low_i[1])}</p>'
                      f'<strong style="color:{_factor_color(low_i[2])};">{low_i[2]:.1f}/10</strong></div>'
                      if show_cards and low_i else "")
@@ -1694,7 +1701,7 @@ def render_exit_report_html(data: dict) -> str:
   {er_context}
   {low_card}
   {high_card}
-  <h3 style="margin-top:14px;">Alle items in deze factor</h3>
+  <h3 style="margin-top:14px;">Alle stellingen in deze factor</h3>
   <table class="item-tbl">{rows}</table>
   {deep_block}
 </div>"""
@@ -1813,7 +1820,7 @@ def render_exit_report_html(data: dict) -> str:
   {ch.opener("Appendix — volledige vraagresultaten")}
   <p style="font-size:9.5px;color:#64748B;margin-bottom:14px;">
     Technische onderbouwing. Scores zijn groepsgemiddelden (n={n}), geschaald 1&ndash;10.
-    &#x21a9;&nbsp;= omgekeerd gecodeerd item.
+    &#x21a9;&nbsp;= omgekeerd gecodeerde stelling.
   </p>
   {app_sections}
   <div class="no-break" style="margin-bottom:14px;">
@@ -1887,9 +1894,9 @@ def render_retention_report_html(data: dict) -> str:
         # als vierde/vijfde losse score op een toch al dichte pagina.
         why_cells = ""
         if tf_sc is not None:
-            why_cells += f'<td class="why-cell"><div class="why-l">Factorscore</div><div class="why-v" style="color:{tf_col};">{tf_sc:.1f}/10</div><div class="why-b">gemiddelde van {len(i_scores)} stellingen — {_h(_factor_label(tf_sc).lower())}</div></td>'
+            why_cells += f'<td class="why-cell"><div class="why-l">Gemiddelde score</div><div class="why-v" style="color:{tf_col};">{tf_sc:.1f}/10</div><div class="why-b">van de {len(i_scores)} stellingen over dit thema — {_h(_factor_label(tf_sc).lower())}</div></td>'
         if low_item:
-            why_cells += (f'<td class="why-cell"><div class="why-l">Laagste item</div>'
+            why_cells += (f'<td class="why-cell"><div class="why-l">Laagst scorende stelling</div>'
                           f'<div class="why-v" style="color:{_factor_color(low_item[2])};">{low_item[2]:.1f}/10</div>'
                           f'<div class="why-b">{_h(low_item[1])}</div></td>')
 
@@ -1910,7 +1917,7 @@ def render_retention_report_html(data: dict) -> str:
     # cijfer, zodat de lezer weet WAT er 4.7 scoort (de factorscore ernaast is
     # een ander getal — dat onderscheid was eerder onzichtbaar).
     if avg_risk and band_lbl and low_lbl:
-        exec_line = f"{band_lbl} (behoudssignaal {_score_str(avg_risk)}). {low_lbl} vraagt als eerste aandacht."
+        exec_line = f"{band_lbl} (behoudssignaal {_score_str(avg_risk)}). {low_lbl} is het eerste gesprekspunt."
     else:
         exec_line = "Zie factoranalyse en behoudscontext voor details."
 
@@ -1993,9 +2000,9 @@ def render_retention_report_html(data: dict) -> str:
                  key=lambda kv: (kv[1], kv[0]), default=None)
     _primary_why = None
     if _primary_low_item:
-        _primary_why = f"Laagste item in het cijferbeeld ({_primary_low_item[2]:.1f}/10)."
+        _primary_why = f"Laagst scorende stelling in het cijferbeeld ({_primary_low_item[2]:.1f}/10)."
         if _top_p and _answered_p >= 5:
-            _primary_why = (f"Laagste item in het cijferbeeld ({_primary_low_item[2]:.1f}/10); "
+            _primary_why = (f"Laagst scorende stelling in het cijferbeeld ({_primary_low_item[2]:.1f}/10); "
                             f"{_top_p[1]} van de {_answered_p} respondenten met verdieping "
                             f"kozen de meest gekozen toelichting.")
     _second_why = ("Tweede laagste factorscore in het overzichtsprofiel."
@@ -2037,7 +2044,7 @@ def render_retention_report_html(data: dict) -> str:
         # Per-factor quote bewust geschrapt (besluit 2026-07-12): zie de
         # identieke noot bij _factor_detail hierboven.
         show_cards = len(i_sc) > 3
-        low_card  = (f'<div class="card"><span class="eyebrow">Laagste item</span>'
+        low_card  = (f'<div class="card"><span class="eyebrow">Laagst scorende stelling</span>'
                      f'<p>{_h(low_i[1])}</p>'
                      f'<strong style="color:{_factor_color(low_i[2])};">{low_i[2]:.1f}/10</strong></div>'
                      if show_cards and low_i else "")
@@ -2060,7 +2067,7 @@ def render_retention_report_html(data: dict) -> str:
   {spread}
   {low_card}
   {high_card}
-  <h3 style="margin-top:14px;">Alle items in deze factor</h3>
+  <h3 style="margin-top:14px;">Alle stellingen in deze factor</h3>
   <table class="item-tbl">{rows}</table>
   {deep_block}{dir_block}
 </div>"""
@@ -2179,7 +2186,7 @@ def render_retention_report_html(data: dict) -> str:
   {ch.opener("Appendix — volledige vraagresultaten")}
   <p style="font-size:9.5px;color:#64748B;margin-bottom:14px;">
     Technische onderbouwing. Scores zijn groepsgemiddelden (n={n}), geschaald 1&ndash;10.
-    &#x21a9;&nbsp;= omgekeerd gecodeerd item.
+    &#x21a9;&nbsp;= omgekeerd gecodeerde stelling.
   </p>
   {app_sections}
   <div class="no-break" style="margin-bottom:14px;">
@@ -2306,9 +2313,9 @@ def render_onboarding_report_html(data: dict) -> str:
 
         why_cells = ""
         if tf_sc is not None:
-            why_cells += f'<td class="why-cell"><div class="why-l">Factorscore</div><div class="why-v" style="color:{tf_col};">{tf_sc:.1f}/10</div><div class="why-b">gemiddelde van {len(i_scores)} stellingen — {_h(_factor_label(tf_sc).lower())}</div></td>'
+            why_cells += f'<td class="why-cell"><div class="why-l">Gemiddelde score</div><div class="why-v" style="color:{tf_col};">{tf_sc:.1f}/10</div><div class="why-b">van de {len(i_scores)} stellingen over dit thema — {_h(_factor_label(tf_sc).lower())}</div></td>'
         if low_item:
-            why_cells += (f'<td class="why-cell"><div class="why-l">Laagste item</div>'
+            why_cells += (f'<td class="why-cell"><div class="why-l">Laagst scorende stelling</div>'
                           f'<div class="why-v" style="color:{_factor_color(low_item[2])};">{low_item[2]:.1f}/10</div>'
                           f'<div class="why-b">{_h(low_item[1])}</div></td>')
 
@@ -2326,7 +2333,7 @@ def render_onboarding_report_html(data: dict) -> str:
     # Kernzin: band + geduid getal + laagste factor ("checkpointscore" zodat de
     # lezer weet wat het getal is; de factorscore ernaast is een ander getal).
     if avg_risk and band_lbl and low_lbl:
-        exec_line = f"{band_lbl} (checkpointscore {_score_str(avg_risk)}). {low_lbl} vraagt als eerste aandacht."
+        exec_line = f"{band_lbl} (checkpointscore {_score_str(avg_risk)}). {low_lbl} is het eerste gesprekspunt."
     else:
         exec_line = "Zie factordiepte en checkpointoverzicht voor details."
 
@@ -2399,9 +2406,9 @@ def render_onboarding_report_html(data: dict) -> str:
                  key=lambda kv: (kv[1], kv[0]), default=None)
     _primary_why = None
     if _ob_primary_low:
-        _primary_why = f"Laagste item in het cijferbeeld ({_ob_primary_low[2]:.1f}/10)."
+        _primary_why = f"Laagst scorende stelling in het cijferbeeld ({_ob_primary_low[2]:.1f}/10)."
         if _top_p and _answered_p >= 5:
-            _primary_why = (f"Laagste item in het cijferbeeld ({_ob_primary_low[2]:.1f}/10); "
+            _primary_why = (f"Laagst scorende stelling in het cijferbeeld ({_ob_primary_low[2]:.1f}/10); "
                             f"{_top_p[1]} van de {_answered_p} respondenten met verdieping "
                             f"kozen de meest gekozen toelichting.")
     _second_why = ("Tweede laagste factorscore in het overzichtsprofiel."
@@ -2440,7 +2447,7 @@ def render_onboarding_report_html(data: dict) -> str:
         # Per-factor quote bewust geschrapt (besluit 2026-07-12): zie de
         # identieke noot bij _factor_detail (exit-renderer).
         show_cards = len(i_sc) > 3
-        low_card  = (f'<div class="card"><span class="eyebrow">Kwetsbaarste item</span>'
+        low_card  = (f'<div class="card"><span class="eyebrow">Kwetsbaarste stelling</span>'
                      f'<p>{_h(low_i[1])}</p>'
                      f'<strong style="color:{_factor_color(low_i[2])};">{low_i[2]:.1f}/10</strong></div>'
                      if show_cards and low_i else "")
@@ -2456,7 +2463,7 @@ def render_onboarding_report_html(data: dict) -> str:
   {spread}
   {low_card}
   {high_card}
-  <h3 style="margin-top:14px;">Alle items in deze factor</h3>
+  <h3 style="margin-top:14px;">Alle stellingen in deze factor</h3>
   <table class="item-tbl">{rows}</table>
 </div>"""
 
@@ -2573,7 +2580,7 @@ def render_onboarding_report_html(data: dict) -> str:
   {ch.opener("Appendix — volledige vraagresultaten")}
   <p style="font-size:9.5px;color:#64748B;margin-bottom:14px;">
     Technische onderbouwing. Scores zijn groepsgemiddelden (n={n}), geschaald 1&ndash;10.
-    &#x21a9;&nbsp;= omgekeerd gecodeerd item.
+    &#x21a9;&nbsp;= omgekeerd gecodeerde stelling.
   </p>
   {app_sections}
   {"<div class='no-break' style='margin-bottom:14px;'><div style='font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;'>Werkbeleving (SDT) — checkpoint-items</div><table class='app-tbl'><tr><th class='aq'>Vraag</th><th class='as'>Gem.</th><th class='ab'>Beeld</th></tr>" + sdt_rows + "</table></div>" if sdt_rows else ""}

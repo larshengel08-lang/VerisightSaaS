@@ -686,6 +686,10 @@ def _build_exit_response(profile: dict[str, float | str], salary: int, role: str
         "risk_result": risk_result,
         "preventability_result": prev_result,
         "recommendations": get_recommendations(risk_result["factor_risks"]),
+        # eNPS (0-10), bij vertrekkers lager naarmate het werksignaal zwaarder
+        # weegt — zelfde reden als retention: voorbeeldrapport toont alles.
+        "enps_score": max(0, min(10, round(
+            10 - risk_result["risk_score"] + random.uniform(-1.0, 1.5)))),
     }
 
     return {
@@ -756,6 +760,12 @@ def _build_retention_response(profile: dict[str, float | str]) -> dict:
         "turnover_intention_score": supplemental["turnover_intention_score"],
         "stay_intent_signal_score": supplemental["stay_intent_score"],
         "retention_summary": retention_summary,
+        # eNPS (0-10) gecorreleerd met bevlogenheid: het voorbeeldrapport moet
+        # het volledige product tonen, incl. de werkgeversaanbeveling-sectie
+        # (feedbackronde 2026-07-13). Echte campagnes zonder eNPS-vraag houden
+        # de eerlijke Datastatus-melding.
+        "enps_score": max(0, min(10, round(
+            supplemental["engagement_score"] + random.uniform(-1.5, 1.5)))),
     }
 
     return {
