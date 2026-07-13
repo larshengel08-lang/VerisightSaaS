@@ -1460,7 +1460,14 @@ create policy "org_members_can_select_responses"
 -- + status). De operator leest alles via de service-role; de klant krijgt aggregatie via
 -- campaign_stats + het backend-rapport. (De policies blijven staan voor de service-role
 -- en toekomstige owner-only leespaden.)
+-- survey_responses: alleen de aggregatiekolommen die de campaign_stats-view nodig heeft
+-- (die view is security_invoker=true en joint survey_responses). Ruwe antwoorden/open tekst
+-- gaan dicht. Residu: per-respondent risk_score/risk_band (afgeleid) blijft leesbaar.
 revoke select on public.survey_responses from anon, authenticated;
+grant  select (id, respondent_id, risk_score, risk_band)
+  on public.survey_responses to authenticated;
+-- respondents: alleen niet-identificerende operationele kolommen (department-tellingen +
+-- status). token/email/role_level/exit_month/salary/dedup_key_hash gaan dicht.
 revoke select on public.respondents      from anon, authenticated;
 grant  select (id, campaign_id, department, completed, completed_at, sent_at, opened_at)
   on public.respondents to authenticated;

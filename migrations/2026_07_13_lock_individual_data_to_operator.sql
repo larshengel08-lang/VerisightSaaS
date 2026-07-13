@@ -14,8 +14,20 @@
 -- Anders breken die operatorschermen. Er is nog geen betalende klant, dus een korte
 -- window tussen deploy en deze migratie is acceptabel.
 
--- ── H1a: survey_responses is per definitie individuele data → volledig dicht voor clients
+-- ── H1a: survey_responses → alleen de aggregatiekolommen die de campaign_stats-view
+-- (security_invoker = true) nodig heeft blijven leesbaar; alle ruwe antwoorden, open tekst
+-- en scoredetails gaan dicht. Volledige revoke kan NIET: campaign_stats draait met de
+-- rechten van de aanroeper (klant) en joint survey_responses (risk_score/risk_band), dus
+-- de klant heeft die kolommen nodig om de aggregaten te zien.
+-- Ontoegankelijk worden o.a.: open_text_raw, open_text_analysis, sdt_raw/scores, org_raw/scores,
+-- pull_factors_raw, uwes_raw, turnover_intention_raw, full_result, exit_reason_*, tenure_years.
+-- RESIDU: per-respondent risk_score/risk_band blijft leesbaar (afgeleide risicoband, geen
+-- naam/tekst/antwoorden). Volledig verbergen vereist campaign_stats herschrijven naar een
+-- security-definer view met een multi-rol tenancy-predicate (klant/operator/service-role) —
+-- aparte hardening, vereist live Supabase-verificatie. Zie audit-doc.
 revoke select on public.survey_responses from anon, authenticated;
+grant  select (id, respondent_id, risk_score, risk_band)
+  on public.survey_responses to authenticated;
 
 -- ── H1b: respondents → alleen niet-identificerende operationele kolommen blijven leesbaar
 -- (department-tellingen + verzend/afrondstatus in het dashboard). Ontoegankelijk worden:
