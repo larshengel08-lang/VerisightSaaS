@@ -385,7 +385,7 @@ class _ChapterCounter:
     def __init__(self) -> None:
         self.n = 0
 
-    def opener(self, title: str, kicker: str | None = None) -> str:
+    def opener(self, title: str, *, kicker: str | None = None) -> str:
         self.n += 1
         kicker_html = f'<span class="ch-kicker">{kicker}</span>' if kicker else ""
         return (f'<div class="ch-idx">{self.n:02d}</div><hr class="ch-rule">'
