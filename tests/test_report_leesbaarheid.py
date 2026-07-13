@@ -59,3 +59,11 @@ def test_geen_erkenning_label_meer():
     html = render_retention_report_html(d)
     assert "Groeiperspectief en erkenning" not in html
     assert "Groeiperspectief" in html
+
+
+def test_page_achtergrond_is_chalk():
+    from backend.report_css import build_css, CHALK
+    css = build_css("retention")
+    import re
+    page_rule = re.search(r'@page\s*\{[^}]*\}', css, re.S).group(0)
+    assert CHALK in page_rule, "@page moet de chalk-achtergrond dragen (full-bleed)"

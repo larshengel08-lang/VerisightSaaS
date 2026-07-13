@@ -36,6 +36,7 @@ def build_css(scan_type: str = "exit") -> str:
 @page {
   size: A4;
   margin: 18mm 16mm 20mm 16mm;
+  background: """ + CHALK + r""";
   @bottom-left {
     content: "VERTROUWELIJK — LOEP — GROEPSOUTPUT";
     font-family: 'JetBrains Mono', monospace;
@@ -47,14 +48,13 @@ def build_css(scan_type: str = "exit") -> str:
     font-size: 7px; letter-spacing: 0.12em; color: """ + STEEL + r""";
   }
 }
-@page cover-page { margin: 0; }
+@page cover-page { margin: 0; background: """ + NAVY + r"""; }
 
 * { box-sizing: border-box; margin: 0; padding: 0; border-radius: 0; }
 
 body {
   font-family: 'Inter', Arial, sans-serif;
   font-size: 11px; line-height: 1.6; color: #243247;
-  background: """ + CHALK + r""";
 }
 
 .pb       { break-before: page; }
