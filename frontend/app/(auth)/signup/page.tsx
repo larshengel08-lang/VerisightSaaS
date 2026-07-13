@@ -36,10 +36,18 @@ export default function SignupPage() {
       },
     })
 
+    // Toon nooit de ruwe Supabase-fout: "User already registered" zou een
+    // account-bestaat-orakel geven (e-mailenumeratie). Bij een bestaand adres
+    // vallen we door naar hetzelfde neutrale bevestigingsscherm, zodat bestaande
+    // en nieuwe adressen niet te onderscheiden zijn.
     if (error) {
-      setError(error.message)
-      setLoading(false)
-      return
+      const code = (error as { code?: string }).code
+      const isTransient = error.status === 429 || error.status === 500 || code === 'over_email_send_rate_limit'
+      if (isTransient) {
+        setError('Er ging iets mis. Probeer het over enkele minuten opnieuw.')
+        setLoading(false)
+        return
+      }
     }
 
     setSuccess(true)
