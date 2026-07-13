@@ -9,6 +9,7 @@ import {
 } from '@/lib/dashboard/shell-navigation'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import type { CampaignStats, Respondent, SurveyResponse } from '@/lib/types'
 import {
   buildOpenAnswerItems,
@@ -79,14 +80,18 @@ export default async function OpenAnswersPage({ params }: Props) {
   if (!statsRow) notFound()
   const stats = statsRow as CampaignStats
 
+  // Toegang is hierboven al geverifieerd (canViewInsights + campaign_stats onder RLS).
+  // Individuele responses lezen we na de audit-lockdown (H1) via de service-role; de
+  // pagina blijft de n-drempels (MIN_N_DISPLAY) toepassen op de output.
+  const adminClient = createAdminClient()
   const [{ data: organization }, { data: respondentsRaw }, { data: responsesRaw }] = await Promise.all([
     supabase.from('organizations').select('name').eq('id', stats.organization_id).maybeSingle(),
-    supabase
+    adminClient
       .from('respondents')
       .select('*')
       .eq('campaign_id', id)
       .order('completed_at', { ascending: false, nullsFirst: false }),
-    supabase
+    adminClient
       .from('survey_responses')
       .select(
         `

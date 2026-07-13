@@ -7,6 +7,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { insertCampaignAuditEvent } from '@/lib/campaign-audit'
 import {
   getCustomerActionPermission,
@@ -86,8 +87,10 @@ export async function resendPendingAction(campaignId: string): Promise<ResendRes
     return { sent: 0, failed: 0, skipped: 0, error: 'Autorisatie voor backend-uitnodigingen ontbreekt.' }
   }
 
-  // Get pending respondents — RLS ensures only own-org data is returned
-  const { data: respondents, error: fetchError } = await supabase
+  // Autorisatie is hierboven al afgedwongen (admin/rol + canSendReminders). token/email
+  // zijn na de audit-lockdown (H1) niet meer via de user-client leesbaar, dus lezen we
+  // via de service-role. Scope blijft strak op deze campaign_id.
+  const { data: respondents, error: fetchError } = await createAdminClient()
     .from('respondents')
     .select('token, email')
     .eq('campaign_id', campaignId)

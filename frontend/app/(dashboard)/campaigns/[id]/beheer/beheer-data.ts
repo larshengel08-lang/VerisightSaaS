@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { buildGuidedSelfServeState, deriveGuidedSelfServeDiscipline } from '@/lib/guided-self-serve'
 import { getDeliveryModeLabel } from '@/lib/implementation-readiness'
 import {
@@ -740,6 +741,10 @@ export async function fetchRouteBeheerData(args: {
   userId: string
 }) {
   const { campaignId, supabase, userId } = args
+  // Deze pagina is operator-only (beheer/page.tsx redirect niet-admins). Individuele
+  // respondent-PII (token/email) en ruwe survey_responses lezen we na de audit-lockdown
+  // (H1) via de service-role; de rest blijft op de user-client (RLS).
+  const adminClient = createAdminClient()
   const { data: statsRow } = await supabase
     .from('campaign_stats')
     .select('*')
@@ -788,12 +793,12 @@ export async function fetchRouteBeheerData(args: {
       .eq('org_id', stats.organization_id)
       .is('accepted_at', null),
     supabase.from('campaign_delivery_records').select('*').eq('campaign_id', campaignId).maybeSingle(),
-    supabase
+    adminClient
       .from('respondents')
       .select('id, token, email, sent_at, completed, completed_at, department')
       .eq('campaign_id', campaignId)
       .order('completed_at', { ascending: false, nullsFirst: false }),
-    supabase
+    adminClient
       .from('survey_responses')
       .select('id, org_scores, sdt_scores, respondents!inner(campaign_id)')
       .eq('respondents.campaign_id', campaignId),
