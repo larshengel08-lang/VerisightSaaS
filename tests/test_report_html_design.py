@@ -245,7 +245,7 @@ def test_bestuurlijke_read_folds_stats_and_mgmt_q_into_why_panel():
     assert 'class="card accent"' not in html, "oude losstaande managementvraag-kaart moet weg zijn"
     assert 'class="mq-line"' in html
     why_open = html.index('class="why"')
-    why_close = html.index("</div>\n  \n</div>")  # sluiting van .why, gevolgd door de (lege) responsbasis-slot en sluiting van .pb.sec
+    why_close = html.index("</div>\n  \n  \n</div>")  # sluiting van .why, gevolgd door de (lege) usage- en responsbasis-slots en sluiting van .pb.sec
     # "Primaire factor" is verwijderd: dezelfde score/label stond al in de
     # why-cell (Factorscore) erboven — pure dubbeling (feedback P2/P4).
     assert "Primaire factor" not in html

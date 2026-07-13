@@ -470,6 +470,23 @@ def _intro(key: str) -> str:
     return f'<p class="sec-intro">{SECTION_INTROS[key]}</p>'
 
 
+def _gebruiksblok(scan_lbl: str) -> str:
+    """'Zo gebruik je dit rapport' (spec 2026-07-13 §5) — leesroute + beoogd
+    besluit. Geen bespreekscript: de begeleide bespreking blijft het product."""
+    return f"""<div style="margin-top:24px;">
+  <span class="eyebrow">Zo gebruik je dit rapport</span>
+  <p class="sec-intro" style="margin-top:6px;margin-bottom:0;">
+    Dit rapport is een groepsbeeld van de organisatie &mdash; geen beoordeling van personen
+    of afdelingen. Lees het van voor naar achter: eerst het beeld (context en
+    overzichtsprofiel), dan de verdieping per thema, en achteraan de gespreksagenda &mdash;
+    d&aacute;&aacute;r begint het gesprek. De {scan_lbl}-uitkomsten worden besproken in een
+    begeleide managementbespreking: het rapport levert de onderbouwing, de bespreking de
+    keuzes. Het doel aan het eind van die bespreking: &eacute;&eacute;n prioriteit,
+    &eacute;&eacute;n eigenaar en een vervolgmoment.
+  </p>
+</div>"""
+
+
 class _ChapterCounter:
     """Afgeleide hoofdstuknummering (designsprong §4): elke renderer maakt één
     instantie en roept opener() aan op het moment dat een sectie daadwerkelijk
@@ -494,7 +511,8 @@ def _bestuurlijke_read(*, kernzin: str, totaalbeeld: str,
                        primary_label: str, primary_score: float | None, primary_color: str,
                        why_cells_html: str, strong_label: str, strong_score: float | None,
                        mgmt_q: str, mgmt_q_source: str = "",
-                       responsbasis_html: str = "", opener_html: str = "") -> str:
+                       responsbasis_html: str = "", opener_html: str = "",
+                       usage_html: str = "") -> str:
     return f"""<div class="pb sec">
   {opener_html or '<span class="slabel">Bestuurlijke read</span>'}
   <p class="br-kernzin">{_h(kernzin)}</p>
@@ -507,6 +525,7 @@ def _bestuurlijke_read(*, kernzin: str, totaalbeeld: str,
       "</tr></table>") if strong_label else ""}
     <div class="mq-line"><span class="mq-label">Eerste managementvraag</span><p>{_h(mgmt_q)}</p>{f'<span class="mq-source">{_h(mgmt_q_source)}</span>' if mgmt_q_source else ''}</div>
   </div>
+  {usage_html}
   {responsbasis_html}
 </div>"""
 
@@ -1671,6 +1690,7 @@ def render_exit_report_html(data: dict) -> str:
         mgmt_q_source=br_mgmt_q_source,
         responsbasis_html=_responsbasis_band,
         opener_html=ch.opener("Bestuurlijke read"),
+        usage_html=_gebruiksblok(data["scan_lbl"]),
     )
 
     # ── Vertrekcontext (p.04 — vóór factorprofiel) ───────────────────────────
@@ -2050,6 +2070,7 @@ def render_retention_report_html(data: dict) -> str:
         mgmt_q_source=br_mgmt_q_source,
         responsbasis_html=_responsbasis_band,
         opener_html=ch.opener("Bestuurlijke read"),
+        usage_html=_gebruiksblok(data["scan_lbl"]),
     )
 
     # ── Behoudscontext (p.04 — vóór factorprofiel) ───────────────────────────
@@ -2475,6 +2496,7 @@ def render_onboarding_report_html(data: dict) -> str:
         mgmt_q_source=br_mgmt_q_source,
         responsbasis_html=_responsbasis_band,
         opener_html=ch.opener("Bestuurlijke read"),
+        usage_html=_gebruiksblok(data["scan_lbl"]),
     )
 
     # ── Overzichtsprofiel (p.04) ──────────────────────────────────────────────

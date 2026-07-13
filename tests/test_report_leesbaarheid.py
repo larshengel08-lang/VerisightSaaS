@@ -100,3 +100,12 @@ def test_bronregel_managementvraag():
         strong_label="Rolhelderheid", strong_score=7.2, mgmt_q="Vraag?",
         mgmt_q_source="Gebaseerd op de meest gekozen toelichting van respondenten in de verdieping.")
     assert "meest gekozen toelichting" in html
+
+
+def test_gebruiksblok_op_openingspagina():
+    html = render_retention_report_html(_min_retention_data())
+    blok = html.find("Zo gebruik je dit rapport")
+    responsbasis = html.find("Responsbasis")
+    assert blok != -1
+    assert blok < responsbasis, "gebruiksblok hoort voor de responsbasis"
+    assert "achteraan" in html and "eigenaar" in html
