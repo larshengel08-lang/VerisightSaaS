@@ -172,12 +172,18 @@ FACTOR_EXIT_CODE: dict[str, str] = {
 def _select_priority_factors(factor_avgs: dict[str, float],
                              exit_reason_counts: dict[str, int],
                              max_n: int = 3) -> list[str]:
-    """Prioriteit = lage score + frequentie als vertrekreden. Niet puur laagste."""
+    """Prioriteit = lage score + frequentie als vertrekreden. Niet puur laagste.
+
+    Alleen organisatiefactoren: scoring.py's factor_averages bevat ook de
+    SDT-dimensies (autonomy/competence/relatedness), maar die hebben geen
+    stellingen in de verdieping-template — een SDT-dimensie als "prioritaire
+    factor" rendert een lege verdiepingspagina (bug gevonden 2026-07-13)."""
     def _priority(fk: str) -> float:
         score = factor_avgs.get(fk, 10.0)
         reason = exit_reason_counts.get(fk, 0)
         return (10.0 - score) * 1.0 + reason * 0.4
-    keys = [fk for fk in factor_avgs if factor_avgs.get(fk) is not None]
+    keys = [fk for fk in factor_avgs
+            if factor_avgs.get(fk) is not None and fk in ORG_FACTOR_KEYS]
     return sorted(keys, key=_priority, reverse=True)[:max_n]
 
 
@@ -1866,7 +1872,7 @@ def render_exit_report_html(data: dict) -> str:
     _ex_primary_low = min(_ex_primary_items, key=lambda x: x[2]) if _ex_primary_items else None
     _ex_primary_theme = (
         f"Bespreek eerst ‘{_ex_primary_low[1]}’ binnen {FACTOR_LABELS_NL.get(_ex_primary_fk, _ex_primary_fk).lower()} "
-        f"({_ex_primary_low[2]:.1f}/10) — de scherpste losse waarneming in het cijferbeeld."
+        f"({_ex_primary_low[2]:.1f}/10). Op deze stelling scoort de groep het laagst van het hele beeld."
     ) if _ex_primary_low else (top_flabels[0] if top_flabels else "het leidende thema")
 
     _agg_p = deep_agg.get(_ex_primary_fk) or {}
@@ -2244,7 +2250,7 @@ def render_retention_report_html(data: dict) -> str:
     _primary_low_item = min(_primary_items, key=lambda x: x[2]) if _primary_items else None
     _primary_theme_grounded = (
         f"Bespreek eerst ‘{_primary_low_item[1]}’ binnen {_fl(_primary_fk, ST).lower()} "
-        f"({_primary_low_item[2]:.1f}/10) — de scherpste losse waarneming in het cijferbeeld."
+        f"({_primary_low_item[2]:.1f}/10). Op deze stelling scoort de groep het laagst van het hele beeld."
     ) if _primary_low_item else (low_lbl or "het leidende behoudsthema")
 
     _agg_p = deep_agg.get(_primary_fk) or {}
@@ -2648,7 +2654,7 @@ def render_onboarding_report_html(data: dict) -> str:
     _ob_primary_low = min(_ob_primary_items, key=lambda x: x[2]) if _ob_primary_items else None
     _ob_primary_theme = (
         f"Bespreek eerst ‘{_ob_primary_low[1]}’ binnen {_fl(_ob_primary_fk, ST).lower()} "
-        f"({_ob_primary_low[2]:.1f}/10) — de scherpste losse waarneming in het cijferbeeld."
+        f"({_ob_primary_low[2]:.1f}/10). Op deze stelling scoort de groep het laagst van het hele beeld."
     ) if _ob_primary_low else (low_lbl if low_lbl else "het leidende onboardingthema")
 
     _agg_p = (data.get("deepening_agg") or {}).get(_ob_primary_fk) or {}

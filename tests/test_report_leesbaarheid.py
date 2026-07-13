@@ -109,3 +109,15 @@ def test_gebruiksblok_op_openingspagina():
     assert blok != -1
     assert blok < responsbasis, "gebruiksblok hoort voor de responsbasis"
     assert "achteraan" in html and "eigenaar" in html
+
+
+def test_priority_factors_alleen_organisatiefactoren():
+    # SDT-dimensies (autonomy e.d.) zitten in scoring.py's factor_averages maar
+    # hebben geen verdieping-stellingen: als prioritaire factor renderden ze een
+    # lege verdiepingspagina (bug 2026-07-13). De selectie filtert ze nu weg.
+    from backend.report_html import _select_priority_factors
+    fa = {"workload": 5.0, "growth": 4.0, "autonomy": 3.0,
+          "competence": 3.5, "relatedness": 3.2}
+    picked = _select_priority_factors(fa, {}, max_n=3)
+    assert "autonomy" not in picked and "competence" not in picked
+    assert picked[0] == "growth"          # laagste organisatiefactor eerst
