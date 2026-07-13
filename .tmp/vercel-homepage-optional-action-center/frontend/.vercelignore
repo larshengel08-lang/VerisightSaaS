@@ -1,6 +1,0 @@
-node_modules
-.next-preview
-.next-dev
-coverage
-playwright-report
-test-results
