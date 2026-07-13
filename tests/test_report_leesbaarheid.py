@@ -67,3 +67,25 @@ def test_page_achtergrond_is_chalk():
     import re
     page_rule = re.search(r'@page\s*\{[^}]*\}', css, re.S).group(0)
     assert CHALK in page_rule, "@page moet de chalk-achtergrond dragen (full-bleed)"
+
+
+def test_sectie_intros_aanwezig():
+    d = _min_retention_data()
+    html = render_retention_report_html(d)
+    for frase in [
+        "samenvattende groepsscore",          # behoudscontext: opbouw behoudssignaal
+        "drie stellingen over hetzelfde thema", # overzichtsprofiel: wat is een factor
+        "basisbehoeften",                       # werkbeleving/SDT: waarom gemeten
+        "ontvangstvolgorde",                    # open toelichtingen: selectie
+    ]:
+        assert frase in html, f"sectie-intro mist: {frase}"
+
+
+def test_bronregel_managementvraag():
+    from backend.report_html import _bestuurlijke_read
+    html = _bestuurlijke_read(
+        kernzin="K.", totaalbeeld="T.", primary_label="Groeiperspectief",
+        primary_score=5.1, primary_color="#C17C00", why_cells_html="",
+        strong_label="Rolhelderheid", strong_score=7.2, mgmt_q="Vraag?",
+        mgmt_q_source="Gebaseerd op de meest gekozen toelichting van respondenten in de verdieping.")
+    assert "meest gekozen toelichting" in html

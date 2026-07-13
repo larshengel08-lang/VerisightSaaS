@@ -376,6 +376,100 @@ def _cover(*, scan_label: str, scan_type: str, org_name: str, period: str,
 </div>"""
 
 
+# ─── Zelfuitleg-laag (spec 2026-07-13 §2) ────────────────────────────────────
+# Elke sectie legt zichzelf uit: wat zie je, waarom meten we dit, hoe lees je
+# het. Uitleg is een vertrouwensdrager — ruim en helder, geen disclaimers.
+
+SECTION_INTROS: dict[str, str] = {
+    "behoudscontext": (
+        "Het behoudssignaal is een samenvattende groepsscore: de werkfactoren uit het "
+        "overzichtsprofiel en de werkbeleving samen, teruggebracht tot &eacute;&eacute;n getal "
+        "tussen 1 en 10. Onder de 5,0 noemen we een score kwetsbaar, tussen 5,0 en 6,5 een "
+        "aandachtspunt, vanaf 6,5 relatief sterk. De drie signalen daaronder geven context: "
+        "blijfintentie en vertrekintentie zijn geen spiegelbeeld van elkaar &mdash; iemand kan "
+        "beide tegelijk voelen &mdash; en bevlogenheid staat daar los van: bevlogen medewerkers "
+        "vertrekken soms toch. Lees dit als startpunt voor het gesprek, niet als voorspelling "
+        "van wie vertrekt."
+    ),
+    "vertrekcontext": (
+        "Deze pagina zet de vertrekredenen op een rij zoals vertrokken medewerkers ze zelf "
+        "opgaven: eerst de hoofdreden, daarna wat er volgens hen meespeelde. Samen met de "
+        "factorscores verderop laat dit zien of de opgegeven redenen en het bredere werkbeeld "
+        "hetzelfde verhaal vertellen. Lees dit als de context waarin de rest van het rapport "
+        "staat: het beschrijft waarom mensen zeggen te vertrekken, niet wie er nog zal vertrekken."
+    ),
+    "checkpointoverzicht": (
+        "De checkpointscore vat samen hoe nieuwe medewerkers hun eerste werkperiode ervaren: "
+        "de landingsdomeinen uit dit rapport samengebracht tot &eacute;&eacute;n getal tussen "
+        "1 en 10. Onder de 5,0 noemen we een score kwetsbaar, tussen 5,0 en 6,5 een "
+        "aandachtspunt, vanaf 6,5 relatief sterk. Dit is een momentopname van de landing &mdash; "
+        "een startpunt voor het gesprek over onboarding, geen beoordeling van individuele "
+        "starters of hun begeleiders."
+    ),
+    "overzichtsprofiel": (
+        "Elke factor hieronder is een thema, gemeten met drie stellingen over hetzelfde thema; "
+        "de score is het groepsgemiddelde daarvan. De kleuren volgen vaste drempels &mdash; "
+        "kwetsbaar (onder 5,0), aandachtspunt (5,0 tot 6,5), relatief sterk (vanaf 6,5) &mdash; "
+        "en zijn geen vergelijking met andere organisaties. Belangrijker dan de absolute kleur "
+        "is de rangorde: de factor die binnen jullie eigen beeld het laagst scoort, is het "
+        "logische begin van het gesprek."
+    ),
+    "verdieping": (
+        "Respondenten die laag scoorden op dit thema kregen automatisch een korte vervolgvraag: "
+        "welke toelichting past het best bij hun ervaring, en welke richting zou het gesprek "
+        "hierover het meest helpen? De aantallen hieronder zijn tellingen van wat respondenten "
+        "zelf kozen &mdash; geen interpretatie achteraf. Zo zie je niet alleen d&aacute;t een "
+        "thema laag scoort, maar ook wat de groep zelf als reden en als gespreksrichting aandraagt."
+    ),
+    "werkbeleving": (
+        "Naast de werkfactoren meten we drie psychologische basisbehoeften: autonomie (regie "
+        "over de eigen werkwijze), competentie (ervaren bekwaamheid) en verbondenheid (de band "
+        "met collega's en organisatie). Onderzoek naar werkmotivatie laat consistent zien dat "
+        "deze drie bepalen hoe duurzaam iemand op zijn plek zit &mdash; werkfactoren alleen "
+        "vertellen niet het hele verhaal. Een lage werkfactor met een gezonde werkbeleving "
+        "vraagt een ander gesprek dan wanneer beide onder druk staan."
+    ),
+    "werkgeversaanbeveling": (
+        "De aanbevelingsscore (eNPS) meet &eacute;&eacute;n ding: zouden medewerkers deze "
+        "organisatie aanraden als werkgever? De score loopt van &minus;100 tot +100 en is het "
+        "verschil tussen het aandeel uitgesproken aanraders en het aandeel criticasters. "
+        "Gebruik dit als aanvullende context naast het overzichtsprofiel: het zegt iets over "
+        "het totaalgevoel, de factoren zeggen waar dat gevoel vandaan komt."
+    ),
+    "segmentanalyse": (
+        "Deze tabel splitst het beeld uit per afdeling: het aantal ingevulde vragenlijsten "
+        "tegenover het aantal uitgenodigden, de gemiddelde score en &mdash; bij voldoende "
+        "responses &mdash; de spreiding. Afdelingen met minder dan vijf responses worden "
+        "gebundeld onder &ldquo;Overige afdelingen&rdquo;, zodat antwoorden nooit herleidbaar "
+        "zijn tot personen. Verschillen tussen afdelingen zijn gesprekstof: ze vertellen waar "
+        "je als eerste gaat kijken, niet welke afdeling het &ldquo;slecht doet&rdquo;."
+    ),
+    "open_toelichtingen": (
+        "Dit zijn de open antwoorden zoals respondenten ze zelf schreven, alleen ontdaan van "
+        "namen en contactgegevens. Ze staan in ontvangstvolgorde &mdash; er is niet geselecteerd "
+        "op inhoud en er is geen automatische duiding op losgelaten. De stemmen hieronder geven "
+        "kleur aan de cijfers; wat ze betekenen en hoe zwaar ze wegen, bepaal je in de bespreking."
+    ),
+    "appendix": (
+        "Hier staat elke stelling met haar groepsgemiddelde &mdash; de volledige onderbouwing "
+        "van de factorscores eerder in dit rapport. Gebruik deze pagina's om te controleren "
+        "waar een factorscore vandaan komt of om een specifieke stelling terug te vinden die "
+        "in de bespreking ter sprake komt."
+    ),
+    "gespreksagenda": (
+        "Alles wat je tot hier las is de onderbouwing; hier begint het gesprek. Deze agenda "
+        "vat samen wat als eerste op tafel hoort, waarom juist dat, en wanneer je erop "
+        "terugkomt. Het is bewust geen kant-en-klaar actieplan: de keuzes &mdash; wat pakken "
+        "we op, wie is eigenaar &mdash; maak je in de begeleide managementbespreking, met dit "
+        "rapport als gedeelde basis."
+    ),
+}
+
+
+def _intro(key: str) -> str:
+    return f'<p class="sec-intro">{SECTION_INTROS[key]}</p>'
+
+
 class _ChapterCounter:
     """Afgeleide hoofdstuknummering (designsprong §4): elke renderer maakt één
     instantie en roept opener() aan op het moment dat een sectie daadwerkelijk
@@ -399,7 +493,8 @@ class _ChapterCounter:
 def _bestuurlijke_read(*, kernzin: str, totaalbeeld: str,
                        primary_label: str, primary_score: float | None, primary_color: str,
                        why_cells_html: str, strong_label: str, strong_score: float | None,
-                       mgmt_q: str, responsbasis_html: str = "", opener_html: str = "") -> str:
+                       mgmt_q: str, mgmt_q_source: str = "",
+                       responsbasis_html: str = "", opener_html: str = "") -> str:
     return f"""<div class="pb sec">
   {opener_html or '<span class="slabel">Bestuurlijke read</span>'}
   <p class="br-kernzin">{_h(kernzin)}</p>
@@ -410,7 +505,7 @@ def _bestuurlijke_read(*, kernzin: str, totaalbeeld: str,
     {("<table class='sg'><tr>"
       f"<td><div class='sc-l'>Relatief sterk</div><div class='sc-v'>{_score_str(strong_score)}</div><div class='sc-b'>{_h(strong_label)} — wat w&eacute;l werkt</div></td>"
       "</tr></table>") if strong_label else ""}
-    <div class="mq-line"><span class="mq-label">Eerste managementvraag</span><p>{_h(mgmt_q)}</p></div>
+    <div class="mq-line"><span class="mq-label">Eerste managementvraag</span><p>{_h(mgmt_q)}</p>{f'<span class="mq-source">{_h(mgmt_q_source)}</span>' if mgmt_q_source else ''}</div>
   </div>
   {responsbasis_html}
 </div>"""
@@ -557,8 +652,7 @@ def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: st
 
     return f"""<div class="pb sec">
   {opener_html or '<span class="slabel">Eerste managementspoor</span>'}
-  <p style="font-size:10.5px;color:#64748B;max-width:60ch;margin-bottom:16px;">
-    Geen kant-en-klaar plan &mdash; een agenda voor de begeleide managementbespreking.</p>
+  {_intro("gespreksagenda")}
   <div class="agenda-dark">
   <table class="steps"><tr>
     <td class="step"><div class="step-no">Primair thema</div><div class="step-body">{_h(primary_theme)}</div>{_why(primary_why)}</td>
@@ -926,13 +1020,11 @@ def _segment_block(segment_rows: list[dict], opener_html: str = "") -> str:
 
     return f"""<div class="pb sec">
   {opener_html or '<span class="slabel">Segmentanalyse &mdash; per afdeling</span>'}
+  {_intro("segmentanalyse")}
   <div class="card">
     <table class="item-tbl">{rows_html}</table>
     {low_note}
   </div>
-  <p class="trustline">Alleen afdelingen met minimaal 5 responses worden individueel getoond;
-  kleinere groepen vallen onder &ldquo;Overige afdelingen&rdquo;. Spreiding vanaf 10 responses
-  per afdeling. Geen causale ranking &mdash; verschillen zijn gesprekstof, geen oordeel.</p>
 </div>"""
 
 
@@ -1326,10 +1418,9 @@ def _overzichtsprofiel(factors: list[tuple[str, float | None]],
             breakdown_html = f'<div style="display:flex;margin-top:20px;">{cols}</div>'
     return f"""<div class="pb sec">
   {opener_html or '<span class="slabel">Overzichtsprofiel</span>'}
+  {_intro("overzichtsprofiel")}
   {summary_html}
   <div class="card">{rows}{legend}{breakdown_html}</div>
-  <p class="trustline">Banden zijn vaste schaaldrempels, geen benchmark.
-  De rangorde tussen factoren weegt zwaarder dan de kleur &mdash; zie Methodiek.</p>
 </div>"""
 
 
@@ -1357,10 +1448,7 @@ def _vertrekcontext(*, exit_reasons: list[tuple[str, int]],
 
     return f"""<div class="pb sec">
   {opener_html or '<span class="slabel">Vertrekcontext</span>'}
-  <p style="font-size:10.5px;color:#64748B;max-width:60ch;margin-bottom:18px;">
-    Een <strong>hoofdreden</strong> is de doorslaggevende aanleiding om te vertrekken.
-    Een <strong>meespelende factor</strong> droeg bij maar gaf niet de doorslag.
-    Beide samen geven het vertrekbeeld.</p>
+  {_intro("vertrekcontext")}
   <div class="tcol">
     <div class="tc-l"><div class="card accent"><h3>Hoofdredenen van vertrek (top 3)</h3>
       <table class="item-tbl">{_reason_rows(exit_reasons)}</table></div></div>
@@ -1436,23 +1524,11 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
             strips += (f'<div style="margin-top:10px;"><div class="sc-l">'
                        f'{label}</div>{blk}</div>')
 
-    legend = (
-        '<p style="font-size:10px;color:#64748B;margin-top:10px;margin-bottom:0;">'
-        'Behoudssignaal meet condities (factorscores). '
-        'Blijf&shy;intentie en vertrekintentie zijn geen inverse van elkaar &mdash; '
-        'iemand kan beide tegelijk voelen. '
-        'Bevlogenheid is onafhankelijk: bevlogen medewerkers vertrekken soms toch.</p>'
-    )
-
     return f"""<div class="pb sec">
   {opener_html or '<span class="slabel">Behoudscontext</span>'}
-  <p style="font-size:10.5px;color:#64748B;max-width:60ch;margin-bottom:18px;">
-    Vier signalen op groepsniveau &mdash; condities, intentie en werkbeleving samengebracht.
-    Geen individuele risicobeoordeling &mdash; patronen zijn leidend.
-  </p>
+  {_intro("behoudscontext")}
   {stat_rows}
   {strips}
-  {legend}
 </div>"""
 
 
@@ -1546,7 +1622,13 @@ def render_exit_report_html(data: dict) -> str:
         primary_col   = _factor_color(low_sc)
         # Datagedreven vraag (uit de meest gekozen verdiepings-toelichting)
         # wanneer beschikbaar; anders de generieke per-factor vraag.
-        br_mgmt_q     = _short_mgmt_q(_deep_agg_early, "exit", tf) or _mgmt_q(tf, "exit")
+        _short_q = _short_mgmt_q(_deep_agg_early, "exit", tf)
+        if _short_q:
+            br_mgmt_q = _short_q
+            br_mgmt_q_source = "Gebaseerd op de meest gekozen toelichting van respondenten in de verdieping."
+        else:
+            br_mgmt_q = _mgmt_q(tf, "exit")
+            br_mgmt_q_source = "Gebaseerd op de laagst scorende factor."
     else:
         why_cells     = ""
         primary_fkey  = low_f[0] if low_f else None
@@ -1554,6 +1636,7 @@ def render_exit_report_html(data: dict) -> str:
         primary_sc    = low_sc
         primary_col   = _factor_color(low_sc)
         br_mgmt_q     = _mgmt_q(low_f[0], "exit") if low_f else ""
+        br_mgmt_q_source = "Gebaseerd op de laagst scorende factor." if low_f else ""
 
     # Subtekst herhaalt de titel niet meer: alleen wat NIEUW is — de sterke
     # factor mét score. De responsbasis staat nu onderaan dezelfde pagina.
@@ -1585,6 +1668,7 @@ def render_exit_report_html(data: dict) -> str:
         strong_label=high_lbl,
         strong_score=high_sc,
         mgmt_q=br_mgmt_q,
+        mgmt_q_source=br_mgmt_q_source,
         responsbasis_html=_responsbasis_band,
         opener_html=ch.opener("Bestuurlijke read"),
     )
@@ -1611,7 +1695,7 @@ def render_exit_report_html(data: dict) -> str:
     deep_agg = data.get("deepening_agg") or {}
 
     # ── Factor detail (itemniveau prioritaire factoren) ──────────────────────
-    def _factor_detail(fk: str, opener_html: str = "") -> str:
+    def _factor_detail(fk: str, opener_html: str = "", intro_html: str = "") -> str:
         # ── Data logic (preserved from old helper) ──
         lbl    = FACTOR_LABELS_NL.get(fk, fk)
         fsc    = fa.get(fk)
@@ -1658,6 +1742,7 @@ def render_exit_report_html(data: dict) -> str:
         spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []))
         return f"""<div class="pb sec">
   {opener_html or f'<span class="slabel">Verdieping &mdash; {_h(lbl)}</span>'}
+  {intro_html}
   <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&mdash; {_h(fl_)}</span></h2>
   {spread}
   {er_context}
@@ -1672,7 +1757,7 @@ def render_exit_report_html(data: dict) -> str:
         for _i, _pfk in enumerate(priority_fkeys):
             _lbl = FACTOR_LABELS_NL.get(_pfk, _pfk)
             _opener = ch.opener(f"Verdieping — {_lbl}") if _i == 0 else _ChapterCounter.vervolg(f"Verdieping — {_lbl}")
-            s += _factor_detail(_pfk, opener_html=_opener)
+            s += _factor_detail(_pfk, opener_html=_opener, intro_html=_intro("verdieping") if _i == 0 else "")
     else:
         s += f'<div class="pb sec">{ch.opener("Verdieping — prioritaire factoren")}<div class="card">Factor detail beschikbaar na voldoende patroonduiding.</div></div>'
 
@@ -1699,7 +1784,7 @@ def render_exit_report_html(data: dict) -> str:
 
     s += f"""<div class="pb sec">
   {ch.opener("Werkbeleving", kicker="Autonomie, competentie &amp; verbondenheid")}
-  <p>Drie basisbehoeften die de onderliggende werkbeleving meten, onafhankelijk van de organisatiefactoren.</p>
+  {_intro("werkbeleving")}
   <div class="card" style="margin-bottom:14px;">{sdt_overview_rows}</div>"""
 
     for dim in ("autonomy", "competence", "relatedness"):
@@ -1725,10 +1810,10 @@ def render_exit_report_html(data: dict) -> str:
         ecol = _rag_color(10.0 if es >= 20 else 6.0 if es >= 0 else 4.0)
         s += f"""<div class="pb sec">
   {ch.opener("Werkgeversaanbeveling")}
+  {_intro("werkgeversaanbeveling")}
   <table class="sg"><tr>
     <td><div class="sc-l">Aanbevelingsscore</div><div class="sc-v" style="color:{ecol};">{es:+d}</div><div class="sc-b">eNPS (&minus;100 tot +100)</div></td>
   </tr></table>
-  <div class="card"><p style="margin-bottom:0;">Aanvullende context naast het overzichtsprofiel. Een positieve score betekent meer promotors dan criticasters.</p></div>
 </div>"""
     # Niet gemeten: geen eigen (vrijwel lege) pagina — de Datastatus op de
     # responsbasis-pagina en de appendix-notitie melden dit al (fail-loud blijft).
@@ -1740,9 +1825,9 @@ def render_exit_report_html(data: dict) -> str:
 
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]
-    if _should_show_quotes(texts):
-        s += f"""<div class="pb sec">
+    s += f"""<div class="pb sec">
   {ch.opener("Open toelichtingen", kicker=f"{len(texts)} respondentstemmen")}
+  {_intro("open_toelichtingen")}
   {_themed_quotes(texts, "exit", top_fkeys, n)}
 </div>"""
 
@@ -1821,9 +1906,9 @@ def render_exit_report_html(data: dict) -> str:
 
         s += f"""<div class="pb sec">
   {ch.opener("Appendix", kicker="Volledige vraagresultaten")}
-  <p style="font-size:9.5px;color:#64748B;margin-bottom:14px;">
-    Technische onderbouwing. Scores zijn groepsgemiddelden (n={n}), geschaald 1&ndash;10.
-    &#x21a9;&nbsp;= omgekeerd gecodeerde stelling.
+  {_intro("appendix")}
+  <p style="font-size:9px;color:#94A3B8;margin-bottom:14px;">
+    n={n}. &#x21a9;&nbsp;= omgekeerd gecodeerde stelling.
   </p>
   {app_sections}
   <div class="no-break" style="margin-bottom:14px;">
@@ -1907,7 +1992,13 @@ def render_retention_report_html(data: dict) -> str:
         primary_label = tf_lbl_
         primary_sc    = tf_sc
         primary_col   = tf_col
-        br_mgmt_q     = _short_mgmt_q(_deep_agg_early, ST, tf) or _mgmt_q(tf, ST)
+        _short_q = _short_mgmt_q(_deep_agg_early, ST, tf)
+        if _short_q:
+            br_mgmt_q = _short_q
+            br_mgmt_q_source = "Gebaseerd op de meest gekozen toelichting van respondenten in de verdieping."
+        else:
+            br_mgmt_q = _mgmt_q(tf, ST)
+            br_mgmt_q_source = "Gebaseerd op de laagst scorende factor."
     else:
         why_cells     = ""
         primary_fkey  = low_f[0] if low_f else None
@@ -1915,6 +2006,7 @@ def render_retention_report_html(data: dict) -> str:
         primary_sc    = low_sc
         primary_col   = _factor_color(low_sc)
         br_mgmt_q     = _mgmt_q(low_f[0], ST) if low_f else ""
+        br_mgmt_q_source = "Gebaseerd op de laagst scorende factor." if low_f else ""
 
     # Kernzin: band + geduid getal + laagste factor. "behoudssignaal" bij het
     # cijfer, zodat de lezer weet WAT er 4.7 scoort (de factorscore ernaast is
@@ -1954,6 +2046,7 @@ def render_retention_report_html(data: dict) -> str:
         strong_label=high_lbl,
         strong_score=high_sc,
         mgmt_q=br_mgmt_q,
+        mgmt_q_source=br_mgmt_q_source,
         responsbasis_html=_responsbasis_band,
         opener_html=ch.opener("Bestuurlijke read"),
     )
@@ -1984,7 +2077,7 @@ def render_retention_report_html(data: dict) -> str:
     # Priority = (10-score) — no exit-reason counts exist for retention, pass {}
     priority_fkeys = _select_priority_factors(fa, {}, max_n=3)
 
-    def _ret_factor_detail(fk: str, opener_html: str = "") -> str:
+    def _ret_factor_detail(fk: str, opener_html: str = "", intro_html: str = "") -> str:
         lbl    = _fl(fk, ST)
         fsc    = fa.get(fk)
         col    = _factor_color(fsc)
@@ -2022,6 +2115,7 @@ def render_retention_report_html(data: dict) -> str:
         spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []))
         return f"""<div class="pb sec">
   {opener_html or f'<span class="slabel">Verdieping &mdash; {_h(lbl)}</span>'}
+  {intro_html}
   <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&mdash; {_h(fl_)}</span></h2>
   {spread}
   {low_card}
@@ -2035,7 +2129,7 @@ def render_retention_report_html(data: dict) -> str:
         for _i, _pfk in enumerate(priority_fkeys):
             _lbl = _fl(_pfk, ST)
             _opener = ch.opener(f"Verdieping — {_lbl}") if _i == 0 else _ChapterCounter.vervolg(f"Verdieping — {_lbl}")
-            s += _ret_factor_detail(_pfk, opener_html=_opener)
+            s += _ret_factor_detail(_pfk, opener_html=_opener, intro_html=_intro("verdieping") if _i == 0 else "")
     else:
         s += f'<div class="pb sec">{ch.opener("Verdieping — prioritaire factoren")}<div class="card">Factor detail beschikbaar na voldoende patroonduiding.</div></div>'
 
@@ -2062,7 +2156,7 @@ def render_retention_report_html(data: dict) -> str:
 
     s += f"""<div class="pb sec">
   {ch.opener("Werkbeleving", kicker="Autonomie, competentie &amp; verbondenheid")}
-  <p>Drie basisbehoeften die de onderliggende werkbeleving meten, onafhankelijk van de organisatiefactoren.</p>
+  {_intro("werkbeleving")}
   <div class="card" style="margin-bottom:14px;">{sdt_overview_rows}</div>"""
 
     for dim in ("autonomy", "competence", "relatedness"):
@@ -2088,10 +2182,10 @@ def render_retention_report_html(data: dict) -> str:
         ecol = _rag_color(10.0 if es >= 20 else 6.0 if es >= 0 else 4.0)
         s += f"""<div class="pb sec">
   {ch.opener("Werkgeversaanbeveling")}
+  {_intro("werkgeversaanbeveling")}
   <table class="sg"><tr>
     <td><div class="sc-l">Aanbevelingsscore</div><div class="sc-v" style="color:{ecol};">{es:+d}</div><div class="sc-b">eNPS (&minus;100 tot +100)</div></td>
   </tr></table>
-  <div class="card"><p style="margin-bottom:0;">Aanvullende context naast het overzichtsprofiel. Een positieve score betekent meer promotors dan criticasters.</p></div>
 </div>"""
     # Niet gemeten: geen eigen (vrijwel lege) pagina — de Datastatus op de
     # responsbasis-pagina en de appendix-notitie melden dit al (fail-loud blijft).
@@ -2103,9 +2197,9 @@ def render_retention_report_html(data: dict) -> str:
 
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]
-    if _should_show_quotes(texts):
-        s += f"""<div class="pb sec">
+    s += f"""<div class="pb sec">
   {ch.opener("Open toelichtingen", kicker=f"{len(texts)} medewerkersstemmen")}
+  {_intro("open_toelichtingen")}
   {_themed_quotes(texts, ST, top_fkeys, n)}
 </div>"""
 
@@ -2191,9 +2285,9 @@ def render_retention_report_html(data: dict) -> str:
 
         s += f"""<div class="pb sec">
   {ch.opener("Appendix", kicker="Volledige vraagresultaten")}
-  <p style="font-size:9.5px;color:#64748B;margin-bottom:14px;">
-    Technische onderbouwing. Scores zijn groepsgemiddelden (n={n}), geschaald 1&ndash;10.
-    &#x21a9;&nbsp;= omgekeerd gecodeerde stelling.
+  {_intro("appendix")}
+  <p style="font-size:9px;color:#94A3B8;margin-bottom:14px;">
+    n={n}. &#x21a9;&nbsp;= omgekeerd gecodeerde stelling.
   </p>
   {app_sections}
   <div class="no-break" style="margin-bottom:14px;">
@@ -2240,6 +2334,7 @@ def _checkpointoverzicht(checkpoints: list[tuple[str, float | None]], opener_htm
 
     return f"""<div class="pb sec">
   {opener_html or '<span class="slabel">Checkpointoverzicht</span>'}
+  {_intro("checkpointoverzicht")}
   {body}
 </div>"""
 
@@ -2329,12 +2424,14 @@ def render_onboarding_report_html(data: dict) -> str:
         primary_sc    = tf_sc
         primary_col   = tf_col
         br_mgmt_q     = _mgmt_q(tf, ST)
+        br_mgmt_q_source = "Gebaseerd op de laagst scorende factor."
     else:
         why_cells     = ""
         primary_label = low_lbl
         primary_sc    = low_sc
         primary_col   = _factor_color(low_sc)
         br_mgmt_q     = _mgmt_q(low_f[0], ST) if low_f else ""
+        br_mgmt_q_source = "Gebaseerd op de laagst scorende factor." if low_f else ""
 
     # Kernzin: band + geduid getal + laagste factor ("checkpointscore" zodat de
     # lezer weet wat het getal is; de factorscore ernaast is een ander getal).
@@ -2373,6 +2470,7 @@ def render_onboarding_report_html(data: dict) -> str:
         strong_label=high_lbl,
         strong_score=high_sc,
         mgmt_q=br_mgmt_q,
+        mgmt_q_source=br_mgmt_q_source,
         responsbasis_html=_responsbasis_band,
         opener_html=ch.opener("Bestuurlijke read"),
     )
@@ -2396,7 +2494,7 @@ def render_onboarding_report_html(data: dict) -> str:
     # ── Factordiepte ×≤3 (prioriteit = laagste score, geen vertrekredenen) ────
     priority_fkeys = _select_priority_factors(fa, {}, max_n=3)
 
-    def _ob_factor_detail(fk: str, opener_html: str = "") -> str:
+    def _ob_factor_detail(fk: str, opener_html: str = "", intro_html: str = "") -> str:
         lbl    = _fl(fk, ST)
         fsc    = fa.get(fk)
         col    = _factor_color(fsc)
@@ -2427,6 +2525,7 @@ def render_onboarding_report_html(data: dict) -> str:
         spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []))
         return f"""<div class="pb sec">
   {opener_html or f'<span class="slabel">Verdieping &mdash; {_h(lbl)}</span>'}
+  {intro_html}
   <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&mdash; {_h(fl_)}</span></h2>
   <p style="font-size:10px;color:#64748B;margin-bottom:12px;">Lager op deze factor = meer frictie in de onboardingfase.</p>
   {spread}
@@ -2440,7 +2539,7 @@ def render_onboarding_report_html(data: dict) -> str:
         for _i, _pfk in enumerate(priority_fkeys):
             _lbl = _fl(_pfk, ST)
             _opener = ch.opener(f"Verdieping — {_lbl}") if _i == 0 else _ChapterCounter.vervolg(f"Verdieping — {_lbl}")
-            s += _ob_factor_detail(_pfk, opener_html=_opener)
+            s += _ob_factor_detail(_pfk, opener_html=_opener, intro_html=_intro("verdieping") if _i == 0 else "")
     else:
         s += f'<div class="pb sec">{ch.opener("Verdieping — prioritaire factoren")}<div class="card">Factor detail beschikbaar na voldoende patroonduiding.</div></div>'
 
@@ -2468,7 +2567,7 @@ def render_onboarding_report_html(data: dict) -> str:
     if sdt_overview_rows:
         s += f"""<div class="pb sec">
   {ch.opener("Werkbeleving", kicker="Autonomie, competentie &amp; verbondenheid")}
-  <p>Drie basisbehoeften die de onderliggende werkbeleving meten, onafhankelijk van de organisatiefactoren.</p>
+  {_intro("werkbeleving")}
   <div class="card" style="margin-bottom:14px;">{sdt_overview_rows}</div>"""
 
         for dim in ("autonomy", "competence", "relatedness"):
@@ -2494,10 +2593,10 @@ def render_onboarding_report_html(data: dict) -> str:
         ecol = _rag_color(10.0 if es >= 20 else 6.0 if es >= 0 else 4.0)
         s += f"""<div class="pb sec">
   {ch.opener("Werkgeversaanbeveling")}
+  {_intro("werkgeversaanbeveling")}
   <table class="sg"><tr>
     <td><div class="sc-l">Aanbevelingsscore</div><div class="sc-v" style="color:{ecol};">{es:+d}</div><div class="sc-b">eNPS (&minus;100 tot +100)</div></td>
   </tr></table>
-  <div class="card"><p style="margin-bottom:0;">Aanvullende context naast het overzichtsprofiel. Een positieve score betekent meer promotors dan criticasters.</p></div>
 </div>"""
 
     # ── Segmentstatus ─────────────────────────────────────────────────────────
@@ -2507,9 +2606,9 @@ def render_onboarding_report_html(data: dict) -> str:
 
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]
-    if _should_show_quotes(texts):
-        s += f"""<div class="pb sec">
+    s += f"""<div class="pb sec">
   {ch.opener("Open toelichtingen", kicker=f"{len(texts)} medewerkersstemmen")}
+  {_intro("open_toelichtingen")}
   {_themed_quotes(texts, ST, top_fkeys, n)}
 </div>"""
 
@@ -2585,9 +2684,9 @@ def render_onboarding_report_html(data: dict) -> str:
 
         s += f"""<div class="pb sec">
   {ch.opener("Appendix", kicker="Volledige vraagresultaten")}
-  <p style="font-size:9.5px;color:#64748B;margin-bottom:14px;">
-    Technische onderbouwing. Scores zijn groepsgemiddelden (n={n}), geschaald 1&ndash;10.
-    &#x21a9;&nbsp;= omgekeerd gecodeerde stelling.
+  {_intro("appendix")}
+  <p style="font-size:9px;color:#94A3B8;margin-bottom:14px;">
+    n={n}. &#x21a9;&nbsp;= omgekeerd gecodeerde stelling.
   </p>
   {app_sections}
   {"<div class='no-break' style='margin-bottom:14px;'><div style='font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;'>Werkbeleving (SDT) — checkpoint-items</div><table class='app-tbl'><tr><th class='aq'>Vraag</th><th class='as'>Gem.</th><th class='ab'>Beeld</th></tr>" + sdt_rows + "</table></div>" if sdt_rows else ""}

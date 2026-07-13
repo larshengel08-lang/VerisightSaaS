@@ -85,6 +85,10 @@ body {
   letter-spacing: 0.14em; text-transform: uppercase; color: """ + STEEL + r"""; margin-bottom: 5px; }
 .ch-title { font-family: 'Inter Tight', sans-serif; font-weight: 800; font-size: 21px;
   letter-spacing: -0.03em; color: """ + INK + r"""; line-height: 1.1; margin-bottom: 14px; }
+.sec-intro { font-size: 10.5px; color: #4A5B6E; line-height: 1.7; max-width: 72ch;
+  margin: -4px 0 18px; }
+.mq-source { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.04em;
+  color: """ + STEEL + r"""; margin-top: 5px; display: block; }
 
 /* ── Headings ── */
 h2 { font-family: 'Inter Tight', sans-serif; font-weight: 800;
