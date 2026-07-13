@@ -271,6 +271,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ detail: 'Ongeldige aanvraag.' }, { status: 400 })
   }
 
+  // Honeypot (M4): bots vullen het verborgen 'website'-veld. Stil laten slagen zonder
+  // opslaan/mailen — op élk pad, dus ook wanneer de backend faalt en we naar de
+  // Supabase-fallback zouden vallen (die de honeypot voorheen oversloeg).
+  if (typeof body.website === 'string' && body.website.trim().length > 0) {
+    return NextResponse.json({ ok: true }, { status: 200 })
+  }
+
   if (
     !isNonEmptyString(body.name, 2) ||
     !isNonEmptyString(body.work_email, 5) ||
