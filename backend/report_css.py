@@ -81,6 +81,10 @@ body {
   color: #E8A020; line-height: 1; margin-bottom: 6px; }
 .ch-rule { border: none; border-top: 3px solid #0D1B2A; width: 48px;
   margin: 0 0 12px 0; }
+.ch-kicker { display: block; font-family: 'JetBrains Mono', monospace; font-size: 9px;
+  letter-spacing: 0.14em; text-transform: uppercase; color: """ + STEEL + r"""; margin-bottom: 5px; }
+.ch-title { font-family: 'Inter Tight', sans-serif; font-weight: 800; font-size: 21px;
+  letter-spacing: -0.03em; color: """ + INK + r"""; line-height: 1.1; margin-bottom: 14px; }
 
 /* ── Headings ── */
 h2 { font-family: 'Inter Tight', sans-serif; font-weight: 800;

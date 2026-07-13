@@ -385,10 +385,11 @@ class _ChapterCounter:
     def __init__(self) -> None:
         self.n = 0
 
-    def opener(self, eyebrow: str) -> str:
+    def opener(self, title: str, kicker: str | None = None) -> str:
         self.n += 1
+        kicker_html = f'<span class="ch-kicker">{kicker}</span>' if kicker else ""
         return (f'<div class="ch-idx">{self.n:02d}</div><hr class="ch-rule">'
-                f'<span class="slabel">{eyebrow}</span>')
+                f'{kicker_html}<h2 class="ch-title">{title}</h2>')
 
     @staticmethod
     def vervolg(eyebrow: str) -> str:
@@ -556,7 +557,6 @@ def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: st
 
     return f"""<div class="pb sec">
   {opener_html or '<span class="slabel">Eerste managementspoor</span>'}
-  <h2 style="margin-bottom:6px;">Gespreksagenda</h2>
   <p style="font-size:10.5px;color:#64748B;max-width:60ch;margin-bottom:16px;">
     Geen kant-en-klaar plan &mdash; een agenda voor de begeleide managementbespreking.</p>
   <div class="agenda-dark">
@@ -1357,7 +1357,6 @@ def _vertrekcontext(*, exit_reasons: list[tuple[str, int]],
 
     return f"""<div class="pb sec">
   {opener_html or '<span class="slabel">Vertrekcontext</span>'}
-  <h2 style="margin-bottom:6px;">Wat speelde mee bij vertrek?</h2>
   <p style="font-size:10.5px;color:#64748B;max-width:60ch;margin-bottom:18px;">
     Een <strong>hoofdreden</strong> is de doorslaggevende aanleiding om te vertrekken.
     Een <strong>meespelende factor</strong> droeg bij maar gaf niet de doorslag.
@@ -1447,7 +1446,6 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
 
     return f"""<div class="pb sec">
   {opener_html or '<span class="slabel">Behoudscontext</span>'}
-  <h2 style="margin-bottom:6px;">Waar staat behoud onder druk?</h2>
   <p style="font-size:10.5px;color:#64748B;max-width:60ch;margin-bottom:18px;">
     Vier signalen op groepsniveau &mdash; condities, intentie en werkbeleving samengebracht.
     Geen individuele risicobeoordeling &mdash; patronen zijn leidend.
@@ -1596,7 +1594,7 @@ def render_exit_report_html(data: dict) -> str:
     contributing = [(r["label"], r["count"]) for r in data["cont_dist"]]
     s += _vertrekcontext(exit_reasons=exit_reasons, contributing=contributing,
                          n=n, primary_factor_label=low_lbl,
-                         opener_html=ch.opener("Vertrekcontext"))
+                         opener_html=ch.opener("Wat speelde mee bij vertrek?", kicker="Vertrekcontext"))
 
     # ── Overzichtsprofiel (p.05) ──────────────────────────────────────────────
     profile_factors = [(FACTOR_LABELS_NL.get(fk, fk), fa.get(fk))
@@ -1645,7 +1643,7 @@ def render_exit_report_html(data: dict) -> str:
         review_when="Plan binnen 45-90 dagen een vervolgmoment: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.",
         primary_why=_primary_why,
         second_why=_second_why,
-        opener_html=ch.opener("Eerste managementspoor"),
+        opener_html=ch.opener("Gespreksagenda", kicker="Eerste managementspoor"),
     )
 
     # ── Factor detail (itemniveau prioritaire factoren) ──────────────────────
@@ -1736,7 +1734,7 @@ def render_exit_report_html(data: dict) -> str:
     )
 
     s += f"""<div class="pb sec">
-  {ch.opener("Werkbeleving — autonomie, competentie &amp; verbondenheid")}
+  {ch.opener("Werkbeleving", kicker="Autonomie, competentie &amp; verbondenheid")}
   <p>Drie basisbehoeften die de onderliggende werkbeleving meten, onafhankelijk van de organisatiefactoren.</p>
   <div class="card" style="margin-bottom:14px;">{sdt_overview_rows}</div>"""
 
@@ -1773,14 +1771,14 @@ def render_exit_report_html(data: dict) -> str:
 
     # ── Segmentstatus ─────────────────────────────────────────────────────────
     _seg_rows = data.get("segment_rows") or []
-    _seg_opener = ch.opener("Segmentanalyse &mdash; per afdeling") if _seg_rows else ch.opener("Segmentanalyse")
+    _seg_opener = ch.opener("Segmentanalyse per afdeling") if _seg_rows else ch.opener("Segmentanalyse")
     s += _segment_block(_seg_rows, opener_html=_seg_opener)
 
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]
     if _should_show_quotes(texts):
         s += f"""<div class="pb sec">
-  {ch.opener(f"Open toelichtingen &mdash; {len(texts)} respondentstemmen")}
+  {ch.opener("Open toelichtingen", kicker=f"{len(texts)} respondentstemmen")}
   {_themed_quotes(texts, "exit", top_fkeys, n)}
 </div>"""
 
@@ -1817,7 +1815,7 @@ def render_exit_report_html(data: dict) -> str:
         )
 
         s += f"""<div class="pb sec">
-  {ch.opener("Appendix — volledige vraagresultaten")}
+  {ch.opener("Appendix", kicker="Volledige vraagresultaten")}
   <p style="font-size:9.5px;color:#64748B;margin-bottom:14px;">
     Technische onderbouwing. Scores zijn groepsgemiddelden (n={n}), geschaald 1&ndash;10.
     &#x21a9;&nbsp;= omgekeerd gecodeerde stelling.
@@ -1963,7 +1961,7 @@ def render_retention_report_html(data: dict) -> str:
         engagement=avg_eng,
         primary_factor=low_lbl or primary_label or "—",
         intent_resp=data.get("intent_resp"),
-        opener_html=ch.opener("Behoudscontext"),
+        opener_html=ch.opener("Waar staat behoud onder druk?", kicker="Behoudscontext"),
     )
 
     # ── Overzichtsprofiel (p.05) ──────────────────────────────────────────────
@@ -2018,7 +2016,7 @@ def render_retention_report_html(data: dict) -> str:
         review_when="Plan binnen 45-90 dagen een vervolgmoment: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.",
         primary_why=_primary_why,
         second_why=_second_why,
-        opener_html=ch.opener("Eerste managementspoor"),
+        opener_html=ch.opener("Gespreksagenda", kicker="Eerste managementspoor"),
     )
 
     # ── Factor detail (itemniveau prioritaire factoren) ──────────────────────
@@ -2102,7 +2100,7 @@ def render_retention_report_html(data: dict) -> str:
     )
 
     s += f"""<div class="pb sec">
-  {ch.opener("Werkbeleving — autonomie, competentie &amp; verbondenheid")}
+  {ch.opener("Werkbeleving", kicker="Autonomie, competentie &amp; verbondenheid")}
   <p>Drie basisbehoeften die de onderliggende werkbeleving meten, onafhankelijk van de organisatiefactoren.</p>
   <div class="card" style="margin-bottom:14px;">{sdt_overview_rows}</div>"""
 
@@ -2139,14 +2137,14 @@ def render_retention_report_html(data: dict) -> str:
 
     # ── Segmentstatus ─────────────────────────────────────────────────────────
     _seg_rows = data.get("segment_rows") or []
-    _seg_opener = ch.opener("Segmentanalyse &mdash; per afdeling") if _seg_rows else ch.opener("Segmentanalyse")
+    _seg_opener = ch.opener("Segmentanalyse per afdeling") if _seg_rows else ch.opener("Segmentanalyse")
     s += _segment_block(_seg_rows, opener_html=_seg_opener)
 
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]
     if _should_show_quotes(texts):
         s += f"""<div class="pb sec">
-  {ch.opener(f"Open toelichtingen &mdash; {len(texts)} medewerkersstemmen")}
+  {ch.opener("Open toelichtingen", kicker=f"{len(texts)} medewerkersstemmen")}
   {_themed_quotes(texts, ST, top_fkeys, n)}
 </div>"""
 
@@ -2183,7 +2181,7 @@ def render_retention_report_html(data: dict) -> str:
         )
 
         s += f"""<div class="pb sec">
-  {ch.opener("Appendix — volledige vraagresultaten")}
+  {ch.opener("Appendix", kicker="Volledige vraagresultaten")}
   <p style="font-size:9.5px;color:#64748B;margin-bottom:14px;">
     Technische onderbouwing. Scores zijn groepsgemiddelden (n={n}), geschaald 1&ndash;10.
     &#x21a9;&nbsp;= omgekeerd gecodeerde stelling.
@@ -2233,7 +2231,6 @@ def _checkpointoverzicht(checkpoints: list[tuple[str, float | None]], opener_htm
 
     return f"""<div class="pb sec">
   {opener_html or '<span class="slabel">Checkpointoverzicht</span>'}
-  <h2 style="margin-bottom:14px;">Onboardingfases</h2>
   {body}
 </div>"""
 
@@ -2380,7 +2377,7 @@ def render_onboarding_report_html(data: dict) -> str:
 
     # ── Checkpointoverzicht (p.05 — onboarding-exclusive) ────────────────────
     s += _checkpointoverzicht(checkpoints=[("Huidig checkpoint", avg_risk)],
-                              opener_html=ch.opener("Checkpointoverzicht"))
+                              opener_html=ch.opener("Onboardingfases", kicker="Checkpointoverzicht"))
 
     # ── Landingskwaliteit per domein (onboarding-exclusive) ───────────────────
     domain_scores = [(_fl(fk, ST), fa.get(fk))
@@ -2421,7 +2418,7 @@ def render_onboarding_report_html(data: dict) -> str:
         review_when="Plan een vervolgmoment rond het volgende checkpoint: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.",
         primary_why=_primary_why,
         second_why=_second_why,
-        opener_html=ch.opener("Eerste managementspoor"),
+        opener_html=ch.opener("Gespreksagenda", kicker="Eerste managementspoor"),
     )
 
     # ── Factordiepte ×≤3 (prioriteit = laagste score, geen vertrekredenen) ────
@@ -2498,7 +2495,7 @@ def render_onboarding_report_html(data: dict) -> str:
 
     if sdt_overview_rows:
         s += f"""<div class="pb sec">
-  {ch.opener("Werkbeleving — autonomie, competentie &amp; verbondenheid")}
+  {ch.opener("Werkbeleving", kicker="Autonomie, competentie &amp; verbondenheid")}
   <p>Drie basisbehoeften die de onderliggende werkbeleving meten, onafhankelijk van de organisatiefactoren.</p>
   <div class="card" style="margin-bottom:14px;">{sdt_overview_rows}</div>"""
 
@@ -2533,14 +2530,14 @@ def render_onboarding_report_html(data: dict) -> str:
 
     # ── Segmentstatus ─────────────────────────────────────────────────────────
     _seg_rows = data.get("segment_rows") or []
-    _seg_opener = ch.opener("Segmentanalyse &mdash; per afdeling") if _seg_rows else ch.opener("Segmentanalyse")
+    _seg_opener = ch.opener("Segmentanalyse per afdeling") if _seg_rows else ch.opener("Segmentanalyse")
     s += _segment_block(_seg_rows, opener_html=_seg_opener)
 
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]
     if _should_show_quotes(texts):
         s += f"""<div class="pb sec">
-  {ch.opener(f"Open toelichtingen &mdash; {len(texts)} medewerkersstemmen")}
+  {ch.opener("Open toelichtingen", kicker=f"{len(texts)} medewerkersstemmen")}
   {_themed_quotes(texts, ST, top_fkeys, n)}
 </div>"""
 
@@ -2577,7 +2574,7 @@ def render_onboarding_report_html(data: dict) -> str:
         )
 
         s += f"""<div class="pb sec">
-  {ch.opener("Appendix — volledige vraagresultaten")}
+  {ch.opener("Appendix", kicker="Volledige vraagresultaten")}
   <p style="font-size:9.5px;color:#64748B;margin-bottom:14px;">
     Technische onderbouwing. Scores zijn groepsgemiddelden (n={n}), geschaald 1&ndash;10.
     &#x21a9;&nbsp;= omgekeerd gecodeerde stelling.
