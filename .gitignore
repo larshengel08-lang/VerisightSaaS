@@ -10,7 +10,18 @@ build/
 
 # Omgevingsvariabelen — credentials nooit committen
 .env
+.env.*
+!.env.example
+!.env.*.example
+!.env.local.example
 backend/.env
+
+# Vercel CLI env-dumps + acceptance-runtime (kunnen live secrets bevatten)
+.vercel/
+.env.production.inspect
+.env.vercel.production
+.acceptance-runtime/
+.tmp/
 
 # Database (SQLite — vervangen door Supabase, maar voor zekerheid)
 *.db
@@ -50,3 +61,4 @@ Thumbs.db
 # Node (frontend heeft eigen .gitignore)
 frontend/node_modules/
 frontend/.next/
+.gstack/
