@@ -36,6 +36,7 @@ def build_css(scan_type: str = "exit") -> str:
 @page {
   size: A4;
   margin: 18mm 16mm 20mm 16mm;
+  background: """ + CHALK + r""";
   @bottom-left {
     content: "VERTROUWELIJK — LOEP — GROEPSOUTPUT";
     font-family: 'JetBrains Mono', monospace;
@@ -47,14 +48,13 @@ def build_css(scan_type: str = "exit") -> str:
     font-size: 7px; letter-spacing: 0.12em; color: """ + STEEL + r""";
   }
 }
-@page cover-page { margin: 0; }
+@page cover-page { margin: 0; background: """ + NAVY + r"""; }
 
 * { box-sizing: border-box; margin: 0; padding: 0; border-radius: 0; }
 
 body {
   font-family: 'Inter', Arial, sans-serif;
   font-size: 11px; line-height: 1.6; color: #243247;
-  background: """ + CHALK + r""";
 }
 
 .pb       { break-before: page; }
@@ -81,6 +81,14 @@ body {
   color: #E8A020; line-height: 1; margin-bottom: 6px; }
 .ch-rule { border: none; border-top: 3px solid #0D1B2A; width: 48px;
   margin: 0 0 12px 0; }
+.ch-kicker { display: block; font-family: 'JetBrains Mono', monospace; font-size: 9px;
+  letter-spacing: 0.14em; text-transform: uppercase; color: """ + STEEL + r"""; margin-bottom: 5px; }
+.ch-title { font-family: 'Inter Tight', sans-serif; font-weight: 800; font-size: 21px;
+  letter-spacing: -0.03em; color: """ + INK + r"""; line-height: 1.1; margin-bottom: 14px; }
+.sec-intro { font-size: 10.5px; color: #4A5B6E; line-height: 1.7; max-width: 72ch;
+  margin: -4px 0 18px; }
+.mq-source { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.04em;
+  color: """ + STEEL + r"""; margin-top: 5px; display: block; }
 
 /* ── Headings ── */
 h2 { font-family: 'Inter Tight', sans-serif; font-weight: 800;

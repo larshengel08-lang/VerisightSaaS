@@ -75,7 +75,7 @@ def test_segmentblok_gerenderd_bij_data():
         {"department": "Sales", "n": 9, "avg": 6.8, "scores": [6.8] * 9},
     ]))
     assert "Operations" in html and "Sales" in html
-    assert "minimaal 5 responses" in html            # voetregel
+    assert "minder dan vijf" in html                 # sectie-intro (spec 2026-07-13 §2)
     assert "causale ranking" in html.lower() or "causale" in html
 
 
