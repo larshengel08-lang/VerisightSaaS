@@ -70,7 +70,18 @@ def test_page_achtergrond_is_chalk():
 
 
 def test_sectie_intros_aanwezig():
+    # _min_retention_data() heeft open_texts=[] — verrijk lokaal met ≥5
+    # niet-lege teksten zodat de Open toelichtingen-sectie (gegated door
+    # _should_show_quotes, MIN_QUOTES_N=5) daadwerkelijk rendert (zelfde
+    # patroon als test_geen_erkenning_label_meer hierboven).
     d = _min_retention_data()
+    d["open_texts"] = [
+        "Meer ruimte voor overleg met mijn leidinggevende zou helpen.",
+        "De werkdruk voelt af en toe te hoog aan.",
+        "Ik mis duidelijke doorgroeimogelijkheden.",
+        "Communicatie tussen teams kan beter.",
+        "Over het algemeen ben ik tevreden over de sfeer.",
+    ]
     html = render_retention_report_html(d)
     for frase in [
         "samenvattende groepsscore",          # behoudscontext: opbouw behoudssignaal

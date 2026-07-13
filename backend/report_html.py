@@ -1825,7 +1825,8 @@ def render_exit_report_html(data: dict) -> str:
 
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]
-    s += f"""<div class="pb sec">
+    if _should_show_quotes(texts):
+        s += f"""<div class="pb sec">
   {ch.opener("Open toelichtingen", kicker=f"{len(texts)} respondentstemmen")}
   {_intro("open_toelichtingen")}
   {_themed_quotes(texts, "exit", top_fkeys, n)}
@@ -2197,7 +2198,8 @@ def render_retention_report_html(data: dict) -> str:
 
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]
-    s += f"""<div class="pb sec">
+    if _should_show_quotes(texts):
+        s += f"""<div class="pb sec">
   {ch.opener("Open toelichtingen", kicker=f"{len(texts)} medewerkersstemmen")}
   {_intro("open_toelichtingen")}
   {_themed_quotes(texts, ST, top_fkeys, n)}
@@ -2606,7 +2608,8 @@ def render_onboarding_report_html(data: dict) -> str:
 
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]
-    s += f"""<div class="pb sec">
+    if _should_show_quotes(texts):
+        s += f"""<div class="pb sec">
   {ch.opener("Open toelichtingen", kicker=f"{len(texts)} medewerkersstemmen")}
   {_intro("open_toelichtingen")}
   {_themed_quotes(texts, ST, top_fkeys, n)}
