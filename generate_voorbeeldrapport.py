@@ -688,8 +688,11 @@ def _build_exit_response(profile: dict[str, float | str], salary: int, role: str
         "recommendations": get_recommendations(risk_result["factor_risks"]),
         # eNPS (0-10), bij vertrekkers lager naarmate het werksignaal zwaarder
         # weegt — zelfde reden als retention: voorbeeldrapport toont alles.
+        # Zelfde shift-logica als retention: vertrekkers scoren negatiever
+        # (plausibel), maar zonder shift werd het -90 — te extreem voor een
+        # voorbeeldrapport.
         "enps_score": max(0, min(10, round(
-            10 - risk_result["risk_score"] + random.uniform(-1.0, 1.5)))),
+            10 - risk_result["risk_score"] + random.uniform(0.5, 3.0)))),
     }
 
     return {
@@ -764,8 +767,13 @@ def _build_retention_response(profile: dict[str, float | str]) -> dict:
         # het volledige product tonen, incl. de werkgeversaanbeveling-sectie
         # (feedbackronde 2026-07-13). Echte campagnes zonder eNPS-vraag houden
         # de eerlijke Datastatus-melding.
+        # Verdeling bewust iets omhoog geschoven: zonder shift levert een
+        # gemiddelde bevlogenheid (~6) vrijwel alleen criticasters (<=6) op en
+        # dus een alarmerende eNPS van -90 in het verkoop-voorbeeld. Met de
+        # shift landt de sample-eNPS mild negatief/neutraal — realistisch voor
+        # een organisatie met dit scorebeeld.
         "enps_score": max(0, min(10, round(
-            supplemental["engagement_score"] + random.uniform(-1.5, 1.5)))),
+            supplemental["engagement_score"] + random.uniform(0.0, 3.5)))),
     }
 
     return {
