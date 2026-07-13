@@ -1264,8 +1264,10 @@ as $$
 declare
   resolved_key uuid;
 begin
-  if not public.is_org_member(target_org_id) then
-    raise exception 'Geen toegang tot organisatiesecret voor deze organisatie.';
+  -- Alleen Loep-beheerders (niet gewone org-leden/owners) mogen de operator-API-sleutel
+  -- ophalen (audit H2). Server-side klant-paden vallen terug op de service-role.
+  if not public.is_verisight_admin_user() then
+    raise exception 'Alleen Loep-beheerders mogen de organisatiesleutel opvragen.';
   end if;
 
   select api_key
@@ -1450,6 +1452,18 @@ create policy "org_members_can_select_responses"
         and public.is_org_member(c.organization_id)
     )
   );
+
+-- ── Audit H1 (besluit a): individuele respondent-data alleen voor de Loep-operator ──
+-- De bovenstaande is_org_member-policies zouden élke org-rol (incl. owner) toegang geven.
+-- We sluiten clients daarom op grant-niveau uit: survey_responses volledig dicht, en
+-- respondents beperkt tot niet-identificerende operationele kolommen (department-tellingen
+-- + status). De operator leest alles via de service-role; de klant krijgt aggregatie via
+-- campaign_stats + het backend-rapport. (De policies blijven staan voor de service-role
+-- en toekomstige owner-only leespaden.)
+revoke select on public.survey_responses from anon, authenticated;
+revoke select on public.respondents      from anon, authenticated;
+grant  select (id, campaign_id, department, completed, completed_at, sent_at, opened_at)
+  on public.respondents to authenticated;
 
 -- Campaign delivery records
 drop policy if exists "org_managers_can_select_delivery_records" on public.campaign_delivery_records;
