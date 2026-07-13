@@ -66,3 +66,32 @@ begin
   return resolved_key;
 end;
 $$;
+
+-- ── L8: pin search_path op de SECURITY DEFINER-helpers (hardening tegen search_path-hijack).
+-- Ze verwijzen al schema-gekwalificeerd, dus dit is defensief; voorkomt een footgun bij
+-- toekomstige edits. Bodies ongewijzigd.
+create or replace function public.is_org_member(org_id uuid)
+returns boolean language sql security definer stable set search_path = public as $$
+  select exists (select 1 from public.org_members
+    where org_members.org_id = $1 and org_members.user_id = auth.uid());
+$$;
+
+create or replace function public.is_org_manager(org_id uuid)
+returns boolean language sql security definer stable set search_path = public as $$
+  select exists (select 1 from public.org_members
+    where org_members.org_id = $1 and org_members.user_id = auth.uid()
+      and org_members.role in ('owner', 'member'));
+$$;
+
+create or replace function public.is_org_owner(org_id uuid)
+returns boolean language sql security definer stable set search_path = public as $$
+  select exists (select 1 from public.org_members
+    where org_members.org_id = $1 and org_members.user_id = auth.uid()
+      and org_members.role = 'owner');
+$$;
+
+create or replace function public.is_verisight_admin_user()
+returns boolean language sql security definer stable set search_path = public as $$
+  select exists (select 1 from public.profiles
+    where profiles.id = auth.uid() and profiles.is_verisight_admin = true);
+$$;
