@@ -1603,48 +1603,12 @@ def render_exit_report_html(data: dict) -> str:
     s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary, bands=_overzicht_bands,
                             opener_html=ch.opener("Overzichtsprofiel"))
 
-    # ── Eerste managementspoor (p.06 — na data, vóór verdieping) ─────────────
+    # ── Vertrekreden-telling (nodig voor de verdieping-detail hieronder én voor
+    # de gespreksagenda, die naar het slot is verplaatst — zie onderaan) ───────
     _code_to_count = {r["code"]: r["count"] for r in data["exit_r_dist"]}
     exit_code_counts = {fk: _code_to_count.get(FACTOR_EXIT_CODE.get(fk), 0) for fk in fa}
     priority_fkeys = _select_priority_factors(fa, exit_code_counts, max_n=3)
     deep_agg = data.get("deepening_agg") or {}
-    _enriched_q = (_deepening_mgmt_q(deep_agg, "exit", priority_fkeys[0])
-                   if priority_fkeys else None)
-
-    # Primair thema grounded in het laagst scorende item (zelfde aanpak als
-    # retention): geen vaste per-factor beslistekst die nooit meebeweegt met data.
-    _ex_primary_fk = priority_fkeys[0] if priority_fkeys else None
-    _ex_primary_items = ([(ik, q, oim.get(ik)) for ik, q in fim.get(_ex_primary_fk, []) if oim.get(ik) is not None]
-                          if _ex_primary_fk else [])
-    _ex_primary_low = min(_ex_primary_items, key=lambda x: x[2]) if _ex_primary_items else None
-    _ex_primary_theme = (
-        f"Bespreek eerst ‘{_ex_primary_low[1]}’ binnen {FACTOR_LABELS_NL.get(_ex_primary_fk, _ex_primary_fk).lower()} "
-        f"({_ex_primary_low[2]:.1f}/10) — de scherpste losse waarneming in het cijferbeeld."
-    ) if _ex_primary_low else (top_flabels[0] if top_flabels else "het leidende thema")
-
-    _agg_p = deep_agg.get(_ex_primary_fk) or {}
-    _answered_p = _agg_p.get("answered", 0)
-    _top_p = max((_agg_p.get("primary_counts") or {}).items(),
-                 key=lambda kv: (kv[1], kv[0]), default=None)
-    _primary_why = None
-    if _ex_primary_low:
-        _primary_why = f"Laagst scorende stelling in het cijferbeeld ({_ex_primary_low[2]:.1f}/10)."
-        if _top_p and _answered_p >= 5:
-            _primary_why = (f"Laagst scorende stelling in het cijferbeeld ({_ex_primary_low[2]:.1f}/10); "
-                            f"{_top_p[1]} van de {_answered_p} respondenten met verdieping "
-                            f"kozen de meest gekozen toelichting.")
-    _second_why = ("Tweede laagste factorscore in het overzichtsprofiel."
-                   if len(sorted_f) > 1 else None)
-
-    s += _eerste_managementspoor(
-        primary_theme=_ex_primary_theme,
-        second_point=f"{FACTOR_LABELS_NL.get(sorted_f[1][0], sorted_f[1][0])} ({_score_str(sorted_f[1][1])})" if len(sorted_f) > 1 else "",
-        mgmt_q=_enriched_q or (_mgmt_q(priority_fkeys[0], "exit") if priority_fkeys else (nsp.get("first_decision") or "")),
-        review_when="Plan binnen 45-90 dagen een vervolgmoment: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.",
-        primary_why=_primary_why,
-        second_why=_second_why,
-        opener_html=ch.opener("Gespreksagenda", kicker="Eerste managementspoor"),
-    )
 
     # ── Factor detail (itemniveau prioritaire factoren) ──────────────────────
     def _factor_detail(fk: str, opener_html: str = "") -> str:
@@ -1781,6 +1745,47 @@ def render_exit_report_html(data: dict) -> str:
   {ch.opener("Open toelichtingen", kicker=f"{len(texts)} respondentstemmen")}
   {_themed_quotes(texts, "exit", top_fkeys, n)}
 </div>"""
+
+    # ── Eerste managementspoor / Gespreksagenda (naar het slot — na het bewijs,
+    # vóór de appendix) ────────────────────────────────────────────────────────
+    _ag_priority_fkeys = _select_priority_factors(fa, exit_code_counts, max_n=3)
+    _enriched_q = (_deepening_mgmt_q(deep_agg, "exit", _ag_priority_fkeys[0])
+                   if _ag_priority_fkeys else None)
+
+    # Primair thema grounded in het laagst scorende item (zelfde aanpak als
+    # retention): geen vaste per-factor beslistekst die nooit meebeweegt met data.
+    _ex_primary_fk = _ag_priority_fkeys[0] if _ag_priority_fkeys else None
+    _ex_primary_items = ([(ik, q, oim.get(ik)) for ik, q in fim.get(_ex_primary_fk, []) if oim.get(ik) is not None]
+                          if _ex_primary_fk else [])
+    _ex_primary_low = min(_ex_primary_items, key=lambda x: x[2]) if _ex_primary_items else None
+    _ex_primary_theme = (
+        f"Bespreek eerst ‘{_ex_primary_low[1]}’ binnen {FACTOR_LABELS_NL.get(_ex_primary_fk, _ex_primary_fk).lower()} "
+        f"({_ex_primary_low[2]:.1f}/10) — de scherpste losse waarneming in het cijferbeeld."
+    ) if _ex_primary_low else (top_flabels[0] if top_flabels else "het leidende thema")
+
+    _agg_p = deep_agg.get(_ex_primary_fk) or {}
+    _answered_p = _agg_p.get("answered", 0)
+    _top_p = max((_agg_p.get("primary_counts") or {}).items(),
+                 key=lambda kv: (kv[1], kv[0]), default=None)
+    _primary_why = None
+    if _ex_primary_low:
+        _primary_why = f"Laagst scorende stelling in het cijferbeeld ({_ex_primary_low[2]:.1f}/10)."
+        if _top_p and _answered_p >= 5:
+            _primary_why = (f"Laagst scorende stelling in het cijferbeeld ({_ex_primary_low[2]:.1f}/10); "
+                            f"{_top_p[1]} van de {_answered_p} respondenten met verdieping "
+                            f"kozen de meest gekozen toelichting.")
+    _second_why = ("Tweede laagste factorscore in het overzichtsprofiel."
+                   if len(sorted_f) > 1 else None)
+
+    s += _eerste_managementspoor(
+        primary_theme=_ex_primary_theme,
+        second_point=f"{FACTOR_LABELS_NL.get(sorted_f[1][0], sorted_f[1][0])} ({_score_str(sorted_f[1][1])})" if len(sorted_f) > 1 else "",
+        mgmt_q=_enriched_q or (_mgmt_q(_ag_priority_fkeys[0], "exit") if _ag_priority_fkeys else (nsp.get("first_decision") or "")),
+        review_when="Plan binnen 45-90 dagen een vervolgmoment: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.",
+        primary_why=_primary_why,
+        second_why=_second_why,
+        opener_html=ch.opener("Gespreksagenda", kicker="Eerste managementspoor"),
+    )
 
     # ── Appendix ─────────────────────────────────────────────────────────────
     n_factors = len([fk for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None])
@@ -1971,53 +1976,9 @@ def render_retention_report_html(data: dict) -> str:
     s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary, bands=_overzicht_bands,
                             opener_html=ch.opener("Overzichtsprofiel"))
 
-    # ── Eerste managementspoor (p.06 — na data, vóór verdieping) ─────────────
-    _ret_priority_fkeys = _select_priority_factors(fa, {}, max_n=3)
+    # ── Deepening-aggregatie (nodig voor de verdieping-detail hieronder én voor
+    # de gespreksagenda, die naar het slot is verplaatst — zie onderaan) ───────
     deep_agg = data.get("deepening_agg") or {}
-    # Richting-scenario (spec 7.2) eerst; None -> trede-1-verrijking of generieke regel.
-    _direction_q = (_direction_agenda_line(deep_agg[_ret_priority_fkeys[0]], ST, _ret_priority_fkeys[0])
-                    if _ret_priority_fkeys and _ret_priority_fkeys[0] in deep_agg else None)
-    _enriched_q = _direction_q or (_deepening_mgmt_q(deep_agg, ST, _ret_priority_fkeys[0])
-                                   if _ret_priority_fkeys else None)
-    # Primair thema: geen vaste per-factor beslistekst (RETENTION_DECISION_BY_FACTOR)
-    # meer — die verandert nooit mee met de echte data. In plaats daarvan het
-    # laagst scorende item binnen de topfactor, dezelfde waarneming die al in
-    # de why-cell op p.02 staat, hier als directe eerste-gespreksinstructie.
-    _primary_fk = _ret_priority_fkeys[0] if _ret_priority_fkeys else None
-    _primary_items = ([(ik, q, oim.get(ik)) for ik, q in fim.get(_primary_fk, []) if oim.get(ik) is not None]
-                       if _primary_fk else [])
-    _primary_low_item = min(_primary_items, key=lambda x: x[2]) if _primary_items else None
-    _primary_theme_grounded = (
-        f"Bespreek eerst ‘{_primary_low_item[1]}’ binnen {_fl(_primary_fk, ST).lower()} "
-        f"({_primary_low_item[2]:.1f}/10) — de scherpste losse waarneming in het cijferbeeld."
-    ) if _primary_low_item else (low_lbl or "het leidende behoudsthema")
-
-    _agg_p = deep_agg.get(_primary_fk) or {}
-    _answered_p = _agg_p.get("answered", 0)
-    _top_p = max((_agg_p.get("primary_counts") or {}).items(),
-                 key=lambda kv: (kv[1], kv[0]), default=None)
-    _primary_why = None
-    if _primary_low_item:
-        _primary_why = f"Laagst scorende stelling in het cijferbeeld ({_primary_low_item[2]:.1f}/10)."
-        if _top_p and _answered_p >= 5:
-            _primary_why = (f"Laagst scorende stelling in het cijferbeeld ({_primary_low_item[2]:.1f}/10); "
-                            f"{_top_p[1]} van de {_answered_p} respondenten met verdieping "
-                            f"kozen de meest gekozen toelichting.")
-    _second_why = ("Tweede laagste factorscore in het overzichtsprofiel."
-                   if len(sorted_f) > 1 else None)
-
-    s += _eerste_managementspoor(
-        primary_theme=_primary_theme_grounded,
-        second_point=f"{_fl(sorted_f[1][0], ST)} ({_score_str(sorted_f[1][1])})" if len(sorted_f) > 1 else "",
-        mgmt_q=_enriched_q or (_mgmt_q(_ret_priority_fkeys[0], ST) if _ret_priority_fkeys else (nsp.get("first_decision") or "")),
-        # Opnieuw bespreken: neutrale cadans i.p.v. de vaste "wat is geverifieerd,
-        # welke eerste interventie loopt"-formule, die een vervolg claimde dat er
-        # voor de bespreking nog niet is.
-        review_when="Plan binnen 45-90 dagen een vervolgmoment: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.",
-        primary_why=_primary_why,
-        second_why=_second_why,
-        opener_html=ch.opener("Gespreksagenda", kicker="Eerste managementspoor"),
-    )
 
     # ── Factor detail (itemniveau prioritaire factoren) ──────────────────────
     # Priority = (10-score) — no exit-reason counts exist for retention, pass {}
@@ -2147,6 +2108,54 @@ def render_retention_report_html(data: dict) -> str:
   {ch.opener("Open toelichtingen", kicker=f"{len(texts)} medewerkersstemmen")}
   {_themed_quotes(texts, ST, top_fkeys, n)}
 </div>"""
+
+    # ── Eerste managementspoor / Gespreksagenda (naar het slot — na het bewijs,
+    # vóór de appendix) ────────────────────────────────────────────────────────
+    _ret_priority_fkeys = _select_priority_factors(fa, {}, max_n=3)
+    # Richting-scenario (spec 7.2) eerst; None -> trede-1-verrijking of generieke regel.
+    _direction_q = (_direction_agenda_line(deep_agg[_ret_priority_fkeys[0]], ST, _ret_priority_fkeys[0])
+                    if _ret_priority_fkeys and _ret_priority_fkeys[0] in deep_agg else None)
+    _enriched_q = _direction_q or (_deepening_mgmt_q(deep_agg, ST, _ret_priority_fkeys[0])
+                                   if _ret_priority_fkeys else None)
+    # Primair thema: geen vaste per-factor beslistekst (RETENTION_DECISION_BY_FACTOR)
+    # meer — die verandert nooit mee met de echte data. In plaats daarvan het
+    # laagst scorende item binnen de topfactor, dezelfde waarneming die al in
+    # de why-cell op p.02 staat, hier als directe eerste-gespreksinstructie.
+    _primary_fk = _ret_priority_fkeys[0] if _ret_priority_fkeys else None
+    _primary_items = ([(ik, q, oim.get(ik)) for ik, q in fim.get(_primary_fk, []) if oim.get(ik) is not None]
+                       if _primary_fk else [])
+    _primary_low_item = min(_primary_items, key=lambda x: x[2]) if _primary_items else None
+    _primary_theme_grounded = (
+        f"Bespreek eerst ‘{_primary_low_item[1]}’ binnen {_fl(_primary_fk, ST).lower()} "
+        f"({_primary_low_item[2]:.1f}/10) — de scherpste losse waarneming in het cijferbeeld."
+    ) if _primary_low_item else (low_lbl or "het leidende behoudsthema")
+
+    _agg_p = deep_agg.get(_primary_fk) or {}
+    _answered_p = _agg_p.get("answered", 0)
+    _top_p = max((_agg_p.get("primary_counts") or {}).items(),
+                 key=lambda kv: (kv[1], kv[0]), default=None)
+    _primary_why = None
+    if _primary_low_item:
+        _primary_why = f"Laagst scorende stelling in het cijferbeeld ({_primary_low_item[2]:.1f}/10)."
+        if _top_p and _answered_p >= 5:
+            _primary_why = (f"Laagst scorende stelling in het cijferbeeld ({_primary_low_item[2]:.1f}/10); "
+                            f"{_top_p[1]} van de {_answered_p} respondenten met verdieping "
+                            f"kozen de meest gekozen toelichting.")
+    _second_why = ("Tweede laagste factorscore in het overzichtsprofiel."
+                   if len(sorted_f) > 1 else None)
+
+    s += _eerste_managementspoor(
+        primary_theme=_primary_theme_grounded,
+        second_point=f"{_fl(sorted_f[1][0], ST)} ({_score_str(sorted_f[1][1])})" if len(sorted_f) > 1 else "",
+        mgmt_q=_enriched_q or (_mgmt_q(_ret_priority_fkeys[0], ST) if _ret_priority_fkeys else (nsp.get("first_decision") or "")),
+        # Opnieuw bespreken: neutrale cadans i.p.v. de vaste "wat is geverifieerd,
+        # welke eerste interventie loopt"-formule, die een vervolg claimde dat er
+        # voor de bespreking nog niet is.
+        review_when="Plan binnen 45-90 dagen een vervolgmoment: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.",
+        primary_why=_primary_why,
+        second_why=_second_why,
+        opener_html=ch.opener("Gespreksagenda", kicker="Eerste managementspoor"),
+    )
 
     # ── Appendix ─────────────────────────────────────────────────────────────
     n_factors = len([fk for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None])
@@ -2384,43 +2393,6 @@ def render_onboarding_report_html(data: dict) -> str:
                      for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
     s += _landingskwaliteit(domain_scores)
 
-    # ── Eerste managementspoor (p.06 — na data, vóór verdieping) ─────────────
-    # Primair thema grounded in het laagst scorende item (zelfde aanpak als
-    # exit/retention): geen vaste per-factor beslistekst die nooit meebeweegt.
-    _ob_priority_fkeys = _select_priority_factors(fa, {}, max_n=3)
-    _ob_primary_fk = _ob_priority_fkeys[0] if _ob_priority_fkeys else None
-    _ob_primary_items = ([(ik, q, oim.get(ik)) for ik, q in fim.get(_ob_primary_fk, []) if oim.get(ik) is not None]
-                          if _ob_primary_fk else [])
-    _ob_primary_low = min(_ob_primary_items, key=lambda x: x[2]) if _ob_primary_items else None
-    _ob_primary_theme = (
-        f"Bespreek eerst ‘{_ob_primary_low[1]}’ binnen {_fl(_ob_primary_fk, ST).lower()} "
-        f"({_ob_primary_low[2]:.1f}/10) — de scherpste losse waarneming in het cijferbeeld."
-    ) if _ob_primary_low else (low_lbl if low_lbl else "het leidende onboardingthema")
-
-    _agg_p = (data.get("deepening_agg") or {}).get(_ob_primary_fk) or {}
-    _answered_p = _agg_p.get("answered", 0)
-    _top_p = max((_agg_p.get("primary_counts") or {}).items(),
-                 key=lambda kv: (kv[1], kv[0]), default=None)
-    _primary_why = None
-    if _ob_primary_low:
-        _primary_why = f"Laagst scorende stelling in het cijferbeeld ({_ob_primary_low[2]:.1f}/10)."
-        if _top_p and _answered_p >= 5:
-            _primary_why = (f"Laagst scorende stelling in het cijferbeeld ({_ob_primary_low[2]:.1f}/10); "
-                            f"{_top_p[1]} van de {_answered_p} respondenten met verdieping "
-                            f"kozen de meest gekozen toelichting.")
-    _second_why = ("Tweede laagste factorscore in het overzichtsprofiel."
-                   if len(sorted_f) > 1 else None)
-
-    s += _eerste_managementspoor(
-        primary_theme=_ob_primary_theme,
-        second_point=f"{_fl(sorted_f[1][0], ST)} ({_score_str(sorted_f[1][1])})" if len(sorted_f) > 1 else "",
-        mgmt_q=_mgmt_q(_ob_priority_fkeys[0], ST) if _ob_priority_fkeys else (nsp.get("first_decision") or ""),
-        review_when="Plan een vervolgmoment rond het volgende checkpoint: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.",
-        primary_why=_primary_why,
-        second_why=_second_why,
-        opener_html=ch.opener("Gespreksagenda", kicker="Eerste managementspoor"),
-    )
-
     # ── Factordiepte ×≤3 (prioriteit = laagste score, geen vertrekredenen) ────
     priority_fkeys = _select_priority_factors(fa, {}, max_n=3)
 
@@ -2540,6 +2512,44 @@ def render_onboarding_report_html(data: dict) -> str:
   {ch.opener("Open toelichtingen", kicker=f"{len(texts)} medewerkersstemmen")}
   {_themed_quotes(texts, ST, top_fkeys, n)}
 </div>"""
+
+    # ── Eerste managementspoor / Gespreksagenda (naar het slot — na het bewijs,
+    # vóór de appendix) ────────────────────────────────────────────────────────
+    # Primair thema grounded in het laagst scorende item (zelfde aanpak als
+    # exit/retention): geen vaste per-factor beslistekst die nooit meebeweegt.
+    _ob_priority_fkeys = _select_priority_factors(fa, {}, max_n=3)
+    _ob_primary_fk = _ob_priority_fkeys[0] if _ob_priority_fkeys else None
+    _ob_primary_items = ([(ik, q, oim.get(ik)) for ik, q in fim.get(_ob_primary_fk, []) if oim.get(ik) is not None]
+                          if _ob_primary_fk else [])
+    _ob_primary_low = min(_ob_primary_items, key=lambda x: x[2]) if _ob_primary_items else None
+    _ob_primary_theme = (
+        f"Bespreek eerst ‘{_ob_primary_low[1]}’ binnen {_fl(_ob_primary_fk, ST).lower()} "
+        f"({_ob_primary_low[2]:.1f}/10) — de scherpste losse waarneming in het cijferbeeld."
+    ) if _ob_primary_low else (low_lbl if low_lbl else "het leidende onboardingthema")
+
+    _agg_p = (data.get("deepening_agg") or {}).get(_ob_primary_fk) or {}
+    _answered_p = _agg_p.get("answered", 0)
+    _top_p = max((_agg_p.get("primary_counts") or {}).items(),
+                 key=lambda kv: (kv[1], kv[0]), default=None)
+    _primary_why = None
+    if _ob_primary_low:
+        _primary_why = f"Laagst scorende stelling in het cijferbeeld ({_ob_primary_low[2]:.1f}/10)."
+        if _top_p and _answered_p >= 5:
+            _primary_why = (f"Laagst scorende stelling in het cijferbeeld ({_ob_primary_low[2]:.1f}/10); "
+                            f"{_top_p[1]} van de {_answered_p} respondenten met verdieping "
+                            f"kozen de meest gekozen toelichting.")
+    _second_why = ("Tweede laagste factorscore in het overzichtsprofiel."
+                   if len(sorted_f) > 1 else None)
+
+    s += _eerste_managementspoor(
+        primary_theme=_ob_primary_theme,
+        second_point=f"{_fl(sorted_f[1][0], ST)} ({_score_str(sorted_f[1][1])})" if len(sorted_f) > 1 else "",
+        mgmt_q=_mgmt_q(_ob_priority_fkeys[0], ST) if _ob_priority_fkeys else (nsp.get("first_decision") or ""),
+        review_when="Plan een vervolgmoment rond het volgende checkpoint: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.",
+        primary_why=_primary_why,
+        second_why=_second_why,
+        opener_html=ch.opener("Gespreksagenda", kicker="Eerste managementspoor"),
+    )
 
     # ── Appendix ─────────────────────────────────────────────────────────────
     n_factors = len([fk for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None])

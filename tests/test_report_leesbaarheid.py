@@ -23,3 +23,22 @@ def test_vervolg_blijft_klein_mono():
     from backend.report_html import _ChapterCounter
     html = _ChapterCounter.vervolg("Verdieping — Werkdruk")
     assert 'class="slabel"' in html and "vervolg" in html
+
+
+def test_agenda_na_bewijs_voor_appendix():
+    # _min_retention_data() heeft maar 1 factor en n=12 — de appendix wordt pas
+    # getoond bij n>20 en >5 factoren (_should_show_appendix); verrijk zodat de
+    # appendix daadwerkelijk rendert, anders is de volgordecheck een no-op.
+    d = _min_retention_data(n=25)
+    d["factor_avgs"] = {
+        "leadership": 6.0, "culture": 5.5, "growth": 4.5,
+        "compensation": 5.8, "workload": 5.0, "role_clarity": 6.2,
+    }
+    d["factor_items_map"] = {fk: [(f"{fk}_1", f"Testvraag {fk}")] for fk in d["factor_avgs"]}
+    d["org_item_avgs"] = {f"{fk}_1": v for fk, v in d["factor_avgs"].items()}
+    html = render_retention_report_html(d)
+    agenda = html.find("Gespreksagenda")
+    appendix = html.find("Appendix")
+    werkbeleving = html.find("Werkbeleving")
+    assert -1 not in (agenda, appendix, werkbeleving)
+    assert werkbeleving < agenda < appendix, "agenda moet na het bewijs en voor de appendix staan"
