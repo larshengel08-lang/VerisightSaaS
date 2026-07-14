@@ -3,7 +3,7 @@
 **Scope:** volledige adversariële audit. Next.js frontend (Vercel), FastAPI backend (Railway), Supabase Postgres/Auth.
 **Methode:** vijf parallelle sporen, elke bevinding geverifieerd tegen de echte code (geen theoretische findings). De zwaarste bevindingen zijn onafhankelijk door de hoofdauditor tegen de exacte regels bevestigd.
 **Vorige audit:** 2026-07-03 (opnieuw nagelopen — zie herverificatie).
-**Status fixes (branch `security/audit-2026-07-12`, gepusht → origin):**
+**Status fixes (gemerged naar `main` via PR #186 op 2026-07-13 → Vercel deployt; migratie nog handmatig te draaien):**
 - **L1/L2** — gecommit (Vercel env-dumps + `.tmp/`-boom untracked, `.gitignore`-glob gehard).
 - **M1** — gecommit + 4 tests (contact-requests admin-gate).
 - **M5** — gecommit (signup e-mail-enumeratie dicht).
