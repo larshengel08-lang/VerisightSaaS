@@ -42,8 +42,8 @@ SCAN_DEFINITION: dict[str, Any] = {
     "survey_privacy_note": (
         "Je antwoorden worden vertrouwelijk verwerkt en alleen op groepsniveau gebruikt. Deze meting helpt de "
         "organisatie zien waar vroege integratie of duidelijkheid aandacht vraagt, niet om personen te beoordelen. "
-        "Als je tussentijds stopt, bewaart deze browser tijdelijk een concept op dit apparaat totdat je verzendt of "
-        "het concept wist."
+        "Als je tussentijds stopt, bewaart deze browser tijdelijk een concept op dit apparaat zolang je dit "
+        "tabblad open houdt."
     ),
     "sdt_intro": (
         "Deze drie stellingen geven een korte momentopname van hoe je nu in je nieuwe werkcontext landt. Geef aan in "

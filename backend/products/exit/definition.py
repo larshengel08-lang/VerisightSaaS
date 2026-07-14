@@ -33,7 +33,7 @@ SCAN_DEFINITION: dict[str, Any] = {
         ),
     },
     "survey_intro": "Bedankt voor je tijd. Je antwoorden helpen de organisatie beter te worden. Dit duurt circa 8 minuten.",
-    "survey_privacy_note": "Je antwoorden worden vertrouwelijk verwerkt en alleen op gegroepeerd niveau gerapporteerd. De uitkomsten zijn bedoeld als groepsinzichten en gespreksinput, niet als individueel oordeel of harde voorspelling. Als je tussentijds stopt, bewaart deze browser tijdelijk een concept op dit apparaat totdat je verzendt of het concept wist.",
+    "survey_privacy_note": "Je antwoorden worden vertrouwelijk verwerkt en alleen op gegroepeerd niveau gerapporteerd. De uitkomsten zijn bedoeld als groepsinzichten en gespreksinput, niet als individueel oordeel of harde voorspelling. Als je tussentijds stopt, bewaart deze browser tijdelijk een concept op dit apparaat zolang je dit tabblad open houdt.",
     "sdt_intro": "De volgende stellingen gaan over hoe jij je werk ervoer. Geef aan in welke mate elke stelling voor jou van toepassing was (1 = helemaal niet mee eens, 5 = helemaal mee eens).",
     "org_intro": "Geef aan in welke mate de volgende uitspraken van toepassing waren op jouw werksituatie.",
     "enps_item": (

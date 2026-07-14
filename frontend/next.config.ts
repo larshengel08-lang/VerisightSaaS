@@ -13,6 +13,21 @@ const localSupabaseConnectSources = isProduction
   ? []
   : ['http://127.0.0.1:54321', 'http://localhost:54321', 'ws://127.0.0.1:54321', 'ws://localhost:54321']
 
+// Backend-origin voor connect-src: afgeleid uit de daadwerkelijke API-URL, zodat
+// de CSP correct blijft als de Railway-host wijzigt. Voorheen stond hier een
+// hardcoded host (verisight-production.up.railway.app) die inmiddels dood is;
+// de echte backend draait op web-production-bf382. Overweeg een stabiel eigen
+// domein (bv. api.getloep.nl) om deze afhankelijkheid van de auto-host op te heffen.
+const backendApiOrigin = (() => {
+  const raw = process.env.NEXT_PUBLIC_API_URL?.trim()
+  if (!raw) return 'https://web-production-bf382.up.railway.app'
+  try {
+    return new URL(raw).origin
+  } catch {
+    return 'https://web-production-bf382.up.railway.app'
+  }
+})()
+
 const securityHeaders = [
   {
     key: 'X-Content-Type-Options',
@@ -40,7 +55,7 @@ const securityHeaders = [
       "default-src 'self'",
       // Supabase API + auth. Analytics loopt via Vercel Web Analytics
       // (same-origin /_vercel/insights/*), dus de CSP blijft bewust dicht.
-      `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://verisight-production.up.railway.app ${localSupabaseConnectSources.join(' ')}`.trim(),
+      `connect-src 'self' https://*.supabase.co wss://*.supabase.co ${backendApiOrigin} ${localSupabaseConnectSources.join(' ')}`.trim(),
       // Next.js dev runtime needs unsafe-eval for fast refresh and client hydration.
       `script-src 'self' 'unsafe-inline'${isProduction ? '' : " 'unsafe-eval'"}`,
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",

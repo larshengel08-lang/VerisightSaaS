@@ -94,6 +94,14 @@ export default async function DashboardHomePage() {
   const effectiveTotalInvited = isSelfSend && manualInvitedCount != null
     ? manualInvitedCount
     : campaign.total_invited
+  // Herbereken het percentage uit dezelfde effectieve noemer als hierboven.
+  // De rauwe view-waarde completion_rate_pct rekent op count(respondents)
+  // (= gestart), wat bij self_send afwijkt van de handmatige invited_count en
+  // een zichzelf-tegensprekend "X van Y (Z%)" opleverde. Gelijk aan de
+  // campagnedetailpagina, zodat beide oppervlakken hetzelfde tonen.
+  const effectiveCompletionRatePct = effectiveTotalInvited > 0
+    ? Math.round((campaign.total_completed / effectiveTotalInvited) * 100)
+    : (campaign.completion_rate_pct ?? 0)
 
   const reportReady = isDashboardReleaseReady(campaign.total_completed, {
     scanType: campaign.scan_type,
@@ -108,7 +116,7 @@ export default async function DashboardHomePage() {
       isActive: campaign.is_active,
       totalInvited: effectiveTotalInvited,
       totalCompleted: campaign.total_completed,
-      completionRatePct: campaign.completion_rate_pct ?? 0,
+      completionRatePct: effectiveCompletionRatePct,
       closedAt: campaign.closed_at ?? null,
     },
     launchConfirmedAt: deliveryRecord?.launch_confirmed_at ?? null,

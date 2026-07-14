@@ -32,7 +32,7 @@ SCAN_DEFINITION: dict[str, Any] = {
         ),
     },
     "survey_intro": "Jouw mening telt. Deze RetentieScan is een compacte scan voor vroegsignalering op behoud op groepsniveau - niet voor individuele beoordeling of voorspelling. Invullen kost circa 6 minuten.",
-    "survey_privacy_note": "Je antwoorden worden vertrouwelijk verwerkt en alleen op groeps- of segmentniveau gerapporteerd. De uitkomsten zijn bedoeld als managementinformatie over werkbeleving en behoud, niet als individueel oordeel, brede tevredenheidsmeting of voorspelling. Als je tussentijds stopt, bewaart deze browser tijdelijk een concept op dit apparaat totdat je verzendt of het concept wist.",
+    "survey_privacy_note": "Je antwoorden worden vertrouwelijk verwerkt en alleen op groeps- of segmentniveau gerapporteerd. De uitkomsten zijn bedoeld als managementinformatie over werkbeleving en behoud, niet als individueel oordeel, brede tevredenheidsmeting of voorspelling. Als je tussentijds stopt, bewaart deze browser tijdelijk een concept op dit apparaat zolang je dit tabblad open houdt.",
     "sdt_intro": "De volgende stellingen gaan over hoe jij je werk nu ervaart. Geef aan in welke mate elke stelling voor jou van toepassing is (1 = helemaal niet mee eens, 5 = helemaal mee eens).",
     "org_intro": "Geef aan in welke mate de volgende uitspraken van toepassing zijn op jouw huidige werksituatie.",
     "stay_intro": "De volgende stelling gaat over jouw bereidheid om te blijven en de kans dat je hier op langere termijn wilt blijven werken.",
