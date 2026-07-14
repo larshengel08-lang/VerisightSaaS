@@ -3,16 +3,26 @@
 **Scope:** volledige adversariële audit. Next.js frontend (Vercel), FastAPI backend (Railway), Supabase Postgres/Auth.
 **Methode:** vijf parallelle sporen, elke bevinding geverifieerd tegen de echte code (geen theoretische findings). De zwaarste bevindingen zijn onafhankelijk door de hoofdauditor tegen de exacte regels bevestigd.
 **Vorige audit:** 2026-07-03 (opnieuw nagelopen — zie herverificatie).
-**Status fixes (branch `security/audit-2026-07-12`, 6 commits, lokaal — nog niet gepusht):**
+**Status fixes (branch `security/audit-2026-07-12`, gepusht → origin):**
 - **L1/L2** — gecommit (Vercel env-dumps + `.tmp/`-boom untracked, `.gitignore`-glob gehard).
 - **M1** — gecommit + 4 tests (contact-requests admin-gate).
 - **M5** — gecommit (signup e-mail-enumeratie dicht).
+- **L3** — gecommit (progress-nudge timing-safe token-compare).
+- **L5** — gecommit (verbruikt `token_hash` uit de URL gestript na verifyOtp).
+- **L8** — gecommit (`set search_path = public` op de 4 SECURITY DEFINER-helpers).
+- **L10** — gecommit + 4 tests (open-redirect guard `safeInternalPath` op auth/callback + qa-login).
+- **M4 (deels)** — gecommit (honeypot op élk contact-pad, ook de Supabase-fallback).
+- **M7** — gecommit (open-tekst-sanitizers gelijk + eerlijker rapport-label).
+- **L7** — **al afgehandeld, geen fix nodig**: `_openai_available = False` staat hardcoded uit (backend/main.py:116) met comment dat herinschakelen toestemming + DPA vereist.
+- **L9** — gefixt door de parallelle sessie (`connect-src` leidt de backend-host af uit `NEXT_PUBLIC_API_URL`).
 - **H2** — code + SQL klaar (RPC-guard → `is_verisight_admin_user`).
 - **H1** — **code + migratie klaar** (`migrations/2026_07_13_lock_individual_data_to_operator.sql`): gevoelige reads via service-role (open-antwoorden, campagne-beheer, resend-reminders); add-respondents-insert via nieuwe service-role server-action; de 6 department/tellingen-reads blijven via de respondents-column-grant. **Vondst tijdens implementatie:** `campaign_stats` is een `security_invoker`-view die `survey_responses` joint en óók via de service-role wordt gelezen → een volledige `survey_responses`-revoke zou het klant-dashboard breken. Opgelost met een column-grant op alléén de aggregatiekolommen (`id, respondent_id, risk_score, risk_band`); alle ruwe antwoorden/open tekst/scoredetails + respondent-PII (token/email/role_level/exit_month/salary) gaan dicht. **Residu:** per-respondent `risk_band` (afgeleide risicoband, geen naam/tekst/antwoorden) blijft leesbaar. **Optionele hardening** om óók dat te verbergen: `campaign_stats` herschrijven naar een security-definer view met multi-rol tenancy-predicate (klant/operator/service-role) — vereist live Supabase-verificatie, aparte beslissing.
 - **H3** — live geverifieerd geen risico (LOW, alleen bron-opschoning).
 - tsc **133 = baseline**, testsuite **65 falend = baseline (0 nieuwe regressies)**, 8 nieuwe tests groen.
 - **Go-live H1/H2:** (1) push + Vercel-deploy frontend, (2) daarna de revoke-migratie in Supabase draaien, (3) verifieer: klant-JWT kan geen `survey_responses`/respondent-PII meer via PostgREST lezen én operator-schermen (open-antwoorden, beheer, add-respondents) blijven werken.
-- **Nog open:** M2, M3, M4, M6, M7 + de Low-lijst.
+- **Nog open (code, vereist edge/infra of live-verificatie):** M2 (survey ballot-stuffing — echte fix = CAPTCHA/edge-WAF, niet in-memory), M4-rest (XFF-trust rate-limit-key — proxy-specifiek, hoort bij edge/WAF), M6 (CSP `unsafe-inline` → nonce — defense-in-depth, geen actief XSS-punt gevonden; vereist live verificatie incl. ingelogde schermen), campaign_stats definer-view-hardening (H1-residu, live Supabase-test).
+- **Nog open (jouw config/infra):** M3 (auth-rate-limiter → Vercel Firewall / Supabase Auth), L4 (wachtwoordbeleid Supabase Auth), L6 (retentie/purge-job → scheduler).
+- **Low, bewust overgeslagen:** L11 (action_center wordt uitgefaseerd), L12 (member-rol nu ongebruikt).
 
 > **Disclaimer:** dit is een AI-ondersteunde scan, geen vervanging voor een professionele pentest. Voor een systeem met inloggegevens + persoonsgegevens richting schaal: laat dit t.z.t. door een gekwalificeerd securitybureau toetsen. Gebruik dit als eerste laag.
 
