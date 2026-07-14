@@ -41,6 +41,10 @@ grant select (id, campaign_id, department, completed, completed_at, sent_at, ope
 -- De guard gaat van is_org_member (alle rollen) naar is_verisight_admin_user (alleen Loep).
 -- Server-side klant-paden (rapportdownload) vallen terug op de service-role
 -- (frontend/lib/organization-secrets.ts), dus die blijven werken.
+-- DROP eerst: de live-functie had een ander return-type (uuid), en Postgres staat
+-- geen return-type-wijziging toe via create-or-replace (42P13). De grant wordt
+-- door de drop weggegooid en hieronder opnieuw gezet.
+drop function if exists public.get_org_api_key_for_current_user(uuid);
 create or replace function public.get_org_api_key_for_current_user(target_org_id uuid)
 returns text
 language plpgsql
@@ -66,6 +70,8 @@ begin
   return resolved_key;
 end;
 $$;
+
+grant execute on function public.get_org_api_key_for_current_user(uuid) to authenticated;
 
 -- ── L8: pin search_path op de SECURITY DEFINER-helpers (hardening tegen search_path-hijack).
 -- Ze verwijzen al schema-gekwalificeerd, dus dit is defensief; voorkomt een footgun bij

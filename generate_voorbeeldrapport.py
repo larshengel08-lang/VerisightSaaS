@@ -27,6 +27,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from backend.database import Base, DATABASE_URL, SessionLocal, init_db
 from backend.models import Campaign, Organization, Respondent, SurveyResponse
 from backend.products.shared.deepening import compute_deepening_offers
+from backend.products.shared.enps import build_enps_summary
 from backend.segments import _slugify as slugify_department
 from backend.report_html import generate_campaign_report_html as generate_campaign_report_html
 from backend.report import generate_campaign_report as _generate_campaign_report_legacy
@@ -691,8 +692,8 @@ def _build_exit_response(profile: dict[str, float | str], salary: int, role: str
         # Zelfde shift-logica als retention: vertrekkers scoren negatiever
         # (plausibel), maar zonder shift werd het -90 — te extreem voor een
         # voorbeeldrapport.
-        "enps_score": max(0, min(10, round(
-            10 - risk_result["risk_score"] + random.uniform(0.5, 3.0)))),
+        "enps": build_enps_summary(max(0, min(10, round(
+            10 - risk_result["risk_score"] + random.uniform(0.5, 3.0))))),
     }
 
     return {
@@ -772,8 +773,8 @@ def _build_retention_response(profile: dict[str, float | str]) -> dict:
         # dus een alarmerende eNPS van -90 in het verkoop-voorbeeld. Met de
         # shift landt de sample-eNPS mild negatief/neutraal — realistisch voor
         # een organisatie met dit scorebeeld.
-        "enps_score": max(0, min(10, round(
-            supplemental["engagement_score"] + random.uniform(0.0, 3.5)))),
+        "enps": build_enps_summary(max(0, min(10, round(
+            supplemental["engagement_score"] + random.uniform(0.0, 3.5))))),
     }
 
     return {
