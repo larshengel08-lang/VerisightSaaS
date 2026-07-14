@@ -97,7 +97,7 @@ User-anon-client (RLS geldt → breken bij revoke → migreren naar `createAdmin
 | `app/(dashboard)/beheer/page.tsx:64` | count (head) | idem |
 | `app/(dashboard)/beheer/get-beheer-page-data.ts:243` | count (head) | idem |
 | `lib/managers-page-data.ts:339` | respondents | idem (check caller-client) |
-| **`app/(dashboard)/campaigns/[id]/open-antwoorden/page.tsx:85,90`** | **`select('*')` incl. `open_text_raw`** | **GEVOELIG — per besluit (a) operator-only: gate op `is_verisight_admin` of uit klant-nav halen** |
+| **`app/(dashboard)/campaigns/[id]/open-antwoorden/page.tsx:85,90`** | **`select('*')` incl. `open_text_raw`** | **BESLOTEN (Lars, 2026-07-14): pagina blijft klant-toegankelijk.** De open-antwoorden-weergave (geanonimiseerde teksten boven de n-drempel, MIN_N_DISPLAY) is dezelfde bescherming als het rapport zelf biedt — dit is de bewuste uitzondering op "klant ziet nooit individuele responses". De datalaag (ruwe PostgREST-toegang) is wél dicht via de migratie. |
 | **`app/(dashboard)/campaigns/[id]/beheer/beheer-data.ts:792,797`** | **`email`, `token`, scores** | **GEVOELIG — `email`/`token`-kolommen operator-only; klant krijgt hooguit geaggregeerde status** |
 
 De 8 "department/count"-plekken zijn geen individuele data en mogen blijven (via service-role ná check). De 2 vetgedrukte plekken zijn de echte klant-lek en moeten per besluit (a) operator-only worden. Omvang totaal: ~8-10 bestanden + tests, ordegrootte een halve dag.
