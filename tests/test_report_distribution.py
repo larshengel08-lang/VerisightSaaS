@@ -150,7 +150,9 @@ def test_spreiding_verschijnt_pas_vanaf_n10():
 
 def test_vertrekintentie_label_heeft_duidingssuffix():
     html = render_retention_report_html(_min_retention_data())
-    assert "hoger = meer vertrekgedachten" in html
+    # Strip toont gezondheids-georiënteerde spreiding (11 - vertrekintentie), dus
+    # het duidingssuffix wijst nu de kant aan waar meer vertrekgedachten liggen.
+    assert "links = meer vertrekgedachten" in html
 
 
 def test_overzichtsprofiel_heeft_drempelvoetregel():
