@@ -159,7 +159,11 @@ def test_checkpointoverzicht_shows_three_phases():
 def test_checkpointoverzicht_single_measurement_degraded():
     html = _checkpointoverzicht(checkpoints=[("Huidig checkpoint", 6.5)])
     assert "6.5" in html
-    assert "herhaalde meting" in html.lower()
+    # C2 (audit 2026-07-13): geen belofte meer dat fasevergelijking "opent bij
+    # herhaalde meting" — geen code-pad aggregeert meerdere checkpoints. De
+    # degraded view benoemt eerlijk dat dit één meetmoment is.
+    assert "één meetmoment" in html.lower()
+    assert "herhaalde meting" not in html.lower()
 
 
 def test_landingskwaliteit_renders_domains():

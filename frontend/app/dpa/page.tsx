@@ -12,7 +12,7 @@ export default function DpaPage() {
   return (
     <LegalPageShell
       title="Verwerkersovereenkomst"
-      description="Onderstaande verwerkersovereenkomst is het standaardtemplate dat Loep gebruikt voor klantorganisaties. Het document is op verzoek beschikbaar als gepersonaliseerde, ondertekende versie. Neem hiervoor contact op via privacy@verisight.nl. Voor een publieksvriendelijke samenvatting van trust en privacy kun je ook de Trust & privacy-pagina bekijken."
+      description="Onderstaande verwerkersovereenkomst is het standaardtemplate dat Loep gebruikt voor klantorganisaties. Het document is op verzoek beschikbaar als gepersonaliseerde, ondertekende versie. Neem hiervoor contact op via privacy@getloep.nl. Voor een publieksvriendelijke samenvatting van trust en privacy kun je ook de Trust & privacy-pagina bekijken."
       lastUpdated="13 april 2026"
     >
       <section>
@@ -28,8 +28,8 @@ export default function DpaPage() {
         <strong>Let op:</strong> Dit is een standaardtemplate. Velden met{' '}
         <code className="rounded bg-blue-100 px-1 py-0.5 font-mono text-xs">[...]</code> worden ingevuld op basis van
         uw organisatiegegevens. Neem contact op via{' '}
-        <a href="mailto:privacy@verisight.nl" className="underline">
-          privacy@verisight.nl
+        <a href="mailto:privacy@getloep.nl" className="underline">
+          privacy@getloep.nl
         </a>{' '}
         voor een gepersonaliseerd en ondertekend exemplaar.
       </div>
@@ -48,7 +48,7 @@ export default function DpaPage() {
           <strong>Verwerker:</strong> Loep, Nederlandse dienst voor begeleide HR-signalering en
           rapportage. Volledige bedrijfsgegevens worden opgenomen in de gepersonaliseerde en ondertekende
           versie van deze overeenkomst. Loep is bereikbaar via{' '}
-          <a href="mailto:privacy@verisight.nl">privacy@verisight.nl</a>, hierna te noemen
+          <a href="mailto:privacy@getloep.nl">privacy@getloep.nl</a>, hierna te noemen
           &quot;Verwerker&quot;.
         </p>
         <p>
@@ -180,7 +180,7 @@ export default function DpaPage() {
         <h2>10. Contact</h2>
         <p>
           Voor vragen over deze verwerkersovereenkomst of voor een gepersonaliseerde en ondertekende versie kunt u
-          contact opnemen via <a href="mailto:privacy@verisight.nl">privacy@verisight.nl</a>. Bekijk daarnaast ook{' '}
+          contact opnemen via <a href="mailto:privacy@getloep.nl">privacy@getloep.nl</a>. Bekijk daarnaast ook{' '}
           <Link href="/privacy">het privacybeleid</Link> en{' '}
           <Link href="/vertrouwen">Trust & privacy</Link>.
         </p>

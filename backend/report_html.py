@@ -898,7 +898,7 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "") -> str:
                  "werkperiode. Geen prestatiebeoordeling, geen individuele beoordeling en geen voorspelling van uitval.")
         cells_r1 = [
             ("Groepsniveau",       "Alle scores zijn groepsgemiddelden van de instroomgroep. Geen individuele gegevens."),
-            ("Checkpoint-logica",  "Dit is een enkelvoudig meetmoment (30/60/90). Trends zijn zichtbaar bij herhaalde meting."),
+            ("Checkpoint-logica",  "Dit is een enkelvoudig meetmoment (30/60/90). Een volgende meting bespreken we los van dit rapport."),
             ("Geen beoordeling",   "Scores duiden onboarding-ervaring op groepsniveau. Geen prestatiebeoordeling van individuen of managers."),
         ]
         cells_r2 = [
@@ -1484,8 +1484,11 @@ def _vertrekcontext(*, exit_reasons: list[tuple[str, int]],
                f"genoemde vertrekreden als de laagste factor in het overzichtsprofiel — "
                f"daarom staat het bovenaan.</p>")
     else:
-        rel = (f"<p style='margin-bottom:0;'>De meest genoemde reden en de laagste factor "
-               f"versterken elkaar in de factordiepte hierna.</p>")
+        # Geen substring-match tussen hoofdreden en laagste factor: benoem beide
+        # feiten zonder een verbandclaim ("versterken elkaar") die de data niet draagt.
+        rel = (f"<p style='margin-bottom:0;'>De meest genoemde reden en de laagst "
+               f"scorende factor belichten elk een eigen invalshoek &mdash; beide komen "
+               f"terug in de factordiepte hierna.</p>")
 
     return f"""<div class="pb sec">
   {opener_html or '<span class="slabel">Vertrekcontext</span>'}
@@ -1619,7 +1622,7 @@ def render_exit_report_html(data: dict) -> str:
     primary_signal = low_lbl or high_lbl or "—"
     cover_stats = [
         ("Respondenten", str(n)),
-        ("Respons", f"{int(data['completion_pct'])}%"),  # afgerond — p.03 toont hetzelfde getal
+        ("Respons", f"{round(data['completion_pct'])}%"),  # afgerond — p.03 toont hetzelfde getal
         ("Eerste aandachtspunt", primary_signal),
     ]
     s = _cover(scan_label=data["scan_lbl"], scan_type="exit", org_name=data["org_name"],
@@ -1700,9 +1703,11 @@ def render_exit_report_html(data: dict) -> str:
     _responsbasis_band = _responsbasis(
         invited=data["n_invited"],
         completed=data["n_completed"],
-        pct=int(data["completion_pct"]),
+        pct=round(data["completion_pct"]),
         period=data["campaign_name"],
-        population="Alle medewerkers",
+        # Exit meet uitgestroomde medewerkers, niet het hele personeelsbestand —
+        # "Alle medewerkers" was feitelijk onjuist op het eerlijkheidsanker (C3).
+        population="Uitgestroomde medewerkers",
         segment_available=bool(data.get("segment_rows")),
         segment_reason="te weinig responses per groep voor herleidbaarheid",
         enps_available=data["enps_available"],
@@ -2013,7 +2018,7 @@ def render_retention_report_html(data: dict) -> str:
         period=data["campaign_name"], opening_question="Waar staat behoud nu onder druk?",
         stats=[
             ("Respondenten", str(n)),
-            ("Respons", f"{int(data['completion_pct'])}%"),  # afgerond — p.03 toont hetzelfde getal
+            ("Respons", f"{round(data['completion_pct'])}%"),  # afgerond — p.03 toont hetzelfde getal
             ("Eerste aandachtspunt", _ret_primary),
         ],
     )
@@ -2080,7 +2085,7 @@ def render_retention_report_html(data: dict) -> str:
     _responsbasis_band = _responsbasis(
         invited=data["n_invited"],
         completed=data["n_completed"],
-        pct=int(data["completion_pct"]),
+        pct=round(data["completion_pct"]),
         period=data["campaign_name"],
         population="Actieve medewerkers",
         segment_available=bool(data.get("segment_rows")),
@@ -2384,7 +2389,9 @@ def _checkpointoverzicht(checkpoints: list[tuple[str, float | None]], opener_htm
             f'<div class="sc-v" style="color:{_rag_color(score)};">{_score_str(score)}</div>'
             f'<div class="sc-b">Enkelvoudig meetmoment</div></td>'
             f'</tr></table>'
-            f'<p class="trustline">Eén meetmoment — fasevergelijking opent bij herhaalde meting.</p>'
+            # Geen belofte over automatische fasevergelijking: geen code-pad aggregeert
+            # meerdere checkpoints in één rapport (besluit C2, 2026-07-13 audit).
+            f'<p class="trustline">Dit rapport beslaat één meetmoment; een volgende meting bespreken we los.</p>'
         )
 
     return f"""<div class="pb sec">
@@ -2452,7 +2459,7 @@ def render_onboarding_report_html(data: dict) -> str:
         period=data["campaign_name"], opening_question="Hoe landen nieuwe medewerkers?",
         stats=[
             ("Respondenten", str(n)),
-            ("Respons", f"{int(data['completion_pct'])}%"),  # afgerond — p.03 toont hetzelfde getal
+            ("Respons", f"{round(data['completion_pct'])}%"),  # afgerond — p.03 toont hetzelfde getal
             ("Eerste aandachtspunt", _ob_primary),
         ],
     )
@@ -2506,7 +2513,7 @@ def render_onboarding_report_html(data: dict) -> str:
     _responsbasis_band = _responsbasis(
         invited=data["n_invited"],
         completed=data["n_completed"],
-        pct=int(data["completion_pct"]),
+        pct=round(data["completion_pct"]),
         period=data["campaign_name"],
         population="Nieuwe medewerkers — eerste werkperiode",
         segment_available=bool(data.get("segment_rows")),

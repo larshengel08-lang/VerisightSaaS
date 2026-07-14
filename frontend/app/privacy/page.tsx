@@ -38,7 +38,7 @@ export default function PrivacyPage() {
         <p>
           Publieke bedrijfsgegevens, waaronder KvK-nummer en vestigingsadres, worden op deze pagina aangevuld zodra
           de formele inschrijving is afgerond. Tot die tijd kun je voor privacyvragen of due-diligence-verzoeken mailen naar{' '}
-          <a href="mailto:privacy@verisight.nl">privacy@verisight.nl</a>.
+          <a href="mailto:privacy@getloep.nl">privacy@getloep.nl</a>.
         </p>
       </section>
 
@@ -140,7 +140,7 @@ export default function PrivacyPage() {
         <h2>9. Welke rechten heb je?</h2>
         <p>
           Onder de AVG heb je recht op inzage, correctie, verwijdering, beperking van verwerking, dataportabiliteit
-          en bezwaar. Je kunt hiervoor contact opnemen via <a href="mailto:privacy@verisight.nl">privacy@verisight.nl</a>.
+          en bezwaar. Je kunt hiervoor contact opnemen via <a href="mailto:privacy@getloep.nl">privacy@getloep.nl</a>.
           Wij reageren in principe binnen 30 dagen.
         </p>
         <p>
@@ -157,7 +157,7 @@ export default function PrivacyPage() {
           Als klantorganisatie treedt Loep op als verwerker namens jouw organisatie. Op verzoek stellen wij
           een verwerkersovereenkomst beschikbaar. Het standaardtemplate is beschikbaar op de{' '}
           <Link href="/dpa">DPA-pagina</Link>. Voor een gepersonaliseerd en ondertekend exemplaar kun je contact
-          opnemen via <a href="mailto:privacy@verisight.nl">privacy@verisight.nl</a>.
+          opnemen via <a href="mailto:privacy@getloep.nl">privacy@getloep.nl</a>.
         </p>
       </section>
 
@@ -165,7 +165,7 @@ export default function PrivacyPage() {
         <h2>11. Vragen of aanvullende afspraken</h2>
         <p>
           Voor vragen over dit privacybeleid kun je contact opnemen via{' '}
-          <a href="mailto:privacy@verisight.nl">privacy@verisight.nl</a>. Bekijk ook de{' '}
+          <a href="mailto:privacy@getloep.nl">privacy@getloep.nl</a>. Bekijk ook de{' '}
           <Link href="/vertrouwen">trust & privacy-pagina</Link>, het{' '}
           <Link href="/dpa">DPA-template</Link> en de{' '}
           <Link href="/voorwaarden">algemene voorwaarden</Link>.
