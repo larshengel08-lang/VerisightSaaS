@@ -528,7 +528,7 @@ def _bestuurlijke_read(*, kernzin: str, totaalbeeld: str,
     <table class="why-grid"><tr>{why_cells_html}</tr></table>
     {("<table class='sg'><tr>"
       f"<td><div class='sc-l'>Relatief sterk</div><div class='sc-v'>{_score_str(strong_score)}</div><div class='sc-b'>{_h(strong_label)} — wat w&eacute;l werkt</div></td>"
-      "</tr></table>") if strong_label else ""}
+      "</tr></table>") if (strong_label and strong_score is not None and strong_score >= 6.5) else ""}
     <div class="mq-line"><span class="mq-label">Eerste managementvraag</span><p>{_h(mgmt_q)}</p>{f'<span class="mq-source">{_h(mgmt_q_source)}</span>' if mgmt_q_source else ''}</div>
   </div>
   {usage_html}
@@ -1039,7 +1039,7 @@ def _segment_block(segment_rows: list[dict], opener_html: str = "") -> str:
         low_note = (
             f'<div class="navy-anchor">'
             f'<div class="navy-anchor-eyebrow">Startpunt voor de bespreking</div>'
-            f'<p><strong>{_h(lowest["department"])}</strong> laat het laagste signaal zien '
+            f'<p><strong>{_h(lowest["department"])}</strong> heeft de laagste score '
             f'({lowest["avg"]:.1f}/10; {_low_basis}). Gebruik dit om te toetsen wat hier '
             f'speelt &mdash; geen ranking of oordeel.</p></div>')
 
@@ -1316,14 +1316,26 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
         factor_items_map, [r.org_raw or {} for r in responses])
     sdt_items: list[tuple[str, str]] = scan_meta.get("sdt_items", [])
 
+    # Segment op GEZONDHEID (11 - risk), niet op risk zelf: _department_segment_rows
+    # + _segment_block behandelen signal_score als health-schaal (laag = rood =
+    # aandachtspunt, sortering laagste eerst). Rechtstreeks de risk-score voeden
+    # keerde de polariteit om — de gezondste afdeling werd als grootste
+    # aandachtspunt/startpunt gemarkeerd, de slechtste als "relatief sterk".
     segment_rows = _department_segment_rows([
-        {"department": r.department, "signal_score": r.response.risk_score}
+        {"department": r.department,
+         "signal_score": (11.0 - r.response.risk_score) if r.response.risk_score is not None else None}
         for r in completed
     ])
     segment_rows = _enrich_segment_rows_with_invited(segment_rows, camp.segment_departments)
 
-    enps_vals = [float(fr.get("enps_score")) for r in responses
-                 if (fr := (r.full_result or {})) and fr.get("enps_score") is not None]
+    # eNPS staat canoniek in full_result["enps"]["raw_score"] (zoals de submit-flow
+    # het wegschrijft, backend/products/*/scoring.py). Voorheen werd hier het
+    # topniveau "enps_score" gelezen — een sleutel die de echte flow nooit schrijft,
+    # waardoor enps_available voor elke echte campagne False werd en het rapport
+    # onterecht "niet gemeten in deze wave" meldde.
+    enps_vals = [float(fr["enps"]["raw_score"]) for r in responses
+                 if isinstance((fr := (r.full_result or {})).get("enps"), dict)
+                 and fr["enps"].get("raw_score") is not None]
     enps_available = len(enps_vals) >= MIN_QUOTES_N
     enps_score: int | None = None
     if enps_available:
@@ -1396,8 +1408,12 @@ def _overzicht_summary_and_bands(profile_factors: list[tuple[str, float | None]]
         summary = f"{kwetsbaar[0]} is het duidelijkste kwetsbare punt; geen enkele factor scoort relatief sterk."
     elif aandacht:
         summary = f"Geen factor scoort kritisch. De laagste score zit bij {aandacht[0]}."
-    else:
+    elif sterk:
         summary = "Factorprofiel toont een overwegend relatief sterk beeld."
+    else:
+        # Geen enkele factorscore beschikbaar (n<10 -> factor_avgs leeg): eerlijk
+        # degraderen i.p.v. een positieve claim zonder data (fail-loud).
+        summary = "Onvoldoende responses (<10) voor een groepsprofiel op factorniveau."
     return summary, {"kwetsbaar": kwetsbaar, "aandacht": aandacht, "sterk": list(reversed(sterk))}
 
 
@@ -1499,11 +1515,14 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
     """
     rows = ""
     if retention_score is not None:
-        col = _factor_color(retention_score)
-        note = ("sterk" if retention_score >= 7.5 else
-                "voldoende" if retention_score >= 6.0 else
-                "vraagt aandacht" if retention_score >= 4.5 else
-                "onder druk")
+        # retention_score = avg_risk (RISICO-schaal: hoog = slecht). Note + kleur
+        # moeten dezelfde polariteit hebben als de cover-band (_band): hoog risk =
+        # "onder druk" / rood. Voorheen las de note-ladder hoog = "sterk" / teal,
+        # tegengesteld aan de cover binnen hetzelfde rapport.
+        col = _band(retention_score, "retention")[1]
+        note = ("onder druk" if retention_score >= RISK_HIGH else
+                "vraagt aandacht" if retention_score >= RISK_MEDIUM else
+                "sterk")
         rows += (f'<div class="sigrow"><div class="sigrow-title">Behoudssignaal</div>'
                  f'<div class="sigrow-body">Werkfactoren en werkbeleving samengebracht op groepsniveau.</div>'
                  f'<div><span class="sigrow-score" style="color:{col};">{retention_score:.1f}/10</span>'
@@ -1539,12 +1558,19 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
     stat_rows = f'<div class="card">{rows}</div>' if rows else ""
 
     strips = ""
-    for key, label in (
-        ("stay", "Blijfintentie &mdash; spreiding"),
-        ("turnover", "Vertrekintentie &mdash; spreiding (hoger = meer vertrekgedachten)"),
-        ("engagement", "Bevlogenheid &mdash; spreiding"),
+    for key, label, invert in (
+        ("stay", "Blijfintentie &mdash; spreiding", False),
+        # Vertrekintentie is hoog=slecht; distribution_block is health-georiënteerd
+        # (rechts/hoog = teal = sterk). Zonder inversie kleurden hoge
+        # vertrekgedachten groen "Sterk". Inverteren (11 - v) zet ze links/rood,
+        # consistent met de rest van de behoudscontext en de turnover-sigrow.
+        ("turnover", "Vertrekintentie &mdash; spreiding (links = meer vertrekgedachten)", True),
+        ("engagement", "Bevlogenheid &mdash; spreiding", False),
     ):
-        blk = distribution_block((intent_resp or {}).get(key, []))
+        vals = (intent_resp or {}).get(key, [])
+        if invert:
+            vals = [11.0 - v for v in vals if v is not None]
+        blk = distribution_block(vals)
         if blk:
             strips += (f'<div style="margin-top:10px;"><div class="sc-l">'
                        f'{label}</div>{blk}</div>')
@@ -1668,7 +1694,7 @@ def render_exit_report_html(data: dict) -> str:
     totaalbeeld = (
         f"{high_lbl} ({_score_str(high_sc)}) laat zien wat wél werkt. "
         f"Hoe stevig dit beeld is, hangt af van de responsbasis onderaan deze pagina."
-    ) if high_lbl and low_lbl != high_lbl else \
+    ) if high_lbl and low_lbl != high_lbl and high_sc is not None and high_sc >= 6.5 else \
         "Reikwijdte en betrouwbaarheid van dit beeld: zie de responsbasis onderaan deze pagina."
 
     _responsbasis_band = _responsbasis(
@@ -2048,7 +2074,7 @@ def render_retention_report_html(data: dict) -> str:
     totaalbeeld = (
         f"{high_lbl} ({_score_str(high_sc)}) laat zien wat wél werkt. "
         f"Hoe stevig dit beeld is, hangt af van de responsbasis onderaan deze pagina."
-    ) if high_lbl and low_lbl != high_lbl else \
+    ) if high_lbl and low_lbl != high_lbl and high_sc is not None and high_sc >= 6.5 else \
         "Reikwijdte en betrouwbaarheid van dit beeld: zie de responsbasis onderaan deze pagina."
 
     _responsbasis_band = _responsbasis(
@@ -2474,7 +2500,7 @@ def render_onboarding_report_html(data: dict) -> str:
     totaalbeeld = (
         f"{high_lbl} ({_score_str(high_sc)}) laat zien wat wél goed landt. "
         f"Hoe stevig dit beeld is, hangt af van de responsbasis onderaan deze pagina."
-    ) if high_lbl and low_lbl != high_lbl else \
+    ) if high_lbl and low_lbl != high_lbl and high_sc is not None and high_sc >= 6.5 else \
         "Reikwijdte en betrouwbaarheid van dit beeld: zie de responsbasis onderaan deze pagina."
 
     _responsbasis_band = _responsbasis(
