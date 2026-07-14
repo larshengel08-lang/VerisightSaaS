@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { buildGuidedSelfServeState, deriveGuidedSelfServeDiscipline } from '@/lib/guided-self-serve'
 import { getDeliveryModeLabel } from '@/lib/implementation-readiness'
 import {
@@ -740,6 +741,10 @@ export async function fetchRouteBeheerData(args: {
   userId: string
 }) {
   const { campaignId, supabase, userId } = args
+  // Deze pagina is operator-only (beheer/page.tsx redirect niet-admins). Individuele
+  // respondent-PII (token/email) en ruwe survey_responses lezen we na de audit-lockdown
+  // (H1) via de service-role; de rest blijft op de user-client (RLS).
+  const adminClient = createAdminClient()
   const { data: statsRow } = await supabase
     .from('campaign_stats')
     .select('*')
@@ -788,12 +793,12 @@ export async function fetchRouteBeheerData(args: {
       .eq('org_id', stats.organization_id)
       .is('accepted_at', null),
     supabase.from('campaign_delivery_records').select('*').eq('campaign_id', campaignId).maybeSingle(),
-    supabase
+    adminClient
       .from('respondents')
       .select('id, token, email, sent_at, completed, completed_at, department')
       .eq('campaign_id', campaignId)
       .order('completed_at', { ascending: false, nullsFirst: false }),
-    supabase
+    adminClient
       .from('survey_responses')
       .select('id, org_scores, sdt_scores, respondents!inner(campaign_id)')
       .eq('respondents.campaign_id', campaignId),
@@ -847,7 +852,25 @@ export async function fetchRouteBeheerData(args: {
       })
     | null
 
-  const pendingCount = stats.total_invited - stats.total_completed
+  // Weergave-noemer voor het responspercentage. Bij self_send bestaat er geen
+  // ingeladen deelnemerslijst; respondent-rijen ontstaan pas bij het openen van
+  // de link, dus stats.total_invited (= count(respondents)) telt "gestart", niet
+  // "uitgenodigd". De handmatige invited_count is de canonieke noemer, gelijk aan
+  // home- en campagnedetailpagina, zodat alle drie de schermen hetzelfde tonen.
+  // Let op: dit is uitsluitend de WEERGAVE; de guided-self-serve state machine
+  // hieronder (autoSignals/guidedState/selfServeCurrentStep) blijft bewust op
+  // stats.total_invited (respondent-rijen) draaien.
+  const isSelfSend = (campaign?.comms_mode ?? 'managed') === 'self_send'
+  const manualInvitedCount = (deliveryRecord?.invited_count as number | null) ?? null
+  const displayTotalInvited =
+    isSelfSend && manualInvitedCount != null ? manualInvitedCount : stats.total_invited
+  const displayCompletionRatePct =
+    displayTotalInvited > 0
+      ? Math.round((stats.total_completed / displayTotalInvited) * 100)
+      : typeof stats.completion_rate_pct === 'number'
+        ? stats.completion_rate_pct
+        : null
+  const pendingCount = Math.max(0, displayTotalInvited - stats.total_completed)
   const invitesNotSent = respondents.filter((respondent) => !respondent.sent_at && !respondent.completed).length
   const remindableRespondents = respondents.filter(
     (respondent) => !respondent.completed && typeof respondent.email === 'string' && respondent.email.trim().length > 0,
@@ -962,7 +985,7 @@ export async function fetchRouteBeheerData(args: {
       campaignId,
       respondentCount: respondents.length,
       totalCompleted: stats.total_completed,
-      totalInvited: stats.total_invited,
+      totalInvited: displayTotalInvited,
       outputSummary,
     }),
   )
@@ -975,7 +998,7 @@ export async function fetchRouteBeheerData(args: {
       routeSettingsBody,
       respondentCount: respondents.length,
       totalCompleted: stats.total_completed,
-      totalInvited: stats.total_invited,
+      totalInvited: displayTotalInvited,
       pendingCount,
       outputSummary,
       outputStatusLabel: outputSummary.label,
@@ -1008,11 +1031,10 @@ export async function fetchRouteBeheerData(args: {
     statusBadgeTone: statusBadge.tone,
     lastActivityAt,
     launchDate: deliveryRecord?.launch_date ?? deliveryRecord?.launch_confirmed_at ?? null,
-    totalInvited: stats.total_invited,
+    totalInvited: displayTotalInvited,
     totalCompleted: stats.total_completed,
     pendingCount,
-    completionRatePct:
-      typeof stats.completion_rate_pct === 'number' ? stats.completion_rate_pct : null,
+    completionRatePct: displayCompletionRatePct,
     invitesNotSent,
     hasMinDisplay,
     hasEnoughData,

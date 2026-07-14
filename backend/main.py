@@ -672,9 +672,21 @@ async def db_general_error_handler(request: Request, exc: SQLAlchemyError):
 @app.get("/api/health")
 async def health() -> JSONResponse:
     db_ok = check_db_connection()
+    # Deploystand extern verifieerbaar maken: Railway zet RAILWAY_GIT_COMMIT_SHA
+    # bij elke build. Zonder deze marker was van buitenaf niet vast te stellen
+    # of de live backend de laatste rapportcode draaide.
+    commit_sha = (
+        os.getenv("RAILWAY_GIT_COMMIT_SHA")
+        or os.getenv("GIT_COMMIT_SHA")
+        or "unknown"
+    )
     return JSONResponse(
         status_code=200,
-        content={"status": "ok" if db_ok else "degraded", "checks": {"database": db_ok}},
+        content={
+            "status": "ok" if db_ok else "degraded",
+            "checks": {"database": db_ok},
+            "version": commit_sha[:12],
+        },
     )
 
 
@@ -1253,7 +1265,13 @@ async def serve_survey(
 
     # Controleer of token verlopen is (90 dagen geldig)
     if hasattr(respondent, "token_expires_at") and respondent.token_expires_at:
-        if respondent.token_expires_at < datetime.now(timezone.utc):
+        # Normaliseer naar tz-aware: op SQLite (dev/test) komt een
+        # DateTime(timezone=True)-kolom naive terug, en `naive < aware` gooit een
+        # TypeError -> 500. Productie-Postgres (timestamptz) is altijd aware.
+        token_expires_at = respondent.token_expires_at
+        if token_expires_at.tzinfo is None:
+            token_expires_at = token_expires_at.replace(tzinfo=timezone.utc)
+        if token_expires_at < datetime.now(timezone.utc):
             return _render_survey_status(
                 request,
                 status_code=410,

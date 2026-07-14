@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { createRespondentsAction } from '@/app/(dashboard)/beheer/respondent-actions'
 import {
   getDeliveryModeDescription,
   getDeliveryModeLabel,
@@ -161,8 +162,6 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
             annual_salary_eur: salary ? parseFloat(salary) : null,
           }))
 
-    const { createClient } = await import('@/lib/supabase/client')
-    const supabase = createClient()
     const rows = respondents.map((respondent) => ({
       campaign_id: campaignId,
       department: respondent.department,
@@ -172,16 +171,15 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
       email: respondent.email,
     }))
 
-    const { data, error: supabaseError } = await supabase
-      .from('respondents')
-      .insert(rows)
-      .select('token, email')
-
-    if (supabaseError || !data) {
-      setError(supabaseError?.message ?? 'Aanmaken mislukt.')
+    // Insert loopt na de audit-lockdown (H1) via een service-role server-action:
+    // token/email zijn niet meer via de browser-client leesbaar.
+    const actionResult = await createRespondentsAction(rows)
+    if (!actionResult.ok) {
+      setError(actionResult.error)
       setLoading(null)
       return
     }
+    const data = actionResult.created
 
     let emailsSent = 0
     if (mode === 'emails' && emails.length > 0) {
@@ -190,10 +188,9 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(
-            data.map((row: { token: string; email: string }) => ({
-              token: row.token,
-              email: row.email,
-            })),
+            data
+              .filter((row): row is { token: string; email: string } => row.email !== null)
+              .map((row) => ({ token: row.token, email: row.email })),
           ),
         })
         if (response.ok) {

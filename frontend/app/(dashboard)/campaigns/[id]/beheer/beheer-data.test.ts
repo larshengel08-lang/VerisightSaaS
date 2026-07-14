@@ -1,5 +1,12 @@
 import { readFileSync } from 'node:fs'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+// respondents/survey_responses lopen na de audit-lockdown (H1) via de service-role.
+// De mock geeft dezelfde per-tabel data terug als de user-client-mock, zodat de
+// assertions ongewijzigd blijven. (De pagina is operator-only; auth staat bovenstrooms.)
+vi.mock('@/lib/supabase/admin', () => ({
+  createAdminClient: () => createSupabaseMock(),
+}))
 import { buildGuidedSelfServeState } from '@/lib/guided-self-serve'
 import { buildDeliveryAutoSignals } from '@/lib/ops-delivery'
 import {

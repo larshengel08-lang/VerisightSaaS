@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { safeInternalPath } from '@/lib/safe-redirect'
 
 type AcceptanceFixture = {
   fixture?: {
@@ -60,13 +61,7 @@ async function getQaCredentials() {
 }
 
 function getSafeNextPath(request: NextRequest) {
-  const requestedNext = request.nextUrl.searchParams.get('next')
-
-  if (!requestedNext || !requestedNext.startsWith('/')) {
-    return '/dashboard'
-  }
-
-  return requestedNext
+  return safeInternalPath(request.nextUrl.searchParams.get('next'), '/dashboard')
 }
 
 export async function GET(request: NextRequest) {

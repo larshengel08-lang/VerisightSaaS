@@ -27,12 +27,18 @@ export type OpenAnswerGroup = {
 
 const MIN_OPEN_ANSWER_LENGTH = 24
 
+// Display-pass op reeds bij opslag geanonimiseerde tekst (backend anonymize_text).
+// Patronen gelijkgetrokken met de backend (naam- + postcode-heuristiek toegevoegd) zodat
+// beide lagen dezelfde PII-vormen dekken. Blijft best-effort — geen garantie tegen
+// zelf-identificerende vrije tekst; het label communiceert dat eerlijk.
 function sanitizeOpenAnswerText(value: string) {
   return value
     .replace(/\s+/g, ' ')
     .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, '[verwijderd]')
     .replace(/https?:\/\/\S+/gi, '[link verwijderd]')
     .replace(/\+?\d[\d\s().-]{7,}\d/g, '[verwijderd]')
+    .replace(/\b[A-Z][a-z]{2,}\s(?:van\s(?:de[rn]?\s)?|de\s|den\s|der\s)?[A-Z][a-z]{2,}\b/g, '[naam verwijderd]')
+    .replace(/\b\d{4}\s?[A-Z]{2}\b/g, '[verwijderd]')
     .trim()
 }
 

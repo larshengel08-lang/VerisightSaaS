@@ -881,7 +881,7 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "") -> str:
             ("Geen voorspelling","Scores geven een huidig signaal, geen verlooppredicties en geen individuele risicobeoordeling."),
         ]
         cells_r2 = [
-            ("Open toelichtingen","Geanonimiseerd. Namen, contactgegevens en locaties verwijderd. Alleen bij voldoende n getoond."),
+            ("Open toelichtingen","Automatisch geanonimiseerd: herkende namen, contactgegevens en locaties verwijderd. Alleen bij voldoende n getoond."),
             ("Claimgrenzen",     "Loep Behoud is een actieve-populatie groepssignaal. Geen causale claims, geen interventieprescriptie."),
             ("Privacywaarborg",  "Verwerking conform AVG. Uitsluitend bestemd voor geautoriseerde gebruikers."),
         ]
@@ -902,7 +902,7 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "") -> str:
             ("Geen beoordeling",   "Scores duiden onboarding-ervaring op groepsniveau. Geen prestatiebeoordeling van individuen of managers."),
         ]
         cells_r2 = [
-            ("Open toelichtingen", "Geanonimiseerd. Namen, contactgegevens en locaties verwijderd. Alleen bij voldoende n getoond."),
+            ("Open toelichtingen", "Automatisch geanonimiseerd: herkende namen, contactgegevens en locaties verwijderd. Alleen bij voldoende n getoond."),
             ("Claimgrenzen",       "Onboarding is een groepscheck op de eerste werkperiode. Geen causale claims, geen uitvalpredicties."),
             ("Privacywaarborg",    "Verwerking conform AVG. Uitsluitend bestemd voor geautoriseerde gebruikers."),
         ]
@@ -923,7 +923,7 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "") -> str:
             ("Geen diagnose",   "Scores zijn methodisch verantwoord maar niet extern gevalideerd. Altijd combineren met managementgesprek."),
         ]
         cells_r2 = [
-            ("Open toelichtingen","Geanonimiseerd. Namen, contactgegevens en locaties verwijderd. Alleen bij voldoende n getoond."),
+            ("Open toelichtingen","Automatisch geanonimiseerd: herkende namen, contactgegevens en locaties verwijderd. Alleen bij voldoende n getoond."),
             ("Claimgrenzen",     "Loep Vertrek is een terugkijkende groepsmeting op uitstroom. Geen causale claims, geen oordeel over vermijdbaarheid, geen verlooppredicties."),
             ("Privacywaarborg",  "Verwerking conform AVG. Uitsluitend bestemd voor geautoriseerde gebruikers."),
         ]
@@ -1084,7 +1084,7 @@ def _themed_quotes(texts: list[str], scan_type: str = "exit",
         cards += (
             f'<div class="theme-card">'
             f'<div class="quote-txt">{_h(t)}'
-            f'<div class="quote-anon">Geanonimiseerd &mdash; namen en contactgegevens verwijderd</div>'
+            f'<div class="quote-anon">Automatisch geanonimiseerd &mdash; herkende namen en contactgegevens verwijderd</div>'
             f'</div></div>'
         )
     return f'{note}{cards}'

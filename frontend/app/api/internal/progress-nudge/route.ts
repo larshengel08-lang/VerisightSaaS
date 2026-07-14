@@ -1,9 +1,17 @@
+import { timingSafeEqual } from 'node:crypto'
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendLoepEmail } from '@/lib/email'
 import { voortgangHtml } from '@/lib/email-templates/voortgang'
 import { insertCampaignAuditEvent } from '@/lib/campaign-audit'
 import type { CampaignStats } from '@/lib/types'
+
+function timingSafeEqualStr(a: string, b: string): boolean {
+  const bufA = Buffer.from(a)
+  const bufB = Buffer.from(b)
+  if (bufA.length !== bufB.length) return false
+  return timingSafeEqual(bufA, bufB)
+}
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://verisight.nl'
 
@@ -27,7 +35,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'INTERNAL_ADMIN_TOKEN niet geconfigureerd' }, { status: 500 })
   }
   const provided = request.headers.get('x-admin-token')
-  if (provided !== adminToken) {
+  if (!provided || !timingSafeEqualStr(provided, adminToken)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

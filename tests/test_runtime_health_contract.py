@@ -60,7 +60,12 @@ def test_health_is_liveness_friendly_when_database_is_down(
     response = client.get("/api/health")
 
     assert response.status_code == 200
-    assert response.json() == {"status": "degraded", "checks": {"database": False}}
+    payload = response.json()
+    assert payload["status"] == "degraded"
+    assert payload["checks"] == {"database": False}
+    # Versie-marker toegevoegd (RAILWAY_GIT_COMMIT_SHA) om deploystand extern
+    # verifieerbaar te maken; env-onafhankelijk assert op type i.p.v. exacte waarde.
+    assert isinstance(payload["version"], str)
 
 
 def test_ready_stays_strict_when_database_is_down(
