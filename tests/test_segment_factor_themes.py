@@ -194,7 +194,7 @@ def test_navy_anchor_zin_zonder_score_bij_n5_9():
     fr = {"Marketing": {"factors": [("workload", 3.9, 6)], "omitted": 0},
           "Sales": {"factors": [("culture", 6.4, 8)], "omitted": 0}}
     html = _segment_block(rows, factor_rows=fr, scan_type="retention")
-    assert ("De druk zit daar vooral op werkdruk en herstelruimte "
+    assert ("Het laagst scorende thema daar is werkdruk en herstelruimte "
             "(kwetsbaar punt).") in html
     anchor = html[html.index("Startpunt voor de bespreking"):]
     assert not re.search(r"3\.9/10", anchor)
@@ -205,7 +205,7 @@ def test_navy_anchor_zin_met_score_bij_n10():
     fr = {"Marketing": {"factors": [("workload", 3.9, 11)], "omitted": 0},
           "Sales": {"factors": [("culture", 6.4, 10)], "omitted": 0}}
     html = _segment_block(rows, factor_rows=fr, scan_type="retention")
-    assert ("De druk zit daar vooral op werkdruk en herstelruimte "
+    assert ("Het laagst scorende thema daar is werkdruk en herstelruimte "
             "(3.9/10).") in html
 
 
@@ -214,7 +214,7 @@ def test_navy_anchor_geen_zin_zonder_factordata():
     fr = {"Sales": {"factors": [("culture", 6.4, 8)], "omitted": 0}}
     html = _segment_block(rows, factor_rows=fr, scan_type="retention")
     assert "Startpunt voor de bespreking" in html
-    assert "De druk zit daar vooral op" not in html  # geen data = geen zin
+    assert "Het laagst scorende thema daar is" not in html  # geen data = geen zin
 
 
 # ─── 10. Render: backward-compat zonder factor_rows ──────────────────────────
@@ -226,15 +226,37 @@ def test_backward_compat_zonder_factor_rows():
     assert len(cells) == 2
     assert all("n.b." in c for c in cells)
     assert "Factorbeeld per afdeling" not in html
-    assert "De druk zit daar vooral op" not in html
+    assert "Het laagst scorende thema daar is" not in html
 
 
-def test_backward_compat_lege_factors_lijst_toont_nb():
+def test_lege_factors_met_omitted_toont_meldregel_geen_kaal_nb():
+    # Fail-loud: "alles onder de gate" (omitted > 0) is een andere staat dan
+    # "geen factordata aangeleverd" — de reden moet zichtbaar zijn, geen kaal n.b.
     rows = [_row("Sales", 12, 6.5), _row("Ops", 10, 3.9)]
     fr = {"Sales": {"factors": [], "omitted": 6}}
     html = _segment_block(rows, factor_rows=fr, scan_type="exit")
     cells = _theme_cells(html)
-    assert all("n.b." in c for c in cells)  # lege factors = geen data = n.b.
+    sales_cell = next(c for c in cells if "6 thema" in c)
+    assert "niet beoordeelbaar: te weinig antwoorden" in sales_cell
+    assert "n.b." not in sales_cell                 # reden vervangt het kale label
+    ops_cell = next(c for c in cells if c is not sales_cell)
+    assert "n.b." in ops_cell                        # echt geen data: wel n.b.
+    assert "Factorbeeld per afdeling" not in html    # geen subblok zonder factors
+
+
+def test_alle_factoren_onder_gate_via_helper_eind_tot_eind():
+    # Afdeling n=6 waar elke factor door <5 antwoorden de gate mist: helper
+    # levert factors=[] + omitted, render toont de meldregel.
+    fim = {"workload": [("W1", "q")], "leadership": [("L1", "q")]}
+    resp = ([_r("Sales", {"W1": 3.0, "L1": 3.0})] * 4
+            + [_r("Sales", {})] * 2
+            + [_r("Ops", {"W1": 4.0, "L1": 4.0})] * 5)
+    out = _department_factor_rows(resp, fim)
+    assert out["Sales"]["factors"] == [] and out["Sales"]["omitted"] == 2
+    rows = [_row("Sales", 6, 5.0), _row("Ops", 5, 6.0)]
+    html = _segment_block(rows, factor_rows=out, scan_type="exit")
+    sales_cell = next(c for c in _theme_cells(html) if "2 thema" in c)
+    assert "niet beoordeelbaar: te weinig antwoorden" in sales_cell
 
 
 # ─── Integratie: renderer geeft factor_rows door ─────────────────────────────

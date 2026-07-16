@@ -22,7 +22,7 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 
 from backend.models import Campaign, Respondent, SurveyResponse
 from backend.report_css import build_css, RAG_HIGH, RAG_MID, RAG_LOW
-from backend.report_distribution import distribution_block
+from backend.report_distribution import MIN_DISTRIBUTION_N, distribution_block
 from backend.products.shared.deepening import (
     DIRECTION_SETS,
     agenda_enrichment,
@@ -998,17 +998,27 @@ def _segment_theme_cell(row: dict, factor_rows: dict[str, dict] | None,
 
     Staffel (amendement 1): bij n=5-9 alleen factorlabel + duidingslabel,
     bewust geen decimale score (schijnprecisie + herleidbaarheid in kleine
-    teams); vanaf n=10 wel de score. Amendement 2: omitted > 0 wordt altijd
-    gemeld, ook bij n >= 10 (het getoonde thema is dan "onder voorbehoud").
+    teams); vanaf MIN_DISTRIBUTION_N wel de score. Amendement 2: omitted > 0
+    wordt altijd gemeld, ook bij n >= 10 (het getoonde thema is dan "onder
+    voorbehoud").
     """
     if row.get("is_pooled", False):
         return f'<span style="{_SEG_MONO}">niet getoond: samengestelde restgroep</span>'
     info = (factor_rows or {}).get(row["department"])
-    if not info or not info.get("factors"):
+    if not info:
+        return f'<span style="{_SEG_MONO}">n.b.</span>'
+    if not info.get("factors"):
+        # Fail-loud: "alles onder de gate" is een andere staat dan "geen
+        # factordata aangeleverd" — als er thema's zijn weggelaten, noem de
+        # reden; kaal "n.b." alleen bij echt ontbrekende data.
+        omitted = info.get("omitted", 0)
+        if omitted > 0:
+            return (f'<span style="{_SEG_MONO}">{omitted} thema(&#39;s) '
+                    f'niet beoordeelbaar: te weinig antwoorden</span>')
         return f'<span style="{_SEG_MONO}">n.b.</span>'
     fk, avg, _nf = info["factors"][0]
     col = _factor_color(avg)
-    if row["n"] >= 10:
+    if row["n"] >= MIN_DISTRIBUTION_N:
         second = (f'<span style="font-family:\'JetBrains Mono\', monospace;'
                   f'font-size:8px;color:{col};">{avg:.1f}/10</span>')
     else:
@@ -1027,13 +1037,13 @@ def _segment_factor_subblocks(segment_rows: list[dict],
                               factor_rows: dict[str, dict] | None,
                               scan_type: str) -> str:
     """Factorbeeld per afdeling (spec 2026-07-16 §3.2 punt 2): volledige
-    uitsplitsing alleen voor niet-gepoolde afdelingen met n >= 10 én
-    factordata; laagste eerst (volgorde komt uit _department_factor_rows)."""
+    uitsplitsing alleen voor niet-gepoolde afdelingen met n >= MIN_DISTRIBUTION_N
+    én factordata; laagste eerst (volgorde komt uit _department_factor_rows)."""
     if not factor_rows:
         return ""
     subs = ""
     for row in segment_rows:
-        if row.get("is_pooled", False) or row["n"] < 10:
+        if row.get("is_pooled", False) or row["n"] < MIN_DISTRIBUTION_N:
             continue
         info = factor_rows.get(row["department"])
         if not info or not info.get("factors"):
@@ -1076,7 +1086,7 @@ def _segment_block(segment_rows: list[dict], factor_rows: dict[str, dict] | None
     themakolom "n.b." en verschijnen er geen subblokken: geen crash,
     geen fake data.
     """
-    from backend.report_distribution import MIN_DISTRIBUTION_N, distribution_svg
+    from backend.report_distribution import distribution_svg
 
     if not segment_rows:
         return _segment_status_block(0, has_segment_data=False, opener_html=opener_html)
@@ -1123,16 +1133,18 @@ def _segment_block(segment_rows: list[dict], factor_rows: dict[str, dict] | None
         _low_basis = (f'{lowest["n"]} van de {_low_inv} uitgenodigden vulden in'
                       if _low_inv else f'{lowest["n"]} responses')
         # Themazin (spec 2026-07-16 §3.2 punt 3): zelfde staffel als de kolom;
-        # geen factordata = geen zin (geen fake).
+        # geen factordata = geen zin (geen fake). Band-neutrale formulering:
+        # "de druk zit op X" overdrijft wanneer het laagste thema zelf nog
+        # relatief sterk scoort.
         theme_sentence = ""
         low_info = (factor_rows or {}).get(lowest["department"])
         if low_info and low_info.get("factors"):
             _lfk, _lavg, _lnf = low_info["factors"][0]
             _llbl = _h(_lc(_fl(_lfk, scan_type)))
-            if lowest["n"] >= 10:
-                theme_sentence = f' De druk zit daar vooral op {_llbl} ({_lavg:.1f}/10).'
+            if lowest["n"] >= MIN_DISTRIBUTION_N:
+                theme_sentence = f' Het laagst scorende thema daar is {_llbl} ({_lavg:.1f}/10).'
             else:
-                theme_sentence = (f' De druk zit daar vooral op {_llbl} '
+                theme_sentence = (f' Het laagst scorende thema daar is {_llbl} '
                                   f'({_h(_factor_label(_lavg).lower())}).')
         low_note = (
             f'<div class="navy-anchor">'
