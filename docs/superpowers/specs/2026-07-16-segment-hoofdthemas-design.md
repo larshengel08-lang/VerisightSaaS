@@ -1,7 +1,9 @@
 # Mini-spec: Hoofdthema's per afdeling in de segmentanalyse
 
 **Datum:** 2026-07-16
-**Status:** CONCEPT — ter review aan Lars, nog niet bouwen
+**Status:** AKKOORD (Lars, 16-7-2026) — met twee aanpassingen verwerkt in §3.1;
+de drie open vragen zijn beantwoord in §5. Doel: af vóór 24 augustus
+(voorbeeldrapport dat Gerianne doorbladert toont dan hoofdthema's per afdeling).
 **Aanleiding:** feedback Lars op voorbeeldrapport_retentiescan.pdf (besproken 16-7-2026):
 de segmentanalyse toont nu alleen respons + één samenvattend cijfer + band per
 afdeling. Lars wil per afdeling zichtbaar **welk thema daar het laagst scoort**,
@@ -47,8 +49,15 @@ factorlaag krijgt een eigen trap die daarop aansluit:
 | n per afdeling | wat tonen we op factorniveau |
 |---|---|
 | < 5 | niets (afdeling staat sowieso niet in de tabel; gepoold) |
-| 5–9 | alleen het **laagste thema** (factorlabel + factorscore), met het vaste caveat-patroon "gesprekshaakje, geen conclusie" |
+| 5–9 | alleen het **laagste thema**: factorlabel + **bandlabel, géén decimale score** ("Werkbelasting · kwetsbaar punt"), met het vaste caveat-patroon "gesprekshaakje, geen conclusie" |
 | ≥ 10 | volledige factoruitsplitsing: alle 6 organisatiefactoren met score + bandkleur, laagste bovenaan |
+
+> **Aanpassing Lars (16-7):** bij 5–9 geen decimale score. (a) Consistent met de
+> verdiepingsstaffel (5–9 alleen aantallen, pas vanaf 10 percentages): een score
+> met één decimaal bij n=5 is schijnprecisie — één respondent verschuift hem in
+> z'n eentje een vol punt. (b) Herleidbaarheid: bij een team van 5 dat de
+> leidinggevende kent is "werkdruk scoort hier 3.2" gevoeliger dan "werkdruk
+> vraagt hier als eerste aandacht". Het label stuurt het gesprek net zo goed.
 
 Aanvullende regels:
 
@@ -56,8 +65,15 @@ Aanvullende regels:
   ≥ MIN_SEGMENT_N respondenten in die afdeling die factor daadwerkelijk
   hebben beantwoord (ontbrekende items → respondent telt niet mee voor die
   factor). Haalt een factor die drempel niet, dan wordt hij weggelaten met
-  een eerlijke regel ("1 thema niet getoond: te weinig antwoorden") — geen
-  stil gat.
+  een eerlijke regel ("1 thema niet beoordeelbaar: te weinig antwoorden") —
+  geen stil gat.
+- **Edge-regel laagste thema onder voorbehoud (aanpassing Lars 16-7):** haalt
+  één of meer factoren de gate niet, dan verschijnt de meldregel hierboven
+  áltijd naast het laagste-thema-veld — anders toont het blok stilzwijgend de
+  op-één-na-laagste factor als "laagste thema" wanneer uitgerekend de laagst
+  scorende factor is weggelaten. De lezer weet zo dat het getoonde laagste
+  thema onder voorbehoud is. Zeldzame edge (survey-items zijn in de praktijk
+  verplicht), maar exact de fail-loud-lijn.
 - **"Overige afdelingen" (pooled) krijgt nooit een factorlaag** — zelfde
   argument als bij de spreidingsstrip: samengestelde restgroep, duiding is
   betekenisloos en suggereert een groep die niet bestaat.
@@ -71,7 +87,8 @@ Aanvullende regels:
 ### 3.2 Presentatie (v1, PDF)
 
 1. **Extra kolom "Laagste thema"** in de bestaande segmenttabel (alle
-   rijen n ≥ 5): factorlabel + score in de bandkleur, bij de pooled rij een
+   rijen n ≥ 5): factorlabel in de bandkleur — bij rij-n 5–9 met bandlabel
+   (zonder score), bij rij-n ≥ 10 met score; bij de pooled rij een
    mono-label "niet getoond: samengestelde restgroep". Dit is de kern van
    de feature en blijft compact.
 2. **Factoruitsplitsing per afdeling** als subblokken onder de tabel, alleen
@@ -81,9 +98,12 @@ Aanvullende regels:
    worden — acceptabel, de segmentanalyse is dan ook echt rijker.
 3. **Navy-anchor verrijken:** de bestaande "Startpunt voor de bespreking"
    noemt straks ook het laagste thema van die afdeling, mits n ≥ 5 voor die
-   factor: "Marketing heeft de laagste score (4.4/10; 5 van de 8
-   uitgenodigden vulden in). De druk zit daar vooral op werkdruk en
-   herstelruimte (3.9/10)." Zelfde noemer-eerst-principe als nu.
+   factor — met dezelfde staffel als de kolom. Bij rij-n 5–9 zónder score:
+   "Marketing heeft de laagste score (4.4/10; 5 van de 8 uitgenodigden
+   vulden in). De druk zit daar vooral op werkdruk en herstelruimte
+   (kwetsbaar punt)." Bij rij-n ≥ 10 mét score. Zelfde
+   noemer-eerst-principe als nu. (De afdelingsscore zelf, 4.4/10, staat al
+   in de bestaande tabel en blijft — de staffel geldt voor de factorlaag.)
 4. **Sectie-intro (`SECTION_INTROS["segmentanalyse"]`) uitbreiden** met één
    zin die uitlegt wat het laagste thema is en wat de staffel doet — de
    zelfuitleg-laag is een vertrouwensdrager.
@@ -108,8 +128,11 @@ geen DB, geen schema-wijziging, los testbaar.
 
 ## 4. Testplan
 
-- Staffel: n=4 → geen factorlaag; n=5–9 → alleen laagste thema + caveat;
-  n=10 → volledige uitsplitsing.
+- Staffel: n=4 → geen factorlaag; n=5–9 → alleen laagste thema (label +
+  bandlabel, expliciet GEEN decimale factorscore in de output) + caveat;
+  n=10 → volledige uitsplitsing mét scores.
+- Edge-regel: laagst scorende factor haalt de gate niet → meldregel
+  "niet beoordeelbaar" aanwezig naast het laagste-thema-veld.
 - Per-factor-gate: afdeling n=6 waarvan 3 respondenten een factor misten →
   die factor weggelaten mét meldregel.
 - Pooled rij: nooit een factorlaag.
@@ -117,15 +140,18 @@ geen DB, geen schema-wijziging, los testbaar.
 - Navy-anchor: thema alleen genoemd als de factor-n-gate haalt.
 - Guard: geen SDT-dimensie als thema.
 
-## 5. Open vragen voor Lars
+## 5. Open vragen — beantwoord door Lars (16-7-2026)
 
-1. **Volledige uitsplitsing bij n ≥ 10: alle 6 factoren of top-3?** Voorstel:
-   alle 6 (consistent met overzichtsprofiel; selectie zou weer een keuze van
-   Loep zijn i.p.v. van de data).
-2. **Drempel volledige uitsplitsing:** n ≥ 10 spiegelt MIN_DISTRIBUTION_N en
-   de patroonanalyse-drempel. Akkoord, of liever conservatiever (bijv. 12)?
-3. **Kolom in de hoofdtabel + subblokken, of alleen subblokken?** Voorstel:
-   beide (kolom voor de snelle lezer, subblokken voor wie doorleest).
+1. **Volledige uitsplitsing bij n ≥ 10: alle 6 factoren.** Top-3 zou een
+   redactionele keuze van Loep zijn; de sterke factoren zijn net zo waardevol
+   in het gesprek ("wat werkt hier al", zelfde functie als "Relatief sterk"
+   op de bestuurlijke read).
+2. **Drempel op 10, niet conservatiever.** 10 is al de patroonanalyse- én
+   spreidingsdrempel; een derde magisch getal introduceert uitlegplicht
+   zonder principiële basis. De 5–9-laag is met aanpassing 1 al voorzichtiger.
+3. **Kolom + subblokken, beide.** De kolom bedient de MT-lezer die alleen de
+   tabel scant, de subblokken de HR-lezer die doorleest. Kolom toont bij 5–9
+   label + band, bij ≥ 10 label + score.
 
 ## 6. Buiten scope
 
