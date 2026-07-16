@@ -162,7 +162,12 @@ p  { margin-bottom: 6px; font-size: 11px; }
 
 /* ── Invulbaar veld (eigenaarschap wordt in de bespreking bepaald, niet door Loep) ── */
 .step-fill { border-bottom: 1px dashed #94A3B8; height: 15px; margin-bottom: 4px; }
-.step-fill-hint { font-size: 7.5px; font-style: italic; color: #94A3B8; line-height: 1.4; }
+.step-fill-hint { font-size: 7.5px; font-style: italic; color: #94A3B8; line-height: 1.4; margin-bottom: 6px; }
+/* ── Sub-label boven een invulregel binnen één kaart (bijv. "Uit de bespreking":
+   Prioriteit/Eigenaar/Vervolgmoment onder elkaar) ── */
+.step-sublbl { font-family: 'JetBrains Mono', monospace; font-size: 7.5px; letter-spacing: 0.06em;
+  text-transform: uppercase; color: #64748B; margin: 7px 0 3px; }
+.agenda-dark .step-sublbl { color: #9FB0C0; }
 
 /* ── Navy agenda-anker (designsprong §2a): het hele agendablok als donker vlak ── */
 .agenda-dark { background: #0D1B2A; padding: 18px 20px; margin-top: 4px; }
@@ -447,8 +452,12 @@ h3 { font-family: 'Inter Tight', sans-serif; font-weight: 700;
   <table class="steps"><tr>
     <td class="step"><div class="step-no">Primair thema</div><div class="step-body">Bespreek eerst ‘De hoeveelheid informatie en werk in mijn eerste periode is haalbaar.’ binnen informatiedichtheid en werktempo (4.6/10). Op deze stelling scoort de groep het laagst van het hele beeld.</div><span class="agenda-why">Laagst scorende stelling in het cijferbeeld (4.6/10).</span></td>
     <td class="step"><div class="step-no">Tweede aandachtspunt</div><div class="step-body">Rolhelderheid en verwachtingen eerste 90 dagen (5.5/10)</div><span class="agenda-why">Tweede laagste factorscore in het overzichtsprofiel.</span></td>
-    <td class="step"><div class="step-no">Eigenaarschap</div><div class="step-fill"></div><div class="step-fill-hint">In te vullen tijdens de bespreking</div></td>
-    <td class="step"><div class="step-no">Opnieuw bespreken</div><div class="step-body">Plan een vervolgmoment rond het volgende checkpoint: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.</div></td>
+    <td class="step">
+      <div class="step-no">Uit de bespreking</div>
+      <div class="step-sublbl">Prioriteit</div><div class="step-fill"></div><div class="step-fill-hint">In te vullen tijdens de bespreking</div>
+      <div class="step-sublbl">Eigenaar</div><div class="step-fill"></div><div class="step-fill-hint">In te vullen tijdens de bespreking</div>
+      <div class="step-sublbl">Vervolgmoment</div><div class="step-fill"></div><div class="step-fill-hint">Plan een vervolgmoment rond het volgende checkpoint: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.</div>
+    </td>
   </tr></table>
   <div class="agenda-opener">
     <div style="font-family:'JetBrains Mono', monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#E8A020;margin-bottom:7px;">Gespreksopener</div>

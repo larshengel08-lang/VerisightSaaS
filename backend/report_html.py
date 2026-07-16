@@ -132,9 +132,15 @@ def _band(score: float | None, scan_type: str = "exit") -> tuple[str, str]:
 # ── Managementvragen per product ──────────────────────────────────────────────
 
 _MGMT_Q_EXIT: dict[str, str] = {
-    "leadership":   "Gaat het signaal vooral over feedback, ontwikkelgesprekken of vertrouwen?",
+    # leadership: "ontwikkelgesprekken" hoort bij groeiperspectief, niet bij
+    # aansturing -> vervangen door "zichtbare steun" (matcht ld_support/ld_availability).
+    "leadership":   "Gaat het signaal vooral over feedback, zichtbare steun of vertrouwen?",
     "culture":      "Is dit beeld over psychologische veiligheid, teamdynamiek of cultuurfit?",
-    "growth":       "Gaat het over concrete kansen, zichtbaar perspectief of gebrek aan erkenning?",
+    # growth: "erkenning" wordt niet gemeten (vandaar eerder al de factorlabel-
+    # hernoeming van "Groeiperspectief en erkenning" naar "Groeiperspectief") ->
+    # vervangen door thema's die wel in de verdiepingsset zitten (zichtbaarheid,
+    # concrete ontwikkelgesprekken, plafond/stagnatie).
+    "growth":       "Gaat het over zichtbaar perspectief, concrete ontwikkelgesprekken of stagnatie in doorgroei?",
     "compensation": "Is de kern hier salaris, ervaren fairness of uitlegbaarheid van voorwaarden?",
     "workload":     "Speelt de werkdruk in bepaalde teams, functies of als structureel patroon?",
     "role_clarity": "Gaat de onduidelijkheid over prioriteiten, eigenaarschap of beslisruimte?",
@@ -142,7 +148,7 @@ _MGMT_Q_EXIT: dict[str, str] = {
 _MGMT_Q_RETENTION: dict[str, str] = {
     "leadership":   "Gaat het behoudssignaal over vertrouwen in leiding, feedback of zichtbare steun?",
     "culture":      "Is dit beeld over psychologische veiligheid, teambinding of cultuurmatch?",
-    "growth":       "Speelt ontbrekend perspectief, gebrek aan erkenning of stagnatie een rol?",
+    "growth":       "Speelt ontbrekend perspectief, te weinig concrete ontwikkelgesprekken of stagnatie een rol?",
     "compensation": "Is de kern hier ervaren fairness, uitlegbaarheid of beloningshoogte?",
     "workload":     "Speelt structurele werkdruk, gebrek aan herstelruimte of onbalans mee?",
     "role_clarity": "Is onduidelijkheid over eigenaarschap, prioriteiten of beslisruimte een thema?",
@@ -678,10 +684,20 @@ def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: st
     Navy anker (designsprong §2a): kaarten + gespreksopener vormen één donker
     vlak. primary_why/second_why (designsprong §3) zijn feitelijke
     onderbouwingsregels uit bestaande berekeningen — geen nieuwe duiding.
-    Eigenaarschap blijft bewust een invulbare lege regel.
+    "Uit de bespreking" (feedback 2026-07-16): de losse Eigenaarschap-kaart is
+    vervangen door één blok met drie invulregels (Prioriteit/Eigenaar/
+    Vervolgmoment) — spiegelt de doelzin op de openingspagina ("één
+    prioriteit, één eigenaar en een vervolgmoment"). De aparte
+    Opnieuw-bespreken-kaart is hierin opgegaan: review_when wordt de hint
+    onder Vervolgmoment i.p.v. een vierde, altijd-ingevulde kolom.
     """
     def _why(txt: str | None) -> str:
         return f'<span class="agenda-why">{_h(txt)}</span>' if txt else ""
+
+    def _fill_row(label: str, hint: str) -> str:
+        return (f'<div class="step-sublbl">{_h(label)}</div>'
+                f'<div class="step-fill"></div>'
+                f'<div class="step-fill-hint">{_h(hint)}</div>')
 
     return f"""<div class="pb sec">
   {opener_html or '<span class="slabel">Eerste managementspoor</span>'}
@@ -690,8 +706,12 @@ def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: st
   <table class="steps"><tr>
     <td class="step"><div class="step-no">Primair thema</div><div class="step-body">{_h(primary_theme)}</div>{_why(primary_why)}</td>
     <td class="step"><div class="step-no">Tweede aandachtspunt</div><div class="step-body">{_h(second_point)}</div>{_why(second_why)}</td>
-    <td class="step"><div class="step-no">Eigenaarschap</div><div class="step-fill"></div><div class="step-fill-hint">In te vullen tijdens de bespreking</div></td>
-    <td class="step"><div class="step-no">Opnieuw bespreken</div><div class="step-body">{_h(review_when)}</div></td>
+    <td class="step">
+      <div class="step-no">Uit de bespreking</div>
+      {_fill_row("Prioriteit", "In te vullen tijdens de bespreking")}
+      {_fill_row("Eigenaar", "In te vullen tijdens de bespreking")}
+      {_fill_row("Vervolgmoment", review_when)}
+    </td>
   </tr></table>
   <div class="agenda-opener">
     <div style="font-family:'JetBrains Mono', monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#E8A020;margin-bottom:7px;">Gespreksopener</div>
@@ -714,6 +734,19 @@ def _deepening_campaign_active(deepening_agg: dict) -> bool:
 def _deepening_option_texts(scan_type: str, factor_key: str) -> dict[str, str]:
     return {o["key"]: o["text"]
             for o in get_deepening_sets(scan_type)[factor_key]["options"]}
+
+
+def _primary_why_text(low_item_score: float, agg: dict, scan_type: str, factor_key: str) -> str:
+    """'Waarom eerst'-onderbouwing bij de Primair-thema-kaart (feedback 2026-07-16
+    pt. 1): boven de staffel (answered>=5) wordt de daadwerkelijk meest gekozen
+    toelichting genoemd i.p.v. de circulaire "kozen de meest gekozen toelichting"."""
+    answered = agg.get("answered", 0)
+    top = max((agg.get("primary_counts") or {}).items(), key=lambda kv: (kv[1], kv[0]), default=None)
+    if top and answered >= 5:
+        opt_text = _deepening_option_texts(scan_type, factor_key).get(top[0], top[0])
+        return (f"Laagst scorende stelling in het cijferbeeld ({low_item_score:.1f}/10); "
+                f"{top[1]} van de {answered} respondenten met verdieping kozen: '{opt_text}'.")
+    return f"Laagst scorende stelling in het cijferbeeld ({low_item_score:.1f}/10)."
 
 
 def _lc(label: str) -> str:
@@ -849,7 +882,10 @@ def _short_mgmt_q(deep_agg: dict, scan_type: str, factor_key: str) -> str | None
 
 
 def _deepening_mgmt_q(deep_agg: dict, scan_type: str, factor_key: str) -> str | None:
-    """Verrijkte gespreksagenda-regel (spec 6.3); None -> generieke regel blijft staan."""
+    """Datagedreven gespreksopener (feedback 2026-07-16 pt. 3): noemt de
+    daadwerkelijk meest gekozen toelichting i.p.v. de vaste per-factor
+    menuvraag (_mgmt_q). None -> de vaste menuvraag blijft de fallback voor
+    de Gespreksopener op de gespreksagenda-pagina."""
     agg = deep_agg.get(factor_key)
     if not agg:
         return None
@@ -863,12 +899,8 @@ def _deepening_mgmt_q(deep_agg: dict, scan_type: str, factor_key: str) -> str | 
                     "deepening: *_other is topoptie voor %s - optieset review nodig",
                     factor_key)
         return None
-    opt_text = _deepening_option_texts(scan_type, factor_key)
-    return (f"Van de {agg['triggered']} respondenten met een verdieptrigger op "
-            f"{_lc(_fl(factor_key, scan_type))} beantwoordden {enr['answered']} de "
-            f"verdieping; {enr['count']} kozen "
-            f"'{opt_text.get(enr['option_key'], enr['option_key'])}' als belangrijkste "
-            f"toelichting. Gespreksvraag: {enr['agenda_question']}")
+    opt_text = _deepening_option_texts(scan_type, factor_key).get(enr["option_key"], enr["option_key"])
+    return f"De meest gekozen toelichting was '{opt_text}'. Herkennen jullie dat beeld, en wat zit erachter?"
 
 
 def _trust_page(scan_type: str = "exit", opener_html: str = "") -> str:
@@ -2087,17 +2119,8 @@ def render_exit_report_html(data: dict) -> str:
         f"({_ex_primary_low[2]:.1f}/10). Op deze stelling scoort de groep het laagst van het hele beeld."
     ) if _ex_primary_low else (top_flabels[0] if top_flabels else "het leidende thema")
 
-    _agg_p = deep_agg.get(_ex_primary_fk) or {}
-    _answered_p = _agg_p.get("answered", 0)
-    _top_p = max((_agg_p.get("primary_counts") or {}).items(),
-                 key=lambda kv: (kv[1], kv[0]), default=None)
-    _primary_why = None
-    if _ex_primary_low:
-        _primary_why = f"Laagst scorende stelling in het cijferbeeld ({_ex_primary_low[2]:.1f}/10)."
-        if _top_p and _answered_p >= 5:
-            _primary_why = (f"Laagst scorende stelling in het cijferbeeld ({_ex_primary_low[2]:.1f}/10); "
-                            f"{_top_p[1]} van de {_answered_p} respondenten met verdieping "
-                            f"kozen de meest gekozen toelichting.")
+    _primary_why = (_primary_why_text(_ex_primary_low[2], deep_agg.get(_ex_primary_fk) or {}, "exit", _ex_primary_fk)
+                    if _ex_primary_low else None)
     _second_why = ("Tweede laagste factorscore in het overzichtsprofiel."
                    if len(sorted_f) > 1 else None)
 
@@ -2467,17 +2490,8 @@ def render_retention_report_html(data: dict) -> str:
         f"({_primary_low_item[2]:.1f}/10). Op deze stelling scoort de groep het laagst van het hele beeld."
     ) if _primary_low_item else (low_lbl or "het leidende behoudsthema")
 
-    _agg_p = deep_agg.get(_primary_fk) or {}
-    _answered_p = _agg_p.get("answered", 0)
-    _top_p = max((_agg_p.get("primary_counts") or {}).items(),
-                 key=lambda kv: (kv[1], kv[0]), default=None)
-    _primary_why = None
-    if _primary_low_item:
-        _primary_why = f"Laagst scorende stelling in het cijferbeeld ({_primary_low_item[2]:.1f}/10)."
-        if _top_p and _answered_p >= 5:
-            _primary_why = (f"Laagst scorende stelling in het cijferbeeld ({_primary_low_item[2]:.1f}/10); "
-                            f"{_top_p[1]} van de {_answered_p} respondenten met verdieping "
-                            f"kozen de meest gekozen toelichting.")
+    _primary_why = (_primary_why_text(_primary_low_item[2], deep_agg.get(_primary_fk) or {}, ST, _primary_fk)
+                    if _primary_low_item else None)
     _second_why = ("Tweede laagste factorscore in het overzichtsprofiel."
                    if len(sorted_f) > 1 else None)
 
@@ -2875,17 +2889,8 @@ def render_onboarding_report_html(data: dict) -> str:
         f"({_ob_primary_low[2]:.1f}/10). Op deze stelling scoort de groep het laagst van het hele beeld."
     ) if _ob_primary_low else (low_lbl if low_lbl else "het leidende onboardingthema")
 
-    _agg_p = (data.get("deepening_agg") or {}).get(_ob_primary_fk) or {}
-    _answered_p = _agg_p.get("answered", 0)
-    _top_p = max((_agg_p.get("primary_counts") or {}).items(),
-                 key=lambda kv: (kv[1], kv[0]), default=None)
-    _primary_why = None
-    if _ob_primary_low:
-        _primary_why = f"Laagst scorende stelling in het cijferbeeld ({_ob_primary_low[2]:.1f}/10)."
-        if _top_p and _answered_p >= 5:
-            _primary_why = (f"Laagst scorende stelling in het cijferbeeld ({_ob_primary_low[2]:.1f}/10); "
-                            f"{_top_p[1]} van de {_answered_p} respondenten met verdieping "
-                            f"kozen de meest gekozen toelichting.")
+    _primary_why = (_primary_why_text(_ob_primary_low[2], (data.get("deepening_agg") or {}).get(_ob_primary_fk) or {}, ST, _ob_primary_fk)
+                    if _ob_primary_low else None)
     _second_why = ("Tweede laagste factorscore in het overzichtsprofiel."
                    if len(sorted_f) > 1 else None)
 

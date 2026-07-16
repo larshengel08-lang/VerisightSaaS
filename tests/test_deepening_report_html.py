@@ -66,11 +66,13 @@ def test_unknown_option_key_rendered_raw_not_crash():
 # ── agenda-verrijking (spec 6.3) ─────────────────────────────────────────────
 
 def test_mgmt_q_enriched_when_gates_pass():
+    # Feedback 2026-07-16: de opener noemt de daadwerkelijk meest gekozen
+    # toelichting i.p.v. de vaste per-factor menuvraag.
     agg = _agg(18, 15, 12, 3, {"wl_recovery": 8, "wl_volume": 2})
     q = _deepening_mgmt_q({"workload": agg}, "retention", "workload")
     assert q is not None
-    assert "Van de 18 respondenten" in q and "beantwoordden 12" in q and "8 kozen" in q
-    assert "Gespreksvraag:" in q
+    assert "De meest gekozen toelichting was" in q
+    assert "Herkennen jullie dat beeld" in q
     assert "herstel" in q.lower()
 
 

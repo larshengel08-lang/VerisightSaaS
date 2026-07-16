@@ -188,7 +188,12 @@ p  { margin-bottom: 6px; font-size: 11px; }
 
 /* ── Invulbaar veld (eigenaarschap wordt in de bespreking bepaald, niet door Loep) ── */
 .step-fill { border-bottom: 1px dashed #94A3B8; height: 15px; margin-bottom: 4px; }
-.step-fill-hint { font-size: 7.5px; font-style: italic; color: #94A3B8; line-height: 1.4; }
+.step-fill-hint { font-size: 7.5px; font-style: italic; color: #94A3B8; line-height: 1.4; margin-bottom: 6px; }
+/* ── Sub-label boven een invulregel binnen één kaart (bijv. "Uit de bespreking":
+   Prioriteit/Eigenaar/Vervolgmoment onder elkaar) ── */
+.step-sublbl { font-family: 'JetBrains Mono', monospace; font-size: 7.5px; letter-spacing: 0.06em;
+  text-transform: uppercase; color: #64748B; margin: 7px 0 3px; }
+.agenda-dark .step-sublbl { color: #9FB0C0; }
 
 /* ── Navy agenda-anker (designsprong §2a): het hele agendablok als donker vlak ── */
 .agenda-dark { background: #0D1B2A; padding: 18px 20px; margin-top: 4px; }
