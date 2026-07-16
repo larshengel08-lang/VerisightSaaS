@@ -448,7 +448,11 @@ SECTION_INTROS: dict[str, str] = {
         "responses, de spreiding. Afdelingen met minder dan vijf responses worden "
         "gebundeld onder &ldquo;Overige afdelingen&rdquo;, zodat antwoorden nooit herleidbaar "
         "zijn tot personen. Verschillen tussen afdelingen zijn gesprekstof: ze vertellen waar "
-        "je als eerste gaat kijken, niet welke afdeling het &ldquo;slecht doet&rdquo;."
+        "je als eerste gaat kijken, niet welke afdeling het &ldquo;slecht doet&rdquo;. "
+        "De kolom met het laagste thema toont per afdeling de werkfactor die daar het laagst "
+        "scoort. Bij kleine afdelingen (5 tot 9 responses) tonen we bewust alleen een "
+        "duidingslabel, geen cijfer achter de komma; het volledige factorbeeld per afdeling "
+        "opent vanaf 10 responses."
     ),
     "open_toelichtingen": (
         "Dit zijn de open antwoorden zoals respondenten ze zelf schreven, alleen ontdaan van "
@@ -982,15 +986,95 @@ def _segment_status_block(n: int, has_segment_data: bool = False,
 </div>"""
 
 
-def _segment_block(segment_rows: list[dict], opener_html: str = "") -> str:
-    """Segmentanalyse per afdeling: tabel + spreidingsstrip (spec 2026-07-11).
+# Mono-labelstijl voor degraded/duiding-regels in de segmenttabel (identiek
+# aan de bestaande striplabels).
+_SEG_MONO = ("font-family:'JetBrains Mono', monospace;font-size:8px;"
+             "letter-spacing:0.08em;text-transform:uppercase;color:#94A3B8;")
+
+
+def _segment_theme_cell(row: dict, factor_rows: dict[str, dict] | None,
+                        scan_type: str) -> str:
+    """Inhoud van de kolom "Laagste thema" (spec 2026-07-16 §3.2).
+
+    Staffel (amendement 1): bij n=5-9 alleen factorlabel + duidingslabel,
+    bewust geen decimale score (schijnprecisie + herleidbaarheid in kleine
+    teams); vanaf n=10 wel de score. Amendement 2: omitted > 0 wordt altijd
+    gemeld, ook bij n >= 10 (het getoonde thema is dan "onder voorbehoud").
+    """
+    if row.get("is_pooled", False):
+        return f'<span style="{_SEG_MONO}">niet getoond: samengestelde restgroep</span>'
+    info = (factor_rows or {}).get(row["department"])
+    if not info or not info.get("factors"):
+        return f'<span style="{_SEG_MONO}">n.b.</span>'
+    fk, avg, _nf = info["factors"][0]
+    col = _factor_color(avg)
+    if row["n"] >= 10:
+        second = (f'<span style="font-family:\'JetBrains Mono\', monospace;'
+                  f'font-size:8px;color:{col};">{avg:.1f}/10</span>')
+    else:
+        second = (f'<span style="font-family:\'JetBrains Mono\', monospace;'
+                  f'font-size:8px;color:#4A6070;">{_h(_factor_label(avg))}</span>')
+    cell = (f'<span style="font-size:9.5px;color:{col};">'
+            f'{_h(_fl(fk, scan_type))}</span><br>{second}')
+    omitted = info.get("omitted", 0)
+    if omitted > 0:
+        cell += (f'<br><span style="{_SEG_MONO}">{omitted} thema(&#39;s) '
+                 f'niet beoordeelbaar: te weinig antwoorden</span>')
+    return cell
+
+
+def _segment_factor_subblocks(segment_rows: list[dict],
+                              factor_rows: dict[str, dict] | None,
+                              scan_type: str) -> str:
+    """Factorbeeld per afdeling (spec 2026-07-16 §3.2 punt 2): volledige
+    uitsplitsing alleen voor niet-gepoolde afdelingen met n >= 10 én
+    factordata; laagste eerst (volgorde komt uit _department_factor_rows)."""
+    if not factor_rows:
+        return ""
+    subs = ""
+    for row in segment_rows:
+        if row.get("is_pooled", False) or row["n"] < 10:
+            continue
+        info = factor_rows.get(row["department"])
+        if not info or not info.get("factors"):
+            continue
+        frows = "".join(
+            f'<tr><td class="iq">{_h(_fl(fk, scan_type))}</td>'
+            f'<td class="is" style="width:14%;text-align:left;color:{_factor_color(avg)};">{avg:.1f}</td>'
+            f'<td style="width:24%;color:{_factor_color(avg)};font-size:9.5px;">{_h(_factor_label(avg))}</td></tr>'
+            for fk, avg, _nf in info["factors"])
+        omline = ""
+        if info.get("omitted", 0) > 0:
+            omline = (f'<div style="{_SEG_MONO}margin-top:4px;">'
+                      f'{info["omitted"]} thema(&#39;s) niet beoordeelbaar: '
+                      f'te weinig antwoorden</div>')
+        subs += (f'<div class="no-break" style="margin-top:14px;">'
+                 f'<div style="font-family:\'Inter Tight\', sans-serif;font-weight:700;'
+                 f'font-size:11px;margin-bottom:4px;">{_h(row["department"])} (n={row["n"]})</div>'
+                 f'<table class="item-tbl">{frows}</table>{omline}</div>')
+    if not subs:
+        return ""
+    intro = ('<p style="font-size:10px;color:#64748B;margin:16px 0 0;">'
+             'Factorbeeld per afdeling: dezelfde vaste drempels als in het '
+             'overzichtsprofiel (kwetsbaar onder 5,0, aandachtspunt 5,0 tot 6,5, '
+             'relatief sterk vanaf 6,5).</p>')
+    return intro + subs
+
+
+def _segment_block(segment_rows: list[dict], factor_rows: dict[str, dict] | None = None,
+                   scan_type: str = "exit", opener_html: str = "") -> str:
+    """Segmentanalyse per afdeling: tabel + spreidingsstrip (spec 2026-07-11)
+    + factorlaag met laagste thema en uitsplitsing (spec 2026-07-16).
 
     Strip-gate n>=10 (MIN_DISTRIBUTION_N): rapportbreed EEN regel — bij 5-9
     responses wel de rij (score/band), geen stippen. "Overige afdelingen"
     krijgt nooit een strip (samengestelde restgroep).
 
-    Geen scan_type-parameter: de tabel is scanbreed identiek, geen
-    product-specifieke koppen/labels nodig in v1.
+    scan_type is geïntroduceerd voor de product-specifieke factorlabels van
+    de themalaag (_fl; spec 2026-07-16) — de rest van de tabel blijft
+    scanbreed identiek. Zonder factor_rows (oude aanroepen) toont de
+    themakolom "n.b." en verschijnen er geen subblokken: geen crash,
+    geen fake data.
     """
     from backend.report_distribution import MIN_DISTRIBUTION_N, distribution_svg
 
@@ -1003,11 +1087,11 @@ def _segment_block(segment_rows: list[dict], opener_html: str = "") -> str:
         col = _factor_color(avg)
         is_rest = row.get("is_pooled", False)
         if is_rest:
-            strip = '<span style="font-family:\'JetBrains Mono\', monospace;font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:#94A3B8;">spreiding niet getoond: samengestelde restgroep</span>'
+            strip = f'<span style="{_SEG_MONO}">spreiding niet getoond: samengestelde restgroep</span>'
         elif len(scores) >= MIN_DISTRIBUTION_N:
-            strip = distribution_svg(scores, width=240, height=22)
+            strip = distribution_svg(scores, width=200, height=22)
         else:
-            strip = '<span style="font-family:\'JetBrains Mono\', monospace;font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:#94A3B8;">spreiding vanaf 10 responses</span>'
+            strip = f'<span style="{_SEG_MONO}">spreiding vanaf 10 responses</span>'
         name_html = _h(dept) if is_rest else f"<strong>{_h(dept)}</strong>"
         invited = row.get("invited")
         if invited:  # 0 behandeld als "geen noemer" -- voorkomt 0/0, valt terug op alleen n
@@ -1017,13 +1101,17 @@ def _segment_block(segment_rows: list[dict], opener_html: str = "") -> str:
                       f'color:#4A6070;">{pct}%</span>')
         else:
             n_cell = str(n_)
+        theme_cell = _segment_theme_cell(row, factor_rows, scan_type)
         rows_html += (
-            f'<tr><td class="iq" style="width:21%;">{name_html}</td>'
+            f'<tr><td class="iq" style="width:19%;">{name_html}</td>'
             f'<td style="width:9%;">{n_cell}</td>'
-            f'<td class="is" style="width:12%;text-align:left;color:{col};">{avg:.1f}</td>'
-            f'<td style="width:16%;color:{col};font-size:9.5px;">{_h(_factor_label(avg))}</td>'
-            f'<td>{strip}</td></tr>'
+            f'<td class="is" style="width:11%;text-align:left;color:{col};">{avg:.1f}</td>'
+            f'<td style="width:14%;color:{col};font-size:9.5px;">{_h(_factor_label(avg))}</td>'
+            f'<td class="lt" style="width:20%;">{theme_cell}</td>'
+            f'<td style="width:27%;">{strip}</td></tr>'
         )
+
+    subblocks = _segment_factor_subblocks(segment_rows, factor_rows, scan_type)
 
     lowest = segment_rows[0]
     low_note = ""
@@ -1034,18 +1122,31 @@ def _segment_block(segment_rows: list[dict], opener_html: str = "") -> str:
         _low_inv = lowest.get("invited")
         _low_basis = (f'{lowest["n"]} van de {_low_inv} uitgenodigden vulden in'
                       if _low_inv else f'{lowest["n"]} responses')
+        # Themazin (spec 2026-07-16 §3.2 punt 3): zelfde staffel als de kolom;
+        # geen factordata = geen zin (geen fake).
+        theme_sentence = ""
+        low_info = (factor_rows or {}).get(lowest["department"])
+        if low_info and low_info.get("factors"):
+            _lfk, _lavg, _lnf = low_info["factors"][0]
+            _llbl = _h(_lc(_fl(_lfk, scan_type)))
+            if lowest["n"] >= 10:
+                theme_sentence = f' De druk zit daar vooral op {_llbl} ({_lavg:.1f}/10).'
+            else:
+                theme_sentence = (f' De druk zit daar vooral op {_llbl} '
+                                  f'({_h(_factor_label(_lavg).lower())}).')
         low_note = (
             f'<div class="navy-anchor">'
             f'<div class="navy-anchor-eyebrow">Startpunt voor de bespreking</div>'
             f'<p><strong>{_h(lowest["department"])}</strong> heeft de laagste score '
             f'({lowest["avg"]:.1f}/10; {_low_basis}). Gebruik dit om te toetsen wat hier '
-            f'speelt, geen ranking of oordeel.</p></div>')
+            f'speelt, geen ranking of oordeel.{theme_sentence}</p></div>')
 
     return f"""<div class="pb sec">
   {opener_html or '<span class="slabel">Segmentanalyse per afdeling</span>'}
   {_intro("segmentanalyse")}
   <div class="card">
     <table class="item-tbl">{rows_html}</table>
+    {subblocks}
     {low_note}
   </div>
 </div>"""
@@ -1157,6 +1258,54 @@ def _department_segment_rows(respondents: list[dict]) -> list[dict]:
                         "avg": round(sum(rest) / len(rest), 2), "scores": sorted(rest),
                         "is_pooled": True})
     return visible
+
+
+def _department_factor_rows(respondents: list[dict],
+                            factor_items_map: dict[str, list]) -> dict[str, dict]:
+    """Per afdeling: factorscores voor de segment-factorlaag (spec 2026-07-16 §3).
+
+    Input per afgeronde respondent: {"department": str|None, "org_raw": dict}.
+    Output per afdeling met >= MIN_SEGMENT_N respondenten:
+      {dept: {"factors": [(fk, avg, n_factor)], "omitted": int}}
+
+    Regels:
+    - Alleen factoren in ORG_FACTOR_KEYS én factor_items_map doen mee
+      (SDT-dimensies nooit; zelfde filter als _select_priority_factors).
+    - Individuele factorscore = gemiddelde van de beantwoorde items van die
+      respondent, geschaald via _scale_to_10. Geen beantwoorde items =
+      respondent telt niet mee voor de n van die factor.
+    - Per-factor-gate: factor alleen in "factors" bij n_factor >= MIN_SEGMENT_N;
+      wat de gate niet haalt telt als "omitted" (eerlijke meldregel, geen stil gat).
+    - "factors" gesorteerd laagste avg eerst; gelijkspel alfabetisch op key.
+    """
+    participating = [fk for fk in factor_items_map if fk in ORG_FACTOR_KEYS]
+    grouped: dict[str, list[dict]] = {}
+    for r in respondents:
+        dept = r.get("department")
+        if not dept:
+            continue
+        grouped.setdefault(str(dept), []).append(r.get("org_raw") or {})
+
+    out: dict[str, dict] = {}
+    for dept, raws in grouped.items():
+        if len(raws) < MIN_SEGMENT_N:
+            continue
+        factors: list[tuple[str, float, int]] = []
+        omitted = 0
+        for fk in participating:
+            keys = [ik for ik, _q in factor_items_map[fk]]
+            scores: list[float] = []
+            for raw in raws:
+                vals = [float(raw[k]) for k in keys if raw.get(k) is not None]
+                if vals:
+                    scores.append(_scale_to_10(sum(vals) / len(vals)))
+            if len(scores) >= MIN_SEGMENT_N:
+                factors.append((fk, round(sum(scores) / len(scores), 2), len(scores)))
+            else:
+                omitted += 1
+        factors.sort(key=lambda t: (t[1], t[0]))
+        out[dept] = {"factors": factors, "omitted": omitted}
+    return out
 
 
 def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
@@ -1326,6 +1475,11 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
     ])
     segment_rows = _enrich_segment_rows_with_invited(segment_rows, camp.segment_departments)
 
+    # Factorlaag per afdeling (spec 2026-07-16): laagste thema + uitsplitsing.
+    segment_factor_rows = _department_factor_rows(
+        [{"department": r.department, "org_raw": r.response.org_raw or {}} for r in completed],
+        factor_items_map)
+
     # eNPS staat canoniek in full_result["enps"]["raw_score"] (zoals de submit-flow
     # het wegschrijft, backend/products/*/scoring.py). Voorheen werd hier het
     # topniveau "enps_score" gelezen — een sleutel die de echte flow nooit schrijft,
@@ -1363,6 +1517,7 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
         factor_resp_scores=factor_resp_scores,
         intent_resp={"stay": si_sc, "turnover": to_sc, "engagement": eng_sc},
         segment_rows=segment_rows,
+        segment_factor_rows=segment_factor_rows,
     )
 
 
@@ -1891,7 +2046,8 @@ def render_exit_report_html(data: dict) -> str:
     # ── Segmentstatus ─────────────────────────────────────────────────────────
     _seg_rows = data.get("segment_rows") or []
     _seg_opener = ch.opener("Segmentanalyse per afdeling") if _seg_rows else ch.opener("Segmentanalyse")
-    s += _segment_block(_seg_rows, opener_html=_seg_opener)
+    s += _segment_block(_seg_rows, factor_rows=data.get("segment_factor_rows"),
+                        scan_type="exit", opener_html=_seg_opener)
 
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]
@@ -2266,7 +2422,8 @@ def render_retention_report_html(data: dict) -> str:
     # ── Segmentstatus ─────────────────────────────────────────────────────────
     _seg_rows = data.get("segment_rows") or []
     _seg_opener = ch.opener("Segmentanalyse per afdeling") if _seg_rows else ch.opener("Segmentanalyse")
-    s += _segment_block(_seg_rows, opener_html=_seg_opener)
+    s += _segment_block(_seg_rows, factor_rows=data.get("segment_factor_rows"),
+                        scan_type=ST, opener_html=_seg_opener)
 
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]
@@ -2680,7 +2837,8 @@ def render_onboarding_report_html(data: dict) -> str:
     # ── Segmentstatus ─────────────────────────────────────────────────────────
     _seg_rows = data.get("segment_rows") or []
     _seg_opener = ch.opener("Segmentanalyse per afdeling") if _seg_rows else ch.opener("Segmentanalyse")
-    s += _segment_block(_seg_rows, opener_html=_seg_opener)
+    s += _segment_block(_seg_rows, factor_rows=data.get("segment_factor_rows"),
+                        scan_type=ST, opener_html=_seg_opener)
 
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]
