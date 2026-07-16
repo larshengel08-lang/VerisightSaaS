@@ -392,10 +392,10 @@ SECTION_INTROS: dict[str, str] = {
         "overzichtsprofiel en de werkbeleving samen, teruggebracht tot &eacute;&eacute;n getal "
         "tussen 1 en 10. Onder de 5,0 noemen we een score kwetsbaar, tussen 5,0 en 6,5 een "
         "aandachtspunt, vanaf 6,5 relatief sterk. De drie signalen daaronder geven context: "
-        "blijfintentie en vertrekintentie zijn geen spiegelbeeld van elkaar &mdash; iemand kan "
-        "beide tegelijk voelen &mdash; en bevlogenheid staat daar los van: bevlogen medewerkers "
-        "vertrekken soms toch. Lees dit als startpunt voor het gesprek, niet als voorspelling "
-        "van wie vertrekt."
+        "blijfintentie en vertrekintentie zijn geen spiegelbeeld van elkaar (iemand kan "
+        "beide tegelijk voelen), en bevlogenheid staat daar los van: bevlogen medewerkers "
+        "vertrekken soms toch. Dit rapport wijst aan waar het gesprek moet beginnen. "
+        "Het doet bewust geen uitspraken over individuen."
     ),
     "vertrekcontext": (
         "Deze pagina zet de vertrekredenen op een rij zoals vertrokken medewerkers ze zelf "
@@ -408,14 +408,14 @@ SECTION_INTROS: dict[str, str] = {
         "De checkpointscore vat samen hoe nieuwe medewerkers hun eerste werkperiode ervaren: "
         "de landingsdomeinen uit dit rapport samengebracht tot &eacute;&eacute;n getal tussen "
         "1 en 10. Onder de 5,0 noemen we een score kwetsbaar, tussen 5,0 en 6,5 een "
-        "aandachtspunt, vanaf 6,5 relatief sterk. Dit is een momentopname van de landing &mdash; "
+        "aandachtspunt, vanaf 6,5 relatief sterk. Dit is een momentopname van de landing: "
         "een startpunt voor het gesprek over onboarding, geen beoordeling van individuele "
         "starters of hun begeleiders."
     ),
     "overzichtsprofiel": (
         "Elke factor hieronder is een thema, gemeten met drie stellingen over hetzelfde thema; "
-        "de score is het groepsgemiddelde daarvan. De kleuren volgen vaste drempels &mdash; "
-        "kwetsbaar (onder 5,0), aandachtspunt (5,0 tot 6,5), relatief sterk (vanaf 6,5) &mdash; "
+        "de score is het groepsgemiddelde daarvan. De kleuren volgen vaste drempels "
+        "(kwetsbaar onder 5,0, aandachtspunt 5,0 tot 6,5, relatief sterk vanaf 6,5) "
         "en zijn geen vergelijking met andere organisaties. Belangrijker dan de absolute kleur "
         "is de rangorde: de factor die binnen jullie eigen beeld het laagst scoort, is het "
         "logische begin van het gesprek."
@@ -424,14 +424,14 @@ SECTION_INTROS: dict[str, str] = {
         "Respondenten die laag scoorden op dit thema kregen automatisch een korte vervolgvraag: "
         "welke toelichting past het best bij hun ervaring, en welke richting zou het gesprek "
         "hierover het meest helpen? De aantallen hieronder zijn tellingen van wat respondenten "
-        "zelf kozen &mdash; geen interpretatie achteraf. Zo zie je niet alleen d&aacute;t een "
+        "zelf kozen, geen interpretatie achteraf. Zo zie je niet alleen d&aacute;t een "
         "thema laag scoort, maar ook wat de groep zelf als reden en als gespreksrichting aandraagt."
     ),
     "werkbeleving": (
         "Naast de werkfactoren meten we drie psychologische basisbehoeften: autonomie (regie "
         "over de eigen werkwijze), competentie (ervaren bekwaamheid) en verbondenheid (de band "
         "met collega's en organisatie). Onderzoek naar werkmotivatie laat consistent zien dat "
-        "deze drie bepalen hoe duurzaam iemand op zijn plek zit &mdash; werkfactoren alleen "
+        "deze drie bepalen hoe duurzaam iemand op zijn plek zit. Werkfactoren alleen "
         "vertellen niet het hele verhaal. Een lage werkfactor met een gezonde werkbeleving "
         "vraagt een ander gesprek dan wanneer beide onder druk staan."
     ),
@@ -444,20 +444,20 @@ SECTION_INTROS: dict[str, str] = {
     ),
     "segmentanalyse": (
         "Deze tabel splitst het beeld uit per afdeling: het aantal ingevulde vragenlijsten "
-        "tegenover het aantal uitgenodigden, de gemiddelde score en &mdash; bij voldoende "
-        "responses &mdash; de spreiding. Afdelingen met minder dan vijf responses worden "
+        "tegenover het aantal uitgenodigden, de gemiddelde score en, bij voldoende "
+        "responses, de spreiding. Afdelingen met minder dan vijf responses worden "
         "gebundeld onder &ldquo;Overige afdelingen&rdquo;, zodat antwoorden nooit herleidbaar "
         "zijn tot personen. Verschillen tussen afdelingen zijn gesprekstof: ze vertellen waar "
         "je als eerste gaat kijken, niet welke afdeling het &ldquo;slecht doet&rdquo;."
     ),
     "open_toelichtingen": (
         "Dit zijn de open antwoorden zoals respondenten ze zelf schreven, alleen ontdaan van "
-        "namen en contactgegevens. Ze staan in ontvangstvolgorde &mdash; er is niet geselecteerd "
+        "namen en contactgegevens. Ze staan in ontvangstvolgorde: er is niet geselecteerd "
         "op inhoud en er is geen automatische duiding op losgelaten. De stemmen hieronder geven "
         "kleur aan de cijfers; wat ze betekenen en hoe zwaar ze wegen, bepaal je in de bespreking."
     ),
     "appendix": (
-        "Hier staat elke stelling met haar groepsgemiddelde &mdash; de volledige onderbouwing "
+        "Hier staat elke stelling met haar groepsgemiddelde: de volledige onderbouwing "
         "van de factorscores eerder in dit rapport. Gebruik deze pagina's om te controleren "
         "waar een factorscore vandaan komt of om een specifieke stelling terug te vinden die "
         "in de bespreking ter sprake komt."
@@ -465,8 +465,8 @@ SECTION_INTROS: dict[str, str] = {
     "gespreksagenda": (
         "Alles wat je tot hier las is de onderbouwing; hier begint het gesprek. Deze agenda "
         "vat samen wat als eerste op tafel hoort, waarom juist dat, en wanneer je erop "
-        "terugkomt. Het is bewust geen kant-en-klaar actieplan: de keuzes &mdash; wat pakken "
-        "we op, wie is eigenaar &mdash; maak je in de begeleide managementbespreking, met dit "
+        "terugkomt. Het is bewust geen kant-en-klaar actieplan: de keuzes (wat pakken "
+        "we op, wie is eigenaar) maak je in de begeleide managementbespreking, met dit "
         "rapport als gedeelde basis."
     ),
 }
@@ -482,12 +482,12 @@ def _gebruiksblok(scan_lbl: str) -> str:
     return f"""<div style="margin-top:24px;">
   <span class="eyebrow">Zo gebruik je dit rapport</span>
   <p class="sec-intro" style="margin-top:6px;margin-bottom:0;">
-    Dit rapport is een groepsbeeld van de organisatie &mdash; geen beoordeling van personen
+    Dit rapport is een groepsbeeld van de organisatie, geen beoordeling van personen
     of afdelingen. Lees het van voor naar achter: eerst het beeld (context en
-    overzichtsprofiel), dan de verdieping per thema, en achteraan de gespreksagenda &mdash;
+    overzichtsprofiel), dan de verdieping per thema, en achteraan de gespreksagenda:
     d&aacute;&aacute;r begint het gesprek. De {scan_lbl}-uitkomsten worden besproken in een
     begeleide managementbespreking: het rapport levert de onderbouwing, de bespreking de
-    keuzes. Het doel aan het eind van die bespreking: &eacute;&eacute;n prioriteit,
+    keuzes. Het doel aan het eind van die bespreking is meestal simpel: &eacute;&eacute;n prioriteit,
     &eacute;&eacute;n eigenaar en een vervolgmoment.
   </p>
 </div>"""
@@ -503,14 +503,18 @@ class _ChapterCounter:
         self.n = 0
 
     def opener(self, title: str, *, kicker: str | None = None) -> str:
+        # Titel naast het hoofdstuknummer, beide in dezelfde amber (feedback
+        # 2026-07-16): de titel is het dominante element van de paginakop, de
+        # kicker eronder blijft klein en ondergeschikt.
         self.n += 1
         kicker_html = f'<span class="ch-kicker">{kicker}</span>' if kicker else ""
-        return (f'<div class="ch-idx">{self.n:02d}</div><hr class="ch-rule">'
-                f'{kicker_html}<h2 class="ch-title">{title}</h2>')
+        return (f'<div class="ch-head"><span class="ch-idx">{self.n:02d}</span>'
+                f'<h2 class="ch-title">{title}</h2></div><hr class="ch-rule">'
+                f'{kicker_html}')
 
     @staticmethod
     def vervolg(eyebrow: str) -> str:
-        return f'<span class="slabel">{eyebrow} &mdash; vervolg</span>'
+        return f'<span class="slabel">{eyebrow} (vervolg)</span>'
 
 
 def _bestuurlijke_read(*, kernzin: str, totaalbeeld: str,
@@ -527,7 +531,7 @@ def _bestuurlijke_read(*, kernzin: str, totaalbeeld: str,
     <div class="why-title">Waarom {_h(primary_label)} bovenaan staat</div>
     <table class="why-grid"><tr>{why_cells_html}</tr></table>
     {("<table class='sg'><tr>"
-      f"<td><div class='sc-l'>Relatief sterk</div><div class='sc-v'>{_score_str(strong_score)}</div><div class='sc-b'>{_h(strong_label)} — wat w&eacute;l werkt</div></td>"
+      f"<td><div class='sc-l'>Relatief sterk</div><div class='sc-v'>{_score_str(strong_score)}</div><div class='sc-b'>{_h(strong_label)}: wat w&eacute;l werkt</div></td>"
       "</tr></table>") if (strong_label and strong_score is not None and strong_score >= 6.5) else ""}
     <div class="mq-line"><span class="mq-label">Eerste managementvraag</span><p>{_h(mgmt_q)}</p>{f'<span class="mq-source">{_h(mgmt_q_source)}</span>' if mgmt_q_source else ''}</div>
   </div>
@@ -539,8 +543,8 @@ def _bestuurlijke_read(*, kernzin: str, totaalbeeld: str,
 def _responsbasis(*, invited: int, completed: int, pct: int, period: str,
                   population: str, segment_available: bool, segment_reason: str = "",
                   enps_available: bool = True, compact: bool = False) -> str:
-    seg = ("Beschikbaar — segmentbeeld verderop in dit rapport." if segment_available
-           else f"Niet beschikbaar — {_h(segment_reason)}.")
+    seg = ("Beschikbaar: segmentbeeld verderop in dit rapport." if segment_available
+           else f"Niet beschikbaar: {_h(segment_reason)}.")
 
     not_available: list[str] = []
     if not segment_available:
@@ -605,7 +609,7 @@ def _playbook_card(row: dict) -> str:
     return f"""<div class="play" style="border-left-color:{col};">
   <div class="play-hdr">
     <div class="play-bdg"><span style="background:{col};">{_h(bl)}</span></div>
-    <div class="play-ttl">{_h(lbl)} — {_h(row.get("title",""))}</div>
+    <div class="play-ttl">{_h(lbl)} &middot; {_h(row.get("title",""))}</div>
   </div>
   {"<div class='sub-l'>Eerste managementvraag</div><p style='font-size:10.5px;'>" + _h(decision) + "</p>" if decision else ""}
   {"<div class='sub-l'>Waar te beginnen</div><p style='font-size:10.5px;'>" + _h(validate) + "</p>" if validate else ""}
@@ -690,7 +694,7 @@ def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: st
     <p style="margin-bottom:0;font-size:12.5px;line-height:1.6;color:#F4F1EA;">{_h(mgmt_q)}</p>
   </div>
   </div>
-  <p class="trustline">Nog niet besluiten: of een verdieping of kortere vervolgmeting nodig is &mdash; dat volgt uit het gesprek.</p>
+  <p class="trustline">Nog niet besluiten of een verdieping of kortere vervolgmeting nodig is: dat volgt uit het gesprek.</p>
 </div>"""
 
 
@@ -744,21 +748,15 @@ def _deepening_block(agg: dict, scan_type: str, factor_key: str) -> str:
         body = f'<table class="item-tbl" style="margin-top:6px;">{rows}</table>'
         if answered <= 9:
             body += ('<p style="font-size:10px;color:#92400E;margin:4px 0 0;">'
-                     'Beperkte antwoordbasis &mdash; gebruik dit als gesprekshaakje, '
+                     'Beperkte antwoordbasis: gebruik dit als gesprekshaakje, '
                      'niet als conclusie.</p>')
 
-    sec = agg.get("secondary_counts") or {}
-    sec_line = ""
-    if sum(sec.values()) >= 5:
-        top2 = sorted(sec.items(), key=lambda kv: (-kv[1], kv[0]))[:2]
-        texts = [opt_text.get(k, k) for k, _ in top2]
-        joined = texts[0] if len(texts) == 1 else f"{texts[0]} en {texts[1]}"
-        sec_line = (f'<p style="font-size:9px;color:#64748B;margin:6px 0 0;">'
-                    f'Daarnaast werden vooral {_h(joined)} genoemd.</p>')
-
+    # De "Daarnaast werden vooral X en Y genoemd"-samenvatting is bewust weg
+    # (feedback 2026-07-16): de regel dupliceerde de tabel met aantallen die
+    # er direct boven staat. secondary_counts blijft in de aggregatie bestaan.
     return (f'<div class="card"><span class="eyebrow">Welke toelichting respondenten kozen</span>'
             f'<p style="font-size:10px;margin:4px 0 0;">{_h(chain)}</p>'
-            f'{body}{sec_line}</div>')
+            f'{body}</div>')
 
 
 def _direction_block(agg: dict, scan_type: str, factor_key: str) -> str:
@@ -787,7 +785,7 @@ def _direction_block(agg: dict, scan_type: str, factor_key: str) -> str:
         body = f'<table class="item-tbl" style="margin-top:6px;">{rows}</table>'
         if n <= 9:
             body += ('<p style="font-size:10px;color:#92400E;margin:4px 0 0;">'
-                     'Beperkte antwoordbasis &mdash; gebruik dit als gesprekshaakje, '
+                     'Beperkte antwoordbasis: gebruik dit als gesprekshaakje, '
                      'niet als conclusie.</p>')
         # Spec par. 7.2: veel respondenten buiten de vaste opties -> neutrale
         # regel + interne reviewvlag (spiegelt het trede-1-gedrag in _deepening_mgmt_q).
@@ -807,7 +805,7 @@ def _direction_block(agg: dict, scan_type: str, factor_key: str) -> str:
     # Eén zelfverzekerde zin i.p.v. drie disclaimers (feedbackronde 2026-07-13):
     # de claimgrens (input, geen uitvoeringsadvies) blijft, de verdedigende toon niet.
     footer = ('<p style="font-size:10px;color:#64748B;margin:8px 0 0;">'
-              'Dit is wat de groep aandraagt voor het gesprek &mdash; de weging '
+              'Dit is wat de groep aandraagt voor het gesprek. De weging '
               '(haalbaarheid, passendheid) gebeurt in de managementbespreking.</p>')
     return (f'<div class="card"><span class="eyebrow">Welke gespreksrichting respondenten kozen</span>'
             f'<p style="font-size:10px;margin:4px 0 0;">{_h(chain)}</p>{body}{footer}</div>')
@@ -966,7 +964,7 @@ def _segment_status_block(n: int, has_segment_data: bool = False,
           padding:3px 9px;border-radius:3px;letter-spacing:0.08em;text-transform:uppercase;">Beschikbaar</span>
       </div>
       <div style="display:table-cell;vertical-align:middle;font-size:10px;color:#374151;">
-        Segmentanalyse beschikbaar &mdash; zie uitgebreide versie.
+        Segmentanalyse beschikbaar: zie uitgebreide versie.
       </div>
     </div>
   </div>
@@ -1005,7 +1003,7 @@ def _segment_block(segment_rows: list[dict], opener_html: str = "") -> str:
         col = _factor_color(avg)
         is_rest = row.get("is_pooled", False)
         if is_rest:
-            strip = '<span style="font-family:\'JetBrains Mono\', monospace;font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:#94A3B8;">spreiding niet getoond &mdash; samengestelde restgroep</span>'
+            strip = '<span style="font-family:\'JetBrains Mono\', monospace;font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:#94A3B8;">spreiding niet getoond: samengestelde restgroep</span>'
         elif len(scores) >= MIN_DISTRIBUTION_N:
             strip = distribution_svg(scores, width=240, height=22)
         else:
@@ -1041,10 +1039,10 @@ def _segment_block(segment_rows: list[dict], opener_html: str = "") -> str:
             f'<div class="navy-anchor-eyebrow">Startpunt voor de bespreking</div>'
             f'<p><strong>{_h(lowest["department"])}</strong> heeft de laagste score '
             f'({lowest["avg"]:.1f}/10; {_low_basis}). Gebruik dit om te toetsen wat hier '
-            f'speelt &mdash; geen ranking of oordeel.</p></div>')
+            f'speelt, geen ranking of oordeel.</p></div>')
 
     return f"""<div class="pb sec">
-  {opener_html or '<span class="slabel">Segmentanalyse &mdash; per afdeling</span>'}
+  {opener_html or '<span class="slabel">Segmentanalyse per afdeling</span>'}
   {_intro("segmentanalyse")}
   <div class="card">
     <table class="item-tbl">{rows_html}</table>
@@ -1072,7 +1070,7 @@ def _themed_quotes(texts: list[str], scan_type: str = "exit",
     note = ""
     if len(texts) > MAX_QUOTES:
         note = (f'<div class="cbox" style="margin-bottom:12px;font-size:10px;color:#374151;">'
-                f'Getoond: de eerste {MAX_QUOTES} van {len(texts)} in ontvangstvolgorde &mdash; '
+                f'Getoond: de eerste {MAX_QUOTES} van {len(texts)} in ontvangstvolgorde, '
                 f'geen inhoudelijke selectie.</div>')
 
     seen: set[str] = set()
@@ -1084,7 +1082,7 @@ def _themed_quotes(texts: list[str], scan_type: str = "exit",
         cards += (
             f'<div class="theme-card">'
             f'<div class="quote-txt">{_h(t)}'
-            f'<div class="quote-anon">Automatisch geanonimiseerd &mdash; herkende namen en contactgegevens verwijderd</div>'
+            f'<div class="quote-anon">Automatisch geanonimiseerd: herkende namen en contactgegevens verwijderd</div>'
             f'</div></div>'
         )
     return f'{note}{cards}'
@@ -1435,11 +1433,12 @@ def _overzichtsprofiel(factors: list[tuple[str, float | None]],
         if summary else ""
     )
     # Uitsplitsing per band (dezelfde kwetsbaar/aandacht/sterk-indeling die de
-    # summary-zin al gebruikt) als leesbare tekst i.p.v. alleen balkjes — vult de
-    # pagina met echte, dataeigen duiding in plaats van decoratieve witruimte.
+    # summary-zin al gebruikt) als leesbare tekst i.p.v. alleen balkjes.
+    # Onder elkaar en groter i.p.v. drie smalle kolommen (feedback 2026-07-16):
+    # de pagina was half leeg en de kolommen lazen als voetnoot.
     breakdown_html = ""
     if bands:
-        cols = ""
+        blocks = ""
         band_meta = [
             ("kwetsbaar punt", bands.get("kwetsbaar") or [], RAG_HIGH),
             ("aandachtspunt", bands.get("aandacht") or [], RAG_MID),
@@ -1449,14 +1448,13 @@ def _overzichtsprofiel(factors: list[tuple[str, float | None]],
             if not labels:
                 continue
             items = "".join(f"<li>{_h(lbl)}</li>" for lbl in labels)
-            # padding-right i.p.v. flex-gap: WeasyPrint ondersteunt gap niet
-            cols += (f'<div style="flex:1;min-width:0;padding-right:24px;">'
-                     f'<div style="font-family:\'JetBrains Mono\', monospace;font-size:8px;letter-spacing:0.1em;'
-                     f'text-transform:uppercase;color:{color};margin-bottom:6px;">{_h(title)} ({len(labels)})</div>'
-                     f'<ul style="font-size:10px;color:#374151;line-height:1.7;margin:0;padding-left:14px;">{items}</ul>'
-                     f'</div>')
-        if cols:
-            breakdown_html = f'<div style="display:flex;margin-top:20px;">{cols}</div>'
+            blocks += (f'<div style="margin-bottom:18px;">'
+                       f'<div style="font-family:\'JetBrains Mono\', monospace;font-size:9.5px;letter-spacing:0.1em;'
+                       f'text-transform:uppercase;color:{color};margin-bottom:7px;">{_h(title)} ({len(labels)})</div>'
+                       f'<ul style="font-size:11.5px;color:#243247;line-height:1.9;margin:0;padding-left:16px;">{items}</ul>'
+                       f'</div>')
+        if blocks:
+            breakdown_html = f'<div style="margin-top:26px;">{blocks}</div>'
     return f"""<div class="pb sec">
   {opener_html or '<span class="slabel">Overzichtsprofiel</span>'}
   {_intro("overzichtsprofiel")}
@@ -1481,13 +1479,13 @@ def _vertrekcontext(*, exit_reasons: list[tuple[str, int]],
     if exit_reasons and primary_factor_label and \
        primary_factor_label.lower() in exit_reasons[0][0].lower():
         rel = (f"<p style='margin-bottom:0;'>{_h(primary_factor_label)} is zowel de meest "
-               f"genoemde vertrekreden als de laagste factor in het overzichtsprofiel — "
-               f"daarom staat het bovenaan.</p>")
+               f"genoemde vertrekreden als de laagste factor in het overzichtsprofiel. "
+               f"Daarom staat het bovenaan.</p>")
     else:
         # Geen substring-match tussen hoofdreden en laagste factor: benoem beide
         # feiten zonder een verbandclaim ("versterken elkaar") die de data niet draagt.
         rel = (f"<p style='margin-bottom:0;'>De meest genoemde reden en de laagst "
-               f"scorende factor belichten elk een eigen invalshoek &mdash; beide komen "
+               f"scorende factor belichten elk een eigen invalshoek. Beide komen "
                f"terug in de factordiepte hierna.</p>")
 
     return f"""<div class="pb sec">
@@ -1534,27 +1532,27 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
         scol = _rag_color(stay_intent)
         rows += (f'<div class="sigrow"><div class="sigrow-title">Blijfintentie</div>'
                   f'<div class="sigrow-body">&ldquo;Als het aan mij ligt, werk ik over 12 maanden nog steeds hier.&rdquo; '
-                  f'&mdash; enkelvoudige richtingsvraag, indicatief.</div>'
+                  f'Enkelvoudige richtingsvraag, indicatief.</div>'
                   f'<div><span class="sigrow-score" style="color:{scol};">{stay_intent:.1f}/10</span></div></div>')
     if turnover is not None:
         tcol = _rag_color(10 - turnover)
         note = ("laag" if turnover <= 3.0 else
                 "beperkt" if turnover <= 5.0 else
                 "zichtbaar" if turnover <= 6.5 else
-                "hoog &mdash; actief vertrekrisico")
+                "hoog: actief vertrekrisico")
         rows += (f'<div class="sigrow"><div class="sigrow-title">Vertrekintentie</div>'
                   f'<div class="sigrow-body">&ldquo;Ik denk er serieus over na te vertrekken&rdquo; + &ldquo;Ik zoek actief.&rdquo; '
-                  f'&mdash; gemiddelde van 2 stellingen.</div>'
+                  f'Gemiddelde van 2 stellingen.</div>'
                   f'<div><span class="sigrow-score" style="color:{tcol};">{turnover:.1f}/10</span>'
                   f'<span class="sigrow-note">{note}</span></div></div>')
     if engagement is not None:
         ecol = _factor_color(engagement)
         note = ("hoog" if engagement >= 7.5 else
                 "gemiddeld" if engagement >= 6.0 else
-                "laag &mdash; geen buffer" if engagement >= 4.5 else
+                "laag: geen buffer" if engagement >= 4.5 else
                 "zorgelijk laag")
         rows += (f'<div class="sigrow"><div class="sigrow-title">Bevlogenheid</div>'
-                  f'<div class="sigrow-body">Energie &middot; Inspiratie &middot; Zin om te gaan (UWES) &mdash; gemiddelde van 3 stellingen.</div>'
+                  f'<div class="sigrow-body">Energie &middot; Inspiratie &middot; Zin om te gaan (UWES). Gemiddelde van 3 stellingen.</div>'
                   f'<div><span class="sigrow-score" style="color:{ecol};">{engagement:.1f}/10</span>'
                   f'<span class="sigrow-note">{note}</span></div></div>')
 
@@ -1562,28 +1560,42 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
 
     strips = ""
     for key, label, invert in (
-        ("stay", "Blijfintentie &mdash; spreiding", False),
+        ("stay", "Blijfintentie", False),
         # Vertrekintentie is hoog=slecht; distribution_block is health-georiënteerd
         # (rechts/hoog = teal = sterk). Zonder inversie kleurden hoge
         # vertrekgedachten groen "Sterk". Inverteren (11 - v) zet ze links/rood,
         # consistent met de rest van de behoudscontext en de turnover-sigrow.
-        ("turnover", "Vertrekintentie &mdash; spreiding (links = meer vertrekgedachten)", True),
-        ("engagement", "Bevlogenheid &mdash; spreiding", False),
+        ("turnover", "Vertrekintentie (links = meer vertrekgedachten)", True),
+        ("engagement", "Bevlogenheid", False),
     ):
         vals = (intent_resp or {}).get(key, [])
         if invert:
             vals = [11.0 - v for v in vals if v is not None]
-        blk = distribution_block(vals)
+        blk = distribution_block(vals, width=660, height=52, dot_r=4.5, label_size=9)
         if blk:
-            strips += (f'<div style="margin-top:10px;"><div class="sc-l">'
+            strips += (f'<div style="margin-top:26px;"><div class="spread-title">'
                        f'{label}</div>{blk}</div>')
 
-    return f"""<div class="pb sec">
+    page = f"""<div class="pb sec">
   {opener_html or '<span class="slabel">Behoudscontext</span>'}
   {_intro("behoudscontext")}
   {stat_rows}
+</div>"""
+
+    # Spreidingsbalken samen op een eigen pagina (feedback 2026-07-16): onder
+    # de sigrows braken ze onvoorspelbaar over de paginagrens (derde balk
+    # verweesd op een eigen pagina) en waren ze klein. Nu: eigen pagina,
+    # groot formaat, met een korte leesuitleg.
+    if strips:
+        page += f"""<div class="pb sec">
+  {_ChapterCounter.vervolg("Behoudscontext")}
+  <h3>Spreiding per signaal</h3>
+  <p class="sec-intro" style="margin-top:2px;">Elke stip is &eacute;&eacute;n respondent; de donkere lijn markeert het
+    groepsgemiddelde. Zo zie je of een gemiddelde &eacute;&eacute;n gedeelde ervaring beschrijft
+    of juist twee uiteenlopende groepen.</p>
   {strips}
 </div>"""
+    return page
 
 
 # ─── ExitScan renderer ────────────────────────────────────────────────────────
@@ -1662,7 +1674,7 @@ def render_exit_report_html(data: dict) -> str:
         if er_n:
             why_cells += f'<td class="why-cell"><div class="why-l">Hoofdreden</div><div class="why-v" style="color:{tf_col};">{er_n}&times;</div><div class="why-b">van {n} vertrekkers de meest genoemde reden</div></td>'
         if tf_sc:
-            why_cells += f'<td class="why-cell"><div class="why-l">Gemiddelde score</div><div class="why-v" style="color:{tf_col};">{tf_sc:.1f}/10</div><div class="why-b">van de {len(i_scores)} stellingen over dit thema — {_h(tf_fl.lower())}</div></td>'
+            why_cells += f'<td class="why-cell"><div class="why-l">Gemiddelde score</div><div class="why-v" style="color:{tf_col};">{tf_sc:.1f}/10</div><div class="why-b">van de {len(i_scores)} stellingen over dit thema ({_h(tf_fl.lower())})</div></td>'
         if low_item:
             why_cells += (f'<td class="why-cell"><div class="why-l">Laagst scorende stelling</div>'
                           f'<div class="why-v" style="color:{_factor_color(low_item[2])};">{low_item[2]:.1f}/10</div>'
@@ -1765,7 +1777,8 @@ def render_exit_report_html(data: dict) -> str:
         # Item table rows; het laagste item wordt vet — dat vervangt de aparte
         # "Laagste item"-kaart die bij 3 items pure herhaling van deze tabel was.
         rows = "".join(
-            f'<tr><td class="iq"{" style=\"font-weight:700;\"" if low_i and ik == low_i[0] else ""}>{_h(q)}</td>'
+            f'<tr><td class="iq"{" style=\"font-weight:700;\"" if low_i and ik == low_i[0] else ""}>{_h(q)}'
+            f'{" <span class=\"low-tag\">laagste score</span>" if low_i and ik == low_i[0] else ""}</td>'
             f'<td class="is" style="color:{_factor_color(isc)};">{isc:.1f}</td></tr>'
             for ik, q, isc in i_sc
         ) or '<tr><td colspan="2" style="color:#94A3B8;font-style:italic;">Itemscores niet beschikbaar in deze wave.</td></tr>'
@@ -1776,7 +1789,7 @@ def render_exit_report_html(data: dict) -> str:
         # ── Exit reason context block ──
         er_count = exit_code_counts.get(fk, 0)
         if er_count > 0:
-            er_context = f'<div class="card accent">{er_count}&times; genoemd als vertrekreden &mdash; directe link met vertrekcontext.</div>'
+            er_context = f'<div class="card accent">{er_count}&times; genoemd als vertrekreden: directe link met vertrekcontext.</div>'
         else:
             er_context = ""
         # ── Lowest / highest item cards — alleen bij >3 items; bij 3 items zijn
@@ -1798,14 +1811,14 @@ def render_exit_report_html(data: dict) -> str:
                       if fk in deep_agg else "")
         spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []))
         return f"""<div class="pb sec">
-  {opener_html or f'<span class="slabel">Verdieping &mdash; {_h(lbl)}</span>'}
+  {opener_html or f'<span class="slabel">Verdieping: {_h(lbl)}</span>'}
   {intro_html}
-  <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&mdash; {_h(fl_)}</span></h2>
+  <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&middot; {_h(fl_)}</span></h2>
   {spread}
   {er_context}
   {low_card}
   {high_card}
-  <h3 style="margin-top:14px;">Alle stellingen in deze factor</h3>
+  <h3 style="margin-top:28px;">Alle stellingen in deze factor</h3>
   <table class="item-tbl">{rows}</table>
   {deep_block}
 </div>"""
@@ -1813,10 +1826,10 @@ def render_exit_report_html(data: dict) -> str:
     if priority_fkeys:
         for _i, _pfk in enumerate(priority_fkeys):
             _lbl = FACTOR_LABELS_NL.get(_pfk, _pfk)
-            _opener = ch.opener(f"Verdieping — {_lbl}") if _i == 0 else _ChapterCounter.vervolg(f"Verdieping — {_lbl}")
+            _opener = ch.opener(f"Verdieping: {_lbl}") if _i == 0 else _ChapterCounter.vervolg(f"Verdieping: {_lbl}")
             s += _factor_detail(_pfk, opener_html=_opener, intro_html=_intro("verdieping") if _i == 0 else "")
     else:
-        s += f'<div class="pb sec">{ch.opener("Verdieping — prioritaire factoren")}<div class="card">Factor detail beschikbaar na voldoende patroonduiding.</div></div>'
+        s += f'<div class="pb sec">{ch.opener("Verdieping: prioritaire factoren")}<div class="card">Factor detail beschikbaar na voldoende patroonduiding.</div></div>'
 
     # ── SDT basisbehoeften ────────────────────────────────────────────────────
     def _sdt_item_tbl(dim: str) -> str:
@@ -1854,7 +1867,7 @@ def render_exit_report_html(data: dict) -> str:
   <div style="margin-bottom:8px;">
     <span style="font-size:12px;font-weight:700;color:#243247;">{_h(SDT_LABELS.get(dim,""))}</span>
     <span style="font-size:11px;font-weight:700;color:{col};margin-left:10px;">{_score_str(sc)}</span>
-    <span style="font-size:10px;color:{col};margin-left:6px;">— {_h(fl_)}</span>
+    <span style="font-size:10px;color:{col};margin-left:6px;">&middot; {_h(fl_)}</span>
   </div>
   <div style="font-size:9.5px;color:#6B7280;margin-bottom:8px;">{_h(SDT_HELP.get(dim,""))}</div>
   {tbl}
@@ -1948,7 +1961,7 @@ def render_exit_report_html(data: dict) -> str:
             app_sections += (f'<div class="no-break" style="margin-bottom:14px;">'
                              f'<div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">'
                              f'{_h(lbl_f)}'
-                             f'{"&nbsp;&mdash;&nbsp;" + _score_str(fsc_a) if fsc_a else ""}</div>'
+                             f'{"&nbsp;&middot;&nbsp;" + _score_str(fsc_a) if fsc_a else ""}</div>'
                              f'<table class="app-tbl"><tr><th class="aq">Vraag</th>'
                              f'<th class="as">Gem.</th><th class="ab">Beeld</th></tr>{rows}</table></div>')
 
@@ -1970,7 +1983,7 @@ def render_exit_report_html(data: dict) -> str:
   </p>
   {app_sections}
   <div class="no-break" style="margin-bottom:14px;">
-    <div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">Werkbeleving (SDT) — B1 t/m B12</div>
+    <div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">Werkbeleving (SDT): B1 t/m B12</div>
     <table class="app-tbl"><tr><th class="aq">Vraag</th><th class="as">Gem.</th><th class="ab">Beeld</th></tr>{sdt_rows}</table>
   </div>
   <div class="empty-state" style="margin-top:8px;">
@@ -1980,7 +1993,7 @@ def render_exit_report_html(data: dict) -> str:
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────
     s += _trust_page("exit", opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen"))
-    return _doc(f"Loep Vertrek — {data['campaign_name']}", s, scan_type="exit")
+    return _doc(f"Loep Vertrek · {data['campaign_name']}", s, scan_type="exit")
 
 
 # ─── RetentieScan renderer ───────────────────────────────────────────────────
@@ -2040,7 +2053,7 @@ def render_retention_report_html(data: dict) -> str:
         # als vierde/vijfde losse score op een toch al dichte pagina.
         why_cells = ""
         if tf_sc is not None:
-            why_cells += f'<td class="why-cell"><div class="why-l">Gemiddelde score</div><div class="why-v" style="color:{tf_col};">{tf_sc:.1f}/10</div><div class="why-b">van de {len(i_scores)} stellingen over dit thema — {_h(_factor_label(tf_sc).lower())}</div></td>'
+            why_cells += f'<td class="why-cell"><div class="why-l">Gemiddelde score</div><div class="why-v" style="color:{tf_col};">{tf_sc:.1f}/10</div><div class="why-b">van de {len(i_scores)} stellingen over dit thema ({_h(_factor_label(tf_sc).lower())})</div></td>'
         if low_item:
             why_cells += (f'<td class="why-cell"><div class="why-l">Laagst scorende stelling</div>'
                           f'<div class="why-v" style="color:{_factor_color(low_item[2])};">{low_item[2]:.1f}/10</div>'
@@ -2148,7 +2161,8 @@ def render_retention_report_html(data: dict) -> str:
         # Laagste item vet in de tabel i.p.v. losse laagste/hoogste-kaarten:
         # bij 3 items per factor waren die kaarten pure herhaling van de tabel.
         rows = "".join(
-            f'<tr><td class="iq"{" style=\"font-weight:700;\"" if low_i and ik == low_i[0] else ""}>{_h(q)}</td>'
+            f'<tr><td class="iq"{" style=\"font-weight:700;\"" if low_i and ik == low_i[0] else ""}>{_h(q)}'
+            f'{" <span class=\"low-tag\">laagste score</span>" if low_i and ik == low_i[0] else ""}</td>'
             f'<td class="is" style="color:{_factor_color(isc)};">{isc:.1f}</td></tr>'
             for ik, q, isc in i_sc
         ) or '<tr><td colspan="2" style="color:#94A3B8;font-style:italic;">Itemscores niet beschikbaar in deze wave.</td></tr>'
@@ -2173,13 +2187,13 @@ def render_retention_report_html(data: dict) -> str:
                      if fk in deep_agg else "")
         spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []))
         return f"""<div class="pb sec">
-  {opener_html or f'<span class="slabel">Verdieping &mdash; {_h(lbl)}</span>'}
+  {opener_html or f'<span class="slabel">Verdieping: {_h(lbl)}</span>'}
   {intro_html}
-  <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&mdash; {_h(fl_)}</span></h2>
+  <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&middot; {_h(fl_)}</span></h2>
   {spread}
   {low_card}
   {high_card}
-  <h3 style="margin-top:14px;">Alle stellingen in deze factor</h3>
+  <h3 style="margin-top:28px;">Alle stellingen in deze factor</h3>
   <table class="item-tbl">{rows}</table>
   {deep_block}{dir_block}
 </div>"""
@@ -2187,10 +2201,10 @@ def render_retention_report_html(data: dict) -> str:
     if priority_fkeys:
         for _i, _pfk in enumerate(priority_fkeys):
             _lbl = _fl(_pfk, ST)
-            _opener = ch.opener(f"Verdieping — {_lbl}") if _i == 0 else _ChapterCounter.vervolg(f"Verdieping — {_lbl}")
+            _opener = ch.opener(f"Verdieping: {_lbl}") if _i == 0 else _ChapterCounter.vervolg(f"Verdieping: {_lbl}")
             s += _ret_factor_detail(_pfk, opener_html=_opener, intro_html=_intro("verdieping") if _i == 0 else "")
     else:
-        s += f'<div class="pb sec">{ch.opener("Verdieping — prioritaire factoren")}<div class="card">Factor detail beschikbaar na voldoende patroonduiding.</div></div>'
+        s += f'<div class="pb sec">{ch.opener("Verdieping: prioritaire factoren")}<div class="card">Factor detail beschikbaar na voldoende patroonduiding.</div></div>'
 
     # ── Werkbeleving (SDT) ────────────────────────────────────────────────────
     def _sdt_item_tbl(dim: str) -> str:
@@ -2228,7 +2242,7 @@ def render_retention_report_html(data: dict) -> str:
   <div style="margin-bottom:8px;">
     <span style="font-size:12px;font-weight:700;color:#243247;">{_h(SDT_LABELS.get(dim,""))}</span>
     <span style="font-size:11px;font-weight:700;color:{col};margin-left:10px;">{_score_str(sc)}</span>
-    <span style="font-size:10px;color:{col};margin-left:6px;">— {_h(fl_)}</span>
+    <span style="font-size:10px;color:{col};margin-left:6px;">&middot; {_h(fl_)}</span>
   </div>
   <div style="font-size:9.5px;color:#6B7280;margin-bottom:8px;">{_h(SDT_HELP.get(dim,""))}</div>
   {tbl}
@@ -2329,7 +2343,7 @@ def render_retention_report_html(data: dict) -> str:
             app_sections += (f'<div class="no-break" style="margin-bottom:14px;">'
                              f'<div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">'
                              f'{_h(lbl_f)}'
-                             f'{"&nbsp;&mdash;&nbsp;" + _score_str(fsc_a) if fsc_a else ""}</div>'
+                             f'{"&nbsp;&middot;&nbsp;" + _score_str(fsc_a) if fsc_a else ""}</div>'
                              f'<table class="app-tbl"><tr><th class="aq">Vraag</th>'
                              f'<th class="as">Gem.</th><th class="ab">Beeld</th></tr>{rows}</table></div>')
 
@@ -2351,7 +2365,7 @@ def render_retention_report_html(data: dict) -> str:
   </p>
   {app_sections}
   <div class="no-break" style="margin-bottom:14px;">
-    <div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">Werkbeleving (SDT) — B1 t/m B12</div>
+    <div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">Werkbeleving (SDT): B1 t/m B12</div>
     <table class="app-tbl"><tr><th class="aq">Vraag</th><th class="as">Gem.</th><th class="ab">Beeld</th></tr>{sdt_rows}</table>
   </div>
   <div class="empty-state" style="margin-top:8px;">
@@ -2361,7 +2375,7 @@ def render_retention_report_html(data: dict) -> str:
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────
     s += _trust_page(ST, opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen"))
-    return _doc(f"Loep Behoud — {data['campaign_name']}", s, scan_type="retention")
+    return _doc(f"Loep Behoud · {data['campaign_name']}", s, scan_type="retention")
 
 
 # ─── Onboarding-exclusive helpers ────────────────────────────────────────────
@@ -2476,7 +2490,7 @@ def render_onboarding_report_html(data: dict) -> str:
 
         why_cells = ""
         if tf_sc is not None:
-            why_cells += f'<td class="why-cell"><div class="why-l">Gemiddelde score</div><div class="why-v" style="color:{tf_col};">{tf_sc:.1f}/10</div><div class="why-b">van de {len(i_scores)} stellingen over dit thema — {_h(_factor_label(tf_sc).lower())}</div></td>'
+            why_cells += f'<td class="why-cell"><div class="why-l">Gemiddelde score</div><div class="why-v" style="color:{tf_col};">{tf_sc:.1f}/10</div><div class="why-b">van de {len(i_scores)} stellingen over dit thema ({_h(_factor_label(tf_sc).lower())})</div></td>'
         if low_item:
             why_cells += (f'<td class="why-cell"><div class="why-l">Laagst scorende stelling</div>'
                           f'<div class="why-v" style="color:{_factor_color(low_item[2])};">{low_item[2]:.1f}/10</div>'
@@ -2515,7 +2529,7 @@ def render_onboarding_report_html(data: dict) -> str:
         completed=data["n_completed"],
         pct=round(data["completion_pct"]),
         period=data["campaign_name"],
-        population="Nieuwe medewerkers — eerste werkperiode",
+        population="Nieuwe medewerkers in de eerste werkperiode",
         segment_available=bool(data.get("segment_rows")),
         segment_reason="te weinig responses per groep voor herleidbaarheid",
         enps_available=data["enps_available"],
@@ -2570,7 +2584,8 @@ def render_onboarding_report_html(data: dict) -> str:
         # (bij 3 items waren ze herhaling van de tabel). Het statische
         # "Eerste managementvraag"-blok is bewust weg — template-taal.
         rows = "".join(
-            f'<tr><td class="iq"{" style=\"font-weight:700;\"" if low_i and ik == low_i[0] else ""}>{_h(q)}</td>'
+            f'<tr><td class="iq"{" style=\"font-weight:700;\"" if low_i and ik == low_i[0] else ""}>{_h(q)}'
+            f'{" <span class=\"low-tag\">laagste score</span>" if low_i and ik == low_i[0] else ""}</td>'
             f'<td class="is" style="color:{_factor_color(isc)};">{isc:.1f}</td></tr>'
             for ik, q, isc in i_sc
         ) or '<tr><td colspan="2" style="color:#94A3B8;font-style:italic;">Itemscores niet beschikbaar in deze wave.</td></tr>'
@@ -2587,24 +2602,24 @@ def render_onboarding_report_html(data: dict) -> str:
                      if show_cards and high_i else "")
         spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []))
         return f"""<div class="pb sec">
-  {opener_html or f'<span class="slabel">Verdieping &mdash; {_h(lbl)}</span>'}
+  {opener_html or f'<span class="slabel">Verdieping: {_h(lbl)}</span>'}
   {intro_html}
-  <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&mdash; {_h(fl_)}</span></h2>
+  <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&middot; {_h(fl_)}</span></h2>
   <p style="font-size:10px;color:#64748B;margin-bottom:12px;">Lager op deze factor = meer frictie in de onboardingfase.</p>
   {spread}
   {low_card}
   {high_card}
-  <h3 style="margin-top:14px;">Alle stellingen in deze factor</h3>
+  <h3 style="margin-top:28px;">Alle stellingen in deze factor</h3>
   <table class="item-tbl">{rows}</table>
 </div>"""
 
     if priority_fkeys:
         for _i, _pfk in enumerate(priority_fkeys):
             _lbl = _fl(_pfk, ST)
-            _opener = ch.opener(f"Verdieping — {_lbl}") if _i == 0 else _ChapterCounter.vervolg(f"Verdieping — {_lbl}")
+            _opener = ch.opener(f"Verdieping: {_lbl}") if _i == 0 else _ChapterCounter.vervolg(f"Verdieping: {_lbl}")
             s += _ob_factor_detail(_pfk, opener_html=_opener, intro_html=_intro("verdieping") if _i == 0 else "")
     else:
-        s += f'<div class="pb sec">{ch.opener("Verdieping — prioritaire factoren")}<div class="card">Factor detail beschikbaar na voldoende patroonduiding.</div></div>'
+        s += f'<div class="pb sec">{ch.opener("Verdieping: prioritaire factoren")}<div class="card">Factor detail beschikbaar na voldoende patroonduiding.</div></div>'
 
     # ── Werkbeleving (SDT) — if present ──────────────────────────────────────
     def _sdt_item_tbl(dim: str) -> str:
@@ -2643,7 +2658,7 @@ def render_onboarding_report_html(data: dict) -> str:
   <div style="margin-bottom:8px;">
     <span style="font-size:12px;font-weight:700;color:#243247;">{_h(SDT_LABELS.get(dim,""))}</span>
     <span style="font-size:11px;font-weight:700;color:{col};margin-left:10px;">{_score_str(sc)}</span>
-    <span style="font-size:10px;color:{col};margin-left:6px;">— {_h(fl_)}</span>
+    <span style="font-size:10px;color:{col};margin-left:6px;">&middot; {_h(fl_)}</span>
   </div>
   <div style="font-size:9.5px;color:#6B7280;margin-bottom:8px;">{_h(SDT_HELP.get(dim,""))}</div>
   {tbl}
@@ -2732,7 +2747,7 @@ def render_onboarding_report_html(data: dict) -> str:
             app_sections += (f'<div class="no-break" style="margin-bottom:14px;">'
                              f'<div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">'
                              f'{_h(lbl_f)}'
-                             f'{"&nbsp;&mdash;&nbsp;" + _score_str(fsc_a) if fsc_a else ""}</div>'
+                             f'{"&nbsp;&middot;&nbsp;" + _score_str(fsc_a) if fsc_a else ""}</div>'
                              f'<table class="app-tbl"><tr><th class="aq">Vraag</th>'
                              f'<th class="as">Gem.</th><th class="ab">Beeld</th></tr>{rows}</table></div>')
 
@@ -2753,12 +2768,12 @@ def render_onboarding_report_html(data: dict) -> str:
     n={n}. &#x21a9;&nbsp;= omgekeerd gecodeerde stelling.
   </p>
   {app_sections}
-  {"<div class='no-break' style='margin-bottom:14px;'><div style='font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;'>Werkbeleving (SDT) — checkpoint-items</div><table class='app-tbl'><tr><th class='aq'>Vraag</th><th class='as'>Gem.</th><th class='ab'>Beeld</th></tr>" + sdt_rows + "</table></div>" if sdt_rows else ""}
+  {"<div class='no-break' style='margin-bottom:14px;'><div style='font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;'>Werkbeleving (SDT): checkpoint-items</div><table class='app-tbl'><tr><th class='aq'>Vraag</th><th class='as'>Gem.</th><th class='ab'>Beeld</th></tr>" + sdt_rows + "</table></div>" if sdt_rows else ""}
 </div>"""
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────
     s += _trust_page(ST, opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen"))
-    return _doc(f"Loep Start — {data['campaign_name']}", s, scan_type="onboarding")
+    return _doc(f"Loep Start · {data['campaign_name']}", s, scan_type="onboarding")
 
 
 # ─── Dispatcher + PDF ────────────────────────────────────────────────────────

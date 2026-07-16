@@ -76,7 +76,8 @@ def _jitter_offset(i: int, denom: int) -> int:
     return int(frac * denom) % denom
 
 
-def distribution_svg(values: list[float], width: int = 440, height: int = 34) -> str:
+def distribution_svg(values: list[float], width: int = 440, height: int = 34,
+                     dot_r: float = 3.5, label_size: int = 7) -> str:
     """Stippen-op-zone-as: zone-tinten, stippen, gemiddelde-marker."""
     dist = score_distribution(values)
     if dist["mean"] is None:
@@ -97,21 +98,27 @@ def distribution_svg(values: list[float], width: int = 440, height: int = 34) ->
     jitter_range = max(1, band_h - 8)
     for i, v in enumerate(dist["dots"]):
         cy = band_y + 5 + _jitter_offset(i, jitter_range)
-        parts.append(f'<circle cx="{_x(v, width)}" cy="{cy}" r="3.5" '
+        parts.append(f'<circle cx="{_x(v, width)}" cy="{cy}" r="{dot_r}" '
                      f'fill="{_zone_color(v)}" fill-opacity="0.9"/>')
     # gemiddelde-marker: navy lijn + mono-label
     mx = _x(dist["mean"], width)
     parts.append(f'<rect x="{mx - 1}" y="0" width="2" height="{height}" fill="#0D1B2A"/>')
     anchor = "end" if mx > width - 40 else "start"
     tx = mx - 4 if anchor == "end" else mx + 4
-    parts.append(f'<text x="{tx}" y="5" font-family="JetBrains Mono, monospace" '
-                 f'font-size="7" fill="#0D1B2A" text-anchor="{anchor}">GEM {dist["mean"]:.1f}</text>')
+    parts.append(f'<text x="{tx}" y="{max(5, label_size - 2)}" font-family="JetBrains Mono, monospace" '
+                 f'font-size="{label_size}" fill="#0D1B2A" text-anchor="{anchor}">GEM {dist["mean"]:.1f}</text>')
     parts.append('</svg>')
     return "".join(parts)
 
 
-def distribution_block(values: list[float]) -> str:
-    """SVG + zone-aantallen + (alleen bij polarisatie) duidingszin. Leeg onder n=10."""
+def distribution_block(values: list[float], width: int = 440, height: int = 34,
+                       dot_r: float = 3.5, label_size: int = 7) -> str:
+    """SVG + zone-aantallen + (alleen bij polarisatie) duidingszin. Leeg onder n=10.
+
+    width/height/dot_r/label_size: doorgifte naar distribution_svg voor het
+    grote formaat op de eigen spreidingspagina (behoudscontext); defaults
+    blijven het compacte formaat in de factorverdieping.
+    """
     vals = [v for v in values if v is not None]
     if len(vals) < MIN_DISTRIBUTION_N:
         return ""
@@ -135,4 +142,5 @@ def distribution_block(values: list[float]) -> str:
             f'verschillende ervaringen.</p>'
         )
     return (f'<div class="no-break" style="margin:10px 0 4px;">'
-            f'{distribution_svg(vals)}{counts}{sentence}</div>')
+            f'{distribution_svg(vals, width=width, height=height, dot_r=dot_r, label_size=label_size)}'
+            f'{counts}{sentence}</div>')

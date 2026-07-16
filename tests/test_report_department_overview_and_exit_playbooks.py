@@ -195,6 +195,6 @@ def test_exit_playbook_payload_only_returns_scored_high_and_middle_factors_in_pr
 
     assert [entry["factor_key"] for entry in payload] == ["leadership", "workload", "culture"]
     assert [entry["band"] for entry in payload] == ["HOOG", "MIDDEN", "MIDDEN"]
-    assert payload[0]["title"] == "Leiderschap als vertrekdriver — directe managementvraag"
+    assert payload[0]["title"] == "Leiderschap als vertrekdriver: directe managementvraag"
     assert payload[0]["score"] == 3.6
     assert payload[-1]["score"] == 6.2

@@ -21,7 +21,7 @@ def test_opener_met_kicker():
 
 def test_vervolg_blijft_klein_mono():
     from backend.report_html import _ChapterCounter
-    html = _ChapterCounter.vervolg("Verdieping — Werkdruk")
+    html = _ChapterCounter.vervolg("Verdieping: Werkdruk")
     assert 'class="slabel"' in html and "vervolg" in html
 
 

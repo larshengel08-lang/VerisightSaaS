@@ -38,7 +38,7 @@ def build_css(scan_type: str = "exit") -> str:
   margin: 18mm 16mm 20mm 16mm;
   background: """ + CHALK + r""";
   @bottom-left {
-    content: "VERTROUWELIJK — LOEP — GROEPSOUTPUT";
+    content: "VERTROUWELIJK · LOEP · GROEPSOUTPUT";
     font-family: 'JetBrains Mono', monospace;
     font-size: 7px; letter-spacing: 0.12em; color: """ + STEEL + r""";
   }
@@ -76,17 +76,28 @@ body {
 }
 .slabel::after { content: ""; flex: 1; height: 1px; margin-left: 12px; background: """ + HAIRLINE + r"""; }
 
-/* ── Hoofdstuknummering (designsprong §4) ── */
-.ch-idx { font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 700;
-  color: #E8A020; line-height: 1; margin-bottom: 6px; }
+/* ── Paginakop (feedback 2026-07-16): nummer + titel op één regel, beide in
+   dezelfde amber; de titel is het dominante element, de kicker eronder blijft
+   klein. Bewust de donkere amber (accent_lo) i.p.v. #E8A020: het lichte
+   merkamber haalt op chalk maar ~2:1 contrast — te zwak voor de hoofdtitel. ── */
+.ch-head { margin-bottom: 10px; }
+.ch-idx { font-family: 'JetBrains Mono', monospace; font-size: 25px; font-weight: 700;
+  color: """ + accent_lo + r"""; margin-right: 12px; vertical-align: baseline; }
 .ch-rule { border: none; border-top: 3px solid #0D1B2A; width: 48px;
-  margin: 0 0 12px 0; }
+  margin: 0 0 14px 0; }
 .ch-kicker { display: block; font-family: 'JetBrains Mono', monospace; font-size: 9px;
-  letter-spacing: 0.14em; text-transform: uppercase; color: """ + STEEL + r"""; margin-bottom: 5px; }
-.ch-title { font-family: 'Inter Tight', sans-serif; font-weight: 800; font-size: 21px;
-  letter-spacing: -0.03em; color: """ + INK + r"""; line-height: 1.1; margin-bottom: 14px; }
+  letter-spacing: 0.14em; text-transform: uppercase; color: """ + STEEL + r"""; margin: -4px 0 14px; }
+.ch-title { display: inline; font-family: 'Inter Tight', sans-serif; font-weight: 800; font-size: 25px;
+  letter-spacing: -0.03em; color: """ + accent_lo + r"""; line-height: 1.1; }
 .sec-intro { font-size: 10.5px; color: #4A5B6E; line-height: 1.7; max-width: 72ch;
   margin: -4px 0 18px; }
+/* Label bij de vetgedrukte (laagst scorende) stelling in de itemtabellen —
+   maakt de betekenis van het vet expliciet (feedback 2026-07-16). */
+.low-tag { font-family: 'JetBrains Mono', monospace; font-size: 7.5px; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase; color: """ + accent_lo + r"""; margin-left: 7px; }
+/* Titel boven een grote spreidingsbalk op de eigen spreidingspagina */
+.spread-title { font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 13px;
+  color: """ + INK + r"""; margin-bottom: 2px; }
 .mq-source { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.04em;
   color: """ + STEEL + r"""; margin-top: 5px; display: block; }
 

@@ -42,11 +42,14 @@ def test_option_texts_rendered_not_keys():
     assert "wl_recovery" not in html
 
 
-def test_secondary_line_only_from_5():
+def test_geen_secondary_samenvattingsregel():
+    # "Daarnaast werden vooral X en Y genoemd" is verwijderd (feedback
+    # 2026-07-16): de regel dupliceerde de tabel met aantallen erboven.
+    # Guard: de regel mag ook bij voldoende secondary-antwoorden niet terugkomen.
     below = _deepening_block(_agg(14, 13, 12, 1, {"wl_recovery": 8}, {"wl_volume": 4}), "retention", "workload")
     assert "Daarnaast" not in below
     at5 = _deepening_block(_agg(14, 13, 12, 1, {"wl_recovery": 8}, {"wl_volume": 3, "wl_process": 2}), "retention", "workload")
-    assert "Daarnaast" in at5
+    assert "Daarnaast" not in at5
 
 
 def test_no_forbidden_report_words():

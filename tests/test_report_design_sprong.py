@@ -96,7 +96,6 @@ def test_verdieping_vervolg_label():
     d["org_item_avgs"] = {"W1": 4.0, "G1": 5.0}
     html = render_retention_report_html(d)
     # Bij >1 verdiepingsfactor: eerste = hoofdstukstart, volgende = vervolg.
-    # Let op: de renderer emit een letterlijk em-dash-teken (—), geen
-    # HTML-entity &mdash; — vandaar het echte teken hier, niet de entity.
-    assert html.count("Verdieping —") > 1, "fixture levert geen 2e verdiepingsfactor"
+    # Sinds de em-dash-sweep (2026-07-16) is de titelscheider een dubbele punt.
+    assert html.count("Verdieping:") > 1, "fixture levert geen 2e verdiepingsfactor"
     assert "VERVOLG" in html.upper()
