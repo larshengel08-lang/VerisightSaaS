@@ -36,8 +36,8 @@ export default function PrivacyPage() {
           interpretatiegrenzen, niet voor individuele oordelen of black-box voorspellingen.
         </p>
         <p>
-          Publieke bedrijfsgegevens, waaronder KvK-nummer en vestigingsadres, worden op deze pagina aangevuld zodra
-          de formele inschrijving is afgerond. Tot die tijd kun je voor privacyvragen of due-diligence-verzoeken mailen naar{' '}
+          Loep is ingeschreven bij de Kamer van Koophandel onder nummer 42108397 (btw-id NL005499444B07).
+          Voor privacyvragen of due-diligence-verzoeken kun je mailen naar{' '}
           <a href="mailto:privacy@getloep.nl">privacy@getloep.nl</a>.
         </p>
       </section>
