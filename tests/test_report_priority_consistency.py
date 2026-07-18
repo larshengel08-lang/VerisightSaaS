@@ -16,6 +16,7 @@ de wiring klopt. Deze fixtures gebruiken 6 factoren met een duidelijke
 spreiding zodat de ranking een echte kans heeft om fout te gaan.
 """
 from backend.report_html import (
+    FACTOR_LABELS_NL,
     _fl,
     render_exit_report_html,
     render_retention_report_html,
@@ -137,6 +138,20 @@ def _assert_p02_matches_raster_startpunt(html: str, scan_type: str) -> None:
 
     expected_fk = ranked[0]["key"]
     expected_label = _fl(expected_fk, scan_type)
+
+    # Bewaakt de aanname waar deze hele test op leunt (code-review Taak 8):
+    # "workload" is bewust gekozen omdat zijn canonieke label afwijkt van de
+    # generieke FACTOR_LABELS_NL. Als die twee ooit weer gelijk worden (bijv.
+    # door een toekomstige copy-wijziging), verliest deze test stilzwijgend
+    # zijn vermogen om de Taak-6-bugklasse te vangen -- dat mag nooit stil
+    # gebeuren. Als dit breekt: kies een andere ORG_FACTOR_KEYS-factor die nog
+    # wel afwijkt (niet "growth"/"role_clarity" voor exit -- zie moduledocstring).
+    assert expected_label != FACTOR_LABELS_NL.get(expected_fk), (
+        f"'{expected_fk}' zijn canonieke label ({expected_label!r}) is gelijk "
+        f"geworden aan het generieke FACTOR_LABELS_NL-label -- deze test kan "
+        f"de Taak-6-labelbron-regressie niet meer vangen. Kies een andere "
+        f"laagste factor in _FACTOR_AVGS."
+    )
 
     # p.02 "Bestuurlijke read": why-title noemt de primaire factor.
     why_marker = f"Waarom {expected_label} bovenaan staat"
