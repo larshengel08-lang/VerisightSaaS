@@ -3,7 +3,6 @@ import pytest
 
 from backend.report_priority import (
     PRIORITY_TIE_MARGIN,
-    SPREAD_FLAG_MIN_SHARE,
     rank_factors,
 )
 
@@ -188,13 +187,20 @@ def test_near_tie_label_exact_margin_with_equal_flagsets():
           counts={"gr_visibility": 9, "gr_conversation": 1}), 1),
     (_agg(answered=9, offered=10, triggered=10,
           counts={"gr_visibility": 5, "gr_conversation": 4}), 2),
+    # Amendement-grens: answered==8 is exact de nieuwe drempel (was >=5) —
+    # zonder deze case blijft het enige verschil tussen het oude en het
+    # geamendeerde gedrag ongetest.
+    (_agg(answered=8, offered=9, triggered=9,
+          counts={"gr_visibility": 4, "gr_conversation": 4}), 2),
     # Amendement: 5-7 beantwoorders is staat 3, ook met schijnbare meerderheid.
     (_agg(answered=6, offered=8, triggered=8,
           counts={"gr_visibility": 5, "gr_conversation": 1}), 3),
     (_agg(answered=2, offered=4, triggered=6, counts={"gr_visibility": 2}), 3),
     (_agg(answered=0, offered=0, triggered=4), 4),
     (_agg(answered=0, offered=0, triggered=0), 5),
-])
+], ids=["state1_fires", "state2_no_majority_n9", "state2_boundary_n8",
+        "state3_low_n_apparent_majority", "state3_very_low_n",
+        "state4_cap_reached", "state5_not_triggered"])
 def test_deepening_cell_states(agg, expected_state):
     rows = _rank("retention", {"growth": 6.0}, deep={"growth": agg})
     assert rows[0]["deepening_state"] == expected_state
@@ -210,7 +216,10 @@ def test_campaign_gate_off_gives_state_zero_and_no_flag():
 
 def _invariant(rows):
     """Elke afwijking van pure base-volgorde moet een zichtbaar signaal dragen;
-    elk onbeslist gelijkspel draagt het label."""
+    het gelijkspel-label verschijnt exact wanneer de voorwaarde geldt, nooit
+    daarbuiten (code-review Taak 3: de oorspronkelijke versie was
+    eenrichtings — controleerde alleen dat het label aanwezig IS binnen de
+    marge, nooit dat het AFWEZIG is erbuiten; dat maskeerde over-labeling)."""
     for i, r in enumerate(rows):
         for later in rows[i + 1:]:
             if r["base"] > later["base"]:
@@ -220,8 +229,11 @@ def _invariant(rows):
         prev = rows[i - 1]
         same_flagset = (r["spread_flag"] == prev["spread_flag"]
                         and (r["deepening_state"] == 1) == (prev["deepening_state"] == 1))
-        if abs(r["base"] - prev["base"]) < PRIORITY_TIE_MARGIN and same_flagset:
+        should_label = abs(r["base"] - prev["base"]) < PRIORITY_TIE_MARGIN and same_flagset
+        if should_label:
             assert r["near_tie_with"] == prev["key"], f"label mist op {r['key']}"
+        else:
+            assert r["near_tie_with"] is None, f"onterecht label op {r['key']}"
 
 
 def test_navolgbaarheid_invariant_over_scenarios():
