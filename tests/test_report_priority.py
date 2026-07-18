@@ -173,3 +173,67 @@ def test_near_tie_label_exact_margin_with_equal_flagsets():
     rows = _rank("retention", {"growth": 5.1, "workload": 5.4})
     assert [r["key"] for r in rows] == ["growth", "workload"]
     assert rows[1]["near_tie_with"] is None
+
+
+# ── Celstaten verdiepingskolom (spec par. 6, incl. amendement staat 2 >= 8) ──
+# Let op: alleen de eerste case (state=1) laat agenda_enrichment daadwerkelijk
+# vuren -> gebruik dan verplicht echte growth-option-keys (gr_visibility/
+# gr_conversation), anders KeyError uit get_agenda_question. De overige cases
+# vallen allemaal onder agenda_enrichment's eigen "answered<8 -> return None"
+# of margin-check, dus daar zijn de keys onschadelijk (behouden als "a"/"b"
+# zou kunnen, maar voor consistentie ook hier echte keys).
+
+@pytest.mark.parametrize("agg,expected_state", [
+    (_agg(answered=13, offered=13, triggered=13,
+          counts={"gr_visibility": 9, "gr_conversation": 1}), 1),
+    (_agg(answered=9, offered=10, triggered=10,
+          counts={"gr_visibility": 5, "gr_conversation": 4}), 2),
+    # Amendement: 5-7 beantwoorders is staat 3, ook met schijnbare meerderheid.
+    (_agg(answered=6, offered=8, triggered=8,
+          counts={"gr_visibility": 5, "gr_conversation": 1}), 3),
+    (_agg(answered=2, offered=4, triggered=6, counts={"gr_visibility": 2}), 3),
+    (_agg(answered=0, offered=0, triggered=4), 4),
+    (_agg(answered=0, offered=0, triggered=0), 5),
+])
+def test_deepening_cell_states(agg, expected_state):
+    rows = _rank("retention", {"growth": 6.0}, deep={"growth": agg})
+    assert rows[0]["deepening_state"] == expected_state
+
+
+def test_campaign_gate_off_gives_state_zero_and_no_flag():
+    rows = _rank("retention", {"growth": 4.0}, deep={})
+    assert rows[0]["deepening_state"] == 0
+    assert rows[0]["flags"] == 0
+
+
+# ── Navolgbaarheids-invariant (spec par. 3, kernbelofte; par. 9 test 2) ──────
+
+def _invariant(rows):
+    """Elke afwijking van pure base-volgorde moet een zichtbaar signaal dragen;
+    elk onbeslist gelijkspel draagt het label."""
+    for i, r in enumerate(rows):
+        for later in rows[i + 1:]:
+            if r["base"] > later["base"]:
+                # r staat hoger dan zijn score rechtvaardigt -> vlag verplicht.
+                assert r["flags"] > 0, f"onzichtbare flip: {r['key']} boven {later['key']}"
+    for i, r in enumerate(rows[1:], start=1):
+        prev = rows[i - 1]
+        same_flagset = (r["spread_flag"] == prev["spread_flag"]
+                        and (r["deepening_state"] == 1) == (prev["deepening_state"] == 1))
+        if abs(r["base"] - prev["base"]) < PRIORITY_TIE_MARGIN and same_flagset:
+            assert r["near_tie_with"] == prev["key"], f"label mist op {r['key']}"
+
+
+def test_navolgbaarheid_invariant_over_scenarios():
+    scenarios = [
+        # (avgs, resp, deep, reasons, scan_type)
+        ({"growth": 5.1, "workload": 5.4, "leadership": 5.6,
+          "culture": 6.8, "compensation": 7.1, "role_clarity": 6.3}, {}, {}, None, "retention"),
+        ({"growth": 5.2, "workload": 5.4}, {}, {"workload": _flagged_deep()}, None, "retention"),
+        ({"growth": 5.2, "workload": 5.3, "leadership": 5.4},
+         {"leadership": _scores(12, 6)}, {}, None, "retention"),
+        ({"growth": 5.0, "workload": 5.5, "culture": 5.5}, {}, {}, {"workload": 2}, "exit"),
+        ({"growth": 6.0, "workload": 6.0, "culture": 6.1}, {}, {}, None, "retention"),
+    ]
+    for avgs, resp, deep, reasons, st in scenarios:
+        _invariant(_rank(st, avgs, resp=resp, deep=deep, reasons=reasons))
