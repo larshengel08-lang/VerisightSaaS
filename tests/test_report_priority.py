@@ -162,3 +162,14 @@ def test_near_tie_label_requires_same_flagset():
                  deep={"workload": _flagged_deep()})
     assert [r["key"] for r in rows] == ["workload", "growth"]
     assert rows[1]["near_tie_with"] is None
+
+
+def test_near_tie_label_exact_margin_with_equal_flagsets():
+    # Code-review Taak 2: de vorige exact-0,3-check in
+    # test_flag_flips_only_within_margin bevestigde "geen label" alleen omdat
+    # de vlaggensets daar al verschilden (confound). Hier zijn de vlaggensets
+    # gelijk (beide leeg) en is het verschil exact PRIORITY_TIE_MARGIN, dus dit
+    # pint de strikte "<" op de near_tie_with-grens zelf, spec par. 3.4.
+    rows = _rank("retention", {"growth": 5.1, "workload": 5.4})
+    assert [r["key"] for r in rows] == ["growth", "workload"]
+    assert rows[1]["near_tie_with"] is None
