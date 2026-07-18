@@ -2002,9 +2002,19 @@ def render_exit_report_html(data: dict) -> str:
     high_lbl = FACTOR_LABELS_NL.get(high_f[0], "") if high_f else ""
     high_sc  = high_f[1]                            if high_f else None
 
+    # Eén waarheid voor "de primaire factor" door het hele rapport heen (spec
+    # 2026-07-18 par. 4). Vóór deze fix wezen cover/kernzin/vertrekcontext nog
+    # de ruwe laagste score aan (low_lbl/low_sc) -- die kan afwijken van de
+    # raster-startpunt-/why-tabel-factor zodra een vlag een near-tie beslecht
+    # of het vertrekredengewicht de volgorde verschuift (whole-feature review
+    # na Taak 9 vond dit reproduceerbaar: kernzin noemde een andere factor dan
+    # de why-tabel op dezelfde pagina).
+    _raster_primary_label = _raster_rows[0]["label"] if _raster_rows else (low_lbl or high_lbl or "—")
+    _raster_primary_score = _raster_rows[0]["score"] if _raster_rows else low_sc
+
     # ── Cover ─────────────────────────────────────────────────────────────────
     opening_q = "Wat speelde mee bij vertrek?"
-    primary_signal = low_lbl or high_lbl or "—"
+    primary_signal = _raster_primary_label
     cover_stats = [
         ("Respondenten", str(n)),
         ("Respons", f"{round(data['completion_pct'])}%"),  # afgerond — p.03 toont hetzelfde getal
@@ -2015,10 +2025,10 @@ def render_exit_report_html(data: dict) -> str:
     er_top   = data["exit_r_dist"][0]["label"] if data["exit_r_dist"] else ""
 
     # Directe executive copy
-    if low_lbl and er_top and low_lbl.lower() in er_top.lower():
-        exec_line = f"Het vertrekbeeld is {fl.lower().replace(' frictiebeeld','').replace(' vertrekbeeld','')}, maar {low_lbl} springt er duidelijk uit: het is zowel de laagste factor als de meest genoemde vertrekreden."
-    elif low_lbl and er_top:
-        exec_line = f"Het vertrekbeeld is {fl.lower().replace(' frictiebeeld','').replace(' vertrekbeeld','')}. {low_lbl} scoort het laagst ({_score_str(low_sc)}); {er_top} is de meest genoemde vertrekreden."
+    if _raster_primary_label and er_top and _raster_primary_label.lower() in er_top.lower():
+        exec_line = f"Het vertrekbeeld is {fl.lower().replace(' frictiebeeld','').replace(' vertrekbeeld','')}, maar {_raster_primary_label} springt er duidelijk uit: het is zowel de laagste factor als de meest genoemde vertrekreden."
+    elif _raster_primary_label and er_top:
+        exec_line = f"Het vertrekbeeld is {fl.lower().replace(' frictiebeeld','').replace(' vertrekbeeld','')}. {_raster_primary_label} scoort het laagst ({_score_str(_raster_primary_score)}); {er_top} is de meest genoemde vertrekreden."
     elif avg_risk:
         exec_line = f"De frictiescore van {rdsp} wijst op een {fl.lower()}."
     else:
@@ -2087,7 +2097,7 @@ def render_exit_report_html(data: dict) -> str:
     totaalbeeld = (
         f"{high_lbl} ({_score_str(high_sc)}) laat zien wat wél werkt. "
         f"Hoe stevig dit beeld is, hangt af van de responsbasis onderaan deze pagina."
-    ) if high_lbl and low_lbl != high_lbl and high_sc is not None and high_sc >= 6.5 else \
+    ) if high_lbl and _raster_primary_label != high_lbl and high_sc is not None and high_sc >= 6.5 else \
         "Reikwijdte en betrouwbaarheid van dit beeld: zie de responsbasis onderaan deze pagina."
 
     _responsbasis_band = _responsbasis(
@@ -2124,7 +2134,7 @@ def render_exit_report_html(data: dict) -> str:
     exit_reasons = [(r["label"], r["count"]) for r in data["exit_r_dist"]]
     contributing = [(r["label"], r["count"]) for r in data["cont_dist"]]
     s += _vertrekcontext(exit_reasons=exit_reasons, contributing=contributing,
-                         n=n, primary_factor_label=low_lbl,
+                         n=n, primary_factor_label=_raster_primary_label,
                          opener_html=ch.opener("Wat speelde mee bij vertrek?", kicker="Vertrekcontext"))
 
     # ── Overzichtsprofiel (p.05) ──────────────────────────────────────────────
@@ -2384,8 +2394,13 @@ def render_retention_report_html(data: dict) -> str:
         "retention", fa, data.get("factor_resp_scores") or {}, deep_agg,
         labels={fk: _fl(fk, ST) for fk in ORG_FACTOR_KEYS})
 
+    # Eén waarheid voor "de primaire factor" door het hele rapport heen (spec
+    # 2026-07-18 par. 4) -- zie identieke fix + toelichting in
+    # render_exit_report_html.
+    _raster_primary_label = _raster_rows[0]["label"] if _raster_rows else (low_lbl or high_lbl or "—")
+
     # ── Cover ─────────────────────────────────────────────────────────────────
-    _ret_primary = low_lbl or "—"   # lowest = primary behoudsdruk
+    _ret_primary = _raster_primary_label
     s = _cover(
         scan_label=data["scan_lbl"], scan_type=ST, org_name=data["org_name"],
         period=data["campaign_name"], opening_question="Waar staat behoud nu onder druk?",
@@ -2442,8 +2457,8 @@ def render_retention_report_html(data: dict) -> str:
     # Kernzin: band + geduid getal + laagste factor. "behoudssignaal" bij het
     # cijfer, zodat de lezer weet WAT er 4.7 scoort (de factorscore ernaast is
     # een ander getal — dat onderscheid was eerder onzichtbaar).
-    if avg_risk and band_lbl and low_lbl:
-        exec_line = f"{band_lbl} (behoudssignaal {_score_str(avg_risk)}). {low_lbl} is het eerste gesprekspunt."
+    if avg_risk and band_lbl and _raster_primary_label:
+        exec_line = f"{band_lbl} (behoudssignaal {_score_str(avg_risk)}). {_raster_primary_label} is het eerste gesprekspunt."
     else:
         exec_line = "Zie factoranalyse en behoudscontext voor details."
 
@@ -2452,7 +2467,7 @@ def render_retention_report_html(data: dict) -> str:
     totaalbeeld = (
         f"{high_lbl} ({_score_str(high_sc)}) laat zien wat wél werkt. "
         f"Hoe stevig dit beeld is, hangt af van de responsbasis onderaan deze pagina."
-    ) if high_lbl and low_lbl != high_lbl and high_sc is not None and high_sc >= 6.5 else \
+    ) if high_lbl and _raster_primary_label != high_lbl and high_sc is not None and high_sc >= 6.5 else \
         "Reikwijdte en betrouwbaarheid van dit beeld: zie de responsbasis onderaan deze pagina."
 
     _responsbasis_band = _responsbasis(
