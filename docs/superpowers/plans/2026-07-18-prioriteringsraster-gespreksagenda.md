@@ -310,16 +310,24 @@ def _agg(answered=0, offered=0, triggered=0, counts=None):
 
 
 def test_deepening_flag_follows_enrichment_gates():
+    # Echte option-keys nodig: agenda_enrichment roept bij een gevuurde staffel
+    # get_agenda_question aan, die een KeyError gooit op onbekende keys.
+    # Growth-opties (backend.products.shared.deepening.DEEPENING_SETS):
+    # gr_visibility, gr_conversation, gr_follow_through, gr_time, gr_criteria,
+    # gr_ceiling, gr_other.
     avgs = {"growth": 6.0}
     # 7 van 13, marge >= 2: verrijkingsstaffel haalt -> staat 1 + vlag.
     ok = _agg(answered=13, offered=13, triggered=13,
-              counts={"growth_no_path": 7, "growth_other_reason": 3})
+              counts={"gr_visibility": 7, "gr_conversation": 3})
     rows = _rank("retention", avgs, deep={"growth": ok})
     assert rows[0]["deepening_state"] == 1
     assert rows[0]["flags"] == 1
     # 6 van 13 (46% < 50%): staffel haalt niet -> staat 2, geen vlag.
+    # (Dit pad retourneert None uit agenda_enrichment vóór get_agenda_question
+    # wordt aangeroepen, dus placeholder-keys zouden hier niet crashen -- maar
+    # gebruik ook hier echte keys voor consistentie.)
     nok = _agg(answered=13, offered=13, triggered=13,
-               counts={"growth_no_path": 6, "growth_other_reason": 4})
+               counts={"gr_visibility": 6, "gr_conversation": 4})
     rows = _rank("retention", avgs, deep={"growth": nok})
     assert rows[0]["deepening_state"] == 2
     assert rows[0]["flags"] == 0
@@ -328,8 +336,12 @@ def test_deepening_flag_follows_enrichment_gates():
 # ── Marge-mechanica ──────────────────────────────────────────────────────────
 
 def _flagged_deep():
+    # Workload-opties (DEEPENING_SETS): wl_volume, wl_recovery, wl_priorities,
+    # wl_capacity, wl_peaks_adhoc, wl_process, wl_other. Deze fixture wordt
+    # gebruikt voor de "workload"-factor, dus echte wl_*-keys (zie hierboven:
+    # agenda_enrichment vuurt hier, dus get_agenda_question wordt aangeroepen).
     return _agg(answered=13, offered=13, triggered=13,
-                counts={"x_a": 9, "x_b": 1})
+                counts={"wl_volume": 9, "wl_recovery": 1})
 
 
 def test_flag_flips_only_within_margin():
@@ -400,13 +412,22 @@ Voeg toe aan `tests/test_report_priority.py`:
 
 ```python
 # ── Celstaten verdiepingskolom (spec par. 6, incl. amendement staat 2 >= 8) ──
+# Let op: alleen de eerste case (state=1) laat agenda_enrichment daadwerkelijk
+# vuren -> gebruik dan verplicht echte growth-option-keys (gr_visibility/
+# gr_conversation), anders KeyError uit get_agenda_question. De overige cases
+# vallen allemaal onder agenda_enrichment's eigen "answered<8 -> return None"
+# of margin-check, dus daar zijn de keys onschadelijk (behouden als "a"/"b"
+# zou kunnen, maar voor consistentie ook hier echte keys).
 
 @pytest.mark.parametrize("agg,expected_state", [
-    (_agg(answered=13, offered=13, triggered=13, counts={"a": 9, "b": 1}), 1),
-    (_agg(answered=9, offered=10, triggered=10, counts={"a": 5, "b": 4}), 2),
+    (_agg(answered=13, offered=13, triggered=13,
+          counts={"gr_visibility": 9, "gr_conversation": 1}), 1),
+    (_agg(answered=9, offered=10, triggered=10,
+          counts={"gr_visibility": 5, "gr_conversation": 4}), 2),
     # Amendement: 5-7 beantwoorders is staat 3, ook met schijnbare meerderheid.
-    (_agg(answered=6, offered=8, triggered=8, counts={"a": 5, "b": 1}), 3),
-    (_agg(answered=2, offered=4, triggered=6, counts={"a": 2}), 3),
+    (_agg(answered=6, offered=8, triggered=8,
+          counts={"gr_visibility": 5, "gr_conversation": 1}), 3),
+    (_agg(answered=2, offered=4, triggered=6, counts={"gr_visibility": 2}), 3),
     (_agg(answered=0, offered=0, triggered=4), 4),
     (_agg(answered=0, offered=0, triggered=0), 5),
 ])
