@@ -797,14 +797,19 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
     """
     from backend.report_distribution import MIN_DISTRIBUTION_N, distribution_svg
 
-    any_full_spread = False
+    # Onafhankelijk van de renderlus berekend (code-review Taak 5): een
+    # nonlocal-neveneffect binnen _spread_cell zou hier onzichtbaar koppelen
+    # aan de looprvolgorde en breken zodra deze closure ooit los hergebruikt
+    # wordt. Beide kanten gebruiken dezelfde MIN_DISTRIBUTION_N-staffel als
+    # _spread_cell, dus het resultaat is identiek.
+    any_full_spread = any(
+        len([v for v in (factor_resp_scores.get(row["key"]) or []) if v is not None]) >= MIN_DISTRIBUTION_N
+        for row in ranked)
 
     def _spread_cell(row: dict) -> str:
-        nonlocal any_full_spread
         scores = [v for v in (factor_resp_scores.get(row["key"]) or []) if v is not None]
         if len(scores) < MIN_DISTRIBUTION_N:
             return '<span class="r-mono">spreiding vanaf 10 responses</span>'
-        any_full_spread = True
         strip = distribution_svg(scores, width=200, height=22)
         return (f'{strip}<br><span class="r-mono">'
                 f'{row["spread_below"]} van {row["spread_n"]} onder de 5</span>')
@@ -830,7 +835,7 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
         deep_td = (f'<td style="font-size:9.5px;">{_raster_deepening_cell(row, scan_type)}</td>'
                    if deepening_active else "")
         body += (f'<tr{top_cls}><td>{fl_html}</td>'
-                 f'<td>{_score_str(row["score"])}</td>'
+                 f'<td style="color:{_factor_color(row["score"])};">{_score_str(row["score"])}</td>'
                  f'<td>{_spread_cell(row)}</td>'
                  f'{deep_td}'
                  f'<td>{_agenda_cell(row)}</td></tr>')

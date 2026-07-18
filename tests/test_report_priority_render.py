@@ -7,6 +7,7 @@ from backend.report_html import (
     RASTER_INTRO_GATE,
     RASTER_LEGENDA,
     RASTER_UITLEG,
+    _factor_color,
     _prioriteringsraster,
 )
 from backend.report_priority import (
@@ -96,6 +97,13 @@ def test_geen_em_dashes_in_nieuwe_copy():
 def test_scores_via_score_str():
     # Punt als decimaalteken, /10-formaat zoals de rest van het rapport.
     assert "5.1/10" in _render()
+
+
+def test_score_kleur_via_bestaande_bandkleuren():
+    # Code-review Taak 5: de scorekolom moet dezelfde gedempte RAG-bandkleur
+    # dragen als overal elders in het rapport (_factor_color), niet ongekleurd.
+    html = _render()
+    assert f'color:{_factor_color(5.1)};' in html  # growth, 5.1 -> RAG_HIGH
 
 
 def test_spreiding_degraded_onder_n10():
