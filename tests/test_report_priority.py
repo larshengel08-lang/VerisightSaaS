@@ -59,3 +59,106 @@ def test_deterministic_alphabetical_final_tiebreak():
     for _ in range(3):
         rows = _rank("retention", avgs, labels=labels)
         assert [r["key"] for r in rows] == ["culture", "workload"]
+
+
+# ── Spreidingsvlag-gates ─────────────────────────────────────────────────────
+
+def _scores(n, below):
+    """n respondentscores waarvan `below` onder de 5.0."""
+    return [4.0] * below + [7.0] * (n - below)
+
+
+def test_spread_flag_requires_n10_and_share():
+    avgs = {"growth": 6.0}
+    # n=9, 5 onder de 5 (55%): vlag bestaat NIET onder MIN_DISTRIBUTION_N.
+    rows = _rank("retention", avgs, resp={"growth": _scores(9, 5)})
+    assert rows[0]["spread_flag"] is False
+    # n=10, 3 onder de 5 (30%): precies op de share-drempel -> vlag.
+    rows = _rank("retention", avgs, resp={"growth": _scores(10, 3)})
+    assert rows[0]["spread_flag"] is True
+    # n=10, 2 onder de 5 (20%): geen vlag.
+    rows = _rank("retention", avgs, resp={"growth": _scores(10, 2)})
+    assert rows[0]["spread_flag"] is False
+
+
+# ── Verdiepingsvlag = exact agenda_enrichment ────────────────────────────────
+
+def _agg(answered=0, offered=0, triggered=0, counts=None):
+    return {"triggered": triggered, "offered": offered, "answered": answered,
+            "skipped": 0, "primary_counts": counts or {}, "secondary_counts": {},
+            "direction_offered": 0, "direction_answered": 0,
+            "direction_skipped": 0, "direction_counts": {}}
+
+
+def test_deepening_flag_follows_enrichment_gates():
+    # Echte option-keys nodig: agenda_enrichment roept bij een gevuurde staffel
+    # get_agenda_question aan, die een KeyError gooit op onbekende keys.
+    # Growth-opties (backend.products.shared.deepening.DEEPENING_SETS):
+    # gr_visibility, gr_conversation, gr_follow_through, gr_time, gr_criteria,
+    # gr_ceiling, gr_other.
+    avgs = {"growth": 6.0}
+    # 7 van 13, marge >= 2: verrijkingsstaffel haalt -> staat 1 + vlag.
+    ok = _agg(answered=13, offered=13, triggered=13,
+              counts={"gr_visibility": 7, "gr_conversation": 3})
+    rows = _rank("retention", avgs, deep={"growth": ok})
+    assert rows[0]["deepening_state"] == 1
+    assert rows[0]["flags"] == 1
+    # 6 van 13 (46% < 50%): staffel haalt niet -> staat 2, geen vlag.
+    # (Dit pad retourneert None uit agenda_enrichment vóór get_agenda_question
+    # wordt aangeroepen, dus placeholder-keys zouden hier niet crashen -- maar
+    # gebruik ook hier echte keys voor consistentie.)
+    nok = _agg(answered=13, offered=13, triggered=13,
+               counts={"gr_visibility": 6, "gr_conversation": 4})
+    rows = _rank("retention", avgs, deep={"growth": nok})
+    assert rows[0]["deepening_state"] == 2
+    assert rows[0]["flags"] == 0
+
+
+# ── Marge-mechanica ──────────────────────────────────────────────────────────
+
+def _flagged_deep():
+    # Workload-opties (DEEPENING_SETS): wl_volume, wl_recovery, wl_priorities,
+    # wl_capacity, wl_peaks_adhoc, wl_process, wl_other. Deze fixture wordt
+    # gebruikt voor de "workload"-factor, dus echte wl_*-keys (zie hierboven:
+    # agenda_enrichment vuurt hier, dus get_agenda_question wordt aangeroepen).
+    return _agg(answered=13, offered=13, triggered=13,
+                counts={"wl_volume": 9, "wl_recovery": 1})
+
+
+def test_flag_flips_only_within_margin():
+    deep = {"workload": _flagged_deep()}
+    # Verschil 0.2 (< 0.3): gevlagde workload 5.4 passeert growth 5.2.
+    rows = _rank("retention", {"growth": 5.2, "workload": 5.4}, deep=deep)
+    assert [r["key"] for r in rows] == ["workload", "growth"]
+    # Verschil exact 0.3: GEEN flip (strikt kleiner dan) en GEEN label.
+    rows = _rank("retention", {"growth": 5.1, "workload": 5.4}, deep=deep)
+    assert [r["key"] for r in rows] == ["growth", "workload"]
+    assert rows[1]["near_tie_with"] is None
+    # Verschil 0.4 (> 0.3): geen flip.
+    rows = _rank("retention", {"growth": 5.0, "workload": 5.4}, deep=deep)
+    assert [r["key"] for r in rows] == ["growth", "workload"]
+
+
+def test_flags_do_not_stack():
+    # workload heeft TWEE vlaggen (spreiding + verdieping) maar passeert een
+    # factor op 0.4 afstand nog steeds niet: vlaggen stapelen niet tot 0.6.
+    deep = {"workload": _flagged_deep()}
+    resp = {"workload": _scores(12, 6)}
+    rows = _rank("retention", {"growth": 5.0, "workload": 5.4},
+                 deep=deep, resp=resp)
+    assert rows[0]["key"] == "growth"
+    assert rows[1]["flags"] == 2
+
+
+# ── Gelijkspel-label ─────────────────────────────────────────────────────────
+
+def test_near_tie_label_requires_same_flagset():
+    # Zelfde vlaggenset (geen vlaggen), verschil 0.2: label op de onderste rij.
+    rows = _rank("retention", {"growth": 5.2, "workload": 5.4})
+    assert rows[0]["near_tie_with"] is None  # bovenste rij nooit een label
+    assert rows[1]["near_tie_with"] == "growth"
+    # Verschillend vlaggenset: de vlag gaf de doorslag -> geen gelijkspel-label.
+    rows = _rank("retention", {"growth": 5.2, "workload": 5.4},
+                 deep={"workload": _flagged_deep()})
+    assert [r["key"] for r in rows] == ["workload", "growth"]
+    assert rows[1]["near_tie_with"] is None
