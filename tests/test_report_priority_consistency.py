@@ -24,14 +24,23 @@ from backend.report_priority import rank_factors
 from backend.scoring_config import ORG_FACTOR_KEYS
 
 # Multi-factor spread (zelfde patroon als tests/test_report_priority.py's
-# test_navolgbaarheid_invariant_over_scenarios): "growth" scoort duidelijk het
-# laagst, geen van de verschillen valt binnen PRIORITY_TIE_MARGIN (0.3), dus
-# geen vlaggen/gelijkspel-mechanica kan de simpele score-volgorde omgooien --
-# de test moet puur de wiring toetsen, niet de tiebreak-logica (die heeft al
-# een eigen dekking in test_report_priority.py).
+# test_navolgbaarheid_invariant_over_scenarios): "workload" scoort duidelijk
+# het laagst, geen van de verschillen valt binnen PRIORITY_TIE_MARGIN (0.3),
+# dus geen vlaggen/gelijkspel-mechanica kan de simpele score-volgorde omgooien
+# -- de test moet puur de wiring toetsen, niet de tiebreak-logica (die heeft
+# al een eigen dekking in test_report_priority.py).
+#
+# BEWUST "workload" als laagste, niet "growth": code-review Taak 8 (mutatie-
+# test) toonde dat "growth" toevallig hetzelfde label heeft in zowel de
+# generieke FACTOR_LABELS_NL als de canonieke _fl(fk, scan_type) -- een test
+# die "growth" als startpunt gebruikt, zou de exacte Taak-6-bugklasse (p.02
+# gebruikte FACTOR_LABELS_NL i.p.v. _fl) NIET vangen als hij ooit terugkeert.
+# "workload" heeft voor beide scans een echt afwijkend generiek label
+# ("Werkbelasting" vs "Werkdruk en balans"/"Werkdruk en herstelruimte"), dus
+# een terugval naar de generieke labelbron breekt deze test aantoonbaar.
 _FACTOR_AVGS = {
-    "growth": 5.1,
-    "workload": 5.9,
+    "workload": 5.1,
+    "growth": 5.9,
     "leadership": 6.4,
     "culture": 6.8,
     "compensation": 7.1,
@@ -66,6 +75,12 @@ def _min_retention_fixture():
         completion_pct=80.0, avg_risk=5.5, avg_eng=6.0, avg_to=5.0, avg_si=5.0,
         band_counts={"HOOG": 0, "MIDDEN": n, "LAAG": 0}, has_pattern=True,
         factor_avgs=dict(_FACTOR_AVGS),
+        # Bewust "growth" (niet "workload"): dit simuleert de OUDE,
+        # losstaande ranking die p.02 vóór Taak 6/7 gebruikte. Blijft
+        # opzettelijk afwijken van de nieuwe raster-startpunt ("workload"),
+        # zodat deze test ook bewijst dat de nieuwe wiring de oude
+        # top_fkeys-selectie daadwerkelijk overstemt, niet toevallig eendere
+        # uitkomsten geeft.
         top_risks=[("growth", _FACTOR_AVGS["growth"])],
         top_fkeys=["growth"], top_flabels=[_fl("growth", "retention")],
         strong_work=None, top_exit_lbl=None, top_cont_lbl=None, sig_vis=None,
@@ -118,7 +133,7 @@ def _assert_p02_matches_raster_startpunt(html: str, scan_type: str) -> None:
     # Sanity: dit moet een echte, niet-triviale ranking zijn -- meerdere
     # factoren, en de laagste is niet toevallig de enige.
     assert len(ranked) > 1
-    assert ranked[0]["key"] == "growth"
+    assert ranked[0]["key"] == "workload"
 
     expected_fk = ranked[0]["key"]
     expected_label = _fl(expected_fk, scan_type)
@@ -140,8 +155,16 @@ def _assert_p02_matches_raster_startpunt(html: str, scan_type: str) -> None:
     # De startpuntfactor krijgt ook een eigen verdieping/detailpagina --
     # priority_fkeys = [r["key"] for r in _raster_rows[:3]] moet dus deze
     # factor daadwerkelijk als sectie emitten, niet alleen als raster-rij.
-    detail_marker = f"Verdieping: {expected_label}"
-    assert detail_marker in html, f"verdieping-detailpagina niet gevonden: {detail_marker!r}"
+    #
+    # Check op de factor-specifieke itemvraag (uit _ITEM_MAP), niet op het
+    # "Verdieping: {label}"-koptekst-label: de exit-renderer's _factor_detail
+    # gebruikt voor die koptekst nog de generieke FACTOR_LABELS_NL i.p.v. _fl
+    # (bekend, apart getrackt vervolgpunt na code-review Taak 6 -- niet dit
+    # rasterwerk se scope). Deze check moet puur bewijzen dat de JUISTE
+    # FACTOR (op key) een detailpagina kreeg, onafhankelijk van welke
+    # labelconventie de koptekst gebruikt.
+    item_question = _ITEM_MAP[expected_fk][0][1]
+    assert item_question in html, f"verdieping-detailpagina niet gevonden voor {expected_fk!r} (itemvraag {item_question!r} ontbreekt)"
 
 
 def test_retention_p02_primary_matches_raster_startpunt():
