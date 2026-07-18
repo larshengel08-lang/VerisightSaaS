@@ -1970,6 +1970,18 @@ def render_exit_report_html(data: dict) -> str:
     nsp         = data["nsp"]
     ch          = _ChapterCounter()
 
+    # ── Prioriteringsraster-rangorde (spec 2026-07-18 par. 4: één ranking per
+    # rapport) — vroeg berekend zodat zowel de Bestuurlijke read (p.02) als de
+    # verdieping-detailkeuze én de sluitende gespreksagenda dezelfde volgorde
+    # gebruiken. ────────────────────────────────────────────────────────────
+    _code_to_count = {r["code"]: r["count"] for r in data["exit_r_dist"]}
+    exit_code_counts = {fk: _code_to_count.get(FACTOR_EXIT_CODE.get(fk), 0) for fk in fa}
+    deep_agg = data.get("deepening_agg") or {}
+    _raster_rows = rank_factors(
+        "exit", fa, data.get("factor_resp_scores") or {}, deep_agg,
+        exit_reason_counts=exit_code_counts,
+        labels={fk: _fl(fk, "exit") for fk in ORG_FACTOR_KEYS})
+
     sorted_f = sorted([(fk, fa.get(fk)) for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None],
                       key=lambda x: x[1])
     bottom_2 = [fk for fk, _ in sorted_f[:2]]
@@ -2009,8 +2021,8 @@ def render_exit_report_html(data: dict) -> str:
 
     # ── Bestuurlijke read ─────────────────────────────────────────────────────
     # Build why_cells for the primary (lowest-scoring) factor
-    if top_fkeys:
-        tf      = top_fkeys[0]
+    if _raster_rows:
+        tf      = _raster_rows[0]["key"]
         tf_lbl  = FACTOR_LABELS_NL.get(tf, tf)
         tf_sc   = fa.get(tf)
         tf_col  = _factor_color(tf_sc)
@@ -2110,12 +2122,10 @@ def render_exit_report_html(data: dict) -> str:
     s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary, bands=_overzicht_bands,
                             opener_html=ch.opener("Overzichtsprofiel"))
 
-    # ── Vertrekreden-telling (nodig voor de verdieping-detail hieronder én voor
-    # de gespreksagenda, die naar het slot is verplaatst — zie onderaan) ───────
-    _code_to_count = {r["code"]: r["count"] for r in data["exit_r_dist"]}
-    exit_code_counts = {fk: _code_to_count.get(FACTOR_EXIT_CODE.get(fk), 0) for fk in fa}
-    priority_fkeys = _select_priority_factors(fa, exit_code_counts, max_n=3)
-    deep_agg = data.get("deepening_agg") or {}
+    # priority_fkeys volgt nu dezelfde rangorde als het prioriteringsraster
+    # (spec 2026-07-18 par. 4: één ranking per rapport) -- _raster_rows is
+    # hierboven al berekend, vóór de Bestuurlijke read.
+    priority_fkeys = [r["key"] for r in _raster_rows[:3]]
 
     # ── Factor detail (itemniveau prioritaire factoren) ──────────────────────
     def _factor_detail(fk: str, opener_html: str = "", intro_html: str = "") -> str:
@@ -2257,36 +2267,19 @@ def render_exit_report_html(data: dict) -> str:
   {_themed_quotes(texts, "exit", top_fkeys, n)}
 </div>"""
 
-    # ── Eerste managementspoor / Gespreksagenda (naar het slot — na het bewijs,
+    # ── Prioriteringsraster / gespreksagenda (naar het slot — na het bewijs,
     # vóór de appendix) ────────────────────────────────────────────────────────
-    _ex_priority_fkeys = _select_priority_factors(fa, exit_code_counts, max_n=3)
-    _enriched_q = (_deepening_mgmt_q(deep_agg, "exit", _ex_priority_fkeys[0])
-                   if _ex_priority_fkeys else None)
-
-    # Primair thema grounded in het laagst scorende item (zelfde aanpak als
-    # retention): geen vaste per-factor beslistekst die nooit meebeweegt met data.
-    _ex_primary_fk = _ex_priority_fkeys[0] if _ex_priority_fkeys else None
-    _ex_primary_items = ([(ik, q, oim.get(ik)) for ik, q in fim.get(_ex_primary_fk, []) if oim.get(ik) is not None]
-                          if _ex_primary_fk else [])
-    _ex_primary_low = min(_ex_primary_items, key=lambda x: x[2]) if _ex_primary_items else None
-    _ex_primary_theme = (
-        f"Bespreek eerst ‘{_ex_primary_low[1]}’ binnen {FACTOR_LABELS_NL.get(_ex_primary_fk, _ex_primary_fk).lower()} "
-        f"({_ex_primary_low[2]:.1f}/10). Op deze stelling scoort de groep het laagst van het hele beeld."
-    ) if _ex_primary_low else (top_flabels[0] if top_flabels else "het leidende thema")
-
-    _primary_why = (_primary_why_text(_ex_primary_low[2], deep_agg.get(_ex_primary_fk) or {}, "exit", _ex_primary_fk)
-                    if _ex_primary_low else None)
-    _second_why = ("Tweede laagste factorscore in het overzichtsprofiel."
-                   if len(sorted_f) > 1 else None)
-
-    s += _eerste_managementspoor(
-        primary_theme=_ex_primary_theme,
-        second_point=f"{FACTOR_LABELS_NL.get(sorted_f[1][0], sorted_f[1][0])} ({_score_str(sorted_f[1][1])})" if len(sorted_f) > 1 else "",
-        mgmt_q=_enriched_q or (_mgmt_q(_ex_priority_fkeys[0], "exit") if _ex_priority_fkeys else (nsp.get("first_decision") or "")),
+    _startpunt_fk = _raster_rows[0]["key"] if _raster_rows else None
+    _enriched_q = (_deepening_mgmt_q(deep_agg, "exit", _startpunt_fk)
+                   if _startpunt_fk else None)
+    s += _prioriteringsraster(
+        ranked=_raster_rows,
+        scan_type="exit",
+        factor_resp_scores=data.get("factor_resp_scores") or {},
+        deepening_active=bool(deep_agg),
+        mgmt_q=_enriched_q or (_mgmt_q(_startpunt_fk, "exit") if _startpunt_fk else (nsp.get("first_decision") or "")),
         review_when="Plan binnen 45-90 dagen een vervolgmoment: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.",
-        primary_why=_primary_why,
-        second_why=_second_why,
-        opener_html=ch.opener("Gespreksagenda", kicker="Eerste managementspoor"),
+        opener_html=ch.opener("Waar begint het gesprek?", kicker="Prioritering & gespreksagenda"),
     )
 
     # ── Appendix ─────────────────────────────────────────────────────────────
