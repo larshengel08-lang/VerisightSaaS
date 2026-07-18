@@ -2023,7 +2023,12 @@ def render_exit_report_html(data: dict) -> str:
     # Build why_cells for the primary (lowest-scoring) factor
     if _raster_rows:
         tf      = _raster_rows[0]["key"]
-        tf_lbl  = FACTOR_LABELS_NL.get(tf, tf)
+        # _fl (niet de generieke FACTOR_LABELS_NL), zelfde bron als
+        # _raster_rows[0]["label"]: code-review Taak 6 ving anders een
+        # zichtbare labelinconsistentie tussen p.02 en het raster voor
+        # dezelfde factor (bijv. "Werkbelasting" vs "Werkdruk en balans").
+        # retention/onboarding gebruiken hier al _fl (zie tf_lbl_ verderop).
+        tf_lbl  = _fl(tf, "exit")
         tf_sc   = fa.get(tf)
         tf_col  = _factor_color(tf_sc)
         tf_fl   = _factor_label(tf_sc)
