@@ -694,6 +694,13 @@ def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: st
     prioriteit, één eigenaar en een vervolgmoment"). De aparte
     Opnieuw-bespreken-kaart is hierin opgegaan: review_when wordt de hint
     onder Vervolgmoment i.p.v. een vierde, altijd-ingevulde kolom.
+
+    TIJDELIJK (spec 2026-07-18 par. 10): sinds het prioriteringsraster
+    (_prioriteringsraster) exit en retention heeft overgenomen, wordt deze
+    functie alleen nog aangeroepen door de onboarding-renderer (Loep Start
+    heeft in v1 nog geen verdiepingsset). Migreert naar _prioriteringsraster
+    zodra de Loep Start-verdiepingsset v1.1 landt; deze functie wordt dan
+    verwijderd.
     """
     def _why(txt: str | None) -> str:
         return f'<span class="agenda-why">{_h(txt)}</span>' if txt else ""
