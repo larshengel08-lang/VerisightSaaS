@@ -195,8 +195,13 @@ p  { margin-bottom: 6px; font-size: 11px; }
   text-transform: uppercase; color: #64748B; margin: 7px 0 3px; }
 .agenda-dark .step-sublbl { color: #9FB0C0; }
 
-/* ── Navy agenda-anker (designsprong §2a): het hele agendablok als donker vlak ── */
-.agenda-dark { background: #0D1B2A; padding: 18px 20px; margin-top: 4px; }
+/* ── Navy agenda-anker (designsprong §2a): het hele agendablok als donker vlak ──
+   break-inside: avoid voorkomt dat het blok halverwege een pagina-einde
+   afbreekt (zelfde patroon als .mgmt-anchor/.play hieronder) — zonder deze
+   regel splitst WeasyPrint het blok en blijft er op de vorige pagina een
+   lege navy vlek achter terwijl de invulregels alleen op de volgende pagina
+   verschijnen (gevonden tijdens Taak 9-visuele verificatie, prioriteringsraster). */
+.agenda-dark { background: #0D1B2A; padding: 18px 20px; margin-top: 4px; break-inside: avoid; }
 .agenda-dark .step { background: transparent; border: 1px solid #2A3D52; }
 .agenda-dark .step-no { color: #E8A020; }
 .agenda-dark .step-body { color: #E7E2D6; }
@@ -213,6 +218,21 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .navy-anchor-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.14em;
   text-transform: uppercase; color: #E8A020; margin-bottom: 6px; }
 .navy-anchor p { margin: 0; font-size: 11px; line-height: 1.55; color: #F4F1EA; }
+
+/* ── Prioriteringsraster (spec 2026-07-18) ── */
+.raster-tbl { width: 100%; border-collapse: collapse; font-size: 10.5px; margin-top: 12px; }
+.raster-tbl th { text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 8px;
+  text-transform: uppercase; letter-spacing: 0.08em; color: """ + STEEL + r""";
+  border-bottom: 1.5px solid """ + NAVY + r"""; padding: 4px 7px; }
+.raster-tbl td { border-bottom: 1px solid """ + HAIRLINE + r"""; padding: 6px 7px; vertical-align: top; }
+.raster-tbl tr.r-top td { background: """ + NAVY + r"""; color: """ + CHALK + r"""; }
+.raster-tbl tr.r-top .r-fl { color: """ + accent + r"""; font-weight: 600; }
+.r-mono { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: """ + STEEL + r"""; }
+.raster-tbl tr.r-top .r-mono { color: #94A3B8; }
+.r-legend { font-size: 10px; color: """ + STEEL + r"""; margin-top: 6px; }
+.r-uitleg { font-size: 10px; color: #374151; margin-top: 10px; line-height: 1.5;
+  border-left: 3px solid """ + accent + r"""; padding-left: 9px; }
+.r-gate { font-size: 10px; color: """ + STEEL + r"""; margin-top: 6px; font-style: italic; }
 
 /* ── Trust / methodiek ── */
 .tg { display: table; width: 100%; border-collapse: separate; border-spacing: 10px 0; }

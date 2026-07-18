@@ -31,6 +31,10 @@ from backend.products.shared.deepening import (
     get_deepening_sets,
 )
 from backend.products.shared.registry import get_product_module
+from backend.report_priority import (
+    CELL_CAP_REACHED, CELL_NO_MAJORITY, CELL_NOT_TRIGGERED, CELL_TOO_FEW,
+    rank_factors,
+)
 from backend.scan_definitions import get_scan_definition
 from backend.scoring import (
     ORG_FACTOR_KEYS,
@@ -528,7 +532,7 @@ class _ChapterCounter:
 
 
 def _bestuurlijke_read(*, kernzin: str, totaalbeeld: str,
-                       primary_label: str, primary_score: float | None, primary_color: str,
+                       primary_label: str,
                        why_cells_html: str, strong_label: str, strong_score: float | None,
                        mgmt_q: str, mgmt_q_source: str = "",
                        responsbasis_html: str = "", opener_html: str = "",
@@ -690,6 +694,13 @@ def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: st
     prioriteit, één eigenaar en een vervolgmoment"). De aparte
     Opnieuw-bespreken-kaart is hierin opgegaan: review_when wordt de hint
     onder Vervolgmoment i.p.v. een vierde, altijd-ingevulde kolom.
+
+    TIJDELIJK (spec 2026-07-18 par. 10): sinds het prioriteringsraster
+    (_prioriteringsraster) exit en retention heeft overgenomen, wordt deze
+    functie alleen nog aangeroepen door de onboarding-renderer (Loep Start
+    heeft in v1 nog geen verdiepingsset). Migreert naar _prioriteringsraster
+    zodra de Loep Start-verdiepingsset v1.1 landt; deze functie wordt dan
+    verwijderd.
     """
     def _why(txt: str | None) -> str:
         return f'<span class="agenda-why">{_h(txt)}</span>' if txt else ""
@@ -717,6 +728,157 @@ def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: st
     <div style="font-family:'JetBrains Mono', monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#E8A020;margin-bottom:7px;">Gespreksopener</div>
     <p style="margin-bottom:0;font-size:12.5px;line-height:1.6;color:#F4F1EA;">{_h(mgmt_q)}</p>
   </div>
+  </div>
+  <p class="trustline">Nog niet besluiten of een verdieping of kortere vervolgmeting nodig is: dat volgt uit het gesprek.</p>
+</div>"""
+
+
+# ── Prioriteringsraster (spec 2026-07-18) ────────────────────────────────────
+# Alle copy hieronder is gepind met contract-tests: inkorten = rode test.
+
+RASTER_INTRO = (
+    "Dit overzicht weegt alle zes factoren tegen elkaar af op drie zichtbare "
+    "signalen: de gemiddelde score, de spreiding tussen respondenten en wat "
+    "respondenten in de verdieping als toelichting kozen. De volgorde is "
+    "daarmee navolgbaar: je ziet per factor wat meewoog. De bespreking "
+    "beslist; dit raster structureert.")
+
+RASTER_INTRO_GATE = (
+    "Dit overzicht weegt alle zes factoren tegen elkaar af op twee zichtbare "
+    "signalen: de gemiddelde score en de spreiding tussen respondenten. De "
+    "volgorde is daarmee navolgbaar: je ziet per factor wat meewoog. De "
+    "bespreking beslist; dit raster structureert.")
+
+RASTER_UITLEG: dict[str, str] = {
+    "retention": (
+        "Hoe deze volgorde tot stand komt: gesorteerd op score. Bij vrijwel "
+        "gelijke scores (verschil kleiner dan 0,3) geven grote spreiding of "
+        "een gedeelde toelichting uit de verdieping de doorslag. Spreiding "
+        "tonen we vanaf 10 responses; verdiepingsduiding vanaf 8 "
+        "beantwoorders per factor."),
+    "exit": (
+        "Hoe deze volgorde tot stand komt: gesorteerd op score, waarbij ook "
+        "meeweegt hoe vaak een factor als vertrekreden is genoemd. Bij "
+        "vrijwel gelijke scores (verschil kleiner dan 0,3) geven grote "
+        "spreiding of een gedeelde toelichting uit de verdieping de "
+        "doorslag. Spreiding tonen we vanaf 10 responses; verdiepingsduiding "
+        "vanaf 8 beantwoorders per factor."),
+}
+
+RASTER_LEGENDA = (
+    "Het blokje in de spreidingsbalk markeert het groepsgemiddelde; de "
+    "telling eronder toont hoeveel respondenten deze factor onder de 5 "
+    "scoren.")
+
+RASTER_GATE_NOTE = (
+    "In deze meting waren geen verdiepingsvragen actief; de volgorde volgt "
+    "score en spreiding.")
+
+
+def _raster_deepening_cell(row: dict, scan_type: str) -> str:
+    """Celtekst verdiepingskolom volgens de vijf vaste staten (spec par. 6)."""
+    state = row["deepening_state"]
+    if state == 1:
+        key, cnt, answered = row["deepening_top"]
+        opt = _deepening_option_texts(scan_type, row["key"]).get(key, key)
+        return f'{cnt} van {answered} kozen: "{_h(opt)}"'
+    return _h({2: CELL_NO_MAJORITY, 3: CELL_TOO_FEW,
+               4: CELL_CAP_REACHED, 5: CELL_NOT_TRIGGERED}.get(state, ""))
+
+
+def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
+                         factor_resp_scores: dict[str, list[float]],
+                         deepening_active: bool,
+                         mgmt_q: str, review_when: str,
+                         opener_html: str) -> str:
+    """Prioriteringsraster + geintegreerde gespreksagenda (spec par. 2).
+
+    Vervangt _eerste_managementspoor voor exit en retention. De tabel toont
+    het afwegingswerk (zichtbaarheids-invariant: elke tiebreak-input staat in
+    een kolom); het navy slotblok draagt opener + invulregels.
+
+    RASTER_UITLEG wordt PLAIN gerenderd (geen bold-prefix-splitsing): de
+    contract-test controleert de letterlijke, volledige string als substring
+    van de HTML-output, dus elke opmaak die de string zelf onderbreekt
+    (bijv. een <b>-tag halverwege) breekt die test.
+    """
+    from backend.report_distribution import MIN_DISTRIBUTION_N, distribution_svg
+
+    # Onafhankelijk van de renderlus berekend (code-review Taak 5): een
+    # nonlocal-neveneffect binnen _spread_cell zou hier onzichtbaar koppelen
+    # aan de looprvolgorde en breken zodra deze closure ooit los hergebruikt
+    # wordt. Beide kanten gebruiken dezelfde MIN_DISTRIBUTION_N-staffel als
+    # _spread_cell, dus het resultaat is identiek.
+    any_full_spread = any(
+        len([v for v in (factor_resp_scores.get(row["key"]) or []) if v is not None]) >= MIN_DISTRIBUTION_N
+        for row in ranked)
+
+    def _spread_cell(row: dict) -> str:
+        scores = [v for v in (factor_resp_scores.get(row["key"]) or []) if v is not None]
+        if len(scores) < MIN_DISTRIBUTION_N:
+            return '<span class="r-mono">spreiding vanaf 10 responses</span>'
+        strip = distribution_svg(scores, width=200, height=22)
+        return (f'{strip}<br><span class="r-mono">'
+                f'{row["spread_below"]} van {row["spread_n"]} onder de 5</span>')
+
+    def _agenda_cell(row: dict) -> str:
+        parts = []
+        if row["agenda_role"] == "startpunt":
+            parts.append("<b>Startpunt</b>")
+        elif row["agenda_role"] == "tweede":
+            parts.append("<b>Tweede punt</b>")
+        if row["near_tie_with"]:
+            tie_lbl = next((r["label"] for r in ranked if r["key"] == row["near_tie_with"]),
+                           row["near_tie_with"])
+            parts.append(f'<span class="r-mono">vrijwel gelijk aan {_h(tie_lbl)}</span>')
+        return "<br>".join(parts)
+
+    deep_th = '<th style="width:29%">Verdieping</th>' if deepening_active else ""
+    body = ""
+    for row in ranked:
+        top_cls = ' class="r-top"' if row["agenda_role"] else ""
+        fl_html = (f'<span class="r-fl">{_h(row["label"])}</span>'
+                   if row["agenda_role"] else _h(row["label"]))
+        deep_td = (f'<td style="font-size:9.5px;">{_raster_deepening_cell(row, scan_type)}</td>'
+                   if deepening_active else "")
+        body += (f'<tr{top_cls}><td>{fl_html}</td>'
+                 f'<td style="color:{_factor_color(row["score"])};">{_score_str(row["score"])}</td>'
+                 f'<td>{_spread_cell(row)}</td>'
+                 f'{deep_td}'
+                 f'<td>{_agenda_cell(row)}</td></tr>')
+
+    intro = RASTER_INTRO if deepening_active else RASTER_INTRO_GATE
+    gate = f'<p class="r-gate">{RASTER_GATE_NOTE}</p>' if not deepening_active else ""
+    # Legenda legt de spreidingskolom uit ("... onder de 5 scoren"); zonder een
+    # enkele rij met volledige spreidingsdata (n >= 10) is die uitleg niet van
+    # toepassing en zou de tekst zelf de degraded-staffel-test doorbreken.
+    legenda = f'<p class="r-legend">{RASTER_LEGENDA}</p>' if any_full_spread else ""
+
+    def _fill_row(label: str, hint: str) -> str:
+        return (f'<div class="step-sublbl">{_h(label)}</div>'
+                f'<div class="step-fill"></div>'
+                f'<div class="step-fill-hint">{_h(hint)}</div>')
+
+    return f"""<div class="pb sec">
+  {opener_html}
+  <p class="sec-intro">{intro}</p>
+  <table class="raster-tbl"><tr>
+    <th style="width:27%">Factor</th><th style="width:12%">Score</th>
+    <th style="width:22%">Spreiding</th>{deep_th}<th style="width:14%">Agenda</th>
+  </tr>{body}</table>
+  {legenda}
+  {gate}
+  <div class="r-uitleg">{RASTER_UITLEG[scan_type]}</div>
+  <div class="agenda-dark" style="margin-top:16px;">
+    <div class="agenda-opener">
+      <div style="font-family:'JetBrains Mono', monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#E8A020;margin-bottom:7px;">Gespreksopener</div>
+      <p style="margin-bottom:0;font-size:12.5px;line-height:1.6;color:#F4F1EA;">{_h(mgmt_q)}</p>
+    </div>
+    <table class="steps"><tr><td class="step">
+      {_fill_row("Prioriteit", "In te vullen tijdens de bespreking")}
+      {_fill_row("Eigenaar", "In te vullen tijdens de bespreking")}
+      {_fill_row("Vervolgmoment", review_when)}
+    </td></tr></table>
   </div>
   <p class="trustline">Nog niet besluiten of een verdieping of kortere vervolgmeting nodig is: dat volgt uit het gesprek.</p>
 </div>"""
@@ -1704,7 +1866,7 @@ def _vertrekcontext(*, exit_reasons: list[tuple[str, int]],
 
 def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
                     turnover: float | None, engagement: float | None,
-                    primary_factor: str, intent_resp: dict | None = None,
+                    intent_resp: dict | None = None,
                     opener_html: str = "") -> str:
     """Retention-exclusive section: actuele behoudscontext op groepsniveau.
 
@@ -1815,6 +1977,18 @@ def render_exit_report_html(data: dict) -> str:
     nsp         = data["nsp"]
     ch          = _ChapterCounter()
 
+    # ── Prioriteringsraster-rangorde (spec 2026-07-18 par. 4: één ranking per
+    # rapport) — vroeg berekend zodat zowel de Bestuurlijke read (p.02) als de
+    # verdieping-detailkeuze én de sluitende gespreksagenda dezelfde volgorde
+    # gebruiken. ────────────────────────────────────────────────────────────
+    _code_to_count = {r["code"]: r["count"] for r in data["exit_r_dist"]}
+    exit_code_counts = {fk: _code_to_count.get(FACTOR_EXIT_CODE.get(fk), 0) for fk in fa}
+    deep_agg = data.get("deepening_agg") or {}
+    _raster_rows = rank_factors(
+        "exit", fa, data.get("factor_resp_scores") or {}, deep_agg,
+        exit_reason_counts=exit_code_counts,
+        labels={fk: _fl(fk, "exit") for fk in ORG_FACTOR_KEYS})
+
     sorted_f = sorted([(fk, fa.get(fk)) for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None],
                       key=lambda x: x[1])
     bottom_2 = [fk for fk, _ in sorted_f[:2]]
@@ -1828,9 +2002,19 @@ def render_exit_report_html(data: dict) -> str:
     high_lbl = _fl(high_f[0], "exit") if high_f else ""
     high_sc  = high_f[1]                            if high_f else None
 
+    # Eén waarheid voor "de primaire factor" door het hele rapport heen (spec
+    # 2026-07-18 par. 4). Vóór deze fix wezen cover/kernzin/vertrekcontext nog
+    # de ruwe laagste score aan (low_lbl/low_sc) -- die kan afwijken van de
+    # raster-startpunt-/why-tabel-factor zodra een vlag een near-tie beslecht
+    # of het vertrekredengewicht de volgorde verschuift (whole-feature review
+    # na Taak 9 vond dit reproduceerbaar: kernzin noemde een andere factor dan
+    # de why-tabel op dezelfde pagina).
+    _raster_primary_label = _raster_rows[0]["label"] if _raster_rows else (low_lbl or high_lbl or "—")
+    _raster_primary_score = _raster_rows[0]["score"] if _raster_rows else low_sc
+
     # ── Cover ─────────────────────────────────────────────────────────────────
     opening_q = "Wat speelde mee bij vertrek?"
-    primary_signal = low_lbl or high_lbl or "—"
+    primary_signal = _raster_primary_label
     cover_stats = [
         ("Respondenten", str(n)),
         ("Respons", f"{round(data['completion_pct'])}%"),  # afgerond — p.03 toont hetzelfde getal
@@ -1841,10 +2025,10 @@ def render_exit_report_html(data: dict) -> str:
     er_top   = data["exit_r_dist"][0]["label"] if data["exit_r_dist"] else ""
 
     # Directe executive copy
-    if low_lbl and er_top and low_lbl.lower() in er_top.lower():
-        exec_line = f"Het vertrekbeeld is {fl.lower().replace(' frictiebeeld','').replace(' vertrekbeeld','')}, maar {low_lbl} springt er duidelijk uit: het is zowel de laagste factor als de meest genoemde vertrekreden."
-    elif low_lbl and er_top:
-        exec_line = f"Het vertrekbeeld is {fl.lower().replace(' frictiebeeld','').replace(' vertrekbeeld','')}. {low_lbl} scoort het laagst ({_score_str(low_sc)}); {er_top} is de meest genoemde vertrekreden."
+    if _raster_primary_label and er_top and _raster_primary_label.lower() in er_top.lower():
+        exec_line = f"Het vertrekbeeld is {fl.lower().replace(' frictiebeeld','').replace(' vertrekbeeld','')}, maar {_raster_primary_label} springt er duidelijk uit: het is zowel de laagste factor als de meest genoemde vertrekreden."
+    elif _raster_primary_label and er_top:
+        exec_line = f"Het vertrekbeeld is {fl.lower().replace(' frictiebeeld','').replace(' vertrekbeeld','')}. {_raster_primary_label} scoort het laagst ({_score_str(_raster_primary_score)}); {er_top} is de meest genoemde vertrekreden."
     elif avg_risk:
         exec_line = f"De frictiescore van {rdsp} wijst op een {fl.lower()}."
     else:
@@ -1854,8 +2038,13 @@ def render_exit_report_html(data: dict) -> str:
 
     # ── Bestuurlijke read ─────────────────────────────────────────────────────
     # Build why_cells for the primary (lowest-scoring) factor
-    if top_fkeys:
-        tf      = top_fkeys[0]
+    if _raster_rows:
+        tf      = _raster_rows[0]["key"]
+        # _fl (niet de generieke FACTOR_LABELS_NL), zelfde bron als
+        # _raster_rows[0]["label"]: code-review Taak 6 ving anders een
+        # zichtbare labelinconsistentie tussen p.02 en het raster voor
+        # dezelfde factor (bijv. "Werkbelasting" vs "Werkdruk en balans").
+        # retention/onboarding gebruiken hier al _fl (zie tf_lbl_ verderop).
         tf_lbl  = _fl(tf, "exit")
         tf_sc   = fa.get(tf)
         tf_col  = _factor_color(tf_sc)
@@ -1883,8 +2072,6 @@ def render_exit_report_html(data: dict) -> str:
 
         primary_fkey  = tf
         primary_label = tf_lbl
-        primary_sc    = low_sc
-        primary_col   = _factor_color(low_sc)
         # Datagedreven vraag (uit de meest gekozen verdiepings-toelichting)
         # wanneer beschikbaar; anders de generieke per-factor vraag.
         _short_q = _short_mgmt_q(_deep_agg_early, "exit", tf)
@@ -1898,8 +2085,6 @@ def render_exit_report_html(data: dict) -> str:
         why_cells     = ""
         primary_fkey  = low_f[0] if low_f else None
         primary_label = low_lbl
-        primary_sc    = low_sc
-        primary_col   = _factor_color(low_sc)
         br_mgmt_q     = _mgmt_q(low_f[0], "exit") if low_f else ""
         br_mgmt_q_source = "Gebaseerd op de laagst scorende factor." if low_f else ""
 
@@ -1908,7 +2093,7 @@ def render_exit_report_html(data: dict) -> str:
     totaalbeeld = (
         f"{high_lbl} ({_score_str(high_sc)}) laat zien wat wél werkt. "
         f"Hoe stevig dit beeld is, hangt af van de responsbasis onderaan deze pagina."
-    ) if high_lbl and low_lbl != high_lbl and high_sc is not None and high_sc >= 6.5 else \
+    ) if high_lbl and _raster_primary_label != high_lbl and high_sc is not None and high_sc >= 6.5 else \
         "Reikwijdte en betrouwbaarheid van dit beeld: zie de responsbasis onderaan deze pagina."
 
     _responsbasis_band = _responsbasis(
@@ -1929,8 +2114,6 @@ def render_exit_report_html(data: dict) -> str:
         kernzin=exec_line,
         totaalbeeld=totaalbeeld,
         primary_label=primary_label,
-        primary_score=primary_sc,
-        primary_color=primary_col,
         why_cells_html=why_cells,
         strong_label=high_lbl,
         strong_score=high_sc,
@@ -1945,7 +2128,7 @@ def render_exit_report_html(data: dict) -> str:
     exit_reasons = [(r["label"], r["count"]) for r in data["exit_r_dist"]]
     contributing = [(r["label"], r["count"]) for r in data["cont_dist"]]
     s += _vertrekcontext(exit_reasons=exit_reasons, contributing=contributing,
-                         n=n, primary_factor_label=low_lbl,
+                         n=n, primary_factor_label=_raster_primary_label,
                          opener_html=ch.opener("Wat speelde mee bij vertrek?", kicker="Vertrekcontext"))
 
     # ── Overzichtsprofiel (p.05) ──────────────────────────────────────────────
@@ -1955,12 +2138,10 @@ def render_exit_report_html(data: dict) -> str:
     s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary, bands=_overzicht_bands,
                             opener_html=ch.opener("Overzichtsprofiel"))
 
-    # ── Vertrekreden-telling (nodig voor de verdieping-detail hieronder én voor
-    # de gespreksagenda, die naar het slot is verplaatst — zie onderaan) ───────
-    _code_to_count = {r["code"]: r["count"] for r in data["exit_r_dist"]}
-    exit_code_counts = {fk: _code_to_count.get(FACTOR_EXIT_CODE.get(fk), 0) for fk in fa}
-    priority_fkeys = _select_priority_factors(fa, exit_code_counts, max_n=3)
-    deep_agg = data.get("deepening_agg") or {}
+    # priority_fkeys volgt nu dezelfde rangorde als het prioriteringsraster
+    # (spec 2026-07-18 par. 4: één ranking per rapport) -- _raster_rows is
+    # hierboven al berekend, vóór de Bestuurlijke read.
+    priority_fkeys = [r["key"] for r in _raster_rows[:3]]
 
     # ── Factor detail (itemniveau prioritaire factoren) ──────────────────────
     def _factor_detail(fk: str, opener_html: str = "", intro_html: str = "") -> str:
@@ -2102,36 +2283,19 @@ def render_exit_report_html(data: dict) -> str:
   {_themed_quotes(texts, "exit", top_fkeys, n)}
 </div>"""
 
-    # ── Eerste managementspoor / Gespreksagenda (naar het slot — na het bewijs,
+    # ── Prioriteringsraster / gespreksagenda (naar het slot — na het bewijs,
     # vóór de appendix) ────────────────────────────────────────────────────────
-    _ex_priority_fkeys = _select_priority_factors(fa, exit_code_counts, max_n=3)
-    _enriched_q = (_deepening_mgmt_q(deep_agg, "exit", _ex_priority_fkeys[0])
-                   if _ex_priority_fkeys else None)
-
-    # Primair thema grounded in het laagst scorende item (zelfde aanpak als
-    # retention): geen vaste per-factor beslistekst die nooit meebeweegt met data.
-    _ex_primary_fk = _ex_priority_fkeys[0] if _ex_priority_fkeys else None
-    _ex_primary_items = ([(ik, q, oim.get(ik)) for ik, q in fim.get(_ex_primary_fk, []) if oim.get(ik) is not None]
-                          if _ex_primary_fk else [])
-    _ex_primary_low = min(_ex_primary_items, key=lambda x: x[2]) if _ex_primary_items else None
-    _ex_primary_theme = (
-        f"Bespreek eerst ‘{_ex_primary_low[1]}’ binnen {_fl(_ex_primary_fk, 'exit').lower()} "
-        f"({_ex_primary_low[2]:.1f}/10). Op deze stelling scoort de groep het laagst van het hele beeld."
-    ) if _ex_primary_low else (top_flabels[0] if top_flabels else "het leidende thema")
-
-    _primary_why = (_primary_why_text(_ex_primary_low[2], deep_agg.get(_ex_primary_fk) or {}, "exit", _ex_primary_fk)
-                    if _ex_primary_low else None)
-    _second_why = ("Tweede laagste factorscore in het overzichtsprofiel."
-                   if len(sorted_f) > 1 else None)
-
-    s += _eerste_managementspoor(
-        primary_theme=_ex_primary_theme,
-        second_point=f"{_fl(sorted_f[1][0], 'exit')} ({_score_str(sorted_f[1][1])})" if len(sorted_f) > 1 else "",
-        mgmt_q=_enriched_q or (_mgmt_q(_ex_priority_fkeys[0], "exit") if _ex_priority_fkeys else (nsp.get("first_decision") or "")),
+    _startpunt_fk = _raster_rows[0]["key"] if _raster_rows else None
+    _enriched_q = (_deepening_mgmt_q(deep_agg, "exit", _startpunt_fk)
+                   if _startpunt_fk else None)
+    s += _prioriteringsraster(
+        ranked=_raster_rows,
+        scan_type="exit",
+        factor_resp_scores=data.get("factor_resp_scores") or {},
+        deepening_active=bool(deep_agg),
+        mgmt_q=_enriched_q or (_mgmt_q(_startpunt_fk, "exit") if _startpunt_fk else (nsp.get("first_decision") or "")),
         review_when="Plan binnen 45-90 dagen een vervolgmoment: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.",
-        primary_why=_primary_why,
-        second_why=_second_why,
-        opener_html=ch.opener("Gespreksagenda", kicker="Eerste managementspoor"),
+        opener_html=ch.opener("Waar begint het gesprek?", kicker="Prioritering & gespreksagenda"),
     )
 
     # ── Appendix ─────────────────────────────────────────────────────────────
@@ -2215,8 +2379,22 @@ def render_retention_report_html(data: dict) -> str:
     low_sc      = low_f[1]  if low_f  else None
     high_sc     = high_f[1] if high_f else None
 
+    # ── Prioriteringsraster-rangorde (spec 2026-07-18 par. 4: één ranking per
+    # rapport) — vroeg berekend zodat zowel de Bestuurlijke read (p.02) als de
+    # verdieping-detailkeuze én de sluitende gespreksagenda dezelfde volgorde
+    # gebruiken. ────────────────────────────────────────────────────────────
+    deep_agg = data.get("deepening_agg") or {}
+    _raster_rows = rank_factors(
+        "retention", fa, data.get("factor_resp_scores") or {}, deep_agg,
+        labels={fk: _fl(fk, ST) for fk in ORG_FACTOR_KEYS})
+
+    # Eén waarheid voor "de primaire factor" door het hele rapport heen (spec
+    # 2026-07-18 par. 4) -- zie identieke fix + toelichting in
+    # render_exit_report_html.
+    _raster_primary_label = _raster_rows[0]["label"] if _raster_rows else (low_lbl or high_lbl or "—")
+
     # ── Cover ─────────────────────────────────────────────────────────────────
-    _ret_primary = low_lbl or "—"   # lowest = primary behoudsdruk
+    _ret_primary = _raster_primary_label
     s = _cover(
         scan_label=data["scan_lbl"], scan_type=ST, org_name=data["org_name"],
         period=data["campaign_name"], opening_question="Waar staat behoud nu onder druk?",
@@ -2228,8 +2406,8 @@ def render_retention_report_html(data: dict) -> str:
     )
 
     # ── Bestuurlijke read ─────────────────────────────────────────────────────
-    if top_fkeys:
-        tf       = top_fkeys[0]
+    if _raster_rows:
+        tf       = _raster_rows[0]["key"]
         tf_lbl_  = _fl(tf, ST)
         tf_sc    = fa.get(tf)
         tf_col   = _factor_color(tf_sc)
@@ -2252,8 +2430,6 @@ def render_retention_report_html(data: dict) -> str:
 
         primary_fkey  = tf
         primary_label = tf_lbl_
-        primary_sc    = tf_sc
-        primary_col   = tf_col
         _short_q = _short_mgmt_q(_deep_agg_early, ST, tf)
         if _short_q:
             br_mgmt_q = _short_q
@@ -2265,16 +2441,14 @@ def render_retention_report_html(data: dict) -> str:
         why_cells     = ""
         primary_fkey  = low_f[0] if low_f else None
         primary_label = low_lbl
-        primary_sc    = low_sc
-        primary_col   = _factor_color(low_sc)
         br_mgmt_q     = _mgmt_q(low_f[0], ST) if low_f else ""
         br_mgmt_q_source = "Gebaseerd op de laagst scorende factor." if low_f else ""
 
     # Kernzin: band + geduid getal + laagste factor. "behoudssignaal" bij het
     # cijfer, zodat de lezer weet WAT er 4.7 scoort (de factorscore ernaast is
     # een ander getal — dat onderscheid was eerder onzichtbaar).
-    if avg_risk and band_lbl and low_lbl:
-        exec_line = f"{band_lbl} (behoudssignaal {_score_str(avg_risk)}). {low_lbl} is het eerste gesprekspunt."
+    if avg_risk and band_lbl and _raster_primary_label:
+        exec_line = f"{band_lbl} (behoudssignaal {_score_str(avg_risk)}). {_raster_primary_label} is het eerste gesprekspunt."
     else:
         exec_line = "Zie factoranalyse en behoudscontext voor details."
 
@@ -2283,7 +2457,7 @@ def render_retention_report_html(data: dict) -> str:
     totaalbeeld = (
         f"{high_lbl} ({_score_str(high_sc)}) laat zien wat wél werkt. "
         f"Hoe stevig dit beeld is, hangt af van de responsbasis onderaan deze pagina."
-    ) if high_lbl and low_lbl != high_lbl and high_sc is not None and high_sc >= 6.5 else \
+    ) if high_lbl and _raster_primary_label != high_lbl and high_sc is not None and high_sc >= 6.5 else \
         "Reikwijdte en betrouwbaarheid van dit beeld: zie de responsbasis onderaan deze pagina."
 
     _responsbasis_band = _responsbasis(
@@ -2302,8 +2476,6 @@ def render_retention_report_html(data: dict) -> str:
         kernzin=exec_line,
         totaalbeeld=totaalbeeld,
         primary_label=primary_label,
-        primary_score=primary_sc,
-        primary_color=primary_col,
         why_cells_html=why_cells,
         strong_label=high_lbl,
         strong_score=high_sc,
@@ -2320,7 +2492,6 @@ def render_retention_report_html(data: dict) -> str:
         stay_intent=avg_si,
         turnover=avg_to,
         engagement=avg_eng,
-        primary_factor=low_lbl or primary_label or "—",
         intent_resp=data.get("intent_resp"),
         opener_html=ch.opener("Waar staat behoud onder druk?", kicker="Behoudscontext"),
     )
@@ -2332,13 +2503,10 @@ def render_retention_report_html(data: dict) -> str:
     s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary, bands=_overzicht_bands,
                             opener_html=ch.opener("Overzichtsprofiel"))
 
-    # ── Deepening-aggregatie (nodig voor de verdieping-detail hieronder én voor
-    # de gespreksagenda, die naar het slot is verplaatst — zie onderaan) ───────
-    deep_agg = data.get("deepening_agg") or {}
-
-    # ── Factor detail (itemniveau prioritaire factoren) ──────────────────────
-    # Priority = (10-score) — no exit-reason counts exist for retention, pass {}
-    priority_fkeys = _select_priority_factors(fa, {}, max_n=3)
+    # priority_fkeys volgt nu dezelfde rangorde als het prioriteringsraster
+    # (spec 2026-07-18 par. 4: één ranking per rapport) -- _raster_rows is
+    # hierboven al berekend, vóór de Bestuurlijke read.
+    priority_fkeys = [r["key"] for r in _raster_rows[:3]]
 
     def _ret_factor_detail(fk: str, opener_html: str = "", intro_html: str = "") -> str:
         lbl    = _fl(fk, ST)
@@ -2469,43 +2637,22 @@ def render_retention_report_html(data: dict) -> str:
   {_themed_quotes(texts, ST, top_fkeys, n)}
 </div>"""
 
-    # ── Eerste managementspoor / Gespreksagenda (naar het slot — na het bewijs,
+    # ── Prioriteringsraster / gespreksagenda (naar het slot — na het bewijs,
     # vóór de appendix) ────────────────────────────────────────────────────────
-    _ret_priority_fkeys = _select_priority_factors(fa, {}, max_n=3)
-    # Richting-scenario (spec 7.2) eerst; None -> trede-1-verrijking of generieke regel.
-    _direction_q = (_direction_agenda_line(deep_agg[_ret_priority_fkeys[0]], ST, _ret_priority_fkeys[0])
-                    if _ret_priority_fkeys and _ret_priority_fkeys[0] in deep_agg else None)
-    _enriched_q = _direction_q or (_deepening_mgmt_q(deep_agg, ST, _ret_priority_fkeys[0])
-                                   if _ret_priority_fkeys else None)
-    # Primair thema: geen vaste per-factor beslistekst (RETENTION_DECISION_BY_FACTOR)
-    # meer — die verandert nooit mee met de echte data. In plaats daarvan het
-    # laagst scorende item binnen de topfactor, dezelfde waarneming die al in
-    # de why-cell op p.02 staat, hier als directe eerste-gespreksinstructie.
-    _primary_fk = _ret_priority_fkeys[0] if _ret_priority_fkeys else None
-    _primary_items = ([(ik, q, oim.get(ik)) for ik, q in fim.get(_primary_fk, []) if oim.get(ik) is not None]
-                       if _primary_fk else [])
-    _primary_low_item = min(_primary_items, key=lambda x: x[2]) if _primary_items else None
-    _primary_theme_grounded = (
-        f"Bespreek eerst ‘{_primary_low_item[1]}’ binnen {_fl(_primary_fk, ST).lower()} "
-        f"({_primary_low_item[2]:.1f}/10). Op deze stelling scoort de groep het laagst van het hele beeld."
-    ) if _primary_low_item else (low_lbl or "het leidende behoudsthema")
-
-    _primary_why = (_primary_why_text(_primary_low_item[2], deep_agg.get(_primary_fk) or {}, ST, _primary_fk)
-                    if _primary_low_item else None)
-    _second_why = ("Tweede laagste factorscore in het overzichtsprofiel."
-                   if len(sorted_f) > 1 else None)
-
-    s += _eerste_managementspoor(
-        primary_theme=_primary_theme_grounded,
-        second_point=f"{_fl(sorted_f[1][0], ST)} ({_score_str(sorted_f[1][1])})" if len(sorted_f) > 1 else "",
-        mgmt_q=_enriched_q or (_mgmt_q(_ret_priority_fkeys[0], ST) if _ret_priority_fkeys else (nsp.get("first_decision") or "")),
-        # Opnieuw bespreken: neutrale cadans i.p.v. de vaste "wat is geverifieerd,
-        # welke eerste interventie loopt"-formule, die een vervolg claimde dat er
-        # voor de bespreking nog niet is.
+    _startpunt_fk = _raster_rows[0]["key"] if _raster_rows else None
+    # Richting-scenario (spec 7.2) eerst; None -> trede-1-verrijking of menuvraag.
+    _direction_q = (_direction_agenda_line(deep_agg[_startpunt_fk], ST, _startpunt_fk)
+                    if _startpunt_fk and _startpunt_fk in deep_agg else None)
+    _enriched_q = _direction_q or (_deepening_mgmt_q(deep_agg, ST, _startpunt_fk)
+                                   if _startpunt_fk else None)
+    s += _prioriteringsraster(
+        ranked=_raster_rows,
+        scan_type=ST,
+        factor_resp_scores=data.get("factor_resp_scores") or {},
+        deepening_active=bool(deep_agg),
+        mgmt_q=_enriched_q or (_mgmt_q(_startpunt_fk, ST) if _startpunt_fk else (nsp.get("first_decision") or "")),
         review_when="Plan binnen 45-90 dagen een vervolgmoment: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.",
-        primary_why=_primary_why,
-        second_why=_second_why,
-        opener_html=ch.opener("Gespreksagenda", kicker="Eerste managementspoor"),
+        opener_html=ch.opener("Waar begint het gesprek?", kicker="Prioritering & gespreksagenda"),
     )
 
     # ── Appendix ─────────────────────────────────────────────────────────────
@@ -2680,15 +2827,11 @@ def render_onboarding_report_html(data: dict) -> str:
                           f'<div class="why-b">{_h(low_item[1])}</div></td>')
 
         primary_label = tf_lbl_
-        primary_sc    = tf_sc
-        primary_col   = tf_col
         br_mgmt_q     = _mgmt_q(tf, ST)
         br_mgmt_q_source = "Gebaseerd op de laagst scorende factor."
     else:
         why_cells     = ""
         primary_label = low_lbl
-        primary_sc    = low_sc
-        primary_col   = _factor_color(low_sc)
         br_mgmt_q     = _mgmt_q(low_f[0], ST) if low_f else ""
         br_mgmt_q_source = "Gebaseerd op de laagst scorende factor." if low_f else ""
 
@@ -2723,8 +2866,6 @@ def render_onboarding_report_html(data: dict) -> str:
         kernzin=exec_line,
         totaalbeeld=totaalbeeld,
         primary_label=primary_label,
-        primary_score=primary_sc,
-        primary_color=primary_col,
         why_cells_html=why_cells,
         strong_label=high_lbl,
         strong_score=high_sc,
