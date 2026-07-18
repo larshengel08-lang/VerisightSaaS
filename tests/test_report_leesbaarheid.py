@@ -98,7 +98,7 @@ def test_bronregel_managementvraag():
     from backend.report_html import _bestuurlijke_read
     html = _bestuurlijke_read(
         kernzin="K.", totaalbeeld="T.", primary_label="Groeiperspectief",
-        primary_score=5.1, primary_color="#C17C00", why_cells_html="",
+        why_cells_html="",
         strong_label="Rolhelderheid", strong_score=7.2, mgmt_q="Vraag?",
         mgmt_q_source="Gebaseerd op de meest gekozen toelichting van respondenten in de verdieping.")
     assert "meest gekozen toelichting" in html

@@ -532,7 +532,7 @@ class _ChapterCounter:
 
 
 def _bestuurlijke_read(*, kernzin: str, totaalbeeld: str,
-                       primary_label: str, primary_score: float | None, primary_color: str,
+                       primary_label: str,
                        why_cells_html: str, strong_label: str, strong_score: float | None,
                        mgmt_q: str, mgmt_q_source: str = "",
                        responsbasis_html: str = "", opener_html: str = "",
@@ -1866,7 +1866,7 @@ def _vertrekcontext(*, exit_reasons: list[tuple[str, int]],
 
 def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
                     turnover: float | None, engagement: float | None,
-                    primary_factor: str, intent_resp: dict | None = None,
+                    intent_resp: dict | None = None,
                     opener_html: str = "") -> str:
     """Retention-exclusive section: actuele behoudscontext op groepsniveau.
 
@@ -2072,8 +2072,6 @@ def render_exit_report_html(data: dict) -> str:
 
         primary_fkey  = tf
         primary_label = tf_lbl
-        primary_sc    = low_sc
-        primary_col   = _factor_color(low_sc)
         # Datagedreven vraag (uit de meest gekozen verdiepings-toelichting)
         # wanneer beschikbaar; anders de generieke per-factor vraag.
         _short_q = _short_mgmt_q(_deep_agg_early, "exit", tf)
@@ -2087,8 +2085,6 @@ def render_exit_report_html(data: dict) -> str:
         why_cells     = ""
         primary_fkey  = low_f[0] if low_f else None
         primary_label = low_lbl
-        primary_sc    = low_sc
-        primary_col   = _factor_color(low_sc)
         br_mgmt_q     = _mgmt_q(low_f[0], "exit") if low_f else ""
         br_mgmt_q_source = "Gebaseerd op de laagst scorende factor." if low_f else ""
 
@@ -2118,8 +2114,6 @@ def render_exit_report_html(data: dict) -> str:
         kernzin=exec_line,
         totaalbeeld=totaalbeeld,
         primary_label=primary_label,
-        primary_score=primary_sc,
-        primary_color=primary_col,
         why_cells_html=why_cells,
         strong_label=high_lbl,
         strong_score=high_sc,
@@ -2436,8 +2430,6 @@ def render_retention_report_html(data: dict) -> str:
 
         primary_fkey  = tf
         primary_label = tf_lbl_
-        primary_sc    = tf_sc
-        primary_col   = tf_col
         _short_q = _short_mgmt_q(_deep_agg_early, ST, tf)
         if _short_q:
             br_mgmt_q = _short_q
@@ -2449,8 +2441,6 @@ def render_retention_report_html(data: dict) -> str:
         why_cells     = ""
         primary_fkey  = low_f[0] if low_f else None
         primary_label = low_lbl
-        primary_sc    = low_sc
-        primary_col   = _factor_color(low_sc)
         br_mgmt_q     = _mgmt_q(low_f[0], ST) if low_f else ""
         br_mgmt_q_source = "Gebaseerd op de laagst scorende factor." if low_f else ""
 
@@ -2486,8 +2476,6 @@ def render_retention_report_html(data: dict) -> str:
         kernzin=exec_line,
         totaalbeeld=totaalbeeld,
         primary_label=primary_label,
-        primary_score=primary_sc,
-        primary_color=primary_col,
         why_cells_html=why_cells,
         strong_label=high_lbl,
         strong_score=high_sc,
@@ -2504,7 +2492,6 @@ def render_retention_report_html(data: dict) -> str:
         stay_intent=avg_si,
         turnover=avg_to,
         engagement=avg_eng,
-        primary_factor=low_lbl or primary_label or "—",
         intent_resp=data.get("intent_resp"),
         opener_html=ch.opener("Waar staat behoud onder druk?", kicker="Behoudscontext"),
     )
@@ -2840,15 +2827,11 @@ def render_onboarding_report_html(data: dict) -> str:
                           f'<div class="why-b">{_h(low_item[1])}</div></td>')
 
         primary_label = tf_lbl_
-        primary_sc    = tf_sc
-        primary_col   = tf_col
         br_mgmt_q     = _mgmt_q(tf, ST)
         br_mgmt_q_source = "Gebaseerd op de laagst scorende factor."
     else:
         why_cells     = ""
         primary_label = low_lbl
-        primary_sc    = low_sc
-        primary_col   = _factor_color(low_sc)
         br_mgmt_q     = _mgmt_q(low_f[0], ST) if low_f else ""
         br_mgmt_q_source = "Gebaseerd op de laagst scorende factor." if low_f else ""
 
@@ -2883,8 +2866,6 @@ def render_onboarding_report_html(data: dict) -> str:
         kernzin=exec_line,
         totaalbeeld=totaalbeeld,
         primary_label=primary_label,
-        primary_score=primary_sc,
-        primary_color=primary_col,
         why_cells_html=why_cells,
         strong_label=high_lbl,
         strong_score=high_sc,
