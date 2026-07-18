@@ -37,7 +37,9 @@ def test_agenda_na_bewijs_voor_appendix():
     d["factor_items_map"] = {fk: [(f"{fk}_1", f"Testvraag {fk}")] for fk in d["factor_avgs"]}
     d["org_item_avgs"] = {f"{fk}_1": v for fk, v in d["factor_avgs"].items()}
     html = render_retention_report_html(d)
-    agenda = html.find("Gespreksagenda")
+    # lockstep raster 2026-07-18: agendapagina heet nu "Waar begint het gesprek?"
+    # (prioriteringsraster) i.p.v. de oude "Gespreksagenda"-titel.
+    agenda = html.find("Waar begint het gesprek?")
     appendix = html.find("Appendix")
     werkbeleving = html.find("Werkbeleving")
     assert -1 not in (agenda, appendix, werkbeleving)

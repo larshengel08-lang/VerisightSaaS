@@ -2368,6 +2368,15 @@ def render_retention_report_html(data: dict) -> str:
     low_sc      = low_f[1]  if low_f  else None
     high_sc     = high_f[1] if high_f else None
 
+    # ── Prioriteringsraster-rangorde (spec 2026-07-18 par. 4: één ranking per
+    # rapport) — vroeg berekend zodat zowel de Bestuurlijke read (p.02) als de
+    # verdieping-detailkeuze én de sluitende gespreksagenda dezelfde volgorde
+    # gebruiken. ────────────────────────────────────────────────────────────
+    deep_agg = data.get("deepening_agg") or {}
+    _raster_rows = rank_factors(
+        "retention", fa, data.get("factor_resp_scores") or {}, deep_agg,
+        labels={fk: _fl(fk, ST) for fk in ORG_FACTOR_KEYS})
+
     # ── Cover ─────────────────────────────────────────────────────────────────
     _ret_primary = low_lbl or "—"   # lowest = primary behoudsdruk
     s = _cover(
@@ -2381,8 +2390,8 @@ def render_retention_report_html(data: dict) -> str:
     )
 
     # ── Bestuurlijke read ─────────────────────────────────────────────────────
-    if top_fkeys:
-        tf       = top_fkeys[0]
+    if _raster_rows:
+        tf       = _raster_rows[0]["key"]
         tf_lbl_  = _fl(tf, ST)
         tf_sc    = fa.get(tf)
         tf_col   = _factor_color(tf_sc)
@@ -2485,13 +2494,10 @@ def render_retention_report_html(data: dict) -> str:
     s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary, bands=_overzicht_bands,
                             opener_html=ch.opener("Overzichtsprofiel"))
 
-    # ── Deepening-aggregatie (nodig voor de verdieping-detail hieronder én voor
-    # de gespreksagenda, die naar het slot is verplaatst — zie onderaan) ───────
-    deep_agg = data.get("deepening_agg") or {}
-
-    # ── Factor detail (itemniveau prioritaire factoren) ──────────────────────
-    # Priority = (10-score) — no exit-reason counts exist for retention, pass {}
-    priority_fkeys = _select_priority_factors(fa, {}, max_n=3)
+    # priority_fkeys volgt nu dezelfde rangorde als het prioriteringsraster
+    # (spec 2026-07-18 par. 4: één ranking per rapport) -- _raster_rows is
+    # hierboven al berekend, vóór de Bestuurlijke read.
+    priority_fkeys = [r["key"] for r in _raster_rows[:3]]
 
     def _ret_factor_detail(fk: str, opener_html: str = "", intro_html: str = "") -> str:
         lbl    = _fl(fk, ST)
@@ -2622,43 +2628,22 @@ def render_retention_report_html(data: dict) -> str:
   {_themed_quotes(texts, ST, top_fkeys, n)}
 </div>"""
 
-    # ── Eerste managementspoor / Gespreksagenda (naar het slot — na het bewijs,
+    # ── Prioriteringsraster / gespreksagenda (naar het slot — na het bewijs,
     # vóór de appendix) ────────────────────────────────────────────────────────
-    _ret_priority_fkeys = _select_priority_factors(fa, {}, max_n=3)
-    # Richting-scenario (spec 7.2) eerst; None -> trede-1-verrijking of generieke regel.
-    _direction_q = (_direction_agenda_line(deep_agg[_ret_priority_fkeys[0]], ST, _ret_priority_fkeys[0])
-                    if _ret_priority_fkeys and _ret_priority_fkeys[0] in deep_agg else None)
-    _enriched_q = _direction_q or (_deepening_mgmt_q(deep_agg, ST, _ret_priority_fkeys[0])
-                                   if _ret_priority_fkeys else None)
-    # Primair thema: geen vaste per-factor beslistekst (RETENTION_DECISION_BY_FACTOR)
-    # meer — die verandert nooit mee met de echte data. In plaats daarvan het
-    # laagst scorende item binnen de topfactor, dezelfde waarneming die al in
-    # de why-cell op p.02 staat, hier als directe eerste-gespreksinstructie.
-    _primary_fk = _ret_priority_fkeys[0] if _ret_priority_fkeys else None
-    _primary_items = ([(ik, q, oim.get(ik)) for ik, q in fim.get(_primary_fk, []) if oim.get(ik) is not None]
-                       if _primary_fk else [])
-    _primary_low_item = min(_primary_items, key=lambda x: x[2]) if _primary_items else None
-    _primary_theme_grounded = (
-        f"Bespreek eerst ‘{_primary_low_item[1]}’ binnen {_fl(_primary_fk, ST).lower()} "
-        f"({_primary_low_item[2]:.1f}/10). Op deze stelling scoort de groep het laagst van het hele beeld."
-    ) if _primary_low_item else (low_lbl or "het leidende behoudsthema")
-
-    _primary_why = (_primary_why_text(_primary_low_item[2], deep_agg.get(_primary_fk) or {}, ST, _primary_fk)
-                    if _primary_low_item else None)
-    _second_why = ("Tweede laagste factorscore in het overzichtsprofiel."
-                   if len(sorted_f) > 1 else None)
-
-    s += _eerste_managementspoor(
-        primary_theme=_primary_theme_grounded,
-        second_point=f"{_fl(sorted_f[1][0], ST)} ({_score_str(sorted_f[1][1])})" if len(sorted_f) > 1 else "",
-        mgmt_q=_enriched_q or (_mgmt_q(_ret_priority_fkeys[0], ST) if _ret_priority_fkeys else (nsp.get("first_decision") or "")),
-        # Opnieuw bespreken: neutrale cadans i.p.v. de vaste "wat is geverifieerd,
-        # welke eerste interventie loopt"-formule, die een vervolg claimde dat er
-        # voor de bespreking nog niet is.
+    _startpunt_fk = _raster_rows[0]["key"] if _raster_rows else None
+    # Richting-scenario (spec 7.2) eerst; None -> trede-1-verrijking of menuvraag.
+    _direction_q = (_direction_agenda_line(deep_agg[_startpunt_fk], ST, _startpunt_fk)
+                    if _startpunt_fk and _startpunt_fk in deep_agg else None)
+    _enriched_q = _direction_q or (_deepening_mgmt_q(deep_agg, ST, _startpunt_fk)
+                                   if _startpunt_fk else None)
+    s += _prioriteringsraster(
+        ranked=_raster_rows,
+        scan_type=ST,
+        factor_resp_scores=data.get("factor_resp_scores") or {},
+        deepening_active=bool(deep_agg),
+        mgmt_q=_enriched_q or (_mgmt_q(_startpunt_fk, ST) if _startpunt_fk else (nsp.get("first_decision") or "")),
         review_when="Plan binnen 45-90 dagen een vervolgmoment: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.",
-        primary_why=_primary_why,
-        second_why=_second_why,
-        opener_html=ch.opener("Gespreksagenda", kicker="Eerste managementspoor"),
+        opener_html=ch.opener("Waar begint het gesprek?", kicker="Prioritering & gespreksagenda"),
     )
 
     # ── Appendix ─────────────────────────────────────────────────────────────
