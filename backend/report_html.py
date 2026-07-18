@@ -31,6 +31,10 @@ from backend.products.shared.deepening import (
     get_deepening_sets,
 )
 from backend.products.shared.registry import get_product_module
+from backend.report_priority import (
+    CELL_CAP_REACHED, CELL_NO_MAJORITY, CELL_NOT_TRIGGERED, CELL_TOO_FEW,
+    rank_factors,
+)
 from backend.scan_definitions import get_scan_definition
 from backend.scoring import (
     ORG_FACTOR_KEYS,
@@ -717,6 +721,152 @@ def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: st
     <div style="font-family:'JetBrains Mono', monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#E8A020;margin-bottom:7px;">Gespreksopener</div>
     <p style="margin-bottom:0;font-size:12.5px;line-height:1.6;color:#F4F1EA;">{_h(mgmt_q)}</p>
   </div>
+  </div>
+  <p class="trustline">Nog niet besluiten of een verdieping of kortere vervolgmeting nodig is: dat volgt uit het gesprek.</p>
+</div>"""
+
+
+# ── Prioriteringsraster (spec 2026-07-18) ────────────────────────────────────
+# Alle copy hieronder is gepind met contract-tests: inkorten = rode test.
+
+RASTER_INTRO = (
+    "Dit overzicht weegt alle zes factoren tegen elkaar af op drie zichtbare "
+    "signalen: de gemiddelde score, de spreiding tussen respondenten en wat "
+    "respondenten in de verdieping als toelichting kozen. De volgorde is "
+    "daarmee navolgbaar: je ziet per factor wat meewoog. De bespreking "
+    "beslist; dit raster structureert.")
+
+RASTER_INTRO_GATE = (
+    "Dit overzicht weegt alle zes factoren tegen elkaar af op twee zichtbare "
+    "signalen: de gemiddelde score en de spreiding tussen respondenten. De "
+    "volgorde is daarmee navolgbaar: je ziet per factor wat meewoog. De "
+    "bespreking beslist; dit raster structureert.")
+
+RASTER_UITLEG: dict[str, str] = {
+    "retention": (
+        "Hoe deze volgorde tot stand komt: gesorteerd op score. Bij vrijwel "
+        "gelijke scores (verschil kleiner dan 0,3) geven grote spreiding of "
+        "een gedeelde toelichting uit de verdieping de doorslag. Spreiding "
+        "tonen we vanaf 10 responses; verdiepingsduiding vanaf 8 "
+        "beantwoorders per factor."),
+    "exit": (
+        "Hoe deze volgorde tot stand komt: gesorteerd op score, waarbij ook "
+        "meeweegt hoe vaak een factor als vertrekreden is genoemd. Bij "
+        "vrijwel gelijke scores (verschil kleiner dan 0,3) geven grote "
+        "spreiding of een gedeelde toelichting uit de verdieping de "
+        "doorslag. Spreiding tonen we vanaf 10 responses; verdiepingsduiding "
+        "vanaf 8 beantwoorders per factor."),
+}
+
+RASTER_LEGENDA = (
+    "Het blokje in de spreidingsbalk markeert het groepsgemiddelde; de "
+    "telling eronder toont hoeveel respondenten deze factor onder de 5 "
+    "scoren.")
+
+RASTER_GATE_NOTE = (
+    "In deze meting waren geen verdiepingsvragen actief; de volgorde volgt "
+    "score en spreiding.")
+
+
+def _raster_deepening_cell(row: dict, scan_type: str) -> str:
+    """Celtekst verdiepingskolom volgens de vijf vaste staten (spec par. 6)."""
+    state = row["deepening_state"]
+    if state == 1:
+        key, cnt, answered = row["deepening_top"]
+        opt = _deepening_option_texts(scan_type, row["key"]).get(key, key)
+        return f'{cnt} van {answered} kozen: "{_h(opt)}"'
+    return _h({2: CELL_NO_MAJORITY, 3: CELL_TOO_FEW,
+               4: CELL_CAP_REACHED, 5: CELL_NOT_TRIGGERED}.get(state, ""))
+
+
+def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
+                         factor_resp_scores: dict[str, list[float]],
+                         deepening_active: bool,
+                         mgmt_q: str, review_when: str,
+                         opener_html: str) -> str:
+    """Prioriteringsraster + geintegreerde gespreksagenda (spec par. 2).
+
+    Vervangt _eerste_managementspoor voor exit en retention. De tabel toont
+    het afwegingswerk (zichtbaarheids-invariant: elke tiebreak-input staat in
+    een kolom); het navy slotblok draagt opener + invulregels.
+
+    RASTER_UITLEG wordt PLAIN gerenderd (geen bold-prefix-splitsing): de
+    contract-test controleert de letterlijke, volledige string als substring
+    van de HTML-output, dus elke opmaak die de string zelf onderbreekt
+    (bijv. een <b>-tag halverwege) breekt die test.
+    """
+    from backend.report_distribution import MIN_DISTRIBUTION_N, distribution_svg
+
+    any_full_spread = False
+
+    def _spread_cell(row: dict) -> str:
+        nonlocal any_full_spread
+        scores = [v for v in (factor_resp_scores.get(row["key"]) or []) if v is not None]
+        if len(scores) < MIN_DISTRIBUTION_N:
+            return '<span class="r-mono">spreiding vanaf 10 responses</span>'
+        any_full_spread = True
+        strip = distribution_svg(scores, width=200, height=22)
+        return (f'{strip}<br><span class="r-mono">'
+                f'{row["spread_below"]} van {row["spread_n"]} onder de 5</span>')
+
+    def _agenda_cell(row: dict) -> str:
+        parts = []
+        if row["agenda_role"] == "startpunt":
+            parts.append("<b>Startpunt</b>")
+        elif row["agenda_role"] == "tweede":
+            parts.append("<b>Tweede punt</b>")
+        if row["near_tie_with"]:
+            tie_lbl = next((r["label"] for r in ranked if r["key"] == row["near_tie_with"]),
+                           row["near_tie_with"])
+            parts.append(f'<span class="r-mono">vrijwel gelijk aan {_h(tie_lbl)}</span>')
+        return "<br>".join(parts)
+
+    deep_th = '<th style="width:29%">Verdieping</th>' if deepening_active else ""
+    body = ""
+    for row in ranked:
+        top_cls = ' class="r-top"' if row["agenda_role"] else ""
+        fl_html = (f'<span class="r-fl">{_h(row["label"])}</span>'
+                   if row["agenda_role"] else _h(row["label"]))
+        deep_td = (f'<td style="font-size:9.5px;">{_raster_deepening_cell(row, scan_type)}</td>'
+                   if deepening_active else "")
+        body += (f'<tr{top_cls}><td>{fl_html}</td>'
+                 f'<td>{_score_str(row["score"])}</td>'
+                 f'<td>{_spread_cell(row)}</td>'
+                 f'{deep_td}'
+                 f'<td>{_agenda_cell(row)}</td></tr>')
+
+    intro = RASTER_INTRO if deepening_active else RASTER_INTRO_GATE
+    gate = f'<p class="r-gate">{RASTER_GATE_NOTE}</p>' if not deepening_active else ""
+    # Legenda legt de spreidingskolom uit ("... onder de 5 scoren"); zonder een
+    # enkele rij met volledige spreidingsdata (n >= 10) is die uitleg niet van
+    # toepassing en zou de tekst zelf de degraded-staffel-test doorbreken.
+    legenda = f'<p class="r-legend">{RASTER_LEGENDA}</p>' if any_full_spread else ""
+
+    def _fill_row(label: str, hint: str) -> str:
+        return (f'<div class="step-sublbl">{_h(label)}</div>'
+                f'<div class="step-fill"></div>'
+                f'<div class="step-fill-hint">{_h(hint)}</div>')
+
+    return f"""<div class="pb sec">
+  {opener_html}
+  <p class="sec-intro">{intro}</p>
+  <table class="raster-tbl"><tr>
+    <th style="width:27%">Factor</th><th style="width:12%">Score</th>
+    <th style="width:22%">Spreiding</th>{deep_th}<th style="width:14%">Agenda</th>
+  </tr>{body}</table>
+  {legenda}
+  {gate}
+  <div class="r-uitleg">{RASTER_UITLEG[scan_type]}</div>
+  <div class="agenda-dark" style="margin-top:16px;">
+    <div class="agenda-opener">
+      <div style="font-family:'JetBrains Mono', monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#E8A020;margin-bottom:7px;">Gespreksopener</div>
+      <p style="margin-bottom:0;font-size:12.5px;line-height:1.6;color:#F4F1EA;">{_h(mgmt_q)}</p>
+    </div>
+    <table class="steps"><tr><td class="step">
+      {_fill_row("Prioriteit", "In te vullen tijdens de bespreking")}
+      {_fill_row("Eigenaar", "In te vullen tijdens de bespreking")}
+      {_fill_row("Vervolgmoment", review_when)}
+    </td></tr></table>
   </div>
   <p class="trustline">Nog niet besluiten of een verdieping of kortere vervolgmeting nodig is: dat volgt uit het gesprek.</p>
 </div>"""
