@@ -1823,9 +1823,9 @@ def render_exit_report_html(data: dict) -> str:
     high_f   = sorted_f[-1] if sorted_f else None
 
     # ── Executive summary ─────────────────────────────────────────────────────
-    low_lbl  = FACTOR_LABELS_NL.get(low_f[0], "")  if low_f  else ""
+    low_lbl  = _fl(low_f[0], "exit")  if low_f  else ""
     low_sc   = low_f[1]                             if low_f  else None
-    high_lbl = FACTOR_LABELS_NL.get(high_f[0], "") if high_f else ""
+    high_lbl = _fl(high_f[0], "exit") if high_f else ""
     high_sc  = high_f[1]                            if high_f else None
 
     # ── Cover ─────────────────────────────────────────────────────────────────
@@ -1856,7 +1856,7 @@ def render_exit_report_html(data: dict) -> str:
     # Build why_cells for the primary (lowest-scoring) factor
     if top_fkeys:
         tf      = top_fkeys[0]
-        tf_lbl  = FACTOR_LABELS_NL.get(tf, tf)
+        tf_lbl  = _fl(tf, "exit")
         tf_sc   = fa.get(tf)
         tf_col  = _factor_color(tf_sc)
         tf_fl   = _factor_label(tf_sc)
@@ -1949,7 +1949,7 @@ def render_exit_report_html(data: dict) -> str:
                          opener_html=ch.opener("Wat speelde mee bij vertrek?", kicker="Vertrekcontext"))
 
     # ── Overzichtsprofiel (p.05) ──────────────────────────────────────────────
-    profile_factors = [(FACTOR_LABELS_NL.get(fk, fk), fa.get(fk))
+    profile_factors = [(_fl(fk, "exit"), fa.get(fk))
                        for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
     _overzicht_summary, _overzicht_bands = _overzicht_summary_and_bands(profile_factors)
     s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary, bands=_overzicht_bands,
@@ -1965,7 +1965,7 @@ def render_exit_report_html(data: dict) -> str:
     # ── Factor detail (itemniveau prioritaire factoren) ──────────────────────
     def _factor_detail(fk: str, opener_html: str = "", intro_html: str = "") -> str:
         # ── Data logic (preserved from old helper) ──
-        lbl    = FACTOR_LABELS_NL.get(fk, fk)
+        lbl    = _fl(fk, "exit")
         fsc    = fa.get(fk)
         col    = _factor_color(fsc)
         fl_    = _factor_label(fsc)
@@ -2024,7 +2024,7 @@ def render_exit_report_html(data: dict) -> str:
 
     if priority_fkeys:
         for _i, _pfk in enumerate(priority_fkeys):
-            _lbl = FACTOR_LABELS_NL.get(_pfk, _pfk)
+            _lbl = _fl(_pfk, "exit")
             _opener = ch.opener(f"Verdieping: {_lbl}") if _i == 0 else _ChapterCounter.vervolg(f"Verdieping: {_lbl}")
             s += _factor_detail(_pfk, opener_html=_opener, intro_html=_intro("verdieping") if _i == 0 else "")
     else:
@@ -2115,7 +2115,7 @@ def render_exit_report_html(data: dict) -> str:
                           if _ex_primary_fk else [])
     _ex_primary_low = min(_ex_primary_items, key=lambda x: x[2]) if _ex_primary_items else None
     _ex_primary_theme = (
-        f"Bespreek eerst ‘{_ex_primary_low[1]}’ binnen {FACTOR_LABELS_NL.get(_ex_primary_fk, _ex_primary_fk).lower()} "
+        f"Bespreek eerst ‘{_ex_primary_low[1]}’ binnen {_fl(_ex_primary_fk, 'exit').lower()} "
         f"({_ex_primary_low[2]:.1f}/10). Op deze stelling scoort de groep het laagst van het hele beeld."
     ) if _ex_primary_low else (top_flabels[0] if top_flabels else "het leidende thema")
 
@@ -2126,7 +2126,7 @@ def render_exit_report_html(data: dict) -> str:
 
     s += _eerste_managementspoor(
         primary_theme=_ex_primary_theme,
-        second_point=f"{FACTOR_LABELS_NL.get(sorted_f[1][0], sorted_f[1][0])} ({_score_str(sorted_f[1][1])})" if len(sorted_f) > 1 else "",
+        second_point=f"{_fl(sorted_f[1][0], 'exit')} ({_score_str(sorted_f[1][1])})" if len(sorted_f) > 1 else "",
         mgmt_q=_enriched_q or (_mgmt_q(_ex_priority_fkeys[0], "exit") if _ex_priority_fkeys else (nsp.get("first_decision") or "")),
         review_when="Plan binnen 45-90 dagen een vervolgmoment: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.",
         primary_why=_primary_why,
@@ -2139,7 +2139,7 @@ def render_exit_report_html(data: dict) -> str:
     if _should_show_appendix(n, n_factors):
         app_sections = ""
         for fk, items in data["factor_items_map"].items():
-            lbl_f = FACTOR_LABELS_NL.get(fk, fk)
+            lbl_f = _fl(fk, "exit")
             fsc_a = fa.get(fk)
             rows  = "".join(
                 (f'<tr><td class="aq">{_h(q)}</td>'
