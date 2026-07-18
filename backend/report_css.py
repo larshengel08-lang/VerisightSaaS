@@ -195,8 +195,13 @@ p  { margin-bottom: 6px; font-size: 11px; }
   text-transform: uppercase; color: #64748B; margin: 7px 0 3px; }
 .agenda-dark .step-sublbl { color: #9FB0C0; }
 
-/* ── Navy agenda-anker (designsprong §2a): het hele agendablok als donker vlak ── */
-.agenda-dark { background: #0D1B2A; padding: 18px 20px; margin-top: 4px; }
+/* ── Navy agenda-anker (designsprong §2a): het hele agendablok als donker vlak ──
+   break-inside: avoid voorkomt dat het blok halverwege een pagina-einde
+   afbreekt (zelfde patroon als .mgmt-anchor/.play hieronder) — zonder deze
+   regel splitst WeasyPrint het blok en blijft er op de vorige pagina een
+   lege navy vlek achter terwijl de invulregels alleen op de volgende pagina
+   verschijnen (gevonden tijdens Taak 9-visuele verificatie, prioriteringsraster). */
+.agenda-dark { background: #0D1B2A; padding: 18px 20px; margin-top: 4px; break-inside: avoid; }
 .agenda-dark .step { background: transparent; border: 1px solid #2A3D52; }
 .agenda-dark .step-no { color: #E8A020; }
 .agenda-dark .step-body { color: #E7E2D6; }
