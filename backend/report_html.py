@@ -547,7 +547,7 @@ def _bestuurlijke_read(*, kernzin: str, totaalbeeld: str,
     {("<table class='sg'><tr>"
       f"<td><div class='sc-l'>Relatief sterk</div><div class='sc-v'>{_score_str(strong_score)}</div><div class='sc-b'>{_h(strong_label)}: wat w&eacute;l werkt</div></td>"
       "</tr></table>") if (strong_label and strong_score is not None and strong_score >= 6.5) else ""}
-    <div class="mq-line"><span class="mq-label">Eerste managementvraag</span><p>{_h(mgmt_q)}</p>{f'<span class="mq-source">{_h(mgmt_q_source)}</span>' if mgmt_q_source else ''}</div>
+    <div class="mq-line"><span class="mq-label">Gespreksopener</span><p>{_h(mgmt_q)}</p>{f'<span class="mq-source">{_h(mgmt_q_source)}</span>' if mgmt_q_source else ''}</div>
   </div>
   {usage_html}
   {responsbasis_html}
@@ -882,6 +882,36 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
   </div>
   <p class="trustline">Nog niet besluiten of een verdieping of kortere vervolgmeting nodig is: dat volgt uit het gesprek.</p>
 </div>"""
+
+
+def _raster_attribution(rows: list[dict], scan_type: str) -> str:
+    """Bronregel onder de gespreksopener op p.02: benoemt hoe het
+    raster-startpunt tot stand kwam. Sinds het prioriteringsraster kan een
+    spreidings- of verdiepingsvlag het startpunt binnen PRIORITY_TIE_MARGIN
+    voor de strikt laagste factor zetten; een vaste "laagst scorende
+    factor"-regel zou p.02 dan het raster laten tegenspreken."""
+    if not rows:
+        return ""
+    top = rows[0]
+    if top["base"] > min(r["base"] for r in rows):
+        # Alleen een vlag kan een rij boven een lagere base tillen (sort-key
+        # in rank_factors); benoem welk signaal de doorslag gaf, in dezelfde
+        # termen als RASTER_UITLEG.
+        spread, deep = top["spread_flag"], top["deepening_state"] == 1
+        if spread and deep:
+            return ("De scores lagen vrijwel gelijk; de spreiding en de "
+                    "gedeelde toelichting uit de verdieping gaven de doorslag.")
+        if spread:
+            return ("De scores lagen vrijwel gelijk; de spreiding tussen "
+                    "respondenten gaf de doorslag.")
+        return ("De scores lagen vrijwel gelijk; de gedeelde toelichting "
+                "uit de verdieping gaf de doorslag.")
+    if scan_type == "exit" and top["score"] > min(r["score"] for r in rows):
+        # De vertrekreden-weging (EXIT_REASON_WEIGHT) zette dit thema bovenaan
+        # terwijl een andere factor de laagste kale score heeft.
+        return ("Gebaseerd op de score en hoe vaak dit thema als "
+                "vertrekreden is genoemd.")
+    return "Gebaseerd op de laagst scorende factor."
 
 
 def _deepening_campaign_active(deepening_agg: dict) -> bool:
@@ -2080,7 +2110,7 @@ def render_exit_report_html(data: dict) -> str:
             br_mgmt_q_source = "Gebaseerd op de meest gekozen toelichting van respondenten in de verdieping."
         else:
             br_mgmt_q = _mgmt_q(tf, "exit")
-            br_mgmt_q_source = "Gebaseerd op de laagst scorende factor."
+            br_mgmt_q_source = _raster_attribution(_raster_rows, "exit")
     else:
         why_cells     = ""
         primary_fkey  = low_f[0] if low_f else None
@@ -2436,7 +2466,7 @@ def render_retention_report_html(data: dict) -> str:
             br_mgmt_q_source = "Gebaseerd op de meest gekozen toelichting van respondenten in de verdieping."
         else:
             br_mgmt_q = _mgmt_q(tf, ST)
-            br_mgmt_q_source = "Gebaseerd op de laagst scorende factor."
+            br_mgmt_q_source = _raster_attribution(_raster_rows, ST)
     else:
         why_cells     = ""
         primary_fkey  = low_f[0] if low_f else None
