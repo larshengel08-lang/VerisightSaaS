@@ -1,12 +1,15 @@
 # Loep
 
-> Loep helpt HR-teams bij organisaties met 100 tot 1.000 medewerkers scherper
-> zien wat telt: Loep Behoud laat zien waar behoud onder druk staat, Loep
-> Vertrek brengt vertrekpatronen in beeld en Loep Start volgt hoe nieuwe
-> medewerkers landen. Elke scan is een begeleide analyse (geen
-> zelfbedieningstool): uitvoering, managementrapport met prioriteiten en een
-> begeleide managementbespreking zijn inbegrepen. Rapportage is altijd op
-> groepsniveau, zonder individuele voorspellingen of profielen.
+> Loep helpt organisaties van 100 tot 1.000 medewerkers zien waar het wringt,
+> waarom volgens hun eigen mensen, en waar ze moeten beginnen. Anders dan een
+> breed medewerkersonderzoek eindigt elke Loep-scan in een ranglijst waarvan
+> de lezer ziet hoe die tot stand komt, plus een gesprek waarin HR en
+> management kiezen wat ze als eerste aanpakken. Loep Behoud (waar het wringt
+> bij mensen die je wilt houden), Loep Vertrek (waarom mensen weggingen) en
+> Loep Start (hoe nieuwe medewerkers landen). Elke scan is begeleid: Loep doet
+> de meting en de analyse, de klant beheert geen software. Rapportage altijd
+> per groep, nooit per persoon, zonder voorspellingen of automatisch
+> gegenereerde actieplannen.
 
 ## Publieke routes
 

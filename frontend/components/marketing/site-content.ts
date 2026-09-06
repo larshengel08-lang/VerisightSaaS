@@ -526,8 +526,8 @@ export const pricingCards = [
     description:
       'De standaard eerste instap voor organisaties die snel een betrouwbaar organisatiebeeld, duidelijke prioriteiten en een professioneel managementrapport over uitstroom willen dat ook in sponsor-, prioriteits- en budgetgesprekken overeind blijft.',
     bullets: [
-      'Scan uitsturen en bewaken door Loep',
-      'Managementrapport met factoranalyse en prioriteiten',
+      'Loep zet alles klaar; jij stuurt één mail naar je mensen',
+      'Rapport: waar het wringt, waarom, en waar je begint',
       'Begeleide managementbespreking (60–90 min)',
       'Eerste keuze en vervolgrichting vastgesteld',
     ],
@@ -619,7 +619,7 @@ export const faqs = [
   ],
   [
     'Is Loep Behoud gewoon een MTO?',
-    'Nee. Loep Behoud is smaller en scherper gepositioneerd: het is een compacte scan voor vroegsignalering op behoud op groeps- en segmentniveau rond retentiesignaal, stay-intent, vertrekintentie en beinvloedbare werkfactoren.',
+    'Nee. Een MTO meet alles een beetje en levert een dik rapport op. Loep Behoud is smal en scherp: het laat zien waar het wringt bij de mensen die je wilt houden, wat ze daar zelf over zeggen, en waar je begint. Per afdeling, nooit per persoon.',
   ],
   [
     'Wanneer kies je voor de combinatie?',

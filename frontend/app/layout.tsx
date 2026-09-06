@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     shortcut: [{ url: '/icon.png', type: 'image/png' }],
   },
   description:
-    'Loep helpt HR-teams bij organisaties met 100 tot 1.000 medewerkers zien waar behoud onder druk staat, waarom mensen vertrekken en hoe nieuwe medewerkers landen. Met Loep Behoud, Loep Vertrek en Loep Start: rapport en managementbespreking inbegrepen.',
+    'Loep laat organisaties van 100 tot 1.000 medewerkers zien waar het wringt, waarom volgens hun eigen mensen, en waar ze moeten beginnen. Loep Behoud, Loep Vertrek en Loep Start: rapport en gesprek inbegrepen, geen software om te beheren.',
   metadataBase: new URL('https://www.getloep.nl'),
   openGraph: {
     type: 'website',
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     siteName: 'Loep',
     title: 'Loep | Begeleide analyse van behoud, vertrek en onboarding',
     description:
-      'Zie eerder waar behoud onder druk staat, begrijp waarom medewerkers vertrekken en volg hoe nieuwe mensen landen. Begeleide analyse met rapport en managementbespreking.',
+      'Zie waar het wringt voordat mensen vertrekken, hoor waarom van je mensen zelf, en weet waar je begint. Begeleide scan met rapport en gesprek inbegrepen.',
     images: [
       {
         url: '/opengraph-image',
@@ -53,7 +53,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Loep | Begeleide analyse van behoud, vertrek en onboarding',
     description:
-      'Zie eerder waar behoud onder druk staat, begrijp waarom medewerkers vertrekken en volg hoe nieuwe mensen landen. Begeleide analyse met rapport en managementbespreking.',
+      'Zie waar het wringt voordat mensen vertrekken, hoor waarom van je mensen zelf, en weet waar je begint. Begeleide scan met rapport en gesprek inbegrepen.',
     images: ['/opengraph-image'],
   },
   robots: {

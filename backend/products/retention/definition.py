@@ -27,12 +27,12 @@ SCAN_DEFINITION: dict[str, Any] = {
             "vertrekintentie en open tekst op persoonsniveau blijven buiten beeld; segmenten verschijnen alleen bij voldoende n."
         ),
         "evidence_status": (
-            "RetentieScan is een v1-werkmodel: inhoudelijk plausibel, intern consistent en "
+            "Loep Behoud is een v1-werkmodel: inhoudelijk plausibel, intern consistent en "
             "testmatig beschermd. Het product is nadrukkelijk geen pragmatisch bewezen of wetenschappelijk gevalideerde predictor van vrijwillig vertrek."
         ),
     },
-    "survey_intro": "Jouw mening telt. Deze RetentieScan is een compacte scan voor vroegsignalering op behoud op groepsniveau - niet voor individuele beoordeling of voorspelling. Invullen kost circa 6 minuten.",
-    "survey_privacy_note": "Je antwoorden worden vertrouwelijk verwerkt en alleen op groeps- of segmentniveau gerapporteerd. De uitkomsten zijn bedoeld als managementinformatie over werkbeleving en behoud, niet als individueel oordeel, brede tevredenheidsmeting of voorspelling. Als je tussentijds stopt, bewaart deze browser tijdelijk een concept op dit apparaat zolang je dit tabblad open houdt.",
+    "survey_intro": "Jouw mening telt. Deze vragenlijst gaat over hoe jij je werk ervaart en wat maakt dat je blijft of zou vertrekken. Je antwoorden worden alleen per groep bekeken, nooit per persoon. Invullen kost ongeveer 6 minuten.",
+    "survey_privacy_note": "Je antwoorden zijn vertrouwelijk en worden alleen per groep gerapporteerd, nooit per persoon. Ze zijn bedoeld om te zien waar het in de organisatie wringt, niet om jou te beoordelen of iets over jou te voorspellen. Als je tussentijds stopt, bewaart deze browser tijdelijk een concept op dit apparaat zolang je dit tabblad open houdt.",
     "sdt_intro": "De volgende stellingen gaan over hoe jij je werk nu ervaart. Geef aan in welke mate elke stelling voor jou van toepassing is (1 = helemaal niet mee eens, 5 = helemaal mee eens).",
     "org_intro": "Geef aan in welke mate de volgende uitspraken van toepassing zijn op jouw huidige werksituatie.",
     "stay_intro": "De volgende stelling gaat over jouw bereidheid om te blijven en de kans dat je hier op langere termijn wilt blijven werken.",
@@ -43,12 +43,12 @@ SCAN_DEFINITION: dict[str, Any] = {
     ),
     "open_text_label": "Welke verandering in je werk, leiding of samenwerking zou jouw bereidheid om te blijven het meest versterken?",
     "open_text_placeholder": "Welke verandering zou behoud voor jou het meest versterken?",
-    "open_text_help": "Je antwoord wordt geanonimiseerd opgeslagen en alleen als groepssignaal voor verificatie en opvolging gebruikt.",
-    "invite_intro": "Je leidinggevende of HR-afdeling nodigt je uit om een korte vragenlijst in te vullen over jouw werkbeleving en signalen rond behoud. Jouw input wordt vertrouwelijk verwerkt en helpt de organisatie eerder bij te sturen op groepsniveau.",
+    "open_text_help": "Je antwoord wordt anoniem bewaard en alleen per groep bekeken, nooit per persoon. Noem liever geen namen.",
+    "invite_intro": "Je leidinggevende of HR nodigt je uit voor een korte vragenlijst over hoe jij je werk ervaart. Je antwoorden zijn vertrouwelijk en worden alleen per groep bekeken. Zo weet de organisatie eerder waar het wringt.",
     "invite_duration": "6-10 minuten",
-    "contact_subject": "Kennismakingsaanvraag RetentieScan",
+    "contact_subject": "Kennismakingsaanvraag Loep Behoud",
     "dashboard_signal_help": "Retentiesignaal 1-10: een gelijkgewogen v1-samenvatting van SDT-werkbeleving en beinvloedbare werkfactoren. Hogere score = sterker samenvattend groepssignaal dat behoud aandacht vraagt.",
-    "report_repeat_title": "Herhaal de RetentieScan - bijvoorbeeld per kwartaal of halfjaar",
+    "report_repeat_title": "Herhaal Loep Behoud, bijvoorbeeld per kwartaal of halfjaar",
     "report_repeat_body": "Deze meting geeft een momentopname van het retentiesignaal en de aanvullende signalen rond behoud. Door periodiek te meten zie je hoe werkbeleving, stay-intent, vertrekintentie en prioriteiten verschuiven en waar management bevestiging of bijstelling nodig heeft.",
     "sdt_items": [
         ("B1", "In mijn werk heb ik het gevoel dat ik zelf keuzes kan maken over hoe ik mijn taken uitvoer."),

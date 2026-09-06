@@ -36,23 +36,23 @@ const bodyFont = "var(--font-ibm-plex-sans), system-ui, sans-serif"
 const suiteFlowPoints = [
   {
     index: '01',
-    title: 'Zie wat opvalt',
-    body: 'Patronen en verschillen worden snel zichtbaar.',
+    title: 'Zie waar het wringt',
+    body: 'Per afdeling, nooit per persoon.',
   },
   {
     index: '02',
-    title: 'Begrijp wat eerst telt',
-    body: 'Niet alles tegelijk, maar focus op wat nu aandacht vraagt.',
+    title: 'Hoor waarom',
+    body: 'Van je mensen zelf, niet van een algoritme.',
   },
   {
     index: '03',
-    title: 'Maak opvolging concreet',
-    body: 'Leg vast wie iets oppakt en wat de eerste stap is.',
+    title: 'Weet waar je begint',
+    body: 'Eén ranglijst, en je ziet waarom.',
   },
   {
     index: '04',
-    title: 'Plan het reviewmoment',
-    body: 'Zo blijft inzicht niet hangen in rapportage.',
+    title: 'Kies: wat, wie, wanneer',
+    body: 'Samen, in één gesprek.',
   },
 ]
 
@@ -73,7 +73,7 @@ const routeCards = [
     index: '01',
     eyebrow: 'Behoud onder druk',
     title: 'Loep Behoud',
-    body: 'Wij laten zien waar behoud onder druk staat, voordat uitstroom zichtbaar wordt. Rapport en bespreking inbegrepen.',
+    body: 'Waar het wringt bij de mensen die je wilt houden, waarom volgens henzelf, en waar je begint. Rapport en gesprek inbegrepen.',
     href: '/producten#loep-behoud',
     accent: SURFACE.teal,
   },
@@ -81,7 +81,7 @@ const routeCards = [
     index: '02',
     eyebrow: 'Vertrek begrijpen',
     title: 'Loep Vertrek',
-    body: 'Wij brengen vertrekpatronen scherp in beeld en leveren een rapport met prioriteiten. Begeleide bespreking inbegrepen.',
+    body: 'Waarom mensen écht weggingen, volgens henzelf, en wat je als eerste aanpakt. Rapport en gesprek inbegrepen.',
     href: '/producten#loep-vertrek',
     accent: SURFACE.amber,
   },
@@ -118,19 +118,19 @@ const managementFlowSteps = [
     step: '1',
     label: 'Luisteren',
     title: 'Medewerkers vullen de scan in',
-    body: 'Anoniem, op groepsniveau en in ongeveer 10 minuten ingevuld. Je levert de doelgroep aan; wij sturen de scan uit en bewaken de uitvoering, zonder toolbeheer voor je team.',
+    body: 'Anoniem, in tien minuten ingevuld. Loep zet alles klaar; jij stuurt één mail naar je mensen vanuit je eigen mailbox. Loep ziet hun adressen nooit, en jij beheert geen tool.',
   },
   {
     step: '2',
     label: 'Begrijpen',
-    title: 'Loep levert een rapport waar je mee aan tafel kunt',
-    body: 'We duiden de belangrijkste patronen en leveren een managementrapport met prioriteiten en de eerste managementvraag. In weken, niet maanden.',
+    title: 'Loep levert een rapport met een antwoord',
+    body: 'Een rapport dat niet alleen zegt wat laag scoort, maar ook wat je mensen daar zelf over zeggen. Plus één ranglijst: dit eerst, en je ziet precies waarom. Binnen weken, niet maanden.',
   },
   {
     step: '3',
     label: 'Kiezen',
-    title: 'Samen de eerste gerichte keuze',
-    body: 'De managementbespreking met HR en management leidt tot één eerste keuze: wat pak je aan, en wie is eigenaar.',
+    title: 'Samen kiezen: wat, wie, wanneer',
+    body: 'In het gesprek met je MT kiezen jullie samen: wat pakken we op, wie doet het, wanneer kijken we terug. Geen actieplan uit een computer. Jullie kiezen, met de feiten erbij.',
   },
 ] as const
 
@@ -760,7 +760,7 @@ function HeroSection() {
                   maxWidth: '34rem',
                 }}
               >
-                Loep brengt vroeg in beeld waar behoud onder druk staat, welke patronen terugkomen en welke managementvraag als eerste op tafel moet.
+                Loep laat zien waar het wringt voordat mensen vertrekken, laat je mensen zelf vertellen waarom, en wijst aan waar je begint. Loep doet het werk; jij krijgt een antwoord.
               </p>
 
               <div
@@ -927,10 +927,10 @@ function SuitePreviewSection() {
                   textWrap: 'pretty',
                 }}
               >
-                Geen losse output.
+                Geen stapel grafieken.
                 <br />
                 <span style={{ color: SURFACE.amberGlow, fontStyle: 'italic', fontWeight: 300 }}>
-                  Wel een helder besluitspoor.
+                  Wel een antwoord: hier begin je.
                 </span>
               </h2>
             </Reveal>
@@ -945,7 +945,7 @@ function SuitePreviewSection() {
                   maxWidth: '33rem',
                 }}
               >
-                Loep brengt signalen samen in dashboard, samenvatting en rapport, en helpt vervolgens om prioriteit, eigenaar en actie vast te leggen.
+                Het rapport eindigt niet in grafieken maar in een ranglijst: dit pak je als eerste aan, en hierom. Je ziet per onderwerp wat meewoog, dus geen magisch cijfer dat je maar moet geloven. Daarna bespreken we het samen met je MT en leggen we vast: wat, wie, wanneer.
               </p>
             </Reveal>
 

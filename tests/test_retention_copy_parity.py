@@ -48,6 +48,9 @@ def test_retention_copy_keeps_non_predictive_management_boundary():
 def test_retention_survey_copy_stays_compact_and_actionable():
     backend_definition = _read("backend/products/retention/definition.py")
 
-    assert "compacte scan voor vroegsignalering op behoud" in backend_definition
+    # Respondent-copy in gewone taal (copy-ronde 2026-09-06): geen "vroegsignalering op
+    # behoud op groepsniveau"-jargon en geen oude productnaam in wat een medewerker leest.
+    assert "alleen per groep bekeken, nooit per persoon" in backend_definition
     assert "welke verandering in je werk, leiding of samenwerking" in backend_definition
-    assert "groepssignaal voor verificatie en opvolging" in backend_definition
+    assert "anoniem bewaard en alleen per groep bekeken" in backend_definition
+    assert "RetentieScan" not in backend_definition.split("survey_intro")[1].split("open_text_help")[0]

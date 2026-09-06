@@ -159,9 +159,10 @@ describe('Loep Behoud positioning copy', () => {
       ([question]) => question === 'Hoe verhouden Loep Behoud ritmeroute en compacte vervolgmeting zich tot elkaar?',
     )
 
-    expect(mtoFaq?.[1].toLowerCase()).toContain('smaller en scherper')
-    expect(mtoFaq?.[1].toLowerCase()).toContain('groeps- en segmentniveau')
-    expect(mtoFaq?.[1].toLowerCase()).toContain('stay-intent')
+    // Copy-ronde 2026-09-06: gewone taal, zelfde grenzen (groepsinzicht, geen individuele lezing).
+    expect(mtoFaq?.[1].toLowerCase()).toContain('smal en scherp')
+    expect(mtoFaq?.[1].toLowerCase()).toContain('nooit per persoon')
+    expect(mtoFaq?.[1].toLowerCase()).toContain('wat ze daar zelf over zeggen')
     expect(scoreFaq?.[1].toLowerCase()).toContain('groeps- en segmentinzichten')
     expect(scoreFaq?.[1].toLowerCase()).toContain('performance-sturing')
     expect(predictorFaq?.[1].toLowerCase()).toContain('verificatie en prioritering')

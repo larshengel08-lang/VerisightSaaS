@@ -29,7 +29,7 @@ SCAN_DEFINITION: dict[str, Any] = {
             "aantallen vragen terughoudendheid in detailweergave."
         ),
         "evidence_status": (
-            "Onboarding 30-60-90 is in deze eerste wave een begrensde checkpoint-laag binnen de bestaande "
+            "Loep Start is in deze eerste wave een begrensde checkpoint-laag binnen de bestaande "
             "Loep-methodiek. De output helpt vroege integratie en eerste frictie duiden, maar is nog geen "
             "multi-checkpoint journey- of retentiemodel en ook geen client onboarding-route."
         ),
@@ -73,7 +73,7 @@ SCAN_DEFINITION: dict[str, Any] = {
         "Deze compacte meting helpt de organisatie zien waar nieuwe medewerkers in deze fase steun of duidelijkheid nodig hebben."
     ),
     "invite_duration": "3-5 minuten",
-    "contact_subject": "Kennismakingsaanvraag Onboarding 30-60-90",
+    "contact_subject": "Kennismakingsaanvraag Loep Start",
     "dashboard_signal_help": (
         "Onboardingsignaal 1-10: samenvattend checkpointsignaal van korte werkbeleving en geselecteerde werkfactoren "
         "in deze campaign. Hogere score = scherper vroeg aandachtssignaal dat nu bestuurlijke opvolging vraagt."

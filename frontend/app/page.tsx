@@ -8,7 +8,7 @@ import { faqSchema } from '@/components/marketing/site-content'
 export const metadata: Metadata = {
   title: 'Loep | Begeleide analyse van behoud, vertrek en onboarding',
   description:
-    'Zie eerder waar behoud onder druk staat, waarom medewerkers vertrekken en hoe nieuwe mensen landen. Begeleide analyse voor HR en management, met rapport en managementbespreking inbegrepen.',
+    'Zie waar het wringt voordat mensen vertrekken, hoor waarom van je mensen zelf, en weet waar je begint. Begeleide scan voor HR en management, rapport en gesprek inbegrepen.',
   alternates: { canonical: '/' },
 }
 
@@ -18,7 +18,7 @@ export default function LandingPage() {
     '@type': 'WebPage',
     name: 'Loep',
     description:
-      'Begeleide analyse van behoud, vertrek en onboarding voor HR en management, met managementrapport en begeleide bespreking per scan.',
+      'Begeleide scan van behoud, vertrek en onboarding voor HR en management: waar het wringt, waarom volgens je mensen, en waar je begint. Rapport en gesprek per scan inbegrepen.',
     url: 'https://www.getloep.nl/',
     inLanguage: 'nl-NL',
     mainEntity: {
