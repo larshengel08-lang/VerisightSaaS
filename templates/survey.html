@@ -305,6 +305,10 @@
     }
     .has-error .field-error { display: block; }
     .has-error .likert-options { outline: 2px solid var(--danger); border-radius: 8px; }
+    /* Verdiepings- en richtingsblokken hebben geen .likert-options en geen
+       .field-error, dus zonder deze regel markeerde has-error alleen de banner
+       bovenaan en niet het veld dat ontbreekt (e2e-bevinding 2026-09-08). */
+    .has-error .dp-other input[type="text"] { outline: 2px solid var(--danger); outline-offset: 2px; }
 
     /* ── Privacy notice ──────────────────────────────────────── */
     .privacy-note {
