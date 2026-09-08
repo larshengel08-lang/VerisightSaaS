@@ -234,6 +234,20 @@ p  { margin-bottom: 6px; font-size: 11px; }
   border-left: 3px solid """ + accent + r"""; padding-left: 9px; }
 .r-gate { font-size: 10px; color: """ + STEEL + r"""; margin-top: 6px; font-style: italic; }
 
+/* ── Richtingblok "Wat er moet gebeuren" ── */
+.dir-block { margin-top: 18px; break-inside: avoid; }
+.dir-intro { font-size: 10px; color: #374151; line-height: 1.5; margin: 4px 0 10px; max-width: 70ch; }
+.dir-grid { width: 100%; border-collapse: separate; border-spacing: 12px 0; margin-left: -12px; }
+.dir-card { width: 50%; vertical-align: top; background: #FFFFFF; border-left: 3px solid """ + HAIRLINE + r"""; padding: 12px 14px; }
+.dir-card.dir-clear { border-left-color: """ + accent + r"""; }
+.dir-role { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.12em; text-transform: uppercase; color: """ + accent_lo + r"""; margin-bottom: 6px; }
+.dir-head { font-size: 14px; font-weight: 700; line-height: 1.3; color: """ + NAVY + r"""; margin-bottom: 6px; }
+.dir-src { font-size: 10px; color: #374151; margin-bottom: 8px; }
+.dir-tbl td { font-size: 9.5px; padding: 5px 6px; }
+.dir-caveat { font-size: 10px; color: #92400E; margin: 4px 0 0; }
+.dir-chain { font-family: 'JetBrains Mono', monospace; font-size: 8.5px; color: """ + STEEL + r"""; margin-top: 8px; }
+.mq-direction { font-size: 11px; font-weight: 600; color: """ + NAVY + r"""; margin: 8px 0 0; }
+
 /* ── Trust / methodiek ── */
 .tg { display: table; width: 100%; border-collapse: separate; border-spacing: 10px 0; }
 .tc { display: table-cell; background: #fff; border: 1px solid """ + HAIRLINE + r"""; padding: 14px 15px; vertical-align: top; width: 33%; }

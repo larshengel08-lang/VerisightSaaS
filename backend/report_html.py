@@ -24,8 +24,13 @@ from backend.models import Campaign, Respondent, SurveyResponse
 from backend.report_css import build_css, RAG_HIGH, RAG_MID, RAG_LOW
 from backend.report_distribution import MIN_DISTRIBUTION_N, distribution_block
 from backend.products.shared.deepening import (
+    DIRECTION_SCAN_TYPES,
     agenda_enrichment,
     aggregate_deepening,
+    aggregate_direction,
+    direction_imperative,
+    direction_option_texts,
+    direction_state,
     get_deepening_sets,
 )
 from backend.products.shared.registry import get_product_module
@@ -534,7 +539,7 @@ def _bestuurlijke_read(*, kernzin: str, totaalbeeld: str,
                        why_cells_html: str, strong_label: str, strong_score: float | None,
                        mgmt_q: str, mgmt_q_source: str = "",
                        responsbasis_html: str = "", opener_html: str = "",
-                       usage_html: str = "") -> str:
+                       usage_html: str = "", direction_line: str = "") -> str:
     return f"""<div class="pb sec">
   {opener_html or '<span class="slabel">Bestuurlijke read</span>'}
   <p class="br-kernzin">{_h(kernzin)}</p>
@@ -545,7 +550,7 @@ def _bestuurlijke_read(*, kernzin: str, totaalbeeld: str,
     {("<table class='sg'><tr>"
       f"<td><div class='sc-l'>Relatief sterk</div><div class='sc-v'>{_score_str(strong_score)}</div><div class='sc-b'>{_h(strong_label)}: wat w&eacute;l werkt</div></td>"
       "</tr></table>") if (strong_label and strong_score is not None and strong_score >= 6.5) else ""}
-    <div class="mq-line"><span class="mq-label">Gespreksopener</span><p>{_h(mgmt_q)}</p>{f'<span class="mq-source">{_h(mgmt_q_source)}</span>' if mgmt_q_source else ''}</div>
+    <div class="mq-line"><span class="mq-label">Gespreksopener</span><p>{_h(mgmt_q)}</p>{f'<span class="mq-source">{_h(mgmt_q_source)}</span>' if mgmt_q_source else ''}{f'<p class="mq-direction">{_h(direction_line)}</p>' if direction_line else ''}</div>
   </div>
   {usage_html}
   {responsbasis_html}
@@ -784,11 +789,117 @@ def _raster_deepening_cell(row: dict, scan_type: str) -> str:
                4: CELL_CAP_REACHED, 5: CELL_NOT_TRIGGERED}.get(state, ""))
 
 
+# ── Richtingblok "Wat er moet gebeuren" (spec 2026-09-07 par. 6) ─────────────
+
+DIRECTION_BLOCK_EYEBROW = "Wat er moet gebeuren"
+DIRECTION_BLOCK_INTRO = (
+    "Elke respondent kreeg één vraag over het onderwerp dat bij henzelf het laagst "
+    "scoorde: wat zou hier het meest helpen? Hieronder staat wat die respondenten kozen "
+    "voor het startpunt en het tweede punt. Dit is hun keuze, geen advies van Loep.")
+_EMPTY_DIRECTION_AGG = {"lowest_n": 0, "offered": 0, "answered": 0, "skipped": 0, "counts": {}}
+
+
+def _direction_chain(agg: dict, n_total: int) -> str:
+    """Keten laagst -> (aangeboden ->) beantwoord/overgeslagen (spec par. 6.1)."""
+    lowest, offered = agg["lowest_n"], agg["offered"]
+    answered, skipped = agg["answered"], agg["skipped"]
+    had = f"hadden {lowest}" if lowest != 1 else "had 1"
+    parts: list[str] = []
+    if offered < lowest:
+        parts.append(f"{offered} kregen de vraag" if offered != 1 else "1 kreeg de vraag")
+        parts.append(f"{answered} beantwoordden die" if answered != 1 else "1 beantwoordde die")
+    else:
+        parts.append(f"{answered} beantwoordden de vraag" if answered != 1 else "1 beantwoordde de vraag")
+    if skipped:
+        parts.append(f"{skipped} sloegen over" if skipped != 1 else "1 sloeg over")
+    return f"Van de {n_total} respondenten {had} dit als laagste; {', '.join(parts)}."
+
+
+def _direction_card(role: str, label: str, agg: dict, scan_type: str,
+                    factor_key: str, n_total: int) -> str:
+    """Eén kaart (startpunt of tweede punt) in de vier staten van spec par. 6.1."""
+    st = direction_state(agg, factor_key)
+    texts = direction_option_texts(scan_type, factor_key)
+    n = st["n"]
+    role_lbl = "Startpunt" if role == "startpunt" else "Tweede punt"
+    which = "het startpunt" if role == "startpunt" else "het tweede punt"
+    if st["state"] == "too_few":
+        head, src = "Te weinig antwoorden voor een richting.", ""
+    elif st["state"] == "clear":
+        head = direction_imperative(scan_type, factor_key, st["top_key"]) or ""
+        src = f"Volgens {st['top_n']} van de {n} bij wie {_h(_lc(label))} het laagst scoorde."
+    elif st["state"] == "none_needed":
+        head = "Hier hoeft volgens de meeste betrokkenen niets."
+        # De letterlijke rechte aanhalingstekens rondom de gekozen optietekst zijn
+        # bewust buiten _h() gehouden (die zou ze naar &#x27; omzetten); alleen de
+        # geinterpoleerde optietekst zelf wordt geescaped.
+        src = (f"{st['top_n']} van de {n} bij wie dit het laagst scoorde kozen "
+               f"'{_h(texts.get(st['top_key'], st['top_key']))}'. Bespreek of dit dan {which} moet zijn.")
+    else:
+        head = "Geen eenduidige richting."
+        src = f"De {n} bij wie dit het laagst scoorde kozen verschillend."
+
+    table = ""
+    if st["state"] != "too_few":
+        rows = "".join(
+            f'<tr><td class="iq">{_h(texts.get(k, k))}</td>'
+            f'<td class="is">{f"{round(c / n * 100)}% ({c})" if n >= 10 else c}</td></tr>'
+            for k, c in st["ranked"])
+        table = f'<table class="item-tbl dir-tbl">{rows}</table>'
+        if n <= 4:
+            table += ('<p class="dir-caveat">Beperkte basis: gebruik dit als '
+                      'gesprekshaakje, niet als conclusie.</p>')
+    # src is hierboven al per interpolatie geescaped (_h op label/optietekst
+    # afzonderlijk); nogmaals _h() op de hele string zou ook de bewust
+    # letterlijke aanhalingstekens rond de optietekst naar &#x27; omzetten.
+    src_html = f'<div class="dir-src">{src}</div>' if src else ""
+    return (f'<td class="dir-card dir-{st["state"]}">'
+            f'<div class="dir-role">{role_lbl}: {_h(label)}</div>'
+            f'<div class="dir-head">{_h(head)}</div>{src_html}{table}'
+            f'<div class="dir-chain">{_h(_direction_chain(agg, n_total))}</div></td>')
+
+
+def _wat_moet_gebeuren_block(ranked: list[dict], direction_agg: dict,
+                             scan_type: str, n_total: int) -> str:
+    """Twee kaarten (startpunt + tweede punt) onder het raster. Leeg zonder
+    richtingdata (campagne-gate zit in build_report_data)."""
+    if not direction_agg:
+        return ""
+    cards = "".join(
+        _direction_card(r["agenda_role"], r["label"],
+                        direction_agg.get(r["key"]) or _EMPTY_DIRECTION_AGG,
+                        scan_type, r["key"], n_total)
+        for r in ranked if r["agenda_role"] in ("startpunt", "tweede"))
+    if not cards:
+        return ""
+    return (f'<div class="dir-block"><span class="eyebrow">{DIRECTION_BLOCK_EYEBROW}</span>'
+            f'<p class="dir-intro">{DIRECTION_BLOCK_INTRO}</p>'
+            f'<table class="dir-grid"><tr>{cards}</tr></table></div>')
+
+
+def _direction_p02_line(direction_agg: dict, factor_key: str | None, scan_type: str) -> str:
+    """Eén regel over het startpunt op de openingspagina (spec par. 6.2); leeg onder de vloer."""
+    if not direction_agg or not factor_key or factor_key not in direction_agg:
+        return ""
+    st = direction_state(direction_agg[factor_key], factor_key)
+    n = st["n"]
+    if st["state"] == "clear":
+        return (f"Wat er volgens {st['top_n']} van de {n} moet gebeuren: "
+                f"{direction_imperative(scan_type, factor_key, st['top_key'])}")
+    if st["state"] == "divided":
+        return (f"Over wat hier moet gebeuren zijn de {n} die dit het laagst scoorden "
+                "verdeeld. Zie de gespreksagenda.")
+    if st["state"] == "none_needed":
+        return f"{st['top_n']} van de {n} die dit het laagst scoorden zeggen: hier hoeft niets."
+    return ""
+
+
 def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
                          factor_resp_scores: dict[str, list[float]],
                          deepening_active: bool,
                          mgmt_q: str, review_when: str,
-                         opener_html: str) -> str:
+                         opener_html: str,
+                         direction_agg: dict | None = None, n_total: int = 0) -> str:
     """Prioriteringsraster + geintegreerde gespreksagenda (spec par. 2).
 
     Vervangt _eerste_managementspoor voor exit en retention. De tabel toont
@@ -867,6 +978,7 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
   {legenda}
   {gate}
   <div class="r-uitleg">{RASTER_UITLEG[scan_type]}</div>
+  {_wat_moet_gebeuren_block(ranked, direction_agg or {}, scan_type, n_total)}
   <div class="agenda-dark" style="margin-top:16px;">
     <div class="agenda-opener">
       <div style="font-family:'JetBrains Mono', monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#E8A020;margin-bottom:7px;">Gespreksopener</div>
@@ -1583,6 +1695,14 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
             # Pre-feature campagne: nergens een verdieping aangeboden -> geen blokken.
             deepening_agg = {}
 
+    # Richtingvraag (spec 2026-09-07 par. 5.3): zelfde campagne-gate-idee als de verdieping.
+    direction_agg: dict[str, Any] = {}
+    if scan_type in DIRECTION_SCAN_TYPES:
+        direction_agg = aggregate_direction(
+            [(r.org_raw or {}, r.direction_response) for r in responses], scan_type)
+        if not any(a["offered"] > 0 for a in direction_agg.values()):
+            direction_agg = {}
+
     is_retention      = scan_type == "retention"
     retention_profile = None
     if is_retention and avg_risk is not None:
@@ -1673,6 +1793,7 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
         exit_r_dist=exit_r_dist, cont_dist=cont_dist,
         prev_dist=prev_dist, open_texts=open_texts,
         deepening_agg=deepening_agg,
+        direction_agg=direction_agg,
         retention_profile=retention_profile,
         exit_pbs=exit_pbs, ret_pbs=ret_pbs, msp=msp, nsp=nsp,
         factor_items_map=factor_items_map, sdt_items=sdt_items,
@@ -1941,6 +2062,7 @@ def render_exit_report_html(data: dict) -> str:
     _code_to_count = {r["code"]: r["count"] for r in data["exit_r_dist"]}
     exit_code_counts = {fk: _code_to_count.get(FACTOR_EXIT_CODE.get(fk), 0) for fk in fa}
     deep_agg = data.get("deepening_agg") or {}
+    direction_agg = data.get("direction_agg") or {}
     _raster_rows = rank_factors(
         "exit", fa, data.get("factor_resp_scores") or {}, deep_agg,
         exit_reason_counts=exit_code_counts,
@@ -2079,6 +2201,7 @@ def render_exit_report_html(data: dict) -> str:
         responsbasis_html=_responsbasis_band,
         opener_html=ch.opener("Bestuurlijke read"),
         usage_html=_gebruiksblok(data["scan_lbl"]),
+        direction_line=_direction_p02_line(direction_agg, _raster_rows[0]["key"] if _raster_rows else None, "exit"),
     )
 
     # ── Vertrekcontext (p.04 — vóór factorprofiel) ───────────────────────────
@@ -2253,6 +2376,8 @@ def render_exit_report_html(data: dict) -> str:
         mgmt_q=_enriched_q or (_mgmt_q(_startpunt_fk, "exit") if _startpunt_fk else (nsp.get("first_decision") or "")),
         review_when="Plan binnen 45-90 dagen een vervolgmoment: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.",
         opener_html=ch.opener("Waar begint het gesprek?", kicker="Prioritering & gespreksagenda"),
+        direction_agg=direction_agg,
+        n_total=n,
     )
 
     # ── Appendix ─────────────────────────────────────────────────────────────
@@ -2341,6 +2466,7 @@ def render_retention_report_html(data: dict) -> str:
     # verdieping-detailkeuze én de sluitende gespreksagenda dezelfde volgorde
     # gebruiken. ────────────────────────────────────────────────────────────
     deep_agg = data.get("deepening_agg") or {}
+    direction_agg = data.get("direction_agg") or {}
     _raster_rows = rank_factors(
         "retention", fa, data.get("factor_resp_scores") or {}, deep_agg,
         labels={fk: _fl(fk, ST) for fk in ORG_FACTOR_KEYS})
@@ -2441,6 +2567,7 @@ def render_retention_report_html(data: dict) -> str:
         responsbasis_html=_responsbasis_band,
         opener_html=ch.opener("Bestuurlijke read"),
         usage_html=_gebruiksblok(data["scan_lbl"]),
+        direction_line=_direction_p02_line(direction_agg, _raster_rows[0]["key"] if _raster_rows else None, ST),
     )
 
     # ── Behoudscontext (p.04 — vóór factorprofiel) ───────────────────────────
@@ -2604,6 +2731,8 @@ def render_retention_report_html(data: dict) -> str:
         mgmt_q=_enriched_q or (_mgmt_q(_startpunt_fk, ST) if _startpunt_fk else (nsp.get("first_decision") or "")),
         review_when="Plan binnen 45-90 dagen een vervolgmoment: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.",
         opener_html=ch.opener("Waar begint het gesprek?", kicker="Prioritering & gespreksagenda"),
+        direction_agg=direction_agg,
+        n_total=n,
     )
 
     # ── Appendix ─────────────────────────────────────────────────────────────
