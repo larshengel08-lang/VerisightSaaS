@@ -7,7 +7,9 @@ from tests.test_api_flows import _create_campaign, _create_org, _create_responde
 
 
 def _survey_page(client, db_session: Session, scan_type: str) -> str:
-    org = _create_org(db_session, api_key=f"deepening-template-{scan_type}")
+    # slug moet ook uniek zijn: sommige tests roepen dit tweemaal aan binnen
+    # dezelfde db_session (verschillende scan_types), en organizations.slug is uniek.
+    org = _create_org(db_session, slug=f"deepening-template-{scan_type}", api_key=f"deepening-template-{scan_type}")
     campaign = _create_campaign(db_session, org, name=f"Verdieping {scan_type}", scan_type=scan_type)
     respondent = _create_respondent(db_session, campaign, email=f"tmpl-{scan_type}@example.com")
     response = client.get(f"/survey/{respondent.token}")
@@ -34,21 +36,31 @@ def test_exit_survey_contains_deepening_step_with_exit_cap(client, db_session: S
     assert "werkbelasting destijds" in html
 
 
-def test_direction_step_rendered_for_retention(client, db_session: Session):
-    html = _survey_page(client, db_session, "retention")
-    assert 'id="direction-step"' in html
-    assert "Gespreksrichting" in html
-    assert "geen toezegging" in html            # introductieregel
-    assert "__DIRECTION_SETS" in html
+def test_direction_step_rendered_for_retention_and_exit(client, db_session: Session):
+    for scan_type in ("retention", "exit"):
+        html = _survey_page(client, db_session, scan_type)
+        assert 'id="direction-step"' in html, scan_type
+        assert "window.__DIRECTION_SETS = {" in html, scan_type
+        assert "het onderwerp dat bij jou het laagst scoorde" in html, scan_type
+        assert "geen toezegging" in html, scan_type
+        # De oude per-verdieping-koppeling is weg.
+        assert "Nog één korte vraag per onderwerp" not in html, scan_type
+        assert "answeredDeepeningFactors" not in html, scan_type
 
 
-def test_direction_step_rendered_for_exit(client, db_session: Session):
-    # Gespreksrichting geldt sinds 2026-09-07 voor exit én retention (niet meer retention-only).
-    html = _survey_page(client, db_session, "exit")
-    assert 'id="direction-step"' in html
-    assert "Gespreksrichting" in html
-    assert "geen toezegging" in html            # introductieregel
-    assert "__DIRECTION_SETS" in html
+def test_direction_question_text_per_scan_in_json(client, db_session: Session):
+    ret = _survey_page(client, db_session, "retention")
+    ex = _survey_page(client, db_session, "exit")
+    assert "Wat zou hier volgens jou het meest helpen?" in ret
+    assert "Niets, dit zit hier goed" in ret
+    assert "Wat had hier volgens jou het meest geholpen?" in ex
+    assert "Niets, dit zat hier goed" in ex
+
+
+def test_direction_step_absent_for_onboarding(client, db_session: Session):
+    html = _survey_page(client, db_session, "onboarding")
+    assert 'id="direction-step"' not in html
+    assert "window.__DIRECTION_SETS = {" not in html
 
 
 def test_pulse_survey_has_no_deepening_step(client, db_session: Session):
