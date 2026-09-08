@@ -50,5 +50,13 @@ def test_deepening_entry_has_no_direction_field_and_rejects_legacy():
     assert "Verouderd inzendformaat voor gespreksrichting" in str(exc.value)
 
 
-def test_survey_submit_accepts_optional_direction_response():
-    assert SurveySubmit.model_fields["direction_response"].default is None
+def test_survey_submit_wires_direction_response_model():
+    ok = SurveySubmit(token="t", direction_response=_dr())
+    assert isinstance(ok.direction_response, DirectionResponse)
+    with pytest.raises(ValidationError):
+        SurveySubmit(token="t", direction_response=_dr(choice=None))
+
+
+def test_factor_key_required():
+    with pytest.raises(ValidationError):
+        DirectionResponse(**{k: v for k, v in _dr().items() if k != "factor_key"})

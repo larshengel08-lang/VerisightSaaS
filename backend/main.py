@@ -1389,24 +1389,12 @@ async def submit_survey(
                     raise HTTPException(status_code=422, detail="Onbekende verdiepingsoptie.")
             if entry.question_set_version != factor_set["question_set_version"]:
                 raise HTTPException(status_code=422, detail="Verouderde vragenset-versie.")
-            if entry.direction is not None:
-                if scan_type != "retention":
-                    raise HTTPException(status_code=422, detail="Gespreksrichting wordt niet ondersteund voor dit scantype.")
-                direction_set = get_direction_sets(scan_type)[entry.factor_key]
-                valid_route_keys = {o["key"] for o in direction_set["options"]}
-                if entry.direction.choice is not None and entry.direction.choice not in valid_route_keys:
-                    raise HTTPException(status_code=422, detail="Onbekende gespreksrichting-optie.")
-                if entry.direction.question_set_version != direction_set["question_set_version"]:
-                    raise HTTPException(status_code=422, detail="Verouderde gespreksrichting-versie.")
 
     deepening_clean: list[dict] = []
     for entry in payload.deepening_responses:
         d = entry.model_dump()
         if d.get("other_text"):
             d["other_text"] = anonymize_text(d["other_text"])
-        d_dir = d.get("direction")
-        if d_dir and d_dir.get("other_text"):
-            d_dir["other_text"] = anonymize_text(d_dir["other_text"])
         deepening_clean.append(d)
 
     exit_reason_code = payload.exit_reason_code
