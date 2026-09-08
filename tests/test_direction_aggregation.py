@@ -62,6 +62,13 @@ def test_unknown_scan_type_raises():
         aggregate_direction([], "onboarding")
 
 
+def test_answered_without_choice_counts_as_answered_not_skipped():
+    # Een datadefect mag nooit als "sloeg over" in het rapport belanden (spec par. 6.1).
+    rows = [(LOW_WL, _dr(choice=None))]
+    a = aggregate_direction(rows, "retention")["workload"]
+    assert a["answered"] == 1 and a["skipped"] == 0 and a["counts"] == {}
+
+
 def test_aggregate_deepening_ignores_legacy_nested_direction():
     # Oude pilotdata (juli 2026) heeft een genest `direction`-veld dat bewust niet
     # wordt gebackfilld en via report_html.py rechtstreeks uit de JSONB binnenkomt.
@@ -77,42 +84,61 @@ def test_aggregate_deepening_ignores_legacy_nested_direction():
 
 # ── direction_state ────────────────────────────────────────────────────────
 
-def _agg(**counts):
+def _agg(offered=None, lowest_n=None, **counts):
+    """Aggregaat voor direction_state. answered <= offered <= lowest_n wordt
+    expliciet gesteld, niet aangenomen."""
     n = sum(counts.values())
-    return {"lowest_n": n + 1, "offered": n + 1, "answered": n, "skipped": 1, "counts": counts}
+    offered = n if offered is None else offered
+    lowest_n = offered if lowest_n is None else lowest_n
+    assert n <= offered <= lowest_n
+    return {"lowest_n": lowest_n, "offered": offered, "answered": n,
+            "skipped": offered - n, "counts": counts}
 
 
 def test_too_few_below_3():
-    assert direction_state(_agg(wld_peaks=2))["state"] == "too_few"
-    assert direction_state(_agg())["state"] == "too_few"
+    assert direction_state(_agg(wld_peaks=2), "workload")["state"] == "too_few"
+    assert direction_state(_agg(), "workload")["state"] == "too_few"
 
 
 def test_clear_requires_half_and_margin_2():
-    assert direction_state(_agg(wld_peaks=3))["state"] == "clear"            # 3-0
-    assert direction_state(_agg(wld_peaks=2, wld_scope=1))["state"] == "divided"  # 2-1: marge 1
-    assert direction_state(_agg(wld_peaks=3, wld_scope=1))["state"] == "clear"    # 3-1
-    assert direction_state(_agg(wld_peaks=5, wld_scope=3, wld_none=2))["state"] == "clear"   # 50%, marge 2
-    assert direction_state(_agg(wld_peaks=5, wld_scope=4, wld_none=1))["state"] == "divided"  # marge 1
-    assert direction_state(_agg(wld_peaks=4, wld_scope=2, wld_none=2, wld_time=2))["state"] == "divided"  # 40%
+    assert direction_state(_agg(wld_peaks=3), "workload")["state"] == "clear"            # 3-0
+    assert direction_state(_agg(wld_peaks=2, wld_scope=1), "workload")["state"] == "divided"  # 2-1: marge 1
+    assert direction_state(_agg(wld_peaks=3, wld_scope=1), "workload")["state"] == "clear"    # 3-1
+    assert direction_state(_agg(wld_peaks=5, wld_scope=3, wld_none=2), "workload")["state"] == "clear"   # 50%, marge 2
+    assert direction_state(_agg(wld_peaks=5, wld_scope=4, wld_none=1), "workload")["state"] == "divided"  # marge 1
+    assert direction_state(_agg(wld_peaks=4, wld_scope=2, wld_none=2, wld_time=2), "workload")["state"] == "divided"  # 40%
 
 
 def test_none_needed_wins_ties_and_is_evaluated_first():
-    s = direction_state(_agg(wld_none=2, wld_peaks=2))     # 2-2 op n=4
+    s = direction_state(_agg(wld_none=2, wld_peaks=2), "workload")     # 2-2 op n=4
     assert s["state"] == "none_needed" and s["top_key"] == "wld_none" and s["top_n"] == 2
-    assert direction_state(_agg(wld_none=5, wld_peaks=1, wld_scope=1))["state"] == "none_needed"
-    assert direction_state(_agg(wld_none=2, wld_peaks=3))["state"] == "divided"  # niets 40%, peaks 60% marge 1
+    assert direction_state(_agg(wld_none=5, wld_peaks=1, wld_scope=1), "workload")["state"] == "none_needed"
+    assert direction_state(_agg(wld_none=2, wld_peaks=3), "workload")["state"] == "divided"  # niets 40%, peaks 60% marge 1
 
 
 def test_other_as_top_is_divided_and_logged(caplog):
     with caplog.at_level(logging.WARNING):
-        s = direction_state(_agg(wld_other=6, wld_peaks=2), factor_key="workload")
+        s = direction_state(_agg(wld_other=6, wld_peaks=2), "workload")
     assert s["state"] == "divided"
     assert any("optieset review" in r.message for r in caplog.records)
 
 
+def test_other_top_below_warn_threshold_is_silent(caplog):
+    with caplog.at_level(logging.WARNING):
+        s = direction_state(_agg(wld_other=4, wld_peaks=2), "workload")
+    assert s["state"] == "divided"
+    assert not [r for r in caplog.records if "optieset review" in r.message]
+
+
 def test_state_payload_shape():
-    s = direction_state(_agg(wld_peaks=6, wld_scope=2, wld_none=2))
+    s = direction_state(_agg(wld_peaks=6, wld_scope=2, wld_none=2), "workload")
     assert s["state"] == "clear"
     assert s["n"] == 10 and s["top_key"] == "wld_peaks" and s["top_n"] == 6 and s["second_n"] == 2
     assert s["ranked"][0] == ("wld_peaks", 6)
     assert [k for k, _ in s["ranked"]] == ["wld_peaks", "wld_none", "wld_scope"]  # aantal desc, key asc
+
+
+def test_empty_counts_with_enough_answered_raises():
+    agg = {"lowest_n": 3, "offered": 3, "answered": 3, "skipped": 0, "counts": {}}
+    with pytest.raises(ValueError):
+        direction_state(agg, "workload")

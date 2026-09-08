@@ -759,7 +759,7 @@ DIRECTION_OTHER_WARN_N = 8   # vanaf hier een reviewvlag als *_other de topoptie
 
 
 def aggregate_direction(
-    rows: list[tuple[dict[str, int], dict | None]],
+    rows: list[tuple[dict[str, int], dict[str, Any] | None]],
     scan_type: str,
 ) -> dict[str, dict[str, Any]]:
     """Per factor de keten laagst -> aangeboden -> beantwoord/overgeslagen + keuzeverdeling
@@ -768,6 +768,12 @@ def aggregate_direction(
     rows: per respondent (org_raw, direction_response | None).
     lowest_n wordt herberekend uit org_raw (niet uit het opgeslagen veld), zodat de
     keten ook klopt als een oude client niets meestuurde (lowest_n > offered).
+
+    Een status-`answered`-rij zonder `choice` telt als answered maar draagt niet bij
+    aan counts (mirrort aggregate_deepening): een datadefect mag nooit als "sloeg
+    over" in het rapport belanden (spec par. 6.1). Het gevolg is answered >=
+    sum(counts), wat de clear-drempel in direction_state alleen strenger maakt --
+    de veilige kant voor een eerlijkheidscontract.
     """
     if scan_type not in DIRECTION_VERSION:
         raise ValueError(f"unknown scan_type {scan_type!r}")
@@ -785,11 +791,15 @@ def aggregate_direction(
         if agg is None:
             continue
         agg["offered"] += 1
-        if dr["status"] == "answered" and dr.get("choice"):
+        if dr["status"] == "answered":
             agg["answered"] += 1
-            agg["counts"][dr["choice"]] = agg["counts"].get(dr["choice"], 0) + 1
+            if dr.get("choice"):
+                agg["counts"][dr["choice"]] = agg["counts"].get(dr["choice"], 0) + 1
         else:
             agg["skipped"] += 1
+    # Tweede lus, bewust apart van de rij-lus hierboven: lowest_n is pas compleet
+    # nadat alle respondenten zijn verwerkt, dus deze check kan niet in dezelfde
+    # lus als de rij-verwerking worden gevouwen.
     for fk, agg in out.items():
         if agg["offered"] > agg["lowest_n"]:
             # Anders dan offered > triggered bij aggregate_deepening (verwacht bij
@@ -801,7 +811,7 @@ def aggregate_direction(
     return out
 
 
-def direction_state(agg: dict[str, Any], factor_key: str | None = None) -> dict[str, Any]:
+def direction_state(agg: dict[str, Any], factor_key: str) -> dict[str, Any]:
     """Staat van het richtingblok voor een factor (spec par. 5.4), geëvalueerd in
     de volgorde too_few -> none_needed -> clear -> divided.
 
@@ -813,16 +823,22 @@ def direction_state(agg: dict[str, Any], factor_key: str | None = None) -> dict[
     base: dict[str, Any] = {"n": n, "ranked": ranked, "top_key": None, "top_n": 0, "second_n": 0}
     if n < DIRECTION_MIN_N:
         return {**base, "state": "too_few"}
-    none_items = [(k, c) for k, c in counts.items() if k.endswith("_none")]
-    none_n = sum(c for _, c in none_items)
-    if none_n / n >= 0.5:
-        return {**base, "state": "none_needed", "top_key": none_items[0][0], "top_n": none_n}
+    if not counts:
+        raise ValueError(
+            f"direction_state: answered={n} maar geen counts voor {factor_key!r}")
+    # Precies één *_none-optie per factor (contentgarantie: de _none()-factory en
+    # de prefix-guard in test_direction_content). Eén sleutel, dus top_key, top_n
+    # en de ratio verwijzen gegarandeerd naar hetzelfde getal.
+    none_key = next((k for k in sorted(counts) if k.endswith("_none")), None)
+    if none_key is not None and counts[none_key] / n >= 0.5:
+        return {**base, "state": "none_needed",
+                "top_key": none_key, "top_n": counts[none_key]}
     top_key, top_n = ranked[0]
     second_n = ranked[1][1] if len(ranked) > 1 else 0
     base.update(top_key=top_key, top_n=top_n, second_n=second_n)
     if top_key.endswith("_other") and n >= DIRECTION_OTHER_WARN_N:
         logger.warning("direction: *_other is topoptie voor %s - optieset review nodig",
-                       factor_key or top_key.split("_")[0])
+                       factor_key)
     if (not top_key.endswith(("_none", "_other"))
             and top_n / n >= 0.5 and top_n - second_n >= 2):
         return {**base, "state": "clear"}
