@@ -224,3 +224,22 @@ def test_no_em_dashes_or_forbidden_words():
         low = b.lower()
         for w in FORBIDDEN:
             assert w not in low, w
+
+
+def test_verdieping_intro_no_longer_promises_direction_per_deepening():
+    from backend.report_html import SECTION_INTROS
+    intro = SECTION_INTROS["verdieping"]
+    assert "gespreksrichting" not in intro.lower()
+    assert "welke richting" not in intro.lower()
+    assert "toelichting past het best" in intro
+
+
+def test_trust_page_explains_direction_question_for_exit_and_retention_only():
+    from backend.report_html import _trust_page
+    for st in ("exit", "retention"):
+        html = _trust_page(st)
+        assert "Richtingvraag" in html
+        assert "geen advies van Loep" in html
+        assert "vanaf 3 antwoorden" in html
+        assert "\u2014" not in html
+    assert "Richtingvraag" not in _trust_page("onboarding")

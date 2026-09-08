@@ -436,10 +436,10 @@ SECTION_INTROS: dict[str, str] = {
     ),
     "verdieping": (
         "Respondenten die laag scoorden op dit thema kregen automatisch een korte vervolgvraag: "
-        "welke toelichting past het best bij hun ervaring, en welke richting zou het gesprek "
-        "hierover het meest helpen? De aantallen hieronder zijn tellingen van wat respondenten "
-        "zelf kozen, geen interpretatie achteraf. Zo zie je niet alleen d&aacute;t een "
-        "thema laag scoort, maar ook wat de groep zelf als reden en als gespreksrichting aandraagt."
+        "welke toelichting past het best bij hun ervaring? De aantallen hieronder zijn tellingen "
+        "van wat respondenten zelf kozen, geen interpretatie achteraf. Zo zie je niet alleen "
+        "d&aacute;t een thema laag scoort, maar ook wat de groep zelf als reden aandraagt. "
+        "Wat er volgens hen moet gebeuren staat bij de gespreksagenda."
     ),
     "werkbeleving": (
         "Naast de werkfactoren meten we drie psychologische basisbehoeften: autonomie (regie "
@@ -1241,6 +1241,19 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "") -> str:
              "meting en vervolgmeting een-op-een vergelijkbaar."),
         ]
 
+    cells_r4: list[tuple[str, str]] = []
+    if scan_type in DIRECTION_SCAN_TYPES:
+        cells_r4 = [
+            ("Richtingvraag",
+             "Elke respondent kreeg één vraag over het onderwerp dat bij henzelf het laagst "
+             "scoorde: wat zou hier het meest helpen? De opdrachtvorm in ‘Wat er moet gebeuren’ "
+             "geeft de keuze van die respondenten weer, geen advies van Loep. Dit blok toont al "
+             "vanaf 3 antwoorden, lager dan de 5 die voor afdelingen geldt, omdat niemand in de "
+             "organisatie kan zien wie een onderwerp als laagste had. Het risico bij kleine "
+             "aantallen is dat het beeld toevallig is, niet dat het herleidbaar is; daarom staat "
+             "er dan een beperkte-basis-regel bij."),
+        ]
+
     def _cells(pairs: list[tuple[str, str]], full: bool = False) -> str:
         cls = "tc-full" if full else "tc"
         return "".join(
@@ -1255,6 +1268,7 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "") -> str:
   <table class="tg"><tr>{_cells(cells_r1)}</tr></table>
   <table class="tg" style="margin-top:10px;"><tr>{_cells(cells_r2)}</tr></table>
   <table class="tg" style="margin-top:10px;"><tr>{_cells(cells_r3, full=True)}</tr></table>
+  {f'<table class="tg" style="margin-top:10px;"><tr>{_cells(cells_r4, full=True)}</tr></table>' if cells_r4 else ''}
 </div>"""
 
 
