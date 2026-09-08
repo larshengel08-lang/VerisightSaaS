@@ -24,10 +24,8 @@ from backend.models import Campaign, Respondent, SurveyResponse
 from backend.report_css import build_css, RAG_HIGH, RAG_MID, RAG_LOW
 from backend.report_distribution import MIN_DISTRIBUTION_N, distribution_block
 from backend.products.shared.deepening import (
-    DIRECTION_SETS,
     agenda_enrichment,
     aggregate_deepening,
-    direction_agenda_scenario,
     get_deepening_sets,
 )
 from backend.products.shared.registry import get_product_module
@@ -986,77 +984,6 @@ def _deepening_block(agg: dict, scan_type: str, factor_key: str) -> str:
     return (f'<div class="card"><span class="eyebrow">Welke toelichting respondenten kozen</span>'
             f'<p style="font-size:10px;margin:4px 0 0;">{_h(chain)}</p>'
             f'{body}</div>')
-
-
-def _direction_block(agg: dict, scan_type: str, factor_key: str) -> str:
-    """Blok 'Welke gespreksrichting respondenten kozen' (spec 2026-07-05 par. 7.1)."""
-    n = agg.get("direction_answered", 0)
-    offered = agg.get("direction_offered", 0)
-    if offered == 0:
-        return ""
-    opt_text = {o["key"]: o["text"] for o in DIRECTION_SETS[factor_key]["options"]}
-    # Alleen de delta t.o.v. het toelichtingsblok erboven: de volledige keten
-    # (getriggerd -> aangeboden -> beantwoord) staat daar al — die hier woordelijk
-    # herhalen maakte de pagina onnodig vol.
-    chain = f"Van de {agg['answered']} respondenten die de verdieping beantwoordden, gaven {n} ook een gespreksrichting."
-    if n < 5:
-        body = ('<p style="font-size:10px;color:#64748B;margin:4px 0 0;">'
-                'Te weinig antwoorden om een verdeling te tonen. Bespreek dit onderwerp '
-                'in de managementbespreking.</p>')
-    else:
-        ranked = sorted(agg["direction_counts"].items(), key=lambda kv: (-kv[1], kv[0]))
-        rows = "".join(
-            f'<tr><td class="iq">{_h(opt_text.get(key, key))}</td>'
-            f'<td class="is" style="color:#0D1B2A;">'
-            f'{f"{round(cnt / n * 100)}% ({cnt})" if n >= 10 else cnt}'
-            f'</td></tr>'
-            for key, cnt in ranked)
-        body = f'<table class="item-tbl" style="margin-top:6px;">{rows}</table>'
-        if n <= 9:
-            body += ('<p style="font-size:10px;color:#92400E;margin:4px 0 0;">'
-                     'Beperkte antwoordbasis: gebruik dit als gesprekshaakje, '
-                     'niet als conclusie.</p>')
-        # Spec par. 7.2: veel respondenten buiten de vaste opties -> neutrale
-        # regel + interne reviewvlag (spiegelt het trede-1-gedrag in _deepening_mgmt_q).
-        top_key = max(agg["direction_counts"].items(), key=lambda kv: (kv[1], kv[0]))[0]
-        if top_key.endswith("_other"):
-            logger.warning(
-                "direction: *_other is topoptie voor %s - routeset review nodig",
-                factor_key)
-            body += ('<p style="font-size:10px;color:#64748B;margin:4px 0 0;">'
-                     'Veel antwoorden vielen buiten de vaste opties.</p>')
-    # Spec par. 7.3 stopregel: >40% van de aangeboden richtingen overgeslagen
-    # -> zichtbaar label; de bijbehorende agenda-suppressie zit in
-    # direction_agenda_scenario (deepening.py).
-    if agg.get("direction_skipped", 0) / offered > 0.4:
-        body += ('<p style="font-size:10px;color:#92400E;margin:4px 0 0;">'
-                 'Gespreksrichting-basis beperkt door overslag.</p>')
-    # Eén zelfverzekerde zin i.p.v. drie disclaimers (feedbackronde 2026-07-13):
-    # de claimgrens (input, geen uitvoeringsadvies) blijft, de verdedigende toon niet.
-    footer = ('<p style="font-size:10px;color:#64748B;margin:8px 0 0;">'
-              'Dit is wat de groep aandraagt voor het gesprek. De weging '
-              '(haalbaarheid, passendheid) gebeurt in de managementbespreking.</p>')
-    return (f'<div class="card"><span class="eyebrow">Welke gespreksrichting respondenten kozen</span>'
-            f'<p style="font-size:10px;margin:4px 0 0;">{_h(chain)}</p>{body}{footer}</div>')
-
-
-def _direction_agenda_line(agg: dict, scan_type: str, factor_key: str) -> str | None:
-    """Verrijkte agenda-regel per scenario (spec par. 7.2); None -> bestaande regel blijft."""
-    s = direction_agenda_scenario(agg, scan_type, factor_key)
-    if s["scenario"] not in ("concordant", "discrepant"):
-        return None
-    cause = s["cause"]
-    cause_text = _deepening_option_texts(scan_type, factor_key).get(cause["option_key"], cause["option_key"])
-    route_text = {o["key"]: o["text"] for o in DIRECTION_SETS[factor_key]["options"]}[s["route_key"]]
-    if s["scenario"] == "concordant":
-        return (f"{cause['count']} van de {cause['answered']} kozen '{cause_text}' als belangrijkste "
-                f"toelichting; de meest gekozen gespreksrichting sluit daarbij aan "
-                f"({s['route_count']} van {s['direction_answered']}). "
-                f"Gespreksvraag: {s['agenda_question']}")
-    return (f"Toelichting en gespreksrichting lopen uiteen: respondenten kozen vooral "
-            f"'{cause_text}' als toelichting, maar '{route_text}' als richting voor het gesprek "
-            f"({s['route_count']} van {s['direction_answered']}). "
-            f"Bespreek eerst waar dit verschil vandaan komt.")
 
 
 def _short_mgmt_q(deep_agg: dict, scan_type: str, factor_key: str) -> str | None:
@@ -2571,9 +2498,6 @@ def render_retention_report_html(data: dict) -> str:
         # ── Toelichtingsblok verdiepingsvragen (spec 6.2) ──
         deep_block = (_deepening_block(deep_agg[fk], ST, fk)
                       if fk in deep_agg else "")
-        # ── Gespreksrichting-blok (spec 7.1) — direct na de toelichting ──
-        dir_block = (_direction_block(deep_agg[fk], ST, fk)
-                     if fk in deep_agg else "")
         spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []))
         return f"""<div class="pb sec">
   {opener_html or f'<span class="slabel">Verdieping: {_h(lbl)}</span>'}
@@ -2584,7 +2508,7 @@ def render_retention_report_html(data: dict) -> str:
   {high_card}
   <h3 style="margin-top:28px;">Alle stellingen in deze factor</h3>
   <table class="item-tbl">{rows}</table>
-  {deep_block}{dir_block}
+  {deep_block}
 </div>"""
 
     if priority_fkeys:
@@ -2670,11 +2594,8 @@ def render_retention_report_html(data: dict) -> str:
     # ── Prioriteringsraster / gespreksagenda (naar het slot — na het bewijs,
     # vóór de appendix) ────────────────────────────────────────────────────────
     _startpunt_fk = _raster_rows[0]["key"] if _raster_rows else None
-    # Richting-scenario (spec 7.2) eerst; None -> trede-1-verrijking of menuvraag.
-    _direction_q = (_direction_agenda_line(deep_agg[_startpunt_fk], ST, _startpunt_fk)
-                    if _startpunt_fk and _startpunt_fk in deep_agg else None)
-    _enriched_q = _direction_q or (_deepening_mgmt_q(deep_agg, ST, _startpunt_fk)
-                                   if _startpunt_fk else None)
+    _enriched_q = (_deepening_mgmt_q(deep_agg, ST, _startpunt_fk)
+                   if _startpunt_fk else None)
     s += _prioriteringsraster(
         ranked=_raster_rows,
         scan_type=ST,
