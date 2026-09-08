@@ -2494,7 +2494,7 @@ def render_retention_report_html(data: dict) -> str:
                      f'<strong style="color:{_factor_color(high_i[2])};">{high_i[2]:.1f}/10</strong></div>'
                      if show_cards and high_i else "")
         # Statisch "Eerste managementvraag"-blok bewust verwijderd (template-taal;
-        # stond ook al op p.02) — de toelichting/richting-blokken dragen de duiding.
+        # stond ook al op p.02) — het toelichtingsblok draagt de duiding.
         # ── Toelichtingsblok verdiepingsvragen (spec 6.2) ──
         deep_block = (_deepening_block(deep_agg[fk], ST, fk)
                       if fk in deep_agg else "")
