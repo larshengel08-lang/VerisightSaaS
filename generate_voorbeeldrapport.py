@@ -26,7 +26,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from backend.database import Base, DATABASE_URL, SessionLocal, init_db
 from backend.models import Campaign, Organization, Respondent, SurveyResponse
-from backend.products.shared.deepening import compute_deepening_offers
+from backend.products.shared.deepening import (
+    DIRECTION_VERSION,
+    compute_deepening_offers,
+    compute_direction_factor,
+)
 from backend.products.shared.enps import build_enps_summary
 from backend.segments import _slugify as slugify_department
 from backend.report_html import generate_campaign_report_html as generate_campaign_report_html
@@ -293,17 +297,19 @@ DEEPENING_SECONDARY_WEIGHTS: dict[str, dict[str, float]] = {
 DEEPENING_SKIP_RATE = 0.12
 DEEPENING_SECONDARY_RATE = 0.55
 
-# Gespreksrichting (alleen retention): gewichten zo gekozen dat de sample
-# minimaal één concordant scenario toont (workload: oorzaak-top wl_recovery,
-# richting-top wld_recovery) en één discrepant (growth: oorzaak-top
-# gr_visibility, richting-top grd_followthrough) — spec 2026-07-05 par. 7.4.
+# Richtingvraag (spec 2026-09-07): elke respondent één keer, op de eigen laagste
+# factor, via compute_direction_factor (niets gefabriceerd). Gewichten incl. de
+# niets-optie. Gekozen zodat de Behoud-sample 'clear' toont op het startpunt
+# (growth) en 'divided' op het tweede punt (workload); voor exit alle routes
+# geconcentreerd (startpunt 'clear'). none_needed/too_few zijn unit-getest.
 DIRECTION_WEIGHTS: dict[str, dict[str, float]] = {
-    "workload": {"wld_recovery": 0.85, "wld_priorities": 0.15},
-    "leadership": {"ldd_feedback": 0.50, "ldd_recognition": 0.30, "ldd_availability": 0.20},
-    "growth": {"grd_followthrough": 0.65, "grd_visibility": 0.15, "grd_conversation": 0.10, "grd_time": 0.10},
-    "culture": {"cud_crossteam": 0.50, "cud_involvement": 0.30, "cud_conflict": 0.20},
-    "compensation": {"cpd_insight": 0.40, "cpd_path": 0.35, "cpd_clarity": 0.25},
-    "role_clarity": {"rcd_priorities": 0.40, "rcd_alignment": 0.35, "rcd_scope": 0.25},
+    "workload": {"wld_recovery": 0.30, "wld_priorities": 0.25, "wld_planning": 0.20,
+                 "wld_none": 0.15, "wld_peaks": 0.10},
+    "leadership": {"ldd_feedback": 0.65, "ldd_recognition": 0.15, "ldd_availability": 0.10, "ldd_none": 0.10},
+    "growth": {"grd_visibility": 0.72, "grd_conversation": 0.12, "grd_none": 0.08, "grd_followthrough": 0.08},
+    "culture": {"cud_crossteam": 0.60, "cud_involvement": 0.20, "cud_none": 0.20},
+    "compensation": {"cpd_insight": 0.55, "cpd_path": 0.25, "cpd_none": 0.20},
+    "role_clarity": {"rcd_priorities": 0.60, "rcd_alignment": 0.20, "rcd_none": 0.20},
 }
 DIRECTION_SKIP_RATE = 0.10
 
@@ -348,26 +354,22 @@ def _build_deepening_entries(org_raw: dict[str, int], scan_type: str) -> list[di
             "secondary": secondary,
             "other_text": None,
         }
-        # Gespreksrichting alleen bij beantwoorde retention-verdiepingen,
-        # via dezelfde echte flow als de survey (niets gefabriceerd).
-        if scan_type == "retention":
-            direction_version = f"retention_{factor_key}_direction_v1"
-            if random.random() < DIRECTION_SKIP_RATE:
-                entry["direction"] = {
-                    "question_set_version": direction_version,
-                    "status": "skipped",
-                    "choice": None,
-                    "other_text": None,
-                }
-            else:
-                entry["direction"] = {
-                    "question_set_version": direction_version,
-                    "status": "answered",
-                    "choice": _weighted_choice(DIRECTION_WEIGHTS[factor_key]),
-                    "other_text": None,
-                }
         entries.append(entry)
     return entries or None
+
+
+def _build_direction_response(org_raw: dict[str, int], scan_type: str) -> dict | None:
+    """Eén richtingantwoord op de eigen laagste factor, via de echte keten."""
+    factor_key = compute_direction_factor(org_raw)
+    if factor_key is None:
+        return None
+    version = f"{scan_type}_{factor_key}_direction_{DIRECTION_VERSION[scan_type]}"
+    if random.random() < DIRECTION_SKIP_RATE:
+        return {"factor_key": factor_key, "question_set_version": version,
+                "status": "skipped", "choice": None, "other_text": None}
+    return {"factor_key": factor_key, "question_set_version": version,
+            "status": "answered", "choice": _weighted_choice(DIRECTION_WEIGHTS[factor_key]),
+            "other_text": None}
 
 
 def _pick_profile(profiles: list[tuple]) -> dict[str, float | str]:
@@ -717,6 +719,7 @@ def _build_exit_response(profile: dict[str, float | str], salary: int, role: str
         "replacement_cost_eur": replacement_cost["cost_per_employee"],
         "full_result": full_result,
         "deepening_responses": _build_deepening_entries(org_raw, "exit"),
+        "direction_response": _build_direction_response(org_raw, "exit"),
     }
 
 
@@ -798,6 +801,7 @@ def _build_retention_response(profile: dict[str, float | str]) -> dict:
         "replacement_cost_eur": None,
         "full_result": full_result,
         "deepening_responses": _build_deepening_entries(org_raw, "retention"),
+        "direction_response": _build_direction_response(org_raw, "retention"),
     }
 
 
@@ -1099,6 +1103,7 @@ def main() -> None:
             replacement_cost_eur=response_payload["replacement_cost_eur"],
             full_result=response_payload["full_result"],
             deepening_responses=response_payload.get("deepening_responses"),
+            direction_response=response_payload.get("direction_response"),
         )
         db.add(response)
 
