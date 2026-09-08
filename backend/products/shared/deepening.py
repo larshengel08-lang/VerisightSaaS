@@ -569,23 +569,33 @@ def _is_triggered(items: list[int]) -> bool:
     return False
 
 
-def _priority_key(items: list[int], idx: int) -> tuple[float, int, int, int]:
-    """Eén prioriteitsregel voor verdieping én richting (spec 2026-09-07 par. 5.1):
-    laagste gemiddelde -> meeste stellingen <=2 -> laagste minimum -> vaste volgorde."""
+_PriorityKey = tuple[float, int, int, int]
+
+
+def _priority_key(items: list[int], factor_key: str) -> _PriorityKey:
+    """Eén prioriteitsregel per respondent voor verdieping én richting
+    (spec 2026-09-07 par. 5.1): laagste gemiddelde -> meeste stellingen <=2 ->
+    laagste minimum -> vaste factorvolgorde.
+
+    NB: dit is de respondent-niveau regel. Het rapport ordent factoren op
+    groepsniveau met een eigen weging (_select_priority_factors in report_html.py).
+
+    `items` mag niet leeg zijn; beide callers filteren daar zelf op.
+    """
     avg = sum(items) / len(items)
     low_count = sum(1 for v in items if v <= 2)
-    return (avg, -low_count, min(items), idx)
+    return (avg, -low_count, min(items), DEEPENING_FACTOR_KEYS.index(factor_key))
 
 
 def compute_deepening_offers(org_raw: dict[str, int], scan_type: str) -> list[str]:
     """Getriggerde factoren, geprioriteerd via _priority_key en afgekapt op de scan-cap."""
     if scan_type not in DEEPENING_CAP:
         raise ValueError(f"unknown scan_type {scan_type!r}")
-    triggered: list[tuple[tuple[float, int, int, int], str]] = []
-    for idx, fk in enumerate(DEEPENING_FACTOR_KEYS):
+    triggered: list[tuple[_PriorityKey, str]] = []
+    for fk in DEEPENING_FACTOR_KEYS:
         items = _factor_items(org_raw, fk)
         if _is_triggered(items):
-            triggered.append((_priority_key(items, idx), fk))
+            triggered.append((_priority_key(items, fk), fk))
     triggered.sort()
     return [fk for _, fk in triggered[:DEEPENING_CAP[scan_type]]]
 
@@ -595,16 +605,16 @@ def compute_direction_factor(org_raw: dict[str, int]) -> str | None:
 
     Zelfde sleutel als de verdieping, maar zonder triggerfilter: iedereen met
     minstens één beantwoorde stelling krijgt een factor. None alleen zonder
-    stellingen (dan is er geen richtingvraag)."""
-    candidates: list[tuple[tuple[float, int, int, int], str]] = []
-    for idx, fk in enumerate(DEEPENING_FACTOR_KEYS):
+    stellingen (dan is er geen richtingvraag).
+    """
+    candidates: list[tuple[_PriorityKey, str]] = []
+    for fk in DEEPENING_FACTOR_KEYS:
         items = _factor_items(org_raw, fk)
         if items:
-            candidates.append((_priority_key(items, idx), fk))
+            candidates.append((_priority_key(items, fk), fk))
     if not candidates:
         return None
-    candidates.sort()
-    return candidates[0][1]
+    return min(candidates)[1]
 
 
 def get_deepening_sets(scan_type: str) -> dict[str, dict[str, Any]]:

@@ -49,3 +49,17 @@ def test_agrees_with_first_deepening_offer_when_triggered():
     raw = _raw(workload=[1, 2, 2], growth=[2, 2, 3], leadership=[2, 3, 3])
     offers = compute_deepening_offers(raw, "retention")
     assert offers and offers[0] == compute_direction_factor(raw)
+
+
+def test_partially_answered_factor_still_counts():
+    # De docstring belooft een factor bij minstens één beantwoorde stelling.
+    # Eén lage losse score verslaat een consequent lage, volledig ingevulde factor.
+    raw = {"growth_1": 1, "workload_1": 2, "workload_2": 2, "workload_3": 2}
+    assert compute_direction_factor(raw) == "growth"
+
+
+def test_deepening_factor_keys_match_org_factor_keys():
+    # De idx-tiebreak leunt op deze volgorde; een zevende org-factor zou anders
+    # stilzwijgend buiten verdieping en richting vallen.
+    from backend.scoring import ORG_FACTOR_KEYS
+    assert DEEPENING_FACTOR_KEYS == list(ORG_FACTOR_KEYS)
