@@ -399,6 +399,13 @@ def _cover(*, scan_label: str, scan_type: str, org_name: str, period: str,
 # ─── Zelfuitleg-laag (spec 2026-07-13 §2) ────────────────────────────────────
 # Elke sectie legt zichzelf uit: wat zie je, waarom meten we dit, hoe lees je
 # het. Uitleg is een vertrouwensdrager — ruim en helder, geen disclaimers.
+#
+# LET OP bij het schrijven of verplaatsen van copy: _intro() rendert deze
+# waarden UNESCAPED — non-ASCII moet hier dus als HTML-entity (&eacute;,
+# &ldquo;, &minus;, ...). Dat is het omgekeerde van _trust_page-cellen, die
+# door _h() gaan en juist letterlijke Unicode nodig hebben. Een string die
+# tussen de twee verhuist zonder die aanpassing is precies de fout die dit
+# codereview-taak (9) maakte.
 
 SECTION_INTROS: dict[str, str] = {
     "behoudscontext": (
@@ -964,7 +971,7 @@ def _lc(label: str) -> str:
 
 DIRECTION_BLOCK_EYEBROW = "Wat er moet gebeuren"
 DIRECTION_BLOCK_INTRO = (
-    "Elke respondent kreeg één vraag over het onderwerp dat bij henzelf het laagst "
+    "Elke respondent kreeg één vraag over het onderwerp dat bij die respondent het laagst "
     "scoorde: wat zou hier het meest helpen? Hieronder staat wat die respondenten kozen "
     "voor het startpunt en het tweede punt. Dit is hun keuze, geen advies van Loep.")
 DIRECTION_HEAD_TOO_FEW = "Te weinig antwoorden voor een richting."
@@ -1174,8 +1181,16 @@ def _deepening_mgmt_q(deep_agg: dict, scan_type: str, factor_key: str) -> str | 
     return f"De meest gekozen toelichting was '{opt_text}'. Herkennen jullie dat beeld, en wat zit erachter?"
 
 
-def _trust_page(scan_type: str = "exit", opener_html: str = "") -> str:
-    """Product-specifieke methodiekpagina — nooit gedeelde ExitScan-copy buiten ExitScan."""
+def _trust_page(scan_type: str = "exit", opener_html: str = "",
+                direction_active: bool = False) -> str:
+    """Product-specifieke methodiekpagina — nooit gedeelde ExitScan-copy buiten ExitScan.
+
+    direction_active volgt het patroon van _prioriteringsraster's
+    deepening_active: de Richtingvraag-rij mag alleen beloven wat dit
+    specifieke rapport ook echt bevat. scan_type in DIRECTION_SCAN_TYPES
+    zegt alleen dat het PRODUCT de vraag ooit kan stellen; de campagnegate
+    in build_report_data kan direction_agg voor DEZE meting alsnog leeg
+    maken (niemand aangeboden). Beide moeten dus waar zijn."""
     if scan_type == "retention":
         intro = ("Dit rapport bundelt patronen uit actieve-medewerkerresponses tot een groepsbeeld van "
                  "behoud, vertrekdenken en werkfactoren. Geen individuele risicoscore, geen voorspelling "
@@ -1242,16 +1257,16 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "") -> str:
         ]
 
     cells_r4: list[tuple[str, str]] = []
-    if scan_type in DIRECTION_SCAN_TYPES:
+    if scan_type in DIRECTION_SCAN_TYPES and direction_active:
         cells_r4 = [
             ("Richtingvraag",
-             "Elke respondent kreeg één vraag over het onderwerp dat bij henzelf het laagst "
+             "Elke respondent kreeg één vraag over het onderwerp dat bij die respondent het laagst "
              "scoorde: wat zou hier het meest helpen? De opdrachtvorm in ‘Wat er moet gebeuren’ "
-             "geeft de keuze van die respondenten weer, geen advies van Loep. Dit blok toont al "
-             "vanaf 3 antwoorden, lager dan de 5 die voor afdelingen geldt, omdat niemand in de "
-             "organisatie kan zien wie een onderwerp als laagste had. Het risico bij kleine "
-             "aantallen is dat het beeld toevallig is, niet dat het herleidbaar is; daarom staat "
-             "er dan een beperkte-basis-regel bij."),
+             "geeft de keuze van die respondenten weer, geen advies van Loep. Dit blok toont een "
+             "richting vanaf 3 antwoorden, lager dan de 5 die voor afdelingen geldt, omdat niemand "
+             "in de organisatie kan zien wie een onderwerp als laagste had. Bij kleine aantallen "
+             "kan het beeld toevallig zijn; herleidbaar is het niet. Daarom staat er dan een "
+             "beperkte-basis-regel bij."),
         ]
 
     def _cells(pairs: list[tuple[str, str]], full: bool = False) -> str:
@@ -2483,7 +2498,8 @@ def render_exit_report_html(data: dict) -> str:
 </div>"""
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────
-    s += _trust_page("exit", opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen"))
+    s += _trust_page("exit", opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen"),
+                     direction_active=bool(direction_agg))
     return _doc(f"Loep Vertrek · {data['campaign_name']}", s, scan_type="exit")
 
 
@@ -2838,7 +2854,8 @@ def render_retention_report_html(data: dict) -> str:
 </div>"""
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────
-    s += _trust_page(ST, opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen"))
+    s += _trust_page(ST, opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen"),
+                     direction_active=bool(direction_agg))
     return _doc(f"Loep Behoud · {data['campaign_name']}", s, scan_type="retention")
 
 
@@ -3075,7 +3092,13 @@ def render_onboarding_report_html(data: dict) -> str:
         for _i, _pfk in enumerate(priority_fkeys):
             _lbl = _fl(_pfk, ST)
             _opener = ch.opener(f"Verdieping: {_lbl}") if _i == 0 else _ChapterCounter.vervolg(f"Verdieping: {_lbl}")
-            s += _ob_factor_detail(_pfk, opener_html=_opener, intro_html=_intro("verdieping") if _i == 0 else "")
+            # Geen SECTION_INTROS["verdieping"] hier (code-review taak 9, fix A):
+            # die tekst belooft een automatische vervolgvraag + een
+            # gespreksagenda gevuld met wat respondenten kozen. Onboarding
+            # heeft in v1 geen richtingdata (DIRECTION_SCAN_TYPES) en geen
+            # deepening-set, dus dat is niet waar voor dit rapport. De
+            # factordetailpagina leest prima zonder intro.
+            s += _ob_factor_detail(_pfk, opener_html=_opener, intro_html="")
     else:
         s += f'<div class="pb sec">{ch.opener("Verdieping: prioritaire factoren")}<div class="card">Factor detail beschikbaar na voldoende patroonduiding.</div></div>'
 

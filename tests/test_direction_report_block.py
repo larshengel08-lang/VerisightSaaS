@@ -232,14 +232,85 @@ def test_verdieping_intro_no_longer_promises_direction_per_deepening():
     assert "gespreksrichting" not in intro.lower()
     assert "welke richting" not in intro.lower()
     assert "toelichting past het best" in intro
+    # Mutatiebestendig (code-review taak 9C): pin de VOLLEDIGE, letterlijke
+    # afsluitzin die naar de gespreksagenda doorverwijst. Alleen het woord
+    # "gespreksrichting" afwezig-checken laat een mutatie die de zin in
+    # andere woorden herformuleert, of 'm gewoon weglaat, ongemerkt door.
+    assert "Wat er volgens hen moet gebeuren staat bij de gespreksagenda." in intro
 
 
 def test_trust_page_explains_direction_question_for_exit_and_retention_only():
     from backend.report_html import _trust_page
+    # Decisive justification, verbatim (code-review taak 9C): de vloer van 3
+    # (lager dan de 5 die voor afdelingen geldt) is alleen verdedigbaar MET
+    # deze reden. Alleen het getal "3" pinnen (via "vanaf 3 antwoorden")
+    # laat een mutatie die de reden weghaalt maar het getal laat staan
+    # ongemerkt door.
+    justification = "omdat niemand in de organisatie kan zien wie een onderwerp als laagste had"
     for st in ("exit", "retention"):
-        html = _trust_page(st)
+        html = _trust_page(st, direction_active=True)
         assert "Richtingvraag" in html
         assert "geen advies van Loep" in html
         assert "vanaf 3 antwoorden" in html
+        assert justification in html
         assert "\u2014" not in html
-    assert "Richtingvraag" not in _trust_page("onboarding")
+    assert "Richtingvraag" not in _trust_page("onboarding", direction_active=True)
+
+
+def test_trust_page_direction_row_requires_direction_active():
+    """Code-review taak 9, fix B: scan_type in DIRECTION_SCAN_TYPES zegt
+    alleen dat het PRODUCT de richtingvraag kan stellen; de campagnegate in
+    build_report_data kan direction_agg voor DEZE meting leeg maken (nog
+    niemand aangeboden). De Richtingvraag-rij mag dan niet beweren dat er
+    een vraag is gesteld, precies zoals _prioriteringsraster's
+    deepening_active al voorkomt voor de verdiepingskolom."""
+    from backend.report_html import _trust_page
+    for st in ("exit", "retention"):
+        assert "Richtingvraag" not in _trust_page(st, direction_active=False)
+        assert "Richtingvraag" not in _trust_page(st)  # default = False
+        assert "Richtingvraag" in _trust_page(st, direction_active=True)
+    # Onboarding kent de richtingvraag sowieso niet (niet in
+    # DIRECTION_SCAN_TYPES), ongeacht direction_active.
+    assert "Richtingvraag" not in _trust_page("onboarding", direction_active=True)
+    assert "Richtingvraag" not in _trust_page("onboarding", direction_active=False)
+
+
+def _min_onboarding_data():
+    """Minimale data-dict voor render_onboarding_report_html(), model op
+    tests/test_report_distribution.py::_min_retention_data maar met de
+    onboarding-specifieke keys (nsp/sdt_item_avgs/sdt_items i.p.v.
+    avg_eng/avg_to/band_counts/exit_r_dist/...)."""
+    n = 12
+    return dict(
+        scan_lbl="Loep Start", org_name="TestOrg", campaign_name="Wave 1",
+        n_invited=n + 3, n_completed=n, completion_pct=80.0,
+        avg_risk=5.0, avg_si=5.0,
+        factor_avgs={"workload": 5.0}, sdt_avgs={}, nsp={},
+        top_fkeys=["workload"], top_flabels=["Werkdruk en herstelruimte"],
+        factor_items_map={"workload": [("W1", "Testvraag werkdruk")]},
+        org_item_avgs={"W1": 5.0}, sdt_item_avgs={},
+        sdt_items=[], enps_available=False, enps_score=None,
+        open_texts=[], factor_resp_scores={"workload": [5.0] * n},
+        deepening_agg={}, segment_rows=[], segment_factor_rows=None,
+    )
+
+
+def test_onboarding_report_drops_verdieping_intro_retention_keeps_it():
+    """Code-review taak 9, fix A: SECTION_INTROS["verdieping"] belooft een
+    automatische vervolgvraag + een gespreksagenda gevuld met wat
+    respondenten kozen. Dat klopt voor exit/retention (deepening + evt.
+    richtingvraag), maar niet voor onboarding: geen deepening-set in v1,
+    geen richtingdata (DIRECTION_SCAN_TYPES sluit onboarding uit), dus de
+    onboarding-gespreksagenda komt uit een vaste template-lookup, niet uit
+    wat respondenten zelf kozen. De onboarding-renderer moet die intro dus
+    niet meer tonen; exit/retention wel."""
+    from backend.report_html import render_onboarding_report_html, render_retention_report_html
+    from tests.test_report_distribution import _min_retention_data
+
+    opening_clause = "Respondenten die laag scoorden op dit thema kregen automatisch"
+
+    onboarding_html = render_onboarding_report_html(_min_onboarding_data())
+    assert opening_clause not in onboarding_html
+
+    retention_html = render_retention_report_html(_min_retention_data())
+    assert opening_clause in retention_html
