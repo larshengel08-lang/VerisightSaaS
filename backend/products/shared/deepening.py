@@ -383,172 +383,230 @@ DEEPENING_SETS: dict[str, dict[str, Any]] = {
     },
 }
 
-# Gespreksrichting-sets (spec: docs/superpowers/specs/2026-07-05-richtingsvraag-behoud-design.md par. 4).
-# GEEN 1-op-1-spiegeling van de oorzaakset: routes zijn managementrichtingen; `related`
-# is een losse verwantschaps-mapping, uitsluitend voor concordantie-analyse.
+
+def _t(retention: str, exit: str | None = None) -> dict[str, str]:
+    return {"retention": retention, "exit": exit if exit is not None else retention}
+
+
+def _q(onderwerp: str) -> dict[str, str]:
+    return {
+        "retention": (f"Van deze onderwerpen scoorde {onderwerp} bij jou het laagst. "
+                      "Wat zou hier volgens jou het meest helpen?"),
+        "exit": (f"Van deze onderwerpen scoorde {onderwerp} bij jou het laagst. "
+                 "Wat had hier volgens jou het meest geholpen?"),
+    }
+
+
+def _none(prefix: str) -> dict[str, Any]:
+    return {"key": f"{prefix}_none",
+            "text": _t("Niets, dit zit hier goed", "Niets, dit zat hier goed"),
+            "imperative": None}
+
+
+def _other(prefix: str) -> dict[str, Any]:
+    return {"key": f"{prefix}_other", "text": _t("Anders, namelijk…"), "imperative": None}
+
+
+# Versie per scan: retention v1 -> v2 (optieset gewijzigd: *_none toegevoegd,
+# vraag herformuleerd, losgekoppeld van de verdieping); exit is nieuw.
+DIRECTION_VERSION: dict[str, str] = {"retention": "v2", "exit": "v1"}
+
+# Richtingsets (spec 2026-09-07 par. 8). `imperative` is de opdrachtvorm voor het
+# rapportblok "Wat er moet gebeuren": tijd-neutraal, de stem van de respondenten.
 DIRECTION_SETS: dict[str, dict[str, Any]] = {
     "workload": {
-        "question": "Welke richting zou het gesprek over werkbelasting het meest helpen?",
+        "question": _q("werkbelasting"),
         "options": [
-            {"key": "wld_scope", "text": "Takenpakket en werkvolume beter afbakenen",
-             "related": ["wl_volume"],
-             "agenda": "Waar moet het takenpakket scherper worden afgebakend?"},
-            {"key": "wld_planning", "text": "Planning en bezetting beter laten aansluiten op het werk dat er ligt",
-             "related": ["wl_capacity"],
-             "agenda": "Hoe laten we planning en bezetting beter aansluiten op het werk dat er ligt?"},
-            {"key": "wld_peaks", "text": "Piekmomenten en spoedwerk eerder plannen, verdelen of begrenzen",
-             "related": ["wl_peaks_adhoc"],
-             "agenda": "Hoe plannen, verdelen of begrenzen we piek- en spoeddruk eerder?"},
-            {"key": "wld_recovery", "text": "Meer ruimte om te herstellen en werk goed af te ronden",
-             "related": ["wl_recovery"],
-             "agenda": "Hoe maken we meer ruimte voor herstel en het goed afronden van werk?"},
-            {"key": "wld_priorities", "text": "Duidelijkere keuzes over wat voorrang heeft en wat kan wachten",
-             "related": ["wl_priorities"],
-             "agenda": "Hoe maken we explicieter wat voorrang heeft en wat kan wachten?"},
-            {"key": "wld_friction", "text": "Minder dubbel werk, systeemgedoe of fouten in overdracht",
-             "related": ["wl_process"],
-             "agenda": "Waar belemmeren dubbel werk, systeemgedoe of overdracht het werk het meest?"},
-            {"key": "wld_other", "text": "Anders, namelijk…", "related": [], "agenda": None},
+            _none("wld"),
+            {"key": "wld_scope",
+             "text": _t("Takenpakket en werkvolume beter afbakenen"),
+             "imperative": "Baken het takenpakket en het werkvolume scherper af."},
+            {"key": "wld_planning",
+             "text": _t("Planning en bezetting beter laten aansluiten op het werk dat er ligt"),
+             "imperative": "Laat planning en bezetting beter aansluiten op het werk dat er ligt."},
+            {"key": "wld_peaks",
+             "text": _t("Piekmomenten en spoedwerk eerder plannen, verdelen of begrenzen"),
+             "imperative": "Plan piekmomenten en spoedwerk eerder, verdeel ze beter of begrens ze."},
+            {"key": "wld_recovery",
+             "text": _t("Meer ruimte om te herstellen en werk goed af te ronden"),
+             "imperative": "Maak meer ruimte om te herstellen en werk goed af te ronden."},
+            {"key": "wld_priorities",
+             "text": _t("Duidelijkere keuzes over wat voorrang heeft en wat kan wachten"),
+             "imperative": "Maak duidelijker wat voorrang heeft en wat kan wachten."},
+            {"key": "wld_friction",
+             "text": _t("Minder dubbel werk, systeemgedoe of fouten in overdracht"),
+             "imperative": "Haal dubbel werk, systeemgedoe en fouten in de overdracht weg."},
+            _other("wld"),
         ],
     },
     "leadership": {
-        "question": "Welke richting zou het gesprek over de aansturing het meest helpen?",
+        "question": _q("de aansturing"),
         "options": [
-            {"key": "ldd_feedback", "text": "Meer bruikbare feedback en richting",
-             "related": ["ld_feedback"],
-             "agenda": "Hoe krijgen medewerkers meer bruikbare feedback en richting?"},
-            {"key": "ldd_mandate", "text": "Duidelijker wat ik zelf mag beslissen in mijn werk",
-             "related": ["ld_autonomy"],
-             "agenda": "Waar hebben medewerkers meer duidelijkheid nodig over wat zij zelf mogen beslissen?"},
-            {"key": "ldd_escalation", "text": "Duidelijkere steun als er spanningen zijn of situaties vastlopen",
-             "related": ["ld_support"],
-             "agenda": "Welke steun missen medewerkers als spanningen oplopen of situaties vastlopen?"},
-            {"key": "ldd_recognition", "text": "Concretere terugkoppeling op wat goed gaat en wat wordt gewaardeerd",
-             "related": ["ld_recognition"],
-             "agenda": "Waar missen medewerkers concrete terugkoppeling of waardering?"},
-            {"key": "ldd_availability", "text": "Meer beschikbaarheid en zichtbaarheid van mijn leidinggevende",
-             "related": ["ld_availability"],
-             "agenda": "Past de beschikbaarheid en zichtbaarheid van leidinggevenden bij de omvang van hun teams?"},
-            {"key": "ldd_consistency", "text": "Stabielere en beter uitlegbare besluiten en verwachtingen",
-             "related": ["ld_consistency"],
-             "agenda": "Hoe maken we besluiten en verwachtingen stabieler en beter uitlegbaar?"},
-            {"key": "ldd_other", "text": "Anders, namelijk…", "related": [], "agenda": None},
+            _none("ldd"),
+            {"key": "ldd_feedback",
+             "text": _t("Meer bruikbare feedback en richting"),
+             "imperative": "Geef meer bruikbare feedback en richting."},
+            {"key": "ldd_mandate",
+             "text": _t("Duidelijker wat ik zelf mag beslissen in mijn werk",
+                        "Duidelijker wat ik zelf mocht beslissen in mijn werk"),
+             "imperative": "Maak duidelijker wat medewerkers zelf mogen beslissen."},
+            {"key": "ldd_escalation",
+             "text": _t("Duidelijkere steun als er spanningen zijn of situaties vastlopen",
+                        "Duidelijkere steun als er spanningen waren of situaties vastliepen"),
+             "imperative": "Bied duidelijkere steun als er spanningen zijn of situaties vastlopen."},
+            {"key": "ldd_recognition",
+             "text": _t("Concretere terugkoppeling op wat goed gaat en wat wordt gewaardeerd",
+                        "Concretere terugkoppeling op wat goed ging en wat werd gewaardeerd"),
+             "imperative": "Koppel concreter terug wat goed gaat en wat wordt gewaardeerd."},
+            {"key": "ldd_availability",
+             "text": _t("Meer beschikbaarheid en zichtbaarheid van mijn leidinggevende"),
+             "imperative": "Zorg dat leidinggevenden beschikbaarder en zichtbaarder zijn."},
+            {"key": "ldd_consistency",
+             "text": _t("Stabielere en beter uitlegbare besluiten en verwachtingen"),
+             "imperative": "Maak besluiten en verwachtingen stabieler en beter uitlegbaar."},
+            _other("ldd"),
         ],
     },
     "culture": {
-        "question": "Welke richting zou het gesprek over de samenwerking in het team het meest helpen?",
+        "question": _q("de samenwerking in het team"),
         "options": [
-            {"key": "cud_safety", "text": "Fouten of twijfels makkelijker en veiliger kunnen bespreken",
-             "related": ["cu_mistakes"],
-             "agenda": "Wat maakt het bespreken van fouten of twijfels nu lastig?"},
-            {"key": "cud_dissent", "text": "Meer ruimte voor kritische vragen en afwijkende meningen",
-             "related": ["cu_dissent"],
-             "agenda": "Hoe geven we kritische vragen en afwijkende meningen meer ruimte?"},
-            {"key": "cud_conflict", "text": "Spanningen of conflicten eerder bespreekbaar maken",
-             "related": ["cu_conflict"],
-             "agenda": "Hoe maken we spanningen of conflicten eerder bespreekbaar?"},
-            {"key": "cud_agreements", "text": "Duidelijkere teamafspraken over gedrag, samenwerking en opvolging",
-             "related": ["cu_behavior"],
-             "agenda": "Welke teamafspraken over gedrag, samenwerking en opvolging vragen aanscherping?"},
-            {"key": "cud_involvement", "text": "Eerder betrokken worden bij besluiten of veranderingen die het team raken",
-             "related": ["cu_exclusion"],
-             "agenda": "Hoe betrekken we medewerkers eerder bij besluiten die het team raken?"},
-            {"key": "cud_crossteam", "text": "Betere samenwerking tussen teams of afdelingen",
-             "related": ["cu_cross_team"],
-             "agenda": "Waar loopt de samenwerking tussen teams of afdelingen het meest vast?"},
-            {"key": "cud_other", "text": "Anders, namelijk…", "related": [], "agenda": None},
+            _none("cud"),
+            {"key": "cud_safety",
+             "text": _t("Fouten of twijfels makkelijker en veiliger kunnen bespreken"),
+             "imperative": "Maak het makkelijker en veiliger om fouten of twijfels te bespreken."},
+            {"key": "cud_dissent",
+             "text": _t("Meer ruimte voor kritische vragen en afwijkende meningen"),
+             "imperative": "Geef kritische vragen en afwijkende meningen meer ruimte."},
+            {"key": "cud_conflict",
+             "text": _t("Spanningen of conflicten eerder bespreekbaar maken"),
+             "imperative": "Maak spanningen of conflicten eerder bespreekbaar."},
+            {"key": "cud_agreements",
+             "text": _t("Duidelijkere teamafspraken over gedrag, samenwerking en opvolging"),
+             "imperative": "Maak duidelijkere teamafspraken over gedrag, samenwerking en opvolging."},
+            {"key": "cud_involvement",
+             "text": _t("Eerder betrokken worden bij besluiten of veranderingen die het team raken",
+                        "Eerder betrokken worden bij besluiten of veranderingen die het team raakten"),
+             "imperative": "Betrek medewerkers eerder bij besluiten of veranderingen die het team raken."},
+            {"key": "cud_crossteam",
+             "text": _t("Betere samenwerking tussen teams of afdelingen"),
+             "imperative": "Verbeter de samenwerking tussen teams of afdelingen."},
+            _other("cud"),
         ],
     },
     "growth": {
-        "question": "Welke richting zou het gesprek over groeiperspectief het meest helpen?",
+        "question": _q("groeiperspectief"),
         "options": [
-            {"key": "grd_visibility", "text": "Beter zicht op welke mogelijkheden er voor mij zijn",
-             "related": ["gr_visibility"],
-             "agenda": "Hoe maken we ontwikkelmogelijkheden zichtbaarder?"},
-            {"key": "grd_conversation", "text": "Een concreter gesprek over mijn ontwikkeling",
-             "related": ["gr_conversation"],
-             "agenda": "Hoe maken we ontwikkelgesprekken concreter?"},
-            {"key": "grd_followthrough", "text": "Ontwikkelafspraken concreter vastleggen en zichtbaar opvolgen",
-             "related": ["gr_follow_through"],
-             "agenda": "Hoe leggen we ontwikkelafspraken vast en volgen we ze zichtbaar op?"},
-            {"key": "grd_time", "text": "Ontwikkeling beter inplannen naast het reguliere werk",
-             "related": ["gr_time"],
-             "agenda": "Hoe krijgt ontwikkeling een vaste plek naast het reguliere werk?"},
-            {"key": "grd_criteria", "text": "Duidelijkere criteria voor hoe doorgroei wordt bepaald",
-             "related": ["gr_criteria"],
-             "agenda": "Hoe maken we de criteria voor doorgroei duidelijker?"},
-            {"key": "grd_nextstep", "text": "Een open en concreet gesprek over realistische vervolgstappen binnen de organisatie",
-             "related": ["gr_ceiling"],
-             "agenda": "Welke realistische vervolgstappen binnen de organisatie zien of missen medewerkers?"},
-            {"key": "grd_other", "text": "Anders, namelijk…", "related": [], "agenda": None},
+            _none("grd"),
+            {"key": "grd_visibility",
+             "text": _t("Beter zicht op welke mogelijkheden er voor mij zijn",
+                        "Beter zicht op welke mogelijkheden er voor mij waren"),
+             "imperative": "Maak zichtbaar welke mogelijkheden er voor medewerkers zijn."},
+            {"key": "grd_conversation",
+             "text": _t("Een concreter gesprek over mijn ontwikkeling"),
+             "imperative": "Voer een concreter gesprek over ontwikkeling."},
+            {"key": "grd_followthrough",
+             "text": _t("Ontwikkelafspraken concreter vastleggen en zichtbaar opvolgen"),
+             "imperative": "Leg ontwikkelafspraken concreter vast en volg ze zichtbaar op."},
+            {"key": "grd_time",
+             "text": _t("Ontwikkeling beter inplannen naast het reguliere werk"),
+             "imperative": "Plan ontwikkeling in naast het reguliere werk."},
+            {"key": "grd_criteria",
+             "text": _t("Duidelijkere criteria voor hoe doorgroei wordt bepaald",
+                        "Duidelijkere criteria voor hoe doorgroei werd bepaald"),
+             "imperative": "Maak duidelijker hoe doorgroei wordt bepaald."},
+            {"key": "grd_nextstep",
+             "text": _t("Een open en concreet gesprek over realistische vervolgstappen binnen de organisatie"),
+             "imperative": "Voer een open en concreet gesprek over realistische vervolgstappen binnen de organisatie."},
+            _other("grd"),
         ],
     },
     "compensation": {
-        "question": "Welke richting zou het gesprek over beloning en voorwaarden het meest helpen?",
+        "question": _q("beloning en voorwaarden"),
         "options": [
-            {"key": "cpd_insight", "text": "Beter inzicht in hoe beloning zich verhoudt tot vergelijkbaar werk elders",
-             "related": ["cp_external"],
-             "agenda": "Welke behoefte leeft er aan uitleg over hoe de beloning zich verhoudt tot vergelijkbaar werk elders?"},
-            {"key": "cpd_explain", "text": "Meer uitlegbaarheid van verschillen tussen vergelijkbare functies",
-             "related": ["cp_internal"],
-             "agenda": "Waar voelen verschillen tussen vergelijkbare functies onvoldoende uitlegbaar?"},
-            {"key": "cpd_review", "text": "Beter kijken of beloning past bij de zwaarte en verantwoordelijkheid van mijn werk",
-             "related": ["cp_responsibility"],
-             "agenda": "Waar leven vragen over de verhouding tussen beloning, zwaarte en verantwoordelijkheid van het werk?"},
-            {"key": "cpd_path", "text": "Meer duidelijkheid over mogelijke salarisgroei, voorwaarden en timing",
-             "related": ["cp_growth"],
-             "agenda": "Waar is meer duidelijkheid nodig over mogelijke salarisgroei, voorwaarden en timing?"},
-            {"key": "cpd_clarity", "text": "Meer duidelijkheid over hoe beloning en groei worden bepaald",
-             "related": ["cp_clarity"],
-             "agenda": "Hoe maken we uitlegbaar hoe beloning en groei worden bepaald?"},
-            {"key": "cpd_flex", "text": "Meer duidelijkheid of ruimte rond rooster, werktijden of flexibiliteit",
-             "related": ["cp_flexibility"],
-             "agenda": "Waar knellen rooster, werktijden of flexibiliteit het meest?"},
-            {"key": "cpd_other", "text": "Anders, namelijk…", "related": [], "agenda": None},
+            _none("cpd"),
+            {"key": "cpd_insight",
+             "text": _t("Beter inzicht in hoe beloning zich verhoudt tot vergelijkbaar werk elders",
+                        "Beter inzicht in hoe beloning zich verhield tot vergelijkbaar werk elders"),
+             "imperative": "Geef inzicht in hoe de beloning zich verhoudt tot vergelijkbaar werk elders."},
+            {"key": "cpd_explain",
+             "text": _t("Meer uitlegbaarheid van verschillen tussen vergelijkbare functies"),
+             "imperative": "Leg verschillen tussen vergelijkbare functies beter uit."},
+            {"key": "cpd_review",
+             "text": _t("Beter kijken of beloning past bij de zwaarte en verantwoordelijkheid van mijn werk",
+                        "Beter kijken of beloning paste bij de zwaarte en verantwoordelijkheid van mijn werk"),
+             "imperative": "Kijk opnieuw of de beloning past bij de zwaarte en verantwoordelijkheid van het werk."},
+            {"key": "cpd_path",
+             "text": _t("Meer duidelijkheid over mogelijke salarisgroei, voorwaarden en timing"),
+             "imperative": "Geef duidelijkheid over mogelijke salarisgroei, voorwaarden en timing."},
+            {"key": "cpd_clarity",
+             "text": _t("Meer duidelijkheid over hoe beloning en groei worden bepaald",
+                        "Meer duidelijkheid over hoe beloning en groei werden bepaald"),
+             "imperative": "Maak duidelijk hoe beloning en groei worden bepaald."},
+            {"key": "cpd_flex",
+             "text": _t("Meer duidelijkheid of ruimte rond rooster, werktijden of flexibiliteit"),
+             "imperative": "Geef meer duidelijkheid of ruimte rond rooster, werktijden en flexibiliteit."},
+            _other("cpd"),
         ],
     },
     "role_clarity": {
-        "question": "Welke richting zou het gesprek over rolhelderheid het meest helpen?",
+        "question": _q("duidelijkheid over je rol"),
         "options": [
-            {"key": "rcd_priorities", "text": "Duidelijkere prioriteiten binnen mijn rol",
-             "related": ["rc_priorities"],
-             "agenda": "Hoe maken we prioriteiten binnen rollen duidelijker?"},
-            {"key": "rcd_expectations", "text": "Duidelijkheid over verwachtingen en waarop ik word aangesproken",
-             "related": ["rc_expectations"],
-             "agenda": "Hoe verduidelijken we verwachtingen en waar medewerkers op worden aangesproken?"},
-            {"key": "rcd_alignment", "text": "Eenduidigere opdrachten en betere afstemming tussen betrokkenen",
-             "related": ["rc_conflicting"],
-             "agenda": "Hoe maken we opdrachten eenduidiger en de afstemming tussen betrokkenen beter?"},
-            {"key": "rcd_scope", "text": "Duidelijke afspraken als mijn takenpakket verandert",
-             "related": ["rc_scope"],
-             "agenda": "Hoe leggen we afspraken duidelijker vast wanneer takenpakketten veranderen?"},
-            {"key": "rcd_mandate", "text": "Duidelijkheid over wat ik zelf mag beslissen",
-             "related": ["rc_mandate"],
-             "agenda": "Hoe maken we duidelijker wat medewerkers zelf mogen beslissen?"},
-            {"key": "rcd_information", "text": "Betere informatie, context en overdracht voor mijn werk",
-             "related": ["rc_information"],
-             "agenda": "Hoe zorgen we dat informatie, context en overdracht aansluiten op het werk?"},
-            {"key": "rcd_other", "text": "Anders, namelijk…", "related": [], "agenda": None},
+            _none("rcd"),
+            {"key": "rcd_priorities",
+             "text": _t("Duidelijkere prioriteiten binnen mijn rol"),
+             "imperative": "Maak de prioriteiten binnen rollen duidelijker."},
+            {"key": "rcd_expectations",
+             "text": _t("Duidelijkheid over verwachtingen en waarop ik word aangesproken",
+                        "Duidelijkheid over verwachtingen en waarop ik werd aangesproken"),
+             "imperative": "Maak duidelijk wat er wordt verwacht en waarop medewerkers worden aangesproken."},
+            {"key": "rcd_alignment",
+             "text": _t("Eenduidigere opdrachten en betere afstemming tussen betrokkenen"),
+             "imperative": "Maak opdrachten eenduidiger en stem beter af tussen betrokkenen."},
+            {"key": "rcd_scope",
+             "text": _t("Duidelijke afspraken als mijn takenpakket verandert",
+                        "Duidelijke afspraken als mijn takenpakket veranderde"),
+             "imperative": "Maak duidelijke afspraken wanneer een takenpakket verandert."},
+            {"key": "rcd_mandate",
+             "text": _t("Duidelijkheid over wat ik zelf mag beslissen",
+                        "Duidelijkheid over wat ik zelf mocht beslissen"),
+             "imperative": "Maak duidelijk wat medewerkers zelf mogen beslissen."},
+            {"key": "rcd_information",
+             "text": _t("Betere informatie, context en overdracht voor mijn werk"),
+             "imperative": "Zorg voor betere informatie, context en overdracht."},
+            _other("rcd"),
         ],
     },
 }
 
 
 def get_direction_sets(scan_type: str) -> dict[str, dict[str, Any]]:
-    """Per factor: question_set_version, question, options. Alleen retention in v1."""
-    if scan_type not in DEEPENING_CAP:
+    """Per factor: question_set_version, question, options (key+text, scan-specifiek).
+    `imperative` blijft server-side (alleen voor het rapport).
+    """
+    if scan_type not in DIRECTION_VERSION:
         raise ValueError(f"unknown scan_type {scan_type!r}")
-    if scan_type != "retention":
-        return {}
     out: dict[str, dict[str, Any]] = {}
     for fk in DEEPENING_FACTOR_KEYS:
         raw = DIRECTION_SETS[fk]
         out[fk] = {
-            "question_set_version": f"retention_{fk}_direction_v1",
-            "question": raw["question"],
-            "options": [{"key": o["key"], "text": o["text"]} for o in raw["options"]],
+            "question_set_version": f"{scan_type}_{fk}_direction_{DIRECTION_VERSION[scan_type]}",
+            "question": raw["question"][scan_type],
+            "options": [{"key": o["key"], "text": o["text"][scan_type]} for o in raw["options"]],
         }
     return out
+
+
+def direction_option_texts(scan_type: str, factor_key: str) -> dict[str, str]:
+    """key -> respondenttekst voor het rapport (verdelingstabel, niets-optie)."""
+    return {o["key"]: o["text"] for o in get_direction_sets(scan_type)[factor_key]["options"]}
+
+
+def direction_imperative(factor_key: str, option_key: str) -> str | None:
+    """Opdrachtvorm van een route; None voor *_none en *_other."""
+    options = {o["key"]: o["imperative"] for o in DIRECTION_SETS[factor_key]["options"]}
+    if option_key not in options:
+        raise KeyError(f"unknown option_key {option_key!r} for factor {factor_key!r}")
+    return options[option_key]
 
 
 def _factor_items(org_raw: dict[str, int], factor_key: str) -> list[int]:

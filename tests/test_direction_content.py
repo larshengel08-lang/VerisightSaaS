@@ -1,80 +1,92 @@
-"""Content-guard voor gespreksrichting-sets (spec 2026-07-05 par. 4)."""
-import re
-
+"""Content-guard voor de richtingsets (spec 2026-09-07 par. 3.2 en 8)."""
 import pytest
 
 from backend.products.shared.deepening import (
-    DEEPENING_CAP,
     DEEPENING_FACTOR_KEYS,
-    DEEPENING_SETS,
     DIRECTION_SETS,
+    DIRECTION_VERSION,
+    direction_imperative,
+    direction_option_texts,
     get_direction_sets,
 )
 
-# Verboden in respondent- en rapportcopy (trede-1-lijst + spec-v2-aanvullingen).
+# Verboden in respondent- en rapportcopy.
 FORBIDDEN = [
-    "laag gescoord", "niet goed", "risico", "probleem", "oorzaak",
+    "laag gescoord", "niet goed", "risico", "probleem", "oorzaak", "interventie",
     "anoniem", "betrouwbaar", "verschilmaker", "aanbeveling", "actieplan",
-    "management moet",
+    "management moet", "loep adviseert",
 ]
 
 
-def test_cap_retention_is_3():
-    assert DEEPENING_CAP == {"exit": 3, "retention": 3}
-
-
-def test_direction_sets_complete():
-    assert set(DIRECTION_SETS.keys()) == set(DEEPENING_FACTOR_KEYS)
+def test_sets_complete_with_none_first_and_other_last():
+    assert set(DIRECTION_SETS) == set(DEEPENING_FACTOR_KEYS)
     for fk, s in DIRECTION_SETS.items():
         keys = [o["key"] for o in s["options"]]
-        assert len(keys) == 7, fk                      # 6 routes + other
+        assert len(keys) == 8, fk                       # none + 6 routes + other
+        assert keys[0].endswith("_none"), fk
         assert keys[-1].endswith("_other"), fk
-        assert len(set(keys)) == 7, fk                 # geen dubbele keys
-        assert s["question"], fk
+        assert len(set(keys)) == 8, fk
 
 
-def test_every_route_maps_to_existing_cause_keys():
-    for fk, s in DIRECTION_SETS.items():
-        cause_keys = {o["key"] for o in DEEPENING_SETS[fk]["options"]}
-        for o in s["options"]:
-            if o["key"].endswith("_other"):
-                assert o["related"] == []
-                continue
-            assert o["related"], f"{fk}/{o['key']} mist verwantschaps-mapping"
-            for rk in o["related"]:
-                assert rk in cause_keys, f"{fk}/{o['key']} verwijst naar onbekende {rk}"
-
-
-def test_every_route_has_agenda_question():
-    for fk, s in DIRECTION_SETS.items():
-        for o in s["options"]:
-            if o["key"].endswith("_other"):
-                assert o["agenda"] is None
-            else:
-                assert o["agenda"] and o["agenda"].endswith("?"), \
-                    f"{fk}/{o['key']}: agenda-template ontbreekt of eindigt niet op een vraag"
-
-
-def test_no_forbidden_words_in_direction_copy():
-    for fk, s in DIRECTION_SETS.items():
-        blobs = [s["question"]] + [o["text"] for o in s["options"]] + \
-                [o["agenda"] or "" for o in s["options"]]
-        for blob in blobs:
-            low = blob.lower()
-            for word in FORBIDDEN:
-                assert word not in low, f"{fk}: verboden woord {word!r} in {blob!r}"
-
-
-def test_get_direction_sets_retention_only():
-    sets = get_direction_sets("retention")
-    assert set(sets.keys()) == set(DEEPENING_FACTOR_KEYS)
+@pytest.mark.parametrize("scan_type", ["exit", "retention"])
+def test_get_direction_sets_shape_per_scan(scan_type):
+    sets = get_direction_sets(scan_type)
+    assert set(sets) == set(DEEPENING_FACTOR_KEYS)
     for fk, s in sets.items():
-        assert s["question_set_version"] == f"retention_{fk}_direction_v1"
-        assert len(s["options"]) == 7
-        assert all("text" in o and "key" in o for o in s["options"])
-    assert get_direction_sets("exit") == {}          # exit: eigen ronde, geen sets
+        assert s["question_set_version"] == f"{scan_type}_{fk}_direction_{DIRECTION_VERSION[scan_type]}"
+        assert "scoorde" in s["question"] and "het laagst" in s["question"]
+        assert s["options"][0]["text"].startswith("Niets, dit z")
+        for o in s["options"]:
+            assert set(o) == {"key", "text"}, "imperative mag niet naar de client"
+            assert isinstance(o["text"], str) and o["text"]
 
 
-def test_get_direction_sets_unknown_scan_raises():
+def test_tense_per_scan():
+    ret = get_direction_sets("retention")["workload"]
+    ex = get_direction_sets("exit")["workload"]
+    assert "zou hier volgens jou het meest helpen" in ret["question"]
+    assert "had hier volgens jou het meest geholpen" in ex["question"]
+    assert ret["options"][0]["text"] == "Niets, dit zit hier goed"
+    assert ex["options"][0]["text"] == "Niets, dit zat hier goed"
+    # Eerste-persoonsroutes staan bij exit in de verleden tijd.
+    assert "mocht beslissen" in direction_option_texts("exit", "leadership")["ldd_mandate"]
+    assert "mag beslissen" in direction_option_texts("retention", "leadership")["ldd_mandate"]
+
+
+def test_versions():
+    assert DIRECTION_VERSION == {"retention": "v2", "exit": "v1"}
+
+
+def test_unknown_scan_type_raises():
     with pytest.raises(ValueError):
-        get_direction_sets("pulse")
+        get_direction_sets("onboarding")
+
+
+def test_every_route_has_imperative_except_none_and_other():
+    for fk, s in DIRECTION_SETS.items():
+        for o in s["options"]:
+            imp = direction_imperative(fk, o["key"])
+            if o["key"].endswith(("_none", "_other")):
+                assert imp is None, f"{fk}/{o['key']}"
+            else:
+                assert imp and imp[0].isupper() and imp.endswith("."), f"{fk}/{o['key']}"
+                assert "—" not in imp
+
+
+def test_no_forbidden_words_and_no_em_dashes():
+    for scan_type in ("exit", "retention"):
+        for fk, s in get_direction_sets(scan_type).items():
+            blob = (s["question"] + " " + " ".join(o["text"] for o in s["options"])).lower()
+            for w in FORBIDDEN:
+                assert w not in blob, f"{scan_type}/{fk}: {w}"
+            assert "—" not in blob
+    for fk, s in DIRECTION_SETS.items():
+        for o in s["options"]:
+            imp = (o.get("imperative") or "").lower()
+            for w in FORBIDDEN:
+                assert w not in imp, f"{fk}/{o['key']}: {w}"
+
+
+def test_direction_imperative_unknown_key_raises():
+    with pytest.raises(KeyError):
+        direction_imperative("workload", "wld_bestaat_niet")
