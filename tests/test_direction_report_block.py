@@ -1,8 +1,10 @@
 """Rapportblok 'Wat er moet gebeuren' + p.02-regel (spec 2026-09-07 par. 6)."""
+import pytest
+
 from backend.report_html import (
     DIRECTION_BLOCK_EYEBROW,
     _bestuurlijke_read,
-    _direction_card,
+    _direction_card_cell,
     _direction_chain,
     _direction_p02_line,
     _prioriteringsraster,
@@ -27,7 +29,8 @@ FEW = _agg(2, {"wld_peaks": 2}, skipped=0)
 
 
 def test_clear_card_shows_imperative_source_and_chain():
-    html = _direction_card("startpunt", "Groeiperspectief", CLEAR, "retention", "growth", 13)
+    html = _direction_card_cell("startpunt", label="Groeiperspectief", agg=CLEAR,
+                                scan_type="retention", factor_key="growth", n_total=13)
     assert "Startpunt: Groeiperspectief" in html
     assert "Maak zichtbaar welke mogelijkheden er voor medewerkers zijn." in html
     assert "Volgens 6 van de 8 bij wie groeiperspectief het laagst scoorde." in html
@@ -35,10 +38,12 @@ def test_clear_card_shows_imperative_source_and_chain():
     assert "Niets, dit zit hier goed" in html
     assert "%" not in html
     assert "Beperkte basis" not in html
+    assert 'class="dir-card dir-clear"' in html
 
 
 def test_divided_card():
-    html = _direction_card("tweede", "Werkdruk en herstelruimte", DIVIDED, "retention", "workload", 13)
+    html = _direction_card_cell("tweede", label="Werkdruk en herstelruimte", agg=DIVIDED,
+                                scan_type="retention", factor_key="workload", n_total=13)
     assert "Tweede punt: Werkdruk en herstelruimte" in html
     assert "Geen eenduidige richting." in html
     assert "De 8 bij wie dit het laagst scoorde kozen verschillend." in html
@@ -46,33 +51,58 @@ def test_divided_card():
 
 
 def test_none_needed_card_questions_the_role():
-    start = _direction_card("startpunt", "Werkdruk en herstelruimte", NONE, "retention", "workload", 13)
+    start = _direction_card_cell("startpunt", label="Werkdruk en herstelruimte", agg=NONE,
+                                 scan_type="retention", factor_key="workload", n_total=13)
     assert "Hier hoeft volgens de meeste betrokkenen niets." in start
-    assert "5 van de 8 bij wie dit het laagst scoorde kozen 'Niets, dit zit hier goed'. Bespreek of dit dan het startpunt moet zijn." in start
-    second = _direction_card("tweede", "Werkdruk en herstelruimte", NONE, "retention", "workload", 13)
+    assert "5 van de 8 bij wie dit het laagst scoorde kozen ‘Niets, dit zit hier goed’. Bespreek of dit dan het startpunt moet zijn." in start
+    second = _direction_card_cell("tweede", label="Werkdruk en herstelruimte", agg=NONE,
+                                  scan_type="retention", factor_key="workload", n_total=13)
     assert "het tweede punt moet zijn." in second
 
 
 def test_too_few_card_only_chain():
-    html = _direction_card("tweede", "Werkdruk en herstelruimte", FEW, "retention", "workload", 13)
+    html = _direction_card_cell("tweede", label="Werkdruk en herstelruimte", agg=FEW,
+                                scan_type="retention", factor_key="workload", n_total=13)
     assert "Te weinig antwoorden voor een richting." in html
     assert "item-tbl" not in html
     assert "Van de 13 respondenten hadden 2 dit als laagste; 2 beantwoordden de vraag." in html
 
 
+def test_unknown_role_raises():
+    with pytest.raises(ValueError):
+        _direction_card_cell("derde", label="Groeiperspectief", agg=CLEAR,
+                             scan_type="retention", factor_key="growth", n_total=13)
+
+
 def test_percentages_from_10_and_caveat_at_3_4():
-    big = _direction_card("startpunt", "Groeiperspectief",
-                          _agg(10, {"grd_visibility": 7, "grd_none": 3}), "retention", "growth", 20)
+    big = _direction_card_cell("startpunt", label="Groeiperspectief",
+                               agg=_agg(10, {"grd_visibility": 7, "grd_none": 3}),
+                               scan_type="retention", factor_key="growth", n_total=20)
     assert "70% (7)" in big and "30% (3)" in big
-    small = _direction_card("startpunt", "Groeiperspectief",
-                            _agg(3, {"grd_visibility": 3}, skipped=0), "retention", "growth", 13)
+    small = _direction_card_cell("startpunt", label="Groeiperspectief",
+                                 agg=_agg(3, {"grd_visibility": 3}, skipped=0),
+                                 scan_type="retention", factor_key="growth", n_total=13)
     assert "Beperkte basis: gebruik dit als gesprekshaakje, niet als conclusie." in small
     assert "Volgens 3 van de 3" in small
 
 
+def test_percentage_denominator_is_answered_not_sum_of_counts():
+    # answered=10 maar de counts tellen op tot 8 (een answered-rij zonder
+    # choice telt wel mee in answered, niet in counts, spec 6.1). De
+    # verdelingstabel moet delen door answered (10), niet door sum(counts)
+    # (8) -- anders klopt de weergegeven verhouding niet met de noemer-zin.
+    agg = _agg(10, {"grd_visibility": 5, "grd_time": 3}, skipped=0)
+    html = _direction_card_cell("startpunt", label="Groeiperspectief", agg=agg,
+                                scan_type="retention", factor_key="growth", n_total=13)
+    assert "50% (5)" in html
+    assert "30% (3)" in html
+
+
 def test_exit_tense_in_none_option_text():
-    html = _direction_card("startpunt", "Werkdruk en balans",
-                           _agg(8, {"wld_none": 5, "wld_peaks": 3}, skipped=0), "exit", "workload", 13)
+    html = _direction_card_cell(
+        "startpunt", label="Werkdruk en balans",
+        agg=_agg(8, {"wld_none": 5, "wld_peaks": 3}, skipped=0),
+        scan_type="exit", factor_key="workload", n_total=13)
     assert "Niets, dit zat hier goed" in html
 
 
@@ -85,19 +115,54 @@ def test_chain_with_old_client_gap():
         "Van de 13 respondenten hadden 3 dit als laagste; 1 beantwoordde de vraag, 2 sloegen over.")
 
 
+def test_chain_lowest_zero():
+    agg = {"lowest_n": 0, "offered": 0, "answered": 0, "skipped": 0, "counts": {}}
+    assert _direction_chain(agg, 13) == "Niemand had dit als laagste onderwerp."
+
+
+def test_chain_zero_answered_nonzero_skipped():
+    agg = {"lowest_n": 5, "offered": 5, "answered": 0, "skipped": 5, "counts": {}}
+    assert _direction_chain(agg, 13) == (
+        "Van de 13 respondenten hadden 5 dit als laagste; 5 sloegen over.")
+
+
+def test_chain_offered_zero_ends_at_opener():
+    agg = {"lowest_n": 4, "offered": 0, "answered": 0, "skipped": 0, "counts": {}}
+    assert _direction_chain(agg, 13) == "Van de 13 respondenten hadden 4 dit als laagste."
+
+
+def test_chain_singular_lowest():
+    agg = {"lowest_n": 1, "offered": 1, "answered": 1, "skipped": 0, "counts": {}}
+    assert _direction_chain(agg, 13) == (
+        "Van de 13 respondenten had 1 dit als laagste; 1 beantwoordde de vraag.")
+
+
+def test_chain_singular_gap_offered_and_answered():
+    agg = {"lowest_n": 2, "offered": 1, "answered": 1, "skipped": 0, "counts": {}}
+    assert _direction_chain(agg, 13) == (
+        "Van de 13 respondenten hadden 2 dit als laagste; 1 kreeg de vraag, 1 beantwoordde die.")
+
+
+def test_chain_singular_skipped():
+    agg = {"lowest_n": 3, "offered": 3, "answered": 2, "skipped": 1, "counts": {}}
+    assert _direction_chain(agg, 13) == (
+        "Van de 13 respondenten hadden 3 dit als laagste; 2 beantwoordden de vraag, 1 sloeg over.")
+
+
 def test_block_two_cards_for_startpunt_and_tweede_only():
     agg = {"growth": CLEAR, "workload": DIVIDED, "leadership": CLEAR}
     html = _wat_moet_gebeuren_block(RANKED, agg, "retention", 13)
     assert DIRECTION_BLOCK_EYEBROW in html
+    assert "Wat er moet gebeuren" in html
     assert html.count('class="dir-card') == 2
     assert "Startpunt: Groeiperspectief" in html and "Tweede punt: Werkdruk en herstelruimte" in html
     assert "geen advies van Loep" in html
 
 
-def test_block_empty_without_data_and_missing_factor_is_too_few():
+def test_block_empty_without_data_and_missing_factor_raises_keyerror():
     assert _wat_moet_gebeuren_block(RANKED, {}, "retention", 13) == ""
-    html = _wat_moet_gebeuren_block(RANKED, {"growth": CLEAR}, "retention", 13)
-    assert "Te weinig antwoorden voor een richting." in html
+    with pytest.raises(KeyError):
+        _wat_moet_gebeuren_block(RANKED, {"growth": CLEAR}, "retention", 13)
 
 
 def test_raster_integration_gate():
@@ -109,7 +174,17 @@ def test_raster_integration_gate():
     with_dir = _prioriteringsraster(**kwargs, direction_agg={"growth": CLEAR, "workload": DIVIDED}, n_total=13)
     assert DIRECTION_BLOCK_EYEBROW not in without
     assert DIRECTION_BLOCK_EYEBROW in with_dir
+    assert "Wat er moet gebeuren" in with_dir
     assert with_dir.index(DIRECTION_BLOCK_EYEBROW) < with_dir.index('class="agenda-dark"')
+
+
+def test_prioriteringsraster_raises_without_n_total():
+    kwargs = dict(ranked=RANKED, scan_type="retention", factor_resp_scores=RESP,
+                  deepening_active=True, mgmt_q="Testvraag?",
+                  review_when="Plan binnen 45-90 dagen een vervolgmoment.",
+                  opener_html="<h2>Gespreksagenda</h2>")
+    with pytest.raises(ValueError):
+        _prioriteringsraster(**kwargs, direction_agg={"growth": CLEAR})
 
 
 def test_p02_line_per_state():
@@ -134,10 +209,14 @@ def test_bestuurlijke_read_renders_direction_line_only_when_given():
 
 def test_no_em_dashes_or_forbidden_words():
     blobs = [
-        _direction_card("startpunt", "Groeiperspectief", CLEAR, "retention", "growth", 13),
-        _direction_card("tweede", "Werkdruk en herstelruimte", DIVIDED, "retention", "workload", 13),
-        _direction_card("startpunt", "Werkdruk en herstelruimte", NONE, "retention", "workload", 13),
-        _direction_card("tweede", "Werkdruk en herstelruimte", FEW, "retention", "workload", 13),
+        _direction_card_cell("startpunt", label="Groeiperspectief", agg=CLEAR,
+                             scan_type="retention", factor_key="growth", n_total=13),
+        _direction_card_cell("tweede", label="Werkdruk en herstelruimte", agg=DIVIDED,
+                             scan_type="retention", factor_key="workload", n_total=13),
+        _direction_card_cell("startpunt", label="Werkdruk en herstelruimte", agg=NONE,
+                             scan_type="retention", factor_key="workload", n_total=13),
+        _direction_card_cell("tweede", label="Werkdruk en herstelruimte", agg=FEW,
+                             scan_type="retention", factor_key="workload", n_total=13),
         _wat_moet_gebeuren_block(RANKED, {"growth": CLEAR, "workload": DIVIDED}, "exit", 13),
     ]
     for b in blobs:

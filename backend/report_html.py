@@ -24,6 +24,7 @@ from backend.models import Campaign, Respondent, SurveyResponse
 from backend.report_css import build_css, RAG_HIGH, RAG_MID, RAG_LOW
 from backend.report_distribution import MIN_DISTRIBUTION_N, distribution_block
 from backend.products.shared.deepening import (
+    DIRECTION_CAVEAT_MAX_N,
     DIRECTION_SCAN_TYPES,
     agenda_enrichment,
     aggregate_deepening,
@@ -789,118 +790,14 @@ def _raster_deepening_cell(row: dict, scan_type: str) -> str:
                4: CELL_CAP_REACHED, 5: CELL_NOT_TRIGGERED}.get(state, ""))
 
 
-# ── Richtingblok "Wat er moet gebeuren" (spec 2026-09-07 par. 6) ─────────────
-
-DIRECTION_BLOCK_EYEBROW = "Wat er moet gebeuren"
-DIRECTION_BLOCK_INTRO = (
-    "Elke respondent kreeg één vraag over het onderwerp dat bij henzelf het laagst "
-    "scoorde: wat zou hier het meest helpen? Hieronder staat wat die respondenten kozen "
-    "voor het startpunt en het tweede punt. Dit is hun keuze, geen advies van Loep.")
-_EMPTY_DIRECTION_AGG = {"lowest_n": 0, "offered": 0, "answered": 0, "skipped": 0, "counts": {}}
-
-
-def _direction_chain(agg: dict, n_total: int) -> str:
-    """Keten laagst -> (aangeboden ->) beantwoord/overgeslagen (spec par. 6.1)."""
-    lowest, offered = agg["lowest_n"], agg["offered"]
-    answered, skipped = agg["answered"], agg["skipped"]
-    had = f"hadden {lowest}" if lowest != 1 else "had 1"
-    parts: list[str] = []
-    if offered < lowest:
-        parts.append(f"{offered} kregen de vraag" if offered != 1 else "1 kreeg de vraag")
-        parts.append(f"{answered} beantwoordden die" if answered != 1 else "1 beantwoordde die")
-    else:
-        parts.append(f"{answered} beantwoordden de vraag" if answered != 1 else "1 beantwoordde de vraag")
-    if skipped:
-        parts.append(f"{skipped} sloegen over" if skipped != 1 else "1 sloeg over")
-    return f"Van de {n_total} respondenten {had} dit als laagste; {', '.join(parts)}."
-
-
-def _direction_card(role: str, label: str, agg: dict, scan_type: str,
-                    factor_key: str, n_total: int) -> str:
-    """Eén kaart (startpunt of tweede punt) in de vier staten van spec par. 6.1."""
-    st = direction_state(agg, factor_key)
-    texts = direction_option_texts(scan_type, factor_key)
-    n = st["n"]
-    role_lbl = "Startpunt" if role == "startpunt" else "Tweede punt"
-    which = "het startpunt" if role == "startpunt" else "het tweede punt"
-    if st["state"] == "too_few":
-        head, src = "Te weinig antwoorden voor een richting.", ""
-    elif st["state"] == "clear":
-        head = direction_imperative(scan_type, factor_key, st["top_key"]) or ""
-        src = f"Volgens {st['top_n']} van de {n} bij wie {_h(_lc(label))} het laagst scoorde."
-    elif st["state"] == "none_needed":
-        head = "Hier hoeft volgens de meeste betrokkenen niets."
-        # De letterlijke rechte aanhalingstekens rondom de gekozen optietekst zijn
-        # bewust buiten _h() gehouden (die zou ze naar &#x27; omzetten); alleen de
-        # geinterpoleerde optietekst zelf wordt geescaped.
-        src = (f"{st['top_n']} van de {n} bij wie dit het laagst scoorde kozen "
-               f"'{_h(texts.get(st['top_key'], st['top_key']))}'. Bespreek of dit dan {which} moet zijn.")
-    else:
-        head = "Geen eenduidige richting."
-        src = f"De {n} bij wie dit het laagst scoorde kozen verschillend."
-
-    table = ""
-    if st["state"] != "too_few":
-        rows = "".join(
-            f'<tr><td class="iq">{_h(texts.get(k, k))}</td>'
-            f'<td class="is">{f"{round(c / n * 100)}% ({c})" if n >= 10 else c}</td></tr>'
-            for k, c in st["ranked"])
-        table = f'<table class="item-tbl dir-tbl">{rows}</table>'
-        if n <= 4:
-            table += ('<p class="dir-caveat">Beperkte basis: gebruik dit als '
-                      'gesprekshaakje, niet als conclusie.</p>')
-    # src is hierboven al per interpolatie geescaped (_h op label/optietekst
-    # afzonderlijk); nogmaals _h() op de hele string zou ook de bewust
-    # letterlijke aanhalingstekens rond de optietekst naar &#x27; omzetten.
-    src_html = f'<div class="dir-src">{src}</div>' if src else ""
-    return (f'<td class="dir-card dir-{st["state"]}">'
-            f'<div class="dir-role">{role_lbl}: {_h(label)}</div>'
-            f'<div class="dir-head">{_h(head)}</div>{src_html}{table}'
-            f'<div class="dir-chain">{_h(_direction_chain(agg, n_total))}</div></td>')
-
-
-def _wat_moet_gebeuren_block(ranked: list[dict], direction_agg: dict,
-                             scan_type: str, n_total: int) -> str:
-    """Twee kaarten (startpunt + tweede punt) onder het raster. Leeg zonder
-    richtingdata (campagne-gate zit in build_report_data)."""
-    if not direction_agg:
-        return ""
-    cards = "".join(
-        _direction_card(r["agenda_role"], r["label"],
-                        direction_agg.get(r["key"]) or _EMPTY_DIRECTION_AGG,
-                        scan_type, r["key"], n_total)
-        for r in ranked if r["agenda_role"] in ("startpunt", "tweede"))
-    if not cards:
-        return ""
-    return (f'<div class="dir-block"><span class="eyebrow">{DIRECTION_BLOCK_EYEBROW}</span>'
-            f'<p class="dir-intro">{DIRECTION_BLOCK_INTRO}</p>'
-            f'<table class="dir-grid"><tr>{cards}</tr></table></div>')
-
-
-def _direction_p02_line(direction_agg: dict, factor_key: str | None, scan_type: str) -> str:
-    """Eén regel over het startpunt op de openingspagina (spec par. 6.2); leeg onder de vloer."""
-    if not direction_agg or not factor_key or factor_key not in direction_agg:
-        return ""
-    st = direction_state(direction_agg[factor_key], factor_key)
-    n = st["n"]
-    if st["state"] == "clear":
-        return (f"Wat er volgens {st['top_n']} van de {n} moet gebeuren: "
-                f"{direction_imperative(scan_type, factor_key, st['top_key'])}")
-    if st["state"] == "divided":
-        return (f"Over wat hier moet gebeuren zijn de {n} die dit het laagst scoorden "
-                "verdeeld. Zie de gespreksagenda.")
-    if st["state"] == "none_needed":
-        return f"{st['top_n']} van de {n} die dit het laagst scoorden zeggen: hier hoeft niets."
-    return ""
-
-
 def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
                          factor_resp_scores: dict[str, list[float]],
                          deepening_active: bool,
                          mgmt_q: str, review_when: str,
                          opener_html: str,
                          direction_agg: dict | None = None, n_total: int = 0) -> str:
-    """Prioriteringsraster + geintegreerde gespreksagenda (spec par. 2).
+    """Prioriteringsraster + geintegreerde gespreksagenda, inclusief het
+    richtingblok "Wat er moet gebeuren" (spec par. 2 en par. 6).
 
     Vervangt _eerste_managementspoor voor exit en retention. De tabel toont
     het afwegingswerk (zichtbaarheids-invariant: elke tiebreak-input staat in
@@ -911,6 +808,13 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
     van de HTML-output, dus elke opmaak die de string zelf onderbreekt
     (bijv. een <b>-tag halverwege) breekt die test.
     """
+    # Fail-loud: direction_agg en n_total horen bij elkaar (_direction_chain
+    # rekent de noemer-zin uit met n_total) — zonder n_total zou "Van de 0
+    # respondenten..." een foute noemer tonen, precies waar dit blok om de
+    # geloofwaardigheid van het rapport draait.
+    if direction_agg and n_total <= 0:
+        raise ValueError("_prioriteringsraster: direction_agg zonder n_total")
+
     from backend.report_distribution import MIN_DISTRIBUTION_N, distribution_svg
 
     # Onafhankelijk van de renderlus berekend (code-review Taak 5): een
@@ -1054,6 +958,142 @@ def _primary_why_text(low_item_score: float, agg: dict, scan_type: str, factor_k
 def _lc(label: str) -> str:
     """Factorlabel mid-zin: eerste letter lowercase."""
     return label[:1].lower() + label[1:] if label else label
+
+
+# ── Richtingblok "Wat er moet gebeuren" (spec 2026-09-07 par. 6) ─────────────
+
+DIRECTION_BLOCK_EYEBROW = "Wat er moet gebeuren"
+DIRECTION_BLOCK_INTRO = (
+    "Elke respondent kreeg één vraag over het onderwerp dat bij henzelf het laagst "
+    "scoorde: wat zou hier het meest helpen? Hieronder staat wat die respondenten kozen "
+    "voor het startpunt en het tweede punt. Dit is hun keuze, geen advies van Loep.")
+DIRECTION_HEAD_TOO_FEW = "Te weinig antwoorden voor een richting."
+DIRECTION_HEAD_NONE_NEEDED = "Hier hoeft volgens de meeste betrokkenen niets."
+DIRECTION_HEAD_DIVIDED = "Geen eenduidige richting."
+
+
+def _direction_chain(agg: dict, n_total: int) -> str:
+    """Keten laagst -> (aangeboden ->) beantwoord/overgeslagen (spec par. 6.1).
+
+    Bij lowest_n == 0 (mogelijk bij kleine n: iemands eigen laagste factor is
+    niet per se de groeps-startpuntfactor) is er geen keten om te tonen. Een
+    clausule met telling 0 ("0 kregen de vraag") is altijd fout Nederlands en
+    wordt dus overgeslagen; blijft er dan niets over, dan eindigt de zin bij
+    de opener.
+    """
+    lowest, offered = agg["lowest_n"], agg["offered"]
+    answered, skipped = agg["answered"], agg["skipped"]
+    if lowest == 0:
+        return "Niemand had dit als laagste onderwerp."
+    had = f"hadden {lowest}" if lowest != 1 else "had 1"
+    parts: list[str] = []
+    if offered < lowest:
+        if offered:
+            parts.append(f"{offered} kregen de vraag" if offered != 1 else "1 kreeg de vraag")
+        if answered:
+            parts.append(f"{answered} beantwoordden die" if answered != 1 else "1 beantwoordde die")
+    else:
+        if answered:
+            parts.append(f"{answered} beantwoordden de vraag" if answered != 1 else "1 beantwoordde de vraag")
+    if skipped:
+        parts.append(f"{skipped} sloegen over" if skipped != 1 else "1 sloeg over")
+    opener = f"Van de {n_total} respondenten {had} dit als laagste"
+    if not parts:
+        return f"{opener}."
+    return f"{opener}; {', '.join(parts)}."
+
+
+def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
+                         factor_key: str, n_total: int) -> str:
+    """Eén tabelcel (<td>) voor het startpunt of tweede punt, in de vier
+    staten van spec par. 6.1. Keyword-only na role: scan_type/factor_key en
+    label zijn anders aangrenzende gelijksoortige strings die zonder
+    typefout konden transponeren (zelfde reden als _bestuurlijke_read en
+    _prioriteringsraster al keyword-only zijn)."""
+    st = direction_state(agg, factor_key)
+    texts = direction_option_texts(scan_type, factor_key)
+    n = st["n"]
+    if role == "startpunt":
+        role_lbl, which = "Startpunt", "het startpunt"
+    elif role == "tweede":
+        role_lbl, which = "Tweede punt", "het tweede punt"
+    else:
+        raise ValueError(f"_direction_card_cell: onbekende role {role!r}")
+    if st["state"] == "too_few":
+        head, src = DIRECTION_HEAD_TOO_FEW, ""
+    elif st["state"] == "clear":
+        head = direction_imperative(scan_type, factor_key, st["top_key"])
+        src = f"Volgens {st['top_n']} van de {n} bij wie {_lc(label)} het laagst scoorde."
+    elif st["state"] == "none_needed":
+        head = DIRECTION_HEAD_NONE_NEEDED
+        opt = texts.get(st["top_key"], st["top_key"])
+        src = (f"{st['top_n']} van de {n} bij wie dit het laagst scoorde kozen "
+               f"‘{opt}’. Bespreek of dit dan {which} moet zijn.")
+    else:
+        head = DIRECTION_HEAD_DIVIDED
+        src = f"De {n} bij wie dit het laagst scoorde kozen verschillend."
+
+    table = ""
+    if st["state"] != "too_few":
+        rows = "".join(
+            f'<tr><td class="iq">{_h(texts.get(k, k))}</td>'
+            f'<td class="is">{f"{round(c / n * 100)}% ({c})" if n >= MIN_DISTRIBUTION_N else c}</td></tr>'
+            for k, c in st["ranked"])
+        table = f'<table class="item-tbl dir-tbl">{rows}</table>'
+        if n <= DIRECTION_CAVEAT_MAX_N:
+            table += ('<p class="dir-caveat">Beperkte basis: gebruik dit als '
+                      'gesprekshaakje, niet als conclusie.</p>')
+    # head en src worden hier eenmalig samen door _h() gehaald: beide zijn
+    # hierboven bewust rauw (ongeescaped) opgebouwd, dus geen asymmetrie meer
+    # tussen een vooraf geescapete head en een deels geescapete src.
+    src_html = f'<div class="dir-src">{_h(src)}</div>' if src else ""
+    return (f'<td class="dir-card dir-{st["state"]}">'
+            f'<div class="dir-role">{role_lbl}: {_h(label)}</div>'
+            f'<div class="dir-head">{_h(head)}</div>{src_html}{table}'
+            f'<div class="dir-chain">{_h(_direction_chain(agg, n_total))}</div></td>')
+
+
+def _wat_moet_gebeuren_block(ranked: list[dict], direction_agg: dict,
+                             scan_type: str, n_total: int) -> str:
+    """Twee kaarten (startpunt + tweede punt) onder het raster. Leeg zonder
+    richtingdata (campagne-gate zit in build_report_data).
+
+    direction_agg wordt direct geïndexeerd, zonder .get-fallback:
+    aggregate_direction vult altijd alle DEEPENING_FACTOR_KEYS, en die lijst
+    is gelijk aan ORG_FACTOR_KEYS (gepind in test_direction_factor.py) —
+    precies de sleutels die ranked (via rank_factors) gebruikt. Een
+    ontbrekende sleutel is dus een codebug elders; die moet KeyError'en, niet
+    stil een lege-kaart-tekst tonen.
+    """
+    if not direction_agg:
+        return ""
+    cards = "".join(
+        _direction_card_cell(r["agenda_role"], label=r["label"],
+                             agg=direction_agg[r["key"]], scan_type=scan_type,
+                             factor_key=r["key"], n_total=n_total)
+        for r in ranked if r["agenda_role"] in ("startpunt", "tweede"))
+    if not cards:
+        return ""
+    return (f'<div class="dir-block"><span class="eyebrow">{DIRECTION_BLOCK_EYEBROW}</span>'
+            f'<p class="dir-intro">{DIRECTION_BLOCK_INTRO}</p>'
+            f'<table class="dir-grid"><tr>{cards}</tr></table></div>')
+
+
+def _direction_p02_line(direction_agg: dict, factor_key: str | None, scan_type: str) -> str:
+    """Eén regel over het startpunt op de openingspagina (spec par. 6.2); leeg onder de vloer."""
+    if not direction_agg or not factor_key or factor_key not in direction_agg:
+        return ""
+    st = direction_state(direction_agg[factor_key], factor_key)
+    n = st["n"]
+    if st["state"] == "clear":
+        return (f"Wat er volgens {st['top_n']} van de {n} moet gebeuren: "
+                f"{direction_imperative(scan_type, factor_key, st['top_key'])}")
+    if st["state"] == "divided":
+        return (f"Over wat hier moet gebeuren zijn de {n} die dit het laagst scoorden "
+                "verdeeld. Zie de gespreksagenda.")
+    if st["state"] == "none_needed":
+        return f"{st['top_n']} van de {n} die dit het laagst scoorden zeggen: hier hoeft niets."
+    return ""
 
 
 def _deepening_chain(agg: dict, scan_type: str, factor_key: str) -> str:

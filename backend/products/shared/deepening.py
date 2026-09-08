@@ -761,6 +761,7 @@ def aggregate_deepening(
 
 DIRECTION_MIN_N = 3          # vloer voor het rapportblok (spec par. 5.4; bewust lager dan MIN_SEGMENT_N,
                              # zie spec par. 6.3: subgroep onzichtbaar voor de organisatie)
+DIRECTION_CAVEAT_MAX_N = 4   # caveat-drempel = DIRECTION_MIN_N + 1 (dekt n in {3, 4}); niet los wijzigen
 DIRECTION_OTHER_WARN_N = 8   # vanaf hier een reviewvlag als *_other de topoptie is
 
 

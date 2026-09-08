@@ -237,7 +237,7 @@ p  { margin-bottom: 6px; font-size: 11px; }
 /* ── Richtingblok "Wat er moet gebeuren" ── */
 .dir-block { margin-top: 18px; break-inside: avoid; }
 .dir-intro { font-size: 10px; color: #374151; line-height: 1.5; margin: 4px 0 10px; max-width: 70ch; }
-.dir-grid { width: 100%; border-collapse: separate; border-spacing: 12px 0; margin-left: -12px; }
+.dir-grid { width: 100%; border-collapse: separate; border-spacing: 12px 0; }
 .dir-card { width: 50%; vertical-align: top; background: #FFFFFF; border-left: 3px solid """ + HAIRLINE + r"""; padding: 12px 14px; }
 .dir-card.dir-clear { border-left-color: """ + accent + r"""; }
 .dir-role { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.12em; text-transform: uppercase; color: """ + accent_lo + r"""; margin-bottom: 6px; }
