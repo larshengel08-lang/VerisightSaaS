@@ -636,14 +636,18 @@
   // ── Verduidelijkingsstap (conditionele vervolgvragen) ───────────────────
   // Poort 1:1 van backend/products/shared/deepening.py (server valideert opnieuw).
 
+  // <parity-anchor>
+  // Cliëntzijdige spiegel van _priority_key (backend/products/shared/deepening.py):
+  // één prioriteitsregel voor zowel de verduidelijkingsstap als de richtingstap →
+  // laagste gemiddelde, dan meeste stellingen <=2, dan laagste minimum, dan vaste
+  // factorvolgorde. Wijzig dit blok nooit los van _priority_key; zie
+  // tests/test_direction_factor_js_parity.py (extraheert dit blok en vergelijkt
+  // het onder node tegen compute_direction_factor).
   const DEEPENING_FACTOR_ORDER = ["leadership","culture","growth","compensation","workload","role_clarity"];
-  const deepStep   = document.getElementById("deepening-step");
-  const deepBlocks = document.getElementById("deepening-blocks");
 
-  function computeDeepeningOffers() {
-    if (!window.__DEEPENING_SETS || !Object.keys(window.__DEEPENING_SETS).length) return [];
+  function orgFactorCandidates () {
     const orgRaw = collectRadioGroup("org");
-    const triggered = [];
+    const cands = [];
     DEEPENING_FACTOR_ORDER.forEach((fk, idx) => {
       const items = Object.entries(orgRaw)
         .filter(([k]) => k.startsWith(fk + "_")).map(([, v]) => v);
@@ -651,11 +655,27 @@
       const avg = items.reduce((a, b) => a + b, 0) / items.length;
       const lowCount = items.filter(v => v <= 2).length;
       const minV = Math.min(...items);
-      const trig = avg <= 2.5 || (minV === 1 && avg <= 3.5) || lowCount >= 2;
-      if (trig) triggered.push({ avg, lowCount, minV, idx, fk });
+      cands.push({ avg, lowCount, minV, idx, fk, items });
     });
-    triggered.sort((a, b) => a.avg - b.avg || b.lowCount - a.lowCount || a.minV - b.minV || a.idx - b.idx);
-    return triggered.slice(0, window.__DEEPENING_CAP).map(t => t.fk);
+    cands.sort((a, b) => a.avg - b.avg || b.lowCount - a.lowCount || a.minV - b.minV || a.idx - b.idx);
+    return cands;
+  }
+
+  function computeDirectionFactor () {
+    const cands = orgFactorCandidates();
+    return cands.length ? cands[0].fk : null;
+  }
+  // </parity-anchor>
+
+  const deepStep   = document.getElementById("deepening-step");
+  const deepBlocks = document.getElementById("deepening-blocks");
+
+  function computeDeepeningOffers() {
+    if (!window.__DEEPENING_SETS || !Object.keys(window.__DEEPENING_SETS).length) return [];
+    return orgFactorCandidates()
+      .filter(c => c.avg <= 2.5 || (c.minV === 1 && c.avg <= 3.5) || c.lowCount >= 2)
+      .slice(0, window.__DEEPENING_CAP)
+      .map(c => c.fk);
   }
 
   function _dpOptionRow (name, key, text, checked) {
@@ -806,7 +826,7 @@
     if (skipBtn) skipBtn.textContent = skipped ? "Toch beantwoorden" : "Deze vraag liever overslaan";
   }
 
-  function updateDeepeningFromOrg () {
+  function updateConditionalStepsFromOrg () {
     if (deepStep) {
       const offers = computeDeepeningOffers();
       if (offers.length) {
@@ -845,25 +865,10 @@
   // ── Richtingstap: één vraag op de eigen laagste factor (spec 2026-09-07 par. 3) ──
   // Poort van compute_direction_factor (deepening.py): zelfde sleutel als de
   // verdieping, zonder triggerfilter. De server valideert opnieuw (422 bij mismatch).
+  // computeDirectionFactor zelf staat hierboven, in het parity-anchor-blok
+  // (gedeeld met orgFactorCandidates).
   const dirStep   = document.getElementById("direction-step");
   const dirBlocks = document.getElementById("direction-blocks");
-
-  function computeDirectionFactor () {
-    const orgRaw = collectRadioGroup("org");
-    const cands = [];
-    DEEPENING_FACTOR_ORDER.forEach((fk, idx) => {
-      const items = Object.entries(orgRaw)
-        .filter(([k]) => k.startsWith(fk + "_")).map(([, v]) => v);
-      if (!items.length) return;
-      const avg = items.reduce((a, b) => a + b, 0) / items.length;
-      const lowCount = items.filter(v => v <= 2).length;
-      const minV = Math.min(...items);
-      cands.push({ avg, lowCount, minV, idx, fk });
-    });
-    if (!cands.length) return null;
-    cands.sort((a, b) => a.avg - b.avg || b.lowCount - a.lowCount || a.minV - b.minV || a.idx - b.idx);
-    return cands[0].fk;
-  }
 
   function currentDirectionBlock () {
     return dirBlocks ? dirBlocks.querySelector(".dpd-block") : null;
@@ -928,6 +933,13 @@
     block.appendChild(skippedFlag);
 
     // Factor waarvoor dit antwoord geldt; restore vergelijkt hiermee (spec par. 3.3).
+    // De verduidelijkingsvelden zijn per factor genaamd (dp_${fk}_primary) en
+    // daardoor zelf-sleutelend: een verstaald hersteld antwoord vindt het veld
+    // van zijn eigen factor terug, of vindt niets → veroudering is door
+    // constructie uitgesloten. De richtingvelden zijn vlak genaamd (dpd_choice,
+    // niet per factor), dus missen die garantie — vandaar deze expliciete
+    // dpd_factor-vlag om bij restore te verifiëren dat een hersteld antwoord
+    // nog bij de huidige (laagste) factor van deze respondent hoort.
     const factorFlag = document.createElement("input");
     factorFlag.type = "hidden";
     factorFlag.name = "dpd_factor";
@@ -1078,7 +1090,7 @@ const raw = sessionStorage.getItem(key);
 
     // Verduidelijking + richting: blokken opnieuw afleiden uit de org-antwoorden,
     // daarna de opgeslagen velden terugzetten.
-    updateDeepeningFromOrg();
+    updateConditionalStepsFromOrg();
     if (deepStep) {
       Object.entries(data).forEach(([name, val]) => {
         if (name.indexOf("dp_") === 0 && !Array.isArray(val)) applyDeepeningValue(name, val);
@@ -1131,9 +1143,10 @@ try { sessionStorage.removeItem(key); } catch (e) {}
         setFormStatus("Controleer de gemarkeerde vragen voordat je doorgaat.");
         return;
       }
-      // Verlaat de organisatiefactoren-stap: bepaal welke verduidelijkingen we tonen.
+      // Verlaat de organisatiefactoren-stap: bepaal welke verduidelijkings- en
+      // richtingstappen we tonen.
       if (active.querySelector('input[type="radio"][data-group="org"]')) {
-        updateDeepeningFromOrg();
+        updateConditionalStepsFromOrg();
       }
       const ni = nextVisibleIndex(currentStep);
       if (ni !== -1) showStep(ni);
@@ -1254,7 +1267,7 @@ try { sessionStorage.removeItem(key); } catch (e) {}
       const sel = dirBlock.querySelector(".dpd-choice input:checked");
       if (set) {
         if ((flag && flag.value === "1") || !sel) {
-          // Expliciet overgeslagen, of doorgegaan zonder keuze -> overgeslagen.
+          // Expliciet overgeslagen, of doorgegaan zonder keuze → overgeslagen.
           payload.direction_response = { factor_key: fk, question_set_version: set.question_set_version,
                                          status: "skipped", choice: null, other_text: null };
         } else {

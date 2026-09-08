@@ -26,7 +26,7 @@
    eigen laagste factor. Volgt op de verduidelijkingsstap als die er is; step_dir loopt
    in lockstep met dir_offset/step_d in survey.html. #}
 {% set step_dir = (4 if scan_type == "exit" else 3) + (1 if deepening_sets else 0) %}
-<div class="step" data-step="{{ step_dir }}" data-label="Wat zou helpen" id="direction-step">
+<div class="step" data-step="{{ step_dir }}" data-label="{% if scan_type == "exit" %}Wat had geholpen{% else %}Wat zou helpen{% endif %}" id="direction-step">
   <div class="card">
     <div class="card-title">Stap {{ step_dir }} — {% if scan_type == "exit" %}Wat had geholpen?{% else %}Wat zou helpen?{% endif %}</div>
     <p style="color:var(--muted);font-size:13px;margin-bottom:8px;">
