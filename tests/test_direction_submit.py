@@ -112,6 +112,15 @@ def test_wrong_factor_422(client, db_session: Session):
     assert resp.json()["detail"] == "Gespreksrichting hoort niet bij deze inzending."
 
 
+def test_unknown_factor_key_422(client, db_session: Session):
+    # Pint de volgorde: de factorcheck moet vóór de set-lookup staan, anders 500 i.p.v. 422.
+    r = _setup(db_session)
+    resp = client.post("/survey/submit", json=_retention_payload(
+        r.token, org_raw=_org_raw({"workload": 2}), direction=_dr(fk="bestaat_niet")))
+    assert resp.status_code == 422
+    assert resp.json()["detail"] == "Gespreksrichting hoort niet bij deze inzending."
+
+
 def test_unknown_choice_422(client, db_session: Session):
     r = _setup(db_session)
     resp = client.post("/survey/submit", json=_retention_payload(

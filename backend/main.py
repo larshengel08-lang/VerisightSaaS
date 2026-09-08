@@ -74,7 +74,8 @@ from backend.products.onboarding.definition import DEFAULT_ONBOARDING_MODULES
 from backend.products.pulse.definition import DEFAULT_PULSE_MODULES
 from backend.products.team.definition import DEFAULT_TEAM_MODULES
 from backend.products.shared.deepening import (
-    DEEPENING_CAP, compute_deepening_offers, compute_direction_factor,
+    DEEPENING_CAP, DEEPENING_SCAN_TYPES, DIRECTION_SCAN_TYPES,
+    compute_deepening_offers, compute_direction_factor,
     get_deepening_sets, get_direction_sets,
 )
 from backend.products.shared.registry import get_product_module
@@ -1335,9 +1336,9 @@ async def serve_survey(
             "scan_type":       campaign.scan_type,
             "campaign_name":   campaign.name,
             "enabled_modules": enabled_modules,
-            "deepening_sets":  get_deepening_sets(campaign.scan_type) if campaign.scan_type in ("exit", "retention") else {},
+            "deepening_sets":  get_deepening_sets(campaign.scan_type) if campaign.scan_type in DEEPENING_SCAN_TYPES else {},
             "deepening_cap":   DEEPENING_CAP.get(campaign.scan_type, 0),
-            "direction_sets":  get_direction_sets(campaign.scan_type) if campaign.scan_type in ("exit", "retention") else {},
+            "direction_sets":  get_direction_sets(campaign.scan_type) if campaign.scan_type in DIRECTION_SCAN_TYPES else {},
         },
     )
 
@@ -1367,11 +1368,11 @@ async def submit_survey(
         )
     product_module = get_product_module(respondent.campaign.scan_type)
     product_module.validate_submission(payload)
+    scan_type = respondent.campaign.scan_type
 
     # --- Verdiepingsvragen: server-side semantische validatie (client is untrusted) ---
     if payload.deepening_responses:
-        scan_type = respondent.campaign.scan_type
-        if scan_type not in ("exit", "retention"):
+        if scan_type not in DEEPENING_SCAN_TYPES:
             raise HTTPException(
                 status_code=422,
                 detail="Verdieping wordt niet ondersteund voor dit scantype.",
@@ -1403,12 +1404,14 @@ async def submit_survey(
     # --- Richtingvraag: één per respondent, op de eigen laagste factor (spec 2026-09-07 par. 4.3) ---
     direction_clean: dict | None = None
     if payload.direction_response is not None:
-        scan_type = respondent.campaign.scan_type
-        if scan_type not in ("exit", "retention"):
+        if scan_type not in DIRECTION_SCAN_TYPES:
             raise HTTPException(status_code=422, detail="Gespreksrichting wordt niet ondersteund voor dit scantype.")
         dr = payload.direction_response
         if dr.factor_key != compute_direction_factor(payload.org_raw):
             raise HTTPException(status_code=422, detail="Gespreksrichting hoort niet bij deze inzending.")
+        # De factorcheck hierboven garandeert dat factor_key een bestaande factor is
+        # (compute_direction_factor geeft altijd een key uit DEEPENING_FACTOR_KEYS terug),
+        # dus deze lookup kan geen KeyError geven.
         direction_set = get_direction_sets(scan_type)[dr.factor_key]
         if dr.question_set_version != direction_set["question_set_version"]:
             raise HTTPException(status_code=422, detail="Verouderde gespreksrichting-versie.")

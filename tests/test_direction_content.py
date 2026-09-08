@@ -114,3 +114,11 @@ def test_imperatives_are_commands_not_descriptions():
         for o in s["options"]:
             imp = (o["imperative"] or "").lower()
             assert " moet " not in imp and " moeten " not in imp, f"{fk}/{o['key']}"
+
+
+def test_scan_type_sets_derive_from_the_source_dicts():
+    from backend.products.shared.deepening import (
+        DEEPENING_CAP, DEEPENING_SCAN_TYPES, DIRECTION_SCAN_TYPES, DIRECTION_VERSION,
+    )
+    assert DEEPENING_SCAN_TYPES == frozenset(DEEPENING_CAP)
+    assert DIRECTION_SCAN_TYPES == frozenset(DIRECTION_VERSION)

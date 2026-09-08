@@ -229,6 +229,10 @@ create table if not exists public.survey_responses (
   pull_factors_raw          jsonb default '{}',
   open_text_raw             text,
   open_text_analysis        text,
+  -- Verdiepingsvragen bij lage factorscores (migratie 2026_07_03_add_deepening_responses.sql)
+  deepening_responses       jsonb,
+  -- Richtingantwoord op de eigen laagste werkfactor (migratie 2026_09_07_add_direction_response.sql)
+  direction_response        jsonb,
   uwes_raw                  jsonb default '{}',
   uwes_score                numeric,
   turnover_intention_raw    jsonb default '{}',

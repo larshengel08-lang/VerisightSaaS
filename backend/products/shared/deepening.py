@@ -17,6 +17,9 @@ DEEPENING_FACTOR_KEYS = [
 # Retention 2->3 per spec 2026-07-05 (gespreksrichting-ronde).
 DEEPENING_CAP = {"exit": 3, "retention": 3}
 
+# Autoritatief antwoord op "welke scans hebben verdiepingsvragen".
+DEEPENING_SCAN_TYPES = frozenset(DEEPENING_CAP)
+
 DEEPENING_SETS: dict[str, dict[str, Any]] = {
     "workload": {
         "question": {
@@ -421,6 +424,9 @@ def _other(prefix: str) -> dict[str, Any]:
 # Versie per scan: retention v1 -> v2 (optieset gewijzigd: *_none toegevoegd,
 # vraag herformuleerd, losgekoppeld van de verdieping); exit is nieuw.
 DIRECTION_VERSION: dict[str, str] = {"retention": "v2", "exit": "v1"}
+
+# Autoritatief antwoord op "welke scans hebben de gespreksrichting-vraag".
+DIRECTION_SCAN_TYPES = frozenset(DIRECTION_VERSION)
 
 # Richtingsets (spec 2026-09-07 par. 8). `imperative` is de opdrachtvorm voor het
 # rapportblok "Wat er moet gebeuren": tijd-neutraal, de stem van de respondenten.
