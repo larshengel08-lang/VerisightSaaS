@@ -384,8 +384,16 @@ DEEPENING_SETS: dict[str, dict[str, Any]] = {
 }
 
 
-def _t(retention: str, exit: str | None = None) -> dict[str, str]:
-    return {"retention": retention, "exit": exit if exit is not None else retention}
+SAME = object()
+"""Sentinel: de exit-tekst is bewust identiek aan de behoud-tekst."""
+
+
+def _t(retention: str, exit_text: str | object) -> dict[str, str]:
+    """Respondenttekst per scan. Geef SAME door als de exit-tekst bewust
+    gelijk is; nooit impliciet, zodat een vergeten verleden tijd opvalt.
+    """
+    return {"retention": retention,
+            "exit": retention if exit_text is SAME else exit_text}
 
 
 def _q(onderwerp: str) -> dict[str, str]:
@@ -404,7 +412,7 @@ def _none(prefix: str) -> dict[str, Any]:
 
 
 def _other(prefix: str) -> dict[str, Any]:
-    return {"key": f"{prefix}_other", "text": _t("Anders, namelijk…"), "imperative": None}
+    return {"key": f"{prefix}_other", "text": _t("Anders, namelijk…", SAME), "imperative": None}
 
 
 # Versie per scan: retention v1 -> v2 (optieset gewijzigd: *_none toegevoegd,
@@ -419,22 +427,22 @@ DIRECTION_SETS: dict[str, dict[str, Any]] = {
         "options": [
             _none("wld"),
             {"key": "wld_scope",
-             "text": _t("Takenpakket en werkvolume beter afbakenen"),
+             "text": _t("Takenpakket en werkvolume beter afbakenen", SAME),
              "imperative": "Baken het takenpakket en het werkvolume scherper af."},
             {"key": "wld_planning",
-             "text": _t("Planning en bezetting beter laten aansluiten op het werk dat er ligt"),
+             "text": _t("Planning en bezetting beter laten aansluiten op het werk dat er ligt", SAME),
              "imperative": "Laat planning en bezetting beter aansluiten op het werk dat er ligt."},
             {"key": "wld_peaks",
-             "text": _t("Piekmomenten en spoedwerk eerder plannen, verdelen of begrenzen"),
+             "text": _t("Piekmomenten en spoedwerk eerder plannen, verdelen of begrenzen", SAME),
              "imperative": "Plan piekmomenten en spoedwerk eerder, verdeel ze beter of begrens ze."},
             {"key": "wld_recovery",
-             "text": _t("Meer ruimte om te herstellen en werk goed af te ronden"),
+             "text": _t("Meer ruimte om te herstellen en werk goed af te ronden", SAME),
              "imperative": "Maak meer ruimte om te herstellen en werk goed af te ronden."},
             {"key": "wld_priorities",
-             "text": _t("Duidelijkere keuzes over wat voorrang heeft en wat kan wachten"),
+             "text": _t("Duidelijkere keuzes over wat voorrang heeft en wat kan wachten", SAME),
              "imperative": "Maak duidelijker wat voorrang heeft en wat kan wachten."},
             {"key": "wld_friction",
-             "text": _t("Minder dubbel werk, systeemgedoe of fouten in overdracht"),
+             "text": _t("Minder dubbel werk, systeemgedoe of fouten in overdracht", SAME),
              "imperative": "Haal dubbel werk, systeemgedoe en fouten in de overdracht weg."},
             _other("wld"),
         ],
@@ -444,7 +452,7 @@ DIRECTION_SETS: dict[str, dict[str, Any]] = {
         "options": [
             _none("ldd"),
             {"key": "ldd_feedback",
-             "text": _t("Meer bruikbare feedback en richting"),
+             "text": _t("Meer bruikbare feedback en richting", SAME),
              "imperative": "Geef meer bruikbare feedback en richting."},
             {"key": "ldd_mandate",
              "text": _t("Duidelijker wat ik zelf mag beslissen in mijn werk",
@@ -459,10 +467,10 @@ DIRECTION_SETS: dict[str, dict[str, Any]] = {
                         "Concretere terugkoppeling op wat goed ging en wat werd gewaardeerd"),
              "imperative": "Koppel concreter terug wat goed gaat en wat wordt gewaardeerd."},
             {"key": "ldd_availability",
-             "text": _t("Meer beschikbaarheid en zichtbaarheid van mijn leidinggevende"),
+             "text": _t("Meer beschikbaarheid en zichtbaarheid van mijn leidinggevende", SAME),
              "imperative": "Zorg dat leidinggevenden beschikbaarder en zichtbaarder zijn."},
             {"key": "ldd_consistency",
-             "text": _t("Stabielere en beter uitlegbare besluiten en verwachtingen"),
+             "text": _t("Stabielere en beter uitlegbare besluiten en verwachtingen", SAME),
              "imperative": "Maak besluiten en verwachtingen stabieler en beter uitlegbaar."},
             _other("ldd"),
         ],
@@ -472,23 +480,23 @@ DIRECTION_SETS: dict[str, dict[str, Any]] = {
         "options": [
             _none("cud"),
             {"key": "cud_safety",
-             "text": _t("Fouten of twijfels makkelijker en veiliger kunnen bespreken"),
+             "text": _t("Fouten of twijfels makkelijker en veiliger kunnen bespreken", SAME),
              "imperative": "Maak het makkelijker en veiliger om fouten of twijfels te bespreken."},
             {"key": "cud_dissent",
-             "text": _t("Meer ruimte voor kritische vragen en afwijkende meningen"),
+             "text": _t("Meer ruimte voor kritische vragen en afwijkende meningen", SAME),
              "imperative": "Geef kritische vragen en afwijkende meningen meer ruimte."},
             {"key": "cud_conflict",
-             "text": _t("Spanningen of conflicten eerder bespreekbaar maken"),
+             "text": _t("Spanningen of conflicten eerder bespreekbaar maken", SAME),
              "imperative": "Maak spanningen of conflicten eerder bespreekbaar."},
             {"key": "cud_agreements",
-             "text": _t("Duidelijkere teamafspraken over gedrag, samenwerking en opvolging"),
+             "text": _t("Duidelijkere teamafspraken over gedrag, samenwerking en opvolging", SAME),
              "imperative": "Maak duidelijkere teamafspraken over gedrag, samenwerking en opvolging."},
             {"key": "cud_involvement",
              "text": _t("Eerder betrokken worden bij besluiten of veranderingen die het team raken",
                         "Eerder betrokken worden bij besluiten of veranderingen die het team raakten"),
              "imperative": "Betrek medewerkers eerder bij besluiten of veranderingen die het team raken."},
             {"key": "cud_crossteam",
-             "text": _t("Betere samenwerking tussen teams of afdelingen"),
+             "text": _t("Betere samenwerking tussen teams of afdelingen", SAME),
              "imperative": "Verbeter de samenwerking tussen teams of afdelingen."},
             _other("cud"),
         ],
@@ -502,20 +510,20 @@ DIRECTION_SETS: dict[str, dict[str, Any]] = {
                         "Beter zicht op welke mogelijkheden er voor mij waren"),
              "imperative": "Maak zichtbaar welke mogelijkheden er voor medewerkers zijn."},
             {"key": "grd_conversation",
-             "text": _t("Een concreter gesprek over mijn ontwikkeling"),
+             "text": _t("Een concreter gesprek over mijn ontwikkeling", SAME),
              "imperative": "Voer een concreter gesprek over ontwikkeling."},
             {"key": "grd_followthrough",
-             "text": _t("Ontwikkelafspraken concreter vastleggen en zichtbaar opvolgen"),
+             "text": _t("Ontwikkelafspraken concreter vastleggen en zichtbaar opvolgen", SAME),
              "imperative": "Leg ontwikkelafspraken concreter vast en volg ze zichtbaar op."},
             {"key": "grd_time",
-             "text": _t("Ontwikkeling beter inplannen naast het reguliere werk"),
+             "text": _t("Ontwikkeling beter inplannen naast het reguliere werk", SAME),
              "imperative": "Plan ontwikkeling in naast het reguliere werk."},
             {"key": "grd_criteria",
              "text": _t("Duidelijkere criteria voor hoe doorgroei wordt bepaald",
                         "Duidelijkere criteria voor hoe doorgroei werd bepaald"),
              "imperative": "Maak duidelijker hoe doorgroei wordt bepaald."},
             {"key": "grd_nextstep",
-             "text": _t("Een open en concreet gesprek over realistische vervolgstappen binnen de organisatie"),
+             "text": _t("Een open en concreet gesprek over realistische vervolgstappen binnen de organisatie", SAME),
              "imperative": "Voer een open en concreet gesprek over realistische vervolgstappen binnen de organisatie."},
             _other("grd"),
         ],
@@ -529,21 +537,21 @@ DIRECTION_SETS: dict[str, dict[str, Any]] = {
                         "Beter inzicht in hoe beloning zich verhield tot vergelijkbaar werk elders"),
              "imperative": "Geef inzicht in hoe de beloning zich verhoudt tot vergelijkbaar werk elders."},
             {"key": "cpd_explain",
-             "text": _t("Meer uitlegbaarheid van verschillen tussen vergelijkbare functies"),
+             "text": _t("Meer uitlegbaarheid van verschillen tussen vergelijkbare functies", SAME),
              "imperative": "Leg verschillen tussen vergelijkbare functies beter uit."},
             {"key": "cpd_review",
              "text": _t("Beter kijken of beloning past bij de zwaarte en verantwoordelijkheid van mijn werk",
                         "Beter kijken of beloning paste bij de zwaarte en verantwoordelijkheid van mijn werk"),
              "imperative": "Kijk opnieuw of de beloning past bij de zwaarte en verantwoordelijkheid van het werk."},
             {"key": "cpd_path",
-             "text": _t("Meer duidelijkheid over mogelijke salarisgroei, voorwaarden en timing"),
+             "text": _t("Meer duidelijkheid over mogelijke salarisgroei, voorwaarden en timing", SAME),
              "imperative": "Geef duidelijkheid over mogelijke salarisgroei, voorwaarden en timing."},
             {"key": "cpd_clarity",
              "text": _t("Meer duidelijkheid over hoe beloning en groei worden bepaald",
                         "Meer duidelijkheid over hoe beloning en groei werden bepaald"),
              "imperative": "Maak duidelijk hoe beloning en groei worden bepaald."},
             {"key": "cpd_flex",
-             "text": _t("Meer duidelijkheid of ruimte rond rooster, werktijden of flexibiliteit"),
+             "text": _t("Meer duidelijkheid of ruimte rond rooster, werktijden of flexibiliteit", SAME),
              "imperative": "Geef meer duidelijkheid of ruimte rond rooster, werktijden en flexibiliteit."},
             _other("cpd"),
         ],
@@ -553,14 +561,14 @@ DIRECTION_SETS: dict[str, dict[str, Any]] = {
         "options": [
             _none("rcd"),
             {"key": "rcd_priorities",
-             "text": _t("Duidelijkere prioriteiten binnen mijn rol"),
+             "text": _t("Duidelijkere prioriteiten binnen mijn rol", SAME),
              "imperative": "Maak de prioriteiten binnen rollen duidelijker."},
             {"key": "rcd_expectations",
              "text": _t("Duidelijkheid over verwachtingen en waarop ik word aangesproken",
                         "Duidelijkheid over verwachtingen en waarop ik werd aangesproken"),
              "imperative": "Maak duidelijk wat er wordt verwacht en waarop medewerkers worden aangesproken."},
             {"key": "rcd_alignment",
-             "text": _t("Eenduidigere opdrachten en betere afstemming tussen betrokkenen"),
+             "text": _t("Eenduidigere opdrachten en betere afstemming tussen betrokkenen", SAME),
              "imperative": "Maak opdrachten eenduidiger en stem beter af tussen betrokkenen."},
             {"key": "rcd_scope",
              "text": _t("Duidelijke afspraken als mijn takenpakket verandert",
@@ -571,7 +579,7 @@ DIRECTION_SETS: dict[str, dict[str, Any]] = {
                         "Duidelijkheid over wat ik zelf mocht beslissen"),
              "imperative": "Maak duidelijk wat medewerkers zelf mogen beslissen."},
             {"key": "rcd_information",
-             "text": _t("Betere informatie, context en overdracht voor mijn werk"),
+             "text": _t("Betere informatie, context en overdracht voor mijn werk", SAME),
              "imperative": "Zorg voor betere informatie, context en overdracht."},
             _other("rcd"),
         ],
@@ -598,11 +606,20 @@ def get_direction_sets(scan_type: str) -> dict[str, dict[str, Any]]:
 
 def direction_option_texts(scan_type: str, factor_key: str) -> dict[str, str]:
     """key -> respondenttekst voor het rapport (verdelingstabel, niets-optie)."""
-    return {o["key"]: o["text"] for o in get_direction_sets(scan_type)[factor_key]["options"]}
+    if scan_type not in DIRECTION_VERSION:
+        raise ValueError(f"unknown scan_type {scan_type!r}")
+    return {o["key"]: o["text"][scan_type] for o in DIRECTION_SETS[factor_key]["options"]}
 
 
-def direction_imperative(factor_key: str, option_key: str) -> str | None:
-    """Opdrachtvorm van een route; None voor *_none en *_other."""
+def direction_imperative(scan_type: str, factor_key: str, option_key: str) -> str | None:
+    """Opdrachtvorm van een route; None voor *_none en *_other.
+
+    `scan_type` wordt gevalideerd maar niet gebruikt: de opdrachtvorm is
+    tijd-neutraal. Zelfde signatuur als get_agenda_question, zodat callers
+    de twee niet door elkaar halen.
+    """
+    if scan_type not in DIRECTION_VERSION:
+        raise ValueError(f"unknown scan_type {scan_type!r}")
     options = {o["key"]: o["imperative"] for o in DIRECTION_SETS[factor_key]["options"]}
     if option_key not in options:
         raise KeyError(f"unknown option_key {option_key!r} for factor {factor_key!r}")

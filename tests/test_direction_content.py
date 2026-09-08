@@ -65,7 +65,7 @@ def test_unknown_scan_type_raises():
 def test_every_route_has_imperative_except_none_and_other():
     for fk, s in DIRECTION_SETS.items():
         for o in s["options"]:
-            imp = direction_imperative(fk, o["key"])
+            imp = direction_imperative("retention", fk, o["key"])
             if o["key"].endswith(("_none", "_other")):
                 assert imp is None, f"{fk}/{o['key']}"
             else:
@@ -89,4 +89,28 @@ def test_no_forbidden_words_and_no_em_dashes():
 
 def test_direction_imperative_unknown_key_raises():
     with pytest.raises(KeyError):
-        direction_imperative("workload", "wld_bestaat_niet")
+        direction_imperative("retention", "workload", "wld_bestaat_niet")
+    with pytest.raises(ValueError):
+        direction_imperative("onboarding", "workload", "wld_scope")
+
+
+def test_option_keys_share_one_prefix_per_factor_and_are_globally_unique():
+    # Mutatietest toonde aan: _none("wld") in de culture-set bleef onopgemerkt.
+    # De prefix is vrije tekst in de factories, dus een plakfout is stil.
+    seen: set[str] = set()
+    for fk, s in DIRECTION_SETS.items():
+        prefixes = {o["key"].rsplit("_", 1)[0] if o["key"].endswith(("_none", "_other"))
+                    else o["key"].split("_", 1)[0] for o in s["options"]}
+        assert len(prefixes) == 1, f"{fk}: gemengde prefixes {prefixes}"
+        keys = {o["key"] for o in s["options"]}
+        assert not (keys & seen), f"{fk}: sleutel bestaat al in een andere factor"
+        seen |= keys
+
+
+def test_imperatives_are_commands_not_descriptions():
+    # De opdrachtvorm is de stem van de respondenten. Een modaal ("moet worden
+    # afgebakend") leest als advies van Loep en glipt langs de hoofdlettercheck.
+    for fk, s in DIRECTION_SETS.items():
+        for o in s["options"]:
+            imp = (o["imperative"] or "").lower()
+            assert " moet " not in imp and " moeten " not in imp, f"{fk}/{o['key']}"
