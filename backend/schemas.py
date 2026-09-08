@@ -289,15 +289,17 @@ class ContactRequestUpdate(BaseModel):
 # Survey submission (from the HTML survey form)
 # ---------------------------------------------------------------------------
 
-class DeepeningDirection(BaseModel):
-    """Gespreksrichting-antwoord bij een beantwoorde verdieping (spec 2026-07-05 par. 5/6)."""
+class DirectionResponse(BaseModel):
+    """Eén richtingantwoord per respondent, op de eigen laagste werkfactor
+    (spec 2026-09-07 par. 4.1). Vervangt het geneste DeepeningDirection uit juli."""
+    factor_key: str
     question_set_version: str
     status: Literal["answered", "skipped"]
     choice: Optional[str] = None
     other_text: Optional[str] = Field(None, max_length=200)
 
     @model_validator(mode="after")
-    def _validate(self) -> "DeepeningDirection":
+    def _validate(self) -> "DirectionResponse":
         if self.status == "answered" and not self.choice:
             raise ValueError("answered vereist een keuze")
         if self.status == "skipped" and (self.choice or self.other_text):
@@ -317,7 +319,14 @@ class DeepeningEntry(BaseModel):
     primary: Optional[str] = None
     secondary: Optional[str] = None
     other_text: Optional[str] = Field(None, max_length=200)
-    direction: Optional[DeepeningDirection] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def _reject_legacy_direction(cls, data):
+        # Fail Loud (spec 2026-09-07 par. 4.3): het geneste juli-formaat niet stil negeren.
+        if isinstance(data, dict) and "direction" in data:
+            raise ValueError("Verouderd inzendformaat voor gespreksrichting.")
+        return data
 
     @model_validator(mode="after")
     def _validate_choices(self) -> "DeepeningEntry":
@@ -330,8 +339,6 @@ class DeepeningEntry(BaseModel):
         if self.other_text:
             if not any(k and k.endswith("_other") for k in (self.primary, self.secondary)):
                 raise ValueError("other_text alleen bij een *_other keuze")
-        if self.direction is not None and self.status != "answered":
-            raise ValueError("gespreksrichting alleen bij een beantwoorde verdieping")
         return self
 
 
@@ -373,6 +380,7 @@ class SurveySubmit(BaseModel):
 
     # Module F — verdiepingsvragen (optioneel; alleen exit/retention)
     deepening_responses: list[DeepeningEntry] = Field(default_factory=list)
+    direction_response: Optional[DirectionResponse] = None
 
     @field_validator("sdt_raw")
     @classmethod

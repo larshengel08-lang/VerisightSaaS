@@ -1,56 +1,54 @@
-# tests/test_direction_schema.py
+"""DirectionResponse + weigering van het oude geneste formaat (spec par. 4.2/4.3)."""
 import pytest
 from pydantic import ValidationError
 
-from backend.schemas import DeepeningDirection, DeepeningEntry
+from backend.schemas import DeepeningEntry, DirectionResponse, SurveySubmit
 
 
-def _entry(**over):
-    base = dict(factor_key="workload", question_set_version="retention_workload_v1",
-                status="answered", primary="wl_recovery")
+def _dr(**over):
+    base = dict(factor_key="workload", question_set_version="retention_workload_direction_v2",
+                status="answered", choice="wld_peaks")
     base.update(over)
     return base
 
 
-def test_direction_answered_requires_choice():
+def test_answered_requires_choice():
     with pytest.raises(ValidationError):
-        DeepeningDirection(question_set_version="retention_workload_direction_v1",
-                           status="answered", choice=None)
+        DirectionResponse(**_dr(choice=None))
 
 
-def test_direction_skipped_forbids_choice_and_other():
+def test_skipped_forbids_choice_and_other():
     with pytest.raises(ValidationError):
-        DeepeningDirection(question_set_version="retention_workload_direction_v1",
-                           status="skipped", choice="wld_recovery")
+        DirectionResponse(**_dr(status="skipped"))
     with pytest.raises(ValidationError):
-        DeepeningDirection(question_set_version="retention_workload_direction_v1",
-                           status="skipped", other_text="x")
+        DirectionResponse(**_dr(status="skipped", choice=None, other_text="x"))
+    ok = DirectionResponse(**_dr(status="skipped", choice=None))
+    assert ok.choice is None and ok.other_text is None
 
 
-def test_direction_other_requires_other_text():
+def test_other_requires_text_and_text_requires_other():
     with pytest.raises(ValidationError):
-        DeepeningDirection(question_set_version="retention_workload_direction_v1",
-                           status="answered", choice="wld_other", other_text=None)
-    ok = DeepeningDirection(question_set_version="retention_workload_direction_v1",
-                            status="answered", choice="wld_other", other_text="minder vergaderdruk")
-    assert ok.other_text == "minder vergaderdruk"
-
-
-def test_direction_other_text_forbidden_without_other_choice():
+        DirectionResponse(**_dr(choice="wld_other"))
     with pytest.raises(ValidationError):
-        DeepeningDirection(question_set_version="retention_workload_direction_v1",
-                           status="answered", choice="wld_recovery", other_text="tekst")
-
-
-def test_entry_direction_only_when_answered():
-    d = dict(question_set_version="retention_workload_direction_v1",
-             status="answered", choice="wld_recovery")
-    ok = DeepeningEntry(**_entry(direction=d))
-    assert ok.direction.choice == "wld_recovery"
+        DirectionResponse(**_dr(choice="wld_other", other_text="   "))
     with pytest.raises(ValidationError):
-        DeepeningEntry(**_entry(status="skipped", primary=None, direction=d))
+        DirectionResponse(**_dr(other_text="tekst bij een gewone route"))
+    assert DirectionResponse(**_dr(choice="wld_other", other_text="Iets anders")).other_text == "Iets anders"
 
 
-def test_entry_without_direction_still_valid():
-    ok = DeepeningEntry(**_entry())
-    assert ok.direction is None
+def test_other_text_max_200():
+    with pytest.raises(ValidationError):
+        DirectionResponse(**_dr(choice="wld_other", other_text="x" * 201))
+
+
+def test_deepening_entry_has_no_direction_field_and_rejects_legacy():
+    assert "direction" not in DeepeningEntry.model_fields
+    with pytest.raises(ValidationError) as exc:
+        DeepeningEntry(factor_key="workload", question_set_version="retention_workload_v1",
+                       status="answered", primary="wl_recovery",
+                       direction={"question_set_version": "x", "status": "skipped"})
+    assert "Verouderd inzendformaat voor gespreksrichting" in str(exc.value)
+
+
+def test_survey_submit_accepts_optional_direction_response():
+    assert SurveySubmit.model_fields["direction_response"].default is None
