@@ -240,6 +240,10 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .dir-grid { width: 100%; border-collapse: separate; border-spacing: 12px 0; }
 .dir-card { width: 50%; vertical-align: top; background: #FFFFFF; border-left: 3px solid """ + HAIRLINE + r"""; padding: 12px 14px; }
 .dir-card.dir-clear { border-left-color: """ + accent + r"""; }
+/* De too_few-kaart heeft geen bronregel, tabel of caveat en is dus veel korter dan
+   haar buur; de tabelrij dwingt beide cellen op dezelfde hoogte. Verticaal centreren
+   haalt de dode witruimte onderin weg. Table-native, geen flex: WeasyPrint. */
+.dir-card.dir-too_few { vertical-align: middle; }
 .dir-role { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.12em; text-transform: uppercase; color: """ + accent_lo + r"""; margin-bottom: 6px; }
 .dir-head { font-size: 14px; font-weight: 700; line-height: 1.3; color: """ + NAVY + r"""; margin-bottom: 6px; }
 .dir-src { font-size: 10px; color: #374151; margin-bottom: 8px; }

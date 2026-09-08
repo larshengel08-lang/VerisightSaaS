@@ -323,3 +323,12 @@ def test_onboarding_report_drops_verdieping_intro_retention_keeps_it():
 
     retention_html = render_retention_report_html(_min_retention_data())
     assert opening_clause in retention_html
+
+
+def test_too_few_card_is_vertically_centred():
+    # De too_few-kaart mist bronregel, tabel en caveat en is dus veel korter dan
+    # haar buur; de tabelrij dwingt beide cellen op dezelfde hoogte, wat onderin
+    # dode witruimte gaf die als render-bug las. Table-native gecentreerd, geen
+    # flex: WeasyPrint negeert daar stilzwijgend eigenschappen op.
+    from backend.report_css import build_css
+    assert ".dir-card.dir-too_few { vertical-align: middle; }" in build_css("retention")
