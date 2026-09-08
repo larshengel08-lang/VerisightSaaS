@@ -161,7 +161,7 @@ Bij `*_other` als top-optie over n≥8: `logger.warning("direction: *_other is t
 
 Plaats: op de gespreksagenda-pagina in `_prioriteringsraster`, tussen de rastertabel (+ uitleg) en het navy slotblok. Twee kaarten: **Startpunt: [factor]** en **Tweede punt: [factor]** (dezelfde rijen die in het raster `agenda_role` dragen). De rasterkolom "Verdieping" blijft het "waarom"; dit blok is het "wat".
 
-Eyebrow boven het blok: *"Volgens de respondenten bij wie dit het laagst scoorde"*.
+Eyebrow boven het blok: *"Wat er moet gebeuren"* (de sectienaam zelf). De attributie staat per kaart in de bronregel ("Volgens X van de Y bij wie dit het laagst scoorde"), niet nog eens boven het blok; herhaling zou de kop verzwakken.
 
 Per kaart, naar staat:
 
@@ -169,14 +169,15 @@ Per kaart, naar staat:
 |---|---|---|
 | `clear` | de `imperative` van de top-route, bijv. *"Plan piekmomenten en spoedwerk eerder, verdeel ze beter of begrens ze."* | *"Volgens 6 van de 8 bij wie werkbelasting het laagst scoorde."* |
 | `divided` | *"Geen eenduidige richting."* | *"De 8 bij wie dit het laagst scoorde kozen verschillend."* |
-| `none_needed` | *"Hier hoeft volgens de meeste betrokkenen niets."* | *"5 van de 8 bij wie dit het laagst scoorde kozen 'Niets, dit zit hier goed'. Bespreek of dit dan het startpunt moet zijn."* (tweede punt: *"…of dit het tweede punt moet zijn."*) |
+| `none_needed` | *"Hier hoeft volgens de meeste betrokkenen niets."* | *"5 van de 8 bij wie dit het laagst scoorde kozen ‘Niets, dit zit hier goed’. Bespreek of dit dan het startpunt moet zijn."* (tweede punt: *"…of dit het tweede punt moet zijn."*) |
 | `too_few` | *"Te weinig antwoorden voor een richting."* | geen |
 
-Onder de kop (niet bij `too_few`): compacte verdelingstabel (`item-tbl`-stijl) met alle gekozen opties, gesorteerd op aantal, met de niets-optie en "Anders" gewoon in de lijst. Aantallen; vanaf n≥10 `pct (n)`. Bij n 3-4 daaronder de bestaande regel *"Beperkte basis: gebruik dit als gesprekshaakje, niet als conclusie."*
+Onder de kop (niet bij `too_few`): compacte verdelingstabel (`item-tbl`-stijl) met alle gekozen opties, gesorteerd op aantal, met de niets-optie en "Anders" gewoon in de lijst. Aantallen; vanaf n≥10 `pct (n)`. Bij n 3-4 (`DIRECTION_MIN_N` t/m `DIRECTION_CAVEAT_MAX_N`) daaronder de regel *"Beperkte basis: gebruik dit als gesprekshaakje, niet als conclusie."*
 
 Onder elke kaart altijd de keten:
 *"Van de 13 respondenten hadden 9 dit als laagste; 8 beantwoordden de vraag, 1 sloeg over."*
 Bij `lowest_n > offered` (oude client): *"…; 7 kregen de vraag, 6 beantwoordden die, 1 sloeg over."*
+Bij `lowest_n == 0` (niemands eigen laagste factor was deze): *"Niemand had dit als laagste onderwerp."* en verder niets. Een clausule met de telling 0 wordt nooit geschreven; dan eindigt de zin bij de opener.
 
 De Y in de bronregel is `answered` (principe "percentages altijd over beantwoorders", verdiepingsspec 6.1); de keten maakt het verschil met `lowest_n` zichtbaar.
 
