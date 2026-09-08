@@ -20,9 +20,7 @@ def _flagged_deep():
     # agenda_enrichment bij een gevuurde staffel get_agenda_question aanroept.
     return {"triggered": 13, "offered": 13, "answered": 13, "skipped": 0,
             "primary_counts": {"wl_volume": 9, "wl_recovery": 1},
-            "secondary_counts": {}, "direction_offered": 0,
-            "direction_answered": 0, "direction_skipped": 0,
-            "direction_counts": {}}
+            "secondary_counts": {}}
 
 
 def test_score_based_ranking_keeps_static_line():

@@ -4,7 +4,10 @@ Content + pure logica. Geen invloed op scoring.
 """
 from __future__ import annotations
 
+import logging
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 DEEPENING_FACTOR_KEYS = [
     "leadership", "culture", "growth", "compensation", "workload", "role_clarity",
@@ -718,9 +721,10 @@ def aggregate_deepening(
     answered/skipped = status; counts alleen over answered.
 
     NB: offered > triggered is mogelijk bij historische data (bijv. gewijzigde
-    triggerregels of optiesets) en wordt bewust getolereerd. Een eventueel
-    genest `direction`-veld uit het juli-formaat wordt hier genegeerd; de
-    richting leeft sinds spec 2026-09-07 in survey_responses.direction_response.
+    triggerregels of optiesets) en wordt bewust getolereerd.
+
+    Een eventueel genest `direction`-veld uit het juli-formaat wordt hier genegeerd;
+    de richting leeft sinds spec 2026-09-07 in survey_responses.direction_response.
     """
     if scan_type not in DEEPENING_CAP:
         raise ValueError(f"unknown scan_type {scan_type!r}")
@@ -747,6 +751,82 @@ def aggregate_deepening(
             else:
                 agg["skipped"] += 1
     return out
+
+
+DIRECTION_MIN_N = 3          # vloer voor het rapportblok (spec par. 5.4; bewust lager dan MIN_SEGMENT_N,
+                             # zie spec par. 6.3: subgroep onzichtbaar voor de organisatie)
+DIRECTION_OTHER_WARN_N = 8   # vanaf hier een reviewvlag als *_other de topoptie is
+
+
+def aggregate_direction(
+    rows: list[tuple[dict[str, int], dict | None]],
+    scan_type: str,
+) -> dict[str, dict[str, Any]]:
+    """Per factor de keten laagst -> aangeboden -> beantwoord/overgeslagen + keuzeverdeling
+    (spec 2026-09-07 par. 5.3).
+
+    rows: per respondent (org_raw, direction_response | None).
+    lowest_n wordt herberekend uit org_raw (niet uit het opgeslagen veld), zodat de
+    keten ook klopt als een oude client niets meestuurde (lowest_n > offered).
+    """
+    if scan_type not in DIRECTION_VERSION:
+        raise ValueError(f"unknown scan_type {scan_type!r}")
+    out: dict[str, dict[str, Any]] = {
+        fk: {"lowest_n": 0, "offered": 0, "answered": 0, "skipped": 0, "counts": {}}
+        for fk in DEEPENING_FACTOR_KEYS
+    }
+    for org_raw, dr in rows:
+        lowest = compute_direction_factor(org_raw)
+        if lowest is not None:
+            out[lowest]["lowest_n"] += 1
+        if not dr:
+            continue
+        agg = out.get(dr["factor_key"])
+        if agg is None:
+            continue
+        agg["offered"] += 1
+        if dr["status"] == "answered" and dr.get("choice"):
+            agg["answered"] += 1
+            agg["counts"][dr["choice"]] = agg["counts"].get(dr["choice"], 0) + 1
+        else:
+            agg["skipped"] += 1
+    for fk, agg in out.items():
+        if agg["offered"] > agg["lowest_n"]:
+            # Anders dan offered > triggered bij aggregate_deepening (verwacht bij
+            # historische triggerregelwijzigingen), kan dit hier niet ontstaan zonder
+            # bug: de servervalidatie staat alleen de eigen laagste factor toe. Deze
+            # aggregatie vertrouwt daar bewust niet blind op en logt het als signaal.
+            logger.warning("direction: offered > lowest_n voor %s (%d > %d)",
+                           fk, agg["offered"], agg["lowest_n"])
+    return out
+
+
+def direction_state(agg: dict[str, Any], factor_key: str | None = None) -> dict[str, Any]:
+    """Staat van het richtingblok voor een factor (spec par. 5.4), geëvalueerd in
+    de volgorde too_few -> none_needed -> clear -> divided.
+
+    Retourneert altijd {state, n, top_key, top_n, second_n, ranked}.
+    """
+    n = agg["answered"]
+    counts: dict[str, int] = agg.get("counts") or {}
+    ranked = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
+    base: dict[str, Any] = {"n": n, "ranked": ranked, "top_key": None, "top_n": 0, "second_n": 0}
+    if n < DIRECTION_MIN_N:
+        return {**base, "state": "too_few"}
+    none_items = [(k, c) for k, c in counts.items() if k.endswith("_none")]
+    none_n = sum(c for _, c in none_items)
+    if none_n / n >= 0.5:
+        return {**base, "state": "none_needed", "top_key": none_items[0][0], "top_n": none_n}
+    top_key, top_n = ranked[0]
+    second_n = ranked[1][1] if len(ranked) > 1 else 0
+    base.update(top_key=top_key, top_n=top_n, second_n=second_n)
+    if top_key.endswith("_other") and n >= DIRECTION_OTHER_WARN_N:
+        logger.warning("direction: *_other is topoptie voor %s - optieset review nodig",
+                       factor_key or top_key.split("_")[0])
+    if (not top_key.endswith(("_none", "_other"))
+            and top_n / n >= 0.5 and top_n - second_n >= 2):
+        return {**base, "state": "clear"}
+    return {**base, "state": "divided"}
 
 
 def agenda_enrichment(agg: dict[str, Any], scan_type: str, factor_key: str) -> dict[str, Any] | None:

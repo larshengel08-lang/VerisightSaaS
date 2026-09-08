@@ -84,9 +84,7 @@ def test_spread_flag_requires_n10_and_share():
 
 def _agg(answered=0, offered=0, triggered=0, counts=None):
     return {"triggered": triggered, "offered": offered, "answered": answered,
-            "skipped": 0, "primary_counts": counts or {}, "secondary_counts": {},
-            "direction_offered": 0, "direction_answered": 0,
-            "direction_skipped": 0, "direction_counts": {}}
+            "skipped": 0, "primary_counts": counts or {}, "secondary_counts": {}}
 
 
 def test_deepening_flag_follows_enrichment_gates():
