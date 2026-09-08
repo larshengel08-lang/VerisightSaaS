@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import generate_voorbeeldrapport as sample_generator
 from backend.models import Organization
+from backend.products.shared.deepening import DEEPENING_SETS, DIRECTION_SETS
 
 
 def test_pick_exit_profile_keeps_exit_reason_fields(monkeypatch):
@@ -94,3 +95,26 @@ def test_culture_department_assignment_keeps_two_safe_segments_and_one_hidden_gr
     assert assignments.count("Operatie") == 20
     assert assignments.count("Support") == 20
     assert assignments.count("Staf") == 8
+
+
+def test_direction_weights_only_use_real_option_keys():
+    """Code-review (na Task 10): de generator schrijft ORM-rijen rechtstreeks
+    weg, buiten de optiesleutel-check in backend/main.py om. Een sleutel in
+    DIRECTION_WEIGHTS die niet (meer) in DIRECTION_SETS bestaat, zou een
+    onbeantwoordbare/onbekende keuze seeden die _direction_card_cell nu
+    fail-loud afkeurt in plaats van de rauwe sleutel te printen."""
+    for fk, weights in sample_generator.DIRECTION_WEIGHTS.items():
+        valid = {o["key"] for o in DIRECTION_SETS[fk]["options"]}
+        assert set(weights) <= valid, f"{fk}: {set(weights) - valid}"
+
+
+def test_deepening_primary_weights_only_use_real_option_keys():
+    for fk, weights in sample_generator.DEEPENING_PRIMARY_WEIGHTS.items():
+        valid = {o["key"] for o in DEEPENING_SETS[fk]["options"]}
+        assert set(weights) <= valid, f"{fk}: {set(weights) - valid}"
+
+
+def test_deepening_secondary_weights_only_use_real_option_keys():
+    for fk, weights in sample_generator.DEEPENING_SECONDARY_WEIGHTS.items():
+        valid = {o["key"] for o in DEEPENING_SETS[fk]["options"]}
+        assert set(weights) <= valid, f"{fk}: {set(weights) - valid}"

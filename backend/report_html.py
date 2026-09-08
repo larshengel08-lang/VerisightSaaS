@@ -1042,10 +1042,14 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
 
     table = ""
     if st["state"] != "too_few":
-        rows = "".join(
-            f'<tr><td class="iq">{_h(texts.get(k, k))}</td>'
-            f'<td class="is">{f"{round(c / n * 100)}% ({c})" if n >= MIN_DISTRIBUTION_N else c}</td></tr>'
-            for k, c in st["ranked"])
+        row_htmls = []
+        for k, c in st["ranked"]:
+            if k not in texts:
+                raise KeyError(
+                    f"direction: onbekende optiesleutel {k!r} voor {factor_key!r} ({scan_type})")
+            pct = f"{round(c / n * 100)}% ({c})" if n >= MIN_DISTRIBUTION_N else c
+            row_htmls.append(f'<tr><td class="iq">{_h(texts[k])}</td><td class="is">{pct}</td></tr>')
+        rows = "".join(row_htmls)
         table = f'<table class="item-tbl dir-tbl">{rows}</table>'
         if n <= DIRECTION_CAVEAT_MAX_N:
             table += ('<p class="dir-caveat">Beperkte basis: gebruik dit als '

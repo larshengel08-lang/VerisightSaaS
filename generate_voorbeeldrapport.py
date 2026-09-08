@@ -27,9 +27,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from backend.database import Base, DATABASE_URL, SessionLocal, init_db
 from backend.models import Campaign, Organization, Respondent, SurveyResponse
 from backend.products.shared.deepening import (
-    DIRECTION_VERSION,
     compute_deepening_offers,
     compute_direction_factor,
+    get_deepening_sets,
+    get_direction_sets,
 )
 from backend.products.shared.enps import build_enps_summary
 from backend.segments import _slugify as slugify_department
@@ -300,13 +301,24 @@ DEEPENING_SECONDARY_RATE = 0.55
 # Richtingvraag (spec 2026-09-07): elke respondent één keer, op de eigen laagste
 # factor, via compute_direction_factor (niets gefabriceerd). Gewichten incl. de
 # niets-optie. Gekozen zodat de Behoud-sample 'clear' toont op het startpunt
-# (growth) en 'divided' op het tweede punt (workload); voor exit alle routes
-# geconcentreerd (startpunt 'clear'). none_needed/too_few zijn unit-getest.
+# (growth) en 'divided' op het tweede punt (workload); voor exit ook 'clear'
+# op het startpunt, maar met een realistischer verdeling (circa 55-75% eens
+# i.p.v. een landslide) -- deze voorbeeldrapporten zijn publiek
+# marketingmateriaal voor een product dat eerlijke rapportage claimt.
+# none_needed/too_few zijn unit-getest, niet in de samples.
+#
+# Let op: DIRECTION_WEIGHTS is per factor (niet per scan_type) gedefinieerd,
+# dus vertrekkers (exit) en blijvers (retention) trekken uit dezelfde
+# voorkeursverdeling per factor. Bewuste modelleerkeuze voor de generator,
+# geen omissie: er is geen inhoudelijke reden om aan te nemen dat vertrekkers
+# en blijvers structureel andere routevoorkeuren zouden hebben op eenzelfde
+# onderwerp, en een tweede gewichtenset per scan_type zou de contentsets
+# nodeloos verdubbelen zonder een echt signaal te modelleren.
 DIRECTION_WEIGHTS: dict[str, dict[str, float]] = {
     "workload": {"wld_recovery": 0.30, "wld_priorities": 0.25, "wld_planning": 0.20,
                  "wld_none": 0.15, "wld_peaks": 0.10},
     "leadership": {"ldd_feedback": 0.65, "ldd_recognition": 0.15, "ldd_availability": 0.10, "ldd_none": 0.10},
-    "growth": {"grd_visibility": 0.72, "grd_conversation": 0.12, "grd_none": 0.08, "grd_followthrough": 0.08},
+    "growth": {"grd_visibility": 0.32, "grd_conversation": 0.66, "grd_none": 0.01, "grd_followthrough": 0.01},
     "culture": {"cud_crossteam": 0.60, "cud_involvement": 0.20, "cud_none": 0.20},
     "compensation": {"cpd_insight": 0.55, "cpd_path": 0.25, "cpd_none": 0.20},
     "role_clarity": {"rcd_priorities": 0.60, "rcd_alignment": 0.20, "rcd_none": 0.20},
@@ -327,7 +339,7 @@ def _weighted_choice(weights: dict[str, float]) -> str:
 def _build_deepening_entries(org_raw: dict[str, int], scan_type: str) -> list[dict] | None:
     entries: list[dict] = []
     for factor_key in compute_deepening_offers(org_raw, scan_type):
-        version = f"{scan_type}_{factor_key}_v1"
+        version = get_deepening_sets(scan_type)[factor_key]["question_set_version"]
         if random.random() < DEEPENING_SKIP_RATE:
             entries.append({
                 "factor_key": factor_key,
@@ -363,13 +375,22 @@ def _build_direction_response(org_raw: dict[str, int], scan_type: str) -> dict |
     factor_key = compute_direction_factor(org_raw)
     if factor_key is None:
         return None
-    version = f"{scan_type}_{factor_key}_direction_{DIRECTION_VERSION[scan_type]}"
+    version = get_direction_sets(scan_type)[factor_key]["question_set_version"]
     if random.random() < DIRECTION_SKIP_RATE:
-        return {"factor_key": factor_key, "question_set_version": version,
-                "status": "skipped", "choice": None, "other_text": None}
-    return {"factor_key": factor_key, "question_set_version": version,
-            "status": "answered", "choice": _weighted_choice(DIRECTION_WEIGHTS[factor_key]),
-            "other_text": None}
+        return {
+            "factor_key": factor_key,
+            "question_set_version": version,
+            "status": "skipped",
+            "choice": None,
+            "other_text": None,
+        }
+    return {
+        "factor_key": factor_key,
+        "question_set_version": version,
+        "status": "answered",
+        "choice": _weighted_choice(DIRECTION_WEIGHTS[factor_key]),
+        "other_text": None,
+    }
 
 
 def _pick_profile(profiles: list[tuple]) -> dict[str, float | str]:

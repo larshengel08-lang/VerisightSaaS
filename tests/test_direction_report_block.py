@@ -74,6 +74,15 @@ def test_unknown_role_raises():
                              scan_type="retention", factor_key="growth", n_total=13)
 
 
+def test_unknown_option_key_raises_instead_of_printing_raw_key():
+    """Code-review (na Task 10): een onbekende optiesleutel mag nooit als
+    rauwe key in een klantzichtbare PDF verschijnen (Fail-Loud-principe)."""
+    agg = _agg(8, {"grd_visibility": 5, "grd_bogus_key": 3}, skipped=0)
+    with pytest.raises(KeyError, match="grd_bogus_key"):
+        _direction_card_cell("tweede", label="Groeiperspectief", agg=agg,
+                             scan_type="retention", factor_key="growth", n_total=13)
+
+
 def test_percentages_from_10_and_caveat_at_3_4():
     big = _direction_card_cell("startpunt", label="Groeiperspectief",
                                agg=_agg(10, {"grd_visibility": 7, "grd_none": 3}),

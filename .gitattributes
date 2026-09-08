@@ -1,1 +1,3 @@
 *.pdf binary
+docs/examples/*.html -diff linguist-generated
+frontend/public/examples/*.html -diff linguist-generated
