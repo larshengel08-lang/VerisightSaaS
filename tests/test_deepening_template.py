@@ -42,12 +42,13 @@ def test_direction_step_rendered_for_retention(client, db_session: Session):
     assert "__DIRECTION_SETS" in html
 
 
-def test_direction_step_absent_for_exit(client, db_session: Session):
+def test_direction_step_rendered_for_exit(client, db_session: Session):
+    # Gespreksrichting geldt sinds 2026-09-07 voor exit én retention (niet meer retention-only).
     html = _survey_page(client, db_session, "exit")
-    # De gedeelde survey-JS noemt de id wel; het DOM-element en de
-    # data-injectie mogen er niet zijn (gespreksrichting = retention-only).
-    assert 'id="direction-step"' not in html
-    assert "window.__DIRECTION_SETS = {" not in html
+    assert 'id="direction-step"' in html
+    assert "Gespreksrichting" in html
+    assert "geen toezegging" in html            # introductieregel
+    assert "__DIRECTION_SETS" in html
 
 
 def test_pulse_survey_has_no_deepening_step(client, db_session: Session):

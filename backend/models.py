@@ -270,6 +270,9 @@ class SurveyResponse(Base):
     # Verdiepingsvragen (spec 2026-07-03): [{factor_key, question_set_version, status, primary, secondary, other_text}]
     deepening_responses: Mapped[list | None] = mapped_column(JSON, nullable=True)
 
+    # Eén richtingantwoord per respondent op de eigen laagste werkfactor (spec 2026-09-07 par. 4.1).
+    direction_response: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+
     # ------------------------------------------------------------------
     # UWES-3 (retention surveys only)
     # ------------------------------------------------------------------

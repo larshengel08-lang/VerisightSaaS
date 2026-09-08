@@ -73,7 +73,10 @@ from backend.products.leadership.definition import DEFAULT_LEADERSHIP_MODULES
 from backend.products.onboarding.definition import DEFAULT_ONBOARDING_MODULES
 from backend.products.pulse.definition import DEFAULT_PULSE_MODULES
 from backend.products.team.definition import DEFAULT_TEAM_MODULES
-from backend.products.shared.deepening import DEEPENING_CAP, compute_deepening_offers, get_deepening_sets, get_direction_sets
+from backend.products.shared.deepening import (
+    DEEPENING_CAP, compute_deepening_offers, compute_direction_factor,
+    get_deepening_sets, get_direction_sets,
+)
 from backend.products.shared.registry import get_product_module
 from backend.runtime import require_backend_admin_token, validate_runtime_config
 from backend.scan_definitions import get_scan_definition
@@ -1334,7 +1337,7 @@ async def serve_survey(
             "enabled_modules": enabled_modules,
             "deepening_sets":  get_deepening_sets(campaign.scan_type) if campaign.scan_type in ("exit", "retention") else {},
             "deepening_cap":   DEEPENING_CAP.get(campaign.scan_type, 0),
-            "direction_sets":  get_direction_sets(campaign.scan_type) if campaign.scan_type == "retention" else {},
+            "direction_sets":  get_direction_sets(campaign.scan_type) if campaign.scan_type in ("exit", "retention") else {},
         },
     )
 
@@ -1396,6 +1399,24 @@ async def submit_survey(
         if d.get("other_text"):
             d["other_text"] = anonymize_text(d["other_text"])
         deepening_clean.append(d)
+
+    # --- Richtingvraag: één per respondent, op de eigen laagste factor (spec 2026-09-07 par. 4.3) ---
+    direction_clean: dict | None = None
+    if payload.direction_response is not None:
+        scan_type = respondent.campaign.scan_type
+        if scan_type not in ("exit", "retention"):
+            raise HTTPException(status_code=422, detail="Gespreksrichting wordt niet ondersteund voor dit scantype.")
+        dr = payload.direction_response
+        if dr.factor_key != compute_direction_factor(payload.org_raw):
+            raise HTTPException(status_code=422, detail="Gespreksrichting hoort niet bij deze inzending.")
+        direction_set = get_direction_sets(scan_type)[dr.factor_key]
+        if dr.question_set_version != direction_set["question_set_version"]:
+            raise HTTPException(status_code=422, detail="Verouderde gespreksrichting-versie.")
+        if dr.choice is not None and dr.choice not in {o["key"] for o in direction_set["options"]}:
+            raise HTTPException(status_code=422, detail="Onbekende gespreksrichting-optie.")
+        direction_clean = dr.model_dump()
+        if direction_clean.get("other_text"):
+            direction_clean["other_text"] = anonymize_text(direction_clean["other_text"])
 
     exit_reason_code = payload.exit_reason_code
     if not exit_reason_code and payload.exit_reason_category:
@@ -1471,6 +1492,7 @@ async def submit_survey(
         full_result           = full_result,
         scoring_version       = scoring_version,
         deepening_responses   = deepening_clean or None,
+        direction_response    = direction_clean,
     )
 
     # AVG data minimalisatie: jaarlijks salaris is niet langer nodig na scoring.
