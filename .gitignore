@@ -62,3 +62,6 @@ Thumbs.db
 frontend/node_modules/
 frontend/.next/
 .gstack/
+
+# Stresstest-output (QA-harnas, niet committen)
+docs/stresstest/
