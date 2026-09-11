@@ -490,9 +490,14 @@ def _cover(*, scan_label: str, scan_type: str, org_name: str, period: str,
 # codereview-taak (9) maakte.
 
 SECTION_INTROS: dict[str, str] = {
+    # Zonder factorprofiel is het hoofdstuk overzichtsprofiel leeg (het zegt
+    # daar zelf dat er geen scores per factor berekend zijn). De verwijzing
+    # naar dat hoofdstuk stuurde de lezer dan naar een lege pagina; de
+    # samenstelling van het signaal blijft zonder die verwijzing gewoon waar,
+    # dus vervalt hij in beide staten (review ronde 2).
     "behoudscontext": (
-        "Het behoudssignaal is een samenvattende groepsscore: de werkfactoren uit het "
-        "overzichtsprofiel en de werkbeleving samen, teruggebracht tot &eacute;&eacute;n getal "
+        "Het behoudssignaal is een samenvattende groepsscore: de werkfactoren en de "
+        "werkbeleving samen, teruggebracht tot &eacute;&eacute;n getal "
         "tussen 1 en 10. Hoe hoger, hoe beter, net als bij elke andere score in dit rapport. "
         "Onder de 5,0 noemen we een score kwetsbaar, tussen 5,0 en 6,5 een "
         "aandachtspunt, vanaf 6,5 relatief sterk. De drie signalen daaronder geven context: "
@@ -517,9 +522,13 @@ SECTION_INTROS: dict[str, str] = {
         "context waarin de rest van het rapport staat: het beschrijft waarom mensen zeggen te "
         "vertrekken, niet wie er nog zal vertrekken."
     ),
+    # Zelfde correctie als bij behoudscontext: de landingskwaliteit staat
+    # direct onder deze intro en zegt bij een leeg profiel "geen scores per
+    # domein berekend". "uit dit rapport" beloofde daar domeinen die op die
+    # pagina ontbreken.
     "checkpointoverzicht": (
         "De checkpointscore vat samen hoe nieuwe medewerkers hun eerste werkperiode ervaren: "
-        "de landingsdomeinen uit dit rapport samengebracht tot &eacute;&eacute;n getal tussen "
+        "de landingsdomeinen samengebracht tot &eacute;&eacute;n getal tussen "
         "1 en 10. Hoe hoger, hoe beter, net als bij elke andere score in dit rapport. "
         "Onder de 5,0 noemen we een score kwetsbaar, tussen 5,0 en 6,5 een "
         "aandachtspunt, vanaf 6,5 relatief sterk. Dit is een momentopname van de landing: "
@@ -688,6 +697,23 @@ class _ChapterCounter:
 # Standaardwaarde voor het derde coverstatistiek als er geen factorprofiel is
 # (bug B2): de cover toonde daar een kale streep waar een factornaam hoort.
 GEEN_FACTORPROFIEL_LBL = "Nog geen factorprofiel"
+
+# Lege staat van het verdiepingshoofdstuk (review ronde 2). Stond nog op
+# "Factor detail beschikbaar na voldoende patroonduiding", terwijl pagina twee
+# in diezelfde staat zegt dat een verdieping per thema en een volgorde van
+# thema's er nog niet in staan. Nu dezelfde vorm als de andere lege staten
+# ("Voor deze meting zijn er geen scores per ..."), met de reden erbij.
+#
+# Het hoofdstuk blijft bestaan in plaats van te verdwijnen: net als de
+# rasterpagina, die bij lege data ook blijft staan en zelf benoemt dat er geen
+# rangorde is. Onderdrukken zou het hoofdstuk ook laten verdwijnen in de staat
+# waarin er wel factorscores zijn maar geen prioritaire selectie -- daar toont
+# pagina twee nog de normale leesroute ("dan de verdieping per thema") en zou
+# een ontbrekend hoofdstuk een nieuwe tegenstrijdigheid opleveren.
+VERDIEPING_GEEN_RANGORDE = (
+    "Voor deze meting zijn er geen scores per factor berekend. Zonder die "
+    "scores is er geen rangorde om een verdieping aan op te hangen."
+)
 
 
 def _opsomming(items: list[str]) -> str:
@@ -1548,9 +1574,42 @@ def _deepening_mgmt_q(deep_agg: dict, scan_type: str, factor_key: str) -> str | 
     return f"De meest gekozen toelichting was '{opt_text}'. Herkennen jullie dat beeld, en wat zit erachter?"
 
 
+_BANDEN_DREMPELS = (
+    "Kwetsbaar punt (onder 5,0), aandachtspunt (5,0 tot 6,5) en relatief "
+    "sterk (vanaf 6,5) zijn vaste schaaldrempels, geen vergelijking met "
+    "andere organisaties. "
+)
+_BANDEN_RANGORDE = (
+    "De rangorde tussen de eigen factoren weegt zwaarder dan de absolute kleur. "
+)
+_BANDEN_GEEN_RANGORDE = (
+    "In dit rapport staat nog geen rangorde tussen de eigen factoren: daarvoor "
+    "zijn er geen factorscores berekend. "
+)
+_BANDEN_MEETLAT = (
+    "Doordat de meetlat vast is, zijn meting en vervolgmeting een-op-een "
+    "vergelijkbaar."
+)
+
+
+def _banden_cel(ranking_active: bool) -> tuple[str, str]:
+    """De cel "Hoe de banden werken" - identiek voor alle drie de producten.
+
+    De rangorde-zin staat er alleen als dit rapport ook echt een rangorde
+    heeft (review ronde 2): zonder factorprofiel zegt de rasterpagina dat er
+    geen volgorde en geen startpunt is, en beloofde deze cel op de laatste
+    pagina alsnog dat die rangorde zwaarder weegt dan de kleur. De drempels
+    en de vergelijkbaarheid blijven wel staan: dat zijn eigenschappen van de
+    schaal, niet van deze meting.
+    """
+    midden = _BANDEN_RANGORDE if ranking_active else _BANDEN_GEEN_RANGORDE
+    return ("Hoe de banden werken", _BANDEN_DREMPELS + midden + _BANDEN_MEETLAT)
+
+
 def _trust_page(scan_type: str = "exit", opener_html: str = "",
                 direction_active: bool = False,
-                direction_degraded: bool = False) -> str:
+                direction_degraded: bool = False,
+                ranking_active: bool = True) -> str:
     """Product-specifieke methodiekpagina — nooit gedeelde ExitScan-copy buiten ExitScan.
 
     direction_active volgt het patroon van _prioriteringsraster's
@@ -1564,7 +1623,11 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "",
     zonder factorprofiel rendert _wat_moet_gebeuren_block alleen tellingen,
     geen kaarten. De volle cel beloofde daar nog een opdrachtvorm, een
     richting vanaf 3 antwoorden en een beperkte-basis-regel -- drie dingen die
-    in dat blok niet voorkomen. Zie _direction_degraded_block."""
+    in dat blok niet voorkomen. Zie _direction_degraded_block.
+
+    ranking_active is dezelfde gedachte voor de cel "Hoe de banden werken":
+    zonder factorprofiel is er geen rangorde tussen factoren om naar te
+    verwijzen. Zie _banden_cel."""
     if scan_type == "retention":
         intro = ("Dit rapport bundelt patronen uit actieve-medewerkerresponses tot een groepsbeeld van "
                  "behoud, vertrekdenken en werkfactoren. Geen individuele risicoscore, geen voorspelling "
@@ -1579,14 +1642,7 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "",
             ("Claimgrenzen",     "Loep Behoud is een actieve-populatie groepssignaal. Geen causale claims, geen interventieprescriptie."),
             ("Privacywaarborg",  "Verwerking conform AVG. Uitsluitend bestemd voor geautoriseerde gebruikers."),
         ]
-        cells_r3 = [
-            ("Hoe de banden werken",
-             "Kwetsbaar punt (onder 5,0), aandachtspunt (5,0 tot 6,5) en relatief "
-             "sterk (vanaf 6,5) zijn vaste schaaldrempels, geen vergelijking met "
-             "andere organisaties. De rangorde tussen de eigen factoren weegt "
-             "zwaarder dan de absolute kleur. Doordat de meetlat vast is, zijn "
-             "meting en vervolgmeting een-op-een vergelijkbaar."),
-        ]
+        cells_r3 = [_banden_cel(ranking_active)]
     elif scan_type == "onboarding":
         intro = ("Dit rapport bundelt patronen uit onboarding-checkpoints tot een groepsbeeld van de eerste "
                  "werkperiode. Geen prestatiebeoordeling, geen individuele beoordeling en geen voorspelling van uitval.")
@@ -1600,14 +1656,7 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "",
             ("Claimgrenzen",       "Onboarding is een groepscheck op de eerste werkperiode. Geen causale claims, geen uitvalpredicties."),
             ("Privacywaarborg",    "Verwerking conform AVG. Uitsluitend bestemd voor geautoriseerde gebruikers."),
         ]
-        cells_r3 = [
-            ("Hoe de banden werken",
-             "Kwetsbaar punt (onder 5,0), aandachtspunt (5,0 tot 6,5) en relatief "
-             "sterk (vanaf 6,5) zijn vaste schaaldrempels, geen vergelijking met "
-             "andere organisaties. De rangorde tussen de eigen factoren weegt "
-             "zwaarder dan de absolute kleur. Doordat de meetlat vast is, zijn "
-             "meting en vervolgmeting een-op-een vergelijkbaar."),
-        ]
+        cells_r3 = [_banden_cel(ranking_active)]
     else:  # exit
         intro = ("Dit rapport bundelt patronen uit exitvragenlijsten tot een groepsbeeld van vertrek. "
                  "Geen diagnose, geen individuele beoordeling, geen causaliteitsclaim en geen voorspelling.")
@@ -1621,14 +1670,7 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "",
             ("Claimgrenzen",     "Loep Vertrek is een terugkijkende groepsmeting op uitstroom. Geen causale claims, geen oordeel over vermijdbaarheid, geen verlooppredicties."),
             ("Privacywaarborg",  "Verwerking conform AVG. Uitsluitend bestemd voor geautoriseerde gebruikers."),
         ]
-        cells_r3 = [
-            ("Hoe de banden werken",
-             "Kwetsbaar punt (onder 5,0), aandachtspunt (5,0 tot 6,5) en relatief "
-             "sterk (vanaf 6,5) zijn vaste schaaldrempels, geen vergelijking met "
-             "andere organisaties. De rangorde tussen de eigen factoren weegt "
-             "zwaarder dan de absolute kleur. Doordat de meetlat vast is, zijn "
-             "meting en vervolgmeting een-op-een vergelijkbaar."),
-        ]
+        cells_r3 = [_banden_cel(ranking_active)]
 
     cells_r4: list[tuple[str, str]] = []
     if scan_type in DIRECTION_SCAN_TYPES and direction_active and direction_degraded:
@@ -2824,7 +2866,7 @@ def render_exit_report_html(data: dict) -> str:
             _opener = ch.opener(f"Verdieping: {_lbl}") if _i == 0 else _ChapterCounter.vervolg(f"Verdieping: {_lbl}")
             s += _factor_detail(_pfk, opener_html=_opener, intro_html=_intro("verdieping") if _i == 0 else "")
     else:
-        s += f'<div class="pb sec">{ch.opener("Verdieping: prioritaire factoren")}<div class="card">Factor detail beschikbaar na voldoende patroonduiding.</div></div>'
+        s += f'<div class="pb sec">{ch.opener("Verdieping: prioritaire factoren")}<div class="empty-state">{VERDIEPING_GEEN_RANGORDE}</div></div>'
 
     # ── SDT basisbehoeften ────────────────────────────────────────────────────
     def _sdt_item_tbl(dim: str) -> str:
@@ -2970,6 +3012,7 @@ def render_exit_report_html(data: dict) -> str:
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────
     s += _trust_page("exit", opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen"),
+                     ranking_active=not _geen_profiel,
                      direction_active=bool(_dir_block),
                      direction_degraded=bool(_dir_block) and not _raster_rows)
     return _doc(f"Loep Vertrek · {data['campaign_name']}", s, scan_type="exit")
@@ -3208,7 +3251,7 @@ def render_retention_report_html(data: dict) -> str:
             _opener = ch.opener(f"Verdieping: {_lbl}") if _i == 0 else _ChapterCounter.vervolg(f"Verdieping: {_lbl}")
             s += _ret_factor_detail(_pfk, opener_html=_opener, intro_html=_intro("verdieping") if _i == 0 else "")
     else:
-        s += f'<div class="pb sec">{ch.opener("Verdieping: prioritaire factoren")}<div class="card">Factor detail beschikbaar na voldoende patroonduiding.</div></div>'
+        s += f'<div class="pb sec">{ch.opener("Verdieping: prioritaire factoren")}<div class="empty-state">{VERDIEPING_GEEN_RANGORDE}</div></div>'
 
     # ── Werkbeleving (SDT) ────────────────────────────────────────────────────
     def _sdt_item_tbl(dim: str) -> str:
@@ -3352,6 +3395,7 @@ def render_retention_report_html(data: dict) -> str:
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────
     s += _trust_page(ST, opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen"),
+                     ranking_active=not _geen_profiel,
                      direction_active=bool(_dir_block),
                      direction_degraded=bool(_dir_block) and not _raster_rows)
     return _doc(f"Loep Behoud · {data['campaign_name']}", s, scan_type="retention")
@@ -3626,7 +3670,7 @@ def render_onboarding_report_html(data: dict) -> str:
             # factordetailpagina leest prima zonder intro.
             s += _ob_factor_detail(_pfk, opener_html=_opener, intro_html="")
     else:
-        s += f'<div class="pb sec">{ch.opener("Verdieping: prioritaire factoren")}<div class="card">Factor detail beschikbaar na voldoende patroonduiding.</div></div>'
+        s += f'<div class="pb sec">{ch.opener("Verdieping: prioritaire factoren")}<div class="empty-state">{VERDIEPING_GEEN_RANGORDE}</div></div>'
 
     # ── Werkbeleving (SDT) — if present ──────────────────────────────────────
     def _sdt_item_tbl(dim: str) -> str:
@@ -3790,7 +3834,8 @@ def render_onboarding_report_html(data: dict) -> str:
 </div>"""
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────
-    s += _trust_page(ST, opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen"))
+    s += _trust_page(ST, opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen"),
+                     ranking_active=not _geen_profiel)
     return _doc(f"Loep Start · {data['campaign_name']}", s, scan_type="onboarding")
 
 
