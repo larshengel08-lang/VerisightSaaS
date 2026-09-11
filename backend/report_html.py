@@ -498,10 +498,12 @@ SECTION_INTROS: dict[str, str] = {
     "behoudscontext": (
         "Het behoudssignaal is een samenvattende groepsscore: de werkfactoren en de "
         "werkbeleving samen, teruggebracht tot &eacute;&eacute;n getal "
-        "tussen 1 en 10. Hoe hoger, hoe beter, net als bij elke andere score in dit rapport. "
+        "tussen 1 en 10. Hoe hoger, hoe beter. "
         "Onder de 5,0 noemen we een score kwetsbaar, tussen 5,0 en 6,5 een "
         "aandachtspunt, vanaf 6,5 relatief sterk. De drie signalen daaronder geven context: "
-        "blijfintentie en vertrekintentie zijn geen spiegelbeeld van elkaar (iemand kan "
+        "bij vertrekintentie leest een hoge score juist als meer vertrekgedachten, bij de "
+        "andere twee is hoog weer beter. "
+        "Blijfintentie en vertrekintentie zijn geen spiegelbeeld van elkaar (iemand kan "
         "beide tegelijk voelen), en bevlogenheid staat daar los van: bevlogen medewerkers "
         "vertrekken soms toch. Dit rapport wijst aan waar het gesprek moet beginnen. "
         "Het doet bewust geen uitspraken over individuen."
@@ -529,7 +531,7 @@ SECTION_INTROS: dict[str, str] = {
     "checkpointoverzicht": (
         "De checkpointscore vat samen hoe nieuwe medewerkers hun eerste werkperiode ervaren: "
         "de landingsdomeinen samengebracht tot &eacute;&eacute;n getal tussen "
-        "1 en 10. Hoe hoger, hoe beter, net als bij elke andere score in dit rapport. "
+        "1 en 10. Hoe hoger, hoe beter. "
         "Onder de 5,0 noemen we een score kwetsbaar, tussen 5,0 en 6,5 een "
         "aandachtspunt, vanaf 6,5 relatief sterk. Dit is een momentopname van de landing: "
         "een startpunt voor het gesprek over onboarding, geen beoordeling van individuele "
@@ -563,8 +565,8 @@ SECTION_INTROS: dict[str, str] = {
         "De aanbevelingsscore (eNPS) meet &eacute;&eacute;n ding: zouden medewerkers deze "
         "organisatie aanraden als werkgever? De score loopt van &minus;100 tot +100 en is het "
         "verschil tussen het aandeel uitgesproken aanraders en het aandeel criticasters. "
-        "Gebruik dit als aanvullende context naast het overzichtsprofiel: het zegt iets over "
-        "het totaalgevoel, de factoren zeggen waar dat gevoel vandaan komt."
+        "Lees dit als aanvullende context: het zegt iets over het totaalgevoel, niet waar "
+        "dat gevoel vandaan komt."
     ),
     "segmentanalyse": (
         "Deze tabel splitst het beeld uit per afdeling: het aantal ingevulde vragenlijsten "
@@ -2739,6 +2741,8 @@ def render_exit_report_html(data: dict) -> str:
                         f"daaronder bepaalt één vertrekker te veel het beeld."),
             wel=["de opgegeven vertrekredenen" if data["exit_r_dist"] else "",
                  "de werkbeleving van de vertrekkers" if sdt_a else "",
+                 "de werkgeversaanbeveling" if (data["enps_available"]
+                                                and data["enps_score"] is not None) else "",
                  "de responsbasis onderaan deze pagina"],
         )
 
@@ -3127,6 +3131,8 @@ def render_retention_report_html(data: dict) -> str:
                         f"bij minder telt elk los antwoord te zwaar mee."),
             wel=["de behoudscontext op de volgende pagina" if signal is not None else "",
                  "de werkbeleving" if sdt_a else "",
+                 "de werkgeversaanbeveling" if (data["enps_available"]
+                                                and data["enps_score"] is not None) else "",
                  "de responsbasis onderaan deze pagina"],
         )
 
@@ -3549,6 +3555,8 @@ def render_onboarding_report_html(data: dict) -> str:
                         f"antwoorden; daaronder kleurt één antwoord het beeld te sterk."),
             wel=["het checkpointoverzicht" if signal is not None else "",
                  "de werkbeleving van nieuwe medewerkers" if sdt_a else "",
+                 "de werkgeversaanbeveling" if (data["enps_available"]
+                                                and data["enps_score"] is not None) else "",
                  "de responsbasis onderaan deze pagina"],
         )
 
