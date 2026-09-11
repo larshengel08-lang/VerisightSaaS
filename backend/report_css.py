@@ -241,6 +241,8 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .raster-tbl tr.r-top .r-fl { color: """ + accent + r"""; font-weight: 600; }
 .r-mono { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: """ + STEEL + r"""; }
 .raster-tbl tr.r-top .r-mono { color: #94A3B8; }
+.raster-tbl tr.r-note td { border-top: none; padding: 0 8px 8px; font-size: 9.5px;
+  line-height: 1.45; color: #4A6070; }
 .r-legend { font-size: 10px; color: """ + STEEL + r"""; margin-top: 6px; }
 .r-uitleg { font-size: 10px; color: #374151; margin-top: 10px; line-height: 1.5;
   border-left: 3px solid """ + accent + r"""; padding-left: 9px; }

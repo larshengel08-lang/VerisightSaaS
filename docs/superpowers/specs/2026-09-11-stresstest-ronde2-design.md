@@ -38,6 +38,26 @@ Sorteerregel, in één zin (staat letterlijk onder de ranglijst):
 
 Implementatie: binnen een tie-groep (alle rijen die binnen de marge van de laagste van de groep liggen, bestaande groepslogica hergebruiken) wordt gesorteerd op (1) vraag-om-verandering aflopend, alleen als beide rijen een geldig aantal hebben, (2) spreidingsvlag, (3) verdiepingsvlag, (4) score, (5) factorlabel alfabetisch. Determinisme blijft; de bestaande tests op de vlaggen blijven gelden (ze worden alleen ondergeschikt aan het richtingsignaal binnen de marge).
 
+**Implementatie-afwijking (2026-09-11, taak 1):** "alleen als beide rijen een geldig
+aantal hebben" is geimplementeerd als een groepsbrede gate: de richting-tie-break telt
+binnen een gelijkspel-groep alleen als elke rij in die groep >= DIRECTION_MIN_N
+beantwoorders heeft. Reden: een paarsgewijze geldigheidsregel is niet transitief, en een
+niet-transitieve comparator laat het sorteerresultaat van de invoervolgorde afhangen. Dat
+breekt het determinisme-contract van rank_factors. Bij een groep van twee rijen is het
+gedrag identiek aan de spec; bij drie of meer is het strenger.
+
+**Implementatie-afwijking (2026-09-11, taak 1, par. 1.3):** par. 1.3 zegt "boven een rij
+met lagere of gelijke score"; geimplementeerd is STRIKT lager, en op de interne
+rekenwaarde (`base`, inclusief het vertrekredengewicht) in plaats van op de afgeronde
+score in de kolom. Gevolg 1: twee rijen die allebei als 6,2 in de kolom staan maar een
+verschillende base hebben, krijgen wel een markering. Dat is precies het geval waar
+bevinding B5 over ging (scenario 06), dus die is gedekt. Gevolg 2: bij een base die tot
+op de komma gelijk is, beslist een tie-break zonder markeringsregel; de sorteerregel
+onder de tabel legt dan uit wat er gebeurde, de rij zelf niet. Reden: de markering luidt
+"Staat hoger dan X omdat ..." en heeft bij een echt gelijke stand geen zichtbare omkering
+om uit te leggen. Wil je die laatste groep toch markeren, dan is dat een eenrichtings-
+verruiming (`<` naar `<=`) in `_tie_break_marking`.
+
 ### 1.3 Markering van tie-break-rijen (B5)
 Elke rij die door een tie-break boven een rij met lagere of gelijke score staat, krijgt in de agendakolom een regel eronder, in gewone taal, met de telling:
 

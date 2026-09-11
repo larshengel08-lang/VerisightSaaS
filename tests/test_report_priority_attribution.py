@@ -106,3 +106,16 @@ def test_p02_label_is_gespreksopener():
         mgmt_q="Vraag?")
     assert 'class="mq-label">Gespreksopener<' in html
     assert "Eerste managementvraag" not in html
+
+
+def test_direction_flip_names_the_change_demand():
+    rows = [
+        {"key": "workload", "label": "Werkdruk", "score": 6.1, "base": 6.1,
+         "spread_flag": False, "deepening_state": 5, "tie_break_kind": "direction"},
+        {"key": "growth", "label": "Groeiperspectief", "score": 6.0, "base": 6.0,
+         "spread_flag": False, "deepening_state": 5, "tie_break_kind": None},
+    ]
+    line = _raster_attribution(rows, "retention")
+    assert line == ("De scores lagen vrijwel gelijk; het aantal mensen dat om "
+                    "verandering vraagt gaf de doorslag.")
+    assert "—" not in line

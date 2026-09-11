@@ -19,12 +19,18 @@ from backend.report_priority import (
 
 
 def _row(key, label, score, role=None, state=5, top=None, tie=None,
-         spread_n=13, spread_below=2, spread_flag=False):
+         spread_n=13, spread_below=2, spread_flag=False, exit_reason_n=0,
+         direction_answered=0, direction_change=None,
+         tie_kind=None, tie_note=None):
     return {"key": key, "label": label, "score": score, "base": score,
             "spread_n": spread_n, "spread_below": spread_below,
             "spread_flag": spread_flag, "deepening_state": state,
             "deepening_top": top, "flags": int(spread_flag) + int(state == 1),
-            "agenda_role": role, "near_tie_with": tie}
+            "agenda_role": role, "near_tie_with": tie,
+            "exit_reason_n": exit_reason_n,
+            "direction_answered": direction_answered,
+            "direction_change": direction_change,
+            "tie_break_kind": tie_kind, "tie_break_note": tie_note}
 
 
 RANKED = [
@@ -141,3 +147,43 @@ def test_zichtbaar_signaal_bij_vlag_in_html():
     html = _render(ranked=flagged)
     assert "5 van 13 onder de 5" in html
     assert "7 van 13 kozen:" in html
+
+
+def test_markeringsregel_staat_onder_de_rij():
+    ranked = [
+        _row("workload", "Werkdruk en herstelruimte", 6.1, role="startpunt",
+             tie_note="Staat hoger dan Groeiperspectief omdat hier meer mensen om "
+                      "verandering vragen (9 van de 11 tegen 3 van de 11).",
+             tie_kind="direction"),
+        _row("growth", "Groeiperspectief", 6.0, role="tweede"),
+    ]
+    html = _render(ranked=ranked, resp={r["key"]: [6.0] * 13 for r in ranked})
+    assert "meer mensen om verandering vragen" in html
+    assert "r-note" in html
+    # De markering hoort bij de rij erboven, dus in een eigen rij met colspan.
+    assert "colspan" in html
+
+
+def test_geen_markeringsregel_zonder_flip():
+    html = _render()
+    assert "r-note" not in html
+
+
+def test_exit_krijgt_een_vertrekredenkolom():
+    ranked = [_row("leadership", "Leiderschap en feedback", 4.9, role="startpunt",
+                   exit_reason_n=9),
+              _row("growth", "Groeiperspectief", 4.5, role="tweede", exit_reason_n=4)]
+    resp = {r["key"]: [4.0] * 13 for r in ranked}
+    html_exit = _render(scan_type="exit", ranked=ranked, resp=resp)
+    assert "Als vertrekreden genoemd" in html_exit
+    assert ">9<" in html_exit
+    # Loep Behoud kent geen vertrekredenen en krijgt de kolom dus niet.
+    html_ret = _render(scan_type="retention", ranked=ranked, resp=resp)
+    assert "Als vertrekreden genoemd" not in html_ret
+
+
+def test_uitlegregel_noemt_de_richtingvraag_als_eerste_tiebreak():
+    for scan in ("retention", "exit"):
+        uitleg = RASTER_UITLEG[scan]
+        assert "om verandering vragen" in uitleg
+        assert "—" not in uitleg

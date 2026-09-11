@@ -1052,18 +1052,20 @@ RASTER_INTRO_GATE = (
 
 RASTER_UITLEG: dict[str, str] = {
     "retention": (
-        "Hoe deze volgorde tot stand komt: gesorteerd op score. Bij vrijwel "
-        "gelijke scores (verschil kleiner dan 0,3) geven grote spreiding of "
-        "een gedeelde toelichting uit de verdieping de doorslag. Spreiding "
-        "tonen we vanaf 10 responses; verdiepingsduiding vanaf 8 "
-        "beantwoorders per factor."),
+        "Hoe deze volgorde tot stand komt: gesorteerd op score. Liggen scores "
+        "binnen 0,3 van elkaar, dan telt eerst waar de meeste mensen om "
+        "verandering vragen; is dat ook gelijk, dan een grote spreiding en een "
+        "gedeelde toelichting uit de verdieping. Spreiding tonen we vanaf 10 "
+        "responses; verdiepingsduiding vanaf 8 beantwoorders per factor; de "
+        "vraag om verandering vanaf 3 beantwoorders per factor."),
     "exit": (
         "Hoe deze volgorde tot stand komt: gesorteerd op score, waarbij ook "
-        "meeweegt hoe vaak een factor als vertrekreden is genoemd. Bij "
-        "vrijwel gelijke scores (verschil kleiner dan 0,3) geven grote "
-        "spreiding of een gedeelde toelichting uit de verdieping de "
-        "doorslag. Spreiding tonen we vanaf 10 responses; verdiepingsduiding "
-        "vanaf 8 beantwoorders per factor."),
+        "meeweegt hoe vaak een factor als vertrekreden is genoemd. Liggen "
+        "scores binnen 0,3 van elkaar, dan telt eerst waar de meeste mensen om "
+        "verandering vragen; is dat ook gelijk, dan een grote spreiding en een "
+        "gedeelde toelichting uit de verdieping. Spreiding tonen we vanaf 10 "
+        "responses; verdiepingsduiding vanaf 8 beantwoorders per factor; de "
+        "vraag om verandering vanaf 3 beantwoorders per factor."),
 }
 
 RASTER_LEGENDA = (
@@ -1160,7 +1162,15 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
             parts.append(f'<span class="r-mono">vrijwel gelijk aan {_h(tie_lbl)}</span>')
         return "<br>".join(parts)
 
-    deep_th = '<th style="width:29%">Verdieping</th>' if deepening_active else ""
+    is_exit = scan_type == "exit"
+    reason_th = '<th style="width:13%">Als vertrekreden genoemd</th>' if is_exit else ""
+    # Kolombreedtes: Loep Vertrek heeft een kolom extra, dus smaller factor-,
+    # spreidings- en verdiepingsveld. De spreidings-SVG is 200px breed en past
+    # in beide. Loep Behoud houdt exact de breedtes van voor deze wijziging.
+    w_factor, w_spread, w_deep = (("22%", "19%", "23%") if is_exit
+                                  else ("27%", "22%", "29%"))
+    deep_th = f'<th style="width:{w_deep}">Verdieping</th>' if deepening_active else ""
+    n_cols = 4 + int(deepening_active) + int(is_exit)
     body = ""
     for row in ranked:
         top_cls = ' class="r-top"' if row["agenda_role"] else ""
@@ -1168,11 +1178,19 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
                    if row["agenda_role"] else _h(row["label"]))
         deep_td = (f'<td style="font-size:9.5px;">{_raster_deepening_cell(row, scan_type)}</td>'
                    if deepening_active else "")
+        reason_td = (f'<td class="r-mono">{row["exit_reason_n"]}</td>' if is_exit else "")
         body += (f'<tr{top_cls}><td>{fl_html}</td>'
                  f'<td style="color:{_factor_color(row["score"])};">{_score_str(row["score"])}</td>'
+                 f'{reason_td}'
                  f'<td>{_spread_cell(row)}</td>'
                  f'{deep_td}'
                  f'<td>{_agenda_cell(row)}</td></tr>')
+        # Markeringsregel over de volle breedte (spec ronde 2 par. 1.3): de
+        # agendakolom is te smal voor een hele zin, en de regel hoort visueel
+        # bij de rij erboven.
+        if row["tie_break_note"]:
+            body += (f'<tr class="r-note"><td colspan="{n_cols}">'
+                     f'{_h(row["tie_break_note"])}</td></tr>')
 
     # Zonder rasterrijen is er geen tabel om te tonen (bug B3): de kale
     # tabelkop, de uitlegregel over de sorteervolgorde en de gate-notitie
@@ -1194,8 +1212,8 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
                 f'<div class="step-fill-hint">{_h(hint)}</div>')
 
     tabel = f"""<table class="raster-tbl"><tr>
-    <th style="width:27%">Factor</th><th style="width:12%">Score</th>
-    <th style="width:22%">Spreiding</th>{deep_th}<th style="width:14%">Agenda</th>
+    <th style="width:{w_factor}">Factor</th><th style="width:12%">Score</th>
+    {reason_th}<th style="width:{w_spread}">Spreiding</th>{deep_th}<th style="width:14%">Agenda</th>
   </tr>{body}</table>
   {legenda}
   {gate}
@@ -1243,6 +1261,9 @@ def _raster_attribution(rows: list[dict], scan_type: str) -> str:
     if not rows:
         return ""
     top = rows[0]
+    if top["tie_break_kind"] == "direction":
+        return ("De scores lagen vrijwel gelijk; het aantal mensen dat om "
+                "verandering vraagt gaf de doorslag.")
     if top["base"] > min(r["base"] for r in rows):
         # Alleen een vlag kan een rij boven een lagere base tillen (sort-key
         # in rank_factors); benoem welk signaal de doorslag gaf, in dezelfde
@@ -2610,7 +2631,8 @@ def render_exit_report_html(data: dict) -> str:
     _raster_rows = rank_factors(
         "exit", fa, data.get("factor_resp_scores") or {}, deep_agg,
         exit_reason_counts=exit_code_counts,
-        labels={fk: _fl(fk, "exit") for fk in ORG_FACTOR_KEYS})
+        labels={fk: _fl(fk, "exit") for fk in ORG_FACTOR_KEYS},
+        direction_agg=direction_agg)
 
     sorted_f = sorted([(fk, fa.get(fk)) for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None],
                       key=lambda x: x[1])
@@ -3061,7 +3083,8 @@ def render_retention_report_html(data: dict) -> str:
     direction_agg = data.get("direction_agg") or {}
     _raster_rows = rank_factors(
         "retention", fa, data.get("factor_resp_scores") or {}, deep_agg,
-        labels={fk: _fl(fk, ST) for fk in ORG_FACTOR_KEYS})
+        labels={fk: _fl(fk, ST) for fk in ORG_FACTOR_KEYS},
+        direction_agg=direction_agg)
 
     # Eén waarheid voor "de primaire factor" door het hele rapport heen (spec
     # 2026-07-18 par. 4) -- zie identieke fix + toelichting in
