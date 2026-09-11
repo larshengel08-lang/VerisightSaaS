@@ -189,4 +189,6 @@ def test_kernzin_copy_heeft_geen_em_dashes():
     einde = html.find("</p>", start)
     assert einde != -1
     kernzin = html[start:einde]
-    assert "—" not in kernzin and "&#x2014;" not in kernzin
+    # Escape en geen letterlijk teken: anders is deze guard zelf een treffer
+    # bij een repo-brede grep op em-dashes.
+    assert "\u2014" not in kernzin and "&#x2014;" not in kernzin

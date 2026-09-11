@@ -97,19 +97,31 @@ def exit_report_data(*, factor_avgs: dict[str, float],
     en tests/test_report_exit_kernzin.py (startpunt != laagste score). Beide
     hadden een byte-voor-byte identieke dict-vorm; alleen de *data* verschilt,
     en die geeft de aanroeper mee. Item-gemiddelden worden afgeleid van de
-    factorscore (één item per factor), zodat een factor en zijn enige stelling
-    niet uit elkaar kunnen lopen.
+    factorscore, zodat een factor en zijn stellingen niet uit elkaar kunnen
+    lopen -- voor ELK item, niet alleen het eerste: met twee items per factor
+    kreeg het tweede stilzwijgend "n.b." in de gerenderde tabellen.
+
+    top_fkeys/top_flabels en completion_pct zijn afgeleid in plaats van vast.
+    Productie (build_report_data) zet top_fkeys op de twee laagst scorende
+    factoren en berekent het responspercentage uit n en n_invited; een
+    hardgecodeerde "growth" en een vaste 80,0% spraken de meegegeven data
+    tegen zodra een aanroeper andere scores of een andere n koos.
     """
     from backend.report_html import _fl
 
-    item_avgs = {items[0][0]: factor_avgs[fk]
-                 for fk, items in factor_items_map.items()}
+    item_avgs = {ik: factor_avgs[fk]
+                 for fk, items in factor_items_map.items()
+                 for ik, _ in items}
+    invited = n + 3
+    top_fkeys = sorted(factor_avgs, key=lambda fk: (factor_avgs[fk], fk))[:2]
     return dict(
         campaign_id="c1", scan_type="exit", scan_lbl="Loep Vertrek",
         org_name="TestOrg", campaign_name="Wave 1", generated_at="11-09-2026",
-        n_invited=n + 3, n_completed=n, completion_pct=80.0, avg_risk=5.5,
+        n_invited=invited, n_completed=n,
+        completion_pct=round(100.0 * n / invited, 1), avg_risk=5.5,
         factor_avgs=dict(factor_avgs),
-        top_fkeys=["growth"], top_flabels=[_fl("growth", "exit")],
+        top_fkeys=top_fkeys,
+        top_flabels=[_fl(fk, "exit") for fk in top_fkeys],
         factor_items_map={fk: list(items) for fk, items in factor_items_map.items()},
         org_item_avgs=item_avgs,
         sdt_item_avgs={}, sdt_avgs={}, nsp={},

@@ -17,6 +17,7 @@ bij dit aantal antwoorden wel en niet kan zeggen, en géén sjabloon met gaten.
 """
 import pytest
 
+from backend.products.shared.registry import get_product_module
 from backend.report_html import (
     render_exit_report_html,
     render_onboarding_report_html,
@@ -51,6 +52,19 @@ _RENDERERS = {"exit": render_exit_report_html,
               "onboarding": render_onboarding_report_html}
 
 
+def _nsp(scan_type: str, top_fkeys: list[str], top_flabels: list[str]) -> dict:
+    """Productievorm van data["nsp"].
+
+    build_report_data roept dit altijd aan (report_html.py, get_next_steps_payload),
+    ook zonder factorprofiel: top_focus_* zijn dan leeg en de payload valt terug
+    op zijn generieke per-product tekst. Een fixture met nsp={} pinde dus een
+    pagina die in productie niet bestaat -- en liet de generieke
+    "first_decision"-jargonzin ongezien doorrenderen.
+    """
+    return get_product_module(scan_type).get_next_steps_payload(
+        top_focus_labels=top_flabels, top_focus_keys=top_fkeys)
+
+
 def _fixture(scan_type: str, *, n: int, profile: bool) -> dict:
     """Eén fixture-vorm voor alle drie de scans.
 
@@ -60,6 +74,8 @@ def _fixture(scan_type: str, *, n: int, profile: bool) -> dict:
     daar juist wél uit -- die worden buiten de has_pattern-gate berekend.
     """
     fa = dict(_FACTOR_AVGS) if profile else {}
+    _tk = ["workload"] if profile else []
+    _tl = ["Werkdruk en herstelruimte"] if profile else []
     return dict(
         campaign_id="c1", scan_type=scan_type, scan_lbl=_SCAN_LBL[scan_type],
         org_name="TestOrg", campaign_name="Wave 1", generated_at="11-09-2026",
@@ -69,15 +85,14 @@ def _fixture(scan_type: str, *, n: int, profile: bool) -> dict:
         band_counts={"HOOG": 0, "MIDDEN": n, "LAAG": 0}, has_pattern=profile,
         factor_avgs=fa,
         top_risks=[("workload", _FACTOR_AVGS["workload"])] if profile else [],
-        top_fkeys=["workload"] if profile else [],
-        top_flabels=["Werkdruk en herstelruimte"] if profile else [],
+        top_fkeys=_tk, top_flabels=_tl,
         strong_work=None, top_exit_lbl=None, top_cont_lbl=None, sig_vis=None,
         sdt_avgs={"autonomy": 6.1, "competence": 6.4, "relatedness": 6.0},
         sdt_item_avgs={"B1": 6.1}, org_item_avgs=dict(_ITEM_AVGS),
         exit_r_dist=[{"code": "P4", "label": "Organisatiecultuur", "count": 3}],
         cont_dist=[], prev_dist={}, open_texts=[],
         deepening_agg={}, direction_agg={}, retention_profile=None,
-        exit_pbs=[], ret_pbs=[], msp=None, nsp={},
+        exit_pbs=[], ret_pbs=[], msp=None, nsp=_nsp(scan_type, _tk, _tl),
         factor_items_map={fk: list(v) for fk, v in _ITEM_MAP.items()} if profile else {},
         sdt_items=[("B1", "Testvraag autonomie")],
         enps_available=False, enps_score=None,
@@ -177,6 +192,58 @@ def test_eerlijke_zin_is_per_product_toegesneden(scan_type, belofte):
     note = body[i:i + 500]
     assert belofte in note
     assert "de responsbasis onderaan deze pagina" in note
+
+
+# ── De drempelzin mag zichzelf niet tegenspreken ────────────────────────────
+# De degraded staat wordt getriggerd door een LEEG factorprofiel, niet door het
+# responsaantal: scoring.factor_averages laat een factor zonder waarden weg, dus
+# een meting met 14 antwoorden maar zonder gescoorde organisatiefactoren kwam
+# hier ook terecht -- en las dan "Met 14 antwoorden ... Daarvoor zijn minimaal
+# 10 antwoorden nodig". Boven de drempel hoort de zin dus de drempel niet te
+# noemen.
+
+_N_GEEN_SCORES = 14
+assert _N_GEEN_SCORES >= MIN_AGGREGATE_N, "fixture moet BOVEN de patroondrempel zitten"
+
+_GEEN_SCORES_ZIN = (
+    "Voor deze meting zijn er geen scores per factor berekend. "
+    f"Aan het aantal antwoorden ligt het niet: dat zijn er {_N_GEEN_SCORES}.")
+
+
+def _note(body: str) -> str:
+    """De degraded alinea op p.02, van eerste woord tot </p>."""
+    kop = '<h3>Wat dit rapport wel en niet laat zien</h3>'
+    i = body.find(kop)
+    assert i != -1, "degraded alinea niet gevonden"
+    j = body.find(">", body.find("<p", i)) + 1
+    return body[j:body.find("</p>", j)]
+
+
+@pytest.mark.parametrize("scan_type", SCANS)
+def test_boven_de_drempel_noemt_de_zin_de_drempel_niet(scan_type):
+    body = _body(_render(scan_type, n=_N_GEEN_SCORES, profile=False))
+    note = _note(body)
+    assert _GEEN_SCORES_ZIN in note
+    assert f"minimaal {MIN_AGGREGATE_N}" not in note
+    assert "Wat dit rapport wel laat zien:" in note
+
+
+@pytest.mark.parametrize("scan_type", SCANS)
+def test_onder_de_drempel_noemt_de_zin_de_drempel_nog_steeds(scan_type):
+    note = _note(_body(_render(scan_type, n=_N_DEGRADED, profile=False)))
+    assert f"Met {_N_DEGRADED} antwoorden toont Loep nog geen profiel per factor." in note
+    assert f"minimaal {MIN_AGGREGATE_N} antwoorden" in note
+    assert _GEEN_SCORES_ZIN not in note
+
+
+@pytest.mark.parametrize("scan_type", SCANS)
+def test_de_kop_boven_de_alinea_wijst_niet_naar_het_aantal(scan_type):
+    """De kop stond op "Wat dit aantal antwoorden wel en niet toelaat" en deed
+    daarmee dezelfde onjuiste toeschrijving als de drempelzin."""
+    for n in (_N_DEGRADED, _N_GEEN_SCORES):
+        body = _body(_render(scan_type, n=n, profile=False))
+        assert "Wat dit aantal antwoorden wel en niet toelaat" not in body
+        assert "<h3>Wat dit rapport wel en niet laat zien</h3>" in body
 
 
 def test_de_drie_zinnen_zijn_niet_drie_keer_dezelfde():

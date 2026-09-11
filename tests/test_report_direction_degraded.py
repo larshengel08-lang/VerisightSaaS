@@ -24,7 +24,7 @@ Deze tests pinnen drie dingen:
 import pytest
 
 from backend.products.shared.deepening import get_direction_sets
-from backend.report_html import DIRECTION_BLOCK_EYEBROW
+from backend.report_html import AGENDA_OPENER_GEEN_PROFIEL, DIRECTION_BLOCK_EYEBROW
 from backend.scoring_config import MIN_AGGREGATE_N
 from tests.test_report_degraded_page_two import _RENDERERS, _body, _fixture
 
@@ -119,6 +119,37 @@ def test_methodiek_belooft_de_richtingvraag_als_het_blok_er_staat(scan_type):
 
 
 @pytest.mark.parametrize("scan_type", SCANS)
+def test_methodiekcel_belooft_geen_richting_die_er_niet_hangt(scan_type):
+    """De cel pinde alleen het wóórd "Richtingvraag", niet de claim eronder.
+
+    Daardoor bleef de volledige feature-copy staan zodra er richtingdata was:
+    een opdrachtvorm in "Wat er moet gebeuren", een richting vanaf 3
+    antwoorden en een beperkte-basis-regel. Geen van drieën bestaat in het
+    degraded blok, dat alleen tellingen toont.
+    """
+    body = _degraded(scan_type)
+    for claim in ("De opdrachtvorm in",
+                  "Dit blok toont een richting vanaf 3 antwoorden",
+                  "beperkte-basis-regel"):
+        assert claim not in body, f"methodiekpagina belooft nog: {claim!r}"
+    assert ("In dit rapport hangt er geen richting aan die antwoorden: zonder "
+            "profiel per factor is er geen startpunt om ze aan te koppelen, en "
+            "per onderwerp zijn het er te weinig om te tonen. Het blok "
+            "‘Wat er moet gebeuren’ toont daarom alleen hoeveel "
+            "respondenten de vraag kregen, beantwoordden en oversloegen.") in body
+
+
+@pytest.mark.parametrize("scan_type", SCANS)
+def test_methodiekcel_houdt_de_volledige_copy_als_het_blok_kaarten_heeft(scan_type):
+    body = _body(_render(scan_type, n=_N_NORMAL, profile=True,
+                         direction=_agg(scan_type, {"workload": (6, 1), "growth": (4, 1)})))
+    assert "De opdrachtvorm in" in body
+    assert "Dit blok toont een richting vanaf 3 antwoorden" in body
+    assert "beperkte-basis-regel" in body
+    assert "In dit rapport hangt er geen richting aan die antwoorden" not in body
+
+
+@pytest.mark.parametrize("scan_type", SCANS)
 def test_degraded_blok_is_vrij_van_em_dashes_en_ik_vorm(scan_type):
     body = _degraded(scan_type)
     i = body.find(_EYEBROW_TAG)
@@ -172,8 +203,8 @@ def test_rasterintro_belooft_geen_rangorde_zonder_rasterrijen(scan_type):
     assert "Dit overzicht weegt alle zes factoren tegen elkaar af" not in body
     assert "Hoe deze volgorde tot stand komt" not in body
     assert "de volgorde volgt score en spreiding" not in body
-    assert ("Met dit aantal antwoorden toont Loep nog geen profiel per factor, "
-            "dus is er nog geen volgorde en geen startpunt.") in body
+    assert ("Voor deze meting is er nog geen profiel per factor, dus ook geen "
+            "volgorde en geen startpunt.") in body
     # De lege tabelkop is een rangordebelofte zonder inhoud.
     assert 'class="raster-tbl"' not in body
 
@@ -191,3 +222,57 @@ def test_gebruiksblok_ongewijzigd_met_profiel(scan_type):
     body = _body(_render(scan_type, n=_N_NORMAL, profile=True, direction={}))
     assert "dan de verdieping per thema, en achteraan de gespreksagenda" in body
     assert "staan er nog niet in" not in body
+
+
+# ── De sluitende gespreksagenda belooft niets wat er niet is (review ronde 2) ─
+# Twee regels beneden RASTER_INTRO_EMPTY ("geen volgorde en geen startpunt")
+# drukte het navy Gespreksopener-blok nog de generieke per-product
+# nsp["first_decision"] af -- bij Loep Vertrek "Kies eerst of de scherpste
+# werkfactoren vooral een lokaal managementspoor of een breder
+# organisatievraagstuk vormen". Dat beweert "de scherpste werkfactoren" op
+# precies de pagina die zojuist zei dat die er niet zijn, en het is het
+# corporate jargon dat de copy-ronde van 6 september verbood.
+
+_JARGON = [
+    "de scherpste werkfactoren",
+    "lokaal managementspoor",
+    "breder organisatievraagstuk",
+    "30-90 dagenopvolging",
+    "snelle verificatie",
+]
+
+
+@pytest.mark.parametrize("scan_type", SCANS)
+@pytest.mark.parametrize("met_richtingdata", [True, False])
+def test_gespreksopener_herhaalt_geen_startpunt_dat_er_niet_is(scan_type, met_richtingdata):
+    body = _body(_render(scan_type, n=_N_DEGRADED, profile=False,
+                         direction=_agg(scan_type, _DEGRADED_SPREAD) if met_richtingdata else {}))
+    for zin in _JARGON:
+        assert zin not in body, f"gespreksagenda draagt nog jargon: {zin!r}"
+    assert AGENDA_OPENER_GEEN_PROFIEL in body
+
+
+@pytest.mark.parametrize("scan_type", SCANS)
+def test_de_gespreksopener_is_de_beloofde_plek_waar_het_gesprek_begint(scan_type):
+    """Het gebruiksblok op p.02 stuurt in deze staat naar "achteraan lees je
+    waar het gesprek kan beginnen". Dan moet daar ook echt een vraag staan."""
+    body = _body(_render(scan_type, n=_N_DEGRADED, profile=False, direction={}))
+    i = body.rfind("Gespreksopener")
+    assert i != -1
+    blok = body[i:i + 600]
+    assert AGENDA_OPENER_GEEN_PROFIEL in blok
+    assert "<p" in blok and "></p>" not in blok
+    assert "&#x2014;" not in blok and "\u2014" not in blok
+
+
+@pytest.mark.parametrize("scan_type", SCANS)
+def test_met_profiel_blijft_de_echte_gespreksopener_staan(scan_type):
+    body = _body(_render(scan_type, n=_N_NORMAL, profile=True, direction={}))
+    assert AGENDA_OPENER_GEEN_PROFIEL not in body
+
+
+@pytest.mark.parametrize("scan_type", SCANS)
+def test_rasterintro_wijst_niet_naar_het_responsaantal(scan_type):
+    """Dezelfde onjuiste toeschrijving als de drempelzin op p.02: de lege staat
+    hangt aan een leeg factorprofiel, niet aan het aantal antwoorden."""
+    assert "Met dit aantal antwoorden" not in _degraded(scan_type)

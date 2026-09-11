@@ -134,8 +134,16 @@ def test_exactly_half_none_falls_through_to_divided():
         assert not (st["state"] == "clear" and st["top_key"].endswith("_none"))
 
 
-def test_none_needed_is_evaluated_before_clear():
-    """Een niets-meerderheid wint van een route die zelf de clear-drempel haalt."""
+def test_strikte_niets_meerderheid_wordt_none_needed_minderheid_niet():
+    """Boven de helft "niets" -> none_needed; eronder niet.
+
+    Heette test_none_needed_is_evaluated_before_clear, met de claim dat een
+    niets-meerderheid wint van een route die zelf de clear-drempel haalt. Die
+    claim is sinds de strikte meerderheid (commit 83cce033) rekenkundig
+    onmogelijk -- none_needed vraagt de niets-optie boven 50%, clear vraagt een
+    niet-niets-optie op of boven 50% -- en de fixture hieronder (niets 5 van 8,
+    hoogste route 2) benaderde hem sowieso nooit.
+    """
     s = direction_state(_agg(wld_none=5, wld_peaks=2, wld_scope=1), "workload")
     assert s["state"] == "none_needed" and s["top_key"] == "wld_none" and s["top_n"] == 5
     assert direction_state(_agg(wld_none=2, wld_peaks=3), "workload")["state"] == "divided"  # niets 40%, peaks 60% marge 1
