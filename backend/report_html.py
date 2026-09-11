@@ -517,13 +517,14 @@ SECTION_INTROS: dict[str, str] = {
         "een startpunt voor het gesprek over onboarding, geen beoordeling van individuele "
         "starters of hun begeleiders."
     ),
+    # Alleen het gedeelde deel; de rangorde-zin is scan-afhankelijk en staat in
+    # OVERZICHTSPROFIEL_RANGORDE hieronder. _overzichtsprofiel plakt de twee
+    # aan elkaar in dezelfde <p>.
     "overzichtsprofiel": (
         "Elke factor hieronder is een thema, gemeten met drie stellingen over hetzelfde thema; "
         "de score is het groepsgemiddelde daarvan. De kleuren volgen vaste drempels "
         "(kwetsbaar onder 5,0, aandachtspunt 5,0 tot 6,5, relatief sterk vanaf 6,5) "
-        "en zijn geen vergelijking met andere organisaties. Belangrijker dan de absolute kleur "
-        "is de rangorde: de factor die binnen jullie eigen beeld het laagst scoort, is het "
-        "logische begin van het gesprek."
+        "en zijn geen vergelijking met andere organisaties."
     ),
     "verdieping": (
         "Respondenten die laag scoorden op dit thema kregen automatisch een korte vervolgvraag: "
@@ -579,6 +580,35 @@ SECTION_INTROS: dict[str, str] = {
         "rapport als gedeelde basis."
     ),
 }
+
+
+# Rangorde-zin van het overzichtsprofiel, per scan (bug B1, stresstest ronde 1).
+# De oude gedeelde zin ("de factor die het laagst scoort, is het logische begin
+# van het gesprek") is bij Loep Vertrek en Loep Behoud onwaar: daar bepaalt
+# _prioriteringsraster het startpunt, en een spreidings- of verdiepingsvlag
+# (of bij Vertrek de vertrekreden-weging) kan een andere factor dan de laagste
+# bovenaan zetten. Loep Start heeft geen raster en rangschikt wel puur op score
+# (_select_priority_factors met lege vertrekredenen), dus daar klopt de oude
+# regel juist. Een zin die voor alle drie waar is, bestaat niet.
+#
+# Deze waarden worden net als SECTION_INTROS UNESCAPED gerenderd: non-ASCII
+# hier als HTML-entity (&ldquo;, &rdquo;, ...).
+OVERZICHTSPROFIEL_RANGORDE: dict[str, str] = {
+    "exit": (
+        "Belangrijker dan de absolute kleur is de rangorde. Welke factor het gesprek "
+        "begint, bepaalt Loep niet op de score alleen: bij de gespreksagenda verderop "
+        "zie je per factor welke signalen meewogen in de volgorde."
+    ),
+    "onboarding": (
+        "Belangrijker dan de absolute kleur is de rangorde: het thema dat binnen jullie "
+        "eigen beeld het laagst scoort, staat verderop als eerste in de verdieping en in "
+        "de gespreksagenda."
+    ),
+}
+# Loep Behoud deelt de raster-variant met Loep Vertrek: beide renderen
+# _prioriteringsraster. Als alias, niet als kopie, zodat de twee niet uit
+# elkaar kunnen lopen bij een copy-wijziging.
+OVERZICHTSPROFIEL_RANGORDE["retention"] = OVERZICHTSPROFIEL_RANGORDE["exit"]
 
 
 def _intro(key: str) -> str:
@@ -2063,7 +2093,10 @@ def _overzicht_summary_and_bands(profile_factors: list[tuple[str, float | None]]
 
 def _overzichtsprofiel(factors: list[tuple[str, float | None]],
                        summary: str = "", bands: dict[str, list[str]] | None = None,
-                       opener_html: str = "") -> str:
+                       opener_html: str = "", *, scan_type: str) -> str:
+    """scan_type is verplicht en heeft bewust geen default: de rangorde-zin in
+    de intro is scan-afhankelijk (zie OVERZICHTSPROFIEL_RANGORDE) en een stille
+    terugval zou in een van de drie rapporten een onware regel afdrukken."""
     ranked = sorted(factors, key=lambda x: (x[1] is None, x[1]))
     rows = "".join(_factor_bar_row(lbl, sc) for lbl, sc in ranked)
     # Legendatermen = exact dezelfde woorden als _factor_label (rijlabels, p.02,
@@ -2101,9 +2134,13 @@ def _overzichtsprofiel(factors: list[tuple[str, float | None]],
                        f'</div>')
         if blocks:
             breakdown_html = f'<div style="margin-top:26px;">{blocks}</div>'
+    # Niet via _intro(): de rangorde-zin hangt van de scan af, maar hoort in
+    # dezelfde alinea als het gedeelde deel (beide UNESCAPED, zie SECTION_INTROS).
+    intro_html = (f'<p class="sec-intro">{SECTION_INTROS["overzichtsprofiel"]} '
+                  f'{OVERZICHTSPROFIEL_RANGORDE[scan_type]}</p>')
     return f"""<div class="pb sec">
   {opener_html or '<span class="slabel">Overzichtsprofiel</span>'}
-  {_intro("overzichtsprofiel")}
+  {intro_html}
   {summary_html}
   <div class="card">{rows}{legend}{breakdown_html}</div>
 </div>"""
@@ -2124,15 +2161,25 @@ def _vertrekcontext(*, exit_reasons: list[tuple[str, int]],
     rel = ""
     if exit_reasons and primary_factor_label and \
        primary_factor_label.lower() in exit_reasons[0][0].lower():
-        rel = (f"<p style='margin-bottom:0;'>{_h(primary_factor_label)} is zowel de meest "
-               f"genoemde vertrekreden als de laagste factor in het overzichtsprofiel. "
-               f"Daarom staat het bovenaan.</p>")
+        # Positieclaim, geen laagste-claim (bug B1, ronde 2): primary_factor_label
+        # is het raster-startpunt (_raster_primary_label), en dat is bij Loep
+        # Vertrek niet altijd de laagst scorende factor -- zie de guard bij de
+        # kernzin in render_exit_report_html, waarmee deze zin één verhaal vormt.
+        #
+        # NB deze tak is met de echte EXIT_REASON_LABELS_NL onbereikbaar: geen
+        # vertrekredenlabel bevat een volledig factorlabel als substring. Hij
+        # blijft staan voor toekomstige copy-wijzigingen aan die labels en wordt
+        # met een synthetisch label getest in tests/test_report_exit_kernzin.py.
+        rel = (f"<p style='margin-bottom:0;'>{_h(primary_factor_label)} staat bovenaan "
+               f"in de rangorde en is tegelijk de meest genoemde vertrekreden.</p>")
     else:
-        # Geen substring-match tussen hoofdreden en laagste factor: benoem beide
-        # feiten zonder een verbandclaim ("versterken elkaar") die de data niet draagt.
-        rel = (f"<p style='margin-bottom:0;'>De meest genoemde reden en de laagst "
-               f"scorende factor belichten elk een eigen invalshoek. Beide komen "
-               f"terug in de factordiepte hierna.</p>")
+        # Geen substring-match tussen hoofdreden en startpunt: benoem beide
+        # feiten zonder een verbandclaim ("versterken elkaar") die de data niet
+        # draagt. De factordiepte toont de bovenste rasterrijen, niet per se de
+        # laagst scorende factor -- dus verwijst deze zin naar de rangorde.
+        rel = (f"<p style='margin-bottom:0;'>De meest genoemde reden en de factorscores "
+               f"belichten elk een eigen invalshoek. De factoren die bovenaan de "
+               f"rangorde staan, komen terug in de factordiepte hierna.</p>")
 
     return f"""<div class="pb sec">
   {opener_html or '<span class="slabel">Vertrekcontext</span>'}
@@ -2324,10 +2371,17 @@ def render_exit_report_html(data: dict) -> str:
     # verderop in hetzelfde rapport. De kernzin benoemt dus alleen de positie
     # plus de score; waarom die factor bovenaan staat, legt _raster_attribution
     # uit in de bronregel onder de gespreksopener op dezelfde pagina.
+    #
+    # NB de eerste tak is met de echte EXIT_REASON_LABELS_NL onbereikbaar: geen
+    # vertrekredenlabel bevat een volledig factorlabel als substring. Hij blijft
+    # staan voor toekomstige copy-wijzigingen aan die labels en wordt met een
+    # synthetisch label getest in tests/test_report_exit_kernzin.py. Zijn
+    # tweelingzin staat in _vertrekcontext, achter dezelfde substring-test.
+    _beeld = fl.lower().replace(' frictiebeeld', '').replace(' vertrekbeeld', '')
     if _raster_primary_label and er_top and _raster_primary_label.lower() in er_top.lower():
-        exec_line = f"Het vertrekbeeld is {fl.lower().replace(' frictiebeeld','').replace(' vertrekbeeld','')}, maar {_raster_primary_label} springt eruit: het staat bovenaan en is de meest genoemde vertrekreden."
+        exec_line = f"Het vertrekbeeld is {_beeld}, maar {_raster_primary_label} springt eruit: het staat bovenaan en is de meest genoemde vertrekreden."
     elif _raster_primary_label and er_top:
-        exec_line = f"Het vertrekbeeld is {fl.lower().replace(' frictiebeeld','').replace(' vertrekbeeld','')}. Bovenaan staat {_raster_primary_label} ({_score_str(_raster_primary_score)}); {er_top} is de meest genoemde vertrekreden."
+        exec_line = f"Het vertrekbeeld is {_beeld}. Bovenaan staat {_raster_primary_label} ({_score_str(_raster_primary_score)}); {er_top} is de meest genoemde vertrekreden."
     elif avg_risk:
         exec_line = f"De frictiescore van {rdsp} wijst op een {fl.lower()}."
     else:
@@ -2456,7 +2510,7 @@ def render_exit_report_html(data: dict) -> str:
                        for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
     _overzicht_summary, _overzicht_bands = _overzicht_summary_and_bands(profile_factors)
     s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary, bands=_overzicht_bands,
-                            opener_html=ch.opener("Overzichtsprofiel"))
+                            opener_html=ch.opener("Overzichtsprofiel"), scan_type="exit")
 
     # priority_fkeys volgt nu dezelfde rangorde als het prioriteringsraster
     # (spec 2026-07-18 par. 4: één ranking per rapport) -- _raster_rows is
@@ -2851,7 +2905,7 @@ def render_retention_report_html(data: dict) -> str:
                        for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
     _overzicht_summary, _overzicht_bands = _overzicht_summary_and_bands(profile_factors)
     s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary, bands=_overzicht_bands,
-                            opener_html=ch.opener("Overzichtsprofiel"))
+                            opener_html=ch.opener("Overzichtsprofiel"), scan_type=ST)
 
     # priority_fkeys volgt nu dezelfde rangorde als het prioriteringsraster
     # (spec 2026-07-18 par. 4: één ranking per rapport) -- _raster_rows is
@@ -3254,7 +3308,7 @@ def render_onboarding_report_html(data: dict) -> str:
                        for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
     _overzicht_summary, _overzicht_bands = _overzicht_summary_and_bands(profile_factors)
     s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary, bands=_overzicht_bands,
-                            opener_html=ch.opener("Overzichtsprofiel"))
+                            opener_html=ch.opener("Overzichtsprofiel"), scan_type=ST)
 
     # ── Checkpointoverzicht (p.05 — onboarding-exclusive) ────────────────────
     s += _checkpointoverzicht(checkpoints=[("Huidig checkpoint", signal)],

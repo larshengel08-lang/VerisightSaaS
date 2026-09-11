@@ -79,3 +79,43 @@ def client(db_session: Session, monkeypatch: pytest.MonkeyPatch) -> Generator[Te
     finally:
         app.dependency_overrides.clear()
         _contact_request_buckets.clear()
+
+
+# ─── Gedeelde rapport-fixtures ───────────────────────────────────────────────
+
+def exit_report_data(*, factor_avgs: dict[str, float],
+                     factor_items_map: dict[str, list[tuple[str, str]]],
+                     exit_r_dist: list[dict] | None = None,
+                     n: int = 12) -> dict:
+    """Minimale, volledige data-dict voor render_exit_report_html.
+
+    Gebouwd door alle data[...]/data.get(...)-toegangen in
+    render_exit_report_html (backend/report_html.py) te lezen; er bestaat geen
+    productie-equivalent dat een echte rapport-payload opbouwt zonder database.
+
+    Gedeeld door tests/test_report_priority_consistency.py (startpunt == p.02)
+    en tests/test_report_exit_kernzin.py (startpunt != laagste score). Beide
+    hadden een byte-voor-byte identieke dict-vorm; alleen de *data* verschilt,
+    en die geeft de aanroeper mee. Item-gemiddelden worden afgeleid van de
+    factorscore (één item per factor), zodat een factor en zijn enige stelling
+    niet uit elkaar kunnen lopen.
+    """
+    from backend.report_html import _fl
+
+    item_avgs = {items[0][0]: factor_avgs[fk]
+                 for fk, items in factor_items_map.items()}
+    return dict(
+        campaign_id="c1", scan_type="exit", scan_lbl="Loep Vertrek",
+        org_name="TestOrg", campaign_name="Wave 1", generated_at="11-09-2026",
+        n_invited=n + 3, n_completed=n, completion_pct=80.0, avg_risk=5.5,
+        factor_avgs=dict(factor_avgs),
+        top_fkeys=["growth"], top_flabels=[_fl("growth", "exit")],
+        factor_items_map={fk: list(items) for fk, items in factor_items_map.items()},
+        org_item_avgs=item_avgs,
+        sdt_item_avgs={}, sdt_avgs={}, nsp={},
+        exit_r_dist=list(exit_r_dist or []), cont_dist=[],
+        deepening_agg={}, factor_resp_scores={},
+        segment_rows=[], segment_factor_rows=None,
+        enps_available=False, enps_score=None,
+        sdt_items=[], open_texts=[],
+    )
