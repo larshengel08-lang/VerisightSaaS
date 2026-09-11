@@ -10,15 +10,21 @@ import { InviteClientUserForm } from '@/components/dashboard/invite-client-user-
 import { NewCampaignForm } from '@/components/dashboard/new-campaign-form'
 import { NewOrgForm } from '@/components/dashboard/new-org-form'
 import { getDeliveryModeLabel } from '@/lib/implementation-readiness'
+import { getDisplaySignalBand, type DisplaySignalBand } from '@/lib/management-language'
 import { createClient } from '@/lib/supabase/server'
 import {
-  isHealthScaleSignal,
   toDisplaySignalScore,
   type Campaign,
   type CampaignStats,
   type Organization,
   type OrgInvite,
 } from '@/lib/types'
+
+const SIGNAL_BAND_CLASS: Record<DisplaySignalBand, string> = {
+  red: 'text-red-600',
+  amber: 'text-amber-600',
+  emerald: 'text-emerald-700',
+}
 
 export default async function BeheerPage() {
   const supabase = await createClient()
@@ -474,17 +480,7 @@ export default async function BeheerPage() {
                       const signalColorClass =
                         displaySignal === null
                           ? ''
-                          : isHealthScaleSignal(stats.scan_type)
-                            ? displaySignal >= 6.5
-                              ? 'text-emerald-700'
-                              : displaySignal >= 5
-                                ? 'text-amber-600'
-                                : 'text-red-600'
-                            : displaySignal >= 7
-                              ? 'text-red-600'
-                              : displaySignal >= 4.5
-                                ? 'text-amber-600'
-                                : 'text-emerald-700'
+                          : SIGNAL_BAND_CLASS[getDisplaySignalBand(stats.scan_type, displaySignal)]
                       return (
                         <tr key={stats.campaign_id} className="hover:bg-slate-50/70">
                           <td className="px-5 py-3">

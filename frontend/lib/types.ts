@@ -241,7 +241,7 @@ export function getCampaignAverageSignalScore(
 // De backend en de database blijven op de risicoschaal (hoog = slecht); de omzetting
 // gebeurt uitsluitend aan de weergavekant. Interne logica die op de risicoschaal
 // rekent (bandprofielen, playbooks, sortering) blijft ongewijzigd.
-export const HEALTH_SCALE_SCAN_TYPES: ReadonlySet<ScanType> = new Set<ScanType>(['retention', 'onboarding'])
+const HEALTH_SCALE_SCAN_TYPES: ReadonlySet<ScanType> = new Set<ScanType>(['retention', 'onboarding'])
 
 export function isHealthScaleSignal(scanType: ScanType): boolean {
   return HEALTH_SCALE_SCAN_TYPES.has(scanType)
@@ -249,7 +249,10 @@ export function isHealthScaleSignal(scanType: ScanType): boolean {
 
 /**
  * Zet een opgeslagen risk_score/avg_risk_score om naar de waarde die de klant te zien krijgt.
- * Voor retention en onboarding: 11 - risico (afgerond op 2 decimalen). Andere scantypes ongewijzigd.
+ * Voor retention en onboarding: 11 - risico. Andere scantypes ongewijzigd.
+ *
+ * Afronding op 2 decimalen spiegelt de backend (`_signal_health` in report_html.py), zodat
+ * app en rapport dezelfde ruwe waarde delen; aanroepers formatteren zelf met `toFixed(1)`.
  */
 export function toDisplaySignalScore(scanType: ScanType, riskScore: number | null): number | null {
   if (riskScore === null) return null

@@ -337,11 +337,12 @@ describe('dashboard home structure', () => {
     })
 
     const cards = model.groups.flatMap((group) => group.campaigns)
-    const metric = (id: string) => cards.find((card) => card.campaign.campaign_id === id)?.metrics[3]
+    const metric = (id: string, label: string) =>
+      cards.find((card) => card.campaign.campaign_id === id)?.metrics.find((item) => item.label === label)
 
-    expect(metric('ret-1')).toEqual({ label: 'Retentiesignaal', value: '8.0/10' })
-    expect(metric('onb-1')).toEqual({ label: 'Onboardingsignaal', value: '4.5/10' })
-    expect(metric('exit-1')).toEqual({ label: 'Frictiescore', value: '7.2/10' })
+    expect(metric('ret-1', 'Retentiesignaal')).toEqual({ label: 'Retentiesignaal', value: '8.0/10' })
+    expect(metric('onb-1', 'Onboardingsignaal')).toEqual({ label: 'Onboardingsignaal', value: '4.5/10' })
+    expect(metric('exit-1', 'Frictiescore')).toEqual({ label: 'Frictiescore', value: '7.2/10' })
   })
 
 })

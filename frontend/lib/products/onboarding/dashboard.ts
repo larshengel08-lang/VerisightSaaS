@@ -5,6 +5,10 @@ import { ONBOARDING_ACTION_PLAYBOOKS } from './action-playbooks'
 const SIGNAL_BANDS_TEXT =
   'Het onboardingsignaal loopt van 1 tot 10 en hoe hoger, hoe beter. Onder de 5,0 is de onboarding een kwetsbaar punt, tussen 5,0 en 6,5 een aandachtspunt, vanaf 6,5 relatief sterk. Gebruik deze banden als vroege hulp op groepsniveau, niet als individuele beoordeling, performance-oordeel of bewijs van latere retentie-uitkomst.'
 
+// Deze drempels werken op de opgeslagen risicoschaal (de API-waarde, hoog = meer frictie),
+// bewust NIET op de getoonde gezondheidsbanden uit SIGNAL_BANDS_TEXT hierboven (5,0 / 6,5,
+// hoog = goed). De afgeleide states en de rapportbanden gelijktrekken is een open
+// ontwerpvraag (ronde 2); niet terloops "fixen" door hier 11 - x te doen.
 const LOW_SIGNAL_THRESHOLD = 4.5
 const HIGH_SIGNAL_THRESHOLD = 7
 const LOW_DIRECTION_THRESHOLD = 5.5

@@ -609,11 +609,16 @@ export function RetentionTrendSection({
   previousCampaignName: string
   trendCards: SignalTrendCard[]
 }) {
-  const signalDelta = current.retentionSignal !== null && previous.retentionSignal !== null
-    ? Number((current.retentionSignal - previous.retentionSignal).toFixed(1))
+  // Weergave op de gezondheidsschaal (hoog = goed), zoals in het rapport; de opgeslagen
+  // waarden blijven op de risicoschaal. Het verschil rekenen we daarom ook op de weergaveschaal,
+  // zodat een plus in de tekst ook echt een verbetering is.
+  const currentDisplay = toDisplaySignalScore('retention', current.retentionSignal)
+  const previousDisplay = toDisplaySignalScore('retention', previous.retentionSignal)
+  const signalDelta = currentDisplay !== null && previousDisplay !== null
+    ? Number((currentDisplay - previousDisplay).toFixed(1))
     : null
-  const isImproving = signalDelta !== null && signalDelta < -0.1
-  const isWorsening = signalDelta !== null && signalDelta > 0.1
+  const isImproving = signalDelta !== null && signalDelta > 0.1
+  const isWorsening = signalDelta !== null && signalDelta < -0.1
   const tone = isImproving ? 'emerald' : isWorsening ? 'amber' : 'slate'
 
   const formattedDate = new Intl.DateTimeFormat('nl-NL', {
@@ -628,7 +633,7 @@ export function RetentionTrendSection({
         eyebrow="Trend sinds vorige meting"
         title={isImproving ? 'Verbeterd' : isWorsening ? 'Verslechterd' : 'Stabiel'}
         value={signalDelta === null ? '-' : `${signalDelta > 0 ? '+' : ''}${signalDelta.toFixed(1)}`}
-        body={`Vergeleken met ${previousCampaignName} van ${formattedDate} veranderde het gemiddelde retentiesignaal van ${previous.retentionSignal?.toFixed(1) ?? '-'} /10 naar ${current.retentionSignal?.toFixed(1) ?? '-'} /10.`}
+        body={`Vergeleken met ${previousCampaignName} van ${formattedDate} veranderde het gemiddelde retentiesignaal van ${previousDisplay?.toFixed(1) ?? '-'} /10 naar ${currentDisplay?.toFixed(1) ?? '-'} /10.`}
         tone={tone}
       />
 

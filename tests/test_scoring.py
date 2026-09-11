@@ -508,7 +508,8 @@ class TestReportingParity:
         assert "managementsamenvatting" in exit_definition
         assert "geen diagnose" in exit_definition
         assert "eerdere signalering" in exit_definition
-        assert "eerst verificatie" in retention_definition
+        # Polariteit van het retentiesignaal in de app moet gelijk blijven aan het rapport (hoog = goed).
+        assert "hoe hoger, hoe beter" in retention_definition
         assert "v1-werkmodel" in retention_definition
         assert "aanvullende signalen rond behoud" in retention_definition
 
