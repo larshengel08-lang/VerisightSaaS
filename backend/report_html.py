@@ -51,6 +51,7 @@ from backend.scoring_config import (
     FACTOR_LABELS_NL,
     RISK_HIGH,
     RISK_MEDIUM,
+    MIN_AGGREGATE_N,
     MIN_SEGMENT_N,
     SDT_DIMENSION_ITEMS,
     SDT_REVERSE_ITEMS,
@@ -310,7 +311,12 @@ def _h(s: Any) -> str:
     return "" if s is None else _esc(str(s))
 
 def _score_str(v: float | None) -> str:
-    return f"{v:.1f}/10" if v is not None else "&#x2014;"
+    # "n.b." en niet "&#x2014;" (bug B2): de oude waarde was een HTML-entity in
+    # een str, dus alleen veilig in een niet-geescapete f-string. Zodra de
+    # uitkomst door _h() ging (kernzin p.02) verscheen "&amp;#x2014;" letterlijk
+    # op de pagina. "n.b." overleeft escaping en is bovendien de placeholder
+    # die de appendix- en segmenttabellen al gebruiken.
+    return f"{v:.1f}/10" if v is not None else "n.b."
 
 def _scale_to_10(raw: float, reverse: bool = False) -> float:
     r = 6.0 - raw if reverse else raw
@@ -620,24 +626,65 @@ class _ChapterCounter:
         return f'<span class="slabel">{eyebrow} (vervolg)</span>'
 
 
+# Standaardwaarde voor het derde coverstatistiek als er geen factorprofiel is
+# (bug B2): de cover toonde daar een kale streep waar een factornaam hoort.
+GEEN_FACTORPROFIEL_LBL = "Nog geen factorprofiel"
+
+
+def _geen_factorprofiel_note(n: int, *, drempelzin: str, wel: list[str]) -> str:
+    """De degraded p.02-alinea als er geen factorprofiel is (bug B2).
+
+    Onder MIN_AGGREGATE_N afgeronde antwoorden geeft detect_patterns
+    `sufficient_data: False`; build_report_data laat factor_avgs dan leeg.
+    Het normale sjabloon had daarna geen onderwerp meer ("Waarom  bovenaan
+    staat", lege Gespreksopener, kale streep als score). Fail Loud: benoem het
+    aantal, de drempel en wat het rapport wél bevat.
+
+    `wel` bevat alleen secties die in deze staat daadwerkelijk renderen -- de
+    aanroeper schakelt ze op de data die hij heeft, zodat de zin niets belooft
+    wat niet op de pagina staat.
+    """
+    items = [w for w in wel if w]
+    staart = f"{', '.join(items[:-1])} en {items[-1]}" if len(items) > 1 else items[0]
+    antwoorden = "antwoord" if n == 1 else "antwoorden"
+    return (f"Met {n} {antwoorden} toont Loep nog geen profiel per factor. "
+            f"{drempelzin} Wat dit rapport wel laat zien: {staart}.")
+
+
 def _bestuurlijke_read(*, kernzin: str, totaalbeeld: str,
                        primary_label: str,
                        why_cells_html: str, strong_label: str, strong_score: float | None,
                        mgmt_q: str, mgmt_q_source: str = "",
                        responsbasis_html: str = "", opener_html: str = "",
-                       usage_html: str = "", direction_line: str = "") -> str:
-    return f"""<div class="pb sec">
-  {opener_html or '<span class="slabel">Bestuurlijke read</span>'}
-  <p class="br-kernzin">{_h(kernzin)}</p>
-  <p style="font-size:11px;color:#374151;max-width:62ch;margin-bottom:22px;">{_h(totaalbeeld)}</p>
-  <div class="why">
+                       usage_html: str = "", direction_line: str = "",
+                       degraded_note: str = "") -> str:
+    # Degraded variant (bug B2): zonder factorprofiel heeft het why-blok geen
+    # onderwerp en de Gespreksopener geen vraag. Dan rendert hier één
+    # expliciete alinea in plaats van het gewone blok met gaten erin;
+    # primary_label/why_cells_html/strong_*/mgmt_q/direction_line worden dan
+    # bewust genegeerd (de aanroeper heeft ze in die staat ook niet).
+    if degraded_note:
+        body = (f'<div class="card accent">'
+                f'<h3>Wat dit aantal antwoorden wel en niet toelaat</h3>'
+                f'<p style="max-width:62ch;margin-bottom:0;">{_h(degraded_note)}</p></div>')
+    else:
+        body = f"""<div class="why">
     <div class="why-title">Waarom {_h(primary_label)} bovenaan staat</div>
     <table class="why-grid"><tr>{why_cells_html}</tr></table>
     {("<table class='sg'><tr>"
       f"<td><div class='sc-l'>Relatief sterk</div><div class='sc-v'>{_score_str(strong_score)}</div><div class='sc-b'>{_h(strong_label)}: wat w&eacute;l werkt</div></td>"
       "</tr></table>") if (strong_label and _factor_label(strong_score) == "Relatief sterk") else ""}
     <div class="mq-line"><span class="mq-label">Gespreksopener</span><p>{_h(mgmt_q)}</p>{f'<span class="mq-source">{_h(mgmt_q_source)}</span>' if mgmt_q_source else ''}{f'<p class="mq-direction">{_h(direction_line)}</p>' if direction_line else ''}</div>
-  </div>
+  </div>"""
+    # Lege subtekst levert geen lege <p> meer op: in de degraded staat draagt de
+    # alinea hierboven de reikwijdte-uitleg al.
+    totaalbeeld_html = (f'<p style="font-size:11px;color:#374151;max-width:62ch;'
+                        f'margin-bottom:22px;">{_h(totaalbeeld)}</p>') if totaalbeeld else ""
+    return f"""<div class="pb sec">
+  {opener_html or '<span class="slabel">Bestuurlijke read</span>'}
+  <p class="br-kernzin">{_h(kernzin)}</p>
+  {totaalbeeld_html}
+  {body}
   {usage_html}
   {responsbasis_html}
 </div>"""
@@ -2249,12 +2296,16 @@ def render_exit_report_html(data: dict) -> str:
     # of het vertrekredengewicht de volgorde verschuift (whole-feature review
     # na Taak 9 vond dit reproduceerbaar: kernzin noemde een andere factor dan
     # de why-tabel op dezelfde pagina).
-    _raster_primary_label = _raster_rows[0]["label"] if _raster_rows else (low_lbl or high_lbl or "—")
+    # Kale streep als laatste terugval verwijderd (bug B2): die belandde zo op
+    # de cover en in de kernzin. Leeg betekent hier "geen factorprofiel"; de
+    # cover en de kernzin vullen dat zelf eerlijk in.
+    _raster_primary_label = _raster_rows[0]["label"] if _raster_rows else (low_lbl or high_lbl or "")
     _raster_primary_score = _raster_rows[0]["score"] if _raster_rows else low_sc
+    _geen_profiel = not _raster_rows
 
     # ── Cover ─────────────────────────────────────────────────────────────────
     opening_q = "Wat speelde mee bij vertrek?"
-    primary_signal = _raster_primary_label
+    primary_signal = _raster_primary_label or GEEN_FACTORPROFIEL_LBL
     cover_stats = [
         ("Respondenten", str(n)),
         ("Respons", f"{round(data['completion_pct'])}%"),  # afgerond — p.03 toont hetzelfde getal
@@ -2280,7 +2331,7 @@ def render_exit_report_html(data: dict) -> str:
     elif avg_risk:
         exec_line = f"De frictiescore van {rdsp} wijst op een {fl.lower()}."
     else:
-        exec_line = "Zie factoranalyse en vertrekcontext voor details."
+        exec_line = "Zie de vertrekcontext en de responsbasis voor wat dit rapport wel toont."
     # Sterke factor bewust NIET in de titel: die staat al in de subtekst
     # (totaalbeeld) — voorheen stond dezelfde observatie 2x binnen 4 regels.
 
@@ -2336,6 +2387,20 @@ def render_exit_report_html(data: dict) -> str:
         br_mgmt_q     = _mgmt_q(low_f[0], "exit") if low_f else ""
         br_mgmt_q_source = "Gebaseerd op de laagst scorende factor." if low_f else ""
 
+    # Degraded pagina twee (bug B2): geen factorprofiel, dus geen why-blok en
+    # geen gespreksopener -- wel een expliciete alinea over wat er bij dit
+    # aantal antwoorden wel en niet te zeggen valt.
+    br_degraded_note = ""
+    if _geen_profiel:
+        br_degraded_note = _geen_factorprofiel_note(
+            n,
+            drempelzin=(f"Dat profiel vraagt minimaal {MIN_AGGREGATE_N} antwoorden; "
+                        f"daaronder bepaalt één vertrekker te veel het beeld."),
+            wel=["de opgegeven vertrekredenen" if data["exit_r_dist"] else "",
+                 "de werkbeleving van de vertrekkers" if sdt_a else "",
+                 "de responsbasis onderaan deze pagina"],
+        )
+
     # Subtekst herhaalt de titel niet meer: alleen wat NIEUW is — de sterke
     # factor mét score. De responsbasis staat nu onderaan dezelfde pagina.
     totaalbeeld = (
@@ -2343,6 +2408,11 @@ def render_exit_report_html(data: dict) -> str:
         f"Hoe stevig dit beeld is, hangt af van de responsbasis onderaan deze pagina."
     ) if high_lbl and _raster_primary_label != high_lbl and _factor_label(high_sc) == "Relatief sterk" else \
         "Reikwijdte en betrouwbaarheid van dit beeld: zie de responsbasis onderaan deze pagina."
+
+    if br_degraded_note:
+        # De degraded alinea verwijst zelf al naar de responsbasis; dezelfde
+        # verwijzing twee keer op één pagina leest als een gat.
+        totaalbeeld = ""
 
     _responsbasis_band = _responsbasis(
         invited=data["n_invited"],
@@ -2371,6 +2441,7 @@ def render_exit_report_html(data: dict) -> str:
         opener_html=ch.opener("Bestuurlijke read"),
         usage_html=_gebruiksblok(data["scan_lbl"]),
         direction_line=_direction_p02_line(direction_agg, _raster_rows[0]["key"] if _raster_rows else None, "exit"),
+        degraded_note=br_degraded_note,
     )
 
     # ── Vertrekcontext (p.04 — vóór factorprofiel) ───────────────────────────
@@ -2647,10 +2718,13 @@ def render_retention_report_html(data: dict) -> str:
     # Eén waarheid voor "de primaire factor" door het hele rapport heen (spec
     # 2026-07-18 par. 4) -- zie identieke fix + toelichting in
     # render_exit_report_html.
-    _raster_primary_label = _raster_rows[0]["label"] if _raster_rows else (low_lbl or high_lbl or "—")
+    # Kale streep als laatste terugval verwijderd (bug B2), zie identieke fix
+    # in render_exit_report_html.
+    _raster_primary_label = _raster_rows[0]["label"] if _raster_rows else (low_lbl or high_lbl or "")
+    _geen_profiel = not _raster_rows
 
     # ── Cover ─────────────────────────────────────────────────────────────────
-    _ret_primary = _raster_primary_label
+    _ret_primary = _raster_primary_label or GEEN_FACTORPROFIEL_LBL
     s = _cover(
         scan_label=data["scan_lbl"], scan_type=ST, org_name=data["org_name"],
         period=data["campaign_name"], opening_question="Waar staat behoud nu onder druk?",
@@ -2700,13 +2774,28 @@ def render_retention_report_html(data: dict) -> str:
         br_mgmt_q     = _mgmt_q(low_f[0], ST) if low_f else ""
         br_mgmt_q_source = "Gebaseerd op de laagst scorende factor." if low_f else ""
 
+    # Degraded pagina twee (bug B2), zie render_exit_report_html.
+    br_degraded_note = ""
+    if _geen_profiel:
+        br_degraded_note = _geen_factorprofiel_note(
+            n,
+            drempelzin=(f"Daarvoor zijn minimaal {MIN_AGGREGATE_N} antwoorden nodig; "
+                        f"bij minder telt elk los antwoord te zwaar mee."),
+            wel=["de behoudscontext op de volgende pagina" if signal is not None else "",
+                 "de werkbeleving" if sdt_a else "",
+                 "de responsbasis onderaan deze pagina"],
+        )
+
     # Kernzin: band + geduid getal + laagste factor. "behoudssignaal" bij het
     # cijfer, zodat de lezer weet WAT er 4.7 scoort (de factorscore ernaast is
     # een ander getal — dat onderscheid was eerder onzichtbaar).
     if signal and band_lbl and _raster_primary_label:
         exec_line = f"{band_lbl} (behoudssignaal {_score_str(signal)}). {_raster_primary_label} is het eerste gesprekspunt."
+    elif signal and band_lbl:
+        # Geen factorprofiel: wel het behoudssignaal, geen startpunt (bug B2).
+        exec_line = f"{band_lbl} (behoudssignaal {_score_str(signal)})."
     else:
-        exec_line = "Zie factoranalyse en behoudscontext voor details."
+        exec_line = "Zie de behoudscontext en de responsbasis voor wat dit rapport wel toont."
 
     # Subtekst herhaalt de titel niet meer: alleen wat nieuw is. De
     # responsbasis staat nu onderaan dezelfde pagina.
@@ -2715,6 +2804,9 @@ def render_retention_report_html(data: dict) -> str:
         f"Hoe stevig dit beeld is, hangt af van de responsbasis onderaan deze pagina."
     ) if high_lbl and _raster_primary_label != high_lbl and _factor_label(high_sc) == "Relatief sterk" else \
         "Reikwijdte en betrouwbaarheid van dit beeld: zie de responsbasis onderaan deze pagina."
+
+    if br_degraded_note:
+        totaalbeeld = ""
 
     _responsbasis_band = _responsbasis(
         invited=data["n_invited"],
@@ -2741,6 +2833,7 @@ def render_retention_report_html(data: dict) -> str:
         opener_html=ch.opener("Bestuurlijke read"),
         usage_html=_gebruiksblok(data["scan_lbl"]),
         direction_line=_direction_p02_line(direction_agg, _raster_rows[0]["key"] if _raster_rows else None, ST),
+        degraded_note=br_degraded_note,
     )
 
     # ── Behoudscontext (p.04 — vóór factorprofiel) ───────────────────────────
@@ -3052,8 +3145,13 @@ def render_onboarding_report_html(data: dict) -> str:
     low_sc   = low_f[1]  if low_f  else None
     high_sc  = high_f[1] if high_f else None
 
+    # Geen raster bij Loep Start: "geen factorprofiel" == geen enkele factor
+    # met een score (zelfde staat die exit/retention via _raster_rows zien).
+    _geen_profiel = not sorted_f
+
     # ── Cover ─────────────────────────────────────────────────────────────────
-    _ob_primary = low_lbl or high_lbl or "—"
+    # Kale streep als laatste terugval verwijderd (bug B2).
+    _ob_primary = low_lbl or high_lbl or GEEN_FACTORPROFIEL_LBL
     s = _cover(
         scan_label=data["scan_lbl"], scan_type=ST, org_name=data["org_name"],
         period=data["campaign_name"], opening_question="Hoe landen nieuwe medewerkers?",
@@ -3091,12 +3189,27 @@ def render_onboarding_report_html(data: dict) -> str:
         br_mgmt_q     = _mgmt_q(low_f[0], ST) if low_f else ""
         br_mgmt_q_source = "Gebaseerd op de laagst scorende factor." if low_f else ""
 
+    # Degraded pagina twee (bug B2), zie render_exit_report_html.
+    br_degraded_note = ""
+    if _geen_profiel:
+        br_degraded_note = _geen_factorprofiel_note(
+            n,
+            drempelzin=(f"Een profiel per factor vraagt minimaal {MIN_AGGREGATE_N} "
+                        f"antwoorden; daaronder kleurt één antwoord het beeld te sterk."),
+            wel=["het checkpointoverzicht" if signal is not None else "",
+                 "de werkbeleving van nieuwe medewerkers" if sdt_a else "",
+                 "de responsbasis onderaan deze pagina"],
+        )
+
     # Kernzin: band + geduid getal + laagste factor ("checkpointscore" zodat de
     # lezer weet wat het getal is; de factorscore ernaast is een ander getal).
     if signal and band_lbl and low_lbl:
         exec_line = f"{band_lbl} (checkpointscore {_score_str(signal)}). {low_lbl} is het eerste gesprekspunt."
+    elif signal and band_lbl:
+        # Geen factorprofiel: wel de checkpointscore, geen startpunt (bug B2).
+        exec_line = f"{band_lbl} (checkpointscore {_score_str(signal)})."
     else:
-        exec_line = "Zie factordiepte en checkpointoverzicht voor details."
+        exec_line = "Zie het checkpointoverzicht en de responsbasis voor wat dit rapport wel toont."
 
     # Subtekst herhaalt de titel niet meer: alleen wat nieuw is. De
     # responsbasis staat nu onderaan dezelfde pagina.
@@ -3105,6 +3218,9 @@ def render_onboarding_report_html(data: dict) -> str:
         f"Hoe stevig dit beeld is, hangt af van de responsbasis onderaan deze pagina."
     ) if high_lbl and low_lbl != high_lbl and _factor_label(high_sc) == "Relatief sterk" else \
         "Reikwijdte en betrouwbaarheid van dit beeld: zie de responsbasis onderaan deze pagina."
+
+    if br_degraded_note:
+        totaalbeeld = ""
 
     _responsbasis_band = _responsbasis(
         invited=data["n_invited"],
@@ -3130,6 +3246,7 @@ def render_onboarding_report_html(data: dict) -> str:
         responsbasis_html=_responsbasis_band,
         opener_html=ch.opener("Bestuurlijke read"),
         usage_html=_gebruiksblok(data["scan_lbl"]),
+        degraded_note=br_degraded_note,
     )
 
     # ── Overzichtsprofiel (p.04) ──────────────────────────────────────────────
