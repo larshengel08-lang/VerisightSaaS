@@ -172,13 +172,14 @@ def test_overzichtsprofiel_shows_summary_when_provided():
     html = _overzichtsprofiel(
         factors=[("Groeiperspectief", 4.2), ("Leiderschap", 7.0)],
         summary="Groeiperspectief is het enige kwetsbare punt.",
+        scan_type="retention",
     )
     assert "Groeiperspectief is het enige kwetsbare punt." in html
 
 
 def test_overzichtsprofiel_no_error_when_summary_omitted():
     from backend.report_html import _overzichtsprofiel
-    html = _overzichtsprofiel(factors=[("Groeiperspectief", 4.2)])
+    html = _overzichtsprofiel(factors=[("Groeiperspectief", 4.2)], scan_type="retention")
     assert "Overzichtsprofiel" in html
 
 

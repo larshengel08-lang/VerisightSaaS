@@ -19,7 +19,7 @@ export const onboardingScanDefinition: ScanDefinition = {
   evidenceStatusText:
     'Onboarding is methodisch bewust smal: een enkel checkpoint, een assisted managementhandoff, geen journey-engine, geen client onboarding-route en geen brede retentieclaim. De huidige vorm helpt vroege integratie en frictie lezen en een eerste eigenaar of actie kiezen, maar is nog geen 30-60-90 trend- of cohortmodel.',
   signalHelp:
-    'Onboardingsignaal 1-10: samenvattend checkpointsignaal van korte werkbeleving en geselecteerde vroege werkfactoren in deze campaign. Hogere score = scherper vroeg aandachtssignaal dat bestuurlijke opvolging vraagt.',
+    'Onboardingsignaal 1-10: hoe nieuwe medewerkers hun eerste werkperiode ervaren, samengebracht tot een groepsscore. Hoe hoger, hoe beter; onder de 5,0 vraagt de onboarding aandacht.',
   reliabilityText:
     'Grafieken en patroonanalyse tonen we pas vanaf minimaal 10 responses. Deze onboardingvorm lees je als groepssnapshot en assisted checkpoint-handoff voor een enkel meetmoment, niet als multi-checkpoint journey of individuele voorspelling.',
   segmentText:

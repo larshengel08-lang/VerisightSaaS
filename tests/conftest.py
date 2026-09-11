@@ -79,3 +79,55 @@ def client(db_session: Session, monkeypatch: pytest.MonkeyPatch) -> Generator[Te
     finally:
         app.dependency_overrides.clear()
         _contact_request_buckets.clear()
+
+
+# ─── Gedeelde rapport-fixtures ───────────────────────────────────────────────
+
+def exit_report_data(*, factor_avgs: dict[str, float],
+                     factor_items_map: dict[str, list[tuple[str, str]]],
+                     exit_r_dist: list[dict] | None = None,
+                     n: int = 12) -> dict:
+    """Minimale, volledige data-dict voor render_exit_report_html.
+
+    Gebouwd door alle data[...]/data.get(...)-toegangen in
+    render_exit_report_html (backend/report_html.py) te lezen; er bestaat geen
+    productie-equivalent dat een echte rapport-payload opbouwt zonder database.
+
+    Gedeeld door tests/test_report_priority_consistency.py (startpunt == p.02)
+    en tests/test_report_exit_kernzin.py (startpunt != laagste score). Beide
+    hadden een byte-voor-byte identieke dict-vorm; alleen de *data* verschilt,
+    en die geeft de aanroeper mee. Item-gemiddelden worden afgeleid van de
+    factorscore, zodat een factor en zijn stellingen niet uit elkaar kunnen
+    lopen -- voor ELK item, niet alleen het eerste: met twee items per factor
+    kreeg het tweede stilzwijgend "n.b." in de gerenderde tabellen.
+
+    top_fkeys/top_flabels en completion_pct zijn afgeleid in plaats van vast.
+    Productie (build_report_data) zet top_fkeys op de twee laagst scorende
+    factoren en berekent het responspercentage uit n en n_invited; een
+    hardgecodeerde "growth" en een vaste 80,0% spraken de meegegeven data
+    tegen zodra een aanroeper andere scores of een andere n koos.
+    """
+    from backend.report_html import _fl
+
+    item_avgs = {ik: factor_avgs[fk]
+                 for fk, items in factor_items_map.items()
+                 for ik, _ in items}
+    invited = n + 3
+    top_fkeys = sorted(factor_avgs, key=lambda fk: (factor_avgs[fk], fk))[:2]
+    return dict(
+        campaign_id="c1", scan_type="exit", scan_lbl="Loep Vertrek",
+        org_name="TestOrg", campaign_name="Wave 1", generated_at="11-09-2026",
+        n_invited=invited, n_completed=n,
+        completion_pct=round(100.0 * n / invited, 1), avg_risk=5.5,
+        factor_avgs=dict(factor_avgs),
+        top_fkeys=top_fkeys,
+        top_flabels=[_fl(fk, "exit") for fk in top_fkeys],
+        factor_items_map={fk: list(items) for fk, items in factor_items_map.items()},
+        org_item_avgs=item_avgs,
+        sdt_item_avgs={}, sdt_avgs={}, nsp={},
+        exit_r_dist=list(exit_r_dist or []), cont_dist=[],
+        deepening_agg={}, factor_resp_scores={},
+        segment_rows=[], segment_factor_rows=None,
+        enps_available=False, enps_score=None,
+        sdt_items=[], open_texts=[],
+    )

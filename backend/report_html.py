@@ -51,6 +51,7 @@ from backend.scoring_config import (
     FACTOR_LABELS_NL,
     RISK_HIGH,
     RISK_MEDIUM,
+    MIN_AGGREGATE_N,
     MIN_SEGMENT_N,
     SDT_DIMENSION_ITEMS,
     SDT_REVERSE_ITEMS,
@@ -127,14 +128,76 @@ _ONBOARDING_BANDS = {
     "LAAG":   ("Onboardingbasis stabiel",           "#3C8D8A"),
 }
 
+def _shown(score: float | None) -> float | None:
+    """De score zoals de lezer 'm ziet: op 1 decimaal, exact zoals _score_str formatteert.
+
+    B15: labels en kleuren werden op de onafgeronde waarde berekend, terwijl de
+    score afgerond getoond wordt. 6.55 / 6.47 / 6.55 toonden alle drie "6.5/10"
+    maar kregen "Relatief sterk" / "Aandachtspunt" / "Relatief sterk", terwijl
+    de methodiekpagina "relatief sterk (vanaf 6,5)" zegt. Elke band-helper die
+    naast een getoonde score staat, vergelijkt daarom via deze functie. Bewust
+    via de f-string (niet round()) zodat display en vergelijking nooit uiteenlopen.
+    """
+    if score is None:
+        return None
+    return float(f"{score:.1f}")
+
+
+def _signal_health(avg_risk: float | None) -> float | None:
+    """Behoudssignaal / checkpointscore zoals het rapport 'm toont: health = 11 - avg_risk.
+
+    B4: de opgeslagen risk_score (DB, API, campaign_stats) staat op de
+    RISICO-schaal (hoog = slecht; per factor 11 - score, zie
+    compute_retention_risk / compute_onboarding_risk). Elk ander "/10"-getal in
+    het rapport is een GEZONDHEIDS-score (hoog = goed) en de uitleg naast het
+    signaal beschrijft de gezondheidsladder (onder 5,0 kwetsbaar, 5,0 tot 6,5
+    aandachtspunt, vanaf 6,5 relatief sterk). Het signaal werd echter ongekeerd
+    getoond: "alles hoog" gaf "3.0/10 · sterk", "alles laag" "6.9/10 · vraagt
+    aandacht". Deze helper is de enige plek in deze renderer waar de omkering
+    gebeurt; ook het segmentblok in build_report_data (signal_score) loopt
+    hierlangs. De opslag blijft onaangeraakt. Loep Vertrek (frictiescore) valt
+    hier buiten: die toont bewust de risicoschaal.
+
+    Let op: de legacy ReportLab-renderer (backend/report.py, dood pad voor
+    retention/onboarding sinds de fail-loud fix) koppelt dashboard_signal_help
+    nog aan de ruwe risk_score; die copy is nu op de gezondheidsschaal en mag
+    daar niet ongewijzigd hergebruikt worden.
+    """
+    if avg_risk is None:
+        return None
+    return round(11.0 - avg_risk, 2)
+
+
+def _band_key(score: float | None, scan_type: str = "exit") -> str | None:
+    """Bandsleutel HOOG/MIDDEN/LAAG voor een totaalscore, of None zonder data.
+
+    Polariteit per product (B4):
+    - exit: RISICO-schaal (frictiescore, hoog = meer frictie):
+      >= RISK_HIGH -> HOOG, >= RISK_MEDIUM -> MIDDEN, anders LAAG.
+    - retention / onboarding: GEZONDHEIDS-schaal (behoudssignaal /
+      checkpointscore via _signal_health, hoog = goed), dezelfde ladder als
+      _factor_label: < 5,0 -> HOOG (onder druk), < 6,5 -> MIDDEN, anders LAAG.
+    HOOG betekent in beide gevallen "meeste aandacht nodig" (rood).
+    Vergelijkt op de getoonde (afgeronde) score, zie _shown (B15)."""
+    if score is None:
+        return None
+    score = _shown(score)
+    if scan_type in ("retention", "onboarding"):
+        return "HOOG" if score < 5.0 else "MIDDEN" if score < 6.5 else "LAAG"
+    return "HOOG" if score >= RISK_HIGH else "MIDDEN" if score >= RISK_MEDIUM else "LAAG"
+
+
 def _band(score: float | None, scan_type: str = "exit") -> tuple[str, str]:
-    """(label, kleur) voor een totaalscore — product-specifiek, nooit gedeeld."""
+    """(label, kleur) voor een totaalscore — product-specifiek, nooit gedeeld.
+
+    Retention en onboarding verwachten hier de GEZONDHEIDS-waarde
+    (_signal_health(avg_risk)), exit de frictiescore zelf; zie _band_key."""
     table = (_RETENTION_BANDS if scan_type == "retention"
              else _ONBOARDING_BANDS if scan_type == "onboarding"
              else _EXIT_BANDS)
-    if score is None:
+    k = _band_key(score, scan_type)
+    if k is None:
         return ("Geen data", "#94A3B8")
-    k = "HOOG" if score >= RISK_HIGH else "MIDDEN" if score >= RISK_MEDIUM else "LAAG"
     return table[k]
 
 # ── Managementvragen per product ──────────────────────────────────────────────
@@ -225,7 +288,9 @@ def _friction_color(score: float | None) -> str:
     return _band(score, "exit")[1]
 
 def _factor_label(score: float | None) -> str:
+    # Drempels op de getoonde score (1 decimaal), zie _shown (B15).
     if score is None:  return "Geen data"
+    score = _shown(score)
     if score < 5.0:    return "Kwetsbaar punt"
     if score < 6.5:    return "Aandachtspunt"
     return "Relatief sterk"
@@ -235,8 +300,9 @@ def _factor_color(score: float | None) -> str:
     # functie felle tailwind-tinten (#EF4444/#F59E0B/#22C55E), waardoor er drie
     # ambers in het rapport zaten (merk #E8A020, fel #F59E0B, RAG #C17C00) en een
     # waarschuwingskleur eerder als huisstijl las. Eén betekenis-set, visueel
-    # onderscheiden van het merkaccent.
+    # onderscheiden van het merkaccent. Drempels op de getoonde score (B15).
     if score is None:  return "#94A3B8"
+    score = _shown(score)
     if score < 5.0:    return RAG_HIGH
     if score < 6.5:    return RAG_MID
     return RAG_LOW
@@ -245,7 +311,12 @@ def _h(s: Any) -> str:
     return "" if s is None else _esc(str(s))
 
 def _score_str(v: float | None) -> str:
-    return f"{v:.1f}/10" if v is not None else "&#x2014;"
+    # "n.b." en niet "&#x2014;" (bug B2): de oude waarde was een HTML-entity in
+    # een str, dus alleen veilig in een niet-geescapete f-string. Zodra de
+    # uitkomst door _h() ging (kernzin p.02) verscheen "&amp;#x2014;" letterlijk
+    # op de pagina. "n.b." overleeft escaping en is bovendien de placeholder
+    # die de appendix- en segmenttabellen al gebruiken.
+    return f"{v:.1f}/10" if v is not None else "n.b."
 
 def _scale_to_10(raw: float, reverse: bool = False) -> float:
     r = 6.0 - raw if reverse else raw
@@ -376,10 +447,21 @@ def _doc(title: str, body: str, scan_type: str = "exit") -> str:
 
 # ─── Shared blocks ────────────────────────────────────────────────────────────
 
+# B10: langer dan dit -> kleiner corps, breekt binnen de kolom. 18 tekens is
+# ongeveer een volle regel Inter Tight 700 op 22px in een kolom van een derde
+# van de covermeta (~209px); bij een ander corps of andere padding opnieuw meten.
+_COVER_VALUE_LONG_CHARS = 18
+
+
+def _cover_value_class(value: str) -> str:
+    return "cmv cmv-long" if len(value) > _COVER_VALUE_LONG_CHARS else "cmv"
+
+
 def _cover(*, scan_label: str, scan_type: str, org_name: str, period: str,
            opening_question: str, stats: list[tuple[str, str]]) -> str:
     cells = "".join(
-        f'<div class="cmc"><div class="cml">{_h(label)}</div><div class="cmv">{_h(value)}</div></div>'
+        f'<div class="cmc"><div class="cml">{_h(label)}</div>'
+        f'<div class="{_cover_value_class(value)}">{_h(value)}</div></div>'
         for label, value in stats[:3]
     )
     return f"""<div class="cover">
@@ -392,7 +474,7 @@ def _cover(*, scan_label: str, scan_type: str, org_name: str, period: str,
   <div class="cbar"></div>
   <h1 class="ctitle">{_h(opening_question)}</h1>
   <div class="csub">{_h(org_name)} &nbsp;&middot;&nbsp; {_h(period)} &nbsp;&middot;&nbsp; Managementrapport</div>
-  <div class="cmeta">{cells}</div>
+  <div class="cmeta"><div class="cmeta-row">{cells}</div></div>
 </div>"""
 
 
@@ -408,12 +490,20 @@ def _cover(*, scan_label: str, scan_type: str, org_name: str, period: str,
 # codereview-taak (9) maakte.
 
 SECTION_INTROS: dict[str, str] = {
+    # Zonder factorprofiel is het hoofdstuk overzichtsprofiel leeg (het zegt
+    # daar zelf dat er geen scores per factor berekend zijn). De verwijzing
+    # naar dat hoofdstuk stuurde de lezer dan naar een lege pagina; de
+    # samenstelling van het signaal blijft zonder die verwijzing gewoon waar,
+    # dus vervalt hij in beide staten (review ronde 2).
     "behoudscontext": (
-        "Het behoudssignaal is een samenvattende groepsscore: de werkfactoren uit het "
-        "overzichtsprofiel en de werkbeleving samen, teruggebracht tot &eacute;&eacute;n getal "
-        "tussen 1 en 10. Onder de 5,0 noemen we een score kwetsbaar, tussen 5,0 en 6,5 een "
+        "Het behoudssignaal is een samenvattende groepsscore: de werkfactoren en de "
+        "werkbeleving samen, teruggebracht tot &eacute;&eacute;n getal "
+        "tussen 1 en 10. Hoe hoger, hoe beter. "
+        "Onder de 5,0 noemen we een score kwetsbaar, tussen 5,0 en 6,5 een "
         "aandachtspunt, vanaf 6,5 relatief sterk. De drie signalen daaronder geven context: "
-        "blijfintentie en vertrekintentie zijn geen spiegelbeeld van elkaar (iemand kan "
+        "bij vertrekintentie leest een hoge score juist als meer vertrekgedachten, bij de "
+        "andere twee is hoog weer beter. "
+        "Blijfintentie en vertrekintentie zijn geen spiegelbeeld van elkaar (iemand kan "
         "beide tegelijk voelen), en bevlogenheid staat daar los van: bevlogen medewerkers "
         "vertrekken soms toch. Dit rapport wijst aan waar het gesprek moet beginnen. "
         "Het doet bewust geen uitspraken over individuen."
@@ -425,21 +515,36 @@ SECTION_INTROS: dict[str, str] = {
         "hetzelfde verhaal vertellen. Lees dit als de context waarin de rest van het rapport "
         "staat: het beschrijft waarom mensen zeggen te vertrekken, niet wie er nog zal vertrekken."
     ),
+    # Zonder factorprofiel valt de middelste zin weg: die belooft factorscores
+    # verderop in een rapport dat ze niet heeft (eind-tot-eind-lezing van
+    # stresstest 07). De rest van de alinea blijft woordelijk gelijk.
+    "vertrekcontext_geen_profiel": (
+        "Deze pagina zet de vertrekredenen op een rij zoals vertrokken medewerkers ze zelf "
+        "opgaven: eerst de hoofdreden, daarna wat er volgens hen meespeelde. Lees dit als de "
+        "context waarin de rest van het rapport staat: het beschrijft waarom mensen zeggen te "
+        "vertrekken, niet wie er nog zal vertrekken."
+    ),
+    # Zelfde correctie als bij behoudscontext: de landingskwaliteit staat
+    # direct onder deze intro en zegt bij een leeg profiel "geen scores per
+    # domein berekend". "uit dit rapport" beloofde daar domeinen die op die
+    # pagina ontbreken.
     "checkpointoverzicht": (
         "De checkpointscore vat samen hoe nieuwe medewerkers hun eerste werkperiode ervaren: "
-        "de landingsdomeinen uit dit rapport samengebracht tot &eacute;&eacute;n getal tussen "
-        "1 en 10. Onder de 5,0 noemen we een score kwetsbaar, tussen 5,0 en 6,5 een "
+        "de landingsdomeinen samengebracht tot &eacute;&eacute;n getal tussen "
+        "1 en 10. Hoe hoger, hoe beter. "
+        "Onder de 5,0 noemen we een score kwetsbaar, tussen 5,0 en 6,5 een "
         "aandachtspunt, vanaf 6,5 relatief sterk. Dit is een momentopname van de landing: "
         "een startpunt voor het gesprek over onboarding, geen beoordeling van individuele "
         "starters of hun begeleiders."
     ),
+    # Alleen het gedeelde deel; de rangorde-zin is scan-afhankelijk en staat in
+    # OVERZICHTSPROFIEL_RANGORDE hieronder. _overzichtsprofiel plakt de twee
+    # aan elkaar in dezelfde <p>.
     "overzichtsprofiel": (
         "Elke factor hieronder is een thema, gemeten met drie stellingen over hetzelfde thema; "
         "de score is het groepsgemiddelde daarvan. De kleuren volgen vaste drempels "
         "(kwetsbaar onder 5,0, aandachtspunt 5,0 tot 6,5, relatief sterk vanaf 6,5) "
-        "en zijn geen vergelijking met andere organisaties. Belangrijker dan de absolute kleur "
-        "is de rangorde: de factor die binnen jullie eigen beeld het laagst scoort, is het "
-        "logische begin van het gesprek."
+        "en zijn geen vergelijking met andere organisaties."
     ),
     "verdieping": (
         "Respondenten die laag scoorden op dit thema kregen automatisch een korte vervolgvraag: "
@@ -460,8 +565,8 @@ SECTION_INTROS: dict[str, str] = {
         "De aanbevelingsscore (eNPS) meet &eacute;&eacute;n ding: zouden medewerkers deze "
         "organisatie aanraden als werkgever? De score loopt van &minus;100 tot +100 en is het "
         "verschil tussen het aandeel uitgesproken aanraders en het aandeel criticasters. "
-        "Gebruik dit als aanvullende context naast het overzichtsprofiel: het zegt iets over "
-        "het totaalgevoel, de factoren zeggen waar dat gevoel vandaan komt."
+        "Lees dit als aanvullende context: het zegt iets over het totaalgevoel, niet waar "
+        "dat gevoel vandaan komt."
     ),
     "segmentanalyse": (
         "Deze tabel splitst het beeld uit per afdeling: het aantal ingevulde vragenlijsten "
@@ -497,20 +602,69 @@ SECTION_INTROS: dict[str, str] = {
 }
 
 
+# Rangorde-zin van het overzichtsprofiel, per scan (bug B1, stresstest ronde 1).
+# De oude gedeelde zin ("de factor die het laagst scoort, is het logische begin
+# van het gesprek") is bij Loep Vertrek en Loep Behoud onwaar: daar bepaalt
+# _prioriteringsraster het startpunt, en een spreidings- of verdiepingsvlag
+# (of bij Vertrek de vertrekreden-weging) kan een andere factor dan de laagste
+# bovenaan zetten. Loep Start heeft geen raster en rangschikt wel puur op score
+# (_select_priority_factors met lege vertrekredenen), dus daar klopt de oude
+# regel juist. Een zin die voor alle drie waar is, bestaat niet.
+#
+# Deze waarden worden net als SECTION_INTROS UNESCAPED gerenderd: non-ASCII
+# hier als HTML-entity (&ldquo;, &rdquo;, ...).
+OVERZICHTSPROFIEL_RANGORDE: dict[str, str] = {
+    "exit": (
+        "Belangrijker dan de absolute kleur is de rangorde. Welke factor het gesprek "
+        "begint, bepaalt Loep niet op de score alleen: bij de gespreksagenda verderop "
+        "zie je per factor welke signalen meewogen in de volgorde."
+    ),
+    "onboarding": (
+        "Belangrijker dan de absolute kleur is de rangorde: het thema dat binnen jullie "
+        "eigen beeld het laagst scoort, staat verderop als eerste in de verdieping en in "
+        "de gespreksagenda."
+    ),
+}
+# Loep Behoud deelt de raster-variant met Loep Vertrek: beide renderen
+# _prioriteringsraster. Als alias, niet als kopie, zodat de twee niet uit
+# elkaar kunnen lopen bij een copy-wijziging.
+OVERZICHTSPROFIEL_RANGORDE["retention"] = OVERZICHTSPROFIEL_RANGORDE["exit"]
+
+
 def _intro(key: str) -> str:
     return f'<p class="sec-intro">{SECTION_INTROS[key]}</p>'
 
 
-def _gebruiksblok(scan_lbl: str) -> str:
+GEBRUIKSBLOK_LEESROUTE = (
+    "Lees het van voor naar achter: eerst het beeld (context en "
+    "overzichtsprofiel), dan de verdieping per thema, en achteraan de "
+    "gespreksagenda: d&aacute;&aacute;r begint het gesprek.")
+
+# Degraded leesroute (bug B3): zonder factorprofiel is er geen verdieping per
+# thema en geen volgorde van thema's. De normale zin stuurde de lezer dan naar
+# twee secties die leeg of gedegradeerd zijn. De gespreksagenda-pagina zelf
+# bestaat wél in elke staat (met gespreksopener, en bij richtingdata het
+# degraded richtingblok), dus daar mag de zin nog naar verwijzen.
+GEBRUIKSBLOK_LEESROUTE_DEGRADED = (
+    "Lees het van voor naar achter: eerst wat dit rapport wel en niet laat "
+    "zien, daarna de context en de werkbeleving. Een verdieping per "
+    "thema en een volgorde van thema&#x27;s staan er nog niet in; achteraan "
+    "lees je waar het gesprek kan beginnen.")
+
+
+def _gebruiksblok(scan_lbl: str, *, degraded: bool = False) -> str:
     """'Zo gebruik je dit rapport' (spec 2026-07-13 §5) — leesroute + beoogd
-    besluit. Geen bespreekscript: de begeleide bespreking blijft het product."""
+    besluit. Geen bespreekscript: de begeleide bespreking blijft het product.
+
+    degraded volgt dezelfde schakelaar als de degraded p.02-alinea
+    (_geen_factorprofiel_note): de leesroute mag alleen naar secties sturen
+    die in deze staat ook echt iets bevatten."""
+    leesroute = GEBRUIKSBLOK_LEESROUTE_DEGRADED if degraded else GEBRUIKSBLOK_LEESROUTE
     return f"""<div style="margin-top:24px;">
   <span class="eyebrow">Zo gebruik je dit rapport</span>
   <p class="sec-intro" style="margin-top:6px;margin-bottom:0;">
     Dit rapport is een groepsbeeld van de organisatie, geen beoordeling van personen
-    of afdelingen. Lees het van voor naar achter: eerst het beeld (context en
-    overzichtsprofiel), dan de verdieping per thema, en achteraan de gespreksagenda:
-    d&aacute;&aacute;r begint het gesprek. De {scan_lbl}-uitkomsten worden besproken in een
+    of afdelingen. {leesroute} De {scan_lbl}-uitkomsten worden besproken in een
     begeleide managementbespreking: het rapport levert de onderbouwing, de bespreking de
     keuzes. Het doel aan het eind van die bespreking is meestal simpel: &eacute;&eacute;n prioriteit,
     &eacute;&eacute;n eigenaar en een vervolgmoment.
@@ -542,24 +696,103 @@ class _ChapterCounter:
         return f'<span class="slabel">{eyebrow} (vervolg)</span>'
 
 
+# Standaardwaarde voor het derde coverstatistiek als er geen factorprofiel is
+# (bug B2): de cover toonde daar een kale streep waar een factornaam hoort.
+GEEN_FACTORPROFIEL_LBL = "Nog geen factorprofiel"
+
+# Lege staat van het verdiepingshoofdstuk (review ronde 2). Stond nog op
+# "Factor detail beschikbaar na voldoende patroonduiding", terwijl pagina twee
+# in diezelfde staat zegt dat een verdieping per thema en een volgorde van
+# thema's er nog niet in staan. Nu dezelfde vorm als de andere lege staten
+# ("Voor deze meting zijn er geen scores per ..."), met de reden erbij.
+#
+# Het hoofdstuk blijft bestaan in plaats van te verdwijnen: net als de
+# rasterpagina, die bij lege data ook blijft staan en zelf benoemt dat er geen
+# rangorde is. Onderdrukken zou het hoofdstuk ook laten verdwijnen in de staat
+# waarin er wel factorscores zijn maar geen prioritaire selectie -- daar toont
+# pagina twee nog de normale leesroute ("dan de verdieping per thema") en zou
+# een ontbrekend hoofdstuk een nieuwe tegenstrijdigheid opleveren.
+VERDIEPING_GEEN_RANGORDE = (
+    "Voor deze meting zijn er geen scores per factor berekend. Zonder die "
+    "scores is er geen rangorde om een verdieping aan op te hangen."
+)
+
+
+def _opsomming(items: list[str]) -> str:
+    """"a", "a en b", "a, b en c" -- Nederlandse opsomming zonder Oxford-komma."""
+    schoon = [i for i in items if i]
+    return f"{', '.join(schoon[:-1])} en {schoon[-1]}" if len(schoon) > 1 else schoon[0]
+
+
+def _geen_factorprofiel_note(n: int, *, drempelzin: str, wel: list[str]) -> str:
+    """De degraded p.02-alinea als er geen factorprofiel is (bug B2).
+
+    Onder MIN_AGGREGATE_N afgeronde antwoorden geeft detect_patterns
+    `sufficient_data: False`; build_report_data laat factor_avgs dan leeg.
+    Het normale sjabloon had daarna geen onderwerp meer ("Waarom  bovenaan
+    staat", lege Gespreksopener, kale streep als score). Fail Loud: benoem het
+    aantal, de drempel en wat het rapport wél bevat.
+
+    De drempel wordt alléén genoemd als het responsaantal er daadwerkelijk
+    onder zit (review ronde 2). De degraded staat hangt namelijk aan een LEEG
+    factorprofiel, niet aan n: scoring.factor_averages laat een factor zonder
+    waarden weg, dus een meting met 14 antwoorden zonder gescoorde
+    organisatiefactoren belandde hier ook -- en las dan "Met 14 antwoorden ...
+    Daarvoor zijn minimaal 10 antwoorden nodig", een zin die zichzelf
+    tegenspreekt op de openingspagina. Boven de drempel zegt Loep dus gewoon
+    dat er geen factorscores berekend zijn, zonder een oorzaak te suggereren
+    die niet klopt.
+
+    `wel` bevat alleen secties die in deze staat daadwerkelijk renderen -- de
+    aanroeper schakelt ze op de data die hij heeft, zodat de zin niets belooft
+    wat niet op de pagina staat.
+    """
+    if n < MIN_AGGREGATE_N:
+        antwoorden = "antwoord" if n == 1 else "antwoorden"
+        kop = (f"Met {n} {antwoorden} toont Loep nog geen profiel per factor. "
+               f"{drempelzin}")
+    else:
+        kop = ("Voor deze meting zijn er geen scores per factor berekend. "
+               f"Aan het aantal antwoorden ligt het niet: dat zijn er {n}.")
+    return f"{kop} Wat dit rapport wel laat zien: {_opsomming(wel)}."
+
+
 def _bestuurlijke_read(*, kernzin: str, totaalbeeld: str,
                        primary_label: str,
                        why_cells_html: str, strong_label: str, strong_score: float | None,
                        mgmt_q: str, mgmt_q_source: str = "",
                        responsbasis_html: str = "", opener_html: str = "",
-                       usage_html: str = "", direction_line: str = "") -> str:
-    return f"""<div class="pb sec">
-  {opener_html or '<span class="slabel">Bestuurlijke read</span>'}
-  <p class="br-kernzin">{_h(kernzin)}</p>
-  <p style="font-size:11px;color:#374151;max-width:62ch;margin-bottom:22px;">{_h(totaalbeeld)}</p>
-  <div class="why">
+                       usage_html: str = "", direction_line: str = "",
+                       degraded_note: str = "") -> str:
+    # Degraded variant (bug B2): zonder factorprofiel heeft het why-blok geen
+    # onderwerp en de Gespreksopener geen vraag. Dan rendert hier één
+    # expliciete alinea in plaats van het gewone blok met gaten erin;
+    # primary_label/why_cells_html/strong_*/mgmt_q/direction_line én
+    # totaalbeeld worden dan bewust genegeerd (de aanroeper heeft ze in die
+    # staat ook niet, en de alinea draagt de reikwijdte-uitleg al -- diezelfde
+    # verwijzing twee keer op één pagina leest als een gat).
+    if degraded_note:
+        body = (f'<div class="card accent">'
+                f'<h3>Wat dit rapport wel en niet laat zien</h3>'
+                f'<p style="max-width:62ch;margin-bottom:0;">{_h(degraded_note)}</p></div>')
+    else:
+        body = f"""<div class="why">
     <div class="why-title">Waarom {_h(primary_label)} bovenaan staat</div>
     <table class="why-grid"><tr>{why_cells_html}</tr></table>
     {("<table class='sg'><tr>"
       f"<td><div class='sc-l'>Relatief sterk</div><div class='sc-v'>{_score_str(strong_score)}</div><div class='sc-b'>{_h(strong_label)}: wat w&eacute;l werkt</div></td>"
-      "</tr></table>") if (strong_label and strong_score is not None and strong_score >= 6.5) else ""}
+      "</tr></table>") if (strong_label and _factor_label(strong_score) == "Relatief sterk") else ""}
     <div class="mq-line"><span class="mq-label">Gespreksopener</span><p>{_h(mgmt_q)}</p>{f'<span class="mq-source">{_h(mgmt_q_source)}</span>' if mgmt_q_source else ''}{f'<p class="mq-direction">{_h(direction_line)}</p>' if direction_line else ''}</div>
-  </div>
+  </div>"""
+    # Lege subtekst levert geen lege <p> meer op.
+    totaalbeeld_html = (f'<p style="font-size:11px;color:#374151;max-width:62ch;'
+                        f'margin-bottom:22px;">{_h(totaalbeeld)}</p>'
+                        ) if (totaalbeeld and not degraded_note) else ""
+    return f"""<div class="pb sec">
+  {opener_html or '<span class="slabel">Bestuurlijke read</span>'}
+  <p class="br-kernzin">{_h(kernzin)}</p>
+  {totaalbeeld_html}
+  {body}
   {usage_html}
   {responsbasis_html}
 </div>"""
@@ -689,11 +922,45 @@ def _step_cards(nsp: dict) -> str:
     return f'<table class="steps"><tr>{tds}</tr></table>'
 
 
+# Gespreksopener zonder factorprofiel (review ronde 2). Het navy blok onderaan
+# de gespreksagenda drukte hier de generieke nsp["first_decision"] af ("Kies
+# eerst of de scherpste werkfactoren vooral een lokaal managementspoor of een
+# breder organisatievraagstuk vormen"), twee regels onder de intro die zojuist
+# zei dat er geen volgorde en geen startpunt is. Die vraag beweert dus iets dat
+# de pagina ontkent, en is bovendien het jargon dat de copy-ronde van 6
+# september verbood.
+#
+# Bewust een vraag en niet niets: het gebruiksblok op p.02 stuurt in deze staat
+# naar "achteraan lees je waar het gesprek kan beginnen". Een leeg navy vlak
+# zou die verwijzing opnieuw onwaar maken. Deze vraag klopt bij elk aantal: ze
+# vraagt naar herkenning van wat er wél staat en naar wat een volgende meting
+# nodig heeft. Gedeeld met de onboarding-gespreksagenda (_eerste_managementspoor).
+AGENDA_OPENER_GEEN_PROFIEL = (
+    "Dit rapport wijst nog geen thema aan om mee te beginnen. Wat herkennen "
+    "jullie in wat er wel staat, en wat is er nodig om bij een volgende meting "
+    "wel een startpunt te krijgen?")
+
+# Vervolgmoment-hint zonder factorprofiel: de normale hint sluit af met "of dit
+# thema nog voorrang verdient", en "dit thema" heeft hier geen onderwerp.
+REVIEW_WHEN_GEEN_PROFIEL = (
+    "Spreek af wanneer jullie hier opnieuw naar kijken, en met welke meting.")
+
+# Sectie-intro van de gespreksagenda zonder factorprofiel (review ronde 2).
+# SECTION_INTROS["gespreksagenda"] belooft een samenvatting van "wat als eerste
+# op tafel hoort, waarom juist dat" -- precies wat deze pagina in die staat
+# niet heeft.
+GESPREKSAGENDA_INTRO_GEEN_PROFIEL = (
+    "Deze agenda vat normaal samen wat als eerste op tafel hoort en waarom "
+    "juist dat. Dat kan hier nog niet. Wat hieronder staat is daarom geen "
+    "uitkomst van de meting, maar een startvraag voor de bespreking.")
+
+
 def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: str,
                             review_when: str,
                             primary_why: str | None = None,
                             second_why: str | None = None,
-                            opener_html: str = "") -> str:
+                            opener_html: str = "",
+                            degraded_note: str = "") -> str:
     """Gespreksagenda voor eerste managementbespreking — geen actieplan, agenda.
 
     Navy anker (designsprong §2a): kaarten + gespreksopener vormen één donker
@@ -712,6 +979,14 @@ def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: st
     heeft in v1 nog geen verdiepingsset). Migreert naar _prioriteringsraster
     zodra de Loep Start-verdiepingsset v1.1 landt; deze functie wordt dan
     verwijderd.
+
+    degraded_note (review ronde 2) volgt dezelfde schakelaar als de degraded
+    p.02-alinea: zonder factorprofiel is er geen primair thema en geen tweede
+    aandachtspunt, en viel primary_theme door naar de letterlijke placeholder
+    "het leidende onboardingthema" met een lege cel ernaast. Dan rendert hier
+    één kaart met wat er wél gemeten is; primary_theme/second_point/
+    primary_why/second_why/mgmt_q/review_when worden bewust genegeerd (de
+    aanroeper heeft ze in die staat ook niet).
     """
     def _why(txt: str | None) -> str:
         return f'<span class="agenda-why">{_h(txt)}</span>' if txt else ""
@@ -721,23 +996,38 @@ def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: st
                 f'<div class="step-fill"></div>'
                 f'<div class="step-fill-hint">{_h(hint)}</div>')
 
+    if degraded_note:
+        intro_html = f'<p class="sec-intro">{GESPREKSAGENDA_INTRO_GEEN_PROFIEL}</p>'
+        theme_cells = (f'<td class="step"><div class="step-no">Wat deze meting wel geeft</div>'
+                       f'<div class="step-body">{_h(degraded_note)}</div></td>')
+        opener_vraag = AGENDA_OPENER_GEEN_PROFIEL
+        review_hint = REVIEW_WHEN_GEEN_PROFIEL
+    else:
+        intro_html = _intro("gespreksagenda")
+        theme_cells = (
+            f'<td class="step"><div class="step-no">Primair thema</div>'
+            f'<div class="step-body">{_h(primary_theme)}</div>{_why(primary_why)}</td>'
+            f'\n    <td class="step"><div class="step-no">Tweede aandachtspunt</div>'
+            f'<div class="step-body">{_h(second_point)}</div>{_why(second_why)}</td>')
+        opener_vraag = mgmt_q
+        review_hint = review_when
+
     return f"""<div class="pb sec">
   {opener_html or '<span class="slabel">Eerste managementspoor</span>'}
-  {_intro("gespreksagenda")}
+  {intro_html}
   <div class="agenda-dark">
   <table class="steps"><tr>
-    <td class="step"><div class="step-no">Primair thema</div><div class="step-body">{_h(primary_theme)}</div>{_why(primary_why)}</td>
-    <td class="step"><div class="step-no">Tweede aandachtspunt</div><div class="step-body">{_h(second_point)}</div>{_why(second_why)}</td>
+    {theme_cells}
     <td class="step">
       <div class="step-no">Uit de bespreking</div>
       {_fill_row("Prioriteit", "In te vullen tijdens de bespreking")}
       {_fill_row("Eigenaar", "In te vullen tijdens de bespreking")}
-      {_fill_row("Vervolgmoment", review_when)}
+      {_fill_row("Vervolgmoment", review_hint)}
     </td>
   </tr></table>
   <div class="agenda-opener">
     <div style="font-family:'JetBrains Mono', monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#E8A020;margin-bottom:7px;">Gespreksopener</div>
-    <p style="margin-bottom:0;font-size:12.5px;line-height:1.6;color:#F4F1EA;">{_h(mgmt_q)}</p>
+    <p style="margin-bottom:0;font-size:12.5px;line-height:1.6;color:#F4F1EA;">{_h(opener_vraag)}</p>
   </div>
   </div>
   <p class="trustline">Nog niet besluiten of een verdieping of kortere vervolgmeting nodig is: dat volgt uit het gesprek.</p>
@@ -785,6 +1075,16 @@ RASTER_GATE_NOTE = (
     "In deze meting waren geen verdiepingsvragen actief; de volgorde volgt "
     "score en spreiding.")
 
+# Derde intro-staat (bug B3): zonder rasterrijen is er geen tabel, geen
+# volgorde en geen startpunt. RASTER_INTRO en RASTER_INTRO_GATE beloven beide
+# een afweging van zes factoren die de pagina dan niet toont; dezelfde
+# eerlijkheidsfout als de methodiekpagina die het richtingblok beloofde.
+RASTER_INTRO_EMPTY = (
+    "Dit overzicht weegt normaal alle zes factoren tegen elkaar af. Voor deze "
+    "meting is er nog geen profiel per factor, dus ook geen volgorde en geen "
+    "startpunt. Wat er wel is, staat hieronder en in de voorgaande "
+    "hoofdstukken.")
+
 
 def _raster_deepening_cell(row: dict, scan_type: str) -> str:
     """Celtekst verdiepingskolom volgens de vijf vaste staten (spec par. 6)."""
@@ -802,7 +1102,8 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
                          deepening_active: bool,
                          mgmt_q: str, review_when: str,
                          opener_html: str,
-                         direction_agg: dict | None = None, n_total: int = 0) -> str:
+                         direction_agg: dict | None = None, n_total: int = 0,
+                         direction_block_html: str | None = None) -> str:
     """Prioriteringsraster + geintegreerde gespreksagenda, inclusief het
     richtingblok "Wat er moet gebeuren" (spec par. 2 en par. 6).
 
@@ -814,6 +1115,12 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
     contract-test controleert de letterlijke, volledige string als substring
     van de HTML-output, dus elke opmaak die de string zelf onderbreekt
     (bijv. een <b>-tag halverwege) breekt die test.
+
+    direction_block_html (bug B3): de renderers bouwen het richtingblok zelf,
+    omdat de methodiekpagina moet weten of het blok daadwerkelijk gerenderd
+    is (_trust_page's direction_active). Meegegeven blok wint; zonder dat
+    argument bouwt deze functie het blok alsnog uit direction_agg, zodat
+    directe aanroepers (tests) niets hoeven te weten van die volgorde.
     """
     # Fail-loud: direction_agg en n_total horen bij elkaar (_direction_chain
     # rekent de noemer-zin uit met n_total) — zonder n_total zou "Van de 0
@@ -867,8 +1174,15 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
                  f'{deep_td}'
                  f'<td>{_agenda_cell(row)}</td></tr>')
 
-    intro = RASTER_INTRO if deepening_active else RASTER_INTRO_GATE
-    gate = f'<p class="r-gate">{RASTER_GATE_NOTE}</p>' if not deepening_active else ""
+    # Zonder rasterrijen is er geen tabel om te tonen (bug B3): de kale
+    # tabelkop, de uitlegregel over de sorteervolgorde en de gate-notitie
+    # beschrijven dan alle drie een rangorde die de pagina niet heeft.
+    if ranked:
+        intro = RASTER_INTRO if deepening_active else RASTER_INTRO_GATE
+    else:
+        intro = RASTER_INTRO_EMPTY
+    gate = (f'<p class="r-gate">{RASTER_GATE_NOTE}</p>'
+            if ranked and not deepening_active else "")
     # Legenda legt de spreidingskolom uit ("... onder de 5 scoren"); zonder een
     # enkele rij met volledige spreidingsdata (n >= 10) is die uitleg niet van
     # toepassing en zou de tekst zelf de degraded-staffel-test doorbreken.
@@ -879,26 +1193,41 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
                 f'<div class="step-fill"></div>'
                 f'<div class="step-fill-hint">{_h(hint)}</div>')
 
-    return f"""<div class="pb sec">
-  {opener_html}
-  <p class="sec-intro">{intro}</p>
-  <table class="raster-tbl"><tr>
+    tabel = f"""<table class="raster-tbl"><tr>
     <th style="width:27%">Factor</th><th style="width:12%">Score</th>
     <th style="width:22%">Spreiding</th>{deep_th}<th style="width:14%">Agenda</th>
   </tr>{body}</table>
   {legenda}
   {gate}
-  <div class="r-uitleg">{RASTER_UITLEG[scan_type]}</div>
-  {_wat_moet_gebeuren_block(ranked, direction_agg or {}, scan_type, n_total)}
+  <div class="r-uitleg">{RASTER_UITLEG[scan_type]}</div>""" if ranked else ""
+
+    dir_block = (direction_block_html if direction_block_html is not None
+                 else _wat_moet_gebeuren_block(ranked, direction_agg or {},
+                                               scan_type, n_total))
+
+    # Zonder rasterrijen slaat de meegegeven mgmt_q nergens op: de aanroeper
+    # valt daar terug op nsp["first_decision"], de generieke per-product
+    # besliszin die "de scherpste werkfactoren" benoemt -- precies wat de intro
+    # hierboven zojuist ontkende. Zie AGENDA_OPENER_GEEN_PROFIEL.
+    opener_vraag = mgmt_q if ranked else AGENDA_OPENER_GEEN_PROFIEL
+    # "of dit thema nog voorrang verdient" heeft zonder rasterrijen geen
+    # onderwerp; dezelfde lege verwijzing als de opener hierboven.
+    review_hint = review_when if ranked else REVIEW_WHEN_GEEN_PROFIEL
+
+    return f"""<div class="pb sec">
+  {opener_html}
+  <p class="sec-intro">{intro}</p>
+  {tabel}
+  {dir_block}
   <div class="agenda-dark" style="margin-top:16px;">
     <div class="agenda-opener">
       <div style="font-family:'JetBrains Mono', monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#E8A020;margin-bottom:7px;">Gespreksopener</div>
-      <p style="margin-bottom:0;font-size:12.5px;line-height:1.6;color:#F4F1EA;">{_h(mgmt_q)}</p>
+      <p style="margin-bottom:0;font-size:12.5px;line-height:1.6;color:#F4F1EA;">{_h(opener_vraag)}</p>
     </div>
     <table class="steps"><tr><td class="step">
       {_fill_row("Prioriteit", "In te vullen tijdens de bespreking")}
       {_fill_row("Eigenaar", "In te vullen tijdens de bespreking")}
-      {_fill_row("Vervolgmoment", review_when)}
+      {_fill_row("Vervolgmoment", review_hint)}
     </td></tr></table>
   </div>
   <p class="trustline">Nog niet besluiten of een verdieping of kortere vervolgmeting nodig is: dat volgt uit het gesprek.</p>
@@ -970,10 +1299,18 @@ def _lc(label: str) -> str:
 # ── Richtingblok "Wat er moet gebeuren" (spec 2026-09-07 par. 6) ─────────────
 
 DIRECTION_BLOCK_EYEBROW = "Wat er moet gebeuren"
-DIRECTION_BLOCK_INTRO = (
+# Eerste zin apart: de degraded variant (bug B3) gebruikt 'm ook, maar mag de
+# tweede zin niet overnemen -- die belooft kaarten voor startpunt en tweede
+# punt, en precies die kaarten zijn er zonder factorprofiel niet.
+DIRECTION_INTRO_VRAAG = (
     "Elke respondent kreeg één vraag over het onderwerp dat bij die respondent het laagst "
-    "scoorde: wat zou hier het meest helpen? Hieronder staat wat die respondenten kozen "
+    "scoorde: wat zou hier het meest helpen?")
+DIRECTION_BLOCK_INTRO = (
+    f"{DIRECTION_INTRO_VRAAG} Hieronder staat wat die respondenten kozen "
     "voor het startpunt en het tweede punt. Dit is hun keuze, geen advies van Loep.")
+DIRECTION_DEGRADED_TAIL = (
+    "Zonder profiel per factor is er nog geen startpunt om die antwoorden aan "
+    "te koppelen, en per onderwerp zijn het er te weinig om te tonen.")
 DIRECTION_HEAD_TOO_FEW = "Te weinig antwoorden voor een richting."
 DIRECTION_HEAD_NONE_NEEDED = "Hier hoeft volgens de meeste betrokkenen niets."
 DIRECTION_HEAD_DIVIDED = "Geen eenduidige richting."
@@ -1084,10 +1421,58 @@ def _wat_moet_gebeuren_block(ranked: list[dict], direction_agg: dict,
                              factor_key=r["key"], n_total=n_total)
         for r in ranked if r["agenda_role"] in ("startpunt", "tweede"))
     if not cards:
-        return ""
+        # Geen rasterrijen, dus geen startpunt om een richting aan te hangen
+        # (bug B3). Het blok stil laten vallen liet de verzamelde antwoorden
+        # spoorloos verdwijnen terwijl de methodiekpagina ze wél beloofde.
+        return _direction_degraded_block(direction_agg, n_total)
     return (f'<div class="dir-block"><span class="eyebrow">{DIRECTION_BLOCK_EYEBROW}</span>'
             f'<p class="dir-intro">{DIRECTION_BLOCK_INTRO}</p>'
             f'<table class="dir-grid"><tr>{cards}</tr></table></div>')
+
+
+def _direction_degraded_line(direction_agg: dict, n_total: int) -> str:
+    """Eerlijke totalen over alle factoren samen: aangeboden, beantwoord,
+    overgeslagen. Elke respondent krijgt precies één richtingvraag, dus de som
+    over de factoren is het aantal respondenten.
+
+    Enkelvoud/meervoud per telling en het weglaten van nul-clausules volgen
+    _direction_chain: "0 sloegen over" is altijd fout Nederlands.
+
+    De tellingen worden direct geïndexeerd, zonder .get-fallback, om dezelfde
+    reden als in _wat_moet_gebeuren_block: aggregate_direction vult elke factor
+    met alle drie de sleutels, dus een ontbrekende sleutel is een codebug die
+    hoort te KeyError'en in plaats van stil als nul mee te tellen in een zin
+    die de klant leest als volledige verantwoording.
+    """
+    offered = sum(a["offered"] for a in direction_agg.values())
+    answered = sum(a["answered"] for a in direction_agg.values())
+    skipped = sum(a["skipped"] for a in direction_agg.values())
+    if not offered:
+        return ""
+    kreeg = f"kregen {offered} deze vraag" if offered != 1 else "kreeg 1 deze vraag"
+    parts: list[str] = []
+    if answered:
+        parts.append(f"{answered} beantwoordden die" if answered != 1 else "1 beantwoordde die")
+    if skipped:
+        parts.append(f"{skipped} sloegen over" if skipped != 1 else "1 sloeg over")
+    zin = f"Van de {n_total} respondenten {kreeg}"
+    if parts:
+        zin += f"; {', '.join(parts)}"
+    return f"{zin}. {DIRECTION_DEGRADED_TAIL}"
+
+
+def _direction_degraded_block(direction_agg: dict, n_total: int) -> str:
+    """Degraded richtingblok: geen kaarten, wel de tellingen en de reden.
+
+    Belooft bewust niets over wat er later met de antwoorden gebeurt -- alleen
+    wat nu waar is."""
+    line = _direction_degraded_line(direction_agg, n_total)
+    if not line:
+        return ""
+    return (f'<div class="dir-block"><span class="eyebrow">{DIRECTION_BLOCK_EYEBROW}</span>'
+            f'<p class="dir-intro">{DIRECTION_INTRO_VRAAG}</p>'
+            f'<div class="card"><p style="font-size:11px;color:#374151;'
+            f'max-width:70ch;margin-bottom:0;">{_h(line)}</p></div></div>')
 
 
 def _direction_p02_line(direction_agg: dict, factor_key: str | None, scan_type: str) -> str:
@@ -1108,10 +1493,16 @@ def _direction_p02_line(direction_agg: dict, factor_key: str | None, scan_type: 
 
 
 def _deepening_chain(agg: dict, scan_type: str, factor_key: str) -> str:
-    """Noemer-keten (spec 6.1): getriggerd -> aangeboden -> beantwoord."""
-    return (f"Van de {agg['triggered']} respondenten met een verdieptrigger op "
-            f"{_lc(_fl(factor_key, scan_type))} kregen {agg['offered']} de "
-            f"verdiepingsvraag; {agg['answered']} beantwoordden die.")
+    """Noemer-keten (spec 6.1): getriggerd -> aangeboden -> beantwoord.
+
+    Enkelvoud/meervoud per telling, analoog aan _direction_chain (B16: was
+    altijd meervoud, wat bij tellingen van 1 fout Nederlands opleverde)."""
+    triggered, offered, answered = agg["triggered"], agg["offered"], agg["answered"]
+    resp_word = "respondent" if triggered == 1 else "respondenten"
+    offered_clause = "kreeg 1 de verdiepingsvraag" if offered == 1 else f"kregen {offered} de verdiepingsvraag"
+    answered_clause = "1 beantwoordde die" if answered == 1 else f"{answered} beantwoordden die"
+    return (f"Van de {triggered} {resp_word} met een verdieptrigger op "
+            f"{_lc(_fl(factor_key, scan_type))} {offered_clause}; {answered_clause}.")
 
 
 def _deepening_block(agg: dict, scan_type: str, factor_key: str) -> str:
@@ -1185,8 +1576,42 @@ def _deepening_mgmt_q(deep_agg: dict, scan_type: str, factor_key: str) -> str | 
     return f"De meest gekozen toelichting was '{opt_text}'. Herkennen jullie dat beeld, en wat zit erachter?"
 
 
+_BANDEN_DREMPELS = (
+    "Kwetsbaar punt (onder 5,0), aandachtspunt (5,0 tot 6,5) en relatief "
+    "sterk (vanaf 6,5) zijn vaste schaaldrempels, geen vergelijking met "
+    "andere organisaties. "
+)
+_BANDEN_RANGORDE = (
+    "De rangorde tussen de eigen factoren weegt zwaarder dan de absolute kleur. "
+)
+_BANDEN_GEEN_RANGORDE = (
+    "In dit rapport staat nog geen rangorde tussen de eigen factoren: daarvoor "
+    "zijn er geen factorscores berekend. "
+)
+_BANDEN_MEETLAT = (
+    "Doordat de meetlat vast is, zijn meting en vervolgmeting een-op-een "
+    "vergelijkbaar."
+)
+
+
+def _banden_cel(ranking_active: bool) -> tuple[str, str]:
+    """De cel "Hoe de banden werken" - identiek voor alle drie de producten.
+
+    De rangorde-zin staat er alleen als dit rapport ook echt een rangorde
+    heeft (review ronde 2): zonder factorprofiel zegt de rasterpagina dat er
+    geen volgorde en geen startpunt is, en beloofde deze cel op de laatste
+    pagina alsnog dat die rangorde zwaarder weegt dan de kleur. De drempels
+    en de vergelijkbaarheid blijven wel staan: dat zijn eigenschappen van de
+    schaal, niet van deze meting.
+    """
+    midden = _BANDEN_RANGORDE if ranking_active else _BANDEN_GEEN_RANGORDE
+    return ("Hoe de banden werken", _BANDEN_DREMPELS + midden + _BANDEN_MEETLAT)
+
+
 def _trust_page(scan_type: str = "exit", opener_html: str = "",
-                direction_active: bool = False) -> str:
+                direction_active: bool = False,
+                direction_degraded: bool = False,
+                ranking_active: bool = True) -> str:
     """Product-specifieke methodiekpagina — nooit gedeelde ExitScan-copy buiten ExitScan.
 
     direction_active volgt het patroon van _prioriteringsraster's
@@ -1194,7 +1619,17 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "",
     specifieke rapport ook echt bevat. scan_type in DIRECTION_SCAN_TYPES
     zegt alleen dat het PRODUCT de vraag ooit kan stellen; de campagnegate
     in build_report_data kan direction_agg voor DEZE meting alsnog leeg
-    maken (niemand aangeboden). Beide moeten dus waar zijn."""
+    maken (niemand aangeboden). Beide moeten dus waar zijn.
+
+    direction_degraded is dezelfde gate één niveau fijner (review ronde 2):
+    zonder factorprofiel rendert _wat_moet_gebeuren_block alleen tellingen,
+    geen kaarten. De volle cel beloofde daar nog een opdrachtvorm, een
+    richting vanaf 3 antwoorden en een beperkte-basis-regel -- drie dingen die
+    in dat blok niet voorkomen. Zie _direction_degraded_block.
+
+    ranking_active is dezelfde gedachte voor de cel "Hoe de banden werken":
+    zonder factorprofiel is er geen rangorde tussen factoren om naar te
+    verwijzen. Zie _banden_cel."""
     if scan_type == "retention":
         intro = ("Dit rapport bundelt patronen uit actieve-medewerkerresponses tot een groepsbeeld van "
                  "behoud, vertrekdenken en werkfactoren. Geen individuele risicoscore, geen voorspelling "
@@ -1209,14 +1644,7 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "",
             ("Claimgrenzen",     "Loep Behoud is een actieve-populatie groepssignaal. Geen causale claims, geen interventieprescriptie."),
             ("Privacywaarborg",  "Verwerking conform AVG. Uitsluitend bestemd voor geautoriseerde gebruikers."),
         ]
-        cells_r3 = [
-            ("Hoe de banden werken",
-             "Kwetsbaar punt (onder 5,0), aandachtspunt (5,0 tot 6,5) en relatief "
-             "sterk (vanaf 6,5) zijn vaste schaaldrempels, geen vergelijking met "
-             "andere organisaties. De rangorde tussen de eigen factoren weegt "
-             "zwaarder dan de absolute kleur. Doordat de meetlat vast is, zijn "
-             "meting en vervolgmeting een-op-een vergelijkbaar."),
-        ]
+        cells_r3 = [_banden_cel(ranking_active)]
     elif scan_type == "onboarding":
         intro = ("Dit rapport bundelt patronen uit onboarding-checkpoints tot een groepsbeeld van de eerste "
                  "werkperiode. Geen prestatiebeoordeling, geen individuele beoordeling en geen voorspelling van uitval.")
@@ -1230,14 +1658,7 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "",
             ("Claimgrenzen",       "Onboarding is een groepscheck op de eerste werkperiode. Geen causale claims, geen uitvalpredicties."),
             ("Privacywaarborg",    "Verwerking conform AVG. Uitsluitend bestemd voor geautoriseerde gebruikers."),
         ]
-        cells_r3 = [
-            ("Hoe de banden werken",
-             "Kwetsbaar punt (onder 5,0), aandachtspunt (5,0 tot 6,5) en relatief "
-             "sterk (vanaf 6,5) zijn vaste schaaldrempels, geen vergelijking met "
-             "andere organisaties. De rangorde tussen de eigen factoren weegt "
-             "zwaarder dan de absolute kleur. Doordat de meetlat vast is, zijn "
-             "meting en vervolgmeting een-op-een vergelijkbaar."),
-        ]
+        cells_r3 = [_banden_cel(ranking_active)]
     else:  # exit
         intro = ("Dit rapport bundelt patronen uit exitvragenlijsten tot een groepsbeeld van vertrek. "
                  "Geen diagnose, geen individuele beoordeling, geen causaliteitsclaim en geen voorspelling.")
@@ -1251,17 +1672,19 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "",
             ("Claimgrenzen",     "Loep Vertrek is een terugkijkende groepsmeting op uitstroom. Geen causale claims, geen oordeel over vermijdbaarheid, geen verlooppredicties."),
             ("Privacywaarborg",  "Verwerking conform AVG. Uitsluitend bestemd voor geautoriseerde gebruikers."),
         ]
-        cells_r3 = [
-            ("Hoe de banden werken",
-             "Kwetsbaar punt (onder 5,0), aandachtspunt (5,0 tot 6,5) en relatief "
-             "sterk (vanaf 6,5) zijn vaste schaaldrempels, geen vergelijking met "
-             "andere organisaties. De rangorde tussen de eigen factoren weegt "
-             "zwaarder dan de absolute kleur. Doordat de meetlat vast is, zijn "
-             "meting en vervolgmeting een-op-een vergelijkbaar."),
-        ]
+        cells_r3 = [_banden_cel(ranking_active)]
 
     cells_r4: list[tuple[str, str]] = []
-    if scan_type in DIRECTION_SCAN_TYPES and direction_active:
+    if scan_type in DIRECTION_SCAN_TYPES and direction_active and direction_degraded:
+        cells_r4 = [
+            ("Richtingvraag",
+             "Elke respondent kreeg één vraag over het onderwerp dat bij die respondent het laagst "
+             "scoorde: wat zou hier het meest helpen? In dit rapport hangt er geen richting aan die "
+             "antwoorden: zonder profiel per factor is er geen startpunt om ze aan te koppelen, en "
+             "per onderwerp zijn het er te weinig om te tonen. Het blok ‘Wat er moet gebeuren’ toont "
+             "daarom alleen hoeveel respondenten de vraag kregen, beantwoordden en oversloegen."),
+        ]
+    elif scan_type in DIRECTION_SCAN_TYPES and direction_active:
         cells_r4 = [
             ("Richtingvraag",
              "Elke respondent kreeg één vraag over het onderwerp dat bij die respondent het laagst "
@@ -1826,7 +2249,7 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
     # aandachtspunt/startpunt gemarkeerd, de slechtste als "relatief sterk".
     segment_rows = _department_segment_rows([
         {"department": r.department,
-         "signal_score": (11.0 - r.response.risk_score) if r.response.risk_score is not None else None}
+         "signal_score": _signal_health(r.response.risk_score)}
         for r in completed
     ])
     segment_rows = _enrich_segment_rows_with_invited(segment_rows, camp.segment_departments)
@@ -1881,7 +2304,9 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
 # ─── Overzichtsprofiel (T6) ──────────────────────────────────────────────────
 
 def _rag_color(score: float | None) -> str:
+    # Drempels op de getoonde score (1 decimaal), zie _shown (B15).
     if score is None: return "#CBD5E1"
+    score = _shown(score)
     if score < 5.0:  return RAG_HIGH
     if score < 6.5:  return RAG_MID
     return RAG_LOW
@@ -1908,9 +2333,10 @@ def _overzicht_summary_and_bands(profile_factors: list[tuple[str, float | None]]
     rapport de laagst scorende factor vooropzet — het rapport sprak zichzelf tegen.
     """
     ranked = sorted([(l, s) for l, s in profile_factors if s is not None], key=lambda x: x[1])
-    kwetsbaar = [l for l, s in ranked if s < 5.0]
-    aandacht  = [l for l, s in ranked if 5.0 <= s < 6.5]
-    sterk     = [l for l, s in ranked if s >= 6.5]
+    # Indeling via _factor_label: zelfde (afgeronde) drempels als de balken (B15).
+    kwetsbaar = [l for l, s in ranked if _factor_label(s) == "Kwetsbaar punt"]
+    aandacht  = [l for l, s in ranked if _factor_label(s) == "Aandachtspunt"]
+    sterk     = [l for l, s in ranked if _factor_label(s) == "Relatief sterk"]
     if kwetsbaar and sterk:
         summary = (f"{kwetsbaar[0]} is het {'enige' if len(kwetsbaar) == 1 else 'duidelijkste'} "
                    f"kwetsbare punt. {sterk[-1]} vormt een relatief sterke basis.")
@@ -1921,15 +2347,22 @@ def _overzicht_summary_and_bands(profile_factors: list[tuple[str, float | None]]
     elif sterk:
         summary = "Factorprofiel toont een overwegend relatief sterk beeld."
     else:
-        # Geen enkele factorscore beschikbaar (n<10 -> factor_avgs leeg): eerlijk
-        # degraderen i.p.v. een positieve claim zonder data (fail-loud).
-        summary = "Onvoldoende responses (<10) voor een groepsprofiel op factorniveau."
+        # Geen enkele factorscore beschikbaar: eerlijk degraderen i.p.v. een
+        # positieve claim zonder data (fail-loud). Bewust zonder "(<10)": de
+        # lege staat hangt aan een leeg factorprofiel, niet aan het
+        # responsaantal -- scoring.factor_averages laat ook een factor zonder
+        # waarden weg. Zie _geen_factorprofiel_note voor dezelfde correctie.
+        summary = ("Voor deze meting zijn er geen scores per factor berekend, "
+                   "dus staat hier nog geen profiel.")
     return summary, {"kwetsbaar": kwetsbaar, "aandacht": aandacht, "sterk": list(reversed(sterk))}
 
 
 def _overzichtsprofiel(factors: list[tuple[str, float | None]],
                        summary: str = "", bands: dict[str, list[str]] | None = None,
-                       opener_html: str = "") -> str:
+                       opener_html: str = "", *, scan_type: str) -> str:
+    """scan_type is verplicht en heeft bewust geen default: de rangorde-zin in
+    de intro is scan-afhankelijk (zie OVERZICHTSPROFIEL_RANGORDE) en een stille
+    terugval zou in een van de drie rapporten een onware regel afdrukken."""
     ranked = sorted(factors, key=lambda x: (x[1] is None, x[1]))
     rows = "".join(_factor_bar_row(lbl, sc) for lbl, sc in ranked)
     # Legendatermen = exact dezelfde woorden als _factor_label (rijlabels, p.02,
@@ -1967,9 +2400,24 @@ def _overzichtsprofiel(factors: list[tuple[str, float | None]],
                        f'</div>')
         if blocks:
             breakdown_html = f'<div style="margin-top:26px;">{blocks}</div>'
+    # Niet via _intro(): de rangorde-zin hangt van de scan af, maar hoort in
+    # dezelfde alinea als het gedeelde deel (beide UNESCAPED, zie SECTION_INTROS).
+    #
+    # Zonder factorscores rendert die intro niet (eind-tot-eind-lezing van
+    # stresstest 07): hij beschrijft "elke factor hieronder" en belooft dat je
+    # verderop per factor ziet welke signalen in de volgorde meewogen -- op een
+    # pagina zonder factoren, in een rapport zonder volgorde. De summary-zin
+    # draagt dan de hele boodschap. Om dezelfde reden vervalt de legenda: die
+    # legt de kleuren van balken uit die er niet zijn.
+    if rows:
+        intro_html = (f'<p class="sec-intro">{SECTION_INTROS["overzichtsprofiel"]} '
+                      f'{OVERZICHTSPROFIEL_RANGORDE[scan_type]}</p>')
+    else:
+        intro_html = ""
+        legend = ""
     return f"""<div class="pb sec">
   {opener_html or '<span class="slabel">Overzichtsprofiel</span>'}
-  {_intro("overzichtsprofiel")}
+  {intro_html}
   {summary_html}
   <div class="card">{rows}{legend}{breakdown_html}</div>
 </div>"""
@@ -1979,7 +2427,15 @@ def _overzichtsprofiel(factors: list[tuple[str, float | None]],
 
 def _vertrekcontext(*, exit_reasons: list[tuple[str, int]],
                     contributing: list[tuple[str, int]], n: int,
-                    primary_factor_label: str, opener_html: str = "") -> str:
+                    primary_factor_label: str, opener_html: str = "",
+                    has_profile: bool = True) -> str:
+    """has_profile volgt dezelfde schakelaar als de degraded p.02-alinea.
+
+    Zonder factorprofiel verwijzen twee zinnen op deze pagina naar iets dat er
+    niet is: de sectie-intro belooft factorscores verderop, en de kaart
+    "Relatie met het overzichtsprofiel" noemt "de factoren die bovenaan de
+    rangorde staan" en "de factordiepte hierna". De redenen zelf blijven staan
+    -- die komen rechtstreeks uit de antwoorden en zijn er wel."""
     def _reason_rows(items: list[tuple[str, int]]) -> str:
         return "".join(
             f'<tr><td class="iq">{_h(lbl)}</td>'
@@ -1990,26 +2446,40 @@ def _vertrekcontext(*, exit_reasons: list[tuple[str, int]],
     rel = ""
     if exit_reasons and primary_factor_label and \
        primary_factor_label.lower() in exit_reasons[0][0].lower():
-        rel = (f"<p style='margin-bottom:0;'>{_h(primary_factor_label)} is zowel de meest "
-               f"genoemde vertrekreden als de laagste factor in het overzichtsprofiel. "
-               f"Daarom staat het bovenaan.</p>")
+        # Positieclaim, geen laagste-claim (bug B1, ronde 2): primary_factor_label
+        # is het raster-startpunt (_raster_primary_label), en dat is bij Loep
+        # Vertrek niet altijd de laagst scorende factor -- zie de guard bij de
+        # kernzin in render_exit_report_html, waarmee deze zin één verhaal vormt.
+        #
+        # NB deze tak is met de echte EXIT_REASON_LABELS_NL onbereikbaar: geen
+        # vertrekredenlabel bevat een volledig factorlabel als substring. Hij
+        # blijft staan voor toekomstige copy-wijzigingen aan die labels en wordt
+        # met een synthetisch label getest in tests/test_report_exit_kernzin.py.
+        rel = (f"<p style='margin-bottom:0;'>{_h(primary_factor_label)} staat bovenaan "
+               f"in de rangorde en is tegelijk de meest genoemde vertrekreden.</p>")
     else:
-        # Geen substring-match tussen hoofdreden en laagste factor: benoem beide
-        # feiten zonder een verbandclaim ("versterken elkaar") die de data niet draagt.
-        rel = (f"<p style='margin-bottom:0;'>De meest genoemde reden en de laagst "
-               f"scorende factor belichten elk een eigen invalshoek. Beide komen "
-               f"terug in de factordiepte hierna.</p>")
+        # Geen substring-match tussen hoofdreden en startpunt: benoem beide
+        # feiten zonder een verbandclaim ("versterken elkaar") die de data niet
+        # draagt. De factordiepte toont de bovenste rasterrijen, niet per se de
+        # laagst scorende factor -- dus verwijst deze zin naar de rangorde.
+        rel = (f"<p style='margin-bottom:0;'>De meest genoemde reden en de factorscores "
+               f"belichten elk een eigen invalshoek. De factoren die bovenaan de "
+               f"rangorde staan, komen terug in de factordiepte hierna.</p>")
+
+    rel_card = (f'<div class="card navy" style="background:#fff;">'
+                f'<h3>Relatie met het overzichtsprofiel</h3>{rel}</div>'
+                ) if has_profile else ""
 
     return f"""<div class="pb sec">
   {opener_html or '<span class="slabel">Vertrekcontext</span>'}
-  {_intro("vertrekcontext")}
+  {_intro("vertrekcontext" if has_profile else "vertrekcontext_geen_profiel")}
   <div class="tcol">
     <div class="tc-l"><div class="card accent"><h3>Hoofdredenen van vertrek (top 3)</h3>
       <table class="item-tbl">{_reason_rows(exit_reasons)}</table></div></div>
     <div class="tc-r"><div class="card"><h3>Speelde ook mee</h3>
       <table class="item-tbl">{_reason_rows(contributing)}</table></div></div>
   </div>
-  <div class="card navy" style="background:#fff;"><h3>Relatie met het overzichtsprofiel</h3>{rel}</div>
+  {rel_card}
 </div>"""
 
 
@@ -2028,14 +2498,13 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
     """
     rows = ""
     if retention_score is not None:
-        # retention_score = avg_risk (RISICO-schaal: hoog = slecht). Note + kleur
-        # moeten dezelfde polariteit hebben als de cover-band (_band): hoog risk =
-        # "onder druk" / rood. Voorheen las de note-ladder hoog = "sterk" / teal,
-        # tegengesteld aan de cover binnen hetzelfde rapport.
-        col = _band(retention_score, "retention")[1]
-        note = ("onder druk" if retention_score >= RISK_HIGH else
-                "vraagt aandacht" if retention_score >= RISK_MEDIUM else
-                "sterk")
+        # retention_score = _signal_health(avg_risk): GEZONDHEIDS-schaal, hoog =
+        # goed (B4). Note en kleur komen uit dezelfde ladder als de kernzin-band
+        # (_band_key), zodat er nooit een derde drempelset naast de intro-copy
+        # ("onder de 5,0 kwetsbaar ... vanaf 6,5 relatief sterk") ontstaat.
+        _k = _band_key(retention_score, "retention")
+        col = _RETENTION_BANDS[_k][1]
+        note = {"HOOG": "onder druk", "MIDDEN": "vraagt aandacht", "LAAG": "sterk"}[_k]
         rows += (f'<div class="sigrow"><div class="sigrow-title">Behoudssignaal</div>'
                  f'<div class="sigrow-body">Werkfactoren en werkbeleving samengebracht op groepsniveau.</div>'
                  f'<div><span class="sigrow-score" style="color:{col};">{retention_score:.1f}/10</span>'
@@ -2047,10 +2516,11 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
                   f'Enkelvoudige richtingsvraag, indicatief.</div>'
                   f'<div><span class="sigrow-score" style="color:{scol};">{stay_intent:.1f}/10</span></div></div>')
     if turnover is not None:
-        tcol = _rag_color(10 - turnover)
-        note = ("laag" if turnover <= 3.0 else
-                "beperkt" if turnover <= 5.0 else
-                "zichtbaar" if turnover <= 6.5 else
+        _tv = _shown(turnover)  # note + kleur op de getoonde score (B15)
+        tcol = _rag_color(10 - _tv)
+        note = ("laag" if _tv <= 3.0 else
+                "beperkt" if _tv <= 5.0 else
+                "zichtbaar" if _tv <= 6.5 else
                 "hoog: actief vertrekrisico")
         rows += (f'<div class="sigrow"><div class="sigrow-title">Vertrekintentie</div>'
                   f'<div class="sigrow-body">&ldquo;Ik denk er serieus over na te vertrekken&rdquo; + &ldquo;Ik zoek actief.&rdquo; '
@@ -2059,9 +2529,10 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
                   f'<span class="sigrow-note">{note}</span></div></div>')
     if engagement is not None:
         ecol = _factor_color(engagement)
-        note = ("hoog" if engagement >= 7.5 else
-                "gemiddeld" if engagement >= 6.0 else
-                "laag: geen buffer" if engagement >= 4.5 else
+        _ev = _shown(engagement)  # note op de getoonde score (B15)
+        note = ("hoog" if _ev >= 7.5 else
+                "gemiddeld" if _ev >= 6.0 else
+                "laag: geen buffer" if _ev >= 4.5 else
                 "zorgelijk laag")
         rows += (f'<div class="sigrow"><div class="sigrow-title">Bevlogenheid</div>'
                   f'<div class="sigrow-body">Energie &middot; Inspiratie &middot; Zin om te gaan (UWES). Gemiddelde van 3 stellingen.</div>'
@@ -2161,12 +2632,16 @@ def render_exit_report_html(data: dict) -> str:
     # of het vertrekredengewicht de volgorde verschuift (whole-feature review
     # na Taak 9 vond dit reproduceerbaar: kernzin noemde een andere factor dan
     # de why-tabel op dezelfde pagina).
-    _raster_primary_label = _raster_rows[0]["label"] if _raster_rows else (low_lbl or high_lbl or "—")
+    # Kale streep als laatste terugval verwijderd (bug B2): die belandde zo op
+    # de cover en in de kernzin. Leeg betekent hier "geen factorprofiel"; de
+    # cover en de kernzin vullen dat zelf eerlijk in.
+    _raster_primary_label = _raster_rows[0]["label"] if _raster_rows else (low_lbl or high_lbl or "")
     _raster_primary_score = _raster_rows[0]["score"] if _raster_rows else low_sc
+    _geen_profiel = not _raster_rows
 
     # ── Cover ─────────────────────────────────────────────────────────────────
     opening_q = "Wat speelde mee bij vertrek?"
-    primary_signal = _raster_primary_label
+    primary_signal = _raster_primary_label or GEEN_FACTORPROFIEL_LBL
     cover_stats = [
         ("Respondenten", str(n)),
         ("Respons", f"{round(data['completion_pct'])}%"),  # afgerond — p.03 toont hetzelfde getal
@@ -2177,14 +2652,29 @@ def render_exit_report_html(data: dict) -> str:
     er_top   = data["exit_r_dist"][0]["label"] if data["exit_r_dist"] else ""
 
     # Directe executive copy
+    # Kernzin claimt bewust NIET dat het startpunt "het laagst scoort" (bug B1,
+    # stresstest ronde 1): het raster-startpunt is bij Loep Vertrek by design
+    # niet altijd de laagste factor -- de vertrekreden-weging
+    # (EXIT_REASON_WEIGHT) en de spreidings-/verdiepingsvlaggen kunnen een
+    # andere factor bovenaan zetten, en het raster toont die lagere score dan
+    # verderop in hetzelfde rapport. De kernzin benoemt dus alleen de positie
+    # plus de score; waarom die factor bovenaan staat, legt _raster_attribution
+    # uit in de bronregel onder de gespreksopener op dezelfde pagina.
+    #
+    # NB de eerste tak is met de echte EXIT_REASON_LABELS_NL onbereikbaar: geen
+    # vertrekredenlabel bevat een volledig factorlabel als substring. Hij blijft
+    # staan voor toekomstige copy-wijzigingen aan die labels en wordt met een
+    # synthetisch label getest in tests/test_report_exit_kernzin.py. Zijn
+    # tweelingzin staat in _vertrekcontext, achter dezelfde substring-test.
+    _beeld = fl.lower().replace(' frictiebeeld', '').replace(' vertrekbeeld', '')
     if _raster_primary_label and er_top and _raster_primary_label.lower() in er_top.lower():
-        exec_line = f"Het vertrekbeeld is {fl.lower().replace(' frictiebeeld','').replace(' vertrekbeeld','')}, maar {_raster_primary_label} springt er duidelijk uit: het is zowel de laagste factor als de meest genoemde vertrekreden."
+        exec_line = f"Het vertrekbeeld is {_beeld}, maar {_raster_primary_label} springt eruit: het staat bovenaan en is de meest genoemde vertrekreden."
     elif _raster_primary_label and er_top:
-        exec_line = f"Het vertrekbeeld is {fl.lower().replace(' frictiebeeld','').replace(' vertrekbeeld','')}. {_raster_primary_label} scoort het laagst ({_score_str(_raster_primary_score)}); {er_top} is de meest genoemde vertrekreden."
+        exec_line = f"Het vertrekbeeld is {_beeld}. Bovenaan staat {_raster_primary_label} ({_score_str(_raster_primary_score)}); {er_top} is de meest genoemde vertrekreden."
     elif avg_risk:
         exec_line = f"De frictiescore van {rdsp} wijst op een {fl.lower()}."
     else:
-        exec_line = "Zie factoranalyse en vertrekcontext voor details."
+        exec_line = "Zie de vertrekcontext en de responsbasis voor wat dit rapport wel toont."
     # Sterke factor bewust NIET in de titel: die staat al in de subtekst
     # (totaalbeeld) — voorheen stond dezelfde observatie 2x binnen 4 regels.
 
@@ -2240,12 +2730,28 @@ def render_exit_report_html(data: dict) -> str:
         br_mgmt_q     = _mgmt_q(low_f[0], "exit") if low_f else ""
         br_mgmt_q_source = "Gebaseerd op de laagst scorende factor." if low_f else ""
 
+    # Degraded pagina twee (bug B2): geen factorprofiel, dus geen why-blok en
+    # geen gespreksopener -- wel een expliciete alinea over wat er bij dit
+    # aantal antwoorden wel en niet te zeggen valt.
+    br_degraded_note = ""
+    if _geen_profiel:
+        br_degraded_note = _geen_factorprofiel_note(
+            n,
+            drempelzin=(f"Dat profiel vraagt minimaal {MIN_AGGREGATE_N} antwoorden; "
+                        f"daaronder bepaalt één vertrekker te veel het beeld."),
+            wel=["de opgegeven vertrekredenen" if data["exit_r_dist"] else "",
+                 "de werkbeleving van de vertrekkers" if sdt_a else "",
+                 "de werkgeversaanbeveling" if (data["enps_available"]
+                                                and data["enps_score"] is not None) else "",
+                 "de responsbasis onderaan deze pagina"],
+        )
+
     # Subtekst herhaalt de titel niet meer: alleen wat NIEUW is — de sterke
     # factor mét score. De responsbasis staat nu onderaan dezelfde pagina.
     totaalbeeld = (
         f"{high_lbl} ({_score_str(high_sc)}) laat zien wat wél werkt. "
         f"Hoe stevig dit beeld is, hangt af van de responsbasis onderaan deze pagina."
-    ) if high_lbl and _raster_primary_label != high_lbl and high_sc is not None and high_sc >= 6.5 else \
+    ) if high_lbl and _raster_primary_label != high_lbl and _factor_label(high_sc) == "Relatief sterk" else \
         "Reikwijdte en betrouwbaarheid van dit beeld: zie de responsbasis onderaan deze pagina."
 
     _responsbasis_band = _responsbasis(
@@ -2273,8 +2779,9 @@ def render_exit_report_html(data: dict) -> str:
         mgmt_q_source=br_mgmt_q_source,
         responsbasis_html=_responsbasis_band,
         opener_html=ch.opener("Bestuurlijke read"),
-        usage_html=_gebruiksblok(data["scan_lbl"]),
+        usage_html=_gebruiksblok(data["scan_lbl"], degraded=bool(br_degraded_note)),
         direction_line=_direction_p02_line(direction_agg, _raster_rows[0]["key"] if _raster_rows else None, "exit"),
+        degraded_note=br_degraded_note,
     )
 
     # ── Vertrekcontext (p.04 — vóór factorprofiel) ───────────────────────────
@@ -2282,14 +2789,15 @@ def render_exit_report_html(data: dict) -> str:
     contributing = [(r["label"], r["count"]) for r in data["cont_dist"]]
     s += _vertrekcontext(exit_reasons=exit_reasons, contributing=contributing,
                          n=n, primary_factor_label=_raster_primary_label,
-                         opener_html=ch.opener("Wat speelde mee bij vertrek?", kicker="Vertrekcontext"))
+                         opener_html=ch.opener("Wat speelde mee bij vertrek?", kicker="Vertrekcontext"),
+                         has_profile=not _geen_profiel)
 
     # ── Overzichtsprofiel (p.05) ──────────────────────────────────────────────
     profile_factors = [(_fl(fk, "exit"), fa.get(fk))
                        for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
     _overzicht_summary, _overzicht_bands = _overzicht_summary_and_bands(profile_factors)
     s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary, bands=_overzicht_bands,
-                            opener_html=ch.opener("Overzichtsprofiel"))
+                            opener_html=ch.opener("Overzichtsprofiel"), scan_type="exit")
 
     # priority_fkeys volgt nu dezelfde rangorde als het prioriteringsraster
     # (spec 2026-07-18 par. 4: één ranking per rapport) -- _raster_rows is
@@ -2362,7 +2870,7 @@ def render_exit_report_html(data: dict) -> str:
             _opener = ch.opener(f"Verdieping: {_lbl}") if _i == 0 else _ChapterCounter.vervolg(f"Verdieping: {_lbl}")
             s += _factor_detail(_pfk, opener_html=_opener, intro_html=_intro("verdieping") if _i == 0 else "")
     else:
-        s += f'<div class="pb sec">{ch.opener("Verdieping: prioritaire factoren")}<div class="card">Factor detail beschikbaar na voldoende patroonduiding.</div></div>'
+        s += f'<div class="pb sec">{ch.opener("Verdieping: prioritaire factoren")}<div class="empty-state">{VERDIEPING_GEEN_RANGORDE}</div></div>'
 
     # ── SDT basisbehoeften ────────────────────────────────────────────────────
     def _sdt_item_tbl(dim: str) -> str:
@@ -2441,6 +2949,10 @@ def render_exit_report_html(data: dict) -> str:
     _startpunt_fk = _raster_rows[0]["key"] if _raster_rows else None
     _enriched_q = (_deepening_mgmt_q(deep_agg, "exit", _startpunt_fk)
                    if _startpunt_fk else None)
+    # Het richtingblok wordt hier gebouwd, niet in _prioriteringsraster (bug
+    # B3): alleen zo kan de methodiekpagina verderop beloven wat dit rapport
+    # daadwerkelijk bevat in plaats van wat er aan data bestaat.
+    _dir_block = _wat_moet_gebeuren_block(_raster_rows, direction_agg, "exit", n)
     s += _prioriteringsraster(
         ranked=_raster_rows,
         scan_type="exit",
@@ -2451,6 +2963,7 @@ def render_exit_report_html(data: dict) -> str:
         opener_html=ch.opener("Waar begint het gesprek?", kicker="Prioritering & gespreksagenda"),
         direction_agg=direction_agg,
         n_total=n,
+        direction_block_html=_dir_block,
     )
 
     # ── Appendix ─────────────────────────────────────────────────────────────
@@ -2503,7 +3016,9 @@ def render_exit_report_html(data: dict) -> str:
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────
     s += _trust_page("exit", opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen"),
-                     direction_active=bool(direction_agg))
+                     ranking_active=not _geen_profiel,
+                     direction_active=bool(_dir_block),
+                     direction_degraded=bool(_dir_block) and not _raster_rows)
     return _doc(f"Loep Vertrek · {data['campaign_name']}", s, scan_type="exit")
 
 
@@ -2516,7 +3031,10 @@ def render_retention_report_html(data: dict) -> str:
     avg_eng     = data["avg_eng"]
     avg_to      = data["avg_to"]
     avg_si      = data["avg_si"]
-    band_lbl, band_col = _band(avg_risk, ST)
+    # Behoudssignaal op de gezondheidsschaal (B4): één omkering, hier, en
+    # daarna overal dezelfde waarde (band, kernzin, behoudscontext).
+    signal      = _signal_health(avg_risk)
+    band_lbl, band_col = _band(signal, ST)
     fa          = data["factor_avgs"]
     sdt_a       = data["sdt_avgs"]
     nsp         = data["nsp"]
@@ -2548,10 +3066,13 @@ def render_retention_report_html(data: dict) -> str:
     # Eén waarheid voor "de primaire factor" door het hele rapport heen (spec
     # 2026-07-18 par. 4) -- zie identieke fix + toelichting in
     # render_exit_report_html.
-    _raster_primary_label = _raster_rows[0]["label"] if _raster_rows else (low_lbl or high_lbl or "—")
+    # Kale streep als laatste terugval verwijderd (bug B2), zie identieke fix
+    # in render_exit_report_html.
+    _raster_primary_label = _raster_rows[0]["label"] if _raster_rows else (low_lbl or high_lbl or "")
+    _geen_profiel = not _raster_rows
 
     # ── Cover ─────────────────────────────────────────────────────────────────
-    _ret_primary = _raster_primary_label
+    _ret_primary = _raster_primary_label or GEEN_FACTORPROFIEL_LBL
     s = _cover(
         scan_label=data["scan_lbl"], scan_type=ST, org_name=data["org_name"],
         period=data["campaign_name"], opening_question="Waar staat behoud nu onder druk?",
@@ -2601,20 +3122,37 @@ def render_retention_report_html(data: dict) -> str:
         br_mgmt_q     = _mgmt_q(low_f[0], ST) if low_f else ""
         br_mgmt_q_source = "Gebaseerd op de laagst scorende factor." if low_f else ""
 
+    # Degraded pagina twee (bug B2), zie render_exit_report_html.
+    br_degraded_note = ""
+    if _geen_profiel:
+        br_degraded_note = _geen_factorprofiel_note(
+            n,
+            drempelzin=(f"Daarvoor zijn minimaal {MIN_AGGREGATE_N} antwoorden nodig; "
+                        f"bij minder telt elk los antwoord te zwaar mee."),
+            wel=["de behoudscontext op de volgende pagina" if signal is not None else "",
+                 "de werkbeleving" if sdt_a else "",
+                 "de werkgeversaanbeveling" if (data["enps_available"]
+                                                and data["enps_score"] is not None) else "",
+                 "de responsbasis onderaan deze pagina"],
+        )
+
     # Kernzin: band + geduid getal + laagste factor. "behoudssignaal" bij het
     # cijfer, zodat de lezer weet WAT er 4.7 scoort (de factorscore ernaast is
     # een ander getal — dat onderscheid was eerder onzichtbaar).
-    if avg_risk and band_lbl and _raster_primary_label:
-        exec_line = f"{band_lbl} (behoudssignaal {_score_str(avg_risk)}). {_raster_primary_label} is het eerste gesprekspunt."
+    if signal and band_lbl and _raster_primary_label:
+        exec_line = f"{band_lbl} (behoudssignaal {_score_str(signal)}). {_raster_primary_label} is het eerste gesprekspunt."
+    elif signal and band_lbl:
+        # Geen factorprofiel: wel het behoudssignaal, geen startpunt (bug B2).
+        exec_line = f"{band_lbl} (behoudssignaal {_score_str(signal)})."
     else:
-        exec_line = "Zie factoranalyse en behoudscontext voor details."
+        exec_line = "Zie de behoudscontext en de responsbasis voor wat dit rapport wel toont."
 
     # Subtekst herhaalt de titel niet meer: alleen wat nieuw is. De
     # responsbasis staat nu onderaan dezelfde pagina.
     totaalbeeld = (
         f"{high_lbl} ({_score_str(high_sc)}) laat zien wat wél werkt. "
         f"Hoe stevig dit beeld is, hangt af van de responsbasis onderaan deze pagina."
-    ) if high_lbl and _raster_primary_label != high_lbl and high_sc is not None and high_sc >= 6.5 else \
+    ) if high_lbl and _raster_primary_label != high_lbl and _factor_label(high_sc) == "Relatief sterk" else \
         "Reikwijdte en betrouwbaarheid van dit beeld: zie de responsbasis onderaan deze pagina."
 
     _responsbasis_band = _responsbasis(
@@ -2640,13 +3178,14 @@ def render_retention_report_html(data: dict) -> str:
         mgmt_q_source=br_mgmt_q_source,
         responsbasis_html=_responsbasis_band,
         opener_html=ch.opener("Bestuurlijke read"),
-        usage_html=_gebruiksblok(data["scan_lbl"]),
+        usage_html=_gebruiksblok(data["scan_lbl"], degraded=bool(br_degraded_note)),
         direction_line=_direction_p02_line(direction_agg, _raster_rows[0]["key"] if _raster_rows else None, ST),
+        degraded_note=br_degraded_note,
     )
 
     # ── Behoudscontext (p.04 — vóór factorprofiel) ───────────────────────────
     s += _behoudscontext(
-        retention_score=avg_risk,
+        retention_score=signal,
         stay_intent=avg_si,
         turnover=avg_to,
         engagement=avg_eng,
@@ -2659,7 +3198,7 @@ def render_retention_report_html(data: dict) -> str:
                        for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
     _overzicht_summary, _overzicht_bands = _overzicht_summary_and_bands(profile_factors)
     s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary, bands=_overzicht_bands,
-                            opener_html=ch.opener("Overzichtsprofiel"))
+                            opener_html=ch.opener("Overzichtsprofiel"), scan_type=ST)
 
     # priority_fkeys volgt nu dezelfde rangorde als het prioriteringsraster
     # (spec 2026-07-18 par. 4: één ranking per rapport) -- _raster_rows is
@@ -2718,7 +3257,7 @@ def render_retention_report_html(data: dict) -> str:
             _opener = ch.opener(f"Verdieping: {_lbl}") if _i == 0 else _ChapterCounter.vervolg(f"Verdieping: {_lbl}")
             s += _ret_factor_detail(_pfk, opener_html=_opener, intro_html=_intro("verdieping") if _i == 0 else "")
     else:
-        s += f'<div class="pb sec">{ch.opener("Verdieping: prioritaire factoren")}<div class="card">Factor detail beschikbaar na voldoende patroonduiding.</div></div>'
+        s += f'<div class="pb sec">{ch.opener("Verdieping: prioritaire factoren")}<div class="empty-state">{VERDIEPING_GEEN_RANGORDE}</div></div>'
 
     # ── Werkbeleving (SDT) ────────────────────────────────────────────────────
     def _sdt_item_tbl(dim: str) -> str:
@@ -2797,6 +3336,8 @@ def render_retention_report_html(data: dict) -> str:
     _startpunt_fk = _raster_rows[0]["key"] if _raster_rows else None
     _enriched_q = (_deepening_mgmt_q(deep_agg, ST, _startpunt_fk)
                    if _startpunt_fk else None)
+    # Zie render_exit_report_html: blok eerst, methodiekpagina gate erop (B3).
+    _dir_block = _wat_moet_gebeuren_block(_raster_rows, direction_agg, ST, n)
     s += _prioriteringsraster(
         ranked=_raster_rows,
         scan_type=ST,
@@ -2807,6 +3348,7 @@ def render_retention_report_html(data: dict) -> str:
         opener_html=ch.opener("Waar begint het gesprek?", kicker="Prioritering & gespreksagenda"),
         direction_agg=direction_agg,
         n_total=n,
+        direction_block_html=_dir_block,
     )
 
     # ── Appendix ─────────────────────────────────────────────────────────────
@@ -2859,7 +3401,9 @@ def render_retention_report_html(data: dict) -> str:
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────
     s += _trust_page(ST, opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen"),
-                     direction_active=bool(direction_agg))
+                     ranking_active=not _geen_profiel,
+                     direction_active=bool(_dir_block),
+                     direction_degraded=bool(_dir_block) and not _raster_rows)
     return _doc(f"Loep Behoud · {data['campaign_name']}", s, scan_type="retention")
 
 
@@ -2912,12 +3456,17 @@ def _landingskwaliteit(domains: list[tuple[str, float | None]]) -> str:
         for label, score in domains
         if score is not None
     )
-    if not rows:
-        rows = '<div class="empty-state">Domeinscores beschikbaar bij voldoende patroonduiding.</div>'
-    legend = (f'<p style="font-size:9px;color:#64748B;margin-top:12px;">'
-              f'<span style="color:{RAG_HIGH};">&#9632;</span> kwetsbaar punt &nbsp; '
-              f'<span style="color:{RAG_MID};">&#9632;</span> aandachtspunt &nbsp; '
-              f'<span style="color:{RAG_LOW};">&#9632;</span> goed geland</p>')
+    # Legenda alleen bij balken: zonder domeinscores legt hij kleuren uit die
+    # nergens op de pagina staan (zelfde correctie als in _overzichtsprofiel).
+    legend = ""
+    if rows:
+        legend = (f'<p style="font-size:9px;color:#64748B;margin-top:12px;">'
+                  f'<span style="color:{RAG_HIGH};">&#9632;</span> kwetsbaar punt &nbsp; '
+                  f'<span style="color:{RAG_MID};">&#9632;</span> aandachtspunt &nbsp; '
+                  f'<span style="color:{RAG_LOW};">&#9632;</span> goed geland</p>')
+    else:
+        rows = ('<div class="empty-state">Voor deze meting zijn er geen scores '
+                'per domein berekend.</div>')
     return f"""<div class="sec">
   <span class="slabel">Landingskwaliteit per domein</span>
   <div class="card">{rows}{legend}</div>
@@ -2931,7 +3480,9 @@ def render_onboarding_report_html(data: dict) -> str:
     n           = data["n_completed"]
     avg_risk    = data["avg_risk"]
     avg_si      = data["avg_si"]
-    band_lbl, band_col = _band(avg_risk, ST)
+    # Checkpointscore op de gezondheidsschaal (B4), zie _signal_health.
+    signal      = _signal_health(avg_risk)
+    band_lbl, band_col = _band(signal, ST)
     fa          = data["factor_avgs"]
     sdt_a       = data["sdt_avgs"]
     nsp         = data["nsp"]
@@ -2951,8 +3502,13 @@ def render_onboarding_report_html(data: dict) -> str:
     low_sc   = low_f[1]  if low_f  else None
     high_sc  = high_f[1] if high_f else None
 
+    # Geen raster bij Loep Start: "geen factorprofiel" == geen enkele factor
+    # met een score (zelfde staat die exit/retention via _raster_rows zien).
+    _geen_profiel = not sorted_f
+
     # ── Cover ─────────────────────────────────────────────────────────────────
-    _ob_primary = low_lbl or high_lbl or "—"
+    # Kale streep als laatste terugval verwijderd (bug B2).
+    _ob_primary = low_lbl or high_lbl or GEEN_FACTORPROFIEL_LBL
     s = _cover(
         scan_label=data["scan_lbl"], scan_type=ST, org_name=data["org_name"],
         period=data["campaign_name"], opening_question="Hoe landen nieuwe medewerkers?",
@@ -2990,19 +3546,36 @@ def render_onboarding_report_html(data: dict) -> str:
         br_mgmt_q     = _mgmt_q(low_f[0], ST) if low_f else ""
         br_mgmt_q_source = "Gebaseerd op de laagst scorende factor." if low_f else ""
 
+    # Degraded pagina twee (bug B2), zie render_exit_report_html.
+    br_degraded_note = ""
+    if _geen_profiel:
+        br_degraded_note = _geen_factorprofiel_note(
+            n,
+            drempelzin=(f"Een profiel per factor vraagt minimaal {MIN_AGGREGATE_N} "
+                        f"antwoorden; daaronder kleurt één antwoord het beeld te sterk."),
+            wel=["het checkpointoverzicht" if signal is not None else "",
+                 "de werkbeleving van nieuwe medewerkers" if sdt_a else "",
+                 "de werkgeversaanbeveling" if (data["enps_available"]
+                                                and data["enps_score"] is not None) else "",
+                 "de responsbasis onderaan deze pagina"],
+        )
+
     # Kernzin: band + geduid getal + laagste factor ("checkpointscore" zodat de
     # lezer weet wat het getal is; de factorscore ernaast is een ander getal).
-    if avg_risk and band_lbl and low_lbl:
-        exec_line = f"{band_lbl} (checkpointscore {_score_str(avg_risk)}). {low_lbl} is het eerste gesprekspunt."
+    if signal and band_lbl and low_lbl:
+        exec_line = f"{band_lbl} (checkpointscore {_score_str(signal)}). {low_lbl} is het eerste gesprekspunt."
+    elif signal and band_lbl:
+        # Geen factorprofiel: wel de checkpointscore, geen startpunt (bug B2).
+        exec_line = f"{band_lbl} (checkpointscore {_score_str(signal)})."
     else:
-        exec_line = "Zie factordiepte en checkpointoverzicht voor details."
+        exec_line = "Zie het checkpointoverzicht en de responsbasis voor wat dit rapport wel toont."
 
     # Subtekst herhaalt de titel niet meer: alleen wat nieuw is. De
     # responsbasis staat nu onderaan dezelfde pagina.
     totaalbeeld = (
         f"{high_lbl} ({_score_str(high_sc)}) laat zien wat wél goed landt. "
         f"Hoe stevig dit beeld is, hangt af van de responsbasis onderaan deze pagina."
-    ) if high_lbl and low_lbl != high_lbl and high_sc is not None and high_sc >= 6.5 else \
+    ) if high_lbl and low_lbl != high_lbl and _factor_label(high_sc) == "Relatief sterk" else \
         "Reikwijdte en betrouwbaarheid van dit beeld: zie de responsbasis onderaan deze pagina."
 
     _responsbasis_band = _responsbasis(
@@ -3028,7 +3601,8 @@ def render_onboarding_report_html(data: dict) -> str:
         mgmt_q_source=br_mgmt_q_source,
         responsbasis_html=_responsbasis_band,
         opener_html=ch.opener("Bestuurlijke read"),
-        usage_html=_gebruiksblok(data["scan_lbl"]),
+        usage_html=_gebruiksblok(data["scan_lbl"], degraded=bool(br_degraded_note)),
+        degraded_note=br_degraded_note,
     )
 
     # ── Overzichtsprofiel (p.04) ──────────────────────────────────────────────
@@ -3036,10 +3610,10 @@ def render_onboarding_report_html(data: dict) -> str:
                        for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
     _overzicht_summary, _overzicht_bands = _overzicht_summary_and_bands(profile_factors)
     s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary, bands=_overzicht_bands,
-                            opener_html=ch.opener("Overzichtsprofiel"))
+                            opener_html=ch.opener("Overzichtsprofiel"), scan_type=ST)
 
     # ── Checkpointoverzicht (p.05 — onboarding-exclusive) ────────────────────
-    s += _checkpointoverzicht(checkpoints=[("Huidig checkpoint", avg_risk)],
+    s += _checkpointoverzicht(checkpoints=[("Huidig checkpoint", signal)],
                               opener_html=ch.opener("Onboardingfases", kicker="Checkpointoverzicht"))
 
     # ── Landingskwaliteit per domein (onboarding-exclusive) ───────────────────
@@ -3104,7 +3678,7 @@ def render_onboarding_report_html(data: dict) -> str:
             # factordetailpagina leest prima zonder intro.
             s += _ob_factor_detail(_pfk, opener_html=_opener, intro_html="")
     else:
-        s += f'<div class="pb sec">{ch.opener("Verdieping: prioritaire factoren")}<div class="card">Factor detail beschikbaar na voldoende patroonduiding.</div></div>'
+        s += f'<div class="pb sec">{ch.opener("Verdieping: prioritaire factoren")}<div class="empty-state">{VERDIEPING_GEEN_RANGORDE}</div></div>'
 
     # ── Werkbeleving (SDT) — if present ──────────────────────────────────────
     def _sdt_item_tbl(dim: str) -> str:
@@ -3189,7 +3763,25 @@ def render_onboarding_report_html(data: dict) -> str:
     _ob_primary_theme = (
         f"Bespreek eerst ‘{_ob_primary_low[1]}’ binnen {_fl(_ob_primary_fk, ST).lower()} "
         f"({_ob_primary_low[2]:.1f}/10). Op deze stelling scoort de groep het laagst van het hele beeld."
-    ) if _ob_primary_low else (low_lbl if low_lbl else "het leidende onboardingthema")
+    ) if _ob_primary_low else low_lbl
+
+    # Zonder factorprofiel is er geen primair thema en geen tweede
+    # aandachtspunt (review ronde 2). De pagina zei dat niet: primary_theme
+    # viel door naar de letterlijke placeholder "het leidende onboardingthema"
+    # en second_point/mgmt_q bleven leeg, terwijl de intro erboven ongewijzigd
+    # een samenvatting van het eerste gesprekspunt beloofde. Nu benoemt de
+    # pagina wat er wél gemeten is. De opsomming volgt dezelfde regel als de
+    # degraded p.02-alinea: alleen secties die in deze staat echt renderen.
+    _agenda_degraded_note = ""
+    if _geen_profiel:
+        _agenda_wel = _opsomming([
+            "het checkpointoverzicht" if signal is not None else "",
+            "de werkbeleving van nieuwe medewerkers" if sdt_overview_rows else "",
+            "de responsbasis op de openingspagina"])
+        _agenda_degraded_note = (
+            f"Wat dit rapport wel laat zien: {_agenda_wel}. Een score per thema "
+            f"ontbreekt, dus er is geen onderbouwde volgorde en geen eerste "
+            f"gesprekspunt dat uit de cijfers volgt.")
 
     _primary_why = (_primary_why_text(_ob_primary_low[2], (data.get("deepening_agg") or {}).get(_ob_primary_fk) or {}, ST, _ob_primary_fk)
                     if _ob_primary_low else None)
@@ -3204,6 +3796,7 @@ def render_onboarding_report_html(data: dict) -> str:
         primary_why=_primary_why,
         second_why=_second_why,
         opener_html=ch.opener("Gespreksagenda", kicker="Eerste managementspoor"),
+        degraded_note=_agenda_degraded_note,
     )
 
     # ── Appendix ─────────────────────────────────────────────────────────────
@@ -3249,7 +3842,8 @@ def render_onboarding_report_html(data: dict) -> str:
 </div>"""
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────
-    s += _trust_page(ST, opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen"))
+    s += _trust_page(ST, opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen"),
+                     ranking_active=not _geen_profiel)
     return _doc(f"Loep Start · {data['campaign_name']}", s, scan_type="onboarding")
 
 

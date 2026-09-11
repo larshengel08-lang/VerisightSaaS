@@ -1,5 +1,5 @@
 import { getScanDefinition } from '@/lib/scan-definitions'
-import type { CampaignStats } from '@/lib/types'
+import { toDisplaySignalScore, type CampaignStats } from '@/lib/types'
 
 export type DashboardHomeBucket = 'open_now' | 'building' | 'closed' | 'archive'
 export type DashboardHomeEmptyState = 'no_campaigns' | 'has_campaigns'
@@ -148,6 +148,8 @@ function buildCampaignCardModel(
 ): HomeCampaignCardModel {
   const bucket = getCampaignHomeBucket(campaign, allCampaigns)
   const scanDefinition = getScanDefinition(campaign.scan_type)
+  // Alleen de getoonde waarde volgt de rapportschaal; de sortering verderop blijft op de risicoschaal.
+  const displaySignalScore = toDisplaySignalScore(campaign.scan_type, campaign.avg_risk_score)
   const primaryAction = buildDashboardAction(campaign, bucket, isAdmin)
   const secondaryAction = buildPdfAction(campaign, bucket)
 
@@ -166,7 +168,7 @@ function buildCampaignCardModel(
       { label: 'Uitgenodigd', value: `${campaign.total_invited}` },
       {
         label: scanDefinition.signalLabel,
-        value: campaign.avg_risk_score !== null ? `${campaign.avg_risk_score.toFixed(1)}/10` : '-',
+        value: displaySignalScore !== null ? `${displaySignalScore.toFixed(1)}/10` : '-',
       },
     ],
     primaryAction,

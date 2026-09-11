@@ -60,6 +60,31 @@ def test_none_needed_card_questions_the_role():
     assert "het tweede punt moet zijn." in second
 
 
+def test_half_none_card_prints_no_do_nothing_imperative():
+    """B11: bij precies de helft 'Niets, dit zit hier goed' is 'volgens de meeste
+    betrokkenen' onwaar. De kaart valt terug op divided en mag geen opdrachtvorm
+    tonen - ook niet een die zegt dat er niets hoeft."""
+    half = _agg(4, {"wld_none": 2, "wld_peaks": 2}, skipped=0)
+    html = _direction_card_cell("startpunt", label="Werkdruk en herstelruimte", agg=half,
+                                scan_type="retention", factor_key="workload", n_total=13)
+    assert 'class="dir-card dir-divided"' in html
+    assert "Geen eenduidige richting." in html
+    assert "Hier hoeft volgens de meeste betrokkenen niets." not in html
+    assert "Bespreek of dit dan het startpunt moet zijn." not in html
+    assert "De 4 bij wie dit het laagst scoorde kozen verschillend." in html
+    # De verdeling blijft zichtbaar, inclusief de niets-optie.
+    assert "Niets, dit zit hier goed" in html
+    assert "Beperkte basis" in html
+
+
+def test_half_none_p02_line_makes_no_majority_claim():
+    half = _agg(4, {"wld_none": 2, "wld_peaks": 2}, skipped=0)
+    line = _direction_p02_line({"workload": half}, "workload", "retention")
+    assert line == ("Over wat hier moet gebeuren zijn de 4 die dit het laagst "
+                    "scoorden verdeeld. Zie de gespreksagenda.")
+    assert "hier hoeft niets" not in line
+
+
 def test_too_few_card_only_chain():
     html = _direction_card_cell("tweede", label="Werkdruk en herstelruimte", agg=FEW,
                                 scan_type="retention", factor_key="workload", n_total=13)

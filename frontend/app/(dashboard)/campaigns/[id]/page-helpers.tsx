@@ -15,6 +15,7 @@ import {
   FACTOR_LABELS,
   getResponseDirectionSignalScore,
   getResponseSignalScore,
+  toDisplaySignalScore,
 } from '@/lib/types'
 import type { CampaignStats, Respondent, ScanType, SurveyResponse } from '@/lib/types'
 import { DashboardPanel } from '@/components/dashboard/dashboard-primitives'
@@ -165,7 +166,7 @@ export function buildHeroDescription({
   }
 
   if (scanType === 'onboarding') {
-    return `Deze onboarding-campaign laat een begrensde checkpoint-read zien van nieuwe instroom op groepsniveau. Gebruik de uitkomst om te bepalen welke vroege succes- of frictiefactor nu eerst aandacht vraagt, zonder dit al als volledige 30-60-90-journey of individuele voorspelling te lezen. Huidig ${scanDefinition.signalLabelLower}: ${averageRiskScore?.toFixed(1) ?? '-'} /10.`
+    return `Deze onboarding-campaign laat een begrensde checkpoint-read zien van nieuwe instroom op groepsniveau. Gebruik de uitkomst om te bepalen welke vroege succes- of frictiefactor nu eerst aandacht vraagt, zonder dit al als volledige 30-60-90-journey of individuele voorspelling te lezen. Huidig ${scanDefinition.signalLabelLower}: ${toDisplaySignalScore(scanType, averageRiskScore)?.toFixed(1) ?? '-'} /10.`
   }
 
   if (scanType === 'leadership') {
@@ -211,12 +212,14 @@ export function buildDecisionPanels({
   hasMinDisplay: boolean
 }): DecisionPanel[] {
   const topFactorLabel = getTopFactorLabel(factorAverages)
+  // Weergave op de schaal die de klant ook in het rapport ziet (retention/onboarding: hoog = goed).
+  const displaySignalScore = toDisplaySignalScore(stats.scan_type, averageRiskScore)
 
   const sharedPanels: DecisionPanel[] = [
     {
       eyebrow: 'Primair signaal',
       title: scanDefinition.signalLabel,
-      value: averageRiskScore !== null ? `${averageRiskScore.toFixed(1)}/10` : '-',
+      value: displaySignalScore !== null ? `${displaySignalScore.toFixed(1)}/10` : '-',
       body: averageRiskScore !== null
         ? `Gebruik dit als samenvattend managementsignaal. Lees de score altijd samen met ${topFactorLabel ? topFactorLabel.toLowerCase() : 'de topfactoren'} en de responskwaliteit.`
         : 'Nog geen score zichtbaar zolang er te weinig responses zijn om veilig te tonen.',
@@ -606,11 +609,16 @@ export function RetentionTrendSection({
   previousCampaignName: string
   trendCards: SignalTrendCard[]
 }) {
-  const signalDelta = current.retentionSignal !== null && previous.retentionSignal !== null
-    ? Number((current.retentionSignal - previous.retentionSignal).toFixed(1))
+  // Weergave op de gezondheidsschaal (hoog = goed), zoals in het rapport; de opgeslagen
+  // waarden blijven op de risicoschaal. Het verschil rekenen we daarom ook op de weergaveschaal,
+  // zodat een plus in de tekst ook echt een verbetering is.
+  const currentDisplay = toDisplaySignalScore('retention', current.retentionSignal)
+  const previousDisplay = toDisplaySignalScore('retention', previous.retentionSignal)
+  const signalDelta = currentDisplay !== null && previousDisplay !== null
+    ? Number((currentDisplay - previousDisplay).toFixed(1))
     : null
-  const isImproving = signalDelta !== null && signalDelta < -0.1
-  const isWorsening = signalDelta !== null && signalDelta > 0.1
+  const isImproving = signalDelta !== null && signalDelta > 0.1
+  const isWorsening = signalDelta !== null && signalDelta < -0.1
   const tone = isImproving ? 'emerald' : isWorsening ? 'amber' : 'slate'
 
   const formattedDate = new Intl.DateTimeFormat('nl-NL', {
@@ -625,7 +633,7 @@ export function RetentionTrendSection({
         eyebrow="Trend sinds vorige meting"
         title={isImproving ? 'Verbeterd' : isWorsening ? 'Verslechterd' : 'Stabiel'}
         value={signalDelta === null ? '-' : `${signalDelta > 0 ? '+' : ''}${signalDelta.toFixed(1)}`}
-        body={`Vergeleken met ${previousCampaignName} van ${formattedDate} veranderde het gemiddelde retentiesignaal van ${previous.retentionSignal?.toFixed(1) ?? '-'} /10 naar ${current.retentionSignal?.toFixed(1) ?? '-'} /10.`}
+        body={`Vergeleken met ${previousCampaignName} van ${formattedDate} veranderde het gemiddelde retentiesignaal van ${previousDisplay?.toFixed(1) ?? '-'} /10 naar ${currentDisplay?.toFixed(1) ?? '-'} /10.`}
         tone={tone}
       />
 

@@ -143,11 +143,11 @@ Met `n = agg["answered"]`, geëvalueerd in deze volgorde:
 | Staat | Regel |
 |---|---|
 | `too_few` | `n < 3` |
-| `none_needed` | `counts[*_none] / n ≥ 0.5` |
+| `none_needed` | `counts[*_none] / n > 0.5` (strikte meerderheid; zie fix-ronde 1, B11) |
 | `clear` | top-optie is geen `*_none` en geen `*_other`, `top / n ≥ 0.5`, én `top − tweede ≥ 2` (niets en anders tellen mee als concurrent) |
 | `divided` | alles wat overblijft, inclusief "anders" als top |
 
-Gevolgen: bij n=3 is `clear` alleen 3-0; bij n=4 vanaf 3-1; bij gelijkspel niets/route op n=4 (2-2) wint `none_needed`. Retourneert `{state, n, top_key, top_n, second_n, ranked}` voor de renderer.
+Gevolgen: bij n=3 is `clear` alleen 3-0; bij n=4 vanaf 3-1; bij gelijkspel niets/route op n=4 (2-2) valt de factor door naar `divided`, want de helft is niet “de meeste” (B11, 11 september 2026). Retourneert `{state, n, top_key, top_n, second_n, ranked}` voor de renderer.
 
 Bij `*_other` als top-optie over n≥8: `logger.warning("direction: *_other is topoptie voor %s - optieset review nodig")`, gespiegeld aan het bestaande verdiepingspatroon.
 
@@ -304,7 +304,7 @@ Opmerking bij 8.6: de bestaande vraag zei "rolhelderheid"; in de respondentvraag
 
 **Pure logica (`tests/test_deepening_direction.py`, nieuw):**
 - `compute_direction_factor`: laagste wint; tie-break op low_count, dan minimum, dan volgorde; `None` zonder stellingen; gelijk aan `compute_deepening_offers()[0]` wanneer die niet leeg is.
-- `direction_state`: elk van de vier staten; n=2 → too_few; n=3 3-0 → clear, 2-1 → divided; n=4 3-1 → clear, 2-2 niets/route → none_needed, 2-1-1 → divided; anders als top → divided; niets ≥50% wint vóór clear.
+- `direction_state`: elk van de vier staten; n=2 → too_few; n=3 3-0 → clear, 2-1 → divided; n=4 3-1 → clear, 2-2 niets/route → divided, 2-1-1 → divided; anders als top → divided; niets boven 50% wint vóór clear.
 - `aggregate_direction`: één factor per respondent voor `lowest_n`; `lowest_n > offered` bij ontbrekend veld; counts alleen over answered; warning bij `offered > lowest_n`.
 - `get_direction_sets`: exit én retention, niets-optie eerst, versies, `imperative` niet in de client-set, elke route heeft een niet-lege `imperative` behalve `*_none`/`*_other`.
 

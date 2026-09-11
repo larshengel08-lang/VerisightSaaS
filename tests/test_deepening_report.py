@@ -1,5 +1,6 @@
 import pytest
 from backend.products.shared.deepening import aggregate_deepening, agenda_enrichment
+from backend.report_html import _deepening_chain
 
 
 def _resp(status="answered", primary="wl_recovery", secondary=None, factor="workload",
@@ -106,3 +107,41 @@ def test_enrichment_blocked_when_other_is_top():
 
 def test_enrichment_none_when_no_answers():
     assert agenda_enrichment(_agg({}, answered=0), "retention", "workload") is None
+
+
+# ── _deepening_chain enkelvoud/meervoud (B16) ────────────────────────────────
+
+def _chain_agg(triggered, offered, answered):
+    return {"triggered": triggered, "offered": offered, "answered": answered, "skipped": 0}
+
+
+def test_deepening_chain_all_singular():
+    text = _deepening_chain(_chain_agg(1, 1, 1), "retention", "compensation")
+    assert text == (
+        "Van de 1 respondent met een verdieptrigger op beloning en eerlijkheid "
+        "kreeg 1 de verdiepingsvraag; 1 beantwoordde die."
+    )
+
+
+def test_deepening_chain_triggered_plural_rest_singular():
+    text = _deepening_chain(_chain_agg(2, 1, 1), "retention", "compensation")
+    assert text == (
+        "Van de 2 respondenten met een verdieptrigger op beloning en eerlijkheid "
+        "kreeg 1 de verdiepingsvraag; 1 beantwoordde die."
+    )
+
+
+def test_deepening_chain_answered_singular_rest_plural():
+    text = _deepening_chain(_chain_agg(3, 3, 1), "retention", "compensation")
+    assert text == (
+        "Van de 3 respondenten met een verdieptrigger op beloning en eerlijkheid "
+        "kregen 3 de verdiepingsvraag; 1 beantwoordde die."
+    )
+
+
+def test_deepening_chain_all_plural():
+    text = _deepening_chain(_chain_agg(3, 3, 2), "retention", "compensation")
+    assert text == (
+        "Van de 3 respondenten met een verdieptrigger op beloning en eerlijkheid "
+        "kregen 3 de verdiepingsvraag; 2 beantwoordden die."
+    )

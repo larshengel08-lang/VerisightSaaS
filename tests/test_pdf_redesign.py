@@ -88,7 +88,7 @@ from backend.report_html import _overzichtsprofiel
 
 def test_overzichtsprofiel_ranks_all_factors_with_rag():
     factors = [("Groeiperspectief", 4.2), ("Beloning", 5.1), ("Werksfeer", 7.3)]
-    html = _overzichtsprofiel(factors)
+    html = _overzichtsprofiel(factors, scan_type="retention")
     assert "Groeiperspectief" in html and "Werksfeer" in html
     assert html.index("Groeiperspectief") < html.index("Werksfeer")
     assert "4.2" in html and "7.3" in html

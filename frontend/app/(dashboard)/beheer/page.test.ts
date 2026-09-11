@@ -27,4 +27,17 @@ describe('beheer admin alignment', () => {
     expect(source).not.toContain('Open setupwerkvloer')
     expect(source).not.toContain('Segment deep dive')
   })
+
+  // De signaalkolom mengt twee polariteiten (Loep Vertrek hoog = meer frictie,
+  // Loep Behoud/Loep Start hoog = beter). De productnaam per rij is de enige
+  // aanwijzing welke schaal geldt, dus mag geen enkele plek een onbekende scan
+  // als "Loep Behoud" labelen.
+  it('leidt elke productnaam af uit de scan-definitie', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).not.toContain("'Loep Vertrek'")
+    expect(source).not.toContain("'Loep Behoud'")
+    expect(source).toContain("import { getScanDefinition } from '@/lib/scan-definitions'")
+    expect(source.match(/getScanDefinition\((?:selectedCampaign|campaign|stats)\.scan_type\)\.productName/g)).toHaveLength(4)
+  })
 })

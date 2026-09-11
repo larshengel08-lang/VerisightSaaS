@@ -836,8 +836,13 @@ def direction_state(agg: dict[str, Any], factor_key: str) -> dict[str, Any]:
     # Precies één *_none-optie per factor (contentgarantie: de _none()-factory en
     # de prefix-guard in test_direction_content). Eén sleutel, dus top_key, top_n
     # en de ratio verwijzen gegarandeerd naar hetzelfde getal.
+    # Strikte meerderheid (> 0.5), niet >= 0.5: de kop van dit blok zegt "volgens
+    # de meeste betrokkenen", en precies de helft is niet "de meeste" (B11).
+    # Op precies de helft valt de factor door naar de logica hieronder; de
+    # clear-tak sluit *_none expliciet uit, dus dat landt altijd op divided en
+    # nooit op een opdrachtvorm die zegt dat er niets hoeft.
     none_key = next((k for k in sorted(counts) if k.endswith("_none")), None)
-    if none_key is not None and counts[none_key] / n >= 0.5:
+    if none_key is not None and counts[none_key] / n > 0.5:
         return {**base, "state": "none_needed",
                 "top_key": none_key, "top_n": counts[none_key]}
     top_key, top_n = ranked[0]

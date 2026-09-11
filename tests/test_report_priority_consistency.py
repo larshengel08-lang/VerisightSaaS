@@ -24,6 +24,8 @@ from backend.report_html import (
 from backend.report_priority import rank_factors
 from backend.scoring_config import ORG_FACTOR_KEYS
 
+from tests.conftest import exit_report_data
+
 # Multi-factor spread (zelfde patroon als tests/test_report_priority.py's
 # test_navolgbaarheid_invariant_over_scenarios): "workload" scoort duidelijk
 # het laagst, geen van de verschillen valt binnen PRIORITY_TIE_MARGIN (0.3),
@@ -97,28 +99,15 @@ def _min_retention_fixture():
 
 
 def _min_exit_fixture():
-    """Lokale minimale fixture voor render_exit_report_html -- er bestaat nog
-    geen equivalent van _min_retention_data voor exit. Gebouwd door alle
-    data[...]/data.get(...)-toegangen in render_exit_report_html
-    (backend/report_html.py, vanaf regel 1964) te lezen; exit_r_dist/cont_dist
-    blijven leeg (geen vertrekreden-weging getest hier -- zie
-    test_report_priority.py voor die interactie op rank_factors-niveau)."""
-    n = 12
-    return dict(
-        campaign_id="c1", scan_type="exit", scan_lbl="Loep Vertrek",
-        org_name="TestOrg", campaign_name="Wave 1", generated_at="11-07-2026",
-        n_invited=n + 3, n_completed=n, completion_pct=80.0, avg_risk=5.5,
-        factor_avgs=dict(_FACTOR_AVGS),
-        top_fkeys=["growth"], top_flabels=[_fl("growth", "exit")],
-        factor_items_map={fk: list(items) for fk, items in _ITEM_MAP.items()},
-        org_item_avgs=dict(_ITEM_AVGS),
-        sdt_item_avgs={}, sdt_avgs={}, nsp={},
-        exit_r_dist=[], cont_dist=[],
-        deepening_agg={}, factor_resp_scores={},
-        segment_rows=[], segment_factor_rows=None,
-        enps_available=False, enps_score=None,
-        sdt_items=[], open_texts=[],
-    )
+    """Minimale fixture voor render_exit_report_html; de dict-vorm zelf staat in
+    tests/conftest.py::exit_report_data (gedeeld met test_report_exit_kernzin.py,
+    dat dezelfde vorm gebruikte met andere data).
+
+    exit_r_dist/cont_dist blijven hier leeg: geen vertrekreden-weging in deze
+    test -- zie test_report_priority.py voor die interactie op
+    rank_factors-niveau, en test_report_exit_kernzin.py voor het effect op de
+    copy."""
+    return exit_report_data(factor_avgs=_FACTOR_AVGS, factor_items_map=_ITEM_MAP)
 
 
 def _assert_p02_matches_raster_startpunt(html: str, scan_type: str) -> None:

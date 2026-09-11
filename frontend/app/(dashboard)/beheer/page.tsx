@@ -10,8 +10,27 @@ import { InviteClientUserForm } from '@/components/dashboard/invite-client-user-
 import { NewCampaignForm } from '@/components/dashboard/new-campaign-form'
 import { NewOrgForm } from '@/components/dashboard/new-org-form'
 import { getDeliveryModeLabel } from '@/lib/implementation-readiness'
+import { getDisplaySignalBand, type DisplaySignalBand } from '@/lib/management-language'
+import { getScanDefinition } from '@/lib/scan-definitions'
 import { createClient } from '@/lib/supabase/server'
-import { type Campaign, type CampaignStats, type Organization, type OrgInvite } from '@/lib/types'
+import {
+  toDisplaySignalScore,
+  type Campaign,
+  type CampaignStats,
+  type Organization,
+  type OrgInvite,
+} from '@/lib/types'
+
+// Productnaam via de scan-definitie, niet via een exit/anders-ternary: die
+// noemde elke niet-exit campagne "Loep Behoud", dus ook Loep Start. Sinds de
+// signaalkolom twee polariteiten mengt (Vertrek hoog = meer frictie,
+// Behoud/Start hoog = beter) is de productnaam de enige aanwijzing per rij
+// welke schaal geldt, en dan mag hij niet het verkeerde product noemen.
+const SIGNAL_BAND_CLASS: Record<DisplaySignalBand, string> = {
+  red: 'text-red-600',
+  amber: 'text-amber-600',
+  emerald: 'text-emerald-700',
+}
 
 export default async function BeheerPage() {
   const supabase = await createClient()
@@ -154,7 +173,7 @@ export default async function BeheerPage() {
                 <p className="mt-2 text-base font-semibold text-white">{selectedCampaign?.name ?? 'Nog geen campaign gekozen'}</p>
                 <p className="mt-1 text-sm text-slate-300">
                   {selectedCampaign
-                    ? `${selectedCampaign.scan_type === 'exit' ? 'Loep Vertrek' : 'Loep Behoud'} · ${selectedCampaign.is_active ? 'Actief' : 'Gearchiveerd'}`
+                    ? `${getScanDefinition(selectedCampaign.scan_type).productName} · ${selectedCampaign.is_active ? 'Actief' : 'Gearchiveerd'}`
                     : 'Respondenten en klanttoegang worden actief na campaign-keuze'}
                 </p>
               </div>
@@ -256,7 +275,7 @@ export default async function BeheerPage() {
                 <div className="mt-4 space-y-4 border-t border-slate-200 pt-4">
                   <div className="flex flex-wrap items-center gap-2">
                     <DashboardChip surface="ops" label={selectedCampaign.name} tone="slate" />
-                    <DashboardChip surface="ops" label={selectedCampaign.scan_type === 'exit' ? 'Loep Vertrek' : 'Loep Behoud'} tone="slate" />
+                    <DashboardChip surface="ops" label={getScanDefinition(selectedCampaign.scan_type).productName} tone="slate" />
                   </div>
 
                   {campaigns.filter((campaign) => campaign.is_active).length === 0 ? (
@@ -285,7 +304,7 @@ export default async function BeheerPage() {
                         >
                           <div className="min-w-0 flex-1">
                             <div className="mb-1 flex flex-wrap items-center gap-2">
-                              <DashboardChip surface="ops" label={campaign.scan_type === 'exit' ? 'Loep Vertrek' : 'Loep Behoud'} />
+                              <DashboardChip surface="ops" label={getScanDefinition(campaign.scan_type).productName} />
                               <DashboardChip surface="ops" label={getDeliveryModeLabel(campaign.delivery_mode, campaign.scan_type)} />
                               <span className={`text-xs font-medium ${campaign.is_active ? 'text-emerald-700' : 'text-slate-400'}`}>
                                 {campaign.is_active ? '● Actief' : '○ Archief'}
@@ -453,7 +472,7 @@ export default async function BeheerPage() {
                       <th className="px-5 py-3 text-right">Uitgenodigd</th>
                       <th className="px-5 py-3 text-right">Ingevuld</th>
                       <th className="px-5 py-3 text-right">Respons</th>
-                      <th className="px-5 py-3 text-right">Gem. risico</th>
+                      <th className="px-5 py-3 text-right">Gem. signaal</th>
                       <th className="px-4 py-3" />
                     </tr>
                   </thead>
@@ -461,11 +480,18 @@ export default async function BeheerPage() {
                     {campaignStats.map((stats) => {
                       const pct = stats.completion_rate_pct ?? 0
                       const org = orgs.find((item) => item.id === stats.organization_id)
+                      // Weergave op de rapportschaal: retention/onboarding tonen hoog = goed,
+                      // de andere scans blijven op de risicoschaal (hoog = meer frictie).
+                      const displaySignal = toDisplaySignalScore(stats.scan_type, stats.avg_risk_score)
+                      const signalColorClass =
+                        displaySignal === null
+                          ? ''
+                          : SIGNAL_BAND_CLASS[getDisplaySignalBand(stats.scan_type, displaySignal)]
                       return (
                         <tr key={stats.campaign_id} className="hover:bg-slate-50/70">
                           <td className="px-5 py-3">
                             <div className="font-medium text-slate-900">{stats.campaign_name}</div>
-                            <div className="mt-0.5 text-xs text-slate-500">{stats.scan_type === 'exit' ? 'Loep Vertrek' : 'Loep Behoud'}</div>
+                            <div className="mt-0.5 text-xs text-slate-500">{getScanDefinition(stats.scan_type).productName}</div>
                           </td>
                           <td className="px-5 py-3 text-slate-600">{org?.name ?? '—'}</td>
                           <td className="px-5 py-3 text-center">
@@ -494,17 +520,9 @@ export default async function BeheerPage() {
                             </div>
                           </td>
                           <td className="px-5 py-3 text-right tabular-nums text-slate-700">
-                            {stats.avg_risk_score ? (
-                              <span
-                                className={`font-semibold ${
-                                  stats.avg_risk_score >= 7
-                                    ? 'text-red-600'
-                                    : stats.avg_risk_score >= 4.5
-                                      ? 'text-amber-600'
-                                      : 'text-emerald-700'
-                                }`}
-                              >
-                                {stats.avg_risk_score.toFixed(1)}
+                            {displaySignal !== null ? (
+                              <span className={`font-semibold ${signalColorClass}`}>
+                                {displaySignal.toFixed(1)}
                               </span>
                             ) : (
                               <span className="text-xs text-slate-300">—</span>

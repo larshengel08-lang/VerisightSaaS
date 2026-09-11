@@ -1,4 +1,4 @@
-import type { Preventability, RiskBand } from '@/lib/types'
+import { isHealthScaleSignal, type Preventability, type RiskBand, type ScanType } from '@/lib/types'
 
 export interface FactorPresentation {
   scoreDisplay: string
@@ -22,6 +22,33 @@ export function getRiskBandFromScore(score: number): RiskBand {
   if (score >= 7) return 'HOOG'
   if (score >= 4.5) return 'MIDDEN'
   return 'LAAG'
+}
+
+// Rapportbanden op de gezondheidsschaal (hoog = goed). Dezelfde ladder als het PDF-rapport:
+// kwetsbaar < 5,0, aandachtspunt 5,0-6,5, relatief sterk >= 6,5.
+export const HEALTH_BAND_VULNERABLE_BELOW = 5.0
+export const HEALTH_BAND_STRONG_FROM = 6.5
+
+export type DisplaySignalBand = 'red' | 'amber' | 'emerald'
+
+/**
+ * Kleurband voor een al omgezette weergavescore (zie toDisplaySignalScore in lib/types).
+ *
+ * De twee takken zijn bewust GEEN spiegelbeeld van elkaar: de gezondheidsschaal
+ * (retention/onboarding) volgt de rapportbanden 5,0 / 6,5, de risicoschaal (overige scans)
+ * volgt getRiskBandFromScore met 4,5 / 7. Elke schaal houdt dus de drempels die de klant
+ * elders in dat product al kent; ze gelijktrekken is een ontwerpvraag, geen bugfix.
+ */
+export function getDisplaySignalBand(scanType: ScanType, displayScore: number): DisplaySignalBand {
+  if (isHealthScaleSignal(scanType)) {
+    if (displayScore >= HEALTH_BAND_STRONG_FROM) return 'emerald'
+    if (displayScore >= HEALTH_BAND_VULNERABLE_BELOW) return 'amber'
+    return 'red'
+  }
+  const riskBand = getRiskBandFromScore(displayScore)
+  if (riskBand === 'HOOG') return 'red'
+  if (riskBand === 'MIDDEN') return 'amber'
+  return 'emerald'
 }
 
 export function getManagementBandLabel(input: RiskBand | number): string {

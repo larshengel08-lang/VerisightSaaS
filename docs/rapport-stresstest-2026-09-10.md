@@ -547,6 +547,105 @@ Daarna, in volgorde: B11 en B15 (kleine, goedkope eerlijkheidsfixes), B12 en B13
 
 ---
 
+## Na ronde 1 (11 september 2026)
+
+Branch `fix/rapport-stresstest-ronde-1`. Acht bevindingen waren in scope: **B1, B2, B3,
+B4, B10, B11, B15, B16**. De rest was expliciet ronde 2 of 3. Alle twintig scenario's zijn
+opnieuw gegenereerd met de gefixte code en langs dezelfde zes vragen gelegd; elke claim is
+getoetst aan de `.meta.json` in plaats van aan het rapport zelf. B10 is gemeten in de
+WeasyPrint-PDF, want dat defect bestond alleen daar.
+
+### Matrix na ronde 1
+
+| # | Scenario | n | Q1 antwoord p2 | Q2 startpunt | Q3 wat moet gebeuren | Q4 holle pagina's | Q5 tegenspraak | Q6 overclaim |
+|---|----------|---|----|----|----|----|----|----|
+| 01 | Vlak middelmatig | 45 | ~ | ✗ | ✓ | ✗ | ✗ | ✗ |
+| 02 | Eén lage factor | 45 | ✓ | ✓ | ~ | ✗ | ✓ | ✗ |
+| 03 | Twee near-ties | 45 | ✓ | ~ | ✓ | ✗ | ✓ | ✗ |
+| 04 | Alles hoog | 45 | ✗ | ✗ | ✓ | ✗ | ✗ | ✗ |
+| 05 | Alles laag, crisis | 45 | **✓** | ✓ | ✓ | ✗ | ✗ | ✗ |
+| 06 | Eén afdeling laag | 45 | ✗ | ✗ | ~ | ✗ | **~** | ✗ |
+| 07 | Vertrek, onder drempel | 8 | **~** | **~** | **~** | ✗ | **~** | ✗ |
+| 08 | Vertrek, net boven | 12 | **✓** | ~ | ~ | ✗ | **~** | **~** |
+| 09 | Gemengde afdelingen | 25 | ~ | ✗ | ~ | ✗ | ~ | ✗ |
+| 10 | Twaalf kleine afdelingen | 90 | ✓ | ✓ | ~ | ✗ | ✗ | ✗ |
+| 11 | Grote populatie | 180 | ~ | ✓ | ✗ | ✗ | ~ | ~ |
+| 12 | 60% overslag verdieping | 45 | ✓ | ✓ | ~ | ✗ | **✓** | ✗ |
+| 13 | 40% "niets nodig" | 45 | ~ | ✓ | ✗ | ✗ | **~** | ✗ |
+| 14 | 35% "Anders" | 45 | ~ | ✓ | ✗ | ✗ | ~ | ✗ |
+| 15 | Richting verdeeld | 45 | ~ | ✓ | ~ | ✗ | ✓ | ~ |
+| 16 | Respons 30% | 45 | ✓ | ✓ | ✓ | ✗ | ~ | ✗ |
+| 17 | Respons 90% | 45 | ✓ | ✓ | ✓ | ✗ | ~ | ~ |
+| 18 | Vlak + n=12 | 12 | ✗ | ✗ | ✗ | ✗ | ~ | ✗ |
+| 19 | Vlak + 40% niets nodig | 45 | ~ | ✗ | ~ | ✗ | **~** | ✗ |
+| 20 | Loep Start sanity | 30 | ✓ | ~ | ✗ | ✗ | ✗ | ✗ |
+
+Gewijzigde cellen vet. Score: Q1 9✓/8~/3✗ · Q2 10✓/4~/6✗ · Q3 6✓/9~/5✗ ·
+Q4 0✓/0~/20✗ · Q5 3✓/13~/4✗ · Q6 0✓/4~/16✗.
+Was: Q1 6✓/9~/5✗ · Q2 9✓/3~/8✗ · Q3 5✓/8~/7✗ · Q4 0✓/0~/20✗ · Q5 1✓/8~/11✗ · Q6 0✓/3~/17✗.
+
+Beoordelingsregel: een cel beweegt alleen als de bevindingen die hem droegen tot de acht
+gefixte horen én geen openstaande bevinding dezelfde cel zelfstandig op hetzelfde niveau
+houdt. Daarom bewegen dertien van de honderdtwintig cellen terwijl acht bevindingen weg
+zijn: in de meeste cellen zit ook een bevinding uit ronde 2.
+
+### Wat er per bevinding veranderde
+
+| # | Status | Bewijs |
+|---|---|---|
+| B1 | **gefixt** | Scenario 08: "Bovenaan staat Leiderschap en feedback (4.9/10)" in plaats van "scoort het laagst", terwijl Groeiperspectief 4,50 scoort. De tekenreeks "scoort het laagst" komt in geen van de twintig rapporten meer voor. Bijvangst: dezelfde onware regel stond in de gedeelde overzichtsprofiel-intro en in de vertrekcontext. |
+| B2 | **gefixt** | Scenario 07: cover toont "Nog geen factorprofiel", de kernzin is een echte zin, en een eigen blok noemt het aantal (8) en de drempel (10). Nul treffers op de dubbel geescapete entiteit, op een em-dash en op de onderwerploze kop in alle twintig. |
+| B3 | **gefixt** | Scenario 07 toont het blok "Wat er moet gebeuren" met de keten 8 aangeboden, 7 beantwoord, 1 overgeslagen. De methodiekpagina belooft in die staat geen opdrachtvorm meer. De gate hangt nu aan het gerenderde blok, niet aan het bestaan van data. |
+| B4 | **gefixt** | Scenario 04: 8.0/10 "sterk" (was 3.0/10 "sterk"). Scenario 05: 4.1/10 "onder druk" (was 6.9/10 "vraagt aandacht"). Scenario 20: checkpointscore 6.3/10 "Gemengd onboardingsbeeld". De omkering gebeurt op één plek; de opslag is niet aangeraakt en het dashboard ging in lockstep mee. |
+| B5 | open | Scenario 06 leest 6.2 · 6.2 · 6.3 · 6.2 · 6.3 · 6.5 zonder markering van welke vlag de volgorde flipte. |
+| B6 | open | Scenario 01: zes factoren tussen 5,67 en 6,33 en toch een startpunt. Scenario 04: startpunt op 7,8 met het label "relatief sterk". |
+| B7 | open | Scenario 01: "Sales heeft de laagste score (6.0/10)" terwijl "Overige afdelingen" op 5,86 staat in dezelfde tabel. |
+| B8 | open | Scenario 10: vijf afdelingen met 7 tot 9 responses verdwijnen in de restgroep, tegen een intro die vijf als grens noemt. |
+| B9 | open | Onveranderd. Alleen scenario 07 telt minder pagina's, als neveneffect van het onderdrukken van lege secties. |
+| B10 | **gefixt** | Gemeten in de WeasyPrint-PDF op de drie langste factornamen: uiterste x 521, 476 en 500 op een pagina van 595 punt, tegen een rechtermarge van 539. Voorheen liep het blok tot 597. |
+| B11 | **gefixt** | Scenario 02, tweede punt: "Geen eenduidige richting" bij 2 van de 4. De overgebleven none-staten rusten op echte meerderheden (4 van 7, 5 van 8, 2 van 3). Bijvangst: de clear-tak bleek de niets-optie al uit te sluiten, dus een opdrachtvorm die zegt dat er niets hoeft kan niet ontstaan. |
+| B12 | open | Scenario 11: grootste groep 44% met 12 voorsprong heet nog steeds "geen eenduidige richting". |
+| B13 | open | Scenario 14: "Anders, namelijk" staat bovenaan zonder dat het rapport meldt dat die toelichtingen bestaan. |
+| B14 | open | Scenario 01: verdieping 2 getriggerd tegenover richting 11 van de 45, op dezelfde factor, zonder brugzin. |
+| B15 | **gefixt** | Scenario 20: drie regels 6.5/10 met hetzelfde label. Over alle twintig rapporten geen enkele combinatie van getoonde score en bandlabel die elkaar tegenspreekt. |
+| B16 | **gefixt** | Nul treffers op de drie meervoudsfouten uit de geciteerde zin. |
+| B17 | **vervalt in deze vorm** | Scenario 01 en 05 dragen niet langer hetzelfde label (6.1/10 "vraagt aandacht" tegenover 4.1/10 "onder druk"). Oorzaak is de B4-omkering: de middenband liep op de risicoschaal van 4,5 tot 7,0 en loopt op de gezondheidsschaal van 5,0 tot 6,5. Het voorstel uit de bevinding is niet gebouwd, dus structureel is er niets afgedekt. |
+| B18 | open | Scenario 20 heeft geen verdieping, geen richtingvraag en geen raster, en zegt dat nergens. |
+| B19 | open | Scenario 16 en 17 zijn structureel identiek. |
+| B20 | open | Scenario 07 toont nog twaalf SDT-itemgemiddelden en een eNPS over dezelfde acht mensen. Wel noemt de nieuwe alinea op p.02 die secties nu expliciet, dus onaangekondigd zijn ze niet meer. |
+
+Geen enkele buiten-scope-bevinding is stilzwijgend verdwenen.
+
+### Wat de ronde zelf introduceerde en wat daarmee gebeurde
+
+De herbeoordeling vond één echte regressie. De B4-fix zette in de behoudscontext-intro
+"Hoe hoger, hoe beter, net als bij elke andere score in dit rapport", terwijl vier regels
+lager vertrekintentie staat, waar een hoge score juist meer vertrekgedachten betekent. Dat
+is dezelfde inversie die B4 wegnam, een rij lager, en nu expliciet universeel gemaakt.
+Aanwezig in alle zeventien Loep Behoud-rapporten. **Gefixt** in commit `0c7f4992`: de claim
+is beperkt tot het signaal zelf en een regel benoemt de omgekeerde rij. In dezelfde commit
+zijn twee kleinere beloftes rechtgezet: de opsomming "Wat dit rapport wel laat zien" liet
+de werkgeversaanbeveling weg terwijl die sectie in dezelfde staat wel rendert, en de
+eNPS-intro verwees naar factoren die er zonder factorprofiel niet zijn. De matrix hierboven
+is de stand na die fix.
+
+Twee observaties uit dezelfde herbeoordeling zijn **niet** opgelost en horen bij ronde 2.
+De verwijzing "bij de gespreksagenda zie je per factor welke signalen meewogen" klopt voor
+de spreidings- en verdiepingsvlag, maar niet voor de vertrekreden-weging: daar heeft het
+raster geen kolom voor, en dat is B5. En de spreidingsstrook van vertrekintentie draait de
+schaal om, waardoor de rij 3.4 toont en de strook 7.6 voor dezelfde vraag; dat dateert van
+juli en stond niet in de oorspronkelijke twintig bevindingen.
+
+### Verificatie van de ronde
+
+Backend-suite 25 gefaald, 736 geslaagd, 5 overgeslagen, met een faalset die byte-identiek
+is aan de baseline van voor de branch; er zijn ruim 180 tests bijgekomen. Frontend tsc 133
+en vitest 65 gefaald, beide gelijk aan de baseline. De drie voorbeeldrapporten zijn
+geregenereerd en door WeasyPrint-Docker gehaald: drie keer exit 0 met nul waarschuwingen,
+nul em-dashes in de tekstlaag.
+
+---
+
 ## Reproduceren
 
 ```bash

@@ -145,8 +145,8 @@ describe('Loep Behoud positioning copy', () => {
     expect(retentionScanDefinition.whatItIsNotText.toLowerCase()).toContain('performance-instrument')
     expect(retentionScanDefinition.privacyBoundaryText.toLowerCase()).toContain('individuele signalen')
     expect(retentionScanDefinition.evidenceStatusText.toLowerCase()).toContain('v1-werkmodel')
-    expect(retentionScanDefinition.signalHelp.toLowerCase()).toContain('samenvattend groepssignaal')
-    expect(retentionScanDefinition.signalHelp.toLowerCase()).toContain('eerst verificatie')
+    expect(retentionScanDefinition.signalHelp.toLowerCase()).toContain('hoe hoger, hoe beter')
+    expect(retentionScanDefinition.signalHelp.toLowerCase()).toContain('onder de 5,0 vraagt behoud aandacht')
     expect(retentionScanDefinition.methodologyText.toLowerCase()).toContain('aanvullende signalen rond behoud')
   })
 
