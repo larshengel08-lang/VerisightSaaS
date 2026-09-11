@@ -109,10 +109,35 @@ def test_clear_requires_half_and_margin_2():
     assert direction_state(_agg(wld_peaks=4, wld_scope=2, wld_none=2, wld_time=2), "workload")["state"] == "divided"  # 40%
 
 
-def test_none_needed_wins_ties_and_is_evaluated_first():
-    s = direction_state(_agg(wld_none=2, wld_peaks=2), "workload")     # 2-2 op n=4
-    assert s["state"] == "none_needed" and s["top_key"] == "wld_none" and s["top_n"] == 2
+def test_none_needed_requires_a_strict_majority():
+    """B11: de kop zegt 'volgens de meeste betrokkenen', dus precies de helft
+    is niet genoeg. Boven de helft telt wel, ook bij kleine n."""
+    assert direction_state(_agg(wld_none=3, wld_peaks=1), "workload")["state"] == "none_needed"   # 3 van 4
+    assert direction_state(_agg(wld_none=2, wld_peaks=1), "workload")["state"] == "none_needed"   # 2 van 3
     assert direction_state(_agg(wld_none=5, wld_peaks=1, wld_scope=1), "workload")["state"] == "none_needed"
+    # Precies de helft: valt door naar de gewone logica.
+    assert direction_state(_agg(wld_none=2, wld_peaks=2), "workload")["state"] != "none_needed"   # 2 van 4
+    assert direction_state(_agg(wld_none=3, wld_peaks=2, wld_scope=1), "workload")["state"] != "none_needed"  # 3 van 6
+    # Onder de vloer is too_few sterker dan welke ratio ook.
+    assert direction_state(_agg(wld_none=1, wld_peaks=1), "workload")["state"] == "too_few"       # 1 van 2
+
+
+def test_exactly_half_none_falls_through_to_divided():
+    """Op precies de helft mag de niets-optie nooit als 'clear' eindigen: dan
+    zou het rapport een opdrachtvorm voor niets-doen drukken. De clear-tak
+    sluit *_none uit, dus de fall-through landt hier gegarandeerd op divided."""
+    for counts in ({"wld_none": 2, "wld_peaks": 2},
+                   {"wld_none": 2, "wld_peaks": 1, "wld_scope": 1},
+                   {"wld_none": 4, "wld_peaks": 2, "wld_scope": 2}):
+        st = direction_state(_agg(**counts), "workload")
+        assert st["state"] == "divided", counts
+        assert not (st["state"] == "clear" and st["top_key"].endswith("_none"))
+
+
+def test_none_needed_is_evaluated_before_clear():
+    """Een niets-meerderheid wint van een route die zelf de clear-drempel haalt."""
+    s = direction_state(_agg(wld_none=5, wld_peaks=2, wld_scope=1), "workload")
+    assert s["state"] == "none_needed" and s["top_key"] == "wld_none" and s["top_n"] == 5
     assert direction_state(_agg(wld_none=2, wld_peaks=3), "workload")["state"] == "divided"  # niets 40%, peaks 60% marge 1
 
 
