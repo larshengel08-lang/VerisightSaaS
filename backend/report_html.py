@@ -1108,10 +1108,16 @@ def _direction_p02_line(direction_agg: dict, factor_key: str | None, scan_type: 
 
 
 def _deepening_chain(agg: dict, scan_type: str, factor_key: str) -> str:
-    """Noemer-keten (spec 6.1): getriggerd -> aangeboden -> beantwoord."""
-    return (f"Van de {agg['triggered']} respondenten met een verdieptrigger op "
-            f"{_lc(_fl(factor_key, scan_type))} kregen {agg['offered']} de "
-            f"verdiepingsvraag; {agg['answered']} beantwoordden die.")
+    """Noemer-keten (spec 6.1): getriggerd -> aangeboden -> beantwoord.
+
+    Enkelvoud/meervoud per telling, analoog aan _direction_chain (B16: was
+    altijd meervoud, wat bij tellingen van 1 fout Nederlands opleverde)."""
+    triggered, offered, answered = agg["triggered"], agg["offered"], agg["answered"]
+    resp_word = "respondent" if triggered == 1 else "respondenten"
+    offered_clause = "kreeg 1 de verdiepingsvraag" if offered == 1 else f"kregen {offered} de verdiepingsvraag"
+    answered_clause = "1 beantwoordde die" if answered == 1 else f"{answered} beantwoordden die"
+    return (f"Van de {triggered} {resp_word} met een verdieptrigger op "
+            f"{_lc(_fl(factor_key, scan_type))} {offered_clause}; {answered_clause}.")
 
 
 def _deepening_block(agg: dict, scan_type: str, factor_key: str) -> str:
