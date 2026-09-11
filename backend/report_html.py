@@ -441,7 +441,10 @@ def _doc(title: str, body: str, scan_type: str = "exit") -> str:
 
 # ─── Shared blocks ────────────────────────────────────────────────────────────
 
-_COVER_VALUE_LONG_CHARS = 18  # B10: langer dan dit -> kleiner corps, breekt binnen de kolom
+# B10: langer dan dit -> kleiner corps, breekt binnen de kolom. 18 tekens is
+# ongeveer een volle regel Inter Tight 700 op 22px in een kolom van een derde
+# van de covermeta (~209px); bij een ander corps of andere padding opnieuw meten.
+_COVER_VALUE_LONG_CHARS = 18
 
 
 def _cover_value_class(value: str) -> str:
@@ -465,7 +468,7 @@ def _cover(*, scan_label: str, scan_type: str, org_name: str, period: str,
   <div class="cbar"></div>
   <h1 class="ctitle">{_h(opening_question)}</h1>
   <div class="csub">{_h(org_name)} &nbsp;&middot;&nbsp; {_h(period)} &nbsp;&middot;&nbsp; Managementrapport</div>
-  <div class="cmeta">{cells}</div>
+  <div class="cmeta"><div class="cmeta-row">{cells}</div></div>
 </div>"""
 
 

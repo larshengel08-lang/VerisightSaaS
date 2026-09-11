@@ -133,15 +133,19 @@ p  { margin-bottom: 6px; font-size: 11px; }
    auto-width tabel meegroeien met een lange factornaam tot buiten de pagina.
    Geen flex-gap, custom properties of inset-shorthand hier: WeasyPrint
    negeert die stilzwijgend (zie beslissingslog 2026-07-05). */
+/* .cmeta is een gewoon blok: met left+right EN een breedte zou de breedte
+   winnen en de rechtermarge wegvallen (CSS 2.1 10.3.7), waardoor de tabel
+   56px buiten de pagina stak. Als blok lost de breedte op naar de ruimte
+   tussen de marges; .cmeta-row rekent zijn 100% daar tegenaf. */
 .cmeta { position: absolute; left: 56px; right: 56px; bottom: 56px;
-  display: table; width: 100%; table-layout: fixed;
   border-top: 1px solid rgba(255,255,255,0.14); padding-top: 22px; }
+.cmeta-row { display: table; width: 100%; table-layout: fixed; }
 .cmc { display: table-cell; width: 33.33%; padding-right: 18px; vertical-align: top;
   overflow-wrap: break-word; word-wrap: break-word; }
 .cml { font-family: 'JetBrains Mono', monospace; font-size: 8.5px; letter-spacing: 0.14em;
   text-transform: uppercase; color: rgba(255,255,255,0.45); margin-bottom: 4px; }
 .cmv { font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 22px; color: #fff;
-  white-space: normal; line-height: 1.05; }
+  white-space: normal; line-height: 1.05; }  /* white-space expliciet als guard */
 .cmv-long { font-size: 15px; }
 
 /* .card, .why, h3, .slabel — see bottom of file (overrides with more whitespace) */

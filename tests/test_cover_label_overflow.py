@@ -74,10 +74,17 @@ def _rule(css: str, selector: str) -> str:
 def test_cover_meta_table_has_fixed_layout_and_full_width(scan_type: str):
     css = build_css(scan_type)
     cover = _cover_rules(css)
+    # .cmeta zelf mag GEEN breedte dragen: met left+right erbij wint de breedte
+    # en valt de rechtermarge weg (de tabel stak dan 56px buiten de pagina).
     cmeta = _rule(cover, ".cmeta")
-    assert "table-layout: fixed" in cmeta
-    assert "width: 100%" in cmeta
-    assert "width: auto" not in cmeta
+    assert "width:" not in cmeta
+    assert "display: table" not in cmeta
+    assert "left: 56px" in cmeta and "right: 56px" in cmeta
+
+    row = _rule(cover, ".cmeta-row")
+    assert "display: table" in row
+    assert "table-layout: fixed" in row
+    assert "width: 100%" in row
 
     cmc = _rule(cover, ".cmc")
     assert "display: table-cell" in cmc
@@ -97,7 +104,9 @@ def test_cover_rules_avoid_weasyprint_unsafe_properties():
     # WeasyPrint negeert `gap`, CSS custom properties en de `inset`-shorthand
     # stilzwijgend (zie beslissingslog 2026-07-05). Guard op de coverregels,
     # zodat de fix niet opnieuw alleen in Chromium werkt.
-    cover = _cover_rules(build_css("onboarding"))
+    # Commentaar eruit: de guard toetst CSS, geen proza (een comment dat
+    # "geen gap: gebruiken" zegt mag de test niet laten omvallen).
+    cover = re.sub(r"/\*.*?\*/", "", _cover_rules(build_css("onboarding")), flags=re.S)
     assert "gap:" not in cover
     assert "var(" not in cover
     assert "inset:" not in cover
