@@ -177,6 +177,12 @@ Scenario 16 (30%: caution-zin, staart, "Indicatief beeld" want 30% is niet < 0,3
 
 ---
 
+## 7b. Bijvangst uit de ronde-1-herbeoordeling (toegevoegd 2026-09-11, na merge `20769ae7`)
+
+**Spreidingsstrook vertrekintentie draait de schaal om.** In de behoudscontext toont de rij vertrekintentie bijv. 3.4 (laag = weinig vertrekgedachten = goed), maar de spreidingsstrook eronder rendert dezelfde vraag als 7.6: de strook gebruikt de omgekeerde as. Dateert van juli, stond niet in de oorspronkelijke twintig bevindingen, en is in ronde 1 bewust niet gefixt. Regel: rij en strook tonen dezelfde waarde op dezelfde as; als de as van vertrekintentie omgekeerd blijft (hoog = slecht), staat dat er in één zin bij, in gewone taal, en klopt de strook daarmee. Test: retention-scenario waarin rij en strook dezelfde gemiddelde tonen. Ronde 1 heeft de claim "hoe hoger, hoe beter" al beperkt tot het signaal zelf (commit `0c7f4992`); deze fix maakt de strook consistent met die regel.
+
+De tweede observatie uit ronde 1 (het raster heeft geen kolom voor de vertrekreden-weging) is al gedekt door par. 1.3.
+
 ## 8. Buiten scope (ronde 3)
 B9 paginavulling (lay-outtraject), B13 Anders-toelichtingen in het rapport, B14 brug tussen verdieping- en richtingtelling, B20 één drempelregel voor SDT/eNPS bij n < 10, Loep Start v1.1-verdiepingsset.
 
