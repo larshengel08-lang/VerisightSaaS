@@ -129,12 +129,20 @@ p  { margin-bottom: 6px; font-size: 11px; }
   letter-spacing: -0.04em; line-height: 0.98; color: #fff; max-width: 16ch; }
 .csub { font-family: 'Inter', sans-serif; font-size: 13px; color: rgba(255,255,255,0.62);
   margin-top: 22px; }
+/* B10: expliciete breedte + table-layout: fixed, anders laat WeasyPrint de
+   auto-width tabel meegroeien met een lange factornaam tot buiten de pagina.
+   Geen flex-gap, custom properties of inset-shorthand hier: WeasyPrint
+   negeert die stilzwijgend (zie beslissingslog 2026-07-05). */
 .cmeta { position: absolute; left: 56px; right: 56px; bottom: 56px;
-  display: table; width: auto; border-top: 1px solid rgba(255,255,255,0.14); padding-top: 22px; }
-.cmc { display: table-cell; width: 33%; padding-right: 18px; }
+  display: table; width: 100%; table-layout: fixed;
+  border-top: 1px solid rgba(255,255,255,0.14); padding-top: 22px; }
+.cmc { display: table-cell; width: 33.33%; padding-right: 18px; vertical-align: top;
+  overflow-wrap: break-word; word-wrap: break-word; }
 .cml { font-family: 'JetBrains Mono', monospace; font-size: 8.5px; letter-spacing: 0.14em;
   text-transform: uppercase; color: rgba(255,255,255,0.45); margin-bottom: 4px; }
-.cmv { font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 22px; color: #fff; }
+.cmv { font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 22px; color: #fff;
+  white-space: normal; line-height: 1.05; }
+.cmv-long { font-size: 15px; }
 
 /* .card, .why, h3, .slabel — see bottom of file (overrides with more whitespace) */
 

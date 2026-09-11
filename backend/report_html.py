@@ -441,10 +441,18 @@ def _doc(title: str, body: str, scan_type: str = "exit") -> str:
 
 # ─── Shared blocks ────────────────────────────────────────────────────────────
 
+_COVER_VALUE_LONG_CHARS = 18  # B10: langer dan dit -> kleiner corps, breekt binnen de kolom
+
+
+def _cover_value_class(value: str) -> str:
+    return "cmv cmv-long" if len(value) > _COVER_VALUE_LONG_CHARS else "cmv"
+
+
 def _cover(*, scan_label: str, scan_type: str, org_name: str, period: str,
            opening_question: str, stats: list[tuple[str, str]]) -> str:
     cells = "".join(
-        f'<div class="cmc"><div class="cml">{_h(label)}</div><div class="cmv">{_h(value)}</div></div>'
+        f'<div class="cmc"><div class="cml">{_h(label)}</div>'
+        f'<div class="{_cover_value_class(value)}">{_h(value)}</div></div>'
         for label, value in stats[:3]
     )
     return f"""<div class="cover">
