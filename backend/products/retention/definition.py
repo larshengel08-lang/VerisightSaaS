@@ -47,7 +47,7 @@ SCAN_DEFINITION: dict[str, Any] = {
     "invite_intro": "Je leidinggevende of HR nodigt je uit voor een korte vragenlijst over hoe jij je werk ervaart. Je antwoorden zijn vertrouwelijk en worden alleen per groep bekeken. Zo weet de organisatie eerder waar het wringt.",
     "invite_duration": "6-10 minuten",
     "contact_subject": "Kennismakingsaanvraag Loep Behoud",
-    "dashboard_signal_help": "Retentiesignaal 1-10: een gelijkgewogen v1-samenvatting van SDT-werkbeleving en beinvloedbare werkfactoren. Hogere score = sterker samenvattend groepssignaal dat behoud aandacht vraagt.",
+    "dashboard_signal_help": "Retentiesignaal 1-10: werkfactoren en werkbeleving samengebracht tot een groepsscore. Hoe hoger, hoe beter; onder de 5,0 vraagt behoud aandacht.",
     "report_repeat_title": "Herhaal Loep Behoud, bijvoorbeeld per kwartaal of halfjaar",
     "report_repeat_body": "Deze meting geeft een momentopname van het retentiesignaal en de aanvullende signalen rond behoud. Door periodiek te meten zie je hoe werkbeleving, stay-intent, vertrekintentie en prioriteiten verschuiven en waar management bevestiging of bijstelling nodig heeft.",
     "sdt_items": [

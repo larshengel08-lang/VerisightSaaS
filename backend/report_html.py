@@ -142,17 +142,56 @@ def _shown(score: float | None) -> float | None:
     return float(f"{score:.1f}")
 
 
+def _signal_health(avg_risk: float | None) -> float | None:
+    """Behoudssignaal / checkpointscore zoals het rapport 'm toont: health = 11 - avg_risk.
+
+    B4: de opgeslagen risk_score (DB, API, campaign_stats) staat op de
+    RISICO-schaal (hoog = slecht; per factor 11 - score, zie
+    compute_retention_risk / compute_onboarding_risk). Elk ander "/10"-getal in
+    het rapport is een GEZONDHEIDS-score (hoog = goed) en de uitleg naast het
+    signaal beschrijft de gezondheidsladder (onder 5,0 kwetsbaar, 5,0 tot 6,5
+    aandachtspunt, vanaf 6,5 relatief sterk). Het signaal werd echter ongekeerd
+    getoond: "alles hoog" gaf "3.0/10 · sterk", "alles laag" "6.9/10 · vraagt
+    aandacht". Deze helper is de enige plek waar de omkering gebeurt; precedent
+    is het segmentblok in build_report_data (signal_score = 11 - risk_score).
+    De opslag blijft onaangeraakt. Loep Vertrek (frictiescore) valt hier
+    buiten: die toont bewust de risicoschaal.
+    """
+    if avg_risk is None:
+        return None
+    return round(11.0 - avg_risk, 2)
+
+
+def _band_key(score: float | None, scan_type: str = "exit") -> str | None:
+    """Bandsleutel HOOG/MIDDEN/LAAG voor een totaalscore, of None zonder data.
+
+    Polariteit per product (B4):
+    - exit: RISICO-schaal (frictiescore, hoog = meer frictie):
+      >= RISK_HIGH -> HOOG, >= RISK_MEDIUM -> MIDDEN, anders LAAG.
+    - retention / onboarding: GEZONDHEIDS-schaal (behoudssignaal /
+      checkpointscore via _signal_health, hoog = goed), dezelfde ladder als
+      _factor_label: < 5,0 -> HOOG (onder druk), < 6,5 -> MIDDEN, anders LAAG.
+    HOOG betekent in beide gevallen "meeste aandacht nodig" (rood).
+    Vergelijkt op de getoonde (afgeronde) score, zie _shown (B15)."""
+    if score is None:
+        return None
+    score = _shown(score)
+    if scan_type in ("retention", "onboarding"):
+        return "HOOG" if score < 5.0 else "MIDDEN" if score < 6.5 else "LAAG"
+    return "HOOG" if score >= RISK_HIGH else "MIDDEN" if score >= RISK_MEDIUM else "LAAG"
+
+
 def _band(score: float | None, scan_type: str = "exit") -> tuple[str, str]:
     """(label, kleur) voor een totaalscore — product-specifiek, nooit gedeeld.
 
-    Vergelijkt op de getoonde (afgeronde) score, zie _shown (B15)."""
+    Retention en onboarding verwachten hier de GEZONDHEIDS-waarde
+    (_signal_health(avg_risk)), exit de frictiescore zelf; zie _band_key."""
     table = (_RETENTION_BANDS if scan_type == "retention"
              else _ONBOARDING_BANDS if scan_type == "onboarding"
              else _EXIT_BANDS)
-    if score is None:
+    k = _band_key(score, scan_type)
+    if k is None:
         return ("Geen data", "#94A3B8")
-    score = _shown(score)
-    k = "HOOG" if score >= RISK_HIGH else "MIDDEN" if score >= RISK_MEDIUM else "LAAG"
     return table[k]
 
 # ── Managementvragen per product ──────────────────────────────────────────────
@@ -432,7 +471,8 @@ SECTION_INTROS: dict[str, str] = {
     "behoudscontext": (
         "Het behoudssignaal is een samenvattende groepsscore: de werkfactoren uit het "
         "overzichtsprofiel en de werkbeleving samen, teruggebracht tot &eacute;&eacute;n getal "
-        "tussen 1 en 10. Onder de 5,0 noemen we een score kwetsbaar, tussen 5,0 en 6,5 een "
+        "tussen 1 en 10. Hoe hoger, hoe beter, net als bij elke andere score in dit rapport. "
+        "Onder de 5,0 noemen we een score kwetsbaar, tussen 5,0 en 6,5 een "
         "aandachtspunt, vanaf 6,5 relatief sterk. De drie signalen daaronder geven context: "
         "blijfintentie en vertrekintentie zijn geen spiegelbeeld van elkaar (iemand kan "
         "beide tegelijk voelen), en bevlogenheid staat daar los van: bevlogen medewerkers "
@@ -449,7 +489,8 @@ SECTION_INTROS: dict[str, str] = {
     "checkpointoverzicht": (
         "De checkpointscore vat samen hoe nieuwe medewerkers hun eerste werkperiode ervaren: "
         "de landingsdomeinen uit dit rapport samengebracht tot &eacute;&eacute;n getal tussen "
-        "1 en 10. Onder de 5,0 noemen we een score kwetsbaar, tussen 5,0 en 6,5 een "
+        "1 en 10. Hoe hoger, hoe beter, net als bij elke andere score in dit rapport. "
+        "Onder de 5,0 noemen we een score kwetsbaar, tussen 5,0 en 6,5 een "
         "aandachtspunt, vanaf 6,5 relatief sterk. Dit is een momentopname van de landing: "
         "een startpunt voor het gesprek over onboarding, geen beoordeling van individuele "
         "starters of hun begeleiders."
@@ -2058,15 +2099,13 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
     """
     rows = ""
     if retention_score is not None:
-        # retention_score = avg_risk (RISICO-schaal: hoog = slecht). Note + kleur
-        # moeten dezelfde polariteit hebben als de cover-band (_band): hoog risk =
-        # "onder druk" / rood. Voorheen las de note-ladder hoog = "sterk" / teal,
-        # tegengesteld aan de cover binnen hetzelfde rapport.
-        col = _band(retention_score, "retention")[1]
-        _rs = _shown(retention_score)  # note op de getoonde score (B15)
-        note = ("onder druk" if _rs >= RISK_HIGH else
-                "vraagt aandacht" if _rs >= RISK_MEDIUM else
-                "sterk")
+        # retention_score = _signal_health(avg_risk): GEZONDHEIDS-schaal, hoog =
+        # goed (B4). Note en kleur komen uit dezelfde ladder als de kernzin-band
+        # (_band_key), zodat er nooit een derde drempelset naast de intro-copy
+        # ("onder de 5,0 kwetsbaar ... vanaf 6,5 relatief sterk") ontstaat.
+        _k = _band_key(retention_score, "retention")
+        col = _RETENTION_BANDS[_k][1]
+        note = {"HOOG": "onder druk", "MIDDEN": "vraagt aandacht", "LAAG": "sterk"}[_k]
         rows += (f'<div class="sigrow"><div class="sigrow-title">Behoudssignaal</div>'
                  f'<div class="sigrow-body">Werkfactoren en werkbeleving samengebracht op groepsniveau.</div>'
                  f'<div><span class="sigrow-score" style="color:{col};">{retention_score:.1f}/10</span>'
@@ -2549,7 +2588,10 @@ def render_retention_report_html(data: dict) -> str:
     avg_eng     = data["avg_eng"]
     avg_to      = data["avg_to"]
     avg_si      = data["avg_si"]
-    band_lbl, band_col = _band(avg_risk, ST)
+    # Behoudssignaal op de gezondheidsschaal (B4): één omkering, hier, en
+    # daarna overal dezelfde waarde (band, kernzin, behoudscontext).
+    signal      = _signal_health(avg_risk)
+    band_lbl, band_col = _band(signal, ST)
     fa          = data["factor_avgs"]
     sdt_a       = data["sdt_avgs"]
     nsp         = data["nsp"]
@@ -2637,8 +2679,8 @@ def render_retention_report_html(data: dict) -> str:
     # Kernzin: band + geduid getal + laagste factor. "behoudssignaal" bij het
     # cijfer, zodat de lezer weet WAT er 4.7 scoort (de factorscore ernaast is
     # een ander getal — dat onderscheid was eerder onzichtbaar).
-    if avg_risk and band_lbl and _raster_primary_label:
-        exec_line = f"{band_lbl} (behoudssignaal {_score_str(avg_risk)}). {_raster_primary_label} is het eerste gesprekspunt."
+    if signal and band_lbl and _raster_primary_label:
+        exec_line = f"{band_lbl} (behoudssignaal {_score_str(signal)}). {_raster_primary_label} is het eerste gesprekspunt."
     else:
         exec_line = "Zie factoranalyse en behoudscontext voor details."
 
@@ -2679,7 +2721,7 @@ def render_retention_report_html(data: dict) -> str:
 
     # ── Behoudscontext (p.04 — vóór factorprofiel) ───────────────────────────
     s += _behoudscontext(
-        retention_score=avg_risk,
+        retention_score=signal,
         stay_intent=avg_si,
         turnover=avg_to,
         engagement=avg_eng,
@@ -2964,7 +3006,9 @@ def render_onboarding_report_html(data: dict) -> str:
     n           = data["n_completed"]
     avg_risk    = data["avg_risk"]
     avg_si      = data["avg_si"]
-    band_lbl, band_col = _band(avg_risk, ST)
+    # Checkpointscore op de gezondheidsschaal (B4), zie _signal_health.
+    signal      = _signal_health(avg_risk)
+    band_lbl, band_col = _band(signal, ST)
     fa          = data["factor_avgs"]
     sdt_a       = data["sdt_avgs"]
     nsp         = data["nsp"]
@@ -3025,8 +3069,8 @@ def render_onboarding_report_html(data: dict) -> str:
 
     # Kernzin: band + geduid getal + laagste factor ("checkpointscore" zodat de
     # lezer weet wat het getal is; de factorscore ernaast is een ander getal).
-    if avg_risk and band_lbl and low_lbl:
-        exec_line = f"{band_lbl} (checkpointscore {_score_str(avg_risk)}). {low_lbl} is het eerste gesprekspunt."
+    if signal and band_lbl and low_lbl:
+        exec_line = f"{band_lbl} (checkpointscore {_score_str(signal)}). {low_lbl} is het eerste gesprekspunt."
     else:
         exec_line = "Zie factordiepte en checkpointoverzicht voor details."
 
@@ -3072,7 +3116,7 @@ def render_onboarding_report_html(data: dict) -> str:
                             opener_html=ch.opener("Overzichtsprofiel"))
 
     # ── Checkpointoverzicht (p.05 — onboarding-exclusive) ────────────────────
-    s += _checkpointoverzicht(checkpoints=[("Huidig checkpoint", avg_risk)],
+    s += _checkpointoverzicht(checkpoints=[("Huidig checkpoint", signal)],
                               opener_html=ch.opener("Onboardingfases", kicker="Checkpointoverzicht"))
 
     # ── Landingskwaliteit per domein (onboarding-exclusive) ───────────────────

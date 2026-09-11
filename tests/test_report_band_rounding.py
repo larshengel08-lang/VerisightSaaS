@@ -96,17 +96,24 @@ def test_label_and_colour_invariant_under_display_rounding():
             assert _band(x, st) == _band(shown, st), (x, st)
 
 
-# ── _band (totaalscore, RISK_HIGH / RISK_MEDIUM) ─────────────────────────────
+# ── _band (totaalscore) ──────────────────────────────────────────────────────
+# Exit: risicoschaal (RISK_HIGH / RISK_MEDIUM). Retention/onboarding: het
+# signaal staat sinds B4 op de gezondheidsschaal met de factorladder (5,0 / 6,5).
 
 def test_band_rounds_like_display():
     just_below_high = RISK_HIGH - 0.04   # toont als RISK_HIGH
     just_below_med = RISK_MEDIUM - 0.04  # toont als RISK_MEDIUM
     assert _shown(just_below_high) == RISK_HIGH
     assert _shown(just_below_med) == RISK_MEDIUM
-    for st in ("exit", "retention", "onboarding"):
-        assert _band(just_below_high, st) == _band(RISK_HIGH, st)
-        assert _band(just_below_med, st) == _band(RISK_MEDIUM, st)
-        assert _band(RISK_HIGH - 0.06, st) != _band(RISK_HIGH, st)
+    assert _band(just_below_high, "exit") == _band(RISK_HIGH, "exit")
+    assert _band(just_below_med, "exit") == _band(RISK_MEDIUM, "exit")
+    assert _band(RISK_HIGH - 0.06, "exit") != _band(RISK_HIGH, "exit")
+    for st in ("retention", "onboarding"):
+        # 6.46 toont als 6.5 -> zelfde band als 6.5; 6.44 toont als 6.4 -> andere band.
+        assert _band(6.46, st) == _band(6.5, st)
+        assert _band(4.96, st) == _band(5.0, st)
+        assert _band(6.44, st) != _band(6.5, st)
+        assert _band(4.94, st) != _band(5.0, st)
     assert _band(None) == ("Geen data", "#94A3B8")
 
 
@@ -141,11 +148,16 @@ def test_checkpointoverzicht_never_shows_6_5_with_aandachtspunt():
 
 
 def test_behoudscontext_notes_follow_displayed_score():
-    html = _behoudscontext(retention_score=RISK_HIGH - 0.04, stay_intent=None,
+    # Behoudssignaal staat op de gezondheidsschaal (B4): 4.96 toont als 5.0 en
+    # krijgt dus dezelfde note als een echte 5.0 ("vraagt aandacht"), niet de
+    # note van 4.9 ("onder druk").
+    html = _behoudscontext(retention_score=4.96, stay_intent=None,
                            turnover=6.46, engagement=7.46)
-    # Behoudssignaal toont RISK_HIGH -> zelfde note als een echte RISK_HIGH.
-    assert f"{RISK_HIGH:.1f}/10" in html
-    assert "onder druk" in html
+    assert "5.0/10" in html
+    assert "vraagt aandacht" in html and "onder druk" not in html
+    html_low = _behoudscontext(retention_score=4.94, stay_intent=None,
+                               turnover=None, engagement=None)
+    assert "4.9/10" in html_low and "onder druk" in html_low
     # Vertrekintentie toont 6.5 -> "zichtbaar" (grens <= 6.5), niet "hoog".
     assert "6.5/10" in html and "zichtbaar" in html and "actief vertrekrisico" not in html
     # Bevlogenheid toont 7.5 -> "hoog".

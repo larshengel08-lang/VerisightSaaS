@@ -75,8 +75,8 @@ SCAN_DEFINITION: dict[str, Any] = {
     "invite_duration": "3-5 minuten",
     "contact_subject": "Kennismakingsaanvraag Loep Start",
     "dashboard_signal_help": (
-        "Onboardingsignaal 1-10: samenvattend checkpointsignaal van korte werkbeleving en geselecteerde werkfactoren "
-        "in deze campaign. Hogere score = scherper vroeg aandachtssignaal dat nu bestuurlijke opvolging vraagt."
+        "Onboardingsignaal 1-10: hoe nieuwe medewerkers hun eerste werkperiode ervaren, samengebracht tot een "
+        "groepsscore. Hoe hoger, hoe beter; onder de 5,0 vraagt de onboarding aandacht."
     ),
     "report_repeat_title": "Een checkpoint per campaign",
     "report_repeat_body": (
