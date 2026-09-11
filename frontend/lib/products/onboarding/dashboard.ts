@@ -3,7 +3,7 @@ import { FACTOR_LABELS } from '@/lib/types'
 import { ONBOARDING_ACTION_PLAYBOOKS } from './action-playbooks'
 
 const SIGNAL_BANDS_TEXT =
-  'Laag, midden en hoog onboardingsignaal geven alleen de scherpte van het huidige checkpointsignaal weer. Gebruik deze banding als vroege managementhulp op groepsniveau, niet als individuele beoordeling, performance-oordeel of bewijs van latere retentie-uitkomst.'
+  'Het onboardingsignaal loopt van 1 tot 10 en hoe hoger, hoe beter. Onder de 5,0 is de onboarding een kwetsbaar punt, tussen 5,0 en 6,5 een aandachtspunt, vanaf 6,5 relatief sterk. Gebruik deze banden als vroege hulp op groepsniveau, niet als individuele beoordeling, performance-oordeel of bewijs van latere retentie-uitkomst.'
 
 const LOW_SIGNAL_THRESHOLD = 4.5
 const HIGH_SIGNAL_THRESHOLD = 7

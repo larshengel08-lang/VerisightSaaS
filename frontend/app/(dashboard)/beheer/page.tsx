@@ -11,7 +11,14 @@ import { NewCampaignForm } from '@/components/dashboard/new-campaign-form'
 import { NewOrgForm } from '@/components/dashboard/new-org-form'
 import { getDeliveryModeLabel } from '@/lib/implementation-readiness'
 import { createClient } from '@/lib/supabase/server'
-import { type Campaign, type CampaignStats, type Organization, type OrgInvite } from '@/lib/types'
+import {
+  isHealthScaleSignal,
+  toDisplaySignalScore,
+  type Campaign,
+  type CampaignStats,
+  type Organization,
+  type OrgInvite,
+} from '@/lib/types'
 
 export default async function BeheerPage() {
   const supabase = await createClient()
@@ -453,7 +460,7 @@ export default async function BeheerPage() {
                       <th className="px-5 py-3 text-right">Uitgenodigd</th>
                       <th className="px-5 py-3 text-right">Ingevuld</th>
                       <th className="px-5 py-3 text-right">Respons</th>
-                      <th className="px-5 py-3 text-right">Gem. risico</th>
+                      <th className="px-5 py-3 text-right">Gem. signaal</th>
                       <th className="px-4 py-3" />
                     </tr>
                   </thead>
@@ -461,6 +468,23 @@ export default async function BeheerPage() {
                     {campaignStats.map((stats) => {
                       const pct = stats.completion_rate_pct ?? 0
                       const org = orgs.find((item) => item.id === stats.organization_id)
+                      // Weergave op de rapportschaal: retention/onboarding tonen hoog = goed,
+                      // de andere scans blijven op de risicoschaal (hoog = meer frictie).
+                      const displaySignal = toDisplaySignalScore(stats.scan_type, stats.avg_risk_score)
+                      const signalColorClass =
+                        displaySignal === null
+                          ? ''
+                          : isHealthScaleSignal(stats.scan_type)
+                            ? displaySignal >= 6.5
+                              ? 'text-emerald-700'
+                              : displaySignal >= 5
+                                ? 'text-amber-600'
+                                : 'text-red-600'
+                            : displaySignal >= 7
+                              ? 'text-red-600'
+                              : displaySignal >= 4.5
+                                ? 'text-amber-600'
+                                : 'text-emerald-700'
                       return (
                         <tr key={stats.campaign_id} className="hover:bg-slate-50/70">
                           <td className="px-5 py-3">
@@ -494,17 +518,9 @@ export default async function BeheerPage() {
                             </div>
                           </td>
                           <td className="px-5 py-3 text-right tabular-nums text-slate-700">
-                            {stats.avg_risk_score ? (
-                              <span
-                                className={`font-semibold ${
-                                  stats.avg_risk_score >= 7
-                                    ? 'text-red-600'
-                                    : stats.avg_risk_score >= 4.5
-                                      ? 'text-amber-600'
-                                      : 'text-emerald-700'
-                                }`}
-                              >
-                                {stats.avg_risk_score.toFixed(1)}
+                            {displaySignal !== null ? (
+                              <span className={`font-semibold ${signalColorClass}`}>
+                                {displaySignal.toFixed(1)}
                               </span>
                             ) : (
                               <span className="text-xs text-slate-300">—</span>

@@ -19,7 +19,7 @@ export const retentionScanDefinition: ScanDefinition = {
   evidenceStatusText:
     'Loep Behoud is een v1-werkmodel: inhoudelijk plausibel, intern consistent en testmatig beschermd. Het product is nadrukkelijk geen pragmatisch bewezen of wetenschappelijk gevalideerde predictor van vrijwillig vertrek.',
   signalHelp:
-    'Retentiesignaal 1-10: een gelijkgewogen v1-samenvatting van SDT-werkbeleving en beinvloedbare werkfactoren. Hogere score = sterker samenvattend groepssignaal dat behoud eerst verificatie en daarna opvolging vraagt.',
+    'Retentiesignaal 1-10: werkfactoren en werkbeleving samengebracht tot een groepsscore. Hoe hoger, hoe beter; onder de 5,0 vraagt behoud aandacht.',
   reliabilityText:
     'Grafieken en patroonanalyse tonen we pas vanaf minimaal 10 responses. Individuele scores blijven uit beeld; segmentvergelijkingen tonen we alleen bij voldoende aantallen. De uitkomst is bedoeld voor prioritering en verificatie op groepsniveau, niet als gevalideerde voorspeller van vrijwillig vertrek.',
   segmentText:

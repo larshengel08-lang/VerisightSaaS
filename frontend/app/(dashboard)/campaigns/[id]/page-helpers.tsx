@@ -15,6 +15,7 @@ import {
   FACTOR_LABELS,
   getResponseDirectionSignalScore,
   getResponseSignalScore,
+  toDisplaySignalScore,
 } from '@/lib/types'
 import type { CampaignStats, Respondent, ScanType, SurveyResponse } from '@/lib/types'
 import { DashboardPanel } from '@/components/dashboard/dashboard-primitives'
@@ -165,7 +166,7 @@ export function buildHeroDescription({
   }
 
   if (scanType === 'onboarding') {
-    return `Deze onboarding-campaign laat een begrensde checkpoint-read zien van nieuwe instroom op groepsniveau. Gebruik de uitkomst om te bepalen welke vroege succes- of frictiefactor nu eerst aandacht vraagt, zonder dit al als volledige 30-60-90-journey of individuele voorspelling te lezen. Huidig ${scanDefinition.signalLabelLower}: ${averageRiskScore?.toFixed(1) ?? '-'} /10.`
+    return `Deze onboarding-campaign laat een begrensde checkpoint-read zien van nieuwe instroom op groepsniveau. Gebruik de uitkomst om te bepalen welke vroege succes- of frictiefactor nu eerst aandacht vraagt, zonder dit al als volledige 30-60-90-journey of individuele voorspelling te lezen. Huidig ${scanDefinition.signalLabelLower}: ${toDisplaySignalScore(scanType, averageRiskScore)?.toFixed(1) ?? '-'} /10.`
   }
 
   if (scanType === 'leadership') {
@@ -211,12 +212,14 @@ export function buildDecisionPanels({
   hasMinDisplay: boolean
 }): DecisionPanel[] {
   const topFactorLabel = getTopFactorLabel(factorAverages)
+  // Weergave op de schaal die de klant ook in het rapport ziet (retention/onboarding: hoog = goed).
+  const displaySignalScore = toDisplaySignalScore(stats.scan_type, averageRiskScore)
 
   const sharedPanels: DecisionPanel[] = [
     {
       eyebrow: 'Primair signaal',
       title: scanDefinition.signalLabel,
-      value: averageRiskScore !== null ? `${averageRiskScore.toFixed(1)}/10` : '-',
+      value: displaySignalScore !== null ? `${displaySignalScore.toFixed(1)}/10` : '-',
       body: averageRiskScore !== null
         ? `Gebruik dit als samenvattend managementsignaal. Lees de score altijd samen met ${topFactorLabel ? topFactorLabel.toLowerCase() : 'de topfactoren'} en de responskwaliteit.`
         : 'Nog geen score zichtbaar zolang er te weinig responses zijn om veilig te tonen.',

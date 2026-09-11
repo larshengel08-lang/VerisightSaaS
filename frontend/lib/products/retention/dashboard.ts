@@ -25,7 +25,7 @@ const FACTOR_ACTION_HINTS: Record<string, string> = {
 }
 
 const SIGNAL_BANDS_TEXT =
-  'Voorlopig stabiel, aandacht nodig en direct aandachtspunt laten zien hoe breed en hoe scherp het retentiesignaal zich in de groep verdeelt. Gebruik deze banding voor prioritering en verificatie op groepsniveau in HR, sponsor en MT, niet als individuele voorspelling.'
+  'Het retentiesignaal loopt van 1 tot 10 en hoe hoger, hoe beter. Onder de 5,0 is behoud een kwetsbaar punt, tussen 5,0 en 6,5 een aandachtspunt, vanaf 6,5 relatief sterk. Gebruik deze banden om op groepsniveau te bepalen waar HR, sponsor en MT als eerste kijken, niet als individuele voorspelling.'
 
 function deriveSignalProfile(
   riskScore: number | null,

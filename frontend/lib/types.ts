@@ -236,6 +236,27 @@ export function getCampaignAverageSignalScore(
   return stats.avg_signal_score ?? stats.avg_risk_score ?? null
 }
 
+// Scantypes waarvan het signaal aan de klant op de gezondheidsschaal wordt getoond
+// (hoog = goed), zoals in het PDF-rapport (behoudssignaal, checkpointscore).
+// De backend en de database blijven op de risicoschaal (hoog = slecht); de omzetting
+// gebeurt uitsluitend aan de weergavekant. Interne logica die op de risicoschaal
+// rekent (bandprofielen, playbooks, sortering) blijft ongewijzigd.
+export const HEALTH_SCALE_SCAN_TYPES: ReadonlySet<ScanType> = new Set<ScanType>(['retention', 'onboarding'])
+
+export function isHealthScaleSignal(scanType: ScanType): boolean {
+  return HEALTH_SCALE_SCAN_TYPES.has(scanType)
+}
+
+/**
+ * Zet een opgeslagen risk_score/avg_risk_score om naar de waarde die de klant te zien krijgt.
+ * Voor retention en onboarding: 11 - risico (afgerond op 2 decimalen). Andere scantypes ongewijzigd.
+ */
+export function toDisplaySignalScore(scanType: ScanType, riskScore: number | null): number | null {
+  if (riskScore === null) return null
+  if (!isHealthScaleSignal(scanType)) return riskScore
+  return Math.round((11 - riskScore) * 100) / 100
+}
+
 export function getResponseSignalScore(
   response: Pick<SurveyResponse, 'signal_score' | 'risk_score'>,
 ): number | null {

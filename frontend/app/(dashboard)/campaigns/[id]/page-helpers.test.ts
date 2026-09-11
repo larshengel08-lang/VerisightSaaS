@@ -359,3 +359,45 @@ describe('dashboard page helpers field semantics', () => {
     expect(averages.orgAverages.trust_psychological_safety).toBe(6)
   })
 })
+
+describe('B4: signal shown on the health scale for retention and onboarding', () => {
+  it('flips the primary signal panel value for retention but not for exit', () => {
+    const base = {
+      strongWorkSignalRate: null,
+      retentionSupplemental: { engagement: 5.8, turnoverIntention: 5.9, stayIntent: 4.7 },
+      factorAverages: {},
+      hasEnoughData: true,
+      hasMinDisplay: true,
+    }
+
+    const retentionPanels = buildDecisionPanels({
+      ...base,
+      stats: { scan_type: 'retention', completion_rate_pct: 72 } as never,
+      averageRiskScore: 3.0,
+      scanDefinition: getScanDefinition('retention'),
+    })
+    expect(retentionPanels[0]?.value).toBe('8.0/10')
+
+    const exitPanels = buildDecisionPanels({
+      ...base,
+      stats: { scan_type: 'exit', completion_rate_pct: 72 } as never,
+      averageRiskScore: 7.2,
+      scanDefinition: getScanDefinition('exit'),
+    })
+    expect(exitPanels[0]?.value).toBe('7.2/10')
+  })
+
+  it('flips the onboarding hero sentence to the health scale', () => {
+    const hero = buildHeroDescription({
+      scanType: 'onboarding',
+      isActive: true,
+      completionRate: 61,
+      pendingCount: 2,
+      hasEnoughData: true,
+      averageRiskScore: 6.55,
+      scanDefinition: getScanDefinition('onboarding'),
+    })
+
+    expect(hero).toContain('Huidig onboardingsignaal: 4.5 /10')
+  })
+})

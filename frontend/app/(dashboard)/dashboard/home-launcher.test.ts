@@ -325,4 +325,23 @@ describe('dashboard home structure', () => {
       'building',
     ])
   })
+
+  it('shows retention and onboarding signals on the health scale (11 - risk) but leaves exit on the stored scale (B4)', () => {
+    const model = buildDashboardHomeModel({
+      campaigns: [
+        buildCampaign({ campaign_id: 'ret-1', scan_type: 'retention', avg_risk_score: 3.0, avg_signal_score: 3.0 }),
+        buildCampaign({ campaign_id: 'onb-1', scan_type: 'onboarding', avg_risk_score: 6.55, avg_signal_score: 6.55 }),
+        buildCampaign({ campaign_id: 'exit-1', scan_type: 'exit', avg_risk_score: 7.2, avg_signal_score: 7.2 }),
+      ],
+      isAdmin: false,
+    })
+
+    const cards = model.groups.flatMap((group) => group.campaigns)
+    const metric = (id: string) => cards.find((card) => card.campaign.campaign_id === id)?.metrics[3]
+
+    expect(metric('ret-1')).toEqual({ label: 'Retentiesignaal', value: '8.0/10' })
+    expect(metric('onb-1')).toEqual({ label: 'Onboardingsignaal', value: '4.5/10' })
+    expect(metric('exit-1')).toEqual({ label: 'Frictiescore', value: '7.2/10' })
+  })
+
 })
