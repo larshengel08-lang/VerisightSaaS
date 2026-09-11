@@ -615,16 +615,36 @@ def _intro(key: str) -> str:
     return f'<p class="sec-intro">{SECTION_INTROS[key]}</p>'
 
 
-def _gebruiksblok(scan_lbl: str) -> str:
+GEBRUIKSBLOK_LEESROUTE = (
+    "Lees het van voor naar achter: eerst het beeld (context en "
+    "overzichtsprofiel), dan de verdieping per thema, en achteraan de "
+    "gespreksagenda: d&aacute;&aacute;r begint het gesprek.")
+
+# Degraded leesroute (bug B3): zonder factorprofiel is er geen verdieping per
+# thema en geen volgorde van thema's. De normale zin stuurde de lezer dan naar
+# twee secties die leeg of gedegradeerd zijn. De gespreksagenda-pagina zelf
+# bestaat wél in elke staat (met gespreksopener, en bij richtingdata het
+# degraded richtingblok), dus daar mag de zin nog naar verwijzen.
+GEBRUIKSBLOK_LEESROUTE_DEGRADED = (
+    "Lees het van voor naar achter: eerst wat dit aantal antwoorden wel en "
+    "niet toelaat, daarna de context en de werkbeleving. Een verdieping per "
+    "thema en een volgorde van thema&#x27;s staan er nog niet in; achteraan "
+    "lees je waar het gesprek kan beginnen.")
+
+
+def _gebruiksblok(scan_lbl: str, *, degraded: bool = False) -> str:
     """'Zo gebruik je dit rapport' (spec 2026-07-13 §5) — leesroute + beoogd
-    besluit. Geen bespreekscript: de begeleide bespreking blijft het product."""
+    besluit. Geen bespreekscript: de begeleide bespreking blijft het product.
+
+    degraded volgt dezelfde schakelaar als de degraded p.02-alinea
+    (_geen_factorprofiel_note): de leesroute mag alleen naar secties sturen
+    die in deze staat ook echt iets bevatten."""
+    leesroute = GEBRUIKSBLOK_LEESROUTE_DEGRADED if degraded else GEBRUIKSBLOK_LEESROUTE
     return f"""<div style="margin-top:24px;">
   <span class="eyebrow">Zo gebruik je dit rapport</span>
   <p class="sec-intro" style="margin-top:6px;margin-bottom:0;">
     Dit rapport is een groepsbeeld van de organisatie, geen beoordeling van personen
-    of afdelingen. Lees het van voor naar achter: eerst het beeld (context en
-    overzichtsprofiel), dan de verdieping per thema, en achteraan de gespreksagenda:
-    d&aacute;&aacute;r begint het gesprek. De {scan_lbl}-uitkomsten worden besproken in een
+    of afdelingen. {leesroute} De {scan_lbl}-uitkomsten worden besproken in een
     begeleide managementbespreking: het rapport levert de onderbouwing, de bespreking de
     keuzes. Het doel aan het eind van die bespreking is meestal simpel: &eacute;&eacute;n prioriteit,
     &eacute;&eacute;n eigenaar en een vervolgmoment.
@@ -940,6 +960,16 @@ RASTER_GATE_NOTE = (
     "In deze meting waren geen verdiepingsvragen actief; de volgorde volgt "
     "score en spreiding.")
 
+# Derde intro-staat (bug B3): zonder rasterrijen is er geen tabel, geen
+# volgorde en geen startpunt. RASTER_INTRO en RASTER_INTRO_GATE beloven beide
+# een afweging van zes factoren die de pagina dan niet toont; dezelfde
+# eerlijkheidsfout als de methodiekpagina die het richtingblok beloofde.
+RASTER_INTRO_EMPTY = (
+    "Dit overzicht weegt normaal alle zes factoren tegen elkaar af. Met dit "
+    "aantal antwoorden toont Loep nog geen profiel per factor, dus is er nog "
+    "geen volgorde en geen startpunt. Wat er wel is, staat hieronder en in de "
+    "voorgaande hoofdstukken.")
+
 
 def _raster_deepening_cell(row: dict, scan_type: str) -> str:
     """Celtekst verdiepingskolom volgens de vijf vaste staten (spec par. 6)."""
@@ -957,7 +987,8 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
                          deepening_active: bool,
                          mgmt_q: str, review_when: str,
                          opener_html: str,
-                         direction_agg: dict | None = None, n_total: int = 0) -> str:
+                         direction_agg: dict | None = None, n_total: int = 0,
+                         direction_block_html: str | None = None) -> str:
     """Prioriteringsraster + geintegreerde gespreksagenda, inclusief het
     richtingblok "Wat er moet gebeuren" (spec par. 2 en par. 6).
 
@@ -969,6 +1000,12 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
     contract-test controleert de letterlijke, volledige string als substring
     van de HTML-output, dus elke opmaak die de string zelf onderbreekt
     (bijv. een <b>-tag halverwege) breekt die test.
+
+    direction_block_html (bug B3): de renderers bouwen het richtingblok zelf,
+    omdat de methodiekpagina moet weten of het blok daadwerkelijk gerenderd
+    is (_trust_page's direction_active). Meegegeven blok wint; zonder dat
+    argument bouwt deze functie het blok alsnog uit direction_agg, zodat
+    directe aanroepers (tests) niets hoeven te weten van die volgorde.
     """
     # Fail-loud: direction_agg en n_total horen bij elkaar (_direction_chain
     # rekent de noemer-zin uit met n_total) — zonder n_total zou "Van de 0
@@ -1022,8 +1059,15 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
                  f'{deep_td}'
                  f'<td>{_agenda_cell(row)}</td></tr>')
 
-    intro = RASTER_INTRO if deepening_active else RASTER_INTRO_GATE
-    gate = f'<p class="r-gate">{RASTER_GATE_NOTE}</p>' if not deepening_active else ""
+    # Zonder rasterrijen is er geen tabel om te tonen (bug B3): de kale
+    # tabelkop, de uitlegregel over de sorteervolgorde en de gate-notitie
+    # beschrijven dan alle drie een rangorde die de pagina niet heeft.
+    if ranked:
+        intro = RASTER_INTRO if deepening_active else RASTER_INTRO_GATE
+    else:
+        intro = RASTER_INTRO_EMPTY
+    gate = (f'<p class="r-gate">{RASTER_GATE_NOTE}</p>'
+            if ranked and not deepening_active else "")
     # Legenda legt de spreidingskolom uit ("... onder de 5 scoren"); zonder een
     # enkele rij met volledige spreidingsdata (n >= 10) is die uitleg niet van
     # toepassing en zou de tekst zelf de degraded-staffel-test doorbreken.
@@ -1034,17 +1078,23 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
                 f'<div class="step-fill"></div>'
                 f'<div class="step-fill-hint">{_h(hint)}</div>')
 
-    return f"""<div class="pb sec">
-  {opener_html}
-  <p class="sec-intro">{intro}</p>
-  <table class="raster-tbl"><tr>
+    tabel = f"""<table class="raster-tbl"><tr>
     <th style="width:27%">Factor</th><th style="width:12%">Score</th>
     <th style="width:22%">Spreiding</th>{deep_th}<th style="width:14%">Agenda</th>
   </tr>{body}</table>
   {legenda}
   {gate}
-  <div class="r-uitleg">{RASTER_UITLEG[scan_type]}</div>
-  {_wat_moet_gebeuren_block(ranked, direction_agg or {}, scan_type, n_total)}
+  <div class="r-uitleg">{RASTER_UITLEG[scan_type]}</div>""" if ranked else ""
+
+    dir_block = (direction_block_html if direction_block_html is not None
+                 else _wat_moet_gebeuren_block(ranked, direction_agg or {},
+                                               scan_type, n_total))
+
+    return f"""<div class="pb sec">
+  {opener_html}
+  <p class="sec-intro">{intro}</p>
+  {tabel}
+  {dir_block}
   <div class="agenda-dark" style="margin-top:16px;">
     <div class="agenda-opener">
       <div style="font-family:'JetBrains Mono', monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#E8A020;margin-bottom:7px;">Gespreksopener</div>
@@ -1125,10 +1175,18 @@ def _lc(label: str) -> str:
 # ── Richtingblok "Wat er moet gebeuren" (spec 2026-09-07 par. 6) ─────────────
 
 DIRECTION_BLOCK_EYEBROW = "Wat er moet gebeuren"
-DIRECTION_BLOCK_INTRO = (
+# Eerste zin apart: de degraded variant (bug B3) gebruikt 'm ook, maar mag de
+# tweede zin niet overnemen -- die belooft kaarten voor startpunt en tweede
+# punt, en precies die kaarten zijn er zonder factorprofiel niet.
+DIRECTION_INTRO_VRAAG = (
     "Elke respondent kreeg één vraag over het onderwerp dat bij die respondent het laagst "
-    "scoorde: wat zou hier het meest helpen? Hieronder staat wat die respondenten kozen "
+    "scoorde: wat zou hier het meest helpen?")
+DIRECTION_BLOCK_INTRO = (
+    f"{DIRECTION_INTRO_VRAAG} Hieronder staat wat die respondenten kozen "
     "voor het startpunt en het tweede punt. Dit is hun keuze, geen advies van Loep.")
+DIRECTION_DEGRADED_TAIL = (
+    "Zonder profiel per factor is er nog geen startpunt om die antwoorden aan "
+    "te koppelen, en per onderwerp zijn het er te weinig om te tonen.")
 DIRECTION_HEAD_TOO_FEW = "Te weinig antwoorden voor een richting."
 DIRECTION_HEAD_NONE_NEEDED = "Hier hoeft volgens de meeste betrokkenen niets."
 DIRECTION_HEAD_DIVIDED = "Geen eenduidige richting."
@@ -1239,10 +1297,52 @@ def _wat_moet_gebeuren_block(ranked: list[dict], direction_agg: dict,
                              factor_key=r["key"], n_total=n_total)
         for r in ranked if r["agenda_role"] in ("startpunt", "tweede"))
     if not cards:
-        return ""
+        # Geen rasterrijen, dus geen startpunt om een richting aan te hangen
+        # (bug B3). Het blok stil laten vallen liet de verzamelde antwoorden
+        # spoorloos verdwijnen terwijl de methodiekpagina ze wél beloofde.
+        return _direction_degraded_block(direction_agg, n_total)
     return (f'<div class="dir-block"><span class="eyebrow">{DIRECTION_BLOCK_EYEBROW}</span>'
             f'<p class="dir-intro">{DIRECTION_BLOCK_INTRO}</p>'
             f'<table class="dir-grid"><tr>{cards}</tr></table></div>')
+
+
+def _direction_degraded_line(direction_agg: dict, n_total: int) -> str:
+    """Eerlijke totalen over alle factoren samen: aangeboden, beantwoord,
+    overgeslagen. Elke respondent krijgt precies één richtingvraag, dus de som
+    over de factoren is het aantal respondenten.
+
+    Enkelvoud/meervoud per telling en het weglaten van nul-clausules volgen
+    _direction_chain: "0 sloegen over" is altijd fout Nederlands.
+    """
+    offered = sum(a.get("offered", 0) for a in direction_agg.values())
+    answered = sum(a.get("answered", 0) for a in direction_agg.values())
+    skipped = sum(a.get("skipped", 0) for a in direction_agg.values())
+    if not offered:
+        return ""
+    kreeg = f"kregen {offered} deze vraag" if offered != 1 else "kreeg 1 deze vraag"
+    parts: list[str] = []
+    if answered:
+        parts.append(f"{answered} beantwoordden die" if answered != 1 else "1 beantwoordde die")
+    if skipped:
+        parts.append(f"{skipped} sloegen over" if skipped != 1 else "1 sloeg over")
+    zin = f"Van de {n_total} respondenten {kreeg}"
+    if parts:
+        zin += f"; {', '.join(parts)}"
+    return f"{zin}. {DIRECTION_DEGRADED_TAIL}"
+
+
+def _direction_degraded_block(direction_agg: dict, n_total: int) -> str:
+    """Degraded richtingblok: geen kaarten, wel de tellingen en de reden.
+
+    Belooft bewust niets over wat er later met de antwoorden gebeurt -- alleen
+    wat nu waar is."""
+    line = _direction_degraded_line(direction_agg, n_total)
+    if not line:
+        return ""
+    return (f'<div class="dir-block"><span class="eyebrow">{DIRECTION_BLOCK_EYEBROW}</span>'
+            f'<p class="dir-intro">{DIRECTION_INTRO_VRAAG}</p>'
+            f'<div class="card"><p style="font-size:11px;color:#374151;'
+            f'max-width:70ch;margin-bottom:0;">{_h(line)}</p></div></div>')
 
 
 def _direction_p02_line(direction_agg: dict, factor_key: str | None, scan_type: str) -> str:
@@ -2493,7 +2593,7 @@ def render_exit_report_html(data: dict) -> str:
         mgmt_q_source=br_mgmt_q_source,
         responsbasis_html=_responsbasis_band,
         opener_html=ch.opener("Bestuurlijke read"),
-        usage_html=_gebruiksblok(data["scan_lbl"]),
+        usage_html=_gebruiksblok(data["scan_lbl"], degraded=bool(br_degraded_note)),
         direction_line=_direction_p02_line(direction_agg, _raster_rows[0]["key"] if _raster_rows else None, "exit"),
         degraded_note=br_degraded_note,
     )
@@ -2662,6 +2762,10 @@ def render_exit_report_html(data: dict) -> str:
     _startpunt_fk = _raster_rows[0]["key"] if _raster_rows else None
     _enriched_q = (_deepening_mgmt_q(deep_agg, "exit", _startpunt_fk)
                    if _startpunt_fk else None)
+    # Het richtingblok wordt hier gebouwd, niet in _prioriteringsraster (bug
+    # B3): alleen zo kan de methodiekpagina verderop beloven wat dit rapport
+    # daadwerkelijk bevat in plaats van wat er aan data bestaat.
+    _dir_block = _wat_moet_gebeuren_block(_raster_rows, direction_agg, "exit", n)
     s += _prioriteringsraster(
         ranked=_raster_rows,
         scan_type="exit",
@@ -2672,6 +2776,7 @@ def render_exit_report_html(data: dict) -> str:
         opener_html=ch.opener("Waar begint het gesprek?", kicker="Prioritering & gespreksagenda"),
         direction_agg=direction_agg,
         n_total=n,
+        direction_block_html=_dir_block,
     )
 
     # ── Appendix ─────────────────────────────────────────────────────────────
@@ -2724,7 +2829,7 @@ def render_exit_report_html(data: dict) -> str:
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────
     s += _trust_page("exit", opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen"),
-                     direction_active=bool(direction_agg))
+                     direction_active=bool(_dir_block))
     return _doc(f"Loep Vertrek · {data['campaign_name']}", s, scan_type="exit")
 
 
@@ -2885,7 +2990,7 @@ def render_retention_report_html(data: dict) -> str:
         mgmt_q_source=br_mgmt_q_source,
         responsbasis_html=_responsbasis_band,
         opener_html=ch.opener("Bestuurlijke read"),
-        usage_html=_gebruiksblok(data["scan_lbl"]),
+        usage_html=_gebruiksblok(data["scan_lbl"], degraded=bool(br_degraded_note)),
         direction_line=_direction_p02_line(direction_agg, _raster_rows[0]["key"] if _raster_rows else None, ST),
         degraded_note=br_degraded_note,
     )
@@ -3043,6 +3148,8 @@ def render_retention_report_html(data: dict) -> str:
     _startpunt_fk = _raster_rows[0]["key"] if _raster_rows else None
     _enriched_q = (_deepening_mgmt_q(deep_agg, ST, _startpunt_fk)
                    if _startpunt_fk else None)
+    # Zie render_exit_report_html: blok eerst, methodiekpagina gate erop (B3).
+    _dir_block = _wat_moet_gebeuren_block(_raster_rows, direction_agg, ST, n)
     s += _prioriteringsraster(
         ranked=_raster_rows,
         scan_type=ST,
@@ -3053,6 +3160,7 @@ def render_retention_report_html(data: dict) -> str:
         opener_html=ch.opener("Waar begint het gesprek?", kicker="Prioritering & gespreksagenda"),
         direction_agg=direction_agg,
         n_total=n,
+        direction_block_html=_dir_block,
     )
 
     # ── Appendix ─────────────────────────────────────────────────────────────
@@ -3105,7 +3213,7 @@ def render_retention_report_html(data: dict) -> str:
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────
     s += _trust_page(ST, opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen"),
-                     direction_active=bool(direction_agg))
+                     direction_active=bool(_dir_block))
     return _doc(f"Loep Behoud · {data['campaign_name']}", s, scan_type="retention")
 
 
@@ -3299,7 +3407,7 @@ def render_onboarding_report_html(data: dict) -> str:
         mgmt_q_source=br_mgmt_q_source,
         responsbasis_html=_responsbasis_band,
         opener_html=ch.opener("Bestuurlijke read"),
-        usage_html=_gebruiksblok(data["scan_lbl"]),
+        usage_html=_gebruiksblok(data["scan_lbl"], degraded=bool(br_degraded_note)),
         degraded_note=br_degraded_note,
     )
 
