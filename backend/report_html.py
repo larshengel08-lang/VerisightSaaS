@@ -2262,10 +2262,18 @@ def render_exit_report_html(data: dict) -> str:
     er_top   = data["exit_r_dist"][0]["label"] if data["exit_r_dist"] else ""
 
     # Directe executive copy
+    # Kernzin claimt bewust NIET dat het startpunt "het laagst scoort" (bug B1,
+    # stresstest ronde 1): het raster-startpunt is bij Loep Vertrek by design
+    # niet altijd de laagste factor -- de vertrekreden-weging
+    # (EXIT_REASON_WEIGHT) en de spreidings-/verdiepingsvlaggen kunnen een
+    # andere factor bovenaan zetten, en het raster toont die lagere score dan
+    # verderop in hetzelfde rapport. De kernzin benoemt dus alleen de positie
+    # plus de score; waarom die factor bovenaan staat, legt _raster_attribution
+    # uit in de bronregel onder de gespreksopener op dezelfde pagina.
     if _raster_primary_label and er_top and _raster_primary_label.lower() in er_top.lower():
-        exec_line = f"Het vertrekbeeld is {fl.lower().replace(' frictiebeeld','').replace(' vertrekbeeld','')}, maar {_raster_primary_label} springt er duidelijk uit: het is zowel de laagste factor als de meest genoemde vertrekreden."
+        exec_line = f"Het vertrekbeeld is {fl.lower().replace(' frictiebeeld','').replace(' vertrekbeeld','')}, maar {_raster_primary_label} springt eruit: het staat bovenaan en is de meest genoemde vertrekreden."
     elif _raster_primary_label and er_top:
-        exec_line = f"Het vertrekbeeld is {fl.lower().replace(' frictiebeeld','').replace(' vertrekbeeld','')}. {_raster_primary_label} scoort het laagst ({_score_str(_raster_primary_score)}); {er_top} is de meest genoemde vertrekreden."
+        exec_line = f"Het vertrekbeeld is {fl.lower().replace(' frictiebeeld','').replace(' vertrekbeeld','')}. Bovenaan staat {_raster_primary_label} ({_score_str(_raster_primary_score)}); {er_top} is de meest genoemde vertrekreden."
     elif avg_risk:
         exec_line = f"De frictiescore van {rdsp} wijst op een {fl.lower()}."
     else:
