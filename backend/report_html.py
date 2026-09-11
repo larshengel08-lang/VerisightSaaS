@@ -127,13 +127,31 @@ _ONBOARDING_BANDS = {
     "LAAG":   ("Onboardingbasis stabiel",           "#3C8D8A"),
 }
 
+def _shown(score: float | None) -> float | None:
+    """De score zoals de lezer 'm ziet: op 1 decimaal, exact zoals _score_str formatteert.
+
+    B15: labels en kleuren werden op de onafgeronde waarde berekend, terwijl de
+    score afgerond getoond wordt. 6.55 / 6.47 / 6.55 toonden alle drie "6.5/10"
+    maar kregen "Relatief sterk" / "Aandachtspunt" / "Relatief sterk", terwijl
+    de methodiekpagina "relatief sterk (vanaf 6,5)" zegt. Elke band-helper die
+    naast een getoonde score staat, vergelijkt daarom via deze functie. Bewust
+    via de f-string (niet round()) zodat display en vergelijking nooit uiteenlopen.
+    """
+    if score is None:
+        return None
+    return float(f"{score:.1f}")
+
+
 def _band(score: float | None, scan_type: str = "exit") -> tuple[str, str]:
-    """(label, kleur) voor een totaalscore — product-specifiek, nooit gedeeld."""
+    """(label, kleur) voor een totaalscore — product-specifiek, nooit gedeeld.
+
+    Vergelijkt op de getoonde (afgeronde) score, zie _shown (B15)."""
     table = (_RETENTION_BANDS if scan_type == "retention"
              else _ONBOARDING_BANDS if scan_type == "onboarding"
              else _EXIT_BANDS)
     if score is None:
         return ("Geen data", "#94A3B8")
+    score = _shown(score)
     k = "HOOG" if score >= RISK_HIGH else "MIDDEN" if score >= RISK_MEDIUM else "LAAG"
     return table[k]
 
@@ -225,7 +243,9 @@ def _friction_color(score: float | None) -> str:
     return _band(score, "exit")[1]
 
 def _factor_label(score: float | None) -> str:
+    # Drempels op de getoonde score (1 decimaal), zie _shown (B15).
     if score is None:  return "Geen data"
+    score = _shown(score)
     if score < 5.0:    return "Kwetsbaar punt"
     if score < 6.5:    return "Aandachtspunt"
     return "Relatief sterk"
@@ -235,8 +255,9 @@ def _factor_color(score: float | None) -> str:
     # functie felle tailwind-tinten (#EF4444/#F59E0B/#22C55E), waardoor er drie
     # ambers in het rapport zaten (merk #E8A020, fel #F59E0B, RAG #C17C00) en een
     # waarschuwingskleur eerder als huisstijl las. Eén betekenis-set, visueel
-    # onderscheiden van het merkaccent.
+    # onderscheiden van het merkaccent. Drempels op de getoonde score (B15).
     if score is None:  return "#94A3B8"
+    score = _shown(score)
     if score < 5.0:    return RAG_HIGH
     if score < 6.5:    return RAG_MID
     return RAG_LOW
@@ -557,7 +578,7 @@ def _bestuurlijke_read(*, kernzin: str, totaalbeeld: str,
     <table class="why-grid"><tr>{why_cells_html}</tr></table>
     {("<table class='sg'><tr>"
       f"<td><div class='sc-l'>Relatief sterk</div><div class='sc-v'>{_score_str(strong_score)}</div><div class='sc-b'>{_h(strong_label)}: wat w&eacute;l werkt</div></td>"
-      "</tr></table>") if (strong_label and strong_score is not None and strong_score >= 6.5) else ""}
+      "</tr></table>") if (strong_label and _factor_label(strong_score) == "Relatief sterk") else ""}
     <div class="mq-line"><span class="mq-label">Gespreksopener</span><p>{_h(mgmt_q)}</p>{f'<span class="mq-source">{_h(mgmt_q_source)}</span>' if mgmt_q_source else ''}{f'<p class="mq-direction">{_h(direction_line)}</p>' if direction_line else ''}</div>
   </div>
   {usage_html}
@@ -1887,7 +1908,9 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
 # ─── Overzichtsprofiel (T6) ──────────────────────────────────────────────────
 
 def _rag_color(score: float | None) -> str:
+    # Drempels op de getoonde score (1 decimaal), zie _shown (B15).
     if score is None: return "#CBD5E1"
+    score = _shown(score)
     if score < 5.0:  return RAG_HIGH
     if score < 6.5:  return RAG_MID
     return RAG_LOW
@@ -1914,9 +1937,10 @@ def _overzicht_summary_and_bands(profile_factors: list[tuple[str, float | None]]
     rapport de laagst scorende factor vooropzet — het rapport sprak zichzelf tegen.
     """
     ranked = sorted([(l, s) for l, s in profile_factors if s is not None], key=lambda x: x[1])
-    kwetsbaar = [l for l, s in ranked if s < 5.0]
-    aandacht  = [l for l, s in ranked if 5.0 <= s < 6.5]
-    sterk     = [l for l, s in ranked if s >= 6.5]
+    # Indeling via _factor_label: zelfde (afgeronde) drempels als de balken (B15).
+    kwetsbaar = [l for l, s in ranked if _factor_label(s) == "Kwetsbaar punt"]
+    aandacht  = [l for l, s in ranked if _factor_label(s) == "Aandachtspunt"]
+    sterk     = [l for l, s in ranked if _factor_label(s) == "Relatief sterk"]
     if kwetsbaar and sterk:
         summary = (f"{kwetsbaar[0]} is het {'enige' if len(kwetsbaar) == 1 else 'duidelijkste'} "
                    f"kwetsbare punt. {sterk[-1]} vormt een relatief sterke basis.")
@@ -2039,8 +2063,9 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
         # "onder druk" / rood. Voorheen las de note-ladder hoog = "sterk" / teal,
         # tegengesteld aan de cover binnen hetzelfde rapport.
         col = _band(retention_score, "retention")[1]
-        note = ("onder druk" if retention_score >= RISK_HIGH else
-                "vraagt aandacht" if retention_score >= RISK_MEDIUM else
+        _rs = _shown(retention_score)  # note op de getoonde score (B15)
+        note = ("onder druk" if _rs >= RISK_HIGH else
+                "vraagt aandacht" if _rs >= RISK_MEDIUM else
                 "sterk")
         rows += (f'<div class="sigrow"><div class="sigrow-title">Behoudssignaal</div>'
                  f'<div class="sigrow-body">Werkfactoren en werkbeleving samengebracht op groepsniveau.</div>'
@@ -2053,10 +2078,11 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
                   f'Enkelvoudige richtingsvraag, indicatief.</div>'
                   f'<div><span class="sigrow-score" style="color:{scol};">{stay_intent:.1f}/10</span></div></div>')
     if turnover is not None:
-        tcol = _rag_color(10 - turnover)
-        note = ("laag" if turnover <= 3.0 else
-                "beperkt" if turnover <= 5.0 else
-                "zichtbaar" if turnover <= 6.5 else
+        _tv = _shown(turnover)  # note + kleur op de getoonde score (B15)
+        tcol = _rag_color(10 - _tv)
+        note = ("laag" if _tv <= 3.0 else
+                "beperkt" if _tv <= 5.0 else
+                "zichtbaar" if _tv <= 6.5 else
                 "hoog: actief vertrekrisico")
         rows += (f'<div class="sigrow"><div class="sigrow-title">Vertrekintentie</div>'
                   f'<div class="sigrow-body">&ldquo;Ik denk er serieus over na te vertrekken&rdquo; + &ldquo;Ik zoek actief.&rdquo; '
@@ -2065,9 +2091,10 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
                   f'<span class="sigrow-note">{note}</span></div></div>')
     if engagement is not None:
         ecol = _factor_color(engagement)
-        note = ("hoog" if engagement >= 7.5 else
-                "gemiddeld" if engagement >= 6.0 else
-                "laag: geen buffer" if engagement >= 4.5 else
+        _ev = _shown(engagement)  # note op de getoonde score (B15)
+        note = ("hoog" if _ev >= 7.5 else
+                "gemiddeld" if _ev >= 6.0 else
+                "laag: geen buffer" if _ev >= 4.5 else
                 "zorgelijk laag")
         rows += (f'<div class="sigrow"><div class="sigrow-title">Bevlogenheid</div>'
                   f'<div class="sigrow-body">Energie &middot; Inspiratie &middot; Zin om te gaan (UWES). Gemiddelde van 3 stellingen.</div>'
@@ -2251,7 +2278,7 @@ def render_exit_report_html(data: dict) -> str:
     totaalbeeld = (
         f"{high_lbl} ({_score_str(high_sc)}) laat zien wat wél werkt. "
         f"Hoe stevig dit beeld is, hangt af van de responsbasis onderaan deze pagina."
-    ) if high_lbl and _raster_primary_label != high_lbl and high_sc is not None and high_sc >= 6.5 else \
+    ) if high_lbl and _raster_primary_label != high_lbl and _factor_label(high_sc) == "Relatief sterk" else \
         "Reikwijdte en betrouwbaarheid van dit beeld: zie de responsbasis onderaan deze pagina."
 
     _responsbasis_band = _responsbasis(
@@ -2620,7 +2647,7 @@ def render_retention_report_html(data: dict) -> str:
     totaalbeeld = (
         f"{high_lbl} ({_score_str(high_sc)}) laat zien wat wél werkt. "
         f"Hoe stevig dit beeld is, hangt af van de responsbasis onderaan deze pagina."
-    ) if high_lbl and _raster_primary_label != high_lbl and high_sc is not None and high_sc >= 6.5 else \
+    ) if high_lbl and _raster_primary_label != high_lbl and _factor_label(high_sc) == "Relatief sterk" else \
         "Reikwijdte en betrouwbaarheid van dit beeld: zie de responsbasis onderaan deze pagina."
 
     _responsbasis_band = _responsbasis(
@@ -3008,7 +3035,7 @@ def render_onboarding_report_html(data: dict) -> str:
     totaalbeeld = (
         f"{high_lbl} ({_score_str(high_sc)}) laat zien wat wél goed landt. "
         f"Hoe stevig dit beeld is, hangt af van de responsbasis onderaan deze pagina."
-    ) if high_lbl and low_lbl != high_lbl and high_sc is not None and high_sc >= 6.5 else \
+    ) if high_lbl and low_lbl != high_lbl and _factor_label(high_sc) == "Relatief sterk" else \
         "Reikwijdte en betrouwbaarheid van dit beeld: zie de responsbasis onderaan deze pagina."
 
     _responsbasis_band = _responsbasis(
