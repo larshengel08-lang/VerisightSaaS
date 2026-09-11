@@ -152,10 +152,15 @@ def _signal_health(avg_risk: float | None) -> float | None:
     signaal beschrijft de gezondheidsladder (onder 5,0 kwetsbaar, 5,0 tot 6,5
     aandachtspunt, vanaf 6,5 relatief sterk). Het signaal werd echter ongekeerd
     getoond: "alles hoog" gaf "3.0/10 · sterk", "alles laag" "6.9/10 · vraagt
-    aandacht". Deze helper is de enige plek waar de omkering gebeurt; precedent
-    is het segmentblok in build_report_data (signal_score = 11 - risk_score).
-    De opslag blijft onaangeraakt. Loep Vertrek (frictiescore) valt hier
-    buiten: die toont bewust de risicoschaal.
+    aandacht". Deze helper is de enige plek in deze renderer waar de omkering
+    gebeurt; ook het segmentblok in build_report_data (signal_score) loopt
+    hierlangs. De opslag blijft onaangeraakt. Loep Vertrek (frictiescore) valt
+    hier buiten: die toont bewust de risicoschaal.
+
+    Let op: de legacy ReportLab-renderer (backend/report.py, dood pad voor
+    retention/onboarding sinds de fail-loud fix) koppelt dashboard_signal_help
+    nog aan de ruwe risk_score; die copy is nu op de gezondheidsschaal en mag
+    daar niet ongewijzigd hergebruikt worden.
     """
     if avg_risk is None:
         return None
@@ -1894,7 +1899,7 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
     # aandachtspunt/startpunt gemarkeerd, de slechtste als "relatief sterk".
     segment_rows = _department_segment_rows([
         {"department": r.department,
-         "signal_score": (11.0 - r.response.risk_score) if r.response.risk_score is not None else None}
+         "signal_score": _signal_health(r.response.risk_score)}
         for r in completed
     ])
     segment_rows = _enrich_segment_rows_with_invited(segment_rows, camp.segment_departments)
