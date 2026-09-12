@@ -217,10 +217,20 @@ def test_gebruiksblok_belooft_geen_lege_secties(scan_type):
             "nog niet in; achteraan lees je waar het gesprek kan beginnen.") in body
 
 
+# Loep Start noemt zijn eigen hoofdstukken (spec ronde 2 par. 7): die heten geen
+# "Verdieping" meer, want er zijn geen verdiepingsvragen.
+_LEESROUTE_MET_PROFIEL = {
+    "exit": "dan de verdieping per thema, en achteraan de gespreksagenda",
+    "retention": "dan de verdieping per thema, en achteraan de gespreksagenda",
+    "onboarding": ("dan de thema&#x27;s met de meeste aandacht, en achteraan de "
+                   "gespreksagenda"),
+}
+
+
 @pytest.mark.parametrize("scan_type", ["exit", "retention", "onboarding"])
 def test_gebruiksblok_ongewijzigd_met_profiel(scan_type):
     body = _body(_render(scan_type, n=_N_NORMAL, profile=True, direction={}))
-    assert "dan de verdieping per thema, en achteraan de gespreksagenda" in body
+    assert _LEESROUTE_MET_PROFIEL[scan_type] in body
     assert "staan er nog niet in" not in body
 
 

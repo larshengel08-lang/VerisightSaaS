@@ -15,7 +15,7 @@ const sharedDelivery = [
   'Intake en scopebepaling',
   'Survey klaarzetten en launchpakket leveren (uitnodigingslink + tekst)',
   'Respons monitoren op campagneniveau',
-  'Rapport: waar het wringt, waarom, en waar je begint',
+  'Rapport: waar het wringt en waar je begint (bij Loep Vertrek en Loep Behoud ook waarom)',
   'Begeleide managementbespreking (60–90 min)',
   'Vervolgstap vastgelegd',
 ] as const
@@ -72,14 +72,14 @@ const scans = [
     index: '03',
     eyebrow: 'Goed landen',
     title: 'Loep Start',
-    lead: 'Wij meten vroeg hoe nieuwe medewerkers landen en leveren een helder groepsbeeld en een concreet vervolg.',
+    lead: 'Wij meten vroeg hoe nieuwe medewerkers landen en leveren een helder groepsbeeld.',
     when: [
       'Nieuwe medewerkers landen ongelijk of haken vroeg af',
       'Je wilt vroeg toetsen hoe rol, leiding en team nu landen',
       'Management wil een eerste beeld zonder brede retentiescan',
       'Je wilt eerst een kleine borg- of correctiestap bepalen',
     ],
-    output: 'Rapport met de vroege landing in rol, leiding en team op groepsniveau.',
+    output: 'Rapport met de vroege landing in rol, leiding en team op groepsniveau. De verdieping (waarom, volgens je mensen) en het blok "wat er moet gebeuren" komen in een volgende versie.',
     // afgerond vanaf de officiële invite_duration (3-5 min) in backend/products/onboarding
     duration: '± 5 minuten',
     note: null,
@@ -133,10 +133,10 @@ function HeroSection() {
             Vertrek, behoud of de eerste 90 dagen.
           </h1>
           <p style={{ color: T.inkSoft, fontSize: 16.5, lineHeight: 1.72, margin: '26px auto 36px', maxWidth: '58ch' }}>
-            Drie scans, één recept: Loep doet de meting, jij krijgt een rapport dat zegt waar het wringt, waarom
-            volgens je mensen, en waar je begint. Daarna bespreken we het samen. Geen software om te beheren. Loep
-            Vertrek als er al mensen weg zijn, Loep Behoud als je ze wilt houden, Loep Start als nieuwe mensen moeten
-            landen.
+            Drie scans, één recept: Loep doet de meting, jij krijgt een rapport dat zegt waar het wringt en waar je
+            begint. Bij Loep Vertrek en Loep Behoud staat er ook in waarom dat zo is en wat er volgens je mensen moet
+            gebeuren. Daarna bespreken we het samen. Geen software om te beheren. Loep Vertrek als er al mensen weg
+            zijn, Loep Behoud als je ze wilt houden, Loep Start als nieuwe mensen moeten landen.
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 18, justifyContent: 'center' }}>
             {scans.map((scan) => (
@@ -280,7 +280,7 @@ function PricingSection() {
   const included = [
     'Intake en scopebepaling',
     'Uitvoering van de survey, zonder toolbeheer voor je team',
-    'Rapport: waar het wringt, waarom, en waar je begint',
+    'Rapport: waar het wringt en waar je begint (bij Loep Vertrek en Loep Behoud ook waarom)',
     'Begeleide managementbespreking (60–90 min)',
     'Vervolgstap vastgelegd',
   ] as const

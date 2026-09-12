@@ -189,15 +189,24 @@ def test_render_omitted_meldregel_bij_n5_9():
 
 # ─── 9. Render: navy-anchor themazin ─────────────────────────────────────────
 
-def test_navy_anchor_zin_zonder_score_bij_n5_9():
+def test_navy_anchor_wijst_geen_afdeling_aan_bij_n5_9():
+    # Lockstep met spec ronde 2 par. 3.1 + 3.4: het navy-blok noemt een
+    # afdeling alleen als die zelf n >= MIN_DISTRIBUTION_N heeft, dus de
+    # themazin zonder decimaal (de n=5-9-variant, spec 2026-07-16) kan daar
+    # niet meer voorkomen. De staffel zelf leeft door in de themakolom.
     rows = [_row("Marketing", 6, 4.4, invited=8), _row("Sales", 8, 6.5)]
     fr = {"Marketing": {"factors": [("workload", 3.9, 6)], "omitted": 0},
           "Sales": {"factors": [("culture", 6.4, 8)], "omitted": 0}}
     html = _segment_block(rows, factor_rows=fr, scan_type="retention")
-    assert ("Het laagst scorende thema daar is werkdruk en herstelruimte "
-            "(kwetsbaar punt).") in html
     anchor = html[html.index("Startpunt voor de bespreking"):]
+    assert "Het laagst scorende thema daar is" not in anchor
+    assert "maar heeft 6 responses" in anchor
     assert not re.search(r"3\.9/10", anchor)
+    # De kolomstaffel is onveranderd: label + duiding, geen decimale score.
+    marketing_cell = next(c for c in _theme_cells(html)
+                          if "Werkdruk en herstelruimte" in c)
+    assert "Kwetsbaar punt" in marketing_cell
+    assert not re.search(r"\d\.\d/10", marketing_cell)
 
 
 def test_navy_anchor_zin_met_score_bij_n10():
@@ -210,10 +219,14 @@ def test_navy_anchor_zin_met_score_bij_n10():
 
 
 def test_navy_anchor_geen_zin_zonder_factordata():
-    rows = [_row("Marketing", 6, 4.4), _row("Sales", 8, 6.5)]
-    fr = {"Sales": {"factors": [("culture", 6.4, 8)], "omitted": 0}}
+    # De aantallen moeten de aanwijzende staat halen (spec ronde 2 par. 3.1:
+    # verschil >= 0,3 en de laagste afdeling >= MIN_DISTRIBUTION_N). Met 6 en 8
+    # responses was deze test vacuüm: dan komt er sowieso geen themazin, met of
+    # zonder factordata, en de assertie kon niet falen.
+    rows = [_row("Marketing", 12, 4.4), _row("Sales", 12, 6.5)]
+    fr = {"Sales": {"factors": [("culture", 6.4, 12)], "omitted": 0}}
     html = _segment_block(rows, factor_rows=fr, scan_type="retention")
-    assert "Startpunt voor de bespreking" in html
+    assert "Marketing</strong> heeft de laagste score" in html   # staat vuurt
     assert "Het laagst scorende thema daar is" not in html  # geen data = geen zin
 
 

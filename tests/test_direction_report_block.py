@@ -30,7 +30,8 @@ FEW = _agg(2, {"wld_peaks": 2}, skipped=0)
 
 def test_clear_card_shows_imperative_source_and_chain():
     html = _direction_card_cell("startpunt", label="Groeiperspectief", agg=CLEAR,
-                                scan_type="retention", factor_key="growth", n_total=13)
+                                scan_type="retention", factor_key="growth", n_total=13,
+                                factor_score=5.1)
     assert "Startpunt: Groeiperspectief" in html
     assert "Maak zichtbaar welke mogelijkheden er voor medewerkers zijn." in html
     assert "Volgens 6 van de 8 bij wie groeiperspectief het laagst scoorde." in html
@@ -43,7 +44,8 @@ def test_clear_card_shows_imperative_source_and_chain():
 
 def test_divided_card():
     html = _direction_card_cell("tweede", label="Werkdruk en herstelruimte", agg=DIVIDED,
-                                scan_type="retention", factor_key="workload", n_total=13)
+                                scan_type="retention", factor_key="workload", n_total=13,
+                                factor_score=5.4)
     assert "Tweede punt: Werkdruk en herstelruimte" in html
     assert "Geen eenduidige richting." in html
     assert "De 8 bij wie dit het laagst scoorde kozen verschillend." in html
@@ -52,11 +54,13 @@ def test_divided_card():
 
 def test_none_needed_card_questions_the_role():
     start = _direction_card_cell("startpunt", label="Werkdruk en herstelruimte", agg=NONE,
-                                 scan_type="retention", factor_key="workload", n_total=13)
+                                 scan_type="retention", factor_key="workload", n_total=13,
+                                 factor_score=5.4)
     assert "Hier hoeft volgens de meeste betrokkenen niets." in start
     assert "5 van de 8 bij wie dit het laagst scoorde kozen ‘Niets, dit zit hier goed’. Bespreek of dit dan het startpunt moet zijn." in start
     second = _direction_card_cell("tweede", label="Werkdruk en herstelruimte", agg=NONE,
-                                  scan_type="retention", factor_key="workload", n_total=13)
+                                  scan_type="retention", factor_key="workload", n_total=13,
+                                  factor_score=5.4)
     assert "het tweede punt moet zijn." in second
 
 
@@ -66,7 +70,8 @@ def test_half_none_card_prints_no_do_nothing_imperative():
     tonen - ook niet een die zegt dat er niets hoeft."""
     half = _agg(4, {"wld_none": 2, "wld_peaks": 2}, skipped=0)
     html = _direction_card_cell("startpunt", label="Werkdruk en herstelruimte", agg=half,
-                                scan_type="retention", factor_key="workload", n_total=13)
+                                scan_type="retention", factor_key="workload", n_total=13,
+                                factor_score=5.4)
     assert 'class="dir-card dir-divided"' in html
     assert "Geen eenduidige richting." in html
     assert "Hier hoeft volgens de meeste betrokkenen niets." not in html
@@ -79,7 +84,8 @@ def test_half_none_card_prints_no_do_nothing_imperative():
 
 def test_half_none_p02_line_makes_no_majority_claim():
     half = _agg(4, {"wld_none": 2, "wld_peaks": 2}, skipped=0)
-    line = _direction_p02_line({"workload": half}, "workload", "retention")
+    line = _direction_p02_line({"workload": half}, "workload", "retention",
+                               factor_score=5.4)
     assert line == ("Over wat hier moet gebeuren zijn de 4 die dit het laagst "
                     "scoorden verdeeld. Zie de gespreksagenda.")
     assert "hier hoeft niets" not in line
@@ -87,7 +93,8 @@ def test_half_none_p02_line_makes_no_majority_claim():
 
 def test_too_few_card_only_chain():
     html = _direction_card_cell("tweede", label="Werkdruk en herstelruimte", agg=FEW,
-                                scan_type="retention", factor_key="workload", n_total=13)
+                                scan_type="retention", factor_key="workload", n_total=13,
+                                factor_score=5.4)
     assert "Te weinig antwoorden voor een richting." in html
     assert "item-tbl" not in html
     assert "Van de 13 respondenten hadden 2 dit als laagste; 2 beantwoordden de vraag." in html
@@ -96,7 +103,8 @@ def test_too_few_card_only_chain():
 def test_unknown_role_raises():
     with pytest.raises(ValueError):
         _direction_card_cell("derde", label="Groeiperspectief", agg=CLEAR,
-                             scan_type="retention", factor_key="growth", n_total=13)
+                             scan_type="retention", factor_key="growth", n_total=13,
+                             factor_score=5.1)
 
 
 def test_unknown_option_key_raises_instead_of_printing_raw_key():
@@ -105,17 +113,20 @@ def test_unknown_option_key_raises_instead_of_printing_raw_key():
     agg = _agg(8, {"grd_visibility": 5, "grd_bogus_key": 3}, skipped=0)
     with pytest.raises(KeyError, match="grd_bogus_key"):
         _direction_card_cell("tweede", label="Groeiperspectief", agg=agg,
-                             scan_type="retention", factor_key="growth", n_total=13)
+                             scan_type="retention", factor_key="growth", n_total=13,
+                             factor_score=5.1)
 
 
 def test_percentages_from_10_and_caveat_at_3_4():
     big = _direction_card_cell("startpunt", label="Groeiperspectief",
                                agg=_agg(10, {"grd_visibility": 7, "grd_none": 3}),
-                               scan_type="retention", factor_key="growth", n_total=20)
+                               scan_type="retention", factor_key="growth", n_total=20,
+                               factor_score=5.1)
     assert "70% (7)" in big and "30% (3)" in big
     small = _direction_card_cell("startpunt", label="Groeiperspectief",
                                  agg=_agg(3, {"grd_visibility": 3}, skipped=0),
-                                 scan_type="retention", factor_key="growth", n_total=13)
+                                 scan_type="retention", factor_key="growth", n_total=13,
+                                 factor_score=5.1)
     assert "Beperkte basis: gebruik dit als gesprekshaakje, niet als conclusie." in small
     assert "Volgens 3 van de 3" in small
 
@@ -127,7 +138,8 @@ def test_percentage_denominator_is_answered_not_sum_of_counts():
     # (8) -- anders klopt de weergegeven verhouding niet met de noemer-zin.
     agg = _agg(10, {"grd_visibility": 5, "grd_time": 3}, skipped=0)
     html = _direction_card_cell("startpunt", label="Groeiperspectief", agg=agg,
-                                scan_type="retention", factor_key="growth", n_total=13)
+                                scan_type="retention", factor_key="growth", n_total=13,
+                                factor_score=5.1)
     assert "50% (5)" in html
     assert "30% (3)" in html
 
@@ -136,7 +148,7 @@ def test_exit_tense_in_none_option_text():
     html = _direction_card_cell(
         "startpunt", label="Werkdruk en balans",
         agg=_agg(8, {"wld_none": 5, "wld_peaks": 3}, skipped=0),
-        scan_type="exit", factor_key="workload", n_total=13)
+        scan_type="exit", factor_key="workload", n_total=13, factor_score=5.4)
     assert "Niets, dit zat hier goed" in html
 
 
@@ -222,15 +234,15 @@ def test_prioriteringsraster_raises_without_n_total():
 
 
 def test_p02_line_per_state():
-    assert _direction_p02_line({"growth": CLEAR}, "growth", "retention") == (
+    assert _direction_p02_line({"growth": CLEAR}, "growth", "retention", 5.1) == (
         "Wat er volgens 6 van de 8 moet gebeuren: Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.")
-    assert _direction_p02_line({"workload": DIVIDED}, "workload", "retention") == (
+    assert _direction_p02_line({"workload": DIVIDED}, "workload", "retention", 5.4) == (
         "Over wat hier moet gebeuren zijn de 8 die dit het laagst scoorden verdeeld. Zie de gespreksagenda.")
-    assert _direction_p02_line({"workload": NONE}, "workload", "retention") == (
+    assert _direction_p02_line({"workload": NONE}, "workload", "retention", 5.4) == (
         "5 van de 8 die dit het laagst scoorden zeggen: hier hoeft niets.")
-    assert _direction_p02_line({"workload": FEW}, "workload", "retention") == ""
-    assert _direction_p02_line({}, "workload", "retention") == ""
-    assert _direction_p02_line({"workload": CLEAR}, None, "retention") == ""
+    assert _direction_p02_line({"workload": FEW}, "workload", "retention", 5.4) == ""
+    assert _direction_p02_line({}, "workload", "retention", 5.4) == ""
+    assert _direction_p02_line({"workload": CLEAR}, None, "retention", 5.1) == ""
 
 
 def test_bestuurlijke_read_renders_direction_line_only_when_given():
@@ -241,17 +253,260 @@ def test_bestuurlijke_read_renders_direction_line_only_when_given():
     assert 'class="mq-direction"' in html and "6 van de 8" in html
 
 
+# ── Ronde 2 par. 4: plurality en split_none ──────────────────────────
+
+# Scenario 11: 27 van de 62 (44%), voorsprong 12 op de niets-groep.
+PLURALITY = _agg(62, {"grd_visibility": 27, "grd_none": 15, "grd_conversation": 10,
+                      "grd_criteria": 6, "grd_time": 4}, skipped=0)
+# Scenario 13: 14 tegenover 14 op een factor die 4,5 scoort.
+SPLIT_NONE = _agg(31, {"grd_none": 14, "grd_visibility": 14, "grd_conversation": 3},
+                  skipped=0)
+
+
+def _plurality_card():
+    return _direction_card_cell("startpunt", label="Groeiperspectief", agg=PLURALITY,
+                                scan_type="retention", factor_key="growth",
+                                n_total=180, factor_score=5.2)
+
+
+def _split_none_card():
+    return _direction_card_cell("startpunt", label="Groeiperspectief", agg=SPLIT_NONE,
+                                scan_type="retention", factor_key="growth",
+                                n_total=45, factor_score=4.5)
+
+
+def test_plurality_card_names_the_largest_group_without_claiming_a_majority():
+    html = _plurality_card()
+    assert 'class="dir-card dir-plurality"' in html
+    assert ("De grootste groep kiest ‘Beter zicht op welke mogelijkheden er voor "
+            "mij zijn’, zonder meerderheid.") in html
+    assert ("27 van de 62 bij wie groeiperspectief het laagst scoorde kozen die "
+            "richting; 15 kozen ‘Niets, dit zit hier goed’. Wat er volgens de "
+            "grootste groep moet gebeuren: Maak zichtbaar welke mogelijkheden er "
+            "voor medewerkers zijn.") in html
+    # Nooit een meerderheidsclaim, en de percentages blijven binnen de staffel.
+    assert "volgens de meeste" not in html
+    assert "44% (27)" in html
+    assert "Van de 180 respondenten hadden 62 dit als laagste; 62 beantwoordden de vraag." in html
+
+
+def test_plurality_card_without_a_runner_up_makes_no_second_claim():
+    """answered telt hoger dan de som van de counts (een beantwoorde rij zonder
+    keuze): dan is er maar een optie om te noemen en mag de zin er geen tweede
+    verzinnen."""
+    agg = _agg(8, {"grd_visibility": 3}, skipped=0)
+    html = _direction_card_cell("tweede", label="Groeiperspectief", agg=agg,
+                                scan_type="retention", factor_key="growth",
+                                n_total=20, factor_score=5.2)
+    assert 'class="dir-card dir-plurality"' in html
+    assert ("3 van de 8 bij wie groeiperspectief het laagst scoorde kozen die richting. "
+            "Wat er volgens de grootste groep moet gebeuren: Maak zichtbaar welke "
+            "mogelijkheden er voor medewerkers zijn.") in html
+    assert ";" not in html.split('class="dir-src"')[1].split("</div>")[0]
+
+
+def test_split_none_card_makes_the_split_the_subject():
+    html = _split_none_card()
+    assert 'class="dir-card dir-split_none"' in html
+    assert ("Verdeeld: een deel zegt dat hier niets hoeft, een even groot deel vraagt "
+            "om ‘Beter zicht op welke mogelijkheden er voor mij zijn’.") in html
+    assert ("14 kozen ‘Niets, dit zit hier goed’; 14 kozen ‘Beter zicht op welke "
+            "mogelijkheden er voor mij zijn’. Op een onderwerp dat laag scoort "
+            "(4.5/10) is dat verschil van inzicht zelf het gesprek. Wat die andere "
+            "groep vraagt: Maak zichtbaar welke mogelijkheden er voor medewerkers "
+            "zijn.") in html
+
+
+def test_split_none_beslist_op_de_getoonde_score_niet_op_de_rauwe():
+    """B15-klasse: bij een rauwe score van 4,96 toont het rapport "5.0/10" en
+    noemt de factor "Aandachtspunt", terwijl de legenda kwetsbaar definieert
+    als onder de 5,0. De staat moet dus op de getoonde waarde beslissen."""
+    from backend.report_html import _factor_label
+
+    assert _factor_label(4.96) == "Aandachtspunt"
+    net_niet = _direction_card_cell("startpunt", label="Groeiperspectief",
+                                    agg=SPLIT_NONE, scan_type="retention",
+                                    factor_key="growth", n_total=45,
+                                    factor_score=4.96)
+    assert 'class="dir-card dir-divided"' in net_niet
+    assert "op een onderwerp dat laag scoort" not in net_niet.lower()
+    assert "5.0/10" not in net_niet
+
+    assert _factor_label(4.94) == "Kwetsbaar punt"
+    net_wel = _direction_card_cell("startpunt", label="Groeiperspectief",
+                                   agg=SPLIT_NONE, scan_type="retention",
+                                   factor_key="growth", n_total=45,
+                                   factor_score=4.94)
+    assert 'class="dir-card dir-split_none"' in net_wel
+    assert "Op een onderwerp dat laag scoort (4.9/10)" in net_wel
+
+    # Dezelfde grens op p.02, zodat de twee pagina's niet uiteen kunnen lopen.
+    assert "verdeeld. 14 zeggen" not in _direction_p02_line(
+        {"growth": SPLIT_NONE}, "growth", "retention", factor_score=4.96)
+    assert "verdeeld. 14 zeggen" in _direction_p02_line(
+        {"growth": SPLIT_NONE}, "growth", "retention", factor_score=4.94)
+
+
+def test_onbekende_optiesleutel_geeft_de_nette_melding_in_elke_tak():
+    """De kop zoekt de optietekst op vóór de verdelingstabel; zonder de
+    gedeelde lookup gaf een onbekende sleutel daar een kale KeyError in plaats
+    van de melding die zegt om welke factor en scan het gaat."""
+    plurality = _agg(8, {"grd_bogus_key": 3, "grd_none": 1}, skipped=0)
+    with pytest.raises(KeyError, match="onbekende optiesleutel 'grd_bogus_key'"):
+        _direction_card_cell("startpunt", label="Groeiperspectief", agg=plurality,
+                             scan_type="retention", factor_key="growth",
+                             n_total=20, factor_score=5.2)
+    split = _agg(8, {"grd_none": 4, "grd_bogus_key": 4}, skipped=0)
+    with pytest.raises(KeyError, match="onbekende optiesleutel 'grd_bogus_key'"):
+        _direction_card_cell("startpunt", label="Groeiperspectief", agg=split,
+                             scan_type="retention", factor_key="growth",
+                             n_total=20, factor_score=4.5)
+    # En de niets-nodig-tak, die de sleutel eerder stil als tekst afdrukte:
+    # een sleutel die wel op _none eindigt maar niet in de optieset zit.
+    none_needed = _agg(7, {"grd_bogus_none": 6, "grd_visibility": 1}, skipped=0)
+    with pytest.raises(KeyError, match="onbekende optiesleutel 'grd_bogus_none'"):
+        _direction_card_cell("startpunt", label="Groeiperspectief", agg=none_needed,
+                             scan_type="retention", factor_key="growth",
+                             n_total=20, factor_score=5.2)
+
+
+def test_split_none_head_never_claims_groups_the_numbers_contradict():
+    """De kop mag niet "even groot" zeggen als de tellingen eronder verschillen."""
+    een_achter = _direction_card_cell(
+        "startpunt", label="Groeiperspectief",
+        agg=_agg(30, {"grd_none": 13, "grd_visibility": 14, "grd_conversation": 3}, skipped=0),
+        scan_type="retention", factor_key="growth", n_total=45, factor_score=4.5)
+    assert 'class="dir-card dir-split_none"' in een_achter
+    assert ("Verdeeld: een deel zegt dat hier niets hoeft, een ander deel vraagt om "
+            "‘Beter zicht op welke mogelijkheden er voor mij zijn’.") in een_achter
+    assert "even groot" not in een_achter
+    niets_groter = _direction_card_cell(
+        "startpunt", label="Groeiperspectief",
+        agg=_agg(25, {"grd_none": 10, "grd_visibility": 4, "grd_conversation": 3}, skipped=0),
+        scan_type="retention", factor_key="growth", n_total=45, factor_score=4.5)
+    assert "een ander deel vraagt om" in niets_groter
+    assert "even groot" not in niets_groter
+
+
+def test_split_none_quotes_the_scan_specific_none_text():
+    """Loep Vertrek stelt de vraag in de verleden tijd; de niets-optie mag niet
+    hardgecodeerd in de tegenwoordige tijd staan."""
+    html = _direction_card_cell("startpunt", label="Werkdruk en balans",
+                                agg=_agg(20, {"wld_none": 9, "wld_peaks": 9,
+                                              "wld_scope": 2}, skipped=0),
+                                scan_type="exit", factor_key="workload",
+                                n_total=30, factor_score=4.2)
+    assert "9 kozen ‘Niets, dit zat hier goed’;" in html
+    assert "dit zit hier goed" not in html
+
+
+def test_new_states_stay_out_without_a_known_factor_score():
+    """Een factor zonder score (geen factorprofiel) mag nooit als kwetsbaar
+    gelden: onbekend is niet laag."""
+    html = _direction_card_cell("startpunt", label="Groeiperspectief", agg=SPLIT_NONE,
+                                scan_type="retention", factor_key="growth", n_total=45,
+                                factor_score=None)
+    assert 'class="dir-card dir-divided"' in html
+    assert "een deel zegt dat hier niets hoeft" not in html
+
+
+def test_split_none_card_is_singular_correct():
+    """Met een vloer van 3 beantwoorders is een deelgroep van een bereikbaar;
+    "1 kozen" is fout Nederlands. Beide tellingen in deze bronregel kunnen 1
+    zijn, dus beide worden gepind."""
+    niets_een = _direction_card_cell(
+        "startpunt", label="Groeiperspectief",
+        agg=_agg(3, {"grd_none": 1, "grd_visibility": 2}, skipped=0),
+        scan_type="retention", factor_key="growth", n_total=13, factor_score=4.5)
+    assert ("1 koos ‘Niets, dit zit hier goed’; 2 kozen ‘Beter zicht op welke "
+            "mogelijkheden er voor mij zijn’.") in niets_een
+    verandering_een = _direction_card_cell(
+        "startpunt", label="Groeiperspectief",
+        agg=_agg(7, {"grd_none": 3, "grd_visibility": 1, "grd_time": 1}, skipped=0),
+        scan_type="retention", factor_key="growth", n_total=13, factor_score=4.5)
+    assert ("3 kozen ‘Niets, dit zit hier goed’; 1 koos ‘Ontwikkeling beter "
+            "inplannen naast het reguliere werk’.") in verandering_een
+
+
+def test_plurality_card_second_option_is_singular_correct():
+    """De grootste groep telt altijd minstens 2 (de voorsprong eist dat), maar
+    de tweede optie kan er een zijn."""
+    html = _direction_card_cell(
+        "startpunt", label="Groeiperspectief",
+        agg=_agg(8, {"grd_visibility": 3, "grd_none": 1}, skipped=0),
+        scan_type="retention", factor_key="growth", n_total=20, factor_score=5.2)
+    assert 'class="dir-card dir-plurality"' in html
+    assert ("3 van de 8 bij wie groeiperspectief het laagst scoorde kozen die "
+            "richting; 1 koos ‘Niets, dit zit hier goed’.") in html
+
+
+def test_factor_score_heeft_geen_default_in_de_renderhelpers():
+    """Een default maakt een vergeten score onzichtbaar: geen fout, geen log,
+    geen rode test, en pagina twee die de gespreksagenda tegenspreekt. De
+    renderer-pins in test_direction_renderer_wiring vangen het gevolg; deze
+    test vangt de oorzaak, ook voor een helper die nog geen renderer heeft."""
+    import inspect
+
+    from backend.report_html import _direction_card_cell, _direction_p02_line
+
+    for fn in (_direction_card_cell, _direction_p02_line):
+        par = inspect.signature(fn).parameters["factor_score"]
+        assert par.default is inspect.Parameter.empty, fn.__name__
+
+
+def test_p02_line_for_the_new_states():
+    assert _direction_p02_line({"growth": PLURALITY}, "growth", "retention",
+                               factor_score=5.2) == (
+        "Wat er volgens de grootste groep moet gebeuren (27 van de 62, zonder "
+        "meerderheid): Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.")
+    assert _direction_p02_line({"growth": SPLIT_NONE}, "growth", "retention",
+                               factor_score=4.5) == (
+        "Wat er moet gebeuren: de 31 die dit het laagst scoorden zijn hierover "
+        "verdeeld. 14 zeggen dat hier niets hoeft, 14 vragen om ‘Beter zicht op "
+        "welke mogelijkheden er voor mij zijn’.")
+    # Zonder bekende score blijft de oude regel staan: onbekend is niet laag.
+    assert _direction_p02_line({"growth": SPLIT_NONE}, "growth", "retention", None) == (
+        "Over wat hier moet gebeuren zijn de 31 die dit het laagst scoorden verdeeld. "
+        "Zie de gespreksagenda.")
+
+
+def test_p02_split_none_line_is_singular_correct():
+    agg = _agg(4, {"grd_none": 1, "grd_visibility": 2, "grd_time": 1}, skipped=0)
+    assert _direction_p02_line({"growth": agg}, "growth", "retention",
+                               factor_score=4.5) == (
+        "Wat er moet gebeuren: de 4 die dit het laagst scoorden zijn hierover "
+        "verdeeld. 1 zegt dat hier niets hoeft, 2 vragen om ‘Beter zicht op welke "
+        "mogelijkheden er voor mij zijn’.")
+
+
+def test_block_passes_the_factor_score_from_the_raster_row():
+    """De kaarten krijgen de score uit de rasterrij; zonder die koppeling kan
+    split_none nooit vuren in een echt rapport."""
+    ranked = [dict(r) for r in RANKED]
+    ranked[0]["score"] = 4.5
+    html = _wat_moet_gebeuren_block(ranked, {"growth": SPLIT_NONE, "workload": DIVIDED},
+                                    "retention", 45)
+    assert "dir-split_none" in html
+    assert "(4.5/10) is dat verschil van inzicht zelf het gesprek" in html
+
+
 def test_no_em_dashes_or_forbidden_words():
     blobs = [
         _direction_card_cell("startpunt", label="Groeiperspectief", agg=CLEAR,
-                             scan_type="retention", factor_key="growth", n_total=13),
+                             scan_type="retention", factor_key="growth", n_total=13,
+                             factor_score=5.1),
         _direction_card_cell("tweede", label="Werkdruk en herstelruimte", agg=DIVIDED,
-                             scan_type="retention", factor_key="workload", n_total=13),
+                             scan_type="retention", factor_key="workload", n_total=13,
+                             factor_score=5.4),
         _direction_card_cell("startpunt", label="Werkdruk en herstelruimte", agg=NONE,
-                             scan_type="retention", factor_key="workload", n_total=13),
+                             scan_type="retention", factor_key="workload", n_total=13,
+                             factor_score=5.4),
         _direction_card_cell("tweede", label="Werkdruk en herstelruimte", agg=FEW,
-                             scan_type="retention", factor_key="workload", n_total=13),
+                             scan_type="retention", factor_key="workload", n_total=13,
+                             factor_score=5.4),
         _wat_moet_gebeuren_block(RANKED, {"growth": CLEAR, "workload": DIVIDED}, "exit", 13),
+        _plurality_card(),
+        _split_none_card(),
     ]
     for b in blobs:
         assert "—" not in b and "&#x2014;" not in b
@@ -317,7 +572,7 @@ def _min_onboarding_data():
     n = 12
     return dict(
         scan_lbl="Loep Start", org_name="TestOrg", campaign_name="Wave 1",
-        n_invited=n + 3, n_completed=n, completion_pct=80.0,
+        n_invited=n + 3, n_invited_note="", n_completed=n, completion_pct=80.0,
         avg_risk=5.0, avg_si=5.0,
         factor_avgs={"workload": 5.0}, sdt_avgs={}, nsp={},
         top_fkeys=["workload"], top_flabels=["Werkdruk en herstelruimte"],

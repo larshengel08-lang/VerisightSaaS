@@ -15,7 +15,6 @@ deze omkering.
 """
 from __future__ import annotations
 
-import re
 
 import pytest
 
@@ -66,7 +65,10 @@ def test_band_exit_keeps_risk_polarity():
 # ── _behoudscontext: één ladder voor kleur en note ───────────────────────────
 
 def _sigrow_behoudssignaal(html: str) -> str:
-    start = html.index("Behoudssignaal")
+    # Op de sigrow-titel geankerd en niet op het kale woord: sinds ronde 2
+    # (taak 3) draagt ook de onderbouwingscel op p.02 het label
+    # "Behoudssignaal", en die staat eerder in het document.
+    start = html.index('<div class="sigrow-title">Behoudssignaal</div>')
     end = html.index('class="sigrow"', start) if 'class="sigrow"' in html[start:] else len(html)
     return html[start:end]
 
@@ -133,7 +135,7 @@ def _min_data(scan_type: str, avg_risk: float, n: int = 12) -> dict:
         campaign_id="c1", scan_type=scan_type,
         scan_lbl="Loep Behoud" if scan_type == "retention" else "Loep Start",
         org_name="TestOrg", campaign_name="Wave 1", generated_at="11-09-2026",
-        delivery_mode="Baseline", n_invited=n + 3, n_completed=n,
+        delivery_mode="Baseline", n_invited=n + 3, n_invited_note="", n_completed=n,
         completion_pct=80.0, avg_risk=avg_risk, avg_eng=6.0, avg_to=4.0, avg_si=6.5,
         band_counts={"HOOG": 0, "MIDDEN": n, "LAAG": 0}, has_pattern=True,
         factor_avgs=fa, top_risks=[("workload", 6.0)],
@@ -151,21 +153,163 @@ def _min_data(scan_type: str, avg_risk: float, n: int = 12) -> dict:
     )
 
 
+def _signaalcel(html: str, label: str) -> str:
+    """De onderbouwingscel op p.02 die het totaalsignaal draagt.
+
+    Het getal stond tot ronde 2 (taak 3) in de kernzin; die plek is nu van de
+    zin over de vorm van het profiel. De cel moet het getal MET zijn band tonen,
+    dus deze helper levert de hele cel en niet los het getal: een cel met het
+    getal van de ene meting en de band van de andere zou een losse substringtest
+    overleven.
+    """
+    i = html.find(f'<div class="sc-l">{label}</div>')
+    assert i != -1, f"onderbouwingscel {label!r} niet gevonden"
+    j = html.find("</td>", i)
+    return html[i:j]
+
+
 def test_retention_kernzin_shows_health_value_and_matching_band():
     # avg_risk 3.0 -> behoudssignaal 8.0 (sterk); avg_risk 7.0 -> 4.0 (onder druk)
     html = render_retention_report_html(_min_data("retention", 3.0))
-    m = re.search(r"behoudssignaal (\d\.\d)/10", html)
-    assert m and m.group(1) == "8.0"
-    assert "Behoudsklimaat stabiel (behoudssignaal 8.0/10)" in html
+    # De regex op "behoudssignaal 8.0/10" is vervallen: dat woord stond in de
+    # kernzin, en het getal draagt zijn duiding nu via het cel-label hieronder.
+    cel = _signaalcel(html, "Behoudssignaal")
+    assert "8.0/10" in cel and "Behoudsklimaat stabiel" in cel
     assert "3.0/10" not in _sigrow_behoudssignaal(html)
 
     html_low = render_retention_report_html(_min_data("retention", 7.0))
-    assert "Behoud onder druk (behoudssignaal 4.0/10)" in html_low
+    cel_low = _signaalcel(html_low, "Behoudssignaal")
+    assert "4.0/10" in cel_low and "Behoud onder druk" in cel_low
     assert '<span class="sigrow-note">onder druk</span>' in _sigrow_behoudssignaal(html_low)
 
 
 def test_onboarding_kernzin_shows_health_value_and_matching_band():
     html = render_onboarding_report_html(_min_data("onboarding", 3.0))
-    assert "Onboardingbasis stabiel (checkpointscore 8.0/10)" in html
+    cel = _signaalcel(html, "Checkpointscore")
+    assert "8.0/10" in cel and "Onboardingbasis stabiel" in cel
     html_low = render_onboarding_report_html(_min_data("onboarding", 7.0))
-    assert "Onboardingbasis vraagt aandacht (checkpointscore 4.0/10)" in html_low
+    cel_low = _signaalcel(html_low, "Checkpointscore")
+    assert "4.0/10" in cel_low and "Onboardingbasis vraagt aandacht" in cel_low
+
+
+# ── par. 7b: rij en spreidingsstrook op dezelfde as ──────────────────────────
+
+def test_vertrekintentie_rij_en_strook_lopen_niet_uiteen():
+    """De rij toonde 3.4 en de strook 7.6 voor dezelfde vraag (spec par. 7b)."""
+    vals = [2.0, 3.0, 3.0, 3.5, 3.5, 4.0, 4.0, 4.0, 2.5, 3.0, 3.5, 4.5]
+    gem = round(sum(vals) / len(vals), 1)
+    html = _behoudscontext(retention_score=6.0, stay_intent=7.0, turnover=gem,
+                           engagement=6.5, intent_resp={"turnover": vals})
+    # Het hele fragment, zodat het getal niet losraakt van zijn kleur. Let op:
+    # 3.4 kleurt teal onder de oude gespiegelde ladder EN onder de nieuwe, dus
+    # deze regel bewaakt de as niet; hij bewaakt dat rij en strook hetzelfde
+    # getal tonen. De as zelf wordt bewaakt door
+    # test_vertrekintentierij_kleurt_als_de_stip_eronder, dat wel waarden pakt
+    # waar de twee ladders uiteenlopen (4.0, 4.5, 4.9, 5.5, 6.0, 6.4).
+    assert f'<span class="sigrow-score" style="color:#3C8D8A;">{gem:.1f}/10</span>' in html
+    assert f"GEM {gem:.1f}" in html
+    assert "GEM 7.6" not in html
+
+
+def test_vertrekintentiestrook_zegt_welke_kant_op_gelezen_wordt():
+    vals = [2.0] * 6 + [8.0] * 6
+    html = _behoudscontext(retention_score=6.0, stay_intent=None, turnover=5.0,
+                           engagement=None, intent_resp={"turnover": vals})
+    assert ('<div class="spread-title">Vertrekintentie '
+            "(hoe hoger, hoe meer vertrekgedachten)</div>") in html
+    # Het oude label wees de andere kant op, omdat de waarden gespiegeld werden.
+    assert "links = meer vertrekgedachten" not in html
+    assert "—" not in html
+
+
+def test_blijfintentie_en_bevlogenheid_houden_de_normale_schaal():
+    vals = [8.0] * 12  # hoog = goed voor deze twee
+    html = _behoudscontext(retention_score=6.0, stay_intent=8.0, turnover=None,
+                           engagement=8.0,
+                           intent_resp={"stay": vals, "engagement": vals})
+    assert html.count('<span style="color:#3C8D8A;">Sterk 12</span>') == 2
+    # De omgekeerde tellingnamen horen alleen bij de vertrekintentiestrook.
+    assert "Weinig vertrekgedachten" not in html
+    assert "Veel vertrekgedachten" not in html
+
+
+# ── par. 7b: de rij kleurt op dezelfde as als de stip eronder ────────────────
+
+def _rij_en_stipkleur(signaal: str, v: float) -> tuple[str, set[str]]:
+    """(kleur van de sigrow-score, kleuren van de stippen in de eigen strook).
+
+    Alle twaalf respondenten scoren precies v, dus alle stippen horen dezelfde
+    kleur te hebben als het getal in de rij erboven. Bewust via de gerenderde
+    HTML en niet via de twee helpers los: zo valt een rij die zijn eigen
+    kleurladder houdt door de mand, ook als beide helpers op zichzelf kloppen.
+    """
+    import re
+    kwargs = dict(retention_score=None, stay_intent=None, turnover=None,
+                  engagement=None)
+    kwargs[{"turnover": "turnover", "stay": "stay_intent",
+            "engagement": "engagement"}[signaal]] = v
+    html = _behoudscontext(intent_resp={signaal: [v] * 12}, **kwargs)
+    rij = re.search(r'<span class="sigrow-score" style="color:(#[0-9A-F]{6});">', html)
+    assert rij, f"geen sigrow-score gevonden voor {signaal}"
+    titel = {"turnover": "Vertrekintentie", "stay": "Blijfintentie",
+             "engagement": "Bevlogenheid"}[signaal]
+    strook = html[html.index(f'<div class="spread-title">{titel}'):]
+    return rij.group(1), set(re.findall(r'<circle [^>]*fill="(#[0-9A-F]{6})"', strook))
+
+
+@pytest.mark.parametrize("v", [1.0, 2.0, 3.0, 3.4, 4.0, 4.5, 4.9, 5.0, 5.5,
+                               6.0, 6.4, 6.5, 7.0, 8.0, 10.0])
+def test_vertrekintentierij_kleurt_als_de_stip_eronder(v):
+    """Dezelfde waarde, twee pagina's, een kleur.
+
+    Valt de rij terug op de spiegeling (_rag_color(10 - v)), dan loopt dit
+    stuk bij 4.0, 4.5, 4.9, 6.0 en 6.4 uiteen.
+    """
+    rij, stippen = _rij_en_stipkleur("turnover", v)
+    assert stippen == {rij}, f"vertrekintentie {v}: rij {rij}, stippen {stippen}"
+
+
+@pytest.mark.parametrize("signaal", ["stay", "engagement"])
+@pytest.mark.parametrize("v", [4.9, 5.0, 6.4, 6.5])
+def test_de_andere_twee_rijen_kleuren_ook_als_hun_stippen(signaal, v):
+    rij, stippen = _rij_en_stipkleur(signaal, v)
+    assert stippen == {rij}, f"{signaal} {v}: rij {rij}, stippen {stippen}"
+
+
+@pytest.mark.parametrize("v,verwacht_note,verwacht_telling", [
+    (2.0, "laag", "Weinig vertrekgedachten"),
+    (3.0, "laag", "Weinig vertrekgedachten"),
+    (4.9, "beperkt", "Weinig vertrekgedachten"),
+    (5.0, "zichtbaar", "Aandacht"),          # ZONE_LOW zelf hoort in het midden
+    (6.4, "zichtbaar", "Aandacht"),
+    (6.5, "hoog: actief vertrekrisico", "Veel vertrekgedachten"),  # ZONE_HIGH zelf bovenin
+    (8.0, "hoog: actief vertrekrisico", "Veel vertrekgedachten"),
+])
+def test_de_note_zegt_hetzelfde_als_de_zone_waar_de_stip_in_valt(v, verwacht_note,
+                                                                 verwacht_telling):
+    html = _behoudscontext(retention_score=None, stay_intent=None, turnover=v,
+                           engagement=None, intent_resp={"turnover": [v] * 12})
+    assert f'<span class="sigrow-note">{verwacht_note}</span>' in html
+    # De telling met alle twaalf respondenten erin wijst de zone aan.
+    assert f"{verwacht_telling} 12" in html
+
+
+def test_rij_kleurt_op_de_getoonde_score_en_de_stip_op_zijn_positie():
+    """De nulclaim geldt op getoonde scores, niet op twee decimalen: bewust.
+
+    De pijplijn levert gemiddelden met twee decimalen. Scoort iedereen 4.96,
+    dan toont de rij 5.0/10 en kleurt die als 5.0 (amber, B15: de kleur duidt
+    het getal dat er staat), terwijl de stippen links van de 5,0-lijn staan en
+    de kleur van dat vak houden (teal). Dat is geen tegenspraak maar twee
+    dingen die elk hun eigen waarde duiden: een getal en een positie. Zou de
+    stip meeronden, dan kreeg hij de kleur van het vak waarin hij niet staat.
+    """
+    v = 4.96
+    html = _behoudscontext(retention_score=None, stay_intent=None, turnover=v,
+                           engagement=None, intent_resp={"turnover": [v] * 12})
+    assert '<span class="sigrow-score" style="color:#C17C00;">5.0/10</span>' in html
+    assert '<span class="sigrow-note">zichtbaar</span>' in html
+    rij, stippen = _rij_en_stipkleur("turnover", v)
+    assert rij == "#C17C00" and stippen == {"#3C8D8A"}
+    # De telling volgt de stippen, dus die zegt hetzelfde als hun kleur.
+    assert "Weinig vertrekgedachten 12" in html

@@ -79,7 +79,7 @@ def _fixture(scan_type: str, *, n: int, profile: bool) -> dict:
     return dict(
         campaign_id="c1", scan_type=scan_type, scan_lbl=_SCAN_LBL[scan_type],
         org_name="TestOrg", campaign_name="Wave 1", generated_at="11-09-2026",
-        delivery_mode="Baseline", n_invited=n + 6, n_completed=n,
+        delivery_mode="Baseline", n_invited=n + 6, n_invited_note="", n_completed=n,
         completion_pct=57.1 if not profile else 80.0,
         avg_risk=5.5, avg_eng=6.0, avg_to=4.0, avg_si=6.5,
         band_counts={"HOOG": 0, "MIDDEN": n, "LAAG": 0}, has_pattern=profile,
@@ -280,3 +280,36 @@ def test_met_profiel_is_pagina_twee_niet_degraded(scan_type):
     # De degraded-fix mag geen em-dashes terugbrengen in het normale rapport.
     assert "—" not in body
     assert "&amp;#x2014;" not in body
+
+
+# ── het totaalsignaal blijft op p.02 staan zonder factorprofiel ─────────────
+# Sinds ronde 2 (taak 3) draagt de onderbouwingsrij onder het why-blok het
+# totaalsignaal met zijn band, en opent p.02 met een zin over de vorm van het
+# profiel. Zonder factorprofiel rendert die rij niet (het why-blok maakt plaats
+# voor de degraded alinea) en levert de vormzin leeg op. De degraded terugval in
+# de drie renderers is dan de enige plek waar het getal nog staat; valt die weg,
+# dan verdwijnt het signaal stilzwijgend van de pagina.
+
+_DEGRADED_SIGNAAL = {
+    "exit": "De frictiescore van 5.5/10 wijst op een",
+    "retention": "(behoudssignaal 5.5/10).",
+    "onboarding": "(checkpointscore 5.5/10).",
+}
+
+
+@pytest.mark.parametrize("scan_type", SCANS)
+def test_totaalsignaal_blijft_in_de_kernzin_zonder_factorprofiel(scan_type):
+    p2 = _page_two(_render(scan_type, n=_N_DEGRADED, profile=False))
+    # De onderbouwingsrij die het getal normaal draagt bestaat hier niet.
+    assert "<table class='sg'><tr>" not in p2
+    assert _DEGRADED_SIGNAAL[scan_type] in p2
+
+
+@pytest.mark.parametrize("scan_type", SCANS)
+def test_totaalsignaal_staat_met_profiel_in_de_onderbouwingsrij(scan_type):
+    """Het spiegelbeeld: mét profiel draagt de rij het getal en herhaalt de
+    kernzin het niet meer."""
+    p2 = _page_two(_render(scan_type, n=12, profile=True))
+    assert "<table class='sg'><tr>" in p2
+    assert '<div class="sc-v">5.5/10</div>' in p2
+    assert _DEGRADED_SIGNAAL[scan_type] not in p2

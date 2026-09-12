@@ -106,3 +106,48 @@ def test_p02_label_is_gespreksopener():
         mgmt_q="Vraag?")
     assert 'class="mq-label">Gespreksopener<' in html
     assert "Eerste managementvraag" not in html
+
+
+def test_direction_flip_names_the_change_demand():
+    rows = [
+        {"key": "workload", "label": "Werkdruk", "score": 6.1, "base": 6.1,
+         "spread_flag": False, "deepening_state": 5,
+         "decided_by": {"kind": "direction", "other": "growth"}},
+        {"key": "growth", "label": "Groeiperspectief", "score": 6.0, "base": 6.0,
+         "spread_flag": False, "deepening_state": 5, "decided_by": None},
+    ]
+    line = _raster_attribution(rows, "retention")
+    assert line == ("De scores lagen vrijwel gelijk; het aantal mensen dat om "
+                    "verandering vraagt gaf de doorslag.")
+    assert "—" not in line
+
+
+def test_tie_break_at_equal_base_is_not_called_the_lowest_score():
+    # Gelijke base, de verdiepingsvlag besliste wie bovenaan kwam. "Gebaseerd op
+    # de laagst scorende factor" verzwijgt dan dat er een tie-break aan te pas
+    # kwam, terwijl het raster die wel toont (spec ronde 2 par. 1.3).
+    rows = _rank("retention", {"culture": 6.2, "compensation": 6.2},
+                 deep={"compensation": {
+                     "triggered": 13, "offered": 13, "answered": 13, "skipped": 0,
+                     "primary_counts": {"cp_external": 9, "cp_internal": 1},
+                     "secondary_counts": {}}})
+    assert rows[0]["key"] == "compensation"
+    assert rows[0]["decided_by"]["kind"] == "deepening"
+    line = _raster_attribution(rows, "retention")
+    assert "vrijwel gelijk" in line and "toelichting" in line
+    assert "laagst scorende factor" not in line
+    assert "—" not in line
+
+
+def test_attribution_claims_no_signal_when_none_explains_the_top_row():
+    # Bevinding K1: staat de toprij hoger dan een lagere base zonder dat een
+    # vlag dat verklaart, dan mag de bronregel geen verdieping claimen die deze
+    # meting niet had. De generieke regel is dan het eerlijke antwoord.
+    rows = [
+        {"key": "growth", "label": "Groeiperspectief", "score": 6.1, "base": 6.1,
+         "spread_flag": False, "deepening_state": 5, "decided_by": None},
+        {"key": "workload", "label": "Werkdruk", "score": 6.0, "base": 6.0,
+         "spread_flag": False, "deepening_state": 5, "decided_by": None},
+    ]
+    assert _raster_attribution(rows, "retention") == \
+        "Gebaseerd op de laagst scorende factor."

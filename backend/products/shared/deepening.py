@@ -762,7 +762,40 @@ def aggregate_deepening(
 DIRECTION_MIN_N = 3          # vloer voor het rapportblok (spec par. 5.4; bewust lager dan MIN_SEGMENT_N,
                              # zie spec par. 6.3: subgroep onzichtbaar voor de organisatie)
 DIRECTION_CAVEAT_MAX_N = 4   # caveat-drempel = DIRECTION_MIN_N + 1 (dekt n in {3, 4}); niet los wijzigen
-DIRECTION_OTHER_WARN_N = 8   # vanaf hier een reviewvlag als *_other de topoptie is
+
+# Vloer voor elke uitspraak over de keuzes van een factor: onder dit aantal
+# beantwoorders kan "geen duidelijke meerderheid" feitelijk onwaar zijn (5 van
+# de 6 kozen hetzelfde). Eén keer gedefinieerd en op de vier plekken gebruikt
+# waar hij werkt: agenda_enrichment (de verrijkingsstaffel hieronder), de
+# verdiepingsstaat in report_priority.py, de uitlegregel onder de ranglijst in
+# report_html.py (die het getal in klantcopy noemt) en de reviewvlag hieronder.
+# Wijzigen raakt die vier samen; dat is de bedoeling.
+DEEPENING_MIN_N = 8
+
+# Vanaf hier een reviewvlag in het log als *_other de topoptie is. Geen
+# klantcopy, maar wel dezelfde grootheid: een aantal beantwoorders per factor
+# waarboven hun keuzeverdeling iets zegt.
+DIRECTION_OTHER_WARN_N = DEEPENING_MIN_N
+
+# Grootste groep zonder meerderheid (spec ronde 2 par. 4.2). Onder ruim een
+# derde van de beantwoorders is "de grootste groep" geen zinvolle uitspraak
+# meer; daarboven met een voorsprong van TOP_CHOICE_MIN_LEAD wel.
+DIRECTION_PLURALITY_MIN_SHARE = 0.35
+# Verdeeld over wel of niets (spec ronde 2 par. 4.3): alleen op een factor die
+# kwetsbaar scoort. Dat is dezelfde grens als ZONE_LOW in report_distribution,
+# maar die wordt hier bewust NIET geïmporteerd: deze module is de contentlaag en
+# hoort niet van de rapportlaag af te hangen. De waarde staat er dus twee keer;
+# test_direction_state_plurality pint ze aan elkaar gelijk, zodat er geen tweede
+# kwetsbaar-definitie kan ontstaan zonder dat een test omvalt.
+DIRECTION_SPLIT_NONE_MAX_SCORE = 5.0
+
+# Voorsprong die de meest gekozen optie op de volgende nodig heeft om als een
+# duidelijk signaal te tellen: een verschil van 1 is ruis. Een keer gedefinieerd
+# en op alle drie de plekken gebruikt waar hij werkt: direction_state (staat
+# `clear`), agenda_enrichment (verrijkingsstaffel) en de richting-tie-break in
+# het prioriteringsraster (report_priority.py). Wijzigen raakt die drie samen;
+# dat is de bedoeling.
+TOP_CHOICE_MIN_LEAD = 2
 
 
 def aggregate_direction(
@@ -818,16 +851,39 @@ def aggregate_direction(
     return out
 
 
-def direction_state(agg: dict[str, Any], factor_key: str) -> dict[str, Any]:
-    """Staat van het richtingblok voor een factor (spec par. 5.4), geëvalueerd in
-    de volgorde too_few -> none_needed -> clear -> divided.
+def direction_state(agg: dict[str, Any], factor_key: str,
+                    factor_score: float | None) -> dict[str, Any]:
+    """Staat van het richtingblok voor een factor (spec par. 5.4, uitgebreid in
+    stresstest ronde 2 par. 4), geëvalueerd in de volgorde
+    too_few -> none_needed -> clear -> split_none -> plurality -> divided.
 
-    Retourneert altijd {state, n, top_key, top_n, second_n, ranked}.
+    Tussen clear en split_none liggen twee vroege uitgangen naar divided: er is
+    geen enkele veranderoptie gekozen, of de grootste veranderoptie is *_other.
+    Beide staten hieronder tonen een opdrachtvorm, en die bestaat voor *_other
+    niet; zonder veranderoptie valt er sowieso niets te tonen.
+
+    factor_score is VERPLICHT en moet de GETOONDE score zijn: de waarde die de
+    lezer op dezelfde pagina ziet, dus afgerond op één decimaal via _shown in
+    report_html (B15). Vergelijken op de rauwe waarde liet 4,96 als kwetsbaar
+    tellen terwijl het rapport "5.0/10" en "Aandachtspunt" toont. Geen default:
+    een vergeten argument leverde een andere klantzin op zonder fout en zonder
+    rode test. De enige aanroeper die de score aantoonbaar niet nodig heeft,
+    gaat via direction_none_needed_view hieronder.
+
+    None is toegestaan voor een factor zonder score (geen factorprofiel); dan
+    valt de split_none-tak weg, want "dit onderwerp scoort laag" is dan
+    onbekend, en onbekend mag nooit als kwetsbaar gelden.
+
+    Retourneert altijd {state, n, top_key, top_n, second_n, none_n, none_key,
+    ranked}; none_key staat erbij zodat de renderer de niets-optie met haar
+    eigen (scan-specifieke, dus voor Loep Vertrek verleden-tijd) tekst kan
+    citeren in plaats van met een hardgecodeerde zin.
     """
     n = agg["answered"]
     counts: dict[str, int] = agg.get("counts") or {}
     ranked = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
-    base: dict[str, Any] = {"n": n, "ranked": ranked, "top_key": None, "top_n": 0, "second_n": 0}
+    base: dict[str, Any] = {"n": n, "ranked": ranked, "top_key": None, "top_n": 0,
+                            "second_n": 0, "none_n": 0, "none_key": None}
     if n < DIRECTION_MIN_N:
         return {**base, "state": "too_few"}
     if not counts:
@@ -839,12 +895,17 @@ def direction_state(agg: dict[str, Any], factor_key: str) -> dict[str, Any]:
     # Strikte meerderheid (> 0.5), niet >= 0.5: de kop van dit blok zegt "volgens
     # de meeste betrokkenen", en precies de helft is niet "de meeste" (B11).
     # Op precies de helft valt de factor door naar de logica hieronder; de
-    # clear-tak sluit *_none expliciet uit, dus dat landt altijd op divided en
-    # nooit op een opdrachtvorm die zegt dat er niets hoeft.
+    # clear-tak sluit *_none expliciet uit, dus dat landt op split_none of
+    # divided en nooit op een opdrachtvorm die zegt dat er niets hoeft. Ook
+    # split_none doet dat niet: die toont het verschil van inzicht en de
+    # opdrachtvorm van de veranderoptie, niet die van de niets-optie (die
+    # bestaat ook niet: *_none heeft geen imperative).
     none_key = next((k for k in sorted(counts) if k.endswith("_none")), None)
-    if none_key is not None and counts[none_key] / n > 0.5:
+    none_n = counts.get(none_key, 0) if none_key is not None else 0
+    base.update(none_key=none_key, none_n=none_n)
+    if none_key is not None and none_n / n > 0.5:
         return {**base, "state": "none_needed",
-                "top_key": none_key, "top_n": counts[none_key]}
+                "top_key": none_key, "top_n": none_n}
     top_key, top_n = ranked[0]
     second_n = ranked[1][1] if len(ranked) > 1 else 0
     base.update(top_key=top_key, top_n=top_n, second_n=second_n)
@@ -852,16 +913,63 @@ def direction_state(agg: dict[str, Any], factor_key: str) -> dict[str, Any]:
         logger.warning("direction: *_other is topoptie voor %s - optieset review nodig",
                        factor_key)
     if (not top_key.endswith(("_none", "_other"))
-            and top_n / n >= 0.5 and top_n - second_n >= 2):
+            and top_n / n >= 0.5 and top_n - second_n >= TOP_CHOICE_MIN_LEAD):
         return {**base, "state": "clear"}
+    # Vanaf hier draait alles om de grootste optie die om verandering vraagt:
+    # de niets-optie is dat per definitie niet, en *_other heeft geen
+    # opdrachtvorm, dus daar valt niet uit af te leiden wat er moet gebeuren.
+    change_ranked = [(k, c) for k, c in ranked if k != none_key]
+    if not change_ranked:
+        return {**base, "state": "divided"}
+    change_key, change_n = change_ranked[0]
+    if change_key.endswith("_other"):
+        return {**base, "state": "divided"}
+    # Verdeeld over wel of niets, op een onderwerp dat laag scoort: het verschil
+    # van inzicht tussen die twee groepen is zelf de bevinding (par. 4.3). De
+    # niets-groep mag er een achter liggen ("grootste of gedeeld-grootste") en
+    # mag ook groter zijn; in beide gevallen is de vraag dezelfde.
+    if (factor_score is not None and factor_score < DIRECTION_SPLIT_NONE_MAX_SCORE
+            and none_key is not None and none_n >= change_n - 1):
+        # second_n bewust op 0: in deze staat zijn none_n en top_n het paar dat
+        # de bevinding draagt, en "de tweede optie" heeft hier geen betekenis.
+        # De waarde uit base wijst na de overschrijving van top_key naar de rij
+        # die vóór die overschrijving tweede was, en dat kan top_key zelf zijn.
+        return {**base, "state": "split_none",
+                "top_key": change_key, "top_n": change_n, "second_n": 0}
+    # Grootste groep zonder meerderheid (par. 4.2). De voorsprong wordt tegen
+    # ALLE andere opties gemeten, de niets-optie meegerekend, zodat "de grootste
+    # groep" letterlijk waar is. Samen met de clear-tak hierboven garandeert dat
+    # ook dat deze staat nooit een meerderheid heeft: bij >= 50% met dezelfde
+    # voorsprong was de staat al clear.
+    rest = [c for k, c in ranked if k != change_key]
+    runner_up = max(rest) if rest else 0
+    if (change_n / n >= DIRECTION_PLURALITY_MIN_SHARE
+            and change_n - runner_up >= TOP_CHOICE_MIN_LEAD):
+        return {**base, "state": "plurality",
+                "top_key": change_key, "top_n": change_n, "second_n": runner_up}
     return {**base, "state": "divided"}
 
 
+def direction_none_needed_view(agg: dict[str, Any], factor_key: str) -> str:
+    """Alleen de score-onafhankelijke staten: "too_few", "none_needed" of "anders".
+
+    Smallere ingang voor de enige aanroeper die geen factorscore heeft
+    (_p02_direction_key in report_html): die vraagt uitsluitend of een factor
+    "hier hoeft niets" zegt, en die staat wordt geevalueerd voor split_none, de
+    enige staat die de score gebruikt. Geeft bewust nooit clear, plurality of
+    divided terug, zodat deze functie niet als goedkope vervanger van
+    direction_state kan gaan dienen bij het renderen.
+    """
+    state = direction_state(agg, factor_key, None)["state"]
+    return state if state in ("too_few", "none_needed") else "anders"
+
+
 def agenda_enrichment(agg: dict[str, Any], scan_type: str, factor_key: str) -> dict[str, Any] | None:
-    """Spec 6.3: verrijking alleen bij n>=8, top >=50%, top >=4, voorsprong >=2, top niet *_other."""
+    """Spec 6.3: verrijking alleen bij n >= DEEPENING_MIN_N, top >=50%, top >=4,
+    voorsprong >= TOP_CHOICE_MIN_LEAD, top niet *_other."""
     n = agg["answered"]
     counts = agg["primary_counts"]
-    if n < 8 or not counts:
+    if n < DEEPENING_MIN_N or not counts:
         return None
     ranked = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
     top_key, top_n = ranked[0]
@@ -870,7 +978,7 @@ def agenda_enrichment(agg: dict[str, Any], scan_type: str, factor_key: str) -> d
         return None
     # Deler is `answered` per spec 6.1 ("percentages altijd over beantwoorders"),
     # bewust conservatiever dan de "hoofdkeuzes"-formulering in spec 6.3.
-    if top_n < 4 or top_n / n < 0.5 or top_n - second_n < 2:
+    if top_n < 4 or top_n / n < 0.5 or top_n - second_n < TOP_CHOICE_MIN_LEAD:
         return None
     return {
         "option_key": top_key,

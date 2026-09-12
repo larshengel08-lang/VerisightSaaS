@@ -1,15 +1,29 @@
 """Tests voor rank_factors (spec 2026-07-18 par. 3) — pure rangorde-logica."""
 import pytest
 
+from backend.products.shared.deepening import TOP_CHOICE_MIN_LEAD
 from backend.report_priority import (
     PRIORITY_TIE_MARGIN,
     rank_factors,
 )
 
 # Handige defaults: geen spreiding-data, geen deepening, geen exit-redenen.
-def _rank(scan_type, avgs, resp=None, deep=None, reasons=None, labels=None):
+def _rank(scan_type, avgs, resp=None, deep=None, reasons=None, labels=None,
+          direction=None):
     return rank_factors(scan_type, avgs, resp or {}, deep or {},
-                        exit_reason_counts=reasons, labels=labels or {})
+                        exit_reason_counts=reasons, labels=labels or {},
+                        direction_agg=direction)
+
+
+def _dir_agg(answered, change, prefix):
+    """Richtingaggregaat: `change` mensen vroegen om verandering, de rest niets."""
+    counts = {}
+    if change:
+        counts[f"{prefix}_change"] = change
+    if answered - change:
+        counts[f"{prefix}_none"] = answered - change
+    return {"lowest_n": answered, "offered": answered, "answered": answered,
+            "skipped": 0, "counts": counts}
 
 
 def test_basic_order_is_score_ascending():
@@ -99,7 +113,6 @@ def test_deepening_flag_follows_enrichment_gates():
               counts={"gr_visibility": 7, "gr_conversation": 3})
     rows = _rank("retention", avgs, deep={"growth": ok})
     assert rows[0]["deepening_state"] == 1
-    assert rows[0]["flags"] == 1
     # 6 van 13 (46% < 50%): staffel haalt niet -> staat 2, geen vlag.
     # (Dit pad retourneert None uit agenda_enrichment vóór get_agenda_question
     # wordt aangeroepen, dus placeholder-keys zouden hier niet crashen -- maar
@@ -108,7 +121,6 @@ def test_deepening_flag_follows_enrichment_gates():
                counts={"gr_visibility": 6, "gr_conversation": 4})
     rows = _rank("retention", avgs, deep={"growth": nok})
     assert rows[0]["deepening_state"] == 2
-    assert rows[0]["flags"] == 0
 
 
 # ── Marge-mechanica ──────────────────────────────────────────────────────────
@@ -144,7 +156,8 @@ def test_flags_do_not_stack():
     rows = _rank("retention", {"growth": 5.0, "workload": 5.4},
                  deep=deep, resp=resp)
     assert rows[0]["key"] == "growth"
-    assert rows[1]["flags"] == 2
+    assert rows[1]["spread_flag"] is True
+    assert rows[1]["deepening_state"] == 1
 
 
 # ── Gelijkspel-label ─────────────────────────────────────────────────────────
@@ -204,10 +217,23 @@ def test_deepening_cell_states(agg, expected_state):
     assert rows[0]["deepening_state"] == expected_state
 
 
+def test_verdiepingsstaat_leest_de_drempel_uit_de_constante(monkeypatch):
+    """Staat 2 ('geen duidelijke meerderheid') vereist DEEPENING_MIN_N
+    beantwoorders; hetzelfde getal dat agenda_enrichment en de uitlegregel
+    onder de ranglijst gebruiken. Een kaal getal hier laat die drie stil uit
+    elkaar lopen."""
+    import backend.report_priority as rp
+    agg = _agg(answered=7, offered=9, triggered=9,
+               counts={"gr_visibility": 4, "gr_conversation": 3})
+    assert _rank("retention", {"growth": 6.0}, deep={"growth": agg})[0]["deepening_state"] == 3
+    monkeypatch.setattr(rp, "DEEPENING_MIN_N", 7)
+    assert _rank("retention", {"growth": 6.0}, deep={"growth": agg})[0]["deepening_state"] == 2
+
+
 def test_campaign_gate_off_gives_state_zero_and_no_flag():
     rows = _rank("retention", {"growth": 4.0}, deep={})
     assert rows[0]["deepening_state"] == 0
-    assert rows[0]["flags"] == 0
+    assert rows[0]["decided_by"] is None
 
 
 # ── Navolgbaarheids-invariant (spec par. 3, kernbelofte; par. 9 test 2) ──────
@@ -221,8 +247,18 @@ def _invariant(rows):
     for i, r in enumerate(rows):
         for later in rows[i + 1:]:
             if r["base"] > later["base"]:
-                # r staat hoger dan zijn score rechtvaardigt -> vlag verplicht.
-                assert r["flags"] > 0, f"onzichtbare flip: {r['key']} boven {later['key']}"
+                # r staat hoger dan zijn score rechtvaardigt -> een zichtbaar
+                # signaal is verplicht. Sinds ronde 2 telt daarvoor ook een
+                # voorsprong op de vraag om verandering die de marge haalt; die
+                # rijen dragen geen vlag maar wel een markeringsregel.
+                lead = ((r["direction_change"] or 0)
+                        - (later["direction_change"] or 0))
+                signalen = (r["spread_flag"] or r["deepening_state"] == 1
+                            or lead >= TOP_CHOICE_MIN_LEAD)
+                assert signalen, (
+                    f"onzichtbare flip: {r['key']} boven {later['key']}")
+                assert r["tie_break_note"], (
+                    f"flip zonder markeringsregel: {r['key']} boven {later['key']}")
     for i, r in enumerate(rows[1:], start=1):
         prev = rows[i - 1]
         same_flagset = (r["spread_flag"] == prev["spread_flag"]
@@ -247,3 +283,37 @@ def test_navolgbaarheid_invariant_over_scenarios():
     ]
     for avgs, resp, deep, reasons, st in scenarios:
         _invariant(_rank(st, avgs, resp=resp, deep=deep, reasons=reasons))
+
+
+def test_navolgbaarheid_invariant_met_richtingdata():
+    # Dezelfde invariant, nu met het signaal dat sinds ronde 2 meetelt. Zonder
+    # deze variant draait de invariant alleen op rapporten zonder richtingdata.
+    scenarios = [
+        # Duidelijke voorsprong: workload passeert growth op richting alleen.
+        ({"growth": 6.0, "workload": 6.1}, {},
+         {"growth": _dir_agg(11, 2, "gr"), "workload": _dir_agg(11, 9, "wl")}),
+        # Voorsprong onder de marge: niets mag flippen.
+        ({"growth": 6.0, "workload": 6.1}, {},
+         {"growth": _dir_agg(11, 4, "gr"), "workload": _dir_agg(11, 5, "wl")}),
+        # Rij onder de vloer in een grotere groep, plus een spreidingsvlag.
+        ({"growth": 6.0, "workload": 6.05, "culture": 6.1, "leadership": 6.9},
+         {"culture": _scores(12, 6)},
+         {"growth": _dir_agg(11, 2, "gr"), "workload": _dir_agg(2, 2, "wl"),
+          "culture": _dir_agg(11, 3, "cu"), "leadership": _dir_agg(11, 9, "ld")}),
+        # Rij onder de vloer BINNEN de beslissende groep: de winnaar zou hem
+        # passeren zonder een telling te hebben om tegen af te zetten (K1).
+        ({"workload": 6.0, "growth": 6.2, "culture": 6.25}, {},
+         {"growth": _dir_agg(11, 9, "gr"), "culture": _dir_agg(11, 2, "cu"),
+          "workload": _dir_agg(2, 2, "wl")}),
+        # Zelfde vorm, nu met een spreidingsvlag op de rij onder de vloer.
+        ({"workload": 6.0, "growth": 6.2, "culture": 6.25},
+         {"workload": _scores(12, 6)},
+         {"growth": _dir_agg(11, 9, "gr"), "culture": _dir_agg(11, 2, "cu"),
+          "workload": _dir_agg(2, 2, "wl")}),
+        # Buiten de marge: richting mag daar niets doen.
+        ({"growth": 5.2, "leadership": 6.4}, {},
+         {"growth": _dir_agg(11, 1, "gr"), "leadership": _dir_agg(11, 11, "ld")}),
+    ]
+    for avgs, resp, direction in scenarios:
+        rows = _rank("retention", avgs, resp=resp, direction=direction)
+        _invariant(rows)

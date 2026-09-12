@@ -158,8 +158,15 @@ def test_behoudscontext_notes_follow_displayed_score():
     html_low = _behoudscontext(retention_score=4.94, stay_intent=None,
                                turnover=None, engagement=None)
     assert "4.9/10" in html_low and "onder druk" in html_low
-    # Vertrekintentie toont 6.5 -> "zichtbaar" (grens <= 6.5), niet "hoog".
-    assert "6.5/10" in html and "zichtbaar" in html and "actief vertrekrisico" not in html
+    # Lockstep met spec ronde 2 par. 7b: de note van vertrekintentie ligt nu op
+    # ZONE_LOW en ZONE_HIGH, dezelfde grenzen waarmee de spreidingsstrook de
+    # stippen indeelt, en strikt kleiner-dan. 6.46 toont als 6.5 en valt daarmee
+    # in de hoogste zone ("Veel vertrekgedachten"), dus hoort de note daar ook
+    # "hoog" te zeggen. Voorheen zei de note "zichtbaar" (grens <= 6.5) terwijl
+    # de stip in de rode zone stond. Wat deze test bewaakt blijft hetzelfde: de
+    # note volgt de GETOONDE score (6.5), niet de onafgeronde 6.46 (B15).
+    assert "6.5/10" in html and "hoog: actief vertrekrisico" in html
+    assert "zichtbaar" not in html
     # Bevlogenheid toont 7.5 -> "hoog".
     assert "7.5/10" in html
     assert ">hoog<" in html or "hoog</span>" in html

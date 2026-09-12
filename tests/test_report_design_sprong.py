@@ -23,7 +23,7 @@ def test_geen_zie_p03_meer():
 def test_responsbasis_compact_geen_eigen_pagina():
     from backend.report_html import _responsbasis
     band = _responsbasis(
-        invited=58, completed=39, pct=67, period="Q2 2026",
+        invited=58, completed=39, period="Q2 2026",
         population="Actieve medewerkers",
         segment_available=True, enps_available=True, compact=True)
     assert 'class="pb sec"' not in band

@@ -38,11 +38,13 @@ def test_row_bevat_score_scores_en_sortering_laagste_eerst():
     assert rows[0]["scores"] == [4.0] * 5              # per-respondent scores voor de strip
 
 
-def test_max_8_rijen_ook_bij_overige_zonder_overflow():
-    # 8 kwalificerende afdelingen (n=5, elk), dus geen overflow uit `rows[:8]`.
-    # Plus 2 sub-drempel afdelingen (n=3 elk) die samen n=6 >= MIN_SEGMENT_N poolen
-    # in "Overige afdelingen" -- dit moet zelfstandig (zonder overflow) ook trimmen
-    # naar max 8 totale rijen i.p.v. 9.
+def test_geen_rijlimiet_elke_kwalificerende_afdeling_plus_overige():
+    # Lockstep met spec ronde 2 par. 3.2 (bevinding B8): de cap van 8 rijen is
+    # vervallen. Deze test eiste eerder dat de 8e afdeling wegtrimde zodra er
+    # een restgroep bijkwam -- precies het gedrag dat de sectie-intro tegensprak
+    # ("alleen afdelingen onder de vijf responses worden gebundeld").
+    # 8 kwalificerende afdelingen (n=5 elk) + 2 sub-drempel afdelingen (n=3 elk)
+    # die samen n=6 >= MIN_SEGMENT_N poolen -> 9 rijen.
     respondents = []
     for i, avg in enumerate([4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5]):
         respondents += [_resp(f"Afd{i}", avg)] * 5
@@ -51,10 +53,12 @@ def test_max_8_rijen_ook_bij_overige_zonder_overflow():
 
     rows = _department_segment_rows(respondents)
 
-    assert len(rows) == 8
+    assert len(rows) == 9
+    assert [r["department"] for r in rows[:8]] == [f"Afd{i}" for i in range(8)]
     overige = [r for r in rows if r["department"] == "Overige afdelingen"]
     assert len(overige) == 1
     assert overige[0]["n"] == 6
+    assert rows[-1]["is_pooled"] is True        # restgroep blijft onderaan
 
 
 def test_respondenten_zonder_department_tellen_niet_mee():
