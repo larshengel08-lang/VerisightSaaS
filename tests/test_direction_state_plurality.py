@@ -79,6 +79,33 @@ def test_plurality_vereist_de_share_en_de_voorsprong():
     assert direction_state(agg, "growth", factor_score=5.2)["state"] == "plurality"
 
 
+def test_plurality_share_grens_is_inclusief_en_exact():
+    """Precies op DIRECTION_PLURALITY_MIN_SHARE telt mee, een haartje eronder
+    niet. Zonder deze twee kan de vergelijking van >= naar > verschuiven zonder
+    dat iets rood wordt (alle andere nieuwe grenzen zijn wel exact gepind)."""
+    op_de_grens = _agg({"grd_visibility": 7, "grd_none": 5, "grd_conversation": 4,
+                        "grd_time": 4})  # 7 van 20 = exact 0,35, voorsprong 2
+    st = direction_state(op_de_grens, "growth", 5.2)
+    assert st["top_n"] / st["n"] == DIRECTION_PLURALITY_MIN_SHARE
+    assert st["state"] == "plurality"
+    eronder = _agg({"grd_visibility": 17, "grd_none": 15, "grd_conversation": 9,
+                    "grd_time": 9})  # 17 van 50 = 0,34, zelfde voorsprong
+    st = direction_state(eronder, "growth", 5.2)
+    assert st["top_n"] / st["n"] < DIRECTION_PLURALITY_MIN_SHARE
+    assert st["state"] == "divided"
+
+
+def test_split_none_zet_second_n_expliciet_op_nul():
+    """In deze staat dragen none_n en top_n de bevinding; "de tweede optie"
+    heeft geen betekenis. De waarde uit de basis wees na het overschrijven van
+    top_key naar de rij die daarvoor tweede was, en dat kan top_key zelf zijn.
+    """
+    st = direction_state(_agg({"grd_none": 14, "grd_visibility": 14,
+                               "grd_conversation": 3}), "growth", 4.5)
+    assert st["state"] == "split_none"
+    assert st["second_n"] == 0
+
+
 def test_scenario_13_verdeeld_over_wel_of_niets_op_een_lage_factor():
     # 14 niets tegenover 14 verandering op een factor die 4,5 scoort.
     agg = _agg({"grd_none": 14, "grd_visibility": 14, "grd_conversation": 3})
@@ -141,12 +168,16 @@ def test_anders_wordt_nooit_een_richting():
     assert direction_state(agg, "growth", factor_score=4.5)["state"] == "divided"
 
 
-def test_factor_score_is_optioneel_voor_bestaande_aanroepers():
-    agg = _agg({"grd_visibility": 9, "grd_conversation": 2})
-    assert direction_state(agg, "growth")["state"] == "clear"
-    # Zonder score valt de split_none-tak weg; het gedrag blijft dat van voor ronde 2.
+def test_factor_score_is_verplicht():
+    """Een vergeten score leverde stil een andere klantzin op: geen fout, geen
+    log, geen rode test. Daarom geen default meer."""
+    with pytest.raises(TypeError):
+        direction_state(_agg({"grd_visibility": 9, "grd_conversation": 2}), "growth")
+
+
+def test_onbekende_score_geldt_nooit_als_kwetsbaar():
     agg = _agg({"grd_none": 14, "grd_visibility": 14, "grd_conversation": 3})
-    assert direction_state(agg, "growth")["state"] == "divided"
+    assert direction_state(agg, "growth", None)["state"] == "divided"
 
 
 def test_lege_counts_boven_de_vloer_blijft_fail_loud():

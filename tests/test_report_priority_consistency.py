@@ -230,7 +230,7 @@ def _kernzin(html: str) -> str:
 
 def test_fixture_zet_de_botsing_echt_op():
     """Sanity: zonder deze twee eigenschappen toetst de test hieronder niets."""
-    from backend.products.shared.deepening import direction_state
+    from backend.products.shared.deepening import direction_none_needed_view
     from backend.report_priority import rank_factors as _rank
 
     rows = _rank("exit", _NN_FACTOR_AVGS, {}, {}, exit_reason_counts={},
@@ -241,7 +241,7 @@ def test_fixture_zet_de_botsing_echt_op():
     assert rows[0]["decided_by"] == {"kind": "direction", "other": "culture"}
     # En toch zegt elke factor met genoeg beantwoorders "hier hoeft niets".
     for fk, agg in _NN_DIRECTION_AGG.items():
-        assert direction_state(agg, fk)["state"] == "none_needed"
+        assert direction_none_needed_view(agg, fk) == "none_needed"
 
 
 def test_bij_breed_niets_nodig_staat_er_geen_richtinggrond_op_pagina_twee():

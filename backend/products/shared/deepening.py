@@ -762,16 +762,20 @@ def aggregate_deepening(
 DIRECTION_MIN_N = 3          # vloer voor het rapportblok (spec par. 5.4; bewust lager dan MIN_SEGMENT_N,
                              # zie spec par. 6.3: subgroep onzichtbaar voor de organisatie)
 DIRECTION_CAVEAT_MAX_N = 4   # caveat-drempel = DIRECTION_MIN_N + 1 (dekt n in {3, 4}); niet los wijzigen
-DIRECTION_OTHER_WARN_N = 8   # vanaf hier een reviewvlag als *_other de topoptie is
 
-# Vloer voor elke uitspraak over de verdiepingskeuzes: onder dit aantal
+# Vloer voor elke uitspraak over de keuzes van een factor: onder dit aantal
 # beantwoorders kan "geen duidelijke meerderheid" feitelijk onwaar zijn (5 van
-# de 6 kozen hetzelfde). Eén keer gedefinieerd en op de drie plekken gebruikt
+# de 6 kozen hetzelfde). Eén keer gedefinieerd en op de vier plekken gebruikt
 # waar hij werkt: agenda_enrichment (de verrijkingsstaffel hieronder), de
-# verdiepingsstaat in report_priority.py en de uitlegregel onder de ranglijst in
-# report_html.py, die het getal in klantcopy noemt. Wijzigen raakt die drie
-# samen; dat is de bedoeling.
+# verdiepingsstaat in report_priority.py, de uitlegregel onder de ranglijst in
+# report_html.py (die het getal in klantcopy noemt) en de reviewvlag hieronder.
+# Wijzigen raakt die vier samen; dat is de bedoeling.
 DEEPENING_MIN_N = 8
+
+# Vanaf hier een reviewvlag in het log als *_other de topoptie is. Geen
+# klantcopy, maar wel dezelfde grootheid: een aantal beantwoorders per factor
+# waarboven hun keuzeverdeling iets zegt.
+DIRECTION_OTHER_WARN_N = DEEPENING_MIN_N
 
 # Grootste groep zonder meerderheid (spec ronde 2 par. 4.2). Onder ruim een
 # derde van de beantwoorders is "de grootste groep" geen zinvolle uitspraak
@@ -848,7 +852,7 @@ def aggregate_direction(
 
 
 def direction_state(agg: dict[str, Any], factor_key: str,
-                    factor_score: float | None = None) -> dict[str, Any]:
+                    factor_score: float | None) -> dict[str, Any]:
     """Staat van het richtingblok voor een factor (spec par. 5.4, uitgebreid in
     stresstest ronde 2 par. 4), geëvalueerd in de volgorde
     too_few -> none_needed -> clear -> split_none -> plurality -> divided.
@@ -858,9 +862,17 @@ def direction_state(agg: dict[str, Any], factor_key: str,
     Beide staten hieronder tonen een opdrachtvorm, en die bestaat voor *_other
     niet; zonder veranderoptie valt er sowieso niets te tonen.
 
-    factor_score is nodig voor split_none: die staat bestaat alleen op een
-    factor die kwetsbaar scoort. Zonder score valt die tak weg en blijft het
-    gedrag gelijk aan voor ronde 2.
+    factor_score is VERPLICHT en moet de GETOONDE score zijn: de waarde die de
+    lezer op dezelfde pagina ziet, dus afgerond op één decimaal via _shown in
+    report_html (B15). Vergelijken op de rauwe waarde liet 4,96 als kwetsbaar
+    tellen terwijl het rapport "5.0/10" en "Aandachtspunt" toont. Geen default:
+    een vergeten argument leverde een andere klantzin op zonder fout en zonder
+    rode test. De enige aanroeper die de score aantoonbaar niet nodig heeft,
+    gaat via direction_none_needed_view hieronder.
+
+    None is toegestaan voor een factor zonder score (geen factorprofiel); dan
+    valt de split_none-tak weg, want "dit onderwerp scoort laag" is dan
+    onbekend, en onbekend mag nooit als kwetsbaar gelden.
 
     Retourneert altijd {state, n, top_key, top_n, second_n, none_n, none_key,
     ranked}; none_key staat erbij zodat de renderer de niets-optie met haar
@@ -918,8 +930,12 @@ def direction_state(agg: dict[str, Any], factor_key: str,
     # mag ook groter zijn; in beide gevallen is de vraag dezelfde.
     if (factor_score is not None and factor_score < DIRECTION_SPLIT_NONE_MAX_SCORE
             and none_key is not None and none_n >= change_n - 1):
+        # second_n bewust op 0: in deze staat zijn none_n en top_n het paar dat
+        # de bevinding draagt, en "de tweede optie" heeft hier geen betekenis.
+        # De waarde uit base wijst na de overschrijving van top_key naar de rij
+        # die vóór die overschrijving tweede was, en dat kan top_key zelf zijn.
         return {**base, "state": "split_none",
-                "top_key": change_key, "top_n": change_n}
+                "top_key": change_key, "top_n": change_n, "second_n": 0}
     # Grootste groep zonder meerderheid (par. 4.2). De voorsprong wordt tegen
     # ALLE andere opties gemeten, de niets-optie meegerekend, zodat "de grootste
     # groep" letterlijk waar is. Samen met de clear-tak hierboven garandeert dat
@@ -932,6 +948,20 @@ def direction_state(agg: dict[str, Any], factor_key: str,
         return {**base, "state": "plurality",
                 "top_key": change_key, "top_n": change_n, "second_n": runner_up}
     return {**base, "state": "divided"}
+
+
+def direction_none_needed_view(agg: dict[str, Any], factor_key: str) -> str:
+    """Alleen de score-onafhankelijke staten: "too_few", "none_needed" of "anders".
+
+    Smallere ingang voor de enige aanroeper die geen factorscore heeft
+    (_p02_direction_key in report_html): die vraagt uitsluitend of een factor
+    "hier hoeft niets" zegt, en die staat wordt geevalueerd voor split_none, de
+    enige staat die de score gebruikt. Geeft bewust nooit clear, plurality of
+    divided terug, zodat deze functie niet als goedkope vervanger van
+    direction_state kan gaan dienen bij het renderen.
+    """
+    state = direction_state(agg, factor_key, None)["state"]
+    return state if state in ("too_few", "none_needed") else "anders"
 
 
 def agenda_enrichment(agg: dict[str, Any], scan_type: str, factor_key: str) -> dict[str, Any] | None:

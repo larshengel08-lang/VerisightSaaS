@@ -38,6 +38,7 @@ from backend.products.shared.deepening import (
     aggregate_deepening,
     aggregate_direction,
     direction_imperative,
+    direction_none_needed_view,
     direction_option_texts,
     direction_state,
     get_deepening_sets,
@@ -439,11 +440,12 @@ def _p02_direction_key(direction_agg: dict[str, Any] | None,
     """
     if not direction_agg or not primary_key or primary_key not in direction_agg:
         return None
-    # Bewust zonder factorscore: deze functie kijkt alleen of elke leesbare
-    # factor in none_needed staat, en die staat wordt voor split_none en
-    # plurality geevalueerd (ronde 2 par. 4). Een score meegeven zou hier dus
-    # niets kunnen veranderen, alleen een tweede bron van waarheid opleveren.
-    states = {fk: direction_state(agg, fk)["state"] for fk, agg in direction_agg.items()}
+    # Via de smallere ingang, want deze functie heeft geen factorscore en
+    # heeft er ook geen nodig: hij kijkt alleen of elke leesbare factor
+    # none_needed zegt, en die staat wordt geevalueerd vóór split_none, de
+    # enige score-afhankelijke staat (ronde 2 par. 4). direction_state zelf
+    # eist de score, zodat een renderer hem niet stil kan vergeten.
+    states = {fk: direction_none_needed_view(agg, fk) for fk, agg in direction_agg.items()}
     # too_few zegt niets over de richting en spreekt "nergens" dus ook niet tegen.
     leesbaar = [s for s in states.values() if s != "too_few"]
     if states[primary_key] == "none_needed" and all(s == "none_needed" for s in leesbaar):
@@ -2063,18 +2065,31 @@ def _direction_chain(agg: dict, n_total: int) -> str:
 
 def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
                          factor_key: str, n_total: int,
-                         factor_score: float | None = None) -> str:
+                         factor_score: float | None) -> str:
     """Eén tabelcel (<td>) voor het startpunt of tweede punt, in de zes
     staten van spec par. 6.1 + ronde 2 par. 4. Keyword-only na role:
     scan_type/factor_key en label zijn anders aangrenzende gelijksoortige
     strings die zonder typefout konden transponeren (zelfde reden als
     _bestuurlijke_read en _prioriteringsraster al keyword-only zijn).
 
-    factor_score is optioneel: zonder score valt de split_none-staat weg en
-    blijft het gedrag dat van voor ronde 2."""
-    st = direction_state(agg, factor_key, factor_score)
+    factor_score is verplicht (None alleen voor een factor zonder score) en
+    gaat via _shown naar direction_state: de staat moet beslissen op de score
+    die de lezer op de pagina ziet, niet op de rauwe waarde (B15). Anders zegt
+    de kaart "op een onderwerp dat laag scoort (5.0/10)" naast een legenda die
+    kwetsbaar definieert als onder de 5,0."""
+    st = direction_state(agg, factor_key, _shown(factor_score))
     texts = direction_option_texts(scan_type, factor_key)
     n = st["n"]
+
+    def _opt(key: str) -> str:
+        """Optietekst met een nette fout in plaats van een rauwe sleutel in een
+        klant-PDF. Alle takken lopen hierlangs, ook de koppen die vóór de
+        verdelingstabel worden opgebouwd: een onbekende sleutel gaf daar anders
+        een kale KeyError in plaats van deze melding."""
+        if key not in texts:
+            raise KeyError(
+                f"direction: onbekende optiesleutel {key!r} voor {factor_key!r} ({scan_type})")
+        return texts[key]
     if role == "startpunt":
         role_lbl, which = "Startpunt", "het startpunt"
     elif role == "tweede":
@@ -2088,17 +2103,17 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
         src = f"Volgens {st['top_n']} van de {n} bij wie {_lc(label)} het laagst scoorde."
     elif st["state"] == "none_needed":
         head = DIRECTION_HEAD_NONE_NEEDED
-        opt = texts.get(st["top_key"], st["top_key"])
+        opt = _opt(st["top_key"])
         src = (f"{st['top_n']} van de {n} bij wie dit het laagst scoorde kozen "
                f"‘{opt}’. Bespreek of dit dan {which} moet zijn.")
     elif st["state"] == "plurality":
-        head = DIRECTION_HEAD_PLURALITY.format(opt=texts[st["top_key"]])
+        head = DIRECTION_HEAD_PLURALITY.format(opt=_opt(st["top_key"]))
         # De tweede optie komt uit ranked zelf en niet uit second_n, zodat de
         # zin de optie noemt die bij dat getal hoort. Is er geen tweede optie
         # (mogelijk als answered hoger ligt dan de som van de keuzes), dan komt
         # die clausule er niet; een tweede groep verzinnen mag niet.
         rest = [(k, c) for k, c in st["ranked"] if k != st["top_key"]]
-        tweede = (f"; {_tel(rest[0][1], 'koos', 'kozen')} ‘{texts[rest[0][0]]}’"
+        tweede = (f"; {_tel(rest[0][1], 'koos', 'kozen')} ‘{_opt(rest[0][0])}’"
                   if rest else "")
         src = (f"{st['top_n']} van de {n} bij wie {_lc(label)} het laagst scoorde "
                f"kozen die richting{tweede}. Wat er volgens de grootste groep moet "
@@ -2107,10 +2122,10 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
         # "even groot" alleen als de twee groepen echt gelijk zijn; zie de
         # toelichting bij DIRECTION_HEAD_SPLIT_NONE.
         deel = "even groot" if st["none_n"] == st["top_n"] else "ander"
-        head = DIRECTION_HEAD_SPLIT_NONE.format(deel=deel, opt=texts[st["top_key"]])
-        src = (f"{_tel(st['none_n'], 'koos', 'kozen')} ‘{texts[st['none_key']]}’; "
+        head = DIRECTION_HEAD_SPLIT_NONE.format(deel=deel, opt=_opt(st["top_key"]))
+        src = (f"{_tel(st['none_n'], 'koos', 'kozen')} ‘{_opt(st['none_key'])}’; "
                f"{_tel(st['top_n'], 'koos', 'kozen')} "
-               f"‘{texts[st['top_key']]}’. Op een onderwerp dat laag scoort "
+               f"‘{_opt(st['top_key'])}’. Op een onderwerp dat laag scoort "
                f"({_score_str(factor_score)}) is dat verschil van inzicht zelf het "
                f"gesprek. Wat die andere groep vraagt: "
                f"{direction_imperative(scan_type, factor_key, st['top_key'])}")
@@ -2122,11 +2137,8 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
     if st["state"] != "too_few":
         row_htmls = []
         for k, c in st["ranked"]:
-            if k not in texts:
-                raise KeyError(
-                    f"direction: onbekende optiesleutel {k!r} voor {factor_key!r} ({scan_type})")
             pct = f"{round(c / n * 100)}% ({c})" if n >= MIN_DISTRIBUTION_N else c
-            row_htmls.append(f'<tr><td class="iq">{_h(texts[k])}</td><td class="is">{pct}</td></tr>')
+            row_htmls.append(f'<tr><td class="iq">{_h(_opt(k))}</td><td class="is">{pct}</td></tr>')
         rows = "".join(row_htmls)
         table = f'<table class="item-tbl dir-tbl">{rows}</table>'
         if n <= DIRECTION_CAVEAT_MAX_N:
@@ -2220,13 +2232,17 @@ def _direction_degraded_block(direction_agg: dict, n_total: int) -> str:
 
 
 def _direction_p02_line(direction_agg: dict, factor_key: str | None, scan_type: str,
-                        factor_score: float | None = None) -> str:
+                        factor_score: float | None) -> str:
     """Eén regel over het startpunt op de openingspagina (spec par. 6.2, ronde 2
-    par. 4); leeg onder de vloer. factor_score is optioneel, net als bij
-    _direction_card_cell: zonder score bestaat de split_none-staat niet."""
+    par. 4); leeg onder de vloer.
+
+    factor_score is verplicht en gaat via _shown, om dezelfde twee redenen als
+    bij _direction_card_cell: een vergeten score gaf hier stil een andere
+    klantzin dan de kaart op de gespreksagenda, en de rauwe waarde kon
+    kwetsbaar heten terwijl de pagina 5.0 toont."""
     if not direction_agg or not factor_key or factor_key not in direction_agg:
         return ""
-    st = direction_state(direction_agg[factor_key], factor_key, factor_score)
+    st = direction_state(direction_agg[factor_key], factor_key, _shown(factor_score))
     n = st["n"]
     if st["state"] == "clear":
         return (f"Wat er volgens {st['top_n']} van de {n} moet gebeuren: "
@@ -2237,9 +2253,11 @@ def _direction_p02_line(direction_agg: dict, factor_key: str | None, scan_type: 
                 f"{direction_imperative(scan_type, factor_key, st['top_key'])}")
     if st["state"] == "split_none":
         texts = direction_option_texts(scan_type, factor_key)
-        return (f"Wat er moet gebeuren: je mensen zijn hierover verdeeld. "
-                f"{_tel(st['none_n'], 'zegt', 'zeggen')} dat hier niets hoeft, "
-                f"{_tel(st['top_n'], 'vraagt', 'vragen')} om "
+        # Met noemer, zoals de drie andere takken: twee kale tellingen naast
+        # elkaar lezen bij 10 en 4 uit 25 als een groep van 14.
+        return (f"Wat er moet gebeuren: de {n} die dit het laagst scoorden zijn "
+                f"hierover verdeeld. {_tel(st['none_n'], 'zegt', 'zeggen')} dat "
+                f"hier niets hoeft, {_tel(st['top_n'], 'vraagt', 'vragen')} om "
                 f"‘{texts[st['top_key']]}’.")
     if st["state"] == "divided":
         return (f"Over wat hier moet gebeuren zijn de {n} die dit het laagst scoorden "

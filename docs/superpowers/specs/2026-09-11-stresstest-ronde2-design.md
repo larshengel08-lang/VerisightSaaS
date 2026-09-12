@@ -304,10 +304,29 @@ zelf in staan.
    `direction_state` geeft daarvoor `none_key` mee terug.
 
 Verder: de regel op p.02 is grammaticaal anders opgebouwd dan in par. 4.2/4.3
-(enkelvoud/meervoud per telling, geen dubbele zinsafsluiting achter de
-opdrachtvorm); de inhoud is gelijk. De plurality-staat krijgt bewust geen eigen
-accentkleur in de CSS: die is voorbehouden aan `clear`, waar wel een meerderheid
-achter staat.
+(enkelvoud/meervoud per telling, een noemer zoals de drie andere p.02-takken,
+geen dubbele zinsafsluiting achter de opdrachtvorm); de inhoud is gelijk. De
+plurality-staat krijgt bewust geen eigen accentkleur in de CSS: die is
+voorbehouden aan `clear`, waar wel een meerderheid achter staat.
+
+`factor_score` is verplicht en moet de getoonde (afgeronde) score zijn. Een
+optionele score degradeerde stil: een vergeten argument bij de p.02-regel gaf
+daar een andere klantzin dan de kaart op de gespreksagenda, zonder fout en
+zonder rode test. De enige aanroeper zonder score (`_p02_direction_key`) gaat
+via `direction_none_needed_view`, die alleen de score-onafhankelijke staten
+teruggeeft. Beide renderers zijn gepind in
+`tests/test_direction_renderer_wiring.py`.
+
+**Vervolg (niet in deze ronde):**
+
+- De copy per staat leeft op twee plaatsen, de kaart in het richtingblok en de
+  regel op p.02, elk met eigen literals en zonder gedeelde bron. Wie later de
+  kaartkop herformuleert laat de p.02-regel stil achter. Eén bron per staat
+  maken is een aparte ingreep, ook voor de vier oudere staten.
+- Bij een gelijkspel tussen veranderopties noemt `split_none` alfabetisch een
+  van de twee, zonder noemer, terwijl een derde optie ook stemmen kan hebben.
+- `DIRECTION_OTHER_WARN_N` is meegenomen in de drempelconsolidatie; het blijft
+  een log-only reviewvlag zonder klantcopy.
 
 ---
 
