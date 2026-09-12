@@ -15,7 +15,7 @@ const sharedDelivery = [
   'Intake en scopebepaling',
   'Survey klaarzetten en launchpakket leveren (uitnodigingslink + tekst)',
   'Respons monitoren op campagneniveau',
-  'Rapport: waar het wringt, waarom, en waar je begint',
+  'Rapport: waar het wringt en waar je begint (bij Loep Vertrek en Loep Behoud ook waarom)',
   'Begeleide managementbespreking (60–90 min)',
   'Vervolgstap vastgelegd',
 ] as const
@@ -280,7 +280,7 @@ function PricingSection() {
   const included = [
     'Intake en scopebepaling',
     'Uitvoering van de survey, zonder toolbeheer voor je team',
-    'Rapport: waar het wringt, waarom, en waar je begint',
+    'Rapport: waar het wringt en waar je begint (bij Loep Vertrek en Loep Behoud ook waarom)',
     'Begeleide managementbespreking (60–90 min)',
     'Vervolgstap vastgelegd',
   ] as const

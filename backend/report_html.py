@@ -1144,10 +1144,12 @@ OVERZICHTSPROFIEL_RANGORDE: dict[str, str] = {
         "begint, bepaalt Loep niet op de score alleen: bij de gespreksagenda verderop "
         "zie je per factor welke signalen meewogen in de volgorde."
     ),
+    # "als eerste in de verdieping" verwees naar een hoofdstuk dat in dit rapport
+    # niet meer zo heet (spec ronde 2 par. 7): Loep Start heeft geen verdieping.
     "onboarding": (
         "Belangrijker dan de absolute kleur is de rangorde: het thema dat binnen jullie "
-        "eigen beeld het laagst scoort, staat verderop als eerste in de verdieping en in "
-        "de gespreksagenda."
+        "eigen beeld het laagst scoort, staat verderop vooraan bij de thema&#x27;s met de "
+        "meeste aandacht en in de gespreksagenda."
     ),
 }
 # Loep Behoud deelt de raster-variant met Loep Vertrek: beide renderen
@@ -1279,6 +1281,16 @@ ONBOARDING_GEEN_VERDIEPING_NOTE = (
     "gebeuren volgt in een volgende versie."
 )
 
+# Zonder factorprofiel weerlegt de tweede helft zichzelf binnen drie zinnen: het
+# degraded blok eronder zegt juist dat Loep bij dit aantal antwoorden nog geen
+# profiel per factor toont, dus "laat zien waar het wringt" is dan geen belofte
+# die dit rapport waarmaakt. De eerste zin gaat over het product en blijft waar;
+# die blijft staan, met alleen het deel over de volgende versie erachter.
+ONBOARDING_GEEN_VERDIEPING_NOTE_DEGRADED = (
+    "Deze scan bevat nog geen verdiepingsvragen en geen richtingvraag. Wat er "
+    "volgens nieuwe medewerkers moet gebeuren volgt in een volgende versie."
+)
+
 
 def _opsomming(items: list[str]) -> str:
     """"a", "a en b", "a, b en c" -- Nederlandse opsomming zonder Oxford-komma."""
@@ -1379,10 +1391,20 @@ def _bestuurlijke_read(*, kernzin: str, totaalbeeld: str,
 </div>"""
 
 
+DATASTATUS_VERVOLG = "Verdieping opent zodra voldoende responses beschikbaar zijn."
+
+# Loep Start heeft geen verdieping die kan openen (spec ronde 2 par. 7), en deze
+# regel staat een paar centimeter onder de zin die dat zegt. Daar gaat de zin
+# over de onderdelen die hierboven als ontbrekend zijn opgesomd. Exit en
+# retention houden hun eigen tekst.
+DATASTATUS_VERVOLG_ONBOARDING = (
+    "Deze onderdelen openen zodra er voldoende responses beschikbaar zijn.")
+
+
 def _responsbasis(*, invited: int | None, completed: int, period: str,
                   population: str, segment_available: bool, segment_reason: str = "",
                   enps_available: bool = True, compact: bool = False,
-                  note: str = "") -> str:
+                  note: str = "", datastatus_vervolg: str = "") -> str:
     """`note` alleen zonder noemer: de zin uit `_respons_noemer` die zegt waarom.
 
     Het percentage is GEEN parameter meer. Het werd naast `invited` en
@@ -1406,7 +1428,7 @@ def _responsbasis(*, invited: int | None, completed: int, period: str,
             f'<div class="card" style="margin-top:14px;">'
             f'<span class="eyebrow">Datastatus</span>'
             f'<p style="margin-top:4px;margin-bottom:0;">Niet beschikbaar in deze wave: {items_html}. '
-            f'Verdieping opent zodra voldoende responses beschikbaar zijn.</p>'
+            f'{_h(datastatus_vervolg or DATASTATUS_VERVOLG)}</p>'
             f'</div>'
         )
     else:
@@ -1562,20 +1584,47 @@ GESPREKSAGENDA_INTRO_GEEN_PROFIEL = (
     "uitkomst van de meting, maar een startvraag voor de bespreking.")
 
 
+def _laagste_stelling_reikwijdte(score: float | None,
+                                 alle_scores: list[float | None]) -> tuple[bool, bool]:
+    """(laagste_van_alles, uniek) voor de claim over de laagst scorende stelling.
+
+    Twee onafhankelijke vragen, en de zin heeft ze allebei nodig:
+
+    * Is dit de laagste van alle gemeten stellingen? De gekozen stelling is de
+      laagste *binnen het startthema*, en het startthema is de laagste factor op
+      het gemiddelde. Een gemiddelde verbergt zijn spreiding: werkdruk 5,1 uit
+      5,6 en 4,6 is de laagste factor, terwijl groei 5,9 uit 8,0 en 3,8 een
+      lagere losse stelling heeft. Dan is 4,6 niet de laagste van het rapport,
+      en is ook "een van de laagste" onwaar; de zin beperkt zich dan tot het
+      thema.
+    * Is de waarde uniek? Zo niet, dan is elke exclusieve formulering onwaar en
+      spreekt de appendix het rapport tegen.
+
+    Vergelijken gaat over de GETOONDE score (zie _shown, B15): 5.14 en 5.09
+    staan allebei als 5.1 in de tabel, en dan leest "de laagst scorende
+    stelling" als een fout.
+    """
+    getoond = [_shown(v) for v in alle_scores if v is not None]
+    doel = _shown(score)
+    if doel is None or not getoond:
+        return False, False
+    return doel == min(getoond), getoond.count(doel) == 1
+
+
 def _laagste_stelling_zin(factor_label: str, stelling: str, score: float,
-                          *, strikt_laagste: bool) -> str:
+                          *, laagste_van_alles: bool, uniek: bool) -> str:
     """Een constatering over de laagst scorende stelling, precies één keer.
 
-    strikt_laagste is alleen waar als geen enkele andere stelling in het hele
-    rapport dezelfde getoonde score haalt; bij gelijkspel is "het laagst"
-    onwaar en spreekt de appendix het rapport tegen. Vergelijken gaat over de
-    getoonde score (zie _shown, B15): 5.14 en 5.09 staan allebei als 5.1 in de
-    tabel, en dan leest "de laagst scorende stelling" als een fout.
+    Vier uitkomsten uit twee onafhankelijke booleans (zie
+    _laagste_stelling_reikwijdte). uniek slaat op de reikwijdte die de zin
+    noemt: bij laagste_van_alles op alle gemeten stellingen, anders op het
+    thema, waar de gekozen stelling per definitie de laagste is.
     """
-    welke = ("de laagst scorende stelling" if strikt_laagste
+    welke = ("de laagst scorende stelling" if uniek
              else "een van de laagst scorende stellingen")
+    waar = "in het cijferbeeld" if laagste_van_alles else "van dit thema"
     return (f"Bespreek eerst ‘{stelling}’ binnen {factor_label.lower()} "
-            f"({score:.1f}/10). Dat is {welke} in het cijferbeeld.")
+            f"({score:.1f}/10). Dat is {welke} {waar}.")
 
 
 def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: str,
@@ -2018,19 +2067,6 @@ def _deepening_campaign_active(deepening_agg: dict) -> bool:
 def _deepening_option_texts(scan_type: str, factor_key: str) -> dict[str, str]:
     return {o["key"]: o["text"]
             for o in get_deepening_sets(scan_type)[factor_key]["options"]}
-
-
-def _primary_why_text(low_item_score: float, agg: dict, scan_type: str, factor_key: str) -> str:
-    """'Waarom eerst'-onderbouwing bij de Primair-thema-kaart (feedback 2026-07-16
-    pt. 1): boven de staffel (answered>=5) wordt de daadwerkelijk meest gekozen
-    toelichting genoemd i.p.v. de circulaire "kozen de meest gekozen toelichting"."""
-    answered = agg.get("answered", 0)
-    top = max((agg.get("primary_counts") or {}).items(), key=lambda kv: (kv[1], kv[0]), default=None)
-    if top and answered >= 5:
-        opt_text = _deepening_option_texts(scan_type, factor_key).get(top[0], top[0])
-        return (f"Laagst scorende stelling in het cijferbeeld ({low_item_score:.1f}/10); "
-                f"{top[1]} van de {answered} respondenten met verdieping kozen: '{opt_text}'.")
-    return f"Laagst scorende stelling in het cijferbeeld ({low_item_score:.1f}/10)."
 
 
 def _lc(label: str) -> str:
@@ -2536,8 +2572,17 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "",
 </div>"""
 
 
+# Vijfde plek met dezelfde belofte (spec ronde 2 par. 7): dit blok staat ook in
+# het Loep Start-rapport, dat geen verdieping heeft die kan openen. Exit en
+# retention houden hun eigen zin.
+SEGMENT_VERVOLG = "Verdieping opent zodra voldoende responses per groep beschikbaar zijn."
+SEGMENT_VERVOLG_ONBOARDING = (
+    "Dit onderdeel opent zodra er per groep voldoende responses beschikbaar zijn.")
+
+
 def _segment_status_block(n: int, has_segment_data: bool = False,
-                           reason: str = "n-grens", opener_html: str = "") -> str:
+                           reason: str = "n-grens", opener_html: str = "",
+                           scan_type: str = "exit") -> str:
     """Segmentstatus — altijd zichtbaar, ook als segmenten niet worden getoond."""
     if has_segment_data:
         return f"""<div class="pb sec">
@@ -2562,7 +2607,7 @@ def _segment_status_block(n: int, has_segment_data: bool = False,
   {opener_html or '<span class="slabel">Segmentanalyse</span>'}
   <div class="empty-state">
     <p style="margin-bottom:4px;">Segmentverschillen zijn niet getoond om herleidbaarheid te voorkomen.</p>
-    <p style="margin-bottom:0;">Verdieping opent zodra voldoende responses per groep beschikbaar zijn.</p>
+    <p style="margin-bottom:0;">{_h(SEGMENT_VERVOLG_ONBOARDING if scan_type == "onboarding" else SEGMENT_VERVOLG)}</p>
   </div>
 </div>"""
 
@@ -2835,7 +2880,8 @@ def _segment_block(segment_rows: list[dict], factor_rows: dict[str, dict] | None
     from backend.report_distribution import distribution_svg
 
     if not segment_rows:
-        return _segment_status_block(0, has_segment_data=False, opener_html=opener_html)
+        return _segment_status_block(0, has_segment_data=False, opener_html=opener_html,
+                                    scan_type=scan_type)
 
     rows_html = ""
     for row in segment_rows:
@@ -4679,6 +4725,7 @@ def render_onboarding_report_html(data: dict) -> str:
         segment_reason="te weinig responses per groep voor herleidbaarheid",
         enps_available=data["enps_available"],
         compact=True,
+        datastatus_vervolg=DATASTATUS_VERVOLG_ONBOARDING,
     )
 
     s += _bestuurlijke_read(
@@ -4697,7 +4744,8 @@ def render_onboarding_report_html(data: dict) -> str:
         degraded_note=br_degraded_note,
         why_title=_p02_why_title(_shape),
         signal_cell_html=_signal_cell,
-        scope_note=ONBOARDING_GEEN_VERDIEPING_NOTE,
+        scope_note=(ONBOARDING_GEEN_VERDIEPING_NOTE_DEGRADED if br_degraded_note
+                    else ONBOARDING_GEEN_VERDIEPING_NOTE),
     )
 
     # ── Overzichtsprofiel (p.04) ──────────────────────────────────────────────
@@ -4860,18 +4908,28 @@ def render_onboarding_report_html(data: dict) -> str:
                           if _ob_primary_fk else [])
     _ob_primary_low = min(_ob_primary_items, key=lambda x: x[2]) if _ob_primary_items else None
     # "Het laagst van het hele beeld" keek alleen binnen de eerste factor (spec
-    # ronde 2 par. 7). Scoort een stelling in een andere factor even laag, dan
-    # sprak de appendix die claim tegen. De vergelijking loopt daarom over alle
-    # stellingen die dit rapport toont (de factorpagina's en de appendix putten
-    # allebei uit factor_items_map) en over de getoonde score, zie _shown.
-    _ob_alle_getoond = [_shown(oim[_ik])
-                        for _items in fim.values() for _ik, _q in _items
-                        if oim.get(_ik) is not None]
-    _ob_strikt = (_ob_primary_low is not None
-                  and _ob_alle_getoond.count(_shown(_ob_primary_low[2])) == 1)
+    # ronde 2 par. 7). Scoort een stelling in een andere factor even laag of
+    # lager, dan sprak de appendix die claim tegen.
+    #
+    # De vergelijking loopt bewust over ALLE gemeten stellingen
+    # (factor_items_map), ook die van factoren waarvan de detailpagina in dit
+    # rapport niet rendert (er zijn er hoogstens drie) en ook wanneer de
+    # appendix onder zijn drempel blijft. Breder vergelijken kan de claim alleen
+    # verzwakken, nooit versterken: wat de laagste van alles is, is zeker de
+    # laagste van wat de lezer ziet. Andersom zou een onzichtbare lagere
+    # stelling een exclusieve claim overeind houden die feitelijk niet klopt.
+    _ob_alle_scores = [oim.get(_ik) for _items in fim.values() for _ik, _q in _items]
+    _ob_thema_scores = [_sc for _ik, _q, _sc in _ob_primary_items]
+    _ob_laagste_van_alles, _ob_uniek_in_rapport = _laagste_stelling_reikwijdte(
+        _ob_primary_low[2] if _ob_primary_low else None, _ob_alle_scores)
+    _, _ob_uniek_in_thema = _laagste_stelling_reikwijdte(
+        _ob_primary_low[2] if _ob_primary_low else None, _ob_thema_scores)
     _ob_primary_theme = (
         _laagste_stelling_zin(_fl(_ob_primary_fk, ST), _ob_primary_low[1],
-                              _ob_primary_low[2], strikt_laagste=_ob_strikt)
+                              _ob_primary_low[2],
+                              laagste_van_alles=_ob_laagste_van_alles,
+                              uniek=(_ob_uniek_in_rapport if _ob_laagste_van_alles
+                                     else _ob_uniek_in_thema))
     ) if _ob_primary_low else low_lbl
 
     # Zonder factorprofiel is er geen primair thema en geen tweede
@@ -4894,9 +4952,10 @@ def render_onboarding_report_html(data: dict) -> str:
 
     # Geen primary_why meer (spec ronde 2 par. 7): die regel zei "Laagst
     # scorende stelling in het cijferbeeld (5.1/10)" onder een kaart die precies
-    # dat al zegt, met hetzelfde getal. Loep Start heeft geen verdiepingsdata,
-    # dus de rijkere variant van _primary_why_text (de meest gekozen toelichting)
-    # kon hier nooit staan. De constatering staat nu één keer, in de zin erboven.
+    # dat al zegt, met hetzelfde getal. De helper die hem opbouwde had daarna nul
+    # aanroepers en is verwijderd; zijn rijkere variant (de meest gekozen
+    # toelichting uit de verdieping) kon bij Loep Start sowieso nooit vullen. De
+    # constatering staat nu één keer, in de zin erboven.
     _second_why = ("Tweede laagste factorscore in het overzichtsprofiel."
                    if len(sorted_f) > 1 else None)
 
