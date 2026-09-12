@@ -34,7 +34,9 @@ export function buildReminderText(input: ReminderTextInput): string {
     // (de klant verstuurt zelf). Zonder bruikbare token kan de echte
     // uitnodigingstekst niet gebouwd worden, dus geven we een zichtbaar
     // gedegradeerde tekst terug in plaats van een onbruikbare of misleidende.
-    if (!input.publicSurveyToken) {
+    // Een token van alleen spaties is in JS waar, maar levert een kapotte
+    // link op. Trimmen, zodat ook die vorm de gedegradeerde tekst krijgt.
+    if (!input.publicSurveyToken?.trim()) {
       return [
         'Er is nog geen surveylink beschikbaar voor deze meting.',
         '',

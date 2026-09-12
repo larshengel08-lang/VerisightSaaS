@@ -55,4 +55,14 @@ describe('buildReminderText (spec 2026-09-11 par. 6)', () => {
     expect(text).not.toContain('Loep verzorgt de uitnodiging')
     expect(text).not.toMatch(/https?:\/\//)
   })
+
+  // Een token van alleen spaties is waar in JS en glipte daardoor langs de
+  // guard: dat bouwde een link met spaties erin, in een tekst die er verder
+  // uitzag als een gewone uitnodiging.
+  it('behandelt een token van alleen witruimte als ontbrekend', () => {
+    const text = buildReminderText(input({ publicSurveyToken: '   ' }))
+    expect(text).not.toContain('Loep verzorgt de uitnodiging')
+    expect(text).not.toMatch(/https?:\/\//)
+    expect(text).toContain('nog geen surveylink beschikbaar')
+  })
 })
