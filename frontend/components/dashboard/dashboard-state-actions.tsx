@@ -9,6 +9,7 @@ export function DashboardStateActions({ state, reminderText }: { state: Dashboar
   const router = useRouter()
   const [phase, setPhase] = useState<'idle' | 'copied' | 'busy'>('idle')
   const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
 
   if (!state.campaignId || !state.ctaLabel) return null
 
@@ -36,6 +37,7 @@ export function DashboardStateActions({ state, reminderText }: { state: Dashboar
 
   async function handleClose() {
     setError(null)
+    setNotice(null)
     const confirmed = confirm('Weet je zeker dat je deze campagne wilt sluiten?\n\nRespondenten kunnen daarna niet meer invullen. Resultaten en het rapport blijven beschikbaar.')
     if (!confirmed) return
     setPhase('busy')
@@ -45,6 +47,8 @@ export function DashboardStateActions({ state, reminderText }: { state: Dashboar
       setPhase('idle')
       return
     }
+    setNotice(result.warning ?? null)
+    setPhase('idle')
     router.refresh()
   }
 
@@ -75,6 +79,11 @@ export function DashboardStateActions({ state, reminderText }: { state: Dashboar
           {phase === 'busy' ? 'Sluiten…' : (state.ctaLabel ?? 'Campagne sluiten')}
         </button>
         {error ? <p role="alert" className="text-xs text-red-600">{error}</p> : null}
+        {notice ? (
+          <p role="status" className="max-w-md text-xs text-[color:var(--dashboard-muted)]">
+            {notice}
+          </p>
+        ) : null}
       </div>
     )
   }

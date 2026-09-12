@@ -7,21 +7,21 @@ describe('rapportGereedHtml', () => {
       organizationName: 'TechBouw B.V.',
       campaignName: 'Loep Vertrek Q1 2026',
       dashboardUrl: 'https://loep.nl/campaigns/abc',
-      calendlyUrl: null,
     })
     expect(html).toContain('Loep Vertrek Q1 2026')
     expect(html).toContain('TechBouw B.V.')
     expect(html).toContain('https://loep.nl/campaigns/abc')
   })
 
-  it('bevat Calendly-link als opgegeven', () => {
+  it('nodigt niet meer uit voor een bespreking', () => {
     const html = rapportGereedHtml({
       organizationName: 'Org',
       campaignName: 'Scan',
-      dashboardUrl: 'https://loep.nl/campaigns/x',
-      calendlyUrl: 'https://calendly.com/loep/bespreking',
+      dashboardUrl: 'https://www.getloep.nl/campaigns/x',
     })
-    expect(html).toContain('calendly.com')
+    expect(html).not.toContain('calendly')
+    expect(html).not.toContain('bespreking')
+    expect(html).toContain('pagina twee')
   })
 
   it('escapet HTML-injectie in organisatienaam', () => {
@@ -29,7 +29,6 @@ describe('rapportGereedHtml', () => {
       organizationName: '<script>alert(1)</script>',
       campaignName: 'Scan',
       dashboardUrl: 'https://loep.nl/campaigns/x',
-      calendlyUrl: null,
     })
     expect(html).not.toContain('<script>')
     expect(html).toContain('&lt;script&gt;')

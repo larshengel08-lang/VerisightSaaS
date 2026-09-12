@@ -20,6 +20,12 @@ describe('dashboard state interaction island', () => {
     expect(island).toContain('Campagne sluiten')
     expect(island).toMatch(/confirm\(/)
   })
+
+  it('toont een waarschuwing als het sluiten lukte maar de mail niet', () => {
+    expect(island).toContain('setNotice')
+    expect(island).toContain('result.warning')
+    expect(island).toContain('role="status"')
+  })
 })
 
 describe('dashboard state card', () => {

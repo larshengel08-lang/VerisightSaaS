@@ -21,4 +21,21 @@ describe('dashboard server actions', () => {
     expect(source).toContain('is_active: false')
     expect(source).toContain('closed_at')
   })
+
+  it('mailt alleen als er echt een rapport is en naar bestaande kolommen', () => {
+    expect(source).toContain('isReportReleaseReady')
+    expect(source).toContain("from('org_invites')")
+    expect(source).toContain("eq('role', 'owner')")
+    expect(source).toContain('buildReportMailRecipients')
+    expect(source).toContain('getOperatorEmail')
+    // profiles.email bestaat niet in het schema; org_members kent geen
+    // rollen admin/hr_manager. Beide waren de oorzaak van de stille no-op.
+    expect(source).not.toContain("from('profiles')\n      .select('email')")
+    expect(source).not.toContain("'hr_manager'")
+  })
+
+  it('meldt een mislukte mail in plaats van hem stil te slikken', () => {
+    expect(source).toContain('warning')
+    expect(source).toContain('report_mail')
+  })
 })
