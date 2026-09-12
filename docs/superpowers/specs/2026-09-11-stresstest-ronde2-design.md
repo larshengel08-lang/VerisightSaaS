@@ -381,6 +381,34 @@ Scenario 01, 02, 05 krijgen drie verschillende openingszinnen; tellingen kloppen
 ### 6.2 Tests
 Scenario 16 (30%: caution-zin, staart, "Indicatief beeld" want 30% is niet < 0,3 → alleen caution; voeg scenario 16b toe met 25% voor de indicatieve variant) en 17 (90%: ongewijzigd).
 
+### 6.3 Implementatie (2026-09-12, taak 4)
+
+Vier punten wijken af van of verfijnen de regel hierboven.
+
+1. **De noemer zit in een pure helper (`_respons_noemer`), niet inline in `build_report_data`.**
+   Anders is de enige regel die bepaalt of het rapport een percentage toont alleen
+   te testen met een database erbij. `camp.delivery_record.invited_count` is
+   geverifieerd aanwezig (`models.py`: relatie `uselist=False`, kolom nullable).
+   De helper kreeg er één regel bij die niet in het plan stond: een vastgelegd
+   aantal genodigden dat **kleiner** is dan het aantal afgeronde vragenlijsten
+   telt niet mee. Bij self-send is dat aantal handmatig ingevoerd en de
+   campagnelink is open, dus 50 genodigden met 55 ingevulde vragenlijsten is een
+   bereikbare stand, en die zou 110% respons op de cover zetten. De keten valt
+   dan door naar de volgende regel, precies zoals bij een ontbrekend aantal.
+2. **Zonder noemer is `completion_pct` None, niet 0,0, en de cover zegt "Onbekend".**
+   De coverstat stond niet in het plan, maar `completion` viel daar terug op 0,0
+   en de tegel toonde dus "Respons 0%": een getal dat niemand gemeten heeft, op
+   de eerste pagina die een MT-lid ziet. `_cover_respons_stat` is nu de enige
+   plek waar die tegel wordt gebouwd (was drie keer dezelfde regel).
+3. **De staart gaat binnen de laatste zin, niet erachter.** Het plan plakte hem
+   achter de kernzin (`exec_line + _staart`), wat een losse haakjeszin achter de
+   punt oplevert. `_p02_met_respons` zet hem vóór de slotpunt. Bij Loep Vertrek
+   landt hij daarmee op de vertrekredenzin die de renderer er nog achter plakt;
+   die telling komt uit dezelfde ingevulde vragenlijsten, dus dat blijft waar.
+4. **De responsgevolgen worden toegepast ná de terugval zonder factorprofiel**
+   (bug B2). Juist een rapport zonder factorprofiel staat op een dunne basis, dus
+   daar hoort de noemer ook in de kernzin te staan.
+
 ---
 
 ## 7. Loep Start eerlijk labelen (B18, tussenstap tot v1.1)
