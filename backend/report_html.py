@@ -3445,16 +3445,16 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
     for key, label, invert in (
         ("stay", "Blijfintentie", False),
         # Vertrekintentie is hoog=slecht; distribution_block is health-georiënteerd
-        # (rechts/hoog = teal = sterk). Zonder inversie kleurden hoge
-        # vertrekgedachten groen "Sterk". Inverteren (11 - v) zet ze links/rood,
-        # consistent met de rest van de behoudscontext en de turnover-sigrow.
-        ("turnover", "Vertrekintentie (links = meer vertrekgedachten)", True),
+        # (rechts/hoog = teal = sterk). Eerder werd de waarde gespiegeld (11 - v)
+        # zodat de kleuren klopten, maar dan toonde de strook 7.6 waar de rij
+        # erboven 3.4 zei: twee getallen voor dezelfde vraag. Nu draait alleen de
+        # kleurschaal om en blijft het getal hetzelfde (spec ronde 2 par. 7b).
+        ("turnover", "Vertrekintentie (hoe hoger, hoe meer vertrekgedachten)", True),
         ("engagement", "Bevlogenheid", False),
     ):
-        vals = (intent_resp or {}).get(key, [])
-        if invert:
-            vals = [11.0 - v for v in vals if v is not None]
-        blk = distribution_block(vals, width=660, height=52, dot_r=4.5, label_size=9)
+        vals = [v for v in (intent_resp or {}).get(key, []) if v is not None]
+        blk = distribution_block(vals, width=660, height=52, dot_r=4.5, label_size=9,
+                                 invert_scale=invert)
         if blk:
             strips += (f'<div style="margin-top:26px;"><div class="spread-title">'
                        f'{label}</div>{blk}</div>')

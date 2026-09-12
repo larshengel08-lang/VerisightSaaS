@@ -190,3 +190,38 @@ def test_onboarding_kernzin_shows_health_value_and_matching_band():
     html_low = render_onboarding_report_html(_min_data("onboarding", 7.0))
     cel_low = _signaalcel(html_low, "Checkpointscore")
     assert "4.0/10" in cel_low and "Onboardingbasis vraagt aandacht" in cel_low
+
+
+# ── par. 7b: rij en spreidingsstrook op dezelfde as ──────────────────────────
+
+def test_vertrekintentie_rij_en_strook_lopen_niet_uiteen():
+    """De rij toonde 3.4 en de strook 7.6 voor dezelfde vraag (spec par. 7b)."""
+    vals = [2.0, 3.0, 3.0, 3.5, 3.5, 4.0, 4.0, 4.0, 2.5, 3.0, 3.5, 4.5]
+    gem = round(sum(vals) / len(vals), 1)
+    html = _behoudscontext(retention_score=6.0, stay_intent=7.0, turnover=gem,
+                           engagement=6.5, intent_resp={"turnover": vals})
+    assert f'<span class="sigrow-score" style="color:#3C8D8A;">{gem:.1f}/10</span>' in html
+    assert f"GEM {gem:.1f}" in html
+    assert "GEM 7.6" not in html
+
+
+def test_vertrekintentiestrook_zegt_welke_kant_op_gelezen_wordt():
+    vals = [2.0] * 6 + [8.0] * 6
+    html = _behoudscontext(retention_score=6.0, stay_intent=None, turnover=5.0,
+                           engagement=None, intent_resp={"turnover": vals})
+    assert ('<div class="spread-title">Vertrekintentie '
+            "(hoe hoger, hoe meer vertrekgedachten)</div>") in html
+    # Het oude label wees de andere kant op, omdat de waarden gespiegeld werden.
+    assert "links = meer vertrekgedachten" not in html
+    assert "—" not in html
+
+
+def test_blijfintentie_en_bevlogenheid_houden_de_normale_schaal():
+    vals = [8.0] * 12  # hoog = goed voor deze twee
+    html = _behoudscontext(retention_score=6.0, stay_intent=8.0, turnover=None,
+                           engagement=8.0,
+                           intent_resp={"stay": vals, "engagement": vals})
+    assert html.count('<span style="color:#3C8D8A;">Sterk 12</span>') == 2
+    # De omgekeerde tellingnamen horen alleen bij de vertrekintentiestrook.
+    assert "Weinig vertrekgedachten" not in html
+    assert "Veel vertrekgedachten" not in html

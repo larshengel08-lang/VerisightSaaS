@@ -39,13 +39,27 @@ _TRACK_BG = {"low": "rgba(192,57,43,0.10)", "mid": "rgba(193,124,0,0.10)",
 
 MIN_DISTRIBUTION_N = 10  # zelfde drempel als patroonanalyse
 
+# Omgekeerde as (spec ronde 2 par. 7b): bij vertrekintentie is een hoge score
+# slecht. De waarden blijven ongemoeid, alleen de kleur en de tellingnamen
+# draaien om, zodat de strook hetzelfde getal toont als de rij erboven. Eerder
+# werd de waarde zelf gespiegeld (11 - v): de kleuren klopten, maar de rij zei
+# 3.4 en de strook 7.6 voor dezelfde vraag.
+_ZONE_LABELS = ("Kwetsbaar", "Aandacht", "Sterk")
+_ZONE_LABELS_INVERT = ("Weinig vertrekgedachten", "Aandacht", "Veel vertrekgedachten")
 
-def _zone_color(v: float) -> str:
+
+def _zone_ends(invert_scale: bool) -> tuple[str, str]:
+    """(kleur van de laagste zone, kleur van de hoogste zone)."""
+    return (_C_HIGH, _C_LOW) if invert_scale else (_C_LOW, _C_HIGH)
+
+
+def _zone_color(v: float, invert_scale: bool = False) -> str:
+    low, high = _zone_ends(invert_scale)
     if v < ZONE_LOW:
-        return _C_LOW
+        return low
     if v < ZONE_HIGH:
         return _C_MID
-    return _C_HIGH
+    return high
 
 
 # Inset zodat stippen (r=3.5) en de gemiddelde-marker op de schaaluitersten
@@ -77,29 +91,38 @@ def _jitter_offset(i: int, denom: int) -> int:
 
 
 def distribution_svg(values: list[float], width: int = 440, height: int = 34,
-                     dot_r: float = 3.5, label_size: int = 7) -> str:
-    """Stippen-op-zone-as: zone-tinten, stippen, gemiddelde-marker."""
+                     dot_r: float = 3.5, label_size: int = 7,
+                     invert_scale: bool = False) -> str:
+    """Stippen-op-zone-as: zone-tinten, stippen, gemiddelde-marker.
+
+    invert_scale: alleen de kleurschaal draait om (laag wordt teal, hoog rood).
+    De x-posities, de stippen en de gemiddelde-marker blijven op hun echte
+    waarde staan; zie de toelichting bij _ZONE_LABELS_INVERT.
+    """
     dist = score_distribution(values)
     if dist["mean"] is None:
         return ""
     x_low, x_high = _x(ZONE_LOW, width), _x(ZONE_HIGH, width)
     band_y, band_h = 6, height - 12
+    c_low, c_high = _zone_ends(invert_scale)
+    bg_low, bg_high = ((_TRACK_BG["high"], _TRACK_BG["low"]) if invert_scale
+                       else (_TRACK_BG["low"], _TRACK_BG["high"]))
     parts = [
         f'<svg width="{width}" height="{height}" xmlns="http://www.w3.org/2000/svg">',
         # zone-achtergronden + 2px onderrand per zone
-        f'<rect x="0" y="{band_y}" width="{x_low}" height="{band_h}" fill="{_TRACK_BG["low"]}"/>',
+        f'<rect x="0" y="{band_y}" width="{x_low}" height="{band_h}" fill="{bg_low}"/>',
         f'<rect x="{x_low}" y="{band_y}" width="{x_high - x_low}" height="{band_h}" fill="{_TRACK_BG["mid"]}"/>',
-        f'<rect x="{x_high}" y="{band_y}" width="{width - x_high}" height="{band_h}" fill="{_TRACK_BG["high"]}"/>',
-        f'<rect x="0" y="{band_y + band_h}" width="{x_low}" height="2" fill="{_C_LOW}"/>',
+        f'<rect x="{x_high}" y="{band_y}" width="{width - x_high}" height="{band_h}" fill="{bg_high}"/>',
+        f'<rect x="0" y="{band_y + band_h}" width="{x_low}" height="2" fill="{c_low}"/>',
         f'<rect x="{x_low}" y="{band_y + band_h}" width="{x_high - x_low}" height="2" fill="{_C_MID}"/>',
-        f'<rect x="{x_high}" y="{band_y + band_h}" width="{width - x_high}" height="2" fill="{_C_HIGH}"/>',
+        f'<rect x="{x_high}" y="{band_y + band_h}" width="{width - x_high}" height="2" fill="{c_high}"/>',
     ]
     # stippen: deterministische verticale jitter op index (geen random)
     jitter_range = max(1, band_h - 8)
     for i, v in enumerate(dist["dots"]):
         cy = band_y + 5 + _jitter_offset(i, jitter_range)
         parts.append(f'<circle cx="{_x(v, width)}" cy="{cy}" r="{dot_r}" '
-                     f'fill="{_zone_color(v)}" fill-opacity="0.9"/>')
+                     f'fill="{_zone_color(v, invert_scale)}" fill-opacity="0.9"/>')
     # gemiddelde-marker: navy lijn + mono-label
     mx = _x(dist["mean"], width)
     parts.append(f'<rect x="{mx - 1}" y="0" width="2" height="{height}" fill="#0D1B2A"/>')
@@ -112,25 +135,31 @@ def distribution_svg(values: list[float], width: int = 440, height: int = 34,
 
 
 def distribution_block(values: list[float], width: int = 440, height: int = 34,
-                       dot_r: float = 3.5, label_size: int = 7) -> str:
+                       dot_r: float = 3.5, label_size: int = 7,
+                       invert_scale: bool = False) -> str:
     """SVG + zone-aantallen + (alleen bij polarisatie) duidingszin. Leeg onder n=10.
 
     width/height/dot_r/label_size: doorgifte naar distribution_svg voor het
     grote formaat op de eigen spreidingspagina (behoudscontext); defaults
     blijven het compacte formaat in de factorverdieping.
+
+    invert_scale: draait de kleurschaal en de tellingnamen om voor een signaal
+    waar hoog slecht is (vertrekintentie). De getoonde waarden veranderen niet.
     """
     vals = [v for v in values if v is not None]
     if len(vals) < MIN_DISTRIBUTION_N:
         return ""
     dist = score_distribution(vals)
     low, mid, high = dist["zones"]
+    labels = _ZONE_LABELS_INVERT if invert_scale else _ZONE_LABELS
+    c_low, c_high = _zone_ends(invert_scale)
     counts = (
         f'<div style="display:flex;justify-content:space-between;margin-top:3px;'
         f"font-family:'JetBrains Mono', monospace;font-size:8px;letter-spacing:0.08em;"
         f'text-transform:uppercase;">'
-        f'<span style="color:{_C_LOW};">Kwetsbaar {low}</span>'
-        f'<span style="color:{_C_MID};">Aandacht {mid}</span>'
-        f'<span style="color:{_C_HIGH};">Sterk {high}</span></div>'
+        f'<span style="color:{c_low};">{labels[0]} {low}</span>'
+        f'<span style="color:{_C_MID};">{labels[1]} {mid}</span>'
+        f'<span style="color:{c_high};">{labels[2]} {high}</span></div>'
     )
     sentence = ""
     if dist["polarized"]:
@@ -142,5 +171,5 @@ def distribution_block(values: list[float], width: int = 440, height: int = 34,
             f'verschillende ervaringen.</p>'
         )
     return (f'<div class="no-break" style="margin:10px 0 4px;">'
-            f'{distribution_svg(vals, width=width, height=height, dot_r=dot_r, label_size=label_size)}'
+            f'{distribution_svg(vals, width=width, height=height, dot_r=dot_r, label_size=label_size, invert_scale=invert_scale)}'
             f'{counts}{sentence}</div>')

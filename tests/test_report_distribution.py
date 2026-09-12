@@ -150,9 +150,12 @@ def test_spreiding_verschijnt_pas_vanaf_n10():
 
 def test_vertrekintentie_label_heeft_duidingssuffix():
     html = render_retention_report_html(_min_retention_data())
-    # Strip toont gezondheids-georiënteerde spreiding (11 - vertrekintentie), dus
-    # het duidingssuffix wijst nu de kant aan waar meer vertrekgedachten liggen.
-    assert "links = meer vertrekgedachten" in html
+    # Lockstep met spec ronde 2 par. 7b: de strook spiegelt de waarde niet meer
+    # (rij en strook toonden 3.4 en 7.6 voor dezelfde vraag). De stippen staan nu
+    # op hun echte waarde, dus ligt "meer vertrekgedachten" rechts, niet links.
+    assert ('<div class="spread-title">Vertrekintentie '
+            "(hoe hoger, hoe meer vertrekgedachten)</div>") in html
+    assert "links = meer vertrekgedachten" not in html
 
 
 def test_overzichtsprofiel_heeft_drempelvoetregel():
