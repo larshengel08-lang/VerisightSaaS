@@ -758,6 +758,8 @@ zonder factorprofiel (07). Vier van die vijf bestonden voor ronde 2 niet.
 | 14 Q3 en Q6, 14 Q5 (~) | Richtingtabel op het startpunt: "Anders, namelijk 30% (9)", de hoogste rij. Verdiepingstabel op dezelfde factor idem. Negen mensen typten een toelichting die nergens in het rapport staat en waarvan het rapport niet meldt dat hij bestaat. | **B13** |
 | 20 Q3 | Loep Start levert de laag "wat er moet gebeuren" nog steeds niet. Nieuw is dat het rapport dat nu zelf zegt; het antwoord op de vraag blijft nee. | **vervolg op B18**, de v1.1-verdiepingsset, buiten scope van deze ronde |
 
+Daarmee is het acceptatiecriterium van deze ronde gehaald: op Q1 en Q2 staat geen enkel kruisje meer, en de kruisjes die op Q5 en Q6 blijven staan worden alle vier gedragen door een bevinding die expliciet naar ronde 3 is geschoven (01 en 05 op Q5 door B14, 07 op Q6 door B20, 14 op Q6 door B13). Q3 en Q4 vielen buiten het criterium; daar blijven 14 en 20 op Q3 staan (B13 en de v1.1-set van Loep Start) en de hele kolom Q4 (B9).
+
 ### Wat de beoordeling zelf nog opleverde
 
 **Tijdens de beoordeling gevonden en in dezelfde ronde gefixt.** Loep Start beloofde op
@@ -768,7 +770,7 @@ regel "Deze scan bevat nog geen verdiepingsvragen en geen richtingvraag". Twee d
 klopten er niet: de verdieping opent niet bij meer responses, want dit product heeft er
 geen, en Loep Start meet nooit een eNPS, dus "in deze wave" suggereerde een volgende wave
 waarin dat wel gebeurt. Het blok komt uit de gedeelde `_responsbasis` en verscheen bij elk
-Loep Start-rapport, want `enps_available` is daar altijd onwaar. Commit `19023761` geeft
+Loep Start-rapport, want `enps_available` is daar altijd onwaar. De fixronde op taak 8 geeft
 Loep Start een eigen vervolgzin ("Deze onderdelen openen zodra er voldoende responses
 beschikbaar zijn") en haalt dezelfde verwijzing uit de intro van het overzichtsprofiel.
 Daarmee gaat scenario 20 op Q5 en Q6 alsnog vooruit. Het woord "verdieping" staat in dat
@@ -802,6 +804,43 @@ eist minder dan één punt. Het verschil tussen nummer één en nummer twee is
 het op één na vlakste profiel van de matrix. Beide drempels zijn bewust gekozen en
 staan als constante in de code, dus dit is geen bug; het is wel de reden dat 18 op Q1, Q2
 en Q6 op ~ blijft staan in plaats van door te schuiven naar ✓.
+
+**Observatie 4. De ranglijsttabel verliest zijn kolomkoppen zodra hij over een pagina
+breekt.** De kop staat in een gewone `<tbody>` en niet in een `<thead>`, dus WeasyPrint
+herhaalt hem niet. In de eenentwintig scenario's en in de drie voorbeeldrapporten past de
+tabel steeds op één pagina, dus vandaag is dit onzichtbaar. Geforceerd zichtbaar te maken:
+met een blok van 560 px boven de tabel in scenario 06 staat de eerste rij met haar
+markeringsregel op pagina 15 en beginnen de vijf andere rijen op pagina 16, zonder Factor,
+Score, Spreiding, Verdieping of Agenda erboven. Bij 700 px staat de kop alleen op een
+pagina en verhuist de hele tabel. Dit wordt echt zodra de tabel groeit: meer
+markeringsregels, langere verdiepingstekst, of de extra kolom van Loep Vertrek.
+
+**De paginabescherming op een tabelsectie werkt wel.** In diezelfde proef blijft elke rij
+bij haar markeringsregel en wordt geen enkele rij doormidden gesneden: `break-inside:
+avoid` op `tbody.r-grp` wordt door WeasyPrint gehonoreerd. Hetzelfde geldt voor
+`tbody.seg-grp` in de segmenttabel: scenario 10 zet twaalf afdelingsrijen onder elkaar en
+verplaatst het conclusieblok naar de volgende pagina in plaats van een rij te splitsen.
+
+### Verificatie van de ronde
+
+Backend-suite 25 gefaald, 1050 geslaagd, 5 overgeslagen; de faalset is byte-identiek aan
+`docs/superpowers/plans/ronde2-baseline-failset.txt`. Frontend tsc 133 fouten en vitest 65
+gefaald van 1189, allebei gelijk aan de baseline; het typecheck draait in de worktree over
+de echte bronbestanden (de diagnostiek noemt bestaande bestanden en regels, niet nul).
+
+De drie voorbeeldrapporten zijn opnieuw gegenereerd en door WeasyPrint-Docker gehaald:
+drie keer exit 0 met lege stdout en stderr, dus nul waarschuwingen. De tekstlaag bevat nul
+em-dashes. Loep Vertrek telt 17 pagina's, Loep Behoud 19 en Loep Start 15.
+
+Visueel gecontroleerd in de drie samples: pagina twee (openingszin, responsstaart,
+signaalcel), de ranglijst met de markeringsregels en de vertrekredenkolom bij Loep
+Vertrek, de segmentpagina en het richtingblok. De vier richtingstaten die in geen enkele
+sample voorkomen zijn apart gerenderd uit de stresstest-scenario's: `plurality` in 11,
+`split_none` en `none_needed` in 13, `too_few` in 06. Het retentievoorbeeld laat de
+B7-fix in zijn scherpste vorm zien: het wijst Operations aan (6.0/10, 17 van de 21) en
+zegt er in dezelfde alinea bij dat de restgroep lager staat (5.9/10) en waarom die geen
+startpunt is.
+
 
 ---
 
