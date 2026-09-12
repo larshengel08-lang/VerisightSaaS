@@ -439,6 +439,10 @@ def _p02_direction_key(direction_agg: dict[str, Any] | None,
     """
     if not direction_agg or not primary_key or primary_key not in direction_agg:
         return None
+    # Bewust zonder factorscore: deze functie kijkt alleen of elke leesbare
+    # factor in none_needed staat, en die staat wordt voor split_none en
+    # plurality geevalueerd (ronde 2 par. 4). Een score meegeven zou hier dus
+    # niets kunnen veranderen, alleen een tweede bron van waarheid opleveren.
     states = {fk: direction_state(agg, fk)["state"] for fk, agg in direction_agg.items()}
     # too_few zegt niets over de richting en spreekt "nergens" dus ook niet tegen.
     leesbaar = [s for s in states.values() if s != "too_few"]
