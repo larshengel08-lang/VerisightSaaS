@@ -3517,7 +3517,6 @@ def render_retention_report_html(data: dict) -> str:
     high_f      = sorted_f[-1] if sorted_f else None
     low_lbl     = _fl(low_f[0], ST)  if low_f  else ""
     high_lbl    = _fl(high_f[0], ST) if high_f else ""
-    low_sc      = low_f[1]  if low_f  else None
     high_sc     = high_f[1] if high_f else None
 
     # ── Prioriteringsraster-rangorde (spec 2026-07-18 par. 4: één ranking per
@@ -3980,7 +3979,6 @@ def render_onboarding_report_html(data: dict) -> str:
     high_f   = sorted_f[-1] if sorted_f else None
     low_lbl  = _fl(low_f[0], ST)  if low_f  else ""
     high_lbl = _fl(high_f[0], ST) if high_f else ""
-    low_sc   = low_f[1]  if low_f  else None
     high_sc  = high_f[1] if high_f else None
     _raster_labels = {fk: _fl(fk, ST) for fk in ORG_FACTOR_KEYS}
 

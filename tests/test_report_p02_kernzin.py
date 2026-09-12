@@ -230,6 +230,24 @@ def test_startpuntgrond_bij_niets_nodig():
     assert "Bespreek of een startpunt nu nodig is" in zin
 
 
+def test_niets_nodig_gaat_voor_op_de_richtinggrond():
+    """Beide regels zijn los waar, maar niet naast elkaar (beslissing
+    reviewronde 2026-09-12, spec par. 2.2). Is het profiel breed "niets nodig",
+    dan is de vraag óf er een startpunt moet zijn zelf aan de orde, en dan is een
+    grond vóór dat startpunt misleidend, hoe waar de telling ook is. De
+    markeringsregel onder de rasterrij legt de volgorde nog wel uit; de
+    gerenderde tegenhanger van deze test staat in
+    test_report_priority_consistency.py.
+    """
+    zin = _open(VLAK, direction_state_key="none_needed",
+                tie_break_kind="direction", change=(3, 7),
+                change_other=(L("culture"), 0, 4))
+    assert "vragen nergens dringend om verandering" in zin
+    assert "om verandering dan bij" not in zin
+    assert "3 van de 7" not in zin
+    assert "Als startpunt kiest Loep" not in zin
+
+
 # ── product, taal en vorm ────────────────────────────────────────────────────
 
 def test_per_product_eigen_onderwerpwoord():

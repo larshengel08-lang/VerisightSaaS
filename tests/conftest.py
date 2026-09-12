@@ -86,6 +86,7 @@ def client(db_session: Session, monkeypatch: pytest.MonkeyPatch) -> Generator[Te
 def exit_report_data(*, factor_avgs: dict[str, float],
                      factor_items_map: dict[str, list[tuple[str, str]]],
                      exit_r_dist: list[dict] | None = None,
+                     direction_agg: dict[str, dict] | None = None,
                      n: int = 12) -> dict:
     """Minimale, volledige data-dict voor render_exit_report_html.
 
@@ -100,6 +101,11 @@ def exit_report_data(*, factor_avgs: dict[str, float],
     factorscore, zodat een factor en zijn stellingen niet uit elkaar kunnen
     lopen -- voor ELK item, niet alleen het eerste: met twee items per factor
     kreeg het tweede stilzwijgend "n.b." in de gerenderde tabellen.
+
+    direction_agg is optioneel: leeg betekent "deze campagne had geen
+    richtingvraag", precies zoals build_report_data dat oplevert. Aanroepers die
+    de richting-tie-break of de richtingstaten willen raken, geven hem mee met
+    de echte optiesleutels (de renderer faalt hard op een onbekende sleutel).
 
     top_fkeys/top_flabels en completion_pct zijn afgeleid in plaats van vast.
     Productie (build_report_data) zet top_fkeys op de twee laagst scorende
@@ -126,7 +132,8 @@ def exit_report_data(*, factor_avgs: dict[str, float],
         org_item_avgs=item_avgs,
         sdt_item_avgs={}, sdt_avgs={}, nsp={},
         exit_r_dist=list(exit_r_dist or []), cont_dist=[],
-        deepening_agg={}, factor_resp_scores={},
+        deepening_agg={}, direction_agg=dict(direction_agg or {}),
+        factor_resp_scores={},
         segment_rows=[], segment_factor_rows=None,
         enps_available=False, enps_score=None,
         sdt_items=[], open_texts=[],

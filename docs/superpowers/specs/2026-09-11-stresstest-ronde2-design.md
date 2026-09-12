@@ -206,6 +206,18 @@ Daarna de startpuntkeuze, met de grond erbij, afhankelijk van wat de ranglijst b
 - alleen score (geen tie binnen 0,3, of richting ongeldig): "Als startpunt kiest Loep [factor], de laagste score. Het verschil met de volgende is klein ([delta]); weeg dat mee in de bespreking."
 - iedereen zegt vooral "niets nodig" (state none_needed op het startpunt): "Je mensen vragen nergens dringend om verandering. Bespreek of een startpunt nu nodig is, of dat dit beeld eerst gedeeld wordt."
 
+**Deze variant gaat vóór op de richtinggrond (beslissing reviewronde 2026-09-12).** Beide
+regels kunnen tegelijk waar zijn: de tie-break kan op de vraag om verandering hebben
+beslist (3 van de 7 tegen 0 van de 4) terwijl op elke factor de niets-optie een strikte
+meerderheid heeft. Naast elkaar op één pagina leest dat als tegenspraak. Is het profiel
+breed "niets nodig", dan is de vraag *of* er een startpunt moet zijn zelf aan de orde, en
+dan is een grond vóór dat startpunt misleidend, hoe waar de telling ook is. De grond
+vervalt daarom op p.02; de markeringsregel onder de rasterrij legt de volgorde nog steeds
+uit met hetzelfde signaal en dezelfde tellingen, dus er verdwijnt geen navolgbaarheid. De
+volgorde van de takken in `_p02_startpunt_zin` is dus betekenisdragend en geen toeval;
+gepind in `test_niets_nodig_gaat_voor_op_de_richtinggrond` (puur) en
+`test_bij_breed_niets_nodig_staat_er_geen_richtinggrond_op_pagina_twee` (gerenderd).
+
 Bij een vlak profiel waarbij alle factoren >= 6,5 (scenario 04): de kop "Waarom [factor] bovenaan staat" wordt "Waar Loep zou beginnen, en waarom", en de bandcel "7,8/10 · relatief sterk" mag niet naast "eerste gesprekspunt" staan zonder de vlak-profiel-zin erboven.
 
 De bestaande onderbouwingscel ("Gemiddelde score", "Laagst scorende stelling", "Relatief sterk") blijft.

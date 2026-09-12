@@ -179,3 +179,84 @@ def test_retention_p02_primary_matches_raster_startpunt():
 def test_exit_p02_primary_matches_raster_startpunt():
     html = render_exit_report_html(_min_exit_fixture())
     _assert_p02_matches_raster_startpunt(html, "exit")
+
+
+# ── p.02 en het raster vertellen één verhaal over de vraag om verandering ────
+# Beslissing reviewronde 2026-09-12 (spec ronde 2 par. 2.2): is het profiel breed
+# "niets nodig", dan is de vraag ÓF er een startpunt moet zijn zelf aan de orde,
+# en dan hoort er geen grond vóór dat startpunt te staan, hoe waar de telling ook
+# is. De markeringsregel onder de rasterrij legt de volgorde dan nog steeds uit,
+# dus er verdwijnt navolgbaarheid noch getal.
+
+# Leiderschap (4,70) en cultuur (4,60) liggen binnen PRIORITY_TIE_MARGIN, en de
+# vraag om verandering zet leiderschap bovenaan (3 van de 7 tegen 0 van de 4).
+# Beide factoren zijn óók none_needed: de niets-optie heeft op elk van de twee
+# een strikte meerderheid. Dat is precies de combinatie waarin p.02 en het
+# raster elkaar zouden tegenspreken.
+_NN_FACTOR_AVGS = {
+    "leadership":   4.70,
+    "culture":      4.60,
+    "growth":       7.40,
+    "compensation": 7.10,
+    "workload":     7.00,
+    "role_clarity": 7.20,
+}
+_NN_ITEM_MAP = {fk: [(fk[:2].upper() + "1", f"Stelling over {fk}")]
+                for fk in _NN_FACTOR_AVGS}
+
+
+def _nn_agg(none_n: int, change_n: int, none_key: str, change_key: str) -> dict:
+    return {"lowest_n": none_n + change_n, "offered": none_n + change_n,
+            "answered": none_n + change_n, "skipped": 0,
+            "counts": {none_key: none_n, change_key: change_n}}
+
+
+_NN_DIRECTION_AGG = {
+    "leadership": _nn_agg(4, 3, "ldd_none", "ldd_feedback"),
+    "culture": _nn_agg(4, 0, "cud_none", "cud_safety"),
+}
+
+
+def _nn_html() -> str:
+    return render_exit_report_html(exit_report_data(
+        factor_avgs=_NN_FACTOR_AVGS, factor_items_map=_NN_ITEM_MAP,
+        direction_agg=_NN_DIRECTION_AGG))
+
+
+def _kernzin(html: str) -> str:
+    start = html.index('<p class="br-kernzin">')
+    return html[start:html.index("</p>", start)]
+
+
+def test_fixture_zet_de_botsing_echt_op():
+    """Sanity: zonder deze twee eigenschappen toetst de test hieronder niets."""
+    from backend.products.shared.deepening import direction_state
+    from backend.report_priority import rank_factors as _rank
+
+    rows = _rank("exit", _NN_FACTOR_AVGS, {}, {}, exit_reason_counts={},
+                 labels={fk: _fl(fk, "exit") for fk in ORG_FACTOR_KEYS},
+                 direction_agg=_NN_DIRECTION_AGG)
+    # De richting besliste de volgorde, tegen cultuur.
+    assert rows[0]["key"] == "leadership"
+    assert rows[0]["decided_by"] == {"kind": "direction", "other": "culture"}
+    # En toch zegt elke factor met genoeg beantwoorders "hier hoeft niets".
+    for fk, agg in _NN_DIRECTION_AGG.items():
+        assert direction_state(agg, fk)["state"] == "none_needed"
+
+
+def test_bij_breed_niets_nodig_staat_er_geen_richtinggrond_op_pagina_twee():
+    kernzin = _kernzin(_nn_html())
+    assert "Je mensen vragen nergens dringend om verandering." in kernzin
+    assert "Bespreek of een startpunt nu nodig is" in kernzin
+    # De grond vóór het startpunt hoort hier niet: de vraag is of er een
+    # startpunt moet zijn, niet waarom het dit onderwerp is.
+    assert "vragen meer mensen om verandering dan bij" not in kernzin
+    assert "Als startpunt kiest Loep" not in kernzin
+
+
+def test_het_raster_legt_de_volgorde_nog_steeds_uit():
+    """Er verdwijnt geen navolgbaarheid: de markeringsregel onder de rasterrij
+    noemt het signaal en beide tellingen nog gewoon."""
+    html = _nn_html()
+    assert (f"Staat hoger dan {_fl('culture', 'exit')} omdat hier meer mensen om "
+            f"verandering vragen (3 van de 7 tegen 0 van de 4).") in html
