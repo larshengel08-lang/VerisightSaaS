@@ -8,6 +8,10 @@ interface Props {
   campaignName: string
   scanType?: string
   showSegmentSummaryExport?: boolean
+  /** Tekst op de primaire knop. Standaard "Rapport downloaden". */
+  label?: string
+  /** 'end' lijnt knop en foutmelding rechts uit in een tabelrij. */
+  align?: 'start' | 'end'
 }
 
 const UNSUPPORTED_REPORT_MESSAGES: Record<string, string> = {}
@@ -19,6 +23,8 @@ export function PdfDownloadButton({
   campaignName,
   scanType,
   showSegmentSummaryExport = false,
+  label,
+  align = 'start',
 }: Props) {
   const [loadingFormat, setLoadingFormat] = useState<DownloadFormat | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -69,27 +75,31 @@ export function PdfDownloadButton({
     }
   }
 
+  const primaryLabel = label ?? 'Rapport downloaden'
+  const columnAlign = align === 'end' ? 'items-start sm:items-end' : 'items-start'
+  const rowAlign = align === 'end' ? 'sm:justify-end' : ''
+
   return (
-    <div className="flex flex-col items-start gap-1 sm:items-end">
-      <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+    <div className={`flex flex-col gap-1 ${columnAlign}`}>
+      <div className={`flex flex-wrap items-center gap-2 ${rowAlign}`}>
         <button
           onClick={() => handleDownload('pdf')}
           disabled={loadingFormat !== null}
-          className="inline-flex rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex rounded-lg bg-[color:var(--dashboard-ink)] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#1B2E45] disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {loadingFormat === 'pdf' ? 'Rapport ophalen...' : 'Rapport downloaden'}
+          {loadingFormat === 'pdf' ? 'Rapport ophalen...' : primaryLabel}
         </button>
         {showSegmentSummaryExport ? (
           <button
             onClick={() => handleDownload('segment_summary')}
             disabled={loadingFormat !== null}
-            className="inline-flex rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex rounded-lg border border-[color:var(--dashboard-frame-border)] bg-white px-4 py-2.5 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:bg-[color:var(--dashboard-soft)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loadingFormat === 'segment_summary' ? 'Export ophalen...' : 'Segmentexport downloaden'}
           </button>
         ) : null}
       </div>
-      {error ? <p className="max-w-48 text-xs text-red-600 sm:text-right">{error}</p> : null}
+      {error ? <p className="max-w-xs text-xs text-red-600">{error}</p> : null}
     </div>
   )
 }
