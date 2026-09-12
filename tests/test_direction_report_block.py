@@ -317,7 +317,7 @@ def _min_onboarding_data():
     n = 12
     return dict(
         scan_lbl="Loep Start", org_name="TestOrg", campaign_name="Wave 1",
-        n_invited=n + 3, n_completed=n, completion_pct=80.0,
+        n_invited=n + 3, n_invited_note="", n_completed=n, completion_pct=80.0,
         avg_risk=5.0, avg_si=5.0,
         factor_avgs={"workload": 5.0}, sdt_avgs={}, nsp={},
         top_fkeys=["workload"], top_flabels=["Werkdruk en herstelruimte"],

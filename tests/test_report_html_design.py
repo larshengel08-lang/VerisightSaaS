@@ -144,7 +144,7 @@ def test_exit_flow_managementspoor_after_vertrekcontext():
 def test_responsbasis_datastatus_block_when_unavailable():
     from backend.report_html import _responsbasis
     html = _responsbasis(
-        invited=51, completed=35, pct=69, period="Q1 2026",
+        invited=51, completed=35, period="Q1 2026",
         population="Alle medewerkers",
         segment_available=False,
         segment_reason="te weinig responses per groep",
@@ -158,7 +158,7 @@ def test_responsbasis_datastatus_block_when_unavailable():
 def test_responsbasis_no_datastatus_when_all_available():
     from backend.report_html import _responsbasis
     html = _responsbasis(
-        invited=51, completed=35, pct=69, period="Q1 2026",
+        invited=51, completed=35, period="Q1 2026",
         population="Alle medewerkers",
         segment_available=True,
         segment_reason="",

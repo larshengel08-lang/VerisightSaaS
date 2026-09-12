@@ -383,31 +383,62 @@ Scenario 16 (30%: caution-zin, staart, "Indicatief beeld" want 30% is niet < 0,3
 
 ### 6.3 Implementatie (2026-09-12, taak 4)
 
-Vier punten wijken af van of verfijnen de regel hierboven.
+Zeven punten wijken af van of verfijnen de regel hierboven.
 
 1. **De noemer zit in een pure helper (`_respons_noemer`), niet inline in `build_report_data`.**
    Anders is de enige regel die bepaalt of het rapport een percentage toont alleen
    te testen met een database erbij. `camp.delivery_record.invited_count` is
-   geverifieerd aanwezig (`models.py`: relatie `uselist=False`, kolom nullable).
-   De helper kreeg er één regel bij die niet in het plan stond: een vastgelegd
-   aantal genodigden dat **kleiner** is dan het aantal afgeronde vragenlijsten
-   telt niet mee. Bij self-send is dat aantal handmatig ingevoerd en de
-   campagnelink is open, dus 50 genodigden met 55 ingevulde vragenlijsten is een
-   bereikbare stand, en die zou 110% respons op de cover zetten. De keten valt
-   dan door naar de volgende regel, precies zoals bij een ontbrekend aantal.
-2. **Zonder noemer is `completion_pct` None, niet 0,0, en de cover zegt "Onbekend".**
+   geverifieerd aanwezig (`models.py`: relatie `uselist=False`, kolom nullable);
+   de aanroepplek leest dat expliciet uit, zonder `getattr`-default, want zo'n
+   default vangt geen ontbrekend record af maar een hernoeming, en dan verliest
+   élk rapport stil zijn responspercentage. De helper kreeg er één regel bij die
+   niet in het plan stond: een vastgelegd aantal genodigden dat **kleiner** is dan
+   het aantal afgeronde vragenlijsten telt niet mee. Bij self-send is dat aantal
+   handmatig ingevoerd en de campagnelink is open, dus 50 genodigden met 55
+   ingevulde vragenlijsten is een bereikbare stand, en die zou 110% respons op de
+   cover zetten. De keten valt dan door naar de volgende regel.
+2. **"Geen noemer" dekt twee werkelijkheden, dus de helper geeft de reden mee.**
+   Eén zin voor beide beweerde er één: bij een te laag vastgelegd aantal kreeg
+   precies de operator die de invoerfout kan herstellen te lezen dat er niets was
+   vastgelegd. De helper levert nu `(noemer, zin)`: bij een te laag aantal noemt
+   die zin **beide getallen**, en anders zegt hij alleen wat zeker is, namelijk
+   dat Loep het aantal genodigden niet kan vaststellen. Die laatste stand is
+   zowel self-send zonder ingevuld aantal als een managed campagne waarin
+   iedereen invulde, en die twee zijn in de data niet te onderscheiden. De zin
+   reist als `n_invited_note` mee in de rapportdata.
+3. **Zonder noemer is `completion_pct` None, niet 0,0, en de cover zegt "Onbekend".**
    De coverstat stond niet in het plan, maar `completion` viel daar terug op 0,0
    en de tegel toonde dus "Respons 0%": een getal dat niemand gemeten heeft, op
    de eerste pagina die een MT-lid ziet. `_cover_respons_stat` is nu de enige
    plek waar die tegel wordt gebouwd (was drie keer dezelfde regel).
-3. **De staart gaat binnen de laatste zin, niet erachter.** Het plan plakte hem
+4. **`_responsbasis` leidt het percentage zelf af.** Het kreeg het als parameter
+   én berekende de waarschuwingszin uit dezelfde twee getallen: twee bronnen voor
+   één getal, die uit elkaar konden lopen (een bekend aantal met een leeg
+   percentage rendeerde letterlijk "None%").
+5. **De staart gaat binnen de laatste zin, niet erachter.** Het plan plakte hem
    achter de kernzin (`exec_line + _staart`), wat een losse haakjeszin achter de
-   punt oplevert. `_p02_met_respons` zet hem vóór de slotpunt. Bij Loep Vertrek
-   landt hij daarmee op de vertrekredenzin die de renderer er nog achter plakt;
-   die telling komt uit dezelfde ingevulde vragenlijsten, dus dat blijft waar.
-4. **De responsgevolgen worden toegepast ná de terugval zonder factorprofiel**
+   punt oplevert. `_p02_met_respons` zet hem vóór de slotpunt, en bij Loep Vertrek
+   vóór de vertrekredenzin die de renderer er nog achter plakt: de noemer hoort
+   bij de claim die hij relativeert (het startpunt), niet bij een redentelling.
+   De ene terugval die niet claimt maar doorverwijst ("Zie de vertrekcontext ...
+   voor wat dit rapport wel toont") krijgt de responsbasis als eigen mededeling
+   ervóór: een haakje relativeert een claim, en die staat er niet.
+6. **De indicatieve stand wordt doorgegeven, niet achteraf ingevoegd.** Eerst
+   verving `_p02_respons_prefix` de tekenreeks "Als startpunt kiest Loep";
+   daarmee bleven de tak zonder kwetsbare onderwerpen ("X scoort het laagst en is
+   het eerste gesprekspunt") en de "nergens dringend"-tak even stellig. `indicatief`
+   gaat nu als parameter naar `_p02_opening` en `_p02_startpunt_zin`, die elk hun
+   eigen voorzichtige vorm kiezen ("een mogelijk eerste gesprekspunt", "In wat is
+   ingevuld vraagt niemand dringend om verandering"). Het prefix zet alleen nog
+   het label.
+7. **De responsgevolgen worden toegepast ná de terugval zonder factorprofiel**
    (bug B2). Juist een rapport zonder factorprofiel staat op een dunne basis, dus
    daar hoort de noemer ook in de kernzin te staan.
+
+De 30%-drempel legt zichzelf uit op de plek waar hij werkt: de waarschuwingszin
+bij de responsbasis krijgt er onder die grens één zin bij die zegt wat
+"indicatief" met de eerste zin van het rapport doet. De halve drempel legt
+zichzelf al uit ("minder dan de helft").
 
 ---
 

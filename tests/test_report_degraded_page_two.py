@@ -79,7 +79,7 @@ def _fixture(scan_type: str, *, n: int, profile: bool) -> dict:
     return dict(
         campaign_id="c1", scan_type=scan_type, scan_lbl=_SCAN_LBL[scan_type],
         org_name="TestOrg", campaign_name="Wave 1", generated_at="11-09-2026",
-        delivery_mode="Baseline", n_invited=n + 6, n_completed=n,
+        delivery_mode="Baseline", n_invited=n + 6, n_invited_note="", n_completed=n,
         completion_pct=57.1 if not profile else 80.0,
         avg_risk=5.5, avg_eng=6.0, avg_to=4.0, avg_si=6.5,
         band_counts={"HOOG": 0, "MIDDEN": n, "LAAG": 0}, has_pattern=profile,

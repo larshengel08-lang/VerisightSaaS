@@ -123,7 +123,7 @@ def exit_report_data(*, factor_avgs: dict[str, float],
     return dict(
         campaign_id="c1", scan_type="exit", scan_lbl="Loep Vertrek",
         org_name="TestOrg", campaign_name="Wave 1", generated_at="11-09-2026",
-        n_invited=invited, n_completed=n,
+        n_invited=invited, n_invited_note="", n_completed=n,
         completion_pct=round(100.0 * n / invited, 1), avg_risk=5.5,
         factor_avgs=dict(factor_avgs),
         top_fkeys=top_fkeys,

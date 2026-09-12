@@ -451,7 +451,8 @@ def _p02_startpunt_zin(primary_label: str, *, tie_break_kind: str | None,
                        change_other: tuple[str, int, int] | None,
                        next_delta: float | None,
                        direction_state_key: str | None,
-                       primary_is_lowest: bool) -> str:
+                       primary_is_lowest: bool,
+                       indicatief: bool = False) -> str:
     """Welk onderwerp Loep als startpunt kiest, met de grond erbij.
 
     Elke tak eist zijn eigen grond expliciet, zodat geen enkele zin iets beweert
@@ -478,19 +479,28 @@ def _p02_startpunt_zin(primary_label: str, *, tie_break_kind: str | None,
 
     Haalt geen enkele tak zijn voorwaarde, dan blijft de kale keuze over: die is
     altijd waar.
+
+    `indicatief` (respons onder RESPONSE_INDICATIVE_RATE, spec par. 6.1) laat
+    elke tak zichzelf voorzichtiger formuleren. Achteraf een tekenreeks
+    vervangen werkte alleen in de takken waarin die reeks letterlijk voorkwam.
     """
+    kiest = "Als mogelijk startpunt kiest Loep" if indicatief else "Als startpunt kiest Loep"
     if direction_state_key == "none_needed":
-        return ("Je mensen vragen nergens dringend om verandering. Bespreek of een "
-                "startpunt nu nodig is, of dat dit beeld eerst gedeeld wordt.")
+        # Indicatief blijft de waarneming staan, maar begrensd tot wat er ligt:
+        # "je mensen" is bij een kwart van de groep een uitspraak over mensen
+        # die niets hebben ingevuld.
+        wie = "In wat is ingevuld vraagt niemand" if indicatief else "Je mensen vragen nergens"
+        return (f"{wie} dringend om verandering. Bespreek of een "
+                f"startpunt nu nodig is, of dat dit beeld eerst gedeeld wordt.")
     if tie_break_kind == "direction" and change and change_other:
         a, b = change
         ander_label, c, d = change_other
-        return (f"Als startpunt kiest Loep {primary_label}: daar vragen meer mensen "
+        return (f"{kiest} {primary_label}: daar vragen meer mensen "
                 f"om verandering dan bij {ander_label} ({a} van de {b} tegen {c} van "
                 f"de {d}).")
     if tie_break_kind is None and primary_is_lowest and next_delta is not None:
         if next_delta == 0.0:
-            return (f"Als startpunt kiest Loep {primary_label}. Dat onderwerp deelt "
+            return (f"{kiest} {primary_label}. Dat onderwerp deelt "
                     f"de laagste score met het volgende; weeg die gelijkstand mee "
                     f"in de bespreking.")
         if 0.0 < next_delta < PRIORITY_TIE_MARGIN:
@@ -500,10 +510,10 @@ def _p02_startpunt_zin(primary_label: str, *, tie_break_kind: str | None,
             # hun punt en hun /10, zodat de twee soorten getallen uit elkaar te
             # houden zijn in plaats van als typefout te lezen.
             delta = f"{next_delta:.2f}".replace(".", ",")
-            return (f"Als startpunt kiest Loep {primary_label}, de laagste score. Het "
+            return (f"{kiest} {primary_label}, de laagste score. Het "
                     f"verschil met de volgende is klein, {delta} punt; weeg dat mee "
                     f"in de bespreking.")
-    return f"Als startpunt kiest Loep {primary_label}."
+    return f"{kiest} {primary_label}."
 
 
 def _p02_shared_low(shape: dict[str, Any]) -> bool:
@@ -523,7 +533,8 @@ def _p02_opening(*, scan_type: str, shape: dict[str, Any], labels: dict[str, str
                  change: tuple[int, int] | None = None,
                  change_other: tuple[str, int, int] | None = None,
                  next_delta: float | None = None,
-                 direction_state_key: str | None = None) -> str:
+                 direction_state_key: str | None = None,
+                 indicatief: bool = False) -> str:
     """De eerste zin van pagina twee (spec ronde 2 par. 2.2 en par. 5.2).
 
     Beweegt mee met hoeveel onderwerpen kwetsbaar scoren, en zegt het expliciet
@@ -533,6 +544,11 @@ def _p02_opening(*, scan_type: str, shape: dict[str, Any], labels: dict[str, str
 
     Zonder factorprofiel leeg: de degraded tak van _bestuurlijke_read (ronde 1,
     B2) draagt dan het verhaal.
+
+    `indicatief` (respons onder RESPONSE_INDICATIVE_RATE, spec par. 6.1) reist
+    door naar elke tak die een startpunt aanwijst, zodat die zich in de
+    voorzichtige vorm OPBOUWT. Achteraf verzachten raakte alleen de takken
+    waarin toevallig de vervangen tekenreeks stond.
     """
     if not shape["n_factors"] or primary_key is None:
         return ""
@@ -553,11 +569,17 @@ def _p02_opening(*, scan_type: str, shape: dict[str, Any], labels: dict[str, str
         # _p02_startpunt_zin.
         laagste_clause = (f"{laagste} deelt de laagste score met het volgende onderwerp"
                           if _p02_shared_low(shape) else f"{laagste} scoort het laagst")
+        # Deze tak noemt het startpunt "gesprekspunt" in plaats van "startpunt",
+        # dus hij heeft zijn eigen indicatieve vorm nodig.
+        gesprekspunt = ("een mogelijk eerste gesprekspunt" if indicatief
+                        else "het eerste gesprekspunt")
+        kiest_gp = ("als mogelijk eerste gesprekspunt kiest Loep" if indicatief
+                    else "als eerste gesprekspunt kiest Loep")
         if shape["low_key"] == primary_key:
             return (f"Geen onderwerp scoort kwetsbaar. {laagste_clause} "
-                    f"en is het eerste gesprekspunt.")
+                    f"en is {gesprekspunt}.")
         return (f"Geen onderwerp scoort kwetsbaar. {laagste_clause}; "
-                f"als eerste gesprekspunt kiest Loep {labels[primary_key]}.")
+                f"{kiest_gp} {labels[primary_key]}.")
     elif k <= 2:
         # factors_low_to_high staat al in de canonieke volgorde (laagst eerst,
         # op de onafgeronde waarde), dus hier alleen filteren: opnieuw sorteren
@@ -580,7 +602,8 @@ def _p02_opening(*, scan_type: str, shape: dict[str, Any], labels: dict[str, str
         labels[primary_key], tie_break_kind=tie_break_kind, change=change,
         change_other=change_other, next_delta=next_delta,
         direction_state_key=direction_state_key,
-        primary_is_lowest=shape["low_key"] == primary_key)
+        primary_is_lowest=shape["low_key"] == primary_key,
+        indicatief=indicatief)
 
 
 def _p02_startpunt_gronden(
@@ -640,27 +663,54 @@ RESPONSE_INDICATIVE_RATE = 0.3
 
 
 def _respons_noemer(record_invited: int | None, *, rows: int,
-                    completed: int) -> int | None:
-    """Het aantal genodigden, of None als dat niet te weten is.
+                    completed: int) -> tuple[int | None, str]:
+    """(aantal genodigden, zin die zegt waarom dat aantal er niet is).
 
     Volgorde (spec ronde 2 par. 6.1):
 
-    1. het handmatig vastgelegde aantal uit het delivery record;
+    1. het handmatig vastgelegde aantal uit het delivery record, mits dat niet
+       lager is dan het aantal ingevulde vragenlijsten (dat zou meer dan 100%
+       respons opleveren; bij self-send is het aantal handmatig ingevoerd en de
+       campagnelink open, dus die stand is bereikbaar);
     2. anders het aantal respondentrijen, maar alleen als dat groter is dan het
        aantal afgeronde vragenlijsten. Bij de self-send-flow bestaat er geen rij
        voor wie niet invulde, dus daar is elke rij een ingevulde vragenlijst en
        zou deze noemer een respons van 100% suggereren;
     3. anders onbekend. Liever geen getal dan een onwaar getal.
 
-    Een vastgelegd aantal dat kleiner is dan het aantal afgeronde vragenlijsten
-    kan niet kloppen (dat levert meer dan 100% respons op) en telt daarom niet
-    mee; de keten valt dan door naar de volgende regel.
+    Regel 1 gaat vóór regel 2: bij een managed campagne met een handmatig
+    ingevuld aantal zijn ze allebei waar, en dan is het vastgelegde aantal de
+    bedoelde noemer.
+
+    Zodra er een noemer is, is de tweede waarde leeg. Is die er niet, dan zegt
+    de zin WELKE van de twee redenen dat is. "Geen noemer" dekt namelijk twee
+    verschillende werkelijkheden, en er één van beweren is precies de
+    stelligheid die deze ronde wegneemt:
+
+    - er is een aantal vastgelegd, maar dat is LAGER dan het aantal ingevulde
+      vragenlijsten (meer dan 100% respons, dus onbruikbaar). Dan noemt de zin
+      beide getallen, zodat de operator ziet wat er niet klopt en het kan
+      herstellen. "Niet vastgelegd" zou juist hem op het verkeerde been zetten;
+    - er is niets vastgelegd en er zijn evenveel deelnemers bekend als
+      ingevulde vragenlijsten. Dat is self-send zonder ingevuld aantal, maar het
+      is ook een managed campagne waarin iedereen invulde, en die twee zijn in
+      de data niet uit elkaar te houden. De zin zegt daarom alleen wat zeker is:
+      Loep kan het aantal genodigden niet vaststellen.
     """
     if record_invited and record_invited >= completed:
-        return record_invited
+        return record_invited, ""
     if rows > completed:
-        return rows
-    return None
+        return rows, ""
+    if record_invited:
+        # Hier alleen bereikbaar als het vastgelegde aantal te laag is én er
+        # geen echte non-responderrijen zijn: pas dan valt er niets te rekenen.
+        return None, (f"Het vastgelegde aantal genodigden ({record_invited}) is lager "
+                      f"dan het aantal ingevulde vragenlijsten ({completed}). Loep "
+                      f"rekent daar geen responspercentage uit; controleer het "
+                      f"vastgelegde aantal.")
+    return None, ("Loep kan niet vaststellen hoeveel mensen zijn uitgenodigd: er is "
+                  "geen aantal genodigden vastgelegd. Het responspercentage staat "
+                  "daarom niet in dit rapport.")
 
 
 def _response_rate(completed: int, invited: int | None) -> float | None:
@@ -670,17 +720,38 @@ def _response_rate(completed: int, invited: int | None) -> float | None:
     return completed / invited
 
 
-def _respons_caution(completed: int, invited: int | None) -> str:
-    """De zin bij de responsbasis; leeg zodra de respons de helft haalt."""
+def _respons_pct(completed: int, invited: int | None) -> int | None:
+    """Het afgeronde responspercentage, of None zonder noemer."""
+    rate = _response_rate(completed, invited)
+    return None if rate is None else round(rate * 100)
+
+
+def _respons_caution(completed: int, invited: int | None, note: str) -> str:
+    """De zin bij de responsbasis; leeg zodra de respons de helft haalt.
+
+    Zonder noemer is `note` de zin uit `_respons_noemer` die zegt waarom er geen
+    percentage staat. Ontbreekt die, dan is dat een bug en geen reden om het
+    zwijgend zonder uitleg te laten: de responsbasis toont dan een tabel waar
+    twee cellen uit verdwenen zijn en niets dat zegt waarom.
+    """
     rate = _response_rate(completed, invited)
     if rate is None:
-        return ("Het aantal genodigden is niet vastgelegd; het responspercentage "
-                "is daarom niet bekend.")
+        if not note:
+            raise ValueError("_respons_caution: zonder noemer hoort er een note te zijn")
+        return note
     if rate >= RESPONSE_CAUTION_RATE:
         return ""
-    return (f"Minder dan de helft heeft ingevuld ({completed} van de {invited}). "
-            f"Lees de uitkomsten als het beeld van wie meedeed, niet van de hele "
-            f"organisatie.")
+    zin = (f"Minder dan de helft heeft ingevuld ({completed} van de {invited}). "
+           f"Lees de uitkomsten als het beeld van wie meedeed, niet van de hele "
+           f"organisatie.")
+    if rate < RESPONSE_INDICATIVE_RATE:
+        # De halve-drempel legt zichzelf uit ("minder dan de helft"); de
+        # 30%-drempel niet. Hij werkt op de eerste zin van dit rapport, dus
+        # staat hier in één zin wat hij daar doet.
+        zin += (f" Onder de {round(RESPONSE_INDICATIVE_RATE * 100)}% noemt Loep het "
+                f"beeld indicatief: de eerste zin van dit rapport wijst dan een "
+                f"mogelijk startpunt aan, geen vastgesteld startpunt.")
+    return zin
 
 
 def _respons_kernzin_staart(completed: int, invited: int | None) -> tuple[str, bool]:
@@ -696,22 +767,47 @@ def _respons_kernzin_staart(completed: int, invited: int | None) -> tuple[str, b
             rate < RESPONSE_INDICATIVE_RATE)
 
 
+def _respons_indicatief(completed: int, invited: int | None) -> bool:
+    """Is het beeld indicatief? Stuurt de formulering van de kernzin zelf.
+
+    Los opvraagbaar omdat _p02_opening de zin met die stand moet OPBOUWEN.
+    Achteraf een tekenreeks vervangen raakte alleen de takken waarin die reeks
+    letterlijk voorkwam, waardoor drie van de vijf varianten (de tak zonder
+    kwetsbare onderwerpen en de "nergens dringend"-tak) even stellig bleven.
+    """
+    return _respons_kernzin_staart(completed, invited)[1]
+
+
 def _p02_respons_prefix(zin: str, *, indicatief: bool) -> str:
-    """Verzacht de stelligheid van de kernzin bij een zeer lage respons."""
-    if not indicatief:
-        return zin
-    return "Indicatief beeld: " + zin.replace("Als startpunt kiest Loep",
-                                              "Als mogelijk startpunt kiest Loep")
+    """Het label voor de kernzin bij een zeer lage respons.
+
+    Alleen het label: de zin zelf is al in de indicatieve vorm opgebouwd.
+    """
+    return f"Indicatief beeld: {zin}" if indicatief else zin
 
 
-def _p02_met_respons(zin: str, *, completed: int, invited: int | None) -> str:
+def _p02_met_respons(zin: str, *, completed: int, invited: int | None,
+                     verwijzing: bool = False) -> str:
     """De kernzin met de gevolgen van de respons erin verwerkt.
+
+    Aangeroepen door alle drie de renderers, ná de terugval zonder
+    factorprofiel (bug B2): juist een rapport zonder factorprofiel staat op een
+    dunne basis, dus daar hoort de noemer ook in de kernzin te staan.
 
     De staart gaat BINNEN de laatste zin, niet erachter: achter de punt blijft
     een losse haakjeszin over, terwijl hij juist de zin relativeert waar hij
     aan hangt.
+
+    `verwijzing=True` voor de ene terugval die geen uitspraak doet maar alleen
+    doorverwijst ("Zie de vertrekcontext ... voor wat dit rapport wel toont").
+    Daar hoort de responsbasis als eigen mededeling vóór de verwijzing, niet als
+    haakje erachter: een haakje relativeert een claim, en die staat er niet.
     """
     staart, indicatief = _respons_kernzin_staart(completed, invited)
+    if verwijzing:
+        if not staart:
+            return zin
+        return f"Dit rapport rust op {completed} van de {invited} genodigden. {zin}"
     zin = _p02_respons_prefix(zin, indicatief=indicatief)
     if not staart:
         return zin
@@ -720,15 +816,15 @@ def _p02_met_respons(zin: str, *, completed: int, invited: int | None) -> str:
     return f"{zin}{staart}"
 
 
-def _cover_respons_stat(data: dict[str, Any]) -> tuple[str, str]:
-    """De responstegel op de cover, afgerond zoals p.02 hem toont.
+def _cover_respons_stat(completion_pct: float | None) -> tuple[str, str]:
+    """De responstegel op de cover, afgerond zoals de responsbasis hem toont.
 
     Zonder noemer staat er geen percentage: completion_pct is dan None en een
     0% op de cover zou een getal zijn dat niemand heeft gemeten.
     """
-    if data["n_invited"] and data["completion_pct"] is not None:
-        return ("Respons", f"{round(data['completion_pct'])}%")
-    return ("Respons", "Onbekend")
+    if completion_pct is None:
+        return ("Respons", "Onbekend")
+    return ("Respons", f"{round(completion_pct)}%")
 
 
 def _factor_color(score: float | None) -> str:
@@ -1245,9 +1341,18 @@ def _bestuurlijke_read(*, kernzin: str, totaalbeeld: str,
 </div>"""
 
 
-def _responsbasis(*, invited: int | None, completed: int, pct: int | None, period: str,
+def _responsbasis(*, invited: int | None, completed: int, period: str,
                   population: str, segment_available: bool, segment_reason: str = "",
-                  enps_available: bool = True, compact: bool = False) -> str:
+                  enps_available: bool = True, compact: bool = False,
+                  note: str = "") -> str:
+    """`note` alleen zonder noemer: de zin uit `_respons_noemer` die zegt waarom.
+
+    Het percentage is GEEN parameter meer. Het werd naast `invited` en
+    `completed` meegegeven terwijl deze functie de waarschuwingszin uit die twee
+    zelf berekent: twee bronnen voor hetzelfde getal, die uit elkaar konden
+    lopen (een bekend aantal met een leeg percentage rendeerde letterlijk
+    "None%").
+    """
     seg = ("Beschikbaar: segmentbeeld verderop in dit rapport." if segment_available
            else f"Niet beschikbaar: {_h(segment_reason)}.")
 
@@ -1279,10 +1384,11 @@ def _responsbasis(*, invited: int | None, completed: int, pct: int | None, perio
         stat_cells = (
             f'<td><div class="sc-l">Uitgenodigd</div><div class="sc-v">{invited}</div></td>'
             f'<td><div class="sc-l">Afgerond</div><div class="sc-v">{completed}</div></td>'
-            f'<td><div class="sc-l">Respons</div><div class="sc-v">{pct}%</div></td>'
+            f'<td><div class="sc-l">Respons</div>'
+            f'<div class="sc-v">{_respons_pct(completed, invited)}%</div></td>'
         )
 
-    caution = _respons_caution(completed, invited)
+    caution = _respons_caution(completed, invited, note)
     caution_html = (f'<p class="trustline" style="margin-top:6px;">{_h(caution)}</p>'
                     if caution else "")
 
@@ -2688,10 +2794,17 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
     # Noemer voor het responspercentage (spec ronde 2 par. 6.1). Bij de
     # self-send-flow bestaan er geen rijen voor wie niet invulde, dus daar zou
     # len(respondents) een respons van 100% suggereren. Liever geen getal dan
-    # een onwaar getal: zonder noemer blijft completion None en zeggen de cover
-    # en de responsbasis dat het percentage niet bekend is.
-    n_invited   = _respons_noemer(getattr(camp.delivery_record, "invited_count", None),
-                                  rows=len(respondents), completed=n_completed)
+    # een onwaar getal: zonder noemer blijft completion None en zegt het rapport
+    # in een hele zin waarom het percentage er niet staat.
+    #
+    # Geen getattr-fallback: de relatie delivery_record en de kolom
+    # invited_count bestaan allebei in het model, dus een default zou geen
+    # ontbrekend record afvangen maar een hernoeming, en dan zou ELK rapport
+    # stil zijn responspercentage verliezen.
+    _record = camp.delivery_record
+    n_invited, n_invited_note = _respons_noemer(
+        _record.invited_count if _record is not None else None,
+        rows=len(respondents), completed=n_completed)
     completion  = round(n_completed / n_invited * 100, 1) if n_invited else None
 
     risk_sc  = [r.risk_score for r in responses if r.risk_score is not None]
@@ -2865,7 +2978,8 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
         campaign_id=campaign_id, scan_type=scan_type, scan_lbl=scan_lbl,
         org_name=org.name if org else "", campaign_name=camp.name,
         generated_at=now_str, delivery_mode=mode_lbl,
-        n_invited=n_invited, n_completed=n_completed, completion_pct=completion,
+        n_invited=n_invited, n_invited_note=n_invited_note,
+        n_completed=n_completed, completion_pct=completion,
         avg_risk=avg_risk, avg_eng=avg_eng, avg_to=avg_to, avg_si=avg_si,
         band_counts=band_counts, has_pattern=has_pattern,
         factor_avgs=factor_avgs, top_risks=top_risks,
@@ -3229,7 +3343,7 @@ def render_exit_report_html(data: dict) -> str:
     primary_signal = _raster_primary_label or GEEN_FACTORPROFIEL_LBL
     cover_stats = [
         ("Respondenten", str(n)),
-        _cover_respons_stat(data),  # afgerond, dezelfde noemer als de responsbasis
+        _cover_respons_stat(data["completion_pct"]),  # zelfde noemer als de responsbasis
         ("Eerste aandachtspunt", primary_signal),
     ]
     s = _cover(scan_label=data["scan_lbl"], scan_type="exit", org_name=data["org_name"],
@@ -3253,11 +3367,16 @@ def render_exit_report_html(data: dict) -> str:
     exec_line = _p02_opening(
         scan_type="exit", shape=_shape, labels=_raster_labels, primary_key=_primary,
         tie_break_kind=_tk, change=_chg, change_other=_chg_other, next_delta=_delta,
-        direction_state_key=_p02_direction_key(direction_agg, _primary))
+        direction_state_key=_p02_direction_key(direction_agg, _primary),
+        indicatief=_respons_indicatief(data["n_completed"], data["n_invited"]))
     _signal_cell = _p02_signal_cell("Frictiescore", rdsp if avg_risk else "",
                                     fl if avg_risk else "")
-    if exec_line and er_top:
-        exec_line = f"{exec_line} {er_top} is de meest genoemde vertrekreden."
+    # De vertrekredenzin hangt achter de kernzin, maar de noemer hoort bij de
+    # claim die hij relativeert (het startpunt), niet bij een redentelling. Hij
+    # wordt daarom pas na _p02_met_respons aangehaakt.
+    _er_zin = f" {er_top} is de meest genoemde vertrekreden." if (exec_line and er_top) else ""
+    # Deze terugval verwijst alleen, hij doet geen uitspraak (spec par. 6.3).
+    _verwijst = not exec_line and not avg_risk
     if not exec_line:
         # Geen factorprofiel (bug B2). De onderbouwingsrij rendert in die staat
         # niet, dus de frictiescore blijft hier staan in plaats van uit het
@@ -3268,12 +3387,9 @@ def render_exit_report_html(data: dict) -> str:
     # Sterke factor bewust NIET in de titel: die staat al in de subtekst
     # (totaalbeeld) — voorheen stond dezelfde observatie 2x binnen 4 regels.
 
-    # De respons remt de stelligheid van deze zin (spec ronde 2 par. 6.1):
-    # onder de helft komt de noemer erbij, onder de 30% opent de zin met
-    # "Indicatief beeld". Staat hier bewust ná de terugval hierboven, zodat ook
-    # een rapport zonder factorprofiel zijn responsbasis in de kernzin draagt.
     exec_line = _p02_met_respons(exec_line, completed=data["n_completed"],
-                                 invited=data["n_invited"])
+                                 invited=data["n_invited"],
+                                 verwijzing=_verwijst) + _er_zin
 
     # ── Bestuurlijke read ─────────────────────────────────────────────────────
     # Build why_cells for the primary (lowest-scoring) factor
@@ -3354,7 +3470,7 @@ def render_exit_report_html(data: dict) -> str:
     _responsbasis_band = _responsbasis(
         invited=data["n_invited"],
         completed=data["n_completed"],
-        pct=(round(data["completion_pct"]) if data["completion_pct"] is not None else None),
+        note=data["n_invited_note"],
         period=data["campaign_name"],
         # Exit meet uitgestroomde medewerkers, niet het hele personeelsbestand —
         # "Alle medewerkers" was feitelijk onjuist op het eerlijkheidsanker (C3).
@@ -3678,7 +3794,7 @@ def render_retention_report_html(data: dict) -> str:
         period=data["campaign_name"], opening_question="Waar staat behoud nu onder druk?",
         stats=[
             ("Respondenten", str(n)),
-            _cover_respons_stat(data),  # afgerond, dezelfde noemer als de responsbasis
+            _cover_respons_stat(data["completion_pct"]),  # zelfde noemer als de responsbasis
             ("Eerste aandachtspunt", _ret_primary),
         ],
     )
@@ -3746,9 +3862,12 @@ def render_retention_report_html(data: dict) -> str:
     exec_line = _p02_opening(
         scan_type=ST, shape=_shape, labels=_raster_labels, primary_key=_primary,
         tie_break_kind=_tk, change=_chg, change_other=_chg_other, next_delta=_delta,
-        direction_state_key=_p02_direction_key(direction_agg, _primary))
+        direction_state_key=_p02_direction_key(direction_agg, _primary),
+        indicatief=_respons_indicatief(data["n_completed"], data["n_invited"]))
     _signal_cell = _p02_signal_cell("Behoudssignaal", _score_str(signal) if signal else "",
                                     band_lbl or "")
+    # Deze terugval verwijst alleen, hij doet geen uitspraak (spec par. 6.3).
+    _verwijst = not exec_line and not (signal and band_lbl)
     if not exec_line:
         # Geen factorprofiel (bug B2). De onderbouwingsrij rendert in die staat
         # niet, dus het behoudssignaal blijft hier staan in plaats van uit het
@@ -3757,12 +3876,8 @@ def render_retention_report_html(data: dict) -> str:
                      if signal and band_lbl
                      else "Zie de behoudscontext en de responsbasis voor wat dit rapport wel toont.")
 
-    # De respons remt de stelligheid van deze zin (spec ronde 2 par. 6.1):
-    # onder de helft komt de noemer erbij, onder de 30% opent de zin met
-    # "Indicatief beeld". Staat hier bewust ná de terugval hierboven, zodat ook
-    # een rapport zonder factorprofiel zijn responsbasis in de kernzin draagt.
     exec_line = _p02_met_respons(exec_line, completed=data["n_completed"],
-                                 invited=data["n_invited"])
+                                 invited=data["n_invited"], verwijzing=_verwijst)
 
     # Subtekst herhaalt de titel niet meer: alleen wat nieuw is. De
     # responsbasis staat nu onderaan dezelfde pagina.
@@ -3775,7 +3890,7 @@ def render_retention_report_html(data: dict) -> str:
     _responsbasis_band = _responsbasis(
         invited=data["n_invited"],
         completed=data["n_completed"],
-        pct=(round(data["completion_pct"]) if data["completion_pct"] is not None else None),
+        note=data["n_invited_note"],
         period=data["campaign_name"],
         population="Actieve medewerkers",
         segment_available=bool(data.get("segment_rows")),
@@ -4133,7 +4248,7 @@ def render_onboarding_report_html(data: dict) -> str:
         period=data["campaign_name"], opening_question="Hoe landen nieuwe medewerkers?",
         stats=[
             ("Respondenten", str(n)),
-            _cover_respons_stat(data),  # afgerond, dezelfde noemer als de responsbasis
+            _cover_respons_stat(data["completion_pct"]),  # zelfde noemer als de responsbasis
             ("Eerste aandachtspunt", _ob_primary),
         ],
     )
@@ -4189,9 +4304,12 @@ def render_onboarding_report_html(data: dict) -> str:
     _delta = (round(sorted_f[1][1] - sorted_f[0][1], 2) if len(sorted_f) > 1 else None)
     exec_line = _p02_opening(
         scan_type=ST, shape=_shape, labels=_raster_labels, primary_key=_primary,
-        next_delta=_delta)
+        next_delta=_delta,
+        indicatief=_respons_indicatief(data["n_completed"], data["n_invited"]))
     _signal_cell = _p02_signal_cell("Checkpointscore", _score_str(signal) if signal else "",
                                     band_lbl or "")
+    # Deze terugval verwijst alleen, hij doet geen uitspraak (spec par. 6.3).
+    _verwijst = not exec_line and not (signal and band_lbl)
     if not exec_line:
         # Geen factorprofiel (bug B2). De onderbouwingsrij rendert in die staat
         # niet, dus de checkpointscore blijft hier staan in plaats van uit het
@@ -4200,12 +4318,8 @@ def render_onboarding_report_html(data: dict) -> str:
                      if signal and band_lbl
                      else "Zie het checkpointoverzicht en de responsbasis voor wat dit rapport wel toont.")
 
-    # De respons remt de stelligheid van deze zin (spec ronde 2 par. 6.1):
-    # onder de helft komt de noemer erbij, onder de 30% opent de zin met
-    # "Indicatief beeld". Staat hier bewust ná de terugval hierboven, zodat ook
-    # een rapport zonder factorprofiel zijn responsbasis in de kernzin draagt.
     exec_line = _p02_met_respons(exec_line, completed=data["n_completed"],
-                                 invited=data["n_invited"])
+                                 invited=data["n_invited"], verwijzing=_verwijst)
 
     # Subtekst herhaalt de titel niet meer: alleen wat nieuw is. De
     # responsbasis staat nu onderaan dezelfde pagina.
@@ -4218,7 +4332,7 @@ def render_onboarding_report_html(data: dict) -> str:
     _responsbasis_band = _responsbasis(
         invited=data["n_invited"],
         completed=data["n_completed"],
-        pct=(round(data["completion_pct"]) if data["completion_pct"] is not None else None),
+        note=data["n_invited_note"],
         period=data["campaign_name"],
         population="Nieuwe medewerkers in de eerste werkperiode",
         segment_available=bool(data.get("segment_rows")),

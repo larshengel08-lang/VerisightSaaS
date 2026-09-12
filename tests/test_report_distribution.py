@@ -101,7 +101,7 @@ def _min_retention_data(factor_resp_scores=None, intent_resp=None, n=12):
     return dict(
         campaign_id="c1", scan_type="retention", scan_lbl="Loep Behoud",
         org_name="TestOrg", campaign_name="Wave 1", generated_at="11-07-2026",
-        delivery_mode="Baseline", n_invited=n + 3, n_completed=n,
+        delivery_mode="Baseline", n_invited=n + 3, n_invited_note="", n_completed=n,
         completion_pct=80.0, avg_risk=5.0, avg_eng=6.0, avg_to=5.0, avg_si=5.0,
         band_counts={"HOOG": 0, "MIDDEN": n, "LAAG": 0}, has_pattern=True,
         factor_avgs=fa, top_risks=[("workload", 5.0)],

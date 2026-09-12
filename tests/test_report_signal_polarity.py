@@ -135,7 +135,7 @@ def _min_data(scan_type: str, avg_risk: float, n: int = 12) -> dict:
         campaign_id="c1", scan_type=scan_type,
         scan_lbl="Loep Behoud" if scan_type == "retention" else "Loep Start",
         org_name="TestOrg", campaign_name="Wave 1", generated_at="11-09-2026",
-        delivery_mode="Baseline", n_invited=n + 3, n_completed=n,
+        delivery_mode="Baseline", n_invited=n + 3, n_invited_note="", n_completed=n,
         completion_pct=80.0, avg_risk=avg_risk, avg_eng=6.0, avg_to=4.0, avg_si=6.5,
         band_counts={"HOOG": 0, "MIDDEN": n, "LAAG": 0}, has_pattern=True,
         factor_avgs=fa, top_risks=[("workload", 6.0)],
