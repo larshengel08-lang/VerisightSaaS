@@ -5,10 +5,10 @@ import {
   buildSurveyLink,
   type SegmentDepartmentStored,
 } from '@/lib/self-send-comms'
-import type { DeliveryMode, ScanType } from '@/lib/types'
+import type { CommsMode, DeliveryMode, ScanType } from '@/lib/types'
 
 export interface ReminderTextInput {
-  commsMode: string | null | undefined
+  commsMode: CommsMode | null | undefined
   scanType: ScanType
   scanLabel: string
   organizationName: string
@@ -27,7 +27,21 @@ export interface ReminderTextInput {
  * verstuurt en blijft daarom alleen voor oude managed-campagnes.
  */
 export function buildReminderText(input: ReminderTextInput): string {
-  if (input.commsMode === 'self_send' && input.publicSurveyToken) {
+  if (input.commsMode === 'self_send') {
+    // Bij self_send mag de tekst NOOIT terugvallen op de managed-preview
+    // hieronder: die belooft "Loep verzorgt de uitnodiging, verzending en
+    // verwerking" en bevat geen surveylink, wat bij self_send niet waar is
+    // (de klant verstuurt zelf). Zonder bruikbare token kan de echte
+    // uitnodigingstekst niet gebouwd worden, dus geven we een zichtbaar
+    // gedegradeerde tekst terug in plaats van een onbruikbare of misleidende.
+    if (!input.publicSurveyToken) {
+      return [
+        'Er is nog geen surveylink beschikbaar voor deze meting.',
+        '',
+        'Loep kan de herinneringstekst pas klaarzetten zodra de link er is. Mail hallo@getloep.nl, dan zetten we dit recht.',
+      ].join('\n')
+    }
+
     const departments = input.segmentDepartments ?? null
     const template = buildReminderTemplate({
       senderName: '',
