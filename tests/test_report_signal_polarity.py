@@ -225,3 +225,64 @@ def test_blijfintentie_en_bevlogenheid_houden_de_normale_schaal():
     # De omgekeerde tellingnamen horen alleen bij de vertrekintentiestrook.
     assert "Weinig vertrekgedachten" not in html
     assert "Veel vertrekgedachten" not in html
+
+
+# ── par. 7b: de rij kleurt op dezelfde as als de stip eronder ────────────────
+
+def _rij_en_stipkleur(signaal: str, v: float) -> tuple[str, set[str]]:
+    """(kleur van de sigrow-score, kleuren van de stippen in de eigen strook).
+
+    Alle twaalf respondenten scoren precies v, dus alle stippen horen dezelfde
+    kleur te hebben als het getal in de rij erboven. Bewust via de gerenderde
+    HTML en niet via de twee helpers los: zo valt een rij die zijn eigen
+    kleurladder houdt door de mand, ook als beide helpers op zichzelf kloppen.
+    """
+    import re
+    kwargs = dict(retention_score=None, stay_intent=None, turnover=None,
+                  engagement=None)
+    kwargs[{"turnover": "turnover", "stay": "stay_intent",
+            "engagement": "engagement"}[signaal]] = v
+    html = _behoudscontext(intent_resp={signaal: [v] * 12}, **kwargs)
+    rij = re.search(r'<span class="sigrow-score" style="color:(#[0-9A-F]{6});">', html)
+    assert rij, f"geen sigrow-score gevonden voor {signaal}"
+    titel = {"turnover": "Vertrekintentie", "stay": "Blijfintentie",
+             "engagement": "Bevlogenheid"}[signaal]
+    strook = html[html.index(f'<div class="spread-title">{titel}'):]
+    return rij.group(1), set(re.findall(r'<circle [^>]*fill="(#[0-9A-F]{6})"', strook))
+
+
+@pytest.mark.parametrize("v", [1.0, 2.0, 3.0, 3.4, 4.0, 4.5, 4.9, 5.0, 5.5,
+                               6.0, 6.4, 6.5, 7.0, 8.0, 10.0])
+def test_vertrekintentierij_kleurt_als_de_stip_eronder(v):
+    """Dezelfde waarde, twee pagina's, een kleur.
+
+    Valt de rij terug op de spiegeling (_rag_color(10 - v)), dan loopt dit
+    stuk bij 4.0, 4.5, 4.9, 6.0 en 6.4 uiteen.
+    """
+    rij, stippen = _rij_en_stipkleur("turnover", v)
+    assert stippen == {rij}, f"vertrekintentie {v}: rij {rij}, stippen {stippen}"
+
+
+@pytest.mark.parametrize("signaal", ["stay", "engagement"])
+@pytest.mark.parametrize("v", [4.9, 5.0, 6.4, 6.5])
+def test_de_andere_twee_rijen_kleuren_ook_als_hun_stippen(signaal, v):
+    rij, stippen = _rij_en_stipkleur(signaal, v)
+    assert stippen == {rij}, f"{signaal} {v}: rij {rij}, stippen {stippen}"
+
+
+@pytest.mark.parametrize("v,verwacht_note,verwacht_telling", [
+    (2.0, "laag", "Weinig vertrekgedachten"),
+    (3.0, "laag", "Weinig vertrekgedachten"),
+    (4.9, "beperkt", "Weinig vertrekgedachten"),
+    (5.0, "zichtbaar", "Aandacht"),          # ZONE_LOW zelf hoort in het midden
+    (6.4, "zichtbaar", "Aandacht"),
+    (6.5, "hoog: actief vertrekrisico", "Veel vertrekgedachten"),  # ZONE_HIGH zelf bovenin
+    (8.0, "hoog: actief vertrekrisico", "Veel vertrekgedachten"),
+])
+def test_de_note_zegt_hetzelfde_als_de_zone_waar_de_stip_in_valt(v, verwacht_note,
+                                                                 verwacht_telling):
+    html = _behoudscontext(retention_score=None, stay_intent=None, turnover=v,
+                           engagement=None, intent_resp={"turnover": [v] * 12})
+    assert f'<span class="sigrow-note">{verwacht_note}</span>' in html
+    # De telling met alle twaalf respondenten erin wijst de zone aan.
+    assert f"{verwacht_telling} 12" in html

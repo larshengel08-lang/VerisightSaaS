@@ -27,6 +27,7 @@ from backend.report_distribution import (
     ZONE_HIGH,
     ZONE_LOW,
     distribution_block,
+    zone_color,
 )
 from backend.products.shared.deepening import (
     DEEPENING_MIN_N,
@@ -3492,10 +3493,19 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
                   f'<div><span class="sigrow-score" style="color:{scol};">{stay_intent:.1f}/10</span></div></div>')
     if turnover is not None:
         _tv = _shown(turnover)  # note + kleur op de getoonde score (B15)
-        tcol = _rag_color(10 - _tv)
+        # Kleur en note komen uit dezelfde zone-as als de spreidingsstrook op de
+        # volgende pagina (spec ronde 2 par. 7b). Eerder kleurde deze rij via een
+        # eigen spiegeling (_rag_color(10 - _tv)): bij vertrekintentie 4.0 gaf dat
+        # een amber rij boven een teal stip, dezelfde tegenspraak als de gespiegelde
+        # getallen, alleen in kleur. De grenzen zijn daarom ZONE_LOW en ZONE_HIGH,
+        # en strikt kleiner-dan: 5,0 zelf hoort in het midden, 6,5 zelf bovenin,
+        # precies zoals de strook de stip indeelt. De grens van 3,0 splitst binnen
+        # de laagste zone ("laag" of "beperkt", allebei weinig vertrekgedachten) en
+        # valt daarom niet samen met een zonegrens.
+        tcol = zone_color(_tv, invert_scale=True)
         note = ("laag" if _tv <= 3.0 else
-                "beperkt" if _tv <= 5.0 else
-                "zichtbaar" if _tv <= 6.5 else
+                "beperkt" if _tv < ZONE_LOW else
+                "zichtbaar" if _tv < ZONE_HIGH else
                 "hoog: actief vertrekrisico")
         rows += (f'<div class="sigrow"><div class="sigrow-title">Vertrekintentie</div>'
                   f'<div class="sigrow-body">&ldquo;Ik denk er serieus over na te vertrekken&rdquo; + &ldquo;Ik zoek actief.&rdquo; '

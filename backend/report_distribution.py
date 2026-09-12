@@ -53,7 +53,15 @@ def _zone_ends(invert_scale: bool) -> tuple[str, str]:
     return (_C_HIGH, _C_LOW) if invert_scale else (_C_LOW, _C_HIGH)
 
 
-def _zone_color(v: float, invert_scale: bool = False) -> str:
+def zone_color(v: float, invert_scale: bool = False) -> str:
+    """De kleur van een waarde op de zone-as: de enige plek die dat bepaalt.
+
+    Publiek omdat ook de signaalrijen in de behoudscontext hier doorheen gaan.
+    Anders kleurt dezelfde waarde op twee pagina's verschillend: de rij kleurde
+    vertrekintentie via een eigen spiegeling (10 - v), de strook via deze
+    drempels, en bij vertrekintentie 4.0 gaf dat een amber rij boven een teal
+    stip (spec ronde 2 par. 7b: rij en strook op dezelfde as).
+    """
     low, high = _zone_ends(invert_scale)
     if v < ZONE_LOW:
         return low
@@ -122,7 +130,7 @@ def distribution_svg(values: list[float], width: int = 440, height: int = 34,
     for i, v in enumerate(dist["dots"]):
         cy = band_y + 5 + _jitter_offset(i, jitter_range)
         parts.append(f'<circle cx="{_x(v, width)}" cy="{cy}" r="{dot_r}" '
-                     f'fill="{_zone_color(v, invert_scale)}" fill-opacity="0.9"/>')
+                     f'fill="{zone_color(v, invert_scale)}" fill-opacity="0.9"/>')
     # gemiddelde-marker: navy lijn + mono-label
     mx = _x(dist["mean"], width)
     parts.append(f'<rect x="{mx - 1}" y="0" width="2" height="{height}" fill="#0D1B2A"/>')
