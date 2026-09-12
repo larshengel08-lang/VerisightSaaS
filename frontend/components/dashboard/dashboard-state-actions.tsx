@@ -25,7 +25,7 @@ export function DashboardStateActions({ state, reminderText }: { state: Dashboar
   ) : null
 
   if (!state.campaignId || !state.ctaLabel) {
-    return noticeBlock ? <div className="flex flex-col items-start gap-2">{noticeBlock}</div> : null
+    return noticeBlock ? <div className="mt-6 flex flex-col items-start gap-2">{noticeBlock}</div> : null
   }
 
   async function handleCopyReminder() {
@@ -72,7 +72,7 @@ export function DashboardStateActions({ state, reminderText }: { state: Dashboar
 
   if (state.ctaKind === 'copy_reminder') {
     return (
-      <div className="flex flex-col items-start gap-2">
+      <div className="mt-6 flex flex-col items-start gap-2">
         {phase === 'idle' ? (
           <button type="button" onClick={handleCopyReminder} className={primaryButtonClass}>
             {state.ctaLabel}
@@ -90,7 +90,7 @@ export function DashboardStateActions({ state, reminderText }: { state: Dashboar
 
   if (state.ctaKind === 'close_campaign') {
     return (
-      <div className="flex flex-col items-start gap-2">
+      <div className="mt-6 flex flex-col items-start gap-2">
         <button type="button" onClick={handleClose} disabled={phase === 'busy'} className={primaryButtonClass}>
           {phase === 'busy' ? 'Sluiten…' : (state.ctaLabel ?? 'Campagne sluiten')}
         </button>
@@ -100,5 +100,5 @@ export function DashboardStateActions({ state, reminderText }: { state: Dashboar
     )
   }
 
-  return noticeBlock ? <div className="flex flex-col items-start gap-2">{noticeBlock}</div> : null
+  return noticeBlock ? <div className="mt-6 flex flex-col items-start gap-2">{noticeBlock}</div> : null
 }

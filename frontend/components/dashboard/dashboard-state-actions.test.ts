@@ -82,4 +82,21 @@ describe('dashboard state card', () => {
     expect(card).not.toContain('RiskCharts')
     expect(card).not.toContain('FactorTable')
   })
+
+  it('defect 2 (source guard): mount van DashboardStateActions is niet gegated op ctaKind/islandCta', () => {
+    // Regressieguard, geen bewijs van React-gedrag: dit pint alleen de codevorm.
+    // De eerdere fix (defect 1, hierboven) verplaatste de notice-render naar
+    // buiten de ctaKind-branches ín het eiland, maar de kaart wrapte het eiland
+    // zelf nog in {islandCta ? (...) : null} met islandCta = ctaKind === 'copy_reminder'
+    // || ctaKind === 'close_campaign'. Na het sluiten van een campagne gaat de
+    // state over naar 'report_ready'/'processing', islandCta wordt dan false, en
+    // React unmountte het hele eiland — de net gezette notice (waarschuwing over
+    // een mislukte rapport-klaar-mail) werd zo weggegooid vóórdat de gebruiker
+    // 'm ooit kon zien. Deze test faalt zodra die conditionele mount terugkomt.
+    expect(card).not.toContain('islandCta')
+
+    // De component moet als kale JSX-child staan (niet binnen een `{... ? (` blok)
+    // zodat hij bij elke render van de kaart gemount blijft, ongeacht ctaKind.
+    expect(card).toMatch(/\n\s*<DashboardStateActions state=\{state\} reminderText=\{reminderText\} \/>\s*\n/)
+  })
 })
