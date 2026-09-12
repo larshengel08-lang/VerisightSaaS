@@ -175,15 +175,25 @@ Loep Vertrek: de vertrekreden-weging (`EXIT_REASON_WEIGHT`) verschuift daar ook 
 ### 2.1 Regel
 Het profiel is **vlak** wanneer het verschil tussen de hoogste en laagste van de zes werkfactoren kleiner is dan `FLAT_PROFILE_SPAN = 1.0` (strikt <). Constante in `report_priority.py`, met toelichting: "binnen één punt van elkaar" is in één zin uitlegbaar.
 
-**Implementatie (2026-09-11, taak 2):** de telling van kwetsbare onderwerpen en de span
-lopen over de getoonde (afgeronde) score, zodat ze niet kunnen botsen met het bandlabel
-ernaast (ronde 1, B15) en de lezer de span kan narekenen met de getallen die in de zin
-staan. De *volgorde* loopt wel over de onafgeronde waarde: 5,67 en 5,70 tonen allebei
-5,7, en dan moet p.02 hetzelfde onderwerp "het laagst" noemen als het raster bovenaan
-zet (`rank_factors` sorteert op `base`). Bij exact gelijke waarden beslist het
-factorlabel, zodat de uitkomst niet van de invoervolgorde afhangt. Een ontbrekend
-factorlabel laat de zin hard falen in plaats van de interne factorsleutel in klantcopy
-te zetten (Fail Loud).
+**Implementatie (2026-09-11, taak 2, onderbouwing gecorrigeerd na review):** de telling
+van kwetsbare onderwerpen en de span lopen over de getoonde (afgeronde) score, tegen de
+bestaande grens `ZONE_LOW`, zodat ze niet kunnen botsen met het bandlabel ernaast (ronde
+1, B15) en de lezer de span kan narekenen met de getallen die in de zin staan. De span
+wordt afgerond: 8,2 min 7,2 is in binaire drijvende komma 0,99999..., en dat profiel zou
+anders "niets springt eruit" heten terwijl het op de pagina een punt spant.
+
+De *volgorde* loopt over de onafgeronde waarde: 5,67 en 5,70 tonen allebei 5,7, en dan
+hoort de feitelijk laagste factor het laagst te staan in plaats van de alfabetisch eerste.
+Bij exact gelijke waarden beslist de factorsleutel, zodat de uitkomst niet van de
+invoervolgorde afhangt. `low_key` is daarmee de laagst scorende factor, en dat is bewust
+iets anders dan het startpunt dat `rank_factors` kiest: die sorteert op `base` (bij Loep
+Vertrek inclusief `EXIT_REASON_WEIGHT`) en laat binnen een gelijkspelgroep de richting, de
+spreiding en de verdieping de volgorde bepalen. Wie het startpunt nodig heeft, leest dat
+uit de ranglijst.
+
+De drempel zelf staat niet als getal in de copy: de zin haalt hem uit `FLAT_PROFILE_SPAN`,
+zoals `raster_uitleg` dat voor de gelijkspelmarge doet. Een ontbrekend factorlabel laat de
+zin hard falen in plaats van de interne factorsleutel in klantcopy te zetten (Fail Loud).
 
 ### 2.2 Copy op p.02
 Bij een vlak profiel opent de kernzin niet met "[factor] is het eerste gesprekspunt" maar met:

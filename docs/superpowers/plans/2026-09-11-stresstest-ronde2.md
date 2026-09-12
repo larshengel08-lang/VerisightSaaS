@@ -1039,7 +1039,7 @@ def _p02_opening(*, scan_type: str, shape: dict[str, Any], labels: dict[str, str
                    f"als eerste gesprekspunt kiest Loep {labels[primary_key]}.")
     elif k <= 2:
         vuln = [(fk, v) for fk, v in
-                sorted(((fk, s) for fk, s in shape["_pairs"]), key=lambda t: (t[1], t[0]))
+                sorted(((fk, s) for fk, s in shape["factors_low_to_high"]), key=lambda t: (t[1], t[0]))
                 if v < 5.0][:2]
         onderwerp = "een onderwerp" if k == 1 else "twee onderwerpen"
         namen = " en ".join(f"{labels[fk]} ({_score_str(v)})" for fk, v in vuln)
@@ -1071,13 +1071,13 @@ def _p02_startpunt_zin(primary_label: str, *, tie_break_kind: str | None,
     return f"Als startpunt kiest Loep {primary_label}."
 ```
 
-Voeg in `profile_shape` het veld `_pairs` toe aan de returnwaarde (beide takken), zodat `_p02_opening` de kwetsbare factoren kan opsommen zonder de invoer opnieuw te filteren:
+Voeg in `profile_shape` het veld `factors_low_to_high` toe aan de returnwaarde (beide takken), zodat `_p02_opening` de kwetsbare factoren kan opsommen zonder de invoer opnieuw te filteren:
 
 ```python
-        "_pairs": pairs,
+        "factors_low_to_high": pairs,
 ```
 
-(in de lege tak: `"_pairs": []`.)
+(in de lege tak: `"factors_low_to_high": []`.)
 
 - [ ] **Stap 4: Draai de tests**
 
@@ -1085,7 +1085,7 @@ Voeg in `profile_shape` het veld `_pairs` toe aan de returnwaarde (beide takken)
 /c/Users/larsh/Desktop/Business/Verisight/.venv/Scripts/python.exe -m pytest tests/test_report_p02_kernzin.py -q
 ```
 
-Verwacht: PASS. Faalt `test_leeg_profiel_levert_lege_zin`, controleer dat `profile_shape({})` ook `_pairs` teruggeeft.
+Verwacht: PASS. Faalt `test_leeg_profiel_levert_lege_zin`, controleer dat `profile_shape({})` ook `factors_low_to_high` teruggeeft.
 
 - [ ] **Stap 5: Sluit de kernzin aan in de drie renderers**
 
@@ -2346,4 +2346,4 @@ git add -A && git commit -m "test(stresstest): scenario 16b, matrix na ronde 2, 
 3. Taak 5: `*_other` is ook van `plurality` en `split_none` uitgesloten, net als van `clear`, omdat die optie geen opdrachtvorm heeft.
 4. Taak 4: de noemer voor het responspercentage komt uit het delivery record wanneer dat bestaat, omdat `len(respondents)` bij self-send een respons van 100% zou suggereren.
 
-**Typeconsistentie.** `profile_shape` levert `_pairs` (taak 2) en `_p02_opening` leest dat (taak 3). `rank_factors` levert `tie_break_kind`, `tie_break_note`, `exit_reason_n`, `direction_answered` en `direction_change` (taak 1); `_prioriteringsraster`, `_raster_attribution` en de kernzin-takken lezen precies die namen (taak 1 en 3). `direction_state` levert er `none_n` bij (taak 5) en `_direction_card_cell` en `_direction_p02_line` lezen dat. `distribution_block` krijgt `invert_scale` (taak 7) en `_behoudscontext` geeft die door.
+**Typeconsistentie.** `profile_shape` levert `factors_low_to_high` (taak 2) en `_p02_opening` leest dat (taak 3). `rank_factors` levert `tie_break_kind`, `tie_break_note`, `exit_reason_n`, `direction_answered` en `direction_change` (taak 1); `_prioriteringsraster`, `_raster_attribution` en de kernzin-takken lezen precies die namen (taak 1 en 3). `direction_state` levert er `none_n` bij (taak 5) en `_direction_card_cell` en `_direction_p02_line` lezen dat. `distribution_block` krijgt `invert_scale` (taak 7) en `_behoudscontext` geeft die door.
