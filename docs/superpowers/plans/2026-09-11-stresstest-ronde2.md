@@ -898,10 +898,20 @@ def test_vlak_profiel_opent_met_de_vlakke_zin():
 
 
 def test_geen_kwetsbaar_en_niet_vlak():
-    zin = _open(NIET_VLAK_GEEN_KWETSBAAR)
-    assert "Geen onderwerp scoort kwetsbaar." in zin
-    assert "Groeiperspectief" in zin
-    assert "eerste gesprekspunt" in zin
+    # Laagste factor is hier ook het startpunt: dan mag de zin dat zeggen.
+    zin = _open(NIET_VLAK_GEEN_KWETSBAAR, primary="growth")
+    assert zin == ("Geen onderwerp scoort kwetsbaar. Groeiperspectief scoort het "
+                   "laagst en is het eerste gesprekspunt.")
+
+
+def test_geen_kwetsbaar_en_startpunt_wijkt_af_van_de_laagste():
+    # Bij Loep Vertrek tilt de vertrekredenweging een andere factor bovenaan,
+    # en binnen een gelijkspelgroep kan een tie-break dat ook. De zin mag dan
+    # niet suggereren dat de laagste factor het startpunt is.
+    zin = _open(NIET_VLAK_GEEN_KWETSBAAR, scan="exit", primary="leadership")
+    assert "Groeiperspectief scoort het laagst" in zin
+    assert "als eerste gesprekspunt kiest Loep Leiderschap" in zin
+    assert "Groeiperspectief scoort het laagst en is" not in zin
 
 
 def test_een_kwetsbaar_onderwerp():
@@ -1015,8 +1025,18 @@ def _p02_opening(*, scan_type: str, shape: dict[str, Any], labels: dict[str, str
     if k == 0 and shape["flat"]:
         kop = _p02_flat_sentence(shape, labels)
     elif k == 0:
-        kop = (f"Geen onderwerp scoort kwetsbaar. {labels[shape['low_key']]} scoort "
-               f"het laagst en is het eerste gesprekspunt.")
+        # De laagst scorende factor is NIET altijd het startpunt: bij Loep
+        # Vertrek verschuift de vertrekredenweging de base, en binnen een
+        # gelijkspelgroep kan richting, spreiding of verdieping de volgorde
+        # bepalen. Vallen ze samen, dan mag de zin dat zeggen; verschillen ze,
+        # dan noemt de zin ze apart en legt de bronregel eronder uit waarom.
+        laagste = labels[shape["low_key"]]
+        if shape["low_key"] == primary_key:
+            kop = (f"Geen onderwerp scoort kwetsbaar. {laagste} scoort het laagst "
+                   f"en is het eerste gesprekspunt.")
+        else:
+            kop = (f"Geen onderwerp scoort kwetsbaar. {laagste} scoort het laagst; "
+                   f"als eerste gesprekspunt kiest Loep {labels[primary_key]}.")
     elif k <= 2:
         vuln = [(fk, v) for fk, v in
                 sorted(((fk, s) for fk, s in shape["_pairs"]), key=lambda t: (t[1], t[0]))
