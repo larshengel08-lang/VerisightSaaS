@@ -1,4 +1,8 @@
-import { isDashboardReleaseReady } from '@/lib/response-activation'
+import {
+  getResponseActivationThresholds,
+  isDashboardReleaseReady,
+  isReportReleaseReady,
+} from '@/lib/response-activation'
 import { SCAN_TYPE_LABELS, type CampaignStats, type ScanType } from '@/lib/types'
 
 // ─── HR Report Download Rows ──────────────────────────────────────────────────
@@ -55,4 +59,56 @@ export function buildHrReportDownloadRows(campaigns: CampaignStats[]): {
     availableRows: rows.filter((row) => row.isAvailable),
     unavailableRows: rows.filter((row) => !row.isAvailable),
   }
+}
+
+// ─── Rapportenoverzicht ───────────────────────────────────────────────────────
+// Gebruikt door reports/page.tsx (spec 2026-09-11 par. 4.3). De oudere
+// buildHrReportDownloadRows hierboven blijft ongemoeid: die hangt aan de
+// dashboarddrempel en wordt alleen nog door dashboard/cockpit-index.ts gelezen.
+
+/**
+ * Een rapport bestaat pas als de meting gesloten is én de rapportdrempel is
+ * gehaald. Een lopende meting is dus nooit "beschikbaar", ook niet met veel
+ * respons. Bij self_send maakt het platform geen respondenten vooraf aan, dus
+ * staat total_invited in campaign_stats op 0; dan tonen we alleen het aantal
+ * ingevulde vragenlijsten in plaats van een onjuiste noemer.
+ */
+export function buildReportOverviewRows(campaigns: CampaignStats[]): HrReportDownloadRow[] {
+  return campaigns
+    .filter((campaign) => campaign.scan_type !== 'culture_assessment')
+    .map((campaign) => {
+      const thresholds = getResponseActivationThresholds(campaign.scan_type)
+      const isAvailable =
+        !campaign.is_active &&
+        isReportReleaseReady(campaign.total_completed, { scanType: campaign.scan_type })
+      const date = new Date(campaign.created_at)
+      const quarter = Math.floor(date.getUTCMonth() / 3) + 1
+      const invited = campaign.total_invited ?? 0
+
+      let status: string
+      if (isAvailable) {
+        status = 'Beschikbaar nu'
+      } else if (campaign.is_active) {
+        status = 'Meting loopt'
+      } else {
+        status = `Gesloten met ${campaign.total_completed} ingevuld. Minimaal ${thresholds.insightMin} nodig voor een rapport.`
+      }
+
+      return {
+        campaignId: campaign.campaign_id,
+        campaignName: campaign.campaign_name,
+        scanType: campaign.scan_type,
+        scanName: SCAN_TYPE_LABELS[campaign.scan_type],
+        periodLabel: `Q${quarter} ${date.getUTCFullYear()}`,
+        createdAt: campaign.created_at,
+        responseBasis:
+          invited > 0
+            ? `${campaign.total_completed} van ${invited} ingevuld`
+            : `${campaign.total_completed} ingevuld`,
+        status,
+        isAvailable,
+        extraDisambiguator: null,
+      }
+    })
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 }
