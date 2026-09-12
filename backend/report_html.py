@@ -451,6 +451,11 @@ def _p02_startpunt_zin(primary_label: str, *, tie_break_kind: str | None,
     - "het verschil is klein" alleen binnen PRIORITY_TIE_MARGIN, de marge waarop
       de rangorde zelf van gelijkspel spreekt. Anders zou het getal in de zin de
       zin tegenspreken.
+    - bij een exacte gelijkstand is de laagste score niet van dit onderwerp
+      alleen, en "het verschil is klein (0,00)" oogt als een formatteerfout in
+      plaats van als informatie. Die stand krijgt daarom haar eigen zin, die de
+      gelijkstand benoemt in plaats van hem weg te rekenen: het verschil
+      verzwijgen zou dezelfde stelligheid opleveren als voor ronde 2.
 
     Haalt geen enkele tak zijn voorwaarde, dan blijft de kale keuze over: die is
     altijd waar.
@@ -462,12 +467,16 @@ def _p02_startpunt_zin(primary_label: str, *, tie_break_kind: str | None,
         a, b = change
         return (f"Als startpunt kiest Loep {primary_label}: daar vragen de meeste "
                 f"mensen om verandering ({a} van de {b}).")
-    if (tie_break_kind is None and primary_is_lowest and next_delta is not None
-            and 0.0 <= next_delta < PRIORITY_TIE_MARGIN):
-        delta = f"{next_delta:.2f}".replace(".", ",")
-        return (f"Als startpunt kiest Loep {primary_label}, de laagste score. Het "
-                f"verschil met de volgende is klein ({delta}); weeg dat mee in de "
-                f"bespreking.")
+    if tie_break_kind is None and primary_is_lowest and next_delta is not None:
+        if next_delta == 0.0:
+            return (f"Als startpunt kiest Loep {primary_label}. Dat onderwerp deelt "
+                    f"de laagste score met het volgende; weeg die gelijkstand mee "
+                    f"in de bespreking.")
+        if 0.0 < next_delta < PRIORITY_TIE_MARGIN:
+            delta = f"{next_delta:.2f}".replace(".", ",")
+            return (f"Als startpunt kiest Loep {primary_label}, de laagste score. Het "
+                    f"verschil met de volgende is klein ({delta}); weeg dat mee in de "
+                    f"bespreking.")
     return f"Als startpunt kiest Loep {primary_label}."
 
 
@@ -510,7 +519,10 @@ def _p02_opening(*, scan_type: str, shape: dict[str, Any], labels: dict[str, str
         # op de onafgeronde waarde), dus hier alleen filteren: opnieuw sorteren
         # op de getoonde score zou twee gelijk getoonde factoren omdraaien.
         vuln = [(fk, v) for fk, v in shape["factors_low_to_high"] if v < ZONE_LOW]
-        onderwerp = "een onderwerp" if k == 1 else "twee onderwerpen"
+        # "één" met accent, zoals _flat_span_woorden: hier telt het onderwerpen,
+        # en zonder accent leest "een onderwerp" als lidwoord in plaats van als
+        # telwoord tegenover "twee onderwerpen".
+        onderwerp = "één onderwerp" if k == 1 else "twee onderwerpen"
         namen = " en ".join(f"{labels[fk]} ({_score_str(v)})" for fk, v in vuln)
         kop = f"{zacht} {onderwerp}: {namen}."
     else:

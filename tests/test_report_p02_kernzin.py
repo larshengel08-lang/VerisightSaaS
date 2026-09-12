@@ -64,7 +64,10 @@ def test_geen_kwetsbaar_en_startpunt_wijkt_af_van_de_laagste():
 
 def test_een_kwetsbaar_onderwerp():
     zin = _open(EEN_LAGE)
-    assert "een onderwerp" in zin
+    # Telwoord met accent, geen lidwoord: "een onderwerp" leest als "a topic"
+    # in plaats van als tegenhanger van "twee onderwerpen" (spec par. 5.2).
+    assert "één onderwerp" in zin
+    assert "aandacht op een onderwerp" not in zin
     assert "Groeiperspectief (4.5/10)" in zin
     assert "twee onderwerpen" not in zin
 
@@ -101,6 +104,17 @@ def test_startpuntgrond_bij_alleen_score():
     assert "de laagste score" in zin
     assert "klein (0,03)" in zin
     assert "weeg dat mee" in zin
+
+
+def test_exacte_gelijkstand_krijgt_een_eigen_zin():
+    """Bij een gelijkstand is de laagste score niet van dit onderwerp alleen, en
+    "het verschil is klein (0,00)" oogt als een formatteerfout. De zin benoemt de
+    stand dan, in plaats van hem weg te rekenen."""
+    zin = _open(VLAK, tie_break_kind=None, next_delta=0.0)
+    assert "deelt de laagste score met het volgende" in zin
+    assert "weeg die gelijkstand mee in de bespreking" in zin
+    assert "0,00" not in zin
+    assert "is klein" not in zin
 
 
 def test_klein_verschil_wordt_alleen_klein_genoemd_als_het_klein_is():
@@ -170,6 +184,13 @@ def test_vlakke_zin_houdt_zijn_accent_in_de_gerenderde_pagina():
     assert "binnen één punt van elkaar" in html
     assert "&eacute;" not in html
     assert "&amp;#" not in html
+
+    # Zelfde pad, tweede accentzin: het telwoord in de kwetsbaar-opsomming.
+    html = _bestuurlijke_read(kernzin=_open(EEN_LAGE), totaalbeeld="T.",
+                              primary_label="Groeiperspectief", why_cells_html="",
+                              strong_label="", strong_score=None, mgmt_q="V?")
+    assert "aandacht op één onderwerp" in html
+    assert "&eacute;" not in html
 
 
 # ── "nergens" is een uitspraak over het hele profiel ─────────────────────────

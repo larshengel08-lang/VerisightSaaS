@@ -315,6 +315,14 @@ verfijnen de tekst hierboven:
    keuze over; die is altijd waar. Het tie-breaksignaal komt uit `decided_by` van
    `rank_factors` (taak 1), dus de grond in de kernzin kan niet afwijken van de volgorde in
    het raster.
+   **Exacte gelijkstand (reviewronde 2026-09-12).** Scenario 04 van Loep Start zet twee
+   factoren op precies 7,85, en dan las de zin "de laagste score. Het verschil met de
+   volgende is klein (0,00)": bij een gelijkstand is de laagste score niet van dit onderwerp
+   alleen, en 0,00 oogt als een formatteerfout. Die stand krijgt daarom haar eigen zin
+   ("Dat onderwerp deelt de laagste score met het volgende; weeg die gelijkstand mee in de
+   bespreking"). Gekozen boven een ondergrens op de delta, waarmee de zin terugvalt op de
+   kale keuze en de gelijkstand helemaal onzichtbaar wordt: dat is precies de stelligheid
+   die deze ronde wegneemt.
 5. **"Nergens dringend om verandering" is een uitspraak over het hele profiel.**
    `direction_state` werkt per factor, dus `_p02_direction_key` geeft die sleutel alleen af
    als het startpunt in `none_needed` staat én geen enkele andere factor met genoeg
