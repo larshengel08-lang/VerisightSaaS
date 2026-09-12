@@ -38,25 +38,54 @@ Sorteerregel, in één zin (staat letterlijk onder de ranglijst):
 
 Implementatie: binnen een tie-groep (alle rijen die binnen de marge van de laagste van de groep liggen, bestaande groepslogica hergebruiken) wordt gesorteerd op (1) vraag-om-verandering aflopend, alleen als beide rijen een geldig aantal hebben, (2) spreidingsvlag, (3) verdiepingsvlag, (4) score, (5) factorlabel alfabetisch. Determinisme blijft; de bestaande tests op de vlaggen blijven gelden (ze worden alleen ondergeschikt aan het richtingsignaal binnen de marge).
 
-**Implementatie-afwijking (2026-09-11, taak 1):** "alleen als beide rijen een geldig
-aantal hebben" is geimplementeerd als een groepsbrede gate: de richting-tie-break telt
-binnen een gelijkspel-groep alleen als elke rij in die groep >= DIRECTION_MIN_N
-beantwoorders heeft. Reden: een paarsgewijze geldigheidsregel is niet transitief, en een
-niet-transitieve comparator laat het sorteerresultaat van de invoervolgorde afhangen. Dat
-breekt het determinisme-contract van rank_factors. Bij een groep van twee rijen is het
-gedrag identiek aan de spec; bij drie of meer is het strenger.
+**Implementatie (2026-09-11, taak 1, herzien na spec-review 2026-09-12):** "alleen als
+beide rijen een geldig aantal hebben" is geimplementeerd als een per-rij-regel: een rij
+met minder dan DIRECTION_MIN_N beantwoorders telt als 0 vraag-om-verandering. De eerste
+versie gebruikte een groepsbrede gate (het signaal uit zodra een rij onder de vloer zat),
+maar in scenario 06 zet een factor met 2 beantwoorders het signaal dan uit voor een groep
+van vijf: precies het scenario waarvoor het gebouwd is, en de uitlegzin onder de tabel
+("de vraag om verandering vanaf 3 beantwoorders per factor") werd er onwaar van. Een rij
+onder de vloer heeft hoogstens twee veranderverzoeken, dus 0 is de conservatieve kant.
 
-**Implementatie-afwijking (2026-09-11, taak 1, par. 1.3):** par. 1.3 zegt "boven een rij
-met lagere of gelijke score"; geimplementeerd is STRIKT lager, en op de interne
-rekenwaarde (`base`, inclusief het vertrekredengewicht) in plaats van op de afgeronde
-score in de kolom. Gevolg 1: twee rijen die allebei als 6,2 in de kolom staan maar een
-verschillende base hebben, krijgen wel een markering. Dat is precies het geval waar
-bevinding B5 over ging (scenario 06), dus die is gedekt. Gevolg 2: bij een base die tot
-op de komma gelijk is, beslist een tie-break zonder markeringsregel; de sorteerregel
-onder de tabel legt dan uit wat er gebeurde, de rij zelf niet. Reden: de markering luidt
-"Staat hoger dan X omdat ..." en heeft bij een echt gelijke stand geen zichtbare omkering
-om uit te leggen. Wil je die laatste groep toch markeren, dan is dat een eenrichtings-
-verruiming (`<` naar `<=`) in `_tie_break_marking`.
+**Aanvullende regel (spec-review 2026-09-12): de vraag om verandering beslist alleen bij
+een voorsprong van minstens `DIRECTION_TIE_MIN_MARGIN` (2).** Binnen een gelijkspel-groep
+wordt alleen de hoogste rij vooruit gezet, en alleen als die er minstens 2 mensen bovenuit
+steekt; anders beslist dit signaal niets en valt de groep door naar spreiding en
+verdieping. Zonder deze marge zou "2 van de 11 tegen 1 van de 11" de volgorde bepalen, een
+stellige uitspraak over ruis. De waarde is geen vierde drempelset: het is exact de
+voorsprong die `direction_state` voor de staat `clear` eist en die `agenda_enrichment`
+hanteert. Precies een winnaar per groep houdt de sorteersleutel een totale orde, dus
+transitief en onafhankelijk van de invoervolgorde; een paarsgewijze margeregel zou dat
+niet zijn.
+
+**Implementatie (2026-09-11, taak 1, par. 1.3, herzien na spec-review 2026-09-12):** de
+markeringsregel volgt de spec ("lagere of gelijke score") en vergelijkt op de interne
+rekenwaarde `base` (inclusief het vertrekredengewicht), niet op de afgeronde score in de
+kolom. Twee rijen die allebei als 6,2 tonen krijgen dus een markering zodra een signaal de
+volgorde bepaalde: in scenario 06 staan Beloning en Cultuur allebei op base 6,20 en legt
+de regel nu uit dat de gedeelde toelichting uit de verdieping de doorslag gaf. De
+referentierij wordt per signaal gekozen uit de rijen die het genoemde verschil ook
+daadwerkelijk tonen (laagste base eerst, bij gelijke base alfabetisch); bij gelijke
+tellingen valt de tekstkeuze door naar spreiding, dan verdieping, en anders naar geen
+markering.
+
+**Extra copy-variant (2026-09-12):** staat de winnaar alleen boven rijen waarvan het
+aantal onder de vloer ligt, dan is er geen tweede telling om tegen af te zetten. De regel
+zegt dat dan ("... (9 van de 11); bij X gaven te weinig mensen antwoord om dat te
+vergelijken"), in plaats van de flip onverklaard te laten of een getal te suggereren dat
+er niet is.
+
+**Ontwerpbeslissing (spec-review 2026-09-12): geen kolom voor de vraag om verandering.**
+Par. 1.3 schrijft een extra kolom voor Loep Vertrek voor (vertrekreden) en niet meer.
+Zeven kolommen met een spreidings-SVG erin is op A4 een lay-outrisico dat in deze ronde
+niet te valideren is, en de navolgbaarheid van de beslissing is al geborgd door de
+markeringsregel, die beide tellingen noemt. `RASTER_INTRO`, `RASTER_INTRO_GATE`,
+`RASTER_GATE_NOTE` en de docstring-invariant van `_prioriteringsraster` zijn daarom
+bijgewerkt: ze noemen vier (respectievelijk drie) signalen, zeggen welke daarvan in de
+tabel staan, en beloven voor de vraag om verandering alleen dat die onder de rij wordt
+genoemd zodra hij de volgorde bepaalde. De richtingvraag staat los van de
+verdiepings-gate: elke respondent beantwoordt hem, dus ook een meting zonder actieve
+verdiepingsvragen (scenario 04) kan erop kantelen.
 
 ### 1.3 Markering van tie-break-rijen (B5)
 Elke rij die door een tie-break boven een rij met lagere of gelijke score staat, krijgt in de agendakolom een regel eronder, in gewone taal, met de telling:

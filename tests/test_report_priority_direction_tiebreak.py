@@ -1,6 +1,6 @@
 """Tests voor de richting-tie-break en de markeringsregels (spec ronde 2 par. 1)."""
 from backend.products.shared.deepening import DIRECTION_MIN_N
-from backend.report_priority import rank_factors
+from backend.report_priority import DIRECTION_TIE_MIN_MARGIN, rank_factors
 
 
 def _dir(answered, change, none_key="gr_none", change_key="gr_visibility"):
@@ -115,7 +115,7 @@ def test_every_row_has_the_new_fields():
         for field in ("direction_answered", "direction_change", "exit_reason_n",
                       "tie_break_kind", "tie_break_note"):
             assert field in r
-        assert "_dir_decided" not in r
+        assert "_dir_winner" not in r
 
 
 def test_notes_have_no_em_dashes():
@@ -132,3 +132,85 @@ def test_without_direction_agg_behaviour_is_unchanged():
     rows = rank_factors("retention", {"growth": 5.2, "workload": 5.4}, {}, {})
     assert [r["key"] for r in rows] == ["growth", "workload"]
     assert rows[0]["direction_change"] is None
+
+
+def test_direction_needs_a_margin_of_two():
+    # "5 van de 11 tegen 4 van de 11" is ruis: de voorsprong haalt
+    # DIRECTION_TIE_MIN_MARGIN niet, dus richting beslist niets en de groep valt
+    # door naar base. Bij een voorsprong van precies 2 flipt het wel.
+    assert DIRECTION_TIE_MIN_MARGIN == 2
+    avgs = {"growth": 6.0, "workload": 6.1}
+    krap = {"growth": _dir(11, 4),
+            "workload": _dir(11, 5, none_key="wl_none", change_key="wl_volume")}
+    rows = _rank(avgs, direction=krap)
+    assert [r["key"] for r in rows] == ["growth", "workload"]
+    assert rows[0]["tie_break_kind"] is None
+    genoeg = {"growth": _dir(11, 4),
+              "workload": _dir(11, 6, none_key="wl_none", change_key="wl_volume")}
+    rows = _rank(avgs, direction=genoeg)
+    assert [r["key"] for r in rows] == ["workload", "growth"]
+    assert rows[0]["tie_break_kind"] == "direction"
+
+
+def test_row_below_the_floor_does_not_disable_the_group():
+    # Regressie: de eerste versie zette het richtingsignaal voor de HELE groep
+    # uit zodra een rij te weinig beantwoorders had. Scenario 06 heeft precies
+    # zo'n rij (workload, 2 beantwoorders), waardoor het signaal uitstond in het
+    # scenario waarvoor het gebouwd is. Een rij onder de vloer telt nu als 0.
+    avgs = {"growth": 6.0, "workload": 6.05, "culture": 6.1}
+    direction = {"growth": _dir(11, 2),
+                 "workload": _dir(2, 2, none_key="wl_none", change_key="wl_volume"),
+                 "culture": _dir(11, 9, none_key="cu_none", change_key="cu_safety")}
+    rows = _rank(avgs, direction=direction)
+    assert rows[0]["key"] == "culture"
+    assert rows[0]["tie_break_kind"] == "direction"
+    assert rows[0]["direction_change"] == 9
+
+
+def test_marking_at_exactly_equal_base():
+    # Spec par. 1.3: "lagere of gelijke score". Bij een gelijke base toont de
+    # scorekolom twee keer hetzelfde getal; zonder markering legt de pagina niet
+    # uit waarom de ene rij boven de andere staat.
+    avgs = {"culture": 6.2, "compensation": 6.2}
+    direction = {"culture": _dir(11, 3, none_key="cu_none", change_key="cu_safety"),
+                 "compensation": _dir(11, 8, none_key="cp_none", change_key="cp_insight")}
+    labels = {"culture": "Cultuur en psychologische veiligheid",
+              "compensation": "Beloning en voorwaarden"}
+    rows = _rank(avgs, direction=direction, labels=labels)
+    assert rows[0]["key"] == "compensation"
+    assert rows[0]["tie_break_note"].startswith(
+        "Staat hoger dan Cultuur en psychologische veiligheid omdat hier meer mensen")
+    assert "8 van de 11 tegen 3 van de 11" in rows[0]["tie_break_note"]
+
+
+def test_equal_counts_fall_through_to_the_next_signal():
+    # Gelijke tellingen: richting beslist niets, de verdiepingsvlag wel, en de
+    # markering noemt dan de verdieping (niet de richting).
+    ok = {"triggered": 13, "offered": 13, "answered": 13, "skipped": 0,
+          "primary_counts": {"cp_external": 9, "cp_internal": 1}, "secondary_counts": {}}
+    avgs = {"culture": 6.2, "compensation": 6.2}
+    direction = {"culture": _dir(11, 7, none_key="cu_none", change_key="cu_safety"),
+                 "compensation": _dir(11, 7, none_key="cp_none", change_key="cp_insight")}
+    labels = {"culture": "Cultuur", "compensation": "Beloning"}
+    rows = _rank(avgs, direction=direction, labels=labels,
+                 deep={"compensation": ok})
+    assert rows[0]["key"] == "compensation"
+    assert rows[0]["tie_break_kind"] == "deepening"
+    assert "gedeelde toelichting" in rows[0]["tie_break_note"]
+
+
+def test_direction_marking_is_honest_when_the_other_row_has_no_count():
+    # De winnaar passeert alleen een rij onder de vloer: dan is er geen tweede
+    # telling om tegen af te zetten. De regel zegt dat, in plaats van de flip
+    # onverklaard te laten of een getal te suggereren dat er niet is.
+    avgs = {"growth": 6.1, "workload": 6.0}
+    direction = {"growth": _dir(11, 9),
+                 "workload": _dir(2, 2, none_key="wl_none", change_key="wl_volume")}
+    labels = {"growth": "Groeiperspectief", "workload": "Werkdruk en herstelruimte"}
+    rows = _rank(avgs, direction=direction, labels=labels)
+    assert rows[0]["key"] == "growth"
+    note = rows[0]["tie_break_note"]
+    assert "9 van de 11" in note
+    assert "te weinig mensen antwoord om dat te vergelijken" in note
+    assert "van de 2" not in note
+    assert "—" not in note

@@ -158,10 +158,11 @@ def test_markeringsregel_staat_onder_de_rij():
         _row("growth", "Groeiperspectief", 6.0, role="tweede"),
     ]
     html = _render(ranked=ranked, resp={r["key"]: [6.0] * 13 for r in ranked})
-    assert "meer mensen om verandering vragen" in html
-    assert "r-note" in html
-    # De markering hoort bij de rij erboven, dus in een eigen rij met colspan.
-    assert "colspan" in html
+    # De markering hoort bij de rij erboven, dus in een eigen rij die de volle
+    # tabelbreedte overspant (hier 5 kolommen: retention met verdiepingskolom).
+    assert ('<tr class="r-note"><td colspan="5">Staat hoger dan Groeiperspectief '
+            "omdat hier meer mensen om verandering vragen "
+            "(9 van de 11 tegen 3 van de 11).</td></tr>") in html
 
 
 def test_geen_markeringsregel_zonder_flip():
@@ -175,8 +176,10 @@ def test_exit_krijgt_een_vertrekredenkolom():
               _row("growth", "Groeiperspectief", 4.5, role="tweede", exit_reason_n=4)]
     resp = {r["key"]: [4.0] * 13 for r in ranked}
     html_exit = _render(scan_type="exit", ranked=ranked, resp=resp)
-    assert "Als vertrekreden genoemd" in html_exit
-    assert ">9<" in html_exit
+    assert '<th style="width:13%">Als vertrekreden genoemd</th>' in html_exit
+    # De telling staat in de vertrekredencel zelf, niet ergens anders op de pagina.
+    assert '<td class="r-mono">9</td>' in html_exit
+    assert '<td class="r-mono">4</td>' in html_exit
     # Loep Behoud kent geen vertrekredenen en krijgt de kolom dus niet.
     html_ret = _render(scan_type="retention", ranked=ranked, resp=resp)
     assert "Als vertrekreden genoemd" not in html_ret
@@ -187,3 +190,23 @@ def test_uitlegregel_noemt_de_richtingvraag_als_eerste_tiebreak():
         uitleg = RASTER_UITLEG[scan]
         assert "om verandering vragen" in uitleg
         assert "—" not in uitleg
+
+
+def test_intro_en_gatecopy_zijn_eerlijk_over_de_vraag_om_verandering():
+    # De vraag om verandering staat los van de verdiepings-gate: elke respondent
+    # beantwoordt hem. De intro mag hem dus niet verzwijgen, en mag ook niet
+    # beloven dat hij per factor in een kolom staat (die is er bewust niet).
+    assert "vier signalen" in RASTER_INTRO
+    assert "drie signalen" in RASTER_INTRO_GATE
+    for copy in (RASTER_INTRO, RASTER_INTRO_GATE):
+        assert "om verandering vragen" in copy
+        assert "onder de rij" in copy
+        assert "—" not in copy
+    assert "vraag om verandering" in RASTER_GATE_NOTE
+    assert "volgt score en spreiding" not in RASTER_GATE_NOTE
+    assert "—" not in RASTER_GATE_NOTE
+
+
+def test_uitlegregel_noemt_de_marge_van_twee():
+    for scan in ("retention", "exit"):
+        assert "minstens 2 mensen" in RASTER_UITLEG[scan]

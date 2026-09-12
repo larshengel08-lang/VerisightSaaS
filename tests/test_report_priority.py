@@ -2,14 +2,28 @@
 import pytest
 
 from backend.report_priority import (
+    DIRECTION_TIE_MIN_MARGIN,
     PRIORITY_TIE_MARGIN,
     rank_factors,
 )
 
 # Handige defaults: geen spreiding-data, geen deepening, geen exit-redenen.
-def _rank(scan_type, avgs, resp=None, deep=None, reasons=None, labels=None):
+def _rank(scan_type, avgs, resp=None, deep=None, reasons=None, labels=None,
+          direction=None):
     return rank_factors(scan_type, avgs, resp or {}, deep or {},
-                        exit_reason_counts=reasons, labels=labels or {})
+                        exit_reason_counts=reasons, labels=labels or {},
+                        direction_agg=direction)
+
+
+def _dir_agg(answered, change, prefix):
+    """Richtingaggregaat: `change` mensen vroegen om verandering, de rest niets."""
+    counts = {}
+    if change:
+        counts[f"{prefix}_change"] = change
+    if answered - change:
+        counts[f"{prefix}_none"] = answered - change
+    return {"lowest_n": answered, "offered": answered, "answered": answered,
+            "skipped": 0, "counts": counts}
 
 
 def test_basic_order_is_score_ascending():
@@ -221,8 +235,14 @@ def _invariant(rows):
     for i, r in enumerate(rows):
         for later in rows[i + 1:]:
             if r["base"] > later["base"]:
-                # r staat hoger dan zijn score rechtvaardigt -> vlag verplicht.
-                assert r["flags"] > 0, f"onzichtbare flip: {r['key']} boven {later['key']}"
+                # r staat hoger dan zijn score rechtvaardigt -> een zichtbaar
+                # signaal is verplicht. Sinds ronde 2 telt daarvoor ook een
+                # voorsprong op de vraag om verandering die de marge haalt; die
+                # rijen hebben flags == 0 maar dragen wel een markeringsregel.
+                lead = ((r["direction_change"] or 0)
+                        - (later["direction_change"] or 0))
+                assert r["flags"] > 0 or lead >= DIRECTION_TIE_MIN_MARGIN,                     f"onzichtbare flip: {r['key']} boven {later['key']}"
+                assert r["tie_break_note"],                     f"flip zonder markeringsregel: {r['key']} boven {later['key']}"
     for i, r in enumerate(rows[1:], start=1):
         prev = rows[i - 1]
         same_flagset = (r["spread_flag"] == prev["spread_flag"]
@@ -247,3 +267,27 @@ def test_navolgbaarheid_invariant_over_scenarios():
     ]
     for avgs, resp, deep, reasons, st in scenarios:
         _invariant(_rank(st, avgs, resp=resp, deep=deep, reasons=reasons))
+
+
+def test_navolgbaarheid_invariant_met_richtingdata():
+    # Dezelfde invariant, nu met het signaal dat sinds ronde 2 meetelt. Zonder
+    # deze variant draait de invariant alleen op rapporten zonder richtingdata.
+    scenarios = [
+        # Duidelijke voorsprong: workload passeert growth op richting alleen.
+        ({"growth": 6.0, "workload": 6.1}, {},
+         {"growth": _dir_agg(11, 2, "gr"), "workload": _dir_agg(11, 9, "wl")}),
+        # Voorsprong onder de marge: niets mag flippen.
+        ({"growth": 6.0, "workload": 6.1}, {},
+         {"growth": _dir_agg(11, 4, "gr"), "workload": _dir_agg(11, 5, "wl")}),
+        # Rij onder de vloer in een grotere groep, plus een spreidingsvlag.
+        ({"growth": 6.0, "workload": 6.05, "culture": 6.1, "leadership": 6.9},
+         {"culture": _scores(12, 6)},
+         {"growth": _dir_agg(11, 2, "gr"), "workload": _dir_agg(2, 2, "wl"),
+          "culture": _dir_agg(11, 3, "cu"), "leadership": _dir_agg(11, 9, "ld")}),
+        # Buiten de marge: richting mag daar niets doen.
+        ({"growth": 5.2, "leadership": 6.4}, {},
+         {"growth": _dir_agg(11, 1, "gr"), "leadership": _dir_agg(11, 11, "ld")}),
+    ]
+    for avgs, resp, direction in scenarios:
+        rows = _rank("retention", avgs, resp=resp, direction=direction)
+        _invariant(rows)

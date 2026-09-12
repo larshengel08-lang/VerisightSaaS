@@ -1038,32 +1038,38 @@ def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: st
 # Alle copy hieronder is gepind met contract-tests: inkorten = rode test.
 
 RASTER_INTRO = (
-    "Dit overzicht weegt alle zes factoren tegen elkaar af op drie zichtbare "
-    "signalen: de gemiddelde score, de spreiding tussen respondenten en wat "
-    "respondenten in de verdieping als toelichting kozen. De volgorde is "
-    "daarmee navolgbaar: je ziet per factor wat meewoog. De bespreking "
-    "beslist; dit raster structureert.")
+    "Dit overzicht weegt alle zes factoren tegen elkaar af op vier signalen: de "
+    "gemiddelde score, de spreiding tussen respondenten, wat respondenten in de "
+    "verdieping als toelichting kozen, en hoeveel mensen bij een factor om "
+    "verandering vragen. De eerste drie staan in de tabel. De vraag om "
+    "verandering telt alleen mee bij vrijwel gelijke scores; gaf die de "
+    "doorslag, dan staat dat met de tellingen onder de rij. Zo is de volgorde "
+    "navolgbaar. De bespreking beslist; dit raster structureert.")
 
 RASTER_INTRO_GATE = (
-    "Dit overzicht weegt alle zes factoren tegen elkaar af op twee zichtbare "
-    "signalen: de gemiddelde score en de spreiding tussen respondenten. De "
-    "volgorde is daarmee navolgbaar: je ziet per factor wat meewoog. De "
-    "bespreking beslist; dit raster structureert.")
+    "Dit overzicht weegt alle zes factoren tegen elkaar af op drie signalen: de "
+    "gemiddelde score, de spreiding tussen respondenten, en hoeveel mensen bij "
+    "een factor om verandering vragen. De eerste twee staan in de tabel. De "
+    "vraag om verandering telt alleen mee bij vrijwel gelijke scores; gaf die "
+    "de doorslag, dan staat dat met de tellingen onder de rij. Zo is de "
+    "volgorde navolgbaar. De bespreking beslist; dit raster structureert.")
 
 RASTER_UITLEG: dict[str, str] = {
     "retention": (
         "Hoe deze volgorde tot stand komt: gesorteerd op score. Liggen scores "
         "binnen 0,3 van elkaar, dan telt eerst waar de meeste mensen om "
-        "verandering vragen; is dat ook gelijk, dan een grote spreiding en een "
-        "gedeelde toelichting uit de verdieping. Spreiding tonen we vanaf 10 "
+        "verandering vragen, en alleen als een factor er minstens 2 mensen "
+        "bovenuit steekt; anders geven een grote spreiding en een gedeelde "
+        "toelichting uit de verdieping de doorslag. Spreiding tonen we vanaf 10 "
         "responses; verdiepingsduiding vanaf 8 beantwoorders per factor; de "
         "vraag om verandering vanaf 3 beantwoorders per factor."),
     "exit": (
         "Hoe deze volgorde tot stand komt: gesorteerd op score, waarbij ook "
         "meeweegt hoe vaak een factor als vertrekreden is genoemd. Liggen "
         "scores binnen 0,3 van elkaar, dan telt eerst waar de meeste mensen om "
-        "verandering vragen; is dat ook gelijk, dan een grote spreiding en een "
-        "gedeelde toelichting uit de verdieping. Spreiding tonen we vanaf 10 "
+        "verandering vragen, en alleen als een factor er minstens 2 mensen "
+        "bovenuit steekt; anders geven een grote spreiding en een gedeelde "
+        "toelichting uit de verdieping de doorslag. Spreiding tonen we vanaf 10 "
         "responses; verdiepingsduiding vanaf 8 beantwoorders per factor; de "
         "vraag om verandering vanaf 3 beantwoorders per factor."),
 }
@@ -1075,7 +1081,8 @@ RASTER_LEGENDA = (
 
 RASTER_GATE_NOTE = (
     "In deze meting waren geen verdiepingsvragen actief; de volgorde volgt "
-    "score en spreiding.")
+    "score, spreiding en de vraag om verandering. Die laatste staat los van de "
+    "verdieping: elke respondent beantwoordt hem.")
 
 # Derde intro-staat (bug B3): zonder rasterrijen is er geen tabel, geen
 # volgorde en geen startpunt. RASTER_INTRO en RASTER_INTRO_GATE beloven beide
@@ -1110,8 +1117,12 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
     richtingblok "Wat er moet gebeuren" (spec par. 2 en par. 6).
 
     Vervangt _eerste_managementspoor voor exit en retention. De tabel toont
-    het afwegingswerk (zichtbaarheids-invariant: elke tiebreak-input staat in
-    een kolom); het navy slotblok draagt opener + invulregels.
+    het afwegingswerk: score, spreiding en verdieping staan elk in een kolom.
+    De vierde input, de vraag om verandering, heeft bewust geen kolom (spec
+    ronde 2 par. 1.3: zeven kolommen met een SVG erin passen niet op A4); die
+    is navolgbaar via de markeringsregel onder de rij, die beide tellingen
+    noemt zodra dit signaal de volgorde bepaalde. Het navy slotblok draagt
+    opener + invulregels.
 
     RASTER_UITLEG wordt PLAIN gerenderd (geen bold-prefix-splitsing): de
     contract-test controleert de letterlijke, volledige string als substring
@@ -1264,10 +1275,13 @@ def _raster_attribution(rows: list[dict], scan_type: str) -> str:
     if top["tie_break_kind"] == "direction":
         return ("De scores lagen vrijwel gelijk; het aantal mensen dat om "
                 "verandering vraagt gaf de doorslag.")
-    if top["base"] > min(r["base"] for r in rows):
-        # Alleen een vlag kan een rij boven een lagere base tillen (sort-key
-        # in rank_factors); benoem welk signaal de doorslag gaf, in dezelfde
-        # termen als RASTER_UITLEG.
+    if top["tie_break_kind"] in ("spread", "deepening") or             top["base"] > min(r["base"] for r in rows):
+        # Een vlag tilde deze rij boven een lagere base, of besliste bij een
+        # gelijke base wie bovenaan kwam (tie_break_kind). In beide gevallen is
+        # "de laagst scorende factor" geen volledige verklaring; benoem welk
+        # signaal de doorslag gaf, in dezelfde termen als RASTER_UITLEG.
+        # exit_reason hoort hier bewust niet bij: die krijgt zijn eigen regel
+        # hieronder.
         spread, deep = top["spread_flag"], top["deepening_state"] == 1
         if spread and deep:
             return ("De scores lagen vrijwel gelijk; de spreiding en de "
