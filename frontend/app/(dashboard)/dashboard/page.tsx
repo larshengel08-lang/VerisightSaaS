@@ -5,7 +5,7 @@ import { RunningStateCard } from '@/components/dashboard/running-state-card'
 import { WelcomeGate } from '@/components/dashboard/welcome-gate'
 import { resolveDashboardState } from '@/lib/dashboard/dashboard-state-resolver'
 import { normalizeReminderConfig, buildParticipantCommunicationPreview } from '@/lib/launch-controls'
-import { isDashboardReleaseReady } from '@/lib/response-activation'
+import { isReportReleaseReady } from '@/lib/response-activation'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import { createClient } from '@/lib/supabase/server'
 import type { CampaignStats } from '@/lib/types'
@@ -103,9 +103,10 @@ export default async function DashboardHomePage() {
     ? Math.round((campaign.total_completed / effectiveTotalInvited) * 100)
     : (campaign.completion_rate_pct ?? 0)
 
-  const reportReady = isDashboardReleaseReady(campaign.total_completed, {
+  // Rapportvrijgave (spec 2026-09-11 par. 4.1): 10 ingevulde vragenlijsten
+  // (30 bij culture_assessment). Of de campagne gesloten is, beslist de resolver.
+  const reportReady = isReportReleaseReady(campaign.total_completed, {
     scanType: campaign.scan_type,
-    isActive: false,
   })
 
   const state = resolveDashboardState({

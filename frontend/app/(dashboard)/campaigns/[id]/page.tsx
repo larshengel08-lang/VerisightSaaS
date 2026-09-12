@@ -7,7 +7,7 @@ import { PdfDownloadButton } from './pdf-download-button'
 import { SuiteAccessDenied } from '@/components/dashboard/suite-access-denied'
 import { resolveDashboardState } from '@/lib/dashboard/dashboard-state-resolver'
 import { normalizeReminderConfig, buildParticipantCommunicationPreview } from '@/lib/launch-controls'
-import { isDashboardReleaseReady } from '@/lib/response-activation'
+import { isReportReleaseReady } from '@/lib/response-activation'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import { createClient } from '@/lib/supabase/server'
 import { CAMPAIGN_SCAN_OPTIONS } from '@/lib/campaign-setup'
@@ -92,12 +92,11 @@ export default async function CampaignPage({ params }: Props) {
     ? Math.round((stats.total_completed / effectiveTotalInvited) * 100)
     : (stats.completion_rate_pct ?? 0)
 
-  // reportReady = "response threshold met". Pass isActive:false so the threshold is
-  // checked independent of the live-campaign gate — this lets State 3 "Voldoende respons —
-  // sluit de campagne" fire for culture_assessment too (its report releases only on close).
-  const reportReady = isDashboardReleaseReady(stats.total_completed, {
+  // Rapportvrijgave (spec 2026-09-11 par. 4.1): 10 ingevulde vragenlijsten
+  // (30 bij culture_assessment). Of de campagne gesloten is, beslist de resolver;
+  // daardoor vuurt "Voldoende respons voor een rapport" ook voor culture_assessment.
+  const reportReady = isReportReleaseReady(stats.total_completed, {
     scanType: stats.scan_type,
-    isActive: false,
   })
 
   const state = resolveDashboardState({

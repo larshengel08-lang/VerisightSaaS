@@ -14,9 +14,10 @@ describe('state-driven dashboard page', () => {
     expect(source).toContain("if (context.managerOnly) redirect('/action-center')")
   })
 
-  it('selects the most recent campaign and derives report readiness from existing data', () => {
+  it('selects the most recent campaign and derives report readiness from the report release rule', () => {
     expect(source).toContain("order('created_at', { ascending: false })")
-    expect(source).toContain('isDashboardReleaseReady')
+    expect(source).toContain('isReportReleaseReady')
+    expect(source).not.toContain('isDashboardReleaseReady')
   })
 
   it('drops the cockpit/triage/status-filter IA', () => {
