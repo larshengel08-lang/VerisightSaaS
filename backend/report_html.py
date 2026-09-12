@@ -29,6 +29,7 @@ from backend.report_distribution import (
     distribution_block,
 )
 from backend.products.shared.deepening import (
+    DEEPENING_MIN_N,
     DIRECTION_CAVEAT_MAX_N,
     DIRECTION_MIN_N,
     DIRECTION_SCAN_TYPES,
@@ -1687,7 +1688,8 @@ def raster_uitleg(scan_type: str, deepening_active: bool,
         regel = f"Liggen scores binnen {marge} van elkaar, dan {terugval}."
     drempels = [f"Spreiding tonen we vanaf {MIN_DISTRIBUTION_N} responses"]
     if deepening_active:
-        drempels.append("verdiepingsduiding vanaf 8 beantwoorders per factor")
+        drempels.append(f"verdiepingsduiding vanaf {DEEPENING_MIN_N} "
+                        "beantwoorders per factor")
     if direction_active:
         drempels.append(f"de vraag om verandering vanaf {DIRECTION_MIN_N} "
                         "beantwoorders per factor")
@@ -2001,6 +2003,15 @@ DIRECTION_DEGRADED_TAIL = (
 DIRECTION_HEAD_TOO_FEW = "Te weinig antwoorden voor een richting."
 DIRECTION_HEAD_NONE_NEEDED = "Hier hoeft volgens de meeste betrokkenen niets."
 DIRECTION_HEAD_DIVIDED = "Geen eenduidige richting."
+# "De grootste groep", nooit "de meeste": deze staat bestaat juist omdat er geen
+# meerderheid is (spec ronde 2 par. 4.2).
+DIRECTION_HEAD_PLURALITY = "De grootste groep kiest ‘{opt}’, zonder meerderheid."
+# {deel} is "even groot" of "ander" (spec ronde 2 par. 4.3). De spec schrijft
+# "een even groot deel", maar deze staat vuurt ook als de niets-groep er een
+# achter ligt of juist groter is; dan zou die kop worden tegengesproken door de
+# tellingen die er in de bronregel onder staan.
+DIRECTION_HEAD_SPLIT_NONE = ("Verdeeld: een deel zegt dat hier niets hoeft, een "
+                             "{deel} deel vraagt om ‘{opt}’.")
 
 
 def _direction_chain(agg: dict, n_total: int) -> str:
@@ -2035,13 +2046,17 @@ def _direction_chain(agg: dict, n_total: int) -> str:
 
 
 def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
-                         factor_key: str, n_total: int) -> str:
-    """Eén tabelcel (<td>) voor het startpunt of tweede punt, in de vier
-    staten van spec par. 6.1. Keyword-only na role: scan_type/factor_key en
-    label zijn anders aangrenzende gelijksoortige strings die zonder
-    typefout konden transponeren (zelfde reden als _bestuurlijke_read en
-    _prioriteringsraster al keyword-only zijn)."""
-    st = direction_state(agg, factor_key)
+                         factor_key: str, n_total: int,
+                         factor_score: float | None = None) -> str:
+    """Eén tabelcel (<td>) voor het startpunt of tweede punt, in de zes
+    staten van spec par. 6.1 + ronde 2 par. 4. Keyword-only na role:
+    scan_type/factor_key en label zijn anders aangrenzende gelijksoortige
+    strings die zonder typefout konden transponeren (zelfde reden als
+    _bestuurlijke_read en _prioriteringsraster al keyword-only zijn).
+
+    factor_score is optioneel: zonder score valt de split_none-staat weg en
+    blijft het gedrag dat van voor ronde 2."""
+    st = direction_state(agg, factor_key, factor_score)
     texts = direction_option_texts(scan_type, factor_key)
     n = st["n"]
     if role == "startpunt":
@@ -2060,6 +2075,27 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
         opt = texts.get(st["top_key"], st["top_key"])
         src = (f"{st['top_n']} van de {n} bij wie dit het laagst scoorde kozen "
                f"‘{opt}’. Bespreek of dit dan {which} moet zijn.")
+    elif st["state"] == "plurality":
+        head = DIRECTION_HEAD_PLURALITY.format(opt=texts[st["top_key"]])
+        # De tweede optie komt uit ranked zelf en niet uit second_n, zodat de
+        # zin de optie noemt die bij dat getal hoort. Is er geen tweede optie
+        # (mogelijk als answered hoger ligt dan de som van de keuzes), dan komt
+        # die clausule er niet; een tweede groep verzinnen mag niet.
+        rest = [(k, c) for k, c in st["ranked"] if k != st["top_key"]]
+        tweede = f"; {rest[0][1]} kozen ‘{texts[rest[0][0]]}’" if rest else ""
+        src = (f"{st['top_n']} van de {n} bij wie {_lc(label)} het laagst scoorde "
+               f"kozen die richting{tweede}. Wat er volgens de grootste groep moet "
+               f"gebeuren: {direction_imperative(scan_type, factor_key, st['top_key'])}")
+    elif st["state"] == "split_none":
+        # "even groot" alleen als de twee groepen echt gelijk zijn; zie de
+        # toelichting bij DIRECTION_HEAD_SPLIT_NONE.
+        deel = "even groot" if st["none_n"] == st["top_n"] else "ander"
+        head = DIRECTION_HEAD_SPLIT_NONE.format(deel=deel, opt=texts[st["top_key"]])
+        src = (f"{st['none_n']} kozen ‘{texts[st['none_key']]}’; {st['top_n']} kozen "
+               f"‘{texts[st['top_key']]}’. Op een onderwerp dat laag scoort "
+               f"({_score_str(factor_score)}) is dat verschil van inzicht zelf het "
+               f"gesprek. Wat die andere groep vraagt: "
+               f"{direction_imperative(scan_type, factor_key, st['top_key'])}")
     else:
         head = DIRECTION_HEAD_DIVIDED
         src = f"De {n} bij wie dit het laagst scoorde kozen verschillend."
@@ -2098,14 +2134,17 @@ def _wat_moet_gebeuren_block(ranked: list[dict], direction_agg: dict,
     is gelijk aan ORG_FACTOR_KEYS (gepind in test_direction_factor.py) —
     precies de sleutels die ranked (via rank_factors) gebruikt. Een
     ontbrekende sleutel is dus een codebug elders; die moet KeyError'en, niet
-    stil een lege-kaart-tekst tonen.
+    stil een lege-kaart-tekst tonen. Om dezelfde reden wordt ook r["score"]
+    direct geïndexeerd: die score bepaalt of de kaart de split_none-staat mag
+    tonen (ronde 2 par. 4.3), en een rasterrij zonder score bestaat niet.
     """
     if not direction_agg:
         return ""
     cards = "".join(
         _direction_card_cell(r["agenda_role"], label=r["label"],
                              agg=direction_agg[r["key"]], scan_type=scan_type,
-                             factor_key=r["key"], n_total=n_total)
+                             factor_key=r["key"], n_total=n_total,
+                             factor_score=r["score"])
         for r in ranked if r["agenda_role"] in ("startpunt", "tweede"))
     if not cards:
         # Geen rasterrijen, dus geen startpunt om een richting aan te hangen
@@ -2162,15 +2201,29 @@ def _direction_degraded_block(direction_agg: dict, n_total: int) -> str:
             f'max-width:70ch;margin-bottom:0;">{_h(line)}</p></div></div>')
 
 
-def _direction_p02_line(direction_agg: dict, factor_key: str | None, scan_type: str) -> str:
-    """Eén regel over het startpunt op de openingspagina (spec par. 6.2); leeg onder de vloer."""
+def _direction_p02_line(direction_agg: dict, factor_key: str | None, scan_type: str,
+                        factor_score: float | None = None) -> str:
+    """Eén regel over het startpunt op de openingspagina (spec par. 6.2, ronde 2
+    par. 4); leeg onder de vloer. factor_score is optioneel, net als bij
+    _direction_card_cell: zonder score bestaat de split_none-staat niet."""
     if not direction_agg or not factor_key or factor_key not in direction_agg:
         return ""
-    st = direction_state(direction_agg[factor_key], factor_key)
+    st = direction_state(direction_agg[factor_key], factor_key, factor_score)
     n = st["n"]
     if st["state"] == "clear":
         return (f"Wat er volgens {st['top_n']} van de {n} moet gebeuren: "
                 f"{direction_imperative(scan_type, factor_key, st['top_key'])}")
+    if st["state"] == "plurality":
+        return (f"Wat er volgens de grootste groep moet gebeuren ({st['top_n']} van "
+                f"de {n}, zonder meerderheid): "
+                f"{direction_imperative(scan_type, factor_key, st['top_key'])}")
+    if st["state"] == "split_none":
+        texts = direction_option_texts(scan_type, factor_key)
+        zeggen = "zegt" if st["none_n"] == 1 else "zeggen"
+        vragen = "vraagt" if st["top_n"] == 1 else "vragen"
+        return (f"Wat er moet gebeuren: je mensen zijn hierover verdeeld. "
+                f"{st['none_n']} {zeggen} dat hier niets hoeft, {st['top_n']} "
+                f"{vragen} om ‘{texts[st['top_key']]}’.")
     if st["state"] == "divided":
         return (f"Over wat hier moet gebeuren zijn de {n} die dit het laagst scoorden "
                 "verdeeld. Zie de gespreksagenda.")
@@ -3363,6 +3416,9 @@ def render_exit_report_html(data: dict) -> str:
     # dezelfde pagina.
     _shape = profile_shape(fa)
     _primary = _raster_rows[0]["key"] if _raster_rows else None
+    # Score van het startpunt: de richtingregel hieronder heeft 'm nodig om te
+    # zien of dit onderwerp kwetsbaar scoort (staat split_none, ronde 2 par. 4.3).
+    _primary_score = _raster_rows[0]["score"] if _raster_rows else None
     _tk, _chg, _chg_other, _delta = _p02_startpunt_gronden(_raster_rows)
     exec_line = _p02_opening(
         scan_type="exit", shape=_shape, labels=_raster_labels, primary_key=_primary,
@@ -3493,7 +3549,8 @@ def render_exit_report_html(data: dict) -> str:
         responsbasis_html=_responsbasis_band,
         opener_html=ch.opener("Bestuurlijke read"),
         usage_html=_gebruiksblok(data["scan_lbl"], degraded=bool(br_degraded_note)),
-        direction_line=_direction_p02_line(direction_agg, _primary, "exit"),
+        direction_line=_direction_p02_line(direction_agg, _primary, "exit",
+                                           factor_score=_primary_score),
         degraded_note=br_degraded_note,
         why_title=_p02_why_title(_shape),
         signal_cell_html=_signal_cell,
@@ -3858,6 +3915,9 @@ def render_retention_report_html(data: dict) -> str:
     # kregen; het staat nu met zijn band in de onderbouwingsrij eronder.
     _shape = profile_shape(fa)
     _primary = _raster_rows[0]["key"] if _raster_rows else None
+    # Score van het startpunt: de richtingregel hieronder heeft 'm nodig om te
+    # zien of dit onderwerp kwetsbaar scoort (staat split_none, ronde 2 par. 4.3).
+    _primary_score = _raster_rows[0]["score"] if _raster_rows else None
     _tk, _chg, _chg_other, _delta = _p02_startpunt_gronden(_raster_rows)
     exec_line = _p02_opening(
         scan_type=ST, shape=_shape, labels=_raster_labels, primary_key=_primary,
@@ -3911,7 +3971,8 @@ def render_retention_report_html(data: dict) -> str:
         responsbasis_html=_responsbasis_band,
         opener_html=ch.opener("Bestuurlijke read"),
         usage_html=_gebruiksblok(data["scan_lbl"], degraded=bool(br_degraded_note)),
-        direction_line=_direction_p02_line(direction_agg, _primary, ST),
+        direction_line=_direction_p02_line(direction_agg, _primary, ST,
+                                           factor_score=_primary_score),
         degraded_note=br_degraded_note,
         why_title=_p02_why_title(_shape),
         signal_cell_html=_signal_cell,

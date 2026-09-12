@@ -73,6 +73,18 @@ def test_enrichment_blocked_below_n8():
     assert agenda_enrichment(_agg({"wl_recovery": 5, "wl_volume": 2}), "retention", "workload") is None  # n=7
 
 
+def test_enrichment_drempel_komt_uit_de_benoemde_constante(monkeypatch):
+    """Dezelfde drempel als de verdiepingsstaat in report_priority en als de
+    uitlegregel onder de ranglijst; een kaal getal hier laat die drie stil uit
+    elkaar lopen."""
+    import backend.products.shared.deepening as dp
+    assert dp.DEEPENING_MIN_N == 8
+    agg = _agg({"wl_recovery": 5, "wl_volume": 2})  # n=7, alleen de vloer blokkeert
+    assert agenda_enrichment(agg, "retention", "workload") is None
+    monkeypatch.setattr(dp, "DEEPENING_MIN_N", 7)
+    assert agenda_enrichment(agg, "retention", "workload") is not None
+
+
 def test_enrichment_blocked_below_50pct():
     # n=9, top 4 -> 44%
     assert agenda_enrichment(_agg({"wl_recovery": 4, "wl_volume": 2, "wl_process": 3}), "retention", "workload") is None

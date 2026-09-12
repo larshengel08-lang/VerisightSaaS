@@ -217,6 +217,19 @@ def test_deepening_cell_states(agg, expected_state):
     assert rows[0]["deepening_state"] == expected_state
 
 
+def test_verdiepingsstaat_leest_de_drempel_uit_de_constante(monkeypatch):
+    """Staat 2 ('geen duidelijke meerderheid') vereist DEEPENING_MIN_N
+    beantwoorders; hetzelfde getal dat agenda_enrichment en de uitlegregel
+    onder de ranglijst gebruiken. Een kaal getal hier laat die drie stil uit
+    elkaar lopen."""
+    import backend.report_priority as rp
+    agg = _agg(answered=7, offered=9, triggered=9,
+               counts={"gr_visibility": 4, "gr_conversation": 3})
+    assert _rank("retention", {"growth": 6.0}, deep={"growth": agg})[0]["deepening_state"] == 3
+    monkeypatch.setattr(rp, "DEEPENING_MIN_N", 7)
+    assert _rank("retention", {"growth": 6.0}, deep={"growth": agg})[0]["deepening_state"] == 2
+
+
 def test_campaign_gate_off_gives_state_zero_and_no_flag():
     rows = _rank("retention", {"growth": 4.0}, deep={})
     assert rows[0]["deepening_state"] == 0

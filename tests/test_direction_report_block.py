@@ -241,6 +241,145 @@ def test_bestuurlijke_read_renders_direction_line_only_when_given():
     assert 'class="mq-direction"' in html and "6 van de 8" in html
 
 
+# ── Ronde 2 par. 4: plurality en split_none ──────────────────────────
+
+# Scenario 11: 27 van de 62 (44%), voorsprong 12 op de niets-groep.
+PLURALITY = _agg(62, {"grd_visibility": 27, "grd_none": 15, "grd_conversation": 10,
+                      "grd_criteria": 6, "grd_time": 4}, skipped=0)
+# Scenario 13: 14 tegenover 14 op een factor die 4,5 scoort.
+SPLIT_NONE = _agg(31, {"grd_none": 14, "grd_visibility": 14, "grd_conversation": 3},
+                  skipped=0)
+
+
+def _plurality_card():
+    return _direction_card_cell("startpunt", label="Groeiperspectief", agg=PLURALITY,
+                                scan_type="retention", factor_key="growth",
+                                n_total=180, factor_score=5.2)
+
+
+def _split_none_card():
+    return _direction_card_cell("startpunt", label="Groeiperspectief", agg=SPLIT_NONE,
+                                scan_type="retention", factor_key="growth",
+                                n_total=45, factor_score=4.5)
+
+
+def test_plurality_card_names_the_largest_group_without_claiming_a_majority():
+    html = _plurality_card()
+    assert 'class="dir-card dir-plurality"' in html
+    assert ("De grootste groep kiest ‘Beter zicht op welke mogelijkheden er voor "
+            "mij zijn’, zonder meerderheid.") in html
+    assert ("27 van de 62 bij wie groeiperspectief het laagst scoorde kozen die "
+            "richting; 15 kozen ‘Niets, dit zit hier goed’. Wat er volgens de "
+            "grootste groep moet gebeuren: Maak zichtbaar welke mogelijkheden er "
+            "voor medewerkers zijn.") in html
+    # Nooit een meerderheidsclaim, en de percentages blijven binnen de staffel.
+    assert "volgens de meeste" not in html
+    assert "44% (27)" in html
+    assert "Van de 180 respondenten hadden 62 dit als laagste; 62 beantwoordden de vraag." in html
+
+
+def test_plurality_card_without_a_runner_up_makes_no_second_claim():
+    """answered telt hoger dan de som van de counts (een beantwoorde rij zonder
+    keuze): dan is er maar een optie om te noemen en mag de zin er geen tweede
+    verzinnen."""
+    agg = _agg(8, {"grd_visibility": 3}, skipped=0)
+    html = _direction_card_cell("tweede", label="Groeiperspectief", agg=agg,
+                                scan_type="retention", factor_key="growth",
+                                n_total=20, factor_score=5.2)
+    assert 'class="dir-card dir-plurality"' in html
+    assert ("3 van de 8 bij wie groeiperspectief het laagst scoorde kozen die richting. "
+            "Wat er volgens de grootste groep moet gebeuren: Maak zichtbaar welke "
+            "mogelijkheden er voor medewerkers zijn.") in html
+    assert ";" not in html.split('class="dir-src"')[1].split("</div>")[0]
+
+
+def test_split_none_card_makes_the_split_the_subject():
+    html = _split_none_card()
+    assert 'class="dir-card dir-split_none"' in html
+    assert ("Verdeeld: een deel zegt dat hier niets hoeft, een even groot deel vraagt "
+            "om ‘Beter zicht op welke mogelijkheden er voor mij zijn’.") in html
+    assert ("14 kozen ‘Niets, dit zit hier goed’; 14 kozen ‘Beter zicht op welke "
+            "mogelijkheden er voor mij zijn’. Op een onderwerp dat laag scoort "
+            "(4.5/10) is dat verschil van inzicht zelf het gesprek. Wat die andere "
+            "groep vraagt: Maak zichtbaar welke mogelijkheden er voor medewerkers "
+            "zijn.") in html
+
+
+def test_split_none_head_never_claims_groups_the_numbers_contradict():
+    """De kop mag niet "even groot" zeggen als de tellingen eronder verschillen."""
+    een_achter = _direction_card_cell(
+        "startpunt", label="Groeiperspectief",
+        agg=_agg(30, {"grd_none": 13, "grd_visibility": 14, "grd_conversation": 3}, skipped=0),
+        scan_type="retention", factor_key="growth", n_total=45, factor_score=4.5)
+    assert 'class="dir-card dir-split_none"' in een_achter
+    assert ("Verdeeld: een deel zegt dat hier niets hoeft, een ander deel vraagt om "
+            "‘Beter zicht op welke mogelijkheden er voor mij zijn’.") in een_achter
+    assert "even groot" not in een_achter
+    niets_groter = _direction_card_cell(
+        "startpunt", label="Groeiperspectief",
+        agg=_agg(25, {"grd_none": 10, "grd_visibility": 4, "grd_conversation": 3}, skipped=0),
+        scan_type="retention", factor_key="growth", n_total=45, factor_score=4.5)
+    assert "een ander deel vraagt om" in niets_groter
+    assert "even groot" not in niets_groter
+
+
+def test_split_none_quotes_the_scan_specific_none_text():
+    """Loep Vertrek stelt de vraag in de verleden tijd; de niets-optie mag niet
+    hardgecodeerd in de tegenwoordige tijd staan."""
+    html = _direction_card_cell("startpunt", label="Werkdruk en balans",
+                                agg=_agg(20, {"wld_none": 9, "wld_peaks": 9,
+                                              "wld_scope": 2}, skipped=0),
+                                scan_type="exit", factor_key="workload",
+                                n_total=30, factor_score=4.2)
+    assert "9 kozen ‘Niets, dit zat hier goed’;" in html
+    assert "dit zit hier goed" not in html
+
+
+def test_new_states_stay_out_without_a_factor_score():
+    """Bestaande aanroepers geven geen score mee; dan blijft het gedrag van voor
+    ronde 2 staan en verschijnt er geen split_none-kop."""
+    html = _direction_card_cell("startpunt", label="Groeiperspectief", agg=SPLIT_NONE,
+                                scan_type="retention", factor_key="growth", n_total=45)
+    assert 'class="dir-card dir-divided"' in html
+    assert "een deel zegt dat hier niets hoeft" not in html
+
+
+def test_p02_line_for_the_new_states():
+    assert _direction_p02_line({"growth": PLURALITY}, "growth", "retention",
+                               factor_score=5.2) == (
+        "Wat er volgens de grootste groep moet gebeuren (27 van de 62, zonder "
+        "meerderheid): Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.")
+    assert _direction_p02_line({"growth": SPLIT_NONE}, "growth", "retention",
+                               factor_score=4.5) == (
+        "Wat er moet gebeuren: je mensen zijn hierover verdeeld. 14 zeggen dat hier "
+        "niets hoeft, 14 vragen om ‘Beter zicht op welke mogelijkheden er voor mij "
+        "zijn’.")
+    # Zonder score blijft de oude regel staan (geen stille gedragswijziging).
+    assert _direction_p02_line({"growth": SPLIT_NONE}, "growth", "retention") == (
+        "Over wat hier moet gebeuren zijn de 31 die dit het laagst scoorden verdeeld. "
+        "Zie de gespreksagenda.")
+
+
+def test_p02_split_none_line_is_singular_correct():
+    agg = _agg(4, {"grd_none": 1, "grd_visibility": 2, "grd_time": 1}, skipped=0)
+    assert _direction_p02_line({"growth": agg}, "growth", "retention",
+                               factor_score=4.5) == (
+        "Wat er moet gebeuren: je mensen zijn hierover verdeeld. 1 zegt dat hier "
+        "niets hoeft, 2 vragen om ‘Beter zicht op welke mogelijkheden er voor mij "
+        "zijn’.")
+
+
+def test_block_passes_the_factor_score_from_the_raster_row():
+    """De kaarten krijgen de score uit de rasterrij; zonder die koppeling kan
+    split_none nooit vuren in een echt rapport."""
+    ranked = [dict(r) for r in RANKED]
+    ranked[0]["score"] = 4.5
+    html = _wat_moet_gebeuren_block(ranked, {"growth": SPLIT_NONE, "workload": DIVIDED},
+                                    "retention", 45)
+    assert "dir-split_none" in html
+    assert "(4.5/10) is dat verschil van inzicht zelf het gesprek" in html
+
+
 def test_no_em_dashes_or_forbidden_words():
     blobs = [
         _direction_card_cell("startpunt", label="Groeiperspectief", agg=CLEAR,
@@ -252,6 +391,8 @@ def test_no_em_dashes_or_forbidden_words():
         _direction_card_cell("tweede", label="Werkdruk en herstelruimte", agg=FEW,
                              scan_type="retention", factor_key="workload", n_total=13),
         _wat_moet_gebeuren_block(RANKED, {"growth": CLEAR, "workload": DIVIDED}, "exit", 13),
+        _plurality_card(),
+        _split_none_card(),
     ]
     for b in blobs:
         assert "—" not in b and "&#x2014;" not in b

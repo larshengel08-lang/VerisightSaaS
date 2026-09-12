@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import Any
 
 from backend.products.shared.deepening import (
+    DEEPENING_MIN_N,
     DIRECTION_MIN_N,
     TOP_CHOICE_MIN_LEAD,
     agenda_enrichment,
@@ -222,15 +223,17 @@ def _deepening_state(agg: dict[str, Any] | None, scan_type: str,
 
     Staat 0 = geen deepening-data voor deze factor (campagne-gate uit of
     factor onbekend in de aggregatie).
-    Amendement planreview: staat 2 vereist answered >= 8; bij 5-7 kan 'geen
-    duidelijke meerderheid' feitelijk onwaar zijn (bv. 5 van 6 kozen hetzelfde).
+    Amendement planreview: staat 2 vereist answered >= DEEPENING_MIN_N; bij 5-7
+    kan 'geen duidelijke meerderheid' feitelijk onwaar zijn (bv. 5 van 6 kozen
+    hetzelfde). Dezelfde constante als agenda_enrichment hierboven en als de
+    uitlegregel onder de ranglijst, die het getal in klantcopy noemt.
     """
     if not agg:
         return 0, None
     enr = agenda_enrichment(agg, scan_type, fk)
     if enr is not None:
         return 1, (enr["option_key"], enr["count"], enr["answered"])
-    if agg.get("answered", 0) >= 8:
+    if agg.get("answered", 0) >= DEEPENING_MIN_N:
         return 2, None
     if agg.get("offered", 0) > 0:
         return 3, None

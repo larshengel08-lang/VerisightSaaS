@@ -117,6 +117,20 @@ def test_uitlegregel_noemt_alleen_de_drempels_die_meespeelden():
     assert "om verandering" not in alleen_verdieping
 
 
+def test_uitlegregel_leest_de_verdiepingsdrempel_uit_de_constante(monkeypatch):
+    """De regel noemt de drempel in klantcopy. Staat het getal er hardgecodeerd,
+    dan gaat de copy liegen zodra de gate verschuift; daarom moet hij uit
+    DEEPENING_MIN_N komen. Monkeypatch verschuift de constante en de zin hoort
+    mee te bewegen."""
+    import backend.report_html as rh
+    from backend.products.shared.deepening import DEEPENING_MIN_N
+    assert f"verdiepingsduiding vanaf {DEEPENING_MIN_N} beantwoorders per factor" in \
+        raster_uitleg("retention", True, True)
+    monkeypatch.setattr(rh, "DEEPENING_MIN_N", 9)
+    assert "verdiepingsduiding vanaf 9 beantwoorders per factor" in \
+        raster_uitleg("retention", True, True)
+
+
 def test_richting_gate_volgt_de_pagina_niet_het_aggregaat():
     # Bug B3-patroon: is het richtingblok onderdrukt, dan mag de intro de vraag
     # om verandering niet noemen, ook al zit er wel een aggregaat in de data.

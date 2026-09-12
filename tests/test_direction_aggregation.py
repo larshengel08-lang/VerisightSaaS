@@ -106,7 +106,10 @@ def test_clear_requires_half_and_margin_2():
     assert direction_state(_agg(wld_peaks=3, wld_scope=1), "workload")["state"] == "clear"    # 3-1
     assert direction_state(_agg(wld_peaks=5, wld_scope=3, wld_none=2), "workload")["state"] == "clear"   # 50%, marge 2
     assert direction_state(_agg(wld_peaks=5, wld_scope=4, wld_none=1), "workload")["state"] == "divided"  # marge 1
-    assert direction_state(_agg(wld_peaks=4, wld_scope=2, wld_none=2, wld_time=2), "workload")["state"] == "divided"  # 40%
+    # 40% met voorsprong 2: geen clear, maar sinds ronde 2 par. 4.2 ook geen kaal
+    # "divided" meer -- de grootste groep wordt wel genoemd, zonder meerderheid.
+    st = direction_state(_agg(wld_peaks=4, wld_scope=2, wld_none=2, wld_time=2), "workload")
+    assert st["state"] == "plurality" and st["top_n"] / st["n"] < 0.5
 
 
 def test_none_needed_requires_a_strict_majority():

@@ -281,6 +281,31 @@ Als op een factor met score < 5,0 (kwetsbaar) de niets-optie de grootste of gede
 
 Volgorde van evaluatie: too_few → none_needed (strikt > 50%) → clear → split_none (alleen bij score < 5,0) → plurality → divided.
 
+### 4.5 Afwijkingen bij de bouw (2026-09-12, taak 5)
+
+De staten zijn gebouwd zoals hierboven; de copy week op vier punten af, steeds
+omdat de voorgeschreven zin kon worden tegengesproken door de getallen die er
+zelf in staan.
+
+1. **Kop van `split_none`.** De spec schrijft "een even groot deel vraagt om
+   [X]", maar de staat vuurt ook als de niets-groep er een achter ligt (13 tegen
+   14) of juist groter is (10 tegen 4). De kop zegt nu "een even groot deel"
+   alleen bij een exacte gelijkstand en anders "een ander deel".
+2. **"dat verschil zelf het gesprek"** is "dat verschil van inzicht zelf het
+   gesprek" geworden: na "14 kozen dit; 14 kozen dat" leest "dat verschil" als
+   het verschil tussen de twee tellingen, en dat is nul.
+3. **"wat de andere helft vraagt"** is "Wat die andere groep vraagt" geworden.
+   Bij 14 / 14 / 3 is geen van beide groepen een helft.
+4. **De niets-optie wordt geciteerd uit de optieset**, niet hardgecodeerd:
+   Loep Vertrek stelt de vraag in de verleden tijd ("Niets, dit zat hier goed").
+   `direction_state` geeft daarvoor `none_key` mee terug.
+
+Verder: de regel op p.02 is grammaticaal anders opgebouwd dan in par. 4.2/4.3
+(enkelvoud/meervoud per telling, geen dubbele zinsafsluiting achter de
+opdrachtvorm); de inhoud is gelijk. De plurality-staat krijgt bewust geen eigen
+accentkleur in de CSS: die is voorbehouden aan `clear`, waar wel een meerderheid
+achter staat.
+
 ### 4.4 Tests
 Scenario 11 → plurality met 27/62; scenario 13 → split_none (14 niets, 14 verandering, score 4,5); scenario 15 (geen optie boven 35%) → divided ongewijzigd; scenario 04 → none_needed ongewijzigd. Staffel: onder 10 beantwoorders alleen tellingen.
 
