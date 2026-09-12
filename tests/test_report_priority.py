@@ -237,7 +237,7 @@ def _invariant(rows):
                 # r staat hoger dan zijn score rechtvaardigt -> een zichtbaar
                 # signaal is verplicht. Sinds ronde 2 telt daarvoor ook een
                 # voorsprong op de vraag om verandering die de marge haalt; die
-                # rijen hebben flags == 0 maar dragen wel een markeringsregel.
+                # rijen dragen geen vlag maar wel een markeringsregel.
                 lead = ((r["direction_change"] or 0)
                         - (later["direction_change"] or 0))
                 signalen = (r["spread_flag"] or r["deepening_state"] == 1

@@ -137,7 +137,9 @@ def test_every_row_has_the_new_fields():
         for field in ("direction_answered", "direction_change", "exit_reason_n",
                       "decided_by", "tie_break_note"):
             assert field in r
-        assert "_dir_winner" not in r
+        # Tijdelijke sorteertoestand hoort nooit op een rij te blijven staan die
+        # de renderlaag in handen krijgt.
+        assert not [k for k in r if k.startswith("_")], sorted(r)
 
 
 def test_notes_have_no_em_dashes():
@@ -339,3 +341,26 @@ def test_decided_by_records_the_reference_row_for_direction():
     rows = _rank(avgs, direction=direction, labels={"growth": "Groeiperspectief"})
     assert rows[0]["decided_by"] == {"kind": "direction", "other": "growth"}
     assert rows[1]["decided_by"] is None
+
+
+def test_direction_marking_skips_a_lower_row_without_a_count():
+    # De rij met de laagste base heeft geen telling (workload komt niet voor in
+    # direction_agg), de noembare rij ligt hoger. Voorwaarde 4 garandeert dat er
+    # een noembare rij is, maar niet dat die als eerste uit de keuze komt: de
+    # laagste base wint daar. Zonder de overslag in _decision zou de zin
+    # "tegen None van de 0" in een klant-PDF belanden.
+    avgs = {"workload": 6.0, "culture": 6.1, "growth": 6.2}
+    direction = {"growth": _dir(16, 8),
+                 "culture": _dir(11, 2, none_key="cu_none", change_key="cu_safety")}
+    labels = {"workload": "Werkdruk", "culture": "Cultuur",
+              "growth": "Groeiperspectief"}
+    rows = _rank(avgs, direction=direction, labels=labels)
+    assert rows[0]["key"] == "growth"
+    assert rows[0]["direction_change"] == 8
+    # De rij zonder telling (base 6.0) ligt lager dan de rij met telling (6.1)
+    # en zou dus als eerste gekozen worden.
+    assert rows[1]["key"] == "workload" and rows[1]["direction_change"] is None
+    assert rows[0]["decided_by"] == {"kind": "direction", "other": "culture"}
+    note = rows[0]["tie_break_note"]
+    assert "8 van de 16 tegen 2 van de 11" in note
+    assert "None" not in note and "van de 0" not in note

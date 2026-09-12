@@ -1262,7 +1262,9 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
     if direction_agg and n_total <= 0:
         raise ValueError("_prioriteringsraster: direction_agg zonder n_total")
 
-    from backend.report_distribution import MIN_DISTRIBUTION_N, distribution_svg
+    # MIN_DISTRIBUTION_N staat op moduleniveau (regel 25) en wordt ook door
+    # raster_uitleg gebruikt; hier alleen nog de renderhelper erbij halen.
+    from backend.report_distribution import distribution_svg
 
     # Onafhankelijk van de renderlus berekend (code-review Taak 5): een
     # nonlocal-neveneffect binnen _spread_cell zou hier onzichtbaar koppelen

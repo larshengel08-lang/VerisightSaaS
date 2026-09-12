@@ -181,6 +181,12 @@ def _decision(row: dict[str, Any], below_rows: list[dict[str, Any]],
         return _KEY_SIGNALS[best[0][0]], best[1]
     # Vertrekreden-weging: alleen tegenover een rij die er ook echt minder heeft,
     # anders zou de zin "vaker genoemd (1 keer tegen 1)" opleveren (bevinding K2).
+    # Die vergelijking kan sinds voorwaarde 4 in _direction_winner niet meer
+    # vuren: deze tak wordt alleen bereikt als de sorteersleutel niets besliste,
+    # en dan staat de base-volgorde nog ongeschonden, waardoor een lager
+    # scorende rij lager in base altijd minder vermeldingen heeft. Vangnet
+    # bewust laten staan: valt die invariant ooit weg, dan is dit het verschil
+    # tussen een kloppende zin en een onware.
     weighed = [o for o in below_rows if o["score"] < row["score"]
                and o["exit_reason_n"] < row["exit_reason_n"]]
     if weighed:
