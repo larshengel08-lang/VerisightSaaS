@@ -113,7 +113,6 @@ def test_deepening_flag_follows_enrichment_gates():
               counts={"gr_visibility": 7, "gr_conversation": 3})
     rows = _rank("retention", avgs, deep={"growth": ok})
     assert rows[0]["deepening_state"] == 1
-    assert rows[0]["flags"] == 1
     # 6 van 13 (46% < 50%): staffel haalt niet -> staat 2, geen vlag.
     # (Dit pad retourneert None uit agenda_enrichment vóór get_agenda_question
     # wordt aangeroepen, dus placeholder-keys zouden hier niet crashen -- maar
@@ -122,7 +121,6 @@ def test_deepening_flag_follows_enrichment_gates():
                counts={"gr_visibility": 6, "gr_conversation": 4})
     rows = _rank("retention", avgs, deep={"growth": nok})
     assert rows[0]["deepening_state"] == 2
-    assert rows[0]["flags"] == 0
 
 
 # ── Marge-mechanica ──────────────────────────────────────────────────────────
@@ -158,7 +156,8 @@ def test_flags_do_not_stack():
     rows = _rank("retention", {"growth": 5.0, "workload": 5.4},
                  deep=deep, resp=resp)
     assert rows[0]["key"] == "growth"
-    assert rows[1]["flags"] == 2
+    assert rows[1]["spread_flag"] is True
+    assert rows[1]["deepening_state"] == 1
 
 
 # ── Gelijkspel-label ─────────────────────────────────────────────────────────
@@ -221,7 +220,7 @@ def test_deepening_cell_states(agg, expected_state):
 def test_campaign_gate_off_gives_state_zero_and_no_flag():
     rows = _rank("retention", {"growth": 4.0}, deep={})
     assert rows[0]["deepening_state"] == 0
-    assert rows[0]["flags"] == 0
+    assert rows[0]["decided_by"] is None
 
 
 # ── Navolgbaarheids-invariant (spec par. 3, kernbelofte; par. 9 test 2) ──────
@@ -241,7 +240,9 @@ def _invariant(rows):
                 # rijen hebben flags == 0 maar dragen wel een markeringsregel.
                 lead = ((r["direction_change"] or 0)
                         - (later["direction_change"] or 0))
-                assert r["flags"] > 0 or lead >= TOP_CHOICE_MIN_LEAD, (
+                signalen = (r["spread_flag"] or r["deepening_state"] == 1
+                            or lead >= TOP_CHOICE_MIN_LEAD)
+                assert signalen, (
                     f"onzichtbare flip: {r['key']} boven {later['key']}")
                 assert r["tie_break_note"], (
                     f"flip zonder markeringsregel: {r['key']} boven {later['key']}")
@@ -286,6 +287,16 @@ def test_navolgbaarheid_invariant_met_richtingdata():
          {"culture": _scores(12, 6)},
          {"growth": _dir_agg(11, 2, "gr"), "workload": _dir_agg(2, 2, "wl"),
           "culture": _dir_agg(11, 3, "cu"), "leadership": _dir_agg(11, 9, "ld")}),
+        # Rij onder de vloer BINNEN de beslissende groep: de winnaar zou hem
+        # passeren zonder een telling te hebben om tegen af te zetten (K1).
+        ({"workload": 6.0, "growth": 6.2, "culture": 6.25}, {},
+         {"growth": _dir_agg(11, 9, "gr"), "culture": _dir_agg(11, 2, "cu"),
+          "workload": _dir_agg(2, 2, "wl")}),
+        # Zelfde vorm, nu met een spreidingsvlag op de rij onder de vloer.
+        ({"workload": 6.0, "growth": 6.2, "culture": 6.25},
+         {"workload": _scores(12, 6)},
+         {"growth": _dir_agg(11, 9, "gr"), "culture": _dir_agg(11, 2, "cu"),
+          "workload": _dir_agg(2, 2, "wl")}),
         # Buiten de marge: richting mag daar niets doen.
         ({"growth": 5.2, "leadership": 6.4}, {},
          {"growth": _dir_agg(11, 1, "gr"), "leadership": _dir_agg(11, 11, "ld")}),

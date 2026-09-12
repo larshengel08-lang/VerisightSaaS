@@ -39,6 +39,7 @@ from backend.products.shared.deepening import (
 from backend.products.shared.registry import get_product_module
 from backend.report_priority import (
     CELL_CAP_REACHED, CELL_NO_MAJORITY, CELL_NOT_TRIGGERED, CELL_TOO_FEW,
+    PRIORITY_TIE_MARGIN,
     rank_factors,
 )
 from backend.scan_definitions import get_scan_definition
@@ -1095,20 +1096,24 @@ def raster_intro(scan_type: str, deepening_active: bool,
 def raster_uitleg(scan_type: str, deepening_active: bool,
                   direction_active: bool) -> str:
     """Sorteerregel onder de tabel. De regel zelf blijft een zin; daarna volgen
-    alleen de drempels van de signalen die in deze meting meespeelden."""
+    alleen de drempels van de signalen die in deze meting meespeelden. De
+    getallen komen uit de constanten die ze ook echt sturen, zodat de copy niet
+    kan gaan liegen als een drempel verandert."""
+    marge = str(PRIORITY_TIE_MARGIN).replace(".", ",")
     reden = (", waarbij ook meeweegt hoe vaak een factor als vertrekreden is genoemd"
              if scan_type == "exit" else "")
-    terugval = ("geven een grote spreiding en een gedeelde toelichting uit de "
+    # "of", niet "en": de sleutel past ze na elkaar toe, allebei tegelijk hoeft niet.
+    terugval = ("geeft een grote spreiding of een gedeelde toelichting uit de "
                 "verdieping de doorslag" if deepening_active
                 else "geeft een grote spreiding de doorslag")
     if direction_active:
-        regel = ("Liggen scores binnen 0,3 van elkaar, dan telt eerst waar de meeste "
-                 f"mensen om verandering vragen, en alleen als een factor er minstens "
-                 f"{TOP_CHOICE_MIN_LEAD} mensen bovenuit steekt; anders "
+        regel = (f"Liggen scores binnen {marge} van elkaar, dan telt eerst waar de "
+                 "meeste mensen om verandering vragen, en alleen als een factor er "
+                 f"minstens {TOP_CHOICE_MIN_LEAD} mensen bovenuit steekt; anders "
                  f"{terugval}.")
     else:
-        regel = f"Liggen scores binnen 0,3 van elkaar, dan {terugval}."
-    drempels = ["Spreiding tonen we vanaf 10 responses"]
+        regel = f"Liggen scores binnen {marge} van elkaar, dan {terugval}."
+    drempels = [f"Spreiding tonen we vanaf {MIN_DISTRIBUTION_N} responses"]
     if deepening_active:
         drempels.append("verdiepingsduiding vanaf 8 beantwoorders per factor")
     if direction_active:
@@ -1168,11 +1173,11 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
 
     Vervangt _eerste_managementspoor voor exit en retention. De tabel toont
     het afwegingswerk: score, spreiding en verdieping staan elk in een kolom.
-    De vierde input, de vraag om verandering, heeft bewust geen kolom (spec
-    ronde 2 par. 1.3: zeven kolommen met een SVG erin passen niet op A4); die
-    is navolgbaar via de markeringsregel onder de rij, die beide tellingen
-    noemt zodra dit signaal de volgorde bepaalde. Het navy slotblok draagt
-    opener + invulregels.
+    Het signaal dat als enige geen kolom heeft, de vraag om verandering, is
+    navolgbaar via de markeringsregel onder de rij, die beide tellingen noemt
+    zodra dit signaal de volgorde bepaalde (spec ronde 2 par. 1.3: een kolom
+    erbij zou bij Loep Vertrek zeven kolommen met een SVG geven, en dat past
+    niet op A4). Het navy slotblok draagt opener + invulregels.
 
     De uitlegregel wordt PLAIN gerenderd (geen bold-prefix-splitsing): de
     contract-test controleert de letterlijke, volledige string uit
@@ -1236,13 +1241,18 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
     n_cols = 4 + int(deepening_active) + int(is_exit)
     body = ""
     for row in ranked:
-        top_cls = ' class="r-top"' if row["agenda_role"] else ""
+        # Elke factorrij zit met zijn eventuele markeringsregel in een eigen
+        # tbody: die twee mogen niet door een pagina-einde gescheiden worden,
+        # anders landt een zin zonder onderwerp boven aan de volgende pagina.
+        note = row["tie_break_note"]
+        classes = (["r-top"] if row["agenda_role"] else []) + (["r-has-note"] if note else [])
+        cls = f' class="{" ".join(classes)}"' if classes else ""
         fl_html = (f'<span class="r-fl">{_h(row["label"])}</span>'
                    if row["agenda_role"] else _h(row["label"]))
         deep_td = (f'<td style="font-size:9.5px;">{_raster_deepening_cell(row, scan_type)}</td>'
                    if deepening_active else "")
         reason_td = (f'<td class="r-mono">{row["exit_reason_n"]}</td>' if is_exit else "")
-        body += (f'<tr{top_cls}><td>{fl_html}</td>'
+        body += (f'<tbody class="r-grp"><tr{cls}><td>{fl_html}</td>'
                  f'<td style="color:{_factor_color(row["score"])};">{_score_str(row["score"])}</td>'
                  f'{reason_td}'
                  f'<td>{_spread_cell(row)}</td>'
@@ -1251,9 +1261,10 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
         # Markeringsregel over de volle breedte (spec ronde 2 par. 1.3): de
         # agendakolom is te smal voor een hele zin, en de regel hoort visueel
         # bij de rij erboven.
-        if row["tie_break_note"]:
+        if note:
             body += (f'<tr class="r-note"><td colspan="{n_cols}">'
-                     f'{_h(row["tie_break_note"])}</td></tr>')
+                     f'{_h(note)}</td></tr>')
+        body += "</tbody>"
 
     # Het richtingblok wordt hier al gebouwd, voor de intro en de uitlegregel:
     # die twee moeten weten of de richtingvraag in deze meting bestond, en de
@@ -1265,7 +1276,11 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
     dir_block = (direction_block_html if direction_block_html is not None
                  else _wat_moet_gebeuren_block(ranked, direction_agg or {},
                                                scan_type, n_total))
-    direction_active = bool(dir_block)
+    # Het degraded richtingblok is ook truthy: het staat er juist om te melden
+    # dat geen enkele factor de vloer haalde. Dan heeft de vraag om verandering
+    # niets kunnen wegen en mag de intro hem niet als signaal opvoeren.
+    direction_active = bool(dir_block) and any(
+        row["direction_change"] is not None for row in ranked)
 
     # Zonder rasterrijen is er geen tabel om te tonen (bug B3): de kale
     # tabelkop, de uitlegregel over de sorteervolgorde en de gate-notitie
@@ -1286,10 +1301,10 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
                 f'<div class="step-fill"></div>'
                 f'<div class="step-fill-hint">{_h(hint)}</div>')
 
-    tabel = f"""<table class="raster-tbl"><tr>
+    tabel = f"""<table class="raster-tbl"><tbody><tr>
     <th style="width:{w_factor}">Factor</th><th style="width:12%">Score</th>
     {reason_th}<th style="width:{w_spread}">Spreiding</th>{deep_th}<th style="width:14%">Agenda</th>
-  </tr>{body}</table>
+  </tr></tbody>{body}</table>
   {legenda}
   {gate}
   <div class="r-uitleg">{raster_uitleg(scan_type, deepening_active, direction_active)}</div>""" if ranked else ""
@@ -1332,17 +1347,15 @@ def _raster_attribution(rows: list[dict], scan_type: str) -> str:
     if not rows:
         return ""
     top = rows[0]
-    if top["tie_break_kind"] == "direction":
+    kind = top["decided_by"]["kind"] if top["decided_by"] else None
+    if kind == "direction":
         return ("De scores lagen vrijwel gelijk; het aantal mensen dat om "
                 "verandering vraagt gaf de doorslag.")
-    if (top["tie_break_kind"] in ("spread", "deepening")
-            or top["base"] > min(r["base"] for r in rows)):
+    if kind in ("spread", "deepening") or top["base"] > min(r["base"] for r in rows):
         # Een vlag tilde deze rij boven een lagere base, of besliste bij een
-        # gelijke base wie bovenaan kwam (tie_break_kind). In beide gevallen is
-        # "de laagst scorende factor" geen volledige verklaring; benoem welk
-        # signaal de doorslag gaf, in dezelfde termen als RASTER_UITLEG.
-        # exit_reason hoort hier bewust niet bij: die krijgt zijn eigen regel
-        # hieronder.
+        # gelijke base wie bovenaan kwam. In beide gevallen is "de laagst
+        # scorende factor" geen volledige verklaring; benoem welk signaal de
+        # doorslag gaf, in dezelfde termen als raster_uitleg().
         spread, deep = top["spread_flag"], top["deepening_state"] == 1
         if spread and deep:
             return ("De scores lagen vrijwel gelijk; de spreiding en de "
@@ -1350,8 +1363,12 @@ def _raster_attribution(rows: list[dict], scan_type: str) -> str:
         if spread:
             return ("De scores lagen vrijwel gelijk; de spreiding tussen "
                     "respondenten gaf de doorslag.")
-        return ("De scores lagen vrijwel gelijk; de gedeelde toelichting "
-                "uit de verdieping gaf de doorslag.")
+        if deep:
+            return ("De scores lagen vrijwel gelijk; de gedeelde toelichting "
+                    "uit de verdieping gaf de doorslag.")
+        # Geen van beide vlaggen: dan is er niets te benoemen en zou de
+        # verdiepingszin een signaal claimen dat deze meting niet had (K1).
+        # Val door naar de generieke regel hieronder.
     if scan_type == "exit" and top["score"] > min(r["score"] for r in rows):
         # De vertrekreden-weging (EXIT_REASON_WEIGHT) zette dit thema bovenaan
         # terwijl een andere factor de laagste kale score heeft.

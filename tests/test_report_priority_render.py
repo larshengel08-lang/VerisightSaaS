@@ -20,16 +20,18 @@ from backend.report_priority import (
 def _row(key, label, score, role=None, state=5, top=None, tie=None,
          spread_n=13, spread_below=2, spread_flag=False, exit_reason_n=0,
          direction_answered=0, direction_change=None,
-         tie_kind=None, tie_note=None):
+         tie_kind=None, tie_other=None, tie_note=None):
     return {"key": key, "label": label, "score": score, "base": score,
             "spread_n": spread_n, "spread_below": spread_below,
             "spread_flag": spread_flag, "deepening_state": state,
-            "deepening_top": top, "flags": int(spread_flag) + int(state == 1),
+            "deepening_top": top,
             "agenda_role": role, "near_tie_with": tie,
             "exit_reason_n": exit_reason_n,
             "direction_answered": direction_answered,
             "direction_change": direction_change,
-            "tie_break_kind": tie_kind, "tie_break_note": tie_note}
+            "decided_by": ({"kind": tie_kind, "other": tie_other}
+                           if tie_kind else None),
+            "tie_break_note": tie_note}
 
 
 RANKED = [
@@ -55,8 +57,18 @@ DIRECTION = {
 }
 
 
+def _with_direction(rows):
+    """Rijen zoals rank_factors ze oplevert zodra er richtingdata is: de twee
+    agendarijen dragen dan een geldige telling. Zonder die velden zou de intro
+    terecht zeggen dat de vraag om verandering niet meespeelde."""
+    return [dict(r, direction_answered=8, direction_change=6)
+            if r["key"] in DIRECTION else r for r in rows]
+
+
 def _render(scan_type="retention", ranked=RANKED, resp=RESP, active=True,
             direction=None, **extra):
+    if direction:
+        ranked = _with_direction(ranked)
     return _prioriteringsraster(
         ranked=ranked, scan_type=scan_type, factor_resp_scores=resp,
         deepening_active=active, mgmt_q="Testvraag?",
@@ -65,7 +77,20 @@ def _render(scan_type="retention", ranked=RANKED, resp=RESP, active=True,
         direction_agg=direction, n_total=13 if direction else 0, **extra)
 
 
-def test_uitlegregel_letterlijk_gepind_in_alle_vier_de_combinaties():
+def test_uitlegregel_letterlijk_gepind():
+    # Een volledige variant woordelijk, zodat een wijziging in de samenstelling
+    # niet ongemerkt door de vergelijking-met-zichzelf hieronder glipt.
+    assert raster_uitleg("retention", True, True) == (
+        "Hoe deze volgorde tot stand komt: gesorteerd op score. Liggen scores "
+        "binnen 0,3 van elkaar, dan telt eerst waar de meeste mensen om "
+        "verandering vragen, en alleen als een factor er minstens 2 mensen "
+        "bovenuit steekt; anders geeft een grote spreiding of een gedeelde "
+        "toelichting uit de verdieping de doorslag. Spreiding tonen we vanaf 10 "
+        "responses; verdiepingsduiding vanaf 8 beantwoorders per factor; de "
+        "vraag om verandering vanaf 3 beantwoorders per factor.")
+
+
+def test_intro_en_uitleg_staan_gerenderd_in_alle_vier_de_combinaties():
     # Intro en uitlegregel worden samengesteld uit de signalen die deze meting
     # had; beide scan-types maal verdieping aan/uit maal richting aan/uit.
     for scan in ("retention", "exit"):
@@ -268,3 +293,39 @@ def test_exit_intro_noemt_de_vertrekredenkolom():
     assert intro in _render("exit", direction=DIRECTION)
     # Loep Behoud kent geen vertrekredenen en noemt ze dus ook niet.
     assert "vertrekreden" not in raster_intro("retention", True, True)
+
+
+def test_gate_notitie_volgt_de_richtinggate():
+    # Bedrading: zonder verdiepingsvragen maar mét richtingdata hoort de
+    # gate-notitie de vraag om verandering te noemen. Een hardgecodeerde
+    # raster_gate_note(False) zou hier doorheen vallen.
+    html = _render(active=False, direction=DIRECTION)
+    assert raster_gate_note(True) in html
+    assert raster_gate_note(False) not in html
+
+
+def test_degraded_richtingblok_telt_niet_als_signaal():
+    # Het degraded blok is truthy maar meldt juist dat geen factor de vloer
+    # haalde; dan mag de intro de vraag om verandering niet opvoeren.
+    html = _prioriteringsraster(
+        ranked=RANKED, scan_type="retention", factor_resp_scores=RESP,
+        deepening_active=True, mgmt_q="Testvraag?", review_when="R.",
+        opener_html="<h2>Gespreksagenda</h2>",
+        direction_agg=DIRECTION, n_total=13)
+    assert raster_intro("retention", True, False) in html
+
+
+def test_rij_en_markeringsregel_blijven_bij_elkaar():
+    ranked = [
+        _row("workload", "Werkdruk en herstelruimte", 6.1, role="startpunt",
+             tie_note="Staat hoger dan Groeiperspectief omdat hier meer mensen om "
+                      "verandering vragen (9 van de 11 tegen 3 van de 11).",
+             tie_kind="direction", tie_other="growth"),
+        _row("growth", "Groeiperspectief", 6.0, role="tweede"),
+    ]
+    html = _render(ranked=ranked, resp={r["key"]: [6.0] * 13 for r in ranked})
+    # Rij en regel in hetzelfde tbody, dat niet over een pagina-einde mag breken.
+    grp = html.split('<tbody class="r-grp">')[1]
+    assert grp.index('class="r-note"') < grp.index("</tbody>")
+    # En de haarlijn tussen de rij en zijn eigen uitleg is weg.
+    assert "r-top r-has-note" in html

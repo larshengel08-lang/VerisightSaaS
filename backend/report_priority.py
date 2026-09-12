@@ -37,7 +37,7 @@ CELL_CAP_REACHED = "niet aangeboden: maximum aantal verdiepingen per respondent 
 CELL_NOT_TRIGGERED = "geen verdieping aangeboden: score boven de drempel"
 
 
-def _change_demand(agg: dict[str, Any] | None) -> tuple[int, int | None]:
+def _direction_counts(agg: dict[str, Any] | None) -> tuple[int, int | None]:
     """(beantwoorders, aantal dat om verandering vroeg) voor een factor.
 
     Het tweede getal is None zodra er minder dan DIRECTION_MIN_N beantwoorders
@@ -49,7 +49,7 @@ def _change_demand(agg: dict[str, Any] | None) -> tuple[int, int | None]:
     if not agg:
         return 0, None
     answered = agg["answered"]
-    counts: dict[str, int] = agg.get("counts") or {}
+    counts: dict[str, int] = agg["counts"]
     if answered < DIRECTION_MIN_N:
         return answered, None
     none_key = next((k for k in sorted(counts) if k.endswith("_none")), None)
@@ -79,10 +79,28 @@ def _change_share(row: dict[str, Any]) -> float:
     return row["direction_change"] / row["direction_answered"]
 
 
+# De signalen in de sorteersleutel, op de plek waar ze in die sleutel staan.
+# _decision leest de index van het eerste verschil terug en weet daarmee precies
+# welk signaal de volgorde bepaalde; dat hoeft dus niet gereconstrueerd te worden.
+_KEY_SIGNALS = ("direction", "spread", "deepening")
+
+
+def _sort_key(row: dict[str, Any],
+              winner: dict[str, Any] | None) -> tuple[Any, ...]:
+    """De volgorde binnen een gelijkspel-groep: vraag om verandering, spreiding,
+    verdieping, base, label. Een sleutel en geen paarsgewijze vergelijking, dus
+    altijd een totale orde: transitief en onafhankelijk van de invoervolgorde."""
+    return (0 if row is winner else 1,
+            -int(row["spread_flag"]),
+            -int(row["deepening_state"] == 1),
+            row["base"],
+            row["label"])
+
+
 def _direction_winner(group: list[dict[str, Any]]) -> dict[str, Any] | None:
     """De ene rij die de gelijkspel-groep wint op de vraag om verandering.
 
-    Drie voorwaarden, alle drie bedoeld om te voorkomen dat de markeringsregel
+    Vier voorwaarden, alle vier bedoeld om te voorkomen dat de markeringsregel
     wordt tegengesproken door de getallen die er zelf in staan:
 
     1. Er zijn minstens twee rijen met een geldig aantal (>= DIRECTION_MIN_N
@@ -93,12 +111,12 @@ def _direction_winner(group: list[dict[str, Any]]) -> dict[str, Any] | None:
     3. Het aandeel van de winnaar is niet lager dan dat van welke andere geldige
        rij ook. Spec par. 1.2 maakt het aantal leidend, maar "27 van de 35 tegen
        17 van de 19" leest als onwaar zolang 77 procent onder 89 procent ligt.
-
-    Rijen zonder geldig aantal doen niet mee, in geen van beide richtingen: ze
-    schakelen het signaal niet uit (dat deed de oude groepsbrede gate wel) en ze
-    kunnen ook niet gepasseerd worden op dit signaal. Er is hoogstens een
-    winnaar, dus de sorteersleutel blijft een totale orde: transitief en
-    onafhankelijk van de invoervolgorde.
+    4. Staat er een rij met een lagere of gelijke base in de groep, dan heeft
+       minstens een daarvan zelf een geldig aantal. Anders verschuift de
+       volgorde wel, maar is er geen rij te noemen waartegen het verschil
+       zichtbaar is (bevinding K1). Passeert de winnaar niemand, dan speelt dat
+       niet en houdt het signaal hem gewoon boven een spreidings- of
+       verdiepingsvlag, zoals spec par. 1.2 voorschrijft.
     """
     valid = [r for r in group if r["direction_change"] is not None]
     if len(valid) < 2:
@@ -108,68 +126,80 @@ def _direction_winner(group: list[dict[str, Any]]) -> dict[str, Any] | None:
         return None
     if _change_share(top) < max(_change_share(o) for o in rest):
         return None
+    # De rijen waartegen de markering straks geschreven wordt: alles in de groep
+    # met een lagere of gelijke base. Is er geen enkele met een telling, dan
+    # verschuift de volgorde wel maar valt er niets te noemen, en dat mag niet.
+    # Zijn er er helemaal geen, dan passeert de winnaar niets en is er ook niets
+    # uit te leggen; het signaal mag hem dan gewoon boven een vlag houden.
+    lower = [o for o in group if o is not top and o["base"] <= top["base"]]
+    if lower and not any(o["direction_change"] is not None for o in lower):
+        return None
     return top
 
 
-def _reference_row(candidates: list[dict[str, Any]]) -> dict[str, Any]:
-    """De rij waarnaar een markeringsregel verwijst: de laagste base eerst, bij
-    gelijke base alfabetisch. De aanroeper filtert vooraf op rijen die het
-    genoemde verschil ook echt tonen."""
-    return min(candidates, key=lambda o: (o["base"], o["label"]))
+def _first_diff(a: tuple[Any, ...], b: tuple[Any, ...]) -> int | None:
+    return next((i for i, (x, y) in enumerate(zip(a, b)) if x != y), None)
 
 
-def _tie_break_marking(row: dict[str, Any],
-                       below_rows: list[dict[str, Any]]) -> tuple[str | None, str | None]:
-    """Welk signaal tilde deze rij boven een lager of gelijk scorende rij, plus
-    de zin erbij (spec ronde 2 par. 1.3).
+def _decision(row: dict[str, Any], below_rows: list[dict[str, Any]],
+              keys: dict[str, tuple[Any, ...]]) -> tuple[str, dict[str, Any]] | None:
+    """Welk signaal zette deze rij boven een rij met een lagere of gelijke stand,
+    en tegenover welke rij; None als de rij gewoon op zijn plek staat.
 
-    Twee soorten: een tie-break binnen de gelijkspel-groep (richting, spreiding,
-    verdieping) en bij Loep Vertrek de vertrekreden-weging, die al in base zit
-    en dus buiten de groepslogica om werkt. Geen van beide = (None, None); de
-    rij staat dan gewoon op zijn score en heeft geen uitleg nodig.
+    De sorteersleutel is de bron: de index van het eerste verschil zegt welk
+    signaal besliste. Daardoor kan een flip niet zonder verklaring blijven, en
+    kan de verklaring ook niet afwijken van wat de sorteerder deed. Van de
+    kandidaten wint het vroegste signaal, en daarbinnen de laagste base.
 
-    De referentierij wordt per signaal gekozen uit de rijen die het verschil ook
-    daadwerkelijk tonen: een regel over de vraag om verandering verwijst nooit
-    naar een rij waarvan het aantal onder de vloer ligt, want dan valt er niets
-    te vergelijken.
+    Uitzondering: de vertrekreden-weging van Loep Vertrek zit al in base en dus
+    niet in de sleutel. Die komt alleen aan bod als de sleutel niets besliste.
     """
     passed = [o for o in below_rows if o["base"] <= row["base"]]
-    if passed:
-        if row["_dir_winner"]:
-            comparable = [o for o in passed if o["direction_change"] is not None
-                          and o["direction_change"] < row["direction_change"]]
-            if comparable:
-                other = _reference_row(comparable)
-                return "direction", (
-                    f"Staat hoger dan {other['label']} omdat hier meer mensen om "
-                    f"verandering vragen ({row['direction_change']} van de "
-                    f"{row['direction_answered']} tegen {other['direction_change']} "
-                    f"van de {other['direction_answered']}).")
-            # Geen else-tak: een winnaar heeft per definitie een tweede rij met
-            # een geldig aantal in zijn groep (_direction_winner), en staat die
-            # rij lager in base, dan zit ze in `comparable`. Staat ze hoger, dan
-            # is er niets gepasseerd om uit te leggen en valt de markering door
-            # naar spreiding en verdieping.
-        if row["spread_flag"]:
-            comparable = [o for o in passed if not o["spread_flag"]]
-            if comparable:
-                return "spread", (
-                    f"Staat hoger dan {_reference_row(comparable)['label']} omdat de "
-                    f"antwoorden hier verder uiteenlopen ({row['spread_below']} van de "
-                    f"{row['spread_n']} onder de 5).")
-        if row["deepening_state"] == 1:
-            comparable = [o for o in passed if o["deepening_state"] != 1]
-            if comparable:
-                return "deepening", (
-                    f"Staat hoger dan {_reference_row(comparable)['label']} omdat hier "
-                    f"een gedeelde toelichting uit de verdieping ligt.")
-    passed_score = [o for o in below_rows if o["score"] < row["score"]]
-    if passed_score and row["exit_reason_n"]:
-        other = min(passed_score, key=lambda o: (o["score"], o["label"]))
-        return "exit_reason", (
-            f"Staat hoger dan {other['label']} omdat dit vaker als vertrekreden is "
-            f"genoemd ({row['exit_reason_n']} keer tegen {other['exit_reason_n']}).")
-    return None, None
+    best: tuple[tuple[int, float, str], dict[str, Any]] | None = None
+    for other in passed:
+        idx = _first_diff(keys[row["key"]], keys[other["key"]])
+        if idx is None or idx >= len(_KEY_SIGNALS):
+            # Gelijk tot en met de verdiepingsvlag: base of het label besliste,
+            # en dat is geen flip die uitleg nodig heeft.
+            continue
+        if idx == 0 and other["direction_change"] is None:
+            # Geen telling om te noemen. _direction_winner garandeert dat er een
+            # gepasseerde rij is die er wel een heeft.
+            continue
+        rank = (idx, other["base"], other["label"])
+        if best is None or rank < best[0]:
+            best = (rank, other)
+    if best is not None:
+        return _KEY_SIGNALS[best[0][0]], best[1]
+    # Vertrekreden-weging: alleen tegenover een rij die er ook echt minder heeft,
+    # anders zou de zin "vaker genoemd (1 keer tegen 1)" opleveren (bevinding K2).
+    weighed = [o for o in below_rows if o["score"] < row["score"]
+               and o["exit_reason_n"] < row["exit_reason_n"]]
+    if weighed:
+        return "exit_reason", min(weighed, key=lambda o: (o["score"], o["label"]))
+    return None
+
+
+def _tie_break_note(row: dict[str, Any], other: dict[str, Any], kind: str) -> str:
+    """De zin onder de rij. Formuleert alleen; de beslissing komt uit _decision."""
+    lbl = other["label"]
+    if kind == "direction":
+        return (f"Staat hoger dan {lbl} omdat hier meer mensen om verandering "
+                f"vragen ({row['direction_change']} van de "
+                f"{row['direction_answered']} tegen {other['direction_change']} "
+                f"van de {other['direction_answered']}).")
+    if kind == "spread":
+        return (f"Staat hoger dan {lbl} omdat de antwoorden hier verder "
+                f"uiteenlopen ({row['spread_below']} van de {row['spread_n']} "
+                "onder de 5).")
+    if kind == "deepening":
+        return (f"Staat hoger dan {lbl} omdat hier een gedeelde toelichting uit "
+                "de verdieping ligt.")
+    if kind == "exit_reason":
+        return (f"Staat hoger dan {lbl} omdat dit vaker als vertrekreden is "
+                f"genoemd ({row['exit_reason_n']} keer tegen "
+                f"{other['exit_reason_n']}).")
+    raise ValueError(f"onbekend tie-break-signaal {kind!r}")
 
 
 def _deepening_state(agg: dict[str, Any] | None, scan_type: str,
@@ -222,9 +252,12 @@ def rank_factors(scan_type: str,
       laagste base van die groep) beslist achtereenvolgens: vraag om
       verandering, spreidingsvlag, verdiepingsvlag, base, label.
     - De vraag om verandering zet alleen de hoogste rij van de groep vooruit,
-      en alleen bij een voorsprong van TOP_CHOICE_MIN_LEAD of meer. Een
-      rij met te weinig beantwoorders telt daarbij als 0 en schakelt het
-      signaal voor de rest van de groep dus niet uit.
+      onder de vier voorwaarden in _direction_winner. Een rij met te weinig
+      beantwoorders doet daar niet aan mee: ze telt niet als vergelijkingsrij,
+      maar blokkeert het signaal ook niet voor de rest van de groep.
+    - Elke rij draagt achteraf decided_by: welk signaal hem boven een lager of
+      gelijk scorende rij zette, en tegenover welke rij. Dat komt uit dezelfde
+      sorteersleutel, dus de uitleg kan niet afwijken van de volgorde.
     - Slotvolgorde alfabetisch op canoniek label: twee runs geven altijd
       dezelfde volgorde.
     """
@@ -239,8 +272,7 @@ def rank_factors(scan_type: str,
         base = score - EXIT_REASON_WEIGHT * reason_n if scan_type == "exit" else score
         n, below, spread_flag = _spread(factor_resp_scores.get(fk) or [])
         state, top = _deepening_state((deepening_agg or {}).get(fk), scan_type, fk)
-        deep_flag = state == 1
-        dir_answered, dir_change = _change_demand((direction_agg or {}).get(fk))
+        dir_answered, dir_change = _direction_counts((direction_agg or {}).get(fk))
         rows.append({
             "key": fk,
             "label": labels.get(fk, fk),
@@ -251,7 +283,6 @@ def rank_factors(scan_type: str,
             "spread_flag": spread_flag,
             "deepening_state": state,
             "deepening_top": top,
-            "flags": int(spread_flag) + int(deep_flag),
             "exit_reason_n": reason_n,
             "direction_answered": dir_answered,
             "direction_change": dir_change,
@@ -259,17 +290,12 @@ def rank_factors(scan_type: str,
 
     rows.sort(key=lambda r: (r["base"], r["label"]))
     ordered: list[dict[str, Any]] = []
+    keys: dict[str, tuple[Any, ...]] = {}
     for group in _tie_groups(rows):
         winner = _direction_winner(group)
-        group.sort(key=lambda r: (
-            0 if r is winner else 1,
-            -int(r["spread_flag"]),
-            -int(r["deepening_state"] == 1),
-            r["base"],
-            r["label"],
-        ))
         for r in group:
-            r["_dir_winner"] = r is winner
+            keys[r["key"]] = _sort_key(r, winner)
+        group.sort(key=lambda r: keys[r["key"]])
         ordered.extend(group)
     rows = ordered
 
@@ -283,9 +309,12 @@ def rank_factors(scan_type: str,
             and r["spread_flag"] == prev["spread_flag"]
             and (r["deepening_state"] == 1) == (prev["deepening_state"] == 1)
             else None)
-        kind, note = _tie_break_marking(r, rows[i + 1:])
-        r["tie_break_kind"] = kind
-        r["tie_break_note"] = note
-    for r in rows:
-        del r["_dir_winner"]
+        decided = _decision(r, rows[i + 1:], keys)
+        # decided_by legt vast wat de sorteerder besloot: het signaal en de rij
+        # waartegen dat zichtbaar is. De markeringsregel is daar de formulering
+        # van, geen tweede redenering.
+        r["decided_by"] = ({"kind": decided[0], "other": decided[1]["key"]}
+                           if decided else None)
+        r["tie_break_note"] = (_tie_break_note(r, decided[1], decided[0])
+                               if decided else None)
     return rows

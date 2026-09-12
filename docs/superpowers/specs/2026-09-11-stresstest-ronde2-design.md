@@ -77,7 +77,7 @@ keer gedefinieerd als `TOP_CHOICE_MIN_LEAD` in `deepening.py` en wordt op alle d
 plekken gebruikt; de waarde is ongewijzigd, dus geen gedragswijziging.
 
 **Aanvullende regel (spec-review 2026-09-12): de vraag om verandering beslist alleen bij
-een voorsprong van minstens `DIRECTION_TIE_MIN_MARGIN` (2).** Binnen een gelijkspel-groep
+een voorsprong van minstens `TOP_CHOICE_MIN_LEAD` (2).** Binnen een gelijkspel-groep
 wordt alleen de hoogste rij vooruit gezet, en alleen als die er minstens 2 mensen bovenuit
 steekt; anders beslist dit signaal niets en valt de groep door naar spreiding en
 verdieping. Zonder deze marge zou "2 van de 11 tegen 1 van de 11" de volgorde bepalen, een
@@ -98,11 +98,29 @@ daadwerkelijk tonen (laagste base eerst, bij gelijke base alfabetisch); bij geli
 tellingen valt de tekstkeuze door naar spreiding, dan verdieping, en anders naar geen
 markering.
 
-**Extra copy-variant (2026-09-12):** staat de winnaar alleen boven rijen waarvan het
-aantal onder de vloer ligt, dan is er geen tweede telling om tegen af te zetten. De regel
-zegt dat dan ("... (9 van de 11); bij X gaven te weinig mensen antwoord om dat te
-vergelijken"), in plaats van de flip onverklaard te laten of een getal te suggereren dat
-er niet is.
+**Vervallen copy-variant (2026-09-12, derde ronde):** de zin "... (9 van de 11); bij X
+gaven te weinig mensen antwoord om dat te vergelijken" bestond kort, voor het geval dat de
+winnaar alleen boven rijen met een telling onder de vloer stond. Hij is verwijderd: zo'n
+flip vindt niet meer plaats (voorwaarde 4 in `_direction_winner`), dus de situatie kan niet
+ontstaan.
+
+**Structuur (kwaliteitsreview 2026-09-12, vierde ronde): de sorteerder legt vast wat hij
+besloot.** `rank_factors` schrijft per rij `decided_by` = `{kind, other}`: het signaal dat
+de rij boven een lager of gelijk scorende rij zette, en de rij waartegen dat zichtbaar is.
+Dat komt uit de sorteersleutel zelf (de index van het eerste verschil), niet uit een
+reconstructie achteraf; de markeringsregel is enkel nog de formulering ervan. Daarmee is
+"een flip zonder uitleg" structureel onmogelijk in plaats van per tak dichtgetimmerd, en
+kan de uitleg niet afwijken van de volgorde. Twee bevindingen die daarmee verdwenen:
+
+- **K1:** won een rij de groep op richting terwijl de enige gepasseerde rij een telling
+  onder de vloer had, dan bleef de markering leeg en viel `_raster_attribution` door naar
+  "de gedeelde toelichting uit de verdieping gaf de doorslag" in een rapport zonder
+  verdiepingsdata. De flip vindt nu niet meer plaats, en die slotregel eist voortaan
+  expliciet een verdiepingsvlag; anders valt hij terug op de generieke regel.
+- **K2:** de vertrekreden-tak koos zijn referentierij op laagste score zonder te eisen dat
+  die rij ook minder vertrekredenen had, met "(1 keer tegen 1)" als gevolg, en met de
+  verkeerde oorzaak erbij. De tak komt nu alleen aan bod als de sorteersleutel niets
+  besliste, en kiest alleen uit rijen met minder vermeldingen.
 
 **Ontwerpbeslissing (spec-review 2026-09-12): het raster belooft nooit een signaal dat in
 deze meting niet bestond.** Dezelfde regel die ronde 1 toepaste toen `RASTER_INTRO_GATE`

@@ -1,5 +1,6 @@
 """Tests voor de richting-tie-break en de markeringsregels (spec ronde 2 par. 1)."""
 from backend.products.shared.deepening import DIRECTION_MIN_N, TOP_CHOICE_MIN_LEAD
+from backend.report_html import _raster_attribution
 from backend.report_priority import rank_factors
 
 
@@ -12,6 +13,16 @@ def _dir(answered, change, none_key="gr_none", change_key="gr_visibility"):
         counts[none_key] = answered - change
     return {"lowest_n": answered, "offered": answered, "answered": answered,
             "skipped": 0, "counts": counts}
+
+
+def _kind(row):
+    """Het signaal dat de sorteerder vastlegde, of None."""
+    return row["decided_by"]["kind"] if row["decided_by"] else None
+
+
+def _deep_agg(counts):
+    return {"triggered": 13, "offered": 13, "answered": 13, "skipped": 0,
+            "primary_counts": counts, "secondary_counts": {}}
 
 
 def _rank(avgs, direction=None, resp=None, deep=None, reasons=None, labels=None,
@@ -41,7 +52,7 @@ def test_direction_outranks_spread_within_margin():
                  "workload": _dir(11, 10, none_key="wl_none", change_key="wl_volume")}
     rows = _rank(avgs, direction=direction, resp=resp)
     assert rows[0]["key"] == "workload"
-    assert rows[0]["tie_break_kind"] == "direction"
+    assert _kind(rows[0]) == "direction"
 
 
 def test_row_below_the_floor_has_no_count_but_keeps_its_answered_total():
@@ -67,7 +78,7 @@ def test_direction_needs_two_rows_with_a_valid_count():
     labels = {"growth": "Groeiperspectief", "workload": "Werkdruk en herstelruimte"}
     rows = _rank(avgs, direction=direction, resp=resp, labels=labels)
     assert rows[0]["key"] == "growth"
-    assert rows[0]["tie_break_kind"] == "spread"
+    assert _kind(rows[0]) == "spread"
     assert "verandering" not in rows[0]["tie_break_note"]
     assert "vergelijken" not in rows[0]["tie_break_note"]
 
@@ -82,7 +93,7 @@ def test_direction_does_not_work_outside_the_margin():
                                     change_key="ldd_feedback")}
     rows = _rank(avgs, direction=direction)
     assert [r["key"] for r in rows] == ["growth", "leadership"]
-    assert rows[0]["tie_break_kind"] is None
+    assert _kind(rows[0]) is None
 
 
 def test_marking_only_on_rows_that_actually_flipped():
@@ -109,7 +120,7 @@ def test_exit_reason_weight_is_marked_and_counted():
     rows = _rank(avgs, reasons=reasons, labels=labels, scan_type="exit")
     assert rows[0]["key"] == "leadership"
     assert rows[0]["exit_reason_n"] == 9
-    assert rows[0]["tie_break_kind"] == "exit_reason"
+    assert _kind(rows[0]) == "exit_reason"
     assert "vaker als vertrekreden" in rows[0]["tie_break_note"]
     assert "9 keer tegen 4" in rows[0]["tie_break_note"]
 
@@ -124,7 +135,7 @@ def test_every_row_has_the_new_fields():
     rows = _rank({"growth": 6.0, "workload": 6.5})
     for r in rows:
         for field in ("direction_answered", "direction_change", "exit_reason_n",
-                      "tie_break_kind", "tie_break_note"):
+                      "decided_by", "tie_break_note"):
             assert field in r
         assert "_dir_winner" not in r
 
@@ -155,12 +166,12 @@ def test_direction_needs_a_margin_of_two():
             "workload": _dir(11, 5, none_key="wl_none", change_key="wl_volume")}
     rows = _rank(avgs, direction=krap)
     assert [r["key"] for r in rows] == ["growth", "workload"]
-    assert rows[0]["tie_break_kind"] is None
+    assert _kind(rows[0]) is None
     genoeg = {"growth": _dir(11, 4),
               "workload": _dir(11, 6, none_key="wl_none", change_key="wl_volume")}
     rows = _rank(avgs, direction=genoeg)
     assert [r["key"] for r in rows] == ["workload", "growth"]
-    assert rows[0]["tie_break_kind"] == "direction"
+    assert _kind(rows[0]) == "direction"
 
 
 def test_row_below_the_floor_does_not_disable_the_group():
@@ -174,7 +185,7 @@ def test_row_below_the_floor_does_not_disable_the_group():
                  "culture": _dir(11, 9, none_key="cu_none", change_key="cu_safety")}
     rows = _rank(avgs, direction=direction)
     assert rows[0]["key"] == "culture"
-    assert rows[0]["tie_break_kind"] == "direction"
+    assert _kind(rows[0]) == "direction"
     assert rows[0]["direction_change"] == 9
 
 
@@ -206,7 +217,7 @@ def test_equal_counts_fall_through_to_the_next_signal():
     rows = _rank(avgs, direction=direction, labels=labels,
                  deep={"compensation": ok})
     assert rows[0]["key"] == "compensation"
-    assert rows[0]["tie_break_kind"] == "deepening"
+    assert _kind(rows[0]) == "deepening"
     assert "gedeelde toelichting" in rows[0]["tie_break_note"]
 
 
@@ -219,7 +230,7 @@ def test_direction_needs_the_larger_share_too():
                  "workload": _dir(35, 27, none_key="wl_none", change_key="wl_volume")}
     rows = _rank(avgs, direction=direction)
     assert [r["key"] for r in rows] == ["growth", "workload"]
-    assert rows[0]["tie_break_kind"] is None
+    assert _kind(rows[0]) is None
     assert rows[0]["tie_break_note"] is None
 
 
@@ -231,5 +242,100 @@ def test_direction_wins_when_count_and_share_are_both_higher():
                  "workload": _dir(35, 27, none_key="wl_none", change_key="wl_volume")}
     rows = _rank(avgs, direction=direction, labels={"growth": "Groeiperspectief"})
     assert rows[0]["key"] == "workload"
-    assert rows[0]["tie_break_kind"] == "direction"
+    assert _kind(rows[0]) == "direction"
     assert "27 van de 35 tegen 5 van de 19" in rows[0]["tie_break_note"]
+
+
+def _flip_invariant(rows):
+    """Elke rij die boven een lagere base staat moet een markeringsregel dragen."""
+    for i, r in enumerate(rows):
+        for later in rows[i + 1:]:
+            if r["base"] > later["base"]:
+                assert r["tie_break_note"], (
+                    f"flip zonder markeringsregel: {r['key']} boven {later['key']}")
+
+
+def test_k1_winner_passeert_geen_rij_die_hij_niet_kan_noemen():
+    # De winnaar (growth, 9 van de 11) heeft zijn vergelijkingsrij (culture,
+    # 2 van de 11) BOVEN zich in base; de enige rij die hij zou passeren is
+    # workload, met een telling onder de vloer. Dan is er geen zin te schrijven
+    # die klopt, dus mag de flip niet plaatsvinden.
+    avgs = {"workload": 6.0, "growth": 6.2, "culture": 6.25}
+    direction = {"growth": _dir(11, 9),
+                 "culture": _dir(11, 2, none_key="cu_none", change_key="cu_safety"),
+                 "workload": _dir(2, 2, none_key="wl_none", change_key="wl_volume")}
+    labels = {"workload": "Werkdruk", "growth": "Groeiperspectief", "culture": "Cultuur"}
+    rows = _rank(avgs, direction=direction, labels=labels)
+    _flip_invariant(rows)
+    # En p.02 verzint geen verdieping in een meting zonder verdiepingsdata.
+    line = _raster_attribution(rows, "retention")
+    assert "verdieping" not in line, line
+
+
+def test_k2_vertrekredenregel_noemt_nooit_een_gelijk_aantal():
+    # Zelfde vorm, nu bij Loep Vertrek: zonder gard viel de markering door naar
+    # de vertrekreden-tak en schreef "(1 keer tegen 1)", met bovendien de
+    # verkeerde oorzaak.
+    avgs = {"workload": 5.2, "growth": 5.4, "culture": 5.45}
+    reasons = {"workload": 2, "growth": 2, "culture": 2}
+    direction = {"growth": _dir(11, 9),
+                 "culture": _dir(11, 2, none_key="cu_none", change_key="cu_safety"),
+                 "workload": _dir(2, 2, none_key="wl_none", change_key="wl_volume")}
+    labels = {"workload": "Werkdruk", "growth": "Groeiperspectief", "culture": "Cultuur"}
+    rows = _rank(avgs, direction=direction, reasons=reasons, labels=labels,
+                 scan_type="exit")
+    for r in rows:
+        note = r["tie_break_note"] or ""
+        assert "keer tegen 2" not in note, note
+        assert "vertrekreden" not in note or r["exit_reason_n"] > 2, note
+    _flip_invariant(rows)
+
+
+def test_spread_marking_names_a_row_without_the_flag():
+    # Guard: een gepasseerde rij die zelf de spreidingsvlag draagt mag nooit de
+    # referentie zijn; de zin zou dan een verschil claimen dat er niet is.
+    avgs = {"growth": 6.1, "workload": 6.0, "culture": 6.05}
+    resp = {"growth": [4.0] * 5 + [7.0] * 7, "workload": [4.0] * 5 + [7.0] * 7}
+    labels = {"growth": "Groeiperspectief", "workload": "Werkdruk",
+              "culture": "Cultuur"}
+    rows = _rank(avgs, resp=resp, labels=labels)
+    top = next(r for r in rows if r["key"] == "growth")
+    assert top["decided_by"] == {"kind": "spread", "other": "culture"}
+    assert "Cultuur" in top["tie_break_note"]
+    assert "Werkdruk" not in top["tie_break_note"]
+
+
+def test_deepening_marking_names_a_row_without_the_toelichting():
+    # Zelfde guard voor de verdiepingstak.
+    avgs = {"growth": 6.1, "workload": 6.0, "culture": 6.05}
+    deep = {"growth": _deep_agg({"gr_visibility": 9, "gr_conversation": 1}),
+            "workload": _deep_agg({"wl_volume": 9, "wl_recovery": 1})}
+    labels = {"growth": "Groeiperspectief", "workload": "Werkdruk",
+              "culture": "Cultuur"}
+    rows = _rank(avgs, deep=deep, labels=labels)
+    top = next(r for r in rows if r["key"] == "growth")
+    assert top["decided_by"] == {"kind": "deepening", "other": "culture"}
+    assert "Cultuur" in top["tie_break_note"]
+    assert "Werkdruk" not in top["tie_break_note"]
+
+
+def test_reference_row_is_the_lowest_of_the_passed_rows():
+    # Twee kandidaten die allebei het verschil tonen: de laagste base wordt
+    # genoemd, niet de hoogste.
+    avgs = {"growth": 6.1, "workload": 6.0, "culture": 6.05}
+    resp = {"growth": [4.0] * 5 + [7.0] * 7}
+    labels = {"growth": "Groeiperspectief", "workload": "Werkdruk",
+              "culture": "Cultuur"}
+    rows = _rank(avgs, resp=resp, labels=labels)
+    assert rows[0]["key"] == "growth"
+    assert rows[0]["decided_by"]["other"] == "workload"      # base 6.0, niet 6.05
+    assert "Werkdruk" in rows[0]["tie_break_note"]
+
+
+def test_decided_by_records_the_reference_row_for_direction():
+    avgs = {"growth": 6.0, "workload": 6.1}
+    direction = {"growth": _dir(11, 3),
+                 "workload": _dir(11, 9, none_key="wl_none", change_key="wl_volume")}
+    rows = _rank(avgs, direction=direction, labels={"growth": "Groeiperspectief"})
+    assert rows[0]["decided_by"] == {"kind": "direction", "other": "growth"}
+    assert rows[1]["decided_by"] is None
