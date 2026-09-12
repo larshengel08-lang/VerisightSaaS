@@ -89,7 +89,7 @@ const routeCards = [
     index: '03',
     eyebrow: 'Nieuwe medewerkers laten landen',
     title: 'Loep Start',
-    body: 'Wij meten vroeg hoe nieuwe medewerkers landen. Helder groepsbeeld, geen individuele beoordeling.',
+    body: 'Wij meten vroeg hoe nieuwe medewerkers landen. Helder groepsbeeld, geen individuele beoordeling. De verdieping (waarom, volgens je mensen) en het blok "wat er moet gebeuren" komen in een volgende versie.',
     href: '/producten#loep-start',
     accent: '#9b5f1e',
   },

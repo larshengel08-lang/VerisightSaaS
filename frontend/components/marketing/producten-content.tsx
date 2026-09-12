@@ -72,14 +72,14 @@ const scans = [
     index: '03',
     eyebrow: 'Goed landen',
     title: 'Loep Start',
-    lead: 'Wij meten vroeg hoe nieuwe medewerkers landen en leveren een helder groepsbeeld en een concreet vervolg.',
+    lead: 'Wij meten vroeg hoe nieuwe medewerkers landen en leveren een helder groepsbeeld.',
     when: [
       'Nieuwe medewerkers landen ongelijk of haken vroeg af',
       'Je wilt vroeg toetsen hoe rol, leiding en team nu landen',
       'Management wil een eerste beeld zonder brede retentiescan',
       'Je wilt eerst een kleine borg- of correctiestap bepalen',
     ],
-    output: 'Rapport met de vroege landing in rol, leiding en team op groepsniveau.',
+    output: 'Rapport met de vroege landing in rol, leiding en team op groepsniveau. De verdieping (waarom, volgens je mensen) en het blok "wat er moet gebeuren" komen in een volgende versie.',
     // afgerond vanaf de officiële invite_duration (3-5 min) in backend/products/onboarding
     duration: '± 5 minuten',
     note: null,

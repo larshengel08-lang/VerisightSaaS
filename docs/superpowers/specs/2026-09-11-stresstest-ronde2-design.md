@@ -612,6 +612,14 @@ zichzelf al uit ("minder dan de helft").
 - Gespreksagenda Start: de dubbele constatering ("Op deze stelling scoort de groep het laagst" + "Laagst scorende stelling in het cijferbeeld") ontdubbelen; de claim "het laagst van het hele beeld" alleen bij een strikt laagste, bij gelijkspel "een van de laagst scorende stellingen".
 - Contract-tests die Start-copy pinnen in lockstep. Geen wijziging aan de Start-survey.
 
+**Afwijkingen bij de uitvoering (taak 8), met reden:**
+
+1. *Scope en grondslag van "strikt laagste".* Het plan vergeleek over `oim.values()` op de ruwe score. Uitgevoerd is: vergelijken over de stellingen die het rapport ook echt toont (`factor_items_map`, waar zowel de factorpagina's als de appendix uit putten) en op de **getoonde** score via `_shown`. Twee stellingen van 5,14 en 5,09 staan allebei als 5,1 op de pagina; op de ruwe waarde zou het rapport dan nog steeds "de laagst scorende stelling" claimen naast twee gelijke getallen.
+2. *Lege staat van het verdiepingshoofdstuk (toegevoegd).* Zonder factorprofiel toonde Loep Start de gedeelde tekst "geen rangorde om een verdieping aan op te hangen": opnieuw een verdieping die dit product niet heeft. Nieuwe constante `ONBOARDING_GEEN_RANGORDE` met dezelfde vorm en eigen woorden.
+3. *Leesroute in "Zo gebruik je dit rapport" (toegevoegd).* Die stuurde de lezer naar "de verdieping per thema", een hoofdstuk dat na de hernoeming niet meer zo heet, twee alinea's onder de zin die zegt dat er geen verdieping is. Nieuwe constante `GEBRUIKSBLOK_LEESROUTE_ONBOARDING`; exit en retention ongewijzigd.
+4. *`lead` van Loep Start op /producten (toegevoegd).* Die beloofde "een helder groepsbeeld en een concreet vervolg", precies de laag die de outputregel eronder nu als "volgende versie" markeert. "En een concreet vervolg" is geschrapt.
+5. *Nog open (niet gewijzigd, buiten de opsomming hierboven).* De hero van /producten zegt over alle drie de scans: "een rapport dat zegt waar het wringt, waarom volgens je mensen, en waar je begint." Die belofte geldt voor Loep Start niet en staat op dezelfde pagina als de nieuwe outputregel. Herformuleren raakt de positionering van alle drie de scans en is een keuze voor Lars, geen implementatiedetail.
+
 ---
 
 ## 7b. Bijvangst uit de ronde-1-herbeoordeling (toegevoegd 2026-09-11, na merge `20769ae7`)

@@ -1180,6 +1180,15 @@ GEBRUIKSBLOK_LEESROUTE = (
     "overzichtsprofiel), dan de verdieping per thema, en achteraan de "
     "gespreksagenda: d&aacute;&aacute;r begint het gesprek.")
 
+# Loep Start-variant (spec ronde 2 par. 7): die hoofdstukken heten geen
+# "Verdieping" meer, want er zijn geen verdiepingsvragen. De leesroute noemt de
+# hoofdstukken zoals ze in het rapport heten, anders stuurt hij naar een
+# hoofdstuk dat onder die naam niet bestaat.
+GEBRUIKSBLOK_LEESROUTE_ONBOARDING = (
+    "Lees het van voor naar achter: eerst het beeld (context en "
+    "overzichtsprofiel), dan de thema&#x27;s met de meeste aandacht, en "
+    "achteraan de gespreksagenda: d&aacute;&aacute;r begint het gesprek.")
+
 # Degraded leesroute (bug B3): zonder factorprofiel is er geen verdieping per
 # thema en geen volgorde van thema's. De normale zin stuurde de lezer dan naar
 # twee secties die leeg of gedegradeerd zijn. De gespreksagenda-pagina zelf
@@ -1192,14 +1201,20 @@ GEBRUIKSBLOK_LEESROUTE_DEGRADED = (
     "lees je waar het gesprek kan beginnen.")
 
 
-def _gebruiksblok(scan_lbl: str, *, degraded: bool = False) -> str:
+def _gebruiksblok(scan_lbl: str, *, degraded: bool = False,
+                  leesroute: str = "") -> str:
     """'Zo gebruik je dit rapport' (spec 2026-07-13 §5) — leesroute + beoogd
     besluit. Geen bespreekscript: de begeleide bespreking blijft het product.
 
     degraded volgt dezelfde schakelaar als de degraded p.02-alinea
     (_geen_factorprofiel_note): de leesroute mag alleen naar secties sturen
-    die in deze staat ook echt iets bevatten."""
-    leesroute = GEBRUIKSBLOK_LEESROUTE_DEGRADED if degraded else GEBRUIKSBLOK_LEESROUTE
+    die in deze staat ook echt iets bevatten.
+
+    leesroute overschrijft de standaardroute voor een product waar de
+    hoofdstukken anders heten (Loep Start, spec ronde 2 par. 7). De degraded
+    route gaat voor: die zegt zelf al dat een verdieping per thema ontbreekt."""
+    leesroute = (GEBRUIKSBLOK_LEESROUTE_DEGRADED if degraded
+                 else (leesroute or GEBRUIKSBLOK_LEESROUTE))
     return f"""<div style="margin-top:24px;">
   <span class="eyebrow">Zo gebruik je dit rapport</span>
   <p class="sec-intro" style="margin-top:6px;margin-bottom:0;">
@@ -1257,6 +1272,27 @@ VERDIEPING_GEEN_RANGORDE = (
     "scores is er geen rangorde om een verdieping aan op te hangen."
 )
 
+# Loep Start levert de verdiepings- en richtinglaag nog niet (spec ronde 2
+# par. 7, B18). Loep Vertrek en Loep Behoud vragen door op een lage score
+# (waarom scoort dit zo, volgens de respondent) en stellen daarna de
+# richtingvraag (wat zou hier het meest helpen); die twee vullen samen het blok
+# "Wat er moet gebeuren". Loep Start heeft geen van beide. Zolang dat zo is,
+# zegt het rapport dat zelf, op de plek waar de lezer anders naar die laag zou
+# zoeken. Dezelfde zin staat op de site (home-page-content.tsx,
+# producten-content.tsx): rapport en site zeggen hetzelfde.
+# Dezelfde lege staat, maar in de woorden van Loep Start: dat rapport heeft geen
+# verdieping om aan een rangorde op te hangen, dus die belofte hoort hier niet.
+ONBOARDING_GEEN_RANGORDE = (
+    "Voor deze meting zijn er geen scores per factor berekend. Zonder die "
+    "scores is er geen volgorde om de factoren met de meeste aandacht aan te wijzen."
+)
+
+ONBOARDING_GEEN_VERDIEPING_NOTE = (
+    "Deze scan bevat nog geen verdiepingsvragen en geen richtingvraag. Het rapport "
+    "laat zien waar het wringt bij nieuwe medewerkers; wat er volgens hen moet "
+    "gebeuren volgt in een volgende versie."
+)
+
 
 def _opsomming(items: list[str]) -> str:
     """"a", "a en b", "a, b en c" -- Nederlandse opsomming zonder Oxford-komma."""
@@ -1304,7 +1340,12 @@ def _bestuurlijke_read(*, kernzin: str, totaalbeeld: str,
                        responsbasis_html: str = "", opener_html: str = "",
                        usage_html: str = "", direction_line: str = "",
                        degraded_note: str = "", why_title: str = "",
-                       signal_cell_html: str = "") -> str:
+                       signal_cell_html: str = "", scope_note: str = "") -> str:
+    # scope_note (spec ronde 2 par. 7): één regel direct onder de kernzin over
+    # wat dit product nog niet levert. Staat bewust vóór het why-blok, want daar
+    # begint de lezer te zoeken naar de laag die er niet is. Rendert in beide
+    # staten (met en zonder factorprofiel): de zin gaat over het product, niet
+    # over deze meting, en blijft dus ook waar zonder profiel.
     # Degraded variant (bug B2): zonder factorprofiel heeft het why-blok geen
     # onderwerp en de Gespreksopener geen vraag. Dan rendert hier één
     # expliciete alinea in plaats van het gewone blok met gaten erin;
@@ -1339,9 +1380,12 @@ def _bestuurlijke_read(*, kernzin: str, totaalbeeld: str,
     totaalbeeld_html = (f'<p style="font-size:11px;color:#374151;max-width:62ch;'
                         f'margin-bottom:22px;">{_h(totaalbeeld)}</p>'
                         ) if (totaalbeeld and not degraded_note) else ""
+    scope_html = (f'<p class="trustline" style="margin-top:-14px;margin-bottom:18px;">'
+                  f'{_h(scope_note)}</p>') if scope_note else ""
     return f"""<div class="pb sec">
   {opener_html or '<span class="slabel">Bestuurlijke read</span>'}
   <p class="br-kernzin">{_h(kernzin)}</p>
+  {scope_html}
   {totaalbeeld_html}
   {body}
   {usage_html}
@@ -1530,6 +1574,22 @@ GESPREKSAGENDA_INTRO_GEEN_PROFIEL = (
     "Deze agenda vat normaal samen wat als eerste op tafel hoort en waarom "
     "juist dat. Dat kan hier nog niet. Wat hieronder staat is daarom geen "
     "uitkomst van de meting, maar een startvraag voor de bespreking.")
+
+
+def _laagste_stelling_zin(factor_label: str, stelling: str, score: float,
+                          *, strikt_laagste: bool) -> str:
+    """Een constatering over de laagst scorende stelling, precies één keer.
+
+    strikt_laagste is alleen waar als geen enkele andere stelling in het hele
+    rapport dezelfde getoonde score haalt; bij gelijkspel is "het laagst"
+    onwaar en spreekt de appendix het rapport tegen. Vergelijken gaat over de
+    getoonde score (zie _shown, B15): 5.14 en 5.09 staan allebei als 5.1 in de
+    tabel, en dan leest "de laagst scorende stelling" als een fout.
+    """
+    welke = ("de laagst scorende stelling" if strikt_laagste
+             else "een van de laagst scorende stellingen")
+    return (f"Bespreek eerst ‘{stelling}’ binnen {factor_label.lower()} "
+            f"({score:.1f}/10). Dat is {welke} in het cijferbeeld.")
 
 
 def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: str,
@@ -4646,10 +4706,12 @@ def render_onboarding_report_html(data: dict) -> str:
         mgmt_q_source=br_mgmt_q_source,
         responsbasis_html=_responsbasis_band,
         opener_html=ch.opener("Bestuurlijke read"),
-        usage_html=_gebruiksblok(data["scan_lbl"], degraded=bool(br_degraded_note)),
+        usage_html=_gebruiksblok(data["scan_lbl"], degraded=bool(br_degraded_note),
+                                 leesroute=GEBRUIKSBLOK_LEESROUTE_ONBOARDING),
         degraded_note=br_degraded_note,
         why_title=_p02_why_title(_shape),
         signal_cell_html=_signal_cell,
+        scope_note=ONBOARDING_GEEN_VERDIEPING_NOTE,
     )
 
     # ── Overzichtsprofiel (p.04) ──────────────────────────────────────────────
@@ -4702,7 +4764,7 @@ def render_onboarding_report_html(data: dict) -> str:
                      if show_cards and high_i else "")
         spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []))
         return f"""<div class="pb sec">
-  {opener_html or f'<span class="slabel">Verdieping: {_h(lbl)}</span>'}
+  {opener_html or f'<span class="slabel">{_h(lbl)}</span>'}
   {intro_html}
   <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&middot; {_h(fl_)}</span></h2>
   <p style="font-size:10px;color:#64748B;margin-bottom:12px;">Lager op deze factor = meer frictie in de onboardingfase.</p>
@@ -4716,7 +4778,10 @@ def render_onboarding_report_html(data: dict) -> str:
     if priority_fkeys:
         for _i, _pfk in enumerate(priority_fkeys):
             _lbl = _fl(_pfk, ST)
-            _opener = ch.opener(f"Verdieping: {_lbl}") if _i == 0 else _ChapterCounter.vervolg(f"Verdieping: {_lbl}")
+            # Geen "Verdieping:" in de paginatitel (spec ronde 2 par. 7): Loep
+            # Start heeft geen verdiepingsvragen, deze pagina toont de score en
+            # de stellingen van de factor.
+            _opener = ch.opener(_lbl) if _i == 0 else _ChapterCounter.vervolg(_lbl)
             # Geen SECTION_INTROS["verdieping"] hier (code-review taak 9, fix A):
             # die tekst belooft een automatische vervolgvraag + een
             # gespreksagenda gevuld met wat respondenten kozen. Onboarding
@@ -4725,7 +4790,7 @@ def render_onboarding_report_html(data: dict) -> str:
             # factordetailpagina leest prima zonder intro.
             s += _ob_factor_detail(_pfk, opener_html=_opener, intro_html="")
     else:
-        s += f'<div class="pb sec">{ch.opener("Verdieping: prioritaire factoren")}<div class="empty-state">{VERDIEPING_GEEN_RANGORDE}</div></div>'
+        s += f'<div class="pb sec">{ch.opener("Factoren met de meeste aandacht")}<div class="empty-state">{ONBOARDING_GEEN_RANGORDE}</div></div>'
 
     # ── Werkbeleving (SDT) — if present ──────────────────────────────────────
     def _sdt_item_tbl(dim: str) -> str:
@@ -4808,9 +4873,19 @@ def render_onboarding_report_html(data: dict) -> str:
     _ob_primary_items = ([(ik, q, oim.get(ik)) for ik, q in fim.get(_ob_primary_fk, []) if oim.get(ik) is not None]
                           if _ob_primary_fk else [])
     _ob_primary_low = min(_ob_primary_items, key=lambda x: x[2]) if _ob_primary_items else None
+    # "Het laagst van het hele beeld" keek alleen binnen de eerste factor (spec
+    # ronde 2 par. 7). Scoort een stelling in een andere factor even laag, dan
+    # sprak de appendix die claim tegen. De vergelijking loopt daarom over alle
+    # stellingen die dit rapport toont (de factorpagina's en de appendix putten
+    # allebei uit factor_items_map) en over de getoonde score, zie _shown.
+    _ob_alle_getoond = [_shown(oim[_ik])
+                        for _items in fim.values() for _ik, _q in _items
+                        if oim.get(_ik) is not None]
+    _ob_strikt = (_ob_primary_low is not None
+                  and _ob_alle_getoond.count(_shown(_ob_primary_low[2])) == 1)
     _ob_primary_theme = (
-        f"Bespreek eerst ‘{_ob_primary_low[1]}’ binnen {_fl(_ob_primary_fk, ST).lower()} "
-        f"({_ob_primary_low[2]:.1f}/10). Op deze stelling scoort de groep het laagst van het hele beeld."
+        _laagste_stelling_zin(_fl(_ob_primary_fk, ST), _ob_primary_low[1],
+                              _ob_primary_low[2], strikt_laagste=_ob_strikt)
     ) if _ob_primary_low else low_lbl
 
     # Zonder factorprofiel is er geen primair thema en geen tweede
@@ -4831,8 +4906,11 @@ def render_onboarding_report_html(data: dict) -> str:
             f"ontbreekt, dus er is geen onderbouwde volgorde en geen eerste "
             f"gesprekspunt dat uit de cijfers volgt.")
 
-    _primary_why = (_primary_why_text(_ob_primary_low[2], (data.get("deepening_agg") or {}).get(_ob_primary_fk) or {}, ST, _ob_primary_fk)
-                    if _ob_primary_low else None)
+    # Geen primary_why meer (spec ronde 2 par. 7): die regel zei "Laagst
+    # scorende stelling in het cijferbeeld (5.1/10)" onder een kaart die precies
+    # dat al zegt, met hetzelfde getal. Loep Start heeft geen verdiepingsdata,
+    # dus de rijkere variant van _primary_why_text (de meest gekozen toelichting)
+    # kon hier nooit staan. De constatering staat nu één keer, in de zin erboven.
     _second_why = ("Tweede laagste factorscore in het overzichtsprofiel."
                    if len(sorted_f) > 1 else None)
 
@@ -4841,7 +4919,7 @@ def render_onboarding_report_html(data: dict) -> str:
         second_point=f"{_fl(sorted_f[1][0], ST)} ({_score_str(sorted_f[1][1])})" if len(sorted_f) > 1 else "",
         mgmt_q=_mgmt_q(_ob_priority_fkeys[0], ST) if _ob_priority_fkeys else (nsp.get("first_decision") or ""),
         review_when="Plan een vervolgmoment rond het volgende checkpoint: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.",
-        primary_why=_primary_why,
+        primary_why=None,
         second_why=_second_why,
         opener_html=ch.opener("Gespreksagenda", kicker="Eerste managementspoor"),
         degraded_note=_agenda_degraded_note,

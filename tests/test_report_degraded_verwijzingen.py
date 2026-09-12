@@ -147,13 +147,34 @@ def test_checkpointoverzicht_intro_blijft_verder_intact():
 
 # ── 6. Leeg verdiepingshoofdstuk ────────────────────────────────────────────
 
+# Loep Start heeft geen verdiepingsvragen (spec ronde 2 par. 7), dus daar mag de
+# lege staat er ook geen beloven: zelfde vorm, eigen woorden.
+_LEGE_VERDIEPING = {
+    "exit": ("Voor deze meting zijn er geen scores per factor berekend. Zonder "
+             "die scores is er geen rangorde om een verdieping aan op te hangen."),
+    "retention": ("Voor deze meting zijn er geen scores per factor berekend. Zonder "
+                  "die scores is er geen rangorde om een verdieping aan op te hangen."),
+    "onboarding": ("Voor deze meting zijn er geen scores per factor berekend. Zonder "
+                   "die scores is er geen volgorde om de factoren met de meeste "
+                   "aandacht aan te wijzen."),
+}
+_VERDIEPING_HOOFDSTUK = {
+    "exit": "Verdieping: prioritaire factoren",
+    "retention": "Verdieping: prioritaire factoren",
+    "onboarding": "Factoren met de meeste aandacht",
+}
+
+
 @pytest.mark.parametrize("scan_type", SCANS)
 def test_lege_verdieping_gebruikt_dezelfde_bewoording_als_de_rest(scan_type):
     body = _render(scan_type, profile=False)
     assert "Factor detail beschikbaar na voldoende patroonduiding" not in body
-    assert ("Voor deze meting zijn er geen scores per factor berekend. Zonder "
-            "die scores is er geen rangorde om een verdieping aan op te "
-            "hangen.") in body
+    assert _LEGE_VERDIEPING[scan_type] in body
+
+
+def test_lege_verdieping_belooft_bij_loep_start_geen_verdieping():
+    assert "verdieping" not in _LEGE_VERDIEPING["onboarding"].lower()
+    assert "om een verdieping aan op te hangen" not in _render("onboarding", profile=False)
 
 
 @pytest.mark.parametrize("scan_type", SCANS)
@@ -164,7 +185,7 @@ def test_verdiepingshoofdstuk_blijft_bestaan_zodat_de_leesroute_klopt(scan_type)
     # staat waarin pagina twee nog wél de normale leesroute toont (factoren
     # zonder prioritaire selectie).
     body = _render(scan_type, profile=False)
-    assert "Verdieping: prioritaire factoren" in body
+    assert _VERDIEPING_HOOFDSTUK[scan_type] in body
 
 
 @pytest.mark.parametrize("scan_type", SCANS)
