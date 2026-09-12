@@ -210,6 +210,13 @@ Bij een vlak profiel waarbij alle factoren >= 6,5 (scenario 04): de kop "Waarom 
 
 De bestaande onderbouwingscel ("Gemiddelde score", "Laagst scorende stelling", "Relatief sterk") blijft.
 
+**Implementatie (2026-09-12, taak 3).** De kop-variant zit in `_p02_why_title` en gaat via
+`_bestuurlijke_read(why_title=...)`. "Alle factoren >= 6,5" wordt niet als los getal
+opgeschreven maar als `low_score >= ZONE_HIGH`, dezelfde grens die `_factor_label` gebruikt
+voor "relatief sterk": zo kan de kop niet uit de pas lopen met de bandcel eronder. De tweede
+eis uit deze paragraaf (geen bandcel naast "eerste gesprekspunt" zonder de vlak-zin erboven)
+volgt uit de kernzin zelf: bij een vlak profiel opent p.02 altijd met de vlak-zin.
+
 ### 2.3 Niet-vlak profiel
 Ongewijzigd: "[factor] is het eerste gesprekspunt." plus `_raster_attribution`.
 
@@ -281,6 +288,38 @@ De eerste zin van p.02 volgt het aantal werkfactoren onder 5,0:
 - 3 of meer kwetsbaar → "Behoud staat breed onder druk: [k] van de 6 onderwerpen scoren kwetsbaar." gevolgd door het startpunt.
 
 Het behoudssignaal-getal blijft in de cel eronder staan met zijn band; het stuurt de eerste zin niet meer alleen.
+
+**Implementatie (2026-09-12, taak 3).** Eén gedeelde `_p02_opening` in `report_html.py`
+bouwt de zin voor alle drie de producten; de productstaart (de meest genoemde
+vertrekreden bij Loep Vertrek) blijft in de renderer. Vijf punten wijken af van of
+verfijnen de tekst hierboven:
+
+1. **Per product een eigen onderwerpwoord.** Par. 5.2 geeft alleen retention-copy, maar de
+   bevinding geldt productbreed. `_P02_DRUKWOORD` houdt per scan een zachte en een brede
+   variant ("Het vertrekbeeld wijst naar ..." / "Het vertrekbeeld is breed: ...", "De
+   landing van nieuwe medewerkers ..."). Indexeren en geen `.get()`: een onbekend product
+   hoort hard te falen in plaats van retention-copy in een ander rapport te zetten.
+2. **"De cel eronder" is de onderbouwingsrij onder het why-blok**, niet een cel in de
+   why-tabel: die tabel stijlt alleen `.why-cell`, terwijl de rij eronder (`table.sg`, waar
+   ook "Relatief sterk" staat) precies de `sc-l`/`sc-v`/`sc-b`-vorm heeft die het getal met
+   zijn band draagt. `_bestuurlijke_read` krijgt daarvoor `signal_cell_html`.
+3. **Zonder factorprofiel blijft het getal in de kernzin staan.** Die onderbouwingsrij
+   rendert niet in de degraded staat (ronde 1, B2), dus daar houden de drie renderers hun
+   bestaande zin ("Behoud onder druk (behoudssignaal 4.0/10).", de checkpointscore-variant,
+   de frictiescore-variant). Anders zou het getal daar helemaal van p.02 verdwijnen.
+4. **Elke startpuntgrond eist zijn eigen voorwaarde.** "de laagste score" alleen als het
+   startpunt ook echt de laagste factor is (bij Loep Vertrek tilt `EXIT_REASON_WEIGHT` het
+   daar weg, en binnen een gelijkspelgroep doet een tie-break dat ook), en "het verschil met
+   de volgende is klein" alleen binnen `PRIORITY_TIE_MARGIN`, de bestaande marge waarop de
+   rangorde zelf van gelijkspel spreekt. Haalt geen tak zijn voorwaarde, dan blijft de kale
+   keuze over; die is altijd waar. Het tie-breaksignaal komt uit `decided_by` van
+   `rank_factors` (taak 1), dus de grond in de kernzin kan niet afwijken van de volgorde in
+   het raster.
+5. **"Nergens dringend om verandering" is een uitspraak over het hele profiel.**
+   `direction_state` werkt per factor, dus `_p02_direction_key` geeft die sleutel alleen af
+   als het startpunt in `none_needed` staat én geen enkele andere factor met genoeg
+   beantwoorders een andere richting laat zien. De per-factor-nuance staat al in
+   `_direction_p02_line`, een paar regels lager op dezelfde pagina.
 
 ### 5.3 Tests
 Scenario 01, 02, 05 krijgen drie verschillende openingszinnen; tellingen kloppen met `_factor_label`-drempels (afgeronde, getoonde waarde, conform ronde 1 B15).

@@ -22,7 +22,12 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 
 from backend.models import Campaign, Respondent, SurveyResponse
 from backend.report_css import build_css, RAG_HIGH, RAG_MID, RAG_LOW
-from backend.report_distribution import MIN_DISTRIBUTION_N, ZONE_LOW, distribution_block
+from backend.report_distribution import (
+    MIN_DISTRIBUTION_N,
+    ZONE_HIGH,
+    ZONE_LOW,
+    distribution_block,
+)
 from backend.products.shared.deepening import (
     DIRECTION_CAVEAT_MAX_N,
     DIRECTION_MIN_N,
@@ -377,6 +382,178 @@ def _p02_flat_sentence(shape: dict[str, Any], labels: dict[str, str]) -> str:
             f"(laagste {low} {_score_str(shape['low_score'])}, "
             f"hoogste {high} {_score_str(shape['high_score'])}). "
             f"Dat is zelf de bevinding.")
+
+
+# Onderwerpwoord per product voor de kernzin (spec ronde 2 par. 5.2, verfijnd
+# naar drie producten): dezelfde structuur, de taal van het product. Per scan
+# (zachte variant bij een of twee kwetsbare onderwerpen, brede variant vanaf
+# drie). Indexeren en niet .get(): een onbekend product hoort hard te falen in
+# plaats van de retention-copy in een ander rapport te zetten.
+_P02_DRUKWOORD = {
+    "retention": ("Behoud vraagt aandacht op", "Behoud staat breed onder druk"),
+    "exit": ("Het vertrekbeeld wijst naar", "Het vertrekbeeld is breed"),
+    "onboarding": ("De landing van nieuwe medewerkers vraagt aandacht op",
+                   "De landing van nieuwe medewerkers staat breed onder druk"),
+}
+
+# Kop boven het why-blok bij een vlak profiel waarin zelfs de laagste factor
+# relatief sterk scoort (spec ronde 2 par. 2.2): daar staat niets bovenaan
+# omdat het slecht scoort, dus "Waarom X bovenaan staat" is de verkeerde vraag.
+P02_WHY_TITLE_FLAT = "Waar Loep zou beginnen, en waarom"
+
+
+def _p02_why_title(shape: dict[str, Any]) -> str:
+    """De afwijkende why-kop, of leeg voor de gewone kop (spec ronde 2 par. 2.2).
+
+    Alleen bij een vlak profiel waarin de laagste factor al in de bovenste band
+    valt. ZONE_HIGH is dezelfde grens als _factor_label gebruikt voor "relatief
+    sterk", dus de kop kan niet uit de pas lopen met de bandcel eronder.
+    """
+    return (P02_WHY_TITLE_FLAT
+            if shape["flat"] and shape["low_score"] is not None
+            and shape["low_score"] >= ZONE_HIGH
+            else "")
+
+
+def _p02_direction_key(direction_agg: dict[str, Any] | None,
+                       primary_key: str | None) -> str | None:
+    """"Niets nodig" alleen als dat over het hele profiel waar is.
+
+    _p02_startpunt_zin schrijft bij none_needed dat je mensen NERGENS om
+    verandering vragen. direction_state werkt per factor, dus die sleutel wordt
+    hier alleen afgegeven als het startpunt in die staat staat en geen enkele
+    andere factor met genoeg beantwoorders een andere richting laat zien.
+    Anders geen sleutel: de per-factor-nuance staat al in _direction_p02_line,
+    een paar regels lager op dezelfde pagina.
+    """
+    if not direction_agg or not primary_key or primary_key not in direction_agg:
+        return None
+    states = {fk: direction_state(agg, fk)["state"] for fk, agg in direction_agg.items()}
+    # too_few zegt niets over de richting en spreekt "nergens" dus ook niet tegen.
+    leesbaar = [s for s in states.values() if s != "too_few"]
+    if states[primary_key] == "none_needed" and all(s == "none_needed" for s in leesbaar):
+        return "none_needed"
+    return None
+
+
+def _p02_startpunt_zin(primary_label: str, *, tie_break_kind: str | None,
+                       change: tuple[int, int] | None, next_delta: float | None,
+                       direction_state_key: str | None,
+                       primary_is_lowest: bool) -> str:
+    """Welk onderwerp Loep als startpunt kiest, met de grond erbij.
+
+    Elke tak eist zijn eigen grond expliciet, zodat geen enkele zin iets beweert
+    wat in deze meting niet meespeelde:
+
+    - "de laagste score" alleen als het startpunt ook echt de laagste factor is.
+      Bij Loep Vertrek tilt de vertrekredenweging het startpunt daar weg, en
+      binnen een gelijkspelgroep doet een tie-break dat ook.
+    - "het verschil is klein" alleen binnen PRIORITY_TIE_MARGIN, de marge waarop
+      de rangorde zelf van gelijkspel spreekt. Anders zou het getal in de zin de
+      zin tegenspreken.
+
+    Haalt geen enkele tak zijn voorwaarde, dan blijft de kale keuze over: die is
+    altijd waar.
+    """
+    if direction_state_key == "none_needed":
+        return ("Je mensen vragen nergens dringend om verandering. Bespreek of een "
+                "startpunt nu nodig is, of dat dit beeld eerst gedeeld wordt.")
+    if tie_break_kind == "direction" and change:
+        a, b = change
+        return (f"Als startpunt kiest Loep {primary_label}: daar vragen de meeste "
+                f"mensen om verandering ({a} van de {b}).")
+    if (tie_break_kind is None and primary_is_lowest and next_delta is not None
+            and 0.0 <= next_delta < PRIORITY_TIE_MARGIN):
+        delta = f"{next_delta:.2f}".replace(".", ",")
+        return (f"Als startpunt kiest Loep {primary_label}, de laagste score. Het "
+                f"verschil met de volgende is klein ({delta}); weeg dat mee in de "
+                f"bespreking.")
+    return f"Als startpunt kiest Loep {primary_label}."
+
+
+def _p02_opening(*, scan_type: str, shape: dict[str, Any], labels: dict[str, str],
+                 primary_key: str | None,
+                 tie_break_kind: str | None = None,
+                 change: tuple[int, int] | None = None,
+                 next_delta: float | None = None,
+                 direction_state_key: str | None = None) -> str:
+    """De eerste zin van pagina twee (spec ronde 2 par. 2.2 en par. 5.2).
+
+    Beweegt mee met hoeveel onderwerpen kwetsbaar scoren, en zegt het expliciet
+    als er niets uitspringt. Voorheen volgde deze zin alleen de band van het
+    totaalsignaal, waardoor "geen enkele factor kwetsbaar" en "alle zes
+    kwetsbaar" structureel dezelfde zin kregen (bevinding B17).
+
+    Zonder factorprofiel leeg: de degraded tak van _bestuurlijke_read (ronde 1,
+    B2) draagt dan het verhaal.
+    """
+    if not shape["n_factors"] or primary_key is None:
+        return ""
+    k = shape["n_vulnerable"]
+    zacht, breed = _P02_DRUKWOORD[scan_type]
+    if k == 0 and shape["flat"]:
+        kop = _p02_flat_sentence(shape, labels)
+    elif k == 0:
+        # De laagst scorende factor is NIET altijd het startpunt: bij Loep
+        # Vertrek verschuift de vertrekredenweging de base, en binnen een
+        # gelijkspelgroep kan richting, spreiding of verdieping de volgorde
+        # bepalen. Vallen ze samen, dan mag de zin dat zeggen; verschillen ze,
+        # dan noemt de zin ze apart en legt de bronregel eronder uit waarom.
+        laagste = labels[shape["low_key"]]
+        if shape["low_key"] == primary_key:
+            return (f"Geen onderwerp scoort kwetsbaar. {laagste} scoort het laagst "
+                    f"en is het eerste gesprekspunt.")
+        return (f"Geen onderwerp scoort kwetsbaar. {laagste} scoort het laagst; "
+                f"als eerste gesprekspunt kiest Loep {labels[primary_key]}.")
+    elif k <= 2:
+        # factors_low_to_high staat al in de canonieke volgorde (laagst eerst,
+        # op de onafgeronde waarde), dus hier alleen filteren: opnieuw sorteren
+        # op de getoonde score zou twee gelijk getoonde factoren omdraaien.
+        vuln = [(fk, v) for fk, v in shape["factors_low_to_high"] if v < ZONE_LOW]
+        onderwerp = "een onderwerp" if k == 1 else "twee onderwerpen"
+        namen = " en ".join(f"{labels[fk]} ({_score_str(v)})" for fk, v in vuln)
+        kop = f"{zacht} {onderwerp}: {namen}."
+    else:
+        kop = (f"{breed}: {k} van de {shape['n_factors']} onderwerpen scoren "
+               f"kwetsbaar.")
+    return f"{kop} " + _p02_startpunt_zin(
+        labels[primary_key], tie_break_kind=tie_break_kind, change=change,
+        next_delta=next_delta, direction_state_key=direction_state_key,
+        primary_is_lowest=shape["low_key"] == primary_key)
+
+
+def _p02_startpunt_gronden(
+        raster_rows: list[dict[str, Any]],
+) -> tuple[str | None, tuple[int, int] | None, float | None]:
+    """De grond onder de startpuntregel op p.02, uit de rangorde zelf.
+
+    Levert (tie-break-signaal, richtingtelling, afstand tot de volgende rij).
+    decided_by komt uit rank_factors, dus de grond in de kernzin kan niet
+    afwijken van de volgorde die de lezer verderop in het raster ziet.
+    """
+    if not raster_rows:
+        return None, None, None
+    top = raster_rows[0]
+    decided = top["decided_by"]
+    change = ((top["direction_change"], top["direction_answered"])
+              if top["direction_change"] is not None else None)
+    delta = (round(raster_rows[1]["score"] - top["score"], 2)
+             if len(raster_rows) > 1 else None)
+    return (decided["kind"] if decided else None), change, delta
+
+
+def _p02_signal_cell(label: str, value: str, band: str) -> str:
+    """Het totaalsignaal met zijn band, als cel in de onderbouwingsrij van p.02.
+
+    Stond tot ronde 2 in de kernzin; die plek is nu van de zin over de vorm van
+    het profiel. Leeg zonder waarde of band: een cel met een gat erin is geen
+    eerlijke degradatie maar een kaal veld.
+    """
+    if not value or not band:
+        return ""
+    return (f'<td><div class="sc-l">{_h(label)}</div>'
+            f'<div class="sc-v">{_h(value)}</div>'
+            f'<div class="sc-b">{_h(band)}</div></td>')
 
 
 def _factor_color(score: float | None) -> str:
@@ -847,7 +1024,8 @@ def _bestuurlijke_read(*, kernzin: str, totaalbeeld: str,
                        mgmt_q: str, mgmt_q_source: str = "",
                        responsbasis_html: str = "", opener_html: str = "",
                        usage_html: str = "", direction_line: str = "",
-                       degraded_note: str = "") -> str:
+                       degraded_note: str = "", why_title: str = "",
+                       signal_cell_html: str = "") -> str:
     # Degraded variant (bug B2): zonder factorprofiel heeft het why-blok geen
     # onderwerp en de Gespreksopener geen vraag. Dan rendert hier één
     # expliciete alinea in plaats van het gewone blok met gaten erin;
@@ -860,12 +1038,22 @@ def _bestuurlijke_read(*, kernzin: str, totaalbeeld: str,
                 f'<h3>Wat dit rapport wel en niet laat zien</h3>'
                 f'<p style="max-width:62ch;margin-bottom:0;">{_h(degraded_note)}</p></div>')
     else:
+        # Onderbouwingsrij onder het why-blok. Sinds ronde 2 (taak 3) draagt die
+        # ook het totaalsignaal met zijn band: dat getal stond in de kernzin, en
+        # die plek is nu ingenomen door de zin over de vorm van het profiel.
+        strong_cell = (
+            f"<td><div class='sc-l'>Relatief sterk</div>"
+            f"<div class='sc-v'>{_score_str(strong_score)}</div>"
+            f"<div class='sc-b'>{_h(strong_label)}: wat w&eacute;l werkt</div></td>"
+        ) if (strong_label and _factor_label(strong_score) == "Relatief sterk") else ""
+        sg_row = (f"<table class='sg'><tr>{signal_cell_html}{strong_cell}</tr></table>"
+                  if (signal_cell_html or strong_cell) else "")
+        why_title_html = (_h(why_title) if why_title
+                          else f"Waarom {_h(primary_label)} bovenaan staat")
         body = f"""<div class="why">
-    <div class="why-title">Waarom {_h(primary_label)} bovenaan staat</div>
+    <div class="why-title">{why_title_html}</div>
     <table class="why-grid"><tr>{why_cells_html}</tr></table>
-    {("<table class='sg'><tr>"
-      f"<td><div class='sc-l'>Relatief sterk</div><div class='sc-v'>{_score_str(strong_score)}</div><div class='sc-b'>{_h(strong_label)}: wat w&eacute;l werkt</div></td>"
-      "</tr></table>") if (strong_label and _factor_label(strong_score) == "Relatief sterk") else ""}
+    {sg_row}
     <div class="mq-line"><span class="mq-label">Gespreksopener</span><p>{_h(mgmt_q)}</p>{f'<span class="mq-source">{_h(mgmt_q_source)}</span>' if mgmt_q_source else ''}{f'<p class="mq-direction">{_h(direction_line)}</p>' if direction_line else ''}</div>
   </div>"""
     # Lege subtekst levert geen lege <p> meer op.
@@ -2809,10 +2997,11 @@ def render_exit_report_html(data: dict) -> str:
     exit_code_counts = {fk: _code_to_count.get(FACTOR_EXIT_CODE.get(fk), 0) for fk in fa}
     deep_agg = data.get("deepening_agg") or {}
     direction_agg = data.get("direction_agg") or {}
+    _raster_labels = {fk: _fl(fk, "exit") for fk in ORG_FACTOR_KEYS}
     _raster_rows = rank_factors(
         "exit", fa, data.get("factor_resp_scores") or {}, deep_agg,
         exit_reason_counts=exit_code_counts,
-        labels={fk: _fl(fk, "exit") for fk in ORG_FACTOR_KEYS},
+        labels=_raster_labels,
         direction_agg=direction_agg)
 
     sorted_f = sorted([(fk, fa.get(fk)) for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None],
@@ -2839,7 +3028,6 @@ def render_exit_report_html(data: dict) -> str:
     # de cover en in de kernzin. Leeg betekent hier "geen factorprofiel"; de
     # cover en de kernzin vullen dat zelf eerlijk in.
     _raster_primary_label = _raster_rows[0]["label"] if _raster_rows else (low_lbl or high_lbl or "")
-    _raster_primary_score = _raster_rows[0]["score"] if _raster_rows else low_sc
     _geen_profiel = not _raster_rows
 
     # ── Cover ─────────────────────────────────────────────────────────────────
@@ -2855,29 +3043,33 @@ def render_exit_report_html(data: dict) -> str:
     er_top   = data["exit_r_dist"][0]["label"] if data["exit_r_dist"] else ""
 
     # Directe executive copy
-    # Kernzin claimt bewust NIET dat het startpunt "het laagst scoort" (bug B1,
-    # stresstest ronde 1): het raster-startpunt is bij Loep Vertrek by design
-    # niet altijd de laagste factor -- de vertrekreden-weging
+    # Kernzin (ronde 2, B17): volgt de vorm van het profiel, niet de band van de
+    # frictiescore. Die score staat nu met haar band in de onderbouwingsrij
+    # eronder. De zin claimt bewust NIET dat het startpunt "het laagst scoort"
+    # (bug B1, stresstest ronde 1): het raster-startpunt is bij Loep Vertrek by
+    # design niet altijd de laagste factor -- de vertrekreden-weging
     # (EXIT_REASON_WEIGHT) en de spreidings-/verdiepingsvlaggen kunnen een
-    # andere factor bovenaan zetten, en het raster toont die lagere score dan
-    # verderop in hetzelfde rapport. De kernzin benoemt dus alleen de positie
-    # plus de score; waarom die factor bovenaan staat, legt _raster_attribution
-    # uit in de bronregel onder de gespreksopener op dezelfde pagina.
-    #
-    # NB de eerste tak is met de echte EXIT_REASON_LABELS_NL onbereikbaar: geen
-    # vertrekredenlabel bevat een volledig factorlabel als substring. Hij blijft
-    # staan voor toekomstige copy-wijzigingen aan die labels en wordt met een
-    # synthetisch label getest in tests/test_report_exit_kernzin.py. Zijn
-    # tweelingzin staat in _vertrekcontext, achter dezelfde substring-test.
-    _beeld = fl.lower().replace(' frictiebeeld', '').replace(' vertrekbeeld', '')
-    if _raster_primary_label and er_top and _raster_primary_label.lower() in er_top.lower():
-        exec_line = f"Het vertrekbeeld is {_beeld}, maar {_raster_primary_label} springt eruit: het staat bovenaan en is de meest genoemde vertrekreden."
-    elif _raster_primary_label and er_top:
-        exec_line = f"Het vertrekbeeld is {_beeld}. Bovenaan staat {_raster_primary_label} ({_score_str(_raster_primary_score)}); {er_top} is de meest genoemde vertrekreden."
-    elif avg_risk:
-        exec_line = f"De frictiescore van {rdsp} wijst op een {fl.lower()}."
-    else:
-        exec_line = "Zie de vertrekcontext en de responsbasis voor wat dit rapport wel toont."
+    # andere factor bovenaan zetten. Vallen de laagste factor en het startpunt
+    # uiteen, dan noemt _p02_opening ze apart; waarom die factor bovenaan staat,
+    # legt _raster_attribution uit in de bronregel onder de gespreksopener op
+    # dezelfde pagina.
+    _shape = profile_shape(fa)
+    _primary = _raster_rows[0]["key"] if _raster_rows else None
+    _tk, _chg, _delta = _p02_startpunt_gronden(_raster_rows)
+    exec_line = _p02_opening(
+        scan_type="exit", shape=_shape, labels=_raster_labels, primary_key=_primary,
+        tie_break_kind=_tk, change=_chg, next_delta=_delta,
+        direction_state_key=_p02_direction_key(direction_agg, _primary))
+    _signal_cell = _p02_signal_cell("Frictiescore", rdsp if avg_risk else "",
+                                    fl if avg_risk else "")
+    if exec_line and er_top:
+        exec_line = f"{exec_line} {er_top} is de meest genoemde vertrekreden."
+    if not exec_line:
+        # Geen factorprofiel (bug B2). De onderbouwingsrij rendert in die staat
+        # niet, dus de frictiescore blijft hier staan in plaats van uit het
+        # rapport te verdwijnen.
+        exec_line = (f"De frictiescore van {rdsp} wijst op een {fl.lower()}." if avg_risk
+                     else "Zie de vertrekcontext en de responsbasis voor wat dit rapport wel toont.")
     # Sterke factor bewust NIET in de titel: die staat al in de subtekst
     # (totaalbeeld) — voorheen stond dezelfde observatie 2x binnen 4 regels.
 
@@ -2983,8 +3175,10 @@ def render_exit_report_html(data: dict) -> str:
         responsbasis_html=_responsbasis_band,
         opener_html=ch.opener("Bestuurlijke read"),
         usage_html=_gebruiksblok(data["scan_lbl"], degraded=bool(br_degraded_note)),
-        direction_line=_direction_p02_line(direction_agg, _raster_rows[0]["key"] if _raster_rows else None, "exit"),
+        direction_line=_direction_p02_line(direction_agg, _primary, "exit"),
         degraded_note=br_degraded_note,
+        why_title=_p02_why_title(_shape),
+        signal_cell_html=_signal_cell,
     )
 
     # ── Vertrekcontext (p.04 — vóór factorprofiel) ───────────────────────────
@@ -3262,9 +3456,10 @@ def render_retention_report_html(data: dict) -> str:
     # gebruiken. ────────────────────────────────────────────────────────────
     deep_agg = data.get("deepening_agg") or {}
     direction_agg = data.get("direction_agg") or {}
+    _raster_labels = {fk: _fl(fk, ST) for fk in ORG_FACTOR_KEYS}
     _raster_rows = rank_factors(
         "retention", fa, data.get("factor_resp_scores") or {}, deep_agg,
-        labels={fk: _fl(fk, ST) for fk in ORG_FACTOR_KEYS},
+        labels=_raster_labels,
         direction_agg=direction_agg)
 
     # Eén waarheid voor "de primaire factor" door het hele rapport heen (spec
@@ -3340,16 +3535,26 @@ def render_retention_report_html(data: dict) -> str:
                  "de responsbasis onderaan deze pagina"],
         )
 
-    # Kernzin: band + geduid getal + laagste factor. "behoudssignaal" bij het
-    # cijfer, zodat de lezer weet WAT er 4.7 scoort (de factorscore ernaast is
-    # een ander getal — dat onderscheid was eerder onzichtbaar).
-    if signal and band_lbl and _raster_primary_label:
-        exec_line = f"{band_lbl} (behoudssignaal {_score_str(signal)}). {_raster_primary_label} is het eerste gesprekspunt."
-    elif signal and band_lbl:
-        # Geen factorprofiel: wel het behoudssignaal, geen startpunt (bug B2).
-        exec_line = f"{band_lbl} (behoudssignaal {_score_str(signal)})."
-    else:
-        exec_line = "Zie de behoudscontext en de responsbasis voor wat dit rapport wel toont."
+    # Kernzin (ronde 2, B17): volgt de vorm van het profiel, niet de band van
+    # het behoudssignaal. Dat getal volgde eerder als enige de openingszin,
+    # waardoor "geen factor kwetsbaar" en "alle zes kwetsbaar" dezelfde zin
+    # kregen; het staat nu met zijn band in de onderbouwingsrij eronder.
+    _shape = profile_shape(fa)
+    _primary = _raster_rows[0]["key"] if _raster_rows else None
+    _tk, _chg, _delta = _p02_startpunt_gronden(_raster_rows)
+    exec_line = _p02_opening(
+        scan_type=ST, shape=_shape, labels=_raster_labels, primary_key=_primary,
+        tie_break_kind=_tk, change=_chg, next_delta=_delta,
+        direction_state_key=_p02_direction_key(direction_agg, _primary))
+    _signal_cell = _p02_signal_cell("Behoudssignaal", _score_str(signal) if signal else "",
+                                    band_lbl or "")
+    if not exec_line:
+        # Geen factorprofiel (bug B2). De onderbouwingsrij rendert in die staat
+        # niet, dus het behoudssignaal blijft hier staan in plaats van uit het
+        # rapport te verdwijnen.
+        exec_line = (f"{band_lbl} (behoudssignaal {_score_str(signal)})."
+                     if signal and band_lbl
+                     else "Zie de behoudscontext en de responsbasis voor wat dit rapport wel toont.")
 
     # Subtekst herhaalt de titel niet meer: alleen wat nieuw is. De
     # responsbasis staat nu onderaan dezelfde pagina.
@@ -3383,8 +3588,10 @@ def render_retention_report_html(data: dict) -> str:
         responsbasis_html=_responsbasis_band,
         opener_html=ch.opener("Bestuurlijke read"),
         usage_html=_gebruiksblok(data["scan_lbl"], degraded=bool(br_degraded_note)),
-        direction_line=_direction_p02_line(direction_agg, _raster_rows[0]["key"] if _raster_rows else None, ST),
+        direction_line=_direction_p02_line(direction_agg, _primary, ST),
         degraded_note=br_degraded_note,
+        why_title=_p02_why_title(_shape),
+        signal_cell_html=_signal_cell,
     )
 
     # ── Behoudscontext (p.04 — vóór factorprofiel) ───────────────────────────
@@ -3705,6 +3912,7 @@ def render_onboarding_report_html(data: dict) -> str:
     high_lbl = _fl(high_f[0], ST) if high_f else ""
     low_sc   = low_f[1]  if low_f  else None
     high_sc  = high_f[1] if high_f else None
+    _raster_labels = {fk: _fl(fk, ST) for fk in ORG_FACTOR_KEYS}
 
     # Geen raster bij Loep Start: "geen factorprofiel" == geen enkele factor
     # met een score (zelfde staat die exit/retention via _raster_rows zien).
@@ -3764,15 +3972,26 @@ def render_onboarding_report_html(data: dict) -> str:
                  "de responsbasis onderaan deze pagina"],
         )
 
-    # Kernzin: band + geduid getal + laagste factor ("checkpointscore" zodat de
-    # lezer weet wat het getal is; de factorscore ernaast is een ander getal).
-    if signal and band_lbl and low_lbl:
-        exec_line = f"{band_lbl} (checkpointscore {_score_str(signal)}). {low_lbl} is het eerste gesprekspunt."
-    elif signal and band_lbl:
-        # Geen factorprofiel: wel de checkpointscore, geen startpunt (bug B2).
-        exec_line = f"{band_lbl} (checkpointscore {_score_str(signal)})."
-    else:
-        exec_line = "Zie het checkpointoverzicht en de responsbasis voor wat dit rapport wel toont."
+    # Kernzin (ronde 2, B17): volgt de vorm van het profiel, niet de band van de
+    # checkpointscore. Die staat nu met haar band in de onderbouwingsrij eronder.
+    # Loep Start heeft geen prioriteringsraster (de rangorde is puur de score) en
+    # geen richtingvraag, dus er is hier geen tie-break of richtingtelling te
+    # noemen. Het startpunt is dezelfde factor die het why-blok eronder toont.
+    _shape = profile_shape(fa)
+    _primary = (top_fkeys[0] if top_fkeys else (low_f[0] if low_f else None))
+    _delta = (round(sorted_f[1][1] - sorted_f[0][1], 2) if len(sorted_f) > 1 else None)
+    exec_line = _p02_opening(
+        scan_type=ST, shape=_shape, labels=_raster_labels, primary_key=_primary,
+        next_delta=_delta)
+    _signal_cell = _p02_signal_cell("Checkpointscore", _score_str(signal) if signal else "",
+                                    band_lbl or "")
+    if not exec_line:
+        # Geen factorprofiel (bug B2). De onderbouwingsrij rendert in die staat
+        # niet, dus de checkpointscore blijft hier staan in plaats van uit het
+        # rapport te verdwijnen.
+        exec_line = (f"{band_lbl} (checkpointscore {_score_str(signal)})."
+                     if signal and band_lbl
+                     else "Zie het checkpointoverzicht en de responsbasis voor wat dit rapport wel toont.")
 
     # Subtekst herhaalt de titel niet meer: alleen wat nieuw is. De
     # responsbasis staat nu onderaan dezelfde pagina.
@@ -3807,6 +4026,8 @@ def render_onboarding_report_html(data: dict) -> str:
         opener_html=ch.opener("Bestuurlijke read"),
         usage_html=_gebruiksblok(data["scan_lbl"], degraded=bool(br_degraded_note)),
         degraded_note=br_degraded_note,
+        why_title=_p02_why_title(_shape),
+        signal_cell_html=_signal_cell,
     )
 
     # ── Overzichtsprofiel (p.04) ──────────────────────────────────────────────

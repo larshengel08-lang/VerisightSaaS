@@ -120,11 +120,17 @@ def test_geen_enkele_zin_claimt_dat_het_startpunt_het_laagst_scoort():
 
 
 def test_kernzin_claimt_niet_dat_startpunt_het_laagst_scoort():
+    """Ronde 2 (taak 3): de kernzin volgt de vorm van het profiel en noemt het
+    startpunt apart. Beide kwetsbare onderwerpen staan met hun eigen score in de
+    zin, dus een verwisseling van laagste en startpunt overleeft deze assertie
+    niet."""
     html = render_exit_report_html(_exit_fixture(_DIST_LOS))
 
     start_lbl = _fl("leadership", "exit")
-    assert (f"Bovenaan staat {start_lbl} (4.9/10); Beter aanbod elders is de "
-            f"meest genoemde vertrekreden.") in html
+    laagste_lbl = _fl("growth", "exit")
+    assert (f"Het vertrekbeeld wijst naar twee onderwerpen: {laagste_lbl} (4.5/10) "
+            f"en {start_lbl} (4.9/10). Als startpunt kiest Loep {start_lbl}. "
+            f"Beter aanbod elders is de meest genoemde vertrekreden.") in html
     # De bronregel onder de gespreksopener draagt de uitleg (een verhaal).
     assert ("Gebaseerd op de score en hoe vaak dit thema als vertrekreden is "
             "genoemd.") in html
@@ -132,12 +138,20 @@ def test_kernzin_claimt_niet_dat_startpunt_het_laagst_scoort():
 
 
 def test_kernzin_bij_samenvallende_vertrekreden_claimt_geen_laagste_factor():
-    # Tak 1: het startpuntlabel valt samen met de meest genoemde vertrekreden.
+    """Het startpuntlabel valt samen met de meest genoemde vertrekreden.
+
+    De aparte samenval-tak op p.02 is in ronde 2 (taak 3) vervallen: de kernzin
+    volgt nu de vorm van het profiel en krijgt de vertrekreden als staart, ook
+    als die hetzelfde thema noemt. De samenval blijft wel benoemd in de
+    vertrekcontext-kaart (zie de test hieronder). Wat niet mag terugkomen is de
+    claim dat het startpunt het laagst scoort.
+    """
     html = render_exit_report_html(_exit_fixture(_DIST_SAMENVALLEND))
 
     start_lbl = _fl("leadership", "exit")
-    assert (f"maar {start_lbl} springt eruit: het staat bovenaan en is de "
-            f"meest genoemde vertrekreden.") in html
+    assert (f"Als startpunt kiest Loep {start_lbl}. {_SYNTHETISCH_REDENLABEL} is "
+            f"de meest genoemde vertrekreden.") in html
+    assert "springt eruit: het staat bovenaan" not in html
 
 
 def test_vertrekcontext_vertelt_hetzelfde_verhaal_als_pagina_twee():
@@ -184,7 +198,9 @@ def test_overzichtsprofiel_intro_is_productbewust():
 
 def test_kernzin_copy_heeft_geen_em_dashes():
     html = render_exit_report_html(_exit_fixture(_DIST_LOS))
-    start = html.find("Het vertrekbeeld is")
+    # Op de kernzin-class geankerd en niet op een woordvolgorde: die volgt sinds
+    # ronde 2 de vorm van het profiel en verschilt dus per meting.
+    start = html.find('<p class="br-kernzin">')
     assert start != -1
     einde = html.find("</p>", start)
     assert einde != -1

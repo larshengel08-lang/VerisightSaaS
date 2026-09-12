@@ -15,7 +15,6 @@ deze omkering.
 """
 from __future__ import annotations
 
-import re
 
 import pytest
 
@@ -66,7 +65,10 @@ def test_band_exit_keeps_risk_polarity():
 # ── _behoudscontext: één ladder voor kleur en note ───────────────────────────
 
 def _sigrow_behoudssignaal(html: str) -> str:
-    start = html.index("Behoudssignaal")
+    # Op de sigrow-titel geankerd en niet op het kale woord: sinds ronde 2
+    # (taak 3) draagt ook de onderbouwingscel op p.02 het label
+    # "Behoudssignaal", en die staat eerder in het document.
+    start = html.index('<div class="sigrow-title">Behoudssignaal</div>')
     end = html.index('class="sigrow"', start) if 'class="sigrow"' in html[start:] else len(html)
     return html[start:end]
 
@@ -151,21 +153,40 @@ def _min_data(scan_type: str, avg_risk: float, n: int = 12) -> dict:
     )
 
 
+def _signaalcel(html: str, label: str) -> str:
+    """De onderbouwingscel op p.02 die het totaalsignaal draagt.
+
+    Het getal stond tot ronde 2 (taak 3) in de kernzin; die plek is nu van de
+    zin over de vorm van het profiel. De cel moet het getal MET zijn band tonen,
+    dus deze helper levert de hele cel en niet los het getal: een cel met het
+    getal van de ene meting en de band van de andere zou een losse substringtest
+    overleven.
+    """
+    i = html.find(f'<div class="sc-l">{label}</div>')
+    assert i != -1, f"onderbouwingscel {label!r} niet gevonden"
+    j = html.find("</td>", i)
+    return html[i:j]
+
+
 def test_retention_kernzin_shows_health_value_and_matching_band():
     # avg_risk 3.0 -> behoudssignaal 8.0 (sterk); avg_risk 7.0 -> 4.0 (onder druk)
     html = render_retention_report_html(_min_data("retention", 3.0))
-    m = re.search(r"behoudssignaal (\d\.\d)/10", html)
-    assert m and m.group(1) == "8.0"
-    assert "Behoudsklimaat stabiel (behoudssignaal 8.0/10)" in html
+    # De regex op "behoudssignaal 8.0/10" is vervallen: dat woord stond in de
+    # kernzin, en het getal draagt zijn duiding nu via het cel-label hieronder.
+    cel = _signaalcel(html, "Behoudssignaal")
+    assert "8.0/10" in cel and "Behoudsklimaat stabiel" in cel
     assert "3.0/10" not in _sigrow_behoudssignaal(html)
 
     html_low = render_retention_report_html(_min_data("retention", 7.0))
-    assert "Behoud onder druk (behoudssignaal 4.0/10)" in html_low
+    cel_low = _signaalcel(html_low, "Behoudssignaal")
+    assert "4.0/10" in cel_low and "Behoud onder druk" in cel_low
     assert '<span class="sigrow-note">onder druk</span>' in _sigrow_behoudssignaal(html_low)
 
 
 def test_onboarding_kernzin_shows_health_value_and_matching_band():
     html = render_onboarding_report_html(_min_data("onboarding", 3.0))
-    assert "Onboardingbasis stabiel (checkpointscore 8.0/10)" in html
+    cel = _signaalcel(html, "Checkpointscore")
+    assert "8.0/10" in cel and "Onboardingbasis stabiel" in cel
     html_low = render_onboarding_report_html(_min_data("onboarding", 7.0))
-    assert "Onboardingbasis vraagt aandacht (checkpointscore 4.0/10)" in html_low
+    cel_low = _signaalcel(html_low, "Checkpointscore")
+    assert "4.0/10" in cel_low and "Onboardingbasis vraagt aandacht" in cel_low
