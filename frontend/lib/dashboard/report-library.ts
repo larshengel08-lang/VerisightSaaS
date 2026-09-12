@@ -6,7 +6,11 @@ import {
 import { SCAN_TYPE_LABELS, type CampaignStats, type ScanType } from '@/lib/types'
 
 // ─── HR Report Download Rows ──────────────────────────────────────────────────
-// Gebruikt door reports/page.tsx en dashboard/cockpit-index.ts.
+// Sinds reports/page.tsx op buildReportOverviewRows draait (spec 2026-09-11
+// par. 4.3) leest alleen dashboard/cockpit-index.ts dit nog, en dat bestand
+// wordt zelf nergens meer geïmporteerd behalve door zijn eigen test. Deze
+// keten staat dus op de nominatie om via verify-before-delete te verdwijnen;
+// dat is een los traject, niet dit plan.
 // Type is structureel compatibel met ReportDownloadRow in report-download-index.ts.
 
 export type HrReportDownloadRow = {
