@@ -2656,8 +2656,9 @@ def _segment_start_note(segment_rows: list[dict],
     """
     # Zelf sorteren, niet vertrouwen op de invoervolgorde: bestaande aanroepen
     # geven ook ongesorteerde rijen door (zie tests/test_segment_report.py), en
-    # dan zou "de laagste" de verkeerde afdeling noemen. Zelfde sleutel als
-    # _department_segment_rows, zodat de zin de tabelvolgorde volgt.
+    # dan zou "de laagste" de verkeerde afdeling noemen. Dezelfde sorteersleutel
+    # als _department_segment_rows, zodat "de laagste" hier hetzelfde betekent
+    # als daar (de tabel rendert in de volgorde die hij binnenkrijgt).
     named = sorted((r for r in segment_rows if not r.get("is_pooled", False)),
                    key=lambda r: (r["avg"], -r["n"], r["department"]))
     if len(named) < 2:
@@ -2697,11 +2698,22 @@ def _segment_start_note(segment_rows: list[dict],
                 f'De twee laagste afdelingen liggen dicht bij elkaar '
                 f'({_h(lowest["department"])} {low_sc:.1f}/10 en '
                 f'{_h(runner_up["department"])} {run_sc:.1f}/10).')
+        # "Geen eerste afdeling aan te wijzen", niet "geen afdeling vraagt
+        # aandacht": vastgesteld is alleen dat de twee laagste niet van elkaar
+        # te onderscheiden zijn. Bij 5,0 / 5,1 / 9,0 vragen die twee ten
+        # opzichte van de hoogste wel degelijk aandacht; de conclusie mag niet
+        # breder generaliseren dan de vergelijking in de haakjes ervoor.
         body = (f'{vergelijking} Loep wijst pas een afdeling aan bij een verschil '
-                f'van minstens {marge} punt met de volgende. Geen afdeling vraagt '
-                f'als eerste aandacht; kijk naar het organisatiebeeld.')
+                f'van minstens {marge} punt met de volgende. Er is hier dus geen '
+                f'eerste afdeling aan te wijzen. Kijk voor de eerste prioriteit '
+                f'naar het organisatiebeeld.')
     elif laagste_te_klein:
-        body = (f'{_h(lowest["department"])} scoort het laagst ({low_sc:.1f}/10), maar '
+        # "van de afdelingen die apart getoond worden": de gepoolde restgroep kan
+        # lager staan, en dan zou een kale "scoort het laagst" in dezelfde alinea
+        # worden weerlegd door de restgroep-zin eronder. Zonder restgroep is de
+        # toevoeging ook waar (elke getoonde afdeling staat apart in de tabel).
+        body = (f'{_h(lowest["department"])} scoort het laagst van de afdelingen die '
+                f'apart getoond worden ({low_sc:.1f}/10), maar '
                 f'heeft {lowest["n"]} responses. Loep wijst een afdeling pas aan vanaf '
                 f'{MIN_DISTRIBUTION_N} responses, zodat de conclusie niet op een handvol '
                 f'antwoorden rust. Kijk voor de eerste prioriteit naar het '
@@ -2723,13 +2735,26 @@ def _segment_start_note(segment_rows: list[dict],
         # zonder decimaal (n=5-9) is hier vervallen: deze staat eist
         # MIN_DISTRIBUTION_N, dus de score mag altijd getoond worden. De
         # staffel zelf leeft door in de themakolom (_segment_theme_cell).
+        #
+        # Zijn er thema's die de per-factor-gate niet haalden, dan staat het
+        # getoonde thema onder voorbehoud: de themakolom meldt dat al, en die
+        # melding hoort ook hier te staan. Zonder dat voorbehoud is deze zin
+        # steviger dan de cel ernaast over precies hetzelfde thema.
         theme_sentence = ""
         low_info = (factor_rows or {}).get(lowest["department"])
         if low_info and low_info.get("factors"):
-            _lfk, _lavg, _lnf = low_info["factors"][0]
+            _lfk, _lavg, _ = low_info["factors"][0]
+            _omitted = low_info.get("omitted", 0)
+            _voorbehoud = ""
+            if _omitted > 0:
+                _woord = "thema is" if _omitted == 1 else "thema&#39;s zijn"
+                _voorbehoud = (f' Daarbij past een voorbehoud: {_omitted} {_woord} '
+                               f'daar niet beoordeelbaar, te weinig antwoorden.')
             theme_sentence = (f' Het laagst scorende thema daar is '
-                              f'{_h(_lc(_fl(_lfk, scan_type)))} ({_lavg:.1f}/10).')
+                              f'{_h(_lc(_fl(_lfk, scan_type)))} ({_lavg:.1f}/10).'
+                              f'{_voorbehoud}')
         body = (f'<strong>{_h(lowest["department"])}</strong> heeft de laagste score '
+                f'van de afdelingen die apart getoond worden '
                 f'({low_sc:.1f}/10; {_low_basis}). Gebruik dit om te toetsen wat hier '
                 f'speelt, geen ranking of oordeel.{theme_sentence}')
 
@@ -2739,9 +2764,16 @@ def _segment_start_note(segment_rows: list[dict],
 
 
 def _segment_block(segment_rows: list[dict], factor_rows: dict[str, dict] | None = None,
-                   scan_type: str = "exit", opener_html: str = "") -> str:
+                   scan_type: str = "exit", opener_html: str = "",
+                   hidden_n: int = 0) -> str:
     """Segmentanalyse per afdeling: tabel + spreidingsstrip (spec 2026-07-11)
     + factorlaag met laagste thema en uitsplitsing (spec 2026-07-16).
+
+    hidden_n (uit `_segment_hidden_n`) is het aantal responses dat nergens in
+    de tabel terechtkomt omdat hun afdeling te klein is en de restgroep de
+    grens ook niet haalt; dat wordt onder de tabel gemeld. 0 betekent "niemand
+    valt buiten de tabel", de juiste waarde voor aanroepen met handgemaakte
+    rijen: die hebben geen verborgen respondenten.
 
     Strip-gate n>=10 (MIN_DISTRIBUTION_N): rapportbreed EEN regel — bij 5-9
     responses wel de rij (score/band), geen stippen. "Overige afdelingen"
@@ -2798,11 +2830,26 @@ def _segment_block(segment_rows: list[dict], factor_rows: dict[str, dict] | None
 
     low_note = _segment_start_note(segment_rows, factor_rows, scan_type)
 
+    # Fail Loud: niet tonen mag, verzwijgen niet. Halen de kleine afdelingen
+    # samen de grens voor een restgroep niet, dan staan hun responses nergens
+    # in deze tabel; zonder deze regel klopt de sectie-intro in dat geval niet.
+    hidden_note = ""
+    if hidden_n > 0:
+        _aantal = ("Eén response valt" if hidden_n == 1
+                   else f"{hidden_n} responses vallen")
+        _horen = "die hoort" if hidden_n == 1 else "ze horen elk"
+        hidden_note = (
+            f'<p style="font-size:10px;color:#4A6070;margin:10px 0 0;">'
+            f'{_aantal} buiten deze tabel: {_horen} bij een afdeling met minder dan '
+            f'{MIN_SEGMENT_N} responses, en dat zijn er te weinig om samen als '
+            f'restgroep te tonen.</p>')
+
     return f"""<div class="pb sec">
   {opener_html or '<span class="slabel">Segmentanalyse per afdeling</span>'}
   {_intro("segmentanalyse")}
   <div class="card">
     <table class="item-tbl">{rows_html}</table>
+    {hidden_note}
     {subblocks}
     {low_note}
   </div>
@@ -2877,6 +2924,35 @@ def _enrich_segment_rows_with_invited(segment_rows: list[dict],
     return segment_rows
 
 
+def _department_grouping(respondents: list[dict]) -> dict[str, list[float]]:
+    """Scores per afdelingsnaam. Respondenten zonder afdeling of zonder score
+    tellen niet mee. Eén bron voor de rijen en voor de telling van wat er buiten
+    de tabel valt, zodat die twee niet uit elkaar kunnen lopen."""
+    grouped: dict[str, list[float]] = {}
+    for r in respondents:
+        dept, score = r.get("department"), r.get("signal_score")
+        if not dept or score is None:
+            continue
+        grouped.setdefault(str(dept), []).append(float(score))
+    return grouped
+
+
+def _segment_hidden_n(respondents: list[dict]) -> int:
+    """Responses die nergens in de segmenttabel terechtkomen.
+
+    Een afdeling onder MIN_SEGMENT_N krijgt geen eigen rij (privacygrens, die
+    blijft). Normaal komen die responses samen in "Overige afdelingen", maar
+    haalt die restgroep zelf de grens ook niet, dan verdwijnen ze zonder één
+    woord: 12 + 10 + 3 geeft twee rijen met samen 22, terwijl de meting er 25
+    heeft. Niet tonen mag, verzwijgen niet; `_segment_block` meldt dit aantal
+    onder de tabel. Zonder dat is de sectie-intro ("alleen afdelingen met
+    minder dan vijf responses worden gebundeld") in dit geval onwaar.
+    """
+    grouped = _department_grouping(respondents)
+    rest = [s for _d, v in grouped.items() if len(v) < MIN_SEGMENT_N for s in v]
+    return 0 if len(rest) >= MIN_SEGMENT_N else len(rest)
+
+
 def _department_segment_rows(respondents: list[dict]) -> list[dict]:
     """Segmentrijen voor het rapport (regels geport uit legacy report.py:1680-1795).
 
@@ -2887,13 +2963,7 @@ def _department_segment_rows(respondents: list[dict]) -> list[dict]:
     laagste gemiddelde eerst (grootste aandachtspunt bovenaan); "Overige
     afdelingen" altijd onderaan (na de sortering geappend).
     """
-    grouped: dict[str, list[float]] = {}
-    for r in respondents:
-        dept, score = r.get("department"), r.get("signal_score")
-        if not dept or score is None:
-            continue
-        grouped.setdefault(str(dept), []).append(float(score))
-
+    grouped = _department_grouping(respondents)
     eligible = {d: v for d, v in grouped.items() if len(v) >= MIN_SEGMENT_N}
     if len(eligible) < 2:
         return []
@@ -3146,12 +3216,16 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
     # aandachtspunt, sortering laagste eerst). Rechtstreeks de risk-score voeden
     # keerde de polariteit om — de gezondste afdeling werd als grootste
     # aandachtspunt/startpunt gemarkeerd, de slechtste als "relatief sterk".
-    segment_rows = _department_segment_rows([
+    _segment_input = [
         {"department": r.department,
          "signal_score": _signal_health(r.response.risk_score)}
         for r in completed
-    ])
+    ]
+    segment_rows = _department_segment_rows(_segment_input)
     segment_rows = _enrich_segment_rows_with_invited(segment_rows, camp.segment_departments)
+    # Responses die door de privacygrens buiten de tabel vallen zonder in een
+    # restgroep te belanden; _segment_block meldt dit aantal onder de tabel.
+    segment_hidden_n = _segment_hidden_n(_segment_input)
 
     # Factorlaag per afdeling (spec 2026-07-16): laagste thema + uitsplitsing.
     segment_factor_rows = _department_factor_rows(
@@ -3198,6 +3272,7 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
         intent_resp={"stay": si_sc, "turnover": to_sc, "engagement": eng_sc},
         segment_rows=segment_rows,
         segment_factor_rows=segment_factor_rows,
+        segment_hidden_n=segment_hidden_n,
     )
 
 
@@ -3851,7 +3926,8 @@ def render_exit_report_html(data: dict) -> str:
     _seg_rows = data.get("segment_rows") or []
     _seg_opener = ch.opener("Segmentanalyse per afdeling") if _seg_rows else ch.opener("Segmentanalyse")
     s += _segment_block(_seg_rows, factor_rows=data.get("segment_factor_rows"),
-                        scan_type="exit", opener_html=_seg_opener)
+                        scan_type="exit", opener_html=_seg_opener,
+                        hidden_n=data.get("segment_hidden_n", 0))
 
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]
@@ -4261,7 +4337,8 @@ def render_retention_report_html(data: dict) -> str:
     _seg_rows = data.get("segment_rows") or []
     _seg_opener = ch.opener("Segmentanalyse per afdeling") if _seg_rows else ch.opener("Segmentanalyse")
     s += _segment_block(_seg_rows, factor_rows=data.get("segment_factor_rows"),
-                        scan_type=ST, opener_html=_seg_opener)
+                        scan_type=ST, opener_html=_seg_opener,
+                        hidden_n=data.get("segment_hidden_n", 0))
 
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]
@@ -4700,7 +4777,8 @@ def render_onboarding_report_html(data: dict) -> str:
     _seg_rows = data.get("segment_rows") or []
     _seg_opener = ch.opener("Segmentanalyse per afdeling") if _seg_rows else ch.opener("Segmentanalyse")
     s += _segment_block(_seg_rows, factor_rows=data.get("segment_factor_rows"),
-                        scan_type=ST, opener_html=_seg_opener)
+                        scan_type=ST, opener_html=_seg_opener,
+                        hidden_n=data.get("segment_hidden_n", 0))
 
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]

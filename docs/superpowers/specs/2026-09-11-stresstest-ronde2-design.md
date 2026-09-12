@@ -305,6 +305,31 @@ vorm kon worden tegengesproken door de getallen of de opmaak eronder.
 5. **Vergelijken op de getoonde score** (`_shown`, B15), zowel voor de
    verschilgrens als voor het gelijkspel: 6,04 tegen 6,26 staat in de tabel als
    6,0 en 6,3, dus ziet de lezer 0,3 verschil.
+6. **"de laagste score van de afdelingen die apart getoond worden"** in de
+   aanwijzende staat en in de te-klein-staat (fixronde 2026-09-12). Een kale
+   "heeft de laagste score (5,0)" werd binnen dezelfde alinea weerlegd door de
+   restgroep-zin eronder ("scoort lager (4,0)"), precies de fout waarvoor deze
+   taak bestaat. Met de kwalificatie klopt de zin ook zonder restgroep, en ook
+   wanneer de restgroep exact gelijk staat aan de laagste afdeling (dan vuurt
+   de restgroep-zin niet, want die eist strikt lager).
+7. **De conclusie in de dicht-bij-elkaar-staat generaliseert niet verder dan de
+   vergelijking** (fixronde 2026-09-12): "Er is hier dus geen eerste afdeling
+   aan te wijzen" in plaats van "Geen afdeling vraagt als eerste aandacht".
+   Vastgesteld is alleen dat de twee laagste niet van elkaar te onderscheiden
+   zijn; bij 5,0 / 5,1 / 9,0 vragen die twee tegenover de hoogste wel degelijk
+   aandacht.
+8. **De themazin meldt hetzelfde voorbehoud als de themakolom** (fixronde
+   2026-09-12): staan er thema's onder de per-factor-gate (`omitted > 0`), dan
+   zegt de zin dat erbij. Anders is de conclusie steviger dan de cel ernaast
+   over precies hetzelfde thema.
+9. **Meldregel onder de tabel voor responses die nergens landen** (fixronde
+   2026-09-12, `_segment_hidden_n` + `hidden_n` in `_segment_block`). Haalt de
+   restgroep zelf `MIN_SEGMENT_N` niet, dan verdwenen die respondenten zonder
+   één woord: 12 + 10 + 3 gaf twee rijen met samen 22 terwijl de meting er 25
+   had, tegen een intro die alleen over bundelen spreekt. De privacygrens
+   blijft, maar niet tonen mag en verzwijgen niet. `_department_grouping` is de
+   gedeelde bron voor de rijen en voor deze telling, zodat ze niet uit elkaar
+   kunnen lopen.
 
 Verder:
 
@@ -326,6 +351,20 @@ Verder:
   zoals nu. Die staat kan niet uit `_department_segment_rows` komen (onder twee
   kwalificerende afdelingen geeft die een lege lijst) en is gepind door
   `test_report_design_sprong.py`.
+
+**Vervolg, genoteerd bij de review (niet in deze ronde):**
+
+- De kennis dat het laagst scorende thema het eerste element van
+  `factor_rows[dept]["factors"]` is, staat op twee plaatsen met elk hun eigen
+  formattering: `_segment_theme_cell` (de kolom) en `_segment_start_note` (de
+  zin). Wie de volgorde of de staffel verandert, moet ze allebei vinden. Eén
+  bron voor "het laagste thema van deze afdeling, zo geformatteerd" is een
+  aparte ingreep.
+- De paginabescherming is gepind op de CSS-tekst (`.item-tbl tbody.seg-grp`
+  bestaat, `.navy-anchor` bevat `break-inside`), niet op gedrag. Een echte
+  gedragstest vraagt een PDF-render in de suite; die loopt nu alleen via
+  WeasyPrint-Docker buiten pytest (lokaal is WeasyPrint niet importeerbaar, zie
+  de `requires_weasyprint`-marker).
 
 **Vervolg (niet in deze ronde):** ook met de omvangeis op alleen de aangewezen
 afdeling blijft het blok vaker zwijgen dan spreken, omdat afdelingen van 5 tot

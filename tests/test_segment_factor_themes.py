@@ -219,10 +219,14 @@ def test_navy_anchor_zin_met_score_bij_n10():
 
 
 def test_navy_anchor_geen_zin_zonder_factordata():
-    rows = [_row("Marketing", 6, 4.4), _row("Sales", 8, 6.5)]
-    fr = {"Sales": {"factors": [("culture", 6.4, 8)], "omitted": 0}}
+    # De aantallen moeten de aanwijzende staat halen (spec ronde 2 par. 3.1:
+    # verschil >= 0,3 en de laagste afdeling >= MIN_DISTRIBUTION_N). Met 6 en 8
+    # responses was deze test vacuüm: dan komt er sowieso geen themazin, met of
+    # zonder factordata, en de assertie kon niet falen.
+    rows = [_row("Marketing", 12, 4.4), _row("Sales", 12, 6.5)]
+    fr = {"Sales": {"factors": [("culture", 6.4, 12)], "omitted": 0}}
     html = _segment_block(rows, factor_rows=fr, scan_type="retention")
-    assert "Startpunt voor de bespreking" in html
+    assert "Marketing</strong> heeft de laagste score" in html   # staat vuurt
     assert "Het laagst scorende thema daar is" not in html  # geen data = geen zin
 
 

@@ -13,6 +13,7 @@ from backend.report_html import (
     SEGMENT_START_MIN_DELTA,
     _department_segment_rows,
     _segment_block,
+    _segment_hidden_n,
 )
 
 
@@ -88,14 +89,16 @@ def test_startpunt_alleen_bij_voldoende_verschil_en_omvang():
     html = _segment_block(_department_segment_rows(
         _rows(("Operations", 14, 4.5), ("Sales", 12, 7.0))), scan_type="retention")
     assert "Startpunt voor de bespreking" in html
-    assert "<strong>Operations</strong> heeft de laagste score (4.5/10" in html
+    assert ("<strong>Operations</strong> heeft de laagste score van de afdelingen "
+            "die apart getoond worden (4.5/10") in html
 
 
 def test_drempel_precies_gehaald_wijst_wel_aan():
     # Exacte grens: 6.0 tegen 6.3 is 0,3 verschil.
     html = _segment_block(_department_segment_rows(
         _rows(("Operations", 12, 6.0), ("Sales", 12, 6.3))), scan_type="retention")
-    assert "<strong>Operations</strong> heeft de laagste score (6.0/10" in html
+    assert ("<strong>Operations</strong> heeft de laagste score van de afdelingen "
+            "die apart getoond worden (6.0/10") in html
 
 
 def test_net_onder_de_drempel_wijst_niet_aan():
@@ -109,7 +112,8 @@ def test_drempel_telt_op_de_getoonde_score():
     # 6.0 en 6.3: de lezer ziet 0,3 verschil, dus de drempel telt daarop.
     html = _segment_block(_department_segment_rows(
         _rows(("Operations", 12, 6.04), ("Sales", 12, 6.26))), scan_type="retention")
-    assert "Operations</strong> heeft de laagste score (6.0/10" in html
+    assert ("Operations</strong> heeft de laagste score van de afdelingen die "
+            "apart getoond worden (6.0/10") in html
 
 
 def test_geen_startpunt_bij_een_klein_verschil():
@@ -120,10 +124,11 @@ def test_geen_startpunt_bij_een_klein_verschil():
     assert "heeft de laagste score" not in html
     assert ("De twee laagste afdelingen liggen dicht bij elkaar "
             "(Sales 6.0/10 en Finance 6.1/10). Loep wijst pas een afdeling aan bij "
-            "een verschil van minstens 0,3 punt met de volgende. Geen afdeling vraagt "
-            "als eerste aandacht; kijk naar het organisatiebeeld.") in a
+            "een verschil van minstens 0,3 punt met de volgende. Er is hier dus geen "
+            "eerste afdeling aan te wijzen. Kijk voor de eerste prioriteit naar het "
+            "organisatiebeeld.") in a
     # De omvangdrempel speelde hier niet mee en mag dus niet genoemd worden.
-    assert "responses hebben" not in a
+    assert "responses" not in a
 
 
 def test_geen_startpunt_bij_een_exacte_gelijkspel():
@@ -136,8 +141,9 @@ def test_geen_startpunt_bij_een_exacte_gelijkspel():
     # Gelijke score: alfabetisch, zelfde tie-break als de tabelsortering.
     assert ("De twee laagste afdelingen komen op dezelfde score uit "
             "(Finance en Sales, beide 6.0/10). Loep wijst pas een afdeling aan bij "
-            "een verschil van minstens 0,3 punt met de volgende. Geen afdeling vraagt "
-            "als eerste aandacht; kijk naar het organisatiebeeld.") in a
+            "een verschil van minstens 0,3 punt met de volgende. Er is hier dus geen "
+            "eerste afdeling aan te wijzen. Kijk voor de eerste prioriteit naar het "
+            "organisatiebeeld.") in a
 
 
 def test_gelijkspel_op_de_getoonde_score_is_ook_gelijkspel():
@@ -156,7 +162,8 @@ def test_kleine_tweede_afdeling_blokkeert_de_aanwijzing_niet():
     html = _segment_block(_department_segment_rows(
         _rows(("Operations", 12, 4.5), ("Sales", 6, 7.0))), scan_type="retention")
     a = _anchor(html)
-    assert "<strong>Operations</strong> heeft de laagste score (4.5/10" in html
+    assert ("<strong>Operations</strong> heeft de laagste score van de afdelingen "
+            "die apart getoond worden (4.5/10") in html
     assert "dicht bij elkaar" not in a
     # De omvang van de tweede afdeling is geen argument in de copy.
     assert "6 responses" not in a
@@ -174,6 +181,18 @@ def test_grote_afdeling_met_klein_verschil_wordt_nog_steeds_niet_aangewezen():
     assert "responses" not in a
 
 
+def test_conclusie_generaliseert_niet_verder_dan_de_vergelijking():
+    # 5.0, 5.1 en 9.0: de twee laagste zijn niet van elkaar te onderscheiden,
+    # maar ze vallen tegenover de hoogste wel degelijk op. De conclusie mag dus
+    # niet zeggen dat geen enkele afdeling aandacht vraagt.
+    html = _segment_block(_department_segment_rows(
+        _rows(("Operations", 12, 5.0), ("Sales", 12, 5.1),
+              ("Customer Success", 12, 9.0))), scan_type="retention")
+    a = _anchor(html)
+    assert "Er is hier dus geen eerste afdeling aan te wijzen." in a
+    assert "vraagt" not in a
+
+
 def test_kleine_laagste_afdeling_met_groot_verschil_wordt_niet_aangewezen():
     # De andere kant van het besluit: het verschil is 2,5 punt, maar de
     # afdeling die genoemd zou worden heeft er 8. Dan draagt een handvol
@@ -183,9 +202,10 @@ def test_kleine_laagste_afdeling_met_groot_verschil_wordt_niet_aangewezen():
     a = _anchor(html)
     assert "heeft de laagste score" not in html
     assert "dicht bij elkaar" not in a
-    assert ("Operations scoort het laagst (4.5/10), maar heeft 8 responses. Loep "
-            "wijst een afdeling pas aan vanaf 10 responses, zodat de conclusie niet "
-            "op een handvol antwoorden rust. Kijk voor de eerste prioriteit naar het "
+    assert ("Operations scoort het laagst van de afdelingen die apart getoond "
+            "worden (4.5/10), maar heeft 8 responses. Loep wijst een afdeling pas "
+            "aan vanaf 10 responses, zodat de conclusie niet op een handvol "
+            "antwoorden rust. Kijk voor de eerste prioriteit naar het "
             "organisatiebeeld.") in a
 
 
@@ -240,7 +260,8 @@ def test_restgroep_wordt_genoemd_als_die_lager_uitkomt():
         _rows(("Sales", 13, 5.0), ("Finance", 12, 7.0),
               ("Marketing", 3, 4.0), ("Customer Success", 3, 4.0)))
     html = _segment_block(rows, scan_type="retention")
-    assert "Sales</strong> heeft de laagste score (5.0/10" in html
+    assert ("Sales</strong> heeft de laagste score van de afdelingen die apart "
+            "getoond worden (5.0/10") in html
     assert _POOLED_ZIN in html
 
 
@@ -253,6 +274,110 @@ def test_restgroep_wordt_ook_genoemd_als_er_geen_afdeling_wordt_aangewezen():
     html = _segment_block(rows, scan_type="retention")
     assert "dicht bij elkaar" in _anchor(html)
     assert _POOLED_ZIN in html
+
+
+def test_restgroep_niet_genoemd_als_die_tussen_de_twee_laagsten_ligt():
+    # Het onderscheidende geval: de restgroep staat onder de op een na laagste
+    # maar boven de aangewezen afdeling. De zin zou dan zeggen dat ze lager
+    # scoort dan de laagste, terwijl ze in de tabel hoger staat.
+    rows = _department_segment_rows(
+        _rows(("Sales", 13, 5.0), ("Finance", 12, 7.0),
+              ("Marketing", 3, 6.0), ("Customer Success", 3, 6.0)))
+    html = _segment_block(rows, scan_type="retention")
+    pooled = next(r for r in rows if r["is_pooled"])
+    assert pooled["avg"] == 6.0                       # tussen 5.0 en 7.0
+    assert "Sales</strong> heeft de laagste score" in html
+    assert "De restgroep" not in html
+
+
+def test_restgroep_precies_gelijk_aan_de_laagste_afdeling():
+    # Exact gelijk is niet lager: geen restgroep-zin. De claim blijft waar
+    # omdat ze beperkt is tot de afdelingen die apart getoond worden.
+    rows = _department_segment_rows(
+        _rows(("Sales", 13, 4.5), ("Finance", 12, 7.0),
+              ("Marketing", 3, 4.5), ("Customer Success", 3, 4.5)))
+    html = _segment_block(rows, scan_type="retention")
+    pooled = next(r for r in rows if r["is_pooled"])
+    assert pooled["avg"] == 4.5
+    assert "De restgroep" not in html
+    assert ("<strong>Sales</strong> heeft de laagste score van de afdelingen die "
+            "apart getoond worden (4.5/10") in html
+
+
+def test_aanwijzende_zin_wordt_niet_weersproken_door_de_restgroep():
+    # De zin die deze taak bestaat om te repareren: "laagste" naast een rij die
+    # lager staat. De kwalificatie maakt de claim waar in dezelfde alinea.
+    rows = _department_segment_rows(
+        _rows(("Sales", 13, 5.0), ("Finance", 12, 7.0),
+              ("Marketing", 3, 4.0), ("Customer Success", 3, 4.0)))
+    a = _anchor(_segment_block(rows, scan_type="retention"))
+    assert ("Sales heeft de laagste score van de afdelingen die apart getoond "
+            "worden (5.0/10") in a
+    assert "De restgroep &ldquo;Overige afdelingen&rdquo; scoort lager (4.0/10)" in a
+
+
+def test_te_kleine_laagste_afdeling_wordt_ook_niet_weersproken():
+    rows = _department_segment_rows(
+        _rows(("Sales", 8, 5.0), ("Finance", 12, 7.0),
+              ("Marketing", 3, 4.0), ("Customer Success", 3, 4.0)))
+    a = _anchor(_segment_block(rows, scan_type="retention"))
+    assert ("Sales scoort het laagst van de afdelingen die apart getoond worden "
+            "(5.0/10), maar heeft 8 responses.") in a
+    assert "De restgroep &ldquo;Overige afdelingen&rdquo; scoort lager (4.0/10)" in a
+
+
+# ─── 4b. Responses die buiten de tabel vallen (Fail Loud) ────────────────────
+
+def test_hidden_n_telt_de_responses_zonder_rij_en_zonder_restgroep():
+    # 12 + 10 + 3: twee rijen met samen 22, terwijl de meting er 25 heeft.
+    resp = _rows(("Operations", 12, 5.0), ("Sales", 10, 6.0), ("Finance", 3, 4.0))
+    rows = _department_segment_rows(resp)
+    assert sum(r["n"] for r in rows) == 22
+    assert _segment_hidden_n(resp) == 3
+
+
+def test_hidden_n_is_nul_zodra_de_restgroep_zelf_getoond_wordt():
+    resp = _rows(("Operations", 12, 5.0), ("Sales", 10, 6.0),
+                 ("Finance", 3, 4.0), ("Marketing", 3, 4.0))
+    rows = _department_segment_rows(resp)
+    assert sum(r["n"] for r in rows) == 28 == len(resp)
+    assert _segment_hidden_n(resp) == 0
+
+
+def test_meldregel_onder_de_tabel_bij_verborgen_responses():
+    resp = _rows(("Operations", 12, 5.0), ("Sales", 10, 6.0), ("Finance", 3, 4.0))
+    html = _segment_block(_department_segment_rows(resp), scan_type="retention",
+                          hidden_n=_segment_hidden_n(resp))
+    assert ("3 responses vallen buiten deze tabel: ze horen elk bij een afdeling "
+            "met minder dan 5 responses, en dat zijn er te weinig om samen als "
+            "restgroep te tonen.") in html
+
+
+def test_meldregel_enkelvoud():
+    resp = _rows(("Operations", 12, 5.0), ("Sales", 10, 6.0), ("Finance", 1, 4.0))
+    html = _segment_block(_department_segment_rows(resp), scan_type="retention",
+                          hidden_n=_segment_hidden_n(resp))
+    assert ("Eén response valt buiten deze tabel: die hoort bij een afdeling "
+            "met minder dan 5 responses") in html
+
+
+def test_geen_meldregel_als_niemand_buiten_de_tabel_valt():
+    resp = _rows(("Operations", 12, 5.0), ("Sales", 10, 6.0))
+    html = _segment_block(_department_segment_rows(resp), scan_type="retention",
+                          hidden_n=_segment_hidden_n(resp))
+    assert "buiten deze tabel" not in html
+
+
+def test_meldregel_staat_in_het_gerenderde_rapport():
+    # Bedrading: build_report_data levert segment_hidden_n, de renderer geeft
+    # het door. Zonder die keten is de melding alleen in de helper waar.
+    from tests.test_report_distribution import _min_retention_data
+    d = _min_retention_data()
+    d["segment_rows"] = _department_segment_rows(
+        _rows(("Operations", 12, 5.0), ("Sales", 10, 6.0), ("Finance", 3, 4.0)))
+    d["segment_hidden_n"] = 3
+    from backend.report_html import render_retention_report_html
+    assert "3 responses vallen buiten deze tabel" in render_retention_report_html(d)
 
 
 def test_restgroep_niet_genoemd_als_die_hoger_uitkomt():
@@ -289,6 +414,29 @@ def test_themazin_alleen_als_er_een_afdeling_wordt_genoemd():
         _rows(("Operations", 12, 6.0), ("Sales", 12, 6.1))),
         factor_rows=fr, scan_type="retention")
     assert "Het laagst scorende thema daar is" not in niet_genoemd
+
+
+def test_themazin_meldt_hetzelfde_voorbehoud_als_de_kolom():
+    # De kolom meldt bij omitted > 0 dat het getoonde thema onder voorbehoud
+    # staat; de zin in het navy blok gaat over hetzelfde thema en mag dus niet
+    # steviger zijn.
+    fr = {"Operations": {"factors": [("workload", 3.9, 12)], "omitted": 2},
+          "Sales": {"factors": [("culture", 6.4, 12)], "omitted": 0}}
+    a = _anchor(_segment_block(_department_segment_rows(
+        _rows(("Operations", 12, 4.5), ("Sales", 12, 7.0))),
+        factor_rows=fr, scan_type="retention"))
+    assert ("Het laagst scorende thema daar is werkdruk en herstelruimte (3.9/10). "
+            "Daarbij past een voorbehoud: 2 thema&#39;s zijn daar niet beoordeelbaar, "
+            "te weinig antwoorden.") in a
+
+
+def test_themazin_zonder_voorbehoud_als_alles_beoordeeld_is():
+    fr = {"Operations": {"factors": [("workload", 3.9, 12)], "omitted": 0},
+          "Sales": {"factors": [("culture", 6.4, 12)], "omitted": 0}}
+    a = _anchor(_segment_block(_department_segment_rows(
+        _rows(("Operations", 12, 4.5), ("Sales", 12, 7.0))),
+        factor_rows=fr, scan_type="retention"))
+    assert "voorbehoud" not in a
 
 
 # ─── 6. Vorm ─────────────────────────────────────────────────────────────────
