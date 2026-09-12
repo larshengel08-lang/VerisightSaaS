@@ -287,6 +287,7 @@ function RouteBeheerPhaseDetailContent({ data, detail }: { data: RouteBeheerPage
               campaignId={data.campaignId}
               campaignName={data.campaignName}
               scanType={data.scanType}
+              align="end"
             />
           ) : (
             <span className="text-sm text-[color:var(--text)]">
@@ -493,6 +494,7 @@ export function RouteBeheerOutputSummary({ data }: { data: RouteBeheerPageData }
             campaignId={data.campaignId}
             campaignName={data.campaignName}
             scanType={data.scanType}
+            align="end"
           />
         ) : null}
       </div>

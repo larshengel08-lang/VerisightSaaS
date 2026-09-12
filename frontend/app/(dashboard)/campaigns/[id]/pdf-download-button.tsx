@@ -78,6 +78,7 @@ export function PdfDownloadButton({
   const primaryLabel = label ?? 'Rapport downloaden'
   const columnAlign = align === 'end' ? 'items-start sm:items-end' : 'items-start'
   const rowAlign = align === 'end' ? 'sm:justify-end' : ''
+  const textAlign = align === 'end' ? 'sm:text-right' : ''
 
   return (
     <div className={`flex flex-col gap-1 ${columnAlign}`}>
@@ -99,7 +100,7 @@ export function PdfDownloadButton({
           </button>
         ) : null}
       </div>
-      {error ? <p className="max-w-xs text-xs text-red-600">{error}</p> : null}
+      {error ? <p className={`max-w-xs text-xs text-red-600 ${textAlign}`}>{error}</p> : null}
     </div>
   )
 }
