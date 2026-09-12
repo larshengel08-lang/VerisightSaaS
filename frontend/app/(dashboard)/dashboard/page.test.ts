@@ -35,4 +35,12 @@ describe('state-driven dashboard page', () => {
     expect(source).toContain("action_key")
     expect(source).toContain("'send_reminders'")
   })
+
+  it('laat alleen de eigenaar en de operator de meting beheren', () => {
+    expect(source).toContain("supabase.from('profiles')")
+    expect(source).toContain("from('org_members')")
+    expect(source).toContain('const canManage =')
+    expect(source).toContain("membership?.role === 'owner'")
+    expect(source).toContain('ReadOnlyStateCard')
+  })
 })

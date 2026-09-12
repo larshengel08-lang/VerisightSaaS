@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { DashboardStateCard } from '@/components/dashboard/dashboard-state-card'
+import { ReadOnlyStateCard } from '@/components/dashboard/read-only-state-card'
 import { RunningStateCard } from '@/components/dashboard/running-state-card'
 import { WelcomeGate } from '@/components/dashboard/welcome-gate'
 import { PdfDownloadButton } from './pdf-download-button'
@@ -52,7 +53,7 @@ export default async function CampaignPage({ params }: Props) {
   if (!statsRow) notFound()
   const stats = statsRow as CampaignStats
 
-  const [{ data: campaignMeta }, { data: deliveryRecord }, { data: reminderEvents }, { data: profile }, { data: orgData }, { data: respondentDepts }] = await Promise.all([
+  const [{ data: campaignMeta }, { data: deliveryRecord }, { data: reminderEvents }, { data: profile }, { data: orgData }, { data: respondentDepts }, { data: membership }] = await Promise.all([
     supabase.from('campaigns').select('closed_at, closes_at, delivery_mode, comms_mode, public_survey_token, organization_id, segment_departments').eq('id', id).maybeSingle(),
     supabase
       .from('campaign_delivery_records')
@@ -70,6 +71,12 @@ export default async function CampaignPage({ params }: Props) {
     supabase.from('profiles').select('is_verisight_admin').eq('id', user.id).maybeSingle(),
     supabase.from('organizations').select('name').eq('id', stats.organization_id ?? '').maybeSingle(),
     supabase.from('respondents').select('department').eq('campaign_id', id).not('department', 'is', null),
+    supabase
+      .from('org_members')
+      .select('role')
+      .eq('org_id', stats.organization_id ?? '')
+      .eq('user_id', user.id)
+      .maybeSingle(),
   ])
 
   const departmentResponseCounts: Record<string, number> = {}
@@ -78,6 +85,9 @@ export default async function CampaignPage({ params }: Props) {
     if (dept) departmentResponseCounts[dept] = (departmentResponseCounts[dept] ?? 0) + 1
   }
   const isAdmin = profile?.is_verisight_admin === true
+  // Beheer is voorbehouden aan de eigenaar en aan de Loep-operator
+  // (spec 2026-09-11 par. 9); meelezende leden zien de status zonder knoppen.
+  const canManage = isAdmin || membership?.role === 'owner'
 
   const reminderConfig = normalizeReminderConfig(deliveryRecord?.reminder_config ?? null)
 
@@ -147,7 +157,9 @@ export default async function CampaignPage({ params }: Props) {
           </span>
         ) : null}
       </div>
-      {state.kind === 'setup' ? (
+      {!canManage ? (
+        <ReadOnlyStateCard state={state} />
+      ) : state.kind === 'setup' ? (
         <WelcomeGate
           campaignId={id}
           scanType={stats.scan_type}
