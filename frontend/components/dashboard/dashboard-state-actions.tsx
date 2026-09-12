@@ -11,7 +11,22 @@ export function DashboardStateActions({ state, reminderText }: { state: Dashboar
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
 
-  if (!state.campaignId || !state.ctaLabel) return null
+  // De notice hoort NIET bij een specifieke ctaKind-branch: handleClose zet
+  // 'm en roept meteen router.refresh() aan, waarna de state overgaat van
+  // 'close_campaign' naar 'report_ready'/'processing'. Een branch-lokale
+  // notice zou dan verdwijnen precies op het moment dat 'ie zichtbaar moet
+  // worden (Fail Loud: een waarschuwing die nooit te zien is, is geen
+  // waarschuwing). Daarom wordt 'm hier één keer gebouwd en in élke
+  // return-tak meegerenderd, inclusief de vroege return hieronder.
+  const noticeBlock = notice ? (
+    <p role="status" className="max-w-md text-xs text-[color:var(--dashboard-muted)]">
+      {notice}
+    </p>
+  ) : null
+
+  if (!state.campaignId || !state.ctaLabel) {
+    return noticeBlock ? <div className="flex flex-col items-start gap-2">{noticeBlock}</div> : null
+  }
 
   async function handleCopyReminder() {
     setError(null)
@@ -68,6 +83,7 @@ export function DashboardStateActions({ state, reminderText }: { state: Dashboar
           </button>
         )}
         {error ? <p role="alert" className="text-xs text-red-600">{error}</p> : null}
+        {noticeBlock}
       </div>
     )
   }
@@ -79,14 +95,10 @@ export function DashboardStateActions({ state, reminderText }: { state: Dashboar
           {phase === 'busy' ? 'Sluiten…' : (state.ctaLabel ?? 'Campagne sluiten')}
         </button>
         {error ? <p role="alert" className="text-xs text-red-600">{error}</p> : null}
-        {notice ? (
-          <p role="status" className="max-w-md text-xs text-[color:var(--dashboard-muted)]">
-            {notice}
-          </p>
-        ) : null}
+        {noticeBlock}
       </div>
     )
   }
 
-  return null
+  return noticeBlock ? <div className="flex flex-col items-start gap-2">{noticeBlock}</div> : null
 }

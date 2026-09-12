@@ -14,8 +14,8 @@ import type { MemberRole } from '@/lib/types'
 import { sendLoepEmail } from '@/lib/email'
 import { rapportGereedHtml } from '@/lib/email-templates/rapport-gereed'
 import { isReportReleaseReady } from '@/lib/response-activation'
-import { buildReportMailRecipients } from '@/lib/report-mail-recipients'
-import { getOperatorEmail } from '@/lib/loep-contact'
+import { buildReportMailRecipients, countCustomerRecipients } from '@/lib/report-mail-recipients'
+import { getOperatorEmail, LOEP_CONTACT_EMAIL } from '@/lib/loep-contact'
 import type { ScanType } from '@/lib/types'
 
 export interface DashboardActionResult {
@@ -135,7 +135,7 @@ export async function closeCampaignAction(campaignId: string): Promise<Dashboard
   // een rapport is: onder de drempel krijgt de klant geen belofte die niet
   // waargemaakt wordt. Ontvangers komen uit org_invites (rol owner, uitnodiging
   // geaccepteerd) plus het organisatieadres; profiles.email bestaat niet.
-  const [{ data: statsRow }, { data: ownerInvites }, { data: orgRow }] = await Promise.all([
+  const [{ data: statsRow, error: statsError }, { data: ownerInvites }, { data: orgRow }] = await Promise.all([
     ctx.supabase
       .from('campaign_stats')
       .select('total_completed, scan_type')
@@ -156,17 +156,26 @@ export async function closeCampaignAction(campaignId: string): Promise<Dashboard
 
   const totalCompleted = (statsRow as { total_completed?: number } | null)?.total_completed ?? 0
   const scanType = (statsRow as { scan_type?: ScanType } | null)?.scan_type
-  const reportAvailable = isReportReleaseReady(totalCompleted, { scanType })
+  // Fail Loud: een mislukte campaign_stats-query mag nooit stilzwijgend als
+  // "0 responses" gelezen worden (dat oogt exact als een legitieme sluiting
+  // onder de drempel). Bij een query-fout weten we het antwoord niet, dus
+  // proberen we ook geen mail te sturen op basis van een geraden 0.
+  const reportAvailable = !statsError && isReportReleaseReady(totalCompleted, { scanType })
 
   let mailSent = 0
   let mailFailed = 0
+  let customerRecipientCount = 0
+  const operatorEmail = getOperatorEmail()
 
   if (reportAvailable) {
     const recipients = buildReportMailRecipients({
       ownerInviteEmails: (ownerInvites ?? []).map((row: { email: string | null }) => row.email),
       organizationContactEmail: (orgRow as { contact_email?: string | null } | null)?.contact_email ?? null,
-      operatorEmail: getOperatorEmail(),
+      operatorEmail,
     })
+    // Alleen de operator-kopie is geen bericht aan de klant: dat mag niet
+    // hetzelfde ogen als "iedereen gemaild". Zie Defect 2.
+    customerRecipientCount = countCustomerRecipients(recipients, operatorEmail)
     const dashboardUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.getloep.nl'}/campaigns/${campaignId}`
 
     for (const to of recipients) {
@@ -193,14 +202,44 @@ export async function closeCampaignAction(campaignId: string): Promise<Dashboard
     action: 'delivery_lifecycle_changed',
     outcome: 'completed',
     summary: 'Campagne gesloten vanuit het dashboard.',
-    metadata: { report_mail: { available: reportAvailable, sent: mailSent, failed: mailFailed } },
+    metadata: {
+      report_mail: {
+        available: reportAvailable,
+        sent: mailSent,
+        failed: mailFailed,
+        customer_recipients: customerRecipientCount,
+        ...(statsError ? { stats_error: statsError.message } : {}),
+      },
+    },
   })
   if (auditError) return { ok: false, error: `Sluiten gelukt, maar loggen mislukt: ${auditError.message}` }
+
+  // Precedence voor de zichtbare waarschuwing: er kan er maar één terug, dus
+  // van hoog naar laag naar urgentie/onzekerheid in plaats van ze samen te
+  // voegen tot een verwarrende zin.
+  // 1) De stats-query zelf faalde: we weten helemaal niet of er een rapport
+  //    is, dus dat weegt zwaarder dan een individuele mailfout.
+  // 2) Er is wel degelijk geprobeerd te mailen, maar dat is (deels) mislukt.
+  // 3) Alles technisch gelukt, maar er was niemand klant-gericht om naar te
+  //    sturen (Defect 2) — de operator-kopie telt hier niet mee.
+  if (statsError) {
+    return {
+      ok: true,
+      warning: `Campagne gesloten. Loep kon niet vaststellen of er genoeg antwoorden zijn voor een rapport, dus er is nog geen bericht verstuurd. Controleer het later in je dashboard of mail ${LOEP_CONTACT_EMAIL}.`,
+    }
+  }
 
   if (mailFailed > 0) {
     return {
       ok: true,
       warning: `Campagne gesloten. De e-mail kon niet naar ${mailFailed} van de ${mailSent + mailFailed} adressen worden verstuurd. Het rapport staat wel klaar in je dashboard.`,
+    }
+  }
+
+  if (reportAvailable && customerRecipientCount === 0) {
+    return {
+      ok: true,
+      warning: `Campagne gesloten en het rapport staat klaar. Er is geen e-mailadres van je organisatie bekend, dus er is geen bericht verstuurd. Mail ${LOEP_CONTACT_EMAIL} om dat in te stellen.`,
     }
   }
 

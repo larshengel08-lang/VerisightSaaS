@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildReportMailRecipients } from '@/lib/report-mail-recipients'
+import { buildReportMailRecipients, countCustomerRecipients } from '@/lib/report-mail-recipients'
 
 describe('buildReportMailRecipients (spec 2026-09-11 par. 5)', () => {
   it('bundelt eigenaren, het organisatieadres en de operator', () => {
@@ -30,5 +30,25 @@ describe('buildReportMailRecipients (spec 2026-09-11 par. 5)', () => {
         operatorEmail: 'hallo@getloep.nl',
       }),
     ).toEqual(['hallo@getloep.nl'])
+  })
+})
+
+describe('countCustomerRecipients (defect 2: operator-only send moet niet als succes ogen)', () => {
+  it('telt alle adressen behalve het operator-adres', () => {
+    expect(
+      countCustomerRecipients(['hr@klant.nl', 'directie@klant.nl', 'hallo@getloep.nl'], 'hallo@getloep.nl'),
+    ).toBe(2)
+  })
+
+  it('geeft 0 als alleen de operator overblijft (geen klantadres bekend)', () => {
+    expect(countCustomerRecipients(['hallo@getloep.nl'], 'hallo@getloep.nl')).toBe(0)
+  })
+
+  it('normaliseert hoofdletters en spaties zoals buildReportMailRecipients dat al doet', () => {
+    expect(countCustomerRecipients([' hr@klant.nl ', 'HALLO@GETLOEP.NL'], 'hallo@getloep.nl')).toBe(1)
+  })
+
+  it('geeft 0 op een lege ontvangerslijst', () => {
+    expect(countCustomerRecipients([], 'hallo@getloep.nl')).toBe(0)
   })
 })

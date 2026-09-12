@@ -38,4 +38,28 @@ describe('dashboard server actions', () => {
     expect(source).toContain('warning')
     expect(source).toContain('report_mail')
   })
+
+  it('defect 2: een operator-only send (geen klantadres) oogt niet als succes', () => {
+    expect(source).toContain('countCustomerRecipients')
+    expect(source).toContain('customerRecipientCount')
+    expect(source).toContain('customer_recipients: customerRecipientCount')
+    expect(source).toContain('customerRecipientCount === 0')
+    expect(source).toContain('Er is geen e-mailadres van je organisatie bekend')
+  })
+
+  it('defect 3: een mislukte campaign_stats-query wordt niet stil gelezen als "0 responses"', () => {
+    expect(source).toContain('error: statsError')
+    expect(source).toContain('!statsError &&')
+    expect(source).toContain('stats_error: statsError.message')
+    expect(source).toContain('kon niet vaststellen of er genoeg antwoorden zijn')
+  })
+
+  it('geeft precedence aan de stats-fout boven een mailfout boven "geen klantadres", nooit samengevoegd', () => {
+    const statsIdx = source.indexOf('if (statsError) {')
+    const mailFailedIdx = source.indexOf('if (mailFailed > 0) {')
+    const noRecipientsIdx = source.indexOf('if (reportAvailable && customerRecipientCount === 0) {')
+    expect(statsIdx).toBeGreaterThan(-1)
+    expect(mailFailedIdx).toBeGreaterThan(statsIdx)
+    expect(noRecipientsIdx).toBeGreaterThan(mailFailedIdx)
+  })
 })

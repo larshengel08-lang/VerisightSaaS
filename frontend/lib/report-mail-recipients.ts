@@ -27,3 +27,14 @@ export function buildReportMailRecipients(input: ReportMailRecipientsInput): str
 
   return recipients
 }
+
+/**
+ * Telt hoeveel van de opgebouwde ontvangers klant-gericht zijn, dus alle
+ * adressen behalve de operator-kopie. Puur en apart getest zodat
+ * closeCampaignAction niet zelf dezelfde normalisatie (trim/lowercase) hoeft
+ * te herhalen om te bepalen of de klant zelf iets heeft ontvangen.
+ */
+export function countCustomerRecipients(recipients: string[], operatorEmail: string): number {
+  const normalizedOperator = operatorEmail.trim().toLowerCase()
+  return recipients.filter((email) => email.trim().toLowerCase() !== normalizedOperator).length
+}
