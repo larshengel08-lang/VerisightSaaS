@@ -1,6 +1,9 @@
 // Self-send mode — pure helpers. No e-mail addresses are stored server-side;
 // these builders only produce copy-paste text and compute display values.
 
+import { SURVEY_DURATION_LABEL } from '@/lib/campaign-setup'
+import type { ScanType } from '@/lib/types'
+
 export const MIN_INVITED_COUNT = 5
 
 export interface SelfSendConfig {
@@ -228,11 +231,38 @@ export function getDueReminders(
   })
 }
 
+/**
+ * Waarom deze scan de moeite waard is, in de stem van de organisatie. Stond
+ * eerder alleen in de setup-wizard; hier staat hij één keer, zodat de
+ * uitnodiging op het dashboard en in de wizard identiek zijn.
+ */
+export const SCAN_WHY: Partial<Record<ScanType, string>> = {
+  retention: 'Jouw eerlijke inzicht helpt ons gericht te verbeteren wat jij en je collega\'s dagelijks ervaren.',
+  exit: 'Jouw eerlijke inzicht helpt ons begrijpen wat er speelt bij vertrek, voor de mensen die blijven.',
+  onboarding: 'Jouw ervaring helpt ons de eerste maanden beter vorm te geven voor nieuwe collega\'s.',
+}
+
+const DEFAULT_SCAN_WHY = 'Jouw inzicht helpt ons als organisatie verder.'
+
 interface TemplateArgs {
   senderName: string
   organizationName: string
   scanLabel: string
+  scanType: ScanType
   surveyLink: string
+  /** Bij afdelingsrapportage: één link per afdeling in plaats van de algemene link. */
+  departmentLinks?: Array<{ label: string; url: string }>
+}
+
+function buildLinkLines(args: TemplateArgs): string[] {
+  const duration = SURVEY_DURATION_LABEL[args.scanType]
+  if (args.departmentLinks && args.departmentLinks.length > 0) {
+    return [
+      `Gebruik de link van je eigen afdeling (invullen kost ${duration}):`,
+      ...args.departmentLinks.map((link) => `${link.label}: ${link.url}`),
+    ]
+  }
+  return [`Vul de vragenlijst hier in (${duration}): ${args.surveyLink}`]
 }
 
 export function buildInviteTemplate(args: TemplateArgs): EmailTemplate {
@@ -242,9 +272,13 @@ export function buildInviteTemplate(args: TemplateArgs): EmailTemplate {
     body: [
       'Beste collega,',
       '',
-      `${args.organizationName} houdt een korte, anonieme vragenlijst (${args.scanLabel}). Je antwoorden worden alleen op groepsniveau gerapporteerd en zijn niet naar jou herleidbaar.`,
+      `${args.organizationName} houdt een korte, anonieme vragenlijst (${args.scanLabel}).`,
       '',
-      `Vul de vragenlijst hier in (10–15 minuten): ${args.surveyLink}`,
+      SCAN_WHY[args.scanType] ?? DEFAULT_SCAN_WHY,
+      '',
+      'Je antwoorden worden alleen op groepsniveau gerapporteerd en zijn niet naar jou herleidbaar.',
+      '',
+      ...buildLinkLines(args),
       '',
       'Alvast bedankt voor je deelname.',
       '',
@@ -261,11 +295,11 @@ export function buildReminderTemplate(args: TemplateArgs): EmailTemplate {
     body: [
       'Beste collega,',
       '',
-      'Een korte herinnering: heb je de anonieme vragenlijst al ingevuld? Het kost ongeveer 10–15 minuten en je antwoorden tellen alleen op groepsniveau mee.',
+      `Een korte herinnering: heb je de anonieme vragenlijst van ${args.organizationName} al ingevuld? Je antwoorden tellen alleen op groepsniveau mee.`,
       '',
-      `Vul de vragenlijst hier in: ${args.surveyLink}`,
+      ...buildLinkLines(args),
       '',
-      'Heb je hem al ingevuld? Dan kun je deze mail negeren — dank je wel!',
+      'Heb je hem al ingevuld? Dan kun je deze mail negeren, en bedankt.',
       '',
       'Met vriendelijke groet,',
       sender,

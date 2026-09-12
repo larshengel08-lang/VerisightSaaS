@@ -69,22 +69,44 @@ describe('self-send-comms', () => {
       senderName: 'Sarah de Vries, HR',
       organizationName: 'Acme BV',
       scanLabel: 'Loep Vertrek',
-      surveyLink: 'https://verisight.nl/survey/open/tok-123',
+      scanType: 'exit',
+      surveyLink: 'https://www.getloep.nl/survey/open/tok-123',
     })
     expect(tpl.subject).toContain('Acme BV')
-    expect(tpl.body).toContain('https://verisight.nl/survey/open/tok-123')
+    expect(tpl.body).toContain('https://www.getloep.nl/survey/open/tok-123')
     expect(tpl.body).toContain('Sarah de Vries, HR')
+    expect(tpl.body).toContain('ongeveer 8 minuten')
+    expect(tpl.body).not.toMatch(/[—–]/)
   })
 
   it('reminder template references the same link and signals it is a reminder', () => {
     const tpl = buildReminderTemplate({
       senderName: 'Sarah',
       organizationName: 'Acme BV',
-      scanLabel: 'Loep Vertrek',
-      surveyLink: 'https://verisight.nl/survey/open/tok-123',
+      scanLabel: 'Loep Behoud',
+      scanType: 'retention',
+      surveyLink: 'https://www.getloep.nl/survey/open/tok-123',
     })
     expect(tpl.subject.toLowerCase()).toContain('herinnering')
-    expect(tpl.body).toContain('https://verisight.nl/survey/open/tok-123')
+    expect(tpl.body).toContain('https://www.getloep.nl/survey/open/tok-123')
+    expect(tpl.body).toContain('ongeveer 6 minuten')
+  })
+
+  it('zet bij afdelingsrapportage de links per afdeling in plaats van één algemene link', () => {
+    const tpl = buildReminderTemplate({
+      senderName: 'Sarah',
+      organizationName: 'Acme BV',
+      scanLabel: 'Loep Behoud',
+      scanType: 'retention',
+      surveyLink: 'https://www.getloep.nl/survey/open/tok-123',
+      departmentLinks: [
+        { label: 'Zorg', url: 'https://www.getloep.nl/survey/open/tok-123?afd=zorg' },
+        { label: 'Kantoor', url: 'https://www.getloep.nl/survey/open/tok-123?afd=kantoor' },
+      ],
+    })
+    expect(tpl.body).toContain('Zorg: https://www.getloep.nl/survey/open/tok-123?afd=zorg')
+    expect(tpl.body).toContain('Kantoor: https://www.getloep.nl/survey/open/tok-123?afd=kantoor')
+    expect(tpl.body).not.toContain('Vul de vragenlijst hier in')
   })
 
   it('normalizes partial stored config without losing edited templates', () => {

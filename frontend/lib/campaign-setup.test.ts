@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   CAMPAIGN_SCAN_OPTIONS,
+  SURVEY_DURATION_LABEL,
   getAllowedDeliveryModes,
   getCampaignNamePlaceholder,
   getCampaignReportAddOnSetupNote,
@@ -31,5 +32,19 @@ describe('campaign setup rails', () => {
     expect(supportsCampaignReportAddOns('exit')).toBe(false)
     expect(supportsCampaignReportAddOns('retention')).toBe(false)
     expect(getCampaignReportAddOnSetupNote('retention')).toBeNull()
+  })
+})
+
+describe('SURVEY_DURATION_LABEL', () => {
+  it('volgt de invultijd die de vragenlijst zelf noemt', () => {
+    expect(SURVEY_DURATION_LABEL.retention).toBe('ongeveer 6 minuten')
+    expect(SURVEY_DURATION_LABEL.exit).toBe('ongeveer 8 minuten')
+    expect(SURVEY_DURATION_LABEL.onboarding).toBe('ongeveer 3 minuten')
+  })
+
+  it('heeft voor elke scan een waarde', () => {
+    for (const option of CAMPAIGN_SCAN_OPTIONS) {
+      expect(SURVEY_DURATION_LABEL[option.value]).toBeTruthy()
+    }
   })
 })

@@ -5,7 +5,8 @@ import { ReadOnlyStateCard } from '@/components/dashboard/read-only-state-card'
 import { RunningStateCard } from '@/components/dashboard/running-state-card'
 import { WelcomeGate } from '@/components/dashboard/welcome-gate'
 import { resolveDashboardState } from '@/lib/dashboard/dashboard-state-resolver'
-import { normalizeReminderConfig, buildParticipantCommunicationPreview } from '@/lib/launch-controls'
+import { normalizeReminderConfig } from '@/lib/launch-controls'
+import { buildReminderText } from '@/lib/dashboard/reminder-text'
 import { isReportReleaseReady } from '@/lib/response-activation'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import { createClient } from '@/lib/supabase/server'
@@ -151,13 +152,20 @@ export default async function DashboardHomePage() {
     today: todayIso(),
   })
 
-  const reminderPreview = buildParticipantCommunicationPreview({
+  const reminderText = buildReminderText({
+    commsMode: campaignRow?.comms_mode ?? null,
     scanType: campaign.scan_type,
+    scanLabel: SCAN_TYPE_LABELS[campaign.scan_type] ?? campaign.scan_type,
+    organizationName: orgData?.name ?? 'je organisatie',
+    publicSurveyToken: (campaignRow as Record<string, unknown>)?.public_survey_token as string | undefined,
+    frontendBaseUrl: process.env.NEXT_PUBLIC_FRONTEND_URL ?? 'https://getloep.nl',
+    segmentDepartments: (campaignRow as Record<string, unknown>)?.segment_departments as
+      | { label: string; slug: string; invited_count?: number }[]
+      | null,
     deliveryMode: campaignRow?.delivery_mode ?? null,
     launchDate: deliveryRecord?.launch_date ?? null,
     participantCommsConfig: deliveryRecord?.participant_comms_config ?? null,
   })
-  const reminderText = `${reminderPreview.subject}\n\n${reminderPreview.body.join('\n\n')}`
 
   return (
     <div className="space-y-8">

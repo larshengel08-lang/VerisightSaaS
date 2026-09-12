@@ -7,7 +7,8 @@ import { WelcomeGate } from '@/components/dashboard/welcome-gate'
 import { PdfDownloadButton } from './pdf-download-button'
 import { SuiteAccessDenied } from '@/components/dashboard/suite-access-denied'
 import { resolveDashboardState } from '@/lib/dashboard/dashboard-state-resolver'
-import { normalizeReminderConfig, buildParticipantCommunicationPreview } from '@/lib/launch-controls'
+import { normalizeReminderConfig } from '@/lib/launch-controls'
+import { buildReminderText } from '@/lib/dashboard/reminder-text'
 import { isReportReleaseReady } from '@/lib/response-activation'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import { createClient } from '@/lib/supabase/server'
@@ -129,13 +130,20 @@ export default async function CampaignPage({ params }: Props) {
     today: todayIso(),
   })
 
-  const reminderPreview = buildParticipantCommunicationPreview({
+  const reminderText = buildReminderText({
+    commsMode: campaignMeta?.comms_mode ?? null,
     scanType: stats.scan_type,
+    scanLabel: SCAN_TYPE_LABELS[stats.scan_type] ?? stats.scan_type,
+    organizationName: orgData?.name ?? 'je organisatie',
+    publicSurveyToken: (campaignMeta as Record<string, unknown>)?.public_survey_token as string | undefined,
+    frontendBaseUrl: process.env.NEXT_PUBLIC_FRONTEND_URL ?? 'https://getloep.nl',
+    segmentDepartments: (campaignMeta as Record<string, unknown>)?.segment_departments as
+      | { label: string; slug: string; invited_count?: number }[]
+      | null,
     deliveryMode: campaignMeta?.delivery_mode ?? null,
     launchDate: deliveryRecord?.launch_date ?? null,
     participantCommsConfig: deliveryRecord?.participant_comms_config ?? null,
   })
-  const reminderText = `${reminderPreview.subject}\n\n${reminderPreview.body.join('\n\n')}`
 
   const scanOption = CAMPAIGN_SCAN_OPTIONS.find((o) => o.value === stats.scan_type)
 

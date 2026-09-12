@@ -3,7 +3,13 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { SCAN_TYPE_LABELS, type ScanType } from '@/lib/types'
-import { buildSegmentSurveyLinks, buildSurveyLink, slugify, type SegmentDepartmentStored } from '@/lib/self-send-comms'
+import {
+  buildInviteTemplate,
+  buildSegmentSurveyLinks,
+  buildSurveyLink,
+  slugify,
+  type SegmentDepartmentStored,
+} from '@/lib/self-send-comms'
 import { saveLaunchSetupAction, confirmLaunchAction } from '@/app/(dashboard)/campaigns/[id]/setup/launch-setup-actions'
 import { saveSegmentDepartmentsAction } from '@/app/(dashboard)/campaigns/[id]/setup/segment-actions'
 
@@ -26,43 +32,10 @@ interface DeptRow {
   invitedCount: number | ''
 }
 
-const SCAN_WHY: Partial<Record<ScanType, string>> = {
-  retention: 'Jouw eerlijke inzicht helpt ons gericht te verbeteren wat jij en je collega\'s dagelijks ervaren.',
-  exit:      'Jouw eerlijke inzicht helpt ons begrijpen wat er speelt bij vertrek — voor de mensen die blijven.',
-  onboarding: 'Jouw ervaring helpt ons de eerste maanden beter vorm te geven voor nieuwe collega\'s.',
-}
-
 const SCAN_TIP: Partial<Record<ScanType, string>> = {
   retention:  'Informeer je team vooraf dat er een korte vragenlijst aankomt. Dat verhoogt de respons aanzienlijk.',
   exit:       'Stuur leidinggevenden vooraf een korte intro — medewerkers die het verwachten vullen vaker in.',
   onboarding: 'Laat de direct leidinggevende weten dat nieuwe medewerkers een korte vragenlijst ontvangen.',
-}
-
-function buildInviteBody(args: {
-  organizationName: string
-  scanLabel: string
-  surveyLink: string
-  scanType: ScanType
-}): { subject: string; body: string } {
-  const why = SCAN_WHY[args.scanType] ?? 'Jouw inzicht helpt ons als organisatie verder.'
-  const subject = `Uitnodiging: korte vragenlijst - ${args.organizationName}`
-  const body = [
-    'Beste collega,',
-    '',
-    `${args.organizationName} houdt een korte, anonieme vragenlijst (${args.scanLabel}).`,
-    '',
-    why,
-    '',
-    'Je antwoorden worden alleen op groepsniveau gerapporteerd en zijn niet naar jou herleidbaar.',
-    '',
-    `Vul de vragenlijst hier in (10-15 minuten): ${args.surveyLink}`,
-    '',
-    'Alvast bedankt voor je deelname.',
-    '',
-    'Met vriendelijke groet,',
-    'HR',
-  ].join('\n')
-  return { subject, body }
 }
 
 export function SetupWizardCard({
@@ -128,11 +101,17 @@ export function SetupWizardCard({
 
   const surveyLink = buildSurveyLink(frontendBaseUrl, publicSurveyToken)
   const scanLabel = SCAN_TYPE_LABELS[scanType] ?? scanType
-  const { subject: inviteSubject, body: inviteBody } = buildInviteBody({
+  const inviteDepartmentLinks =
+    segmentDepartments && segmentDepartments.length > 0
+      ? buildSegmentSurveyLinks(frontendBaseUrl, publicSurveyToken, segmentDepartments)
+      : undefined
+  const { subject: inviteSubject, body: inviteBody } = buildInviteTemplate({
+    senderName: '',
     organizationName,
     scanLabel,
-    surveyLink,
     scanType,
+    surveyLink,
+    departmentLinks: inviteDepartmentLinks,
   })
 
   const [editableSubject, setEditableSubject] = useState(inviteSubject)

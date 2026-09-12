@@ -21,4 +21,12 @@ describe('setup-wizard afdelingsblok', () => {
   it('vraagt het enkelvoudige aantal niet meer in segment-modus', () => {
     expect(src).toMatch(/hasSegments|segmentMode/)
   })
+  it('gebruikt de gedeelde uitnodigingstekst in plaats van een eigen kopie', () => {
+    const source = readFileSync(new URL('./setup-wizard-card.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('buildInviteTemplate')
+    expect(source).not.toContain('function buildInviteBody')
+    expect(source).not.toContain('const SCAN_WHY')
+    expect(source).not.toContain('10-15 minuten')
+  })
 })
