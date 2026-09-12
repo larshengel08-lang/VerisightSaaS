@@ -2525,6 +2525,19 @@ def _segment_status_block(n: int, has_segment_data: bool = False,
 _SEG_MONO = ("font-family:'JetBrains Mono', monospace;font-size:8px;"
              "letter-spacing:0.08em;text-transform:uppercase;color:#94A3B8;")
 
+# ─── Afdelingsstartpunt (spec ronde 2 par. 3.1) ──────────────────────────────
+# Bevinding B7: het zwaarste visuele element van het rapport wees een afdeling
+# aan op 0,00 tot 0,30 punt verschil met de volgende (16 van de 17 scenario's
+# met segmenten), twee keer zelfs terwijl de gepoolde restgroep in dezelfde
+# tabel lager stond. Loep wijst daarom pas een afdeling aan als het verschil
+# met de volgende dit haalt EN beide afdelingen groot genoeg zijn voor een
+# spreidingsbeeld (MIN_DISTRIBUTION_N, dezelfde grens als de strip in de rij
+# ernaast: geen derde magisch getal). Onder die grenzen is "de laagste
+# afdeling" niet te onderscheiden van de volgende en wordt de conclusie een
+# uitspraak over ruis. Vergelijken gebeurt op de GETOONDE score (_shown, B15),
+# zodat de zin nooit een verschil claimt dat de lezer in de tabel niet ziet.
+SEGMENT_START_MIN_DELTA = 0.3
+
 
 def _segment_theme_cell(row: dict, factor_rows: dict[str, dict] | None,
                         scan_type: str) -> str:
@@ -2605,6 +2618,118 @@ def _segment_factor_subblocks(segment_rows: list[dict],
     return intro + subs
 
 
+def _segment_start_note(segment_rows: list[dict],
+                        factor_rows: dict[str, dict] | None,
+                        scan_type: str) -> str:
+    """Het navy-blok "Startpunt voor de bespreking" onder de segmenttabel.
+
+    Drie staten (spec ronde 2 par. 3.1), elk met de reden die in DEZE meting
+    gold en zonder de drempel te noemen die niet meespeelde:
+
+    1. verschil onder SEGMENT_START_MIN_DELTA: de twee laagste afdelingen zijn
+       niet van elkaar te onderscheiden (aparte zin bij een exact gelijke
+       getoonde score, "dicht bij elkaar" past daar niet);
+    2. verschil gehaald, maar een van de twee afdelingen onder
+       MIN_DISTRIBUTION_N: het verschil is er wel, de groep is te klein om het
+       te onderbouwen. Dit is bewust NIET de "dicht bij elkaar"-zin: die zou
+       worden weersproken door de scores in zijn eigen haakjes;
+    3. beide grenzen gehaald: de afdeling wordt genoemd, met noemer en het
+       laagst scorende thema daar.
+
+    De zin gaat over de twee LAAGSTE afdelingen, niet over de hele reeks: bij
+    5,0 / 5,1 / 8,0 zijn de twee laagste inwisselbaar terwijl de reeks dat niet
+    is. De gepoolde restgroep doet aan geen van de drie staten mee (ze is
+    samengesteld uit kleine afdelingen), maar kan wel de laagste score van de
+    tabel hebben; dan zegt een slotzin dat ze lager staat en waarom ze geen
+    startpunt is. Zonder die zin spreekt de tabel de conclusie erboven tegen.
+    """
+    # Zelf sorteren, niet vertrouwen op de invoervolgorde: bestaande aanroepen
+    # geven ook ongesorteerde rijen door (zie tests/test_segment_report.py), en
+    # dan zou "de laagste" de verkeerde afdeling noemen. Zelfde sleutel als
+    # _department_segment_rows, zodat de zin de tabelvolgorde volgt.
+    named = sorted((r for r in segment_rows if not r.get("is_pooled", False)),
+                   key=lambda r: (r["avg"], -r["n"], r["department"]))
+    if len(named) < 2:
+        # Uit _department_segment_rows komen altijd minstens twee benoemde
+        # afdelingen (onder twee kwalificerende afdelingen geeft die functie
+        # een lege lijst terug), en alle productie-aanroepen lopen daarlangs.
+        # Een tabel met één benoemde rij krijgt geen conclusie: een startpunt
+        # is per definitie een vergelijking. De degraded staat zonder
+        # segmentdata is afgedekt door _segment_status_block.
+        return ""
+
+    lowest, runner_up = named[0], named[1]
+    low_sc, run_sc = _shown(lowest["avg"]), _shown(runner_up["avg"])
+    delta = round(run_sc - low_sc, 1)
+    # De twee afdelingen waar de zin over gaat, niet de hele tabel: alleen deze
+    # twee bepalen of er een onderscheid te maken is.
+    te_klein = [r for r in (lowest, runner_up) if r["n"] < MIN_DISTRIBUTION_N]
+    marge = str(SEGMENT_START_MIN_DELTA).replace(".", ",")
+
+    pooled = next((r for r in segment_rows if r.get("is_pooled", False)), None)
+    rest_sentence = ""
+    if pooled and _shown(pooled["avg"]) < low_sc:
+        rest_sentence = (
+            f' De restgroep &ldquo;{_h(pooled["department"])}&rdquo; scoort lager '
+            f'({_shown(pooled["avg"]):.1f}/10), maar is samengesteld uit kleine '
+            f'afdelingen en wordt daarom niet als startpunt genoemd.')
+
+    if delta < SEGMENT_START_MIN_DELTA:
+        if low_sc == run_sc:
+            vergelijking = (
+                f'De twee laagste afdelingen komen op dezelfde score uit '
+                f'({_h(lowest["department"])} en {_h(runner_up["department"])}, '
+                f'beide {low_sc:.1f}/10).')
+        else:
+            vergelijking = (
+                f'De twee laagste afdelingen liggen dicht bij elkaar '
+                f'({_h(lowest["department"])} {low_sc:.1f}/10 en '
+                f'{_h(runner_up["department"])} {run_sc:.1f}/10).')
+        body = (f'{vergelijking} Loep wijst pas een afdeling aan bij een verschil '
+                f'van minstens {marge} punt met de volgende. Geen afdeling vraagt '
+                f'als eerste aandacht; kijk naar het organisatiebeeld.')
+    elif te_klein:
+        if len(te_klein) == 1:
+            tekort = f'{_h(te_klein[0]["department"])} heeft er {te_klein[0]["n"]}'
+        else:
+            tekort = (f'{_h(te_klein[0]["department"])} heeft er {te_klein[0]["n"]} '
+                      f'en {_h(te_klein[1]["department"])} {te_klein[1]["n"]}')
+        body = (f'{_h(lowest["department"])} scoort het laagst ({low_sc:.1f}/10), maar '
+                f'Loep wijst pas een afdeling aan als de twee laagste afdelingen elk '
+                f'minstens {MIN_DISTRIBUTION_N} responses hebben: {tekort}. Kijk voor '
+                f'de eerste prioriteit naar het organisatiebeeld.')
+    else:
+        # Beide grenzen gehaald: verschil >= SEGMENT_START_MIN_DELTA en beide
+        # afdelingen >= MIN_DISTRIBUTION_N. Dit is de enige staat die een
+        # afdeling aanwijst.
+        #
+        # Noemer in de conclusie zelf (feedbackronde 2026-07-13): een manager
+        # met een lage score moet niet zelf hoeven ontdekken dat n klein is —
+        # het rapport is de "n=5"-discussie voor, i.p.v. er munitie voor te zijn.
+        _low_inv = lowest.get("invited")
+        _low_basis = (f'{lowest["n"]} van de {_low_inv} uitgenodigden vulden in'
+                      if _low_inv else f'{lowest["n"]} responses')
+        # Themazin (spec 2026-07-16 §3.2 punt 3): geen factordata = geen zin
+        # (geen fake). Band-neutrale formulering: "de druk zit op X" overdrijft
+        # wanneer het laagste thema zelf nog relatief sterk scoort. De variant
+        # zonder decimaal (n=5-9) is hier vervallen: deze staat eist
+        # MIN_DISTRIBUTION_N, dus de score mag altijd getoond worden. De
+        # staffel zelf leeft door in de themakolom (_segment_theme_cell).
+        theme_sentence = ""
+        low_info = (factor_rows or {}).get(lowest["department"])
+        if low_info and low_info.get("factors"):
+            _lfk, _lavg, _lnf = low_info["factors"][0]
+            theme_sentence = (f' Het laagst scorende thema daar is '
+                              f'{_h(_lc(_fl(_lfk, scan_type)))} ({_lavg:.1f}/10).')
+        body = (f'<strong>{_h(lowest["department"])}</strong> heeft de laagste score '
+                f'({low_sc:.1f}/10; {_low_basis}). Gebruik dit om te toetsen wat hier '
+                f'speelt, geen ranking of oordeel.{theme_sentence}')
+
+    return (f'<div class="navy-anchor">'
+            f'<div class="navy-anchor-eyebrow">Startpunt voor de bespreking</div>'
+            f'<p>{body}{rest_sentence}</p></div>')
+
+
 def _segment_block(segment_rows: list[dict], factor_rows: dict[str, dict] | None = None,
                    scan_type: str = "exit", opener_html: str = "") -> str:
     """Segmentanalyse per afdeling: tabel + spreidingsstrip (spec 2026-07-11)
@@ -2646,46 +2771,24 @@ def _segment_block(segment_rows: list[dict], factor_rows: dict[str, dict] | None
         else:
             n_cell = str(n_)
         theme_cell = _segment_theme_cell(row, factor_rows, scan_type)
+        # Elke afdeling in een eigen tbody: sinds de rijlimiet verviel (spec
+        # ronde 2 par. 3.2) kan deze tabel over een pagina-einde lopen, en een
+        # rij met een spreidingsstrip en twee regels tekst mag daarbij niet
+        # halverwege worden afgekapt. break-inside op de <tr> zelf doet onder
+        # border-collapse: collapse niets in WeasyPrint; het tbody-patroon van
+        # .raster-tbl (tbody.r-grp) werkt wel.
         rows_html += (
-            f'<tr><td class="iq" style="width:19%;">{name_html}</td>'
+            f'<tbody class="seg-grp"><tr><td class="iq" style="width:19%;">{name_html}</td>'
             f'<td style="width:9%;">{n_cell}</td>'
             f'<td class="is" style="width:11%;text-align:left;color:{col};">{avg:.1f}</td>'
             f'<td style="width:14%;color:{col};font-size:9.5px;">{_h(_factor_label(avg))}</td>'
             f'<td class="lt" style="width:20%;">{theme_cell}</td>'
-            f'<td style="width:27%;">{strip}</td></tr>'
+            f'<td style="width:27%;">{strip}</td></tr></tbody>'
         )
 
     subblocks = _segment_factor_subblocks(segment_rows, factor_rows, scan_type)
 
-    lowest = segment_rows[0]
-    low_note = ""
-    if not lowest.get("is_pooled", False):
-        # Noemer in de conclusie zelf (feedbackronde 2026-07-13): een manager
-        # met een lage score moet niet zelf hoeven ontdekken dat n klein is —
-        # het rapport is de "n=5"-discussie voor, i.p.v. er munitie voor te zijn.
-        _low_inv = lowest.get("invited")
-        _low_basis = (f'{lowest["n"]} van de {_low_inv} uitgenodigden vulden in'
-                      if _low_inv else f'{lowest["n"]} responses')
-        # Themazin (spec 2026-07-16 §3.2 punt 3): zelfde staffel als de kolom;
-        # geen factordata = geen zin (geen fake). Band-neutrale formulering:
-        # "de druk zit op X" overdrijft wanneer het laagste thema zelf nog
-        # relatief sterk scoort.
-        theme_sentence = ""
-        low_info = (factor_rows or {}).get(lowest["department"])
-        if low_info and low_info.get("factors"):
-            _lfk, _lavg, _lnf = low_info["factors"][0]
-            _llbl = _h(_lc(_fl(_lfk, scan_type)))
-            if lowest["n"] >= MIN_DISTRIBUTION_N:
-                theme_sentence = f' Het laagst scorende thema daar is {_llbl} ({_lavg:.1f}/10).'
-            else:
-                theme_sentence = (f' Het laagst scorende thema daar is {_llbl} '
-                                  f'({_h(_factor_label(_lavg).lower())}).')
-        low_note = (
-            f'<div class="navy-anchor">'
-            f'<div class="navy-anchor-eyebrow">Startpunt voor de bespreking</div>'
-            f'<p><strong>{_h(lowest["department"])}</strong> heeft de laagste score '
-            f'({lowest["avg"]:.1f}/10; {_low_basis}). Gebruik dit om te toetsen wat hier '
-            f'speelt, geen ranking of oordeel.{theme_sentence}</p></div>')
+    low_note = _segment_start_note(segment_rows, factor_rows, scan_type)
 
     return f"""<div class="pb sec">
   {opener_html or '<span class="slabel">Segmentanalyse per afdeling</span>'}
@@ -2771,10 +2874,10 @@ def _department_segment_rows(respondents: list[dict]) -> list[dict]:
 
     Input: [{"department": str|None, "signal_score": float}] per afgeronde respondent.
     Kwalificatie: n >= MIN_SEGMENT_N per afdeling; minimaal 2 kwalificerende
-    afdelingen (anders []); max 8 rijen, kleinere groepen samen als "Overige
-    afdelingen" (alleen als die bucket zelf ook n >= MIN_SEGMENT_N haalt).
-    Sortering: laagste gemiddelde eerst (grootste aandachtspunt bovenaan);
-    "Overige afdelingen" altijd onderaan.
+    afdelingen (anders []); kleinere groepen samen als "Overige afdelingen"
+    (alleen als die bucket zelf ook n >= MIN_SEGMENT_N haalt). Sortering:
+    laagste gemiddelde eerst (grootste aandachtspunt bovenaan); "Overige
+    afdelingen" altijd onderaan (na de sortering geappend).
     """
     grouped: dict[str, list[float]] = {}
     for r in respondents:
@@ -2791,19 +2894,19 @@ def _department_segment_rows(respondents: list[dict]) -> list[dict]:
              "scores": sorted(v), "is_pooled": False} for d, v in eligible.items()]
     rows.sort(key=lambda r: (r["avg"], -r["n"], r["department"]))
 
-    visible, overflow = rows[:8], rows[8:]
-    rest: list[float] = []
-    for d, v in grouped.items():
-        if d not in eligible:
-            rest.extend(v)
-    for row in overflow:
-        rest.extend(row["scores"])
+    # Geen rijlimiet (spec ronde 2 par. 3.2, bevinding B8): de sectie-intro
+    # belooft dat alleen afdelingen onder de vijf responses gebundeld worden, en
+    # met een cap van acht rijen was dat aantoonbaar onwaar. In scenario 10
+    # verdwenen vijf afdelingen met 7 tot 9 responses in de restgroep, waaronder
+    # de grootste afdeling van de meting: negen mensen onvindbaar, met een
+    # uitleg die een andere reden noemde. De restgroep bundelt nu uitsluitend de
+    # afdelingen die de privacydrempel niet halen.
+    rest = [s for d, v in grouped.items() if d not in eligible for s in v]
     if len(rest) >= MIN_SEGMENT_N:
-        visible = visible[:7]
-        visible.append({"department": "Overige afdelingen", "n": len(rest),
-                        "avg": round(sum(rest) / len(rest), 2), "scores": sorted(rest),
-                        "is_pooled": True})
-    return visible
+        rows.append({"department": "Overige afdelingen", "n": len(rest),
+                     "avg": round(sum(rest) / len(rest), 2), "scores": sorted(rest),
+                     "is_pooled": True})
+    return rows
 
 
 def _department_factor_rows(respondents: list[dict],

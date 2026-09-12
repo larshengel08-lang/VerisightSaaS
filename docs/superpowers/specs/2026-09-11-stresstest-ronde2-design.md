@@ -256,6 +256,65 @@ De cap van 8 rijen in `_department_segment_rows` vervalt: elke afdeling met n >=
 ### 3.3 Tests
 Scenario 01 (Sales 6,02 vs restgroep 5,86: geen aanwijzing, restgroep-zin), 02 en 19 (exacte tie: geen aanwijzing), 06 (Operations 4,5 vs 7+: wél aanwijzing), 10 (12 afdelingen, allemaal in de tabel, Operations n=9 zichtbaar).
 
+### 3.4 Afwijkingen bij de bouw (2026-09-12, taak 6)
+
+De twee regels van par. 3.1 en 3.2 zijn gebouwd zoals voorgeschreven. De copy en
+de paginabescherming weken op vijf punten af, steeds omdat de voorgeschreven
+vorm kon worden tegengesproken door de getallen of de opmaak eronder.
+
+1. **Een derde staat voor "verschil groot genoeg, groep te klein".** Par. 3.1
+   schrijft één alternatieve zin ("De afdelingen liggen dicht bij elkaar") voor
+   beide faalgevallen. Die zin is onwaar zodra alleen de omvanggrens blokkeert:
+   bij Operations 4,5 (n=12) tegen Sales 7,0 (n=6) zou er "liggen dicht bij
+   elkaar (laagste Operations 4,5, hoogste Sales 7,0)" staan. Er is dus een
+   eigen zin: "[X] scoort het laagst ([score]), maar Loep wijst pas een afdeling
+   aan als de twee laagste afdelingen elk minstens 10 responses hebben: [Y]
+   heeft er [n]." De verschilgrens wordt in die staat niet genoemd (die speelde
+   niet mee), en de omvanggrens niet in de "dicht bij elkaar"-staat.
+2. **De zin gaat over de twee laagste afdelingen, niet over de hele reeks.**
+   Par. 3.1 noemt laagste en hoogste in één zin, maar de grens vergelijkt alleen
+   de laagste met de volgende. Bij 5,0 / 5,1 / 8,0 zou "de afdelingen liggen
+   dicht bij elkaar (laagste 5,0, hoogste 8,0)" zichzelf tegenspreken. De zin
+   noemt daarom de twee laagste, met hun scores.
+3. **Eigen zin bij een exact gelijke getoonde score.** "Dicht bij elkaar" met
+   twee keer hetzelfde getal in de haakjes leest als een fout: "De twee laagste
+   afdelingen komen op dezelfde score uit ([X] en [Y], beide [score])."
+4. **De restgroep-zin staat in alle drie de staten**, niet alleen achter een
+   aangewezen afdeling. Scenario 01 is precies het geval waarin geen afdeling
+   wordt aangewezen én de restgroep lager staat; zonder die zin spreekt de
+   tabel de conclusie erboven alsnog tegen.
+5. **Vergelijken op de getoonde score** (`_shown`, B15), zowel voor de
+   verschilgrens als voor het gelijkspel: 6,04 tegen 6,26 staat in de tabel als
+   6,0 en 6,3, dus ziet de lezer 0,3 verschil.
+
+Verder:
+
+- Par. 3.2 schrijft "header herhalen" voor. De segmenttabel heeft geen
+  kolomkoppen; de sectie-intro benoemt de kolommen. Er is dus niets te
+  herhalen. Wat wel nodig was: de rijen heel houden. `break-inside: avoid` op
+  een `<tr>` doet onder `border-collapse: collapse` niets in WeasyPrint, dus
+  staat elke afdeling in haar eigen `tbody.seg-grp`, hetzelfde patroon als
+  `tbody.r-grp` in het prioriteringsraster. `.navy-anchor` kreeg dezelfde
+  bescherming als `.agenda-dark`, die het als enige navy-blok al had.
+- De themazin-variant zonder decimaal (spec 2026-07-16, n=5-9) is vervallen:
+  een aangewezen afdeling heeft nu altijd n >= 10. De staffel zelf leeft door
+  in de themakolom. `test_navy_anchor_zin_zonder_score_bij_n5_9` is in lockstep
+  omgezet naar `test_navy_anchor_wijst_geen_afdeling_aan_bij_n5_9`, en
+  `test_max_8_rijen_ook_bij_overige_zonder_overflow` naar
+  `test_geen_rijlimiet_elke_kwalificerende_afdeling_plus_overige` (die test
+  pinde exact de cap die par. 3.2 opheft).
+- Bij minder dan twee benoemde afdelingen blijft er geen conclusieblok staan,
+  zoals nu. Die staat kan niet uit `_department_segment_rows` komen (onder twee
+  kwalificerende afdelingen geeft die een lege lijst) en is gepind door
+  `test_report_design_sprong.py`.
+
+**Vervolg (niet in deze ronde):** met de grens op n >= 10 aan beide kanten
+wijst het blok in de praktijk zelden nog een afdeling aan, omdat afdelingen van
+5 tot 9 responses de regel zijn. Dat is het eerlijke antwoord op B7, maar het
+maakt de segmentpagina wel stiller. Of de segmentconclusie op termijn iets
+anders moet doen dan een startpunt aanwijzen (bijvoorbeeld het factorbeeld per
+afdeling als hoofdconclusie) is een ontwerpvraag voor een volgende ronde.
+
 ---
 
 ## 4. Richtingblok: grootste groep zonder meerderheid, en "niets nodig" op een laag onderwerp (B12)
