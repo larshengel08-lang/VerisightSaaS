@@ -2530,12 +2530,22 @@ _SEG_MONO = ("font-family:'JetBrains Mono', monospace;font-size:8px;"
 # aan op 0,00 tot 0,30 punt verschil met de volgende (16 van de 17 scenario's
 # met segmenten), twee keer zelfs terwijl de gepoolde restgroep in dezelfde
 # tabel lager stond. Loep wijst daarom pas een afdeling aan als het verschil
-# met de volgende dit haalt EN beide afdelingen groot genoeg zijn voor een
-# spreidingsbeeld (MIN_DISTRIBUTION_N, dezelfde grens als de strip in de rij
-# ernaast: geen derde magisch getal). Onder die grenzen is "de laagste
+# met de volgende dit haalt EN de aangewezen afdeling zelf groot genoeg is voor
+# een spreidingsbeeld (MIN_DISTRIBUTION_N, dezelfde grens als de strip in de rij
+# ernaast: geen derde magisch getal). Onder de verschilgrens is "de laagste
 # afdeling" niet te onderscheiden van de volgende en wordt de conclusie een
-# uitspraak over ruis. Vergelijken gebeurt op de GETOONDE score (_shown, B15),
-# zodat de zin nooit een verschil claimt dat de lezer in de tabel niet ziet.
+# uitspraak over ruis.
+#
+# De omvangeis geldt alleen voor de AANGEWEZEN afdeling, niet voor beide
+# (resolutie van de tegenspraak tussen spec par. 3.1 en 3.3, besluit Lars
+# 2026-09-12, uitgewerkt in spec par. 3.4): de conclusie gaat over de genoemde
+# afdeling, de tweede dient alleen om vast te stellen dat het verschil echt is,
+# en dat kan bij 2,5 punt verschil ook met vijf antwoorden. Met de eis aan beide
+# kanten vuurde de regel in nul van de twintig stresstest-scenario's, en een
+# regel die nooit vuurt schakelt het blok uit in plaats van het te bewaken.
+#
+# Vergelijken gebeurt op de GETOONDE score (_shown, B15), zodat de zin nooit een
+# verschil claimt dat de lezer in de tabel niet ziet.
 SEGMENT_START_MIN_DELTA = 0.3
 
 
@@ -2629,12 +2639,13 @@ def _segment_start_note(segment_rows: list[dict],
     1. verschil onder SEGMENT_START_MIN_DELTA: de twee laagste afdelingen zijn
        niet van elkaar te onderscheiden (aparte zin bij een exact gelijke
        getoonde score, "dicht bij elkaar" past daar niet);
-    2. verschil gehaald, maar een van de twee afdelingen onder
-       MIN_DISTRIBUTION_N: het verschil is er wel, de groep is te klein om het
-       te onderbouwen. Dit is bewust NIET de "dicht bij elkaar"-zin: die zou
-       worden weersproken door de scores in zijn eigen haakjes;
+    2. verschil gehaald, maar de laagste afdeling zelf onder
+       MIN_DISTRIBUTION_N: het verschil is er wel, de afdeling is te klein om
+       de conclusie te dragen. Dit is bewust NIET de "dicht bij elkaar"-zin:
+       die zou worden weersproken door de scores in zijn eigen haakjes;
     3. beide grenzen gehaald: de afdeling wordt genoemd, met noemer en het
-       laagst scorende thema daar.
+       laagst scorende thema daar. De omvang van de op één na laagste afdeling
+       telt hier niet mee, zie de toelichting bij SEGMENT_START_MIN_DELTA.
 
     De zin gaat over de twee LAAGSTE afdelingen, niet over de hele reeks: bij
     5,0 / 5,1 / 8,0 zijn de twee laagste inwisselbaar terwijl de reeks dat niet
@@ -2661,9 +2672,10 @@ def _segment_start_note(segment_rows: list[dict],
     lowest, runner_up = named[0], named[1]
     low_sc, run_sc = _shown(lowest["avg"]), _shown(runner_up["avg"])
     delta = round(run_sc - low_sc, 1)
-    # De twee afdelingen waar de zin over gaat, niet de hele tabel: alleen deze
-    # twee bepalen of er een onderscheid te maken is.
-    te_klein = [r for r in (lowest, runner_up) if r["n"] < MIN_DISTRIBUTION_N]
+    # Het verschil gaat over de twee laagste afdelingen, niet over de hele
+    # tabel: alleen die twee bepalen of er een onderscheid te maken is. De
+    # omvangeis geldt alleen voor de afdeling die genoemd zou worden.
+    laagste_te_klein = lowest["n"] < MIN_DISTRIBUTION_N
     marge = str(SEGMENT_START_MIN_DELTA).replace(".", ",")
 
     pooled = next((r for r in segment_rows if r.get("is_pooled", False)), None)
@@ -2688,19 +2700,15 @@ def _segment_start_note(segment_rows: list[dict],
         body = (f'{vergelijking} Loep wijst pas een afdeling aan bij een verschil '
                 f'van minstens {marge} punt met de volgende. Geen afdeling vraagt '
                 f'als eerste aandacht; kijk naar het organisatiebeeld.')
-    elif te_klein:
-        if len(te_klein) == 1:
-            tekort = f'{_h(te_klein[0]["department"])} heeft er {te_klein[0]["n"]}'
-        else:
-            tekort = (f'{_h(te_klein[0]["department"])} heeft er {te_klein[0]["n"]} '
-                      f'en {_h(te_klein[1]["department"])} {te_klein[1]["n"]}')
+    elif laagste_te_klein:
         body = (f'{_h(lowest["department"])} scoort het laagst ({low_sc:.1f}/10), maar '
-                f'Loep wijst pas een afdeling aan als de twee laagste afdelingen elk '
-                f'minstens {MIN_DISTRIBUTION_N} responses hebben: {tekort}. Kijk voor '
-                f'de eerste prioriteit naar het organisatiebeeld.')
+                f'heeft {lowest["n"]} responses. Loep wijst een afdeling pas aan vanaf '
+                f'{MIN_DISTRIBUTION_N} responses, zodat de conclusie niet op een handvol '
+                f'antwoorden rust. Kijk voor de eerste prioriteit naar het '
+                f'organisatiebeeld.')
     else:
-        # Beide grenzen gehaald: verschil >= SEGMENT_START_MIN_DELTA en beide
-        # afdelingen >= MIN_DISTRIBUTION_N. Dit is de enige staat die een
+        # Beide grenzen gehaald: verschil >= SEGMENT_START_MIN_DELTA en de
+        # laagste afdeling >= MIN_DISTRIBUTION_N. Dit is de enige staat die een
         # afdeling aanwijst.
         #
         # Noemer in de conclusie zelf (feedbackronde 2026-07-13): een manager

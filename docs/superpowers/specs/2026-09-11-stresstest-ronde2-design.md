@@ -242,7 +242,7 @@ Scenario 01, 04, 18, 19 tonen de vlak-profiel-zin; scenario 02, 05, 06 niet. De 
 ### 3.1 Regel
 Het navy-blok "Startpunt voor de bespreking" op de segmentpagina noemt een afdeling alleen als:
 - verschil tussen de laagste niet-gepoolde afdeling en de op één na laagste >= `SEGMENT_START_MIN_DELTA = 0.3`, én
-- beide afdelingen n >= `MIN_DISTRIBUTION_N` (10).
+- ~~beide afdelingen~~ **de aangewezen (laagste) afdeling** n >= `MIN_DISTRIBUTION_N` (10). Zie de resolutie in par. 3.4; deze regel luidde eerst "beide afdelingen" en was toen in tegenspraak met par. 3.3.
 
 Anders: "De afdelingen liggen dicht bij elkaar (laagste [X] [score], hoogste [Y] [score]). Geen afdeling vraagt als eerste aandacht; kijk naar het organisatiebeeld." Bij exact gelijke laagste scores: nooit één aanwijzen.
 
@@ -262,15 +262,34 @@ De twee regels van par. 3.1 en 3.2 zijn gebouwd zoals voorgeschreven. De copy en
 de paginabescherming weken op vijf punten af, steeds omdat de voorgeschreven
 vorm kon worden tegengesproken door de getallen of de opmaak eronder.
 
-1. **Een derde staat voor "verschil groot genoeg, groep te klein".** Par. 3.1
-   schrijft één alternatieve zin ("De afdelingen liggen dicht bij elkaar") voor
-   beide faalgevallen. Die zin is onwaar zodra alleen de omvanggrens blokkeert:
-   bij Operations 4,5 (n=12) tegen Sales 7,0 (n=6) zou er "liggen dicht bij
-   elkaar (laagste Operations 4,5, hoogste Sales 7,0)" staan. Er is dus een
-   eigen zin: "[X] scoort het laagst ([score]), maar Loep wijst pas een afdeling
-   aan als de twee laagste afdelingen elk minstens 10 responses hebben: [Y]
-   heeft er [n]." De verschilgrens wordt in die staat niet genoemd (die speelde
-   niet mee), en de omvanggrens niet in de "dicht bij elkaar"-staat.
+0. **Resolutie van de tegenspraak tussen par. 3.1 en 3.3 (besluit Lars,
+   2026-09-12): de omvangeis geldt voor de aangewezen afdeling, niet voor
+   beide.** Par. 3.1 eiste n >= 10 aan beide kanten, par. 3.3 eist dat scenario
+   06 wél een afdeling aanwijst (Operations 4,5 met n=14 tegen Customer Success
+   7,0 met n=5). Dat kan niet samen. Par. 3.1 is niet genegeerd maar
+   herzien, om drie redenen: (a) de conclusie gaat over de genoemde afdeling,
+   dus daar hoort de eis die voorkomt dat een handvol antwoorden een conclusie
+   draagt; de op één na laagste dient alleen om vast te stellen dát het
+   verschil er is, en bij 2,5 punt verschil kan dat ook met vijf antwoorden;
+   (b) vijf is in dit product al de ondergrens om een afdeling überhaupt te
+   tonen (`MIN_SEGMENT_N`); (c) met de eis aan beide kanten vuurde de regel in
+   **nul van de twintig** stresstest-scenario's, en een regel die nooit vuurt
+   schakelt het blok uit in plaats van het te bewaken. De ruisbescherming
+   blijft volledig staan: de verschilgrens vangt alle zestien gevallen waar B7
+   over gaat (scenario 10 zwijgt terecht, want de laagste afdeling heeft daar
+   zeven antwoorden). Gepind met twee tests: een grote afdeling met een klein
+   verschil wijst niet aan, en een kleine laagste afdeling met een groot
+   verschil wijst ook niet aan.
+1. **Een derde staat voor "verschil groot genoeg, afdeling te klein".** Par.
+   3.1 schrijft één alternatieve zin ("De afdelingen liggen dicht bij elkaar")
+   voor beide faalgevallen. Die zin is onwaar zodra alleen de omvanggrens
+   blokkeert: bij Operations 4,5 (n=8) tegen Sales 7,0 (n=20) zou er "liggen
+   dicht bij elkaar (laagste Operations 4,5, hoogste Sales 7,0)" staan. Er is
+   dus een eigen zin: "[X] scoort het laagst ([score]), maar heeft [n]
+   responses. Loep wijst een afdeling pas aan vanaf 10 responses, zodat de
+   conclusie niet op een handvol antwoorden rust." De verschilgrens wordt in
+   die staat niet genoemd (die speelde niet mee), en de omvanggrens niet in de
+   "dicht bij elkaar"-staat.
 2. **De zin gaat over de twee laagste afdelingen, niet over de hele reeks.**
    Par. 3.1 noemt laagste en hoogste in één zin, maar de grens vergelijkt alleen
    de laagste met de volgende. Bij 5,0 / 5,1 / 8,0 zou "de afdelingen liggen
@@ -308,12 +327,13 @@ Verder:
   kwalificerende afdelingen geeft die een lege lijst) en is gepind door
   `test_report_design_sprong.py`.
 
-**Vervolg (niet in deze ronde):** met de grens op n >= 10 aan beide kanten
-wijst het blok in de praktijk zelden nog een afdeling aan, omdat afdelingen van
-5 tot 9 responses de regel zijn. Dat is het eerlijke antwoord op B7, maar het
-maakt de segmentpagina wel stiller. Of de segmentconclusie op termijn iets
-anders moet doen dan een startpunt aanwijzen (bijvoorbeeld het factorbeeld per
-afdeling als hoofdconclusie) is een ontwerpvraag voor een volgende ronde.
+**Vervolg (niet in deze ronde):** ook met de omvangeis op alleen de aangewezen
+afdeling blijft het blok vaker zwijgen dan spreken, omdat afdelingen van 5 tot
+9 responses de regel zijn. Dat is het eerlijke antwoord op B7. Of de
+segmentconclusie op termijn iets anders moet doen dan een startpunt aanwijzen
+(bijvoorbeeld het factorbeeld per afdeling als hoofdconclusie) is een
+ontwerpvraag voor een volgende ronde. De extra pagina die scenario 10 krijgt
+doordat de rijlimiet verviel, is paginavulling (B9, ronde 3).
 
 ---
 

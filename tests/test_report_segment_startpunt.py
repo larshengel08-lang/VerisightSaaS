@@ -147,25 +147,46 @@ def test_gelijkspel_op_de_getoonde_score_is_ook_gelijkspel():
     assert "komen op dezelfde score uit (Sales en Finance, beide 6.0/10)" in _anchor(html)
 
 
-def test_geen_startpunt_als_een_van_beide_te_klein_is():
-    # Verschil groot genoeg, maar de tweede afdeling heeft er maar 6. De
-    # "dicht bij elkaar"-zin zou hier worden weersproken door 4.5 tegen 7.0.
+def test_kleine_tweede_afdeling_blokkeert_de_aanwijzing_niet():
+    # Scenario 06 en de resolutie van de tegenspraak tussen spec par. 3.1 en
+    # 3.3 (besluit Lars 2026-09-12): de omvangeis geldt voor de AANGEWEZEN
+    # afdeling. Operations (n=12) staat 2,5 punt onder Sales (n=6); die zes
+    # antwoorden hoeven de conclusie niet te dragen, ze stellen alleen vast
+    # dat het verschil er is.
     html = _segment_block(_department_segment_rows(
         _rows(("Operations", 12, 4.5), ("Sales", 6, 7.0))), scan_type="retention")
     a = _anchor(html)
+    assert "<strong>Operations</strong> heeft de laagste score (4.5/10" in html
+    assert "dicht bij elkaar" not in a
+    # De omvang van de tweede afdeling is geen argument in de copy.
+    assert "6 responses" not in a
+
+
+def test_grote_afdeling_met_klein_verschil_wordt_nog_steeds_niet_aangewezen():
+    # De ruisbescherming blijft volledig staan: n is ruim boven de grens, maar
+    # het verschil met de volgende is 0,1. Dit is het geval waar B7 over gaat.
+    html = _segment_block(_department_segment_rows(
+        _rows(("Operations", 40, 6.0), ("Sales", 38, 6.1))), scan_type="retention")
+    a = _anchor(html)
+    assert "heeft de laagste score" not in html
+    assert "De twee laagste afdelingen liggen dicht bij elkaar" in a
+    # De omvanggrens speelde hier niet mee en mag dus niet genoemd worden.
+    assert "responses" not in a
+
+
+def test_kleine_laagste_afdeling_met_groot_verschil_wordt_niet_aangewezen():
+    # De andere kant van het besluit: het verschil is 2,5 punt, maar de
+    # afdeling die genoemd zou worden heeft er 8. Dan draagt een handvol
+    # antwoorden de conclusie, en dat is precies wat de omvangeis tegenhoudt.
+    html = _segment_block(_department_segment_rows(
+        _rows(("Operations", 8, 4.5), ("Sales", 20, 7.0))), scan_type="retention")
+    a = _anchor(html)
     assert "heeft de laagste score" not in html
     assert "dicht bij elkaar" not in a
-    assert ("Operations scoort het laagst (4.5/10), maar Loep wijst pas een afdeling "
-            "aan als de twee laagste afdelingen elk minstens 10 responses hebben: "
-            "Sales heeft er 6. Kijk voor de eerste prioriteit naar het "
+    assert ("Operations scoort het laagst (4.5/10), maar heeft 8 responses. Loep "
+            "wijst een afdeling pas aan vanaf 10 responses, zodat de conclusie niet "
+            "op een handvol antwoorden rust. Kijk voor de eerste prioriteit naar het "
             "organisatiebeeld.") in a
-
-
-def test_beide_te_klein_noemt_beide_afdelingen():
-    html = _segment_block(_department_segment_rows(
-        _rows(("Operations", 8, 4.5), ("Sales", 6, 7.0))), scan_type="retention")
-    assert ("minstens 10 responses hebben: Operations heeft er 8 en Sales 6."
-            in _anchor(html))
 
 
 def test_omvangdrempel_precies_gehaald_wijst_wel_aan():
@@ -180,7 +201,7 @@ def test_net_onder_de_omvangdrempel_wijst_niet_aan():
         _rows(("Operations", MIN_DISTRIBUTION_N - 1, 4.5),
               ("Sales", MIN_DISTRIBUTION_N, 7.0))), scan_type="retention")
     assert "heeft de laagste score" not in html
-    assert "Operations heeft er 9." in _anchor(html)
+    assert "maar heeft 9 responses." in _anchor(html)
 
 
 def test_startpunt_gaat_over_de_twee_laagste_niet_over_de_hele_reeks():
