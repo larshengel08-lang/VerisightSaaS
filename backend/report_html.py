@@ -425,6 +425,16 @@ def _p02_direction_key(direction_agg: dict[str, Any] | None,
     andere factor met genoeg beantwoorders een andere richting laat zien.
     Anders geen sleutel: de per-factor-nuance staat al in _direction_p02_line,
     een paar regels lager op dezelfde pagina.
+
+    REIKWIJDTE: dit evalueert direction_state voor elke factor, niet alleen voor
+    het startpunt, en dat is nodig om "nergens" waar te maken. Het verbreedt wel
+    een bestaande fail-loud: direction_state werpt ValueError bij answered >=
+    DIRECTION_MIN_N met lege counts, en de submit-validatie laat een inzending
+    met status answered zonder keuze toe. Drie daarvan op een willekeurige
+    factor laten nu de hele rapportgeneratie falen, ook als die factor in geen
+    enkele zin voorkomt. De echte oplossing ligt in die validatie (een status
+    answered hoort een keuze te hebben), niet hier: stil overslaan zou van deze
+    fail-loud een fail-fake maken.
     """
     if not direction_agg or not primary_key or primary_key not in direction_agg:
         return None
@@ -437,7 +447,9 @@ def _p02_direction_key(direction_agg: dict[str, Any] | None,
 
 
 def _p02_startpunt_zin(primary_label: str, *, tie_break_kind: str | None,
-                       change: tuple[int, int] | None, next_delta: float | None,
+                       change: tuple[int, int] | None,
+                       change_other: tuple[str, int, int] | None,
+                       next_delta: float | None,
                        direction_state_key: str | None,
                        primary_is_lowest: bool) -> str:
     """Welk onderwerp Loep als startpunt kiest, met de grond erbij.
@@ -445,6 +457,13 @@ def _p02_startpunt_zin(primary_label: str, *, tie_break_kind: str | None,
     Elke tak eist zijn eigen grond expliciet, zodat geen enkele zin iets beweert
     wat in deze meting niet meespeelde:
 
+    - de vraag om verandering is comparatief, met beide tellingen, precies zoals
+      de markeringsregel onder de rasterrij (_tie_break_note). Absoluut
+      geformuleerd ("daar vragen de meeste mensen om verandering") kan dezelfde
+      tie-break een minderheid als meerderheid presenteren: 2 van de 5 wint het
+      van 0 van de 4 en beslist de volgorde terecht, maar is niet "de meeste".
+      Een meerderheidseis zou de grond laten wegvallen terwijl het raster wel op
+      dit signaal besliste, waarna p.02 en het raster elkaar tegenspreken.
     - "de laagste score" alleen als het startpunt ook echt de laagste factor is.
       Bij Loep Vertrek tilt de vertrekredenweging het startpunt daar weg, en
       binnen een gelijkspelgroep doet een tie-break dat ook.
@@ -463,27 +482,46 @@ def _p02_startpunt_zin(primary_label: str, *, tie_break_kind: str | None,
     if direction_state_key == "none_needed":
         return ("Je mensen vragen nergens dringend om verandering. Bespreek of een "
                 "startpunt nu nodig is, of dat dit beeld eerst gedeeld wordt.")
-    if tie_break_kind == "direction" and change:
+    if tie_break_kind == "direction" and change and change_other:
         a, b = change
-        return (f"Als startpunt kiest Loep {primary_label}: daar vragen de meeste "
-                f"mensen om verandering ({a} van de {b}).")
+        ander_label, c, d = change_other
+        return (f"Als startpunt kiest Loep {primary_label}: daar vragen meer mensen "
+                f"om verandering dan bij {ander_label} ({a} van de {b} tegen {c} van "
+                f"de {d}).")
     if tie_break_kind is None and primary_is_lowest and next_delta is not None:
         if next_delta == 0.0:
             return (f"Als startpunt kiest Loep {primary_label}. Dat onderwerp deelt "
                     f"de laagste score met het volgende; weeg die gelijkstand mee "
                     f"in de bespreking.")
         if 0.0 < next_delta < PRIORITY_TIE_MARGIN:
+            # Komma en het woord "punt", zoals _flat_span_woorden en de
+            # sectie-intro's ("onder de 5,0"): dit is een prozagetal over de
+            # grootte van een gat, geen score. Scores houden in dezelfde alinea
+            # hun punt en hun /10, zodat de twee soorten getallen uit elkaar te
+            # houden zijn in plaats van als typefout te lezen.
             delta = f"{next_delta:.2f}".replace(".", ",")
             return (f"Als startpunt kiest Loep {primary_label}, de laagste score. Het "
-                    f"verschil met de volgende is klein ({delta}); weeg dat mee in de "
-                    f"bespreking.")
+                    f"verschil met de volgende is klein, {delta} punt; weeg dat mee "
+                    f"in de bespreking.")
     return f"Als startpunt kiest Loep {primary_label}."
+
+
+def _p02_shared_low(shape: dict[str, Any]) -> bool:
+    """Deelt de laagst scorende factor zijn getoonde score met de volgende?
+
+    Op de getoonde score, want dat is wat de lezer verderop in het
+    overzichtsprofiel naast elkaar ziet staan. Zolang dat waar is, is "X scoort
+    het laagst" geen uitspraak over X alleen.
+    """
+    pairs = shape["factors_low_to_high"]
+    return len(pairs) > 1 and pairs[0][1] == pairs[1][1]
 
 
 def _p02_opening(*, scan_type: str, shape: dict[str, Any], labels: dict[str, str],
                  primary_key: str | None,
                  tie_break_kind: str | None = None,
                  change: tuple[int, int] | None = None,
+                 change_other: tuple[str, int, int] | None = None,
                  next_delta: float | None = None,
                  direction_state_key: str | None = None) -> str:
     """De eerste zin van pagina twee (spec ronde 2 par. 2.2 en par. 5.2).
@@ -509,10 +547,16 @@ def _p02_opening(*, scan_type: str, shape: dict[str, Any], labels: dict[str, str
         # bepalen. Vallen ze samen, dan mag de zin dat zeggen; verschillen ze,
         # dan noemt de zin ze apart en legt de bronregel eronder uit waarom.
         laagste = labels[shape["low_key"]]
+        # Staan er twee onderwerpen op dezelfde getoonde score, dan is de laagste
+        # score niet van dit onderwerp alleen; het overzichtsprofiel verderop
+        # toont ze naast elkaar. Zelfde behandeling als de gelijkstand in
+        # _p02_startpunt_zin.
+        laagste_clause = (f"{laagste} deelt de laagste score met het volgende onderwerp"
+                          if _p02_shared_low(shape) else f"{laagste} scoort het laagst")
         if shape["low_key"] == primary_key:
-            return (f"Geen onderwerp scoort kwetsbaar. {laagste} scoort het laagst "
+            return (f"Geen onderwerp scoort kwetsbaar. {laagste_clause} "
                     f"en is het eerste gesprekspunt.")
-        return (f"Geen onderwerp scoort kwetsbaar. {laagste} scoort het laagst; "
+        return (f"Geen onderwerp scoort kwetsbaar. {laagste_clause}; "
                 f"als eerste gesprekspunt kiest Loep {labels[primary_key]}.")
     elif k <= 2:
         # factors_low_to_high staat al in de canonieke volgorde (laagst eerst,
@@ -523,35 +567,52 @@ def _p02_opening(*, scan_type: str, shape: dict[str, Any], labels: dict[str, str
         # en zonder accent leest "een onderwerp" als lidwoord in plaats van als
         # telwoord tegenover "twee onderwerpen".
         onderwerp = "één onderwerp" if k == 1 else "twee onderwerpen"
-        namen = " en ".join(f"{labels[fk]} ({_score_str(v)})" for fk, v in vuln)
+        # Komma en geen "en": bijna elk echt factorlabel bevat zelf al "en"
+        # ("Rolhelderheid en verwachtingen eerste 90 dagen"), en met een
+        # voegwoord ertussen staat er vier keer "en" in één opsomming. Na de
+        # dubbele punt leest dit als lijst, niet als nevenschikking.
+        namen = ", ".join(f"{labels[fk]} ({_score_str(v)})" for fk, v in vuln)
         kop = f"{zacht} {onderwerp}: {namen}."
     else:
         kop = (f"{breed}: {k} van de {shape['n_factors']} onderwerpen scoren "
                f"kwetsbaar.")
     return f"{kop} " + _p02_startpunt_zin(
         labels[primary_key], tie_break_kind=tie_break_kind, change=change,
-        next_delta=next_delta, direction_state_key=direction_state_key,
+        change_other=change_other, next_delta=next_delta,
+        direction_state_key=direction_state_key,
         primary_is_lowest=shape["low_key"] == primary_key)
 
 
 def _p02_startpunt_gronden(
         raster_rows: list[dict[str, Any]],
-) -> tuple[str | None, tuple[int, int] | None, float | None]:
+) -> tuple[str | None, tuple[int, int] | None, tuple[str, int, int] | None, float | None]:
     """De grond onder de startpuntregel op p.02, uit de rangorde zelf.
 
-    Levert (tie-break-signaal, richtingtelling, afstand tot de volgende rij).
-    decided_by komt uit rank_factors, dus de grond in de kernzin kan niet
-    afwijken van de volgorde die de lezer verderop in het raster ziet.
+    Levert (tie-break-signaal, richtingtelling van het startpunt, richtingtelling
+    van de rij waartegen dat besliste, afstand tot de volgende rij). decided_by
+    komt uit rank_factors, dus de grond in de kernzin kan niet afwijken van de
+    volgorde die de lezer verderop in het raster ziet, en de vergelijkingsrij is
+    dezelfde die de markeringsregel onder die rij noemt.
+
+    Ontbreekt een van beide tellingen, dan blijven ze allebei leeg: een
+    comparatieve zin met maar een kant is geen vergelijking.
     """
     if not raster_rows:
-        return None, None, None
+        return None, None, None, None
     top = raster_rows[0]
     decided = top["decided_by"]
-    change = ((top["direction_change"], top["direction_answered"])
-              if top["direction_change"] is not None else None)
+    kind = decided["kind"] if decided else None
+    change = change_other = None
+    if kind == "direction":
+        ander = next((r for r in raster_rows if r["key"] == decided["other"]), None)
+        if (top["direction_change"] is not None and ander is not None
+                and ander["direction_change"] is not None):
+            change = (top["direction_change"], top["direction_answered"])
+            change_other = (ander["label"], ander["direction_change"],
+                            ander["direction_answered"])
     delta = (round(raster_rows[1]["score"] - top["score"], 2)
              if len(raster_rows) > 1 else None)
-    return (decided["kind"] if decided else None), change, delta
+    return kind, change, change_other, delta
 
 
 def _p02_signal_cell(label: str, value: str, band: str) -> str:
@@ -3025,17 +3086,14 @@ def render_exit_report_html(data: dict) -> str:
 
     # ── Executive summary ─────────────────────────────────────────────────────
     low_lbl  = _fl(low_f[0], "exit")  if low_f  else ""
-    low_sc   = low_f[1]                             if low_f  else None
     high_lbl = _fl(high_f[0], "exit") if high_f else ""
     high_sc  = high_f[1]                            if high_f else None
 
     # Eén waarheid voor "de primaire factor" door het hele rapport heen (spec
-    # 2026-07-18 par. 4). Vóór deze fix wezen cover/kernzin/vertrekcontext nog
-    # de ruwe laagste score aan (low_lbl/low_sc) -- die kan afwijken van de
-    # raster-startpunt-/why-tabel-factor zodra een vlag een near-tie beslecht
-    # of het vertrekredengewicht de volgorde verschuift (whole-feature review
-    # na Taak 9 vond dit reproduceerbaar: kernzin noemde een andere factor dan
-    # de why-tabel op dezelfde pagina).
+    # 2026-07-18 par. 4): cover, vertrekcontext en why-tabel wijzen allemaal de
+    # rasterrij bovenaan aan, en niet de ruwe laagste score. Die twee kunnen
+    # uiteenlopen zodra een vlag een near-tie beslecht of het vertrekredengewicht
+    # de volgorde verschuift; de kernzin noemt ze dan apart (_p02_opening).
     # Kale streep als laatste terugval verwijderd (bug B2): die belandde zo op
     # de cover en in de kernzin. Leeg betekent hier "geen factorprofiel"; de
     # cover en de kernzin vullen dat zelf eerlijk in.
@@ -3067,10 +3125,10 @@ def render_exit_report_html(data: dict) -> str:
     # dezelfde pagina.
     _shape = profile_shape(fa)
     _primary = _raster_rows[0]["key"] if _raster_rows else None
-    _tk, _chg, _delta = _p02_startpunt_gronden(_raster_rows)
+    _tk, _chg, _chg_other, _delta = _p02_startpunt_gronden(_raster_rows)
     exec_line = _p02_opening(
         scan_type="exit", shape=_shape, labels=_raster_labels, primary_key=_primary,
-        tie_break_kind=_tk, change=_chg, next_delta=_delta,
+        tie_break_kind=_tk, change=_chg, change_other=_chg_other, next_delta=_delta,
         direction_state_key=_p02_direction_key(direction_agg, _primary))
     _signal_cell = _p02_signal_cell("Frictiescore", rdsp if avg_risk else "",
                                     fl if avg_risk else "")
@@ -3553,10 +3611,10 @@ def render_retention_report_html(data: dict) -> str:
     # kregen; het staat nu met zijn band in de onderbouwingsrij eronder.
     _shape = profile_shape(fa)
     _primary = _raster_rows[0]["key"] if _raster_rows else None
-    _tk, _chg, _delta = _p02_startpunt_gronden(_raster_rows)
+    _tk, _chg, _chg_other, _delta = _p02_startpunt_gronden(_raster_rows)
     exec_line = _p02_opening(
         scan_type=ST, shape=_shape, labels=_raster_labels, primary_key=_primary,
-        tie_break_kind=_tk, change=_chg, next_delta=_delta,
+        tie_break_kind=_tk, change=_chg, change_other=_chg_other, next_delta=_delta,
         direction_state_key=_p02_direction_key(direction_agg, _primary))
     _signal_cell = _p02_signal_cell("Behoudssignaal", _score_str(signal) if signal else "",
                                     band_lbl or "")

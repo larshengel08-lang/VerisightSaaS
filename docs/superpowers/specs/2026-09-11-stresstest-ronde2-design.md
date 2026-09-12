@@ -307,7 +307,14 @@ verfijnen de tekst hierboven:
    rendert niet in de degraded staat (ronde 1, B2), dus daar houden de drie renderers hun
    bestaande zin ("Behoud onder druk (behoudssignaal 4.0/10).", de checkpointscore-variant,
    de frictiescore-variant). Anders zou het getal daar helemaal van p.02 verdwijnen.
-4. **Elke startpuntgrond eist zijn eigen voorwaarde.** "de laagste score" alleen als het
+4. **Elke startpuntgrond eist zijn eigen voorwaarde.** De vraag om verandering is
+   **comparatief**, met beide tellingen, precies zoals de markeringsregel onder de rasterrij
+   (`_tie_break_note`). Absoluut geformuleerd ("daar vragen de meeste mensen om verandering")
+   presenteert dezelfde tie-break een minderheid als meerderheid: 2 van de 5 wint het van 0
+   van de 4, beslist de volgorde terecht, maar is niet "de meeste" (reviewronde 2026-09-12,
+   gereproduceerd op echte data). Een meerderheidseis zou de grond laten wegvallen terwijl
+   het raster wel op dit signaal besliste, waarna p.02 en het raster elkaar tegenspreken.
+   Verder: "de laagste score" alleen als het
    startpunt ook echt de laagste factor is (bij Loep Vertrek tilt `EXIT_REASON_WEIGHT` het
    daar weg, en binnen een gelijkspelgroep doet een tie-break dat ook), en "het verschil met
    de volgende is klein" alleen binnen `PRIORITY_TIE_MARGIN`, de bestaande marge waarop de
@@ -322,7 +329,22 @@ verfijnen de tekst hierboven:
    ("Dat onderwerp deelt de laagste score met het volgende; weeg die gelijkstand mee in de
    bespreking"). Gekozen boven een ondergrens op de delta, waarmee de zin terugvalt op de
    kale keuze en de gelijkstand helemaal onzichtbaar wordt: dat is precies de stelligheid
-   die deze ronde wegneemt.
+   die deze ronde wegneemt. **Dezelfde stand op een tweede plek** (reviewronde 2026-09-12):
+   in de tak zonder kwetsbare onderwerpen stond "X scoort het laagst" terwijl twee factoren
+   op dezelfde getoonde score staan en het overzichtsprofiel ze verderop naast elkaar toont.
+   `_p02_shared_low` vergelijkt daar de getoonde scores (wat de lezer ziet) en levert dan
+   dezelfde formulering: "X deelt de laagste score met het volgende onderwerp".
+
+6. **Notatie van getallen binnen de alinea.** Scores houden hun punt en hun /10 ("4.5/10"),
+   een prozagetal over de grootte van een gat krijgt een komma en het woord punt ("0,03
+   punt"). Dat volgt `_flat_span_woorden` ("binnen één punt van elkaar") en de sectie-intro's
+   ("onder de 5,0"), en houdt de twee soorten getallen uit elkaar in plaats van de ene als
+   typefout in de andere te laten lezen.
+
+7. **Scheidingsteken in de opsomming van twee kwetsbare onderwerpen is een komma**, geen
+   "en": bijna elk echt factorlabel bevat zelf al "en" ("Rolhelderheid en verwachtingen
+   eerste 90 dagen"), en met een voegwoord ertussen staat "en" vier keer in één opsomming.
+   Na de dubbele punt leest dit als lijst, niet als nevenschikking.
 5. **"Nergens dringend om verandering" is een uitspraak over het hele profiel.**
    `direction_state` werkt per factor, dus `_p02_direction_key` geeft die sleutel alleen af
    als het startpunt in `none_needed` staat én geen enkele andere factor met genoeg
