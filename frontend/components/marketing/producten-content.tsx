@@ -133,10 +133,10 @@ function HeroSection() {
             Vertrek, behoud of de eerste 90 dagen.
           </h1>
           <p style={{ color: T.inkSoft, fontSize: 16.5, lineHeight: 1.72, margin: '26px auto 36px', maxWidth: '58ch' }}>
-            Drie scans, één recept: Loep doet de meting, jij krijgt een rapport dat zegt waar het wringt, waarom
-            volgens je mensen, en waar je begint. Daarna bespreken we het samen. Geen software om te beheren. Loep
-            Vertrek als er al mensen weg zijn, Loep Behoud als je ze wilt houden, Loep Start als nieuwe mensen moeten
-            landen.
+            Drie scans, één recept: Loep doet de meting, jij krijgt een rapport dat zegt waar het wringt en waar je
+            begint. Bij Loep Vertrek en Loep Behoud staat er ook in waarom dat zo is en wat er volgens je mensen moet
+            gebeuren. Daarna bespreken we het samen. Geen software om te beheren. Loep Vertrek als er al mensen weg
+            zijn, Loep Behoud als je ze wilt houden, Loep Start als nieuwe mensen moeten landen.
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 18, justifyContent: 'center' }}>
             {scans.map((scan) => (
