@@ -175,6 +175,16 @@ Loep Vertrek: de vertrekreden-weging (`EXIT_REASON_WEIGHT`) verschuift daar ook 
 ### 2.1 Regel
 Het profiel is **vlak** wanneer het verschil tussen de hoogste en laagste van de zes werkfactoren kleiner is dan `FLAT_PROFILE_SPAN = 1.0` (strikt <). Constante in `report_priority.py`, met toelichting: "binnen één punt van elkaar" is in één zin uitlegbaar.
 
+**Implementatie (2026-09-11, taak 2):** de telling van kwetsbare onderwerpen en de span
+lopen over de getoonde (afgeronde) score, zodat ze niet kunnen botsen met het bandlabel
+ernaast (ronde 1, B15) en de lezer de span kan narekenen met de getallen die in de zin
+staan. De *volgorde* loopt wel over de onafgeronde waarde: 5,67 en 5,70 tonen allebei
+5,7, en dan moet p.02 hetzelfde onderwerp "het laagst" noemen als het raster bovenaan
+zet (`rank_factors` sorteert op `base`). Bij exact gelijke waarden beslist het
+factorlabel, zodat de uitkomst niet van de invoervolgorde afhangt. Een ontbrekend
+factorlabel laat de zin hard falen in plaats van de interne factorsleutel in klantcopy
+te zetten (Fail Loud).
+
 ### 2.2 Copy op p.02
 Bij een vlak profiel opent de kernzin niet met "[factor] is het eerste gesprekspunt" maar met:
 

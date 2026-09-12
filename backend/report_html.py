@@ -39,6 +39,7 @@ from backend.products.shared.deepening import (
 from backend.products.shared.registry import get_product_module
 from backend.report_priority import (
     CELL_CAP_REACHED, CELL_NO_MAJORITY, CELL_NOT_TRIGGERED, CELL_TOO_FEW,
+    FLAT_PROFILE_SPAN,
     PRIORITY_TIE_MARGIN,
     rank_factors,
 )
@@ -297,6 +298,64 @@ def _factor_label(score: float | None) -> str:
     if score < 5.0:    return "Kwetsbaar punt"
     if score < 6.5:    return "Aandachtspunt"
     return "Relatief sterk"
+
+
+def profile_shape(factor_avgs: dict[str, float | None]) -> dict[str, Any]:
+    """De vorm van het factorprofiel: hoeveel kwetsbaar, en ligt alles dicht bijeen.
+
+    Telt op de getoonde (afgeronde) score via _shown, zodat deze telling nooit
+    kan botsen met het bandlabel dat de lezer ernaast ziet (ronde 1, B15). Dat
+    geldt ook voor de span: twee factoren die als 5.0 en 6.0 op de pagina staan
+    liggen voor de lezer exact een punt uit elkaar, niet minder.
+    De volgorde loopt wel over de onafgeronde waarde, zodat de laagste factor
+    hier dezelfde is als die rank_factors bovenaan zet (die sorteert op base).
+    Bij exact gelijke waarden beslist het factorlabel, zodat de uitkomst niet
+    van de invoervolgorde afhangt.
+    Alleen organisatiefactoren; SDT-dimensies horen hier niet in.
+    """
+    ranked = sorted(
+        ((fk, _shown(v), v) for fk, v in factor_avgs.items()
+         if fk in ORG_FACTOR_KEYS and v is not None),
+        key=lambda t: (t[2], t[0]),
+    )
+    if not ranked:
+        return {"n_factors": 0, "n_vulnerable": 0, "flat": False, "span": None,
+                "low_key": None, "low_score": None, "high_key": None,
+                "high_score": None, "_pairs": []}
+    low_key, low_score, _low_raw = ranked[0]
+    high_key, high_score, _high_raw = ranked[-1]
+    span = round(high_score - low_score, 2)
+    return {
+        "n_factors": len(ranked),
+        "n_vulnerable": sum(1 for _fk, shown, _raw in ranked if shown < 5.0),
+        "flat": len(ranked) > 1 and span < FLAT_PROFILE_SPAN,
+        "span": span,
+        "low_key": low_key, "low_score": low_score,
+        "high_key": high_key, "high_score": high_score,
+        # Taak 3 somt hieruit de kwetsbare onderwerpen op, zonder de invoer
+        # opnieuw te filteren: (factorsleutel, getoonde score).
+        "_pairs": [(fk, shown) for fk, shown, _raw in ranked],
+    }
+
+
+def _p02_flat_sentence(shape: dict[str, Any], labels: dict[str, str]) -> str:
+    """De vlak-profiel-zin op pagina twee (spec ronde 2 par. 2.2).
+
+    Zegt expliciet dat er niets uitspringt, met de echte uiterste waarden erbij,
+    zodat de lezer de conclusie zelf kan narekenen. Een ontbrekend factorlabel
+    is een bug en geen reden om de interne sleutel in klantcopy te zetten, dus
+    die opzoeking faalt hard.
+    """
+    if not shape["flat"]:
+        raise ValueError("_p02_flat_sentence: alleen bij een vlak profiel")
+    telwoord = _TELWOORD.get(shape["n_factors"], str(shape["n_factors"]))
+    low = labels[shape["low_key"]]
+    high = labels[shape["high_key"]]
+    return (f"Geen enkel onderwerp springt eruit: alle {telwoord} liggen binnen "
+            f"een punt van elkaar (laagste {low} {_score_str(shape['low_score'])}, "
+            f"hoogste {high} {_score_str(shape['high_score'])}). "
+            f"Dat is zelf de bevinding.")
+
 
 def _factor_color(score: float | None) -> str:
     # Zelfde gedempte RAG-set als de balken (_rag_color): voorheen gebruikte deze
@@ -1052,7 +1111,11 @@ _SIGNAL_EXIT_REASON = "hoe vaak een factor als vertrekreden is genoemd"
 _SIGNAL_SPREAD = "de spreiding tussen respondenten"
 _SIGNAL_DEEPENING = "wat respondenten in de verdieping als toelichting kozen"
 _SIGNAL_DIRECTION = "hoeveel mensen bij een factor om verandering vragen"
-_TELWOORD = {2: "twee", 3: "drie", 4: "vier", 5: "vijf"}
+# Aantalwoorden in klantcopy: het aantal signalen in de rasterintro hieronder en
+# het aantal factoren in de vlak-profiel-zin op p.02 ("alle zes" leest beter dan
+# "alle 6"). Een dict, geen tweede kopie bij profile_shape: twee definities van
+# dezelfde naam in een module overschrijven elkaar stil.
+_TELWOORD = {1: "een", 2: "twee", 3: "drie", 4: "vier", 5: "vijf", 6: "zes"}
 
 # De vraag om verandering heeft bewust geen eigen kolom (spec ronde 2 par. 1.3),
 # dus de intro belooft alleen wat er echt staat: de markeringsregel onder de rij

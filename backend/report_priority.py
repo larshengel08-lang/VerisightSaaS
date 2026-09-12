@@ -20,6 +20,14 @@ from backend.scoring_config import ORG_FACTOR_KEYS
 # 5.1 vs 5.4 is exact 0.3 verschil en is dus geen gelijkspel.
 PRIORITY_TIE_MARGIN = 0.3
 
+# Vlak profiel (spec ronde 2 par. 2.1): het verschil tussen de hoogst en laagst
+# scorende werkfactor is STRIKT kleiner dan dit. Een punt op tien is in een zin
+# uit te leggen ("binnen een punt van elkaar") en ligt ruim boven de ruis die
+# een enkel antwoord in een groep van 45 veroorzaakt. De constante hoort hier
+# omdat het een rangorde-eigenschap is; de functie die hem gebruikt staat in
+# report_html.py, want die heeft _shown en de factorlabels nodig.
+FLAT_PROFILE_SPAN = 1.0
+
 # Spreidingsvlag: aandeel respondenten met factorscore < ZONE_LOW (5.0, de
 # bestaande kwetsbaar-grens) is >= deze share, EN n >= MIN_DISTRIBUTION_N.
 # Enige echt nieuwe drempel in dit ontwerp; wijziging vereist een spec-update.
