@@ -5,6 +5,8 @@ Pure functies, geen DB. Zone-drempels zijn exact de _factor_label-drempels
 """
 from __future__ import annotations
 
+from backend.report_css import RAG_HIGH, RAG_LOW, RAG_MID
+
 ZONE_LOW = 5.0   # < ZONE_LOW  -> kwetsbaar punt (laagste zone)
 ZONE_HIGH = 6.5  # < ZONE_HIGH -> aandachtspunt; >= ZONE_HIGH -> relatief sterk
 
@@ -32,10 +34,22 @@ def score_distribution(values: list[float]) -> dict:
     }
 
 
-# RAG-kleuren: zelfde gedempte set als report_css (RAG_HIGH/MID/LOW).
-_C_LOW, _C_MID, _C_HIGH = "#C0392B", "#C17C00", "#3C8D8A"
-_TRACK_BG = {"low": "rgba(192,57,43,0.10)", "mid": "rgba(193,124,0,0.10)",
-             "high": "rgba(60,141,138,0.10)"}
+# De RAG-set komt uit report_css: één huisstijlbron. Eerder stonden de hexwaarden
+# hier als kopie met een comment dat ze gelijk waren aan die van report_css. Sinds
+# de signaalrijen in de behoudscontext hun kleur hier vandaan halen en de
+# factorbalken op dezelfde kaart uit report_css, zou een huisstijlronde die twee
+# uiteen laten lopen zonder dat een test dat merkt (spec ronde 2 par. 7b).
+# Let op de naamdraai: een LAGE score is een HOOG risico, dus _C_LOW is RAG_HIGH.
+_C_LOW, _C_MID, _C_HIGH = RAG_HIGH, RAG_MID, RAG_LOW
+
+
+def _tint(hex_color: str, alpha: str = "0.10") -> str:
+    """Doorschijnende zonevulling uit dezelfde hex, zodat er niets te synchroniseren valt."""
+    r, g, b = (int(hex_color[i:i + 2], 16) for i in (1, 3, 5))
+    return f"rgba({r},{g},{b},{alpha})"
+
+
+_TRACK_BG = {"low": _tint(_C_LOW), "mid": _tint(_C_MID), "high": _tint(_C_HIGH)}
 
 MIN_DISTRIBUTION_N = 10  # zelfde drempel als patroonanalyse
 
@@ -53,14 +67,34 @@ def _zone_ends(invert_scale: bool) -> tuple[str, str]:
     return (_C_HIGH, _C_LOW) if invert_scale else (_C_LOW, _C_HIGH)
 
 
-def zone_color(v: float, invert_scale: bool = False) -> str:
-    """De kleur van een waarde op de zone-as: de enige plek die dat bepaalt.
+def shown(score: float | None) -> float | None:
+    """De score zoals de lezer 'm ziet: op 1 decimaal, exact zoals _score_str formatteert.
 
-    Publiek omdat ook de signaalrijen in de behoudscontext hier doorheen gaan.
-    Anders kleurt dezelfde waarde op twee pagina's verschillend: de rij kleurde
-    vertrekintentie via een eigen spiegeling (10 - v), de strook via deze
-    drempels, en bij vertrekintentie 4.0 gaf dat een amber rij boven een teal
-    stip (spec ronde 2 par. 7b: rij en strook op dezelfde as).
+    B15: labels en kleuren werden op de onafgeronde waarde berekend, terwijl de
+    score afgerond getoond wordt. 6.55 / 6.47 / 6.55 toonden alle drie "6.5/10"
+    maar kregen "Relatief sterk" / "Aandachtspunt" / "Relatief sterk", terwijl
+    de methodiekpagina "relatief sterk (vanaf 6,5)" zegt. Elke band-helper die
+    naast een getoonde score staat, vergelijkt daarom via deze functie. Bewust
+    via de f-string (niet round()) zodat display en vergelijking nooit uiteenlopen.
+
+    Staat in deze module en niet in report_html, omdat de afronding en de
+    zonedrempels samen bepalen in welke band het getal valt dat de lezer ziet.
+    report_html importeert hem als _shown (spec ronde 2 par. 7b).
+    """
+    if score is None:
+        return None
+    return float(f"{score:.1f}")
+
+
+def _zone_color(v: float, invert_scale: bool) -> str:
+    """De ladder: de enige plek in de codebase met deze drempels.
+
+    Alles wat een score of een stip een RAG-kleur geeft, loopt hier langs:
+    zone_color (naast een getoonde score), dot_color (een stip in de strook) en
+    via zone_color ook _rag_color en _factor_color in report_html. Voorheen
+    stond dezelfde ladder op drie plekken en kleurde de rij vertrekintentie
+    bovendien via een eigen spiegeling (10 - v), waardoor bij vertrekintentie
+    4.0 een amber rij boven een teal stip stond (spec ronde 2 par. 7b).
     """
     low, high = _zone_ends(invert_scale)
     if v < ZONE_LOW:
@@ -68,6 +102,28 @@ def zone_color(v: float, invert_scale: bool = False) -> str:
     if v < ZONE_HIGH:
         return _C_MID
     return high
+
+
+def zone_color(score: float, invert_scale: bool = False) -> str:
+    """Kleur voor een score die als getal naast de kleur staat. Rondt af (B15).
+
+    Dit is de functie die je wilt voor een kleur naast een getoonde score: hij
+    duidt hetzelfde getal als de lezer leest. Voor een stip in de strook is dat
+    dot_color, die op de exacte waarde kleurt.
+    """
+    return _zone_color(shown(score), invert_scale)
+
+
+def dot_color(value: float, invert_scale: bool = False) -> str:
+    """Kleur van één stip: op de exacte waarde, bewust zonder afronding.
+
+    Een stip staat op de x-positie van zijn eigen waarde en moet de kleur
+    hebben van het zonevak waarin hij getekend is. Afronden zou een stip die
+    net links van de 5,0-lijn staat de kleur van het middenvak geven: een
+    kleur die zijn eigen positie tegenspreekt. Staat er een getal naast de
+    kleur, gebruik dan zone_color (spec ronde 2 par. 7b).
+    """
+    return _zone_color(value, invert_scale)
 
 
 # Inset zodat stippen (r=3.5) en de gemiddelde-marker op de schaaluitersten
@@ -130,7 +186,7 @@ def distribution_svg(values: list[float], width: int = 440, height: int = 34,
     for i, v in enumerate(dist["dots"]):
         cy = band_y + 5 + _jitter_offset(i, jitter_range)
         parts.append(f'<circle cx="{_x(v, width)}" cy="{cy}" r="{dot_r}" '
-                     f'fill="{zone_color(v, invert_scale)}" fill-opacity="0.9"/>')
+                     f'fill="{dot_color(v, invert_scale)}" fill-opacity="0.9"/>')
     # gemiddelde-marker: navy lijn + mono-label
     mx = _x(dist["mean"], width)
     parts.append(f'<rect x="{mx - 1}" y="0" width="2" height="{height}" fill="#0D1B2A"/>')

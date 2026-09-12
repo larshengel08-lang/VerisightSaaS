@@ -154,3 +154,70 @@ def test_polarisatiezin_beschrijft_zones_niet_goed_of_slecht():
 
 def test_geen_em_dash_in_de_strookcopy():
     assert "—" not in distribution_block(LOW_TURNOVER, invert_scale=True)
+
+
+# ── één ladder, één kleurbron, één afrondingsregel ───────────────────────────
+
+def test_een_verzette_drempel_schuift_alle_kleurhelpers_mee(monkeypatch):
+    """De ladder staat op één plek, en dat is aantoonbaar.
+
+    Stond hij ook in de renderlaag, dan schoof een verzette drempel de
+    spreidingsstrook wel en de factorbalken plus twee van de vier signaalrijen
+    niet. Deze test verzet ZONE_LOW en eist dat alle vier de ingangen meegaan.
+    """
+    import backend.report_distribution as rd
+    from backend.report_html import _factor_color, _rag_color
+
+    assert rd.zone_color(5.2) == _C_AMBER  # normaal: 5.2 ligt boven de 5,0-grens
+    monkeypatch.setattr(rd, "ZONE_LOW", 5.5)
+    assert rd.zone_color(5.2) == _C_RED
+    assert rd.dot_color(5.2) == _C_RED
+    assert _rag_color(5.2) == _C_RED
+    assert _factor_color(5.2) == _C_RED
+
+
+def test_de_kleuren_komen_uit_de_stijlmodule_en_niet_uit_een_kopie():
+    """Geen tweede bron voor dezelfde hex.
+
+    De signaalrijen halen hun kleur hier vandaan en de factorbalken uit
+    report_css; een kopie in deze module zou bij een huisstijlronde uiteen
+    lopen zonder dat een gelijkheidstest dat merkt, omdat beide kanten de hex
+    hardgecodeerd pinnen. Daarom pint deze test de afwezigheid van de literal.
+    """
+    import inspect
+
+    import backend.report_distribution as rd
+    from backend.report_css import RAG_HIGH, RAG_LOW, RAG_MID
+
+    assert (rd._C_LOW, rd._C_MID, rd._C_HIGH) == (RAG_HIGH, RAG_MID, RAG_LOW)
+    src = inspect.getsource(rd)
+    for hexwaarde in (RAG_HIGH, RAG_MID, RAG_LOW):
+        assert hexwaarde not in src, f"eigen kopie van {hexwaarde} terug in de module"
+    for kopie in ("rgba(192,57,43", "rgba(193,124,0", "rgba(60,141,138"):
+        assert kopie not in src, f"eigen kopie van {kopie} terug in de module"
+
+
+def test_zonevulling_blijft_dezelfde_tint_maar_nu_afgeleid():
+    import backend.report_distribution as rd
+
+    assert rd._TRACK_BG == {"low": "rgba(192,57,43,0.10)",
+                            "mid": "rgba(193,124,0,0.10)",
+                            "high": "rgba(60,141,138,0.10)"}
+    assert rd._tint("#3C8D8A") == "rgba(60,141,138,0.10)"
+
+
+def test_zone_color_rondt_af_en_dot_color_bewust_niet():
+    """4.96 toont als 5.0, maar staat links van de 5,0-lijn.
+
+    Naast een getoond getal hoort de kleur van wat er staat (5.0, dus midden,
+    B15). Een stip heeft geen getal maar wel een positie, en hoort de kleur van
+    het vak waarin hij getekend is (links, dus de laagste zone). Dat de twee
+    binnen 0,05 van een drempel uiteenlopen is daarom geen fout maar het gevolg
+    van twee verschillende dingen die elk hun eigen waarde duiden.
+    """
+    from backend.report_distribution import dot_color, zone_color
+
+    assert zone_color(4.96) == _C_AMBER and dot_color(4.96) == _C_RED
+    assert zone_color(4.96, True) == _C_AMBER and dot_color(4.96, True) == _C_TEAL
+    # Precies op de getoonde grens lopen ze weer samen.
+    assert zone_color(5.0) == dot_color(5.0) == _C_AMBER

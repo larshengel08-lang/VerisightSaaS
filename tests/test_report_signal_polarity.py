@@ -200,6 +200,12 @@ def test_vertrekintentie_rij_en_strook_lopen_niet_uiteen():
     gem = round(sum(vals) / len(vals), 1)
     html = _behoudscontext(retention_score=6.0, stay_intent=7.0, turnover=gem,
                            engagement=6.5, intent_resp={"turnover": vals})
+    # Het hele fragment, zodat het getal niet losraakt van zijn kleur. Let op:
+    # 3.4 kleurt teal onder de oude gespiegelde ladder EN onder de nieuwe, dus
+    # deze regel bewaakt de as niet; hij bewaakt dat rij en strook hetzelfde
+    # getal tonen. De as zelf wordt bewaakt door
+    # test_vertrekintentierij_kleurt_als_de_stip_eronder, dat wel waarden pakt
+    # waar de twee ladders uiteenlopen (4.0, 4.5, 4.9, 5.5, 6.0, 6.4).
     assert f'<span class="sigrow-score" style="color:#3C8D8A;">{gem:.1f}/10</span>' in html
     assert f"GEM {gem:.1f}" in html
     assert "GEM 7.6" not in html
@@ -286,3 +292,24 @@ def test_de_note_zegt_hetzelfde_als_de_zone_waar_de_stip_in_valt(v, verwacht_not
     assert f'<span class="sigrow-note">{verwacht_note}</span>' in html
     # De telling met alle twaalf respondenten erin wijst de zone aan.
     assert f"{verwacht_telling} 12" in html
+
+
+def test_rij_kleurt_op_de_getoonde_score_en_de_stip_op_zijn_positie():
+    """De nulclaim geldt op getoonde scores, niet op twee decimalen: bewust.
+
+    De pijplijn levert gemiddelden met twee decimalen. Scoort iedereen 4.96,
+    dan toont de rij 5.0/10 en kleurt die als 5.0 (amber, B15: de kleur duidt
+    het getal dat er staat), terwijl de stippen links van de 5,0-lijn staan en
+    de kleur van dat vak houden (teal). Dat is geen tegenspraak maar twee
+    dingen die elk hun eigen waarde duiden: een getal en een positie. Zou de
+    stip meeronden, dan kreeg hij de kleur van het vak waarin hij niet staat.
+    """
+    v = 4.96
+    html = _behoudscontext(retention_score=None, stay_intent=None, turnover=v,
+                           engagement=None, intent_resp={"turnover": [v] * 12})
+    assert '<span class="sigrow-score" style="color:#C17C00;">5.0/10</span>' in html
+    assert '<span class="sigrow-note">zichtbaar</span>' in html
+    rij, stippen = _rij_en_stipkleur("turnover", v)
+    assert rij == "#C17C00" and stippen == {"#3C8D8A"}
+    # De telling volgt de stippen, dus die zegt hetzelfde als hun kleur.
+    assert "Weinig vertrekgedachten 12" in html

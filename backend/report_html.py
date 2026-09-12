@@ -27,6 +27,7 @@ from backend.report_distribution import (
     ZONE_HIGH,
     ZONE_LOW,
     distribution_block,
+    shown as _shown,
     zone_color,
 )
 from backend.products.shared.deepening import (
@@ -139,21 +140,6 @@ _ONBOARDING_BANDS = {
     "MIDDEN": ("Gemengd onboardingsbeeld",         "#C17C00"),
     "LAAG":   ("Onboardingbasis stabiel",           "#3C8D8A"),
 }
-
-def _shown(score: float | None) -> float | None:
-    """De score zoals de lezer 'm ziet: op 1 decimaal, exact zoals _score_str formatteert.
-
-    B15: labels en kleuren werden op de onafgeronde waarde berekend, terwijl de
-    score afgerond getoond wordt. 6.55 / 6.47 / 6.55 toonden alle drie "6.5/10"
-    maar kregen "Relatief sterk" / "Aandachtspunt" / "Relatief sterk", terwijl
-    de methodiekpagina "relatief sterk (vanaf 6,5)" zegt. Elke band-helper die
-    naast een getoonde score staat, vergelijkt daarom via deze functie. Bewust
-    via de f-string (niet round()) zodat display en vergelijking nooit uiteenlopen.
-    """
-    if score is None:
-        return None
-    return float(f"{score:.1f}")
-
 
 def _signal_health(avg_risk: float | None) -> float | None:
     """Behoudssignaal / checkpointscore zoals het rapport 'm toont: health = 11 - avg_risk.
@@ -841,11 +827,10 @@ def _factor_color(score: float | None) -> str:
     # ambers in het rapport zaten (merk #E8A020, fel #F59E0B, RAG #C17C00) en een
     # waarschuwingskleur eerder als huisstijl las. Eén betekenis-set, visueel
     # onderscheiden van het merkaccent. Drempels op de getoonde score (B15).
+    # Zelfde ladder als de spreidingsstrook, via zone_color (dat afrondt, B15);
+    # alleen de kleur voor "geen score" wijkt af van _rag_color.
     if score is None:  return "#94A3B8"
-    score = _shown(score)
-    if score < 5.0:    return RAG_HIGH
-    if score < 6.5:    return RAG_MID
-    return RAG_LOW
+    return zone_color(score)
 
 def _h(s: Any) -> str:
     return "" if s is None else _esc(str(s))
@@ -3341,12 +3326,12 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
 # ─── Overzichtsprofiel (T6) ──────────────────────────────────────────────────
 
 def _rag_color(score: float | None) -> str:
-    # Drempels op de getoonde score (1 decimaal), zie _shown (B15).
+    # Drempels op de getoonde score (1 decimaal) via zone_color, dat afrondt
+    # (B15). De ladder zelf staat in report_distribution: stond hij ook hier,
+    # dan schoof een verzette drempel de balken wel en de spreidingsstrook niet
+    # (spec ronde 2 par. 7b). Alleen de kleur voor "geen score" is eigen.
     if score is None: return "#CBD5E1"
-    score = _shown(score)
-    if score < 5.0:  return RAG_HIGH
-    if score < 6.5:  return RAG_MID
-    return RAG_LOW
+    return zone_color(score)
 
 
 def _factor_bar_row(label: str, score: float | None) -> str:
