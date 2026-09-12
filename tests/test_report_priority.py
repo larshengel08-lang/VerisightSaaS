@@ -1,8 +1,8 @@
 """Tests voor rank_factors (spec 2026-07-18 par. 3) — pure rangorde-logica."""
 import pytest
 
+from backend.products.shared.deepening import TOP_CHOICE_MIN_LEAD
 from backend.report_priority import (
-    DIRECTION_TIE_MIN_MARGIN,
     PRIORITY_TIE_MARGIN,
     rank_factors,
 )
@@ -241,8 +241,10 @@ def _invariant(rows):
                 # rijen hebben flags == 0 maar dragen wel een markeringsregel.
                 lead = ((r["direction_change"] or 0)
                         - (later["direction_change"] or 0))
-                assert r["flags"] > 0 or lead >= DIRECTION_TIE_MIN_MARGIN,                     f"onzichtbare flip: {r['key']} boven {later['key']}"
-                assert r["tie_break_note"],                     f"flip zonder markeringsregel: {r['key']} boven {later['key']}"
+                assert r["flags"] > 0 or lead >= TOP_CHOICE_MIN_LEAD, (
+                    f"onzichtbare flip: {r['key']} boven {later['key']}")
+                assert r["tie_break_note"], (
+                    f"flip zonder markeringsregel: {r['key']} boven {later['key']}")
     for i, r in enumerate(rows[1:], start=1):
         prev = rows[i - 1]
         same_flagset = (r["spread_flag"] == prev["spread_flag"]

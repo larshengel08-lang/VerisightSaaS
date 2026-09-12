@@ -73,7 +73,7 @@ def test_uitlegregel_letterlijk_gepind_in_alle_vier_de_combinaties():
             for direction in (DIRECTION, None):
                 html = _render(scan, active=deep, direction=direction)
                 assert raster_uitleg(scan, deep, bool(direction)) in html
-                assert raster_intro(deep, bool(direction)) in html
+                assert raster_intro(scan, deep, bool(direction)) in html
     # De exit-variant noemt het vertrekredengewicht, de retention-variant niet.
     assert "vertrekreden" in raster_uitleg("exit", True, True)
     assert "vertrekreden" not in raster_uitleg("retention", True, True)
@@ -96,13 +96,13 @@ def test_richting_gate_volgt_de_pagina_niet_het_aggregaat():
     # Bug B3-patroon: is het richtingblok onderdrukt, dan mag de intro de vraag
     # om verandering niet noemen, ook al zit er wel een aggregaat in de data.
     html = _render(direction=DIRECTION, direction_block_html="")
-    assert raster_intro(True, False) in html
+    assert raster_intro("retention", True, False) in html
     assert "om verandering vragen" not in html
 
 
 def test_intro_en_legenda_aanwezig():
     html = _render()
-    assert raster_intro(True, False) in html
+    assert raster_intro("retention", True, False) in html
     assert RASTER_LEGENDA in html
 
 
@@ -160,7 +160,7 @@ def test_spreiding_degraded_onder_n10():
 def test_campagne_gate_kolom_weg_plus_disclosure():
     html = _render(active=False)
     assert raster_gate_note(False) in html
-    assert raster_intro(False, False) in html
+    assert raster_intro("retention", False, False) in html
     assert "Verdieping" not in html  # kolomkop weg
     assert CELL_NOT_TRIGGERED not in html
 
@@ -233,17 +233,17 @@ def test_intro_en_gatecopy_zijn_eerlijk_over_de_vraag_om_verandering():
     # De vraag om verandering staat los van de verdiepings-gate: elke respondent
     # beantwoordt hem. De intro mag hem dus niet verzwijgen, en mag ook niet
     # beloven dat hij per factor in een kolom staat (die is er bewust niet).
-    assert "vier signalen" in raster_intro(True, True)
-    assert "drie signalen" in raster_intro(False, True)
-    assert "drie signalen" in raster_intro(True, False)
-    assert "twee signalen" in raster_intro(False, False)
-    for copy in (raster_intro(True, True), raster_intro(False, True)):
+    assert "vier signalen" in raster_intro("retention", True, True)
+    assert "drie signalen" in raster_intro("retention", False, True)
+    assert "drie signalen" in raster_intro("retention", True, False)
+    assert "twee signalen" in raster_intro("retention", False, False)
+    for copy in (raster_intro("retention", True, True), raster_intro("retention", False, True)):
         assert "om verandering vragen" in copy
         assert "onder de rij" in copy
         assert "—" not in copy
     # Zonder richtingdata noemt de intro het signaal niet, en belooft de
     # gate-notitie het ook niet.
-    for copy in (raster_intro(True, False), raster_intro(False, False)):
+    for copy in (raster_intro("retention", True, False), raster_intro("retention", False, False)):
         assert "om verandering" not in copy
         assert "onder de rij" not in copy
     assert "vraag om verandering" in raster_gate_note(True)
@@ -256,3 +256,15 @@ def test_uitlegregel_noemt_de_marge_van_twee():
         assert "minstens 2 mensen" in raster_uitleg(scan, True, True)
         # Zonder richtingdata speelt de marge niet en wordt hij niet genoemd.
         assert "minstens 2 mensen" not in raster_uitleg(scan, True, False)
+
+
+def test_exit_intro_noemt_de_vertrekredenkolom():
+    # De exit-tabel heeft een kolom extra; de opsomming moet die noemen, anders
+    # belooft de intro minder dan de pagina toont.
+    intro = raster_intro("exit", True, True)
+    assert "vijf signalen" in intro
+    assert "hoe vaak een factor als vertrekreden is genoemd" in intro
+    assert "De eerste vier staan in de tabel." in intro
+    assert intro in _render("exit", direction=DIRECTION)
+    # Loep Behoud kent geen vertrekredenen en noemt ze dus ook niet.
+    assert "vertrekreden" not in raster_intro("retention", True, True)

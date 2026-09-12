@@ -8,7 +8,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from backend.products.shared.deepening import DIRECTION_MIN_N, agenda_enrichment
+from backend.products.shared.deepening import (
+    DIRECTION_MIN_N,
+    TOP_CHOICE_MIN_LEAD,
+    agenda_enrichment,
+)
 from backend.report_distribution import MIN_DISTRIBUTION_N, ZONE_LOW
 from backend.scoring_config import ORG_FACTOR_KEYS
 
@@ -24,13 +28,6 @@ SPREAD_FLAG_MIN_SHARE = 0.30
 # Exit: gewicht per vertrekreden-vermelding (exact de bestaande
 # _select_priority_factors-formule uit report_html.py).
 EXIT_REASON_WEIGHT = 0.4
-
-# Vraag om verandering: pas een tie-break als een factor er minstens dit aantal
-# mensen bovenuit steekt. Geen nieuwe drempelset: exact de voorsprong die
-# direction_state voor de staat `clear` eist en die agenda_enrichment hanteert.
-# Zonder deze marge zou "2 van de 11 tegen 1 van de 11" de volgorde bepalen, en
-# dat is een stellige uitspraak over ruis.
-DIRECTION_TIE_MIN_MARGIN = 2
 
 # Celstaten verdiepingskolom (spec par. 6): vaste copy, klantentaal.
 # Staat 1 heeft een dynamische tekst (telling + optietekst) en staat niet hier.
@@ -76,23 +73,42 @@ def _tie_groups(rows: list[dict[str, Any]]) -> list[list[dict[str, Any]]]:
     return groups
 
 
+def _change_share(row: dict[str, Any]) -> float:
+    """Aandeel van de beantwoorders dat om verandering vroeg. Alleen aanroepen
+    voor rijen met een geldig aantal; die hebben er minstens DIRECTION_MIN_N."""
+    return row["direction_change"] / row["direction_answered"]
+
+
 def _direction_winner(group: list[dict[str, Any]]) -> dict[str, Any] | None:
     """De ene rij die de gelijkspel-groep wint op de vraag om verandering.
 
-    Alleen een rij die er minstens DIRECTION_TIE_MIN_MARGIN mensen bovenuit
-    steekt wordt vooruit gezet; is de voorsprong kleiner, dan beslist dit
-    signaal niets en valt de groep door naar spreiding en verdieping. Een rij
-    zonder geldig aantal (onder DIRECTION_MIN_N beantwoorders) telt als 0, de
-    conservatieve kant: zo'n rij heeft hoogstens twee veranderverzoeken en kan
-    andere rijen niet uitschakelen. Precies een winnaar, dus de sorteersleutel
-    blijft een totale orde (transitief en invoervolgorde-onafhankelijk).
+    Drie voorwaarden, alle drie bedoeld om te voorkomen dat de markeringsregel
+    wordt tegengesproken door de getallen die er zelf in staan:
+
+    1. Er zijn minstens twee rijen met een geldig aantal (>= DIRECTION_MIN_N
+       beantwoorders). Zonder tweede rij is er niets om mee te vergelijken, en
+       "hier vragen meer mensen om verandering" is dan een lege bewering.
+    2. De hoogste rij ligt minstens TOP_CHOICE_MIN_LEAD boven de hoogste andere
+       geldige rij. Een verschil van 1 is ruis.
+    3. Het aandeel van de winnaar is niet lager dan dat van welke andere geldige
+       rij ook. Spec par. 1.2 maakt het aantal leidend, maar "27 van de 35 tegen
+       17 van de 19" leest als onwaar zolang 77 procent onder 89 procent ligt.
+
+    Rijen zonder geldig aantal doen niet mee, in geen van beide richtingen: ze
+    schakelen het signaal niet uit (dat deed de oude groepsbrede gate wel) en ze
+    kunnen ook niet gepasseerd worden op dit signaal. Er is hoogstens een
+    winnaar, dus de sorteersleutel blijft een totale orde: transitief en
+    onafhankelijk van de invoervolgorde.
     """
-    if len(group) < 2:
+    valid = [r for r in group if r["direction_change"] is not None]
+    if len(valid) < 2:
         return None
-    demands = sorted((r["direction_change"] or 0 for r in group), reverse=True)
-    if demands[0] - demands[1] < DIRECTION_TIE_MIN_MARGIN:
+    top, *rest = sorted(valid, key=lambda r: (-r["direction_change"], r["label"]))
+    if top["direction_change"] - rest[0]["direction_change"] < TOP_CHOICE_MIN_LEAD:
         return None
-    return next(r for r in group if (r["direction_change"] or 0) == demands[0])
+    if _change_share(top) < max(_change_share(o) for o in rest):
+        return None
+    return top
 
 
 def _reference_row(candidates: list[dict[str, Any]]) -> dict[str, Any]:
@@ -129,17 +145,11 @@ def _tie_break_marking(row: dict[str, Any],
                     f"verandering vragen ({row['direction_change']} van de "
                     f"{row['direction_answered']} tegen {other['direction_change']} "
                     f"van de {other['direction_answered']}).")
-            # Fail Loud: de rij is wel degelijk vooruit gezet door de vraag om
-            # verandering, maar geen enkele gepasseerde rij heeft een telling om
-            # tegen af te zetten. Dan noemt de regel dat, in plaats van de flip
-            # onverklaard te laten (bevinding B5) of een getal te suggereren dat
-            # er niet is.
-            other = _reference_row(passed)
-            return "direction", (
-                f"Staat hoger dan {other['label']} omdat hier meer mensen om "
-                f"verandering vragen ({row['direction_change']} van de "
-                f"{row['direction_answered']}); bij {other['label']} gaven te weinig "
-                f"mensen antwoord om dat te vergelijken.")
+            # Geen else-tak: een winnaar heeft per definitie een tweede rij met
+            # een geldig aantal in zijn groep (_direction_winner), en staat die
+            # rij lager in base, dan zit ze in `comparable`. Staat ze hoger, dan
+            # is er niets gepasseerd om uit te leggen en valt de markering door
+            # naar spreiding en verdieping.
         if row["spread_flag"]:
             comparable = [o for o in passed if not o["spread_flag"]]
             if comparable:
@@ -212,7 +222,7 @@ def rank_factors(scan_type: str,
       laagste base van die groep) beslist achtereenvolgens: vraag om
       verandering, spreidingsvlag, verdiepingsvlag, base, label.
     - De vraag om verandering zet alleen de hoogste rij van de groep vooruit,
-      en alleen bij een voorsprong van DIRECTION_TIE_MIN_MARGIN of meer. Een
+      en alleen bij een voorsprong van TOP_CHOICE_MIN_LEAD of meer. Een
       rij met te weinig beantwoorders telt daarbij als 0 en schakelt het
       signaal voor de rest van de groep dus niet uit.
     - Slotvolgorde alfabetisch op canoniek label: twee runs geven altijd

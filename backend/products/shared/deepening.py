@@ -764,6 +764,14 @@ DIRECTION_MIN_N = 3          # vloer voor het rapportblok (spec par. 5.4; bewust
 DIRECTION_CAVEAT_MAX_N = 4   # caveat-drempel = DIRECTION_MIN_N + 1 (dekt n in {3, 4}); niet los wijzigen
 DIRECTION_OTHER_WARN_N = 8   # vanaf hier een reviewvlag als *_other de topoptie is
 
+# Voorsprong die de meest gekozen optie op de volgende nodig heeft om als een
+# duidelijk signaal te tellen: een verschil van 1 is ruis. Een keer gedefinieerd
+# en op alle drie de plekken gebruikt waar hij werkt: direction_state (staat
+# `clear`), agenda_enrichment (verrijkingsstaffel) en de richting-tie-break in
+# het prioriteringsraster (report_priority.py). Wijzigen raakt die drie samen;
+# dat is de bedoeling.
+TOP_CHOICE_MIN_LEAD = 2
+
 
 def aggregate_direction(
     rows: list[tuple[dict[str, int], dict[str, Any] | None]],
@@ -852,7 +860,7 @@ def direction_state(agg: dict[str, Any], factor_key: str) -> dict[str, Any]:
         logger.warning("direction: *_other is topoptie voor %s - optieset review nodig",
                        factor_key)
     if (not top_key.endswith(("_none", "_other"))
-            and top_n / n >= 0.5 and top_n - second_n >= 2):
+            and top_n / n >= 0.5 and top_n - second_n >= TOP_CHOICE_MIN_LEAD):
         return {**base, "state": "clear"}
     return {**base, "state": "divided"}
 
@@ -870,7 +878,7 @@ def agenda_enrichment(agg: dict[str, Any], scan_type: str, factor_key: str) -> d
         return None
     # Deler is `answered` per spec 6.1 ("percentages altijd over beantwoorders"),
     # bewust conservatiever dan de "hoofdkeuzes"-formulering in spec 6.3.
-    if top_n < 4 or top_n / n < 0.5 or top_n - second_n < 2:
+    if top_n < 4 or top_n / n < 0.5 or top_n - second_n < TOP_CHOICE_MIN_LEAD:
         return None
     return {
         "option_key": top_key,

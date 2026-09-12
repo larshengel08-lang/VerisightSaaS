@@ -1,6 +1,6 @@
 """Tests voor de richting-tie-break en de markeringsregels (spec ronde 2 par. 1)."""
-from backend.products.shared.deepening import DIRECTION_MIN_N
-from backend.report_priority import DIRECTION_TIE_MIN_MARGIN, rank_factors
+from backend.products.shared.deepening import DIRECTION_MIN_N, TOP_CHOICE_MIN_LEAD
+from backend.report_priority import rank_factors
 
 
 def _dir(answered, change, none_key="gr_none", change_key="gr_visibility"):
@@ -44,21 +44,32 @@ def test_direction_outranks_spread_within_margin():
     assert rows[0]["tie_break_kind"] == "direction"
 
 
-def test_direction_ignored_below_the_floor():
-    # workload heeft 2 beantwoorders (< DIRECTION_MIN_N): richting telt voor de
-    # hele groep niet mee; de spreidingsvlag van growth beslist dan.
-    # growth staat hier BOVEN workload in score (6.1 tegen 6.0), zodat de
-    # spreidingsvlag echt de flip veroorzaakt en dus gemarkeerd hoort te worden.
-    # Telde richting wel mee, dan won workload (2 van 2 tegen 1 van 11).
+def test_row_below_the_floor_has_no_count_but_keeps_its_answered_total():
+    # Onder DIRECTION_MIN_N beantwoorders is er geen bruikbaar aantal. De rij
+    # houdt wel zijn beantwoorderstotaal, zodat de noemer-keten elders klopt.
     assert DIRECTION_MIN_N == 3
+    rows = _rank({"workload": 6.0},
+                 direction={"workload": _dir(2, 2, none_key="wl_none",
+                                             change_key="wl_volume")})
+    assert rows[0]["direction_answered"] == 2
+    assert rows[0]["direction_change"] is None
+
+
+def test_direction_needs_two_rows_with_a_valid_count():
+    # Scenario 09 en 13: een factor met 3 van de 3 tegenover een rij die te
+    # weinig antwoorden had. "Meer mensen" beweren en in dezelfde zin zeggen dat
+    # vergelijken onmogelijk is, is ruis; richting beslist hier dus niet. De
+    # spreidingsvlag van growth doet dat wel, en die regel klopt wel.
     avgs = {"growth": 6.1, "workload": 6.0}
-    resp = {"growth": [4.0] * 5 + [7.0] * 7}
-    direction = {"growth": _dir(11, 1),
+    resp = {"growth": [4.0] * 5 + [7.0] * 7}          # 5 van 12 onder de 5 -> vlag
+    direction = {"growth": _dir(11, 9),
                  "workload": _dir(2, 2, none_key="wl_none", change_key="wl_volume")}
-    rows = _rank(avgs, direction=direction, resp=resp)
+    labels = {"growth": "Groeiperspectief", "workload": "Werkdruk en herstelruimte"}
+    rows = _rank(avgs, direction=direction, resp=resp, labels=labels)
     assert rows[0]["key"] == "growth"
     assert rows[0]["tie_break_kind"] == "spread"
-    assert rows[1]["direction_change"] is None
+    assert "verandering" not in rows[0]["tie_break_note"]
+    assert "vergelijken" not in rows[0]["tie_break_note"]
 
 
 def test_direction_does_not_work_outside_the_margin():
@@ -136,9 +147,9 @@ def test_without_direction_agg_behaviour_is_unchanged():
 
 def test_direction_needs_a_margin_of_two():
     # "5 van de 11 tegen 4 van de 11" is ruis: de voorsprong haalt
-    # DIRECTION_TIE_MIN_MARGIN niet, dus richting beslist niets en de groep valt
+    # TOP_CHOICE_MIN_LEAD niet, dus richting beslist niets en de groep valt
     # door naar base. Bij een voorsprong van precies 2 flipt het wel.
-    assert DIRECTION_TIE_MIN_MARGIN == 2
+    assert TOP_CHOICE_MIN_LEAD == 2
     avgs = {"growth": 6.0, "workload": 6.1}
     krap = {"growth": _dir(11, 4),
             "workload": _dir(11, 5, none_key="wl_none", change_key="wl_volume")}
@@ -199,18 +210,26 @@ def test_equal_counts_fall_through_to_the_next_signal():
     assert "gedeelde toelichting" in rows[0]["tie_break_note"]
 
 
-def test_direction_marking_is_honest_when_the_other_row_has_no_count():
-    # De winnaar passeert alleen een rij onder de vloer: dan is er geen tweede
-    # telling om tegen af te zetten. De regel zegt dat, in plaats van de flip
-    # onverklaard te laten of een getal te suggereren dat er niet is.
-    avgs = {"growth": 6.1, "workload": 6.0}
-    direction = {"growth": _dir(11, 9),
-                 "workload": _dir(2, 2, none_key="wl_none", change_key="wl_volume")}
-    labels = {"growth": "Groeiperspectief", "workload": "Werkdruk en herstelruimte"}
-    rows = _rank(avgs, direction=direction, labels=labels)
-    assert rows[0]["key"] == "growth"
-    note = rows[0]["tie_break_note"]
-    assert "9 van de 11" in note
-    assert "te weinig mensen antwoord om dat te vergelijken" in note
-    assert "van de 2" not in note
-    assert "—" not in note
+def test_direction_needs_the_larger_share_too():
+    # Scenario 10: 27 van de 35 tegen 17 van de 19. Het aantal is hoger, het
+    # aandeel lager (77 tegen 89 procent). De markeringsregel zou zichzelf dan
+    # tegenspreken, dus richting beslist niet en de base bepaalt de volgorde.
+    avgs = {"growth": 6.0, "workload": 6.1}
+    direction = {"growth": _dir(19, 17),
+                 "workload": _dir(35, 27, none_key="wl_none", change_key="wl_volume")}
+    rows = _rank(avgs, direction=direction)
+    assert [r["key"] for r in rows] == ["growth", "workload"]
+    assert rows[0]["tie_break_kind"] is None
+    assert rows[0]["tie_break_note"] is None
+
+
+def test_direction_wins_when_count_and_share_are_both_higher():
+    # Zelfde vorm als hierboven, maar nu is ook het aandeel hoger: 27 van de 35
+    # (77 procent) tegen 5 van de 19 (26 procent).
+    avgs = {"growth": 6.0, "workload": 6.1}
+    direction = {"growth": _dir(19, 5),
+                 "workload": _dir(35, 27, none_key="wl_none", change_key="wl_volume")}
+    rows = _rank(avgs, direction=direction, labels={"growth": "Groeiperspectief"})
+    assert rows[0]["key"] == "workload"
+    assert rows[0]["tie_break_kind"] == "direction"
+    assert "27 van de 35 tegen 5 van de 19" in rows[0]["tie_break_note"]

@@ -27,6 +27,7 @@ from backend.products.shared.deepening import (
     DIRECTION_CAVEAT_MAX_N,
     DIRECTION_MIN_N,
     DIRECTION_SCAN_TYPES,
+    TOP_CHOICE_MIN_LEAD,
     agenda_enrichment,
     aggregate_deepening,
     aggregate_direction,
@@ -38,7 +39,6 @@ from backend.products.shared.deepening import (
 from backend.products.shared.registry import get_product_module
 from backend.report_priority import (
     CELL_CAP_REACHED, CELL_NO_MAJORITY, CELL_NOT_TRIGGERED, CELL_TOO_FEW,
-    DIRECTION_TIE_MIN_MARGIN,
     rank_factors,
 )
 from backend.scan_definitions import get_scan_definition
@@ -1047,10 +1047,11 @@ def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: st
 # varianten. Die worden hier samengesteld uit bouwstenen in plaats van als acht
 # losse constanten onderhouden.
 _SIGNAL_SCORE = "de gemiddelde score"
+_SIGNAL_EXIT_REASON = "hoe vaak een factor als vertrekreden is genoemd"
 _SIGNAL_SPREAD = "de spreiding tussen respondenten"
 _SIGNAL_DEEPENING = "wat respondenten in de verdieping als toelichting kozen"
 _SIGNAL_DIRECTION = "hoeveel mensen bij een factor om verandering vragen"
-_TELWOORD = {2: "twee", 3: "drie", 4: "vier"}
+_TELWOORD = {2: "twee", 3: "drie", 4: "vier", 5: "vijf"}
 
 # De vraag om verandering heeft bewust geen eigen kolom (spec ronde 2 par. 1.3),
 # dus de intro belooft alleen wat er echt staat: de markeringsregel onder de rij
@@ -1060,8 +1061,15 @@ _RASTER_DIRECTION_CLAUSE = (
     "de doorslag, dan staat dat met de tellingen onder de rij.")
 
 
-def _raster_signals(deepening_active: bool, direction_active: bool) -> list[str]:
-    signals = [_SIGNAL_SCORE, _SIGNAL_SPREAD]
+def _raster_signals(scan_type: str, deepening_active: bool,
+                    direction_active: bool) -> list[str]:
+    """De signalen in de volgorde waarin ze op de pagina staan: eerst de
+    kolommen van links naar rechts, de vraag om verandering als laatste omdat
+    die geen kolom heeft."""
+    signals = [_SIGNAL_SCORE]
+    if scan_type == "exit":
+        signals.append(_SIGNAL_EXIT_REASON)
+    signals.append(_SIGNAL_SPREAD)
     if deepening_active:
         signals.append(_SIGNAL_DEEPENING)
     if direction_active:
@@ -1069,9 +1077,11 @@ def _raster_signals(deepening_active: bool, direction_active: bool) -> list[str]
     return signals
 
 
-def raster_intro(deepening_active: bool, direction_active: bool) -> str:
-    """Intro boven het raster: noemt precies de signalen die meewogen."""
-    signals = _raster_signals(deepening_active, direction_active)
+def raster_intro(scan_type: str, deepening_active: bool,
+                 direction_active: bool) -> str:
+    """Intro boven het raster: noemt precies de signalen die meewogen. Loep
+    Vertrek telt er een extra: de vertrekredenkolom staat ook in de tabel."""
+    signals = _raster_signals(scan_type, deepening_active, direction_active)
     lijst = f'{", ".join(signals[:-1])} en {signals[-1]}'
     # De richting staat altijd als laatste in de lijst en heeft geen kolom.
     waar = (f"De eerste {_TELWOORD[len(signals) - 1]} staan in de tabel."
@@ -1094,7 +1104,7 @@ def raster_uitleg(scan_type: str, deepening_active: bool,
     if direction_active:
         regel = ("Liggen scores binnen 0,3 van elkaar, dan telt eerst waar de meeste "
                  f"mensen om verandering vragen, en alleen als een factor er minstens "
-                 f"{DIRECTION_TIE_MIN_MARGIN} mensen bovenuit steekt; anders "
+                 f"{TOP_CHOICE_MIN_LEAD} mensen bovenuit steekt; anders "
                  f"{terugval}.")
     else:
         regel = f"Liggen scores binnen 0,3 van elkaar, dan {terugval}."
@@ -1261,7 +1271,7 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
     # tabelkop, de uitlegregel over de sorteervolgorde en de gate-notitie
     # beschrijven dan alle drie een rangorde die de pagina niet heeft.
     if ranked:
-        intro = raster_intro(deepening_active, direction_active)
+        intro = raster_intro(scan_type, deepening_active, direction_active)
     else:
         intro = RASTER_INTRO_EMPTY
     gate = (f'<p class="r-gate">{raster_gate_note(direction_active)}</p>'
@@ -1325,7 +1335,8 @@ def _raster_attribution(rows: list[dict], scan_type: str) -> str:
     if top["tie_break_kind"] == "direction":
         return ("De scores lagen vrijwel gelijk; het aantal mensen dat om "
                 "verandering vraagt gaf de doorslag.")
-    if top["tie_break_kind"] in ("spread", "deepening") or             top["base"] > min(r["base"] for r in rows):
+    if (top["tie_break_kind"] in ("spread", "deepening")
+            or top["base"] > min(r["base"] for r in rows)):
         # Een vlag tilde deze rij boven een lagere base, of besliste bij een
         # gelijke base wie bovenaan kwam (tie_break_kind). In beide gevallen is
         # "de laagst scorende factor" geen volledige verklaring; benoem welk

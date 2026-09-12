@@ -47,6 +47,35 @@ van vijf: precies het scenario waarvoor het gebouwd is, en de uitlegzin onder de
 ("de vraag om verandering vanaf 3 beantwoorders per factor") werd er onwaar van. Een rij
 onder de vloer heeft hoogstens twee veranderverzoeken, dus 0 is de conservatieve kant.
 
+**Verfijning (spec-review 2026-09-12, derde ronde): richting beslist alleen als het aantal
+en het aandeel allebei hoger zijn, en alleen tegenover een rij die zelf een geldig aantal
+heeft.** Twee gaten in dezelfde regel: een markeringsregel mag nooit worden tegengesproken
+door de getallen die in dezelfde zin staan.
+
+1. *Aandeel.* Scenario 10 gaf "meer mensen om verandering vragen (27 van de 35 tegen 17 van
+   de 19)" en bepaalde daarmee het startpunt, terwijl dat in aandeel omgekeerd is (77 tegen
+   89 procent) en de gepasseerde factor ook nog lager scoorde. Letterlijk waar, maar de
+   lezer leest hem als onwaar. Het aantal blijft leidend (par. 1.2), met als voorwaarde dat
+   het aandeel van de winnaar niet lager is dan dat van welke andere geldige rij ook.
+2. *Vergelijkingsrij.* Scenario 09 en 13 gaven "meer mensen om verandering vragen (3 van de
+   3); bij X gaven te weinig mensen antwoord om dat te vergelijken": een zin die "meer"
+   beweert en in dezelfde adem zegt dat vergelijken onmogelijk is. Richting beslist daarom
+   pas als er in de gelijkspel-groep minstens twee rijen met een geldig aantal zitten, en
+   de winnaar minstens `TOP_CHOICE_MIN_LEAD` boven de hoogste andere geldige rij uitkomt.
+   Rijen zonder geldig aantal doen in geen van beide richtingen mee: ze schakelen het
+   signaal niet uit (dat deed de weggehaalde groepsbrede gate wel) en kunnen er ook niet op
+   gepasseerd worden. De referentierij van een richtingmarkering komt uitsluitend uit rijen
+   met een geldig aantal; de copy-variant "bij X gaven te weinig mensen antwoord om dat te
+   vergelijken" is daarmee vervallen.
+
+Beide voorwaarden worden groepsbreed geevalueerd en leveren hoogstens een winnaar op, dus
+de sorteersleutel blijft een totale orde: transitief en onafhankelijk van de invoervolgorde.
+
+**Drempelconsolidatie (2026-09-12):** de voorsprong van 2 stond op drie plekken als los
+getal (`direction_state` clear, `agenda_enrichment`, de raster-tie-break). Hij is nu een
+keer gedefinieerd als `TOP_CHOICE_MIN_LEAD` in `deepening.py` en wordt op alle drie de
+plekken gebruikt; de waarde is ongewijzigd, dus geen gedragswijziging.
+
 **Aanvullende regel (spec-review 2026-09-12): de vraag om verandering beslist alleen bij
 een voorsprong van minstens `DIRECTION_TIE_MIN_MARGIN` (2).** Binnen een gelijkspel-groep
 wordt alleen de hoogste rij vooruit gezet, en alleen als die er minstens 2 mensen bovenuit
