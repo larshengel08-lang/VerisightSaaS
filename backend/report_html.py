@@ -25,6 +25,7 @@ from backend.report_css import build_css, RAG_HIGH, RAG_MID, RAG_LOW
 from backend.report_distribution import MIN_DISTRIBUTION_N, distribution_block
 from backend.products.shared.deepening import (
     DIRECTION_CAVEAT_MAX_N,
+    DIRECTION_MIN_N,
     DIRECTION_SCAN_TYPES,
     agenda_enrichment,
     aggregate_deepening,
@@ -37,6 +38,7 @@ from backend.products.shared.deepening import (
 from backend.products.shared.registry import get_product_module
 from backend.report_priority import (
     CELL_CAP_REACHED, CELL_NO_MAJORITY, CELL_NOT_TRIGGERED, CELL_TOO_FEW,
+    DIRECTION_TIE_MIN_MARGIN,
     rank_factors,
 )
 from backend.scan_definitions import get_scan_definition
@@ -1037,56 +1039,94 @@ def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: st
 # ── Prioriteringsraster (spec 2026-07-18) ────────────────────────────────────
 # Alle copy hieronder is gepind met contract-tests: inkorten = rode test.
 
-RASTER_INTRO = (
-    "Dit overzicht weegt alle zes factoren tegen elkaar af op vier signalen: de "
-    "gemiddelde score, de spreiding tussen respondenten, wat respondenten in de "
-    "verdieping als toelichting kozen, en hoeveel mensen bij een factor om "
-    "verandering vragen. De eerste drie staan in de tabel. De vraag om "
-    "verandering telt alleen mee bij vrijwel gelijke scores; gaf die de "
-    "doorslag, dan staat dat met de tellingen onder de rij. Zo is de volgorde "
-    "navolgbaar. De bespreking beslist; dit raster structureert.")
+# ── Intro, sorteerregel en gate-notitie: samengesteld uit de signalen die deze
+# meting werkelijk had ────────────────────────────────────────────────────────
+# Vaste regel (ronde 1, herbevestigd in ronde 2 par. 1.3): het raster belooft
+# nooit een signaal dat in deze meting niet bestond. Twee signalen kunnen per
+# meting aan of uit staan (verdieping, richting), maal twee scan-types: acht
+# varianten. Die worden hier samengesteld uit bouwstenen in plaats van als acht
+# losse constanten onderhouden.
+_SIGNAL_SCORE = "de gemiddelde score"
+_SIGNAL_SPREAD = "de spreiding tussen respondenten"
+_SIGNAL_DEEPENING = "wat respondenten in de verdieping als toelichting kozen"
+_SIGNAL_DIRECTION = "hoeveel mensen bij een factor om verandering vragen"
+_TELWOORD = {2: "twee", 3: "drie", 4: "vier"}
 
-RASTER_INTRO_GATE = (
-    "Dit overzicht weegt alle zes factoren tegen elkaar af op drie signalen: de "
-    "gemiddelde score, de spreiding tussen respondenten, en hoeveel mensen bij "
-    "een factor om verandering vragen. De eerste twee staan in de tabel. De "
-    "vraag om verandering telt alleen mee bij vrijwel gelijke scores; gaf die "
-    "de doorslag, dan staat dat met de tellingen onder de rij. Zo is de "
-    "volgorde navolgbaar. De bespreking beslist; dit raster structureert.")
+# De vraag om verandering heeft bewust geen eigen kolom (spec ronde 2 par. 1.3),
+# dus de intro belooft alleen wat er echt staat: de markeringsregel onder de rij
+# zodra dit signaal de volgorde bepaalde.
+_RASTER_DIRECTION_CLAUSE = (
+    "De vraag om verandering telt alleen mee bij vrijwel gelijke scores; gaf die "
+    "de doorslag, dan staat dat met de tellingen onder de rij.")
 
-RASTER_UITLEG: dict[str, str] = {
-    "retention": (
-        "Hoe deze volgorde tot stand komt: gesorteerd op score. Liggen scores "
-        "binnen 0,3 van elkaar, dan telt eerst waar de meeste mensen om "
-        "verandering vragen, en alleen als een factor er minstens 2 mensen "
-        "bovenuit steekt; anders geven een grote spreiding en een gedeelde "
-        "toelichting uit de verdieping de doorslag. Spreiding tonen we vanaf 10 "
-        "responses; verdiepingsduiding vanaf 8 beantwoorders per factor; de "
-        "vraag om verandering vanaf 3 beantwoorders per factor."),
-    "exit": (
-        "Hoe deze volgorde tot stand komt: gesorteerd op score, waarbij ook "
-        "meeweegt hoe vaak een factor als vertrekreden is genoemd. Liggen "
-        "scores binnen 0,3 van elkaar, dan telt eerst waar de meeste mensen om "
-        "verandering vragen, en alleen als een factor er minstens 2 mensen "
-        "bovenuit steekt; anders geven een grote spreiding en een gedeelde "
-        "toelichting uit de verdieping de doorslag. Spreiding tonen we vanaf 10 "
-        "responses; verdiepingsduiding vanaf 8 beantwoorders per factor; de "
-        "vraag om verandering vanaf 3 beantwoorders per factor."),
-}
+
+def _raster_signals(deepening_active: bool, direction_active: bool) -> list[str]:
+    signals = [_SIGNAL_SCORE, _SIGNAL_SPREAD]
+    if deepening_active:
+        signals.append(_SIGNAL_DEEPENING)
+    if direction_active:
+        signals.append(_SIGNAL_DIRECTION)
+    return signals
+
+
+def raster_intro(deepening_active: bool, direction_active: bool) -> str:
+    """Intro boven het raster: noemt precies de signalen die meewogen."""
+    signals = _raster_signals(deepening_active, direction_active)
+    lijst = f'{", ".join(signals[:-1])} en {signals[-1]}'
+    # De richting staat altijd als laatste in de lijst en heeft geen kolom.
+    waar = (f"De eerste {_TELWOORD[len(signals) - 1]} staan in de tabel."
+            if direction_active else "Ze staan allemaal in de tabel.")
+    staart = f" {_RASTER_DIRECTION_CLAUSE}" if direction_active else ""
+    return (f"Dit overzicht weegt alle zes factoren tegen elkaar af op "
+            f"{_TELWOORD[len(signals)]} signalen: {lijst}. {waar}{staart} Zo is de "
+            "volgorde navolgbaar. De bespreking beslist; dit raster structureert.")
+
+
+def raster_uitleg(scan_type: str, deepening_active: bool,
+                  direction_active: bool) -> str:
+    """Sorteerregel onder de tabel. De regel zelf blijft een zin; daarna volgen
+    alleen de drempels van de signalen die in deze meting meespeelden."""
+    reden = (", waarbij ook meeweegt hoe vaak een factor als vertrekreden is genoemd"
+             if scan_type == "exit" else "")
+    terugval = ("geven een grote spreiding en een gedeelde toelichting uit de "
+                "verdieping de doorslag" if deepening_active
+                else "geeft een grote spreiding de doorslag")
+    if direction_active:
+        regel = ("Liggen scores binnen 0,3 van elkaar, dan telt eerst waar de meeste "
+                 f"mensen om verandering vragen, en alleen als een factor er minstens "
+                 f"{DIRECTION_TIE_MIN_MARGIN} mensen bovenuit steekt; anders "
+                 f"{terugval}.")
+    else:
+        regel = f"Liggen scores binnen 0,3 van elkaar, dan {terugval}."
+    drempels = ["Spreiding tonen we vanaf 10 responses"]
+    if deepening_active:
+        drempels.append("verdiepingsduiding vanaf 8 beantwoorders per factor")
+    if direction_active:
+        drempels.append(f"de vraag om verandering vanaf {DIRECTION_MIN_N} "
+                        "beantwoorders per factor")
+    return (f"Hoe deze volgorde tot stand komt: gesorteerd op score{reden}. {regel} "
+            f'{"; ".join(drempels)}.')
+
 
 RASTER_LEGENDA = (
     "Het blokje in de spreidingsbalk markeert het groepsgemiddelde; de "
     "telling eronder toont hoeveel respondenten deze factor onder de 5 "
     "scoren.")
 
-RASTER_GATE_NOTE = (
-    "In deze meting waren geen verdiepingsvragen actief; de volgorde volgt "
-    "score, spreiding en de vraag om verandering. Die laatste staat los van de "
-    "verdieping: elke respondent beantwoordt hem.")
+
+def raster_gate_note(direction_active: bool) -> str:
+    """Disclosure bij een meting zonder verdiepingsvragen. De richtingvraag staat
+    daar los van (elke respondent beantwoordt hem), dus die wordt alleen genoemd
+    als hij er in deze meting ook echt was."""
+    volgt = ("score, spreiding en de vraag om verandering. Die laatste staat los "
+             "van de verdieping: elke respondent beantwoordt hem."
+             if direction_active else "score en spreiding.")
+    return f"In deze meting waren geen verdiepingsvragen actief; de volgorde volgt {volgt}"
+
 
 # Derde intro-staat (bug B3): zonder rasterrijen is er geen tabel, geen
-# volgorde en geen startpunt. RASTER_INTRO en RASTER_INTRO_GATE beloven beide
-# een afweging van zes factoren die de pagina dan niet toont; dezelfde
+# volgorde en geen startpunt. raster_intro() belooft in elke variant een
+# afweging van zes factoren die de pagina dan niet toont; dezelfde
 # eerlijkheidsfout als de methodiekpagina die het richtingblok beloofde.
 RASTER_INTRO_EMPTY = (
     "Dit overzicht weegt normaal alle zes factoren tegen elkaar af. Voor deze "
@@ -1124,10 +1164,12 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
     noemt zodra dit signaal de volgorde bepaalde. Het navy slotblok draagt
     opener + invulregels.
 
-    RASTER_UITLEG wordt PLAIN gerenderd (geen bold-prefix-splitsing): de
-    contract-test controleert de letterlijke, volledige string als substring
-    van de HTML-output, dus elke opmaak die de string zelf onderbreekt
-    (bijv. een <b>-tag halverwege) breekt die test.
+    De uitlegregel wordt PLAIN gerenderd (geen bold-prefix-splitsing): de
+    contract-test controleert de letterlijke, volledige string uit
+    raster_uitleg() als substring van de HTML-output, dus elke opmaak die de
+    string zelf onderbreekt (bijv. een <b>-tag halverwege) breekt die test.
+    Intro, uitlegregel en gate-notitie worden samengesteld uit de signalen die
+    deze meting had: het raster belooft nooit een signaal dat er niet was.
 
     direction_block_html (bug B3): de renderers bouwen het richtingblok zelf,
     omdat de methodiekpagina moet weten of het blok daadwerkelijk gerenderd
@@ -1203,14 +1245,26 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
             body += (f'<tr class="r-note"><td colspan="{n_cols}">'
                      f'{_h(row["tie_break_note"])}</td></tr>')
 
+    # Het richtingblok wordt hier al gebouwd, voor de intro en de uitlegregel:
+    # die twee moeten weten of de richtingvraag in deze meting bestond, en de
+    # eerlijkste bron daarvoor is wat er daadwerkelijk op de pagina komt te
+    # staan, niet of er een aggregaat in de data zit (bug B3, hetzelfde patroon
+    # als _trust_page's direction_active, dat deze renderers uit exact dezelfde
+    # waarde afleiden). Een aparte parameter zou een tweede waarheid zijn die
+    # stil kan afwijken van de pagina.
+    dir_block = (direction_block_html if direction_block_html is not None
+                 else _wat_moet_gebeuren_block(ranked, direction_agg or {},
+                                               scan_type, n_total))
+    direction_active = bool(dir_block)
+
     # Zonder rasterrijen is er geen tabel om te tonen (bug B3): de kale
     # tabelkop, de uitlegregel over de sorteervolgorde en de gate-notitie
     # beschrijven dan alle drie een rangorde die de pagina niet heeft.
     if ranked:
-        intro = RASTER_INTRO if deepening_active else RASTER_INTRO_GATE
+        intro = raster_intro(deepening_active, direction_active)
     else:
         intro = RASTER_INTRO_EMPTY
-    gate = (f'<p class="r-gate">{RASTER_GATE_NOTE}</p>'
+    gate = (f'<p class="r-gate">{raster_gate_note(direction_active)}</p>'
             if ranked and not deepening_active else "")
     # Legenda legt de spreidingskolom uit ("... onder de 5 scoren"); zonder een
     # enkele rij met volledige spreidingsdata (n >= 10) is die uitleg niet van
@@ -1228,11 +1282,7 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
   </tr>{body}</table>
   {legenda}
   {gate}
-  <div class="r-uitleg">{RASTER_UITLEG[scan_type]}</div>""" if ranked else ""
-
-    dir_block = (direction_block_html if direction_block_html is not None
-                 else _wat_moet_gebeuren_block(ranked, direction_agg or {},
-                                               scan_type, n_total))
+  <div class="r-uitleg">{raster_uitleg(scan_type, deepening_active, direction_active)}</div>""" if ranked else ""
 
     # Zonder rasterrijen slaat de meegegeven mgmt_q nergens op: de aanroeper
     # valt daar terug op nsp["first_decision"], de generieke per-product

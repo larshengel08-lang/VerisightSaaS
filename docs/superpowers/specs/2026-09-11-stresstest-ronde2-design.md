@@ -75,6 +75,25 @@ zegt dat dan ("... (9 van de 11); bij X gaven te weinig mensen antwoord om dat t
 vergelijken"), in plaats van de flip onverklaard te laten of een getal te suggereren dat
 er niet is.
 
+**Ontwerpbeslissing (spec-review 2026-09-12): het raster belooft nooit een signaal dat in
+deze meting niet bestond.** Dezelfde regel die ronde 1 toepaste toen `RASTER_INTRO_GATE`
+voor de verdiepings-gate werd gemaakt, nu ook voor de richtingvraag. Twee signalen die per
+meting aan of uit kunnen (verdieping, richting) maal twee scan-types geeft acht varianten;
+die worden samengesteld uit bouwstenen in `raster_intro()`, `raster_uitleg()` en
+`raster_gate_note()` in plaats van als losse constanten onderhouden. De sorteerregel blijft
+een zin, staat letterlijk onder de tabel, en noemt alleen de drempels van de signalen die
+meespeelden: geen verdiepingsdrempel in een meting zonder verdiepingsvragen, geen marge van
+2 in een meting zonder richtingdata. De vertrekredenclausule blijft aan Loep Vertrek hangen.
+
+Of de richting actief was, wordt afgeleid uit het richtingblok dat daadwerkelijk gerenderd
+wordt (`bool(dir_block)` in `_prioriteringsraster`), niet uit het bestaan van het
+aggregaat: hetzelfde patroon als `_trust_page`'s `direction_active` (bevinding B3), en
+dezelfde waarde, want de renderers geven dat blok als `direction_block_html` mee. Dit is
+bewust geen aparte parameter naast `deepening_active`: een tweede waarheid kan stil
+afwijken van wat er op de pagina staat, en dat is precies de fout die B3 was. Wie dat toch
+als parameter wil, vervangt de afleiding door een argument en voedt het in beide renderers
+uit `_dir_block`.
+
 **Ontwerpbeslissing (spec-review 2026-09-12): geen kolom voor de vraag om verandering.**
 Par. 1.3 schrijft een extra kolom voor Loep Vertrek voor (vertrekreden) en niet meer.
 Zeven kolommen met een spreidings-SVG erin is op A4 een lay-outrisico dat in deze ronde

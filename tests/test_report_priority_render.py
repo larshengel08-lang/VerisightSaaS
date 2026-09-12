@@ -2,13 +2,12 @@
 import re
 
 from backend.report_html import (
-    RASTER_GATE_NOTE,
-    RASTER_INTRO,
-    RASTER_INTRO_GATE,
     RASTER_LEGENDA,
-    RASTER_UITLEG,
     _factor_color,
     _prioriteringsraster,
+    raster_gate_note,
+    raster_intro,
+    raster_uitleg,
 )
 from backend.report_priority import (
     CELL_CAP_REACHED,
@@ -46,26 +45,64 @@ RANKED = [
 RESP = {r["key"]: [4.0] * r["spread_below"] + [7.0] * (r["spread_n"] - r["spread_below"])
         for r in RANKED}
 
+# Richtingdata voor de twee agendarijen (startpunt growth, tweede workload);
+# echte optiesleutels, want direction_state/direction_imperative slaan erop op.
+DIRECTION = {
+    "growth": {"lowest_n": 9, "offered": 9, "answered": 8, "skipped": 1,
+               "counts": {"grd_visibility": 6, "grd_none": 1, "grd_time": 1}},
+    "workload": {"lowest_n": 8, "offered": 8, "answered": 8, "skipped": 0,
+                 "counts": {"wld_peaks": 3, "wld_scope": 3, "wld_none": 2}},
+}
 
-def _render(scan_type="retention", ranked=RANKED, resp=RESP, active=True):
+
+def _render(scan_type="retention", ranked=RANKED, resp=RESP, active=True,
+            direction=None, **extra):
     return _prioriteringsraster(
         ranked=ranked, scan_type=scan_type, factor_resp_scores=resp,
         deepening_active=active, mgmt_q="Testvraag?",
         review_when="Plan binnen 45-90 dagen een vervolgmoment.",
-        opener_html="<h2>Gespreksagenda</h2>")
+        opener_html="<h2>Gespreksagenda</h2>",
+        direction_agg=direction, n_total=13 if direction else 0, **extra)
 
 
-def test_uitlegregel_letterlijk_gepind_beide_varianten():
-    assert RASTER_UITLEG["retention"] in _render("retention")
-    assert RASTER_UITLEG["exit"] in _render("exit")
-    # De exit-variant noemt het vertrekredengewicht.
-    assert "vertrekreden" in RASTER_UITLEG["exit"]
-    assert "vertrekreden" not in RASTER_UITLEG["retention"]
+def test_uitlegregel_letterlijk_gepind_in_alle_vier_de_combinaties():
+    # Intro en uitlegregel worden samengesteld uit de signalen die deze meting
+    # had; beide scan-types maal verdieping aan/uit maal richting aan/uit.
+    for scan in ("retention", "exit"):
+        for deep in (True, False):
+            for direction in (DIRECTION, None):
+                html = _render(scan, active=deep, direction=direction)
+                assert raster_uitleg(scan, deep, bool(direction)) in html
+                assert raster_intro(deep, bool(direction)) in html
+    # De exit-variant noemt het vertrekredengewicht, de retention-variant niet.
+    assert "vertrekreden" in raster_uitleg("exit", True, True)
+    assert "vertrekreden" not in raster_uitleg("retention", True, True)
+
+
+def test_uitlegregel_noemt_alleen_de_drempels_die_meespeelden():
+    zonder = raster_uitleg("retention", False, False)
+    assert "verdieping" not in zonder
+    assert "vraag om verandering" not in zonder
+    assert "Spreiding tonen we vanaf 10 responses." in zonder
+    alleen_richting = raster_uitleg("retention", False, True)
+    assert "verdiepingsduiding" not in alleen_richting
+    assert "vanaf 3 beantwoorders per factor" in alleen_richting
+    alleen_verdieping = raster_uitleg("retention", True, False)
+    assert "verdiepingsduiding vanaf 8 beantwoorders per factor" in alleen_verdieping
+    assert "om verandering" not in alleen_verdieping
+
+
+def test_richting_gate_volgt_de_pagina_niet_het_aggregaat():
+    # Bug B3-patroon: is het richtingblok onderdrukt, dan mag de intro de vraag
+    # om verandering niet noemen, ook al zit er wel een aggregaat in de data.
+    html = _render(direction=DIRECTION, direction_block_html="")
+    assert raster_intro(True, False) in html
+    assert "om verandering vragen" not in html
 
 
 def test_intro_en_legenda_aanwezig():
     html = _render()
-    assert RASTER_INTRO in html
+    assert raster_intro(True, False) in html
     assert RASTER_LEGENDA in html
 
 
@@ -122,8 +159,8 @@ def test_spreiding_degraded_onder_n10():
 
 def test_campagne_gate_kolom_weg_plus_disclosure():
     html = _render(active=False)
-    assert RASTER_GATE_NOTE in html
-    assert RASTER_INTRO_GATE in html
+    assert raster_gate_note(False) in html
+    assert raster_intro(False, False) in html
     assert "Verdieping" not in html  # kolomkop weg
     assert CELL_NOT_TRIGGERED not in html
 
@@ -187,7 +224,7 @@ def test_exit_krijgt_een_vertrekredenkolom():
 
 def test_uitlegregel_noemt_de_richtingvraag_als_eerste_tiebreak():
     for scan in ("retention", "exit"):
-        uitleg = RASTER_UITLEG[scan]
+        uitleg = raster_uitleg(scan, True, True)
         assert "om verandering vragen" in uitleg
         assert "—" not in uitleg
 
@@ -196,17 +233,26 @@ def test_intro_en_gatecopy_zijn_eerlijk_over_de_vraag_om_verandering():
     # De vraag om verandering staat los van de verdiepings-gate: elke respondent
     # beantwoordt hem. De intro mag hem dus niet verzwijgen, en mag ook niet
     # beloven dat hij per factor in een kolom staat (die is er bewust niet).
-    assert "vier signalen" in RASTER_INTRO
-    assert "drie signalen" in RASTER_INTRO_GATE
-    for copy in (RASTER_INTRO, RASTER_INTRO_GATE):
+    assert "vier signalen" in raster_intro(True, True)
+    assert "drie signalen" in raster_intro(False, True)
+    assert "drie signalen" in raster_intro(True, False)
+    assert "twee signalen" in raster_intro(False, False)
+    for copy in (raster_intro(True, True), raster_intro(False, True)):
         assert "om verandering vragen" in copy
         assert "onder de rij" in copy
         assert "—" not in copy
-    assert "vraag om verandering" in RASTER_GATE_NOTE
-    assert "volgt score en spreiding" not in RASTER_GATE_NOTE
-    assert "—" not in RASTER_GATE_NOTE
+    # Zonder richtingdata noemt de intro het signaal niet, en belooft de
+    # gate-notitie het ook niet.
+    for copy in (raster_intro(True, False), raster_intro(False, False)):
+        assert "om verandering" not in copy
+        assert "onder de rij" not in copy
+    assert "vraag om verandering" in raster_gate_note(True)
+    assert raster_gate_note(False).endswith("volgorde volgt score en spreiding.")
+    assert "—" not in raster_gate_note(True) and "—" not in raster_gate_note(False)
 
 
 def test_uitlegregel_noemt_de_marge_van_twee():
     for scan in ("retention", "exit"):
-        assert "minstens 2 mensen" in RASTER_UITLEG[scan]
+        assert "minstens 2 mensen" in raster_uitleg(scan, True, True)
+        # Zonder richtingdata speelt de marge niet en wordt hij niet genoemd.
+        assert "minstens 2 mensen" not in raster_uitleg(scan, True, False)
