@@ -1272,6 +1272,14 @@ VERDIEPING_GEEN_RANGORDE = (
     "scores is er geen rangorde om een verdieping aan op te hangen."
 )
 
+# Dezelfde lege staat, maar in de woorden van Loep Start (spec ronde 2 par. 7):
+# dat rapport heeft geen verdieping om aan een rangorde op te hangen, dus die
+# belofte hoort hier niet.
+ONBOARDING_GEEN_RANGORDE = (
+    "Voor deze meting zijn er geen scores per factor berekend. Zonder die "
+    "scores is er geen volgorde om de factoren met de meeste aandacht aan te wijzen."
+)
+
 # Loep Start levert de verdiepings- en richtinglaag nog niet (spec ronde 2
 # par. 7, B18). Loep Vertrek en Loep Behoud vragen door op een lage score
 # (waarom scoort dit zo, volgens de respondent) en stellen daarna de
@@ -1280,13 +1288,6 @@ VERDIEPING_GEEN_RANGORDE = (
 # zegt het rapport dat zelf, op de plek waar de lezer anders naar die laag zou
 # zoeken. Dezelfde zin staat op de site (home-page-content.tsx,
 # producten-content.tsx): rapport en site zeggen hetzelfde.
-# Dezelfde lege staat, maar in de woorden van Loep Start: dat rapport heeft geen
-# verdieping om aan een rangorde op te hangen, dus die belofte hoort hier niet.
-ONBOARDING_GEEN_RANGORDE = (
-    "Voor deze meting zijn er geen scores per factor berekend. Zonder die "
-    "scores is er geen volgorde om de factoren met de meeste aandacht aan te wijzen."
-)
-
 ONBOARDING_GEEN_VERDIEPING_NOTE = (
     "Deze scan bevat nog geen verdiepingsvragen en geen richtingvraag. Het rapport "
     "laat zien waar het wringt bij nieuwe medewerkers; wat er volgens hen moet "
