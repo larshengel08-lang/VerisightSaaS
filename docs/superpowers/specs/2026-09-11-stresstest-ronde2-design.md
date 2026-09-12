@@ -281,6 +281,9 @@ Als op een factor met score < 5,0 (kwetsbaar) de niets-optie de grootste of gede
 
 Volgorde van evaluatie: too_few → none_needed (strikt > 50%) → clear → split_none (alleen bij score < 5,0) → plurality → divided.
 
+### 4.4 Tests
+Scenario 11 → plurality met 27/62; scenario 13 → split_none (14 niets, 14 verandering, score 4,5); scenario 15 (geen optie boven 35%) → divided ongewijzigd; scenario 04 → none_needed ongewijzigd. Staffel: onder 10 beantwoorders alleen tellingen.
+
 ### 4.5 Afwijkingen bij de bouw (2026-09-12, taak 5)
 
 De staten zijn gebouwd zoals hierboven; de copy week op vier punten af, steeds
@@ -305,9 +308,6 @@ Verder: de regel op p.02 is grammaticaal anders opgebouwd dan in par. 4.2/4.3
 opdrachtvorm); de inhoud is gelijk. De plurality-staat krijgt bewust geen eigen
 accentkleur in de CSS: die is voorbehouden aan `clear`, waar wel een meerderheid
 achter staat.
-
-### 4.4 Tests
-Scenario 11 → plurality met 27/62; scenario 13 → split_none (14 niets, 14 verandering, score 4,5); scenario 15 (geen optie boven 35%) → divided ongewijzigd; scenario 04 → none_needed ongewijzigd. Staffel: onder 10 beantwoorders alleen tellingen.
 
 ---
 

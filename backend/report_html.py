@@ -1989,6 +1989,18 @@ def _lc(label: str) -> str:
     return label[:1].lower() + label[1:] if label else label
 
 
+def _tel(n: int, enkelvoud: str, meervoud: str) -> str:
+    """Telling met het werkwoord dat erbij hoort: "1 koos" tegenover "3 kozen".
+
+    Met een vloer van DIRECTION_MIN_N (3) beantwoorders is een deelgroep van één
+    gewoon bereikbaar, dus elke telling die direct door een werkwoord wordt
+    gevolgd loopt hierlangs. Dezelfde regel als _direction_chain al toepast; die
+    zet het getal soms achter het werkwoord ("had 1") en kan deze vorm daarom
+    niet gebruiken.
+    """
+    return f"{n} {enkelvoud if n == 1 else meervoud}"
+
+
 # ── Richtingblok "Wat er moet gebeuren" (spec 2026-09-07 par. 6) ─────────────
 
 DIRECTION_BLOCK_EYEBROW = "Wat er moet gebeuren"
@@ -2086,7 +2098,8 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
         # (mogelijk als answered hoger ligt dan de som van de keuzes), dan komt
         # die clausule er niet; een tweede groep verzinnen mag niet.
         rest = [(k, c) for k, c in st["ranked"] if k != st["top_key"]]
-        tweede = f"; {rest[0][1]} kozen ‘{texts[rest[0][0]]}’" if rest else ""
+        tweede = (f"; {_tel(rest[0][1], 'koos', 'kozen')} ‘{texts[rest[0][0]]}’"
+                  if rest else "")
         src = (f"{st['top_n']} van de {n} bij wie {_lc(label)} het laagst scoorde "
                f"kozen die richting{tweede}. Wat er volgens de grootste groep moet "
                f"gebeuren: {direction_imperative(scan_type, factor_key, st['top_key'])}")
@@ -2095,7 +2108,8 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
         # toelichting bij DIRECTION_HEAD_SPLIT_NONE.
         deel = "even groot" if st["none_n"] == st["top_n"] else "ander"
         head = DIRECTION_HEAD_SPLIT_NONE.format(deel=deel, opt=texts[st["top_key"]])
-        src = (f"{st['none_n']} kozen ‘{texts[st['none_key']]}’; {st['top_n']} kozen "
+        src = (f"{_tel(st['none_n'], 'koos', 'kozen')} ‘{texts[st['none_key']]}’; "
+               f"{_tel(st['top_n'], 'koos', 'kozen')} "
                f"‘{texts[st['top_key']]}’. Op een onderwerp dat laag scoort "
                f"({_score_str(factor_score)}) is dat verschil van inzicht zelf het "
                f"gesprek. Wat die andere groep vraagt: "
@@ -2223,11 +2237,10 @@ def _direction_p02_line(direction_agg: dict, factor_key: str | None, scan_type: 
                 f"{direction_imperative(scan_type, factor_key, st['top_key'])}")
     if st["state"] == "split_none":
         texts = direction_option_texts(scan_type, factor_key)
-        zeggen = "zegt" if st["none_n"] == 1 else "zeggen"
-        vragen = "vraagt" if st["top_n"] == 1 else "vragen"
         return (f"Wat er moet gebeuren: je mensen zijn hierover verdeeld. "
-                f"{st['none_n']} {zeggen} dat hier niets hoeft, {st['top_n']} "
-                f"{vragen} om ‘{texts[st['top_key']]}’.")
+                f"{_tel(st['none_n'], 'zegt', 'zeggen')} dat hier niets hoeft, "
+                f"{_tel(st['top_n'], 'vraagt', 'vragen')} om "
+                f"‘{texts[st['top_key']]}’.")
     if st["state"] == "divided":
         return (f"Over wat hier moet gebeuren zijn de {n} die dit het laagst scoorden "
                 "verdeeld. Zie de gespreksagenda.")

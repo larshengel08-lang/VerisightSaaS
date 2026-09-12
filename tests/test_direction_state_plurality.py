@@ -25,6 +25,15 @@ def test_drempels_zijn_benoemde_constanten():
     assert DIRECTION_SPLIT_NONE_MAX_SCORE == 5.0
 
 
+def test_kwetsbaar_grens_is_gelijk_aan_zone_low():
+    """deepening.py is de contentlaag en importeert ZONE_LOW bewust niet (dat
+    zou de afhankelijkheidsrichting omdraaien), dus de waarde staat twee keer.
+    Deze test pint ze aan elkaar: zonder haar kan er stil een tweede
+    kwetsbaar-definitie ontstaan."""
+    from backend.report_distribution import ZONE_LOW
+    assert DIRECTION_SPLIT_NONE_MAX_SCORE == ZONE_LOW
+
+
 def test_fixturesleutels_bestaan_echt():
     """Valt om zodra een test hieronder een sleutel gebruikt die niet in de
     richtingset van deze factor zit (bijvoorbeeld een verdiepingssleutel)."""

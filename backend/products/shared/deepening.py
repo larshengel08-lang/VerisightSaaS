@@ -778,8 +778,11 @@ DEEPENING_MIN_N = 8
 # meer; daarboven met een voorsprong van TOP_CHOICE_MIN_LEAD wel.
 DIRECTION_PLURALITY_MIN_SHARE = 0.35
 # Verdeeld over wel of niets (spec ronde 2 par. 4.3): alleen op een factor die
-# kwetsbaar scoort. Dezelfde grens als _factor_label en ZONE_LOW gebruiken,
-# zodat er geen tweede kwetsbaar-definitie in het product ontstaat.
+# kwetsbaar scoort. Dat is dezelfde grens als ZONE_LOW in report_distribution,
+# maar die wordt hier bewust NIET geïmporteerd: deze module is de contentlaag en
+# hoort niet van de rapportlaag af te hangen. De waarde staat er dus twee keer;
+# test_direction_state_plurality pint ze aan elkaar gelijk, zodat er geen tweede
+# kwetsbaar-definitie kan ontstaan zonder dat een test omvalt.
 DIRECTION_SPLIT_NONE_MAX_SCORE = 5.0
 
 # Voorsprong die de meest gekozen optie op de volgende nodig heeft om als een
@@ -849,6 +852,11 @@ def direction_state(agg: dict[str, Any], factor_key: str,
     """Staat van het richtingblok voor een factor (spec par. 5.4, uitgebreid in
     stresstest ronde 2 par. 4), geëvalueerd in de volgorde
     too_few -> none_needed -> clear -> split_none -> plurality -> divided.
+
+    Tussen clear en split_none liggen twee vroege uitgangen naar divided: er is
+    geen enkele veranderoptie gekozen, of de grootste veranderoptie is *_other.
+    Beide staten hieronder tonen een opdrachtvorm, en die bestaat voor *_other
+    niet; zonder veranderoptie valt er sowieso niets te tonen.
 
     factor_score is nodig voor split_none: die staat bestaat alleen op een
     factor die kwetsbaar scoort. Zonder score valt die tak weg en blijft het

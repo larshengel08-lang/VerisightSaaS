@@ -344,6 +344,36 @@ def test_new_states_stay_out_without_a_factor_score():
     assert "een deel zegt dat hier niets hoeft" not in html
 
 
+def test_split_none_card_is_singular_correct():
+    """Met een vloer van 3 beantwoorders is een deelgroep van een bereikbaar;
+    "1 kozen" is fout Nederlands. Beide tellingen in deze bronregel kunnen 1
+    zijn, dus beide worden gepind."""
+    niets_een = _direction_card_cell(
+        "startpunt", label="Groeiperspectief",
+        agg=_agg(3, {"grd_none": 1, "grd_visibility": 2}, skipped=0),
+        scan_type="retention", factor_key="growth", n_total=13, factor_score=4.5)
+    assert ("1 koos ‘Niets, dit zit hier goed’; 2 kozen ‘Beter zicht op welke "
+            "mogelijkheden er voor mij zijn’.") in niets_een
+    verandering_een = _direction_card_cell(
+        "startpunt", label="Groeiperspectief",
+        agg=_agg(7, {"grd_none": 3, "grd_visibility": 1, "grd_time": 1}, skipped=0),
+        scan_type="retention", factor_key="growth", n_total=13, factor_score=4.5)
+    assert ("3 kozen ‘Niets, dit zit hier goed’; 1 koos ‘Ontwikkeling beter "
+            "inplannen naast het reguliere werk’.") in verandering_een
+
+
+def test_plurality_card_second_option_is_singular_correct():
+    """De grootste groep telt altijd minstens 2 (de voorsprong eist dat), maar
+    de tweede optie kan er een zijn."""
+    html = _direction_card_cell(
+        "startpunt", label="Groeiperspectief",
+        agg=_agg(8, {"grd_visibility": 3, "grd_none": 1}, skipped=0),
+        scan_type="retention", factor_key="growth", n_total=20, factor_score=5.2)
+    assert 'class="dir-card dir-plurality"' in html
+    assert ("3 van de 8 bij wie groeiperspectief het laagst scoorde kozen die "
+            "richting; 1 koos ‘Niets, dit zit hier goed’.") in html
+
+
 def test_p02_line_for_the_new_states():
     assert _direction_p02_line({"growth": PLURALITY}, "growth", "retention",
                                factor_score=5.2) == (
