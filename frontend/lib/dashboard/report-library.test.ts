@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildHrReportDownloadRows } from './report-library'
+import { buildHrReportDownloadRows, buildReportOverviewRows } from './report-library'
 import type { CampaignStats } from '@/lib/types'
 
 const campaigns: CampaignStats[] = [
@@ -123,5 +123,52 @@ describe('report library', () => {
       status: 'Nog onvoldoende respons',
       isAvailable: false,
     })
+  })
+})
+
+describe('buildReportOverviewRows (spec 2026-09-11 par. 4.3)', () => {
+  function campaign(overrides: Partial<CampaignStats> = {}): CampaignStats {
+    return {
+      campaign_id: 'camp-1',
+      campaign_name: 'Loep Behoud Voorjaar 2026',
+      organization_id: 'org-1',
+      scan_type: 'retention',
+      is_active: false,
+      total_invited: 0,
+      total_completed: 12,
+      completion_rate_pct: 0,
+      created_at: '2026-04-02T10:00:00Z',
+      ...overrides,
+    } as CampaignStats
+  }
+
+  it('geeft een gesloten meting met tien of meer ingevuld vrij', () => {
+    const [row] = buildReportOverviewRows([campaign()])
+    expect(row.isAvailable).toBe(true)
+    expect(row.status).toBe('Beschikbaar nu')
+    expect(row.periodLabel).toBe('Q2 2026')
+  })
+
+  it('geeft een lopende meting nooit vrij, ook niet met veel respons', () => {
+    const [row] = buildReportOverviewRows([campaign({ is_active: true, total_completed: 40 })])
+    expect(row.isAvailable).toBe(false)
+    expect(row.status).toBe('Meting loopt')
+  })
+
+  it('noemt bij een gesloten meting onder de drempel het aantal en de drempel', () => {
+    const [row] = buildReportOverviewRows([campaign({ total_completed: 7 })])
+    expect(row.isAvailable).toBe(false)
+    expect(row.status).toContain('7')
+    expect(row.status).toContain('10')
+  })
+
+  it('verzint geen noemer als er geen uitgenodigden bekend zijn (self_send)', () => {
+    const [row] = buildReportOverviewRows([campaign()])
+    expect(row.responseBasis).toBe('12 ingevuld')
+  })
+
+  it('toont de noemer wel als die er is', () => {
+    const [row] = buildReportOverviewRows([campaign({ total_invited: 30 })])
+    expect(row.responseBasis).toBe('12 van 30 ingevuld')
   })
 })

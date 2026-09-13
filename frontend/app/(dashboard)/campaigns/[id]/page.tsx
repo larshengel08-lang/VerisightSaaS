@@ -1,13 +1,15 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { DashboardStateCard } from '@/components/dashboard/dashboard-state-card'
+import { ReadOnlyStateCard } from '@/components/dashboard/read-only-state-card'
 import { RunningStateCard } from '@/components/dashboard/running-state-card'
 import { WelcomeGate } from '@/components/dashboard/welcome-gate'
 import { PdfDownloadButton } from './pdf-download-button'
 import { SuiteAccessDenied } from '@/components/dashboard/suite-access-denied'
 import { resolveDashboardState } from '@/lib/dashboard/dashboard-state-resolver'
-import { normalizeReminderConfig, buildParticipantCommunicationPreview } from '@/lib/launch-controls'
-import { isDashboardReleaseReady } from '@/lib/response-activation'
+import { normalizeReminderConfig } from '@/lib/launch-controls'
+import { buildReminderText } from '@/lib/dashboard/reminder-text'
+import { isReportReleaseReady } from '@/lib/response-activation'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import { createClient } from '@/lib/supabase/server'
 import { CAMPAIGN_SCAN_OPTIONS } from '@/lib/campaign-setup'
@@ -52,7 +54,7 @@ export default async function CampaignPage({ params }: Props) {
   if (!statsRow) notFound()
   const stats = statsRow as CampaignStats
 
-  const [{ data: campaignMeta }, { data: deliveryRecord }, { data: reminderEvents }, { data: profile }, { data: orgData }, { data: respondentDepts }] = await Promise.all([
+  const [{ data: campaignMeta }, { data: deliveryRecord }, { data: reminderEvents }, { data: profile }, { data: orgData }, { data: respondentDepts }, { data: membership }] = await Promise.all([
     supabase.from('campaigns').select('closed_at, closes_at, delivery_mode, comms_mode, public_survey_token, organization_id, segment_departments').eq('id', id).maybeSingle(),
     supabase
       .from('campaign_delivery_records')
@@ -70,6 +72,12 @@ export default async function CampaignPage({ params }: Props) {
     supabase.from('profiles').select('is_verisight_admin').eq('id', user.id).maybeSingle(),
     supabase.from('organizations').select('name').eq('id', stats.organization_id ?? '').maybeSingle(),
     supabase.from('respondents').select('department').eq('campaign_id', id).not('department', 'is', null),
+    supabase
+      .from('org_members')
+      .select('role')
+      .eq('org_id', stats.organization_id ?? '')
+      .eq('user_id', user.id)
+      .maybeSingle(),
   ])
 
   const departmentResponseCounts: Record<string, number> = {}
@@ -78,6 +86,9 @@ export default async function CampaignPage({ params }: Props) {
     if (dept) departmentResponseCounts[dept] = (departmentResponseCounts[dept] ?? 0) + 1
   }
   const isAdmin = profile?.is_verisight_admin === true
+  // Beheer is voorbehouden aan de eigenaar en aan de Loep-operator
+  // (spec 2026-09-11 par. 9); meelezende leden zien de status zonder knoppen.
+  const canManage = isAdmin || membership?.role === 'owner'
 
   const reminderConfig = normalizeReminderConfig(deliveryRecord?.reminder_config ?? null)
 
@@ -92,12 +103,11 @@ export default async function CampaignPage({ params }: Props) {
     ? Math.round((stats.total_completed / effectiveTotalInvited) * 100)
     : (stats.completion_rate_pct ?? 0)
 
-  // reportReady = "response threshold met". Pass isActive:false so the threshold is
-  // checked independent of the live-campaign gate — this lets State 3 "Voldoende respons —
-  // sluit de campagne" fire for culture_assessment too (its report releases only on close).
-  const reportReady = isDashboardReleaseReady(stats.total_completed, {
+  // Rapportvrijgave (spec 2026-09-11 par. 4.1): 10 ingevulde vragenlijsten
+  // (30 bij culture_assessment). Of de campagne gesloten is, beslist de resolver;
+  // daardoor vuurt "Voldoende respons voor een rapport" ook voor culture_assessment.
+  const reportReady = isReportReleaseReady(stats.total_completed, {
     scanType: stats.scan_type,
-    isActive: false,
   })
 
   const state = resolveDashboardState({
@@ -120,13 +130,20 @@ export default async function CampaignPage({ params }: Props) {
     today: todayIso(),
   })
 
-  const reminderPreview = buildParticipantCommunicationPreview({
+  const reminderText = buildReminderText({
+    commsMode: campaignMeta?.comms_mode ?? null,
     scanType: stats.scan_type,
+    scanLabel: SCAN_TYPE_LABELS[stats.scan_type] ?? stats.scan_type,
+    organizationName: orgData?.name ?? 'je organisatie',
+    publicSurveyToken: (campaignMeta as Record<string, unknown>)?.public_survey_token as string | undefined,
+    frontendBaseUrl: process.env.NEXT_PUBLIC_FRONTEND_URL ?? 'https://getloep.nl',
+    segmentDepartments: (campaignMeta as Record<string, unknown>)?.segment_departments as
+      | { label: string; slug: string; invited_count?: number }[]
+      | null,
     deliveryMode: campaignMeta?.delivery_mode ?? null,
     launchDate: deliveryRecord?.launch_date ?? null,
     participantCommsConfig: deliveryRecord?.participant_comms_config ?? null,
   })
-  const reminderText = `${reminderPreview.subject}\n\n${reminderPreview.body.join('\n\n')}`
 
   const scanOption = CAMPAIGN_SCAN_OPTIONS.find((o) => o.value === stats.scan_type)
 
@@ -148,7 +165,9 @@ export default async function CampaignPage({ params }: Props) {
           </span>
         ) : null}
       </div>
-      {state.kind === 'setup' ? (
+      {!canManage ? (
+        <ReadOnlyStateCard state={state} />
+      ) : state.kind === 'setup' ? (
         <WelcomeGate
           campaignId={id}
           scanType={stats.scan_type}
@@ -172,40 +191,20 @@ export default async function CampaignPage({ params }: Props) {
         <DashboardStateCard state={state} reminderText={reminderText} />
       )}
       {state.kind === 'report_ready' ? (
-        <>
-          <div className="rounded-[22px] border border-[color:var(--dashboard-frame-border)] bg-white px-6 py-6">
-            {isAdmin ? (
-              <PdfDownloadButton campaignId={stats.campaign_id} campaignName={stats.campaign_name} scanType={stats.scan_type} />
-            ) : (
-              <div>
-                <p className="mb-1 text-sm font-semibold text-[color:var(--dashboard-ink)]">
-                  Volgende stap
-                </p>
-                <p className="text-sm text-[color:var(--dashboard-text)]">
-                  Je rapport is in voorbereiding. Loep neemt contact met je op om de vervolgstap te bespreken.
-                </p>
-              </div>
-            )}
-          </div>
-          {isAdmin && process.env.NEXT_PUBLIC_CALENDLY_URL ? (
-            <div className="rounded-[22px] border border-[color:var(--dashboard-frame-border)] bg-white px-6 py-6">
-              <p className="mb-3 text-sm font-semibold text-[color:var(--dashboard-ink)]">
-                Volgende stap: managementbespreking
-              </p>
-              <a
-                href={process.env.NEXT_PUBLIC_CALENDLY_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-lg border border-[color:var(--dashboard-frame-border)] px-4 py-2.5 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:bg-[color:var(--dashboard-soft)]"
-              >
-                Plan de managementbespreking →
-              </a>
-              <p className="mt-2 text-xs text-[color:var(--dashboard-muted)]">
-                Kies een moment dat uitkomt voor HR en management.
-              </p>
-            </div>
-          ) : null}
-        </>
+        <div className="rounded-[22px] border border-[color:var(--dashboard-frame-border)] bg-white px-6 py-6">
+          <p className="mb-1 text-sm font-semibold text-[color:var(--dashboard-ink)]">
+            Je rapport staat klaar
+          </p>
+          <p className="mb-5 max-w-2xl text-sm leading-6 text-[color:var(--dashboard-text)]">
+            Het antwoord staat op pagina twee. De gespreksagenda achterin is de leidraad voor het
+            gesprek met je managementteam.
+          </p>
+          <PdfDownloadButton
+            campaignId={stats.campaign_id}
+            campaignName={stats.campaign_name}
+            scanType={stats.scan_type}
+          />
+        </div>
       ) : null}
     </div>
   )

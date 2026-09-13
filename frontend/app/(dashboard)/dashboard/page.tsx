@@ -1,11 +1,13 @@
 // frontend/app/(dashboard)/dashboard/page.tsx
 import { redirect } from 'next/navigation'
 import { DashboardStateCard } from '@/components/dashboard/dashboard-state-card'
+import { ReadOnlyStateCard } from '@/components/dashboard/read-only-state-card'
 import { RunningStateCard } from '@/components/dashboard/running-state-card'
 import { WelcomeGate } from '@/components/dashboard/welcome-gate'
 import { resolveDashboardState } from '@/lib/dashboard/dashboard-state-resolver'
-import { normalizeReminderConfig, buildParticipantCommunicationPreview } from '@/lib/launch-controls'
-import { isDashboardReleaseReady } from '@/lib/response-activation'
+import { normalizeReminderConfig } from '@/lib/launch-controls'
+import { buildReminderText } from '@/lib/dashboard/reminder-text'
+import { isReportReleaseReady } from '@/lib/response-activation'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import { createClient } from '@/lib/supabase/server'
 import type { CampaignStats } from '@/lib/types'
@@ -50,7 +52,15 @@ export default async function DashboardHomePage() {
     )
   }
 
-  const [{ data: deliveryRecord }, { data: reminderEvents }, { data: campaignRow }, { data: orgData }, { data: respondentDepts }] = await Promise.all([
+  const [
+    { data: deliveryRecord },
+    { data: reminderEvents },
+    { data: campaignRow },
+    { data: orgData },
+    { data: respondentDepts },
+    { data: profile },
+    { data: membership },
+  ] = await Promise.all([
     supabase
       .from('campaign_delivery_records')
       .select('launch_date, launch_confirmed_at, reminder_config, participant_comms_config, invited_count')
@@ -79,7 +89,20 @@ export default async function DashboardHomePage() {
       .select('department')
       .eq('campaign_id', campaign.campaign_id)
       .not('department', 'is', null),
+    supabase.from('profiles').select('is_verisight_admin').eq('id', user.id).maybeSingle(),
+    supabase
+      .from('org_members')
+      .select('role')
+      .eq('org_id', campaign.organization_id)
+      .eq('user_id', user.id)
+      .maybeSingle(),
   ])
+
+  // Beheer is voorbehouden aan de eigenaar van de klantomgeving en aan de
+  // Loep-operator (spec 2026-09-11 par. 9). Andere leden lezen alleen mee:
+  // hun schrijfacties worden server-side toch geweigerd, dus knoppen tonen
+  // die altijd falen is misleidend.
+  const canManage = profile?.is_verisight_admin === true || membership?.role === 'owner'
 
   const departmentResponseCounts: Record<string, number> = {}
   for (const r of respondentDepts ?? []) {
@@ -103,9 +126,10 @@ export default async function DashboardHomePage() {
     ? Math.round((campaign.total_completed / effectiveTotalInvited) * 100)
     : (campaign.completion_rate_pct ?? 0)
 
-  const reportReady = isDashboardReleaseReady(campaign.total_completed, {
+  // Rapportvrijgave (spec 2026-09-11 par. 4.1): 10 ingevulde vragenlijsten
+  // (30 bij culture_assessment). Of de campagne gesloten is, beslist de resolver.
+  const reportReady = isReportReleaseReady(campaign.total_completed, {
     scanType: campaign.scan_type,
-    isActive: false,
   })
 
   const state = resolveDashboardState({
@@ -128,17 +152,26 @@ export default async function DashboardHomePage() {
     today: todayIso(),
   })
 
-  const reminderPreview = buildParticipantCommunicationPreview({
+  const reminderText = buildReminderText({
+    commsMode: campaignRow?.comms_mode ?? null,
     scanType: campaign.scan_type,
+    scanLabel: SCAN_TYPE_LABELS[campaign.scan_type] ?? campaign.scan_type,
+    organizationName: orgData?.name ?? 'je organisatie',
+    publicSurveyToken: (campaignRow as Record<string, unknown>)?.public_survey_token as string | undefined,
+    frontendBaseUrl: process.env.NEXT_PUBLIC_FRONTEND_URL ?? 'https://getloep.nl',
+    segmentDepartments: (campaignRow as Record<string, unknown>)?.segment_departments as
+      | { label: string; slug: string; invited_count?: number }[]
+      | null,
     deliveryMode: campaignRow?.delivery_mode ?? null,
     launchDate: deliveryRecord?.launch_date ?? null,
     participantCommsConfig: deliveryRecord?.participant_comms_config ?? null,
   })
-  const reminderText = `${reminderPreview.subject}\n\n${reminderPreview.body.join('\n\n')}`
 
   return (
     <div className="space-y-8">
-      {state.kind === 'setup' ? (
+      {!canManage ? (
+        <ReadOnlyStateCard state={state} />
+      ) : state.kind === 'setup' ? (
         <WelcomeGate
           campaignId={campaign.campaign_id}
           scanType={campaign.scan_type}

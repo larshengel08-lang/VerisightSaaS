@@ -41,7 +41,7 @@ export interface DashboardStateInput {
   reminderConfig: DashboardReminderConfig
   /** Most recent manual reminder confirmation (from audit events), or null. */
   reminderAlreadySentAt: string | null
-  /** isDashboardReleaseReady(total_completed, { scanType, isActive: false }). */
+  /** isReportReleaseReady(total_completed, { scanType }) — 10 ingevuld (30 bij culture_assessment). */
   reportReady: boolean
   /** Injected YYYY-MM-DD for deterministic tests. */
   today: string
@@ -137,7 +137,7 @@ export function resolveDashboardState(input: DashboardStateInput): DashboardStat
       }
     }
 
-    const enough = campaign.totalCompleted >= thresholds.dashboardMin
+    const enough = campaign.totalCompleted >= thresholds.insightMin
     return {
       ...EMPTY_STATE,
       kind: 'processing',
@@ -225,15 +225,15 @@ export function resolveDashboardState(input: DashboardStateInput): DashboardStat
     }
   }
 
-  // Priority 4b (within State 3) — sufficient response reached (indicator, optional close)
+  // Priority 4b (within State 3) — rapportdrempel gehaald (indicator, sluiten optioneel)
   if (input.reportReady) {
     return {
       ...EMPTY_STATE,
       kind: 'action',
       actionVariant: 'sufficient_response',
       campaignId: campaign.id,
-      primaryMessage: 'Voldoende respons — sluit de campagne',
-      subtext: `Voldoende respons voor patroonduiding · ${campaign.totalCompleted} van ${campaign.totalInvited} ingevuld (${progressPct}%) · ${close.label}`,
+      primaryMessage: 'Voldoende respons voor een rapport',
+      subtext: `Je kunt de campagne sluiten of nog even open laten. ${campaign.totalCompleted} van ${campaign.totalInvited} ingevuld (${progressPct}%) · ${close.label}`,
       tone: 'attention',
       ctaLabel: 'Campagne sluiten',
       ctaKind: 'close_campaign',

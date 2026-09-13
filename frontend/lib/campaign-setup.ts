@@ -58,3 +58,20 @@ export function getCampaignReportAddOnSetupNote(scanType: ScanType) {
 export function getAllowedDeliveryModes(scanType: ScanType): DeliveryMode[] {
   return isBaselineOnlyScanType(scanType) ? ['baseline'] : ['baseline', 'live']
 }
+
+/**
+ * Invultijd zoals de vragenlijst hem zelf noemt in survey_intro
+ * (backend/products/{scan}/definition.py). De uitnodigings- en herinneringstekst
+ * gebruiken deze waarde, zodat de klant niet iets anders belooft dan de
+ * respondent leest. Scans zonder eigen tijdsindicatie krijgen een neutrale
+ * formulering in plaats van een verzonnen getal.
+ */
+export const SURVEY_DURATION_LABEL: Record<ScanType, string> = {
+  exit: 'ongeveer 8 minuten',
+  retention: 'ongeveer 6 minuten',
+  onboarding: 'ongeveer 3 minuten',
+  culture_assessment: 'een paar minuten',
+  pulse: 'een paar minuten',
+  team: 'een paar minuten',
+  leadership: 'een paar minuten',
+}

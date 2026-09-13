@@ -14,9 +14,10 @@ describe('state-driven dashboard page', () => {
     expect(source).toContain("if (context.managerOnly) redirect('/action-center')")
   })
 
-  it('selects the most recent campaign and derives report readiness from existing data', () => {
+  it('selects the most recent campaign and derives report readiness from the report release rule', () => {
     expect(source).toContain("order('created_at', { ascending: false })")
-    expect(source).toContain('isDashboardReleaseReady')
+    expect(source).toContain('isReportReleaseReady')
+    expect(source).not.toContain('isDashboardReleaseReady')
   })
 
   it('drops the cockpit/triage/status-filter IA', () => {
@@ -33,5 +34,13 @@ describe('state-driven dashboard page', () => {
   it('derives the manual reminder-sent signal from the send_reminders audit events', () => {
     expect(source).toContain("action_key")
     expect(source).toContain("'send_reminders'")
+  })
+
+  it('laat alleen de eigenaar en de operator de meting beheren', () => {
+    expect(source).toContain("supabase.from('profiles')")
+    expect(source).toContain("from('org_members')")
+    expect(source).toContain('const canManage =')
+    expect(source).toContain("membership?.role === 'owner'")
+    expect(source).toContain('ReadOnlyStateCard')
   })
 })

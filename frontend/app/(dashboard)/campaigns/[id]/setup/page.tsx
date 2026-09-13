@@ -33,6 +33,22 @@ export default async function CampaignSetupPage({ params }: Props) {
 
   if (!campaign) notFound()
 
+  // Dezelfde gate als op het dashboard (spec 2026-09-11 par. 9): zonder deze
+  // check opent een meelezend lid de wizard via de directe URL en krijgt pas
+  // bij opslaan een weigering.
+  const [{ data: profile }, { data: membership }] = await Promise.all([
+    supabase.from('profiles').select('is_verisight_admin').eq('id', user.id).maybeSingle(),
+    supabase
+      .from('org_members')
+      .select('role')
+      .eq('org_id', (campaign as Record<string, unknown>).organization_id as string)
+      .eq('user_id', user.id)
+      .maybeSingle(),
+  ])
+  if (profile?.is_verisight_admin !== true && membership?.role !== 'owner') {
+    redirect(`/campaigns/${id}`)
+  }
+
   const departmentResponseCounts: Record<string, number> = {}
   for (const r of respondentDepts ?? []) {
     const dept = r.department as string | null

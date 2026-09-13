@@ -5,6 +5,7 @@ import {
   FIRST_DASHBOARD_THRESHOLD,
   FIRST_INSIGHT_THRESHOLD,
   buildResponseActivationState,
+  isReportReleaseReady,
 } from '@/lib/response-activation'
 
 describe('response activation thresholds', () => {
@@ -79,5 +80,30 @@ describe('response activation thresholds', () => {
     expect(state.dashboardVisible).toBe(true)
     expect(state.reportVisible).toBe(true)
     expect(state.deeperInsightsVisible).toBe(true)
+  })
+})
+
+describe('isReportReleaseReady (spec 2026-09-11 par. 4.1)', () => {
+  it('geeft het rapport pas vrij vanaf FIRST_INSIGHT_THRESHOLD ingevulde vragenlijsten', () => {
+    expect(isReportReleaseReady(FIRST_INSIGHT_THRESHOLD - 1)).toBe(false)
+    expect(isReportReleaseReady(FIRST_INSIGHT_THRESHOLD)).toBe(true)
+    expect(isReportReleaseReady(FIRST_INSIGHT_THRESHOLD, { scanType: 'exit' })).toBe(true)
+    expect(isReportReleaseReady(FIRST_INSIGHT_THRESHOLD, { scanType: 'retention' })).toBe(true)
+    expect(isReportReleaseReady(FIRST_INSIGHT_THRESHOLD, { scanType: 'onboarding' })).toBe(true)
+  })
+
+  it('ligt boven de dashboarddrempel van 5: 5 t/m 9 is nog geen rapport', () => {
+    expect(isReportReleaseReady(FIRST_DASHBOARD_THRESHOLD)).toBe(false)
+    expect(isReportReleaseReady(9)).toBe(false)
+  })
+
+  it('houdt voor culture_assessment de bestaande 30-grens', () => {
+    expect(isReportReleaseReady(CULTURE_ASSESSMENT_INSIGHT_THRESHOLD - 1, { scanType: 'culture_assessment' })).toBe(false)
+    expect(isReportReleaseReady(CULTURE_ASSESSMENT_INSIGHT_THRESHOLD, { scanType: 'culture_assessment' })).toBe(true)
+  })
+
+  it('behandelt ongeldige invoer als nul', () => {
+    expect(isReportReleaseReady(Number.NaN)).toBe(false)
+    expect(isReportReleaseReady(-3)).toBe(false)
   })
 })

@@ -63,6 +63,24 @@ export function isDashboardReleaseReady(totalCompleted: number, options: Respons
   return true
 }
 
+export interface ReportReleaseOptions {
+  scanType?: ScanType
+}
+
+/**
+ * Vrijgaveregel voor het rapport (spec 2026-09-11 par. 4.1): het rapport is er
+ * pas vanaf FIRST_INSIGHT_THRESHOLD (10) ingevulde vragenlijsten; voor
+ * culture_assessment blijft de 30-grens uit getResponseActivationThresholds
+ * gelden. Of de campagne gesloten is, beslist de aanroeper (de resolver kijkt
+ * eerst naar isActive). De dashboarddrempel van 5 (isDashboardReleaseReady)
+ * blijft alleen bestaan als ondergrens voor het tonen van voortgang.
+ */
+export function isReportReleaseReady(totalCompleted: number, options: ReportReleaseOptions = {}) {
+  const completed = Number.isFinite(totalCompleted) ? Math.max(0, Math.floor(totalCompleted)) : 0
+  const thresholds = getResponseActivationThresholds(options.scanType)
+  return completed >= thresholds.insightMin
+}
+
 export function isInsightReleaseReady(totalCompleted: number, options: ResponseActivationOptions = {}) {
   const completed = Number.isFinite(totalCompleted) ? Math.max(0, Math.floor(totalCompleted)) : 0
   const thresholds = getResponseActivationThresholds(options.scanType)

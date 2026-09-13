@@ -70,7 +70,7 @@ describe('resolveDashboardState', () => {
     expect(state.tone).toBe('attention')
   })
 
-  it('State 3 — sufficient response prompts close when min is reached', () => {
+  it('State 3 — sufficient response: rapportdrempel gehaald, sluiten mag maar hoeft niet', () => {
     const state = resolveDashboardState(
       baseInput({
         campaign: { ...baseInput().campaign!, totalCompleted: 12, completionRatePct: 60 },
@@ -80,7 +80,10 @@ describe('resolveDashboardState', () => {
     )
     expect(state.kind).toBe('action')
     expect(state.actionVariant).toBe('sufficient_response')
-    expect(state.primaryMessage).toBe('Voldoende respons — sluit de campagne')
+    expect(state.primaryMessage).toBe('Voldoende respons voor een rapport')
+    expect(state.subtext).toContain('Je kunt de campagne sluiten of nog even open laten.')
+    expect(state.subtext).toContain('12 van 20 ingevuld (60%)')
+    expect(state.primaryMessage).not.toMatch(/[—–]/)
     expect(state.ctaLabel).toBe('Campagne sluiten')
   })
 
@@ -132,6 +135,18 @@ describe('resolveDashboardState', () => {
     expect(state.kind).toBe('processing')
     expect(state.processingVariant).toBe('insufficient_response')
     expect(state.primaryMessage).toBe('Rapport nog niet beschikbaar')
+  })
+
+  it('State 3b — gesloten met 5 t/m 9 antwoorden is insufficient, niet generating (besluit 1, spec 2026-09-11)', () => {
+    const state = resolveDashboardState(
+      baseInput({
+        campaign: { ...baseInput().campaign!, isActive: false, totalCompleted: 7, closedAt: '2026-06-10T09:00:00Z' },
+        reportReady: false,
+      }),
+    )
+    expect(state.kind).toBe('processing')
+    expect(state.processingVariant).toBe('insufficient_response')
+    expect(state.subtext).toContain('7 ingevulde reacties')
   })
 
   it('State 4 — report ready when closed and report is available', () => {

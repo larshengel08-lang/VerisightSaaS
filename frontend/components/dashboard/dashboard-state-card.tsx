@@ -18,7 +18,6 @@ function toneClasses(tone: DashboardStateTone) {
 
 export function DashboardStateCard({ state, reminderText }: { state: DashboardState; reminderText: string }) {
   const linkCta = state.ctaKind === 'link' && state.ctaLabel && state.ctaHref
-  const islandCta = state.ctaKind === 'copy_reminder' || state.ctaKind === 'close_campaign'
 
   return (
     <section className={`rounded-[22px] border px-6 py-7 ${toneClasses(state.tone)}`}>
@@ -55,11 +54,15 @@ export function DashboardStateCard({ state, reminderText }: { state: DashboardSt
         </div>
       ) : null}
 
-      {islandCta ? (
-        <div className="mt-6">
-          <DashboardStateActions state={state} reminderText={reminderText} />
-        </div>
-      ) : null}
+      {/*
+        Altijd gemount (niet gegated op ctaKind): na sluiten verandert de state
+        (close_campaign → report_ready/processing), en een waarschuwing over
+        een mislukte rapport-klaar-mail moet die overgang overleven. Zou dit
+        component hier ont-mount worden, dan verdwijnt zijn lokale notice-state
+        vóórdat de gebruiker 'm ooit ziet. Het eiland rendert zelf null als het
+        geen CTA en geen notice heeft, dus dit voegt geen dode UI toe.
+      */}
+      <DashboardStateActions state={state} reminderText={reminderText} />
 
       {state.secondaryActions.length > 0 ? (
         <div className="mt-4 flex flex-wrap gap-4">
