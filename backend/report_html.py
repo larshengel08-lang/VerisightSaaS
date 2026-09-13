@@ -3912,10 +3912,16 @@ def render_exit_report_html(data: dict) -> str:
         high_i = max(i_sc, key=lambda x: x[2]) if i_sc else None
         # Item table rows; het laagste item wordt vet — dat vervangt de aparte
         # "Laagste item"-kaart die bij 3 items pure herhaling van deze tabel was.
+        # Geen backslashes of hergebruikte aanhalingstekens in f-string-expressies:
+        # dat is pas geldig sinds Python 3.12 (PEP 701) en Railway draait 3.11.
+        # Zie tests/test_python311_syntax_guard.py.
+        low_key = low_i[0] if low_i else None
         rows = "".join(
-            f'<tr><td class="iq"{" style=\"font-weight:700;\"" if low_i and ik == low_i[0] else ""}>{_h(q)}'
-            f'{" <span class=\"low-tag\">laagste score</span>" if low_i and ik == low_i[0] else ""}</td>'
-            f'<td class="is" style="color:{_factor_color(isc)};">{isc:.1f}</td></tr>'
+            '<tr><td class="iq"'
+            + (' style="font-weight:700;"' if ik == low_key else "")
+            + f">{_h(q)}"
+            + (' <span class="low-tag">laagste score</span>' if ik == low_key else "")
+            + f'</td><td class="is" style="color:{_factor_color(isc)};">{isc:.1f}</td></tr>'
             for ik, q, isc in i_sc
         ) or '<tr><td colspan="2" style="color:#94A3B8;font-style:italic;">Itemscores niet beschikbaar in deze wave.</td></tr>'
         # Per-factor quote bewust geschrapt (besluit 2026-07-12): de trefwoord-
@@ -4335,10 +4341,16 @@ def render_retention_report_html(data: dict) -> str:
         high_i = max(i_sc, key=lambda x: x[2]) if i_sc else None
         # Laagste item vet in de tabel i.p.v. losse laagste/hoogste-kaarten:
         # bij 3 items per factor waren die kaarten pure herhaling van de tabel.
+        # Geen backslashes of hergebruikte aanhalingstekens in f-string-expressies:
+        # dat is pas geldig sinds Python 3.12 (PEP 701) en Railway draait 3.11.
+        # Zie tests/test_python311_syntax_guard.py.
+        low_key = low_i[0] if low_i else None
         rows = "".join(
-            f'<tr><td class="iq"{" style=\"font-weight:700;\"" if low_i and ik == low_i[0] else ""}>{_h(q)}'
-            f'{" <span class=\"low-tag\">laagste score</span>" if low_i and ik == low_i[0] else ""}</td>'
-            f'<td class="is" style="color:{_factor_color(isc)};">{isc:.1f}</td></tr>'
+            '<tr><td class="iq"'
+            + (' style="font-weight:700;"' if ik == low_key else "")
+            + f">{_h(q)}"
+            + (' <span class="low-tag">laagste score</span>' if ik == low_key else "")
+            + f'</td><td class="is" style="color:{_factor_color(isc)};">{isc:.1f}</td></tr>'
             for ik, q, isc in i_sc
         ) or '<tr><td colspan="2" style="color:#94A3B8;font-style:italic;">Itemscores niet beschikbaar in deze wave.</td></tr>'
         # Per-factor quote bewust geschrapt (besluit 2026-07-12): zie de
@@ -4779,10 +4791,16 @@ def render_onboarding_report_html(data: dict) -> str:
         # Laagste item vet in de tabel; losse kaarten alleen bij >3 items
         # (bij 3 items waren ze herhaling van de tabel). Het statische
         # "Eerste managementvraag"-blok is bewust weg — template-taal.
+        # Geen backslashes of hergebruikte aanhalingstekens in f-string-expressies:
+        # dat is pas geldig sinds Python 3.12 (PEP 701) en Railway draait 3.11.
+        # Zie tests/test_python311_syntax_guard.py.
+        low_key = low_i[0] if low_i else None
         rows = "".join(
-            f'<tr><td class="iq"{" style=\"font-weight:700;\"" if low_i and ik == low_i[0] else ""}>{_h(q)}'
-            f'{" <span class=\"low-tag\">laagste score</span>" if low_i and ik == low_i[0] else ""}</td>'
-            f'<td class="is" style="color:{_factor_color(isc)};">{isc:.1f}</td></tr>'
+            '<tr><td class="iq"'
+            + (' style="font-weight:700;"' if ik == low_key else "")
+            + f">{_h(q)}"
+            + (' <span class="low-tag">laagste score</span>' if ik == low_key else "")
+            + f'</td><td class="is" style="color:{_factor_color(isc)};">{isc:.1f}</td></tr>'
             for ik, q, isc in i_sc
         ) or '<tr><td colspan="2" style="color:#94A3B8;font-style:italic;">Itemscores niet beschikbaar in deze wave.</td></tr>'
         # Per-factor quote bewust geschrapt (besluit 2026-07-12): zie de
