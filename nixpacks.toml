@@ -12,3 +12,25 @@ nixPkgs = [
   "shared-mime-info",
   "fontconfig",
 ]
+
+# WeasyPrint laadt zijn systeembibliotheken via ctypes.util.find_library(), en
+# die leest de ldconfig-cache. Nix-paden staan NIET in die cache, dus de
+# nixPkgs hierboven zijn onvindbaar voor de renderer: op 2026-09-16 bleek de
+# rapportdownload live al dagen te falen op
+#   cannot load library 'libgobject-2.0-0' ... find_library() did not manage
+# terwijl dezelfde code lokaal en in de WeasyPrint-Docker foutloos rendert.
+# Apt installeert in /usr/lib/x86_64-linux-gnu, dat staat wel in de cache.
+# Dit is de door WeasyPrint gedocumenteerde set voor Debian/Ubuntu; libpango
+# trekt libglib2.0-0 mee, die libgobject-2.0.so.0 levert.
+# Let op: nixLibs bewust NIET gezet — die vervangt (net als nixPkgs) de
+# auto-set van de Python-provider, en dat brak de build eerder al.
+aptPkgs = [
+  "libpango-1.0-0",
+  "libpangoft2-1.0-0",
+  "libharfbuzz0b",
+  "libgdk-pixbuf-2.0-0",
+  "libcairo2",
+  "libffi8",
+  "shared-mime-info",
+  "fontconfig",
+]

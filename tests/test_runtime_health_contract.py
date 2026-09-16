@@ -56,16 +56,54 @@ def test_health_is_liveness_friendly_when_database_is_down(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr("backend.main.check_db_connection", lambda: False)
+    monkeypatch.setattr("backend.main.check_pdf_renderer", lambda: True)
 
     response = client.get("/api/health")
 
     assert response.status_code == 200
     payload = response.json()
     assert payload["status"] == "degraded"
-    assert payload["checks"] == {"database": False}
+    assert payload["checks"] == {"database": False, "pdf_renderer": True}
     # Versie-marker toegevoegd (RAILWAY_GIT_COMMIT_SHA) om deploystand extern
     # verifieerbaar te maken; env-onafhankelijk assert op type i.p.v. exacte waarde.
     assert isinstance(payload["version"], str)
+
+
+def test_health_reports_a_broken_pdf_renderer_without_crashing_the_deploy(
+    client,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Regressie 2026-09-16: WeasyPrint kon libgobject niet laden op Railway.
+
+    Elke rapportdownload gaf een 500 en /api/health meldde vrolijk "ok", want
+    die keek alleen naar de database. Nu is het van buitenaf zichtbaar. De
+    status blijft bewust 200: Railway herstart op een falende healthcheck en
+    een ontbrekende systeembibliotheek mag geen crashloop worden.
+    """
+    monkeypatch.setattr("backend.main.check_db_connection", lambda: True)
+    monkeypatch.setattr("backend.main.check_pdf_renderer", lambda: False)
+
+    response = client.get("/api/health")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["status"] == "degraded"
+    assert payload["checks"] == {"database": True, "pdf_renderer": False}
+
+
+def test_pdf_renderer_check_caches_its_outcome(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Ontbrekende systeembibliotheken verschijnen niet tijdens de looptijd.
+
+    De healthcheck wordt elke 30 seconden gepingd; zonder cache zou elke ping
+    een dlopen-poging doen.
+    """
+    import backend.main as main
+
+    monkeypatch.setattr(main, "_pdf_renderer_ok", None)
+    first = main.check_pdf_renderer()
+
+    monkeypatch.setattr(main, "_pdf_renderer_ok", not first)
+    assert main.check_pdf_renderer() is (not first), "tweede aanroep moet de cache lezen"
 
 
 def test_ready_stays_strict_when_database_is_down(

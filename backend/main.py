@@ -673,9 +673,38 @@ async def db_general_error_handler(request: Request, exc: SQLAlchemyError):
 # Health
 # ---------------------------------------------------------------------------
 
+_pdf_renderer_ok: bool | None = None
+
+
+def check_pdf_renderer() -> bool:
+    """Kan WeasyPrint zijn systeembibliotheken laden?
+
+    Aanleiding (2026-09-16): de rapportdownload faalde live dagenlang met een
+    500 omdat libgobject niet vindbaar was, en dat was van buitenaf nergens te
+    zien; /api/health meldde alleen de database. Deze check laadt de FFI (geen
+    hele render, dat is te duur voor een healthcheck elke 30 seconden) en
+    cachet de uitkomst: ontbrekende systeembibliotheken verschijnen niet
+    tijdens de looptijd van een proces.
+    """
+    global _pdf_renderer_ok
+    if _pdf_renderer_ok is None:
+        try:
+            import weasyprint  # noqa: F401  (import triggert de dlopen van pango/gobject)
+
+            _pdf_renderer_ok = True
+        except Exception:
+            _logging.getLogger("loep.report").exception(
+                "WeasyPrint kan zijn systeembibliotheken niet laden; "
+                "rapportdownloads falen tot dit is opgelost"
+            )
+            _pdf_renderer_ok = False
+    return _pdf_renderer_ok
+
+
 @app.get("/api/health")
 async def health() -> JSONResponse:
     db_ok = check_db_connection()
+    pdf_ok = check_pdf_renderer()
     # Deploystand extern verifieerbaar maken: Railway zet RAILWAY_GIT_COMMIT_SHA
     # bij elke build. Zonder deze marker was van buitenaf niet vast te stellen
     # of de live backend de laatste rapportcode draaide.
@@ -684,11 +713,14 @@ async def health() -> JSONResponse:
         or os.getenv("GIT_COMMIT_SHA")
         or "unknown"
     )
+    # Bewust altijd 200: Railway herstart op een falende healthcheck, en een
+    # ontbrekende PDF-bibliotheek mag geen crashloop worden. De degraded-status
+    # is het signaal.
     return JSONResponse(
         status_code=200,
         content={
-            "status": "ok" if db_ok else "degraded",
-            "checks": {"database": db_ok},
+            "status": "ok" if (db_ok and pdf_ok) else "degraded",
+            "checks": {"database": db_ok, "pdf_renderer": pdf_ok},
             "version": commit_sha[:12],
         },
     )
