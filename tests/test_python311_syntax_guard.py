@@ -12,6 +12,7 @@ geen string-literal met hetzelfde aanhalingsteken als de f-string zelf.
 from __future__ import annotations
 
 import io
+import sys
 import tokenize
 from pathlib import Path
 
@@ -22,7 +23,20 @@ SOURCES = sorted(p for p in BACKEND_ROOT.rglob("*.py") if ".venv" not in p.parts
 
 
 def find_py312_only_fstrings(source: str) -> list[tuple[int, str]]:
-    """Geeft (regel, reden) voor elk replacement field dat Python 3.11 weigert."""
+    """Geeft (regel, reden) voor elk replacement field dat Python 3.11 weigert.
+
+    Op Python 3.11 zelf (of ouder) is de compiler de echte scheidsrechter: die
+    weigert PEP 701-syntax hard, dus dan compileren we gewoon. Vanaf 3.12
+    accepteert de compiler alles en lezen we de tokens (FSTRING_START bestaat
+    pas sinds 3.12).
+    """
+    if sys.version_info < (3, 12):
+        try:
+            compile(source, "<guard>", "exec")
+        except SyntaxError as exc:
+            return [(exc.lineno or 0, f"compileert niet op {sys.version.split()[0]}: {exc.msg}")]
+        return []
+
     problems: list[tuple[int, str]] = []
     tokens = list(tokenize.generate_tokens(io.StringIO(source).readline))
     quote_stack: list[str] = []  # omsluitend aanhalingsteken per open f-string
