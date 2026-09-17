@@ -599,3 +599,62 @@ def test_onderbouwingsrij_blijft_weg_als_er_niets_in_staat():
                               primary_label="Werkdruk", why_cells_html="",
                               strong_label="", strong_score=None, mgmt_q="V?")
     assert "<table class='sg'><tr>" not in html
+
+
+# ── codereview 2 taak 3: Loep Start rekent het verschil ook op getoonde scores ──
+
+def _onboarding_kop(growth: float, workload: float) -> str:
+    import re
+    from backend.report_html import render_onboarding_report_html
+    from tests.test_report_degraded_page_two import _fixture, _page_two
+    d = _fixture("onboarding", n=12, profile=True)
+    fa = {"growth": growth, "workload": workload, "role_clarity": 7.2,
+          "leadership": 7.4, "culture": 7.8, "compensation": 7.1}
+    d["factor_avgs"] = fa
+    d["factor_resp_scores"] = {fk: [sc] * 12 for fk, sc in fa.items()}
+    d["top_fkeys"] = ["growth"]
+    d["top_flabels"] = [L("growth", "onboarding")]
+    d["top_risks"] = [("growth", growth)]
+    html = _page_two(render_onboarding_report_html(d))
+    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html))
+
+
+def test_loep_start_klein_verschil_op_getoonde_scores():
+    # 4.94 en 4.96 tonen als 4.9 en 5.0: getoond verschil 0,1, niet "0,0".
+    tekst = _onboarding_kop(4.94, 4.96)
+    assert "0,0 punt" not in tekst and "0,02" not in tekst
+    assert (f"Als startpunt kiest Loep {L('growth', 'onboarding')}, de laagste score. "
+            f"Het verschil met de volgende is klein, 0,1 punt") in tekst
+
+
+def test_loep_start_getoonde_gelijkstand_krijgt_de_gelijkstandzin():
+    # 5.46 en 5.54 tonen allebei 5.5. Geen kwetsbaar onderwerp: de kop zelf
+    # noemt de gelijkstand en het startpunt.
+    tekst = _onboarding_kop(5.46, 5.54)
+    assert (f"Twee onderwerpen delen de laagste score (5.5/10): "
+            f"{L('growth', 'onboarding')}, {L('workload', 'onboarding')};") in tekst
+    assert "0,1 punt" not in tekst and "0,0 punt" not in tekst
+    # 4.46 en 4.54 tonen allebei 4.5, beide kwetsbaar: de startpuntzin noemt
+    # de gelijkstand.
+    tekst = _onboarding_kop(4.46, 4.54)
+    assert "de laagste score." not in tekst
+    assert "0,1 punt" not in tekst
+    assert (f"Dat onderwerp deelt de laagste score met {L('workload', 'onboarding')}; "
+            f"weeg die gelijkstand mee in de bespreking.") in tekst
+
+
+def test_alles_kwetsbaar_en_gelijk_toont_toch_de_gelijkstandzin():
+    """De kop "6 van de 6 onderwerpen scoren kwetsbaar" zegt niet dat ze gelijk
+    scoren; alleen de vlakke kop zegt dat. Dan hoort de gelijkstandzin erbij."""
+    gelijk = {fk: 4.2 for fk in ORG_FACTOR_KEYS}
+    zin = _open(gelijk, primary="growth", tie_break_kind=None, next_delta=0.0)
+    assert "6 van de 6 onderwerpen scoren kwetsbaar" in zin
+    assert ("Dat onderwerp deelt de laagste score met vijf andere onderwerpen; "
+            "weeg die gelijkstand mee in de bespreking.") in zin
+
+
+def test_gedeelde_verschilhelper():
+    from backend.report_html import _getoond_verschil
+    assert _getoond_verschil(4.94, 4.96) == 0.1
+    assert _getoond_verschil(5.46, 5.54) == 0.0
+    assert _getoond_verschil(4.95, 4.96) == 0.0

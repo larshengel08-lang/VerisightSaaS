@@ -641,11 +641,14 @@ def _p02_opening(*, scan_type: str, shape: dict[str, Any], labels: dict[str, str
     laagste_keys = _p02_laagste_keys(shape)
     # "Laagste" op de getoonde score: het startpunt hoort bij de onderwerpen die
     # de laagste score tonen. De onderwerpen die die score met het startpunt
-    # delen gaan mee naar de gelijkstandzin; tonen alle onderwerpen dezelfde
-    # score, dan zegt de kop dat al en blijft die lijst leeg.
+    # delen gaan mee naar de gelijkstandzin. Tonen alle onderwerpen dezelfde
+    # score en is de kop de vlakke zin, dan zegt die kop dat al en blijft de lijst
+    # leeg. De kop "6 van de 6 onderwerpen scoren kwetsbaar" zegt dat niet, dus
+    # daar blijft de gelijkstandzin staan.
     primary_is_lowest = primary_key in laagste_keys
-    alle_gelijk = len(laagste_keys) == shape["n_factors"]
-    gelijk_met = ([] if alle_gelijk else
+    kop_noemt_gelijkstand = (k == 0 and shape["flat"]
+                             and len(laagste_keys) == shape["n_factors"])
+    gelijk_met = ([] if kop_noemt_gelijkstand else
                   [labels[fk] for fk in laagste_keys if fk != primary_key])
     start = _p02_startpunt_zin(
         labels[primary_key], tie_break_kind=tie_break_kind, change=change,
@@ -669,6 +672,16 @@ def _p02_opening(*, scan_type: str, shape: dict[str, Any], labels: dict[str, str
         start = ("Daar begint het gesprek waarschijnlijk." if indicatief
                  else "Daar begint het gesprek.")
     return f"{kop} {start}"
+
+
+def _getoond_verschil(laag: float, hoog: float) -> float:
+    """Het verschil tussen twee scores zoals de lezer ze ziet (B15).
+
+    Eén helper voor alle drie de scans: 4.94 en 4.96 staan als 4.9 en 5.0 op de
+    pagina, dus het verschil is 0,1 en niet 0,02; 5.46 en 5.54 staan allebei als
+    5.5, dus 0. Afgerond op 0,1 omdat 5.0 - 4.9 in drijvende komma 0.0999... is.
+    """
+    return round(_shown(hoog) - _shown(laag), 1)
 
 
 def _p02_startpunt_gronden(
@@ -702,7 +715,7 @@ def _p02_startpunt_gronden(
     # raster, en "klein, 0,02 punt" klopt dan niet met wat de lezer ziet. Een
     # getoond verschil van 0 wordt vanzelf de gelijkstandzin. De gate "klein"
     # (onder PRIORITY_TIE_MARGIN) blijft dezelfde, maar werkt op dit getal.
-    delta = (round(_shown(raster_rows[1]["score"]) - _shown(top["score"]), 1)
+    delta = (_getoond_verschil(top["score"], raster_rows[1]["score"])
              if len(raster_rows) > 1 else None)
     return kind, change, change_other, delta
 
@@ -5016,7 +5029,8 @@ def render_onboarding_report_html(data: dict) -> str:
     # noemen. Het startpunt is dezelfde factor die het why-blok eronder toont.
     _shape = profile_shape(fa)
     _primary = (top_fkeys[0] if top_fkeys else (low_f[0] if low_f else None))
-    _delta = (round(sorted_f[1][1] - sorted_f[0][1], 2) if len(sorted_f) > 1 else None)
+    # Op de getoonde scores, net als _p02_startpunt_gronden bij de andere scans.
+    _delta = (_getoond_verschil(sorted_f[0][1], sorted_f[1][1]) if len(sorted_f) > 1 else None)
     exec_line = _p02_opening(
         scan_type=ST, shape=_shape, labels=_raster_labels, primary_key=_primary,
         next_delta=_delta,
