@@ -10,16 +10,23 @@ import {
   supportsCampaignModuleSelection,
   supportsCampaignReportAddOns,
 } from '@/lib/campaign-setup'
-import { buildSegmentDepartments, type SegmentDepartment } from '@/lib/self-send-comms'
+import { prepareSegmentDepartmentsUpdate } from '@/lib/self-send-comms'
+import { MIN_INVITED_PER_DEPARTMENT, MIN_INVITED_TOTAL, validateInvitedTotal } from '@/lib/response-activation'
 import { createClient } from '@/lib/supabase/client'
 import type { CommsMode, DeliveryMode, Organization, ScanType } from '@/lib/types'
 import { FACTOR_LABELS, REPORT_ADD_ON_LABELS } from '@/lib/types'
 
 const ORG_FACTORS = ['leadership', 'culture', 'growth', 'compensation', 'workload', 'role_clarity']
 const REPORT_ADD_ONS = ['segment_deep_dive'] as const
+const OTHER_DEPARTMENT_LABEL = 'Geen afdeling / overig'
 
 interface Props {
   orgs: Organization[]
+}
+
+interface DeptRow {
+  label: string
+  invitedCount: number | ''
 }
 
 export function NewCampaignForm({ orgs }: Props) {
@@ -28,13 +35,14 @@ export function NewCampaignForm({ orgs }: Props) {
   const [scanType, setScanType] = useState<ScanType>('exit')
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>('baseline')
   // Alleen self_send: platform slaat bewust geen deelnemer-e-mailadressen op.
-  // De platform-verzendkeuze is uit de aanmaakflow gehaald (2026-07-08) — bestaande
+  // De platform-verzendkeuze is uit de aanmaakflow gehaald (2026-07-08); bestaande
   // campagnes met de oude modus blijven elders gewoon werken, dit is puur de keuze
   // bij het aanmaken van een nieuwe campagne.
   const commsMode: CommsMode = 'self_send'
   const [modules, setModules] = useState<string[]>([])
   const [useSegments, setUseSegments] = useState(false)
-  const [segmentLabels, setSegmentLabels] = useState('')
+  const [deptRows, setDeptRows] = useState<DeptRow[]>([{ label: '', invitedCount: '' }, { label: '', invitedCount: '' }])
+  const [targetCount, setTargetCount] = useState<number | ''>('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -56,56 +64,108 @@ export function NewCampaignForm({ orgs }: Props) {
     setModules(getDefaultModulesForScanType(nextScanType))
   }
 
+  function updateDeptRow(index: number, patch: Partial<DeptRow>) {
+    setDeptRows((prev) => prev.map((row, i) => (i === index ? { ...row, ...patch } : row)))
+  }
+
+  function addDeptRow(label = '') {
+    setDeptRows((prev) => [...prev, { label, invitedCount: '' }])
+  }
+
+  function removeDeptRow(index: number) {
+    setDeptRows((prev) => prev.filter((_, i) => i !== index))
+  }
+
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
     setLoading(true)
     setError(null)
 
     // Segment-modus mag met een lege lijst opgeslagen worden (spec 2026-07-12
-    // §1): de klant vult de afdelingen zelf in via de setup-wizard. Alleen
-    // wanneer er al labels zijn ingevoerd, gelden de validatieregels (min. 2,
-    // geen dubbele/lege labels) — een half ingevulde lijst mag niet stil
-    // worden opgeslagen alsof die compleet is.
-    let segmentDepartments: SegmentDepartment[] | null = null
+    // par. 1): de klant vult de afdelingen zelf in via de setup-wizard. Zodra
+    // er een rij is ingevuld, gelden dezelfde regels als in de wizard (min. 2,
+    // geen dubbele/lege labels, minimaal 5 per afdeling, 10 in totaal). Een
+    // half ingevulde lijst mag niet stil worden opgeslagen alsof die compleet is.
+    let segmentDepartments: Array<{ label: string; slug: string; invited_count: number }> | null = null
+    let invitedCount: number | null = null
     if (useSegments) {
-      const labels = segmentLabels.split('\n').filter((l) => l.trim())
-      if (labels.length > 0) {
+      const filled = deptRows.filter((row) => row.label.trim() || row.invitedCount !== '')
+      if (filled.length === 0) {
+        segmentDepartments = []
+      } else {
         try {
-          segmentDepartments = buildSegmentDepartments(labels)
+          const update = prepareSegmentDepartmentsUpdate(
+            [],
+            filled.map((row) => ({
+              label: row.label.trim(),
+              invited_count: typeof row.invitedCount === 'number' ? row.invitedCount : 0,
+            })),
+            new Set(),
+          )
+          segmentDepartments = update.departments
+          invitedCount = update.totalInvited
         } catch (e) {
           setError(e instanceof Error ? e.message : 'Ongeldige afdelingslijst')
           setLoading(false)
           return
         }
-        if (segmentDepartments.length < 2) {
-          setError('Segmentrapportage vraagt minimaal 2 afdelingen.')
-          setLoading(false)
-          return
-        }
-      } else {
-        segmentDepartments = []
       }
+    } else if (targetCount !== '') {
+      const targetError = validateInvitedTotal(targetCount)
+      if (targetError) {
+        setError(targetError)
+        setLoading(false)
+        return
+      }
+      invitedCount = targetCount
     }
 
-    const { error: insertError } = await supabase.from('campaigns').insert({
-      organization_id: orgId,
-      name,
-      scan_type: scanType,
-      delivery_mode: deliveryMode,
-      comms_mode: commsMode,
-      enabled_modules: modules.length > 0 ? modules : null,
-      segment_departments: segmentDepartments,
-    })
+    const { data: created, error: insertError } = await supabase
+      .from('campaigns')
+      .insert({
+        organization_id: orgId,
+        name,
+        scan_type: scanType,
+        delivery_mode: deliveryMode,
+        comms_mode: commsMode,
+        enabled_modules: modules.length > 0 ? modules : null,
+        segment_departments: segmentDepartments,
+      })
+      .select('id')
+      .single()
 
-    if (insertError) {
-      setError(insertError.message)
+    if (insertError || !created) {
+      setError(insertError?.message ?? 'Aanmaken mislukt.')
       setLoading(false)
       return
+    }
+
+    // Voorvullen (spec 2026-09-16 par. 5.3): het totaal op het delivery record,
+    // dat de trigger on_campaign_created zojuist heeft aangemaakt. Upsert, zodat
+    // dit ook werkt als dat record ontbreekt. Fail Loud: de campagne bestaat al,
+    // dus zeg precies dat als deze tweede write faalt.
+    if (invitedCount !== null) {
+      const { error: deliveryError } = await supabase
+        .from('campaign_delivery_records')
+        .upsert(
+          { campaign_id: created.id, organization_id: orgId, invited_count: invitedCount },
+          { onConflict: 'campaign_id' },
+        )
+      if (deliveryError) {
+        setError(
+          `Campagne is aangemaakt, maar het aantal deelnemers kon niet worden opgeslagen: ${deliveryError.message}. Zet het alsnog via de campagnepagina of laat de klant het in stap 1 invullen.`,
+        )
+        setLoading(false)
+        router.refresh()
+        return
+      }
     }
 
     setSuccess(true)
     setName('')
     setDeliveryMode('baseline')
+    setDeptRows([{ label: '', invitedCount: '' }, { label: '', invitedCount: '' }])
+    setTargetCount('')
     setTimeout(() => {
       setSuccess(false)
       router.refresh()
@@ -227,39 +287,86 @@ export function NewCampaignForm({ orgs }: Props) {
           Rapporteren op afdelingsniveau
         </label>
         <p className="mt-2 text-xs leading-5 text-slate-600">
-          Elke afdeling krijgt een eigen variant van de campagnelink. Er is dan bewust géén
-          algemene link — elke deelnemer komt binnen via de link van zijn afdeling.
+          Elke afdeling krijgt een eigen variant van de campagnelink. Er is dan bewust geen
+          algemene link: elke deelnemer komt binnen via de link van zijn afdeling.
         </p>
         {useSegments ? (
           <div className="mt-3 space-y-2">
-            <label className="mb-1 block text-xs font-medium text-slate-700">
-              Afdelingen (één per regel, minimaal 2 — of leeg laten zodat de klant dit zelf
-              invult bij de setup)
-            </label>
-            <textarea
-              value={segmentLabels}
-              onChange={(event) => setSegmentLabels(event.target.value)}
-              rows={4}
-              placeholder={'Sales\nOperations\nKantoor'}
-              className={fieldClass}
-            />
-            <button
-              type="button"
-              onClick={() =>
-                setSegmentLabels((prev) =>
-                  prev.trim() ? `${prev.trimEnd()}\nGeen afdeling / overig` : 'Geen afdeling / overig',
-                )
-              }
-              className="text-xs font-medium text-blue-700 underline underline-offset-2"
-            >
-              Voeg &ldquo;Geen afdeling / overig&rdquo; toe
-            </button>
+            <p className="text-xs font-medium text-slate-700">
+              Afdelingen uit de intake (minimaal 2, elk minimaal {MIN_INVITED_PER_DEPARTMENT} medewerkers), of alles leeg
+              laten zodat de klant dit zelf invult bij de setup.
+            </p>
+            {deptRows.map((row, index) => (
+              <div key={index} className="flex gap-2">
+                <input
+                  type="text"
+                  value={row.label}
+                  placeholder="Afdelingsnaam"
+                  onChange={(event) => updateDeptRow(index, { label: event.target.value })}
+                  className={`${fieldClass} flex-1`}
+                />
+                <input
+                  type="number"
+                  min={MIN_INVITED_PER_DEPARTMENT}
+                  value={row.invitedCount}
+                  placeholder="Aantal medewerkers"
+                  aria-label="Aantal medewerkers"
+                  onChange={(event) =>
+                    updateDeptRow(index, { invitedCount: event.target.value === '' ? '' : Number(event.target.value) })
+                  }
+                  className={`${fieldClass} w-44`}
+                />
+                {deptRows.length > 2 ? (
+                  <button
+                    type="button"
+                    onClick={() => removeDeptRow(index)}
+                    aria-label="Verwijder afdeling"
+                    className="rounded-2xl border border-slate-200 px-3 text-sm text-slate-500 hover:bg-white"
+                  >
+                    ×
+                  </button>
+                ) : null}
+              </div>
+            ))}
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => addDeptRow()}
+                className="text-xs font-medium text-blue-700 underline underline-offset-2"
+              >
+                + Afdeling toevoegen
+              </button>
+              <button
+                type="button"
+                onClick={() => addDeptRow(OTHER_DEPARTMENT_LABEL)}
+                className="text-xs font-medium text-blue-700 underline underline-offset-2"
+              >
+                Voeg &ldquo;Geen afdeling / overig&rdquo; toe
+              </button>
+            </div>
             <p className="text-xs leading-5 text-slate-500">
-              Aanbevolen voor iedereen die nergens onder valt (bijv. directie) — anders klikken
+              Aanbevolen voor iedereen die nergens onder valt (bijv. directie); anders klikken
               zij mogelijk willekeurig een afdeling aan.
             </p>
           </div>
-        ) : null}
+        ) : (
+          <div className="mt-3">
+            <label className="mb-1 block text-xs font-medium text-slate-700">
+              Aantal in de doelgroep <span className="font-normal text-slate-400">(uit de intake; minimaal {MIN_INVITED_TOTAL}, of leeg laten)</span>
+            </label>
+            <input
+              type="number"
+              min={MIN_INVITED_TOTAL}
+              value={targetCount}
+              placeholder="bijv. 180"
+              onChange={(event) => setTargetCount(event.target.value === '' ? '' : Number(event.target.value))}
+              className={fieldClass}
+            />
+            <p className="mt-1 text-xs leading-5 text-slate-500">
+              De klant ziet dit voorgevuld in stap 1 van de wizard en corrigeert het daar.
+            </p>
+          </div>
+        )}
       </div>
 
       {supportsCampaignModuleSelection(scanType) ? (
