@@ -179,6 +179,8 @@ export function resolveDashboardState(input: DashboardStateInput): DashboardStat
     reminderHandledAt: input.reminderAlreadySentAt,
     reminderSkipped: input.reminderSkipped,
     closesAt: input.closesAt,
+    scanType: campaign.scanType,
+    today: input.today,
   })
 
   // Priority 3 — expired (close date reached). Disabled while closesAt is null.

@@ -58,3 +58,46 @@ describe('buildCampaignTimeline (spec 2026-09-16 par. 4.2)', () => {
     expect(timeline.reportNote).not.toMatch(/[—–]/)
   })
 })
+
+describe('buildCampaignTimeline: afstemming met de herinneringskaart en de rapportdrempel', () => {
+  it('telt een herinneringsevent vóór de herinneringsdag niet als verstuurd', () => {
+    expect(buildCampaignTimeline({ ...base, reminderHandledAt: '2026-09-18T09:30:00Z' }).items[1]).toMatchObject({
+      value: '21 september 2026',
+      done: false,
+    })
+    expect(
+      buildCampaignTimeline({ ...base, reminderHandledAt: '2026-09-18T09:30:00Z', reminderSkipped: true }).items[1],
+    ).toMatchObject({ value: '21 september 2026', done: false })
+  })
+
+  it('telt een event op of na de herinneringsdag wel, en een overgeslagen als overgeslagen', () => {
+    expect(buildCampaignTimeline({ ...base, reminderHandledAt: '2026-09-23T09:30:00Z' }).items[1]).toMatchObject({
+      value: 'Verstuurd op 23 september 2026',
+      done: true,
+    })
+    expect(
+      buildCampaignTimeline({ ...base, reminderHandledAt: '2026-09-21T09:30:00Z', reminderSkipped: true }).items[1],
+    ).toMatchObject({ value: 'Overgeslagen', done: true })
+  })
+
+  it('noemt de rapportdrempel van de scan: 10 standaard, 30 bij culture_assessment', () => {
+    expect(buildCampaignTimeline({ ...base, scanType: 'exit' }).reportNote).toBe(
+      'Rapport downloaden zodra de meting gesloten is met minimaal 10 ingevulde vragenlijsten.',
+    )
+    expect(buildCampaignTimeline({ ...base, scanType: 'culture_assessment' }).reportNote).toBe(
+      'Rapport downloaden zodra de meting gesloten is met minimaal 30 ingevulde vragenlijsten.',
+    )
+  })
+
+  it('toont een startdatum in de toekomst als gepland, niet als verstuurd', () => {
+    expect(buildCampaignTimeline({ ...base, today: '2026-09-10' }).items[0]).toMatchObject({
+      label: 'Uitnodiging gepland',
+      value: '16 september 2026',
+      done: false,
+    })
+    expect(buildCampaignTimeline({ ...base, today: '2026-09-16' }).items[0]).toMatchObject({
+      label: 'Uitnodiging verstuurd',
+      done: true,
+    })
+  })
+})

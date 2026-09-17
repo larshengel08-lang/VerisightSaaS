@@ -181,4 +181,15 @@ describe('resolveDashboardState', () => {
     ])
     expect(resolveDashboardState(baseInput({ launchConfirmedAt: null })).timeline).toBeNull()
   })
+
+  it('geeft de tijdlijn de scan en de datum van vandaag mee (rapportdrempel, geplande start)', () => {
+    const culture = resolveDashboardState(
+      baseInput({ campaign: { ...baseInput().campaign!, scanType: 'culture_assessment', totalCompleted: 3 } }),
+    )
+    expect(culture.timeline?.reportNote).toContain('minimaal 30 ingevulde vragenlijsten')
+    const planned = resolveDashboardState(
+      baseInput({ campaign: { ...baseInput().campaign!, totalCompleted: 0 }, launchDate: '2026-06-05' }),
+    )
+    expect(planned.timeline?.items[0]).toMatchObject({ label: 'Uitnodiging gepland', value: '5 juni 2026', done: false })
+  })
 })

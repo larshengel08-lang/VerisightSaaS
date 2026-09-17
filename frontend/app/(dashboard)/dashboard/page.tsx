@@ -5,6 +5,7 @@ import { ReadOnlyStateCard } from '@/components/dashboard/read-only-state-card'
 import { RunningStateCard } from '@/components/dashboard/running-state-card'
 import { WelcomeGate } from '@/components/dashboard/welcome-gate'
 import { resolveDashboardState } from '@/lib/dashboard/dashboard-state-resolver'
+import { isSkippedReminderEvent } from '@/lib/dashboard/reminder-event'
 import { normalizeReminderConfig } from '@/lib/launch-controls'
 import { readReminderChoice } from '@/lib/campaign-schedule'
 import { buildReminderText } from '@/lib/dashboard/reminder-text'
@@ -150,9 +151,7 @@ export default async function DashboardHomePage() {
     closesAt: campaign.closes_at ?? null,
     reminderConfig,
     reminderAlreadySentAt: reminderEvents?.[0]?.created_at ?? null,
-    reminderSkipped:
-      ((reminderEvents?.[0] as { metadata?: { channel?: string } | null } | undefined)?.metadata?.channel ?? null) ===
-      'skipped_by_customer',
+    reminderSkipped: isSkippedReminderEvent(reminderEvents?.[0]),
     reportReady,
     today: todayIso(),
   })

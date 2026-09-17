@@ -17,6 +17,7 @@ import {
   isReminderChoice,
   maxClosesAt,
   minClosesAt,
+  reminderConfigFromChoice,
   validateSchedule,
   type ReminderChoice,
 } from '@/lib/campaign-schedule'
@@ -181,14 +182,16 @@ export function SetupWizardCard({
     reminderChoice !== 'none' && launchDate ? formatDutchDate(addDays(launchDate, reminderChoice)) : null
   // Vooruitblik voor stap 3 (spec 2026-09-16 par. 4.2): dezelfde tijdlijn als
   // op de kaart van een lopende meting, met wat de klant nu invult.
+  const previewReminderConfig = reminderConfigFromChoice(reminderChoice)
   const previewTimeline = buildCampaignTimeline({
     launchDate: launchDate || null,
     launchConfirmedAt: null,
-    reminderEnabled: reminderChoice !== 'none',
-    reminderAfterDays: reminderChoice === 'none' ? DEFAULT_REMINDER_AFTER_DAYS : reminderChoice,
+    reminderEnabled: previewReminderConfig.enabled,
+    reminderAfterDays: previewReminderConfig.firstReminderAfterDays,
     reminderHandledAt: null,
     reminderSkipped: false,
     closesAt: closesAt || null,
+    scanType,
   })
 
   function handleLaunchDateChange(value: string) {

@@ -1,6 +1,8 @@
-import { FIRST_INSIGHT_THRESHOLD } from '@/lib/response-activation'
+import type { ScanType } from '@/lib/types'
+import { FIRST_INSIGHT_THRESHOLD, getResponseActivationThresholds } from '@/lib/response-activation'
 import { formatDutchDate } from '@/lib/dashboard/format-dutch-date'
 import { getReminderDueDate } from '@/lib/dashboard/reminder-due'
+import { isReminderHandled } from '@/lib/dashboard/reminder-event'
 
 export interface CampaignTimelineItem {
   key: 'start' | 'reminder' | 'close'
@@ -14,7 +16,12 @@ export interface CampaignTimeline {
   reportNote: string
 }
 
-export const TIMELINE_REPORT_NOTE = `Rapport downloaden zodra de meting gesloten is met minimaal ${FIRST_INSIGHT_THRESHOLD} ingevulde vragenlijsten.`
+function buildReportNote(threshold: number): string {
+  return `Rapport downloaden zodra de meting gesloten is met minimaal ${threshold} ingevulde vragenlijsten.`
+}
+
+/** De rapportregel bij de standaarddrempel (10). Gebruik scanType voor de drempel van een specifieke scan. */
+export const TIMELINE_REPORT_NOTE = buildReportNote(FIRST_INSIGHT_THRESHOLD)
 
 export interface CampaignTimelineInput {
   launchDate: string | null
@@ -26,6 +33,10 @@ export interface CampaignTimelineInput {
   /** Dat event had metadata.channel = 'skipped_by_customer'. */
   reminderSkipped: boolean
   closesAt: string | null
+  /** Bepaalt de rapportdrempel (isReportReleaseReady): 10, of 30 bij culture_assessment. */
+  scanType?: ScanType
+  /** YYYY-MM-DD. Een startdatum na vandaag heet "gepland", ook als de lancering al bevestigd is. */
+  today?: string
 }
 
 /**
@@ -35,18 +46,25 @@ export interface CampaignTimelineInput {
  * nooit ingevuld met een gok.
  */
 export function buildCampaignTimeline(input: CampaignTimelineInput): CampaignTimeline {
-  const launched = Boolean(input.launchConfirmedAt)
+  const confirmed = Boolean(input.launchConfirmedAt)
+  const startInFuture =
+    input.today !== undefined && input.launchDate !== null && input.launchDate.slice(0, 10) > input.today.slice(0, 10)
   const start: CampaignTimelineItem = {
     key: 'start',
-    label: launched ? 'Uitnodiging verstuurd' : 'Start',
+    label: confirmed ? (startInFuture ? 'Uitnodiging gepland' : 'Uitnodiging verstuurd') : 'Start',
     value: formatDutchDate(input.launchDate) ?? 'Nog niet gepland',
-    done: launched,
+    done: confirmed && !startInFuture,
   }
 
   let reminder: CampaignTimelineItem
+  const handled = isReminderHandled({
+    launchDate: input.launchDate,
+    delayDays: input.reminderAfterDays,
+    handledAt: input.reminderHandledAt,
+  })
   if (!input.reminderEnabled) {
     reminder = { key: 'reminder', label: 'Herinnering', value: 'Geen herinnering', done: false }
-  } else if (input.reminderHandledAt) {
+  } else if (handled && input.reminderHandledAt) {
     reminder = {
       key: 'reminder',
       label: 'Herinnering',
@@ -72,5 +90,6 @@ export function buildCampaignTimeline(input: CampaignTimelineInput): CampaignTim
     done: false,
   }
 
-  return { items: [start, reminder, close], reportNote: TIMELINE_REPORT_NOTE }
+  const reportNote = buildReportNote(getResponseActivationThresholds(input.scanType).insightMin)
+  return { items: [start, reminder, close], reportNote }
 }
