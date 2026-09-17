@@ -64,7 +64,7 @@ export default async function DashboardHomePage() {
     { data: respondentDepts },
     { data: profile },
     { data: membership },
-    { count: extensionCount },
+    { count: extensionCount, error: extensionCountError },
   ] = await Promise.all([
     supabase
       .from('campaign_delivery_records')
@@ -105,10 +105,18 @@ export default async function DashboardHomePage() {
       .from('campaign_action_audit_events')
       .select('id', { count: 'exact', head: true })
       .eq('campaign_id', campaign.campaign_id)
+      .eq('organization_id', campaign.organization_id)
       .eq('action_key', 'delivery_lifecycle_changed')
       .eq('outcome', 'completed')
       .contains('metadata', { extension: true }),
   ])
+
+  // Fail Loud: een mislukte telling mag niet als "nog nooit verlengd" gelezen
+  // worden, want dan biedt de kaart verlengen aan op een meting die al op de
+  // grens zit.
+  if (extensionCountError) {
+    throw new Error(`Kon het aantal verlengingen niet laden: ${extensionCountError.message}`)
+  }
 
   // Beheer is voorbehouden aan de eigenaar van de klantomgeving en aan de
   // Loep-operator (spec 2026-09-11 par. 9). Andere leden lezen alleen mee:

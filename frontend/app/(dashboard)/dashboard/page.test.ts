@@ -49,4 +49,11 @@ describe('state-driven dashboard page', () => {
     expect(source).toContain('extensionCount: extensionCount ?? 0')
     expect(source).toContain('isSkippedReminderEvent(reminderEvents?.[0])')
   })
+
+  it('telt de verlengingen binnen de eigen organisatie en faalt luid als de telling niet lukt', () => {
+    expect(source).toContain("{ count: extensionCount, error: extensionCountError }")
+    expect(source).toContain("eq('organization_id', campaign.organization_id)")
+    expect(source).toContain('if (extensionCountError)')
+    expect(source).toContain('throw new Error(`Kon het aantal verlengingen niet laden: ${extensionCountError.message}`)')
+  })
 })

@@ -5,20 +5,44 @@ let orgMemberRole: string | null = 'owner'
 let isAdmin = false
 let closesAt: string | null = '2026-10-07'
 let isActive = true
+let closedAt: string | null = null
 let extensionCount = 0
+let countError: { message: string } | null = null
+let countFilters: Array<[string, unknown]> = []
 let campaignUpdates: Array<Record<string, unknown>> = []
+/** Eén resultaat per update-aanroep, in volgorde; standaard 1 rij, geen fout. */
+let updateResults: Array<{ rows: number; error: { message: string } | null }> = []
 let auditInserts: Array<Record<string, unknown>> = []
 let auditInsertError: { message: string } | null = null
 
 interface CountChain {
-  eq: (...args: unknown[]) => CountChain
-  contains: (...args: unknown[]) => Promise<{ count: number; error: null }>
+  eq: (column: string, value: unknown) => CountChain
+  contains: (column: string, value: unknown) => Promise<{ count: number | null; error: { message: string } | null }>
 }
 
+/**
+ * De telquery moet op deze campagne, deze organisatie, de lifecycle-actie en
+ * metadata.extension filteren; anders telt hij verkeerd en is de grens van drie
+ * verlengingen te omzeilen. De mock geeft pas een telling als dat klopt.
+ */
 function auditCountChain(): CountChain {
   const chain: CountChain = {
-    eq: () => chain,
-    contains: async () => ({ count: extensionCount, error: null }),
+    eq: (column, value) => {
+      countFilters.push([column, value])
+      return chain
+    },
+    contains: async (column, value) => {
+      countFilters.push([column, value])
+      const has = (c: string, v: unknown) => countFilters.some(([fc, fv]) => fc === c && JSON.stringify(fv) === JSON.stringify(v))
+      const complete =
+        has('campaign_id', 'campaign-1') &&
+        has('organization_id', 'org-1') &&
+        has('action_key', 'delivery_lifecycle_changed') &&
+        has('outcome', 'completed') &&
+        has('metadata', { extension: true })
+      if (!complete) throw new Error(`telquery mist filters: ${JSON.stringify(countFilters)}`)
+      return countError ? { count: null, error: countError } : { count: extensionCount, error: null }
+    },
   }
   return chain
 }
@@ -34,14 +58,16 @@ vi.mock('@/lib/supabase/server', () => ({
           select: () => ({
             eq: () => ({
               single: async () => ({ data: { organization_id: 'org-1' } }),
-              maybeSingle: async () => ({ data: { closes_at: closesAt, is_active: isActive }, error: null }),
+              maybeSingle: async () => ({ data: { closes_at: closesAt, is_active: isActive, closed_at: closedAt }, error: null }),
             }),
           }),
           update: (payload: Record<string, unknown>) => ({
             eq: () => ({
               select: async () => {
                 campaignUpdates.push(payload)
-                return { data: [{ id: 'campaign-1' }], error: null }
+                const result = updateResults.shift() ?? { rows: 1, error: null }
+                if (result.error) return { data: null, error: result.error }
+                return { data: Array.from({ length: result.rows }, () => ({ id: 'campaign-1' })), error: null }
               },
             }),
           }),
@@ -84,8 +110,12 @@ beforeEach(() => {
   isAdmin = false
   closesAt = '2026-10-07'
   isActive = true
+  closedAt = null
   extensionCount = 0
+  countError = null
+  countFilters = []
   campaignUpdates = []
+  updateResults = []
   auditInserts = []
   auditInsertError = null
 })
@@ -138,15 +168,69 @@ describe('extendCampaignAction (spec 2026-09-16 par. 4.3)', () => {
     expect(result).toEqual({ ok: true })
   })
 
-  it('meldt het als de verlenging wel is opgeslagen maar niet gelogd (Fail Loud)', async () => {
+  it('weigert en schrijft niets als de telling mislukt', async () => {
+    countError = { message: 'permission denied' }
+    const result = await extendCampaignAction('campaign-1')
+    expect(result.ok).toBe(false)
+    expect(result.error).toContain('hoe vaak deze meting al verlengd is')
+    expect(campaignUpdates).toHaveLength(0)
+    expect(auditInserts).toHaveLength(0)
+  })
+
+  it('weigert als de update geen rij raakt', async () => {
+    updateResults = [{ rows: 0, error: null }]
+    const result = await extendCampaignAction('campaign-1')
+    expect(result).toEqual({ ok: false, error: 'Verlengen mislukt: campagne niet gevonden of geen rechten.' })
+    expect(auditInserts).toHaveLength(0)
+  })
+
+  it('zet de sluitdatum terug als de verlenging niet vastgelegd kan worden (anders telt hij niet mee)', async () => {
+    closesAt = '2099-01-10'
     auditInsertError = { message: 'insert denied' }
     const result = await extendCampaignAction('campaign-1')
+    expect(result).toEqual({
+      ok: false,
+      error: 'Verlengen is niet gelukt: Loep kon de verlenging niet vastleggen. Probeer het opnieuw.',
+    })
+    expect(campaignUpdates).toEqual([{ closes_at: '2099-01-24' }, { closes_at: '2099-01-10' }])
+  })
+
+  it('meldt eerlijk als ook het terugzetten mislukt: datum verschoven, verlenging niet geteld', async () => {
+    closesAt = '2099-01-10'
+    auditInsertError = { message: 'insert denied' }
+    updateResults = [{ rows: 1, error: null }, { rows: 0, error: { message: 'update denied' } }]
+    const result = await extendCampaignAction('campaign-1')
     expect(result.ok).toBe(true)
-    expect(result.warning).toContain('kon dat niet vastleggen')
+    expect(result.warning).toContain('24 januari 2099')
+    expect(result.warning).toContain('kon Loep de verlenging niet vastleggen')
+    expect(result.warning).toContain('hallo@getloep.nl')
+    expect(campaignUpdates).toHaveLength(2)
+  })
+
+  it('meldt het ook als het terugzetten geen rij raakt', async () => {
+    auditInsertError = { message: 'insert denied' }
+    updateResults = [{ rows: 1, error: null }, { rows: 0, error: null }]
+    const result = await extendCampaignAction('campaign-1')
+    expect(result.ok).toBe(true)
+    expect(result.warning).toContain('kon Loep de verlenging niet vastleggen')
   })
 })
 
 describe('skipReminderAction (spec 2026-09-16 par. 4.3)', () => {
+  it('weigert voor een gesloten meting en logt niets', async () => {
+    isActive = false
+    const result = await skipReminderAction('campaign-1')
+    expect(result).toEqual({ ok: false, error: 'Deze meting is al gesloten; een herinnering overslaan is niet meer nodig.' })
+    expect(auditInserts).toHaveLength(0)
+  })
+
+  it('weigert ook als closed_at gezet is', async () => {
+    closedAt = '2026-09-01T10:00:00Z'
+    const result = await skipReminderAction('campaign-1')
+    expect(result.ok).toBe(false)
+    expect(auditInserts).toHaveLength(0)
+  })
+
   it('logt een send_reminders-event met channel skipped_by_customer', async () => {
     const result = await skipReminderAction('campaign-1')
     expect(result).toEqual({ ok: true })

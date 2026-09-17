@@ -10,6 +10,7 @@ import {
   type DashboardActionResult,
 } from '@/app/(dashboard)/dashboard/dashboard-actions'
 import type { DashboardSecondaryAction, DashboardState } from '@/lib/dashboard/dashboard-state-resolver'
+import { MAX_EXTENSIONS } from '@/lib/dashboard/campaign-extension'
 import { ConfirmDialog, type ConfirmDialogAction } from './confirm-dialog'
 
 type Busy = 'idle' | 'closing' | 'extending' | 'skipping' | 'confirming'
@@ -54,14 +55,22 @@ export function DashboardStateActions({ state, reminderText }: { state: Dashboar
     setError(null)
     setNotice(null)
     setBusy(kind)
-    const result = await action()
-    setBusy('idle')
-    if (!result.ok) {
-      setError(result.error ?? failLabel)
-      return
+    try {
+      const result = await action()
+      if (!result.ok) {
+        setError(result.error ?? failLabel)
+        return
+      }
+      setNotice(result.warning ?? null)
+      router.refresh()
+    } catch (err) {
+      // Een afgewezen server action (netwerk, verouderde deploy) mag de knop
+      // niet stil laten hangen: melden en de knoppen weer vrijgeven.
+      console.error('[DashboardStateActions] actie mislukt:', err)
+      setError(`${failLabel} Controleer je verbinding en probeer het opnieuw.`)
+    } finally {
+      setBusy('idle')
     }
-    setNotice(result.warning ?? null)
-    router.refresh()
   }
 
   if (!campaignId) {
@@ -217,7 +226,7 @@ function buildCloseDialog(
   return {
     body: (
       <p>
-        {counts} {noReport} Je hebt de meting al drie keer verlengd; verlengen kan niet meer.
+        {counts} {noReport} Je hebt de meting al {MAX_EXTENSIONS} keer verlengd; verlengen kan niet meer.
       </p>
     ),
     actions: [cancel, { label: 'Toch sluiten', onClick: handlers.onClose, variant: 'primary' }],

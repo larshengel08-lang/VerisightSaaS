@@ -63,6 +63,19 @@ describe('dashboard state interaction island', () => {
     expect(earlyReturnBlock).toContain('noticeBlock')
   })
 
+  it('vangt een afgewezen server action af: foutmelding tonen en busy altijd terugzetten', () => {
+    const run = island.slice(island.indexOf('async function run'), island.indexOf('if (!campaignId)'))
+    expect(run).toContain('try {')
+    expect(run).toContain('} catch')
+    expect(run).toContain('} finally {')
+    expect(run).toContain("setBusy('idle')")
+  })
+
+  it('leidt het aantal verlengingen in de sluitdialoog af van MAX_EXTENSIONS', () => {
+    expect(island).toContain('MAX_EXTENSIONS')
+    expect(island).not.toContain('drie keer')
+  })
+
   it('bevat geen em- of en-dashes in klantcopy', () => {
     expect(island).not.toMatch(/[—–]/)
   })

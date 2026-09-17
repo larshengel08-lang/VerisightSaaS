@@ -254,6 +254,11 @@ export async function closeCampaignAction(campaignId: string): Promise<Dashboard
  * delivery_lifecycle_changed-events met metadata.extension = true; geen nieuwe
  * outcome-waarde, want de audittabel is live aangemaakt en een onbekende
  * check-constraint is een risico.
+ *
+ * De grens wordt in deze actie afgedwongen, niet door de database: RLS laat
+ * een beheerder closes_at vrij bijwerken. Daarom telt een verlenging alleen
+ * als het auditevent er ook staat; lukt het loggen niet, dan wordt closes_at
+ * teruggezet, zodat er geen ongetelde verlenging bestaat.
  */
 export async function extendCampaignAction(campaignId: string): Promise<DashboardActionResult> {
   const ctx = await loadActorContext(campaignId)
@@ -268,6 +273,7 @@ export async function extendCampaignAction(campaignId: string): Promise<Dashboar
       .from('campaign_action_audit_events')
       .select('id', { count: 'exact', head: true })
       .eq('campaign_id', campaignId)
+      .eq('organization_id', ctx.organizationId)
       .eq('action_key', 'delivery_lifecycle_changed')
       .eq('outcome', 'completed')
       .contains('metadata', { extension: true }),
@@ -322,10 +328,24 @@ export async function extendCampaignAction(campaignId: string): Promise<Dashboar
     },
   })
   if (auditError) {
-    // De datum staat al; de teller mist deze keer. Zeggen, niet verzwijgen.
+    // Een verlenging die niet gelogd is, telt niet mee voor de grens. Zet de
+    // datum terug, zodat de teller en closes_at niet uit elkaar lopen.
+    const { data: rolledBack, error: rollbackError } = await ctx.supabase
+      .from('campaigns')
+      .update({ closes_at: row.closes_at })
+      .eq('id', campaignId)
+      .select('id')
+    if (rollbackError || !rolledBack || rolledBack.length === 0) {
+      console.error('[extendCampaignAction] audit en terugzetten mislukt:', auditError.message, rollbackError?.message)
+      // Zeggen, niet verzwijgen: de datum is verschoven maar telt niet mee.
+      return {
+        ok: true,
+        warning: `De sluitdatum staat nu op ${nextClosesAtLabel}, maar daarna kon Loep de verlenging niet vastleggen en ook niet terugdraaien. Deze verlenging telt daardoor niet mee. Mail ${LOEP_CONTACT_EMAIL}, dan zet Loep het recht.`,
+      }
+    }
     return {
-      ok: true,
-      warning: `De sluitdatum is verlengd tot ${nextClosesAtLabel}, maar Loep kon dat niet vastleggen (${auditError.message}). Mail ${LOEP_CONTACT_EMAIL} als je nog een keer wilt verlengen.`,
+      ok: false,
+      error: 'Verlengen is niet gelukt: Loep kon de verlenging niet vastleggen. Probeer het opnieuw.',
     }
   }
 
@@ -344,6 +364,19 @@ export async function skipReminderAction(campaignId: string): Promise<DashboardA
 
   const canSend = ctx.isAdmin || getCustomerActionPermission(ctx.role, 'send_reminders')
   if (!canSend) return { ok: false, error: getPermissionDeniedMessage('send_reminders') }
+
+  const { data: campaignRow, error: campaignError } = await ctx.supabase
+    .from('campaigns')
+    .select('is_active, closed_at')
+    .eq('id', campaignId)
+    .maybeSingle()
+  if (campaignError || !campaignRow) {
+    return { ok: false, error: `Overslaan mislukt: ${campaignError?.message ?? 'campagne niet gevonden of geen rechten'}.` }
+  }
+  const row = campaignRow as { is_active: boolean; closed_at: string | null }
+  if (!row.is_active || row.closed_at) {
+    return { ok: false, error: 'Deze meting is al gesloten; een herinnering overslaan is niet meer nodig.' }
+  }
 
   const { error } = await insertCampaignAuditEvent({
     supabase: ctx.supabase,
