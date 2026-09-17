@@ -31,7 +31,12 @@ const secondaryButtonClass =
 export function DashboardStateActions({ state, reminderText }: { state: DashboardState; reminderText: string }) {
   const router = useRouter()
   const [busy, setBusy] = useState<Busy>('idle')
-  const [copied, setCopied] = useState(false)
+  // De tekst zelf onthouden in plaats van een los boolean (spec-review
+  // 2026-09-17, ronde 2): na router.refresh() of een nieuwe herinneringsdag
+  // krijgt dit eiland een andere reminderText, en "gekopieerd" voor de OUDE
+  // tekst mag dan niet blijven gelden voor de nieuwe.
+  const [copiedFor, setCopiedFor] = useState<string | null>(null)
+  const copied = copiedFor === reminderText
   const [closeDialogOpen, setCloseDialogOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
@@ -126,13 +131,18 @@ export function DashboardStateActions({ state, reminderText }: { state: Dashboar
       {state.ctaKind === 'copy_reminder' ? (
         <>
           {isReminderTextAvailable(reminderText) ? (
-            <ReminderComposer key={reminderText} reminderText={reminderText} onCopied={() => setCopied(true)} />
+            <ReminderComposer key={reminderText} reminderText={reminderText} onCopied={() => setCopiedFor(reminderText)} />
           ) : (
             <p role="alert" className="max-w-md whitespace-pre-line text-xs text-red-600">
               {reminderText}
             </p>
           )}
-          <button type="button" onClick={handleConfirmReminder} disabled={!copied || isBusy} className={primaryButtonClass}>
+          <button
+            type="button"
+            onClick={handleConfirmReminder}
+            disabled={!copied || isBusy || !isReminderTextAvailable(reminderText)}
+            className={primaryButtonClass}
+          >
             {busy === 'confirming' ? 'Bevestigen...' : 'Ik heb de herinnering verstuurd'}
           </button>
           {isReminderTextAvailable(reminderText) && !copied ? (
@@ -277,6 +287,18 @@ function ReminderComposer({ reminderText, onCopied }: { reminderText: string; on
     }
   }
 
+  // Een Ctrl+C-copy telt alleen als de klant echt het hele veld selecteerde
+  // (spec-review 2026-09-17, ronde 2): anders levert een toevallige of
+  // gedeeltelijke selectie een groen vinkje op voor een kopie die niet klopt.
+  function handleManualCopy(which: 'subject' | 'body') {
+    const el = which === 'subject' ? subjectRef.current : bodyRef.current
+    if (!el) return
+    const { value, selectionStart, selectionEnd } = el
+    if (value.length > 0 && selectionStart === 0 && selectionEnd === value.length) {
+      markCopied(which)
+    }
+  }
+
   async function copy(which: 'subject' | 'body') {
     const text = which === 'subject' ? subject : body
     try {
@@ -320,7 +342,7 @@ function ReminderComposer({ reminderText, onCopied }: { reminderText: string; on
           type="text"
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
-          onCopy={() => markCopied('subject')}
+          onCopy={() => handleManualCopy('subject')}
           className="w-full rounded-lg border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-3 py-2 text-base sm:text-xs text-[color:var(--dashboard-ink)] focus:outline-none focus:ring-1 focus:ring-[#E8A020]/50"
         />
         {errorField === 'subject' ? (
@@ -347,7 +369,7 @@ function ReminderComposer({ reminderText, onCopied }: { reminderText: string; on
           ref={bodyRef}
           value={body}
           onChange={(e) => setBody(e.target.value)}
-          onCopy={() => markCopied('body')}
+          onCopy={() => handleManualCopy('body')}
           rows={10}
           className="w-full resize-y rounded-lg border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-3 py-2 text-base sm:text-xs leading-relaxed text-[color:var(--dashboard-ink)] focus:outline-none focus:ring-1 focus:ring-[#E8A020]/50"
         />

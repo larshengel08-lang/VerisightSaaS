@@ -92,9 +92,19 @@ describe('dashboard state interaction island', () => {
     expect(island).not.toContain('Kopieer herinneringstekst')
   })
 
-  it('laat pas bevestigen dat de herinnering is verstuurd nadat er iets gekopieerd is', () => {
-    expect(island).toContain('disabled={!copied || isBusy}')
+  it('laat pas bevestigen dat de herinnering is verstuurd nadat er iets gekopieerd is, en nooit voor gedegradeerde tekst', () => {
+    expect(island).toContain('disabled={!copied || isBusy || !isReminderTextAvailable(reminderText)}')
     expect(island).toContain('Kopieer eerst het onderwerp en het bericht')
+  })
+
+  it('reset de kopieerstatus zodra de herinneringstekst verandert (spec-review 2026-09-17, ronde 2)', () => {
+    // copiedFor onthoudt VOOR WELKE tekst er gekopieerd is; na router.refresh()
+    // of een nieuwe herinneringsdag verandert reminderText en moet "gekopieerd"
+    // niet blijven gelden voor de oude tekst.
+    expect(island).toContain('const [copiedFor, setCopiedFor] = useState<string | null>(null)')
+    expect(island).toContain('const copied = copiedFor === reminderText')
+    expect(island).toContain('setCopiedFor(reminderText)')
+    expect(island).not.toContain('setCopied(true)')
   })
 
   it('toont bij een mislukte kopieeractie een melding per veld, geen valse bevestiging (spec-review 2026-09-17)', () => {
@@ -112,9 +122,16 @@ describe('dashboard state interaction island', () => {
     expect(island).toContain('Kopiëren lukte niet. Selecteer de tekst en kopieer met Ctrl+C.')
   })
 
-  it('telt een handmatige kopieeractie (Ctrl+C) ook mee via onCopy op beide velden', () => {
-    expect(island).toContain("onCopy={() => markCopied('subject')}")
-    expect(island).toContain("onCopy={() => markCopied('body')}")
+  it('telt een handmatige kopieeractie (Ctrl+C) alleen mee als de hele veldwaarde geselecteerd was (spec-review 2026-09-17, ronde 2)', () => {
+    expect(island).toContain("onCopy={() => handleManualCopy('subject')}")
+    expect(island).toContain("onCopy={() => handleManualCopy('body')}")
+    const manualCopyFn = island.slice(island.indexOf('function handleManualCopy'), island.indexOf('async function copy'))
+    expect(manualCopyFn).toContain('value.length > 0')
+    expect(manualCopyFn).toContain('selectionStart === 0')
+    expect(manualCopyFn).toContain('selectionEnd === value.length')
+    // Geen onvoorwaardelijke markCopied meer op het onCopy-event zelf: die
+    // hangt nu achter de volledige-selectie-check in handleManualCopy.
+    expect(island).not.toContain("onCopy={() => markCopied(")
   })
 
   it('ontgrendelt bevestigen pas als onderwerp én bericht allebei zijn gekopieerd', () => {
