@@ -810,6 +810,22 @@ def _p02_met_respons(zin: str, *, completed: int, invited: int | None,
     return f"{zin}{staart}"
 
 
+_MAANDEN_NL = ("januari", "februari", "maart", "april", "mei", "juni", "juli",
+               "augustus", "september", "oktober", "november", "december")
+
+
+def _datum_nl(d) -> str | None:
+    """Datum als Nederlandse tekst ("9 maart 2026"), of None als er geen datum is.
+
+    Meetgegevens op pagina twee (H8). Een datetime wordt op de kalenderdag
+    gelezen; een ontbrekende datum blijft None, zodat de renderer er in één zin
+    bij kan zeggen dat hij niet is vastgelegd in plaats van iets te verzinnen.
+    """
+    if d is None:
+        return None
+    return f"{d.day} {_MAANDEN_NL[d.month - 1]} {d.year}"
+
+
 def _cover_respons_stat(completion_pct: float | None) -> tuple[str, str]:
     """De responstegel op de cover, afgerond zoals de responsbasis hem toont.
 
@@ -3169,6 +3185,12 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
         rows=len(respondents), completed=n_completed)
     completion  = round(n_completed / n_invited * 100, 1) if n_invited else None
 
+    # Meetdatums (spec 16-9 par. 4 blok 6, H8): start uit het delivery record,
+    # sluiting uit de campagne zelf (closed_at staat op Campaign). Beide mogen
+    # ontbreken; dan zegt de meetgegevensregel dat, en verzint het rapport niets.
+    period_start = _datum_nl(_record.launch_date if _record is not None else None)
+    period_end = _datum_nl(camp.closed_at)
+
     risk_sc  = [r.risk_score for r in responses if r.risk_score is not None]
     avg_risk = round(_mean(risk_sc), 2) if risk_sc else None
     eng_sc   = [r.uwes_score for r in responses if r.uwes_score is not None]
@@ -3346,6 +3368,7 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
         generated_at=now_str, delivery_mode=mode_lbl,
         n_invited=n_invited, n_invited_note=n_invited_note,
         n_completed=n_completed, completion_pct=completion,
+        period_start=period_start, period_end=period_end,
         avg_risk=avg_risk, avg_eng=avg_eng, avg_to=avg_to, avg_si=avg_si,
         band_counts=band_counts, has_pattern=has_pattern,
         factor_avgs=factor_avgs, top_risks=top_risks,

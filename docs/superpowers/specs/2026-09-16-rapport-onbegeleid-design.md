@@ -164,3 +164,8 @@ Per onderwerp (leiderschap, cultuur, groeiperspectief, beloning, werkdruk, rolhe
 | factor / thema | onderwerp |
 | item | stelling |
 | segment | afdeling |
+
+## Afwijkingen bij plan 3a
+
+- **Responsnoemer (spec 11-9 par. 4.6):** de code (`_respons_noemer`, ronde 2) neemt het vastgelegde aantal uit het delivery record als noemer ongeacht `comms_mode`, en geeft bij een te laag vastgelegd aantal géén afgekapte 100% maar géén percentage plus de reden. Dat is strenger dan par. 4.6 en blijft zo: liever geen getal dan een onwaar getal.
+- **Sluitdatum:** `closed_at` staat op `Campaign`, niet op het delivery record; de start komt uit `delivery_record.launch_date`.
