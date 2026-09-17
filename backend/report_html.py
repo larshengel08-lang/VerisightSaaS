@@ -980,6 +980,23 @@ def _respons_cell(completed: int, invited: int | None) -> str:
             f'<div class="sc-b">{_h(_respons_oordeel(completed, invited))}</div></td>')
 
 
+def _exit_reason_count(data: dict, code: str) -> int:
+    """Hoe vaak vertrekreden `code` is genoemd, uit de volledige teller.
+
+    `exit_r_dist` is de top 5 van de tabel; een reden die daarbuiten valt kwam
+    daar als 0 uit. Dat maakte de why-cel op p.02 onzichtbaar in precies het
+    geval waarin ze "Even vaak" moest melden (meer dan vijf redenen met dezelfde
+    hoogste telling). `exit_r_counts` is de hele Counter; fixtures van vóór die
+    sleutel vallen terug op de top 5 plus het volledige gelijkspel
+    (`exit_r_top`), wat de bekende gevallen dekt zonder een getal te verzinnen.
+    """
+    counts = data.get("exit_r_counts")
+    if counts:
+        return int(counts.get(code, 0))
+    fallback = list(data.get("exit_r_dist") or []) + list(data.get("exit_r_top") or [])
+    return next((r["count"] for r in fallback if r["code"] == code), 0)
+
+
 def _vertrekreden_top(exit_r_dist: list[dict]) -> tuple[list[dict], int]:
     """(alle redenen met de hoogste telling, die telling). Leeg zonder redenen."""
     if not exit_r_dist:
@@ -2072,7 +2089,8 @@ def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: st
                             second_why: str | None = None,
                             opener_html: str = "",
                             degraded_note: str = "",
-                            opener_op_p02: bool = False) -> str:
+                            opener_op_p02: bool = False,
+                            brug_zin: str = "") -> str:
     """Gespreksagenda voor eerste managementbespreking — geen actieplan, agenda.
 
     Navy anker (designsprong §2a): kaarten + gespreksopener vormen één donker
@@ -2091,6 +2109,10 @@ def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: st
     heeft in v1 nog geen verdiepingsset). Migreert naar _prioriteringsraster
     zodra de Loep Start-verdiepingsset v1.1 landt; deze functie wordt dan
     verwijderd.
+
+    brug_zin (taak 7, B2): dezelfde zin als op pagina twee, die het ene
+    organisatiebrede startpunt verbindt met wat de aangewezen afdeling laag
+    heeft. Leeg als geen afdeling wordt aangewezen.
 
     degraded_note (review ronde 2) volgt dezelfde schakelaar als de degraded
     p.02-alinea: zonder factorprofiel is er geen primair thema en geen tweede
@@ -2132,6 +2154,7 @@ def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: st
     return f"""<div class="pb sec">
   {opener_html or '<span class="slabel">Eerste managementspoor</span>'}
   {intro_html}
+  {f'<p class="mq-brug" style="margin-top:10px;">{_h(brug_zin)}</p>' if brug_zin else ''}
   <div class="agenda-dark">
   <table class="steps"><tr>
     {theme_cells}
@@ -2289,7 +2312,8 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
                          mgmt_q: str, review_when: str,
                          opener_html: str,
                          direction_agg: dict | None = None, n_total: int = 0,
-                         direction_block_html: str | None = None) -> str:
+                         direction_block_html: str | None = None,
+                         brug_zin: str = "") -> str:
     """Prioriteringsraster + geintegreerde gespreksagenda, inclusief het
     richtingblok "Wat er moet gebeuren" (spec par. 2 en par. 6).
 
@@ -2307,6 +2331,10 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
     string zelf onderbreekt (bijv. een <b>-tag halverwege) breekt die test.
     Intro, uitlegregel en gate-notitie worden samengesteld uit de signalen die
     deze meting had: het raster belooft nooit een signaal dat er niet was.
+
+    brug_zin (taak 7, B2): dezelfde zin als op pagina twee, die het ene
+    organisatiebrede startpunt verbindt met wat de aangewezen afdeling laag
+    heeft. Leeg als geen afdeling wordt aangewezen.
 
     direction_block_html (bug B3): de renderers bouwen het richtingblok zelf,
     omdat de methodiekpagina moet weten of het blok daadwerkelijk gerenderd
@@ -2446,6 +2474,7 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
   {opener_html}
   <p class="sec-intro">{intro}</p>
   {tabel}
+  {f'<p class="mq-brug" style="margin-top:10px;">{_h(brug_zin)}</p>' if brug_zin else ''}
   {dir_block}
   <div class="agenda-dark" style="margin-top:16px;">
     <div class="agenda-opener">
@@ -3191,10 +3220,66 @@ def _segment_factor_subblocks(segment_rows: list[dict],
     return intro + subs
 
 
+def _segment_startpunt(segment_rows: list[dict],
+                       factor_rows: dict[str, dict] | None) -> dict | None:
+    """De aangewezen afdeling, of None.
+
+    De enige gate voor staat 3 van `_segment_start_note` (verschil >=
+    SEGMENT_START_MIN_DELTA met de volgende én n >= MIN_DISTRIBUTION_N), zodat
+    de brugzin op pagina twee en het navy blok onder de tabel nooit uiteen
+    kunnen lopen: dat blok leest deze functie ook (een tweede kopie van de
+    gates zou stil kunnen afwijken).
+    """
+    named = sorted((r for r in segment_rows if not r.get("is_pooled", False)),
+                   key=lambda r: (r["avg"], -r["n"], r["department"]))
+    if len(named) < 2:
+        return None
+    lowest, runner_up = named[0], named[1]
+    low_sc, run_sc = _shown(lowest["avg"]), _shown(runner_up["avg"])
+    if round(run_sc - low_sc, 1) < SEGMENT_START_MIN_DELTA or lowest["n"] < MIN_DISTRIBUTION_N:
+        return None
+    info = (factor_rows or {}).get(lowest["department"]) or {}
+    factors = info.get("factors") or []
+    return {"department": lowest["department"], "score": low_sc, "n": lowest["n"],
+            "invited": lowest.get("invited"),
+            "low_fk": factors[0][0] if factors else None,
+            "low_avg": factors[0][1] if factors else None}
+
+
+def _brugzin(startpunt_key: str | None, startpunt_label: str, seg: dict | None,
+             scan_type: str) -> str:
+    """De zin die organisatiebreed en per afdeling aan elkaar knoopt (spec par. 5).
+
+    Bevinding B2: twee dingen heetten "startpunt". Het rapport heeft er één,
+    organisatiebreed; wat een afdeling laag heeft is een tweede punt voor die
+    afdeling. Deze zin zegt dat met zoveel woorden, op pagina twee en op de
+    gespreksagenda.
+
+    Drie varianten: ander onderwerp (tweede punt voor die afdeling), hetzelfde
+    onderwerp (daar begint het gesprek ook), of geen onderwerp bekend voor die
+    afdeling (te weinig antwoorden per onderwerp). Zonder aangewezen afdeling
+    geen zin: het navy blok geeft dan zelf de reden. Zonder organisatiebreed
+    startpunt ook niet: dan is er niets om aan te knopen.
+    """
+    if not seg or not startpunt_key:
+        return ""
+    dept, score = seg["department"], _score_str(seg["score"])
+    if seg["low_fk"] is None:
+        return (f"Organisatiebreed begint het gesprek bij {startpunt_label}. {dept} scoort het "
+                f"laagst van de afdelingen ({score}); welk onderwerp daar het zwaarst weegt is "
+                f"niet te zeggen, te weinig antwoorden per onderwerp.")
+    low_lbl = _lc(_fl(seg["low_fk"], scan_type))
+    low_sc = _score_str(seg["low_avg"])
+    if seg["low_fk"] == startpunt_key:
+        return f"Bij {dept} weegt {low_lbl} het zwaarst ({low_sc}); daar begint het gesprek ook."
+    return (f"Organisatiebreed begint het gesprek bij {startpunt_label}. Bij {dept} springt "
+            f"{low_lbl} eruit ({low_sc}); neem dat als tweede punt voor die afdeling.")
+
+
 def _segment_start_note(segment_rows: list[dict],
                         factor_rows: dict[str, dict] | None,
                         scan_type: str) -> str:
-    """Het navy-blok "Startpunt voor de bespreking" onder de segmenttabel.
+    """Het navy-blok "Waar het per afdeling begint" onder de segmenttabel.
 
     Drie staten (spec ronde 2 par. 3.1), elk met de reden die in DEZE meting
     gold en zonder de drempel te noemen die niet meespeelde:
@@ -3238,19 +3323,37 @@ def _segment_start_note(segment_rows: list[dict],
     delta = round(run_sc - low_sc, 1)
     # Het verschil gaat over de twee laagste afdelingen, niet over de hele
     # tabel: alleen die twee bepalen of er een onderscheid te maken is. De
-    # omvangeis geldt alleen voor de afdeling die genoemd zou worden.
-    laagste_te_klein = lowest["n"] < MIN_DISTRIBUTION_N
+    # omvangeis geldt alleen voor de afdeling die genoemd zou worden en zit in
+    # _segment_startpunt; hier is `delta` alleen nog nodig om te weten WELKE van
+    # de twee redenen gold.
     marge = str(SEGMENT_START_MIN_DELTA).replace(".", ",")
 
+    # H20: de restgroep krijgt haar samenstelling en haar noemer, zodat
+    # "scoort lager" niet over een naamloze groep gaat. Zonder volledige
+    # noemer (geen deelsom, zie _enrich_segment_rows_with_invited) alleen het
+    # aantal ingevulde vragenlijsten.
     pooled = next((r for r in segment_rows if r.get("is_pooled", False)), None)
     rest_sentence = ""
     if pooled and _shown(pooled["avg"]) < low_sc:
+        leden = pooled.get("members") or []
+        inv = pooled.get("invited")
+        samenstelling = ""
+        if leden:
+            noemer = (f"; samen {inv} uitgenodigd, {pooled['n']} ingevuld" if inv
+                      else f"; {pooled['n']} ingevuld")
+            samenstelling = f' ({_h(", ".join(leden))}{noemer})'
         rest_sentence = (
-            f' De restgroep &ldquo;{_h(pooled["department"])}&rdquo; scoort lager '
+            f' De restgroep &ldquo;{_h(pooled["department"])}&rdquo;{samenstelling} scoort lager '
             f'({_shown(pooled["avg"]):.1f}/10), maar is samengesteld uit kleine '
             f'afdelingen en wordt daarom niet als startpunt genoemd.')
 
-    if delta < SEGMENT_START_MIN_DELTA:
+    # Eén gate voor staat 3, gedeeld met de brugzin (_segment_startpunt).
+    # Is die None, dan is de reden hier per definitie een van de twee
+    # hieronder: de rij-eis (minstens twee benoemde afdelingen) is boven al
+    # afgevangen.
+    aangewezen = _segment_startpunt(segment_rows, factor_rows)
+
+    if aangewezen is None and delta < SEGMENT_START_MIN_DELTA:
         if low_sc == run_sc:
             vergelijking = (
                 f'De twee laagste afdelingen komen op dezelfde score uit '
@@ -3270,7 +3373,7 @@ def _segment_start_note(segment_rows: list[dict],
                 f'van minstens {marge} punt met de volgende. Er is hier dus geen '
                 f'eerste afdeling aan te wijzen. Kijk voor de eerste prioriteit '
                 f'naar het organisatiebeeld.')
-    elif laagste_te_klein:
+    elif aangewezen is None:
         # "van de afdelingen die apart getoond worden": de gepoolde restgroep kan
         # lager staan, en dan zou een kale "scoort het laagst" in dezelfde alinea
         # worden weerlegd door de restgroep-zin eronder. Zonder restgroep is de
@@ -3289,9 +3392,9 @@ def _segment_start_note(segment_rows: list[dict],
         # Noemer in de conclusie zelf (feedbackronde 2026-07-13): een manager
         # met een lage score moet niet zelf hoeven ontdekken dat n klein is —
         # het rapport is de "n=5"-discussie voor, i.p.v. er munitie voor te zijn.
-        _low_inv = lowest.get("invited")
-        _low_basis = (f'{lowest["n"]} van de {_low_inv} uitgenodigden vulden in'
-                      if _low_inv else f'{lowest["n"]} responses')
+        _low_inv = aangewezen["invited"]
+        _low_basis = (f'{aangewezen["n"]} van de {_low_inv} uitgenodigden vulden in'
+                      if _low_inv else f'{aangewezen["n"]} responses')
         # Themazin (spec 2026-07-16 §3.2 punt 3): geen factordata = geen zin
         # (geen fake). Band-neutrale formulering: "de druk zit op X" overdrijft
         # wanneer het laagste thema zelf nog relatief sterk scoort. De variant
@@ -3304,9 +3407,8 @@ def _segment_start_note(segment_rows: list[dict],
         # melding hoort ook hier te staan. Zonder dat voorbehoud is deze zin
         # steviger dan de cel ernaast over precies hetzelfde thema.
         theme_sentence = ""
-        low_info = (factor_rows or {}).get(lowest["department"])
-        if low_info and low_info.get("factors"):
-            _lfk, _lavg, _ = low_info["factors"][0]
+        low_info = (factor_rows or {}).get(aangewezen["department"]) or {}
+        if aangewezen["low_fk"] is not None:
             _omitted = low_info.get("omitted", 0)
             _voorbehoud = ""
             if _omitted > 0:
@@ -3314,15 +3416,17 @@ def _segment_start_note(segment_rows: list[dict],
                 _voorbehoud = (f' Daarbij past een voorbehoud: {_omitted} {_woord} '
                                f'daar niet beoordeelbaar, te weinig antwoorden.')
             theme_sentence = (f' Het laagst scorende thema daar is '
-                              f'{_h(_lc(_fl(_lfk, scan_type)))} ({_lavg:.1f}/10).'
-                              f'{_voorbehoud}')
-        body = (f'<strong>{_h(lowest["department"])}</strong> heeft de laagste score '
+                              f'{_h(_lc(_fl(aangewezen["low_fk"], scan_type)))} '
+                              f'({aangewezen["low_avg"]:.1f}/10).{_voorbehoud}')
+        body = (f'<strong>{_h(aangewezen["department"])}</strong> heeft de laagste score '
                 f'van de afdelingen die apart getoond worden '
-                f'({low_sc:.1f}/10; {_low_basis}). Gebruik dit om te toetsen wat hier '
+                f'({aangewezen["score"]:.1f}/10; {_low_basis}). Gebruik dit om te toetsen wat hier '
                 f'speelt, geen ranking of oordeel.{theme_sentence}')
 
+    # C8/B2: dit blok gaat over de afdelingen, niet over het ene startpunt van
+    # het rapport. Dat staat op pagina twee en op de gespreksagenda.
     return (f'<div class="navy-anchor">'
-            f'<div class="navy-anchor-eyebrow">Startpunt voor de bespreking</div>'
+            f'<div class="navy-anchor-eyebrow">Waar het per afdeling begint</div>'
             f'<p>{body}{rest_sentence}</p></div>')
 
 
@@ -3365,7 +3469,14 @@ def _segment_block(segment_rows: list[dict], factor_rows: dict[str, dict] | None
             strip = distribution_svg(scores, width=200, height=22)
         else:
             strip = f'<span style="{_SEG_MONO}">spreiding vanaf 10 responses</span>'
-        name_html = _h(dept) if is_rest else f"<strong>{_h(dept)}</strong>"
+        if is_rest:
+            # H20: de restgroep noemt haar leden, zodat "Overige afdelingen"
+            # geen naamloze groep is waarover het rapport wel conclusies trekt.
+            leden = row.get("members") or []
+            name_html = _h(dept) + (f'<br><span style="{_SEG_MONO}">{_h(", ".join(leden))}</span>'
+                                    if leden else "")
+        else:
+            name_html = f"<strong>{_h(dept)}</strong>"
         invited = row.get("invited")
         if invited:  # 0 behandeld als "geen noemer" -- voorkomt 0/0, valt terug op alleen n
             pct = min(100, round(n_ / invited * 100))
@@ -3478,13 +3589,18 @@ def _per_respondent_factor_scores(
 def _enrich_segment_rows_with_invited(segment_rows: list[dict],
                                       segment_departments: list[dict] | None) -> list[dict]:
     """Voegt per rij de noemer (invited) toe via label-match op de campagnelijst
-    (spec 2026-07-12 §6). Ontbrekende noemer of pooled rij -> invited=None
-    (eerlijke degradatie: alleen n tonen, geen fake percentage)."""
+    (spec 2026-07-12 §6). De restgroep krijgt de som van haar leden (H20), maar
+    alleen als élk lid een noemer heeft: een deelsom zou een te hoog
+    responspercentage geven. Anders None (alleen n tonen, geen fake percentage)."""
     invited_by_label = {d.get("label"): d.get("invited_count")
                         for d in (segment_departments or [])}
     for row in segment_rows:
-        row["invited"] = (None if row.get("is_pooled")
-                          else invited_by_label.get(row["department"]))
+        if row.get("is_pooled"):
+            leden = row.get("members") or []
+            noemers = [invited_by_label.get(m) for m in leden]
+            row["invited"] = sum(noemers) if leden and all(noemers) else None
+        else:
+            row["invited"] = invited_by_label.get(row["department"])
     return segment_rows
 
 
@@ -3565,7 +3681,10 @@ def _department_segment_rows(respondents: list[dict]) -> list[dict]:
     if len(rest) >= MIN_SEGMENT_N:
         rows.append({"department": "Overige afdelingen", "n": len(rest),
                      "avg": round(sum(rest) / len(rest), 2), "scores": sorted(rest),
-                     "is_pooled": True})
+                     "is_pooled": True,
+                     # H20: de restgroep krijgt een naam. Alfabetisch, zodat de
+                     # zin niet van de invoervolgorde afhangt.
+                     "members": sorted(d for d in grouped if d not in eligible)})
     return rows
 
 
@@ -3874,6 +3993,9 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
         sig_vis=sig_vis, sdt_avgs=sdt_avgs,
         sdt_item_avgs=sdt_item_avgs, org_item_avgs=org_item_avgs,
         exit_r_dist=exit_r_dist, exit_r_top=exit_r_top, exit_r_given=exit_r_given,
+        # De volledige teller, niet alleen de top 5 van de tabel: de why-cel op
+        # p.02 moet ook de telling van een reden kennen die buiten die top valt.
+        exit_r_counts=dict(exit_r_cnt),
         cont_dist=cont_dist,
         prev_dist=prev_dist, open_texts=open_texts,
         deepening_agg=deepening_agg,
@@ -4235,13 +4357,24 @@ def render_exit_report_html(data: dict) -> str:
     _raster_primary_label = _raster_rows[0]["label"] if _raster_rows else (low_lbl or high_lbl or "")
     _geen_profiel = not _raster_rows
 
+    # Brugzin (taak 7, B2): één startpuntverhaal. Zelfde zin op p.02 en op de
+    # gespreksagenda; leeg zonder aangewezen afdeling of zonder factorprofiel
+    # (dan is er niets om aan te knopen en zegt het navy blok zelf de reden).
+    _seg_startpunt = _segment_startpunt(data.get("segment_rows") or [],
+                                        data.get("segment_factor_rows"))
+    _brug = ("" if _geen_profiel else
+             _brugzin(_raster_rows[0]["key"], _raster_primary_label, _seg_startpunt, "exit"))
+
     # ── Cover ─────────────────────────────────────────────────────────────────
     opening_q = "Wat speelde mee bij vertrek?"
     primary_signal = _raster_primary_label or GEEN_FACTORPROFIEL_LBL
     cover_stats = [
         ("Respondenten", str(n)),
         _cover_respons_stat(data["completion_pct"]),  # zelfde noemer als de responsbasis
-        ("Eerste aandachtspunt", primary_signal),
+        # C8: één woord voor hetzelfde ding. De cover noemde het "Eerste
+        # aandachtspunt" terwijl binnen "startpunt" en "aandachtspunt" twee
+        # verschillende dingen zijn (een aandachtspunt is een bandlabel).
+        ("Waar het gesprek begint", primary_signal),
     ]
     s = _cover(scan_label=data["scan_lbl"], scan_type="exit", org_name=data["org_name"],
                period=data["campaign_name"], opening_question=opening_q, stats=cover_stats)
@@ -4313,7 +4446,12 @@ def render_exit_report_html(data: dict) -> str:
         tf_col  = _factor_color(tf_sc)
         tf_fl   = _factor_label(tf_sc)
         tf_code = FACTOR_EXIT_CODE.get(tf)
-        er_n    = next((r["count"] for r in data["exit_r_dist"] if r["code"] == tf_code), 0) if tf_code else 0
+        # Uit de volledige teller, niet uit de top 5 van de tabel: zijn meer dan
+        # vijf redenen even vaak genoemd en valt die van het startpunt buiten die
+        # top 5, dan zag de cel een telling van 0 en verdween hij, terwijl hij
+        # juist "Even vaak" moest melden. Een oude fixture zonder exit_r_counts
+        # valt terug op wat er wél is (top 5 plus het volledige gelijkspel).
+        er_n    = _exit_reason_count(data, tf_code) if tf_code else 0
         cont_n  = next((r["count"] for r in data["cont_dist"]   if r["code"] == tf_code), 0) if tf_code else 0
 
         items_in   = fim.get(tf, [])
@@ -4397,6 +4535,7 @@ def render_exit_report_html(data: dict) -> str:
             geen_profiel=_geen_profiel),
         direction_line=_direction_p02_line(direction_agg, _primary, "exit",
                                            factor_score=_primary_score),
+        brug_zin=_brug,
         degraded_note=br_degraded_note,
         why_title=_p02_why_title(_shape),
     )
@@ -4587,6 +4726,7 @@ def render_exit_report_html(data: dict) -> str:
         direction_agg=direction_agg,
         n_total=n,
         direction_block_html=_dir_block,
+        brug_zin=_brug,
     )
 
     # ── Appendix ─────────────────────────────────────────────────────────────
@@ -4694,6 +4834,12 @@ def render_retention_report_html(data: dict) -> str:
     _raster_primary_label = _raster_rows[0]["label"] if _raster_rows else (low_lbl or high_lbl or "")
     _geen_profiel = not _raster_rows
 
+    # Brugzin (taak 7, B2), zie render_exit_report_html.
+    _seg_startpunt = _segment_startpunt(data.get("segment_rows") or [],
+                                        data.get("segment_factor_rows"))
+    _brug = ("" if _geen_profiel else
+             _brugzin(_raster_rows[0]["key"], _raster_primary_label, _seg_startpunt, ST))
+
     # ── Cover ─────────────────────────────────────────────────────────────────
     _ret_primary = _raster_primary_label or GEEN_FACTORPROFIEL_LBL
     s = _cover(
@@ -4702,7 +4848,7 @@ def render_retention_report_html(data: dict) -> str:
         stats=[
             ("Respondenten", str(n)),
             _cover_respons_stat(data["completion_pct"]),  # zelfde noemer als de responsbasis
-            ("Eerste aandachtspunt", _ret_primary),
+            ("Waar het gesprek begint", _ret_primary),  # C8, zie render_exit_report_html
         ],
     )
 
@@ -4833,6 +4979,7 @@ def render_retention_report_html(data: dict) -> str:
             geen_profiel=_geen_profiel),
         direction_line=_direction_p02_line(direction_agg, _primary, ST,
                                            factor_score=_primary_score),
+        brug_zin=_brug,
         degraded_note=br_degraded_note,
         why_title=_p02_why_title(_shape),
     )
@@ -5009,6 +5156,7 @@ def render_retention_report_html(data: dict) -> str:
         direction_agg=direction_agg,
         n_total=n,
         direction_block_html=_dir_block,
+        brug_zin=_brug,
     )
 
     # ── Appendix ─────────────────────────────────────────────────────────────
@@ -5156,31 +5304,51 @@ def render_onboarding_report_html(data: dict) -> str:
     sorted_f = sorted([(fk, fa.get(fk)) for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None],
                       key=lambda x: x[1])
     low_f    = sorted_f[0]  if sorted_f else None
-    high_f   = sorted_f[-1] if sorted_f else None
     low_lbl  = _fl(low_f[0], ST)  if low_f  else ""
-    high_lbl = _fl(high_f[0], ST) if high_f else ""
+    # Geen hoogste-factor-label meer: dat was alleen nog de terugval van de
+    # cover, en die leest sinds taak 7 hetzelfde startpunt als pagina twee.
     _raster_labels = {fk: _fl(fk, ST) for fk in ORG_FACTOR_KEYS}
 
     # Geen raster bij Loep Start: "geen factorprofiel" == geen enkele factor
     # met een score (zelfde staat die exit/retention via _raster_rows zien).
     _geen_profiel = not sorted_f
 
+    # Eén startpunt voor cover, pagina twee en de gespreksagenda (taak 7, C8).
+    # De cover noemt dit voortaan "Waar het gesprek begint", en dan mag dat niet
+    # een ander onderwerp zijn dan waar de agenda het gesprek laat beginnen.
+    # De agenda las _select_priority_factors, pagina twee en de cover lazen
+    # top_fkeys respectievelijk de laagste score; bij Loep Start (geen
+    # vertrekredenweging) ordenen die alle drie oplopend op dezelfde afgeronde
+    # factorgemiddelden, dus met echte data komen ze op hetzelfde onderwerp uit.
+    # Ze hier uit één bron halen maakt dat ook zo voor een fixture waarin
+    # top_fkeys niet bij factor_avgs past.
+    _ob_priority_fkeys = _select_priority_factors(fa, {}, max_n=3)
+    _ob_startpunt_fk = _ob_priority_fkeys[0] if _ob_priority_fkeys else None
+
+    # Brugzin (taak 7, B2), zie render_exit_report_html.
+    _seg_startpunt = _segment_startpunt(data.get("segment_rows") or [],
+                                        data.get("segment_factor_rows"))
+    _brug = ("" if _geen_profiel else
+             _brugzin(_ob_startpunt_fk, _fl(_ob_startpunt_fk, ST) if _ob_startpunt_fk else "",
+                      _seg_startpunt, ST))
+
     # ── Cover ─────────────────────────────────────────────────────────────────
     # Kale streep als laatste terugval verwijderd (bug B2).
-    _ob_primary = low_lbl or high_lbl or GEEN_FACTORPROFIEL_LBL
+    _ob_primary = (_fl(_ob_startpunt_fk, ST) if _ob_startpunt_fk
+                   else GEEN_FACTORPROFIEL_LBL)
     s = _cover(
         scan_label=data["scan_lbl"], scan_type=ST, org_name=data["org_name"],
         period=data["campaign_name"], opening_question="Hoe landen nieuwe medewerkers?",
         stats=[
             ("Respondenten", str(n)),
             _cover_respons_stat(data["completion_pct"]),  # zelfde noemer als de responsbasis
-            ("Eerste aandachtspunt", _ob_primary),
+            ("Waar het gesprek begint", _ob_primary),  # C8, zie render_exit_report_html
         ],
     )
 
     # ── Bestuurlijke read ─────────────────────────────────────────────────────
-    if top_fkeys:
-        tf       = top_fkeys[0]
+    if _ob_startpunt_fk:
+        tf       = _ob_startpunt_fk
         tf_lbl_  = _fl(tf, ST)
         tf_sc    = fa.get(tf)
         tf_col   = _factor_color(tf_sc)
@@ -5201,10 +5369,13 @@ def render_onboarding_report_html(data: dict) -> str:
         br_mgmt_q_source = _bron_laagste_score(
             tf_sc, [(_fl(fk, ST), sc) for fk, sc in sorted_f if fk != tf])
     else:
+        # Dezelfde staat als _geen_profiel: _ob_startpunt_fk is leeg precies
+        # wanneer geen enkele organisatiefactor een score heeft. De degraded
+        # alinea hieronder vertelt wat er dan wel is.
         why_cells     = ""
-        primary_label = low_lbl
-        br_mgmt_q     = _mgmt_q(low_f[0], ST) if low_f else ""
-        br_mgmt_q_source = "Gebaseerd op de laagst scorende factor." if low_f else ""
+        primary_label = ""
+        br_mgmt_q     = ""
+        br_mgmt_q_source = ""
 
     # Degraded pagina twee (bug B2), zie render_exit_report_html.
     br_degraded_note = ""
@@ -5226,7 +5397,7 @@ def render_onboarding_report_html(data: dict) -> str:
     # geen richtingvraag, dus er is hier geen tie-break of richtingtelling te
     # noemen. Het startpunt is dezelfde factor die het why-blok eronder toont.
     _shape = profile_shape(fa)
-    _primary = (top_fkeys[0] if top_fkeys else (low_f[0] if low_f else None))
+    _primary = _ob_startpunt_fk
     # Op de getoonde scores, net als _p02_startpunt_gronden bij de andere scans.
     _delta = (_getoond_verschil(sorted_f[0][1], sorted_f[1][1]) if len(sorted_f) > 1 else None)
     exec_line = _p02_opening(
@@ -5284,6 +5455,7 @@ def render_onboarding_report_html(data: dict) -> str:
         responsbasis_html=_responsbasis_band,
         opener_html=ch.opener("Bestuurlijke read"),
         leidraad_html=_ob_leidraad,
+        brug_zin=_brug,
         degraded_note=br_degraded_note,
         why_title=_p02_why_title(_shape),
         scope_note=(ONBOARDING_GEEN_VERDIEPING_NOTE_DEGRADED if br_degraded_note
@@ -5307,7 +5479,8 @@ def render_onboarding_report_html(data: dict) -> str:
     s += _landingskwaliteit(domain_scores)
 
     # ── Factordiepte ×≤3 (prioriteit = laagste score, geen vertrekredenen) ────
-    priority_fkeys = _select_priority_factors(fa, {}, max_n=3)
+    # Dezelfde rangorde als de cover, pagina twee en de gespreksagenda.
+    priority_fkeys = _ob_priority_fkeys
 
     def _ob_factor_detail(fk: str, opener_html: str = "", intro_html: str = "") -> str:
         lbl    = _fl(fk, ST)
@@ -5450,8 +5623,8 @@ def render_onboarding_report_html(data: dict) -> str:
     # vóór de appendix) ────────────────────────────────────────────────────────
     # Primair thema grounded in het laagst scorende item (zelfde aanpak als
     # exit/retention): geen vaste per-factor beslistekst die nooit meebeweegt.
-    _ob_priority_fkeys = _select_priority_factors(fa, {}, max_n=3)
-    _ob_primary_fk = _ob_priority_fkeys[0] if _ob_priority_fkeys else None
+    # Startpunt uit dezelfde bron als de cover en pagina twee (taak 7).
+    _ob_primary_fk = _ob_startpunt_fk
     _ob_primary_items = ([(ik, q, oim.get(ik)) for ik, q in fim.get(_ob_primary_fk, []) if oim.get(ik) is not None]
                           if _ob_primary_fk else [])
     _ob_primary_low = min(_ob_primary_items, key=lambda x: x[2]) if _ob_primary_items else None
@@ -5507,22 +5680,23 @@ def render_onboarding_report_html(data: dict) -> str:
     _second_why = ("Tweede laagste factorscore in het overzichtsprofiel."
                    if len(sorted_f) > 1 else None)
 
-    _ob_agenda_q = (_mgmt_q(_ob_priority_fkeys[0], ST) if _ob_priority_fkeys
+    _ob_agenda_q = (_mgmt_q(_ob_startpunt_fk, ST) if _ob_startpunt_fk
                     else (nsp.get("first_decision") or ""))
     s += _eerste_managementspoor(
         primary_theme=_ob_primary_theme,
         second_point=f"{_fl(sorted_f[1][0], ST)} ({_score_str(sorted_f[1][1])})" if len(sorted_f) > 1 else "",
         mgmt_q=_ob_agenda_q,
-        # p.02 kiest het startpunt uit top_fkeys (scoring, risico op 2 decimalen
-        # afgerond), de agenda uit _select_priority_factors (onafgerond): bij een
-        # bijna-gelijkstand kunnen ze uiteenlopen. Verwijs daarom alleen als de
-        # zinnen werkelijk gelijk zijn.
+        # Pagina twee en deze agenda kiezen het startpunt sinds taak 7 uit één
+        # bron (_ob_startpunt_fk), dus de opener is dezelfde zin. De
+        # gelijkheidstest blijft staan als goedkope guard: hij is er om te
+        # voorkomen dat de verwijzing ooit stil onwaar wordt.
         opener_op_p02=(not br_degraded_note and _ob_agenda_q == br_mgmt_q),
         review_when="Plan een vervolgmoment rond het volgende checkpoint: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.",
         primary_why=None,
         second_why=_second_why,
         opener_html=ch.opener("Gespreksagenda", kicker="Eerste managementspoor", anchor=LEIDRAAD_ANKERS["agenda"]),
         degraded_note=_agenda_degraded_note,
+        brug_zin=_brug,
     )
 
     # ── Appendix ─────────────────────────────────────────────────────────────

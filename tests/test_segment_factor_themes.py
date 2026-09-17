@@ -198,7 +198,7 @@ def test_navy_anchor_wijst_geen_afdeling_aan_bij_n5_9():
     fr = {"Marketing": {"factors": [("workload", 3.9, 6)], "omitted": 0},
           "Sales": {"factors": [("culture", 6.4, 8)], "omitted": 0}}
     html = _segment_block(rows, factor_rows=fr, scan_type="retention")
-    anchor = html[html.index("Startpunt voor de bespreking"):]
+    anchor = html[html.index("Waar het per afdeling begint"):]
     assert "Het laagst scorende thema daar is" not in anchor
     assert "maar heeft 6 responses" in anchor
     assert not re.search(r"3\.9/10", anchor)

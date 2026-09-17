@@ -1,6 +1,6 @@
 """Segmentstartpunt en rij-cap (spec ronde 2 par. 3).
 
-B7: het navy-blok "Startpunt voor de bespreking" wees een afdeling aan op grond
+B7: het navy-blok "Waar het per afdeling begint" wees een afdeling aan op grond
 van 0,00 tot 0,30 punt verschil, twee keer met een claim die de tabel erboven
 tegensprak (de gepoolde restgroep stond lager dan de aangewezen afdeling).
 B8: een rijlimiet van acht liet afdelingen met 7 tot 9 responses verdwijnen in
@@ -88,7 +88,7 @@ def test_startpunt_alleen_bij_voldoende_verschil_en_omvang():
     # Verschil 2,5, beide n >= 10: wel een startpunt.
     html = _segment_block(_department_segment_rows(
         _rows(("Operations", 14, 4.5), ("Sales", 12, 7.0))), scan_type="retention")
-    assert "Startpunt voor de bespreking" in html
+    assert "Waar het per afdeling begint" in html
     assert ("<strong>Operations</strong> heeft de laagste score van de afdelingen "
             "die apart getoond worden (4.5/10") in html
 
@@ -249,7 +249,8 @@ def test_zin_noemt_de_werkelijk_laagste_afdeling_ook_bij_ongesorteerde_rijen():
 
 # ─── 4. Gepoolde restgroep die lager uitkomt ─────────────────────────────────
 
-_POOLED_ZIN = ('De restgroep &ldquo;Overige afdelingen&rdquo; scoort lager (4.0/10), '
+_POOLED_ZIN = ('De restgroep &ldquo;Overige afdelingen&rdquo; (Customer Success, Marketing; '
+               '6 ingevuld) scoort lager (4.0/10), '
                'maar is samengesteld uit kleine afdelingen en wordt daarom niet als '
                'startpunt genoemd.')
 
@@ -313,7 +314,8 @@ def test_aanwijzende_zin_wordt_niet_weersproken_door_de_restgroep():
     a = _anchor(_segment_block(rows, scan_type="retention"))
     assert ("Sales heeft de laagste score van de afdelingen die apart getoond "
             "worden (5.0/10") in a
-    assert "De restgroep &ldquo;Overige afdelingen&rdquo; scoort lager (4.0/10)" in a
+    assert ("De restgroep &ldquo;Overige afdelingen&rdquo; (Customer Success, Marketing; "
+            "6 ingevuld) scoort lager (4.0/10)") in a
 
 
 def test_te_kleine_laagste_afdeling_wordt_ook_niet_weersproken():
@@ -323,7 +325,8 @@ def test_te_kleine_laagste_afdeling_wordt_ook_niet_weersproken():
     a = _anchor(_segment_block(rows, scan_type="retention"))
     assert ("Sales scoort het laagst van de afdelingen die apart getoond worden "
             "(5.0/10), maar heeft 8 responses.") in a
-    assert "De restgroep &ldquo;Overige afdelingen&rdquo; scoort lager (4.0/10)" in a
+    assert ("De restgroep &ldquo;Overige afdelingen&rdquo; (Customer Success, Marketing; "
+            "6 ingevuld) scoort lager (4.0/10)") in a
 
 
 # ─── 4b. Responses die buiten de tabel vallen (Fail Loud) ────────────────────

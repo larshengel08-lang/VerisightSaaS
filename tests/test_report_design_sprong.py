@@ -66,14 +66,14 @@ def test_segmentconclusie_navy_blok():
         {"department": "Sales", "n": 6, "avg": 6.8, "scores": [6.8] * 6, "is_pooled": False},
     ]
     html = _segment_block(rows)
-    assert "Startpunt voor de bespreking" in html
-    assert 'class="navy-anchor"' in html.split("Startpunt voor de bespreking")[0][-200:]
+    assert "Waar het per afdeling begint" in html
+    assert 'class="navy-anchor"' in html.split("Waar het per afdeling begint")[0][-200:]
     # Pooled laagste rij: geen conclusieblok (bestaande voorwaarde blijft)
     rows_pooled = [
         {"department": "Overige afdelingen", "n": 6, "avg": 4.0, "scores": [4.0] * 6, "is_pooled": True},
         {"department": "Sales", "n": 6, "avg": 6.8, "scores": [6.8] * 6, "is_pooled": False},
     ]
-    assert "Startpunt voor de bespreking" not in _segment_block(rows_pooled)
+    assert "Waar het per afdeling begint" not in _segment_block(rows_pooled)
 
 
 def test_hoofdstuknummers_oplopend_zonder_gaten():
