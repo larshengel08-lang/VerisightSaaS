@@ -25,8 +25,17 @@ interface Props {
 }
 
 interface DeptRow {
+  id: string
   label: string
   invitedCount: number | ''
+}
+
+function newDeptRow(label = ''): DeptRow {
+  return { id: crypto.randomUUID(), label, invitedCount: '' }
+}
+
+function emptyDeptRows(): DeptRow[] {
+  return [newDeptRow(), newDeptRow()]
 }
 
 export function NewCampaignForm({ orgs }: Props) {
@@ -41,7 +50,7 @@ export function NewCampaignForm({ orgs }: Props) {
   const commsMode: CommsMode = 'self_send'
   const [modules, setModules] = useState<string[]>([])
   const [useSegments, setUseSegments] = useState(false)
-  const [deptRows, setDeptRows] = useState<DeptRow[]>([{ label: '', invitedCount: '' }, { label: '', invitedCount: '' }])
+  const [deptRows, setDeptRows] = useState<DeptRow[]>(emptyDeptRows)
   const [targetCount, setTargetCount] = useState<number | ''>('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -64,16 +73,33 @@ export function NewCampaignForm({ orgs }: Props) {
     setModules(getDefaultModulesForScanType(nextScanType))
   }
 
-  function updateDeptRow(index: number, patch: Partial<DeptRow>) {
-    setDeptRows((prev) => prev.map((row, i) => (i === index ? { ...row, ...patch } : row)))
+  function updateDeptRow(id: string, patch: Partial<Omit<DeptRow, 'id'>>) {
+    setDeptRows((prev) => prev.map((row) => (row.id === id ? { ...row, ...patch } : row)))
   }
 
   function addDeptRow(label = '') {
-    setDeptRows((prev) => [...prev, { label, invitedCount: '' }])
+    setDeptRows((prev) => [...prev, newDeptRow(label)])
   }
 
-  function removeDeptRow(index: number) {
-    setDeptRows((prev) => prev.filter((_, i) => i !== index))
+  function removeDeptRow(id: string) {
+    setDeptRows((prev) => prev.filter((row) => row.id !== id))
+  }
+
+  function handleUseSegmentsChange(checked: boolean) {
+    setUseSegments(checked)
+    // Een getypt doelgroepaantal hoort bij de modus zonder afdelingen; het
+    // mag niet onzichtbaar blijven staan en later stil genegeerd worden.
+    if (checked) setTargetCount('')
+  }
+
+  // Na een aanmaakpoging (geslaagd of met mislukte tweede write) staat de
+  // campagne al in de database: leeg de velden, zodat nogmaals op Aanmaken
+  // drukken geen dubbele campagne maakt.
+  function resetFormFields() {
+    setName('')
+    setDeliveryMode('baseline')
+    setDeptRows(emptyDeptRows())
+    setTargetCount('')
   }
 
   async function handleSubmit(event: React.FormEvent) {
@@ -153,8 +179,9 @@ export function NewCampaignForm({ orgs }: Props) {
         )
       if (deliveryError) {
         setError(
-          `Campagne is aangemaakt, maar het aantal deelnemers kon niet worden opgeslagen: ${deliveryError.message}. Zet het alsnog via de campagnepagina of laat de klant het in stap 1 invullen.`,
+          `Campagne is aangemaakt, maar het aantal deelnemers kon niet worden opgeslagen: ${deliveryError.message}. Zet het aantal alsnog in stap 1 (Deelnemers) op de beheerpagina van de campagne, of laat de klant het in stap 1 invullen. Maak de campagne niet opnieuw aan.`,
         )
+        resetFormFields()
         setLoading(false)
         router.refresh()
         return
@@ -162,10 +189,7 @@ export function NewCampaignForm({ orgs }: Props) {
     }
 
     setSuccess(true)
-    setName('')
-    setDeliveryMode('baseline')
-    setDeptRows([{ label: '', invitedCount: '' }, { label: '', invitedCount: '' }])
-    setTargetCount('')
+    resetFormFields()
     setTimeout(() => {
       setSuccess(false)
       router.refresh()
@@ -281,7 +305,7 @@ export function NewCampaignForm({ orgs }: Props) {
           <input
             type="checkbox"
             checked={useSegments}
-            onChange={(event) => setUseSegments(event.target.checked)}
+            onChange={(event) => handleUseSegmentsChange(event.target.checked)}
             className="rounded"
           />
           Rapporteren op afdelingsniveau
@@ -296,13 +320,13 @@ export function NewCampaignForm({ orgs }: Props) {
               Afdelingen uit de intake (minimaal 2, elk minimaal {MIN_INVITED_PER_DEPARTMENT} medewerkers), of alles leeg
               laten zodat de klant dit zelf invult bij de setup.
             </p>
-            {deptRows.map((row, index) => (
-              <div key={index} className="flex gap-2">
+            {deptRows.map((row) => (
+              <div key={row.id} className="flex gap-2">
                 <input
                   type="text"
                   value={row.label}
                   placeholder="Afdelingsnaam"
-                  onChange={(event) => updateDeptRow(index, { label: event.target.value })}
+                  onChange={(event) => updateDeptRow(row.id, { label: event.target.value })}
                   className={`${fieldClass} flex-1`}
                 />
                 <input
@@ -312,14 +336,14 @@ export function NewCampaignForm({ orgs }: Props) {
                   placeholder="Aantal medewerkers"
                   aria-label="Aantal medewerkers"
                   onChange={(event) =>
-                    updateDeptRow(index, { invitedCount: event.target.value === '' ? '' : Number(event.target.value) })
+                    updateDeptRow(row.id, { invitedCount: event.target.value === '' ? '' : Number(event.target.value) })
                   }
                   className={`${fieldClass} w-44`}
                 />
                 {deptRows.length > 2 ? (
                   <button
                     type="button"
-                    onClick={() => removeDeptRow(index)}
+                    onClick={() => removeDeptRow(row.id)}
                     aria-label="Verwijder afdeling"
                     className="rounded-2xl border border-slate-200 px-3 text-sm text-slate-500 hover:bg-white"
                   >
