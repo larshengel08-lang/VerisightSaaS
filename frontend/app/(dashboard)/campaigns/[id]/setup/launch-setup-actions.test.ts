@@ -9,6 +9,7 @@ let campaignUpdateOptions: Array<unknown> = []
 let deliveryUpsertError: { message: string } | null = null
 let campaignUpdateError: { message: string } | null = null
 let confirmCount = 1
+let confirmUpdates: Array<Record<string, unknown>> = []
 let campaignUpdateCount: number | null = 1
 let campaignRow: Record<string, unknown> = { organization_id: 'org-1', is_active: true, closed_at: null }
 let deliveryRow: Record<string, unknown> | null = null
@@ -69,8 +70,11 @@ vi.mock('@/lib/supabase/server', () => ({
             deliveryUpserts.push(payload)
             return { error: deliveryUpsertError }
           },
-          update: (_data: unknown, _opts?: unknown) => ({
-            eq: async () => ({ error: null, count: confirmCount }),
+          update: (data: Record<string, unknown>, _opts?: unknown) => ({
+            eq: async () => {
+              confirmUpdates.push(data)
+              return { error: null, count: confirmCount }
+            },
           }),
         }
       }
@@ -220,32 +224,107 @@ describe('saveLaunchSetupAction (spec 2026-09-16 par. 4.1 en 5.2)', () => {
 })
 
 describe('confirmLaunchAction', () => {
+  const closesAt = addDays(launchDate, 21)
+  const savedStep1 = () => ({
+    launch_date: launchDate,
+    invited_count: 25,
+    reminder_config: { enabled: true, firstReminderAfterDays: 5, maxReminderCount: 1 },
+    launch_confirmed_at: null,
+  })
+
+  beforeEach(() => {
+    confirmUpdates = []
+    confirmCount = 1
+    campaignRow = { organization_id: 'org-1', is_active: true, closed_at: null, closes_at: closesAt }
+    deliveryRow = savedStep1()
+    deliveryReadError = null
+  })
   afterEach(() => {
     orgMemberRole = 'owner'
-    confirmCount = 1
-    campaignRow = { organization_id: 'org-1', is_active: true, closed_at: null }
   })
 
   it('weigert te bevestigen als de meting al gesloten is', async () => {
-    campaignRow = { organization_id: 'org-1', is_active: false, closed_at: '2026-09-10T10:00:00Z' }
+    campaignRow = { organization_id: 'org-1', is_active: false, closed_at: '2026-09-10T10:00:00Z', closes_at: closesAt }
     const result = await confirmLaunchAction('campaign-1')
     expect(result).toEqual({ ok: false, error: 'De meting is al gesloten; je kunt hem niet meer als verstuurd bevestigen.' })
+    expect(confirmUpdates).toHaveLength(0)
   })
 
-  it('returns ok: true for authorized user', async () => {
+  it('bevestigt als stap 1 volledig en geldig is opgeslagen', async () => {
     const result = await confirmLaunchAction('campaign-1')
     expect(result).toEqual({ ok: true })
+    expect(confirmUpdates).toHaveLength(1)
+    expect(confirmUpdates[0]).toHaveProperty('launch_confirmed_at')
   })
 
   it('geeft "Niet gemachtigd" terug voor een viewer i.p.v. te crashen op de RLS-afwijzing (2026-07-08 regressie)', async () => {
     orgMemberRole = 'viewer'
     const result = await confirmLaunchAction('campaign-1')
     expect(result).toEqual({ ok: false, error: 'Niet gemachtigd.' })
+    expect(confirmUpdates).toHaveLength(0)
   })
 
-  it('geeft een resultaat terug als er nog geen delivery record is, geen throw', async () => {
+  it('weigert te bevestigen zolang startdatum en aantal niet zijn opgeslagen (het record bestaat altijd via de trigger)', async () => {
+    deliveryRow = { launch_date: null, invited_count: null, reminder_config: {}, launch_confirmed_at: null }
+    const result = await confirmLaunchAction('campaign-1')
+    expect(result).toEqual({ ok: false, error: 'Sla eerst stap 1 op: startdatum en aantal deelnemers ontbreken nog.' })
+    expect(confirmUpdates).toHaveLength(0)
+  })
+
+  it('weigert ook zonder delivery record, zonder throw', async () => {
+    deliveryRow = null
+    const result = await confirmLaunchAction('campaign-1')
+    expect(result).toEqual({ ok: false, error: 'Sla eerst stap 1 op: startdatum en aantal deelnemers ontbreken nog.' })
+    expect(confirmUpdates).toHaveLength(0)
+  })
+
+  it('weigert een opgeslagen aantal onder de drempel', async () => {
+    deliveryRow = { ...savedStep1(), invited_count: 4 }
+    const result = await confirmLaunchAction('campaign-1')
+    expect(result).toEqual({
+      ok: false,
+      error: 'Controleer stap 1: Vul minimaal 10 deelnemers in. Onder de 10 ingevulde vragenlijsten maakt Loep geen rapport.',
+    })
+    expect(confirmUpdates).toHaveLength(0)
+  })
+
+  it('weigert te bevestigen als de sluitdatum al voorbij is (verouderd tabblad)', async () => {
+    const oldLaunch = addDays(today, -20)
+    deliveryRow = { ...savedStep1(), launch_date: oldLaunch }
+    campaignRow = { organization_id: 'org-1', is_active: true, closed_at: null, closes_at: addDays(oldLaunch, 7) }
+    const result = await confirmLaunchAction('campaign-1')
+    expect(result).toEqual({ ok: false, error: 'Controleer stap 1: Kies een sluitdatum na vandaag.' })
+    expect(confirmUpdates).toHaveLength(0)
+  })
+
+  it('weigert te bevestigen zonder opgeslagen sluitdatum', async () => {
+    campaignRow = { organization_id: 'org-1', is_active: true, closed_at: null, closes_at: null }
+    const result = await confirmLaunchAction('campaign-1')
+    expect(result).toEqual({ ok: false, error: 'Controleer stap 1: Vul een sluitdatum in.' })
+    expect(confirmUpdates).toHaveLength(0)
+  })
+
+  it('toetst de opgeslagen herinneringskeuze, ook "geen herinnering"', async () => {
+    campaignRow = { organization_id: 'org-1', is_active: true, closed_at: null, closes_at: addDays(launchDate, 7) }
+    deliveryRow = { ...savedStep1(), reminder_config: { enabled: true, firstReminderAfterDays: 7, maxReminderCount: 1 } }
+    expect(await confirmLaunchAction('campaign-1')).toEqual({
+      ok: false,
+      error: 'Controleer stap 1: De herinnering valt op of na de sluitdatum. Kies een eerdere herinnering of een latere sluitdatum.',
+    })
+    deliveryRow = { ...savedStep1(), reminder_config: { enabled: false, firstReminderAfterDays: 5, maxReminderCount: 1 } }
+    expect(await confirmLaunchAction('campaign-1')).toEqual({ ok: true })
+  })
+
+  it('meldt het als de planning niet te lezen is, in plaats van blind te bevestigen', async () => {
+    deliveryReadError = { message: 'timeout' }
+    const result = await confirmLaunchAction('campaign-1')
+    expect(result).toEqual({ ok: false, error: 'Bevestigen mislukt: de planning kon niet worden gelezen (timeout).' })
+    expect(confirmUpdates).toHaveLength(0)
+  })
+
+  it('meldt eerlijk als de database niets heeft bijgewerkt (0 rijen, geen fout)', async () => {
     confirmCount = 0
     const result = await confirmLaunchAction('campaign-1')
-    expect(result).toEqual({ ok: false, error: 'Sla eerst stap 1 op; er is nog geen startdatum voor deze meting.' })
+    expect(result).toEqual({ ok: false, error: 'Bevestigen mislukt: de meting is niet bijgewerkt. Probeer opnieuw.' })
   })
 })

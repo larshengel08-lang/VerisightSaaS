@@ -2,7 +2,12 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { validateInvitedTotal } from '@/lib/response-activation'
-import { validateSchedule, type ReminderChoice } from '@/lib/campaign-schedule'
+import {
+  DEFAULT_REMINDER_AFTER_DAYS,
+  readReminderChoice,
+  validateSchedule,
+  type ReminderChoice,
+} from '@/lib/campaign-schedule'
 
 export interface ActionResult {
   ok: boolean
@@ -28,7 +33,7 @@ async function getAuthAndMembership(campaignId: string) {
 
   const { data: campaign } = await supabase
     .from('campaigns')
-    .select('organization_id, is_active, closed_at')
+    .select('organization_id, is_active, closed_at, closes_at')
     .eq('id', campaignId)
     .single()
 
@@ -126,12 +131,54 @@ export async function saveLaunchSetupAction(
   return { ok: true }
 }
 
+/**
+ * "Ja, verstuurd": zet launch_confirmed_at. Daarna is stap 1 op slot, dus deze
+ * action toetst eerst of stap 1 compleet en nog geldig is. Het delivery record
+ * bestaat altijd (trigger), dus "er is een rij" zegt niets; een directe aanroep
+ * of een tabblad van dagen geleden zou anders een meting starten zonder
+ * startdatum of met een sluitdatum die al voorbij is, en die kan de klant dan
+ * nooit meer herstellen.
+ */
 export async function confirmLaunchAction(campaignId: string): Promise<ActionResult> {
   const { supabase, campaign, authorized } = await getAuthAndMembership(campaignId)
   if (!authorized || !campaign) return { ok: false, error: 'Niet gemachtigd.' }
   if (campaign.is_active === false || campaign.closed_at) {
     return { ok: false, error: 'De meting is al gesloten; je kunt hem niet meer als verstuurd bevestigen.' }
   }
+
+  const { data: delivery, error: deliveryReadError } = await supabase
+    .from('campaign_delivery_records')
+    .select('launch_date, invited_count, reminder_config')
+    .eq('campaign_id', campaignId)
+    .maybeSingle()
+  if (deliveryReadError) {
+    return { ok: false, error: `Bevestigen mislukt: de planning kon niet worden gelezen (${deliveryReadError.message}).` }
+  }
+
+  const storedLaunchDate = (delivery?.launch_date as string | null | undefined) ?? null
+  const storedInvitedCount = (delivery?.invited_count as number | null | undefined) ?? null
+  if (!storedLaunchDate || storedInvitedCount === null) {
+    return { ok: false, error: 'Sla eerst stap 1 op: startdatum en aantal deelnemers ontbreken nog.' }
+  }
+
+  const invitedError = validateInvitedTotal(storedInvitedCount)
+  if (invitedError) return { ok: false, error: `Controleer stap 1: ${invitedError}` }
+
+  // saveLaunchSetupAction schrijft altijd een volledige reminder_config. Een
+  // lege config ('{}', kolomdefault) betekent dat er nooit gekozen is; het
+  // dashboard (normalizeReminderConfig) en de wizard lezen dat allebei als
+  // de standaard van 5 dagen, dus toetsen we die ook.
+  const reminderChoice: ReminderChoice = readReminderChoice(delivery?.reminder_config) ?? DEFAULT_REMINDER_AFTER_DAYS
+  const schedule = validateSchedule(
+    {
+      launchDate: storedLaunchDate,
+      closesAt: (campaign.closes_at as string | null | undefined)?.slice(0, 10) ?? '',
+      reminderChoice,
+      today: todayIso(),
+    },
+    { storedLaunchDate },
+  )
+  if (!schedule.ok) return { ok: false, error: `Controleer stap 1: ${schedule.error}` }
 
   const now = new Date().toISOString()
   const { error, count } = await supabase
@@ -140,6 +187,7 @@ export async function confirmLaunchAction(campaignId: string): Promise<ActionRes
     .eq('campaign_id', campaignId)
 
   if (error) return { ok: false, error: `Bevestigen mislukt: ${error.message}` }
-  if (count === 0) return { ok: false, error: 'Sla eerst stap 1 op; er is nog geen startdatum voor deze meting.' }
+  // Een door RLS gefilterde UPDATE geeft geen fout maar 0 rijen.
+  if (count === 0) return { ok: false, error: 'Bevestigen mislukt: de meting is niet bijgewerkt. Probeer opnieuw.' }
   return { ok: true }
 }
