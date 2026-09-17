@@ -395,17 +395,23 @@ def _raster(ranked):
         opener_html="<h2>Gespreksagenda</h2>", direction_agg=None, n_total=0)
 
 
+# Het paginanummer komt van WeasyPrint (codereview taak 5, minor d): de "2" was
+# hardcoded en blijft alleen waar zolang p.02 letterlijk pagina twee is.
+_OPENER_P02 = 'Dezelfde opener staat op pagina <a class="pref" href="#p02"></a>.'
+
+
 def test_agenda_verwijst_naar_pagina_twee_alleen_met_rasterrijen():
-    assert "Dezelfde opener staat op pagina 2." in _raster(RANKED)
-    assert "Dezelfde opener staat op pagina 2." not in _raster([])
+    assert _OPENER_P02 in _raster(RANKED)
+    assert _OPENER_P02 not in _raster([])
+    assert "op pagina 2." not in _raster(RANKED)
 
 
 def test_onboarding_agenda_verwijst_naar_pagina_twee():
     kw = dict(primary_theme="A (5.0/10)", second_point="B (5.5/10)", mgmt_q="V?",
               review_when="Later.")
-    assert "Dezelfde opener staat op pagina 2." in _eerste_managementspoor(**kw, opener_op_p02=True)
-    assert "Dezelfde opener staat op pagina 2." not in _eerste_managementspoor(**kw)
-    assert "Dezelfde opener staat op pagina 2." not in _eerste_managementspoor(
+    assert _OPENER_P02 in _eerste_managementspoor(**kw, opener_op_p02=True)
+    assert _OPENER_P02 not in _eerste_managementspoor(**kw)
+    assert _OPENER_P02 not in _eerste_managementspoor(
         **kw, opener_op_p02=True, degraded_note="Niets.")
 
 
@@ -413,9 +419,9 @@ def test_onboarding_render_verwijst_naar_pagina_twee():
     from tests.test_report_degraded_page_two import _fixture
     from backend.report_html import render_onboarding_report_html
     html = render_onboarding_report_html(_fixture("onboarding", n=12, profile=True))
-    assert "Dezelfde opener staat op pagina 2." in html
+    assert _OPENER_P02 in html
     html = render_onboarding_report_html(_fixture("onboarding", n=8, profile=False))
-    assert "Dezelfde opener staat op pagina 2." not in html
+    assert _OPENER_P02 not in html
 
 
 def test_spreiding_cel_alleen_als_spreiding_een_signaal_is():
@@ -519,6 +525,7 @@ def test_leidraad_belooft_geen_toelichtingen_in_een_meting_zonder_verdieping():
 
 def test_elke_paginaverwijzing_wijst_naar_precies_een_anker():
     for html in (render_retention_report_html(_min_retention_data()),
+                 render_retention_report_html(_retention_met_secties()),
                  render_exit_report_html(_degraded_fixture("exit", n=12, profile=True)),
                  render_retention_report_html(_degraded_fixture("retention", n=12, profile=True)),
                  render_onboarding_report_html(_degraded_fixture("onboarding", n=12, profile=True))):
@@ -574,7 +581,7 @@ def test_renderer_geeft_de_datums_door_aan_de_meetgegevens():
 
 
 def test_gebruiksblok_en_begeleide_bespreking_zijn_weg():
-    html = render_retention_report_html(_min_retention_data())
+    html = render_retention_report_html(_retention_met_secties())
     assert "Zo gebruik je dit rapport" not in html
     assert "begeleide managementbespreking" not in html
     assert "Zo leid je dit gesprek in 45 minuten" in html
@@ -639,3 +646,138 @@ def test_de_pdf_vult_de_verwijzingen_met_echte_paginanummers():
     assert str(_pagina_met("Waar begint het gesprek?")) in nummers
     assert str(_pagina_met("Overzichtsprofiel")) in nummers
     doc.close()
+
+
+# ── Codereview taak 5: geen belofte die op niets uitkomt ─────────────────────
+
+from datetime import date, datetime, timezone  # noqa: E402
+
+from backend.models import CampaignDeliveryRecord  # noqa: E402
+from backend.report_html import (  # noqa: E402
+    _deepening_shows_distribution,
+    _segment_absent_reason,
+)
+
+
+def _deep_agg(answered: int) -> dict:
+    """Aggregaat van één onderwerp met `answered` beantwoorde verdiepingsvragen."""
+    return {"triggered": answered + 2, "offered": answered + 2, "answered": answered,
+            "primary_counts": {"wl_volume": answered}, "secondary_counts": {},
+            "other_texts": [], "question_set_version": "retention_v2"}
+
+
+def _retention_met_secties(**over) -> dict:
+    """Retention-data die de secties van leidraadregel 4 echt bevat: afdelingen,
+    open toelichtingen en werkbeleving."""
+    data = _min_retention_data()
+    data["sdt_avgs"] = {"autonomy": 5.5, "competence": 6.0, "relatedness": 6.5}
+    data["sdt_item_avgs"] = {}
+    data["segment_rows"] = [
+        {"department": "Zorg", "n": 7, "avg": 4.8, "scores": [4.0] * 7, "is_pooled": False},
+        {"department": "Techniek", "n": 6, "avg": 6.4, "scores": [6.0] * 6, "is_pooled": False},
+    ]
+    data["open_texts"] = [f"Toelichting {i}" for i in range(6)]
+    data.update(over)
+    return data
+
+
+def test_deepening_staffel_is_een_bron_voor_blok_en_leidraad():
+    assert _deepening_shows_distribution(None) is False
+    assert _deepening_shows_distribution({}) is False
+    assert _deepening_shows_distribution({"triggered": 0, "answered": 9}) is False
+    assert _deepening_shows_distribution(_deep_agg(4)) is False
+    assert _deepening_shows_distribution(_deep_agg(5)) is True
+
+
+def test_leidraad_belooft_toelichtingen_alleen_als_het_blok_ze_toont():
+    """Reproductie uit de codereview: met answered=2 beloofde regel 3 "wat
+    mensen als toelichting kozen" terwijl die pagina zegt dat het er te weinig
+    zijn. De vlag volgt nu het aggregaat van het startpunt, met dezelfde
+    staffel als `_deepening_block`."""
+    weinig = _retention_met_secties(deepening_agg={"workload": _deep_agg(2)})
+    html = render_retention_report_html(weinig)
+    assert "Te weinig verdiepingsantwoorden" in html
+    assert "wat mensen als toelichting kozen" not in html
+    assert "de score van elke stelling" in html
+
+    genoeg = _retention_met_secties(deepening_agg={"workload": _deep_agg(6)})
+    html = render_retention_report_html(genoeg)
+    assert "wat mensen als toelichting kozen" in html
+    assert "Te weinig verdiepingsantwoorden" not in html
+
+
+def test_leidraad_verwijst_bij_loep_start_niet_naar_drempels_die_er_niet_zijn():
+    """De methodiekpagina van Loep Start heeft geen drempelcel; die van Vertrek
+    en Behoud wel. Regel 1 mag dus niet in alle drie hetzelfde beloven."""
+    ob = render_onboarding_report_html(_degraded_fixture("onboarding", n=12, profile=True))
+    assert "Drempelwaarden" not in ob
+    assert "de drempels staan op" not in ob
+    assert "wat Loep uit deze aantallen wel en niet afleidt" in ob
+
+    ret = render_retention_report_html(_retention_met_secties())
+    assert "Drempelwaarden" in ret
+    assert "de drempels staan op" in ret
+
+
+def test_afdelingen_en_toelichtingen_zijn_end_tot_eind_gepind():
+    """Minor f: met afdelingen én toelichtingen verwijst de leidraad naar beide
+    ankers, en die staan er allebei precies één keer."""
+    html = render_retention_report_html(_retention_met_secties())
+    hrefs = _assert_verwijzingen_kloppen(html)
+    assert "sec-afdelingen" in hrefs
+    assert "sec-toelichtingen" not in hrefs      # regel 4 kiest afdelingen
+    assert 'id="sec-toelichtingen"' in html      # de sectie bestaat wel
+    zonder_afdelingen = _retention_met_secties(segment_rows=[])
+    hrefs = _assert_verwijzingen_kloppen(render_retention_report_html(zonder_afdelingen))
+    assert "sec-toelichtingen" in hrefs and "sec-afdelingen" not in hrefs
+
+
+def test_zonder_afdelingen_toelichtingen_en_werkbeleving_geen_leidraad():
+    """Minor g: dezelfde gate als bij Loep Start. Zonder die drie secties heeft
+    regel 4 niets om naar te verwijzen, ook bij Behoud en Vertrek."""
+    kaal = _retention_met_secties(segment_rows=[], open_texts=[], sdt_avgs={})
+    html = render_retention_report_html(kaal)
+    assert "Zo leid je dit gesprek" not in html
+    # De verwijzing van de gespreksagenda naar pagina twee blijft, en klopt.
+    assert _assert_verwijzingen_kloppen(html) == ["p02"]
+
+
+def test_omgekeerde_meetperiode_wordt_gemeld_niet_afgedrukt():
+    tekst = _tekst(_responsbasis(invited=58, completed=39, period="Wave 1",
+                                 population="Actieve medewerkers", segment_available=True,
+                                 period_start="30 maart 2026", period_end="9 maart 2026",
+                                 period_conflict=True))
+    assert "Meetperiode niet betrouwbaar vastgelegd" in tekst
+    assert "30 maart 2026" not in tekst and "9 maart 2026" not in tekst
+    assert "in de verkeerde volgorde vastgelegd" in tekst
+
+
+def test_build_report_data_drukt_een_omgekeerde_meetperiode_niet_af(db_session: Session):
+    camp_id = _exit_campagne(db_session, ["P1"] * 12)
+    camp = db_session.get(Campaign, camp_id)
+    camp.closed_at = datetime(2026, 3, 9, 12, 0, tzinfo=timezone.utc)
+    db_session.add(CampaignDeliveryRecord(
+        organization_id=camp.organization_id, campaign_id=camp.id,
+        launch_date=date(2026, 3, 30), invited_count=20))
+    db_session.commit()
+    data = build_report_data(camp_id, db_session)
+    assert data["period_dates_conflict"] is True
+    assert data["period_start"] is None and data["period_end"] is None
+    assert "in de verkeerde volgorde vastgelegd" in _tekst(render_exit_report_html(data))
+
+
+def test_build_report_data_noemt_de_echte_reden_zonder_afdelingstabel(db_session: Session):
+    """Minor b: "geen afdelingen vastgelegd" is iets anders dan "te weinig
+    antwoorden per afdeling"; de datalaag weet het verschil."""
+    assert _segment_absent_reason([]) == "niet vastgelegd bij deze meting"
+    assert _segment_absent_reason([{"department": None, "signal_score": 5.0}]) == (
+        "niet vastgelegd bij deze meting")
+    assert _segment_absent_reason([{"department": "Zorg", "signal_score": 5.0}]) == (
+        "te weinig antwoorden per afdeling")
+    # Alle respondenten in _exit_campagne zitten op afdeling Zorg: één afdeling,
+    # dus geen tabel, maar de afdelingen zijn wel vastgelegd.
+    data = build_report_data(_exit_campagne(db_session, ["P1"] * 12), db_session)
+    assert data["segment_rows"] == []
+    assert data["segment_reason"] == "te weinig antwoorden per afdeling"
+    assert "afdelingen (te weinig antwoorden per afdeling)" in _tekst(
+        render_exit_report_html(data))

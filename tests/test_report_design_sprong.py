@@ -21,11 +21,13 @@ def test_geen_zie_p03_meer():
 
 
 def test_responsbasis_compact_geen_eigen_pagina():
+    # De band hoort altijd op pagina twee; de `compact`-parameter is weg
+    # (codereview taak 5, minor e: die tak had geen aanroeper).
     from backend.report_html import _responsbasis
     band = _responsbasis(
         invited=58, completed=39, period="Q2 2026",
         population="Actieve medewerkers",
-        segment_available=True, enps_available=True, compact=True)
+        segment_available=True, enps_available=True)
     assert 'class="pb sec"' not in band
     assert "Uitgenodigd" in band and "Meetgegevens" in band
 

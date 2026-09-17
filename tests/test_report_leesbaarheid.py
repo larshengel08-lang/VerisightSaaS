@@ -106,7 +106,12 @@ def test_bronregel_managementvraag():
 
 def test_leidraad_op_openingspagina():
     # Plan 3a taak 5 (H5): de leidraad vervangt het gebruiksblok, vóór de meetgegevens.
-    html = render_retention_report_html(_min_retention_data())
+    # Met werkbeleving erin: zonder afdelingen, toelichtingen én werkbeleving
+    # heeft regel 4 geen sectie om naar te verwijzen en rendert de leidraad
+    # bewust niet (codereview taak 5, minor g).
+    data = _min_retention_data()
+    data["sdt_avgs"] = {"autonomy": 5.5, "competence": 6.0, "relatedness": 6.5}
+    html = render_retention_report_html(data)
     assert "Zo leid je dit gesprek in 45 minuten" in html
     assert html.find("Zo leid je dit gesprek") < html.find("Meetgegevens")
 

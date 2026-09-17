@@ -1164,9 +1164,19 @@ def _datum_nl(d: date | datetime | None) -> str | None:
     """
     if d is None:
         return None
-    if isinstance(d, datetime):
-        d = _nl_tijd(d)
+    d = _kalenderdag(d)
     return f"{d.day} {_MAANDEN_NL[d.month - 1]} {d.year}"
+
+
+def _kalenderdag(d: date | datetime) -> date:
+    """De kalenderdag zoals `_datum_nl` hem afdrukt.
+
+    Eén bron, zodat een vergelijking tussen twee datums (loopt de meetperiode
+    de goede kant op?) dezelfde dag gebruikt als de tekst eronder. Een
+    UTC-timestamp gaat eerst naar Nederlandse tijd; `datetime` is een subklasse
+    van `date`, dus die check staat vooraan.
+    """
+    return _nl_tijd(d).date() if isinstance(d, datetime) else d
 
 
 def _cover_respons_stat(completion_pct: float | None) -> tuple[str, str]:
@@ -1611,9 +1621,19 @@ def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
     else:
         rij3 = ("De verdieping van het startpunt: de laagste stelling en de score van elke stelling "
                 f"(pagina {p(A['verdieping'])}). Open met de gespreksopener hierboven.")
+    # Regel 1 verwijst naar wat de methodiekpagina van dít product bevat
+    # (codereview taak 5): Vertrek en Behoud hebben daar een cel
+    # Drempelwaarden, Loep Start niet (daar staat Checkpoint-logica). Zet taak
+    # 11 een drempeltabel op alle drie de methodiekpagina's, dan mag deze
+    # tweedeling weg en wijst regel 1 naar LEIDRAAD_ANKERS["drempels"].
+    if scan_type == "onboarding":
+        rij1 = ("De respons en de meetgegevens op deze pagina; wat Loep uit deze aantallen wel "
+                f"en niet afleidt staat op pagina {p(A['methodiek'])}.")
+    else:
+        rij1 = ("De respons en de meetgegevens op deze pagina; de drempels staan op "
+                f"pagina {p(A['methodiek'])}.")
     rijen = [
-        ("0-5 min", "Hoe stevig is dit", "De respons en de meetgegevens op deze pagina; de drempels staan op "
-                                         f"pagina {p(A['methodiek'])}."),
+        ("0-5 min", "Hoe stevig is dit", rij1),
         ("5-12 min", "Het beeld in één plaatje", f"Het cijferoverzicht (pagina {p(A['overzicht'])}) en {context} "
                                                  f"(pagina {p(A['context'])}). Vraag: verrast dit iemand?"),
         ("12-25 min", "Waar het wringt, en waarom", rij3),
@@ -1630,6 +1650,48 @@ def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
             f'geen beoordeling van personen of afdelingen.</p></div>')
 
 
+def _heeft_werkbeleving(sdt_avgs: dict) -> bool:
+    """Levert de werkbelevingssectie echt rijen op?
+
+    Dezelfde dimensies en dezelfde None-check als die sectie zelf (de sleutels
+    van SDT_LABELS), zodat de leidraad niet naar een pagina met lege kaarten
+    verwijst (codereview taak 5).
+    """
+    return any(sdt_avgs.get(dim) is not None for dim in SDT_LABELS)
+
+
+def _leidraad_html(scan_type: str, *, data: dict, deep_agg: dict, direction_agg: dict,
+                   startpunt_fk: str | None, has_sdt: bool, geen_profiel: bool) -> str:
+    """Kiest de vlaggen van de leidraad uit de data van dit rapport.
+
+    Eén plek voor de drie renderers (codereview taak 5), zodat ze niet uit
+    elkaar lopen: elke vlag hangt aan de gate van de sectie waar de leidraad
+    naar verwijst.
+
+    - Zonder factorprofiel geen leidraad: hij zou sturen naar een startpunt,
+      een verdieping en een volgorde die er niet zijn.
+    - Regel 4 kiest afdelingen, anders de open toelichtingen, anders de
+      werkbeleving. Bestaat geen van die drie, dan vervalt de hele leidraad:
+      die regel heeft dan geen sectie om naar te verwijzen.
+    - Regel 3 belooft de toelichtingen alleen als het verdiepingsblok van het
+      startpunt er echt een verdeling van toont (`_deepening_shows_distribution`).
+    - Regel 5 volgt `direction_agg`: bij te weinig antwoorden rendert het blok
+      "Wat er moet gebeuren" nog wel, met de eerlijke tellingen, dus die
+      verwijzing blijft staan.
+    """
+    if geen_profiel:
+        return ""
+    has_segments = bool(data.get("segment_rows"))
+    has_quotes = _should_show_quotes(data["open_texts"])
+    if not (has_segments or has_quotes or has_sdt):
+        return ""
+    return _leidraad_block(
+        scan_type, has_segments=has_segments, has_quotes=has_quotes,
+        has_direction=bool(direction_agg),
+        has_deepening=_deepening_shows_distribution(
+            deep_agg.get(startpunt_fk) if startpunt_fk else None))
+
+
 # Standaardwaarde voor het derde coverstatistiek als er geen factorprofiel is
 # (bug B2): de cover toonde daar een kale streep waar een factornaam hoort.
 GEEN_FACTORPROFIEL_LBL = "Nog geen factorprofiel"
@@ -1643,9 +1705,10 @@ GEEN_FACTORPROFIEL_LBL = "Nog geen factorprofiel"
 # Het hoofdstuk blijft bestaan in plaats van te verdwijnen: net als de
 # rasterpagina, die bij lege data ook blijft staan en zelf benoemt dat er geen
 # rangorde is. Onderdrukken zou het hoofdstuk ook laten verdwijnen in de staat
-# waarin er wel factorscores zijn maar geen prioritaire selectie -- daar toont
-# pagina twee nog de normale leesroute ("dan de verdieping per thema") en zou
-# een ontbrekend hoofdstuk een nieuwe tegenstrijdigheid opleveren.
+# waarin er wel factorscores zijn maar geen prioritaire selectie -- daar
+# verwijst regel 3 van de leidraad op pagina twee ernaar, en die verwijzing
+# hangt aan het anker op deze hoofdstukkop (LEIDRAAD_ANKERS["verdieping"]):
+# zonder hoofdstuk wijst het paginanummer nergens heen.
 VERDIEPING_GEEN_RANGORDE = (
     "Voor deze meting zijn er geen scores per factor berekend. Zonder die "
     "scores is er geen rangorde om een verdieping aan op te hangen."
@@ -1777,9 +1840,9 @@ def _bestuurlijke_read(*, kernzin: str, primary_label: str, why_cells_html: str,
 
 def _responsbasis(*, invited: int | None, completed: int, period: str,
                   population: str, segment_available: bool, segment_reason: str = "",
-                  enps_available: bool = True, compact: bool = True,
-                  note: str = "", period_start: str | None = None,
-                  period_end: str | None = None) -> str:
+                  enps_available: bool = True, note: str = "",
+                  period_start: str | None = None, period_end: str | None = None,
+                  period_conflict: bool = False) -> str:
     """Meetgegevens, blok 6 van pagina twee (spec par. 4): uitgenodigd, ingevuld,
     respons, meetperiode als datums (H8) en één regel met wat niet in dit
     rapport staat. `note` alleen zonder noemer: de zin uit `_respons_noemer`.
@@ -1788,10 +1851,14 @@ def _responsbasis(*, invited: int | None, completed: int, period: str,
     waarschuwingszin uit `invited` en `completed`, zodat die twee niet uit
     elkaar kunnen lopen.
 
+    `period_conflict` komt uit `build_report_data` (`period_dates_conflict`):
+    een sluitdatum vóór de startdatum is geen meetperiode maar een fout in de
+    vastlegging, en die wordt gemeld in plaats van afgedrukt.
+
     De losse kaarten Populatie, Segmentstatus en Datastatus zijn hierin
-    opgegaan (H16: de laatste ervan viel als enige regel op pagina drie).
-    `compact` bestaat nog voor aanroepers die de band als eigen sectie willen;
-    de drie renderers gebruiken hem compact.
+    opgegaan (H16: de laatste ervan viel als enige regel op pagina drie). De
+    band hoort altijd op pagina twee, dus er is geen variant met een eigen
+    pagina meer (codereview taak 5: die tak had geen aanroeper).
     """
     # Zonder noemer vervallen de cellen "Uitgenodigd" en "Respons": een leeg
     # vakje of een 0% zou een meting suggereren die niet bestaat (spec ronde 2
@@ -1805,7 +1872,9 @@ def _responsbasis(*, invited: int | None, completed: int, period: str,
             f'<td><div class="sc-l">Respons</div>'
             f'<div class="sc-v">{_respons_pct(completed, invited)}%</div></td>'
         )
-    if period_start and period_end:
+    if period_conflict:
+        periode = "niet betrouwbaar vastgelegd"
+    elif period_start and period_end:
         periode = f"{period_start} tot {period_end}"
     elif period_start:
         periode = f"vanaf {period_start}, sluitdatum niet vastgelegd"
@@ -1820,6 +1889,9 @@ def _responsbasis(*, invited: int | None, completed: int, period: str,
     caution = _respons_caution(completed, invited, note)
     caution_html = (f'<p class="trustline" style="margin-top:6px;">{_h(caution)}</p>'
                     if caution else "")
+    conflict_html = ('<p class="trustline" style="margin-top:4px;">De start- en sluitdatum van '
+                     'deze meting staan in de verkeerde volgorde vastgelegd; daarom noemt Loep '
+                     'hier geen meetperiode.</p>') if period_conflict else ""
 
     ontbreekt: list[str] = []
     if not segment_available:
@@ -1832,10 +1904,8 @@ def _responsbasis(*, invited: int | None, completed: int, period: str,
     # De statregel blijft als geheel bij elkaar (spec §1 randgeval).
     body = f"""<span class="slabel" style="margin-top:18px;">Meetgegevens</span>
   <table class="sg no-break"><tr>{stat_cells}</tr></table>
-  {caution_html}{ontbreekt_html}"""
-    if compact:
-        return f'<div style="margin-top:22px;">{body}</div>'
-    return f'<div class="pb sec">\n  {body}\n</div>'
+  {caution_html}{conflict_html}{ontbreekt_html}"""
+    return f'<div style="margin-top:22px;">{body}</div>'
 
 
 def _stat4(cards: list[dict]) -> str:
@@ -2056,7 +2126,8 @@ def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: st
     # Alleen als p.02 dezelfde opener toont (de aanroeper vergelijkt); zonder
     # profiel staat op p.02 geen opener.
     verwijzing_html = ('<p class="agenda-why" style="margin-top:6px;">Dezelfde opener '
-                       'staat op pagina 2.</p>') if (opener_op_p02 and not degraded_note) else ""
+                       f'staat op pagina {_pref("p02")}.</p>'
+                       ) if (opener_op_p02 and not degraded_note) else ""
 
     return f"""<div class="pb sec">
   {opener_html or '<span class="slabel">Eerste managementspoor</span>'}
@@ -2380,7 +2451,7 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
     <div class="agenda-opener">
       <div style="font-family:'JetBrains Mono', monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#E8A020;margin-bottom:7px;">Gespreksopener</div>
       <p style="margin-bottom:0;font-size:12.5px;line-height:1.6;color:#F4F1EA;">{_h(opener_vraag)}</p>
-      {'<p class="agenda-why" style="margin-top:6px;">Dezelfde opener staat op pagina 2.</p>' if ranked else ''}
+      {f'<p class="agenda-why" style="margin-top:6px;">Dezelfde opener staat op pagina {_pref("p02")}.</p>' if ranked else ''}
     </div>
     <table class="steps"><tr><td class="step">
       {_fill_row("Prioriteit", "In te vullen tijdens de bespreking")}
@@ -2758,6 +2829,18 @@ def _deepening_chain(agg: dict, scan_type: str, factor_key: str) -> str:
             f"{_lc(_fl(factor_key, scan_type))} {offered_clause}; {answered_clause}.")
 
 
+def _deepening_shows_distribution(agg: dict | None) -> bool:
+    """Toont `_deepening_block` voor dit onderwerp echt een verdeling?
+
+    Eén bron voor die staffel (codereview taak 5): de leidraad op pagina twee
+    beloofde "wat mensen als toelichting kozen" zodra de meting verdiepingsdata
+    had, terwijl de pagina bij minder dan vijf antwoorden alleen zegt dat het er
+    te weinig zijn. Geen nieuwe drempel: dit is de staffel die hieronder al
+    gold.
+    """
+    return bool(agg and agg.get("triggered") and agg.get("answered", 0) >= 5)
+
+
 def _deepening_block(agg: dict, scan_type: str, factor_key: str) -> str:
     """Toelichtingsblok onder een factor (spec 6.1 + 6.2), gestaffeld op n=answered."""
     if not agg.get("triggered"):
@@ -2766,7 +2849,7 @@ def _deepening_block(agg: dict, scan_type: str, factor_key: str) -> str:
     opt_text = _deepening_option_texts(scan_type, factor_key)
     chain = _deepening_chain(agg, scan_type, factor_key)
 
-    if answered < 5:
+    if not _deepening_shows_distribution(agg):
         body = ('<p style="font-size:9px;color:#64748B;margin:6px 0 0;">'
                 'Te weinig verdiepingsantwoorden om een verdeling te tonen. '
                 'Bespreek dit onderwerp in de managementbespreking.</p>')
@@ -3418,6 +3501,24 @@ def _department_grouping(respondents: list[dict]) -> dict[str, list[float]]:
     return grouped
 
 
+def _segment_absent_reason(respondents: list[dict]) -> str:
+    """Waarom er geen afdelingstabel is, voor de regel "Niet in dit rapport".
+
+    Twee verschillende dingen (codereview taak 5): er zijn geen afdelingen
+    vastgelegd, of ze zijn wel vastgelegd maar geen twee ervan halen
+    MIN_SEGMENT_N. De meetgegevens noemden altijd het tweede, ook als de
+    organisatie nooit een afdeling had ingevuld. Leeg zodra de tabel wél kan
+    renderen, dan is er niets uit te leggen.
+    """
+    grouped = _department_grouping(respondents)
+    if not grouped:
+        # Leest in de regel als "afdelingen (niet vastgelegd bij deze meting)".
+        return "niet vastgelegd bij deze meting"
+    if len({d for d, v in grouped.items() if len(v) >= MIN_SEGMENT_N}) < 2:
+        return "te weinig antwoorden per afdeling"
+    return ""
+
+
 def _segment_hidden_n(respondents: list[dict]) -> int:
     """Responses die nergens in de segmenttabel terechtkomen.
 
@@ -3560,8 +3661,19 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
     # Meetdatums (spec 16-9 par. 4 blok 6, H8): start uit het delivery record,
     # sluiting uit de campagne zelf (closed_at staat op Campaign). Beide mogen
     # ontbreken; dan zegt de meetgegevensregel dat, en verzint het rapport niets.
-    period_start = _datum_nl(_record.launch_date if _record is not None else None)
-    period_end = _datum_nl(camp.closed_at)
+    _raw_period_start = _record.launch_date if _record is not None else None
+    _raw_period_end = camp.closed_at
+    period_start = _datum_nl(_raw_period_start)
+    period_end = _datum_nl(_raw_period_end)
+    # Een sluitdatum vóór de startdatum is een fout in de vastlegging, geen
+    # meetperiode (codereview taak 5). Letterlijk afdrukken ("30 maart 2026 tot
+    # 9 maart 2026") laat het rapport onzin beweren; beide datums vervallen en
+    # de meetgegevens zeggen in één regel waarom.
+    period_dates_conflict = bool(
+        _raw_period_start and _raw_period_end
+        and _kalenderdag(_raw_period_end) < _kalenderdag(_raw_period_start))
+    if period_dates_conflict:
+        period_start = period_end = None
 
     risk_sc  = [r.risk_score for r in responses if r.risk_score is not None]
     avg_risk = round(_mean(risk_sc), 2) if risk_sc else None
@@ -3722,6 +3834,9 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
     # Responses die door de privacygrens buiten de tabel vallen zonder in een
     # restgroep te belanden; _segment_block meldt dit aantal onder de tabel.
     segment_hidden_n = _segment_hidden_n(_segment_input)
+    # Waarom de tabel ontbreekt, uit de data en niet uit een vaste zin in de
+    # renderer (codereview taak 5).
+    segment_reason = _segment_absent_reason(_segment_input)
 
     # Factorlaag per afdeling (spec 2026-07-16): laagste thema + uitsplitsing.
     segment_factor_rows = _department_factor_rows(
@@ -3750,6 +3865,7 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
         n_invited=n_invited, n_invited_note=n_invited_note,
         n_completed=n_completed, completion_pct=completion,
         period_start=period_start, period_end=period_end,
+        period_dates_conflict=period_dates_conflict,
         avg_risk=avg_risk, avg_eng=avg_eng, avg_to=avg_to, avg_si=avg_si,
         band_counts=band_counts, has_pattern=has_pattern,
         factor_avgs=factor_avgs, top_risks=top_risks,
@@ -3771,6 +3887,7 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
         segment_rows=segment_rows,
         segment_factor_rows=segment_factor_rows,
         segment_hidden_n=segment_hidden_n,
+        segment_reason=segment_reason,
     )
 
 
@@ -4256,11 +4373,11 @@ def render_exit_report_html(data: dict) -> str:
         # "Alle medewerkers" was feitelijk onjuist op het eerlijkheidsanker (C3).
         population="Uitgestroomde medewerkers",
         segment_available=bool(data.get("segment_rows")),
-        segment_reason="te weinig antwoorden per afdeling",
+        segment_reason=data.get("segment_reason") or "",
         enps_available=data["enps_available"],
-        compact=True,
         period_start=data.get("period_start"),
         period_end=data.get("period_end"),
+        period_conflict=bool(data.get("period_dates_conflict")),
     )
 
     s += _bestuurlijke_read(
@@ -4272,13 +4389,12 @@ def render_exit_report_html(data: dict) -> str:
         cijfers_html=_cijfers_html,
         responsbasis_html=_responsbasis_band,
         opener_html=ch.opener("Bestuurlijke read"),
-        # Geen leidraad zonder factorprofiel: hij zou sturen naar een verdieping
-        # en een volgorde die er niet zijn; de degraded alinea zegt wat er wél is.
-        leidraad_html=("" if _geen_profiel else _leidraad_block(
-            "exit", has_segments=bool(data.get("segment_rows")),
-            has_quotes=_should_show_quotes(data["open_texts"]),
-            has_direction=bool(direction_agg),
-            has_deepening=bool(deep_agg))),
+        # De leidraad kiest zijn vlaggen uit de data; zonder factorprofiel of
+        # zonder de secties van regel 4 rendert hij bewust niet.
+        leidraad_html=_leidraad_html(
+            "exit", data=data, deep_agg=deep_agg, direction_agg=direction_agg,
+            startpunt_fk=_primary, has_sdt=_heeft_werkbeleving(sdt_a),
+            geen_profiel=_geen_profiel),
         direction_line=_direction_p02_line(direction_agg, _primary, "exit",
                                            factor_score=_primary_score),
         degraded_note=br_degraded_note,
@@ -4694,11 +4810,11 @@ def render_retention_report_html(data: dict) -> str:
         period=data["campaign_name"],
         population="Actieve medewerkers",
         segment_available=bool(data.get("segment_rows")),
-        segment_reason="te weinig antwoorden per afdeling",
+        segment_reason=data.get("segment_reason") or "",
         enps_available=data["enps_available"],
-        compact=True,
         period_start=data.get("period_start"),
         period_end=data.get("period_end"),
+        period_conflict=bool(data.get("period_dates_conflict")),
     )
 
     s += _bestuurlijke_read(
@@ -4710,12 +4826,11 @@ def render_retention_report_html(data: dict) -> str:
         cijfers_html=_cijfers_html,
         responsbasis_html=_responsbasis_band,
         opener_html=ch.opener("Bestuurlijke read"),
-        # Geen leidraad zonder factorprofiel, zie render_exit_report_html.
-        leidraad_html=("" if _geen_profiel else _leidraad_block(
-            ST, has_segments=bool(data.get("segment_rows")),
-            has_quotes=_should_show_quotes(data["open_texts"]),
-            has_direction=bool(direction_agg),
-            has_deepening=bool(deep_agg))),
+        # Vlaggen uit de data, zie render_exit_report_html.
+        leidraad_html=_leidraad_html(
+            ST, data=data, deep_agg=deep_agg, direction_agg=direction_agg,
+            startpunt_fk=_primary, has_sdt=_heeft_werkbeleving(sdt_a),
+            geen_profiel=_geen_profiel),
         direction_line=_direction_p02_line(direction_agg, _primary, ST,
                                            factor_score=_primary_score),
         degraded_note=br_degraded_note,
@@ -5144,25 +5259,21 @@ def render_onboarding_report_html(data: dict) -> str:
         period=data["campaign_name"],
         population="Nieuwe medewerkers in de eerste werkperiode",
         segment_available=bool(data.get("segment_rows")),
-        segment_reason="te weinig antwoorden per afdeling",
+        segment_reason=data.get("segment_reason") or "",
         enps_available=data["enps_available"],
-        compact=True,
         period_start=data.get("period_start"),
         period_end=data.get("period_end"),
+        period_conflict=bool(data.get("period_dates_conflict")),
     )
 
-    # Leidraad (spec par. 4 blok 5). Niet zonder factorprofiel (zie exit), en
-    # niet als regel 4 nergens heen kan: zonder afdelingen, zonder open
-    # toelichtingen en zonder werkbeleving bestaat geen van de drie secties
-    # waar die regel naar verwijst. Loep Start heeft geen verdiepings- en geen
-    # richtingvraag (v1.1), dus beide vlaggen staan hier hard op False.
-    _ob_has_sdt = any(sdt_a.get(d) is not None for d in ("autonomy", "competence", "relatedness"))
-    _ob_has_segments = bool(data.get("segment_rows"))
-    _ob_has_quotes = _should_show_quotes(data["open_texts"])
-    _ob_leidraad = ("" if (_geen_profiel or not (_ob_has_segments or _ob_has_quotes or _ob_has_sdt))
-                    else _leidraad_block(ST, has_segments=_ob_has_segments,
-                                         has_quotes=_ob_has_quotes, has_direction=False,
-                                         has_deepening=False))
+    # Leidraad (spec par. 4 blok 5), vlaggen uit de data. Loep Start heeft geen
+    # verdiepings- en geen richtingvraag (v1.1), dus die twee aggregaten zijn
+    # hier leeg. _ob_has_sdt schakelt ook de werkbelevingssectie verderop, zodat
+    # de leidraad en die sectie niet uiteen kunnen lopen.
+    _ob_has_sdt = _heeft_werkbeleving(sdt_a)
+    _ob_leidraad = _leidraad_html(ST, data=data, deep_agg={}, direction_agg={},
+                                  startpunt_fk=None, has_sdt=_ob_has_sdt,
+                                  geen_profiel=_geen_profiel)
     s += _bestuurlijke_read(
         kernzin=exec_line,
         primary_label=primary_label,
