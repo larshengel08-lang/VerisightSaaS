@@ -85,13 +85,17 @@ ALLE_REGELS = (REGEL_P02, REGEL_VULLING, REGEL_VERWIJZING, REGEL_THEAD, REGEL_FO
 
 # Een verwijzing waarvan het anker ontbreekt, rendert leeg: WeasyPrint logt
 # "Content discarded: target points to undefined anchor" en de tekstlaag houdt
-# "op pagina ." of "op pagina)" over. Dat mag nooit als "geen overtreding"
-# doorgaan. Pagina twee verwijst ook naar zichzelf ("de meetgegevens op deze
-# pagina;"), en dat is geen weggelopen verwijzing: die vorm wordt eerst
-# weggemaskeerd. Komt er een andere zelfverwijzing in de copy (taak 13), dan
-# hoort die hier ook in, anders meldt dit script een fout die er niet is.
-_ZELFVERWIJZING = re.compile(r"\b(?:deze|dit|die|dezelfde)\s+pagina\b")
-_LEEGGELOPEN_VERWIJZING = re.compile(r"pagina\s*(?=[.,;:)\]]|$)")
+# "op pagina ." of "(pagina )" over. Dat mag nooit als "geen overtreding"
+# doorgaan.
+#
+# Het patroon eist de vorm van een echte verwijzing: elke verwijzing in de copy
+# is "(pagina X)" of "op pagina X" (`_leidraad_block`, `_pref`). Zonder die eis
+# vangt de regel ook gewone tekst waarin het woord pagina vóór een punt staat,
+# en die tekst staat er: "de meetgegevens op deze pagina;", "onderaan deze
+# pagina.", "de behoudscontext op de volgende pagina". Dat waren valse
+# bevindingen op een correct degraded rapport. Zet de copy een verwijzing in een
+# andere vorm, dan hoort die vorm hier ook in.
+_LEEGGELOPEN_VERWIJZING = re.compile(r"(?:\(|\bop\s+)pagina\s*(?=[.,;:)\]]|$)")
 
 
 @dataclass(frozen=True)
@@ -224,8 +228,13 @@ def _verwijzingen(doc: pymupdf.Document, p2: str) -> list[Bevinding]:
     """
     bevindingen: list[Bevinding] = []
     n = doc.page_count
-    gevuld = sorted({int(m) for m in re.findall(r"pagina (\d+)", p2)})
-    leeg = len(_LEEGGELOPEN_VERWIJZING.findall(_ZELFVERWIJZING.sub("[zelf]", p2)))
+    # Tellen doet het op verwijzingen, niet op unieke paginanummers: twee
+    # verwijzingen naar dezelfde pagina zijn twee verwijzingen. Anders zakt de
+    # telling onder het minimum zodra twee regels naar hetzelfde hoofdstuk
+    # wijzen (taak 11 zet de drempeltabel op de methodiekpagina, waar regel 1
+    # al naar wijst).
+    gevuld = [int(m) for m in re.findall(r"pagina (\d+)", p2)]
+    leeg = len(_LEEGGELOPEN_VERWIJZING.findall(p2))
 
     if leeg:
         bevindingen.append(Bevinding(
@@ -239,7 +248,7 @@ def _verwijzingen(doc: pymupdf.Document, p2: str) -> list[Bevinding]:
             f"pagina 2 draagt de leidraad maar {len(gevuld)} gevulde verwijzing(en) "
             f"({gevuld}); dat blok levert er minstens {LEIDRAAD_MIN_VERWIJZINGEN}"))
 
-    for ref in gevuld:
+    for ref in sorted(set(gevuld)):
         if not 1 <= ref <= n:
             bevindingen.append(Bevinding(
                 REGEL_VERWIJZING,
@@ -292,6 +301,10 @@ def main() -> None:
     gemeten = ", ".join(regels)
     if REGEL_THEAD in regels and not args.thead:
         gemeten = gemeten.replace(REGEL_THEAD, f"{REGEL_THEAD} (niet gemeten, geen --thead)")
+    if REGEL_FORMAAT not in regels:
+        # Het formaat wordt altijd gemeten, ook buiten de selectie; de slotregel
+        # hoort dat te zeggen, anders lijkt het alsof het overgeslagen is.
+        gemeten += f", {REGEL_FORMAAT} (altijd)"
     print(f"{'OK' if not bevindingen else 'NIET OK'} {args.pdf} (gemeten: {gemeten})")
     sys.exit(1 if bevindingen else 0)
 

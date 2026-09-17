@@ -1237,3 +1237,97 @@ def test_de_echte_pdf_zet_de_meetgegevens_op_pagina_twee(tmp_path: Path):
     HTML(string=render_retention_report_html(_retention_met_secties())).write_pdf(str(pad))
     bevindingen = cpr.check(str(pad), regels=(cpr.REGEL_P02, cpr.REGEL_VERWIJZING))
     assert bevindingen == [], [str(b) for b in bevindingen]
+
+
+# ── Re-review taak 6: geen valse lege verwijzing, markers aan de renderer ────
+
+_PREF_TAG = re.compile(r'<a class="pref" href="#[a-z0-9-]+"></a>')
+
+
+def _p02_pdf_tekst(html: str, *, vul: str) -> str:
+    """De tekst van p.02 zoals de tekstlaag van de PDF hem oplevert.
+
+    `vul` is wat WeasyPrint in het lege anker zet: een paginanummer als het
+    anker bestaat, niets als het is weggegooid. De verwijzing wordt precies op
+    zijn eigen plek vervangen (niet door een spatie, zoals de overige tags),
+    want "(pagina" en het nummer staan in de PDF aan elkaar.
+    """
+    blok = _PREF_TAG.sub(vul, _p02_slice(html))
+    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", blok))
+
+
+@requires_pymupdf
+def test_geen_valse_lege_verwijzing_op_de_zeven_p02_staten():
+    """De copy op p.02 zegt ook "op deze pagina;", "onderaan deze pagina." en
+    (zonder factorprofiel) "de behoudscontext op de volgende pagina". Dat is
+    gewone tekst, geen weggegooide verwijzing: het patroon eist daarom de vorm
+    van een echte verwijzing ("(pagina X)" of "op pagina X").
+
+    Met gevulde ankers hoort geen enkele staat een bevinding te geven; met
+    weggegooide ankers precies zoveel als er verwijzingen staan.
+    """
+    for naam, render, data in _P02_STATEN:
+        html = render(data)
+        prefs = len(_PREF_TAG.findall(_p02_slice(html)))
+        gevuld = _p02_pdf_tekst(html, vul="4")
+        leeg = _p02_pdf_tekst(html, vul="")
+        assert cpr._LEEGGELOPEN_VERWIJZING.findall(gevuld) == [], (
+            f"{naam}: valse bevinding op een correct rapport")
+        assert len(cpr._LEEGGELOPEN_VERWIJZING.findall(leeg)) == prefs, naam
+        assert len(re.findall(r"pagina (\d+)", gevuld)) == prefs, naam
+        # De vier staten zonder factorprofiel dragen geen leidraad en dus geen
+        # verwijzing; de drie met leidraad dragen er zes.
+        assert prefs in (0, 6), f"{naam}: {prefs}"
+        assert (cpr.LEIDRAAD_MARKER in leeg) is (prefs > 0), naam
+
+
+@requires_pymupdf
+def test_de_markers_van_het_script_komen_uit_de_renderer():
+    """Het script herkent p.02 aan twee stukken copy. Verandert de renderer die
+    (taak 13), dan hoort er een rode test te staan in plaats van een regel die
+    stil niets meer meet."""
+    leidraad = _leidraad_block("retention", has_segments=True, has_quotes=True,
+                              has_direction=True, has_deepening=True)
+    assert cpr.LEIDRAAD_MARKER in _tekst(leidraad)
+    meet = _responsbasis(invited=58, completed=39, period="W", population="P",
+                         segment_available=True)
+    assert cpr.MEETGEGEVENS_MARKER in _tekst(meet)
+
+
+@requires_pymupdf
+def test_check_telt_verwijzingen_niet_unieke_paginanummers(tmp_path: Path):
+    """Twee regels mogen naar hetzelfde hoofdstuk wijzen (taak 11 zet de
+    drempeltabel op de methodiekpagina, waar regel 1 al naar wijst). Vijf
+    verwijzingen naar drie pagina's is dus genoeg, vier niet."""
+    def _pdf(naam: str, regels: list[str]) -> Path:
+        return _bouw_pdf(tmp_path / naam, [
+            [(400.0, "cover")],
+            [(60.0, "kernzin")] + _vulregels(90.0, 600.0, "p2")
+            + [(640.0, "Zo leid je dit gesprek in 45 minuten")]
+            + [(660.0 + 15.0 * i, r) for i, r in enumerate(regels)]
+            + [(745.0, "Meetgegevens")],
+            [(60.0, "02 Behoudscontext")] + _vulregels(90.0, 760.0, "p3"),
+            [(60.0, "03 Overzichtsprofiel")] + _vulregels(90.0, 760.0, "p4"),
+            [(60.0, "04 Verdieping")] + _vulregels(90.0, 760.0, "p5"),
+            [(60.0, "korte slotpagina")],
+        ])
+
+    vijf_naar_drie = ["0-5 min: de drempels staan op pagina 5",
+                      "5-12 min: het cijferoverzicht (pagina 4)",
+                      "12-25 min: de verdieping (pagina 5)",
+                      "25-33 min: de context (pagina 3)",
+                      "33-45 min: het besluit (pagina 5)"]
+    assert cpr.check(str(_pdf("vijf.pdf", vijf_naar_drie)),
+                     regels=(cpr.REGEL_VERWIJZING,)) == []
+    meldingen = [b.melding for b in cpr.check(str(_pdf("vier.pdf", vijf_naar_drie[:4])),
+                                              regels=(cpr.REGEL_VERWIJZING,))]
+    assert meldingen == [
+        "pagina 2 draagt de leidraad maar 4 gevulde verwijzing(en) "
+        "([5, 4, 5, 3]); dat blok levert er minstens 5"]
+
+
+@requires_pymupdf
+def test_cli_noemt_het_paginaformaat_ook_buiten_de_selectie(tmp_path: Path):
+    uit = _cli(str(_goed_rapport(tmp_path / "cli-formaat.pdf")), "--regel", cpr.REGEL_P02)
+    assert uit.returncode == 0, uit.stdout + uit.stderr
+    assert "gemeten: p02-op-een-a4, paginaformaat (altijd)" in uit.stdout
