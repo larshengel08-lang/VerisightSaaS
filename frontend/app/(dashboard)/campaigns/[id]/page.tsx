@@ -64,7 +64,7 @@ export default async function CampaignPage({ params }: Props) {
       .maybeSingle(),
     supabase
       .from('campaign_action_audit_events')
-      .select('created_at, action_key, outcome')
+      .select('created_at, action_key, outcome, metadata')
       .eq('campaign_id', id)
       .eq('action_key', 'send_reminders')
       .eq('outcome', 'completed')
@@ -127,6 +127,9 @@ export default async function CampaignPage({ params }: Props) {
     closesAt: campaignMeta?.closes_at ?? null,
     reminderConfig,
     reminderAlreadySentAt: reminderEvents?.[0]?.created_at ?? null,
+    reminderSkipped:
+      ((reminderEvents?.[0] as { metadata?: { channel?: string } | null } | undefined)?.metadata?.channel ?? null) ===
+      'skipped_by_customer',
     reportReady,
     today: todayIso(),
   })

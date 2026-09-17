@@ -1,4 +1,5 @@
 import type { DashboardState } from '@/lib/dashboard/dashboard-state-resolver'
+import { CampaignTimeline } from './campaign-timeline'
 
 /**
  * Statusweergave voor iedereen die de meting niet beheert (spec 2026-09-11
@@ -35,6 +36,12 @@ export function ReadOnlyStateCard({ state }: { state: DashboardState }) {
           <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--dashboard-muted)]">
             {state.progressPct}% ingevuld
           </p>
+        </div>
+      ) : null}
+
+      {state.timeline ? (
+        <div className="mt-6">
+          <CampaignTimeline timeline={state.timeline} />
         </div>
       ) : null}
 

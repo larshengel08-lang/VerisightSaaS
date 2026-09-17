@@ -2,6 +2,8 @@
 import type { ScanType } from '@/lib/types'
 import { getResponseActivationThresholds } from '@/lib/response-activation'
 import { isReminderDue } from '@/lib/dashboard/reminder-due'
+import { formatDutchDate } from '@/lib/dashboard/format-dutch-date'
+import { buildCampaignTimeline, type CampaignTimeline } from '@/lib/dashboard/campaign-timeline'
 
 export type DashboardStateKind =
   | 'no_campaign'
@@ -36,11 +38,13 @@ export interface DashboardStateInput {
   campaign: DashboardStateCampaign | null
   launchConfirmedAt: string | null
   launchDate: string | null
-  /** Not sourced yet (subsystem 2). Always null today → expired trigger disabled, close label degraded. */
+  /** campaigns.closes_at (date). Null bij metingen van vóór de wizard-sluitdatum: dan geen expired-trigger en een eerlijk "nog niet ingesteld". */
   closesAt: string | null
   reminderConfig: DashboardReminderConfig
-  /** Most recent manual reminder confirmation (from audit events), or null. */
+  /** created_at van het meest recente send_reminders-event (verstuurd of overgeslagen), of null. */
   reminderAlreadySentAt: string | null
+  /** Dat event had metadata.channel = 'skipped_by_customer'. */
+  reminderSkipped: boolean
   /** isReportReleaseReady(total_completed, { scanType }) — 10 ingevuld (30 bij culture_assessment). */
   reportReady: boolean
   /** Injected YYYY-MM-DD for deterministic tests. */
@@ -70,20 +74,15 @@ export interface DashboardState {
   showProgress: boolean
   progressPct: number
   closeDateLabel: string
+  /** Tijdlijn met datums (spec 2026-09-16 par. 4.2); alleen voor een gelanceerde, lopende meting. */
+  timeline: CampaignTimeline | null
   /** Set true where a real backend field is missing and the value is derived/degraded. */
   degraded: boolean
 }
 
-function formatDutchDate(iso: string | null): string | null {
-  if (!iso) return null
-  const date = new Date(iso.length === 10 ? `${iso}T00:00:00Z` : iso)
-  if (Number.isNaN(date.getTime())) return null
-  return new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Amsterdam' }).format(date)
-}
-
 function buildCloseDateLabel(closesAt: string | null): { label: string; degraded: boolean } {
   const formatted = formatDutchDate(closesAt)
-  if (!formatted) return { label: 'Sluitdatum: nog niet gepland', degraded: true }
+  if (!formatted) return { label: 'Sluitdatum: nog niet ingesteld', degraded: true }
   return { label: `Sluit ${formatted}`, degraded: false }
 }
 
@@ -97,7 +96,8 @@ const EMPTY_STATE: Omit<DashboardState, 'kind' | 'primaryMessage' | 'subtext' | 
   secondaryActions: [],
   showProgress: false,
   progressPct: 0,
-  closeDateLabel: 'Sluitdatum: nog niet gepland',
+  closeDateLabel: 'Sluitdatum: nog niet ingesteld',
+  timeline: null,
   degraded: false,
 }
 
@@ -171,6 +171,16 @@ export function resolveDashboardState(input: DashboardStateInput): DashboardStat
     }
   }
 
+  const timeline = buildCampaignTimeline({
+    launchDate: input.launchDate,
+    launchConfirmedAt: input.launchConfirmedAt,
+    reminderEnabled: input.reminderConfig.enabled,
+    reminderAfterDays: input.reminderConfig.firstReminderAfterDays,
+    reminderHandledAt: input.reminderAlreadySentAt,
+    reminderSkipped: input.reminderSkipped,
+    closesAt: input.closesAt,
+  })
+
   // Priority 3 — expired (close date reached). Disabled while closesAt is null.
   // Compare date-only portions so a full ISO closesAt timestamp still fires on the close day.
   const expired = input.closesAt !== null && input.today.slice(0, 10) >= input.closesAt.slice(0, 10)
@@ -194,6 +204,7 @@ export function resolveDashboardState(input: DashboardStateInput): DashboardStat
           ],
       showProgress: true,
       progressPct,
+      timeline,
       closeDateLabel: close.label,
       degraded: close.degraded,
     }
@@ -220,6 +231,7 @@ export function resolveDashboardState(input: DashboardStateInput): DashboardStat
       secondaryActions: [{ label: 'Geen herinnering versturen', kind: 'skip_reminder' }],
       showProgress: true,
       progressPct,
+      timeline,
       closeDateLabel: close.label,
       degraded: close.degraded,
     }
@@ -239,6 +251,7 @@ export function resolveDashboardState(input: DashboardStateInput): DashboardStat
       ctaKind: 'close_campaign',
       showProgress: true,
       progressPct,
+      timeline,
       closeDateLabel: close.label,
       degraded: close.degraded,
     }
@@ -250,10 +263,11 @@ export function resolveDashboardState(input: DashboardStateInput): DashboardStat
     kind: 'running',
     campaignId: campaign.id,
     primaryMessage: 'Campagne loopt',
-    subtext: `${campaign.totalCompleted} van ${campaign.totalInvited} ingevuld · ${close.label}`,
+    subtext: `${campaign.totalCompleted} van ${campaign.totalInvited} ingevuld`,
     tone: 'positive',
     showProgress: true,
     progressPct,
+    timeline,
     closeDateLabel: close.label,
     degraded: close.degraded,
   }

@@ -95,3 +95,12 @@ describe('setup-wizard stap 2: terug en bevestigen (spec 2026-09-16 par. 5.2)', 
     expect(src).toContain('!everCopied')
   })
 })
+
+describe('setup-wizard stap 3 (spec 2026-09-16 par. 4.2)', () => {
+  it('toont de tijdlijn als vooruitblik en belooft geen rapport via Loep', () => {
+    expect(src).toContain('Volgen en afronden')
+    expect(src).toContain('previewTimeline')
+    expect(src).toContain('<CampaignTimeline timeline={previewTimeline} dimmed />')
+    expect(src).not.toContain('rapport via Loep')
+  })
+})

@@ -22,6 +22,8 @@ import {
 } from '@/lib/campaign-schedule'
 import { formatDutchDate } from '@/lib/dashboard/format-dutch-date'
 import { ConfirmDialog } from './confirm-dialog'
+import { CampaignTimeline } from './campaign-timeline'
+import { buildCampaignTimeline } from '@/lib/dashboard/campaign-timeline'
 import {
   buildInviteTemplate,
   buildSegmentSurveyLinks,
@@ -177,6 +179,17 @@ export function SetupWizardCard({
   const invitedHelp = INVITED_COUNT_HELP[scanType] ?? DEFAULT_INVITED_COUNT_HELP
   const reminderDateLabel =
     reminderChoice !== 'none' && launchDate ? formatDutchDate(addDays(launchDate, reminderChoice)) : null
+  // Vooruitblik voor stap 3 (spec 2026-09-16 par. 4.2): dezelfde tijdlijn als
+  // op de kaart van een lopende meting, met wat de klant nu invult.
+  const previewTimeline = buildCampaignTimeline({
+    launchDate: launchDate || null,
+    launchConfirmedAt: null,
+    reminderEnabled: reminderChoice !== 'none',
+    reminderAfterDays: reminderChoice === 'none' ? DEFAULT_REMINDER_AFTER_DAYS : reminderChoice,
+    reminderHandledAt: null,
+    reminderSkipped: false,
+    closesAt: closesAt || null,
+  })
 
   function handleLaunchDateChange(value: string) {
     setLaunchDate(value)
@@ -605,16 +618,17 @@ export function SetupWizardCard({
           )}
         </div>
 
-        {/* Stap 3 */}
-        <div className="relative rounded-[18px] border border-[color:var(--dashboard-frame-border)] bg-white p-5 opacity-45">
+        {/* Stap 3: vooruitblik. Na de lancering staat dezelfde tijdlijn op de kaart van de lopende meting. */}
+        <div className="relative rounded-[18px] border border-[color:var(--dashboard-frame-border)] bg-white p-5">
           <span className="absolute right-4 top-4 text-[color:var(--dashboard-muted)]">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           </span>
           <p className="mb-3 text-xs font-semibold text-[color:var(--dashboard-muted)]">Stap 3</p>
-          <p className="mb-1 text-sm font-semibold text-[color:var(--dashboard-ink)]">Volgen &amp; rapport</p>
-          <p className="text-xs text-[color:var(--dashboard-muted)]">
-            Respons monitoren · herinnering sturen · rapport via Loep.
+          <p className="mb-1 text-sm font-semibold text-[color:var(--dashboard-ink)]">Volgen en afronden</p>
+          <p className="mb-4 text-xs text-[color:var(--dashboard-muted)]">
+            Na de lancering volg je hier de respons en sluit je de meting.
           </p>
+          <CampaignTimeline timeline={previewTimeline} dimmed />
         </div>
       </div>
 

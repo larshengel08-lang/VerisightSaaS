@@ -43,6 +43,7 @@ export default async function DashboardHomePage() {
       closesAt: null,
       reminderConfig: normalizeReminderConfig(null),
       reminderAlreadySentAt: null,
+      reminderSkipped: false,
       reportReady: false,
       today: todayIso(),
     })
@@ -69,7 +70,7 @@ export default async function DashboardHomePage() {
       .maybeSingle(),
     supabase
       .from('campaign_action_audit_events')
-      .select('created_at, action_key, outcome')
+      .select('created_at, action_key, outcome, metadata')
       .eq('campaign_id', campaign.campaign_id)
       .eq('action_key', 'send_reminders')
       .eq('outcome', 'completed')
@@ -149,6 +150,9 @@ export default async function DashboardHomePage() {
     closesAt: campaign.closes_at ?? null,
     reminderConfig,
     reminderAlreadySentAt: reminderEvents?.[0]?.created_at ?? null,
+    reminderSkipped:
+      ((reminderEvents?.[0] as { metadata?: { channel?: string } | null } | undefined)?.metadata?.channel ?? null) ===
+      'skipped_by_customer',
     reportReady,
     today: todayIso(),
   })

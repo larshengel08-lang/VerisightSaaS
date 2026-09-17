@@ -19,6 +19,7 @@ function baseInput(overrides: Partial<DashboardStateInput> = {}): DashboardState
     closesAt: null,
     reminderConfig: { enabled: true, firstReminderAfterDays: 5, maxReminderCount: 2 },
     reminderAlreadySentAt: null,
+    reminderSkipped: false,
     reportReady: false,
     today: '2026-06-03',
     ...overrides,
@@ -162,9 +163,22 @@ describe('resolveDashboardState', () => {
     expect(state.ctaHref).toBe('/campaigns/camp-1')
   })
 
-  it('degrades the close date label when no close date is known', () => {
+  it('degradeert het sluitlabel eerlijk als er geen sluitdatum is en zet dat ook in de tijdlijn', () => {
     const state = resolveDashboardState(baseInput({ campaign: { ...baseInput().campaign!, totalCompleted: 3 } }))
     expect(state.kind).toBe('running')
-    expect(state.closeDateLabel).toBe('Sluitdatum: nog niet gepland')
+    expect(state.closeDateLabel).toBe('Sluitdatum: nog niet ingesteld')
+    expect(state.timeline?.items.map((i) => i.value)).toEqual(['1 juni 2026', '6 juni 2026', 'Nog niet ingesteld'])
+  })
+
+  it('geeft een lopende meting een tijdlijn met de sluitdatum, en een niet-gelanceerde geen', () => {
+    const running = resolveDashboardState(
+      baseInput({ campaign: { ...baseInput().campaign!, totalCompleted: 3 }, closesAt: '2026-06-22' }),
+    )
+    expect(running.timeline?.items.map((i) => [i.label, i.value])).toEqual([
+      ['Uitnodiging verstuurd', '1 juni 2026'],
+      ['Herinnering', '6 juni 2026'],
+      ['Meting sluit', '22 juni 2026'],
+    ])
+    expect(resolveDashboardState(baseInput({ launchConfirmedAt: null })).timeline).toBeNull()
   })
 })

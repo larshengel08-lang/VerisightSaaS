@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { DashboardState, DashboardStateTone } from '@/lib/dashboard/dashboard-state-resolver'
+import { CampaignTimeline } from './campaign-timeline'
 import { DashboardStateActions } from './dashboard-state-actions'
 
 function toneClasses(tone: DashboardStateTone) {
@@ -40,6 +41,12 @@ export function DashboardStateCard({ state, reminderText }: { state: DashboardSt
           <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--dashboard-muted)]">
             {state.progressPct}% ingevuld
           </p>
+        </div>
+      ) : null}
+
+      {state.timeline ? (
+        <div className="mt-6">
+          <CampaignTimeline timeline={state.timeline} />
         </div>
       ) : null}
 
