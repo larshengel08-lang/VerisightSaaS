@@ -79,6 +79,19 @@ describe('dashboard state interaction island', () => {
   it('bevat geen em- of en-dashes in klantcopy', () => {
     expect(island).not.toMatch(/[—–]/)
   })
+
+  it('biedt op de herinneringsdag onderwerp en bericht apart, elk met een eigen kopieerknop (spec 2026-09-16 par. 4.4)', () => {
+    expect(island).toContain('splitReminderText')
+    expect(island).toContain('ReminderComposer')
+    expect(island).toContain('>Onderwerp<')
+    expect(island).toContain('>Bericht<')
+    expect(island).not.toContain('Kopieer herinneringstekst')
+  })
+
+  it('laat pas bevestigen dat de herinnering is verstuurd nadat er iets gekopieerd is', () => {
+    expect(island).toContain('disabled={!copied || isBusy}')
+    expect(island).toContain('Kopieer eerst het onderwerp en het bericht')
+  })
 })
 
 describe('dashboard state card', () => {

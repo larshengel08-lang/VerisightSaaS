@@ -11,6 +11,7 @@ import {
 } from '@/app/(dashboard)/dashboard/dashboard-actions'
 import type { DashboardSecondaryAction, DashboardState } from '@/lib/dashboard/dashboard-state-resolver'
 import { MAX_EXTENSIONS } from '@/lib/dashboard/campaign-extension'
+import { splitReminderText } from '@/lib/dashboard/reminder-text'
 import { ConfirmDialog, type ConfirmDialogAction } from './confirm-dialog'
 
 type Busy = 'idle' | 'closing' | 'extending' | 'skipping' | 'confirming'
@@ -79,15 +80,6 @@ export function DashboardStateActions({ state, reminderText }: { state: Dashboar
 
   const isBusy = busy !== 'idle'
 
-  async function handleCopyReminder() {
-    try {
-      await navigator.clipboard.writeText(reminderText)
-    } catch {
-      // Clipboard can fail silently in some browsers; still advance so HR can confirm manual send.
-    }
-    setCopied(true)
-  }
-
   function handleConfirmReminder() {
     return run('confirming', () => confirmReminderSentAction(campaignId!), 'Bevestigen mislukt.')
   }
@@ -132,15 +124,17 @@ export function DashboardStateActions({ state, reminderText }: { state: Dashboar
   return (
     <div className="mt-6 flex flex-col items-start gap-3">
       {state.ctaKind === 'copy_reminder' ? (
-        !copied ? (
-          <button type="button" onClick={handleCopyReminder} className={primaryButtonClass}>
-            Kopieer herinneringstekst
-          </button>
-        ) : (
-          <button type="button" onClick={handleConfirmReminder} disabled={isBusy} className={primaryButtonClass}>
+        <>
+          <ReminderComposer reminderText={reminderText} onCopied={() => setCopied(true)} />
+          <button type="button" onClick={handleConfirmReminder} disabled={!copied || isBusy} className={primaryButtonClass}>
             {busy === 'confirming' ? 'Bevestigen...' : 'Ik heb de herinnering verstuurd'}
           </button>
-        )
+          {!copied ? (
+            <p className="text-xs text-[color:var(--dashboard-muted)]">
+              Kopieer eerst het onderwerp en het bericht; daarna bevestig je hier dat je de herinnering hebt verstuurd.
+            </p>
+          ) : null}
+        </>
       ) : null}
 
       {state.ctaKind === 'close_campaign' ? (
@@ -231,4 +225,72 @@ function buildCloseDialog(
     ),
     actions: [cancel, { label: 'Toch sluiten', onClick: handlers.onClose, variant: 'primary' }],
   }
+}
+
+/**
+ * Onderwerp en bericht van de herinnering, bewerkbaar en elk apart te
+ * kopiëren (spec 2026-09-16 par. 4.4), zoals de wizard en de vroegere
+ * "Campagne loopt"-kaart dat al deden. Eén blok kopiëren zette het onderwerp
+ * in de mailtekst; dat is precies wat hier niet meer kan.
+ */
+function ReminderComposer({ reminderText, onCopied }: { reminderText: string; onCopied: () => void }) {
+  const initial = splitReminderText(reminderText)
+  const [subject, setSubject] = useState(initial.subject)
+  const [body, setBody] = useState(initial.body)
+  const [copiedField, setCopiedField] = useState<'subject' | 'body' | null>(null)
+
+  async function copy(text: string, which: 'subject' | 'body') {
+    try {
+      await navigator.clipboard.writeText(text)
+    } catch {
+      // Clipboard can fail silently in some browsers; HR can still select and copy by hand.
+    }
+    setCopiedField(which)
+    onCopied()
+    setTimeout(() => setCopiedField(null), 2000)
+  }
+
+  return (
+    <div className="w-full max-w-lg rounded-[16px] border border-[color:var(--dashboard-frame-border)] bg-white p-5">
+      <p className="mb-4 text-xs font-semibold uppercase tracking-[0.1em] text-[color:var(--dashboard-muted)]">
+        Herinneringsmail: pas aan en stuur vanuit je eigen e-mail
+      </p>
+
+      <div className="mb-3">
+        <div className="mb-1 flex items-center justify-between">
+          <label htmlFor="reminder-subject" className="text-[10px] font-semibold uppercase tracking-wide text-[color:var(--dashboard-muted)]">Onderwerp</label>
+          <button type="button" onClick={() => copy(subject, 'subject')} className="text-[10px] font-semibold text-[#E8A020] hover:opacity-75">
+            {copiedField === 'subject' ? 'Gekopieerd ✓' : 'Kopieer'}
+          </button>
+        </div>
+        <input
+          id="reminder-subject"
+          type="text"
+          value={subject}
+          onChange={(e) => setSubject(e.target.value)}
+          className="w-full rounded-lg border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-3 py-2 text-xs text-[color:var(--dashboard-ink)] focus:outline-none focus:ring-1 focus:ring-[#E8A020]/50"
+        />
+      </div>
+
+      <div>
+        <div className="mb-1 flex items-center justify-between">
+          <label htmlFor="reminder-body" className="text-[10px] font-semibold uppercase tracking-wide text-[color:var(--dashboard-muted)]">Bericht</label>
+          <button type="button" onClick={() => copy(body, 'body')} className="text-[10px] font-semibold text-[#E8A020] hover:opacity-75">
+            {copiedField === 'body' ? 'Gekopieerd ✓' : 'Kopieer'}
+          </button>
+        </div>
+        <textarea
+          id="reminder-body"
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          rows={10}
+          className="w-full resize-none rounded-lg border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-3 py-2 text-xs leading-relaxed text-[color:var(--dashboard-ink)] focus:outline-none focus:ring-1 focus:ring-[#E8A020]/50"
+        />
+      </div>
+
+      <p className="mt-2 text-[10px] text-[color:var(--dashboard-muted)]">
+        Je kunt de tekst aanpassen voor je kopieert. Vergeet niet je naam in te vullen bij &ldquo;Met vriendelijke groet&rdquo;.
+      </p>
+    </div>
+  )
 }

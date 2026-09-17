@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildReminderText, type ReminderTextInput } from '@/lib/dashboard/reminder-text'
+import { buildReminderText, splitReminderText, type ReminderTextInput } from '@/lib/dashboard/reminder-text'
 
 function input(overrides: Partial<ReminderTextInput> = {}): ReminderTextInput {
   return {
@@ -64,5 +64,20 @@ describe('buildReminderText (spec 2026-09-11 par. 6)', () => {
     expect(text).not.toContain('Loep verzorgt de uitnodiging')
     expect(text).not.toMatch(/https?:\/\//)
     expect(text).toContain('nog geen surveylink beschikbaar')
+  })
+})
+
+describe('splitReminderText (spec 2026-09-16 par. 4.4)', () => {
+  it('splitst de gebouwde tekst weer in onderwerp en bericht', () => {
+    const text = buildReminderText(input())
+    const parts = splitReminderText(text)
+    expect(parts.subject).toBe('Herinnering: korte vragenlijst - Acme BV')
+    expect(parts.body.startsWith('Beste collega,')).toBe(true)
+    expect(parts.body).toContain('https://www.getloep.nl/survey/open/tok-123')
+    expect(`${parts.subject}\n\n${parts.body}`).toBe(text)
+  })
+
+  it('geeft een tekst zonder lege regel volledig als onderwerp terug, met leeg bericht', () => {
+    expect(splitReminderText('alleen een regel')).toEqual({ subject: 'alleen een regel', body: '' })
   })
 })

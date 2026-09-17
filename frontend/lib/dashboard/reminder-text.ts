@@ -67,3 +67,15 @@ export function buildReminderText(input: ReminderTextInput): string {
   })
   return `${preview.subject}\n\n${preview.body.join('\n\n')}`
 }
+
+/**
+ * Inverse van de `subject\n\nbody`-vorm die buildReminderText teruggeeft, zodat
+ * de herinneringskaart onderwerp en bericht apart kan tonen en kopiëren (spec
+ * 2026-09-16 par. 4.4). Zonder lege regel is alles onderwerp; de gedegradeerde
+ * tekst (geen surveylink) komt dan als geheel in beeld, wat de bedoeling is.
+ */
+export function splitReminderText(text: string): { subject: string; body: string } {
+  const firstBreak = text.indexOf('\n\n')
+  if (firstBreak < 0) return { subject: text, body: '' }
+  return { subject: text.slice(0, firstBreak), body: text.slice(firstBreak + 2) }
+}
