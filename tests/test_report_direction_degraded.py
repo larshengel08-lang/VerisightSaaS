@@ -210,28 +210,29 @@ def test_rasterintro_belooft_geen_rangorde_zonder_rasterrijen(scan_type):
 
 
 @pytest.mark.parametrize("scan_type", ["exit", "retention", "onboarding"])
-def test_gebruiksblok_belooft_geen_lege_secties(scan_type):
+def test_leidraad_belooft_geen_lege_secties(scan_type):
+    # Plan 3a taak 5: de leidraad vervangt het gebruiksblok en rendert zonder
+    # factorprofiel bewust niet; geen verwijzing naar een verdieping of een
+    # volgorde die er niet is.
     body = _body(_render(scan_type, n=_N_DEGRADED, profile=False, direction={}))
-    assert "dan de verdieping per thema, en achteraan de gespreksagenda" not in body
-    assert ("Een verdieping per thema en een volgorde van thema&#x27;s staan er "
-            "nog niet in; achteraan lees je waar het gesprek kan beginnen.") in body
+    assert "Zo leid je dit gesprek" not in body
+    assert 'class="pref"' not in body
 
 
 # Loep Start noemt zijn eigen hoofdstukken (spec ronde 2 par. 7): die heten geen
 # "Verdieping" meer, want er zijn geen verdiepingsvragen.
-_LEESROUTE_MET_PROFIEL = {
-    "exit": "dan de verdieping per thema, en achteraan de gespreksagenda",
-    "retention": "dan de verdieping per thema, en achteraan de gespreksagenda",
-    "onboarding": ("dan de thema&#x27;s met de meeste aandacht, en achteraan de "
-                   "gespreksagenda"),
+_LEIDRAAD_RIJ3_MET_PROFIEL = {
+    "exit": "De verdieping van het startpunt",
+    "retention": "De verdieping van het startpunt",
+    "onboarding": "Het startpunt: de score en de laagste stelling",
 }
 
 
 @pytest.mark.parametrize("scan_type", ["exit", "retention", "onboarding"])
-def test_gebruiksblok_ongewijzigd_met_profiel(scan_type):
+def test_leidraad_met_profiel(scan_type):
     body = _body(_render(scan_type, n=_N_NORMAL, profile=True, direction={}))
-    assert _LEESROUTE_MET_PROFIEL[scan_type] in body
-    assert "staan er nog niet in" not in body
+    assert "Zo leid je dit gesprek in 45 minuten" in body
+    assert _LEIDRAAD_RIJ3_MET_PROFIEL[scan_type] in body
 
 
 # ── De sluitende gespreksagenda belooft niets wat er niet is (review ronde 2) ─
@@ -264,8 +265,8 @@ def test_gespreksopener_herhaalt_geen_startpunt_dat_er_niet_is(scan_type, met_ri
 
 @pytest.mark.parametrize("scan_type", SCANS)
 def test_de_gespreksopener_is_de_beloofde_plek_waar_het_gesprek_begint(scan_type):
-    """Het gebruiksblok op p.02 stuurt in deze staat naar "achteraan lees je
-    waar het gesprek kan beginnen". Dan moet daar ook echt een vraag staan."""
+    """De slotpagina is in deze staat de plek waar het gesprek begint (de
+    leidraad rendert hier niet). Dan moet daar ook echt een vraag staan."""
     body = _body(_render(scan_type, n=_N_DEGRADED, profile=False, direction={}))
     i = body.rfind("Gespreksopener")
     assert i != -1

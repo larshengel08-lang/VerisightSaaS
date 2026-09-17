@@ -144,8 +144,8 @@ def test_responsbasis_datastatus_block_when_unavailable():
         segment_reason="te weinig responses per groep",
         enps_available=False,
     )
-    assert "Datastatus" in html
-    assert "segmentcontrasten" in html
+    assert "Niet in dit rapport" in html
+    assert "afdelingen" in html
     assert "werkgeversaanbeveling" in html
 
 
@@ -158,7 +158,7 @@ def test_responsbasis_no_datastatus_when_all_available():
         segment_reason="",
         enps_available=True,
     )
-    assert "Datastatus" not in html
+    assert "Niet in dit rapport" not in html
 
 
 def test_overzichtsprofiel_shows_summary_when_provided():

@@ -100,6 +100,18 @@ body {
   color: """ + INK + r"""; margin-bottom: 2px; }
 .mq-source { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.04em;
   color: """ + STEEL + r"""; margin-top: 5px; display: block; }
+/* Paginaverwijzing (H4): WeasyPrint vult het nummer via target-counter; in
+   Chromium (stresstest-harnas) blijft het anker leeg. De tekst ervoor zegt
+   "pagina ". Geverifieerd in ghcr.io/weasyprint/weasyprint op 2026-09-16. */
+a.pref { text-decoration: none; color: inherit; }
+a.pref::after { content: target-counter(attr(href), page); }
+/* Leidraad (spec par. 4 blok 5) */
+.leidraad { margin-top: 18px; border-top: 1px solid """ + HAIRLINE + r"""; padding-top: 12px; }
+.leidraad-title { font-family: 'Inter Tight', sans-serif; font-weight: 800; font-size: 13px; color: """ + INK + r"""; margin-bottom: 6px; }
+.leidraad table { width: 100%; border-collapse: collapse; }
+.leidraad td { font-size: 10px; color: #374151; padding: 3px 6px 3px 0; vertical-align: top; border-bottom: 1px solid """ + HAIRLINE + r"""; line-height: 1.45; }
+.leidraad td.lt { width: 13%; font-family: 'JetBrains Mono', monospace; font-size: 8.5px; color: """ + STEEL + r"""; white-space: nowrap; }
+.leidraad td.lw { width: 34%; font-weight: 600; color: """ + INK + r"""; }
 
 /* ── Headings ── */
 h2 { font-family: 'Inter Tight', sans-serif; font-weight: 800;

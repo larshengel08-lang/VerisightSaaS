@@ -1480,7 +1480,7 @@ SECTION_INTROS: dict[str, str] = {
         "Alles wat je tot hier las is de onderbouwing; hier begint het gesprek. Deze agenda "
         "vat samen wat als eerste op tafel hoort, waarom juist dat, en wanneer je erop "
         "terugkomt. Het is bewust geen kant-en-klaar actieplan: de keuzes (wat pakken "
-        "we op, wie is eigenaar) maak je in de begeleide managementbespreking, met dit "
+        "we op, wie is eigenaar) maken jullie in de bespreking zelf, met dit "
         "rapport als gedeelde basis."
     ),
 }
@@ -1521,80 +1521,113 @@ def _intro(key: str) -> str:
     return f'<p class="sec-intro">{SECTION_INTROS[key]}</p>'
 
 
-GEBRUIKSBLOK_LEESROUTE = (
-    "Lees het van voor naar achter: eerst het beeld (context en "
-    "overzichtsprofiel), dan de verdieping per thema, en achteraan de "
-    "gespreksagenda: d&aacute;&aacute;r begint het gesprek.")
-
-# Loep Start-variant (spec ronde 2 par. 7): die hoofdstukken heten geen
-# "Verdieping" meer, want er zijn geen verdiepingsvragen. De leesroute noemt de
-# hoofdstukken zoals ze in het rapport heten, anders stuurt hij naar een
-# hoofdstuk dat onder die naam niet bestaat.
-GEBRUIKSBLOK_LEESROUTE_ONBOARDING = (
-    "Lees het van voor naar achter: eerst het beeld (context en "
-    "overzichtsprofiel), dan de thema&#x27;s met de meeste aandacht, en "
-    "achteraan de gespreksagenda: d&aacute;&aacute;r begint het gesprek.")
-
-# Degraded leesroute (bug B3): zonder factorprofiel is er geen verdieping per
-# thema en geen volgorde van thema's. De normale zin stuurde de lezer dan naar
-# twee secties die leeg of gedegradeerd zijn. De gespreksagenda-pagina zelf
-# bestaat wél in elke staat (met gespreksopener, en bij richtingdata het
-# degraded richtingblok), dus daar mag de zin nog naar verwijzen.
-GEBRUIKSBLOK_LEESROUTE_DEGRADED = (
-    "Lees het van voor naar achter: eerst wat dit rapport wel en niet laat "
-    "zien, daarna de context en de werkbeleving. Een verdieping per "
-    "thema en een volgorde van thema&#x27;s staan er nog niet in; achteraan "
-    "lees je waar het gesprek kan beginnen.")
-
-
-def _gebruiksblok(scan_lbl: str, *, degraded: bool = False,
-                  leesroute: str = "") -> str:
-    """'Zo gebruik je dit rapport' (spec 2026-07-13 §5) — leesroute + beoogd
-    besluit. Geen bespreekscript: de begeleide bespreking blijft het product.
-
-    degraded volgt dezelfde schakelaar als de degraded p.02-alinea
-    (_geen_factorprofiel_note): de leesroute mag alleen naar secties sturen
-    die in deze staat ook echt iets bevatten.
-
-    leesroute overschrijft de standaardroute voor een product waar de
-    hoofdstukken anders heten (Loep Start, spec ronde 2 par. 7). De degraded
-    route gaat voor: die zegt zelf al dat een verdieping per thema ontbreekt."""
-    leesroute = (GEBRUIKSBLOK_LEESROUTE_DEGRADED if degraded
-                 else (leesroute or GEBRUIKSBLOK_LEESROUTE))
-    return f"""<div style="margin-top:24px;">
-  <span class="eyebrow">Zo gebruik je dit rapport</span>
-  <p class="sec-intro" style="margin-top:6px;margin-bottom:0;">
-    Dit rapport is een groepsbeeld van de organisatie, geen beoordeling van personen
-    of afdelingen. {leesroute} De {scan_lbl}-uitkomsten worden besproken in een
-    begeleide managementbespreking: het rapport levert de onderbouwing, de bespreking de
-    keuzes. Het doel aan het eind van die bespreking is meestal simpel: &eacute;&eacute;n prioriteit,
-    &eacute;&eacute;n eigenaar en een vervolgmoment.
-  </p>
-</div>"""
-
-
 class _ChapterCounter:
-    """Afgeleide hoofdstuknummering (designsprong §4): elke renderer maakt één
-    instantie en roept opener() aan op het moment dat een sectie daadwerkelijk
-    wordt geëmit — conditionele secties schuiven zo op zonder gaten.
-    vervolg() geeft het compacte label voor doorlooppagina's (verdieping 2+)."""
+    """Afgeleide hoofdstuknummering (designsprong §4). opener() emit de kop op
+    het moment dat een sectie echt wordt gerenderd; conditionele secties
+    schuiven zo op zonder gaten. vervolg() geeft het compacte label voor
+    doorlooppagina's (verdieping 2+). anchor zet een id op de kop, zodat een
+    paginaverwijzing (_pref) ernaartoe kan wijzen (H4)."""
 
     def __init__(self) -> None:
         self.n = 0
 
-    def opener(self, title: str, *, kicker: str | None = None) -> str:
+    def opener(self, title: str, *, kicker: str | None = None,
+               anchor: str | None = None) -> str:
         # Titel naast het hoofdstuknummer, beide in dezelfde amber (feedback
         # 2026-07-16): de titel is het dominante element van de paginakop, de
         # kicker eronder blijft klein en ondergeschikt.
         self.n += 1
         kicker_html = f'<span class="ch-kicker">{kicker}</span>' if kicker else ""
-        return (f'<div class="ch-head"><span class="ch-idx">{self.n:02d}</span>'
+        id_attr = f' id="{anchor}"' if anchor else ""
+        return (f'<div class="ch-head"{id_attr}><span class="ch-idx">{self.n:02d}</span>'
                 f'<h2 class="ch-title">{title}</h2></div><hr class="ch-rule">'
                 f'{kicker_html}')
 
     @staticmethod
     def vervolg(eyebrow: str) -> str:
         return f'<span class="slabel">{eyebrow} (vervolg)</span>'
+
+
+def _pref(anchor: str) -> str:
+    """Lege anker die WeasyPrint met het paginanummer vult (zie a.pref in de CSS)."""
+    return f'<a class="pref" href="#{anchor}"></a>'
+
+
+# Vaste ankers per sectie. Eén bron: de renderers zetten ze op de hoofdstukkop,
+# de leidraad wijst ernaar. Ontbreekt een sectie in een rapport (bijv. geen
+# afdelingen), dan mag er ook geen verwijzing naar staan.
+LEIDRAAD_ANKERS = {
+    "context": "sec-context",          # vertrekcontext / behoudscontext / checkpointoverzicht
+    "overzicht": "sec-overzicht",      # overzichtsprofiel
+    "verdieping": "sec-verdieping",    # eerste verdiepingspagina (startpunt)
+    "werkbeleving": "sec-werkbeleving",
+    "afdelingen": "sec-afdelingen",
+    "toelichtingen": "sec-toelichtingen",
+    "agenda": "sec-agenda",
+    "methodiek": "sec-methodiek",
+    "drempels": "sec-drempels",        # drempeltabel op de methodiekpagina (taak 11)
+}
+
+
+def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
+                    has_direction: bool, has_deepening: bool) -> str:
+    """"Zo leid je dit gesprek in 45 minuten" (spec par. 4 blok 5): vijf regels
+    met tijdvak, wat je op tafel legt en de paginaverwijzing. Vervangt het
+    gebruiksblok en de zin over de begeleide managementbespreking (H5): de
+    HR-manager is de facilitator, dit is haar script.
+
+    Regel 4 volgt de data: afdelingen als die er zijn, anders de open
+    toelichtingen, anders de werkbeleving. Nooit een verwijzing naar een
+    sectie die dit rapport niet heeft; de aanroeper geeft geen leidraad mee
+    als ook de werkbeleving ontbreekt.
+
+    has_deepening en has_direction volgen dezelfde regel voor regel 3 en 5.
+    Een meting van voor de verdiepings- en richtingvraag (campagne-gate, juli
+    2026) rendert die blokken niet; de leidraad mag ze dan ook niet beloven.
+    Loep Start heeft geen van beide en zegt dat zo.
+    """
+    A = LEIDRAAD_ANKERS
+    p = _pref
+    context = {"exit": "de vertrekredenen", "retention": "de blijfintentie en het behoudssignaal",
+               "onboarding": "de checkpointscore"}[scan_type]
+    if has_segments:
+        rij4 = ("Per afdeling", "Waar het per afdeling begint, en hoe dat zich verhoudt tot het "
+                                f"startpunt (pagina {p(A['afdelingen'])}).")
+    elif has_quotes:
+        rij4 = ("Wat mensen zelf schreven", f"De open toelichtingen, ongefilterd (pagina {p(A['toelichtingen'])}).")
+    else:
+        rij4 = ("Werkbeleving", f"Autonomie, competentie en verbondenheid (pagina {p(A['werkbeleving'])}).")
+    slot = ("Wat er volgens je mensen moet gebeuren, en het besluit: &eacute;&eacute;n prioriteit, "
+            f"&eacute;&eacute;n eigenaar, een vervolgmoment (pagina {p(A['agenda'])})."
+            if has_direction else
+            "Het eerste gesprekspunt en het besluit: &eacute;&eacute;n prioriteit, &eacute;&eacute;n "
+            f"eigenaar, een vervolgmoment (pagina {p(A['agenda'])}).")
+    if scan_type == "onboarding":
+        rij3 = (f"Het startpunt: de score en de laagste stelling (pagina {p(A['verdieping'])}). "
+                "Open met de gespreksopener hierboven.")
+    elif has_deepening:
+        rij3 = ("De verdieping van het startpunt: de laagste stelling en wat mensen als toelichting "
+                f"kozen (pagina {p(A['verdieping'])}). Open met de gespreksopener hierboven.")
+    else:
+        rij3 = ("De verdieping van het startpunt: de laagste stelling en de score van elke stelling "
+                f"(pagina {p(A['verdieping'])}). Open met de gespreksopener hierboven.")
+    rijen = [
+        ("0-5 min", "Hoe stevig is dit", "De respons en de meetgegevens op deze pagina; de drempels staan op "
+                                         f"pagina {p(A['methodiek'])}."),
+        ("5-12 min", "Het beeld in één plaatje", f"Het cijferoverzicht (pagina {p(A['overzicht'])}) en {context} "
+                                                 f"(pagina {p(A['context'])}). Vraag: verrast dit iemand?"),
+        ("12-25 min", "Waar het wringt, en waarom", rij3),
+        ("25-33 min", *rij4),
+        ("33-45 min", "Wat gaan we doen", slot),
+    ]
+    # De body-kolom draagt de <a class="pref">-ankers en gaat daarom bewust
+    # niet door _h(); het is vaste copy zonder data.
+    trs = "".join(f'<tr><td class="lt">{_h(t)}</td><td class="lw">{_h(w)}</td><td>{body}</td></tr>'
+                  for t, w, body in rijen)
+    return (f'<div class="leidraad"><div class="leidraad-title">Zo leid je dit gesprek in 45 minuten</div>'
+            f'<table>{trs}</table>'
+            f'<p class="trustline" style="margin-top:6px;">Dit rapport is een groepsbeeld van de organisatie, '
+            f'geen beoordeling van personen of afdelingen.</p></div>')
 
 
 # Standaardwaarde voor het derde coverstatistiek als er geen factorprofiel is
@@ -1742,81 +1775,66 @@ def _bestuurlijke_read(*, kernzin: str, primary_label: str, why_cells_html: str,
 </div>"""
 
 
-DATASTATUS_VERVOLG = "Verdieping opent zodra voldoende responses beschikbaar zijn."
-
-# Loep Start heeft geen verdieping die kan openen (spec ronde 2 par. 7), en deze
-# regel staat een paar centimeter onder de zin die dat zegt. Daar gaat de zin
-# over de onderdelen die hierboven als ontbrekend zijn opgesomd. Exit en
-# retention houden hun eigen tekst.
-DATASTATUS_VERVOLG_ONBOARDING = (
-    "Deze onderdelen openen zodra er voldoende responses beschikbaar zijn.")
-
-
 def _responsbasis(*, invited: int | None, completed: int, period: str,
                   population: str, segment_available: bool, segment_reason: str = "",
-                  enps_available: bool = True, compact: bool = False,
-                  note: str = "", datastatus_vervolg: str = "") -> str:
-    """`note` alleen zonder noemer: de zin uit `_respons_noemer` die zegt waarom.
+                  enps_available: bool = True, compact: bool = True,
+                  note: str = "", period_start: str | None = None,
+                  period_end: str | None = None) -> str:
+    """Meetgegevens, blok 6 van pagina twee (spec par. 4): uitgenodigd, ingevuld,
+    respons, meetperiode als datums (H8) en één regel met wat niet in dit
+    rapport staat. `note` alleen zonder noemer: de zin uit `_respons_noemer`.
 
-    Het percentage is GEEN parameter meer. Het werd naast `invited` en
-    `completed` meegegeven terwijl deze functie de waarschuwingszin uit die twee
-    zelf berekent: twee bronnen voor hetzelfde getal, die uit elkaar konden
-    lopen (een bekend aantal met een leeg percentage rendeerde letterlijk
-    "None%").
+    Het percentage is GEEN parameter: deze functie berekent het en de
+    waarschuwingszin uit `invited` en `completed`, zodat die twee niet uit
+    elkaar kunnen lopen.
+
+    De losse kaarten Populatie, Segmentstatus en Datastatus zijn hierin
+    opgegaan (H16: de laatste ervan viel als enige regel op pagina drie).
+    `compact` bestaat nog voor aanroepers die de band als eigen sectie willen;
+    de drie renderers gebruiken hem compact.
     """
-    seg = ("Beschikbaar: segmentbeeld verderop in dit rapport." if segment_available
-           else f"Niet beschikbaar: {_h(segment_reason)}.")
-
-    not_available: list[str] = []
-    if not segment_available:
-        not_available.append("segmentcontrasten")
-    if not enps_available:
-        not_available.append("werkgeversaanbeveling (eNPS)")
-
-    if not_available:
-        items_html = " &middot; ".join(_h(x) for x in not_available)
-        datastatus_html = (
-            f'<div class="card" style="margin-top:14px;">'
-            f'<span class="eyebrow">Datastatus</span>'
-            f'<p style="margin-top:4px;margin-bottom:0;">Niet beschikbaar in deze wave: {items_html}. '
-            f'{_h(datastatus_vervolg or DATASTATUS_VERVOLG)}</p>'
-            f'</div>'
-        )
-    else:
-        datastatus_html = ""
-
     # Zonder noemer vervallen de cellen "Uitgenodigd" en "Respons": een leeg
-    # vakje of een 0% zou een meting suggereren die niet bestaat. Wat er wél is
-    # (het aantal afgeronde vragenlijsten) blijft staan, en de regel onder de
-    # tabel zegt in een hele zin wat er ontbreekt (spec ronde 2 par. 6.1).
+    # vakje of een 0% zou een meting suggereren die niet bestaat (spec ronde 2
+    # par. 6.1). De regel onder de tabel zegt in een hele zin wat er ontbreekt.
     if invited is None:
-        stat_cells = f'<td><div class="sc-l">Afgerond</div><div class="sc-v">{completed}</div></td>'
+        stat_cells = f'<td><div class="sc-l">Ingevuld</div><div class="sc-v">{completed}</div></td>'
     else:
         stat_cells = (
             f'<td><div class="sc-l">Uitgenodigd</div><div class="sc-v">{invited}</div></td>'
-            f'<td><div class="sc-l">Afgerond</div><div class="sc-v">{completed}</div></td>'
+            f'<td><div class="sc-l">Ingevuld</div><div class="sc-v">{completed}</div></td>'
             f'<td><div class="sc-l">Respons</div>'
             f'<div class="sc-v">{_respons_pct(completed, invited)}%</div></td>'
         )
+    if period_start and period_end:
+        periode = f"{period_start} tot {period_end}"
+    elif period_start:
+        periode = f"vanaf {period_start}, sluitdatum niet vastgelegd"
+    elif period_end:
+        periode = f"tot {period_end}, startdatum niet vastgelegd"
+    else:
+        periode = "niet vastgelegd"
+    stat_cells += (f'<td><div class="sc-l">Meetperiode</div>'
+                   f'<div class="sc-v" style="font-size:12px;">{_h(periode)}</div>'
+                   f'<div class="sc-b">{_h(period)} &middot; {_h(population)}</div></td>')
 
     caution = _respons_caution(completed, invited, note)
     caution_html = (f'<p class="trustline" style="margin-top:6px;">{_h(caution)}</p>'
                     if caution else "")
 
-    # De statregel blijft als geheel bij elkaar; de band als geheel mag wél
-    # doorbreken naar de volgende pagina (spec §1 randgeval).
-    body = f"""<span class="slabel">Responsbasis &amp; reikwijdte</span>
-  <table class="sg no-break"><tr>
-    {stat_cells}
-    <td><div class="sc-l">Meetperiode</div><div class="sc-v" style="font-size:14px;">{_h(period)}</div></td>
-  </tr></table>
-  {caution_html}
-  <div class="card"><h3>Populatie</h3><p>{_h(population)}</p>
-    <h3 style="margin-top:10px;">Segmentstatus</h3><p style="margin-bottom:0;">{seg}</p></div>
-  {datastatus_html}"""
+    ontbreekt: list[str] = []
+    if not segment_available:
+        ontbreekt.append(f"afdelingen ({segment_reason})" if segment_reason else "afdelingen")
+    if not enps_available:
+        ontbreekt.append("werkgeversaanbeveling (eNPS)")
+    ontbreekt_html = (f'<p class="trustline" style="margin-top:4px;">Niet in dit rapport: '
+                      f'{_h(", ".join(ontbreekt))}.</p>') if ontbreekt else ""
 
+    # De statregel blijft als geheel bij elkaar (spec §1 randgeval).
+    body = f"""<span class="slabel" style="margin-top:18px;">Meetgegevens</span>
+  <table class="sg no-break"><tr>{stat_cells}</tr></table>
+  {caution_html}{ontbreekt_html}"""
     if compact:
-        return f'<div style="margin-top:28px;">{body}</div>'
+        return f'<div style="margin-top:22px;">{body}</div>'
     return f'<div class="pb sec">\n  {body}\n</div>'
 
 
@@ -4158,7 +4176,7 @@ def render_exit_report_html(data: dict) -> str:
         # niet, dus de frictiescore blijft hier staan in plaats van uit het
         # rapport te verdwijnen.
         exec_line = (f"De frictiescore van {rdsp} wijst op een {fl.lower()}." if avg_risk
-                     else "Zie de vertrekcontext en de responsbasis voor wat dit rapport wel toont.")
+                     else "Zie de vertrekcontext en de meetgegevens voor wat dit rapport wel toont.")
 
     exec_line = _p02_met_respons(exec_line, completed=data["n_completed"],
                                  invited=data["n_invited"],
@@ -4226,7 +4244,7 @@ def render_exit_report_html(data: dict) -> str:
                  "de werkbeleving van de vertrekkers" if sdt_a else "",
                  "de werkgeversaanbeveling" if (data["enps_available"]
                                                 and data["enps_score"] is not None) else "",
-                 "de responsbasis onderaan deze pagina"],
+                 "de meetgegevens onderaan deze pagina"],
         )
 
     _responsbasis_band = _responsbasis(
@@ -4238,9 +4256,11 @@ def render_exit_report_html(data: dict) -> str:
         # "Alle medewerkers" was feitelijk onjuist op het eerlijkheidsanker (C3).
         population="Uitgestroomde medewerkers",
         segment_available=bool(data.get("segment_rows")),
-        segment_reason="te weinig responses per groep voor herleidbaarheid",
+        segment_reason="te weinig antwoorden per afdeling",
         enps_available=data["enps_available"],
         compact=True,
+        period_start=data.get("period_start"),
+        period_end=data.get("period_end"),
     )
 
     s += _bestuurlijke_read(
@@ -4252,9 +4272,13 @@ def render_exit_report_html(data: dict) -> str:
         cijfers_html=_cijfers_html,
         responsbasis_html=_responsbasis_band,
         opener_html=ch.opener("Bestuurlijke read"),
-        # Tot taak 5 van plan 3a (leidraad) draagt het gebruiksblok de leesroute
-        # in het leidraad-slot; zo verdwijnt het blok niet een taak lang.
-        leidraad_html=_gebruiksblok(data["scan_lbl"], degraded=bool(br_degraded_note)),
+        # Geen leidraad zonder factorprofiel: hij zou sturen naar een verdieping
+        # en een volgorde die er niet zijn; de degraded alinea zegt wat er wél is.
+        leidraad_html=("" if _geen_profiel else _leidraad_block(
+            "exit", has_segments=bool(data.get("segment_rows")),
+            has_quotes=_should_show_quotes(data["open_texts"]),
+            has_direction=bool(direction_agg),
+            has_deepening=bool(deep_agg))),
         direction_line=_direction_p02_line(direction_agg, _primary, "exit",
                                            factor_score=_primary_score),
         degraded_note=br_degraded_note,
@@ -4266,7 +4290,7 @@ def render_exit_report_html(data: dict) -> str:
     contributing = [(r["label"], r["count"]) for r in data["cont_dist"]]
     s += _vertrekcontext(exit_reasons=exit_reasons, contributing=contributing,
                          n=n, primary_factor_label=_raster_primary_label,
-                         opener_html=ch.opener("Wat speelde mee bij vertrek?", kicker="Vertrekcontext"),
+                         opener_html=ch.opener("Wat speelde mee bij vertrek?", kicker="Vertrekcontext", anchor=LEIDRAAD_ANKERS["context"]),
                          has_profile=not _geen_profiel)
 
     # ── Overzichtsprofiel (p.05) ──────────────────────────────────────────────
@@ -4274,7 +4298,7 @@ def render_exit_report_html(data: dict) -> str:
                        for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
     _overzicht_summary, _overzicht_bands = _overzicht_summary_and_bands(profile_factors)
     s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary, bands=_overzicht_bands,
-                            opener_html=ch.opener("Overzichtsprofiel"), scan_type="exit")
+                            opener_html=ch.opener("Overzichtsprofiel", anchor=LEIDRAAD_ANKERS["overzicht"]), scan_type="exit")
 
     # priority_fkeys volgt nu dezelfde rangorde als het prioriteringsraster
     # (spec 2026-07-18 par. 4: één ranking per rapport) -- _raster_rows is
@@ -4350,10 +4374,10 @@ def render_exit_report_html(data: dict) -> str:
     if priority_fkeys:
         for _i, _pfk in enumerate(priority_fkeys):
             _lbl = _fl(_pfk, "exit")
-            _opener = ch.opener(f"Verdieping: {_lbl}") if _i == 0 else _ChapterCounter.vervolg(f"Verdieping: {_lbl}")
+            _opener = ch.opener(f"Verdieping: {_lbl}", anchor=LEIDRAAD_ANKERS["verdieping"]) if _i == 0 else _ChapterCounter.vervolg(f"Verdieping: {_lbl}")
             s += _factor_detail(_pfk, opener_html=_opener, intro_html=_intro("verdieping") if _i == 0 else "")
     else:
-        s += f'<div class="pb sec">{ch.opener("Verdieping: prioritaire factoren")}<div class="empty-state">{VERDIEPING_GEEN_RANGORDE}</div></div>'
+        s += f'<div class="pb sec">{ch.opener("Verdieping: prioritaire factoren", anchor=LEIDRAAD_ANKERS["verdieping"])}<div class="empty-state">{VERDIEPING_GEEN_RANGORDE}</div></div>'
 
     # ── SDT basisbehoeften ────────────────────────────────────────────────────
     def _sdt_item_tbl(dim: str) -> str:
@@ -4377,7 +4401,7 @@ def render_exit_report_html(data: dict) -> str:
     )
 
     s += f"""<div class="pb sec">
-  {ch.opener("Werkbeleving", kicker="Autonomie, competentie &amp; verbondenheid")}
+  {ch.opener("Werkbeleving", kicker="Autonomie, competentie &amp; verbondenheid", anchor=LEIDRAAD_ANKERS["werkbeleving"])}
   {_intro("werkbeleving")}
   <div class="card" style="margin-bottom:14px;">{sdt_overview_rows}</div>"""
 
@@ -4409,12 +4433,12 @@ def render_exit_report_html(data: dict) -> str:
     <td><div class="sc-l">Aanbevelingsscore</div><div class="sc-v" style="color:{ecol};">{es:+d}</div><div class="sc-b">eNPS (&minus;100 tot +100)</div></td>
   </tr></table>
 </div>"""
-    # Niet gemeten: geen eigen (vrijwel lege) pagina — de Datastatus op de
-    # responsbasis-pagina en de appendix-notitie melden dit al (fail-loud blijft).
+    # Niet gemeten: geen eigen (vrijwel lege) pagina — de regel 'Niet in dit
+    # rapport' bij de meetgegevens en de appendix-notitie melden dit al (fail-loud blijft).
 
     # ── Segmentstatus ─────────────────────────────────────────────────────────
     _seg_rows = data.get("segment_rows") or []
-    _seg_opener = ch.opener("Segmentanalyse per afdeling") if _seg_rows else ch.opener("Segmentanalyse")
+    _seg_opener = ch.opener("Segmentanalyse per afdeling", anchor=LEIDRAAD_ANKERS["afdelingen"]) if _seg_rows else ch.opener("Segmentanalyse")
     s += _segment_block(_seg_rows, factor_rows=data.get("segment_factor_rows"),
                         scan_type="exit", opener_html=_seg_opener,
                         hidden_n=data.get("segment_hidden_n", 0))
@@ -4423,7 +4447,7 @@ def render_exit_report_html(data: dict) -> str:
     texts = data["open_texts"]
     if _should_show_quotes(texts):
         s += f"""<div class="pb sec">
-  {ch.opener("Open toelichtingen", kicker=f"{len(texts)} respondentstemmen")}
+  {ch.opener("Open toelichtingen", kicker=f"{len(texts)} respondentstemmen", anchor=LEIDRAAD_ANKERS["toelichtingen"])}
   {_intro("open_toelichtingen")}
   {_themed_quotes(texts, "exit", top_fkeys, n)}
 </div>"""
@@ -4443,7 +4467,7 @@ def render_exit_report_html(data: dict) -> str:
         mgmt_q=(_gespreksopener(deep_agg, "exit", _startpunt_fk) if _startpunt_fk
                 else (nsp.get("first_decision") or "")),
         review_when="Plan binnen 45-90 dagen een vervolgmoment: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.",
-        opener_html=ch.opener("Waar begint het gesprek?", kicker="Prioritering & gespreksagenda"),
+        opener_html=ch.opener("Waar begint het gesprek?", kicker="Prioritering & gespreksagenda", anchor=LEIDRAAD_ANKERS["agenda"]),
         direction_agg=direction_agg,
         n_total=n,
         direction_block_html=_dir_block,
@@ -4498,7 +4522,7 @@ def render_exit_report_html(data: dict) -> str:
 </div>"""
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────
-    s += _trust_page("exit", opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen"),
+    s += _trust_page("exit", opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen", anchor=LEIDRAAD_ANKERS["methodiek"]),
                      ranking_active=not _geen_profiel,
                      direction_active=bool(_dir_block),
                      direction_degraded=bool(_dir_block) and not _raster_rows)
@@ -4615,7 +4639,7 @@ def render_retention_report_html(data: dict) -> str:
                  "de werkbeleving" if sdt_a else "",
                  "de werkgeversaanbeveling" if (data["enps_available"]
                                                 and data["enps_score"] is not None) else "",
-                 "de responsbasis onderaan deze pagina"],
+                 "de meetgegevens onderaan deze pagina"],
         )
 
     # Kernzin (ronde 2, B17): volgt de vorm van het profiel, niet de band van
@@ -4653,7 +4677,7 @@ def render_retention_report_html(data: dict) -> str:
         # rapport te verdwijnen.
         exec_line = (f"{band_lbl} (behoudssignaal {_score_str(signal)})."
                      if signal and band_lbl
-                     else "Zie de behoudscontext en de responsbasis voor wat dit rapport wel toont.")
+                     else "Zie de behoudscontext en de meetgegevens voor wat dit rapport wel toont.")
 
     exec_line = _p02_met_respons(exec_line, completed=data["n_completed"],
                                  invited=data["n_invited"], verwijzing=_verwijst)
@@ -4670,9 +4694,11 @@ def render_retention_report_html(data: dict) -> str:
         period=data["campaign_name"],
         population="Actieve medewerkers",
         segment_available=bool(data.get("segment_rows")),
-        segment_reason="te weinig responses per groep voor herleidbaarheid",
+        segment_reason="te weinig antwoorden per afdeling",
         enps_available=data["enps_available"],
         compact=True,
+        period_start=data.get("period_start"),
+        period_end=data.get("period_end"),
     )
 
     s += _bestuurlijke_read(
@@ -4684,9 +4710,12 @@ def render_retention_report_html(data: dict) -> str:
         cijfers_html=_cijfers_html,
         responsbasis_html=_responsbasis_band,
         opener_html=ch.opener("Bestuurlijke read"),
-        # Tot taak 5 van plan 3a (leidraad) draagt het gebruiksblok de leesroute
-        # in het leidraad-slot; zo verdwijnt het blok niet een taak lang.
-        leidraad_html=_gebruiksblok(data["scan_lbl"], degraded=bool(br_degraded_note)),
+        # Geen leidraad zonder factorprofiel, zie render_exit_report_html.
+        leidraad_html=("" if _geen_profiel else _leidraad_block(
+            ST, has_segments=bool(data.get("segment_rows")),
+            has_quotes=_should_show_quotes(data["open_texts"]),
+            has_direction=bool(direction_agg),
+            has_deepening=bool(deep_agg))),
         direction_line=_direction_p02_line(direction_agg, _primary, ST,
                                            factor_score=_primary_score),
         degraded_note=br_degraded_note,
@@ -4700,7 +4729,7 @@ def render_retention_report_html(data: dict) -> str:
         turnover=avg_to,
         engagement=avg_eng,
         intent_resp=data.get("intent_resp"),
-        opener_html=ch.opener("Waar staat behoud onder druk?", kicker="Behoudscontext"),
+        opener_html=ch.opener("Waar staat behoud onder druk?", kicker="Behoudscontext", anchor=LEIDRAAD_ANKERS["context"]),
     )
 
     # ── Overzichtsprofiel (p.05) ──────────────────────────────────────────────
@@ -4708,7 +4737,7 @@ def render_retention_report_html(data: dict) -> str:
                        for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
     _overzicht_summary, _overzicht_bands = _overzicht_summary_and_bands(profile_factors)
     s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary, bands=_overzicht_bands,
-                            opener_html=ch.opener("Overzichtsprofiel"), scan_type=ST)
+                            opener_html=ch.opener("Overzichtsprofiel", anchor=LEIDRAAD_ANKERS["overzicht"]), scan_type=ST)
 
     # priority_fkeys volgt nu dezelfde rangorde als het prioriteringsraster
     # (spec 2026-07-18 par. 4: één ranking per rapport) -- _raster_rows is
@@ -4770,10 +4799,10 @@ def render_retention_report_html(data: dict) -> str:
     if priority_fkeys:
         for _i, _pfk in enumerate(priority_fkeys):
             _lbl = _fl(_pfk, ST)
-            _opener = ch.opener(f"Verdieping: {_lbl}") if _i == 0 else _ChapterCounter.vervolg(f"Verdieping: {_lbl}")
+            _opener = ch.opener(f"Verdieping: {_lbl}", anchor=LEIDRAAD_ANKERS["verdieping"]) if _i == 0 else _ChapterCounter.vervolg(f"Verdieping: {_lbl}")
             s += _ret_factor_detail(_pfk, opener_html=_opener, intro_html=_intro("verdieping") if _i == 0 else "")
     else:
-        s += f'<div class="pb sec">{ch.opener("Verdieping: prioritaire factoren")}<div class="empty-state">{VERDIEPING_GEEN_RANGORDE}</div></div>'
+        s += f'<div class="pb sec">{ch.opener("Verdieping: prioritaire factoren", anchor=LEIDRAAD_ANKERS["verdieping"])}<div class="empty-state">{VERDIEPING_GEEN_RANGORDE}</div></div>'
 
     # ── Werkbeleving (SDT) ────────────────────────────────────────────────────
     def _sdt_item_tbl(dim: str) -> str:
@@ -4797,7 +4826,7 @@ def render_retention_report_html(data: dict) -> str:
     )
 
     s += f"""<div class="pb sec">
-  {ch.opener("Werkbeleving", kicker="Autonomie, competentie &amp; verbondenheid")}
+  {ch.opener("Werkbeleving", kicker="Autonomie, competentie &amp; verbondenheid", anchor=LEIDRAAD_ANKERS["werkbeleving"])}
   {_intro("werkbeleving")}
   <div class="card" style="margin-bottom:14px;">{sdt_overview_rows}</div>"""
 
@@ -4829,12 +4858,12 @@ def render_retention_report_html(data: dict) -> str:
     <td><div class="sc-l">Aanbevelingsscore</div><div class="sc-v" style="color:{ecol};">{es:+d}</div><div class="sc-b">eNPS (&minus;100 tot +100)</div></td>
   </tr></table>
 </div>"""
-    # Niet gemeten: geen eigen (vrijwel lege) pagina — de Datastatus op de
-    # responsbasis-pagina en de appendix-notitie melden dit al (fail-loud blijft).
+    # Niet gemeten: geen eigen (vrijwel lege) pagina — de regel 'Niet in dit
+    # rapport' bij de meetgegevens en de appendix-notitie melden dit al (fail-loud blijft).
 
     # ── Segmentstatus ─────────────────────────────────────────────────────────
     _seg_rows = data.get("segment_rows") or []
-    _seg_opener = ch.opener("Segmentanalyse per afdeling") if _seg_rows else ch.opener("Segmentanalyse")
+    _seg_opener = ch.opener("Segmentanalyse per afdeling", anchor=LEIDRAAD_ANKERS["afdelingen"]) if _seg_rows else ch.opener("Segmentanalyse")
     s += _segment_block(_seg_rows, factor_rows=data.get("segment_factor_rows"),
                         scan_type=ST, opener_html=_seg_opener,
                         hidden_n=data.get("segment_hidden_n", 0))
@@ -4843,7 +4872,7 @@ def render_retention_report_html(data: dict) -> str:
     texts = data["open_texts"]
     if _should_show_quotes(texts):
         s += f"""<div class="pb sec">
-  {ch.opener("Open toelichtingen", kicker=f"{len(texts)} medewerkersstemmen")}
+  {ch.opener("Open toelichtingen", kicker=f"{len(texts)} medewerkersstemmen", anchor=LEIDRAAD_ANKERS["toelichtingen"])}
   {_intro("open_toelichtingen")}
   {_themed_quotes(texts, ST, top_fkeys, n)}
 </div>"""
@@ -4861,7 +4890,7 @@ def render_retention_report_html(data: dict) -> str:
         mgmt_q=(_gespreksopener(deep_agg, ST, _startpunt_fk) if _startpunt_fk
                 else (nsp.get("first_decision") or "")),
         review_when="Plan binnen 45-90 dagen een vervolgmoment: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.",
-        opener_html=ch.opener("Waar begint het gesprek?", kicker="Prioritering & gespreksagenda"),
+        opener_html=ch.opener("Waar begint het gesprek?", kicker="Prioritering & gespreksagenda", anchor=LEIDRAAD_ANKERS["agenda"]),
         direction_agg=direction_agg,
         n_total=n,
         direction_block_html=_dir_block,
@@ -4916,7 +4945,7 @@ def render_retention_report_html(data: dict) -> str:
 </div>"""
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────
-    s += _trust_page(ST, opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen"),
+    s += _trust_page(ST, opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen", anchor=LEIDRAAD_ANKERS["methodiek"]),
                      ranking_active=not _geen_profiel,
                      direction_active=bool(_dir_block),
                      direction_degraded=bool(_dir_block) and not _raster_rows)
@@ -5073,7 +5102,7 @@ def render_onboarding_report_html(data: dict) -> str:
                  "de werkbeleving van nieuwe medewerkers" if sdt_a else "",
                  "de werkgeversaanbeveling" if (data["enps_available"]
                                                 and data["enps_score"] is not None) else "",
-                 "de responsbasis onderaan deze pagina"],
+                 "de meetgegevens onderaan deze pagina"],
         )
 
     # Kernzin (ronde 2, B17): volgt de vorm van het profiel, niet de band van de
@@ -5103,7 +5132,7 @@ def render_onboarding_report_html(data: dict) -> str:
         # rapport te verdwijnen.
         exec_line = (f"{band_lbl} (checkpointscore {_score_str(signal)})."
                      if signal and band_lbl
-                     else "Zie het checkpointoverzicht en de responsbasis voor wat dit rapport wel toont.")
+                     else "Zie het checkpointoverzicht en de meetgegevens voor wat dit rapport wel toont.")
 
     exec_line = _p02_met_respons(exec_line, completed=data["n_completed"],
                                  invited=data["n_invited"], verwijzing=_verwijst)
@@ -5115,12 +5144,25 @@ def render_onboarding_report_html(data: dict) -> str:
         period=data["campaign_name"],
         population="Nieuwe medewerkers in de eerste werkperiode",
         segment_available=bool(data.get("segment_rows")),
-        segment_reason="te weinig responses per groep voor herleidbaarheid",
+        segment_reason="te weinig antwoorden per afdeling",
         enps_available=data["enps_available"],
         compact=True,
-        datastatus_vervolg=DATASTATUS_VERVOLG_ONBOARDING,
+        period_start=data.get("period_start"),
+        period_end=data.get("period_end"),
     )
 
+    # Leidraad (spec par. 4 blok 5). Niet zonder factorprofiel (zie exit), en
+    # niet als regel 4 nergens heen kan: zonder afdelingen, zonder open
+    # toelichtingen en zonder werkbeleving bestaat geen van de drie secties
+    # waar die regel naar verwijst. Loep Start heeft geen verdiepings- en geen
+    # richtingvraag (v1.1), dus beide vlaggen staan hier hard op False.
+    _ob_has_sdt = any(sdt_a.get(d) is not None for d in ("autonomy", "competence", "relatedness"))
+    _ob_has_segments = bool(data.get("segment_rows"))
+    _ob_has_quotes = _should_show_quotes(data["open_texts"])
+    _ob_leidraad = ("" if (_geen_profiel or not (_ob_has_segments or _ob_has_quotes or _ob_has_sdt))
+                    else _leidraad_block(ST, has_segments=_ob_has_segments,
+                                         has_quotes=_ob_has_quotes, has_direction=False,
+                                         has_deepening=False))
     s += _bestuurlijke_read(
         kernzin=exec_line,
         primary_label=primary_label,
@@ -5130,10 +5172,7 @@ def render_onboarding_report_html(data: dict) -> str:
         cijfers_html=_cijfers_html,
         responsbasis_html=_responsbasis_band,
         opener_html=ch.opener("Bestuurlijke read"),
-        # Tot taak 5 van plan 3a (leidraad) draagt het gebruiksblok de leesroute
-        # in het leidraad-slot; zo verdwijnt het blok niet een taak lang.
-        leidraad_html=_gebruiksblok(data["scan_lbl"], degraded=bool(br_degraded_note),
-                                    leesroute=GEBRUIKSBLOK_LEESROUTE_ONBOARDING),
+        leidraad_html=_ob_leidraad,
         degraded_note=br_degraded_note,
         why_title=_p02_why_title(_shape),
         scope_note=(ONBOARDING_GEEN_VERDIEPING_NOTE_DEGRADED if br_degraded_note
@@ -5145,11 +5184,11 @@ def render_onboarding_report_html(data: dict) -> str:
                        for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
     _overzicht_summary, _overzicht_bands = _overzicht_summary_and_bands(profile_factors)
     s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary, bands=_overzicht_bands,
-                            opener_html=ch.opener("Overzichtsprofiel"), scan_type=ST)
+                            opener_html=ch.opener("Overzichtsprofiel", anchor=LEIDRAAD_ANKERS["overzicht"]), scan_type=ST)
 
     # ── Checkpointoverzicht (p.05 — onboarding-exclusive) ────────────────────
     s += _checkpointoverzicht(checkpoints=[("Huidig checkpoint", signal)],
-                              opener_html=ch.opener("Onboardingfases", kicker="Checkpointoverzicht"))
+                              opener_html=ch.opener("Onboardingfases", kicker="Checkpointoverzicht", anchor=LEIDRAAD_ANKERS["context"]))
 
     # ── Landingskwaliteit per domein (onboarding-exclusive) ───────────────────
     domain_scores = [(_fl(fk, ST), fa.get(fk))
@@ -5213,7 +5252,7 @@ def render_onboarding_report_html(data: dict) -> str:
             # Geen "Verdieping:" in de paginatitel (spec ronde 2 par. 7): Loep
             # Start heeft geen verdiepingsvragen, deze pagina toont de score en
             # de stellingen van de factor.
-            _opener = ch.opener(_lbl) if _i == 0 else _ChapterCounter.vervolg(_lbl)
+            _opener = ch.opener(_lbl, anchor=LEIDRAAD_ANKERS["verdieping"]) if _i == 0 else _ChapterCounter.vervolg(_lbl)
             # Geen SECTION_INTROS["verdieping"] hier (code-review taak 9, fix A):
             # die tekst belooft een automatische vervolgvraag + een
             # gespreksagenda gevuld met wat respondenten kozen. Onboarding
@@ -5222,7 +5261,7 @@ def render_onboarding_report_html(data: dict) -> str:
             # factordetailpagina leest prima zonder intro.
             s += _ob_factor_detail(_pfk, opener_html=_opener, intro_html="")
     else:
-        s += f'<div class="pb sec">{ch.opener("Factoren met de meeste aandacht")}<div class="empty-state">{ONBOARDING_GEEN_RANGORDE}</div></div>'
+        s += f'<div class="pb sec">{ch.opener("Factoren met de meeste aandacht", anchor=LEIDRAAD_ANKERS["verdieping"])}<div class="empty-state">{ONBOARDING_GEEN_RANGORDE}</div></div>'
 
     # ── Werkbeleving (SDT) — if present ──────────────────────────────────────
     def _sdt_item_tbl(dim: str) -> str:
@@ -5245,9 +5284,9 @@ def render_onboarding_report_html(data: dict) -> str:
         if sdt_a.get(dim) is not None
     )
 
-    if sdt_overview_rows:
+    if _ob_has_sdt:
         s += f"""<div class="pb sec">
-  {ch.opener("Werkbeleving", kicker="Autonomie, competentie &amp; verbondenheid")}
+  {ch.opener("Werkbeleving", kicker="Autonomie, competentie &amp; verbondenheid", anchor=LEIDRAAD_ANKERS["werkbeleving"])}
   {_intro("werkbeleving")}
   <div class="card" style="margin-bottom:14px;">{sdt_overview_rows}</div>"""
 
@@ -5282,7 +5321,7 @@ def render_onboarding_report_html(data: dict) -> str:
 
     # ── Segmentstatus ─────────────────────────────────────────────────────────
     _seg_rows = data.get("segment_rows") or []
-    _seg_opener = ch.opener("Segmentanalyse per afdeling") if _seg_rows else ch.opener("Segmentanalyse")
+    _seg_opener = ch.opener("Segmentanalyse per afdeling", anchor=LEIDRAAD_ANKERS["afdelingen"]) if _seg_rows else ch.opener("Segmentanalyse")
     s += _segment_block(_seg_rows, factor_rows=data.get("segment_factor_rows"),
                         scan_type=ST, opener_html=_seg_opener,
                         hidden_n=data.get("segment_hidden_n", 0))
@@ -5291,7 +5330,7 @@ def render_onboarding_report_html(data: dict) -> str:
     texts = data["open_texts"]
     if _should_show_quotes(texts):
         s += f"""<div class="pb sec">
-  {ch.opener("Open toelichtingen", kicker=f"{len(texts)} medewerkersstemmen")}
+  {ch.opener("Open toelichtingen", kicker=f"{len(texts)} medewerkersstemmen", anchor=LEIDRAAD_ANKERS["toelichtingen"])}
   {_intro("open_toelichtingen")}
   {_themed_quotes(texts, ST, top_fkeys, n)}
 </div>"""
@@ -5342,7 +5381,7 @@ def render_onboarding_report_html(data: dict) -> str:
         _agenda_wel = _opsomming([
             "het checkpointoverzicht" if signal is not None else "",
             "de werkbeleving van nieuwe medewerkers" if sdt_overview_rows else "",
-            "de responsbasis op de openingspagina"])
+            "de meetgegevens op de openingspagina"])
         _agenda_degraded_note = (
             f"Wat dit rapport wel laat zien: {_agenda_wel}. Een score per thema "
             f"ontbreekt, dus er is geen onderbouwde volgorde en geen eerste "
@@ -5371,7 +5410,7 @@ def render_onboarding_report_html(data: dict) -> str:
         review_when="Plan een vervolgmoment rond het volgende checkpoint: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.",
         primary_why=None,
         second_why=_second_why,
-        opener_html=ch.opener("Gespreksagenda", kicker="Eerste managementspoor"),
+        opener_html=ch.opener("Gespreksagenda", kicker="Eerste managementspoor", anchor=LEIDRAAD_ANKERS["agenda"]),
         degraded_note=_agenda_degraded_note,
     )
 
@@ -5418,7 +5457,7 @@ def render_onboarding_report_html(data: dict) -> str:
 </div>"""
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────
-    s += _trust_page(ST, opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen"),
+    s += _trust_page(ST, opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen", anchor=LEIDRAAD_ANKERS["methodiek"]),
                      ranking_active=not _geen_profiel)
     return _doc(f"Loep Start · {data['campaign_name']}", s, scan_type="onboarding")
 

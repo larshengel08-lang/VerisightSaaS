@@ -47,7 +47,7 @@ def test_opsomming_noemt_de_werkgeversaanbeveling_als_die_rendert():
     note = _geen_factorprofiel_note(
         8, drempelzin="Dat profiel vraagt minimaal 10 antwoorden.",
         wel=["de opgegeven vertrekredenen", "de werkgeversaanbeveling",
-             "de responsbasis onderaan deze pagina"])
+             "de meetgegevens onderaan deze pagina"])
     assert "de werkgeversaanbeveling" in note
     # De opsomming blijft een lopende zin, geen lijst met een dubbele punt erin.
     assert note.count(":") == 1
@@ -56,7 +56,7 @@ def test_opsomming_noemt_de_werkgeversaanbeveling_als_die_rendert():
 def test_opsomming_laat_lege_posities_weg():
     note = _geen_factorprofiel_note(
         8, drempelzin="Dat profiel vraagt minimaal 10 antwoorden.",
-        wel=["de opgegeven vertrekredenen", "", "de responsbasis onderaan deze pagina"])
+        wel=["de opgegeven vertrekredenen", "", "de meetgegevens onderaan deze pagina"])
     assert ", ," not in note and "  " not in note
 
 

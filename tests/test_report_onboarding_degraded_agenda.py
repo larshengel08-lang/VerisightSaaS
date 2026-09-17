@@ -82,11 +82,15 @@ def test_de_pagina_zegt_wat_er_wel_gemeten_is():
             "en geen eerste gesprekspunt dat uit de cijfers volgt.") in agenda
 
 
-def test_de_leesroute_op_p02_komt_uit_bij_een_echte_vraag():
-    """Het gebruiksblok stuurt naar "achteraan lees je waar het gesprek kan
-    beginnen"; dat moet op deze pagina landen."""
+def test_zonder_profiel_geen_leidraad_maar_wel_een_echte_vraag():
+    """Het gebruiksblok stuurde naar "achteraan lees je waar het gesprek kan
+    beginnen". Plan 3a taak 5: zonder factorprofiel rendert de leidraad bewust
+    niet (hij zou naar een startpunt en een verdieping sturen die er niet
+    zijn); de degraded alinea op p.02 zegt wat er wel is. De slotpagina
+    draagt nog steeds een echte vraag."""
     body = _ob(n=_N_DEGRADED, profile=False)
-    assert "achteraan lees je waar het gesprek kan beginnen" in body
+    assert "Zo leid je dit gesprek" not in body
+    assert 'class="pref"' not in body
     assert AGENDA_OPENER_GEEN_PROFIEL in _agenda(body)
 
 

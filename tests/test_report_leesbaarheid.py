@@ -104,13 +104,11 @@ def test_bronregel_managementvraag():
     assert '<span class="mq-source">Gebaseerd op de laagst scorende factor.</span>' in html
 
 
-def test_gebruiksblok_op_openingspagina():
+def test_leidraad_op_openingspagina():
+    # Plan 3a taak 5 (H5): de leidraad vervangt het gebruiksblok, vóór de meetgegevens.
     html = render_retention_report_html(_min_retention_data())
-    blok = html.find("Zo gebruik je dit rapport")
-    responsbasis = html.find("Responsbasis")
-    assert blok != -1
-    assert blok < responsbasis, "gebruiksblok hoort voor de responsbasis"
-    assert "achteraan" in html and "eigenaar" in html
+    assert "Zo leid je dit gesprek in 45 minuten" in html
+    assert html.find("Zo leid je dit gesprek") < html.find("Meetgegevens")
 
 
 def test_priority_factors_alleen_organisatiefactoren():

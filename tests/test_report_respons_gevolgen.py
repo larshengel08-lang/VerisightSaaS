@@ -317,7 +317,7 @@ def test_indicatief_beeld_en_staart_samen():
 def test_verwijzing_krijgt_een_eigen_mededeling_in_plaats_van_een_haakje():
     # Een haakje relativeert een claim; deze terugval doet geen uitspraak maar
     # wijst alleen de weg.
-    zin = "Zie de behoudscontext en de responsbasis voor wat dit rapport wel toont."
+    zin = "Zie de behoudscontext en de meetgegevens voor wat dit rapport wel toont."
     assert _p02_met_respons(zin, completed=45, invited=150, verwijzing=True) == (
         f"Dit rapport rust op 45 van de 150 genodigden. {zin}")
     assert _p02_met_respons(zin, completed=45, invited=50, verwijzing=True) == zin
@@ -329,8 +329,11 @@ def test_verwijzing_krijgt_een_eigen_mededeling_in_plaats_van_een_haakje():
 # ── De responsbasis ──────────────────────────────────────────────────────────
 
 def _basis(**kw):
+    # Met meetdatums: deze tests gaan over de noemer, en "Meetperiode niet
+    # vastgelegd" (plan 3a taak 5, H8) zou hun "vastgelegd"-asserties raken.
     base = dict(period="apr-mei 2026", population="Actieve medewerkers",
-                segment_available=True, enps_available=True)
+                segment_available=True, enps_available=True,
+                period_start="1 april 2026", period_end="31 mei 2026")
     base.update(kw)
     return _responsbasis(**base)
 
@@ -339,7 +342,7 @@ def test_responsbasis_leidt_het_percentage_zelf_af():
     # Eén bron voor dat getal: met een meegegeven percentage kon de tabel iets
     # anders tonen dan de waarschuwingszin eronder berekende.
     tekst = _tekst(_basis(invited=150, completed=45))
-    assert "Uitgenodigd 150 Afgerond 45 Respons 30%" in tekst
+    assert "Uitgenodigd 150 Ingevuld 45 Respons 30%" in tekst
     assert ("Minder dan de helft heeft ingevuld (45 van de 150). Lees de "
             "uitkomsten als het beeld van wie meedeed, niet van de hele "
             "organisatie.") in tekst
@@ -356,7 +359,7 @@ def test_responsbasis_zonder_noemer_toont_geen_percentage():
     tekst = _tekst(_basis(invited=None, completed=45, note=_NIET_VASTGELEGD))
     assert "Uitgenodigd" not in tekst
     assert re.search(r"\d+%", tekst) is None
-    assert "Afgerond 45" in tekst
+    assert "Ingevuld 45" in tekst
     assert _NIET_VASTGELEGD in tekst
 
 
@@ -498,7 +501,7 @@ def test_verwijzende_terugval_krijgt_geen_haakje():
     data["avg_risk"] = None
     tekst = _tekst(render_exit_report_html(data))
     assert ("Dit rapport rust op 45 van de 150 genodigden. Zie de vertrekcontext "
-            "en de responsbasis voor wat dit rapport wel toont.") in tekst
+            "en de meetgegevens voor wat dit rapport wel toont.") in tekst
     assert "toont (op basis van" not in tekst
 
 

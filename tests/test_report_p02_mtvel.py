@@ -439,3 +439,203 @@ def test_verdieping_cel_onbekende_optiesleutel_faalt_hard():
     top = dict(RANKED[0], spread_flag=False, deepening_top=("gr_bestaat_niet", 7, 13))
     with pytest.raises(KeyError, match="onbekende optiesleutel"):
         _p02_why_extra_cells(top, "retention")
+
+
+# ── Taak 5: leidraad 45 minuten, paginaverwijzingen, meetgegevens (H4/H5/H8) ─
+
+from backend.report_html import (  # noqa: E402
+    LEIDRAAD_ANKERS,
+    _ChapterCounter,
+    _leidraad_block,
+    _pref,
+    _responsbasis,
+    render_onboarding_report_html,
+)
+from tests.conftest import requires_weasyprint  # noqa: E402
+from tests.test_report_degraded_page_two import _fixture as _degraded_fixture  # noqa: E402
+from tests.test_report_distribution import _min_retention_data  # noqa: E402
+
+_PREF_RE = r'<a class="pref" href="#([a-z0-9-]+)"></a>'
+
+
+def _assert_verwijzingen_kloppen(html: str) -> list[str]:
+    body = html.split("</style>")[-1]
+    hrefs = re.findall(_PREF_RE, body)
+    for h in set(hrefs):
+        assert body.count(f'id="{h}"') == 1, f"anker {h} moet precies één keer bestaan"
+    return hrefs
+
+
+def test_pref_is_een_lege_anker_die_weasyprint_vult():
+    assert _pref("sec-agenda") == '<a class="pref" href="#sec-agenda"></a>'
+
+
+def test_opener_zet_het_anker_op_de_hoofdstukkop():
+    ch = _ChapterCounter()
+    html = ch.opener("Overzichtsprofiel", anchor="sec-overzicht")
+    assert '<div class="ch-head" id="sec-overzicht">' in html
+    assert '<div class="ch-head">' in _ChapterCounter().opener("Zonder anker")
+
+
+def test_leidraad_heeft_vijf_tijdvakken_met_paginaverwijzingen():
+    html = _leidraad_block("retention", has_segments=True, has_quotes=True,
+                           has_direction=True, has_deepening=True)
+    tekst = _tekst(html)
+    assert "Zo leid je dit gesprek in 45 minuten" in tekst
+    for tijd in ("0-5 min", "5-12 min", "12-25 min", "25-33 min", "33-45 min"):
+        assert tijd in tekst
+    assert html.count('class="pref"') >= 5
+    assert "begeleide managementbespreking" not in tekst
+    assert "pagina " in tekst
+    assert "—" not in html and "&#x2014;" not in html
+
+
+def test_leidraad_zonder_afdelingen_valt_terug_op_toelichtingen_of_werkbeleving():
+    met_quotes = _tekst(_leidraad_block("retention", has_segments=False, has_quotes=True,
+                                        has_direction=True, has_deepening=True))
+    assert "Per afdeling" not in met_quotes and "Wat mensen zelf schreven" in met_quotes
+    zonder = _tekst(_leidraad_block("retention", has_segments=False, has_quotes=False,
+                                    has_direction=True, has_deepening=True))
+    assert "Werkbeleving" in zonder
+
+
+def test_leidraad_loep_start_belooft_geen_verdieping():
+    tekst = _tekst(_leidraad_block("onboarding", has_segments=False, has_quotes=False,
+                                   has_direction=False, has_deepening=False))
+    assert "verdieping" not in tekst.lower()
+    assert "Wat er volgens je mensen moet gebeuren" not in tekst
+
+
+def test_leidraad_belooft_geen_toelichtingen_in_een_meting_zonder_verdieping():
+    """Een meting van voor de verdiepings- en richtingvraag rendert die blokken
+    niet (campagne-gate); regel 3 en 5 mogen ze dan niet aankondigen."""
+    tekst = _tekst(_leidraad_block("retention", has_segments=True, has_quotes=False,
+                                   has_direction=False, has_deepening=False))
+    assert "wat mensen als toelichting kozen" not in tekst
+    assert "De verdieping van het startpunt: de laagste stelling en de score van elke stelling" in tekst
+    assert "Wat er volgens je mensen moet gebeuren" not in tekst
+    assert "Het eerste gesprekspunt en het besluit" in tekst
+
+
+def test_elke_paginaverwijzing_wijst_naar_precies_een_anker():
+    for html in (render_retention_report_html(_min_retention_data()),
+                 render_exit_report_html(_degraded_fixture("exit", n=12, profile=True)),
+                 render_retention_report_html(_degraded_fixture("retention", n=12, profile=True)),
+                 render_onboarding_report_html(_degraded_fixture("onboarding", n=12, profile=True))):
+        assert _assert_verwijzingen_kloppen(html), "geen paginaverwijzingen gevonden"
+
+
+def test_degraded_staat_heeft_geen_leidraad_en_geen_losse_verwijzing():
+    """Zonder factorprofiel rendert de leidraad bewust niet: hij zou sturen naar
+    een verdieping en een volgorde die er niet zijn. De degraded alinea op p.02
+    zegt zelf wat er wél is."""
+    for scan_type, render in (("exit", render_exit_report_html),
+                              ("retention", render_retention_report_html),
+                              ("onboarding", render_onboarding_report_html)):
+        html = render(_degraded_fixture(scan_type, n=8, profile=False))
+        assert "Zo leid je dit gesprek" not in html
+        _assert_verwijzingen_kloppen(html)
+
+
+def test_loep_start_zonder_werkbeleving_afdelingen_en_quotes_verwijst_niet_in_het_niets():
+    data = _degraded_fixture("onboarding", n=12, profile=True)
+    data["sdt_avgs"] = {}
+    html = render_onboarding_report_html(data)
+    assert "Zo leid je dit gesprek" not in html
+    _assert_verwijzingen_kloppen(html)
+    assert 'id="sec-werkbeleving"' not in html
+
+
+def test_meetgegevens_tonen_datums_of_zeggen_dat_ze_ontbreken():
+    met = _tekst(_responsbasis(invited=58, completed=39, period="Loep Behoud Voorjaar 2026",
+                               population="Actieve medewerkers", segment_available=True,
+                               period_start="9 maart 2026", period_end="30 maart 2026"))
+    assert "Meetperiode 9 maart 2026 tot 30 maart 2026" in met
+    assert "Uitgenodigd 58" in met and "Ingevuld 39" in met
+    zonder = _tekst(_responsbasis(invited=58, completed=39, period="Loep Behoud Voorjaar 2026",
+                                  population="Actieve medewerkers", segment_available=True))
+    assert "Meetperiode niet vastgelegd" in zonder
+    assert "Loep Behoud Voorjaar 2026" in zonder     # de naam van de meting blijft staan
+
+
+def test_meetgegevens_zeggen_wat_niet_in_dit_rapport_staat():
+    html = _tekst(_responsbasis(invited=58, completed=39, period="W", population="P",
+                                segment_available=False, segment_reason="te weinig antwoorden per afdeling",
+                                enps_available=False))
+    assert "Niet in dit rapport: afdelingen (te weinig antwoorden per afdeling), werkgeversaanbeveling (eNPS)" in html
+    assert "Segmentstatus" not in html and "Datastatus" not in html and "Populatie" not in html
+
+
+def test_renderer_geeft_de_datums_door_aan_de_meetgegevens():
+    data = _min_retention_data()
+    data["period_start"] = "9 maart 2026"
+    data["period_end"] = "30 maart 2026"
+    assert "Meetperiode 9 maart 2026 tot 30 maart 2026" in _tekst(render_retention_report_html(data))
+
+
+def test_gebruiksblok_en_begeleide_bespreking_zijn_weg():
+    html = render_retention_report_html(_min_retention_data())
+    assert "Zo gebruik je dit rapport" not in html
+    assert "begeleide managementbespreking" not in html
+    assert "Zo leid je dit gesprek in 45 minuten" in html
+    ob = render_onboarding_report_html(_degraded_fixture("onboarding", n=12, profile=True))
+    assert "begeleide managementbespreking" not in ob
+
+
+@requires_weasyprint
+def test_de_pdf_vult_de_verwijzingen_met_echte_paginanummers():
+    """De tests hierboven bewaken de structuur (elke verwijzing wijst naar een
+    bestaand, uniek anker); deze bewaakt de uitkomst: WeasyPrint moet
+    `target-counter` omzetten in een paginanummer dat in de tekstlaag staat en
+    naar de juiste pagina wijst.
+
+    Slaat over waar WeasyPrint niet kan renderen (Windows zonder GTK). Valideer
+    daar via de WeasyPrint-Docker-image, zie CLAUDE.md. De renderwaarschuwingen
+    van WeasyPrint gelden hier als fout: de eis is nul warnings.
+    """
+    import logging
+
+    import pymupdf
+    from weasyprint import HTML
+
+    html = render_retention_report_html(_min_retention_data())
+
+    class _Collect(logging.Handler):
+        def __init__(self) -> None:
+            super().__init__(level=logging.WARNING)
+            self.records: list[str] = []
+
+        def emit(self, record: logging.LogRecord) -> None:
+            self.records.append(record.getMessage())
+
+    logger = logging.getLogger("weasyprint")
+    handler = _Collect()
+    logger.addHandler(handler)
+    try:
+        pdf_bytes = HTML(string=html).write_pdf()
+    finally:
+        logger.removeHandler(handler)
+    assert handler.records == [], f"WeasyPrint-warnings: {handler.records}"
+
+    doc = pymupdf.open(stream=pdf_bytes, filetype="pdf")
+    # Genormaliseerd: de tekstlaag breekt regels waar de lay-out dat doet, ook
+    # tussen "pagina" en het nummer dat target-counter erachter zet.
+    paginas = [re.sub(r"\s+", " ", p.get_text()) for p in doc]
+
+    def _pagina_met(fragment: str) -> int:
+        """1-gebaseerd paginanummer, zoals target-counter het telt."""
+        treffers = [i + 1 for i, t in enumerate(paginas) if fragment in t]
+        assert len(treffers) == 1, f"'{fragment}' staat op {treffers}, verwacht precies 1 pagina"
+        return treffers[0]
+
+    leidraad = paginas[_pagina_met("Zo leid je dit gesprek in 45 minuten") - 1]
+    nummers = re.findall(r"pagina (\d+)", leidraad)
+    assert len(nummers) >= 5, f"te weinig gevulde paginaverwijzingen: {nummers}"
+    for nr in nummers:
+        assert 1 <= int(nr) <= doc.page_count
+
+    # De verwijzing uit de slotregel van de leidraad moet echt op de
+    # gespreksagenda uitkomen, niet op een willekeurig nummer.
+    assert str(_pagina_met("Waar begint het gesprek?")) in nummers
+    assert str(_pagina_met("Overzichtsprofiel")) in nummers
+    doc.close()

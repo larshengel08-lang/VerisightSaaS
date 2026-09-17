@@ -191,7 +191,7 @@ def test_eerlijke_zin_is_per_product_toegesneden(scan_type, belofte):
     assert i != -1
     note = body[i:i + 500]
     assert belofte in note
-    assert "de responsbasis onderaan deze pagina" in note
+    assert "de meetgegevens onderaan deze pagina" in note
 
 
 # ── De drempelzin mag zichzelf niet tegenspreken ────────────────────────────

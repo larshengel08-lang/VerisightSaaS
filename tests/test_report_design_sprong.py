@@ -27,7 +27,7 @@ def test_responsbasis_compact_geen_eigen_pagina():
         population="Actieve medewerkers",
         segment_available=True, enps_available=True, compact=True)
     assert 'class="pb sec"' not in band
-    assert "Uitgenodigd" in band and "Responsbasis" in band
+    assert "Uitgenodigd" in band and "Meetgegevens" in band
 
 
 def test_agenda_is_navy_vlak_met_amber_labels():
