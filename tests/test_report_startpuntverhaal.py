@@ -42,7 +42,7 @@ def _tekst(html):
 def test_segment_startpunt_wijst_alleen_aan_bij_beide_grenzen():
     seg = _segment_startpunt(ROWS, FACTOR_ROWS)
     assert seg == {"department": "Operations", "score": 6.0, "n": 17, "invited": 21,
-                   "low_fk": "workload", "low_avg": 4.9}
+                   "low_fk": "workload", "low_avg": 4.9, "rest_lager": True}
     te_klein = [_row("Ops", 7, 5.0), _row("Sales", 9, 6.1)]
     assert _segment_startpunt(te_klein, None) is None
     te_dicht = [_row("Ops", 12, 6.0), _row("Sales", 12, 6.1)]
@@ -53,15 +53,17 @@ def test_brugzin_drie_varianten():
     seg = _segment_startpunt(ROWS, FACTOR_ROWS)
     anders = _brugzin("growth", "Groeiperspectief", seg, "retention")
     assert anders == ("Organisatiebreed begint het gesprek bij Groeiperspectief. Bij Operations springt "
-                      "werkdruk en herstelruimte eruit (4.9/10); neem dat als tweede punt voor die afdeling.")
+                      "Werkdruk en herstelruimte eruit (4.9/10); neem dat als tweede punt voor die afdeling.")
     zelfde = _brugzin("workload", "Werkdruk en herstelruimte", seg, "retention")
-    assert zelfde == ("Bij Operations weegt werkdruk en herstelruimte het zwaarst (4.9/10); daar begint "
+    assert zelfde == ("Bij Operations weegt Werkdruk en herstelruimte het zwaarst (4.9/10); daar begint "
                       "het gesprek ook.")
     assert _brugzin("growth", "Groeiperspectief", None, "retention") == ""
     zonder_thema = _brugzin("growth", "Groeiperspectief", dict(seg, low_fk=None, low_avg=None), "retention")
     assert zonder_thema == ("Organisatiebreed begint het gesprek bij Groeiperspectief. Operations scoort het "
-                            "laagst van de afdelingen (6.0/10); welk onderwerp daar het zwaarst weegt is "
-                            "niet te zeggen, te weinig antwoorden per onderwerp.")
+                            "laagst van de afdelingen die apart getoond worden (6.0/10); welk onderwerp "
+                            "daar het zwaarst weegt is niet te zeggen, te weinig antwoorden per onderwerp. "
+                            "De restgroep scoort lager, maar bestaat uit kleine afdelingen en telt daarom "
+                            "niet als startpunt.")
 
 
 def test_brugzin_zonder_startpunt_blijft_leeg():
@@ -92,7 +94,8 @@ def test_restgroep_zonder_noemer_meldt_alleen_het_aantal():
     rows = [r.copy() for r in ROWS]
     rows[-1]["invited"] = None
     tekst = _tekst(_segment_block(rows, FACTOR_ROWS, scan_type="retention"))
-    assert "(Facilitair, Staf; 9 ingevuld) scoort lager" in tekst
+    assert ("(Facilitair, Staf; 9 ingevuld, hoeveel mensen hier zijn uitgenodigd is niet "
+            "volledig vastgelegd) scoort lager") in tekst
     assert "uitgenodigd, 9 ingevuld" not in tekst
 
 
@@ -124,6 +127,14 @@ def test_cover_en_p02_dragen_de_brugzin_en_het_nieuwe_coverlabel():
     assert "Waar het gesprek begint" in html and "Eerste aandachtspunt" not in html
     assert html.count("Organisatiebreed begint het gesprek bij") == 2   # p.02 en agenda
     assert 'class="mq-brug"' in html
+    # Niet alleen "twee keer in het document": één ervan hoort op pagina twee.
+    from tests.test_report_degraded_page_two import _page_two
+    p02 = _page_two(html)
+    assert p02.count("Organisatiebreed begint het gesprek bij") == 1
+    assert 'class="mq-brug"' in p02
+    # De marge van de sectievariant staat in report_css.py, niet inline.
+    assert 'class="mq-brug mq-brug-sec"' in html
+    assert not re.search(r'class="mq-brug[^"]*"\s+style=', html)
     # Em-dash-guard op de nieuwe copy van deze taak (vaste regel 2).
     nieuw = [_tekst(p) for p in re.findall(r'<p class="mq-brug"[^>]*>(.*?)</p>', html, re.S)]
     nieuw.append(_tekst(_segment_start_note(ROWS, FACTOR_ROWS, "retention")))
@@ -197,3 +208,94 @@ def test_loep_start_cover_en_pagina_twee_noemen_hetzelfde_startpunt():
     cover = html[html.index("Waar het gesprek begint"):][:400]
     assert verwacht in cover
     assert _fl("culture", "onboarding") not in cover
+
+
+# ── Codereview taak 7: drie defecten in de brugzin en de restgroepnoemer ─────
+
+def test_variant_zonder_thema_hedget_net_als_het_navy_blok():
+    # Defect 1: "Operations scoort het laagst van de afdelingen (6.0/10)" is
+    # onwaar zodra de gepoolde restgroep lager staat, en het navy blok zegt in
+    # precies deze situatie "van de afdelingen die apart getoond worden".
+    seg = dict(_segment_startpunt(ROWS, FACTOR_ROWS), low_fk=None, low_avg=None)
+    assert seg["rest_lager"] is True
+    zin = _brugzin("growth", "Groeiperspectief", seg, "retention")
+    assert "scoort het laagst van de afdelingen die apart getoond worden (6.0/10)" in zin
+    assert ("De restgroep scoort lager, maar bestaat uit kleine afdelingen en telt "
+            "daarom niet als startpunt.") in zin
+
+
+def test_variant_zonder_thema_zwijgt_over_een_restgroep_die_niet_lager_staat():
+    zonder_rest = [r for r in ROWS if not r["is_pooled"]]
+    seg = dict(_segment_startpunt(zonder_rest, FACTOR_ROWS), low_fk=None, low_avg=None)
+    assert seg["rest_lager"] is False
+    zin = _brugzin("growth", "Groeiperspectief", seg, "retention")
+    assert "De restgroep" not in zin
+    assert "van de afdelingen die apart getoond worden" in zin
+
+
+_STERK_FR = {"Operations": {"factors": [("compensation", 7.4, 17)], "omitted": 0}}
+
+
+def test_brugzin_is_bandbewust_bij_een_relatief_sterk_thema():
+    # Defect 2: "springt eruit; neem dat als tweede punt" bij 7.4/10 overdrijft,
+    # en draait de band-neutrale keuze van het navy blok terug.
+    seg = _segment_startpunt(ROWS, _STERK_FR)
+    anders = _brugzin("growth", "Groeiperspectief", seg, "retention")
+    assert anders == ("Organisatiebreed begint het gesprek bij Groeiperspectief. Het laagst "
+                      "scorende thema bij Operations is Beloning en eerlijkheid (7.4/10), "
+                      "en dat scoort daar relatief sterk.")
+    assert "springt" not in anders and "tweede punt" not in anders
+    zelfde = _brugzin("compensation", "Beloning en eerlijkheid", seg, "retention")
+    assert zelfde == ("Bij Operations is Beloning en eerlijkheid het laagst scorende thema "
+                      "(7.4/10); daar begint het gesprek ook.")
+    assert "het zwaarst" not in zelfde
+
+
+def test_aandachtspunt_houdt_de_sterke_vorm():
+    # 5.0 tot 6.5 is een aandachtspunt: daar mag "neem dat als tweede punt" wel.
+    seg = _segment_startpunt(ROWS, {"Operations": {"factors": [("compensation", 6.4, 17)],
+                                                   "omitted": 0}})
+    zin = _brugzin("growth", "Groeiperspectief", seg, "retention")
+    assert "springt Beloning en eerlijkheid eruit (6.4/10); neem dat als tweede punt" in zin
+
+
+def test_brugzin_gebruikt_een_hoofdletter_voor_beide_onderwerpen():
+    seg = _segment_startpunt(ROWS, FACTOR_ROWS)
+    zin = _brugzin("growth", "Groeiperspectief", seg, "retention")
+    assert "Bij Operations springt Werkdruk en herstelruimte eruit" in zin
+    assert "werkdruk en herstelruimte" not in zin
+
+
+def test_restgroepnoemer_telt_afdelingen_zonder_respons_mee():
+    # Defect 3: members komt uit de respondenten, dus een afdeling die is
+    # uitgenodigd maar niemand liet antwoorden viel buiten de noemer. 6 van de 8
+    # (75%) in plaats van 6 van de 14 (43%).
+    resp = ([{"department": "Ops", "signal_score": 6.0}] * 12
+            + [{"department": "Sales", "signal_score": 6.5}] * 10
+            + [{"department": "Staf", "signal_score": 5.0}] * 3
+            + [{"department": "Facilitair", "signal_score": 5.5}] * 3)
+    lijst = [{"label": "Ops", "invited_count": 15}, {"label": "Sales", "invited_count": 13},
+             {"label": "Staf", "invited_count": 4}, {"label": "Facilitair", "invited_count": 4},
+             {"label": "Inkoop", "invited_count": 6}]
+    rows = _enrich_segment_rows_with_invited(_department_segment_rows(resp), lijst)
+    pooled = [r for r in rows if r["is_pooled"]][0]
+    assert pooled["members"] == ["Facilitair", "Inkoop", "Staf"]
+    assert pooled["invited"] == 14
+    tekst = _tekst(_segment_block(rows, None, scan_type="retention"))
+    assert "6/14" in tekst and "43%" in tekst
+    assert "75%" not in tekst
+
+
+def test_restgroepnoemer_vervalt_met_reden_als_de_campagnelijst_hem_niet_draagt():
+    resp = ([{"department": "Ops", "signal_score": 6.0}] * 12
+            + [{"department": "Sales", "signal_score": 6.5}] * 10
+            + [{"department": "Staf", "signal_score": 4.0}] * 3
+            + [{"department": "Facilitair", "signal_score": 4.2}] * 3)
+    rows = _enrich_segment_rows_with_invited(
+        _department_segment_rows(resp),
+        [{"label": "Ops", "invited_count": 15}, {"label": "Staf", "invited_count": 4}])
+    pooled = [r for r in rows if r["is_pooled"]][0]
+    assert pooled["invited"] is None
+    tekst = _tekst(_segment_start_note(rows, None, "retention"))
+    assert ("6 ingevuld, hoeveel mensen hier zijn uitgenodigd is niet volledig "
+            "vastgelegd) scoort lager") in tekst

@@ -2154,7 +2154,7 @@ def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: st
     return f"""<div class="pb sec">
   {opener_html or '<span class="slabel">Eerste managementspoor</span>'}
   {intro_html}
-  {f'<p class="mq-brug" style="margin-top:10px;">{_h(brug_zin)}</p>' if brug_zin else ''}
+  {f'<p class="mq-brug mq-brug-sec">{_h(brug_zin)}</p>' if brug_zin else ''}
   <div class="agenda-dark">
   <table class="steps"><tr>
     {theme_cells}
@@ -2474,7 +2474,7 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
   {opener_html}
   <p class="sec-intro">{intro}</p>
   {tabel}
-  {f'<p class="mq-brug" style="margin-top:10px;">{_h(brug_zin)}</p>' if brug_zin else ''}
+  {f'<p class="mq-brug mq-brug-sec">{_h(brug_zin)}</p>' if brug_zin else ''}
   {dir_block}
   <div class="agenda-dark" style="margin-top:16px;">
     <div class="agenda-opener">
@@ -3220,6 +3220,19 @@ def _segment_factor_subblocks(segment_rows: list[dict],
     return intro + subs
 
 
+def _pooled_lager(segment_rows: list[dict], low_sc: float | None) -> dict | None:
+    """De gepoolde restgroep, als die onder de aangewezen afdeling uitkomt.
+
+    Eén bron voor het navy blok en voor de brugzin: beide moeten precies in dit
+    geval de claim "de laagste afdeling" kwalificeren, anders wordt die door de
+    tabel eronder weerlegd.
+    """
+    pooled = next((r for r in segment_rows if r.get("is_pooled", False)), None)
+    if pooled and low_sc is not None and _shown(pooled["avg"]) < low_sc:
+        return pooled
+    return None
+
+
 def _segment_startpunt(segment_rows: list[dict],
                        factor_rows: dict[str, dict] | None) -> dict | None:
     """De aangewezen afdeling, of None.
@@ -3243,7 +3256,10 @@ def _segment_startpunt(segment_rows: list[dict],
     return {"department": lowest["department"], "score": low_sc, "n": lowest["n"],
             "invited": lowest.get("invited"),
             "low_fk": factors[0][0] if factors else None,
-            "low_avg": factors[0][1] if factors else None}
+            "low_avg": factors[0][1] if factors else None,
+            # Staat de restgroep lager, dan mag ook de brugzin niet kaal "de
+            # laagste afdeling" zeggen (codereview taak 7, defect 1).
+            "rest_lager": _pooled_lager(segment_rows, low_sc) is not None}
 
 
 def _brugzin(startpunt_key: str | None, startpunt_label: str, seg: dict | None,
@@ -3260,20 +3276,47 @@ def _brugzin(startpunt_key: str | None, startpunt_label: str, seg: dict | None,
     afdeling (te weinig antwoorden per onderwerp). Zonder aangewezen afdeling
     geen zin: het navy blok geeft dan zelf de reden. Zonder organisatiebreed
     startpunt ook niet: dan is er niets om aan te knopen.
+
+    Twee correcties uit de codereview van taak 7:
+
+    * De variant zonder thema nam de kale claim "scoort het laagst van de
+      afdelingen" over. Die wordt weerlegd door de tabel zodra de gepoolde
+      restgroep lager staat, en het navy blok kwalificeert daar precies om die
+      reden ("van de afdelingen die apart getoond worden") en noemt de restgroep.
+      Deze zin doet nu hetzelfde.
+    * "Springt eruit, neem dat als tweede punt" overdrijft bij een thema dat
+      relatief sterk scoort, en draaide de bewuste band-neutrale keuze van het
+      navy blok terug. Boven de aandachtspuntgrens volgt daarom de neutrale
+      vorm, met de band erbij in plaats van een opdracht. De grens komt uit
+      _factor_label; geen nieuwe drempel.
+
+    Beide onderwerpen staan met een hoofdletter: de zin noemt er twee, en de
+    kernzin en de cover op dezelfde pagina schrijven het startpunt ook zo.
     """
     if not seg or not startpunt_key:
         return ""
     dept, score = seg["department"], _score_str(seg["score"])
+    rest_zin = (" De restgroep scoort lager, maar bestaat uit kleine afdelingen en "
+                "telt daarom niet als startpunt." if seg.get("rest_lager") else "")
     if seg["low_fk"] is None:
         return (f"Organisatiebreed begint het gesprek bij {startpunt_label}. {dept} scoort het "
-                f"laagst van de afdelingen ({score}); welk onderwerp daar het zwaarst weegt is "
-                f"niet te zeggen, te weinig antwoorden per onderwerp.")
-    low_lbl = _lc(_fl(seg["low_fk"], scan_type))
+                f"laagst van de afdelingen die apart getoond worden ({score}); welk onderwerp "
+                f"daar het zwaarst weegt is niet te zeggen, te weinig antwoorden per "
+                f"onderwerp.{rest_zin}")
+    low_lbl = _fl(seg["low_fk"], scan_type)
     low_sc = _score_str(seg["low_avg"])
+    zwaar = _factor_label(seg["low_avg"]) != "Relatief sterk"
     if seg["low_fk"] == startpunt_key:
-        return f"Bij {dept} weegt {low_lbl} het zwaarst ({low_sc}); daar begint het gesprek ook."
-    return (f"Organisatiebreed begint het gesprek bij {startpunt_label}. Bij {dept} springt "
-            f"{low_lbl} eruit ({low_sc}); neem dat als tweede punt voor die afdeling.")
+        if zwaar:
+            return f"Bij {dept} weegt {low_lbl} het zwaarst ({low_sc}); daar begint het gesprek ook."
+        return (f"Bij {dept} is {low_lbl} het laagst scorende thema ({low_sc}); daar begint "
+                f"het gesprek ook.")
+    if zwaar:
+        return (f"Organisatiebreed begint het gesprek bij {startpunt_label}. Bij {dept} springt "
+                f"{low_lbl} eruit ({low_sc}); neem dat als tweede punt voor die afdeling.")
+    return (f"Organisatiebreed begint het gesprek bij {startpunt_label}. Het laagst scorende "
+            f"thema bij {dept} is {low_lbl} ({low_sc}), en dat scoort daar "
+            f"{_factor_label(seg['low_avg']).lower()}.")
 
 
 def _segment_start_note(segment_rows: list[dict],
@@ -3332,15 +3375,18 @@ def _segment_start_note(segment_rows: list[dict],
     # "scoort lager" niet over een naamloze groep gaat. Zonder volledige
     # noemer (geen deelsom, zie _enrich_segment_rows_with_invited) alleen het
     # aantal ingevulde vragenlijsten.
-    pooled = next((r for r in segment_rows if r.get("is_pooled", False)), None)
+    pooled = _pooled_lager(segment_rows, low_sc)
     rest_sentence = ""
-    if pooled and _shown(pooled["avg"]) < low_sc:
+    if pooled:
         leden = pooled.get("members") or []
         inv = pooled.get("invited")
         samenstelling = ""
         if leden:
+            # Zonder volledige noemer geen percentage, maar wél de reden: een
+            # deelsom zou een te hoog responspercentage geven (Fail Loud).
             noemer = (f"; samen {inv} uitgenodigd, {pooled['n']} ingevuld" if inv
-                      else f"; {pooled['n']} ingevuld")
+                      else f"; {pooled['n']} ingevuld, hoeveel mensen hier zijn "
+                           f"uitgenodigd is niet volledig vastgelegd")
             samenstelling = f' ({_h(", ".join(leden))}{noemer})'
         rest_sentence = (
             f' De restgroep &ldquo;{_h(pooled["department"])}&rdquo;{samenstelling} scoort lager '
@@ -3589,14 +3635,30 @@ def _per_respondent_factor_scores(
 def _enrich_segment_rows_with_invited(segment_rows: list[dict],
                                       segment_departments: list[dict] | None) -> list[dict]:
     """Voegt per rij de noemer (invited) toe via label-match op de campagnelijst
-    (spec 2026-07-12 §6). De restgroep krijgt de som van haar leden (H20), maar
-    alleen als élk lid een noemer heeft: een deelsom zou een te hoog
-    responspercentage geven. Anders None (alleen n tonen, geen fake percentage)."""
+    (spec 2026-07-12 §6).
+
+    De restgroep krijgt de som van haar leden (H20), maar alleen als élk lid een
+    noemer heeft: een deelsom zou een te hoog responspercentage geven, en dan
+    volgt None (alleen n tonen, met de reden in de zin eronder).
+
+    De ledenlijst van de restgroep komt NIET alleen uit de respondenten
+    (codereview taak 7, defect 3). `_department_segment_rows` kent alleen
+    afdelingen waar iemand antwoordde, dus een afdeling die wel is uitgenodigd
+    maar waar niemand invulde viel buiten de noemer: 6 van de 8 (75%) waar het 6
+    van de 14 (43%) is. Elk label uit de campagnelijst zonder eigen rij hoort in
+    de restgroep, inclusief die met nul respons. De respondentkant wordt bij de
+    eerste aanroep vastgelegd (`members_resp`), zodat een tweede aanroep met een
+    andere lijst niet op zijn eigen uitkomst verder rekent.
+    """
     invited_by_label = {d.get("label"): d.get("invited_count")
                         for d in (segment_departments or [])}
+    eigen_rij = {r["department"] for r in segment_rows if not r.get("is_pooled")}
     for row in segment_rows:
         if row.get("is_pooled"):
-            leden = row.get("members") or []
+            leden_resp = row.setdefault("members_resp", list(row.get("members") or []))
+            uit_lijst = [lbl for lbl in invited_by_label if lbl and lbl not in eigen_rij]
+            leden = sorted(set(leden_resp) | set(uit_lijst))
+            row["members"] = leden
             noemers = [invited_by_label.get(m) for m in leden]
             row["invited"] = sum(noemers) if leden and all(noemers) else None
         else:
@@ -5303,10 +5365,8 @@ def render_onboarding_report_html(data: dict) -> str:
 
     sorted_f = sorted([(fk, fa.get(fk)) for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None],
                       key=lambda x: x[1])
-    low_f    = sorted_f[0]  if sorted_f else None
-    low_lbl  = _fl(low_f[0], ST)  if low_f  else ""
-    # Geen hoogste-factor-label meer: dat was alleen nog de terugval van de
-    # cover, en die leest sinds taak 7 hetzelfde startpunt als pagina twee.
+    # Geen losse laagste/hoogste labels meer: cover, pagina twee en de
+    # gespreksagenda lezen sinds taak 7 één startpunt (_ob_startpunt_fk).
     _raster_labels = {fk: _fl(fk, ST) for fk in ORG_FACTOR_KEYS}
 
     # Geen raster bij Loep Start: "geen factorprofiel" == geen enkele factor
@@ -5651,7 +5711,7 @@ def render_onboarding_report_html(data: dict) -> str:
                               laagste_van_alles=_ob_laagste_van_alles,
                               uniek=(_ob_uniek_in_rapport if _ob_laagste_van_alles
                                      else _ob_uniek_in_thema))
-    ) if _ob_primary_low else low_lbl
+    ) if _ob_primary_low else _fl(_ob_startpunt_fk, ST) if _ob_startpunt_fk else ""
 
     # Zonder factorprofiel is er geen primair thema en geen tweede
     # aandachtspunt (review ronde 2). De pagina zei dat niet: primary_theme
@@ -5677,14 +5737,19 @@ def render_onboarding_report_html(data: dict) -> str:
     # aanroepers en is verwijderd; zijn rijkere variant (de meest gekozen
     # toelichting uit de verdieping) kon bij Loep Start sowieso nooit vullen. De
     # constatering staat nu één keer, in de zin erboven.
+    # Tweede punt uit dezelfde rangorde als het startpunt (_ob_priority_fkeys),
+    # niet uit een tweede sortering op sorted_f: bij Loep Start leveren die
+    # dezelfde volgorde, maar twee bronnen kunnen stil gaan afwijken.
+    _ob_second_fk = _ob_priority_fkeys[1] if len(_ob_priority_fkeys) > 1 else None
     _second_why = ("Tweede laagste factorscore in het overzichtsprofiel."
-                   if len(sorted_f) > 1 else None)
+                   if _ob_second_fk else None)
 
     _ob_agenda_q = (_mgmt_q(_ob_startpunt_fk, ST) if _ob_startpunt_fk
                     else (nsp.get("first_decision") or ""))
     s += _eerste_managementspoor(
         primary_theme=_ob_primary_theme,
-        second_point=f"{_fl(sorted_f[1][0], ST)} ({_score_str(sorted_f[1][1])})" if len(sorted_f) > 1 else "",
+        second_point=(f"{_fl(_ob_second_fk, ST)} ({_score_str(fa.get(_ob_second_fk))})"
+                      if _ob_second_fk else ""),
         mgmt_q=_ob_agenda_q,
         # Pagina twee en deze agenda kiezen het startpunt sinds taak 7 uit één
         # bron (_ob_startpunt_fk), dus de opener is dezelfde zin. De

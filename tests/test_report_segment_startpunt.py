@@ -250,7 +250,8 @@ def test_zin_noemt_de_werkelijk_laagste_afdeling_ook_bij_ongesorteerde_rijen():
 # ─── 4. Gepoolde restgroep die lager uitkomt ─────────────────────────────────
 
 _POOLED_ZIN = ('De restgroep &ldquo;Overige afdelingen&rdquo; (Customer Success, Marketing; '
-               '6 ingevuld) scoort lager (4.0/10), '
+               '6 ingevuld, hoeveel mensen hier zijn uitgenodigd is niet volledig '
+               'vastgelegd) scoort lager (4.0/10), '
                'maar is samengesteld uit kleine afdelingen en wordt daarom niet als '
                'startpunt genoemd.')
 
@@ -315,7 +316,8 @@ def test_aanwijzende_zin_wordt_niet_weersproken_door_de_restgroep():
     assert ("Sales heeft de laagste score van de afdelingen die apart getoond "
             "worden (5.0/10") in a
     assert ("De restgroep &ldquo;Overige afdelingen&rdquo; (Customer Success, Marketing; "
-            "6 ingevuld) scoort lager (4.0/10)") in a
+            "6 ingevuld, hoeveel mensen hier zijn uitgenodigd is niet volledig "
+            "vastgelegd) scoort lager (4.0/10)") in a
 
 
 def test_te_kleine_laagste_afdeling_wordt_ook_niet_weersproken():
@@ -326,7 +328,8 @@ def test_te_kleine_laagste_afdeling_wordt_ook_niet_weersproken():
     assert ("Sales scoort het laagst van de afdelingen die apart getoond worden "
             "(5.0/10), maar heeft 8 responses.") in a
     assert ("De restgroep &ldquo;Overige afdelingen&rdquo; (Customer Success, Marketing; "
-            "6 ingevuld) scoort lager (4.0/10)") in a
+            "6 ingevuld, hoeveel mensen hier zijn uitgenodigd is niet volledig "
+            "vastgelegd) scoort lager (4.0/10)") in a
 
 
 # ─── 4b. Responses die buiten de tabel vallen (Fail Loud) ────────────────────
