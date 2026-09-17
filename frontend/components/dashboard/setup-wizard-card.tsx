@@ -72,7 +72,7 @@ const INVITED_COUNT_HELP: Partial<Record<ScanType, string>> = {
 }
 const DEFAULT_INVITED_COUNT_HELP = 'Iedereen die de vragenlijst van je krijgt.'
 const LAUNCH_DATE_HELP = 'De dag waarop je de uitnodiging verstuurt.'
-const CLOSES_AT_HELP = 'Na deze datum kan niemand meer invullen. Drie weken is gebruikelijk; verlengen kan later met twee weken per keer.'
+const CLOSES_AT_HELP = 'Op deze datum vraagt Loep je de meting te sluiten of te verlengen. Drie weken is gebruikelijk; verlengen kan met twee weken per keer.'
 const REMINDER_HELP = 'Op die dag zet Loep de herinneringstekst voor je klaar; jij verstuurt hem vanuit je eigen mail.'
 const DEPARTMENT_HELP = `Per afdeling zijn minimaal ${MIN_INVITED_PER_DEPARTMENT} ingevulde vragenlijsten nodig om apart in het rapport te verschijnen, en vanaf 10 zie je de spreiding.`
 

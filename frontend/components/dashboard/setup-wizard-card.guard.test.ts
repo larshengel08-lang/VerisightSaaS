@@ -40,7 +40,9 @@ describe('setup-wizard stap 1: planning en drempels (spec 2026-09-16 par. 4.1 en
 
   it('geeft de toelichtingen uit de spec', () => {
     expect(src).toContain('De dag waarop je de uitnodiging verstuurt.')
-    expect(src).toContain('Na deze datum kan niemand meer invullen. Drie weken is gebruikelijk; verlengen kan later met twee weken per keer.')
+    expect(src).toContain('Op deze datum vraagt Loep je de meting te sluiten of te verlengen. Drie weken is gebruikelijk; verlengen kan met twee weken per keer.')
+    // Niets dwingt closes_at af (alleen is_active telt): beloof niet dat invullen dan stopt.
+    expect(src).not.toContain('Na deze datum kan niemand meer invullen')
     expect(src).toContain('Op die dag zet Loep de herinneringstekst voor je klaar; jij verstuurt hem vanuit je eigen mail.')
     expect(src).toContain('inclusief parttimers en oproepkrachten')
     expect(src).toContain('niet het hele personeelsbestand')
