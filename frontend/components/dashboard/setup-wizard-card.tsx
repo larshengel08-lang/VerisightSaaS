@@ -106,8 +106,13 @@ export function SetupWizardCard({
     initialClosesAt ?? (initialLaunchDate ? defaultClosesAt(initialLaunchDate) : ''),
   )
   // Zolang de klant de sluitdatum niet zelf heeft aangeraakt, volgt hij de
-  // startdatum (start + 21). Daarna blijft de eigen keuze staan.
-  const [closesAtTouched, setClosesAtTouched] = useState(Boolean(initialClosesAt))
+  // startdatum (start + 21). Daarna blijft de eigen keuze staan. Een eerder
+  // opgeslagen standaardwaarde telt als niet aangeraakt, anders zakt hij na een
+  // latere startdatum onder de minimale looptijd.
+  const [closesAtTouched, setClosesAtTouched] = useState(
+    Boolean(initialClosesAt) &&
+      !(initialLaunchDate && initialClosesAt === defaultClosesAt(initialLaunchDate)),
+  )
   const [reminderChoice, setReminderChoice] = useState<ReminderChoice>(
     initialReminderChoice ?? DEFAULT_REMINDER_AFTER_DAYS,
   )
@@ -208,7 +213,10 @@ export function SetupWizardCard({
 
     // Dezelfde regels als saveLaunchSetupAction, zodat de klant de fout hier
     // al leest en de server alleen nog de tweede grens is.
-    const schedule = validateSchedule({ launchDate, closesAt, reminderChoice, today })
+    const schedule = validateSchedule(
+      { launchDate, closesAt, reminderChoice, today },
+      { storedLaunchDate: initialLaunchDate },
+    )
     if (!schedule.ok) { setStep1Error(schedule.error); return }
 
     if (segmentMode) {
@@ -241,8 +249,10 @@ export function SetupWizardCard({
           reminderChoice,
         })
         if (!launchResult.ok) {
+          // De servermelding zegt zelf al wat wel en niet is opgeslagen en of
+          // je opnieuw moet proberen; hier alleen de afdelingen erbij noemen.
           setStep1Error(
-            `Afdelingen zijn opgeslagen, maar de planning niet: ${launchResult.error ?? 'er ging iets mis.'} Probeer opnieuw.`,
+            `Afdelingen zijn opgeslagen. ${launchResult.error ?? 'De planning is niet opgeslagen. Probeer opnieuw.'}`,
           )
           return
         }

@@ -93,14 +93,25 @@ export interface ValidSchedule {
   reminderConfig: ReminderConfig
 }
 
+export interface ScheduleOptions {
+  /**
+   * De startdatum die al op het delivery record staat. Zolang de meting nog
+   * niet gestart is, mag de klant precies die datum laten staan, ook als hij
+   * inmiddels in het verleden ligt (stap 1 gisteren opgeslagen, vandaag pas
+   * verstuurd). Een andere datum in het verleden blijft verboden.
+   */
+  storedLaunchDate?: string | null
+}
+
 export type ScheduleValidation = { ok: true; value: ValidSchedule } | { ok: false; error: string }
 
-export function validateSchedule(input: ScheduleInput): ScheduleValidation {
+export function validateSchedule(input: ScheduleInput, options: ScheduleOptions = {}): ScheduleValidation {
   const fail = (error: string): ScheduleValidation => ({ ok: false, error })
 
   if (!input.launchDate) return fail('Vul een startdatum in.')
   if (!isDateOnly(input.launchDate)) return fail('De startdatum is geen geldige datum.')
-  if (input.launchDate < input.today) return fail('Kies een startdatum vanaf vandaag.')
+  const keepsStoredDate = Boolean(options.storedLaunchDate) && input.launchDate === options.storedLaunchDate
+  if (input.launchDate < input.today && !keepsStoredDate) return fail('Kies een startdatum vanaf vandaag.')
 
   if (!input.closesAt) return fail('Vul een sluitdatum in.')
   if (!isDateOnly(input.closesAt)) return fail('De sluitdatum is geen geldige datum.')

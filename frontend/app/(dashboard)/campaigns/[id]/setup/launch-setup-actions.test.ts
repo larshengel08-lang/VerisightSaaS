@@ -8,6 +8,10 @@ let campaignUpdates: Array<Record<string, unknown>> = []
 let deliveryUpsertError: { message: string } | null = null
 let campaignUpdateError: { message: string } | null = null
 let confirmCount = 1
+let campaignUpdateCount: number | null = 1
+let campaignRow: Record<string, unknown> = { organization_id: 'org-1', is_active: true, closed_at: null }
+let deliveryRow: Record<string, unknown> | null = null
+let deliveryReadError: { message: string } | null = null
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({
@@ -19,13 +23,13 @@ vi.mock('@/lib/supabase/server', () => ({
         return {
           select: () => ({
             eq: () => ({
-              single: async () => ({ data: { organization_id: 'org-1' } }),
+              single: async () => ({ data: campaignRow }),
             }),
           }),
-          update: (payload: Record<string, unknown>) => ({
+          update: (payload: Record<string, unknown>, _opts?: unknown) => ({
             eq: async () => {
               campaignUpdates.push(payload)
-              return { error: campaignUpdateError }
+              return { error: campaignUpdateError, count: campaignUpdateError ? null : campaignUpdateCount }
             },
           }),
         }
@@ -52,6 +56,11 @@ vi.mock('@/lib/supabase/server', () => ({
       }
       if (table === 'campaign_delivery_records') {
         return {
+          select: () => ({
+            eq: () => ({
+              maybeSingle: async () => ({ data: deliveryRow, error: deliveryReadError }),
+            }),
+          }),
           upsert: async (payload: Record<string, unknown>) => {
             deliveryUpserts.push(payload)
             return { error: deliveryUpsertError }
@@ -87,6 +96,10 @@ describe('saveLaunchSetupAction (spec 2026-09-16 par. 4.1 en 5.2)', () => {
     campaignUpdates = []
     deliveryUpsertError = null
     campaignUpdateError = null
+    campaignUpdateCount = 1
+    campaignRow = { organization_id: 'org-1', is_active: true, closed_at: null }
+    deliveryRow = null
+    deliveryReadError = null
   })
   afterEach(() => {
     orgMemberRole = 'owner'
@@ -159,6 +172,44 @@ describe('saveLaunchSetupAction (spec 2026-09-16 par. 4.1 en 5.2)', () => {
     const result = await saveLaunchSetupAction('campaign-1', input())
     expect(result.ok).toBe(false)
     expect(result.error).toContain('Startdatum en deelnemers zijn opgeslagen, maar de sluitdatum niet')
+  })
+
+  it('meldt eerlijk als de sluitdatum door de database niet is bijgewerkt (0 rijen, geen fout)', async () => {
+    campaignUpdateCount = 0
+    const result = await saveLaunchSetupAction('campaign-1', input())
+    expect(result.ok).toBe(false)
+    expect(result.error).toContain('Startdatum en deelnemers zijn opgeslagen, maar de sluitdatum niet')
+  })
+
+  it('accepteert de al opgeslagen startdatum van gisteren zolang de meting nog niet gestart is', async () => {
+    const yesterday = addDays(today, -1)
+    deliveryRow = { launch_date: yesterday, launch_confirmed_at: null }
+    const result = await saveLaunchSetupAction('campaign-1', input({ launchDate: yesterday, closesAt: addDays(yesterday, 21) }))
+    expect(result).toEqual({ ok: true })
+    expect(deliveryUpserts[0]?.launch_date).toBe(yesterday)
+  })
+
+  it('weigert wijzigingen als de meting al gestart is', async () => {
+    deliveryRow = { launch_date: launchDate, launch_confirmed_at: '2026-09-01T10:00:00Z' }
+    const result = await saveLaunchSetupAction('campaign-1', input())
+    expect(result).toEqual({ ok: false, error: 'De meting is al gestart; stap 1 kun je niet meer wijzigen.' })
+    expect(deliveryUpserts).toHaveLength(0)
+    expect(campaignUpdates).toHaveLength(0)
+  })
+
+  it('weigert wijzigingen als de meting al gesloten is', async () => {
+    campaignRow = { organization_id: 'org-1', is_active: false, closed_at: '2026-09-10T10:00:00Z' }
+    const result = await saveLaunchSetupAction('campaign-1', input())
+    expect(result).toEqual({ ok: false, error: 'De meting is al gesloten; stap 1 kun je niet meer wijzigen.' })
+    expect(deliveryUpserts).toHaveLength(0)
+    expect(campaignUpdates).toHaveLength(0)
+  })
+
+  it('meldt het als de huidige stand van de meting niet te lezen is, in plaats van blind te schrijven', async () => {
+    deliveryReadError = { message: 'timeout' }
+    const result = await saveLaunchSetupAction('campaign-1', input())
+    expect(result).toEqual({ ok: false, error: 'Opslaan mislukt: de huidige planning kon niet worden gelezen (timeout).' })
+    expect(deliveryUpserts).toHaveLength(0)
   })
 })
 

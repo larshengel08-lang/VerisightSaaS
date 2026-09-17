@@ -28,7 +28,7 @@ async function getAuthAndMembership(campaignId: string) {
 
   const { data: campaign } = await supabase
     .from('campaigns')
-    .select('organization_id')
+    .select('organization_id, is_active, closed_at')
     .eq('id', campaignId)
     .single()
 
@@ -59,19 +59,41 @@ export async function saveLaunchSetupAction(
   campaignId: string,
   input: LaunchSetupInput,
 ): Promise<ActionResult> {
-  const schedule = validateSchedule({
-    launchDate: input.launchDate,
-    closesAt: input.closesAt,
-    reminderChoice: input.reminderChoice,
-    today: todayIso(),
-  })
+  const { supabase, campaign, authorized } = await getAuthAndMembership(campaignId)
+  if (!authorized || !campaign) return { ok: false, error: 'Niet gemachtigd.' }
+
+  // Server actions zijn publieke POST-endpoints: na de lancering of sluiting
+  // mag stap 1 niets meer herschrijven (anders omzeilt een eigenaar hier de
+  // verleng-grens of verschuift hij de startdatum van een lopende meting).
+  if (campaign.is_active === false || campaign.closed_at) {
+    return { ok: false, error: 'De meting is al gesloten; stap 1 kun je niet meer wijzigen.' }
+  }
+
+  const { data: delivery, error: deliveryReadError } = await supabase
+    .from('campaign_delivery_records')
+    .select('launch_date, launch_confirmed_at')
+    .eq('campaign_id', campaignId)
+    .maybeSingle()
+  if (deliveryReadError) {
+    return { ok: false, error: `Opslaan mislukt: de huidige planning kon niet worden gelezen (${deliveryReadError.message}).` }
+  }
+  if (delivery?.launch_confirmed_at) {
+    return { ok: false, error: 'De meting is al gestart; stap 1 kun je niet meer wijzigen.' }
+  }
+
+  const schedule = validateSchedule(
+    {
+      launchDate: input.launchDate,
+      closesAt: input.closesAt,
+      reminderChoice: input.reminderChoice,
+      today: todayIso(),
+    },
+    { storedLaunchDate: (delivery?.launch_date as string | null | undefined) ?? null },
+  )
   if (!schedule.ok) return { ok: false, error: schedule.error }
 
   const invitedError = validateInvitedTotal(input.invitedCount)
   if (invitedError) return { ok: false, error: invitedError }
-
-  const { supabase, campaign, authorized } = await getAuthAndMembership(campaignId)
-  if (!authorized || !campaign) return { ok: false, error: 'Niet gemachtigd.' }
 
   const { error: deliveryError } = await supabase
     .from('campaign_delivery_records')
@@ -87,14 +109,17 @@ export async function saveLaunchSetupAction(
     )
   if (deliveryError) return { ok: false, error: `Opslaan mislukt: ${deliveryError.message}` }
 
-  const { error: closesError } = await supabase
+  // count: 'exact', want een door RLS gefilterde UPDATE geeft geen fout maar
+  // 0 rijen; zonder deze check zou dat stil als succes doorgaan.
+  const { error: closesError, count: closesCount } = await supabase
     .from('campaigns')
-    .update({ closes_at: schedule.value.closesAt })
+    .update({ closes_at: schedule.value.closesAt }, { count: 'exact' })
     .eq('id', campaignId)
-  if (closesError) {
+  if (closesError || closesCount === 0) {
+    const reason = closesError ? closesError.message : 'de meting is niet bijgewerkt'
     return {
       ok: false,
-      error: `Startdatum en deelnemers zijn opgeslagen, maar de sluitdatum niet: ${closesError.message}. Probeer opnieuw.`,
+      error: `Startdatum en deelnemers zijn opgeslagen, maar de sluitdatum niet: ${reason}. Probeer opnieuw.`,
     }
   }
 

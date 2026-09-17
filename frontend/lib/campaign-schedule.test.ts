@@ -61,6 +61,19 @@ describe('validateSchedule', () => {
     expect(validateSchedule({ ...valid, launchDate: 'gisteren' })).toEqual({ ok: false, error: 'De startdatum is geen geldige datum.' })
   })
 
+  it('accepteert een eerder opgeslagen startdatum in het verleden zolang de meting nog niet gestart is', () => {
+    const stored = '2026-09-15'
+    const input = { ...valid, launchDate: stored, closesAt: '2026-10-06' }
+    expect(validateSchedule(input, { storedLaunchDate: stored }).ok).toBe(true)
+    expect(validateSchedule(input, { storedLaunchDate: null })).toEqual({ ok: false, error: 'Kies een startdatum vanaf vandaag.' })
+    expect(validateSchedule(input)).toEqual({ ok: false, error: 'Kies een startdatum vanaf vandaag.' })
+    // Alleen de opgeslagen datum zelf mag in het verleden liggen, geen andere.
+    expect(validateSchedule({ ...input, launchDate: '2026-09-14', closesAt: '2026-10-05' }, { storedLaunchDate: stored })).toEqual({
+      ok: false,
+      error: 'Kies een startdatum vanaf vandaag.',
+    })
+  })
+
   it('houdt de sluitdatum tussen start + 7 en start + 90 en noemt de grens als datum', () => {
     expect(validateSchedule({ ...valid, closesAt: '' })).toEqual({ ok: false, error: 'Vul een sluitdatum in.' })
     expect(validateSchedule({ ...valid, closesAt: '2026-09-26' })).toEqual({
