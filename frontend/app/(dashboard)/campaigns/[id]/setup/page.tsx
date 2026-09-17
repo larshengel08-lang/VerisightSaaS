@@ -1,5 +1,6 @@
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { readReminderChoice } from '@/lib/campaign-schedule'
 import { SetupWizardCard } from '@/components/dashboard/setup-wizard-card'
 
 interface Props {
@@ -21,7 +22,7 @@ export default async function CampaignSetupPage({ params }: Props) {
       .maybeSingle(),
     supabase
       .from('campaign_delivery_records')
-      .select('launch_date, invited_count, launch_confirmed_at')
+      .select('launch_date, invited_count, launch_confirmed_at, reminder_config')
       .eq('campaign_id', id)
       .maybeSingle(),
     supabase
@@ -80,6 +81,8 @@ export default async function CampaignSetupPage({ params }: Props) {
         frontendBaseUrl={frontendBaseUrl}
         initialLaunchDate={delivery?.launch_date ?? null}
         initialInvitedCount={delivery?.invited_count ?? null}
+        initialClosesAt={((campaign as Record<string, unknown>).closes_at as string | null) ?? null}
+        initialReminderChoice={readReminderChoice(delivery?.reminder_config)}
         segmentDepartments={(campaign as Record<string, unknown>).segment_departments as
           | { label: string; slug: string; invited_count?: number }[]
           | null}

@@ -1,32 +1,73 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
-describe('setup-wizard afdelingsblok', () => {
-  const src = readFileSync(new URL('./setup-wizard-card.tsx', import.meta.url), 'utf8')
+const src = readFileSync(new URL('./setup-wizard-card.tsx', import.meta.url), 'utf8')
 
+describe('setup-wizard afdelingsblok', () => {
   it('toont in segment-modus een blok per afdeling met naam, aantal en kopieerlink', () => {
     expect(src).toContain('saveSegmentDepartmentsAction')
     expect(src).toContain('buildSegmentSurveyLinks')
   })
   it('vergrendelt de naam van afdelingen met responses', () => {
     expect(src).toContain('lockedDepartments')
-    expect(src).toMatch(/naam vergrendeld|al responses/)
+    expect(src).toMatch(/naam vergrendeld|al responses/i)
   })
   it('toont het automatisch opgetelde totaal', () => {
     expect(src).toMatch(/Totaal deelnemers|totalInvited/)
   })
-  it('managet de n>=5-verwachting expliciet', () => {
-    expect(src).toContain('minimaal 5')
+  it('managet de n>=5-verwachting expliciet (via de gedeelde constante)', () => {
+    expect(src).toMatch(/minimaal \$\{MIN_INVITED_PER_DEPARTMENT\}|minimaal 5/)
   })
   it('vraagt het enkelvoudige aantal niet meer in segment-modus', () => {
     expect(src).toMatch(/hasSegments|segmentMode/)
   })
   it('gebruikt de gedeelde uitnodigingstekst in plaats van een eigen kopie', () => {
-    const source = readFileSync(new URL('./setup-wizard-card.tsx', import.meta.url), 'utf8')
+    expect(src).toContain('buildInviteTemplate')
+    expect(src).not.toContain('function buildInviteBody')
+    expect(src).not.toContain('const SCAN_WHY')
+    expect(src).not.toContain('10-15 minuten')
+  })
+})
 
-    expect(source).toContain('buildInviteTemplate')
-    expect(source).not.toContain('function buildInviteBody')
-    expect(source).not.toContain('const SCAN_WHY')
-    expect(source).not.toContain('10-15 minuten')
+describe('setup-wizard stap 1: planning en drempels (spec 2026-09-16 par. 4.1 en 5.2)', () => {
+  it('heeft een sluitdatum- en herinneringsveld en valideert via de gedeelde planningsregels', () => {
+    expect(src).toContain('validateSchedule')
+    expect(src).toContain('defaultClosesAt')
+    expect(src).toContain('REMINDER_CHOICES')
+    expect(src).toContain('Sluitdatum')
+    expect(src).toContain('Herinnering')
+  })
+
+  it('geeft de toelichtingen uit de spec', () => {
+    expect(src).toContain('De dag waarop je de uitnodiging verstuurt.')
+    expect(src).toContain('Na deze datum kan niemand meer invullen. Drie weken is gebruikelijk; verlengen kan later met twee weken per keer.')
+    expect(src).toContain('Op die dag zet Loep de herinneringstekst voor je klaar; jij verstuurt hem vanuit je eigen mail.')
+    expect(src).toContain('inclusief parttimers en oproepkrachten')
+    expect(src).toContain('niet het hele personeelsbestand')
+    expect(src).toContain('Alle nieuwe medewerkers die je in deze ronde uitnodigt.')
+  })
+
+  it('dwingt de drempels client-side af met dezelfde helpers als de server', () => {
+    expect(src).toContain('validateInvitedTotal')
+    expect(src).toContain('validateDepartmentInvitedCount')
+    expect(src).not.toContain('minimaal 1)')
+  })
+
+  it('laat het formulier de Nederlandse melding geven in plaats van de browsermelding', () => {
+    expect(src).toContain('noValidate')
+    expect(src).toContain('min={today}')
+  })
+
+  it('heeft geen "Link getest"-checkbox meer', () => {
+    expect(src).not.toContain('Link getest')
+    expect(src).not.toContain('linkTested')
+  })
+
+  it('opent altijd op stap 1 zodat de klant tot de lancering kan corrigeren', () => {
+    expect(src).toContain('useState<WizardStep>(1)')
+  })
+
+  it('bevat geen em- of en-dashes in de UI-copy', () => {
+    expect(src).not.toMatch(/[—–]/)
   })
 })

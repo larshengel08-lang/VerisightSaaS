@@ -3,7 +3,24 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { SCAN_TYPE_LABELS, type ScanType } from '@/lib/types'
-import { validateInvitedTotal } from '@/lib/response-activation'
+import {
+  MIN_INVITED_PER_DEPARTMENT,
+  MIN_INVITED_TOTAL,
+  validateDepartmentInvitedCount,
+  validateInvitedTotal,
+} from '@/lib/response-activation'
+import {
+  DEFAULT_REMINDER_AFTER_DAYS,
+  REMINDER_CHOICES,
+  addDays,
+  defaultClosesAt,
+  isReminderChoice,
+  maxClosesAt,
+  minClosesAt,
+  validateSchedule,
+  type ReminderChoice,
+} from '@/lib/campaign-schedule'
+import { formatDutchDate } from '@/lib/dashboard/format-dutch-date'
 import {
   buildInviteTemplate,
   buildSegmentSurveyLinks,
@@ -14,7 +31,7 @@ import {
 import { saveLaunchSetupAction, confirmLaunchAction } from '@/app/(dashboard)/campaigns/[id]/setup/launch-setup-actions'
 import { saveSegmentDepartmentsAction } from '@/app/(dashboard)/campaigns/[id]/setup/segment-actions'
 
-interface Props {
+export interface SetupWizardCardProps {
   campaignId: string
   scanType: ScanType
   organizationName: string
@@ -22,6 +39,10 @@ interface Props {
   frontendBaseUrl: string
   initialLaunchDate: string | null
   initialInvitedCount: number | null
+  /** campaigns.closes_at (date), of null als er nog geen sluitdatum is ingesteld. */
+  initialClosesAt: string | null
+  /** Uit campaign_delivery_records.reminder_config; null als nog nooit opgeslagen. */
+  initialReminderChoice: ReminderChoice | null
   segmentDepartments?: SegmentDepartmentStored[] | null
   departmentResponseCounts?: Record<string, number>
 }
@@ -35,9 +56,26 @@ interface DeptRow {
 
 const SCAN_TIP: Partial<Record<ScanType, string>> = {
   retention:  'Informeer je team vooraf dat er een korte vragenlijst aankomt. Dat verhoogt de respons aanzienlijk.',
-  exit:       'Stuur leidinggevenden vooraf een korte intro — medewerkers die het verwachten vullen vaker in.',
+  exit:       'Stuur leidinggevenden vooraf een korte intro. Medewerkers die het verwachten vullen vaker in.',
   onboarding: 'Laat de direct leidinggevende weten dat nieuwe medewerkers een korte vragenlijst ontvangen.',
 }
+
+// Toelichting bij "Aantal deelnemers", per scan (spec 2026-09-16 par. 5.2).
+const INVITED_COUNT_HELP: Partial<Record<ScanType, string>> = {
+  retention:  'Iedereen die je uitnodigt, inclusief parttimers en oproepkrachten. Stagiairs alleen als ze de vragenlijst ook krijgen.',
+  exit:       'Het aantal mensen dat in de meetperiode vertrekt en de vragenlijst krijgt, niet het hele personeelsbestand.',
+  onboarding: 'Alle nieuwe medewerkers die je in deze ronde uitnodigt.',
+}
+const DEFAULT_INVITED_COUNT_HELP = 'Iedereen die de vragenlijst van je krijgt.'
+const LAUNCH_DATE_HELP = 'De dag waarop je de uitnodiging verstuurt.'
+const CLOSES_AT_HELP = 'Na deze datum kan niemand meer invullen. Drie weken is gebruikelijk; verlengen kan later met twee weken per keer.'
+const REMINDER_HELP = 'Op die dag zet Loep de herinneringstekst voor je klaar; jij verstuurt hem vanuit je eigen mail.'
+const DEPARTMENT_HELP = `Per afdeling zijn minimaal ${MIN_INVITED_PER_DEPARTMENT} ingevulde vragenlijsten nodig om apart in het rapport te verschijnen, en vanaf 10 zie je de spreiding.`
+
+const fieldLabelClass = 'mb-1 block text-xs font-semibold text-white/50'
+const helpClass = 'mt-1 text-[10px] leading-relaxed text-white/40'
+const inputClass =
+  'w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#E8A020]/50'
 
 export function SetupWizardCard({
   campaignId,
@@ -47,23 +85,33 @@ export function SetupWizardCard({
   frontendBaseUrl,
   initialLaunchDate,
   initialInvitedCount,
+  initialClosesAt,
+  initialReminderChoice,
   segmentDepartments,
   departmentResponseCounts,
-}: Props) {
+}: SetupWizardCardProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
   // Segment-modus: de campagne heeft een (evt. lege) afdelingslijst (spec
-  // 2026-07-12 §1/§5). Een lege lijst betekent "modus aan, klant moet nog
-  // vullen" — géén algemene link wordt dan getoond, wel het afdelingenblok.
+  // 2026-07-12 par. 1/5). Een lege lijst betekent "modus aan, klant moet nog
+  // vullen": geen algemene link wordt dan getoond, wel het afdelingenblok.
   const segmentMode = Boolean(segmentDepartments)
 
-  const [step, setStep] = useState<WizardStep>(
-    initialLaunchDate && initialInvitedCount ? 2 : 1,
-  )
+  // Altijd stap 1 (spec 2026-09-16 par. 5.2): tot de lancering kan de klant
+  // corrigeren, ook na een herlaad. De opgeslagen waarden staan voorgevuld.
+  const [step, setStep] = useState<WizardStep>(1)
   const [launchDate, setLaunchDate] = useState(initialLaunchDate ?? '')
+  const [closesAt, setClosesAt] = useState(
+    initialClosesAt ?? (initialLaunchDate ? defaultClosesAt(initialLaunchDate) : ''),
+  )
+  // Zolang de klant de sluitdatum niet zelf heeft aangeraakt, volgt hij de
+  // startdatum (start + 21). Daarna blijft de eigen keuze staan.
+  const [closesAtTouched, setClosesAtTouched] = useState(Boolean(initialClosesAt))
+  const [reminderChoice, setReminderChoice] = useState<ReminderChoice>(
+    initialReminderChoice ?? DEFAULT_REMINDER_AFTER_DAYS,
+  )
   const [invitedCount, setInvitedCount] = useState<number | ''>(initialInvitedCount ?? '')
-  const [linkTested, setLinkTested] = useState(false)
   const [step1Error, setStep1Error] = useState<string | null>(null)
   const [step2Error, setStep2Error] = useState<string | null>(null)
   const [copiedSubject, setCopiedSubject] = useState(false)
@@ -71,9 +119,9 @@ export function SetupWizardCard({
   const [everCopied, setEverCopied] = useState(false)
   const [copiedDeptSlug, setCopiedDeptSlug] = useState<string | null>(null)
 
-  // Rijen voor het afdelingenblok. Startpunt: bestaande afdelingen, of — als
-  // de lijst nog leeg is (modus net aangezet) — twee lege rijen zodat de
-  // minimaal-2-eis meteen zichtbaar is.
+  // Rijen voor het afdelingenblok. Startpunt: bestaande afdelingen, of (als
+  // de lijst nog leeg is) twee lege rijen zodat de minimaal-2-eis meteen
+  // zichtbaar is.
   const [deptRows, setDeptRows] = useState<DeptRow[]>(() => {
     if (segmentDepartments && segmentDepartments.length > 0) {
       return segmentDepartments.map((d) => ({
@@ -85,17 +133,16 @@ export function SetupWizardCard({
   })
 
   // Afdelingen met >=1 respondent: naam-wijziging/verwijdering niet meer
-  // toegestaan — de link is al in omloop (spec §3).
+  // toegestaan, de link is al in omloop (spec 2026-07-12 par. 3).
   const lockedDepartments = new Set(
     Object.keys(departmentResponseCounts ?? {}).filter(
       (label) => (departmentResponseCounts![label] ?? 0) > 0,
     ),
   )
 
-  // Alleen rijen met een ingevulde naam tellen mee — een leeg-genaamde rij
-  // wordt bij opslaan sowieso niet meegenomen in segment_departments, dus het
-  // getoonde totaal moet daarmee overeenkomen (anders wijkt het weergegeven
-  // totaal af van wat straks daadwerkelijk wordt opgeslagen).
+  // Alleen rijen met een ingevulde naam tellen mee: een leeg-genaamde rij
+  // wordt bij opslaan niet meegenomen in segment_departments, dus het getoonde
+  // totaal moet daarmee overeenkomen.
   const totalInvited = deptRows
     .filter((row) => row.label.trim())
     .reduce((sum, row) => sum + (typeof row.invitedCount === 'number' ? row.invitedCount : 0), 0)
@@ -120,6 +167,19 @@ export function SetupWizardCard({
 
   const today = new Date().toISOString().slice(0, 10)
   const tip = SCAN_TIP[scanType]
+  const invitedHelp = INVITED_COUNT_HELP[scanType] ?? DEFAULT_INVITED_COUNT_HELP
+  const reminderDateLabel =
+    reminderChoice !== 'none' && launchDate ? formatDutchDate(addDays(launchDate, reminderChoice)) : null
+
+  function handleLaunchDateChange(value: string) {
+    setLaunchDate(value)
+    if (!closesAtTouched) setClosesAt(value ? defaultClosesAt(value) : '')
+  }
+
+  function handleReminderChange(raw: string) {
+    const parsed: unknown = raw === 'none' ? 'none' : Number(raw)
+    if (isReminderChoice(parsed)) setReminderChoice(parsed)
+  }
 
   function updateDeptRow(index: number, patch: Partial<DeptRow>) {
     setDeptRows((prev) => prev.map((row, i) => (i === index ? { ...row, ...patch } : row)))
@@ -145,7 +205,11 @@ export function SetupWizardCard({
   async function handleStep1Submit(e: React.FormEvent) {
     e.preventDefault()
     setStep1Error(null)
-    if (!launchDate) { setStep1Error('Vul een startdatum in.'); return }
+
+    // Dezelfde regels als saveLaunchSetupAction, zodat de klant de fout hier
+    // al leest en de server alleen nog de tweede grens is.
+    const schedule = validateSchedule({ launchDate, closesAt, reminderChoice, today })
+    if (!schedule.ok) { setStep1Error(schedule.error); return }
 
     if (segmentMode) {
       const incoming = deptRows
@@ -158,16 +222,27 @@ export function SetupWizardCard({
         setStep1Error('Vul minimaal 2 afdelingen in (naam + aantal deelnemers).')
         return
       }
+      for (const row of incoming) {
+        const deptError = validateDepartmentInvitedCount(row.label, row.invited_count)
+        if (deptError) { setStep1Error(deptError); return }
+      }
+      const totalError = validateInvitedTotal(totalInvited)
+      if (totalError) { setStep1Error(totalError); return }
+
       startTransition(async () => {
         const segResult = await saveSegmentDepartmentsAction(campaignId, incoming)
         if (!segResult.ok) { setStep1Error(segResult.error ?? 'Er ging iets mis.'); return }
-        // totalInvited is al afgeleid van dezelfde gefilterde (naam-ingevulde)
-        // rijen als `incoming` hierboven — komt dus overeen met wat
-        // saveSegmentDepartmentsAction zojuist als som heeft opgeslagen.
-        const launchResult = await saveLaunchSetupAction(campaignId, launchDate, totalInvited)
+        // totalInvited is afgeleid van dezelfde gefilterde rijen als `incoming`
+        // en komt dus overeen met wat saveSegmentDepartmentsAction als som opsloeg.
+        const launchResult = await saveLaunchSetupAction(campaignId, {
+          launchDate,
+          invitedCount: totalInvited,
+          closesAt,
+          reminderChoice,
+        })
         if (!launchResult.ok) {
           setStep1Error(
-            `Afdelingen zijn opgeslagen, maar de startdatum niet: ${launchResult.error ?? 'er ging iets mis.'} Probeer opnieuw.`,
+            `Afdelingen zijn opgeslagen, maar de planning niet: ${launchResult.error ?? 'er ging iets mis.'} Probeer opnieuw.`,
           )
           return
         }
@@ -179,7 +254,12 @@ export function SetupWizardCard({
     const invitedError = validateInvitedTotal(invitedCount)
     if (invitedError) { setStep1Error(invitedError); return }
     startTransition(async () => {
-      const result = await saveLaunchSetupAction(campaignId, launchDate, Number(invitedCount))
+      const result = await saveLaunchSetupAction(campaignId, {
+        launchDate,
+        invitedCount: Number(invitedCount),
+        closesAt,
+        reminderChoice,
+      })
       if (!result.ok) { setStep1Error(result.error ?? 'Er ging iets mis.'); return }
       setStep(2)
     })
@@ -212,7 +292,7 @@ export function SetupWizardCard({
         Welkom {organizationName} bij Loep
       </h1>
       <p className="mt-2 text-[0.95rem] text-[color:var(--dashboard-text)]">
-        Doorloop drie stappen om je scan te lanceren.
+        Doorloop drie stappen om je meting te starten.
       </p>
 
       <div className="mt-6 grid grid-cols-3 gap-3">
@@ -220,34 +300,68 @@ export function SetupWizardCard({
         {/* Stap 1 */}
         <div className={`relative rounded-[18px] p-5 ${step === 1 ? 'bg-[#0D1B2A]' : 'border border-[color:var(--dashboard-frame-border)] bg-white opacity-45'}`}>
           <p className={`mb-3 text-xs font-semibold ${step === 1 ? 'text-[#E8A020]' : 'text-[color:var(--dashboard-muted)]'}`}>
-            {step > 1 ? 'Stap 1 — Klaar ✓' : 'Stap 1 — Nu'}
+            {step > 1 ? 'Stap 1: klaar' : 'Stap 1: nu'}
           </p>
           <p className={`mb-1 text-sm font-semibold ${step === 1 ? 'text-white' : 'text-[color:var(--dashboard-ink)]'}`}>
-            Startdatum instellen
+            Planning en deelnemers
           </p>
           <p className={`text-xs ${step === 1 ? 'text-white/50' : 'text-[color:var(--dashboard-muted)]'}`}>
-            Wanneer stuur je de uitnodiging? Naar hoeveel medewerkers?
+            Wanneer start en sluit de meting, en naar hoeveel medewerkers gaat hij?
           </p>
 
           {step === 1 && (
-            <form onSubmit={handleStep1Submit} className="mt-5 space-y-4">
+            <form onSubmit={handleStep1Submit} noValidate className="mt-5 space-y-4">
               <div>
-                <label className="mb-1 block text-xs font-semibold text-white/50">Startdatum</label>
+                <label htmlFor="launch-date" className={fieldLabelClass}>Startdatum</label>
                 <input
-                  type="date" min={today} value={launchDate} required
-                  onChange={(e) => setLaunchDate(e.target.value)}
-                  className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#E8A020]/50"
+                  id="launch-date"
+                  type="date" min={today} value={launchDate}
+                  onChange={(e) => handleLaunchDateChange(e.target.value)}
+                  className={inputClass}
                 />
+                <p className={helpClass}>{LAUNCH_DATE_HELP}</p>
+              </div>
+
+              <div>
+                <label htmlFor="closes-at" className={fieldLabelClass}>Sluitdatum</label>
+                <input
+                  id="closes-at"
+                  type="date"
+                  min={launchDate ? minClosesAt(launchDate) : today}
+                  max={launchDate ? maxClosesAt(launchDate) : undefined}
+                  value={closesAt}
+                  onChange={(e) => { setClosesAtTouched(true); setClosesAt(e.target.value) }}
+                  className={inputClass}
+                />
+                <p className={helpClass}>{CLOSES_AT_HELP}</p>
+              </div>
+
+              <div>
+                <label htmlFor="reminder-choice" className={fieldLabelClass}>Herinnering</label>
+                <select
+                  id="reminder-choice"
+                  value={String(reminderChoice)}
+                  onChange={(e) => handleReminderChange(e.target.value)}
+                  className={`${inputClass} appearance-none`}
+                >
+                  {REMINDER_CHOICES.map((choice) => (
+                    <option key={String(choice.value)} value={String(choice.value)} className="text-[#0D1B2A]">
+                      {choice.label}
+                    </option>
+                  ))}
+                </select>
+                <p className={helpClass}>
+                  {REMINDER_HELP}
+                  {reminderDateLabel ? ` Dat is op ${reminderDateLabel}.` : ''}
+                </p>
               </div>
 
               {segmentMode ? (
                 <div className="space-y-3">
                   <div>
-                    <p className="text-xs font-semibold text-white/50">Afdelingen &amp; links</p>
-                    <p className="mt-1 text-[10px] leading-relaxed text-white/40">
-                      Elke afdeling krijgt een eigen link — minimaal 5 deelnemers per afdeling
-                      voor zichtbaarheid in het rapport.
-                    </p>
+                    <p className="text-xs font-semibold text-white/50">Afdelingen en links</p>
+                    <p className={helpClass}>{DEPARTMENT_HELP}</p>
+                    <p className={helpClass}>{invitedHelp}</p>
                   </div>
 
                   <div className="space-y-2">
@@ -268,7 +382,7 @@ export function SetupWizardCard({
                               className="flex-1 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#E8A020]/50 disabled:opacity-50"
                             />
                             <input
-                              type="number" min={1}
+                              type="number" min={MIN_INVITED_PER_DEPARTMENT}
                               value={row.invitedCount}
                               placeholder="aantal"
                               onChange={(e) =>
@@ -291,7 +405,7 @@ export function SetupWizardCard({
                           </div>
                           {isLocked && (
                             <p className="mt-1.5 text-[10px] text-white/40">
-                              🔒 naam vergrendeld — er zijn al responses op deze link
+                              Naam vergrendeld: er zijn al responses op deze link.
                             </p>
                           )}
                           {links && (
@@ -322,23 +436,25 @@ export function SetupWizardCard({
                   </button>
 
                   <div className="flex items-center justify-between border-t border-white/15 pt-2 text-xs text-white/70">
-                    <span>Totaal deelnemers</span>
+                    <span>Totaal deelnemers (minimaal {MIN_INVITED_TOTAL})</span>
                     <strong className="text-white">{totalInvited}</strong>
                   </div>
                 </div>
               ) : (
                 <>
                   <div>
-                    <label className="mb-1 block text-xs font-semibold text-white/50">Aantal deelnemers</label>
+                    <label htmlFor="invited-count" className={fieldLabelClass}>Aantal deelnemers</label>
                     <input
-                      type="number" min={1} value={invitedCount} placeholder="bijv. 40" required
+                      id="invited-count"
+                      type="number" min={MIN_INVITED_TOTAL} value={invitedCount} placeholder="bijv. 40"
                       onChange={(e) => setInvitedCount(e.target.value === '' ? '' : Number(e.target.value))}
-                      className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#E8A020]/50"
+                      className={inputClass}
                     />
+                    <p className={helpClass}>{invitedHelp}</p>
                   </div>
 
                   <div>
-                    <p className="mb-1 text-xs font-semibold text-white/50">Survey-link</p>
+                    <p className="mb-1 text-xs font-semibold text-white/50">Vragenlijstlink</p>
                     <div className="flex items-center gap-2">
                       <code className="flex-1 truncate rounded-lg border border-white/15 bg-white/10 px-2 py-1.5 text-[10px] text-white/70">
                         {surveyLink}
@@ -348,24 +464,20 @@ export function SetupWizardCard({
                         Test →
                       </a>
                     </div>
-                    <p className="mt-2 text-[10px] leading-relaxed text-white/40">
-                      Alleen openen om te controleren — niet volledig invullen, anders tellen jouw antwoorden mee.
+                    <p className={helpClass}>
+                      Alleen openen om te controleren. Vul hem niet volledig in, anders tellen jouw antwoorden mee.
                     </p>
-                    <label className="mt-2 flex cursor-pointer items-center gap-2 text-[10px] text-white/50">
-                      <input type="checkbox" checked={linkTested} onChange={(e) => setLinkTested(e.target.checked)} className="h-3.5 w-3.5 rounded" />
-                      Link getest en werkt
-                    </label>
                   </div>
                 </>
               )}
 
               {step1Error && (
-                <p className="rounded-lg bg-red-500/20 px-3 py-2 text-xs font-semibold text-red-300">{step1Error}</p>
+                <p role="alert" className="rounded-lg bg-red-500/20 px-3 py-2 text-xs font-semibold text-red-300">{step1Error}</p>
               )}
 
               <button type="submit" disabled={isPending}
                 className="w-full rounded-lg bg-[#E8A020] px-4 py-2.5 text-sm font-semibold text-[#0D1B2A] transition-opacity hover:opacity-90 disabled:opacity-50">
-                {isPending ? 'Bezig…' : 'Opslaan en verder →'}
+                {isPending ? 'Bezig...' : 'Opslaan en verder →'}
               </button>
             </form>
           )}
@@ -379,7 +491,7 @@ export function SetupWizardCard({
             </span>
           )}
           <p className={`mb-3 text-xs font-semibold ${step === 2 ? 'text-[#E8A020]' : 'text-[color:var(--dashboard-muted)]'}`}>
-            Stap 2{step === 2 ? ' — Nu' : ''}
+            {step === 2 ? 'Stap 2: nu' : 'Stap 2'}
           </p>
           <p className={`mb-1 text-sm font-semibold ${step === 2 ? 'text-white' : 'text-[color:var(--dashboard-ink)]'}`}>
             Uitnodiging versturen
@@ -391,7 +503,6 @@ export function SetupWizardCard({
           {step === 2 && (
             <div className="mt-5 space-y-3">
 
-              {/* Tip sticky */}
               {tip && (
                 <div className="rounded-xl bg-[#E8A020]/15 border border-[#E8A020]/30 px-3 py-2.5">
                   <p className="text-[10px] font-semibold text-[#E8A020] mb-0.5">Advies</p>
@@ -403,7 +514,7 @@ export function SetupWizardCard({
                 <div className="rounded-xl bg-white/5 border border-white/10 px-3 py-2.5">
                   <p className="text-[10px] font-semibold text-white/50 mb-1">Deel per afdeling de eigen link</p>
                   <p className="text-[11px] leading-relaxed text-white/60">
-                    Er is bewust géén algemene link — gebruik de links uit stap 1 per afdeling.
+                    Er is bewust geen algemene link. Gebruik de links uit stap 1 per afdeling.
                   </p>
                 </div>
               )}
@@ -411,30 +522,32 @@ export function SetupWizardCard({
               {/* Onderwerp */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-[10px] font-semibold text-white/50 uppercase tracking-wide">Onderwerp</label>
+                  <label htmlFor="invite-subject" className="text-[10px] font-semibold text-white/50 uppercase tracking-wide">Onderwerp</label>
                   <button type="button" onClick={() => handleCopy(editableSubject, 'subject')}
                     className="text-[10px] font-semibold text-[#E8A020] hover:opacity-80">
                     {copiedSubject ? 'Gekopieerd ✓' : 'Kopieer'}
                   </button>
                 </div>
-                <textarea
+                <input
+                  id="invite-subject"
+                  type="text"
                   value={editableSubject}
                   onChange={(e) => setEditableSubject(e.target.value)}
-                  rows={1}
-                  className="w-full resize-none rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-xs text-white/90 focus:outline-none focus:ring-1 focus:ring-[#E8A020]/50"
+                  className="w-full rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-xs text-white/90 focus:outline-none focus:ring-1 focus:ring-[#E8A020]/50"
                 />
               </div>
 
-              {/* Body */}
+              {/* Bericht */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-[10px] font-semibold text-white/50 uppercase tracking-wide">Bericht</label>
+                  <label htmlFor="invite-body" className="text-[10px] font-semibold text-white/50 uppercase tracking-wide">Bericht</label>
                   <button type="button" onClick={() => handleCopy(editableBody, 'body')}
                     className="text-[10px] font-semibold text-[#E8A020] hover:opacity-80">
                     {copiedBody ? 'Gekopieerd ✓' : 'Kopieer'}
                   </button>
                 </div>
                 <textarea
+                  id="invite-body"
                   value={editableBody}
                   onChange={(e) => setEditableBody(e.target.value)}
                   rows={11}
@@ -445,11 +558,11 @@ export function SetupWizardCard({
 
               <div className="border-t border-white/15 pt-3">
                 {step2Error && (
-                  <p className="mb-2 rounded-lg bg-red-500/20 px-3 py-2 text-xs font-semibold text-red-300">{step2Error}</p>
+                  <p role="alert" className="mb-2 rounded-lg bg-red-500/20 px-3 py-2 text-xs font-semibold text-red-300">{step2Error}</p>
                 )}
                 <button type="button" onClick={handleConfirmLaunch} disabled={isPending}
                   className="w-full rounded-lg bg-[#E8A020] px-4 py-2.5 text-sm font-semibold text-[#0D1B2A] transition-opacity hover:opacity-90 disabled:opacity-50">
-                  {isPending ? 'Bezig…' : 'Ja, verstuurd →'}
+                  {isPending ? 'Bezig...' : 'Ja, verstuurd →'}
                 </button>
                 {!everCopied && (
                   <p className="mt-1.5 text-center text-[10px] text-white/30">Tip: kopieer de tekst hierboven voor je verstuurt</p>
@@ -476,12 +589,10 @@ export function SetupWizardCard({
 }
 
 // Live link-preview tijdens het intypen: de naam is dan nog niet per se een
-// geldige/unieke slug (leeg, dubbel met een andere rij) — de echte validatie
+// geldige/unieke slug (leeg, dubbel met een andere rij). De echte validatie
 // (incl. duplicaatcheck) gebeurt server-side bij opslaan via
 // saveSegmentDepartmentsAction. Deze functie geeft alleen een voorlopige
-// link, op basis van de gedeelde slugify() uit self-send-comms.ts (geen
-// eigen kopie — anders drie plekken i.p.v. twee om in sync te houden met
-// backend/segments.py's _slugify).
+// link, op basis van de gedeelde slugify() uit self-send-comms.ts.
 function buildSegmentSurveyLinksSafe(
   frontendBaseUrl: string,
   publicSurveyToken: string,

@@ -6,6 +6,7 @@ import { RunningStateCard } from '@/components/dashboard/running-state-card'
 import { WelcomeGate } from '@/components/dashboard/welcome-gate'
 import { resolveDashboardState } from '@/lib/dashboard/dashboard-state-resolver'
 import { normalizeReminderConfig } from '@/lib/launch-controls'
+import { readReminderChoice } from '@/lib/campaign-schedule'
 import { buildReminderText } from '@/lib/dashboard/reminder-text'
 import { isReportReleaseReady } from '@/lib/response-activation'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
@@ -180,6 +181,8 @@ export default async function DashboardHomePage() {
           frontendBaseUrl={process.env.NEXT_PUBLIC_FRONTEND_URL ?? 'https://getloep.nl'}
           initialLaunchDate={deliveryRecord?.launch_date ?? null}
           initialInvitedCount={deliveryRecord?.invited_count ?? null}
+          initialClosesAt={campaign.closes_at ?? null}
+          initialReminderChoice={readReminderChoice(deliveryRecord?.reminder_config)}
           segmentDepartments={(campaignRow as Record<string, unknown>)?.segment_departments as
             | { label: string; slug: string; invited_count?: number }[]
             | null}

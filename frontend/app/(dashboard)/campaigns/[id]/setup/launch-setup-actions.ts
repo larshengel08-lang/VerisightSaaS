@@ -2,10 +2,23 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { validateInvitedTotal } from '@/lib/response-activation'
+import { validateSchedule, type ReminderChoice } from '@/lib/campaign-schedule'
 
 export interface ActionResult {
   ok: boolean
   error?: string
+}
+
+/** Stap 1 van de wizard (spec 2026-09-16 par. 4.1 en 5.2). */
+export interface LaunchSetupInput {
+  launchDate: string
+  invitedCount: number
+  closesAt: string
+  reminderChoice: ReminderChoice
+}
+
+function todayIso(): string {
+  return new Date().toISOString().slice(0, 10)
 }
 
 async function getAuthAndMembership(campaignId: string) {
@@ -27,7 +40,7 @@ async function getAuthAndMembership(campaignId: string) {
   ])
 
   // Moet in sync blijven met is_org_manager() in schema.sql (owner/member,
-  // geen viewer) — anders passeert een viewer deze check terwijl de RLS-
+  // geen viewer). Anders passeert een viewer deze check terwijl de RLS-
   // insert/update-policy op campaign_delivery_records 'm alsnog blokkeert,
   // wat hier als een onbehandelde 500 naar buiten komt i.p.v. een nette
   // 'Niet gemachtigd'.
@@ -36,34 +49,55 @@ async function getAuthAndMembership(campaignId: string) {
   return { supabase, user, campaign, authorized }
 }
 
+/**
+ * Slaat stap 1 op: startdatum, aantal en herinnering op het delivery record,
+ * de sluitdatum op de campagne (RLS org_managers_can_update_campaigns staat
+ * de eigenaar dit toe). Validatie spiegelt de wizard; elke voorspelbare fout
+ * komt terug als { ok: false, error }, nooit als throw (spec par. 9).
+ */
 export async function saveLaunchSetupAction(
   campaignId: string,
-  launchDate: string,
-  invitedCount: number,
+  input: LaunchSetupInput,
 ): Promise<ActionResult> {
-  if (!launchDate) return { ok: false, error: 'Startdatum is verplicht.' }
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(launchDate) || isNaN(new Date(launchDate).getTime())) {
-    return { ok: false, error: 'Ongeldige datum.' }
-  }
-  const invitedError = validateInvitedTotal(invitedCount)
+  const schedule = validateSchedule({
+    launchDate: input.launchDate,
+    closesAt: input.closesAt,
+    reminderChoice: input.reminderChoice,
+    today: todayIso(),
+  })
+  if (!schedule.ok) return { ok: false, error: schedule.error }
+
+  const invitedError = validateInvitedTotal(input.invitedCount)
   if (invitedError) return { ok: false, error: invitedError }
 
   const { supabase, campaign, authorized } = await getAuthAndMembership(campaignId)
   if (!authorized || !campaign) return { ok: false, error: 'Niet gemachtigd.' }
 
-  const { error } = await supabase
+  const { error: deliveryError } = await supabase
     .from('campaign_delivery_records')
     .upsert(
       {
         campaign_id: campaignId,
         organization_id: campaign.organization_id,
-        launch_date: launchDate,
-        invited_count: invitedCount,
+        launch_date: schedule.value.launchDate,
+        invited_count: input.invitedCount,
+        reminder_config: schedule.value.reminderConfig,
       },
       { onConflict: 'campaign_id' },
     )
+  if (deliveryError) return { ok: false, error: `Opslaan mislukt: ${deliveryError.message}` }
 
-  if (error) throw new Error(`Opslaan mislukt: ${error.message}`)
+  const { error: closesError } = await supabase
+    .from('campaigns')
+    .update({ closes_at: schedule.value.closesAt })
+    .eq('id', campaignId)
+  if (closesError) {
+    return {
+      ok: false,
+      error: `Startdatum en deelnemers zijn opgeslagen, maar de sluitdatum niet: ${closesError.message}. Probeer opnieuw.`,
+    }
+  }
+
   return { ok: true }
 }
 
@@ -77,7 +111,7 @@ export async function confirmLaunchAction(campaignId: string): Promise<ActionRes
     .update({ launch_confirmed_at: now }, { count: 'exact' })
     .eq('campaign_id', campaignId)
 
-  if (error) throw new Error(`Bevestigen mislukt: ${error.message}`)
-  if (count === 0) throw new Error('Geen delivery record gevonden — sla eerst de startdatum op.')
+  if (error) return { ok: false, error: `Bevestigen mislukt: ${error.message}` }
+  if (count === 0) return { ok: false, error: 'Sla eerst stap 1 op; er is nog geen startdatum voor deze meting.' }
   return { ok: true }
 }
