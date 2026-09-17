@@ -21,7 +21,6 @@ const REMINDER_TEXT_UNAVAILABLE = [
 export interface ReminderTextInput {
   commsMode: CommsMode | null | undefined
   scanType: ScanType
-  scanLabel: string
   organizationName: string
   publicSurveyToken: string | null | undefined
   frontendBaseUrl: string
@@ -55,7 +54,6 @@ export function buildReminderText(input: ReminderTextInput): string {
     const template = buildReminderTemplate({
       senderName: '',
       organizationName: input.organizationName,
-      scanLabel: input.scanLabel,
       scanType: input.scanType,
       surveyLink: buildSurveyLink(input.frontendBaseUrl, input.publicSurveyToken),
       departmentLinks:

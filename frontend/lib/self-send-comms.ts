@@ -247,11 +247,17 @@ const DEFAULT_SCAN_WHY = 'Jouw inzicht helpt ons als organisatie verder.'
 interface TemplateArgs {
   senderName: string
   organizationName: string
-  scanLabel: string
   scanType: ScanType
   surveyLink: string
   /** Bij afdelingsrapportage: één link per afdeling in plaats van de algemene link. */
   departmentLinks?: Array<{ label: string; url: string }>
+}
+
+// Ondertekening (spec 2026-09-16 par. 5.2): de organisatie, niet "HR". De
+// ontvanger kent Loep niet, dus de scannaam staat niet in de mail; de
+// vragenlijstpagina zelf noemt Loep wel.
+function signature(args: TemplateArgs): string {
+  return args.senderName || args.organizationName
 }
 
 function buildLinkLines(args: TemplateArgs): string[] {
@@ -266,13 +272,13 @@ function buildLinkLines(args: TemplateArgs): string[] {
 }
 
 export function buildInviteTemplate(args: TemplateArgs): EmailTemplate {
-  const sender = args.senderName || 'HR'
+  const sender = signature(args)
   return {
     subject: `Uitnodiging: korte vragenlijst - ${args.organizationName}`,
     body: [
       'Beste collega,',
       '',
-      `${args.organizationName} houdt een korte, anonieme vragenlijst (${args.scanLabel}).`,
+      `${args.organizationName} houdt een korte, anonieme vragenlijst.`,
       '',
       SCAN_WHY[args.scanType] ?? DEFAULT_SCAN_WHY,
       '',
@@ -289,7 +295,7 @@ export function buildInviteTemplate(args: TemplateArgs): EmailTemplate {
 }
 
 export function buildReminderTemplate(args: TemplateArgs): EmailTemplate {
-  const sender = args.senderName || 'HR'
+  const sender = signature(args)
   return {
     subject: `Herinnering: korte vragenlijst - ${args.organizationName}`,
     body: [

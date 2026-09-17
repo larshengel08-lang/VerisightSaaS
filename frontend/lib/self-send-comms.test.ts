@@ -75,7 +75,6 @@ describe('self-send-comms', () => {
     const tpl = buildInviteTemplate({
       senderName: 'Sarah de Vries, HR',
       organizationName: 'Acme BV',
-      scanLabel: 'Loep Vertrek',
       scanType: 'exit',
       surveyLink: 'https://www.getloep.nl/survey/open/tok-123',
     })
@@ -90,7 +89,6 @@ describe('self-send-comms', () => {
     const tpl = buildReminderTemplate({
       senderName: 'Sarah',
       organizationName: 'Acme BV',
-      scanLabel: 'Loep Behoud',
       scanType: 'retention',
       surveyLink: 'https://www.getloep.nl/survey/open/tok-123',
     })
@@ -103,7 +101,6 @@ describe('self-send-comms', () => {
     const tpl = buildReminderTemplate({
       senderName: 'Sarah',
       organizationName: 'Acme BV',
-      scanLabel: 'Loep Behoud',
       scanType: 'retention',
       surveyLink: 'https://www.getloep.nl/survey/open/tok-123',
       departmentLinks: [
@@ -114,6 +111,39 @@ describe('self-send-comms', () => {
     expect(tpl.body).toContain('Zorg: https://www.getloep.nl/survey/open/tok-123?afd=zorg')
     expect(tpl.body).toContain('Kantoor: https://www.getloep.nl/survey/open/tok-123?afd=kantoor')
     expect(tpl.body).not.toContain('Vul de vragenlijst hier in')
+  })
+
+  it('ondertekent met de organisatienaam als er geen afzendernaam is, en noemt Loep niet in de mail (spec 2026-09-16 par. 5.2)', () => {
+    const invite = buildInviteTemplate({
+      senderName: '',
+      organizationName: 'Acme BV',
+      scanType: 'exit',
+      surveyLink: 'https://www.getloep.nl/survey/open/tok-123',
+    })
+    expect(invite.body.trimEnd().endsWith('Met vriendelijke groet,\nAcme BV')).toBe(true)
+    expect(invite.body).toContain('Acme BV houdt een korte, anonieme vragenlijst.')
+    expect(invite.body).not.toContain('Loep Vertrek')
+    expect(invite.body).not.toContain('(Loep')
+    expect(invite.body).not.toContain('\nHR')
+
+    const reminder = buildReminderTemplate({
+      senderName: '',
+      organizationName: 'Acme BV',
+      scanType: 'retention',
+      surveyLink: 'https://www.getloep.nl/survey/open/tok-123',
+    })
+    expect(reminder.body.trimEnd().endsWith('Met vriendelijke groet,\nAcme BV')).toBe(true)
+    expect(reminder.body).not.toContain('Loep Behoud')
+  })
+
+  it('houdt een ingevulde afzendernaam boven de organisatienaam', () => {
+    const invite = buildInviteTemplate({
+      senderName: 'Sanne de Vries',
+      organizationName: 'Acme BV',
+      scanType: 'retention',
+      surveyLink: 'https://www.getloep.nl/survey/open/tok-123',
+    })
+    expect(invite.body.trimEnd().endsWith('Met vriendelijke groet,\nSanne de Vries')).toBe(true)
   })
 
   it('normalizes partial stored config without losing edited templates', () => {

@@ -166,7 +166,6 @@ export function SetupWizardCard({
   const { subject: inviteSubject, body: inviteBody } = buildInviteTemplate({
     senderName: '',
     organizationName,
-    scanLabel,
     scanType,
     surveyLink,
     departmentLinks: inviteDepartmentLinks,

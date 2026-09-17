@@ -152,7 +152,6 @@ export default async function CampaignPage({ params }: Props) {
   const reminderText = buildReminderText({
     commsMode: campaignMeta?.comms_mode ?? null,
     scanType: stats.scan_type,
-    scanLabel: SCAN_TYPE_LABELS[stats.scan_type] ?? stats.scan_type,
     organizationName: orgData?.name ?? 'je organisatie',
     publicSurveyToken: (campaignMeta as Record<string, unknown>)?.public_survey_token as string | undefined,
     frontendBaseUrl: process.env.NEXT_PUBLIC_FRONTEND_URL ?? 'https://getloep.nl',

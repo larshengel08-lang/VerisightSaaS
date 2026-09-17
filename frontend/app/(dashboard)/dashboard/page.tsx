@@ -177,7 +177,6 @@ export default async function DashboardHomePage() {
   const reminderText = buildReminderText({
     commsMode: campaignRow?.comms_mode ?? null,
     scanType: campaign.scan_type,
-    scanLabel: SCAN_TYPE_LABELS[campaign.scan_type] ?? campaign.scan_type,
     organizationName: orgData?.name ?? 'je organisatie',
     publicSurveyToken: (campaignRow as Record<string, unknown>)?.public_survey_token as string | undefined,
     frontendBaseUrl: process.env.NEXT_PUBLIC_FRONTEND_URL ?? 'https://getloep.nl',

@@ -5,7 +5,6 @@ function input(overrides: Partial<ReminderTextInput> = {}): ReminderTextInput {
   return {
     commsMode: 'self_send',
     scanType: 'retention' as const,
-    scanLabel: 'Loep Behoud',
     organizationName: 'Acme BV',
     publicSurveyToken: 'tok-123',
     frontendBaseUrl: 'https://www.getloep.nl',

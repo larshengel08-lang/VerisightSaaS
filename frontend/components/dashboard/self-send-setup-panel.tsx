@@ -85,12 +85,12 @@ export function SelfSendSetupPanel({
     [frontendBaseUrl, publicSurveyToken, segmentDepartments],
   )
   const inviteTpl = useMemo(
-    () => buildInviteTemplate({ senderName: config.senderName, organizationName, scanLabel, scanType, surveyLink }),
-    [config.senderName, organizationName, scanLabel, scanType, surveyLink],
+    () => buildInviteTemplate({ senderName: config.senderName, organizationName, scanType, surveyLink }),
+    [config.senderName, organizationName, scanType, surveyLink],
   )
   const reminderTpl = useMemo(
-    () => buildReminderTemplate({ senderName: config.senderName, organizationName, scanLabel, scanType, surveyLink }),
-    [config.senderName, organizationName, scanLabel, scanType, surveyLink],
+    () => buildReminderTemplate({ senderName: config.senderName, organizationName, scanType, surveyLink }),
+    [config.senderName, organizationName, scanType, surveyLink],
   )
   const inviteSubject = config.inviteSubject || inviteTpl.subject
   const inviteBody = config.inviteBody || inviteTpl.body
