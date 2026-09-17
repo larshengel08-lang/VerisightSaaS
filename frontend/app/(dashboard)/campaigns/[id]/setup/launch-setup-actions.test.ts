@@ -13,6 +13,9 @@ let confirmUpdates: Array<Record<string, unknown>> = []
 let campaignUpdateCount: number | null = 1
 let campaignRow: Record<string, unknown> = { organization_id: 'org-1', is_active: true, closed_at: null }
 let deliveryRow: Record<string, unknown> | null = null
+// Wat een herlezing ná een UPDATE met 0 rijen ziet (gelijktijdige bevestiging); undefined = zelfde als deliveryRow.
+let deliveryRowAfterUpdate: Record<string, unknown> | null | undefined = undefined
+let confirmIsFilters: Array<[string, unknown]> = []
 let deliveryReadError: { message: string } | null = null
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -63,7 +66,10 @@ vi.mock('@/lib/supabase/server', () => ({
         return {
           select: () => ({
             eq: () => ({
-              maybeSingle: async () => ({ data: deliveryRow, error: deliveryReadError }),
+              maybeSingle: async () => ({
+                data: confirmUpdates.length > 0 && deliveryRowAfterUpdate !== undefined ? deliveryRowAfterUpdate : deliveryRow,
+                error: deliveryReadError,
+              }),
             }),
           }),
           upsert: async (payload: Record<string, unknown>) => {
@@ -71,10 +77,13 @@ vi.mock('@/lib/supabase/server', () => ({
             return { error: deliveryUpsertError }
           },
           update: (data: Record<string, unknown>, _opts?: unknown) => ({
-            eq: async () => {
-              confirmUpdates.push(data)
-              return { error: null, count: confirmCount }
-            },
+            eq: () => ({
+              is: async (column: string, value: unknown) => {
+                confirmUpdates.push(data)
+                confirmIsFilters.push([column, value])
+                return { error: null, count: confirmCount }
+              },
+            }),
           }),
         }
       }
@@ -234,6 +243,8 @@ describe('confirmLaunchAction', () => {
 
   beforeEach(() => {
     confirmUpdates = []
+    confirmIsFilters = []
+    deliveryRowAfterUpdate = undefined
     confirmCount = 1
     campaignRow = { organization_id: 'org-1', is_active: true, closed_at: null, closes_at: closesAt }
     deliveryRow = savedStep1()
@@ -264,6 +275,8 @@ describe('confirmLaunchAction', () => {
     expect(result).toEqual({ ok: true })
     expect(confirmUpdates).toHaveLength(1)
     expect(confirmUpdates[0]).toHaveProperty('launch_confirmed_at')
+    // Alleen schrijven als nog niemand bevestigde: twee gelijktijdige bevestigingen overschrijven elkaar niet.
+    expect(confirmIsFilters).toEqual([['launch_confirmed_at', null]])
   })
 
   it('geeft "Niet gemachtigd" terug voor een viewer i.p.v. te crashen op de RLS-afwijzing (2026-07-08 regressie)', async () => {
@@ -333,6 +346,21 @@ describe('confirmLaunchAction', () => {
 
   it('meldt eerlijk als de database niets heeft bijgewerkt (0 rijen, geen fout)', async () => {
     confirmCount = 0
+    const result = await confirmLaunchAction('campaign-1')
+    expect(result).toEqual({ ok: false, error: 'Bevestigen mislukt: de meting is niet bijgewerkt. Probeer opnieuw.' })
+  })
+
+  it('geeft ok als een gelijktijdige bevestiging net voor was (0 rijen, herlezing toont launch_confirmed_at)', async () => {
+    confirmCount = 0
+    deliveryRowAfterUpdate = { ...savedStep1(), launch_confirmed_at: '2026-09-17T08:00:00Z' }
+    const result = await confirmLaunchAction('campaign-1')
+    expect(result).toEqual({ ok: true })
+    expect(confirmUpdates).toHaveLength(1)
+  })
+
+  it('blijft een eerlijke fout als ook de herlezing na 0 rijen geen bevestiging toont', async () => {
+    confirmCount = 0
+    deliveryRowAfterUpdate = null
     const result = await confirmLaunchAction('campaign-1')
     expect(result).toEqual({ ok: false, error: 'Bevestigen mislukt: de meting is niet bijgewerkt. Probeer opnieuw.' })
   })

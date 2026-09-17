@@ -280,7 +280,9 @@ export function SetupWizardCard({
         setGeneratedInvite(refreshed.generated)
         setEditableSubject(refreshed.subject)
         setEditableBody(refreshed.body)
-        setInviteLinksReplacedEdits(refreshed.replacedEdits)
+        // Alleen aanzetten: een latere save zonder gewijzigde links mag de
+        // melding niet wissen voordat de klant stap 2 heeft gezien.
+        if (refreshed.replacedEdits) setInviteLinksReplacedEdits(true)
         // totalInvited is afgeleid van dezelfde gefilterde rijen als `incoming`
         // en komt dus overeen met wat saveSegmentDepartmentsAction als som opsloeg.
         const launchResult = await saveLaunchSetupAction(campaignId, {
@@ -317,6 +319,7 @@ export function SetupWizardCard({
   }
 
   async function handleCopy(text: string, which: 'subject' | 'body') {
+    setInviteLinksReplacedEdits(false)
     try {
       await navigator.clipboard.writeText(text)
       setEverCopied(true)
@@ -604,7 +607,7 @@ export function SetupWizardCard({
                   id="invite-subject"
                   type="text"
                   value={editableSubject}
-                  onChange={(e) => setEditableSubject(e.target.value)}
+                  onChange={(e) => { setEditableSubject(e.target.value); setInviteLinksReplacedEdits(false) }}
                   className="w-full rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-xs text-white/90 focus:outline-none focus:ring-1 focus:ring-[#E8A020]/50"
                 />
               </div>
@@ -621,7 +624,7 @@ export function SetupWizardCard({
                 <textarea
                   id="invite-body"
                   value={editableBody}
-                  onChange={(e) => setEditableBody(e.target.value)}
+                  onChange={(e) => { setEditableBody(e.target.value); setInviteLinksReplacedEdits(false) }}
                   rows={11}
                   className="w-full resize-none rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-xs leading-relaxed text-white/90 focus:outline-none focus:ring-1 focus:ring-[#E8A020]/50"
                 />

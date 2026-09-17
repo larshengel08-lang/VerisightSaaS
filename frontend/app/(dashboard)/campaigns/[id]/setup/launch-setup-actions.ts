@@ -189,9 +189,21 @@ export async function confirmLaunchAction(campaignId: string): Promise<ActionRes
     .from('campaign_delivery_records')
     .update({ launch_confirmed_at: now }, { count: 'exact' })
     .eq('campaign_id', campaignId)
+    // Alleen als nog niemand bevestigde: twee gelijktijdige bevestigingen
+    // overschrijven de starttijd niet.
+    .is('launch_confirmed_at', null)
 
   if (error) return { ok: false, error: `Bevestigen mislukt: ${error.message}` }
-  // Een door RLS gefilterde UPDATE geeft geen fout maar 0 rijen.
-  if (count === 0) return { ok: false, error: 'Bevestigen mislukt: de meting is niet bijgewerkt. Probeer opnieuw.' }
+  if (count === 0) {
+    // 0 rijen: een gelijktijdige bevestiging was net eerder (dan is het goed),
+    // of een door RLS gefilterde UPDATE (geen fout, wel niets geschreven).
+    const { data: after, error: rereadError } = await supabase
+      .from('campaign_delivery_records')
+      .select('launch_confirmed_at')
+      .eq('campaign_id', campaignId)
+      .maybeSingle()
+    if (!rereadError && after?.launch_confirmed_at) return { ok: true }
+    return { ok: false, error: 'Bevestigen mislukt: de meting is niet bijgewerkt. Probeer opnieuw.' }
+  }
   return { ok: true }
 }

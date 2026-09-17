@@ -27,6 +27,14 @@ describe('setup-wizard afdelingsblok', () => {
     expect(src).toContain('refreshInviteDraft')
     expect(src).toMatch(/buildSegmentSurveyLinks\(frontendBaseUrl, publicSurveyToken, segResult\.departments\)/)
     expect(src).toContain('replacedEdits')
+    // De melding alleen aanzetten vanuit het opslaan: een latere save zonder
+    // gewijzigde links mag hem niet wissen voordat de klant stap 2 ziet.
+    expect(src).toContain('if (refreshed.replacedEdits) setInviteLinksReplacedEdits(true)')
+    expect(src).not.toContain('setInviteLinksReplacedEdits(refreshed.replacedEdits)')
+    // Uit zodra de klant de tekst zelf bewerkt of kopieert.
+    expect(src).toMatch(/onChange=\{\(e\) => \{ setEditableSubject\(e\.target\.value\); setInviteLinksReplacedEdits\(false\) \}\}/)
+    expect(src).toMatch(/onChange=\{\(e\) => \{ setEditableBody\(e\.target\.value\); setInviteLinksReplacedEdits\(false\) \}\}/)
+    expect(src).toMatch(/async function handleCopy\(text: string, which: 'subject' \| 'body'\) \{\s+setInviteLinksReplacedEdits\(false\)/)
     expect(src).toContain('De uitnodiging is bijgewerkt met de nieuwe afdelingslinks.')
   })
   it('gebruikt de gedeelde uitnodigingstekst in plaats van een eigen kopie', () => {
