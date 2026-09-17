@@ -78,6 +78,10 @@ describe('setup-wizard stap 2: terug en bevestigen (spec 2026-09-16 par. 5.2)', 
     expect(src).toContain('setStep(1)')
   })
 
+  it('deactiveert de terugknop zolang een lancering in behandeling is', () => {
+    expect(src).toMatch(/onClick=\{backToStep1\}[\s\S]*?disabled=\{isPending\}[\s\S]*?Terug naar stap 1/)
+  })
+
   it('vraagt bevestiging in een eigen dialoog voordat de meting als gestart telt', () => {
     expect(src).toContain('ConfirmDialog')
     expect(src).toContain('Heb je de uitnodiging naar je medewerkers gestuurd? Daarna telt de meting als gestart en kun je stap 1 niet meer wijzigen.')

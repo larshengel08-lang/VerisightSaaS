@@ -25,4 +25,10 @@ describe('ConfirmDialog (spec 2026-09-16 par. 4.3 en 9: eigen dialoog, geen brow
     expect(src).not.toMatch(/(?<![A-Za-z_])confirm\(/)
     expect(src).not.toMatch(/[—–]/)
   })
+
+  it('gebruikt React useId voor de titel-id in plaats van een vaste string', () => {
+    expect(src).toContain('useId')
+    expect(src).toContain('aria-labelledby={titleId}')
+    expect(src).not.toContain('confirm-dialog-title')
+  })
 })

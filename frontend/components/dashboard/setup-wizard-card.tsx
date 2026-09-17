@@ -530,7 +530,8 @@ export function SetupWizardCard({
               <button
                 type="button"
                 onClick={backToStep1}
-                className="text-[10px] font-semibold text-white/60 underline underline-offset-2 hover:text-white"
+                disabled={isPending}
+                className="text-[10px] font-semibold text-white/60 underline underline-offset-2 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
                 ← Terug naar stap 1
               </button>
