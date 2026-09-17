@@ -21,6 +21,7 @@ import {
   type ReminderChoice,
 } from '@/lib/campaign-schedule'
 import { formatDutchDate } from '@/lib/dashboard/format-dutch-date'
+import { ConfirmDialog } from './confirm-dialog'
 import {
   buildInviteTemplate,
   buildSegmentSurveyLinks,
@@ -123,6 +124,7 @@ export function SetupWizardCard({
   const [copiedBody, setCopiedBody] = useState(false)
   const [everCopied, setEverCopied] = useState(false)
   const [copiedDeptSlug, setCopiedDeptSlug] = useState<string | null>(null)
+  const [launchDialogOpen, setLaunchDialogOpen] = useState(false)
 
   // Rijen voor het afdelingenblok. Startpunt: bestaande afdelingen, of (als
   // de lijst nog leeg is) twee lege rijen zodat de minimaal-2-eis meteen
@@ -284,8 +286,20 @@ export function SetupWizardCard({
     } catch { /* clipboard unavailable */ }
   }
 
-  async function handleConfirmLaunch() {
+  function openLaunchDialog() {
     setStep2Error(null)
+    setLaunchDialogOpen(true)
+  }
+
+  function backToStep1() {
+    setStep2Error(null)
+    setStep(1)
+  }
+
+  // Onomkeerbaar (spec 2026-09-16 par. 5.2 en 9): pas na de eigen dialoog telt
+  // de meting als gestart en is stap 1 niet meer te wijzigen.
+  function handleConfirmLaunch() {
+    setLaunchDialogOpen(false)
     startTransition(async () => {
       const result = await confirmLaunchAction(campaignId)
       if (!result.ok) { setStep2Error(result.error ?? 'Er ging iets mis.'); return }
@@ -513,6 +527,14 @@ export function SetupWizardCard({
           {step === 2 && (
             <div className="mt-5 space-y-3">
 
+              <button
+                type="button"
+                onClick={backToStep1}
+                className="text-[10px] font-semibold text-white/60 underline underline-offset-2 hover:text-white"
+              >
+                ← Terug naar stap 1
+              </button>
+
               {tip && (
                 <div className="rounded-xl bg-[#E8A020]/15 border border-[#E8A020]/30 px-3 py-2.5">
                   <p className="text-[10px] font-semibold text-[#E8A020] mb-0.5">Advies</p>
@@ -570,7 +592,7 @@ export function SetupWizardCard({
                 {step2Error && (
                   <p role="alert" className="mb-2 rounded-lg bg-red-500/20 px-3 py-2 text-xs font-semibold text-red-300">{step2Error}</p>
                 )}
-                <button type="button" onClick={handleConfirmLaunch} disabled={isPending}
+                <button type="button" onClick={openLaunchDialog} disabled={isPending}
                   className="w-full rounded-lg bg-[#E8A020] px-4 py-2.5 text-sm font-semibold text-[#0D1B2A] transition-opacity hover:opacity-90 disabled:opacity-50">
                   {isPending ? 'Bezig...' : 'Ja, verstuurd →'}
                 </button>
@@ -594,6 +616,23 @@ export function SetupWizardCard({
           </p>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={launchDialogOpen}
+        title="Heb je de uitnodiging verstuurd?"
+        onClose={() => setLaunchDialogOpen(false)}
+        actions={[
+          { label: 'Nog niet', onClick: () => setLaunchDialogOpen(false) },
+          { label: 'Ja, verstuurd', onClick: handleConfirmLaunch, variant: 'primary', disabled: isPending },
+        ]}
+      >
+        <p>Heb je de uitnodiging naar je medewerkers gestuurd? Daarna telt de meting als gestart en kun je stap 1 niet meer wijzigen.</p>
+        {!everCopied ? (
+          <p className="font-semibold text-[#B9571F]">
+            Je hebt nog niets gekopieerd. Kopieer eerst het onderwerp en het bericht en verstuur ze vanuit je eigen mail.
+          </p>
+        ) : null}
+      </ConfirmDialog>
     </section>
   )
 }

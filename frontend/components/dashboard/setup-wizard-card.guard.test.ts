@@ -71,3 +71,23 @@ describe('setup-wizard stap 1: planning en drempels (spec 2026-09-16 par. 4.1 en
     expect(src).not.toMatch(/[—–]/)
   })
 })
+
+describe('setup-wizard stap 2: terug en bevestigen (spec 2026-09-16 par. 5.2)', () => {
+  it('biedt in stap 2 een weg terug naar stap 1', () => {
+    expect(src).toContain('Terug naar stap 1')
+    expect(src).toContain('setStep(1)')
+  })
+
+  it('vraagt bevestiging in een eigen dialoog voordat de meting als gestart telt', () => {
+    expect(src).toContain('ConfirmDialog')
+    expect(src).toContain('Heb je de uitnodiging naar je medewerkers gestuurd? Daarna telt de meting als gestart en kun je stap 1 niet meer wijzigen.')
+    expect(src).toContain("'Ja, verstuurd'")
+    expect(src).toContain("'Nog niet'")
+    expect(src).not.toMatch(/(?<![A-Za-z_])confirm\(/)
+  })
+
+  it('zegt in de dialoog dat er nog niets gekopieerd is als dat zo is', () => {
+    expect(src).toContain('Je hebt nog niets gekopieerd.')
+    expect(src).toContain('!everCopied')
+  })
+})
