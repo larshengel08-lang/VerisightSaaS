@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { validateInvitedTotal } from '@/lib/response-activation'
 
 export interface ActionResult {
   ok: boolean
@@ -44,7 +45,8 @@ export async function saveLaunchSetupAction(
   if (!/^\d{4}-\d{2}-\d{2}$/.test(launchDate) || isNaN(new Date(launchDate).getTime())) {
     return { ok: false, error: 'Ongeldige datum.' }
   }
-  if (!invitedCount || invitedCount < 1) return { ok: false, error: 'Aantal deelnemers moet minimaal 1 zijn.' }
+  const invitedError = validateInvitedTotal(invitedCount)
+  if (invitedError) return { ok: false, error: invitedError }
 
   const { supabase, campaign, authorized } = await getAuthAndMembership(campaignId)
   if (!authorized || !campaign) return { ok: false, error: 'Niet gemachtigd.' }

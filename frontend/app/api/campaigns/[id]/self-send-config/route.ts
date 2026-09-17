@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import {
-  MIN_INVITED_COUNT,
   normalizeSelfSendConfig,
   normalizeSelfSendReminders,
   validateInvitedCount,
@@ -89,11 +88,11 @@ export async function PATCH(request: Request, { params }: Context) {
     if (errors.length > 0) {
       return NextResponse.json({ detail: errors.join(' ') }, { status: 400 })
     }
-  } else if (nextInvitedCount !== null && validateInvitedCount(nextInvitedCount).length > 0) {
-    return NextResponse.json(
-      { detail: `Aantal uitgenodigde deelnemers moet minimaal ${MIN_INVITED_COUNT} zijn.` },
-      { status: 400 },
-    )
+  } else if (nextInvitedCount !== null) {
+    const errors = validateInvitedCount(nextInvitedCount)
+    if (errors.length > 0) {
+      return NextResponse.json({ detail: errors.join(' ') }, { status: 400 })
+    }
   }
 
   const nowIso = new Date().toISOString()

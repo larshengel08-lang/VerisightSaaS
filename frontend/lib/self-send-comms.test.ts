@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
+import { MIN_INVITED_TOTAL } from '@/lib/response-activation'
+import * as comms from './self-send-comms'
 import {
-  MIN_INVITED_COUNT,
   buildSurveyLink,
   buildInviteTemplate,
   buildReminderTemplate,
@@ -23,10 +24,16 @@ describe('self-send-comms', () => {
     expect(config.endDate).toBeNull()
   })
 
-  it('rejects invited counts below the minimum', () => {
-    expect(validateInvitedCount(4)).toHaveLength(1)
-    expect(validateInvitedCount(MIN_INVITED_COUNT)).toHaveLength(0)
+  it('wijst uitgenodigde aantallen onder MIN_INVITED_TOTAL af met de klantmelding (spec 2026-09-16 par. 5.1)', () => {
+    expect(validateInvitedCount(9)).toEqual([
+      'Vul minimaal 10 deelnemers in. Onder de 10 ingevulde vragenlijsten maakt Loep geen rapport.',
+    ])
+    expect(validateInvitedCount(MIN_INVITED_TOTAL)).toHaveLength(0)
     expect(validateInvitedCount(34)).toHaveLength(0)
+  })
+
+  it('kent geen eigen MIN_INVITED_COUNT meer: de drempel woont in response-activation', () => {
+    expect((comms as Record<string, unknown>).MIN_INVITED_COUNT).toBeUndefined()
   })
 
   it('computes response rate against the manual denominator and caps at 100', () => {
@@ -192,12 +199,12 @@ describe('prepareSegmentDepartmentsUpdate', () => {
     ).toThrow(/minimaal 2/)
   })
 
-  it('eist een positief aantal per afdeling', () => {
+  it('eist minimaal 5 per afdeling en noemt de afdeling in de melding', () => {
     expect(() =>
       prepareSegmentDepartmentsUpdate(existing,
-        [{ label: 'Sales', invited_count: 0 }, { label: 'Ops', invited_count: 5 }],
+        [{ label: 'Sales', invited_count: 4 }, { label: 'Ops', invited_count: 5 }],
         new Set()),
-    ).toThrow(/aantal/i)
+    ).toThrow(/Afdeling Sales: minimaal 5 deelnemers/)
   })
 })
 

@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { SCAN_TYPE_LABELS, type ScanType } from '@/lib/types'
+import { validateInvitedTotal } from '@/lib/response-activation'
 import {
   buildInviteTemplate,
   buildSegmentSurveyLinks,
@@ -175,7 +176,8 @@ export function SetupWizardCard({
       return
     }
 
-    if (!invitedCount || Number(invitedCount) < 1) { setStep1Error('Vul het aantal deelnemers in (minimaal 1).'); return }
+    const invitedError = validateInvitedTotal(invitedCount)
+    if (invitedError) { setStep1Error(invitedError); return }
     startTransition(async () => {
       const result = await saveLaunchSetupAction(campaignId, launchDate, Number(invitedCount))
       if (!result.ok) { setStep1Error(result.error ?? 'Er ging iets mis.'); return }

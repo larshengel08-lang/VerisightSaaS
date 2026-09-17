@@ -63,14 +63,18 @@ describe('saveLaunchSetupAction', () => {
     expect(result).toEqual({ ok: false, error: 'Startdatum is verplicht.' })
   })
 
-  it('returns error when invitedCount is 0', async () => {
+  it('wijst een aantal onder MIN_INVITED_TOTAL af met de klantmelding', async () => {
     const result = await saveLaunchSetupAction('campaign-1', '2026-07-01', 0)
-    expect(result).toEqual({ ok: false, error: 'Aantal deelnemers moet minimaal 1 zijn.' })
+    expect(result).toEqual({
+      ok: false,
+      error: 'Vul minimaal 10 deelnemers in. Onder de 10 ingevulde vragenlijsten maakt Loep geen rapport.',
+    })
   })
 
-  it('returns error when invitedCount is negative', async () => {
+  it('wijst een negatief aantal af', async () => {
     const result = await saveLaunchSetupAction('campaign-1', '2026-07-01', -5)
-    expect(result).toEqual({ ok: false, error: 'Aantal deelnemers moet minimaal 1 zijn.' })
+    expect(result.ok).toBe(false)
+    expect(result.error).toContain('minimaal 10')
   })
 
   it('returns error for invalid date format', async () => {
