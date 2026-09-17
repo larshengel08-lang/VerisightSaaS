@@ -49,7 +49,11 @@ describe('dashboard state interaction island', () => {
     expect(noticeBlockIdx).toBeGreaterThan(-1)
     expect(firstCtaKindCheckIdx).toBeGreaterThan(-1)
     expect(noticeBlockIdx).toBeLessThan(firstCtaKindCheckIdx)
-    const roleStatusMatches = island.match(/role="status"/g) ?? []
+    // Scope tot DashboardStateActions zelf: ReminderComposer (spec-review
+    // 2026-09-17) heeft zijn eigen, aparte role="status" om per veld te
+    // melden dat er iets gekopieerd is, los van deze notice-regressieguard.
+    const ownScope = island.slice(0, island.indexOf('function ReminderComposer'))
+    const roleStatusMatches = ownScope.match(/role="status"/g) ?? []
     expect(roleStatusMatches.length).toBe(1)
     const mainReturn = island.slice(
       island.indexOf('const secondaryActions = state.secondaryActions'),
@@ -91,6 +95,62 @@ describe('dashboard state interaction island', () => {
   it('laat pas bevestigen dat de herinnering is verstuurd nadat er iets gekopieerd is', () => {
     expect(island).toContain('disabled={!copied || isBusy}')
     expect(island).toContain('Kopieer eerst het onderwerp en het bericht')
+  })
+
+  it('toont bij een mislukte kopieeractie een melding per veld, geen valse bevestiging (spec-review 2026-09-17)', () => {
+    const copyFn = island.slice(island.indexOf('async function copy'), island.indexOf('return (', island.indexOf('async function copy')))
+    expect(copyFn).toContain('try {')
+    expect(copyFn).toContain('await navigator.clipboard.writeText')
+    expect(copyFn).toContain('} catch {')
+    const tryBlock = copyFn.slice(copyFn.indexOf('try {'), copyFn.indexOf('} catch'))
+    const catchBlock = copyFn.slice(copyFn.indexOf('} catch'))
+    // markCopied (en dus onCopied naar de ouder) mag alleen ná een geslaagde
+    // writeText lopen, nooit in de catch-tak.
+    expect(tryBlock).not.toContain('markCopied')
+    expect(catchBlock).toContain('setErrorField(which)')
+    expect(catchBlock).toContain('.select()')
+    expect(island).toContain('Kopiëren lukte niet. Selecteer de tekst en kopieer met Ctrl+C.')
+  })
+
+  it('telt een handmatige kopieeractie (Ctrl+C) ook mee via onCopy op beide velden', () => {
+    expect(island).toContain("onCopy={() => markCopied('subject')}")
+    expect(island).toContain("onCopy={() => markCopied('body')}")
+  })
+
+  it('ontgrendelt bevestigen pas als onderwerp én bericht allebei zijn gekopieerd', () => {
+    expect(island).toContain('copiedRef.current.subject && copiedRef.current.body')
+  })
+
+  it('herkent de gedegradeerde herinneringstekst (geen surveylink) en toont die als alert, geen bewerkbare composer', () => {
+    expect(island).toContain('isReminderTextAvailable')
+    const ctaBlock = island.slice(island.indexOf("state.ctaKind === 'copy_reminder'"), island.indexOf("state.ctaKind === 'close_campaign'"))
+    expect(ctaBlock).toContain('isReminderTextAvailable(reminderText) ? (')
+    expect(ctaBlock).toContain('<ReminderComposer')
+    expect(ctaBlock).toContain('role="alert"')
+  })
+
+  it('rendert de composer met key={reminderText} zodat een ververste tekst de velden reset', () => {
+    expect(island).toContain('key={reminderText}')
+  })
+
+  it('bewaart de kopieer-flash-timeout in een ref en ruimt hem op bij een nieuwe kopie en bij unmount', () => {
+    expect(island).toContain('flashTimeoutRef')
+    const flashFn = island.slice(island.indexOf('function flash('), island.indexOf('function markCopied'))
+    expect(flashFn).toContain('clearTimeout(flashTimeoutRef.current)')
+    const cleanupEffect = island.slice(island.indexOf('useEffect(() => {'), island.indexOf('function flash('))
+    expect(cleanupEffect).toContain('clearTimeout(flashTimeoutRef.current)')
+  })
+
+  it('heeft aria-labels op de kopieerknoppen en een aria-live-melding voor screenreaders', () => {
+    expect(island).toContain('aria-label="Kopieer onderwerp"')
+    expect(island).toContain('aria-label="Kopieer bericht"')
+    expect(island).toContain('aria-live="polite"')
+    expect(island).toContain('sr-only')
+  })
+
+  it('gebruikt resize-y op het bericht en text-base sm:text-xs op de velden tegen iOS-zoom', () => {
+    expect(island).toContain('resize-y')
+    expect(island).toContain('text-base sm:text-xs')
   })
 })
 

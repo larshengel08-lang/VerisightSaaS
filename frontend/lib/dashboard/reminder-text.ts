@@ -7,6 +7,17 @@ import {
 } from '@/lib/self-send-comms'
 import type { CommsMode, DeliveryMode, ScanType } from '@/lib/types'
 
+/**
+ * Tekst die de klant ziet zolang er nog geen surveylink is (spec 2026-09-16
+ * par. 4.4). Vastgelegd als module-constante zodat isReminderTextAvailable
+ * 'm woordelijk kan herkennen, ongeacht wie buildReminderText aanroept.
+ */
+const REMINDER_TEXT_UNAVAILABLE = [
+  'Er is nog geen surveylink beschikbaar voor deze meting.',
+  '',
+  'Loep kan de herinneringstekst pas klaarzetten zodra de link er is. Mail hallo@getloep.nl, dan zetten we dit recht.',
+].join('\n')
+
 export interface ReminderTextInput {
   commsMode: CommsMode | null | undefined
   scanType: ScanType
@@ -37,11 +48,7 @@ export function buildReminderText(input: ReminderTextInput): string {
     // Een token van alleen spaties is in JS waar, maar levert een kapotte
     // link op. Trimmen, zodat ook die vorm de gedegradeerde tekst krijgt.
     if (!input.publicSurveyToken?.trim()) {
-      return [
-        'Er is nog geen surveylink beschikbaar voor deze meting.',
-        '',
-        'Loep kan de herinneringstekst pas klaarzetten zodra de link er is. Mail hallo@getloep.nl, dan zetten we dit recht.',
-      ].join('\n')
+      return REMINDER_TEXT_UNAVAILABLE
     }
 
     const departments = input.segmentDepartments ?? null
@@ -71,11 +78,24 @@ export function buildReminderText(input: ReminderTextInput): string {
 /**
  * Inverse van de `subject\n\nbody`-vorm die buildReminderText teruggeeft, zodat
  * de herinneringskaart onderwerp en bericht apart kan tonen en kopiëren (spec
- * 2026-09-16 par. 4.4). Zonder lege regel is alles onderwerp; de gedegradeerde
- * tekst (geen surveylink) komt dan als geheel in beeld, wat de bedoeling is.
+ * 2026-09-16 par. 4.4). Splitst op de eerste lege regel; zonder lege regel is
+ * alles onderwerp. Let op: de gedegradeerde tekst (geen surveylink) bevat zelf
+ * een lege regel en wordt dus ook gesplitst in een onderwerp en bericht die
+ * geen van beide kloppen. Gebruik isReminderTextAvailable om die tekst te
+ * herkennen voordat je dit aanroept.
  */
 export function splitReminderText(text: string): { subject: string; body: string } {
   const firstBreak = text.indexOf('\n\n')
   if (firstBreak < 0) return { subject: text, body: '' }
   return { subject: text.slice(0, firstBreak), body: text.slice(firstBreak + 2) }
+}
+
+/**
+ * True zodra buildReminderText een echte, kopieerbare herinnering teruggaf;
+ * false voor de gedegradeerde tekst (geen surveylink). De herinneringskaart
+ * gebruikt dit om de composer over te slaan in plaats van 'm te vullen met
+ * een nep-onderwerp en -bericht (spec-review 2026-09-17).
+ */
+export function isReminderTextAvailable(text: string): boolean {
+  return text !== REMINDER_TEXT_UNAVAILABLE
 }

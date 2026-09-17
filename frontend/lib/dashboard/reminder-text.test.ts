@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildReminderText, splitReminderText, type ReminderTextInput } from '@/lib/dashboard/reminder-text'
+import { buildReminderText, isReminderTextAvailable, splitReminderText, type ReminderTextInput } from '@/lib/dashboard/reminder-text'
 
 function input(overrides: Partial<ReminderTextInput> = {}): ReminderTextInput {
   return {
@@ -79,5 +79,27 @@ describe('splitReminderText (spec 2026-09-16 par. 4.4)', () => {
 
   it('geeft een tekst zonder lege regel volledig als onderwerp terug, met leeg bericht', () => {
     expect(splitReminderText('alleen een regel')).toEqual({ subject: 'alleen een regel', body: '' })
+  })
+})
+
+describe('isReminderTextAvailable (spec-review 2026-09-17)', () => {
+  it('herkent de echte, gedegradeerde fallback-tekst (geen surveylink) als niet beschikbaar', () => {
+    const text = buildReminderText(input({ publicSurveyToken: null }))
+    expect(isReminderTextAvailable(text)).toBe(false)
+  })
+
+  it('herkent de whitespace-only-tokenvariant van de fallback ook als niet beschikbaar', () => {
+    const text = buildReminderText(input({ publicSurveyToken: '   ' }))
+    expect(isReminderTextAvailable(text)).toBe(false)
+  })
+
+  it('herkent een echte, kopieerbare herinnering als beschikbaar', () => {
+    const text = buildReminderText(input())
+    expect(isReminderTextAvailable(text)).toBe(true)
+  })
+
+  it('herkent de managed-tekst ook als beschikbaar', () => {
+    const text = buildReminderText(input({ commsMode: 'managed' }))
+    expect(isReminderTextAvailable(text)).toBe(true)
   })
 })
