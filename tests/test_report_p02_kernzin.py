@@ -79,20 +79,146 @@ def test_geen_kwetsbaar_en_startpunt_wijkt_af_van_de_laagste():
     assert f"{L('growth', 'exit')} scoort het laagst en is" not in zin
 
 
+# Scenario 06 uit de stresstest: drie onderwerpen tonen 6.2, de vlakke zin
+# noemde er één als "laagste" (ronde 2 open punt a).
+DRIE_GEDEELD = {"leadership": 6.5, "culture": 6.24, "growth": 6.22,
+                "compensation": 6.15, "workload": 6.3, "role_clarity": 6.3}
+
+
+def test_vlakke_zin_noemt_alle_onderwerpen_op_de_laagste_getoonde_score():
+    zin = _open(DRIE_GEDEELD, primary="workload")
+    assert f"laagste {L('compensation')}, {L('growth')} en {L('culture')} 6.2/10" in zin
+    assert "laagste Beloning en eerlijkheid 6.2/10," not in zin
+
+
+def test_gedeelde_laagste_zonder_kwetsbaar_noemt_beide_namen():
+    zin = _open(GEDEELDE_LAAGSTE, primary="compensation")
+    assert f"{L('compensation')} en {L('leadership')} delen de laagste score (5.8/10)" in zin
+    assert "deelt de laagste score met het volgende onderwerp" not in zin
+
+
+def test_een_kwetsbaar_onderwerp_noemt_de_aandachtspunten():
+    # H17: één rode balk, twee oranje. De kop zegt dat er één kwetsbaar
+    # onderwerp is en noemt de aandachtspunten in dezelfde adem.
+    avgs = {"leadership": 5.7, "culture": 7.1, "growth": 4.7,
+            "compensation": 7.1, "workload": 5.2, "role_clarity": 7.1}
+    zin = _open(avgs, primary="growth")
+    assert zin.startswith(f"Behoud vraagt aandacht op één kwetsbaar onderwerp: {L('growth')} (4.7/10). ")
+    assert f"Daarnaast zijn {L('workload')} (5.2/10) en {L('leadership')} (5.7/10) een aandachtspunt." in zin
+
+
+def test_een_kwetsbaar_onderwerp_zonder_aandachtspunten():
+    zin = _open(EEN_LAGE, primary="growth")
+    assert "één kwetsbaar onderwerp" in zin
+    assert "Daarnaast" not in zin
+
+
+def test_kop_herhaalt_het_startpunt_niet():
+    # C11: "...: Groeiperspectief (4.5/10). Als startpunt kiest Loep
+    # Groeiperspectief." zegt tweemaal hetzelfde. Is het startpunt het
+    # eerstgenoemde kwetsbare onderwerp en heeft de startpuntzin geen eigen
+    # grond, dan volstaat "Daar begint het gesprek."
+    zin = _open(EEN_LAGE, primary="growth")
+    assert zin.endswith("(4.5/10). Daar begint het gesprek.")
+    assert "Als startpunt kiest Loep" not in zin
+    zacht = _open(EEN_LAGE, primary="growth", indicatief=True)
+    assert zacht.endswith("Daar begint het gesprek waarschijnlijk.")
+
+
+def test_kop_herhaalt_niet_maar_grond_blijft_staan():
+    # Met een grond (klein verschil, richting) blijft de volle startpuntzin: die
+    # zegt iets nieuws.
+    zin = _open(TWEE_LAAG, primary="growth", next_delta=0.1)
+    assert f"Als startpunt kiest Loep {L('growth')}, de laagste score." in zin
+    # Startpunt is niet het eerstgenoemde kwetsbare onderwerp: geen verkorting.
+    zin = _open(TWEE_LAAG, scan="exit", primary="workload", tie_break_kind=None, next_delta=1.0)
+    assert f"Als startpunt kiest Loep {L('workload', 'exit')}." in zin
+
+
+# ── afwijkingen bij plan 3a taak 3: "Daar" wijst naar één onderwerp ──────────
+
+def test_daar_wijst_niet_naar_de_aandachtspunten():
+    """Staat er na het kwetsbare onderwerp een "Daarnaast"-zin, dan zou "Daar
+    begint het gesprek." naar de aandachtspunten wijzen. Dan blijft de volle
+    startpuntzin staan: die zegt welk onderwerp het is."""
+    avgs = {"leadership": 5.7, "culture": 7.1, "growth": 4.7,
+            "compensation": 7.1, "workload": 5.2, "role_clarity": 7.1}
+    zin = _open(avgs, primary="growth")
+    assert "Daar begint het gesprek" not in zin
+    assert zin.endswith(f"een aandachtspunt. Als startpunt kiest Loep {L('growth')}.")
+
+
+def test_daar_wijst_niet_naar_twee_kwetsbare_onderwerpen():
+    """Bij twee kwetsbare onderwerpen zou "Daar begint het gesprek." suggereren
+    dat het gesprek bij allebei begint; Loep kiest er één."""
+    zin = _open(TWEE_LAAG, primary="growth")
+    assert "Daar begint het gesprek" not in zin
+    assert zin.endswith(f"Als startpunt kiest Loep {L('growth')}.")
+
+
+def test_getoonde_gelijkstand_claimt_geen_laagste_score():
+    """Twee kwetsbare onderwerpen tonen allebei 4.5. "Als startpunt kiest Loep X,
+    de laagste score. Het verschil met de volgende is klein, 0,04 punt" claimt
+    dan een laagste score die de lezer twee keer ziet staan. De zin benoemt de
+    gelijkstand in plaats daarvan."""
+    avgs = dict(TWEE_LAAG, growth=4.48, workload=4.52)
+    zin = _open(avgs, primary="growth", tie_break_kind=None, next_delta=0.04)
+    assert f"{L('growth')} (4.5/10), {L('workload')} (4.5/10)." in zin
+    assert "de laagste score." not in zin
+    assert "0,04" not in zin
+    assert "deelt de laagste score met het volgende" in zin
+
+
+def test_vlak_profiel_met_getoonde_gelijkstand_claimt_geen_laagste_score():
+    # VLAK: growth 5.67 en compensation 5.70 tonen allebei 5.7, en de vlakke zin
+    # noemt ze nu allebei als laagste.
+    zin = _open(VLAK, tie_break_kind=None, next_delta=0.03)
+    assert f"laagste {L('growth')} en {L('compensation')} 5.7/10" in zin
+    assert "de laagste score." not in zin
+
+
+def test_retention_render_kop_en_blijfintentie_lopen_samen():
+    """De verkorte startpuntzin en de kopzin over de blijfintentie in één
+    gerenderde kop: geen "Wel" na een kwetsbaar onderwerp, geen herhaling."""
+    import re
+    from backend.report_html import render_retention_report_html
+    from tests.test_report_distribution import _min_retention_data
+    avgs = {"leadership": 6.8, "culture": 7.2, "growth": 4.5,
+            "compensation": 6.6, "workload": 7.0, "role_clarity": 7.5}
+    d = _min_retention_data(
+        factor_resp_scores={fk: [v] * 12 for fk, v in avgs.items()},
+        intent_resp={"stay": [2.0] * 10 + [8.0] * 2,
+                     "turnover": [5.0] * 12, "engagement": [6.0] * 12})
+    d["factor_avgs"] = avgs
+    d["top_risks"] = sorted(avgs.items(), key=lambda kv: kv[1])
+    d["avg_si"] = 3.0
+    html = render_retention_report_html(d)
+    tekst = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html))
+    kop = (f"Behoud vraagt aandacht op één kwetsbaar onderwerp: {L('growth')} "
+           f"(4.5/10). Daar begint het gesprek. Ook de blijfintentie is "
+           f"kwetsbaar: 3.0/10, 10 van de 12 zitten onder de 5.")
+    assert kop in tekst
+    assert "Wel is de blijfintentie" not in tekst
+    i = tekst.index(kop)
+    assert "—" not in tekst[max(0, i - 300):i + len(kop) + 300]
+
+
 def test_gedeelde_laagste_score_claimt_geen_alleenrecht():
     """Twee onderwerpen op dezelfde getoonde score: "X scoort het laagst" is dan
     geen uitspraak over X alleen, en het overzichtsprofiel toont ze verderop
     naast elkaar. Zelfde behandeling als de gelijkstand in de startpuntregel."""
     zin = _open(GEDEELDE_LAAGSTE)
     assert "scoort het laagst" not in zin
-    assert (f"{L('compensation')} deelt de laagste score met het volgende "
-            f"onderwerp en is het eerste gesprekspunt.") in zin
+    # Twee onderwerpen kunnen niet samen "het eerste gesprekspunt" zijn: het
+    # startpunt wordt apart genoemd (plan 3a taak 3).
+    assert (f"{L('compensation')} en {L('leadership')} delen de laagste score "
+            f"(5.8/10); als eerste gesprekspunt kiest Loep {L('compensation')}.") in zin
 
 
 def test_gedeelde_laagste_score_ook_als_het_startpunt_afwijkt():
     zin = _open(GEDEELDE_LAAGSTE, primary="culture")
-    assert f"{L('compensation')} deelt de laagste score met het volgende onderwerp;" in zin
-    assert f"als eerste gesprekspunt kiest Loep {L('culture')}." in zin
+    assert (f"{L('compensation')} en {L('leadership')} delen de laagste score "
+            f"(5.8/10); als eerste gesprekspunt kiest Loep {L('culture')}.") in zin
     assert "scoort het laagst" not in zin
 
 
@@ -100,15 +226,15 @@ def test_een_kwetsbaar_onderwerp():
     zin = _open(EEN_LAGE)
     # Telwoord met accent, geen lidwoord: "een onderwerp" leest als "a topic"
     # in plaats van als tegenhanger van "twee onderwerpen" (spec par. 5.2).
-    assert "één onderwerp" in zin
-    assert "aandacht op een onderwerp" not in zin
+    assert "één kwetsbaar onderwerp" in zin
+    assert "aandacht op een kwetsbaar onderwerp" not in zin
     assert f"{L('growth')} (4.5/10)" in zin
-    assert "twee onderwerpen" not in zin
+    assert "twee kwetsbare onderwerpen" not in zin
 
 
 def test_twee_kwetsbare_onderwerpen():
     zin = _open(TWEE_LAAG)
-    assert "twee onderwerpen" in zin
+    assert "twee kwetsbare onderwerpen" in zin
     # Laagst eerst, met de eigen score erbij: een verwisseling van de twee
     # overleeft een losse substringtest wel, deze niet. Komma en geen "en":
     # beide echte labels bevatten zelf al "en".
@@ -127,7 +253,7 @@ def test_grens_tussen_twee_en_drie_kwetsbare_onderwerpen():
     grens, dan somt het rapport er drie op of telt het er twee."""
     twee = _open(TWEE_LAAG)
     drie = _open(DRIE_LAAG)
-    assert "twee onderwerpen" in twee and "scoren kwetsbaar" not in twee
+    assert "twee kwetsbare onderwerpen" in twee and "scoren kwetsbaar" not in twee
     assert "3 van de 6 onderwerpen scoren kwetsbaar" in drie
     assert "drie onderwerpen:" not in drie
     assert f"{L('compensation')} (4.9/10)" not in drie
@@ -139,12 +265,13 @@ def test_kwetsbaar_is_strikt_onder_de_grens():
     als er daarnaast wel een kwetsbaar onderwerp is."""
     op_de_grens = dict(EEN_LAGE, compensation=ZONE_LOW)
     zin = _open(op_de_grens)
-    assert "één onderwerp" in zin
+    assert "één kwetsbaar onderwerp" in zin
     assert f"{L('growth')} (4.5/10)." in zin
-    assert "5.0/10" not in zin
+    # Op de grens is het een aandachtspunt (H17), niet een kwetsbaar onderwerp.
+    assert f"(4.5/10). Daarnaast is {L('compensation')} (5.0/10) een aandachtspunt." in zin
 
     net_eronder = dict(EEN_LAGE, compensation=4.94)
-    assert "twee onderwerpen" in _open(net_eronder)
+    assert "twee kwetsbare onderwerpen" in _open(net_eronder)
 
 
 def test_drie_scenarios_geven_drie_verschillende_zinnen():
@@ -174,7 +301,10 @@ def test_richtinggrond_valt_weg_zonder_vergelijkingskant():
 
 
 def test_startpuntgrond_bij_alleen_score():
-    zin = _open(VLAK, tie_break_kind=None, next_delta=0.03)
+    # EEN_LAGE en niet VLAK: in VLAK tonen twee onderwerpen 5.7, en dan is "de
+    # laagste score" niet van het startpunt alleen (zie
+    # test_getoonde_gelijkstand_claimt_geen_laagste_score).
+    zin = _open(EEN_LAGE, tie_break_kind=None, next_delta=0.03)
     assert "de laagste score" in zin
     # Prozagetal met komma en het woord "punt", zoals "binnen een punt van
     # elkaar" en "onder de 5,0"; scores houden hun punt en hun /10.
@@ -299,7 +429,7 @@ def test_vlakke_zin_houdt_zijn_accent_in_de_gerenderde_pagina():
     html = _bestuurlijke_read(kernzin=_open(EEN_LAGE), totaalbeeld="T.",
                               primary_label="Groeiperspectief", why_cells_html="",
                               strong_label="", strong_score=None, mgmt_q="V?")
-    assert "aandacht op één onderwerp" in html
+    assert "aandacht op één kwetsbaar onderwerp" in html
     assert "&eacute;" not in html
 
 

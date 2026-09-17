@@ -218,10 +218,11 @@ _VLAK = {"leadership": 6.17, "culture": 6.33, "growth": 5.67,
 
 
 def test_kale_keuze_wordt_een_mogelijk_startpunt():
-    assert _open(_EEN_LAAG, primary="growth").endswith(
-        f"Als startpunt kiest Loep {_fl('growth', 'retention')}.")
+    # Kale keuze na één kwetsbaar onderwerp zonder aandachtspunten: verkort
+    # (plan 3a taak 3, C11), in beide vormen.
+    assert _open(_EEN_LAAG, primary="growth").endswith("Daar begint het gesprek.")
     assert _open(_EEN_LAAG, primary="growth", indicatief=True).endswith(
-        f"Als mogelijk startpunt kiest Loep {_fl('growth', 'retention')}.")
+        "Daar begint het gesprek waarschijnlijk.")
 
 
 def test_gelijkstandzin_wordt_een_mogelijk_startpunt():
@@ -289,7 +290,7 @@ def test_prefix_zet_alleen_het_label():
 
 
 def test_kernzin_onaangetast_bij_voldoende_respons():
-    zin = "Behoud vraagt aandacht op één onderwerp: Groeiperspectief (4.5/10)."
+    zin = "Behoud vraagt aandacht op één kwetsbaar onderwerp: Groeiperspectief (4.5/10)."
     assert _p02_met_respons(zin, completed=45, invited=50) == zin
     assert _p02_met_respons(zin, completed=45, invited=None) == zin
 

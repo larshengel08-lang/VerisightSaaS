@@ -354,22 +354,38 @@ def _flat_span_woorden() -> str:
     return f"{span:.1f} punt".replace(".", ",")
 
 
+def _p02_laagste_keys(shape: dict[str, Any]) -> list[str]:
+    """Alle onderwerpen die de laagste GETOONDE score delen, laagst-eerst.
+
+    Ronde 2 punt (a): de vlakke zin vergeleek op de ruwe waarde en noemde in
+    scenario 06 één onderwerp "laagste" terwijl er drie 6.2 tonen. De lezer ziet
+    de getoonde score, dus die telt. De volgorde blijft die van
+    factors_low_to_high (onafgerond, dan factorsleutel).
+    """
+    pairs = shape["factors_low_to_high"]
+    if not pairs:
+        return []
+    low = pairs[0][1]
+    return [fk for fk, v in pairs if v == low]
+
+
 def _p02_flat_sentence(shape: dict[str, Any], labels: dict[str, str]) -> str:
-    """De vlak-profiel-zin op pagina twee (spec ronde 2 par. 2.2).
+    """De vlak-profiel-zin op pagina twee (spec ronde 2 par. 2.2, plan 3a taak 3).
 
     Zegt expliciet dat er niets uitspringt, met de echte uiterste waarden erbij,
-    zodat de lezer de conclusie zelf kan narekenen. Een ontbrekend factorlabel
-    is een bug en geen reden om de interne sleutel in klantcopy te zetten, dus
-    die opzoeking faalt hard.
+    zodat de lezer de conclusie zelf kan narekenen. Delen meerdere onderwerpen
+    de laagste getoonde score, dan staan ze allemaal in de zin. Een ontbrekend
+    factorlabel is een bug en geen reden om de interne sleutel in klantcopy te
+    zetten, dus die opzoeking faalt hard.
     """
     if not shape["flat"]:
         raise ValueError("_p02_flat_sentence: alleen bij een vlak profiel")
     telwoord = _TELWOORD[shape["n_factors"]]
-    low = labels[shape["low_key"]]
+    laagste = _opsomming([labels[fk] for fk in _p02_laagste_keys(shape)])
     high = labels[shape["high_key"]]
     return (f"Geen enkel onderwerp springt eruit: alle {telwoord} liggen binnen "
             f"{_flat_span_woorden()} van elkaar "
-            f"(laagste {low} {_score_str(shape['low_score'])}, "
+            f"(laagste {laagste} {_score_str(shape['low_score'])}, "
             f"hoogste {high} {_score_str(shape['high_score'])}). "
             f"Dat is zelf de bevinding.")
 
@@ -511,17 +527,6 @@ def _p02_startpunt_zin(primary_label: str, *, tie_break_kind: str | None,
     return f"{kiest} {primary_label}."
 
 
-def _p02_shared_low(shape: dict[str, Any]) -> bool:
-    """Deelt de laagst scorende factor zijn getoonde score met de volgende?
-
-    Op de getoonde score, want dat is wat de lezer verderop in het
-    overzichtsprofiel naast elkaar ziet staan. Zolang dat waar is, is "X scoort
-    het laagst" geen uitspraak over X alleen.
-    """
-    pairs = shape["factors_low_to_high"]
-    return len(pairs) > 1 and pairs[0][1] == pairs[1][1]
-
-
 def _p02_opening(*, scan_type: str, shape: dict[str, Any], labels: dict[str, str],
                  primary_key: str | None,
                  tie_break_kind: str | None = None,
@@ -549,28 +554,31 @@ def _p02_opening(*, scan_type: str, shape: dict[str, Any], labels: dict[str, str
         return ""
     k = shape["n_vulnerable"]
     zacht, breed = _P02_DRUKWOORD[scan_type]
+    aandacht: list[tuple[str, float]] = []
     if k == 0 and shape["flat"]:
         kop = _p02_flat_sentence(shape, labels)
     elif k == 0:
         # De laagst scorende factor is NIET altijd het startpunt: bij Loep
         # Vertrek verschuift de vertrekredenweging de base, en binnen een
         # gelijkspelgroep kan richting, spreiding of verdieping de volgorde
-        # bepalen. Vallen ze samen, dan mag de zin dat zeggen; verschillen ze,
-        # dan noemt de zin ze apart en legt de bronregel eronder uit waarom.
-        laagste = labels[shape["low_key"]]
-        # Staan er twee onderwerpen op dezelfde getoonde score, dan is de laagste
-        # score niet van dit onderwerp alleen; het overzichtsprofiel verderop
-        # toont ze naast elkaar. Zelfde behandeling als de gelijkstand in
-        # _p02_startpunt_zin.
-        laagste_clause = (f"{laagste} deelt de laagste score met het volgende onderwerp"
-                          if _p02_shared_low(shape) else f"{laagste} scoort het laagst")
+        # bepalen. Delen meerdere onderwerpen de laagste getoonde score, dan
+        # noemt de zin ze allemaal (spec 16-9 par. 4 blok 1) en kan geen van
+        # beide alleen "het eerste gesprekspunt" zijn: dan wordt het startpunt
+        # apart genoemd.
+        laagste_keys = _p02_laagste_keys(shape)
+        if len(laagste_keys) > 1:
+            laagste_clause = (f"{_opsomming([labels[fk] for fk in laagste_keys])} "
+                              f"delen de laagste score "
+                              f"({_score_str(shape['low_score'])})")
+        else:
+            laagste_clause = f"{labels[laagste_keys[0]]} scoort het laagst"
         # Deze tak noemt het startpunt "gesprekspunt" in plaats van "startpunt",
         # dus hij heeft zijn eigen indicatieve vorm nodig.
         gesprekspunt = ("een mogelijk eerste gesprekspunt" if indicatief
                         else "het eerste gesprekspunt")
         kiest_gp = ("als mogelijk eerste gesprekspunt kiest Loep" if indicatief
                     else "als eerste gesprekspunt kiest Loep")
-        if shape["low_key"] == primary_key:
+        if len(laagste_keys) == 1 and shape["low_key"] == primary_key:
             return (f"Geen onderwerp scoort kwetsbaar. {laagste_clause} "
                     f"en is {gesprekspunt}.")
         return (f"Geen onderwerp scoort kwetsbaar. {laagste_clause}; "
@@ -581,24 +589,57 @@ def _p02_opening(*, scan_type: str, shape: dict[str, Any], labels: dict[str, str
         # op de getoonde score zou twee gelijk getoonde factoren omdraaien.
         vuln = [(fk, v) for fk, v in shape["factors_low_to_high"] if v < ZONE_LOW]
         # "één" met accent, zoals _flat_span_woorden: hier telt het onderwerpen,
-        # en zonder accent leest "een onderwerp" als lidwoord in plaats van als
-        # telwoord tegenover "twee onderwerpen".
-        onderwerp = "één onderwerp" if k == 1 else "twee onderwerpen"
+        # en zonder accent leest "een" als lidwoord in plaats van als telwoord.
+        onderwerp = "één kwetsbaar onderwerp" if k == 1 else "twee kwetsbare onderwerpen"
         # Komma en geen "en": bijna elk echt factorlabel bevat zelf al "en"
         # ("Rolhelderheid en verwachtingen eerste 90 dagen"), en met een
         # voegwoord ertussen staat er vier keer "en" in één opsomming. Na de
         # dubbele punt leest dit als lijst, niet als nevenschikking.
         namen = ", ".join(f"{labels[fk]} ({_score_str(v)})" for fk, v in vuln)
         kop = f"{zacht} {onderwerp}: {namen}."
+        # H17: "één onderwerp" beloofde rust die de oranje balken niet
+        # waarmaken. De aandachtspunten (5,0 tot 6,5) staan daarom in dezelfde adem.
+        aandacht = [(fk, v) for fk, v in shape["factors_low_to_high"]
+                    if ZONE_LOW <= v < ZONE_HIGH]
+        if aandacht:
+            lijst = _opsomming([f"{labels[fk]} ({_score_str(v)})" for fk, v in aandacht])
+            werkwoord = "is" if len(aandacht) == 1 else "zijn"
+            kop += f" Daarnaast {werkwoord} {lijst} een aandachtspunt."
     else:
         kop = (f"{breed}: {k} van de {shape['n_factors']} onderwerpen scoren "
                f"kwetsbaar.")
-    return f"{kop} " + _p02_startpunt_zin(
+    primary_is_lowest = shape["low_key"] == primary_key
+    # Tonen twee onderwerpen dezelfde laagste score, dan is "de laagste score.
+    # Het verschil met de volgende is klein, 0,04 punt" een claim op een
+    # laagste score die de lezer twee keer ziet staan (in de kop hierboven en in
+    # het overzichtsprofiel). Dan benoemt de startpuntzin de gelijkstand, net
+    # als bij een exacte gelijkstand. Onder PRIORITY_TIE_MARGIN, want alleen
+    # daar spreekt de zin van een klein verschil.
+    if (primary_is_lowest and tie_break_kind is None and next_delta is not None
+            and 0.0 < next_delta < PRIORITY_TIE_MARGIN
+            and len(_p02_laagste_keys(shape)) > 1):
+        next_delta = 0.0
+    start = _p02_startpunt_zin(
         labels[primary_key], tie_break_kind=tie_break_kind, change=change,
         change_other=change_other, next_delta=next_delta,
         direction_state_key=direction_state_key,
-        primary_is_lowest=shape["low_key"] == primary_key,
+        primary_is_lowest=primary_is_lowest,
         indicatief=indicatief)
+    # C11: "...: Groeiperspectief (4.5/10). Als startpunt kiest Loep
+    # Groeiperspectief." is één mededeling in twee zinnen. Alleen als de kop
+    # precies één kwetsbaar onderwerp noemt, dat het startpunt is, er geen
+    # "Daarnaast"-zin tussen staat EN de startpuntzin geen eigen grond draagt
+    # (kale vorm), volstaat een korte vervolgzin. Bij twee kwetsbare onderwerpen
+    # of een aandachtspuntenzin zou "Daar" naar meer dan het startpunt wijzen.
+    # Een zin met grond (klein verschil, gelijkstand, richting) zegt iets nieuws
+    # en blijft staan.
+    kiest = "Als mogelijk startpunt kiest Loep" if indicatief else "Als startpunt kiest Loep"
+    if (k == 1 and shape["factors_low_to_high"][0][0] == primary_key
+            and not aandacht
+            and start == f"{kiest} {labels[primary_key]}."):
+        start = ("Daar begint het gesprek waarschijnlijk." if indicatief
+                 else "Daar begint het gesprek.")
+    return f"{kop} {start}"
 
 
 def _p02_startpunt_gronden(

@@ -128,8 +128,10 @@ def test_kernzin_claimt_niet_dat_startpunt_het_laagst_scoort():
 
     start_lbl = _fl("leadership", "exit")
     laagste_lbl = _fl("growth", "exit")
-    assert (f"Het vertrekbeeld wijst naar twee onderwerpen: {laagste_lbl} (4.5/10), "
-            f"{start_lbl} (4.9/10). Als startpunt kiest Loep {start_lbl}. "
+    assert (f"Het vertrekbeeld wijst naar twee kwetsbare onderwerpen: {laagste_lbl} (4.5/10), "
+            f"{start_lbl} (4.9/10). Daarnaast zijn {_fl('workload', 'exit')} (5.9/10), "
+            f"{_fl('role_clarity', 'exit')} (6.2/10) en {_fl('culture', 'exit')} (6.4/10) "
+            f"een aandachtspunt. Als startpunt kiest Loep {start_lbl}. "
             f"Beter aanbod elders is de meest genoemde vertrekreden (5 van de 12).") in html
     # Komma en geen "en" tussen de twee: beide labels bevatten zelf al "en".
     assert f"(4.5/10) en {start_lbl}" not in html

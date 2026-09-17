@@ -103,13 +103,16 @@ def test_factors_low_to_high_draagt_elke_factor_met_de_getoonde_score():
 
 
 def test_vlakke_zin_noemt_laagste_en_hoogste_met_scores():
+    # Groeiperspectief (5.67) en Beloning (5.70) tonen allebei 5.7: de zin noemt
+    # ze allebei als laagste (plan 3a taak 3, ronde 2 open punt a).
     zin = _p02_flat_sentence(profile_shape(VLAK),
                              {"growth": "Groeiperspectief",
+                              "compensation": "Beloning en eerlijkheid",
                               "culture": "Cultuur en psychologische veiligheid"})
     assert zin == (
         "Geen enkel onderwerp springt eruit: alle zes liggen binnen één punt "
-        "van elkaar (laagste Groeiperspectief 5.7/10, hoogste Cultuur en "
-        "psychologische veiligheid 6.3/10). Dat is zelf de bevinding."
+        "van elkaar (laagste Groeiperspectief en Beloning en eerlijkheid 5.7/10, "
+        "hoogste Cultuur en psychologische veiligheid 6.3/10). Dat is zelf de bevinding."
     )
     assert "—" not in zin
 
