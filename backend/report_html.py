@@ -1574,6 +1574,12 @@ class _ChapterCounter:
     def vervolg(eyebrow: str) -> str:
         return f'<span class="slabel">{eyebrow} (vervolg)</span>'
 
+    @staticmethod
+    def sub(title: str) -> str:
+        """Kop van een volgend onderwerp in hetzelfde hoofdstuk (C12): geen
+        "(vervolg)", want het is geen vervolg van het vorige onderwerp."""
+        return f'<span class="slabel">{title}</span>'
+
 
 def _pref(anchor: str) -> str:
     """Lege anker die WeasyPrint met het paginanummer vult (zie a.pref in de CSS)."""
@@ -4034,10 +4040,14 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
                  and fr["enps"].get("raw_score") is not None]
     enps_available = len(enps_vals) >= MIN_QUOTES_N
     enps_score: int | None = None
+    # De tellingen achter de score (B9/C7): "+0" zegt niets zolang de lezer niet
+    # weet of dat 0 aanraders en 0 critici is of 12 tegen 12.
+    enps_detail: dict | None = None
     if enps_available:
         promoters  = sum(1 for v in enps_vals if v >= 9)
         detractors = sum(1 for v in enps_vals if v <= 6)
         enps_score = round((promoters - detractors) / len(enps_vals) * 100)
+        enps_detail = {"n": len(enps_vals), "promoters": promoters, "detractors": detractors}
 
     return dict(
         campaign_id=campaign_id, scan_type=scan_type, scan_lbl=scan_lbl,
@@ -4065,7 +4075,7 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
         retention_profile=retention_profile,
         exit_pbs=exit_pbs, ret_pbs=ret_pbs, msp=msp, nsp=nsp,
         factor_items_map=factor_items_map, sdt_items=sdt_items,
-        enps_available=enps_available, enps_score=enps_score,
+        enps_available=enps_available, enps_score=enps_score, enps_detail=enps_detail,
         factor_resp_scores=factor_resp_scores,
         intent_resp={"stay": si_sc, "turnover": to_sc, "engagement": eng_sc},
         segment_rows=segment_rows,
@@ -4202,7 +4212,7 @@ def _overzichtsprofiel(factors: list[tuple[str, float | None]],
 def _vertrekcontext(*, exit_reasons: list[tuple[str, int]],
                     contributing: list[tuple[str, int]], n: int,
                     primary_factor_label: str, opener_html: str = "",
-                    has_profile: bool = True) -> str:
+                    has_profile: bool = True, enps_html: str = "") -> str:
     """has_profile volgt dezelfde schakelaar als de degraded p.02-alinea.
 
     Zonder factorprofiel verwijzen twee zinnen op deze pagina naar iets dat er
@@ -4254,6 +4264,7 @@ def _vertrekcontext(*, exit_reasons: list[tuple[str, int]],
       <table class="item-tbl">{_reason_rows(contributing)}</table></div></div>
   </div>
   {rel_card}
+  {enps_html}
 </div>"""
 
 
@@ -4262,7 +4273,7 @@ def _vertrekcontext(*, exit_reasons: list[tuple[str, int]],
 def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
                     turnover: float | None, engagement: float | None,
                     intent_resp: dict | None = None,
-                    opener_html: str = "") -> str:
+                    opener_html: str = "", enps_html: str = "") -> str:
     """Retention-exclusive section: actuele behoudscontext op groepsniveau.
 
     Signalen staan bewust onder elkaar (niet naast elkaar in één balk): titel
@@ -4346,6 +4357,7 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
   {opener_html or '<span class="slabel">Behoudscontext</span>'}
   {_intro("behoudscontext")}
   {stat_rows}
+  {enps_html}
 </div>"""
 
     # Spreidingsbalken samen op een eigen pagina (feedback 2026-07-16): onder
@@ -4362,6 +4374,110 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
   {strips}
 </div>"""
     return page
+
+
+# ─── Gedeelde secties: werkgeversaanbeveling, werkbeleving, appendix ─────────
+
+def _enps_block(enps_score: int | None, enps_detail: dict | None) -> str:
+    """Werkgeversaanbeveling als blok op de contextpagina (H13, spec par. 9 B9):
+    de score met de tellingen erbij, zodat "+0" iets betekent. Leeg zonder
+    score. Geen eigen hoofdstuk meer."""
+    if enps_score is None or not enps_detail:
+        return ""
+    ecol = _rag_color(10.0 if enps_score >= 20 else 6.0 if enps_score >= 0 else 4.0)
+    n, p, d = enps_detail["n"], enps_detail["promoters"], enps_detail["detractors"]
+    return (f'<div class="enps-inline no-break"><span class="eyebrow">Werkgeversaanbeveling</span>'
+            f'{_intro("werkgeversaanbeveling")}'
+            f'<table class="sg"><tr><td><div class="sc-l">Aanbevelingsscore</div>'
+            f'<div class="sc-v" style="color:{ecol};">{enps_score:+d}</div>'
+            f'<div class="sc-b">{p} aanraders, {d} critici van {n} (eNPS, &minus;100 tot +100)</div></td>'
+            f'</tr></table></div>')
+
+
+def _werkbeleving_section(sdt_a: dict, sim: dict, sdt_items: list, opener_html: str) -> str:
+    """Werkbeleving (SDT) in twee kolommen (B9): links de overzichtsbalken en
+    autonomie, rechts competentie en verbondenheid. Eén helper voor de drie
+    renderers; voorheen drie keer dezelfde 40 regels.
+
+    Leeg zonder dimensiescores. De aanroeper gate't daarom op
+    _heeft_werkbeleving (dezelfde dimensies, dezelfde None-check), zodat
+    ch.opener geen hoofdstuknummer opeist voor een sectie die niets toont.
+    """
+    def _item_tbl(dim: str) -> str:
+        keys = SDT_DIMENSION_ITEMS.get(dim, [])
+        REV = '<span style="font-size:8px;color:#94A3B8;">&nbsp;(omgekeerd)</span>'
+        rows = "".join(
+            f'<tr><td class="iq">{_h(q)}{REV if ik in SDT_REVERSE_ITEMS else ""}</td>'
+            f'<td class="is" style="color:{_rag_color(sim.get(ik))};">{sim[ik]:.1f}</td>'
+            f'<td class="ib">{_mini_bar_svg(sim.get(ik), _rag_color(sim.get(ik)), width=80, height=6)}</td></tr>'
+            for ik in keys
+            for q in [next((t for k, t in sdt_items if k == ik), ik)]
+            if ik in sim)
+        return f'<table class="item-tbl">{rows}</table>' if rows else ""
+
+    def _card(dim: str) -> str:
+        sc, tbl = sdt_a.get(dim), _item_tbl(dim)
+        if not tbl:
+            return ""
+        col = _rag_color(sc)
+        return (f'<div class="card no-break" style="margin-bottom:12px;">'
+                f'<div style="margin-bottom:8px;"><span style="font-size:12px;font-weight:700;color:#243247;">'
+                f'{_h(SDT_LABELS.get(dim, ""))}</span>'
+                f'<span style="font-size:11px;font-weight:700;color:{col};margin-left:10px;">{_score_str(sc)}</span>'
+                f'<span style="font-size:10px;color:{col};margin-left:6px;">&middot; {_h(_factor_label(sc))}</span></div>'
+                f'<div style="font-size:9.5px;color:#6B7280;margin-bottom:8px;">{_h(SDT_HELP.get(dim, ""))}</div>{tbl}</div>')
+
+    overview = "".join(_factor_bar_row(SDT_LABELS.get(dim, ""), sdt_a.get(dim))
+                       for dim in ("autonomy", "competence", "relatedness") if sdt_a.get(dim) is not None)
+    if not overview:
+        return ""
+    left = f'<div class="card" style="margin-bottom:14px;">{overview}</div>{_card("autonomy")}'
+    right = f'{_card("competence")}{_card("relatedness")}'
+    return (f'<div class="pb sec">{opener_html}{_intro("werkbeleving")}'
+            f'<div class="tcol wb-cols"><div class="tc-l">{left}</div><div class="tc-r">{right}</div></div></div>')
+
+
+def _appendix_section(*, fa: dict, oim: dict, sim: dict, factor_items_map: dict, sdt_items: list,
+                      scan_type: str, n: int, enps_score: int | None, enps_detail: dict | None,
+                      opener_html: str, sdt_title: str) -> str:
+    """Appendix in twee kolommen (B9): de onderwerpstabellen verdeeld over
+    links en rechts, de SDT-tabel eronder. C7: de eNPS-regel noemt de score en
+    de tellingen of zegt dat hij niet is gemeten. Eén helper voor drie renderers."""
+    def _rows(items, avgs):
+        return "".join(
+            (f'<tr><td class="aq">{_h(q)}{"&nbsp;&#x21a9;" if ik in SDT_REVERSE_ITEMS else ""}</td>'
+             f'<td class="as" style="color:{_factor_color(avgs.get(ik))};">{avgs[ik]:.1f}</td>'
+             f'<td class="ab">{_mini_bar_svg(avgs.get(ik), _factor_color(avgs.get(ik)), width=70, height=5)}</td></tr>')
+            if avgs.get(ik) is not None else
+            f'<tr><td class="aq">{_h(q)}{"&nbsp;&#x21a9;" if ik in SDT_REVERSE_ITEMS else ""}</td>'
+            f'<td class="as" style="color:#94A3B8;">n.b.</td><td class="ab"></td></tr>'
+            for ik, q in items)
+
+    def _tbl(title, rows):
+        return (f'<div class="no-break" style="margin-bottom:14px;">'
+                f'<div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">{title}</div>'
+                f'<table class="app-tbl"><tr><th class="aq">Stelling</th><th class="as">Gem.</th>'
+                f'<th class="ab">Beeld</th></tr>{rows}</table></div>')
+
+    secties = [_tbl(_h(_fl(fk, scan_type)) + ("&nbsp;&middot;&nbsp;" + _score_str(fa.get(fk)) if fa.get(fk) else ""),
+                    _rows(items, oim))
+               for fk, items in factor_items_map.items()]
+    helft = (len(secties) + 1) // 2
+    sdt_rows = _rows(sdt_items, sim)
+    sdt_html = _tbl(sdt_title, sdt_rows) if sdt_rows else ""
+    if enps_score is not None and enps_detail:
+        enps_line = (f"Werkgeversaanbeveling (eNPS): {enps_score:+d}, {enps_detail['promoters']} aanraders en "
+                     f"{enps_detail['detractors']} critici van {enps_detail['n']}.")
+    else:
+        enps_line = "Werkgeversaanbeveling (eNPS): niet gemeten in deze meting."
+    return f"""<div class="pb sec">
+  {opener_html}
+  {_intro("appendix")}
+  <p style="font-size:9px;color:#94A3B8;margin-bottom:14px;">n={n}. &#x21a9;&nbsp;= omgekeerd gecodeerde stelling.</p>
+  <div class="tcol app-cols"><div class="tc-l">{"".join(secties[:helft])}</div><div class="tc-r">{"".join(secties[helft:])}</div></div>
+  {sdt_html}
+  <p class="trustline">{_h(enps_line)}</p>
+</div>"""
 
 
 # ─── ExitScan renderer ────────────────────────────────────────────────────────
@@ -4608,7 +4724,10 @@ def render_exit_report_html(data: dict) -> str:
     s += _vertrekcontext(exit_reasons=exit_reasons, contributing=contributing,
                          n=n, primary_factor_label=_raster_primary_label,
                          opener_html=ch.opener("Wat speelde mee bij vertrek?", kicker="Vertrekcontext", anchor=LEIDRAAD_ANKERS["context"]),
-                         has_profile=not _geen_profiel)
+                         has_profile=not _geen_profiel,
+                         # eNPS staat bij de context i.p.v. op een eigen,
+                         # vrijwel lege pagina (H13, B9).
+                         enps_html=_enps_block(data["enps_score"], data.get("enps_detail")))
 
     # ── Overzichtsprofiel (p.05) ──────────────────────────────────────────────
     profile_factors = [(_fl(fk, "exit"), fa.get(fk))
@@ -4623,7 +4742,8 @@ def render_exit_report_html(data: dict) -> str:
     priority_fkeys = [r["key"] for r in _raster_rows[:3]]
 
     # ── Factor detail (itemniveau prioritaire factoren) ──────────────────────
-    def _factor_detail(fk: str, opener_html: str = "", intro_html: str = "") -> str:
+    def _factor_detail(fk: str, opener_html: str = "", intro_html: str = "",
+                       is_first: bool = True) -> str:
         # ── Data logic (preserved from old helper) ──
         lbl    = _fl(fk, "exit")
         fsc    = fa.get(fk)
@@ -4675,7 +4795,10 @@ def render_exit_report_html(data: dict) -> str:
         deep_block = (_deepening_block(deep_agg[fk], "exit", fk)
                       if fk in deep_agg else "")
         spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []))
-        return f"""<div class="pb sec">
+        # Alleen het eerste onderwerp opent een nieuwe pagina (B9): de volgende
+        # verdiepingen stromen door onder hun voorganger en verhuizen als geheel
+        # zodra ze niet meer passen.
+        return f"""<div class="{'pb sec' if is_first else 'sec flow'}">
   {opener_html or f'<span class="slabel">Verdieping: {_h(lbl)}</span>'}
   {intro_html}
   <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&middot; {_h(fl_)}</span></h2>
@@ -4691,67 +4814,31 @@ def render_exit_report_html(data: dict) -> str:
     if priority_fkeys:
         for _i, _pfk in enumerate(priority_fkeys):
             _lbl = _fl(_pfk, "exit")
-            _opener = ch.opener(f"Verdieping: {_lbl}", anchor=LEIDRAAD_ANKERS["verdieping"]) if _i == 0 else _ChapterCounter.vervolg(f"Verdieping: {_lbl}")
-            s += _factor_detail(_pfk, opener_html=_opener, intro_html=_intro("verdieping") if _i == 0 else "")
+            # Geen "(vervolg)" (C12): het volgende onderwerp is geen vervolg van
+            # het vorige, het is een nieuw onderwerp in hetzelfde hoofdstuk.
+            _opener = (ch.opener(f"Verdieping: {_lbl}", anchor=LEIDRAAD_ANKERS["verdieping"])
+                       if _i == 0 else _ChapterCounter.sub(f"Verdieping: {_lbl}"))
+            s += _factor_detail(_pfk, opener_html=_opener,
+                                intro_html=_intro("verdieping") if _i == 0 else "",
+                                is_first=_i == 0)
     else:
         s += f'<div class="pb sec">{ch.opener("Verdieping: prioritaire factoren", anchor=LEIDRAAD_ANKERS["verdieping"])}<div class="empty-state">{VERDIEPING_GEEN_RANGORDE}</div></div>'
 
     # ── SDT basisbehoeften ────────────────────────────────────────────────────
-    def _sdt_item_tbl(dim: str) -> str:
-        keys = SDT_DIMENSION_ITEMS.get(dim, [])
-        REV_LABEL = '<span style="font-size:8px;color:#94A3B8;">&nbsp;(omgekeerd)</span>'
-        rows = "".join(
-            f'<tr><td class="iq">{_h(q)}'
-            f'{REV_LABEL if ik in SDT_REVERSE_ITEMS else ""}'
-            f'</td><td class="is" style="color:{_rag_color(sim.get(ik))};">{sim[ik]:.1f}</td>'
-            f'<td class="ib">{_mini_bar_svg(sim.get(ik), _rag_color(sim.get(ik)), width=80, height=6)}</td></tr>'
-            for ik in keys
-            for q in [next((t for k, t in data["sdt_items"] if k == ik), ik)]
-            if ik in sim
-        )
-        return f'<table class="item-tbl">{rows}</table>' if rows else ""
+    # Werkbeleving in twee kolommen via de gedeelde helper (B9). De gate is
+    # _heeft_werkbeleving, dezelfde die de leidraad gebruikt: zonder
+    # dimensiescores toonde deze pagina een lege kaart en eiste ze toch een
+    # hoofdstuknummer op.
+    if _heeft_werkbeleving(sdt_a):
+        s += _werkbeleving_section(
+            sdt_a, sim, data["sdt_items"],
+            ch.opener("Werkbeleving", kicker="Autonomie, competentie &amp; verbondenheid",
+                      anchor=LEIDRAAD_ANKERS["werkbeleving"]))
 
-    sdt_overview_rows = "".join(
-        _factor_bar_row(SDT_LABELS.get(dim, ""), sdt_a.get(dim))
-        for dim in ("autonomy", "competence", "relatedness")
-        if sdt_a.get(dim) is not None
-    )
-
-    s += f"""<div class="pb sec">
-  {ch.opener("Werkbeleving", kicker="Autonomie, competentie &amp; verbondenheid", anchor=LEIDRAAD_ANKERS["werkbeleving"])}
-  {_intro("werkbeleving")}
-  <div class="card" style="margin-bottom:14px;">{sdt_overview_rows}</div>"""
-
-    for dim in ("autonomy", "competence", "relatedness"):
-        sc    = sdt_a.get(dim)
-        col   = _rag_color(sc)
-        fl_   = _factor_label(sc)
-        tbl   = _sdt_item_tbl(dim)
-        if not tbl: continue
-        s += f"""<div class="card no-break" style="margin-bottom:12px;">
-  <div style="margin-bottom:8px;">
-    <span style="font-size:12px;font-weight:700;color:#243247;">{_h(SDT_LABELS.get(dim,""))}</span>
-    <span style="font-size:11px;font-weight:700;color:{col};margin-left:10px;">{_score_str(sc)}</span>
-    <span style="font-size:10px;color:{col};margin-left:6px;">&middot; {_h(fl_)}</span>
-  </div>
-  <div style="font-size:9.5px;color:#6B7280;margin-bottom:8px;">{_h(SDT_HELP.get(dim,""))}</div>
-  {tbl}
-</div>"""
-    s += "</div>"
-
-    # ── eNPS ─────────────────────────────────────────────────────────────────
-    if data["enps_available"] and data["enps_score"] is not None:
-        es   = data["enps_score"]
-        ecol = _rag_color(10.0 if es >= 20 else 6.0 if es >= 0 else 4.0)
-        s += f"""<div class="pb sec">
-  {ch.opener("Werkgeversaanbeveling")}
-  {_intro("werkgeversaanbeveling")}
-  <table class="sg"><tr>
-    <td><div class="sc-l">Aanbevelingsscore</div><div class="sc-v" style="color:{ecol};">{es:+d}</div><div class="sc-b">eNPS (&minus;100 tot +100)</div></td>
-  </tr></table>
-</div>"""
-    # Niet gemeten: geen eigen (vrijwel lege) pagina — de regel 'Niet in dit
-    # rapport' bij de meetgegevens en de appendix-notitie melden dit al (fail-loud blijft).
+    # Geen eigen eNPS-hoofdstuk meer (H13, B9): één score op een eigen vel was
+    # de leegste pagina van het rapport. Het blok staat nu bij de context, met de
+    # tellingen erbij; niet gemeten meldt de regel 'Niet in dit rapport' bij de
+    # meetgegevens en de appendixregel (fail-loud blijft).
 
     # ── Segmentstatus ─────────────────────────────────────────────────────────
     _seg_rows = data.get("segment_rows") or []
@@ -4794,50 +4881,15 @@ def render_exit_report_html(data: dict) -> str:
     # ── Appendix ─────────────────────────────────────────────────────────────
     n_factors = len([fk for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None])
     if _should_show_appendix(n, n_factors):
-        app_sections = ""
-        for fk, items in data["factor_items_map"].items():
-            lbl_f = _fl(fk, "exit")
-            fsc_a = fa.get(fk)
-            rows  = "".join(
-                (f'<tr><td class="aq">{_h(q)}</td>'
-                 f'<td class="as" style="color:{_factor_color(oim.get(ik))};">{oim[ik]:.1f}</td>'
-                 f'<td class="ab">{_mini_bar_svg(oim.get(ik), _factor_color(oim.get(ik)), width=70, height=5)}</td></tr>')
-                if oim.get(ik) is not None else
-                f'<tr><td class="aq">{_h(q)}</td><td class="as" style="color:#94A3B8;">n.b.</td><td class="ab"></td></tr>'
-                for ik, q in items
-            )
-            app_sections += (f'<div class="no-break" style="margin-bottom:14px;">'
-                             f'<div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">'
-                             f'{_h(lbl_f)}'
-                             f'{"&nbsp;&middot;&nbsp;" + _score_str(fsc_a) if fsc_a else ""}</div>'
-                             f'<table class="app-tbl"><tr><th class="aq">Vraag</th>'
-                             f'<th class="as">Gem.</th><th class="ab">Beeld</th></tr>{rows}</table></div>')
-
-        sdt_rows = "".join(
-            (f'<tr><td class="aq">{_h(q)}{"&nbsp;&#x21a9;" if ik in SDT_REVERSE_ITEMS else ""}</td>'
-             f'<td class="as" style="color:{_factor_color(sim.get(ik))};">{sim[ik]:.1f}</td>'
-             f'<td class="ab">{_mini_bar_svg(sim.get(ik), _factor_color(sim.get(ik)), width=70, height=5)}</td></tr>')
-            if sim.get(ik) is not None else
-            f'<tr><td class="aq">{_h(q)}{"&nbsp;&#x21a9;" if ik in SDT_REVERSE_ITEMS else ""}</td>'
-            f'<td class="as" style="color:#94A3B8;">n.b.</td><td class="ab"></td></tr>'
-            for ik, q in data["sdt_items"]
-        )
-
-        s += f"""<div class="pb sec">
-  {ch.opener("Appendix", kicker="Volledige vraagresultaten")}
-  {_intro("appendix")}
-  <p style="font-size:9px;color:#94A3B8;margin-bottom:14px;">
-    n={n}. &#x21a9;&nbsp;= omgekeerd gecodeerde stelling.
-  </p>
-  {app_sections}
-  <div class="no-break" style="margin-bottom:14px;">
-    <div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">Werkbeleving (SDT): B1 t/m B12</div>
-    <table class="app-tbl"><tr><th class="aq">Vraag</th><th class="as">Gem.</th><th class="ab">Beeld</th></tr>{sdt_rows}</table>
-  </div>
-  <div class="empty-state" style="margin-top:8px;">
-    Werkgeversaanbeveling (eNPS): {"beschikbaar, zie hoofdrapport" if data["enps_available"] else "niet gemeten in deze wave"}
-  </div>
-</div>"""
+        # Twee kolommen via de gedeelde helper (B9): de onderwerpstabellen naast
+        # elkaar in plaats van onder elkaar, zodat de appendix niet met een paar
+        # regels op een tweede vel overloopt.
+        s += _appendix_section(
+            fa=fa, oim=oim, sim=sim, factor_items_map=data["factor_items_map"],
+            sdt_items=data["sdt_items"], scan_type="exit", n=n,
+            enps_score=data["enps_score"], enps_detail=data.get("enps_detail"),
+            opener_html=ch.opener("Appendix", kicker="Volledige vraagresultaten"),
+            sdt_title="Werkbeleving (SDT): B1 t/m B12")
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────
     s += _trust_page("exit", opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen", anchor=LEIDRAAD_ANKERS["methodiek"]),
@@ -5054,6 +5106,8 @@ def render_retention_report_html(data: dict) -> str:
         engagement=avg_eng,
         intent_resp=data.get("intent_resp"),
         opener_html=ch.opener("Waar staat behoud onder druk?", kicker="Behoudscontext", anchor=LEIDRAAD_ANKERS["context"]),
+        # eNPS bij de context i.p.v. op een eigen, vrijwel lege pagina (H13, B9).
+        enps_html=_enps_block(data["enps_score"], data.get("enps_detail")),
     )
 
     # ── Overzichtsprofiel (p.05) ──────────────────────────────────────────────
@@ -5068,7 +5122,8 @@ def render_retention_report_html(data: dict) -> str:
     # hierboven al berekend, vóór de Bestuurlijke read.
     priority_fkeys = [r["key"] for r in _raster_rows[:3]]
 
-    def _ret_factor_detail(fk: str, opener_html: str = "", intro_html: str = "") -> str:
+    def _ret_factor_detail(fk: str, opener_html: str = "", intro_html: str = "",
+                           is_first: bool = True) -> str:
         lbl    = _fl(fk, ST)
         fsc    = fa.get(fk)
         col    = _factor_color(fsc)
@@ -5108,7 +5163,9 @@ def render_retention_report_html(data: dict) -> str:
         deep_block = (_deepening_block(deep_agg[fk], ST, fk)
                       if fk in deep_agg else "")
         spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []))
-        return f"""<div class="pb sec">
+        # Alleen het eerste onderwerp opent een nieuwe pagina (B9), zie
+        # _factor_detail in de Vertrek-renderer.
+        return f"""<div class="{'pb sec' if is_first else 'sec flow'}">
   {opener_html or f'<span class="slabel">Verdieping: {_h(lbl)}</span>'}
   {intro_html}
   <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&middot; {_h(fl_)}</span></h2>
@@ -5123,67 +5180,30 @@ def render_retention_report_html(data: dict) -> str:
     if priority_fkeys:
         for _i, _pfk in enumerate(priority_fkeys):
             _lbl = _fl(_pfk, ST)
-            _opener = ch.opener(f"Verdieping: {_lbl}", anchor=LEIDRAAD_ANKERS["verdieping"]) if _i == 0 else _ChapterCounter.vervolg(f"Verdieping: {_lbl}")
-            s += _ret_factor_detail(_pfk, opener_html=_opener, intro_html=_intro("verdieping") if _i == 0 else "")
+            # Geen "(vervolg)" (C12): een volgend onderwerp, geen vervolg.
+            _opener = (ch.opener(f"Verdieping: {_lbl}", anchor=LEIDRAAD_ANKERS["verdieping"])
+                       if _i == 0 else _ChapterCounter.sub(f"Verdieping: {_lbl}"))
+            s += _ret_factor_detail(_pfk, opener_html=_opener,
+                                    intro_html=_intro("verdieping") if _i == 0 else "",
+                                    is_first=_i == 0)
     else:
         s += f'<div class="pb sec">{ch.opener("Verdieping: prioritaire factoren", anchor=LEIDRAAD_ANKERS["verdieping"])}<div class="empty-state">{VERDIEPING_GEEN_RANGORDE}</div></div>'
 
     # ── Werkbeleving (SDT) ────────────────────────────────────────────────────
-    def _sdt_item_tbl(dim: str) -> str:
-        keys = SDT_DIMENSION_ITEMS.get(dim, [])
-        REV_LABEL = '<span style="font-size:8px;color:#94A3B8;">&nbsp;(omgekeerd)</span>'
-        rows = "".join(
-            f'<tr><td class="iq">{_h(q)}'
-            f'{REV_LABEL if ik in SDT_REVERSE_ITEMS else ""}'
-            f'</td><td class="is" style="color:{_rag_color(sim.get(ik))};">{sim[ik]:.1f}</td>'
-            f'<td class="ib">{_mini_bar_svg(sim.get(ik), _rag_color(sim.get(ik)), width=80, height=6)}</td></tr>'
-            for ik in keys
-            for q in [next((t for k, t in data["sdt_items"] if k == ik), ik)]
-            if ik in sim
-        )
-        return f'<table class="item-tbl">{rows}</table>' if rows else ""
+    # Werkbeleving in twee kolommen via de gedeelde helper (B9). De gate is
+    # _heeft_werkbeleving, dezelfde die de leidraad gebruikt: zonder
+    # dimensiescores toonde deze pagina een lege kaart en eiste ze toch een
+    # hoofdstuknummer op.
+    if _heeft_werkbeleving(sdt_a):
+        s += _werkbeleving_section(
+            sdt_a, sim, data["sdt_items"],
+            ch.opener("Werkbeleving", kicker="Autonomie, competentie &amp; verbondenheid",
+                      anchor=LEIDRAAD_ANKERS["werkbeleving"]))
 
-    sdt_overview_rows = "".join(
-        _factor_bar_row(SDT_LABELS.get(dim, ""), sdt_a.get(dim))
-        for dim in ("autonomy", "competence", "relatedness")
-        if sdt_a.get(dim) is not None
-    )
-
-    s += f"""<div class="pb sec">
-  {ch.opener("Werkbeleving", kicker="Autonomie, competentie &amp; verbondenheid", anchor=LEIDRAAD_ANKERS["werkbeleving"])}
-  {_intro("werkbeleving")}
-  <div class="card" style="margin-bottom:14px;">{sdt_overview_rows}</div>"""
-
-    for dim in ("autonomy", "competence", "relatedness"):
-        sc    = sdt_a.get(dim)
-        col   = _rag_color(sc)
-        fl_   = _factor_label(sc)
-        tbl   = _sdt_item_tbl(dim)
-        if not tbl: continue
-        s += f"""<div class="card no-break" style="margin-bottom:12px;">
-  <div style="margin-bottom:8px;">
-    <span style="font-size:12px;font-weight:700;color:#243247;">{_h(SDT_LABELS.get(dim,""))}</span>
-    <span style="font-size:11px;font-weight:700;color:{col};margin-left:10px;">{_score_str(sc)}</span>
-    <span style="font-size:10px;color:{col};margin-left:6px;">&middot; {_h(fl_)}</span>
-  </div>
-  <div style="font-size:9.5px;color:#6B7280;margin-bottom:8px;">{_h(SDT_HELP.get(dim,""))}</div>
-  {tbl}
-</div>"""
-    s += "</div>"
-
-    # ── eNPS (if available) ───────────────────────────────────────────────────
-    if data["enps_available"] and data["enps_score"] is not None:
-        es   = data["enps_score"]
-        ecol = _rag_color(10.0 if es >= 20 else 6.0 if es >= 0 else 4.0)
-        s += f"""<div class="pb sec">
-  {ch.opener("Werkgeversaanbeveling")}
-  {_intro("werkgeversaanbeveling")}
-  <table class="sg"><tr>
-    <td><div class="sc-l">Aanbevelingsscore</div><div class="sc-v" style="color:{ecol};">{es:+d}</div><div class="sc-b">eNPS (&minus;100 tot +100)</div></td>
-  </tr></table>
-</div>"""
-    # Niet gemeten: geen eigen (vrijwel lege) pagina — de regel 'Niet in dit
-    # rapport' bij de meetgegevens en de appendix-notitie melden dit al (fail-loud blijft).
+    # Geen eigen eNPS-hoofdstuk meer (H13, B9): één score op een eigen vel was
+    # de leegste pagina van het rapport. Het blok staat nu bij de context, met de
+    # tellingen erbij; niet gemeten meldt de regel 'Niet in dit rapport' bij de
+    # meetgegevens en de appendixregel (fail-loud blijft).
 
     # ── Segmentstatus ─────────────────────────────────────────────────────────
     _seg_rows = data.get("segment_rows") or []
@@ -5224,50 +5244,15 @@ def render_retention_report_html(data: dict) -> str:
     # ── Appendix ─────────────────────────────────────────────────────────────
     n_factors = len([fk for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None])
     if _should_show_appendix(n, n_factors):
-        app_sections = ""
-        for fk, items in data["factor_items_map"].items():
-            lbl_f = _fl(fk, ST)
-            fsc_a = fa.get(fk)
-            rows  = "".join(
-                (f'<tr><td class="aq">{_h(q)}</td>'
-                 f'<td class="as" style="color:{_factor_color(oim.get(ik))};">{oim[ik]:.1f}</td>'
-                 f'<td class="ab">{_mini_bar_svg(oim.get(ik), _factor_color(oim.get(ik)), width=70, height=5)}</td></tr>')
-                if oim.get(ik) is not None else
-                f'<tr><td class="aq">{_h(q)}</td><td class="as" style="color:#94A3B8;">n.b.</td><td class="ab"></td></tr>'
-                for ik, q in items
-            )
-            app_sections += (f'<div class="no-break" style="margin-bottom:14px;">'
-                             f'<div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">'
-                             f'{_h(lbl_f)}'
-                             f'{"&nbsp;&middot;&nbsp;" + _score_str(fsc_a) if fsc_a else ""}</div>'
-                             f'<table class="app-tbl"><tr><th class="aq">Vraag</th>'
-                             f'<th class="as">Gem.</th><th class="ab">Beeld</th></tr>{rows}</table></div>')
-
-        sdt_rows = "".join(
-            (f'<tr><td class="aq">{_h(q)}{"&nbsp;&#x21a9;" if ik in SDT_REVERSE_ITEMS else ""}</td>'
-             f'<td class="as" style="color:{_factor_color(sim.get(ik))};">{sim[ik]:.1f}</td>'
-             f'<td class="ab">{_mini_bar_svg(sim.get(ik), _factor_color(sim.get(ik)), width=70, height=5)}</td></tr>')
-            if sim.get(ik) is not None else
-            f'<tr><td class="aq">{_h(q)}{"&nbsp;&#x21a9;" if ik in SDT_REVERSE_ITEMS else ""}</td>'
-            f'<td class="as" style="color:#94A3B8;">n.b.</td><td class="ab"></td></tr>'
-            for ik, q in data["sdt_items"]
-        )
-
-        s += f"""<div class="pb sec">
-  {ch.opener("Appendix", kicker="Volledige vraagresultaten")}
-  {_intro("appendix")}
-  <p style="font-size:9px;color:#94A3B8;margin-bottom:14px;">
-    n={n}. &#x21a9;&nbsp;= omgekeerd gecodeerde stelling.
-  </p>
-  {app_sections}
-  <div class="no-break" style="margin-bottom:14px;">
-    <div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">Werkbeleving (SDT): B1 t/m B12</div>
-    <table class="app-tbl"><tr><th class="aq">Vraag</th><th class="as">Gem.</th><th class="ab">Beeld</th></tr>{sdt_rows}</table>
-  </div>
-  <div class="empty-state" style="margin-top:8px;">
-    Werkgeversaanbeveling (eNPS): {"beschikbaar, zie hoofdrapport" if data["enps_available"] else "niet gemeten in deze wave"}
-  </div>
-</div>"""
+        # Twee kolommen via de gedeelde helper (B9): de onderwerpstabellen naast
+        # elkaar in plaats van onder elkaar, zodat de appendix niet met een paar
+        # regels op een tweede vel overloopt.
+        s += _appendix_section(
+            fa=fa, oim=oim, sim=sim, factor_items_map=data["factor_items_map"],
+            sdt_items=data["sdt_items"], scan_type=ST, n=n,
+            enps_score=data["enps_score"], enps_detail=data.get("enps_detail"),
+            opener_html=ch.opener("Appendix", kicker="Volledige vraagresultaten"),
+            sdt_title="Werkbeleving (SDT): B1 t/m B12")
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────
     s += _trust_page(ST, opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen", anchor=LEIDRAAD_ANKERS["methodiek"]),
@@ -5279,7 +5264,8 @@ def render_retention_report_html(data: dict) -> str:
 
 # ─── Onboarding-exclusive helpers ────────────────────────────────────────────
 
-def _checkpointoverzicht(checkpoints: list[tuple[str, float | None]], opener_html: str = "") -> str:
+def _checkpointoverzicht(checkpoints: list[tuple[str, float | None]], opener_html: str = "",
+                         enps_html: str = "") -> str:
     """Checkpoint-fasevergelijking (30/60/90 dagen) of eerlijke single-measurement degraded view.
 
     checkpoints — lijst van (fase-label, score | None).
@@ -5311,6 +5297,7 @@ def _checkpointoverzicht(checkpoints: list[tuple[str, float | None]], opener_htm
   {opener_html or '<span class="slabel">Checkpointoverzicht</span>'}
   {_intro("checkpointoverzicht")}
   {body}
+  {enps_html}
 </div>"""
 
 
@@ -5531,7 +5518,10 @@ def render_onboarding_report_html(data: dict) -> str:
 
     # ── Checkpointoverzicht (p.05 — onboarding-exclusive) ────────────────────
     s += _checkpointoverzicht(checkpoints=[("Huidig checkpoint", signal)],
-                              opener_html=ch.opener("Onboardingfases", kicker="Checkpointoverzicht", anchor=LEIDRAAD_ANKERS["context"]))
+                              opener_html=ch.opener("Onboardingfases", kicker="Checkpointoverzicht", anchor=LEIDRAAD_ANKERS["context"]),
+                              # eNPS bij de context i.p.v. op een eigen,
+                              # vrijwel lege pagina (H13, B9).
+                              enps_html=_enps_block(data["enps_score"], data.get("enps_detail")))
 
     # ── Landingskwaliteit per domein (onboarding-exclusive) ───────────────────
     domain_scores = [(_fl(fk, ST), fa.get(fk))
@@ -5542,7 +5532,8 @@ def render_onboarding_report_html(data: dict) -> str:
     # Dezelfde rangorde als de cover, pagina twee en de gespreksagenda.
     priority_fkeys = _ob_priority_fkeys
 
-    def _ob_factor_detail(fk: str, opener_html: str = "", intro_html: str = "") -> str:
+    def _ob_factor_detail(fk: str, opener_html: str = "", intro_html: str = "",
+                          is_first: bool = True) -> str:
         lbl    = _fl(fk, ST)
         fsc    = fa.get(fk)
         col    = _factor_color(fsc)
@@ -5578,7 +5569,9 @@ def render_onboarding_report_html(data: dict) -> str:
                      f'<strong style="color:{_factor_color(high_i[2])};">{high_i[2]:.1f}/10</strong></div>'
                      if show_cards and high_i else "")
         spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []))
-        return f"""<div class="pb sec">
+        # Alleen het eerste onderwerp opent een nieuwe pagina (B9), zie
+        # _factor_detail in de Vertrek-renderer.
+        return f"""<div class="{'pb sec' if is_first else 'sec flow'}">
   {opener_html or f'<span class="slabel">{_h(lbl)}</span>'}
   {intro_html}
   <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&middot; {_h(fl_)}</span></h2>
@@ -5596,72 +5589,30 @@ def render_onboarding_report_html(data: dict) -> str:
             # Geen "Verdieping:" in de paginatitel (spec ronde 2 par. 7): Loep
             # Start heeft geen verdiepingsvragen, deze pagina toont de score en
             # de stellingen van de factor.
-            _opener = ch.opener(_lbl, anchor=LEIDRAAD_ANKERS["verdieping"]) if _i == 0 else _ChapterCounter.vervolg(_lbl)
+            # Geen "(vervolg)" (C12): een volgend onderwerp, geen vervolg.
+            _opener = (ch.opener(_lbl, anchor=LEIDRAAD_ANKERS["verdieping"])
+                       if _i == 0 else _ChapterCounter.sub(_lbl))
             # Geen SECTION_INTROS["verdieping"] hier (code-review taak 9, fix A):
             # die tekst belooft een automatische vervolgvraag + een
             # gespreksagenda gevuld met wat respondenten kozen. Onboarding
             # heeft in v1 geen richtingdata (DIRECTION_SCAN_TYPES) en geen
             # deepening-set, dus dat is niet waar voor dit rapport. De
             # factordetailpagina leest prima zonder intro.
-            s += _ob_factor_detail(_pfk, opener_html=_opener, intro_html="")
+            s += _ob_factor_detail(_pfk, opener_html=_opener, intro_html="",
+                                   is_first=_i == 0)
     else:
         s += f'<div class="pb sec">{ch.opener("Factoren met de meeste aandacht", anchor=LEIDRAAD_ANKERS["verdieping"])}<div class="empty-state">{ONBOARDING_GEEN_RANGORDE}</div></div>'
 
     # ── Werkbeleving (SDT) — if present ──────────────────────────────────────
-    def _sdt_item_tbl(dim: str) -> str:
-        keys = SDT_DIMENSION_ITEMS.get(dim, [])
-        REV_LABEL = '<span style="font-size:8px;color:#94A3B8;">&nbsp;(omgekeerd)</span>'
-        rows = "".join(
-            f'<tr><td class="iq">{_h(q)}'
-            f'{REV_LABEL if ik in SDT_REVERSE_ITEMS else ""}'
-            f'</td><td class="is" style="color:{_rag_color(sim.get(ik))};">{sim[ik]:.1f}</td>'
-            f'<td class="ib">{_mini_bar_svg(sim.get(ik), _rag_color(sim.get(ik)), width=80, height=6)}</td></tr>'
-            for ik in keys
-            for q in [next((t for k, t in data["sdt_items"] if k == ik), ik)]
-            if ik in sim
-        )
-        return f'<table class="item-tbl">{rows}</table>' if rows else ""
-
-    sdt_overview_rows = "".join(
-        _factor_bar_row(SDT_LABELS.get(dim, ""), sdt_a.get(dim))
-        for dim in ("autonomy", "competence", "relatedness")
-        if sdt_a.get(dim) is not None
-    )
-
+    # Twee kolommen via de gedeelde helper (B9); dezelfde gate als de leidraad.
     if _ob_has_sdt:
-        s += f"""<div class="pb sec">
-  {ch.opener("Werkbeleving", kicker="Autonomie, competentie &amp; verbondenheid", anchor=LEIDRAAD_ANKERS["werkbeleving"])}
-  {_intro("werkbeleving")}
-  <div class="card" style="margin-bottom:14px;">{sdt_overview_rows}</div>"""
+        s += _werkbeleving_section(
+            sdt_a, sim, data["sdt_items"],
+            ch.opener("Werkbeleving", kicker="Autonomie, competentie &amp; verbondenheid",
+                      anchor=LEIDRAAD_ANKERS["werkbeleving"]))
 
-        for dim in ("autonomy", "competence", "relatedness"):
-            sc    = sdt_a.get(dim)
-            col   = _rag_color(sc)
-            fl_   = _factor_label(sc)
-            tbl   = _sdt_item_tbl(dim)
-            if not tbl: continue
-            s += f"""<div class="card no-break" style="margin-bottom:12px;">
-  <div style="margin-bottom:8px;">
-    <span style="font-size:12px;font-weight:700;color:#243247;">{_h(SDT_LABELS.get(dim,""))}</span>
-    <span style="font-size:11px;font-weight:700;color:{col};margin-left:10px;">{_score_str(sc)}</span>
-    <span style="font-size:10px;color:{col};margin-left:6px;">&middot; {_h(fl_)}</span>
-  </div>
-  <div style="font-size:9.5px;color:#6B7280;margin-bottom:8px;">{_h(SDT_HELP.get(dim,""))}</div>
-  {tbl}
-</div>"""
-        s += "</div>"
-
-    # ── eNPS (if present) ────────────────────────────────────────────────────
-    if data["enps_available"] and data["enps_score"] is not None:
-        es   = data["enps_score"]
-        ecol = _rag_color(10.0 if es >= 20 else 6.0 if es >= 0 else 4.0)
-        s += f"""<div class="pb sec">
-  {ch.opener("Werkgeversaanbeveling")}
-  {_intro("werkgeversaanbeveling")}
-  <table class="sg"><tr>
-    <td><div class="sc-l">Aanbevelingsscore</div><div class="sc-v" style="color:{ecol};">{es:+d}</div><div class="sc-b">eNPS (&minus;100 tot +100)</div></td>
-  </tr></table>
-</div>"""
+    # eNPS heeft geen eigen hoofdstuk meer: het blok staat bij het
+    # checkpointoverzicht (H13, B9), zie _enps_block.
 
     # ── Segmentstatus ─────────────────────────────────────────────────────────
     _seg_rows = data.get("segment_rows") or []
@@ -5724,7 +5675,10 @@ def render_onboarding_report_html(data: dict) -> str:
     if _geen_profiel:
         _agenda_wel = _opsomming([
             "het checkpointoverzicht" if signal is not None else "",
-            "de werkbeleving van nieuwe medewerkers" if sdt_overview_rows else "",
+            # Zelfde vlag als de sectie zelf en als de leidraad; sdt_overview_rows
+            # bestond hier niet meer nadat de werkbeleving naar de gedeelde
+            # helper verhuisde (B9).
+            "de werkbeleving van nieuwe medewerkers" if _ob_has_sdt else "",
             "de meetgegevens op de openingspagina"])
         _agenda_degraded_note = (
             f"Wat dit rapport wel laat zien: {_agenda_wel}. Een score per thema "
@@ -5767,44 +5721,15 @@ def render_onboarding_report_html(data: dict) -> str:
     # ── Appendix ─────────────────────────────────────────────────────────────
     n_factors = len([fk for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None])
     if _should_show_appendix(n, n_factors):
-        app_sections = ""
-        for fk, items in data["factor_items_map"].items():
-            lbl_f = _fl(fk, ST)
-            fsc_a = fa.get(fk)
-            rows  = "".join(
-                (f'<tr><td class="aq">{_h(q)}</td>'
-                 f'<td class="as" style="color:{_factor_color(oim.get(ik))};">{oim[ik]:.1f}</td>'
-                 f'<td class="ab">{_mini_bar_svg(oim.get(ik), _factor_color(oim.get(ik)), width=70, height=5)}</td></tr>')
-                if oim.get(ik) is not None else
-                f'<tr><td class="aq">{_h(q)}</td><td class="as" style="color:#94A3B8;">n.b.</td><td class="ab"></td></tr>'
-                for ik, q in items
-            )
-            app_sections += (f'<div class="no-break" style="margin-bottom:14px;">'
-                             f'<div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">'
-                             f'{_h(lbl_f)}'
-                             f'{"&nbsp;&middot;&nbsp;" + _score_str(fsc_a) if fsc_a else ""}</div>'
-                             f'<table class="app-tbl"><tr><th class="aq">Vraag</th>'
-                             f'<th class="as">Gem.</th><th class="ab">Beeld</th></tr>{rows}</table></div>')
-
-        sdt_rows = "".join(
-            (f'<tr><td class="aq">{_h(q)}{"&nbsp;&#x21a9;" if ik in SDT_REVERSE_ITEMS else ""}</td>'
-             f'<td class="as" style="color:{_factor_color(sim.get(ik))};">{sim[ik]:.1f}</td>'
-             f'<td class="ab">{_mini_bar_svg(sim.get(ik), _factor_color(sim.get(ik)), width=70, height=5)}</td></tr>')
-            if sim.get(ik) is not None else
-            f'<tr><td class="aq">{_h(q)}{"&nbsp;&#x21a9;" if ik in SDT_REVERSE_ITEMS else ""}</td>'
-            f'<td class="as" style="color:#94A3B8;">n.b.</td><td class="ab"></td></tr>'
-            for ik, q in data["sdt_items"]
-        )
-
-        s += f"""<div class="pb sec">
-  {ch.opener("Appendix", kicker="Volledige vraagresultaten")}
-  {_intro("appendix")}
-  <p style="font-size:9px;color:#94A3B8;margin-bottom:14px;">
-    n={n}. &#x21a9;&nbsp;= omgekeerd gecodeerde stelling.
-  </p>
-  {app_sections}
-  {"<div class='no-break' style='margin-bottom:14px;'><div style='font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;'>Werkbeleving (SDT): checkpoint-items</div><table class='app-tbl'><tr><th class='aq'>Vraag</th><th class='as'>Gem.</th><th class='ab'>Beeld</th></tr>" + sdt_rows + "</table></div>" if sdt_rows else ""}
-</div>"""
+        # Twee kolommen via de gedeelde helper (B9): de onderwerpstabellen naast
+        # elkaar in plaats van onder elkaar, zodat de appendix niet met een paar
+        # regels op een tweede vel overloopt.
+        s += _appendix_section(
+            fa=fa, oim=oim, sim=sim, factor_items_map=data["factor_items_map"],
+            sdt_items=data["sdt_items"], scan_type=ST, n=n,
+            enps_score=data["enps_score"], enps_detail=data.get("enps_detail"),
+            opener_html=ch.opener("Appendix", kicker="Volledige vraagresultaten"),
+            sdt_title="Werkbeleving (SDT): checkpoint-items")
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────
     s += _trust_page(ST, opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen", anchor=LEIDRAAD_ANKERS["methodiek"]),

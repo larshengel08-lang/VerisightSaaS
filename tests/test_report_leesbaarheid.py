@@ -76,6 +76,10 @@ def test_sectie_intros_aanwezig():
     # niet-lege teksten zodat de Open toelichtingen-sectie (gegated door
     # _should_show_quotes, MIN_QUOTES_N=5) daadwerkelijk rendert (zelfde
     # patroon als test_geen_erkenning_label_meer hierboven).
+    # Sinds taak 8 (B9) rendert de werkbelevingssectie alleen met echte
+    # dimensiescores -- een lege kaart plus een hoofdstuknummer was precies de
+    # halflege pagina die B9 aanpakt. Deze test gaat over de intro's, dus krijgt
+    # de fixture ook SDT-data, zoals hij hierboven al open toelichtingen krijgt.
     d = _min_retention_data()
     d["open_texts"] = [
         "Meer ruimte voor overleg met mijn leidinggevende zou helpen.",
@@ -84,6 +88,9 @@ def test_sectie_intros_aanwezig():
         "Communicatie tussen teams kan beter.",
         "Over het algemeen ben ik tevreden over de sfeer.",
     ]
+    d["sdt_avgs"] = {"autonomy": 6.1, "competence": 6.4, "relatedness": 6.0}
+    d["sdt_item_avgs"] = {"B1": 6.1}
+    d["sdt_items"] = [("B1", "Ik bepaal zelf hoe ik mijn werk indeel")]
     html = render_retention_report_html(d)
     for frase in [
         "samenvattende groepsscore",          # behoudscontext: opbouw behoudssignaal

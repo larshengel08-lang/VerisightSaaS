@@ -315,6 +315,18 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .app-tbl .as { width: 10%; }
 .app-tbl .ab { width: 28%; }
 .sec { margin-bottom: 44px; }
+/* Flow-sectie (B9): geen geforceerde paginabreuk, wel bij elkaar blijven. Een
+   sectie die niet meer past gaat als geheel naar de volgende pagina, zodat de
+   tweede en derde verdiepingspagina de ruimte onder hun voorganger vullen in
+   plaats van elk een eigen halflege vel te openen. */
+.sec.flow { break-before: auto; break-inside: avoid; margin-top: 30px; }
+/* Werkbeleving en appendix in twee kolommen (B9): halveert de hoogte. Via de
+   bestaande .tcol-tabel (display: table), niet via column-count of flex met
+   gap: WeasyPrint kent geen gap op flex en verdeelt kolommen van een
+   multicol-blok niet over paginagrenzen. */
+.tcol.wb-cols .tc-l, .tcol.wb-cols .tc-r { width: 50%; }
+.tcol.app-cols .tc-l, .tcol.app-cols .tc-r { width: 50%; }
+.enps-inline { margin-top: 18px; }
 .empty-state { background: #fff; border: 1px dashed """ + HAIRLINE + r"""; padding: 18px;
   text-align: center; color: #94A3B8; font-size: 10px; }
 .trustline { font-size: 10px; color: """ + STEEL + r"""; font-style: italic; margin-top: 8px; }
