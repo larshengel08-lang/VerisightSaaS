@@ -27,6 +27,7 @@ from backend.report_distribution import (
     ZONE_HIGH,
     ZONE_LOW,
     distribution_block,
+    score_distribution,
     shown as _shown,
     zone_color,
 )
@@ -646,6 +647,52 @@ def _p02_signal_cell(label: str, value: str, band: str) -> str:
             f'<div class="sc-b">{_h(band)}</div></td>')
 
 
+def _p02_cijfers_block(cells: list[str]) -> str:
+    """Blok 2 van pagina twee (spec 16-9 par. 4): de cijfers die het MT wakker
+    maken, als één statrij. Lege cellen vallen weg; zonder cellen geen tabel."""
+    tds = "".join(c for c in cells if c)
+    if not tds:
+        return ""
+    return f'<table class="sg p02-cijfers"><tr>{tds}</tr></table>'
+
+
+def _blijfintentie_zones(stay_scores: list[float]) -> tuple[int, int, int, int]:
+    """(onder 5, 5 tot 6,5, vanaf 6,5, n) op de individuele blijfintentiescores."""
+    vals = [v for v in stay_scores if v is not None]
+    low, mid, high = score_distribution(vals)["zones"]
+    return low, mid, high, len(vals)
+
+
+def _blijfintentie_cell(avg_si: float | None, stay_scores: list[float]) -> str:
+    """Blijfintentie met dezelfde band als de onderwerpen en de zone-verdeling (B1).
+
+    "Blijfintentie 3.9/10: kwetsbaar. 25 van de 39 zitten onder de 5." De band
+    komt uit _factor_label (dus op de getoonde score, B15), de zones uit
+    score_distribution: dezelfde grenzen als de spreidingsstrook verderop.
+    """
+    if avg_si is None:
+        return ""
+    low, _mid, _high, n = _blijfintentie_zones(stay_scores)
+    band = _factor_label(avg_si).lower()
+    zones = f"{low} van de {n} zitten onder de 5" if n else "geen losse scores beschikbaar"
+    return (f'<td><div class="sc-l">Blijfintentie</div>'
+            f'<div class="sc-v" style="color:{_factor_color(avg_si)};">{_score_str(avg_si)}</div>'
+            f'<div class="sc-b">{_h(band)}: {_h(zones)}</div></td>')
+
+
+def _blijfintentie_kopzin(avg_si: float | None, stay_scores: list[float]) -> str:
+    """De zin die de kop krijgt zodra de blijfintentie kwetsbaar is (spec par. 4 blok 2).
+
+    Alleen dan: een blijfintentie die aandachtspunt of relatief sterk is hoort
+    in blok 2, niet in de kop. Leeg als er geen score is.
+    """
+    if avg_si is None or _factor_label(avg_si) != "Kwetsbaar punt":
+        return ""
+    low, _mid, _high, n = _blijfintentie_zones(stay_scores)
+    return (f"Ook de blijfintentie is kwetsbaar: {_score_str(avg_si)}, "
+            f"{low} van de {n} zitten onder de 5.")
+
+
 # ─── Respons heeft gevolgen (spec ronde 2 par. 6) ────────────────────────────
 # Bevinding B19: 30% respons en 90% respons leverden structureel hetzelfde
 # rapport op. Onder de helft is het beeld dat van wie meedeed, niet van de
@@ -718,6 +765,68 @@ def _respons_pct(completed: int, invited: int | None) -> int | None:
     """Het afgeronde responspercentage, of None zonder noemer."""
     rate = _response_rate(completed, invited)
     return None if rate is None else round(rate * 100)
+
+
+def _respons_oordeel(completed: int, invited: int | None) -> str:
+    """Eén zin die zegt of de respons genoeg is (H3), op dezelfde drempels als
+    _respons_caution en _respons_kernzin_staart, zodat blok 2 en de kernzin
+    nooit verschillend kunnen oordelen over hetzelfde getal."""
+    if not invited:
+        return (f"{completed} ingevuld; het aantal uitgenodigden is niet vastgelegd, "
+                f"dus staat er geen percentage.")
+    pct = _respons_pct(completed, invited)
+    kop = f"{completed} van de {invited} ingevuld ({pct}%)"
+    if completed < MIN_AGGREGATE_N:
+        return (f"{kop}: te weinig voor een profiel per onderwerp, daarvoor zijn er "
+                f"minimaal {MIN_AGGREGATE_N} nodig.")
+    rate = _response_rate(completed, invited)
+    if rate < RESPONSE_INDICATIVE_RATE:
+        return f"{kop}: indicatief, geen vastgesteld startpunt."
+    if rate < RESPONSE_CAUTION_RATE:
+        return f"{kop}: het beeld van wie meedeed, niet van de hele organisatie."
+    return f"{kop}: genoeg voor een betrouwbaar groepsbeeld."
+
+
+def _respons_cell(completed: int, invited: int | None) -> str:
+    pct = _respons_pct(completed, invited)
+    value = f"{pct}%" if pct is not None else "n.b."
+    return (f'<td><div class="sc-l">Respons</div><div class="sc-v">{value}</div>'
+            f'<div class="sc-b">{_h(_respons_oordeel(completed, invited))}</div></td>')
+
+
+def _vertrekreden_top(exit_r_dist: list[dict]) -> tuple[list[dict], int]:
+    """(alle redenen met de hoogste telling, die telling). Leeg zonder redenen."""
+    if not exit_r_dist:
+        return [], 0
+    top = max(r["count"] for r in exit_r_dist)
+    return [r for r in exit_r_dist if r["count"] == top], top
+
+
+def _vertrekreden_zin(exit_r_dist: list[dict], n: int) -> str:
+    """De meest genoemde vertrekreden met noemer; bij een gelijkspel alle
+    gelijke redenen (ronde 2 punt b, scenario 08: 4 om 4)."""
+    tops, cnt = _vertrekreden_top(exit_r_dist)
+    if not tops:
+        return ""
+    if len(tops) == 1:
+        return tops[0]["label"] + f" is de meest genoemde vertrekreden ({cnt} van de {n})."
+    namen = _opsomming([r["label"] for r in tops])
+    return (f"{_TELWOORD[len(tops)].capitalize()} redenen zijn even vaak genoemd "
+            f"({cnt} van de {n} elk): {namen}.")
+
+
+def _vertrekreden_cell(exit_r_dist: list[dict], n: int) -> str:
+    tops, cnt = _vertrekreden_top(exit_r_dist)
+    if not tops:
+        return ""
+    if len(tops) == 1:
+        label, body = tops[0]["label"], f"meest genoemde vertrekreden, {cnt} van de {n}"
+    else:
+        label = _opsomming([r["label"] for r in tops])
+        body = f"even vaak genoemd, {cnt} van de {n} elk"
+    return (f'<td><div class="sc-l">Vertrekreden</div>'
+            f'<div class="sc-v" style="font-size:14px;">{_h(label)}</div>'
+            f'<div class="sc-b">{_h(body)}</div></td>')
 
 
 def _respons_caution(completed: int, invited: int | None, note: str) -> str:
@@ -3800,10 +3909,18 @@ def render_exit_report_html(data: dict) -> str:
         indicatief=_respons_indicatief(data["n_completed"], data["n_invited"]))
     _signal_cell = _p02_signal_cell("Frictiescore", rdsp if avg_risk else "",
                                     fl if avg_risk else "")
-    # De vertrekredenzin hangt achter de kernzin, maar de noemer hoort bij de
-    # claim die hij relativeert (het startpunt), niet bij een redentelling. Hij
-    # wordt daarom pas na _p02_met_respons aangehaakt.
-    _er_zin = f" {er_top} is de meest genoemde vertrekreden." if (exec_line and er_top) else ""
+    # Blok 2 (spec par. 4): vertrekreden met noemer en gelijkspel, respons met
+    # oordeel, frictiescore. De vertrekredenzin hangt achter de kernzin, maar de
+    # noemer van de respons hoort bij de claim die hij relativeert (het
+    # startpunt), dus de zin wordt pas na _p02_met_respons aangehaakt.
+    _er_zin = (" " + _vertrekreden_zin(data["exit_r_dist"], n)) if (exec_line and er_top) else ""
+    # Taak 4 van plan 3a rendert dit blok via _bestuurlijke_read; tot dan bewust
+    # alleen opgebouwd.
+    _cijfers_html = _p02_cijfers_block([
+        _vertrekreden_cell(data["exit_r_dist"], n),
+        _respons_cell(data["n_completed"], data["n_invited"]),
+        _signal_cell,
+    ])
     # Deze terugval verwijst alleen, hij doet geen uitspraak (spec par. 6.3).
     _verwijst = not exec_line and not avg_risk
     if not exec_line:
@@ -4306,6 +4423,15 @@ def render_retention_report_html(data: dict) -> str:
         indicatief=_respons_indicatief(data["n_completed"], data["n_invited"]))
     _signal_cell = _p02_signal_cell("Behoudssignaal", _score_str(signal) if signal else "",
                                     band_lbl or "")
+    _stay_scores = (data.get("intent_resp") or {}).get("stay") or []
+    # Taak 4 van plan 3a rendert dit blok via _bestuurlijke_read; tot dan bewust
+    # alleen opgebouwd.
+    _cijfers_html = _p02_cijfers_block([
+        _blijfintentie_cell(avg_si, _stay_scores),
+        _respons_cell(data["n_completed"], data["n_invited"]),
+        _signal_cell,
+    ])
+    _si_kop = _blijfintentie_kopzin(avg_si, _stay_scores)
     # Deze terugval verwijst alleen, hij doet geen uitspraak (spec par. 6.3).
     _verwijst = not exec_line and not (signal and band_lbl)
     if not exec_line:
@@ -4318,6 +4444,11 @@ def render_retention_report_html(data: dict) -> str:
 
     exec_line = _p02_met_respons(exec_line, completed=data["n_completed"],
                                  invited=data["n_invited"], verwijzing=_verwijst)
+    # Kwetsbare blijfintentie hoort in de kop (B1): het rapport past zijn eigen
+    # regel "onder 5,0 is kwetsbaar" toe op zijn slechtste getal. Niet in de
+    # degraded staat: daar draagt de alinea van _geen_factorprofiel_note het verhaal.
+    if _si_kop and not _geen_profiel:
+        exec_line = f"{exec_line} {_si_kop}"
 
     # Subtekst herhaalt de titel niet meer: alleen wat nieuw is. De
     # responsbasis staat nu onderaan dezelfde pagina.
@@ -4756,6 +4887,12 @@ def render_onboarding_report_html(data: dict) -> str:
         indicatief=_respons_indicatief(data["n_completed"], data["n_invited"]))
     _signal_cell = _p02_signal_cell("Checkpointscore", _score_str(signal) if signal else "",
                                     band_lbl or "")
+    # Taak 4 van plan 3a rendert dit blok via _bestuurlijke_read; tot dan bewust
+    # alleen opgebouwd.
+    _cijfers_html = _p02_cijfers_block([
+        _respons_cell(data["n_completed"], data["n_invited"]),
+        _signal_cell,
+    ])
     # Deze terugval verwijst alleen, hij doet geen uitspraak (spec par. 6.3).
     _verwijst = not exec_line and not (signal and band_lbl)
     if not exec_line:
