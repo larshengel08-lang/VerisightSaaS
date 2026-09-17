@@ -674,23 +674,39 @@ def _blijfintentie_cell(avg_si: float | None, stay_scores: list[float]) -> str:
         return ""
     low, _mid, _high, n = _blijfintentie_zones(stay_scores)
     band = _factor_label(avg_si).lower()
-    zones = f"{low} van de {n} zitten onder de 5" if n else "geen losse scores beschikbaar"
+    zones = _onder_de_vijf(low, n) if n else "geen losse scores beschikbaar"
     return (f'<td><div class="sc-l">Blijfintentie</div>'
             f'<div class="sc-v" style="color:{_factor_color(avg_si)};">{_score_str(avg_si)}</div>'
             f'<div class="sc-b">{_h(band)}: {_h(zones)}</div></td>')
 
 
-def _blijfintentie_kopzin(avg_si: float | None, stay_scores: list[float]) -> str:
+def _onder_de_vijf(low: int, n: int) -> str:
+    """"1 van de 39 zit onder de 5" / "25 van de 39 zitten onder de 5"."""
+    werkwoord = "zit" if low == 1 else "zitten"
+    return f"{low} van de {n} {werkwoord} onder de 5"
+
+
+def _blijfintentie_kopzin(avg_si: float | None, stay_scores: list[float], *,
+                          na_kwetsbaar_onderwerp: bool = True) -> str:
     """De zin die de kop krijgt zodra de blijfintentie kwetsbaar is (spec par. 4 blok 2).
 
     Alleen dan: een blijfintentie die aandachtspunt of relatief sterk is hoort
-    in blok 2, niet in de kop. Leeg als er geen score is.
+    in blok 2, niet in de kop. Leeg als er geen score is, en ook zonder losse
+    scores: een kop met "0 van de 0" is een kaal getal, de cel in blok 2 zegt
+    dan al dat die scores ontbreken.
+
+    na_kwetsbaar_onderwerp: staat er in de kop al een kwetsbaar onderwerp? Zo
+    niet, dan zegt de kop "Geen onderwerp scoort kwetsbaar." en zou "Ook" die
+    zin tegenspreken; dan wordt het "Wel is de blijfintentie kwetsbaar".
     """
     if avg_si is None or _factor_label(avg_si) != "Kwetsbaar punt":
         return ""
     low, _mid, _high, n = _blijfintentie_zones(stay_scores)
-    return (f"Ook de blijfintentie is kwetsbaar: {_score_str(avg_si)}, "
-            f"{low} van de {n} zitten onder de 5.")
+    if not n:
+        return ""
+    opening = ("Ook de blijfintentie is kwetsbaar" if na_kwetsbaar_onderwerp
+               else "Wel is de blijfintentie kwetsbaar")
+    return f"{opening}: {_score_str(avg_si)}, {_onder_de_vijf(low, n)}."
 
 
 # ─── Respons heeft gevolgen (spec ronde 2 par. 6) ────────────────────────────
@@ -772,8 +788,15 @@ def _respons_oordeel(completed: int, invited: int | None) -> str:
     _respons_caution en _respons_kernzin_staart, zodat blok 2 en de kernzin
     nooit verschillend kunnen oordelen over hetzelfde getal."""
     if not invited:
-        return (f"{completed} ingevuld; het aantal uitgenodigden is niet vastgelegd, "
-                f"dus staat er geen percentage.")
+        # Niet "niet vastgelegd": zonder noemer kan er ook een te laag aantal
+        # vastgelegd zijn, of een managed campagne waarin iedereen invulde
+        # (_respons_noemer). De zin zegt alleen wat zeker is.
+        zin = (f"{completed} ingevuld; Loep kan het aantal uitgenodigden niet "
+               f"vaststellen, dus staat er geen percentage.")
+        if completed < MIN_AGGREGATE_N:
+            zin += (f" Te weinig voor een profiel per onderwerp, daarvoor zijn er "
+                    f"minimaal {MIN_AGGREGATE_N} nodig.")
+        return zin
     pct = _respons_pct(completed, invited)
     kop = f"{completed} van de {invited} ingevuld ({pct}%)"
     if completed < MIN_AGGREGATE_N:
@@ -802,31 +825,52 @@ def _vertrekreden_top(exit_r_dist: list[dict]) -> tuple[list[dict], int]:
     return [r for r in exit_r_dist if r["count"] == top], top
 
 
-def _vertrekreden_zin(exit_r_dist: list[dict], n: int) -> str:
+def _vertrekreden_delen(exit_r_top: list[dict], n: int,
+                        gegeven: int | None = None) -> dict[str, str] | None:
+    """Eén vertakking (enkel/gelijkspel) voor zin en cel, zodat ze niet uiteenlopen.
+
+    exit_r_top: alle redenen met de hoogste telling (build_report_data zet ze op
+    de volledige teller; een lijst met lagere tellingen erbij mag ook, de
+    hoogste telling wordt hier opnieuw bepaald).
+    gegeven: hoeveel respondenten een vertrekreden gaven. De reden is optioneel,
+    dus dat kan minder zijn dan n; dan zegt de noemer dat erbij. None betekent
+    onbekend (oude fixture) en valt terug op n.
+    """
+    tops, cnt = _vertrekreden_top(exit_r_top)
+    if not tops:
+        return None
+    noemer = gegeven if gegeven is not None else n
+    deel = f"{cnt} van de {noemer}"
+    gedeeltelijk = noemer < n
+    labels = [r["label"] for r in tops]
+    if len(tops) == 1:
+        telling = deel + (" die een reden gaven" if gedeeltelijk else "")
+        return {"label": labels[0],
+                "zin": labels[0] + f" is de meest genoemde vertrekreden ({telling}).",
+                "cel": f"meest genoemde vertrekreden, {telling}"}
+    telling = (f"elk {deel} die een reden gaven" if gedeeltelijk else f"{deel} elk")
+    aantal = _TELWOORD.get(len(tops), str(len(tops)))
+    namen = _opsomming(labels)
+    return {"label": namen,
+            "zin": (f"{aantal[0].upper()}{aantal[1:]} redenen zijn even vaak genoemd "
+                    f"({telling}): {namen}."),
+            "cel": f"even vaak genoemd, {telling}"}
+
+
+def _vertrekreden_zin(exit_r_top: list[dict], n: int, *, gegeven: int | None = None) -> str:
     """De meest genoemde vertrekreden met noemer; bij een gelijkspel alle
     gelijke redenen (ronde 2 punt b, scenario 08: 4 om 4)."""
-    tops, cnt = _vertrekreden_top(exit_r_dist)
-    if not tops:
-        return ""
-    if len(tops) == 1:
-        return tops[0]["label"] + f" is de meest genoemde vertrekreden ({cnt} van de {n})."
-    namen = _opsomming([r["label"] for r in tops])
-    return (f"{_TELWOORD[len(tops)].capitalize()} redenen zijn even vaak genoemd "
-            f"({cnt} van de {n} elk): {namen}.")
+    delen = _vertrekreden_delen(exit_r_top, n, gegeven)
+    return delen["zin"] if delen else ""
 
 
-def _vertrekreden_cell(exit_r_dist: list[dict], n: int) -> str:
-    tops, cnt = _vertrekreden_top(exit_r_dist)
-    if not tops:
+def _vertrekreden_cell(exit_r_top: list[dict], n: int, *, gegeven: int | None = None) -> str:
+    delen = _vertrekreden_delen(exit_r_top, n, gegeven)
+    if not delen:
         return ""
-    if len(tops) == 1:
-        label, body = tops[0]["label"], f"meest genoemde vertrekreden, {cnt} van de {n}"
-    else:
-        label = _opsomming([r["label"] for r in tops])
-        body = f"even vaak genoemd, {cnt} van de {n} elk"
     return (f'<td><div class="sc-l">Vertrekreden</div>'
-            f'<div class="sc-v" style="font-size:14px;">{_h(label)}</div>'
-            f'<div class="sc-b">{_h(body)}</div></td>')
+            f'<div class="sc-v" style="font-size:14px;">{_h(delen["label"])}</div>'
+            f'<div class="sc-b">{_h(delen["cel"])}</div></td>')
 
 
 def _respons_caution(completed: int, invited: int | None, note: str) -> str:
@@ -3390,6 +3434,15 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
     exit_r_cnt  = Counter(r.exit_reason_code for r in responses if r.exit_reason_code)
     exit_r_dist = [{"code": c, "label": EXIT_REASON_LABELS_NL.get(c, c), "count": n_}
                    for c, n_ in exit_r_cnt.most_common(5)]
+    # Gelijkspel op de VOLLEDIGE teller: most_common(5) kapt een gelijkspel van
+    # meer dan vijf redenen af. Zelfde volgorde als exit_r_dist (most_common is
+    # stabiel), zodat tabel en p.02 dezelfde redenen eerst noemen.
+    _exit_r_all = exit_r_cnt.most_common()
+    exit_r_top = ([{"code": c, "label": EXIT_REASON_LABELS_NL.get(c, c), "count": n_}
+                   for c, n_ in _exit_r_all if n_ == _exit_r_all[0][1]]
+                  if _exit_r_all else [])
+    # De vertrekreden is optioneel: de noemer is wie er een gaf, niet n_completed.
+    exit_r_given = sum(exit_r_cnt.values())
     cont_cnt    = Counter()
     for r in responses:
         for k in (r.pull_factors_raw or {}).keys(): cont_cnt[k] += 1
@@ -3512,7 +3565,8 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
         strong_work=strong_work, top_exit_lbl=top_exit_lbl, top_cont_lbl=top_cont_lbl,
         sig_vis=sig_vis, sdt_avgs=sdt_avgs,
         sdt_item_avgs=sdt_item_avgs, org_item_avgs=org_item_avgs,
-        exit_r_dist=exit_r_dist, cont_dist=cont_dist,
+        exit_r_dist=exit_r_dist, exit_r_top=exit_r_top, exit_r_given=exit_r_given,
+        cont_dist=cont_dist,
         prev_dist=prev_dist, open_texts=open_texts,
         deepening_agg=deepening_agg,
         direction_agg=direction_agg,
@@ -3913,11 +3967,16 @@ def render_exit_report_html(data: dict) -> str:
     # oordeel, frictiescore. De vertrekredenzin hangt achter de kernzin, maar de
     # noemer van de respons hoort bij de claim die hij relativeert (het
     # startpunt), dus de zin wordt pas na _p02_met_respons aangehaakt.
-    _er_zin = (" " + _vertrekreden_zin(data["exit_r_dist"], n)) if (exec_line and er_top) else ""
+    # exit_r_top/exit_r_given komen uit build_report_data; oudere fixtures
+    # kennen ze niet en vallen terug op de tabel en op n (plan-regel 12).
+    _er_top = data.get("exit_r_top") or data["exit_r_dist"]
+    _er_given = data.get("exit_r_given")
+    _er_zin = ((" " + _vertrekreden_zin(_er_top, n, gegeven=_er_given))
+               if (exec_line and er_top) else "")
     # Taak 4 van plan 3a rendert dit blok via _bestuurlijke_read; tot dan bewust
     # alleen opgebouwd.
     _cijfers_html = _p02_cijfers_block([
-        _vertrekreden_cell(data["exit_r_dist"], n),
+        _vertrekreden_cell(_er_top, n, gegeven=_er_given),
         _respons_cell(data["n_completed"], data["n_invited"]),
         _signal_cell,
     ])
@@ -4431,7 +4490,10 @@ def render_retention_report_html(data: dict) -> str:
         _respons_cell(data["n_completed"], data["n_invited"]),
         _signal_cell,
     ])
-    _si_kop = _blijfintentie_kopzin(avg_si, _stay_scores)
+    # Zelfde telling als _p02_opening: zonder kwetsbaar onderwerp zegt de kop
+    # "Geen onderwerp scoort kwetsbaar.", dus geen "Ook".
+    _si_kop = _blijfintentie_kopzin(avg_si, _stay_scores,
+                                    na_kwetsbaar_onderwerp=_shape["n_vulnerable"] > 0)
     # Deze terugval verwijst alleen, hij doet geen uitspraak (spec par. 6.3).
     _verwijst = not exec_line and not (signal and band_lbl)
     if not exec_line:
