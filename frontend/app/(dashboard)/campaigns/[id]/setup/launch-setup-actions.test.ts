@@ -5,6 +5,7 @@ import { addDays } from '@/lib/campaign-schedule'
 let orgMemberRole: string | null = 'owner'
 let deliveryUpserts: Array<Record<string, unknown>> = []
 let campaignUpdates: Array<Record<string, unknown>> = []
+let campaignUpdateOptions: Array<unknown> = []
 let deliveryUpsertError: { message: string } | null = null
 let campaignUpdateError: { message: string } | null = null
 let confirmCount = 1
@@ -26,10 +27,13 @@ vi.mock('@/lib/supabase/server', () => ({
               single: async () => ({ data: campaignRow }),
             }),
           }),
-          update: (payload: Record<string, unknown>, _opts?: unknown) => ({
+          update: (payload: Record<string, unknown>, opts?: { count?: string }) => ({
             eq: async () => {
               campaignUpdates.push(payload)
-              return { error: campaignUpdateError, count: campaignUpdateError ? null : campaignUpdateCount }
+              campaignUpdateOptions.push(opts)
+              // Zoals Supabase: zonder { count: 'exact' } komt er geen telling terug.
+              const count = opts?.count === 'exact' && !campaignUpdateError ? campaignUpdateCount : null
+              return { error: campaignUpdateError, count }
             },
           }),
         }
@@ -94,6 +98,7 @@ describe('saveLaunchSetupAction (spec 2026-09-16 par. 4.1 en 5.2)', () => {
   beforeEach(() => {
     deliveryUpserts = []
     campaignUpdates = []
+    campaignUpdateOptions = []
     deliveryUpsertError = null
     campaignUpdateError = null
     campaignUpdateCount = 1
@@ -177,6 +182,7 @@ describe('saveLaunchSetupAction (spec 2026-09-16 par. 4.1 en 5.2)', () => {
   it('meldt eerlijk als de sluitdatum door de database niet is bijgewerkt (0 rijen, geen fout)', async () => {
     campaignUpdateCount = 0
     const result = await saveLaunchSetupAction('campaign-1', input())
+    expect(campaignUpdateOptions).toEqual([{ count: 'exact' }])
     expect(result.ok).toBe(false)
     expect(result.error).toContain('Startdatum en deelnemers zijn opgeslagen, maar de sluitdatum niet')
   })
@@ -217,6 +223,13 @@ describe('confirmLaunchAction', () => {
   afterEach(() => {
     orgMemberRole = 'owner'
     confirmCount = 1
+    campaignRow = { organization_id: 'org-1', is_active: true, closed_at: null }
+  })
+
+  it('weigert te bevestigen als de meting al gesloten is', async () => {
+    campaignRow = { organization_id: 'org-1', is_active: false, closed_at: '2026-09-10T10:00:00Z' }
+    const result = await confirmLaunchAction('campaign-1')
+    expect(result).toEqual({ ok: false, error: 'De meting is al gesloten; je kunt hem niet meer als verstuurd bevestigen.' })
   })
 
   it('returns ok: true for authorized user', async () => {

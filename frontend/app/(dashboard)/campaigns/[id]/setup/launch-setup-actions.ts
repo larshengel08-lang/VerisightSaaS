@@ -127,8 +127,11 @@ export async function saveLaunchSetupAction(
 }
 
 export async function confirmLaunchAction(campaignId: string): Promise<ActionResult> {
-  const { supabase, authorized } = await getAuthAndMembership(campaignId)
-  if (!authorized) return { ok: false, error: 'Niet gemachtigd.' }
+  const { supabase, campaign, authorized } = await getAuthAndMembership(campaignId)
+  if (!authorized || !campaign) return { ok: false, error: 'Niet gemachtigd.' }
+  if (campaign.is_active === false || campaign.closed_at) {
+    return { ok: false, error: 'De meting is al gesloten; je kunt hem niet meer als verstuurd bevestigen.' }
+  }
 
   const now = new Date().toISOString()
   const { error, count } = await supabase

@@ -123,6 +123,10 @@ export function validateSchedule(input: ScheduleInput, options: ScheduleOptions 
   if (input.closesAt > max) {
     return fail(`Kies een sluitdatum van uiterlijk ${CLOSE_MAX_DAYS} dagen na de start, dus op of voor ${formatDutchDate(max)}.`)
   }
+  // Bij een startdatum vanaf vandaag volgt dit al uit het minimum van 7 dagen;
+  // bij een opgeslagen startdatum in het verleden kan de sluitdatum inmiddels
+  // voorbij zijn, en dan zou niemand meer kunnen invullen.
+  if (input.closesAt <= input.today) return fail('Kies een sluitdatum na vandaag.')
 
   if (!isReminderChoice(input.reminderChoice)) {
     return fail('Kies een herinnering van 3, 5 of 7 dagen na de start, of geen herinnering.')

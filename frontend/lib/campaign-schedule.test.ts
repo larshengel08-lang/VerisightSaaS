@@ -74,6 +74,19 @@ describe('validateSchedule', () => {
     })
   })
 
+  it('laat bij een opgeslagen startdatum geen sluitdatum door die al voorbij is', () => {
+    const stored = '2026-08-20'
+    expect(validateSchedule({ ...valid, launchDate: stored, closesAt: '2026-09-10' }, { storedLaunchDate: stored })).toEqual({
+      ok: false,
+      error: 'Kies een sluitdatum na vandaag.',
+    })
+    expect(validateSchedule({ ...valid, launchDate: stored, closesAt: TODAY }, { storedLaunchDate: stored })).toEqual({
+      ok: false,
+      error: 'Kies een sluitdatum na vandaag.',
+    })
+    expect(validateSchedule({ ...valid, launchDate: stored, closesAt: '2026-09-17', reminderChoice: 'none' }, { storedLaunchDate: stored }).ok).toBe(true)
+  })
+
   it('houdt de sluitdatum tussen start + 7 en start + 90 en noemt de grens als datum', () => {
     expect(validateSchedule({ ...valid, closesAt: '' })).toEqual({ ok: false, error: 'Vul een sluitdatum in.' })
     expect(validateSchedule({ ...valid, closesAt: '2026-09-26' })).toEqual({
