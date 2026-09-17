@@ -100,8 +100,8 @@ def test_bronregel_managementvraag():
         kernzin="K.", primary_label="Groeiperspectief",
         why_cells_html="",
         mgmt_q="Vraag?",
-        mgmt_q_source="Gebaseerd op de meest gekozen toelichting van respondenten in de verdieping.")
-    assert "meest gekozen toelichting" in html
+        mgmt_q_source="Gebaseerd op de laagst scorende factor.")
+    assert '<span class="mq-source">Gebaseerd op de laagst scorende factor.</span>' in html
 
 
 def test_gebruiksblok_op_openingspagina():

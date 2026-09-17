@@ -743,24 +743,79 @@ def _p02_cijfers_block(cells: list[str]) -> str:
     return f'<table class="sg p02-cijfers"><tr>{tds}</tr></table>'
 
 
-def _p02_why_extra_cells(top_row: dict, scan_type: str) -> str:
-    """Extra why-cellen die echt een reden zijn (spec par. 4 blok 3): spreiding
-    (alleen vanaf MIN_DISTRIBUTION_N, dezelfde staffel als de rasterkolom) en de
-    gedeelde toelichting uit de verdieping (alleen in celstaat 1). Beide komen
-    uit de rasterrij van het startpunt, dus p.02 en het raster tonen dezelfde
-    getallen."""
+def _hoofdreden_cell(*, er_n: int, er_top: list[dict], gegeven: int | None, n: int,
+                     tf_code: str | None, color: str) -> str:
+    """Why-cel over de vertrekreden die bij het startpunt hoort (exit).
+
+    Staat de reden van het startpunt bij de meest genoemde (alleen of in een
+    gelijkspel), dan draagt blok 2 (cijfersrij) die reden al met getal en de
+    kernzin ook: deze cel maakt dan alleen de koppeling, zonder getal
+    (codereview taak 4). Staat een andere reden hoger, dan toont de cel hoe vaak
+    de reden van het startpunt genoemd is en welke reden vaker genoemd is.
+    Gelijkspel en noemer komen uit dezelfde volledige teller als blok 2
+    (exit_r_top/exit_r_given)."""
+    if not er_n:
+        return ""
+    tops, top_cnt = _vertrekreden_top(er_top)
+    if tf_code in {r["code"] for r in tops}:
+        if len(tops) == 1:
+            lbl, v, body = ("Hoofdreden", "Meest genoemd",
+                            "dit onderwerp hangt samen met de meest genoemde vertrekreden")
+        else:
+            lbl, v, body = ("Als vertrekreden genoemd", "Even vaak",
+                            "dit onderwerp hangt samen met een van de meest genoemde vertrekredenen")
+        return (f'<td class="why-cell"><div class="why-l">{lbl}</div>'
+                f'<div class="why-v" style="color:{color};font-size:14px;">{v}</div>'
+                f'<div class="why-b">{_h(body)}</div></td>')
+    noemer = (f"van de {gegeven} vertrekkers die een reden gaven"
+              if (gegeven is not None and gegeven < n) else f"van de {n} vertrekkers")
+    werkwoord = "is" if len(tops) == 1 else "zijn"
+    body = (f"{noemer}; {_opsomming([r['label'] for r in tops])} {werkwoord} "
+            f"vaker genoemd ({top_cnt} keer)")
+    return (f'<td class="why-cell"><div class="why-l">Als vertrekreden genoemd</div>'
+            f'<div class="why-v" style="color:{color};">{er_n}&times;</div>'
+            f'<div class="why-b">{_h(body)}</div></td>')
+
+
+def _opener_toelichting(deep_agg: dict, scan_type: str, factor_key: str) -> str | None:
+    """De optiesleutel die de datagedreven gespreksopener noemt, of None als
+    de opener de vaste vraag per onderwerp is. Zelfde gate als _deepening_mgmt_q."""
+    agg = deep_agg.get(factor_key)
+    if not agg:
+        return None
+    enr = agenda_enrichment(agg, scan_type, factor_key)
+    return enr["option_key"] if enr else None
+
+
+def _p02_why_extra_cells(top_row: dict, scan_type: str,
+                         opener_toelichting: str | None = None) -> str:
+    """Extra why-cellen die echt een reden zijn (spec par. 4 blok 3), uit de
+    rasterrij van het startpunt, zodat p.02 en het raster dezelfde getallen tonen.
+
+    Spreiding alleen als die voor dit startpunt een signaal is: de rij heeft de
+    spreidingsvlag of de spreiding besliste de volgorde (codereview taak 4; zonder
+    signaal stond er "0 van de 45 onder de 5", wat geen reden is). De staffel
+    MIN_DISTRIBUTION_N blijft gelden. Verdieping alleen in celstaat 1 en niet als
+    de gespreksopener dezelfde toelichting al noemt (opener_toelichting).
+    Een onbekende optiesleutel is een fout, geen rauwe sleutel in een klant-PDF."""
     cells = ""
-    if top_row["spread_n"] >= MIN_DISTRIBUTION_N:
+    decided = top_row.get("decided_by") or {}
+    spread_signaal = top_row["spread_flag"] or decided.get("kind") == "spread"
+    if spread_signaal and top_row["spread_n"] >= MIN_DISTRIBUTION_N:
         cells += (f'<td class="why-cell"><div class="why-l">Spreiding</div>'
                   f'<div class="why-v" style="color:{_factor_color(top_row["score"])};">'
                   f'{top_row["spread_below"]}</div>'
                   f'<div class="why-b">van de {top_row["spread_n"]} onder de 5</div></td>')
     if top_row["deepening_state"] == 1 and top_row["deepening_top"]:
         key, cnt, answered = top_row["deepening_top"]
-        opt = _deepening_option_texts(scan_type, top_row["key"]).get(key, key)
-        cells += (f'<td class="why-cell"><div class="why-l">Verdieping</div>'
-                  f'<div class="why-v">{cnt}</div>'
-                  f'<div class="why-b">van de {answered} kozen: {_h(opt)}</div></td>')
+        if key != opener_toelichting:
+            texts = _deepening_option_texts(scan_type, top_row["key"])
+            if key not in texts:
+                raise KeyError(f"deepening: onbekende optiesleutel {key!r} voor "
+                               f"{top_row['key']!r} ({scan_type})")
+            cells += (f'<td class="why-cell"><div class="why-l">Verdieping</div>'
+                      f'<div class="why-v">{cnt}</div>'
+                      f'<div class="why-b">van de {answered} kozen: {_h(texts[key])}</div></td>')
     return cells
 
 
@@ -1928,7 +1983,8 @@ def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: st
                             primary_why: str | None = None,
                             second_why: str | None = None,
                             opener_html: str = "",
-                            degraded_note: str = "") -> str:
+                            degraded_note: str = "",
+                            opener_op_p02: bool = False) -> str:
     """Gespreksagenda voor eerste managementbespreking — geen actieplan, agenda.
 
     Navy anker (designsprong §2a): kaarten + gespreksopener vormen één donker
@@ -1979,6 +2035,10 @@ def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: st
             f'<div class="step-body">{_h(second_point)}</div>{_why(second_why)}</td>')
         opener_vraag = mgmt_q
         review_hint = review_when
+    # Alleen als p.02 dezelfde opener toont (de aanroeper vergelijkt); zonder
+    # profiel staat op p.02 geen opener.
+    verwijzing_html = ('<p class="agenda-why" style="margin-top:6px;">Dezelfde opener '
+                       'staat op pagina 2.</p>') if (opener_op_p02 and not degraded_note) else ""
 
     return f"""<div class="pb sec">
   {opener_html or '<span class="slabel">Eerste managementspoor</span>'}
@@ -1996,6 +2056,7 @@ def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: st
   <div class="agenda-opener">
     <div style="font-family:'JetBrains Mono', monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#E8A020;margin-bottom:7px;">Gespreksopener</div>
     <p style="margin-bottom:0;font-size:12.5px;line-height:1.6;color:#F4F1EA;">{_h(opener_vraag)}</p>
+    {verwijzing_html}
   </div>
   </div>
   <p class="trustline">Nog niet besluiten of een verdieping of kortere vervolgmeting nodig is: dat volgt uit het gesprek.</p>
@@ -4027,7 +4088,6 @@ def render_exit_report_html(data: dict) -> str:
     # ── Executive summary ─────────────────────────────────────────────────────
     low_lbl  = _fl(low_f[0], "exit")  if low_f  else ""
     high_lbl = _fl(high_f[0], "exit") if high_f else ""
-    high_sc  = high_f[1]                            if high_f else None
 
     # Eén waarheid voor "de primaire factor" door het hele rapport heen (spec
     # 2026-07-18 par. 4): cover, vertrekcontext en why-tabel wijzen allemaal de
@@ -4127,23 +4187,8 @@ def render_exit_report_html(data: dict) -> str:
 
         _deep_agg_early = data.get("deepening_agg") or {}
         why_cells = ""
-        if er_n:
-            # Eerlijk over de rang (plan 3a taak 4): het startpunt hoeft niet de
-            # meest genoemde reden te zijn. Gelijkspel en noemer uit dezelfde
-            # volledige teller als blok 2 (exit_r_top/exit_r_given).
-            _tops, _top_cnt = _vertrekreden_top(_er_top)
-            _noemer = (f"van de {_er_given} vertrekkers die een reden gaven"
-                       if (_er_given is not None and _er_given < n)
-                       else f"van de {n} vertrekkers")
-            if er_n == _top_cnt and len(_tops) == 1:
-                _hr_body = f"{_noemer}, de meest genoemde reden"
-            elif er_n == _top_cnt:
-                _anderen = _opsomming([r["label"] for r in _tops if r["code"] != tf_code])
-                _hr_body = f"{_noemer}, even vaak genoemd als {_anderen}"
-            else:
-                _vaker = _opsomming([r["label"] for r in _tops])
-                _hr_body = f"{_noemer}; {_vaker} vaker ({_top_cnt} keer)"
-            why_cells += f'<td class="why-cell"><div class="why-l">Hoofdreden</div><div class="why-v" style="color:{tf_col};">{er_n}&times;</div><div class="why-b">{_h(_hr_body)}</div></td>'
+        why_cells += _hoofdreden_cell(er_n=er_n, er_top=_er_top, gegeven=_er_given,
+                                      n=n, tf_code=tf_code, color=tf_col)
         if tf_sc:
             why_cells += f'<td class="why-cell"><div class="why-l">Gemiddelde score</div><div class="why-v" style="color:{tf_col};">{tf_sc:.1f}/10</div><div class="why-b">van de {len(i_scores)} stellingen over dit thema ({_h(tf_fl.lower())})</div></td>'
         if low_item:
@@ -4153,7 +4198,9 @@ def render_exit_report_html(data: dict) -> str:
         if cont_n:
             why_cells += f'<td class="why-cell"><div class="why-l">Speelt ook mee</div><div class="why-v">{cont_n}&times;</div><div class="why-b">als meespelende context</div></td>'
 
-        why_cells += _p02_why_extra_cells(_raster_rows[0], "exit")
+        why_cells += _p02_why_extra_cells(
+            _raster_rows[0], "exit",
+            opener_toelichting=_opener_toelichting(_deep_agg_early, "exit", tf))
         primary_fkey  = tf
         primary_label = tf_lbl
         # Eén gespreksopener (H9): dezelfde zin als op de gespreksagenda.
@@ -4486,7 +4533,6 @@ def render_retention_report_html(data: dict) -> str:
     high_f      = sorted_f[-1] if sorted_f else None
     low_lbl     = _fl(low_f[0], ST)  if low_f  else ""
     high_lbl    = _fl(high_f[0], ST) if high_f else ""
-    high_sc     = high_f[1] if high_f else None
 
     # ── Prioriteringsraster-rangorde (spec 2026-07-18 par. 4: één ranking per
     # rapport) — vroeg berekend zodat zowel de Bestuurlijke read (p.02) als de
@@ -4543,7 +4589,9 @@ def render_retention_report_html(data: dict) -> str:
                           f'<div class="why-v" style="color:{_factor_color(low_item[2])};">{low_item[2]:.1f}/10</div>'
                           f'<div class="why-b">{_h(low_item[1])}</div></td>')
 
-        why_cells += _p02_why_extra_cells(_raster_rows[0], ST)
+        why_cells += _p02_why_extra_cells(
+            _raster_rows[0], ST,
+            opener_toelichting=_opener_toelichting(_deep_agg_early, ST, tf))
         primary_fkey  = tf
         primary_label = tf_lbl_
         # Eén gespreksopener (H9): dezelfde zin als op de gespreksagenda.
@@ -4967,7 +5015,6 @@ def render_onboarding_report_html(data: dict) -> str:
     high_f   = sorted_f[-1] if sorted_f else None
     low_lbl  = _fl(low_f[0], ST)  if low_f  else ""
     high_lbl = _fl(high_f[0], ST) if high_f else ""
-    high_sc  = high_f[1] if high_f else None
     _raster_labels = {fk: _fl(fk, ST) for fk in ORG_FACTOR_KEYS}
 
     # Geen raster bij Loep Start: "geen factorprofiel" == geen enkele factor
@@ -5310,10 +5357,17 @@ def render_onboarding_report_html(data: dict) -> str:
     _second_why = ("Tweede laagste factorscore in het overzichtsprofiel."
                    if len(sorted_f) > 1 else None)
 
+    _ob_agenda_q = (_mgmt_q(_ob_priority_fkeys[0], ST) if _ob_priority_fkeys
+                    else (nsp.get("first_decision") or ""))
     s += _eerste_managementspoor(
         primary_theme=_ob_primary_theme,
         second_point=f"{_fl(sorted_f[1][0], ST)} ({_score_str(sorted_f[1][1])})" if len(sorted_f) > 1 else "",
-        mgmt_q=_mgmt_q(_ob_priority_fkeys[0], ST) if _ob_priority_fkeys else (nsp.get("first_decision") or ""),
+        mgmt_q=_ob_agenda_q,
+        # p.02 kiest het startpunt uit top_fkeys (scoring, risico op 2 decimalen
+        # afgerond), de agenda uit _select_priority_factors (onafgerond): bij een
+        # bijna-gelijkstand kunnen ze uiteenlopen. Verwijs daarom alleen als de
+        # zinnen werkelijk gelijk zijn.
+        opener_op_p02=(not br_degraded_note and _ob_agenda_q == br_mgmt_q),
         review_when="Plan een vervolgmoment rond het volgende checkpoint: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.",
         primary_why=None,
         second_why=_second_why,

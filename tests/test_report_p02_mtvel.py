@@ -266,7 +266,9 @@ def test_bestuurlijke_read_heeft_geen_lege_redenen_meer():
 
 
 def test_why_extra_cellen_alleen_bij_echte_signalen():
-    top = dict(RANKED[0], spread_n=39, spread_below=21, spread_flag=True)
+    # Echte optiesleutel: een onbekende geeft een fout (fail loud).
+    top = dict(RANKED[0], spread_n=39, spread_below=21, spread_flag=True,
+               deepening_top=("gr_visibility", 7, 13))
     cells = _tekst(_p02_why_extra_cells(top, "retention"))
     assert "Spreiding 21 van de 39 onder de 5" in cells
     assert "Verdieping 7 van de 13 kozen" in cells
@@ -327,3 +329,113 @@ def test_loep_start_bronregel_zegt_het_als_de_laagste_score_gedeeld_is():
     p2 = _tekst(_page_two(render_onboarding_report_html(d)))
     assert "Gebaseerd op de laagste score; die deelt dit onderwerp met" in p2
     assert "laagst scorende factor" not in p2
+
+
+# ── codereview taak 4 ────────────────────────────────────────────────────────
+
+import pytest  # noqa: E402
+
+from backend.report_html import (  # noqa: E402
+    _bron_laagste_score,
+    _eerste_managementspoor,
+    _hoofdreden_cell,
+    _prioriteringsraster,
+)
+
+_TOPS_ENKEL = [{"code": "P1", "label": "Beter aanbod elders", "count": 30}]
+_TOPS_GELIJK = [{"code": "P1", "label": "Beter aanbod elders", "count": 4},
+                {"code": "P4", "label": "Leiderschap / management", "count": 4}]
+
+
+def test_hoofdreden_enkel_top_maakt_alleen_de_koppeling_zonder_getal():
+    cel = _tekst(_hoofdreden_cell(er_n=30, er_top=_TOPS_ENKEL, gegeven=None, n=45,
+                                  tf_code="P1", color="#000"))
+    assert "Hoofdreden" in cel
+    assert "dit onderwerp hangt samen met de meest genoemde vertrekreden" in cel
+    assert not any(ch.isdigit() for ch in cel)
+    assert "—" not in cel
+
+
+def test_hoofdreden_gelijkspel_met_startpunt_maakt_alleen_de_koppeling():
+    cel = _tekst(_hoofdreden_cell(er_n=4, er_top=_TOPS_GELIJK, gegeven=None, n=12,
+                                  tf_code="P4", color="#000"))
+    assert "Als vertrekreden genoemd" in cel
+    assert "een van de meest genoemde vertrekredenen" in cel
+    assert not any(ch.isdigit() for ch in cel)
+
+
+def test_hoofdreden_vaker_tak_spreekt_zichzelf_niet_tegen():
+    cel = _tekst(_hoofdreden_cell(er_n=26, er_top=_TOPS_ENKEL, gegeven=None, n=45,
+                                  tf_code="P4", color="#000"))
+    assert "Hoofdreden" not in cel
+    assert cel == ("Als vertrekreden genoemd 26&times; van de 45 vertrekkers; "
+                   "Beter aanbod elders is vaker genoemd (30 keer)")
+    # Noemer volgt wie een reden gaf, zoals blok 2.
+    cel = _tekst(_hoofdreden_cell(er_n=3, er_top=_TOPS_GELIJK, gegeven=10, n=12,
+                                  tf_code="P7", color="#000"))
+    assert ("3&times; van de 10 vertrekkers die een reden gaven; Beter aanbod elders en "
+            "Leiderschap / management zijn vaker genoemd (4 keer)") in cel
+    assert _hoofdreden_cell(er_n=0, er_top=_TOPS_ENKEL, gegeven=None, n=45,
+                            tf_code="P4", color="#000") == ""
+
+
+def test_bron_laagste_score_enkel_telwoord_en_none():
+    assert _bron_laagste_score(5.1, [("Werkdruk", 6.0)]) == "Gebaseerd op de laagst scorende factor."
+    assert _bron_laagste_score(5.46, [("Werkdruk", 5.54), ("Cultuur", 6.0)]) ==         "Gebaseerd op de laagste score; die deelt dit onderwerp met Werkdruk."
+    assert _bron_laagste_score(5.5, [("A", 5.5), ("B", 5.5), ("C", 5.5)]) ==         "Gebaseerd op de laagste score; die deelt dit onderwerp met drie andere onderwerpen."
+    assert _bron_laagste_score(None, [("A", 5.5)]) == "Gebaseerd op de laagst scorende factor."
+    assert _bron_laagste_score(5.5, [("A", None)]) == "Gebaseerd op de laagst scorende factor."
+
+
+def _raster(ranked):
+    return _prioriteringsraster(
+        ranked=ranked, scan_type="retention", factor_resp_scores={},
+        deepening_active=False, mgmt_q="Testvraag?",
+        review_when="Plan binnen 45-90 dagen een vervolgmoment.",
+        opener_html="<h2>Gespreksagenda</h2>", direction_agg=None, n_total=0)
+
+
+def test_agenda_verwijst_naar_pagina_twee_alleen_met_rasterrijen():
+    assert "Dezelfde opener staat op pagina 2." in _raster(RANKED)
+    assert "Dezelfde opener staat op pagina 2." not in _raster([])
+
+
+def test_onboarding_agenda_verwijst_naar_pagina_twee():
+    kw = dict(primary_theme="A (5.0/10)", second_point="B (5.5/10)", mgmt_q="V?",
+              review_when="Later.")
+    assert "Dezelfde opener staat op pagina 2." in _eerste_managementspoor(**kw, opener_op_p02=True)
+    assert "Dezelfde opener staat op pagina 2." not in _eerste_managementspoor(**kw)
+    assert "Dezelfde opener staat op pagina 2." not in _eerste_managementspoor(
+        **kw, opener_op_p02=True, degraded_note="Niets.")
+
+
+def test_onboarding_render_verwijst_naar_pagina_twee():
+    from tests.test_report_degraded_page_two import _fixture
+    from backend.report_html import render_onboarding_report_html
+    html = render_onboarding_report_html(_fixture("onboarding", n=12, profile=True))
+    assert "Dezelfde opener staat op pagina 2." in html
+    html = render_onboarding_report_html(_fixture("onboarding", n=8, profile=False))
+    assert "Dezelfde opener staat op pagina 2." not in html
+
+
+def test_spreiding_cel_alleen_als_spreiding_een_signaal_is():
+    geen = dict(RANKED[3], spread_n=45, spread_below=0, spread_flag=False, decided_by=None)
+    assert "Spreiding" not in _p02_why_extra_cells(geen, "retention")
+    beslist = dict(RANKED[3], spread_n=45, spread_below=12, spread_flag=False,
+                   decided_by={"kind": "spread", "other": "growth"})
+    assert "Spreiding" in _p02_why_extra_cells(beslist, "retention")
+
+
+def test_verdieping_cel_weg_als_de_opener_dezelfde_toelichting_noemt():
+    top = dict(RANKED[0], spread_flag=False, deepening_top=("gr_visibility", 7, 13))
+    assert "Verdieping" in _p02_why_extra_cells(top, "retention")
+    assert "Verdieping" not in _p02_why_extra_cells(top, "retention",
+                                                    opener_toelichting="gr_visibility")
+    assert "Verdieping" in _p02_why_extra_cells(top, "retention",
+                                                opener_toelichting="gr_time")
+
+
+def test_verdieping_cel_onbekende_optiesleutel_faalt_hard():
+    top = dict(RANKED[0], spread_flag=False, deepening_top=("gr_bestaat_niet", 7, 13))
+    with pytest.raises(KeyError, match="onbekende optiesleutel"):
+        _p02_why_extra_cells(top, "retention")
