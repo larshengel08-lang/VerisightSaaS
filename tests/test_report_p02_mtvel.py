@@ -781,3 +781,316 @@ def test_build_report_data_noemt_de_echte_reden_zonder_afdelingstabel(db_session
     assert data["segment_reason"] == "te weinig antwoorden per afdeling"
     assert "afdelingen (te weinig antwoorden per afdeling)" in _tekst(
         render_exit_report_html(data))
+
+
+# ── Taak 6: pagina twee is één A4, pagina drie begint met hoofdstuk 02 (H16) ──
+
+import subprocess  # noqa: E402
+import sys  # noqa: E402
+from pathlib import Path  # noqa: E402
+
+import pymupdf  # noqa: E402
+
+from backend.report_css import build_css  # noqa: E402
+from scripts.check_pdf_report import (  # noqa: E402
+    ALLE_REGELS,
+    MIN_FILL,
+    REGEL_P02,
+    REGEL_THEAD,
+    REGEL_VERWIJZING,
+    REGEL_VULLING,
+    check,
+    first_text,
+    page_fill,
+)
+
+_SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "check_pdf_report.py"
+
+_P02_STATEN = (
+    ("retention minimaal", render_retention_report_html, _min_retention_data()),
+    ("retention met secties", render_retention_report_html, _retention_met_secties()),
+    ("exit met profiel", render_exit_report_html, _degraded_fixture("exit", n=12, profile=True)),
+    ("exit zonder profiel", render_exit_report_html, _degraded_fixture("exit", n=8, profile=False)),
+    ("retention zonder profiel", render_retention_report_html,
+     _degraded_fixture("retention", n=8, profile=False)),
+    ("onboarding met profiel", render_onboarding_report_html,
+     _degraded_fixture("onboarding", n=12, profile=True)),
+    ("onboarding zonder profiel", render_onboarding_report_html,
+     _degraded_fixture("onboarding", n=8, profile=False)),
+)
+
+
+def _p02_slice(html: str) -> str:
+    """Van de opening van p.02 tot de start van de volgende paginasectie."""
+    body = html.split("</style>")[-1]
+    start = body.index('<div class="pb sec" id="p02"')
+    eind = body.index('<div class="pb sec"', start + 10)
+    return body[start:eind]
+
+
+def test_pagina_twee_heeft_geen_losse_kaarten_na_de_meetgegevens():
+    """Alles wat na de meetgegevens komt hoort bij hoofdstuk 02 (H16). In de
+    HTML: tussen "Meetgegevens" en de volgende paginasectie staat geen
+    <div class="card"> meer, en de losse kaarten zijn nergens terug."""
+    for naam, render, data in _P02_STATEN:
+        html = render(data)
+        blok = _p02_slice(html)
+        na = blok[blok.index("Meetgegevens"):]
+        assert '<div class="card' not in na, f"{naam}: losse kaart na de meetgegevens"
+        assert "Segmentstatus" not in html and "Populatie" not in html, naam
+
+
+def test_pagina_twee_is_een_enkele_paginabreuk():
+    """Eén `pb sec` voor heel p.02: geen tweede paginabreuk binnen het blok en
+    niets tussen het sluiten van p.02 en de volgende sectie, want dat zou een
+    pagina drie opleveren die op één regel na leeg is (H16)."""
+    for naam, render, data in _P02_STATEN:
+        blok = _p02_slice(render(data))
+        assert 'class="pb' not in blok[10:], f"{naam}: tweede paginabreuk binnen p.02"
+        assert blok.rstrip().endswith("</div>"), f"{naam}: losse inhoud na p.02"
+
+
+def test_pagina_drie_begint_met_hoofdstuk_02():
+    """De sectie direct na p.02 opent met de hoofdstukkop 02; in de PDF is dat
+    de eerste tekst van pagina drie (gemeten door scripts/check_pdf_report.py)."""
+    for naam, render, data in _P02_STATEN:
+        body = render(data).split("</style>")[-1]
+        start = body.index('<div class="pb sec" id="p02"')
+        volgende = body[body.index('<div class="pb sec"', start + 10):][:400]
+        assert re.search(r'<div class="ch-head"[^>]*><span class="ch-idx">02</span>',
+                         volgende), f"{naam}: {volgende[:120]!r}"
+
+
+def test_css_houdt_pagina_twee_compact():
+    """De compacte maten hangen aan #p02, niet aan de klassen zelf: de rest van
+    het rapport houdt zijn eigen ruimte."""
+    css = build_css("retention")
+    for regel in ("#p02 .br-kernzin { font-size: 24px;",
+                  "#p02 .why { padding: 14px 18px 12px;",
+                  "#p02 .why-grid { margin-bottom: 10px;",
+                  "#p02 .sg { margin-bottom: 10px;",
+                  "#p02 .sc-v { font-size: 20px;",
+                  "#p02 .leidraad { margin-top: 12px;"):
+        assert regel in css, regel
+    assert ".br-kernzin {\n  font-family" in css      # de basisstijl blijft staan
+    # De overrides staan ná de basisregels die ze aanpassen. Anders is de eerste
+    # `.why {`-regel in het stylesheet die van #p02, en die draagt geen
+    # achtergrond of left-border: tests/test_report_html_design.py leest de
+    # eerste treffer en zou dan de verkeerde regel keuren.
+    for basis in (".br-kernzin {", ".why {", ".sg {", ".sc-v {", ".leidraad {"):
+        assert css.index(basis) < css.index("#p02 " + basis), basis
+    assert re.search(r"\.why\s*\{([^}]+)\}", css).group(1).count("border-left") == 1
+
+
+# ── De meetlogica van check_pdf_report.py, gemeten op gebouwde PDF's ─────────
+#
+# WeasyPrint kan op Windows niet renderen (geen GTK) en de Docker-image was in
+# deze sessie niet bereikbaar. De meetcode wordt daarom getest op PDF's die
+# PyMuPDF zelf bouwt, met bekende paginavulling en bekende teksten: elke regel
+# krijgt een document dat hem overtreedt en een document dat hem haalt. Dat
+# bewijst de meting, niet de uitkomst voor het echte rapport; die staat in
+# test_de_echte_pdf_zet_de_meetgegevens_op_pagina_twee (slaat over zonder
+# renderer).
+
+_A4 = (595.0, 842.0)
+
+
+def _bouw_pdf(pad: Path, paginas: list[list[tuple[float, str]]]) -> Path:
+    doc = pymupdf.open()
+    for regels in paginas:
+        page = doc.new_page(width=_A4[0], height=_A4[1])
+        for y, tekst in regels:
+            page.insert_text((60.0, y), tekst, fontsize=11)
+    doc.save(str(pad))
+    doc.close()
+    return pad
+
+
+def _vulregels(vanaf: float, tot: float, label: str) -> list[tuple[float, str]]:
+    y = vanaf
+    regels = []
+    while y <= tot:
+        regels.append((y, f"{label} regel op {y:.0f}"))
+        y += 20.0
+    return regels
+
+
+def _goed_rapport(pad: Path, *, p2_extra: list[tuple[float, str]] | None = None,
+                  p3_kop: str = "02 Behoudscontext",
+                  p4_regels: list[tuple[float, str]] | None = None) -> Path:
+    p2 = ([(60.0, "Behoud vraagt aandacht op een kwetsbaar onderwerp.")]
+          + _vulregels(90.0, 620.0, "p2")
+          + [(660.0, "Zo leid je dit gesprek in 45 minuten"),
+             (680.0, "Lees eerst het overzichtsprofiel op pagina 4"),
+             (700.0, "Sluit af met de gespreksagenda op pagina 6"),
+             (730.0, "Meetgegevens")]
+          + (p2_extra or []))
+    return _bouw_pdf(pad, [
+        [(400.0, "Loep Behoud"), (430.0, "Voorjaar 2026")],                 # cover
+        p2,
+        [(60.0, p3_kop)] + _vulregels(90.0, 760.0, "p3"),
+        p4_regels if p4_regels is not None
+        else [(60.0, "03 Overzichtsprofiel")] + _vulregels(90.0, 760.0, "p4"),
+        [(60.0, "04 Verdieping")] + _vulregels(90.0, 760.0, "p5"),
+        [(60.0, "05 Werkbeleving")] + _vulregels(90.0, 760.0, "p6"),
+        [(60.0, "06 Methodiek"), (90.0, "korte slotpagina")],               # laatste
+    ])
+
+
+def test_page_fill_meet_de_tekstkolom_zonder_voetregel(tmp_path: Path):
+    pad = _bouw_pdf(tmp_path / "vulling.pdf", [
+        _vulregels(60.0, 780.0, "vol"),
+        _vulregels(60.0, 200.0, "leeg"),
+        [(810.0, "alleen een voetregel")],
+    ])
+    doc = pymupdf.open(str(pad))
+    try:
+        assert page_fill(doc[0]) > 0.95
+        assert 0.15 < page_fill(doc[1]) < 0.25
+        assert page_fill(doc[2]) == 0.0          # onder FOOTER_PT telt niet mee
+        assert first_text(doc[1]).startswith("leeg regel op 60")
+    finally:
+        doc.close()
+
+
+def test_check_keurt_een_goed_rapport_goed(tmp_path: Path):
+    assert check(str(_goed_rapport(tmp_path / "goed.pdf"))) == []
+
+
+def test_check_ziet_de_meetgegevens_van_pagina_twee_glijden(tmp_path: Path):
+    pad = _bouw_pdf(tmp_path / "overloop.pdf", [
+        [(400.0, "cover")],
+        _vulregels(60.0, 760.0, "p2"),                       # geen Meetgegevens
+        [(60.0, "Meetgegevens")] + _vulregels(90.0, 760.0, "p3"),
+        [(60.0, "02 Behoudscontext")] + _vulregels(90.0, 760.0, "p4"),
+        [(60.0, "korte slotpagina")],
+    ])
+    bevindingen = check(str(pad), regels=(REGEL_P02,))
+    meldingen = [b.melding for b in bevindingen]
+    assert any("bevat de meetgegevens niet" in m for m in meldingen)
+    assert any("pagina 3 begint niet met hoofdstuk 02" in m for m in meldingen)
+    assert all(b.regel == REGEL_P02 for b in bevindingen)
+
+
+def test_check_ziet_een_andere_kop_op_pagina_drie(tmp_path: Path):
+    pad = _goed_rapport(tmp_path / "p3.pdf", p3_kop="Segmentstatus")
+    bevindingen = check(str(pad), regels=(REGEL_P02,))
+    assert [b.regel for b in bevindingen] == [REGEL_P02]
+    assert "Segmentstatus" in bevindingen[0].melding
+
+
+def test_check_ziet_een_te_lege_pagina_en_spaart_cover_en_slot(tmp_path: Path):
+    pad = _goed_rapport(tmp_path / "leeg.pdf",
+                        p4_regels=[(60.0, "03 Overzichtsprofiel"), (90.0, "een regel")])
+    bevindingen = check(str(pad), regels=(REGEL_VULLING,))
+    assert len(bevindingen) == 1, [b.melding for b in bevindingen]
+    assert bevindingen[0].melding.startswith("pagina 4 is ")
+    assert "< 40%" in bevindingen[0].melding and MIN_FILL == 0.40
+    assert "03 Overzichtsprofiel" in bevindingen[0].melding
+
+
+def test_check_ziet_een_verwijzing_buiten_het_document(tmp_path: Path):
+    pad = _goed_rapport(tmp_path / "ref.pdf",
+                        p2_extra=[(750.0, "zie pagina 99 voor de afdelingen")])
+    bevindingen = check(str(pad), regels=(REGEL_VERWIJZING,))
+    assert [b.melding for b in bevindingen] == [
+        "verwijzing naar pagina 99 buiten het document (7 pagina's)"]
+
+
+def test_check_ziet_een_verwijzing_naar_een_pagina_zonder_hoofdstukkop(tmp_path: Path):
+    pad = _goed_rapport(tmp_path / "ref2.pdf",
+                        p2_extra=[(750.0, "zie pagina 2 voor de meetgegevens")])
+    bevindingen = check(str(pad), regels=(REGEL_VERWIJZING,))
+    assert len(bevindingen) == 1
+    assert bevindingen[0].melding.startswith("pagina 2 begint niet met een hoofdstukkop")
+
+
+def test_check_leest_een_verwijzing_die_over_twee_regels_afbreekt(tmp_path: Path):
+    """In de tekstlaag kunnen "pagina" en het nummer dat target-counter erachter
+    zet op twee regels staan; de meting normaliseert daarom de witruimte."""
+    pad = _bouw_pdf(tmp_path / "afbreek.pdf", [
+        [(400.0, "cover")],
+        [(60.0, "Lees eerst het overzichtsprofiel op pagina"), (80.0, "99")]
+        + _vulregels(110.0, 700.0, "p2") + [(730.0, "Meetgegevens")],
+        [(60.0, "02 Behoudscontext")] + _vulregels(90.0, 760.0, "p3"),
+        [(60.0, "korte slotpagina")],
+    ])
+    assert [b.melding for b in check(str(pad), regels=(REGEL_VERWIJZING,))] == [
+        "verwijzing naar pagina 99 buiten het document (4 pagina's)"]
+
+
+def test_check_thead_alleen_met_vlag(tmp_path: Path):
+    pad = _goed_rapport(tmp_path / "thead.pdf")
+    assert check(str(pad), thead=None) == []
+    bevindingen = check(str(pad), thead="04 Verdieping")
+    assert [b.regel for b in bevindingen] == [REGEL_THEAD]
+    assert "staat op [5]" in bevindingen[0].melding
+    # Een kop die zich op de vervolgpagina herhaalt, staat op twee pagina's.
+    herhaald = _bouw_pdf(tmp_path / "herhaald.pdf", [
+        [(400.0, "cover")],
+        _vulregels(60.0, 700.0, "p2") + [(730.0, "Meetgegevens")],
+        [(60.0, "02 Behoudscontext"), (90.0, "Onderwerp Score")]
+        + _vulregels(120.0, 760.0, "p3"),
+        [(60.0, "Onderwerp Score")] + _vulregels(90.0, 760.0, "p4"),
+        [(60.0, "korte slotpagina")],
+    ])
+    assert check(str(herhaald), thead="Onderwerp Score",
+                 regels=(REGEL_THEAD,)) == []
+
+
+def test_check_meldt_een_document_dat_te_kort_is_om_te_meten(tmp_path: Path):
+    pad = _bouw_pdf(tmp_path / "kort.pdf", [[(400.0, "cover")], [(60.0, "Meetgegevens")]])
+    bevindingen = check(str(pad))
+    assert [b.regel for b in bevindingen] == [REGEL_P02]
+    assert "2 pagina" in bevindingen[0].melding
+    # Ook als de regelselectie hem niet vraagt: zwijgen zou lezen als "gemeten
+    # en goed", en er is juist niets te meten.
+    assert check(str(pad), regels=(REGEL_VULLING,)) == bevindingen
+
+
+def test_check_meet_alleen_de_gevraagde_regels(tmp_path: Path):
+    pad = _goed_rapport(tmp_path / "filter.pdf", p3_kop="Segmentstatus",
+                        p4_regels=[(60.0, "03 Overzichtsprofiel"), (90.0, "een regel")])
+    assert {b.regel for b in check(str(pad), regels=ALLE_REGELS)} == {REGEL_P02, REGEL_VULLING}
+    assert {b.regel for b in check(str(pad), regels=(REGEL_VULLING,))} == {REGEL_VULLING}
+
+
+def _cli(*args: str) -> subprocess.CompletedProcess:
+    return subprocess.run([sys.executable, str(_SCRIPT), *args],
+                          capture_output=True, text=True,
+                          cwd=str(_SCRIPT.parents[1]))
+
+
+def test_cli_faalt_hard_en_zegt_welke_regel(tmp_path: Path):
+    goed = _goed_rapport(tmp_path / "cli-goed.pdf")
+    uit = _cli(str(goed))
+    assert uit.returncode == 0, uit.stdout + uit.stderr
+    assert "OK" in uit.stdout and "gemeten: " in uit.stdout
+
+    fout = _goed_rapport(tmp_path / "cli-fout.pdf", p3_kop="Segmentstatus")
+    uit = _cli(str(fout))
+    assert uit.returncode == 1
+    assert f"[{REGEL_P02}] pagina 3 begint niet met hoofdstuk 02" in uit.stdout
+    assert "NIET OK" in uit.stdout
+
+    uit = _cli(str(tmp_path / "bestaat-niet.pdf"))
+    assert uit.returncode == 2
+    assert "NIET GEMETEN" in uit.stdout
+
+
+@requires_weasyprint
+def test_de_echte_pdf_zet_de_meetgegevens_op_pagina_twee(tmp_path: Path):
+    """H16 op de echte render: pagina 2 eindigt met de meetgegevens en pagina 3
+    begint met hoofdstuk 02. De vullingsregel hoort bij taak 8 en wordt hier
+    niet gemeten.
+
+    Slaat over waar WeasyPrint niet kan renderen (Windows zonder GTK); valideer
+    daar via de WeasyPrint-Docker-image en scripts/check_pdf_report.py, zie
+    CLAUDE.md.
+    """
+    from weasyprint import HTML
+
+    pad = tmp_path / "retention.pdf"
+    HTML(string=render_retention_report_html(_retention_met_secties())).write_pdf(str(pad))
+    bevindingen = check(str(pad), regels=(REGEL_P02, REGEL_VERWIJZING))
+    assert bevindingen == [], [str(b) for b in bevindingen]

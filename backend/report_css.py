@@ -422,4 +422,18 @@ p  { margin-bottom: 6px; font-size: 11px; }
 h3 { font-family: 'Inter Tight', sans-serif; font-weight: 700;
      font-size: 16px; color: """ + INK + r"""; margin-bottom: 8px; line-height: 1.2; }
 .slabel { margin-bottom: 22px; }
+
+/* ── Pagina twee is één A4 (spec par. 4 slot, H16) ──────────────────────────
+   Strakkere maten dan de rest van het rapport, zodat kernzin + cijfers +
+   waarom + gespreksopener + leidraad + meetgegevens samen op één vel passen en
+   hoofdstuk 02 op pagina drie begint; de meting staat in
+   scripts/check_pdf_report.py. Deze overrides staan bewust achteraan, ná de
+   basisregels die ze aanpassen: ze hangen aan #p02, dus de rest van het
+   rapport houdt zijn eigen ruimte. */
+#p02 .br-kernzin { font-size: 24px; margin-bottom: 18px; }
+#p02 .why { padding: 14px 18px 12px; margin-bottom: 12px; }
+#p02 .why-grid { margin-bottom: 10px; }
+#p02 .sg { margin-bottom: 10px; }
+#p02 .sc-v { font-size: 20px; }
+#p02 .leidraad { margin-top: 12px; }
 """
