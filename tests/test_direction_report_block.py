@@ -235,7 +235,7 @@ def test_prioriteringsraster_raises_without_n_total():
 
 def test_p02_line_per_state():
     assert _direction_p02_line({"growth": CLEAR}, "growth", "retention", 5.1) == (
-        "Wat er volgens 6 van de 8 moet gebeuren: Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.")
+        "Wat er volgens 6 van de 8 mensen bij wie dit het laagst scoorde moet gebeuren: Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.")
     assert _direction_p02_line({"workload": DIVIDED}, "workload", "retention", 5.4) == (
         "Over wat hier moet gebeuren zijn de 8 die dit het laagst scoorden verdeeld. Zie de gespreksagenda.")
     assert _direction_p02_line({"workload": NONE}, "workload", "retention", 5.4) == (
@@ -246,8 +246,8 @@ def test_p02_line_per_state():
 
 
 def test_bestuurlijke_read_renders_direction_line_only_when_given():
-    kwargs = dict(kernzin="k", totaalbeeld="t", primary_label="Groeiperspectief",
-                  why_cells_html="", strong_label="", strong_score=None, mgmt_q="Vraag?")
+    kwargs = dict(kernzin="k", primary_label="Groeiperspectief",
+                  why_cells_html="", mgmt_q="Vraag?")
     assert "mq-direction" not in _bestuurlijke_read(**kwargs)
     html = _bestuurlijke_read(**kwargs, direction_line="Wat er volgens 6 van de 8 moet gebeuren: X.")
     assert 'class="mq-direction"' in html and "6 van de 8" in html
@@ -457,8 +457,8 @@ def test_factor_score_heeft_geen_default_in_de_renderhelpers():
 def test_p02_line_for_the_new_states():
     assert _direction_p02_line({"growth": PLURALITY}, "growth", "retention",
                                factor_score=5.2) == (
-        "Wat er volgens de grootste groep moet gebeuren (27 van de 62, zonder "
-        "meerderheid): Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.")
+        "Wat er volgens de grootste groep moet gebeuren (27 van de 62 mensen bij "
+        "wie dit het laagst scoorde, zonder meerderheid): Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.")
     assert _direction_p02_line({"growth": SPLIT_NONE}, "growth", "retention",
                                factor_score=4.5) == (
         "Wat er moet gebeuren: de 31 die dit het laagst scoorden zijn hierover "

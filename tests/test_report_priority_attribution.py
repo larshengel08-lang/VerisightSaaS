@@ -101,9 +101,8 @@ def test_attribution_copy_has_no_em_dashes():
 def test_p02_label_is_gespreksopener():
     # Harmonisatie: p.02 en het raster labelen dezelfde vraag hetzelfde.
     html = _bestuurlijke_read(
-        kernzin="K.", totaalbeeld="T.", primary_label="Groeiperspectief",
-        why_cells_html="", strong_label="Rolhelderheid", strong_score=7.2,
-        mgmt_q="Vraag?")
+        kernzin="K.", primary_label="Groeiperspectief",
+        why_cells_html="", mgmt_q="Vraag?")
     assert 'class="mq-label">Gespreksopener<' in html
     assert "Eerste managementvraag" not in html
 

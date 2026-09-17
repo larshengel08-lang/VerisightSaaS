@@ -123,9 +123,9 @@ def _page_two(html: str) -> str:
     gespreksagenda); een assertie op het hele document zou daarop afketsen.
     """
     body = _body(html)
-    i = body.find('<div class="pb sec">')
+    i = body.find('<div class="pb sec"')
     assert i != -1, "pagina twee niet gevonden"
-    j = body.find('<div class="pb sec">', i + 10)
+    j = body.find('<div class="pb sec"', i + 10)
     return body[i:j if j != -1 else len(body)]
 
 
@@ -310,6 +310,7 @@ def test_totaalsignaal_staat_met_profiel_in_de_onderbouwingsrij(scan_type):
     """Het spiegelbeeld: mét profiel draagt de rij het getal en herhaalt de
     kernzin het niet meer."""
     p2 = _page_two(_render(scan_type, n=12, profile=True))
-    assert "<table class='sg'><tr>" in p2
+    # Plan 3a taak 4: het getal staat in de cijfersrij (blok 2) van p.02.
+    assert 'class="sg p02-cijfers"' in p2
     assert '<div class="sc-v">5.5/10</div>' in p2
     assert _DEGRADED_SIGNAAL[scan_type] not in p2

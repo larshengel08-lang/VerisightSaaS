@@ -68,15 +68,15 @@ def test_responsbasis_shows_counts_and_segment_reason():
 def test_bestuurlijke_read_contains_core_blocks():
     html = _bestuurlijke_read(
         kernzin="Het vertrekbeeld is gemengd; groeiperspectief springt eruit.",
-        totaalbeeld="Drie factoren scoren laag. Eén factor is relatief sterk.",
         primary_label="Groeiperspectief",
         why_cells_html="<td class='why-cell'><div class='why-l'>Score</div><div class='why-v'>4.2</div></td>",
-        strong_label="Werksfeer", strong_score=7.1,
         mgmt_q="Welke loopbaanstappen ontbreken voor deze groep?",
     )
     assert "Groeiperspectief" in html
     assert 'class="why"' in html
-    assert "Werksfeer" in html
+    # De "Relatief sterk: wat wél werkt"-cel is weg (plan 3a taak 4, C10):
+    # het overzichtsprofiel toont de sterke onderwerpen al.
+    assert "wat w&eacute;l werkt" not in html
     assert "Welke loopbaanstappen" in html
     # De p.03-kruisverwijzing is verwijderd (designsprong §1): de responsbasis
     # wordt nu als band meegegeven i.p.v. verwezen via een paginanummer.

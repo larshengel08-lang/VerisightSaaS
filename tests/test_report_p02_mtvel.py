@@ -236,3 +236,94 @@ def test_build_report_data_top_redenen_op_de_volledige_teller(db_session: Sessio
     assert all(r["count"] == 2 for r in data["exit_r_top"])
     assert data["exit_r_given"] == 12
     assert data["n_completed"] == 14
+
+
+# ── taak 4: onderbouwing zonder lege redenen, noemer ter plekke, één opener ──
+
+from backend.products.shared.deepening import DEEPENING_SETS  # noqa: E402
+from backend.report_html import (  # noqa: E402
+    _bestuurlijke_read,
+    _direction_p02_line,
+    _gespreksopener,
+    _mgmt_q,
+    _p02_why_extra_cells,
+)
+from tests.test_report_priority_render import RANKED  # noqa: E402
+
+CLEAR = {"lowest_n": 9, "offered": 9, "answered": 8, "skipped": 1,
+         "counts": {"grd_visibility": 6, "grd_none": 1, "grd_time": 1}}
+
+
+def test_bestuurlijke_read_heeft_geen_lege_redenen_meer():
+    html = _bestuurlijke_read(kernzin="K.", primary_label="Groeiperspectief",
+                              why_cells_html="<td class='why-cell'>x</td>", mgmt_q="V?",
+                              cijfers_html="<table class='sg p02-cijfers'><tr><td>c</td></tr></table>")
+    assert "wat w&eacute;l werkt" not in html and "Relatief sterk" not in html
+    assert "<table class='sg'><tr>" not in html          # de oude onderbouwingsrij
+    assert html.index("p02-cijfers") < html.index('class="why"')
+    assert "<!-- /why -->" in html
+    assert "—" not in _tekst(html)
+
+
+def test_why_extra_cellen_alleen_bij_echte_signalen():
+    top = dict(RANKED[0], spread_n=39, spread_below=21, spread_flag=True)
+    cells = _tekst(_p02_why_extra_cells(top, "retention"))
+    assert "Spreiding 21 van de 39 onder de 5" in cells
+    assert "Verdieping 7 van de 13 kozen" in cells
+    assert "—" not in cells
+    kaal = dict(RANKED[3], spread_n=6, spread_below=1, spread_flag=False)   # state 5, n<10
+    assert _p02_why_extra_cells(kaal, "retention") == ""
+
+
+def test_direction_p02_line_draagt_de_noemer_ter_plekke():
+    zin = _direction_p02_line({"growth": CLEAR}, "growth", "retention", 5.1)
+    assert zin.startswith("Wat er volgens 6 van de 8 mensen bij wie dit het laagst scoorde moet gebeuren: ")
+    assert "—" not in zin
+
+
+def test_een_gespreksopener_voor_p02_en_agenda():
+    # Zonder verdiepingsdata: de vaste vraag per onderwerp, op beide plekken dezelfde.
+    assert _gespreksopener({}, "retention", "growth") == _mgmt_q("growth", "retention")
+    # Met een gedeelde toelichting: de datagedreven vraag. Echte optiesleutels,
+    # want agenda_enrichment slaat de agendavraag op sleutel op en faalt hard op
+    # een onbekende.
+    keys = [o["key"] for o in DEEPENING_SETS["growth"]["options"] if not o["key"].endswith("_other")]
+    agg = {"triggered": 17, "offered": 17, "answered": 16, "skipped": 1,
+           "primary_counts": {keys[0]: 8, keys[1]: 4, keys[2]: 4},
+           "secondary_counts": {}}
+    q = _gespreksopener({"growth": agg}, "retention", "growth")
+    assert q.startswith("De meest gekozen toelichting was") and "Herkennen jullie dat beeld" in q
+
+
+def _attr_row(key, label, score):
+    return {"key": key, "label": label, "score": score, "base": score,
+            "spread_flag": False, "deepening_state": 5, "decided_by": None}
+
+
+def test_bronregel_zegt_het_als_de_laagste_score_gedeeld_is():
+    from backend.report_html import _raster_attribution
+    een = [_attr_row("growth", "Groeiperspectief", 5.46),
+           _attr_row("workload", "Werkdruk", 5.54),
+           _attr_row("culture", "Cultuur", 6.8)]
+    zin = _raster_attribution(een, "retention")
+    assert zin == "Gebaseerd op de laagste score; die deelt dit onderwerp met Werkdruk."
+    twee = een[:2] + [_attr_row("culture", "Cultuur", 5.5)]
+    zin = _raster_attribution(twee, "retention")
+    assert zin == ("Gebaseerd op de laagste score; die deelt dit onderwerp met twee "
+                   "andere onderwerpen.")
+    assert "laagst scorende factor" not in zin and "—" not in zin
+
+
+def test_loep_start_bronregel_zegt_het_als_de_laagste_score_gedeeld_is():
+    from tests.test_report_degraded_page_two import _fixture, _page_two
+    from backend.report_html import render_onboarding_report_html
+    d = _fixture("onboarding", n=12, profile=True)
+    fa = d["factor_avgs"]
+    keys = sorted(fa, key=lambda k: fa[k])
+    fa[keys[0]] = 4.2
+    fa[keys[1]] = 4.2
+    for k in keys[2:]:
+        fa[k] = 6.8
+    p2 = _tekst(_page_two(render_onboarding_report_html(d)))
+    assert "Gebaseerd op de laagste score; die deelt dit onderwerp met" in p2
+    assert "laagst scorende factor" not in p2

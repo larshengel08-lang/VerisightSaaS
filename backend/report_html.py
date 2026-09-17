@@ -743,6 +743,27 @@ def _p02_cijfers_block(cells: list[str]) -> str:
     return f'<table class="sg p02-cijfers"><tr>{tds}</tr></table>'
 
 
+def _p02_why_extra_cells(top_row: dict, scan_type: str) -> str:
+    """Extra why-cellen die echt een reden zijn (spec par. 4 blok 3): spreiding
+    (alleen vanaf MIN_DISTRIBUTION_N, dezelfde staffel als de rasterkolom) en de
+    gedeelde toelichting uit de verdieping (alleen in celstaat 1). Beide komen
+    uit de rasterrij van het startpunt, dus p.02 en het raster tonen dezelfde
+    getallen."""
+    cells = ""
+    if top_row["spread_n"] >= MIN_DISTRIBUTION_N:
+        cells += (f'<td class="why-cell"><div class="why-l">Spreiding</div>'
+                  f'<div class="why-v" style="color:{_factor_color(top_row["score"])};">'
+                  f'{top_row["spread_below"]}</div>'
+                  f'<div class="why-b">van de {top_row["spread_n"]} onder de 5</div></td>')
+    if top_row["deepening_state"] == 1 and top_row["deepening_top"]:
+        key, cnt, answered = top_row["deepening_top"]
+        opt = _deepening_option_texts(scan_type, top_row["key"]).get(key, key)
+        cells += (f'<td class="why-cell"><div class="why-l">Verdieping</div>'
+                  f'<div class="why-v">{cnt}</div>'
+                  f'<div class="why-b">van de {answered} kozen: {_h(opt)}</div></td>')
+    return cells
+
+
 def _blijfintentie_zones(stay_scores: list[float]) -> tuple[int, int, int, int]:
     """(onder 5, 5 tot 6,5, vanaf 6,5, n) op de individuele blijfintentiescores."""
     vals = [v for v in stay_scores if v is not None]
@@ -1614,62 +1635,54 @@ def _geen_factorprofiel_note(n: int, *, drempelzin: str, wel: list[str]) -> str:
     return f"{kop} Wat dit rapport wel laat zien: {_opsomming(wel)}."
 
 
-def _bestuurlijke_read(*, kernzin: str, totaalbeeld: str,
-                       primary_label: str,
-                       why_cells_html: str, strong_label: str, strong_score: float | None,
+def _bestuurlijke_read(*, kernzin: str, primary_label: str, why_cells_html: str,
                        mgmt_q: str, mgmt_q_source: str = "",
+                       cijfers_html: str = "", leidraad_html: str = "",
                        responsbasis_html: str = "", opener_html: str = "",
-                       usage_html: str = "", direction_line: str = "",
+                       direction_line: str = "", brug_zin: str = "",
                        degraded_note: str = "", why_title: str = "",
-                       signal_cell_html: str = "", scope_note: str = "") -> str:
-    # scope_note (spec ronde 2 par. 7): één regel direct onder de kernzin over
-    # wat dit product nog niet levert. Staat bewust vóór het why-blok, want daar
-    # begint de lezer te zoeken naar de laag die er niet is. Rendert in beide
-    # staten (met en zonder factorprofiel): de zin gaat over het product, niet
-    # over deze meting, en blijft dus ook waar zonder profiel.
-    # Degraded variant (bug B2): zonder factorprofiel heeft het why-blok geen
-    # onderwerp en de Gespreksopener geen vraag. Dan rendert hier één
-    # expliciete alinea in plaats van het gewone blok met gaten erin;
-    # primary_label/why_cells_html/strong_*/mgmt_q/direction_line én
-    # totaalbeeld worden dan bewust genegeerd (de aanroeper heeft ze in die
-    # staat ook niet, en de alinea draagt de reikwijdte-uitleg al -- diezelfde
-    # verwijzing twee keer op één pagina leest als een gat).
+                       scope_note: str = "") -> str:
+    """Pagina twee als MT-vel (spec 16-9 par. 4), in vaste blokvolgorde:
+    1 kernzin, 2 cijfers (cijfers_html, taak 2), 3 startpunt en waarom (why-blok
+    met alleen echte redenen, C10), 4 gespreksopener (dezelfde als op de agenda,
+    H9), 5 leidraad (leidraad_html, taak 5), 6 meetgegevens (responsbasis_html).
+
+    brug_zin (taak 7) is de zin die organisatiebreed en per afdeling aan elkaar
+    knoopt; leeg als er geen afdeling wordt aangewezen.
+
+    scope_note (spec ronde 2 par. 7): één regel direct onder de kernzin over wat
+    dit product nog niet levert; rendert in beide staten.
+
+    Degraded (bug B2): zonder factorprofiel rendert één expliciete alinea in
+    plaats van het why-blok; cijfers en meetgegevens blijven staan, want die
+    zijn er in die staat wél. De marker <!-- /why --> sluit het why-blok, zodat
+    tests de grens niet uit de whitespace hoeven af te leiden.
+    """
     if degraded_note:
         body = (f'<div class="card accent">'
                 f'<h3>Wat dit rapport wel en niet laat zien</h3>'
-                f'<p style="max-width:62ch;margin-bottom:0;">{_h(degraded_note)}</p></div>')
+                f'<p style="max-width:62ch;margin-bottom:0;">{_h(degraded_note)}</p></div>'
+                f'<!-- /why -->')
     else:
-        # Onderbouwingsrij onder het why-blok. Sinds ronde 2 (taak 3) draagt die
-        # ook het totaalsignaal met zijn band: dat getal stond in de kernzin, en
-        # die plek is nu ingenomen door de zin over de vorm van het profiel.
-        strong_cell = (
-            f"<td><div class='sc-l'>Relatief sterk</div>"
-            f"<div class='sc-v'>{_score_str(strong_score)}</div>"
-            f"<div class='sc-b'>{_h(strong_label)}: wat w&eacute;l werkt</div></td>"
-        ) if (strong_label and _factor_label(strong_score) == "Relatief sterk") else ""
-        sg_row = (f"<table class='sg'><tr>{signal_cell_html}{strong_cell}</tr></table>"
-                  if (signal_cell_html or strong_cell) else "")
         why_title_html = (_h(why_title) if why_title
                           else f"Waarom {_h(primary_label)} bovenaan staat")
+        source_html = f'<span class="mq-source">{_h(mgmt_q_source)}</span>' if mgmt_q_source else ""
+        direction_html = f'<p class="mq-direction">{_h(direction_line)}</p>' if direction_line else ""
+        brug_html = f'<p class="mq-brug">{_h(brug_zin)}</p>' if brug_zin else ""
         body = f"""<div class="why">
     <div class="why-title">{why_title_html}</div>
     <table class="why-grid"><tr>{why_cells_html}</tr></table>
-    {sg_row}
-    <div class="mq-line"><span class="mq-label">Gespreksopener</span><p>{_h(mgmt_q)}</p>{f'<span class="mq-source">{_h(mgmt_q_source)}</span>' if mgmt_q_source else ''}{f'<p class="mq-direction">{_h(direction_line)}</p>' if direction_line else ''}</div>
-  </div>"""
-    # Lege subtekst levert geen lege <p> meer op.
-    totaalbeeld_html = (f'<p style="font-size:11px;color:#374151;max-width:62ch;'
-                        f'margin-bottom:22px;">{_h(totaalbeeld)}</p>'
-                        ) if (totaalbeeld and not degraded_note) else ""
+    <div class="mq-line"><span class="mq-label">Gespreksopener</span><p>{_h(mgmt_q)}</p>{source_html}{direction_html}{brug_html}</div>
+  </div><!-- /why -->"""
     scope_html = (f'<p class="trustline" style="margin-top:-14px;margin-bottom:18px;">'
                   f'{_h(scope_note)}</p>') if scope_note else ""
-    return f"""<div class="pb sec">
+    return f"""<div class="pb sec" id="p02">
   {opener_html or '<span class="slabel">Bestuurlijke read</span>'}
   <p class="br-kernzin">{_h(kernzin)}</p>
   {scope_html}
-  {totaalbeeld_html}
+  {cijfers_html}
   {body}
-  {usage_html}
+  {leidraad_html}
   {responsbasis_html}
 </div>"""
 
@@ -2288,6 +2301,7 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
     <div class="agenda-opener">
       <div style="font-family:'JetBrains Mono', monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#E8A020;margin-bottom:7px;">Gespreksopener</div>
       <p style="margin-bottom:0;font-size:12.5px;line-height:1.6;color:#F4F1EA;">{_h(opener_vraag)}</p>
+      {'<p class="agenda-why" style="margin-top:6px;">Dezelfde opener staat op pagina 2.</p>' if ranked else ''}
     </div>
     <table class="steps"><tr><td class="step">
       {_fill_row("Prioriteit", "In te vullen tijdens de bespreking")}
@@ -2335,6 +2349,24 @@ def _raster_attribution(rows: list[dict], scan_type: str) -> str:
         # terwijl een andere factor de laagste kale score heeft.
         return ("Gebaseerd op de score en hoe vaak dit thema als "
                 "vertrekreden is genoemd.")
+    return _bron_laagste_score(top["score"], [(r["label"], r["score"]) for r in rows[1:]])
+
+
+def _bron_laagste_score(score: float, overige: list[tuple[str, float]]) -> str:
+    """Bronregel "op de laagste score", eerlijk bij een gedeelde laagste.
+
+    Delen meer onderwerpen de laagste GETOONDE score (B15), dan is "de laagst
+    scorende factor" niet één onderwerp: zeg met wie het die score deelt, zoals
+    de kop erboven (plan 3a taak 4, open punt uit taak 3). overige: (label,
+    score) van de andere onderwerpen."""
+    if score is None:
+        return "Gebaseerd op de laagst scorende factor."
+    gelijk = [lbl for lbl, sc in overige if sc is not None and _shown(sc) == _shown(score)]
+    if len(gelijk) == 1:
+        return f"Gebaseerd op de laagste score; die deelt dit onderwerp met {gelijk[0]}."
+    if gelijk:
+        aantal = _TELWOORD.get(len(gelijk), str(len(gelijk)))
+        return f"Gebaseerd op de laagste score; die deelt dit onderwerp met {aantal} andere onderwerpen."
     return "Gebaseerd op de laagst scorende factor."
 
 
@@ -2611,11 +2643,12 @@ def _direction_p02_line(direction_agg: dict, factor_key: str | None, scan_type: 
     st = direction_state(direction_agg[factor_key], factor_key, _shown(factor_score))
     n = st["n"]
     if st["state"] == "clear":
-        return (f"Wat er volgens {st['top_n']} van de {n} moet gebeuren: "
+        return (f"Wat er volgens {st['top_n']} van de {n} mensen bij wie dit het laagst "
+                f"scoorde moet gebeuren: "
                 f"{direction_imperative(scan_type, factor_key, st['top_key'])}")
     if st["state"] == "plurality":
         return (f"Wat er volgens de grootste groep moet gebeuren ({st['top_n']} van "
-                f"de {n}, zonder meerderheid): "
+                f"de {n} mensen bij wie dit het laagst scoorde, zonder meerderheid): "
                 f"{direction_imperative(scan_type, factor_key, st['top_key'])}")
     if st["state"] == "split_none":
         texts = direction_option_texts(scan_type, factor_key)
@@ -2681,18 +2714,11 @@ def _deepening_block(agg: dict, scan_type: str, factor_key: str) -> str:
             f'{body}</div>')
 
 
-def _short_mgmt_q(deep_agg: dict, scan_type: str, factor_key: str) -> str | None:
-    """Korte, datagedreven managementvraag voor de bestuurlijke read (p.02).
-
-    Gebruikt de agenda_question die hoort bij de meest gekozen verdiepings-
-    toelichting — inhoud die respondenten zelf kozen, geen vaste template.
-    None -> valt terug op de generieke per-factor vraag.
-    """
-    agg = deep_agg.get(factor_key)
-    if not agg:
-        return None
-    enr = agenda_enrichment(agg, scan_type, factor_key)
-    return enr["agenda_question"] if enr else None
+def _gespreksopener(deep_agg: dict, scan_type: str, factor_key: str) -> str:
+    """De ene gespreksopener van dit rapport (H9): op pagina twee en op de
+    gespreksagenda dezelfde zin. Datagedreven zodra de verdieping een gedeelde
+    toelichting heeft (_deepening_mgmt_q), anders de vaste vraag per onderwerp."""
+    return _deepening_mgmt_q(deep_agg, scan_type, factor_key) or _mgmt_q(factor_key, scan_type)
 
 
 def _deepening_mgmt_q(deep_agg: dict, scan_type: str, factor_key: str) -> str | None:
@@ -4060,8 +4086,6 @@ def render_exit_report_html(data: dict) -> str:
     _er_given = data.get("exit_r_given")
     _er_zin = ((" " + _vertrekreden_zin(_er_top, n, gegeven=_er_given))
                if (exec_line and er_top) else "")
-    # Taak 4 van plan 3a rendert dit blok via _bestuurlijke_read; tot dan bewust
-    # alleen opgebouwd.
     _cijfers_html = _p02_cijfers_block([
         _vertrekreden_cell(_er_top, n, gegeven=_er_given),
         _respons_cell(data["n_completed"], data["n_invited"]),
@@ -4075,9 +4099,6 @@ def render_exit_report_html(data: dict) -> str:
         # rapport te verdwijnen.
         exec_line = (f"De frictiescore van {rdsp} wijst op een {fl.lower()}." if avg_risk
                      else "Zie de vertrekcontext en de responsbasis voor wat dit rapport wel toont.")
-
-    # Sterke factor bewust NIET in de titel: die staat al in de subtekst
-    # (totaalbeeld) — voorheen stond dezelfde observatie 2x binnen 4 regels.
 
     exec_line = _p02_met_respons(exec_line, completed=data["n_completed"],
                                  invited=data["n_invited"],
@@ -4107,7 +4128,22 @@ def render_exit_report_html(data: dict) -> str:
         _deep_agg_early = data.get("deepening_agg") or {}
         why_cells = ""
         if er_n:
-            why_cells += f'<td class="why-cell"><div class="why-l">Hoofdreden</div><div class="why-v" style="color:{tf_col};">{er_n}&times;</div><div class="why-b">van {n} vertrekkers de meest genoemde reden</div></td>'
+            # Eerlijk over de rang (plan 3a taak 4): het startpunt hoeft niet de
+            # meest genoemde reden te zijn. Gelijkspel en noemer uit dezelfde
+            # volledige teller als blok 2 (exit_r_top/exit_r_given).
+            _tops, _top_cnt = _vertrekreden_top(_er_top)
+            _noemer = (f"van de {_er_given} vertrekkers die een reden gaven"
+                       if (_er_given is not None and _er_given < n)
+                       else f"van de {n} vertrekkers")
+            if er_n == _top_cnt and len(_tops) == 1:
+                _hr_body = f"{_noemer}, de meest genoemde reden"
+            elif er_n == _top_cnt:
+                _anderen = _opsomming([r["label"] for r in _tops if r["code"] != tf_code])
+                _hr_body = f"{_noemer}, even vaak genoemd als {_anderen}"
+            else:
+                _vaker = _opsomming([r["label"] for r in _tops])
+                _hr_body = f"{_noemer}; {_vaker} vaker ({_top_cnt} keer)"
+            why_cells += f'<td class="why-cell"><div class="why-l">Hoofdreden</div><div class="why-v" style="color:{tf_col};">{er_n}&times;</div><div class="why-b">{_h(_hr_body)}</div></td>'
         if tf_sc:
             why_cells += f'<td class="why-cell"><div class="why-l">Gemiddelde score</div><div class="why-v" style="color:{tf_col};">{tf_sc:.1f}/10</div><div class="why-b">van de {len(i_scores)} stellingen over dit thema ({_h(tf_fl.lower())})</div></td>'
         if low_item:
@@ -4117,17 +4153,12 @@ def render_exit_report_html(data: dict) -> str:
         if cont_n:
             why_cells += f'<td class="why-cell"><div class="why-l">Speelt ook mee</div><div class="why-v">{cont_n}&times;</div><div class="why-b">als meespelende context</div></td>'
 
+        why_cells += _p02_why_extra_cells(_raster_rows[0], "exit")
         primary_fkey  = tf
         primary_label = tf_lbl
-        # Datagedreven vraag (uit de meest gekozen verdiepings-toelichting)
-        # wanneer beschikbaar; anders de generieke per-factor vraag.
-        _short_q = _short_mgmt_q(_deep_agg_early, "exit", tf)
-        if _short_q:
-            br_mgmt_q = _short_q
-            br_mgmt_q_source = "Gebaseerd op de meest gekozen toelichting van respondenten in de verdieping."
-        else:
-            br_mgmt_q = _mgmt_q(tf, "exit")
-            br_mgmt_q_source = _raster_attribution(_raster_rows, "exit")
+        # Eén gespreksopener (H9): dezelfde zin als op de gespreksagenda.
+        br_mgmt_q = _gespreksopener(_deep_agg_early, "exit", tf)
+        br_mgmt_q_source = _raster_attribution(_raster_rows, "exit")
     else:
         why_cells     = ""
         primary_fkey  = low_f[0] if low_f else None
@@ -4151,14 +4182,6 @@ def render_exit_report_html(data: dict) -> str:
                  "de responsbasis onderaan deze pagina"],
         )
 
-    # Subtekst herhaalt de titel niet meer: alleen wat NIEUW is — de sterke
-    # factor mét score. De responsbasis staat nu onderaan dezelfde pagina.
-    totaalbeeld = (
-        f"{high_lbl} ({_score_str(high_sc)}) laat zien wat wél werkt. "
-        f"Hoe stevig dit beeld is, hangt af van de responsbasis onderaan deze pagina."
-    ) if high_lbl and _raster_primary_label != high_lbl and _factor_label(high_sc) == "Relatief sterk" else \
-        "Reikwijdte en betrouwbaarheid van dit beeld: zie de responsbasis onderaan deze pagina."
-
     _responsbasis_band = _responsbasis(
         invited=data["n_invited"],
         completed=data["n_completed"],
@@ -4175,21 +4198,20 @@ def render_exit_report_html(data: dict) -> str:
 
     s += _bestuurlijke_read(
         kernzin=exec_line,
-        totaalbeeld=totaalbeeld,
         primary_label=primary_label,
         why_cells_html=why_cells,
-        strong_label=high_lbl,
-        strong_score=high_sc,
         mgmt_q=br_mgmt_q,
         mgmt_q_source=br_mgmt_q_source,
+        cijfers_html=_cijfers_html,
         responsbasis_html=_responsbasis_band,
         opener_html=ch.opener("Bestuurlijke read"),
-        usage_html=_gebruiksblok(data["scan_lbl"], degraded=bool(br_degraded_note)),
+        # Tot taak 5 van plan 3a (leidraad) draagt het gebruiksblok de leesroute
+        # in het leidraad-slot; zo verdwijnt het blok niet een taak lang.
+        leidraad_html=_gebruiksblok(data["scan_lbl"], degraded=bool(br_degraded_note)),
         direction_line=_direction_p02_line(direction_agg, _primary, "exit",
                                            factor_score=_primary_score),
         degraded_note=br_degraded_note,
         why_title=_p02_why_title(_shape),
-        signal_cell_html=_signal_cell,
     )
 
     # ── Vertrekcontext (p.04 — vóór factorprofiel) ───────────────────────────
@@ -4362,8 +4384,6 @@ def render_exit_report_html(data: dict) -> str:
     # ── Prioriteringsraster / gespreksagenda (naar het slot — na het bewijs,
     # vóór de appendix) ────────────────────────────────────────────────────────
     _startpunt_fk = _raster_rows[0]["key"] if _raster_rows else None
-    _enriched_q = (_deepening_mgmt_q(deep_agg, "exit", _startpunt_fk)
-                   if _startpunt_fk else None)
     # Het richtingblok wordt hier gebouwd, niet in _prioriteringsraster (bug
     # B3): alleen zo kan de methodiekpagina verderop beloven wat dit rapport
     # daadwerkelijk bevat in plaats van wat er aan data bestaat.
@@ -4373,7 +4393,8 @@ def render_exit_report_html(data: dict) -> str:
         scan_type="exit",
         factor_resp_scores=data.get("factor_resp_scores") or {},
         deepening_active=bool(deep_agg),
-        mgmt_q=_enriched_q or (_mgmt_q(_startpunt_fk, "exit") if _startpunt_fk else (nsp.get("first_decision") or "")),
+        mgmt_q=(_gespreksopener(deep_agg, "exit", _startpunt_fk) if _startpunt_fk
+                else (nsp.get("first_decision") or "")),
         review_when="Plan binnen 45-90 dagen een vervolgmoment: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.",
         opener_html=ch.opener("Waar begint het gesprek?", kicker="Prioritering & gespreksagenda"),
         direction_agg=direction_agg,
@@ -4522,15 +4543,12 @@ def render_retention_report_html(data: dict) -> str:
                           f'<div class="why-v" style="color:{_factor_color(low_item[2])};">{low_item[2]:.1f}/10</div>'
                           f'<div class="why-b">{_h(low_item[1])}</div></td>')
 
+        why_cells += _p02_why_extra_cells(_raster_rows[0], ST)
         primary_fkey  = tf
         primary_label = tf_lbl_
-        _short_q = _short_mgmt_q(_deep_agg_early, ST, tf)
-        if _short_q:
-            br_mgmt_q = _short_q
-            br_mgmt_q_source = "Gebaseerd op de meest gekozen toelichting van respondenten in de verdieping."
-        else:
-            br_mgmt_q = _mgmt_q(tf, ST)
-            br_mgmt_q_source = _raster_attribution(_raster_rows, ST)
+        # Eén gespreksopener (H9): dezelfde zin als op de gespreksagenda.
+        br_mgmt_q = _gespreksopener(_deep_agg_early, ST, tf)
+        br_mgmt_q_source = _raster_attribution(_raster_rows, ST)
     else:
         why_cells     = ""
         primary_fkey  = low_f[0] if low_f else None
@@ -4570,8 +4588,6 @@ def render_retention_report_html(data: dict) -> str:
     _signal_cell = _p02_signal_cell("Behoudssignaal", _score_str(signal) if signal else "",
                                     band_lbl or "")
     _stay_scores = (data.get("intent_resp") or {}).get("stay") or []
-    # Taak 4 van plan 3a rendert dit blok via _bestuurlijke_read; tot dan bewust
-    # alleen opgebouwd.
     _cijfers_html = _p02_cijfers_block([
         _blijfintentie_cell(avg_si, _stay_scores),
         _respons_cell(data["n_completed"], data["n_invited"]),
@@ -4599,14 +4615,6 @@ def render_retention_report_html(data: dict) -> str:
     if _si_kop and not _geen_profiel:
         exec_line = f"{exec_line} {_si_kop}"
 
-    # Subtekst herhaalt de titel niet meer: alleen wat nieuw is. De
-    # responsbasis staat nu onderaan dezelfde pagina.
-    totaalbeeld = (
-        f"{high_lbl} ({_score_str(high_sc)}) laat zien wat wél werkt. "
-        f"Hoe stevig dit beeld is, hangt af van de responsbasis onderaan deze pagina."
-    ) if high_lbl and _raster_primary_label != high_lbl and _factor_label(high_sc) == "Relatief sterk" else \
-        "Reikwijdte en betrouwbaarheid van dit beeld: zie de responsbasis onderaan deze pagina."
-
     _responsbasis_band = _responsbasis(
         invited=data["n_invited"],
         completed=data["n_completed"],
@@ -4621,21 +4629,20 @@ def render_retention_report_html(data: dict) -> str:
 
     s += _bestuurlijke_read(
         kernzin=exec_line,
-        totaalbeeld=totaalbeeld,
         primary_label=primary_label,
         why_cells_html=why_cells,
-        strong_label=high_lbl,
-        strong_score=high_sc,
         mgmt_q=br_mgmt_q,
         mgmt_q_source=br_mgmt_q_source,
+        cijfers_html=_cijfers_html,
         responsbasis_html=_responsbasis_band,
         opener_html=ch.opener("Bestuurlijke read"),
-        usage_html=_gebruiksblok(data["scan_lbl"], degraded=bool(br_degraded_note)),
+        # Tot taak 5 van plan 3a (leidraad) draagt het gebruiksblok de leesroute
+        # in het leidraad-slot; zo verdwijnt het blok niet een taak lang.
+        leidraad_html=_gebruiksblok(data["scan_lbl"], degraded=bool(br_degraded_note)),
         direction_line=_direction_p02_line(direction_agg, _primary, ST,
                                            factor_score=_primary_score),
         degraded_note=br_degraded_note,
         why_title=_p02_why_title(_shape),
-        signal_cell_html=_signal_cell,
     )
 
     # ── Behoudscontext (p.04 — vóór factorprofiel) ───────────────────────────
@@ -4796,8 +4803,6 @@ def render_retention_report_html(data: dict) -> str:
     # ── Prioriteringsraster / gespreksagenda (naar het slot — na het bewijs,
     # vóór de appendix) ────────────────────────────────────────────────────────
     _startpunt_fk = _raster_rows[0]["key"] if _raster_rows else None
-    _enriched_q = (_deepening_mgmt_q(deep_agg, ST, _startpunt_fk)
-                   if _startpunt_fk else None)
     # Zie render_exit_report_html: blok eerst, methodiekpagina gate erop (B3).
     _dir_block = _wat_moet_gebeuren_block(_raster_rows, direction_agg, ST, n)
     s += _prioriteringsraster(
@@ -4805,7 +4810,8 @@ def render_retention_report_html(data: dict) -> str:
         scan_type=ST,
         factor_resp_scores=data.get("factor_resp_scores") or {},
         deepening_active=bool(deep_agg),
-        mgmt_q=_enriched_q or (_mgmt_q(_startpunt_fk, ST) if _startpunt_fk else (nsp.get("first_decision") or "")),
+        mgmt_q=(_gespreksopener(deep_agg, ST, _startpunt_fk) if _startpunt_fk
+                else (nsp.get("first_decision") or "")),
         review_when="Plan binnen 45-90 dagen een vervolgmoment: bespreek dan wat er is opgepakt en of dit thema nog voorrang verdient.",
         opener_html=ch.opener("Waar begint het gesprek?", kicker="Prioritering & gespreksagenda"),
         direction_agg=direction_agg,
@@ -5001,7 +5007,8 @@ def render_onboarding_report_html(data: dict) -> str:
 
         primary_label = tf_lbl_
         br_mgmt_q     = _mgmt_q(tf, ST)
-        br_mgmt_q_source = "Gebaseerd op de laagst scorende factor."
+        br_mgmt_q_source = _bron_laagste_score(
+            tf_sc, [(_fl(fk, ST), sc) for fk, sc in sorted_f if fk != tf])
     else:
         why_cells     = ""
         primary_label = low_lbl
@@ -5037,8 +5044,6 @@ def render_onboarding_report_html(data: dict) -> str:
         indicatief=_respons_indicatief(data["n_completed"], data["n_invited"]))
     _signal_cell = _p02_signal_cell("Checkpointscore", _score_str(signal) if signal else "",
                                     band_lbl or "")
-    # Taak 4 van plan 3a rendert dit blok via _bestuurlijke_read; tot dan bewust
-    # alleen opgebouwd.
     _cijfers_html = _p02_cijfers_block([
         _respons_cell(data["n_completed"], data["n_invited"]),
         _signal_cell,
@@ -5056,14 +5061,6 @@ def render_onboarding_report_html(data: dict) -> str:
     exec_line = _p02_met_respons(exec_line, completed=data["n_completed"],
                                  invited=data["n_invited"], verwijzing=_verwijst)
 
-    # Subtekst herhaalt de titel niet meer: alleen wat nieuw is. De
-    # responsbasis staat nu onderaan dezelfde pagina.
-    totaalbeeld = (
-        f"{high_lbl} ({_score_str(high_sc)}) laat zien wat wél goed landt. "
-        f"Hoe stevig dit beeld is, hangt af van de responsbasis onderaan deze pagina."
-    ) if high_lbl and low_lbl != high_lbl and _factor_label(high_sc) == "Relatief sterk" else \
-        "Reikwijdte en betrouwbaarheid van dit beeld: zie de responsbasis onderaan deze pagina."
-
     _responsbasis_band = _responsbasis(
         invited=data["n_invited"],
         completed=data["n_completed"],
@@ -5079,20 +5076,19 @@ def render_onboarding_report_html(data: dict) -> str:
 
     s += _bestuurlijke_read(
         kernzin=exec_line,
-        totaalbeeld=totaalbeeld,
         primary_label=primary_label,
         why_cells_html=why_cells,
-        strong_label=high_lbl,
-        strong_score=high_sc,
         mgmt_q=br_mgmt_q,
         mgmt_q_source=br_mgmt_q_source,
+        cijfers_html=_cijfers_html,
         responsbasis_html=_responsbasis_band,
         opener_html=ch.opener("Bestuurlijke read"),
-        usage_html=_gebruiksblok(data["scan_lbl"], degraded=bool(br_degraded_note),
-                                 leesroute=GEBRUIKSBLOK_LEESROUTE_ONBOARDING),
+        # Tot taak 5 van plan 3a (leidraad) draagt het gebruiksblok de leesroute
+        # in het leidraad-slot; zo verdwijnt het blok niet een taak lang.
+        leidraad_html=_gebruiksblok(data["scan_lbl"], degraded=bool(br_degraded_note),
+                                    leesroute=GEBRUIKSBLOK_LEESROUTE_ONBOARDING),
         degraded_note=br_degraded_note,
         why_title=_p02_why_title(_shape),
-        signal_cell_html=_signal_cell,
         scope_note=(ONBOARDING_GEEN_VERDIEPING_NOTE_DEGRADED if br_degraded_note
                     else ONBOARDING_GEEN_VERDIEPING_NOTE),
     )

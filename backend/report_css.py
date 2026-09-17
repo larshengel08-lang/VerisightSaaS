@@ -275,6 +275,7 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .dir-caveat { font-size: 10px; color: #92400E; margin: 4px 0 0; }
 .dir-chain { font-family: 'JetBrains Mono', monospace; font-size: 8.5px; color: """ + STEEL + r"""; margin-top: 8px; }
 .mq-direction { font-size: 11px; font-weight: 600; color: """ + NAVY + r"""; margin: 8px 0 0; }
+.mq-brug { font-size: 10.5px; color: #374151; margin: 8px 0 0; }
 
 /* ── Trust / methodiek ── */
 .tg { display: table; width: 100%; border-collapse: separate; border-spacing: 10px 0; }

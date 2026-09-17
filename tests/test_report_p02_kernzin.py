@@ -16,6 +16,7 @@ from backend.report_html import (
     _bestuurlijke_read,
     _fl,
     _p02_direction_key,
+    _p02_cijfers_block,
     _p02_opening,
     _p02_signal_cell,
     _p02_startpunt_gronden,
@@ -494,17 +495,15 @@ def test_vlakke_zin_houdt_zijn_accent_in_de_gerenderde_pagina():
     """De kernzin gaat door _h() (html.escape), niet door het niet-escapende
     intro-pad: letterlijke Unicode hoort er dus letterlijk uit te komen, en
     juist geen HTML-entity (die zou dubbel geescaped op de pagina belanden)."""
-    html = _bestuurlijke_read(kernzin=_open(VLAK), totaalbeeld="T.",
-                              primary_label="Groeiperspectief", why_cells_html="",
-                              strong_label="", strong_score=None, mgmt_q="V?")
+    html = _bestuurlijke_read(kernzin=_open(VLAK), primary_label="Groeiperspectief", why_cells_html="",
+                              mgmt_q="V?")
     assert "binnen één punt van elkaar" in html
     assert "&eacute;" not in html
     assert "&amp;#" not in html
 
     # Zelfde pad, tweede accentzin: het telwoord in de kwetsbaar-opsomming.
-    html = _bestuurlijke_read(kernzin=_open(EEN_LAGE), totaalbeeld="T.",
-                              primary_label="Groeiperspectief", why_cells_html="",
-                              strong_label="", strong_score=None, mgmt_q="V?")
+    html = _bestuurlijke_read(kernzin=_open(EEN_LAGE), primary_label="Groeiperspectief", why_cells_html="",
+                              mgmt_q="V?")
     assert "aandacht op één kwetsbaar onderwerp" in html
     assert "&eacute;" not in html
 
@@ -559,9 +558,8 @@ def test_why_kop_blijft_bij_een_niet_vlak_profiel():
 
 
 def test_bestuurlijke_read_gebruikt_de_neutrale_kop():
-    html = _bestuurlijke_read(kernzin="K.", totaalbeeld="T.",
-                              primary_label="Rolhelderheid", why_cells_html="",
-                              strong_label="", strong_score=None, mgmt_q="V?",
+    html = _bestuurlijke_read(kernzin="K.", primary_label="Rolhelderheid", why_cells_html="",
+                              mgmt_q="V?",
                               why_title=P02_WHY_TITLE_FLAT)
     assert P02_WHY_TITLE_FLAT in html
     assert "Waarom Rolhelderheid bovenaan staat" not in html
@@ -585,20 +583,21 @@ def test_signaalcel_blijft_leeg_zonder_getal_of_band():
 
 
 def test_signaalcel_staat_in_de_onderbouwingsrij():
+    # Plan 3a taak 4: het signaalgetal staat in blok 2 (de cijfersrij).
     cel = _p02_signal_cell("Behoudssignaal", "8.0/10", "Behoudsklimaat stabiel")
-    html = _bestuurlijke_read(kernzin="K.", totaalbeeld="T.",
+    html = _bestuurlijke_read(kernzin="K.",
                               primary_label="Werkdruk", why_cells_html="",
-                              strong_label="", strong_score=None, mgmt_q="V?",
-                              signal_cell_html=cel)
+                              mgmt_q="V?",
+                              cijfers_html=_p02_cijfers_block([cel]))
     assert cel in html
-    assert "<table class='sg'><tr>" in html
+    assert 'class="sg p02-cijfers"' in html
 
 
 def test_onderbouwingsrij_blijft_weg_als_er_niets_in_staat():
-    html = _bestuurlijke_read(kernzin="K.", totaalbeeld="T.",
+    html = _bestuurlijke_read(kernzin="K.",
                               primary_label="Werkdruk", why_cells_html="",
-                              strong_label="", strong_score=None, mgmt_q="V?")
-    assert "<table class='sg'><tr>" not in html
+                              mgmt_q="V?", cijfers_html=_p02_cijfers_block([]))
+    assert 'class="sg p02-cijfers"' not in html
 
 
 # ── codereview 2 taak 3: Loep Start rekent het verschil ook op getoonde scores ──
