@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { SCAN_TYPE_LABELS, type ScanType } from '@/lib/types'
 import {
@@ -130,6 +130,17 @@ export function SetupWizardCard({
   const [everCopied, setEverCopied] = useState(false)
   const [copiedDeptSlug, setCopiedDeptSlug] = useState<string | null>(null)
   const [launchDialogOpen, setLaunchDialogOpen] = useState(false)
+  // Fail Loud: als het klembord de kopieeractie weigert (NotAllowedError e.d.)
+  // mag de klant niet denken dat het gelukt is. copyErrorField/deptCopyError
+  // tonen dan een melding; de tekst wordt meteen geselecteerd zodat Ctrl+C
+  // meteen kan, en een handmatige Ctrl+C met het hele veld geselecteerd telt
+  // zelf ook als kopiëren (zelfde patroon als ReminderComposer in
+  // dashboard-state-actions.tsx).
+  const [copyErrorField, setCopyErrorField] = useState<'subject' | 'body' | null>(null)
+  const [deptCopyError, setDeptCopyError] = useState<string | null>(null)
+  const inviteSubjectRef = useRef<HTMLInputElement>(null)
+  const inviteBodyRef = useRef<HTMLTextAreaElement>(null)
+  const deptCodeRefs = useRef<Map<string, HTMLElement>>(new Map())
 
   // Rijen voor het afdelingenblok. Startpunt: bestaande afdelingen, of (als
   // de lijst nog leeg is) twee lege rijen zodat de minimaal-2-eis meteen
@@ -225,10 +236,30 @@ export function SetupWizardCard({
   async function handleCopyDeptLink(slug: string, url: string) {
     try {
       await navigator.clipboard.writeText(url)
+    } catch {
+      // Fail Loud: geen stille no-op, en de link staat meteen geselecteerd
+      // zodat de klant zelf met Ctrl+C kan kopiëren.
+      setDeptCopyError(slug)
+      const el = deptCodeRefs.current.get(slug)
+      if (el) selectElementText(el)
+      return
+    }
+    setDeptCopyError((current) => (current === slug ? null : current))
+    setEverCopied(true)
+    setCopiedDeptSlug(slug)
+    setTimeout(() => setCopiedDeptSlug(null), 2000)
+  }
+
+  // Een handmatige Ctrl+C telt alleen als de klant echt de hele link
+  // selecteerde, niet een toevallige deelselectie.
+  function handleManualDeptCopy(slug: string, url: string) {
+    const selected = window.getSelection()?.toString().trim() ?? ''
+    if (selected && selected === url) {
+      setDeptCopyError((current) => (current === slug ? null : current))
       setEverCopied(true)
       setCopiedDeptSlug(slug)
       setTimeout(() => setCopiedDeptSlug(null), 2000)
-    } catch { /* clipboard unavailable */ }
+    }
   }
 
   async function handleStep1Submit(e: React.FormEvent) {
@@ -322,10 +353,32 @@ export function SetupWizardCard({
     setInviteLinksReplacedEdits(false)
     try {
       await navigator.clipboard.writeText(text)
+    } catch {
+      // Fail Loud: geen "Gekopieerd" tonen als het klembord dit weigert. De
+      // klant krijgt een melding en het veld wordt geselecteerd, zodat
+      // handmatig kopiëren (Ctrl+C) meteen kan.
+      setCopyErrorField(which)
+      ;(which === 'subject' ? inviteSubjectRef : inviteBodyRef).current?.select()
+      return
+    }
+    setCopyErrorField((current) => (current === which ? null : current))
+    setEverCopied(true)
+    if (which === 'subject') { setCopiedSubject(true); setTimeout(() => setCopiedSubject(false), 2000) }
+    else { setCopiedBody(true); setTimeout(() => setCopiedBody(false), 2000) }
+  }
+
+  // Een handmatige Ctrl+C telt alleen als het hele veld geselecteerd was
+  // (zelfde patroon als ReminderComposer in dashboard-state-actions.tsx).
+  function handleManualCopy(which: 'subject' | 'body') {
+    const el = which === 'subject' ? inviteSubjectRef.current : inviteBodyRef.current
+    if (!el) return
+    const { value, selectionStart, selectionEnd } = el
+    if (value.length > 0 && selectionStart === 0 && selectionEnd === value.length) {
+      setCopyErrorField((current) => (current === which ? null : current))
       setEverCopied(true)
       if (which === 'subject') { setCopiedSubject(true); setTimeout(() => setCopiedSubject(false), 2000) }
       else { setCopiedBody(true); setTimeout(() => setCopiedBody(false), 2000) }
-    } catch { /* clipboard unavailable */ }
+    }
   }
 
   function openLaunchDialog() {
@@ -476,7 +529,14 @@ export function SetupWizardCard({
                           )}
                           {links && (
                             <div className="mt-2 flex items-center gap-2">
-                              <code className="flex-1 truncate rounded border border-white/10 bg-white/5 px-2 py-1 text-[9px] text-white/50">
+                              <code
+                                ref={(el) => {
+                                  if (el) deptCodeRefs.current.set(links.slug, el)
+                                  else deptCodeRefs.current.delete(links.slug)
+                                }}
+                                onCopy={() => handleManualDeptCopy(links.slug, links.url)}
+                                className="flex-1 truncate rounded border border-white/10 bg-white/5 px-2 py-1 text-[9px] text-white/50"
+                              >
                                 {links.url}
                               </code>
                               <button
@@ -487,6 +547,11 @@ export function SetupWizardCard({
                                 {copiedDeptSlug === links.slug ? 'Gekopieerd ✓' : 'Kopieer link'}
                               </button>
                             </div>
+                          )}
+                          {links && deptCopyError === links.slug && (
+                            <p role="alert" className="mt-1.5 text-[10px] text-red-300">
+                              Kopiëren lukte niet. Selecteer de tekst en kopieer met Ctrl+C.
+                            </p>
                           )}
                         </div>
                       )
@@ -605,11 +670,18 @@ export function SetupWizardCard({
                 </div>
                 <input
                   id="invite-subject"
+                  ref={inviteSubjectRef}
                   type="text"
                   value={editableSubject}
                   onChange={(e) => { setEditableSubject(e.target.value); setInviteLinksReplacedEdits(false) }}
+                  onCopy={() => handleManualCopy('subject')}
                   className="w-full rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-xs text-white/90 focus:outline-none focus:ring-1 focus:ring-[#E8A020]/50"
                 />
+                {copyErrorField === 'subject' && (
+                  <p role="alert" className="mt-1 text-[10px] text-red-300">
+                    Kopiëren lukte niet. Selecteer de tekst en kopieer met Ctrl+C.
+                  </p>
+                )}
               </div>
 
               {/* Bericht */}
@@ -623,11 +695,18 @@ export function SetupWizardCard({
                 </div>
                 <textarea
                   id="invite-body"
+                  ref={inviteBodyRef}
                   value={editableBody}
                   onChange={(e) => { setEditableBody(e.target.value); setInviteLinksReplacedEdits(false) }}
+                  onCopy={() => handleManualCopy('body')}
                   rows={11}
                   className="w-full resize-none rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-xs leading-relaxed text-white/90 focus:outline-none focus:ring-1 focus:ring-[#E8A020]/50"
                 />
+                {copyErrorField === 'body' && (
+                  <p role="alert" className="mt-1 text-[10px] text-red-300">
+                    Kopiëren lukte niet. Selecteer de tekst en kopieer met Ctrl+C.
+                  </p>
+                )}
               </div>
               {inviteLinksReplacedEdits && (
                 <p role="status" className="rounded-lg bg-[#E8A020]/15 px-3 py-2 text-[11px] leading-relaxed text-white/80">
@@ -684,6 +763,17 @@ export function SetupWizardCard({
       </ConfirmDialog>
     </section>
   )
+}
+
+// Selecteert de volledige tekstinhoud van een niet-bewerkbaar element (het
+// <code>-blok met de afdelingslink), zodat een mislukte navigator.clipboard
+// de klant meteen in staat stelt om zelf met Ctrl+C te kopiëren.
+function selectElementText(el: HTMLElement) {
+  const range = document.createRange()
+  range.selectNodeContents(el)
+  const selection = window.getSelection()
+  selection?.removeAllRanges()
+  selection?.addRange(range)
 }
 
 // Live link-preview tijdens het intypen: de naam is dan nog niet per se een

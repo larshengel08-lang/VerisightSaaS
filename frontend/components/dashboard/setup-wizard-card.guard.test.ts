@@ -45,6 +45,48 @@ describe('setup-wizard afdelingsblok', () => {
   })
 })
 
+describe('setup-wizard kopieerknoppen: Fail Loud bij geweigerd klembord', () => {
+  it('markeert onderwerp/bericht pas als gekopieerd nadat writeText slaagt, en toont een melding als het klembord weigert', () => {
+    // handleCopy: geen "Gekopieerd" meer voor een writeText die nooit resolvet.
+    expect(src).toMatch(/async function handleCopy\(text: string, which: 'subject' \| 'body'\) \{[\s\S]*?await navigator\.clipboard\.writeText\(text\)/)
+    expect(src).toMatch(/catch \{[\s\S]*?setCopyErrorField\(which\)/)
+    expect(src).not.toContain('catch { /* clipboard unavailable */ }')
+    expect(src).toContain("Kopiëren lukte niet. Selecteer de tekst en kopieer met Ctrl+C.")
+  })
+
+  it('geeft elk veld een eigen role="alert"-melding bij een mislukte kopie', () => {
+    expect(src).toMatch(/copyErrorField === 'subject' &&[\s\S]*?role="alert"/)
+    expect(src).toMatch(/copyErrorField === 'body' &&[\s\S]*?role="alert"/)
+  })
+
+  it('telt een handmatige Ctrl+C met het hele veld geselecteerd ook als kopiëren', () => {
+    expect(src).toContain('function handleManualCopy')
+    expect(src).toMatch(/selectionStart === 0 && selectionEnd === value\.length/)
+    expect(src).toContain("onCopy={() => handleManualCopy('subject')}")
+    expect(src).toContain("onCopy={() => handleManualCopy('body')}")
+    // Een geslaagde handmatige kopie telt mee voor de "nog niets gekopieerd"-melding.
+    expect(src).toMatch(/function handleManualCopy\([\s\S]*?setEverCopied\(true\)/)
+  })
+
+  it('selecteert het veld zelf als writeText faalt, zodat Ctrl+C meteen kan', () => {
+    expect(src).toMatch(/inviteSubjectRef : inviteBodyRef\)\.current\?\.select\(\)/)
+  })
+
+  it('past hetzelfde Fail Loud-patroon toe op de afdelingslink-kopieerknop', () => {
+    expect(src).toContain('function handleManualDeptCopy')
+    expect(src).toContain('deptCopyError')
+    expect(src).not.toContain("catch { /* clipboard unavailable */ }")
+    expect(src).toMatch(/handleCopyDeptLink[\s\S]*?catch \{[\s\S]*?setDeptCopyError\(slug\)/)
+    expect(src).toContain('selectElementText')
+  })
+
+  it('wist een oude edits-vervangen-melding nog steeds bij het kopiëren van onderwerp of bericht', () => {
+    // Regressie: de Fail Loud-fix mag de bestaande "edits replaced"-melding
+    // niet laten hangen zodra de klant opnieuw kopieert.
+    expect(src).toMatch(/async function handleCopy\(text: string, which: 'subject' \| 'body'\) \{\s+setInviteLinksReplacedEdits\(false\)/)
+  })
+})
+
 describe('setup-wizard stap 1: planning en drempels (spec 2026-09-16 par. 4.1 en 5.2)', () => {
   it('heeft een sluitdatum- en herinneringsveld en valideert via de gedeelde planningsregels', () => {
     expect(src).toContain('validateSchedule')
