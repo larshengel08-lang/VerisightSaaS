@@ -148,12 +148,16 @@ export async function confirmLaunchAction(campaignId: string): Promise<ActionRes
 
   const { data: delivery, error: deliveryReadError } = await supabase
     .from('campaign_delivery_records')
-    .select('launch_date, invited_count, reminder_config')
+    .select('launch_date, invited_count, reminder_config, launch_confirmed_at')
     .eq('campaign_id', campaignId)
     .maybeSingle()
   if (deliveryReadError) {
     return { ok: false, error: `Bevestigen mislukt: de planning kon niet worden gelezen (${deliveryReadError.message}).` }
   }
+  // Idempotent: al gestart blijft gestart. Niet opnieuw schrijven (de
+  // starttijd blijft staan) en stap 1 niet opnieuw toetsen, anders krijgt een
+  // oud tabblad een fout over een stap die niet meer te wijzigen is.
+  if (delivery?.launch_confirmed_at) return { ok: true }
 
   const storedLaunchDate = (delivery?.launch_date as string | null | undefined) ?? null
   const storedInvitedCount = (delivery?.invited_count as number | null | undefined) ?? null

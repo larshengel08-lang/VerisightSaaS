@@ -250,6 +250,15 @@ describe('confirmLaunchAction', () => {
     expect(confirmUpdates).toHaveLength(0)
   })
 
+  it('is idempotent: al bevestigd geeft ok zonder opnieuw te schrijven of stap 1 te toetsen', async () => {
+    // Oud tabblad na de lancering: sluitdatum inmiddels voorbij, maar de meting loopt al.
+    deliveryRow = { launch_date: null, invited_count: null, reminder_config: {}, launch_confirmed_at: '2026-09-01T10:00:00Z' }
+    campaignRow = { organization_id: 'org-1', is_active: true, closed_at: null, closes_at: addDays(today, -1) }
+    const result = await confirmLaunchAction('campaign-1')
+    expect(result).toEqual({ ok: true })
+    expect(confirmUpdates).toHaveLength(0)
+  })
+
   it('bevestigt als stap 1 volledig en geldig is opgeslagen', async () => {
     const result = await confirmLaunchAction('campaign-1')
     expect(result).toEqual({ ok: true })
