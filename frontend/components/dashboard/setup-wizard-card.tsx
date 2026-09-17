@@ -29,7 +29,9 @@ import {
   buildInviteTemplate,
   buildSegmentSurveyLinks,
   buildSurveyLink,
+  refreshInviteDraft,
   slugify,
+  type EmailTemplate,
   type SegmentDepartmentStored,
 } from '@/lib/self-send-comms'
 import { saveLaunchSetupAction, confirmLaunchAction } from '@/app/(dashboard)/campaigns/[id]/setup/launch-setup-actions'
@@ -173,6 +175,11 @@ export function SetupWizardCard({
 
   const [editableSubject, setEditableSubject] = useState(inviteSubject)
   const [editableBody, setEditableBody] = useState(inviteBody)
+  // De tekst zoals Loep hem het laatst opbouwde. Na opnieuw opslaan van stap 1
+  // bouwt refreshInviteDraft hem opnieuw op als de afdelingslinks veranderd
+  // zijn; de props blijven tot een herlaad de oude afdelingen bevatten.
+  const [generatedInvite, setGeneratedInvite] = useState<EmailTemplate>({ subject: inviteSubject, body: inviteBody })
+  const [inviteLinksReplacedEdits, setInviteLinksReplacedEdits] = useState(false)
 
   const today = new Date().toISOString().slice(0, 10)
   const tip = SCAN_TIP[scanType]
@@ -257,6 +264,23 @@ export function SetupWizardCard({
       startTransition(async () => {
         const segResult = await saveSegmentDepartmentsAction(campaignId, incoming)
         if (!segResult.ok) { setStep1Error(segResult.error ?? 'Er ging iets mis.'); return }
+        // Direct na het opslaan van de afdelingen, ook als de planning hierna
+        // faalt: vanaf nu gelden de nieuwe slugs, dus stap 2 mag geen oude
+        // (dode) afdelingslinks meer tonen.
+        const refreshed = refreshInviteDraft(
+          { generated: generatedInvite, subject: editableSubject, body: editableBody },
+          buildInviteTemplate({
+            senderName: '',
+            organizationName,
+            scanType,
+            surveyLink,
+            departmentLinks: buildSegmentSurveyLinks(frontendBaseUrl, publicSurveyToken, segResult.departments),
+          }),
+        )
+        setGeneratedInvite(refreshed.generated)
+        setEditableSubject(refreshed.subject)
+        setEditableBody(refreshed.body)
+        setInviteLinksReplacedEdits(refreshed.replacedEdits)
         // totalInvited is afgeleid van dezelfde gefilterde rijen als `incoming`
         // en komt dus overeen met wat saveSegmentDepartmentsAction als som opsloeg.
         const launchResult = await saveLaunchSetupAction(campaignId, {
@@ -602,6 +626,11 @@ export function SetupWizardCard({
                   className="w-full resize-none rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-xs leading-relaxed text-white/90 focus:outline-none focus:ring-1 focus:ring-[#E8A020]/50"
                 />
               </div>
+              {inviteLinksReplacedEdits && (
+                <p role="status" className="rounded-lg bg-[#E8A020]/15 px-3 py-2 text-[11px] leading-relaxed text-white/80">
+                  De uitnodiging is bijgewerkt met de nieuwe afdelingslinks. Je eigen aanpassingen aan de tekst zijn daarbij vervangen; voeg ze zo nodig opnieuw toe.
+                </p>
+              )}
               <p className="text-[10px] text-white/40">Je kunt de tekst aanpassen voor je kopieert. Vergeet niet je naam in te vullen bij &ldquo;Met vriendelijke groet&rdquo;.</p>
 
               <div className="border-t border-white/15 pt-3">

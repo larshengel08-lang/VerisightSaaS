@@ -13,6 +13,7 @@ import {
   getDueReminders,
   normalizeSelfSendConfig,
   prepareSegmentDepartmentsUpdate,
+  refreshInviteDraft,
   resolveReminderDate,
   validateInvitedCount,
 } from './self-send-comms'
@@ -274,5 +275,50 @@ describe('formatDepartmentProgress', () => {
   })
   it('cap op 100%', () => {
     expect(formatDepartmentProgress(16, 14)).toBe('16 van 14 ingevuld (100%)')
+  })
+})
+
+describe('refreshInviteDraft (afdelingslinks na "Terug naar stap 1")', () => {
+  const base = { frontendBaseUrl: 'https://www.getloep.nl', token: 'tok-1' }
+  const template = (departments: Array<{ label: string; slug: string }>) =>
+    buildInviteTemplate({
+      senderName: '',
+      organizationName: 'Testklant',
+      scanType: 'retention',
+      surveyLink: buildSurveyLink(base.frontendBaseUrl, base.token),
+      departmentLinks: buildSegmentSurveyLinks(base.frontendBaseUrl, base.token, departments),
+    })
+  const before = template([
+    { label: 'Zorg', slug: 'zorg' },
+    { label: 'Staf', slug: 'staf' },
+  ])
+  const after = template([
+    { label: 'Zorg', slug: 'zorg' },
+    { label: 'Ondersteuning', slug: 'ondersteuning' },
+  ])
+
+  it('bouwt de tekst opnieuw op met de nieuwe afdelingslinks', () => {
+    const draft = { generated: before, subject: before.subject, body: before.body }
+    const next = refreshInviteDraft(draft, after)
+    expect(next.body).toContain('?afd=ondersteuning')
+    expect(next.body).not.toContain('?afd=staf')
+    expect(next.generated).toEqual(after)
+    expect(next.replacedEdits).toBe(false)
+  })
+
+  it('kiest bij gewijzigde links voor juiste links en meldt dat eigen aanpassingen zijn vervangen', () => {
+    const draft = { generated: before, subject: before.subject, body: `${before.body}
+Groet, Anne` }
+    const next = refreshInviteDraft(draft, after)
+    expect(next.body).toBe(after.body)
+    expect(next.body).not.toContain('?afd=staf')
+    expect(next.replacedEdits).toBe(true)
+  })
+
+  it('laat eigen aanpassingen staan als de links niet veranderd zijn', () => {
+    const draft = { generated: before, subject: 'Eigen onderwerp', body: `${before.body}
+Groet, Anne` }
+    const next = refreshInviteDraft(draft, before)
+    expect(next).toEqual({ ...draft, replacedEdits: false })
   })
 })

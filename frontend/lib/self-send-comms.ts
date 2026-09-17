@@ -271,6 +271,31 @@ function buildLinkLines(args: TemplateArgs): string[] {
   return [`Vul de vragenlijst hier in (${duration}): ${args.surveyLink}`]
 }
 
+/** Uitnodiging zoals de wizard hem toont: de laatst gegenereerde tekst plus wat de klant ervan maakte. */
+export interface InviteDraft {
+  generated: EmailTemplate
+  subject: string
+  body: string
+}
+
+/**
+ * Na opslaan van stap 1 kunnen de afdelingslinks veranderd zijn (afdeling
+ * hernoemd of toegevoegd). Dan wint de juiste link: de tekst wordt opnieuw
+ * opgebouwd, ook als de klant hem had aangepast, en replacedEdits zegt of er
+ * daarbij eigen aanpassingen zijn vervangen, zodat de wizard dat kan melden.
+ * Veranderde er niets, dan blijft de tekst van de klant staan.
+ */
+export function refreshInviteDraft(
+  draft: InviteDraft,
+  next: EmailTemplate,
+): InviteDraft & { replacedEdits: boolean } {
+  if (next.subject === draft.generated.subject && next.body === draft.generated.body) {
+    return { ...draft, replacedEdits: false }
+  }
+  const replacedEdits = draft.subject !== draft.generated.subject || draft.body !== draft.generated.body
+  return { generated: next, subject: next.subject, body: next.body, replacedEdits }
+}
+
 export function buildInviteTemplate(args: TemplateArgs): EmailTemplate {
   const sender = signature(args)
   return {

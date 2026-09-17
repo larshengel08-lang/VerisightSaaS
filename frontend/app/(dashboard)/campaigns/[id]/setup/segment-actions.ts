@@ -5,12 +5,18 @@ import {
   prepareSegmentDepartmentsUpdate,
   type SegmentDepartmentInput,
   type SegmentDepartmentStored,
+  type SegmentDepartmentsUpdate,
 } from '@/lib/self-send-comms'
 
 export interface ActionResult {
   ok: boolean
   error?: string
 }
+
+/** Bij succes de opgeslagen afdelingen mét slug, zodat de wizard de links in de uitnodiging kan bijwerken. */
+export type SaveSegmentDepartmentsResult =
+  | { ok: true; departments: SegmentDepartmentsUpdate['departments'] }
+  | { ok: false; error: string }
 
 // Zelfde patroon als launch-setup-actions.ts: owner/member of verisight-admin.
 // Moet in sync blijven met is_org_manager() in schema.sql.
@@ -40,7 +46,7 @@ async function getAuthAndMembership(campaignId: string) {
 export async function saveSegmentDepartmentsAction(
   campaignId: string,
   incoming: SegmentDepartmentInput[],
-): Promise<ActionResult> {
+): Promise<SaveSegmentDepartmentsResult> {
   const { supabase, campaign, authorized } = await getAuthAndMembership(campaignId)
   if (!authorized || !campaign) return { ok: false, error: 'Niet gemachtigd.' }
 
@@ -87,5 +93,5 @@ export async function saveSegmentDepartmentsAction(
     )
   if (deliveryError) return { ok: false, error: `Totaal opslaan mislukt: ${deliveryError.message}` }
 
-  return { ok: true }
+  return { ok: true, departments: update.departments }
 }

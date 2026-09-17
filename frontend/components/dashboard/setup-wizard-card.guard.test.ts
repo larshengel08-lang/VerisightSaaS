@@ -21,6 +21,14 @@ describe('setup-wizard afdelingsblok', () => {
   it('vraagt het enkelvoudige aantal niet meer in segment-modus', () => {
     expect(src).toMatch(/hasSegments|segmentMode/)
   })
+  it('werkt de afdelingslinks in stap 2 bij na opnieuw opslaan van stap 1', () => {
+    // De uitnodiging werd eenmalig uit de props opgebouwd; na "Terug naar stap 1"
+    // en een hernoemde afdeling bleef stap 2 dode links tonen.
+    expect(src).toContain('refreshInviteDraft')
+    expect(src).toMatch(/buildSegmentSurveyLinks\(frontendBaseUrl, publicSurveyToken, segResult\.departments\)/)
+    expect(src).toContain('replacedEdits')
+    expect(src).toContain('De uitnodiging is bijgewerkt met de nieuwe afdelingslinks.')
+  })
   it('gebruikt de gedeelde uitnodigingstekst in plaats van een eigen kopie', () => {
     expect(src).toContain('buildInviteTemplate')
     expect(src).not.toContain('function buildInviteBody')
