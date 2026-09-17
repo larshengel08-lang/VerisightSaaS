@@ -45,6 +45,7 @@ export default async function DashboardHomePage() {
       reminderConfig: normalizeReminderConfig(null),
       reminderAlreadySentAt: null,
       reminderSkipped: false,
+      extensionCount: 0,
       reportReady: false,
       today: todayIso(),
     })
@@ -63,6 +64,7 @@ export default async function DashboardHomePage() {
     { data: respondentDepts },
     { data: profile },
     { data: membership },
+    { count: extensionCount },
   ] = await Promise.all([
     supabase
       .from('campaign_delivery_records')
@@ -99,6 +101,13 @@ export default async function DashboardHomePage() {
       .eq('org_id', campaign.organization_id)
       .eq('user_id', user.id)
       .maybeSingle(),
+    supabase
+      .from('campaign_action_audit_events')
+      .select('id', { count: 'exact', head: true })
+      .eq('campaign_id', campaign.campaign_id)
+      .eq('action_key', 'delivery_lifecycle_changed')
+      .eq('outcome', 'completed')
+      .contains('metadata', { extension: true }),
   ])
 
   // Beheer is voorbehouden aan de eigenaar van de klantomgeving en aan de
@@ -152,6 +161,7 @@ export default async function DashboardHomePage() {
     reminderConfig,
     reminderAlreadySentAt: reminderEvents?.[0]?.created_at ?? null,
     reminderSkipped: isSkippedReminderEvent(reminderEvents?.[0]),
+    extensionCount: extensionCount ?? 0,
     reportReady,
     today: todayIso(),
   })

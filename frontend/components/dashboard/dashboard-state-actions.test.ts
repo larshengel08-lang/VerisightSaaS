@@ -5,10 +5,12 @@ const island = readFileSync(new URL('./dashboard-state-actions.tsx', import.meta
 const card = readFileSync(new URL('./dashboard-state-card.tsx', import.meta.url), 'utf8')
 
 describe('dashboard state interaction island', () => {
-  it('is a client component wired to the dashboard server actions', () => {
+  it('is a client component wired to all four dashboard server actions', () => {
     expect(island).toContain("'use client'")
     expect(island).toContain('confirmReminderSentAction')
     expect(island).toContain('closeCampaignAction')
+    expect(island).toContain('extendCampaignAction')
+    expect(island).toContain('skipReminderAction')
   })
 
   it('implements the copy → confirm reminder flow', () => {
@@ -16,58 +18,53 @@ describe('dashboard state interaction island', () => {
     expect(island).toContain('Ik heb de herinnering verstuurd')
   })
 
-  it('confirms before closing a campaign', () => {
-    expect(island).toContain('Campagne sluiten')
-    expect(island).toMatch(/confirm\(/)
+  it('sluit via een eigen dialoog die de gevolgen benoemt, niet via browser-confirm (spec 2026-09-16 par. 4.3)', () => {
+    expect(island).not.toMatch(/(?<![A-Za-z_])confirm\(/)
+    expect(island).toContain('ConfirmDialog')
+    expect(island).toContain('Daarna kan niemand meer invullen en staat het rapport klaar.')
+    expect(island).toContain('die komen er dan niet.')
+    expect(island).toContain('Wil je liever twee weken verlengen?')
+    expect(island).toContain("'Twee weken verlengen'")
+    expect(island).toContain("'Toch sluiten'")
+    expect(island).toContain('state.reportThreshold')
+    expect(island).toContain('state.canExtend')
   })
 
-  it('toont een waarschuwing als het sluiten lukte maar de mail niet', () => {
+  it('rendert de secundaire acties als echte knoppen (verlengen, sluiten, herinnering overslaan)', () => {
+    expect(island).toContain('state.secondaryActions')
+    expect(island).toContain("case 'skip_reminder'")
+    expect(island).toContain("case 'extend'")
+    expect(island).toContain("case 'close_campaign'")
+  })
+
+  it('toont een waarschuwing als een actie lukte maar een neveneffect niet', () => {
     expect(island).toContain('setNotice')
     expect(island).toContain('result.warning')
     expect(island).toContain('role="status"')
   })
 
-  it('defect 1: bouwt de notice buiten de ctaKind-branches, zodat die de state-overgang na het sluiten overleeft', () => {
-    // De notice moet ná de laatste ctaKind-check gedefinieerd zijn zodat elke
-    // branch (copy_reminder, close_campaign, én de fallback/vroege return)
-    // 'm kan renderen, in plaats van 'm lokaal in de close_campaign-tak te
-    // bouwen zoals de gefixte bug deed.
+  it('defect 1 (2026-09-12): de notice wordt op één plek gebouwd en in de laatste return meegerenderd, ongeacht ctaKind', () => {
     const noticeBlockIdx = island.indexOf('const noticeBlock')
     const firstCtaKindCheckIdx = island.indexOf("state.ctaKind ===")
     expect(noticeBlockIdx).toBeGreaterThan(-1)
     expect(firstCtaKindCheckIdx).toBeGreaterThan(-1)
     expect(noticeBlockIdx).toBeLessThan(firstCtaKindCheckIdx)
-
-    // Er mag geen losse, branch-lokale <p role="status">-opbouw meer bestaan
-    // (dat was precies de bug: alleen zichtbaar in de close_campaign-tak).
     const roleStatusMatches = island.match(/role="status"/g) ?? []
     expect(roleStatusMatches.length).toBe(1)
-  })
-
-  it('defect 1: rendert de notice ook buiten de close_campaign-tak (copy_reminder en de fallback na beide branches)', () => {
-    const copyReminderIdx = island.indexOf("state.ctaKind === 'copy_reminder'")
-    const closeCampaignIdx = island.indexOf("state.ctaKind === 'close_campaign'")
-    expect(copyReminderIdx).toBeGreaterThan(-1)
-    expect(closeCampaignIdx).toBeGreaterThan(copyReminderIdx)
-
-    // noticeBlock moet in de copy_reminder-tak worden meegerenderd...
-    const copyReminderBranch = island.slice(copyReminderIdx, closeCampaignIdx)
-    expect(copyReminderBranch).toContain('{noticeBlock}')
-
-    // ...en de allerlaatste return (ná de close_campaign-tak, i.p.v. een kaal
-    // `return null`) moet de notice ook nog kunnen tonen in plaats van 'm weg
-    // te gooien op de eerste render nadat de state al is overgegaan.
-    const closeCampaignBranch = island.slice(closeCampaignIdx)
-    const finalReturnIdx = closeCampaignBranch.lastIndexOf('return ')
-    expect(closeCampaignBranch.slice(finalReturnIdx)).toContain('noticeBlock')
-  })
-
-  it('defect 1: de vroege return (geen campaignId/ctaLabel) gooit een openstaande notice niet weg', () => {
-    const earlyReturnBlock = island.slice(
-      island.indexOf('if (!state.campaignId'),
-      island.indexOf('async function handleCopyReminder'),
+    const mainReturn = island.slice(
+      island.indexOf('const secondaryActions = state.secondaryActions'),
+      island.indexOf('function buildCloseDialog'),
     )
+    expect(mainReturn).toContain('{noticeBlock}')
+  })
+
+  it('defect 1: de vroege return (geen campaignId) gooit een openstaande notice niet weg', () => {
+    const earlyReturnBlock = island.slice(island.indexOf('if (!campaignId)'), island.indexOf('const isBusy'))
     expect(earlyReturnBlock).toContain('noticeBlock')
+  })
+
+  it('bevat geen em- of en-dashes in klantcopy', () => {
+    expect(island).not.toMatch(/[—–]/)
   })
 })
 
@@ -76,6 +73,7 @@ describe('dashboard state card', () => {
     expect(card).toContain('state.primaryMessage')
     expect(card).toContain('DashboardStateActions')
     expect(card).toContain('state.showProgress')
+    expect(card).toContain('CampaignTimeline')
   })
 
   it('keeps no inline analysis (no charts/factor tables)', () => {
@@ -84,19 +82,16 @@ describe('dashboard state card', () => {
   })
 
   it('defect 2 (source guard): mount van DashboardStateActions is niet gegated op ctaKind/islandCta', () => {
-    // Regressieguard, geen bewijs van React-gedrag: dit pint alleen de codevorm.
-    // De eerdere fix (defect 1, hierboven) verplaatste de notice-render naar
-    // buiten de ctaKind-branches ín het eiland, maar de kaart wrapte het eiland
-    // zelf nog in {islandCta ? (...) : null} met islandCta = ctaKind === 'copy_reminder'
-    // || ctaKind === 'close_campaign'. Na het sluiten van een campagne gaat de
-    // state over naar 'report_ready'/'processing', islandCta wordt dan false, en
-    // React unmountte het hele eiland — de net gezette notice (waarschuwing over
-    // een mislukte rapport-klaar-mail) werd zo weggegooid vóórdat de gebruiker
-    // 'm ooit kon zien. Deze test faalt zodra die conditionele mount terugkomt.
     expect(card).not.toContain('islandCta')
-
-    // De component moet als kale JSX-child staan (niet binnen een `{... ? (` blok)
-    // zodat hij bij elke render van de kaart gemount blijft, ongeacht ctaKind.
     expect(card).toMatch(/\n\s*<DashboardStateActions state=\{state\} reminderText=\{reminderText\} \/>\s*\n/)
+  })
+
+  it('rendert secundaire acties niet meer zelf als dode tekst; het eiland maakt er knoppen van', () => {
+    expect(card).not.toContain('secondaryActions.map')
+    expect(card).not.toContain('non-interactive')
+  })
+
+  it('rendert een mailto-CTA als gewone link (eindtoestand, spec 4.5)', () => {
+    expect(card).toContain("startsWith('mailto:')")
   })
 })

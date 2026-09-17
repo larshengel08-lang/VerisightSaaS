@@ -56,7 +56,7 @@ export default async function CampaignPage({ params }: Props) {
   if (!statsRow) notFound()
   const stats = statsRow as CampaignStats
 
-  const [{ data: campaignMeta }, { data: deliveryRecord }, { data: reminderEvents }, { data: profile }, { data: orgData }, { data: respondentDepts }, { data: membership }] = await Promise.all([
+  const [{ data: campaignMeta }, { data: deliveryRecord }, { data: reminderEvents }, { data: profile }, { data: orgData }, { data: respondentDepts }, { data: membership }, { count: extensionCount }] = await Promise.all([
     supabase.from('campaigns').select('closed_at, closes_at, delivery_mode, comms_mode, public_survey_token, organization_id, segment_departments').eq('id', id).maybeSingle(),
     supabase
       .from('campaign_delivery_records')
@@ -80,6 +80,13 @@ export default async function CampaignPage({ params }: Props) {
       .eq('org_id', stats.organization_id ?? '')
       .eq('user_id', user.id)
       .maybeSingle(),
+    supabase
+      .from('campaign_action_audit_events')
+      .select('id', { count: 'exact', head: true })
+      .eq('campaign_id', id)
+      .eq('action_key', 'delivery_lifecycle_changed')
+      .eq('outcome', 'completed')
+      .contains('metadata', { extension: true }),
   ])
 
   const departmentResponseCounts: Record<string, number> = {}
@@ -129,6 +136,7 @@ export default async function CampaignPage({ params }: Props) {
     reminderConfig,
     reminderAlreadySentAt: reminderEvents?.[0]?.created_at ?? null,
     reminderSkipped: isSkippedReminderEvent(reminderEvents?.[0]),
+    extensionCount: extensionCount ?? 0,
     reportReady,
     today: todayIso(),
   })

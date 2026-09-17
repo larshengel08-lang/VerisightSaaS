@@ -4,6 +4,8 @@ import { getResponseActivationThresholds } from '@/lib/response-activation'
 import { isReminderDue } from '@/lib/dashboard/reminder-due'
 import { formatDutchDate } from '@/lib/dashboard/format-dutch-date'
 import { buildCampaignTimeline, type CampaignTimeline } from '@/lib/dashboard/campaign-timeline'
+import { canExtendCampaign, extensionsLeft, MAX_EXTENSIONS } from '@/lib/dashboard/campaign-extension'
+import { LOEP_CONTACT_EMAIL } from '@/lib/loep-contact'
 
 export type DashboardStateKind =
   | 'no_campaign'
@@ -45,16 +47,21 @@ export interface DashboardStateInput {
   reminderAlreadySentAt: string | null
   /** Dat event had metadata.channel = 'skipped_by_customer'. */
   reminderSkipped: boolean
-  /** isReportReleaseReady(total_completed, { scanType }) — 10 ingevuld (30 bij culture_assessment). */
+  /** Aantal delivery_lifecycle_changed-events met metadata.extension = true. */
+  extensionCount: number
+  /** isReportReleaseReady(total_completed, { scanType }): 10 ingevuld (30 bij culture_assessment). */
   reportReady: boolean
   /** Injected YYYY-MM-DD for deterministic tests. */
   today: string
 }
 
+export type DashboardCtaKind = 'link' | 'copy_reminder' | 'close_campaign' | 'extend'
+export type DashboardSecondaryActionKind = 'link' | 'close_campaign' | 'extend' | 'skip_reminder'
+
 export interface DashboardSecondaryAction {
   label: string
   /** 'link' renders an anchor; the others are handled by the client island. */
-  kind: 'link' | 'close_without_report' | 'extend' | 'skip_reminder'
+  kind: DashboardSecondaryActionKind
   href?: string
 }
 
@@ -68,14 +75,21 @@ export interface DashboardState {
   tone: DashboardStateTone
   ctaLabel: string | null
   ctaHref: string | null
-  /** For State 3 reminder: signals the client island to show the copy→confirm flow. */
-  ctaKind: 'link' | 'copy_reminder' | 'close_campaign' | null
+  /** copy_reminder, close_campaign en extend worden door het client-eiland afgehandeld. */
+  ctaKind: DashboardCtaKind | null
   secondaryActions: DashboardSecondaryAction[]
   showProgress: boolean
   progressPct: number
   closeDateLabel: string
   /** Tijdlijn met datums (spec 2026-09-16 par. 4.2); alleen voor een gelanceerde, lopende meting. */
   timeline: CampaignTimeline | null
+  /** Voor de sluitdialoog (spec par. 4.3): X van Y, en of er bij sluiting een rapport is. */
+  totalCompleted: number
+  totalInvited: number
+  reportReady: boolean
+  reportThreshold: number
+  canExtend: boolean
+  extensionsLeft: number
   /** Set true where a real backend field is missing and the value is derived/degraded. */
   degraded: boolean
 }
@@ -98,6 +112,12 @@ const EMPTY_STATE: Omit<DashboardState, 'kind' | 'primaryMessage' | 'subtext' | 
   progressPct: 0,
   closeDateLabel: 'Sluitdatum: nog niet ingesteld',
   timeline: null,
+  totalCompleted: 0,
+  totalInvited: 0,
+  reportReady: false,
+  reportThreshold: 0,
+  canExtend: false,
+  extensionsLeft: 0,
   degraded: false,
 }
 
@@ -118,38 +138,62 @@ export function resolveDashboardState(input: DashboardStateInput): DashboardStat
   const close = buildCloseDateLabel(input.closesAt)
   const thresholds = getResponseActivationThresholds(campaign.scanType)
   const progressPct = Number.isFinite(campaign.completionRatePct) ? campaign.completionRatePct : 0
+  const counts = `${campaign.totalCompleted} van ${campaign.totalInvited} ingevuld (${progressPct}%)`
+  const base = {
+    campaignId: campaign.id,
+    totalCompleted: campaign.totalCompleted,
+    totalInvited: campaign.totalInvited,
+    reportReady: input.reportReady,
+    reportThreshold: thresholds.insightMin,
+    closeDateLabel: close.label,
+  }
 
   // Priority 1 & 2 — closed campaign: report_ready beats processing
   if (!campaign.isActive) {
     if (input.reportReady) {
       return {
         ...EMPTY_STATE,
+        ...base,
         kind: 'report_ready',
-        campaignId: campaign.id,
         primaryMessage: 'Je rapport is beschikbaar',
         subtext: `${campaign.totalCompleted} respondenten · Gesloten ${formatDutchDate(campaign.closedAt) ?? 'recent'}`,
         tone: 'neutral',
         ctaLabel: 'Open rapport',
         ctaHref: `/campaigns/${campaign.id}`,
         ctaKind: 'link',
-        closeDateLabel: close.label,
         degraded: close.degraded,
       }
     }
 
     const enough = campaign.totalCompleted >= thresholds.insightMin
+    if (enough) {
+      return {
+        ...EMPTY_STATE,
+        ...base,
+        kind: 'processing',
+        processingVariant: 'generating',
+        primaryMessage: 'Rapport wordt voorbereid',
+        subtext: 'Je ontvangt een e-mail zodra het rapport gereed is. Dit duurt doorgaans minder dan een dag.',
+        tone: 'neutral',
+        degraded: true, // no async processing/failed signal exists yet
+      }
+    }
+
+    // Eindtoestand (spec 2026-09-16 par. 4.5): geen belofte van een e-mail die
+    // niet komt; wel de weg naar een nieuwe meting.
+    const subject = encodeURIComponent(`Opnieuw meten: ${campaign.name}`)
     return {
       ...EMPTY_STATE,
+      ...base,
       kind: 'processing',
-      processingVariant: enough ? 'generating' : 'insufficient_response',
-      campaignId: campaign.id,
-      primaryMessage: enough ? 'Rapport wordt voorbereid' : 'Rapport nog niet beschikbaar',
-      subtext: enough
-        ? 'Je ontvangt een e-mail zodra het rapport gereed is. Dit duurt doorgaans minder dan een dag.'
-        : `Deze campagne is gesloten met ${campaign.totalCompleted} ingevulde reacties. Dat is te weinig voor een veilig rapport.`,
+      processingVariant: 'insufficient_response',
+      primaryMessage: 'Gesloten zonder rapport',
+      subtext: `Deze meting is gesloten met ${campaign.totalCompleted} ingevulde vragenlijsten. Voor een rapport zijn er minimaal ${thresholds.insightMin} nodig. Wil je opnieuw meten? Mail Loep.`,
       tone: 'neutral',
-      closeDateLabel: close.label,
-      degraded: true, // no async processing/failed signal exists yet
+      ctaLabel: 'Mail Loep',
+      ctaHref: `mailto:${LOEP_CONTACT_EMAIL}?subject=${subject}`,
+      ctaKind: 'link',
+      degraded: true,
     }
   }
 
@@ -158,15 +202,14 @@ export function resolveDashboardState(input: DashboardStateInput): DashboardStat
   if (!launched) {
     return {
       ...EMPTY_STATE,
+      ...base,
       kind: 'setup',
-      campaignId: campaign.id,
       primaryMessage: 'Stap 1: stel de startdatum in',
       subtext: 'Vul de startdatum en het aantal deelnemers in, en kopieer de uitnodigingstekst.',
       tone: 'calm',
       ctaLabel: 'Start de setup →',
       ctaHref: `/campaigns/${campaign.id}/setup`,
       ctaKind: 'link',
-      closeDateLabel: close.label,
       degraded: close.degraded,
     }
   }
@@ -182,37 +225,66 @@ export function resolveDashboardState(input: DashboardStateInput): DashboardStat
     scanType: campaign.scanType,
     today: input.today,
   })
+  const canExtend = canExtendCampaign(input.extensionCount)
+  const running = {
+    ...base,
+    timeline,
+    canExtend,
+    extensionsLeft: extensionsLeft(input.extensionCount),
+    showProgress: true,
+    progressPct,
+    degraded: close.degraded,
+  }
+  const closeAction: DashboardSecondaryAction = { label: 'Meting sluiten', kind: 'close_campaign' }
+  const extendAction: DashboardSecondaryAction = { label: 'Twee weken verlengen', kind: 'extend' }
 
   // Priority 3 — expired (close date reached). Disabled while closesAt is null.
   // Compare date-only portions so a full ISO closesAt timestamp still fires on the close day.
   const expired = input.closesAt !== null && input.today.slice(0, 10) >= input.closesAt.slice(0, 10)
   if (expired) {
-    const enough = campaign.totalCompleted >= thresholds.dashboardMin
+    if (input.reportReady) {
+      return {
+        ...EMPTY_STATE,
+        ...running,
+        kind: 'action',
+        actionVariant: 'expired',
+        primaryMessage: 'De sluitdatum is bereikt',
+        subtext: `${counts}. Sluit de meting, dan staat het rapport klaar.`,
+        tone: 'attention',
+        ctaLabel: 'Meting sluiten',
+        ctaKind: 'close_campaign',
+        secondaryActions: canExtend ? [extendAction] : [],
+      }
+    }
+    if (canExtend) {
+      return {
+        ...EMPTY_STATE,
+        ...running,
+        kind: 'action',
+        actionVariant: 'expired',
+        primaryMessage: 'De sluitdatum is bereikt',
+        subtext: `${counts}. Voor een rapport zijn minimaal ${thresholds.insightMin} antwoorden nodig. Verleng met twee weken of sluit zonder rapport.`,
+        tone: 'attention',
+        ctaLabel: 'Twee weken verlengen',
+        ctaKind: 'extend',
+        secondaryActions: [{ label: 'Toch sluiten', kind: 'close_campaign' }],
+      }
+    }
     return {
       ...EMPTY_STATE,
+      ...running,
       kind: 'action',
       actionVariant: 'expired',
-      campaignId: campaign.id,
-      primaryMessage: 'Campagne is verlopen — sluit nu af',
-      subtext: `${campaign.totalCompleted} van ${campaign.totalInvited} ingevuld (${progressPct}%)`,
+      primaryMessage: 'De sluitdatum is bereikt',
+      subtext: `${counts}. Voor een rapport zijn minimaal ${thresholds.insightMin} antwoorden nodig. Je hebt de meting al ${MAX_EXTENSIONS} keer verlengd; je kunt hem alleen nog sluiten.`,
       tone: 'attention',
-      ctaLabel: 'Campagne sluiten',
+      ctaLabel: 'Meting sluiten',
       ctaKind: 'close_campaign',
-      secondaryActions: enough
-        ? []
-        : [
-            { label: 'Campagne verlengen', kind: 'extend' },
-            { label: 'Sluiten zonder rapport', kind: 'close_without_report' },
-          ],
-      showProgress: true,
-      progressPct,
-      timeline,
-      closeDateLabel: close.label,
-      degraded: close.degraded,
+      secondaryActions: [],
     }
   }
 
-  // Priority 4 — reminder day
+  // Priority 4 — reminder day (spec 4.4: de kaart verschijnt pas op die dag)
   const reminderDue = isReminderDue({
     launchDate: input.launchDate,
     delayDays: input.reminderConfig.firstReminderAfterDays,
@@ -222,20 +294,15 @@ export function resolveDashboardState(input: DashboardStateInput): DashboardStat
   if (input.reminderConfig.enabled && reminderDue) {
     return {
       ...EMPTY_STATE,
+      ...running,
       kind: 'action',
       actionVariant: 'reminder',
-      campaignId: campaign.id,
       primaryMessage: 'Vandaag: stuur de herinnering',
-      subtext: `${campaign.totalCompleted} van ${campaign.totalInvited} ingevuld (${progressPct}%) · ${close.label}`,
+      subtext: counts,
       tone: 'attention',
-      ctaLabel: 'Kopieer herinneringstekst',
+      ctaLabel: 'Ik heb de herinnering verstuurd',
       ctaKind: 'copy_reminder',
-      secondaryActions: [{ label: 'Geen herinnering versturen', kind: 'skip_reminder' }],
-      showProgress: true,
-      progressPct,
-      timeline,
-      closeDateLabel: close.label,
-      degraded: close.degraded,
+      secondaryActions: [{ label: 'Geen herinnering versturen', kind: 'skip_reminder' }, closeAction],
     }
   }
 
@@ -243,34 +310,26 @@ export function resolveDashboardState(input: DashboardStateInput): DashboardStat
   if (input.reportReady) {
     return {
       ...EMPTY_STATE,
+      ...running,
       kind: 'action',
       actionVariant: 'sufficient_response',
-      campaignId: campaign.id,
       primaryMessage: 'Voldoende respons voor een rapport',
-      subtext: `Je kunt de campagne sluiten of nog even open laten. ${campaign.totalCompleted} van ${campaign.totalInvited} ingevuld (${progressPct}%) · ${close.label}`,
+      subtext: `Je kunt de meting sluiten of nog even open laten. ${counts}`,
       tone: 'attention',
-      ctaLabel: 'Campagne sluiten',
+      ctaLabel: 'Meting sluiten',
       ctaKind: 'close_campaign',
-      showProgress: true,
-      progressPct,
-      timeline,
-      closeDateLabel: close.label,
-      degraded: close.degraded,
+      secondaryActions: [],
     }
   }
 
-  // Priority 5 — running normally
+  // Priority 5 — running normally; sluiten blijft altijd bereikbaar (spec 4.3)
   return {
     ...EMPTY_STATE,
+    ...running,
     kind: 'running',
-    campaignId: campaign.id,
     primaryMessage: 'Campagne loopt',
     subtext: `${campaign.totalCompleted} van ${campaign.totalInvited} ingevuld`,
     tone: 'positive',
-    showProgress: true,
-    progressPct,
-    timeline,
-    closeDateLabel: close.label,
-    degraded: close.degraded,
+    secondaryActions: [closeAction],
   }
 }

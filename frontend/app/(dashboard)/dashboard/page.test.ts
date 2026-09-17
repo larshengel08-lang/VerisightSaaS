@@ -43,4 +43,10 @@ describe('state-driven dashboard page', () => {
     expect(source).toContain("membership?.role === 'owner'")
     expect(source).toContain('ReadOnlyStateCard')
   })
+
+  it('telt de verlengingen uit de auditevents (spec 2026-09-16 par. 4.3)', () => {
+    expect(source).toContain("contains('metadata', { extension: true })")
+    expect(source).toContain('extensionCount: extensionCount ?? 0')
+    expect(source).toContain('isSkippedReminderEvent(reminderEvents?.[0])')
+  })
 })

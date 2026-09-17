@@ -63,3 +63,14 @@ describe('dashboard server actions', () => {
     expect(noRecipientsIdx).toBeGreaterThan(mailFailedIdx)
   })
 })
+
+describe('levenscyclus-acties (spec 2026-09-16 par. 4.3)', () => {
+  it('exporteert extendCampaignAction en skipReminderAction met de afgesproken auditvorm', () => {
+    expect(source).toContain('export async function extendCampaignAction')
+    expect(source).toContain('export async function skipReminderAction')
+    expect(source).toContain("contains('metadata', { extension: true })")
+    expect(source).toContain("channel: 'skipped_by_customer'")
+    expect(source).toContain('computeExtendedClosesAt')
+    expect(source).toContain('canExtendCampaign')
+  })
+})
