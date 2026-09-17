@@ -789,20 +789,19 @@ import subprocess  # noqa: E402
 import sys  # noqa: E402
 from pathlib import Path  # noqa: E402
 
-import pymupdf  # noqa: E402
-
 from backend.report_css import build_css  # noqa: E402
-from scripts.check_pdf_report import (  # noqa: E402
-    ALLE_REGELS,
-    MIN_FILL,
-    REGEL_P02,
-    REGEL_THEAD,
-    REGEL_VERWIJZING,
-    REGEL_VULLING,
-    check,
-    first_text,
-    page_fill,
-)
+from tests.conftest import requires_pymupdf  # noqa: E402
+
+# PyMuPDF staat in requirements-dev.txt, niet in requirements.txt. Een
+# module-level import zou zonder dat pakket de hele collectie van tests/ laten
+# vallen, en die collectie is de poort voor de faalset-diff; daarom een geguarde
+# import plus @requires_pymupdf op de tests die echt meten.
+try:                                        # noqa: E402
+    import pymupdf
+
+    from scripts import check_pdf_report as cpr
+except ImportError:                         # pragma: no cover - alleen zonder pymupdf
+    pymupdf = cpr = None
 
 _SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "check_pdf_report.py"
 
@@ -882,6 +881,8 @@ def test_css_houdt_pagina_twee_compact():
     assert re.search(r"\.why\s*\{([^}]+)\}", css).group(1).count("border-left") == 1
 
 
+
+
 # ── De meetlogica van check_pdf_report.py, gemeten op gebouwde PDF's ─────────
 #
 # WeasyPrint kan op Windows niet renderen (geen GTK) en de Docker-image was in
@@ -895,10 +896,11 @@ def test_css_houdt_pagina_twee_compact():
 _A4 = (595.0, 842.0)
 
 
-def _bouw_pdf(pad: Path, paginas: list[list[tuple[float, str]]]) -> Path:
+def _bouw_pdf(pad: Path, paginas: list[list[tuple[float, str]]],
+              formaat: tuple[float, float] = _A4) -> Path:
     doc = pymupdf.open()
     for regels in paginas:
-        page = doc.new_page(width=_A4[0], height=_A4[1])
+        page = doc.new_page(width=formaat[0], height=formaat[1])
         for y, tekst in regels:
             page.insert_text((60.0, y), tekst, fontsize=11)
     doc.save(str(pad))
@@ -917,13 +919,19 @@ def _vulregels(vanaf: float, tot: float, label: str) -> list[tuple[float, str]]:
 
 def _goed_rapport(pad: Path, *, p2_extra: list[tuple[float, str]] | None = None,
                   p3_kop: str = "02 Behoudscontext",
-                  p4_regels: list[tuple[float, str]] | None = None) -> Path:
+                  p4_regels: list[tuple[float, str]] | None = None,
+                  formaat: tuple[float, float] = _A4) -> Path:
+    # Vijf tijdvakken met een gevulde verwijzing, zoals de echte leidraad ze
+    # levert: minder dan vijf is zelf een bevinding (weggevallen anker).
     p2 = ([(60.0, "Behoud vraagt aandacht op een kwetsbaar onderwerp.")]
-          + _vulregels(90.0, 620.0, "p2")
-          + [(660.0, "Zo leid je dit gesprek in 45 minuten"),
-             (680.0, "Lees eerst het overzichtsprofiel op pagina 4"),
-             (700.0, "Sluit af met de gespreksagenda op pagina 6"),
-             (730.0, "Meetgegevens")]
+          + _vulregels(90.0, 600.0, "p2")
+          + [(640.0, "Zo leid je dit gesprek in 45 minuten"),
+             (660.0, "0-5 min: de drempels staan op pagina 7"),
+             (675.0, "5-12 min: het cijferoverzicht op pagina 4"),
+             (690.0, "12-25 min: de verdieping op pagina 5"),
+             (705.0, "25-33 min: de werkbeleving op pagina 6"),
+             (720.0, "33-45 min: het besluit op pagina 3"),
+             (740.0, "Meetgegevens")]
           + (p2_extra or []))
     return _bouw_pdf(pad, [
         [(400.0, "Loep Behoud"), (430.0, "Voorjaar 2026")],                 # cover
@@ -934,9 +942,10 @@ def _goed_rapport(pad: Path, *, p2_extra: list[tuple[float, str]] | None = None,
         [(60.0, "04 Verdieping")] + _vulregels(90.0, 760.0, "p5"),
         [(60.0, "05 Werkbeleving")] + _vulregels(90.0, 760.0, "p6"),
         [(60.0, "06 Methodiek"), (90.0, "korte slotpagina")],               # laatste
-    ])
+    ], formaat=formaat)
 
 
+@requires_pymupdf
 def test_page_fill_meet_de_tekstkolom_zonder_voetregel(tmp_path: Path):
     pad = _bouw_pdf(tmp_path / "vulling.pdf", [
         _vulregels(60.0, 780.0, "vol"),
@@ -945,18 +954,20 @@ def test_page_fill_meet_de_tekstkolom_zonder_voetregel(tmp_path: Path):
     ])
     doc = pymupdf.open(str(pad))
     try:
-        assert page_fill(doc[0]) > 0.95
-        assert 0.15 < page_fill(doc[1]) < 0.25
-        assert page_fill(doc[2]) == 0.0          # onder FOOTER_PT telt niet mee
-        assert first_text(doc[1]).startswith("leeg regel op 60")
+        assert cpr.page_fill(doc[0]) > 0.95
+        assert 0.15 < cpr.page_fill(doc[1]) < 0.25
+        assert cpr.page_fill(doc[2]) == 0.0          # onder FOOTER_PT telt niet mee
+        assert cpr.first_text(doc[1]).startswith("leeg regel op 60")
     finally:
         doc.close()
 
 
+@requires_pymupdf
 def test_check_keurt_een_goed_rapport_goed(tmp_path: Path):
-    assert check(str(_goed_rapport(tmp_path / "goed.pdf"))) == []
+    assert cpr.check(str(_goed_rapport(tmp_path / "goed.pdf"))) == []
 
 
+@requires_pymupdf
 def test_check_ziet_de_meetgegevens_van_pagina_twee_glijden(tmp_path: Path):
     pad = _bouw_pdf(tmp_path / "overloop.pdf", [
         [(400.0, "cover")],
@@ -965,46 +976,51 @@ def test_check_ziet_de_meetgegevens_van_pagina_twee_glijden(tmp_path: Path):
         [(60.0, "02 Behoudscontext")] + _vulregels(90.0, 760.0, "p4"),
         [(60.0, "korte slotpagina")],
     ])
-    bevindingen = check(str(pad), regels=(REGEL_P02,))
+    bevindingen = cpr.check(str(pad), regels=(cpr.REGEL_P02,))
     meldingen = [b.melding for b in bevindingen]
     assert any("bevat de meetgegevens niet" in m for m in meldingen)
     assert any("pagina 3 begint niet met hoofdstuk 02" in m for m in meldingen)
-    assert all(b.regel == REGEL_P02 for b in bevindingen)
+    assert all(b.regel == cpr.REGEL_P02 for b in bevindingen)
 
 
+@requires_pymupdf
 def test_check_ziet_een_andere_kop_op_pagina_drie(tmp_path: Path):
     pad = _goed_rapport(tmp_path / "p3.pdf", p3_kop="Segmentstatus")
-    bevindingen = check(str(pad), regels=(REGEL_P02,))
-    assert [b.regel for b in bevindingen] == [REGEL_P02]
+    bevindingen = cpr.check(str(pad), regels=(cpr.REGEL_P02,))
+    assert [b.regel for b in bevindingen] == [cpr.REGEL_P02]
     assert "Segmentstatus" in bevindingen[0].melding
 
 
+@requires_pymupdf
 def test_check_ziet_een_te_lege_pagina_en_spaart_cover_en_slot(tmp_path: Path):
     pad = _goed_rapport(tmp_path / "leeg.pdf",
                         p4_regels=[(60.0, "03 Overzichtsprofiel"), (90.0, "een regel")])
-    bevindingen = check(str(pad), regels=(REGEL_VULLING,))
+    bevindingen = cpr.check(str(pad), regels=(cpr.REGEL_VULLING,))
     assert len(bevindingen) == 1, [b.melding for b in bevindingen]
     assert bevindingen[0].melding.startswith("pagina 4 is ")
-    assert "< 40%" in bevindingen[0].melding and MIN_FILL == 0.40
+    assert "< 40%" in bevindingen[0].melding and cpr.MIN_FILL == 0.40
     assert "03 Overzichtsprofiel" in bevindingen[0].melding
 
 
+@requires_pymupdf
 def test_check_ziet_een_verwijzing_buiten_het_document(tmp_path: Path):
     pad = _goed_rapport(tmp_path / "ref.pdf",
-                        p2_extra=[(750.0, "zie pagina 99 voor de afdelingen")])
-    bevindingen = check(str(pad), regels=(REGEL_VERWIJZING,))
+                        p2_extra=[(765.0, "zie pagina 99 voor de afdelingen")])
+    bevindingen = cpr.check(str(pad), regels=(cpr.REGEL_VERWIJZING,))
     assert [b.melding for b in bevindingen] == [
         "verwijzing naar pagina 99 buiten het document (7 pagina's)"]
 
 
+@requires_pymupdf
 def test_check_ziet_een_verwijzing_naar_een_pagina_zonder_hoofdstukkop(tmp_path: Path):
     pad = _goed_rapport(tmp_path / "ref2.pdf",
-                        p2_extra=[(750.0, "zie pagina 2 voor de meetgegevens")])
-    bevindingen = check(str(pad), regels=(REGEL_VERWIJZING,))
+                        p2_extra=[(765.0, "zie pagina 2 voor de meetgegevens")])
+    bevindingen = cpr.check(str(pad), regels=(cpr.REGEL_VERWIJZING,))
     assert len(bevindingen) == 1
     assert bevindingen[0].melding.startswith("pagina 2 begint niet met een hoofdstukkop")
 
 
+@requires_pymupdf
 def test_check_leest_een_verwijzing_die_over_twee_regels_afbreekt(tmp_path: Path):
     """In de tekstlaag kunnen "pagina" en het nummer dat target-counter erachter
     zet op twee regels staan; de meting normaliseert daarom de witruimte."""
@@ -1015,15 +1031,77 @@ def test_check_leest_een_verwijzing_die_over_twee_regels_afbreekt(tmp_path: Path
         [(60.0, "02 Behoudscontext")] + _vulregels(90.0, 760.0, "p3"),
         [(60.0, "korte slotpagina")],
     ])
-    assert [b.melding for b in check(str(pad), regels=(REGEL_VERWIJZING,))] == [
+    assert [b.melding for b in cpr.check(str(pad), regels=(cpr.REGEL_VERWIJZING,))] == [
         "verwijzing naar pagina 99 buiten het document (4 pagina's)"]
 
 
+@requires_pymupdf
+def test_check_ziet_verwijzingen_die_leeg_renderden(tmp_path: Path):
+    """Het gevaarlijkste geval: een ontbrekend anker levert geen fout nummer maar
+    geen nummer. "pagina ." mag nooit als "geen overtreding" langsglippen, en
+    een leidraad met minder dan vijf gevulde nummers ook niet."""
+    pad = _bouw_pdf(tmp_path / "leegref.pdf", [
+        [(400.0, "cover")],
+        [(60.0, "Behoud vraagt aandacht op een kwetsbaar onderwerp.")]
+        + _vulregels(90.0, 600.0, "p2")
+        + [(640.0, "Zo leid je dit gesprek in 45 minuten"),
+           (660.0, "0-5 min: de drempels staan op pagina ."),
+           (680.0, "5-12 min: het cijferoverzicht (pagina ) en de blijfintentie"),
+           (700.0, "12-25 min: de score van elke stelling (pagina )"),
+           (730.0, "Meetgegevens")],
+        [(60.0, "02 Behoudscontext")] + _vulregels(90.0, 760.0, "p3"),
+        [(60.0, "korte slotpagina")],
+    ])
+    meldingen = [b.melding for b in cpr.check(str(pad), regels=(cpr.REGEL_VERWIJZING,))]
+    assert any("3 verwijzing(en) zonder nummer" in m for m in meldingen), meldingen
+    assert any("0 gevulde verwijzing(en)" in m for m in meldingen), meldingen
+
+
+@requires_pymupdf
+def test_check_rekent_een_verwijzing_naar_de_eigen_pagina_niet_mee(tmp_path: Path):
+    """p.02 verwijst ook naar zichzelf ("de meetgegevens op deze pagina;"). Dat
+    is geen weggelopen verwijzing, en de degraded staat zonder leidraad hoort
+    helemaal geen verwijzingen te hebben."""
+    pad = _bouw_pdf(tmp_path / "zelf.pdf", [
+        [(400.0, "cover")],
+        [(60.0, "Wat dit rapport wel en niet laat zien")]
+        + _vulregels(90.0, 700.0, "p2")
+        + [(720.0, "Lees de meetgegevens onderaan deze pagina."), (740.0, "Meetgegevens")],
+        [(60.0, "02 Behoudscontext")] + _vulregels(90.0, 760.0, "p3"),
+        [(60.0, "korte slotpagina")],
+    ])
+    assert cpr.check(str(pad), regels=(cpr.REGEL_VERWIJZING,)) == []
+
+
+@requires_pymupdf
+def test_check_eist_vijf_gevulde_verwijzingen_zodra_de_leidraad_er_staat(tmp_path: Path):
+    """Met de leidraad horen er vijf nummers te staan; vier is een weggevallen
+    anker, ook als die vier alle vier naar een echte hoofdstukpagina wijzen."""
+    vier = [(660.0, "Zo leid je dit gesprek in 45 minuten"),
+            (680.0, "0-5 min: pagina 3"), (700.0, "5-12 min: pagina 4"),
+            (715.0, "12-25 min: pagina 5"), (730.0, "25-33 min: pagina 6"),
+            (745.0, "Meetgegevens")]
+    pad = _bouw_pdf(tmp_path / "vier.pdf", [
+        [(400.0, "cover")],
+        [(60.0, "kernzin")] + _vulregels(90.0, 620.0, "p2") + vier,
+        [(60.0, "02 Behoudscontext")] + _vulregels(90.0, 760.0, "p3"),
+        [(60.0, "03 Overzichtsprofiel")] + _vulregels(90.0, 760.0, "p4"),
+        [(60.0, "04 Verdieping")] + _vulregels(90.0, 760.0, "p5"),
+        [(60.0, "05 Werkbeleving")] + _vulregels(90.0, 760.0, "p6"),
+        [(60.0, "korte slotpagina")],
+    ])
+    meldingen = [b.melding for b in cpr.check(str(pad), regels=(cpr.REGEL_VERWIJZING,))]
+    assert meldingen == [
+        "pagina 2 draagt de leidraad maar 4 gevulde verwijzing(en) "
+        "([3, 4, 5, 6]); dat blok levert er minstens 5"]
+
+
+@requires_pymupdf
 def test_check_thead_alleen_met_vlag(tmp_path: Path):
     pad = _goed_rapport(tmp_path / "thead.pdf")
-    assert check(str(pad), thead=None) == []
-    bevindingen = check(str(pad), thead="04 Verdieping")
-    assert [b.regel for b in bevindingen] == [REGEL_THEAD]
+    assert cpr.check(str(pad), thead=None) == []
+    bevindingen = cpr.check(str(pad), thead="04 Verdieping")
+    assert [b.regel for b in bevindingen] == [cpr.REGEL_THEAD]
     assert "staat op [5]" in bevindingen[0].melding
     # Een kop die zich op de vervolgpagina herhaalt, staat op twee pagina's.
     herhaald = _bouw_pdf(tmp_path / "herhaald.pdf", [
@@ -1034,25 +1112,68 @@ def test_check_thead_alleen_met_vlag(tmp_path: Path):
         [(60.0, "Onderwerp Score")] + _vulregels(90.0, 760.0, "p4"),
         [(60.0, "korte slotpagina")],
     ])
-    assert check(str(herhaald), thead="Onderwerp Score",
-                 regels=(REGEL_THEAD,)) == []
+    assert cpr.check(str(herhaald), thead="Onderwerp Score",
+                     regels=(cpr.REGEL_THEAD,)) == []
 
 
+@requires_pymupdf
 def test_check_meldt_een_document_dat_te_kort_is_om_te_meten(tmp_path: Path):
     pad = _bouw_pdf(tmp_path / "kort.pdf", [[(400.0, "cover")], [(60.0, "Meetgegevens")]])
-    bevindingen = check(str(pad))
-    assert [b.regel for b in bevindingen] == [REGEL_P02]
+    bevindingen = cpr.check(str(pad))
+    assert [b.regel for b in bevindingen] == [cpr.REGEL_P02]
     assert "2 pagina" in bevindingen[0].melding
     # Ook als de regelselectie hem niet vraagt: zwijgen zou lezen als "gemeten
     # en goed", en er is juist niets te meten.
-    assert check(str(pad), regels=(REGEL_VULLING,)) == bevindingen
+    assert cpr.check(str(pad), regels=(cpr.REGEL_VULLING,)) == bevindingen
 
 
+@requires_pymupdf
+def test_check_meldt_een_pagina_die_geen_a4_is(tmp_path: Path):
+    """De vulling wordt met de A4-marges gerekend; op een ander formaat is die
+    uitkomst niet te vertrouwen. Dat is een bevinding, geen crash, en hij komt
+    er ook als de selectie hem niet vraagt."""
+    pad = _goed_rapport(tmp_path / "liggend.pdf", formaat=(842.0, 595.0))
+    bevindingen = cpr.check(str(pad), regels=(cpr.REGEL_P02,))
+    formaat = [b for b in bevindingen if b.regel == cpr.REGEL_FORMAAT]
+    assert len(formaat) == 1, [str(b) for b in bevindingen]
+    assert "842x595pt" in formaat[0].melding and "595x842pt" in formaat[0].melding
+    assert cpr.check(str(_goed_rapport(tmp_path / "staand.pdf"))) == []
+
+
+@requires_pymupdf
 def test_check_meet_alleen_de_gevraagde_regels(tmp_path: Path):
     pad = _goed_rapport(tmp_path / "filter.pdf", p3_kop="Segmentstatus",
                         p4_regels=[(60.0, "03 Overzichtsprofiel"), (90.0, "een regel")])
-    assert {b.regel for b in check(str(pad), regels=ALLE_REGELS)} == {REGEL_P02, REGEL_VULLING}
-    assert {b.regel for b in check(str(pad), regels=(REGEL_VULLING,))} == {REGEL_VULLING}
+    # Drie regels vallen hier om: pagina 3 heeft de verkeerde kop, pagina 4 is
+    # bijna leeg, en de leidraad verwijst naar die kop-loze pagina 3.
+    assert {b.regel for b in cpr.check(str(pad), regels=cpr.ALLE_REGELS)} == {
+        cpr.REGEL_P02, cpr.REGEL_VULLING, cpr.REGEL_VERWIJZING}
+    assert {b.regel for b in cpr.check(str(pad), regels=(cpr.REGEL_VULLING,))} == {
+        cpr.REGEL_VULLING}
+    assert {b.regel for b in cpr.check(str(pad), regels=(cpr.REGEL_P02,))} == {cpr.REGEL_P02}
+
+
+@requires_pymupdf
+def test_check_leest_een_echt_gerenderd_rapport():
+    """De meetcode hierboven draait op zelfgebouwde PDF's; deze test zet hem op
+    een echte WeasyPrint-render, het gecommitte voorbeeldrapport. Dat bestand is
+    van vóór taak 5 en overtreedt dus regels (dat is precies H16), dus er wordt
+    niet gepind welke bevindingen eruit komen: alleen dat de meting op een echt
+    bestand werkt, dat het formaat klopt en dat elke bevinding een bekende regel
+    en een echte melding draagt. Taak 14 regenereert deze PDF.
+    """
+    pad = Path(__file__).resolve().parents[1] / "docs" / "examples" / "voorbeeldrapport_loep.pdf"
+    assert pad.exists(), pad
+    bevindingen = cpr.check(str(pad))
+    assert all(b.regel in cpr.ALLE_REGELS and b.melding.strip() for b in bevindingen)
+    assert not [b for b in bevindingen if b.regel == cpr.REGEL_FORMAAT], "moet A4 zijn"
+    doc = pymupdf.open(str(pad))
+    try:
+        assert doc.page_count > 10
+        assert cpr.page_fill(doc[1]) > 0.5           # p.02 draagt echt inhoud
+        assert cpr.first_text(doc[1])
+    finally:
+        doc.close()
 
 
 def _cli(*args: str) -> subprocess.CompletedProcess:
@@ -1061,6 +1182,7 @@ def _cli(*args: str) -> subprocess.CompletedProcess:
                           cwd=str(_SCRIPT.parents[1]))
 
 
+@requires_pymupdf
 def test_cli_faalt_hard_en_zegt_welke_regel(tmp_path: Path):
     goed = _goed_rapport(tmp_path / "cli-goed.pdf")
     uit = _cli(str(goed))
@@ -1070,7 +1192,7 @@ def test_cli_faalt_hard_en_zegt_welke_regel(tmp_path: Path):
     fout = _goed_rapport(tmp_path / "cli-fout.pdf", p3_kop="Segmentstatus")
     uit = _cli(str(fout))
     assert uit.returncode == 1
-    assert f"[{REGEL_P02}] pagina 3 begint niet met hoofdstuk 02" in uit.stdout
+    assert f"[{cpr.REGEL_P02}] pagina 3 begint niet met hoofdstuk 02" in uit.stdout
     assert "NIET OK" in uit.stdout
 
     uit = _cli(str(tmp_path / "bestaat-niet.pdf"))
@@ -1078,11 +1200,32 @@ def test_cli_faalt_hard_en_zegt_welke_regel(tmp_path: Path):
     assert "NIET GEMETEN" in uit.stdout
 
 
+@requires_pymupdf
+def test_cli_weigert_de_tabelkopregel_zonder_tabelkop(tmp_path: Path):
+    """Anders zegt de slotregel "gemeten: tabelkop" zonder iets te meten."""
+    goed = _goed_rapport(tmp_path / "cli-thead.pdf")
+    uit = _cli(str(goed), "--regel", cpr.REGEL_THEAD)
+    assert uit.returncode == 2, uit.stdout + uit.stderr
+    assert "--thead" in uit.stderr
+
+    # Omgekeerd net zo: een tabelkop meegeven terwijl de regel niet gevraagd is.
+    uit = _cli(str(goed), "--regel", cpr.REGEL_P02, "--thead", "Onderwerp Score")
+    assert uit.returncode == 2
+    assert "--thead meet alleen de regel" in uit.stderr
+
+    # Zonder --regel meet de CLI alles; dan is de tabelkopregel optioneel en
+    # zegt de slotregel eerlijk dat hij niet gemeten is.
+    uit = _cli(str(goed))
+    assert uit.returncode == 0
+    assert "tabelkop (niet gemeten, geen --thead)" in uit.stdout
+
+
 @requires_weasyprint
+@requires_pymupdf
 def test_de_echte_pdf_zet_de_meetgegevens_op_pagina_twee(tmp_path: Path):
     """H16 op de echte render: pagina 2 eindigt met de meetgegevens en pagina 3
-    begint met hoofdstuk 02. De vullingsregel hoort bij taak 8 en wordt hier
-    niet gemeten.
+    begint met hoofdstuk 02, en elke paginaverwijzing op p.02 draagt een nummer.
+    De vullingsregel hoort bij taak 8 en wordt hier niet gemeten.
 
     Slaat over waar WeasyPrint niet kan renderen (Windows zonder GTK); valideer
     daar via de WeasyPrint-Docker-image en scripts/check_pdf_report.py, zie
@@ -1092,5 +1235,5 @@ def test_de_echte_pdf_zet_de_meetgegevens_op_pagina_twee(tmp_path: Path):
 
     pad = tmp_path / "retention.pdf"
     HTML(string=render_retention_report_html(_retention_met_secties())).write_pdf(str(pad))
-    bevindingen = check(str(pad), regels=(REGEL_P02, REGEL_VERWIJZING))
+    bevindingen = cpr.check(str(pad), regels=(cpr.REGEL_P02, cpr.REGEL_VERWIJZING))
     assert bevindingen == [], [str(b) for b in bevindingen]

@@ -4,3 +4,7 @@
 
 # Testing
 pytest>=9.0.0
+
+# PDF-metingen op een gerenderd rapport (scripts/check_pdf_report.py en de
+# report-tests die de tekstlaag van een PDF lezen)
+pymupdf>=1.24.0
