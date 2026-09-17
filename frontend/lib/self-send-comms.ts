@@ -257,7 +257,7 @@ interface TemplateArgs {
 // ontvanger kent Loep niet, dus de scannaam staat niet in de mail; de
 // vragenlijstpagina zelf noemt Loep wel.
 function signature(args: TemplateArgs): string {
-  return args.senderName || args.organizationName
+  return args.senderName.trim() || args.organizationName.trim()
 }
 
 function buildLinkLines(args: TemplateArgs): string[] {

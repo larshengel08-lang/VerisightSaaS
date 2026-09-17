@@ -144,6 +144,32 @@ describe('self-send-comms', () => {
       surveyLink: 'https://www.getloep.nl/survey/open/tok-123',
     })
     expect(invite.body.trimEnd().endsWith('Met vriendelijke groet,\nSanne de Vries')).toBe(true)
+
+    const reminder = buildReminderTemplate({
+      senderName: 'Sanne de Vries',
+      organizationName: 'Acme BV',
+      scanType: 'retention',
+      surveyLink: 'https://www.getloep.nl/survey/open/tok-123',
+    })
+    expect(reminder.body.trimEnd().endsWith('Met vriendelijke groet,\nSanne de Vries')).toBe(true)
+  })
+
+  it('valt terug op de organisatienaam als de afzendernaam alleen witruimte is', () => {
+    const invite = buildInviteTemplate({
+      senderName: '   ',
+      organizationName: 'Acme BV',
+      scanType: 'exit',
+      surveyLink: 'https://www.getloep.nl/survey/open/tok-123',
+    })
+    expect(invite.body.trimEnd().endsWith('Met vriendelijke groet,\nAcme BV')).toBe(true)
+
+    const reminder = buildReminderTemplate({
+      senderName: '   ',
+      organizationName: 'Acme BV',
+      scanType: 'retention',
+      surveyLink: 'https://www.getloep.nl/survey/open/tok-123',
+    })
+    expect(reminder.body.trimEnd().endsWith('Met vriendelijke groet,\nAcme BV')).toBe(true)
   })
 
   it('normalizes partial stored config without losing edited templates', () => {
