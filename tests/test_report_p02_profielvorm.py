@@ -111,8 +111,9 @@ def test_vlakke_zin_noemt_laagste_en_hoogste_met_scores():
                               "culture": "Cultuur en psychologische veiligheid"})
     assert zin == (
         "Geen enkel onderwerp springt eruit: alle zes liggen binnen één punt "
-        "van elkaar (laagste Groeiperspectief en Beloning en eerlijkheid 5.7/10, "
-        "hoogste Cultuur en psychologische veiligheid 6.3/10). Dat is zelf de bevinding."
+        "van elkaar (laagste score 5.7/10, gedeeld door twee onderwerpen: "
+        "Groeiperspectief, Beloning en eerlijkheid; hoogste Cultuur en "
+        "psychologische veiligheid 6.3/10). Dat is zelf de bevinding."
     )
     assert "—" not in zin
 

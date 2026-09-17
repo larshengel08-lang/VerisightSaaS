@@ -377,16 +377,31 @@ def _p02_flat_sentence(shape: dict[str, Any], labels: dict[str, str]) -> str:
     de laagste getoonde score, dan staan ze allemaal in de zin. Een ontbrekend
     factorlabel is een bug en geen reden om de interne sleutel in klantcopy te
     zetten, dus die opzoeking faalt hard.
+
+    Gedeelde laagste score: telwoord, dubbele punt en komma's, geen "en" tussen
+    de labels. Bijna elk label bevat zelf al "en", en "Leiderschap en vertrouwen
+    en Cultuur en psychologische veiligheid" leest als één lang label.
+    Tonen alle onderwerpen dezelfde score, dan heet geen enkel onderwerp
+    laagste of hoogste: dan zou hetzelfde onderwerp beide zijn.
     """
     if not shape["flat"]:
         raise ValueError("_p02_flat_sentence: alleen bij een vlak profiel")
     telwoord = _TELWOORD[shape["n_factors"]]
-    laagste = _opsomming([labels[fk] for fk in _p02_laagste_keys(shape)])
+    laagste_keys = _p02_laagste_keys(shape)
+    if len(laagste_keys) == shape["n_factors"]:
+        return (f"Geen enkel onderwerp springt eruit: alle {telwoord} onderwerpen "
+                f"scoren {_score_str(shape['low_score'])}. Dat is zelf de bevinding.")
     high = labels[shape["high_key"]]
+    if len(laagste_keys) > 1:
+        laagste = (f"laagste score {_score_str(shape['low_score'])}, gedeeld door "
+                   f"{_TELWOORD[len(laagste_keys)]} onderwerpen: "
+                   f"{', '.join(labels[fk] for fk in laagste_keys)}; ")
+    else:
+        laagste = (f"laagste {labels[laagste_keys[0]]} "
+                   f"{_score_str(shape['low_score'])}, ")
     return (f"Geen enkel onderwerp springt eruit: alle {telwoord} liggen binnen "
             f"{_flat_span_woorden()} van elkaar "
-            f"(laagste {laagste} {_score_str(shape['low_score'])}, "
-            f"hoogste {high} {_score_str(shape['high_score'])}). "
+            f"({laagste}hoogste {high} {_score_str(shape['high_score'])}). "
             f"Dat is zelf de bevinding.")
 
 
@@ -463,6 +478,7 @@ def _p02_startpunt_zin(primary_label: str, *, tie_break_kind: str | None,
                        next_delta: float | None,
                        direction_state_key: str | None,
                        primary_is_lowest: bool,
+                       gelijk_met: list[str] | None = None,
                        indicatief: bool = False) -> str:
     """Welk onderwerp Loep als startpunt kiest, met de grond erbij.
 
@@ -510,17 +526,28 @@ def _p02_startpunt_zin(primary_label: str, *, tie_break_kind: str | None,
                 f"om verandering dan bij {ander_label} ({a} van de {b} tegen {c} van "
                 f"de {d}).")
     if tie_break_kind is None and primary_is_lowest and next_delta is not None:
+        # next_delta is het verschil tussen GETOONDE scores (B15), dus 0 als de
+        # lezer twee keer hetzelfde getal ziet. De gelijke onderwerpen komen uit
+        # het profiel (gelijk_met), niet uit "de volgende rij": na een tie-break
+        # hoeft die niet de gelijke te zijn. Bij drie of meer gelijke onderwerpen
+        # een telwoord, zodat de zin geen lange opsomming wordt. Zonder bekende
+        # gelijke onderwerpen (alle onderwerpen gelijk: de kop zegt dat al) geen
+        # gelijkstandzin maar de kale keuze.
         if next_delta == 0.0:
+            if not gelijk_met:
+                return f"{kiest} {primary_label}."
+            met = (gelijk_met[0] if len(gelijk_met) == 1
+                   else f"{_TELWOORD[len(gelijk_met)]} andere onderwerpen")
             return (f"{kiest} {primary_label}. Dat onderwerp deelt "
-                    f"de laagste score met het volgende; weeg die gelijkstand mee "
+                    f"de laagste score met {met}; weeg die gelijkstand mee "
                     f"in de bespreking.")
-        if 0.0 < next_delta < PRIORITY_TIE_MARGIN:
+        if not gelijk_met and 0.0 < next_delta < PRIORITY_TIE_MARGIN:
             # Komma en het woord "punt", zoals _flat_span_woorden en de
             # sectie-intro's ("onder de 5,0"): dit is een prozagetal over de
             # grootte van een gat, geen score. Scores houden in dezelfde alinea
             # hun punt en hun /10, zodat de twee soorten getallen uit elkaar te
             # houden zijn in plaats van als typefout te lezen.
-            delta = f"{next_delta:.2f}".replace(".", ",")
+            delta = f"{next_delta:.1f}".replace(".", ",")
             return (f"{kiest} {primary_label}, de laagste score. Het "
                     f"verschil met de volgende is klein, {delta} punt; weeg dat mee "
                     f"in de bespreking.")
@@ -567,9 +594,11 @@ def _p02_opening(*, scan_type: str, shape: dict[str, Any], labels: dict[str, str
         # apart genoemd.
         laagste_keys = _p02_laagste_keys(shape)
         if len(laagste_keys) > 1:
-            laagste_clause = (f"{_opsomming([labels[fk] for fk in laagste_keys])} "
-                              f"delen de laagste score "
-                              f"({_score_str(shape['low_score'])})")
+            # Telwoord, dubbele punt en komma's: zie _p02_flat_sentence.
+            laagste_clause = (f"{_TELWOORD[len(laagste_keys)].capitalize()} "
+                              f"onderwerpen delen de laagste score "
+                              f"({_score_str(shape['low_score'])}): "
+                              f"{', '.join(labels[fk] for fk in laagste_keys)}")
         else:
             laagste_clause = f"{labels[laagste_keys[0]]} scoort het laagst"
         # Deze tak noemt het startpunt "gesprekspunt" in plaats van "startpunt",
@@ -603,27 +632,27 @@ def _p02_opening(*, scan_type: str, shape: dict[str, Any], labels: dict[str, str
                     if ZONE_LOW <= v < ZONE_HIGH]
         if aandacht:
             lijst = _opsomming([f"{labels[fk]} ({_score_str(v)})" for fk, v in aandacht])
-            werkwoord = "is" if len(aandacht) == 1 else "zijn"
-            kop += f" Daarnaast {werkwoord} {lijst} een aandachtspunt."
+            rest = ("is " + lijst + " een aandachtspunt" if len(aandacht) == 1
+                    else "zijn " + lijst + " aandachtspunten")
+            kop += f" Daarnaast {rest}."
     else:
         kop = (f"{breed}: {k} van de {shape['n_factors']} onderwerpen scoren "
                f"kwetsbaar.")
-    primary_is_lowest = shape["low_key"] == primary_key
-    # Tonen twee onderwerpen dezelfde laagste score, dan is "de laagste score.
-    # Het verschil met de volgende is klein, 0,04 punt" een claim op een
-    # laagste score die de lezer twee keer ziet staan (in de kop hierboven en in
-    # het overzichtsprofiel). Dan benoemt de startpuntzin de gelijkstand, net
-    # als bij een exacte gelijkstand. Onder PRIORITY_TIE_MARGIN, want alleen
-    # daar spreekt de zin van een klein verschil.
-    if (primary_is_lowest and tie_break_kind is None and next_delta is not None
-            and 0.0 < next_delta < PRIORITY_TIE_MARGIN
-            and len(_p02_laagste_keys(shape)) > 1):
-        next_delta = 0.0
+    laagste_keys = _p02_laagste_keys(shape)
+    # "Laagste" op de getoonde score: het startpunt hoort bij de onderwerpen die
+    # de laagste score tonen. De onderwerpen die die score met het startpunt
+    # delen gaan mee naar de gelijkstandzin; tonen alle onderwerpen dezelfde
+    # score, dan zegt de kop dat al en blijft die lijst leeg.
+    primary_is_lowest = primary_key in laagste_keys
+    alle_gelijk = len(laagste_keys) == shape["n_factors"]
+    gelijk_met = ([] if alle_gelijk else
+                  [labels[fk] for fk in laagste_keys if fk != primary_key])
     start = _p02_startpunt_zin(
         labels[primary_key], tie_break_kind=tie_break_kind, change=change,
         change_other=change_other, next_delta=next_delta,
         direction_state_key=direction_state_key,
         primary_is_lowest=primary_is_lowest,
+        gelijk_met=gelijk_met,
         indicatief=indicatief)
     # C11: "...: Groeiperspectief (4.5/10). Als startpunt kiest Loep
     # Groeiperspectief." is één mededeling in twee zinnen. Alleen als de kop
@@ -669,7 +698,11 @@ def _p02_startpunt_gronden(
             change = (top["direction_change"], top["direction_answered"])
             change_other = (ander["label"], ander["direction_change"],
                             ander["direction_answered"])
-    delta = (round(raster_rows[1]["score"] - top["score"], 2)
+    # Op de GETOONDE scores (B15): 4.94 en 4.96 staan als 4.9 en 5.0 in het
+    # raster, en "klein, 0,02 punt" klopt dan niet met wat de lezer ziet. Een
+    # getoond verschil van 0 wordt vanzelf de gelijkstandzin. De gate "klein"
+    # (onder PRIORITY_TIE_MARGIN) blijft dezelfde, maar werkt op dit getal.
+    delta = (round(_shown(raster_rows[1]["score"]) - _shown(top["score"]), 1)
              if len(raster_rows) > 1 else None)
     return kind, change, change_other, delta
 

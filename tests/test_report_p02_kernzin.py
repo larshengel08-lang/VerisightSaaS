@@ -18,6 +18,7 @@ from backend.report_html import (
     _p02_direction_key,
     _p02_opening,
     _p02_signal_cell,
+    _p02_startpunt_gronden,
     _p02_why_title,
     profile_shape,
 )
@@ -87,13 +88,40 @@ DRIE_GEDEELD = {"leadership": 6.5, "culture": 6.24, "growth": 6.22,
 
 def test_vlakke_zin_noemt_alle_onderwerpen_op_de_laagste_getoonde_score():
     zin = _open(DRIE_GEDEELD, primary="workload")
-    assert f"laagste {L('compensation')}, {L('growth')} en {L('culture')} 6.2/10" in zin
+    # Telwoord, dubbele punt en komma's: labels bevatten zelf al "en", dus een
+    # opsomming met "en" ertussen leest als één lang label (codereview taak 3).
+    assert (f"(laagste score 6.2/10, gedeeld door drie onderwerpen: "
+            f"{L('compensation')}, {L('growth')}, {L('culture')}; "
+            f"hoogste {L('leadership')} 6.5/10)") in zin
     assert "laagste Beloning en eerlijkheid 6.2/10," not in zin
+
+
+def test_vlakke_zin_bij_een_laagste_houdt_de_bestaande_vorm():
+    zin = _open(dict(DRIE_GEDEELD, compensation=6.02), primary="workload")
+    assert (f"(laagste {L('compensation')} 6.0/10, hoogste {L('leadership')} "
+            f"6.5/10)") in zin
+
+
+def test_alle_onderwerpen_gelijk_heet_niet_laagste_en_hoogste():
+    """Geen onderwerp mag tegelijk laagste en hoogste heten."""
+    gelijk = {fk: 6.2 for fk in ORG_FACTOR_KEYS}
+    zin = _open(gelijk, primary="growth")
+    assert zin.startswith("Geen enkel onderwerp springt eruit: alle zes "
+                          "onderwerpen scoren 6.2/10. Dat is zelf de bevinding.")
+    assert "laagste" not in zin and "hoogste" not in zin
+    assert "gelijkstand" not in zin
+    assert zin.endswith(f"Als startpunt kiest Loep {L('growth')}.")
+    # Zo komt het uit _p02_startpunt_gronden: getoond verschil 0.
+    zin = _open(gelijk, primary="growth", tie_break_kind=None, next_delta=0.0)
+    assert "laagste" not in zin and "gelijkstand" not in zin
+    assert zin.endswith(f"Als startpunt kiest Loep {L('growth')}.")
 
 
 def test_gedeelde_laagste_zonder_kwetsbaar_noemt_beide_namen():
     zin = _open(GEDEELDE_LAAGSTE, primary="compensation")
-    assert f"{L('compensation')} en {L('leadership')} delen de laagste score (5.8/10)" in zin
+    assert (f"Geen onderwerp scoort kwetsbaar. Twee onderwerpen delen de laagste "
+            f"score (5.8/10): {L('compensation')}, {L('leadership')}; als eerste "
+            f"gesprekspunt kiest Loep {L('compensation')}.") == zin
     assert "deelt de laagste score met het volgende onderwerp" not in zin
 
 
@@ -104,7 +132,8 @@ def test_een_kwetsbaar_onderwerp_noemt_de_aandachtspunten():
             "compensation": 7.1, "workload": 5.2, "role_clarity": 7.1}
     zin = _open(avgs, primary="growth")
     assert zin.startswith(f"Behoud vraagt aandacht op één kwetsbaar onderwerp: {L('growth')} (4.7/10). ")
-    assert f"Daarnaast zijn {L('workload')} (5.2/10) en {L('leadership')} (5.7/10) een aandachtspunt." in zin
+    assert f"Daarnaast zijn {L('workload')} (5.2/10) en {L('leadership')} (5.7/10) aandachtspunten." in zin
+    assert "een aandachtspunt" not in zin
 
 
 def test_een_kwetsbaar_onderwerp_zonder_aandachtspunten():
@@ -145,7 +174,7 @@ def test_daar_wijst_niet_naar_de_aandachtspunten():
             "compensation": 7.1, "workload": 5.2, "role_clarity": 7.1}
     zin = _open(avgs, primary="growth")
     assert "Daar begint het gesprek" not in zin
-    assert zin.endswith(f"een aandachtspunt. Als startpunt kiest Loep {L('growth')}.")
+    assert zin.endswith(f"aandachtspunten. Als startpunt kiest Loep {L('growth')}.")
 
 
 def test_daar_wijst_niet_naar_twee_kwetsbare_onderwerpen():
@@ -156,24 +185,69 @@ def test_daar_wijst_niet_naar_twee_kwetsbare_onderwerpen():
     assert zin.endswith(f"Als startpunt kiest Loep {L('growth')}.")
 
 
+def _rij(key, score):
+    return {"key": key, "label": L(key), "score": score, "decided_by": None,
+            "direction_change": None, "direction_answered": None}
+
+
+def test_delta_wordt_op_de_getoonde_score_berekend():
+    """B15: 4.94 en 4.96 tonen als 4.9 en 5.0. "klein, 0,02 punt" klopt dan niet
+    met wat de lezer ziet; het getoonde verschil is 0,1."""
+    _kind, _c, _co, delta = _p02_startpunt_gronden([_rij("growth", 4.94), _rij("workload", 4.96)])
+    assert delta == 0.1
+    # Op de 4.95-grens: 4.95 toont als 5.0, net als 4.96.
+    _kind, _c, _co, delta = _p02_startpunt_gronden([_rij("growth", 4.95), _rij("workload", 4.96)])
+    assert delta == 0.0
+    # Ruw 0,04 uiteen, getoond gelijk: dan is het een gelijkstand.
+    _kind, _c, _co, delta = _p02_startpunt_gronden([_rij("growth", 4.48), _rij("workload", 4.52)])
+    assert delta == 0.0
+    # De gelijkspelmarge werkt op getoonde waarden: 0,3 getoond is niet klein.
+    _kind, _c, _co, delta = _p02_startpunt_gronden([_rij("growth", 4.94), _rij("workload", 5.16)])
+    assert delta == 0.3
+    assert not delta < PRIORITY_TIE_MARGIN
+
+
+def test_kop_op_de_495_grens():
+    avgs = dict(EEN_LAGE, growth=4.94, workload=4.96)
+    rows = [_rij("growth", 4.94), _rij("workload", 4.96)]
+    kind, c, co, delta = _p02_startpunt_gronden(rows)
+    zin = _open(avgs, primary="growth", tie_break_kind=kind, change=c,
+                change_other=co, next_delta=delta)
+    assert "0,02" not in zin
+    assert f"{L('growth')} (4.9/10). Daarnaast is {L('workload')} (5.0/10) een aandachtspunt." in zin
+    assert f"Als startpunt kiest Loep {L('growth')}, de laagste score. Het verschil met de volgende is klein, 0,1 punt" in zin
+
+
 def test_getoonde_gelijkstand_claimt_geen_laagste_score():
     """Twee kwetsbare onderwerpen tonen allebei 4.5. "Als startpunt kiest Loep X,
     de laagste score. Het verschil met de volgende is klein, 0,04 punt" claimt
     dan een laagste score die de lezer twee keer ziet staan. De zin benoemt de
-    gelijkstand in plaats daarvan."""
+    gelijkstand in plaats daarvan, met het gelijke onderwerp bij naam."""
     avgs = dict(TWEE_LAAG, growth=4.48, workload=4.52)
-    zin = _open(avgs, primary="growth", tie_break_kind=None, next_delta=0.04)
+    kind, c, co, delta = _p02_startpunt_gronden([_rij("growth", 4.48), _rij("workload", 4.52)])
+    zin = _open(avgs, primary="growth", tie_break_kind=kind, next_delta=delta)
     assert f"{L('growth')} (4.5/10), {L('workload')} (4.5/10)." in zin
     assert "de laagste score." not in zin
     assert "0,04" not in zin
-    assert "deelt de laagste score met het volgende" in zin
+    assert (f"Dat onderwerp deelt de laagste score met {L('workload')}; weeg die "
+            f"gelijkstand mee in de bespreking.") in zin
+    assert "met het volgende" not in zin
+
+
+def test_gelijkstand_met_drie_of_meer_telt_de_andere_onderwerpen():
+    avgs = {"leadership": 4.52, "culture": 4.48, "growth": 4.46,
+            "compensation": 7.0, "workload": 7.4, "role_clarity": 7.1}
+    zin = _open(avgs, primary="growth", tie_break_kind=None, next_delta=0.0)
+    assert ("Dat onderwerp deelt de laagste score met twee andere onderwerpen; "
+            "weeg die gelijkstand mee in de bespreking.") in zin
 
 
 def test_vlak_profiel_met_getoonde_gelijkstand_claimt_geen_laagste_score():
     # VLAK: growth 5.67 en compensation 5.70 tonen allebei 5.7, en de vlakke zin
     # noemt ze nu allebei als laagste.
-    zin = _open(VLAK, tie_break_kind=None, next_delta=0.03)
-    assert f"laagste {L('growth')} en {L('compensation')} 5.7/10" in zin
+    zin = _open(VLAK, tie_break_kind=None, next_delta=0.0)
+    assert (f"laagste score 5.7/10, gedeeld door twee onderwerpen: {L('growth')}, "
+            f"{L('compensation')};") in zin
     assert "de laagste score." not in zin
 
 
@@ -211,14 +285,14 @@ def test_gedeelde_laagste_score_claimt_geen_alleenrecht():
     assert "scoort het laagst" not in zin
     # Twee onderwerpen kunnen niet samen "het eerste gesprekspunt" zijn: het
     # startpunt wordt apart genoemd (plan 3a taak 3).
-    assert (f"{L('compensation')} en {L('leadership')} delen de laagste score "
-            f"(5.8/10); als eerste gesprekspunt kiest Loep {L('compensation')}.") in zin
+    assert (f"Twee onderwerpen delen de laagste score (5.8/10): {L('compensation')}, "
+            f"{L('leadership')}; als eerste gesprekspunt kiest Loep {L('compensation')}.") in zin
 
 
 def test_gedeelde_laagste_score_ook_als_het_startpunt_afwijkt():
     zin = _open(GEDEELDE_LAAGSTE, primary="culture")
-    assert (f"{L('compensation')} en {L('leadership')} delen de laagste score "
-            f"(5.8/10); als eerste gesprekspunt kiest Loep {L('culture')}.") in zin
+    assert (f"Twee onderwerpen delen de laagste score (5.8/10): {L('compensation')}, "
+            f"{L('leadership')}; als eerste gesprekspunt kiest Loep {L('culture')}.") in zin
     assert "scoort het laagst" not in zin
 
 
@@ -304,11 +378,13 @@ def test_startpuntgrond_bij_alleen_score():
     # EEN_LAGE en niet VLAK: in VLAK tonen twee onderwerpen 5.7, en dan is "de
     # laagste score" niet van het startpunt alleen (zie
     # test_getoonde_gelijkstand_claimt_geen_laagste_score).
-    zin = _open(EEN_LAGE, tie_break_kind=None, next_delta=0.03)
+    # next_delta komt uit _p02_startpunt_gronden en is een verschil tussen
+    # getoonde scores, dus een veelvoud van 0,1 (codereview taak 3, B15).
+    zin = _open(EEN_LAGE, tie_break_kind=None, next_delta=0.1)
     assert "de laagste score" in zin
     # Prozagetal met komma en het woord "punt", zoals "binnen een punt van
     # elkaar" en "onder de 5,0"; scores houden hun punt en hun /10.
-    assert "klein, 0,03 punt" in zin
+    assert "klein, 0,1 punt" in zin
     assert "weeg dat mee" in zin
 
 
@@ -317,7 +393,7 @@ def test_exacte_gelijkstand_krijgt_een_eigen_zin():
     "het verschil is klein (0,00)" oogt als een formatteerfout. De zin benoemt de
     stand dan, in plaats van hem weg te rekenen."""
     zin = _open(VLAK, tie_break_kind=None, next_delta=0.0)
-    assert "deelt de laagste score met het volgende" in zin
+    assert f"deelt de laagste score met {L('compensation')}" in zin
     assert "weeg die gelijkstand mee in de bespreking" in zin
     assert "0,00" not in zin
     assert "is klein" not in zin

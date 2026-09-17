@@ -226,9 +226,12 @@ def test_kale_keuze_wordt_een_mogelijk_startpunt():
 
 
 def test_gelijkstandzin_wordt_een_mogelijk_startpunt():
-    zin = _open(_EEN_LAAG, primary="growth", indicatief=True, next_delta=0.0)
+    # Een getoond verschil van 0 betekent dat een ander onderwerp dezelfde
+    # laagste score toont; de zin noemt dat onderwerp (codereview taak 3).
+    zin = _open(dict(_EEN_LAAG, workload=4.5), primary="growth", indicatief=True,
+                next_delta=0.0)
     assert f"Als mogelijk startpunt kiest Loep {_fl('growth', 'retention')}. " \
-           f"Dat onderwerp deelt de laagste score met het volgende" in zin
+           f"Dat onderwerp deelt de laagste score met {_fl('workload', 'retention')}" in zin
 
 
 def test_kleinverschilzin_wordt_een_mogelijk_startpunt():
