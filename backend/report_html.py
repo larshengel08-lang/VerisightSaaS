@@ -13,7 +13,7 @@ from __future__ import annotations
 import logging
 import math
 from collections import Counter, defaultdict
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from html import escape as _esc
 from statistics import mean as _mean
 from typing import Any
@@ -814,15 +814,42 @@ _MAANDEN_NL = ("januari", "februari", "maart", "april", "mei", "juni", "juli",
                "augustus", "september", "oktober", "november", "december")
 
 
-def _datum_nl(d) -> str | None:
+def _laatste_zondag_utc(jaar: int, maand: int) -> datetime:
+    """01:00 UTC op de laatste zondag van de maand (EU-zomertijdgrens)."""
+    volgende = datetime(jaar + (maand == 12), maand % 12 + 1, 1, tzinfo=timezone.utc)
+    laatste_dag = volgende - timedelta(days=1)
+    zondag = laatste_dag - timedelta(days=(laatste_dag.weekday() - 6) % 7)
+    return zondag.replace(hour=1)
+
+
+def _nl_tijd(d: datetime) -> datetime:
+    """Zet een timestamp om naar Nederlandse tijd zonder tzdata-afhankelijkheid.
+
+    closed_at wordt als UTC opgeslagen (frontend: new Date().toISOString()); een
+    naive datetime behandelen we daarom als UTC. EU-regel: zomertijd (UTC+2) van
+    de laatste zondag van maart 01:00 UTC tot de laatste zondag van oktober
+    01:00 UTC, daarbuiten wintertijd (UTC+1). ZoneInfo is bewust niet gebruikt:
+    tzdata staat niet in het venv en mogelijk niet op Railway.
+    """
+    utc = d.replace(tzinfo=timezone.utc) if d.tzinfo is None else d.astimezone(timezone.utc)
+    zomer = _laatste_zondag_utc(utc.year, 3) <= utc < _laatste_zondag_utc(utc.year, 10)
+    return utc + timedelta(hours=2 if zomer else 1)
+
+
+def _datum_nl(d: date | datetime | None) -> str | None:
     """Datum als Nederlandse tekst ("9 maart 2026"), of None als er geen datum is.
 
-    Meetgegevens op pagina twee (H8). Een datetime wordt op de kalenderdag
-    gelezen; een ontbrekende datum blijft None, zodat de renderer er in één zin
-    bij kan zeggen dat hij niet is vastgelegd in plaats van iets te verzinnen.
+    Meetgegevens op pagina twee (H8). Een datetime (UTC-timestamp) wordt eerst
+    naar Nederlandse tijd omgezet en dan op de kalenderdag gelezen, zodat een
+    meting die om 00:30 Nederlandse tijd sluit niet een dag te vroeg staat. Een
+    date blijft zoals hij is. Een ontbrekende datum blijft None, zodat de
+    renderer er in één zin bij kan zeggen dat hij niet is vastgelegd in plaats
+    van iets te verzinnen.
     """
     if d is None:
         return None
+    if isinstance(d, datetime):
+        d = _nl_tijd(d)
     return f"{d.day} {_MAANDEN_NL[d.month - 1]} {d.year}"
 
 

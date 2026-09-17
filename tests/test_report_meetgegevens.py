@@ -42,8 +42,24 @@ def _campagne(db: Session, *, comms_mode: str, completed: int, rows: int,
 
 def test_datum_nl_formatteert_nederlands():
     assert _datum_nl(date(2026, 3, 9)) == "9 maart 2026"
-    assert _datum_nl(datetime(2026, 4, 30, 23, 59, tzinfo=timezone.utc)) == "30 april 2026"
     assert _datum_nl(None) is None
+
+
+def test_datum_nl_leest_timestamps_in_nederlandse_tijd():
+    # closed_at is UTC; de kalenderdag moet de Nederlandse zijn.
+    assert _datum_nl(datetime(2026, 4, 30, 23, 59, tzinfo=timezone.utc)) == "1 mei 2026"
+    # naive datetime telt als UTC
+    assert _datum_nl(datetime(2026, 4, 30, 23, 59)) == "1 mei 2026"
+    # 29 maart 2026 is de laatste zondag van maart: 30 maart 22:30 UTC = 31 maart 00:30 CEST
+    assert _datum_nl(datetime(2026, 3, 30, 22, 30, tzinfo=timezone.utc)) == "31 maart 2026"
+    # winter: UTC+1
+    assert _datum_nl(datetime(2026, 1, 15, 23, 30, tzinfo=timezone.utc)) == "16 januari 2026"
+    # DST-grens: 25 oktober 2026 00:30 UTC is nog zomertijd (02:30 CEST)
+    assert _datum_nl(datetime(2026, 10, 25, 0, 30, tzinfo=timezone.utc)) == "25 oktober 2026"
+    # net na de grens: 25 oktober 23:30 UTC = 26 oktober 00:30 CET
+    assert _datum_nl(datetime(2026, 10, 25, 23, 30, tzinfo=timezone.utc)) == "26 oktober 2026"
+    # vóór de maartgrens (wintertijd): 29 maart 00:30 UTC = 01:30 CET
+    assert _datum_nl(datetime(2026, 3, 29, 0, 30, tzinfo=timezone.utc)) == "29 maart 2026"
 
 
 def test_self_send_gebruikt_het_vastgelegde_aantal(db_session: Session):
