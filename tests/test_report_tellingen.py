@@ -8,21 +8,27 @@ from backend.products.shared.deepening import aggregate_deepening, aggregate_dir
 from backend.report_html import (
     MAX_QUOTES,
     MIN_QUOTES_N,
-    OTHER_SHARE_MIN,
+    OTHER_MIN_N,
     _anders_block,
+    _deepening_block,
+    _direction_card_cell,
     build_report_data,
 )
 
 LOW_GROWTH = {f"growth_{i}": 1 for i in (1, 2, 3)} | {f"{fk}_{i}": 5 for fk in
               ("leadership", "culture", "compensation", "workload", "role_clarity") for i in (1, 2, 3)}
 
+ANON_LABEL = "Automatisch geanonimiseerd: herkende namen en contactgegevens verwijderd"
+
+
+def _plain(html):
+    """Tags eruit, witruimte BEWUST intact: een dubbele spatie of een spatie
+    voor een puntkomma moet in een assert opvallen (codereview taak 9)."""
+    return re.sub(r"<[^>]+>", "", html).replace("&lsquo;", "‘").replace("&rsquo;", "’")
+
 
 def _tekst(html):
     return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html)).strip()
-
-
-def _quotes(t):
-    return t.replace("&ldquo;", "“").replace("&rdquo;", "”")
 
 
 def test_aggregaties_verzamelen_de_anders_teksten():
@@ -39,25 +45,24 @@ def test_aggregaties_verzamelen_de_anders_teksten():
     assert aggregate_direction([(LOW_GROWTH, dr)], "retention")["growth"]["other_texts"] == []
 
 
-def test_anders_drempel_is_benoemd():
-    assert OTHER_SHARE_MIN == 0.20
-
-
 def test_anders_block_toont_teksten_vanaf_vijf():
     teksten = [f"Toelichting {i}." for i in range(5)]
     html = _anders_block(other_n=5, answered=16, texts=teksten)
-    t = _tekst(html)
-    assert "5 van de 16 kozen “Anders” en schreven een eigen toelichting" in _quotes(t)
+    assert ("5 van de 16 kozen ‘Anders’ en schreven een eigen toelichting: "
+            "de vaste opties dekten hun ervaring niet.") in _plain(html)
     for x in teksten:
-        assert x in t
+        assert x in _plain(html)
+    assert ANON_LABEL in _plain(html)
 
 
 def test_anders_block_alleen_aantal_onder_vijf():
     teksten = ["Toelichting alfa.", "Toelichting beta.", "Toelichting gamma.", "Toelichting delta."]
-    t = _tekst(_anders_block(other_n=4, answered=16, texts=teksten))
-    assert "4 van de 16 kozen" in t
-    assert "tonen we pas vanaf 5" in t
+    t = _plain(_anders_block(other_n=4, answered=16, texts=teksten))
+    assert "4 van de 16 kozen ‘Anders’ en schreven een eigen toelichting" in t
+    assert "De teksten tonen we pas vanaf 5, om herleidbaarheid te voorkomen." in t
     assert not any(x in t for x in teksten)
+    # Zonder teksten ook geen anonimiseringslabel: er staat niets om te anonimiseren.
+    assert ANON_LABEL not in t
 
 
 def test_anders_block_leeg_onder_de_drempel():
@@ -69,36 +74,126 @@ def test_anders_block_zonder_noemer_is_leeg():
     assert _anders_block(other_n=2, answered=0, texts=["a", "b"]) == ""
 
 
+def test_anders_block_zwijgt_als_niemand_iets_schreef():
+    """Bij de verdieping mag "Anders" zonder toelichting: dan is er niets te
+    melden en staat de telling al in de verdelingstabel erboven."""
+    assert _anders_block(other_n=3, answered=10, texts=[]) == ""
+    assert _anders_block(other_n=3, answered=10, texts=["", "   "]) == ""
+
+
+def test_anders_block_heeft_een_absolute_vloer():
+    """Eén respondent op de minimumbasis is geen bevinding: 1 van de 3 haalt het
+    aandeel wel, maar OTHER_MIN_N houdt het blok dicht."""
+    assert OTHER_MIN_N == 2
+    assert _anders_block(other_n=1, answered=3, texts=["Alleen ik."]) == ""
+    assert _anders_block(other_n=2, answered=3, texts=["Alfa.", "Beta."]) != ""
+
+
 def test_anders_block_zonder_em_dash():
     t = _tekst(_anders_block(other_n=6, answered=12, texts=[f"Tekst {i}." for i in range(6)]))
     assert "—" not in t and "&mdash;" not in t
 
 
 def test_anders_block_belooft_geen_teksten_die_er_niet_zijn():
-    """Bij de verdieping mag "Anders" zonder toelichting (schemas.py laat dat toe),
-    dus other_n kan hoger zijn dan het aantal teksten. Dan claimt de kop niet dat
-    ze allemaal iets schreven."""
-    t = _quotes(_tekst(_anders_block(other_n=6, answered=12,
-                                     texts=["Alfa.", "Beta.", "Gamma.", "Delta."])))
-    assert "6 van de 12 kozen “Anders”" in t
-    assert "4 van hen schreven" in t
-    assert "6 van de 12 kozen “Anders” en schreven" not in t
+    """other_n kan hoger zijn dan het aantal teksten (Anders zonder toelichting).
+    Dan claimt de kop niet dat ze allemaal iets schreven, en staat er geen spatie
+    voor de puntkomma."""
+    t = _plain(_anders_block(other_n=6, answered=12,
+                             texts=["Alfa.", "Beta.", "Gamma.", "Delta."]))
+    assert ("6 van de 12 kozen ‘Anders’; 4 schreven een toelichting: "
+            "de vaste opties dekten hun ervaring niet.") in t
+    assert "‘Anders’ ;" not in t
+    assert "en schreven een eigen toelichting" not in t
+
+
+def test_anders_block_enkelvoud_bij_een_toelichting():
+    t = _plain(_anders_block(other_n=4, answered=10, texts=["Alleen ik schreef iets."]))
+    assert "4 van de 10 kozen ‘Anders’; 1 schreef een toelichting:" in t
 
 
 def test_anders_block_toont_geen_teksten_onder_de_quote_staffel():
     """De privacystaffel telt de teksten, niet de keuzes: vier toelichtingen
     blijven onzichtbaar, ook als zes mensen "Anders" kozen."""
     teksten = ["Alfa.", "Beta.", "Gamma.", "Delta."]
-    t = _tekst(_anders_block(other_n=6, answered=12, texts=teksten))
-    assert f"tonen we pas vanaf {MIN_QUOTES_N}" in t
+    t = _plain(_anders_block(other_n=6, answered=12, texts=teksten))
+    assert f"De teksten tonen we pas vanaf {MIN_QUOTES_N}" in t
     assert not any(x in t for x in teksten)
 
 
 def test_anders_block_meldt_dat_het_afkapt():
     teksten = [f"Toelichting {i}." for i in range(MAX_QUOTES + 3)]
-    t = _tekst(_anders_block(other_n=len(teksten), answered=40, texts=teksten))
-    assert f"de eerste {MAX_QUOTES} van {len(teksten)}" in t
+    t = _plain(_anders_block(other_n=len(teksten), answered=40, texts=teksten))
+    assert (f"Getoond: de eerste {MAX_QUOTES} van {len(teksten)} in ontvangstvolgorde, "
+            "geen inhoudelijke selectie.") in t
     assert teksten[MAX_QUOTES] not in t
+
+
+def test_anders_block_escapet_de_teksten():
+    html = _anders_block(other_n=5, answered=10,
+                         texts=["<script>x</script>", "b.", "c.", "d.", "e."])
+    assert "<script>" not in html
+    assert "&lt;script&gt;" in html
+
+
+def test_anders_block_gebruikt_klassen_geen_inline_styles():
+    """De regels moeten kunnen afbreken (200 tekens vrije tekst in een halve
+    kolom, zie het commentaar bij .cmeta in report_css.py); die opmaak staat in
+    het stylesheet, niet in een inline style."""
+    html = _anders_block(other_n=5, answered=10, texts=[f"T{i}." for i in range(5)])
+    assert "style=" not in html
+    for klasse in ("anders-kop", "anders-list", "anders-anon"):
+        assert klasse in html
+
+
+# ── Wiring: de twee aanroepplekken ───────────────────────────────────────────
+
+def _deep_agg(**counts):
+    n = sum(counts.values())
+    return {"triggered": n, "offered": n, "answered": n, "skipped": 0,
+            "primary_counts": counts, "secondary_counts": {},
+            "other_texts": [f"Iets eigens {i}." for i in range(counts.get("gr_other", 0))]}
+
+
+def test_verdiepingsblok_toont_de_anders_toelichtingen():
+    html = _deepening_block(_deep_agg(gr_other=6, gr_visibility=5, gr_time=5),
+                            "retention", "growth")
+    t = _plain(html)
+    assert "6 van de 16 kozen ‘Anders’ en schreven een eigen toelichting" in t
+    assert "Iets eigens 0." in t
+
+
+def test_verdiepingsblok_zet_de_beperkte_basis_regel_voor_de_lijst():
+    """"Beperkte antwoordbasis" hoort bij de verdeling erboven, niet bij de
+    toelichtingen eronder."""
+    html = _deepening_block(_deep_agg(gr_other=5, gr_visibility=2), "retention", "growth")
+    t = _plain(html)
+    assert t.index("Beperkte antwoordbasis") < t.index("kozen ‘Anders’")
+
+
+def test_richtingkaart_toont_de_anders_toelichtingen_na_de_caveat():
+    agg = {"lowest_n": 14, "offered": 13, "answered": 12, "skipped": 1,
+           "counts": {"grd_other": 5, "grd_visibility": 4, "grd_time": 3},
+           "other_texts": [f"Eigen richting {i}." for i in range(5)]}
+    t = _plain(_direction_card_cell("startpunt", label="Groeiperspectief", agg=agg,
+                                    scan_type="retention", factor_key="growth",
+                                    n_total=39, factor_score=4.9))
+    assert "5 van de 12 kozen ‘Anders’ en schreven een eigen toelichting" in t
+    assert "Eigen richting 0." in t
+    # De keten sluit het blok af, de toelichtingen staan ervoor.
+    assert t.index("kozen ‘Anders’") < t.index("Van de 39 respondenten")
+
+
+def test_richtingkaart_zwijgt_over_anders_bij_te_weinig_antwoorden():
+    """In de staat too_few toont de kaart geen enkele telling; dan hoort er ook
+    geen aantal "Anders" bij te komen."""
+    agg = {"lowest_n": 3, "offered": 2, "answered": 2, "skipped": 0,
+           "counts": {"grd_other": 2},
+           "other_texts": ["Eigen richting a.", "Eigen richting b."]}
+    t = _plain(_direction_card_cell("startpunt", label="Groeiperspectief", agg=agg,
+                                    scan_type="retention", factor_key="growth",
+                                    n_total=39, factor_score=4.9))
+    assert "Anders" not in t
+    assert "Eigen richting" not in t
 
 
 def test_build_report_data_anonimiseert_de_anders_teksten(db_session: Session):
@@ -139,10 +234,3 @@ def test_build_report_data_anonimiseert_de_anders_teksten(db_session: Session):
         assert "[NAAM]" in t and "[EMAIL]" in t
     for t in direc:
         assert "Sanne Bakker" not in t and "[NAAM]" in t
-
-
-def test_anders_block_escapet_de_teksten():
-    html = _anders_block(other_n=5, answered=10,
-                         texts=["<script>x</script>", "b.", "c.", "d.", "e."])
-    assert "<script>" not in html
-    assert "&lt;script&gt;" in html

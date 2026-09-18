@@ -2583,7 +2583,14 @@ def _tel(n: int, enkelvoud: str, meervoud: str) -> str:
     zet het getal soms achter het werkwoord ("had 1") en kan deze vorm daarom
     niet gebruiken.
     """
-    return f"{n} {enkelvoud if n == 1 else meervoud}"
+    return f"{n} {_werkwoord(n, enkelvoud, meervoud)}"
+
+
+def _werkwoord(n: int, enkelvoud: str, meervoud: str) -> str:
+    """Alleen het werkwoord, voor de zinnen waarin het getal er niet direct
+    voor staat ("6 van de 12 kozen"). Eén regel voor de vervoeging, twee vormen:
+    _tel plakt het getal eraan vast, deze laat de zin ertussen."""
+    return enkelvoud if n == 1 else meervoud
 
 
 # ── Richtingblok "Wat er moet gebeuren" (spec 2026-09-07 par. 6) ─────────────
@@ -2724,15 +2731,16 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
             row_htmls.append(f'<tr><td class="iq">{_h(_opt(k))}</td><td class="is">{pct}</td></tr>')
         rows = "".join(row_htmls)
         table = f'<table class="item-tbl dir-tbl">{rows}</table>'
-        # B13, zelfde blok als onder de verdiepingsverdeling. Bewust binnen deze
-        # tak: in de staat too_few toont de kaart geen enkele telling, en daar
-        # hoort ook geen aantal "Anders" bij te komen.
-        table += _anders_block(
-            other_n=sum(c for k, c in st["ranked"] if k.endswith("_other")),
-            answered=n, texts=agg.get("other_texts") or [])
         if n <= DIRECTION_CAVEAT_MAX_N:
             table += ('<p class="dir-caveat">Beperkte basis: gebruik dit als '
                       'gesprekshaakje, niet als conclusie.</p>')
+        # B13, zelfde blok als onder de verdiepingsverdeling, en net als daar na
+        # de beperkte-basis-regel (die hoort bij de verdeling). Bewust binnen
+        # deze tak: in de staat too_few toont de kaart geen enkele telling, en
+        # daar hoort ook geen aantal "Anders" bij te komen.
+        table += _anders_block(
+            other_n=sum(c for k, c in st["ranked"] if k.endswith("_other")),
+            answered=n, texts=agg.get("other_texts") or [])
     # head en src worden hier eenmalig samen door _h() gehaald: beide zijn
     # hierboven bewust rauw (ongeescaped) opgebouwd, dus geen asymmetrie meer
     # tussen een vooraf geescapete head en een deels geescapete src.
@@ -2863,11 +2871,21 @@ def _direction_p02_line(direction_agg: dict, factor_key: str | None, scan_type: 
 # restcategorie geen rest meer is maar een eigen antwoord.
 OTHER_SHARE_MIN = 0.20
 
+# Absolute vloer naast dat aandeel: op de minimumbasis van dit rapport haalt
+# één respondent het aandeel al (1 van de 3 is 33%), en van één mens is geen
+# conclusie te trekken over de optieset. Twee is de kleinste groep die "de
+# opties dekken dit niet" kan dragen. Bewust een eigen getal en niet
+# MIN_QUOTES_N: die staffel bepaalt of de teksten zichtbaar worden, deze of er
+# een blok staat.
+OTHER_MIN_N = 2
+
+ANON_NOTE = "Automatisch geanonimiseerd: herkende namen en contactgegevens verwijderd"
+
 
 def _anders_block(*, other_n: int, answered: int, texts: list[str]) -> str:
     """"Anders"-toelichtingen onder een verdeling (spec par. 9 B13). Leeg onder
-    OTHER_SHARE_MIN; vanaf MIN_QUOTES_N de (geanonimiseerde) teksten, daaronder
-    alleen het aantal, om herleidbaarheid te voorkomen.
+    OTHER_SHARE_MIN of OTHER_MIN_N; vanaf MIN_QUOTES_N de (geanonimiseerde)
+    teksten, daaronder alleen het aantal, om herleidbaarheid te voorkomen.
 
     De staffel telt de teksten en niet de keuzes: bij de verdieping mag "Anders"
     zonder toelichting (schemas.py), dus vier teksten van zes keuzes blijven
@@ -2875,29 +2893,34 @@ def _anders_block(*, other_n: int, answered: int, texts: list[str]) -> str:
     de open toelichtingen, en om dezelfde reden: onder vijf teksten is een
     toelichting te makkelijk aan een persoon te koppelen.
 
-    Schrijft niet iedereen die "Anders" koos een toelichting, dan zegt de kop dat
-    (Fail Loud): anders belooft de regel teksten die er niet zijn. Hetzelfde geldt
-    voor de afkapping op MAX_QUOTES.
+    Schreef niemand iets, dan rendert het blok niet: er is dan niets te melden en
+    het aantal "Anders" staat al in de verdelingstabel erboven. Schreef een deel
+    van hen iets, dan zegt de kop dat (Fail Loud), en hetzelfde geldt voor de
+    afkapping op MAX_QUOTES: niets valt stil weg.
     """
-    if not answered or other_n / answered < OTHER_SHARE_MIN:
+    if not answered or other_n < OTHER_MIN_N or other_n / answered < OTHER_SHARE_MIN:
         return ""
     schoon = [t for t in texts if t and t.strip()]
-    geschreven = ("en schreven een eigen toelichting"
+    if not schoon:
+        return ""
+    geschreven = (" en schreven een eigen toelichting"
                   if len(schoon) >= other_n else
-                  f"; {len(schoon)} van hen schreven een toelichting")
-    kop = (f'<p style="font-size:10px;margin:8px 0 0;">{other_n} van de {answered} kozen '
-           f'&ldquo;Anders&rdquo; {geschreven}: de vaste opties dekten '
-           f'hun ervaring niet.</p>')
+                  "; " + _tel(len(schoon), "schreef", "schreven") + " een toelichting")
+    kop = (f'<p class="anders-kop">{other_n} van de {answered} '
+           f'{_werkwoord(other_n, "koos", "kozen")} &lsquo;Anders&rsquo;{geschreven}: '
+           f'de vaste opties dekten hun ervaring niet.</p>')
     if len(schoon) < MIN_QUOTES_N:
-        return kop + (f'<p style="font-size:9.5px;color:#64748B;margin:2px 0 0;">De teksten tonen we '
-                      f'pas vanaf {MIN_QUOTES_N}, om herleidbaarheid te voorkomen.</p>')
+        return kop + (f'<p class="anders-note">De teksten tonen we pas vanaf '
+                      f'{MIN_QUOTES_N}, om herleidbaarheid te voorkomen.</p>')
     note = ""
     if len(schoon) > MAX_QUOTES:
-        note = (f'<p style="font-size:9.5px;color:#64748B;margin:2px 0 0;">Getoond: de eerste '
-                f'{MAX_QUOTES} van {len(schoon)} in ontvangstvolgorde, geen inhoudelijke '
-                f'selectie.</p>')
+        note = (f'<p class="anders-note">Getoond: de eerste {MAX_QUOTES} van '
+                f'{len(schoon)} in ontvangstvolgorde, geen inhoudelijke selectie.</p>')
     items = "".join(f'<li>{_h(t)}</li>' for t in schoon[:MAX_QUOTES])
-    return kop + note + f'<ul style="font-size:10px;color:#374151;margin:4px 0 0 16px;">{items}</ul>'
+    # Hetzelfde label als onder de open toelichtingen (_themed_quotes), hier
+    # één keer onder de lijst in plaats van per regel.
+    return (kop + note + f'<ul class="anders-list">{items}</ul>'
+            f'<p class="anders-anon">{ANON_NOTE}</p>')
 
 
 def _deepening_chain(agg: dict, scan_type: str, factor_key: str) -> str:
@@ -2947,16 +2970,18 @@ def _deepening_block(agg: dict, scan_type: str, factor_key: str) -> str:
             f'</td></tr>'
             for key, cnt in ranked)
         body = f'<table class="item-tbl" style="margin-top:6px;">{rows}</table>'
-        # B13: haalt "Anders" een vijfde van de antwoorden, dan dekt de optieset
-        # de werkelijkheid niet en zijn de eigen woorden het antwoord.
-        body += _anders_block(
-            other_n=sum(c for k, c in (agg.get("primary_counts") or {}).items()
-                        if k.endswith("_other")),
-            answered=answered, texts=agg.get("other_texts") or [])
         if answered <= 9:
             body += ('<p style="font-size:10px;color:#92400E;margin:4px 0 0;">'
                      'Beperkte antwoordbasis: gebruik dit als gesprekshaakje, '
                      'niet als conclusie.</p>')
+        # B13: haalt "Anders" een vijfde van de antwoorden, dan dekt de optieset
+        # de werkelijkheid niet en zijn de eigen woorden het antwoord. Na de
+        # beperkte-basis-regel: die hoort bij de verdeling erboven, niet bij de
+        # toelichtingen.
+        body += _anders_block(
+            other_n=sum(c for k, c in (agg.get("primary_counts") or {}).items()
+                        if k.endswith("_other")),
+            answered=answered, texts=agg.get("other_texts") or [])
 
     # De "Daarnaast werden vooral X en Y genoemd"-samenvatting is bewust weg
     # (feedback 2026-07-16): de regel dupliceerde de tabel met aantallen die

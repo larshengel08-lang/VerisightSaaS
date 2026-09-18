@@ -212,6 +212,22 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .quote-anon { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.1em;
   text-transform: uppercase; color: #94A3B8; margin-top: 5px; }
 
+/* ── B13: "Anders"-toelichtingen onder een verdeling ── */
+/* 10px en niet kleiner: de leesbaarheidsronde van 2026-07-09 heeft juist de
+   eerlijkheidsregels (staffels, noemers, caveats) naar 10px getild, en dit is
+   er een van. overflow-wrap zoals .item-tbl td en .cmc: een toelichting mag
+   200 tekens zijn en kan in een halve kolom staan (de twee richtingkaarten
+   naast elkaar), dus een lange reeks zonder spatie moet afbreken in plaats van
+   de kaart over de marge te duwen. */
+.anders-kop { font-size: 10px; color: #374151; margin: 8px 0 0; line-height: 1.5;
+  overflow-wrap: break-word; word-wrap: break-word; }
+.anders-note { font-size: 10px; color: """ + STEEL + r"""; margin: 2px 0 0; line-height: 1.5; }
+.anders-list { font-size: 10px; color: #374151; margin: 4px 0 0; padding-left: 16px; }
+.anders-list li { margin-bottom: 3px; line-height: 1.5;
+  overflow-wrap: break-word; word-wrap: break-word; }
+.anders-anon { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: #94A3B8; margin: 5px 0 0; }
+
 /* ── Steps ── */
 .steps { display: table; width: 100%; border-collapse: separate; border-spacing: 10px 0; }
 .step { display: table-cell; background: #fff; border: 1px solid """ + HAIRLINE + r"""; padding: 14px 16px; vertical-align: top; width: 25%; }
