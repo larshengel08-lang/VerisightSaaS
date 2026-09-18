@@ -17,6 +17,10 @@ describe('/help (spec 2026-09-16 par. 6.4)', () => {
     expect(source).toContain("if (!user) redirect('/login')")
   })
 
+  it('gebruikt een kop voor het contactblok, niet enkel vet lopend platte tekst', () => {
+    expect(source).toMatch(/<h2[^>]*>Vragen\?<\/h2>/)
+  })
+
   it('bevat geen em- of en-dashes', () => {
     expect(source).not.toMatch(/[—–]/)
   })

@@ -4,6 +4,7 @@ import {
   buildDashboardShellNavigation,
   getActiveModuleFromLocation,
   getDashboardModuleHref,
+  getDashboardShellCurrentLabel,
   normalizeDashboardModuleFilter,
   normalizeDashboardPortfolioView,
   type DashboardShellCampaignRef,
@@ -154,6 +155,15 @@ describe('dashboard shell navigation', () => {
     expect(getActiveModuleFromLocation('/action-center', null, [...campaigns])).toBe('action_center')
     expect(getActiveModuleFromLocation('/beheer', null, [...campaigns])).toBe('overview')
     expect(getActiveModuleFromLocation('/help', null, [...campaigns])).toBe('help')
+    expect(getActiveModuleFromLocation('/help/anything', null, [...campaigns])).toBe('help')
+    // Exacte match, geen prefixmatch: '/helpme' is geen /help-route.
+    expect(getActiveModuleFromLocation('/helpme', null, [...campaigns])).toBe('overview')
+  })
+
+  it('geeft het label "Hulp" voor /help exact en met subpad, niet voor een toevallig gelijkend pad', () => {
+    expect(getDashboardShellCurrentLabel('/help')).toBe('Hulp')
+    expect(getDashboardShellCurrentLabel('/help/anything')).toBe('Hulp')
+    expect(getDashboardShellCurrentLabel('/helpme')).not.toBe('Hulp')
   })
 
   it('keeps module nav active on detail routes instead of treating the item itself as a rail destination', () => {

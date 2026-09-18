@@ -67,7 +67,7 @@ export default async function HelpPage() {
       </section>
 
       <section className="rounded-[22px] bg-[#0D1B2A] px-6 py-6 text-white">
-        <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[#E8A020]">Vragen?</p>
+        <h2 className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[#E8A020]">Vragen?</h2>
         <p className="mt-2 text-sm leading-6 text-white/80">
           Mail naar{' '}
           <a href={`mailto:${HELP_CONTACT.email}`} className="font-semibold text-white underline underline-offset-4">

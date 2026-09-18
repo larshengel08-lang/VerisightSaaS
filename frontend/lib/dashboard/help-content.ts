@@ -14,7 +14,7 @@ export const HELP_STEPS: ReadonlyArray<{ title: string; body: string }> = [
   },
   {
     title: '2. Uitnodigen en herinneren',
-    body: 'Je verstuurt de uitnodiging zelf vanuit je eigen mail: Loep verstuurt niets en slaat geen mailadressen van je medewerkers op. Op de herinneringsdag staat de herinneringstekst klaar op je overzicht; ook die verstuur je zelf.',
+    body: 'Je verstuurt de uitnodiging zelf vanuit je eigen mail. Loep mailt je medewerkers niet en slaat geen mailadressen van ze op. Heb je een herinneringsdag gekozen, dan staat op die dag de herinneringstekst klaar op je overzicht; ook die verstuur je zelf.',
   },
   {
     title: '3. Sluiten en rapport',
@@ -25,7 +25,7 @@ export const HELP_STEPS: ReadonlyArray<{ title: string; body: string }> = [
 export const HELP_THRESHOLDS = {
   total: MIN_INVITED_TOTAL,
   perDepartment: MIN_INVITED_PER_DEPARTMENT,
-  why: `Loep rapporteert alleen op groepsniveau. Onder ${MIN_INVITED_TOTAL} ingevulde vragenlijsten is een patroon niet te onderscheiden van toeval, en onder ${MIN_INVITED_PER_DEPARTMENT} per afdeling zou een antwoord herleidbaar kunnen zijn. Daarom maakt Loep dan geen rapport en geen uitsplitsing per afdeling; kleinere afdelingen vallen onder "Overige afdelingen".`,
+  why: `Loep rapporteert alleen op groepsniveau. Onder ${MIN_INVITED_TOTAL} ingevulde vragenlijsten is een patroon niet te onderscheiden van toeval; dan maakt Loep geen rapport. Een afdeling met minder dan ${MIN_INVITED_PER_DEPARTMENT} ingevulde vragenlijsten krijgt geen eigen regel, omdat een antwoord dan herleidbaar kan zijn. Samen vormen die afdelingen de regel "Overige afdelingen", als ze met elkaar op ${MIN_INVITED_PER_DEPARTMENT} komen. Hebben minder dan twee afdelingen er ${MIN_INVITED_PER_DEPARTMENT}, dan laat Loep de uitsplitsing per afdeling weg. Alle antwoorden tellen wel mee in het beeld van de hele organisatie.`,
 }
 
 export const HELP_ROLES = {
@@ -38,7 +38,7 @@ export const HELP_ROLES = {
   loep: [
     'Je organisatie en je meting aanmaken na de intake.',
     'De vragenlijst, de uitnodigingstekst en de herinneringstekst klaarzetten.',
-    'Antwoorden verwerken tot een rapport op groepsniveau, nooit per persoon.',
+    'Antwoorden verwerken tot een rapport op groepsniveau, nooit per persoon, en je mailen zodra het klaarstaat.',
     'Vragen beantwoorden en een nieuwe meting klaarzetten als je die aanvraagt.',
   ],
 }

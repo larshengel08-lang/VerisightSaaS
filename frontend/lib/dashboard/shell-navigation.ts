@@ -134,7 +134,7 @@ export function getActiveModuleFromLocation(
   campaigns: DashboardShellCampaignRef[],
 ): DashboardModuleKey {
   if (pathname.startsWith('/reports')) return 'reports'
-  if (pathname.startsWith('/help')) return 'help'
+  if (pathname === '/help' || pathname.startsWith('/help/')) return 'help'
   if (pathname.startsWith('/action-center')) return 'action_center'
   if (!pathname.startsWith('/campaigns/')) {
     return normalizeDashboardModuleFilter(moduleFilter ?? undefined) ?? 'overview'
@@ -240,7 +240,7 @@ export type ActionCenterNavItem = (typeof ACTION_CENTER_NAV)[number]
 
 export function getDashboardShellCurrentLabel(pathname: string) {
   if (pathname.startsWith('/reports')) return 'Rapporten'
-  if (pathname.startsWith('/help')) return 'Hulp'
+  if (pathname === '/help' || pathname.startsWith('/help/')) return 'Hulp'
   if (pathname.startsWith('/action-center')) return 'Action Center'
   if (pathname.startsWith('/campaigns/')) return 'Campagnedetail'
   if (pathname.startsWith('/beheer/contact-aanvragen')) return 'Leadcontext'
