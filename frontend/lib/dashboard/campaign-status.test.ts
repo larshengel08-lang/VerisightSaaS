@@ -82,8 +82,10 @@ describe('deriveCampaignStatus (spec 2026-09-16 par. 6.1)', () => {
     ['loopt, vóór de herinneringsdag', {}, 'running'],
     ['herinneringsdag', { today: '2026-09-18' }, 'action'],
     ['herinnering al afgehandeld', { today: '2026-09-18', reminderHandledAt: '2026-09-18T08:00:00Z' }, 'running'],
-    ['sluitdatum bereikt', { today: '2026-10-04' }, 'action'],
-    ['sluitdatum bereikt, herinnering uit', { today: '2026-10-04', reminderEnabled: false }, 'action'],
+    // closes_at is inclusief (spec 4.3a: "Invullen kan tot en met X"): de sluitdag zelf loopt nog.
+    ['op de sluitdag zelf loopt de meting nog', { today: '2026-10-04', reminderEnabled: false }, 'running'],
+    ['dag na de sluitdatum', { today: '2026-10-05' }, 'action'],
+    ['dag na de sluitdatum, herinnering uit', { today: '2026-10-05', reminderEnabled: false }, 'action'],
     ['genoeg respons, mag sluiten', { totalCompleted: 12 }, 'action'],
     ['gesloten met rapport', { isActive: false, totalCompleted: 14 }, 'report_ready'],
     ['gesloten zonder rapport', { isActive: false, totalCompleted: 7 }, 'closed_no_report'],
@@ -91,7 +93,8 @@ describe('deriveCampaignStatus (spec 2026-09-16 par. 6.1)', () => {
     ['geen sluitdatum, loopt', { closesAt: null }, 'running'],
     ['herinneringsevent vóór de herinneringsdag telt niet', { today: '2026-09-18', reminderHandledAt: '2026-09-15T08:00:00Z' }, 'action'],
     ['herinnering uit op de herinneringsdag, sluitdatum nog niet bereikt', { today: '2026-09-18', reminderEnabled: false }, 'running'],
-    ['sluitdatum als volledige timestamp', { today: '2026-10-04', closesAt: '2026-10-04T00:00:00Z' }, 'action'],
+    ['sluitdag als volledige timestamp loopt nog', { today: '2026-10-04', closesAt: '2026-10-04T00:00:00Z', reminderEnabled: false }, 'running'],
+    ['dag na een sluitdatum als volledige timestamp', { today: '2026-10-05', closesAt: '2026-10-04T23:00:00Z', reminderEnabled: false }, 'action'],
     ['dag vóór een sluitdatum als volledige timestamp', { today: '2026-10-03', closesAt: '2026-10-04T23:00:00Z', reminderEnabled: false }, 'running'],
   ]
 

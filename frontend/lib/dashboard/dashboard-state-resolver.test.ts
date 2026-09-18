@@ -126,7 +126,7 @@ describe('resolveDashboardState', () => {
     )
     expect(state.kind).toBe('action')
     expect(state.actionVariant).toBe('expired')
-    expect(state.primaryMessage).toBe('De sluitdatum is bereikt')
+    expect(state.primaryMessage).toBe('De sluitdatum is voorbij')
     expect(state.ctaLabel).toBe('Meting sluiten')
     expect(state.ctaKind).toBe('close_campaign')
     expect(state.secondaryActions).toEqual([{ label: 'Twee weken verlengen', kind: 'extend' }])
@@ -165,6 +165,44 @@ describe('resolveDashboardState', () => {
     )
     expect(state.ctaLabel).toBe('Meting sluiten')
     expect(state.secondaryActions).toEqual([])
+  })
+
+  it('State 3 — de sluitdag zelf is nog geen expired: closes_at is inclusief (spec 4.3a, "tot en met")', () => {
+    const closeDay = resolveDashboardState(
+      baseInput({
+        campaign: withCampaign({ totalCompleted: 6, completionRatePct: 30 }),
+        closesAt: '2026-06-05',
+        today: '2026-06-05',
+        reminderConfig: { enabled: false, firstReminderAfterDays: 5, maxReminderCount: 1 },
+      }),
+    )
+    expect(closeDay.kind).toBe('running')
+    expect(closeDay.actionVariant).not.toBe('expired')
+
+    const closeDayTimestamp = resolveDashboardState(
+      baseInput({
+        campaign: withCampaign({ totalCompleted: 12 }),
+        reportReady: true,
+        closesAt: '2026-06-05T00:00:00Z',
+        today: '2026-06-05',
+      }),
+    )
+    expect(closeDayTimestamp.actionVariant).not.toBe('expired')
+
+    const dayAfter = resolveDashboardState(
+      baseInput({ campaign: withCampaign({ totalCompleted: 6, completionRatePct: 30 }), closesAt: '2026-06-05', today: '2026-06-06' }),
+    )
+    expect(dayAfter.actionVariant).toBe('expired')
+  })
+
+  it('State 3 — expired-copy klopt op de dag na de sluitdatum en bevat geen streepjes', () => {
+    for (const [completed, extensionCount, ready] of [[12, 0, true], [6, 0, false], [6, 3, false]] as const) {
+      const state = resolveDashboardState(
+        baseInput({ campaign: withCampaign({ totalCompleted: completed }), reportReady: ready, extensionCount, closesAt: '2026-06-05', today: '2026-06-06' }),
+      )
+      expect(state.primaryMessage).toBe('De sluitdatum is voorbij')
+      expect(`${state.primaryMessage} ${state.subtext}`).not.toMatch(/[—–]/)
+    }
   })
 
   it('State 3 — expired fires even when closesAt is a full ISO timestamp', () => {

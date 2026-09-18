@@ -239,9 +239,12 @@ export function resolveDashboardState(input: DashboardStateInput): DashboardStat
   const closeAction: DashboardSecondaryAction = { label: 'Meting sluiten', kind: 'close_campaign' }
   const extendAction: DashboardSecondaryAction = { label: 'Twee weken verlengen', kind: 'extend' }
 
-  // Priority 3 — expired (close date reached). Disabled while closesAt is null.
-  // Compare date-only portions so a full ISO closesAt timestamp still fires on the close day.
-  const expired = input.closesAt !== null && input.today.slice(0, 10) >= input.closesAt.slice(0, 10)
+  // Priority 3 — expired (close date passed). Disabled while closesAt is null.
+  // closes_at is inclusief (spec 4.3a: "Invullen kan tot en met X"; backend/survey_window.py
+  // accepteert zolang vandaag <= closes_at). Pas de dag ná de sluitdatum is de meting verlopen,
+  // anders sluit een klant die de kaart volgt respondenten buiten op de dag die hun beloofd is.
+  // Compare date-only portions so a full ISO closesAt timestamp behaves as its date.
+  const expired = input.closesAt !== null && input.today.slice(0, 10) > input.closesAt.slice(0, 10)
   if (expired) {
     if (input.reportReady) {
       return {
@@ -249,7 +252,7 @@ export function resolveDashboardState(input: DashboardStateInput): DashboardStat
         ...running,
         kind: 'action',
         actionVariant: 'expired',
-        primaryMessage: 'De sluitdatum is bereikt',
+        primaryMessage: 'De sluitdatum is voorbij',
         subtext: `${counts}. Sluit de meting, dan staat het rapport klaar.`,
         tone: 'attention',
         ctaLabel: 'Meting sluiten',
@@ -263,7 +266,7 @@ export function resolveDashboardState(input: DashboardStateInput): DashboardStat
         ...running,
         kind: 'action',
         actionVariant: 'expired',
-        primaryMessage: 'De sluitdatum is bereikt',
+        primaryMessage: 'De sluitdatum is voorbij',
         subtext: `${counts}. Voor een rapport zijn minimaal ${thresholds.insightMin} antwoorden nodig. Verleng met twee weken of sluit zonder rapport.`,
         tone: 'attention',
         ctaLabel: 'Twee weken verlengen',
@@ -276,7 +279,7 @@ export function resolveDashboardState(input: DashboardStateInput): DashboardStat
       ...running,
       kind: 'action',
       actionVariant: 'expired',
-      primaryMessage: 'De sluitdatum is bereikt',
+      primaryMessage: 'De sluitdatum is voorbij',
       subtext: `${counts}. Voor een rapport zijn minimaal ${thresholds.insightMin} antwoorden nodig. Je hebt de meting al ${MAX_EXTENSIONS} keer verlengd; je kunt hem alleen nog sluiten.`,
       tone: 'attention',
       ctaLabel: 'Meting sluiten',

@@ -9,7 +9,7 @@ import { resolveInvitedDenominator, type InvitedDenominator } from '@/lib/dashbo
  * rijen op /reports (spec 2026-09-16 par. 6.1 en 6.2). De kaart blijft het
  * domein van resolveDashboardState; deze afgeleide gebruikt dezelfde
  * primitieven (rapportdrempel, gelanceerd = bevestigd én noemer > 0,
- * sluitdatum bereikt, herinneringsdag) en is met een pariteitstest aan de
+ * sluitdatum voorbij, herinneringsdag) en is met een pariteitstest aan de
  * resolver vastgeklonken, zodat lijst en kaart nooit iets anders zeggen.
  */
 export type CampaignStatusKey = 'setup' | 'running' | 'action' | 'closed_no_report' | 'report_ready'
@@ -46,7 +46,8 @@ export function deriveCampaignStatus(input: CampaignStatusInput): CampaignStatus
   const launched = Boolean(input.launchConfirmedAt) && input.totalInvited > 0
   if (!launched) return 'setup'
 
-  const expired = input.closesAt !== null && input.today.slice(0, 10) >= input.closesAt.slice(0, 10)
+  // closes_at is inclusief (spec 4.3a): pas de dag ná de sluitdatum vraagt de meting om actie.
+  const expired = input.closesAt !== null && input.today.slice(0, 10) > input.closesAt.slice(0, 10)
   if (expired) return 'action'
 
   const reminderDue =
