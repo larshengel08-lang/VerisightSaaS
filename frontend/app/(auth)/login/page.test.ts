@@ -22,9 +22,16 @@ describe('inlogpagina (spec 2026-09-16 par. 7, walkthrough 7.3)', () => {
   })
 
   it('legt een verlopen of gebruikte activatielink uit in plaats van stil op /login te landen', () => {
-    // complete-account stuurt bij een mislukte verifyOtp naar /login?error=invite.
-    expect(login).toContain("get('error') === 'invite'")
-    expect(login).toContain('De activatielink is verlopen of al gebruikt.')
+    // complete-account stuurt bij een mislukte verifyOtp naar /login?error=invite;
+    // de tekst en de detectie staan in lib/invite-link-notice (eigen unittest).
+    expect(login).toContain('inviteLinkNoticeFromSearch(window.location.search)')
+    // Na het lezen gaat de parameter uit de URL, zodat een refresh de melding niet opnieuw toont.
+    expect(login).toContain("window.history.replaceState({}, '', window.location.pathname)")
+  })
+
+  it('laat de browser e-mail en wachtwoord invullen', () => {
+    expect(login).toContain('autoComplete="email"')
+    expect(login).toContain('autoComplete="current-password"')
   })
 
   it('staat in het Loep-ontwerp, niet in het oude blauw', () => {

@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { LOEP_CONTACT_EMAIL } from '@/lib/loep-contact'
+import { inviteLinkNoticeFromSearch } from '@/lib/invite-link-notice'
 
 const inputClass =
   'w-full rounded-lg border border-[#0D1B2A]/20 bg-white px-3 py-2.5 text-sm text-[#0D1B2A] placeholder:text-[#0D1B2A]/40 focus:border-[#E8A020] focus:outline-none focus:ring-2 focus:ring-[#E8A020]/40'
@@ -19,15 +20,15 @@ export default function LoginPage() {
   const supabase = createClient()
 
   // complete-account stuurt hierheen met ?error=invite als de activatielink
-  // niet meer geldig is. Zonder uitleg landde de klant stil op een kale
-  // inlogpagina (walkthrough 0). window.location in plaats van
-  // useSearchParams: die laatste vraagt een Suspense-grens in de App Router.
+  // niet meer geldig is (zie lib/invite-link-notice). window.location in
+  // plaats van useSearchParams: die laatste vraagt een Suspense-grens in de
+  // App Router. Na het lezen halen we de parameter uit de URL, zodat een
+  // refresh de melding niet opnieuw toont.
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    if (params.get('error') === 'invite') {
-      setLinkNotice(
-        `De activatielink is verlopen of al gebruikt. Vraag via Wachtwoord vergeten een nieuwe link aan, of mail ${LOEP_CONTACT_EMAIL}.`,
-      )
+    const notice = inviteLinkNoticeFromSearch(window.location.search)
+    if (notice) {
+      setLinkNotice(notice)
+      window.history.replaceState({}, '', window.location.pathname)
     }
   }, [])
 
@@ -77,6 +78,7 @@ export default function LoginPage() {
               <input
                 id="email"
                 type="email"
+                autoComplete="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -97,6 +99,7 @@ export default function LoginPage() {
               <input
                 id="password"
                 type="password"
+                autoComplete="current-password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

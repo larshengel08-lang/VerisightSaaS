@@ -142,7 +142,7 @@ export default function CompleteAccountPage() {
               </div>
             ) : (
               <>
-                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[#B07A10]">Welkom bij Loep</p>
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[#7A5410]">Welkom bij Loep</p>
                 <h1 className="mt-2 font-serif text-[2rem] leading-[1.05] tracking-[-0.03em]">Kies een wachtwoord</h1>
                 <p className="mb-6 mt-3 text-sm leading-6 text-[#4A6070]">
                   Je bent ingelogd via de activatiemail voor {email ?? 'jouw account'}. Kies nu een wachtwoord,
@@ -157,6 +157,7 @@ export default function CompleteAccountPage() {
                     <input
                       id="password"
                       type="password"
+                      autoComplete="new-password"
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -171,6 +172,7 @@ export default function CompleteAccountPage() {
                     <input
                       id="password2"
                       type="password"
+                      autoComplete="new-password"
                       required
                       value={password2}
                       onChange={(e) => setPassword2(e.target.value)}
@@ -222,8 +224,7 @@ export default function CompleteAccountPage() {
           <aside className="rounded-[22px] bg-[#0D1B2A] p-8 text-white">
             <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[#E8A020]">Wat je hierna doet</p>
             <p className="mt-3 text-sm leading-6 text-white/80">
-              Loep heeft je organisatie en je eerste meting al aangemaakt. Daarna richt je in drie stappen je eerste
-              meting in:
+              Je organisatie staat al klaar in Loep. Een meting loopt in drie stappen:
             </p>
             <ol className="mt-4 space-y-3">
               {NEXT_STEPS.map((step, index) => (
@@ -235,6 +236,9 @@ export default function CompleteAccountPage() {
                 </li>
               ))}
             </ol>
+            <p className="mt-4 text-sm leading-6 text-white/80">
+              In je overzicht zie je bij welke stap jouw meting nu staat.
+            </p>
             <p className="mt-6 text-xs leading-5 text-white/60">
               Je verstuurt de uitnodiging zelf vanuit je eigen mail; Loep slaat geen mailadressen van je medewerkers op.
             </p>

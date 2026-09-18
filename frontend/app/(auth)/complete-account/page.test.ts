@@ -24,6 +24,16 @@ describe('activatiepagina (spec 2026-09-16 par. 7, walkthrough 0.1 t/m 0.4)', ()
     expect(page).not.toContain('placeholder="••••••••"')
   })
 
+  it('laat de browser een nieuw wachtwoord voorstellen en bewaren', () => {
+    expect(page.match(/autoComplete="new-password"/g)?.length).toBe(2)
+  })
+
+  it('belooft niet dat de eerste meting al is aangemaakt (klopt niet voor latere uitnodigingen)', () => {
+    expect(page).not.toContain('al aangemaakt')
+    expect(page).toContain('Je organisatie staat al klaar in Loep. Een meting loopt in drie stappen:')
+    expect(page).toContain('In je overzicht zie je bij welke stap jouw meting nu staat.')
+  })
+
   it('staat in het Loep-ontwerp', () => {
     expect(page).not.toContain('bg-blue-600')
     expect(page).not.toContain('text-blue-600')
