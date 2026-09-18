@@ -56,7 +56,7 @@ export function buildHrReportDownloadRows(campaigns: CampaignStats[]): {
         scanName: SCAN_TYPE_LABELS[campaign.scan_type],
         periodLabel,
         createdAt: campaign.created_at,
-        responseBasis: `${campaign.total_completed} / ${campaign.total_invited ?? '—'}`,
+        responseBasis: `${campaign.total_completed} / ${campaign.total_invited ?? 'n.b.'}`,
         status: isAvailable ? 'Beschikbaar' : 'Nog onvoldoende respons',
         isAvailable,
         extraDisambiguator: null,

@@ -22,8 +22,10 @@ function sourceFiles(dir: string, out: string[] = []): string[] {
 describe('geen em- of en-dashes in de ingelogde omgeving (spec 2026-09-16 par. 7)', () => {
   it('vindt geen enkele U+2014 of U+2013 in bronbestanden onder de drie mappen', () => {
     const hits: string[] = []
+    let scannedCount = 0
     for (const root of ROOTS) {
       for (const file of sourceFiles(path.join(process.cwd(), root))) {
+        scannedCount += 1
         fs.readFileSync(file, 'utf8')
           .split('\n')
           .forEach((line, index) => {
@@ -31,6 +33,10 @@ describe('geen em- of en-dashes in de ingelogde omgeving (spec 2026-09-16 par. 7
           })
       }
     }
+    // Sanity: een verkeerde of lege root laat de guard hierboven vals-groen slagen
+    // (geen bestanden = geen treffers). Dwing een minimumaantal af zodat een
+    // kapotte ROOTS-configuratie hard faalt in plaats van stil te slagen.
+    expect(scannedCount, `slechts ${scannedCount} bronbestanden gevonden onder ${ROOTS.join(', ')}`).toBeGreaterThan(50)
     expect(hits, `streepjes gevonden in:\n${hits.join('\n')}`).toEqual([])
   })
 })
