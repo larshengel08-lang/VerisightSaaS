@@ -27,3 +27,14 @@ export function buildNewMeasurementMailto(organizationName: string | null | unde
   ].join('\n')
   return `mailto:${LOEP_CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
 }
+
+/**
+ * Welke variant van het blok "nieuwe meting aanvragen" past (spec 2026-09-16
+ * par. 6.3). "Vervolgmeting" met prijs belooft "dezelfde meting opnieuw"; dat
+ * klopt pas als er een meting gesloten is. Een nieuwe klant met alleen een
+ * meting in inrichting of lopend krijgt de neutrale variant. Gesloten = de
+ * campaign_stats-vlag is_active false, dezelfde bron als deriveCampaignStatus.
+ */
+export function newMeasurementVariant(campaigns: ReadonlyArray<{ is_active: boolean }>): 'follow_up' | 'first' {
+  return campaigns.some((c) => c.is_active === false) ? 'follow_up' : 'first'
+}

@@ -6,6 +6,7 @@ import { RunningStateCard } from '@/components/dashboard/running-state-card'
 import { WelcomeGate } from '@/components/dashboard/welcome-gate'
 import { CampaignListSection } from '@/components/dashboard/campaign-list-section'
 import { RequestNewMeasurement } from '@/components/dashboard/request-new-measurement'
+import { newMeasurementVariant } from '@/lib/dashboard/new-measurement-request'
 import { loadAccountOrganizations } from '@/lib/dashboard/account-organization'
 import { buildCampaignListItems, pickMainCampaign } from '@/lib/dashboard/campaign-list'
 import { loadCampaignStatusContext } from '@/lib/dashboard/campaign-status-context'
@@ -243,7 +244,7 @@ export default async function DashboardHomePage() {
       {campaigns.length > 1 ? (
         <CampaignListSection items={listItems} />
       ) : null}
-      <RequestNewMeasurement variant="follow_up" organizationName={orgData?.name ?? null} />
+      <RequestNewMeasurement variant={newMeasurementVariant(campaigns)} organizationName={orgData?.name ?? null} />
     </div>
   )
 }

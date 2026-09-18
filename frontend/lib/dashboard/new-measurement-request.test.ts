@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { NEW_MEASUREMENT_PRICE_LABEL, buildNewMeasurementMailto } from './new-measurement-request'
+import { NEW_MEASUREMENT_PRICE_LABEL, buildNewMeasurementMailto, newMeasurementVariant } from './new-measurement-request'
 
 function parse(href: string) {
   const [target, query] = href.split('?')
@@ -36,5 +36,21 @@ describe('buildNewMeasurementMailto (spec 2026-09-16 par. 6.3)', () => {
   it('bevat geen em- of en-dashes', () => {
     const { subject, body } = parse(buildNewMeasurementMailto('Acme'))
     expect(subject + body).not.toMatch(/[—–]/)
+  })
+})
+
+describe('newMeasurementVariant: "vervolgmeting" alleen als er al een meting is afgerond', () => {
+  it('zonder metingen: neutrale variant', () => {
+    expect(newMeasurementVariant([])).toBe('first')
+  })
+
+  it('een nieuwe klant met alleen een meting in inrichting of lopend: geen vervolgmeting met prijs', () => {
+    expect(newMeasurementVariant([{ is_active: true }])).toBe('first')
+    expect(newMeasurementVariant([{ is_active: true }, { is_active: true }])).toBe('first')
+  })
+
+  it('zodra één meting gesloten is (met of zonder rapport): vervolgmeting', () => {
+    expect(newMeasurementVariant([{ is_active: false }])).toBe('follow_up')
+    expect(newMeasurementVariant([{ is_active: true }, { is_active: false }])).toBe('follow_up')
   })
 })

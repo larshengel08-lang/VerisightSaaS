@@ -70,7 +70,11 @@ describe('state-driven dashboard page', () => {
     expect(source).toContain('loadAccountOrganizations(supabase, user.id)')
     // Zonder meting is er geen "zelfde meting opnieuw": neutrale variant.
     expect(source).toContain('<RequestNewMeasurement variant="first" organizationName={account.names[0] ?? null} />')
-    expect(source).toContain('<RequestNewMeasurement variant="follow_up" organizationName={orgData?.name ?? null} />')
+    // Met metingen: "vervolgmeting" met prijs alleen als er al een meting gesloten
+    // is. Een nieuwe klant met alleen een meting in inrichting krijgt de neutrale variant.
+    expect(source).toContain('newMeasurementVariant(campaigns)')
+    expect(source).toContain('<RequestNewMeasurement variant={newMeasurementVariant(campaigns)} organizationName={orgData?.name ?? null} />')
+    expect(source).not.toContain('variant="follow_up"')
     // Een mislukte naamlading blijft niet stil (Task 6 toont hem in de kop).
     expect(source).toContain('if (account.error) console.warn(')
   })
