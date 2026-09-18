@@ -81,26 +81,6 @@ export function OperatorOnboardingBlueprint() {
   )
 }
 
-export function ActivationJourneyPanel() {
-  return (
-    <div className="rounded-[22px] border border-blue-100 bg-blue-50 p-5">
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-700">Wat gebeurt er nu?</p>
-      <div className="mt-4 grid gap-3 md:grid-cols-3">
-        {[
-          'Je account is bedoeld voor dashboardtoegang. Loep heeft organisatie, campaign en respondentimport al voorbereid.',
-          'Open na activatie eerst je campaignoverzicht. Daar zie je welke campagne al klaar is voor eerste managementduiding en welke nog respons opbouwt.',
-          'Gebruik daarna dashboard en rapport samen voor het eerste managementgesprek. Je hoeft geen setup of surveylogica meer te beheren.',
-        ].map((item, index) => (
-          <div key={item} className="rounded-2xl border border-white/80 bg-white/90 p-4 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-500">Stap {index + 1}</p>
-            <p className="mt-2 text-sm leading-6 text-slate-700">{item}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
 export function ManagementReadGuide({
   scanType,
   hasMinDisplay,

@@ -1,10 +1,14 @@
-﻿'use client'
+'use client'
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { ActivationJourneyPanel } from '@/components/dashboard/onboarding-panels'
 import { createClient } from '@/lib/supabase/client'
+
+const inputClass =
+  'w-full rounded-lg border border-[#0D1B2A]/20 bg-white px-3 py-2.5 text-sm text-[#0D1B2A] placeholder:text-[#0D1B2A]/40 focus:border-[#E8A020] focus:outline-none focus:ring-2 focus:ring-[#E8A020]/40'
+
+const NEXT_STEPS = ['Startdatum en deelnemers', 'Uitnodigen', 'Volgen en afronden']
 
 export default function CompleteAccountPage() {
   const router = useRouter()
@@ -32,14 +36,14 @@ export default function CompleteAccountPage() {
     }
 
     // @supabase/ssr's createBrowserClient forceert altijd flowType 'pkce'
-    // (hardcoded in de library, niet via options te overschrijven) — die
+    // (hardcoded in de library, niet via options te overschrijven); die
     // client herkent dus alleen een ?code=-param, nooit een #access_token-
     // hash. Een server-verstuurde activatielink (sendActivationLink) kan
     // echter geen geldige pkce-code leveren: de code_verifier hoort thuis in
     // dezelfde browser die de link verstuurt, en dat is nooit de browser van
-    // de ontvanger. Daarom stuurt de activatiemail nu een token_hash mee
+    // de ontvanger. Daarom stuurt de activatiemail een token_hash mee
     // (Supabase-template aangepast) die hier expliciet met verifyOtp wordt
-    // ingewisseld — dat werkt ongeacht flowType. Bestaat er geen token_hash
+    // ingewisseld; dat werkt ongeacht flowType. Bestaat er geen token_hash
     // (bv. een teruggekeerde, al ingelogde gebruiker), dan valt dit terug op
     // de gewone getUser()-check.
     const {
@@ -91,12 +95,12 @@ export default function CompleteAccountPage() {
     setError(null)
 
     if (password !== password2) {
-      setError('Wachtwoorden komen niet overeen.')
+      setError('De twee wachtwoorden zijn niet gelijk.')
       return
     }
 
     if (password.length < 8) {
-      setError('Wachtwoord moet minimaal 8 tekens zijn.')
+      setError('Kies een wachtwoord van minimaal 8 tekens.')
       return
     }
 
@@ -105,11 +109,11 @@ export default function CompleteAccountPage() {
     setLoading(false)
 
     if (updateError) {
-      setError('Wachtwoord instellen mislukt. Probeer het opnieuw of gebruik later Wachtwoord vergeten.')
+      setError('Het wachtwoord kon niet worden opgeslagen. Probeer het opnieuw, of gebruik later Wachtwoord vergeten.')
       return
     }
 
-    setSuccess('Account geactiveerd. Je wordt doorgestuurd naar het dashboard...')
+    setSuccess('Wachtwoord opgeslagen. Loep opent je overzicht.')
     setTimeout(() => router.push('/dashboard'), 1200)
   }
 
@@ -118,34 +122,36 @@ export default function CompleteAccountPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
-      <div className="w-full max-w-5xl">
+    <div className="flex min-h-screen items-center justify-center bg-[#F4F1EA] p-4 text-[#0D1B2A]">
+      <div className="w-full max-w-4xl">
         <div className="mb-8 text-center">
-          <Link href="/" className="text-2xl font-bold tracking-tight text-blue-600">
-            Loep
+          <Link href="/" className="font-serif text-2xl tracking-[-0.03em] text-[#0D1B2A]">
+            Loep <span className="text-[#E8A020]">&bull;</span>
           </Link>
-          <p className="mt-2 text-sm text-gray-500">Account activeren voor dashboardtoegang</p>
+          <p className="mt-1 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[#4A6070]">
+            Scherper zien wat telt
+          </p>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.05fr),minmax(320px,0.95fr)]">
-          <div className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)]">
+          <div className="rounded-[22px] border border-[#0D1B2A]/15 bg-white p-8">
             {checking ? (
               <div className="text-center">
-                <h1 className="mb-2 text-lg font-semibold text-gray-900">Activatielink verifiëren...</h1>
-                <p className="text-sm text-gray-500">Even geduld. We ronden je dashboardtoegang af.</p>
+                <h1 className="mb-2 text-lg font-semibold">Activatielink controleren</h1>
+                <p className="text-sm text-[#4A6070]">Even geduld. Loep controleert je link.</p>
               </div>
             ) : (
               <>
-                <h1 className="mb-2 text-xl font-semibold text-gray-900">Kies direct een wachtwoord</h1>
-                <p className="mb-6 text-sm text-gray-500">
-                  Je bent ingelogd via de activatiemail voor {email ?? 'jouw account'}. Stel nu meteen een wachtwoord in,
-                  zodat je later gewoon via de inlogpagina kunt terugkomen. Na deze stap is je account klaar voor
-                  het juiste dashboard en de juiste campagne.
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[#B07A10]">Welkom bij Loep</p>
+                <h1 className="mt-2 font-serif text-[2rem] leading-[1.05] tracking-[-0.03em]">Kies een wachtwoord</h1>
+                <p className="mb-6 mt-3 text-sm leading-6 text-[#4A6070]">
+                  Je bent ingelogd via de activatiemail voor {email ?? 'jouw account'}. Kies nu een wachtwoord,
+                  dan kun je later gewoon via de inlogpagina terugkomen.
                 </p>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
-                    <label htmlFor="password" className="mb-1 block text-sm font-medium text-gray-700">
+                    <label htmlFor="password" className="mb-1 block text-sm font-medium">
                       Nieuw wachtwoord
                     </label>
                     <input
@@ -155,12 +161,12 @@ export default function CompleteAccountPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Minimaal 8 tekens"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className={inputClass}
                     />
                   </div>
                   <div>
-                    <label htmlFor="password2" className="mb-1 block text-sm font-medium text-gray-700">
-                      Bevestig wachtwoord
+                    <label htmlFor="password2" className="mb-1 block text-sm font-medium">
+                      Herhaal het wachtwoord
                     </label>
                     <input
                       id="password2"
@@ -168,19 +174,19 @@ export default function CompleteAccountPage() {
                       required
                       value={password2}
                       onChange={(e) => setPassword2(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Minimaal 8 tekens"
+                      className={inputClass}
                     />
                   </div>
 
                   {error ? (
-                    <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                    <div role="alert" className="rounded-lg border border-[#C0392B]/30 bg-[#C0392B]/10 px-3 py-2 text-sm text-[#8E2A1F]">
                       {error}
                     </div>
                   ) : null}
 
                   {success ? (
-                    <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
+                    <div role="status" className="rounded-lg border border-[#3C8D8A]/30 bg-[#3C8D8A]/10 px-3 py-2 text-sm text-[#2A6663]">
                       {success}
                     </div>
                   ) : null}
@@ -188,7 +194,7 @@ export default function CompleteAccountPage() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="w-full rounded-lg bg-[#0D1B2A] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#1B2E45] disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {loading ? 'Opslaan...' : 'Wachtwoord instellen'}
                   </button>
@@ -197,35 +203,44 @@ export default function CompleteAccountPage() {
                 <button
                   type="button"
                   onClick={handleSkip}
-                  className="mt-3 w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                  className="mt-3 w-full rounded-lg border border-[#0D1B2A]/20 px-4 py-2.5 text-sm font-semibold text-[#0D1B2A] hover:bg-[#F4F1EA]"
                 >
-                  Nu overslaan en doorgaan naar dashboard
+                  Later, ga naar mijn overzicht
                 </button>
 
-                <p className="mt-4 text-xs text-gray-400">
-                  Liever later? Dat kan ook. Je kunt altijd via{' '}
-                  <Link href="/forgot-password" className="text-blue-600 hover:underline">
+                <p className="mt-4 text-xs text-[#4A6070]">
+                  Liever later? Via{' '}
+                  <Link href="/forgot-password" className="font-semibold text-[#0D1B2A] underline underline-offset-4">
                     Wachtwoord vergeten
                   </Link>{' '}
-                  alsnog een vast wachtwoord instellen.
+                  stel je altijd alsnog een wachtwoord in.
                 </p>
               </>
             )}
           </div>
 
-          <div className="space-y-6">
-            <ActivationJourneyPanel />
-            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-400">Begeleide inrichting</p>
-              <p className="mt-3 text-sm leading-6 text-gray-600">
-                Je account gaat pas open als het dashboard, de campagne en de respondentgroep voor je klaarstaan.
-                Daardoor kom je niet in een lege omgeving terecht, maar meteen in de juiste werkomgeving.
-              </p>
-            </div>
-          </div>
+          <aside className="rounded-[22px] bg-[#0D1B2A] p-8 text-white">
+            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[#E8A020]">Wat je hierna doet</p>
+            <p className="mt-3 text-sm leading-6 text-white/80">
+              Loep heeft je organisatie en je eerste meting al aangemaakt. Daarna richt je in drie stappen je eerste
+              meting in:
+            </p>
+            <ol className="mt-4 space-y-3">
+              {NEXT_STEPS.map((step, index) => (
+                <li key={step} className="flex items-start gap-3">
+                  <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#E8A020] text-xs font-bold text-[#0D1B2A]">
+                    {index + 1}
+                  </span>
+                  <span className="text-sm font-semibold">{step}</span>
+                </li>
+              ))}
+            </ol>
+            <p className="mt-6 text-xs leading-5 text-white/60">
+              Je verstuurt de uitnodiging zelf vanuit je eigen mail; Loep slaat geen mailadressen van je medewerkers op.
+            </p>
+          </aside>
         </div>
       </div>
     </div>
   )
 }
-
