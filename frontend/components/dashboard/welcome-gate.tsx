@@ -1,21 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { SetupWizardCard } from './setup-wizard-card'
-import type { ScanType } from '@/lib/types'
-import type { SegmentDepartmentStored } from '@/lib/self-send-comms'
+import { SetupWizardCard, type SetupWizardCardProps } from './setup-wizard-card'
 
-interface Props {
-  campaignId: string
-  scanType: ScanType
-  organizationName: string
-  publicSurveyToken: string
-  frontendBaseUrl: string
-  initialLaunchDate: string | null
-  initialInvitedCount: number | null
-  segmentDepartments?: SegmentDepartmentStored[] | null
-  departmentResponseCounts?: Record<string, number>
-}
+type Props = SetupWizardCardProps
 
 const BALLOONS = [
   { left: '8%',  delay: '0s',    dur: '3.8s', color: '#E8A020', size: 44 },

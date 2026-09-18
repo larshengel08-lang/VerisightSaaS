@@ -16,6 +16,8 @@ import { rapportGereedHtml } from '@/lib/email-templates/rapport-gereed'
 import { isReportReleaseReady } from '@/lib/response-activation'
 import { buildReportMailRecipients, countCustomerRecipients } from '@/lib/report-mail-recipients'
 import { getOperatorEmail, LOEP_CONTACT_EMAIL } from '@/lib/loep-contact'
+import { formatDutchDate } from '@/lib/dashboard/format-dutch-date'
+import { canExtendCampaign, computeExtendedClosesAt, MAX_EXTENSIONS } from '@/lib/dashboard/campaign-extension'
 import type { ScanType } from '@/lib/types'
 
 export interface DashboardActionResult {
@@ -242,6 +244,152 @@ export async function closeCampaignAction(campaignId: string): Promise<Dashboard
       warning: `Campagne gesloten en het rapport staat klaar. Er is geen e-mailadres van je organisatie bekend, dus er is geen bericht verstuurd. Mail ${LOEP_CONTACT_EMAIL} om dat in te stellen.`,
     }
   }
+
+  return { ok: true }
+}
+
+/**
+ * Verlengen (spec 2026-09-16 par. 4.3): closes_at = max(vandaag, closes_at) + 14
+ * dagen, maximaal MAX_EXTENSIONS keer per meting. De teller is het aantal
+ * delivery_lifecycle_changed-events met metadata.extension = true; geen nieuwe
+ * outcome-waarde, want de audittabel is live aangemaakt en een onbekende
+ * check-constraint is een risico.
+ *
+ * De grens wordt in deze actie afgedwongen, niet door de database: RLS laat
+ * een beheerder closes_at vrij bijwerken. Daarom telt een verlenging alleen
+ * als het auditevent er ook staat; lukt het loggen niet, dan wordt closes_at
+ * teruggezet, zodat er geen ongetelde verlenging bestaat.
+ */
+export async function extendCampaignAction(campaignId: string): Promise<DashboardActionResult> {
+  const ctx = await loadActorContext(campaignId)
+  if (!ctx.ok) return { ok: false, error: ctx.error }
+
+  const canManage = ctx.isAdmin || getCustomerActionPermission(ctx.role, 'review_launch')
+  if (!canManage) return { ok: false, error: getPermissionDeniedMessage('review_launch') }
+
+  const [{ data: campaignRow, error: campaignError }, { count: extensionCount, error: countError }] = await Promise.all([
+    ctx.supabase.from('campaigns').select('closes_at, is_active').eq('id', campaignId).maybeSingle(),
+    ctx.supabase
+      .from('campaign_action_audit_events')
+      .select('id', { count: 'exact', head: true })
+      .eq('campaign_id', campaignId)
+      .eq('organization_id', ctx.organizationId)
+      .eq('action_key', 'delivery_lifecycle_changed')
+      .eq('outcome', 'completed')
+      .contains('metadata', { extension: true }),
+  ])
+
+  if (campaignError || !campaignRow) {
+    return { ok: false, error: `Verlengen mislukt: ${campaignError?.message ?? 'campagne niet gevonden of geen rechten'}.` }
+  }
+  if (countError) {
+    return {
+      ok: false,
+      error: `Verlengen mislukt: Loep kon niet vaststellen hoe vaak deze meting al verlengd is (${countError.message}).`,
+    }
+  }
+
+  const row = campaignRow as { closes_at: string | null; is_active: boolean }
+  if (!row.is_active) return { ok: false, error: 'Deze meting is al gesloten en kan niet meer verlengd worden.' }
+
+  const used = extensionCount ?? 0
+  if (!canExtendCampaign(used)) {
+    return { ok: false, error: `Deze meting is al ${MAX_EXTENSIONS} keer verlengd. Je kunt hem alleen nog sluiten.` }
+  }
+
+  const today = new Date().toISOString().slice(0, 10)
+  const nextClosesAt = computeExtendedClosesAt(row.closes_at, today)
+  const nextClosesAtLabel = formatDutchDate(nextClosesAt) ?? nextClosesAt
+
+  const { data: updated, error: updateError } = await ctx.supabase
+    .from('campaigns')
+    .update({ closes_at: nextClosesAt })
+    .eq('id', campaignId)
+    .select('id')
+  if (updateError) return { ok: false, error: `Verlengen mislukt: ${updateError.message}` }
+  if (!updated || updated.length === 0) {
+    return { ok: false, error: 'Verlengen mislukt: campagne niet gevonden of geen rechten.' }
+  }
+
+  const { error: auditError } = await insertCampaignAuditEvent({
+    supabase: ctx.supabase,
+    organizationId: ctx.organizationId,
+    campaignId,
+    actorUserId: ctx.user.id,
+    actorRole: ctx.actorRole,
+    action: 'delivery_lifecycle_changed',
+    outcome: 'completed',
+    summary: `Sluitdatum verlengd tot ${nextClosesAtLabel}.`,
+    metadata: {
+      extension: true,
+      previous_closes_at: row.closes_at,
+      new_closes_at: nextClosesAt,
+      extension_number: used + 1,
+    },
+  })
+  if (auditError) {
+    // Een verlenging die niet gelogd is, telt niet mee voor de grens. Zet de
+    // datum terug, zodat de teller en closes_at niet uit elkaar lopen.
+    const { data: rolledBack, error: rollbackError } = await ctx.supabase
+      .from('campaigns')
+      .update({ closes_at: row.closes_at })
+      .eq('id', campaignId)
+      .select('id')
+    if (rollbackError || !rolledBack || rolledBack.length === 0) {
+      console.error('[extendCampaignAction] audit en terugzetten mislukt:', auditError.message, rollbackError?.message)
+      // Zeggen, niet verzwijgen: de datum is verschoven maar telt niet mee.
+      return {
+        ok: true,
+        warning: `De sluitdatum staat nu op ${nextClosesAtLabel}, maar daarna kon Loep de verlenging niet vastleggen en ook niet terugdraaien. Deze verlenging telt daardoor niet mee. Mail ${LOEP_CONTACT_EMAIL}, dan zet Loep het recht.`,
+      }
+    }
+    return {
+      ok: false,
+      error: 'Verlengen is niet gelukt: Loep kon de verlenging niet vastleggen. Probeer het opnieuw.',
+    }
+  }
+
+  return { ok: true }
+}
+
+/**
+ * Herinnering overslaan (spec 2026-09-16 par. 4.3): een send_reminders-event
+ * met channel 'skipped_by_customer'. isReminderDue telt elk send_reminders-
+ * event op of na de vervaldatum als afgehandeld, dus de herinneringskaart
+ * verdwijnt daarna eerlijk.
+ */
+export async function skipReminderAction(campaignId: string): Promise<DashboardActionResult> {
+  const ctx = await loadActorContext(campaignId)
+  if (!ctx.ok) return { ok: false, error: ctx.error }
+
+  const canSend = ctx.isAdmin || getCustomerActionPermission(ctx.role, 'send_reminders')
+  if (!canSend) return { ok: false, error: getPermissionDeniedMessage('send_reminders') }
+
+  const { data: campaignRow, error: campaignError } = await ctx.supabase
+    .from('campaigns')
+    .select('is_active, closed_at')
+    .eq('id', campaignId)
+    .maybeSingle()
+  if (campaignError || !campaignRow) {
+    return { ok: false, error: `Overslaan mislukt: ${campaignError?.message ?? 'campagne niet gevonden of geen rechten'}.` }
+  }
+  const row = campaignRow as { is_active: boolean; closed_at: string | null }
+  if (!row.is_active || row.closed_at) {
+    return { ok: false, error: 'Deze meting is al gesloten; een herinnering overslaan is niet meer nodig.' }
+  }
+
+  const { error } = await insertCampaignAuditEvent({
+    supabase: ctx.supabase,
+    organizationId: ctx.organizationId,
+    campaignId,
+    actorUserId: ctx.user.id,
+    actorRole: ctx.actorRole,
+    action: 'send_reminders',
+    outcome: 'completed',
+    summary: 'HR koos ervoor geen herinnering te versturen.',
+    metadata: { channel: 'skipped_by_customer' },
+  })
+  if (error) return { ok: false, error: `Overslaan mislukt: ${error.message}` }
 
   return { ok: true }
 }

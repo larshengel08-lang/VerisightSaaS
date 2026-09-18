@@ -5,12 +5,18 @@ import {
   prepareSegmentDepartmentsUpdate,
   type SegmentDepartmentInput,
   type SegmentDepartmentStored,
+  type SegmentDepartmentsUpdate,
 } from '@/lib/self-send-comms'
 
 export interface ActionResult {
   ok: boolean
   error?: string
 }
+
+/** Bij succes de opgeslagen afdelingen mét slug, zodat de wizard de links in de uitnodiging kan bijwerken. */
+export type SaveSegmentDepartmentsResult =
+  | { ok: true; departments: SegmentDepartmentsUpdate['departments'] }
+  | { ok: false; error: string }
 
 // Zelfde patroon als launch-setup-actions.ts: owner/member of verisight-admin.
 // Moet in sync blijven met is_org_manager() in schema.sql.
@@ -21,7 +27,7 @@ async function getAuthAndMembership(campaignId: string) {
 
   const { data: campaign } = await supabase
     .from('campaigns')
-    .select('organization_id, segment_departments')
+    .select('organization_id, segment_departments, is_active, closed_at')
     .eq('id', campaignId)
     .single()
 
@@ -40,9 +46,26 @@ async function getAuthAndMembership(campaignId: string) {
 export async function saveSegmentDepartmentsAction(
   campaignId: string,
   incoming: SegmentDepartmentInput[],
-): Promise<ActionResult> {
+): Promise<SaveSegmentDepartmentsResult> {
   const { supabase, campaign, authorized } = await getAuthAndMembership(campaignId)
   if (!authorized || !campaign) return { ok: false, error: 'Niet gemachtigd.' }
+
+  // Zelfde grens als saveLaunchSetupAction: na lancering of sluiting mag stap 1
+  // de afdelingen (en dus de links en het totaal) niet meer herschrijven.
+  if (campaign.is_active === false || campaign.closed_at) {
+    return { ok: false, error: 'De meting is al gesloten; stap 1 kun je niet meer wijzigen.' }
+  }
+  const { data: delivery, error: deliveryReadError } = await supabase
+    .from('campaign_delivery_records')
+    .select('launch_confirmed_at')
+    .eq('campaign_id', campaignId)
+    .maybeSingle()
+  if (deliveryReadError) {
+    return { ok: false, error: `Opslaan mislukt: de huidige planning kon niet worden gelezen (${deliveryReadError.message}).` }
+  }
+  if (delivery?.launch_confirmed_at) {
+    return { ok: false, error: 'De meting is al gestart; stap 1 kun je niet meer wijzigen.' }
+  }
 
   // Vergrendelde afdelingen uit de database (Fail Loud: onafhankelijk van
   // wat de client beweert). Elke respondent-rij telt — ook niet-afgeronde:
@@ -87,5 +110,5 @@ export async function saveSegmentDepartmentsAction(
     )
   if (deliveryError) return { ok: false, error: `Totaal opslaan mislukt: ${deliveryError.message}` }
 
-  return { ok: true }
+  return { ok: true, departments: update.departments }
 }

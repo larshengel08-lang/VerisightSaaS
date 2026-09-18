@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { buildReminderText, type ReminderTextInput } from '@/lib/dashboard/reminder-text'
+import { buildReminderText, isReminderTextAvailable, splitReminderText, type ReminderTextInput } from '@/lib/dashboard/reminder-text'
 
 function input(overrides: Partial<ReminderTextInput> = {}): ReminderTextInput {
   return {
     commsMode: 'self_send',
     scanType: 'retention' as const,
-    scanLabel: 'Loep Behoud',
     organizationName: 'Acme BV',
     publicSurveyToken: 'tok-123',
     frontendBaseUrl: 'https://www.getloep.nl',
@@ -64,5 +63,42 @@ describe('buildReminderText (spec 2026-09-11 par. 6)', () => {
     expect(text).not.toContain('Loep verzorgt de uitnodiging')
     expect(text).not.toMatch(/https?:\/\//)
     expect(text).toContain('nog geen surveylink beschikbaar')
+  })
+})
+
+describe('splitReminderText (spec 2026-09-16 par. 4.4)', () => {
+  it('splitst de gebouwde tekst weer in onderwerp en bericht', () => {
+    const text = buildReminderText(input())
+    const parts = splitReminderText(text)
+    expect(parts.subject).toBe('Herinnering: korte vragenlijst - Acme BV')
+    expect(parts.body.startsWith('Beste collega,')).toBe(true)
+    expect(parts.body).toContain('https://www.getloep.nl/survey/open/tok-123')
+    expect(`${parts.subject}\n\n${parts.body}`).toBe(text)
+  })
+
+  it('geeft een tekst zonder lege regel volledig als onderwerp terug, met leeg bericht', () => {
+    expect(splitReminderText('alleen een regel')).toEqual({ subject: 'alleen een regel', body: '' })
+  })
+})
+
+describe('isReminderTextAvailable (spec-review 2026-09-17)', () => {
+  it('herkent de echte, gedegradeerde fallback-tekst (geen surveylink) als niet beschikbaar', () => {
+    const text = buildReminderText(input({ publicSurveyToken: null }))
+    expect(isReminderTextAvailable(text)).toBe(false)
+  })
+
+  it('herkent de whitespace-only-tokenvariant van de fallback ook als niet beschikbaar', () => {
+    const text = buildReminderText(input({ publicSurveyToken: '   ' }))
+    expect(isReminderTextAvailable(text)).toBe(false)
+  })
+
+  it('herkent een echte, kopieerbare herinnering als beschikbaar', () => {
+    const text = buildReminderText(input())
+    expect(isReminderTextAvailable(text)).toBe(true)
+  })
+
+  it('herkent de managed-tekst ook als beschikbaar', () => {
+    const text = buildReminderText(input({ commsMode: 'managed' }))
+    expect(isReminderTextAvailable(text)).toBe(true)
   })
 })

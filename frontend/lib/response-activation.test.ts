@@ -4,8 +4,12 @@ import {
   CULTURE_ASSESSMENT_INSIGHT_THRESHOLD,
   FIRST_DASHBOARD_THRESHOLD,
   FIRST_INSIGHT_THRESHOLD,
+  MIN_INVITED_PER_DEPARTMENT,
+  MIN_INVITED_TOTAL,
   buildResponseActivationState,
   isReportReleaseReady,
+  validateDepartmentInvitedCount,
+  validateInvitedTotal,
 } from '@/lib/response-activation'
 
 describe('response activation thresholds', () => {
@@ -105,5 +109,43 @@ describe('isReportReleaseReady (spec 2026-09-11 par. 4.1)', () => {
   it('behandelt ongeldige invoer als nul', () => {
     expect(isReportReleaseReady(Number.NaN)).toBe(false)
     expect(isReportReleaseReady(-3)).toBe(false)
+  })
+})
+
+describe('drempels voor uitgenodigden (spec 2026-09-16 par. 5.1)', () => {
+  it('MIN_INVITED_TOTAL is de rapportdrempel en MIN_INVITED_PER_DEPARTMENT spiegelt MIN_SEGMENT_N', () => {
+    expect(MIN_INVITED_TOTAL).toBe(FIRST_INSIGHT_THRESHOLD)
+    expect(MIN_INVITED_TOTAL).toBe(10)
+    expect(MIN_INVITED_PER_DEPARTMENT).toBe(5)
+  })
+
+  it('validateInvitedTotal wijst onder de 10 af met de klantmelding en accepteert 10', () => {
+    expect(validateInvitedTotal(9)).toBe(
+      'Vul minimaal 10 deelnemers in. Onder de 10 ingevulde vragenlijsten maakt Loep geen rapport.',
+    )
+    expect(validateInvitedTotal(3)).toContain('minimaal 10')
+    expect(validateInvitedTotal(10)).toBeNull()
+    expect(validateInvitedTotal(180)).toBeNull()
+  })
+
+  it('validateInvitedTotal wijst lege, niet-gehele en onbruikbare waarden af', () => {
+    expect(validateInvitedTotal('')).not.toBeNull()
+    expect(validateInvitedTotal(null)).not.toBeNull()
+    expect(validateInvitedTotal(10.5)).not.toBeNull()
+    expect(validateInvitedTotal(Number.NaN)).not.toBeNull()
+    expect(validateInvitedTotal('12')).toBeNull()
+  })
+
+  it('validateDepartmentInvitedCount noemt de afdeling en de samenvoegregel', () => {
+    expect(validateDepartmentInvitedCount('Zorg', 4)).toBe(
+      "Afdeling Zorg: minimaal 5 deelnemers. Kleinere afdelingen voeg je samen; anders vallen ze in het rapport onder 'Overige afdelingen'.",
+    )
+    expect(validateDepartmentInvitedCount('Zorg', 5)).toBeNull()
+    expect(validateDepartmentInvitedCount('  ', 0)).toContain('Afdeling zonder naam')
+  })
+
+  it('de meldingen bevatten geen em- of en-dashes', () => {
+    expect(validateInvitedTotal(1)).not.toMatch(/[—–]/)
+    expect(validateDepartmentInvitedCount('Zorg', 1)).not.toMatch(/[—–]/)
   })
 })

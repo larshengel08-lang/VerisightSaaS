@@ -7,7 +7,9 @@ import { WelcomeGate } from '@/components/dashboard/welcome-gate'
 import { PdfDownloadButton } from './pdf-download-button'
 import { SuiteAccessDenied } from '@/components/dashboard/suite-access-denied'
 import { resolveDashboardState } from '@/lib/dashboard/dashboard-state-resolver'
+import { isSkippedReminderEvent } from '@/lib/dashboard/reminder-event'
 import { normalizeReminderConfig } from '@/lib/launch-controls'
+import { readReminderChoice } from '@/lib/campaign-schedule'
 import { buildReminderText } from '@/lib/dashboard/reminder-text'
 import { isReportReleaseReady } from '@/lib/response-activation'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
@@ -54,7 +56,7 @@ export default async function CampaignPage({ params }: Props) {
   if (!statsRow) notFound()
   const stats = statsRow as CampaignStats
 
-  const [{ data: campaignMeta }, { data: deliveryRecord }, { data: reminderEvents }, { data: profile }, { data: orgData }, { data: respondentDepts }, { data: membership }] = await Promise.all([
+  const [{ data: campaignMeta }, { data: deliveryRecord }, { data: reminderEvents }, { data: profile }, { data: orgData }, { data: respondentDepts }, { data: membership }, { count: extensionCount, error: extensionCountError }] = await Promise.all([
     supabase.from('campaigns').select('closed_at, closes_at, delivery_mode, comms_mode, public_survey_token, organization_id, segment_departments').eq('id', id).maybeSingle(),
     supabase
       .from('campaign_delivery_records')
@@ -63,7 +65,7 @@ export default async function CampaignPage({ params }: Props) {
       .maybeSingle(),
     supabase
       .from('campaign_action_audit_events')
-      .select('created_at, action_key, outcome')
+      .select('created_at, action_key, outcome, metadata')
       .eq('campaign_id', id)
       .eq('action_key', 'send_reminders')
       .eq('outcome', 'completed')
@@ -78,7 +80,22 @@ export default async function CampaignPage({ params }: Props) {
       .eq('org_id', stats.organization_id ?? '')
       .eq('user_id', user.id)
       .maybeSingle(),
+    supabase
+      .from('campaign_action_audit_events')
+      .select('id', { count: 'exact', head: true })
+      .eq('campaign_id', id)
+      .eq('organization_id', stats.organization_id)
+      .eq('action_key', 'delivery_lifecycle_changed')
+      .eq('outcome', 'completed')
+      .contains('metadata', { extension: true }),
   ])
+
+  // Fail Loud: een mislukte telling mag niet als "nog nooit verlengd" gelezen
+  // worden, want dan biedt de kaart verlengen aan op een meting die al op de
+  // grens zit.
+  if (extensionCountError) {
+    throw new Error(`Kon het aantal verlengingen niet laden: ${extensionCountError.message}`)
+  }
 
   const departmentResponseCounts: Record<string, number> = {}
   for (const r of respondentDepts ?? []) {
@@ -126,6 +143,8 @@ export default async function CampaignPage({ params }: Props) {
     closesAt: campaignMeta?.closes_at ?? null,
     reminderConfig,
     reminderAlreadySentAt: reminderEvents?.[0]?.created_at ?? null,
+    reminderSkipped: isSkippedReminderEvent(reminderEvents?.[0]),
+    extensionCount: extensionCount ?? 0,
     reportReady,
     today: todayIso(),
   })
@@ -133,7 +152,6 @@ export default async function CampaignPage({ params }: Props) {
   const reminderText = buildReminderText({
     commsMode: campaignMeta?.comms_mode ?? null,
     scanType: stats.scan_type,
-    scanLabel: SCAN_TYPE_LABELS[stats.scan_type] ?? stats.scan_type,
     organizationName: orgData?.name ?? 'je organisatie',
     publicSurveyToken: (campaignMeta as Record<string, unknown>)?.public_survey_token as string | undefined,
     frontendBaseUrl: process.env.NEXT_PUBLIC_FRONTEND_URL ?? 'https://getloep.nl',
@@ -176,6 +194,8 @@ export default async function CampaignPage({ params }: Props) {
           frontendBaseUrl={process.env.NEXT_PUBLIC_FRONTEND_URL ?? 'https://getloep.nl'}
           initialLaunchDate={deliveryRecord?.launch_date ?? null}
           initialInvitedCount={deliveryRecord?.invited_count ?? null}
+          initialClosesAt={campaignMeta?.closes_at ?? null}
+          initialReminderChoice={readReminderChoice(deliveryRecord?.reminder_config)}
           segmentDepartments={(campaignMeta as Record<string, unknown>)?.segment_departments as
             | { label: string; slug: string; invited_count?: number }[]
             | null}

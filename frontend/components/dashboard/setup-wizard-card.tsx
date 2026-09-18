@@ -1,19 +1,43 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { SCAN_TYPE_LABELS, type ScanType } from '@/lib/types'
+import {
+  MIN_INVITED_PER_DEPARTMENT,
+  MIN_INVITED_TOTAL,
+  validateDepartmentInvitedCount,
+  validateInvitedTotal,
+} from '@/lib/response-activation'
+import {
+  DEFAULT_REMINDER_AFTER_DAYS,
+  REMINDER_CHOICES,
+  addDays,
+  defaultClosesAt,
+  isReminderChoice,
+  maxClosesAt,
+  minClosesAt,
+  reminderConfigFromChoice,
+  validateSchedule,
+  type ReminderChoice,
+} from '@/lib/campaign-schedule'
+import { formatDutchDate } from '@/lib/dashboard/format-dutch-date'
+import { ConfirmDialog } from './confirm-dialog'
+import { CampaignTimeline } from './campaign-timeline'
+import { buildCampaignTimeline } from '@/lib/dashboard/campaign-timeline'
 import {
   buildInviteTemplate,
   buildSegmentSurveyLinks,
   buildSurveyLink,
+  refreshInviteDraft,
   slugify,
+  type EmailTemplate,
   type SegmentDepartmentStored,
 } from '@/lib/self-send-comms'
 import { saveLaunchSetupAction, confirmLaunchAction } from '@/app/(dashboard)/campaigns/[id]/setup/launch-setup-actions'
 import { saveSegmentDepartmentsAction } from '@/app/(dashboard)/campaigns/[id]/setup/segment-actions'
 
-interface Props {
+export interface SetupWizardCardProps {
   campaignId: string
   scanType: ScanType
   organizationName: string
@@ -21,6 +45,10 @@ interface Props {
   frontendBaseUrl: string
   initialLaunchDate: string | null
   initialInvitedCount: number | null
+  /** campaigns.closes_at (date), of null als er nog geen sluitdatum is ingesteld. */
+  initialClosesAt: string | null
+  /** Uit campaign_delivery_records.reminder_config; null als nog nooit opgeslagen. */
+  initialReminderChoice: ReminderChoice | null
   segmentDepartments?: SegmentDepartmentStored[] | null
   departmentResponseCounts?: Record<string, number>
 }
@@ -34,9 +62,26 @@ interface DeptRow {
 
 const SCAN_TIP: Partial<Record<ScanType, string>> = {
   retention:  'Informeer je team vooraf dat er een korte vragenlijst aankomt. Dat verhoogt de respons aanzienlijk.',
-  exit:       'Stuur leidinggevenden vooraf een korte intro — medewerkers die het verwachten vullen vaker in.',
+  exit:       'Stuur leidinggevenden vooraf een korte intro. Medewerkers die het verwachten vullen vaker in.',
   onboarding: 'Laat de direct leidinggevende weten dat nieuwe medewerkers een korte vragenlijst ontvangen.',
 }
+
+// Toelichting bij "Aantal deelnemers", per scan (spec 2026-09-16 par. 5.2).
+const INVITED_COUNT_HELP: Partial<Record<ScanType, string>> = {
+  retention:  'Iedereen die je uitnodigt, inclusief parttimers en oproepkrachten. Stagiairs alleen als ze de vragenlijst ook krijgen.',
+  exit:       'Het aantal mensen dat in de meetperiode vertrekt en de vragenlijst krijgt, niet het hele personeelsbestand.',
+  onboarding: 'Alle nieuwe medewerkers die je in deze ronde uitnodigt.',
+}
+const DEFAULT_INVITED_COUNT_HELP = 'Iedereen die de vragenlijst van je krijgt.'
+const LAUNCH_DATE_HELP = 'De dag waarop je de uitnodiging verstuurt.'
+const CLOSES_AT_HELP = 'Op deze datum vraagt Loep je de meting te sluiten of te verlengen. Drie weken is gebruikelijk; verlengen kan met twee weken per keer.'
+const REMINDER_HELP = 'Op die dag zet Loep de herinneringstekst voor je klaar; jij verstuurt hem vanuit je eigen mail.'
+const DEPARTMENT_HELP = `Per afdeling zijn minimaal ${MIN_INVITED_PER_DEPARTMENT} ingevulde vragenlijsten nodig om apart in het rapport te verschijnen, en vanaf 10 zie je de spreiding.`
+
+const fieldLabelClass = 'mb-1 block text-xs font-semibold text-white/50'
+const helpClass = 'mt-1 text-[10px] leading-relaxed text-white/40'
+const inputClass =
+  'w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#E8A020]/50'
 
 export function SetupWizardCard({
   campaignId,
@@ -46,33 +91,60 @@ export function SetupWizardCard({
   frontendBaseUrl,
   initialLaunchDate,
   initialInvitedCount,
+  initialClosesAt,
+  initialReminderChoice,
   segmentDepartments,
   departmentResponseCounts,
-}: Props) {
+}: SetupWizardCardProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
   // Segment-modus: de campagne heeft een (evt. lege) afdelingslijst (spec
-  // 2026-07-12 §1/§5). Een lege lijst betekent "modus aan, klant moet nog
-  // vullen" — géén algemene link wordt dan getoond, wel het afdelingenblok.
+  // 2026-07-12 par. 1/5). Een lege lijst betekent "modus aan, klant moet nog
+  // vullen": geen algemene link wordt dan getoond, wel het afdelingenblok.
   const segmentMode = Boolean(segmentDepartments)
 
-  const [step, setStep] = useState<WizardStep>(
-    initialLaunchDate && initialInvitedCount ? 2 : 1,
-  )
+  // Altijd stap 1 (spec 2026-09-16 par. 5.2): tot de lancering kan de klant
+  // corrigeren, ook na een herlaad. De opgeslagen waarden staan voorgevuld.
+  const [step, setStep] = useState<WizardStep>(1)
   const [launchDate, setLaunchDate] = useState(initialLaunchDate ?? '')
+  const [closesAt, setClosesAt] = useState(
+    initialClosesAt ?? (initialLaunchDate ? defaultClosesAt(initialLaunchDate) : ''),
+  )
+  // Zolang de klant de sluitdatum niet zelf heeft aangeraakt, volgt hij de
+  // startdatum (start + 21). Daarna blijft de eigen keuze staan. Een eerder
+  // opgeslagen standaardwaarde telt als niet aangeraakt, anders zakt hij na een
+  // latere startdatum onder de minimale looptijd.
+  const [closesAtTouched, setClosesAtTouched] = useState(
+    Boolean(initialClosesAt) &&
+      !(initialLaunchDate && initialClosesAt === defaultClosesAt(initialLaunchDate)),
+  )
+  const [reminderChoice, setReminderChoice] = useState<ReminderChoice>(
+    initialReminderChoice ?? DEFAULT_REMINDER_AFTER_DAYS,
+  )
   const [invitedCount, setInvitedCount] = useState<number | ''>(initialInvitedCount ?? '')
-  const [linkTested, setLinkTested] = useState(false)
   const [step1Error, setStep1Error] = useState<string | null>(null)
   const [step2Error, setStep2Error] = useState<string | null>(null)
   const [copiedSubject, setCopiedSubject] = useState(false)
   const [copiedBody, setCopiedBody] = useState(false)
   const [everCopied, setEverCopied] = useState(false)
   const [copiedDeptSlug, setCopiedDeptSlug] = useState<string | null>(null)
+  const [launchDialogOpen, setLaunchDialogOpen] = useState(false)
+  // Fail Loud: als het klembord de kopieeractie weigert (NotAllowedError e.d.)
+  // mag de klant niet denken dat het gelukt is. copyErrorField/deptCopyError
+  // tonen dan een melding; de tekst wordt meteen geselecteerd zodat Ctrl+C
+  // meteen kan, en een handmatige Ctrl+C met het hele veld geselecteerd telt
+  // zelf ook als kopiëren (zelfde patroon als ReminderComposer in
+  // dashboard-state-actions.tsx).
+  const [copyErrorField, setCopyErrorField] = useState<'subject' | 'body' | null>(null)
+  const [deptCopyError, setDeptCopyError] = useState<string | null>(null)
+  const inviteSubjectRef = useRef<HTMLInputElement>(null)
+  const inviteBodyRef = useRef<HTMLTextAreaElement>(null)
+  const deptCodeRefs = useRef<Map<string, HTMLElement>>(new Map())
 
-  // Rijen voor het afdelingenblok. Startpunt: bestaande afdelingen, of — als
-  // de lijst nog leeg is (modus net aangezet) — twee lege rijen zodat de
-  // minimaal-2-eis meteen zichtbaar is.
+  // Rijen voor het afdelingenblok. Startpunt: bestaande afdelingen, of (als
+  // de lijst nog leeg is) twee lege rijen zodat de minimaal-2-eis meteen
+  // zichtbaar is.
   const [deptRows, setDeptRows] = useState<DeptRow[]>(() => {
     if (segmentDepartments && segmentDepartments.length > 0) {
       return segmentDepartments.map((d) => ({
@@ -84,17 +156,16 @@ export function SetupWizardCard({
   })
 
   // Afdelingen met >=1 respondent: naam-wijziging/verwijdering niet meer
-  // toegestaan — de link is al in omloop (spec §3).
+  // toegestaan, de link is al in omloop (spec 2026-07-12 par. 3).
   const lockedDepartments = new Set(
     Object.keys(departmentResponseCounts ?? {}).filter(
       (label) => (departmentResponseCounts![label] ?? 0) > 0,
     ),
   )
 
-  // Alleen rijen met een ingevulde naam tellen mee — een leeg-genaamde rij
-  // wordt bij opslaan sowieso niet meegenomen in segment_departments, dus het
-  // getoonde totaal moet daarmee overeenkomen (anders wijkt het weergegeven
-  // totaal af van wat straks daadwerkelijk wordt opgeslagen).
+  // Alleen rijen met een ingevulde naam tellen mee: een leeg-genaamde rij
+  // wordt bij opslaan niet meegenomen in segment_departments, dus het getoonde
+  // totaal moet daarmee overeenkomen.
   const totalInvited = deptRows
     .filter((row) => row.label.trim())
     .reduce((sum, row) => sum + (typeof row.invitedCount === 'number' ? row.invitedCount : 0), 0)
@@ -108,7 +179,6 @@ export function SetupWizardCard({
   const { subject: inviteSubject, body: inviteBody } = buildInviteTemplate({
     senderName: '',
     organizationName,
-    scanLabel,
     scanType,
     surveyLink,
     departmentLinks: inviteDepartmentLinks,
@@ -116,9 +186,40 @@ export function SetupWizardCard({
 
   const [editableSubject, setEditableSubject] = useState(inviteSubject)
   const [editableBody, setEditableBody] = useState(inviteBody)
+  // De tekst zoals Loep hem het laatst opbouwde. Na opnieuw opslaan van stap 1
+  // bouwt refreshInviteDraft hem opnieuw op als de afdelingslinks veranderd
+  // zijn; de props blijven tot een herlaad de oude afdelingen bevatten.
+  const [generatedInvite, setGeneratedInvite] = useState<EmailTemplate>({ subject: inviteSubject, body: inviteBody })
+  const [inviteLinksReplacedEdits, setInviteLinksReplacedEdits] = useState(false)
 
   const today = new Date().toISOString().slice(0, 10)
   const tip = SCAN_TIP[scanType]
+  const invitedHelp = INVITED_COUNT_HELP[scanType] ?? DEFAULT_INVITED_COUNT_HELP
+  const reminderDateLabel =
+    reminderChoice !== 'none' && launchDate ? formatDutchDate(addDays(launchDate, reminderChoice)) : null
+  // Vooruitblik voor stap 3 (spec 2026-09-16 par. 4.2): dezelfde tijdlijn als
+  // op de kaart van een lopende meting, met wat de klant nu invult.
+  const previewReminderConfig = reminderConfigFromChoice(reminderChoice)
+  const previewTimeline = buildCampaignTimeline({
+    launchDate: launchDate || null,
+    launchConfirmedAt: null,
+    reminderEnabled: previewReminderConfig.enabled,
+    reminderAfterDays: previewReminderConfig.firstReminderAfterDays,
+    reminderHandledAt: null,
+    reminderSkipped: false,
+    closesAt: closesAt || null,
+    scanType,
+  })
+
+  function handleLaunchDateChange(value: string) {
+    setLaunchDate(value)
+    if (!closesAtTouched) setClosesAt(value ? defaultClosesAt(value) : '')
+  }
+
+  function handleReminderChange(raw: string) {
+    const parsed: unknown = raw === 'none' ? 'none' : Number(raw)
+    if (isReminderChoice(parsed)) setReminderChoice(parsed)
+  }
 
   function updateDeptRow(index: number, patch: Partial<DeptRow>) {
     setDeptRows((prev) => prev.map((row, i) => (i === index ? { ...row, ...patch } : row)))
@@ -135,16 +236,43 @@ export function SetupWizardCard({
   async function handleCopyDeptLink(slug: string, url: string) {
     try {
       await navigator.clipboard.writeText(url)
+    } catch {
+      // Fail Loud: geen stille no-op, en de link staat meteen geselecteerd
+      // zodat de klant zelf met Ctrl+C kan kopiëren.
+      setDeptCopyError(slug)
+      const el = deptCodeRefs.current.get(slug)
+      if (el) selectElementText(el)
+      return
+    }
+    setDeptCopyError((current) => (current === slug ? null : current))
+    setEverCopied(true)
+    setCopiedDeptSlug(slug)
+    setTimeout(() => setCopiedDeptSlug(null), 2000)
+  }
+
+  // Een handmatige Ctrl+C telt alleen als de klant echt de hele link
+  // selecteerde, niet een toevallige deelselectie.
+  function handleManualDeptCopy(slug: string, url: string) {
+    const selected = window.getSelection()?.toString().trim() ?? ''
+    if (selected && selected === url) {
+      setDeptCopyError((current) => (current === slug ? null : current))
       setEverCopied(true)
       setCopiedDeptSlug(slug)
       setTimeout(() => setCopiedDeptSlug(null), 2000)
-    } catch { /* clipboard unavailable */ }
+    }
   }
 
   async function handleStep1Submit(e: React.FormEvent) {
     e.preventDefault()
     setStep1Error(null)
-    if (!launchDate) { setStep1Error('Vul een startdatum in.'); return }
+
+    // Dezelfde regels als saveLaunchSetupAction, zodat de klant de fout hier
+    // al leest en de server alleen nog de tweede grens is.
+    const schedule = validateSchedule(
+      { launchDate, closesAt, reminderChoice, today },
+      { storedLaunchDate: initialLaunchDate },
+    )
+    if (!schedule.ok) { setStep1Error(schedule.error); return }
 
     if (segmentMode) {
       const incoming = deptRows
@@ -157,16 +285,48 @@ export function SetupWizardCard({
         setStep1Error('Vul minimaal 2 afdelingen in (naam + aantal deelnemers).')
         return
       }
+      for (const row of incoming) {
+        const deptError = validateDepartmentInvitedCount(row.label, row.invited_count)
+        if (deptError) { setStep1Error(deptError); return }
+      }
+      const totalError = validateInvitedTotal(totalInvited)
+      if (totalError) { setStep1Error(totalError); return }
+
       startTransition(async () => {
         const segResult = await saveSegmentDepartmentsAction(campaignId, incoming)
         if (!segResult.ok) { setStep1Error(segResult.error ?? 'Er ging iets mis.'); return }
-        // totalInvited is al afgeleid van dezelfde gefilterde (naam-ingevulde)
-        // rijen als `incoming` hierboven — komt dus overeen met wat
-        // saveSegmentDepartmentsAction zojuist als som heeft opgeslagen.
-        const launchResult = await saveLaunchSetupAction(campaignId, launchDate, totalInvited)
+        // Direct na het opslaan van de afdelingen, ook als de planning hierna
+        // faalt: vanaf nu gelden de nieuwe slugs, dus stap 2 mag geen oude
+        // (dode) afdelingslinks meer tonen.
+        const refreshed = refreshInviteDraft(
+          { generated: generatedInvite, subject: editableSubject, body: editableBody },
+          buildInviteTemplate({
+            senderName: '',
+            organizationName,
+            scanType,
+            surveyLink,
+            departmentLinks: buildSegmentSurveyLinks(frontendBaseUrl, publicSurveyToken, segResult.departments),
+          }),
+        )
+        setGeneratedInvite(refreshed.generated)
+        setEditableSubject(refreshed.subject)
+        setEditableBody(refreshed.body)
+        // Alleen aanzetten: een latere save zonder gewijzigde links mag de
+        // melding niet wissen voordat de klant stap 2 heeft gezien.
+        if (refreshed.replacedEdits) setInviteLinksReplacedEdits(true)
+        // totalInvited is afgeleid van dezelfde gefilterde rijen als `incoming`
+        // en komt dus overeen met wat saveSegmentDepartmentsAction als som opsloeg.
+        const launchResult = await saveLaunchSetupAction(campaignId, {
+          launchDate,
+          invitedCount: totalInvited,
+          closesAt,
+          reminderChoice,
+        })
         if (!launchResult.ok) {
+          // De servermelding zegt zelf al wat wel en niet is opgeslagen en of
+          // je opnieuw moet proberen; hier alleen de afdelingen erbij noemen.
           setStep1Error(
-            `Afdelingen zijn opgeslagen, maar de startdatum niet: ${launchResult.error ?? 'er ging iets mis.'} Probeer opnieuw.`,
+            `Afdelingen zijn opgeslagen. ${launchResult.error ?? 'De planning is niet opgeslagen. Probeer opnieuw.'}`,
           )
           return
         }
@@ -175,25 +335,66 @@ export function SetupWizardCard({
       return
     }
 
-    if (!invitedCount || Number(invitedCount) < 1) { setStep1Error('Vul het aantal deelnemers in (minimaal 1).'); return }
+    const invitedError = validateInvitedTotal(invitedCount)
+    if (invitedError) { setStep1Error(invitedError); return }
     startTransition(async () => {
-      const result = await saveLaunchSetupAction(campaignId, launchDate, Number(invitedCount))
+      const result = await saveLaunchSetupAction(campaignId, {
+        launchDate,
+        invitedCount: Number(invitedCount),
+        closesAt,
+        reminderChoice,
+      })
       if (!result.ok) { setStep1Error(result.error ?? 'Er ging iets mis.'); return }
       setStep(2)
     })
   }
 
   async function handleCopy(text: string, which: 'subject' | 'body') {
+    setInviteLinksReplacedEdits(false)
     try {
       await navigator.clipboard.writeText(text)
+    } catch {
+      // Fail Loud: geen "Gekopieerd" tonen als het klembord dit weigert. De
+      // klant krijgt een melding en het veld wordt geselecteerd, zodat
+      // handmatig kopiëren (Ctrl+C) meteen kan.
+      setCopyErrorField(which)
+      ;(which === 'subject' ? inviteSubjectRef : inviteBodyRef).current?.select()
+      return
+    }
+    setCopyErrorField((current) => (current === which ? null : current))
+    setEverCopied(true)
+    if (which === 'subject') { setCopiedSubject(true); setTimeout(() => setCopiedSubject(false), 2000) }
+    else { setCopiedBody(true); setTimeout(() => setCopiedBody(false), 2000) }
+  }
+
+  // Een handmatige Ctrl+C telt alleen als het hele veld geselecteerd was
+  // (zelfde patroon als ReminderComposer in dashboard-state-actions.tsx).
+  function handleManualCopy(which: 'subject' | 'body') {
+    const el = which === 'subject' ? inviteSubjectRef.current : inviteBodyRef.current
+    if (!el) return
+    const { value, selectionStart, selectionEnd } = el
+    if (value.length > 0 && selectionStart === 0 && selectionEnd === value.length) {
+      setCopyErrorField((current) => (current === which ? null : current))
       setEverCopied(true)
       if (which === 'subject') { setCopiedSubject(true); setTimeout(() => setCopiedSubject(false), 2000) }
       else { setCopiedBody(true); setTimeout(() => setCopiedBody(false), 2000) }
-    } catch { /* clipboard unavailable */ }
+    }
   }
 
-  async function handleConfirmLaunch() {
+  function openLaunchDialog() {
     setStep2Error(null)
+    setLaunchDialogOpen(true)
+  }
+
+  function backToStep1() {
+    setStep2Error(null)
+    setStep(1)
+  }
+
+  // Onomkeerbaar (spec 2026-09-16 par. 5.2 en 9): pas na de eigen dialoog telt
+  // de meting als gestart en is stap 1 niet meer te wijzigen.
+  function handleConfirmLaunch() {
+    setLaunchDialogOpen(false)
     startTransition(async () => {
       const result = await confirmLaunchAction(campaignId)
       if (!result.ok) { setStep2Error(result.error ?? 'Er ging iets mis.'); return }
@@ -210,7 +411,7 @@ export function SetupWizardCard({
         Welkom {organizationName} bij Loep
       </h1>
       <p className="mt-2 text-[0.95rem] text-[color:var(--dashboard-text)]">
-        Doorloop drie stappen om je scan te lanceren.
+        Doorloop drie stappen om je meting te starten.
       </p>
 
       <div className="mt-6 grid grid-cols-3 gap-3">
@@ -218,34 +419,68 @@ export function SetupWizardCard({
         {/* Stap 1 */}
         <div className={`relative rounded-[18px] p-5 ${step === 1 ? 'bg-[#0D1B2A]' : 'border border-[color:var(--dashboard-frame-border)] bg-white opacity-45'}`}>
           <p className={`mb-3 text-xs font-semibold ${step === 1 ? 'text-[#E8A020]' : 'text-[color:var(--dashboard-muted)]'}`}>
-            {step > 1 ? 'Stap 1 — Klaar ✓' : 'Stap 1 — Nu'}
+            {step > 1 ? 'Stap 1: klaar' : 'Stap 1: nu'}
           </p>
           <p className={`mb-1 text-sm font-semibold ${step === 1 ? 'text-white' : 'text-[color:var(--dashboard-ink)]'}`}>
-            Startdatum instellen
+            Planning en deelnemers
           </p>
           <p className={`text-xs ${step === 1 ? 'text-white/50' : 'text-[color:var(--dashboard-muted)]'}`}>
-            Wanneer stuur je de uitnodiging? Naar hoeveel medewerkers?
+            Wanneer start en sluit de meting, en naar hoeveel medewerkers gaat hij?
           </p>
 
           {step === 1 && (
-            <form onSubmit={handleStep1Submit} className="mt-5 space-y-4">
+            <form onSubmit={handleStep1Submit} noValidate className="mt-5 space-y-4">
               <div>
-                <label className="mb-1 block text-xs font-semibold text-white/50">Startdatum</label>
+                <label htmlFor="launch-date" className={fieldLabelClass}>Startdatum</label>
                 <input
-                  type="date" min={today} value={launchDate} required
-                  onChange={(e) => setLaunchDate(e.target.value)}
-                  className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#E8A020]/50"
+                  id="launch-date"
+                  type="date" min={today} value={launchDate}
+                  onChange={(e) => handleLaunchDateChange(e.target.value)}
+                  className={inputClass}
                 />
+                <p className={helpClass}>{LAUNCH_DATE_HELP}</p>
+              </div>
+
+              <div>
+                <label htmlFor="closes-at" className={fieldLabelClass}>Sluitdatum</label>
+                <input
+                  id="closes-at"
+                  type="date"
+                  min={launchDate ? minClosesAt(launchDate) : today}
+                  max={launchDate ? maxClosesAt(launchDate) : undefined}
+                  value={closesAt}
+                  onChange={(e) => { setClosesAtTouched(true); setClosesAt(e.target.value) }}
+                  className={inputClass}
+                />
+                <p className={helpClass}>{CLOSES_AT_HELP}</p>
+              </div>
+
+              <div>
+                <label htmlFor="reminder-choice" className={fieldLabelClass}>Herinnering</label>
+                <select
+                  id="reminder-choice"
+                  value={String(reminderChoice)}
+                  onChange={(e) => handleReminderChange(e.target.value)}
+                  className={`${inputClass} appearance-none`}
+                >
+                  {REMINDER_CHOICES.map((choice) => (
+                    <option key={String(choice.value)} value={String(choice.value)} className="text-[#0D1B2A]">
+                      {choice.label}
+                    </option>
+                  ))}
+                </select>
+                <p className={helpClass}>
+                  {REMINDER_HELP}
+                  {reminderDateLabel ? ` Dat is op ${reminderDateLabel}.` : ''}
+                </p>
               </div>
 
               {segmentMode ? (
                 <div className="space-y-3">
                   <div>
-                    <p className="text-xs font-semibold text-white/50">Afdelingen &amp; links</p>
-                    <p className="mt-1 text-[10px] leading-relaxed text-white/40">
-                      Elke afdeling krijgt een eigen link — minimaal 5 deelnemers per afdeling
-                      voor zichtbaarheid in het rapport.
-                    </p>
+                    <p className="text-xs font-semibold text-white/50">Afdelingen en links</p>
+                    <p className={helpClass}>{DEPARTMENT_HELP}</p>
+                    <p className={helpClass}>{invitedHelp}</p>
                   </div>
 
                   <div className="space-y-2">
@@ -266,7 +501,7 @@ export function SetupWizardCard({
                               className="flex-1 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#E8A020]/50 disabled:opacity-50"
                             />
                             <input
-                              type="number" min={1}
+                              type="number" min={MIN_INVITED_PER_DEPARTMENT}
                               value={row.invitedCount}
                               placeholder="aantal"
                               onChange={(e) =>
@@ -289,12 +524,19 @@ export function SetupWizardCard({
                           </div>
                           {isLocked && (
                             <p className="mt-1.5 text-[10px] text-white/40">
-                              🔒 naam vergrendeld — er zijn al responses op deze link
+                              Naam vergrendeld: er zijn al responses op deze link.
                             </p>
                           )}
                           {links && (
                             <div className="mt-2 flex items-center gap-2">
-                              <code className="flex-1 truncate rounded border border-white/10 bg-white/5 px-2 py-1 text-[9px] text-white/50">
+                              <code
+                                ref={(el) => {
+                                  if (el) deptCodeRefs.current.set(links.slug, el)
+                                  else deptCodeRefs.current.delete(links.slug)
+                                }}
+                                onCopy={() => handleManualDeptCopy(links.slug, links.url)}
+                                className="flex-1 truncate rounded border border-white/10 bg-white/5 px-2 py-1 text-[9px] text-white/50"
+                              >
                                 {links.url}
                               </code>
                               <button
@@ -305,6 +547,11 @@ export function SetupWizardCard({
                                 {copiedDeptSlug === links.slug ? 'Gekopieerd ✓' : 'Kopieer link'}
                               </button>
                             </div>
+                          )}
+                          {links && deptCopyError === links.slug && (
+                            <p role="alert" className="mt-1.5 text-[10px] text-red-300">
+                              Kopiëren lukte niet. Selecteer de tekst en kopieer met Ctrl+C.
+                            </p>
                           )}
                         </div>
                       )
@@ -320,23 +567,25 @@ export function SetupWizardCard({
                   </button>
 
                   <div className="flex items-center justify-between border-t border-white/15 pt-2 text-xs text-white/70">
-                    <span>Totaal deelnemers</span>
+                    <span>Totaal deelnemers (minimaal {MIN_INVITED_TOTAL})</span>
                     <strong className="text-white">{totalInvited}</strong>
                   </div>
                 </div>
               ) : (
                 <>
                   <div>
-                    <label className="mb-1 block text-xs font-semibold text-white/50">Aantal deelnemers</label>
+                    <label htmlFor="invited-count" className={fieldLabelClass}>Aantal deelnemers</label>
                     <input
-                      type="number" min={1} value={invitedCount} placeholder="bijv. 40" required
+                      id="invited-count"
+                      type="number" min={MIN_INVITED_TOTAL} value={invitedCount} placeholder="bijv. 40"
                       onChange={(e) => setInvitedCount(e.target.value === '' ? '' : Number(e.target.value))}
-                      className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#E8A020]/50"
+                      className={inputClass}
                     />
+                    <p className={helpClass}>{invitedHelp}</p>
                   </div>
 
                   <div>
-                    <p className="mb-1 text-xs font-semibold text-white/50">Survey-link</p>
+                    <p className="mb-1 text-xs font-semibold text-white/50">Vragenlijstlink</p>
                     <div className="flex items-center gap-2">
                       <code className="flex-1 truncate rounded-lg border border-white/15 bg-white/10 px-2 py-1.5 text-[10px] text-white/70">
                         {surveyLink}
@@ -346,24 +595,20 @@ export function SetupWizardCard({
                         Test →
                       </a>
                     </div>
-                    <p className="mt-2 text-[10px] leading-relaxed text-white/40">
-                      Alleen openen om te controleren — niet volledig invullen, anders tellen jouw antwoorden mee.
+                    <p className={helpClass}>
+                      Alleen openen om te controleren. Vul hem niet volledig in, anders tellen jouw antwoorden mee.
                     </p>
-                    <label className="mt-2 flex cursor-pointer items-center gap-2 text-[10px] text-white/50">
-                      <input type="checkbox" checked={linkTested} onChange={(e) => setLinkTested(e.target.checked)} className="h-3.5 w-3.5 rounded" />
-                      Link getest en werkt
-                    </label>
                   </div>
                 </>
               )}
 
               {step1Error && (
-                <p className="rounded-lg bg-red-500/20 px-3 py-2 text-xs font-semibold text-red-300">{step1Error}</p>
+                <p role="alert" className="rounded-lg bg-red-500/20 px-3 py-2 text-xs font-semibold text-red-300">{step1Error}</p>
               )}
 
               <button type="submit" disabled={isPending}
                 className="w-full rounded-lg bg-[#E8A020] px-4 py-2.5 text-sm font-semibold text-[#0D1B2A] transition-opacity hover:opacity-90 disabled:opacity-50">
-                {isPending ? 'Bezig…' : 'Opslaan en verder →'}
+                {isPending ? 'Bezig...' : 'Opslaan en verder →'}
               </button>
             </form>
           )}
@@ -377,7 +622,7 @@ export function SetupWizardCard({
             </span>
           )}
           <p className={`mb-3 text-xs font-semibold ${step === 2 ? 'text-[#E8A020]' : 'text-[color:var(--dashboard-muted)]'}`}>
-            Stap 2{step === 2 ? ' — Nu' : ''}
+            {step === 2 ? 'Stap 2: nu' : 'Stap 2'}
           </p>
           <p className={`mb-1 text-sm font-semibold ${step === 2 ? 'text-white' : 'text-[color:var(--dashboard-ink)]'}`}>
             Uitnodiging versturen
@@ -389,7 +634,15 @@ export function SetupWizardCard({
           {step === 2 && (
             <div className="mt-5 space-y-3">
 
-              {/* Tip sticky */}
+              <button
+                type="button"
+                onClick={backToStep1}
+                disabled={isPending}
+                className="text-[10px] font-semibold text-white/60 underline underline-offset-2 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                ← Terug naar stap 1
+              </button>
+
               {tip && (
                 <div className="rounded-xl bg-[#E8A020]/15 border border-[#E8A020]/30 px-3 py-2.5">
                   <p className="text-[10px] font-semibold text-[#E8A020] mb-0.5">Advies</p>
@@ -401,7 +654,7 @@ export function SetupWizardCard({
                 <div className="rounded-xl bg-white/5 border border-white/10 px-3 py-2.5">
                   <p className="text-[10px] font-semibold text-white/50 mb-1">Deel per afdeling de eigen link</p>
                   <p className="text-[11px] leading-relaxed text-white/60">
-                    Er is bewust géén algemene link — gebruik de links uit stap 1 per afdeling.
+                    Er is bewust geen algemene link. Gebruik de links uit stap 1 per afdeling.
                   </p>
                 </div>
               )}
@@ -409,45 +662,66 @@ export function SetupWizardCard({
               {/* Onderwerp */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-[10px] font-semibold text-white/50 uppercase tracking-wide">Onderwerp</label>
+                  <label htmlFor="invite-subject" className="text-[10px] font-semibold text-white/50 uppercase tracking-wide">Onderwerp</label>
                   <button type="button" onClick={() => handleCopy(editableSubject, 'subject')}
                     className="text-[10px] font-semibold text-[#E8A020] hover:opacity-80">
                     {copiedSubject ? 'Gekopieerd ✓' : 'Kopieer'}
                   </button>
                 </div>
-                <textarea
+                <input
+                  id="invite-subject"
+                  ref={inviteSubjectRef}
+                  type="text"
                   value={editableSubject}
-                  onChange={(e) => setEditableSubject(e.target.value)}
-                  rows={1}
-                  className="w-full resize-none rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-xs text-white/90 focus:outline-none focus:ring-1 focus:ring-[#E8A020]/50"
+                  onChange={(e) => { setEditableSubject(e.target.value); setInviteLinksReplacedEdits(false) }}
+                  onCopy={() => handleManualCopy('subject')}
+                  className="w-full rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-xs text-white/90 focus:outline-none focus:ring-1 focus:ring-[#E8A020]/50"
                 />
+                {copyErrorField === 'subject' && (
+                  <p role="alert" className="mt-1 text-[10px] text-red-300">
+                    Kopiëren lukte niet. Selecteer de tekst en kopieer met Ctrl+C.
+                  </p>
+                )}
               </div>
 
-              {/* Body */}
+              {/* Bericht */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-[10px] font-semibold text-white/50 uppercase tracking-wide">Bericht</label>
+                  <label htmlFor="invite-body" className="text-[10px] font-semibold text-white/50 uppercase tracking-wide">Bericht</label>
                   <button type="button" onClick={() => handleCopy(editableBody, 'body')}
                     className="text-[10px] font-semibold text-[#E8A020] hover:opacity-80">
                     {copiedBody ? 'Gekopieerd ✓' : 'Kopieer'}
                   </button>
                 </div>
                 <textarea
+                  id="invite-body"
+                  ref={inviteBodyRef}
                   value={editableBody}
-                  onChange={(e) => setEditableBody(e.target.value)}
+                  onChange={(e) => { setEditableBody(e.target.value); setInviteLinksReplacedEdits(false) }}
+                  onCopy={() => handleManualCopy('body')}
                   rows={11}
                   className="w-full resize-none rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-xs leading-relaxed text-white/90 focus:outline-none focus:ring-1 focus:ring-[#E8A020]/50"
                 />
+                {copyErrorField === 'body' && (
+                  <p role="alert" className="mt-1 text-[10px] text-red-300">
+                    Kopiëren lukte niet. Selecteer de tekst en kopieer met Ctrl+C.
+                  </p>
+                )}
               </div>
+              {inviteLinksReplacedEdits && (
+                <p role="status" className="rounded-lg bg-[#E8A020]/15 px-3 py-2 text-[11px] leading-relaxed text-white/80">
+                  De uitnodiging is bijgewerkt met de nieuwe afdelingslinks. Je eigen aanpassingen aan de tekst zijn daarbij vervangen; voeg ze zo nodig opnieuw toe.
+                </p>
+              )}
               <p className="text-[10px] text-white/40">Je kunt de tekst aanpassen voor je kopieert. Vergeet niet je naam in te vullen bij &ldquo;Met vriendelijke groet&rdquo;.</p>
 
               <div className="border-t border-white/15 pt-3">
                 {step2Error && (
-                  <p className="mb-2 rounded-lg bg-red-500/20 px-3 py-2 text-xs font-semibold text-red-300">{step2Error}</p>
+                  <p role="alert" className="mb-2 rounded-lg bg-red-500/20 px-3 py-2 text-xs font-semibold text-red-300">{step2Error}</p>
                 )}
-                <button type="button" onClick={handleConfirmLaunch} disabled={isPending}
+                <button type="button" onClick={openLaunchDialog} disabled={isPending}
                   className="w-full rounded-lg bg-[#E8A020] px-4 py-2.5 text-sm font-semibold text-[#0D1B2A] transition-opacity hover:opacity-90 disabled:opacity-50">
-                  {isPending ? 'Bezig…' : 'Ja, verstuurd →'}
+                  {isPending ? 'Bezig...' : 'Ja, verstuurd →'}
                 </button>
                 {!everCopied && (
                   <p className="mt-1.5 text-center text-[10px] text-white/30">Tip: kopieer de tekst hierboven voor je verstuurt</p>
@@ -457,29 +731,56 @@ export function SetupWizardCard({
           )}
         </div>
 
-        {/* Stap 3 */}
-        <div className="relative rounded-[18px] border border-[color:var(--dashboard-frame-border)] bg-white p-5 opacity-45">
+        {/* Stap 3: vooruitblik. Na de lancering staat dezelfde tijdlijn op de kaart van de lopende meting. */}
+        <div className="relative rounded-[18px] border border-[color:var(--dashboard-frame-border)] bg-white p-5">
           <span className="absolute right-4 top-4 text-[color:var(--dashboard-muted)]">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           </span>
           <p className="mb-3 text-xs font-semibold text-[color:var(--dashboard-muted)]">Stap 3</p>
-          <p className="mb-1 text-sm font-semibold text-[color:var(--dashboard-ink)]">Volgen &amp; rapport</p>
-          <p className="text-xs text-[color:var(--dashboard-muted)]">
-            Respons monitoren · herinnering sturen · rapport via Loep.
+          <p className="mb-1 text-sm font-semibold text-[color:var(--dashboard-ink)]">Volgen en afronden</p>
+          <p className="mb-4 text-xs text-[color:var(--dashboard-muted)]">
+            Na de lancering volg je hier de respons en sluit je de meting.
           </p>
+          <CampaignTimeline timeline={previewTimeline} dimmed />
         </div>
       </div>
+
+      <ConfirmDialog
+        open={launchDialogOpen}
+        title="Heb je de uitnodiging verstuurd?"
+        onClose={() => setLaunchDialogOpen(false)}
+        actions={[
+          { label: 'Nog niet', onClick: () => setLaunchDialogOpen(false) },
+          { label: 'Ja, verstuurd', onClick: handleConfirmLaunch, variant: 'primary', disabled: isPending },
+        ]}
+      >
+        <p>Heb je de uitnodiging naar je medewerkers gestuurd? Daarna telt de meting als gestart en kun je stap 1 niet meer wijzigen.</p>
+        {!everCopied ? (
+          <p className="font-semibold text-[#B9571F]">
+            Je hebt nog niets gekopieerd. Kopieer eerst het onderwerp en het bericht en verstuur ze vanuit je eigen mail.
+          </p>
+        ) : null}
+      </ConfirmDialog>
     </section>
   )
 }
 
+// Selecteert de volledige tekstinhoud van een niet-bewerkbaar element (het
+// <code>-blok met de afdelingslink), zodat een mislukte navigator.clipboard
+// de klant meteen in staat stelt om zelf met Ctrl+C te kopiëren.
+function selectElementText(el: HTMLElement) {
+  const range = document.createRange()
+  range.selectNodeContents(el)
+  const selection = window.getSelection()
+  selection?.removeAllRanges()
+  selection?.addRange(range)
+}
+
 // Live link-preview tijdens het intypen: de naam is dan nog niet per se een
-// geldige/unieke slug (leeg, dubbel met een andere rij) — de echte validatie
+// geldige/unieke slug (leeg, dubbel met een andere rij). De echte validatie
 // (incl. duplicaatcheck) gebeurt server-side bij opslaan via
 // saveSegmentDepartmentsAction. Deze functie geeft alleen een voorlopige
-// link, op basis van de gedeelde slugify() uit self-send-comms.ts (geen
-// eigen kopie — anders drie plekken i.p.v. twee om in sync te houden met
-// backend/segments.py's _slugify).
+// link, op basis van de gedeelde slugify() uit self-send-comms.ts.
 function buildSegmentSurveyLinksSafe(
   frontendBaseUrl: string,
   publicSurveyToken: string,

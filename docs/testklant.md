@@ -119,19 +119,35 @@ expliciet in plaats van stil door te gaan.
 Doe dit zelf, in plaats van de wijziging door te geven ter handmatige controle.
 
 1. Haal een sessie op met `--login-link` en open die URL in de browser.
-2. `/dashboard` toont campagne B als "Campagne loopt", met "6 van 30 ingevuld"
-   en een herinneringstekst waarin de surveylink staat.
+2. `/dashboard` toont campagne B met "6 van 30 ingevuld", de tijdlijn (start,
+   herinnering, sluitdatum) en de knop "Meting sluiten". Tot vijf dagen na de
+   seed-lancering heet de kaart "Campagne loopt" en staat er geen
+   herinneringstekst; daarna "Vandaag: stuur de herinnering" met onderwerp en
+   bericht apart kopieerbaar (surveylink in het bericht) en "Geen herinnering
+   versturen". B heeft na een reset geen sluitdatum ("Nog niet ingesteld").
 3. `/campaigns/12b958fb-ce46-5efa-a947-d5b6e1e09126` toont "Je rapport is
    beschikbaar" en de knop "Rapport downloaden".
 4. `/reports` toont campagne A onder "Beschikbaar nu" en de andere twee onder
    "Nog niet beschikbaar".
 5. `/campaigns/d13634c5-115c-51ea-b337-e933dbf74f0f/setup` opent de wizard bij
-   stap 1 met een lege startdatum en een werkende survey-link.
+   stap 1 met een lege startdatum, sluitdatum en herinnering (standaard 5
+   dagen), een werkende survey-link en de toelichting bij "Aantal deelnemers".
+   3 deelnemers wordt geweigerd met de melding over minimaal 10.
 6. Controleer de console op fouten en bekijk de pagina ook op 375 px breed als
    je layout hebt aangeraakt.
 7. Raakte je de rapportgeneratie, draai dan eerst
    `scripts/seed_test_tenant.py --dry-run`: die rendert campagne A met de
    echte rapportgenerator en faalt hard als een blok verdwijnt.
+
+Twee omgevingsvalkuilen (gezien op 17 september 2026):
+
+- De `.venv` in de repo-root mist `httpx`; `--reset` en `--login-link` breken
+  daar af vóór er iets geschreven wordt. De systeem-Python heeft het wel:
+  `python scripts/seed_test_tenant.py --reset`. `--dry-run` werkt met beide.
+- `frontend/.env.local` heeft geen `RESEND_API_KEY`. Lokaal laadt de module
+  met de dashboardacties dan niet ("Verlengen mislukt"), en `npm run build`
+  breekt af. Voor een lokale check volstaat een dummywaarde; er gaat dan geen
+  mail uit.
 
 Schermafdrukken van de uitgangssituatie staan in
 [`docs/testklant/`](testklant/). Ze zijn gemaakt op 13 september 2026 en

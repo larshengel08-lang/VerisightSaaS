@@ -5,7 +5,9 @@ import { ReadOnlyStateCard } from '@/components/dashboard/read-only-state-card'
 import { RunningStateCard } from '@/components/dashboard/running-state-card'
 import { WelcomeGate } from '@/components/dashboard/welcome-gate'
 import { resolveDashboardState } from '@/lib/dashboard/dashboard-state-resolver'
+import { isSkippedReminderEvent } from '@/lib/dashboard/reminder-event'
 import { normalizeReminderConfig } from '@/lib/launch-controls'
+import { readReminderChoice } from '@/lib/campaign-schedule'
 import { buildReminderText } from '@/lib/dashboard/reminder-text'
 import { isReportReleaseReady } from '@/lib/response-activation'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
@@ -42,6 +44,8 @@ export default async function DashboardHomePage() {
       closesAt: null,
       reminderConfig: normalizeReminderConfig(null),
       reminderAlreadySentAt: null,
+      reminderSkipped: false,
+      extensionCount: 0,
       reportReady: false,
       today: todayIso(),
     })
@@ -60,6 +64,7 @@ export default async function DashboardHomePage() {
     { data: respondentDepts },
     { data: profile },
     { data: membership },
+    { count: extensionCount, error: extensionCountError },
   ] = await Promise.all([
     supabase
       .from('campaign_delivery_records')
@@ -68,7 +73,7 @@ export default async function DashboardHomePage() {
       .maybeSingle(),
     supabase
       .from('campaign_action_audit_events')
-      .select('created_at, action_key, outcome')
+      .select('created_at, action_key, outcome, metadata')
       .eq('campaign_id', campaign.campaign_id)
       .eq('action_key', 'send_reminders')
       .eq('outcome', 'completed')
@@ -96,7 +101,22 @@ export default async function DashboardHomePage() {
       .eq('org_id', campaign.organization_id)
       .eq('user_id', user.id)
       .maybeSingle(),
+    supabase
+      .from('campaign_action_audit_events')
+      .select('id', { count: 'exact', head: true })
+      .eq('campaign_id', campaign.campaign_id)
+      .eq('organization_id', campaign.organization_id)
+      .eq('action_key', 'delivery_lifecycle_changed')
+      .eq('outcome', 'completed')
+      .contains('metadata', { extension: true }),
   ])
+
+  // Fail Loud: een mislukte telling mag niet als "nog nooit verlengd" gelezen
+  // worden, want dan biedt de kaart verlengen aan op een meting die al op de
+  // grens zit.
+  if (extensionCountError) {
+    throw new Error(`Kon het aantal verlengingen niet laden: ${extensionCountError.message}`)
+  }
 
   // Beheer is voorbehouden aan de eigenaar van de klantomgeving en aan de
   // Loep-operator (spec 2026-09-11 par. 9). Andere leden lezen alleen mee:
@@ -148,6 +168,8 @@ export default async function DashboardHomePage() {
     closesAt: campaign.closes_at ?? null,
     reminderConfig,
     reminderAlreadySentAt: reminderEvents?.[0]?.created_at ?? null,
+    reminderSkipped: isSkippedReminderEvent(reminderEvents?.[0]),
+    extensionCount: extensionCount ?? 0,
     reportReady,
     today: todayIso(),
   })
@@ -155,7 +177,6 @@ export default async function DashboardHomePage() {
   const reminderText = buildReminderText({
     commsMode: campaignRow?.comms_mode ?? null,
     scanType: campaign.scan_type,
-    scanLabel: SCAN_TYPE_LABELS[campaign.scan_type] ?? campaign.scan_type,
     organizationName: orgData?.name ?? 'je organisatie',
     publicSurveyToken: (campaignRow as Record<string, unknown>)?.public_survey_token as string | undefined,
     frontendBaseUrl: process.env.NEXT_PUBLIC_FRONTEND_URL ?? 'https://getloep.nl',
@@ -180,6 +201,8 @@ export default async function DashboardHomePage() {
           frontendBaseUrl={process.env.NEXT_PUBLIC_FRONTEND_URL ?? 'https://getloep.nl'}
           initialLaunchDate={deliveryRecord?.launch_date ?? null}
           initialInvitedCount={deliveryRecord?.invited_count ?? null}
+          initialClosesAt={campaign.closes_at ?? null}
+          initialReminderChoice={readReminderChoice(deliveryRecord?.reminder_config)}
           segmentDepartments={(campaignRow as Record<string, unknown>)?.segment_departments as
             | { label: string; slug: string; invited_count?: number }[]
             | null}

@@ -3,8 +3,8 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { SCAN_TYPE_LABELS, type ScanType } from '@/lib/types'
+import { MIN_INVITED_TOTAL } from '@/lib/response-activation'
 import {
-  MIN_INVITED_COUNT,
   buildInviteTemplate,
   buildReminderTemplate,
   buildSegmentSurveyLinks,
@@ -85,12 +85,12 @@ export function SelfSendSetupPanel({
     [frontendBaseUrl, publicSurveyToken, segmentDepartments],
   )
   const inviteTpl = useMemo(
-    () => buildInviteTemplate({ senderName: config.senderName, organizationName, scanLabel, scanType, surveyLink }),
-    [config.senderName, organizationName, scanLabel, scanType, surveyLink],
+    () => buildInviteTemplate({ senderName: config.senderName, organizationName, scanType, surveyLink }),
+    [config.senderName, organizationName, scanType, surveyLink],
   )
   const reminderTpl = useMemo(
-    () => buildReminderTemplate({ senderName: config.senderName, organizationName, scanLabel, scanType, surveyLink }),
-    [config.senderName, organizationName, scanLabel, scanType, surveyLink],
+    () => buildReminderTemplate({ senderName: config.senderName, organizationName, scanType, surveyLink }),
+    [config.senderName, organizationName, scanType, surveyLink],
   )
   const inviteSubject = config.inviteSubject || inviteTpl.subject
   const inviteBody = config.inviteBody || inviteTpl.body
@@ -199,14 +199,14 @@ export function SelfSendSetupPanel({
             <span className="mb-1 block font-medium text-slate-700">Aantal uitgenodigde deelnemers</span>
             <input
               type="number"
-              min={MIN_INVITED_COUNT}
+              min={MIN_INVITED_TOTAL}
               value={invitedCount}
               onChange={(e) => setInvitedCount(e.target.value === '' ? '' : Number(e.target.value))}
               className={fieldClass}
               placeholder="bijv. 34"
             />
             <span className="mt-1 block text-xs text-slate-500">
-              Minimaal {MIN_INVITED_COUNT}. Dit is de noemer voor het responspercentage.{' '}
+              Minimaal {MIN_INVITED_TOTAL}. Dit is de noemer voor het responspercentage.{' '}
               {typeof invitedCount === 'number' ? `${invitedCount} deelnemers` : ''}
             </span>
           </label>

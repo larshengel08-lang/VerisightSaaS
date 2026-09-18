@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
+import { MIN_INVITED_TOTAL } from '@/lib/response-activation'
+import * as comms from './self-send-comms'
 import {
-  MIN_INVITED_COUNT,
   buildSurveyLink,
   buildInviteTemplate,
   buildReminderTemplate,
@@ -12,6 +13,7 @@ import {
   getDueReminders,
   normalizeSelfSendConfig,
   prepareSegmentDepartmentsUpdate,
+  refreshInviteDraft,
   resolveReminderDate,
   validateInvitedCount,
 } from './self-send-comms'
@@ -23,10 +25,16 @@ describe('self-send-comms', () => {
     expect(config.endDate).toBeNull()
   })
 
-  it('rejects invited counts below the minimum', () => {
-    expect(validateInvitedCount(4)).toHaveLength(1)
-    expect(validateInvitedCount(MIN_INVITED_COUNT)).toHaveLength(0)
+  it('wijst uitgenodigde aantallen onder MIN_INVITED_TOTAL af met de klantmelding (spec 2026-09-16 par. 5.1)', () => {
+    expect(validateInvitedCount(9)).toEqual([
+      'Vul minimaal 10 deelnemers in. Onder de 10 ingevulde vragenlijsten maakt Loep geen rapport.',
+    ])
+    expect(validateInvitedCount(MIN_INVITED_TOTAL)).toHaveLength(0)
     expect(validateInvitedCount(34)).toHaveLength(0)
+  })
+
+  it('kent geen eigen MIN_INVITED_COUNT meer: de drempel woont in response-activation', () => {
+    expect((comms as Record<string, unknown>).MIN_INVITED_COUNT).toBeUndefined()
   })
 
   it('computes response rate against the manual denominator and caps at 100', () => {
@@ -68,7 +76,6 @@ describe('self-send-comms', () => {
     const tpl = buildInviteTemplate({
       senderName: 'Sarah de Vries, HR',
       organizationName: 'Acme BV',
-      scanLabel: 'Loep Vertrek',
       scanType: 'exit',
       surveyLink: 'https://www.getloep.nl/survey/open/tok-123',
     })
@@ -83,7 +90,6 @@ describe('self-send-comms', () => {
     const tpl = buildReminderTemplate({
       senderName: 'Sarah',
       organizationName: 'Acme BV',
-      scanLabel: 'Loep Behoud',
       scanType: 'retention',
       surveyLink: 'https://www.getloep.nl/survey/open/tok-123',
     })
@@ -96,7 +102,6 @@ describe('self-send-comms', () => {
     const tpl = buildReminderTemplate({
       senderName: 'Sarah',
       organizationName: 'Acme BV',
-      scanLabel: 'Loep Behoud',
       scanType: 'retention',
       surveyLink: 'https://www.getloep.nl/survey/open/tok-123',
       departmentLinks: [
@@ -107,6 +112,65 @@ describe('self-send-comms', () => {
     expect(tpl.body).toContain('Zorg: https://www.getloep.nl/survey/open/tok-123?afd=zorg')
     expect(tpl.body).toContain('Kantoor: https://www.getloep.nl/survey/open/tok-123?afd=kantoor')
     expect(tpl.body).not.toContain('Vul de vragenlijst hier in')
+  })
+
+  it('ondertekent met de organisatienaam als er geen afzendernaam is, en noemt Loep niet in de mail (spec 2026-09-16 par. 5.2)', () => {
+    const invite = buildInviteTemplate({
+      senderName: '',
+      organizationName: 'Acme BV',
+      scanType: 'exit',
+      surveyLink: 'https://www.getloep.nl/survey/open/tok-123',
+    })
+    expect(invite.body.trimEnd().endsWith('Met vriendelijke groet,\nAcme BV')).toBe(true)
+    expect(invite.body).toContain('Acme BV houdt een korte, anonieme vragenlijst.')
+    expect(invite.body).not.toContain('Loep Vertrek')
+    expect(invite.body).not.toContain('(Loep')
+    expect(invite.body).not.toContain('\nHR')
+
+    const reminder = buildReminderTemplate({
+      senderName: '',
+      organizationName: 'Acme BV',
+      scanType: 'retention',
+      surveyLink: 'https://www.getloep.nl/survey/open/tok-123',
+    })
+    expect(reminder.body.trimEnd().endsWith('Met vriendelijke groet,\nAcme BV')).toBe(true)
+    expect(reminder.body).not.toContain('Loep Behoud')
+  })
+
+  it('houdt een ingevulde afzendernaam boven de organisatienaam', () => {
+    const invite = buildInviteTemplate({
+      senderName: 'Sanne de Vries',
+      organizationName: 'Acme BV',
+      scanType: 'retention',
+      surveyLink: 'https://www.getloep.nl/survey/open/tok-123',
+    })
+    expect(invite.body.trimEnd().endsWith('Met vriendelijke groet,\nSanne de Vries')).toBe(true)
+
+    const reminder = buildReminderTemplate({
+      senderName: 'Sanne de Vries',
+      organizationName: 'Acme BV',
+      scanType: 'retention',
+      surveyLink: 'https://www.getloep.nl/survey/open/tok-123',
+    })
+    expect(reminder.body.trimEnd().endsWith('Met vriendelijke groet,\nSanne de Vries')).toBe(true)
+  })
+
+  it('valt terug op de organisatienaam als de afzendernaam alleen witruimte is', () => {
+    const invite = buildInviteTemplate({
+      senderName: '   ',
+      organizationName: 'Acme BV',
+      scanType: 'exit',
+      surveyLink: 'https://www.getloep.nl/survey/open/tok-123',
+    })
+    expect(invite.body.trimEnd().endsWith('Met vriendelijke groet,\nAcme BV')).toBe(true)
+
+    const reminder = buildReminderTemplate({
+      senderName: '   ',
+      organizationName: 'Acme BV',
+      scanType: 'retention',
+      surveyLink: 'https://www.getloep.nl/survey/open/tok-123',
+    })
+    expect(reminder.body.trimEnd().endsWith('Met vriendelijke groet,\nAcme BV')).toBe(true)
   })
 
   it('normalizes partial stored config without losing edited templates', () => {
@@ -192,12 +256,12 @@ describe('prepareSegmentDepartmentsUpdate', () => {
     ).toThrow(/minimaal 2/)
   })
 
-  it('eist een positief aantal per afdeling', () => {
+  it('eist minimaal 5 per afdeling en noemt de afdeling in de melding', () => {
     expect(() =>
       prepareSegmentDepartmentsUpdate(existing,
-        [{ label: 'Sales', invited_count: 0 }, { label: 'Ops', invited_count: 5 }],
+        [{ label: 'Sales', invited_count: 4 }, { label: 'Ops', invited_count: 5 }],
         new Set()),
-    ).toThrow(/aantal/i)
+    ).toThrow(/Afdeling Sales: minimaal 5 deelnemers/)
   })
 })
 
@@ -211,5 +275,50 @@ describe('formatDepartmentProgress', () => {
   })
   it('cap op 100%', () => {
     expect(formatDepartmentProgress(16, 14)).toBe('16 van 14 ingevuld (100%)')
+  })
+})
+
+describe('refreshInviteDraft (afdelingslinks na "Terug naar stap 1")', () => {
+  const base = { frontendBaseUrl: 'https://www.getloep.nl', token: 'tok-1' }
+  const template = (departments: Array<{ label: string; slug: string }>) =>
+    buildInviteTemplate({
+      senderName: '',
+      organizationName: 'Testklant',
+      scanType: 'retention',
+      surveyLink: buildSurveyLink(base.frontendBaseUrl, base.token),
+      departmentLinks: buildSegmentSurveyLinks(base.frontendBaseUrl, base.token, departments),
+    })
+  const before = template([
+    { label: 'Zorg', slug: 'zorg' },
+    { label: 'Staf', slug: 'staf' },
+  ])
+  const after = template([
+    { label: 'Zorg', slug: 'zorg' },
+    { label: 'Ondersteuning', slug: 'ondersteuning' },
+  ])
+
+  it('bouwt de tekst opnieuw op met de nieuwe afdelingslinks', () => {
+    const draft = { generated: before, subject: before.subject, body: before.body }
+    const next = refreshInviteDraft(draft, after)
+    expect(next.body).toContain('?afd=ondersteuning')
+    expect(next.body).not.toContain('?afd=staf')
+    expect(next.generated).toEqual(after)
+    expect(next.replacedEdits).toBe(false)
+  })
+
+  it('kiest bij gewijzigde links voor juiste links en meldt dat eigen aanpassingen zijn vervangen', () => {
+    const draft = { generated: before, subject: before.subject, body: `${before.body}
+Groet, Anne` }
+    const next = refreshInviteDraft(draft, after)
+    expect(next.body).toBe(after.body)
+    expect(next.body).not.toContain('?afd=staf')
+    expect(next.replacedEdits).toBe(true)
+  })
+
+  it('laat eigen aanpassingen staan als de links niet veranderd zijn', () => {
+    const draft = { generated: before, subject: 'Eigen onderwerp', body: `${before.body}
+Groet, Anne` }
+    const next = refreshInviteDraft(draft, before)
+    expect(next).toEqual({ ...draft, replacedEdits: false })
   })
 })

@@ -2,9 +2,8 @@
 // these builders only produce copy-paste text and compute display values.
 
 import { SURVEY_DURATION_LABEL } from '@/lib/campaign-setup'
+import { validateDepartmentInvitedCount, validateInvitedTotal } from '@/lib/response-activation'
 import type { ScanType } from '@/lib/types'
-
-export const MIN_INVITED_COUNT = 5
 
 export interface SelfSendConfig {
   senderName: string
@@ -60,12 +59,11 @@ export function normalizeSelfSendConfig(value: unknown): SelfSendConfig {
   }
 }
 
+// Drempel en melding komen uit response-activation.ts (spec 2026-09-16 par. 5.1);
+// deze wrapper blijft voor aanroepers die een lijst met fouten verwachten.
 export function validateInvitedCount(value: unknown): string[] {
-  const n = typeof value === 'number' ? value : Number(value)
-  if (!Number.isInteger(n) || n < MIN_INVITED_COUNT) {
-    return [`Aantal uitgenodigde deelnemers moet minimaal ${MIN_INVITED_COUNT} zijn.`]
-  }
-  return []
+  const error = validateInvitedTotal(value)
+  return error ? [error] : []
 }
 
 export function computeResponseRatePct(completed: number, invitedCount: number | null): number | null {
@@ -158,9 +156,8 @@ export function prepareSegmentDepartmentsUpdate(
 ): SegmentDepartmentsUpdate {
   if (incoming.length < 2) throw new Error('Segmentrapportage vraagt minimaal 2 afdelingen.')
   for (const item of incoming) {
-    if (!Number.isInteger(item.invited_count) || item.invited_count < 1) {
-      throw new Error(`Vul een geldig aantal deelnemers in voor '${(item.label ?? '').trim() || '?'}' (minimaal 1).`)
-    }
+    const error = validateDepartmentInvitedCount(item.label ?? '', item.invited_count)
+    if (error) throw new Error(error)
   }
   // Hergebruik de bestaande label/slug-validatie (leeg, duplicaat):
   const validated = buildSegmentDepartments(incoming.map((i) => i.label))
@@ -182,10 +179,13 @@ export function prepareSegmentDepartmentsUpdate(
     ...d,
     invited_count: invitedByLabel.get(d.label)!,
   }))
-  return {
-    departments,
-    totalInvited: departments.reduce((sum, d) => sum + d.invited_count, 0),
-  }
+  const totalInvited = departments.reduce((sum, d) => sum + d.invited_count, 0)
+  // Met minimaal 2 afdelingen van elk minimaal 5 is dit vandaag altijd waar;
+  // de check staat er zodat een toekomstige wijziging van één drempel de
+  // andere niet stil ondergraaft.
+  const totalError = validateInvitedTotal(totalInvited)
+  if (totalError) throw new Error(totalError)
+  return { departments, totalInvited }
 }
 
 export function normalizeSelfSendReminders(value: unknown): SelfSendReminder[] {
@@ -247,11 +247,17 @@ const DEFAULT_SCAN_WHY = 'Jouw inzicht helpt ons als organisatie verder.'
 interface TemplateArgs {
   senderName: string
   organizationName: string
-  scanLabel: string
   scanType: ScanType
   surveyLink: string
   /** Bij afdelingsrapportage: één link per afdeling in plaats van de algemene link. */
   departmentLinks?: Array<{ label: string; url: string }>
+}
+
+// Ondertekening (spec 2026-09-16 par. 5.2): de organisatie, niet "HR". De
+// ontvanger kent Loep niet, dus de scannaam staat niet in de mail; de
+// vragenlijstpagina zelf noemt Loep wel.
+function signature(args: TemplateArgs): string {
+  return args.senderName.trim() || args.organizationName.trim()
 }
 
 function buildLinkLines(args: TemplateArgs): string[] {
@@ -265,14 +271,39 @@ function buildLinkLines(args: TemplateArgs): string[] {
   return [`Vul de vragenlijst hier in (${duration}): ${args.surveyLink}`]
 }
 
+/** Uitnodiging zoals de wizard hem toont: de laatst gegenereerde tekst plus wat de klant ervan maakte. */
+export interface InviteDraft {
+  generated: EmailTemplate
+  subject: string
+  body: string
+}
+
+/**
+ * Na opslaan van stap 1 kunnen de afdelingslinks veranderd zijn (afdeling
+ * hernoemd of toegevoegd). Dan wint de juiste link: de tekst wordt opnieuw
+ * opgebouwd, ook als de klant hem had aangepast, en replacedEdits zegt of er
+ * daarbij eigen aanpassingen zijn vervangen, zodat de wizard dat kan melden.
+ * Veranderde er niets, dan blijft de tekst van de klant staan.
+ */
+export function refreshInviteDraft(
+  draft: InviteDraft,
+  next: EmailTemplate,
+): InviteDraft & { replacedEdits: boolean } {
+  if (next.subject === draft.generated.subject && next.body === draft.generated.body) {
+    return { ...draft, replacedEdits: false }
+  }
+  const replacedEdits = draft.subject !== draft.generated.subject || draft.body !== draft.generated.body
+  return { generated: next, subject: next.subject, body: next.body, replacedEdits }
+}
+
 export function buildInviteTemplate(args: TemplateArgs): EmailTemplate {
-  const sender = args.senderName || 'HR'
+  const sender = signature(args)
   return {
     subject: `Uitnodiging: korte vragenlijst - ${args.organizationName}`,
     body: [
       'Beste collega,',
       '',
-      `${args.organizationName} houdt een korte, anonieme vragenlijst (${args.scanLabel}).`,
+      `${args.organizationName} houdt een korte, anonieme vragenlijst.`,
       '',
       SCAN_WHY[args.scanType] ?? DEFAULT_SCAN_WHY,
       '',
@@ -289,7 +320,7 @@ export function buildInviteTemplate(args: TemplateArgs): EmailTemplate {
 }
 
 export function buildReminderTemplate(args: TemplateArgs): EmailTemplate {
-  const sender = args.senderName || 'HR'
+  const sender = signature(args)
   return {
     subject: `Herinnering: korte vragenlijst - ${args.organizationName}`,
     body: [

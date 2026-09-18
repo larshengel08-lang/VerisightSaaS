@@ -5,6 +5,40 @@ export const FIRST_INSIGHT_THRESHOLD = 10
 export const CULTURE_ASSESSMENT_DASHBOARD_THRESHOLD = 30
 export const CULTURE_ASSESSMENT_INSIGHT_THRESHOLD = 30
 
+/**
+ * Eén set drempels voor het aantal uitgenodigden (spec 2026-09-16 par. 5.1).
+ * MIN_INVITED_TOTAL is gelijk aan de rapportdrempel: onder de 10 ingevulde
+ * vragenlijsten maakt Loep geen rapport, dus minder dan 10 uitnodigen kan nooit
+ * een rapport opleveren. MIN_INVITED_PER_DEPARTMENT spiegelt MIN_SEGMENT_N in
+ * backend/scoring_config.py (regel 54); bij aanpassing beide kanten bijwerken.
+ */
+export const MIN_INVITED_TOTAL = FIRST_INSIGHT_THRESHOLD
+export const MIN_INVITED_PER_DEPARTMENT = 5
+
+function toInteger(value: unknown): number {
+  const n = typeof value === 'number' ? value : Number(value)
+  return Number.isInteger(n) ? n : Number.NaN
+}
+
+/** Null als het totaal voldoet; anders de melding voor de klant. */
+export function validateInvitedTotal(value: unknown): string | null {
+  const n = toInteger(value)
+  if (Number.isNaN(n) || n < MIN_INVITED_TOTAL) {
+    return `Vul minimaal ${MIN_INVITED_TOTAL} deelnemers in. Onder de ${MIN_INVITED_TOTAL} ingevulde vragenlijsten maakt Loep geen rapport.`
+  }
+  return null
+}
+
+/** Null als de afdeling voldoet; anders de melding voor de klant, met de afdelingsnaam erin. */
+export function validateDepartmentInvitedCount(label: string, value: unknown): string | null {
+  const n = toInteger(value)
+  if (Number.isNaN(n) || n < MIN_INVITED_PER_DEPARTMENT) {
+    const name = label.trim() || 'zonder naam'
+    return `Afdeling ${name}: minimaal ${MIN_INVITED_PER_DEPARTMENT} deelnemers. Kleinere afdelingen voeg je samen; anders vallen ze in het rapport onder 'Overige afdelingen'.`
+  }
+  return null
+}
+
 export type ResponseActivationStage =
   | 'collecting_responses'
   | 'dashboard_active'
