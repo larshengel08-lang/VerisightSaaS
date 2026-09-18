@@ -48,6 +48,17 @@ export function ReadOnlyStateCard({ state }: { state: DashboardState }) {
         </div>
       ) : null}
 
+      {state.ctaKind === 'link' && state.ctaLabel && state.ctaHref?.startsWith('mailto:') ? (
+        <div className="mt-6">
+          <a
+            href={state.ctaHref}
+            className="inline-flex items-center justify-center rounded-lg bg-[color:var(--dashboard-ink)] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1B2E45]"
+          >
+            {state.ctaLabel}
+          </a>
+        </div>
+      ) : null}
+
       <p className="mt-6 text-sm text-[color:var(--dashboard-muted)]">
         Alleen de eigenaar van deze Loep-omgeving kan de meting beheren.
       </p>

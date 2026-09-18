@@ -64,4 +64,9 @@ describe('state-driven dashboard page', () => {
     expect(source).toContain('if (extensionCountError)')
     expect(source).toContain('throw new Error(`Kon het aantal verlengingen niet laden: ${extensionCountError.message}`)')
   })
+
+  it('biedt onderaan altijd "nieuwe meting aanvragen" aan, ook zonder meting (spec 2026-09-16 par. 6.3)', () => {
+    expect(source.match(/<RequestNewMeasurement organizationName=/g)?.length).toBe(2)
+    expect(source).toContain('loadAccountOrganizations(supabase, user.id)')
+  })
 })

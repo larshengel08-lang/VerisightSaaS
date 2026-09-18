@@ -43,10 +43,7 @@ export function RunningStateCard({ state, reminderText, scanLabel }: Props) {
             style={{ width: `${pct}%` }}
           />
         </div>
-        <div className="mt-2 flex justify-between text-xs text-[color:var(--dashboard-muted)]">
-          <span>{state.subtext}</span>
-          <span>{state.closeDateLabel}</span>
-        </div>
+        <p className="mt-2 text-xs text-[color:var(--dashboard-muted)]">{state.subtext}</p>
       </div>
 
       {state.timeline ? (

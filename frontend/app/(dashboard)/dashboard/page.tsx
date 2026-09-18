@@ -5,6 +5,8 @@ import { ReadOnlyStateCard } from '@/components/dashboard/read-only-state-card'
 import { RunningStateCard } from '@/components/dashboard/running-state-card'
 import { WelcomeGate } from '@/components/dashboard/welcome-gate'
 import { CampaignListSection } from '@/components/dashboard/campaign-list-section'
+import { RequestNewMeasurement } from '@/components/dashboard/request-new-measurement'
+import { loadAccountOrganizations } from '@/lib/dashboard/account-organization'
 import { buildCampaignListItems, pickMainCampaign } from '@/lib/dashboard/campaign-list'
 import { loadCampaignStatusContext } from '@/lib/dashboard/campaign-status-context'
 import { resolveDashboardState } from '@/lib/dashboard/dashboard-state-resolver'
@@ -56,9 +58,13 @@ export default async function DashboardHomePage() {
       reportReady: false,
       today: todayIso(),
     })
+    // Zonder meting is er geen campagne-organisatie; de naam komt dan van het
+    // account. Lukt dat niet, dan staat er "organisatie niet bekend" in de mail.
+    const account = await loadAccountOrganizations(supabase, user.id)
     return (
       <div className="space-y-8">
         <DashboardStateCard state={state} reminderText="" />
+        <RequestNewMeasurement organizationName={account.names[0] ?? null} />
       </div>
     )
   }
@@ -236,6 +242,7 @@ export default async function DashboardHomePage() {
       {campaigns.length > 1 ? (
         <CampaignListSection items={listItems} />
       ) : null}
+      <RequestNewMeasurement organizationName={orgData?.name ?? null} />
     </div>
   )
 }

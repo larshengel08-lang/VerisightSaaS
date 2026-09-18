@@ -18,10 +18,10 @@ describe('alleen-lezen statuskaart (spec 2026-09-11 par. 9)', () => {
     expect(source).toContain('state.campaignName')
   })
 
-  it('bevat geen enkele actie', () => {
+  it('bevat geen beheeractie; alleen een mailto-link (contact is geen beheer) mag blijven', () => {
     expect(source).not.toContain('DashboardStateActions')
     expect(source).not.toContain('<button')
-    expect(source).not.toContain('ctaLabel')
     expect(source).not.toContain('secondaryActions')
+    expect(source).toContain("startsWith('mailto:')")
   })
 })

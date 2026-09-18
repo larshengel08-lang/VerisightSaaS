@@ -4,6 +4,7 @@ import { DashboardStateCard } from '@/components/dashboard/dashboard-state-card'
 import { ReadOnlyStateCard } from '@/components/dashboard/read-only-state-card'
 import { RunningStateCard } from '@/components/dashboard/running-state-card'
 import { WelcomeGate } from '@/components/dashboard/welcome-gate'
+import { RequestNewMeasurement } from '@/components/dashboard/request-new-measurement'
 import { PdfDownloadButton } from './pdf-download-button'
 import { SuiteAccessDenied } from '@/components/dashboard/suite-access-denied'
 import { resolveDashboardState } from '@/lib/dashboard/dashboard-state-resolver'
@@ -232,6 +233,9 @@ export default async function CampaignPage({ params }: Props) {
             scanType={stats.scan_type}
           />
         </div>
+      ) : null}
+      {state.processingVariant === 'insufficient_response' ? (
+        <RequestNewMeasurement organizationName={orgData?.name ?? null} />
       ) : null}
     </div>
   )
