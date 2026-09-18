@@ -1369,6 +1369,24 @@ def _cover_value_class(value: str) -> str:
     return "cmv cmv-long" if len(value) > _COVER_VALUE_LONG_CHARS else "cmv"
 
 
+# H15: wie dit rapport mag zien, in één zin op de cover en op de slotpagina.
+# Het rapport gaat over groepen maar de toelichtingen komen van mensen; in een
+# klein team is een geanonimiseerde regel nog steeds herkenbaar. Dat stond
+# nergens, terwijl de HR-manager het rapport zelf doorstuurt.
+VERSPREIDINGSREGEL = ("Voor het MT en HR van {org}. Deel dit rapport niet met individuele "
+                      "medewerkers; de toelichtingen zijn geanonimiseerd maar herkenbaar in kleine teams.")
+
+
+def _verspreidingsregel(org_name: str) -> str:
+    """H15: één zin op cover en slotpagina over wie dit mag zien. Zonder
+    organisatienaam (tests, oude aanroepen) "de organisatie"."""
+    org = (org_name or "").strip() or "de organisatie"
+    regel = VERSPREIDINGSREGEL.format(org=org)
+    # Een naam die zelf op een punt eindigt ("TechBouw B.V.") kreeg er een
+    # tweede achter, en twee punten achter elkaar lezen als een typefout.
+    return regel.replace(org + ".", org, 1) if org.endswith(".") else regel
+
+
 def _cover(*, scan_label: str, scan_type: str, org_name: str, period: str,
            opening_question: str, stats: list[tuple[str, str]]) -> str:
     cells = "".join(
@@ -1386,6 +1404,7 @@ def _cover(*, scan_label: str, scan_type: str, org_name: str, period: str,
   <div class="cbar"></div>
   <h1 class="ctitle">{_h(opening_question)}</h1>
   <div class="csub">{_h(org_name)} &nbsp;&middot;&nbsp; {_h(period)} &nbsp;&middot;&nbsp; Managementrapport</div>
+  <div class="cdist">{_h(_verspreidingsregel(org_name))}</div>
   <div class="cmeta"><div class="cmeta-row">{cells}</div></div>
 </div>"""
 
@@ -2901,7 +2920,13 @@ def _direction_totals_line(direction_agg: dict, agenda_keys: list[str], scan_typ
     elif delen2:
         zin += "."
     if niet_gevraagd:
-        zin += (f" Bij {niet_gevraagd} van de {n_total} is die vraag niet gesteld; "
+        # Met drift (overschot) kregen deze mensen de vraag wél, alleen over een
+        # ander onderwerp dan hun nu herberekende laagste: "van hen is er dus
+        # geen antwoord" is dan onwaar (restpunt uit de review van taak 11).
+        # Zonder drift kreeg niemand van hen een vraag en blijft de zin waar.
+        zin += (f" Bij {niet_gevraagd} van de {n_total} is de vraag niet over hun "
+                "laagste onderwerp gesteld." if overschot else
+                f" Bij {niet_gevraagd} van de {n_total} is die vraag niet gesteld; "
                 "van hen is er dus geen antwoord.")
     # Twee losse meldingen, want het zijn twee losse feiten (codereview taak 11):
     # het overschot hoeft niet in de groep zonder herberekend laagste onderwerp te
@@ -3425,7 +3450,7 @@ def _banden_cel(ranking_active: bool) -> tuple[str, str]:
 
 
 def _drempeltabel(scan_type: str, *, direction_active: bool = True,
-                  deepening_active: bool = True) -> str:
+                  deepening_active: bool = True, ranking_active: bool = True) -> str:
     """Eén drempeltabel voor het hele rapport (B20, H18): elke drempel met de
     plek waar hij werkt en één zin waarom.
 
@@ -3446,6 +3471,13 @@ def _drempeltabel(scan_type: str, *, direction_active: bool = True,
     een richtingkaart, dus de drempel werkt ook in een meting zonder
     verdiepingsdata maar met richtingantwoorden.
 
+    De verdiepingsrijen hangen ook aan `ranking_active`: zonder factorprofiel
+    (stresstest 07) rendert er geen ranglijst en geen verdiepingsblok, en dan
+    beloofde de rij van DEEPENING_MIN_N nog "de kolom Verdieping in de ranglijst"
+    en de rij van de verdeelstaffel een verdeling die nergens staat. Het Anders-
+    blok volgt diezelfde verdiepingsvlag (het staat onder de verdiepings-
+    verdeling) naast de richtingvraag.
+
     Drie rijen kunnen hetzelfde getal dragen (MIN_SEGMENT_N, MIN_QUOTES_N en
     DEEPENING_DISTRIBUTION_MIN_N staan alle drie op 5): ze worden bewust niet
     samengevoegd, want het zijn losse constanten die uiteen kunnen lopen, en ze
@@ -3453,7 +3485,10 @@ def _drempeltabel(scan_type: str, *, direction_active: bool = True,
     het getal alleen, zodat de invoegvolgorde bij gelijke getallen blijft staan.
     """
     pct = round(OTHER_SHARE_MIN * 100)
-    anders_actief = scan_type in DIRECTION_SCAN_TYPES and (deepening_active or direction_active)
+    # Het verdiepingsblok hangt aan de ranglijst: priority_fkeys komt uit de
+    # rasterrijen, dus zonder profiel wordt geen enkele verdieping gerenderd.
+    verdieping_actief = deepening_active and ranking_active
+    anders_actief = scan_type in DIRECTION_SCAN_TYPES and (verdieping_actief or direction_active)
     rijen: list[tuple[int, str, str]] = [
         (MIN_AGGREGATE_N, "profiel per onderwerp, spreiding, en een afdeling als startpunt",
          "Onder de tien antwoorden bepaalt één persoon te veel het gemiddelde, en is een "
@@ -3473,7 +3508,7 @@ def _drempeltabel(scan_type: str, *, direction_active: bool = True,
              "rapport haalt één mens dat aandeel al, en van één mens is geen conclusie "
              "over de vraagopties te trekken. Schreef niemand van hen een toelichting, "
              "dan blijft het blok weg: het aantal staat dan al in de verdeling erboven."))
-    if scan_type in DIRECTION_SCAN_TYPES and deepening_active:
+    if scan_type in DIRECTION_SCAN_TYPES and verdieping_actief:
         rijen.append(
             (DEEPENING_DISTRIBUTION_MIN_N, "de verdeling van toelichtingen onder een onderwerp",
              "Onder de vijf antwoorden zegt een verdeling meer over wie er toevallig "
@@ -3510,7 +3545,8 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "",
                 direction_active: bool = False,
                 direction_degraded: bool = False,
                 ranking_active: bool = True,
-                deepening_active: bool = False) -> str:
+                deepening_active: bool = False,
+                org_name: str = "") -> str:
     """Product-specifieke methodiekpagina — nooit gedeelde ExitScan-copy buiten ExitScan.
 
     Draagt de drempeltabel (_drempeltabel, B20/H18): de losse cel Drempelwaarden
@@ -3539,7 +3575,14 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "",
 
     ranking_active is dezelfde gedachte voor de cel "Hoe de banden werken":
     zonder factorprofiel is er geen rangorde tussen factoren om naar te
-    verwijzen. Zie _banden_cel."""
+    verwijzen. Zie _banden_cel. Diezelfde vlag hangt de verdiepingsrijen van de
+    drempeltabel aan hun sectie: zonder rangorde rendert er geen verdiepingsblok
+    en geen kolom Verdieping, dus werken die twee drempels in dit rapport niet
+    (restpunt uit de review van taak 11, zichtbaar in stresstest 07).
+
+    org_name draagt de verspreidingsregel (H15): dezelfde zin als op de cover,
+    zodat de laatste pagina ook zegt voor wie dit rapport bedoeld is. Zonder naam
+    "de organisatie", nooit een lege plek."""
     if scan_type == "retention":
         intro = ("Dit rapport bundelt patronen uit actieve-medewerkerresponses tot een groepsbeeld van "
                  "behoud, vertrekdenken en werkfactoren. Geen individuele risicoscore, geen voorspelling "
@@ -3551,7 +3594,7 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "",
         cells_r2 = [
             ("Open toelichtingen","Automatisch geanonimiseerd: herkende namen, contactgegevens en locaties verwijderd. Alleen bij voldoende n getoond."),
             ("Claimgrenzen",     "Loep Behoud is een actieve-populatie groepssignaal. Geen causale claims, geen interventieprescriptie."),
-            ("Privacywaarborg",  "Verwerking conform AVG. Uitsluitend bestemd voor geautoriseerde gebruikers."),
+            ("Wie dit mag zien",  f"Verwerking conform AVG. {_verspreidingsregel(org_name)}"),
         ]
         cells_r3 = [_banden_cel(ranking_active)]
     elif scan_type == "onboarding":
@@ -3565,7 +3608,7 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "",
         cells_r2 = [
             ("Open toelichtingen", "Automatisch geanonimiseerd: herkende namen, contactgegevens en locaties verwijderd. Alleen bij voldoende n getoond."),
             ("Claimgrenzen",       "Onboarding is een groepscheck op de eerste werkperiode. Geen causale claims, geen uitvalpredicties."),
-            ("Privacywaarborg",    "Verwerking conform AVG. Uitsluitend bestemd voor geautoriseerde gebruikers."),
+            ("Wie dit mag zien",    f"Verwerking conform AVG. {_verspreidingsregel(org_name)}"),
         ]
         cells_r3 = [_banden_cel(ranking_active)]
     else:  # exit
@@ -3578,7 +3621,7 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "",
         cells_r2 = [
             ("Open toelichtingen","Automatisch geanonimiseerd: herkende namen, contactgegevens en locaties verwijderd. Alleen bij voldoende n getoond."),
             ("Claimgrenzen",     "Loep Vertrek is een terugkijkende groepsmeting op uitstroom. Geen causale claims, geen oordeel over vermijdbaarheid, geen verlooppredicties."),
-            ("Privacywaarborg",  "Verwerking conform AVG. Uitsluitend bestemd voor geautoriseerde gebruikers."),
+            ("Wie dit mag zien",  f"Verwerking conform AVG. {_verspreidingsregel(org_name)}"),
         ]
         cells_r3 = [_banden_cel(ranking_active)]
 
@@ -3625,7 +3668,7 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "",
     <p style="font-size:11px;color:#374151;">{_h(intro)}</p>
   </div>
   <table class="tg"><tr>{_cells(cells_r1)}</tr></table>
-  {_drempeltabel(scan_type, direction_active=direction_active, deepening_active=deepening_active)}
+  {_drempeltabel(scan_type, direction_active=direction_active, deepening_active=deepening_active, ranking_active=ranking_active)}
   <table class="tg" style="margin-top:10px;"><tr>{_cells(cells_r2)}</tr></table>
   <table class="tg" style="margin-top:10px;"><tr>{_cells(cells_r3, full=True)}</tr></table>
   {f'<table class="tg" style="margin-top:10px;"><tr>{_cells(cells_r4, full=True)}</tr></table>' if cells_r4 else ''}
@@ -4181,11 +4224,14 @@ def _themed_quotes(texts: list[str], scan_type: str = "exit",
         seen.add(t)
         cards += (
             f'<div class="theme-card">'
-            f'<div class="quote-txt">{_h(t)}'
-            f'<div class="quote-anon">Automatisch geanonimiseerd: herkende namen en contactgegevens verwijderd</div>'
-            f'</div></div>'
+            f'<div class="quote-txt">{_h(t)}</div></div>'
         )
-    return f'{note}{cards}'
+    # C2: het anonimiseringslabel stond onder elke kaart en werd zo bij twaalf
+    # toelichtingen twaalf keer afgedrukt. Het geldt voor de hele lijst, dus
+    # staat het één keer bovenaan (zelfde constante als het Anders-blok, dat het
+    # om dezelfde reden één keer onder zijn lijst zet).
+    label = f'<p class="quote-anon" style="margin-bottom:10px;">{ANON_NOTE}.</p>'
+    return f'{note}{label}{cards}'
 
 
 # ─── Data builder ─────────────────────────────────────────────────────────────
@@ -4717,11 +4763,18 @@ def _overzicht_summary_and_bands(profile_factors: list[tuple[str, float | None]]
 
 
 def _overzichtsprofiel(factors: list[tuple[str, float | None]],
-                       summary: str = "", bands: dict[str, list[str]] | None = None,
-                       opener_html: str = "", *, scan_type: str) -> str:
+                       summary: str = "", opener_html: str = "", *, scan_type: str) -> str:
     """scan_type is verplicht en heeft bewust geen default: de rangorde-zin in
     de intro is scan-afhankelijk (zie OVERZICHTSPROFIEL_RANGORDE) en een stille
-    terugval zou in een van de drie rapporten een onware regel afdrukken."""
+    terugval zou in een van de drie rapporten een onware regel afdrukken.
+
+    C3: de uitsplitsing per band (drie lijstjes met dezelfde labels die in de
+    balken erboven al staan, elk met zijn aantal) is verdwenen. Die lijst zei
+    niets wat de balken en de samenvattingszin niet al zeggen, en herhaalde de
+    bandtermen een derde keer op dezelfde pagina. _overzicht_summary_and_bands
+    levert de indeling nog wel (de banden komen uit dezelfde afgeronde drempels
+    als de balken, en dat is elders getest); de renderers gebruiken alleen de
+    zin."""
     ranked = sorted(factors, key=lambda x: (x[1] is None, x[1]))
     rows = "".join(_factor_bar_row(lbl, sc) for lbl, sc in ranked)
     # Legendatermen = exact dezelfde woorden als _factor_label (rijlabels, p.02,
@@ -4736,29 +4789,6 @@ def _overzichtsprofiel(factors: list[tuple[str, float | None]],
         f'<p style="font-size:11px;color:#374151;max-width:66ch;margin-bottom:18px;">{_h(summary)}</p>'
         if summary else ""
     )
-    # Uitsplitsing per band (dezelfde kwetsbaar/aandacht/sterk-indeling die de
-    # summary-zin al gebruikt) als leesbare tekst i.p.v. alleen balkjes.
-    # Onder elkaar en groter i.p.v. drie smalle kolommen (feedback 2026-07-16):
-    # de pagina was half leeg en de kolommen lazen als voetnoot.
-    breakdown_html = ""
-    if bands:
-        blocks = ""
-        band_meta = [
-            ("kwetsbaar punt", bands.get("kwetsbaar") or [], RAG_HIGH),
-            ("aandachtspunt", bands.get("aandacht") or [], RAG_MID),
-            ("relatief sterk", bands.get("sterk") or [], RAG_LOW),
-        ]
-        for title, labels, color in band_meta:
-            if not labels:
-                continue
-            items = "".join(f"<li>{_h(lbl)}</li>" for lbl in labels)
-            blocks += (f'<div style="margin-bottom:18px;">'
-                       f'<div style="font-family:\'JetBrains Mono\', monospace;font-size:9.5px;letter-spacing:0.1em;'
-                       f'text-transform:uppercase;color:{color};margin-bottom:7px;">{_h(title)} ({len(labels)})</div>'
-                       f'<ul style="font-size:11.5px;color:#243247;line-height:1.9;margin:0;padding-left:16px;">{items}</ul>'
-                       f'</div>')
-        if blocks:
-            breakdown_html = f'<div style="margin-top:26px;">{blocks}</div>'
     # Niet via _intro(): de rangorde-zin hangt van de scan af, maar hoort in
     # dezelfde alinea als het gedeelde deel (beide UNESCAPED, zie SECTION_INTROS).
     #
@@ -4778,7 +4808,7 @@ def _overzichtsprofiel(factors: list[tuple[str, float | None]],
   {opener_html or '<span class="slabel">Overzichtsprofiel</span>'}
   {intro_html}
   {summary_html}
-  <div class="card">{rows}{legend}{breakdown_html}</div>
+  <div class="card">{rows}{legend}</div>
 </div>"""
 
 
@@ -5372,8 +5402,9 @@ def render_exit_report_html(data: dict) -> str:
     # ── Overzichtsprofiel (p.05) ──────────────────────────────────────────────
     profile_factors = [(_fl(fk, "exit"), fa.get(fk))
                        for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
-    _overzicht_summary, _overzicht_bands = _overzicht_summary_and_bands(profile_factors)
-    s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary, bands=_overzicht_bands,
+    # C3: alleen de samenvattingszin; de bandlijst onder de balken is weg.
+    _overzicht_summary, _ = _overzicht_summary_and_bands(profile_factors)
+    s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary,
                             opener_html=ch.opener("Overzichtsprofiel", anchor=LEIDRAAD_ANKERS["overzicht"]), scan_type="exit")
 
     # priority_fkeys volgt nu dezelfde rangorde als het prioriteringsraster
@@ -5536,7 +5567,8 @@ def render_exit_report_html(data: dict) -> str:
                      ranking_active=not _geen_profiel,
                      direction_active=bool(_dir_block),
                      direction_degraded=bool(_dir_block) and not _raster_rows,
-                     deepening_active=bool(deep_agg))
+                     deepening_active=bool(deep_agg),
+                     org_name=data["org_name"])
     return _doc(f"Loep Vertrek · {data['campaign_name']}", s, scan_type="exit")
 
 
@@ -5756,8 +5788,9 @@ def render_retention_report_html(data: dict) -> str:
     # ── Overzichtsprofiel (p.05) ──────────────────────────────────────────────
     profile_factors = [(_fl(fk, ST), fa.get(fk))
                        for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
-    _overzicht_summary, _overzicht_bands = _overzicht_summary_and_bands(profile_factors)
-    s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary, bands=_overzicht_bands,
+    # C3: alleen de samenvattingszin; de bandlijst onder de balken is weg.
+    _overzicht_summary, _ = _overzicht_summary_and_bands(profile_factors)
+    s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary,
                             opener_html=ch.opener("Overzichtsprofiel", anchor=LEIDRAAD_ANKERS["overzicht"]), scan_type=ST)
 
     # priority_fkeys volgt nu dezelfde rangorde als het prioriteringsraster
@@ -5902,7 +5935,8 @@ def render_retention_report_html(data: dict) -> str:
                      ranking_active=not _geen_profiel,
                      direction_active=bool(_dir_block),
                      direction_degraded=bool(_dir_block) and not _raster_rows,
-                     deepening_active=bool(deep_agg))
+                     deepening_active=bool(deep_agg),
+                     org_name=data["org_name"])
     return _doc(f"Loep Behoud · {data['campaign_name']}", s, scan_type="retention")
 
 
@@ -6158,8 +6192,9 @@ def render_onboarding_report_html(data: dict) -> str:
     # ── Overzichtsprofiel (p.04) ──────────────────────────────────────────────
     profile_factors = [(_fl(fk, ST), fa.get(fk))
                        for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
-    _overzicht_summary, _overzicht_bands = _overzicht_summary_and_bands(profile_factors)
-    s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary, bands=_overzicht_bands,
+    # C3: alleen de samenvattingszin; de bandlijst onder de balken is weg.
+    _overzicht_summary, _ = _overzicht_summary_and_bands(profile_factors)
+    s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary,
                             opener_html=ch.opener("Overzichtsprofiel", anchor=LEIDRAAD_ANKERS["overzicht"]), scan_type=ST)
 
     # ── Checkpointoverzicht (p.05 — onboarding-exclusive) ────────────────────
@@ -6379,7 +6414,8 @@ def render_onboarding_report_html(data: dict) -> str:
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────
     s += _trust_page(ST, opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen", anchor=LEIDRAAD_ANKERS["methodiek"]),
-                     ranking_active=not _geen_profiel)
+                     ranking_active=not _geen_profiel,
+                     org_name=data["org_name"])
     return _doc(f"Loep Start · {data['campaign_name']}", s, scan_type="onboarding")
 
 

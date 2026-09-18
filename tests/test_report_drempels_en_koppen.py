@@ -96,6 +96,31 @@ def test_anders_rij_hangt_ook_aan_de_richtingvraag():
     assert f" {DEEPENING_MIN_N} " not in f" {alleen_richting} "
 
 
+def test_drempeltabel_laat_de_verdiepingsrijen_weg_zonder_ranglijst():
+    """Restpunt uit de review van taak 11: zonder factorprofiel (stresstest 07)
+    rendert er geen ranglijst en geen verdiepingsblok, maar de rij van
+    DEEPENING_MIN_N beloofde nog "de kolom Verdieping in de ranglijst" en de rij
+    van de verdeelstaffel een verdeling die nergens staat. Dezelfde vlag die
+    _trust_page al voor de banden-cel gebruikt (`ranking_active`) hangt ze nu aan
+    de sectie waarin ze werken."""
+    zonder = _tekst(_drempeltabel("retention", deepening_active=True,
+                                  direction_active=False, ranking_active=False))
+    assert f" {DEEPENING_MIN_N} " not in f" {zonder} "
+    assert "de kolom Verdieping in de ranglijst" not in zonder
+    assert "de verdeling van toelichtingen onder een onderwerp" not in zonder
+    assert "Anders" not in zonder
+    # Wat er wél staat, blijft staan: die drempels werken ook zonder ranglijst.
+    assert "de open toelichtingen" in zonder
+    assert "profiel per onderwerp" in zonder and "een afdeling apart" in zonder
+    # Met ranglijst staan ze er weer.
+    met = _tekst(_drempeltabel("retention", deepening_active=True,
+                               direction_active=False, ranking_active=True))
+    assert "de kolom Verdieping in de ranglijst" in met
+    # En de methodiekpagina geeft de vlag door in plaats van hem te laten vallen.
+    html = _trust_page("retention", deepening_active=True, ranking_active=False)
+    assert "de kolom Verdieping in de ranglijst" not in html
+
+
 def test_verdiepingsverdeling_drempel_staat_in_de_tabel_en_de_melding_verwijst_ernaar():
     """Codereview taak 11, punt 2: de meest getoonde onderdrukking van het
     rapport ("Te weinig verdiepingsantwoorden om een verdeling te tonen") hing

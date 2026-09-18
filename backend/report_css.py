@@ -141,6 +141,10 @@ p  { margin-bottom: 6px; font-size: 11px; }
   letter-spacing: -0.04em; line-height: 0.98; color: #fff; max-width: 16ch; }
 .csub { font-family: 'Inter', sans-serif; font-size: 13px; color: rgba(255,255,255,0.62);
   margin-top: 22px; }
+/* H15: wie dit rapport mag zien. Kleiner dan .csub en met een leesbreedte, want
+   het is een voorwaarde bij het rapport en geen titelregel. */
+.cdist { font-size: 10px; color: rgba(255,255,255,0.55); margin-top: 10px;
+  max-width: 60ch; line-height: 1.5; }
 /* B10: expliciete breedte + table-layout: fixed, anders laat WeasyPrint de
    auto-width tabel meegroeien met een lange factornaam tot buiten de pagina.
    Geen flex-gap, custom properties of inset-shorthand hier: WeasyPrint

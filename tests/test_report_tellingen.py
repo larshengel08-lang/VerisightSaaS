@@ -577,8 +577,12 @@ def test_totaalregel_meet_het_overschot_per_onderwerp_niet_op_de_som():
     dagg = _dagg(growth=(12, 4, 4, 0), workload=(4, 12, 12, 0))
     zin = _direction_totals_line(dagg, ["growth", "workload"], "retention", 16)
     assert zin.startswith("Van de 16 respondenten kregen 16 de vraag, 16 beantwoordden hem. ")
-    assert ("Bij 8 van de 16 is die vraag niet gesteld; van hen is er dus geen "
-            "antwoord.") in zin
+    # Met drift kregen die acht de vraag wél, alleen over een ander onderwerp
+    # (restpunt uit de review van taak 11): "van hen is er dus geen antwoord"
+    # was daar onwaar, want alle 16 antwoordden.
+    assert ("Bij 8 van de 16 is de vraag niet over hun laagste onderwerp "
+            "gesteld.") in zin
+    assert "van hen is er dus geen antwoord" not in zin
     assert ("Bij 8 van de 16 ging de vraag over een onderwerp dat met de rekenregels "
             "van nu niet hun laagste onderwerp is; die telling sluit daarom niet op "
             "de verdeling hierboven.") in zin
