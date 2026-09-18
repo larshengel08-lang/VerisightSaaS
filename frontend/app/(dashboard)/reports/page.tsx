@@ -29,7 +29,7 @@ function ReportRow({ row, children }: { row: ReportDownloadRow; children: ReactN
         </p>
         <Link
           href={`/campaigns/${row.campaignId}`}
-          className="mt-2 block text-[1.02rem] font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)] underline-offset-4 hover:underline"
+          className="mt-2 block text-[1.02rem] font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)] underline decoration-slate-300 underline-offset-4 hover:decoration-current focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--dashboard-ink)]"
         >
           {row.campaignName}
         </Link>

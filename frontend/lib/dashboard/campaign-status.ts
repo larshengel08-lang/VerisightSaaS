@@ -2,7 +2,7 @@ import type { CampaignStats, ScanType } from '@/lib/types'
 import { isReportReleaseReady } from '@/lib/response-activation'
 import { isReminderDue } from '@/lib/dashboard/reminder-due'
 import { normalizeReminderConfig } from '@/lib/launch-controls'
-import { resolveInvitedDenominator } from '@/lib/dashboard/invited-denominator'
+import { resolveInvitedDenominator, type InvitedDenominator } from '@/lib/dashboard/invited-denominator'
 
 /**
  * Eén statusvocabulaire voor de lijst "Al je metingen" op /dashboard en de
@@ -77,13 +77,22 @@ export interface CampaignStatusContext {
   today: string
 }
 
+/**
+ * De noemer van één meting uit campaign_stats plus context. Eén helper voor de
+ * status (statusInputFor) en de tekst "X van Y" (report-library), zodat die
+ * twee nooit een andere noemer kunnen gebruiken.
+ */
+export function denominatorFor(campaign: CampaignStats, context: CampaignStatusContext): InvitedDenominator {
+  return resolveInvitedDenominator({
+    invitedCount: context.deliveryByCampaign.get(campaign.campaign_id)?.invitedCount ?? null,
+    respondentRows: campaign.total_invited,
+  })
+}
+
 export function statusInputFor(campaign: CampaignStats, context: CampaignStatusContext): CampaignStatusInput {
   const delivery = context.deliveryByCampaign.get(campaign.campaign_id)
   const reminderConfig = normalizeReminderConfig(delivery?.reminderConfig ?? null)
-  const denominator = resolveInvitedDenominator({
-    invitedCount: delivery?.invitedCount ?? null,
-    respondentRows: campaign.total_invited,
-  })
+  const denominator = denominatorFor(campaign, context)
   return {
     isActive: campaign.is_active,
     scanType: campaign.scan_type,

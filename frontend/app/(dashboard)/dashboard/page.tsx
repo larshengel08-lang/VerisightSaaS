@@ -141,6 +141,9 @@ export default async function DashboardHomePage() {
     respondentRows: campaign.total_invited,
   })
   const effectiveTotalInvited = denominator.known ? denominator.value : 0
+  // De ?? 0 is alleen bereikbaar zonder noemer. Dan is effectiveTotalInvited 0:
+  // een lopende meting valt in de setup-staat (gelanceerd vereist een noemer > 0)
+  // en de gesloten staten tonen geen percentage. Render deze 0 dus nooit als percentage.
   const effectiveCompletionRatePct = completionPct(campaign.total_completed, denominator) ?? 0
 
   // Rapportvrijgave (spec 2026-09-11 par. 4.1): 10 ingevulde vragenlijsten

@@ -2,11 +2,12 @@ import { getResponseActivationThresholds, isDashboardReleaseReady } from '@/lib/
 import { SCAN_TYPE_LABELS, type CampaignStats, type ScanType } from '@/lib/types'
 import {
   CAMPAIGN_STATUS_LABELS,
+  denominatorFor,
   deriveCampaignStatusFor,
   type CampaignStatusContext,
   type CampaignStatusKey,
 } from '@/lib/dashboard/campaign-status'
-import { formatResponseBasis, resolveInvitedDenominator } from '@/lib/dashboard/invited-denominator'
+import { formatResponseBasis } from '@/lib/dashboard/invited-denominator'
 
 // ─── HR Report Download Rows ──────────────────────────────────────────────────
 // Sinds reports/page.tsx op buildReportOverviewRows draait (spec 2026-09-11
@@ -92,11 +93,8 @@ export function buildReportOverviewRows(
       const thresholds = getResponseActivationThresholds(campaign.scan_type)
       const statusKey = deriveCampaignStatusFor(campaign, context)
       const isAvailable = statusKey === 'report_ready'
-      const delivery = context.deliveryByCampaign.get(campaign.campaign_id)
-      const denominator = resolveInvitedDenominator({
-        invitedCount: delivery?.invitedCount ?? null,
-        respondentRows: campaign.total_invited,
-      })
+      // Dezelfde helper als de status gebruikt: tekst en status delen één noemer.
+      const denominator = denominatorFor(campaign, context)
       const date = new Date(campaign.created_at)
       const quarter = Math.floor(date.getUTCMonth() / 3) + 1
 

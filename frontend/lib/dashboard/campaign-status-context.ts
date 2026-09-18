@@ -2,12 +2,24 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { CampaignDeliveryLite, CampaignStatusContext } from '@/lib/dashboard/campaign-status'
 
 /**
+ * Standaard max-rows van Supabase/PostgREST. Een resultaat van precies deze
+ * lengte kan afgekapt zijn; zie de controle in loadCampaignStatusContext.
+ */
+export const SUPABASE_ROW_CAP = 1000
+
+/**
  * Laadt in twee queries (met .in()) wat deriveCampaignStatusFor per meting
  * nodig heeft: het delivery record (lancering, noemer, herinnering) en het
  * nieuwste send_reminders-event. Gebruikt door /dashboard (lijst) en /reports.
  *
  * Fail Loud: een mislukte query wordt een fout. Een lege map zou lezen als
  * "niets gelanceerd, geen noemer" en dat is een leugen, geen degradatie.
+ * Hetzelfde geldt voor een resultaat dat de rijlimiet van Supabase raakt: dat
+ * is mogelijk afgekapt, dus ook een fout.
+ *
+ * Alleen de client van de ingelogde gebruiker (createClient uit
+ * lib/supabase/server): de tenant-isolatie komt uit RLS. Geef hier nooit een
+ * service-role client aan, dan leest de lijst metingen van andere organisaties.
  */
 export async function loadCampaignStatusContext(
   supabase: SupabaseClient,
@@ -18,11 +30,16 @@ export async function loadCampaignStatusContext(
     return { deliveryByCampaign: new Map(), lastReminderEventAtByCampaign: new Map(), today }
   }
 
+  // De .in()-lijsten gaan als GET-querystring mee; de URL groeit met het aantal
+  // metingen. Voor één klant (pre eerste klant: een handvol metingen) ruim
+  // binnen de grens. Groeit het operatoroverzicht, dan de ids in blokken opdelen.
   const [{ data: deliveries, error: deliveryError }, { data: events, error: eventError }] = await Promise.all([
     supabase
       .from('campaign_delivery_records')
       .select('campaign_id, launch_confirmed_at, launch_date, invited_count, reminder_config')
       .in('campaign_id', campaignIds),
+    // Alleen de twee kolommen die nodig zijn, nieuwste eerst: raakt de lijst
+    // toch de rijlimiet, dan vangt de controle hieronder dat af.
     supabase
       .from('campaign_action_audit_events')
       .select('campaign_id, created_at')
@@ -34,6 +51,16 @@ export async function loadCampaignStatusContext(
 
   if (deliveryError) throw new Error(`Kon de metinggegevens niet laden: ${deliveryError.message}`)
   if (eventError) throw new Error(`Kon de herinneringsgeschiedenis niet laden: ${eventError.message}`)
+  if ((deliveries?.length ?? 0) >= SUPABASE_ROW_CAP) {
+    throw new Error(
+      `Metinggegevens raken de rijlimiet van ${SUPABASE_ROW_CAP}: het resultaat is mogelijk afgekapt, dus de status per meting is niet betrouwbaar.`,
+    )
+  }
+  if ((events?.length ?? 0) >= SUPABASE_ROW_CAP) {
+    throw new Error(
+      `Herinneringsgeschiedenis raakt de rijlimiet van ${SUPABASE_ROW_CAP}: het resultaat is mogelijk afgekapt, dus de herinneringsstatus is niet betrouwbaar.`,
+    )
+  }
 
   const deliveryByCampaign = new Map<string, CampaignDeliveryLite>()
   for (const row of deliveries ?? []) {

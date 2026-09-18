@@ -31,6 +31,12 @@ describe('rapportenoverzicht (spec 2026-09-16 par. 6.2, walkthrough 6.1 t/m 6.5)
     expect(source).toContain('href={`/campaigns/${row.campaignId}`}')
   })
 
+  it('laat de naam in rust al als link zien en geeft een zichtbare focusrand', () => {
+    const link = source.slice(source.indexOf('<Link'), source.indexOf('</Link>'))
+    expect(link).toMatch(/className="[^"]*(?<![:\w-])underline /)
+    expect(link).toContain('focus-visible:outline')
+  })
+
   it('verstopt de lopende metingen niet meer in een dichtgeklapte details (walkthrough 6.4)', () => {
     expect(source).not.toContain('<details')
     expect(source).not.toContain('<summary')

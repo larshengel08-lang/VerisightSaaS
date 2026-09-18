@@ -17,6 +17,17 @@ describe('loadCampaignStatusContext (spec 2026-09-16 par. 6.2: één query met i
     expect(src).toContain('if (eventError) throw new Error(')
   })
 
+  it('faalt luid bij de Supabase-rijlimiet in plaats van stil af te kappen', () => {
+    expect(src).toContain('export const SUPABASE_ROW_CAP = 1000')
+    expect(src).toContain('(deliveries?.length ?? 0) >= SUPABASE_ROW_CAP')
+    expect(src).toContain('(events?.length ?? 0) >= SUPABASE_ROW_CAP')
+  })
+
+  it('draait alleen met de client van de ingelogde gebruiker (RLS), nooit met service-role', () => {
+    expect(src).toContain('Alleen de client van de ingelogde gebruiker')
+    expect(src).not.toContain('supabase/admin')
+  })
+
   it('houdt per campagne alleen het nieuwste herinneringsevent', () => {
     expect(src).toContain('if (!lastReminderEventAtByCampaign.has(id))')
   })
