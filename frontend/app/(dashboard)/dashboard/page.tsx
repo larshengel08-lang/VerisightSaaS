@@ -75,7 +75,7 @@ export default async function DashboardHomePage() {
     { data: deliveryRecord, error: deliveryRecordError },
     { data: reminderEvents, error: reminderEventsError },
     { data: campaignRow },
-    { data: orgData },
+    { data: orgData, error: orgDataError },
     { data: respondentDepts },
     { data: profile },
     { data: membership },
@@ -126,6 +126,12 @@ export default async function DashboardHomePage() {
       .contains('metadata', { extension: true }),
   ])
 
+  // Fail Loud: een mislukte organisatie-query mag niet stil als "geen naam"
+  // doorgaan. Een ontbrekende naam zonder fout blijft de zichtbare
+  // gedegradeerde tekst ("je organisatie" / "organisatie niet bekend").
+  if (orgDataError) {
+    throw new Error(`Kon de organisatienaam niet laden: ${orgDataError.message}`)
+  }
   // Fail Loud: een mislukte query mag niet als "geen delivery record" (dan valt
   // de kaart stil terug op de inrichtstaat) of als "herinnering nog niet
   // afgehandeld" gelezen worden. Een ontbrekende rij (data null zonder fout,

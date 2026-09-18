@@ -96,3 +96,12 @@ describe('dashboard: Fail Loud op de queries van de hoofdkaart', () => {
     expect(source).not.toMatch(/if \(!deliveryRecord\)/)
   })
 })
+
+describe('dashboard: Fail Loud op de organisatienaam', () => {
+  it('gooit bij een mislukte organisatie-query; een ontbrekende naam zonder fout blijft zichtbaar gedegradeerd', () => {
+    expect(source).toContain('{ data: orgData, error: orgDataError }')
+    expect(source).toContain('if (orgDataError)')
+    expect(source).toContain('throw new Error(`Kon de organisatienaam niet laden: ${orgDataError.message}`)')
+    expect(source).not.toMatch(/if \(!orgData\)/)
+  })
+})

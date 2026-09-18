@@ -59,7 +59,7 @@ export default async function CampaignPage({ params }: Props) {
   if (!statsRow) notFound()
   const stats = statsRow as CampaignStats
 
-  const [{ data: campaignMeta }, { data: deliveryRecord, error: deliveryRecordError }, { data: reminderEvents, error: reminderEventsError }, { data: profile }, { data: orgData }, { data: respondentDepts }, { data: membership }, { count: extensionCount, error: extensionCountError }] = await Promise.all([
+  const [{ data: campaignMeta, error: campaignMetaError }, { data: deliveryRecord, error: deliveryRecordError }, { data: reminderEvents, error: reminderEventsError }, { data: profile }, { data: orgData, error: orgDataError }, { data: respondentDepts }, { data: membership }, { count: extensionCount, error: extensionCountError }] = await Promise.all([
     supabase.from('campaigns').select('closed_at, closes_at, delivery_mode, comms_mode, public_survey_token, organization_id, segment_departments').eq('id', id).maybeSingle(),
     supabase
       .from('campaign_delivery_records')
@@ -93,6 +93,18 @@ export default async function CampaignPage({ params }: Props) {
       .contains('metadata', { extension: true }),
   ])
 
+  // Fail Loud: campaignMeta levert sluitdatum en gesloten-status. Een mislukte
+  // query zou de expired-check stil uitzetten en "Nog niet ingesteld" tonen.
+  // Een ontbrekende rij zonder fout (maybeSingle) gooit niet.
+  if (campaignMetaError) {
+    throw new Error(`Kon de gegevens van de meting niet laden: ${campaignMetaError.message}`)
+  }
+  // Fail Loud: een mislukte organisatie-query mag niet stil als "geen naam"
+  // doorgaan. Een ontbrekende naam zonder fout blijft de zichtbare
+  // gedegradeerde tekst ("je organisatie" / "organisatie niet bekend").
+  if (orgDataError) {
+    throw new Error(`Kon de organisatienaam niet laden: ${orgDataError.message}`)
+  }
   // Fail Loud: een mislukte query mag niet als "geen delivery record" (dan valt
   // de kaart stil terug op de inrichtstaat) of als "herinnering nog niet
   // afgehandeld" gelezen worden. Een ontbrekende rij (data null zonder fout,

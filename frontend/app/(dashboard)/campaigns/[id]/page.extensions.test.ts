@@ -33,3 +33,18 @@ describe('campagnedetail: Fail Loud op delivery record en herinneringsevents', (
     expect(source).not.toMatch(/if \(!deliveryRecord\)/)
   })
 })
+
+describe('campagnedetail: Fail Loud op campagnegegevens en organisatienaam', () => {
+  it('gooit bij een mislukte campaigns-query, want die levert sluitdatum en gesloten-status', () => {
+    expect(source).toContain('{ data: campaignMeta, error: campaignMetaError }')
+    expect(source).toContain('if (campaignMetaError)')
+    expect(source).toContain('throw new Error(`Kon de gegevens van de meting niet laden: ${campaignMetaError.message}`)')
+  })
+
+  it('gooit bij een mislukte organisatie-query; een ontbrekende naam zonder fout blijft zichtbaar gedegradeerd', () => {
+    expect(source).toContain('{ data: orgData, error: orgDataError }')
+    expect(source).toContain('if (orgDataError)')
+    expect(source).toContain('throw new Error(`Kon de organisatienaam niet laden: ${orgDataError.message}`)')
+    expect(source).not.toMatch(/if \(!orgData\)|if \(!campaignMeta\)/)
+  })
+})
