@@ -35,6 +35,22 @@ describe('schil van de ingelogde omgeving (spec 2026-09-16 par. 6.5, walkthrough
     expect(layout).toContain("select('campaign_id, campaign_name, scan_type, is_active, created_at, closed_at, total_invited, total_completed')")
   })
 
+  it('faalt luid als campaign_stats niet laadt, in plaats van een lege sidebar en nultellingen', () => {
+    expect(layout).toMatch(/\{\s*data:\s*stats,\s*error:\s*statsError\s*\}/)
+    expect(layout).toMatch(/if \(statsError\) throw new Error\(/)
+  })
+
+  it('maakt het mobiele menu toegankelijk: aria-expanded en aria-controls naar het paneel', () => {
+    expect(shell).toContain('aria-expanded={mobileNavOpen}')
+    expect(shell).toContain('aria-controls="dashboard-mobile-nav"')
+    expect(shell).toContain('id="dashboard-mobile-nav"')
+  })
+
+  it('maakt de contacthint bij een degraded kop bereikbaar zonder hover', () => {
+    expect(shell).toContain('aria-describedby={accountHeading.degraded ? ')
+    expect(shell).toMatch(/id="account-heading-degraded-hint"[^>]*className="sr-only"|className="sr-only"[^>]*id="account-heading-degraded-hint"/)
+  })
+
   it('bevat geen em- of en-dashes', () => {
     expect(shell).not.toMatch(/[—–]/)
     expect(layout).not.toMatch(/[—–]/)

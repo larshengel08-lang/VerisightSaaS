@@ -243,6 +243,17 @@ describe('closed campaign sidebar list (walkthrough 1.7: campagnenaam en sluitma
     expect(items[0].closedLabel).toBe('Gesloten aug 2026')
   })
 
+  it('sorteert op sluitdatum (anders aanmaakdatum), zodat de volgorde klopt met "Gesloten <maand>"', () => {
+    const items = buildClosedCampaignNavItems([
+      // Eerst aangemaakt, als laatste gesloten: moet bovenaan.
+      { campaign_id: 'old-created', campaign_name: 'Vroeg gestart', scan_type: 'exit', is_active: false, created_at: '2026-01-01T00:00:00Z', closed_at: '2026-09-01T00:00:00Z', total_completed: 12 },
+      { campaign_id: 'new-created', campaign_name: 'Laat gestart', scan_type: 'retention', is_active: false, created_at: '2026-06-01T00:00:00Z', closed_at: '2026-07-01T00:00:00Z', total_completed: 12 },
+      // Geen sluitdatum: valt terug op de aanmaakdatum voor de volgorde.
+      { campaign_id: 'no-close', campaign_name: 'Onbekend gesloten', scan_type: 'exit', is_active: false, created_at: '2026-08-01T00:00:00Z', closed_at: null, total_completed: 12 },
+    ])
+    expect(items.map((item) => item.campaignId)).toEqual(['old-created', 'no-close', 'new-created'])
+  })
+
   it('zegt eerlijk dat de sluitdatum onbekend is in plaats van de aanmaakmaand te tonen', () => {
     const items = buildClosedCampaignNavItems(refs)
     expect(items[1].closedLabel).toBe('Gesloten, datum onbekend')

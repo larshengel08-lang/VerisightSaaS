@@ -258,10 +258,19 @@ function closedMonthLabel(closedAt: string | null): string {
   return `Gesloten ${new Intl.DateTimeFormat('nl-NL', { month: 'short', year: 'numeric', timeZone: 'Europe/Amsterdam' }).format(date)}`
 }
 
+/**
+ * Sorteersleutel: de sluitdatum, want die staat in het label. Zonder (geldige)
+ * sluitdatum de aanmaakdatum; het label zegt dan eerlijk "datum onbekend".
+ */
+function closedSortKey(campaign: DashboardShellCampaignRef): number {
+  const closed = campaign.closed_at ? new Date(campaign.closed_at).getTime() : Number.NaN
+  return Number.isNaN(closed) ? new Date(campaign.created_at).getTime() : closed
+}
+
 export function buildClosedCampaignNavItems(campaigns: DashboardShellCampaignRef[]): ClosedCampaignNavItem[] {
   return campaigns
     .filter((campaign) => !campaign.is_active)
-    .sort((left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime())
+    .sort((left, right) => closedSortKey(right) - closedSortKey(left))
     .map((campaign) => ({
       campaignId: campaign.campaign_id,
       href: `/campaigns/${campaign.campaign_id}`,

@@ -63,6 +63,7 @@ export function DashboardShellFrame({
   )
   const isActionCenter = pathname.startsWith('/action-center')
   const actionCenterView = searchParams.get('view')
+  const degradedHeadingHint = `Loep kon de organisatienaam niet laden. Blijft dit zo, mail ${LOEP_CONTACT_EMAIL}.`
   const mobileItems = isActionCenter ? ACTION_CENTER_NAV : [...navigation.modules, ...navigation.admin]
   const activeAcHref = ACTION_CENTER_NAV.find((item) => {
     const itemUrl = new URL(item.href, 'http://localhost')
@@ -173,6 +174,8 @@ export function DashboardShellFrame({
                 onClick={() => setMobileNavOpen((open) => !open)}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[color:var(--dashboard-frame-border)] bg-white text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] lg:hidden"
                 aria-label={mobileNavOpen ? 'Navigatie sluiten' : 'Navigatie openen'}
+                aria-expanded={mobileNavOpen}
+                aria-controls="dashboard-mobile-nav"
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   {mobileNavOpen ? (
@@ -192,14 +195,16 @@ export function DashboardShellFrame({
                     className={`text-lg font-semibold tracking-[-0.03em] ${
                       accountHeading.degraded ? 'text-[#B9571F]' : 'text-[color:var(--dashboard-ink)]'
                     }`}
-                    title={
-                      accountHeading.degraded
-                        ? `Loep kon de organisatienaam niet laden. Blijft dit zo, mail ${LOEP_CONTACT_EMAIL}.`
-                        : undefined
-                    }
+                    title={accountHeading.degraded ? degradedHeadingHint : undefined}
+                    aria-describedby={accountHeading.degraded ? 'account-heading-degraded-hint' : undefined}
                   >
                     {accountHeading.label}
                   </span>
+                  {accountHeading.degraded ? (
+                    <span id="account-heading-degraded-hint" className="sr-only">
+                      {degradedHeadingHint}
+                    </span>
+                  ) : null}
                 </div>
               </div>
 
@@ -216,7 +221,10 @@ export function DashboardShellFrame({
             </div>
 
             {mobileNavOpen ? (
-              <div className="border-t border-[color:var(--dashboard-frame-border)] px-4 py-4 sm:px-6 lg:hidden">
+              <div
+                id="dashboard-mobile-nav"
+                className="border-t border-[color:var(--dashboard-frame-border)] px-4 py-4 sm:px-6 lg:hidden"
+              >
                   <div className="space-y-2 rounded-[20px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--surface)] p-4 shadow-[0_12px_30px_rgba(19,32,51,0.08)]">
                   {mobileItems.map((item) => {
                     const href = item.href

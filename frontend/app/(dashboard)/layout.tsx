@@ -22,13 +22,16 @@ export default async function DashboardLayout({
   // Eerst uitnodigingen accepteren: dat kan een lidmaatschap toevoegen dat de
   // organisatienaam en de campagnelijst hieronder nodig hebben.
   const { acceptedCount } = await syncPendingOrgInvitesForUser(supabase)
-  const [{ context }, { data: stats }, accountOrganizations] = await Promise.all([
+  const [{ context }, { data: stats, error: statsError }, accountOrganizations] = await Promise.all([
     loadSuiteAccessContext(supabase, user.id),
     supabase
       .from('campaign_stats')
       .select('campaign_id, campaign_name, scan_type, is_active, created_at, closed_at, total_invited, total_completed'),
     loadAccountOrganizations(supabase, user.id),
   ])
+  // Fail loud, net als dashboard/page.tsx: geen lege sidebar en nultellingen
+  // alsof er geen metingen zijn.
+  if (statsError) throw new Error(`Kon de metingen voor de navigatie niet laden: ${statsError.message}`)
 
   const accountHeading = resolveAccountHeading({
     names: accountOrganizations.names,
