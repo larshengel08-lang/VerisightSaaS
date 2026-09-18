@@ -16,3 +16,20 @@ describe('campagnedetail: verlengingen tellen (spec 2026-09-16 par. 4.3)', () =>
     expect(source).toContain('throw new Error(`Kon het aantal verlengingen niet laden: ${extensionCountError.message}`)')
   })
 })
+
+describe('campagnedetail: Fail Loud op delivery record en herinneringsevents', () => {
+  it('leest de fout van beide queries uit en gooit een duidelijke Error', () => {
+    expect(source).toContain('{ data: deliveryRecord, error: deliveryRecordError }')
+    expect(source).toContain('{ data: reminderEvents, error: reminderEventsError }')
+    expect(source).toContain('if (deliveryRecordError)')
+    expect(source).toContain('throw new Error(`Kon de lanceergegevens van de meting niet laden: ${deliveryRecordError.message}`)')
+    expect(source).toContain('if (reminderEventsError)')
+    expect(source).toContain('throw new Error(`Kon de herinneringsstatus van de meting niet laden: ${reminderEventsError.message}`)')
+  })
+
+  it('een ontbrekend delivery record (geen fout, data null) blijft legitiem: maybeSingle, geen throw op !deliveryRecord', () => {
+    const deliveryQuery = source.slice(source.indexOf(".from('campaign_delivery_records')"), source.indexOf(".from('campaign_action_audit_events')"))
+    expect(deliveryQuery).toContain('.maybeSingle()')
+    expect(source).not.toMatch(/if \(!deliveryRecord\)/)
+  })
+})

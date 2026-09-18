@@ -59,7 +59,7 @@ export default async function CampaignPage({ params }: Props) {
   if (!statsRow) notFound()
   const stats = statsRow as CampaignStats
 
-  const [{ data: campaignMeta }, { data: deliveryRecord }, { data: reminderEvents }, { data: profile }, { data: orgData }, { data: respondentDepts }, { data: membership }, { count: extensionCount, error: extensionCountError }] = await Promise.all([
+  const [{ data: campaignMeta }, { data: deliveryRecord, error: deliveryRecordError }, { data: reminderEvents, error: reminderEventsError }, { data: profile }, { data: orgData }, { data: respondentDepts }, { data: membership }, { count: extensionCount, error: extensionCountError }] = await Promise.all([
     supabase.from('campaigns').select('closed_at, closes_at, delivery_mode, comms_mode, public_survey_token, organization_id, segment_departments').eq('id', id).maybeSingle(),
     supabase
       .from('campaign_delivery_records')
@@ -92,6 +92,17 @@ export default async function CampaignPage({ params }: Props) {
       .eq('outcome', 'completed')
       .contains('metadata', { extension: true }),
   ])
+
+  // Fail Loud: een mislukte query mag niet als "geen delivery record" (dan valt
+  // de kaart stil terug op de inrichtstaat) of als "herinnering nog niet
+  // afgehandeld" gelezen worden. Een ontbrekende rij (data null zonder fout,
+  // maybeSingle) is wél legitiem en gooit niet.
+  if (deliveryRecordError) {
+    throw new Error(`Kon de lanceergegevens van de meting niet laden: ${deliveryRecordError.message}`)
+  }
+  if (reminderEventsError) {
+    throw new Error(`Kon de herinneringsstatus van de meting niet laden: ${reminderEventsError.message}`)
+  }
 
   // Fail Loud: een mislukte telling mag niet als "nog nooit verlengd" gelezen
   // worden, want dan biedt de kaart verlengen aan op een meting die al op de

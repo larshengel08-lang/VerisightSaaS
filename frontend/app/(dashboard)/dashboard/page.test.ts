@@ -79,3 +79,20 @@ describe('state-driven dashboard page', () => {
     expect(source).toContain('if (account.error) console.warn(')
   })
 })
+
+describe('dashboard: Fail Loud op de queries van de hoofdkaart', () => {
+  it('leest de fout van delivery record en herinneringsevents uit en gooit een duidelijke Error', () => {
+    expect(source).toContain('{ data: deliveryRecord, error: deliveryRecordError }')
+    expect(source).toContain('{ data: reminderEvents, error: reminderEventsError }')
+    expect(source).toContain('if (deliveryRecordError)')
+    expect(source).toContain('throw new Error(`Kon de lanceergegevens van de meting niet laden: ${deliveryRecordError.message}`)')
+    expect(source).toContain('if (reminderEventsError)')
+    expect(source).toContain('throw new Error(`Kon de herinneringsstatus van de meting niet laden: ${reminderEventsError.message}`)')
+  })
+
+  it('een ontbrekend delivery record (geen fout, data null) blijft legitiem: maybeSingle, geen throw op !deliveryRecord', () => {
+    const deliveryQuery = source.slice(source.indexOf(".from('campaign_delivery_records')"), source.indexOf(".from('campaign_action_audit_events')"))
+    expect(deliveryQuery).toContain('.maybeSingle()')
+    expect(source).not.toMatch(/if \(!deliveryRecord\)/)
+  })
+})
