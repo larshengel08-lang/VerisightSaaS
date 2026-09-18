@@ -365,4 +365,9 @@ describe('sluitdatum in uitnodiging en herinnering (amendement spec par. 4.3a)',
     })
     expect(body.indexOf('?afd=kantoor')).toBeLessThan(body.indexOf('Invullen kan tot en met'))
   })
+
+  it('leest bij een tijdstempel zonder offset alleen het datumdeel, zodat de lokale browsertijdzone de dag niet kan verschuiven', () => {
+    const { body } = buildInviteTemplate({ ...base, closesAt: '2026-10-08T00:00:00' })
+    expect(body).toContain('Invullen kan tot en met 8 oktober 2026.')
+  })
 })

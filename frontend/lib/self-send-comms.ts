@@ -280,7 +280,15 @@ function buildLinkLines(args: TemplateArgs): string[] {
 
 // Dezelfde dagdefinitie als backend/survey_window.py: tot en met de sluitdag zelf.
 function buildDeadlineLines(args: TemplateArgs): string[] {
-  const formatted = formatDutchDate(args.closesAt ?? null)
+  const raw = args.closesAt ?? null
+  // Een tijdstempel zonder offset (bijv. '2026-10-08T00:00:00') wordt door
+  // new Date() in de lokale tijdzone van de browser gelezen; formatDutchDate
+  // dwingt de output naar Europe/Amsterdam, maar de dag zelf kan dan al
+  // verschoven zijn (bijv. bij een lokale tijdzone vóór UTC). closes_at is een
+  // kale datum (date-kolom); alleen de eerste 10 tekens (YYYY-MM-DD) meegeven
+  // voorkomt die verschuiving. Geen match: onleesbare invoer, ongewijzigd door.
+  const dateOnly = raw && /^\d{4}-\d{2}-\d{2}/.test(raw) ? raw.slice(0, 10) : raw
+  const formatted = formatDutchDate(dateOnly)
   if (!formatted) return []
   return ['', `Invullen kan tot en met ${formatted}.`]
 }
