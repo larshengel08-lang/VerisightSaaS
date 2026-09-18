@@ -33,7 +33,10 @@ def test_chain_sentence_always_present():
 
 def test_block_counts_only_5_to_9():
     html = _deepening_block(_agg(10, 9, 7, 2, {"wl_recovery": 4, "wl_volume": 3}), "retention", "workload", N_TOTAL)
-    assert "Beperkte antwoordbasis" in html and "gesprekshaakje" in html
+    # Taak 11: dezelfde beperkte-basis-regel als onder een richtingkaart, met de
+    # verwijzing naar de drempeltabel (was "Beperkte antwoordbasis").
+    assert "Beperkte basis" in html and "gesprekshaakje" in html
+    assert 'href="#sec-drempels"' in html
     assert "%" not in html
     assert "Welke toelichting respondenten kozen" in html
     assert "4" in html  # counts shown

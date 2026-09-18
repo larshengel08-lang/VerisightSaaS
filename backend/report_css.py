@@ -196,11 +196,17 @@ p  { margin-bottom: 6px; font-size: 11px; }
   border-bottom: 1px solid """ + HAIRLINE + r"""; overflow-wrap: break-word; }
 .item-tbl .iq { width: 56%; }
 .item-tbl .is { width: 10%; font-weight: 700; text-align: right; }
+/* Kolomkoppen (C9, taak 11): de afdelingstabel en de drempeltabel dragen er een,
+   in dezelfde monotypografie als .raster-tbl th. table-header-group laat
+   WeasyPrint de kop herhalen op een vervolgpagina. */
+.item-tbl th { text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 8px;
+  text-transform: uppercase; letter-spacing: 0.08em; color: """ + STEEL + r""";
+  border-bottom: 1.5px solid """ + NAVY + r"""; padding: 4px 8px; }
+.item-tbl thead { display: table-header-group; }
 /* De segmenttabel mag over een paginagrens lopen sinds de rijlimiet verviel
    (ronde 2 par. 3.2). break-inside op de <tr> doet onder border-collapse:
    collapse niets in WeasyPrint, dus staat elke afdeling in haar eigen tbody
-   (zelfde patroon als tbody.r-grp in het prioriteringsraster). Deze tabel
-   heeft geen kolomkoppen om te herhalen: de sectie-intro benoemt de kolommen. */
+   (zelfde patroon als tbody.r-grp in het prioriteringsraster). */
 .item-tbl tbody.seg-grp { break-inside: avoid; }
 
 /* ── Quote / theme ── */
@@ -275,6 +281,9 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .raster-tbl th { text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 8px;
   text-transform: uppercase; letter-spacing: 0.08em; color: """ + STEEL + r""";
   border-bottom: 1.5px solid """ + NAVY + r"""; padding: 4px 7px; }
+/* De kop staat in een <thead> (ronde 2 observatie 4): zonder deze regel herhaalt
+   WeasyPrint hem niet en begint een vervolgpagina met kolommen zonder naam. */
+.raster-tbl thead { display: table-header-group; }
 .raster-tbl td { border-bottom: 1px solid """ + HAIRLINE + r"""; padding: 6px 7px; vertical-align: top; }
 .raster-tbl tr.r-top td { background: """ + NAVY + r"""; color: """ + CHALK + r"""; }
 .raster-tbl tr.r-top .r-fl { color: """ + accent + r"""; font-weight: 600; }

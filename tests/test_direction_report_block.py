@@ -131,7 +131,8 @@ def test_percentages_from_10_and_caveat_at_3_4():
                                  agg=_agg(3, {"grd_visibility": 3}, skipped=0),
                                  scan_type="retention", factor_key="growth", n_total=13,
                                  factor_score=5.1)
-    assert "Beperkte basis: gebruik dit als gesprekshaakje, niet als conclusie." in small
+    assert ("Beperkte basis: gebruik dit als gesprekshaakje, niet als conclusie "
+            "(drempels: pagina ") in small
     assert "Volgens 3 van de 3" in small
 
 
@@ -563,7 +564,9 @@ def test_trust_page_explains_direction_question_for_exit_and_retention_only():
         html = _trust_page(st, direction_active=True)
         assert "Richtingvraag" in html
         assert "geen advies van Loep" in html
-        assert "vanaf 3 antwoorden" in html
+        # Sinds taak 11 (B20) staat de vloer met zijn verantwoording in de
+        # drempeltabel op dezelfde pagina; de cel verwijst ernaar.
+        assert "De drempel van 3 staat in de drempeltabel hierboven." in html
         assert justification in html
         assert "\u2014" not in html
     assert "Richtingvraag" not in _trust_page("onboarding", direction_active=True)

@@ -168,11 +168,11 @@ def test_verdiepingsblok_toont_de_anders_toelichtingen():
 
 
 def test_verdiepingsblok_zet_de_beperkte_basis_regel_voor_de_lijst():
-    """"Beperkte antwoordbasis" hoort bij de verdeling erboven, niet bij de
+    """De beperkte-basis-regel hoort bij de verdeling erboven, niet bij de
     toelichtingen eronder."""
     html = _deepening_block(_deep_agg(gr_other=5, gr_visibility=2), "retention", "growth", 39)
     t = _plain(html)
-    assert t.index("Beperkte antwoordbasis") < t.index("kozen ‘Anders’")
+    assert t.index("Beperkte basis") < t.index("kozen ‘Anders’")
 
 
 def test_richtingkaart_toont_de_anders_toelichtingen_na_de_caveat():
@@ -518,12 +518,45 @@ def test_totaalregel_faalt_op_een_onmogelijke_telling():
         _direction_totals_line(dagg, ["growth", "workload"], "retention", 39)
 
 
-def test_keten_faalt_als_er_meer_is_aangeboden_dan_laagst_scoorde():
+def test_keten_degradeert_zichtbaar_als_er_meer_is_aangeboden_dan_laagst_scoorde():
     """"10 van de 10 beantwoordden de vraag" onder "9 hadden dit als laagste" is
-    onzin; aggregate_direction logt deze staat al als bug."""
+    onzin, maar de staat zelf is met versiedrift bereikbaar: offered komt uit
+    opgeslagen antwoorden en lowest_n wordt bij elke render opnieuw berekend
+    (aggregate_direction tolereert en logt dat bewust). Een harde fout zou de
+    download van een historisch rapport laten mislukken, dus zegt de keten wat
+    er niet klopt (Fail Loud trap 2)."""
     agg = {"lowest_n": 9, "offered": 10, "answered": 10, "skipped": 0, "counts": {}}
-    with pytest.raises(ValueError, match="aangeboden"):
-        _direction_chain(agg, 13)
+    zin = _direction_chain(agg, 13)
+    assert zin == ("10 van de 13 respondenten kregen de vraag over dit onderwerp "
+                   "(10 = wie de vraag kreeg; met de rekenregels van nu is dit bij "
+                   "9 respondenten het laagste onderwerp); 10 van de 10 beantwoordden "
+                   "de vraag.")
+    assert "—" not in zin
+
+
+def test_keten_degradeert_ook_als_niemand_het_nu_nog_als_laagste_heeft():
+    agg = {"lowest_n": 0, "offered": 3, "answered": 2, "skipped": 1, "counts": {}}
+    zin = _direction_chain(agg, 13)
+    assert "met de rekenregels van nu is dit bij geen enkele respondent" in zin
+    assert "2 van de 3 beantwoordden de vraag, 1 sloeg over." in zin
+    # Niet de kale "Niemand had dit als eigen laagste onderwerp."-regel: er zijn
+    # wel antwoorden en die mogen niet stil verdwijnen.
+    assert not zin.startswith("Niemand")
+
+
+def test_totaalregel_degradeert_bij_meer_aanbod_dan_laagste_onderwerpen():
+    """Zelfde versiedrift over alle onderwerpen samen: 28 kregen de vraag terwijl
+    er nu maar 20 respondenten een laagste onderwerp hebben. Dan staat er wat er
+    niet klopt, en de reden bij "kon geen laagste onderwerp vaststellen" claimt
+    niet langer dat die mensen niets invulden."""
+    dagg = _dagg(growth=(12, 20, 20, 0), workload=(8, 8, 8, 0))
+    zin = _direction_totals_line(dagg, ["growth", "workload"], "retention", 39)
+    assert zin.startswith("Van de 39 respondenten kregen 28 de vraag, 28 beantwoordden hem. ")
+    assert "de overige" not in zin
+    assert ("Bij 19 respondenten kon Loep met de rekenregels van nu geen laagste "
+            "onderwerp vaststellen, en 8 van hen kregen de vraag toch: die twee "
+            "tellingen sluiten daarom niet op elkaar.") in zin
+    assert "zij vulden geen van de stellingen" not in zin
 
 
 def test_verdiepingsketen_noemt_de_drempel_zonder_van_hen():

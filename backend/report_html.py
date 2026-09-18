@@ -1645,17 +1645,13 @@ def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
     else:
         rij3 = ("De verdieping van het startpunt: de laagste stelling en de score van elke stelling "
                 f"(pagina {p(A['verdieping'])}). Open met de gespreksopener hierboven.")
-    # Regel 1 verwijst naar wat de methodiekpagina van dít product bevat
-    # (codereview taak 5): Vertrek en Behoud hebben daar een cel
-    # Drempelwaarden, Loep Start niet (daar staat Checkpoint-logica). Zet taak
-    # 11 een drempeltabel op alle drie de methodiekpagina's, dan mag deze
-    # tweedeling weg en wijst regel 1 naar LEIDRAAD_ANKERS["drempels"].
-    if scan_type == "onboarding":
-        rij1 = ("De respons en de meetgegevens op deze pagina; wat Loep uit deze aantallen wel "
-                f"en niet afleidt staat op pagina {p(A['methodiek'])}.")
-    else:
-        rij1 = ("De respons en de meetgegevens op deze pagina; de drempels staan op "
-                f"pagina {p(A['methodiek'])}.")
+    # Regel 1 wees tot taak 11 naar de methodiekpagina, met een tweedeling omdat
+    # alleen Vertrek en Behoud daar een cel Drempelwaarden hadden (codereview
+    # taak 5). Sinds taak 11 staat op alle drie de methodiekpagina's dezelfde
+    # drempeltabel (_drempeltabel), dus verwijzen alle drie de producten nu naar
+    # dat anker; die tweedeling is daarmee vervallen.
+    rij1 = ("De respons en de meetgegevens op deze pagina; de drempels staan op "
+            f"pagina {p(A['drempels'])}.")
     rijen = [
         ("0-5 min", "Hoe stevig is dit", rij1),
         ("5-12 min", "Het beeld in één plaatje", f"Het cijferoverzicht (pagina {p(A['overzicht'])}) en {context} "
@@ -2246,10 +2242,16 @@ def raster_intro(scan_type: str, deepening_active: bool,
 
 def raster_uitleg(scan_type: str, deepening_active: bool,
                   direction_active: bool) -> str:
-    """Sorteerregel onder de tabel. De regel zelf blijft een zin; daarna volgen
-    alleen de drempels van de signalen die in deze meting meespeelden. De
-    getallen komen uit de constanten die ze ook echt sturen, zodat de copy niet
-    kan gaan liegen als een drempel verandert."""
+    """Sorteerregel onder de tabel. De regel zelf blijft een zin; daarna volgt
+    één slotzin die de drempels van deze meting opsomt en naar de drempeltabel
+    op de methodiekpagina wijst (B20/H18): vier drempels op drie pagina's, maar
+    de uitleg staat één keer. De getallen komen uit de constanten die ze ook echt
+    sturen, zodat de copy niet kan gaan liegen als een drempel verandert.
+
+    De slotzin eindigt bewust ZONDER punt: _prioriteringsraster zet daar de
+    paginaverwijzing (_pref) achter. Deze functie blijft een kale string, want de
+    contract-test pint de volledige string als substring van de HTML-output en
+    een anker erin zou daar letterlijk in belanden."""
     marge = str(PRIORITY_TIE_MARGIN).replace(".", ",")
     reden = (", waarbij ook meeweegt hoe vaak een factor als vertrekreden is genoemd"
              if scan_type == "exit" else "")
@@ -2264,15 +2266,12 @@ def raster_uitleg(scan_type: str, deepening_active: bool,
                  f"{terugval}.")
     else:
         regel = f"Liggen scores binnen {marge} van elkaar, dan {terugval}."
-    drempels = [f"Spreiding tonen we vanaf {MIN_DISTRIBUTION_N} responses"]
-    if deepening_active:
-        drempels.append(f"verdiepingsduiding vanaf {DEEPENING_MIN_N} "
-                        "beantwoorders per factor")
-    if direction_active:
-        drempels.append(f"de vraag om verandering vanaf {DIRECTION_MIN_N} "
-                        "beantwoorders per factor")
+    drempels = (f"De drempels (spreiding vanaf {MIN_DISTRIBUTION_N}"
+                + (f", verdieping vanaf {DEEPENING_MIN_N}" if deepening_active else "")
+                + (f", richting vanaf {DIRECTION_MIN_N}" if direction_active else "")
+                + ") staan uitgelegd in de drempeltabel")
     return (f"Hoe deze volgorde tot stand komt: gesorteerd op score{reden}. {regel} "
-            f'{"; ".join(drempels)}.')
+            f"{drempels}")
 
 
 RASTER_LEGENDA = (
@@ -2378,16 +2377,15 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
                 f'{row["spread_below"]} van {row["spread_n"]} onder de 5</span>')
 
     def _agenda_cell(row: dict) -> str:
-        parts = []
+        """Alleen de rol. De near-tie-regel stond hier ook (C13), maar "vrijwel
+        gelijk aan Werkdruk en herstelruimte" in een kolom van 14% brak over vier
+        regels en las als een label bij de agenda-rol. Die regels staan nu als
+        volle zin onder de tabel."""
         if row["agenda_role"] == "startpunt":
-            parts.append("<b>Startpunt</b>")
-        elif row["agenda_role"] == "tweede":
-            parts.append("<b>Tweede punt</b>")
-        if row["near_tie_with"]:
-            tie_lbl = next((r["label"] for r in ranked if r["key"] == row["near_tie_with"]),
-                           row["near_tie_with"])
-            parts.append(f'<span class="r-mono">vrijwel gelijk aan {_h(tie_lbl)}</span>')
-        return "<br>".join(parts)
+            return "<b>Startpunt</b>"
+        if row["agenda_role"] == "tweede":
+            return "<b>Tweede punt</b>"
+        return ""
 
     is_exit = scan_type == "exit"
     reason_th = '<th style="width:13%">Als vertrekreden genoemd</th>' if is_exit else ""
@@ -2455,18 +2453,30 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
     # toepassing en zou de tekst zelf de degraded-staffel-test doorbreken.
     legenda = f'<p class="r-legend">{RASTER_LEGENDA}</p>' if any_full_spread else ""
 
+    # C13: de gelijkspel-meldingen als volle zinnen onder de tabel, in dezelfde
+    # volgorde als de rijen. De fallback op de sleutel blijft staan (zoals in de
+    # oude agendacel): near_tie_with hoort naar een rij in deze lijst te wijzen,
+    # maar een ontbrekende rij mag geen StopIteration in een klantrapport geven.
+    ties = [f'{_h(r["label"])} staat vrijwel gelijk aan '
+            + _h(next((x["label"] for x in ranked if x["key"] == r["near_tie_with"]),
+                      r["near_tie_with"]))
+            for r in ranked if r["near_tie_with"]]
+    ties_html = f'<p class="r-legend">{"; ".join(ties)}.</p>' if ties else ""
+
     def _fill_row(label: str, hint: str) -> str:
         return (f'<div class="step-sublbl">{_h(label)}</div>'
                 f'<div class="step-fill"></div>'
                 f'<div class="step-fill-hint">{_h(hint)}</div>')
 
-    tabel = f"""<table class="raster-tbl"><tbody><tr>
-    <th style="width:{w_factor}">Factor</th><th style="width:12%">Score</th>
-    {reason_th}<th style="width:{w_spread}">Spreiding</th>{deep_th}<th style="width:14%">Agenda</th>
-  </tr></tbody>{body}</table>
+    # Kop in een <thead> (ronde 2 observatie 4): in een <tbody> herhaalt WeasyPrint
+    # hem niet, dus stond de tabel op een vervolgpagina zonder kolomnamen.
+    # "Onderwerp" en niet "Factor": dat is de term die de rest van het rapport
+    # gebruikt.
+    tabel = f"""<table class="raster-tbl"><thead><tr><th style="width:{w_factor}">Onderwerp</th><th style="width:12%">Score</th>{reason_th}<th style="width:{w_spread}">Spreiding</th>{deep_th}<th style="width:14%">Agenda</th></tr></thead>{body}</table>
+  {ties_html}
   {legenda}
   {gate}
-  <div class="r-uitleg">{raster_uitleg(scan_type, deepening_active, direction_active)}</div>""" if ranked else ""
+  <div class="r-uitleg">{raster_uitleg(scan_type, deepening_active, direction_active)} op pagina {_pref(LEIDRAAD_ANKERS["drempels"])}.</div>""" if ranked else ""
 
     # Zonder rasterrijen slaat de meegegeven mgmt_q nergens op: de aanroeper
     # valt daar terug op nsp["first_decision"], de generieke per-product
@@ -2680,6 +2690,21 @@ def _dir_n_wie(label: str | None = None) -> str:
 DIR_N_DIE_WIE = "die dit het laagst scoorden en de vraag beantwoordden"
 
 
+def _beperkte_basis_note() -> str:
+    """De beperkte-basis-regel onder een verdeling, met de verwijzing naar de
+    drempeltabel (B20/H18).
+
+    Eén bron voor twee plekken: onder de verdiepingsverdeling (_deepening_block,
+    onder MIN_AGGREGATE_N antwoorden) en onder een richtingkaart
+    (_direction_card_cell, bij DIRECTION_MIN_N of DIRECTION_CAVEAT_MAX_N). De twee
+    hadden dezelfde bedoeling in twee formuleringen ("Beperkte antwoordbasis" en
+    "Beperkte basis") en de drempel erachter stond nergens uitgelegd. De opmaak
+    zit in .dir-caveat in het stylesheet (codereview taak 9, bevinding 3).
+    """
+    return ('<p class="dir-caveat">Beperkte basis: gebruik dit als gesprekshaakje, '
+            f'niet als conclusie (drempels: pagina {_pref(LEIDRAAD_ANKERS["drempels"])}).</p>')
+
+
 def _direction_chain(agg: dict, n_total: int) -> str:
     """Keten laagst -> (aangeboden ->) beantwoord/overgeslagen, in de vaste
     tellingsvorm (B14, H2): elke stap noemt zijn eigen noemer, en de stappen
@@ -2692,26 +2717,44 @@ def _direction_chain(agg: dict, n_total: int) -> str:
     laagste onderwerp was, dan zegt de keten dat met woorden (H19: die mensen
     mogen niet spoorloos zijn).
 
+    Is er méér aangeboden dan er nu een laagste onderwerp hebben, dan opent de
+    keten vanaf het aanbod en zegt ze wat er niet klopt. Zie de toelichting bij
+    die tak: dat is versiedrift, geen onmogelijkheid.
+
     De clausules dragen bewust geen percentage: vier percentages achter elkaar
     zijn ruis. Het percentage hoort bij de vergelijking van groepen, en staat
     daarom in de bronregel en de verdelingstabel (_telling).
     """
     lowest, offered = agg["lowest_n"], agg["offered"]
     answered, skipped = agg["answered"], agg["skipped"]
-    if offered > lowest:
-        # Kan alleen uit een bug komen (de servervalidatie staat alleen de eigen
-        # laagste factor toe; aggregate_direction logt deze staat al). Renderen
-        # gaf "10 van de 10 beantwoordden de vraag" onder "9 hadden dit als
-        # laagste": een keten die zichzelf tegenspreekt.
-        raise ValueError(
-            f"_direction_chain: meer aangeboden ({offered}) dan respondenten bij wie "
-            f"dit het laagst scoorde ({lowest})")
-    if lowest == 0:
+    # Versiedrift, en daarmee bereikbaar met echte data: `offered` komt uit de
+    # opgeslagen antwoorden, terwijl `lowest_n` bij elke render opnieuw uit de
+    # ruwe scores wordt berekend (aggregate_direction tolereert en logt deze
+    # staat om precies die reden). Verandert de rekenregel voor het laagste
+    # onderwerp, dan kan iemand de vraag hebben gekregen over een onderwerp dat
+    # nu niet meer zijn laagste is. Hard falen zou de download van een
+    # historisch rapport laten mislukken; renderen alsof er niets aan de hand is
+    # gaf "10 van de 10 beantwoordden de vraag" onder "9 hadden dit als
+    # laagste". Dus: een zichtbaar gedegradeerde keten die beide getallen noemt
+    # (Fail Loud trap 2), in dezelfde vorm als _deepening_chain bij
+    # offered > triggered.
+    drift = offered > lowest
+    if drift:
+        nu = _respondenten(lowest) if lowest else "geen enkele respondent"
+        opener = (f"{offered} van de {_respondenten(n_total)} "
+                  + _werkwoord(offered, "kreeg", "kregen")
+                  + " de vraag over dit onderwerp "
+                  + f"({offered} = wie de vraag kreeg; met de rekenregels van nu is dit "
+                  + f"bij {nu} het laagste onderwerp)")
+    elif lowest == 0:
         return "Niemand had dit als eigen laagste onderwerp."
-    had = _werkwoord(lowest, "had", "hadden")
-    opener = (f"{lowest} van de {_respondenten(n_total)} {had} dit als eigen "
-              "laagste onderwerp")
+    else:
+        had = _werkwoord(lowest, "had", "hadden")
+        opener = (f"{lowest} van de {_respondenten(n_total)} {had} dit als eigen "
+                  "laagste onderwerp")
     parts: list[str] = []
+    # Bij drift is offered groter dan lowest, dus is er niets "deels aangeboden"
+    # en is offered nooit 0.
     deels_aangeboden = 0 < offered < lowest
     if deels_aangeboden:
         parts.append(f"{offered} van de {lowest} "
@@ -2719,8 +2762,9 @@ def _direction_chain(agg: dict, n_total: int) -> str:
     elif offered == 0:
         return f"{opener}; niemand van hen kreeg de vraag."
     # De noemer van "beantwoordden" is wie de vraag kreeg; bij offered == lowest
-    # is dat hetzelfde getal. Hoger dan lowest kan offered hier niet zijn (de
-    # guard bovenaan).
+    # is dat hetzelfde getal. Bij drift (offered > lowest) blijft het het aanbod,
+    # zodat de clausule nooit "10 van de 9" wordt; de opener heeft dan al gezegd
+    # dat de twee tellingen uiteen lopen.
     noemer = offered
     if answered:
         voorwerp = "die" if deels_aangeboden else "de vraag"
@@ -2774,11 +2818,19 @@ def _direction_totals_line(direction_agg: dict, agenda_keys: list[str], scan_typ
        nooit (`lowest_n > offered`, bij een campagne die over de deploy heen
        liep). Zin 1 telt `offered` en zin 2 telt `lowest_n`, dus zonder deze
        melding staat "kregen 28 de vraag" naast "de overige 11 een ander
-       onderwerp ... daarom niet uitgewerkt" over elf mensen zonder antwoord.
+       onderwerp ... daarom niet uitgewerkt" over elf mensen zonder antwoord;
+    3. de omgekeerde drift: er is méér aangeboden dan er nu een laagste onderwerp
+       hebben (`offered > toegewezen`). Dan hebben mensen zonder herberekend
+       laagste onderwerp de vraag wél gekregen, en mag de slotzin niet beweren
+       dat zij geen stelling invulden.
 
-    In beide gevallen vervalt het woord "overige" en volgt de reden. Nooit een
+    In alle gevallen vervalt het woord "overige" en volgt de reden. Nooit een
     getal bijschatten om de som te laten kloppen (H19 ging er juist over dat
     twaalf mensen nergens stonden).
+
+    Alleen `toegewezen > n_total` blijft een harde fout: dat is rekenkundig
+    onmogelijk (elke respondent draagt aan ten hoogste één onderwerp bij), dus
+    geen drift maar een codebug of een inconsistente aanroep.
     """
     offered, answered, skipped = _direction_totals(direction_agg)
     if not offered:
@@ -2809,13 +2861,14 @@ def _direction_totals_line(direction_agg: dict, agenda_keys: list[str], scan_typ
         raise ValueError(
             f"_direction_totals_line: laagste-onderwerptelling {toegewezen} groter dan "
             f"het aantal respondenten {n_total}")
-    if offered > toegewezen:
-        # Meer aanbod dan laagste-onderwerpen: dezelfde onmogelijke staat als in
-        # _direction_chain, maar over alle onderwerpen samen.
-        raise ValueError(
-            f"_direction_totals_line: meer aangeboden ({offered}) dan laagste-onderwerpen "
-            f"({toegewezen})")
-    sluit = toegewezen == n_total and niet_gevraagd == 0
+    # Meer aanbod dan laagste-onderwerpen: dezelfde versiedrift als in
+    # _direction_chain, maar over alle onderwerpen samen. Elke respondent krijgt
+    # één richtingvraag, dus minstens `overschot` van de mensen zonder een
+    # herberekend laagste onderwerp hebben de vraag wél gekregen. Dat hoort in de
+    # regel te staan (en niet de generatie te stoppen), anders zou de slotzin
+    # hieronder beweren dat zij niets invulden.
+    overschot = max(0, offered - toegewezen)
+    sluit = toegewezen == n_total and niet_gevraagd == 0 and overschot == 0
     delen2: list[str] = []
     for i, (k, cnt) in enumerate(agenda):
         lbl = _lc(_fl(k, scan_type))
@@ -2852,8 +2905,21 @@ def _direction_totals_line(direction_agg: dict, agenda_keys: list[str], scan_typ
                 "van hen is er dus geen antwoord.")
     if toegewezen < n_total:
         ontbreekt = n_total - toegewezen
-        zin += (f" Bij {_respondenten(ontbreekt)} kon Loep geen laagste onderwerp "
-                "vaststellen: zij vulden geen van de stellingen over deze onderwerpen in.")
+        if overschot:
+            zin += (f" Bij {_respondenten(ontbreekt)} kon Loep met de rekenregels van nu "
+                    f"geen laagste onderwerp vaststellen, en {overschot} van hen "
+                    + _werkwoord(overschot, "kreeg", "kregen")
+                    + " de vraag toch: die twee tellingen sluiten daarom niet op elkaar.")
+        else:
+            zin += (f" Bij {_respondenten(ontbreekt)} kon Loep geen laagste onderwerp "
+                    "vaststellen: zij vulden geen van de stellingen over deze onderwerpen in.")
+    elif overschot:
+        # Onbereikbaar zolang offered <= n_total (elke respondent krijgt één
+        # vraag), maar de melding hoort er te staan voor het geval de aantallen
+        # tóch uiteen lopen: nooit stil een som die niet klopt.
+        zin += (f" Bij {overschot} van de {n_total} ging de vraag over een onderwerp dat "
+                "met de rekenregels van nu niet hun laagste onderwerp is; die telling "
+                "sluit daarom niet op de verdeling hierboven.")
     return zin
 
 
@@ -2950,8 +3016,7 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
         rows = "".join(row_htmls)
         table = f'<table class="item-tbl dir-tbl">{rows}</table>'
         if n <= DIRECTION_CAVEAT_MAX_N:
-            table += ('<p class="dir-caveat">Beperkte basis: gebruik dit als '
-                      'gesprekshaakje, niet als conclusie.</p>')
+            table += _beperkte_basis_note()
         # B13, zelfde blok als onder de verdiepingsverdeling, en net als daar na
         # de beperkte-basis-regel (die hoort bij de verdeling). Bewust binnen
         # deze tak: in de staat too_few toont de kaart geen enkele telling, en
@@ -3109,6 +3174,13 @@ OTHER_SHARE_MIN = 0.20
 # een blok staat.
 OTHER_MIN_N = 2
 
+# Eén bron voor de zin waarmee het Anders-blok zijn tekststaffel uitlegt. De
+# drempeltabel op de methodiekpagina (_drempeltabel, taak 11) noemt dezelfde
+# drempel met dezelfde woorden; twee kopieën van deze zin kunnen stil uiteen
+# lopen, en dan legt de tabel iets anders uit dan het blok doet.
+ANDERS_TEKST_DREMPEL = (
+    f"De teksten tonen we pas vanaf {MIN_QUOTES_N}, om herleidbaarheid te voorkomen")
+
 ANON_NOTE = "Automatisch geanonimiseerd: herkende namen en contactgegevens verwijderd"
 
 
@@ -3144,8 +3216,7 @@ def _anders_block(*, other_n: int, answered: int, texts: list[str]) -> str:
            f'{_werkwoord(other_n, "koos", "kozen")} &lsquo;Anders&rsquo;{geschreven}: '
            f'de vaste opties dekten hun ervaring niet.</p>')
     if len(schoon) < MIN_QUOTES_N:
-        return kop + (f'<p class="anders-note">De teksten tonen we pas vanaf '
-                      f'{MIN_QUOTES_N}, om herleidbaarheid te voorkomen.</p>')
+        return kop + f'<p class="anders-note">{ANDERS_TEKST_DREMPEL}.</p>'
     note = ""
     if len(schoon) > MAX_QUOTES:
         note = (f'<p class="anders-note">Getoond: de eerste {MAX_QUOTES} van '
@@ -3256,10 +3327,8 @@ def _deepening_block(agg: dict, scan_type: str, factor_key: str, n_total: int) -
             f'<td class="is" style="color:#0D1B2A;">{_telling(cnt, answered)}</td></tr>'
             for key, cnt in ranked)
         body = f'<table class="item-tbl" style="margin-top:6px;">{rows}</table>'
-        if answered <= 9:
-            body += ('<p style="font-size:10px;color:#92400E;margin:4px 0 0;">'
-                     'Beperkte antwoordbasis: gebruik dit als gesprekshaakje, '
-                     'niet als conclusie.</p>')
+        if answered < MIN_AGGREGATE_N:
+            body += _beperkte_basis_note()
         # B13: haalt "Anders" een vijfde van de antwoorden, dan dekt de optieset
         # de werkelijkheid niet en zijn de eigen woorden het antwoord. Na de
         # beperkte-basis-regel: die hoort bij de verdeling erboven, niet bij de
@@ -3338,11 +3407,81 @@ def _banden_cel(ranking_active: bool) -> tuple[str, str]:
     return ("Hoe de banden werken", _BANDEN_DREMPELS + midden + _BANDEN_MEETLAT)
 
 
+def _drempeltabel(scan_type: str, *, direction_active: bool = True) -> str:
+    """Eén drempeltabel voor het hele rapport (B20, H18): elke drempel met de
+    plek waar hij werkt en één zin waarom.
+
+    De getallen komen uit de constanten die ze ook echt sturen, zodat deze uitleg
+    niet kan gaan liegen zodra een gate verschuift. De inline verwijzingen in het
+    rapport (ranglijst, afdelingen, beperkte-basis-regels, leidraad) noemen deze
+    tabel met een paginanummer via LEIDRAAD_ANKERS["drempels"].
+
+    Twee gates, dezelfde als de rest van de methodiekpagina: Loep Start kent geen
+    verdieping en geen richtingvraag (niet in DIRECTION_SCAN_TYPES), en
+    direction_active zegt of DEZE meting de richtingvraag stelde. Een rij over een
+    drempel die in dit rapport nergens werkt hoort er niet te staan.
+
+    Twee rijen kunnen hetzelfde getal dragen (MIN_SEGMENT_N en MIN_QUOTES_N staan
+    beide op 5): ze worden bewust niet samengevoegd, want het zijn losse
+    constanten die uiteen kunnen lopen, en ze gelden op een andere plek. De
+    sortering is daarom op het getal alleen, zodat de invoegvolgorde bij gelijke
+    getallen blijft staan.
+    """
+    pct = round(OTHER_SHARE_MIN * 100)
+    rijen: list[tuple[int, str, str]] = [
+        (MIN_AGGREGATE_N, "profiel per onderwerp, spreiding, en een afdeling als startpunt",
+         "Onder de tien antwoorden bepaalt één persoon te veel het gemiddelde, en is een "
+         "spreidingsbeeld geen beeld maar een handvol stippen."),
+        (MIN_SEGMENT_N, "een afdeling apart in de tabel",
+         "Onder de vijf zijn antwoorden herleidbaar tot personen, ook zonder naam."),
+        (MIN_QUOTES_N,
+         "de open toelichtingen" + (" en de teksten bij ‘Anders’"
+                                    if scan_type in DIRECTION_SCAN_TYPES else ""),
+         ANDERS_TEKST_DREMPEL + ": een geschreven antwoord is makkelijker aan een "
+         "persoon te koppelen dan een cijfer."),
+    ]
+    if scan_type in DIRECTION_SCAN_TYPES:
+        rijen.append(
+            (OTHER_MIN_N, "het blok met de toelichtingen bij ‘Anders’",
+             f"Dat blok verschijnt zodra ‘Anders’ minstens {pct}% van de antwoorden haalt "
+             f"en minstens {OTHER_MIN_N} mensen het kozen: op de kleinste basis van dit "
+             "rapport haalt één mens dat aandeel al, en van één mens is geen conclusie "
+             "over de vraagopties te trekken."))
+        rijen.append(
+            (DEEPENING_MIN_N, "een gedeelde toelichting uit de verdieping op de agenda",
+             "Onder de acht kan ‘geen duidelijke meerderheid’ toevallig zijn; vanaf acht "
+             "telt een voorsprong van twee als signaal."))
+        if direction_active:
+            rijen.append(
+                (DIRECTION_MIN_N, "de richtingvraag per onderwerp",
+                 f"Lager dan de {_TELWOORD.get(MIN_SEGMENT_N, MIN_SEGMENT_N)} voor "
+                 "afdelingen, omdat niemand in de organisatie kan zien wie een onderwerp "
+                 "als laagste had; daaronder blijft het beeld een gesprekshaakje en geen "
+                 "conclusie."))
+    rijen.sort(key=lambda rij: rij[0])
+    trs = "".join(f'<tr><td class="is" style="width:8%;text-align:left;">{n}</td>'
+                  f'<td class="iq" style="width:38%;">{_h(waar)}</td><td>{_h(waarom)}</td></tr>'
+                  for n, waar, waarom in rijen)
+    return (f'<div class="card" id="{LEIDRAAD_ANKERS["drempels"]}" style="margin-top:10px;">'
+            f'<h3>Drempels in dit rapport</h3>'
+            f'<p style="font-size:10px;color:#374151;">Loep toont pas iets vanaf een '
+            f'minimumaantal antwoorden. Dit zijn de drempels, waar ze werken en waarom.</p>'
+            f'<table class="item-tbl"><thead><tr><th style="width:8%">Vanaf</th>'
+            f'<th style="width:38%">Waar het geldt</th><th>Waarom</th></tr></thead>'
+            f'<tbody>{trs}</tbody></table></div>')
+
+
 def _trust_page(scan_type: str = "exit", opener_html: str = "",
                 direction_active: bool = False,
                 direction_degraded: bool = False,
                 ranking_active: bool = True) -> str:
     """Product-specifieke methodiekpagina — nooit gedeelde ExitScan-copy buiten ExitScan.
+
+    Draagt de drempeltabel (_drempeltabel, B20/H18): de losse cel Drempelwaarden
+    ("5+ responses indicatief · 10+ voor patroonduiding · ...") is daarin
+    opgegaan. Die cel noemde vier getallen zonder uitleg en in jargon, en stond
+    alleen op de pagina van Vertrek en Behoud; de tabel staat op alle drie en legt
+    elke drempel uit op de plek waar het rapport naar verwijst.
 
     direction_active volgt het patroon van _prioriteringsraster's
     deepening_active: de Richtingvraag-rij mag alleen beloven wat dit
@@ -3366,7 +3505,6 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "",
                  "en geen diagnose.")
         cells_r1 = [
             ("Groepsniveau",     "Alle scores zijn groepsgemiddelden van de actieve populatie. Geen individuele gegevens."),
-            ("Drempelwaarden",   "5+ responses indicatief · 10+ voor patroonduiding · 5+ per groep voor segmentweergave"),
             ("Geen voorspelling","Scores geven een huidig signaal, geen verlooppredicties en geen individuele risicobeoordeling."),
         ]
         cells_r2 = [
@@ -3394,7 +3532,6 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "",
                  "Geen diagnose, geen individuele beoordeling, geen causaliteitsclaim en geen voorspelling.")
         cells_r1 = [
             ("Groepsniveau",    "Alle scores zijn groepsgemiddelden. Geen individuele gegevens in dit rapport."),
-            ("Drempelwaarden",  "5+ responses indicatief · 10+ voor patroonduiding · 5+ per groep voor segmenten"),
             ("Geen diagnose",   "Scores zijn methodisch verantwoord maar niet extern gevalideerd. Altijd combineren met managementgesprek."),
         ]
         cells_r2 = [
@@ -3419,11 +3556,8 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "",
             ("Richtingvraag",
              "Elke respondent kreeg één vraag over het onderwerp dat bij die respondent het laagst "
              "scoorde: wat zou hier het meest helpen? De opdrachtvorm in ‘Wat er moet gebeuren’ "
-             "geeft de keuze van die respondenten weer, geen advies van Loep. Dit blok toont een "
-             "richting vanaf 3 antwoorden, lager dan de 5 die voor afdelingen geldt, omdat niemand "
-             "in de organisatie kan zien wie een onderwerp als laagste had. Bij kleine aantallen "
-             "kan het beeld toevallig zijn; herleidbaar is het niet. Daarom staat er dan een "
-             "beperkte-basis-regel bij."),
+             f"geeft de keuze van die respondenten weer, geen advies van Loep. De drempel van "
+             f"{DIRECTION_MIN_N} staat in de drempeltabel hierboven."),
         ]
 
     def _cells(pairs: list[tuple[str, str]], full: bool = False) -> str:
@@ -3438,6 +3572,7 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "",
     <p style="font-size:11px;color:#374151;">{_h(intro)}</p>
   </div>
   <table class="tg"><tr>{_cells(cells_r1)}</tr></table>
+  {_drempeltabel(scan_type, direction_active=direction_active)}
   <table class="tg" style="margin-top:10px;"><tr>{_cells(cells_r2)}</tr></table>
   <table class="tg" style="margin-top:10px;"><tr>{_cells(cells_r3, full=True)}</tr></table>
   {f'<table class="tg" style="margin-top:10px;"><tr>{_cells(cells_r4, full=True)}</tr></table>' if cells_r4 else ''}
@@ -3937,11 +4072,23 @@ def _segment_block(segment_rows: list[dict], factor_rows: dict[str, dict] | None
             f'{MIN_SEGMENT_N} responses, en dat zijn er te weinig om samen als '
             f'restgroep te tonen.</p>')
 
+    # C9: de tabel had geen kolomkoppen, dus was per kolom niet te zien wat er
+    # stond (de sectie-intro benoemde ze in proza). In een <thead>, zodat
+    # WeasyPrint hem op een vervolgpagina herhaalt.
+    kop = ('<thead><tr><th style="width:19%">Afdeling</th>'
+           '<th style="width:9%">Ingevuld / uitgenodigd</th>'
+           '<th style="width:11%">Score</th><th style="width:14%">Band</th>'
+           '<th style="width:20%">Laagste onderwerp</th>'
+           '<th style="width:27%">Spreiding</th></tr></thead>')
+    drempelregel = (f'<p class="trustline">Afdelingen vanaf {MIN_SEGMENT_N} antwoorden, '
+                    f'het onderwerpbeeld vanaf {MIN_DISTRIBUTION_N}: zie de drempeltabel '
+                    f'op pagina {_pref(LEIDRAAD_ANKERS["drempels"])}.</p>')
     return f"""<div class="pb sec">
   {opener_html or '<span class="slabel">Segmentanalyse per afdeling</span>'}
   {_intro("segmentanalyse")}
+  {drempelregel}
   <div class="card">
-    <table class="item-tbl">{rows_html}</table>
+    <table class="item-tbl">{kop}{rows_html}</table>
     {hidden_note}
     {subblocks}
     {low_note}

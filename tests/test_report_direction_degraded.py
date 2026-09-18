@@ -123,14 +123,13 @@ def test_methodiekcel_belooft_geen_richting_die_er_niet_hangt(scan_type):
     """De cel pinde alleen het wóórd "Richtingvraag", niet de claim eronder.
 
     Daardoor bleef de volledige feature-copy staan zodra er richtingdata was:
-    een opdrachtvorm in "Wat er moet gebeuren", een richting vanaf 3
-    antwoorden en een beperkte-basis-regel. Geen van drieën bestaat in het
-    degraded blok, dat alleen tellingen toont.
+    een opdrachtvorm in "Wat er moet gebeuren" en de uitleg van de vloer van 3
+    (sinds taak 11 een verwijzing naar de drempeltabel). Geen van beide bestaat
+    in het degraded blok, dat alleen tellingen toont.
     """
     body = _degraded(scan_type)
     for claim in ("De opdrachtvorm in",
-                  "Dit blok toont een richting vanaf 3 antwoorden",
-                  "beperkte-basis-regel"):
+                  "De drempel van 3 staat in de drempeltabel hierboven."):
         assert claim not in body, f"methodiekpagina belooft nog: {claim!r}"
     assert ("In dit rapport hangt er geen richting aan die antwoorden: zonder "
             "profiel per factor is er geen startpunt om ze aan te koppelen, en "
@@ -144,8 +143,7 @@ def test_methodiekcel_houdt_de_volledige_copy_als_het_blok_kaarten_heeft(scan_ty
     body = _body(_render(scan_type, n=_N_NORMAL, profile=True,
                          direction=_agg(scan_type, {"workload": (6, 1), "growth": (4, 1)})))
     assert "De opdrachtvorm in" in body
-    assert "Dit blok toont een richting vanaf 3 antwoorden" in body
-    assert "beperkte-basis-regel" in body
+    assert "De drempel van 3 staat in de drempeltabel hierboven." in body
     assert "In dit rapport hangt er geen richting aan die antwoorden" not in body
 
 

@@ -88,9 +88,9 @@ def test_uitlegregel_letterlijk_gepind():
         "binnen 0,3 van elkaar, dan telt eerst waar de meeste mensen om "
         "verandering vragen, en alleen als een factor er minstens 2 mensen "
         "bovenuit steekt; anders geeft een grote spreiding of een gedeelde "
-        "toelichting uit de verdieping de doorslag. Spreiding tonen we vanaf 10 "
-        "responses; verdiepingsduiding vanaf 8 beantwoorders per factor; de "
-        "vraag om verandering vanaf 3 beantwoorders per factor.")
+        "toelichting uit de verdieping de doorslag. De drempels (spreiding vanaf "
+        "10, verdieping vanaf 8, richting vanaf 3) staan uitgelegd in de "
+        "drempeltabel")
 
 
 def test_intro_en_uitleg_staan_gerenderd_in_alle_vier_de_combinaties():
@@ -111,12 +111,12 @@ def test_uitlegregel_noemt_alleen_de_drempels_die_meespeelden():
     zonder = raster_uitleg("retention", False, False)
     assert "verdieping" not in zonder
     assert "vraag om verandering" not in zonder
-    assert "Spreiding tonen we vanaf 10 responses." in zonder
+    assert "De drempels (spreiding vanaf 10) staan uitgelegd in de drempeltabel" in zonder
     alleen_richting = raster_uitleg("retention", False, True)
-    assert "verdiepingsduiding" not in alleen_richting
-    assert "vanaf 3 beantwoorders per factor" in alleen_richting
+    assert "verdieping vanaf" not in alleen_richting
+    assert "(spreiding vanaf 10, richting vanaf 3)" in alleen_richting
     alleen_verdieping = raster_uitleg("retention", True, False)
-    assert "verdiepingsduiding vanaf 8 beantwoorders per factor" in alleen_verdieping
+    assert "(spreiding vanaf 10, verdieping vanaf 8)" in alleen_verdieping
     assert "om verandering" not in alleen_verdieping
 
 
@@ -127,11 +127,10 @@ def test_uitlegregel_leest_de_verdiepingsdrempel_uit_de_constante(monkeypatch):
     mee te bewegen."""
     import backend.report_html as rh
     from backend.products.shared.deepening import DEEPENING_MIN_N
-    assert f"verdiepingsduiding vanaf {DEEPENING_MIN_N} beantwoorders per factor" in \
+    assert f"verdieping vanaf {DEEPENING_MIN_N}" in \
         raster_uitleg("retention", True, True)
     monkeypatch.setattr(rh, "DEEPENING_MIN_N", 9)
-    assert "verdiepingsduiding vanaf 9 beantwoorders per factor" in \
-        raster_uitleg("retention", True, True)
+    assert "verdieping vanaf 9" in raster_uitleg("retention", True, True)
 
 
 def test_richting_gate_volgt_de_pagina_niet_het_aggregaat():
@@ -163,6 +162,9 @@ def test_agenda_kolom_en_gelijkspel():
     assert "Startpunt" in html
     assert "Tweede punt" in html
     assert "vrijwel gelijk aan Werkdruk en herstelruimte" in html
+    # C13: die melding staat als volle zin onder de tabel, niet in de smalle
+    # agendakolom waar hij over vier regels brak.
+    assert html.index("vrijwel gelijk aan") > html.index("</table>")
     # Geen rangnummer-verwijzingen (spec par. 8).
     assert "nr." not in html
 

@@ -712,17 +712,20 @@ def test_leidraad_belooft_toelichtingen_alleen_als_het_blok_ze_toont():
     assert "Te weinig verdiepingsantwoorden" not in html
 
 
-def test_leidraad_verwijst_bij_loep_start_niet_naar_drempels_die_er_niet_zijn():
-    """De methodiekpagina van Loep Start heeft geen drempelcel; die van Vertrek
-    en Behoud wel. Regel 1 mag dus niet in alle drie hetzelfde beloven."""
+def test_leidraad_verwijst_in_alle_drie_de_producten_naar_de_drempeltabel():
+    """Tot taak 11 had alleen de methodiekpagina van Vertrek en Behoud een cel
+    Drempelwaarden, dus beloofde regel 1 daar iets anders dan bij Loep Start.
+    Sinds taak 11 staat op alle drie dezelfde drempeltabel (B20), dus wijst regel
+    1 overal naar dat anker en is de oude tweedeling vervallen."""
     ob = render_onboarding_report_html(_degraded_fixture("onboarding", n=12, profile=True))
-    assert "Drempelwaarden" not in ob
-    assert "de drempels staan op" not in ob
-    assert "wat Loep uit deze aantallen wel en niet afleidt" in ob
-
     ret = render_retention_report_html(_retention_met_secties())
-    assert "Drempelwaarden" in ret
-    assert "de drempels staan op" in ret
+    for html in (ob, ret):
+        # De losse cel met vier kale getallen is in de tabel opgegaan.
+        assert "Drempelwaarden" not in html
+        assert "de drempels staan op" in html
+        assert "wat Loep uit deze aantallen wel en niet afleidt" not in html
+        assert 'id="sec-drempels"' in html
+        assert "sec-drempels" in _assert_verwijzingen_kloppen(html)
 
 
 def test_afdelingen_en_toelichtingen_zijn_end_tot_eind_gepind():
@@ -744,8 +747,10 @@ def test_zonder_afdelingen_toelichtingen_en_werkbeleving_geen_leidraad():
     kaal = _retention_met_secties(segment_rows=[], open_texts=[], sdt_avgs={})
     html = render_retention_report_html(kaal)
     assert "Zo leid je dit gesprek" not in html
-    # De verwijzing van de gespreksagenda naar pagina twee blijft, en klopt.
-    assert _assert_verwijzingen_kloppen(html) == ["p02"]
+    # De verwijzing van de gespreksagenda naar pagina twee blijft, en klopt. De
+    # ranglijst verwijst sinds taak 11 ook naar de drempeltabel; zonder leidraad
+    # zijn dat samen de enige twee verwijzingen in dit rapport.
+    assert set(_assert_verwijzingen_kloppen(html)) == {"p02", "sec-drempels"}
 
 
 def test_omgekeerde_meetperiode_wordt_gemeld_niet_afgedrukt():

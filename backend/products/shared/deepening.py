@@ -858,10 +858,15 @@ def aggregate_direction(
     # lus als de rij-verwerking worden gevouwen.
     for fk, agg in out.items():
         if agg["offered"] > agg["lowest_n"]:
-            # Anders dan offered > triggered bij aggregate_deepening (verwacht bij
-            # historische triggerregelwijzigingen), kan dit hier niet ontstaan zonder
-            # bug: de servervalidatie staat alleen de eigen laagste factor toe. Deze
-            # aggregatie vertrouwt daar bewust niet blind op en logt het als signaal.
+            # De servervalidatie staat alleen de eigen laagste factor toe, dus bij
+            # gelijke rekenregels kan dit niet ontstaan. Het is wél bereikbaar met
+            # versiedrift: `offered` komt uit de opgeslagen antwoorden en
+            # `lowest_n` wordt hierboven opnieuw berekend uit org_raw, dus een
+            # gewijzigde rekenregel voor het laagste onderwerp kan de twee uiteen
+            # laten lopen in een historisch rapport. Daarom getolereerd en gelogd,
+            # niet afgebroken; de rapportlaag (_direction_chain en
+            # _direction_totals_line) toont deze staat als een zichtbaar
+            # gedegradeerde keten die beide getallen noemt.
             logger.warning("direction: offered > lowest_n voor %s (%d > %d)",
                            fk, agg["offered"], agg["lowest_n"])
     return out

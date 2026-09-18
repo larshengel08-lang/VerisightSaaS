@@ -465,7 +465,16 @@ def test_scenario_16b_vijfentwintig_procent_is_indicatief():
 
 
 def test_render_zonder_noemer_noemt_nergens_een_responspercentage():
-    tekst = _tekst(render_exit_report_html(_fixture(completed=45, invited=None)))
+    html = render_exit_report_html(_fixture(completed=45, invited=None))
+    # De drempeltabel op de methodiekpagina (taak 11, B20) legt uit dat het blok
+    # met de toelichtingen bij 'Anders' pas verschijnt zodra die optie 20% van de
+    # antwoorden haalt. Dat is de uitleg van een gate en geen responspercentage,
+    # dus staat die ene tabel buiten deze sweep; de rest van het rapport, inclusief
+    # elke plek waar over respons wordt gesproken, blijft erin.
+    zonder_drempeltabel = re.sub(r'<div class="card" id="sec-drempels".*?</div>', "",
+                                 html, flags=re.S)
+    assert 'id="sec-drempels"' not in zonder_drempeltabel
+    tekst = _tekst(zonder_drempeltabel)
     assert re.search(r"\d+%", tekst) is None, "geen percentage zonder noemer"
     assert "Uitgenodigd" not in tekst
     assert _NIET_VASTGELEGD in tekst
