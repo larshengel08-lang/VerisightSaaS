@@ -136,9 +136,9 @@ def test_kernzin_claimt_niet_dat_startpunt_het_laagst_scoort():
     # Komma en geen "en" tussen de twee: beide labels bevatten zelf al "en".
     assert f"(4.5/10) en {start_lbl}" not in html
     # De bronregel onder de gespreksopener draagt de uitleg (een verhaal).
-    assert ("Gebaseerd op de score en hoe vaak dit thema als vertrekreden is "
+    assert ("Gebaseerd op de score en hoe vaak dit onderwerp als vertrekreden is "
             "genoemd.") in html
-    assert "Gebaseerd op de laagst scorende factor." not in html
+    assert "Gebaseerd op het laagst scorende onderwerp." not in html
 
 
 def test_kernzin_bij_samenvallende_vertrekreden_claimt_geen_laagste_factor():
@@ -170,8 +170,8 @@ def test_vertrekcontext_vertelt_hetzelfde_verhaal_als_pagina_twee():
     # De andere tak wijst naar de rangorde in plaats van naar de laagste
     # factor: de factordiepte toont immers de bovenste rasterrijen.
     html = render_exit_report_html(_exit_fixture(_DIST_LOS))
-    assert ("De factoren die bovenaan de rangorde staan, komen terug in de "
-            "factordiepte hierna.") in html
+    assert ("De onderwerpen die bovenaan de rangorde staan, komen terug in de "
+            "verdieping hierna.") in html
 
 
 def test_overzichtsprofiel_intro_is_productbewust():

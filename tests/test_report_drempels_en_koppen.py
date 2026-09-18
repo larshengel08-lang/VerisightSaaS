@@ -96,6 +96,27 @@ def test_anders_rij_hangt_ook_aan_de_richtingvraag():
     assert f" {DEEPENING_MIN_N} " not in f" {alleen_richting} "
 
 
+def test_anders_rij_blijft_weg_in_de_degraded_richtingstaat():
+    """Review ronde 2 (taak 13): `anders_actief` hing aan `direction_active`,
+    maar in de degraded richtingstaat rendert `_direction_degraded_block` alleen
+    tellingen en geen kaarten. Daar staat dus geen Anders-blok onder een
+    richtingkaart, en dan legt de tabel een drempel uit die in dit rapport
+    nergens werkt. `_trust_page` heeft die vlag al en geeft hem nu door."""
+    degraded = _tekst(_drempeltabel("retention", deepening_active=False,
+                                    direction_active=True, direction_degraded=True,
+                                    ranking_active=False))
+    assert "het blok met de toelichtingen bij ‘Anders’" not in degraded
+    assert "de teksten bij ‘Anders’" not in degraded
+    # De richtingrij zelf blijft: die vraag is wél gesteld en het degraded blok
+    # toont de tellingen ervan.
+    assert "de richtingvraag per onderwerp" in degraded
+    assert "de open toelichtingen" in degraded
+    # En de methodiekpagina geeft de vlag door in plaats van hem te laten vallen.
+    html = _trust_page("retention", direction_active=True, direction_degraded=True,
+                       deepening_active=False, ranking_active=False)
+    assert "de teksten bij ‘Anders’" not in html
+
+
 def test_drempeltabel_laat_de_verdiepingsrijen_weg_zonder_ranglijst():
     """Restpunt uit de review van taak 11: zonder factorprofiel (stresstest 07)
     rendert er geen ranglijst en geen verdiepingsblok, maar de rij van

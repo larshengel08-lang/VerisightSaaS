@@ -27,7 +27,7 @@ def test_score_based_ranking_keeps_static_line():
     rows = _rank("retention", {"growth": 5.1, "workload": 6.2})
     assert rows[0]["key"] == "growth"
     assert _raster_attribution(rows, "retention") == \
-        "Gebaseerd op de laagst scorende factor."
+        "Gebaseerd op het laagst scorende onderwerp."
 
 
 def test_spread_flag_flip_names_spread():
@@ -76,7 +76,7 @@ def test_exit_lowest_score_and_base_keeps_static_line():
                  reasons={"growth": 1})
     assert rows[0]["key"] == "growth"
     assert _raster_attribution(rows, "exit") == \
-        "Gebaseerd op de laagst scorende factor."
+        "Gebaseerd op het laagst scorende onderwerp."
 
 
 def test_empty_rows_give_empty_line():
@@ -149,4 +149,4 @@ def test_attribution_claims_no_signal_when_none_explains_the_top_row():
          "spread_flag": False, "deepening_state": 5, "decided_by": None},
     ]
     assert _raster_attribution(rows, "retention") == \
-        "Gebaseerd op de laagst scorende factor."
+        "Gebaseerd op het laagst scorende onderwerp."

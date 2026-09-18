@@ -78,7 +78,7 @@ def test_de_pagina_zegt_wat_er_wel_gemeten_is():
     agenda = _agenda(_ob(n=_N_DEGRADED, profile=False))
     assert "Wat deze meting wel geeft" in agenda
     assert "Wat dit rapport wel laat zien: het checkpointoverzicht" in agenda
-    assert ("Een score per thema ontbreekt, dus er is geen onderbouwde volgorde "
+    assert ("Een score per onderwerp ontbreekt, dus er is geen onderbouwde volgorde "
             "en geen eerste gesprekspunt dat uit de cijfers volgt.") in agenda
 
 
@@ -104,7 +104,7 @@ def test_slotpagina_is_vrij_van_em_dashes():
 def test_met_profiel_blijft_de_slotpagina_zoals_hij_was():
     body = _ob(n=_N_NORMAL, profile=True)
     agenda = _agenda(body)
-    assert "Primair thema" in agenda
+    assert "Primair onderwerp" in agenda
     assert "Tweede aandachtspunt" in agenda
     assert SECTION_INTROS["gespreksagenda"] in body
     assert GESPREKSAGENDA_INTRO_GEEN_PROFIEL not in body

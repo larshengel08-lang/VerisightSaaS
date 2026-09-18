@@ -130,7 +130,8 @@ def test_vlakke_zin_volgt_de_drempelconstante(monkeypatch):
 def test_vlakke_zin_telt_het_echte_aantal_factoren():
     zin = _p02_flat_sentence(profile_shape({"growth": 5.0, "culture": 5.5}),
                              {"growth": "Groeiperspectief", "culture": "Cultuur"})
-    assert "alle twee liggen binnen één punt van elkaar" in zin
+    assert "beide liggen binnen één punt van elkaar" in zin
+    assert "alle twee" not in zin
     assert "alle zes" not in zin
 
 

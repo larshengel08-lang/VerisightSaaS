@@ -94,7 +94,7 @@ def test_sectie_intros_aanwezig():
     html = render_retention_report_html(d)
     for frase in [
         "samenvattende groepsscore",          # behoudscontext: opbouw behoudssignaal
-        "drie stellingen over hetzelfde thema", # overzichtsprofiel: wat is een factor
+        "gemeten met drie stellingen",           # overzichtsprofiel: wat is een onderwerp
         "basisbehoeften",                       # werkbeleving/SDT: waarom gemeten
         "ontvangstvolgorde",                    # open toelichtingen: selectie
     ]:
@@ -107,8 +107,8 @@ def test_bronregel_managementvraag():
         kernzin="K.", primary_label="Groeiperspectief",
         why_cells_html="",
         mgmt_q="Vraag?",
-        mgmt_q_source="Gebaseerd op de laagst scorende factor.")
-    assert '<span class="mq-source">Gebaseerd op de laagst scorende factor.</span>' in html
+        mgmt_q_source="Gebaseerd op het laagst scorende onderwerp.")
+    assert '<span class="mq-source">Gebaseerd op het laagst scorende onderwerp.</span>' in html
 
 
 def test_leidraad_op_openingspagina():

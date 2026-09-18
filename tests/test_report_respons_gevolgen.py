@@ -288,7 +288,7 @@ def test_vlakke_tak_verzacht_alleen_zijn_startpuntzin():
 
 def test_prefix_zet_alleen_het_label():
     zin = "Als mogelijk startpunt kiest Loep Groeiperspectief."
-    assert _p02_respons_prefix(zin, indicatief=True) == f"Indicatief beeld: {zin}"
+    assert _p02_respons_prefix(zin, indicatief=True) == f"Indicatief beeld. {zin}"
     assert _p02_respons_prefix(zin, indicatief=False) == zin
 
 
@@ -310,7 +310,7 @@ def test_staart_staat_binnen_de_laatste_zin_en_niet_erachter():
 def test_indicatief_beeld_en_staart_samen():
     uit = _p02_met_respons("Als mogelijk startpunt kiest Loep Groeiperspectief.",
                            completed=45, invited=180)
-    assert uit == ("Indicatief beeld: Als mogelijk startpunt kiest Loep "
+    assert uit == ("Indicatief beeld. Als mogelijk startpunt kiest Loep "
                    "Groeiperspectief (op basis van 45 van de 180 genodigden).")
 
 
@@ -458,7 +458,7 @@ def test_scenario_16_dertig_procent_remt_de_kernzin():
 
 def test_scenario_16b_vijfentwintig_procent_is_indicatief():
     tekst = _tekst(render_exit_report_html(_fixture(completed=45, invited=180)))
-    assert "Indicatief beeld: Het vertrekbeeld wijst naar" in tekst
+    assert "Indicatief beeld. Het vertrekbeeld wijst naar" in tekst
     assert ("Als mogelijk startpunt kiest Loep Groeiperspectief (op basis van 45 "
             "van de 180 genodigden).") in tekst
     assert "Onder de 30% noemt Loep het beeld indicatief" in tekst
@@ -499,7 +499,7 @@ def test_ook_een_rapport_zonder_factorprofiel_draagt_zijn_responsbasis():
     data["factor_avgs"] = {}
     data["factor_items_map"] = {}
     tekst = _tekst(render_exit_report_html(data))
-    assert ("Indicatief beeld: De frictiescore van 5.5/10 wijst op een "
+    assert ("Indicatief beeld. De frictiescore van 5.5/10 wijst op een "
             "gemengd vertrekbeeld (op basis van 45 van de 180 genodigden).") in tekst
 
 

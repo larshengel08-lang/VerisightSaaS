@@ -414,12 +414,12 @@ def test_themazin_alleen_als_er_een_afdeling_wordt_genoemd():
     genoemd = _segment_block(_department_segment_rows(
         _rows(("Operations", 12, 4.5), ("Sales", 12, 7.0))),
         factor_rows=fr, scan_type="retention")
-    assert ("Het laagst scorende thema daar is werkdruk en herstelruimte (3.9/10)."
+    assert ("Het laagst scorende onderwerp daar is werkdruk en herstelruimte (3.9/10)."
             in genoemd)
     niet_genoemd = _segment_block(_department_segment_rows(
         _rows(("Operations", 12, 6.0), ("Sales", 12, 6.1))),
         factor_rows=fr, scan_type="retention")
-    assert "Het laagst scorende thema daar is" not in niet_genoemd
+    assert "Het laagst scorende onderwerp daar is" not in niet_genoemd
 
 
 def test_themazin_meldt_hetzelfde_voorbehoud_als_de_kolom():
@@ -431,8 +431,8 @@ def test_themazin_meldt_hetzelfde_voorbehoud_als_de_kolom():
     a = _anchor(_segment_block(_department_segment_rows(
         _rows(("Operations", 12, 4.5), ("Sales", 12, 7.0))),
         factor_rows=fr, scan_type="retention"))
-    assert ("Het laagst scorende thema daar is werkdruk en herstelruimte (3.9/10). "
-            "Daarbij past een voorbehoud: 2 thema&#39;s zijn daar niet beoordeelbaar, "
+    assert ("Het laagst scorende onderwerp daar is werkdruk en herstelruimte (3.9/10). "
+            "Daarbij past een voorbehoud: 2 onderwerpen zijn daar niet beoordeelbaar, "
             "te weinig antwoorden.") in a
 
 

@@ -242,11 +242,11 @@ def test_brugzin_is_bandbewust_bij_een_relatief_sterk_thema():
     seg = _segment_startpunt(ROWS, _STERK_FR)
     anders = _brugzin("growth", "Groeiperspectief", seg, "retention")
     assert anders == ("Organisatiebreed begint het gesprek bij Groeiperspectief. Het laagst "
-                      "scorende thema bij Operations is Beloning en eerlijkheid (7.4/10), "
+                      "scorende onderwerp bij Operations is Beloning en eerlijkheid (7.4/10), "
                       "en dat scoort daar relatief sterk.")
     assert "springt" not in anders and "tweede punt" not in anders
     zelfde = _brugzin("compensation", "Beloning en eerlijkheid", seg, "retention")
-    assert zelfde == ("Bij Operations is Beloning en eerlijkheid het laagst scorende thema "
+    assert zelfde == ("Bij Operations is Beloning en eerlijkheid het laagst scorende onderwerp "
                       "(7.4/10); daar begint het gesprek ook.")
     assert "het zwaarst" not in zelfde
 

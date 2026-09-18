@@ -98,7 +98,7 @@ def test_degraded_blok_noemt_de_echte_totalen(scan_type):
 @pytest.mark.parametrize("scan_type", SCANS)
 def test_degraded_blok_zegt_waarom_er_geen_richting_hangt(scan_type):
     body = _degraded(scan_type)
-    assert ("Zonder profiel per factor is er nog geen startpunt om die "
+    assert ("Zonder profiel per onderwerp is er nog geen startpunt om die "
             "antwoorden aan te koppelen, en per onderwerp zijn het er te "
             "weinig om te tonen.") in body
 
@@ -132,7 +132,7 @@ def test_methodiekcel_belooft_geen_richting_die_er_niet_hangt(scan_type):
                   "De drempel van 3 staat in de drempeltabel op pagina"):
         assert claim not in body, f"methodiekpagina belooft nog: {claim!r}"
     assert ("In dit rapport hangt er geen richting aan die antwoorden: zonder "
-            "profiel per factor is er geen startpunt om ze aan te koppelen, en "
+            "profiel per onderwerp is er geen startpunt om ze aan te koppelen, en "
             "per onderwerp zijn het er te weinig om te tonen. Het blok "
             "‘Wat er moet gebeuren’ toont daarom alleen hoeveel "
             "respondenten de vraag kregen, beantwoordden en oversloegen.") in body
@@ -179,7 +179,7 @@ def test_met_profiel_blijven_de_kaarten_zoals_ze_waren(scan_type):
     assert "voor het startpunt en het tweede punt" in body
     assert "Richtingvraag" in body
     # De degraded variant mag hier niet meeliften.
-    assert "Zonder profiel per factor is er nog geen startpunt" not in body
+    assert "Zonder profiel per onderwerp is er nog geen startpunt" not in body
 
 
 # ── 3. Zonder richtingdata belooft het rapport niets ────────────────────────
@@ -190,7 +190,7 @@ def test_zonder_richtingdata_geen_blok_en_geen_belofte(scan_type, n, profile):
     body = _body(_render(scan_type, n=n, profile=profile, direction={}))
     assert _EYEBROW_TAG not in body
     assert "Richtingvraag" not in body
-    assert "Zonder profiel per factor is er nog geen startpunt" not in body
+    assert "Zonder profiel per onderwerp is er nog geen startpunt" not in body
 
 
 # ── De twee eerlijkheidsrestanten op diezelfde pagina (B3, punt 3) ───────────
@@ -198,10 +198,10 @@ def test_zonder_richtingdata_geen_blok_en_geen_belofte(scan_type, n, profile):
 @pytest.mark.parametrize("scan_type", SCANS)
 def test_rasterintro_belooft_geen_rangorde_zonder_rasterrijen(scan_type):
     body = _degraded(scan_type)
-    assert "Dit overzicht weegt alle zes factoren tegen elkaar af" not in body
+    assert "Dit overzicht weegt alle zes onderwerpen tegen elkaar af" not in body
     assert "Hoe deze volgorde tot stand komt" not in body
     assert "de volgorde volgt score en spreiding" not in body
-    assert ("Voor deze meting is er nog geen profiel per factor, dus ook geen "
+    assert ("Voor deze meting is er nog geen profiel per onderwerp, dus ook geen "
             "volgorde en geen startpunt.") in body
     # De lege tabelkop is een rangordebelofte zonder inhoud.
     assert 'class="raster-tbl"' not in body

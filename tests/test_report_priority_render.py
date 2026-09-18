@@ -86,7 +86,7 @@ def test_uitlegregel_letterlijk_gepind():
     assert raster_uitleg("retention", True, True) == (
         "Hoe deze volgorde tot stand komt: gesorteerd op score. Liggen scores "
         "binnen 0,3 van elkaar, dan telt eerst waar de meeste mensen om "
-        "verandering vragen, en alleen als een factor er minstens 2 mensen "
+        "verandering vragen, en alleen als een onderwerp er minstens 2 mensen "
         "bovenuit steekt; anders geeft een grote spreiding of een gedeelde "
         "toelichting uit de verdieping de doorslag. De drempels (spreiding vanaf "
         "10, verdieping vanaf 8, richting vanaf 3) staan uitgelegd in de "
@@ -307,7 +307,7 @@ def test_exit_intro_noemt_de_vertrekredenkolom():
     # belooft de intro minder dan de pagina toont.
     intro = raster_intro("exit", True, True)
     assert "vijf signalen" in intro
-    assert "hoe vaak een factor als vertrekreden is genoemd" in intro
+    assert "hoe vaak een onderwerp als vertrekreden is genoemd" in intro
     assert "De eerste vier staan in de tabel." in intro
     assert intro in _render("exit", direction=DIRECTION)
     # Loep Behoud kent geen vertrekredenen en noemt ze dus ook niet.

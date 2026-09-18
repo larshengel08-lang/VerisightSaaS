@@ -159,7 +159,7 @@ def test_de_meetgegevens_beloven_bij_loep_start_geen_verdieping():
 
 def test_de_rangordezin_verwijst_naar_het_hernoemde_hoofdstuk():
     ob = _body(_RENDERERS["onboarding"](_ob_fixture()))
-    assert "vooraan bij de thema&#x27;s met de meeste aandacht" in ob
+    assert "vooraan bij de onderwerpen met de meeste aandacht" in ob
     assert "als eerste in de verdieping" not in ob
 
 
@@ -216,8 +216,8 @@ def test_de_agenda_constateert_niet_twee_keer_hetzelfde():
 @pytest.mark.parametrize("laagste_van_alles,uniek,verwacht", [
     (True,  True,  "Dat is de laagst scorende stelling in het cijferbeeld."),
     (True,  False, "Dat is een van de laagst scorende stellingen in het cijferbeeld."),
-    (False, True,  "Dat is de laagst scorende stelling van dit thema."),
-    (False, False, "Dat is een van de laagst scorende stellingen van dit thema."),
+    (False, True,  "Dat is de laagst scorende stelling van dit onderwerp."),
+    (False, False, "Dat is een van de laagst scorende stellingen van dit onderwerp."),
 ])
 def test_de_zin_dekt_alle_vier_de_uitkomsten(laagste_van_alles, uniek, verwacht):
     zin = _laagste_stelling_zin("Rolhelderheid", "Ik weet wat er van mij wordt verwacht",
@@ -258,7 +258,7 @@ def test_het_rapport_beperkt_zich_tot_het_thema_als_een_stelling_elders_lager_sc
     rapport, en 3,8 staat twee pagina's verderop."""
     body = _ob_html(tie="lager_elders")
     agenda = _agenda(body)
-    assert "Dat is de laagst scorende stelling van dit thema." in agenda
+    assert "Dat is de laagst scorende stelling van dit onderwerp." in agenda
     assert "in het cijferbeeld" not in agenda
     # De lagere stelling staat er echt, anders test dit niets.
     assert "3.8" in body

@@ -141,7 +141,7 @@ def test_behoudscontext_signals_stacked_not_side_by_side():
     assert html.count('class="sigrow"') == 4
     # Titel staat vóór de uitleg, uitleg vóór de score binnen elke rij.
     behoudssignaal_idx = html.index("Behoudssignaal")
-    uitleg_idx = html.index("Werkfactoren en werkbeleving")
+    uitleg_idx = html.index("De zes onderwerpen over het werk en de werkbeleving")
     score_idx = html.index("4.7/10")
     assert behoudssignaal_idx < uitleg_idx < score_idx
 

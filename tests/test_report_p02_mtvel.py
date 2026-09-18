@@ -381,11 +381,11 @@ def test_hoofdreden_vaker_tak_spreekt_zichzelf_niet_tegen():
 
 
 def test_bron_laagste_score_enkel_telwoord_en_none():
-    assert _bron_laagste_score(5.1, [("Werkdruk", 6.0)]) == "Gebaseerd op de laagst scorende factor."
+    assert _bron_laagste_score(5.1, [("Werkdruk", 6.0)]) == "Gebaseerd op het laagst scorende onderwerp."
     assert _bron_laagste_score(5.46, [("Werkdruk", 5.54), ("Cultuur", 6.0)]) ==         "Gebaseerd op de laagste score; die deelt dit onderwerp met Werkdruk."
     assert _bron_laagste_score(5.5, [("A", 5.5), ("B", 5.5), ("C", 5.5)]) ==         "Gebaseerd op de laagste score; die deelt dit onderwerp met drie andere onderwerpen."
-    assert _bron_laagste_score(None, [("A", 5.5)]) == "Gebaseerd op de laagst scorende factor."
-    assert _bron_laagste_score(5.5, [("A", None)]) == "Gebaseerd op de laagst scorende factor."
+    assert _bron_laagste_score(None, [("A", 5.5)]) == "Gebaseerd op het laagst scorende onderwerp."
+    assert _bron_laagste_score(5.5, [("A", None)]) == "Gebaseerd op het laagst scorende onderwerp."
 
 
 def _raster(ranked):

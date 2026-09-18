@@ -117,7 +117,7 @@ def _render(scan_type: str, *, n: int, profile: bool) -> str:
 
 
 def _page_two(html: str) -> str:
-    """Alleen de Bestuurlijke read -- het eerste .pb-blok na de cover.
+    """Alleen de Het antwoord in het kort -- het eerste .pb-blok na de cover.
 
     "Gespreksopener" komt verderop in het rapport legitiem terug (de sluitende
     gespreksagenda); een assertie op het hele document zou daarop afketsen.
@@ -171,7 +171,7 @@ def test_geen_claim_over_de_laagste_score(scan_type):
 @pytest.mark.parametrize("scan_type", SCANS)
 def test_eerlijke_zin_noemt_aantal_en_drempel(scan_type):
     body = _body(_render(scan_type, n=_N_DEGRADED, profile=False))
-    assert f"Met {_N_DEGRADED} antwoorden toont Loep nog geen profiel per factor." in body
+    assert f"Met {_N_DEGRADED} antwoorden toont Loep nog geen profiel per onderwerp." in body
     assert f"minimaal {MIN_AGGREGATE_N} antwoorden" in body
     assert "Wat dit rapport wel laat zien:" in body
     # Loep als onderwerp, geen "ik", geen jargon.
@@ -206,7 +206,7 @@ _N_GEEN_SCORES = 14
 assert _N_GEEN_SCORES >= MIN_AGGREGATE_N, "fixture moet BOVEN de patroondrempel zitten"
 
 _GEEN_SCORES_ZIN = (
-    "Voor deze meting zijn er geen scores per factor berekend. "
+    "Voor deze meting zijn er geen scores per onderwerp berekend. "
     f"Aan het aantal antwoorden ligt het niet: dat zijn er {_N_GEEN_SCORES}.")
 
 
@@ -231,7 +231,7 @@ def test_boven_de_drempel_noemt_de_zin_de_drempel_niet(scan_type):
 @pytest.mark.parametrize("scan_type", SCANS)
 def test_onder_de_drempel_noemt_de_zin_de_drempel_nog_steeds(scan_type):
     note = _note(_body(_render(scan_type, n=_N_DEGRADED, profile=False)))
-    assert f"Met {_N_DEGRADED} antwoorden toont Loep nog geen profiel per factor." in note
+    assert f"Met {_N_DEGRADED} antwoorden toont Loep nog geen profiel per onderwerp." in note
     assert f"minimaal {MIN_AGGREGATE_N} antwoorden" in note
     assert _GEEN_SCORES_ZIN not in note
 
@@ -260,10 +260,10 @@ def test_de_drie_zinnen_zijn_niet_drie_keer_dezelfde():
 @pytest.mark.parametrize("scan_type", SCANS)
 def test_cover_toont_geen_streep_maar_een_eerlijke_waarde(scan_type):
     body = _body(_render(scan_type, n=_N_DEGRADED, profile=False))
-    # cmv-long: "Nog geen factorprofiel" is langer dan _COVER_VALUE_LONG_CHARS,
+    # cmv-long: "Nog geen profiel per onderwerp" is langer dan _COVER_VALUE_LONG_CHARS,
     # dus de bestaande overflow-guard uit B10 pakt 'm op.
-    assert ">Nog geen factorprofiel</div>" in body
-    assert '<div class="cmv cmv-long">Nog geen factorprofiel</div>' in body
+    assert ">Nog geen profiel per onderwerp</div>" in body
+    assert '<div class="cmv cmv-long">Nog geen profiel per onderwerp</div>' in body
 
 
 # ── Positieve controle: met profiel is de pagina NIET degraded ──────────────
@@ -271,8 +271,8 @@ def test_cover_toont_geen_streep_maar_een_eerlijke_waarde(scan_type):
 @pytest.mark.parametrize("scan_type", SCANS)
 def test_met_profiel_is_pagina_twee_niet_degraded(scan_type):
     body = _body(_render(scan_type, n=12, profile=True))
-    assert "toont Loep nog geen profiel per factor" not in body
-    assert "Nog geen factorprofiel" not in body
+    assert "toont Loep nog geen profiel per onderwerp" not in body
+    assert "Nog geen profiel per onderwerp" not in body
     assert "bovenaan staat" in body
     p2 = _page_two(_render(scan_type, n=12, profile=True))
     assert "Gespreksopener" in p2
