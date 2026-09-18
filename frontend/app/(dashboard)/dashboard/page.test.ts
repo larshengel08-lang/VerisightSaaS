@@ -66,7 +66,12 @@ describe('state-driven dashboard page', () => {
   })
 
   it('biedt onderaan altijd "nieuwe meting aanvragen" aan, ook zonder meting (spec 2026-09-16 par. 6.3)', () => {
-    expect(source.match(/<RequestNewMeasurement organizationName=/g)?.length).toBe(2)
+    expect(source.match(/<RequestNewMeasurement\s/g)?.length).toBe(2)
     expect(source).toContain('loadAccountOrganizations(supabase, user.id)')
+    // Zonder meting is er geen "zelfde meting opnieuw": neutrale variant.
+    expect(source).toContain('<RequestNewMeasurement variant="first" organizationName={account.names[0] ?? null} />')
+    expect(source).toContain('<RequestNewMeasurement variant="follow_up" organizationName={orgData?.name ?? null} />')
+    // Een mislukte naamlading blijft niet stil (Task 6 toont hem in de kop).
+    expect(source).toContain('if (account.error) console.warn(')
   })
 })

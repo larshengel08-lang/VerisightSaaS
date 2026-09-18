@@ -12,6 +12,21 @@ describe('blok "nieuwe meting aanvragen" (spec 2026-09-16 par. 6.3)', () => {
     expect(src).toContain('Nieuwe meting aanvragen')
   })
 
+  it('belooft geen vergelijking of bespreking die er op de eindtoestand niet is', () => {
+    expect(src).toContain('Dezelfde meting opnieuw kost {NEW_MEASUREMENT_PRICE_LABEL}.')
+    expect(src).not.toContain('vergelijking')
+    expect(src).not.toContain('bespreking')
+  })
+
+  it('heeft een neutrale variant zonder prijs of "vervolgmeting" voor wie nog geen meting heeft', () => {
+    expect(src).toContain("variant: 'follow_up' | 'first'")
+    expect(src).toContain('Een meting aanvragen?')
+    expect(src).toContain('Mail Loep welke scan je wilt starten, dan zet Loep hem voor je klaar.')
+    const firstBranch = src.slice(src.indexOf('Een meting aanvragen?'), src.indexOf('Klaar voor een vervolgmeting?'))
+    expect(firstBranch).not.toContain('NEW_MEASUREMENT_PRICE_LABEL')
+    expect(firstBranch).not.toContain('vervolgmeting')
+  })
+
   it('spreekt met Loep als onderwerp, niet als "wij"', () => {
     expect(src).toContain('dan zet Loep hem voor je klaar')
     expect(src).not.toMatch(/\b[Ww]ij\b|\b[Ww]e zetten\b/)

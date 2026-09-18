@@ -11,6 +11,10 @@ describe('loadAccountOrganizations (spec 2026-09-16 par. 6.5)', () => {
     expect(src).not.toContain("split('@')")
   })
 
+  it('geeft de namen in een vaste volgorde terug (Nederlandse sortering)', () => {
+    expect(src).toContain(".sort((a, b) => a.localeCompare(b, 'nl'))")
+  })
+
   it('geeft een fout terug in plaats van stil een lege lijst', () => {
     expect(src).toContain('error: membershipError.message')
     expect(src).toContain('error: orgError.message')

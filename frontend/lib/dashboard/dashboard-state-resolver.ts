@@ -5,7 +5,6 @@ import { isReminderDue } from '@/lib/dashboard/reminder-due'
 import { formatDutchDate } from '@/lib/dashboard/format-dutch-date'
 import { buildCampaignTimeline, type CampaignTimeline } from '@/lib/dashboard/campaign-timeline'
 import { canExtendCampaign, extensionsLeft, MAX_EXTENSIONS } from '@/lib/dashboard/campaign-extension'
-import { LOEP_CONTACT_EMAIL } from '@/lib/loep-contact'
 
 export type DashboardStateKind =
   | 'no_campaign'
@@ -184,8 +183,9 @@ export function resolveDashboardState(input: DashboardStateInput): DashboardStat
     }
 
     // Eindtoestand (spec 2026-09-16 par. 4.5): geen belofte van een e-mail die
-    // niet komt; wel de weg naar een nieuwe meting.
-    const subject = encodeURIComponent(`Opnieuw meten: ${campaign.name}`)
+    // niet komt; wel de weg naar een nieuwe meting. Die weg is de mailknop uit
+    // blok G (RequestNewMeasurement onder de kaart), dus de kaart zelf heeft
+    // geen CTA: één mailactie, niet twee.
     return {
       ...EMPTY_STATE,
       ...base,
@@ -194,9 +194,6 @@ export function resolveDashboardState(input: DashboardStateInput): DashboardStat
       primaryMessage: 'Gesloten zonder rapport',
       subtext: `Deze meting is gesloten met ${campaign.totalCompleted} ingevulde vragenlijsten. Voor een rapport zijn er minimaal ${thresholds.insightMin} nodig. Wil je opnieuw meten? Mail Loep.`,
       tone: 'neutral',
-      ctaLabel: 'Mail Loep',
-      ctaHref: `mailto:${LOEP_CONTACT_EMAIL}?subject=${subject}`,
-      ctaKind: 'link',
       degraded: true,
     }
   }

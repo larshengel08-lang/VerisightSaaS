@@ -235,7 +235,7 @@ export default async function CampaignPage({ params }: Props) {
         </div>
       ) : null}
       {state.processingVariant === 'insufficient_response' ? (
-        <RequestNewMeasurement organizationName={orgData?.name ?? null} />
+        <RequestNewMeasurement variant="follow_up" organizationName={orgData?.name ?? null} />
       ) : null}
     </div>
   )

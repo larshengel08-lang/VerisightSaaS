@@ -61,10 +61,11 @@ export default async function DashboardHomePage() {
     // Zonder meting is er geen campagne-organisatie; de naam komt dan van het
     // account. Lukt dat niet, dan staat er "organisatie niet bekend" in de mail.
     const account = await loadAccountOrganizations(supabase, user.id)
+    if (account.error) console.warn(`[dashboard] Organisatienaam van het account niet geladen: ${account.error}`)
     return (
       <div className="space-y-8">
         <DashboardStateCard state={state} reminderText="" />
-        <RequestNewMeasurement organizationName={account.names[0] ?? null} />
+        <RequestNewMeasurement variant="first" organizationName={account.names[0] ?? null} />
       </div>
     )
   }
@@ -242,7 +243,7 @@ export default async function DashboardHomePage() {
       {campaigns.length > 1 ? (
         <CampaignListSection items={listItems} />
       ) : null}
-      <RequestNewMeasurement organizationName={orgData?.name ?? null} />
+      <RequestNewMeasurement variant="follow_up" organizationName={orgData?.name ?? null} />
     </div>
   )
 }

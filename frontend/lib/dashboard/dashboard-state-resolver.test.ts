@@ -183,7 +183,7 @@ describe('resolveDashboardState', () => {
     expect(state.primaryMessage).toBe('Rapport wordt voorbereid')
   })
 
-  it('State 3b — gesloten onder de drempel is een eindtoestand met contact (spec 4.5)', () => {
+  it('State 3b — gesloten onder de drempel is een eindtoestand; de mailknop komt uit het blok, niet uit de kaart (spec 4.5)', () => {
     const state = resolveDashboardState(
       baseInput({ campaign: withCampaign({ isActive: false, totalCompleted: 7, closedAt: '2026-06-10T09:00:00Z' }), reportReady: false }),
     )
@@ -193,9 +193,10 @@ describe('resolveDashboardState', () => {
     expect(state.subtext).toBe(
       'Deze meting is gesloten met 7 ingevulde vragenlijsten. Voor een rapport zijn er minimaal 10 nodig. Wil je opnieuw meten? Mail Loep.',
     )
-    expect(state.ctaKind).toBe('link')
-    expect(state.ctaLabel).toBe('Mail Loep')
-    expect(state.ctaHref).toBe('mailto:hallo@getloep.nl?subject=Opnieuw%20meten%3A%20Loep%20Vertrek%20Q2%202026')
+    // Eén mailactie op de eindtoestand: RequestNewMeasurement onder de kaart.
+    expect(state.ctaKind).toBeNull()
+    expect(state.ctaLabel).toBeNull()
+    expect(state.ctaHref).toBeNull()
     expect(state.subtext).not.toContain('e-mail')
     expect(state.timeline).toBeNull()
   })

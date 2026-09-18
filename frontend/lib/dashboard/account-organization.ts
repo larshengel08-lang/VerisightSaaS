@@ -35,6 +35,9 @@ export async function loadAccountOrganizations(
   const names = (organizations ?? [])
     .map((row) => (typeof row.name === 'string' ? row.name.trim() : ''))
     .filter((name) => name.length > 0)
+    // Vaste volgorde: de database belooft er geen, en de kop en de mailto
+    // mogen niet per verzoek een andere organisatie noemen.
+    .sort((a, b) => a.localeCompare(b, 'nl'))
   if (names.length < orgIds.length) {
     return { names, error: `Van ${orgIds.length - names.length} organisatie(s) ontbreekt de naam of de leesrechten.` }
   }
