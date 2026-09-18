@@ -27,11 +27,35 @@ describe('pdf download button guardrails', () => {
   it('legt een mislukte download in het Nederlands uit, met contact, en houdt de technische melding apart (walkthrough 5.3)', () => {
     const source = readFileSync(new URL('./pdf-download-button.tsx', import.meta.url), 'utf8')
 
-    expect(source).toContain("import { LOEP_CONTACT_EMAIL } from '@/lib/loep-contact'")
-    expect(source).toContain('Het rapport kon niet worden opgehaald')
+    expect(source).toContain(
+      "import { downloadErrorMessage, summarizeTechnicalDetail } from '@/lib/report-download-error'",
+    )
+    expect(source).toContain('downloadErrorMessage(response.status)')
     expect(source).toContain('Technische melding:')
     expect(source).not.toContain('Controleer of de backend bereikbaar is')
     expect(source).not.toContain('Rapport kon niet worden gegenereerd')
     expect(source).not.toMatch(/[—–]/)
+  })
+
+  it('geeft de statuscode-specifieke hoofdmelding en de ruwe backend-body altijd door aan summarizeTechnicalDetail (code review Task 9)', () => {
+    const source = readFileSync(new URL('./pdf-download-button.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('technical: summarizeTechnicalDetail(rawDetail)')
+    expect(source).not.toContain('detail.trim()')
+  })
+
+  it('logt en toont de echte fout bij een verbindingsprobleem in plaats van een vaste "backend bereikbaar"-tekst (code review Task 9)', () => {
+    const source = readFileSync(new URL('./pdf-download-button.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('console.error(err)')
+    expect(source).toContain('Het downloaden is niet gelukt. Controleer je internetverbinding en probeer het opnieuw.')
+    expect(source).toContain('summarizeTechnicalDetail(err instanceof Error ? err.message : String(err))')
+  })
+
+  it('houdt de technische melding leesbaar (afbreken, begrensde hoogte, voldoende contrast) (code review Task 9)', () => {
+    const source = readFileSync(new URL('./pdf-download-button.tsx', import.meta.url), 'utf8')
+
+    expect(source).toMatch(/max-h-24 overflow-auto break-words text-\[11px\] text-red-700/)
+    expect(source).not.toContain('text-red-600/70')
   })
 })

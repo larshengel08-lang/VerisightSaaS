@@ -557,7 +557,7 @@ export function SetupWizardCard({
                                   else deptCodeRefs.current.delete(links.slug)
                                 }}
                                 onCopy={() => handleManualDeptCopy(links.slug, links.url)}
-                                className="flex-1 truncate rounded border border-white/10 bg-white/5 px-2 py-1 text-[9px] text-white/50"
+                                className="min-w-0 flex-1 truncate rounded border border-white/10 bg-white/5 px-2 py-1 text-[9px] text-white/50"
                               >
                                 {links.url}
                               </code>
@@ -609,7 +609,7 @@ export function SetupWizardCard({
                   <div>
                     <p className="mb-1 text-xs font-semibold text-white/50">Vragenlijstlink</p>
                     <div className="flex items-center gap-2">
-                      <code className="flex-1 truncate rounded-lg border border-white/15 bg-white/10 px-2 py-1.5 text-[10px] text-white/70">
+                      <code className="min-w-0 flex-1 truncate rounded-lg border border-white/15 bg-white/10 px-2 py-1.5 text-[10px] text-white/70">
                         {surveyLink}
                       </code>
                       <a href={surveyLink} target="_blank" rel="noopener noreferrer"

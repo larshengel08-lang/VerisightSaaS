@@ -204,4 +204,9 @@ describe('setup-wizard responsive en invoervelden (spec 2026-09-16 par. 7, walkt
     expect(src).toContain('shrink-0 rounded-lg border border-white/15 px-2 text-xs text-white/50 hover:bg-white/10')
     expect(src).not.toContain('w-24 rounded-lg border border-white/20 bg-white/10')
   })
+
+  it('laat de link-codeblokken krimpen zodat de knop ernaast niet wordt weggeduwd (code review Task 9)', () => {
+    expect(src).toContain('min-w-0 flex-1 truncate rounded border border-white/10 bg-white/5')
+    expect(src).toContain('min-w-0 flex-1 truncate rounded-lg border border-white/15 bg-white/10')
+  })
 })
