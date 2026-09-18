@@ -2623,14 +2623,15 @@ DIRECTION_HEAD_SPLIT_NONE = ("Verdeeld: een deel zegt dat hier niets hoeft, een 
                              "{deel} deel vraagt om ‘{opt}’.")
 
 
-def _telling(x: int, y: int, y_is: str = "") -> str:
+def _telling(x: int, y: int) -> str:
     """Vaste tellingsvorm (B14): "X van de Y (P%)" vanaf MIN_DISTRIBUTION_N,
     anders zonder percentage (dezelfde staffel als de tabellen; onder tien
     antwoorden suggereert een percentage precisie die er niet is).
 
-    y_is is de uitleg van de noemer en wordt door de aanroeper in de zin
-    geplaatst; hij staat hier als parameter zodat elke aanroeper eraan herinnerd
-    wordt dat de noemer uitleg nodig heeft.
+    De uitleg van de noemer hoort in de zin en niet hier: die verschilt per
+    plaats (_dir_n_wie voor de richtingkaarten, "= wie hier laag scoorde" in de
+    verdiepingsketen). Een parameter die alleen bedoeld was als herinnering deed
+    niets met zijn waarde en suggereerde dat hij in de output landde.
 
     Zonder noemer bestaat de vorm niet: dat is precies de kale telling die B14
     verbiedt, en "3 van de 0" afdrukken in een klant-PDF is erger dan omvallen.
@@ -2659,6 +2660,26 @@ def _statusrest(offered: int, answered: int, skipped: int) -> str:
             "vastgelegd of de vraag is beantwoord")
 
 
+def _dir_n_wie(label: str | None = None) -> str:
+    """Wie de noemer van een richtingkaart zijn (codereview taak 10).
+
+    `n` is `agg["answered"]`, dus niet iedereen bij wie dit onderwerp het laagst
+    scoorde: wie oversloeg zit er niet in, en dan is `lowest_n` groter. Alleen de
+    clear-tak zei dat; de vier andere staten en pagina twee noemden hetzelfde
+    getal "bij wie dit het laagst scoorde", drie regels boven een keten die de
+    twee getallen los van elkaar toont. Eén bron voor die bijzin, zodat de zes
+    plaatsen niet elk hun eigen omschrijving kunnen krijgen.
+    """
+    return (f"bij wie {_lc(label)} het laagst scoorde en die de vraag beantwoordden"
+            if label else
+            "bij wie dit het laagst scoorde en die de vraag beantwoordden")
+
+
+# Zelfde claim in de vorm die achter "de {n}" past (pagina twee en de
+# divided-kaart): "de 10 die dit het laagst scoorden en de vraag beantwoordden".
+DIR_N_DIE_WIE = "die dit het laagst scoorden en de vraag beantwoordden"
+
+
 def _direction_chain(agg: dict, n_total: int) -> str:
     """Keten laagst -> (aangeboden ->) beantwoord/overgeslagen, in de vaste
     tellingsvorm (B14, H2): elke stap noemt zijn eigen noemer, en de stappen
@@ -2677,6 +2698,14 @@ def _direction_chain(agg: dict, n_total: int) -> str:
     """
     lowest, offered = agg["lowest_n"], agg["offered"]
     answered, skipped = agg["answered"], agg["skipped"]
+    if offered > lowest:
+        # Kan alleen uit een bug komen (de servervalidatie staat alleen de eigen
+        # laagste factor toe; aggregate_direction logt deze staat al). Renderen
+        # gaf "10 van de 10 beantwoordden de vraag" onder "9 hadden dit als
+        # laagste": een keten die zichzelf tegenspreekt.
+        raise ValueError(
+            f"_direction_chain: meer aangeboden ({offered}) dan respondenten bij wie "
+            f"dit het laagst scoorde ({lowest})")
     if lowest == 0:
         return "Niemand had dit als eigen laagste onderwerp."
     had = _werkwoord(lowest, "had", "hadden")
@@ -2689,9 +2718,9 @@ def _direction_chain(agg: dict, n_total: int) -> str:
                      + _werkwoord(offered, "kreeg de vraag", "kregen de vraag"))
     elif offered == 0:
         return f"{opener}; niemand van hen kreeg de vraag."
-    # De noemer van "beantwoordden" is wie de vraag kreeg. Bij offered == lowest
-    # is dat hetzelfde getal; ligt offered hoger (aggregate_direction logt dat als
-    # signaal), dan zou lowest als noemer "10 van de 9" opleveren.
+    # De noemer van "beantwoordden" is wie de vraag kreeg; bij offered == lowest
+    # is dat hetzelfde getal. Hoger dan lowest kan offered hier niet zijn (de
+    # guard bovenaan).
     noemer = offered
     if answered:
         voorwerp = "die" if deels_aangeboden else "de vraag"
@@ -2735,11 +2764,21 @@ def _direction_totals_line(direction_agg: dict, agenda_keys: list[str], scan_typ
     laagste had, en waar de rest is gebleven. Elke respondent krijgt precies één
     richtingvraag, dus de som over de onderwerpen is het aantal respondenten.
 
-    Sluit die som niet, dan staat er wat er ontbreekt. Dat gebeurt bij een
-    respondent die geen enkele stelling over deze onderwerpen invulde: die heeft
-    geen laagste onderwerp, en dan is "de overige" onwaar. Nooit een getal
-    bijschatten om de som te laten kloppen (H19 ging er juist over dat twaalf
-    mensen nergens stonden).
+    Sluit die som niet, dan staat er wat er ontbreekt. Dat kan op twee manieren,
+    en beide zijn met echte data bereikbaar:
+
+    1. een respondent die geen enkele stelling over deze onderwerpen invulde
+       heeft geen laagste onderwerp (`compute_direction_factor` geeft `None`),
+       dus de onderwerpen tellen niet op tot het aantal respondenten;
+    2. een respondent bij wie dit onderwerp wél het laagst scoorde kreeg de vraag
+       nooit (`lowest_n > offered`, bij een campagne die over de deploy heen
+       liep). Zin 1 telt `offered` en zin 2 telt `lowest_n`, dus zonder deze
+       melding staat "kregen 28 de vraag" naast "de overige 11 een ander
+       onderwerp ... daarom niet uitgewerkt" over elf mensen zonder antwoord.
+
+    In beide gevallen vervalt het woord "overige" en volgt de reden. Nooit een
+    getal bijschatten om de som te laten kloppen (H19 ging er juist over dat
+    twaalf mensen nergens stonden).
     """
     offered, answered, skipped = _direction_totals(direction_agg)
     if not offered:
@@ -2758,13 +2797,25 @@ def _direction_totals_line(direction_agg: dict, agenda_keys: list[str], scan_typ
 
     agenda = [(k, direction_agg[k]["lowest_n"]) for k in agenda_keys if k in direction_agg]
     toegewezen = sum(a["lowest_n"] for a in direction_agg.values())
-    sluit = toegewezen == n_total
+    # Wie dit als laagste had maar de vraag nooit kreeg. Per onderwerp gemeten:
+    # één onderwerp met een gat mag niet worden weggepoetst door een ander
+    # onderwerp waar offered hoger uitkomt.
+    niet_gevraagd = sum(max(0, a["lowest_n"] - a["offered"]) for a in direction_agg.values())
     if toegewezen > n_total:
         # Onbereikbaar met echte data (elke respondent draagt aan ten hoogste
-        # één onderwerp bij), dus een codebug of een inconsistente aanroep. Geen
-        # klantzin erover verzinnen, maar ook niet "de overige" claimen.
-        logger.warning("direction: laagste-onderwerptelling %d > n_total %d",
-                       toegewezen, n_total)
+        # één onderwerp bij), dus een codebug of een inconsistente aanroep. De
+        # zin zou dan onzin zijn ("de overige" uit een som die niet kan), dus
+        # stopt de generatie hier in plaats van hem te renderen.
+        raise ValueError(
+            f"_direction_totals_line: laagste-onderwerptelling {toegewezen} groter dan "
+            f"het aantal respondenten {n_total}")
+    if offered > toegewezen:
+        # Meer aanbod dan laagste-onderwerpen: dezelfde onmogelijke staat als in
+        # _direction_chain, maar over alle onderwerpen samen.
+        raise ValueError(
+            f"_direction_totals_line: meer aangeboden ({offered}) dan laagste-onderwerpen "
+            f"({toegewezen})")
+    sluit = toegewezen == n_total and niet_gevraagd == 0
     delen2: list[str] = []
     for i, (k, cnt) in enumerate(agenda):
         lbl = _lc(_fl(k, scan_type))
@@ -2785,10 +2836,20 @@ def _direction_totals_line(direction_agg: dict, agenda_keys: list[str], scan_typ
         lijst = ", ".join(f"{_lc(_fl(k, scan_type))} {c}"
                           for k, c in sorted(rest, key=lambda kc: (-kc[1], kc[0])))
         overige = f"de overige {rest_n}" if sluit else str(rest_n)
-        zin += (f"; {overige} een ander onderwerp ({lijst}). Die antwoorden gaan over "
-                "onderwerpen die niet op de agenda staan en zijn daarom niet uitgewerkt.")
+        zin += f"; {overige} een ander onderwerp ({lijst})."
+        # "Die antwoorden ... niet uitgewerkt" alleen als er buiten de agenda
+        # echt antwoorden zijn: kreeg niemand van hen de vraag, dan bestaan die
+        # antwoorden niet en zou de zin een keuze suggereren die Loep niet had.
+        rest_antwoorden = sum(a["answered"] for k, a in direction_agg.items()
+                              if k not in agenda_keys)
+        if rest_antwoorden:
+            zin += (" Die antwoorden gaan over onderwerpen die niet op de agenda staan "
+                    "en zijn daarom niet uitgewerkt.")
     elif delen2:
         zin += "."
+    if niet_gevraagd:
+        zin += (f" Bij {niet_gevraagd} van de {n_total} is die vraag niet gesteld; "
+                "van hen is er dus geen antwoord.")
     if toegewezen < n_total:
         ontbreekt = n_total - toegewezen
         zin += (f" Bij {_respondenten(ontbreekt)} kon Loep geen laagste onderwerp "
@@ -2839,12 +2900,12 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
         # (H2).
         # Niet twee haakjes achter elkaar ("(53%) (36 = ...)"): de uitleg van de
         # noemer staat als bijzin achter de telling.
-        src = (f"Volgens {_telling(st['top_n'], n)}; die {n} zijn de mensen bij wie "
-               f"{_lc(label)} het laagst scoorde en de vraag beantwoordden.")
+        src = (f"Volgens {_telling(st['top_n'], n)}; die {n} zijn de mensen "
+               f"{_dir_n_wie(label)}.")
     elif st["state"] == "none_needed":
         head = DIRECTION_HEAD_NONE_NEEDED
         opt = _opt(st["top_key"])
-        src = (f"{_telling(st['top_n'], n)} bij wie dit het laagst scoorde kozen "
+        src = (f"{_telling(st['top_n'], n)} {_dir_n_wie()} kozen "
                f"‘{opt}’. Bespreek of dit dan {which} moet zijn.")
     elif st["state"] == "plurality":
         head = DIRECTION_HEAD_PLURALITY.format(opt=_opt(st["top_key"]))
@@ -2855,7 +2916,7 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
         rest = [(k, c) for k, c in st["ranked"] if k != st["top_key"]]
         tweede = (f"; {_tel(rest[0][1], 'koos', 'kozen')} ‘{_opt(rest[0][0])}’"
                   if rest else "")
-        src = (f"{_telling(st['top_n'], n)} bij wie {_lc(label)} het laagst scoorde "
+        src = (f"{_telling(st['top_n'], n)} {_dir_n_wie(label)} "
                f"kozen die richting{tweede}. Wat er volgens de grootste groep moet "
                f"gebeuren: {direction_imperative(scan_type, factor_key, st['top_key'])}")
     elif st["state"] == "split_none":
@@ -2866,7 +2927,7 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
         # Noemer op de eerste telling, zoals in de plurality-tak: twee kale
         # tellingen naast elkaar lezen bij 14 en 14 uit 31 als een groep van 28
         # (B14). De tweede hangt aan diezelfde noemer.
-        src = (f"{_telling(st['none_n'], n)} "
+        src = (f"{_telling(st['none_n'], n)} {_dir_n_wie(label)} "
                f"{_werkwoord(st['none_n'], 'koos', 'kozen')} ‘{_opt(st['none_key'])}’; "
                f"{_tel(st['top_n'], 'koos', 'kozen')} "
                f"‘{_opt(st['top_key'])}’. Op een onderwerp dat laag scoort "
@@ -2875,7 +2936,7 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
                f"{direction_imperative(scan_type, factor_key, st['top_key'])}")
     else:
         head = DIRECTION_HEAD_DIVIDED
-        src = f"De {n} bij wie dit het laagst scoorde kozen verschillend."
+        src = f"De {n} {DIR_N_DIE_WIE} kozen verschillend."
 
     table = ""
     if st["state"] != "too_few":
@@ -3003,27 +3064,34 @@ def _direction_p02_line(direction_agg: dict, factor_key: str | None, scan_type: 
         return ""
     st = direction_state(direction_agg[factor_key], factor_key, _shown(factor_score))
     n = st["n"]
+    # Dezelfde tellingsvorm (_telling) en hetzelfde noemerlabel (DIR_N_DIE_WIE)
+    # als de kaart op de gespreksagenda: n is het aantal beantwoorders, niet
+    # iedereen bij wie dit het laagst scoorde, en die twee lopen uiteen zodra
+    # iemand overslaat (codereview taak 10). "Wat er moet gebeuren volgens ..."
+    # in plaats van "Wat er volgens ... moet gebeuren": met de bijzin erin stond
+    # het werkwoord anders twaalf woorden van zijn onderwerp.
     if st["state"] == "clear":
-        return (f"Wat er volgens {st['top_n']} van de {n} mensen bij wie dit het laagst "
-                f"scoorde moet gebeuren: "
+        return (f"Wat er moet gebeuren volgens {_telling(st['top_n'], n)} "
+                f"{DIR_N_DIE_WIE}: "
                 f"{direction_imperative(scan_type, factor_key, st['top_key'])}")
     if st["state"] == "plurality":
-        return (f"Wat er volgens de grootste groep moet gebeuren ({st['top_n']} van "
-                f"de {n} mensen bij wie dit het laagst scoorde, zonder meerderheid): "
+        return (f"Wat er volgens de grootste groep moet gebeuren "
+                f"({_telling(st['top_n'], n)} {DIR_N_DIE_WIE}, zonder meerderheid): "
                 f"{direction_imperative(scan_type, factor_key, st['top_key'])}")
     if st["state"] == "split_none":
         texts = direction_option_texts(scan_type, factor_key)
         # Met noemer, zoals de drie andere takken: twee kale tellingen naast
         # elkaar lezen bij 10 en 4 uit 25 als een groep van 14.
-        return (f"Wat er moet gebeuren: de {n} die dit het laagst scoorden zijn "
+        return (f"Wat er moet gebeuren: de {n} {DIR_N_DIE_WIE} zijn "
                 f"hierover verdeeld. {_tel(st['none_n'], 'zegt', 'zeggen')} dat "
                 f"hier niets hoeft, {_tel(st['top_n'], 'vraagt', 'vragen')} om "
                 f"‘{texts[st['top_key']]}’.")
     if st["state"] == "divided":
-        return (f"Over wat hier moet gebeuren zijn de {n} die dit het laagst scoorden "
+        return (f"Over wat hier moet gebeuren zijn de {n} {DIR_N_DIE_WIE} "
                 "verdeeld. Zie de gespreksagenda.")
     if st["state"] == "none_needed":
-        return f"{st['top_n']} van de {n} die dit het laagst scoorden zeggen: hier hoeft niets."
+        return (f"{_telling(st['top_n'], n)} {DIR_N_DIE_WIE} zeggen: "
+                "hier hoeft niets.")
     return ""
 
 
@@ -3124,8 +3192,11 @@ def _deepening_chain(agg: dict, scan_type: str, factor_key: str, n_total: int) -
         # aantal dat hem echt kreeg.
         return (f"{offered} van de {_respondenten(n_total)} "
                 + _werkwoord(offered, "kreeg", "kregen")
+                # Niet "van hen": triggered is over alle respondenten geteld, niet
+                # over de groep die de vraag kreeg.
                 + f" de verdiepende vraag over {lbl} ({offered} = wie de vraag kreeg; "
-                + f"met de drempel van nu scoren {triggered} van hen hier laag){staart}")
+                + f"met de drempel van nu scoren {triggered} respondenten hier laag)"
+                + staart)
     if offered < triggered:
         cap = DEEPENING_CAP[scan_type]
         cap_woord = _TELWOORD.get(cap, str(cap))

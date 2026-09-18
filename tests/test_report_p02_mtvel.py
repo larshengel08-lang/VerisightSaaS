@@ -279,7 +279,8 @@ def test_why_extra_cellen_alleen_bij_echte_signalen():
 
 def test_direction_p02_line_draagt_de_noemer_ter_plekke():
     zin = _direction_p02_line({"growth": CLEAR}, "growth", "retention", 5.1)
-    assert zin.startswith("Wat er volgens 6 van de 8 mensen bij wie dit het laagst scoorde moet gebeuren: ")
+    assert zin.startswith("Wat er moet gebeuren volgens 6 van de 8 die dit het laagst "
+                          "scoorden en de vraag beantwoordden: ")
     assert "—" not in zin
 
 

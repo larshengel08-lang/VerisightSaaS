@@ -74,7 +74,10 @@ def _render(scan_type="retention", ranked=RANKED, resp=RESP, active=True,
         deepening_active=active, mgmt_q="Testvraag?",
         review_when="Plan binnen 45-90 dagen een vervolgmoment.",
         opener_html="<h2>Gespreksagenda</h2>",
-        direction_agg=direction, n_total=13 if direction else 0, **extra)
+        # n_total moet minstens de som van lowest_n in DIRECTION zijn (9 + 8):
+        # een lagere waarde is een onmogelijke telling en _direction_totals_line
+        # weigert die sinds de codereview van taak 10.
+        direction_agg=direction, n_total=17 if direction else 0, **extra)
 
 
 def test_uitlegregel_letterlijk_gepind():
@@ -325,7 +328,7 @@ def test_degraded_richtingblok_telt_niet_als_signaal():
         ranked=RANKED, scan_type="retention", factor_resp_scores=RESP,
         deepening_active=True, mgmt_q="Testvraag?", review_when="R.",
         opener_html="<h2>Gespreksagenda</h2>",
-        direction_agg=DIRECTION, n_total=13)
+        direction_agg=DIRECTION, n_total=17)
     assert raster_intro("retention", True, False) in html
 
 

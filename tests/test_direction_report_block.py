@@ -35,7 +35,7 @@ def test_clear_card_shows_imperative_source_and_chain():
     assert "Startpunt: Groeiperspectief" in html
     assert "Maak zichtbaar welke mogelijkheden er voor medewerkers zijn." in html
     assert ("Volgens 6 van de 8; die 8 zijn de mensen bij wie groeiperspectief het "
-            "laagst scoorde en de vraag beantwoordden.") in html
+            "laagst scoorde en die de vraag beantwoordden.") in html
     assert ("9 van de 13 respondenten hadden dit als eigen laagste onderwerp; "
             "8 van de 9 beantwoordden de vraag, 1 sloeg over.") in html
     assert "Niets, dit zit hier goed" in html
@@ -50,7 +50,7 @@ def test_divided_card():
                                 factor_score=5.4)
     assert "Tweede punt: Werkdruk en herstelruimte" in html
     assert "Geen eenduidige richting." in html
-    assert "De 8 bij wie dit het laagst scoorde kozen verschillend." in html
+    assert "De 8 die dit het laagst scoorden en de vraag beantwoordden kozen verschillend." in html
     assert "Plan piekmomenten" not in html
 
 
@@ -59,7 +59,8 @@ def test_none_needed_card_questions_the_role():
                                  scan_type="retention", factor_key="workload", n_total=13,
                                  factor_score=5.4)
     assert "Hier hoeft volgens de meeste betrokkenen niets." in start
-    assert "5 van de 8 bij wie dit het laagst scoorde kozen ‘Niets, dit zit hier goed’. Bespreek of dit dan het startpunt moet zijn." in start
+    assert ("5 van de 8 bij wie dit het laagst scoorde en die de vraag beantwoordden kozen "
+            "‘Niets, dit zit hier goed’. Bespreek of dit dan het startpunt moet zijn.") in start
     second = _direction_card_cell("tweede", label="Werkdruk en herstelruimte", agg=NONE,
                                   scan_type="retention", factor_key="workload", n_total=13,
                                   factor_score=5.4)
@@ -78,7 +79,7 @@ def test_half_none_card_prints_no_do_nothing_imperative():
     assert "Geen eenduidige richting." in html
     assert "Hier hoeft volgens de meeste betrokkenen niets." not in html
     assert "Bespreek of dit dan het startpunt moet zijn." not in html
-    assert "De 4 bij wie dit het laagst scoorde kozen verschillend." in html
+    assert "De 4 die dit het laagst scoorden en de vraag beantwoordden kozen verschillend." in html
     # De verdeling blijft zichtbaar, inclusief de niets-optie.
     assert "Niets, dit zit hier goed" in html
     assert "Beperkte basis" in html
@@ -89,7 +90,7 @@ def test_half_none_p02_line_makes_no_majority_claim():
     line = _direction_p02_line({"workload": half}, "workload", "retention",
                                factor_score=5.4)
     assert line == ("Over wat hier moet gebeuren zijn de 4 die dit het laagst "
-                    "scoorden verdeeld. Zie de gespreksagenda.")
+                    "scoorden en de vraag beantwoordden verdeeld. Zie de gespreksagenda.")
     assert "hier hoeft niets" not in line
 
 
@@ -207,7 +208,9 @@ def test_chain_singular_skipped():
 
 def test_block_two_cards_for_startpunt_and_tweede_only():
     agg = {"growth": CLEAR, "workload": DIVIDED, "leadership": CLEAR}
-    html = _wat_moet_gebeuren_block(RANKED, agg, "retention", 13)
+    # n_total minstens de som van lowest_n (9 + 8 + 9): minder is een telling
+    # die niet kan bestaan, en die weigert _direction_totals_line.
+    html = _wat_moet_gebeuren_block(RANKED, agg, "retention", 26)
     assert DIRECTION_BLOCK_EYEBROW in html
     assert "Wat er moet gebeuren" in html
     assert html.count('class="dir-card') == 2
@@ -227,7 +230,7 @@ def test_raster_integration_gate():
                   review_when="Plan binnen 45-90 dagen een vervolgmoment.",
                   opener_html="<h2>Gespreksagenda</h2>")
     without = _prioriteringsraster(**kwargs)
-    with_dir = _prioriteringsraster(**kwargs, direction_agg={"growth": CLEAR, "workload": DIVIDED}, n_total=13)
+    with_dir = _prioriteringsraster(**kwargs, direction_agg={"growth": CLEAR, "workload": DIVIDED}, n_total=17)
     assert DIRECTION_BLOCK_EYEBROW not in without
     assert DIRECTION_BLOCK_EYEBROW in with_dir
     assert "Wat er moet gebeuren" in with_dir
@@ -245,11 +248,15 @@ def test_prioriteringsraster_raises_without_n_total():
 
 def test_p02_line_per_state():
     assert _direction_p02_line({"growth": CLEAR}, "growth", "retention", 5.1) == (
-        "Wat er volgens 6 van de 8 mensen bij wie dit het laagst scoorde moet gebeuren: Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.")
+        "Wat er moet gebeuren volgens 6 van de 8 die dit het laagst scoorden "
+        "en de vraag beantwoordden: Maak zichtbaar welke mogelijkheden er voor "
+        "medewerkers zijn.")
     assert _direction_p02_line({"workload": DIVIDED}, "workload", "retention", 5.4) == (
-        "Over wat hier moet gebeuren zijn de 8 die dit het laagst scoorden verdeeld. Zie de gespreksagenda.")
+        "Over wat hier moet gebeuren zijn de 8 die dit het laagst scoorden "
+        "en de vraag beantwoordden verdeeld. Zie de gespreksagenda.")
     assert _direction_p02_line({"workload": NONE}, "workload", "retention", 5.4) == (
-        "5 van de 8 die dit het laagst scoorden zeggen: hier hoeft niets.")
+        "5 van de 8 die dit het laagst scoorden en de vraag beantwoordden zeggen: "
+        "hier hoeft niets.")
     assert _direction_p02_line({"workload": FEW}, "workload", "retention", 5.4) == ""
     assert _direction_p02_line({}, "workload", "retention", 5.4) == ""
     assert _direction_p02_line({"workload": CLEAR}, None, "retention", 5.1) == ""
@@ -290,8 +297,8 @@ def test_plurality_card_names_the_largest_group_without_claiming_a_majority():
     assert 'class="dir-card dir-plurality"' in html
     assert ("De grootste groep kiest ‘Beter zicht op welke mogelijkheden er voor "
             "mij zijn’, zonder meerderheid.") in html
-    assert ("27 van de 62 (44%) bij wie groeiperspectief het laagst scoorde kozen die "
-            "richting; 15 kozen ‘Niets, dit zit hier goed’. Wat er volgens de "
+    assert ("27 van de 62 (44%) bij wie groeiperspectief het laagst scoorde en die de vraag beantwoordden "
+            "kozen die richting; 15 kozen ‘Niets, dit zit hier goed’. Wat er volgens de "
             "grootste groep moet gebeuren: Maak zichtbaar welke mogelijkheden er "
             "voor medewerkers zijn.") in html
     # Nooit een meerderheidsclaim, en de percentages blijven binnen de staffel.
@@ -310,9 +317,9 @@ def test_plurality_card_without_a_runner_up_makes_no_second_claim():
                                 scan_type="retention", factor_key="growth",
                                 n_total=20, factor_score=5.2)
     assert 'class="dir-card dir-plurality"' in html
-    assert ("3 van de 8 bij wie groeiperspectief het laagst scoorde kozen die richting. "
-            "Wat er volgens de grootste groep moet gebeuren: Maak zichtbaar welke "
-            "mogelijkheden er voor medewerkers zijn.") in html
+    assert ("3 van de 8 bij wie groeiperspectief het laagst scoorde en die de vraag beantwoordden kozen "
+            "die richting. Wat er volgens de grootste groep moet gebeuren: Maak "
+            "zichtbaar welke mogelijkheden er voor medewerkers zijn.") in html
     assert ";" not in html.split('class="dir-src"')[1].split("</div>")[0]
 
 
@@ -321,8 +328,9 @@ def test_split_none_card_makes_the_split_the_subject():
     assert 'class="dir-card dir-split_none"' in html
     assert ("Verdeeld: een deel zegt dat hier niets hoeft, een even groot deel vraagt "
             "om ‘Beter zicht op welke mogelijkheden er voor mij zijn’.") in html
-    assert ("14 van de 31 (45%) kozen ‘Niets, dit zit hier goed’; 14 kozen ‘Beter zicht "
-            "op welke mogelijkheden er voor mij zijn’. Op een onderwerp dat laag scoort "
+    assert ("14 van de 31 (45%) bij wie groeiperspectief het laagst scoorde en die de vraag beantwoordden "
+            "kozen ‘Niets, dit zit hier goed’; 14 kozen ‘Beter zicht op welke "
+            "mogelijkheden er voor mij zijn’. Op een onderwerp dat laag scoort "
             "(4.5/10) is dat verschil van inzicht zelf het gesprek. Wat die andere "
             "groep vraagt: Maak zichtbaar welke mogelijkheden er voor medewerkers "
             "zijn.") in html
@@ -407,7 +415,8 @@ def test_split_none_quotes_the_scan_specific_none_text():
                                               "wld_scope": 2}, skipped=0),
                                 scan_type="exit", factor_key="workload",
                                 n_total=30, factor_score=4.2)
-    assert "9 van de 20 (45%) kozen ‘Niets, dit zat hier goed’;" in html
+    assert ("9 van de 20 (45%) bij wie werkdruk en balans het laagst scoorde en die de vraag beantwoordden "
+            "kozen ‘Niets, dit zat hier goed’;") in html
     assert "dit zit hier goed" not in html
 
 
@@ -429,14 +438,16 @@ def test_split_none_card_is_singular_correct():
         "startpunt", label="Groeiperspectief",
         agg=_agg(3, {"grd_none": 1, "grd_visibility": 2}, skipped=0),
         scan_type="retention", factor_key="growth", n_total=13, factor_score=4.5)
-    assert ("1 van de 3 koos ‘Niets, dit zit hier goed’; 2 kozen ‘Beter zicht op welke "
-            "mogelijkheden er voor mij zijn’.") in niets_een
+    assert ("1 van de 3 bij wie groeiperspectief het laagst scoorde en die de vraag beantwoordden koos "
+            "‘Niets, dit zit hier goed’; 2 kozen ‘Beter zicht op welke mogelijkheden "
+            "er voor mij zijn’.") in niets_een
     verandering_een = _direction_card_cell(
         "startpunt", label="Groeiperspectief",
         agg=_agg(7, {"grd_none": 3, "grd_visibility": 1, "grd_time": 1}, skipped=0),
         scan_type="retention", factor_key="growth", n_total=13, factor_score=4.5)
-    assert ("3 van de 7 kozen ‘Niets, dit zit hier goed’; 1 koos ‘Ontwikkeling beter "
-            "inplannen naast het reguliere werk’.") in verandering_een
+    assert ("3 van de 7 bij wie groeiperspectief het laagst scoorde en die de vraag beantwoordden kozen "
+            "‘Niets, dit zit hier goed’; 1 koos ‘Ontwikkeling beter inplannen naast "
+            "het reguliere werk’.") in verandering_een
 
 
 def test_plurality_card_second_option_is_singular_correct():
@@ -447,8 +458,8 @@ def test_plurality_card_second_option_is_singular_correct():
         agg=_agg(8, {"grd_visibility": 3, "grd_none": 1}, skipped=0),
         scan_type="retention", factor_key="growth", n_total=20, factor_score=5.2)
     assert 'class="dir-card dir-plurality"' in html
-    assert ("3 van de 8 bij wie groeiperspectief het laagst scoorde kozen die "
-            "richting; 1 koos ‘Niets, dit zit hier goed’.") in html
+    assert ("3 van de 8 bij wie groeiperspectief het laagst scoorde en die de vraag beantwoordden kozen "
+            "die richting; 1 koos ‘Niets, dit zit hier goed’.") in html
 
 
 def test_factor_score_heeft_geen_default_in_de_renderhelpers():
@@ -468,26 +479,27 @@ def test_factor_score_heeft_geen_default_in_de_renderhelpers():
 def test_p02_line_for_the_new_states():
     assert _direction_p02_line({"growth": PLURALITY}, "growth", "retention",
                                factor_score=5.2) == (
-        "Wat er volgens de grootste groep moet gebeuren (27 van de 62 mensen bij "
-        "wie dit het laagst scoorde, zonder meerderheid): Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.")
+        "Wat er volgens de grootste groep moet gebeuren (27 van de 62 (44%) die "
+        "dit het laagst scoorden en de vraag beantwoordden, zonder meerderheid): Maak "
+        "zichtbaar welke mogelijkheden er voor medewerkers zijn.")
     assert _direction_p02_line({"growth": SPLIT_NONE}, "growth", "retention",
                                factor_score=4.5) == (
-        "Wat er moet gebeuren: de 31 die dit het laagst scoorden zijn hierover "
-        "verdeeld. 14 zeggen dat hier niets hoeft, 14 vragen om ‘Beter zicht op "
-        "welke mogelijkheden er voor mij zijn’.")
+        "Wat er moet gebeuren: de 31 die dit het laagst scoorden en de vraag beantwoordden "
+        "zijn hierover verdeeld. 14 zeggen dat hier niets hoeft, 14 vragen om "
+        "‘Beter zicht op welke mogelijkheden er voor mij zijn’.")
     # Zonder bekende score blijft de oude regel staan: onbekend is niet laag.
     assert _direction_p02_line({"growth": SPLIT_NONE}, "growth", "retention", None) == (
-        "Over wat hier moet gebeuren zijn de 31 die dit het laagst scoorden verdeeld. "
-        "Zie de gespreksagenda.")
+        "Over wat hier moet gebeuren zijn de 31 die dit het laagst scoorden "
+        "en de vraag beantwoordden verdeeld. Zie de gespreksagenda.")
 
 
 def test_p02_split_none_line_is_singular_correct():
     agg = _agg(4, {"grd_none": 1, "grd_visibility": 2, "grd_time": 1}, skipped=0)
     assert _direction_p02_line({"growth": agg}, "growth", "retention",
                                factor_score=4.5) == (
-        "Wat er moet gebeuren: de 4 die dit het laagst scoorden zijn hierover "
-        "verdeeld. 1 zegt dat hier niets hoeft, 2 vragen om ‘Beter zicht op welke "
-        "mogelijkheden er voor mij zijn’.")
+        "Wat er moet gebeuren: de 4 die dit het laagst scoorden en de vraag beantwoordden "
+        "zijn hierover verdeeld. 1 zegt dat hier niets hoeft, 2 vragen om ‘Beter "
+        "zicht op welke mogelijkheden er voor mij zijn’.")
 
 
 def test_block_passes_the_factor_score_from_the_raster_row():
@@ -515,7 +527,7 @@ def test_no_em_dashes_or_forbidden_words():
         _direction_card_cell("tweede", label="Werkdruk en herstelruimte", agg=FEW,
                              scan_type="retention", factor_key="workload", n_total=13,
                              factor_score=5.4),
-        _wat_moet_gebeuren_block(RANKED, {"growth": CLEAR, "workload": DIVIDED}, "exit", 13),
+        _wat_moet_gebeuren_block(RANKED, {"growth": CLEAR, "workload": DIVIDED}, "exit", 17),
         _plurality_card(),
         _split_none_card(),
     ]

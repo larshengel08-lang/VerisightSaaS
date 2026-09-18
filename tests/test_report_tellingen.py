@@ -248,7 +248,7 @@ AGG_D = {"triggered": 17, "offered": 17, "answered": 16, "skipped": 1,
 
 
 def test_telling_vaste_vorm():
-    assert _telling(8, 16, "8 = beantwoorders") == "8 van de 16 (50%)"
+    assert _telling(8, 16) == "8 van de 16 (50%)"
     assert _telling(3, 8) == "3 van de 8"           # onder 10 geen percentage
     assert _telling(27, 62) == "27 van de 62 (44%)"
 
@@ -288,7 +288,7 @@ def test_deepening_chain_meer_aangeboden_dan_getriggerd_liegt_niet():
     zin = _deepening_chain(dict(AGG_D, triggered=9, offered=17), "retention", "growth",
                            n_total=39)
     assert zin == ("17 van de 39 respondenten kregen de verdiepende vraag over groeiperspectief "
-                   "(17 = wie de vraag kreeg; met de drempel van nu scoren 9 van hen hier laag); "
+                   "(17 = wie de vraag kreeg; met de drempel van nu scoren 9 respondenten hier laag); "
                    "16 van de 17 beantwoordden die, 1 sloeg over.")
 
 
@@ -404,3 +404,152 @@ def test_richtingblok_draagt_de_sluitende_keten():
             "9 hadden groeiperspectief als laagste onderwerp, 8 werkdruk en herstelruimte; "
             "de overige 9 een ander onderwerp (leiderschap en vertrouwen 9).") in t
     assert t.index("geen advies van Loep") < t.index("Van de 26 respondenten") < t.index("Startpunt:")
+
+
+# ── Codereview taak 10: het noemerlabel en de sluiting van de totaalregel ────
+
+def _dir_agg(answered, counts, *, skipped=0, lowest=None, offered=None):
+    """Richtingaggregaat dat sluit tenzij anders gevraagd; met skipped > 0 is
+    lowest_n groter dan answered, precies de staat waarin het noemerlabel telt."""
+    return {"lowest_n": answered + skipped if lowest is None else lowest,
+            "offered": answered + skipped if offered is None else offered,
+            "answered": answered, "skipped": skipped, "counts": counts,
+            "other_texts": []}
+
+
+# Eén aggregaat per staat van direction_state, elk met overslagers erin, zodat
+# lowest_n (13) en answered (10) verschillen.
+STATEN = {
+    "clear": (_dir_agg(10, {"grd_visibility": 8, "grd_none": 1, "grd_time": 1}, skipped=3), 5.1),
+    "none_needed": (_dir_agg(10, {"grd_none": 6, "grd_visibility": 3, "grd_time": 1}, skipped=3), 5.1),
+    "plurality": (_dir_agg(10, {"grd_visibility": 4, "grd_none": 2, "grd_time": 2,
+                                "grd_criteria": 2}, skipped=3), 5.2),
+    "split_none": (_dir_agg(10, {"grd_none": 4, "grd_visibility": 4, "grd_time": 2}, skipped=3), 4.5),
+    "divided": (_dir_agg(10, {"grd_visibility": 4, "grd_time": 4, "grd_criteria": 2}, skipped=3), 5.4),
+}
+
+
+def _zonder_juiste_claims(tekst):
+    """Alles wat over "het laagst scoorde/scoorden" gaat en de noemer correct
+    labelt, weggehaald. Blijft er iets staan, dan is dat een kale (onjuiste)
+    claim: n is het aantal beantwoorders, niet iedereen bij wie dit het laagst
+    scoorde."""
+    for goed in ("het laagst scoorde en die de vraag beantwoordden",
+                 "het laagst scoorden en de vraag beantwoordden"):
+        tekst = tekst.replace(goed, "")
+    return tekst
+
+
+@pytest.mark.parametrize("staat", sorted(STATEN))
+def test_richtingkaart_labelt_de_noemer_in_elke_staat(staat):
+    agg, score = STATEN[staat]
+    html = _direction_card_cell("startpunt", label="Groeiperspectief", agg=agg,
+                                scan_type="retention", factor_key="growth",
+                                n_total=39, factor_score=score)
+    assert f'dir-card dir-{staat}"' in html, "fixture levert een andere staat"
+    src = _plain(html.split('class="dir-src">')[1].split("</div>")[0])
+    assert "de vraag beantwoordden" in src, src
+    assert "het laagst scoor" not in _zonder_juiste_claims(src), src
+    # De keten eronder houdt zijn eigen (andere, juiste) noemer.
+    assert "13 van de 39 respondenten hadden dit als eigen laagste onderwerp" in _plain(html)
+
+
+@pytest.mark.parametrize("staat", sorted(STATEN))
+def test_p02_regel_labelt_de_noemer_net_als_de_kaart(staat):
+    from backend.report_html import _direction_p02_line
+
+    agg, score = STATEN[staat]
+    regel = _direction_p02_line({"growth": agg}, "growth", "retention", score)
+    assert "de vraag beantwoordden" in regel, regel
+    assert "het laagst scoor" not in _zonder_juiste_claims(regel), regel
+
+
+def test_p02_en_kaart_noemen_hetzelfde_getal_met_percentage():
+    from backend.report_html import _direction_p02_line
+
+    agg, score = STATEN["plurality"]
+    regel = _direction_p02_line({"growth": agg}, "growth", "retention", score)
+    kaart = _plain(_direction_card_cell("startpunt", label="Groeiperspectief", agg=agg,
+                                        scan_type="retention", factor_key="growth",
+                                        n_total=39, factor_score=score))
+    assert "4 van de 10 (40%)" in regel and "4 van de 10 (40%)" in kaart
+
+
+def test_totaalregel_meldt_wie_de_vraag_niet_kreeg():
+    """lowest_n > offered (campagne die over de deploy heen liep): die mensen
+    hebben geen antwoord, dus mogen ze niet onder "de overige ... een ander
+    onderwerp" verdwijnen alsof hun antwoord bestaat maar niet is uitgewerkt."""
+    dagg = _dagg(growth=(20, 20, 20, 0), workload=(8, 8, 8, 0), leadership=(11, 0, 0, 0))
+    zin = _direction_totals_line(dagg, ["growth", "workload"], "retention", 39)
+    assert zin.startswith("Van de 39 respondenten kregen 28 de vraag, 28 beantwoordden hem. ")
+    assert "de overige" not in zin
+    assert "11 een ander onderwerp (leiderschap en vertrouwen 11)" in zin
+    assert ("Bij 11 van de 39 is die vraag niet gesteld; van hen is er dus geen "
+            "antwoord.") in zin
+    # Niemand buiten de agenda heeft geantwoord, dus niets om "niet uitgewerkt" te noemen.
+    assert "niet uitgewerkt" not in zin
+    # En de zin sluit: 28 gekregen + 11 niet gesteld = 39.
+
+
+def test_totaalregel_meldt_ook_een_gat_op_een_agendafactor():
+    dagg = _dagg(growth=(20, 15, 14, 1), workload=(8, 8, 8, 0), leadership=(11, 11, 10, 1))
+    zin = _direction_totals_line(dagg, ["growth", "workload"], "retention", 39)
+    assert zin.startswith("Van de 39 respondenten kregen 34 de vraag, 32 beantwoordden hem, "
+                          "2 sloegen over. ")
+    assert "de overige" not in zin
+    assert "11 een ander onderwerp (leiderschap en vertrouwen 11)" in zin
+    assert "Die antwoorden gaan over onderwerpen die niet op de agenda staan" in zin
+    assert ("Bij 5 van de 39 is die vraag niet gesteld; van hen is er dus geen "
+            "antwoord.") in zin
+
+
+def test_totaalregel_houdt_de_overige_als_alles_sluit():
+    dagg = _dagg(growth=(20, 20, 19, 1), workload=(8, 8, 8, 0), leadership=(11, 11, 11, 0))
+    zin = _direction_totals_line(dagg, ["growth", "workload"], "retention", 39)
+    assert "de overige 11 een ander onderwerp" in zin
+    assert "niet gesteld" not in zin
+
+
+def test_totaalregel_faalt_op_een_onmogelijke_telling():
+    """Meer laagste-onderwerpen dan respondenten kan met echte data niet
+    bestaan; dan is de zin onzin en hoort de generatie te stoppen."""
+    dagg = _dagg(growth=(20, 20, 20, 0), workload=(30, 30, 30, 0))
+    with pytest.raises(ValueError, match="laagste-onderwerptelling"):
+        _direction_totals_line(dagg, ["growth", "workload"], "retention", 39)
+
+
+def test_keten_faalt_als_er_meer_is_aangeboden_dan_laagst_scoorde():
+    """"10 van de 10 beantwoordden de vraag" onder "9 hadden dit als laagste" is
+    onzin; aggregate_direction logt deze staat al als bug."""
+    agg = {"lowest_n": 9, "offered": 10, "answered": 10, "skipped": 0, "counts": {}}
+    with pytest.raises(ValueError, match="aangeboden"):
+        _direction_chain(agg, 13)
+
+
+def test_verdiepingsketen_noemt_de_drempel_zonder_van_hen():
+    """triggered is over alle respondenten geteld, niet over wie de vraag kreeg,
+    dus "9 van hen" was onjuist."""
+    zin = _deepening_chain(dict(AGG_D, triggered=9, offered=17), "retention", "growth",
+                           n_total=39)
+    assert "met de drempel van nu scoren 9 respondenten hier laag" in zin
+    assert "van hen" not in zin
+
+
+def test_css_laat_de_scorekolom_niet_afbreken():
+    """"27 van de 62 (44%)" is te breed voor de kolom die auto-layout aan de
+    scorekolom van een halve kaart geeft."""
+    from backend.report_css import build_css
+
+    css = build_css("retention")
+
+    def _rule(selector):
+        m = re.search(re.escape(selector) + r"\s*\{(.*?)\}", css, re.S)
+        assert m, f"geen regel voor {selector}"
+        return m.group(1)
+
+    kolom = _rule(".dir-tbl .is")
+    assert "white-space: nowrap" in kolom
+    assert "width:" in kolom
+    # Dezelfde kleur als de intro erboven: dit is gewone leestekst.
+    assert "color: #374151" in _rule(".dir-chain.dir-totals")
+    assert "color: #374151" in _rule(".dir-intro")

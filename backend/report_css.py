@@ -303,6 +303,12 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .dir-head { font-size: 14px; font-weight: 700; line-height: 1.3; color: """ + NAVY + r"""; margin-bottom: 6px; }
 .dir-src { font-size: 10px; color: #374151; margin-bottom: 8px; }
 .dir-tbl td { font-size: 9.5px; padding: 5px 6px; }
+/* De scorekolom draagt sinds B14 de volle tellingsvorm ("27 van de 62 (44%)",
+   ongeveer 91px): in een halve kaart geeft auto-layout die kolom ongeveer 59px,
+   waardoor de telling over twee regels viel en niet meer als één getal las.
+   Vaste breedtehint plus nowrap; de vraagkolom ernaast breekt wel af
+   (.item-tbl td heeft overflow-wrap: break-word). */
+.dir-tbl .is { width: 34%; white-space: nowrap; }
 .dir-caveat { font-size: 10px; color: #92400E; margin: 4px 0 0; }
 .dir-chain { font-family: 'JetBrains Mono', monospace; font-size: 8.5px; color: """ + STEEL + r"""; margin-top: 8px; }
 /* De sluitende totaalregel boven de kaarten (B14, H19) verantwoordt álle
@@ -310,7 +316,7 @@ p  { margin-bottom: 6px; font-size: 11px; }
    een kaart: leesbare 10px in de gewone letter, zoals .dir-intro erboven. De
    maat staat hier en niet inline, zodat er één plek is (codereview taak 9). */
 .dir-chain.dir-totals { font-family: inherit; font-size: 10px; line-height: 1.5;
-  max-width: 70ch; margin: 0 0 10px; }
+  color: #374151; max-width: 70ch; margin: 0 0 10px; }
 .mq-direction { font-size: 11px; font-weight: 600; color: """ + NAVY + r"""; margin: 8px 0 0; }
 .mq-brug { font-size: 10.5px; color: #374151; margin: 8px 0 0; }
 /* Dezelfde brugzin op een eigen sectie (gespreksagenda) staat na een tabel en
