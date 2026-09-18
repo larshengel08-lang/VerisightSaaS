@@ -2724,6 +2724,12 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
             row_htmls.append(f'<tr><td class="iq">{_h(_opt(k))}</td><td class="is">{pct}</td></tr>')
         rows = "".join(row_htmls)
         table = f'<table class="item-tbl dir-tbl">{rows}</table>'
+        # B13, zelfde blok als onder de verdiepingsverdeling. Bewust binnen deze
+        # tak: in de staat too_few toont de kaart geen enkele telling, en daar
+        # hoort ook geen aantal "Anders" bij te komen.
+        table += _anders_block(
+            other_n=sum(c for k, c in st["ranked"] if k.endswith("_other")),
+            answered=n, texts=agg.get("other_texts") or [])
         if n <= DIRECTION_CAVEAT_MAX_N:
             table += ('<p class="dir-caveat">Beperkte basis: gebruik dit als '
                       'gesprekshaakje, niet als conclusie.</p>')
@@ -2851,6 +2857,49 @@ def _direction_p02_line(direction_agg: dict, factor_key: str | None, scan_type: 
     return ""
 
 
+# B13: vanaf dit aandeel "Anders" zegt het rapport dat de optieset de
+# werkelijkheid niet dekt en toont het de vrije teksten (staffel MIN_QUOTES_N,
+# dezelfde als de open toelichtingen). Één op vijf is de grens waarop een
+# restcategorie geen rest meer is maar een eigen antwoord.
+OTHER_SHARE_MIN = 0.20
+
+
+def _anders_block(*, other_n: int, answered: int, texts: list[str]) -> str:
+    """"Anders"-toelichtingen onder een verdeling (spec par. 9 B13). Leeg onder
+    OTHER_SHARE_MIN; vanaf MIN_QUOTES_N de (geanonimiseerde) teksten, daaronder
+    alleen het aantal, om herleidbaarheid te voorkomen.
+
+    De staffel telt de teksten en niet de keuzes: bij de verdieping mag "Anders"
+    zonder toelichting (schemas.py), dus vier teksten van zes keuzes blijven
+    onzichtbaar. Dat is dezelfde ondergrens als _should_show_quotes hanteert voor
+    de open toelichtingen, en om dezelfde reden: onder vijf teksten is een
+    toelichting te makkelijk aan een persoon te koppelen.
+
+    Schrijft niet iedereen die "Anders" koos een toelichting, dan zegt de kop dat
+    (Fail Loud): anders belooft de regel teksten die er niet zijn. Hetzelfde geldt
+    voor de afkapping op MAX_QUOTES.
+    """
+    if not answered or other_n / answered < OTHER_SHARE_MIN:
+        return ""
+    schoon = [t for t in texts if t and t.strip()]
+    geschreven = ("en schreven een eigen toelichting"
+                  if len(schoon) >= other_n else
+                  f"; {len(schoon)} van hen schreven een toelichting")
+    kop = (f'<p style="font-size:10px;margin:8px 0 0;">{other_n} van de {answered} kozen '
+           f'&ldquo;Anders&rdquo; {geschreven}: de vaste opties dekten '
+           f'hun ervaring niet.</p>')
+    if len(schoon) < MIN_QUOTES_N:
+        return kop + (f'<p style="font-size:9.5px;color:#64748B;margin:2px 0 0;">De teksten tonen we '
+                      f'pas vanaf {MIN_QUOTES_N}, om herleidbaarheid te voorkomen.</p>')
+    note = ""
+    if len(schoon) > MAX_QUOTES:
+        note = (f'<p style="font-size:9.5px;color:#64748B;margin:2px 0 0;">Getoond: de eerste '
+                f'{MAX_QUOTES} van {len(schoon)} in ontvangstvolgorde, geen inhoudelijke '
+                f'selectie.</p>')
+    items = "".join(f'<li>{_h(t)}</li>' for t in schoon[:MAX_QUOTES])
+    return kop + note + f'<ul style="font-size:10px;color:#374151;margin:4px 0 0 16px;">{items}</ul>'
+
+
 def _deepening_chain(agg: dict, scan_type: str, factor_key: str) -> str:
     """Noemer-keten (spec 6.1): getriggerd -> aangeboden -> beantwoord.
 
@@ -2898,6 +2947,12 @@ def _deepening_block(agg: dict, scan_type: str, factor_key: str) -> str:
             f'</td></tr>'
             for key, cnt in ranked)
         body = f'<table class="item-tbl" style="margin-top:6px;">{rows}</table>'
+        # B13: haalt "Anders" een vijfde van de antwoorden, dan dekt de optieset
+        # de werkelijkheid niet en zijn de eigen woorden het antwoord.
+        body += _anders_block(
+            other_n=sum(c for k, c in (agg.get("primary_counts") or {}).items()
+                        if k.endswith("_other")),
+            answered=answered, texts=agg.get("other_texts") or [])
         if answered <= 9:
             body += ('<p style="font-size:10px;color:#92400E;margin:4px 0 0;">'
                      'Beperkte antwoordbasis: gebruik dit als gesprekshaakje, '
@@ -3962,6 +4017,13 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
             [(r.org_raw or {}, r.direction_response) for r in responses], scan_type)
         if not any(a["offered"] > 0 for a in direction_agg.values()):
             direction_agg = {}
+
+    # B13: vrije teksten bij "Anders" gaan door dezelfde anonimisering als de
+    # open toelichtingen. De submit-route doet dat al bij opslag (main.py), maar
+    # rijen van vóór die sanitizer of uit een ander pad zouden hier ongefilterd
+    # in een klant-PDF belanden; anonymize_text is idempotent, dus dubbel mag.
+    for agg in list(deepening_agg.values()) + list(direction_agg.values()):
+        agg["other_texts"] = [anonymize_text(t) for t in agg.get("other_texts", [])]
 
     is_retention      = scan_type == "retention"
     retention_profile = None

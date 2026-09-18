@@ -39,7 +39,7 @@ def test_chain_counts_offered_answered_skipped():
     rows = [(LOW_WL, _dr()), (LOW_WL, _dr(status="skipped")), (LOW_WL, None)]
     a = aggregate_direction(rows, "retention")["workload"]
     assert a == {"lowest_n": 3, "offered": 2, "answered": 1, "skipped": 1,
-                 "counts": {"wld_peaks": 1}}
+                 "counts": {"wld_peaks": 1}, "other_texts": []}
 
 
 def test_missing_field_shows_as_not_offered():
@@ -79,7 +79,8 @@ def test_aggregate_deepening_ignores_legacy_nested_direction():
                             "status": "answered", "choice": "wld_recovery", "other_text": None}}
     a = aggregate_deepening([(LOW_WL, [legacy])], "retention")["workload"]
     assert a == {"triggered": 1, "offered": 1, "answered": 1, "skipped": 0,
-                 "primary_counts": {"wl_recovery": 1}, "secondary_counts": {}}
+                 "primary_counts": {"wl_recovery": 1}, "secondary_counts": {},
+                 "other_texts": []}
 
 
 # ── direction_state ────────────────────────────────────────────────────────

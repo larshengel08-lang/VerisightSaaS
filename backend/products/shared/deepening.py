@@ -736,7 +736,7 @@ def aggregate_deepening(
         raise ValueError(f"unknown scan_type {scan_type!r}")
     out: dict[str, dict[str, Any]] = {
         fk: {"triggered": 0, "offered": 0, "answered": 0, "skipped": 0,
-             "primary_counts": {}, "secondary_counts": {}}
+             "primary_counts": {}, "secondary_counts": {}, "other_texts": []}
         for fk in DEEPENING_FACTOR_KEYS
     }
     for org_raw, entries in rows:
@@ -754,6 +754,15 @@ def aggregate_deepening(
                     agg["primary_counts"][e["primary"]] = agg["primary_counts"].get(e["primary"], 0) + 1
                 if e.get("secondary"):
                     agg["secondary_counts"][e["secondary"]] = agg["secondary_counts"].get(e["secondary"], 0) + 1
+                # B13: de vrije toelichting bij "Anders". Alleen de tekst zelf wordt
+                # bewaard, nooit een verwijzing naar de respondent; de rapportlaag
+                # anonimiseert hem nog een keer (backend/report_html.build_report_data)
+                # omdat historische rijen van vóór de sanitizer in main.py kunnen komen.
+                # Een lege of alleen-witruimte-tekst komt niet in de lijst: bij de
+                # verdieping mag "Anders" zonder toelichting (schemas.py), en dan is
+                # er niets geschreven om te tonen.
+                if (e.get("primary") or "").endswith("_other") and (e.get("other_text") or "").strip():
+                    agg["other_texts"].append(e["other_text"].strip())
             else:
                 agg["skipped"] += 1
     return out
@@ -818,7 +827,8 @@ def aggregate_direction(
     if scan_type not in DIRECTION_VERSION:
         raise ValueError(f"unknown scan_type {scan_type!r}")
     out: dict[str, dict[str, Any]] = {
-        fk: {"lowest_n": 0, "offered": 0, "answered": 0, "skipped": 0, "counts": {}}
+        fk: {"lowest_n": 0, "offered": 0, "answered": 0, "skipped": 0, "counts": {},
+             "other_texts": []}
         for fk in DEEPENING_FACTOR_KEYS
     }
     for org_raw, dr in rows:
@@ -835,6 +845,12 @@ def aggregate_direction(
             agg["answered"] += 1
             if dr.get("choice"):
                 agg["counts"][dr["choice"]] = agg["counts"].get(dr["choice"], 0) + 1
+            # B13, zelfde regel als in aggregate_deepening. Bij de richtingvraag eist
+            # schemas.py een toelichting bij een *_other keuze, dus hier horen aantal
+            # en aantal teksten gelijk te zijn; de lege-tekst-check blijft staan voor
+            # historische rijen van vóór die validatie.
+            if (dr.get("choice") or "").endswith("_other") and (dr.get("other_text") or "").strip():
+                agg["other_texts"].append(dr["other_text"].strip())
         else:
             agg["skipped"] += 1
     # Tweede lus, bewust apart van de rij-lus hierboven: lowest_n is pas compleet
