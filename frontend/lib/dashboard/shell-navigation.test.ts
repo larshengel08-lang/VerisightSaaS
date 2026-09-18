@@ -93,6 +93,12 @@ describe('dashboard shell navigation', () => {
         href: '/reports',
         disabled: false,
       },
+      {
+        key: 'help',
+        label: 'Hulp',
+        href: '/help',
+        disabled: false,
+      },
     ])
     expect(navigation.admin).toEqual([])
   })
@@ -147,6 +153,7 @@ describe('dashboard shell navigation', () => {
     expect(getActiveModuleFromLocation('/reports', null, [...campaigns])).toBe('reports')
     expect(getActiveModuleFromLocation('/action-center', null, [...campaigns])).toBe('action_center')
     expect(getActiveModuleFromLocation('/beheer', null, [...campaigns])).toBe('overview')
+    expect(getActiveModuleFromLocation('/help', null, [...campaigns])).toBe('help')
   })
 
   it('keeps module nav active on detail routes instead of treating the item itself as a rail destination', () => {
@@ -179,6 +186,12 @@ describe('dashboard shell navigation', () => {
         key: 'reports',
         label: 'Rapporten',
         href: '/reports',
+        disabled: false,
+      },
+      {
+        key: 'help',
+        label: 'Hulp',
+        href: '/help',
         disabled: false,
       },
     ])

@@ -20,11 +20,12 @@ export type DashboardModuleKey =
   | 'leadership'
   | 'culture_assessment'
   | 'reports'
+  | 'help'
   | 'action_center'
 
 export type DashboardCategoryModuleKey = Exclude<
   DashboardModuleKey,
-  'overview' | 'reports' | 'action_center'
+  'overview' | 'reports' | 'help' | 'action_center'
 >
 
 export type DashboardModuleNavItem = {
@@ -91,7 +92,7 @@ function getModuleKeyForScanType(scanType: ScanType): DashboardModuleKey {
 
   const moduleKeyByScanType: Record<
     Exclude<ScanType, 'team'>,
-    Exclude<DashboardModuleKey, 'overview' | 'reports' | 'action_center'>
+    Exclude<DashboardModuleKey, 'overview' | 'reports' | 'help' | 'action_center'>
   > = {
     exit: 'exit',
     retention: 'retention',
@@ -133,6 +134,7 @@ export function getActiveModuleFromLocation(
   campaigns: DashboardShellCampaignRef[],
 ): DashboardModuleKey {
   if (pathname.startsWith('/reports')) return 'reports'
+  if (pathname.startsWith('/help')) return 'help'
   if (pathname.startsWith('/action-center')) return 'action_center'
   if (!pathname.startsWith('/campaigns/')) {
     return normalizeDashboardModuleFilter(moduleFilter ?? undefined) ?? 'overview'
@@ -189,6 +191,12 @@ export function buildDashboardShellNavigation({
       href: '/reports',
       disabled: false,
     },
+    {
+      key: 'help',
+      label: 'Hulp',
+      href: '/help',
+      disabled: false,
+    },
   ]
 
   const admin: DashboardShellNavItem[] = isAdmin
@@ -232,6 +240,7 @@ export type ActionCenterNavItem = (typeof ACTION_CENTER_NAV)[number]
 
 export function getDashboardShellCurrentLabel(pathname: string) {
   if (pathname.startsWith('/reports')) return 'Rapporten'
+  if (pathname.startsWith('/help')) return 'Hulp'
   if (pathname.startsWith('/action-center')) return 'Action Center'
   if (pathname.startsWith('/campaigns/')) return 'Campagnedetail'
   if (pathname.startsWith('/beheer/contact-aanvragen')) return 'Leadcontext'
