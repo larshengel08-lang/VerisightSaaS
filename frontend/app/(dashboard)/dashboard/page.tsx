@@ -185,6 +185,7 @@ export default async function DashboardHomePage() {
       | null,
     deliveryMode: campaignRow?.delivery_mode ?? null,
     launchDate: deliveryRecord?.launch_date ?? null,
+    closesAt: campaign.closes_at ?? null,
     participantCommsConfig: deliveryRecord?.participant_comms_config ?? null,
   })
 

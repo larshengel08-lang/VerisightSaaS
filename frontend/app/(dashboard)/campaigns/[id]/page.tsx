@@ -160,6 +160,7 @@ export default async function CampaignPage({ params }: Props) {
       | null,
     deliveryMode: campaignMeta?.delivery_mode ?? null,
     launchDate: deliveryRecord?.launch_date ?? null,
+    closesAt: campaignMeta?.closes_at ?? null,
     participantCommsConfig: deliveryRecord?.participant_comms_config ?? null,
   })
 

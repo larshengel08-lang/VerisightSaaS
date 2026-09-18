@@ -322,3 +322,47 @@ Groet, Anne` }
     expect(next).toEqual({ ...draft, replacedEdits: false })
   })
 })
+
+describe('sluitdatum in uitnodiging en herinnering (amendement spec par. 4.3a)', () => {
+  const base = {
+    senderName: '',
+    organizationName: 'Acme BV',
+    scanType: 'retention' as const,
+    surveyLink: 'https://www.getloep.nl/survey/open/tok-1',
+  }
+
+  it('noemt in de uitnodiging tot en met welke dag invullen kan, in het Nederlands', () => {
+    const { body } = buildInviteTemplate({ ...base, closesAt: '2026-10-08' })
+    expect(body).toContain('Invullen kan tot en met 8 oktober 2026.')
+    // Na de link, vóór de afsluiting: de ontvanger leest eerst waar, dan tot wanneer.
+    expect(body.indexOf('tok-1')).toBeLessThan(body.indexOf('Invullen kan tot en met'))
+    expect(body.indexOf('Invullen kan tot en met')).toBeLessThan(body.indexOf('Alvast bedankt'))
+  })
+
+  it('noemt de sluitdatum ook in de herinnering', () => {
+    const { body } = buildReminderTemplate({ ...base, closesAt: '2026-10-08' })
+    expect(body).toContain('Invullen kan tot en met 8 oktober 2026.')
+  })
+
+  it('laat de regel weg zonder sluitdatum en zegt nooit "tot en met onbekend"', () => {
+    for (const closesAt of [undefined, null, '', 'geen-datum']) {
+      const invite = buildInviteTemplate({ ...base, closesAt })
+      const reminder = buildReminderTemplate({ ...base, closesAt })
+      expect(invite.body).not.toContain('tot en met')
+      expect(reminder.body).not.toContain('tot en met')
+      expect(invite.body).not.toContain('onbekend')
+    }
+  })
+
+  it('zet bij afdelingslinks de deadline ná de laatste link', () => {
+    const { body } = buildInviteTemplate({
+      ...base,
+      closesAt: '2026-10-08',
+      departmentLinks: [
+        { label: 'Zorg', url: 'https://www.getloep.nl/survey/open/tok-1?afd=zorg' },
+        { label: 'Kantoor', url: 'https://www.getloep.nl/survey/open/tok-1?afd=kantoor' },
+      ],
+    })
+    expect(body.indexOf('?afd=kantoor')).toBeLessThan(body.indexOf('Invullen kan tot en met'))
+  })
+})

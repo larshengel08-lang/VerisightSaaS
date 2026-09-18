@@ -2,6 +2,7 @@
 // these builders only produce copy-paste text and compute display values.
 
 import { SURVEY_DURATION_LABEL } from '@/lib/campaign-setup'
+import { formatDutchDate } from '@/lib/dashboard/format-dutch-date'
 import { validateDepartmentInvitedCount, validateInvitedTotal } from '@/lib/response-activation'
 import type { ScanType } from '@/lib/types'
 
@@ -251,6 +252,12 @@ interface TemplateArgs {
   surveyLink: string
   /** Bij afdelingsrapportage: één link per afdeling in plaats van de algemene link. */
   departmentLinks?: Array<{ label: string; url: string }>
+  /**
+   * campaigns.closes_at (YYYY-MM-DD). Sinds het amendement (spec par. 4.3a)
+   * dwingt de backend deze dag af, dus de mail mag hem beloven. Null of
+   * onleesbaar: de regel blijft weg; nooit "tot en met onbekend".
+   */
+  closesAt?: string | null
 }
 
 // Ondertekening (spec 2026-09-16 par. 5.2): de organisatie, niet "HR". De
@@ -269,6 +276,13 @@ function buildLinkLines(args: TemplateArgs): string[] {
     ]
   }
   return [`Vul de vragenlijst hier in (${duration}): ${args.surveyLink}`]
+}
+
+// Dezelfde dagdefinitie als backend/survey_window.py: tot en met de sluitdag zelf.
+function buildDeadlineLines(args: TemplateArgs): string[] {
+  const formatted = formatDutchDate(args.closesAt ?? null)
+  if (!formatted) return []
+  return ['', `Invullen kan tot en met ${formatted}.`]
 }
 
 /** Uitnodiging zoals de wizard hem toont: de laatst gegenereerde tekst plus wat de klant ervan maakte. */
@@ -310,6 +324,7 @@ export function buildInviteTemplate(args: TemplateArgs): EmailTemplate {
       'Je antwoorden worden alleen op groepsniveau gerapporteerd en zijn niet naar jou herleidbaar.',
       '',
       ...buildLinkLines(args),
+      ...buildDeadlineLines(args),
       '',
       'Alvast bedankt voor je deelname.',
       '',
@@ -329,6 +344,7 @@ export function buildReminderTemplate(args: TemplateArgs): EmailTemplate {
       `Een korte herinnering: heb je de anonieme vragenlijst van ${args.organizationName} al ingevuld? Je antwoorden tellen alleen op groepsniveau mee.`,
       '',
       ...buildLinkLines(args),
+      ...buildDeadlineLines(args),
       '',
       'Heb je hem al ingevuld? Dan kun je deze mail negeren, en bedankt.',
       '',

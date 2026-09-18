@@ -74,7 +74,8 @@ const INVITED_COUNT_HELP: Partial<Record<ScanType, string>> = {
 }
 const DEFAULT_INVITED_COUNT_HELP = 'Iedereen die de vragenlijst van je krijgt.'
 const LAUNCH_DATE_HELP = 'De dag waarop je de uitnodiging verstuurt.'
-const CLOSES_AT_HELP = 'Op deze datum vraagt Loep je de meting te sluiten of te verlengen. Drie weken is gebruikelijk; verlengen kan met twee weken per keer.'
+// Amendement spec par. 4.3a (18-9): de backend dwingt de sluitdatum af, dus dit is weer waar.
+const CLOSES_AT_HELP = 'Na deze datum kan niemand meer invullen. Drie weken is gebruikelijk; sluiten of verlengen (twee weken per keer) doe je hier in Loep.'
 const REMINDER_HELP = 'Op die dag zet Loep de herinneringstekst voor je klaar; jij verstuurt hem vanuit je eigen mail.'
 const DEPARTMENT_HELP = `Per afdeling zijn minimaal ${MIN_INVITED_PER_DEPARTMENT} ingevulde vragenlijsten nodig om apart in het rapport te verschijnen, en vanaf 10 zie je de spreiding.`
 
@@ -182,6 +183,7 @@ export function SetupWizardCard({
     scanType,
     surveyLink,
     departmentLinks: inviteDepartmentLinks,
+    closesAt: closesAt || null,
   })
 
   const [editableSubject, setEditableSubject] = useState(inviteSubject)
@@ -306,6 +308,7 @@ export function SetupWizardCard({
             scanType,
             surveyLink,
             departmentLinks: buildSegmentSurveyLinks(frontendBaseUrl, publicSurveyToken, segResult.departments),
+            closesAt: closesAt || null,
           }),
         )
         setGeneratedInvite(refreshed.generated)
@@ -345,6 +348,25 @@ export function SetupWizardCard({
         reminderChoice,
       })
       if (!result.ok) { setStep1Error(result.error ?? 'Er ging iets mis.'); return }
+      // De uitnodiging noemt de sluitdatum (amendement par. 4.3a). Die is in
+      // stap 1 net gekozen of gewijzigd, dus de conceptmail wordt opnieuw
+      // opgebouwd; eigen aanpassingen worden alleen vervangen als de tekst
+      // echt veranderde, en dan met een melding (zelfde regel als de segment-tak).
+      const refreshed = refreshInviteDraft(
+        { generated: generatedInvite, subject: editableSubject, body: editableBody },
+        buildInviteTemplate({
+          senderName: '',
+          organizationName,
+          scanType,
+          surveyLink,
+          departmentLinks: inviteDepartmentLinks,
+          closesAt: closesAt || null,
+        }),
+      )
+      setGeneratedInvite(refreshed.generated)
+      setEditableSubject(refreshed.subject)
+      setEditableBody(refreshed.body)
+      if (refreshed.replacedEdits) setInviteLinksReplacedEdits(true)
       setStep(2)
     })
   }
@@ -710,7 +732,7 @@ export function SetupWizardCard({
               </div>
               {inviteLinksReplacedEdits && (
                 <p role="status" className="rounded-lg bg-[#E8A020]/15 px-3 py-2 text-[11px] leading-relaxed text-white/80">
-                  De uitnodiging is bijgewerkt met de nieuwe afdelingslinks. Je eigen aanpassingen aan de tekst zijn daarbij vervangen; voeg ze zo nodig opnieuw toe.
+                  De uitnodiging is opnieuw opgebouwd met wat je in stap 1 hebt opgeslagen (sluitdatum of afdelingslinks). Je eigen aanpassingen aan de tekst zijn daarbij vervangen; voeg ze zo nodig opnieuw toe.
                 </p>
               )}
               <p className="text-[10px] text-white/40">Je kunt de tekst aanpassen voor je kopieert. Vergeet niet je naam in te vullen bij &ldquo;Met vriendelijke groet&rdquo;.</p>

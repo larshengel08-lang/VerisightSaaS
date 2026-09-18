@@ -35,7 +35,7 @@ describe('setup-wizard afdelingsblok', () => {
     expect(src).toMatch(/onChange=\{\(e\) => \{ setEditableSubject\(e\.target\.value\); setInviteLinksReplacedEdits\(false\) \}\}/)
     expect(src).toMatch(/onChange=\{\(e\) => \{ setEditableBody\(e\.target\.value\); setInviteLinksReplacedEdits\(false\) \}\}/)
     expect(src).toMatch(/async function handleCopy\(text: string, which: 'subject' \| 'body'\) \{\s+setInviteLinksReplacedEdits\(false\)/)
-    expect(src).toContain('De uitnodiging is bijgewerkt met de nieuwe afdelingslinks.')
+    expect(src).toContain('De uitnodiging is opnieuw opgebouwd met wat je in stap 1 hebt opgeslagen (sluitdatum of afdelingslinks).')
   })
   it('gebruikt de gedeelde uitnodigingstekst in plaats van een eigen kopie', () => {
     expect(src).toContain('buildInviteTemplate')
@@ -96,15 +96,29 @@ describe('setup-wizard stap 1: planning en drempels (spec 2026-09-16 par. 4.1 en
     expect(src).toContain('Herinnering')
   })
 
-  it('geeft de toelichtingen uit de spec', () => {
+  it('geeft de toelichtingen uit de spec, met de sluitdatum-toelichting die sinds het amendement weer waar is', () => {
     expect(src).toContain('De dag waarop je de uitnodiging verstuurt.')
-    expect(src).toContain('Op deze datum vraagt Loep je de meting te sluiten of te verlengen. Drie weken is gebruikelijk; verlengen kan met twee weken per keer.')
-    // Niets dwingt closes_at af (alleen is_active telt): beloof niet dat invullen dan stopt.
-    expect(src).not.toContain('Na deze datum kan niemand meer invullen')
+    // Amendement par. 4.3a (18-9): de backend dwingt de sluitdatum nu af, dus de belofte mag terug.
+    expect(src).toContain('Na deze datum kan niemand meer invullen. Drie weken is gebruikelijk; sluiten of verlengen (twee weken per keer) doe je hier in Loep.')
+    expect(src).not.toContain('Op deze datum vraagt Loep je de meting te sluiten of te verlengen')
     expect(src).toContain('Op die dag zet Loep de herinneringstekst voor je klaar; jij verstuurt hem vanuit je eigen mail.')
     expect(src).toContain('inclusief parttimers en oproepkrachten')
     expect(src).toContain('niet het hele personeelsbestand')
     expect(src).toContain('Alle nieuwe medewerkers die je in deze ronde uitnodigt.')
+  })
+
+  it('zet de sluitdatum in de uitnodiging en ververst de tekst na het opslaan van stap 1, in beide modi', () => {
+    // Drie opbouwplekken (eerste render, segment-tak, niet-segment-tak) krijgen allemaal de sluitdatum mee.
+    // Gescopet op buildInviteTemplate-aanroepen: een kale telling van
+    // "closesAt: closesAt || null" in het hele bestand raakt ook de
+    // (bestaande, ongerelateerde) previewTimeline-opbouw voor stap 3, die
+    // dezelfde variabele voor een ander doel meegeeft.
+    const inviteTemplateCalls = src.split('buildInviteTemplate(').slice(1)
+    expect(inviteTemplateCalls.length).toBe(3)
+    expect(inviteTemplateCalls.every((chunk) => /closesAt: closesAt \|\| null/.test(chunk.slice(0, 400)))).toBe(true)
+    // Beide takken verversen de conceptmail; vóór dit plan deed alleen de segment-tak dat,
+    // waardoor een in stap 1 gekozen sluitdatum niet in de tekst van stap 2 belandde.
+    expect(src.match(/refreshInviteDraft\(/g)?.length).toBe(2)
   })
 
   it('dwingt de drempels client-side af met dezelfde helpers als de server', () => {
