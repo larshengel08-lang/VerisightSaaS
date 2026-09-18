@@ -527,10 +527,12 @@ def test_keten_degradeert_zichtbaar_als_er_meer_is_aangeboden_dan_laagst_scoorde
     er niet klopt (Fail Loud trap 2)."""
     agg = {"lowest_n": 9, "offered": 10, "answered": 10, "skipped": 0, "counts": {}}
     zin = _direction_chain(agg, 13)
+    # De opener noemt zijn eigen getal één keer (codereview taak 11): "(10 = wie
+    # de vraag kreeg" herhaalde de 10 die drie woorden eerder al stond.
     assert zin == ("10 van de 13 respondenten kregen de vraag over dit onderwerp "
-                   "(10 = wie de vraag kreeg; met de rekenregels van nu is dit bij "
-                   "9 respondenten het laagste onderwerp); 10 van de 10 beantwoordden "
-                   "de vraag.")
+                   "(met de rekenregels van nu is dit bij 9 respondenten het laagste "
+                   "onderwerp, dus die twee tellingen sluiten niet op elkaar); "
+                   "10 van de 10 beantwoordden de vraag.")
     assert "—" not in zin
 
 
@@ -548,15 +550,54 @@ def test_totaalregel_degradeert_bij_meer_aanbod_dan_laagste_onderwerpen():
     """Zelfde versiedrift over alle onderwerpen samen: 28 kregen de vraag terwijl
     er nu maar 20 respondenten een laagste onderwerp hebben. Dan staat er wat er
     niet klopt, en de reden bij "kon geen laagste onderwerp vaststellen" claimt
-    niet langer dat die mensen niets invulden."""
+    niet langer dat die mensen niets invulden.
+
+    De twee meldingen staan los van elkaar (codereview taak 11): een overschot
+    hoeft niet in de groep zonder laagste onderwerp te passen, dus "X van hen"
+    kan onwaar worden.
+    """
     dagg = _dagg(growth=(12, 20, 20, 0), workload=(8, 8, 8, 0))
     zin = _direction_totals_line(dagg, ["growth", "workload"], "retention", 39)
     assert zin.startswith("Van de 39 respondenten kregen 28 de vraag, 28 beantwoordden hem. ")
     assert "de overige" not in zin
     assert ("Bij 19 respondenten kon Loep met de rekenregels van nu geen laagste "
-            "onderwerp vaststellen, en 8 van hen kregen de vraag toch: die twee "
-            "tellingen sluiten daarom niet op elkaar.") in zin
+            "onderwerp vaststellen.") in zin
+    assert ("Bij 8 van de 39 ging de vraag over een onderwerp dat met de rekenregels "
+            "van nu niet hun laagste onderwerp is; die telling sluit daarom niet op "
+            "de verdeling hierboven.") in zin
     assert "zij vulden geen van de stellingen" not in zin
+
+
+def test_totaalregel_meet_het_overschot_per_onderwerp_niet_op_de_som():
+    """De waarschijnlijkste drift laat respondenten tússen onderwerpen schuiven,
+    dus blijft de som gelijk (codereview taak 11). Op de som gemeten zag de regel
+    niets: er stond "kregen 16 de vraag, 16 beantwoordden hem" en twee zinnen
+    later "Bij 8 van de 16 is die vraag niet gesteld", zonder één woord over de
+    acht die hem op het andere onderwerp wél kregen."""
+    dagg = _dagg(growth=(12, 4, 4, 0), workload=(4, 12, 12, 0))
+    zin = _direction_totals_line(dagg, ["growth", "workload"], "retention", 16)
+    assert zin.startswith("Van de 16 respondenten kregen 16 de vraag, 16 beantwoordden hem. ")
+    assert ("Bij 8 van de 16 is die vraag niet gesteld; van hen is er dus geen "
+            "antwoord.") in zin
+    assert ("Bij 8 van de 16 ging de vraag over een onderwerp dat met de rekenregels "
+            "van nu niet hun laagste onderwerp is; die telling sluit daarom niet op "
+            "de verdeling hierboven.") in zin
+    # De som van de laagste onderwerpen klopt hier wel (16 van de 16), dus er is
+    # geen groep zonder laagste onderwerp om over te melden.
+    assert "kon Loep" not in zin
+    assert "de overige" not in zin
+
+
+def test_totaalregel_claimt_geen_overschot_in_een_groep_die_te_klein_is():
+    """toegewezen < n_total én een overschot dat niet in die groep past: 15 van de
+    16 hebben een laagste onderwerp, dus is er één mens zonder, terwijl het
+    overschot 8 is. "8 van hen" zou dan over één persoon gaan."""
+    dagg = _dagg(growth=(11, 4, 4, 0), workload=(4, 12, 12, 0))
+    zin = _direction_totals_line(dagg, ["growth", "workload"], "retention", 16)
+    assert "van hen kreeg" not in zin
+    assert ("Bij 1 respondent kon Loep met de rekenregels van nu geen laagste "
+            "onderwerp vaststellen.") in zin
+    assert "Bij 8 van de 16 ging de vraag over een onderwerp" in zin
 
 
 def test_verdiepingsketen_noemt_de_drempel_zonder_van_hen():

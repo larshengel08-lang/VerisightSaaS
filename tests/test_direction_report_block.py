@@ -565,8 +565,10 @@ def test_trust_page_explains_direction_question_for_exit_and_retention_only():
         assert "Richtingvraag" in html
         assert "geen advies van Loep" in html
         # Sinds taak 11 (B20) staat de vloer met zijn verantwoording in de
-        # drempeltabel op dezelfde pagina; de cel verwijst ernaar.
-        assert "De drempel van 3 staat in de drempeltabel hierboven." in html
+        # drempeltabel; de cel verwijst ernaar met een paginanummer, niet met
+        # "hierboven" (codereview taak 11: de methodieksectie loopt over twee
+        # pagina's).
+        assert "De drempel van 3 staat in de drempeltabel op pagina " in html
         assert justification in html
         assert "\u2014" not in html
     assert "Richtingvraag" not in _trust_page("onboarding", direction_active=True)

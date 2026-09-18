@@ -129,7 +129,7 @@ def test_methodiekcel_belooft_geen_richting_die_er_niet_hangt(scan_type):
     """
     body = _degraded(scan_type)
     for claim in ("De opdrachtvorm in",
-                  "De drempel van 3 staat in de drempeltabel hierboven."):
+                  "De drempel van 3 staat in de drempeltabel op pagina"):
         assert claim not in body, f"methodiekpagina belooft nog: {claim!r}"
     assert ("In dit rapport hangt er geen richting aan die antwoorden: zonder "
             "profiel per factor is er geen startpunt om ze aan te koppelen, en "
@@ -143,7 +143,7 @@ def test_methodiekcel_houdt_de_volledige_copy_als_het_blok_kaarten_heeft(scan_ty
     body = _body(_render(scan_type, n=_N_NORMAL, profile=True,
                          direction=_agg(scan_type, {"workload": (6, 1), "growth": (4, 1)})))
     assert "De opdrachtvorm in" in body
-    assert "De drempel van 3 staat in de drempeltabel hierboven." in body
+    assert "De drempel van 3 staat in de drempeltabel op pagina" in body
     assert "In dit rapport hangt er geen richting aan die antwoorden" not in body
 
 
