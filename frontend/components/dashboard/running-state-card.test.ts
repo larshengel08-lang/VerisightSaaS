@@ -20,6 +20,10 @@ describe('kaart "Campagne loopt" (spec 2026-09-16 par. 4.2 en 4.4)', () => {
     expect(src).toContain('<DashboardStateActions state={state} reminderText={reminderText} />')
   })
 
+  it('noemt de meting naast de scan (walkthrough 1.2)', () => {
+    expect(src).toContain('state.campaignName')
+  })
+
   it('bevat geen em- of en-dashes', () => {
     expect(src).not.toMatch(/[—–]/)
   })

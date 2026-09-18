@@ -27,4 +27,13 @@ describe('campaign detail reduced to operational state-view', () => {
   it('keeps the access guard', () => {
     expect(source).toContain('canViewInsights')
   })
+
+  it('linkt terug naar alle metingen en toont geen knop die naar zichzelf wijst (spec 2026-09-16 par. 6.1 en 7)', () => {
+    expect(source).toContain('Alle metingen')
+    expect(source).not.toContain('Terug naar dashboard')
+    expect(source).toContain('withoutSelfLink(state, `/campaigns/${id}`)')
+    // De kaarten krijgen de gestripte staat, het rapportblok blijft op de originele kind.
+    expect(source).toContain('state={pageState}')
+    expect(source).not.toContain('<DashboardStateCard state={state}')
+  })
 })

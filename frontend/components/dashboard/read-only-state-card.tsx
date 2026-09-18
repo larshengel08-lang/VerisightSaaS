@@ -12,6 +12,9 @@ export function ReadOnlyStateCard({ state }: { state: DashboardState }) {
 
   return (
     <section className="rounded-[22px] border border-[color:var(--dashboard-frame-border)] bg-white px-6 py-7">
+      {state.campaignName ? (
+        <p className="mb-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#B07A10]">{state.campaignName}</p>
+      ) : null}
       <h1 className="font-serif text-[2rem] leading-[1.05] tracking-[-0.04em] text-[color:var(--dashboard-ink)] sm:text-[2.4rem]">
         {state.primaryMessage}
       </h1>

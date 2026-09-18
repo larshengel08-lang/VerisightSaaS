@@ -7,6 +7,7 @@ import { WelcomeGate } from '@/components/dashboard/welcome-gate'
 import { PdfDownloadButton } from './pdf-download-button'
 import { SuiteAccessDenied } from '@/components/dashboard/suite-access-denied'
 import { resolveDashboardState } from '@/lib/dashboard/dashboard-state-resolver'
+import { withoutSelfLink } from '@/lib/dashboard/self-link'
 import { isSkippedReminderEvent } from '@/lib/dashboard/reminder-event'
 import { completionPct, resolveInvitedDenominator } from '@/lib/dashboard/invited-denominator'
 import { normalizeReminderConfig } from '@/lib/launch-controls'
@@ -150,6 +151,10 @@ export default async function CampaignPage({ params }: Props) {
     today: todayIso(),
   })
 
+  // Walkthrough 5.2: "Open rapport" linkte naar deze pagina zelf en deed
+  // zichtbaar niets. Het rapportblok onderaan heeft de echte downloadknop.
+  const pageState = withoutSelfLink(state, `/campaigns/${id}`)
+
   const reminderText = buildReminderText({
     commsMode: campaignMeta?.comms_mode ?? null,
     scanType: stats.scan_type,
@@ -173,7 +178,7 @@ export default async function CampaignPage({ params }: Props) {
         href="/dashboard"
         className="inline-flex text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:text-[color:var(--dashboard-ink)]"
       >
-        ← Terug naar dashboard
+        ← Alle metingen
       </Link>
       <div className="flex flex-wrap items-baseline gap-3">
         <h2 className="text-xl font-semibold tracking-tight text-[color:var(--dashboard-ink)]">
@@ -186,7 +191,7 @@ export default async function CampaignPage({ params }: Props) {
         ) : null}
       </div>
       {!canManage ? (
-        <ReadOnlyStateCard state={state} />
+        <ReadOnlyStateCard state={pageState} />
       ) : state.kind === 'setup' ? (
         <WelcomeGate
           campaignId={id}
@@ -205,12 +210,12 @@ export default async function CampaignPage({ params }: Props) {
         />
       ) : state.kind === 'running' ? (
         <RunningStateCard
-          state={state}
+          state={pageState}
           reminderText={reminderText}
           scanLabel={SCAN_TYPE_LABELS[stats.scan_type] ?? stats.scan_type}
         />
       ) : (
-        <DashboardStateCard state={state} reminderText={reminderText} />
+        <DashboardStateCard state={pageState} reminderText={reminderText} />
       )}
       {state.kind === 'report_ready' ? (
         <div className="rounded-[22px] border border-[color:var(--dashboard-frame-border)] bg-white px-6 py-6">

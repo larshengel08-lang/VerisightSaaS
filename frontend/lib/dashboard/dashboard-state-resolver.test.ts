@@ -262,4 +262,12 @@ describe('resolveDashboardState', () => {
       for (const action of state.secondaryActions) expect(action.label).not.toMatch(/[—–]/)
     }
   })
+  it('draagt de naam van de meting in elke staat, zodat de kaart hem kan noemen (walkthrough 1.2)', () => {
+    expect(resolveDashboardState(baseInput()).campaignName).toBe('Loep Vertrek Q2 2026')
+    expect(resolveDashboardState(baseInput({ launchConfirmedAt: null })).campaignName).toBe('Loep Vertrek Q2 2026')
+    expect(
+      resolveDashboardState(baseInput({ campaign: withCampaign({ isActive: false, totalCompleted: 14 }), reportReady: true })).campaignName,
+    ).toBe('Loep Vertrek Q2 2026')
+    expect(resolveDashboardState(baseInput({ campaign: null })).campaignName).toBeNull()
+  })
 })

@@ -70,6 +70,8 @@ export interface DashboardState {
   actionVariant: DashboardActionVariant | null
   processingVariant: DashboardProcessingVariant | null
   campaignId: string | null
+  /** Naam van de meting; null in State 0. De kaart noemt hem, want met meer metingen is "Vandaag: stuur de herinnering" anders onbenoemd. */
+  campaignName: string | null
   primaryMessage: string
   subtext: string
   tone: DashboardStateTone
@@ -104,6 +106,7 @@ const EMPTY_STATE: Omit<DashboardState, 'kind' | 'primaryMessage' | 'subtext' | 
   actionVariant: null,
   processingVariant: null,
   campaignId: null,
+  campaignName: null,
   ctaLabel: null,
   ctaHref: null,
   ctaKind: null,
@@ -141,6 +144,7 @@ export function resolveDashboardState(input: DashboardStateInput): DashboardStat
   const counts = `${campaign.totalCompleted} van ${campaign.totalInvited} ingevuld (${progressPct}%)`
   const base = {
     campaignId: campaign.id,
+    campaignName: campaign.name,
     totalCompleted: campaign.totalCompleted,
     totalInvited: campaign.totalInvited,
     reportReady: input.reportReady,

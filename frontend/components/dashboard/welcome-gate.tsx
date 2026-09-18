@@ -114,7 +114,7 @@ export function WelcomeGate(props: Props) {
             {props.organizationName}
           </p>
           <h1 style={{ fontFamily: 'var(--font-serif, Georgia, serif)', fontSize: '2.6rem', lineHeight: 1.1, color: '#fff', margin: '0 0 16px', letterSpacing: '-0.03em' }}>
-            Je eerste scan staat klaar.
+            Je meting staat klaar.
           </h1>
           <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '1rem', lineHeight: 1.6, margin: '0 0 40px' }}>
             In drie stappen lanceer je de uitnodiging naar je medewerkers. Klaar in ongeveer 5 minuten.

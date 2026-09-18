@@ -14,6 +14,10 @@ describe('alleen-lezen statuskaart (spec 2026-09-11 par. 9)', () => {
     expect(source).toContain('Alleen de eigenaar van deze Loep-omgeving kan de meting beheren.')
   })
 
+  it('noemt de meting boven de kop (walkthrough 1.2)', () => {
+    expect(source).toContain('state.campaignName')
+  })
+
   it('bevat geen enkele actie', () => {
     expect(source).not.toContain('DashboardStateActions')
     expect(source).not.toContain('<button')

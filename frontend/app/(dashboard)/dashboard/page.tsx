@@ -4,6 +4,9 @@ import { DashboardStateCard } from '@/components/dashboard/dashboard-state-card'
 import { ReadOnlyStateCard } from '@/components/dashboard/read-only-state-card'
 import { RunningStateCard } from '@/components/dashboard/running-state-card'
 import { WelcomeGate } from '@/components/dashboard/welcome-gate'
+import { CampaignListSection } from '@/components/dashboard/campaign-list-section'
+import { buildCampaignListItems, pickMainCampaign } from '@/lib/dashboard/campaign-list'
+import { loadCampaignStatusContext } from '@/lib/dashboard/campaign-status-context'
 import { resolveDashboardState } from '@/lib/dashboard/dashboard-state-resolver'
 import { isSkippedReminderEvent } from '@/lib/dashboard/reminder-event'
 import { completionPct, resolveInvitedDenominator } from '@/lib/dashboard/invited-denominator'
@@ -32,10 +35,13 @@ export default async function DashboardHomePage() {
     .from('campaign_stats')
     .select('*')
     .order('created_at', { ascending: false })
-    .limit(1)
   if (statsError) throw new Error(`Kon campagne-overzicht niet laden: ${statsError.message}`)
 
-  const campaign = (stats?.[0] as CampaignStats | undefined) ?? null
+  // Alle metingen (spec 2026-09-16 par. 6.1): de nieuwste actieve is de
+  // hoofdkaart; de rest staat in de lijst eronder. Vóór dit plan koos limit(1)
+  // blind de nieuwste en was een nog in te richten meting onvindbaar.
+  const campaigns = (stats ?? []) as CampaignStats[]
+  const campaign = pickMainCampaign(campaigns)
 
   if (!campaign) {
     const state = resolveDashboardState({
@@ -189,6 +195,15 @@ export default async function DashboardHomePage() {
     participantCommsConfig: deliveryRecord?.participant_comms_config ?? null,
   })
 
+  // De lijst gebruikt dezelfde statusvocabulaire als /reports en is met een
+  // pariteitstest aan de resolver vastgeklonken; ze kan dus niet iets anders
+  // zeggen dan de kaart hierboven.
+  const statusContext =
+    campaigns.length > 1
+      ? await loadCampaignStatusContext(supabase, campaigns.map((c) => c.campaign_id), todayIso())
+      : null
+  const listItems = statusContext ? buildCampaignListItems(campaigns, statusContext, campaign.campaign_id) : []
+
   return (
     <div className="space-y-8">
       {!canManage ? (
@@ -218,6 +233,9 @@ export default async function DashboardHomePage() {
       ) : (
         <DashboardStateCard state={state} reminderText={reminderText} />
       )}
+      {campaigns.length > 1 ? (
+        <CampaignListSection items={listItems} />
+      ) : null}
     </div>
   )
 }

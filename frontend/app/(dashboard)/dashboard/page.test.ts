@@ -14,8 +14,16 @@ describe('state-driven dashboard page', () => {
     expect(source).toContain("if (context.managerOnly) redirect('/action-center')")
   })
 
-  it('selects the most recent campaign and derives report readiness from the report release rule', () => {
+  it('laadt alle metingen, kiest de nieuwste actieve als hoofdkaart en toont de rest in een lijst (spec 2026-09-16 par. 6.1)', () => {
     expect(source).toContain("order('created_at', { ascending: false })")
+    // Alleen de campaign_stats-query: de send_reminders-query mag wel limit(1) houden.
+    const statsQuery = source.slice(source.indexOf(".from('campaign_stats')"), source.indexOf('if (statsError)'))
+    expect(statsQuery).toContain("order('created_at', { ascending: false })")
+    expect(statsQuery).not.toContain('.limit(')
+    expect(source).toContain('pickMainCampaign(campaigns)')
+    expect(source).toContain('buildCampaignListItems(campaigns, statusContext, campaign.campaign_id)')
+    expect(source).toContain('campaigns.length > 1 ? (')
+    expect(source).toContain('CampaignListSection')
     expect(source).toContain('isReportReleaseReady')
     expect(source).not.toContain('isDashboardReleaseReady')
   })

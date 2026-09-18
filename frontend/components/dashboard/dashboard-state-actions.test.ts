@@ -197,4 +197,8 @@ describe('dashboard state card', () => {
   it('rendert een mailto-CTA als gewone link (eindtoestand, spec 4.5)', () => {
     expect(card).toContain("startsWith('mailto:')")
   })
+
+  it('noemt de meting boven de kop (walkthrough 1.2)', () => {
+    expect(card).toContain('state.campaignName')
+  })
 })

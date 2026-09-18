@@ -19,7 +19,10 @@ export function RunningStateCard({ state, reminderText, scanLabel }: Props) {
 
   return (
     <section className="rounded-[22px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-6 py-7">
-      <p className="mb-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#E8A020]">{scanLabel}</p>
+      <p className="mb-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#B07A10]">
+        {scanLabel}
+        {state.campaignName ? ` · ${state.campaignName}` : ''}
+      </p>
       <h1 className="font-serif text-[2rem] leading-[1.05] tracking-[-0.04em] text-[color:var(--dashboard-ink)]">
         Campagne loopt
       </h1>
