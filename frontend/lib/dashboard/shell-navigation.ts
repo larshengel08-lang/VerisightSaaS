@@ -36,7 +36,7 @@ export type DashboardModuleNavItem = {
 
 export type DashboardShellCampaignRef = Pick<
   CampaignStats,
-  'campaign_id' | 'scan_type' | 'is_active' | 'created_at' | 'total_completed'
+  'campaign_id' | 'campaign_name' | 'scan_type' | 'is_active' | 'created_at' | 'closed_at' | 'total_completed'
 >
 
 export type DashboardShellNavigation = {
@@ -245,7 +245,17 @@ export type ClosedCampaignNavItem = {
   campaignId: string
   href: string
   scanType: ScanType
-  periodLabel: string
+  /** De campagnenaam: met twee Behoud-metingen is het scanlabel niet te onderscheiden (walkthrough 1.7). */
+  name: string
+  /** "Gesloten aug 2026", of eerlijk "Gesloten, datum onbekend" als closed_at leeg is. */
+  closedLabel: string
+}
+
+function closedMonthLabel(closedAt: string | null): string {
+  if (!closedAt) return 'Gesloten, datum onbekend'
+  const date = new Date(closedAt)
+  if (Number.isNaN(date.getTime())) return 'Gesloten, datum onbekend'
+  return `Gesloten ${new Intl.DateTimeFormat('nl-NL', { month: 'short', year: 'numeric', timeZone: 'Europe/Amsterdam' }).format(date)}`
 }
 
 export function buildClosedCampaignNavItems(campaigns: DashboardShellCampaignRef[]): ClosedCampaignNavItem[] {
@@ -256,6 +266,7 @@ export function buildClosedCampaignNavItems(campaigns: DashboardShellCampaignRef
       campaignId: campaign.campaign_id,
       href: `/campaigns/${campaign.campaign_id}`,
       scanType: campaign.scan_type,
-      periodLabel: new Intl.DateTimeFormat('nl-NL', { month: 'short', year: 'numeric' }).format(new Date(campaign.created_at)),
+      name: campaign.campaign_name,
+      closedLabel: closedMonthLabel(campaign.closed_at),
     }))
 }
