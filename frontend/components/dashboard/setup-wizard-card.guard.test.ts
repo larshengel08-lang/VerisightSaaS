@@ -178,3 +178,15 @@ describe('setup-wizard stap 3 (spec 2026-09-16 par. 4.2)', () => {
     expect(src).not.toContain('rapport via Loep')
   })
 })
+
+describe('setup-wizard responsive en invoervelden (spec 2026-09-16 par. 7, walkthrough 8.1 en 3.12)', () => {
+  it('zet de drie stappen onder elkaar onder lg en naast elkaar vanaf lg', () => {
+    expect(src).toContain('grid grid-cols-1 gap-3 lg:grid-cols-3')
+    expect(src).not.toContain('grid grid-cols-3 gap-3')
+  })
+
+  it('houdt het onderwerp een eenregelig invoerveld dat niet afkapt', () => {
+    expect(src).toMatch(/<input\s+id="invite-subject"/)
+    expect(src).not.toMatch(/<textarea\s+id="invite-subject"/)
+  })
+})

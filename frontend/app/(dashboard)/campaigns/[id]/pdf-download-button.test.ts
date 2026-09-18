@@ -23,4 +23,15 @@ describe('pdf download button guardrails', () => {
     expect(source).toContain('label?: string')
     expect(source).toContain("align?: 'start' | 'end'")
   })
+
+  it('legt een mislukte download in het Nederlands uit, met contact, en houdt de technische melding apart (walkthrough 5.3)', () => {
+    const source = readFileSync(new URL('./pdf-download-button.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain("import { LOEP_CONTACT_EMAIL } from '@/lib/loep-contact'")
+    expect(source).toContain('Het rapport kon niet worden opgehaald')
+    expect(source).toContain('Technische melding:')
+    expect(source).not.toContain('Controleer of de backend bereikbaar is')
+    expect(source).not.toContain('Rapport kon niet worden gegenereerd')
+    expect(source).not.toMatch(/[—–]/)
+  })
 })

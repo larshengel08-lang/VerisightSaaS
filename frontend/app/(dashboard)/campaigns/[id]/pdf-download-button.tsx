@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { SCAN_TYPE_LABELS, type ScanType } from '@/lib/types'
+import { LOEP_CONTACT_EMAIL } from '@/lib/loep-contact'
 
 interface Props {
   campaignId: string
@@ -27,12 +28,12 @@ export function PdfDownloadButton({
   align = 'start',
 }: Props) {
   const [loadingFormat, setLoadingFormat] = useState<DownloadFormat | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<{ message: string; technical: string | null } | null>(null)
 
   async function handleDownload(format: DownloadFormat) {
     const unsupportedMessage = scanType ? UNSUPPORTED_REPORT_MESSAGES[scanType] : undefined
     if (unsupportedMessage) {
-      setError(unsupportedMessage)
+      setError({ message: unsupportedMessage, technical: null })
       return
     }
 
@@ -45,16 +46,20 @@ export function PdfDownloadButton({
         : `/api/campaigns/${campaignId}/report`
       const response = await fetch(url)
       if (!response.ok) {
-        let detail = `Rapport kon niet worden gegenereerd (${response.status}). Probeer het opnieuw.`
+        // De klant leest een Nederlandse zin met een vervolgstap; de technische
+        // melding van de backend (vaak Engels, zoals "Internal Server Error")
+        // blijft zichtbaar maar apart, zodat Loep er iets mee kan (Fail Loud).
+        let technical: string | null = null
         try {
           const payload = (await response.json()) as { detail?: string }
-          if (typeof payload.detail === 'string' && payload.detail.trim()) {
-            detail = payload.detail
-          }
+          if (typeof payload.detail === 'string' && payload.detail.trim()) technical = payload.detail.trim()
         } catch {
-          // Keep the generic fallback when no JSON detail is available.
+          // Geen JSON-detail (bijvoorbeeld een kale 500 van de proxy): alleen de statuscode.
         }
-        setError(detail)
+        setError({
+          message: `Het rapport kon niet worden opgehaald (fout ${response.status}). Probeer het later opnieuw of mail ${LOEP_CONTACT_EMAIL}.`,
+          technical,
+        })
         setLoadingFormat(null)
         return
       }
@@ -69,7 +74,7 @@ export function PdfDownloadButton({
       link.click()
       URL.revokeObjectURL(objectUrl)
     } catch {
-      setError('Verbindingsfout. Controleer of de backend bereikbaar is.')
+      setError({ message: 'Verbindingsfout. Controleer je internetverbinding en probeer het opnieuw.', technical: null })
     } finally {
       setLoadingFormat(null)
     }
@@ -100,7 +105,14 @@ export function PdfDownloadButton({
           </button>
         ) : null}
       </div>
-      {error ? <p className={`max-w-xs text-xs text-red-600 ${textAlign}`}>{error}</p> : null}
+      {error ? (
+        <p role="alert" className={`max-w-xs text-xs text-red-600 ${textAlign}`}>
+          {error.message}
+          {error.technical ? (
+            <span className="mt-1 block text-[10px] text-red-600/70">Technische melding: {error.technical}</span>
+          ) : null}
+        </p>
+      ) : null}
     </div>
   )
 }

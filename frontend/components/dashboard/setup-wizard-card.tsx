@@ -436,7 +436,7 @@ export function SetupWizardCard({
         Doorloop drie stappen om je meting te starten.
       </p>
 
-      <div className="mt-6 grid grid-cols-3 gap-3">
+      <div className="mt-6 grid grid-cols-1 gap-3 lg:grid-cols-3">
 
         {/* Stap 1 */}
         <div className={`relative rounded-[18px] p-5 ${step === 1 ? 'bg-[#0D1B2A]' : 'border border-[color:var(--dashboard-frame-border)] bg-white opacity-45'}`}>
