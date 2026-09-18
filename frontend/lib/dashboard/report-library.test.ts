@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { buildHrReportDownloadRows, buildReportOverviewRows } from './report-library'
 import type { CampaignStats } from '@/lib/types'
+import type { CampaignStatusContext } from './campaign-status'
 
 const campaigns: CampaignStats[] = [
   {
@@ -126,7 +127,8 @@ describe('report library', () => {
   })
 })
 
-describe('buildReportOverviewRows (spec 2026-09-11 par. 4.3)', () => {
+
+describe('buildReportOverviewRows (spec 2026-09-11 par. 4.3 en 2026-09-16 par. 6.2)', () => {
   function campaign(overrides: Partial<CampaignStats> = {}): CampaignStats {
     return {
       campaign_id: 'camp-1',
@@ -138,37 +140,81 @@ describe('buildReportOverviewRows (spec 2026-09-11 par. 4.3)', () => {
       total_completed: 12,
       completion_rate_pct: 0,
       created_at: '2026-04-02T10:00:00Z',
+      closed_at: '2026-04-30T10:00:00Z',
+      closes_at: null,
       ...overrides,
     } as CampaignStats
   }
 
-  it('geeft een gesloten meting met tien of meer ingevuld vrij', () => {
-    const [row] = buildReportOverviewRows([campaign()])
+  const launched = {
+    launchConfirmedAt: '2026-04-02T10:00:00Z',
+    launchDate: '2026-04-02',
+    invitedCount: 30,
+    reminderConfig: { enabled: true, firstReminderAfterDays: 5, maxReminderCount: 1 },
+  }
+
+  function context(overrides: Partial<CampaignStatusContext> = {}): CampaignStatusContext {
+    return {
+      deliveryByCampaign: new Map([['camp-1', launched]]),
+      lastReminderEventAtByCampaign: new Map(),
+      today: '2026-04-05',
+      ...overrides,
+    }
+  }
+
+  it('geeft een gesloten meting met tien of meer ingevuld vrij, met het label uit de statusvocabulaire', () => {
+    const [row] = buildReportOverviewRows([campaign()], context())
     expect(row.isAvailable).toBe(true)
-    expect(row.status).toBe('Beschikbaar nu')
+    expect(row.statusKey).toBe('report_ready')
+    expect(row.status).toBe('Rapport beschikbaar')
     expect(row.periodLabel).toBe('Q2 2026')
   })
 
   it('geeft een lopende meting nooit vrij, ook niet met veel respons', () => {
-    const [row] = buildReportOverviewRows([campaign({ is_active: true, total_completed: 40 })])
+    const [row] = buildReportOverviewRows([campaign({ is_active: true, total_completed: 40 })], context())
     expect(row.isAvailable).toBe(false)
-    expect(row.status).toBe('Meting loopt')
+    // 40 ingevuld boven de drempel: de kaart zegt "sluiten mag", de lijst zegt "Actie nodig".
+    expect(row.status).toBe('Actie nodig')
+  })
+
+  it('noemt een gelanceerde meting onder de drempel "Loopt", en een niet-gelanceerde "Nog in te richten"', () => {
+    const [running] = buildReportOverviewRows([campaign({ is_active: true, total_completed: 3 })], context())
+    expect(running.status).toBe('Loopt')
+    const [setup] = buildReportOverviewRows(
+      [campaign({ is_active: true, total_completed: 0 })],
+      context({ deliveryByCampaign: new Map() }),
+    )
+    expect(setup.status).toBe('Nog in te richten')
+    expect(setup.status).not.toBe('Meting loopt')
   })
 
   it('noemt bij een gesloten meting onder de drempel het aantal en de drempel', () => {
-    const [row] = buildReportOverviewRows([campaign({ total_completed: 7 })])
+    const [row] = buildReportOverviewRows([campaign({ total_completed: 7 })], context())
     expect(row.isAvailable).toBe(false)
+    expect(row.statusKey).toBe('closed_no_report')
     expect(row.status).toContain('7')
     expect(row.status).toContain('10')
   })
 
-  it('verzint geen noemer als er geen uitgenodigden bekend zijn (self_send)', () => {
-    const [row] = buildReportOverviewRows([campaign()])
-    expect(row.responseBasis).toBe('12 ingevuld')
+  it('gebruikt invited_count uit het delivery record als noemer, niet de gestarte respondenten', () => {
+    const [row] = buildReportOverviewRows([campaign({ total_invited: 12 })], context())
+    expect(row.responseBasis).toBe('12 van 30 ingevuld (40%)')
   })
 
-  it('toont de noemer wel als die er is', () => {
-    const [row] = buildReportOverviewRows([campaign({ total_invited: 30 })])
-    expect(row.responseBasis).toBe('12 van 30 ingevuld')
+  it('valt terug op respondentrijen als die er méér zijn dan invited_count', () => {
+    const [row] = buildReportOverviewRows([campaign({ total_invited: 35 })], context())
+    expect(row.responseBasis).toBe('12 van 35 ingevuld (34%)')
+  })
+
+  it('verzint geen noemer: zonder invited_count en zonder rijen staat er een reden', () => {
+    const [row] = buildReportOverviewRows([campaign()], context({ deliveryByCampaign: new Map() }))
+    expect(row.responseBasis).toBe('12 ingevuld, aantal uitgenodigden niet ingevuld')
+  })
+
+  it('bevat geen em- of en-dashes', () => {
+    for (const row of buildReportOverviewRows([campaign(), campaign({ campaign_id: 'x', is_active: true })], context())) {
+      expect(row.status).not.toMatch(/[—–]/)
+      expect(row.responseBasis).not.toMatch(/[—–]/)
+    }
   })
 })

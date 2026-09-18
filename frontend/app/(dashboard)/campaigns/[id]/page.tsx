@@ -8,6 +8,7 @@ import { PdfDownloadButton } from './pdf-download-button'
 import { SuiteAccessDenied } from '@/components/dashboard/suite-access-denied'
 import { resolveDashboardState } from '@/lib/dashboard/dashboard-state-resolver'
 import { isSkippedReminderEvent } from '@/lib/dashboard/reminder-event'
+import { completionPct, resolveInvitedDenominator } from '@/lib/dashboard/invited-denominator'
 import { normalizeReminderConfig } from '@/lib/launch-controls'
 import { readReminderChoice } from '@/lib/campaign-schedule'
 import { buildReminderText } from '@/lib/dashboard/reminder-text'
@@ -109,16 +110,13 @@ export default async function CampaignPage({ params }: Props) {
 
   const reminderConfig = normalizeReminderConfig(deliveryRecord?.reminder_config ?? null)
 
-  // Bij self_send is total_invited in de stats view 0 (geen pre-aangemaakte respondenten).
-  // Gebruik invited_count van het delivery record als noemer wanneer comms_mode = 'self_send'.
-  const isSelfSend = campaignMeta?.comms_mode === 'self_send'
-  const manualInvitedCount = deliveryRecord?.invited_count ?? null
-  const effectiveTotalInvited = isSelfSend && manualInvitedCount != null
-    ? manualInvitedCount
-    : stats.total_invited
-  const effectiveCompletionRatePct = effectiveTotalInvited > 0
-    ? Math.round((stats.total_completed / effectiveTotalInvited) * 100)
-    : (stats.completion_rate_pct ?? 0)
+  // Eén noemer overal (spec 2026-09-16 par. 6.2): zie dashboard/page.tsx.
+  const denominator = resolveInvitedDenominator({
+    invitedCount: deliveryRecord?.invited_count ?? null,
+    respondentRows: stats.total_invited,
+  })
+  const effectiveTotalInvited = denominator.known ? denominator.value : 0
+  const effectiveCompletionRatePct = completionPct(stats.total_completed, denominator) ?? 0
 
   // Rapportvrijgave (spec 2026-09-11 par. 4.1): 10 ingevulde vragenlijsten
   // (30 bij culture_assessment). Of de campagne gesloten is, beslist de resolver;

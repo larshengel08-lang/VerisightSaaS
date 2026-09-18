@@ -6,6 +6,7 @@ import { RunningStateCard } from '@/components/dashboard/running-state-card'
 import { WelcomeGate } from '@/components/dashboard/welcome-gate'
 import { resolveDashboardState } from '@/lib/dashboard/dashboard-state-resolver'
 import { isSkippedReminderEvent } from '@/lib/dashboard/reminder-event'
+import { completionPct, resolveInvitedDenominator } from '@/lib/dashboard/invited-denominator'
 import { normalizeReminderConfig } from '@/lib/launch-controls'
 import { readReminderChoice } from '@/lib/campaign-schedule'
 import { buildReminderText } from '@/lib/dashboard/reminder-text'
@@ -132,19 +133,15 @@ export default async function DashboardHomePage() {
 
   const reminderConfig = normalizeReminderConfig(deliveryRecord?.reminder_config ?? null)
 
-  const isSelfSend = campaignRow?.comms_mode === 'self_send'
-  const manualInvitedCount = deliveryRecord?.invited_count ?? null
-  const effectiveTotalInvited = isSelfSend && manualInvitedCount != null
-    ? manualInvitedCount
-    : campaign.total_invited
-  // Herbereken het percentage uit dezelfde effectieve noemer als hierboven.
-  // De rauwe view-waarde completion_rate_pct rekent op count(respondents)
-  // (= gestart), wat bij self_send afwijkt van de handmatige invited_count en
-  // een zichzelf-tegensprekend "X van Y (Z%)" opleverde. Gelijk aan de
-  // campagnedetailpagina, zodat beide oppervlakken hetzelfde tonen.
-  const effectiveCompletionRatePct = effectiveTotalInvited > 0
-    ? Math.round((campaign.total_completed / effectiveTotalInvited) * 100)
-    : (campaign.completion_rate_pct ?? 0)
+  // Eén noemer overal (spec 2026-09-16 par. 6.2, zelfde regel als /reports en
+  // het rapport): invited_count uit het delivery record; respondentrijen alleen
+  // als die er méér zijn; anders 0 en geen percentage. Nooit een verzonnen noemer.
+  const denominator = resolveInvitedDenominator({
+    invitedCount: deliveryRecord?.invited_count ?? null,
+    respondentRows: campaign.total_invited,
+  })
+  const effectiveTotalInvited = denominator.known ? denominator.value : 0
+  const effectiveCompletionRatePct = completionPct(campaign.total_completed, denominator) ?? 0
 
   // Rapportvrijgave (spec 2026-09-11 par. 4.1): 10 ingevulde vragenlijsten
   // (30 bij culture_assessment). Of de campagne gesloten is, beslist de resolver.
