@@ -3,7 +3,7 @@ import { DashboardSection } from '@/components/dashboard/dashboard-primitives'
 export default function DashboardHomeLoading() {
   return (
     <div className="space-y-6" aria-busy="true">
-      <DashboardSection eyebrow="Laden" title="Campagneoverzicht wordt opgebouwd">
+      <DashboardSection eyebrow="Laden" title="Je overzicht wordt geladen">
         <div className="grid gap-4 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, index) => (
             <div
@@ -13,7 +13,7 @@ export default function DashboardHomeLoading() {
           ))}
         </div>
       </DashboardSection>
-      <DashboardSection eyebrow="Laden" title="Statuscompositie laden">
+      <DashboardSection eyebrow="Laden" title="Je status wordt geladen">
         <div className="space-y-4">
           {Array.from({ length: 3 }).map((_, index) => (
             <div
