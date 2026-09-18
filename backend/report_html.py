@@ -32,6 +32,7 @@ from backend.report_distribution import (
     zone_color,
 )
 from backend.products.shared.deepening import (
+    DEEPENING_CAP,
     DEEPENING_MIN_N,
     DIRECTION_CAVEAT_MAX_N,
     DIRECTION_MIN_N,
@@ -2622,35 +2623,177 @@ DIRECTION_HEAD_SPLIT_NONE = ("Verdeeld: een deel zegt dat hier niets hoeft, een 
                              "{deel} deel vraagt om ‘{opt}’.")
 
 
+def _telling(x: int, y: int, y_is: str = "") -> str:
+    """Vaste tellingsvorm (B14): "X van de Y (P%)" vanaf MIN_DISTRIBUTION_N,
+    anders zonder percentage (dezelfde staffel als de tabellen; onder tien
+    antwoorden suggereert een percentage precisie die er niet is).
+
+    y_is is de uitleg van de noemer en wordt door de aanroeper in de zin
+    geplaatst; hij staat hier als parameter zodat elke aanroeper eraan herinnerd
+    wordt dat de noemer uitleg nodig heeft.
+
+    Zonder noemer bestaat de vorm niet: dat is precies de kale telling die B14
+    verbiedt, en "3 van de 0" afdrukken in een klant-PDF is erger dan omvallen.
+    """
+    if y <= 0:
+        raise ValueError(f"_telling: telling {x} zonder noemer (y={y})")
+    pct = f" ({round(x / y * 100)}%)" if y >= MIN_DISTRIBUTION_N else ""
+    return f"{x} van de {y}{pct}"
+
+
+def _respondenten(n: int) -> str:
+    """"1 respondent" tegenover "39 respondenten"; de noemer van elke keten."""
+    return f"{n} " + _werkwoord(n, "respondent", "respondenten")
+
+
+def _statusrest(offered: int, answered: int, skipped: int) -> str:
+    """Sluitregel van een keten (B14, H19): beantwoord + overgeslagen moet het
+    aanbod dekken. De aggregaties garanderen dat (elke entry is answered of
+    skipped), dus een verschil betekent beschadigde data. Dan staat er wat er
+    ontbreekt, in plaats van een keten waarin mensen stil verdwijnen.
+    """
+    rest = offered - answered - skipped
+    if rest <= 0:
+        return ""
+    return (f"; van {rest} {_werkwoord(rest, 'antwoord', 'antwoorden')} is niet "
+            "vastgelegd of de vraag is beantwoord")
+
+
 def _direction_chain(agg: dict, n_total: int) -> str:
-    """Keten laagst -> (aangeboden ->) beantwoord/overgeslagen (spec par. 6.1).
+    """Keten laagst -> (aangeboden ->) beantwoord/overgeslagen, in de vaste
+    tellingsvorm (B14, H2): elke stap noemt zijn eigen noemer, en de stappen
+    tellen op.
 
     Bij lowest_n == 0 (mogelijk bij kleine n: iemands eigen laagste factor is
     niet per se de groeps-startpuntfactor) is er geen keten om te tonen. Een
     clausule met telling 0 ("0 kregen de vraag") is altijd fout Nederlands en
-    wordt dus overgeslagen; blijft er dan niets over, dan eindigt de zin bij
-    de opener.
+    wordt dus overgeslagen; kreeg niemand de vraag terwijl dit wél iemands
+    laagste onderwerp was, dan zegt de keten dat met woorden (H19: die mensen
+    mogen niet spoorloos zijn).
+
+    De clausules dragen bewust geen percentage: vier percentages achter elkaar
+    zijn ruis. Het percentage hoort bij de vergelijking van groepen, en staat
+    daarom in de bronregel en de verdelingstabel (_telling).
     """
     lowest, offered = agg["lowest_n"], agg["offered"]
     answered, skipped = agg["answered"], agg["skipped"]
     if lowest == 0:
-        return "Niemand had dit als laagste onderwerp."
-    had = f"hadden {lowest}" if lowest != 1 else "had 1"
+        return "Niemand had dit als eigen laagste onderwerp."
+    had = _werkwoord(lowest, "had", "hadden")
+    opener = (f"{lowest} van de {_respondenten(n_total)} {had} dit als eigen "
+              "laagste onderwerp")
     parts: list[str] = []
-    if offered < lowest:
-        if offered:
-            parts.append(f"{offered} kregen de vraag" if offered != 1 else "1 kreeg de vraag")
-        if answered:
-            parts.append(f"{answered} beantwoordden die" if answered != 1 else "1 beantwoordde die")
-    else:
-        if answered:
-            parts.append(f"{answered} beantwoordden de vraag" if answered != 1 else "1 beantwoordde de vraag")
+    deels_aangeboden = 0 < offered < lowest
+    if deels_aangeboden:
+        parts.append(f"{offered} van de {lowest} "
+                     + _werkwoord(offered, "kreeg de vraag", "kregen de vraag"))
+    elif offered == 0:
+        return f"{opener}; niemand van hen kreeg de vraag."
+    # De noemer van "beantwoordden" is wie de vraag kreeg. Bij offered == lowest
+    # is dat hetzelfde getal; ligt offered hoger (aggregate_direction logt dat als
+    # signaal), dan zou lowest als noemer "10 van de 9" opleveren.
+    noemer = offered
+    if answered:
+        voorwerp = "die" if deels_aangeboden else "de vraag"
+        if noemer == 1:
+            # "1 van de 1 beantwoordde de vraag" is de vorm zonder inhoud; met
+            # één iemand is de noemer de persoon zelf.
+            parts.append("die ene beantwoordde hem")
+        else:
+            parts.append(f"{answered} van de {noemer} "
+                         + _werkwoord(answered, "beantwoordde", "beantwoordden")
+                         + f" {voorwerp}")
     if skipped:
-        parts.append(f"{skipped} sloegen over" if skipped != 1 else "1 sloeg over")
-    opener = f"Van de {n_total} respondenten {had} dit als laagste"
+        parts.append(f"{skipped} " + _werkwoord(skipped, "sloeg over", "sloegen over"))
     if not parts:
         return f"{opener}."
-    return f"{opener}; {', '.join(parts)}."
+    return f"{opener}; {', '.join(parts)}{_statusrest(offered, answered, skipped)}."
+
+
+def _direction_totals(direction_agg: dict) -> tuple[int, int, int]:
+    """Aangeboden, beantwoord en overgeslagen over alle onderwerpen samen.
+
+    Eén bron voor die drie sommen: zowel de totaalregel op de gespreksagenda als
+    het degraded blok verantwoorden hiermee alle richtingantwoorden, en twee
+    kopieën van dezelfde optelling kunnen stil uiteen lopen.
+
+    Direct geïndexeerd, zonder .get-fallback, om dezelfde reden als in
+    _wat_moet_gebeuren_block: aggregate_direction vult elke factor met alle drie
+    de sleutels, dus een ontbrekende sleutel is een codebug die hoort te
+    KeyError'en in plaats van stil als nul mee te tellen in een zin die de klant
+    leest als volledige verantwoording.
+    """
+    return (sum(a["offered"] for a in direction_agg.values()),
+            sum(a["answered"] for a in direction_agg.values()),
+            sum(a["skipped"] for a in direction_agg.values()))
+
+
+def _direction_totals_line(direction_agg: dict, agenda_keys: list[str], scan_type: str,
+                           n_total: int) -> str:
+    """De sluitende richtingketen op de gespreksagenda (B14, H19): totaal
+    gekregen/beantwoord/overgeslagen, wie het startpunt en het tweede punt als
+    laagste had, en waar de rest is gebleven. Elke respondent krijgt precies één
+    richtingvraag, dus de som over de onderwerpen is het aantal respondenten.
+
+    Sluit die som niet, dan staat er wat er ontbreekt. Dat gebeurt bij een
+    respondent die geen enkele stelling over deze onderwerpen invulde: die heeft
+    geen laagste onderwerp, en dan is "de overige" onwaar. Nooit een getal
+    bijschatten om de som te laten kloppen (H19 ging er juist over dat twaalf
+    mensen nergens stonden).
+    """
+    offered, answered, skipped = _direction_totals(direction_agg)
+    if not offered:
+        return ""
+    delen = []
+    if answered:
+        delen.append(f"{answered} "
+                     + _werkwoord(answered, "beantwoordde hem", "beantwoordden hem"))
+    if skipped:
+        delen.append(f"{skipped} " + _werkwoord(skipped, "sloeg over", "sloegen over"))
+    zin = (f"Van de {_respondenten(n_total)} "
+           + _werkwoord(offered, "kreeg", "kregen") + f" {offered} de vraag")
+    if delen:
+        zin += ", " + ", ".join(delen)
+    zin += "."
+
+    agenda = [(k, direction_agg[k]["lowest_n"]) for k in agenda_keys if k in direction_agg]
+    toegewezen = sum(a["lowest_n"] for a in direction_agg.values())
+    sluit = toegewezen == n_total
+    if toegewezen > n_total:
+        # Onbereikbaar met echte data (elke respondent draagt aan ten hoogste
+        # één onderwerp bij), dus een codebug of een inconsistente aanroep. Geen
+        # klantzin erover verzinnen, maar ook niet "de overige" claimen.
+        logger.warning("direction: laagste-onderwerptelling %d > n_total %d",
+                       toegewezen, n_total)
+    delen2: list[str] = []
+    for i, (k, cnt) in enumerate(agenda):
+        lbl = _lc(_fl(k, scan_type))
+        if i == 0:
+            # Alleen het eerste deel draagt het werkwoord en de uitleg van de
+            # noemer; de rest hangt eraan ("16 hadden X als laagste onderwerp,
+            # 11 Y").
+            delen2.append(f"{cnt} " + _werkwoord(cnt, "had", "hadden")
+                          + f" {lbl} als laagste onderwerp")
+        else:
+            delen2.append(f"{cnt} {lbl}")
+    if delen2:
+        zin += " " + ", ".join(delen2)
+    rest = [(k, a["lowest_n"]) for k, a in direction_agg.items()
+            if k not in agenda_keys and a["lowest_n"] > 0]
+    rest_n = sum(c for _k, c in rest)
+    if rest_n:
+        lijst = ", ".join(f"{_lc(_fl(k, scan_type))} {c}"
+                          for k, c in sorted(rest, key=lambda kc: (-kc[1], kc[0])))
+        overige = f"de overige {rest_n}" if sluit else str(rest_n)
+        zin += (f"; {overige} een ander onderwerp ({lijst}). Die antwoorden gaan over "
+                "onderwerpen die niet op de agenda staan en zijn daarom niet uitgewerkt.")
+    elif delen2:
+        zin += "."
+    if toegewezen < n_total:
+        ontbreekt = n_total - toegewezen
+        zin += (f" Bij {_respondenten(ontbreekt)} kon Loep geen laagste onderwerp "
+                "vaststellen: zij vulden geen van de stellingen over deze onderwerpen in.")
+    return zin
 
 
 def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
@@ -2690,11 +2833,18 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
         head, src = DIRECTION_HEAD_TOO_FEW, ""
     elif st["state"] == "clear":
         head = direction_imperative(scan_type, factor_key, st["top_key"])
-        src = f"Volgens {st['top_n']} van de {n} bij wie {_lc(label)} het laagst scoorde."
+        # Vaste tellingsvorm met uitleg van de noemer (B14): "de mensen bij wie
+        # dit het laagst scoorde" is een andere selectie dan de respondenten en
+        # dan wie hier laag scoorde, en die drie stonden ongelabeld naast elkaar
+        # (H2).
+        # Niet twee haakjes achter elkaar ("(53%) (36 = ...)"): de uitleg van de
+        # noemer staat als bijzin achter de telling.
+        src = (f"Volgens {_telling(st['top_n'], n)}; die {n} zijn de mensen bij wie "
+               f"{_lc(label)} het laagst scoorde en de vraag beantwoordden.")
     elif st["state"] == "none_needed":
         head = DIRECTION_HEAD_NONE_NEEDED
         opt = _opt(st["top_key"])
-        src = (f"{st['top_n']} van de {n} bij wie dit het laagst scoorde kozen "
+        src = (f"{_telling(st['top_n'], n)} bij wie dit het laagst scoorde kozen "
                f"‘{opt}’. Bespreek of dit dan {which} moet zijn.")
     elif st["state"] == "plurality":
         head = DIRECTION_HEAD_PLURALITY.format(opt=_opt(st["top_key"]))
@@ -2705,7 +2855,7 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
         rest = [(k, c) for k, c in st["ranked"] if k != st["top_key"]]
         tweede = (f"; {_tel(rest[0][1], 'koos', 'kozen')} ‘{_opt(rest[0][0])}’"
                   if rest else "")
-        src = (f"{st['top_n']} van de {n} bij wie {_lc(label)} het laagst scoorde "
+        src = (f"{_telling(st['top_n'], n)} bij wie {_lc(label)} het laagst scoorde "
                f"kozen die richting{tweede}. Wat er volgens de grootste groep moet "
                f"gebeuren: {direction_imperative(scan_type, factor_key, st['top_key'])}")
     elif st["state"] == "split_none":
@@ -2713,7 +2863,11 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
         # toelichting bij DIRECTION_HEAD_SPLIT_NONE.
         deel = "even groot" if st["none_n"] == st["top_n"] else "ander"
         head = DIRECTION_HEAD_SPLIT_NONE.format(deel=deel, opt=_opt(st["top_key"]))
-        src = (f"{_tel(st['none_n'], 'koos', 'kozen')} ‘{_opt(st['none_key'])}’; "
+        # Noemer op de eerste telling, zoals in de plurality-tak: twee kale
+        # tellingen naast elkaar lezen bij 14 en 14 uit 31 als een groep van 28
+        # (B14). De tweede hangt aan diezelfde noemer.
+        src = (f"{_telling(st['none_n'], n)} "
+               f"{_werkwoord(st['none_n'], 'koos', 'kozen')} ‘{_opt(st['none_key'])}’; "
                f"{_tel(st['top_n'], 'koos', 'kozen')} "
                f"‘{_opt(st['top_key'])}’. Op een onderwerp dat laag scoort "
                f"({_score_str(factor_score)}) is dat verschil van inzicht zelf het "
@@ -2727,8 +2881,11 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
     if st["state"] != "too_few":
         row_htmls = []
         for k, c in st["ranked"]:
-            pct = f"{round(c / n * 100)}% ({c})" if n >= MIN_DISTRIBUTION_N else c
-            row_htmls.append(f'<tr><td class="iq">{_h(_opt(k))}</td><td class="is">{pct}</td></tr>')
+            # Vaste tellingsvorm (B14): dezelfde "X van de Y (P%)" als de
+            # bronregel erboven en de verdiepingstabel, in plaats van "70% (7)"
+            # naast een kaal aantal onder de staffel.
+            row_htmls.append(f'<tr><td class="iq">{_h(_opt(k))}</td>'
+                             f'<td class="is">{_telling(c, n)}</td></tr>')
         rows = "".join(row_htmls)
         table = f'<table class="item-tbl dir-tbl">{rows}</table>'
         if n <= DIRECTION_CAVEAT_MAX_N:
@@ -2778,8 +2935,16 @@ def _wat_moet_gebeuren_block(ranked: list[dict], direction_agg: dict,
         # (bug B3). Het blok stil laten vallen liet de verzamelde antwoorden
         # spoorloos verdwijnen terwijl de methodiekpagina ze wél beloofde.
         return _direction_degraded_block(direction_agg, n_total)
+    # H19: de kaarten tonen twee onderwerpen, maar iedereen kreeg de vraag. Zonder
+    # deze regel verdwenen de antwoorden van wie een ander onderwerp als laagste
+    # had spoorloos. De aparte totals_html-regel is bewust: een geneste f-string
+    # met aanhalingstekens in de expressie is geen Python 3.11.
+    agenda_keys = [r["key"] for r in ranked if r["agenda_role"] in ("startpunt", "tweede")]
+    totals = _direction_totals_line(direction_agg, agenda_keys, scan_type, n_total)
+    totals_html = f'<p class="dir-chain dir-totals">{_h(totals)}</p>' if totals else ""
     return (f'<div class="dir-block"><span class="eyebrow">{DIRECTION_BLOCK_EYEBROW}</span>'
             f'<p class="dir-intro">{DIRECTION_BLOCK_INTRO}</p>'
+            f'{totals_html}'
             f'<table class="dir-grid"><tr>{cards}</tr></table></div>')
 
 
@@ -2791,15 +2956,12 @@ def _direction_degraded_line(direction_agg: dict, n_total: int) -> str:
     Enkelvoud/meervoud per telling en het weglaten van nul-clausules volgen
     _direction_chain: "0 sloegen over" is altijd fout Nederlands.
 
-    De tellingen worden direct geïndexeerd, zonder .get-fallback, om dezelfde
-    reden als in _wat_moet_gebeuren_block: aggregate_direction vult elke factor
-    met alle drie de sleutels, dus een ontbrekende sleutel is een codebug die
-    hoort te KeyError'en in plaats van stil als nul mee te tellen in een zin
-    die de klant leest als volledige verantwoording.
+    De drie sommen komen uit _direction_totals, dezelfde bron als de totaalregel
+    op de gespreksagenda; twee kopieën van die optelling konden stil uiteen
+    lopen. De wording verschilt wel: hier ontbreekt de agenda, dus is er geen
+    startpunt om de tellingen aan te hangen.
     """
-    offered = sum(a["offered"] for a in direction_agg.values())
-    answered = sum(a["answered"] for a in direction_agg.values())
-    skipped = sum(a["skipped"] for a in direction_agg.values())
+    offered, answered, skipped = _direction_totals(direction_agg)
     if not offered:
         return ""
     kreeg = f"kregen {offered} deze vraag" if offered != 1 else "kreeg 1 deze vraag"
@@ -2903,9 +3065,13 @@ def _anders_block(*, other_n: int, answered: int, texts: list[str]) -> str:
     schoon = [t for t in texts if t and t.strip()]
     if not schoon:
         return ""
+    # "; 4 schreven een toelichting" miste het antecedent: vier van wie? De
+    # deelzin hangt aan de groep die "Anders" koos, dus "van hen" (B14: elke
+    # telling noemt zijn noemer, ook als die in de zin ervoor staat).
     geschreven = (" en schreven een eigen toelichting"
                   if len(schoon) >= other_n else
-                  "; " + _tel(len(schoon), "schreef", "schreven") + " een toelichting")
+                  f"; {len(schoon)} van hen "
+                  + _werkwoord(len(schoon), "schreef", "schreven") + " een toelichting")
     kop = (f'<p class="anders-kop">{other_n} van de {answered} '
            f'{_werkwoord(other_n, "koos", "kozen")} &lsquo;Anders&rsquo;{geschreven}: '
            f'de vaste opties dekten hun ervaring niet.</p>')
@@ -2923,17 +3089,61 @@ def _anders_block(*, other_n: int, answered: int, texts: list[str]) -> str:
             f'<p class="anders-anon">{ANON_NOTE}</p>')
 
 
-def _deepening_chain(agg: dict, scan_type: str, factor_key: str) -> str:
-    """Noemer-keten (spec 6.1): getriggerd -> aangeboden -> beantwoord.
+def _deepening_chain(agg: dict, scan_type: str, factor_key: str, n_total: int) -> str:
+    """Noemer-keten in de vaste tellingsvorm (B14, H2), zonder "verdieptrigger"
+    (H14): laag gescoord -> aangeboden -> beantwoord/overgeslagen, elke stap met
+    zijn eigen noemer en met het aantal respondenten als begin.
 
-    Enkelvoud/meervoud per telling, analoog aan _direction_chain (B16: was
-    altijd meervoud, wat bij tellingen van 1 fout Nederlands opleverde)."""
-    triggered, offered, answered = agg["triggered"], agg["offered"], agg["answered"]
-    resp_word = "respondent" if triggered == 1 else "respondenten"
-    offered_clause = "kreeg 1 de verdiepingsvraag" if offered == 1 else f"kregen {offered} de verdiepingsvraag"
-    answered_clause = "1 beantwoordde die" if answered == 1 else f"{answered} beantwoordden die"
-    return (f"Van de {triggered} {resp_word} met een verdieptrigger op "
-            f"{_lc(_fl(factor_key, scan_type))} {offered_clause}; {answered_clause}.")
+    Enkelvoud/meervoud per telling, geen nul-clausules, en geen stap die stil
+    wegvalt: kreeg niemand de vraag (elke respondent zat al aan het maximum),
+    dan staat dat er met woorden in plaats van als "0 van de 0".
+
+    Het maximum komt uit DEEPENING_CAP en staat niet als los getal in de copy:
+    anders kan de klantzin stil afwijken van de vragenlijst.
+    """
+    triggered, offered = agg["triggered"], agg["offered"]
+    answered, skipped = agg["answered"], agg["skipped"]
+    lbl = _lc(_fl(factor_key, scan_type))
+    parts: list[str] = []
+    if answered:
+        # Zie _direction_chain: bij één aangeboden verdieping is "1 van de 1" de
+        # vorm zonder inhoud.
+        parts.append("die ene beantwoordde hem" if offered == 1 else
+                     f"{answered} van de {offered} "
+                     + _werkwoord(answered, "beantwoordde die", "beantwoordden die"))
+    if skipped:
+        parts.append(f"{skipped} " + _werkwoord(skipped, "sloeg over", "sloegen over"))
+    staart = (("; " + ", ".join(parts)) if parts else "")
+    if offered:
+        staart += _statusrest(offered, answered, skipped)
+    staart += "."
+    if offered > triggered:
+        # Historische data: de triggerregels of de optieset zijn na deze meting
+        # veranderd (aggregate_deepening tolereert dat bewust). De keten mag dan
+        # niet zeggen dat triggered de vraag kreeg; dat getal is kleiner dan het
+        # aantal dat hem echt kreeg.
+        return (f"{offered} van de {_respondenten(n_total)} "
+                + _werkwoord(offered, "kreeg", "kregen")
+                + f" de verdiepende vraag over {lbl} ({offered} = wie de vraag kreeg; "
+                + f"met de drempel van nu scoren {triggered} van hen hier laag){staart}")
+    if offered < triggered:
+        cap = DEEPENING_CAP[scan_type]
+        cap_woord = _TELWOORD.get(cap, str(cap))
+        opener = (f"{triggered} van de {_respondenten(n_total)} "
+                  + _werkwoord(triggered, "scoorde", "scoorden") + " hier laag; ")
+        if not offered:
+            return (f"{opener}niemand kreeg de verdiepende vraag (zij zaten allemaal al "
+                    f"aan het maximum van {cap_woord} verdiepingen){staart}")
+        rest = triggered - offered
+        return (f"{opener}{offered} van de {triggered} "
+                + _werkwoord(offered, "kreeg", "kregen")
+                + f" de verdiepende vraag (de andere {rest} "
+                + _werkwoord(rest, "zat", "zaten")
+                + f" al aan het maximum van {cap_woord} verdiepingen){staart}")
+    return (f"{triggered} van de {_respondenten(n_total)} "
+            + _werkwoord(triggered, "kreeg", "kregen")
+            + f" de verdiepende vraag over {lbl} "
+            + f"({triggered} = wie hier laag scoorde){staart}")
 
 
 def _deepening_shows_distribution(agg: dict | None) -> bool:
@@ -2948,13 +3158,17 @@ def _deepening_shows_distribution(agg: dict | None) -> bool:
     return bool(agg and agg.get("triggered") and agg.get("answered", 0) >= 5)
 
 
-def _deepening_block(agg: dict, scan_type: str, factor_key: str) -> str:
-    """Toelichtingsblok onder een factor (spec 6.1 + 6.2), gestaffeld op n=answered."""
+def _deepening_block(agg: dict, scan_type: str, factor_key: str, n_total: int) -> str:
+    """Toelichtingsblok onder een factor (spec 6.1 + 6.2), gestaffeld op n=answered.
+
+    n_total is het aantal respondenten en is verplicht: de keten begint ermee
+    (B14), en zonder dat getal staan de tellingen van dit blok los van de rest
+    van het rapport (H2)."""
     if not agg.get("triggered"):
         return ""
     answered = agg.get("answered", 0)
     opt_text = _deepening_option_texts(scan_type, factor_key)
-    chain = _deepening_chain(agg, scan_type, factor_key)
+    chain = _deepening_chain(agg, scan_type, factor_key, n_total)
 
     if not _deepening_shows_distribution(agg):
         body = ('<p style="font-size:9px;color:#64748B;margin:6px 0 0;">'
@@ -2963,11 +3177,12 @@ def _deepening_block(agg: dict, scan_type: str, factor_key: str) -> str:
     else:
         ranked = sorted((agg.get("primary_counts") or {}).items(),
                         key=lambda kv: (-kv[1], kv[0]))
+        # Vaste tellingsvorm (B14), dezelfde als de richtingtabel en de
+        # bronregels: "8 van de 12 (67%)" in plaats van "67% (8)" naast een kaal
+        # aantal onder de staffel. De staffel zelf zit in _telling.
         rows = "".join(
             f'<tr><td class="iq">{_h(opt_text.get(key, key))}</td>'
-            f'<td class="is" style="color:#0D1B2A;">'
-            f'{f"{round(cnt / answered * 100)}% ({cnt})" if answered >= 10 else cnt}'
-            f'</td></tr>'
+            f'<td class="is" style="color:#0D1B2A;">{_telling(cnt, answered)}</td></tr>'
             for key, cnt in ranked)
         body = f'<table class="item-tbl" style="margin-top:6px;">{rows}</table>'
         if answered <= 9:
@@ -4944,7 +5159,7 @@ def render_exit_report_html(data: dict) -> str:
         # NB: het statische "Eerste managementvraag"-navy-blok is hier bewust weg —
         # dezelfde template-vraag stond al op p.02 en 3x op de verdiepingspagina's;
         # de data (items + toelichting + quote) draagt deze pagina zelf.
-        deep_block = (_deepening_block(deep_agg[fk], "exit", fk)
+        deep_block = (_deepening_block(deep_agg[fk], "exit", fk, n)
                       if fk in deep_agg else "")
         spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []))
         # Alleen het eerste onderwerp opent een nieuwe pagina (B9): de volgende
@@ -5314,7 +5529,7 @@ def render_retention_report_html(data: dict) -> str:
         # Statisch "Eerste managementvraag"-blok bewust verwijderd (template-taal;
         # stond ook al op p.02) — het toelichtingsblok draagt de duiding.
         # ── Toelichtingsblok verdiepingsvragen (spec 6.2) ──
-        deep_block = (_deepening_block(deep_agg[fk], ST, fk)
+        deep_block = (_deepening_block(deep_agg[fk], ST, fk, n)
                       if fk in deep_agg else "")
         spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []))
         # Alleen het eerste onderwerp opent een nieuwe pagina (B9), zie

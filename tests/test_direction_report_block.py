@@ -34,8 +34,10 @@ def test_clear_card_shows_imperative_source_and_chain():
                                 factor_score=5.1)
     assert "Startpunt: Groeiperspectief" in html
     assert "Maak zichtbaar welke mogelijkheden er voor medewerkers zijn." in html
-    assert "Volgens 6 van de 8 bij wie groeiperspectief het laagst scoorde." in html
-    assert "Van de 13 respondenten hadden 9 dit als laagste; 8 beantwoordden de vraag, 1 sloeg over." in html
+    assert ("Volgens 6 van de 8; die 8 zijn de mensen bij wie groeiperspectief het "
+            "laagst scoorde en de vraag beantwoordden.") in html
+    assert ("9 van de 13 respondenten hadden dit als eigen laagste onderwerp; "
+            "8 van de 9 beantwoordden de vraag, 1 sloeg over.") in html
     assert "Niets, dit zit hier goed" in html
     assert "%" not in html
     assert "Beperkte basis" not in html
@@ -97,7 +99,8 @@ def test_too_few_card_only_chain():
                                 factor_score=5.4)
     assert "Te weinig antwoorden voor een richting." in html
     assert "item-tbl" not in html
-    assert "Van de 13 respondenten hadden 2 dit als laagste; 2 beantwoordden de vraag." in html
+    assert ("2 van de 13 respondenten hadden dit als eigen laagste onderwerp; "
+            "2 van de 2 beantwoordden de vraag.") in html
 
 
 def test_unknown_role_raises():
@@ -122,7 +125,7 @@ def test_percentages_from_10_and_caveat_at_3_4():
                                agg=_agg(10, {"grd_visibility": 7, "grd_none": 3}),
                                scan_type="retention", factor_key="growth", n_total=20,
                                factor_score=5.1)
-    assert "70% (7)" in big and "30% (3)" in big
+    assert "7 van de 10 (70%)" in big and "3 van de 10 (30%)" in big
     small = _direction_card_cell("startpunt", label="Groeiperspectief",
                                  agg=_agg(3, {"grd_visibility": 3}, skipped=0),
                                  scan_type="retention", factor_key="growth", n_total=13,
@@ -140,8 +143,8 @@ def test_percentage_denominator_is_answered_not_sum_of_counts():
     html = _direction_card_cell("startpunt", label="Groeiperspectief", agg=agg,
                                 scan_type="retention", factor_key="growth", n_total=13,
                                 factor_score=5.1)
-    assert "50% (5)" in html
-    assert "30% (3)" in html
+    assert "5 van de 10 (50%)" in html
+    assert "3 van de 10 (30%)" in html
 
 
 def test_exit_tense_in_none_option_text():
@@ -155,44 +158,51 @@ def test_exit_tense_in_none_option_text():
 def test_chain_with_old_client_gap():
     agg = _agg(6, {"wld_peaks": 6}, lowest=9, offered=7, skipped=1)
     assert _direction_chain(agg, 13) == (
-        "Van de 13 respondenten hadden 9 dit als laagste; 7 kregen de vraag, "
-        "6 beantwoordden die, 1 sloeg over.")
+        "9 van de 13 respondenten hadden dit als eigen laagste onderwerp; 7 van de 9 "
+        "kregen de vraag, 6 van de 7 beantwoordden die, 1 sloeg over.")
     assert _direction_chain(_agg(1, {"wld_peaks": 1}, skipped=2), 13) == (
-        "Van de 13 respondenten hadden 3 dit als laagste; 1 beantwoordde de vraag, 2 sloegen over.")
+        "3 van de 13 respondenten hadden dit als eigen laagste onderwerp; "
+        "1 van de 3 beantwoordde de vraag, 2 sloegen over.")
 
 
 def test_chain_lowest_zero():
     agg = {"lowest_n": 0, "offered": 0, "answered": 0, "skipped": 0, "counts": {}}
-    assert _direction_chain(agg, 13) == "Niemand had dit als laagste onderwerp."
+    assert _direction_chain(agg, 13) == "Niemand had dit als eigen laagste onderwerp."
 
 
 def test_chain_zero_answered_nonzero_skipped():
     agg = {"lowest_n": 5, "offered": 5, "answered": 0, "skipped": 5, "counts": {}}
     assert _direction_chain(agg, 13) == (
-        "Van de 13 respondenten hadden 5 dit als laagste; 5 sloegen over.")
+        "5 van de 13 respondenten hadden dit als eigen laagste onderwerp; 5 sloegen over.")
 
 
-def test_chain_offered_zero_ends_at_opener():
+def test_chain_offered_zero_zegt_dat_niemand_de_vraag_kreeg():
+    """H19: vier mensen hadden dit als laagste en niemand kreeg de vraag. Stil
+    bij de opener eindigen liet die vier zonder verklaring staan."""
     agg = {"lowest_n": 4, "offered": 0, "answered": 0, "skipped": 0, "counts": {}}
-    assert _direction_chain(agg, 13) == "Van de 13 respondenten hadden 4 dit als laagste."
+    assert _direction_chain(agg, 13) == ("4 van de 13 respondenten hadden dit als eigen "
+                                         "laagste onderwerp; niemand van hen kreeg de vraag.")
 
 
 def test_chain_singular_lowest():
     agg = {"lowest_n": 1, "offered": 1, "answered": 1, "skipped": 0, "counts": {}}
     assert _direction_chain(agg, 13) == (
-        "Van de 13 respondenten had 1 dit als laagste; 1 beantwoordde de vraag.")
+        "1 van de 13 respondenten had dit als eigen laagste onderwerp; "
+        "die ene beantwoordde hem.")
 
 
 def test_chain_singular_gap_offered_and_answered():
     agg = {"lowest_n": 2, "offered": 1, "answered": 1, "skipped": 0, "counts": {}}
     assert _direction_chain(agg, 13) == (
-        "Van de 13 respondenten hadden 2 dit als laagste; 1 kreeg de vraag, 1 beantwoordde die.")
+        "2 van de 13 respondenten hadden dit als eigen laagste onderwerp; "
+        "1 van de 2 kreeg de vraag, die ene beantwoordde hem.")
 
 
 def test_chain_singular_skipped():
     agg = {"lowest_n": 3, "offered": 3, "answered": 2, "skipped": 1, "counts": {}}
     assert _direction_chain(agg, 13) == (
-        "Van de 13 respondenten hadden 3 dit als laagste; 2 beantwoordden de vraag, 1 sloeg over.")
+        "3 van de 13 respondenten hadden dit als eigen laagste onderwerp; "
+        "2 van de 3 beantwoordden de vraag, 1 sloeg over.")
 
 
 def test_block_two_cards_for_startpunt_and_tweede_only():
@@ -280,14 +290,15 @@ def test_plurality_card_names_the_largest_group_without_claiming_a_majority():
     assert 'class="dir-card dir-plurality"' in html
     assert ("De grootste groep kiest ‘Beter zicht op welke mogelijkheden er voor "
             "mij zijn’, zonder meerderheid.") in html
-    assert ("27 van de 62 bij wie groeiperspectief het laagst scoorde kozen die "
+    assert ("27 van de 62 (44%) bij wie groeiperspectief het laagst scoorde kozen die "
             "richting; 15 kozen ‘Niets, dit zit hier goed’. Wat er volgens de "
             "grootste groep moet gebeuren: Maak zichtbaar welke mogelijkheden er "
             "voor medewerkers zijn.") in html
     # Nooit een meerderheidsclaim, en de percentages blijven binnen de staffel.
     assert "volgens de meeste" not in html
-    assert "44% (27)" in html
-    assert "Van de 180 respondenten hadden 62 dit als laagste; 62 beantwoordden de vraag." in html
+    assert "27 van de 62 (44%)" in html
+    assert ("62 van de 180 respondenten hadden dit als eigen laagste onderwerp; "
+            "62 van de 62 beantwoordden de vraag.") in html
 
 
 def test_plurality_card_without_a_runner_up_makes_no_second_claim():
@@ -310,8 +321,8 @@ def test_split_none_card_makes_the_split_the_subject():
     assert 'class="dir-card dir-split_none"' in html
     assert ("Verdeeld: een deel zegt dat hier niets hoeft, een even groot deel vraagt "
             "om ‘Beter zicht op welke mogelijkheden er voor mij zijn’.") in html
-    assert ("14 kozen ‘Niets, dit zit hier goed’; 14 kozen ‘Beter zicht op welke "
-            "mogelijkheden er voor mij zijn’. Op een onderwerp dat laag scoort "
+    assert ("14 van de 31 (45%) kozen ‘Niets, dit zit hier goed’; 14 kozen ‘Beter zicht "
+            "op welke mogelijkheden er voor mij zijn’. Op een onderwerp dat laag scoort "
             "(4.5/10) is dat verschil van inzicht zelf het gesprek. Wat die andere "
             "groep vraagt: Maak zichtbaar welke mogelijkheden er voor medewerkers "
             "zijn.") in html
@@ -396,7 +407,7 @@ def test_split_none_quotes_the_scan_specific_none_text():
                                               "wld_scope": 2}, skipped=0),
                                 scan_type="exit", factor_key="workload",
                                 n_total=30, factor_score=4.2)
-    assert "9 kozen ‘Niets, dit zat hier goed’;" in html
+    assert "9 van de 20 (45%) kozen ‘Niets, dit zat hier goed’;" in html
     assert "dit zit hier goed" not in html
 
 
@@ -418,13 +429,13 @@ def test_split_none_card_is_singular_correct():
         "startpunt", label="Groeiperspectief",
         agg=_agg(3, {"grd_none": 1, "grd_visibility": 2}, skipped=0),
         scan_type="retention", factor_key="growth", n_total=13, factor_score=4.5)
-    assert ("1 koos ‘Niets, dit zit hier goed’; 2 kozen ‘Beter zicht op welke "
+    assert ("1 van de 3 koos ‘Niets, dit zit hier goed’; 2 kozen ‘Beter zicht op welke "
             "mogelijkheden er voor mij zijn’.") in niets_een
     verandering_een = _direction_card_cell(
         "startpunt", label="Groeiperspectief",
         agg=_agg(7, {"grd_none": 3, "grd_visibility": 1, "grd_time": 1}, skipped=0),
         scan_type="retention", factor_key="growth", n_total=13, factor_score=4.5)
-    assert ("3 kozen ‘Niets, dit zit hier goed’; 1 koos ‘Ontwikkeling beter "
+    assert ("3 van de 7 kozen ‘Niets, dit zit hier goed’; 1 koos ‘Ontwikkeling beter "
             "inplannen naast het reguliere werk’.") in verandering_een
 
 

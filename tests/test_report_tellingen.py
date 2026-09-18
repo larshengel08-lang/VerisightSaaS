@@ -1,6 +1,7 @@
 """B13 Anders-toelichtingen en B14 tellingen met noemer (spec par. 9)."""
 import re
 
+import pytest
 from sqlalchemy.orm import Session
 
 from backend.models import Campaign, Organization, Respondent, SurveyResponse
@@ -11,7 +12,11 @@ from backend.report_html import (
     OTHER_MIN_N,
     _anders_block,
     _deepening_block,
+    _deepening_chain,
     _direction_card_cell,
+    _direction_chain,
+    _direction_totals_line,
+    _telling,
     build_report_data,
 )
 
@@ -100,7 +105,7 @@ def test_anders_block_belooft_geen_teksten_die_er_niet_zijn():
     voor de puntkomma."""
     t = _plain(_anders_block(other_n=6, answered=12,
                              texts=["Alfa.", "Beta.", "Gamma.", "Delta."]))
-    assert ("6 van de 12 kozen ‘Anders’; 4 schreven een toelichting: "
+    assert ("6 van de 12 kozen ‘Anders’; 4 van hen schreven een toelichting: "
             "de vaste opties dekten hun ervaring niet.") in t
     assert "‘Anders’ ;" not in t
     assert "en schreven een eigen toelichting" not in t
@@ -108,7 +113,7 @@ def test_anders_block_belooft_geen_teksten_die_er_niet_zijn():
 
 def test_anders_block_enkelvoud_bij_een_toelichting():
     t = _plain(_anders_block(other_n=4, answered=10, texts=["Alleen ik schreef iets."]))
-    assert "4 van de 10 kozen ‘Anders’; 1 schreef een toelichting:" in t
+    assert "4 van de 10 kozen ‘Anders’; 1 van hen schreef een toelichting:" in t
 
 
 def test_anders_block_toont_geen_teksten_onder_de_quote_staffel():
@@ -156,7 +161,7 @@ def _deep_agg(**counts):
 
 def test_verdiepingsblok_toont_de_anders_toelichtingen():
     html = _deepening_block(_deep_agg(gr_other=6, gr_visibility=5, gr_time=5),
-                            "retention", "growth")
+                            "retention", "growth", 39)
     t = _plain(html)
     assert "6 van de 16 kozen ‘Anders’ en schreven een eigen toelichting" in t
     assert "Iets eigens 0." in t
@@ -165,7 +170,7 @@ def test_verdiepingsblok_toont_de_anders_toelichtingen():
 def test_verdiepingsblok_zet_de_beperkte_basis_regel_voor_de_lijst():
     """"Beperkte antwoordbasis" hoort bij de verdeling erboven, niet bij de
     toelichtingen eronder."""
-    html = _deepening_block(_deep_agg(gr_other=5, gr_visibility=2), "retention", "growth")
+    html = _deepening_block(_deep_agg(gr_other=5, gr_visibility=2), "retention", "growth", 39)
     t = _plain(html)
     assert t.index("Beperkte antwoordbasis") < t.index("kozen ‘Anders’")
 
@@ -180,7 +185,7 @@ def test_richtingkaart_toont_de_anders_toelichtingen_na_de_caveat():
     assert "5 van de 12 kozen ‘Anders’ en schreven een eigen toelichting" in t
     assert "Eigen richting 0." in t
     # De keten sluit het blok af, de toelichtingen staan ervoor.
-    assert t.index("kozen ‘Anders’") < t.index("Van de 39 respondenten")
+    assert t.index("kozen ‘Anders’") < t.index("14 van de 39 respondenten")
 
 
 def test_richtingkaart_zwijgt_over_anders_bij_te_weinig_antwoorden():
@@ -234,3 +239,168 @@ def test_build_report_data_anonimiseert_de_anders_teksten(db_session: Session):
         assert "[NAAM]" in t and "[EMAIL]" in t
     for t in direc:
         assert "Sanne Bakker" not in t and "[NAAM]" in t
+
+
+# ── B14: één tellingsvorm, en een keten die sluit (H2, H19) ──────────────────
+
+AGG_D = {"triggered": 17, "offered": 17, "answered": 16, "skipped": 1,
+         "primary_counts": {}, "secondary_counts": {}, "other_texts": []}
+
+
+def test_telling_vaste_vorm():
+    assert _telling(8, 16, "8 = beantwoorders") == "8 van de 16 (50%)"
+    assert _telling(3, 8) == "3 van de 8"           # onder 10 geen percentage
+    assert _telling(27, 62) == "27 van de 62 (44%)"
+
+
+def test_telling_zonder_noemer_is_een_fout():
+    """Een telling zonder noemer is precies wat B14 verbiedt; "3 van de 0"
+    afdrukken is erger dan omvallen."""
+    with pytest.raises(ValueError, match="noemer"):
+        _telling(3, 0)
+
+
+def test_deepening_chain_zonder_jargon_met_noemers():
+    zin = _deepening_chain(AGG_D, "retention", "growth", n_total=39)
+    assert zin == ("17 van de 39 respondenten kregen de verdiepende vraag over groeiperspectief "
+                   "(17 = wie hier laag scoorde); 16 van de 17 beantwoordden die, 1 sloeg over.")
+    assert "verdieptrigger" not in zin
+    onder_cap = dict(AGG_D, triggered=20, offered=17)
+    zin = _deepening_chain(onder_cap, "retention", "growth", n_total=39)
+    assert zin.startswith("20 van de 39 respondenten scoorden hier laag; 17 van de 20 kregen de verdiepende "
+                          "vraag (de andere 3 zaten al aan het maximum van drie verdiepingen)")
+
+
+def test_deepening_chain_zonder_aanbod_verzint_geen_noemer():
+    """Cap-verdrongen bij élke respondent (offered=0): "0 van de 0 beantwoordden
+    die" is geen Nederlands en geen telling. De keten eindigt dan bij het aanbod
+    en zegt waarom niemand de vraag kreeg."""
+    agg = dict(AGG_D, triggered=5, offered=0, answered=0, skipped=0)
+    assert _deepening_chain(agg, "retention", "workload", n_total=39) == (
+        "5 van de 39 respondenten scoorden hier laag; niemand kreeg de verdiepende vraag "
+        "(zij zaten allemaal al aan het maximum van drie verdiepingen).")
+
+
+def test_deepening_chain_meer_aangeboden_dan_getriggerd_liegt_niet():
+    """Historische data (gewijzigde triggerregels) kan offered > triggered
+    opleveren. De keten mag dan niet zeggen dat triggered de vraag kreeg: dat
+    getal is kleiner dan het aantal dat hem echt kreeg."""
+    zin = _deepening_chain(dict(AGG_D, triggered=9, offered=17), "retention", "growth",
+                           n_total=39)
+    assert zin == ("17 van de 39 respondenten kregen de verdiepende vraag over groeiperspectief "
+                   "(17 = wie de vraag kreeg; met de drempel van nu scoren 9 van hen hier laag); "
+                   "16 van de 17 beantwoordden die, 1 sloeg over.")
+
+
+def test_deepening_chain_meldt_een_niet_sluitende_status():
+    """answered + skipped moet het aanbod dekken. Klopt dat niet, dan staat er
+    wat er ontbreekt in plaats van een keten waarin mensen verdwijnen."""
+    zin = _deepening_chain(dict(AGG_D, answered=12, skipped=1), "retention", "growth",
+                           n_total=39)
+    assert zin.endswith("12 van de 17 beantwoordden die, 1 sloeg over; van 4 antwoorden is "
+                        "niet vastgelegd of de vraag is beantwoord.")
+
+
+def test_direction_chain_sluit_en_noemt_de_noemer():
+    agg = {"lowest_n": 16, "offered": 16, "answered": 15, "skipped": 1, "counts": {"grd_conversation": 11}}
+    assert _direction_chain(agg, 39) == ("16 van de 39 respondenten hadden dit als eigen laagste onderwerp; "
+                                         "15 van de 16 beantwoordden de vraag, 1 sloeg over.")
+
+
+def test_direction_chain_zonder_aanbod_zegt_dat_niemand_de_vraag_kreeg():
+    """lowest_n zonder aanbod (rijen van vóór de richtingvraag): de keten moet
+    zeggen waar die mensen bleven, niet stil bij de opener eindigen."""
+    agg = {"lowest_n": 4, "offered": 0, "answered": 0, "skipped": 0, "counts": {}}
+    assert _direction_chain(agg, 13) == (
+        "4 van de 13 respondenten hadden dit als eigen laagste onderwerp; "
+        "niemand van hen kreeg de vraag.")
+
+
+def test_direction_chain_meldt_een_niet_sluitende_status():
+    agg = {"lowest_n": 10, "offered": 10, "answered": 6, "skipped": 1, "counts": {}}
+    assert _direction_chain(agg, 39).endswith(
+        "6 van de 10 beantwoordden de vraag, 1 sloeg over; van 3 antwoorden is niet "
+        "vastgelegd of de vraag is beantwoord.")
+
+
+def _dagg(**lows):
+    """Per factor (lowest_n, offered, answered, skipped); de rest op nul."""
+    uit = {fk: {"lowest_n": 0, "offered": 0, "answered": 0, "skipped": 0, "counts": {}}
+           for fk in ("growth", "workload", "leadership", "culture", "compensation",
+                      "role_clarity")}
+    for fk, (low, off, ans, skip) in lows.items():
+        uit[fk] = {"lowest_n": low, "offered": off, "answered": ans, "skipped": skip,
+                   "counts": {}}
+    return uit
+
+
+def test_direction_totals_line_sluit_op_het_totaal_en_verantwoordt_de_rest():
+    dagg = _dagg(growth=(16, 16, 15, 1), workload=(11, 11, 10, 1),
+                 leadership=(8, 8, 2, 6), culture=(4, 4, 0, 4))
+    zin = _direction_totals_line(dagg, ["growth", "workload"], "retention", 39)
+    assert zin == ("Van de 39 respondenten kregen 39 de vraag, 27 beantwoordden hem, 12 sloegen over. "
+                   "16 hadden groeiperspectief als laagste onderwerp, 11 werkdruk en herstelruimte; "
+                   "de overige 12 een ander onderwerp (leiderschap en vertrouwen 8, cultuur en psychologische "
+                   "veiligheid 4). Die antwoorden gaan over onderwerpen die niet op de agenda staan en zijn "
+                   "daarom niet uitgewerkt.")
+
+
+def test_direction_totals_line_laat_geen_nul_clausules_staan():
+    """"0 sloegen over" is fout Nederlands; enkelvoud moet enkelvoud zijn."""
+    dagg = _dagg(growth=(12, 12, 12, 0), workload=(1, 1, 1, 0))
+    zin = _direction_totals_line(dagg, ["growth", "workload"], "retention", 13)
+    assert zin.startswith("Van de 13 respondenten kregen 13 de vraag, 13 beantwoordden hem. ")
+    assert "sloegen over" not in zin
+    assert "12 hadden groeiperspectief als laagste onderwerp, 1 werkdruk en herstelruimte." in zin
+    een = _direction_totals_line(_dagg(growth=(1, 1, 0, 1)), ["growth"], "retention", 1)
+    assert een == ("Van de 1 respondent kreeg 1 de vraag, 1 sloeg over. "
+                   "1 had groeiperspectief als laagste onderwerp.")
+
+
+def test_direction_totals_line_verzint_geen_restgroep():
+    """Wie geen enkele stelling over deze onderwerpen invulde heeft geen laagste
+    onderwerp. Dan telt de keten niet op tot het aantal respondenten, en staat
+    er wat er ontbreekt in plaats van "de overige"."""
+    dagg = _dagg(growth=(16, 16, 15, 1), workload=(11, 11, 10, 1), leadership=(8, 8, 8, 0))
+    zin = _direction_totals_line(dagg, ["growth", "workload"], "retention", 39)
+    assert "8 een ander onderwerp (leiderschap en vertrouwen 8)" in zin
+    assert "de overige" not in zin
+    assert ("Bij 4 respondenten kon Loep geen laagste onderwerp vaststellen: zij vulden "
+            "geen van de stellingen over deze onderwerpen in.") in zin
+
+
+def test_direction_totals_line_zonder_rest_en_zonder_aanbod():
+    dagg = _dagg(growth=(9, 9, 9, 0), workload=(4, 4, 3, 1))
+    zin = _direction_totals_line(dagg, ["growth", "workload"], "retention", 13)
+    assert zin.endswith("9 hadden groeiperspectief als laagste onderwerp, 4 werkdruk en "
+                        "herstelruimte.")
+    assert "ander onderwerp" not in zin
+    assert _direction_totals_line(_dagg(), ["growth"], "retention", 13) == ""
+
+
+def test_direction_totals_line_zonder_em_dash():
+    dagg = _dagg(growth=(16, 16, 15, 1), leadership=(8, 8, 2, 6))
+    zin = _direction_totals_line(dagg, ["growth"], "retention", 39)
+    assert "—" not in zin and "&#x2014;" not in zin
+
+
+def test_richtingblok_draagt_de_sluitende_keten():
+    """De totaalregel staat in het blok zelf, tussen de intro en de kaarten."""
+    from backend.report_html import _wat_moet_gebeuren_block
+    from tests.test_report_priority_render import RANKED
+
+    dagg = _dagg(growth=(9, 9, 8, 1), workload=(8, 8, 8, 0), leadership=(9, 9, 8, 1))
+    dagg["growth"]["counts"] = {"grd_visibility": 6, "grd_none": 1, "grd_time": 1}
+    dagg["workload"]["counts"] = {"wld_peaks": 3, "wld_scope": 3, "wld_none": 2}
+    dagg["leadership"]["counts"] = {"ldd_feedback": 8}
+    html = _wat_moet_gebeuren_block(RANKED, dagg, "retention", 26)
+    # Opmaak in het stylesheet, niet inline (codereview taak 9): deze regel is
+    # een eerlijkheidsregel en moet leesbaar zijn, dus niet in de 8.5px mono van
+    # de ketens in de kaarten.
+    assert '<p class="dir-chain dir-totals">' in html
+    assert "style=" not in html.split("<table")[0]
+    t = _tekst(html)
+    assert ("Van de 26 respondenten kregen 26 de vraag, 24 beantwoordden hem, 2 sloegen over. "
+            "9 hadden groeiperspectief als laagste onderwerp, 8 werkdruk en herstelruimte; "
+            "de overige 9 een ander onderwerp (leiderschap en vertrouwen 9).") in t
+    assert t.index("geen advies van Loep") < t.index("Van de 26 respondenten") < t.index("Startpunt:")

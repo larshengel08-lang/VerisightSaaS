@@ -305,6 +305,12 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .dir-tbl td { font-size: 9.5px; padding: 5px 6px; }
 .dir-caveat { font-size: 10px; color: #92400E; margin: 4px 0 0; }
 .dir-chain { font-family: 'JetBrains Mono', monospace; font-size: 8.5px; color: """ + STEEL + r"""; margin-top: 8px; }
+/* De sluitende totaalregel boven de kaarten (B14, H19) verantwoordt álle
+   richtingantwoorden en is daarmee een eerlijkheidsregel, niet een voetnoot in
+   een kaart: leesbare 10px in de gewone letter, zoals .dir-intro erboven. De
+   maat staat hier en niet inline, zodat er één plek is (codereview taak 9). */
+.dir-chain.dir-totals { font-family: inherit; font-size: 10px; line-height: 1.5;
+  max-width: 70ch; margin: 0 0 10px; }
 .mq-direction { font-size: 11px; font-weight: 600; color: """ + NAVY + r"""; margin: 8px 0 0; }
 .mq-brug { font-size: 10.5px; color: #374151; margin: 8px 0 0; }
 /* Dezelfde brugzin op een eigen sectie (gespreksagenda) staat na een tabel en

@@ -660,10 +660,15 @@ from backend.report_html import (  # noqa: E402
 
 
 def _deep_agg(answered: int) -> dict:
-    """Aggregaat van één onderwerp met `answered` beantwoorde verdiepingsvragen."""
+    """Aggregaat van één onderwerp met `answered` beantwoorde verdiepingsvragen.
+
+    `skipped` sluit de keten (aggregate_deepening zet die sleutel altijd, en elke
+    aangeboden verdieping is beantwoord of overgeslagen): zonder dat getal zou de
+    noemer-keten melden dat er twee antwoorden zonder status zijn (B14)."""
     return {"triggered": answered + 2, "offered": answered + 2, "answered": answered,
-            "primary_counts": {"wl_volume": answered}, "secondary_counts": {},
-            "other_texts": [], "question_set_version": "retention_v2"}
+            "skipped": 2, "primary_counts": {"wl_volume": answered},
+            "secondary_counts": {}, "other_texts": [],
+            "question_set_version": "retention_v2"}
 
 
 def _retention_met_secties(**over) -> dict:
