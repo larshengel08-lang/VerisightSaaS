@@ -2837,7 +2837,11 @@ def _direction_totals_line(direction_agg: dict, agenda_keys: list[str], scan_typ
        nooit (`lowest_n > offered`, bij een campagne die over de deploy heen
        liep). Zin 1 telt `offered` en zin 2 telt `lowest_n`, dus zonder deze
        melding staat "kregen 28 de vraag" naast "de overige 11 een ander
-       onderwerp ... daarom niet uitgewerkt" over elf mensen zonder antwoord;
+       onderwerp ... daarom niet uitgewerkt" over elf mensen zonder antwoord.
+       Die groep valt bij drift in tweeën: hoogstens het overschot kreeg de vraag
+       over een ánder onderwerp (dat staat in de overschotmelding, met zijn eigen
+       getal), en alleen wat daarna overblijft kreeg zeker geen vraag. Alleen
+       over dát deel zegt de regel dat er geen antwoord van is;
     3. de omgekeerde drift: er is méér aangeboden dan er nu een laagste onderwerp
        hebben (`offered > toegewezen`). Dan hebben mensen zonder herberekend
        laagste onderwerp de vraag wél gekregen, en mag de slotzin niet beweren
@@ -2919,14 +2923,19 @@ def _direction_totals_line(direction_agg: dict, agenda_keys: list[str], scan_typ
                     "en zijn daarom niet uitgewerkt.")
     elif delen2:
         zin += "."
-    if niet_gevraagd:
-        # Met drift (overschot) kregen deze mensen de vraag wél, alleen over een
-        # ander onderwerp dan hun nu herberekende laagste: "van hen is er dus
-        # geen antwoord" is dan onwaar (restpunt uit de review van taak 11).
-        # Zonder drift kreeg niemand van hen een vraag en blijft de zin waar.
-        zin += (f" Bij {niet_gevraagd} van de {n_total} is de vraag niet over hun "
-                "laagste onderwerp gesteld." if overschot else
-                f" Bij {niet_gevraagd} van de {n_total} is die vraag niet gesteld; "
+    # Van de groep zonder aanbod op het eigen laagste onderwerp kan hoogstens het
+    # overschot de vraag over een ánder onderwerp hebben gekregen; wat overblijft
+    # kreeg zeker geen vraag, en alleen over dat deel mag hier staan dat er geen
+    # antwoord van is. Eén globale vlag rekende eerst de hele groep naar de
+    # verschoven kant, en dat klopte alleen zolang er twee onderwerpen in het
+    # spel waren (review taak 12): bij groeiperspectief 15/20, werkdruk 8/8 en
+    # leiderschap 16/0 stond er "Bij 16 van de 39 is de vraag niet over hun
+    # laagste onderwerp gesteld", terwijl er 28 aanbiedingen waren en dus elf
+    # mensen helemaal geen vraag kregen. De verschoven mensen staan met hun eigen
+    # getal in de overschotmelding hieronder, dus ze vallen nergens weg.
+    zonder_vraag = max(0, niet_gevraagd - overschot)
+    if zonder_vraag:
+        zin += (f" Bij {zonder_vraag} van de {n_total} is die vraag niet gesteld; "
                 "van hen is er dus geen antwoord.")
     # Twee losse meldingen, want het zijn twee losse feiten (codereview taak 11):
     # het overschot hoeft niet in de groep zonder herberekend laagste onderwerp te

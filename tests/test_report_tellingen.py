@@ -486,6 +486,9 @@ def test_totaalregel_meldt_wie_de_vraag_niet_kreeg():
     assert "11 een ander onderwerp (leiderschap en vertrouwen 11)" in zin
     assert ("Bij 11 van de 39 is die vraag niet gesteld; van hen is er dus geen "
             "antwoord.") in zin
+    # Zuiver geval: geen overschot, dus geen melding over een verschoven vraag
+    # die de hele groep zou herlabelen (review taak 12).
+    assert "ging de vraag over een onderwerp" not in zin
     # Niemand buiten de agenda heeft geantwoord, dus niets om "niet uitgewerkt" te noemen.
     assert "niet uitgewerkt" not in zin
     # En de zin sluit: 28 gekregen + 11 niet gesteld = 39.
@@ -579,9 +582,11 @@ def test_totaalregel_meet_het_overschot_per_onderwerp_niet_op_de_som():
     assert zin.startswith("Van de 16 respondenten kregen 16 de vraag, 16 beantwoordden hem. ")
     # Met drift kregen die acht de vraag wél, alleen over een ander onderwerp
     # (restpunt uit de review van taak 11): "van hen is er dus geen antwoord"
-    # was daar onwaar, want alle 16 antwoordden.
-    assert ("Bij 8 van de 16 is de vraag niet over hun laagste onderwerp "
-            "gesteld.") in zin
+    # was daar onwaar, want alle 16 antwoordden. Iedereen kreeg een vraag, dus
+    # er is niemand zonder aanbod om over te melden; de overschotmelding
+    # verantwoordt deze acht met hun eigen getal.
+    assert "Bij 8 van de 16 is" not in zin   # geen tweede, herlabelde melding
+    assert "niet gesteld" not in zin
     assert "van hen is er dus geen antwoord" not in zin
     assert ("Bij 8 van de 16 ging de vraag over een onderwerp dat met de rekenregels "
             "van nu niet hun laagste onderwerp is; die telling sluit daarom niet op "
@@ -590,6 +595,41 @@ def test_totaalregel_meet_het_overschot_per_onderwerp_niet_op_de_som():
     # geen groep zonder laagste onderwerp om over te melden.
     assert "kon Loep" not in zin
     assert "de overige" not in zin
+
+
+def test_totaalregel_splitst_wie_geen_vraag_kreeg_van_wie_een_andere_vraag_kreeg():
+    """Restpunt uit de review van taak 12: de formulering hing aan één globale
+    vlag, dus zodra er érgens een overschot stond kreeg de hele groep zonder
+    aanbod het label van het verschoven deel. Met drie onderwerpen valt dat uit
+    elkaar: leiderschap kreeg nul aanbod (16 mensen) terwijl het overschot op
+    groeiperspectief 5 is. Hoogstens 5 van die 16 kregen de vraag over een ander
+    onderwerp; 11 kregen er helemaal geen (39 respondenten, 28 aanbiedingen)."""
+    dagg = _dagg(growth=(15, 20, 20, 0), workload=(8, 8, 8, 0), leadership=(16, 0, 0, 0))
+    zin = _direction_totals_line(dagg, ["growth", "workload"], "retention", 39)
+    assert zin.startswith("Van de 39 respondenten kregen 28 de vraag, 28 beantwoordden hem. ")
+    assert ("Bij 11 van de 39 is die vraag niet gesteld; van hen is er dus geen "
+            "antwoord.") in zin
+    # Niet de hele groep van 16: die kregen niet allemaal een andere vraag, en
+    # van hen is ook niet allemaal geen antwoord.
+    assert "Bij 16 van de 39" not in zin
+    # Het verschoven deel staat met zijn eigen getal in de overschotmelding.
+    assert ("Bij 5 van de 39 ging de vraag over een onderwerp dat met de rekenregels "
+            "van nu niet hun laagste onderwerp is; die telling sluit daarom niet op "
+            "de verdeling hierboven.") in zin
+    # En de zin sluit weer: 28 kregen de vraag + 11 zonder vraag = 39.
+
+
+def test_totaalregel_zwijgt_over_wie_geen_vraag_kreeg_als_iedereen_er_een_kreeg():
+    """Zuiver overschot: geen enkel onderwerp heeft meer laagste-scoorders dan
+    aanbiedingen, dus er is niemand zonder vraag om over te melden. Alleen de
+    overschotmelding hoort er dan te staan."""
+    dagg = _dagg(growth=(10, 16, 16, 0), workload=(6, 6, 6, 0))
+    zin = _direction_totals_line(dagg, ["growth", "workload"], "retention", 22)
+    assert zin.startswith("Van de 22 respondenten kregen 22 de vraag, 22 beantwoordden hem. ")
+    assert "niet gesteld" not in zin
+    assert "van hen is er dus geen antwoord" not in zin
+    assert ("Bij 6 van de 22 ging de vraag over een onderwerp dat met de rekenregels "
+            "van nu niet hun laagste onderwerp is") in zin
 
 
 def test_totaalregel_claimt_geen_overschot_in_een_groep_die_te_klein_is():
