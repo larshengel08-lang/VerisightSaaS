@@ -1336,14 +1336,17 @@ async def serve_survey(
             context={"already_done": True},
         )
 
+    # Gesloten metingen (amendement par. 4.3a) tellen niet als "geopend": een
+    # link die pas na de sluitdag wordt aangeklikt mag geen opened_at krijgen.
+    campaign = respondent.campaign
+    if not _campaign_is_open(campaign):
+        return _survey_closed_response(request)
+
     # Mark opened
     if not respondent.opened_at:
         respondent.opened_at = datetime.now(timezone.utc)
         db.commit()
 
-    campaign = respondent.campaign
-    if not _campaign_is_open(campaign):
-        return _survey_closed_response(request)
     locked_product_name = _get_runtime_locked_product_name(campaign.scan_type)
     if locked_product_name:
         return _render_survey_status(
