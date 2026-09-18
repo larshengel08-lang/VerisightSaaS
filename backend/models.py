@@ -149,6 +149,11 @@ class Campaign(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
     closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
+    # Sluitdatum (date) uit de wizard (migratie migrations/2026_06_17_add_closes_at.sql).
+    # Na deze dag (Europe/Amsterdam) weigert de survey-flow, zie backend/survey_window.py;
+    # null betekent geen deadline.
+    closes_at: Mapped[date | None] = mapped_column(Date, nullable=True)
+
     organization: Mapped["Organization"] = relationship(back_populates="campaigns")
     respondents: Mapped[list["Respondent"]] = relationship(back_populates="campaign", cascade="all, delete-orphan")
     learning_dossiers: Mapped[list["PilotLearningDossier"]] = relationship(

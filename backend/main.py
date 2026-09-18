@@ -81,6 +81,13 @@ from backend.products.shared.deepening import (
 from backend.products.shared.registry import get_product_module
 from backend.runtime import require_backend_admin_token, validate_runtime_config
 from backend.scan_definitions import get_scan_definition
+from backend.survey_window import (
+    SURVEY_CLOSED_HEADING,
+    SURVEY_CLOSED_HINT,
+    SURVEY_CLOSED_MESSAGE,
+    SURVEY_CLOSED_TITLE,
+    is_survey_open,
+)
 from backend.schemas import (
     CampaignCreate,
     CampaignRead,
@@ -648,6 +655,24 @@ def _render_survey_status(
     )
 
 
+def _campaign_is_open(campaign: Campaign) -> bool:
+    """Eén bron van waarheid voor 'mag deze meting nog ingevuld worden'
+    (is_active én sluitdatum, amendement spec 2026-09-16 par. 4.3a)."""
+    return is_survey_open(is_active=campaign.is_active, closes_at=campaign.closes_at)
+
+
+def _survey_closed_response(request: Request) -> HTMLResponse:
+    return _render_survey_status(
+        request,
+        status_code=410,
+        title=SURVEY_CLOSED_TITLE,
+        heading=SURVEY_CLOSED_HEADING,
+        message=SURVEY_CLOSED_MESSAGE,
+        hint=SURVEY_CLOSED_HINT,
+        tone="info",
+    )
+
+
 # ---------------------------------------------------------------------------
 # Global DB error handler — geeft 503 terug bij verbindingsfouten
 # (Supabase circuit breaker, network timeout, etc.) in plaats van HTTP 500
@@ -1125,15 +1150,8 @@ async def open_survey_intro(
             tone="warning",
         )
 
-    if not campaign.is_active:
-        return _render_survey_status(
-            request,
-            status_code=410,
-            title="Survey gesloten",
-            heading="Deze survey is gesloten",
-            message="De campagne accepteert geen nieuwe inzendingen meer.",
-            tone="info",
-        )
+    if not _campaign_is_open(campaign):
+        return _survey_closed_response(request)
 
     locked_product_name = _get_runtime_locked_product_name(campaign.scan_type)
     if locked_product_name:
@@ -1200,15 +1218,8 @@ async def open_survey_start(
             tone="warning",
         )
 
-    if not campaign.is_active:
-        return _render_survey_status(
-            request,
-            status_code=410,
-            title="Survey gesloten",
-            heading="Deze survey is gesloten",
-            message="De campagne accepteert geen nieuwe inzendingen meer.",
-            tone="info",
-        )
+    if not _campaign_is_open(campaign):
+        return _survey_closed_response(request)
 
     # Single-fill bescherming: als een afgeronde respondent met deze dedup-hash
     # al bestaat voor deze campagne, geen nieuwe respondent aanmaken.
@@ -1331,16 +1342,8 @@ async def serve_survey(
         db.commit()
 
     campaign = respondent.campaign
-    if not campaign.is_active:
-        return _render_survey_status(
-            request,
-            status_code=410,
-            title="Survey gesloten",
-            heading="Deze survey is gesloten",
-            message="Deze campagne accepteert geen nieuwe inzendingen meer. Eerder ingevulde antwoorden blijven wel meegenomen in de rapportage.",
-            hint="Heb je vragen over de uitkomsten of verwerking van je gegevens, neem dan contact op met de HR-afdeling van je organisatie.",
-            tone="info",
-        )
+    if not _campaign_is_open(campaign):
+        return _survey_closed_response(request)
     locked_product_name = _get_runtime_locked_product_name(campaign.scan_type)
     if locked_product_name:
         return _render_survey_status(
@@ -1391,8 +1394,8 @@ async def submit_survey(
         raise HTTPException(status_code=404, detail="Ongeldige token.")
     if respondent.completed:
         raise HTTPException(status_code=409, detail="Survey al ingevuld.")
-    if not respondent.campaign.is_active:
-        raise HTTPException(status_code=410, detail="Deze survey is gesloten en accepteert geen nieuwe inzendingen meer.")
+    if not _campaign_is_open(respondent.campaign):
+        raise HTTPException(status_code=410, detail=SURVEY_CLOSED_MESSAGE)
     if _is_placeholder_primary_route(respondent.campaign.scan_type):
         raise HTTPException(
             status_code=422,
