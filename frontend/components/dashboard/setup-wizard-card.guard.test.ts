@@ -189,4 +189,19 @@ describe('setup-wizard responsive en invoervelden (spec 2026-09-16 par. 7, walkt
     expect(src).toMatch(/<input\s+id="invite-subject"/)
     expect(src).not.toMatch(/<textarea\s+id="invite-subject"/)
   })
+
+  it('geeft de kop van de kaart ruimte om af te breken op smalle schermen', () => {
+    expect(src).toContain('break-words font-serif text-[2rem]')
+  })
+
+  it('gebruikt smallere zijmarges op een telefoon zodat de afdelingsrij past', () => {
+    expect(src).toContain('px-4 py-7 sm:px-6')
+  })
+
+  it('laat de afdelingsnaam krimpen en houdt aantal en verwijderknop op een vaste breedte (walkthrough 8.1, 375px)', () => {
+    expect(src).toContain('min-w-0 flex-1 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#E8A020]/50 disabled:opacity-50')
+    expect(src).toContain('w-20 shrink-0 rounded-lg border border-white/20 bg-white/10')
+    expect(src).toContain('shrink-0 rounded-lg border border-white/15 px-2 text-xs text-white/50 hover:bg-white/10')
+    expect(src).not.toContain('w-24 rounded-lg border border-white/20 bg-white/10')
+  })
 })

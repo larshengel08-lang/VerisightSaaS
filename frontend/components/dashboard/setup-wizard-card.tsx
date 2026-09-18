@@ -425,11 +425,11 @@ export function SetupWizardCard({
   }
 
   return (
-    <section className="rounded-[22px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-6 py-7">
+    <section className="rounded-[22px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-4 py-7 sm:px-6">
       <p className="mb-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#E8A020]">
         {scanLabel}
       </p>
-      <h1 className="font-serif text-[2rem] leading-[1.05] tracking-[-0.04em] text-[color:var(--dashboard-ink)]">
+      <h1 className="break-words font-serif text-[2rem] leading-[1.05] tracking-[-0.04em] text-[color:var(--dashboard-ink)]">
         Welkom {organizationName} bij Loep
       </h1>
       <p className="mt-2 text-[0.95rem] text-[color:var(--dashboard-text)]">
@@ -520,7 +520,7 @@ export function SetupWizardCard({
                               disabled={isLocked}
                               placeholder="Afdelingsnaam"
                               onChange={(e) => updateDeptRow(index, { label: e.target.value })}
-                              className="flex-1 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#E8A020]/50 disabled:opacity-50"
+                              className="min-w-0 flex-1 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#E8A020]/50 disabled:opacity-50"
                             />
                             <input
                               type="number" min={MIN_INVITED_PER_DEPARTMENT}
@@ -531,13 +531,13 @@ export function SetupWizardCard({
                                   invitedCount: e.target.value === '' ? '' : Number(e.target.value),
                                 })
                               }
-                              className="w-24 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#E8A020]/50"
+                              className="w-20 shrink-0 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#E8A020]/50"
                             />
                             {!isLocked && deptRows.length > 2 && (
                               <button
                                 type="button"
                                 onClick={() => removeDeptRow(index)}
-                                className="rounded-lg border border-white/15 px-2 text-xs text-white/50 hover:bg-white/10"
+                                className="shrink-0 rounded-lg border border-white/15 px-2 text-xs text-white/50 hover:bg-white/10"
                                 aria-label="Verwijder afdeling"
                               >
                                 ×
