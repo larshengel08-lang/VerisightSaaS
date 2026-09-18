@@ -4378,6 +4378,30 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
 
 # ─── Gedeelde secties: werkgeversaanbeveling, werkbeleving, appendix ─────────
 
+def _enps_cijfers(data: dict) -> tuple[int | None, dict | None]:
+    """Eén gate voor de werkgeversaanbeveling (codereview taak 8).
+
+    Het contextblok, de appendixregel en de meetgegevens hingen elk aan hun
+    eigen spelling van dezelfde voorwaarde; drie spellingen kunnen stil
+    uiteenlopen en dan zegt de ene pagina "niet in dit rapport" terwijl de
+    andere een score toont. `enps_available` is de drempel (`MIN_QUOTES_N`);
+    haalt een meting die niet, dan rapporteert dit rapport geen score, ook niet
+    als er een berekende waarde in de data staat.
+
+    Fail Loud: een gerapporteerde score zonder tellingen is een datafout, niet
+    "niet gemeten". Stil terugvallen zou een gemeten score laten verdwijnen.
+    """
+    if not data.get("enps_available") or data.get("enps_score") is None:
+        return None, None
+    detail = data.get("enps_detail")
+    if not detail:
+        raise ValueError(
+            "enps_score zonder enps_detail: de tellingen achter de "
+            "werkgeversaanbeveling ontbreken, dus kan het rapport de score niet "
+            "onderbouwen (build_report_data zet beide samen)")
+    return data["enps_score"], detail
+
+
 def _enps_block(enps_score: int | None, enps_detail: dict | None) -> str:
     """Werkgeversaanbeveling als blok op de contextpagina (H13, spec par. 9 B9):
     de score met de tellingen erbij, zodat "+0" iets betekent. Leeg zonder
@@ -4395,24 +4419,38 @@ def _enps_block(enps_score: int | None, enps_detail: dict | None) -> str:
 
 
 def _werkbeleving_section(sdt_a: dict, sim: dict, sdt_items: list, opener_html: str) -> str:
-    """Werkbeleving (SDT) in twee kolommen (B9): links de overzichtsbalken en
-    autonomie, rechts competentie en verbondenheid. Eén helper voor de drie
-    renderers; voorheen drie keer dezelfde 40 regels.
+    """Werkbeleving (SDT), één helper voor de drie renderers; voorheen drie keer
+    dezelfde 40 regels.
+
+    Twee kolommen (B9) alleen als er echt iets te halveren is: bij een volle
+    SDT-set (vier stellingen per dimensie) ging deze sectie van 287mm naar 233mm
+    en dus van twee pagina's naar één. Loep Start meet drie werkbelevingsitems,
+    dus één stelling per dimensie; twee kolommen halveren daar een sectie die al
+    dun was (0,32 tot 0,35 vulling gemeten op main) en maken het probleem groter
+    in plaats van kleiner. De keuze hangt daarom aan de data en niet aan het
+    scantype: zodra geen enkele kaart meer dan één stelling draagt, staat alles
+    onder elkaar (codereview taak 8).
+
+    Dimensies komen uit SDT_LABELS, dezelfde lijst die _heeft_werkbeleving
+    leest: met een hardcoded drietal zou een nieuwe dimensie wel de gate halen
+    en niet in de sectie staan, en dan verwijst de leidraad naar een pagina die
+    hem niet toont.
 
     Leeg zonder dimensiescores. De aanroeper gate't daarom op
-    _heeft_werkbeleving (dezelfde dimensies, dezelfde None-check), zodat
-    ch.opener geen hoofdstuknummer opeist voor een sectie die niets toont.
+    _heeft_werkbeleving, zodat ch.opener geen hoofdstuknummer opeist voor een
+    sectie die niets toont.
     """
+    def _keys(dim: str) -> list[str]:
+        return [ik for ik in SDT_DIMENSION_ITEMS.get(dim, []) if ik in sim]
+
     def _item_tbl(dim: str) -> str:
-        keys = SDT_DIMENSION_ITEMS.get(dim, [])
         REV = '<span style="font-size:8px;color:#94A3B8;">&nbsp;(omgekeerd)</span>'
         rows = "".join(
             f'<tr><td class="iq">{_h(q)}{REV if ik in SDT_REVERSE_ITEMS else ""}</td>'
             f'<td class="is" style="color:{_rag_color(sim.get(ik))};">{sim[ik]:.1f}</td>'
             f'<td class="ib">{_mini_bar_svg(sim.get(ik), _rag_color(sim.get(ik)), width=80, height=6)}</td></tr>'
-            for ik in keys
-            for q in [next((t for k, t in sdt_items if k == ik), ik)]
-            if ik in sim)
+            for ik in _keys(dim)
+            for q in [next((t for k, t in sdt_items if k == ik), ik)])
         return f'<table class="item-tbl">{rows}</table>' if rows else ""
 
     def _card(dim: str) -> str:
@@ -4427,22 +4465,46 @@ def _werkbeleving_section(sdt_a: dict, sim: dict, sdt_items: list, opener_html: 
                 f'<span style="font-size:10px;color:{col};margin-left:6px;">&middot; {_h(_factor_label(sc))}</span></div>'
                 f'<div style="font-size:9.5px;color:#6B7280;margin-bottom:8px;">{_h(SDT_HELP.get(dim, ""))}</div>{tbl}</div>')
 
-    overview = "".join(_factor_bar_row(SDT_LABELS.get(dim, ""), sdt_a.get(dim))
-                       for dim in ("autonomy", "competence", "relatedness") if sdt_a.get(dim) is not None)
+    dims = [dim for dim in SDT_LABELS if sdt_a.get(dim) is not None]
+    overview = "".join(_factor_bar_row(SDT_LABELS.get(dim, ""), sdt_a.get(dim)) for dim in dims)
     if not overview:
         return ""
-    left = f'<div class="card" style="margin-bottom:14px;">{overview}</div>{_card("autonomy")}'
-    right = f'{_card("competence")}{_card("relatedness")}'
-    return (f'<div class="pb sec">{opener_html}{_intro("werkbeleving")}'
-            f'<div class="tcol wb-cols"><div class="tc-l">{left}</div><div class="tc-r">{right}</div></div></div>')
+    kaarten = [k for k in (_card(dim) for dim in dims) if k]
+    overzichtskaart = f'<div class="card" style="margin-bottom:14px;">{overview}</div>'
+    twee_kolommen = any(len(_keys(dim)) > 1 for dim in dims)
+    if not twee_kolommen:
+        inhoud = overzichtskaart + "".join(kaarten)
+    else:
+        # De overzichtskaart hoort bij de eerste kolom en weegt zelf mee, dus
+        # krijgt die kolom de kleinste helft van de kaarten: met drie dimensies
+        # links de balken plus autonomie, rechts competentie en verbondenheid
+        # (de verdeling waarop de 233mm gemeten is).
+        helft = len(kaarten) // 2
+        inhoud = (f'<div class="tcol wb-cols">'
+                  f'<div class="tc-l">{overzichtskaart}{"".join(kaarten[:helft])}</div>'
+                  f'<div class="tc-r">{"".join(kaarten[helft:])}</div></div>')
+    return f'<div class="pb sec">{opener_html}{_intro("werkbeleving")}{inhoud}</div>'
 
 
 def _appendix_section(*, fa: dict, oim: dict, sim: dict, factor_items_map: dict, sdt_items: list,
                       scan_type: str, n: int, enps_score: int | None, enps_detail: dict | None,
                       opener_html: str, sdt_title: str) -> str:
-    """Appendix in twee kolommen (B9): de onderwerpstabellen verdeeld over
-    links en rechts, de SDT-tabel eronder. C7: de eNPS-regel noemt de score en
-    de tellingen of zegt dat hij niet is gemeten. Eén helper voor drie renderers."""
+    """Appendix: één tabel per onderwerp onder elkaar, de SDT-tabel als laatste.
+    Eén helper voor drie renderers; voorheen drie keer dezelfde 45 regels.
+
+    Bewust één kolom (codereview taak 8). Twee kolommen leken de B9-klacht op te
+    lossen maar deden dat niet: de appendix ging van 360mm naar 303mm en bleef
+    daarmee boven de 259mm van één vel, dus er ging geen pagina af en de
+    staartpagina werd juist leger (39% naar 17% vulling) -- precies de verkeerde
+    kant voor de regel die B9 meet. Bovendien vroeg die opmaak dat de renderer
+    een tabelrij hoger dan een pagina binnen de rij afbreekt; dat pad dekt geen
+    draaiende test.
+
+    C7: de eNPS-regel noemt de score met de tellingen, of zegt dat hij niet
+    gerapporteerd is. Niet "niet gemeten": onder de rapportagedrempel is de
+    vraag wel gesteld. Dat spiegelt de meetgegevens op pagina twee, die ook
+    alleen "Niet in dit rapport" zeggen.
+    """
     def _rows(items, avgs):
         return "".join(
             (f'<tr><td class="aq">{_h(q)}{"&nbsp;&#x21a9;" if ik in SDT_REVERSE_ITEMS else ""}</td>'
@@ -4459,22 +4521,22 @@ def _appendix_section(*, fa: dict, oim: dict, sim: dict, factor_items_map: dict,
                 f'<table class="app-tbl"><tr><th class="aq">Stelling</th><th class="as">Gem.</th>'
                 f'<th class="ab">Beeld</th></tr>{rows}</table></div>')
 
-    secties = [_tbl(_h(_fl(fk, scan_type)) + ("&nbsp;&middot;&nbsp;" + _score_str(fa.get(fk)) if fa.get(fk) else ""),
-                    _rows(items, oim))
-               for fk, items in factor_items_map.items()]
-    helft = (len(secties) + 1) // 2
+    secties = "".join(
+        _tbl(_h(_fl(fk, scan_type)) + ("&nbsp;&middot;&nbsp;" + _score_str(fa.get(fk)) if fa.get(fk) else ""),
+             _rows(items, oim))
+        for fk, items in factor_items_map.items())
     sdt_rows = _rows(sdt_items, sim)
     sdt_html = _tbl(sdt_title, sdt_rows) if sdt_rows else ""
     if enps_score is not None and enps_detail:
         enps_line = (f"Werkgeversaanbeveling (eNPS): {enps_score:+d}, {enps_detail['promoters']} aanraders en "
                      f"{enps_detail['detractors']} critici van {enps_detail['n']}.")
     else:
-        enps_line = "Werkgeversaanbeveling (eNPS): niet gemeten in deze meting."
+        enps_line = "Werkgeversaanbeveling (eNPS): niet gerapporteerd in dit rapport."
     return f"""<div class="pb sec">
   {opener_html}
   {_intro("appendix")}
   <p style="font-size:9px;color:#94A3B8;margin-bottom:14px;">n={n}. &#x21a9;&nbsp;= omgekeerd gecodeerde stelling.</p>
-  <div class="tcol app-cols"><div class="tc-l">{"".join(secties[:helft])}</div><div class="tc-r">{"".join(secties[helft:])}</div></div>
+  {secties}
   {sdt_html}
   <p class="trustline">{_h(enps_line)}</p>
 </div>"""
@@ -4484,6 +4546,9 @@ def _appendix_section(*, fa: dict, oim: dict, sim: dict, factor_items_map: dict,
 
 def render_exit_report_html(data: dict) -> str:
     n           = data["n_completed"]
+    # Eén gate voor de werkgeversaanbeveling: het contextblok, de
+    # appendixregel en de meetgegevens lezen dezelfde twee waarden.
+    _enps_score, _enps_detail = _enps_cijfers(data)
     avg_risk    = data["avg_risk"]
     fl          = _friction_label(avg_risk)
     fcol        = _friction_color(avg_risk)
@@ -4675,8 +4740,7 @@ def render_exit_report_html(data: dict) -> str:
                         f"daaronder bepaalt één vertrekker te veel het beeld."),
             wel=["de opgegeven vertrekredenen" if data["exit_r_dist"] else "",
                  "de werkbeleving van de vertrekkers" if sdt_a else "",
-                 "de werkgeversaanbeveling" if (data["enps_available"]
-                                                and data["enps_score"] is not None) else "",
+                 "de werkgeversaanbeveling" if _enps_score is not None else "",
                  "de meetgegevens onderaan deze pagina"],
         )
 
@@ -4690,7 +4754,8 @@ def render_exit_report_html(data: dict) -> str:
         population="Uitgestroomde medewerkers",
         segment_available=bool(data.get("segment_rows")),
         segment_reason=data.get("segment_reason") or "",
-        enps_available=data["enps_available"],
+        # Zelfde gate als het contextblok en de appendixregel (_enps_cijfers).
+        enps_available=_enps_score is not None,
         period_start=data.get("period_start"),
         period_end=data.get("period_end"),
         period_conflict=bool(data.get("period_dates_conflict")),
@@ -4727,7 +4792,7 @@ def render_exit_report_html(data: dict) -> str:
                          has_profile=not _geen_profiel,
                          # eNPS staat bij de context i.p.v. op een eigen,
                          # vrijwel lege pagina (H13, B9).
-                         enps_html=_enps_block(data["enps_score"], data.get("enps_detail")))
+                         enps_html=_enps_block(_enps_score, _enps_detail))
 
     # ── Overzichtsprofiel (p.05) ──────────────────────────────────────────────
     profile_factors = [(_fl(fk, "exit"), fa.get(fk))
@@ -4887,7 +4952,7 @@ def render_exit_report_html(data: dict) -> str:
         s += _appendix_section(
             fa=fa, oim=oim, sim=sim, factor_items_map=data["factor_items_map"],
             sdt_items=data["sdt_items"], scan_type="exit", n=n,
-            enps_score=data["enps_score"], enps_detail=data.get("enps_detail"),
+            enps_score=_enps_score, enps_detail=_enps_detail,
             opener_html=ch.opener("Appendix", kicker="Volledige vraagresultaten"),
             sdt_title="Werkbeleving (SDT): B1 t/m B12")
 
@@ -4903,6 +4968,8 @@ def render_exit_report_html(data: dict) -> str:
 
 def render_retention_report_html(data: dict) -> str:
     ST          = "retention"
+    # Eén gate voor de werkgeversaanbeveling, zie render_exit_report_html.
+    _enps_score, _enps_detail = _enps_cijfers(data)
     n           = data["n_completed"]
     avg_risk    = data["avg_risk"]
     avg_eng     = data["avg_eng"]
@@ -5013,8 +5080,7 @@ def render_retention_report_html(data: dict) -> str:
                         f"bij minder telt elk los antwoord te zwaar mee."),
             wel=["de behoudscontext op de volgende pagina" if signal is not None else "",
                  "de werkbeleving" if sdt_a else "",
-                 "de werkgeversaanbeveling" if (data["enps_available"]
-                                                and data["enps_score"] is not None) else "",
+                 "de werkgeversaanbeveling" if _enps_score is not None else "",
                  "de meetgegevens onderaan deze pagina"],
         )
 
@@ -5071,7 +5137,8 @@ def render_retention_report_html(data: dict) -> str:
         population="Actieve medewerkers",
         segment_available=bool(data.get("segment_rows")),
         segment_reason=data.get("segment_reason") or "",
-        enps_available=data["enps_available"],
+        # Zelfde gate als het contextblok en de appendixregel (_enps_cijfers).
+        enps_available=_enps_score is not None,
         period_start=data.get("period_start"),
         period_end=data.get("period_end"),
         period_conflict=bool(data.get("period_dates_conflict")),
@@ -5107,7 +5174,7 @@ def render_retention_report_html(data: dict) -> str:
         intent_resp=data.get("intent_resp"),
         opener_html=ch.opener("Waar staat behoud onder druk?", kicker="Behoudscontext", anchor=LEIDRAAD_ANKERS["context"]),
         # eNPS bij de context i.p.v. op een eigen, vrijwel lege pagina (H13, B9).
-        enps_html=_enps_block(data["enps_score"], data.get("enps_detail")),
+        enps_html=_enps_block(_enps_score, _enps_detail),
     )
 
     # ── Overzichtsprofiel (p.05) ──────────────────────────────────────────────
@@ -5250,7 +5317,7 @@ def render_retention_report_html(data: dict) -> str:
         s += _appendix_section(
             fa=fa, oim=oim, sim=sim, factor_items_map=data["factor_items_map"],
             sdt_items=data["sdt_items"], scan_type=ST, n=n,
-            enps_score=data["enps_score"], enps_detail=data.get("enps_detail"),
+            enps_score=_enps_score, enps_detail=_enps_detail,
             opener_html=ch.opener("Appendix", kicker="Volledige vraagresultaten"),
             sdt_title="Werkbeleving (SDT): B1 t/m B12")
 
@@ -5334,6 +5401,8 @@ def _landingskwaliteit(domains: list[tuple[str, float | None]]) -> str:
 
 def render_onboarding_report_html(data: dict) -> str:
     ST          = "onboarding"
+    # Eén gate voor de werkgeversaanbeveling, zie render_exit_report_html.
+    _enps_score, _enps_detail = _enps_cijfers(data)
     n           = data["n_completed"]
     avg_risk    = data["avg_risk"]
     avg_si      = data["avg_si"]
@@ -5433,8 +5502,7 @@ def render_onboarding_report_html(data: dict) -> str:
                         f"antwoorden; daaronder kleurt één antwoord het beeld te sterk."),
             wel=["het checkpointoverzicht" if signal is not None else "",
                  "de werkbeleving van nieuwe medewerkers" if sdt_a else "",
-                 "de werkgeversaanbeveling" if (data["enps_available"]
-                                                and data["enps_score"] is not None) else "",
+                 "de werkgeversaanbeveling" if _enps_score is not None else "",
                  "de meetgegevens onderaan deze pagina"],
         )
 
@@ -5478,7 +5546,8 @@ def render_onboarding_report_html(data: dict) -> str:
         population="Nieuwe medewerkers in de eerste werkperiode",
         segment_available=bool(data.get("segment_rows")),
         segment_reason=data.get("segment_reason") or "",
-        enps_available=data["enps_available"],
+        # Zelfde gate als het contextblok en de appendixregel (_enps_cijfers).
+        enps_available=_enps_score is not None,
         period_start=data.get("period_start"),
         period_end=data.get("period_end"),
         period_conflict=bool(data.get("period_dates_conflict")),
@@ -5521,7 +5590,7 @@ def render_onboarding_report_html(data: dict) -> str:
                               opener_html=ch.opener("Onboardingfases", kicker="Checkpointoverzicht", anchor=LEIDRAAD_ANKERS["context"]),
                               # eNPS bij de context i.p.v. op een eigen,
                               # vrijwel lege pagina (H13, B9).
-                              enps_html=_enps_block(data["enps_score"], data.get("enps_detail")))
+                              enps_html=_enps_block(_enps_score, _enps_detail))
 
     # ── Landingskwaliteit per domein (onboarding-exclusive) ───────────────────
     domain_scores = [(_fl(fk, ST), fa.get(fk))
@@ -5727,7 +5796,7 @@ def render_onboarding_report_html(data: dict) -> str:
         s += _appendix_section(
             fa=fa, oim=oim, sim=sim, factor_items_map=data["factor_items_map"],
             sdt_items=data["sdt_items"], scan_type=ST, n=n,
-            enps_score=data["enps_score"], enps_detail=data.get("enps_detail"),
+            enps_score=_enps_score, enps_detail=_enps_detail,
             opener_html=ch.opener("Appendix", kicker="Volledige vraagresultaten"),
             sdt_title="Werkbeleving (SDT): checkpoint-items")
 

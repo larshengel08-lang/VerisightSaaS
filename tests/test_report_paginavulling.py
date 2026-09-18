@@ -56,16 +56,57 @@ def test_sub_kop_zonder_vervolg():
     assert _ChapterCounter.sub("Werkdruk en balans") == '<span class="slabel">Werkdruk en balans</span>'
 
 
-def test_werkbeleving_en_appendix_staan_in_twee_kolommen():
-    d = _fixture("retention", n=25, profile=True)
+def _volle_sdt(d):
+    """Werkbeleving zoals Vertrek en Behoud die meten: vier stellingen per
+    dimensie (B1 t/m B12), niet de drie checkpoint-items van Loep Start."""
+    from backend.scoring_config import SDT_DIMENSION_ITEMS
+    keys = [k for dim in SDT_DIMENSION_ITEMS for k in SDT_DIMENSION_ITEMS[dim]]
     d["sdt_avgs"] = {"autonomy": 6.1, "competence": 6.4, "relatedness": 6.0}
-    d["sdt_item_avgs"] = {"B1": 6.1, "B5": 6.4, "B9": 6.0}
-    d["sdt_items"] = [("B1", "a"), ("B5", "b"), ("B9", "c")]
-    body = _body(render_retention_report_html(d))
+    d["sdt_items"] = [(k, f"Werkbelevingsstelling {k}") for k in keys]
+    d["sdt_item_avgs"] = {k: 6.2 for k in keys}
+    return d
+
+
+def test_werkbeleving_staat_in_twee_kolommen_bij_een_volle_sdt_set():
+    body = _body(render_retention_report_html(_volle_sdt(_fixture("retention", n=25, profile=True))))
     wb = body[body.index("Werkbeleving"):]
     assert 'class="tcol wb-cols"' in wb
-    app = body[body.index("Appendix"):]
-    assert 'class="tcol app-cols"' in app
+
+
+def test_werkbeleving_blijft_een_kolom_als_elke_kaart_een_stelling_draagt():
+    """Loep Start meet drie werkbelevingsitems (B1/B5/B9), dus &eacute;&eacute;n stelling per
+    dimensie. Twee kolommen halveren dan een sectie die al dun was (0,32-0,35
+    vulling gemeten op main): precies de verkeerde kant voor B9.
+    """
+    d = _fixture("onboarding", n=25, profile=True)
+    d["sdt_avgs"] = {"autonomy": 6.1, "competence": 6.4, "relatedness": 6.0}
+    d["sdt_items"] = [("B1", "a"), ("B5", "b"), ("B9", "c")]
+    d["sdt_item_avgs"] = {"B1": 6.1, "B5": 6.4, "B9": 6.0}
+    body = _body(render_onboarding_report_html(d))
+    wb = body[body.index("Werkbeleving"):]
+    assert 'class="tcol wb-cols"' not in wb
+    # De kaarten staan er wel, alleen onder elkaar.
+    for dim in ("Autonomie", "Competentie", "Verbondenheid"):
+        assert dim in wb
+    # En omgekeerd: met een volle set krijgt Loep Start wel twee kolommen, dus
+    # de keuze hangt aan de data en niet aan het scantype.
+    body2 = _body(render_onboarding_report_html(_volle_sdt(_fixture("onboarding", n=25, profile=True))))
+    assert 'class="tcol wb-cols"' in body2[body2.index("Werkbeleving"):]
+
+
+def test_appendix_staat_in_een_kolom():
+    """Codereview taak 8: twee kolommen spaarden geen pagina (360mm naar 303mm,
+    beide meer dan de 259mm van &eacute;&eacute;n vel) en maakten de staartpagina juist leger
+    (39% naar 17%). Bovendien vroeg die opmaak celsplitsing over een
+    paginagrens, een pad dat geen draaiende test dekt.
+    """
+    d = _volle_sdt(_fixture("retention", n=25, profile=True))
+    body = _body(render_retention_report_html(d))
+    app = body[body.index('<h2 class="ch-title">Appendix</h2>'):]
+    assert "app-cols" not in app and 'class="tcol' not in app
+    # De gedeelde helper blijft: &eacute;&eacute;n tabel per onderwerp, kop "Stelling".
+    assert app.count('<th class="aq">Stelling</th>') == len(d["factor_items_map"]) + 1
+    assert ">Vraag<" not in app
 
 
 # ── Fail Loud: een lege werkbelevingssectie kost geen hoofdstuknummer ─────────
@@ -104,8 +145,29 @@ def test_appendix_noemt_de_enps_score_met_tellingen():
     d2 = _fixture("retention", n=25, profile=True)
     body2 = _body(render_retention_report_html(d2))
     app2 = body2[body2.index('<h2 class="ch-title">Appendix</h2>'):]
-    assert "Werkgeversaanbeveling (eNPS): niet gemeten in deze meting." in app2
-    assert "wave" not in app2.lower()
+    # Niet "niet gemeten": onder de rapportagedrempel is de vraag wel gesteld,
+    # alleen niet gerapporteerd. Spiegelt de meetgegevens op pagina twee, die
+    # ook alleen "Niet in dit rapport" zeggen (codereview taak 8).
+    assert "Werkgeversaanbeveling (eNPS): niet gerapporteerd in dit rapport." in app2
+    assert "niet gemeten" not in app2 and "wave" not in app2.lower()
+
+
+def test_enps_zonder_tellingen_bij_een_aanwezige_score_faalt_hard():
+    """Fail Loud: een score zonder tellingen is een datafout, geen "niet gemeten".
+
+    Zou de renderer daar stil "niet gerapporteerd" van maken, dan verdween een
+    gemeten score uit het rapport zonder dat iemand het merkt.
+    """
+    from backend.report_html import _enps_cijfers
+    assert _enps_cijfers({"enps_available": True, "enps_score": 8,
+                          "enps_detail": {"n": 9, "promoters": 3, "detractors": 2}}) == (
+        8, {"n": 9, "promoters": 3, "detractors": 2})
+    assert _enps_cijfers({"enps_available": False, "enps_score": None}) == (None, None)
+    # Ook een score die de drempel niet haalde telt niet mee.
+    assert _enps_cijfers({"enps_available": False, "enps_score": 8,
+                          "enps_detail": {"n": 3, "promoters": 1, "detractors": 0}}) == (None, None)
+    with pytest.raises(ValueError, match="enps_detail"):
+        _enps_cijfers({"enps_available": True, "enps_score": 8, "enps_detail": None})
 
 
 @pytest.mark.parametrize("scan_type", ["exit", "retention", "onboarding"])
@@ -122,6 +184,55 @@ def test_elke_renderer_laat_de_volgende_verdieping_doorstromen(scan_type):
                   "onboarding": render_onboarding_report_html}[scan_type](
         _fixture(scan_type, n=12, profile=True)))
     assert body.count('class="sec flow"') >= 1, "geen enkele doorstromende verdiepingspagina"
+
+
+def test_een_gate_voor_de_werkgeversaanbeveling():
+    """Drie spellingen van dezelfde voorwaarde konden uiteenlopen.
+
+    Een score die de rapportagedrempel niet haalde (enps_available False met een
+    score in de data) mag nergens opduiken: niet in het contextblok, niet in de
+    appendix, en de meetgegevens horen hem bij "Niet in dit rapport" te zetten.
+    """
+    d = _volle_sdt(_fixture("retention", n=25, profile=True))
+    d["enps_available"], d["enps_score"] = False, 8
+    d["enps_detail"] = {"n": 3, "promoters": 1, "detractors": 0}
+    body = _body(render_retention_report_html(d))
+    assert "aanraders" not in body
+    assert "Niet in dit rapport:" in body and "werkgeversaanbeveling (eNPS)" in body
+    assert "Werkgeversaanbeveling (eNPS): niet gerapporteerd in dit rapport." in body
+
+
+def test_werkbeleving_volgt_de_dimensielijst_en_niet_een_vast_drietal(monkeypatch):
+    """Sectie en gate lezen dezelfde lijst (SDT_LABELS).
+
+    Komt er een dimensie bij, dan hoort die in de sectie te verschijnen zonder
+    dat iemand een hardcoded drietal hoeft bij te werken; anders zou de leidraad
+    naar een pagina verwijzen die die dimensie niet toont.
+    """
+    from backend import report_html as rh
+    monkeypatch.setitem(rh.SDT_LABELS, "meaning", "Zingeving")
+    monkeypatch.setitem(rh.SDT_HELP, "meaning", "Ervaren betekenis van het werk.")
+    monkeypatch.setitem(rh.SDT_DIMENSION_ITEMS, "meaning", ["Z1", "Z2"])
+    html = rh._werkbeleving_section(
+        {"autonomy": 6.1, "meaning": 5.4},
+        {"B1": 6.1, "B2": 6.0, "Z1": 5.4, "Z2": 5.5},
+        [("B1", "a"), ("B2", "b"), ("Z1", "Zin 1"), ("Z2", "Zin 2")],
+        "<span>kop</span>")
+    assert "Zingeving" in html and "Zin 1" in html
+    assert rh._heeft_werkbeleving({"meaning": 5.4}) is True
+
+
+def test_css_zonder_dode_regel_en_met_afbrekende_itemtekst():
+    from backend.report_css import build_css
+    css = build_css("retention")
+    flow = re.search(r"\.sec\.flow\s*\{([^}]+)\}", css).group(1)
+    # break-before: auto is de standaardwaarde; .sec.flow draagt geen .pb, dus
+    # die declaratie zette niets terug (codereview taak 8).
+    assert "break-before" not in flow and "break-inside: avoid" in flow
+    td = re.search(r"\.item-tbl td\s*\{([^}]+)\}", css).group(1)
+    # In een halve kolom (werkbeleving) moet een lange stelling kunnen afbreken,
+    # zoals .app-tbl td dat al deed.
+    assert "overflow-wrap: break-word" in td
 
 
 def test_geen_em_dashes_in_de_nieuwe_blokken():

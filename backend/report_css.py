@@ -189,8 +189,11 @@ p  { margin-bottom: 6px; font-size: 11px; }
 
 /* ── Item table ── */
 .item-tbl { width: 100%; border-collapse: collapse; }
+/* overflow-wrap zoals .app-tbl td: in een halve kolom (werkbeleving in twee
+   kolommen) moet een lange stelling kunnen afbreken in plaats van de kolom uit
+   te duwen. */
 .item-tbl td { padding: 7px 8px; vertical-align: middle; font-size: 10px; color: #374151;
-  border-bottom: 1px solid """ + HAIRLINE + r"""; }
+  border-bottom: 1px solid """ + HAIRLINE + r"""; overflow-wrap: break-word; }
 .item-tbl .iq { width: 56%; }
 .item-tbl .is { width: 10%; font-weight: 700; text-align: right; }
 /* De segmenttabel mag over een paginagrens lopen sinds de rijlimiet verviel
@@ -315,17 +318,19 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .app-tbl .as { width: 10%; }
 .app-tbl .ab { width: 28%; }
 .sec { margin-bottom: 44px; }
-/* Flow-sectie (B9): geen geforceerde paginabreuk, wel bij elkaar blijven. Een
-   sectie die niet meer past gaat als geheel naar de volgende pagina, zodat de
-   tweede en derde verdiepingspagina de ruimte onder hun voorganger vullen in
-   plaats van elk een eigen halflege vel te openen. */
-.sec.flow { break-before: auto; break-inside: avoid; margin-top: 30px; }
-/* Werkbeleving en appendix in twee kolommen (B9): halveert de hoogte. Via de
-   bestaande .tcol-tabel (display: table), niet via column-count of flex met
-   gap: WeasyPrint kent geen gap op flex en verdeelt kolommen van een
-   multicol-blok niet over paginagrenzen. */
+/* Flow-sectie (B9): blijft bij elkaar en opent geen eigen vel. Een sectie die
+   niet meer past gaat als geheel naar de volgende pagina, zodat de tweede en
+   derde verdiepingspagina de ruimte onder hun voorganger vullen in plaats van
+   elk een eigen halflege vel te openen. Geen break-before: auto -- die klasse
+   draagt geen .pb, dus er staat niets terug te zetten (codereview taak 8). */
+.sec.flow { break-inside: avoid; margin-top: 30px; }
+/* Werkbeleving in twee kolommen (B9): 287mm in een kolom werd 233mm, dus een
+   pagina minder. Via de bestaande .tcol-tabel (display: table), niet via
+   column-count of flex met gap: WeasyPrint kent geen gap op flex en verdeelt
+   kolommen van een multicol-blok niet over paginagrenzen. De appendix staat
+   bewust NIET in twee kolommen: daar spaarde het geen pagina (360mm werd 303mm,
+   beide meer dan een vel) en werd de staartpagina juist leger. */
 .tcol.wb-cols .tc-l, .tcol.wb-cols .tc-r { width: 50%; }
-.tcol.app-cols .tc-l, .tcol.app-cols .tc-r { width: 50%; }
 .enps-inline { margin-top: 18px; }
 .empty-state { background: #fff; border: 1px dashed """ + HAIRLINE + r"""; padding: 18px;
   text-align: center; color: #94A3B8; font-size: 10px; }
