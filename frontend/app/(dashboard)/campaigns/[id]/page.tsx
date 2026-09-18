@@ -52,7 +52,7 @@ export default async function CampaignPage({ params }: Props) {
     .select('*')
     .eq('campaign_id', id)
     .single()
-  // .single() returns PGRST116 when no row matches — that is a genuine 404, not a load failure.
+  // .single() returns PGRST116 when no row matches: that is a genuine 404, not a load failure.
   if (statsError && statsError.code !== 'PGRST116') {
     throw new Error(`Kon campagnedetail niet laden: ${statsError.message}`)
   }

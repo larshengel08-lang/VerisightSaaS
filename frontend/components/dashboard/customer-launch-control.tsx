@@ -119,7 +119,7 @@ export function CustomerLaunchControl({
         </ol>
       </div>
 
-      {/* Blockers — only if any */}
+      {/* Blockers: only if any */}
       {state.blockers.length > 0 && (
         <div>
           <p className="mb-3 text-[0.65rem] font-medium uppercase" style={{ color: 'var(--dashboard-muted)', letterSpacing: '0.18em' }}>

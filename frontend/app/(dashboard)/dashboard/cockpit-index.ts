@@ -79,7 +79,7 @@ function buildCockpitRow(args: {
     campaign,
     productLabel: scanDefinition.productName,
     periodLabel: formatCampaignPeriod(campaign),
-    responseValue: Number.isFinite(campaign.completion_rate_pct) ? `${campaign.completion_rate_pct}%` : '—',
+    responseValue: Number.isFinite(campaign.completion_rate_pct) ? `${campaign.completion_rate_pct}%` : 'n.b.',
     statusLabel: getStatusLabel(state),
     factualLine: getFactualLine(state, pdfAvailable),
     primaryAction: actions[0]!,

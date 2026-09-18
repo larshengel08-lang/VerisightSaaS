@@ -27,7 +27,7 @@ export interface ResendResult {
 /**
  * Stuur uitnodigingen opnieuw naar alle incomplete respondenten met e-mailadres.
  * Auth: vereist geldige Supabase-sessie (server-side cookie verificatie).
- * Data-toegang: bewaakt door RLS — alleen respondenten van eigen org zichtbaar.
+ * Data-toegang: bewaakt door RLS; alleen respondenten van eigen org zichtbaar.
  */
 export async function resendPendingAction(campaignId: string): Promise<ResendResult> {
   const supabase = await createClient()

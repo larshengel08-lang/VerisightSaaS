@@ -94,7 +94,7 @@ function formatAmsterdamDate(value: string | null | undefined) {
 }
 
 function buildLeadLabel(lead: ContactRequestRecord) {
-  return `${lead.name} — ${lead.organization} — ${getContactRouteLabel(lead.route_interest)} — ${getContactDesiredTimingLabel(lead.desired_timing)}`
+  return `${lead.name} · ${lead.organization} · ${getContactRouteLabel(lead.route_interest)} · ${getContactDesiredTimingLabel(lead.desired_timing)}`
 }
 
 function dedupeTaskReasons(items: string[]) {

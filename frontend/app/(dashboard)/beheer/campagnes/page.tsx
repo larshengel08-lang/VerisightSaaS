@@ -192,7 +192,7 @@ export default async function BeheerCampagnesPage() {
                             />
                           </div>
                           <span className="w-20 text-xs font-semibold tabular-nums text-slate-700">
-                            {pct}% ({row.total_completed}/{row.total_invited ?? '—'})
+                            {pct}% ({row.total_completed}/{row.total_invited ?? 'n.b.'})
                           </span>
                         </div>
                       </td>
@@ -214,7 +214,7 @@ export default async function BeheerCampagnesPage() {
                             ↓ PDF
                           </a>
                         ) : (
-                          <span className="text-xs text-slate-300">—</span>
+                          <span className="text-xs text-slate-300">n.b.</span>
                         )}
                       </td>
                     </tr>

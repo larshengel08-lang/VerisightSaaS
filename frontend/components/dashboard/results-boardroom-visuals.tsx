@@ -142,7 +142,7 @@ export function PriorityScatterPlot({
               }}
               labelFormatter={(_label, payload) => {
                 const row = payload?.[0]?.payload as (typeof data)[number] | undefined
-                return row ? `${row.factor} — ${row.note}` : ''
+                return row ? `${row.factor}: ${row.note}` : ''
               }}
               contentStyle={{
                 borderRadius: 0,
