@@ -1838,6 +1838,16 @@ def _geen_factorprofiel_note(n: int, *, drempelzin: str, wel: list[str]) -> str:
     return f"{kop} Wat dit rapport wel laat zien: {_opsomming(wel)}."
 
 
+# Boven dit aantal tekens krijgt de kernzin op p.02 een kleinere letter
+# (#p02 .kz-lang in report_css.py). De langste koppen in de stresstest tellen
+# 476 tot 480 tekens (01, 09, 19: vlak profiel met een gelijkstand) en passen op
+# 20px; de krapste pagina is 08 (413 tekens, plus vijf why-cellen en een
+# gelijkspel tussen vertrekredenen). Op die pagina past ook een kop van 500
+# tekens nog op 20px (7,8pt over); daarboven is 18px de rem, gemeten met een kop
+# van 562 tekens op dezelfde pagina (19pt over; fixronde na plan 3a).
+KERNZIN_LANG = 500
+
+
 def _bestuurlijke_read(*, kernzin: str, primary_label: str, why_cells_html: str,
                        mgmt_q: str, mgmt_q_source: str = "",
                        cijfers_html: str = "", leidraad_html: str = "",
@@ -1879,9 +1889,14 @@ def _bestuurlijke_read(*, kernzin: str, primary_label: str, why_cells_html: str,
   </div><!-- /why -->"""
     scope_html = (f'<p class="trustline" style="margin-top:-14px;margin-bottom:18px;">'
                   f'{_h(scope_note)}</p>') if scope_note else ""
+    # Een uitzonderlijk lange kop (meer dan KERNZIN_LANG tekens) krijgt een
+    # kleinere letter via de wrapper, zodat p.02 op een vel blijft (H16).
+    kernzin_html = f'<p class="br-kernzin">{_h(kernzin)}</p>'
+    if len(kernzin) > KERNZIN_LANG:
+        kernzin_html = f'<div class="kz-lang">{kernzin_html}</div>'
     return f"""<div class="pb sec" id="p02">
   {opener_html or '<span class="slabel">Het antwoord in het kort</span>'}
-  <p class="br-kernzin">{_h(kernzin)}</p>
+  {kernzin_html}
   {scope_html}
   {cijfers_html}
   {body}
@@ -1954,10 +1969,12 @@ def _responsbasis(*, invited: int | None, completed: int, period: str,
                       f'{_h(", ".join(ontbreekt))}.</p>') if ontbreekt else ""
 
     # De statregel blijft als geheel bij elkaar (spec §1 randgeval).
-    body = f"""<span class="slabel" style="margin-top:18px;">Meetgegevens</span>
+    body = f"""<span class="slabel">Meetgegevens</span>
   <table class="sg no-break"><tr>{stat_cells}</tr></table>
   {caution_html}{conflict_html}{ontbreekt_html}"""
-    return f'<div style="margin-top:22px;">{body}</div>'
+    # Maten via .meet-blok (#p02 in report_css.py), niet inline: de witruimte
+    # boven dit blok was 40px en liet p.02 overlopen (observatie 9).
+    return f'<div class="meet-blok">{body}</div>'
 
 
 def _stat4(cards: list[dict]) -> str:

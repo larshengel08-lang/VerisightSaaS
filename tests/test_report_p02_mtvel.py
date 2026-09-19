@@ -879,23 +879,51 @@ def test_css_houdt_pagina_twee_compact():
     """De compacte maten hangen aan #p02, niet aan de klassen zelf: de rest van
     het rapport houdt zijn eigen ruimte."""
     css = build_css("retention")
-    for regel in ("#p02 .br-kernzin { font-size: 24px;",
-                  "#p02 .why { padding: 14px 18px 12px;",
-                  "#p02 .why-grid { margin-bottom: 10px;",
+    # Maten van de fixronde na plan 3a (observatie 9), gemeten op de
+    # WeasyPrint-render van alle 24: met deze maten loopt p.02 nergens over.
+    for regel in ("#p02 .br-kernzin { font-size: 20px;",
+                  "#p02 .kz-lang .br-kernzin { font-size: 18px;",
+                  "#p02 .why { padding: 12px 16px 10px;",
+                  "#p02 .why-grid { margin-bottom: 8px;",
                   "#p02 .sg { margin-bottom: 10px;",
-                  "#p02 .sc-v { font-size: 20px;",
-                  "#p02 .leidraad { margin-top: 12px;"):
+                  "#p02 .sc-v { font-size: 18px;",
+                  "#p02 .leidraad { margin-top: 10px;",
+                  "#p02 .leidraad td.lw { width: 22%;",
+                  "#p02 .meet-blok { margin-top: 12px;"):
         assert regel in css, regel
     assert ".br-kernzin {\n  font-family" in css      # de basisstijl blijft staan
     # De overrides staan ná de basisregels die ze aanpassen. Anders is de eerste
     # `.why {`-regel in het stylesheet die van #p02, en die draagt geen
     # achtergrond of left-border: tests/test_report_html_design.py leest de
     # eerste treffer en zou dan de verkeerde regel keuren.
-    for basis in (".br-kernzin {", ".why {", ".sg {", ".sc-v {", ".leidraad {"):
+    for basis in (".br-kernzin {", ".why {", ".sg {", ".sc-v {", ".leidraad {",
+                  ".why-title {", ".why-v {", ".mq-line {", ".leidraad-title {"):
         assert css.index(basis) < css.index("#p02 " + basis), basis
     assert re.search(r"\.why\s*\{([^}]+)\}", css).group(1).count("border-left") == 1
 
 
+
+
+def test_een_uitzonderlijk_lange_kernzin_krijgt_de_kleinere_letter():
+    """H16 structureel: de langste koppen in de stresstest (476 tot 480 tekens)
+    passen op 20px; daarboven zet de renderer de kernzin in .kz-lang (18px),
+    gemeten met een kop van 562 tekens op de krapste p.02 (scenario 08)."""
+    from backend.report_html import KERNZIN_LANG, _bestuurlijke_read
+    kort = _bestuurlijke_read(kernzin="k" * KERNZIN_LANG, primary_label="X",
+                              why_cells_html="", mgmt_q="Vraag?")
+    lang = _bestuurlijke_read(kernzin="k" * (KERNZIN_LANG + 1), primary_label="X",
+                              why_cells_html="", mgmt_q="Vraag?")
+    assert "kz-lang" not in kort and '<p class="br-kernzin">' in kort
+    assert '<div class="kz-lang"><p class="br-kernzin">' in lang
+
+
+def test_meetgegevensblok_draagt_zijn_maten_via_de_klasse():
+    """De inline marges (22px plus 18px boven de kop) lieten p.02 overlopen; de
+    maten staan nu in #p02 .meet-blok."""
+    meet = _responsbasis(invited=58, completed=39, period="W", population="P",
+                         segment_available=True)
+    assert meet.startswith('<div class="meet-blok">')
+    assert "margin-top:22px" not in meet and "margin-top:18px" not in meet
 
 
 # ── De meetlogica van check_pdf_report.py, gemeten op gebouwde PDF's ─────────

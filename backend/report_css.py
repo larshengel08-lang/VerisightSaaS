@@ -502,11 +502,29 @@ h3 { font-family: 'Inter Tight', sans-serif; font-weight: 700;
    hoofdstuk 02 op pagina drie begint; de meting staat in
    scripts/check_pdf_report.py. Deze overrides staan bewust achteraan, ná de
    basisregels die ze aanpassen: ze hangen aan #p02, dus de rest van het
-   rapport houdt zijn eigen ruimte. */
-#p02 .br-kernzin { font-size: 24px; margin-bottom: 18px; }
-#p02 .why { padding: 14px 18px 12px; margin-bottom: 12px; }
-#p02 .why-grid { margin-bottom: 10px; }
+   rapport houdt zijn eigen ruimte.
+   Gemeten op de WeasyPrint-render (fixronde na plan 3a, observatie 9): met de
+   vorige maten liep p.02 over in tien van de 24 renders, tot ongeveer 110pt in
+   scenario 08. Deze maten laten in alle 24 ruimte over (krapst: 08). Winst zit
+   vooral in de kernzin (20px, volle breedte), de leidraad (beschrijving krijgt
+   67% van de breedte, dus meestal één regel) en de witruimte rond het
+   meetgegevensblok. Een kernzin boven KERNZIN_LANG tekens (report_html.py)
+   krijgt 18px, zodat een langere kop dan de stresstest kent p.02 ook niet
+   laat overlopen. */
+#p02 .br-kernzin { font-size: 20px; max-width: none; margin-bottom: 14px; }
+#p02 .kz-lang .br-kernzin { font-size: 18px; }
+#p02 .why { padding: 12px 16px 10px; margin-bottom: 10px; }
+#p02 .why-title { margin-bottom: 10px; }
+#p02 .why-grid { margin-bottom: 8px; }
+#p02 .why-v { font-size: 22px; }
+#p02 .mq-line { padding-top: 10px; margin-top: 10px; }
 #p02 .sg { margin-bottom: 10px; }
-#p02 .sc-v { font-size: 20px; }
-#p02 .leidraad { margin-top: 12px; }
+#p02 .sc-v { font-size: 18px; }
+#p02 .leidraad { margin-top: 10px; padding-top: 8px; }
+#p02 .leidraad-title { margin-bottom: 4px; }
+#p02 .leidraad td { padding: 2px 6px 2px 0; }
+#p02 .leidraad td.lt { width: 11%; }
+#p02 .leidraad td.lw { width: 22%; }
+#p02 .meet-blok { margin-top: 12px; }
+#p02 .meet-blok .slabel { margin-bottom: 8px; }
 """
