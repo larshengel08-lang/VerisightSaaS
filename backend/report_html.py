@@ -3998,7 +3998,9 @@ def _brugzin(startpunt_key: str | None, startpunt_label: str, seg: dict | None,
     afdeling. Deze zin zegt dat met zoveel woorden, op pagina twee en op de
     gespreksagenda.
 
-    Drie varianten: ander onderwerp (tweede punt voor die afdeling), hetzelfde
+    Drie varianten: ander onderwerp (bespreek dat voor die afdeling na het
+    startpunt; niet "tweede punt", want zo heet op de gespreksagenda de kaart
+    van de organisatie, eindreview plan 3a), hetzelfde
     onderwerp (daar begint het gesprek ook), of geen onderwerp bekend voor die
     afdeling (te weinig antwoorden per onderwerp). Zonder aangewezen afdeling
     geen zin: het navy blok geeft dan zelf de reden. Zonder organisatiebreed
@@ -4040,7 +4042,7 @@ def _brugzin(startpunt_key: str | None, startpunt_label: str, seg: dict | None,
                 f"het gesprek ook.")
     if zwaar:
         return (f"Organisatiebreed begint het gesprek bij {startpunt_label}. Bij {dept} springt "
-                f"{low_lbl} eruit ({low_sc}); neem dat als tweede punt voor die afdeling.")
+                f"{low_lbl} eruit ({low_sc}); bespreek dat voor die afdeling na het startpunt.")
     return (f"Organisatiebreed begint het gesprek bij {startpunt_label}. Het laagst scorende "
             f"onderwerp bij {dept} is {low_lbl} ({low_sc}), en dat scoort daar "
             f"{_factor_label(seg['low_avg']).lower()}.")

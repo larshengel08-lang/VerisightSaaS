@@ -53,7 +53,10 @@ def test_brugzin_drie_varianten():
     seg = _segment_startpunt(ROWS, FACTOR_ROWS)
     anders = _brugzin("growth", "Groeiperspectief", seg, "retention")
     assert anders == ("Organisatiebreed begint het gesprek bij Groeiperspectief. Bij Operations springt "
-                      "Werkdruk en herstelruimte eruit (4.9/10); neem dat als tweede punt voor die afdeling.")
+                      "Werkdruk en herstelruimte eruit (4.9/10); bespreek dat voor die afdeling na het startpunt.")
+    # "Tweede punt" is op de agenda de kaart van de organisatie; de brugzin mag
+    # dat woord niet voor een afdeling gebruiken (eindreview plan 3a, punt 5).
+    assert "tweede punt" not in anders.lower()
     zelfde = _brugzin("workload", "Werkdruk en herstelruimte", seg, "retention")
     assert zelfde == ("Bij Operations weegt Werkdruk en herstelruimte het zwaarst (4.9/10); daar begint "
                       "het gesprek ook.")
@@ -252,11 +255,11 @@ def test_brugzin_is_bandbewust_bij_een_relatief_sterk_thema():
 
 
 def test_aandachtspunt_houdt_de_sterke_vorm():
-    # 5.0 tot 6.5 is een aandachtspunt: daar mag "neem dat als tweede punt" wel.
+    # 5.0 tot 6.5 is een aandachtspunt: daar mag de opdrachtvorm ("bespreek dat voor die afdeling") wel.
     seg = _segment_startpunt(ROWS, {"Operations": {"factors": [("compensation", 6.4, 17)],
                                                    "omitted": 0}})
     zin = _brugzin("growth", "Groeiperspectief", seg, "retention")
-    assert "springt Beloning en eerlijkheid eruit (6.4/10); neem dat als tweede punt" in zin
+    assert "springt Beloning en eerlijkheid eruit (6.4/10); bespreek dat voor die afdeling na het startpunt" in zin
 
 
 def test_brugzin_gebruikt_een_hoofdletter_voor_beide_onderwerpen():
