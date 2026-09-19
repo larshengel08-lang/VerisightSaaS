@@ -1495,10 +1495,9 @@ SECTION_INTROS: dict[str, str] = {
         "en zijn geen vergelijking met andere organisaties."
     ),
     "verdieping": (
-        "Respondenten die op dit onderwerp duidelijk laag antwoordden kregen automatisch een korte vervolgvraag: "
-        "welke toelichting past het best bij hun ervaring? De aantallen hieronder zijn tellingen "
-        "van wat respondenten zelf kozen, geen interpretatie achteraf. "
-        "Wat er volgens hen moet gebeuren staat bij de gespreksagenda."
+        "Wie op dit onderwerp duidelijk laag antwoordde, kreeg automatisch een korte vervolgvraag: "
+        "welke toelichting past het best bij hun ervaring? De aantallen zijn hun eigen keuzes, "
+        "geen interpretatie achteraf. Wat er volgens hen moet gebeuren staat bij de gespreksagenda."
     ),
     "werkbeleving": (
         "Naast de onderwerpen over het werk meten we drie psychologische basisbehoeften: autonomie (regie "
@@ -3353,10 +3352,9 @@ def _trigger_regel() -> str:
     Daarom "duidelijk laag" met de regel erbij, en de getallen uit de
     constanten die _is_triggered echt gebruikt."""
     cnt = _TELWOORD.get(TRIGGER_LOW_ITEM_COUNT, str(TRIGGER_LOW_ITEM_COUNT))
-    return (f"Duidelijk laag: op de schaal van 1 tot 5 gemiddeld {_komma(TRIGGER_AVG_MAX)} "
-            f"of lager, minstens {cnt} stellingen op {TRIGGER_LOW_ITEM_MAX} of lager, of een 1 "
-            f"bij gemiddeld hoogstens {_komma(TRIGGER_WITH_ONE_AVG_MAX)}; niet hetzelfde als "
-            f"‘onder de 5’ in de spreiding.")
+    return (f"Duidelijk laag: gemiddeld {_komma(TRIGGER_AVG_MAX)} of lager op 1 tot 5, minstens "
+            f"{cnt} stellingen op {TRIGGER_LOW_ITEM_MAX} of lager, of een 1 bij gemiddeld "
+            f"hoogstens {_komma(TRIGGER_WITH_ONE_AVG_MAX)}. Een andere regel dan ‘onder de 5’.")
 
 
 def _deepening_chain(agg: dict, scan_type: str, factor_key: str, n_total: int,

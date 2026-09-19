@@ -130,9 +130,8 @@ def test_enrichment_none_when_no_answers():
 # De triggerregel in gewone taal staat achter elke keten (eindreview plan 3a
 # punt 1): "laag" betekende in de keten iets anders dan "onder de 5" in de
 # spreiding erboven.
-REGEL = (" Duidelijk laag: op de schaal van 1 tot 5 gemiddeld 2,5 of lager, minstens twee "
-         "stellingen op 2 of lager, of een 1 bij gemiddeld hoogstens 3,5; niet hetzelfde als "
-         "‘onder de 5’ in de spreiding.")
+REGEL = (" Duidelijk laag: gemiddeld 2,5 of lager op 1 tot 5, minstens twee stellingen op 2 of "
+         "lager, of een 1 bij gemiddeld hoogstens 3,5. Een andere regel dan ‘onder de 5’.")
 
 
 def _chain_agg(triggered, offered, answered, skipped=None):
