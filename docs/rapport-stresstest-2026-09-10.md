@@ -868,32 +868,32 @@ voorbeeldrapporten tonen "9 maart 2026 tot 3 april 2026".
 
 | # | Scenario | n | Q1 antwoord p2 | Q2 startpunt | Q3 wat moet gebeuren | Q4 holle pagina's | Q5 tegenspraak | Q6 overclaim |
 |---|----------|---|----|----|----|----|----|----|
-| 01 | Vlak middelmatig | 45 | ✓ | ✓ | ✓ | **~ p7 37%** | **✓** | ✓ |
+| 01 | Vlak middelmatig | 45 | ✓ | ✓ | ✓ | **~ p7 36%** | **✓** | ✓ |
 | 02 | Eén lage factor | 45 | ✓ | ✓ | ~ | **✓** | ✓ | ✓ |
-| 03 | Twee near-ties | 45 | ✓ | ✓ | ✓ | **~ p8 37%** | ✓ | ✓ |
-| 04 | Alles hoog | 45 | ✓ | ✓ | ✓ | **~ p7 27%** | **~** | ✓ |
+| 03 | Twee near-ties | 45 | ✓ | ✓ | ✓ | **✓** | ✓ | ✓ |
+| 04 | Alles hoog | 45 | ✓ | ✓ | ✓ | **✓** | **~** | ✓ |
 | 05 | Alles laag, crisis | 45 | ✓ | ✓ | ✓ | **✓** | **✓** | ✓ |
 | 06 | Eén afdeling laag | 45 | ✓ | ✓ | ~ | **✓** | ✓ | ~ |
-| 07 | Vertrek, onder drempel | 8 | ~ | ~ | ~ | ✗ p4 10%, p5 12% | ~ | ✗ |
+| 07 | Vertrek, onder drempel | 8 | ~ | ~ | ~ | **✓** | ~ | ✗ |
 | 08 | Vertrek, net boven | 12 | ✓ | ✓ | ~ | **✓** | **✓** | **✓** |
-| 09 | Gemengde afdelingen | 25 | ✓ | ✓ | ✓ | **~ p7 27%** | **✓** | ✓ |
+| 09 | Gemengde afdelingen | 25 | ✓ | ✓ | ✓ | **✓** | **✓** | ✓ |
 | 10 | Twaalf kleine afdelingen | 90 | ✓ | ✓ | ~ | **✓** | ✓ | **~** |
 | 11 | Grote populatie | 180 | ✓ | ✓ | ✓ | **✓** | ✓ | ✓ |
 | 12 | 60% overslag verdieping | 45 | ✓ | ✓ | ~ | **✓** | ✓ | ✓ |
 | 13 | 40% "niets nodig" | 45 | ✓ | ✓ | ✓ | **✓** | **✓** | ✓ |
-| 14 | 35% "Anders" | 45 | ✓ | ✓ | **~** | ✗ p13 20% | **✓** | **✓** |
+| 14 | 35% "Anders" | 45 | ✓ | ✓ | **~** | **✓** | **✓** | **✓** |
 | 15 | Richting verdeeld | 45 | ✓ | ✓ | ~ | **✓** | ✓ | ✓ |
 | 16 | Respons 30% | 45 | ✓ | ✓ | ✓ | **✓** | **✓** | ✓ |
 | 16b | Respons 25% | 45 | ✓ | ✓ | ✓ | **✓** | **✓** | ✓ |
 | 17 | Respons 90% | 45 | ✓ | ✓ | ✓ | **✓** | ✓ | ✓ |
-| 18 | Vlak + n=12 | 12 | ~ | ~ | ~ | ~ p7 35% | ✓ | ~ |
-| 19 | Vlak + 40% niets nodig | 45 | ✓ | ✓ | ~ | **~ p7 37%** | ✓ | ✓ |
-| 20 | Loep Start sanity | 30 | ✓ | ✓ | ✗ | ✗ p6 30%, p12 32% | ✓ | ✓ |
+| 18 | Vlak + n=12 | 12 | ~ | ~ | ~ | **✓** | ✓ | ~ |
+| 19 | Vlak + 40% niets nodig | 45 | ✓ | ✓ | ~ | **~ p7 36%** | ✓ | ✓ |
+| 20 | Loep Start sanity | 30 | ✓ | ✓ | ✗ | **✓** | ✓ | ✓ |
 
-Gewijzigde cellen ten opzichte van ronde 2 vet (vijftien; twee daarvan gaan omlaag, zie hieronder). In de kolom Q4 staan per scenario de doorlooppagina's onder `MIN_FILL` (40%) met hun vulling, gemeten met `scripts/check_pdf_report.py` op een WeasyPrint-Docker-render van alle eenentwintig (niet de Chromium-benadering uit het plan: die was er niet, en Docker draaide). **Stand: na de fixronde (HEAD `a6f62c1b`), vet waar de cel ten opzichte van deel B bewoog.**
+Gewijzigde cellen ten opzichte van ronde 2 vet (vijftien; twee daarvan gaan omlaag, zie hieronder). In de kolom Q4 staan per scenario de doorlooppagina's onder `MIN_FILL` (40%) met hun vulling, gemeten met `scripts/check_pdf_report.py` op een WeasyPrint-Docker-render van alle eenentwintig (niet de Chromium-benadering uit het plan: die was er niet, en Docker draaide). **Stand: na fixronde 2 (HEAD `69ab9a24`), vet waar de cel ten opzichte van deel B bewoog.**
 
-Score (21 rijen): Q1 19✓/2~/0✗ · Q2 19✓/2~/0✗ · Q3 10✓/10~/1✗ · Q4 12✓/6~/3✗ · Q5 19✓/2~/0✗ · Q6 17✓/3~/1✗.
-Na deel B, vóór de fixronde: Q4 0✓/2~/19✗ (zie "Fixronde na de WeasyPrint-render" hieronder).
+Score (21 rijen): Q1 19✓/2~/0✗ · Q2 19✓/2~/0✗ · Q3 10✓/10~/1✗ · Q4 19✓/2~/0✗ · Q5 19✓/2~/0✗ · Q6 17✓/3~/1✗.
+Na deel B, vóór de fixrondes: Q4 0✓/2~/19✗; na fixronde 1: 12✓/6~/3✗ (zie "Fixronde na de WeasyPrint-render" en "Fixronde 2" hieronder).
 Was (na ronde 2): Q1 19✓/2~/0✗ · Q2 19✓/2~/0✗ · Q3 10✓/9~/2✗ · Q4 0✓/0~/21✗ · Q5 12✓/7~/2✗ · Q6 16✓/3~/2✗.
 
 Beoordelingsregel, dezelfde als in ronde 1 en 2: een cel gaat omhoog alleen als de
@@ -1254,6 +1254,64 @@ Loep Behoud 16 tot 18 (voorbeeld 17), Loep Vertrek 8 (07), 12 (08), voorbeeld 15
 Start 13. De voorbeeld-HTML's en -PDF's zijn niet gecommit.
 
 Observatie 8, 9, 10 en 11 zijn hiermee opgelost; observatie 12 op één test na (zie punt 2).
+
+### Fixronde 2 (19 september 2026)
+
+Gericht op de resterende NIET OK's, met de zes verplichte bestanden voorop. Drie commits,
+elk met eigen tests en faalset-diff (25 gefaald, identiek aan de baseline):
+
+1. **Verdiepingsonderwerpen stromen allemaal** (`14e3ad02`). Ook het eerste onderwerp opent
+   geen eigen vel meer; het hoofdstuk begint onder het overzichtsprofiel als het eerste
+   onderwerp daar als geheel past. Opgelost: 03, 04, 09, 18 en de vervolgpagina van hoofdstuk
+   04 bij Loep Start. Compactere binnenmaten zijn gemeten en alleen bij Loep Start gebruikt:
+   bij Vertrek en Behoud schoof elke compactere variant het probleem naar 08, 12, 13 of 15
+   (het tweede onderwerp paste dan wel op de eerste pagina, het derde kwam alleen te staan).
+   Geen inhoud geschrapt; de variant "onderwerp zonder verdiepingsdata valt weg" bleek voor de
+   vulling niet nodig en is niet gebouwd (observatie 5 staat dus open).
+2. **Zonder profiel stromen overzichtsprofiel en verdieping mee** (`51c86da8`). 07 gaat van 8
+   naar 6 pagina's; de twee losse zinspagina's (10 en 12%) staan nu onder de vertrekcontext.
+   Bij Loep Start blijft het overzichtsprofiel een eigen vel (hoofdstuk 02 na pagina twee).
+3. **De appendix stroomt** (`69ab9a24`). Hij breekt alleen tussen tabellen; kop en eerste
+   tabel blijven samen; 9px ongewijzigd. Opgelost: 20 en het voorbeeld Loep Start, en als
+   bijvangst 14.
+
+**Scenario 14 met realistische toelichtingen.** De harness vult elke Anders-toelichting met
+dezelfde zin van 32 tekens. Een variant met negen gevarieerde toelichtingen van 47 tot 131
+tekens gaf vóór punt 3 dezelfde losse gespreksopener (20%): het kwam dus niet alleen door de
+placeholders. Na punt 3 zijn zowel de harnessversie als de gevarieerde variant OK, omdat de
+appendix die pagina nu vult.
+
+**`check_pdf_report.py` na fixronde 2, per bestand** (24 keer exit 0, nul warnings, nul
+em-dashes in de tekstlaag):
+
+| Bestand | Uitkomst | Resterende bevinding en oorzaak |
+|---|---|---|
+| 01 | NIET OK | p7 36%: derde verdiepingsonderwerp alleen; drie onderwerpen van elk circa een derde vel, en het eerste past niet onder het overzichtsprofiel |
+| 02 t/m 18 | OK | (02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12, 13, 14, 15, 16, 16b, 17, 18) |
+| 19 | NIET OK | p7 36%: zelfde oorzaak als 01 |
+| 20 | OK | |
+| Voorbeeld Loep Vertrek | NIET OK | p13 36%: appendixstaart (werkbeleving, twaalf stellingen plus eNPS-regel) |
+| Voorbeeld Loep Start | OK | |
+| Voorbeeld Loep Behoud | OK | |
+
+Van de zes verplichte bestanden zijn er vijf OK (06, 11, 18, voorbeeld Loep Start,
+voorbeeld Loep Behoud). **Het voorbeeld Loep Vertrek is niet eerlijk op te lossen binnen de
+regels:** de appendix is 1,32 vel (96% plus 36%); de eerste tabel past niet onder de
+gespreksagenda (70%), dus begint hij op een nieuw vel. Om de regel te halen moet hij onder
+1,00 of boven 1,40 vel uitkomen. Op de ondergrens van 8,5px met 3px celpadding wordt het 88%
+plus 32% (1,20 vel), nog steeds een staart onder de 40%; in het voorbeeld Loep Behoud maakt
+diezelfde maat van een goede staart (49%) een foute (32%). Ter beslissing bij Lars: mag een
+appendix-staartpagina een uitzondering op de vullingsregel zijn? `MIN_FILL` is niet verlaagd
+en er is geen uitzondering ingevoerd.
+
+01 en 19 zijn bin packing: elke gemeten maat (kopmarge 0, 8, 16 en 28px, compactere cellen en
+kaarten) die hun derde onderwerp op de vorige pagina kreeg, liet in 08, 12, 13 of 15 een
+onderwerp alleen staan.
+
+Paginatelling nu: Loep Behoud 15 tot 18 (voorbeeld 17), Loep Vertrek 6 (07), 12 (08),
+voorbeeld 15; Loep Start 11. De WeasyPrint-tests via de Docker-shim: 12 van 13 groen, zoals na
+fixronde 1 (`test_pdf_heeft_geen_pagina_onder_veertig_procent[exit]` faalt op pagina 3 van die
+fixture, de vertrekcontext op 38%). De voorbeeld-HTML's en -PDF's zijn niet gecommit.
 
 ---
 
