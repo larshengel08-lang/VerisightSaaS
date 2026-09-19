@@ -212,6 +212,21 @@ p  { margin-bottom: 6px; font-size: 11px; }
    collapse niets in WeasyPrint, dus staat elke afdeling in haar eigen tbody
    (zelfde patroon als tbody.r-grp in het prioriteringsraster). */
 .item-tbl tbody.seg-grp { break-inside: avoid; }
+/* Segmentsectie compacter (fixronde na plan 3a, observatie 10): de sectie was
+   net iets hoger dan een vel, dus viel de conclusie eronder los op een eigen
+   pagina. */
+.item-tbl.seg-tbl td { padding: 4px 8px; }
+.sub-cols { width: 100%; table-layout: fixed; border-collapse: collapse; }
+.sub-cols td { vertical-align: top; width: 50%; padding: 0 10px 0 0; }
+.sub-cols td + td { padding: 0 0 0 10px; }
+.sub-cols td[colspan] { padding: 0; }
+.sub-cols tbody.sub-grp { break-inside: avoid; }
+.empty-state.seg-leeg { padding: 8px 14px; }
+/* De melding zonder afdelingstabel volgt direct op de werkbeleving (geen eigen
+   vel). De negatieve marge verkleint de samengevallen witruimte tussen beide
+   van 44px naar 20px, zodat kop en melding samen nog onder een volle
+   werkbelevingspagina passen. */
+.sec.seg-status { margin-top: -24px; }
 
 /* ── Quote / theme ── */
 .theme-card { background: #fff; border: 1px solid """ + HAIRLINE + r"""; padding: 14px 16px; margin-bottom: 10px; }
@@ -268,6 +283,15 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .agenda-dark .step-fill-hint { color: #8CA0B3; }
 .agenda-why { display: block; font-family: 'JetBrains Mono', monospace; font-size: 8px;
   letter-spacing: 0.04em; color: #9FB0C0; margin-top: 7px; line-height: 1.5; }
+/* De drie invulregels naast elkaar in plaats van onder elkaar: onder elkaar
+   was het navy blok bijna een derde vel hoog en viel het, met de slotregel,
+   los op een eigen pagina (30 tot 32%, in 15 alleen de slotregel op 1%;
+   fixronde na plan 3a). De slotregel reist mee in .agenda-slot. */
+.fill-steps .step { width: 33.3%; padding: 10px 12px; }
+.fill-steps .step-sublbl { margin-top: 0; }
+.fill-steps .step-fill-hint { margin-bottom: 0; }
+.agenda-slot .agenda-dark { padding: 14px 16px; }
+.agenda-slot .agenda-opener { padding-top: 10px; margin-bottom: 12px; }
 .agenda-opener { border-left: 3px solid #E8A020; border-top: 1px solid #2A3D52;
   padding: 14px 0 0 16px; margin-top: 16px; }
 
@@ -379,8 +403,8 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .tcol.wb-cols { table-layout: fixed; border-spacing: 0; }
 .tcol.wb-cols .tc-l { width: 50%; padding-right: 10px; }
 .tcol.wb-cols .tc-r { width: 50%; padding-left: 10px; }
-.wb-cols .card { padding: 10px 0 10px 12px; margin-bottom: 10px; }
-.wb-cols .item-tbl td { padding: 4px 6px; }
+.wb-cols .card { padding: 8px 0 8px 12px; margin-bottom: 8px; }
+.wb-cols .item-tbl td { padding: 3px 6px; }
 .wb-cols .item-tbl .iq { width: 70%; }
 .wb-cols .item-tbl .is { width: 12%; }
 .enps-inline { margin-top: 18px; }

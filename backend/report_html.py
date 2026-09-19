@@ -2553,19 +2553,21 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
   {tabel}
   {f'<p class="mq-brug mq-brug-sec">{_h(brug_zin)}</p>' if brug_zin else ''}
   {dir_block}
+  <div class="no-break agenda-slot">
   <div class="agenda-dark" style="margin-top:16px;">
     <div class="agenda-opener">
       <div style="font-family:'JetBrains Mono', monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#E8A020;margin-bottom:7px;">Gespreksopener</div>
       <p style="margin-bottom:0;font-size:12.5px;line-height:1.6;color:#F4F1EA;">{_h(opener_vraag)}</p>
       {f'<p class="agenda-why" style="margin-top:6px;">Dezelfde opener staat op pagina {_pref("p02")}.</p>' if ranked else ''}
     </div>
-    <table class="steps"><tr><td class="step">
-      {_fill_row("Prioriteit", "In te vullen tijdens de bespreking")}
-      {_fill_row("Eigenaar", "In te vullen tijdens de bespreking")}
-      {_fill_row("Vervolgmoment", review_hint)}
-    </td></tr></table>
+    <table class="steps fill-steps"><tr>
+      <td class="step">{_fill_row("Prioriteit", "In te vullen tijdens de bespreking")}</td>
+      <td class="step">{_fill_row("Eigenaar", "In te vullen tijdens de bespreking")}</td>
+      <td class="step">{_fill_row("Vervolgmoment", review_hint)}</td>
+    </tr></table>
   </div>
   <p class="trustline">Nog niet besluiten of een verdieping of kortere vervolgmeting nodig is: dat volgt uit het gesprek.</p>
+  </div>
 </div>"""
 
 
@@ -3808,10 +3810,14 @@ def _segment_status_block(n: int, has_segment_data: bool = False,
         # Bewust GEEN eigen pagina (.pb): de melding is twee regels en sluit aan
         # onder de vorige sectie — voorheen stonden hier twee bijna-lege pagina's
         # achter elkaar (eNPS "niet gemeten" + deze), elk met één zin.
-        return f"""<div class="sec">
+        # no-break: de kop blijft bij de melding. Zonder die regel stond "06 Per
+        # afdeling" als laatste regel onder de werkbeleving en de melding
+        # alleen op het volgende vel (fixronde na plan 3a). seg-leeg houdt het
+        # blok compact genoeg om na een volle werkbelevingspagina te passen.
+        return f"""<div class="sec no-break seg-status">
   {opener_html or '<span class="slabel">Per afdeling</span>'}
-  <div class="empty-state">
-    <p style="margin-bottom:4px;">Verschillen tussen afdelingen zijn niet getoond om herleidbaarheid te voorkomen.</p>
+  <div class="empty-state seg-leeg">
+    <p style="margin-bottom:2px;">Verschillen tussen afdelingen zijn niet getoond om herleidbaarheid te voorkomen.</p>
     <p style="margin-bottom:0;">{_h(SEGMENT_VERVOLG_ONBOARDING if scan_type == "onboarding" else SEGMENT_VERVOLG)}</p>
   </div>
 </div>"""
@@ -3895,7 +3901,7 @@ def _segment_factor_subblocks(segment_rows: list[dict],
     én factordata; laagste eerst (volgorde komt uit _department_factor_rows)."""
     if not factor_rows:
         return ""
-    subs = ""
+    subs: list[str] = []
     for row in segment_rows:
         if row.get("is_pooled", False) or row["n"] < MIN_DISTRIBUTION_N:
             continue
@@ -3912,17 +3918,33 @@ def _segment_factor_subblocks(segment_rows: list[dict],
             omline = (f'<div style="{_SEG_MONO}margin-top:4px;">'
                       f'{_tel(info["omitted"], "onderwerp", "onderwerpen")} niet beoordeelbaar: '
                       f'te weinig antwoorden</div>')
-        subs += (f'<div class="no-break" style="margin-top:14px;">'
+        subs.append(f'<div class="no-break" style="margin-top:10px;">'
                  f'<div style="font-family:\'Inter Tight\', sans-serif;font-weight:700;'
                  f'font-size:11px;margin-bottom:4px;">{_h(row["department"])} (n={row["n"]})</div>'
-                 f'<table class="item-tbl">{frows}</table>{omline}</div>')
+                 f'<table class="item-tbl seg-tbl">{frows}</table>{omline}</div>')
     if not subs:
         return ""
-    intro = ('<p style="font-size:10px;color:#64748B;margin:16px 0 0;">'
+    intro = ('<p style="font-size:10px;color:#64748B;margin:10px 0 0;">'
              'Alle onderwerpen per afdeling: dezelfde vaste drempels als in het '
              'overzichtsprofiel (kwetsbaar onder 5,0, aandachtspunt 5,0 tot 6,5, '
              'relatief sterk vanaf 6,5).</p>')
-    return intro + subs
+    # De uitlegregel blijft bij het eerste subblok: los onderaan een pagina
+    # beschrijft ze een uitsplitsing die pas op het volgende vel begint.
+    if len(subs) == 1:
+        return f'<div class="no-break">{intro}{subs[0]}</div>'
+    # Twee of meer afdelingen: twee subblokken naast elkaar. Elk subblok is een
+    # smalle tabel (onderwerp, score, band); onder elkaar werd de sectie bij
+    # een grote populatie drie vellen met een staart van 17% (scenario 11,
+    # fixronde na plan 3a). Elk paar in een eigen tbody, zodat een paar niet
+    # over een pagina-einde breekt (zelfde patroon als tbody.seg-grp).
+    paren = [subs[i:i + 2] for i in range(0, len(subs), 2)]
+    groepen = []
+    for i, paar in enumerate(paren):
+        kop = f'<tr><td colspan="2">{intro}</td></tr>' if i == 0 else ""
+        rechts = paar[1] if len(paar) > 1 else ""
+        groepen.append(f'<tbody class="sub-grp">{kop}<tr><td>{paar[0]}</td>'
+                       f'<td>{rechts}</td></tr></tbody>')
+    return f'<table class="sub-cols">{"".join(groepen)}</table>'
 
 
 def _pooled_lager(segment_rows: list[dict], low_sc: float | None) -> dict | None:
@@ -4244,16 +4266,22 @@ def _segment_block(segment_rows: list[dict], factor_rows: dict[str, dict] | None
         # border-collapse: collapse niets in WeasyPrint; het tbody-patroon van
         # .raster-tbl (tbody.r-grp) werkt wel.
         rows_html += (
-            f'<tbody class="seg-grp"><tr><td class="iq" style="width:19%;">{name_html}</td>'
+            f'<tbody class="seg-grp"><tr><td class="iq" style="width:17%;">{name_html}</td>'
             f'<td style="width:9%;">{n_cell}</td>'
-            f'<td class="is" style="width:11%;text-align:left;color:{col};">{avg:.1f}</td>'
-            f'<td style="width:14%;color:{col};font-size:9.5px;">{_h(_factor_label(avg))}</td>'
-            f'<td class="lt" style="width:20%;">{theme_cell}</td>'
-            f'<td style="width:27%;">{strip}</td></tr></tbody>'
+            f'<td class="is" style="width:8%;text-align:left;color:{col};">{avg:.1f}</td>'
+            f'<td style="width:13%;color:{col};font-size:9.5px;">{_h(_factor_label(avg))}</td>'
+            f'<td class="lt" style="width:27%;">{theme_cell}</td>'
+            f'<td style="width:26%;">{strip}</td></tr></tbody>'
         )
 
     subblocks = _segment_factor_subblocks(segment_rows, factor_rows, scan_type)
 
+    # De conclusie staat direct onder de tabel, vóór de uitsplitsing per
+    # afdeling. Onderaan paste ze in vijftien van de 21 stresstest-scenario's
+    # niet meer op de pagina en stond ze als los navy blok op een eigen vel (7
+    # tot 10% gevuld; stresstest na plan 3a, observatie 10). Nu loopt ze mee
+    # met de tabel waar ze over gaat; wat eventueel doorschuift is de
+    # uitsplitsing, het detail.
     low_note = _segment_start_note(segment_rows, factor_rows, scan_type)
 
     # Fail Loud: niet tonen mag, verzwijgen niet. Halen de kleine afdelingen
@@ -4273,11 +4301,11 @@ def _segment_block(segment_rows: list[dict], factor_rows: dict[str, dict] | None
     # C9: de tabel had geen kolomkoppen, dus was per kolom niet te zien wat er
     # stond (de sectie-intro benoemde ze in proza). In een <thead>, zodat
     # WeasyPrint hem op een vervolgpagina herhaalt.
-    kop = ('<thead><tr><th style="width:19%">Afdeling</th>'
+    kop = ('<thead><tr><th style="width:17%">Afdeling</th>'
            '<th style="width:9%">Ingevuld / uitgenodigd</th>'
-           '<th style="width:11%">Score</th><th style="width:14%">Band</th>'
-           '<th style="width:20%">Laagste onderwerp</th>'
-           '<th style="width:27%">Spreiding</th></tr></thead>')
+           '<th style="width:8%">Score</th><th style="width:13%">Band</th>'
+           '<th style="width:27%">Laagste onderwerp</th>'
+           '<th style="width:26%">Spreiding</th></tr></thead>')
     # Alleen de verwijzing, geen tweede uitleg: de sectie-intro hierboven noemt de
     # bundeling vanaf vijf en de staffel van 5 tot 9 al, en de tabel doet de rest
     # (codereview taak 11).
@@ -4288,10 +4316,10 @@ def _segment_block(segment_rows: list[dict], factor_rows: dict[str, dict] | None
   {_intro("segmentanalyse")}
   {drempelregel}
   <div class="card">
-    <table class="item-tbl">{kop}{rows_html}</table>
+    <table class="item-tbl seg-tbl">{kop}{rows_html}</table>
     {hidden_note}
-    {subblocks}
     {low_note}
+    {subblocks}
   </div>
 </div>"""
 
@@ -5199,7 +5227,9 @@ def _werkbeleving_section(sdt_a: dict, sim: dict, sdt_items: list, opener_html: 
         if not tbl:
             return ""
         col = _rag_color(sc)
-        return (f'<div class="card no-break" style="margin-bottom:12px;">'
+        # In twee kolommen komt de marge uit .wb-cols .card (compacter).
+        marge = "" if twee_kolommen else ' style="margin-bottom:12px;"'
+        return (f'<div class="card no-break"{marge}>'
                 f'<div style="margin-bottom:8px;"><span style="font-size:12px;font-weight:700;color:#243247;">'
                 f'{_h(SDT_LABELS.get(dim, ""))}</span>'
                 f'<span style="font-size:11px;font-weight:700;color:{col};margin-left:10px;">{_score_str(sc)}</span>'

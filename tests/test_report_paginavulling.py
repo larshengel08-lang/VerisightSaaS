@@ -324,3 +324,67 @@ def test_werkbeleving_overzichtskaart_staat_boven_de_kolommen_niet_erin():
     assert links.count('class="card no-break"') == 2
     css = build_css("retention")
     assert re.search(r"\.tcol\.wb-cols\s*\{[^}]*table-layout:\s*fixed", css)
+
+
+# ── Fixronde na plan 3a, punt 4: geen losse conclusie of losse opener ────────
+
+def _seg_rows():
+    def r(dept, n, avg, pooled=False):
+        return {"department": dept, "n": n, "avg": avg, "scores": [avg] * n,
+                "is_pooled": pooled}
+    return [r("Operations", 14, 4.5), r("Sales", 12, 6.8), r("IT", 11, 7.0)]
+
+
+def _seg_factor_rows():
+    return {d: {"factors": [("growth", 4.0, n), ("workload", 5.0, n)], "omitted": 0}
+            for d, n in (("Operations", 14), ("Sales", 12), ("IT", 11))}
+
+
+def test_segmentconclusie_staat_direct_onder_de_tabel_voor_de_uitsplitsing():
+    """Observatie 10: onderaan de sectie paste het navy blok in vijftien
+    scenario's niet meer en stond het alleen op een vel (7 tot 10%). Het loopt
+    nu mee met de tabel; wat doorschuift is de uitsplitsing per afdeling."""
+    from backend.report_html import _segment_block
+    html = _segment_block(_seg_rows(), factor_rows=_seg_factor_rows(), scan_type="retention")
+    assert html.index("</table>") < html.index("Waar het per afdeling begint")
+    assert html.index("Waar het per afdeling begint") < html.index("Alle onderwerpen per afdeling")
+    assert '<table class="item-tbl seg-tbl">' in html
+
+
+def test_uitsplitsing_per_afdeling_twee_naast_elkaar_en_uitleg_bij_het_eerste_paar():
+    from backend.report_html import _segment_factor_subblocks
+    drie = _segment_factor_subblocks(_seg_rows(), _seg_factor_rows(), "retention")
+    assert drie.startswith('<table class="sub-cols">')
+    assert drie.count('<tbody class="sub-grp">') == 2          # paren: 2 + 1
+    eerste = drie[:drie.index("</tbody>")]
+    assert "Alle onderwerpen per afdeling" in eerste and "Operations (n=14)" in eerste
+    assert "Sales (n=12)" in eerste and "IT (n=11)" not in eerste
+    een = _segment_factor_subblocks(_seg_rows()[:1], _seg_factor_rows(), "retention")
+    assert een.startswith('<div class="no-break">') and "sub-cols" not in een
+    assert een.index("Alle onderwerpen per afdeling") < een.index("Operations (n=14)")
+    from backend.report_css import build_css
+    css = build_css("retention")
+    assert ".sub-cols tbody.sub-grp { break-inside: avoid; }" in css
+
+
+def test_melding_zonder_afdelingstabel_houdt_kop_en_melding_bij_elkaar():
+    """Anders stond "06 Per afdeling" als laatste regel onder de werkbeleving
+    en de melding alleen op het volgende vel."""
+    from backend.report_html import _segment_status_block
+    html = _segment_status_block(0, has_segment_data=False, opener_html="<h2>kop</h2>")
+    assert html.startswith('<div class="sec no-break seg-status">')
+
+
+def test_raster_agenda_invulregels_naast_elkaar_en_slotregel_reist_mee():
+    """De drie invulregels onder elkaar maakten het navy blok bijna een derde
+    vel hoog; met de slotregel viel het los op een eigen pagina (30 tot 32%, in
+    15 alleen de slotregel op 1%)."""
+    d = _fixture("retention", n=25, profile=True)
+    body = _body(render_retention_report_html(d))
+    slot = body[body.index('<div class="no-break agenda-slot">'):]
+    slot = slot[:slot.index("Nog niet besluiten")]
+    assert '<table class="steps fill-steps">' in slot
+    rij = slot[slot.index('<table class="steps fill-steps">'):slot.index("</table>")]
+    assert rij.count('<td class="step">') == 3
+    for label in ("Prioriteit", "Eigenaar", "Vervolgmoment"):
+        assert label in rij
