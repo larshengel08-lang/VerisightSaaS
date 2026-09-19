@@ -5308,10 +5308,10 @@ def _appendix_section(*, fa: dict, oim: dict, sim: dict, factor_items_map: dict,
                 f'<table class="app-tbl"><tr><th class="aq">Stelling</th><th class="as">Gem.</th>'
                 f'<th class="ab">Beeld</th></tr>{rows}</table></div>')
 
-    secties = "".join(
+    tabellen = [
         _tbl(_h(_fl(fk, scan_type)) + ("&nbsp;&middot;&nbsp;" + _score_str(fa.get(fk)) if fa.get(fk) else ""),
              _rows(items, oim))
-        for fk, items in factor_items_map.items())
+        for fk, items in factor_items_map.items()]
     sdt_rows = _rows(sdt_items, sim)
     sdt_html = _tbl(sdt_title, sdt_rows) if sdt_rows else ""
     if enps_score is not None and enps_detail:
@@ -5319,10 +5319,18 @@ def _appendix_section(*, fa: dict, oim: dict, sim: dict, factor_items_map: dict,
                      f"{enps_detail['detractors']} critici van {enps_detail['n']}.")
     else:
         enps_line = "Werkgeversaanbeveling (eNPS): niet gerapporteerd in dit rapport."
-    return f"""<div class="pb sec">
-  {opener_html}
-  {_intro("appendix")}
-  <p style="font-size:9px;color:#94A3B8;margin-bottom:14px;">n={n}. &#x21a9;&nbsp;= omgekeerd gecodeerde stelling.</p>
+    # De appendix opent geen eigen vel maar stroomt onder het vorige hoofdstuk
+    # (fixronde 2 na plan 3a): hij is langer dan een vel, dus met een eigen vel
+    # bleef er een staart van 32 tot 36% over (Loep Start, voorbeeld Loep
+    # Vertrek). Hij breekt tussen de tabellen (elke tabel blijft heel); kop,
+    # intro en eerste tabel blijven samen. Geen leidraadverwijzing wijst naar
+    # dit hoofdstuk, dus een kop halverwege een pagina raakt geen verwijzing.
+    kop = (f'<div class="no-break">{opener_html}{_intro("appendix")}'
+           f'<p style="font-size:9px;color:#94A3B8;margin-bottom:14px;">n={n}. &#x21a9;&nbsp;= omgekeerd gecodeerde stelling.</p>'
+           f'{tabellen[0] if tabellen else ""}</div>')
+    secties = "".join(tabellen[1:])
+    return f"""<div class="sec">
+  {kop}
   {secties}
   {sdt_html}
   <p class="trustline">{_h(enps_line)}</p>

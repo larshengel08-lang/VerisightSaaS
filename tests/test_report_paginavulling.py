@@ -422,3 +422,18 @@ def test_zonder_profiel_stromen_overzicht_en_verdieping_behalve_bij_loep_start()
     i = ob.index('<h2 class="ch-title">Overzichtsprofiel</h2>')
     start = ob.rindex("<div class=", 0, ob.rindex('<div class="ch-head"', 0, i) + 1)
     assert ob[start:start + 40].startswith('<div class="pb sec">')
+
+
+def test_appendix_stroomt_en_houdt_de_kop_bij_de_eerste_tabel():
+    """Fixronde 2 na plan 3a: de appendix is langer dan een vel; met een eigen
+    vel bleef een staart van 32 tot 36%. Hij stroomt nu onder het vorige
+    hoofdstuk en breekt alleen tussen tabellen; kop en eerste tabel samen."""
+    d = _volle_sdt(_fixture("retention", n=25, profile=True))
+    body = _body(render_retention_report_html(d))
+    i = body.index('<h2 class="ch-title">Appendix</h2>')
+    open_sec = body.rindex('<div class="sec">', 0, i)
+    assert 'class="pb sec"' not in body[open_sec:i]
+    kop = body[open_sec:body.index('<div class="no-break" style="margin-bottom:14px;">', i)]
+    assert '<div class="no-break"><div class="ch-head"' in kop
+    eerste_tabel = body.index('<table class="app-tbl">', i)
+    assert body.index("</div>", eerste_tabel) < body.index('<table class="app-tbl">', eerste_tabel + 10)
