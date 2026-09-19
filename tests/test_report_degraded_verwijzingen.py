@@ -42,7 +42,7 @@ def _render(scan_type: str, *, profile: bool) -> str:
 def test_overzichtsprofiel_beschrijft_geen_factoren_die_er_niet_staan(scan_type):
     body = _render(scan_type, profile=False)
     assert SECTION_INTROS["overzichtsprofiel"] not in body
-    assert "Elke factor hieronder is een thema" not in body
+    assert "Elk onderwerp hieronder is gemeten" not in body
     assert "welke signalen meewogen in de volgorde" not in body
     assert "het laagst scoort, is het logische begin" not in body
     # De legenda legt kleuren uit van balken die er niet zijn.
@@ -52,7 +52,7 @@ def test_overzichtsprofiel_beschrijft_geen_factoren_die_er_niet_staan(scan_type)
 @pytest.mark.parametrize("scan_type", SCANS)
 def test_overzichtsprofiel_zegt_eerlijk_wat_er_ontbreekt(scan_type):
     body = _render(scan_type, profile=False)
-    assert ("Voor deze meting zijn er geen scores per factor berekend, dus staat "
+    assert ("Voor deze meting zijn er geen scores per onderwerp berekend, dus staat "
             "hier nog geen profiel.") in body
     # Het oude bericht schreef het ontbreken onterecht toe aan het aantal: de
     # lege staat hangt aan een leeg factorprofiel, niet aan n.
@@ -64,7 +64,7 @@ def test_overzichtsprofiel_ongewijzigd_met_profiel(scan_type):
     body = _render(scan_type, profile=True)
     assert SECTION_INTROS["overzichtsprofiel"] in body
     assert "kwetsbaar punt &nbsp;" in body
-    assert "Voor deze meting zijn er geen scores per factor berekend, dus staat" not in body
+    assert "Voor deze meting zijn er geen scores per onderwerp berekend, dus staat" not in body
 
 
 # ── 2 en 3. Vertrekcontext (alleen Loep Vertrek) ────────────────────────────
@@ -81,8 +81,8 @@ def test_vertrekcontext_belooft_geen_factorscores_verderop():
 def test_vertrekcontext_verwijst_niet_naar_een_rangorde_die_er_niet_is():
     body = _render("exit", profile=False)
     assert "Relatie met het overzichtsprofiel" not in body
-    assert "De factoren die bovenaan de rangorde staan" not in body
-    assert "komen terug in de factordiepte hierna" not in body
+    assert "De onderwerpen die bovenaan de rangorde staan" not in body
+    assert "komen terug in de verdieping hierna" not in body
 
 
 def test_vertrekcontext_ongewijzigd_met_profiel():
@@ -118,7 +118,7 @@ def test_behoudscontext_intro_verwijst_niet_naar_het_overzichtsprofiel():
     # een hoofdstuk dat in deze staat leeg is, verdwijnt.
     assert "uit het overzichtsprofiel" not in SECTION_INTROS["behoudscontext"]
     body = _render("retention", profile=False)
-    assert "de werkfactoren en de werkbeleving samen" in body
+    assert "de zes onderwerpen over het werk en de werkbeleving samen" in body
     assert "uit het overzichtsprofiel" not in body
 
 
@@ -150,18 +150,18 @@ def test_checkpointoverzicht_intro_blijft_verder_intact():
 # Loep Start heeft geen verdiepingsvragen (spec ronde 2 par. 7), dus daar mag de
 # lege staat er ook geen beloven: zelfde vorm, eigen woorden.
 _LEGE_VERDIEPING = {
-    "exit": ("Voor deze meting zijn er geen scores per factor berekend. Zonder "
+    "exit": ("Voor deze meting zijn er geen scores per onderwerp berekend. Zonder "
              "die scores is er geen rangorde om een verdieping aan op te hangen."),
-    "retention": ("Voor deze meting zijn er geen scores per factor berekend. Zonder "
+    "retention": ("Voor deze meting zijn er geen scores per onderwerp berekend. Zonder "
                   "die scores is er geen rangorde om een verdieping aan op te hangen."),
-    "onboarding": ("Voor deze meting zijn er geen scores per factor berekend. Zonder "
-                   "die scores is er geen volgorde om de factoren met de meeste "
+    "onboarding": ("Voor deze meting zijn er geen scores per onderwerp berekend. Zonder "
+                   "die scores is er geen volgorde om de onderwerpen met de meeste "
                    "aandacht aan te wijzen."),
 }
 _VERDIEPING_HOOFDSTUK = {
-    "exit": "Verdieping: prioritaire factoren",
-    "retention": "Verdieping: prioritaire factoren",
-    "onboarding": "Factoren met de meeste aandacht",
+    "exit": "Verdieping: onderwerpen met de meeste aandacht",
+    "retention": "Verdieping: onderwerpen met de meeste aandacht",
+    "onboarding": "Onderwerpen met de meeste aandacht",
 }
 
 
@@ -191,7 +191,7 @@ def test_verdiepingshoofdstuk_blijft_bestaan_zodat_de_leesroute_klopt(scan_type)
 @pytest.mark.parametrize("scan_type", SCANS)
 def test_verdieping_ongewijzigd_met_profiel(scan_type):
     body = _render(scan_type, profile=True)
-    assert "Verdieping: prioritaire factoren" not in body
+    assert "Verdieping: onderwerpen met de meeste aandacht" not in body
     assert "geen rangorde om een verdieping aan op te hangen" not in body
 
 
@@ -200,9 +200,9 @@ def test_verdieping_ongewijzigd_met_profiel(scan_type):
 @pytest.mark.parametrize("scan_type", SCANS)
 def test_banden_beloven_geen_rangorde_zonder_factorprofiel(scan_type):
     body = _render(scan_type, profile=False)
-    assert "De rangorde tussen de eigen factoren weegt zwaarder" not in body
-    assert ("In dit rapport staat nog geen rangorde tussen de eigen factoren: "
-            "daarvoor zijn er geen factorscores berekend.") in body
+    assert "De rangorde tussen de eigen onderwerpen weegt zwaarder" not in body
+    assert ("In dit rapport staat nog geen rangorde tussen de eigen onderwerpen: "
+            "daarvoor zijn er geen scores per onderwerp berekend.") in body
     # De rest van de cel blijft staan: de drempels zijn een eigenschap van de
     # schaal, niet van deze meting.
     assert "zijn vaste schaaldrempels, geen vergelijking met" in body
@@ -212,5 +212,5 @@ def test_banden_beloven_geen_rangorde_zonder_factorprofiel(scan_type):
 @pytest.mark.parametrize("scan_type", SCANS)
 def test_banden_ongewijzigd_met_factorprofiel(scan_type):
     body = _render(scan_type, profile=True)
-    assert "De rangorde tussen de eigen factoren weegt zwaarder dan de absolute kleur." in body
+    assert "De rangorde tussen de eigen onderwerpen weegt zwaarder dan de absolute kleur." in body
     assert "In dit rapport staat nog geen rangorde" not in body

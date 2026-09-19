@@ -142,7 +142,7 @@ def _assert_p02_matches_raster_startpunt(html: str, scan_type: str) -> None:
         f"laagste factor in _FACTOR_AVGS."
     )
 
-    # p.02 "Bestuurlijke read": why-title noemt de primaire factor.
+    # p.02 "Het antwoord in het kort": why-title noemt de primaire factor.
     why_marker = f"Waarom {expected_label} bovenaan staat"
     why_idx = html.find(why_marker)
     assert why_idx != -1, f"p.02-marker niet gevonden: {why_marker!r}"

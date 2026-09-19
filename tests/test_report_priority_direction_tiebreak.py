@@ -121,7 +121,7 @@ def test_exit_reason_weight_is_marked_and_counted():
     assert rows[0]["key"] == "leadership"
     assert rows[0]["exit_reason_n"] == 9
     assert _kind(rows[0]) == "exit_reason"
-    assert "vaker als vertrekreden" in rows[0]["tie_break_note"]
+    assert "vaker als hoofdreden van vertrek" in rows[0]["tie_break_note"]
     assert "9 keer tegen 4" in rows[0]["tie_break_note"]
 
 
@@ -289,7 +289,7 @@ def test_k2_vertrekredenregel_noemt_nooit_een_gelijk_aantal():
     for r in rows:
         note = r["tie_break_note"] or ""
         assert "keer tegen 2" not in note, note
-        assert "vertrekreden" not in note or r["exit_reason_n"] > 2, note
+        assert "hoofdreden" not in note or r["exit_reason_n"] > 2, note
     _flip_invariant(rows)
 
 

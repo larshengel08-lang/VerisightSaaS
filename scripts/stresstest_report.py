@@ -31,7 +31,7 @@ import random
 import sys
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 from sqlalchemy import create_engine
@@ -42,7 +42,13 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from backend.database import Base  # noqa: E402
-from backend.models import Campaign, Organization, Respondent, SurveyResponse  # noqa: E402
+from backend.models import (  # noqa: E402
+    Campaign,
+    CampaignDeliveryRecord,
+    Organization,
+    Respondent,
+    SurveyResponse,
+)
 from backend.products.shared.deepening import (  # noqa: E402
     DEEPENING_SETS,
     DIRECTION_SETS,
@@ -600,7 +606,15 @@ def run_scenario(sc: Scenario) -> dict:
     db.add(campaign)
     db.flush()
 
+    # Meetgegevens (plan 3a, H8): start en sluiting vast per scenario, zodat
+    # pagina twee echte datums toont; invited_count als noemer, gelijk aan het
+    # aantal respondentrijen dat hieronder wordt aangemaakt.
     invited = sc.invited if sc.invited is not None else max(sc.n, round(sc.n / 0.7))
+    campaign.closed_at = datetime(2026, 3, 30, 12, 0, tzinfo=timezone.utc)
+    db.add(CampaignDeliveryRecord(organization_id=org.id, campaign_id=campaign.id,
+                                  invited_count=invited, launch_date=date(2026, 3, 9)))
+    db.flush()
+
     labels = _dept_plan(sc)
     dept_counts: dict[str, int] = {}
     now = datetime.now(timezone.utc)

@@ -76,6 +76,10 @@ def test_sectie_intros_aanwezig():
     # niet-lege teksten zodat de Open toelichtingen-sectie (gegated door
     # _should_show_quotes, MIN_QUOTES_N=5) daadwerkelijk rendert (zelfde
     # patroon als test_geen_erkenning_label_meer hierboven).
+    # Sinds taak 8 (B9) rendert de werkbelevingssectie alleen met echte
+    # dimensiescores -- een lege kaart plus een hoofdstuknummer was precies de
+    # halflege pagina die B9 aanpakt. Deze test gaat over de intro's, dus krijgt
+    # de fixture ook SDT-data, zoals hij hierboven al open toelichtingen krijgt.
     d = _min_retention_data()
     d["open_texts"] = [
         "Meer ruimte voor overleg met mijn leidinggevende zou helpen.",
@@ -84,10 +88,13 @@ def test_sectie_intros_aanwezig():
         "Communicatie tussen teams kan beter.",
         "Over het algemeen ben ik tevreden over de sfeer.",
     ]
+    d["sdt_avgs"] = {"autonomy": 6.1, "competence": 6.4, "relatedness": 6.0}
+    d["sdt_item_avgs"] = {"B1": 6.1}
+    d["sdt_items"] = [("B1", "Ik bepaal zelf hoe ik mijn werk indeel")]
     html = render_retention_report_html(d)
     for frase in [
         "samenvattende groepsscore",          # behoudscontext: opbouw behoudssignaal
-        "drie stellingen over hetzelfde thema", # overzichtsprofiel: wat is een factor
+        "gemeten met drie stellingen",           # overzichtsprofiel: wat is een onderwerp
         "basisbehoeften",                       # werkbeleving/SDT: waarom gemeten
         "ontvangstvolgorde",                    # open toelichtingen: selectie
     ]:
@@ -97,20 +104,23 @@ def test_sectie_intros_aanwezig():
 def test_bronregel_managementvraag():
     from backend.report_html import _bestuurlijke_read
     html = _bestuurlijke_read(
-        kernzin="K.", totaalbeeld="T.", primary_label="Groeiperspectief",
+        kernzin="K.", primary_label="Groeiperspectief",
         why_cells_html="",
-        strong_label="Rolhelderheid", strong_score=7.2, mgmt_q="Vraag?",
-        mgmt_q_source="Gebaseerd op de meest gekozen toelichting van respondenten in de verdieping.")
-    assert "meest gekozen toelichting" in html
+        mgmt_q="Vraag?",
+        mgmt_q_source="Gebaseerd op het laagst scorende onderwerp.")
+    assert '<span class="mq-source">Gebaseerd op het laagst scorende onderwerp.</span>' in html
 
 
-def test_gebruiksblok_op_openingspagina():
-    html = render_retention_report_html(_min_retention_data())
-    blok = html.find("Zo gebruik je dit rapport")
-    responsbasis = html.find("Responsbasis")
-    assert blok != -1
-    assert blok < responsbasis, "gebruiksblok hoort voor de responsbasis"
-    assert "achteraan" in html and "eigenaar" in html
+def test_leidraad_op_openingspagina():
+    # Plan 3a taak 5 (H5): de leidraad vervangt het gebruiksblok, vóór de meetgegevens.
+    # Met werkbeleving erin: zonder afdelingen, toelichtingen én werkbeleving
+    # heeft regel 4 geen sectie om naar te verwijzen en rendert de leidraad
+    # bewust niet (codereview taak 5, minor g).
+    data = _min_retention_data()
+    data["sdt_avgs"] = {"autonomy": 5.5, "competence": 6.0, "relatedness": 6.5}
+    html = render_retention_report_html(data)
+    assert "Zo leid je dit gesprek in 45 minuten" in html
+    assert html.find("Zo leid je dit gesprek") < html.find("Meetgegevens")
 
 
 def test_priority_factors_alleen_organisatiefactoren():

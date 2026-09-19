@@ -68,15 +68,15 @@ def test_responsbasis_shows_counts_and_segment_reason():
 def test_bestuurlijke_read_contains_core_blocks():
     html = _bestuurlijke_read(
         kernzin="Het vertrekbeeld is gemengd; groeiperspectief springt eruit.",
-        totaalbeeld="Drie factoren scoren laag. Eén factor is relatief sterk.",
         primary_label="Groeiperspectief",
         why_cells_html="<td class='why-cell'><div class='why-l'>Score</div><div class='why-v'>4.2</div></td>",
-        strong_label="Werksfeer", strong_score=7.1,
         mgmt_q="Welke loopbaanstappen ontbreken voor deze groep?",
     )
     assert "Groeiperspectief" in html
     assert 'class="why"' in html
-    assert "Werksfeer" in html
+    # De "Relatief sterk: wat wél werkt"-cel is weg (plan 3a taak 4, C10):
+    # het overzichtsprofiel toont de sterke onderwerpen al.
+    assert "wat w&eacute;l werkt" not in html
     assert "Welke loopbaanstappen" in html
     # De p.03-kruisverwijzing is verwijderd (designsprong §1): de responsbasis
     # wordt nu als band meegegeven i.p.v. verwezen via een paginanummer.
@@ -141,7 +141,7 @@ def test_behoudscontext_signals_stacked_not_side_by_side():
     assert html.count('class="sigrow"') == 4
     # Titel staat vóór de uitleg, uitleg vóór de score binnen elke rij.
     behoudssignaal_idx = html.index("Behoudssignaal")
-    uitleg_idx = html.index("Werkfactoren en werkbeleving")
+    uitleg_idx = html.index("De zes onderwerpen over het werk en de werkbeleving")
     score_idx = html.index("4.7/10")
     assert behoudssignaal_idx < uitleg_idx < score_idx
 
@@ -194,7 +194,7 @@ from backend.report_html import _segment_status_block, _eerste_managementspoor
 def test_segment_state_b_uses_spec_copy():
     html = _segment_status_block(n=8, has_segment_data=False)
     assert "herleidbaarheid te voorkomen" in html
-    assert "zodra voldoende responses" in html
+    assert "zodra er per afdeling genoeg antwoorden zijn" in html
 
 
 def test_managementspoor_avoids_hard_language():

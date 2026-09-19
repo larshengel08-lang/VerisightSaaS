@@ -98,7 +98,7 @@ def test_degraded_blok_noemt_de_echte_totalen(scan_type):
 @pytest.mark.parametrize("scan_type", SCANS)
 def test_degraded_blok_zegt_waarom_er_geen_richting_hangt(scan_type):
     body = _degraded(scan_type)
-    assert ("Zonder profiel per factor is er nog geen startpunt om die "
+    assert ("Zonder profiel per onderwerp is er nog geen startpunt om die "
             "antwoorden aan te koppelen, en per onderwerp zijn het er te "
             "weinig om te tonen.") in body
 
@@ -123,17 +123,16 @@ def test_methodiekcel_belooft_geen_richting_die_er_niet_hangt(scan_type):
     """De cel pinde alleen het wóórd "Richtingvraag", niet de claim eronder.
 
     Daardoor bleef de volledige feature-copy staan zodra er richtingdata was:
-    een opdrachtvorm in "Wat er moet gebeuren", een richting vanaf 3
-    antwoorden en een beperkte-basis-regel. Geen van drieën bestaat in het
-    degraded blok, dat alleen tellingen toont.
+    een opdrachtvorm in "Wat er moet gebeuren" en de uitleg van de vloer van 3
+    (sinds taak 11 een verwijzing naar de drempeltabel). Geen van beide bestaat
+    in het degraded blok, dat alleen tellingen toont.
     """
     body = _degraded(scan_type)
     for claim in ("De opdrachtvorm in",
-                  "Dit blok toont een richting vanaf 3 antwoorden",
-                  "beperkte-basis-regel"):
+                  "De drempel van 3 staat in de drempeltabel op pagina"):
         assert claim not in body, f"methodiekpagina belooft nog: {claim!r}"
     assert ("In dit rapport hangt er geen richting aan die antwoorden: zonder "
-            "profiel per factor is er geen startpunt om ze aan te koppelen, en "
+            "profiel per onderwerp is er geen startpunt om ze aan te koppelen, en "
             "per onderwerp zijn het er te weinig om te tonen. Het blok "
             "‘Wat er moet gebeuren’ toont daarom alleen hoeveel "
             "respondenten de vraag kregen, beantwoordden en oversloegen.") in body
@@ -144,8 +143,7 @@ def test_methodiekcel_houdt_de_volledige_copy_als_het_blok_kaarten_heeft(scan_ty
     body = _body(_render(scan_type, n=_N_NORMAL, profile=True,
                          direction=_agg(scan_type, {"workload": (6, 1), "growth": (4, 1)})))
     assert "De opdrachtvorm in" in body
-    assert "Dit blok toont een richting vanaf 3 antwoorden" in body
-    assert "beperkte-basis-regel" in body
+    assert "De drempel van 3 staat in de drempeltabel op pagina" in body
     assert "In dit rapport hangt er geen richting aan die antwoorden" not in body
 
 
@@ -181,7 +179,7 @@ def test_met_profiel_blijven_de_kaarten_zoals_ze_waren(scan_type):
     assert "voor het startpunt en het tweede punt" in body
     assert "Richtingvraag" in body
     # De degraded variant mag hier niet meeliften.
-    assert "Zonder profiel per factor is er nog geen startpunt" not in body
+    assert "Zonder profiel per onderwerp is er nog geen startpunt" not in body
 
 
 # ── 3. Zonder richtingdata belooft het rapport niets ────────────────────────
@@ -192,7 +190,7 @@ def test_zonder_richtingdata_geen_blok_en_geen_belofte(scan_type, n, profile):
     body = _body(_render(scan_type, n=n, profile=profile, direction={}))
     assert _EYEBROW_TAG not in body
     assert "Richtingvraag" not in body
-    assert "Zonder profiel per factor is er nog geen startpunt" not in body
+    assert "Zonder profiel per onderwerp is er nog geen startpunt" not in body
 
 
 # ── De twee eerlijkheidsrestanten op diezelfde pagina (B3, punt 3) ───────────
@@ -200,38 +198,39 @@ def test_zonder_richtingdata_geen_blok_en_geen_belofte(scan_type, n, profile):
 @pytest.mark.parametrize("scan_type", SCANS)
 def test_rasterintro_belooft_geen_rangorde_zonder_rasterrijen(scan_type):
     body = _degraded(scan_type)
-    assert "Dit overzicht weegt alle zes factoren tegen elkaar af" not in body
+    assert "Dit overzicht weegt alle zes onderwerpen tegen elkaar af" not in body
     assert "Hoe deze volgorde tot stand komt" not in body
     assert "de volgorde volgt score en spreiding" not in body
-    assert ("Voor deze meting is er nog geen profiel per factor, dus ook geen "
+    assert ("Voor deze meting is er nog geen profiel per onderwerp, dus ook geen "
             "volgorde en geen startpunt.") in body
     # De lege tabelkop is een rangordebelofte zonder inhoud.
     assert 'class="raster-tbl"' not in body
 
 
 @pytest.mark.parametrize("scan_type", ["exit", "retention", "onboarding"])
-def test_gebruiksblok_belooft_geen_lege_secties(scan_type):
+def test_leidraad_belooft_geen_lege_secties(scan_type):
+    # Plan 3a taak 5: de leidraad vervangt het gebruiksblok en rendert zonder
+    # factorprofiel bewust niet; geen verwijzing naar een verdieping of een
+    # volgorde die er niet is.
     body = _body(_render(scan_type, n=_N_DEGRADED, profile=False, direction={}))
-    assert "dan de verdieping per thema, en achteraan de gespreksagenda" not in body
-    assert ("Een verdieping per thema en een volgorde van thema&#x27;s staan er "
-            "nog niet in; achteraan lees je waar het gesprek kan beginnen.") in body
+    assert "Zo leid je dit gesprek" not in body
+    assert 'class="pref"' not in body
 
 
 # Loep Start noemt zijn eigen hoofdstukken (spec ronde 2 par. 7): die heten geen
 # "Verdieping" meer, want er zijn geen verdiepingsvragen.
-_LEESROUTE_MET_PROFIEL = {
-    "exit": "dan de verdieping per thema, en achteraan de gespreksagenda",
-    "retention": "dan de verdieping per thema, en achteraan de gespreksagenda",
-    "onboarding": ("dan de thema&#x27;s met de meeste aandacht, en achteraan de "
-                   "gespreksagenda"),
+_LEIDRAAD_RIJ3_MET_PROFIEL = {
+    "exit": "De verdieping van het startpunt",
+    "retention": "De verdieping van het startpunt",
+    "onboarding": "Het startpunt: de score en de laagste stelling",
 }
 
 
 @pytest.mark.parametrize("scan_type", ["exit", "retention", "onboarding"])
-def test_gebruiksblok_ongewijzigd_met_profiel(scan_type):
+def test_leidraad_met_profiel(scan_type):
     body = _body(_render(scan_type, n=_N_NORMAL, profile=True, direction={}))
-    assert _LEESROUTE_MET_PROFIEL[scan_type] in body
-    assert "staan er nog niet in" not in body
+    assert "Zo leid je dit gesprek in 45 minuten" in body
+    assert _LEIDRAAD_RIJ3_MET_PROFIEL[scan_type] in body
 
 
 # ── De sluitende gespreksagenda belooft niets wat er niet is (review ronde 2) ─
@@ -264,8 +263,8 @@ def test_gespreksopener_herhaalt_geen_startpunt_dat_er_niet_is(scan_type, met_ri
 
 @pytest.mark.parametrize("scan_type", SCANS)
 def test_de_gespreksopener_is_de_beloofde_plek_waar_het_gesprek_begint(scan_type):
-    """Het gebruiksblok op p.02 stuurt in deze staat naar "achteraan lees je
-    waar het gesprek kan beginnen". Dan moet daar ook echt een vraag staan."""
+    """De slotpagina is in deze staat de plek waar het gesprek begint (de
+    leidraad rendert hier niet). Dan moet daar ook echt een vraag staan."""
     body = _body(_render(scan_type, n=_N_DEGRADED, profile=False, direction={}))
     i = body.rfind("Gespreksopener")
     assert i != -1

@@ -100,6 +100,18 @@ body {
   color: """ + INK + r"""; margin-bottom: 2px; }
 .mq-source { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.04em;
   color: """ + STEEL + r"""; margin-top: 5px; display: block; }
+/* Paginaverwijzing (H4): WeasyPrint vult het nummer via target-counter; in
+   Chromium (stresstest-harnas) blijft het anker leeg. De tekst ervoor zegt
+   "pagina ". Geverifieerd in ghcr.io/weasyprint/weasyprint op 2026-09-16. */
+a.pref { text-decoration: none; color: inherit; }
+a.pref::after { content: target-counter(attr(href), page); }
+/* Leidraad (spec par. 4 blok 5) */
+.leidraad { margin-top: 18px; border-top: 1px solid """ + HAIRLINE + r"""; padding-top: 12px; }
+.leidraad-title { font-family: 'Inter Tight', sans-serif; font-weight: 800; font-size: 13px; color: """ + INK + r"""; margin-bottom: 6px; }
+.leidraad table { width: 100%; border-collapse: collapse; }
+.leidraad td { font-size: 10px; color: #374151; padding: 3px 6px 3px 0; vertical-align: top; border-bottom: 1px solid """ + HAIRLINE + r"""; line-height: 1.45; }
+.leidraad td.lt { width: 13%; font-family: 'JetBrains Mono', monospace; font-size: 8.5px; color: """ + STEEL + r"""; white-space: nowrap; }
+.leidraad td.lw { width: 34%; font-weight: 600; color: """ + INK + r"""; }
 
 /* ── Headings ── */
 h2 { font-family: 'Inter Tight', sans-serif; font-weight: 800;
@@ -129,6 +141,10 @@ p  { margin-bottom: 6px; font-size: 11px; }
   letter-spacing: -0.04em; line-height: 0.98; color: #fff; max-width: 16ch; }
 .csub { font-family: 'Inter', sans-serif; font-size: 13px; color: rgba(255,255,255,0.62);
   margin-top: 22px; }
+/* H15: wie dit rapport mag zien. Kleiner dan .csub en met een leesbreedte, want
+   het is een voorwaarde bij het rapport en geen titelregel. */
+.cdist { font-size: 10px; color: rgba(255,255,255,0.55); margin-top: 10px;
+  max-width: 60ch; line-height: 1.5; overflow-wrap: break-word; }
 /* B10: expliciete breedte + table-layout: fixed, anders laat WeasyPrint de
    auto-width tabel meegroeien met een lange factornaam tot buiten de pagina.
    Geen flex-gap, custom properties of inset-shorthand hier: WeasyPrint
@@ -177,16 +193,40 @@ p  { margin-bottom: 6px; font-size: 11px; }
 
 /* ── Item table ── */
 .item-tbl { width: 100%; border-collapse: collapse; }
+/* overflow-wrap zoals .app-tbl td: in een halve kolom (werkbeleving in twee
+   kolommen) moet een lange stelling kunnen afbreken in plaats van de kolom uit
+   te duwen. */
 .item-tbl td { padding: 7px 8px; vertical-align: middle; font-size: 10px; color: #374151;
-  border-bottom: 1px solid """ + HAIRLINE + r"""; }
+  border-bottom: 1px solid """ + HAIRLINE + r"""; overflow-wrap: break-word; }
 .item-tbl .iq { width: 56%; }
 .item-tbl .is { width: 10%; font-weight: 700; text-align: right; }
+/* Kolomkoppen (C9, taak 11): de afdelingstabel en de drempeltabel dragen er een,
+   in dezelfde monotypografie als .raster-tbl th. table-header-group laat
+   WeasyPrint de kop herhalen op een vervolgpagina. */
+.item-tbl th { text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 8px;
+  text-transform: uppercase; letter-spacing: 0.08em; color: """ + STEEL + r""";
+  border-bottom: 1.5px solid """ + NAVY + r"""; padding: 4px 8px; }
+.item-tbl thead { display: table-header-group; }
 /* De segmenttabel mag over een paginagrens lopen sinds de rijlimiet verviel
    (ronde 2 par. 3.2). break-inside op de <tr> doet onder border-collapse:
    collapse niets in WeasyPrint, dus staat elke afdeling in haar eigen tbody
-   (zelfde patroon als tbody.r-grp in het prioriteringsraster). Deze tabel
-   heeft geen kolomkoppen om te herhalen: de sectie-intro benoemt de kolommen. */
+   (zelfde patroon als tbody.r-grp in het prioriteringsraster). */
 .item-tbl tbody.seg-grp { break-inside: avoid; }
+/* Segmentsectie compacter (fixronde na plan 3a, observatie 10): de sectie was
+   net iets hoger dan een vel, dus viel de conclusie eronder los op een eigen
+   pagina. */
+.item-tbl.seg-tbl td { padding: 4px 8px; }
+.sub-cols { width: 100%; table-layout: fixed; border-collapse: collapse; }
+.sub-cols td { vertical-align: top; width: 50%; padding: 0 10px 0 0; }
+.sub-cols td + td { padding: 0 0 0 10px; }
+.sub-cols td[colspan] { padding: 0; }
+.sub-cols tbody.sub-grp { break-inside: avoid; }
+.empty-state.seg-leeg { padding: 8px 14px; }
+/* De melding zonder afdelingstabel volgt direct op de werkbeleving (geen eigen
+   vel). De negatieve marge verkleint de samengevallen witruimte tussen beide
+   van 44px naar 20px, zodat kop en melding samen nog onder een volle
+   werkbelevingspagina passen. */
+.sec.seg-status { margin-top: -24px; }
 
 /* ── Quote / theme ── */
 .theme-card { background: #fff; border: 1px solid """ + HAIRLINE + r"""; padding: 14px 16px; margin-bottom: 10px; }
@@ -196,6 +236,22 @@ p  { margin-bottom: 6px; font-size: 11px; }
   margin-top: 8px; padding-left: 12px; border-left: 2px solid """ + accent + r"""; }
 .quote-anon { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.1em;
   text-transform: uppercase; color: #94A3B8; margin-top: 5px; }
+
+/* ── B13: "Anders"-toelichtingen onder een verdeling ── */
+/* 10px en niet kleiner: de leesbaarheidsronde van 2026-07-09 heeft juist de
+   eerlijkheidsregels (staffels, noemers, caveats) naar 10px getild, en dit is
+   er een van. overflow-wrap zoals .item-tbl td en .cmc: een toelichting mag
+   200 tekens zijn en kan in een halve kolom staan (de twee richtingkaarten
+   naast elkaar), dus een lange reeks zonder spatie moet afbreken in plaats van
+   de kaart over de marge te duwen. */
+.anders-kop { font-size: 10px; color: #374151; margin: 8px 0 0; line-height: 1.5;
+  overflow-wrap: break-word; word-wrap: break-word; }
+.anders-note { font-size: 10px; color: """ + STEEL + r"""; margin: 2px 0 0; line-height: 1.5; }
+.anders-list { font-size: 10px; color: #374151; margin: 4px 0 0; padding-left: 16px; }
+.anders-list li { margin-bottom: 3px; line-height: 1.5;
+  overflow-wrap: break-word; word-wrap: break-word; }
+.anders-anon { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: #94A3B8; margin: 5px 0 0; }
 
 /* ── Steps ── */
 .steps { display: table; width: 100%; border-collapse: separate; border-spacing: 10px 0; }
@@ -227,6 +283,15 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .agenda-dark .step-fill-hint { color: #8CA0B3; }
 .agenda-why { display: block; font-family: 'JetBrains Mono', monospace; font-size: 8px;
   letter-spacing: 0.04em; color: #9FB0C0; margin-top: 7px; line-height: 1.5; }
+/* De drie invulregels naast elkaar in plaats van onder elkaar: onder elkaar
+   was het navy blok bijna een derde vel hoog en viel het, met de slotregel,
+   los op een eigen pagina (30 tot 32%, in 15 alleen de slotregel op 1%;
+   fixronde na plan 3a). De slotregel reist mee in .agenda-slot. */
+.fill-steps .step { width: 33.3%; padding: 10px 12px; }
+.fill-steps .step-sublbl { margin-top: 0; }
+.fill-steps .step-fill-hint { margin-bottom: 0; }
+.agenda-slot .agenda-dark { padding: 14px 16px; }
+.agenda-slot .agenda-opener { padding-top: 10px; margin-bottom: 12px; }
 .agenda-opener { border-left: 3px solid #E8A020; border-top: 1px solid #2A3D52;
   padding: 14px 0 0 16px; margin-top: 16px; }
 
@@ -244,6 +309,9 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .raster-tbl th { text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 8px;
   text-transform: uppercase; letter-spacing: 0.08em; color: """ + STEEL + r""";
   border-bottom: 1.5px solid """ + NAVY + r"""; padding: 4px 7px; }
+/* De kop staat in een <thead> (ronde 2 observatie 4): zonder deze regel herhaalt
+   WeasyPrint hem niet en begint een vervolgpagina met kolommen zonder naam. */
+.raster-tbl thead { display: table-header-group; }
 .raster-tbl td { border-bottom: 1px solid """ + HAIRLINE + r"""; padding: 6px 7px; vertical-align: top; }
 .raster-tbl tr.r-top td { background: """ + NAVY + r"""; color: """ + CHALK + r"""; }
 .raster-tbl tr.r-top .r-fl { color: """ + accent + r"""; font-weight: 600; }
@@ -272,9 +340,26 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .dir-head { font-size: 14px; font-weight: 700; line-height: 1.3; color: """ + NAVY + r"""; margin-bottom: 6px; }
 .dir-src { font-size: 10px; color: #374151; margin-bottom: 8px; }
 .dir-tbl td { font-size: 9.5px; padding: 5px 6px; }
+/* De scorekolom draagt sinds B14 de volle tellingsvorm ("27 van de 62 (44%)",
+   ongeveer 91px): in een halve kaart geeft auto-layout die kolom ongeveer 59px,
+   waardoor de telling over twee regels viel en niet meer als één getal las.
+   Vaste breedtehint plus nowrap; de vraagkolom ernaast breekt wel af
+   (.item-tbl td heeft overflow-wrap: break-word). */
+.dir-tbl .is { width: 34%; white-space: nowrap; }
 .dir-caveat { font-size: 10px; color: #92400E; margin: 4px 0 0; }
 .dir-chain { font-family: 'JetBrains Mono', monospace; font-size: 8.5px; color: """ + STEEL + r"""; margin-top: 8px; }
+/* De sluitende totaalregel boven de kaarten (B14, H19) verantwoordt álle
+   richtingantwoorden en is daarmee een eerlijkheidsregel, niet een voetnoot in
+   een kaart: leesbare 10px in de gewone letter, zoals .dir-intro erboven. De
+   maat staat hier en niet inline, zodat er één plek is (codereview taak 9). */
+.dir-chain.dir-totals { font-family: inherit; font-size: 10px; line-height: 1.5;
+  color: #374151; max-width: 70ch; margin: 0 0 10px; }
 .mq-direction { font-size: 11px; font-weight: 600; color: """ + NAVY + r"""; margin: 8px 0 0; }
+.mq-brug { font-size: 10.5px; color: #374151; margin: 8px 0 0; }
+/* Dezelfde brugzin op een eigen sectie (gespreksagenda) staat na een tabel en
+   krijgt daar iets meer lucht. Als klasse en niet als inline style, zodat de
+   maat op één plek staat. */
+.mq-brug-sec { margin-top: 10px; }
 
 /* ── Trust / methodiek ── */
 .tg { display: table; width: 100%; border-collapse: separate; border-spacing: 10px 0; }
@@ -298,6 +383,49 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .app-tbl .as { width: 10%; }
 .app-tbl .ab { width: 28%; }
 .sec { margin-bottom: 44px; }
+/* Flow-sectie (B9): blijft bij elkaar en opent geen eigen vel. Een sectie die
+   niet meer past gaat als geheel naar de volgende pagina, zodat de tweede en
+   derde verdiepingspagina de ruimte onder hun voorganger vullen in plaats van
+   elk een eigen halflege vel te openen. Geen break-before: auto -- die klasse
+   draagt geen .pb, dus er staat niets terug te zetten (codereview taak 8). */
+.sec.flow { break-inside: avoid; margin-top: 30px; }
+/* Werkbeleving in twee kolommen (B9): 287mm in een kolom werd 233mm, dus een
+   pagina minder. Via de bestaande .tcol-tabel (display: table), niet via
+   column-count of flex met gap: WeasyPrint kent geen gap op flex en verdeelt
+   kolommen van een multicol-blok niet over paginagrenzen. De appendix staat
+   bewust NIET in twee kolommen: daar spaarde het geen pagina (360mm werd 303mm,
+   beide meer dan een vel) en werd de staartpagina juist leger. */
+/* Vaste tabelopmaak: zonder die groeide een cel met zijn breedste inhoud en
+   liep de rechterkolom van het vel (stresstest na plan 3a, observatie 8).
+   Geen border-spacing maar padding: dan lijnen de kaarten links uit met de
+   overzichtskaart erboven. De compactere maten in de kolommen houden de sectie
+   op een vel nu de overzichtskaart boven de kolommen staat. */
+/* Verdiepingshoofdstuk (fixronde 2 na plan 3a): alle onderwerpen stromen,
+   ook het eerste, en tussen twee onderwerpen staat 24px. Met een eigen vel
+   voor het eerste onderwerp bleef het laatste alleen op een pagina van 27 tot
+   37%. Bewust geen compactere binnenmaten: gemeten op de WeasyPrint-render
+   trok dat in 08, 12, 13 en 15 het tweede onderwerp naar voren, waardoor het
+   derde juist alleen kwam te staan (23 tot 37%). */
+.sec.verd { margin-bottom: 24px; }
+.sec.flow.verd { margin-top: 0; }
+/* Het eerste onderwerp volgt op het overzichtsprofiel (margin-bottom 44px);
+   de negatieve marge brengt de samengevallen witruimte naar 24px, dezelfde
+   ruimte als tussen twee onderwerpen. */
+.sec.flow.verd.verd-eerste { margin-top: -20px; }
+.verd-h3 { margin-top: 16px; }
+.verd-compact .slabel { margin-bottom: 10px; }
+.verd-compact .verd-h3 { margin-top: 14px; }
+.verd-compact .item-tbl td { padding: 5px 8px; }
+.verd-compact .card { padding: 10px 0 10px 16px; margin-bottom: 10px; }
+
+.tcol.wb-cols { table-layout: fixed; border-spacing: 0; }
+.tcol.wb-cols .tc-l { width: 50%; padding-right: 10px; }
+.tcol.wb-cols .tc-r { width: 50%; padding-left: 10px; }
+.wb-cols .card { padding: 8px 0 8px 12px; margin-bottom: 8px; }
+.wb-cols .item-tbl td { padding: 3px 6px; }
+.wb-cols .item-tbl .iq { width: 70%; }
+.wb-cols .item-tbl .is { width: 12%; }
+.enps-inline { margin-top: 18px; }
 .empty-state { background: #fff; border: 1px dashed """ + HAIRLINE + r"""; padding: 18px;
   text-align: center; color: #94A3B8; font-size: 10px; }
 .trustline { font-size: 10px; color: """ + STEEL + r"""; font-style: italic; margin-top: 8px; }
@@ -409,4 +537,36 @@ p  { margin-bottom: 6px; font-size: 11px; }
 h3 { font-family: 'Inter Tight', sans-serif; font-weight: 700;
      font-size: 16px; color: """ + INK + r"""; margin-bottom: 8px; line-height: 1.2; }
 .slabel { margin-bottom: 22px; }
+
+/* ── Pagina twee is één A4 (spec par. 4 slot, H16) ──────────────────────────
+   Strakkere maten dan de rest van het rapport, zodat kernzin + cijfers +
+   waarom + gespreksopener + leidraad + meetgegevens samen op één vel passen en
+   hoofdstuk 02 op pagina drie begint; de meting staat in
+   scripts/check_pdf_report.py. Deze overrides staan bewust achteraan, ná de
+   basisregels die ze aanpassen: ze hangen aan #p02, dus de rest van het
+   rapport houdt zijn eigen ruimte.
+   Gemeten op de WeasyPrint-render (fixronde na plan 3a, observatie 9): met de
+   vorige maten liep p.02 over in tien van de 24 renders, tot ongeveer 110pt in
+   scenario 08. Deze maten laten in alle 24 ruimte over (krapst: 08). Winst zit
+   vooral in de kernzin (20px, volle breedte), de leidraad (beschrijving krijgt
+   67% van de breedte, dus meestal één regel) en de witruimte rond het
+   meetgegevensblok. Een kernzin boven KERNZIN_LANG tekens (report_html.py)
+   krijgt 18px, zodat een langere kop dan de stresstest kent p.02 ook niet
+   laat overlopen. */
+#p02 .br-kernzin { font-size: 20px; max-width: none; margin-bottom: 14px; }
+#p02 .kz-lang .br-kernzin { font-size: 18px; }
+#p02 .why { padding: 12px 16px 10px; margin-bottom: 10px; }
+#p02 .why-title { margin-bottom: 10px; }
+#p02 .why-grid { margin-bottom: 8px; }
+#p02 .why-v { font-size: 22px; }
+#p02 .mq-line { padding-top: 10px; margin-top: 10px; }
+#p02 .sg { margin-bottom: 10px; }
+#p02 .sc-v { font-size: 18px; }
+#p02 .leidraad { margin-top: 10px; padding-top: 8px; }
+#p02 .leidraad-title { margin-bottom: 4px; }
+#p02 .leidraad td { padding: 2px 6px 2px 0; }
+#p02 .leidraad td.lt { width: 11%; }
+#p02 .leidraad td.lw { width: 22%; }
+#p02 .meet-blok { margin-top: 12px; }
+#p02 .meet-blok .slabel { margin-bottom: 8px; }
 """

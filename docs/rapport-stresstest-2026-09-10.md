@@ -844,6 +844,488 @@ startpunt is.
 
 ---
 
+## Na plan 3a (19 september 2026)
+
+Branch `feature/rapport-3a`. In scope: spec 2026-09-16 onderdelen 1, 2, 6 en 7 (B9, B13,
+B14, B20, ronde-2-punten a/b/c, de leesronde-gaten B1, B2, H1 t/m H5, H8 t/m H10, H13
+t/m H20, C2, C3, C6 t/m C13) plus de responsnoemer uit spec 11-9 par. 4.6.
+
+**Stand van deze sectie: deel A (HTML, 18-19 september) plus deel B (WeasyPrint-render, 19
+september, HEAD `e614482e`).** Deel A beoordeelde alle eenentwintig scenario's en de drie
+voorbeelden als HTML, omdat de Docker-engine toen niet draaide. Deel B heeft alle
+vierentwintig via WeasyPrint-Docker gerenderd en daarop de kolom Q4, B9, punt (c), de
+paginaverwijzingen, de em-dashes in de tekstlaag en de paginatelling gemeten, en de Q5-cellen
+van 08 en 20 opnieuw gescoord na de nafixes van `b5792422`. De eis van het plan, zes keer
+`check_pdf_report.py` OK, is niet gehaald (zie "Verificatie van de ronde").
+
+De harness zet sinds deze ronde een vaste meetperiode (start 9 maart 2026 uit het delivery
+record, sluiting 30 maart 2026 op de campagne) en het aantal uitgenodigden als
+`invited_count`. In alle eenentwintig rapporten staat op pagina twee
+"Meetperiode 9 maart 2026 tot 30 maart 2026" en nergens meer "niet vastgelegd"; de
+voorbeeldrapporten tonen "9 maart 2026 tot 3 april 2026".
+
+### Matrix na plan 3a
+
+| # | Scenario | n | Q1 antwoord p2 | Q2 startpunt | Q3 wat moet gebeuren | Q4 holle pagina's | Q5 tegenspraak | Q6 overclaim |
+|---|----------|---|----|----|----|----|----|----|
+| 01 | Vlak middelmatig | 45 | ✓ | ✓ | ✓ | **~ p7 36%** | **✓** | ✓ |
+| 02 | Eén lage factor | 45 | ✓ | ✓ | ~ | **✓** | ✓ | ✓ |
+| 03 | Twee near-ties | 45 | ✓ | ✓ | ✓ | **✓** | ✓ | ✓ |
+| 04 | Alles hoog | 45 | ✓ | ✓ | ✓ | **✓** | **~** | ✓ |
+| 05 | Alles laag, crisis | 45 | ✓ | ✓ | ✓ | **✓** | **✓** | ✓ |
+| 06 | Eén afdeling laag | 45 | ✓ | ✓ | ~ | **✓** | ✓ | ~ |
+| 07 | Vertrek, onder drempel | 8 | ~ | ~ | ~ | **✓** | ~ | ✗ |
+| 08 | Vertrek, net boven | 12 | ✓ | ✓ | ~ | **✓** | **✓** | **✓** |
+| 09 | Gemengde afdelingen | 25 | ✓ | ✓ | ✓ | **✓** | **✓** | ✓ |
+| 10 | Twaalf kleine afdelingen | 90 | ✓ | ✓ | ~ | **✓** | ✓ | **~** |
+| 11 | Grote populatie | 180 | ✓ | ✓ | ✓ | **✓** | ✓ | ✓ |
+| 12 | 60% overslag verdieping | 45 | ✓ | ✓ | ~ | **✓** | ✓ | ✓ |
+| 13 | 40% "niets nodig" | 45 | ✓ | ✓ | ✓ | **✓** | **✓** | ✓ |
+| 14 | 35% "Anders" | 45 | ✓ | ✓ | **~** | **✓** | **✓** | **✓** |
+| 15 | Richting verdeeld | 45 | ✓ | ✓ | ~ | **✓** | ✓ | ✓ |
+| 16 | Respons 30% | 45 | ✓ | ✓ | ✓ | **✓** | **✓** | ✓ |
+| 16b | Respons 25% | 45 | ✓ | ✓ | ✓ | **✓** | **✓** | ✓ |
+| 17 | Respons 90% | 45 | ✓ | ✓ | ✓ | **✓** | ✓ | ✓ |
+| 18 | Vlak + n=12 | 12 | ~ | ~ | ~ | **✓** | ✓ | ~ |
+| 19 | Vlak + 40% niets nodig | 45 | ✓ | ✓ | ~ | **~ p7 36%** | ✓ | ✓ |
+| 20 | Loep Start sanity | 30 | ✓ | ✓ | ✗ | **✓** | ✓ | ✓ |
+
+Gewijzigde cellen ten opzichte van ronde 2 vet (vijftien; twee daarvan gaan omlaag, zie hieronder). In de kolom Q4 staan per scenario de doorlooppagina's onder `MIN_FILL` (40%) met hun vulling, gemeten met `scripts/check_pdf_report.py` op een WeasyPrint-Docker-render van alle eenentwintig (niet de Chromium-benadering uit het plan: die was er niet, en Docker draaide). **Stand: na fixronde 2 (HEAD `69ab9a24`), vet waar de cel ten opzichte van deel B bewoog.**
+
+Score (21 rijen): Q1 19✓/2~/0✗ · Q2 19✓/2~/0✗ · Q3 10✓/10~/1✗ · Q4 19✓/2~/0✗ · Q5 19✓/2~/0✗ · Q6 17✓/3~/1✗.
+Na deel B, vóór de fixrondes: Q4 0✓/2~/19✗; na fixronde 1: 12✓/6~/3✗ (zie "Fixronde na de WeasyPrint-render" en "Fixronde 2" hieronder).
+Was (na ronde 2): Q1 19✓/2~/0✗ · Q2 19✓/2~/0✗ · Q3 10✓/9~/2✗ · Q4 0✓/0~/21✗ · Q5 12✓/7~/2✗ · Q6 16✓/3~/2✗.
+
+Beoordelingsregel, dezelfde als in ronde 1 en 2: een cel gaat omhoog alleen als de
+bevindingen die hem droegen tot de gefixte horen én geen openstaande bevinding dezelfde cel
+zelfstandig op hetzelfde niveau houdt. Een cel gaat omlaag als het lezen een probleem
+vindt dat eerder niet gescoord was; dat staat per geval hieronder, met de vermelding of het
+door plan 3a komt of al bestond.
+
+**Omhoog.** Q5 van 01, 05, 09, 13, 16 en 16b werd gedragen door B14; de tellingen staan nu
+in één vaste vorm met hun eigen definitie ("2 = wie hier laag scoorde" tegenover "hadden dit
+als eigen laagste onderwerp") en de richtingketen sluit. 14 op Q3, Q5 en Q6 werd gedragen
+door B13; het rapport noemt nu dat "Anders" de grootste keuze is en toont de toelichtingen.
+08 op Q6 werd gedragen door ronde-2-punt (b); de gelijkstand tussen twee vertrekredenen
+staat nu in de kernzin en in de onderbouwingscel. 14 op Q3 gaat naar ~ en niet naar ✓: er is
+op het startpunt nog steeds geen eenduidige richting, maar het rapport zegt nu eerlijk
+waarom.
+
+**Omlaag, drie cellen, alle drie al van vóór plan 3a.** 04 op Q5: de drie
+verdiepingshoofdstukken openen met "Respondenten die laag scoorden op dit onderwerp kregen
+automatisch een korte vervolgvraag ... De aantallen hieronder zijn tellingen", en daaronder
+staat bij geen van de drie een telling, want niemand kreeg een verdieping. 20 op Q5: pagina
+twee zegt "Twee onderwerpen delen de laagste score (5.3/10)", de gespreksagenda noemt
+Rolhelderheid en verwachtingen eerste 90 dagen "Tweede laagste score in het
+overzichtsprofiel". 10 op Q6: zie observatie 2 hieronder. (20 op Q5 staat inmiddels weer
+op ✓, zie deel B hieronder; daarmee gaan per saldo twee cellen omlaag.)
+
+**Blijft staan.** 06 op Q6 blijft ~: punt (a) is op pagina twee gefixt, maar dezelfde vorm
+staat nog op het overzichtsprofiel (observatie 1). 07 op Q5 en Q6 blijft door B20 (zie de
+bevindingentabel). 08 op Q5 blijft ~, nu om een andere reden dan in ronde 2 (observatie 3).
+18 blijft op Q1, Q2, Q3 en Q6 op ~ om observatie 3 uit ronde 2 (profiel van precies één
+punt, verschil 0,32; beide remmen bewust net niet geraakt). Q3 bewoog verder niet: plan 3a
+bevatte geen onderdeel voor werkvragen per startpunt (spec onderdeel 3), dus de tildes op
+02, 06, 07, 08, 10, 12, 15, 18 en 19 staan nog om dezelfde redenen, en 20 blijft ✗ tot de
+v1.1-set van Loep Start.
+
+**Deel B, na de WeasyPrint-render (19 september 2026).** Q5 van 08 en 20 zijn opnieuw
+gescoord op de render van HEAD `e614482e`, dus met de nafixes uit `b5792422`. 08 gaat naar
+✓: de telling die observatie 3 droeg klopt nu overal ("Staat hoger dan Groeiperspectief omdat
+dit vaker als hoofdreden van vertrek is genoemd (4 keer tegen 1)", en de vertrekcontext toont
+"Beter aanbod elders 4×, Leiderschap / management 4×, Persoonlijke omstandigheid 2×, Gebrek
+aan groei 1×, Beloning 1×"). Wat nog staat is observatie 7(a), het enkelvoud "De meest
+genoemde hoofdreden" bij een gelijkspel; dat is een formulering, geen tegenstrijdige
+telling, en draagt de cel niet. 20 gaat terug naar ✓: de gespreksagenda zegt nu
+"Rolhelderheid en verwachtingen eerste 90 dagen (5.3/10) Deelt de laagste score (5.3/10) met
+Informatiedichtheid en werktempo." 06 op Q6 blijft ~, maar niet meer om observatie 1 (die is
+opgelost): de brugzin "Bij Operations springt Groeiperspectief eruit (4.0/10)" in een
+afdeling waar alle zes onderwerpen kwetsbaar scoren (observatie 7d) houdt hem op ~.
+
+Q4 is gescoord met één vaste regel, strenger dan "het lijkt wel mee te vallen": ✓ als
+`check_pdf_report.py` geen doorlooppagina (cover en laatste pagina uitgezonderd) onder
+`MIN_FILL` (40%) vindt; ~ als er precies één is en die minstens 25% gevuld is; ✗ bij twee of
+meer, of bij één pagina onder de 25% (een vrijwel lege pagina). Dezelfde lat als ronde 2,
+waar zes tot negen halflege pagina's per rapport ✗ gaven. Uitkomst: 0✓/2~/19✗. Alleen 11
+(p17, de gespreksopener-vervolgpagina op 30%) en 18 (p7, verdieping groeiperspectief op
+35%) komen boven ✗ uit, en beide steunen deels op de kapotte werkbelevingspagina (observatie
+8): een pagina waarvan de rechterkolom van het vel valt, telt de gemeten vulling niet eerlijk.
+De ✗'en hebben vier bronnen, alle vier in elk van de drie producten terug te zien: (1) pagina
+twee loopt over in tien van de vierentwintig renders, zodat pagina 3 alleen de rij
+meetgegevens draagt (9 tot 15%, observatie 9); (2) de segmentconclusie "Waar het per
+afdeling begint" valt als los blok op een eigen pagina (7 tot 10%) in vijftien scenario's
+(observatie 10); (3) de vervolgpagina van de gespreksagenda (30 tot 32%, in 15 zelfs één
+regel op 1%); (4) verdiepingspagina's van 27 tot 37% en, bij Loep Start, twee pagina's rond
+30%. In 07 staan overzichtsprofiel en verdieping elk als één zin op een eigen pagina (10 en
+12%).
+
+### De kop van pagina twee, per scenario
+
+Letterlijk, uit het gegenereerde rapport (de kernzin inclusief de blijfintentie- en vertrekredenzin).
+
+- **01** Geen enkel onderwerp springt eruit: alle zes liggen binnen één punt van elkaar (laagste score 5.7/10, gedeeld door twee onderwerpen: Groeiperspectief, Beloning en eerlijkheid; hoogste Rolhelderheid en eigenaarschap 6.3/10). Dat is zelf de bevinding. Als startpunt kiest Loep Groeiperspectief. Dat onderwerp deelt de laagste score met Beloning en eerlijkheid; weeg die gelijkstand mee in de bespreking. Wel is de blijfintentie kwetsbaar: 3.6/10, 33 van de 45 zitten onder de 5.
+- **02** Behoud vraagt aandacht op één kwetsbaar onderwerp: Groeiperspectief (4.7/10). Daar begint het gesprek. Ook de blijfintentie is kwetsbaar: 4.8/10, 16 van de 45 zitten onder de 5.
+- **03** Behoud vraagt aandacht op één kwetsbaar onderwerp: Groeiperspectief (4.8/10). Daarnaast is Werkdruk en herstelruimte (5.0/10) een aandachtspunt. Als startpunt kiest Loep Groeiperspectief, de laagste score. Het verschil met de volgende is klein, 0,2 punt; weeg dat mee in de bespreking. Ook de blijfintentie is kwetsbaar: 4.2/10, 26 van de 45 zitten onder de 5.
+- **04** Geen enkel onderwerp springt eruit: alle zes liggen binnen één punt van elkaar (laagste Rolhelderheid en eigenaarschap 7.8/10, hoogste Leiderschap en vertrouwen 8.1/10). Dat is zelf de bevinding. Als startpunt kiest Loep Rolhelderheid en eigenaarschap, de laagste score. Het verschil met de volgende is klein, 0,2 punt; weeg dat mee in de bespreking.
+- **05** Behoud staat breed onder druk: 6 van de 6 onderwerpen scoren kwetsbaar. Als startpunt kiest Loep Leiderschap en vertrouwen, de laagste score. Het verschil met de volgende is klein, 0,2 punt; weeg dat mee in de bespreking. Ook de blijfintentie is kwetsbaar: 2.2/10, 43 van de 45 zitten onder de 5.
+- **06** Geen enkel onderwerp springt eruit: alle zes liggen binnen één punt van elkaar (laagste score 6.2/10, gedeeld door drie onderwerpen: Beloning en eerlijkheid, Cultuur en psychologische veiligheid, Werkdruk en herstelruimte; hoogste Leiderschap en vertrouwen 6.5/10). Dat is zelf de bevinding. Als startpunt kiest Loep Werkdruk en herstelruimte. Wel is de blijfintentie kwetsbaar: 4.8/10, 20 van de 45 zitten onder de 5.
+- **07** De frictiescore van 5.1/10 wijst op een gemengd vertrekbeeld.
+- **08** Het vertrekbeeld wijst naar twee kwetsbare onderwerpen: Groeiperspectief (4.5/10), Leiderschap en feedback (4.9/10). Daarnaast zijn Beloning en voorwaarden (5.6/10), Werkdruk en balans (5.7/10) en Cultuur en veiligheid (6.2/10) aandachtspunten. Als startpunt kiest Loep Leiderschap en feedback. Twee redenen zijn even vaak genoemd (4 van de 12 elk): Beter aanbod elders en Leiderschap / management.
+- **09** Geen enkel onderwerp springt eruit: alle zes liggen binnen één punt van elkaar (laagste score 5.7/10, gedeeld door twee onderwerpen: Groeiperspectief, Werkdruk en herstelruimte; hoogste Rolhelderheid en eigenaarschap 6.4/10). Dat is zelf de bevinding. Als startpunt kiest Loep Groeiperspectief. Dat onderwerp deelt de laagste score met Werkdruk en herstelruimte; weeg die gelijkstand mee in de bespreking. Wel is de blijfintentie kwetsbaar: 3.8/10, 16 van de 25 zitten onder de 5.
+- **10** Geen onderwerp scoort kwetsbaar. Groeiperspectief scoort het laagst en is het eerste gesprekspunt. Wel is de blijfintentie kwetsbaar: 3.7/10, 61 van de 90 zitten onder de 5.
+- **11** Geen onderwerp scoort kwetsbaar. Groeiperspectief scoort het laagst en is het eerste gesprekspunt. Wel is de blijfintentie kwetsbaar: 4.0/10, 102 van de 180 zitten onder de 5.
+- **12** Behoud vraagt aandacht op één kwetsbaar onderwerp: Groeiperspectief (4.6/10). Daar begint het gesprek. Ook de blijfintentie is kwetsbaar: 4.6/10, 21 van de 45 zitten onder de 5.
+- **13** Behoud vraagt aandacht op één kwetsbaar onderwerp: Groeiperspectief (4.5/10). Daar begint het gesprek. Ook de blijfintentie is kwetsbaar: 4.6/10, 19 van de 45 zitten onder de 5.
+- **14** Behoud vraagt aandacht op één kwetsbaar onderwerp: Groeiperspectief (4.5/10). Daar begint het gesprek. Ook de blijfintentie is kwetsbaar: 4.3/10, 21 van de 45 zitten onder de 5.
+- **15** Behoud vraagt aandacht op één kwetsbaar onderwerp: Groeiperspectief (4.6/10). Daar begint het gesprek. Ook de blijfintentie is kwetsbaar: 4.5/10, 20 van de 45 zitten onder de 5.
+- **16** Behoud vraagt aandacht op één kwetsbaar onderwerp: Groeiperspectief (4.9/10). Daarnaast zijn Leiderschap en vertrouwen (5.4/10), Werkdruk en herstelruimte (5.4/10) en Beloning en eerlijkheid (6.3/10) aandachtspunten. Als startpunt kiest Loep Groeiperspectief (op basis van 45 van de 150 genodigden). Ook de blijfintentie is kwetsbaar: 3.9/10, 29 van de 45 zitten onder de 5.
+- **16b** Indicatief beeld. Geen onderwerp scoort kwetsbaar. Groeiperspectief scoort het laagst en is een mogelijk eerste gesprekspunt (op basis van 45 van de 180 genodigden). Wel is de blijfintentie kwetsbaar: 4.1/10, 27 van de 45 zitten onder de 5.
+- **17** Behoud vraagt aandacht op één kwetsbaar onderwerp: Groeiperspectief (4.9/10). Daarnaast zijn Leiderschap en vertrouwen (5.4/10), Werkdruk en herstelruimte (5.5/10) en Beloning en eerlijkheid (6.3/10) aandachtspunten. Als startpunt kiest Loep Groeiperspectief. Ook de blijfintentie is kwetsbaar: 4.0/10, 27 van de 45 zitten onder de 5.
+- **18** Geen onderwerp scoort kwetsbaar. Beloning en eerlijkheid scoort het laagst en is het eerste gesprekspunt. Wel is de blijfintentie kwetsbaar: 4.2/10, 8 van de 12 zitten onder de 5.
+- **19** Geen enkel onderwerp springt eruit: alle zes liggen binnen één punt van elkaar (laagste score 5.6/10, gedeeld door twee onderwerpen: Groeiperspectief, Werkdruk en herstelruimte; hoogste Rolhelderheid en eigenaarschap 6.5/10). Dat is zelf de bevinding. Als startpunt kiest Loep Groeiperspectief. Dat onderwerp deelt de laagste score met Werkdruk en herstelruimte; weeg die gelijkstand mee in de bespreking. Wel is de blijfintentie kwetsbaar: 3.9/10, 30 van de 45 zitten onder de 5.
+- **20** Geen onderwerp scoort kwetsbaar. Twee onderwerpen delen de laagste score (5.3/10): Informatiedichtheid en werktempo, Rolhelderheid en verwachtingen eerste 90 dagen; als eerste gesprekspunt kiest Loep Informatiedichtheid en werktempo.
+
+Ten opzichte van ronde 2: de vlakke-profiel-zin noemt bij een gedeelde laagste score alle
+gelijke onderwerpen (01, 06, 09, 19), de kop benoemt de blijfintentie zodra die kwetsbaar
+is (achttien van de achttien Loep Behoud-rapporten, behalve 04 waar hij 6.0 is), de zin
+over "één onderwerp" noemt de aandachtspunten erbij (03, 16, 17), en Loep Vertrek meldt een
+gelijkspel tussen vertrekredenen (08).
+
+### Wat er per bevinding veranderde
+
+| # | Status | Bewijs |
+|---|---|---|
+| B9 | **niet gefixt** | WeasyPrint-Docker, `check_pdf_report.py`: NIET OK op alle zes verplichte bestanden en op alle vierentwintig renders. Vulling per pagina: 06 `1:102 2:92 3:9 4:84 5:54 6:47 7:67 8:54 9:50 10:62 11:41 12:93 13:7 14:64 15:84 16:85 17:86 18:49 19:96 20:17`; 11 `... 10:41 ... 17:30 ... 21:17`, één pagina onder de 40%; 18 `... 7:35 ... 14:17`, één pagina onder de 40%; voorbeeld Loep Vertrek p3 11%, p15 36%; Loep Behoud p3 9%, p11 39%; Loep Start p6 34%, p12 32%. Ten opzichte van ronde 2 (zes tot negen pagina's onder de helft) is het aantal holle pagina's gedaald naar één tot vier per rapport, maar geen enkel rapport haalt de regel. Zie de Q4-regel en observaties 8 tot en met 10. |
+| B13 | **gefixt** | Scenario 14, verdiepingspagina: "7 van de 18 kozen ‘Anders’ en schreven een eigen toelichting: de vaste opties dekten hun ervaring niet.", met de zeven teksten en het anonimiseringslabel eronder. Op de gespreksagenda hetzelfde voor de richting: "9 van de 30 kozen ‘Anders’ en schreven een eigen toelichting". De drempeltabel noemt de 2 (blok verschijnt) en de 5 (teksten getoond). De harness vult elke Anders-toelichting met dezelfde placeholder, dus de lijst toont zeven keer dezelfde zin; dat is de testdata, niet het rapport. |
+| B14 | **gefixt** | Scenario 01, verdieping: "2 van de 45 respondenten kregen de verdiepende vraag over groeiperspectief (2 = wie hier laag scoorde); 1 van de 2 beantwoordde die, 1 sloeg over." Richting, zelfde onderwerp: "11 van de 45 respondenten hadden dit als eigen laagste onderwerp; 11 van de 11 beantwoordden de vraag." De totaalregel sluit: "Van de 45 respondenten kregen 45 de vraag, 41 beantwoordden hem, 4 sloegen over. 11 hadden groeiperspectief als laagste onderwerp, 7 beloning en eerlijkheid; de overige 27 een ander onderwerp (leiderschap en vertrouwen 12, werkdruk en herstelruimte 8, cultuur en psychologische veiligheid 6, rolhelderheid en eigenaarschap 1)." Scenario 05: "38 van de 45 respondenten scoorden hier laag; 35 van de 38 kregen de verdiepende vraag (de andere 3 zaten al aan het maximum van drie verdiepingen); 30 van de 35 beantwoordden die, 5 sloegen over." tegenover "17 van de 45 respondenten hadden dit als eigen laagste onderwerp; 15 van de 17 beantwoordden de vraag, 2 sloegen over." Twee definities, elk ter plekke uitgelegd, en elke persoon is terug te vinden. |
+| B20 | **deels** | Scenario 07: de drempeltabel staat op de methodiekpagina (3 richting, 5 afdeling, 5 open toelichtingen, 10 "profiel per onderwerp, spreiding, en een afdeling als startpunt", met "Onder de tien antwoorden bepaalt één persoon te veel het gemiddelde"). Maar twee pagina's eerder staan de drie basisbehoeften met bandlabel (Autonomie 6.1/10 · Aandachtspunt) en twaalf stellinggemiddelden, plus een eNPS van -50, allemaal over dezelfde acht vertrekkers. De tabel noemt werkbeleving en eNPS niet, dus waarom daar geen drempel geldt staat nergens. Houdt 07 op Q5 ~ en Q6 ✗. |
+| punt (a) | **gefixt op pagina twee, niet op het overzichtsprofiel** | Scenario 06, kop: "laagste score 6.2/10, gedeeld door drie onderwerpen: Beloning en eerlijkheid, Cultuur en psychologische veiligheid, Werkdruk en herstelruimte". De bronregel: "De scores lagen vrijwel gelijk; de spreiding tussen respondenten gaf de doorslag." Het overzichtsprofiel zegt in hetzelfde rapport nog "Geen onderwerp scoort kritisch. De laagste score zit bij Cultuur en psychologische veiligheid." (observatie 1). |
+| punt (b) | **gefixt** | Scenario 08, kop: "Twee redenen zijn even vaak genoemd (4 van de 12 elk): Beter aanbod elders en Leiderschap / management." Cel Vertrekreden: "even vaak genoemd, 4 van de 12 elk"; onderbouwingscel: "Als vertrekreden genoemd · Even vaak · dit onderwerp hangt samen met een van de meest genoemde vertrekredenen". Scenario 07 (2 om 2) idem. |
+| punt (c) | **gefixt** | 06 geforceerd (in een kopie van de HTML een `break-before: page` op de derde rijgroep van de ranglijst en van de afdelingstabel), WeasyPrint-Docker exit 0: de kop "Onderwerp Score Spreiding Verdieping Agenda" staat op pagina 15 en 16, "Afdeling Ingevuld / uitgenodigd Score Band ..." op pagina 12 en 13. `check_pdf_report.py --regel tabelkop` geeft OK, maar alleen met de kop in hoofdletters: de tekstlaag draagt de kop zoals `text-transform` hem toont, en de regel vergelijkt hoofdlettergevoelig (observatie 11). Idem voor de drempeltabel op de methodiekpagina, geforceerd bij de derde rij: kop "Vanaf Waar het geldt Waarom" op pagina 19 en 20. |
+| H8 | **gefixt** | Alle eenentwintig: "Meetperiode 9 maart 2026 tot 30 maart 2026" op pagina twee, met Uitgenodigd, Ingevuld en Respons ernaast. |
+
+### Wat de beoordeling nog opleverde
+
+Geen van deze punten is in deze taak opgelost; ze zijn input voor de eindbeoordeling.
+Na deel A zijn observatie 1, 3 en 4 alsnog opgelost (per punt gemarkeerd, met commit); de
+Q5-cellen van 08 en 20 zijn daarop in deel B opnieuw gescoord. Observatie 8 tot en met 12
+komen uit de WeasyPrint-render van deel B.
+
+**Observatie 1. Het overzichtsprofiel noemt één laagste onderwerp bij een gelijkstand, en
+gebruikt een ander bandwoord.** De samenvattingszin op het overzichtsprofiel rekent nog op
+de ruwe score. Scenario 06: "De laagste score zit bij Cultuur en psychologische
+veiligheid", terwijl pagina twee drie onderwerpen op 6.2 noemt en een vierde (Werkdruk en
+herstelruimte) als startpunt kiest, en de cover "Waar het gesprek begint: Werkdruk en
+herstelruimte" zegt. In 01, 09, 19 en 20 noemt dezelfde zin alleen het startpunt en laat de
+gelijkstand weg die pagina twee wel noemt. De zin begint in tien rapporten met "Geen
+onderwerp scoort kritisch", terwijl het rapport overal elders "kwetsbaar" gebruikt (C8).
+Bestond al vóór plan 3a.
+**Opgelost in `b5792422`.** De zin gebruikt nu dezelfde bron als de kop van pagina twee
+(`_p02_laagste_keys`) en dezelfde vorm. Scenario 06: "Geen onderwerp scoort kwetsbaar. Drie
+onderwerpen delen de laagste score (6.2/10): Beloning en eerlijkheid, Cultuur en
+psychologische veiligheid, Werkdruk en herstelruimte.", in dezelfde volgorde als de kop
+("laagste score 6.2/10, gedeeld door drie onderwerpen: Beloning en eerlijkheid, Cultuur en
+psychologische veiligheid, Werkdruk en herstelruimte"). 01, 09 en 19 noemen nu hun twee
+gelijke onderwerpen, 20 ook (zie observatie 4); 10, 11, 16b en 18 houden één onderwerp
+("Groeiperspectief scoort het laagst."). "kritisch" staat nergens meer en de source-guard
+bewaakt het als los woord.
+
+**Observatie 2. De kop zonder kwetsbaar onderwerp heeft geen rem bij een klein verschil.**
+De tak "Geen onderwerp scoort kwetsbaar. X scoort het laagst en is het eerste gesprekspunt"
+zegt nooit dat het verschil klein is, terwijl de tak met kwetsbare onderwerpen dat bij
+hetzelfde verschil wel doet (03: "Het verschil met de volgende is klein, 0,2 punt").
+Scenario 10: Groeiperspectief 5,11 tegen Leiderschap en vertrouwen 5,28 (getoond 5.1 en
+5.3), en 36 mensen hadden Leiderschap als eigen laagste tegen 23 Groeiperspectief; de
+ranglijst markeert die twee ook niet als "vrijwel gelijk". Scenario 16b: 5,00 tegen 5,18,
+en daar zegt de ranglijst wél "Werkdruk en herstelruimte staat vrijwel gelijk aan
+Groeiperspectief" (in 16b vangt "Indicatief beeld ... mogelijk eerste gesprekspunt" het
+deels op, dus daar geen celwijziging). Het voorbeeldrapport van Loep Start: 5.4 tegen 5.5
+zonder rem. Houdt 10 op Q6 op ~. Bestond al vóór plan 3a.
+
+**Observatie 3. Loep Vertrek telt "als vertrekreden genoemd" alleen als hoofdreden, naast
+een pagina die de meespelende redenen toont.** Het publieke voorbeeldrapport: de
+vertrekcontext zegt "Beloning 18×" onder "Speelde ook mee", de ranglijstkolom "Als
+vertrekreden genoemd" zegt voor Beloning en voorwaarden 0. Leiderschap is 6 keer hoofdreden
+en 19 keer meespelend genoemd, en het verdiepingshoofdstuk zegt "6× genoemd als
+vertrekreden". Werkdruk en balans krijgt "5× genoemd als vertrekreden" terwijl Werkdruk in
+geen van beide top-drielijsten staat, dus de lezer kan dat getal nergens terugvinden.
+Scenario 08: "Organisatiecultuur 3×" onder "Speelde ook mee" tegenover 0 in de kolom bij
+Cultuur en veiligheid. Houdt 08 op Q5 op ~. Staat in het voorbeeldrapport dat prospects
+downloaden.
+**Opgelost in `b5792422`.** Het label zegt nu wat er geteld wordt: kolom "Als hoofdreden
+genoemd", kernzin "Gebrek aan groei is de meest genoemde hoofdreden van vertrek (14 van de
+35).", cel "Hoofdreden van vertrek", verdiepingskaart "14× als hoofdreden van vertrek
+genoemd; die telling staat ook in de vertrekcontext.", markeringsregel (08) "Staat hoger dan
+Groeiperspectief omdat dit vaker als hoofdreden van vertrek is genoemd (4 keer tegen 1).", en
+de rasterintro "hoe vaak een onderwerp als hoofdreden van vertrek is genoemd". De
+vertrekcontext toont beide lijsten nu volledig (tot vijf, zoals `build_report_data` ze
+levert) in plaats van een top 3, zodat elke telling terug te vinden is. Voorbeeldrapport:
+"Hoofdredenen van vertrek: Gebrek aan groei 14×, Persoonlijke omstandigheid 6×, Leiderschap /
+management 6×, Werkdruk / stress 5×, Beter aanbod elders 4×" en "Speelde ook mee:
+Leiderschap / management 19×, Beloning 18×, Rolonduidelijkheid 11×, Gebrek aan groei 10×"
+(die 10 staat op pagina twee onder "Speelt ook mee" en ontbrak eerst in de lijst). Scenario
+08: "Beter aanbod elders 4×, Leiderschap / management 4×, Persoonlijke omstandigheid 2×,
+Gebrek aan groei 1×, Beloning 1×". De weging is niet veranderd: de ranglijstvolgorde is in
+alle 21 scenario's gelijk gebleven. WeasyPrint: de vertrekcontext blijft in het voorbeeld en
+in 08 één pagina, 0 warnings. Niet opgelost: de kaart "Relatie met het overzichtsprofiel"
+(observatie 7a).
+
+**Observatie 4. Loep Start noemt een gedeelde laagste "tweede laagste".** Scenario 20,
+gespreksagenda: "Rolhelderheid en verwachtingen eerste 90 dagen (5.3/10) Tweede laagste
+score in het overzichtsprofiel", terwijl pagina twee zegt dat beide 5.3 delen. Zet 20 op Q5
+op ~. Bestond al vóór plan 3a.
+**Opgelost in `b5792422`.** Scenario 20, gespreksagenda: "Rolhelderheid en verwachtingen
+eerste 90 dagen (5.3/10) Deelt de laagste score (5.3/10) met Informatiedichtheid en
+werktempo." Zonder gelijkstand blijft "Tweede laagste score in het overzichtsprofiel.".
+
+**Observatie 5. Verdiepingssubsecties zonder toelichtingsblok, zonder reden.** Een
+onderwerp dat via de ranglijst in het verdiepingshoofdstuk komt maar waar niemand een
+verdieping kreeg, rendert met score, spreidingsstrook en stellingen en verder niets: 02
+(Werkdruk en herstelruimte), 09 (Cultuur en psychologische veiligheid), 13 (Rolhelderheid
+en eigenaarschap), 14 en 15 (Leiderschap en vertrouwen), en in 04 alle drie. De reden
+("geen verdieping aangeboden: score boven de drempel") staat alleen in de ranglijst, pagina's
+verder. In 04 belooft de hoofdstukintro "De aantallen hieronder zijn tellingen van wat
+respondenten zelf kozen" boven drie subsecties zonder één telling; dat zet 04 op Q5 op ~.
+Stil weggelaten blok, dus een Fail-Loud-punt. Bestond al vóór plan 3a.
+
+**Observatie 6. Pagina twee zwijgt over de richting als het startpunt te weinig antwoorden
+heeft.** Scenario 06: de gespreksagenda zegt bij het startpunt "Te weinig antwoorden voor een
+richting" (2 van de 3), maar pagina twee heeft voor dat geval geen regel, terwijl de
+staten clear, divided, plurality en split_none er wel een krijgen.
+
+**Observatie 7. Kleinere punten.** (a) Het blok "Relatie met het overzichtsprofiel" bij
+Loep Vertrek zegt in elk rapport hetzelfde en niets specifieks ("belichten elk een eigen
+invalshoek"), en spreekt bij een gelijkspel (08) van "De meest genoemde reden" in het
+enkelvoud. (b) Loep Start zegt twee keer "een volgende meting bespreken we los", wat Loep in
+de rol van begeleider zet, en de legenda van de landingskwaliteit zegt "goed geland" waar
+de rest "relatief sterk" zegt. (c) Het responsoordeel "genoeg voor een betrouwbaar
+groepsbeeld" kijkt alleen naar het percentage en staat ook bij 12 antwoorden (08, 18).
+(d) De brugzin van 06 zegt "Bij Operations springt Groeiperspectief eruit (4.0/10)" in een
+afdeling waar alle zes onderwerpen tussen 4.0 en 4.9 kwetsbaar scoren.
+
+**Observatie 8. De werkbelevingspagina valt rechts van het vel (blokkerend, ook in de
+publieke voorbeelden).** Gevonden op de WeasyPrint-render, niet zichtbaar in de HTML. De
+twee kolommen van de werkbeleving (`.tcol.wb-cols`, taak 8, `9755eedd`) zijn een
+`display: table` zonder vaste tabelopmaak; de overzichtskaart met de drie balken in de
+linkerkolom is breder dan de helft, dus de linkercel groeit en duwt de rechterkolom
+(Competentie en Verbondenheid) over de paginarand. Die tekst wordt afgesneden: de tekstlaag
+van het voorbeeld Loep Behoud eindigt op pagina 10 bij "Competentie 6.4/10 · Aandachtsp" en
+"Mate van ervaren bekwaamheid en effect", en pagina 11 is een halve kolom Verbondenheid die
+van het vel loopt. Het treft twintig van de eenentwintig scenario's (alle Loep Behoud en
+Loep Vertrek; Loep Start rendert deze kolommen niet) en de voorbeelden Loep Vertrek en Loep
+Behoud. Dat is stil weggevallen tekst, dus een Fail-Loud-punt, en het maakt de gemeten
+vulling van die pagina's onbetrouwbaar. Niet opgelost in deze taak: `table-layout: fixed`
+op `.tcol.wb-cols` (geprobeerd op een kopie) houdt de kolommen binnen het vel, maar dan
+loopt de balkenkaart met score en bandlabel over de rechterkolom heen. Een echte oplossing
+zet de overzichtskaart over de volle breedte boven de twee kolommen; dat is een wijziging in
+`_werkbeleving_section` met een nieuwe paginaverdeling, geen kleine CSS-correctie.
+
+**Observatie 9. Pagina twee loopt over in tien van de vierentwintig renders.** 01, 03, 06,
+08, 09, 16, 17, 19 en de voorbeelden Loep Vertrek en Loep Behoud: pagina 3 draagt dan alleen
+de rij meetgegevens (Uitgenodigd, Ingevuld, Respons, Meetperiode) op 9 tot 15%, en hoofdstuk
+02 begint pas op pagina 4. In 08 schuift het hele blok met zijn label mee (ongeveer 110pt
+tekort); in de andere negen alleen de rij (ongeveer 65pt). Het zijn de rapporten met een
+langere kop (vlak profiel met gelijkstand, aandachtspunten erbij, vertrekredenen) of een
+extra afdelingsregel onder de gespreksopener. H16 ("p.02 op één A4") is daarmee op de echte
+render niet gehaald, en het publieke voorbeeld Loep Behoud toont een vrijwel lege pagina 3.
+Geen kleine CSS-fix: het tekort varieert met de lengte van de kop, dus een oplossing moet
+de pagina structureel inkorten of de meetgegevens hoger zetten.
+
+**Observatie 10. De segmentconclusie staat alleen op een pagina.** In vijftien scenario's
+(01 tot en met 06, 10, 12 tot en met 17 met 16b, en 19) opent een pagina met "Waar het per
+afdeling begint" en houdt daar op: het navy-blok met de conclusie per afdeling (7 tot 10%).
+Het blok past niet meer onder de afdelingstabel en gaat als geheel naar het volgende vel.
+Dit is hetzelfde patroon als "Segmentconclusie los, 9%" uit B9 in ronde 1, nu in meer
+scenario's omdat het blok langer is geworden (reden bij geen aanwijsbare afdeling).
+
+**Observatie 11. `scripts/check_pdf_report.py` meet twee regels hoofdlettergevoelig tegen
+een tekstlaag in hoofdletters.** De marker "Meetgegevens" en de kolomkoppen staan in de PDF
+zoals `text-transform: uppercase` ze toont ("MEETGEGEVENS", "ONDERWERP SCORE ..."). De regel
+`p02-op-een-a4` meldt daardoor op alle vierentwintig renders "pagina 2 bevat de meetgegevens
+niet", ook in de veertien waar pagina 3 wel met hoofdstuk 02 begint. Hoofdletterongevoelig
+maken lost het niet op: pagina twee bevat altijd "de meetgegevens op deze pagina" (in de
+leidraad), dus de markercontrole zou dan altijd slagen. Alleen de tweede helft van de regel
+(pagina 3 begint met 02) meet de overloop echt; die is hierboven gebruikt. De regel
+`tabelkop` slaagt alleen als `--thead` in hoofdletters wordt meegegeven. Niet aangepast in
+deze taak: de opdracht stond alleen een kleine CSS-fix toe.
+
+**Observatie 12. De WeasyPrint-tests, gedraaid tegen Docker.** Lokaal slaan ze over (geen
+GTK). Via een tijdelijke shim in de scratchpad die `weasyprint.HTML(...).write_pdf()` naar de
+Docker-image stuurt (niet in de repo): 6 geslaagd (de appendix verliest geen rijen bij de
+kolomsplitsing, en de vijf PDF-routes in `test_api_flows.py`), 5 gefaald.
+`test_de_pdf_vult_de_verwijzingen_met_echte_paginanummers` faalt omdat de fixture
+`_min_retention_data()` geen leidraad meer oplevert (acht pagina's, "Zo leid je dit gesprek"
+staat niet in de HTML): een verouderde fixture, geen fout in de PDF.
+`test_de_echte_pdf_zet_de_meetgegevens_op_pagina_twee` faalt alleen op de marker van
+observatie 11. `test_pdf_heeft_geen_pagina_onder_veertig_procent` faalt voor alle drie de
+producten: exit pagina 3 op 38% ("02 Wat speelde mee bij vertrek?") en pagina 8 op 30%
+(gespreksopener), retention pagina 9 op 30% (gespreksopener), onboarding alleen op de marker.
+Deze tests staan niet in de baseline-faalset omdat ze lokaal overslaan; op Railway (met GTK)
+zouden ze falen.
+
+### Verificatie van de ronde
+
+Backend 25 failed / 1370 passed / 11 skipped op HEAD `e614482e`, faalset identiek aan
+`docs/superpowers/plans/plan3a-baseline-failset.txt` (diff leeg). Python 3.11-guard en
+taalguard groen (80 passed). Nul treffers op "verdieptrigger", "Bestuurlijke read",
+"interventieprescriptie" en "begeleide managementbespreking" in de drie gegenereerde
+voorbeeld-HTML's.
+
+WeasyPrint-Docker (`ghcr.io/weasyprint/weasyprint`, Docker 29.4.0) op alle vierentwintig
+renders, dus meer dan de zes die het plan vraagt: vierentwintig keer exit 0, nul warnings.
+Tekstlaag: nul em-dashes in alle vierentwintig. Paginaverwijzingen op pagina twee: zes gevuld
+in elk rapport met een factorprofiel (minimaal vijf gevraagd), nul in 07 (geen leidraad, zoals
+bedoeld); geen enkele leeggelopen verwijzing. Pagina's: Loep Vertrek 17 (voorbeeld), 14 (08),
+9 (07); Loep Behoud 19 (voorbeeld), 14 tot 21 over de scenario's; Loep Start 13 (voorbeeld en
+20).
+
+`scripts/check_pdf_report.py`: **NIET OK op alle zes verplichte bestanden** (de drie
+voorbeelden, 06, 11, 18) en op alle vierentwintig. Zie de Q4-kolom, B9 en observaties 8 tot
+en met 11. Daarom zijn de voorbeeld-HTML's en -PDF's in deze taak niet gecommit: het plan
+koppelt die commit aan zes keer OK, en de huidige render zou een vrijwel lege pagina 3
+(Loep Vertrek, Loep Behoud) en een afgesneden werkbelevingspagina naar de publieke
+voorbeelden brengen.
+
+### Fixronde na de WeasyPrint-render (19 september 2026)
+
+Vier punten, elk met een eigen commit, gemeten op WeasyPrint-Docker-renders van alle
+eenentwintig scenario's en de drie voorbeelden (niet gecommit):
+
+1. **Werkbeleving binnen het vel** (`4ba987ca`, observatie 8). De balkenkaart staat over de
+   volle breedte boven de kolommen, `.wb-cols` heeft een vaste tabelopmaak en compactere
+   kaarten. Nieuwe regel `zijmarge` in `scripts/check_pdf_report.py` (woorden buiten de
+   16mm-marges); op de oude render vlagt hij de afgesneden tekst ("Aandachtsp" tot x=597pt),
+   op de nieuwe is hij OK in alle 24. De sectie is weer één pagina.
+2. **`check_pdf_report.py` gerepareerd** (`a3d1ecef`, observatie 11 en 12). Het
+   meetgegevensblok wordt gemeten aan twee eigen regels (blokkop en celabel "Meetperiode"),
+   hoofdletterongevoelig; de leidraadzin "de meetgegevens op deze pagina" laat de regel niet
+   meer slagen, en een doorgeschoven rij onder een achtergebleven kop wordt wel gezien.
+   `--thead` vergelijkt hoofdletterongevoelig. Op de render van vóór punt 3 meldde de regel
+   precies de tien overlopen van observatie 9. De verwijzingstest gebruikt een fixture met
+   leidraad. Via een Docker-shim (niet in de repo) na alle vier punten: 12 van de 13
+   `requires_weasyprint`-tests groen; `test_pdf_heeft_geen_pagina_onder_veertig_procent[exit]`
+   faalt op pagina 3 van die fixture (vertrekcontext, 38%), een pagina buiten deze ronde.
+3. **Pagina twee op één vel** (`ebf65f59`, observatie 9). Alle zes blokken blijven; alleen
+   maten onder `#p02`. Overloop 10 van 24 werd 0 van 24; krapste restruimte 24pt (08). Kop
+   boven 500 tekens krijgt 18px, gemeten met 562 tekens op de pagina van 08.
+4. **Geen losse segmentconclusie of gespreksopener** (`a6f62c1b`, observatie 10). Het navy
+   blok staat direct onder de afdelingstabel, vóór de uitsplitsing; subblokken per afdeling
+   twee aan twee naast elkaar; de melding zonder afdelingstabel houdt kop en tekst bij
+   elkaar; de invulregels van de gespreksagenda staan naast elkaar en reizen samen met de
+   slotregel.
+
+**`check_pdf_report.py` na de fixronde, per bestand** (24 keer exit 0, nul warnings, nul
+em-dashes in de tekstlaag):
+
+| Bestand | Uitkomst | Resterende bevinding en oorzaak |
+|---|---|---|
+| 01 | NIET OK | p7 37%: tweede verdiepingspagina (Werkdruk en herstelruimte) |
+| 02 | OK | |
+| 03 | NIET OK | p8 37%: derde verdiepingspagina (Beloning en eerlijkheid) |
+| 04 | NIET OK | p7 27%: verdiepingspagina zonder toelichtingsblok (observatie 5, niemand kreeg een verdieping) |
+| 05 | OK | |
+| 06 | OK | |
+| 07 | NIET OK | p4 10%, p5 12%: overzichtsprofiel en verdieping zijn onder de tien antwoorden elk één zin op een eigen vel |
+| 08 | OK | |
+| 09 | NIET OK | p7 27%: verdiepingspagina zonder toelichtingsblok (observatie 5) |
+| 10 | OK | |
+| 11 | OK | |
+| 12 | OK | |
+| 13 | OK | |
+| 14 | NIET OK | p13 20%: het navy blok van de gespreksagenda past niet meer na een richtingblok met negen Anders-toelichtingen (de harness vult ze met één placeholder) |
+| 15 | OK | |
+| 16 | OK | |
+| 16b | OK | |
+| 17 | OK | |
+| 18 | NIET OK | p7 35%: verdiepingspagina Groeiperspectief |
+| 19 | NIET OK | p7 37%: verdiepingspagina Beloning en eerlijkheid |
+| 20 | NIET OK | p6 30%: vervolgpagina van hoofdstuk 04 (subsectie Begeleiding en bereikbaarheid); p12 32%: vervolgpagina van de appendix |
+| Voorbeeld Loep Vertrek | NIET OK | p13 36%: appendix-vervolg "Werkbeleving: alle stellingen" |
+| Voorbeeld Loep Start | NIET OK | p6 34% en p12 32%: zelfde twee vervolgpagina's als 20 |
+| Voorbeeld Loep Behoud | OK | |
+
+Van de zes verplichte bestanden zijn er drie OK (06, 11, voorbeeld Loep Behoud) en drie
+niet (18, voorbeeld Loep Vertrek, voorbeeld Loep Start). Alle resterende bevindingen zijn
+paginavulling op pagina's buiten de vier punten van deze ronde: verdiepingspagina's als
+losse flow-secties (`.sec.flow`, taak 8), de degraded weergave onder de tien antwoorden
+(07), de onboardingfactoren en de appendix. Geen enkele resterende bevinding gaat over
+p.02, de zijmarge, de paginaverwijzingen of een losse segmentconclusie. Paginatelling nu:
+Loep Behoud 16 tot 18 (voorbeeld 17), Loep Vertrek 8 (07), 12 (08), voorbeeld 15; Loep
+Start 13. De voorbeeld-HTML's en -PDF's zijn niet gecommit.
+
+Observatie 8, 9, 10 en 11 zijn hiermee opgelost; observatie 12 op één test na (zie punt 2).
+
+### Fixronde 2 (19 september 2026)
+
+Gericht op de resterende NIET OK's, met de zes verplichte bestanden voorop. Drie commits,
+elk met eigen tests en faalset-diff (25 gefaald, identiek aan de baseline):
+
+1. **Verdiepingsonderwerpen stromen allemaal** (`14e3ad02`). Ook het eerste onderwerp opent
+   geen eigen vel meer; het hoofdstuk begint onder het overzichtsprofiel als het eerste
+   onderwerp daar als geheel past. Opgelost: 03, 04, 09, 18 en de vervolgpagina van hoofdstuk
+   04 bij Loep Start. Compactere binnenmaten zijn gemeten en alleen bij Loep Start gebruikt:
+   bij Vertrek en Behoud schoof elke compactere variant het probleem naar 08, 12, 13 of 15
+   (het tweede onderwerp paste dan wel op de eerste pagina, het derde kwam alleen te staan).
+   Geen inhoud geschrapt; de variant "onderwerp zonder verdiepingsdata valt weg" bleek voor de
+   vulling niet nodig en is niet gebouwd (observatie 5 staat dus open).
+2. **Zonder profiel stromen overzichtsprofiel en verdieping mee** (`51c86da8`). 07 gaat van 8
+   naar 6 pagina's; de twee losse zinspagina's (10 en 12%) staan nu onder de vertrekcontext.
+   Bij Loep Start blijft het overzichtsprofiel een eigen vel (hoofdstuk 02 na pagina twee).
+3. **De appendix stroomt** (`69ab9a24`). Hij breekt alleen tussen tabellen; kop en eerste
+   tabel blijven samen; 9px ongewijzigd. Opgelost: 20 en het voorbeeld Loep Start, en als
+   bijvangst 14.
+
+**Scenario 14 met realistische toelichtingen.** De harness vult elke Anders-toelichting met
+dezelfde zin van 32 tekens. Een variant met negen gevarieerde toelichtingen van 47 tot 131
+tekens gaf vóór punt 3 dezelfde losse gespreksopener (20%): het kwam dus niet alleen door de
+placeholders. Na punt 3 zijn zowel de harnessversie als de gevarieerde variant OK, omdat de
+appendix die pagina nu vult.
+
+**`check_pdf_report.py` na fixronde 2, per bestand** (24 keer exit 0, nul warnings, nul
+em-dashes in de tekstlaag):
+
+| Bestand | Uitkomst | Resterende bevinding en oorzaak |
+|---|---|---|
+| 01 | NIET OK | p7 36%: derde verdiepingsonderwerp alleen; drie onderwerpen van elk circa een derde vel, en het eerste past niet onder het overzichtsprofiel |
+| 02 t/m 18 | OK | (02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12, 13, 14, 15, 16, 16b, 17, 18) |
+| 19 | NIET OK | p7 36%: zelfde oorzaak als 01 |
+| 20 | OK | |
+| Voorbeeld Loep Vertrek | NIET OK | p13 36%: appendixstaart (werkbeleving, twaalf stellingen plus eNPS-regel) |
+| Voorbeeld Loep Start | OK | |
+| Voorbeeld Loep Behoud | OK | |
+
+Van de zes verplichte bestanden zijn er vijf OK (06, 11, 18, voorbeeld Loep Start,
+voorbeeld Loep Behoud). **Het voorbeeld Loep Vertrek is niet eerlijk op te lossen binnen de
+regels:** de appendix is 1,32 vel (96% plus 36%); de eerste tabel past niet onder de
+gespreksagenda (70%), dus begint hij op een nieuw vel. Om de regel te halen moet hij onder
+1,00 of boven 1,40 vel uitkomen. Op de ondergrens van 8,5px met 3px celpadding wordt het 88%
+plus 32% (1,20 vel), nog steeds een staart onder de 40%; in het voorbeeld Loep Behoud maakt
+diezelfde maat van een goede staart (49%) een foute (32%). Ter beslissing bij Lars: mag een
+appendix-staartpagina een uitzondering op de vullingsregel zijn? `MIN_FILL` is niet verlaagd
+en er is geen uitzondering ingevoerd.
+
+01 en 19 zijn bin packing: elke gemeten maat (kopmarge 0, 8, 16 en 28px, compactere cellen en
+kaarten) die hun derde onderwerp op de vorige pagina kreeg, liet in 08, 12, 13 of 15 een
+onderwerp alleen staan.
+
+Paginatelling nu: Loep Behoud 15 tot 18 (voorbeeld 17), Loep Vertrek 6 (07), 12 (08),
+voorbeeld 15; Loep Start 11. De WeasyPrint-tests via de Docker-shim: 12 van 13 groen, zoals na
+fixronde 1 (`test_pdf_heeft_geen_pagina_onder_veertig_procent[exit]` faalt op pagina 3 van die
+fixture, de vertrekcontext op 38%). De voorbeeld-HTML's en -PDF's zijn niet gecommit.
+
+---
+
+### Fixronde 3: eindreview (19 september 2026)
+
+Na de eindreview van de hele branch (HEAD `7977254a`). Vijf fixes: de verdiepingsketen noemt zijn eigen regel ("duidelijk laag", een andere regel dan "onder de 5"; drempels als constanten in `deepening.py`), het anonimiseringslabel zegt precies wat `anonymize_text` weghaalt (geen "locaties"), de 10-rij in de drempeltabel is gesplitst naar de constante die de gate echt stuurt (`MIN_AGGREGATE_N` voor het profiel, `MIN_DISTRIBUTION_N` voor spreiding en afdelingen), eNPS met echt minteken en overal "critici", en de brugzin zegt niet meer "tweede punt" (botste met de agendakaart).
+
+`check_pdf_report.py` op een WeasyPrint-Docker-render: **alle 21 scenario's OK** (01 en 19 waren na fixronde 2 nog NIET OK), voorbeeld Loep Behoud en Loep Start OK, voorbeeld Loep Vertrek NIET OK op precies één bevinding: de appendixstaart (p.13, 36%). Die is binnen de regels niet eerlijk op te lossen (appendix 1,32 vel; op de ondergrens van 8,5px 1,20 vel, nog steeds een staart onder de 40%) en ligt als besluit bij Lars. Alle renders exit 0, 0 warnings, 0 em-dashes in de tekstlaag.
+
+**Eindscore (21 rijen): Q1 19✓/2~/0✗ · Q2 19✓/2~/0✗ · Q3 10✓/10~/1✗ · Q4 21✓/0~/0✗ · Q5 19✓/2~/0✗ · Q6 17✓/3~/1✗.**
+Was (na ronde 2): Q1 19✓/2~/0✗ · Q2 19✓/2~/0✗ · Q3 10✓/9~/2✗ · Q4 0✓/0~/21✗ · Q5 12✓/7~/2✗ · Q6 16✓/3~/2✗.
+
+B9 is daarmee op de scenario's gefixt; de rij "B9 niet gefixt" in "Wat er per bevinding veranderde" beschrijft de stand na deel B, vóór de fixrondes.
+
 ## Reproduceren
 
 ```bash

@@ -218,16 +218,20 @@ _VLAK = {"leadership": 6.17, "culture": 6.33, "growth": 5.67,
 
 
 def test_kale_keuze_wordt_een_mogelijk_startpunt():
-    assert _open(_EEN_LAAG, primary="growth").endswith(
-        f"Als startpunt kiest Loep {_fl('growth', 'retention')}.")
+    # Kale keuze na één kwetsbaar onderwerp zonder aandachtspunten: verkort
+    # (plan 3a taak 3, C11), in beide vormen.
+    assert _open(_EEN_LAAG, primary="growth").endswith("Daar begint het gesprek.")
     assert _open(_EEN_LAAG, primary="growth", indicatief=True).endswith(
-        f"Als mogelijk startpunt kiest Loep {_fl('growth', 'retention')}.")
+        "Daar begint het gesprek waarschijnlijk.")
 
 
 def test_gelijkstandzin_wordt_een_mogelijk_startpunt():
-    zin = _open(_EEN_LAAG, primary="growth", indicatief=True, next_delta=0.0)
+    # Een getoond verschil van 0 betekent dat een ander onderwerp dezelfde
+    # laagste score toont; de zin noemt dat onderwerp (codereview taak 3).
+    zin = _open(dict(_EEN_LAAG, workload=4.5), primary="growth", indicatief=True,
+                next_delta=0.0)
     assert f"Als mogelijk startpunt kiest Loep {_fl('growth', 'retention')}. " \
-           f"Dat onderwerp deelt de laagste score met het volgende" in zin
+           f"Dat onderwerp deelt de laagste score met {_fl('workload', 'retention')}" in zin
 
 
 def test_kleinverschilzin_wordt_een_mogelijk_startpunt():
@@ -284,12 +288,12 @@ def test_vlakke_tak_verzacht_alleen_zijn_startpuntzin():
 
 def test_prefix_zet_alleen_het_label():
     zin = "Als mogelijk startpunt kiest Loep Groeiperspectief."
-    assert _p02_respons_prefix(zin, indicatief=True) == f"Indicatief beeld: {zin}"
+    assert _p02_respons_prefix(zin, indicatief=True) == f"Indicatief beeld. {zin}"
     assert _p02_respons_prefix(zin, indicatief=False) == zin
 
 
 def test_kernzin_onaangetast_bij_voldoende_respons():
-    zin = "Behoud vraagt aandacht op één onderwerp: Groeiperspectief (4.5/10)."
+    zin = "Behoud vraagt aandacht op één kwetsbaar onderwerp: Groeiperspectief (4.5/10)."
     assert _p02_met_respons(zin, completed=45, invited=50) == zin
     assert _p02_met_respons(zin, completed=45, invited=None) == zin
 
@@ -306,14 +310,14 @@ def test_staart_staat_binnen_de_laatste_zin_en_niet_erachter():
 def test_indicatief_beeld_en_staart_samen():
     uit = _p02_met_respons("Als mogelijk startpunt kiest Loep Groeiperspectief.",
                            completed=45, invited=180)
-    assert uit == ("Indicatief beeld: Als mogelijk startpunt kiest Loep "
+    assert uit == ("Indicatief beeld. Als mogelijk startpunt kiest Loep "
                    "Groeiperspectief (op basis van 45 van de 180 genodigden).")
 
 
 def test_verwijzing_krijgt_een_eigen_mededeling_in_plaats_van_een_haakje():
     # Een haakje relativeert een claim; deze terugval doet geen uitspraak maar
     # wijst alleen de weg.
-    zin = "Zie de behoudscontext en de responsbasis voor wat dit rapport wel toont."
+    zin = "Zie de behoudscontext en de meetgegevens voor wat dit rapport wel toont."
     assert _p02_met_respons(zin, completed=45, invited=150, verwijzing=True) == (
         f"Dit rapport rust op 45 van de 150 genodigden. {zin}")
     assert _p02_met_respons(zin, completed=45, invited=50, verwijzing=True) == zin
@@ -325,8 +329,11 @@ def test_verwijzing_krijgt_een_eigen_mededeling_in_plaats_van_een_haakje():
 # ── De responsbasis ──────────────────────────────────────────────────────────
 
 def _basis(**kw):
+    # Met meetdatums: deze tests gaan over de noemer, en "Meetperiode niet
+    # vastgelegd" (plan 3a taak 5, H8) zou hun "vastgelegd"-asserties raken.
     base = dict(period="apr-mei 2026", population="Actieve medewerkers",
-                segment_available=True, enps_available=True)
+                segment_available=True, enps_available=True,
+                period_start="1 april 2026", period_end="31 mei 2026")
     base.update(kw)
     return _responsbasis(**base)
 
@@ -335,7 +342,7 @@ def test_responsbasis_leidt_het_percentage_zelf_af():
     # Eén bron voor dat getal: met een meegegeven percentage kon de tabel iets
     # anders tonen dan de waarschuwingszin eronder berekende.
     tekst = _tekst(_basis(invited=150, completed=45))
-    assert "Uitgenodigd 150 Afgerond 45 Respons 30%" in tekst
+    assert "Uitgenodigd 150 Ingevuld 45 Respons 30%" in tekst
     assert ("Minder dan de helft heeft ingevuld (45 van de 150). Lees de "
             "uitkomsten als het beeld van wie meedeed, niet van de hele "
             "organisatie.") in tekst
@@ -352,7 +359,7 @@ def test_responsbasis_zonder_noemer_toont_geen_percentage():
     tekst = _tekst(_basis(invited=None, completed=45, note=_NIET_VASTGELEGD))
     assert "Uitgenodigd" not in tekst
     assert re.search(r"\d+%", tekst) is None
-    assert "Afgerond 45" in tekst
+    assert "Ingevuld 45" in tekst
     assert _NIET_VASTGELEGD in tekst
 
 
@@ -451,14 +458,23 @@ def test_scenario_16_dertig_procent_remt_de_kernzin():
 
 def test_scenario_16b_vijfentwintig_procent_is_indicatief():
     tekst = _tekst(render_exit_report_html(_fixture(completed=45, invited=180)))
-    assert "Indicatief beeld: Het vertrekbeeld wijst naar" in tekst
+    assert "Indicatief beeld. Het vertrekbeeld wijst naar" in tekst
     assert ("Als mogelijk startpunt kiest Loep Groeiperspectief (op basis van 45 "
             "van de 180 genodigden).") in tekst
     assert "Onder de 30% noemt Loep het beeld indicatief" in tekst
 
 
 def test_render_zonder_noemer_noemt_nergens_een_responspercentage():
-    tekst = _tekst(render_exit_report_html(_fixture(completed=45, invited=None)))
+    html = render_exit_report_html(_fixture(completed=45, invited=None))
+    # De drempeltabel op de methodiekpagina (taak 11, B20) legt uit dat het blok
+    # met de toelichtingen bij 'Anders' pas verschijnt zodra die optie 20% van de
+    # antwoorden haalt. Dat is de uitleg van een gate en geen responspercentage,
+    # dus staat die ene tabel buiten deze sweep; de rest van het rapport, inclusief
+    # elke plek waar over respons wordt gesproken, blijft erin.
+    zonder_drempeltabel = re.sub(r'<div class="card" id="sec-drempels".*?</div>', "",
+                                 html, flags=re.S)
+    assert 'id="sec-drempels"' not in zonder_drempeltabel
+    tekst = _tekst(zonder_drempeltabel)
     assert re.search(r"\d+%", tekst) is None, "geen percentage zonder noemer"
     assert "Uitgenodigd" not in tekst
     assert _NIET_VASTGELEGD in tekst
@@ -473,7 +489,7 @@ def test_staart_hangt_aan_de_claim_en_niet_aan_de_vertrekredentelling():
     data["exit_r_dist"] = [{"code": "PL1", "label": "Beter aanbod elders", "count": 9}]
     tekst = _tekst(render_exit_report_html(data))
     assert ("Als startpunt kiest Loep Groeiperspectief (op basis van 45 van de 150 "
-            "genodigden). Beter aanbod elders is de meest genoemde vertrekreden.") in tekst
+            "genodigden). Beter aanbod elders is de meest genoemde hoofdreden van vertrek (9 van de 45).") in tekst
 
 
 def test_ook_een_rapport_zonder_factorprofiel_draagt_zijn_responsbasis():
@@ -483,7 +499,7 @@ def test_ook_een_rapport_zonder_factorprofiel_draagt_zijn_responsbasis():
     data["factor_avgs"] = {}
     data["factor_items_map"] = {}
     tekst = _tekst(render_exit_report_html(data))
-    assert ("Indicatief beeld: De frictiescore van 5.5/10 wijst op een "
+    assert ("Indicatief beeld. De frictiescore van 5.5/10 wijst op een "
             "gemengd vertrekbeeld (op basis van 45 van de 180 genodigden).") in tekst
 
 
@@ -494,7 +510,7 @@ def test_verwijzende_terugval_krijgt_geen_haakje():
     data["avg_risk"] = None
     tekst = _tekst(render_exit_report_html(data))
     assert ("Dit rapport rust op 45 van de 150 genodigden. Zie de vertrekcontext "
-            "en de responsbasis voor wat dit rapport wel toont.") in tekst
+            "en de meetgegevens voor wat dit rapport wel toont.") in tekst
     assert "toont (op basis van" not in tekst
 
 

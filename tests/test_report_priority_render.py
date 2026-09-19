@@ -74,7 +74,10 @@ def _render(scan_type="retention", ranked=RANKED, resp=RESP, active=True,
         deepening_active=active, mgmt_q="Testvraag?",
         review_when="Plan binnen 45-90 dagen een vervolgmoment.",
         opener_html="<h2>Gespreksagenda</h2>",
-        direction_agg=direction, n_total=13 if direction else 0, **extra)
+        # n_total moet minstens de som van lowest_n in DIRECTION zijn (9 + 8):
+        # een lagere waarde is een onmogelijke telling en _direction_totals_line
+        # weigert die sinds de codereview van taak 10.
+        direction_agg=direction, n_total=17 if direction else 0, **extra)
 
 
 def test_uitlegregel_letterlijk_gepind():
@@ -83,11 +86,11 @@ def test_uitlegregel_letterlijk_gepind():
     assert raster_uitleg("retention", True, True) == (
         "Hoe deze volgorde tot stand komt: gesorteerd op score. Liggen scores "
         "binnen 0,3 van elkaar, dan telt eerst waar de meeste mensen om "
-        "verandering vragen, en alleen als een factor er minstens 2 mensen "
+        "verandering vragen, en alleen als een onderwerp er minstens 2 mensen "
         "bovenuit steekt; anders geeft een grote spreiding of een gedeelde "
-        "toelichting uit de verdieping de doorslag. Spreiding tonen we vanaf 10 "
-        "responses; verdiepingsduiding vanaf 8 beantwoorders per factor; de "
-        "vraag om verandering vanaf 3 beantwoorders per factor.")
+        "toelichting uit de verdieping de doorslag. De drempels (spreiding vanaf "
+        "10, verdieping vanaf 8, richting vanaf 3) staan uitgelegd in de "
+        "drempeltabel")
 
 
 def test_intro_en_uitleg_staan_gerenderd_in_alle_vier_de_combinaties():
@@ -100,20 +103,20 @@ def test_intro_en_uitleg_staan_gerenderd_in_alle_vier_de_combinaties():
                 assert raster_uitleg(scan, deep, bool(direction)) in html
                 assert raster_intro(scan, deep, bool(direction)) in html
     # De exit-variant noemt het vertrekredengewicht, de retention-variant niet.
-    assert "vertrekreden" in raster_uitleg("exit", True, True)
-    assert "vertrekreden" not in raster_uitleg("retention", True, True)
+    assert "hoofdreden van vertrek" in raster_uitleg("exit", True, True)
+    assert "hoofdreden" not in raster_uitleg("retention", True, True)
 
 
 def test_uitlegregel_noemt_alleen_de_drempels_die_meespeelden():
     zonder = raster_uitleg("retention", False, False)
     assert "verdieping" not in zonder
     assert "vraag om verandering" not in zonder
-    assert "Spreiding tonen we vanaf 10 responses." in zonder
+    assert "De drempels (spreiding vanaf 10) staan uitgelegd in de drempeltabel" in zonder
     alleen_richting = raster_uitleg("retention", False, True)
-    assert "verdiepingsduiding" not in alleen_richting
-    assert "vanaf 3 beantwoorders per factor" in alleen_richting
+    assert "verdieping vanaf" not in alleen_richting
+    assert "(spreiding vanaf 10, richting vanaf 3)" in alleen_richting
     alleen_verdieping = raster_uitleg("retention", True, False)
-    assert "verdiepingsduiding vanaf 8 beantwoorders per factor" in alleen_verdieping
+    assert "(spreiding vanaf 10, verdieping vanaf 8)" in alleen_verdieping
     assert "om verandering" not in alleen_verdieping
 
 
@@ -124,11 +127,10 @@ def test_uitlegregel_leest_de_verdiepingsdrempel_uit_de_constante(monkeypatch):
     mee te bewegen."""
     import backend.report_html as rh
     from backend.products.shared.deepening import DEEPENING_MIN_N
-    assert f"verdiepingsduiding vanaf {DEEPENING_MIN_N} beantwoorders per factor" in \
+    assert f"verdieping vanaf {DEEPENING_MIN_N}" in \
         raster_uitleg("retention", True, True)
     monkeypatch.setattr(rh, "DEEPENING_MIN_N", 9)
-    assert "verdiepingsduiding vanaf 9 beantwoorders per factor" in \
-        raster_uitleg("retention", True, True)
+    assert "verdieping vanaf 9" in raster_uitleg("retention", True, True)
 
 
 def test_richting_gate_volgt_de_pagina_niet_het_aggregaat():
@@ -160,6 +162,9 @@ def test_agenda_kolom_en_gelijkspel():
     assert "Startpunt" in html
     assert "Tweede punt" in html
     assert "vrijwel gelijk aan Werkdruk en herstelruimte" in html
+    # C13: die melding staat als volle zin onder de tabel, niet in de smalle
+    # agendakolom waar hij over vier regels brak.
+    assert html.index("vrijwel gelijk aan") > html.index("</table>")
     # Geen rangnummer-verwijzingen (spec par. 8).
     assert "nr." not in html
 
@@ -192,7 +197,7 @@ def test_spreiding_degraded_onder_n10():
     kleine = [dict(r, spread_n=7, spread_below=2) for r in RANKED]
     resp7 = {r["key"]: [4.0, 4.0, 7.0, 7.0, 7.0, 7.0, 7.0] for r in kleine}
     html = _render(ranked=kleine, resp=resp7)
-    assert "spreiding vanaf 10 responses" in html
+    assert "spreiding vanaf 10 antwoorden" in html
     assert "onder de 5" not in html  # geen telregel onder de staffel
 
 
@@ -252,13 +257,13 @@ def test_exit_krijgt_een_vertrekredenkolom():
               _row("growth", "Groeiperspectief", 4.5, role="tweede", exit_reason_n=4)]
     resp = {r["key"]: [4.0] * 13 for r in ranked}
     html_exit = _render(scan_type="exit", ranked=ranked, resp=resp)
-    assert '<th style="width:13%">Als vertrekreden genoemd</th>' in html_exit
+    assert '<th style="width:13%">Als hoofdreden genoemd</th>' in html_exit
     # De telling staat in de vertrekredencel zelf, niet ergens anders op de pagina.
     assert '<td class="r-mono">9</td>' in html_exit
     assert '<td class="r-mono">4</td>' in html_exit
     # Loep Behoud kent geen vertrekredenen en krijgt de kolom dus niet.
     html_ret = _render(scan_type="retention", ranked=ranked, resp=resp)
-    assert "Als vertrekreden genoemd" not in html_ret
+    assert "Als hoofdreden genoemd" not in html_ret
 
 
 def test_uitlegregel_noemt_de_richtingvraag_als_eerste_tiebreak():
@@ -302,11 +307,11 @@ def test_exit_intro_noemt_de_vertrekredenkolom():
     # belooft de intro minder dan de pagina toont.
     intro = raster_intro("exit", True, True)
     assert "vijf signalen" in intro
-    assert "hoe vaak een factor als vertrekreden is genoemd" in intro
+    assert "hoe vaak een onderwerp als hoofdreden van vertrek is genoemd" in intro
     assert "De eerste vier staan in de tabel." in intro
     assert intro in _render("exit", direction=DIRECTION)
     # Loep Behoud kent geen vertrekredenen en noemt ze dus ook niet.
-    assert "vertrekreden" not in raster_intro("retention", True, True)
+    assert "hoofdreden" not in raster_intro("retention", True, True)
 
 
 def test_gate_notitie_volgt_de_richtinggate():
@@ -325,7 +330,7 @@ def test_degraded_richtingblok_telt_niet_als_signaal():
         ranked=RANKED, scan_type="retention", factor_resp_scores=RESP,
         deepening_active=True, mgmt_q="Testvraag?", review_when="R.",
         opener_html="<h2>Gespreksagenda</h2>",
-        direction_agg=DIRECTION, n_total=13)
+        direction_agg=DIRECTION, n_total=17)
     assert raster_intro("retention", True, False) in html
 
 

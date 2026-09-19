@@ -43,7 +43,11 @@ EXIT_REASON_WEIGHT = 0.4
 CELL_NO_MAJORITY = "geen toelichting gekozen door een duidelijke meerderheid"
 CELL_TOO_FEW = "te weinig beantwoorders voor duiding"
 CELL_CAP_REACHED = "niet aangeboden: maximum aantal verdiepingen per respondent bereikt"
-CELL_NOT_TRIGGERED = "geen verdieping aangeboden: score boven de drempel"
+# Staat 5 = niemand haalde de triggerregel. "Score boven de drempel" las als de
+# 5 van de kleuren en was onwaar bij een onderwerp onder de 5 waar toch
+# niemand de vraag kreeg (eindreview plan 3a punt 1); "duidelijk laag" is het
+# woord dat de verdiepingsketen met de regel erbij uitlegt.
+CELL_NOT_TRIGGERED = "geen verdieping aangeboden: niemand antwoordde hier duidelijk laag"
 
 
 def _direction_counts(agg: dict[str, Any] | None) -> tuple[int, int | None]:
@@ -211,7 +215,7 @@ def _tie_break_note(row: dict[str, Any], other: dict[str, Any], kind: str) -> st
         return (f"Staat hoger dan {lbl} omdat hier een gedeelde toelichting uit "
                 "de verdieping ligt.")
     if kind == "exit_reason":
-        return (f"Staat hoger dan {lbl} omdat dit vaker als vertrekreden is "
+        return (f"Staat hoger dan {lbl} omdat dit vaker als hoofdreden van vertrek is "
                 f"genoemd ({row['exit_reason_n']} keer tegen "
                 f"{other['exit_reason_n']}).")
     raise ValueError(f"onbekend tie-break-signaal {kind!r}")

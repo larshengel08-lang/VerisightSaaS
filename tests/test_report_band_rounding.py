@@ -122,7 +122,7 @@ def test_band_rounds_like_display():
 def test_overzicht_bands_use_displayed_score():
     _summary, bands = _overzicht_summary_and_bands([
         ("Autonomie", 6.55), ("Competentie", 6.47), ("Verbondenheid", 4.96), ("Leiderschap", 4.94),
-    ])
+    ], laagste=["Leiderschap"])
     assert bands["sterk"] == ["Autonomie", "Competentie"]
     assert bands["aandacht"] == ["Verbondenheid"]
     assert bands["kwetsbaar"] == ["Leiderschap"]

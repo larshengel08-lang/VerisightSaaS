@@ -134,24 +134,32 @@ def test_de_degraded_note_is_vrij_van_em_dashes_en_spreekt_niet_in_de_ik_vorm():
         assert " ik " not in note.lower()
 
 
-def test_de_datastatusregel_belooft_bij_loep_start_geen_verdieping():
-    """Een paar centimeter onder de note stond "Verdieping opent zodra ...";
-    die regel is gedeelde copy, dus exit en retention houden hun eigen tekst."""
+def test_de_meetgegevens_beloven_bij_loep_start_geen_verdieping():
+    """Een paar centimeter onder de note stond "Verdieping opent zodra ...".
+    Plan 3a taak 5: de Datastatus-regel is in geen enkel product meer; de
+    meetgegevens zeggen in één regel wat niet in het rapport staat, zonder
+    iets te beloven dat later zou openen. De lege staat van het segmentblok
+    verderop houdt zijn eigen tekst (taak 13 pakt die)."""
     ob = _body(_RENDERERS["onboarding"](_ob_fixture()))
-    assert "Deze onderdelen openen zodra er voldoende responses beschikbaar zijn." in ob
-    assert ("Dit onderdeel opent zodra er per groep voldoende responses "
-            "beschikbaar zijn.") in ob
+    assert "werkgeversaanbeveling (eNPS).</p>" in ob
+    assert "Niet in dit rapport: " in ob
+    assert ("De tabel per afdeling verschijnt zodra er per afdeling genoeg "
+            "antwoorden zijn.") in ob
     assert "Verdieping opent zodra" not in ob
-    for scan_type in ("exit", "retention"):
-        andere = _body(_RENDERERS[scan_type](_fixture(scan_type, n=_N_NORMAL, profile=True)))
-        assert "Verdieping opent zodra voldoende responses beschikbaar zijn." in andere
-        assert ("Verdieping opent zodra voldoende responses per groep beschikbaar "
-                "zijn.") in andere
+    for scan_type in ("exit", "retention", "onboarding"):
+        html = (ob if scan_type == "onboarding"
+                else _body(_RENDERERS[scan_type](_fixture(scan_type, n=_N_NORMAL, profile=True))))
+        p02 = html[html.find('id="p02"'):html.find("<!-- /why -->")]
+        meet = html[html.find("Meetgegevens"):]
+        meet = meet[:meet.find('<div class="pb sec"')]
+        for deel in (p02, meet):
+            assert "Verdieping opent zodra" not in deel
+            assert "openen zodra" not in deel
 
 
 def test_de_rangordezin_verwijst_naar_het_hernoemde_hoofdstuk():
     ob = _body(_RENDERERS["onboarding"](_ob_fixture()))
-    assert "vooraan bij de thema&#x27;s met de meeste aandacht" in ob
+    assert "vooraan bij de onderwerpen met de meeste aandacht" in ob
     assert "als eerste in de verdieping" not in ob
 
 
@@ -170,12 +178,18 @@ def test_de_lege_staat_belooft_geen_verdieping_die_er_niet_is():
     assert "om een verdieping aan op te hangen" not in html
 
 
-def test_de_leesroute_noemt_de_hoofdstukken_zoals_ze_heten():
+def test_de_leidraad_noemt_bij_loep_start_geen_verdieping():
     """De leesroute op pagina twee stuurde naar "de verdieping per thema", een
-    hoofdstuk dat in dit rapport niet meer zo heet."""
+    hoofdstuk dat in dit rapport niet zo heet. Plan 3a taak 5: de leidraad
+    vervangt de leesroute en noemt bij Loep Start het startpunt, niet een
+    verdieping."""
+    import re
     html = _ob_html()
-    assert "dan de thema&#x27;s met de meeste aandacht" in html
-    assert "dan de verdieping per thema" not in html
+    i = html.find('class="leidraad"')
+    assert i != -1
+    leidraad = re.sub(r"<[^>]+>", " ", html[i:html.find("</table>", i)])
+    assert "Het startpunt: de score en de laagste stelling" in leidraad
+    assert "verdieping" not in leidraad.lower()
 
 
 def test_exit_en_retention_houden_hun_verdiepingspaginas():
@@ -202,8 +216,8 @@ def test_de_agenda_constateert_niet_twee_keer_hetzelfde():
 @pytest.mark.parametrize("laagste_van_alles,uniek,verwacht", [
     (True,  True,  "Dat is de laagst scorende stelling in het cijferbeeld."),
     (True,  False, "Dat is een van de laagst scorende stellingen in het cijferbeeld."),
-    (False, True,  "Dat is de laagst scorende stelling van dit thema."),
-    (False, False, "Dat is een van de laagst scorende stellingen van dit thema."),
+    (False, True,  "Dat is de laagst scorende stelling van dit onderwerp."),
+    (False, False, "Dat is een van de laagst scorende stellingen van dit onderwerp."),
 ])
 def test_de_zin_dekt_alle_vier_de_uitkomsten(laagste_van_alles, uniek, verwacht):
     zin = _laagste_stelling_zin("Rolhelderheid", "Ik weet wat er van mij wordt verwacht",
@@ -244,7 +258,7 @@ def test_het_rapport_beperkt_zich_tot_het_thema_als_een_stelling_elders_lager_sc
     rapport, en 3,8 staat twee pagina's verderop."""
     body = _ob_html(tie="lager_elders")
     agenda = _agenda(body)
-    assert "Dat is de laagst scorende stelling van dit thema." in agenda
+    assert "Dat is de laagst scorende stelling van dit onderwerp." in agenda
     assert "in het cijferbeeld" not in agenda
     # De lagere stelling staat er echt, anders test dit niets.
     assert "3.8" in body

@@ -41,6 +41,28 @@ requires_weasyprint = pytest.mark.skipif(
 )
 
 
+@lru_cache(maxsize=1)
+def _pymupdf_available() -> bool:
+    """PyMuPDF (`pymupdf`) leest de tekstlaag van een gerenderde PDF.
+
+    Het pakket staat in requirements-dev.txt, niet in requirements.txt: de
+    productiecode gebruikt het niet. Tests die ermee meten slaan daarom over in
+    plaats van de hele collectie van tests/ om te laten vallen — die collectie
+    is de poort voor de faalset-diff.
+    """
+    try:
+        import pymupdf  # noqa: F401
+        return True
+    except Exception:
+        return False
+
+
+requires_pymupdf = pytest.mark.skipif(
+    not _pymupdf_available(),
+    reason="PyMuPDF (pakket `pymupdf`) is hier niet geïnstalleerd; zie requirements-dev.txt.",
+)
+
+
 @pytest.fixture()
 def db_session() -> Generator[Session, None, None]:
     engine = create_engine(

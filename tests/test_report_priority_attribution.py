@@ -27,7 +27,7 @@ def test_score_based_ranking_keeps_static_line():
     rows = _rank("retention", {"growth": 5.1, "workload": 6.2})
     assert rows[0]["key"] == "growth"
     assert _raster_attribution(rows, "retention") == \
-        "Gebaseerd op de laagst scorende factor."
+        "Gebaseerd op het laagst scorende onderwerp."
 
 
 def test_spread_flag_flip_names_spread():
@@ -67,7 +67,7 @@ def test_exit_reason_weight_flip_names_vertrekredenen():
                  reasons={"workload": 2})
     assert rows[0]["key"] == "workload"
     line = _raster_attribution(rows, "exit")
-    assert "vertrekreden" in line
+    assert "hoofdreden van vertrek" in line
     assert "laagst scorende factor" not in line
 
 
@@ -76,7 +76,7 @@ def test_exit_lowest_score_and_base_keeps_static_line():
                  reasons={"growth": 1})
     assert rows[0]["key"] == "growth"
     assert _raster_attribution(rows, "exit") == \
-        "Gebaseerd op de laagst scorende factor."
+        "Gebaseerd op het laagst scorende onderwerp."
 
 
 def test_empty_rows_give_empty_line():
@@ -101,9 +101,8 @@ def test_attribution_copy_has_no_em_dashes():
 def test_p02_label_is_gespreksopener():
     # Harmonisatie: p.02 en het raster labelen dezelfde vraag hetzelfde.
     html = _bestuurlijke_read(
-        kernzin="K.", totaalbeeld="T.", primary_label="Groeiperspectief",
-        why_cells_html="", strong_label="Rolhelderheid", strong_score=7.2,
-        mgmt_q="Vraag?")
+        kernzin="K.", primary_label="Groeiperspectief",
+        why_cells_html="", mgmt_q="Vraag?")
     assert 'class="mq-label">Gespreksopener<' in html
     assert "Eerste managementvraag" not in html
 
@@ -150,4 +149,4 @@ def test_attribution_claims_no_signal_when_none_explains_the_top_row():
          "spread_flag": False, "deepening_state": 5, "decided_by": None},
     ]
     assert _raster_attribution(rows, "retention") == \
-        "Gebaseerd op de laagst scorende factor."
+        "Gebaseerd op het laagst scorende onderwerp."

@@ -78,15 +78,19 @@ def test_de_pagina_zegt_wat_er_wel_gemeten_is():
     agenda = _agenda(_ob(n=_N_DEGRADED, profile=False))
     assert "Wat deze meting wel geeft" in agenda
     assert "Wat dit rapport wel laat zien: het checkpointoverzicht" in agenda
-    assert ("Een score per thema ontbreekt, dus er is geen onderbouwde volgorde "
+    assert ("Een score per onderwerp ontbreekt, dus er is geen onderbouwde volgorde "
             "en geen eerste gesprekspunt dat uit de cijfers volgt.") in agenda
 
 
-def test_de_leesroute_op_p02_komt_uit_bij_een_echte_vraag():
-    """Het gebruiksblok stuurt naar "achteraan lees je waar het gesprek kan
-    beginnen"; dat moet op deze pagina landen."""
+def test_zonder_profiel_geen_leidraad_maar_wel_een_echte_vraag():
+    """Het gebruiksblok stuurde naar "achteraan lees je waar het gesprek kan
+    beginnen". Plan 3a taak 5: zonder factorprofiel rendert de leidraad bewust
+    niet (hij zou naar een startpunt en een verdieping sturen die er niet
+    zijn); de degraded alinea op p.02 zegt wat er wel is. De slotpagina
+    draagt nog steeds een echte vraag."""
     body = _ob(n=_N_DEGRADED, profile=False)
-    assert "achteraan lees je waar het gesprek kan beginnen" in body
+    assert "Zo leid je dit gesprek" not in body
+    assert 'class="pref"' not in body
     assert AGENDA_OPENER_GEEN_PROFIEL in _agenda(body)
 
 
@@ -100,7 +104,7 @@ def test_slotpagina_is_vrij_van_em_dashes():
 def test_met_profiel_blijft_de_slotpagina_zoals_hij_was():
     body = _ob(n=_N_NORMAL, profile=True)
     agenda = _agenda(body)
-    assert "Primair thema" in agenda
+    assert "Primair onderwerp" in agenda
     assert "Tweede aandachtspunt" in agenda
     assert SECTION_INTROS["gespreksagenda"] in body
     assert GESPREKSAGENDA_INTRO_GEEN_PROFIEL not in body

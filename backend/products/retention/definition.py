@@ -54,7 +54,7 @@ SCAN_DEFINITION: dict[str, Any] = {
         ("B1", "In mijn werk heb ik het gevoel dat ik zelf keuzes kan maken over hoe ik mijn taken uitvoer."),
         ("B2", "Ik heb de vrijheid om mijn werkzaamheden op mijn eigen manier aan te pakken."),
         ("B3", "Mijn werksituatie laat mij toe om initiatieven te nemen in mijn functie."),
-        ("B4", "Ik ervaar mijn werk als opgelegd - ik heb weinig inspraak over hoe ik taken uitvoer."),
+        ("B4", "Ik ervaar mijn werk als opgelegd: ik heb weinig inspraak over hoe ik taken uitvoer."),
         ("B5", "Ik voel me competent in mijn werk."),
         ("B6", "Ik heb het gevoel dat ik mijn vaardigheden en talenten goed kan inzetten."),
         ("B7", "Ik ben in staat effectief te zijn in mijn werk."),
@@ -62,7 +62,7 @@ SCAN_DEFINITION: dict[str, Any] = {
         ("B9", "Ik heb een goede band met mijn collega's."),
         ("B10", "Ik voel me verbonden met de mensen waarmee ik samenwerk."),
         ("B11", "Ik voel me geaccepteerd door de mensen in mijn directe werkomgeving."),
-        ("B12", "Ik heb het gevoel dat collega's niet echt in mij geinteresseerd zijn."),
+        ("B12", "Ik heb het gevoel dat collega's niet echt in mij geïnteresseerd zijn."),
     ],
     "org_sections": build_org_sections("retention"),
     "uwes_items": [

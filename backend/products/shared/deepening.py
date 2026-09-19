@@ -640,15 +640,26 @@ def _factor_items(org_raw: dict[str, int], factor_key: str) -> list[int]:
             if k.startswith(f"{factor_key}_") and isinstance(v, int)]
 
 
+# De triggerregel voor de verdiepende vraag, per respondent op de ruwe
+# antwoorden (schaal 1 tot 5) van de stellingen van één factor. Benoemde
+# constanten omdat het rapport de regel in gewone taal uitlegt
+# (_trigger_regel in report_html.py, eindreview plan 3a punt 1): een klantzin
+# met eigen getallen kon stil afwijken van de regel die echt draait.
+TRIGGER_AVG_MAX = 2.5            # gemiddeld zo laag of lager
+TRIGGER_WITH_ONE_AVG_MAX = 3.5   # of: een 1 bij een gemiddelde tot en met dit
+TRIGGER_LOW_ITEM_MAX = 2         # of: minstens TRIGGER_LOW_ITEM_COUNT stellingen
+TRIGGER_LOW_ITEM_COUNT = 2       #     op TRIGGER_LOW_ITEM_MAX of lager
+
+
 def _is_triggered(items: list[int]) -> bool:
     if not items:
         return False
     avg = sum(items) / len(items)
-    if avg <= 2.5:
+    if avg <= TRIGGER_AVG_MAX:
         return True
-    if min(items) == 1 and avg <= 3.5:
+    if min(items) == 1 and avg <= TRIGGER_WITH_ONE_AVG_MAX:
         return True
-    if sum(1 for v in items if v <= 2) >= 2:
+    if sum(1 for v in items if v <= TRIGGER_LOW_ITEM_MAX) >= TRIGGER_LOW_ITEM_COUNT:
         return True
     return False
 
@@ -736,7 +747,7 @@ def aggregate_deepening(
         raise ValueError(f"unknown scan_type {scan_type!r}")
     out: dict[str, dict[str, Any]] = {
         fk: {"triggered": 0, "offered": 0, "answered": 0, "skipped": 0,
-             "primary_counts": {}, "secondary_counts": {}}
+             "primary_counts": {}, "secondary_counts": {}, "other_texts": []}
         for fk in DEEPENING_FACTOR_KEYS
     }
     for org_raw, entries in rows:
@@ -754,6 +765,15 @@ def aggregate_deepening(
                     agg["primary_counts"][e["primary"]] = agg["primary_counts"].get(e["primary"], 0) + 1
                 if e.get("secondary"):
                     agg["secondary_counts"][e["secondary"]] = agg["secondary_counts"].get(e["secondary"], 0) + 1
+                # B13: de vrije toelichting bij "Anders". Alleen de tekst zelf wordt
+                # bewaard, nooit een verwijzing naar de respondent; de rapportlaag
+                # anonimiseert hem nog een keer (backend/report_html.build_report_data)
+                # omdat historische rijen van vóór de sanitizer in main.py kunnen komen.
+                # Een lege of alleen-witruimte-tekst komt niet in de lijst: bij de
+                # verdieping mag "Anders" zonder toelichting (schemas.py), en dan is
+                # er niets geschreven om te tonen.
+                if (e.get("primary") or "").endswith("_other") and (e.get("other_text") or "").strip():
+                    agg["other_texts"].append(e["other_text"].strip())
             else:
                 agg["skipped"] += 1
     return out
@@ -818,7 +838,8 @@ def aggregate_direction(
     if scan_type not in DIRECTION_VERSION:
         raise ValueError(f"unknown scan_type {scan_type!r}")
     out: dict[str, dict[str, Any]] = {
-        fk: {"lowest_n": 0, "offered": 0, "answered": 0, "skipped": 0, "counts": {}}
+        fk: {"lowest_n": 0, "offered": 0, "answered": 0, "skipped": 0, "counts": {},
+             "other_texts": []}
         for fk in DEEPENING_FACTOR_KEYS
     }
     for org_raw, dr in rows:
@@ -835,6 +856,12 @@ def aggregate_direction(
             agg["answered"] += 1
             if dr.get("choice"):
                 agg["counts"][dr["choice"]] = agg["counts"].get(dr["choice"], 0) + 1
+            # B13, zelfde regel als in aggregate_deepening. Bij de richtingvraag eist
+            # schemas.py een toelichting bij een *_other keuze, dus hier horen aantal
+            # en aantal teksten gelijk te zijn; de lege-tekst-check blijft staan voor
+            # historische rijen van vóór die validatie.
+            if (dr.get("choice") or "").endswith("_other") and (dr.get("other_text") or "").strip():
+                agg["other_texts"].append(dr["other_text"].strip())
         else:
             agg["skipped"] += 1
     # Tweede lus, bewust apart van de rij-lus hierboven: lowest_n is pas compleet
@@ -842,10 +869,15 @@ def aggregate_direction(
     # lus als de rij-verwerking worden gevouwen.
     for fk, agg in out.items():
         if agg["offered"] > agg["lowest_n"]:
-            # Anders dan offered > triggered bij aggregate_deepening (verwacht bij
-            # historische triggerregelwijzigingen), kan dit hier niet ontstaan zonder
-            # bug: de servervalidatie staat alleen de eigen laagste factor toe. Deze
-            # aggregatie vertrouwt daar bewust niet blind op en logt het als signaal.
+            # De servervalidatie staat alleen de eigen laagste factor toe, dus bij
+            # gelijke rekenregels kan dit niet ontstaan. Het is wél bereikbaar met
+            # versiedrift: `offered` komt uit de opgeslagen antwoorden en
+            # `lowest_n` wordt hierboven opnieuw berekend uit org_raw, dus een
+            # gewijzigde rekenregel voor het laagste onderwerp kan de twee uiteen
+            # laten lopen in een historisch rapport. Daarom getolereerd en gelogd,
+            # niet afgebroken; de rapportlaag (_direction_chain en
+            # _direction_totals_line) toont deze staat als een zichtbaar
+            # gedegradeerde keten die beide getallen noemt.
             logger.warning("direction: offered > lowest_n voor %s (%d > %d)",
                            fk, agg["offered"], agg["lowest_n"])
     return out

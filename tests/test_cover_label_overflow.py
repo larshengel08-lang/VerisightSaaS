@@ -1,7 +1,7 @@
 # tests/test_cover_label_overflow.py
 #
 # Stresstest B10 (docs/rapport-stresstest-2026-09-10.md): de derde coverstat
-# ("Eerste aandachtspunt") droeg een lange factornaam die in WeasyPrint buiten
+# ("Waar het gesprek begint") droeg een lange factornaam die in WeasyPrint buiten
 # de rechter paginarand liep. De fix: een vaste tabelbreedte op .cmeta, breken
 # binnen de kolom, en een kleinere corpsgrootte (cmv-long) voor lange waarden.
 #
@@ -30,7 +30,7 @@ def _render(third_value: str) -> str:
         scan_label="Loep Start", scan_type="onboarding", org_name="Acme BV",
         period="Q2 2026", opening_question="Hoe landen nieuwe collega's?",
         stats=[("Respondenten", "30"), ("Respons", "71%"),
-               ("Eerste aandachtspunt", third_value)],
+               ("Waar het gesprek begint", third_value)],
     )
 
 
