@@ -23,10 +23,9 @@ from backend.report_html import (
 LOW_GROWTH = {f"growth_{i}": 1 for i in (1, 2, 3)} | {f"{fk}_{i}": 5 for fk in
               ("leadership", "culture", "compensation", "workload", "role_clarity") for i in (1, 2, 3)}
 
-REGEL = (" Duidelijk laag betekent hier: op de antwoordschaal van 1 tot 5 gemiddeld 2,5 of lager, "
-        "minstens twee stellingen op 2 of lager, of een 1 bij een gemiddelde van 3,5 of lager. "
-        "Dat is een andere regel dan ‘onder de 5’ (kwetsbaar) in de spreiding, dus de aantallen "
-        "kunnen verschillen.")
+REGEL = (" Duidelijk laag: op de schaal van 1 tot 5 gemiddeld 2,5 of lager, minstens twee "
+         "stellingen op 2 of lager, of een 1 bij gemiddeld hoogstens 3,5; niet hetzelfde als "
+         "‘onder de 5’ in de spreiding.")
 
 ANON_LABEL = ("Automatisch geanonimiseerd: herkende namen, e-mailadressen, telefoonnummers "
               "en postcodes verwijderd")
@@ -711,9 +710,9 @@ def test_keten_zegt_welke_regel_laag_is_en_leest_niet_als_onder_de_5():
     zin = _deepening_chain(AGG_D, "retention", "growth", n_total=39)
     assert "laag scoorde" not in zin and "scoorden hier laag" not in zin
     assert "duidelijk laag" in zin
-    assert "andere regel dan ‘onder de 5’" in zin
+    assert "niet hetzelfde als ‘onder de 5’" in zin
     assert f"gemiddeld {str(dp.TRIGGER_AVG_MAX).replace('.', ',')} of lager" in zin
-    assert f"gemiddelde van {str(dp.TRIGGER_WITH_ONE_AVG_MAX).replace('.', ',')} of lager" in zin
+    assert f"gemiddeld hoogstens {str(dp.TRIGGER_WITH_ONE_AVG_MAX).replace('.', ',')}" in zin
     assert f"stellingen op {dp.TRIGGER_LOW_ITEM_MAX} of lager" in zin
 
 
@@ -721,6 +720,20 @@ def test_keten_leest_de_triggerregel_uit_de_constanten(monkeypatch):
     import backend.report_html as rh
     monkeypatch.setattr(rh, "TRIGGER_AVG_MAX", 2.0)
     assert "gemiddeld 2,0 of lager" in rh._deepening_chain(AGG_D, "retention", "growth", n_total=39)
+
+
+def test_triggerregel_staat_een_keer_en_elke_keten_zegt_duidelijk_laag():
+    """De regel staat achter de eerste keten die rendert, niet achter elke:
+    drie keer dezelfde twee regels duwden in stresstest 18 het laatste
+    verdiepingsonderwerp alleen op een vel. Elke keten gebruikt wel de term."""
+    from tests.test_report_taal_guard import _RENDER, _vol
+    for scan in ("exit", "retention"):
+        t = _tekst(_RENDER[scan](_vol(scan)).split("</style>")[-1])
+        ketens = t.count("hier duidelijk laag")
+        assert ketens >= 2, scan
+        assert t.count("Duidelijk laag: op de schaal van 1 tot 5") == 1, scan
+        assert t.index("Duidelijk laag: op de schaal") > t.index("hier duidelijk laag")
+        assert "laag scoorde" not in t and "laag scoorden" not in t
 
 
 def test_gerenderd_rapport_kent_geen_laag_scoorde_meer():

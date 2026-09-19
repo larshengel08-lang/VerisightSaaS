@@ -1497,8 +1497,7 @@ SECTION_INTROS: dict[str, str] = {
     "verdieping": (
         "Respondenten die op dit onderwerp duidelijk laag antwoordden kregen automatisch een korte vervolgvraag: "
         "welke toelichting past het best bij hun ervaring? De aantallen hieronder zijn tellingen "
-        "van wat respondenten zelf kozen, geen interpretatie achteraf. Zo zie je niet alleen "
-        "d&aacute;t een onderwerp laag scoort, maar ook wat de groep zelf als reden aandraagt. "
+        "van wat respondenten zelf kozen, geen interpretatie achteraf. "
         "Wat er volgens hen moet gebeuren staat bij de gespreksagenda."
     ),
     "werkbeleving": (
@@ -3354,14 +3353,14 @@ def _trigger_regel() -> str:
     Daarom "duidelijk laag" met de regel erbij, en de getallen uit de
     constanten die _is_triggered echt gebruikt."""
     cnt = _TELWOORD.get(TRIGGER_LOW_ITEM_COUNT, str(TRIGGER_LOW_ITEM_COUNT))
-    return (f"Duidelijk laag betekent hier: op de antwoordschaal van 1 tot 5 gemiddeld "
-            f"{_komma(TRIGGER_AVG_MAX)} of lager, minstens {cnt} stellingen op "
-            f"{TRIGGER_LOW_ITEM_MAX} of lager, of een 1 bij een gemiddelde van "
-            f"{_komma(TRIGGER_WITH_ONE_AVG_MAX)} of lager. Dat is een andere regel dan "
-            f"‘onder de 5’ (kwetsbaar) in de spreiding, dus de aantallen kunnen verschillen.")
+    return (f"Duidelijk laag: op de schaal van 1 tot 5 gemiddeld {_komma(TRIGGER_AVG_MAX)} "
+            f"of lager, minstens {cnt} stellingen op {TRIGGER_LOW_ITEM_MAX} of lager, of een 1 "
+            f"bij gemiddeld hoogstens {_komma(TRIGGER_WITH_ONE_AVG_MAX)}; niet hetzelfde als "
+            f"‘onder de 5’ in de spreiding.")
 
 
-def _deepening_chain(agg: dict, scan_type: str, factor_key: str, n_total: int) -> str:
+def _deepening_chain(agg: dict, scan_type: str, factor_key: str, n_total: int,
+                     met_regel: bool = True) -> str:
     """Noemer-keten in de vaste tellingsvorm (B14, H2), zonder "verdieptrigger"
     (H14): laag gescoord -> aangeboden -> beantwoord/overgeslagen, elke stap met
     zijn eigen noemer en met het aantal respondenten als begin.
@@ -3372,6 +3371,11 @@ def _deepening_chain(agg: dict, scan_type: str, factor_key: str, n_total: int) -
 
     Het maximum komt uit DEEPENING_CAP en staat niet als los getal in de copy:
     anders kan de klantzin stil afwijken van de vragenlijst.
+
+    `met_regel`: de triggerregel (_trigger_regel) staat achter de eerste keten
+    van het rapport en niet achter elke: drie keer dezelfde twee regels
+    duwden in stresstest 18 het laatste verdiepingsonderwerp alleen op een vel.
+    De latere ketens gebruiken dezelfde term "duidelijk laag".
     """
     triggered, offered = agg["triggered"], agg["offered"]
     answered, skipped = agg["answered"], agg["skipped"]
@@ -3388,7 +3392,7 @@ def _deepening_chain(agg: dict, scan_type: str, factor_key: str, n_total: int) -
     staart = (("; " + ", ".join(parts)) if parts else "")
     if offered:
         staart += _statusrest(offered, answered, skipped)
-    staart += ". " + _trigger_regel()
+    staart += "." + (" " + _trigger_regel() if met_regel else "")
     if offered > triggered:
         # Historische data: de triggerregels of de optieset zijn na deze meting
         # veranderd (aggregate_deepening tolereert dat bewust). De keten mag dan
@@ -3446,7 +3450,8 @@ def _deepening_shows_distribution(agg: dict | None) -> bool:
                 and agg.get("answered", 0) >= DEEPENING_DISTRIBUTION_MIN_N)
 
 
-def _deepening_block(agg: dict, scan_type: str, factor_key: str, n_total: int) -> str:
+def _deepening_block(agg: dict, scan_type: str, factor_key: str, n_total: int,
+                     met_regel: bool = True) -> str:
     """Toelichtingsblok onder een factor (spec 6.1 + 6.2), gestaffeld op n=answered.
 
     n_total is het aantal respondenten en is verplicht: de keten begint ermee
@@ -3456,7 +3461,7 @@ def _deepening_block(agg: dict, scan_type: str, factor_key: str, n_total: int) -
         return ""
     answered = agg.get("answered", 0)
     opt_text = _deepening_option_texts(scan_type, factor_key)
-    chain = _deepening_chain(agg, scan_type, factor_key, n_total)
+    chain = _deepening_chain(agg, scan_type, factor_key, n_total, met_regel=met_regel)
 
     if not _deepening_shows_distribution(agg):
         # De verwijzing hoort hier (codereview taak 11): dit is de meest getoonde
@@ -5705,8 +5710,10 @@ def render_exit_report_html(data: dict) -> str:
         # NB: het statische "Eerste managementvraag"-navy-blok is hier bewust weg —
         # dezelfde template-vraag stond al op p.02 en 3x op de verdiepingspagina's;
         # de data (items + toelichting + quote) draagt deze pagina zelf.
-        deep_block = (_deepening_block(deep_agg[fk], "exit", fk, n)
+        deep_block = (_deepening_block(deep_agg[fk], "exit", fk, n, met_regel=_regel_nog[0])
                       if fk in deep_agg else "")
+        if deep_block:
+            _regel_nog[0] = False
         spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []))
         # Alleen het eerste onderwerp opent een nieuwe pagina (B9): de volgende
         # verdiepingen stromen door onder hun voorganger en verhuizen als geheel
@@ -5729,6 +5736,9 @@ def render_exit_report_html(data: dict) -> str:
   {deep_block}
 </div>"""
 
+    # De triggerregel staat alleen achter de eerste verdiepingsketen die
+    # rendert (_deepening_chain, met_regel); de closure zet hem daarna uit.
+    _regel_nog = [True]
     if priority_fkeys:
         for _i, _pfk in enumerate(priority_fkeys):
             _lbl = _fl(_pfk, "exit")
@@ -6084,8 +6094,10 @@ def render_retention_report_html(data: dict) -> str:
         # Statisch "Eerste managementvraag"-blok bewust verwijderd (template-taal;
         # stond ook al op p.02) — het toelichtingsblok draagt de duiding.
         # ── Toelichtingsblok verdiepingsvragen (spec 6.2) ──
-        deep_block = (_deepening_block(deep_agg[fk], ST, fk, n)
+        deep_block = (_deepening_block(deep_agg[fk], ST, fk, n, met_regel=_regel_nog[0])
                       if fk in deep_agg else "")
+        if deep_block:
+            _regel_nog[0] = False
         spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []))
         # Alleen het eerste onderwerp opent een nieuwe pagina (B9), zie
         # _factor_detail in de Vertrek-renderer.
@@ -6106,6 +6118,8 @@ def render_retention_report_html(data: dict) -> str:
   {deep_block}
 </div>"""
 
+    # Zie de Vertrek-renderer: triggerregel alleen achter de eerste keten.
+    _regel_nog = [True]
     if priority_fkeys:
         for _i, _pfk in enumerate(priority_fkeys):
             _lbl = _fl(_pfk, ST)
