@@ -1508,7 +1508,7 @@ SECTION_INTROS: dict[str, str] = {
     "werkgeversaanbeveling": (
         "De aanbevelingsscore (eNPS) meet &eacute;&eacute;n ding: zouden medewerkers deze "
         "organisatie aanraden als werkgever? De score loopt van &minus;100 tot +100 en is het "
-        "verschil tussen het aandeel uitgesproken aanraders en het aandeel criticasters. "
+        "verschil tussen het aandeel uitgesproken aanraders en het aandeel critici. "
         "Lees dit als aanvullende context: het zegt iets over het totaalgevoel, niet waar "
         "dat gevoel vandaan komt."
     ),
@@ -5181,6 +5181,13 @@ def _enps_cijfers(data: dict) -> tuple[int | None, dict | None]:
     return data["enps_score"], detail
 
 
+def _enps_str(score: int) -> str:
+    """eNPS met teken, en bij een negatieve score een echt minteken (U+2212),
+    zoals "−100 tot +100" elders in het rapport (eindreview plan 3a punt 4).
+    Een los koppelteken las als streepje, niet als min."""
+    return f"{score:+d}".replace("-", "−")
+
+
 def _enps_block(enps_score: int | None, enps_detail: dict | None) -> str:
     """Werkgeversaanbeveling als blok op de contextpagina (H13, spec par. 9 B9):
     de score met de tellingen erbij, zodat "+0" iets betekent. Leeg zonder
@@ -5192,7 +5199,7 @@ def _enps_block(enps_score: int | None, enps_detail: dict | None) -> str:
     return (f'<div class="enps-inline no-break"><span class="eyebrow">Werkgeversaanbeveling</span>'
             f'{_intro("werkgeversaanbeveling")}'
             f'<table class="sg"><tr><td><div class="sc-l">Aanbevelingsscore</div>'
-            f'<div class="sc-v" style="color:{ecol};">{enps_score:+d}</div>'
+            f'<div class="sc-v" style="color:{ecol};">{_enps_str(enps_score)}</div>'
             f'<div class="sc-b">{p} aanraders, {d} critici van {n} (eNPS, &minus;100 tot +100)</div></td>'
             f'</tr></table></div>')
 
@@ -5317,7 +5324,7 @@ def _appendix_section(*, fa: dict, oim: dict, sim: dict, factor_items_map: dict,
     sdt_rows = _rows(sdt_items, sim)
     sdt_html = _tbl(sdt_title, sdt_rows) if sdt_rows else ""
     if enps_score is not None and enps_detail:
-        enps_line = (f"Werkgeversaanbeveling (eNPS): {enps_score:+d}, {enps_detail['promoters']} aanraders en "
+        enps_line = (f"Werkgeversaanbeveling (eNPS): {_enps_str(enps_score)}, {enps_detail['promoters']} aanraders en "
                      f"{enps_detail['detractors']} critici van {enps_detail['n']}.")
     else:
         enps_line = "Werkgeversaanbeveling (eNPS): niet gerapporteerd in dit rapport."

@@ -32,6 +32,18 @@ def test_enps_block_toont_aanraders_en_critici():
     assert _enps_block(None, None) == ""
 
 
+def test_enps_negatief_krijgt_een_echt_minteken_en_een_woord_voor_critici():
+    """Eindreview plan 3a punt 4: elders staat "−100" met een echt
+    minteken, dus de score zelf ook; en één woord voor de groep (critici),
+    niet daarnaast "criticasters" in de uitleg."""
+    html = _enps_block(-91, {"n": 39, "promoters": 1, "detractors": 36})
+    t = re.sub(r"<[^>]+>", " ", html)
+    assert "−91" in t and "-91" not in t
+    assert "criticaster" not in html
+    assert "critici" in html
+    assert "+8" in _enps_block(8, {"n": 39, "promoters": 12, "detractors": 9})
+
+
 def test_enps_heeft_geen_eigen_hoofdstuk_meer_en_staat_bij_de_context():
     d = _min_retention_data()
     d["enps_available"], d["enps_score"] = True, 8
@@ -140,7 +152,7 @@ def test_appendix_noemt_de_enps_score_met_tellingen():
     d["enps_detail"] = {"n": 25, "promoters": 5, "detractors": 6}
     body = _body(render_retention_report_html(d))
     app = body[body.index('<h2 class="ch-title">Appendix</h2>'):]
-    assert "Werkgeversaanbeveling (eNPS): -4, 5 aanraders en 6 critici van 25." in app
+    assert "Werkgeversaanbeveling (eNPS): −4, 5 aanraders en 6 critici van 25." in app
     assert "zie hoofdrapport" not in app
 
     d2 = _fixture("retention", n=25, profile=True)
