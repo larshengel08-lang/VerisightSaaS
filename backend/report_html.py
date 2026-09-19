@@ -222,7 +222,7 @@ _MGMT_Q_RETENTION: dict[str, str] = {
     "growth":       "Speelt ontbrekend perspectief, te weinig concrete ontwikkelgesprekken of stagnatie een rol?",
     "compensation": "Is de kern hier ervaren fairness, uitlegbaarheid of beloningshoogte?",
     "workload":     "Speelt structurele werkdruk, gebrek aan herstelruimte of onbalans mee?",
-    "role_clarity": "Is onduidelijkheid over eigenaarschap, prioriteiten of beslisruimte een onderwerp?",
+    "role_clarity": "Speelt onduidelijkheid over eigenaarschap, prioriteiten of beslisruimte mee?",
 }
 _MGMT_Q_ONBOARDING: dict[str, str] = {
     "leadership":   "Is de frictie over bereikbaarheid, richting of concrete steun in de eerste periode?",
@@ -1501,9 +1501,9 @@ SECTION_INTROS: dict[str, str] = {
         "Naast de onderwerpen over het werk meten we drie psychologische basisbehoeften: autonomie (regie "
         "over de eigen werkwijze), competentie (ervaren bekwaamheid) en verbondenheid (de band "
         "met collega's en organisatie). Onderzoek naar werkmotivatie laat consistent zien dat "
-        "deze drie bepalen hoe duurzaam iemand op zijn plek zit. Die onderwerpen alleen "
-        "vertellen niet het hele verhaal. Een laag onderwerp met een gezonde werkbeleving "
-        "vraagt een ander gesprek dan wanneer beide onder druk staan."
+        "deze drie bepalen hoe duurzaam iemand op zijn plek zit. De onderwerpen over het werk "
+        "alleen vertellen niet het hele verhaal. Een lage score op een onderwerp, met een "
+        "gezonde werkbeleving, vraagt een ander gesprek dan wanneer beide onder druk staan."
     ),
     "werkgeversaanbeveling": (
         "De aanbevelingsscore (eNPS) meet &eacute;&eacute;n ding: zouden medewerkers deze "
@@ -1515,14 +1515,14 @@ SECTION_INTROS: dict[str, str] = {
     "segmentanalyse": (
         "Deze tabel splitst het beeld uit per afdeling: het aantal ingevulde vragenlijsten "
         "tegenover het aantal uitgenodigden, de gemiddelde score en, bij voldoende "
-        "responses, de spreiding. Afdelingen met minder dan vijf responses worden "
+        "antwoorden, de spreiding. Afdelingen met minder dan vijf antwoorden worden "
         "gebundeld onder &ldquo;Overige afdelingen&rdquo;, zodat antwoorden nooit herleidbaar "
         "zijn tot personen. Verschillen tussen afdelingen zijn gesprekstof: ze vertellen waar "
         "je als eerste gaat kijken, niet welke afdeling het &ldquo;slecht doet&rdquo;. "
         "De kolom met het laagste onderwerp toont per afdeling het onderwerp dat daar het laagst "
-        "scoort. Bij kleine afdelingen (5 tot 9 responses) tonen we bewust alleen een "
-        "duidingslabel, geen cijfer achter de komma; het volledige onderwerpbeeld per afdeling "
-        "opent vanaf 10 responses."
+        "scoort. Bij kleine afdelingen (5 tot 9 antwoorden) tonen we bewust alleen een "
+        "duidingslabel, geen cijfer achter de komma; alle onderwerpen per afdeling met hun "
+        "scores staan er vanaf 10 antwoorden."
     ),
     "open_toelichtingen": (
         "Dit zijn de open antwoorden zoals respondenten ze zelf schreven, alleen ontdaan van "
@@ -2414,7 +2414,7 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
     def _spread_cell(row: dict) -> str:
         scores = [v for v in (factor_resp_scores.get(row["key"]) or []) if v is not None]
         if len(scores) < MIN_DISTRIBUTION_N:
-            return '<span class="r-mono">spreiding vanaf 10 responses</span>'
+            return '<span class="r-mono">spreiding vanaf 10 antwoorden</span>'
         strip = distribution_svg(scores, width=200, height=22)
         return (f'{strip}<br><span class="r-mono">'
                 f'{row["spread_below"]} van {row["spread_n"]} onder de 5</span>')
@@ -3413,7 +3413,7 @@ def _deepening_block(agg: dict, scan_type: str, factor_key: str, n_total: int) -
         body = ('<p style="font-size:9px;color:#64748B;margin:6px 0 0;">'
                 'Te weinig verdiepingsantwoorden om een verdeling te tonen '
                 f'(drempels: pagina {_pref(LEIDRAAD_ANKERS["drempels"])}). '
-                'Bespreek dit onderwerp in de bespreking zelf.</p>')
+                'Bespreek dit onderwerp in het MT.</p>')
     else:
         ranked = sorted((agg.get("primary_counts") or {}).items(),
                         key=lambda kv: (-kv[1], kv[0]))
@@ -3665,7 +3665,9 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "",
             ("Open toelichtingen",f"Automatisch geanonimiseerd: herkende namen, contactgegevens en locaties "
              f"verwijderd. Alleen getoond vanaf {MIN_QUOTES_N} toelichtingen."),
             ("Wat dit rapport niet doet",
-             "Loep Behoud is een groepsbeeld van de huidige medewerkers. Geen uitspraken over oorzaken, geen advies over maatregelen."),
+             "Loep Behoud is een groepsbeeld van de huidige medewerkers. Loep stelt zelf geen oorzaken "
+             "vast: de redenen in dit rapport komen van je mensen. Geen kant-en-klaar actieplan: "
+             "wat er gebeurt, beslist het MT."),
             _wie_mag_zien(),
         ]
         cells_r3 = [_banden_cel(ranking_active)]
@@ -3682,7 +3684,9 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "",
             ("Open toelichtingen", f"Automatisch geanonimiseerd: herkende namen, contactgegevens en locaties "
              f"verwijderd. Alleen getoond vanaf {MIN_QUOTES_N} toelichtingen."),
             ("Wat dit rapport niet doet",
-             "Loep Start is een groepsbeeld van de eerste werkperiode. Geen uitspraken over oorzaken, geen voorspelling van uitval."),
+             "Loep Start is een groepsbeeld van de eerste werkperiode. Loep stelt zelf geen oorzaken "
+             "vast en voorspelt geen uitval. Geen kant-en-klaar actieplan: wat er gebeurt, "
+             "beslist het MT."),
             _wie_mag_zien(),
         ]
         cells_r3 = [_banden_cel(ranking_active)]
@@ -3698,7 +3702,10 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "",
             ("Open toelichtingen",f"Automatisch geanonimiseerd: herkende namen, contactgegevens en locaties "
              f"verwijderd. Alleen getoond vanaf {MIN_QUOTES_N} toelichtingen."),
             ("Wat dit rapport niet doet",
-             "Loep Vertrek is een terugkijkende groepsmeting op vertrek. Geen uitspraken over oorzaken, geen oordeel over vermijdbaarheid, geen voorspellingen over vertrek."),
+             "Loep Vertrek is een terugkijkende groepsmeting op vertrek. Loep stelt zelf geen oorzaken "
+             "vast: de redenen in dit rapport komen van je mensen. Geen oordeel over "
+             "vermijdbaarheid en geen voorspellingen over vertrek. Geen kant-en-klaar "
+             "actieplan: wat er gebeurt, beslist het MT."),
             _wie_mag_zien(),
         ]
         cells_r3 = [_banden_cel(ranking_active)]
@@ -3756,9 +3763,9 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "",
 # Vijfde plek met dezelfde belofte (spec ronde 2 par. 7): dit blok staat ook in
 # het Loep Start-rapport, dat geen verdieping heeft die kan openen. Exit en
 # retention houden hun eigen zin.
-SEGMENT_VERVOLG = "Verdieping opent zodra voldoende responses per groep beschikbaar zijn."
+SEGMENT_VERVOLG = "De tabel per afdeling verschijnt zodra er per afdeling genoeg antwoorden zijn."
 SEGMENT_VERVOLG_ONBOARDING = (
-    "Dit onderdeel opent zodra er per groep voldoende responses beschikbaar zijn.")
+    "De tabel per afdeling verschijnt zodra er per afdeling genoeg antwoorden zijn.")
 
 
 def _segment_status_block(n: int, has_segment_data: bool = False,
@@ -3895,7 +3902,7 @@ def _segment_factor_subblocks(segment_rows: list[dict],
     if not subs:
         return ""
     intro = ('<p style="font-size:10px;color:#64748B;margin:16px 0 0;">'
-             'Onderwerpbeeld per afdeling: dezelfde vaste drempels als in het '
+             'Alle onderwerpen per afdeling: dezelfde vaste drempels als in het '
              'overzichtsprofiel (kwetsbaar onder 5,0, aandachtspunt 5,0 tot 6,5, '
              'relatief sterk vanaf 6,5).</p>')
     return intro + subs
@@ -4107,8 +4114,8 @@ def _segment_start_note(segment_rows: list[dict],
         # toevoeging ook waar (elke getoonde afdeling staat apart in de tabel).
         body = (f'{_h(lowest["department"])} scoort het laagst van de afdelingen die '
                 f'apart getoond worden ({low_sc:.1f}/10), maar '
-                f'heeft {lowest["n"]} responses. Loep wijst een afdeling pas aan vanaf '
-                f'{MIN_DISTRIBUTION_N} responses, zodat de conclusie niet op een handvol '
+                f'heeft {lowest["n"]} antwoorden. Loep wijst een afdeling pas aan vanaf '
+                f'{MIN_DISTRIBUTION_N} antwoorden, zodat de conclusie niet op een handvol '
                 f'antwoorden rust. Kijk voor de eerste prioriteit naar het '
                 f'organisatiebeeld.')
     else:
@@ -4121,7 +4128,7 @@ def _segment_start_note(segment_rows: list[dict],
         # het rapport is de "n=5"-discussie voor, i.p.v. er munitie voor te zijn.
         _low_inv = aangewezen["invited"]
         _low_basis = (f'{aangewezen["n"]} van de {_low_inv} uitgenodigden vulden in'
-                      if _low_inv else f'{aangewezen["n"]} responses')
+                      if _low_inv else f'{aangewezen["n"]} antwoorden')
         # Themazin (spec 2026-07-16 §3.2 punt 3): geen factordata = geen zin
         # (geen fake). Band-neutrale formulering: "de druk zit op X" overdrijft
         # wanneer het laagste thema zelf nog relatief sterk scoort. De variant
@@ -4195,7 +4202,7 @@ def _segment_block(segment_rows: list[dict], factor_rows: dict[str, dict] | None
         elif len(scores) >= MIN_DISTRIBUTION_N:
             strip = distribution_svg(scores, width=200, height=22)
         else:
-            strip = f'<span style="{_SEG_MONO}">spreiding vanaf 10 responses</span>'
+            strip = f'<span style="{_SEG_MONO}">spreiding vanaf 10 antwoorden</span>'
         if is_rest:
             # H20: de restgroep noemt haar leden, zodat "Overige afdelingen"
             # geen naamloze groep is waarover het rapport wel conclusies trekt.
@@ -4237,13 +4244,13 @@ def _segment_block(segment_rows: list[dict], factor_rows: dict[str, dict] | None
     # in deze tabel; zonder deze regel klopt de sectie-intro in dat geval niet.
     hidden_note = ""
     if hidden_n > 0:
-        _aantal = ("Eén response valt" if hidden_n == 1
-                   else f"{hidden_n} responses vallen")
+        _aantal = ("Eén antwoord valt" if hidden_n == 1
+                   else f"{hidden_n} antwoorden vallen")
         _horen = "die hoort" if hidden_n == 1 else "ze horen elk"
         hidden_note = (
             f'<p style="font-size:10px;color:#4A6070;margin:10px 0 0;">'
             f'{_aantal} buiten deze tabel: {_horen} bij een afdeling met minder dan '
-            f'{MIN_SEGMENT_N} responses, en dat zijn er te weinig om samen als '
+            f'{MIN_SEGMENT_N} antwoorden, en dat zijn er te weinig om samen als '
             f'restgroep te tonen.</p>')
 
     # C9: de tabel had geen kolomkoppen, dus was per kolom niet te zien wat er
@@ -5638,7 +5645,7 @@ def render_exit_report_html(data: dict) -> str:
             sdt_items=data["sdt_items"], scan_type="exit", n=n,
             enps_score=_enps_score, enps_detail=_enps_detail,
             opener_html=ch.opener("Appendix", kicker="Volledige vraagresultaten"),
-            sdt_title="Werkbeleving (SDT): B1 t/m B12")
+            sdt_title="Werkbeleving: alle stellingen")
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────
     s += _trust_page("exit", opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen", anchor=LEIDRAAD_ANKERS["methodiek"]),
@@ -6006,7 +6013,7 @@ def render_retention_report_html(data: dict) -> str:
             sdt_items=data["sdt_items"], scan_type=ST, n=n,
             enps_score=_enps_score, enps_detail=_enps_detail,
             opener_html=ch.opener("Appendix", kicker="Volledige vraagresultaten"),
-            sdt_title="Werkbeleving (SDT): B1 t/m B12")
+            sdt_title="Werkbeleving: alle stellingen")
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────
     s += _trust_page(ST, opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen", anchor=LEIDRAAD_ANKERS["methodiek"]),
@@ -6488,7 +6495,7 @@ def render_onboarding_report_html(data: dict) -> str:
             sdt_items=data["sdt_items"], scan_type=ST, n=n,
             enps_score=_enps_score, enps_detail=_enps_detail,
             opener_html=ch.opener("Appendix", kicker="Volledige vraagresultaten"),
-            sdt_title="Werkbeleving (SDT): checkpointstellingen")
+            sdt_title="Werkbeleving: stellingen bij het checkpoint")
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────
     s += _trust_page(ST, opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen", anchor=LEIDRAAD_ANKERS["methodiek"]),

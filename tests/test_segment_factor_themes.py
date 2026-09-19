@@ -112,7 +112,7 @@ def test_render_n5_9_bandlabel_zonder_score():
     ops_cell = next(c for c in cells if "Leiderschap en vertrouwen" in c)
     assert "Aandachtspunt" in ops_cell
     # geen subblokken onder n=10
-    assert "Onderwerpbeeld per afdeling" not in html
+    assert "Alle onderwerpen per afdeling" not in html
 
 
 # ─── 6. Render: n >= 10 met score + subblok ──────────────────────────────────
@@ -131,7 +131,7 @@ def test_render_n10_score_en_subblok_laagste_eerst():
 
     # subblok aanwezig, met alle gegate factoren, laagste eerst
     assert "Operations (n=14)" in html
-    sub = html[html.index("Onderwerpbeeld per afdeling"):]
+    sub = html[html.index("Alle onderwerpen per afdeling"):]
     i_w = sub.index("Werkdruk en herstelruimte")
     i_l = sub.index("Leiderschap en vertrouwen")
     i_c = sub.index("Cultuur en psychologische veiligheid")
@@ -145,7 +145,7 @@ def test_render_geen_subblok_onder_n10_ook_met_factordata():
     fr = {"Sales": {"factors": [("workload", 4.8, 9)], "omitted": 0},
           "Ops": {"factors": [("culture", 5.9, 12)], "omitted": 0}}
     html = _segment_block(rows, factor_rows=fr, scan_type="exit")
-    sub = html[html.index("Onderwerpbeeld per afdeling"):]
+    sub = html[html.index("Alle onderwerpen per afdeling"):]
     assert "Ops (n=12)" in sub
     assert "Sales (n=9)" not in html
 
@@ -200,7 +200,7 @@ def test_navy_anchor_wijst_geen_afdeling_aan_bij_n5_9():
     html = _segment_block(rows, factor_rows=fr, scan_type="retention")
     anchor = html[html.index("Waar het per afdeling begint"):]
     assert "Het laagst scorende onderwerp daar is" not in anchor
-    assert "maar heeft 6 responses" in anchor
+    assert "maar heeft 6 antwoorden" in anchor
     assert not re.search(r"3\.9/10", anchor)
     # De kolomstaffel is onveranderd: label + duiding, geen decimale score.
     marketing_cell = next(c for c in _theme_cells(html)
@@ -238,7 +238,7 @@ def test_backward_compat_zonder_factor_rows():
     cells = _theme_cells(html)
     assert len(cells) == 2
     assert all("n.b." in c for c in cells)
-    assert "Onderwerpbeeld per afdeling" not in html
+    assert "Alle onderwerpen per afdeling" not in html
     assert "Het laagst scorende onderwerp daar is" not in html
 
 
@@ -254,7 +254,7 @@ def test_lege_factors_met_omitted_toont_meldregel_geen_kaal_nb():
     assert "n.b." not in sales_cell                 # reden vervangt het kale label
     ops_cell = next(c for c in cells if c is not sales_cell)
     assert "n.b." in ops_cell                        # echt geen data: wel n.b.
-    assert "Onderwerpbeeld per afdeling" not in html    # geen subblok zonder factors
+    assert "Alle onderwerpen per afdeling" not in html    # geen subblok zonder factors
 
 
 def test_alle_factoren_onder_gate_via_helper_eind_tot_eind():
@@ -285,4 +285,4 @@ def test_volledige_renderer_toont_laagste_thema():
     html = render_retention_report_html(d)
     assert "Werkdruk en herstelruimte" in html
     assert "3.9/10" in html
-    assert "Onderwerpbeeld per afdeling" in html
+    assert "Alle onderwerpen per afdeling" in html

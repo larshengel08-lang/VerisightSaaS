@@ -143,8 +143,8 @@ def test_de_meetgegevens_beloven_bij_loep_start_geen_verdieping():
     ob = _body(_RENDERERS["onboarding"](_ob_fixture()))
     assert "werkgeversaanbeveling (eNPS).</p>" in ob
     assert "Niet in dit rapport: " in ob
-    assert ("Dit onderdeel opent zodra er per groep voldoende responses "
-            "beschikbaar zijn.") in ob
+    assert ("De tabel per afdeling verschijnt zodra er per afdeling genoeg "
+            "antwoorden zijn.") in ob
     assert "Verdieping opent zodra" not in ob
     for scan_type in ("exit", "retention", "onboarding"):
         html = (ob if scan_type == "onboarding"

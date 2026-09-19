@@ -194,7 +194,7 @@ from backend.report_html import _segment_status_block, _eerste_managementspoor
 def test_segment_state_b_uses_spec_copy():
     html = _segment_status_block(n=8, has_segment_data=False)
     assert "herleidbaarheid te voorkomen" in html
-    assert "zodra voldoende responses" in html
+    assert "zodra er per afdeling genoeg antwoorden zijn" in html
 
 
 def test_managementspoor_avoids_hard_language():

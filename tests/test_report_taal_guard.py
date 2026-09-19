@@ -72,7 +72,10 @@ def test_verspreidingsregel_op_cover_en_slotpagina():
 VERBODEN = [r"bestuurlijke read", r"responsbasis", r"verdieptrigger",
             r"interventieprescriptie", r"managementread", r"factor", r"thema",
             r"segment", r"\bitems?\b", r"patroonduiding", r"claimgrenzen",
-            r"begeleide managementbespreking"]
+            r"begeleide managementbespreking",
+            # Codereview taak 13: jargon dat na de eerste sweep nog stond.
+            r"\(sdt\)", r"responses", r"verdieping opent zodra", r"onderwerpbeeld",
+            r"bespreek dit onderwerp in de bespreking zelf"]
 
 
 def _zichtbaar(html: str) -> str:
@@ -321,3 +324,45 @@ def test_de_verspreidingsregel_op_de_cover_breekt_af():
     regel = css[css.index(".cdist {"):]
     regel = regel[:regel.index("}")]
     assert "overflow-wrap: break-word" in regel
+
+
+# ── Codereview taak 13 ────────────────────────────────────────────────────────
+
+def test_werkbelevingsintro_verwijst_naar_de_juiste_onderwerpen():
+    """"Die onderwerpen alleen" sloeg na de sweep op de drie basisbehoeften, en
+    "een laag onderwerp" bestaat niet: een onderwerp heeft een lage score."""
+    from backend.report_html import SECTION_INTROS
+    intro = SECTION_INTROS["werkbeleving"]
+    assert "De onderwerpen over het werk alleen vertellen niet het hele verhaal." in intro
+    assert "Een lage score op een onderwerp, met een gezonde werkbeleving," in intro
+    assert "Die onderwerpen alleen" not in intro and "laag onderwerp" not in intro
+
+
+def test_wat_dit_rapport_niet_doet_spreekt_het_rapport_niet_tegen():
+    """"Geen uitspraken over oorzaken" stond naast de meest genoemde vertrekreden
+    en de verdiepingstoelichtingen, en "geen advies over maatregelen" naast het
+    blok "Wat er moet gebeuren" met opdrachtvormen."""
+    for st in ("exit", "retention", "onboarding"):
+        tekst = _tekst(_trust_page(st, org_name="X"))
+        assert "Geen uitspraken over oorzaken" not in tekst, st
+        assert "geen advies over maatregelen" not in tekst, st
+        assert "Loep stelt zelf geen oorzaken vast" in tekst, st
+    for st in ("exit", "retention"):
+        tekst = _tekst(_trust_page(st, org_name="X"))
+        assert "de redenen in dit rapport komen van je mensen" in tekst, st
+        assert "Geen kant-en-klaar actieplan: wat er gebeurt, beslist het MT." in tekst, st
+
+
+def test_lege_verdiepingsverdeling_verwijst_naar_het_mt():
+    for naam, html in _alle_rapporten():
+        tekst = _zichtbaar(html)
+        if "te weinig verdiepingsantwoorden" in tekst:
+            assert "bespreek dit onderwerp in het mt." in tekst, naam
+
+
+def test_geen_mechanisch_vervangen_onderwerp_in_de_openingsvragen():
+    from backend.report_html import _MGMT_Q_EXIT, _MGMT_Q_ONBOARDING, _MGMT_Q_RETENTION
+    assert _MGMT_Q_RETENTION["role_clarity"] == (
+        "Speelt onduidelijkheid over eigenaarschap, prioriteiten of beslisruimte mee?")
+    for d in (_MGMT_Q_EXIT, _MGMT_Q_RETENTION, _MGMT_Q_ONBOARDING):
+        assert not any(v.endswith("een onderwerp?") for v in d.values())

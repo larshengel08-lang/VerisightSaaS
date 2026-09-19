@@ -81,8 +81,8 @@ def test_segmentblok_gerenderd_bij_data():
     assert "Operations" in html and "Sales" in html
     assert "minder dan vijf" in html                 # sectie-intro (spec 2026-07-13 §2)
     # De claimgrens op de methodiekpagina heet sinds de taalronde (taak 13)
-    # "Geen uitspraken over oorzaken" in plaats van "Geen causale claims".
-    assert "Geen uitspraken over oorzaken" in html
+    # "Loep stelt zelf geen oorzaken vast" in plaats van "Geen causale claims".
+    assert "Loep stelt zelf geen oorzaken vast" in html
 
 
 def test_strip_alleen_vanaf_n10():
@@ -90,7 +90,7 @@ def test_strip_alleen_vanaf_n10():
         {"department": "Operations", "n": 14, "avg": 4.1, "scores": [4.0] * 14},
         {"department": "Sales", "n": 9, "avg": 6.8, "scores": [6.8] * 9},
     ]))
-    assert "spreiding vanaf 10 responses" in html    # Sales n=9: geen strip
+    assert "spreiding vanaf 10 antwoorden" in html    # Sales n=9: geen strip
 
 
 def test_overige_zonder_strip():

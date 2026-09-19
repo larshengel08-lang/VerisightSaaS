@@ -197,7 +197,7 @@ def test_spreiding_degraded_onder_n10():
     kleine = [dict(r, spread_n=7, spread_below=2) for r in RANKED]
     resp7 = {r["key"]: [4.0, 4.0, 7.0, 7.0, 7.0, 7.0, 7.0] for r in kleine}
     html = _render(ranked=kleine, resp=resp7)
-    assert "spreiding vanaf 10 responses" in html
+    assert "spreiding vanaf 10 antwoorden" in html
     assert "onder de 5" not in html  # geen telregel onder de staffel
 
 
