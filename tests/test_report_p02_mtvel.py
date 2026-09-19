@@ -606,7 +606,11 @@ def test_de_pdf_vult_de_verwijzingen_met_echte_paginanummers():
     import pymupdf
     from weasyprint import HTML
 
-    html = render_retention_report_html(_min_retention_data())
+    # _retention_met_secties, niet _min_retention_data: die levert sinds taak 5
+    # geen leidraad meer (geen afdelingen, toelichtingen of werkbeleving), en
+    # dan staat er op p.02 niets om te vullen (stresstest na plan 3a,
+    # observatie 12). Zelfde fixture als de H16-test hieronder.
+    html = render_retention_report_html(_retention_met_secties())
 
     class _Collect(logging.Handler):
         def __init__(self) -> None:
@@ -942,7 +946,9 @@ def _goed_rapport(pad: Path, *, p2_extra: list[tuple[float, str]] | None = None,
              (690.0, "12-25 min: de verdieping op pagina 5"),
              (705.0, "25-33 min: de werkbeleving op pagina 6"),
              (720.0, "33-45 min: het besluit op pagina 3"),
-             (740.0, "Meetgegevens")]
+             # Zoals de echte tekstlaag: text-transform zet beide labels in
+             # hoofdletters, elk op een eigen regel (observatie 11).
+             (740.0, "MEETGEGEVENS"), (755.0, "MEETPERIODE")]
           + (p2_extra or []))
     return _bouw_pdf(pad, [
         [(400.0, "Loep Behoud"), (430.0, "Voorjaar 2026")],                 # cover
@@ -989,9 +995,54 @@ def test_check_ziet_de_meetgegevens_van_pagina_twee_glijden(tmp_path: Path):
     ])
     bevindingen = cpr.check(str(pad), regels=(cpr.REGEL_P02,))
     meldingen = [b.melding for b in bevindingen]
-    assert any("bevat de meetgegevens niet" in m for m in meldingen)
+    assert any("bevat het meetgegevensblok niet volledig" in m for m in meldingen)
     assert any("pagina 3 begint niet met hoofdstuk 02" in m for m in meldingen)
     assert all(b.regel == cpr.REGEL_P02 for b in bevindingen)
+
+
+@requires_pymupdf
+def test_check_meet_het_meetgegevensblok_niet_de_leidraadzin(tmp_path: Path):
+    """Observatie 11: de leidraad zegt "de meetgegevens op deze pagina". Een
+    hoofdletterongevoelige substring zou daarop altijd slagen; de regel eist de
+    blokkop en het celabel "Meetperiode" elk als eigen regel."""
+    def _pdf(naam: str, p2_slot: list[tuple[float, str]], p3_begin: list[tuple[float, str]]):
+        return _bouw_pdf(tmp_path / naam, [
+            [(400.0, "cover")],
+            [(60.0, "kernzin")] + _vulregels(90.0, 660.0, "p2")
+            + [(690.0, "De respons en de meetgegevens op deze pagina; de drempels")] + p2_slot,
+            p3_begin + [(60.0 + 30.0 * len(p3_begin), "02 Behoudscontext")]
+            + _vulregels(150.0, 760.0, "p3"),
+            [(60.0, "korte slotpagina")],
+        ])
+
+    def _p02(pad):
+        return [b.melding for b in cpr.check(str(pad), regels=(cpr.REGEL_P02,))]
+
+    # Het hele blok schoof door (scenario 08): alleen de leidraadzin staat nog op p.02.
+    weg = _p02(_pdf("weg.pdf", [], [(60.0, "MEETGEGEVENS"), (90.0, "MEETPERIODE")]))
+    assert any("ontbreekt als regel: Meetgegevens, Meetperiode" in m for m in weg), weg
+    # Alleen de rij schoof door (scenario 06): de kop staat er, de rij niet.
+    rij = _p02(_pdf("rij.pdf", [(730.0, "MEETGEGEVENS")], [(60.0, "MEETPERIODE")]))
+    assert any("ontbreekt als regel: Meetperiode" in m for m in rij), rij
+    # Het hele blok op p.02, in hoofdletters zoals de render: geen bevinding.
+    assert _p02(_pdf("goed.pdf", [(730.0, "MEETGEGEVENS"), (750.0, "MEETPERIODE")], [])) == []
+
+
+@requires_pymupdf
+def test_check_tabelkop_vergelijkt_hoofdletterongevoelig(tmp_path: Path):
+    """De kolomkoppen staan in `text-transform: uppercase`; --thead mag de kop
+    schrijven zoals hij in de HTML staat (observatie 11)."""
+    pad = _bouw_pdf(tmp_path / "kop.pdf", [
+        [(400.0, "cover")],
+        _vulregels(60.0, 700.0, "p2") + [(730.0, "MEETGEGEVENS"), (745.0, "MEETPERIODE")],
+        [(60.0, "02 Behoudscontext"), (90.0, "ONDERWERP SCORE SPREIDING")]
+        + _vulregels(120.0, 760.0, "p3"),
+        [(60.0, "ONDERWERP   SCORE SPREIDING")] + _vulregels(90.0, 760.0, "p4"),
+        [(60.0, "korte slotpagina")],
+    ])
+    assert cpr.check(str(pad), thead="Onderwerp Score Spreiding",
+                     regels=(cpr.REGEL_THEAD,)) == []
+    assert cpr.check(str(pad), thead="Afdeling Ingevuld", regels=(cpr.REGEL_THEAD,)) != []
 
 
 @requires_pymupdf
@@ -1325,7 +1376,15 @@ def test_de_markers_van_het_script_komen_uit_de_renderer():
     assert cpr.LEIDRAAD_MARKER in _tekst(leidraad)
     meet = _responsbasis(invited=58, completed=39, period="W", population="P",
                          segment_available=True)
-    assert cpr.MEETGEGEVENS_MARKER in _tekst(meet)
+    # Elke marker is de volledige tekst van een eigen element (de blokkop en het
+    # celabel), want het script zoekt hem als eigen regel in de tekstlaag.
+    for marker in cpr.MEETGEGEVENS_MARKERS:
+        assert re.search(r">\s*" + marker + r"\s*<", meet), marker
+    # Zonder noemer vallen Uitgenodigd en Respons weg; de meetperiode blijft.
+    zonder = _responsbasis(invited=None, completed=9, period="W", population="P",
+                           segment_available=False, note="n")
+    for marker in cpr.MEETGEGEVENS_MARKERS:
+        assert re.search(r">\s*" + marker + r"\s*<", zonder), marker
 
 
 @requires_pymupdf

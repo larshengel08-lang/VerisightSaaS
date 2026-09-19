@@ -3,7 +3,8 @@
 Regels (elke bevinding draagt de regelnaam, zodat een taak of test er een kan
 uitkiezen zonder de andere te hoeven halen):
 
-  p02-op-een-a4     pagina 2 eindigt met de meetgegevens en pagina 3 begint met
+  p02-op-een-a4     pagina 2 draagt het meetgegevensblok (kop en rij, elk als
+                    eigen regel, hoofdletterongevoelig) en pagina 3 begint met
                     hoofdstuk "02" (H16);
   paginavulling     geen pagina onder MIN_FILL gevuld, behalve de cover en de
                     laatste pagina (B9, taak 8);
@@ -18,7 +19,8 @@ uitkiezen zonder de andere te hoeven halen):
                     hem als fout aanneemt;
   tabelkop          alleen met --thead: die tabelkop staat op meer dan één
                     pagina, dus hij herhaalt op de vervolgpagina (ronde 2
-                    punt c, taak 11);
+                    punt c, taak 11); hoofdletterongevoelig, want de kop
+                    staat in de tekstlaag zoals text-transform hem toont;
   zijmarge          geen woord staat buiten de linker- of rechtermarge van het
                     vel (16mm), de cover uitgezonderd (die heeft geen marge).
                     Tekst die van het vel loopt, snijdt WeasyPrint stil af;
@@ -78,10 +80,21 @@ A4_TOLERANTIE_PT = 3.0
 LEIDRAAD_MARKER = "Zo leid je dit gesprek"
 LEIDRAAD_MIN_VERWIJZINGEN = 5
 
-# Marker van de meetgegevens: de label-tekst uit
-# backend/report_html.py::_responsbasis. Verandert die kop (taak 13), dan moet
-# deze marker mee, anders meldt dit script een overloop die er niet is.
-MEETGEGEVENS_MARKER = "Meetgegevens"
+# Markers van het meetgegevensblok (backend/report_html.py::_responsbasis):
+# de blokkop en het label van de laatste cel in de rij eronder. Elk moet op
+# pagina twee als een eigen regel van de tekstlaag staan, hoofdletterongevoelig
+# vergeleken. Waarom zo:
+#   - hoofdletterongevoelig, want `text-transform: uppercase` zet de tekstlaag in
+#     hoofdletters ("MEETGEGEVENS"); hoofdlettergevoelig meldde de regel op elke
+#     render een overloop die er niet was (stresstest na plan 3a, observatie 11);
+#   - als hele regel, want de leidraad op dezelfde pagina zegt "de meetgegevens
+#     op deze pagina"; een losse substring zou dan altijd slagen;
+#   - twee markers, want bij de meeste overlopen bleef de kop op pagina twee en
+#     schoof alleen de rij naar pagina drie (observatie 9). Alleen de kop meten
+#     zou die overloop missen.
+# Verandert een van beide labels, dan moet de marker mee; de test
+# test_de_markers_van_het_script_komen_uit_de_renderer bewaakt dat.
+MEETGEGEVENS_MARKERS = ("Meetgegevens", "Meetperiode")
 
 REGEL_P02 = "p02-op-een-a4"
 REGEL_VULLING = "paginavulling"
@@ -168,6 +181,11 @@ def buiten_de_zijmarge(page: pymupdf.Page) -> list[tuple[float, float, str]]:
             if w[4].strip() and (w[0] < links or w[2] > rechts)]
 
 
+def _regels(page: pymupdf.Page) -> set[str]:
+    """De regels van de tekstlaag, genormaliseerd en hoofdletterongevoelig."""
+    return {re.sub(r"\s+", " ", r).strip().casefold() for r in page.get_text().splitlines()}
+
+
 def _niet_a4(page: pymupdf.Page) -> bool:
     breedte, hoogte = page.rect.width, page.rect.height
     return (abs(breedte - A4_PT[0]) > A4_TOLERANTIE_PT
@@ -215,9 +233,12 @@ def _check_doc(doc: pymupdf.Document, thead: str | None,
     p3_eerste = first_text(doc[2])
 
     if REGEL_P02 in regels:
-        if MEETGEGEVENS_MARKER not in p2:
+        p2_regels = _regels(doc[1])
+        ontbreekt = [m for m in MEETGEGEVENS_MARKERS if m.casefold() not in p2_regels]
+        if ontbreekt:
             bevindingen.append(Bevinding(
-                REGEL_P02, "pagina 2 bevat de meetgegevens niet (loopt p.02 over?)"))
+                REGEL_P02, f"pagina 2 bevat het meetgegevensblok niet volledig "
+                           f"(ontbreekt als regel: {', '.join(ontbreekt)}); loopt p.02 over?"))
         if not re.match(r"^0?2\b", p3_eerste):
             bevindingen.append(Bevinding(
                 REGEL_P02, f"pagina 3 begint niet met hoofdstuk 02 maar met: {p3_eerste[:60]!r}"))
@@ -250,7 +271,11 @@ def _check_doc(doc: pymupdf.Document, thead: str | None,
                     f"{woorden[:60]!r}"))
 
     if thead and REGEL_THEAD in regels:
-        pages_with = [i + 1 for i in range(n) if thead in _pagina_tekst(doc[i])]
+        # Hoofdletterongevoelig: .item-tbl th en .raster-tbl th staan in
+        # `text-transform: uppercase`, dus de tekstlaag draagt de kop in
+        # hoofdletters (observatie 11).
+        kop = re.sub(r"\s+", " ", thead).strip().casefold()
+        pages_with = [i + 1 for i in range(n) if kop in _pagina_tekst(doc[i]).casefold()]
         if len(pages_with) < 2:
             bevindingen.append(Bevinding(
                 REGEL_THEAD,
