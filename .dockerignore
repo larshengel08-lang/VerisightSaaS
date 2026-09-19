@@ -1,0 +1,20 @@
+# Alleen backend/, templates/ en requirements.txt gaan het image in.
+.git
+.worktrees
+.venv
+.venv-314
+.superpowers
+.claude
+.gstack
+.tmp
+frontend
+docs
+tests
+scripts
+migrations
+node_modules
+**/__pycache__
+*.pyc
+.env
+.env.*
+*.pdf

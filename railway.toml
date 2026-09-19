@@ -1,8 +1,11 @@
 [build]
-builder = "nixpacks"
+# Dockerfile i.p.v. Nixpacks: zie de kop van het Dockerfile (WeasyPrint-libs).
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "uvicorn backend.main:app --host 0.0.0.0 --port $PORT"
+# Bij een Dockerfile voert Railway dit zonder shell uit; sh -c vult $PORT in.
+startCommand = "/bin/sh -c 'exec uvicorn backend.main:app --host 0.0.0.0 --port $PORT'"
 healthcheckPath = "/api/health"
 healthcheckTimeout = 30
 restartPolicyType = "on_failure"

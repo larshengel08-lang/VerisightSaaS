@@ -24,7 +24,7 @@ def _weasyprint_can_render() -> bool:
     i.p.v. vals te slagen tegen de legacy ReportLab-fallback (die sinds de
     Fail-Loud-fix niet meer stilzwijgend inspringt). Zie CLAUDE.md: lokale
     PDF-validatie op Windows via de WeasyPrint-Docker-image
-    (ghcr.io/weasyprint/weasyprint), productie via Railway/nixpacks-GTK.
+    (ghcr.io/weasyprint/weasyprint), productie via het Dockerfile (python:3.11-slim + apt-libs).
     """
     try:
         from weasyprint import HTML
