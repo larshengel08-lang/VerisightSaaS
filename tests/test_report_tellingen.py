@@ -23,6 +23,11 @@ from backend.report_html import (
 LOW_GROWTH = {f"growth_{i}": 1 for i in (1, 2, 3)} | {f"{fk}_{i}": 5 for fk in
               ("leadership", "culture", "compensation", "workload", "role_clarity") for i in (1, 2, 3)}
 
+REGEL = (" Duidelijk laag betekent hier: op de antwoordschaal van 1 tot 5 gemiddeld 2,5 of lager, "
+        "minstens twee stellingen op 2 of lager, of een 1 bij een gemiddelde van 3,5 of lager. "
+        "Dat is een andere regel dan ‘onder de 5’ (kwetsbaar) in de spreiding, dus de aantallen "
+        "kunnen verschillen.")
+
 ANON_LABEL = ("Automatisch geanonimiseerd: herkende namen, e-mailadressen, telefoonnummers "
               "en postcodes verwijderd")
 
@@ -264,11 +269,12 @@ def test_telling_zonder_noemer_is_een_fout():
 def test_deepening_chain_zonder_jargon_met_noemers():
     zin = _deepening_chain(AGG_D, "retention", "growth", n_total=39)
     assert zin == ("17 van de 39 respondenten kregen de verdiepende vraag over groeiperspectief "
-                   "(17 = wie hier laag scoorde); 16 van de 17 beantwoordden die, 1 sloeg over.")
+                   "(17 = wie hier duidelijk laag antwoordde); 16 van de 17 beantwoordden die, "
+                   "1 sloeg over." + REGEL)
     assert "verdieptrigger" not in zin
     onder_cap = dict(AGG_D, triggered=20, offered=17)
     zin = _deepening_chain(onder_cap, "retention", "growth", n_total=39)
-    assert zin.startswith("20 van de 39 respondenten scoorden hier laag; 17 van de 20 kregen de verdiepende "
+    assert zin.startswith("20 van de 39 respondenten antwoordden hier duidelijk laag; 17 van de 20 kregen de verdiepende "
                           "vraag (de andere 3 zaten al aan het maximum van drie verdiepingen)")
 
 
@@ -278,8 +284,8 @@ def test_deepening_chain_zonder_aanbod_verzint_geen_noemer():
     en zegt waarom niemand de vraag kreeg."""
     agg = dict(AGG_D, triggered=5, offered=0, answered=0, skipped=0)
     assert _deepening_chain(agg, "retention", "workload", n_total=39) == (
-        "5 van de 39 respondenten scoorden hier laag; niemand kreeg de verdiepende vraag "
-        "(zij zaten allemaal al aan het maximum van drie verdiepingen).")
+        "5 van de 39 respondenten antwoordden hier duidelijk laag; niemand kreeg de verdiepende vraag "
+        "(zij zaten allemaal al aan het maximum van drie verdiepingen)." + REGEL)
 
 
 def test_deepening_chain_meer_aangeboden_dan_getriggerd_liegt_niet():
@@ -289,8 +295,8 @@ def test_deepening_chain_meer_aangeboden_dan_getriggerd_liegt_niet():
     zin = _deepening_chain(dict(AGG_D, triggered=9, offered=17), "retention", "growth",
                            n_total=39)
     assert zin == ("17 van de 39 respondenten kregen de verdiepende vraag over groeiperspectief "
-                   "(17 = wie de vraag kreeg; met de drempel van nu scoren 9 respondenten hier laag); "
-                   "16 van de 17 beantwoordden die, 1 sloeg over.")
+                   "(17 = wie de vraag kreeg; met de regel van nu antwoorden 9 respondenten hier "
+                   "duidelijk laag); 16 van de 17 beantwoordden die, 1 sloeg over." + REGEL)
 
 
 def test_deepening_chain_meldt_een_niet_sluitende_status():
@@ -299,7 +305,7 @@ def test_deepening_chain_meldt_een_niet_sluitende_status():
     zin = _deepening_chain(dict(AGG_D, answered=12, skipped=1), "retention", "growth",
                            n_total=39)
     assert zin.endswith("12 van de 17 beantwoordden die, 1 sloeg over; van 4 antwoorden is "
-                        "niet vastgelegd of de vraag is beantwoord.")
+                        "niet vastgelegd of de vraag is beantwoord." + REGEL)
 
 
 def test_direction_chain_sluit_en_noemt_de_noemer():
@@ -650,7 +656,7 @@ def test_verdiepingsketen_noemt_de_drempel_zonder_van_hen():
     dus "9 van hen" was onjuist."""
     zin = _deepening_chain(dict(AGG_D, triggered=9, offered=17), "retention", "growth",
                            n_total=39)
-    assert "met de drempel van nu scoren 9 respondenten hier laag" in zin
+    assert "met de regel van nu antwoorden 9 respondenten hier duidelijk laag" in zin
     assert "van hen" not in zin
 
 
@@ -694,3 +700,31 @@ def test_methodiekcel_gebruikt_hetzelfde_anonimiseringslabel():
         t = _tekst(_trust_page(scan, direction_active=scan != "onboarding"))
         assert ANON_NOTE in t, scan
         assert "locaties" not in t, scan
+
+
+def test_keten_zegt_welke_regel_laag_is_en_leest_niet_als_onder_de_5():
+    """Eindreview plan 3a punt 1: in stresstest 08 stond "Kwetsbaar 7" in de
+    spreiding boven "(3 = wie hier laag scoorde)". Beide heetten laag, maar de
+    keten telt de triggerregel en de spreiding telt "onder de 5". De keten
+    noemt nu de regel zelf, met getallen uit de constanten die hem sturen."""
+    import backend.products.shared.deepening as dp
+    zin = _deepening_chain(AGG_D, "retention", "growth", n_total=39)
+    assert "laag scoorde" not in zin and "scoorden hier laag" not in zin
+    assert "duidelijk laag" in zin
+    assert "andere regel dan ‘onder de 5’" in zin
+    assert f"gemiddeld {str(dp.TRIGGER_AVG_MAX).replace('.', ',')} of lager" in zin
+    assert f"gemiddelde van {str(dp.TRIGGER_WITH_ONE_AVG_MAX).replace('.', ',')} of lager" in zin
+    assert f"stellingen op {dp.TRIGGER_LOW_ITEM_MAX} of lager" in zin
+
+
+def test_keten_leest_de_triggerregel_uit_de_constanten(monkeypatch):
+    import backend.report_html as rh
+    monkeypatch.setattr(rh, "TRIGGER_AVG_MAX", 2.0)
+    assert "gemiddeld 2,0 of lager" in rh._deepening_chain(AGG_D, "retention", "growth", n_total=39)
+
+
+def test_gerenderd_rapport_kent_geen_laag_scoorde_meer():
+    from tests.test_report_distribution import _min_retention_data
+    from backend.report_html import render_retention_report_html
+    t = _tekst(render_retention_report_html(_min_retention_data()).split("</style>")[-1])
+    assert "laag scoorde" not in t and "laag scoorden" not in t and "hier laag" not in t

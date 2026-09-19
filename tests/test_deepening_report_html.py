@@ -25,7 +25,7 @@ def test_block_hidden_below_5():
 def test_chain_sentence_always_present():
     """Elke stap met eigen noemer en zonder "verdieptrigger" (B14, H14)."""
     html = _deepening_block(_agg(8, 6, 4, 2, {"wl_recovery": 4}), "retention", "workload", N_TOTAL)
-    assert "8 van de 39 respondenten scoorden hier laag" in html
+    assert "8 van de 39 respondenten antwoordden hier duidelijk laag" in html
     assert "6 van de 8 kregen de verdiepende vraag" in html
     assert "4 van de 6 beantwoordden die, 2 sloegen over." in html
     assert "verdieptrigger" not in html
@@ -120,6 +120,6 @@ def test_campaign_gate_active_block_renders_for_capped_factor():
     assert _deepening_campaign_active(agg) is True
     html = _deepening_block(agg["workload"], "retention", "workload", N_TOTAL)
     # Geen "0 van de 0 beantwoordden die": wie de vraag niet kreeg, krijgt woorden.
-    assert "5 van de 39 respondenten scoorden hier laag" in html
+    assert "5 van de 39 respondenten antwoordden hier duidelijk laag" in html
     assert "niemand kreeg de verdiepende vraag" in html
     assert "0 van de 0" not in html

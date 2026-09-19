@@ -38,6 +38,10 @@ from backend.products.shared.deepening import (
     DIRECTION_MIN_N,
     DIRECTION_SCAN_TYPES,
     TOP_CHOICE_MIN_LEAD,
+    TRIGGER_AVG_MAX,
+    TRIGGER_LOW_ITEM_COUNT,
+    TRIGGER_LOW_ITEM_MAX,
+    TRIGGER_WITH_ONE_AVG_MAX,
     agenda_enrichment,
     aggregate_deepening,
     aggregate_direction,
@@ -1491,7 +1495,7 @@ SECTION_INTROS: dict[str, str] = {
         "en zijn geen vergelijking met andere organisaties."
     ),
     "verdieping": (
-        "Respondenten die laag scoorden op dit onderwerp kregen automatisch een korte vervolgvraag: "
+        "Respondenten die op dit onderwerp duidelijk laag antwoordden kregen automatisch een korte vervolgvraag: "
         "welke toelichting past het best bij hun ervaring? De aantallen hieronder zijn tellingen "
         "van wat respondenten zelf kozen, geen interpretatie achteraf. Zo zie je niet alleen "
         "d&aacute;t een onderwerp laag scoort, maar ook wat de groep zelf als reden aandraagt. "
@@ -2701,7 +2705,7 @@ def _telling(x: int, y: int) -> str:
     antwoorden suggereert een percentage precisie die er niet is).
 
     De uitleg van de noemer hoort in de zin en niet hier: die verschilt per
-    plaats (_dir_n_wie voor de richtingkaarten, "= wie hier laag scoorde" in de
+    plaats (_dir_n_wie voor de richtingkaarten, "= wie hier duidelijk laag antwoordde" in de
     verdiepingsketen). Een parameter die alleen bedoeld was als herinnering deed
     niets met zijn waarde en suggereerde dat hij in de output landde.
 
@@ -3058,7 +3062,7 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
         head = direction_imperative(scan_type, factor_key, st["top_key"])
         # Vaste tellingsvorm met uitleg van de noemer (B14): "de mensen bij wie
         # dit het laagst scoorde" is een andere selectie dan de respondenten en
-        # dan wie hier laag scoorde, en die drie stonden ongelabeld naast elkaar
+        # dan wie hier duidelijk laag antwoordde, en die drie stonden ongelabeld naast elkaar
         # (H2).
         # Niet twee haakjes achter elkaar ("(53%) (36 = ...)"): de uitleg van de
         # noemer staat als bijzin achter de telling.
@@ -3334,6 +3338,29 @@ def _anders_block(*, other_n: int, answered: int, texts: list[str]) -> str:
             f'<p class="anders-anon">{ANON_NOTE}</p>')
 
 
+def _komma(x: float) -> str:
+    """2.5 -> "2,5" voor een getal in lopende Nederlandse tekst."""
+    return f"{x:g}".replace(".", ",") if x != int(x) else f"{int(x)},0"
+
+
+def _trigger_regel() -> str:
+    """De triggerregel van de verdiepende vraag in gewone taal (eindreview plan
+    3a punt 1). De keten telde "wie hier laag scoorde" terwijl de spreiding
+    erboven "onder de 5" als kwetsbaar telt; in stresstest 08 stond "Kwetsbaar
+    7" boven "(3 = wie hier laag scoorde)". Het zijn twee regels: de
+    vervolgvraag volgt uit de ruwe antwoorden (schaal 1 tot 5) op de stellingen
+    van dat onderwerp, niet uit de score op tien. Iemand met 3, 3 en 2 zit
+    onder de 5 zonder vervolgvraag; iemand met 2, 2 en 5 krijgt hem boven de 5.
+    Daarom "duidelijk laag" met de regel erbij, en de getallen uit de
+    constanten die _is_triggered echt gebruikt."""
+    cnt = _TELWOORD.get(TRIGGER_LOW_ITEM_COUNT, str(TRIGGER_LOW_ITEM_COUNT))
+    return (f"Duidelijk laag betekent hier: op de antwoordschaal van 1 tot 5 gemiddeld "
+            f"{_komma(TRIGGER_AVG_MAX)} of lager, minstens {cnt} stellingen op "
+            f"{TRIGGER_LOW_ITEM_MAX} of lager, of een 1 bij een gemiddelde van "
+            f"{_komma(TRIGGER_WITH_ONE_AVG_MAX)} of lager. Dat is een andere regel dan "
+            f"‘onder de 5’ (kwetsbaar) in de spreiding, dus de aantallen kunnen verschillen.")
+
+
 def _deepening_chain(agg: dict, scan_type: str, factor_key: str, n_total: int) -> str:
     """Noemer-keten in de vaste tellingsvorm (B14, H2), zonder "verdieptrigger"
     (H14): laag gescoord -> aangeboden -> beantwoord/overgeslagen, elke stap met
@@ -3361,7 +3388,7 @@ def _deepening_chain(agg: dict, scan_type: str, factor_key: str, n_total: int) -
     staart = (("; " + ", ".join(parts)) if parts else "")
     if offered:
         staart += _statusrest(offered, answered, skipped)
-    staart += "."
+    staart += ". " + _trigger_regel()
     if offered > triggered:
         # Historische data: de triggerregels of de optieset zijn na deze meting
         # veranderd (aggregate_deepening tolereert dat bewust). De keten mag dan
@@ -3372,13 +3399,13 @@ def _deepening_chain(agg: dict, scan_type: str, factor_key: str, n_total: int) -
                 # Niet "van hen": triggered is over alle respondenten geteld, niet
                 # over de groep die de vraag kreeg.
                 + f" de verdiepende vraag over {lbl} ({offered} = wie de vraag kreeg; "
-                + f"met de drempel van nu scoren {triggered} respondenten hier laag)"
+                + f"met de regel van nu antwoorden {triggered} respondenten hier duidelijk laag)"
                 + staart)
     if offered < triggered:
         cap = DEEPENING_CAP[scan_type]
         cap_woord = _TELWOORD.get(cap, str(cap))
         opener = (f"{triggered} van de {_respondenten(n_total)} "
-                  + _werkwoord(triggered, "scoorde", "scoorden") + " hier laag; ")
+                  + _werkwoord(triggered, "antwoordde", "antwoordden") + " hier duidelijk laag; ")
         if not offered:
             return (f"{opener}niemand kreeg de verdiepende vraag (zij zaten allemaal al "
                     f"aan het maximum van {cap_woord} verdiepingen){staart}")
@@ -3391,7 +3418,7 @@ def _deepening_chain(agg: dict, scan_type: str, factor_key: str, n_total: int) -
     return (f"{triggered} van de {_respondenten(n_total)} "
             + _werkwoord(triggered, "kreeg", "kregen")
             + f" de verdiepende vraag over {lbl} "
-            + f"({triggered} = wie hier laag scoorde){staart}")
+            + f"({triggered} = wie hier duidelijk laag antwoordde){staart}")
 
 
 # Vanaf hoeveel beantwoorde verdiepingsvragen toont een onderwerp de verdeling

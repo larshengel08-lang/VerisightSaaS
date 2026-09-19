@@ -634,7 +634,7 @@ def test_onboarding_report_drops_verdieping_intro_retention_keeps_it():
     from backend.report_html import render_onboarding_report_html, render_retention_report_html
     from tests.test_report_distribution import _min_retention_data
 
-    opening_clause = "Respondenten die laag scoorden op dit onderwerp kregen automatisch"
+    opening_clause = "Respondenten die op dit onderwerp duidelijk laag antwoordden kregen automatisch"
 
     onboarding_html = render_onboarding_report_html(_min_onboarding_data())
     assert opening_clause not in onboarding_html

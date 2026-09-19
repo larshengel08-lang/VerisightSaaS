@@ -640,15 +640,26 @@ def _factor_items(org_raw: dict[str, int], factor_key: str) -> list[int]:
             if k.startswith(f"{factor_key}_") and isinstance(v, int)]
 
 
+# De triggerregel voor de verdiepende vraag, per respondent op de ruwe
+# antwoorden (schaal 1 tot 5) van de stellingen van één factor. Benoemde
+# constanten omdat het rapport de regel in gewone taal uitlegt
+# (_trigger_regel in report_html.py, eindreview plan 3a punt 1): een klantzin
+# met eigen getallen kon stil afwijken van de regel die echt draait.
+TRIGGER_AVG_MAX = 2.5            # gemiddeld zo laag of lager
+TRIGGER_WITH_ONE_AVG_MAX = 3.5   # of: een 1 bij een gemiddelde tot en met dit
+TRIGGER_LOW_ITEM_MAX = 2         # of: minstens TRIGGER_LOW_ITEM_COUNT stellingen
+TRIGGER_LOW_ITEM_COUNT = 2       #     op TRIGGER_LOW_ITEM_MAX of lager
+
+
 def _is_triggered(items: list[int]) -> bool:
     if not items:
         return False
     avg = sum(items) / len(items)
-    if avg <= 2.5:
+    if avg <= TRIGGER_AVG_MAX:
         return True
-    if min(items) == 1 and avg <= 3.5:
+    if min(items) == 1 and avg <= TRIGGER_WITH_ONE_AVG_MAX:
         return True
-    if sum(1 for v in items if v <= 2) >= 2:
+    if sum(1 for v in items if v <= TRIGGER_LOW_ITEM_MAX) >= TRIGGER_LOW_ITEM_COUNT:
         return True
     return False
 

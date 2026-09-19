@@ -127,6 +127,15 @@ def test_enrichment_none_when_no_answers():
 
 # ── _deepening_chain enkelvoud/meervoud (B16) en vaste tellingsvorm (B14) ────
 
+# De triggerregel in gewone taal staat achter elke keten (eindreview plan 3a
+# punt 1): "laag" betekende in de keten iets anders dan "onder de 5" in de
+# spreiding erboven.
+REGEL = (" Duidelijk laag betekent hier: op de antwoordschaal van 1 tot 5 gemiddeld 2,5 of lager, "
+        "minstens twee stellingen op 2 of lager, of een 1 bij een gemiddelde van 3,5 of lager. "
+        "Dat is een andere regel dan ‘onder de 5’ (kwetsbaar) in de spreiding, dus de aantallen "
+        "kunnen verschillen.")
+
+
 def _chain_agg(triggered, offered, answered, skipped=None):
     """skipped sluit de keten standaard (aggregate_deepening: elke aangeboden
     verdieping is beantwoord of overgeslagen), zodat deze tests over vervoeging
@@ -139,32 +148,32 @@ def test_deepening_chain_all_singular():
     text = _deepening_chain(_chain_agg(1, 1, 1), "retention", "compensation", 1)
     assert text == (
         "1 van de 1 respondent kreeg de verdiepende vraag over beloning en "
-        "eerlijkheid (1 = wie hier laag scoorde); die ene beantwoordde hem."
-    )
+        "eerlijkheid (1 = wie hier duidelijk laag antwoordde); die ene beantwoordde hem."
+    ) + REGEL
 
 
 def test_deepening_chain_triggered_plural_rest_singular():
     text = _deepening_chain(_chain_agg(2, 1, 1), "retention", "compensation", 12)
     assert text == (
-        "2 van de 12 respondenten scoorden hier laag; 1 van de 2 kreeg de "
+        "2 van de 12 respondenten antwoordden hier duidelijk laag; 1 van de 2 kreeg de "
         "verdiepende vraag (de andere 1 zat al aan het maximum van drie "
         "verdiepingen); die ene beantwoordde hem."
-    )
+    ) + REGEL
 
 
 def test_deepening_chain_answered_singular_rest_plural():
     text = _deepening_chain(_chain_agg(3, 3, 1), "retention", "compensation", 12)
     assert text == (
         "3 van de 12 respondenten kregen de verdiepende vraag over beloning en "
-        "eerlijkheid (3 = wie hier laag scoorde); 1 van de 3 beantwoordde die, "
+        "eerlijkheid (3 = wie hier duidelijk laag antwoordde); 1 van de 3 beantwoordde die, "
         "2 sloegen over."
-    )
+    ) + REGEL
 
 
 def test_deepening_chain_all_plural():
     text = _deepening_chain(_chain_agg(3, 3, 2), "retention", "compensation", 12)
     assert text == (
         "3 van de 12 respondenten kregen de verdiepende vraag over beloning en "
-        "eerlijkheid (3 = wie hier laag scoorde); 2 van de 3 beantwoordden die, "
+        "eerlijkheid (3 = wie hier duidelijk laag antwoordde); 2 van de 3 beantwoordden die, "
         "1 sloeg over."
-    )
+    ) + REGEL
