@@ -1315,6 +1315,17 @@ fixture, de vertrekcontext op 38%). De voorbeeld-HTML's en -PDF's zijn niet geco
 
 ---
 
+### Fixronde 3: eindreview (19 september 2026)
+
+Na de eindreview van de hele branch (HEAD `7977254a`). Vijf fixes: de verdiepingsketen noemt zijn eigen regel ("duidelijk laag", een andere regel dan "onder de 5"; drempels als constanten in `deepening.py`), het anonimiseringslabel zegt precies wat `anonymize_text` weghaalt (geen "locaties"), de 10-rij in de drempeltabel is gesplitst naar de constante die de gate echt stuurt (`MIN_AGGREGATE_N` voor het profiel, `MIN_DISTRIBUTION_N` voor spreiding en afdelingen), eNPS met echt minteken en overal "critici", en de brugzin zegt niet meer "tweede punt" (botste met de agendakaart).
+
+`check_pdf_report.py` op een WeasyPrint-Docker-render: **alle 21 scenario's OK** (01 en 19 waren na fixronde 2 nog NIET OK), voorbeeld Loep Behoud en Loep Start OK, voorbeeld Loep Vertrek NIET OK op precies één bevinding: de appendixstaart (p.13, 36%). Die is binnen de regels niet eerlijk op te lossen (appendix 1,32 vel; op de ondergrens van 8,5px 1,20 vel, nog steeds een staart onder de 40%) en ligt als besluit bij Lars. Alle renders exit 0, 0 warnings, 0 em-dashes in de tekstlaag.
+
+**Eindscore (21 rijen): Q1 19✓/2~/0✗ · Q2 19✓/2~/0✗ · Q3 10✓/10~/1✗ · Q4 21✓/0~/0✗ · Q5 19✓/2~/0✗ · Q6 17✓/3~/1✗.**
+Was (na ronde 2): Q1 19✓/2~/0✗ · Q2 19✓/2~/0✗ · Q3 10✓/9~/2✗ · Q4 0✓/0~/21✗ · Q5 12✓/7~/2✗ · Q6 16✓/3~/2✗.
+
+B9 is daarmee op de scenario's gefixt; de rij "B9 niet gefixt" in "Wat er per bevinding veranderde" beschrijft de stand na deel B, vóór de fixrondes.
+
 ## Reproduceren
 
 ```bash
