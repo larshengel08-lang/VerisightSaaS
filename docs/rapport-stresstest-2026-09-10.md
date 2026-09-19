@@ -850,15 +850,13 @@ Branch `feature/rapport-3a`. In scope: spec 2026-09-16 onderdelen 1, 2, 6 en 7 (
 B14, B20, ronde-2-punten a/b/c, de leesronde-gaten B1, B2, H1 t/m H5, H8 t/m H10, H13
 t/m H20, C2, C3, C6 t/m C13) plus de responsnoemer uit spec 11-9 par. 4.6.
 
-**Stand van deze sectie: deel A, zonder PDF-render.** De Docker-engine draaide niet op
-het moment van deze beoordeling, dus WeasyPrint kon geen PDF maken; lokaal kan WeasyPrint
-niet renderen (geen GTK) en `playwright` staat niet in het venv, dus ook de Chromium-proxy
-uit het harnas (`--pdf`) was niet beschikbaar. Alle eenentwintig scenario's en de drie
-voorbeeldrapporten zijn als HTML gegenereerd met de code van plan 3a en per sectie
-gelezen. Wat alleen op een gerenderde pagina te zien is, staat hieronder expliciet als
-**nog niet gemeten: wacht op WeasyPrint-render**. Dat geldt voor de hele kolom Q4, voor
-B9, voor de herhaalde tabelkop van punt (c) en voor de paginaverwijzingen: die worden
-door WeasyPrint ingevuld (`target-counter`) en staan in de HTML nog leeg ("pagina .").
+**Stand van deze sectie: deel A (HTML, 18-19 september) plus deel B (WeasyPrint-render, 19
+september, HEAD `e614482e`).** Deel A beoordeelde alle eenentwintig scenario's en de drie
+voorbeelden als HTML, omdat de Docker-engine toen niet draaide. Deel B heeft alle
+vierentwintig via WeasyPrint-Docker gerenderd en daarop de kolom Q4, B9, punt (c), de
+paginaverwijzingen, de em-dashes in de tekstlaag en de paginatelling gemeten, en de Q5-cellen
+van 08 en 20 opnieuw gescoord na de nafixes van `b5792422`. De eis van het plan, zes keer
+`check_pdf_report.py` OK, is niet gehaald (zie "Verificatie van de ronde").
 
 De harness zet sinds deze ronde een vaste meetperiode (start 9 maart 2026 uit het delivery
 record, sluiting 30 maart 2026 op de campagne) en het aantal uitgenodigden als
@@ -870,31 +868,31 @@ voorbeeldrapporten tonen "9 maart 2026 tot 3 april 2026".
 
 | # | Scenario | n | Q1 antwoord p2 | Q2 startpunt | Q3 wat moet gebeuren | Q4 holle pagina's | Q5 tegenspraak | Q6 overclaim |
 |---|----------|---|----|----|----|----|----|----|
-| 01 | Vlak middelmatig | 45 | ✓ | ✓ | ✓ | nog niet gemeten: wacht op WeasyPrint-render | **✓** | ✓ |
-| 02 | Eén lage factor | 45 | ✓ | ✓ | ~ | nog niet gemeten: wacht op WeasyPrint-render | ✓ | ✓ |
-| 03 | Twee near-ties | 45 | ✓ | ✓ | ✓ | nog niet gemeten: wacht op WeasyPrint-render | ✓ | ✓ |
-| 04 | Alles hoog | 45 | ✓ | ✓ | ✓ | nog niet gemeten: wacht op WeasyPrint-render | **~** | ✓ |
-| 05 | Alles laag, crisis | 45 | ✓ | ✓ | ✓ | nog niet gemeten: wacht op WeasyPrint-render | **✓** | ✓ |
-| 06 | Eén afdeling laag | 45 | ✓ | ✓ | ~ | nog niet gemeten: wacht op WeasyPrint-render | ✓ | ~ |
-| 07 | Vertrek, onder drempel | 8 | ~ | ~ | ~ | nog niet gemeten: wacht op WeasyPrint-render | ~ | ✗ |
-| 08 | Vertrek, net boven | 12 | ✓ | ✓ | ~ | nog niet gemeten: wacht op WeasyPrint-render | ~ | **✓** |
-| 09 | Gemengde afdelingen | 25 | ✓ | ✓ | ✓ | nog niet gemeten: wacht op WeasyPrint-render | **✓** | ✓ |
-| 10 | Twaalf kleine afdelingen | 90 | ✓ | ✓ | ~ | nog niet gemeten: wacht op WeasyPrint-render | ✓ | **~** |
-| 11 | Grote populatie | 180 | ✓ | ✓ | ✓ | nog niet gemeten: wacht op WeasyPrint-render | ✓ | ✓ |
-| 12 | 60% overslag verdieping | 45 | ✓ | ✓ | ~ | nog niet gemeten: wacht op WeasyPrint-render | ✓ | ✓ |
-| 13 | 40% "niets nodig" | 45 | ✓ | ✓ | ✓ | nog niet gemeten: wacht op WeasyPrint-render | **✓** | ✓ |
-| 14 | 35% "Anders" | 45 | ✓ | ✓ | **~** | nog niet gemeten: wacht op WeasyPrint-render | **✓** | **✓** |
-| 15 | Richting verdeeld | 45 | ✓ | ✓ | ~ | nog niet gemeten: wacht op WeasyPrint-render | ✓ | ✓ |
-| 16 | Respons 30% | 45 | ✓ | ✓ | ✓ | nog niet gemeten: wacht op WeasyPrint-render | **✓** | ✓ |
-| 16b | Respons 25% | 45 | ✓ | ✓ | ✓ | nog niet gemeten: wacht op WeasyPrint-render | **✓** | ✓ |
-| 17 | Respons 90% | 45 | ✓ | ✓ | ✓ | nog niet gemeten: wacht op WeasyPrint-render | ✓ | ✓ |
-| 18 | Vlak + n=12 | 12 | ~ | ~ | ~ | nog niet gemeten: wacht op WeasyPrint-render | ✓ | ~ |
-| 19 | Vlak + 40% niets nodig | 45 | ✓ | ✓ | ~ | nog niet gemeten: wacht op WeasyPrint-render | ✓ | ✓ |
-| 20 | Loep Start sanity | 30 | ✓ | ✓ | ✗ | nog niet gemeten: wacht op WeasyPrint-render | **~** | ✓ |
+| 01 | Vlak middelmatig | 45 | ✓ | ✓ | ✓ | ✗ p3 9% (p.02 loopt over), p8 37%, p10 39%, p12 10% | **✓** | ✓ |
+| 02 | Eén lage factor | 45 | ✓ | ✓ | ~ | ✗ p11 7% | ✓ | ✓ |
+| 03 | Twee near-ties | 45 | ✓ | ✓ | ✓ | ✗ p3 9% (p.02 loopt over), p9 37%, p13 7% | ✓ | ✓ |
+| 04 | Alles hoog | 45 | ✓ | ✓ | ✓ | ✗ p7 27%, p11 7% | **~** | ✓ |
+| 05 | Alles laag, crisis | 45 | ✓ | ✓ | ✓ | ✗ p12 10% | **✓** | ✓ |
+| 06 | Eén afdeling laag | 45 | ✓ | ✓ | ~ | ✗ p3 9% (p.02 loopt over), p13 7% | ✓ | ~ |
+| 07 | Vertrek, onder drempel | 8 | ~ | ~ | ~ | ✗ p4 10%, p5 12% | ~ | ✗ |
+| 08 | Vertrek, net boven | 12 | ✓ | ✓ | ~ | ✗ p3 15% (p.02 loopt over) | **✓** | **✓** |
+| 09 | Gemengde afdelingen | 25 | ✓ | ✓ | ✓ | ✗ p3 10% (p.02 loopt over), p8 27% | **✓** | ✓ |
+| 10 | Twaalf kleine afdelingen | 90 | ✓ | ✓ | ~ | ✗ p12 7% | ✓ | **~** |
+| 11 | Grote populatie | 180 | ✓ | ✓ | ✓ | **~ p17 30%** | ✓ | ✓ |
+| 12 | 60% overslag verdieping | 45 | ✓ | ✓ | ~ | ✗ p11 7% | ✓ | ✓ |
+| 13 | 40% "niets nodig" | 45 | ✓ | ✓ | ✓ | ✗ p11 7%, p15 32% | **✓** | ✓ |
+| 14 | 35% "Anders" | 45 | ✓ | ✓ | **~** | ✗ p11 7%, p15 30% | **✓** | **✓** |
+| 15 | Richting verdeeld | 45 | ✓ | ✓ | ~ | ✗ p11 7%, p15 1% | ✓ | ✓ |
+| 16 | Respons 30% | 45 | ✓ | ✓ | ✓ | ✗ p3 11% (p.02 loopt over), p13 7% | **✓** | ✓ |
+| 16b | Respons 25% | 45 | ✓ | ✓ | ✓ | ✗ p12 7% | **✓** | ✓ |
+| 17 | Respons 90% | 45 | ✓ | ✓ | ✓ | ✗ p3 9% (p.02 loopt over), p13 7% | ✓ | ✓ |
+| 18 | Vlak + n=12 | 12 | ~ | ~ | ~ | **~ p7 35%** | ✓ | ~ |
+| 19 | Vlak + 40% niets nodig | 45 | ✓ | ✓ | ~ | ✗ p3 9% (p.02 loopt over), p8 37%, p12 7% | ✓ | ✓ |
+| 20 | Loep Start sanity | 30 | ✓ | ✓ | ✗ | ✗ p6 30%, p12 32% | ✓ | ✓ |
 
-Gewijzigde cellen vet (dertien; drie daarvan gaan omlaag, zie hieronder).
+Gewijzigde cellen ten opzichte van ronde 2 vet (vijftien; twee daarvan gaan omlaag, zie hieronder). In de kolom Q4 staan per scenario de doorlooppagina's onder `MIN_FILL` (40%) met hun vulling, gemeten met `scripts/check_pdf_report.py` op een WeasyPrint-Docker-render van alle eenentwintig (niet de Chromium-benadering uit het plan: die was er niet, en Docker draaide).
 
-Score (21 rijen): Q1 19✓/2~/0✗ · Q2 19✓/2~/0✗ · Q3 10✓/10~/1✗ · Q4 nog niet gemeten: wacht op WeasyPrint-render · Q5 17✓/4~/0✗ · Q6 17✓/3~/1✗.
+Score (21 rijen): Q1 19✓/2~/0✗ · Q2 19✓/2~/0✗ · Q3 10✓/10~/1✗ · Q4 0✓/2~/19✗ · Q5 19✓/2~/0✗ · Q6 17✓/3~/1✗.
 Was (na ronde 2): Q1 19✓/2~/0✗ · Q2 19✓/2~/0✗ · Q3 10✓/9~/2✗ · Q4 0✓/0~/21✗ · Q5 12✓/7~/2✗ · Q6 16✓/3~/2✗.
 
 Beoordelingsregel, dezelfde als in ronde 1 en 2: een cel gaat omhoog alleen als de
@@ -918,7 +916,8 @@ automatisch een korte vervolgvraag ... De aantallen hieronder zijn tellingen", e
 staat bij geen van de drie een telling, want niemand kreeg een verdieping. 20 op Q5: pagina
 twee zegt "Twee onderwerpen delen de laagste score (5.3/10)", de gespreksagenda noemt
 Rolhelderheid en verwachtingen eerste 90 dagen "Tweede laagste score in het
-overzichtsprofiel". 10 op Q6: zie observatie 2 hieronder.
+overzichtsprofiel". 10 op Q6: zie observatie 2 hieronder. (20 op Q5 staat inmiddels weer
+op ✓, zie deel B hieronder; daarmee gaan per saldo twee cellen omlaag.)
 
 **Blijft staan.** 06 op Q6 blijft ~: punt (a) is op pagina twee gefixt, maar dezelfde vorm
 staat nog op het overzichtsprofiel (observatie 1). 07 op Q5 en Q6 blijft door B20 (zie de
@@ -928,6 +927,36 @@ punt, verschil 0,32; beide remmen bewust net niet geraakt). Q3 bewoog verder nie
 bevatte geen onderdeel voor werkvragen per startpunt (spec onderdeel 3), dus de tildes op
 02, 06, 07, 08, 10, 12, 15, 18 en 19 staan nog om dezelfde redenen, en 20 blijft ✗ tot de
 v1.1-set van Loep Start.
+
+**Deel B, na de WeasyPrint-render (19 september 2026).** Q5 van 08 en 20 zijn opnieuw
+gescoord op de render van HEAD `e614482e`, dus met de nafixes uit `b5792422`. 08 gaat naar
+✓: de telling die observatie 3 droeg klopt nu overal ("Staat hoger dan Groeiperspectief omdat
+dit vaker als hoofdreden van vertrek is genoemd (4 keer tegen 1)", en de vertrekcontext toont
+"Beter aanbod elders 4×, Leiderschap / management 4×, Persoonlijke omstandigheid 2×, Gebrek
+aan groei 1×, Beloning 1×"). Wat nog staat is observatie 7(a), het enkelvoud "De meest
+genoemde hoofdreden" bij een gelijkspel; dat is een formulering, geen tegenstrijdige
+telling, en draagt de cel niet. 20 gaat terug naar ✓: de gespreksagenda zegt nu
+"Rolhelderheid en verwachtingen eerste 90 dagen (5.3/10) Deelt de laagste score (5.3/10) met
+Informatiedichtheid en werktempo." 06 op Q6 blijft ~, maar niet meer om observatie 1 (die is
+opgelost): de brugzin "Bij Operations springt Groeiperspectief eruit (4.0/10)" in een
+afdeling waar alle zes onderwerpen kwetsbaar scoren (observatie 7d) houdt hem op ~.
+
+Q4 is gescoord met één vaste regel, strenger dan "het lijkt wel mee te vallen": ✓ als
+`check_pdf_report.py` geen doorlooppagina (cover en laatste pagina uitgezonderd) onder
+`MIN_FILL` (40%) vindt; ~ als er precies één is en die minstens 25% gevuld is; ✗ bij twee of
+meer, of bij één pagina onder de 25% (een vrijwel lege pagina). Dezelfde lat als ronde 2,
+waar zes tot negen halflege pagina's per rapport ✗ gaven. Uitkomst: 0✓/2~/19✗. Alleen 11
+(p17, de gespreksopener-vervolgpagina op 30%) en 18 (p7, verdieping groeiperspectief op
+35%) komen boven ✗ uit, en beide steunen deels op de kapotte werkbelevingspagina (observatie
+8): een pagina waarvan de rechterkolom van het vel valt, telt de gemeten vulling niet eerlijk.
+De ✗'en hebben vier bronnen, alle vier in elk van de drie producten terug te zien: (1) pagina
+twee loopt over in tien van de vierentwintig renders, zodat pagina 3 alleen de rij
+meetgegevens draagt (9 tot 15%, observatie 9); (2) de segmentconclusie "Waar het per
+afdeling begint" valt als los blok op een eigen pagina (7 tot 10%) in vijftien scenario's
+(observatie 10); (3) de vervolgpagina van de gespreksagenda (30 tot 32%, in 15 zelfs één
+regel op 1%); (4) verdiepingspagina's van 27 tot 37% en, bij Loep Start, twee pagina's rond
+30%. In 07 staan overzichtsprofiel en verdieping elk als één zin op een eigen pagina (10 en
+12%).
 
 ### De kop van pagina twee, per scenario
 
@@ -965,21 +994,21 @@ gelijkspel tussen vertrekredenen (08).
 
 | # | Status | Bewijs |
 |---|---|---|
-| B9 | **nog niet gemeten: wacht op WeasyPrint-render** | De vullingen per pagina komen uit `scripts/check_pdf_report.py` op 06, 11, 18 en de drie voorbeelden; die meting vraagt een PDF. Wat de HTML al laat zien: in 07 zijn het overzichtsprofiel en het verdiepingshoofdstuk elk één zin in een eigen sectie met `break-before: page`, dus twee pagina's met één zin; en in 02, 04, 09, 13, 14 en 15 staan verdiepingssubsecties zonder toelichtingsblok (zie observatie 5). |
+| B9 | **niet gefixt** | WeasyPrint-Docker, `check_pdf_report.py`: NIET OK op alle zes verplichte bestanden en op alle vierentwintig renders. Vulling per pagina: 06 `1:102 2:92 3:9 4:84 5:54 6:47 7:67 8:54 9:50 10:62 11:41 12:93 13:7 14:64 15:84 16:85 17:86 18:49 19:96 20:17`; 11 `... 10:41 ... 17:30 ... 21:17`, één pagina onder de 40%; 18 `... 7:35 ... 14:17`, één pagina onder de 40%; voorbeeld Loep Vertrek p3 11%, p15 36%; Loep Behoud p3 9%, p11 39%; Loep Start p6 34%, p12 32%. Ten opzichte van ronde 2 (zes tot negen pagina's onder de helft) is het aantal holle pagina's gedaald naar één tot vier per rapport, maar geen enkel rapport haalt de regel. Zie de Q4-regel en observaties 8 tot en met 10. |
 | B13 | **gefixt** | Scenario 14, verdiepingspagina: "7 van de 18 kozen ‘Anders’ en schreven een eigen toelichting: de vaste opties dekten hun ervaring niet.", met de zeven teksten en het anonimiseringslabel eronder. Op de gespreksagenda hetzelfde voor de richting: "9 van de 30 kozen ‘Anders’ en schreven een eigen toelichting". De drempeltabel noemt de 2 (blok verschijnt) en de 5 (teksten getoond). De harness vult elke Anders-toelichting met dezelfde placeholder, dus de lijst toont zeven keer dezelfde zin; dat is de testdata, niet het rapport. |
 | B14 | **gefixt** | Scenario 01, verdieping: "2 van de 45 respondenten kregen de verdiepende vraag over groeiperspectief (2 = wie hier laag scoorde); 1 van de 2 beantwoordde die, 1 sloeg over." Richting, zelfde onderwerp: "11 van de 45 respondenten hadden dit als eigen laagste onderwerp; 11 van de 11 beantwoordden de vraag." De totaalregel sluit: "Van de 45 respondenten kregen 45 de vraag, 41 beantwoordden hem, 4 sloegen over. 11 hadden groeiperspectief als laagste onderwerp, 7 beloning en eerlijkheid; de overige 27 een ander onderwerp (leiderschap en vertrouwen 12, werkdruk en herstelruimte 8, cultuur en psychologische veiligheid 6, rolhelderheid en eigenaarschap 1)." Scenario 05: "38 van de 45 respondenten scoorden hier laag; 35 van de 38 kregen de verdiepende vraag (de andere 3 zaten al aan het maximum van drie verdiepingen); 30 van de 35 beantwoordden die, 5 sloegen over." tegenover "17 van de 45 respondenten hadden dit als eigen laagste onderwerp; 15 van de 17 beantwoordden de vraag, 2 sloegen over." Twee definities, elk ter plekke uitgelegd, en elke persoon is terug te vinden. |
 | B20 | **deels** | Scenario 07: de drempeltabel staat op de methodiekpagina (3 richting, 5 afdeling, 5 open toelichtingen, 10 "profiel per onderwerp, spreiding, en een afdeling als startpunt", met "Onder de tien antwoorden bepaalt één persoon te veel het gemiddelde"). Maar twee pagina's eerder staan de drie basisbehoeften met bandlabel (Autonomie 6.1/10 · Aandachtspunt) en twaalf stellinggemiddelden, plus een eNPS van -50, allemaal over dezelfde acht vertrekkers. De tabel noemt werkbeleving en eNPS niet, dus waarom daar geen drempel geldt staat nergens. Houdt 07 op Q5 ~ en Q6 ✗. |
 | punt (a) | **gefixt op pagina twee, niet op het overzichtsprofiel** | Scenario 06, kop: "laagste score 6.2/10, gedeeld door drie onderwerpen: Beloning en eerlijkheid, Cultuur en psychologische veiligheid, Werkdruk en herstelruimte". De bronregel: "De scores lagen vrijwel gelijk; de spreiding tussen respondenten gaf de doorslag." Het overzichtsprofiel zegt in hetzelfde rapport nog "Geen onderwerp scoort kritisch. De laagste score zit bij Cultuur en psychologische veiligheid." (observatie 1). |
 | punt (b) | **gefixt** | Scenario 08, kop: "Twee redenen zijn even vaak genoemd (4 van de 12 elk): Beter aanbod elders en Leiderschap / management." Cel Vertrekreden: "even vaak genoemd, 4 van de 12 elk"; onderbouwingscel: "Als vertrekreden genoemd · Even vaak · dit onderwerp hangt samen met een van de meest genoemde vertrekredenen". Scenario 07 (2 om 2) idem. |
-| punt (c) | **deels gemeten** | De ranglijst en de afdelingstabel dragen hun kolomkoppen in een `<thead>` (vier in scenario 06). Of WeasyPrint de kop herhaalt bij een geforceerde paginabreuk: **nog niet gemeten: wacht op WeasyPrint-render** (06 geforceerd, kop op pagina x en y). |
+| punt (c) | **gefixt** | 06 geforceerd (in een kopie van de HTML een `break-before: page` op de derde rijgroep van de ranglijst en van de afdelingstabel), WeasyPrint-Docker exit 0: de kop "Onderwerp Score Spreiding Verdieping Agenda" staat op pagina 15 en 16, "Afdeling Ingevuld / uitgenodigd Score Band ..." op pagina 12 en 13. `check_pdf_report.py --regel tabelkop` geeft OK, maar alleen met de kop in hoofdletters: de tekstlaag draagt de kop zoals `text-transform` hem toont, en de regel vergelijkt hoofdlettergevoelig (observatie 11). Idem voor de drempeltabel op de methodiekpagina, geforceerd bij de derde rij: kop "Vanaf Waar het geldt Waarom" op pagina 19 en 20. |
 | H8 | **gefixt** | Alle eenentwintig: "Meetperiode 9 maart 2026 tot 30 maart 2026" op pagina twee, met Uitgenodigd, Ingevuld en Respons ernaast. |
 
 ### Wat de beoordeling nog opleverde
 
 Geen van deze punten is in deze taak opgelost; ze zijn input voor de eindbeoordeling.
-Na deel A zijn observatie 1, 3 en 4 alsnog opgelost (per punt gemarkeerd, met commit). De
-matrix hierboven is daarvoor niet opnieuw gescoord: de Q5-cellen van 08 en 20 volgen bij de
-eindbeoordeling.
+Na deel A zijn observatie 1, 3 en 4 alsnog opgelost (per punt gemarkeerd, met commit); de
+Q5-cellen van 08 en 20 zijn daarop in deel B opnieuw gescoord. Observatie 8 tot en met 12
+komen uit de WeasyPrint-render van deel B.
 
 **Observatie 1. Het overzichtsprofiel noemt één laagste onderwerp bij een gelijkstand, en
 gebruikt een ander bandwoord.** De samenvattingszin op het overzichtsprofiel rekent nog op
@@ -1073,22 +1102,88 @@ groepsbeeld" kijkt alleen naar het percentage en staat ook bij 12 antwoorden (08
 (d) De brugzin van 06 zegt "Bij Operations springt Groeiperspectief eruit (4.0/10)" in een
 afdeling waar alle zes onderwerpen tussen 4.0 en 4.9 kwetsbaar scoren.
 
+**Observatie 8. De werkbelevingspagina valt rechts van het vel (blokkerend, ook in de
+publieke voorbeelden).** Gevonden op de WeasyPrint-render, niet zichtbaar in de HTML. De
+twee kolommen van de werkbeleving (`.tcol.wb-cols`, taak 8, `9755eedd`) zijn een
+`display: table` zonder vaste tabelopmaak; de overzichtskaart met de drie balken in de
+linkerkolom is breder dan de helft, dus de linkercel groeit en duwt de rechterkolom
+(Competentie en Verbondenheid) over de paginarand. Die tekst wordt afgesneden: de tekstlaag
+van het voorbeeld Loep Behoud eindigt op pagina 10 bij "Competentie 6.4/10 · Aandachtsp" en
+"Mate van ervaren bekwaamheid en effect", en pagina 11 is een halve kolom Verbondenheid die
+van het vel loopt. Het treft twintig van de eenentwintig scenario's (alle Loep Behoud en
+Loep Vertrek; Loep Start rendert deze kolommen niet) en de voorbeelden Loep Vertrek en Loep
+Behoud. Dat is stil weggevallen tekst, dus een Fail-Loud-punt, en het maakt de gemeten
+vulling van die pagina's onbetrouwbaar. Niet opgelost in deze taak: `table-layout: fixed`
+op `.tcol.wb-cols` (geprobeerd op een kopie) houdt de kolommen binnen het vel, maar dan
+loopt de balkenkaart met score en bandlabel over de rechterkolom heen. Een echte oplossing
+zet de overzichtskaart over de volle breedte boven de twee kolommen; dat is een wijziging in
+`_werkbeleving_section` met een nieuwe paginaverdeling, geen kleine CSS-correctie.
+
+**Observatie 9. Pagina twee loopt over in tien van de vierentwintig renders.** 01, 03, 06,
+08, 09, 16, 17, 19 en de voorbeelden Loep Vertrek en Loep Behoud: pagina 3 draagt dan alleen
+de rij meetgegevens (Uitgenodigd, Ingevuld, Respons, Meetperiode) op 9 tot 15%, en hoofdstuk
+02 begint pas op pagina 4. In 08 schuift het hele blok met zijn label mee (ongeveer 110pt
+tekort); in de andere negen alleen de rij (ongeveer 65pt). Het zijn de rapporten met een
+langere kop (vlak profiel met gelijkstand, aandachtspunten erbij, vertrekredenen) of een
+extra afdelingsregel onder de gespreksopener. H16 ("p.02 op één A4") is daarmee op de echte
+render niet gehaald, en het publieke voorbeeld Loep Behoud toont een vrijwel lege pagina 3.
+Geen kleine CSS-fix: het tekort varieert met de lengte van de kop, dus een oplossing moet
+de pagina structureel inkorten of de meetgegevens hoger zetten.
+
+**Observatie 10. De segmentconclusie staat alleen op een pagina.** In vijftien scenario's
+(01 tot en met 06, 10, 12 tot en met 17 met 16b, en 19) opent een pagina met "Waar het per
+afdeling begint" en houdt daar op: het navy-blok met de conclusie per afdeling (7 tot 10%).
+Het blok past niet meer onder de afdelingstabel en gaat als geheel naar het volgende vel.
+Dit is hetzelfde patroon als "Segmentconclusie los, 9%" uit B9 in ronde 1, nu in meer
+scenario's omdat het blok langer is geworden (reden bij geen aanwijsbare afdeling).
+
+**Observatie 11. `scripts/check_pdf_report.py` meet twee regels hoofdlettergevoelig tegen
+een tekstlaag in hoofdletters.** De marker "Meetgegevens" en de kolomkoppen staan in de PDF
+zoals `text-transform: uppercase` ze toont ("MEETGEGEVENS", "ONDERWERP SCORE ..."). De regel
+`p02-op-een-a4` meldt daardoor op alle vierentwintig renders "pagina 2 bevat de meetgegevens
+niet", ook in de veertien waar pagina 3 wel met hoofdstuk 02 begint. Hoofdletterongevoelig
+maken lost het niet op: pagina twee bevat altijd "de meetgegevens op deze pagina" (in de
+leidraad), dus de markercontrole zou dan altijd slagen. Alleen de tweede helft van de regel
+(pagina 3 begint met 02) meet de overloop echt; die is hierboven gebruikt. De regel
+`tabelkop` slaagt alleen als `--thead` in hoofdletters wordt meegegeven. Niet aangepast in
+deze taak: de opdracht stond alleen een kleine CSS-fix toe.
+
+**Observatie 12. De WeasyPrint-tests, gedraaid tegen Docker.** Lokaal slaan ze over (geen
+GTK). Via een tijdelijke shim in de scratchpad die `weasyprint.HTML(...).write_pdf()` naar de
+Docker-image stuurt (niet in de repo): 6 geslaagd (de appendix verliest geen rijen bij de
+kolomsplitsing, en de vijf PDF-routes in `test_api_flows.py`), 5 gefaald.
+`test_de_pdf_vult_de_verwijzingen_met_echte_paginanummers` faalt omdat de fixture
+`_min_retention_data()` geen leidraad meer oplevert (acht pagina's, "Zo leid je dit gesprek"
+staat niet in de HTML): een verouderde fixture, geen fout in de PDF.
+`test_de_echte_pdf_zet_de_meetgegevens_op_pagina_twee` faalt alleen op de marker van
+observatie 11. `test_pdf_heeft_geen_pagina_onder_veertig_procent` faalt voor alle drie de
+producten: exit pagina 3 op 38% ("02 Wat speelde mee bij vertrek?") en pagina 8 op 30%
+(gespreksopener), retention pagina 9 op 30% (gespreksopener), onboarding alleen op de marker.
+Deze tests staan niet in de baseline-faalset omdat ze lokaal overslaan; op Railway (met GTK)
+zouden ze falen.
+
 ### Verificatie van de ronde
 
-Backend 25 failed / 1358 passed / 11 skipped, faalset identiek aan
+Backend 25 failed / 1370 passed / 11 skipped op HEAD `e614482e`, faalset identiek aan
 `docs/superpowers/plans/plan3a-baseline-failset.txt` (diff leeg). Python 3.11-guard en
 taalguard groen (80 passed). Nul treffers op "verdieptrigger", "Bestuurlijke read",
 "interventieprescriptie" en "begeleide managementbespreking" in de drie gegenereerde
-voorbeeld-HTML's, en nul treffers op die woorden plus "managementread" en "responsbasis" in
-de zichtbare tekst van alle vierentwintig rapporten. Nul em-dashes in de zichtbare tekst
-(de zeven in elke HTML staan in CSS-commentaar).
+voorbeeld-HTML's.
 
-**Nog open, wacht op WeasyPrint-render:** zes keer exit 0 en nul warnings (drie
-voorbeelden, 06, 11, 18), `check_pdf_report.py` OK op alle zes, paginavulling (B9, kolom
-Q4), de paginaverwijzingen op pagina twee (minstens vijf), de herhaalde tabelkop bij een
-geforceerde breuk (punt c), em-dashes in de PDF-tekstlaag en de paginatelling per product.
-De voorbeeld-HTML's en -PDF's zijn in deze stap niet gecommit: ze gaan samen in één commit
-zodra de PDF-render kan.
+WeasyPrint-Docker (`ghcr.io/weasyprint/weasyprint`, Docker 29.4.0) op alle vierentwintig
+renders, dus meer dan de zes die het plan vraagt: vierentwintig keer exit 0, nul warnings.
+Tekstlaag: nul em-dashes in alle vierentwintig. Paginaverwijzingen op pagina twee: zes gevuld
+in elk rapport met een factorprofiel (minimaal vijf gevraagd), nul in 07 (geen leidraad, zoals
+bedoeld); geen enkele leeggelopen verwijzing. Pagina's: Loep Vertrek 17 (voorbeeld), 14 (08),
+9 (07); Loep Behoud 19 (voorbeeld), 14 tot 21 over de scenario's; Loep Start 13 (voorbeeld en
+20).
+
+`scripts/check_pdf_report.py`: **NIET OK op alle zes verplichte bestanden** (de drie
+voorbeelden, 06, 11, 18) en op alle vierentwintig. Zie de Q4-kolom, B9 en observaties 8 tot
+en met 11. Daarom zijn de voorbeeld-HTML's en -PDF's in deze taak niet gecommit: het plan
+koppelt die commit aan zes keer OK, en de huidige render zou een vrijwel lege pagina 3
+(Loep Vertrek, Loep Behoud) en een afgesneden werkbelevingspagina naar de publieke
+voorbeelden brengen.
 
 ---
 
