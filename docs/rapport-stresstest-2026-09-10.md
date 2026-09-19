@@ -977,6 +977,9 @@ gelijkspel tussen vertrekredenen (08).
 ### Wat de beoordeling nog opleverde
 
 Geen van deze punten is in deze taak opgelost; ze zijn input voor de eindbeoordeling.
+Na deel A zijn observatie 1, 3 en 4 alsnog opgelost (per punt gemarkeerd, met commit). De
+matrix hierboven is daarvoor niet opnieuw gescoord: de Q5-cellen van 08 en 20 volgen bij de
+eindbeoordeling.
 
 **Observatie 1. Het overzichtsprofiel noemt één laagste onderwerp bij een gelijkstand, en
 gebruikt een ander bandwoord.** De samenvattingszin op het overzichtsprofiel rekent nog op
@@ -987,6 +990,15 @@ herstelruimte" zegt. In 01, 09, 19 en 20 noemt dezelfde zin alleen het startpunt
 gelijkstand weg die pagina twee wel noemt. De zin begint in tien rapporten met "Geen
 onderwerp scoort kritisch", terwijl het rapport overal elders "kwetsbaar" gebruikt (C8).
 Bestond al vóór plan 3a.
+**Opgelost in `b5792422`.** De zin gebruikt nu dezelfde bron als de kop van pagina twee
+(`_p02_laagste_keys`) en dezelfde vorm. Scenario 06: "Geen onderwerp scoort kwetsbaar. Drie
+onderwerpen delen de laagste score (6.2/10): Beloning en eerlijkheid, Cultuur en
+psychologische veiligheid, Werkdruk en herstelruimte.", in dezelfde volgorde als de kop
+("laagste score 6.2/10, gedeeld door drie onderwerpen: Beloning en eerlijkheid, Cultuur en
+psychologische veiligheid, Werkdruk en herstelruimte"). 01, 09 en 19 noemen nu hun twee
+gelijke onderwerpen, 20 ook (zie observatie 4); 10, 11, 16b en 18 houden één onderwerp
+("Groeiperspectief scoort het laagst."). "kritisch" staat nergens meer en de source-guard
+bewaakt het als los woord.
 
 **Observatie 2. De kop zonder kwetsbaar onderwerp heeft geen rem bij een klein verschil.**
 De tak "Geen onderwerp scoort kwetsbaar. X scoort het laagst en is het eerste gesprekspunt"
@@ -1010,11 +1022,31 @@ geen van beide top-drielijsten staat, dus de lezer kan dat getal nergens terugvi
 Scenario 08: "Organisatiecultuur 3×" onder "Speelde ook mee" tegenover 0 in de kolom bij
 Cultuur en veiligheid. Houdt 08 op Q5 op ~. Staat in het voorbeeldrapport dat prospects
 downloaden.
+**Opgelost in `b5792422`.** Het label zegt nu wat er geteld wordt: kolom "Als hoofdreden
+genoemd", kernzin "Gebrek aan groei is de meest genoemde hoofdreden van vertrek (14 van de
+35).", cel "Hoofdreden van vertrek", verdiepingskaart "14× als hoofdreden van vertrek
+genoemd; die telling staat ook in de vertrekcontext.", markeringsregel (08) "Staat hoger dan
+Groeiperspectief omdat dit vaker als hoofdreden van vertrek is genoemd (4 keer tegen 1).", en
+de rasterintro "hoe vaak een onderwerp als hoofdreden van vertrek is genoemd". De
+vertrekcontext toont beide lijsten nu volledig (tot vijf, zoals `build_report_data` ze
+levert) in plaats van een top 3, zodat elke telling terug te vinden is. Voorbeeldrapport:
+"Hoofdredenen van vertrek: Gebrek aan groei 14×, Persoonlijke omstandigheid 6×, Leiderschap /
+management 6×, Werkdruk / stress 5×, Beter aanbod elders 4×" en "Speelde ook mee:
+Leiderschap / management 19×, Beloning 18×, Rolonduidelijkheid 11×, Gebrek aan groei 10×"
+(die 10 staat op pagina twee onder "Speelt ook mee" en ontbrak eerst in de lijst). Scenario
+08: "Beter aanbod elders 4×, Leiderschap / management 4×, Persoonlijke omstandigheid 2×,
+Gebrek aan groei 1×, Beloning 1×". De weging is niet veranderd: de ranglijstvolgorde is in
+alle 21 scenario's gelijk gebleven. WeasyPrint: de vertrekcontext blijft in het voorbeeld en
+in 08 één pagina, 0 warnings. Niet opgelost: de kaart "Relatie met het overzichtsprofiel"
+(observatie 7a).
 
 **Observatie 4. Loep Start noemt een gedeelde laagste "tweede laagste".** Scenario 20,
 gespreksagenda: "Rolhelderheid en verwachtingen eerste 90 dagen (5.3/10) Tweede laagste
 score in het overzichtsprofiel", terwijl pagina twee zegt dat beide 5.3 delen. Zet 20 op Q5
 op ~. Bestond al vóór plan 3a.
+**Opgelost in `b5792422`.** Scenario 20, gespreksagenda: "Rolhelderheid en verwachtingen
+eerste 90 dagen (5.3/10) Deelt de laagste score (5.3/10) met Informatiedichtheid en
+werktempo." Zonder gelijkstand blijft "Tweede laagste score in het overzichtsprofiel.".
 
 **Observatie 5. Verdiepingssubsecties zonder toelichtingsblok, zonder reden.** Een
 onderwerp dat via de ranglijst in het verdiepingshoofdstuk komt maar waar niemand een
