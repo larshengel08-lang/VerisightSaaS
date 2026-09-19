@@ -103,8 +103,8 @@ def test_intro_en_uitleg_staan_gerenderd_in_alle_vier_de_combinaties():
                 assert raster_uitleg(scan, deep, bool(direction)) in html
                 assert raster_intro(scan, deep, bool(direction)) in html
     # De exit-variant noemt het vertrekredengewicht, de retention-variant niet.
-    assert "vertrekreden" in raster_uitleg("exit", True, True)
-    assert "vertrekreden" not in raster_uitleg("retention", True, True)
+    assert "hoofdreden van vertrek" in raster_uitleg("exit", True, True)
+    assert "hoofdreden" not in raster_uitleg("retention", True, True)
 
 
 def test_uitlegregel_noemt_alleen_de_drempels_die_meespeelden():
@@ -257,13 +257,13 @@ def test_exit_krijgt_een_vertrekredenkolom():
               _row("growth", "Groeiperspectief", 4.5, role="tweede", exit_reason_n=4)]
     resp = {r["key"]: [4.0] * 13 for r in ranked}
     html_exit = _render(scan_type="exit", ranked=ranked, resp=resp)
-    assert '<th style="width:13%">Als vertrekreden genoemd</th>' in html_exit
+    assert '<th style="width:13%">Als hoofdreden genoemd</th>' in html_exit
     # De telling staat in de vertrekredencel zelf, niet ergens anders op de pagina.
     assert '<td class="r-mono">9</td>' in html_exit
     assert '<td class="r-mono">4</td>' in html_exit
     # Loep Behoud kent geen vertrekredenen en krijgt de kolom dus niet.
     html_ret = _render(scan_type="retention", ranked=ranked, resp=resp)
-    assert "Als vertrekreden genoemd" not in html_ret
+    assert "Als hoofdreden genoemd" not in html_ret
 
 
 def test_uitlegregel_noemt_de_richtingvraag_als_eerste_tiebreak():
@@ -307,11 +307,11 @@ def test_exit_intro_noemt_de_vertrekredenkolom():
     # belooft de intro minder dan de pagina toont.
     intro = raster_intro("exit", True, True)
     assert "vijf signalen" in intro
-    assert "hoe vaak een onderwerp als vertrekreden is genoemd" in intro
+    assert "hoe vaak een onderwerp als hoofdreden van vertrek is genoemd" in intro
     assert "De eerste vier staan in de tabel." in intro
     assert intro in _render("exit", direction=DIRECTION)
     # Loep Behoud kent geen vertrekredenen en noemt ze dus ook niet.
-    assert "vertrekreden" not in raster_intro("retention", True, True)
+    assert "hoofdreden" not in raster_intro("retention", True, True)
 
 
 def test_gate_notitie_volgt_de_richtinggate():

@@ -74,8 +74,11 @@ VERBODEN = [r"bestuurlijke read", r"responsbasis", r"verdieptrigger",
             r"segment", r"\bitems?\b", r"patroonduiding", r"claimgrenzen",
             r"begeleide managementbespreking",
             # Codereview taak 13: jargon dat na de eerste sweep nog stond.
-            r"\(sdt\)", r"responses", r"verdieping opent zodra", r"onderwerpbeeld",
-            r"bespreek dit onderwerp in de bespreking zelf"]
+            r"\(sdt\)", r"\bresponses\b", r"verdieping opent zodra", r"onderwerpbeeld",
+            r"bespreek dit onderwerp in de bespreking zelf",
+            # Nafixes plan 3a: het bandwoord is "kwetsbaar". Als los woord, zodat
+            # de richtingoptie "kritische vragen" (andere betekenis) blijft mogen.
+            r"\bkritisch\b"]
 
 
 def _zichtbaar(html: str) -> str:

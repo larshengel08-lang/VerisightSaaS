@@ -67,7 +67,7 @@ def test_exit_reason_weight_flip_names_vertrekredenen():
                  reasons={"workload": 2})
     assert rows[0]["key"] == "workload"
     line = _raster_attribution(rows, "exit")
-    assert "vertrekreden" in line
+    assert "hoofdreden van vertrek" in line
     assert "laagst scorende factor" not in line
 
 

@@ -489,7 +489,7 @@ def test_staart_hangt_aan_de_claim_en_niet_aan_de_vertrekredentelling():
     data["exit_r_dist"] = [{"code": "PL1", "label": "Beter aanbod elders", "count": 9}]
     tekst = _tekst(render_exit_report_html(data))
     assert ("Als startpunt kiest Loep Groeiperspectief (op basis van 45 van de 150 "
-            "genodigden). Beter aanbod elders is de meest genoemde vertrekreden (9 van de 45).") in tekst
+            "genodigden). Beter aanbod elders is de meest genoemde hoofdreden van vertrek (9 van de 45).") in tekst
 
 
 def test_ook_een_rapport_zonder_factorprofiel_draagt_zijn_responsbasis():

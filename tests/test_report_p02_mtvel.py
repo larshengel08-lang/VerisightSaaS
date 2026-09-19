@@ -103,12 +103,12 @@ TIE = [{"code": "PL1", "label": "Beter aanbod elders", "count": 4},
 
 def test_vertrekreden_zin_met_noemer():
     assert _vertrekreden_zin(DIST, 12) == (
-        "Beter aanbod elders is de meest genoemde vertrekreden (4 van de 12).")
+        "Beter aanbod elders is de meest genoemde hoofdreden van vertrek (4 van de 12).")
 
 
 def test_vertrekreden_zin_benoemt_gelijkspel():
     assert _vertrekreden_zin(TIE, 12) == (
-        "Twee redenen zijn even vaak genoemd (4 van de 12 elk): Beter aanbod elders en Leiderschap / management.")
+        "Twee redenen zijn even vaak als hoofdreden genoemd (4 van de 12 elk): Beter aanbod elders en Leiderschap / management.")
 
 
 def test_vertrekreden_zin_leeg_zonder_redenen():
@@ -174,11 +174,11 @@ def test_retention_render_sterk_profiel_kwetsbare_blijfintentie_zegt_geen_ook():
 
 def test_vertrekreden_noemer_alleen_wie_een_reden_gaf():
     assert _vertrekreden_zin(DIST, 12, gegeven=10) == (
-        "Beter aanbod elders is de meest genoemde vertrekreden (4 van de 10 die een reden gaven).")
+        "Beter aanbod elders is de meest genoemde hoofdreden van vertrek (4 van de 10 die een reden gaven).")
     assert _vertrekreden_zin(DIST, 12, gegeven=12) == (
-        "Beter aanbod elders is de meest genoemde vertrekreden (4 van de 12).")
+        "Beter aanbod elders is de meest genoemde hoofdreden van vertrek (4 van de 12).")
     assert _vertrekreden_zin(TIE, 12, gegeven=10) == (
-        "Twee redenen zijn even vaak genoemd (elk 4 van de 10 die een reden gaven): "
+        "Twee redenen zijn even vaak als hoofdreden genoemd (elk 4 van de 10 die een reden gaven): "
         "Beter aanbod elders en Leiderschap / management.")
     assert "4 van de 10 die een reden gaven" in _tekst(_vertrekreden_cell(DIST, 12, gegeven=10))
 
@@ -189,9 +189,9 @@ def _zes_bij_twee(k: int = 6):
 
 def test_vertrekreden_gelijkspel_van_zes_en_boven_telwoord():
     assert _vertrekreden_zin(_zes_bij_twee(6), 12).startswith(
-        "Zes redenen zijn even vaak genoemd (2 van de 12 elk): Reden 1, Reden 2,")
+        "Zes redenen zijn even vaak als hoofdreden genoemd (2 van de 12 elk): Reden 1, Reden 2,")
     assert _vertrekreden_zin(_zes_bij_twee(7), 14).startswith(
-        "7 redenen zijn even vaak genoemd (2 van de 14 elk):")
+        "7 redenen zijn even vaak als hoofdreden genoemd (2 van de 14 elk):")
 
 
 def test_exit_renderer_gebruikt_volledige_top_en_gegeven_noemer():
@@ -204,7 +204,7 @@ def test_exit_renderer_gebruikt_volledige_top_en_gegeven_noemer():
     data["exit_r_top"] = _zes_bij_twee(6)
     data["exit_r_given"] = 12
     tekst = _tekst(render_exit_report_html(data))
-    assert "Zes redenen zijn even vaak genoemd (2 van de 12 elk)" in tekst
+    assert "Zes redenen zijn even vaak als hoofdreden genoemd (2 van de 12 elk)" in tekst
     assert "Reden 6" in tekst
 
 
@@ -352,7 +352,7 @@ def test_hoofdreden_enkel_top_maakt_alleen_de_koppeling_zonder_getal():
     cel = _tekst(_hoofdreden_cell(er_n=30, er_top=_TOPS_ENKEL, gegeven=None, n=45,
                                   tf_code="P1", color="#000"))
     assert "Hoofdreden" in cel
-    assert "dit onderwerp hangt samen met de meest genoemde vertrekreden" in cel
+    assert "dit onderwerp hangt samen met de meest genoemde hoofdreden van vertrek" in cel
     assert not any(ch.isdigit() for ch in cel)
     assert "—" not in cel
 
@@ -360,8 +360,8 @@ def test_hoofdreden_enkel_top_maakt_alleen_de_koppeling_zonder_getal():
 def test_hoofdreden_gelijkspel_met_startpunt_maakt_alleen_de_koppeling():
     cel = _tekst(_hoofdreden_cell(er_n=4, er_top=_TOPS_GELIJK, gegeven=None, n=12,
                                   tf_code="P4", color="#000"))
-    assert "Als vertrekreden genoemd" in cel
-    assert "een van de meest genoemde vertrekredenen" in cel
+    assert "Als hoofdreden genoemd" in cel
+    assert "een van de meest genoemde hoofdredenen van vertrek" in cel
     assert not any(ch.isdigit() for ch in cel)
 
 
@@ -369,13 +369,13 @@ def test_hoofdreden_vaker_tak_spreekt_zichzelf_niet_tegen():
     cel = _tekst(_hoofdreden_cell(er_n=26, er_top=_TOPS_ENKEL, gegeven=None, n=45,
                                   tf_code="P4", color="#000"))
     assert "Hoofdreden" not in cel
-    assert cel == ("Als vertrekreden genoemd 26&times; van de 45 vertrekkers; "
-                   "Beter aanbod elders is vaker genoemd (30 keer)")
+    assert cel == ("Als hoofdreden genoemd 26&times; van de 45 vertrekkers; "
+                   "Beter aanbod elders is vaker als hoofdreden genoemd (30 keer)")
     # Noemer volgt wie een reden gaf, zoals blok 2.
     cel = _tekst(_hoofdreden_cell(er_n=3, er_top=_TOPS_GELIJK, gegeven=10, n=12,
                                   tf_code="P7", color="#000"))
     assert ("3&times; van de 10 vertrekkers die een reden gaven; Beter aanbod elders en "
-            "Leiderschap / management zijn vaker genoemd (4 keer)") in cel
+            "Leiderschap / management zijn vaker als hoofdreden genoemd (4 keer)") in cel
     assert _hoofdreden_cell(er_n=0, er_top=_TOPS_ENKEL, gegeven=None, n=45,
                             tf_code="P4", color="#000") == ""
 

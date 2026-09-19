@@ -184,7 +184,7 @@ def test_exit_renderer_laat_de_cel_niet_wegvallen_buiten_de_top_vijf():
     d["exit_r_counts"] = {c: 2 for c in _ZES_GELIJK}
     tekst = _tekst(render_exit_report_html(d))
     assert "Even vaak" in tekst
-    assert "een van de meest genoemde vertrekredenen" in tekst
+    assert "een van de meest genoemde hoofdredenen van vertrek" in tekst
 
 
 def test_loep_start_cover_en_pagina_twee_noemen_hetzelfde_startpunt():

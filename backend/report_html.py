@@ -762,10 +762,10 @@ def _hoofdreden_cell(*, er_n: int, er_top: list[dict], gegeven: int | None, n: i
     if tf_code in {r["code"] for r in tops}:
         if len(tops) == 1:
             lbl, v, body = ("Hoofdreden", "Meest genoemd",
-                            "dit onderwerp hangt samen met de meest genoemde vertrekreden")
+                            "dit onderwerp hangt samen met de meest genoemde hoofdreden van vertrek")
         else:
-            lbl, v, body = ("Als vertrekreden genoemd", "Even vaak",
-                            "dit onderwerp hangt samen met een van de meest genoemde vertrekredenen")
+            lbl, v, body = ("Als hoofdreden genoemd", "Even vaak",
+                            "dit onderwerp hangt samen met een van de meest genoemde hoofdredenen van vertrek")
         return (f'<td class="why-cell"><div class="why-l">{lbl}</div>'
                 f'<div class="why-v" style="color:{color};font-size:14px;">{v}</div>'
                 f'<div class="why-b">{_h(body)}</div></td>')
@@ -773,8 +773,8 @@ def _hoofdreden_cell(*, er_n: int, er_top: list[dict], gegeven: int | None, n: i
               if (gegeven is not None and gegeven < n) else f"van de {n} vertrekkers")
     werkwoord = "is" if len(tops) == 1 else "zijn"
     body = (f"{noemer}; {_opsomming([r['label'] for r in tops])} {werkwoord} "
-            f"vaker genoemd ({top_cnt} keer)")
-    return (f'<td class="why-cell"><div class="why-l">Als vertrekreden genoemd</div>'
+            f"vaker als hoofdreden genoemd ({top_cnt} keer)")
+    return (f'<td class="why-cell"><div class="why-l">Als hoofdreden genoemd</div>'
             f'<div class="why-v" style="color:{color};">{er_n}&times;</div>'
             f'<div class="why-b">{_h(body)}</div></td>')
 
@@ -1028,15 +1028,15 @@ def _vertrekreden_delen(exit_r_top: list[dict], n: int,
     if len(tops) == 1:
         telling = deel + (" die een reden gaven" if gedeeltelijk else "")
         return {"label": labels[0],
-                "zin": labels[0] + f" is de meest genoemde vertrekreden ({telling}).",
-                "cel": f"meest genoemde vertrekreden, {telling}"}
+                "zin": labels[0] + f" is de meest genoemde hoofdreden van vertrek ({telling}).",
+                "cel": f"meest genoemde hoofdreden van vertrek, {telling}"}
     telling = (f"elk {deel} die een reden gaven" if gedeeltelijk else f"{deel} elk")
     aantal = _TELWOORD.get(len(tops), str(len(tops)))
     namen = _opsomming(labels)
     return {"label": namen,
-            "zin": (f"{aantal[0].upper()}{aantal[1:]} redenen zijn even vaak genoemd "
+            "zin": (f"{aantal[0].upper()}{aantal[1:]} redenen zijn even vaak als hoofdreden genoemd "
                     f"({telling}): {namen}."),
-            "cel": f"even vaak genoemd, {telling}"}
+            "cel": f"even vaak als hoofdreden genoemd, {telling}"}
 
 
 def _vertrekreden_zin(exit_r_top: list[dict], n: int, *, gegeven: int | None = None) -> str:
@@ -1050,7 +1050,7 @@ def _vertrekreden_cell(exit_r_top: list[dict], n: int, *, gegeven: int | None = 
     delen = _vertrekreden_delen(exit_r_top, n, gegeven)
     if not delen:
         return ""
-    return (f'<td><div class="sc-l">Vertrekreden</div>'
+    return (f'<td><div class="sc-l">Hoofdreden van vertrek</div>'
             f'<div class="sc-v" style="font-size:14px;">{_h(delen["label"])}</div>'
             f'<div class="sc-b">{_h(delen["cel"])}</div></td>')
 
@@ -2221,7 +2221,7 @@ def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: st
 # varianten. Die worden hier samengesteld uit bouwstenen in plaats van als acht
 # losse constanten onderhouden.
 _SIGNAL_SCORE = "de gemiddelde score"
-_SIGNAL_EXIT_REASON = "hoe vaak een onderwerp als vertrekreden is genoemd"
+_SIGNAL_EXIT_REASON = "hoe vaak een onderwerp als hoofdreden van vertrek is genoemd"
 _SIGNAL_SPREAD = "de spreiding tussen respondenten"
 _SIGNAL_DEEPENING = "wat respondenten in de verdieping als toelichting kozen"
 _SIGNAL_DIRECTION = "hoeveel mensen bij een onderwerp om verandering vragen"
@@ -2296,7 +2296,7 @@ def raster_uitleg(scan_type: str, deepening_active: bool,
     contract-test pint de volledige string als substring van de HTML-output en
     een anker erin zou daar letterlijk in belanden."""
     marge = str(PRIORITY_TIE_MARGIN).replace(".", ",")
-    reden = (", waarbij ook meeweegt hoe vaak een onderwerp als vertrekreden is genoemd"
+    reden = (", waarbij ook meeweegt hoe vaak een onderwerp als hoofdreden van vertrek is genoemd"
              if scan_type == "exit" else "")
     # "of", niet "en": de sleutel past ze na elkaar toe, allebei tegelijk hoeft niet.
     terugval = ("geeft een grote spreiding of een gedeelde toelichting uit de "
@@ -2431,7 +2431,7 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
         return ""
 
     is_exit = scan_type == "exit"
-    reason_th = '<th style="width:13%">Als vertrekreden genoemd</th>' if is_exit else ""
+    reason_th = '<th style="width:13%">Als hoofdreden genoemd</th>' if is_exit else ""
     # Kolombreedtes: Loep Vertrek heeft een kolom extra, dus smaller factor-,
     # spreidings- en verdiepingsveld. De spreidings-SVG is 200px breed en past
     # in beide. Loep Behoud houdt exact de breedtes van voor deze wijziging.
@@ -2587,7 +2587,7 @@ def _raster_attribution(rows: list[dict], scan_type: str) -> str:
         # De vertrekreden-weging (EXIT_REASON_WEIGHT) zette dit thema bovenaan
         # terwijl een andere factor de laagste kale score heeft.
         return ("Gebaseerd op de score en hoe vaak dit onderwerp als "
-                "vertrekreden is genoemd.")
+                "hoofdreden van vertrek is genoemd.")
     return _bron_laagste_score(top["score"], [(r["label"], r["score"]) for r in rows[1:]])
 
 
@@ -4815,25 +4815,51 @@ def _factor_bar_row(label: str, score: float | None) -> str:
             f'<div class="fbar-label" style="color:{col};">{_h(interp)}</div></div>')
 
 
-def _overzicht_summary_and_bands(profile_factors: list[tuple[str, float | None]]) -> tuple[str, dict[str, list[str]]]:
+def _overzicht_summary_and_bands(profile_factors: list[tuple[str, float | None]],
+                                 *, laagste: list[str]) -> tuple[str, dict[str, list[str]]]:
     """Bouwt de samenvattingszin + band-indeling voor het overzichtsprofiel.
 
     Sorteert eerst op score: voorheen werd de eerste factor in kolomvolgorde
     genoemd ("Leiderschap vraagt als eerste aandacht") terwijl de rest van het
-    rapport de laagst scorende factor vooropzet — het rapport sprak zichzelf tegen.
+    rapport de laagst scorende factor vooropzet: het rapport sprak zichzelf tegen.
+
+    laagste: de labels van ALLE onderwerpen die de laagste getoonde score delen,
+    in de volgorde van de kop op pagina twee. De renderers leveren die uit
+    _p02_laagste_keys(profile_shape(fa)), dezelfde bron als de kop, zodat beide
+    zinnen dezelfde gelijkstand noemen in dezelfde vorm (telwoord, dubbele punt,
+    komma's; zie _p02_flat_sentence). Verplicht en zonder default: een stille
+    terugval op "het eerste onderwerp" was precies de fout (stresstest na plan
+    3a, observatie 1: scenario 06 noemde één van drie onderwerpen op 6.2).
+    Het bandwoord is "kwetsbaar", zoals overal in het rapport, niet "kritisch".
     """
     ranked = sorted([(l, s) for l, s in profile_factors if s is not None], key=lambda x: x[1])
     # Indeling via _factor_label: zelfde (afgeronde) drempels als de balken (B15).
     kwetsbaar = [l for l, s in ranked if _factor_label(s) == "Kwetsbaar punt"]
     aandacht  = [l for l, s in ranked if _factor_label(s) == "Aandachtspunt"]
     sterk     = [l for l, s in ranked if _factor_label(s) == "Relatief sterk"]
-    if kwetsbaar and sterk:
-        summary = (f"{kwetsbaar[0]} is het {'enige' if len(kwetsbaar) == 1 else 'duidelijkste'} "
-                   f"kwetsbare punt. {sterk[-1]} vormt een relatief sterke basis.")
+    laag_sc = ranked[0][1] if ranked else None
+    if ranked and len(laagste) == len(ranked) and len(ranked) > 1:
+        laagste_zin = (f"{_alle_onderwerpen(len(ranked)).capitalize()} scoren "
+                       f"{_score_str(_shown(laag_sc))}.")
+    elif len(laagste) > 1:
+        bijv = "kwetsbare " if kwetsbaar else ""
+        laagste_zin = (f"{_TELWOORD[len(laagste)].capitalize()} {bijv}onderwerpen "
+                       f"delen de laagste score ({_score_str(_shown(laag_sc))}): "
+                       f"{', '.join(laagste)}.")
     elif kwetsbaar:
-        summary = f"{kwetsbaar[0]} is het duidelijkste kwetsbare punt; geen enkel onderwerp scoort relatief sterk."
+        laagste_zin = (f"{kwetsbaar[0]} is het "
+                       f"{'enige' if len(kwetsbaar) == 1 else 'duidelijkste'} "
+                       f"kwetsbare punt.")
+    elif laagste:
+        laagste_zin = f"{laagste[0]} scoort het laagst."
+    else:
+        laagste_zin = ""
+    if kwetsbaar and sterk:
+        summary = f"{laagste_zin} {sterk[-1]} vormt een relatief sterke basis."
+    elif kwetsbaar:
+        summary = laagste_zin[:-1] + "; geen enkel onderwerp scoort relatief sterk."
     elif aandacht:
-        summary = f"Geen onderwerp scoort kritisch. De laagste score zit bij {aandacht[0]}."
+        summary = f"Geen onderwerp scoort kwetsbaar. {laagste_zin}"
     elif sterk:
         summary = "Het profiel toont een overwegend relatief sterk beeld."
     else:
@@ -4910,11 +4936,19 @@ def _vertrekcontext(*, exit_reasons: list[tuple[str, int]],
     "Relatie met het overzichtsprofiel" noemt "de factoren die bovenaan de
     rangorde staan" en "de factordiepte hierna". De redenen zelf blijven staan
     -- die komen rechtstreeks uit de antwoorden en zijn er wel."""
+    # Hoofdredenen: alle rijen die build_report_data levert (exit_r_dist, de top
+    # 5). Daar komt ook de telling in de ranglijstkolom "Als hoofdreden genoemd"
+    # en op de verdiepingskaarten vandaan, dus elk getal dat de lezer daar ziet,
+    # staat hier terug te vinden. Met alleen de top 3 stond er "Werkdruk en
+    # balans 5x" in de ranglijst terwijl Werkdruk hier ontbrak (stresstest na
+    # plan 3a, observatie 3). Hetzelfde geldt voor de meespelende redenen: de
+    # why-cel "Speelt ook mee" op pagina twee telt uit cont_dist (ook een top
+    # 5), dus ook die lijst staat hier volledig.
     def _reason_rows(items: list[tuple[str, int]]) -> str:
         return "".join(
             f'<tr><td class="iq">{_h(lbl)}</td>'
             f'<td class="is">{cnt}&times;</td></tr>'
-            for lbl, cnt in items[:3]
+            for lbl, cnt in items
         ) or '<tr><td class="iq" style="color:#94A3B8;">Geen reden geregistreerd</td><td class="is"></td></tr>'
 
     rel = ""
@@ -4930,13 +4964,13 @@ def _vertrekcontext(*, exit_reasons: list[tuple[str, int]],
         # blijft staan voor toekomstige copy-wijzigingen aan die labels en wordt
         # met een synthetisch label getest in tests/test_report_exit_kernzin.py.
         rel = (f"<p style='margin-bottom:0;'>{_h(primary_factor_label)} staat bovenaan "
-               f"in de rangorde en is tegelijk de meest genoemde vertrekreden.</p>")
+               f"in de rangorde en is tegelijk de meest genoemde hoofdreden van vertrek.</p>")
     else:
         # Geen substring-match tussen hoofdreden en startpunt: benoem beide
         # feiten zonder een verbandclaim ("versterken elkaar") die de data niet
         # draagt. De factordiepte toont de bovenste rasterrijen, niet per se de
         # laagst scorende factor -- dus verwijst deze zin naar de rangorde.
-        rel = (f"<p style='margin-bottom:0;'>De meest genoemde reden en de scores per onderwerp "
+        rel = (f"<p style='margin-bottom:0;'>De meest genoemde hoofdreden en de scores per onderwerp "
                f"belichten elk een eigen invalshoek. De onderwerpen die bovenaan de "
                f"rangorde staan, komen terug in de verdieping hierna.</p>")
 
@@ -4948,7 +4982,7 @@ def _vertrekcontext(*, exit_reasons: list[tuple[str, int]],
   {opener_html or '<span class="slabel">Vertrekcontext</span>'}
   {_intro("vertrekcontext" if has_profile else "vertrekcontext_geen_profiel")}
   <div class="tcol">
-    <div class="tc-l"><div class="card accent"><h3>Hoofdredenen van vertrek (top 3)</h3>
+    <div class="tc-l"><div class="card accent"><h3>Hoofdredenen van vertrek</h3>
       <table class="item-tbl">{_reason_rows(exit_reasons)}</table></div></div>
     <div class="tc-r"><div class="card"><h3>Speelde ook mee</h3>
       <table class="item-tbl">{_reason_rows(contributing)}</table></div></div>
@@ -5488,7 +5522,8 @@ def render_exit_report_html(data: dict) -> str:
     profile_factors = [(_fl(fk, "exit"), fa.get(fk))
                        for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
     # C3: alleen de samenvattingszin; de bandlijst onder de balken is weg.
-    _overzicht_summary, _ = _overzicht_summary_and_bands(profile_factors)
+    _overzicht_summary, _ = _overzicht_summary_and_bands(
+        profile_factors, laagste=[_raster_labels[fk] for fk in _p02_laagste_keys(_shape)])
     s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary,
                             opener_html=ch.opener("Overzichtsprofiel", anchor=LEIDRAAD_ANKERS["overzicht"]), scan_type="exit")
 
@@ -5530,7 +5565,7 @@ def render_exit_report_html(data: dict) -> str:
         # ── Exit reason context block ──
         er_count = exit_code_counts.get(fk, 0)
         if er_count > 0:
-            er_context = f'<div class="card accent">{er_count}&times; genoemd als vertrekreden: directe link met vertrekcontext.</div>'
+            er_context = f'<div class="card accent">{er_count}&times; als hoofdreden van vertrek genoemd; die telling staat ook in de vertrekcontext.</div>'
         else:
             er_context = ""
         # ── Lowest / highest item cards — alleen bij >3 items; bij 3 items zijn
@@ -5874,7 +5909,8 @@ def render_retention_report_html(data: dict) -> str:
     profile_factors = [(_fl(fk, ST), fa.get(fk))
                        for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
     # C3: alleen de samenvattingszin; de bandlijst onder de balken is weg.
-    _overzicht_summary, _ = _overzicht_summary_and_bands(profile_factors)
+    _overzicht_summary, _ = _overzicht_summary_and_bands(
+        profile_factors, laagste=[_raster_labels[fk] for fk in _p02_laagste_keys(_shape)])
     s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary,
                             opener_html=ch.opener("Overzichtsprofiel", anchor=LEIDRAAD_ANKERS["overzicht"]), scan_type=ST)
 
@@ -6278,7 +6314,8 @@ def render_onboarding_report_html(data: dict) -> str:
     profile_factors = [(_fl(fk, ST), fa.get(fk))
                        for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None]
     # C3: alleen de samenvattingszin; de bandlijst onder de balken is weg.
-    _overzicht_summary, _ = _overzicht_summary_and_bands(profile_factors)
+    _overzicht_summary, _ = _overzicht_summary_and_bands(
+        profile_factors, laagste=[_raster_labels[fk] for fk in _p02_laagste_keys(_shape)])
     s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary,
                             opener_html=ch.opener("Overzichtsprofiel", anchor=LEIDRAAD_ANKERS["overzicht"]), scan_type=ST)
 
@@ -6461,8 +6498,19 @@ def render_onboarding_report_html(data: dict) -> str:
     # niet uit een tweede sortering op sorted_f: bij Loep Start leveren die
     # dezelfde volgorde, maar twee bronnen kunnen stil gaan afwijken.
     _ob_second_fk = _ob_priority_fkeys[1] if len(_ob_priority_fkeys) > 1 else None
-    _second_why = ("Tweede laagste score in het overzichtsprofiel."
-                   if _ob_second_fk else None)
+    # Deelt het tweede punt de laagste GETOONDE score met het startpunt, dan is
+    # het niet de "tweede laagste": pagina twee noemt beide op die score
+    # (stresstest na plan 3a, observatie 4, scenario 20: 5.3 en 5.3). Zelfde
+    # bron als de kop, _p02_laagste_keys.
+    _ob_laagste = _p02_laagste_keys(_shape)
+    if not _ob_second_fk:
+        _second_why = None
+    elif _ob_second_fk in _ob_laagste:
+        _anderen = [_raster_labels[fk] for fk in _ob_laagste if fk != _ob_second_fk]
+        _second_why = (f"Deelt de laagste score ({_score_str(_shape['low_score'])}) met "
+                       f"{', '.join(_anderen)}.")
+    else:
+        _second_why = "Tweede laagste score in het overzichtsprofiel."
 
     _ob_agenda_q = (_mgmt_q(_ob_startpunt_fk, ST) if _ob_startpunt_fk
                     else (nsp.get("first_decision") or ""))

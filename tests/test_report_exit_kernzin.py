@@ -132,11 +132,11 @@ def test_kernzin_claimt_niet_dat_startpunt_het_laagst_scoort():
             f"{start_lbl} (4.9/10). Daarnaast zijn {_fl('workload', 'exit')} (5.9/10), "
             f"{_fl('role_clarity', 'exit')} (6.2/10) en {_fl('culture', 'exit')} (6.4/10) "
             f"aandachtspunten. Als startpunt kiest Loep {start_lbl}. "
-            f"Beter aanbod elders is de meest genoemde vertrekreden (5 van de 12).") in html
+            f"Beter aanbod elders is de meest genoemde hoofdreden van vertrek (5 van de 12).") in html
     # Komma en geen "en" tussen de twee: beide labels bevatten zelf al "en".
     assert f"(4.5/10) en {start_lbl}" not in html
     # De bronregel onder de gespreksopener draagt de uitleg (een verhaal).
-    assert ("Gebaseerd op de score en hoe vaak dit onderwerp als vertrekreden is "
+    assert ("Gebaseerd op de score en hoe vaak dit onderwerp als hoofdreden van vertrek is "
             "genoemd.") in html
     assert "Gebaseerd op het laagst scorende onderwerp." not in html
 
@@ -154,7 +154,7 @@ def test_kernzin_bij_samenvallende_vertrekreden_claimt_geen_laagste_factor():
 
     start_lbl = _fl("leadership", "exit")
     assert (f"Als startpunt kiest Loep {start_lbl}. {_SYNTHETISCH_REDENLABEL} is "
-            f"de meest genoemde vertrekreden (2 van de 12).") in html
+            f"de meest genoemde hoofdreden van vertrek (2 van de 12).") in html
     assert "springt eruit: het staat bovenaan" not in html
 
 
@@ -165,7 +165,7 @@ def test_vertrekcontext_vertelt_hetzelfde_verhaal_als_pagina_twee():
 
     html = render_exit_report_html(_exit_fixture(_DIST_SAMENVALLEND))
     assert (f"{start_lbl} staat bovenaan in de rangorde en is tegelijk de "
-            f"meest genoemde vertrekreden.") in html
+            f"meest genoemde hoofdreden van vertrek.") in html
 
     # De andere tak wijst naar de rangorde in plaats van naar de laagste
     # factor: de factordiepte toont immers de bovenste rasterrijen.

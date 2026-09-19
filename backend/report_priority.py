@@ -211,7 +211,7 @@ def _tie_break_note(row: dict[str, Any], other: dict[str, Any], kind: str) -> st
         return (f"Staat hoger dan {lbl} omdat hier een gedeelde toelichting uit "
                 "de verdieping ligt.")
     if kind == "exit_reason":
-        return (f"Staat hoger dan {lbl} omdat dit vaker als vertrekreden is "
+        return (f"Staat hoger dan {lbl} omdat dit vaker als hoofdreden van vertrek is "
                 f"genoemd ({row['exit_reason_n']} keer tegen "
                 f"{other['exit_reason_n']}).")
     raise ValueError(f"onbekend tie-break-signaal {kind!r}")
