@@ -305,3 +305,22 @@ def test_pdf_heeft_geen_pagina_onder_veertig_procent(scan_type, tmp_path):
     r = subprocess.run([sys.executable, str(ROOT / "scripts" / "check_pdf_report.py"), str(pdf)],
                        capture_output=True, text=True)
     assert r.returncode == 0, r.stdout
+
+
+def test_werkbeleving_overzichtskaart_staat_boven_de_kolommen_niet_erin():
+    """Stresstest na plan 3a, observatie 8: in de linkerkolom was de balkenkaart
+    breder dan een halve kolom, zodat de rechterkolom van het vel liep en
+    WeasyPrint die tekst afsneed. De balken staan nu over de volle breedte vóór
+    de kolommen; de kolommen dragen alleen kaarten, en de tabel heeft een vaste
+    opmaak zodat een cel niet met zijn inhoud meegroeit."""
+    from backend.report_css import build_css
+    body = _body(render_retention_report_html(_volle_sdt(_fixture("retention", n=25, profile=True))))
+    wb = body[body.index('<h2 class="ch-title">Werkbeleving</h2>'):]
+    kolommen = wb.index('class="tcol wb-cols"')
+    assert 'class="fbar-row"' in wb[:kolommen]
+    assert 'class="fbar-row"' not in wb[kolommen:wb.index('class="pb sec"')]
+    # Elke kolom draagt kaarten; de eerste de grootste helft (twee van drie).
+    links = wb[wb.index('class="tc-l"'):wb.index('class="tc-r"')]
+    assert links.count('class="card no-break"') == 2
+    css = build_css("retention")
+    assert re.search(r"\.tcol\.wb-cols\s*\{[^}]*table-layout:\s*fixed", css)

@@ -1128,6 +1128,29 @@ def test_check_thead_alleen_met_vlag(tmp_path: Path):
 
 
 @requires_pymupdf
+def test_check_ziet_tekst_buiten_de_zijmarge(tmp_path: Path):
+    """Stresstest na plan 3a, observatie 8: een kolom die van het vel loopt,
+    snijdt WeasyPrint stil af. De regel meet per woord of het binnen de
+    tekstkolom (16mm links en rechts) staat; de cover (marge 0) telt niet mee."""
+    goed = _goed_rapport(tmp_path / "marge-goed.pdf")
+    assert cpr.check(str(goed), regels=(cpr.REGEL_ZIJMARGE,)) == []
+
+    doc = pymupdf.open(str(goed))
+    doc[4].insert_text((520.0, 300.0), "Competentie 6.4/10 Aandachtspunt", fontsize=11)
+    doc[0].insert_text((560.0, 300.0), "cover tot de rand", fontsize=11)
+    pad = tmp_path / "marge-fout.pdf"
+    doc.save(str(pad))
+    doc.close()
+    bevindingen = cpr.check(str(pad), regels=(cpr.REGEL_ZIJMARGE,))
+    assert [b.regel for b in bevindingen] == [cpr.REGEL_ZIJMARGE], [str(b) for b in bevindingen]
+    assert bevindingen[0].melding.startswith("pagina 5 heeft ")
+    assert "buiten de zijmarge" in bevindingen[0].melding
+    # Grens: een woord dat geheel voorbij de paginarand begint, levert de
+    # tekstlaag niet op; de regel ziet de kolom aan de woorden die de rand
+    # overschrijden. In de gemeten renders (observatie 8) was dat er steeds een.
+
+
+@requires_pymupdf
 def test_check_meldt_een_document_dat_te_kort_is_om_te_meten(tmp_path: Path):
     pad = _bouw_pdf(tmp_path / "kort.pdf", [[(400.0, "cover")], [(60.0, "Meetgegevens")]])
     bevindingen = cpr.check(str(pad))

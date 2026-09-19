@@ -371,7 +371,18 @@ p  { margin-bottom: 6px; font-size: 11px; }
    kolommen van een multicol-blok niet over paginagrenzen. De appendix staat
    bewust NIET in twee kolommen: daar spaarde het geen pagina (360mm werd 303mm,
    beide meer dan een vel) en werd de staartpagina juist leger. */
-.tcol.wb-cols .tc-l, .tcol.wb-cols .tc-r { width: 50%; }
+/* Vaste tabelopmaak: zonder die groeide een cel met zijn breedste inhoud en
+   liep de rechterkolom van het vel (stresstest na plan 3a, observatie 8).
+   Geen border-spacing maar padding: dan lijnen de kaarten links uit met de
+   overzichtskaart erboven. De compactere maten in de kolommen houden de sectie
+   op een vel nu de overzichtskaart boven de kolommen staat. */
+.tcol.wb-cols { table-layout: fixed; border-spacing: 0; }
+.tcol.wb-cols .tc-l { width: 50%; padding-right: 10px; }
+.tcol.wb-cols .tc-r { width: 50%; padding-left: 10px; }
+.wb-cols .card { padding: 10px 0 10px 12px; margin-bottom: 10px; }
+.wb-cols .item-tbl td { padding: 4px 6px; }
+.wb-cols .item-tbl .iq { width: 70%; }
+.wb-cols .item-tbl .is { width: 12%; }
 .enps-inline { margin-top: 18px; }
 .empty-state { background: #fff; border: 1px dashed """ + HAIRLINE + r"""; padding: 18px;
   text-align: center; color: #94A3B8; font-size: 10px; }

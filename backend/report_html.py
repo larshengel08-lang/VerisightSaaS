@@ -5172,7 +5172,7 @@ def _werkbeleving_section(sdt_a: dict, sim: dict, sdt_items: list, opener_html: 
         rows = "".join(
             f'<tr><td class="iq">{_h(q)}{REV if ik in SDT_REVERSE_ITEMS else ""}</td>'
             f'<td class="is" style="color:{_rag_color(sim.get(ik))};">{sim[ik]:.1f}</td>'
-            f'<td class="ib">{_mini_bar_svg(sim.get(ik), _rag_color(sim.get(ik)), width=80, height=6)}</td></tr>'
+            f'<td class="ib">{_mini_bar_svg(sim.get(ik), _rag_color(sim.get(ik)), width=balk, height=6)}</td></tr>'
             for ik in _keys(dim)
             for q in [next((t for k, t in sdt_items if k == ik), ik)])
         return f'<table class="item-tbl">{rows}</table>' if rows else ""
@@ -5193,19 +5193,27 @@ def _werkbeleving_section(sdt_a: dict, sim: dict, sdt_items: list, opener_html: 
     overview = "".join(_factor_bar_row(SDT_LABELS.get(dim, ""), sdt_a.get(dim)) for dim in dims)
     if not overview:
         return ""
+    twee_kolommen = any(len(_keys(dim)) > 1 for dim in dims)
+    # In een halve kolom krijgt de stelling de ruimte en blijft de balk kort;
+    # een balk van 80px liet de stelling over drie regels lopen.
+    balk = 44 if twee_kolommen else 80
     kaarten = [k for k in (_card(dim) for dim in dims) if k]
     overzichtskaart = f'<div class="card" style="margin-bottom:14px;">{overview}</div>'
-    twee_kolommen = any(len(_keys(dim)) > 1 for dim in dims)
     if not twee_kolommen:
         inhoud = overzichtskaart + "".join(kaarten)
     else:
-        # De overzichtskaart hoort bij de eerste kolom en weegt zelf mee, dus
-        # krijgt die kolom de kleinste helft van de kaarten: met drie dimensies
-        # links de balken plus autonomie, rechts competentie en verbondenheid
-        # (de verdeling waarop de 233mm gemeten is).
-        helft = len(kaarten) // 2
-        inhoud = (f'<div class="tcol wb-cols">'
-                  f'<div class="tc-l">{overzichtskaart}{"".join(kaarten[:helft])}</div>'
+        # De overzichtskaart staat over de volle breedte boven de kolommen, niet
+        # in de linkerkolom. Daar was de balkenkaart (naam, balk, score en
+        # bandlabel op een regel) breder dan een halve kolom: de linkercel
+        # groeide, duwde de rechterkolom van het vel en WeasyPrint sneed die
+        # tekst af (stresstest na plan 3a, observatie 8; alleen op de echte
+        # render te zien). Zonder de balken dragen beide kolommen alleen
+        # kaarten, en `table-layout: fixed` op .wb-cols houdt ze elk op de helft.
+        # De eerste kolom krijgt de grootste helft: de kaarten zijn ongeveer
+        # even hoog, dus zo lopen de kolommen het gelijkst af.
+        helft = (len(kaarten) + 1) // 2
+        inhoud = (f'{overzichtskaart}<div class="tcol wb-cols">'
+                  f'<div class="tc-l">{"".join(kaarten[:helft])}</div>'
                   f'<div class="tc-r">{"".join(kaarten[helft:])}</div></div>')
     return f'<div class="pb sec">{opener_html}{_intro("werkbeleving")}{inhoud}</div>'
 

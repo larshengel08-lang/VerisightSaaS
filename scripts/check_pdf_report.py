@@ -19,6 +19,11 @@ uitkiezen zonder de andere te hoeven halen):
   tabelkop          alleen met --thead: die tabelkop staat op meer dan één
                     pagina, dus hij herhaalt op de vervolgpagina (ronde 2
                     punt c, taak 11);
+  zijmarge          geen woord staat buiten de linker- of rechtermarge van het
+                    vel (16mm), de cover uitgezonderd (die heeft geen marge).
+                    Tekst die van het vel loopt, snijdt WeasyPrint stil af;
+                    in de HTML is dat niet te zien (stresstest na plan 3a,
+                    observatie 8: de werkbeleving in twee kolommen);
   paginaformaat     elke pagina is A4-portret; anders kloppen de marges waarmee
                     de vulling wordt gerekend niet. Deze regel wordt altijd
                     gemeten, ook als de selectie hem niet vraagt: zonder A4 zijn
@@ -58,6 +63,8 @@ import pymupdf  # PyMuPDF; `fitz` is dezelfde bibliotheek onder een verouderde n
 # pagina's goedkeuren.
 MIN_FILL = 0.40
 TOP_PT, BOTTOM_PT = 51.0, 57.0      # @page margins 18mm / 20mm in punten
+ZIJMARGE_PT = 45.35                 # @page margin links en rechts, 16mm in punten
+ZIJMARGE_TOLERANTIE_PT = 2.0        # afronding van glyphkaders in de tekstlaag
 FOOTER_PT = 40.0                    # onderste strook met paginanummer
 A4_PT = (595.0, 842.0)              # A4-portret in punten
 A4_TOLERANTIE_PT = 3.0
@@ -81,7 +88,9 @@ REGEL_VULLING = "paginavulling"
 REGEL_VERWIJZING = "paginaverwijzing"
 REGEL_THEAD = "tabelkop"
 REGEL_FORMAAT = "paginaformaat"
-ALLE_REGELS = (REGEL_P02, REGEL_VULLING, REGEL_VERWIJZING, REGEL_THEAD, REGEL_FORMAAT)
+REGEL_ZIJMARGE = "zijmarge"
+ALLE_REGELS = (REGEL_P02, REGEL_VULLING, REGEL_VERWIJZING, REGEL_THEAD, REGEL_ZIJMARGE,
+               REGEL_FORMAAT)
 
 # Een verwijzing waarvan het anker ontbreekt, rendert leeg: WeasyPrint logt
 # "Content discarded: target points to undefined anchor" en de tekstlaag houdt
@@ -140,6 +149,23 @@ def _pagina_tekst(page: pymupdf.Page) -> str:
     """Genormaliseerd: de tekstlaag breekt regels waar de lay-out dat doet, ook
     tussen "pagina" en het nummer dat `target-counter` erachter zet."""
     return re.sub(r"\s+", " ", page.get_text())
+
+
+def buiten_de_zijmarge(page: pymupdf.Page) -> list[tuple[float, float, str]]:
+    """Woorden die links of rechts buiten de tekstkolom staan, als (x0, x1, woord).
+
+    Gemeten per woord, niet per blok: een blok kan een breed kader beschrijven
+    terwijl de tekst erin binnen de kolom blijft. `TEXT_MEDIABOX_CLIP` staat uit,
+    anders laat PyMuPDF juist de tekst weg die van het vel loopt en meet deze
+    regel minder. Grens van de meting: een woord dat geheel voorbij de
+    paginarand begint, levert de tekstlaag ook zo niet op. Een kolom die van
+    het vel loopt, heeft altijd woorden die de rand overschrijden; die ziet de
+    regel (in de render van observatie 8: "Aandachtsp" tot x=597pt)."""
+    flags = pymupdf.TEXTFLAGS_WORDS & ~pymupdf.TEXT_MEDIABOX_CLIP
+    links = ZIJMARGE_PT - ZIJMARGE_TOLERANTIE_PT
+    rechts = page.rect.width - ZIJMARGE_PT + ZIJMARGE_TOLERANTIE_PT
+    return [(w[0], w[2], w[4]) for w in page.get_text("words", flags=flags)
+            if w[4].strip() and (w[0] < links or w[2] > rechts)]
 
 
 def _niet_a4(page: pymupdf.Page) -> bool:
@@ -207,6 +233,21 @@ def _check_doc(doc: pymupdf.Document, thead: str | None,
 
     if REGEL_VERWIJZING in regels:
         bevindingen += _verwijzingen(doc, p2)
+
+    if REGEL_ZIJMARGE in regels:
+        # Vanaf pagina 2: de cover heeft `margin: 0` en loopt bewust tot de rand.
+        for i in range(1, n):
+            buiten = buiten_de_zijmarge(doc[i])
+            if buiten:
+                verste = max(buiten, key=lambda w: max(w[1] - doc[i].rect.width + ZIJMARGE_PT,
+                                                       ZIJMARGE_PT - w[0]))
+                woorden = " ".join(w[2] for w in buiten[:6])
+                bevindingen.append(Bevinding(
+                    REGEL_ZIJMARGE,
+                    f"pagina {i + 1} heeft {len(buiten)} woord(en) buiten de zijmarge "
+                    f"(tot x={verste[1]:.0f}pt op een vel van {doc[i].rect.width:.0f}pt, "
+                    f"kolom {ZIJMARGE_PT:.0f}-{doc[i].rect.width - ZIJMARGE_PT:.0f}pt): "
+                    f"{woorden[:60]!r}"))
 
     if thead and REGEL_THEAD in regels:
         pages_with = [i + 1 for i in range(n) if thead in _pagina_tekst(doc[i])]
