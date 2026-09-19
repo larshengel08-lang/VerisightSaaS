@@ -407,3 +407,18 @@ def test_ook_het_eerste_verdiepingsonderwerp_stroomt(scan_type):
     assert 'class="ch-head"' in body[eerste.end():eerste.end() + 300]
     assert ("verd-compact" in eerste.group(0)) is (scan_type == "onboarding")
 
+
+def test_zonder_profiel_stromen_overzicht_en_verdieping_behalve_bij_loep_start():
+    """Stresstest 07: zonder profiel waren overzichtsprofiel en verdieping elk
+    één zin op een eigen vel (10 en 12%). Ze stromen nu onder het vorige
+    hoofdstuk. Bij Loep Start is het overzichtsprofiel hoofdstuk 02 en blijft
+    het op een eigen vel, zodat pagina twee eindigt met de meetgegevens (H16)."""
+    exit_body = _body(render_exit_report_html(_fixture("exit", n=8, profile=False)))
+    for kop in ("Overzichtsprofiel", "Verdieping: onderwerpen met de meeste aandacht"):
+        i = exit_body.index(f'<h2 class="ch-title">{kop}</h2>')
+        start = exit_body.rindex("<div class=", 0, exit_body.rindex('<div class="ch-head"', 0, i) + 1)
+        assert exit_body[start:start + 40].startswith('<div class="sec flow">'), kop
+    ob = _body(render_onboarding_report_html(_fixture("onboarding", n=8, profile=False)))
+    i = ob.index('<h2 class="ch-title">Overzichtsprofiel</h2>')
+    start = ob.rindex("<div class=", 0, ob.rindex('<div class="ch-head"', 0, i) + 1)
+    assert ob[start:start + 40].startswith('<div class="pb sec">')

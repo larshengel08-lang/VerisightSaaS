@@ -4919,7 +4919,8 @@ def _overzicht_summary_and_bands(profile_factors: list[tuple[str, float | None]]
 
 
 def _overzichtsprofiel(factors: list[tuple[str, float | None]],
-                       summary: str = "", opener_html: str = "", *, scan_type: str) -> str:
+                       summary: str = "", opener_html: str = "", *, scan_type: str,
+                       stroom_zonder_profiel: bool = True) -> str:
     """scan_type is verplicht en heeft bewust geen default: de rangorde-zin in
     de intro is scan-afhankelijk (zie OVERZICHTSPROFIEL_RANGORDE) en een stille
     terugval zou in een van de drie rapporten een onware regel afdrukken.
@@ -4957,10 +4958,17 @@ def _overzichtsprofiel(factors: list[tuple[str, float | None]],
     if rows:
         intro_html = (f'<p class="sec-intro">{SECTION_INTROS["overzichtsprofiel"]} '
                       f'{OVERZICHTSPROFIEL_RANGORDE[scan_type]}</p>')
+        sec_cls = "pb sec"
     else:
         intro_html = ""
         legend = ""
-    return f"""<div class="pb sec">
+        # Zonder profiel is dit hoofdstuk één zin; op een eigen vel was dat een
+        # pagina van 10% (stresstest 07, fixronde 2 na plan 3a). Het stroomt dan
+        # onder het vorige hoofdstuk, kop en zin bij elkaar. Niet bij Loep Start:
+        # daar is dit hoofdstuk 02 en volgt het direct op pagina twee, die op
+        # één vel moet blijven en hoofdstuk 02 op pagina drie laat beginnen (H16).
+        sec_cls = "sec flow" if stroom_zonder_profiel else "pb sec"
+    return f"""<div class="{sec_cls}">
   {opener_html or '<span class="slabel">Overzichtsprofiel</span>'}
   {intro_html}
   {summary_html}
@@ -5673,7 +5681,7 @@ def render_exit_report_html(data: dict) -> str:
                                 intro_html=_intro("verdieping") if _i == 0 else "",
                                 is_first=_i == 0)
     else:
-        s += f'<div class="pb sec">{ch.opener("Verdieping: onderwerpen met de meeste aandacht", anchor=LEIDRAAD_ANKERS["verdieping"])}<div class="empty-state">{VERDIEPING_GEEN_RANGORDE}</div></div>'
+        s += f'<div class="sec flow">{ch.opener("Verdieping: onderwerpen met de meeste aandacht", anchor=LEIDRAAD_ANKERS["verdieping"])}<div class="empty-state">{VERDIEPING_GEEN_RANGORDE}</div></div>'
 
     # ── SDT basisbehoeften ────────────────────────────────────────────────────
     # Werkbeleving in twee kolommen via de gedeelde helper (B9). De gate is
@@ -6049,7 +6057,7 @@ def render_retention_report_html(data: dict) -> str:
                                     intro_html=_intro("verdieping") if _i == 0 else "",
                                     is_first=_i == 0)
     else:
-        s += f'<div class="pb sec">{ch.opener("Verdieping: onderwerpen met de meeste aandacht", anchor=LEIDRAAD_ANKERS["verdieping"])}<div class="empty-state">{VERDIEPING_GEEN_RANGORDE}</div></div>'
+        s += f'<div class="sec flow">{ch.opener("Verdieping: onderwerpen met de meeste aandacht", anchor=LEIDRAAD_ANKERS["verdieping"])}<div class="empty-state">{VERDIEPING_GEEN_RANGORDE}</div></div>'
 
     # ── Werkbeleving (SDT) ────────────────────────────────────────────────────
     # Werkbeleving in twee kolommen via de gedeelde helper (B9). De gate is
@@ -6382,7 +6390,7 @@ def render_onboarding_report_html(data: dict) -> str:
     _overzicht_summary, _ = _overzicht_summary_and_bands(
         profile_factors, laagste=[_raster_labels[fk] for fk in _p02_laagste_keys(_shape)])
     s += _overzichtsprofiel(profile_factors, summary=_overzicht_summary,
-                            opener_html=ch.opener("Overzichtsprofiel", anchor=LEIDRAAD_ANKERS["overzicht"]), scan_type=ST)
+                            opener_html=ch.opener("Overzichtsprofiel", anchor=LEIDRAAD_ANKERS["overzicht"]), scan_type=ST, stroom_zonder_profiel=False)
 
     # ── Checkpointoverzicht (p.05 — onboarding-exclusive) ────────────────────
     s += _checkpointoverzicht(checkpoints=[("Huidig checkpoint", signal)],
@@ -6477,7 +6485,7 @@ def render_onboarding_report_html(data: dict) -> str:
             s += _ob_factor_detail(_pfk, opener_html=_opener, intro_html="",
                                    is_first=_i == 0)
     else:
-        s += f'<div class="pb sec">{ch.opener("Onderwerpen met de meeste aandacht", anchor=LEIDRAAD_ANKERS["verdieping"])}<div class="empty-state">{ONBOARDING_GEEN_RANGORDE}</div></div>'
+        s += f'<div class="sec flow">{ch.opener("Onderwerpen met de meeste aandacht", anchor=LEIDRAAD_ANKERS["verdieping"])}<div class="empty-state">{ONBOARDING_GEEN_RANGORDE}</div></div>'
 
     # ── Werkbeleving (SDT) — if present ──────────────────────────────────────
     # Twee kolommen via de gedeelde helper (B9); dezelfde gate als de leidraad.
