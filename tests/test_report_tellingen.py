@@ -23,7 +23,8 @@ from backend.report_html import (
 LOW_GROWTH = {f"growth_{i}": 1 for i in (1, 2, 3)} | {f"{fk}_{i}": 5 for fk in
               ("leadership", "culture", "compensation", "workload", "role_clarity") for i in (1, 2, 3)}
 
-ANON_LABEL = "Automatisch geanonimiseerd: herkende namen en contactgegevens verwijderd"
+ANON_LABEL = ("Automatisch geanonimiseerd: herkende namen, e-mailadressen, telefoonnummers "
+              "en postcodes verwijderd")
 
 
 def _plain(html):
@@ -671,3 +672,25 @@ def test_css_laat_de_scorekolom_niet_afbreken():
     # Dezelfde kleur als de intro erboven: dit is gewone leestekst.
     assert "color: #374151" in _rule(".dir-chain.dir-totals")
     assert "color: #374151" in _rule(".dir-intro")
+
+
+def test_anonimiseringslabel_zegt_precies_wat_anonymize_text_weghaalt():
+    """Eindreview plan 3a punt 2: het label beloofde "locaties", maar
+    anonymize_text haalt geen plaatsnamen weg. Elk vervangtoken in _PATTERNS
+    staat met zijn woord in het label, en het label noemt niets anders."""
+    from backend.report_html import ANON_NOTE
+    from backend.scoring import _PATTERNS
+    woorden = {"[NAAM]": "namen", "[EMAIL]": "e-mailadressen",
+               "[TELEFOON]": "telefoonnummers", "[POSTCODE]": "postcodes"}
+    assert {rep for _, rep in _PATTERNS} == set(woorden)
+    for w in woorden.values():
+        assert w in ANON_NOTE
+    assert "locatie" not in ANON_NOTE and "contactgegevens" not in ANON_NOTE
+
+
+def test_methodiekcel_gebruikt_hetzelfde_anonimiseringslabel():
+    from backend.report_html import ANON_NOTE, _trust_page
+    for scan in ("exit", "retention", "onboarding"):
+        t = _tekst(_trust_page(scan, direction_active=scan != "onboarding"))
+        assert ANON_NOTE in t, scan
+        assert "locaties" not in t, scan

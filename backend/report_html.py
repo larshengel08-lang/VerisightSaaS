@@ -1526,7 +1526,7 @@ SECTION_INTROS: dict[str, str] = {
     ),
     "open_toelichtingen": (
         "Dit zijn de open antwoorden zoals respondenten ze zelf schreven, alleen ontdaan van "
-        "namen en contactgegevens. Ze staan in ontvangstvolgorde: er is niet geselecteerd "
+        "herkende namen, e-mailadressen, telefoonnummers en postcodes. Ze staan in ontvangstvolgorde: er is niet geselecteerd "
         "op inhoud en er is geen automatische duiding op losgelaten. De stemmen hieronder geven "
         "kleur aan de cijfers; wat ze betekenen en hoe zwaar ze wegen, bepaal je in de bespreking."
     ),
@@ -3282,7 +3282,12 @@ OTHER_MIN_N = 2
 ANDERS_TEKST_DREMPEL = (
     f"De teksten tonen we pas vanaf {MIN_QUOTES_N}, om herleidbaarheid te voorkomen")
 
-ANON_NOTE = "Automatisch geanonimiseerd: herkende namen en contactgegevens verwijderd"
+# Precies wat backend.scoring.anonymize_text weghaalt (_PATTERNS: [NAAM],
+# [EMAIL], [TELEFOON], [POSTCODE]); geen "locaties", want plaatsnamen blijven
+# staan (eindreview plan 3a punt 2). Eén bron voor de labels onder de teksten
+# én de methodiekcel; test_report_tellingen pint de koppeling aan _PATTERNS.
+ANON_NOTE = ("Automatisch geanonimiseerd: herkende namen, e-mailadressen, telefoonnummers "
+             "en postcodes verwijderd")
 
 
 def _anders_block(*, other_n: int, answered: int, texts: list[str]) -> str:
@@ -3694,8 +3699,7 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "",
             ("Geen voorspelling","Scores geven een huidig signaal, geen voorspellingen over vertrek en geen individuele risicobeoordeling."),
         ]
         cells_r2 = [
-            ("Open toelichtingen",f"Automatisch geanonimiseerd: herkende namen, contactgegevens en locaties "
-             f"verwijderd. Alleen getoond vanaf {MIN_QUOTES_N} toelichtingen."),
+            ("Open toelichtingen", f"{ANON_NOTE}. Alleen getoond vanaf {MIN_QUOTES_N} toelichtingen."),
             ("Wat dit rapport niet doet",
              "Loep Behoud is een groepsbeeld van de huidige medewerkers. Loep stelt zelf geen oorzaken "
              "vast: de redenen in dit rapport komen van je mensen. Geen kant-en-klaar actieplan: "
@@ -3713,8 +3717,7 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "",
             ("Geen beoordeling",   "Scores duiden de ervaring van nieuwe medewerkers op groepsniveau. Geen prestatiebeoordeling van individuen of managers."),
         ]
         cells_r2 = [
-            ("Open toelichtingen", f"Automatisch geanonimiseerd: herkende namen, contactgegevens en locaties "
-             f"verwijderd. Alleen getoond vanaf {MIN_QUOTES_N} toelichtingen."),
+            ("Open toelichtingen", f"{ANON_NOTE}. Alleen getoond vanaf {MIN_QUOTES_N} toelichtingen."),
             ("Wat dit rapport niet doet",
              "Loep Start is een groepsbeeld van de eerste werkperiode. Loep stelt zelf geen oorzaken "
              "vast en voorspelt geen uitval. Geen kant-en-klaar actieplan: wat er gebeurt, "
@@ -3731,8 +3734,7 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "",
             ("Geen diagnose",   "Scores zijn methodisch verantwoord maar niet extern gevalideerd. Altijd combineren met het gesprek in het MT."),
         ]
         cells_r2 = [
-            ("Open toelichtingen",f"Automatisch geanonimiseerd: herkende namen, contactgegevens en locaties "
-             f"verwijderd. Alleen getoond vanaf {MIN_QUOTES_N} toelichtingen."),
+            ("Open toelichtingen", f"{ANON_NOTE}. Alleen getoond vanaf {MIN_QUOTES_N} toelichtingen."),
             ("Wat dit rapport niet doet",
              "Loep Vertrek is een terugkijkende groepsmeting op vertrek. Loep stelt zelf geen oorzaken "
              "vast: de redenen in dit rapport komen van je mensen. Geen oordeel over "
