@@ -275,3 +275,20 @@ def test_geen_em_dashes_in_de_nieuwe_copy():
                  _drempeltabel("onboarding"), _raster(),
                  _segment_block(ROWS, FACTOR_ROWS, scan_type="retention")):
         assert "—" not in html and "&#x2014;" not in html
+
+
+def test_tien_rijen_lezen_de_constante_die_hun_gate_stuurt(monkeypatch):
+    """Eindreview plan 3a punt 3: de 10-rij las MIN_AGGREGATE_N terwijl
+    spreiding en een afdeling als startpunt op MIN_DISTRIBUTION_N draaien.
+    Nu elk zijn eigen rij met zijn eigen constante, zodat de tabel niet stil
+    kan afwijken als één van beide verschuift."""
+    import backend.report_html as rh
+    monkeypatch.setattr(rh, "MIN_DISTRIBUTION_N", 12)
+    t = _tekst(rh._drempeltabel("retention"))
+    assert "12 spreiding" in t
+    assert "10 profiel per onderwerp" in t
+    assert "profiel per onderwerp, spreiding" not in t
+    monkeypatch.setattr(rh, "MIN_DISTRIBUTION_N", 10)
+    monkeypatch.setattr(rh, "MIN_AGGREGATE_N", 11)
+    t = _tekst(rh._drempeltabel("retention"))
+    assert "11 profiel per onderwerp" in t and "10 spreiding" in t

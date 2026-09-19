@@ -3572,10 +3572,23 @@ def _drempeltabel(scan_type: str, *, direction_active: bool = True,
     # levert de richtingvraag daar geen Anders-blok op.
     richting_kaarten = direction_active and not direction_degraded
     anders_actief = scan_type in DIRECTION_SCAN_TYPES and (verdieping_actief or richting_kaarten)
+    # De twee tien-rijen lezen elk de constante die hun gate echt stuurt
+    # (eindreview plan 3a punt 3): het profiel draait op MIN_AGGREGATE_N,
+    # spreiding, afdelingsscores en een afdeling als startpunt op
+    # MIN_DISTRIBUTION_N. Nu allebei 10, maar het zijn losse constanten; één
+    # rij met één van beide kon stil gaan afwijken. "tien" alleen lokaal:
+    # _TELWOORD stopt bewust bij zes (boven zes staat het cijfer).
+    def _tw(n: int) -> str:
+        return {10: "tien"}.get(n, _TELWOORD.get(n, str(n)))
+
     rijen: list[tuple[int, str, str]] = [
-        (MIN_AGGREGATE_N, "profiel per onderwerp, spreiding, en een afdeling als startpunt",
-         "Onder de tien antwoorden bepaalt één persoon te veel het gemiddelde, en is een "
-         "spreidingsbeeld geen beeld maar een handvol stippen."),
+        (MIN_AGGREGATE_N, "profiel per onderwerp",
+         f"Onder de {_tw(MIN_AGGREGATE_N)} antwoorden bepaalt één persoon te veel het "
+         "gemiddelde."),
+        (MIN_DISTRIBUTION_N,
+         "spreiding, scores per onderwerp per afdeling, en een afdeling als startpunt",
+         f"Onder de {_tw(MIN_DISTRIBUTION_N)} is een spreidingsbeeld geen beeld maar een "
+         "handvol stippen, en weegt één persoon te zwaar in de score van een afdeling."),
         (MIN_SEGMENT_N, "een afdeling apart in de tabel",
          "Onder de vijf zijn antwoorden herleidbaar tot personen, ook zonder naam."),
         (MIN_QUOTES_N,
