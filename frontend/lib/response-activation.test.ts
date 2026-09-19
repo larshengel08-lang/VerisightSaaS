@@ -138,7 +138,7 @@ describe('drempels voor uitgenodigden (spec 2026-09-16 par. 5.1)', () => {
 
   it('validateDepartmentInvitedCount noemt de afdeling en de samenvoegregel', () => {
     expect(validateDepartmentInvitedCount('Zorg', 4)).toBe(
-      "Afdeling Zorg: minimaal 5 deelnemers. Kleinere afdelingen voeg je samen; anders vallen ze in het rapport onder 'Overige afdelingen'.",
+      'Afdeling Zorg: minimaal 5 deelnemers. Kleinere afdelingen voeg je samen; anders krijgt deze afdeling geen eigen regel in het rapport.',
     )
     expect(validateDepartmentInvitedCount('Zorg', 5)).toBeNull()
     expect(validateDepartmentInvitedCount('  ', 0)).toContain('Afdeling zonder naam')

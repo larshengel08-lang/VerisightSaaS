@@ -835,7 +835,7 @@ export async function fetchRouteBeheerData(args: {
       department: string | null
     }
   >
-  // Afgeronde respondenten per afdeling — noemer voor de responsvoortgang per
+  // Afgeronde respondenten per afdeling, noemer voor de responsvoortgang per
   // afdelingslink in het setup-panel (spec 2026-07-12 §6).
   const departmentCompletedCounts: Record<string, number> = {}
   for (const r of respondents) {

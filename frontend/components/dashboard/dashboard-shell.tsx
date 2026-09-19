@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { useMemo, useState } from 'react'
 import { LogoutButton } from '@/components/ui/logout-button'
+import type { AccountHeading } from '@/lib/dashboard/account-heading'
+import { LOEP_CONTACT_EMAIL } from '@/lib/loep-contact'
 import {
   buildDashboardShellNavigation,
   getActiveModuleFromLocation,
@@ -16,7 +18,6 @@ import {
   type DashboardShellCampaignRef,
   type DashboardShellMode,
 } from '@/lib/dashboard/shell-navigation'
-import { SCAN_TYPE_LABELS } from '@/lib/types'
 
 type PortfolioCounts = Record<DashboardPortfolioView, number>
 
@@ -25,6 +26,7 @@ export function DashboardShellFrame({
   canManageActionCenterAssignments,
   shellMode,
   userEmail,
+  accountHeading,
   acceptedCount,
   portfolioCounts,
   campaigns,
@@ -35,6 +37,7 @@ export function DashboardShellFrame({
   canManageActionCenterAssignments: boolean
   shellMode: DashboardShellMode
   userEmail: string
+  accountHeading: AccountHeading
   acceptedCount: number
   portfolioCounts: PortfolioCounts
   campaigns: DashboardShellCampaignRef[]
@@ -60,10 +63,8 @@ export function DashboardShellFrame({
   )
   const isActionCenter = pathname.startsWith('/action-center')
   const actionCenterView = searchParams.get('view')
-  const accountLabel = userEmail.split('@')[1]?.split('.')[0] ?? 'Loep'
-  const accountName = accountLabel.charAt(0).toUpperCase() + accountLabel.slice(1)
+  const degradedHeadingHint = `Loep kon de organisatienaam niet laden. Blijft dit zo, mail ${LOEP_CONTACT_EMAIL}.`
   const mobileItems = isActionCenter ? ACTION_CENTER_NAV : [...navigation.modules, ...navigation.admin]
-  const showReportsQuickLink = shellMode === 'full' && !isActionCenter
   const activeAcHref = ACTION_CENTER_NAV.find((item) => {
     const itemUrl = new URL(item.href, 'http://localhost')
     const itemView = itemUrl.searchParams.get('view')
@@ -144,8 +145,8 @@ export function DashboardShellFrame({
                           href={item.href}
                           className="block rounded-xl px-4 py-3 text-sm text-[#c8d2dd] transition-colors hover:bg-white/4 hover:text-[#f5f2eb]"
                         >
-                          <p className="font-medium">{SCAN_TYPE_LABELS[item.scanType]}</p>
-                          <p className="mt-1 text-xs leading-5 text-[#8fa1b3]">{item.periodLabel}</p>
+                          <p className="truncate font-medium">{item.name}</p>
+                          <p className="mt-1 text-xs leading-5 text-[#8fa1b3]">{item.closedLabel}</p>
                         </Link>
                       ))}
                     </div>
@@ -157,9 +158,7 @@ export function DashboardShellFrame({
             <div className="mt-6 border-t border-white/8 px-4 pt-5">
               <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#7e8b9a]">Account</p>
               <p className="mt-2 truncate text-sm text-[#f5f2eb]">{userEmail}</p>
-              <p className="mt-1 text-xs leading-5 text-[#8fa1b3]">
-                {acceptedCount > 0 ? `${acceptedCount} gekoppelde organisatie${acceptedCount === 1 ? '' : 's'}` : accountName}
-              </p>
+              <p className="mt-1 text-xs leading-5 text-[#8fa1b3]">{accountHeading.label}</p>
               <div className="mt-4">
                 <LogoutButton className="w-full justify-center rounded-full border border-white/10 bg-transparent px-4 py-2 text-sm font-semibold text-[#f5f2eb] transition-colors hover:bg-white/[0.06]" />
               </div>
@@ -175,6 +174,8 @@ export function DashboardShellFrame({
                 onClick={() => setMobileNavOpen((open) => !open)}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[color:var(--dashboard-frame-border)] bg-white text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] lg:hidden"
                 aria-label={mobileNavOpen ? 'Navigatie sluiten' : 'Navigatie openen'}
+                aria-expanded={mobileNavOpen}
+                aria-controls="dashboard-mobile-nav"
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   {mobileNavOpen ? (
@@ -188,39 +189,42 @@ export function DashboardShellFrame({
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                   <span className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">
-                    Account
+                    Organisatie
                   </span>
-                  <span className="text-lg font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">
-                    {accountName}
+                  <span
+                    className={`text-lg font-semibold tracking-[-0.03em] ${
+                      accountHeading.degraded ? 'text-[#B9571F]' : 'text-[color:var(--dashboard-ink)]'
+                    }`}
+                    title={accountHeading.degraded ? degradedHeadingHint : undefined}
+                    aria-describedby={accountHeading.degraded ? 'account-heading-degraded-hint' : undefined}
+                  >
+                    {accountHeading.label}
                   </span>
+                  {accountHeading.degraded ? (
+                    <span id="account-heading-degraded-hint" className="sr-only">
+                      {degradedHeadingHint}
+                    </span>
+                  ) : null}
                 </div>
               </div>
 
-              <div className="hidden items-center gap-2 lg:flex">
-                {isActionCenter ? (
+              {isActionCenter ? (
+                <div className="hidden items-center gap-2 lg:flex">
                   <Link
                     href="/action-center/acties/nieuw"
                     className="rounded-full border border-[color:var(--dashboard-ink)] bg-[color:var(--dashboard-ink)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1B2E45]"
                   >
                     Actie aanmaken
                   </Link>
-                ) : (
-                  <>
-                    {showReportsQuickLink ? (
-                      <Link
-                        href="/reports"
-                        className="rounded-full border border-[color:var(--dashboard-frame-border)] bg-white px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] hover:text-[color:var(--dashboard-accent-strong)]"
-                      >
-                        Rapporten
-                      </Link>
-                    ) : null}
-                  </>
-                )}
-              </div>
+                </div>
+              ) : null}
             </div>
 
             {mobileNavOpen ? (
-              <div className="border-t border-[color:var(--dashboard-frame-border)] px-4 py-4 sm:px-6 lg:hidden">
+              <div
+                id="dashboard-mobile-nav"
+                className="border-t border-[color:var(--dashboard-frame-border)] px-4 py-4 sm:px-6 lg:hidden"
+              >
                   <div className="space-y-2 rounded-[20px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--surface)] p-4 shadow-[0_12px_30px_rgba(19,32,51,0.08)]">
                   {mobileItems.map((item) => {
                     const href = item.href
@@ -258,6 +262,16 @@ export function DashboardShellFrame({
                       </Link>
                     )
                   })}
+                  <div className="mt-3 border-t border-[color:var(--dashboard-frame-border)] pt-3">
+                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">
+                      Account
+                    </p>
+                    <p className="mt-1 truncate text-sm text-[color:var(--dashboard-ink)]">{userEmail}</p>
+                    <p className="mt-0.5 text-xs text-[color:var(--dashboard-muted)]">{accountHeading.label}</p>
+                    <div className="mt-3">
+                      <LogoutButton className="w-full justify-center rounded-full border border-[color:var(--dashboard-frame-border)] bg-white px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:bg-[color:var(--dashboard-soft)]" />
+                    </div>
+                  </div>
                 </div>
               </div>
             ) : null}
@@ -274,9 +288,7 @@ export function DashboardShellFrame({
           </main>
 
           <footer className="border-t border-[color:var(--dashboard-frame-border)] px-4 py-4 text-xs text-[color:var(--dashboard-muted)] sm:px-6">
-            {shellMode === 'action_center_only'
-              ? 'Loep Action Center voor managers in dezelfde omgeving'
-              : 'Loep dashboard, rapporten en Action Center in één omgeving'}
+            Loep. Vragen? Mail {LOEP_CONTACT_EMAIL}.
           </footer>
         </div>
       </div>

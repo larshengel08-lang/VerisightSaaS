@@ -63,6 +63,15 @@ Op een lopende meting staat altijd een knop **"Meting sluiten"**, ongeacht het a
 
 **Herinnering overslaan** = `skipReminderAction`: auditevent `send_reminders`, outcome `completed`, `metadata.channel = 'skipped_by_customer'`; `isReminderDue` beschouwt elk `send_reminders`-event op of na de vervaldatum als afgehandeld. De kaart "Vandaag: stuur de herinnering" verdwijnt dan eerlijk.
 
+#### 4.3a Amendement (besluit Lars, 18 september 2026): de sluitdatum wordt afgedwongen, als één pakket met de deadline in de uitnodiging
+
+- **Definitie.** `campaigns.closes_at` is een `date` (migratie `migrations/2026_06_17_add_closes_at.sql`). De deur gaat dicht ná het einde van die dag in Europe/Amsterdam: invullen is toegestaan zolang `vandaag in Amsterdam <= closes_at`. Null betekent geen deadline (bestaand gedrag; lopende metingen van vóór de wizard-sluitdatum blijven "Nog niet ingesteld" en krijgen geen knop om er alsnog een te zetten, geaccepteerd).
+- **Backend.** De open survey-flow (`open_survey_intro`, `open_survey_start`, `serve_survey`, `submit_survey` in `backend/main.py`) weigert na de sluitdatum met dezelfde statuspagina die een gesloten meting al krijgt, met de tekst "Deze meting is gesloten. Bedankt voor je interesse." `submit_survey` geeft een 410 met dezelfde boodschap, zodat een respondent die de pagina al open had het ook hoort. `is_active` en de datumcheck zitten in één helper (`backend/survey_window.py`), zodat er één bron van waarheid is.
+- **Verlengen** (`extendCampaignAction`, `closes_at` + 14) opent de deur automatisch weer; dit is met een test vastgepind.
+- **Uitnodiging en herinnering** (één bron, `frontend/lib/self-send-comms.ts`) noemen de sluitdatum: "Invullen kan tot en met [datum in het Nederlands]." Zonder sluitdatum (oude metingen met `closes_at` null) blijft de regel weg; nooit "tot en met onbekend".
+- **Dashboardcopy** bij de sluitdatum in stap 1 is weer waar en sterker: "Na deze datum kan niemand meer invullen. Sluiten of verlengen doe je hier in Loep."
+- **Deploy.** Raakt backend én frontend: Railway-redeploy nodig, géén DB-migratie.
+
 ### 4.4 Herinneringskaart
 
 De herinneringskaart toont de tijdlijn en biedt onderwerp en bericht apart met elk een eigen kopieerknop (zoals de wizard en de "Campagne loopt"-kaart al doen). "Kopieer herinneringstekst" als één blok vervalt. De kaart verschijnt pas op de herinneringsdag; vóór die dag staat op de "Campagne loopt"-kaart alleen "Herinnering: [datum]" in de tijdlijn, zonder de tekst, zodat niemand op dag één een herinnering stuurt.

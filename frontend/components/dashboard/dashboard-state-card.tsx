@@ -26,6 +26,9 @@ export function DashboardStateCard({ state, reminderText }: { state: DashboardSt
 
   return (
     <section className={`rounded-[22px] border px-6 py-7 ${toneClasses(state.tone)}`}>
+      {state.campaignName ? (
+        <p className="mb-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#B07A10]">{state.campaignName}</p>
+      ) : null}
       <h1 className="font-serif text-[2rem] leading-[1.05] tracking-[-0.04em] text-[color:var(--dashboard-ink)] sm:text-[2.4rem]">
         {state.primaryMessage}
       </h1>

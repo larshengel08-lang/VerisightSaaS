@@ -11,6 +11,7 @@ function input(overrides: Partial<ReminderTextInput> = {}): ReminderTextInput {
     segmentDepartments: null,
     deliveryMode: 'baseline' as const,
     launchDate: '2026-06-01',
+    closesAt: null,
     participantCommsConfig: null,
     ...overrides,
   }
@@ -63,6 +64,11 @@ describe('buildReminderText (spec 2026-09-11 par. 6)', () => {
     expect(text).not.toContain('Loep verzorgt de uitnodiging')
     expect(text).not.toMatch(/https?:\/\//)
     expect(text).toContain('nog geen surveylink beschikbaar')
+  })
+
+  it('geeft de sluitdatum door aan de herinnering (amendement par. 4.3a)', () => {
+    expect(buildReminderText(input({ closesAt: '2026-10-08' }))).toContain('Invullen kan tot en met 8 oktober 2026.')
+    expect(buildReminderText(input({ closesAt: null }))).not.toContain('tot en met')
   })
 })
 

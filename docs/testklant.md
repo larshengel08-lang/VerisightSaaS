@@ -119,25 +119,50 @@ expliciet in plaats van stil door te gaan.
 Doe dit zelf, in plaats van de wijziging door te geven ter handmatige controle.
 
 1. Haal een sessie op met `--login-link` en open die URL in de browser.
-2. `/dashboard` toont campagne B met "6 van 30 ingevuld", de tijdlijn (start,
-   herinnering, sluitdatum) en de knop "Meting sluiten". Tot vijf dagen na de
-   seed-lancering heet de kaart "Campagne loopt" en staat er geen
-   herinneringstekst; daarna "Vandaag: stuur de herinnering" met onderwerp en
-   bericht apart kopieerbaar (surveylink in het bericht) en "Geen herinnering
-   versturen". B heeft na een reset geen sluitdatum ("Nog niet ingesteld").
+2. `/dashboard` toont in de kop "TEST Loep Testklant" (niet het maildomein),
+   campagne B als hoofdkaart met de campagnenaam en "6 van 30 ingevuld", de
+   tijdlijn (start, herinnering, sluitdatum) en de knop "Meting sluiten". Tot
+   vijf dagen na de seed-lancering heet de kaart "Campagne loopt" en staat er
+   geen herinneringstekst; daarna "Vandaag: stuur de herinnering" met
+   onderwerp en bericht apart kopieerbaar en "Geen herinnering versturen". B
+   heeft na een reset geen sluitdatum ("Nog niet ingesteld"). Onder de kaart
+   staat "Al je metingen" met B (Loopt), C (Nog in te richten) en A (Rapport
+   beschikbaar), elk klikbaar, en daaronder "Klaar voor een vervolgmeting?"
+   met een mailto naar hallo@getloep.nl. De sidebar toont onder "Afgesloten"
+   de naam van A met "Gesloten sep 2026".
 3. `/campaigns/12b958fb-ce46-5efa-a947-d5b6e1e09126` toont "Je rapport is
-   beschikbaar" en de knop "Rapport downloaden".
-4. `/reports` toont campagne A onder "Beschikbaar nu" en de andere twee onder
-   "Nog niet beschikbaar".
+   beschikbaar" en één knop "Rapport downloaden" (geen "Open rapport" die
+   naar zichzelf linkt). De link bovenaan heet "Alle metingen". Lokaal zonder
+   draaiende backend geeft downloaden "Het rapport kon niet worden opgehaald
+   (fout 500)"; dat is de omgeving, niet de code.
+4. `/reports` toont campagne A onder "Beschikbaar nu" met "18 van 30 ingevuld
+   (60%)" en de andere twee onder "Nog niet beschikbaar" (open lijst) met
+   "Loopt" en "Nog in te richten"; de namen linken naar de meting.
 5. `/campaigns/d13634c5-115c-51ea-b337-e933dbf74f0f/setup` opent de wizard bij
    stap 1 met een lege startdatum, sluitdatum en herinnering (standaard 5
    dagen), een werkende survey-link en de toelichting bij "Aantal deelnemers".
-   3 deelnemers wordt geweigerd met de melding over minimaal 10.
+   3 deelnemers wordt geweigerd met de melding over minimaal 10. De
+   toelichting bij de sluitdatum belooft dat niemand daarna nog kan invullen
+   (de backend dwingt dat af). Na opslaan eindigt de uitnodiging in stap 2 met
+   "Invullen kan tot en met [sluitdatum]". Op 375 px staan de drie stappen
+   onder elkaar en is `scrollWidth` 375. Wie stap 1 opslaat schrijft naar de
+   testklant; reset daarna.
 6. Controleer de console op fouten en bekijk de pagina ook op 375 px breed als
    je layout hebt aangeraakt.
 7. Raakte je de rapportgeneratie, draai dan eerst
    `scripts/seed_test_tenant.py --dry-run`: die rendert campagne A met de
    echte rapportgenerator en faalt hard als een blok verdwijnt.
+8. `/help` toont de drie stappen, de drempels (10 en 5) met de uitleg, en het
+   contactblok met hallo@getloep.nl. "Hulp" staat in de sidebar en in het
+   mobiele menu; dat menu toont ook het accountblok en "Uitloggen".
+9. De activatiepagina (`--login-link`) en `/login` staan in het Loep-ontwerp:
+   "Kies een wachtwoord" met de drie stappen ernaast, en "Log in bij Loep".
+   `/login?error=invite` toont de melding over een verlopen activatielink.
+10. Na de Railway-redeploy: zet via `/beheer/campagnes` de sluitdatum van B
+    op gisteren en open de survey-link van B; de statuspagina zegt "Deze
+    meting is gesloten. Bedankt voor je interesse." Zet de datum daarna terug
+    (of reset de testklant). Op de sluitdag zelf staat de kaart nog op
+    "Campagne loopt"; pas de dag erna vraagt Loep te sluiten of te verlengen.
 
 Twee omgevingsvalkuilen (gezien op 17 september 2026):
 

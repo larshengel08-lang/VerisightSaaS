@@ -68,7 +68,7 @@ export async function saveSegmentDepartmentsAction(
   }
 
   // Vergrendelde afdelingen uit de database (Fail Loud: onafhankelijk van
-  // wat de client beweert). Elke respondent-rij telt — ook niet-afgeronde:
+  // wat de client beweert). Elke respondent-rij telt, ook niet-afgeronde:
   // de link is dan al gebruikt.
   const { data: respondentDepts, error: deptError } = await supabase
     .from('respondents')
@@ -97,7 +97,7 @@ export async function saveSegmentDepartmentsAction(
     .eq('id', campaignId)
   if (campError) return { ok: false, error: `Opslaan mislukt: ${campError.message}` }
 
-  // Campagne-totaal = som (spec §4) — bestaande weergaves blijven werken.
+  // Campagne-totaal = som (spec §4); bestaande weergaves blijven werken.
   const { error: deliveryError } = await supabase
     .from('campaign_delivery_records')
     .upsert(

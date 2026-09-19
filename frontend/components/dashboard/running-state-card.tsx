@@ -19,7 +19,10 @@ export function RunningStateCard({ state, reminderText, scanLabel }: Props) {
 
   return (
     <section className="rounded-[22px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-6 py-7">
-      <p className="mb-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#E8A020]">{scanLabel}</p>
+      <p className="mb-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#B07A10]">
+        {scanLabel}
+        {state.campaignName ? ` · ${state.campaignName}` : ''}
+      </p>
       <h1 className="font-serif text-[2rem] leading-[1.05] tracking-[-0.04em] text-[color:var(--dashboard-ink)]">
         Campagne loopt
       </h1>
@@ -40,10 +43,7 @@ export function RunningStateCard({ state, reminderText, scanLabel }: Props) {
             style={{ width: `${pct}%` }}
           />
         </div>
-        <div className="mt-2 flex justify-between text-xs text-[color:var(--dashboard-muted)]">
-          <span>{state.subtext}</span>
-          <span>{state.closeDateLabel}</span>
-        </div>
+        <p className="mt-2 text-xs text-[color:var(--dashboard-muted)]">{state.subtext}</p>
       </div>
 
       {state.timeline ? (

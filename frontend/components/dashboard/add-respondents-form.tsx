@@ -21,7 +21,7 @@ import {
 } from '@/components/dashboard/add-respondents-form.shared'
 
 const ROLE_LEVELS = [
-  { value: '', label: '— niet opgegeven —' },
+  { value: '', label: 'niet opgegeven' },
   { value: 'uitvoerend', label: 'Uitvoerend' },
   { value: 'specialist', label: 'Specialist' },
   { value: 'senior', label: 'Senior specialist' },
@@ -306,9 +306,9 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
           >
             {campaigns.map((campaign) => (
               <option key={campaign.id} value={campaign.id}>
-                {organizationById[campaign.organization_id] ?? 'Onbekende organisatie'} — {campaign.name} (
+                {organizationById[campaign.organization_id] ?? 'Onbekende organisatie'}: {campaign.name} (
                 {SCAN_TYPE_LABELS[campaign.scan_type]})
-                {campaign.is_active ? '' : ' — gearchiveerd'}
+                {campaign.is_active ? '' : ' (gearchiveerd)'}
               </option>
             ))}
           </select>
@@ -601,9 +601,9 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
                           <tr key={`${row.row_number}-${row.email}`} className="border-t border-gray-200 bg-white">
                             <td className="px-2 py-2">{row.row_number}</td>
                             <td className="px-2 py-2 font-mono">{row.email}</td>
-                            <td className="px-2 py-2">{row.department || '—'}</td>
-                            <td className="px-2 py-2">{row.role_level || '—'}</td>
-                            {isExitCampaign ? <td className="px-2 py-2">{row.exit_month || '—'}</td> : null}
+                            <td className="px-2 py-2">{row.department || 'n.b.'}</td>
+                            <td className="px-2 py-2">{row.role_level || 'n.b.'}</td>
+                            {isExitCampaign ? <td className="px-2 py-2">{row.exit_month || 'n.b.'}</td> : null}
                           </tr>
                         ))}
                       </tbody>
@@ -636,7 +636,7 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
                   <ul className="space-y-1 text-xs text-red-700">
                     {previewResult.errors.slice(0, 12).map((issue) => (
                       <li key={`${issue.row_number}-${issue.field}-${issue.message}`}>
-                        Rij {issue.row_number} — {issue.field}: {issue.message}
+                        Rij {issue.row_number}, {issue.field}: {issue.message}
                       </li>
                     ))}
                   </ul>

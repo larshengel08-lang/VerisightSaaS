@@ -74,7 +74,8 @@ const INVITED_COUNT_HELP: Partial<Record<ScanType, string>> = {
 }
 const DEFAULT_INVITED_COUNT_HELP = 'Iedereen die de vragenlijst van je krijgt.'
 const LAUNCH_DATE_HELP = 'De dag waarop je de uitnodiging verstuurt.'
-const CLOSES_AT_HELP = 'Op deze datum vraagt Loep je de meting te sluiten of te verlengen. Drie weken is gebruikelijk; verlengen kan met twee weken per keer.'
+// Amendement spec par. 4.3a (18-9): de backend dwingt de sluitdatum af, dus dit is weer waar.
+const CLOSES_AT_HELP = 'Na deze datum kan niemand meer invullen. Drie weken is gebruikelijk; sluiten of verlengen (twee weken per keer) doe je hier in Loep.'
 const REMINDER_HELP = 'Op die dag zet Loep de herinneringstekst voor je klaar; jij verstuurt hem vanuit je eigen mail.'
 const DEPARTMENT_HELP = `Per afdeling zijn minimaal ${MIN_INVITED_PER_DEPARTMENT} ingevulde vragenlijsten nodig om apart in het rapport te verschijnen, en vanaf 10 zie je de spreiding.`
 
@@ -182,6 +183,7 @@ export function SetupWizardCard({
     scanType,
     surveyLink,
     departmentLinks: inviteDepartmentLinks,
+    closesAt: closesAt || null,
   })
 
   const [editableSubject, setEditableSubject] = useState(inviteSubject)
@@ -306,6 +308,7 @@ export function SetupWizardCard({
             scanType,
             surveyLink,
             departmentLinks: buildSegmentSurveyLinks(frontendBaseUrl, publicSurveyToken, segResult.departments),
+            closesAt: closesAt || null,
           }),
         )
         setGeneratedInvite(refreshed.generated)
@@ -345,6 +348,25 @@ export function SetupWizardCard({
         reminderChoice,
       })
       if (!result.ok) { setStep1Error(result.error ?? 'Er ging iets mis.'); return }
+      // De uitnodiging noemt de sluitdatum (amendement par. 4.3a). Die is in
+      // stap 1 net gekozen of gewijzigd, dus de conceptmail wordt opnieuw
+      // opgebouwd; eigen aanpassingen worden alleen vervangen als de tekst
+      // echt veranderde, en dan met een melding (zelfde regel als de segment-tak).
+      const refreshed = refreshInviteDraft(
+        { generated: generatedInvite, subject: editableSubject, body: editableBody },
+        buildInviteTemplate({
+          senderName: '',
+          organizationName,
+          scanType,
+          surveyLink,
+          departmentLinks: inviteDepartmentLinks,
+          closesAt: closesAt || null,
+        }),
+      )
+      setGeneratedInvite(refreshed.generated)
+      setEditableSubject(refreshed.subject)
+      setEditableBody(refreshed.body)
+      if (refreshed.replacedEdits) setInviteLinksReplacedEdits(true)
       setStep(2)
     })
   }
@@ -403,18 +425,18 @@ export function SetupWizardCard({
   }
 
   return (
-    <section className="rounded-[22px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-6 py-7">
+    <section className="rounded-[22px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-4 py-7 sm:px-6">
       <p className="mb-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#E8A020]">
         {scanLabel}
       </p>
-      <h1 className="font-serif text-[2rem] leading-[1.05] tracking-[-0.04em] text-[color:var(--dashboard-ink)]">
+      <h1 className="break-words font-serif text-[2rem] leading-[1.05] tracking-[-0.04em] text-[color:var(--dashboard-ink)]">
         Welkom {organizationName} bij Loep
       </h1>
       <p className="mt-2 text-[0.95rem] text-[color:var(--dashboard-text)]">
         Doorloop drie stappen om je meting te starten.
       </p>
 
-      <div className="mt-6 grid grid-cols-3 gap-3">
+      <div className="mt-6 grid grid-cols-1 gap-3 lg:grid-cols-3">
 
         {/* Stap 1 */}
         <div className={`relative rounded-[18px] p-5 ${step === 1 ? 'bg-[#0D1B2A]' : 'border border-[color:var(--dashboard-frame-border)] bg-white opacity-45'}`}>
@@ -498,7 +520,7 @@ export function SetupWizardCard({
                               disabled={isLocked}
                               placeholder="Afdelingsnaam"
                               onChange={(e) => updateDeptRow(index, { label: e.target.value })}
-                              className="flex-1 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#E8A020]/50 disabled:opacity-50"
+                              className="min-w-0 flex-1 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#E8A020]/50 disabled:opacity-50"
                             />
                             <input
                               type="number" min={MIN_INVITED_PER_DEPARTMENT}
@@ -509,13 +531,13 @@ export function SetupWizardCard({
                                   invitedCount: e.target.value === '' ? '' : Number(e.target.value),
                                 })
                               }
-                              className="w-24 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#E8A020]/50"
+                              className="w-20 shrink-0 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#E8A020]/50"
                             />
                             {!isLocked && deptRows.length > 2 && (
                               <button
                                 type="button"
                                 onClick={() => removeDeptRow(index)}
-                                className="rounded-lg border border-white/15 px-2 text-xs text-white/50 hover:bg-white/10"
+                                className="shrink-0 rounded-lg border border-white/15 px-2 text-xs text-white/50 hover:bg-white/10"
                                 aria-label="Verwijder afdeling"
                               >
                                 ×
@@ -535,7 +557,7 @@ export function SetupWizardCard({
                                   else deptCodeRefs.current.delete(links.slug)
                                 }}
                                 onCopy={() => handleManualDeptCopy(links.slug, links.url)}
-                                className="flex-1 truncate rounded border border-white/10 bg-white/5 px-2 py-1 text-[9px] text-white/50"
+                                className="min-w-0 flex-1 truncate rounded border border-white/10 bg-white/5 px-2 py-1 text-[9px] text-white/50"
                               >
                                 {links.url}
                               </code>
@@ -587,7 +609,7 @@ export function SetupWizardCard({
                   <div>
                     <p className="mb-1 text-xs font-semibold text-white/50">Vragenlijstlink</p>
                     <div className="flex items-center gap-2">
-                      <code className="flex-1 truncate rounded-lg border border-white/15 bg-white/10 px-2 py-1.5 text-[10px] text-white/70">
+                      <code className="min-w-0 flex-1 truncate rounded-lg border border-white/15 bg-white/10 px-2 py-1.5 text-[10px] text-white/70">
                         {surveyLink}
                       </code>
                       <a href={surveyLink} target="_blank" rel="noopener noreferrer"
@@ -710,7 +732,7 @@ export function SetupWizardCard({
               </div>
               {inviteLinksReplacedEdits && (
                 <p role="status" className="rounded-lg bg-[#E8A020]/15 px-3 py-2 text-[11px] leading-relaxed text-white/80">
-                  De uitnodiging is bijgewerkt met de nieuwe afdelingslinks. Je eigen aanpassingen aan de tekst zijn daarbij vervangen; voeg ze zo nodig opnieuw toe.
+                  De uitnodiging is opnieuw opgebouwd met wat je in stap 1 hebt opgeslagen (sluitdatum of afdelingslinks). Je eigen aanpassingen aan de tekst zijn daarbij vervangen; voeg ze zo nodig opnieuw toe.
                 </p>
               )}
               <p className="text-[10px] text-white/40">Je kunt de tekst aanpassen voor je kopieert. Vergeet niet je naam in te vullen bij &ldquo;Met vriendelijke groet&rdquo;.</p>

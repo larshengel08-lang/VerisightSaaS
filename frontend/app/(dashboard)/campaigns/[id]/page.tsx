@@ -4,10 +4,13 @@ import { DashboardStateCard } from '@/components/dashboard/dashboard-state-card'
 import { ReadOnlyStateCard } from '@/components/dashboard/read-only-state-card'
 import { RunningStateCard } from '@/components/dashboard/running-state-card'
 import { WelcomeGate } from '@/components/dashboard/welcome-gate'
+import { RequestNewMeasurement } from '@/components/dashboard/request-new-measurement'
 import { PdfDownloadButton } from './pdf-download-button'
 import { SuiteAccessDenied } from '@/components/dashboard/suite-access-denied'
 import { resolveDashboardState } from '@/lib/dashboard/dashboard-state-resolver'
+import { withoutSelfLink } from '@/lib/dashboard/self-link'
 import { isSkippedReminderEvent } from '@/lib/dashboard/reminder-event'
+import { completionPct, resolveInvitedDenominator } from '@/lib/dashboard/invited-denominator'
 import { normalizeReminderConfig } from '@/lib/launch-controls'
 import { readReminderChoice } from '@/lib/campaign-schedule'
 import { buildReminderText } from '@/lib/dashboard/reminder-text'
@@ -49,14 +52,14 @@ export default async function CampaignPage({ params }: Props) {
     .select('*')
     .eq('campaign_id', id)
     .single()
-  // .single() returns PGRST116 when no row matches — that is a genuine 404, not a load failure.
+  // .single() returns PGRST116 when no row matches: that is a genuine 404, not a load failure.
   if (statsError && statsError.code !== 'PGRST116') {
     throw new Error(`Kon campagnedetail niet laden: ${statsError.message}`)
   }
   if (!statsRow) notFound()
   const stats = statsRow as CampaignStats
 
-  const [{ data: campaignMeta }, { data: deliveryRecord }, { data: reminderEvents }, { data: profile }, { data: orgData }, { data: respondentDepts }, { data: membership }, { count: extensionCount, error: extensionCountError }] = await Promise.all([
+  const [{ data: campaignMeta, error: campaignMetaError }, { data: deliveryRecord, error: deliveryRecordError }, { data: reminderEvents, error: reminderEventsError }, { data: profile }, { data: orgData, error: orgDataError }, { data: respondentDepts }, { data: membership }, { count: extensionCount, error: extensionCountError }] = await Promise.all([
     supabase.from('campaigns').select('closed_at, closes_at, delivery_mode, comms_mode, public_survey_token, organization_id, segment_departments').eq('id', id).maybeSingle(),
     supabase
       .from('campaign_delivery_records')
@@ -90,6 +93,29 @@ export default async function CampaignPage({ params }: Props) {
       .contains('metadata', { extension: true }),
   ])
 
+  // Fail Loud: campaignMeta levert sluitdatum en gesloten-status. Een mislukte
+  // query zou de expired-check stil uitzetten en "Nog niet ingesteld" tonen.
+  // Een ontbrekende rij zonder fout (maybeSingle) gooit niet.
+  if (campaignMetaError) {
+    throw new Error(`Kon de gegevens van de meting niet laden: ${campaignMetaError.message}`)
+  }
+  // Fail Loud: een mislukte organisatie-query mag niet stil als "geen naam"
+  // doorgaan. Een ontbrekende naam zonder fout blijft de zichtbare
+  // gedegradeerde tekst ("je organisatie" / "organisatie niet bekend").
+  if (orgDataError) {
+    throw new Error(`Kon de organisatienaam niet laden: ${orgDataError.message}`)
+  }
+  // Fail Loud: een mislukte query mag niet als "geen delivery record" (dan valt
+  // de kaart stil terug op de inrichtstaat) of als "herinnering nog niet
+  // afgehandeld" gelezen worden. Een ontbrekende rij (data null zonder fout,
+  // maybeSingle) is wél legitiem en gooit niet.
+  if (deliveryRecordError) {
+    throw new Error(`Kon de lanceergegevens van de meting niet laden: ${deliveryRecordError.message}`)
+  }
+  if (reminderEventsError) {
+    throw new Error(`Kon de herinneringsstatus van de meting niet laden: ${reminderEventsError.message}`)
+  }
+
   // Fail Loud: een mislukte telling mag niet als "nog nooit verlengd" gelezen
   // worden, want dan biedt de kaart verlengen aan op een meting die al op de
   // grens zit.
@@ -109,16 +135,16 @@ export default async function CampaignPage({ params }: Props) {
 
   const reminderConfig = normalizeReminderConfig(deliveryRecord?.reminder_config ?? null)
 
-  // Bij self_send is total_invited in de stats view 0 (geen pre-aangemaakte respondenten).
-  // Gebruik invited_count van het delivery record als noemer wanneer comms_mode = 'self_send'.
-  const isSelfSend = campaignMeta?.comms_mode === 'self_send'
-  const manualInvitedCount = deliveryRecord?.invited_count ?? null
-  const effectiveTotalInvited = isSelfSend && manualInvitedCount != null
-    ? manualInvitedCount
-    : stats.total_invited
-  const effectiveCompletionRatePct = effectiveTotalInvited > 0
-    ? Math.round((stats.total_completed / effectiveTotalInvited) * 100)
-    : (stats.completion_rate_pct ?? 0)
+  // Eén noemer overal (spec 2026-09-16 par. 6.2): zie dashboard/page.tsx.
+  const denominator = resolveInvitedDenominator({
+    invitedCount: deliveryRecord?.invited_count ?? null,
+    respondentRows: stats.total_invited,
+  })
+  const effectiveTotalInvited = denominator.known ? denominator.value : 0
+  // De ?? 0 is alleen bereikbaar zonder noemer. Dan is effectiveTotalInvited 0:
+  // een lopende meting valt in de setup-staat (gelanceerd vereist een noemer > 0)
+  // en de gesloten staten tonen geen percentage. Render deze 0 dus nooit als percentage.
+  const effectiveCompletionRatePct = completionPct(stats.total_completed, denominator) ?? 0
 
   // Rapportvrijgave (spec 2026-09-11 par. 4.1): 10 ingevulde vragenlijsten
   // (30 bij culture_assessment). Of de campagne gesloten is, beslist de resolver;
@@ -149,6 +175,10 @@ export default async function CampaignPage({ params }: Props) {
     today: todayIso(),
   })
 
+  // Walkthrough 5.2: "Open rapport" linkte naar deze pagina zelf en deed
+  // zichtbaar niets. Het rapportblok onderaan heeft de echte downloadknop.
+  const pageState = withoutSelfLink(state, `/campaigns/${id}`)
+
   const reminderText = buildReminderText({
     commsMode: campaignMeta?.comms_mode ?? null,
     scanType: stats.scan_type,
@@ -160,6 +190,7 @@ export default async function CampaignPage({ params }: Props) {
       | null,
     deliveryMode: campaignMeta?.delivery_mode ?? null,
     launchDate: deliveryRecord?.launch_date ?? null,
+    closesAt: campaignMeta?.closes_at ?? null,
     participantCommsConfig: deliveryRecord?.participant_comms_config ?? null,
   })
 
@@ -171,7 +202,7 @@ export default async function CampaignPage({ params }: Props) {
         href="/dashboard"
         className="inline-flex text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:text-[color:var(--dashboard-ink)]"
       >
-        ← Terug naar dashboard
+        ← Alle metingen
       </Link>
       <div className="flex flex-wrap items-baseline gap-3">
         <h2 className="text-xl font-semibold tracking-tight text-[color:var(--dashboard-ink)]">
@@ -184,7 +215,7 @@ export default async function CampaignPage({ params }: Props) {
         ) : null}
       </div>
       {!canManage ? (
-        <ReadOnlyStateCard state={state} />
+        <ReadOnlyStateCard state={pageState} />
       ) : state.kind === 'setup' ? (
         <WelcomeGate
           campaignId={id}
@@ -203,12 +234,12 @@ export default async function CampaignPage({ params }: Props) {
         />
       ) : state.kind === 'running' ? (
         <RunningStateCard
-          state={state}
+          state={pageState}
           reminderText={reminderText}
           scanLabel={SCAN_TYPE_LABELS[stats.scan_type] ?? stats.scan_type}
         />
       ) : (
-        <DashboardStateCard state={state} reminderText={reminderText} />
+        <DashboardStateCard state={pageState} reminderText={reminderText} />
       )}
       {state.kind === 'report_ready' ? (
         <div className="rounded-[22px] border border-[color:var(--dashboard-frame-border)] bg-white px-6 py-6">
@@ -225,6 +256,9 @@ export default async function CampaignPage({ params }: Props) {
             scanType={stats.scan_type}
           />
         </div>
+      ) : null}
+      {state.processingVariant === 'insufficient_response' ? (
+        <RequestNewMeasurement variant="follow_up" organizationName={orgData?.name ?? null} />
       ) : null}
     </div>
   )

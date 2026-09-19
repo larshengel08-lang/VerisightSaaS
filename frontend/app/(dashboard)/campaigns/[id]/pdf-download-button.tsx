@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { SCAN_TYPE_LABELS, type ScanType } from '@/lib/types'
+import { downloadErrorMessage, summarizeTechnicalDetail } from '@/lib/report-download-error'
 
 interface Props {
   campaignId: string
@@ -27,12 +28,12 @@ export function PdfDownloadButton({
   align = 'start',
 }: Props) {
   const [loadingFormat, setLoadingFormat] = useState<DownloadFormat | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<{ message: string; technical: string | null } | null>(null)
 
   async function handleDownload(format: DownloadFormat) {
     const unsupportedMessage = scanType ? UNSUPPORTED_REPORT_MESSAGES[scanType] : undefined
     if (unsupportedMessage) {
-      setError(unsupportedMessage)
+      setError({ message: unsupportedMessage, technical: null })
       return
     }
 
@@ -45,16 +46,23 @@ export function PdfDownloadButton({
         : `/api/campaigns/${campaignId}/report`
       const response = await fetch(url)
       if (!response.ok) {
-        let detail = `Rapport kon niet worden gegenereerd (${response.status}). Probeer het opnieuw.`
+        // De rapportproxy geeft de ruwe backend-body soms door als JSON
+        // { detail }: dat kan een geneste FastAPI-JSON-string, een hele
+        // HTML-foutpagina (Railway 502/504) of platte tekst zijn.
+        // summarizeTechnicalDetail maakt daar altijd leesbare tekst van
+        // (nooit ruwe HTML); downloadErrorMessage bepaalt de hoofdzin per
+        // statuscode. De technische melding blijft apart zichtbaar (Fail Loud).
+        let rawDetail: string | null = null
         try {
-          const payload = (await response.json()) as { detail?: string }
-          if (typeof payload.detail === 'string' && payload.detail.trim()) {
-            detail = payload.detail
-          }
+          const payload = (await response.json()) as { detail?: unknown }
+          if (typeof payload.detail === 'string') rawDetail = payload.detail
         } catch {
-          // Keep the generic fallback when no JSON detail is available.
+          // Geen JSON-detail (bijvoorbeeld een kale foutpagina zonder body).
         }
-        setError(detail)
+        setError({
+          message: downloadErrorMessage(response.status),
+          technical: summarizeTechnicalDetail(rawDetail),
+        })
         setLoadingFormat(null)
         return
       }
@@ -68,8 +76,15 @@ export function PdfDownloadButton({
         buildFallbackDownloadFilename(scanType, campaignName, format)
       link.click()
       URL.revokeObjectURL(objectUrl)
-    } catch {
-      setError('Verbindingsfout. Controleer of de backend bereikbaar is.')
+    } catch (err) {
+      // Niet elke mislukte download is een verbindingsprobleem (denk aan een
+      // geblokkeerde download door de browser); de echte fout blijft
+      // zichtbaar als technische melding en gaat naar de console (Fail Loud).
+      console.error(err)
+      setError({
+        message: 'Het downloaden is niet gelukt. Controleer je internetverbinding en probeer het opnieuw.',
+        technical: summarizeTechnicalDetail(err instanceof Error ? err.message : String(err)),
+      })
     } finally {
       setLoadingFormat(null)
     }
@@ -100,7 +115,16 @@ export function PdfDownloadButton({
           </button>
         ) : null}
       </div>
-      {error ? <p className={`max-w-xs text-xs text-red-600 ${textAlign}`}>{error}</p> : null}
+      {error ? (
+        <p role="alert" className={`max-w-xs text-xs text-red-600 ${textAlign}`}>
+          {error.message}
+          {error.technical ? (
+            <span className="mt-1 block max-h-24 overflow-auto break-words text-[11px] text-red-700">
+              Technische melding: {error.technical}
+            </span>
+          ) : null}
+        </p>
+      ) : null}
     </div>
   )
 }

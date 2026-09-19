@@ -20,6 +20,14 @@ describe('kaart "Campagne loopt" (spec 2026-09-16 par. 4.2 en 4.4)', () => {
     expect(src).toContain('<DashboardStateActions state={state} reminderText={reminderText} />')
   })
 
+  it('noemt de meting naast de scan (walkthrough 1.2)', () => {
+    expect(src).toContain('state.campaignName')
+  })
+
+  it('toont de sluitdatum één keer, in de tijdlijn (2a-uitvoeringsverslag, punt 9)', () => {
+    expect(src).not.toContain('closeDateLabel')
+  })
+
   it('bevat geen em- of en-dashes', () => {
     expect(src).not.toMatch(/[—–]/)
   })

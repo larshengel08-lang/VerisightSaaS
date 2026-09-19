@@ -223,7 +223,7 @@ export async function closeCampaignAction(campaignId: string): Promise<Dashboard
   //    is, dus dat weegt zwaarder dan een individuele mailfout.
   // 2) Er is wel degelijk geprobeerd te mailen, maar dat is (deels) mislukt.
   // 3) Alles technisch gelukt, maar er was niemand klant-gericht om naar te
-  //    sturen (Defect 2) — de operator-kopie telt hier niet mee.
+  //    sturen (Defect 2); de operator-kopie telt hier niet mee.
   if (statsError) {
     return {
       ok: true,

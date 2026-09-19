@@ -56,7 +56,7 @@ export default async function CampaignSetupPage({ params }: Props) {
     if (dept) departmentResponseCounts[dept] = (departmentResponseCounts[dept] ?? 0) + 1
   }
 
-  // Al gelanceerd — wizard niet meer nodig
+  // Al gelanceerd: wizard niet meer nodig
   if (delivery?.launch_confirmed_at) {
     redirect(`/campaigns/${id}`)
   }

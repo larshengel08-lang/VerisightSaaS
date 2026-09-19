@@ -126,7 +126,7 @@ describe('resolveDashboardState', () => {
     )
     expect(state.kind).toBe('action')
     expect(state.actionVariant).toBe('expired')
-    expect(state.primaryMessage).toBe('De sluitdatum is bereikt')
+    expect(state.primaryMessage).toBe('De sluitdatum is voorbij')
     expect(state.ctaLabel).toBe('Meting sluiten')
     expect(state.ctaKind).toBe('close_campaign')
     expect(state.secondaryActions).toEqual([{ label: 'Twee weken verlengen', kind: 'extend' }])
@@ -167,6 +167,44 @@ describe('resolveDashboardState', () => {
     expect(state.secondaryActions).toEqual([])
   })
 
+  it('State 3 — de sluitdag zelf is nog geen expired: closes_at is inclusief (spec 4.3a, "tot en met")', () => {
+    const closeDay = resolveDashboardState(
+      baseInput({
+        campaign: withCampaign({ totalCompleted: 6, completionRatePct: 30 }),
+        closesAt: '2026-06-05',
+        today: '2026-06-05',
+        reminderConfig: { enabled: false, firstReminderAfterDays: 5, maxReminderCount: 1 },
+      }),
+    )
+    expect(closeDay.kind).toBe('running')
+    expect(closeDay.actionVariant).not.toBe('expired')
+
+    const closeDayTimestamp = resolveDashboardState(
+      baseInput({
+        campaign: withCampaign({ totalCompleted: 12 }),
+        reportReady: true,
+        closesAt: '2026-06-05T00:00:00Z',
+        today: '2026-06-05',
+      }),
+    )
+    expect(closeDayTimestamp.actionVariant).not.toBe('expired')
+
+    const dayAfter = resolveDashboardState(
+      baseInput({ campaign: withCampaign({ totalCompleted: 6, completionRatePct: 30 }), closesAt: '2026-06-05', today: '2026-06-06' }),
+    )
+    expect(dayAfter.actionVariant).toBe('expired')
+  })
+
+  it('State 3 — expired-copy klopt op de dag na de sluitdatum en bevat geen streepjes', () => {
+    for (const [completed, extensionCount, ready] of [[12, 0, true], [6, 0, false], [6, 3, false]] as const) {
+      const state = resolveDashboardState(
+        baseInput({ campaign: withCampaign({ totalCompleted: completed }), reportReady: ready, extensionCount, closesAt: '2026-06-05', today: '2026-06-06' }),
+      )
+      expect(state.primaryMessage).toBe('De sluitdatum is voorbij')
+      expect(`${state.primaryMessage} ${state.subtext}`).not.toMatch(/[—–]/)
+    }
+  })
+
   it('State 3 — expired fires even when closesAt is a full ISO timestamp', () => {
     const state = resolveDashboardState(
       baseInput({ campaign: withCampaign({ totalCompleted: 12 }), closesAt: '2026-06-05T22:00:00Z', today: '2026-06-06' }),
@@ -183,7 +221,7 @@ describe('resolveDashboardState', () => {
     expect(state.primaryMessage).toBe('Rapport wordt voorbereid')
   })
 
-  it('State 3b — gesloten onder de drempel is een eindtoestand met contact (spec 4.5)', () => {
+  it('State 3b — gesloten onder de drempel is een eindtoestand; de mailknop komt uit het blok, niet uit de kaart (spec 4.5)', () => {
     const state = resolveDashboardState(
       baseInput({ campaign: withCampaign({ isActive: false, totalCompleted: 7, closedAt: '2026-06-10T09:00:00Z' }), reportReady: false }),
     )
@@ -193,9 +231,10 @@ describe('resolveDashboardState', () => {
     expect(state.subtext).toBe(
       'Deze meting is gesloten met 7 ingevulde vragenlijsten. Voor een rapport zijn er minimaal 10 nodig. Wil je opnieuw meten? Mail Loep.',
     )
-    expect(state.ctaKind).toBe('link')
-    expect(state.ctaLabel).toBe('Mail Loep')
-    expect(state.ctaHref).toBe('mailto:hallo@getloep.nl?subject=Opnieuw%20meten%3A%20Loep%20Vertrek%20Q2%202026')
+    // Eén mailactie op de eindtoestand: RequestNewMeasurement onder de kaart.
+    expect(state.ctaKind).toBeNull()
+    expect(state.ctaLabel).toBeNull()
+    expect(state.ctaHref).toBeNull()
     expect(state.subtext).not.toContain('e-mail')
     expect(state.timeline).toBeNull()
   })
@@ -261,5 +300,13 @@ describe('resolveDashboardState', () => {
       expect(state.subtext).not.toMatch(/[—–]/)
       for (const action of state.secondaryActions) expect(action.label).not.toMatch(/[—–]/)
     }
+  })
+  it('draagt de naam van de meting in elke staat, zodat de kaart hem kan noemen (walkthrough 1.2)', () => {
+    expect(resolveDashboardState(baseInput()).campaignName).toBe('Loep Vertrek Q2 2026')
+    expect(resolveDashboardState(baseInput({ launchConfirmedAt: null })).campaignName).toBe('Loep Vertrek Q2 2026')
+    expect(
+      resolveDashboardState(baseInput({ campaign: withCampaign({ isActive: false, totalCompleted: 14 }), reportReady: true })).campaignName,
+    ).toBe('Loep Vertrek Q2 2026')
+    expect(resolveDashboardState(baseInput({ campaign: null })).campaignName).toBeNull()
   })
 })

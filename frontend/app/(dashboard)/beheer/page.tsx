@@ -493,7 +493,7 @@ export default async function BeheerPage() {
                             <div className="font-medium text-slate-900">{stats.campaign_name}</div>
                             <div className="mt-0.5 text-xs text-slate-500">{getScanDefinition(stats.scan_type).productName}</div>
                           </td>
-                          <td className="px-5 py-3 text-slate-600">{org?.name ?? '—'}</td>
+                          <td className="px-5 py-3 text-slate-600">{org?.name ?? 'n.b.'}</td>
                           <td className="px-5 py-3 text-center">
                             <span
                               className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
@@ -525,7 +525,7 @@ export default async function BeheerPage() {
                                 {displaySignal.toFixed(1)}
                               </span>
                             ) : (
-                              <span className="text-xs text-slate-300">—</span>
+                              <span className="text-xs text-slate-300">n.b.</span>
                             )}
                           </td>
                           <td className="px-4 py-3">

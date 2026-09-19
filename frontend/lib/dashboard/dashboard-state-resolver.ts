@@ -5,7 +5,6 @@ import { isReminderDue } from '@/lib/dashboard/reminder-due'
 import { formatDutchDate } from '@/lib/dashboard/format-dutch-date'
 import { buildCampaignTimeline, type CampaignTimeline } from '@/lib/dashboard/campaign-timeline'
 import { canExtendCampaign, extensionsLeft, MAX_EXTENSIONS } from '@/lib/dashboard/campaign-extension'
-import { LOEP_CONTACT_EMAIL } from '@/lib/loep-contact'
 
 export type DashboardStateKind =
   | 'no_campaign'
@@ -70,6 +69,8 @@ export interface DashboardState {
   actionVariant: DashboardActionVariant | null
   processingVariant: DashboardProcessingVariant | null
   campaignId: string | null
+  /** Naam van de meting; null in State 0. De kaart noemt hem, want met meer metingen is "Vandaag: stuur de herinnering" anders onbenoemd. */
+  campaignName: string | null
   primaryMessage: string
   subtext: string
   tone: DashboardStateTone
@@ -104,6 +105,7 @@ const EMPTY_STATE: Omit<DashboardState, 'kind' | 'primaryMessage' | 'subtext' | 
   actionVariant: null,
   processingVariant: null,
   campaignId: null,
+  campaignName: null,
   ctaLabel: null,
   ctaHref: null,
   ctaKind: null,
@@ -141,6 +143,7 @@ export function resolveDashboardState(input: DashboardStateInput): DashboardStat
   const counts = `${campaign.totalCompleted} van ${campaign.totalInvited} ingevuld (${progressPct}%)`
   const base = {
     campaignId: campaign.id,
+    campaignName: campaign.name,
     totalCompleted: campaign.totalCompleted,
     totalInvited: campaign.totalInvited,
     reportReady: input.reportReady,
@@ -180,8 +183,9 @@ export function resolveDashboardState(input: DashboardStateInput): DashboardStat
     }
 
     // Eindtoestand (spec 2026-09-16 par. 4.5): geen belofte van een e-mail die
-    // niet komt; wel de weg naar een nieuwe meting.
-    const subject = encodeURIComponent(`Opnieuw meten: ${campaign.name}`)
+    // niet komt; wel de weg naar een nieuwe meting. Die weg is de mailknop uit
+    // blok G (RequestNewMeasurement onder de kaart), dus de kaart zelf heeft
+    // geen CTA: één mailactie, niet twee.
     return {
       ...EMPTY_STATE,
       ...base,
@@ -190,9 +194,6 @@ export function resolveDashboardState(input: DashboardStateInput): DashboardStat
       primaryMessage: 'Gesloten zonder rapport',
       subtext: `Deze meting is gesloten met ${campaign.totalCompleted} ingevulde vragenlijsten. Voor een rapport zijn er minimaal ${thresholds.insightMin} nodig. Wil je opnieuw meten? Mail Loep.`,
       tone: 'neutral',
-      ctaLabel: 'Mail Loep',
-      ctaHref: `mailto:${LOEP_CONTACT_EMAIL}?subject=${subject}`,
-      ctaKind: 'link',
       degraded: true,
     }
   }
@@ -238,9 +239,12 @@ export function resolveDashboardState(input: DashboardStateInput): DashboardStat
   const closeAction: DashboardSecondaryAction = { label: 'Meting sluiten', kind: 'close_campaign' }
   const extendAction: DashboardSecondaryAction = { label: 'Twee weken verlengen', kind: 'extend' }
 
-  // Priority 3 — expired (close date reached). Disabled while closesAt is null.
-  // Compare date-only portions so a full ISO closesAt timestamp still fires on the close day.
-  const expired = input.closesAt !== null && input.today.slice(0, 10) >= input.closesAt.slice(0, 10)
+  // Priority 3 — expired (close date passed). Disabled while closesAt is null.
+  // closes_at is inclusief (spec 4.3a: "Invullen kan tot en met X"; backend/survey_window.py
+  // accepteert zolang vandaag <= closes_at). Pas de dag ná de sluitdatum is de meting verlopen,
+  // anders sluit een klant die de kaart volgt respondenten buiten op de dag die hun beloofd is.
+  // Compare date-only portions so a full ISO closesAt timestamp behaves as its date.
+  const expired = input.closesAt !== null && input.today.slice(0, 10) > input.closesAt.slice(0, 10)
   if (expired) {
     if (input.reportReady) {
       return {
@@ -248,7 +252,7 @@ export function resolveDashboardState(input: DashboardStateInput): DashboardStat
         ...running,
         kind: 'action',
         actionVariant: 'expired',
-        primaryMessage: 'De sluitdatum is bereikt',
+        primaryMessage: 'De sluitdatum is voorbij',
         subtext: `${counts}. Sluit de meting, dan staat het rapport klaar.`,
         tone: 'attention',
         ctaLabel: 'Meting sluiten',
@@ -262,7 +266,7 @@ export function resolveDashboardState(input: DashboardStateInput): DashboardStat
         ...running,
         kind: 'action',
         actionVariant: 'expired',
-        primaryMessage: 'De sluitdatum is bereikt',
+        primaryMessage: 'De sluitdatum is voorbij',
         subtext: `${counts}. Voor een rapport zijn minimaal ${thresholds.insightMin} antwoorden nodig. Verleng met twee weken of sluit zonder rapport.`,
         tone: 'attention',
         ctaLabel: 'Twee weken verlengen',
@@ -275,7 +279,7 @@ export function resolveDashboardState(input: DashboardStateInput): DashboardStat
       ...running,
       kind: 'action',
       actionVariant: 'expired',
-      primaryMessage: 'De sluitdatum is bereikt',
+      primaryMessage: 'De sluitdatum is voorbij',
       subtext: `${counts}. Voor een rapport zijn minimaal ${thresholds.insightMin} antwoorden nodig. Je hebt de meting al ${MAX_EXTENSIONS} keer verlengd; je kunt hem alleen nog sluiten.`,
       tone: 'attention',
       ctaLabel: 'Meting sluiten',

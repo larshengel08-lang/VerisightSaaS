@@ -35,7 +35,7 @@ describe('setup-wizard afdelingsblok', () => {
     expect(src).toMatch(/onChange=\{\(e\) => \{ setEditableSubject\(e\.target\.value\); setInviteLinksReplacedEdits\(false\) \}\}/)
     expect(src).toMatch(/onChange=\{\(e\) => \{ setEditableBody\(e\.target\.value\); setInviteLinksReplacedEdits\(false\) \}\}/)
     expect(src).toMatch(/async function handleCopy\(text: string, which: 'subject' \| 'body'\) \{\s+setInviteLinksReplacedEdits\(false\)/)
-    expect(src).toContain('De uitnodiging is bijgewerkt met de nieuwe afdelingslinks.')
+    expect(src).toContain('De uitnodiging is opnieuw opgebouwd met wat je in stap 1 hebt opgeslagen (sluitdatum of afdelingslinks).')
   })
   it('gebruikt de gedeelde uitnodigingstekst in plaats van een eigen kopie', () => {
     expect(src).toContain('buildInviteTemplate')
@@ -96,15 +96,29 @@ describe('setup-wizard stap 1: planning en drempels (spec 2026-09-16 par. 4.1 en
     expect(src).toContain('Herinnering')
   })
 
-  it('geeft de toelichtingen uit de spec', () => {
+  it('geeft de toelichtingen uit de spec, met de sluitdatum-toelichting die sinds het amendement weer waar is', () => {
     expect(src).toContain('De dag waarop je de uitnodiging verstuurt.')
-    expect(src).toContain('Op deze datum vraagt Loep je de meting te sluiten of te verlengen. Drie weken is gebruikelijk; verlengen kan met twee weken per keer.')
-    // Niets dwingt closes_at af (alleen is_active telt): beloof niet dat invullen dan stopt.
-    expect(src).not.toContain('Na deze datum kan niemand meer invullen')
+    // Amendement par. 4.3a (18-9): de backend dwingt de sluitdatum nu af, dus de belofte mag terug.
+    expect(src).toContain('Na deze datum kan niemand meer invullen. Drie weken is gebruikelijk; sluiten of verlengen (twee weken per keer) doe je hier in Loep.')
+    expect(src).not.toContain('Op deze datum vraagt Loep je de meting te sluiten of te verlengen')
     expect(src).toContain('Op die dag zet Loep de herinneringstekst voor je klaar; jij verstuurt hem vanuit je eigen mail.')
     expect(src).toContain('inclusief parttimers en oproepkrachten')
     expect(src).toContain('niet het hele personeelsbestand')
     expect(src).toContain('Alle nieuwe medewerkers die je in deze ronde uitnodigt.')
+  })
+
+  it('zet de sluitdatum in de uitnodiging en ververst de tekst na het opslaan van stap 1, in beide modi', () => {
+    // Drie opbouwplekken (eerste render, segment-tak, niet-segment-tak) krijgen allemaal de sluitdatum mee.
+    // Gescopet op buildInviteTemplate-aanroepen: een kale telling van
+    // "closesAt: closesAt || null" in het hele bestand raakt ook de
+    // (bestaande, ongerelateerde) previewTimeline-opbouw voor stap 3, die
+    // dezelfde variabele voor een ander doel meegeeft.
+    const inviteTemplateCalls = src.split('buildInviteTemplate(').slice(1)
+    expect(inviteTemplateCalls.length).toBe(3)
+    expect(inviteTemplateCalls.every((chunk) => /closesAt: closesAt \|\| null/.test(chunk.slice(0, 400)))).toBe(true)
+    // Beide takken verversen de conceptmail; vóór dit plan deed alleen de segment-tak dat,
+    // waardoor een in stap 1 gekozen sluitdatum niet in de tekst van stap 2 belandde.
+    expect(src.match(/refreshInviteDraft\(/g)?.length).toBe(2)
   })
 
   it('dwingt de drempels client-side af met dezelfde helpers als de server', () => {
@@ -162,5 +176,37 @@ describe('setup-wizard stap 3 (spec 2026-09-16 par. 4.2)', () => {
     expect(src).toContain('previewTimeline')
     expect(src).toContain('<CampaignTimeline timeline={previewTimeline} dimmed />')
     expect(src).not.toContain('rapport via Loep')
+  })
+})
+
+describe('setup-wizard responsive en invoervelden (spec 2026-09-16 par. 7, walkthrough 8.1 en 3.12)', () => {
+  it('zet de drie stappen onder elkaar onder lg en naast elkaar vanaf lg', () => {
+    expect(src).toContain('grid grid-cols-1 gap-3 lg:grid-cols-3')
+    expect(src).not.toContain('grid grid-cols-3 gap-3')
+  })
+
+  it('houdt het onderwerp een eenregelig invoerveld dat niet afkapt', () => {
+    expect(src).toMatch(/<input\s+id="invite-subject"/)
+    expect(src).not.toMatch(/<textarea\s+id="invite-subject"/)
+  })
+
+  it('geeft de kop van de kaart ruimte om af te breken op smalle schermen', () => {
+    expect(src).toContain('break-words font-serif text-[2rem]')
+  })
+
+  it('gebruikt smallere zijmarges op een telefoon zodat de afdelingsrij past', () => {
+    expect(src).toContain('px-4 py-7 sm:px-6')
+  })
+
+  it('laat de afdelingsnaam krimpen en houdt aantal en verwijderknop op een vaste breedte (walkthrough 8.1, 375px)', () => {
+    expect(src).toContain('min-w-0 flex-1 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#E8A020]/50 disabled:opacity-50')
+    expect(src).toContain('w-20 shrink-0 rounded-lg border border-white/20 bg-white/10')
+    expect(src).toContain('shrink-0 rounded-lg border border-white/15 px-2 text-xs text-white/50 hover:bg-white/10')
+    expect(src).not.toContain('w-24 rounded-lg border border-white/20 bg-white/10')
+  })
+
+  it('laat de link-codeblokken krimpen zodat de knop ernaast niet wordt weggeduwd (code review Task 9)', () => {
+    expect(src).toContain('min-w-0 flex-1 truncate rounded border border-white/10 bg-white/5')
+    expect(src).toContain('min-w-0 flex-1 truncate rounded-lg border border-white/15 bg-white/10')
   })
 })

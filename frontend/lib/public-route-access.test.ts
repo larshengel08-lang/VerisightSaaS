@@ -63,6 +63,7 @@ describe('public route access', () => {
     expect(isProtectedAppRoutePath('/campaigns/123')).toBe(true)
     expect(isProtectedAppRoutePath('/reports')).toBe(true)
     expect(isProtectedAppRoutePath('/action-center')).toBe(true)
+    expect(isProtectedAppRoutePath('/help')).toBe(true)
     // Metadata-routes en onbekende paden mogen nooit richting /login.
     expect(isProtectedAppRoutePath('/opengraph-image')).toBe(false)
     expect(isProtectedAppRoutePath('/deze-pagina-bestaat-niet')).toBe(false)

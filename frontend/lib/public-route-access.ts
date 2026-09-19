@@ -34,6 +34,7 @@ export const PROTECTED_APP_ROUTES = [
   '/beheer',
   '/campaigns',
   '/reports',
+  '/help',
   '/action-center',
   '/dev',
 ] as const

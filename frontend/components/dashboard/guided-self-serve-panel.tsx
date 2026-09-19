@@ -682,7 +682,7 @@ export function GuidedSelfServePanel({
           </div>
         </div>
       ) : (
-        /* STATE C: Live — response tracking + reminder management */
+        /* STATE C: Live, response tracking + reminder management */
         <div className="rounded-[24px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] p-5 shadow-[0_1px_3px_rgba(10,25,47,0.03)]">
           <h3 className="text-base font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">
             Respons en reminders
@@ -711,7 +711,7 @@ export function GuidedSelfServePanel({
             </p>
           )}
 
-          {/* Reminder settings — always editable */}
+          {/* Reminder settings, always editable */}
           <div className="mt-5 space-y-3 border-t border-[color:var(--dashboard-frame-border)] pt-4">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
               Reminderinstellingen aanpassen

@@ -4,8 +4,15 @@ import { DashboardStateCard } from '@/components/dashboard/dashboard-state-card'
 import { ReadOnlyStateCard } from '@/components/dashboard/read-only-state-card'
 import { RunningStateCard } from '@/components/dashboard/running-state-card'
 import { WelcomeGate } from '@/components/dashboard/welcome-gate'
+import { CampaignListSection } from '@/components/dashboard/campaign-list-section'
+import { RequestNewMeasurement } from '@/components/dashboard/request-new-measurement'
+import { newMeasurementVariant } from '@/lib/dashboard/new-measurement-request'
+import { loadAccountOrganizations } from '@/lib/dashboard/account-organization'
+import { buildCampaignListItems, pickMainCampaign } from '@/lib/dashboard/campaign-list'
+import { loadCampaignStatusContext } from '@/lib/dashboard/campaign-status-context'
 import { resolveDashboardState } from '@/lib/dashboard/dashboard-state-resolver'
 import { isSkippedReminderEvent } from '@/lib/dashboard/reminder-event'
+import { completionPct, resolveInvitedDenominator } from '@/lib/dashboard/invited-denominator'
 import { normalizeReminderConfig } from '@/lib/launch-controls'
 import { readReminderChoice } from '@/lib/campaign-schedule'
 import { buildReminderText } from '@/lib/dashboard/reminder-text'
@@ -31,10 +38,13 @@ export default async function DashboardHomePage() {
     .from('campaign_stats')
     .select('*')
     .order('created_at', { ascending: false })
-    .limit(1)
   if (statsError) throw new Error(`Kon campagne-overzicht niet laden: ${statsError.message}`)
 
-  const campaign = (stats?.[0] as CampaignStats | undefined) ?? null
+  // Alle metingen (spec 2026-09-16 par. 6.1): de nieuwste actieve is de
+  // hoofdkaart; de rest staat in de lijst eronder. Vóór dit plan koos limit(1)
+  // blind de nieuwste en was een nog in te richten meting onvindbaar.
+  const campaigns = (stats ?? []) as CampaignStats[]
+  const campaign = pickMainCampaign(campaigns)
 
   if (!campaign) {
     const state = resolveDashboardState({
@@ -49,18 +59,23 @@ export default async function DashboardHomePage() {
       reportReady: false,
       today: todayIso(),
     })
+    // Zonder meting is er geen campagne-organisatie; de naam komt dan van het
+    // account. Lukt dat niet, dan staat er "organisatie niet bekend" in de mail.
+    const account = await loadAccountOrganizations(supabase, user.id)
+    if (account.error) console.warn(`[dashboard] Organisatienaam van het account niet geladen: ${account.error}`)
     return (
       <div className="space-y-8">
         <DashboardStateCard state={state} reminderText="" />
+        <RequestNewMeasurement variant="first" organizationName={account.names[0] ?? null} />
       </div>
     )
   }
 
   const [
-    { data: deliveryRecord },
-    { data: reminderEvents },
+    { data: deliveryRecord, error: deliveryRecordError },
+    { data: reminderEvents, error: reminderEventsError },
     { data: campaignRow },
-    { data: orgData },
+    { data: orgData, error: orgDataError },
     { data: respondentDepts },
     { data: profile },
     { data: membership },
@@ -111,6 +126,23 @@ export default async function DashboardHomePage() {
       .contains('metadata', { extension: true }),
   ])
 
+  // Fail Loud: een mislukte organisatie-query mag niet stil als "geen naam"
+  // doorgaan. Een ontbrekende naam zonder fout blijft de zichtbare
+  // gedegradeerde tekst ("je organisatie" / "organisatie niet bekend").
+  if (orgDataError) {
+    throw new Error(`Kon de organisatienaam niet laden: ${orgDataError.message}`)
+  }
+  // Fail Loud: een mislukte query mag niet als "geen delivery record" (dan valt
+  // de kaart stil terug op de inrichtstaat) of als "herinnering nog niet
+  // afgehandeld" gelezen worden. Een ontbrekende rij (data null zonder fout,
+  // maybeSingle) is wél legitiem en gooit niet.
+  if (deliveryRecordError) {
+    throw new Error(`Kon de lanceergegevens van de meting niet laden: ${deliveryRecordError.message}`)
+  }
+  if (reminderEventsError) {
+    throw new Error(`Kon de herinneringsstatus van de meting niet laden: ${reminderEventsError.message}`)
+  }
+
   // Fail Loud: een mislukte telling mag niet als "nog nooit verlengd" gelezen
   // worden, want dan biedt de kaart verlengen aan op een meting die al op de
   // grens zit.
@@ -132,19 +164,18 @@ export default async function DashboardHomePage() {
 
   const reminderConfig = normalizeReminderConfig(deliveryRecord?.reminder_config ?? null)
 
-  const isSelfSend = campaignRow?.comms_mode === 'self_send'
-  const manualInvitedCount = deliveryRecord?.invited_count ?? null
-  const effectiveTotalInvited = isSelfSend && manualInvitedCount != null
-    ? manualInvitedCount
-    : campaign.total_invited
-  // Herbereken het percentage uit dezelfde effectieve noemer als hierboven.
-  // De rauwe view-waarde completion_rate_pct rekent op count(respondents)
-  // (= gestart), wat bij self_send afwijkt van de handmatige invited_count en
-  // een zichzelf-tegensprekend "X van Y (Z%)" opleverde. Gelijk aan de
-  // campagnedetailpagina, zodat beide oppervlakken hetzelfde tonen.
-  const effectiveCompletionRatePct = effectiveTotalInvited > 0
-    ? Math.round((campaign.total_completed / effectiveTotalInvited) * 100)
-    : (campaign.completion_rate_pct ?? 0)
+  // Eén noemer overal (spec 2026-09-16 par. 6.2, zelfde regel als /reports en
+  // het rapport): invited_count uit het delivery record; respondentrijen alleen
+  // als die er méér zijn; anders 0 en geen percentage. Nooit een verzonnen noemer.
+  const denominator = resolveInvitedDenominator({
+    invitedCount: deliveryRecord?.invited_count ?? null,
+    respondentRows: campaign.total_invited,
+  })
+  const effectiveTotalInvited = denominator.known ? denominator.value : 0
+  // De ?? 0 is alleen bereikbaar zonder noemer. Dan is effectiveTotalInvited 0:
+  // een lopende meting valt in de setup-staat (gelanceerd vereist een noemer > 0)
+  // en de gesloten staten tonen geen percentage. Render deze 0 dus nooit als percentage.
+  const effectiveCompletionRatePct = completionPct(campaign.total_completed, denominator) ?? 0
 
   // Rapportvrijgave (spec 2026-09-11 par. 4.1): 10 ingevulde vragenlijsten
   // (30 bij culture_assessment). Of de campagne gesloten is, beslist de resolver.
@@ -185,8 +216,18 @@ export default async function DashboardHomePage() {
       | null,
     deliveryMode: campaignRow?.delivery_mode ?? null,
     launchDate: deliveryRecord?.launch_date ?? null,
+    closesAt: campaign.closes_at ?? null,
     participantCommsConfig: deliveryRecord?.participant_comms_config ?? null,
   })
+
+  // De lijst gebruikt dezelfde statusvocabulaire als /reports en is met een
+  // pariteitstest aan de resolver vastgeklonken; ze kan dus niet iets anders
+  // zeggen dan de kaart hierboven.
+  const statusContext =
+    campaigns.length > 1
+      ? await loadCampaignStatusContext(supabase, campaigns.map((c) => c.campaign_id), todayIso())
+      : null
+  const listItems = statusContext ? buildCampaignListItems(campaigns, statusContext, campaign.campaign_id) : []
 
   return (
     <div className="space-y-8">
@@ -217,6 +258,10 @@ export default async function DashboardHomePage() {
       ) : (
         <DashboardStateCard state={state} reminderText={reminderText} />
       )}
+      {campaigns.length > 1 ? (
+        <CampaignListSection items={listItems} />
+      ) : null}
+      <RequestNewMeasurement variant={newMeasurementVariant(campaigns)} organizationName={orgData?.name ?? null} />
     </div>
   )
 }

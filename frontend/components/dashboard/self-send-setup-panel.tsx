@@ -41,7 +41,7 @@ async function copy(text: string, onDone: () => void) {
     await navigator.clipboard.writeText(text)
     onDone()
   } catch {
-    /* clipboard unavailable — no-op */
+    /* clipboard unavailable: no-op */
   }
 }
 
@@ -181,7 +181,7 @@ export function SelfSendSetupPanel({
         ))}
       </div>
 
-      {/* Stap 0 — Scan context */}
+      {/* Stap 0: Scan context */}
       {step === 0 ? (
         <div className="space-y-3">
           <p className="text-sm text-slate-600">Afgesproken scan voor deze organisatie:</p>
@@ -192,7 +192,7 @@ export function SelfSendSetupPanel({
         </div>
       ) : null}
 
-      {/* Stap 1 — Deelnemers */}
+      {/* Stap 1: Deelnemers */}
       {step === 1 ? (
         <div className="space-y-4">
           <label className="block text-sm">
@@ -232,7 +232,7 @@ export function SelfSendSetupPanel({
         </div>
       ) : null}
 
-      {/* Stap 2 — E-mailinstellingen */}
+      {/* Stap 2: E-mailinstellingen */}
       {step === 2 ? (
         <div className="space-y-4">
           <label className="block text-sm">
@@ -321,7 +321,7 @@ export function SelfSendSetupPanel({
         </div>
       ) : null}
 
-      {/* Stap 3 — Voorbeeld & kopieer */}
+      {/* Stap 3: Voorbeeld & kopieer */}
       {step === 3 ? (
         <div className="space-y-5">
           <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
@@ -367,7 +367,7 @@ export function SelfSendSetupPanel({
             <div className="space-y-2 rounded-2xl border border-slate-200 p-3">
               <p className="text-sm font-semibold text-slate-900">Links per afdeling</p>
               <p className="text-xs leading-5 text-slate-600">
-                Deel per afdeling de eigen link — er is bewust geen algemene link.
+                Deel per afdeling de eigen link; er is bewust geen algemene link.
               </p>
               <div className="space-y-2">
                 {segmentLinks.map((link) => {
@@ -401,7 +401,7 @@ export function SelfSendSetupPanel({
         </div>
       ) : null}
 
-      {/* Stap 4 — Bevestiging & lancering */}
+      {/* Stap 4: Bevestiging & lancering */}
       {step === 4 ? (
         <div className="space-y-4">
           {launchConfirmedAt ? (
@@ -428,7 +428,7 @@ export function SelfSendSetupPanel({
                 disabled={busy || !isActive}
                 className="w-full rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
               >
-                {busy ? 'Bezig…' : 'Ik heb de uitnodiging verstuurd — zet live'}
+                {busy ? 'Bezig...' : 'Ik heb de uitnodiging verstuurd, zet live'}
               </button>
               <p className="text-xs text-slate-500">
                 Responsmeting start pas wanneer je bevestigt dat de uitnodiging daadwerkelijk is verstuurd.

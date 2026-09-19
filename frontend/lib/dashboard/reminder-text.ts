@@ -27,6 +27,8 @@ export interface ReminderTextInput {
   segmentDepartments?: SegmentDepartmentStored[] | null
   deliveryMode: DeliveryMode | null | undefined
   launchDate: string | null
+  /** campaigns.closes_at; null bij metingen zonder sluitdatum (dan geen deadline-regel). */
+  closesAt: string | null
   participantCommsConfig: unknown
 }
 
@@ -60,6 +62,7 @@ export function buildReminderText(input: ReminderTextInput): string {
         departments && departments.length > 0
           ? buildSegmentSurveyLinks(input.frontendBaseUrl, input.publicSurveyToken, departments)
           : undefined,
+      closesAt: input.closesAt,
     })
     return `${template.subject}\n\n${template.body}`
   }

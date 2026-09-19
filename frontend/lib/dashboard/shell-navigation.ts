@@ -20,11 +20,12 @@ export type DashboardModuleKey =
   | 'leadership'
   | 'culture_assessment'
   | 'reports'
+  | 'help'
   | 'action_center'
 
 export type DashboardCategoryModuleKey = Exclude<
   DashboardModuleKey,
-  'overview' | 'reports' | 'action_center'
+  'overview' | 'reports' | 'help' | 'action_center'
 >
 
 export type DashboardModuleNavItem = {
@@ -36,7 +37,7 @@ export type DashboardModuleNavItem = {
 
 export type DashboardShellCampaignRef = Pick<
   CampaignStats,
-  'campaign_id' | 'scan_type' | 'is_active' | 'created_at' | 'total_completed'
+  'campaign_id' | 'campaign_name' | 'scan_type' | 'is_active' | 'created_at' | 'closed_at' | 'total_completed'
 >
 
 export type DashboardShellNavigation = {
@@ -91,7 +92,7 @@ function getModuleKeyForScanType(scanType: ScanType): DashboardModuleKey {
 
   const moduleKeyByScanType: Record<
     Exclude<ScanType, 'team'>,
-    Exclude<DashboardModuleKey, 'overview' | 'reports' | 'action_center'>
+    Exclude<DashboardModuleKey, 'overview' | 'reports' | 'help' | 'action_center'>
   > = {
     exit: 'exit',
     retention: 'retention',
@@ -133,6 +134,7 @@ export function getActiveModuleFromLocation(
   campaigns: DashboardShellCampaignRef[],
 ): DashboardModuleKey {
   if (pathname.startsWith('/reports')) return 'reports'
+  if (pathname === '/help' || pathname.startsWith('/help/')) return 'help'
   if (pathname.startsWith('/action-center')) return 'action_center'
   if (!pathname.startsWith('/campaigns/')) {
     return normalizeDashboardModuleFilter(moduleFilter ?? undefined) ?? 'overview'
@@ -189,6 +191,12 @@ export function buildDashboardShellNavigation({
       href: '/reports',
       disabled: false,
     },
+    {
+      key: 'help',
+      label: 'Hulp',
+      href: '/help',
+      disabled: false,
+    },
   ]
 
   const admin: DashboardShellNavItem[] = isAdmin
@@ -232,6 +240,7 @@ export type ActionCenterNavItem = (typeof ACTION_CENTER_NAV)[number]
 
 export function getDashboardShellCurrentLabel(pathname: string) {
   if (pathname.startsWith('/reports')) return 'Rapporten'
+  if (pathname === '/help' || pathname.startsWith('/help/')) return 'Hulp'
   if (pathname.startsWith('/action-center')) return 'Action Center'
   if (pathname.startsWith('/campaigns/')) return 'Campagnedetail'
   if (pathname.startsWith('/beheer/contact-aanvragen')) return 'Leadcontext'
@@ -245,17 +254,37 @@ export type ClosedCampaignNavItem = {
   campaignId: string
   href: string
   scanType: ScanType
-  periodLabel: string
+  /** De campagnenaam: met twee Behoud-metingen is het scanlabel niet te onderscheiden (walkthrough 1.7). */
+  name: string
+  /** "Gesloten aug 2026", of eerlijk "Gesloten, datum onbekend" als closed_at leeg is. */
+  closedLabel: string
+}
+
+function closedMonthLabel(closedAt: string | null): string {
+  if (!closedAt) return 'Gesloten, datum onbekend'
+  const date = new Date(closedAt)
+  if (Number.isNaN(date.getTime())) return 'Gesloten, datum onbekend'
+  return `Gesloten ${new Intl.DateTimeFormat('nl-NL', { month: 'short', year: 'numeric', timeZone: 'Europe/Amsterdam' }).format(date)}`
+}
+
+/**
+ * Sorteersleutel: de sluitdatum, want die staat in het label. Zonder (geldige)
+ * sluitdatum de aanmaakdatum; het label zegt dan eerlijk "datum onbekend".
+ */
+function closedSortKey(campaign: DashboardShellCampaignRef): number {
+  const closed = campaign.closed_at ? new Date(campaign.closed_at).getTime() : Number.NaN
+  return Number.isNaN(closed) ? new Date(campaign.created_at).getTime() : closed
 }
 
 export function buildClosedCampaignNavItems(campaigns: DashboardShellCampaignRef[]): ClosedCampaignNavItem[] {
   return campaigns
     .filter((campaign) => !campaign.is_active)
-    .sort((left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime())
+    .sort((left, right) => closedSortKey(right) - closedSortKey(left))
     .map((campaign) => ({
       campaignId: campaign.campaign_id,
       href: `/campaigns/${campaign.campaign_id}`,
       scanType: campaign.scan_type,
-      periodLabel: new Intl.DateTimeFormat('nl-NL', { month: 'short', year: 'numeric' }).format(new Date(campaign.created_at)),
+      name: campaign.campaign_name,
+      closedLabel: closedMonthLabel(campaign.closed_at),
     }))
 }

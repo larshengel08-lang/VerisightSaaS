@@ -34,7 +34,7 @@ export function validateDepartmentInvitedCount(label: string, value: unknown): s
   const n = toInteger(value)
   if (Number.isNaN(n) || n < MIN_INVITED_PER_DEPARTMENT) {
     const name = label.trim() || 'zonder naam'
-    return `Afdeling ${name}: minimaal ${MIN_INVITED_PER_DEPARTMENT} deelnemers. Kleinere afdelingen voeg je samen; anders vallen ze in het rapport onder 'Overige afdelingen'.`
+    return `Afdeling ${name}: minimaal ${MIN_INVITED_PER_DEPARTMENT} deelnemers. Kleinere afdelingen voeg je samen; anders krijgt deze afdeling geen eigen regel in het rapport.`
   }
   return null
 }

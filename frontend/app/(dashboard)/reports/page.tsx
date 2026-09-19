@@ -1,13 +1,22 @@
 import type { ReactNode } from 'react'
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { PdfDownloadButton } from '@/app/(dashboard)/campaigns/[id]/pdf-download-button'
 import { SuiteAccessDenied } from '@/components/dashboard/suite-access-denied'
+import { loadCampaignStatusContext } from '@/lib/dashboard/campaign-status-context'
 import { buildReportOverviewRows } from '@/lib/dashboard/report-library'
 import { createClient } from '@/lib/supabase/server'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
+import type { CampaignStats } from '@/lib/types'
 import { buildReportDownloadIndex, type ReportDownloadRow } from './report-download-index'
 
-const ROW_GRID = 'lg:grid-cols-[minmax(0,1.45fr),150px,190px,auto]'
+// Tailwind scheidt tracks in een arbitrary value met een underscore. Met
+// komma's (de oude vorm) was de CSS ongeldig en stapelden de kolomkoppen.
+const ROW_GRID = 'lg:grid-cols-[minmax(0,1.45fr)_150px_190px_auto]'
+
+function todayIso(): string {
+  return new Date().toISOString().slice(0, 10)
+}
 
 function ReportRow({ row, children }: { row: ReportDownloadRow; children: ReactNode }) {
   return (
@@ -18,9 +27,12 @@ function ReportRow({ row, children }: { row: ReportDownloadRow; children: ReactN
         <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">
           {row.scanName}
         </p>
-        <p className="mt-2 text-[1.02rem] font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">
+        <Link
+          href={`/campaigns/${row.campaignId}`}
+          className="mt-2 block text-[1.02rem] font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)] underline decoration-slate-300 underline-offset-4 hover:decoration-current focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--dashboard-ink)]"
+        >
           {row.campaignName}
-        </p>
+        </Link>
         {row.extraDisambiguator ? (
           <p className="mt-2 text-xs text-[color:var(--dashboard-muted)]">{row.extraDisambiguator}</p>
         ) : null}
@@ -59,7 +71,13 @@ export default async function ReportsPage() {
     .order('created_at', { ascending: false })
   if (error) throw new Error(`Kon het rapportenoverzicht niet laden: ${error.message}`)
 
-  const reportIndex = buildReportDownloadIndex(buildReportOverviewRows(stats ?? []))
+  const campaigns = (stats ?? []) as CampaignStats[]
+  const statusContext = await loadCampaignStatusContext(
+    supabase,
+    campaigns.map((campaign) => campaign.campaign_id),
+    todayIso(),
+  )
+  const reportIndex = buildReportDownloadIndex(buildReportOverviewRows(campaigns, statusContext))
 
   return (
     <div className="space-y-8">
@@ -76,7 +94,7 @@ export default async function ReportsPage() {
         <p className="max-w-3xl text-sm leading-6 text-[color:var(--dashboard-text)]">
           Elke afgeronde meting staat hier als PDF. Het antwoord staat op pagina twee; de
           gespreksagenda achterin is de leidraad voor het gesprek met je managementteam. Lopende
-          metingen zie je met hun status.
+          metingen zie je met hun status; klik op de naam om naar de meting te gaan.
         </p>
       </section>
 
@@ -121,11 +139,17 @@ export default async function ReportsPage() {
         )}
       </section>
 
-      <details className="overflow-hidden border border-slate-200 bg-[color:var(--dashboard-soft)]/24">
-        <summary className="cursor-pointer list-none px-5 py-4 text-sm font-semibold tracking-[-0.01em] text-[color:var(--dashboard-ink)]">
-          Nog niet beschikbaar ({reportIndex.unavailableRows.length})
-        </summary>
-        <div className="border-t border-slate-200 bg-white">
+      <section className="space-y-4">
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="text-lg font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">
+            Nog niet beschikbaar
+          </h2>
+          <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+            {reportIndex.unavailableRows.length}{' '}
+            {reportIndex.unavailableRows.length === 1 ? 'meting' : 'metingen'}
+          </p>
+        </div>
+        <div className="overflow-hidden border border-slate-200 bg-white">
           {reportIndex.unavailableRows.length > 0 ? (
             reportIndex.unavailableRows.map((row) => (
               <ReportRow key={row.campaignId} row={row}>
@@ -140,7 +164,7 @@ export default async function ReportsPage() {
             </div>
           )}
         </div>
-      </details>
+      </section>
     </div>
   )
 }

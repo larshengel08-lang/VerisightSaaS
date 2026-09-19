@@ -14,8 +14,16 @@ describe('state-driven dashboard page', () => {
     expect(source).toContain("if (context.managerOnly) redirect('/action-center')")
   })
 
-  it('selects the most recent campaign and derives report readiness from the report release rule', () => {
+  it('laadt alle metingen, kiest de nieuwste actieve als hoofdkaart en toont de rest in een lijst (spec 2026-09-16 par. 6.1)', () => {
     expect(source).toContain("order('created_at', { ascending: false })")
+    // Alleen de campaign_stats-query: de send_reminders-query mag wel limit(1) houden.
+    const statsQuery = source.slice(source.indexOf(".from('campaign_stats')"), source.indexOf('if (statsError)'))
+    expect(statsQuery).toContain("order('created_at', { ascending: false })")
+    expect(statsQuery).not.toContain('.limit(')
+    expect(source).toContain('pickMainCampaign(campaigns)')
+    expect(source).toContain('buildCampaignListItems(campaigns, statusContext, campaign.campaign_id)')
+    expect(source).toContain('campaigns.length > 1 ? (')
+    expect(source).toContain('CampaignListSection')
     expect(source).toContain('isReportReleaseReady')
     expect(source).not.toContain('isDashboardReleaseReady')
   })
@@ -55,5 +63,45 @@ describe('state-driven dashboard page', () => {
     expect(source).toContain("eq('organization_id', campaign.organization_id)")
     expect(source).toContain('if (extensionCountError)')
     expect(source).toContain('throw new Error(`Kon het aantal verlengingen niet laden: ${extensionCountError.message}`)')
+  })
+
+  it('biedt onderaan altijd "nieuwe meting aanvragen" aan, ook zonder meting (spec 2026-09-16 par. 6.3)', () => {
+    expect(source.match(/<RequestNewMeasurement\s/g)?.length).toBe(2)
+    expect(source).toContain('loadAccountOrganizations(supabase, user.id)')
+    // Zonder meting is er geen "zelfde meting opnieuw": neutrale variant.
+    expect(source).toContain('<RequestNewMeasurement variant="first" organizationName={account.names[0] ?? null} />')
+    // Met metingen: "vervolgmeting" met prijs alleen als er al een meting gesloten
+    // is. Een nieuwe klant met alleen een meting in inrichting krijgt de neutrale variant.
+    expect(source).toContain('newMeasurementVariant(campaigns)')
+    expect(source).toContain('<RequestNewMeasurement variant={newMeasurementVariant(campaigns)} organizationName={orgData?.name ?? null} />')
+    expect(source).not.toContain('variant="follow_up"')
+    // Een mislukte naamlading blijft niet stil (Task 6 toont hem in de kop).
+    expect(source).toContain('if (account.error) console.warn(')
+  })
+})
+
+describe('dashboard: Fail Loud op de queries van de hoofdkaart', () => {
+  it('leest de fout van delivery record en herinneringsevents uit en gooit een duidelijke Error', () => {
+    expect(source).toContain('{ data: deliveryRecord, error: deliveryRecordError }')
+    expect(source).toContain('{ data: reminderEvents, error: reminderEventsError }')
+    expect(source).toContain('if (deliveryRecordError)')
+    expect(source).toContain('throw new Error(`Kon de lanceergegevens van de meting niet laden: ${deliveryRecordError.message}`)')
+    expect(source).toContain('if (reminderEventsError)')
+    expect(source).toContain('throw new Error(`Kon de herinneringsstatus van de meting niet laden: ${reminderEventsError.message}`)')
+  })
+
+  it('een ontbrekend delivery record (geen fout, data null) blijft legitiem: maybeSingle, geen throw op !deliveryRecord', () => {
+    const deliveryQuery = source.slice(source.indexOf(".from('campaign_delivery_records')"), source.indexOf(".from('campaign_action_audit_events')"))
+    expect(deliveryQuery).toContain('.maybeSingle()')
+    expect(source).not.toMatch(/if \(!deliveryRecord\)/)
+  })
+})
+
+describe('dashboard: Fail Loud op de organisatienaam', () => {
+  it('gooit bij een mislukte organisatie-query; een ontbrekende naam zonder fout blijft zichtbaar gedegradeerd', () => {
+    expect(source).toContain('{ data: orgData, error: orgDataError }')
+    expect(source).toContain('if (orgDataError)')
+    expect(source).toContain('throw new Error(`Kon de organisatienaam niet laden: ${orgDataError.message}`)')
+    expect(source).not.toMatch(/if \(!orgData\)/)
   })
 })

@@ -29,7 +29,7 @@ const MIN_OPEN_ANSWER_LENGTH = 24
 
 // Display-pass op reeds bij opslag geanonimiseerde tekst (backend anonymize_text).
 // Patronen gelijkgetrokken met de backend (naam- + postcode-heuristiek toegevoegd) zodat
-// beide lagen dezelfde PII-vormen dekken. Blijft best-effort — geen garantie tegen
+// beide lagen dezelfde PII-vormen dekken. Blijft best-effort, geen garantie tegen
 // zelf-identificerende vrije tekst; het label communiceert dat eerlijk.
 function sanitizeOpenAnswerText(value: string) {
   return value

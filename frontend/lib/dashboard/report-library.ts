@@ -1,9 +1,13 @@
-import {
-  getResponseActivationThresholds,
-  isDashboardReleaseReady,
-  isReportReleaseReady,
-} from '@/lib/response-activation'
+import { getResponseActivationThresholds, isDashboardReleaseReady } from '@/lib/response-activation'
 import { SCAN_TYPE_LABELS, type CampaignStats, type ScanType } from '@/lib/types'
+import {
+  CAMPAIGN_STATUS_LABELS,
+  denominatorFor,
+  deriveCampaignStatusFor,
+  type CampaignStatusContext,
+  type CampaignStatusKey,
+} from '@/lib/dashboard/campaign-status'
+import { formatResponseBasis } from '@/lib/dashboard/invited-denominator'
 
 // ─── HR Report Download Rows ──────────────────────────────────────────────────
 // Sinds reports/page.tsx op buildReportOverviewRows draait (spec 2026-09-11
@@ -23,6 +27,8 @@ export type HrReportDownloadRow = {
   responseBasis: string
   status: string
   isAvailable: boolean
+  /** Alleen gezet door buildReportOverviewRows; de legacy buildHrReportDownloadRows kent de vocabulaire niet. */
+  statusKey?: CampaignStatusKey
   extraDisambiguator?: string | null
 }
 
@@ -50,7 +56,7 @@ export function buildHrReportDownloadRows(campaigns: CampaignStats[]): {
         scanName: SCAN_TYPE_LABELS[campaign.scan_type],
         periodLabel,
         createdAt: campaign.created_at,
-        responseBasis: `${campaign.total_completed} / ${campaign.total_invited ?? '—'}`,
+        responseBasis: `${campaign.total_completed} / ${campaign.total_invited ?? 'n.b.'}`,
         status: isAvailable ? 'Beschikbaar' : 'Nog onvoldoende respons',
         isAvailable,
         extraDisambiguator: null,
@@ -66,37 +72,38 @@ export function buildHrReportDownloadRows(campaigns: CampaignStats[]): {
 }
 
 // ─── Rapportenoverzicht ───────────────────────────────────────────────────────
-// Gebruikt door reports/page.tsx (spec 2026-09-11 par. 4.3). De oudere
-// buildHrReportDownloadRows hierboven blijft ongemoeid: die hangt aan de
-// dashboarddrempel en wordt alleen nog door dashboard/cockpit-index.ts gelezen.
+// Gebruikt door reports/page.tsx (spec 2026-09-11 par. 4.3, 2026-09-16 par. 6.2).
+// De oudere buildHrReportDownloadRows hierboven blijft ongemoeid: die hangt aan
+// de dashboarddrempel en wordt alleen nog door dashboard/cockpit-index.ts gelezen.
 
 /**
  * Een rapport bestaat pas als de meting gesloten is én de rapportdrempel is
- * gehaald. Een lopende meting is dus nooit "beschikbaar", ook niet met veel
- * respons. Bij self_send maakt het platform geen respondenten vooraf aan, dus
- * staat total_invited in campaign_stats op 0; dan tonen we alleen het aantal
- * ingevulde vragenlijsten in plaats van een onjuiste noemer.
+ * gehaald; dat is precies de status 'report_ready' uit de gedeelde
+ * vocabulaire. De noemer komt uit het delivery record (invited_count), nooit
+ * uit campaign_stats.total_invited alleen (= gestarte respondenten, wat bij
+ * self_send "18 van 18" opleverde terwijl er 30 waren uitgenodigd).
  */
-export function buildReportOverviewRows(campaigns: CampaignStats[]): HrReportDownloadRow[] {
+export function buildReportOverviewRows(
+  campaigns: CampaignStats[],
+  context: CampaignStatusContext,
+): HrReportDownloadRow[] {
   return campaigns
     .filter((campaign) => campaign.scan_type !== 'culture_assessment')
     .map((campaign) => {
       const thresholds = getResponseActivationThresholds(campaign.scan_type)
-      const isAvailable =
-        !campaign.is_active &&
-        isReportReleaseReady(campaign.total_completed, { scanType: campaign.scan_type })
+      const statusKey = deriveCampaignStatusFor(campaign, context)
+      const isAvailable = statusKey === 'report_ready'
+      // Dezelfde helper als de status gebruikt: tekst en status delen één noemer.
+      const denominator = denominatorFor(campaign, context)
       const date = new Date(campaign.created_at)
       const quarter = Math.floor(date.getUTCMonth() / 3) + 1
-      const invited = campaign.total_invited ?? 0
 
-      let status: string
-      if (isAvailable) {
-        status = 'Beschikbaar nu'
-      } else if (campaign.is_active) {
-        status = 'Meting loopt'
-      } else {
-        status = `Gesloten met ${campaign.total_completed} ingevuld. Minimaal ${thresholds.insightMin} nodig voor een rapport.`
-      }
+      // Gesloten zonder rapport houdt de uitleg met aantal en drempel: dat is
+      // wat de klant hier wil weten. De andere vier gebruiken het gedeelde label.
+      const status =
+        statusKey === 'closed_no_report'
+          ? `Gesloten met ${campaign.total_completed} ingevuld. Minimaal ${thresholds.insightMin} nodig voor een rapport.`
+          : CAMPAIGN_STATUS_LABELS[statusKey]
 
       return {
         campaignId: campaign.campaign_id,
@@ -105,11 +112,9 @@ export function buildReportOverviewRows(campaigns: CampaignStats[]): HrReportDow
         scanName: SCAN_TYPE_LABELS[campaign.scan_type],
         periodLabel: `Q${quarter} ${date.getUTCFullYear()}`,
         createdAt: campaign.created_at,
-        responseBasis:
-          invited > 0
-            ? `${campaign.total_completed} van ${invited} ingevuld`
-            : `${campaign.total_completed} ingevuld`,
+        responseBasis: formatResponseBasis(campaign.total_completed, denominator),
         status,
+        statusKey,
         isAvailable,
         extraDisambiguator: null,
       }
