@@ -400,6 +400,24 @@ p  { margin-bottom: 6px; font-size: 11px; }
    Geen border-spacing maar padding: dan lijnen de kaarten links uit met de
    overzichtskaart erboven. De compactere maten in de kolommen houden de sectie
    op een vel nu de overzichtskaart boven de kolommen staat. */
+/* Verdiepingshoofdstuk (fixronde 2 na plan 3a): alle onderwerpen stromen,
+   ook het eerste, en tussen twee onderwerpen staat 24px. Met een eigen vel
+   voor het eerste onderwerp bleef het laatste alleen op een pagina van 27 tot
+   37%. Bewust geen compactere binnenmaten: gemeten op de WeasyPrint-render
+   trok dat in 08, 12, 13 en 15 het tweede onderwerp naar voren, waardoor het
+   derde juist alleen kwam te staan (23 tot 37%). */
+.sec.verd { margin-bottom: 24px; }
+.sec.flow.verd { margin-top: 0; }
+/* Het eerste onderwerp volgt op het overzichtsprofiel (margin-bottom 44px);
+   de negatieve marge brengt de samengevallen witruimte naar 24px, dezelfde
+   ruimte als tussen twee onderwerpen. */
+.sec.flow.verd.verd-eerste { margin-top: -20px; }
+.verd-h3 { margin-top: 16px; }
+.verd-compact .slabel { margin-bottom: 10px; }
+.verd-compact .verd-h3 { margin-top: 14px; }
+.verd-compact .item-tbl td { padding: 5px 8px; }
+.verd-compact .card { padding: 10px 0 10px 16px; margin-bottom: 10px; }
+
 .tcol.wb-cols { table-layout: fixed; border-spacing: 0; }
 .tcol.wb-cols .tc-l { width: 50%; padding-right: 10px; }
 .tcol.wb-cols .tc-r { width: 50%; padding-left: 10px; }

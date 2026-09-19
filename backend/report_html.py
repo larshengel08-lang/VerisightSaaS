@@ -5644,7 +5644,12 @@ def render_exit_report_html(data: dict) -> str:
         # Alleen het eerste onderwerp opent een nieuwe pagina (B9): de volgende
         # verdiepingen stromen door onder hun voorganger en verhuizen als geheel
         # zodra ze niet meer passen.
-        return f"""<div class="{'pb sec' if is_first else 'sec flow'}">
+        # Ook het eerste onderwerp stroomt (fixronde 2 na plan 3a): het hoofdstuk
+        # begint onder het overzichtsprofiel als het daar past, en anders op een
+        # nieuw vel omdat de sectie als geheel verhuist (.sec.flow). Met een eigen
+        # vel bleef het laatste onderwerp alleen op een pagina van 27 tot 37%.
+        # is_first bepaalt alleen nog de kop en de intro (aanroeper).
+        return f"""<div class="sec flow verd{' verd-eerste' if is_first else ''}">
   {opener_html or f'<span class="slabel">Verdieping: {_h(lbl)}</span>'}
   {intro_html}
   <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&middot; {_h(fl_)}</span></h2>
@@ -5652,7 +5657,7 @@ def render_exit_report_html(data: dict) -> str:
   {er_context}
   {low_card}
   {high_card}
-  <h3 style="margin-top:28px;">Alle stellingen over dit onderwerp</h3>
+  <h3 class="verd-h3">Alle stellingen over dit onderwerp</h3>
   <table class="item-tbl">{rows}</table>
   {deep_block}
 </div>"""
@@ -6017,14 +6022,19 @@ def render_retention_report_html(data: dict) -> str:
         spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []))
         # Alleen het eerste onderwerp opent een nieuwe pagina (B9), zie
         # _factor_detail in de Vertrek-renderer.
-        return f"""<div class="{'pb sec' if is_first else 'sec flow'}">
+        # Ook het eerste onderwerp stroomt (fixronde 2 na plan 3a): het hoofdstuk
+        # begint onder het overzichtsprofiel als het daar past, en anders op een
+        # nieuw vel omdat de sectie als geheel verhuist (.sec.flow). Met een eigen
+        # vel bleef het laatste onderwerp alleen op een pagina van 27 tot 37%.
+        # is_first bepaalt alleen nog de kop en de intro (aanroeper).
+        return f"""<div class="sec flow verd{' verd-eerste' if is_first else ''}">
   {opener_html or f'<span class="slabel">Verdieping: {_h(lbl)}</span>'}
   {intro_html}
   <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&middot; {_h(fl_)}</span></h2>
   {spread}
   {low_card}
   {high_card}
-  <h3 style="margin-top:28px;">Alle stellingen over dit onderwerp</h3>
+  <h3 class="verd-h3">Alle stellingen over dit onderwerp</h3>
   <table class="item-tbl">{rows}</table>
   {deep_block}
 </div>"""
@@ -6429,7 +6439,15 @@ def render_onboarding_report_html(data: dict) -> str:
         spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []))
         # Alleen het eerste onderwerp opent een nieuwe pagina (B9), zie
         # _factor_detail in de Vertrek-renderer.
-        return f"""<div class="{'pb sec' if is_first else 'sec flow'}">
+        # Ook het eerste onderwerp stroomt (fixronde 2 na plan 3a): het hoofdstuk
+        # begint onder het overzichtsprofiel als het daar past, en anders op een
+        # nieuw vel omdat de sectie als geheel verhuist (.sec.flow). Met een eigen
+        # vel bleef het laatste onderwerp alleen op een pagina van 27 tot 37%.
+        # is_first bepaalt alleen nog de kop en de intro (aanroeper).
+        # Loep Start: compactere binnenmaten (.verd-compact), gemeten: zonder
+        # die maten paste het eerste onderwerp niet onder de onboardingfactoren
+        # en stond het tweede alleen op een vel (32 tot 34%).
+        return f"""<div class="sec flow verd verd-compact{' verd-eerste' if is_first else ''}">
   {opener_html or f'<span class="slabel">{_h(lbl)}</span>'}
   {intro_html}
   <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&middot; {_h(fl_)}</span></h2>
@@ -6437,7 +6455,7 @@ def render_onboarding_report_html(data: dict) -> str:
   {spread}
   {low_card}
   {high_card}
-  <h3 style="margin-top:28px;">Alle stellingen over dit onderwerp</h3>
+  <h3 class="verd-h3">Alle stellingen over dit onderwerp</h3>
   <table class="item-tbl">{rows}</table>
 </div>"""
 

@@ -46,7 +46,8 @@ def test_enps_heeft_geen_eigen_hoofdstuk_meer_en_staat_bij_de_context():
 
 def test_verdiepingspaginas_na_de_eerste_stromen_en_heten_niet_vervolg():
     body = _body(render_exit_report_html(_fixture("exit", n=12, profile=True)))
-    assert body.count('class="sec flow"') >= 2
+    # "sec flow" plus eventuele extra klassen (verd, verd-eerste; fixronde 2).
+    assert len(re.findall(r'class="sec flow[ "]', body)) >= 2
     assert "(vervolg)" not in body.split('<h2 class="ch-title">Werkbeleving</h2>')[0]   # niet bij de verdieping
     body_r = _body(render_retention_report_html(_fixture("retention", n=12, profile=True)))
     assert "(vervolg)" in body_r  # de spreidingspagina van de behoudscontext blijft een echt vervolg
@@ -183,7 +184,7 @@ def test_elke_renderer_laat_de_volgende_verdieping_doorstromen(scan_type):
                   "retention": render_retention_report_html,
                   "onboarding": render_onboarding_report_html}[scan_type](
         _fixture(scan_type, n=12, profile=True)))
-    assert body.count('class="sec flow"') >= 1, "geen enkele doorstromende verdiepingspagina"
+    assert len(re.findall(r'class="sec flow[ "]', body)) >= 1, "geen enkele doorstromende verdiepingspagina"
 
 
 def test_een_gate_voor_de_werkgeversaanbeveling():
@@ -388,3 +389,21 @@ def test_raster_agenda_invulregels_naast_elkaar_en_slotregel_reist_mee():
     assert rij.count('<td class="step">') == 3
     for label in ("Prioriteit", "Eigenaar", "Vervolgmoment"):
         assert label in rij
+
+
+# ── Fixronde 2 na plan 3a: ook het eerste onderwerp stroomt ──────────────────
+
+@pytest.mark.parametrize("scan_type", ["exit", "retention", "onboarding"])
+def test_ook_het_eerste_verdiepingsonderwerp_stroomt(scan_type):
+    """Met een eigen vel voor het eerste onderwerp bleef het laatste alleen op
+    een pagina van 27 tot 37% (01, 03, 04, 09, 18, 19). Het eerste onderwerp
+    draagt de hoofdstukkop en stroomt onder het overzichtsprofiel als het past."""
+    body = _body({"exit": render_exit_report_html,
+                  "retention": render_retention_report_html,
+                  "onboarding": render_onboarding_report_html}[scan_type](
+        _fixture(scan_type, n=25, profile=True)))
+    eerste = re.search(r'<div class="sec flow verd[^"]*verd-eerste">', body)
+    assert eerste, "eerste verdiepingsonderwerp stroomt niet"
+    assert 'class="ch-head"' in body[eerste.end():eerste.end() + 300]
+    assert ("verd-compact" in eerste.group(0)) is (scan_type == "onboarding")
+
