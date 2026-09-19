@@ -15,7 +15,7 @@ import argparse
 import random
 import sys
 import uuid
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 from sqlalchemy import Engine, create_engine
@@ -25,7 +25,7 @@ from sqlalchemy.pool import StaticPool
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from backend.database import Base, DATABASE_URL, SessionLocal, init_db
-from backend.models import Campaign, Organization, Respondent, SurveyResponse
+from backend.models import Campaign, CampaignDeliveryRecord, Organization, Respondent, SurveyResponse
 from backend.products.shared.deepening import (
     compute_deepening_offers,
     compute_direction_factor,
@@ -1001,7 +1001,15 @@ def main() -> None:
     db.add(campaign)
     db.flush()
 
+    # Meetgegevens (plan 3a, H8): vaste start- en sluitdatum, zodat pagina twee
+    # echte datums toont; invited_count als noemer, gelijk aan het aantal
+    # respondentrijen dat hieronder wordt aangemaakt.
     invited = int(config["invited"])
+    campaign.closed_at = datetime(2026, 4, 3, 12, 0, tzinfo=timezone.utc)
+    db.add(CampaignDeliveryRecord(organization_id=org.id, campaign_id=campaign.id,
+                                  invited_count=invited, launch_date=date(2026, 3, 9)))
+    db.flush()
+
     responses = int(config["responses"])
     non_responders = invited - responses
 
