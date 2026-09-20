@@ -21,6 +21,7 @@ from typing import Any
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from backend.models import Campaign, Respondent, SurveyResponse
+from backend.report_decision import load_decision
 from backend.report_css import build_css, RAG_HIGH, RAG_MID, RAG_LOW
 from backend.report_distribution import (
     MIN_DISTRIBUTION_N,
@@ -4596,6 +4597,10 @@ def _department_factor_rows(respondents: list[dict],
 
 
 def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
+    # Het besluit eerst (plan 3b): een mislukt statement op een ontbrekende
+    # tabel vraagt een rollback, en die mag geen al geladen objecten raken.
+    decision, decision_unavailable = load_decision(db, campaign_id)
+
     camp: Campaign = (
         db.query(Campaign)
         .options(joinedload(Campaign.organization),
@@ -4880,6 +4885,8 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
         segment_factor_rows=segment_factor_rows,
         segment_hidden_n=segment_hidden_n,
         segment_reason=segment_reason,
+        decision=decision,
+        decision_unavailable=decision_unavailable,
     )
 
 

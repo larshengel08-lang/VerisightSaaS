@@ -420,6 +420,41 @@ class CampaignDeliveryRecord(Base):
         return f"<CampaignDeliveryRecord campaign_id={self.campaign_id!r} stage={self.lifecycle_stage!r}>"
 
 
+class CampaignDecision(Base):
+    """Het besluit dat het MT na het gesprek vastlegt (plan 3b, spec 16-9 par. 7).
+
+    Een rij per meting; de frontend schrijft hem (upsert op campaign_id), de
+    backend leest hem alleen om de besluitpagina voor te drukken. Bevat alleen
+    wat het MT zelf invult, geen koppeling met antwoorden of respondenten.
+    Migratie: migrations/2026_09_19_add_campaign_decisions.sql.
+
+    Let op: campaigns.previous_campaign_id uit dezelfde migratie staat bewust
+    nog NIET op het Campaign-model (zie tests/test_report_decision_data.py).
+    """
+
+    __tablename__ = "campaign_decisions"
+
+    campaign_id: Mapped[str] = mapped_column(
+        GUID(), ForeignKey("campaigns.id", ondelete="CASCADE"), primary_key=True)
+    organization_id: Mapped[str] = mapped_column(
+        GUID(), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
+    decided_at: Mapped[date | None] = mapped_column(Date, nullable=True)
+    primary_topic: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    primary_action: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    owner: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    follow_up_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    secondary_topic: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    secondary_action: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    feedback_plan: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    success_criterion: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    recorded_by: Mapped[str | None] = mapped_column(GUID(), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+
+    def __repr__(self) -> str:
+        return f"<CampaignDecision campaign_id={self.campaign_id!r}>"
+
+
 class CampaignDeliveryCheckpoint(Base):
     __tablename__ = "campaign_delivery_checkpoints"
 
