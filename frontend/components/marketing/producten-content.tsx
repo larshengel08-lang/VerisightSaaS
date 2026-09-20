@@ -13,11 +13,11 @@ const AMBER_SOFT = 'oklch(0.97 0.03 70)'
 // Gedeelde levering: identiek voor elke scan, daarom hier één keer i.p.v. per scan herhaald.
 const sharedDelivery = [
   'Intake en scopebepaling',
-  'Survey klaarzetten en launchpakket leveren (uitnodigingslink + tekst)',
-  'Respons monitoren op campagneniveau',
+  'Meting klaarzetten: vragenlijst, afdelingen en de uitnodigingstekst die je zelf verstuurt',
+  'Je volgt de respons in je eigen omgeving en sluit of verlengt zelf',
   'Rapport: waar het wringt en waar je begint (bij Loep Vertrek en Loep Behoud ook waarom)',
-  'Begeleide managementbespreking (60–90 min)',
-  'Vervolgstap vastgelegd',
+  'Gespreksleidraad van 45 minuten en een besluitpagina in het rapport',
+  'Besluit vastleggen in je omgeving',
 ] as const
 
 const scans = [
@@ -26,7 +26,7 @@ const scans = [
     index: '01',
     eyebrow: 'Vertrek begrijpen',
     title: 'Loep Vertrek',
-    lead: 'Wij brengen vertrekpatronen scherp in beeld en begeleiden je naar één duidelijke managementkeuze.',
+    lead: 'Loep brengt vertrekpatronen scherp in beeld, en het rapport brengt je MT tot één duidelijke keuze.',
     when: [
       'Vertrek is zichtbaar maar de reden is onduidelijk',
       'Management vraagt om een onderbouwd beeld',
@@ -40,7 +40,7 @@ const scans = [
     // minimaal 10 responses (backend/report.py); bij kleinere organisaties
     // betekent dat een langere meetperiode. Behoud/Start meten de hele
     // populatie en hebben deze kanttekening niet.
-    note: 'Patroonanalyse vraagt minimaal 10 respondenten. Bij kleinere organisaties stemmen we de meetperiode daarop af in de intake.',
+    note: 'Patroonanalyse vraagt minimaal 10 respondenten. Bij kleinere organisaties stemt Loep de meetperiode daarop af in de intake.',
     samplePdf: '/examples/voorbeeldrapport_loep.pdf',
     contactRoute: 'exitscan',
     accent: AC.deep,
@@ -51,7 +51,7 @@ const scans = [
     index: '02',
     eyebrow: 'Behoud versterken',
     title: 'Loep Behoud',
-    lead: 'Wij laten zien waar behoud onder druk staat, vóór uitstroom zichtbaar wordt.',
+    lead: 'Loep laat zien waar behoud onder druk staat, vóór uitstroom zichtbaar wordt, en het rapport brengt je MT tot één eerste keuze.',
     when: [
       'Verloop loopt op maar de oorzaak is onduidelijk',
       'Je wilt bijsturen vóór mensen vertrekbesluiten hebben genomen',
@@ -72,7 +72,7 @@ const scans = [
     index: '03',
     eyebrow: 'Goed landen',
     title: 'Loep Start',
-    lead: 'Wij meten vroeg hoe nieuwe medewerkers landen en leveren een helder groepsbeeld.',
+    lead: 'Loep meet vroeg hoe nieuwe medewerkers landen. Het rapport geeft je MT een helder groepsbeeld om één eerste stap op te kiezen.',
     when: [
       'Nieuwe medewerkers landen ongelijk of haken vroeg af',
       'Je wilt vroeg toetsen hoe rol, leiding en team nu landen',
@@ -133,10 +133,11 @@ function HeroSection() {
             Vertrek, behoud of de eerste 90 dagen.
           </h1>
           <p style={{ color: T.inkSoft, fontSize: 16.5, lineHeight: 1.72, margin: '26px auto 36px', maxWidth: '58ch' }}>
-            Drie scans, één recept: Loep doet de meting, jij krijgt een rapport dat zegt waar het wringt en waar je
-            begint. Bij Loep Vertrek en Loep Behoud staat er ook in waarom dat zo is en wat er volgens je mensen moet
-            gebeuren. Daarna bespreken we het samen. Geen software om te beheren. Loep Vertrek als er al mensen weg
-            zijn, Loep Behoud als je ze wilt houden, Loep Start als nieuwe mensen moeten landen.
+            Drie scans, één recept: Loep zet de meting klaar, jij verstuurt hem, en je krijgt een rapport dat zegt
+            waar het wringt en waar je begint. Bij Loep Vertrek en Loep Behoud staat er ook in waarom dat zo is en wat
+            er volgens je mensen moet gebeuren. Daarna leid jij het gesprek met je MT; het rapport is je leidraad.
+            Loep Vertrek als er al mensen weg zijn, Loep Behoud als je ze wilt houden, Loep Start als nieuwe mensen
+            moeten landen.
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 18, justifyContent: 'center' }}>
             {scans.map((scan) => (
@@ -174,11 +175,11 @@ function SharedDeliverySection() {
                 Zo werkt elke scan
               </div>
               <h2 style={{ color: T.ink, fontFamily: FF, fontSize: 'clamp(26px,3vw,38px)', fontWeight: 700, letterSpacing: '-.026em', lineHeight: 1.06, maxWidth: '15ch' }}>
-                Eén begeleide route, ongeacht de scan.
+                Eén vaste route, ongeacht de scan.
               </h2>
               <p style={{ color: T.inkSoft, fontSize: 15, lineHeight: 1.72, marginTop: 16, maxWidth: '46ch' }}>
-                De drie scans verschillen in vraag en uitkomst, maar de uitvoering is hetzelfde. Loep voert uit, jij
-                beheert geen tool.
+                De drie scans verschillen in vraag en uitkomst, maar de route is hetzelfde. Loep zet klaar en levert
+                het rapport; jij verstuurt, volgt de respons en leidt het gesprek.
               </p>
             </div>
           </Reveal>
@@ -362,7 +363,7 @@ function MtoComparisonSection() {
   const loepFits = [
     'Er speelt nu een concreet vraagstuk rond vertrek, behoud of onboarding',
     'Je wilt één scherpe eerste keuze, geen breed dashboard',
-    'Je wilt duiding en een managementbespreking, geen zelfbeheer',
+    'Je wilt een antwoord waar je MT mee aan tafel kan, geen dashboard om te beheren',
   ] as const
 
   return (
