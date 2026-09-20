@@ -1,4 +1,5 @@
 import { buildContactHref } from '@/lib/contact-funnel'
+import { pricingFaqAnswer } from '@/lib/pricing'
 
 export const marketingNavLinks = [
   { href: '/producten', label: 'Producten' },
@@ -126,7 +127,7 @@ export const trustItems = [
   'Signalen, geen schijnzekerheid',
   'Rapportage op geaggregeerd niveau',
   'Vraagblokken gebaseerd op relevante literatuur',
-  'Loep voert uit, je beheert geen tool',
+  'Loep zet de meting klaar, jij verstuurt en leidt het gesprek',
   'AVG-conform, primaire dataopslag in een EU-regio',
   'Geen koppeling aan individuen in rapportage.',
 ] as const
@@ -189,7 +190,7 @@ export const trustHubAnswerCards = [
   },
   {
     title: 'Wat koop je precies?',
-    body: 'Een begeleide dienst: Loep voert de scan uit, levert een managementrapport met prioriteiten en begeleidt HR en management naar één eerste keuze. Geen platform om zelf te beheren.',
+    body: 'Een meting en een rapport. Loep zet de meting klaar, jij verstuurt hem, en het rapport zegt waar je begint en leidt je MT-gesprek. Geen licentie, geen platform dat je moet inrichten.',
   },
   {
     title: 'Heeft elke scan een publiek voorbeeldrapport?',
@@ -405,10 +406,6 @@ export const faqs = [
     'Nee. Een MTO meet alles een beetje en levert een dik rapport op. Loep Behoud is smal en scherp: het laat zien waar het wringt bij de mensen die je wilt houden, wat ze daar zelf over zeggen, en waar je begint. Per afdeling, nooit per persoon.',
   ],
   [
-    'Wanneer kies je voor de combinatie?',
-    'Als je zowel achteraf wilt begrijpen wat vertrek dreef als eerder wilt signaleren waar behoud nu aandacht vraagt.',
-  ],
-  [
     'Ziet management individuele retention-scores?',
     'Nee. Loep Behoud is bedoeld voor groeps- en segmentinzichten, niet voor beoordeling, performance-sturing of voorspelling op persoonsniveau.',
   ],
@@ -422,12 +419,15 @@ export const faqs = [
   ],
   [
     'Wanneer is Loep Start de juiste route?',
-    'Als de vraag gaat over hoe nieuwe medewerkers de eerste 90 dagen landen in rol, leiding en team. Loep voert de checkpoint-read uit en levert een rapport met begeleide bespreking.',
+    'Als de vraag gaat over hoe nieuwe medewerkers de eerste 90 dagen landen in rol, leiding en team. Loep zet de meting klaar en levert een rapport op groepsniveau, met een gespreksleidraad voor het gesprek met je MT.',
   ],
   [
     'Is Loep een instrument of een dienst?',
-    'Loep is een begeleide dienst. Wij voeren de scan uit, leveren het rapport en begeleiden de managementbespreking. Je hoeft niets zelf in te richten of te beheren.',
+    'Een meting en een rapport. Loep zet de meting klaar en levert het rapport; jij verstuurt de uitnodiging, volgt de respons in je eigen omgeving en leidt het gesprek met je MT, met het rapport als leidraad. Geen licentie, geen platform dat je moet inrichten.',
   ],
+  // Het antwoord komt uit lib/pricing.ts, zodat de FAQ-JSON-LD nooit een ander
+  // bedrag noemt dan /producten#tarieven.
+  ['Wat kost een scan van Loep?', pricingFaqAnswer()],
 ] as const
 
 export const marketingPagePurposes = {
