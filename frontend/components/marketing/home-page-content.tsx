@@ -1890,9 +1890,9 @@ function ProofSection() {
                   Methode
                 </p>
                 <p style={{ color: SURFACE.text, fontSize: 14.5, lineHeight: 1.7 }}>
-                  Loep gebruikt gevalideerde vragenlijsten, geduid door HR-specialisten, geen
-                  geautomatiseerde software-output. Elke rapportage is contextgebonden en wordt
-                  begeleid met een managementbespreking.
+                  Loep gebruikt gevalideerde vragenlijsten. Het rapport laat per onderwerp zien waarom
+                  het bovenaan staat: de score, de spreiding en wat je mensen zelf als reden kozen.
+                  Geen cijfer dat je maar moet geloven.
                 </p>
               </div>
             </Reveal>
