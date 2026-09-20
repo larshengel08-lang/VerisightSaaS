@@ -12,15 +12,24 @@
 export type PricingTierId = 'tot-150' | '150-400' | '400-1000'
 
 export type PricingTier = {
-  id: PricingTierId
-  label: string
-  firstScanEur: number
-  followUpEur: number
+  readonly id: PricingTierId
+  readonly label: string
+  readonly firstScanEur: number
+  readonly followUpEur: number
   /** Alleen waar een trede een eerlijke kanttekening nodig heeft. */
-  note: string | null
+  readonly note: string | null
 }
 
-export const PRICING_TIERS: readonly PricingTier[] = [
+/**
+ * `readonly` bewaakt alleen de compiler. Bevriezen erbij, zodat een bedrag ook
+ * tijdens runtime niet stil kan worden overschreven: in een ES-module gooit een
+ * schrijfpoging dan een TypeError in plaats van hem te slikken.
+ */
+function freezeTiers(tiers: readonly PricingTier[]): readonly PricingTier[] {
+  return Object.freeze(tiers.map((tier) => Object.freeze(tier)))
+}
+
+export const PRICING_TIERS: readonly PricingTier[] = freezeTiers([
   {
     id: 'tot-150',
     label: 'Tot 150 medewerkers',
@@ -30,7 +39,7 @@ export const PRICING_TIERS: readonly PricingTier[] = [
   },
   { id: '150-400', label: '150 tot 400 medewerkers', firstScanEur: 4500, followUpEur: 1250, note: null },
   { id: '400-1000', label: '400 tot 1.000 medewerkers', firstScanEur: 6900, followUpEur: 1750, note: null },
-]
+])
 
 export const PRICING_ABOVE_LABEL = 'Boven 1.000 medewerkers'
 export const PRICING_ABOVE_TEXT = 'Op aanvraag'
@@ -39,12 +48,20 @@ export const PRICING_VAT_NOTE = 'excl. btw'
 /** Loep Cultuurbeeld valt buiten de staffel en houdt zijn eigen vanaf-prijs. */
 export const CULTUURBEELD_FROM_EUR = 6500
 
-/** 3500 -> "3.500". Fail Loud: nooit een half of negatief bedrag op de site. */
-export function formatThousands(amount: number): string {
+/**
+ * Fail Loud: nooit een half of negatief bedrag, niet op de site en niet in de
+ * JSON-LD. Elk pad dat een bedrag naar buiten brengt gaat hier eerst langs.
+ */
+export function assertWholeAmount(amount: number): number {
   if (!Number.isInteger(amount) || amount < 0) {
     throw new Error(`Bedrag moet een heel, positief getal zijn, kreeg: ${amount}`)
   }
-  return String(amount).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+  return amount
+}
+
+/** 3500 -> "3.500", voor een mens. */
+export function formatThousands(amount: number): string {
+  return String(assertWholeAmount(amount)).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 }
 
 /** 3500 -> "€3.500". */
@@ -75,7 +92,7 @@ export function pricingFaqAnswer(): string {
     (tier) =>
       `${tier.label}: ${formatEur(tier.firstScanEur)} voor de eerste scan en ${formatEur(tier.followUpEur)} voor een vervolgmeting.`,
   ).join(' ')
-  return `De prijs hangt af van de grootte van je organisatie, niet van het aantal mensen dat meedoet. ${treden} ${PRICING_ABOVE_LABEL} op aanvraag. Alle bedragen ${PRICING_VAT_NOTE}, zonder licenties per medewerker en zonder add-ons achteraf.`
+  return `De prijs hangt af van de grootte van je organisatie, niet van het aantal mensen dat meedoet. ${treden} ${PRICING_ABOVE_LABEL} ${PRICING_ABOVE_TEXT.toLowerCase()}. Alle bedragen ${PRICING_VAT_NOTE}, zonder licenties per medewerker en zonder add-ons achteraf.`
 }
 
 type PricingOffer = {
@@ -92,7 +109,9 @@ type PricingOffer = {
 }
 
 function offer(name: string, amount: number): PricingOffer {
-  const price = String(amount)
+  // Machineleesbaar: schema.org wil een kaal getal, geen duizendtalscheiding.
+  // De controle staat hier apart, want deze weg loopt niet langs formatThousands.
+  const price = String(assertWholeAmount(amount))
   return {
     '@type': 'Offer',
     name,
@@ -102,14 +121,18 @@ function offer(name: string, amount: number): PricingOffer {
   }
 }
 
-/** JSON-LD voor /producten: per trede een eerste scan en een vervolgmeting. */
-export function buildPricingOfferCatalog() {
+/**
+ * JSON-LD voor /producten: per trede een eerste scan en een vervolgmeting.
+ * `tiers` staat alleen open zodat een test kan bewijzen dat een ongeldig bedrag
+ * hier luid faalt; gerenderde code roept hem zonder argument aan.
+ */
+export function buildPricingOfferCatalog(tiers: readonly PricingTier[] = PRICING_TIERS) {
   return {
     '@context': 'https://schema.org' as const,
     '@type': 'OfferCatalog' as const,
     name: 'Loep Behoud, Loep Vertrek en Loep Start: vaste prijs naar organisatiegrootte',
     url: 'https://www.getloep.nl/producten#tarieven',
-    itemListElement: PRICING_TIERS.flatMap((tier) => [
+    itemListElement: tiers.flatMap((tier) => [
       offer(`Eerste scan, ${tier.label.toLowerCase()}`, tier.firstScanEur),
       offer(`Vervolgmeting, ${tier.label.toLowerCase()}`, tier.followUpEur),
     ]),

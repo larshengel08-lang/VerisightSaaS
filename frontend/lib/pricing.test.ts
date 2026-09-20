@@ -4,6 +4,8 @@ import {
   PRICING_ABOVE_LABEL,
   PRICING_ABOVE_TEXT,
   PRICING_TIERS,
+  PRICING_VAT_NOTE,
+  assertWholeAmount,
   buildPricingOfferCatalog,
   firstScanRangeLabel,
   followUpRangeLabel,
@@ -36,6 +38,14 @@ describe('prijsstaffel (besluit Lars 20-9-2026)', () => {
     expect(PRICING_TIERS[1].firstScanEur).toBe(150 * 30)
   })
 
+  it('laat een bedrag niet overschrijven, niet door de compiler en niet tijdens runtime', () => {
+    expect(() => {
+      // @ts-expect-error firstScanEur is readonly; deze regel hoort niet te compileren.
+      PRICING_TIERS[0].firstScanEur = 1
+    }).toThrow(TypeError)
+    expect(PRICING_TIERS[0].firstScanEur).toBe(3500)
+  })
+
   it('draagt de verwachtingsregel van Loep Vertrek alleen bij de onderste trede', () => {
     expect(PRICING_TIERS[0].note).toContain('minimaal 10 respondenten')
     expect(PRICING_TIERS[1].note).toBeNull()
@@ -45,9 +55,11 @@ describe('prijsstaffel (besluit Lars 20-9-2026)', () => {
 
 describe('weergave van bedragen', () => {
   it('zet een punt als duizendtalscheiding', () => {
+    expect(formatThousands(0)).toBe('0')
     expect(formatThousands(950)).toBe('950')
     expect(formatThousands(3500)).toBe('3.500')
     expect(formatThousands(125000)).toBe('125.000')
+    expect(formatThousands(1000000)).toBe('1.000.000')
     expect(formatEur(6900)).toBe('€6.900')
   })
 
@@ -55,6 +67,14 @@ describe('weergave van bedragen', () => {
     expect(() => formatThousands(12.5)).toThrow(/heel, positief getal/)
     expect(() => formatThousands(-1)).toThrow(/heel, positief getal/)
     expect(() => formatThousands(Number.NaN)).toThrow(/heel, positief getal/)
+  })
+
+  it('bewaakt elk bedrag via één helper, die het bedrag teruggeeft', () => {
+    expect(assertWholeAmount(3500)).toBe(3500)
+    expect(() => assertWholeAmount(12.5)).toThrow(/heel, positief getal/)
+    expect(() => assertWholeAmount(-1)).toThrow(/heel, positief getal/)
+    expect(() => assertWholeAmount(Number.NaN)).toThrow(/heel, positief getal/)
+    expect(() => assertWholeAmount(Number.POSITIVE_INFINITY)).toThrow(/heel, positief getal/)
   })
 
   it('leidt het bereik af uit de staffel, niet uit losse getallen', () => {
@@ -74,6 +94,11 @@ describe('prijs-FAQ', () => {
     }
     expect(antwoord).toContain('Boven 1.000 medewerkers op aanvraag')
     expect(antwoord).toContain('excl. btw')
+  })
+
+  it('leidt de aanvraagzin af uit de constanten, zodat hij niet uit de pas loopt', () => {
+    expect(antwoord).toContain(`${PRICING_ABOVE_LABEL} ${PRICING_ABOVE_TEXT.toLowerCase()}.`)
+    expect(antwoord).toContain(PRICING_VAT_NOTE)
   })
 
   it('gebruikt geen em-dash, geen en-dash en geen wij-vorm', () => {
@@ -101,5 +126,19 @@ describe('JSON-LD OfferCatalog', () => {
     const prijzen = catalog.itemListElement.map((offer) => offer.price).sort()
     const verwacht = PRICING_TIERS.flatMap((t) => [String(t.firstScanEur), String(t.followUpEur)]).sort()
     expect(prijzen).toEqual(verwacht)
+  })
+
+  it('houdt de prijs machineleesbaar, zonder duizendtalscheiding', () => {
+    for (const offer of catalog.itemListElement) {
+      expect(offer.price).toMatch(/^\d+$/)
+    }
+  })
+
+  it('faalt luid op een ongeldig bedrag in plaats van het stil in de JSON-LD te zetten', () => {
+    const kapotteTrede = { ...PRICING_TIERS[0], firstScanEur: 3500.5 }
+    expect(() => buildPricingOfferCatalog([kapotteTrede])).toThrow(/heel, positief getal/)
+    expect(() => buildPricingOfferCatalog([{ ...PRICING_TIERS[0], followUpEur: -950 }])).toThrow(
+      /heel, positief getal/,
+    )
   })
 })
