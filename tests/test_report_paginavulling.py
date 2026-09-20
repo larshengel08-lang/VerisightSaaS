@@ -14,11 +14,19 @@ from backend.report_html import (
     render_onboarding_report_html,
     render_retention_report_html,
 )
+from backend.products.shared.deepening import DEEPENING_SETS
 from tests.conftest import requires_pymupdf, requires_weasyprint
 from tests.test_report_degraded_page_two import _fixture
 from tests.test_report_distribution import _min_retention_data
 
 ROOT = Path(__file__).resolve().parent.parent
+
+_RENDERERS_3B = {"exit": render_exit_report_html, "retention": render_retention_report_html}
+
+
+def _eerste_optie(factor_key: str) -> str:
+    """Een echte toelichtingssleutel van dit onderwerp (de renderer faalt hard op een onbekende)."""
+    return DEEPENING_SETS[factor_key]["options"][0]["key"]
 
 
 def _body(html):
@@ -448,3 +456,68 @@ def test_appendix_stroomt_en_houdt_de_kop_bij_de_eerste_tabel():
     assert '<div class="no-break"><div class="ch-head"' in kop
     eerste_tabel = body.index('<table class="app-tbl">', i)
     assert body.index("</div>", eerste_tabel) < body.index('<table class="app-tbl">', eerste_tabel + 10)
+
+
+# ── Plan 3b, Taak 9: dunne verdiepingsblokken lopen door ─────────────────────
+
+def _deep_agg_3b(**counts):
+    n = sum(counts.values())
+    return {"triggered": n, "offered": n, "answered": n, "skipped": 0,
+            "primary_counts": counts, "secondary_counts": {}, "other_texts": []}
+
+
+def _verd_klassen(body: str) -> list[str]:
+    return re.findall(r'<div class="(sec flow verd[^"]*)">', body)
+
+
+def test_verd_los_helper_kiest_dunne_blokken_en_hun_voorganger():
+    from backend.report_html import _verd_los
+    deep = {"workload": _deep_agg_3b(wl_recovery=6), "growth": _deep_agg_3b(gr_time=6)}
+    assert _verd_los(["workload", "growth", "role_clarity"], deep) == {"growth", "role_clarity"}
+    assert _verd_los(["role_clarity", "workload", "growth"], deep) == {"role_clarity"}
+    assert _verd_los(["workload", "growth"], deep) == set()
+    # Een aggregaat dat niet getriggerd is levert geen toelichtingsblok: ook dun.
+    deep["leadership"] = dict(_deep_agg_3b(), triggered=0)
+    assert _verd_los(["workload", "leadership"], deep) == {"workload", "leadership"}
+
+
+@pytest.mark.parametrize("scan_type", ["exit", "retention"])
+def test_dun_blok_en_zijn_voorganger_mogen_over_de_paginagrens(scan_type):
+    d = _fixture(scan_type, n=25, profile=True)
+    # De fixture heeft geen verdiepingsdata: drie verdiepingsblokken, alle drie dun.
+    body0 = _body(_RENDERERS_3B[scan_type](d))
+    assert len(_verd_klassen(body0)) == 3
+    assert all("verd-los" in k for k in _verd_klassen(body0))
+
+
+def test_rapport_zonder_dun_blok_verandert_niet():
+    """Alle drie de onderwerpen met verdiepingsdata: geen enkele verd-los, dus
+    de HTML (en daarmee de paginering) is die van voor deze taak."""
+    d = _fixture("retention", n=25, profile=True)
+    d["deepening_agg"] = {
+        "workload": _deep_agg_3b(wl_recovery=6, wl_volume=3),
+        "growth": _deep_agg_3b(gr_visibility=6, gr_time=3),
+        "role_clarity": _deep_agg_3b(**{_eerste_optie("role_clarity"): 6}),
+        "leadership": _deep_agg_3b(**{_eerste_optie("leadership"): 6}),
+        "culture": _deep_agg_3b(**{_eerste_optie("culture"): 6}),
+        "compensation": _deep_agg_3b(**{_eerste_optie("compensation"): 6}),
+    }
+    body = _body(render_retention_report_html(d))
+    assert len(_verd_klassen(body)) == 3
+    assert not any("verd-los" in k for k in _verd_klassen(body))
+
+
+def test_loep_start_blijft_buiten_verd_los():
+    from backend.report_html import render_onboarding_report_html
+    body = _body(render_onboarding_report_html(_fixture("onboarding", n=25, profile=True)))
+    assert "verd-los" not in body
+
+
+def test_css_houdt_de_binnendelen_van_een_los_blok_heel():
+    from backend.report_css import build_css
+    css = build_css("retention")
+    assert ".sec.flow.verd.verd-los { break-inside: auto; }" in css
+    blok = css[css.index(".sec.flow.verd.verd-los"):]
+    blok = blok[:blok.index("/* einde verd-los */")]
+    assert "break-after: avoid" in blok          # kop blijft bij de eerste inhoud
+    assert ".verd-los .card" in blok and ".verd-los .item-tbl tr" in blok

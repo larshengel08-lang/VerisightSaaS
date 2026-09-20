@@ -5636,6 +5636,33 @@ def _appendix_section(*, fa: dict, oim: dict, sim: dict, factor_items_map: dict,
 </div>"""
 
 
+# ── Dunne verdiepingsblokken (plan 3b, Taak 9) ────────────────────────────────
+# Een onderwerp zonder getriggerde verdieping krijgt geen toelichtingsblok en is
+# dan ongeveer een derde pagina hoog. Als .sec.flow (break-inside: avoid)
+# verhuist het in zijn geheel zodra het niet meer onder zijn voorganger past, en
+# staat het alleen op een vel (26 tot 36% gevuld in stresstest 01, 09 en 19,
+# gemeten in het productie-image). Zo'n blok, en het blok er direct voor, mogen
+# daarom over een paginagrens lopen; hun binnendelen blijven heel (CSS).
+
+def _verdieping_is_dun(deep_agg: dict, factor_key: str) -> bool:
+    """Zelfde voorwaarde als waarop _deepening_block niets levert."""
+    agg = deep_agg.get(factor_key)
+    return not (agg and agg.get("triggered"))
+
+
+def _verd_los(priority_fkeys: list[str], deep_agg: dict) -> set[str]:
+    """De onderwerpen waarvan het verdiepingsblok over een paginagrens mag
+    lopen: elk dun blok en het blok er direct voor. Leeg als geen blok dun is;
+    dan verandert er niets aan de HTML."""
+    los: set[str] = set()
+    for i, fk in enumerate(priority_fkeys):
+        if _verdieping_is_dun(deep_agg, fk):
+            los.add(fk)
+            if i > 0:
+                los.add(priority_fkeys[i - 1])
+    return los
+
+
 # ─── ExitScan renderer ────────────────────────────────────────────────────────
 
 def render_exit_report_html(data: dict) -> str:
@@ -5902,6 +5929,8 @@ def render_exit_report_html(data: dict) -> str:
     # hierboven al berekend, vóór de Bestuurlijke read.
     priority_fkeys = [r["key"] for r in _raster_rows[:3]]
 
+    _los_fkeys = _verd_los(priority_fkeys, deep_agg)
+
     # ── Factor detail (itemniveau prioritaire factoren) ──────────────────────
     def _factor_detail(fk: str, opener_html: str = "", intro_html: str = "",
                        is_first: bool = True) -> str:
@@ -5966,7 +5995,10 @@ def render_exit_report_html(data: dict) -> str:
         # nieuw vel omdat de sectie als geheel verhuist (.sec.flow). Met een eigen
         # vel bleef het laatste onderwerp alleen op een pagina van 27 tot 37%.
         # is_first bepaalt alleen nog de kop en de intro (aanroeper).
-        return f"""<div class="sec flow verd{' verd-eerste' if is_first else ''}">
+        # verd-los VOOR verd-eerste: test_ook_het_eerste_verdiepingsonderwerp_stroomt
+        # eist dat de klasse op verd-eerste eindigt.
+        klassen = "sec flow verd" + (" verd-los" if fk in _los_fkeys else "") + (" verd-eerste" if is_first else "")
+        return f"""<div class="{klassen}">
   {opener_html or f'<span class="slabel">Verdieping: {_h(lbl)}</span>'}
   {intro_html}
   <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&middot; {_h(fl_)}</span></h2>
@@ -6314,6 +6346,8 @@ def render_retention_report_html(data: dict) -> str:
     # hierboven al berekend, vóór de Bestuurlijke read.
     priority_fkeys = [r["key"] for r in _raster_rows[:3]]
 
+    _los_fkeys = _verd_los(priority_fkeys, deep_agg)
+
     def _ret_factor_detail(fk: str, opener_html: str = "", intro_html: str = "",
                            is_first: bool = True) -> str:
         lbl    = _fl(fk, ST)
@@ -6364,7 +6398,10 @@ def render_retention_report_html(data: dict) -> str:
         # nieuw vel omdat de sectie als geheel verhuist (.sec.flow). Met een eigen
         # vel bleef het laatste onderwerp alleen op een pagina van 27 tot 37%.
         # is_first bepaalt alleen nog de kop en de intro (aanroeper).
-        return f"""<div class="sec flow verd{' verd-eerste' if is_first else ''}">
+        # verd-los VOOR verd-eerste: test_ook_het_eerste_verdiepingsonderwerp_stroomt
+        # eist dat de klasse op verd-eerste eindigt.
+        klassen = "sec flow verd" + (" verd-los" if fk in _los_fkeys else "") + (" verd-eerste" if is_first else "")
+        return f"""<div class="{klassen}">
   {opener_html or f'<span class="slabel">Verdieping: {_h(lbl)}</span>'}
   {intro_html}
   <h2>{_h(lbl)} <span style="color:{col};">{_score_str(fsc)}</span> <span style="font-size:13px;color:{col};">&middot; {_h(fl_)}</span></h2>

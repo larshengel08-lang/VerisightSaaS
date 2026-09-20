@@ -436,6 +436,15 @@ p  { margin-bottom: 6px; font-size: 11px; }
    de negatieve marge brengt de samengevallen witruimte naar 24px, dezelfde
    ruimte als tussen twee onderwerpen. */
 .sec.flow.verd.verd-eerste { margin-top: -20px; }
+/* Dun verdiepingsblok en zijn voorganger (plan 3b): mogen over een paginagrens
+   lopen, zodat het dunne blok niet alleen op een vel belandt. De binnendelen
+   blijven heel: een kop staat nooit los onderaan, een kaart en een tabelrij
+   breken niet. */
+.sec.flow.verd.verd-los { break-inside: auto; }
+.verd-los .slabel, .verd-los .ch-head, .verd-los h2, .verd-los .verd-h3 { break-after: avoid; }
+.verd-los .card, .verd-los .item-tbl tr { break-inside: avoid; }
+.verd-los .card { break-before: avoid; }
+/* einde verd-los */
 .verd-h3 { margin-top: 16px; }
 .verd-compact .slabel { margin-bottom: 10px; }
 .verd-compact .verd-h3 { margin-top: 14px; }
