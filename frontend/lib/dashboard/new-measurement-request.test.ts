@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { PRICING_TIERS, formatEur } from '@/lib/pricing'
 import { NEW_MEASUREMENT_PRICE_LABEL, buildNewMeasurementMailto, newMeasurementVariant } from './new-measurement-request'
 
 function parse(href: string) {
@@ -29,8 +30,10 @@ describe('buildNewMeasurementMailto (spec 2026-09-16 par. 6.3)', () => {
     }
   })
 
-  it('noemt de prijs van de vervolgmeting zoals op de site (beslissing 2026-07-09)', () => {
-    expect(NEW_MEASUREMENT_PRICE_LABEL).toBe('€1.250 excl. btw')
+  it('noemt het bereik van de vervolgmeting uit de staffel, want het dashboard kent de organisatiegrootte niet (besluit 2026-09-20)', () => {
+    expect(NEW_MEASUREMENT_PRICE_LABEL).toBe('€950 tot €1.750 excl. btw, naar de grootte van je organisatie')
+    expect(NEW_MEASUREMENT_PRICE_LABEL).toContain(formatEur(PRICING_TIERS[0].followUpEur))
+    expect(NEW_MEASUREMENT_PRICE_LABEL).toContain(formatEur(PRICING_TIERS[PRICING_TIERS.length - 1].followUpEur))
   })
 
   it('bevat geen em- of en-dashes', () => {
