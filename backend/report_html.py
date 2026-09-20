@@ -3262,6 +3262,27 @@ BESLUIT_GEEN_STARTPUNT = "Dit rapport wijst nog geen startpunt aan; kies zelf he
 BESLUIT_DATUM_HINT = "Kies een datum, geen termijn."
 BESLUIT_ONLEESBAAR = ("Loep kon niet nagaan of er al een besluit is vastgelegd in het dashboard; "
                       "vul het hieronder in.")
+# Meting (2026-09-20, productie-image WeasyPrint 70.0): een besluit waarin elk
+# tekstveld op zijn frontendlimiet zit (DECISION_LIMITS.action/.text = 600 in
+# frontend/lib/dashboard/campaign-decision.ts) duwt de besluitpagina over een
+# tweede vel; op 470 tekens per lang veld past hij nog net, op 480 niet meer.
+# BESLUIT_TEKST_MAX houdt ruime marge (300) voor natuurlijke tekst, die anders
+# wrapt dan de herhaalde-woord-fixture waarmee de knik is gemeten.
+BESLUIT_TEKST_MAX = 300
+BESLUIT_INGEKORT = ("Dit vel toont het begin van lange antwoorden; het volledige besluit staat "
+                    "in het dashboard.")
+
+
+def _bl_kort(tekst: str, max_chars: int = BESLUIT_TEKST_MAX) -> tuple[str, bool]:
+    """Begrenst een lang MT-tekstveld tot max_chars op een woordgrens, zodat de
+    besluitpagina één A4 blijft (spec 3b, restpunt 2). Geen stille afkap: is
+    het veld ingekort, dan meldt de pagina dat via BESLUIT_INGEKORT."""
+    if len(tekst) <= max_chars:
+        return tekst, False
+    kort = tekst[:max_chars].rsplit(" ", 1)[0].rstrip()
+    if not kort:
+        kort = tekst[:max_chars].rstrip()
+    return kort + "...", True
 
 
 def _bl_lines(n: int) -> str:
@@ -3333,26 +3354,57 @@ def _besluit_page(*, opener_html: str, scan_type: str, campaign_name: str,
     # Lokale variabelen in plaats van geneste f-strings: Python 3.11 (Railway).
     meting = '<div class="bl-vast">' + _h(campaign_name) + "</div>"
     gesprek = _bl_waarde(_datum_nl(d.get("decided_at")), 1)
-    wat1 = _bl_waarde(d.get("primary_action"), 3)
-    wat1_hint = "" if d.get("primary_action") else "Een onderwerp is nog geen afspraak: schrijf op wat er gebeurt."
+
+    primary_action_raw = d.get("primary_action")
+    if primary_action_raw:
+        wat1_tekst, wat1_afgekapt = _bl_kort(primary_action_raw)
+        wat1 = _bl_waarde(wat1_tekst, 3)
+        wat1_hint = ""
+    else:
+        wat1 = _bl_waarde(None, 3)
+        wat1_afgekapt = False
+        wat1_hint = "Een onderwerp is nog geen afspraak: schrijf op wat er gebeurt."
+
     eigenaar = _bl_waarde(d.get("owner"), 1)
     eigenaar_hint = "" if d.get("owner") else "Eén naam."
     vervolg = _bl_waarde(_datum_nl(d.get("follow_up_date")), 1)
     vervolg_hint = "" if d.get("follow_up_date") else BESLUIT_DATUM_HINT + " " + review_hint
-    wat2 = _bl_waarde(d.get("secondary_action"), 3)
-    succes = _bl_waarde(d.get("success_criterion"), 1)
-    if d.get("feedback_plan"):
-        terugkoppeling = _bl_waarde(d.get("feedback_plan"), 1)
+
+    secondary_action_raw = d.get("secondary_action")
+    if secondary_action_raw:
+        wat2_tekst, wat2_afgekapt = _bl_kort(secondary_action_raw)
+        wat2 = _bl_waarde(wat2_tekst, 3)
     else:
+        wat2 = _bl_waarde(None, 3)
+        wat2_afgekapt = False
+
+    success_raw = d.get("success_criterion")
+    if success_raw:
+        succes_tekst, succes_afgekapt = _bl_kort(success_raw)
+        succes = _bl_waarde(succes_tekst, 1)
+    else:
+        succes = _bl_waarde(None, 1)
+        succes_afgekapt = False
+
+    feedback_raw = d.get("feedback_plan")
+    if feedback_raw:
+        terugkoppeling_tekst, terugkoppeling_afgekapt = _bl_kort(feedback_raw)
+        terugkoppeling = _bl_waarde(terugkoppeling_tekst, 1)
+    else:
+        terugkoppeling_afgekapt = False
         terugkoppeling = ('<table class="bl-drie"><tr>'
                           + "<td>" + _bl_veld("Wie", _bl_lines(1)) + "</td>"
                           + "<td>" + _bl_veld("Wanneer", _bl_lines(1)) + "</td>"
                           + "<td>" + _bl_veld("Wat", _bl_lines(1)) + "</td>"
                           + "</tr></table>")
+
+    ingekort = wat1_afgekapt or wat2_afgekapt or succes_afgekapt or terugkoppeling_afgekapt
+    ingekort_regel = ('<p class="bl-status">' + BESLUIT_INGEKORT + "</p>") if ingekort else ""
     return f"""<div class="pb sec besluit">
   {opener_html}
   <p class="sec-intro">{intro}</p>
   {status}
+  {ingekort_regel}
   <table class="bl-rij"><tr>
     <td class="bl-cel">{_bl_veld("Meting", meting)}</td>
     <td class="bl-cel">{_bl_veld("Datum van dit gesprek", gesprek)}</td>

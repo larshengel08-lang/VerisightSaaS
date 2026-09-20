@@ -185,3 +185,69 @@ def test_renderers_geven_het_besluit_door(scan_type):
     d["decision"] = BESLUIT
     d["decision_unavailable"] = False
     assert "Sanne de Vries" in _plain(_body(_RENDER[scan_type](d)))
+
+
+def test_ingevuld_terugkoppelingsplan_vervangt_de_tabel_door_tekst():
+    """Bij een gevuld feedback_plan verdwijnt de driekoloms Wie/Wanneer/Wat-tabel
+    en staat de tekst als vrije regel; de hint eronder blijft ongewijzigd staan."""
+    html = _pagina(decision=dict(BESLUIT, feedback_plan="We delen de uitkomst in het "
+                                  "eerstvolgende teamoverleg."))
+    t = _plain(html)
+    assert 'class="bl-drie"' not in html
+    assert "We delen de uitkomst in het eerstvolgende teamoverleg." in t
+    assert "Je mensen vulden in; ze horen wat het MT ermee doet." in t
+
+
+def test_ingevuld_terugkoppelingsplan_wordt_geescaped():
+    html = _pagina(decision=dict(BESLUIT, feedback_plan="<script>alert(2)</script>"))
+    assert "<script>" not in html
+    assert "&lt;script&gt;" in html
+
+
+# ── Opvolgtaak: lange tekstvelden begrensd zodat het vel één A4 blijft ───────
+# Gemeten in het productie-image (WeasyPrint 70.0, zie het commitbericht): een
+# besluit met alle vier lange velden op de frontendlimiet (600 tekens,
+# DECISION_LIMITS.action/.text) duwt de pagina over een tweede vel. Op 470
+# tekens per veld past hij nog net, op 480 niet meer. BESLUIT_TEKST_MAX houdt
+# ruime marge.
+from backend.report_html import BESLUIT_INGEKORT, BESLUIT_TEKST_MAX, _bl_kort
+
+
+def test_bl_kort_laat_korte_tekst_ongemoeid():
+    tekst = "Kort en duidelijk."
+    kort, afgekapt = _bl_kort(tekst)
+    assert kort == tekst
+    assert afgekapt is False
+
+
+def test_bl_kort_snijdt_op_een_woordgrens_binnen_de_grens():
+    tekst = "woord " * 100  # ruim boven BESLUIT_TEKST_MAX
+    kort, afgekapt = _bl_kort(tekst)
+    assert afgekapt is True
+    assert kort.endswith("...")
+    assert len(kort) <= BESLUIT_TEKST_MAX + 3
+    assert not kort[:-3].endswith(" ")  # geen spatie vlak voor de ellips
+
+
+def test_lang_veld_in_de_pagina_wordt_ingekort_en_gemeld():
+    lang = ("besluitwoord " * 60).strip()  # 780 tekens, ruim boven de grens
+    verwacht_kort, verwacht_afgekapt = _bl_kort(lang)
+    assert verwacht_afgekapt is True       # de fixture test zichzelf: raakt de grens echt
+    html = _pagina(decision=dict(BESLUIT, primary_action=lang))
+    t = _plain(html)
+    assert BESLUIT_INGEKORT in t
+    assert lang not in t                  # niet de volledige tekst
+    assert verwacht_kort in t             # exact het ingekorte begin
+
+
+def test_kort_veld_in_de_pagina_wordt_niet_gemeld():
+    t = _plain(_pagina(decision=BESLUIT))
+    assert BESLUIT_INGEKORT not in t
+
+
+@pytest.mark.parametrize("veld", ["primary_action", "secondary_action",
+                                   "feedback_plan", "success_criterion"])
+def test_elk_lang_veld_triggert_de_melding(veld):
+    lang = ("besluitwoord " * 60).strip()
+    html = _pagina(decision=dict(BESLUIT, **{veld: lang}))
+    assert BESLUIT_INGEKORT in _plain(html)
