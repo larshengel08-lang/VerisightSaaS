@@ -157,6 +157,13 @@ def test_blok_rendert_met_de_echte_content_zonder_fout():
     assert html.count('class="wq-card"') == 2
 
 
+def test_ontbrekende_richtingsleutel_valt_luid_om():
+    """Zelfde afspraak als _wat_moet_gebeuren_block: met richtingdata is een
+    ontbrekende sleutel een codebug elders, geen kaart zonder vertaalvraag."""
+    with pytest.raises(KeyError):
+        _werkvragen_block(RANKED, {}, {"growth": DIRECTION["growth"]}, "retention")
+
+
 def test_blok_weigert_loep_start():
     with pytest.raises(ValueError, match="onboarding"):
         _werkvragen_block(RANKED, {}, {}, "onboarding")
@@ -195,6 +202,60 @@ def test_zonder_factorprofiel_geen_blok():
 
 
 # ── H7: de vaste regel op de afdelingspagina ─────────────────────────────────
+
+_SEG_ROWS = [
+    {"department": "Operations", "n": 17, "avg": 5.2, "scores": [5.2] * 17,
+     "is_pooled": False, "invited": 20},
+    {"department": "Sales", "n": 8, "avg": 6.8, "scores": [6.8] * 8,
+     "is_pooled": False, "invited": 10},
+]
+
+
+def _render_met_afdelingen(deepening_agg: dict) -> str:
+    data = _fixture("retention", n=25, profile=True)
+    data["segment_rows"] = list(_SEG_ROWS)
+    data["deepening_agg"] = deepening_agg
+    return _body(render_retention_report_html(data))
+
+
+def test_h7_regel_alleen_als_het_rapport_ergens_een_toelichting_toont():
+    """De regel belooft "het rapport toont die alleen organisatiebreed". Een
+    actieve verdieping is daarvoor niet genoeg: haalt geen enkel onderwerp de
+    staffel van _deepening_shows_distribution, dan staat er nergens een
+    toelichting en is de belofte onwaar.
+    """
+    mager = _render_met_afdelingen({
+        "workload": _deep(wl_recovery=2, wl_volume=1),          # answered 3
+        "growth": _deep(gr_visibility=2, gr_time=2),            # answered 4
+        "leadership": {"triggered": 2, "offered": 2, "answered": 0, "skipped": 2,
+                       "primary_counts": {}, "secondary_counts": {}, "other_texts": []},
+    })
+    # De verdieping draaide wel degelijk in deze meting; het rapport meldt per
+    # onderwerp dat het er te weinig zijn. Zonder die controle zou de test ook
+    # slagen op een rapport zonder enige verdiepingsdata.
+    assert "Te weinig verdiepingsantwoorden om een verdeling te tonen" in mager
+    assert SEGMENT_TOELICHTING_GRENS not in mager
+
+    ruim = _render_met_afdelingen({
+        "workload": _deep(wl_recovery=6, wl_volume=4, wl_priorities=3),  # answered 13
+        "growth": _deep(gr_visibility=2, gr_time=2),
+    })
+    assert "Er is te weinig ruimte om te herstellen of werk goed af te ronden" in ruim
+    assert SEGMENT_TOELICHTING_GRENS in ruim
+
+
+def test_h7_regel_verdwijnt_zonder_afdelingsrijen():
+    data = _fixture("retention", n=25, profile=True)
+    data["segment_rows"] = []
+    data["deepening_agg"] = {"workload": _deep(wl_recovery=6, wl_volume=4, wl_priorities=3)}
+    assert SEGMENT_TOELICHTING_GRENS not in _body(render_retention_report_html(data))
+
+
+def test_loep_start_krijgt_de_h7_regel_niet():
+    data = _fixture("onboarding", n=25, profile=True)
+    data["segment_rows"] = list(_SEG_ROWS)
+    assert SEGMENT_TOELICHTING_GRENS not in _body(render_onboarding_report_html(data))
+
 
 def test_afdelingspagina_zegt_waar_de_toelichting_vandaan_moet_komen():
     rows = [{"department": "Operations", "n": 17, "avg": 5.2, "scores": [5.2] * 17,

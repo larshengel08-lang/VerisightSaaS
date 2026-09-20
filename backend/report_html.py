@@ -3221,9 +3221,17 @@ def _werkvragen_block(ranked: list[dict], deep_agg: dict, direction_agg: dict,
     cards = ""
     for r in punten:
         fk = r["key"]
-        agg = direction_agg.get(fk) if direction_agg else None
-        if agg is not None:
-            st = direction_state(agg, fk, _shown(r["score"]))
+        if direction_agg:
+            # Direct indexeren, net als _wat_moet_gebeuren_block op dezelfde
+            # rijen en dezelfde sleutels: aggregate_direction vult altijd alle
+            # DEEPENING_FACTOR_KEYS, en die lijst is gelijk aan ORG_FACTOR_KEYS,
+            # precies wat ranked (via rank_factors) gebruikt. Een ontbrekende
+            # sleutel is dus een codebug elders en moet omvallen, niet stil een
+            # kaart zonder vertaalvraag opleveren.
+            # De leegte-check staat bewust op de hele dict en niet per sleutel:
+            # een meting van vóór de richtingvraag heeft geen enkel aggregaat,
+            # en dan hoort dit blok te renderen zonder de rij "Vertalen".
+            st = direction_state(direction_agg[fk], fk, _shown(r["score"]))
             vertaal = translation_question(scan_type, fk, st)
             staat = st["state"]
         else:
@@ -3605,6 +3613,23 @@ def _deepening_shows_distribution(agg: dict | None) -> bool:
     """
     return bool(agg and agg.get("triggered")
                 and agg.get("answered", 0) >= DEEPENING_DISTRIBUTION_MIN_N)
+
+
+def _toont_toelichtingen(deep_agg: dict) -> bool:
+    """Staat er ergens in dit rapport een toelichtingverdeling?
+
+    De H7-regel op de afdelingspagina zegt "het rapport toont die alleen
+    organisatiebreed". Een actieve verdieping is daarvoor niet genoeg: drie
+    onderwerpen met 3, 4 en 0 antwoorden maken `bool(deep_agg)` waar terwijl
+    geen enkel onderwerp de staffel haalt en het rapport dus nergens een
+    toelichting toont (codereview taak 5). Dezelfde staffel als het
+    verdiepingsblok zelf, geen nieuwe drempel: de belofte volgt de pagina.
+
+    De campagne-gate zit al in build_report_data (_deepening_campaign_active
+    leegt deepening_agg bij een pre-feature meting), dus hier hoeft alleen nog
+    gekeken te worden naar wat er daadwerkelijk gerenderd wordt.
+    """
+    return any(_deepening_shows_distribution(agg) for agg in deep_agg.values())
 
 
 def _deepening_block(agg: dict, scan_type: str, factor_key: str, n_total: int,
@@ -5951,7 +5976,7 @@ def render_exit_report_html(data: dict) -> str:
     s += _segment_block(_seg_rows, factor_rows=data.get("segment_factor_rows"),
                         scan_type="exit", opener_html=_seg_opener,
                         hidden_n=data.get("segment_hidden_n", 0),
-                        toelichting_regel=bool(deep_agg) and bool(_seg_rows))
+                        toelichting_regel=_toont_toelichtingen(deep_agg) and bool(_seg_rows))
 
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]
@@ -6344,7 +6369,7 @@ def render_retention_report_html(data: dict) -> str:
     s += _segment_block(_seg_rows, factor_rows=data.get("segment_factor_rows"),
                         scan_type=ST, opener_html=_seg_opener,
                         hidden_n=data.get("segment_hidden_n", 0),
-                        toelichting_regel=bool(deep_agg) and bool(_seg_rows))
+                        toelichting_regel=_toont_toelichtingen(deep_agg) and bool(_seg_rows))
 
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]
