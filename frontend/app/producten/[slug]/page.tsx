@@ -23,6 +23,7 @@ import {
   isActiveMarketingProduct,
   isCoreMarketingProduct,
 } from '@/lib/marketing-products'
+import { CULTUURBEELD_FROM_EUR, PRICING_VAT_NOTE, formatEur } from '@/lib/pricing'
 import { getPrimarySampleShowcaseAsset } from '@/lib/sample-showcase-assets'
 
 type Props = { params: Promise<{ slug: string }> }
@@ -213,26 +214,23 @@ function CultureAssessmentPage() {
             <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_360px] items-start">
               <div>
                 <h1 style={{ fontFamily: FF, fontWeight: 800, fontSize: 'clamp(42px,5.5vw,76px)', lineHeight: .97, letterSpacing: '-.032em', color: T.ink, maxWidth: '14ch' }}>
-                  Wij brengen cultuur en engagement in beeld. Jij weet wat bestuurlijk aandacht vraagt.
+                  Loep brengt cultuur en engagement in beeld. Jij weet wat bestuurlijk aandacht vraagt.
                 </h1>
                 <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '48ch', margin: '26px 0 36px' }}>
-                  Loep voert de jaarlijkse cultuur- en engagementbaseline uit, analyseert de uitkomsten en levert een board-read met eerste aandachtspunten. Geen survey-platform, maar een begeleid traject.
+                  Loep zet de jaarlijkse cultuur- en engagementbaseline klaar, analyseert de uitkomsten en levert een board-read met eerste aandachtspunten. Het gesprek met je directie voer je zelf, met het rapport op tafel.
                 </p>
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' as const }}>
                   <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 600, padding: '12px 28px', color: '#fff', background: T.violet }}>
                     Toets Loep Cultuurbeeld
                   </a>
-                  <Link href="/tarieven" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', fontSize: 14, fontWeight: 500, padding: '11px 24px', color: T.inkSoft, border: `1px solid ${T.rule}` }}>
-                    Bekijk tarieven
-                  </Link>
                 </div>
               </div>
               <div>
                 <div style={{ padding: '28px', background: T.violetFaint, border: `1px solid ${T.violetSoft}` }}>
-                  <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase' as const, color: T.violet, marginBottom: 16 }}>vanaf €6.500 {'•'} Baseline</div>
+                  <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase' as const, color: T.violet, marginBottom: 16 }}>vanaf {formatEur(CULTUURBEELD_FROM_EUR)} {'•'} Baseline</div>
                   {[
                     'Board-read rapport met Loep Culture Index en domeinanalyse',
-                    'Begeleide directie-read sessie (60–90 min)',
+                    'Je bespreekt het rapport zelf met je directie',
                     'Top/bottom items en bestuurlijke aandachtspunten',
                     'AVG-conforme dataverwerking en minimum-n-waarborgen',
                   ].map((item, i) => (
@@ -323,7 +321,7 @@ function CultureAssessmentPage() {
                 <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 10 }}>
                   {[
                     'Board-read rapport met Loep Culture Index, domeinprofiel en bestuurlijke aandachtspunten',
-                    'Begeleide directie-read sessie (60–90 min): samen de eerste managementvraag kiezen',
+                    'Het gesprek met je directie voer je zelf, met het board-read rapport als basis',
                     'Top/bottom itemranking en sterktes & aandachtspunten per domein',
                     'Segmentinzicht per afdeling waar respons dat toelaat (boven minimum-n)',
                     'HR-bijlage met itemscores per domein voor HR-partner',
@@ -337,7 +335,7 @@ function CultureAssessmentPage() {
                 <div style={{ marginTop: 22, padding: '18px 20px', border: `1px solid ${T.rule}`, background: T.white }}>
                   <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase' as const, color: T.inkFaint, marginBottom: 8 }}>Wat bewust begrensd blijft</div>
                   <p style={{ fontSize: 13.5, color: T.inkMuted, lineHeight: 1.65 }}>
-                    Geen benchmarking met externe normen in v1 · Geen named manager detail standaard · Geen individuele voorspellingen · Geen automatische interventie · Geen self-serve platform.
+                    Geen benchmarking met externe normen in v1 · Geen named manager detail standaard · Geen individuele voorspellingen · Geen automatische interventie.
                   </p>
                 </div>
               </div>
@@ -345,9 +343,17 @@ function CultureAssessmentPage() {
                 <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontSize: 14, fontWeight: 600, padding: '14px 28px', color: '#fff', background: T.violet, whiteSpace: 'nowrap' as const }}>
                   Toets Loep Cultuurbeeld
                 </a>
-                <Link href="/tarieven" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 500, padding: '12px 24px', color: T.inkSoft, border: `1px solid ${T.rule}`, whiteSpace: 'nowrap' as const }}>
-                  Bekijk tarieven
-                </Link>
+                {/*
+                  Hier stond een tweede knop naar de tarievenpagina. Die verwijst
+                  sinds 17 juni door naar de prijsstaffel op de productenpagina,
+                  en Loep Cultuurbeeld staat daar niet in: het houdt zijn eigen
+                  prijs. De knop stuurde de lezer dus naar bedragen die niet voor
+                  dit product gelden. Daarom staat de prijs er nu zelf, uit
+                  dezelfde bron als elk ander Loep-bedrag.
+                */}
+                <p style={{ fontSize: 13, lineHeight: 1.65, color: T.inkMuted, padding: '12px 0 0' }}>
+                  Vanaf {formatEur(CULTUURBEELD_FROM_EUR)} {PRICING_VAT_NOTE} voor de baseline.
+                </p>
               </div>
             </div>
           </div>
@@ -375,12 +381,12 @@ function CultureAssessmentPage() {
                 </thead>
                 <tbody>
                   {[
-                    ['Doorlooptijd', '5 werkdagen na sluiting', '6–12 weken', 'Onbepaald, je doet het zelf'],
-                    ['Begeleiding', 'Inbegrepen, board-read sessie door Loep', 'Consultancydag apart geprijsd', 'Geen, je interpreteert zelf'],
+                    ['Doorlooptijd', '5 werkdagen na sluiting', '6 tot 12 weken', 'Onbepaald, je doet het zelf'],
+                    ['Gesprek met de directie', 'Voer je zelf, met het board-read rapport', 'Consultancydag apart geprijsd', 'Voer je zelf, zonder rapport dat richting geeft'],
                     ['Vragenlijst', 'Vaste 40-item enterprise-baseline', 'Op maat, lang traject', 'Zelf bouwen, geen validatie'],
                     ['Governance', 'Minimum-n hardcoded, manager detail standaard locked', 'Afhankelijk van afspraken', 'Niet ingebouwd'],
-                    ['Prijs', 'Vanaf €6.500', '€25.000–€100.000+', 'Laag instap, hoge tijdsinvestering'],
-                    ['Geschikt voor', 'MKB 50–1000 fte, directie als koper', 'Enterprise 1000+ fte', 'Teams die zelf willen bouwen'],
+                    ['Prijs', `Vanaf ${formatEur(CULTUURBEELD_FROM_EUR)}`, '€25.000 tot €100.000 en meer', 'Laag instap, hoge tijdsinvestering'],
+                    ['Geschikt voor', '100 tot 1.000 medewerkers, directie als koper', 'Organisaties boven 1.000 medewerkers', 'Teams die zelf willen bouwen'],
                   ].map(([thema, ...cols]) => (
                     <tr key={thema} style={{ borderBottom: `1px solid ${T.rule}`, background: T.white }}>
                       <td style={{ padding: '12px 14px', fontWeight: 600, color: T.ink, verticalAlign: 'top' }}>{thema}</td>
