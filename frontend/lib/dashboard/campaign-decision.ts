@@ -37,23 +37,40 @@ function text(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
 }
 
+/** Leest een veld als tekst zonder te trimmen; niet-string wordt ''. Voor
+ * gebruik ná normalisatie, waar de waarde al getrimd is en trimmen dus geen
+ * verschil maakt, maar een ontbrekend veld (`undefined`) niet mag crashen. */
+function fieldText(value: unknown): string {
+  return typeof value === 'string' ? value : ''
+}
+
 function dateOrNull(value: unknown): string | null {
   const trimmed = text(value)
   return trimmed.length > 0 ? trimmed : null
 }
 
-/** Alleen de bekende velden, getrimd; een lege datum wordt null. */
-export function normalizeDecisionInput(raw: Record<string, unknown>): CampaignDecisionInput {
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+/**
+ * Alleen de bekende velden, getrimd; een lege datum wordt null.
+ * Dit is de saneringslaag voor onbetrouwbare formulierinvoer: `null`,
+ * `undefined`, een array of een primitieve waarde worden behandeld als een
+ * leeg object (dus elk veld wordt de lege waarde) in plaats van te crashen.
+ */
+export function normalizeDecisionInput(raw: unknown): CampaignDecisionInput {
+  const source = isPlainObject(raw) ? raw : {}
   return {
-    decidedAt: dateOrNull(raw.decidedAt),
-    primaryTopic: text(raw.primaryTopic),
-    primaryAction: text(raw.primaryAction),
-    owner: text(raw.owner),
-    followUpDate: dateOrNull(raw.followUpDate),
-    secondaryTopic: text(raw.secondaryTopic),
-    secondaryAction: text(raw.secondaryAction),
-    feedbackPlan: text(raw.feedbackPlan),
-    successCriterion: text(raw.successCriterion),
+    decidedAt: dateOrNull(source.decidedAt),
+    primaryTopic: text(source.primaryTopic),
+    primaryAction: text(source.primaryAction),
+    owner: text(source.owner),
+    followUpDate: dateOrNull(source.followUpDate),
+    secondaryTopic: text(source.secondaryTopic),
+    secondaryAction: text(source.secondaryAction),
+    feedbackPlan: text(source.feedbackPlan),
+    successCriterion: text(source.successCriterion),
   }
 }
 
@@ -73,7 +90,18 @@ const FIELD_LABELS: Record<(typeof TEXT_FIELDS)[number], { label: string; max: n
   successCriterion: { label: 'Waaraan jullie zien dat het werkt', max: DECISION_LIMITS.text },
 }
 
-/** Null als het besluit opgeslagen mag worden, anders één melding voor de klant. */
+/**
+ * Null als het besluit opgeslagen mag worden, anders één melding voor de klant.
+ *
+ * Preconditie: deze functie hoort alleen te draaien op de uitvoer van
+ * `normalizeDecisionInput`. Een veld dat alleen witruimte bevat ("   ") wordt
+ * pas door de normalisatie tot een lege string getrimd; ongenormaliseerde
+ * invoer kan zo'n veld dus ten onrechte als ingevuld beoordelen. Taak 11 (de
+ * server action) moet daarom altijd eerst normaliseren en pas daarna
+ * valideren. Deze functie verdedigt zich wél tegen een ontbrekend optioneel
+ * veld (`undefined`): dat geeft nooit een crash, alleen een nette melding of
+ * een geslaagde validatie.
+ */
 export function validateDecisionInput(input: CampaignDecisionInput): string | null {
   if (!input.primaryTopic) return 'Vul in over welk onderwerp het besluit gaat.'
   if (!input.primaryAction) return 'Vul in wat jullie precies gaan doen. Een onderwerp is nog geen afspraak.'
@@ -81,7 +109,7 @@ export function validateDecisionInput(input: CampaignDecisionInput): string | nu
   if (input.secondaryAction && !input.secondaryTopic) return 'Vul bij het tweede punt ook het onderwerp in.'
   for (const field of TEXT_FIELDS) {
     const { label, max } = FIELD_LABELS[field]
-    if (input[field].length > max) return `${label} is te lang (maximaal ${max} tekens).`
+    if (fieldText(input[field]).length > max) return `${label} is te lang (maximaal ${max} tekens).`
   }
   if (input.decidedAt && !isRealDate(input.decidedAt)) return 'De datum van het gesprek is geen geldige datum.'
   if (input.followUpDate && !isRealDate(input.followUpDate)) {
