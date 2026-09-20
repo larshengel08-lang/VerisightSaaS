@@ -521,7 +521,7 @@ def test_leidraad_belooft_geen_toelichtingen_in_een_meting_zonder_verdieping():
     assert "wat mensen als toelichting kozen" not in tekst
     assert "De verdieping van het startpunt: de laagste stelling en de score van elke stelling" in tekst
     assert "Wat er volgens je mensen moet gebeuren" not in tekst
-    assert "Het eerste gesprekspunt en het besluit" in tekst
+    assert "Het eerste gesprekspunt (pagina" in tekst
 
 
 def test_elke_paginaverwijzing_wijst_naar_precies_een_anker():
@@ -752,9 +752,12 @@ def test_zonder_afdelingen_toelichtingen_en_werkbeleving_geen_leidraad():
     html = render_retention_report_html(kaal)
     assert "Zo leid je dit gesprek" not in html
     # De verwijzing van de gespreksagenda naar pagina twee blijft, en klopt. De
-    # ranglijst verwijst sinds taak 11 ook naar de drempeltabel; zonder leidraad
-    # zijn dat samen de enige twee verwijzingen in dit rapport.
-    assert set(_assert_verwijzingen_kloppen(html)) == {"p02", "sec-drempels"}
+    # ranglijst verwijst sinds taak 11 ook naar de drempeltabel. Sinds plan 3b
+    # wijzen de agenda en de werkvragen naar de besluitpagina, en die pagina
+    # wijst terug naar de agenda; zonder leidraad zijn dat samen alle
+    # verwijzingen in dit rapport.
+    assert set(_assert_verwijzingen_kloppen(html)) == {
+        "p02", "sec-drempels", "sec-besluit", "sec-agenda"}
 
 
 def test_omgekeerde_meetperiode_wordt_gemeld_niet_afgedrukt():
@@ -1389,8 +1392,10 @@ def test_geen_valse_lege_verwijzing_op_de_zeven_p02_staten():
         assert len(cpr._LEEGGELOPEN_VERWIJZING.findall(leeg)) == prefs, naam
         assert len(re.findall(r"pagina (\d+)", gevuld)) == prefs, naam
         # De vier staten zonder factorprofiel dragen geen leidraad en dus geen
-        # verwijzing; de drie met leidraad dragen er zes.
-        assert prefs in (0, 6), f"{naam}: {prefs}"
+        # verwijzing; de drie met leidraad dragen er zeven. Zeven en niet zes
+        # sinds plan 3b: regel 5 wijst naar de gespreksagenda én naar de
+        # besluitpagina, zonder dat de leidraad een rij extra kreeg.
+        assert prefs in (0, 7), f"{naam}: {prefs}"
         assert (cpr.LEIDRAAD_MARKER in leeg) is (prefs > 0), naam
 
 

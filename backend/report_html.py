@@ -1533,10 +1533,9 @@ SECTION_INTROS: dict[str, str] = {
     ),
     "gespreksagenda": (
         "Alles wat je tot hier las is de onderbouwing; hier begint het gesprek. Deze agenda "
-        "vat samen wat als eerste op tafel hoort, waarom juist dat, en wanneer je erop "
-        "terugkomt. Het is bewust geen kant-en-klaar actieplan: de keuzes (wat pakken "
-        "we op, wie is eigenaar) maken jullie in de bespreking zelf, met dit "
-        "rapport als gedeelde basis."
+        "vat samen wat als eerste op tafel hoort en waarom juist dat. Het is bewust geen "
+        "kant-en-klaar actieplan: de keuzes (wat pakken we op, wie is eigenaar, wanneer kijken "
+        "we opnieuw) maken jullie zelf, en je legt ze vast op de besluitpagina."
     ),
 }
 
@@ -1627,6 +1626,7 @@ LEIDRAAD_ANKERS = {
     "agenda": "sec-agenda",
     "methodiek": "sec-methodiek",
     "drempels": "sec-drempels",        # drempeltabel op de methodiekpagina (taak 11)
+    "besluit": "sec-besluit",          # besluitpagina "Besluit van het MT" (plan 3b)
 }
 
 
@@ -1658,11 +1658,13 @@ def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
         rij4 = ("Wat mensen zelf schreven", f"De open toelichtingen, ongefilterd (pagina {p(A['toelichtingen'])}).")
     else:
         rij4 = ("Werkbeleving", f"Autonomie, competentie en verbondenheid (pagina {p(A['werkbeleving'])}).")
-    slot = ("Wat er volgens je mensen moet gebeuren, en het besluit: &eacute;&eacute;n prioriteit, "
-            f"&eacute;&eacute;n eigenaar, een vervolgmoment (pagina {p(A['agenda'])})."
+    # Plan 3b: het besluit heeft een eigen pagina. Geen extra rij (p.02 blijft
+    # een A4), wel twee verwijzingen in deze ene.
+    besluit = f"Het besluit leg je vast op pagina {p(A['besluit'])}."
+    slot = (f"Wat er volgens je mensen moet gebeuren, met de werkvragen (pagina {p(A['agenda'])}). "
+            + besluit
             if has_direction else
-            "Het eerste gesprekspunt en het besluit: &eacute;&eacute;n prioriteit, &eacute;&eacute;n "
-            f"eigenaar, een vervolgmoment (pagina {p(A['agenda'])}).")
+            f"Het eerste gesprekspunt (pagina {p(A['agenda'])}). " + besluit)
     if scan_type == "onboarding":
         rij3 = (f"Het startpunt: de score en de laagste stelling (pagina {p(A['verdieping'])}). "
                 "Open met de gespreksopener hierboven.")
@@ -2072,11 +2074,6 @@ AGENDA_OPENER_GEEN_PROFIEL = (
     "jullie in wat er wel staat, en wat is er nodig om bij een volgende meting "
     "wel een startpunt te krijgen?")
 
-# Vervolgmoment-hint zonder factorprofiel: de normale hint sluit af met "of dit
-# thema nog voorrang verdient", en "dit thema" heeft hier geen onderwerp.
-REVIEW_WHEN_GEEN_PROFIEL = (
-    "Spreek af wanneer jullie hier opnieuw naar kijken, en met welke meting.")
-
 # Sectie-intro van de gespreksagenda zonder factorprofiel (review ronde 2).
 # SECTION_INTROS["gespreksagenda"] belooft een samenvatting van "wat als eerste
 # op tafel hoort, waarom juist dat" -- precies wat deze pagina in die staat
@@ -2143,12 +2140,9 @@ def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: st
     Navy anker (designsprong §2a): kaarten + gespreksopener vormen één donker
     vlak. primary_why/second_why (designsprong §3) zijn feitelijke
     onderbouwingsregels uit bestaande berekeningen — geen nieuwe duiding.
-    "Uit de bespreking" (feedback 2026-07-16): de losse Eigenaarschap-kaart is
-    vervangen door één blok met drie invulregels (Prioriteit/Eigenaar/
-    Vervolgmoment) — spiegelt de doelzin op de openingspagina ("één
-    prioriteit, één eigenaar en een vervolgmoment"). De aparte
-    Opnieuw-bespreken-kaart is hierin opgegaan: review_when wordt de hint
-    onder Vervolgmoment i.p.v. een vierde, altijd-ingevulde kolom.
+
+    review_when: sinds plan 3b ongebruikt (de hint staat op de besluitpagina);
+    blijft in de signatuur tot de aanroepers zijn opgeschoond.
 
     TIJDELIJK (spec 2026-07-18 par. 10): sinds het prioriteringsraster
     (_prioriteringsraster) exit en retention heeft overgenomen, wordt deze
@@ -2166,23 +2160,17 @@ def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: st
     aandachtspunt, en viel primary_theme door naar de letterlijke placeholder
     "het leidende onboardingthema" met een lege cel ernaast. Dan rendert hier
     één kaart met wat er wél gemeten is; primary_theme/second_point/
-    primary_why/second_why/mgmt_q/review_when worden bewust genegeerd (de
-    aanroeper heeft ze in die staat ook niet).
+    primary_why/second_why/mgmt_q worden bewust genegeerd (de aanroeper heeft
+    ze in die staat ook niet).
     """
     def _why(txt: str | None) -> str:
         return f'<span class="agenda-why">{_h(txt)}</span>' if txt else ""
-
-    def _fill_row(label: str, hint: str) -> str:
-        return (f'<div class="step-sublbl">{_h(label)}</div>'
-                f'<div class="step-fill"></div>'
-                f'<div class="step-fill-hint">{_h(hint)}</div>')
 
     if degraded_note:
         intro_html = f'<p class="sec-intro">{GESPREKSAGENDA_INTRO_GEEN_PROFIEL}</p>'
         theme_cells = (f'<td class="step"><div class="step-no">Wat deze meting wel geeft</div>'
                        f'<div class="step-body">{_h(degraded_note)}</div></td>')
         opener_vraag = AGENDA_OPENER_GEEN_PROFIEL
-        review_hint = REVIEW_WHEN_GEEN_PROFIEL
     else:
         intro_html = _intro("gespreksagenda")
         theme_cells = (
@@ -2191,7 +2179,6 @@ def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: st
             f'\n    <td class="step"><div class="step-no">Tweede aandachtspunt</div>'
             f'<div class="step-body">{_h(second_point)}</div>{_why(second_why)}</td>')
         opener_vraag = mgmt_q
-        review_hint = review_when
     # Alleen als p.02 dezelfde opener toont (de aanroeper vergelijkt); zonder
     # profiel staat op p.02 geen opener.
     verwijzing_html = ('<p class="agenda-why" style="margin-top:6px;">Dezelfde opener '
@@ -2205,12 +2192,6 @@ def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: st
   <div class="agenda-dark">
   <table class="steps"><tr>
     {theme_cells}
-    <td class="step">
-      <div class="step-no">Uit de bespreking</div>
-      {_fill_row("Prioriteit", "In te vullen tijdens de bespreking")}
-      {_fill_row("Eigenaar", "In te vullen tijdens de bespreking")}
-      {_fill_row("Vervolgmoment", review_hint)}
-    </td>
   </tr></table>
   <div class="agenda-opener">
     <div style="font-family:'JetBrains Mono', monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#E8A020;margin-bottom:7px;">Gespreksopener</div>
@@ -2218,7 +2199,7 @@ def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: st
     {verwijzing_html}
   </div>
   </div>
-  <p class="trustline">Nog niet besluiten of een verdieping of kortere vervolgmeting nodig is: dat volgt uit het gesprek.</p>
+  <p class="trustline">Leg het besluit vast op pagina {_pref(LEIDRAAD_ANKERS["besluit"])}: wat precies, wie, en op welke datum jullie opnieuw kijken.</p>
 </div>"""
 
 
@@ -2385,7 +2366,8 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
     navolgbaar via de markeringsregel onder de rij, die beide tellingen noemt
     zodra dit signaal de volgorde bepaalde (spec ronde 2 par. 1.3: een kolom
     erbij zou bij Loep Vertrek zeven kolommen met een SVG geven, en dat past
-    niet op A4). Het navy slotblok draagt opener + invulregels.
+    niet op A4). Het navy slotblok draagt de gespreksopener; het invulwerk staat
+    sinds plan 3b op de besluitpagina (_besluit_page).
 
     De uitlegregel wordt PLAIN gerenderd (geen bold-prefix-splitsing): de
     contract-test controleert de letterlijke, volledige string uit
@@ -2405,7 +2387,15 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
     directe aanroepers (tests) niets hoeven te weten van die volgorde.
 
     werkvragen_html (plan 3b): het blok "Zo maak je er een besluit van", door de
-    renderers gebouwd met _werkvragen_block. Leeg voor directe aanroepers.
+    renderers gebouwd met _werkvragen_block. Leeg voor directe aanroepers. Het
+    staat binnen .agenda-slot en reist dus mee als het navy vlak niet meer op
+    de pagina past: tot plan 3b vulde de appendix (die direct achter deze
+    sectie doorstroomde) die staart, maar sinds de besluitpagina ertussen staat
+    kan dat niet meer, en bleef het navy vlak als enige op een vel achter (11
+    tot 13% gevuld in acht van de 21 stresstestscenario's).
+
+    review_when: sinds plan 3b ongebruikt (de hint staat op de besluitpagina);
+    blijft in de signatuur tot de aanroepers zijn opgeschoond.
     """
     # Fail-loud: direction_agg en n_total horen bij elkaar (_direction_chain
     # rekent de noemer-zin uit met n_total) — zonder n_total zou "Van de 0
@@ -2522,11 +2512,6 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
             for r in ranked if r["near_tie_with"]]
     ties_html = f'<p class="r-legend">{"; ".join(ties)}.</p>' if ties else ""
 
-    def _fill_row(label: str, hint: str) -> str:
-        return (f'<div class="step-sublbl">{_h(label)}</div>'
-                f'<div class="step-fill"></div>'
-                f'<div class="step-fill-hint">{_h(hint)}</div>')
-
     # Kop in een <thead> (ronde 2 observatie 4): in een <tbody> herhaalt WeasyPrint
     # hem niet, dus stond de tabel op een vervolgpagina zonder kolomnamen.
     # "Onderwerp" en niet "Factor": dat is de term die de rest van het rapport
@@ -2542,9 +2527,6 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
     # besliszin die "de scherpste werkfactoren" benoemt -- precies wat de intro
     # hierboven zojuist ontkende. Zie AGENDA_OPENER_GEEN_PROFIEL.
     opener_vraag = mgmt_q if ranked else AGENDA_OPENER_GEEN_PROFIEL
-    # "of dit thema nog voorrang verdient" heeft zonder rasterrijen geen
-    # onderwerp; dezelfde lege verwijzing als de opener hierboven.
-    review_hint = review_when if ranked else REVIEW_WHEN_GEEN_PROFIEL
 
     return f"""<div class="pb sec">
   {opener_html}
@@ -2552,21 +2534,16 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
   {tabel}
   {f'<p class="mq-brug mq-brug-sec">{_h(brug_zin)}</p>' if brug_zin else ''}
   {dir_block}
-  {werkvragen_html}
   <div class="no-break agenda-slot">
+  {werkvragen_html}
   <div class="agenda-dark" style="margin-top:16px;">
     <div class="agenda-opener">
       <div style="font-family:'JetBrains Mono', monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#E8A020;margin-bottom:7px;">Gespreksopener</div>
       <p style="margin-bottom:0;font-size:12.5px;line-height:1.6;color:#F4F1EA;">{_h(opener_vraag)}</p>
       {f'<p class="agenda-why" style="margin-top:6px;">Dezelfde opener staat op pagina {_pref("p02")}.</p>' if ranked else ''}
     </div>
-    <table class="steps fill-steps"><tr>
-      <td class="step">{_fill_row("Prioriteit", "In te vullen tijdens de bespreking")}</td>
-      <td class="step">{_fill_row("Eigenaar", "In te vullen tijdens de bespreking")}</td>
-      <td class="step">{_fill_row("Vervolgmoment", review_hint)}</td>
-    </tr></table>
   </div>
-  <p class="trustline">Nog niet besluiten of een verdieping of kortere vervolgmeting nodig is: dat volgt uit het gesprek.</p>
+  <p class="trustline">Leg het besluit vast op pagina {_pref(LEIDRAAD_ANKERS["besluit"])}: wat precies, wie, en op welke datum jullie opnieuw kijken.</p>
   </div>
 </div>"""
 
@@ -3177,9 +3154,11 @@ def _wat_moet_gebeuren_block(ranked: list[dict], direction_agg: dict,
 # niets hieronder veronderstelt een begeleider van Loep.
 
 WERKVRAGEN_EYEBROW = "Zo maak je er een besluit van"
+# De intro draagt sinds plan 3b een <a class="pref">-anker naar de besluitpagina
+# en gaat daarom bewust niet door _h(): vaste copy zonder data, zoals de leidraad.
 WERKVRAGEN_INTRO = ("Per gesprekspunt de vragen die het MT van ‘dit kozen je mensen’ naar "
                     "‘dit gaan wij doen’ brengen. Loep geeft hier geen advies; het besluit is "
-                    "aan jullie.")
+                    "aan jullie en komt op pagina " + _pref(LEIDRAAD_ANKERS["besluit"]) + ".")
 BESLUITVRAAG = ("Wat spreken jullie vandaag af, wie is eigenaar, en waaraan zie je "
                 "over 90 dagen dat het werkt?")
 # Bij none_needed zegt de richtingkaart al dat hier volgens de meeste
@@ -3261,6 +3240,96 @@ def _werkvragen_block(ranked: list[dict], deep_agg: dict, direction_agg: dict,
     return (f'<div class="wq-block"><span class="eyebrow">{WERKVRAGEN_EYEBROW}</span>'
             f'<p class="dir-intro">{WERKVRAGEN_INTRO}</p>'
             f'<table class="dir-grid wq-grid"><tr>{cards}</tr></table></div>')
+
+
+# ── Besluitpagina "Besluit van het MT" (plan 3b, spec 16-9 par. 7) ───────────
+# Invulbaar met de pen. De HR-manager leidt het gesprek; het MT vult in.
+
+BESLUIT_TITEL = "Besluit van het MT"
+# Afwijking van de spec: die belooft "bij een vervolgmeting zet Loep dit besluit
+# op pagina twee". De vervolgmeting is plan 3c; tot dan is dat onwaar.
+BESLUIT_VOETREGEL = ("Leg dit besluit ook vast in je dashboard. Loep drukt het dan voor in dit "
+                     "rapport en bewaart het bij deze meting.")
+BESLUIT_GEEN_STARTPUNT = "Dit rapport wijst nog geen startpunt aan; kies zelf het onderwerp."
+BESLUIT_DATUM_HINT = "Kies een datum, geen termijn."
+
+
+def _bl_lines(n: int) -> str:
+    return '<div class="bl-line"></div>' * n
+
+
+def _bl_veld(label: str, inhoud: str, hint: str = "") -> str:
+    hint_html = f'<div class="bl-hint">{_h(hint)}</div>' if hint else ""
+    return f'<div class="bl-lbl">{_h(label)}</div>{inhoud}{hint_html}'
+
+
+def _besluit_page(*, opener_html: str, scan_type: str, campaign_name: str,
+                  startpunt_label: str | None, tweede_label: str | None,
+                  review_hint: str, heeft_werkvragen: bool) -> str:
+    """Eén A4, los te printen. Voorgedrukt is alleen wat het rapport weet: de
+    meting, het startpunt en het tweede punt. Al het andere is een lijn.
+
+    Zonder startpunt (geen factorprofiel) staat er een lijn met de reden; zonder
+    tweede punt blijft dat veld invulbaar. heeft_werkvragen volgt het blok op de
+    gespreksagenda: alleen dan verwijst de inleiding ernaar.
+    """
+    agenda = _pref(LEIDRAAD_ANKERS["agenda"])
+    if heeft_werkvragen:
+        intro = (f"Neem de uitkomst van ‘{WERKVRAGEN_EYEBROW}’ (pagina {agenda}) hier over. "
+                 "Eén besluit dat iemand draagt is meer waard dan vijf voornemens.")
+    elif scan_type == "onboarding":
+        intro = ("Loep Start meet nog geen richtingvraag; het besluit volgt uit jullie gesprek over "
+                 f"het startpunt (pagina {agenda}). Eén besluit dat iemand draagt is meer waard "
+                 "dan vijf voornemens.")
+    else:
+        intro = (f"Het besluit volgt uit jullie gesprek over de gespreksagenda (pagina {agenda}). "
+                 "Eén besluit dat iemand draagt is meer waard dan vijf voornemens.")
+
+    def _onderwerp(label: str | None, leeg_hint: str) -> str:
+        if label:
+            return '<div class="bl-vast">' + _h(label) + "</div>"
+        hint = ('<div class="bl-hint">' + _h(leeg_hint) + "</div>") if leeg_hint else ""
+        return _bl_lines(1) + hint
+
+    startpunt = _onderwerp(startpunt_label, BESLUIT_GEEN_STARTPUNT)
+    tweede_lbl = "Tweede punt" if tweede_label else "Tweede punt (als jullie er een kiezen)"
+    tweede = _onderwerp(tweede_label, "")
+    # Lokale variabelen in plaats van geneste f-strings: Python 3.11 (Railway).
+    meting = '<div class="bl-vast">' + _h(campaign_name) + "</div>"
+    datum_hint = BESLUIT_DATUM_HINT + " " + review_hint
+    return f"""<div class="pb sec besluit">
+  {opener_html}
+  <p class="sec-intro">{intro}</p>
+  <table class="bl-rij"><tr>
+    <td class="bl-cel">{_bl_veld("Meting", meting)}</td>
+    <td class="bl-cel">{_bl_veld("Datum van dit gesprek", _bl_lines(1))}</td>
+  </tr></table>
+  <div class="bl-blok">
+    {_bl_veld("Startpunt", startpunt)}
+    {_bl_veld("Wat precies", _bl_lines(3), "Een onderwerp is nog geen afspraak: schrijf op wat er gebeurt.")}
+  </div>
+  <table class="bl-rij"><tr>
+    <td class="bl-cel">{_bl_veld("Eigenaar", _bl_lines(1), "Eén naam.")}</td>
+    <td class="bl-cel">{_bl_veld("Datum vervolgmoment", _bl_lines(1), datum_hint)}</td>
+  </tr></table>
+  <div class="bl-blok">
+    {_bl_veld(tweede_lbl, tweede)}
+    {_bl_veld("Wat precies", _bl_lines(3))}
+  </div>
+  <div class="bl-blok">
+    <div class="bl-lbl">Terugkoppeling aan medewerkers</div>
+    <table class="bl-drie"><tr>
+      <td>{_bl_veld("Wie", _bl_lines(1))}</td>
+      <td>{_bl_veld("Wanneer", _bl_lines(1))}</td>
+      <td>{_bl_veld("Wat", _bl_lines(1))}</td>
+    </tr></table>
+    <div class="bl-hint">Je mensen vulden in; ze horen wat het MT ermee doet.</div>
+  </div>
+  <div class="bl-blok">
+    {_bl_veld("Waaraan zien we dat het werkt", _bl_lines(1))}
+  </div>
+  <p class="trustline">{BESLUIT_VOETREGEL}</p>
+</div>"""
 
 
 def _direction_degraded_line(direction_agg: dict, n_total: int) -> str:
@@ -5917,6 +5986,16 @@ def render_exit_report_html(data: dict) -> str:
         werkvragen_html=_wq_block,
     )
 
+    # ── Besluitpagina (plan 3b): laatste pagina voor de appendix ─────────────
+    s += _besluit_page(
+        opener_html=ch.opener(BESLUIT_TITEL, kicker="In te vullen door het MT",
+                              anchor=LEIDRAAD_ANKERS["besluit"]),
+        scan_type="exit", campaign_name=data["campaign_name"],
+        startpunt_label=next((r["label"] for r in _raster_rows if r["agenda_role"] == "startpunt"), None),
+        tweede_label=next((r["label"] for r in _raster_rows if r["agenda_role"] == "tweede"), None),
+        review_hint="Richtlijn: 45 tot 90 dagen na dit gesprek.",
+        heeft_werkvragen=bool(_wq_block))
+
     # ── Appendix ─────────────────────────────────────────────────────────────
     n_factors = len([fk for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None])
     if _should_show_appendix(n, n_factors):
@@ -6297,6 +6376,16 @@ def render_retention_report_html(data: dict) -> str:
         brug_zin=_brug,
         werkvragen_html=_wq_block,
     )
+
+    # ── Besluitpagina (plan 3b): laatste pagina voor de appendix ─────────────
+    s += _besluit_page(
+        opener_html=ch.opener(BESLUIT_TITEL, kicker="In te vullen door het MT",
+                              anchor=LEIDRAAD_ANKERS["besluit"]),
+        scan_type=ST, campaign_name=data["campaign_name"],
+        startpunt_label=next((r["label"] for r in _raster_rows if r["agenda_role"] == "startpunt"), None),
+        tweede_label=next((r["label"] for r in _raster_rows if r["agenda_role"] == "tweede"), None),
+        review_hint="Richtlijn: 45 tot 90 dagen na dit gesprek.",
+        heeft_werkvragen=bool(_wq_block))
 
     # ── Appendix ─────────────────────────────────────────────────────────────
     n_factors = len([fk for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None])
@@ -6799,6 +6888,16 @@ def render_onboarding_report_html(data: dict) -> str:
         degraded_note=_agenda_degraded_note,
         brug_zin=_brug,
     )
+
+    # ── Besluitpagina (plan 3b): laatste pagina voor de appendix ─────────────
+    s += _besluit_page(
+        opener_html=ch.opener(BESLUIT_TITEL, kicker="In te vullen door het MT",
+                              anchor=LEIDRAAD_ANKERS["besluit"]),
+        scan_type=ST, campaign_name=data["campaign_name"],
+        startpunt_label=_fl(_ob_startpunt_fk, ST) if _ob_startpunt_fk and not _geen_profiel else None,
+        tweede_label=_fl(_ob_second_fk, ST) if _ob_second_fk and not _geen_profiel else None,
+        review_hint="Richtlijn: rond het volgende checkpoint.",
+        heeft_werkvragen=False)
 
     # ── Appendix ─────────────────────────────────────────────────────────────
     n_factors = len([fk for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None])

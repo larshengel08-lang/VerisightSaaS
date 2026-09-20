@@ -362,6 +362,18 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .wq-tbl td { font-size: 10px; line-height: 1.5; color: #374151; padding: 5px 0; vertical-align: top; border-bottom: 1px solid """ + HAIRLINE + r"""; }
 .wq-tbl tr:last-child td { border-bottom: none; }
 .wq-stap { width: 22%; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: """ + accent_lo + r"""; padding-right: 8px; }
+
+/* ── Besluitpagina "Besluit van het MT" (plan 3b): lijnen voor de pen ── */
+.besluit { break-inside: avoid; }
+.bl-rij, .bl-drie { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 14px; }
+.bl-cel { width: 50%; vertical-align: top; padding-right: 18px; }
+.bl-drie td { width: 33.3%; vertical-align: top; padding-right: 14px; }
+.bl-drie .bl-lbl { margin-top: 4px; font-size: 7.5px; }
+.bl-blok { margin-top: 16px; break-inside: avoid; }
+.bl-lbl { font-family: 'JetBrains Mono', monospace; font-size: 8.5px; letter-spacing: 0.12em; text-transform: uppercase; color: """ + accent_lo + r"""; margin: 10px 0 2px; }
+.bl-vast { font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 13px; color: """ + INK + r"""; padding: 4px 0 2px; }
+.bl-line { border-bottom: 1px solid #94A3B8; height: 24px; }
+.bl-hint { font-size: 8.5px; font-style: italic; color: """ + STEEL + r"""; margin-top: 4px; }
 .mq-direction { font-size: 11px; font-weight: 600; color: """ + NAVY + r"""; margin: 8px 0 0; }
 .mq-brug { font-size: 10.5px; color: #374151; margin: 8px 0 0; }
 /* Dezelfde brugzin op een eigen sectie (gespreksagenda) staat na een tabel en

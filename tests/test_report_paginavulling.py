@@ -388,19 +388,18 @@ def test_melding_zonder_afdelingstabel_houdt_kop_en_melding_bij_elkaar():
     assert html.startswith('<div class="sec no-break seg-status">')
 
 
-def test_raster_agenda_invulregels_naast_elkaar_en_slotregel_reist_mee():
+def test_raster_agenda_slotregel_reist_mee_met_het_navy_blok():
     """De drie invulregels onder elkaar maakten het navy blok bijna een derde
     vel hoog; met de slotregel viel het los op een eigen pagina (30 tot 32%, in
-    15 alleen de slotregel op 1%)."""
+    15 alleen de slotregel op 1%). Plan 3b: het invulwerk staat op de
+    besluitpagina, het navy blok draagt nog alleen de gespreksopener en de
+    verwijzing ernaartoe, en die twee blijven in hetzelfde no-break-blok."""
     d = _fixture("retention", n=25, profile=True)
     body = _body(render_retention_report_html(d))
     slot = body[body.index('<div class="no-break agenda-slot">'):]
-    slot = slot[:slot.index("Nog niet besluiten")]
-    assert '<table class="steps fill-steps">' in slot
-    rij = slot[slot.index('<table class="steps fill-steps">'):slot.index("</table>")]
-    assert rij.count('<td class="step">') == 3
-    for label in ("Prioriteit", "Eigenaar", "Vervolgmoment"):
-        assert label in rij
+    einde = slot.index("Leg het besluit vast op pagina")   # ValueError als de regel ontbreekt
+    assert "fill-steps" not in slot[:einde]
+    assert "Gespreksopener" in slot[:einde]
 
 
 # ── Fixronde 2 na plan 3a: ook het eerste onderwerp stroomt ──────────────────
