@@ -13,7 +13,7 @@ from __future__ import annotations
 import logging
 import math
 from collections import Counter, defaultdict
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timezone
 from html import escape as _esc
 from statistics import mean as _mean
 from typing import Any
@@ -76,6 +76,7 @@ from backend.scoring_config import (
     SDT_DIMENSION_ITEMS,
     SDT_REVERSE_ITEMS,
 )
+from backend.survey_window import AMSTERDAM
 
 # ─── Constanten ───────────────────────────────────────────────────────────────
 
@@ -1159,26 +1160,16 @@ _MAANDEN_NL = ("januari", "februari", "maart", "april", "mei", "juni", "juli",
                "augustus", "september", "oktober", "november", "december")
 
 
-def _laatste_zondag_utc(jaar: int, maand: int) -> datetime:
-    """01:00 UTC op de laatste zondag van de maand (EU-zomertijdgrens)."""
-    volgende = datetime(jaar + (maand == 12), maand % 12 + 1, 1, tzinfo=timezone.utc)
-    laatste_dag = volgende - timedelta(days=1)
-    zondag = laatste_dag - timedelta(days=(laatste_dag.weekday() - 6) % 7)
-    return zondag.replace(hour=1)
-
-
 def _nl_tijd(d: datetime) -> datetime:
-    """Zet een timestamp om naar Nederlandse tijd zonder tzdata-afhankelijkheid.
+    """Zet een timestamp om naar Nederlandse tijd.
 
     closed_at wordt als UTC opgeslagen (frontend: new Date().toISOString()); een
-    naive datetime behandelen we daarom als UTC. EU-regel: zomertijd (UTC+2) van
-    de laatste zondag van maart 01:00 UTC tot de laatste zondag van oktober
-    01:00 UTC, daarbuiten wintertijd (UTC+1). ZoneInfo is bewust niet gebruikt:
-    tzdata staat niet in het venv en mogelijk niet op Railway.
+    naive datetime behandelen we daarom als UTC. Dezelfde tijdzone als de
+    sluitdatum van de survey (backend/survey_window.py), zodat "de Nederlandse
+    dag" op één plek is gedefinieerd.
     """
-    utc = d.replace(tzinfo=timezone.utc) if d.tzinfo is None else d.astimezone(timezone.utc)
-    zomer = _laatste_zondag_utc(utc.year, 3) <= utc < _laatste_zondag_utc(utc.year, 10)
-    return utc + timedelta(hours=2 if zomer else 1)
+    utc = d.replace(tzinfo=timezone.utc) if d.tzinfo is None else d
+    return utc.astimezone(AMSTERDAM)
 
 
 def _datum_nl(d: date | datetime | None) -> str | None:

@@ -95,3 +95,11 @@ def test_ontbrekende_datums_zijn_none_niet_verzonnen(db_session: Session):
     data = build_report_data(cid, db_session)
     assert data["period_start"] is None
     assert data["period_end"] is None
+
+
+def test_nederlandse_dag_heeft_een_bron():
+    """Plan 3b: de eigen zomertijdregel uit 3a is weg; het rapport en de
+    sluitdatum van de survey lezen dezelfde tijdzone."""
+    from backend import report_html, survey_window
+    assert not hasattr(report_html, "_laatste_zondag_utc")
+    assert report_html.AMSTERDAM is survey_window.AMSTERDAM
