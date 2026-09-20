@@ -364,7 +364,9 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .wq-stap { width: 22%; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: """ + accent_lo + r"""; padding-right: 8px; }
 
 /* ── Besluitpagina "Besluit van het MT" (plan 3b): lijnen voor de pen ── */
-.besluit { break-inside: avoid; }
+/* break-after: de appendix stroomt (.sec zonder .pb) en zou anders onder het
+   invulvel beginnen; dat vel moet los te printen zijn. */
+.besluit { break-inside: avoid; break-after: page; }
 .bl-rij, .bl-drie { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 14px; }
 .bl-cel { width: 50%; vertical-align: top; padding-right: 18px; }
 .bl-drie td { width: 33.3%; vertical-align: top; padding-right: 14px; }

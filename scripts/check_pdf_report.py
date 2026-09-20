@@ -7,7 +7,15 @@ uitkiezen zonder de andere te hoeven halen):
                     eigen regel, hoofdletterongevoelig) en pagina 3 begint met
                     hoofdstuk "02" (H16);
   paginavulling     geen pagina onder MIN_FILL gevuld, behalve de cover en de
-                    laatste pagina (B9, taak 8);
+                    laatste pagina (B9, taak 8). Ook uitgezonderd: de laatste
+                    vervolgpagina van de appendix (APPENDIX_STAART_UITGEZONDERD,
+                    plan 3b). De hoeveelheid data bepaalt hoe vol die staart is;
+                    geen lay-outmaat lost dat op;
+  besluit-op-een-a4 belooft de gespreksagenda een besluitpagina, dan is er precies
+                    één pagina die met de kop "Besluit van het MT" begint, staat
+                    de voetregel op diezelfde pagina en begint de pagina erna met
+                    een hoofdstukkop (plan 3b; het invulvel moet los te printen
+                    zijn);
   paginaverwijzing  pagina 2 draagt gevulde "pagina N"-verwijzingen, geen die
                     leeg renderde, en elke verwijzing wijst binnen het document
                     naar een pagina die met een hoofdstukkop begint (H4). Let
@@ -71,6 +79,18 @@ FOOTER_PT = 40.0                    # onderste strook met paginanummer
 A4_PT = (595.0, 842.0)              # A4-portret in punten
 A4_TOLERANTIE_PT = 3.0
 
+# Aanname plan 3b, door Lars te bevestigen: de laatste vervolgpagina van de
+# appendix telt niet mee voor de vullingsregel. Zet op False om dat terug te
+# draaien; verder verandert er dan niets.
+APPENDIX_STAART_UITGEZONDERD = True
+
+# Markers van de besluitpagina (backend/report_html.py: BESLUIT_TITEL,
+# BESLUIT_VOETREGEL en de trustline onder de gespreksagenda). De test
+# test_markers_komen_uit_de_renderer bewaakt dat ze gelijk blijven.
+BESLUIT_KOP = "Besluit van het MT"
+BESLUIT_VOET = "Leg dit besluit ook vast in je dashboard"
+BESLUIT_BELOFTE = "Leg het besluit vast op pagina"
+
 # De leidraad op pagina twee draagt vijf tijdvakken met elk een
 # paginaverwijzing (backend/report_html.py::_leidraad_block, LEIDRAAD_ANKERS).
 # Staat de leidraad op de pagina, dan horen die vijf nummers er gevuld te staan;
@@ -102,8 +122,9 @@ REGEL_VERWIJZING = "paginaverwijzing"
 REGEL_THEAD = "tabelkop"
 REGEL_FORMAAT = "paginaformaat"
 REGEL_ZIJMARGE = "zijmarge"
+REGEL_BESLUIT = "besluit-op-een-a4"
 ALLE_REGELS = (REGEL_P02, REGEL_VULLING, REGEL_VERWIJZING, REGEL_THEAD, REGEL_ZIJMARGE,
-               REGEL_FORMAAT)
+               REGEL_BESLUIT, REGEL_FORMAAT)
 
 # Een verwijzing waarvan het anker ontbreekt, rendert leeg: WeasyPrint logt
 # "Content discarded: target points to undefined anchor" en de tekstlaag houdt
@@ -192,6 +213,56 @@ def _niet_a4(page: pymupdf.Page) -> bool:
             or abs(hoogte - A4_PT[1]) > A4_TOLERANTIE_PT)
 
 
+def _begint_met_hoofdstukkop(page: pymupdf.Page) -> bool:
+    return bool(re.match(r"^\d{2}\b", first_text(page)))
+
+
+def _appendix_staart(doc: pymupdf.Document) -> int | None:
+    """Index van de laatste vervolgpagina van de appendix, of None.
+
+    De appendix begint op de pagina die met "NN Appendix" opent en loopt tot de
+    eerstvolgende pagina die met een hoofdstukkop begint. Alleen een
+    vervolgpagina telt: de openingspagina zelf is nooit uitgezonderd.
+    """
+    start = None
+    for i in range(doc.page_count):
+        kop = first_text(doc[i]).casefold()
+        if start is None:
+            if re.match(r"^\d{2}\s+appendix\b", kop):
+                start = i
+        elif re.match(r"^\d{2}\b", kop):
+            return i - 1 if i - 1 > start else None
+    return None
+
+
+def _besluit(doc: pymupdf.Document) -> list[Bevinding]:
+    n = doc.page_count
+    patroon = r"^\d{2}\s+" + re.escape(BESLUIT_KOP.casefold())
+    koppen = [i for i in range(n) if re.match(patroon, first_text(doc[i]).casefold())]
+    belooft = any(BESLUIT_BELOFTE.casefold() in _pagina_tekst(doc[i]).casefold() for i in range(n))
+    if not koppen:
+        if belooft:
+            return [Bevinding(REGEL_BESLUIT,
+                              f"de gespreksagenda belooft een besluitpagina, maar er is geen pagina "
+                              f"die met {BESLUIT_KOP!r} begint")]
+        return []
+    if len(koppen) > 1:
+        return [Bevinding(REGEL_BESLUIT,
+                          f"{len(koppen)} pagina's beginnen met {BESLUIT_KOP!r} "
+                          f"({[i + 1 for i in koppen]}); het moet er precies één zijn")]
+    i = koppen[0]
+    bevindingen: list[Bevinding] = []
+    if BESLUIT_VOET.casefold() not in _pagina_tekst(doc[i]).casefold():
+        bevindingen.append(Bevinding(
+            REGEL_BESLUIT, f"pagina {i + 1} draagt de besluitpagina maar niet de voetregel; "
+                           f"loopt het invulvel over naar een tweede pagina?"))
+    if i + 1 < n and not _begint_met_hoofdstukkop(doc[i + 1]):
+        bevindingen.append(Bevinding(
+            REGEL_BESLUIT, f"pagina {i + 2}, direct na de besluitpagina, begint niet met een "
+                           f"hoofdstukkop: {first_text(doc[i + 1])[:50]!r}"))
+    return bevindingen
+
+
 def check(path: str, thead: str | None = None,
           regels: tuple[str, ...] = ALLE_REGELS) -> list[Bevinding]:
     """Meet de gevraagde regels op de PDF in `path`.
@@ -244,13 +315,19 @@ def _check_doc(doc: pymupdf.Document, thead: str | None,
                 REGEL_P02, f"pagina 3 begint niet met hoofdstuk 02 maar met: {p3_eerste[:60]!r}"))
 
     if REGEL_VULLING in regels:
+        staart = _appendix_staart(doc) if APPENDIX_STAART_UITGEZONDERD else None
         for i in range(1, n - 1):
+            if i == staart:
+                continue
             f = page_fill(doc[i])
             if f < MIN_FILL:
                 bevindingen.append(Bevinding(
                     REGEL_VULLING,
                     f"pagina {i + 1} is {f:.0%} gevuld (< {MIN_FILL:.0%}); "
                     f"begint met {first_text(doc[i])[:50]!r}"))
+
+    if REGEL_BESLUIT in regels:
+        bevindingen += _besluit(doc)
 
     if REGEL_VERWIJZING in regels:
         bevindingen += _verwijzingen(doc, p2)
@@ -371,6 +448,16 @@ def main() -> None:
         # Het formaat wordt altijd gemeten, ook buiten de selectie; de slotregel
         # hoort dat te zeggen, anders lijkt het alsof het overgeslagen is.
         gemeten += f", {REGEL_FORMAAT} (altijd)"
+    if REGEL_VULLING in regels and APPENDIX_STAART_UITGEZONDERD:
+        try:
+            doc = pymupdf.open(args.pdf)
+            staart = _appendix_staart(doc)
+            if staart is not None:
+                print(f"INFO {args.pdf}: pagina {staart + 1} (staart van de appendix, "
+                      f"{page_fill(doc[staart]):.0%} gevuld) is uitgezonderd van de vullingsregel")
+            doc.close()
+        except Exception:                          # de meting zelf is hierboven al gelukt
+            pass
     print(f"{'OK' if not bevindingen else 'NIET OK'} {args.pdf} (gemeten: {gemeten})")
     sys.exit(1 if bevindingen else 0)
 
