@@ -54,7 +54,16 @@ describe('/producten: de prijs komt uit lib/pricing.ts', () => {
   })
 
   it('houdt de rekensom van 30 euro per medewerker, zonder de bespreking', () => {
-    expect(bron(CONTENT)).toContain('komt een scan neer op zo&rsquo;n €30 per medewerker.')
+    // De trede staat nu in de zin. Zonder die afbakening legt een lezer de
+    // rekensom naast de rij "Tot 150 medewerkers" (eerste scan €3.500) en komt
+    // hij op €23. lib/pricing.test.ts pint dat 150 x 30 de middelste trede is.
+    expect(bron(CONTENT)).toContain(
+      'In de trede van 150 tot 400 medewerkers komt een scan bij 150 medewerkers neer op zo&rsquo;n €30 per medewerker,',
+    )
+    // De vergelijking heeft sinds de staffel een referent nodig: "zoveel" wees
+    // naar een vast bedrag dat er niet meer is.
+    expect(bron(CONTENT)).toContain('drie tot vier keer het bedrag van die trede')
+    expect(bron(CONTENT)).not.toContain('drie tot vier keer zoveel')
     expect(bron(CONTENT)).not.toContain('inclusief de')
   })
 

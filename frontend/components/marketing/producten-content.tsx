@@ -331,8 +331,9 @@ function PricingSection() {
                 geen maanden; het precieze ritme stem je af in de intake. Maatwerk op aanvraag.
               </p>
               <p style={{ color: T.inkSoft, fontSize: 15, lineHeight: 1.72, marginBottom: 24, maxWidth: '52ch' }}>
-                Ter vergelijking: een volledig uitbesteed onderzoekstraject kost al snel drie tot vier keer zoveel.
-                Bij een organisatie van 150 medewerkers komt een scan neer op zo&rsquo;n €30 per medewerker.
+                In de trede van 150 tot 400 medewerkers komt een scan bij 150 medewerkers neer op zo&rsquo;n €30 per
+                medewerker, en bij 300 medewerkers op de helft daarvan. Ter vergelijking: een volledig uitbesteed
+                onderzoekstraject kost bij die omvang al snel drie tot vier keer het bedrag van die trede.
               </p>
               <div style={{ borderTop: `1px solid ${T.rule}` }}>
                 {PRICING_TIERS.map((tier) => (
