@@ -374,6 +374,8 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .bl-vast { font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 13px; color: """ + INK + r"""; padding: 4px 0 2px; }
 .bl-line { border-bottom: 1px solid #94A3B8; height: 24px; }
 .bl-hint { font-size: 8.5px; font-style: italic; color: """ + STEEL + r"""; margin-top: 4px; }
+.bl-tekst { font-size: 11px; line-height: 1.55; color: """ + INK + r"""; padding: 4px 0 6px; border-bottom: 1px solid """ + HAIRLINE + r"""; }
+.bl-status { font-size: 9.5px; color: """ + STEEL + r"""; margin: 8px 0 0; font-style: italic; }
 .mq-direction { font-size: 11px; font-weight: 600; color: """ + NAVY + r"""; margin: 8px 0 0; }
 .mq-brug { font-size: 10.5px; color: #374151; margin: 8px 0 0; }
 /* Dezelfde brugzin op een eigen sectie (gespreksagenda) staat na een tabel en

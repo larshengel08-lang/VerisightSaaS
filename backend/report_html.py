@@ -3260,6 +3260,8 @@ BESLUIT_VOETREGEL = ("Leg dit besluit ook vast in je dashboard. Loep drukt het d
                      "rapport en bewaart het bij deze meting.")
 BESLUIT_GEEN_STARTPUNT = "Dit rapport wijst nog geen startpunt aan; kies zelf het onderwerp."
 BESLUIT_DATUM_HINT = "Kies een datum, geen termijn."
+BESLUIT_ONLEESBAAR = ("Loep kon niet nagaan of er al een besluit is vastgelegd in het dashboard; "
+                      "vul het hieronder in.")
 
 
 def _bl_lines(n: int) -> str:
@@ -3271,15 +3273,30 @@ def _bl_veld(label: str, inhoud: str, hint: str = "") -> str:
     return f'<div class="bl-lbl">{_h(label)}</div>{inhoud}{hint_html}'
 
 
+def _bl_waarde(tekst: str | None, lijnen: int) -> str:
+    """Gevuld is tekst, leeg blijft een lijn voor de pen."""
+    if tekst:
+        return '<div class="bl-tekst">' + _h(tekst) + "</div>"
+    return _bl_lines(lijnen)
+
+
 def _besluit_page(*, opener_html: str, scan_type: str, campaign_name: str,
                   startpunt_label: str | None, tweede_label: str | None,
-                  review_hint: str, heeft_werkvragen: bool) -> str:
+                  review_hint: str, heeft_werkvragen: bool, decision: dict | None = None,
+                  decision_unavailable: bool = False) -> str:
     """Eén A4, los te printen. Voorgedrukt is alleen wat het rapport weet: de
     meting, het startpunt en het tweede punt. Al het andere is een lijn.
 
     Zonder startpunt (geen factorprofiel) staat er een lijn met de reden; zonder
     tweede punt blijft dat veld invulbaar. heeft_werkvragen volgt het blok op de
     gespreksagenda: alleen dan verwijst de inleiding ernaar.
+
+    Staat er een besluit in `campaign_decisions` (decision), dan drukt de pagina
+    dat voor: gevuld is tekst, leeg blijft een lijn. Het onderwerp dat het MT
+    zelf vastlegde wint van het startpunt van het rapport, het is hun besluit.
+    Kon Loep de tabel niet lezen (decision_unavailable), dan zegt de pagina dat
+    in één regel en blijft ze volledig invulbaar: zichtbare terugval, geen
+    stille.
     """
     agenda = _pref(LEIDRAAD_ANKERS["agenda"])
     if heeft_werkvragen:
@@ -3299,42 +3316,66 @@ def _besluit_page(*, opener_html: str, scan_type: str, campaign_name: str,
         hint = ('<div class="bl-hint">' + _h(leeg_hint) + "</div>") if leeg_hint else ""
         return _bl_lines(1) + hint
 
-    startpunt = _onderwerp(startpunt_label, BESLUIT_GEEN_STARTPUNT)
-    tweede_lbl = "Tweede punt" if tweede_label else "Tweede punt (als jullie er een kiezen)"
-    tweede = _onderwerp(tweede_label, "")
+    d = decision or {}
+    # Het onderwerp dat het MT zelf vastlegde wint: het is hun besluit.
+    startpunt = _onderwerp(d.get("primary_topic") or startpunt_label, BESLUIT_GEEN_STARTPUNT)
+    tweede_onderwerp = d.get("secondary_topic") or tweede_label
+    tweede_lbl = "Tweede punt" if tweede_onderwerp else "Tweede punt (als jullie er een kiezen)"
+    tweede = _onderwerp(tweede_onderwerp, "")
+    if decision:
+        status = ('<p class="bl-status">Vastgelegd in het dashboard, laatst bijgewerkt op '
+                  + _h(_datum_nl(decision.get("updated_at")) or "een onbekende datum")
+                  + ". Lege velden vul je met de pen in of werk je bij in het dashboard.</p>")
+    elif decision_unavailable:
+        status = '<p class="bl-status">' + BESLUIT_ONLEESBAAR + "</p>"
+    else:
+        status = ""
     # Lokale variabelen in plaats van geneste f-strings: Python 3.11 (Railway).
     meting = '<div class="bl-vast">' + _h(campaign_name) + "</div>"
-    datum_hint = BESLUIT_DATUM_HINT + " " + review_hint
+    gesprek = _bl_waarde(_datum_nl(d.get("decided_at")), 1)
+    wat1 = _bl_waarde(d.get("primary_action"), 3)
+    wat1_hint = "" if d.get("primary_action") else "Een onderwerp is nog geen afspraak: schrijf op wat er gebeurt."
+    eigenaar = _bl_waarde(d.get("owner"), 1)
+    eigenaar_hint = "" if d.get("owner") else "Eén naam."
+    vervolg = _bl_waarde(_datum_nl(d.get("follow_up_date")), 1)
+    vervolg_hint = "" if d.get("follow_up_date") else BESLUIT_DATUM_HINT + " " + review_hint
+    wat2 = _bl_waarde(d.get("secondary_action"), 3)
+    succes = _bl_waarde(d.get("success_criterion"), 1)
+    if d.get("feedback_plan"):
+        terugkoppeling = _bl_waarde(d.get("feedback_plan"), 1)
+    else:
+        terugkoppeling = ('<table class="bl-drie"><tr>'
+                          + "<td>" + _bl_veld("Wie", _bl_lines(1)) + "</td>"
+                          + "<td>" + _bl_veld("Wanneer", _bl_lines(1)) + "</td>"
+                          + "<td>" + _bl_veld("Wat", _bl_lines(1)) + "</td>"
+                          + "</tr></table>")
     return f"""<div class="pb sec besluit">
   {opener_html}
   <p class="sec-intro">{intro}</p>
+  {status}
   <table class="bl-rij"><tr>
     <td class="bl-cel">{_bl_veld("Meting", meting)}</td>
-    <td class="bl-cel">{_bl_veld("Datum van dit gesprek", _bl_lines(1))}</td>
+    <td class="bl-cel">{_bl_veld("Datum van dit gesprek", gesprek)}</td>
   </tr></table>
   <div class="bl-blok">
     {_bl_veld("Startpunt", startpunt)}
-    {_bl_veld("Wat precies", _bl_lines(3), "Een onderwerp is nog geen afspraak: schrijf op wat er gebeurt.")}
+    {_bl_veld("Wat precies", wat1, wat1_hint)}
   </div>
   <table class="bl-rij"><tr>
-    <td class="bl-cel">{_bl_veld("Eigenaar", _bl_lines(1), "Eén naam.")}</td>
-    <td class="bl-cel">{_bl_veld("Datum vervolgmoment", _bl_lines(1), datum_hint)}</td>
+    <td class="bl-cel">{_bl_veld("Eigenaar", eigenaar, eigenaar_hint)}</td>
+    <td class="bl-cel">{_bl_veld("Datum vervolgmoment", vervolg, vervolg_hint)}</td>
   </tr></table>
   <div class="bl-blok">
     {_bl_veld(tweede_lbl, tweede)}
-    {_bl_veld("Wat precies", _bl_lines(3))}
+    {_bl_veld("Wat precies", wat2)}
   </div>
   <div class="bl-blok">
     <div class="bl-lbl">Terugkoppeling aan medewerkers</div>
-    <table class="bl-drie"><tr>
-      <td>{_bl_veld("Wie", _bl_lines(1))}</td>
-      <td>{_bl_veld("Wanneer", _bl_lines(1))}</td>
-      <td>{_bl_veld("Wat", _bl_lines(1))}</td>
-    </tr></table>
+    {terugkoppeling}
     <div class="bl-hint">Je mensen vulden in; ze horen wat het MT ermee doet.</div>
   </div>
   <div class="bl-blok">
-    {_bl_veld("Waaraan zien we dat het werkt", _bl_lines(1))}
+    {_bl_veld("Waaraan zien we dat het werkt", succes)}
   </div>
   <p class="trustline">{BESLUIT_VOETREGEL}</p>
 </div>"""
@@ -6019,7 +6060,9 @@ def render_exit_report_html(data: dict) -> str:
         startpunt_label=next((r["label"] for r in _raster_rows if r["agenda_role"] == "startpunt"), None),
         tweede_label=next((r["label"] for r in _raster_rows if r["agenda_role"] == "tweede"), None),
         review_hint="Richtlijn: 45 tot 90 dagen na dit gesprek.",
-        heeft_werkvragen=bool(_wq_block))
+        heeft_werkvragen=bool(_wq_block),
+        decision=data.get("decision"),
+        decision_unavailable=bool(data.get("decision_unavailable")))
 
     # ── Appendix ─────────────────────────────────────────────────────────────
     n_factors = len([fk for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None])
@@ -6410,7 +6453,9 @@ def render_retention_report_html(data: dict) -> str:
         startpunt_label=next((r["label"] for r in _raster_rows if r["agenda_role"] == "startpunt"), None),
         tweede_label=next((r["label"] for r in _raster_rows if r["agenda_role"] == "tweede"), None),
         review_hint="Richtlijn: 45 tot 90 dagen na dit gesprek.",
-        heeft_werkvragen=bool(_wq_block))
+        heeft_werkvragen=bool(_wq_block),
+        decision=data.get("decision"),
+        decision_unavailable=bool(data.get("decision_unavailable")))
 
     # ── Appendix ─────────────────────────────────────────────────────────────
     n_factors = len([fk for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None])
@@ -6922,7 +6967,9 @@ def render_onboarding_report_html(data: dict) -> str:
         startpunt_label=_fl(_ob_startpunt_fk, ST) if _ob_startpunt_fk and not _geen_profiel else None,
         tweede_label=_fl(_ob_second_fk, ST) if _ob_second_fk and not _geen_profiel else None,
         review_hint="Richtlijn: rond het volgende checkpoint.",
-        heeft_werkvragen=False)
+        heeft_werkvragen=False,
+        decision=data.get("decision"),
+        decision_unavailable=bool(data.get("decision_unavailable")))
 
     # ── Appendix ─────────────────────────────────────────────────────────────
     n_factors = len([fk for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None])

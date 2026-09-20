@@ -121,3 +121,67 @@ def test_leidraad_rij_vijf_wijst_naar_agenda_en_besluit():
                              has_direction=False, has_deepening=False)
     assert "werkvragen" not in _plain(zonder)
     assert 'href="#' + LEIDRAAD_ANKERS["besluit"] + '"' in zonder
+
+
+# ── Taak 7: voorgedrukt besluit ──────────────────────────────────────────────
+from datetime import date, datetime, timezone
+
+BESLUIT = {
+    "decided_at": date(2026, 4, 2), "primary_topic": "Groeiperspectief",
+    "primary_action": "Elke leidinggevende voert voor 1 juni een ontwikkelgesprek.",
+    "owner": "Sanne de Vries", "follow_up_date": date(2026, 6, 15),
+    "secondary_topic": "", "secondary_action": "", "feedback_plan": "",
+    "success_criterion": "Iedereen heeft een afspraak op papier.",
+    "updated_at": datetime(2026, 4, 3, 9, 30, tzinfo=timezone.utc),
+}
+
+
+def test_vastgelegd_besluit_staat_voorgedrukt_met_de_datum_van_vastleggen():
+    html = _pagina(decision=BESLUIT)
+    t = _plain(html)
+    assert "Vastgelegd in het dashboard, laatst bijgewerkt op 3 april 2026." in t
+    assert "Elke leidinggevende voert voor 1 juni een ontwikkelgesprek." in t
+    assert "Sanne de Vries" in t
+    assert "2 april 2026" in t and "15 juni 2026" in t
+    assert "Iedereen heeft een afspraak op papier." in t
+
+
+def test_lege_velden_van_een_vastgelegd_besluit_blijven_invulbaar():
+    html = _pagina(decision=BESLUIT)
+    # tweede punt: wat precies (3) + terugkoppeling (3) blijven lijnen
+    assert html.count('class="bl-line"') == 6
+    assert "Lege velden vul je met de pen in of werk je bij in het dashboard." in _plain(html)
+
+
+def test_het_onderwerp_van_het_mt_wint_van_het_startpunt_van_het_rapport():
+    t = _plain(_pagina(decision=dict(BESLUIT, primary_topic="Roosters in de zorgteams")))
+    assert "Roosters in de zorgteams" in t
+    assert t.count("Groeiperspectief") == 0
+
+
+def test_tekst_van_het_mt_wordt_geescaped():
+    html = _pagina(decision=dict(BESLUIT, primary_action="<script>alert(1)</script>"))
+    assert "<script>" not in html
+    assert "&lt;script&gt;" in html
+
+
+def test_onleesbare_tabel_wordt_gezegd_en_de_pagina_blijft_invulbaar():
+    html = _pagina(decision=None, decision_unavailable=True)
+    t = _plain(html)
+    assert ("Loep kon niet nagaan of er al een besluit is vastgelegd in het dashboard; "
+            "vul het hieronder in.") in t
+    assert html.count('class="bl-line"') >= 12
+
+
+def test_zonder_besluit_geen_statusregel():
+    t = _plain(_pagina())
+    assert "Vastgelegd in het dashboard" not in t
+    assert "Loep kon niet nagaan" not in t
+
+
+@pytest.mark.parametrize("scan_type", ["exit", "retention", "onboarding"])
+def test_renderers_geven_het_besluit_door(scan_type):
+    d = _fixture(scan_type, n=25, profile=True)
+    d["decision"] = BESLUIT
+    d["decision_unavailable"] = False
+    assert "Sanne de Vries" in _plain(_body(_RENDER[scan_type](d)))
