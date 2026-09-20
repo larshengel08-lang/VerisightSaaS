@@ -50,7 +50,29 @@ function marketingFiles(): string[] {
     .sort()
 }
 
-const RENDERED_FILES = [...marketingFiles(), ...EXPLICIT_FILES]
+/**
+ * Losse HTML in public/ wordt door Next ongewijzigd geserveerd: robots.txt laat
+ * alles toe en de middleware sluit .html niet uit, dus zo'n bestand is een
+ * publieke pagina zonder dat er ergens naar wordt gelinkt. Twee achtergebleven
+ * previews (preview-rapporteur.html, flow-preview.html) verkochten op die
+ * manier nog "een professional begeleidt het traject" onder het oude merk.
+ * Dynamisch gelezen, zodat een nieuwe preview hier vanzelf onder valt.
+ *
+ * Alleen het topniveau: public/examples bevat gegenereerde voorbeeldrapporten
+ * uit de backend. Die zijn uitvoer, geen marketingcopy, en horen niet door een
+ * copy-guard te worden vastgepind.
+ */
+const PUBLIC_DIR = 'public'
+
+function publicHtmlFiles(): string[] {
+  return fs
+    .readdirSync(path.join(ROOT, PUBLIC_DIR), { withFileTypes: true })
+    .filter((entry) => entry.isFile() && /\.html?$/i.test(entry.name))
+    .map((entry) => `${PUBLIC_DIR}/${entry.name}`)
+    .sort()
+}
+
+const RENDERED_FILES = [...marketingFiles(), ...publicHtmlFiles(), ...EXPLICIT_FILES]
 
 /** Fail Loud: een ontbrekend bestand is een fout, geen overgeslagen controle. */
 function read(rel: string): string {
@@ -235,5 +257,20 @@ describe('geen em-dash en geen en-dash in de herschreven bestanden', () => {
 describe('de guard dekt nog steeds de hele marketingmap', () => {
   it('leest minstens dertig gerenderde bestanden in components/marketing', () => {
     expect(marketingFiles().length).toBeGreaterThanOrEqual(30)
+  })
+
+  /**
+   * Geen minimumaantal: na deze ronde hoort public/ nul losse HTML-pagina's te
+   * hebben. Deze test bewaakt alleen dat de twee verwijderde previews niet
+   * terugkomen; landt er ooit een nieuw HTML-bestand, dan pakt de lus bovenaan
+   * het vanzelf op in plaats van het te weren.
+   */
+  it('heeft de twee achtergebleven previews niet meer in public/', () => {
+    expect(publicHtmlFiles()).not.toContain('public/preview-rapporteur.html')
+    expect(publicHtmlFiles()).not.toContain('public/flow-preview.html')
+  })
+
+  it('neemt elk los HTML-bestand in public/ mee in de gecontroleerde lijst', () => {
+    for (const file of publicHtmlFiles()) expect(RENDERED_FILES).toContain(file)
   })
 })
