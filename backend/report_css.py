@@ -354,6 +354,14 @@ p  { margin-bottom: 6px; font-size: 11px; }
    maat staat hier en niet inline, zodat er één plek is (codereview taak 9). */
 .dir-chain.dir-totals { font-family: inherit; font-size: 10px; line-height: 1.5;
   color: #374151; max-width: 70ch; margin: 0 0 10px; }
+
+/* ── Werkvragen "Zo maak je er een besluit van" (plan 3b) ── */
+.wq-block { margin-top: 16px; break-inside: avoid; }
+.wq-card { width: 50%; vertical-align: top; background: #FFFFFF; border-left: 3px solid """ + accent + r"""; padding: 10px 14px; }
+.wq-tbl { width: 100%; border-collapse: collapse; }
+.wq-tbl td { font-size: 10px; line-height: 1.5; color: #374151; padding: 5px 0; vertical-align: top; border-bottom: 1px solid """ + HAIRLINE + r"""; }
+.wq-tbl tr:last-child td { border-bottom: none; }
+.wq-stap { width: 22%; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: """ + accent_lo + r"""; padding-right: 8px; }
 .mq-direction { font-size: 11px; font-weight: 600; color: """ + NAVY + r"""; margin: 8px 0 0; }
 .mq-brug { font-size: 10.5px; color: #374151; margin: 8px 0 0; }
 /* Dezelfde brugzin op een eigen sectie (gespreksagenda) staat na een tabel en

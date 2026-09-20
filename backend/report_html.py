@@ -51,6 +51,7 @@ from backend.products.shared.deepening import (
     direction_option_texts,
     direction_state,
     get_deepening_sets,
+    translation_question,
 )
 from backend.products.shared.registry import get_product_module
 from backend.report_priority import (
@@ -2373,7 +2374,8 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
                          opener_html: str,
                          direction_agg: dict | None = None, n_total: int = 0,
                          direction_block_html: str | None = None,
-                         brug_zin: str = "") -> str:
+                         brug_zin: str = "",
+                         werkvragen_html: str = "") -> str:
     """Prioriteringsraster + geintegreerde gespreksagenda, inclusief het
     richtingblok "Wat er moet gebeuren" (spec par. 2 en par. 6).
 
@@ -2401,6 +2403,9 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
     is (_trust_page's direction_active). Meegegeven blok wint; zonder dat
     argument bouwt deze functie het blok alsnog uit direction_agg, zodat
     directe aanroepers (tests) niets hoeven te weten van die volgorde.
+
+    werkvragen_html (plan 3b): het blok "Zo maak je er een besluit van", door de
+    renderers gebouwd met _werkvragen_block. Leeg voor directe aanroepers.
     """
     # Fail-loud: direction_agg en n_total horen bij elkaar (_direction_chain
     # rekent de noemer-zin uit met n_total) — zonder n_total zou "Van de 0
@@ -2547,6 +2552,7 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
   {tabel}
   {f'<p class="mq-brug mq-brug-sec">{_h(brug_zin)}</p>' if brug_zin else ''}
   {dir_block}
+  {werkvragen_html}
   <div class="no-break agenda-slot">
   <div class="agenda-dark" style="margin-top:16px;">
     <div class="agenda-opener">
@@ -3163,6 +3169,98 @@ def _wat_moet_gebeuren_block(ranked: list[dict], direction_agg: dict,
             f'<p class="dir-intro">{DIRECTION_BLOCK_INTRO}</p>'
             f'{totals_html}'
             f'<table class="dir-grid"><tr>{cards}</tr></table></div>')
+
+
+# ── Werkvragen "Zo maak je er een besluit van" (plan 3b, spec 16-9 par. 6) ────
+# Geen advies: de vragen die het MT zelf moet beantwoorden om van "dit kozen je
+# mensen" naar "dit gaan wij doen" te komen. De HR-manager leidt dat gesprek;
+# niets hieronder veronderstelt een begeleider van Loep.
+
+WERKVRAGEN_EYEBROW = "Zo maak je er een besluit van"
+WERKVRAGEN_INTRO = ("Per gesprekspunt de vragen die het MT van ‘dit kozen je mensen’ naar "
+                    "‘dit gaan wij doen’ brengen. Loep geeft hier geen advies; het besluit is "
+                    "aan jullie.")
+BESLUITVRAAG = ("Wat spreken jullie vandaag af, wie is eigenaar, en waaraan zie je "
+                "over 90 dagen dat het werkt?")
+# Bij none_needed zegt de richtingkaart al dat hier volgens de meeste
+# betrokkenen niets hoeft; de besluitvraag mag dan niet doen alsof er per se
+# iets afgesproken moet worden.
+BESLUITVRAAG_NIETS = ("De meeste betrokkenen zeggen dat hier niets hoeft. Blijft dit een "
+                      "gesprekspunt, of besluiten jullie hier nu niets te doen? Wie is eigenaar "
+                      "van dat besluit, en wanneer kijken jullie opnieuw?")
+
+
+def _herkenningsvraag(deep_agg: dict, scan_type: str, factor_key: str, label: str,
+                      score: float | None) -> str:
+    """Vraag 1. Datagedreven zodra het verdiepingsblok van dit onderwerp een
+    verdeling toont (_deepening_shows_distribution, dezelfde staffel als die
+    pagina) en de grootste toelichting geen Anders is. De telling staat in de
+    vaste vorm (_telling) en de noemer wordt in dezelfde zin uitgelegd (B14).
+
+    Terugval: de score zelf, niet "zo laag". Bij een vlak profiel is het
+    startpunt een aandachtspunt of relatief sterk, en dan is "zo laag" onwaar.
+    """
+    terugval = f"Wat zit er volgens jullie achter de {_score_str(_shown(score))} op {_lc(label)}?"
+    agg = deep_agg.get(factor_key)
+    if not _deepening_shows_distribution(agg):
+        return terugval
+    ranked = sorted((agg.get("primary_counts") or {}).items(), key=lambda kv: (-kv[1], kv[0]))
+    if not ranked or ranked[0][0].endswith("_other"):
+        return terugval
+    top_key, top_n = ranked[0]
+    teksten = _deepening_option_texts(scan_type, factor_key)
+    if top_key not in teksten:
+        raise KeyError(
+            f"werkvragen: onbekende toelichtingssleutel {top_key!r} voor {factor_key!r} ({scan_type})")
+    answered = agg["answered"]
+    return (f"{_telling(top_n, answered)} {_werkwoord(top_n, 'koos', 'kozen')} als toelichting "
+            f"‘{teksten[top_key]}’; die {answered} zijn de mensen die bij {_lc(label)} duidelijk "
+            "laag antwoordden en de verdiepende vraag beantwoordden. Waar zie je dat bij jullie "
+            "terug, en waar niet?")
+
+
+def _besluitvraag(state: str) -> str:
+    """Vraag 3: altijd dezelfde vorm, behalve als de meerderheid zegt dat hier
+    niets hoeft."""
+    return BESLUITVRAAG_NIETS if state == "none_needed" else BESLUITVRAAG
+
+
+def _werkvragen_block(ranked: list[dict], deep_agg: dict, direction_agg: dict,
+                      scan_type: str) -> str:
+    """Twee kaarten (startpunt en tweede punt) met elk twee of drie vragen.
+
+    Leeg zonder gesprekspunten (geen factorprofiel). Zonder richtingdata rendert
+    het blok wel, zonder vertaalvraag: herkennen en besluiten kan altijd. De
+    rij "Vertalen" staat er alleen als translation_question een vraag geeft;
+    nooit een lege rij.
+    """
+    if scan_type not in DIRECTION_SCAN_TYPES:
+        raise ValueError(f"_werkvragen_block: geen werkvragen voor scan_type {scan_type!r}")
+    punten = [r for r in ranked if r["agenda_role"] in ("startpunt", "tweede")]
+    if not punten:
+        return ""
+    cards = ""
+    for r in punten:
+        fk = r["key"]
+        agg = direction_agg.get(fk) if direction_agg else None
+        if agg is not None:
+            st = direction_state(agg, fk, _shown(r["score"]))
+            vertaal = translation_question(scan_type, fk, st)
+            staat = st["state"]
+        else:
+            vertaal, staat = None, "too_few"
+        rijen = [("Herkennen", _herkenningsvraag(deep_agg, scan_type, fk, r["label"], r["score"]))]
+        if vertaal:
+            rijen.append(("Vertalen", vertaal))
+        rijen.append(("Besluiten", _besluitvraag(staat)))
+        rol = "Startpunt" if r["agenda_role"] == "startpunt" else "Tweede punt"
+        trs = "".join(f'<tr><td class="wq-stap">{_h(stap)}</td><td class="wq-vraag">{_h(vraag)}</td></tr>'
+                      for stap, vraag in rijen)
+        cards += (f'<td class="wq-card"><div class="dir-role">{rol}: {_h(r["label"])}</div>'
+                  f'<table class="wq-tbl">{trs}</table></td>')
+    return (f'<div class="wq-block"><span class="eyebrow">{WERKVRAGEN_EYEBROW}</span>'
+            f'<p class="dir-intro">{WERKVRAGEN_INTRO}</p>'
+            f'<table class="dir-grid wq-grid"><tr>{cards}</tr></table></div>')
 
 
 def _direction_degraded_line(direction_agg: dict, n_total: int) -> str:
@@ -4242,9 +4340,17 @@ def _segment_start_note(segment_rows: list[dict],
             f'<p>{body}{rest_sentence}</p></div>')
 
 
+# H7 (koude leesronde): de afdelingsmanager zegt "dat komt door de reorganisatie".
+# Het rapport kan dat niet toetsen en zegt dat eerlijk: toelichtingen staan er
+# alleen organisatiebreed (per afdeling zijn het er te weinig om te tonen).
+SEGMENT_TOELICHTING_GRENS = (
+    "Een lage score zegt niet waarom. Vraag de afdeling zelf naar de toelichting; "
+    "het rapport toont die alleen organisatiebreed.")
+
+
 def _segment_block(segment_rows: list[dict], factor_rows: dict[str, dict] | None = None,
                    scan_type: str = "exit", opener_html: str = "",
-                   hidden_n: int = 0) -> str:
+                   hidden_n: int = 0, toelichting_regel: bool = False) -> str:
     """Segmentanalyse per afdeling: tabel + spreidingsstrip (spec 2026-07-11)
     + factorlaag met laagste thema en uitsplitsing (spec 2026-07-16).
 
@@ -4263,6 +4369,11 @@ def _segment_block(segment_rows: list[dict], factor_rows: dict[str, dict] | None
     scanbreed identiek. Zonder factor_rows (oude aanroepen) toont de
     themakolom "n.b." en verschijnen er geen subblokken: geen crash,
     geen fake data.
+
+    toelichting_regel (plan 3b, H7): zet SEGMENT_TOELICHTING_GRENS onder de
+    tabel. Alleen de renderers die verdiepingsdata hebben geven hem mee; bij
+    Loep Start bestaan geen toelichtingen, en dan zou "het rapport toont die
+    alleen organisatiebreed" iets beloven dat er niet is.
     """
     from backend.report_distribution import distribution_svg
 
@@ -4358,6 +4469,7 @@ def _segment_block(segment_rows: list[dict], factor_rows: dict[str, dict] | None
     <table class="item-tbl seg-tbl">{kop}{rows_html}</table>
     {hidden_note}
     {low_note}
+    {f'<p class="trustline">{SEGMENT_TOELICHTING_GRENS}</p>' if toelichting_regel else ''}
     {subblocks}
   </div>
 </div>"""
@@ -5769,7 +5881,8 @@ def render_exit_report_html(data: dict) -> str:
     _seg_opener = ch.opener("Per afdeling", anchor=LEIDRAAD_ANKERS["afdelingen"]) if _seg_rows else ch.opener("Per afdeling")
     s += _segment_block(_seg_rows, factor_rows=data.get("segment_factor_rows"),
                         scan_type="exit", opener_html=_seg_opener,
-                        hidden_n=data.get("segment_hidden_n", 0))
+                        hidden_n=data.get("segment_hidden_n", 0),
+                        toelichting_regel=bool(deep_agg) and bool(_seg_rows))
 
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]
@@ -5787,6 +5900,7 @@ def render_exit_report_html(data: dict) -> str:
     # B3): alleen zo kan de methodiekpagina verderop beloven wat dit rapport
     # daadwerkelijk bevat in plaats van wat er aan data bestaat.
     _dir_block = _wat_moet_gebeuren_block(_raster_rows, direction_agg, "exit", n)
+    _wq_block = _werkvragen_block(_raster_rows, deep_agg, direction_agg, "exit")
     s += _prioriteringsraster(
         ranked=_raster_rows,
         scan_type="exit",
@@ -5800,6 +5914,7 @@ def render_exit_report_html(data: dict) -> str:
         n_total=n,
         direction_block_html=_dir_block,
         brug_zin=_brug,
+        werkvragen_html=_wq_block,
     )
 
     # ── Appendix ─────────────────────────────────────────────────────────────
@@ -6149,7 +6264,8 @@ def render_retention_report_html(data: dict) -> str:
     _seg_opener = ch.opener("Per afdeling", anchor=LEIDRAAD_ANKERS["afdelingen"]) if _seg_rows else ch.opener("Per afdeling")
     s += _segment_block(_seg_rows, factor_rows=data.get("segment_factor_rows"),
                         scan_type=ST, opener_html=_seg_opener,
-                        hidden_n=data.get("segment_hidden_n", 0))
+                        hidden_n=data.get("segment_hidden_n", 0),
+                        toelichting_regel=bool(deep_agg) and bool(_seg_rows))
 
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]
@@ -6165,6 +6281,7 @@ def render_retention_report_html(data: dict) -> str:
     _startpunt_fk = _raster_rows[0]["key"] if _raster_rows else None
     # Zie render_exit_report_html: blok eerst, methodiekpagina gate erop (B3).
     _dir_block = _wat_moet_gebeuren_block(_raster_rows, direction_agg, ST, n)
+    _wq_block = _werkvragen_block(_raster_rows, deep_agg, direction_agg, ST)
     s += _prioriteringsraster(
         ranked=_raster_rows,
         scan_type=ST,
@@ -6178,6 +6295,7 @@ def render_retention_report_html(data: dict) -> str:
         n_total=n,
         direction_block_html=_dir_block,
         brug_zin=_brug,
+        werkvragen_html=_wq_block,
     )
 
     # ── Appendix ─────────────────────────────────────────────────────────────
