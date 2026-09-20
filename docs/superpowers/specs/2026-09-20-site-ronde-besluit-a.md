@@ -1,7 +1,7 @@
 # Site-ronde bij propositiebesluit A: de bespreking uit het aanbod
 
 Datum: 2026-09-20
-Status: voorstel, wacht op review Lars
+Status: akkoord Lars 2026-09-20, met de besluiten in par. 8
 Hoort bij: besluit 2026-09-19 (optie A) en besluit 2026-09-11 (het rapport werkt zonder begeleiding)
 
 ## 1. Waar dit over gaat
@@ -26,7 +26,7 @@ De oude categorieregel was "Begeleide analyse · Geen zelfbedieningstool". Die k
 | 2 | Een rapport dat het gesprek leidt | Loep · Het rapport dat je MT-gesprek leidt |
 | 3 | Medewerkersonderzoek met een antwoord | Loep · Medewerkersonderzoek met een antwoord |
 
-Advies: optie 1. De eyebrow zegt eerlijk wat je koopt en wat je zelf doet, en maakt van het ontbreken van de bespreking een keuze in plaats van een gemis. De titel houdt de kernboodschap van 6 september vast ("waar je maandag begint").
+Besluit Lars 20-9: de eyebrow van optie 1, met een andere titel (zie par. 8 punt 1). De eyebrow zegt eerlijk wat je koopt en wat je zelf doet, en maakt van het ontbreken van de bespreking een keuze in plaats van een gemis. De titel houdt de kernboodschap van 6 september vast ("waar je maandag begint").
 
 Wat Loep wél doet, en wat dus mag blijven staan: de intake, de meting klaarzetten met afdelingen en aantallen, de vragenlijst en de methode, het rapport, en bereikbaar zijn als iets niet werkt. Wat de klant doet: uitnodigen, de respons volgen, sluiten, het gesprek leiden, het besluit vastleggen.
 
@@ -48,7 +48,7 @@ Alleen plekken die echt renderen. Dode code staat in par. 5.
 
 | Plek | Nu | Wordt |
 |---|---|---|
-| Titel (3×) | Loep \| Begeleide analyse van behoud, vertrek en onboarding | Loep \| Medewerkersonderzoek dat zegt waar je begint |
+| Titel (3×) | Loep \| Begeleide analyse van behoud, vertrek en onboarding | Loep \| Zie waar behoud onder druk staat, voordat mensen gaan |
 | Beschrijving (layout, 2×) | ... weet waar je begint. Begeleide scan met rapport en gesprek inbegrepen. | ... weet waar je begint. Meting en rapport; het gesprek met je MT voer je zelf, met het rapport als leidraad. |
 | Beschrijving (home) | ... Begeleide scan voor HR en management, rapport en gesprek inbegrepen. | ... Voor HR en management: een meting en een rapport dat je MT-gesprek leidt. |
 | JSON-LD (home r.21) | Begeleide scan van behoud, vertrek en onboarding voor HR en management: ... | Meting van behoud, vertrek en onboarding voor HR en management: ... |
@@ -132,10 +132,25 @@ Verschillende contract-tests pinnen de huidige copy (o.a. `marketing-flow.test.t
 
 Baselines: tsc 133, vitest 59 falend; gate is de faalset per testnaam.
 
-## 8. Wat Lars moet beslissen
+## 8. Besluiten Lars, 20 september 2026
 
-1. De categorieregel: optie 1, 2 of 3 uit par. 2.
-2. Of de onware claim "geduid door HR-specialisten, geen geautomatiseerde software-output" er nu al uit mag, los van de rest.
-3. `/pilot`: weg a of b.
-4. Geldt besluit A ook voor Loep Cultuurbeeld?
-5. De prijsankers: "een volledig uitbesteed onderzoekstraject kost al snel drie tot vier keer zoveel" blijft waar. "€30 per medewerker" blijft waar. Alleen "inclusief de bespreking" vervalt. Akkoord dat de prijs €4.500 blijft zonder dat er op de site iets voor in de plaats komt behalve de leidraad en de besluitpagina?
+1. **Categorieregel.** Eyebrow: "Meting en rapport · Het gesprek voer je zelf". Paginatitel: **"Loep | Zie waar behoud onder druk staat, voordat mensen gaan"**. De titel uit par. 2 en par. 4.1 ("Medewerkersonderzoek dat zegt waar je begint") is afgewezen: hij beschrijft het product en zet niet aan tot kopen. Bedrijven kopen dit om geld te besparen doordat ze zien waar behoud onder druk staat. De beschrijving draagt het geldanker: "Eén vertrokken medewerker vervangen kost al snel tienduizenden euro's. Loep laat zien waar behoud onder druk staat, waarom volgens je mensen zelf, en waar je begint. Meting en rapport; het gesprek voer je zelf." Grens blijft: geen uitkomstbelofte ("minder verloop", "bespaar op verloop").
+2. **De onware methodeclaim is er al uit** (`967ede3a`, 20-9). Bij de ronde vervalt in die alinea niets meer; wel komt de zin over de werkvragen erbij zodra 3b live is.
+3. **`/pilot`: weg a.** De pilot volgt het product. Geen bespreking; wel feedback op het rapport en op hoe het MT-gesprek ermee liep.
+4. **Besluit A geldt ook voor Loep Cultuurbeeld.** "Begeleide directie-read sessie (60–90 min)" vervalt.
+5. **Prijs: staffel op organisatiegrootte, geen prijs per medewerker.**
+
+| Organisatie | Eerste scan | Vervolgmeting |
+|---|---|---|
+| Tot 150 medewerkers | €3.500 | €950 |
+| 150 tot 400 medewerkers | €4.500 | €1.250 |
+| 400 tot 1.000 medewerkers | €6.900 | €1.750 |
+
+Alle bedragen excl. btw. Waarom een staffel: de waarde schaalt met de organisatie (meer mensen, meer vertrekkosten op het spel), de kosten van Loep niet. Waarom niet per medewerker: het past alleen bij Loep Behoud (Vertrek meet vertrekkers, Start nieuwe mensen), het ondergraaft "geen licenties per medewerker", en het maakt het bedrag onvoorspelbaar voor de koper. De onderste trede is geen korting omdat de bespreking wegvalt, maar een andere logica: kleinere organisatie, kleiner belang. Zo moet het ook op de site staan. €6.900 en niet €6.500, want dat is de prijs van Cultuurbeeld.
+
+Gevolgen voor de ronde:
+- Par. 4.3: waar nu "Elke scan kost €4.500 excl. btw" staat, komt de staffel. De zin "Bij een organisatie van 150 medewerkers komt een scan neer op zo'n €30 per medewerker" blijft waar in de middelste trede (150 × €30 = €4.500) en mag blijven, zonder "inclusief de bespreking".
+- "Geen licenties per medewerker, geen jaarlijkse verhogingen, geen add-ons achteraf" blijft en wordt belangrijker.
+- `pricingCards`, de JSON-LD-prijzen (`Offer`/`priceSpecification`), `llms.txt`, de veelgestelde vragen en de Loep_Docs (offerte-template, one-pager, sales-pitch, faq, harde-getallen) krijgen dezelfde drie treden. Eén bron in de code (`site-content.ts`), geen losse bedragen in componenten.
+- Loep Vertrek bij kleine organisaties: de bestaande verwachtingsregel ("Patroonanalyse vraagt minimaal 10 respondenten ...") blijft staan bij de onderste trede.
+- Organisaties boven 1.000 medewerkers: "op aanvraag", geen bedrag.
