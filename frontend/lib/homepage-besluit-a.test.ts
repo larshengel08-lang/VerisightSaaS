@@ -24,7 +24,12 @@ describe('homepage na besluit A', () => {
   })
 
   it('belooft wat het rapport levert, niet wat Loep aan tafel doet', () => {
-    expect(bron()).toContain("'Gespreksleidraad en besluitpagina in elk rapport',")
+    // Niet "in elk rapport": Loep Cultuurbeeld heeft de leidraad noch de
+    // besluitpagina, en die pagina is nog bereikbaar (link-only, noindex).
+    // lib/cultuurbeeld-besluit-a.test.ts pint dat Cultuurbeeld die twee niet
+    // noemt; zonder deze afbakening spreekt de homepage dat tegen.
+    expect(bron()).toContain("'Gespreksleidraad en besluitpagina in Loep Vertrek, Loep Behoud en Loep Start',")
+    expect(bron()).not.toContain('besluitpagina in elk rapport')
     expect(bron()).toContain("['Volgende stap', 'Besluit vastgelegd'],")
     expect(bron().split('Het rapport leidt je MT-gesprek.').length - 1).toBe(2)
   })
@@ -37,6 +42,28 @@ describe('homepage na besluit A', () => {
     expect(bron()).toContain(
       'De vertaling naar jullie situatie maak je zelf, met de werkvragen in het rapport van Loep Behoud en Loep Vertrek.',
     )
+  })
+
+  it('belooft de afweging achter de ranglijst alleen bij de twee scans die een raster hebben', () => {
+    // De ranglijst zelf staat in elk scanrapport en blijft dus onvoorwaardelijk.
+    // Wat Loep Start mist is het prioriteringsraster: daar is de rangorde puur
+    // de score (backend/report_html.py), dus "je ziet waarom dit bovenaan
+    // staat" is voor Loep Start niet waar.
+    expect(bron()).toContain('Bij Loep Vertrek en Loep Behoud lees je er ook bij wat er meewoog in die volgorde.')
+    // De ontkenningen dekken ook SuitePreviewSection en suiteFlowPoints. Die
+    // staan wel in dit bestand maar hangen niet in de renderboom, dus daar
+    // wordt bewust geen zin vastgepind: verdwijnt dat dode blok ooit, dan hoort
+    // deze test niet mee te vallen.
+    expect(bron()).not.toContain('en je ziet waarom')
+    expect(bron()).not.toContain('en je ziet precies waarom')
+    expect(bron()).not.toContain('Je ziet per onderwerp wat meewoog')
+    // Het methodeblok somt de inhoud van het raster op (score, spreiding,
+    // gekozen reden). Dat hoort achter dezelfde afbakening te hangen als de
+    // werkvragen in de zin ervoor, niet als uitspraak over elk rapport.
+    expect(bron()).toContain(
+      'Daar staat ook per onderwerp waarom het bovenaan staat: de score, de spreiding en wat je mensen zelf als reden kozen.',
+    )
+    expect(bron()).not.toContain('Het rapport laat per onderwerp zien waarom het bovenaan staat')
   })
 
   it('heeft het fotoblok met de quote niet meer', () => {

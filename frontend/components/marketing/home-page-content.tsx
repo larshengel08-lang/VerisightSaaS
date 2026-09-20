@@ -47,7 +47,7 @@ const suiteFlowPoints = [
   {
     index: '03',
     title: 'Weet waar je begint',
-    body: 'Eén ranglijst, en je ziet waarom.',
+    body: 'Eén ranglijst, met de onderbouwing erbij.',
   },
   {
     index: '04',
@@ -124,7 +124,7 @@ const managementFlowSteps = [
     step: '2',
     label: 'Begrijpen',
     title: 'Loep levert een rapport met een antwoord',
-    body: 'Een rapport dat niet alleen zegt wat laag scoort, maar ook wat je mensen daar zelf over zeggen. Plus één ranglijst: dit eerst, en je ziet precies waarom. Binnen weken, niet maanden.',
+    body: 'Een rapport dat niet alleen zegt wat laag scoort, maar ook wat je mensen daar zelf over zeggen. Plus één ranglijst: dit eerst. Bij Loep Vertrek en Loep Behoud lees je er ook bij wat er meewoog in die volgorde. Binnen weken, niet maanden.',
   },
   {
     step: '3',
@@ -945,7 +945,7 @@ function SuitePreviewSection() {
                   maxWidth: '33rem',
                 }}
               >
-                Het rapport eindigt niet in grafieken maar in een ranglijst: dit pak je als eerste aan, en hierom. Je ziet per onderwerp wat meewoog, dus geen magisch cijfer dat je maar moet geloven. Daarna leid jij het gesprek met je MT, met het rapport als leidraad, en leggen jullie vast: wat, wie, wanneer.
+                Het rapport eindigt niet in grafieken maar in een ranglijst: dit pak je als eerste aan. Bij Loep Vertrek en Loep Behoud staat er per onderwerp bij wat er meewoog in die volgorde, dus geen magisch cijfer dat je maar moet geloven. Daarna leid jij het gesprek met je MT, met het rapport als leidraad, en leggen jullie vast: wat, wie, wanneer.
               </p>
             </Reveal>
 
@@ -1727,7 +1727,7 @@ const proofPoints = [
   'Rapportage alleen op groepsniveau, geen individuele data',
   'Minimum aantal respondenten vereist voor veilige rapportage',
   'Geen individuele voorspellingen of profielen',
-  'Gespreksleidraad en besluitpagina in elk rapport',
+  'Gespreksleidraad en besluitpagina in Loep Vertrek, Loep Behoud en Loep Start',
 ] as const
 
 function PositioningCalloutSection() {
@@ -1857,10 +1857,10 @@ function ProofSection() {
                   Methode
                 </p>
                 <p style={{ color: SURFACE.text, fontSize: 14.5, lineHeight: 1.7 }}>
-                  Loep gebruikt gevalideerde vragenlijsten. Het rapport laat per onderwerp zien waarom
-                  het bovenaan staat: de score, de spreiding en wat je mensen zelf als reden kozen.
-                  Geen cijfer dat je maar moet geloven. De vertaling naar jullie situatie maak je zelf,
-                  met de werkvragen in het rapport van Loep Behoud en Loep Vertrek.
+                  Loep gebruikt gevalideerde vragenlijsten. De vertaling naar jullie situatie maak je zelf,
+                  met de werkvragen in het rapport van Loep Behoud en Loep Vertrek. Daar staat ook per
+                  onderwerp waarom het bovenaan staat: de score, de spreiding en wat je mensen zelf als
+                  reden kozen. Geen cijfer dat je maar moet geloven.
                 </p>
               </div>
             </Reveal>
