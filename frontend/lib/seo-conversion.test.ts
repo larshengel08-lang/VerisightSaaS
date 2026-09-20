@@ -139,8 +139,11 @@ describe('SEO conversion tranche', () => {
   it('keeps llms.txt aligned with the current pricing and product routes', () => {
     const llmsText = fs.readFileSync(path.join(process.cwd(), 'public', 'llms.txt'), 'utf8')
 
-    // Actuele portfolio (2026-07-04): drie gelijkwaardige scans, één prijs.
-    expect(llmsText).toContain('EUR 4.500 excl. btw')
+    // Site-ronde besluit A (2026-09-20): drie gelijkwaardige scans, één staffel
+    // op organisatiegrootte. De bedragen zelf legt
+    // lib/site-ronde-besluit-a.guard.test.ts tegen lib/pricing.ts.
+    expect(llmsText.replace(/\s+/g, ' ')).toContain('150 tot 400 medewerkers EUR 4.500')
+    expect(llmsText).toContain('Geen bespreking door Loep')
     expect(llmsText).toContain('https://www.getloep.nl/producten#loep-vertrek')
     expect(llmsText).toContain('https://www.getloep.nl/producten#loep-behoud')
     expect(llmsText).toContain('https://www.getloep.nl/producten#loep-start')
