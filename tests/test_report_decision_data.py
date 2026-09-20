@@ -7,6 +7,7 @@ dan valt het rapport niet om maar zegt de data dat het besluit niet te lezen was
 import logging
 from datetime import date
 
+from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.orm import Session
 
 from backend.models import Campaign, CampaignDecision
@@ -74,6 +75,35 @@ def test_ontbrekende_tabel_legt_het_rapport_niet_plat(db_session: Session, caplo
     assert "campaign_decisions" in caplog.text
     # De sessie is na de rollback nog bruikbaar: het rapport moet verder kunnen.
     assert db_session.query(Campaign).filter(Campaign.id == cid).count() == 1
+
+
+def test_programmingerror_wordt_ook_afgevangen(db_session: Session, caplog, monkeypatch):
+    """De docstring van load_decision claimt ook het Postgres-gedrag
+    (ProgrammingError, bijvoorbeeld 'relation ... does not exist' of een
+    ontbrekende kolom); de andere test raakt alleen SQLite's OperationalError."""
+    cid = _cid(db_session)
+    rollback_calls: list[bool] = []
+    origineel_rollback = db_session.rollback
+
+    def _rollback_gespied():
+        rollback_calls.append(True)
+        origineel_rollback()
+
+    def _boom(*args, **kwargs):
+        raise ProgrammingError(
+            "select * from campaign_decisions",
+            None,
+            Exception('relation "campaign_decisions" does not exist'),
+        )
+
+    monkeypatch.setattr(db_session, "query", _boom)
+    monkeypatch.setattr(db_session, "rollback", _rollback_gespied)
+    with caplog.at_level(logging.ERROR, logger="backend.report_decision"):
+        besluit, unavailable = load_decision(db_session, cid)
+    assert (besluit, unavailable) == (None, True)
+    assert "campaign_decisions" in caplog.text
+    assert "does not exist" in caplog.text
+    assert rollback_calls == [True]
 
 
 def test_build_report_data_levert_het_besluit(db_session: Session):

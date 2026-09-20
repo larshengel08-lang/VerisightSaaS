@@ -41,10 +41,13 @@ def load_decision(db: Session, campaign_id: str) -> tuple[dict[str, Any] | None,
     except (ProgrammingError, OperationalError) as exc:
         db.rollback()
         logger.error(
-            "campaign_decisions niet leesbaar voor campagne %s (%s). Is "
-            "migrations/2026_09_19_add_campaign_decisions.sql gedraaid? Het rapport "
-            "rendert de besluitpagina leeg, met een regel dat het besluit niet te lezen was.",
-            campaign_id, type(exc).__name__)
+            "campaign_decisions niet leesbaar voor campagne %s: %s: %s. Mogelijke "
+            "oorzaak: migrations/2026_09_19_add_campaign_decisions.sql is niet "
+            "gedraaid, maar dit kan ook een andere databasefout zijn (bijvoorbeeld "
+            "een verbroken verbinding of een ontbrekende kolom). Het rapport "
+            "rendert de besluitpagina leeg, met een regel dat het besluit niet te "
+            "lezen was.",
+            campaign_id, type(exc).__name__, exc)
         return None, True
     if rij is None:
         return None, False
