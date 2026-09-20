@@ -70,6 +70,9 @@ def test_organisatie_van_het_besluit_is_die_van_de_meting():
     assert "create or replace function public.campaign_decisions_org_guard()" in sql
     assert "create trigger campaign_decisions_org_guard_trg" in sql
     assert "drop trigger if exists campaign_decisions_org_guard_trg" in sql
+    # De trigger moet op beide events vuren: alleen 'insert' zou een latere
+    # update (bijv. het omhangen van organization_id) ongecontroleerd laten.
+    assert re.search(r"before insert or update on public\.campaign_decisions", sql)
 
 
 def test_previous_campaign_id_zit_in_dezelfde_migratie():
