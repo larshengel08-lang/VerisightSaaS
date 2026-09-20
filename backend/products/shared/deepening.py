@@ -659,7 +659,11 @@ def work_questions_ready() -> bool:
 
 def _content_route_keys(factor_key: str) -> list[str]:
     """De inhoudelijke routes van een onderwerp: opties met een opdrachtvorm."""
-    return [o["key"] for o in DIRECTION_SETS[factor_key]["options"] if o["imperative"]]
+    try:
+        options = DIRECTION_SETS[factor_key]["options"]
+    except KeyError:
+        raise KeyError(f"work_question: onbekend onderwerp {factor_key!r}") from None
+    return [o["key"] for o in options if o["imperative"]]
 
 
 def work_question(scan_type: str, factor_key: str, option_key: str) -> str:

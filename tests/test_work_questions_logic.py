@@ -121,7 +121,7 @@ def test_niets_en_anders_hebben_geen_vraag(gevuld):
 def test_onbekend_scantype_en_onbekend_onderwerp_falen_luid(gevuld):
     with pytest.raises(ValueError, match="onboarding"):
         dp.work_question("onboarding", "growth", "grd_visibility")
-    with pytest.raises(KeyError):
+    with pytest.raises(KeyError, match="onbekend onderwerp"):
         dp.work_question("retention", "bestaat_niet", "grd_visibility")
     with pytest.raises(ValueError, match="onboarding"):
         dp.translation_question("onboarding", "growth", {"state": "clear", "top_key": "grd_visibility"})
