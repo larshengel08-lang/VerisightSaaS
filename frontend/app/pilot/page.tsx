@@ -5,8 +5,8 @@ import { PublicHeader } from '@/components/marketing/public-header'
 import { buildContactHref } from '@/lib/contact-funnel'
 
 // Link-only landingspagina: bewust niet in nav en niet in sitemap, en noindex.
-// Bedoeld om 1-op-1 met warme contacten te delen, zodat het de €4.500-positionering
-// niet ondergraaft.
+// Bedoeld om 1-op-1 met warme contacten te delen, zodat het de prijspositionering
+// (de staffel in lib/pricing.ts) niet ondergraaft.
 export const metadata: Metadata = {
   title: 'Founding pilot',
   description:
@@ -82,14 +82,14 @@ export default function PilotPage() {
             <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_368px] items-start">
               <div>
                 <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.18em', textTransform: 'uppercase', color: AC.deep, marginBottom: 18 }}>
-                  Founding pilot · 1–2 plekken
+                  Founding pilot · 1 tot 2 plekken
                 </div>
                 <h1 style={{ fontFamily: FF, fontWeight: 800, fontSize: 'clamp(40px,5.2vw,72px)', lineHeight: 0.98, letterSpacing: '-.032em', color: T.ink, maxWidth: '15ch' }}>
                   Word een van de eerste organisaties die met Loep werkt.
                 </h1>
                 <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '52ch', margin: '24px 0 32px' }}>
                   Voor MKB-organisaties met een concreet vraagstuk rond behoud, vertrek of onboarding. Je krijgt een
-                  volwaardig Loep-traject; wij gebruiken de pilot om de output, begeleiding en klantreis aan te scherpen.
+                  volwaardig Loep-traject; Loep gebruikt de pilot om het rapport en de klantreis aan te scherpen.
                 </p>
                 <a
                   href={ctaHref}
@@ -104,10 +104,10 @@ export default function PilotPage() {
                     Founding pilot · kosteloos
                   </div>
                   {[
-                    'Een begeleide Loep-scan',
-                    'Campagne- en responsregie',
+                    'Een volledige Loep-scan',
+                    'Meting klaargezet door Loep; jij verstuurt en volgt de respons',
                     'Managementrapport met prioriteiten',
-                    'Begeleide managementbespreking (60–90 min)',
+                    'Gespreksleidraad en besluitpagina in het rapport',
                     'Eerste managementvraag en vervolgstap',
                   ].map((item) => (
                     <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '6px 0', fontSize: 13, color: T.inkSoft }}>
@@ -166,7 +166,7 @@ export default function PilotPage() {
                   <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #1c2c40' }}>
                     <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: '#8fa1b3', marginBottom: 6 }}>Gespreksrichting uit de groep</div>
                     <p style={{ fontSize: 12.5, lineHeight: 1.5, color: '#cdd8e4' }}>
-                      Vooral concretere ontwikkelafspraken en beter zicht op groeimogelijkheden — input van respondenten, geen uitvoeringsadvies.
+                      Vooral concretere ontwikkelafspraken en beter zicht op groeimogelijkheden. Input van respondenten, geen uitvoeringsadvies.
                     </p>
                   </div>
                 </div>
@@ -191,7 +191,7 @@ export default function PilotPage() {
             <div className="grid grid-cols-1 gap-x-12 gap-y-4 lg:grid-cols-2" style={{ maxWidth: 940 }}>
               {[
                 'Een eerlijk evaluatiegesprek na afloop.',
-                'Gerichte feedback op proces, rapport en de managementbespreking.',
+                'Gerichte feedback op het proces, het rapport en hoe het gesprek met je MT ermee liep.',
                 'Toestemming om leerpunten geanonimiseerd te gebruiken voor verbetering.',
                 'Bij een positieve ervaring: toestemming voor een korte quote of geanonimiseerde case, altijd pas na expliciete goedkeuring.',
               ].map((text) => (
@@ -217,7 +217,7 @@ export default function PilotPage() {
                   'Een concreet vraagstuk rond behoud, vertrek of onboarding',
                   'Een interne sponsor in HR of directie',
                   'Voldoende medewerkers voor groepsrapportage',
-                  'Management beschikbaar voor de bespreking',
+                  'Je MT bespreekt het rapport zelf en deelt achteraf hoe dat ging',
                   'Bereidheid om scherpe feedback te geven',
                 ].map((text) => (
                   <div key={text} style={{ display: 'flex', gap: 10, fontSize: 13.5, color: T.inkSoft, lineHeight: 1.6, padding: '7px 0' }}>
@@ -259,7 +259,7 @@ export default function PilotPage() {
                 'Eén scan',
                 'Eén doelgroep / campagne',
                 'Eén managementrapport',
-                'Eén managementbespreking',
+                'Eén MT-gesprek dat je zelf leidt, met het rapport als leidraad',
                 'Eén evaluatiegesprek',
                 'Geen individueel risicomodel',
                 'Geen brede maatwerk-consultancy',
@@ -289,7 +289,7 @@ export default function PilotPage() {
           backdropNumber={null}
           title="Loep is klaar voor"
           accentTitle="praktijkvalidatie."
-          body="Daarom stellen we tijdelijk 1–2 founding pilots beschikbaar. Jij krijgt een volwaardig traject; wij krijgen scherpe feedback, praktijkbewijs en, alleen bij tevredenheid, toestemming voor een referentie."
+          body="Daarom stelt Loep tijdelijk 1 tot 2 founding pilots beschikbaar. Jij krijgt een volwaardig traject; Loep krijgt scherpe feedback, praktijkbewijs en, alleen bij tevredenheid, toestemming voor een referentie."
           buttonLabel="Bespreek een pilotplek"
           note="Beperkt aantal plekken. We bekijken eerst samen of de pilot past."
         />
