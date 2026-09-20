@@ -86,7 +86,7 @@ export default function OpenGraphImage() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', minWidth: '320px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '340px' }}>
             <div
               style={{
                 display: 'flex',
