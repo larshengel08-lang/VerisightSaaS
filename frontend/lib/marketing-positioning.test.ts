@@ -15,11 +15,11 @@ import {
   marketingLegalLinks,
   marketingNavLinks,
   pricingFaqs,
-  pricingCards,
   pricingLifecycleLadder,
   productOverviewComparisonRows,
   trustItems,
 } from '@/components/marketing/site-content'
+import { PRICING_TIERS } from '@/lib/pricing'
 
 describe('Portfolio architecture marketing model', () => {
   it('keeps three primary routes with onboarding as bounded peer and pulse plus leadership as follow-up', () => {
@@ -89,10 +89,11 @@ describe('Loep Vertrek positioning copy', () => {
 
   it('keeps Loep Vertrek framed as the default first route in commercial conversations', () => {
     const freePilotFaq = pricingFaqs.find(([question]) => question === 'Waarom starten jullie niet met een gratis pilot?')
-    const exitBaselineCard = pricingCards.find((card) => card.eyebrow === 'Loep Vertrek Baseline')
     const exitLifecycle = pricingLifecycleLadder.find((route) => route.route === 'Loep Vertrek')
 
-    expect(exitBaselineCard?.price).toBe('vanaf €4.500')
+    // Site-ronde besluit A (2026-09-20): pricingCards is weg; de prijs is een
+    // staffel op organisatiegrootte uit lib/pricing.ts, gelijk voor elke scan.
+    expect(PRICING_TIERS.map((tier) => tier.firstScanEur)).toEqual([3500, 4500, 6900])
     expect(exitLifecycle?.firstSale.toLowerCase()).toContain('standaard eerste koop')
     expect(exitLifecycle?.expansion.toLowerCase()).toContain('loep behoud baseline')
     expect(freePilotFaq?.[1].toLowerCase()).toContain('betaald baseline-traject')
@@ -101,7 +102,6 @@ describe('Loep Vertrek positioning copy', () => {
 
   it('keeps Loep Cultuurbeeld framed as a broad annual baseline instead of a pulse, benchmark or ranking layer', () => {
     const cultureProduct = LIVE_MARKETING_PRODUCTS.find((product) => product.slug === 'cultuurbeeld')
-    const cultureBaselineCard = pricingCards.find((card) => card.eyebrow === 'Loep Culture Assessment Baseline')
     const cultureFaq = pricingFaqs.find(([question]) => question === 'Wanneer kies je voor Loep Culture Assessment?')
     const cultureRow = productOverviewComparisonRows.find((row) => row[0] === 'Loep Cultuurbeeld')
 
@@ -110,8 +110,6 @@ describe('Loep Vertrek positioning copy', () => {
     expect(cultureProduct?.description.toLowerCase()).toContain('governed drilldown')
     expect(cultureProduct?.description.toLowerCase()).not.toContain('benchmark-first')
     expect(cultureProduct?.description.toLowerCase()).not.toContain('ranking')
-    expect(cultureBaselineCard?.price).toBe('op aanvraag')
-    expect(cultureBaselineCard?.bullets.join(' ').toLowerCase()).toContain('board-read')
     expect(cultureFaq?.[1].toLowerCase()).toContain('cultuur')
     expect(cultureFaq?.[1].toLowerCase()).toContain('engagement')
     expect(cultureRow?.[2].toLowerCase()).toContain('cultuur- en engagementpatronen')
