@@ -635,6 +635,102 @@ def direction_imperative(scan_type: str, factor_key: str, option_key: str) -> st
     return options[option_key]
 
 
+# ── Vertaalvragen voor het blok "Zo maak je er een besluit van" (plan 3b) ─────
+# Spec 2026-09-16 par. 6. De teksten zijn gated content: ze komen uit
+# docs/superpowers/specs/2026-09-19-vertaalvragen-concept.md en gaan er pas in
+# na akkoord van Lars (plan 3b, Taak 13). Tot dan zijn beide dicts leeg en toont
+# het rapport alleen de herkennings- en de besluitvraag;
+# tests/test_work_questions_content.py maakt een lege set daarna een rode test.
+#
+# Per onderwerp, per inhoudelijke route (een optie met een `imperative`) twee
+# teksten: Behoud in de tegenwoordige tijd, Vertrek in de verleden tijd. *_none
+# en *_other hebben geen vraag. De vragen noemen het onderwerp niet bij naam.
+WORK_QUESTIONS: dict[str, dict[str, dict[str, str]]] = {}
+
+# De zinnen voor een verdeelde richting. "divided" draagt de plaatshouders {a}
+# en {b}, "split_none" alleen {a}; de aanhalingstekens staan in de tekst zelf.
+WORK_QUESTION_VARIANTS: dict[str, dict[str, str]] = {}
+
+
+def work_questions_ready() -> bool:
+    """False zolang de gated content er niet in zit (plan 3b, Taak 13)."""
+    return bool(WORK_QUESTIONS) and bool(WORK_QUESTION_VARIANTS)
+
+
+def _content_route_keys(factor_key: str) -> list[str]:
+    """De inhoudelijke routes van een onderwerp: opties met een opdrachtvorm."""
+    return [o["key"] for o in DIRECTION_SETS[factor_key]["options"] if o["imperative"]]
+
+
+def work_question(scan_type: str, factor_key: str, option_key: str) -> str:
+    """De vertaalvraag bij een inhoudelijke route, in de tijd van deze scan.
+
+    Anders dan direction_imperative GEBRUIKT deze functie scan_type: Behoud en
+    Vertrek hebben elk een eigen tekst. Onbekend scantype, onbekend onderwerp,
+    een niets- of Anders-optie of een route zonder vraag: een fout met een
+    duidelijke melding, nooit een ruwe sleutel in een klant-PDF.
+    """
+    if scan_type not in DIRECTION_VERSION:
+        raise ValueError(f"work_question: onbekend scan_type {scan_type!r}")
+    if option_key not in _content_route_keys(factor_key):
+        raise KeyError(
+            f"work_question: {option_key!r} is geen inhoudelijke route van {factor_key!r}")
+    try:
+        return WORK_QUESTIONS[factor_key][option_key][scan_type]
+    except KeyError:
+        raise KeyError(
+            f"work_question: geen vertaalvraag voor {option_key!r} "
+            f"({factor_key!r}, {scan_type!r})") from None
+
+
+def work_question_variant(kind: str, scan_type: str, **velden: str) -> str:
+    """De zin voor een verdeelde richting, gevuld met de routeteksten."""
+    if scan_type not in DIRECTION_VERSION:
+        raise ValueError(f"work_question_variant: onbekend scan_type {scan_type!r}")
+    try:
+        sjabloon = WORK_QUESTION_VARIANTS[kind][scan_type]
+    except KeyError:
+        raise KeyError(
+            f"work_question_variant: geen variant {kind!r} voor {scan_type!r}") from None
+    return sjabloon.format(**velden)
+
+
+def translation_question(scan_type: str, factor_key: str, state: dict[str, Any]) -> str | None:
+    """De vertaalvraag die bij deze richtingstaat hoort, of None als er geen hoort.
+
+    `state` is de uitkomst van direction_state. Per staat:
+      clear, plurality   de route-eigen vraag van de grootste route;
+      divided            de verdeeld-zin met de twee grootste inhoudelijke
+                         routes, of None als de grootste veranderoptie *_other
+                         is of er geen tweede inhoudelijke route is gekozen;
+      split_none         de eigen zin met alleen de veranderroute;
+      none_needed,
+      too_few            None: er is geen route om op te kiezen.
+    Zolang de content niet gevuld is (voor de reviewgate) altijd None.
+    """
+    if scan_type not in DIRECTION_VERSION:
+        raise ValueError(f"translation_question: onbekend scan_type {scan_type!r}")
+    soort = state["state"]
+    if soort not in ("clear", "plurality", "divided", "split_none", "none_needed", "too_few"):
+        raise ValueError(f"translation_question: onbekende staat {soort!r}")
+    if not work_questions_ready() or soort in ("none_needed", "too_few"):
+        return None
+    if soort in ("clear", "plurality"):
+        return work_question(scan_type, factor_key, state["top_key"])
+    teksten = direction_option_texts(scan_type, factor_key)
+    if soort == "split_none":
+        return work_question_variant("split_none", scan_type, a=teksten[state["top_key"]])
+    # divided
+    verander = [k for k, _c in state["ranked"] if not k.endswith("_none")]
+    if not verander or verander[0].endswith("_other"):
+        return None
+    inhoudelijk = [k for k in verander if not k.endswith("_other")]
+    if len(inhoudelijk) < 2:
+        return None
+    return work_question_variant("divided", scan_type,
+                                 a=teksten[inhoudelijk[0]], b=teksten[inhoudelijk[1]])
+
+
 def _factor_items(org_raw: dict[str, int], factor_key: str) -> list[int]:
     return [v for k, v in org_raw.items()
             if k.startswith(f"{factor_key}_") and isinstance(v, int)]
