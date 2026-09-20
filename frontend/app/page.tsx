@@ -4,11 +4,11 @@ import { PublicFooter } from '@/components/marketing/public-footer'
 import { HomePageContent } from '@/components/marketing/home-page-content'
 import { buildContactHref } from '@/lib/contact-funnel'
 import { faqSchema } from '@/components/marketing/site-content'
+import { HOME_SCHEMA_DESCRIPTION, SITE_DESCRIPTION, SITE_TITLE } from '@/lib/site-meta'
 
 export const metadata: Metadata = {
-  title: 'Loep | Begeleide analyse van behoud, vertrek en onboarding',
-  description:
-    'Zie waar het wringt voordat mensen vertrekken, hoor waarom van je mensen zelf, en weet waar je begint. Begeleide scan voor HR en management, rapport en gesprek inbegrepen.',
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
   alternates: { canonical: '/' },
 }
 
@@ -17,8 +17,7 @@ export default function LandingPage() {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
     name: 'Loep',
-    description:
-      'Begeleide scan van behoud, vertrek en onboarding voor HR en management: waar het wringt, waarom volgens je mensen, en waar je begint. Rapport en gesprek per scan inbegrepen.',
+    description: HOME_SCHEMA_DESCRIPTION,
     url: 'https://www.getloep.nl/',
     inLanguage: 'nl-NL',
     mainEntity: {

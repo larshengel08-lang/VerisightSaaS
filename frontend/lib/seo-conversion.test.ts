@@ -8,6 +8,7 @@ import { generateMetadata as generateSolutionMetadata } from '@/app/oplossingen/
 import { metadata as trustMetadata } from '@/app/vertrouwen/page'
 import { generateMetadata as generateProductMetadata } from '@/app/producten/[slug]/page'
 import { SEO_SOLUTION_PAGES, getSeoSolutionPageBySlug } from '@/lib/seo-solution-pages'
+import { SITE_TITLE } from '@/lib/site-meta'
 
 function firstImage(
   image:
@@ -37,7 +38,7 @@ function imageUrl(
 
 describe('SEO conversion tranche', () => {
   it('keeps the homepage and support-page metadata aligned with current SEO positioning', () => {
-    expect(homePageMetadata.title).toBe('Verisight')
+    expect(homePageMetadata.title).toBe(SITE_TITLE)
     expect(homePageMetadata.alternates?.canonical).toBe('/')
     expect(imageUrl(trustMetadata.openGraph?.images)).toBe('/opengraph-image')
   })
