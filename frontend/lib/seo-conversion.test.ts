@@ -4,9 +4,7 @@ import { describe, expect, it } from 'vitest'
 import nextConfig from '../next.config'
 import { metadata as homePageMetadata } from '@/app/page'
 import sitemap from '@/app/sitemap'
-import { metadata as aanpakMetadata } from '@/app/aanpak/page'
 import { generateMetadata as generateSolutionMetadata } from '@/app/oplossingen/[slug]/page'
-import { metadata as pricingMetadata } from '@/app/tarieven/page'
 import { metadata as trustMetadata } from '@/app/vertrouwen/page'
 import { generateMetadata as generateProductMetadata } from '@/app/producten/[slug]/page'
 import { SEO_SOLUTION_PAGES, getSeoSolutionPageBySlug } from '@/lib/seo-solution-pages'
@@ -41,8 +39,6 @@ describe('SEO conversion tranche', () => {
   it('keeps the homepage and support-page metadata aligned with current SEO positioning', () => {
     expect(homePageMetadata.title).toBe('Verisight')
     expect(homePageMetadata.alternates?.canonical).toBe('/')
-    expect(imageUrl(aanpakMetadata.openGraph?.images)).toBe('/opengraph-image')
-    expect(imageUrl(pricingMetadata.openGraph?.images)).toBe('/opengraph-image')
     expect(imageUrl(trustMetadata.openGraph?.images)).toBe('/opengraph-image')
   })
 
@@ -123,14 +119,6 @@ describe('SEO conversion tranche', () => {
       path.join(process.cwd(), 'app', 'producten', '[slug]', 'page.tsx'),
       'utf8',
     )
-    const pricingPageSource = fs.readFileSync(
-      path.join(process.cwd(), 'app', 'tarieven', 'page.tsx'),
-      'utf8',
-    )
-    const pricingContentSource = fs.readFileSync(
-      path.join(process.cwd(), 'components', 'marketing', 'tarieven-content.tsx'),
-      'utf8',
-    )
     const solutionPageSource = fs.readFileSync(
       path.join(process.cwd(), 'app', 'oplossingen', '[slug]', 'page.tsx'),
       'utf8',
@@ -143,8 +131,6 @@ describe('SEO conversion tranche', () => {
     expect(productPageSource).toContain("ctaSource: 'product_onboarding_form'")
     expect(productPageSource).toContain("ctaSource: 'product_leadership_form'")
     expect(productPageSource.includes('ctaHref="#kennismaking"') || productPageSource.includes('href="#kennismaking"')).toBe(true)
-    expect(pricingPageSource).toContain("ctaSource: 'pricing_primary_cta'")
-    expect(pricingContentSource).toContain("ctaSource: 'pricing_closing_cta'")
     expect(solutionPageSource).toContain('MarketingClosingCta')
     expect(solutionPageSource).toContain('ctaSource: solutionPage.ctaSource')
   })

@@ -11,7 +11,6 @@ function read(rel: string) {
 // technical removal is a separate track.
 const BROWSABLE_SURFACE = [
   'components/marketing/producten-content.tsx',
-  'components/marketing/tarieven-content.tsx',
   'components/marketing/home-page-content.tsx',
   'components/marketing/public-header.tsx',
   'components/marketing/public-footer.tsx',
@@ -41,8 +40,21 @@ describe('Portfolio cleanup — browsable surface is free of removed products an
     })
   }
 
-  it('Cultuurbeeld is not referenced on /tarieven', () => {
-    expect(read('components/marketing/tarieven-content.tsx')).not.toContain('Cultuurbeeld')
+  // Site-ronde besluit A (2026-09-20): /tarieven en /aanpak verwezen al door en
+  // zijn als pagina verwijderd. De redirect is het enige dat overblijft; de
+  // tarieven staan op /producten#tarieven en komen uit lib/pricing.ts.
+  it('/tarieven en /aanpak bestaan alleen nog als redirect naar /producten', () => {
+    for (const rel of [
+      'app/tarieven/page.tsx',
+      'components/marketing/tarieven-content.tsx',
+      'app/aanpak/page.tsx',
+      'components/marketing/aanpak-content.tsx',
+    ]) {
+      expect(fs.existsSync(path.join(process.cwd(), rel)), `${rel} hoort weg te zijn`).toBe(false)
+    }
+    const config = read('next.config.ts')
+    expect(config).toContain("{ source: '/tarieven', destination: '/producten#tarieven', permanent: true }")
+    expect(config).toContain("{ source: '/aanpak', destination: '/producten', permanent: true }")
   })
 
   // Homepage SEO metadata/JSON-LD and the public login page must not name the
@@ -143,15 +155,5 @@ describe('Portfolio cleanup — deferred public Action Center / removed-product 
     expect(og).not.toContain('Combinatie')
     expect(og).not.toContain('Pulse')
     expect(og).not.toContain('Leadership')
-  })
-})
-
-describe('Portfolio cleanup — /tarieven shows three equal baselines', () => {
-  const source = () => read('components/marketing/tarieven-content.tsx')
-
-  it('renders Onboarding as a third €4.500 baseline card', () => {
-    expect(source()).toContain('Loep Start Baseline')
-    expect(source()).not.toContain('Action Center Start')
-    expect(source()).not.toContain('Rest op aanvraag')
   })
 })
