@@ -247,8 +247,14 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .anders-kop { font-size: 10px; color: #374151; margin: 8px 0 0; line-height: 1.5;
   overflow-wrap: break-word; word-wrap: break-word; }
 .anders-note { font-size: 10px; color: """ + STEEL + r"""; margin: 2px 0 0; line-height: 1.5; }
+/* margin-bottom en line-height iets krapper dan de andere quote-blokken op deze
+   pagina (fix scenario 14): dit is de enige lijst die tot MAX_QUOTES items kan
+   tellen binnen een kaart die al twee andere blokken (verdeling + tellingen)
+   draagt, en bij veel "Anders"-antwoorden werd zij zelf de reden dat de
+   eerstvolgende (atomaire) gespreksagenda-sectie niet meer op dezelfde pagina
+   paste en alleen op een volgende vel terechtkwam. Blijft ruim leesbaar. */
 .anders-list { font-size: 10px; color: #374151; margin: 4px 0 0; padding-left: 16px; }
-.anders-list li { margin-bottom: 3px; line-height: 1.5;
+.anders-list li { margin-bottom: 1px; line-height: 1.35;
   overflow-wrap: break-word; word-wrap: break-word; }
 .anders-anon { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.1em;
   text-transform: uppercase; color: #94A3B8; margin: 5px 0 0; }
@@ -327,9 +333,21 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .r-gate { font-size: 10px; color: """ + STEEL + r"""; margin-top: 6px; font-style: italic; }
 
 /* ── Richtingblok "Wat er moet gebeuren" ── */
-.dir-block { margin-top: 18px; break-inside: avoid; }
+/* .dir-block zelf is NIET meer break-inside: avoid (fix scenario 14, plan 3b
+   regressie): de eyebrow/intro/totaalregel zijn gewone tekst en mogen normaal
+   meebreken met de pagina, zoals elke andere alinea in het rapport. Alleen de
+   kaartentabel (.dir-grid hieronder) mag niet middenin splitsen. Vóór deze
+   wijziging maakte break-inside: avoid op de hele .dir-block het tekstblok
+   vóór de tabel net zo onbreekbaar als de tabel zelf, waardoor dat hele blok
+   (tekst + tabel) als één stuk een nieuwe pagina moest openen zodra het niet
+   meer in de resterende ruimte paste -- en daarmee te weinig ruimte overliet
+   voor de agenda-slot erna, die dan alleen en te leeg op de pagina daarna
+   belandde (scenario "35% kiest 'Anders'"). Zonder de wrapper-brede regel kan
+   de tekst vóór de tabel meestromen met wat er nog past, zodat de tabel (en
+   dus ook wat erna komt) eerder ruimte vindt. */
+.dir-block { margin-top: 18px; }
 .dir-intro { font-size: 10px; color: #374151; line-height: 1.5; margin: 4px 0 10px; max-width: 70ch; }
-.dir-grid { width: 100%; border-collapse: separate; border-spacing: 12px 0; }
+.dir-grid { width: 100%; border-collapse: separate; border-spacing: 12px 0; break-inside: avoid; }
 .dir-card { width: 50%; vertical-align: top; background: #FFFFFF; border-left: 3px solid """ + HAIRLINE + r"""; padding: 12px 14px; }
 .dir-card.dir-clear { border-left-color: """ + accent + r"""; }
 /* De too_few-kaart heeft geen bronregel, tabel of caveat en is dus veel korter dan
