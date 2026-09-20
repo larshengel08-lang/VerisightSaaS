@@ -47,7 +47,7 @@ function ReadOnlyDecision({ decision }: { decision: CampaignDecision | null }) {
   return (
     <dl className="grid gap-4 sm:grid-cols-2">
       <ReadOnlyRow label="Datum van het gesprek" value={formatDutchDate(decision.decidedAt)} />
-      <ReadOnlyRow label="Onderwerp" value={decision.primaryTopic} />
+      <ReadOnlyRow label="Startpunt" value={decision.primaryTopic} />
       <ReadOnlyRow label="Wat precies" value={decision.primaryAction} />
       <ReadOnlyRow label="Eigenaar" value={decision.owner} />
       <ReadOnlyRow label="Datum vervolgmoment" value={formatDutchDate(decision.followUpDate)} />
@@ -123,7 +123,7 @@ export function DecisionBlock({ campaignId, canManage, decision, loadError }: De
             <input type="date" name="decidedAt" defaultValue={decision?.decidedAt ?? ''} disabled={busy} className={inputClass} />
           </label>
           <label className={labelClass}>
-            Onderwerp
+            Startpunt
             <input
               type="text"
               name="primaryTopic"

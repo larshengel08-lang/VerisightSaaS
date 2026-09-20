@@ -7,7 +7,7 @@ describe('blok "Besluit vastleggen" (plan 3b, spec 2026-09-16 par. 7)', () => {
   it('heeft dezelfde velden als de besluitpagina in het rapport', () => {
     for (const label of [
       'Datum van het gesprek',
-      'Onderwerp',
+      'Startpunt',
       'Wat precies',
       'Eigenaar',
       'Datum vervolgmoment',
