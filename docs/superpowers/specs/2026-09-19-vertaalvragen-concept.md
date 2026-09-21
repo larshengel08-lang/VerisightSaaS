@@ -1,7 +1,7 @@
 # Vertaalvragen voor het blok "Zo maak je er een besluit van" (concept)
 
 Datum: 2026-09-19
-Status: concept versie 2 (review van 21-9 verwerkt), wacht op akkoord Lars
+Status: akkoord Lars, 2026-09-21 (versie 2, review van 21-9 verwerkt; keuzes in sectie 6)
 Hoort bij: `docs/superpowers/specs/2026-09-16-rapport-onbegeleid-design.md` par. 6 en Bijlage A (plan 3b)
 Bron van de routes: `DIRECTION_SETS` in `backend/products/shared/deepening.py` (retention v2, exit v1)
 
@@ -35,7 +35,7 @@ De volgorde van de onderwerpen volgt `DEEPENING_FACTOR_KEYS`. De onderwerpnamen 
 | Routesleutel | Wat de respondent zag | Opdrachtvorm uit de code | Vertaalvraag (concept) |
 |---|---|---|---|
 | `ldd_feedback` | Meer bruikbare feedback en richting | Geef meer bruikbare feedback en richting. | Een medewerker levert werk in dat beter kan. Van wie hoort die wat er anders moet en waar het naartoe moet, en hoe snel? Wat kan die er de volgende dag mee? |
-| `ldd_mandate` | Duidelijker wat ik zelf mag beslissen in mijn werk | Maak duidelijker wat medewerkers zelf mogen beslissen. | Welke drie beslissingen mag een medewerker bij jullie nemen zonder het eerst te vragen? Noemt iedere leidinggevende aan deze tafel dezelfde drie, en van wie hoort de medewerker het? |
+| `ldd_mandate` | Duidelijker wat ik zelf mag beslissen in mijn werk | Maak duidelijker wat medewerkers zelf mogen beslissen. | Welke drie beslissingen mag een medewerker bij jullie nemen zonder het eerst te vragen, en hoe reageert een leidinggevende als zo'n beslissing anders uitpakt? |
 | `ldd_escalation` | Duidelijkere steun als er spanningen zijn of situaties vastlopen | Bied duidelijkere steun als er spanningen zijn of situaties vastlopen. | Als een medewerker vastloopt in een situatie of een spanning: wat doet de leidinggevende dan, binnen hoeveel dagen, en bij wie kan die medewerker terecht als het daar niet lukt? |
 | `ldd_recognition` | Concretere terugkoppeling op wat goed gaat en wat wordt gewaardeerd | Koppel concreter terug wat goed gaat en wat wordt gewaardeerd. | Hoe hoort iemand bij jullie dat zijn of haar werk goed was: van wie, hoe snel erna, en wat wordt er dan precies genoemd? |
 | `ldd_availability` | Meer beschikbaarheid en zichtbaarheid van mijn leidinggevende | Zorg dat leidinggevenden beschikbaarder en zichtbaarder zijn. | Hoe snel krijgt een medewerker bij jullie antwoord van de leidinggevende, en hoe vaak zien ze elkaar zonder dat er iets aan de hand is? Weet de medewerker wat die mag verwachten? |
@@ -71,7 +71,7 @@ De volgorde van de onderwerpen volgt `DEEPENING_FACTOR_KEYS`. De onderwerpnamen 
 | `cpd_explain` | Meer uitlegbaarheid van verschillen tussen vergelijkbare functies | Leg verschillen tussen vergelijkbare functies beter uit. | Welke verschillen tussen vergelijkbare functies kunnen jullie goed uitleggen en welke niet? Wie legt ze uit, en wat doen jullie met een verschil dat niemand kan uitleggen? |
 | `cpd_review` | Beter kijken of beloning past bij de zwaarte en verantwoordelijkheid van mijn werk | Kijk opnieuw of de beloning past bij de zwaarte en verantwoordelijkheid van het werk. | Wanneer keken jullie voor het laatst of de beloning nog past bij hoe zwaar een functie is? Welke functies zijn sindsdien veranderd, en wie kijkt daar als eerste naar? |
 | `cpd_path` | Meer duidelijkheid over mogelijke salarisgroei, voorwaarden en timing | Geef duidelijkheid over mogelijke salarisgroei, voorwaarden en timing. | Wat kan een medewerker bij jullie de komende twee jaar aan salarisgroei verwachten: onder welke voorwaarden, op welk moment, en wie vertelt dat? |
-| `cpd_clarity` | Meer duidelijkheid over hoe beloning en groei worden bepaald | Maak duidelijk hoe beloning en groei worden bepaald. | Wie aan deze tafel kan nu in twee minuten uitleggen hoe bij jullie een salaris en een volgende stap worden bepaald? Wat blijft er onduidelijk, en wie zet dat op papier? |
+| `cpd_clarity` | Meer duidelijkheid over hoe beloning en groei worden bepaald | Maak duidelijk hoe beloning en groei worden bepaald. | Stel dat een medewerker het morgen vraagt: wie legt in twee minuten uit hoe bij jullie een salaris en een volgende stap worden bepaald? Wat blijft er onduidelijk, en wie zet dat op papier? |
 | `cpd_flex` | Meer duidelijkheid of ruimte rond rooster, werktijden of flexibiliteit | Geef meer duidelijkheid of ruimte rond rooster, werktijden en flexibiliteit. | Wat kan er bij jullie echt rond rooster en werktijden, voor welke functies, wie beslist over een verzoek, en waar staat dat zodat niemand het hoeft te vragen? |
 
 ### 2.5 Werkbelasting (`workload`)
@@ -89,7 +89,7 @@ De volgorde van de onderwerpen volgt `DEEPENING_FACTOR_KEYS`. De onderwerpnamen 
 
 | Routesleutel | Wat de respondent zag | Opdrachtvorm uit de code | Vertaalvraag (concept) |
 |---|---|---|---|
-| `rcd_priorities` | Duidelijkere prioriteiten binnen mijn rol | Maak de prioriteiten binnen rollen duidelijker. | Neem één functie. Welke drie dingen noemt de leidinggevende als belangrijkst in dat werk, en welke drie zou de medewerker noemen? Waar verwachten jullie verschil, en wie bespreekt dat? |
+| `rcd_priorities` | Duidelijkere prioriteiten binnen mijn rol | Maak de prioriteiten binnen rollen duidelijker. | Vraag een medewerker en de leidinggevende los van elkaar naar de drie belangrijkste dingen in dat werk. Krijg je bij jullie twee keer hetzelfde lijstje? Wie bespreekt het, en hoe vaak? |
 | `rcd_expectations` | Duidelijkheid over verwachtingen en waarop ik word aangesproken | Maak duidelijk wat er wordt verwacht en waarop medewerkers worden aangesproken. | Waarop wordt een medewerker bij jullie aangesproken, en wist die dat vooraf? Wie spreekt verwachtingen uit, op welk moment, en waar staan ze? |
 | `rcd_alignment` | Eenduidigere opdrachten en betere afstemming tussen betrokkenen | Maak opdrachten eenduidiger en stem beter af tussen betrokkenen. | Wat doet een medewerker bij jullie die van twee kanten iets anders te horen krijgt? Wie hakt de knoop door, en hoe snel? |
 | `rcd_scope` | Duidelijke afspraken als mijn takenpakket verandert | Maak duidelijke afspraken wanneer een takenpakket verandert. | Als een takenpakket bij jullie verandert: wie bespreekt dat met de medewerker, vóór of na de verandering, en waar leggen jullie vast wat er is afgesproken? |
@@ -141,7 +141,7 @@ De opdrachtvorm is in de code tijd-neutraal en dus dezelfde als bij Behoud. De k
 | `cpd_explain` | Meer uitlegbaarheid van verschillen tussen vergelijkbare functies | Leg verschillen tussen vergelijkbare functies beter uit. | Welke verschillen tussen vergelijkbare functies kunnen jullie nu uitleggen, en welke niet? Wat doen jullie met een verschil dat niemand kan uitleggen? En een jaar geleden? |
 | `cpd_review` | Beter kijken of beloning paste bij de zwaarte en verantwoordelijkheid van mijn werk | Kijk opnieuw of de beloning past bij de zwaarte en verantwoordelijkheid van het werk. | Wanneer keken jullie voor het laatst of de beloning nog past bij hoe zwaar een functie is? Welke functies zijn sindsdien veranderd, en wie kijkt daar nu naar? |
 | `cpd_path` | Meer duidelijkheid over mogelijke salarisgroei, voorwaarden en timing | Geef duidelijkheid over mogelijke salarisgroei, voorwaarden en timing. | Wat kan een medewerker nu de komende twee jaar aan salarisgroei verwachten, en wie vertelt dat? Kreeg een medewerker dat een jaar geleden ook te horen? |
-| `cpd_clarity` | Meer duidelijkheid over hoe beloning en groei werden bepaald | Maak duidelijk hoe beloning en groei worden bepaald. | Wie aan deze tafel kan nu in twee minuten uitleggen hoe een salaris en een volgende stap worden bepaald? Was die uitleg er een jaar geleden ook? |
+| `cpd_clarity` | Meer duidelijkheid over hoe beloning en groei werden bepaald | Maak duidelijk hoe beloning en groei worden bepaald. | Stel dat een medewerker het nu vraagt: wie legt in twee minuten uit hoe een salaris en een volgende stap worden bepaald? Was die uitleg er een jaar geleden ook? |
 | `cpd_flex` | Meer duidelijkheid of ruimte rond rooster, werktijden of flexibiliteit | Geef meer duidelijkheid of ruimte rond rooster, werktijden en flexibiliteit. | Wat kan er nu echt rond rooster en werktijden, voor welke functies, en waar staat dat? Was dat een jaar geleden anders? |
 
 ### 3.5 Werkbelasting (`workload`)
@@ -159,7 +159,7 @@ De opdrachtvorm is in de code tijd-neutraal en dus dezelfde als bij Behoud. De k
 
 | Routesleutel | Wat de respondent zag | Opdrachtvorm uit de code | Vertaalvraag (concept) |
 |---|---|---|---|
-| `rcd_priorities` | Duidelijkere prioriteiten binnen mijn rol | Maak de prioriteiten binnen rollen duidelijker. | Neem één functie. Welke drie dingen noemt de leidinggevende nu als belangrijkst, en welke drie zou de medewerker noemen? Waar verwachten jullie verschil? Was dat een jaar geleden anders? |
+| `rcd_priorities` | Duidelijkere prioriteiten binnen mijn rol | Maak de prioriteiten binnen rollen duidelijker. | Vraag een medewerker en de leidinggevende los van elkaar naar de drie belangrijkste dingen in dat werk. Krijg je nu twee keer hetzelfde lijstje? En een jaar geleden? |
 | `rcd_expectations` | Duidelijkheid over verwachtingen en waarop ik werd aangesproken | Maak duidelijk wat er wordt verwacht en waarop medewerkers worden aangesproken. | Waarop wordt een medewerker nu aangesproken, en wist die dat vooraf? Waar staan die verwachtingen? Stonden ze er al toen de vertrekkers er nog werkten? |
 | `rcd_alignment` | Eenduidigere opdrachten en betere afstemming tussen betrokkenen | Maak opdrachten eenduidiger en stem beter af tussen betrokkenen. | Een medewerker krijgt nu van twee kanten iets anders te horen. Wie hakt de knoop door, en hoe snel? En toen de vertrekkers er nog werkten? |
 | `rcd_scope` | Duidelijke afspraken als mijn takenpakket veranderde | Maak duidelijke afspraken wanneer een takenpakket verandert. | Er verandert nu een takenpakket. Wie bespreekt dat met de medewerker, vóór of na de verandering? Hoe ging dat bij de laatste wijziging? |
@@ -241,18 +241,16 @@ Alternatief slot: "Wie voert dat gesprek nu, en wanneer?"
 
 Bron: `docs/superpowers/specs/2026-09-21-vertaalvragen-review.md` (13 goed, 54 scherper, 5 onhoudbaar). In de tabellen van sectie 2 en 3 hierboven staat nu de definitieve tekst: 59 vragen zijn vervangen door de herschrijving, 13 zijn ongewijzigd. De oorspronkelijke conceptvragen staan in de review, kolom "Conceptvraag". Sectie 4 en 5 hieronder zijn van versie 1 en blijven staan als achtergrond.
 
-**De grote keuzes die in versie 2 zitten. Lars zegt ja of nee:**
+**Besluiten Lars, 21 september 2026 (via het keuzeformulier in de hoofdsessie):**
 
-1. **Loep Vertrek: nu eerst, toen als toets.** Alle 36 Vertrek-vragen gaan over wie er nu werkt, met het verleden als feitelijke toets aan het eind ("En toen de vertrekkers er nog werkten?", "Was dat een jaar geleden anders?"). De vorm "wie had ... moeten" is losgelaten: die levert een mening over vroeger op, zoekt een schuldige, en gaat over vertrekkers die het MT bij naam kent. Dit wijkt af van "verleden-tijd-stem" in de rapport-spec par. 6 en Bijlage A en vraagt daar een amendement van één regel.
-2. **Behoud: begin bij wat een medewerker meemaakt, niet bij wat er geregeld is.** "Wat is bij jullie X: wie, hoe vaak" krijgt als antwoord "dat hebben we". De herschrijvingen zetten een situatie neer.
-3. **De verdeeld-zinnen noemen de routes niet meer** (zie bovenaan).
-4. **Eén vaste regel onder het onderwerp aansturing**, omdat de leidinggevenden over wie het gaat zelf aan tafel zitten: "Deze vraag gaat ook over de leidinggevenden aan deze tafel. Beantwoord hem eerst voor je eigen team."
-
-**Drie vragen die jouw oordeel als HR-professional vragen** (durft een HR-manager dit voor te lezen aan haar eigen directeur?):
-
-- `ldd_mandate`: "... Noemt iedere leidinggevende aan deze tafel dezelfde drie ...". Maakt van de tafel een proef. Sterk, want verschillende lijstjes bewijzen "onduidelijk" zonder dat iemand wordt aangevallen. Terugval: de conceptvraag uit de review.
-- `cpd_clarity`: "Wie aan deze tafel kan nu in twee minuten uitleggen ...". Zet mensen op de proef waar de directeur bij zit. Terugval: "Stel dat een medewerker het morgen vraagt: wie legt in twee minuten uit hoe een salaris en een volgende stap worden bepaald? Wat blijft er onduidelijk, en wie zet dat op papier?"
-- `rcd_priorities`: de review stelde een opdracht voor ("Vraag een medewerker en de leidinggevende los van elkaar ...") en noemde die zelf niet uitvoerbaar aan tafel. In versie 2 staat een variant van de hoofdsessie die aan tafel wel te beantwoorden is ("Neem één functie. Welke drie dingen noemt de leidinggevende ..., en welke drie zou de medewerker noemen?").
+1. **Loep Vertrek: nu eerst, toen als toets.** Akkoord. Alle 36 Vertrek-vragen gaan over wie er nu werkt, met het verleden als feitelijke toets aan het eind. De vorm "wie had ... moeten" vervalt. Dit wijkt af van "verleden-tijd-stem" in de rapport-spec par. 6 en Bijlage A; het amendement staat in sectie 7.
+2. **Behoud begint bij wat een medewerker meemaakt**, niet bij wat er geregeld is. Akkoord.
+3. **De verdeeld-zinnen noemen de routes niet meer.** Akkoord.
+4. **Eén vaste regel onder het onderwerp aansturing.** Akkoord, met deze tekst: "Deze vraag gaat ook over de leidinggevenden aan deze tafel. Beantwoord hem eerst voor je eigen team."
+5. **`ldd_mandate` (Behoud): de zachtere versie.** De herschrijving uit de review ("Noemt iedere leidinggevende aan deze tafel dezelfde drie ...") maakte van de tafel een proef; Lars kiest als HR-professional de conceptvraag.
+6. **`cpd_clarity` (Behoud en Vertrek): de zachtere versie** ("Stel dat een medewerker het morgen vraagt ..."), om dezelfde reden.
+7. **`rcd_priorities` (Behoud en Vertrek): de opdracht-versie uit de review** ("Vraag een medewerker en de leidinggevende los van elkaar ..."). Bekend nadeel: het is een opdracht voor na het overleg, geen vraag die aan tafel te beantwoorden is. Lars kiest hem omdat twee lijstjes naast elkaar niet met een vermoeden af te doen zijn.
+8. **De tien vragen waar het rapport het meest op leunt** (review sectie 4) zijn één voor één voorgelegd en alle tien goedgekeurd. De overige vragen gaan mee zoals ze in versie 2 staan.
 
 **Bekend en geaccepteerd:** `cpd_flex` is een noodvraag. De route zelf is een opdracht met "of" erin (duidelijkheid of ruimte) en moet bij de herweging na twee of drie campagnes worden gesplitst. `wld_friction` laat "fouten in overdracht" uit de route liggen.
 
