@@ -13,6 +13,7 @@ from backend.report_html import (
     BESLUITVRAAG,
     BESLUITVRAAG_NIETS,
     SEGMENT_TOELICHTING_GRENS,
+    WERKVRAGEN_AANSTURING_HINT,
     _besluitvraag,
     _herkenningsvraag,
     _prioriteringsraster,
@@ -22,14 +23,18 @@ from backend.report_html import (
     render_retention_report_html,
 )
 from tests.test_report_degraded_page_two import _body, _fixture
-from tests.test_report_priority_render import DIRECTION, RANKED, RESP
+from tests.test_report_priority_render import DIRECTION, RANKED, RESP, _row
 
 VRAGEN = {
     "growth": {"grd_visibility": {"retention": "Testvraag zicht, nu?", "exit": "Testvraag zicht, toen?"}},
+    "leadership": {"ldd_mandate": {"retention": "Testvraag mandaat, nu?", "exit": "Testvraag mandaat, toen?"}},
 }
+# Amendement plan 3b Taak 13 (concept-sectie 7 punt 1): de verdeeld-zinnen zijn
+# sinds versie 2 vaste teksten zonder plaatshouders {a}/{b} en zonder citaat
+# van de routeteksten.
 VARIANTEN = {
-    "divided": {"retention": "Nu verdeeld tussen ‘{a}’ en ‘{b}’?", "exit": "Toen verdeeld tussen ‘{a}’ en ‘{b}’?"},
-    "split_none": {"retention": "Nu vraagt een deel om ‘{a}’?", "exit": "Toen vroeg een deel om ‘{a}’?"},
+    "divided": {"retention": "Nu verdeeld, vaste zin?", "exit": "Toen verdeeld, vaste zin?"},
+    "split_none": {"retention": "Nu vraagt een deel, vaste zin?", "exit": "Toen vroeg een deel, vaste zin?"},
 }
 
 # n_total hoort bij DIRECTION: de som van lowest_n (9 + 8) is het minimum dat
@@ -124,13 +129,17 @@ def test_blok_toont_per_gesprekspunt_de_drie_vragen(gevuld):
 
 def test_verdeelde_richting_krijgt_de_verdeeld_zin_naast_de_toelichting(gevuld):
     """Gat B3 bij werkdruk: 'Geen eenduidige richting' stond los van de meest
-    gekozen toelichting. Beide staan nu in dezelfde kaart."""
+    gekozen toelichting. Beide staan nu in dezelfde kaart.
+
+    Amendement Taak 13: de verdeeld-zin is een vaste tekst, geen citaat meer
+    van de routetekst.
+    """
     html = _werkvragen_block(RANKED, {"workload": _deep(wl_recovery=6, wl_volume=3, wl_peaks_adhoc=3)},
                              DIRECTION, "retention")
     kaart = html[html.index("Tweede punt: Werkdruk en herstelruimte"):]
     t = _plain(kaart)
     assert "6 van de 12 (50%) kozen als toelichting" in t
-    assert "Nu verdeeld tussen ‘Piekmomenten en spoedwerk eerder plannen" in t
+    assert VARIANTEN["divided"]["retention"] in t
 
 
 def test_zonder_vertaalvraag_staat_er_geen_lege_rij(monkeypatch):
@@ -175,6 +184,43 @@ def test_geen_streepjes_geen_advies_geen_begeleider(gevuld):
     t = _plain(html).lower()
     for fout in ("—", "–", "loep adviseert", "aanbeveling", "begeleide", "de bespreking met loep"):
         assert fout not in t
+
+
+# ── Aansturing-hint (amendement plan 3b Taak 13, concept-sectie 6 punt 4) ────
+# Vaste regel onder de vertaalvraag, alleen bij het onderwerp leadership en
+# alleen als er ook echt een vertaalvraag staat.
+
+LEADERSHIP_RANKED = [_row("leadership", "Leiderschap", 5.6, role="startpunt")]
+LEADERSHIP_DIRECTION = {
+    "leadership": {"lowest_n": 8, "offered": 8, "answered": 8, "skipped": 0,
+                   "counts": {"ldd_mandate": 6, "ldd_none": 1, "ldd_escalation": 1}},
+}
+
+
+def test_aansturing_hint_staat_onder_de_vertaalvraag_van_leadership(gevuld):
+    html = _werkvragen_block(LEADERSHIP_RANKED, {}, LEADERSHIP_DIRECTION, "retention")
+    t = _plain(html)
+    assert "Testvraag mandaat, nu?" in t
+    assert WERKVRAGEN_AANSTURING_HINT in t
+    # Staat na de vertaalvraag, in dezelfde cel, vóór de besluitvraag.
+    assert t.index("Testvraag mandaat, nu?") < t.index(WERKVRAGEN_AANSTURING_HINT) < t.index(BESLUITVRAAG)
+
+
+def test_aansturing_hint_verschijnt_niet_bij_een_ander_onderwerp(gevuld):
+    html = _werkvragen_block(RANKED, {"growth": _deep(gr_visibility=6, gr_time=4, gr_criteria=3)},
+                             DIRECTION, "retention")
+    t = _plain(html)
+    assert "Testvraag zicht, nu?" in t                       # growth heeft wel een vertaalvraag
+    assert WERKVRAGEN_AANSTURING_HINT not in t
+
+
+def test_aansturing_hint_verschijnt_niet_zonder_vertaalvraag(gevuld):
+    """De regel staat "onder de vertaalvraag"; zonder vertaalvraag (hier: geen
+    richtingdata, dus too_few) staat hij er ook niet, ook al is het onderwerp
+    leadership."""
+    html = _werkvragen_block(LEADERSHIP_RANKED, {}, {}, "retention")
+    assert "Vertalen" not in _plain(html)
+    assert WERKVRAGEN_AANSTURING_HINT not in _plain(html)
 
 
 # ── Wiring ───────────────────────────────────────────────────────────────────

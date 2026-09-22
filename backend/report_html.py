@@ -43,6 +43,7 @@ from backend.products.shared.deepening import (
     TRIGGER_LOW_ITEM_COUNT,
     TRIGGER_LOW_ITEM_MAX,
     TRIGGER_WITH_ONE_AVG_MAX,
+    WERKVRAGEN_AANSTURING_HINT,
     agenda_enrichment,
     aggregate_deepening,
     aggregate_direction,
@@ -3212,6 +3213,11 @@ def _werkvragen_block(ranked: list[dict], deep_agg: dict, direction_agg: dict,
     het blok wel, zonder vertaalvraag: herkennen en besluiten kan altijd. De
     rij "Vertalen" staat er alleen als translation_question een vraag geeft;
     nooit een lege rij.
+
+    Amendement plan 3b Taak 13 (concept-sectie 6 punt 4/sectie 7 punt 3): onder
+    de vertaalvraag van het onderwerp aansturing (`leadership`) komt een vaste
+    regel over de leidinggevenden aan tafel. Alleen als er ook echt een
+    vertaalvraag staat, en alleen bij dat ene onderwerp.
     """
     if scan_type not in DIRECTION_SCAN_TYPES:
         raise ValueError(f"_werkvragen_block: geen werkvragen voor scan_type {scan_type!r}")
@@ -3236,12 +3242,15 @@ def _werkvragen_block(ranked: list[dict], deep_agg: dict, direction_agg: dict,
             staat = st["state"]
         else:
             vertaal, staat = None, "too_few"
-        rijen = [("Herkennen", _herkenningsvraag(deep_agg, scan_type, fk, r["label"], r["score"]))]
+        rijen = [("Herkennen", _h(_herkenningsvraag(deep_agg, scan_type, fk, r["label"], r["score"])))]
         if vertaal:
-            rijen.append(("Vertalen", vertaal))
-        rijen.append(("Besluiten", _besluitvraag(staat)))
+            vertaal_cel = _h(vertaal)
+            if fk == "leadership":
+                vertaal_cel += f'<div class="wq-hint">{_h(WERKVRAGEN_AANSTURING_HINT)}</div>'
+            rijen.append(("Vertalen", vertaal_cel))
+        rijen.append(("Besluiten", _h(_besluitvraag(staat))))
         rol = "Startpunt" if r["agenda_role"] == "startpunt" else "Tweede punt"
-        trs = "".join(f'<tr><td class="wq-stap">{_h(stap)}</td><td class="wq-vraag">{_h(vraag)}</td></tr>'
+        trs = "".join(f'<tr><td class="wq-stap">{_h(stap)}</td><td class="wq-vraag">{vraag}</td></tr>'
                       for stap, vraag in rijen)
         cards += (f'<td class="wq-card"><div class="dir-role">{rol}: {_h(r["label"])}</div>'
                   f'<table class="wq-tbl">{trs}</table></td>')

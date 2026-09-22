@@ -380,6 +380,7 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .wq-tbl td { font-size: 10px; line-height: 1.5; color: #374151; padding: 5px 0; vertical-align: top; border-bottom: 1px solid """ + HAIRLINE + r"""; }
 .wq-tbl tr:last-child td { border-bottom: none; }
 .wq-stap { width: 22%; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: """ + accent_lo + r"""; padding-right: 8px; }
+.wq-hint { font-size: 8.5px; font-style: italic; color: """ + STEEL + r"""; margin-top: 4px; }
 
 /* ── Besluitpagina "Besluit van het MT" (plan 3b): lijnen voor de pen ── */
 /* break-after: de appendix stroomt (.sec zonder .pb) en zou anders onder het
