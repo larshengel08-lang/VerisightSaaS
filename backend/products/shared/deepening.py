@@ -635,6 +635,290 @@ def direction_imperative(scan_type: str, factor_key: str, option_key: str) -> st
     return options[option_key]
 
 
+# ── Vertaalvragen voor het blok "Zo maak je er een besluit van" (plan 3b) ─────
+# Spec 2026-09-16 par. 6. De teksten komen uit
+# docs/superpowers/specs/2026-09-19-vertaalvragen-concept.md.
+# Gevuld op 2026-09-22 uit de door Lars goedgekeurde versie van het
+# conceptdocument (commit f5cabcbc), inclusief het amendement in sectie 7 van
+# dat document (plan 3b, Taak 13): Vertrek staat in de tegenwoordige tijd met
+# een terugblik-toets aan het eind (niet de verleden-tijd-stem uit par. 6 en
+# Bijlage A van de rapport-spec), en de verdeeld-zinnen citeren de
+# routeteksten niet meer.
+#
+# Per onderwerp, per inhoudelijke route (een optie met een `imperative`) twee
+# teksten: Behoud in de tegenwoordige tijd, Vertrek in de tegenwoordige tijd
+# met een terugblik-toets. *_none en *_other hebben geen vraag. De vragen
+# noemen het onderwerp niet bij naam.
+WORK_QUESTIONS: dict[str, dict[str, dict[str, str]]] = {
+    "leadership": {
+        "ldd_feedback": {
+            "retention": "Een medewerker levert werk in dat beter kan. Van wie hoort die wat er anders moet en waar het naartoe moet, en hoe snel? Wat kan die er de volgende dag mee?",
+            "exit": "Een medewerker levert nu werk in dat beter kan. Van wie hoort die wat er anders moet, en hoe snel? En toen de vertrekkers er nog werkten?",
+        },
+        "ldd_mandate": {
+            "retention": "Welke drie beslissingen mag een medewerker bij jullie nemen zonder het eerst te vragen, en hoe reageert een leidinggevende als zo'n beslissing anders uitpakt?",
+            "exit": "Welke drie beslissingen mag een medewerker nu nemen zonder het eerst te vragen, en van wie heeft die dat gehoord? Was dat een jaar geleden anders?",
+        },
+        "ldd_escalation": {
+            "retention": "Als een medewerker vastloopt in een situatie of een spanning: wat doet de leidinggevende dan, binnen hoeveel dagen, en bij wie kan die medewerker terecht als het daar niet lukt?",
+            "exit": "Als een medewerker nu vastloopt in een situatie of een spanning: wat doet de leidinggevende dan, en binnen hoeveel dagen? En toen de vertrekkers er nog werkten?",
+        },
+        "ldd_recognition": {
+            "retention": "Hoe hoort iemand bij jullie dat zijn of haar werk goed was: van wie, hoe snel erna, en wat wordt er dan precies genoemd?",
+            "exit": "Hoe hoort een medewerker nu dat het werk goed was: van wie, en wat wordt er dan precies genoemd? Wat is daar het afgelopen jaar aan veranderd?",
+        },
+        "ldd_availability": {
+            "retention": "Hoe snel krijgt een medewerker bij jullie antwoord van de leidinggevende, en hoe vaak zien ze elkaar zonder dat er iets aan de hand is? Weet de medewerker wat die mag verwachten?",
+            "exit": "Hoe snel krijgt een medewerker nu antwoord van de leidinggevende, en weet die vooraf wat die mag verwachten? En toen de vertrekkers er nog werkten?",
+        },
+        "ldd_consistency": {
+            "retention": "Als een besluit of verwachting bij jullie verandert: wie legt uit waarom, aan wie, en binnen hoeveel dagen? En wat als het daarna weer wijzigt?",
+            "exit": "Er verandert nu een besluit of verwachting. Wie legt uit waarom, en binnen hoeveel dagen? Ging dat het afgelopen jaar ook zo?",
+        },
+    },
+    "culture": {
+        "cud_safety": {
+            "retention": "Een medewerker meldt zelf een fout. Wat gebeurt er daarna: wie reageert, wat zien collega's daarvan, en hoort de melder wat ermee gedaan is?",
+            "exit": "Een medewerker meldt nu zelf een fout. Wie reageert, en wat zien collega's daarvan? En toen de vertrekkers er nog werkten?",
+        },
+        "cud_dissent": {
+            "retention": "Wanneer veranderde een kritische vraag van een medewerker bij jullie voor het laatst een besluit? In welk overleg is daar ruimte voor, en wat hoort iemand wiens bezwaar het niet haalt?",
+            "exit": "In welk overleg kan een medewerker nu een kritische vraag stellen vóórdat een besluit vaststaat, en wat hoort die terug? Wat is daar het afgelopen jaar aan veranderd?",
+        },
+        "cud_conflict": {
+            "retention": "Wanneer is een spanning bij jullie groot genoeg om te bespreken: wie begint erover, hoe snel, en wie helpt als twee collega's er samen niet uitkomen?",
+            "exit": "Twee collega's komen er nu samen niet uit. Wie begint erover, hoe snel, en wie helpt? En toen de vertrekkers er nog werkten?",
+        },
+        "cud_agreements": {
+            "retention": "Een collega houdt zich niet aan een teamafspraak. Wie zegt daar bij jullie iets van, en hoe snel? En waar staan die afspraken, zodat een nieuw teamlid ze kent?",
+            "exit": "Een collega houdt zich nu niet aan een teamafspraak. Wie zegt daar iets van, en waar staan die afspraken? Was dat een jaar geleden anders?",
+        },
+        "cud_involvement": {
+            "retention": "Welk besluit dat een team raakt komt er de komende maanden aan? Op welk moment praten medewerkers mee voordat het vaststaat, en wat horen ze terug over hun inbreng?",
+            "exit": "Welk besluit dat een team raakt komt eraan? Op welk moment praten medewerkers mee voordat het vaststaat? En hoe ging dat bij het vorige grote besluit?",
+        },
+        "cud_crossteam": {
+            "retention": "Twee teams hangen van elkaars werk af. Wat spreken ze bij jullie met elkaar af, wie regelt dat, en wie beslist als het botst?",
+            "exit": "Twee teams hangen nu van elkaars werk af. Wat spreken ze met elkaar af, en wie beslist als het botst? En toen de vertrekkers er nog werkten?",
+        },
+    },
+    "growth": {
+        "grd_visibility": {
+            "retention": "Waar ziet een medewerker bij jullie vandaag welke functies, opleidingen of projecten er zijn? En wie wijst een medewerker op wat er voor hem of haar tussen zit?",
+            "exit": "Waar ziet een medewerker vandaag welke functies, opleidingen of projecten er zijn, en wie wijst die erop? Stond dat er een jaar geleden ook?",
+        },
+        "grd_conversation": {
+            "retention": "Wat weet een medewerker bij jullie ná een ontwikkelgesprek dat die ervoor niet wist: welke stap, welke opleiding, welk ander werk? Wie voert dat gesprek, en hoe vaak?",
+            "exit": "Wat weet een medewerker nu ná een ontwikkelgesprek dat die ervoor niet wist, en wie voert dat gesprek? Wat is daar het afgelopen jaar aan veranderd?",
+        },
+        "grd_followthrough": {
+            "retention": "Waar staat een ontwikkelafspraak bij jullie na het gesprek, wie kijkt er na drie maanden naar, en hoe ziet de medewerker dat er iets mee gebeurt?",
+            "exit": "Waar staat een ontwikkelafspraak nu na het gesprek, en wie komt erop terug? Hoeveel afspraken van een jaar geleden zijn nagekomen?",
+        },
+        "grd_time": {
+            "retention": "Hoeveel uur per maand mag ontwikkeling bij jullie kosten, wie vangt het werk dan op, en wat gebeurt er als het druk is?",
+            "exit": "Hoeveel uur per maand heeft een medewerker nu voor ontwikkeling, en wat gebeurt er als het druk is? Was dat een jaar geleden anders?",
+        },
+        "grd_criteria": {
+            "retention": "Wat moet iemand bij jullie laten zien om door te groeien, wie beslist daarover, en waar kan een medewerker dat nalezen voordat hij of zij het vraagt?",
+            "exit": "Wat moet een medewerker nu laten zien om door te groeien, en waar kan die dat nalezen? Stond dat er al toen de vertrekkers er nog werkten?",
+        },
+        "grd_nextstep": {
+            "retention": "Welke vervolgstappen zijn er bij jullie echt, en welke niet? Wie zegt dat eerlijk tegen een medewerker, en op welk moment in het jaar?",
+            "exit": "Welke vervolgstappen zijn er nu echt, en welke niet? Wie zegt dat eerlijk tegen een medewerker, en wanneer? Gebeurde dat een jaar geleden ook?",
+        },
+    },
+    "compensation": {
+        "cpd_insight": {
+            "retention": "Een medewerker vraagt hoe jullie salaris zich verhoudt tot vergelijkbaar werk elders. Wat krijgt die te zien? En weten jullie het zelf niet: wie zoekt het uit, voor welke functies eerst?",
+            "exit": "Een medewerker vraagt nu hoe jullie salaris zich verhoudt tot vergelijkbaar werk elders. Wat krijgt die te zien, en weten jullie het zelf? Was dat een jaar geleden anders?",
+        },
+        "cpd_explain": {
+            "retention": "Welke verschillen tussen vergelijkbare functies kunnen jullie goed uitleggen en welke niet? Wie legt ze uit, en wat doen jullie met een verschil dat niemand kan uitleggen?",
+            "exit": "Welke verschillen tussen vergelijkbare functies kunnen jullie nu uitleggen, en welke niet? Wat doen jullie met een verschil dat niemand kan uitleggen? En een jaar geleden?",
+        },
+        "cpd_review": {
+            "retention": "Wanneer keken jullie voor het laatst of de beloning nog past bij hoe zwaar een functie is? Welke functies zijn sindsdien veranderd, en wie kijkt daar als eerste naar?",
+            "exit": "Wanneer keken jullie voor het laatst of de beloning nog past bij hoe zwaar een functie is? Welke functies zijn sindsdien veranderd, en wie kijkt daar nu naar?",
+        },
+        "cpd_path": {
+            "retention": "Wat kan een medewerker bij jullie de komende twee jaar aan salarisgroei verwachten: onder welke voorwaarden, op welk moment, en wie vertelt dat?",
+            "exit": "Wat kan een medewerker nu de komende twee jaar aan salarisgroei verwachten, en wie vertelt dat? Kreeg een medewerker dat een jaar geleden ook te horen?",
+        },
+        "cpd_clarity": {
+            "retention": "Stel dat een medewerker het morgen vraagt: wie legt in twee minuten uit hoe bij jullie een salaris en een volgende stap worden bepaald? Wat blijft er onduidelijk, en wie zet dat op papier?",
+            "exit": "Stel dat een medewerker het nu vraagt: wie legt in twee minuten uit hoe een salaris en een volgende stap worden bepaald? Was die uitleg er een jaar geleden ook?",
+        },
+        "cpd_flex": {
+            "retention": "Wat kan er bij jullie echt rond rooster en werktijden, voor welke functies, wie beslist over een verzoek, en waar staat dat zodat niemand het hoeft te vragen?",
+            "exit": "Wat kan er nu echt rond rooster en werktijden, voor welke functies, en waar staat dat? Was dat een jaar geleden anders?",
+        },
+    },
+    "workload": {
+        "wld_scope": {
+            "retention": "Er komt werk bij voor een team dat al vol zit. Wie zegt bij jullie wat er dan afgaat, en waar staat wat wel en niet bij een functie hoort?",
+            "exit": "Er komt nu werk bij voor een team dat al vol zit. Wie zegt wat er dan afgaat? En toen de vertrekkers er nog werkten?",
+        },
+        "wld_planning": {
+            "retention": "Hoe ver vooruit zien jullie hoeveel werk er komt, en wie legt dat naast de bezetting? Klopt het niet: mensen erbij, werk eraf, of vangt het team het op?",
+            "exit": "Hoe ver vooruit weten jullie nu hoeveel werk er komt, en wie legt dat naast de bezetting? Keken jullie daar een jaar geleden ook zo naar?",
+        },
+        "wld_peaks": {
+            "retention": "Welke pieken kunnen jullie zien aankomen, en welke niet? Wie verdeelt het spoedwerk, en wie mag zeggen: dit kan er nu niet bij?",
+            "exit": "Welke pieken zien jullie nu aankomen, en wie mag zeggen: dit kan er niet bij? Wie mocht dat zeggen toen de vertrekkers er nog werkten?",
+        },
+        "wld_recovery": {
+            "retention": "Na een drukke periode: wat mag er bij jullie blijven liggen zodat mensen kunnen bijkomen en werk goed kunnen afmaken? Wie beslist dat, en hoe weet het team dat het mag?",
+            "exit": "Na een drukke periode: wat mag er nu blijven liggen, en hoe weet het team dat het mag? En toen de vertrekkers er nog werkten?",
+        },
+        "wld_priorities": {
+            "retention": "Als alles belangrijk is: wie zegt bij jullie hardop wat mag wachten, en hoe weet een medewerker dat op maandag? Wat hebben jullie zelf voor het laatst laten wachten?",
+            "exit": "Als alles belangrijk is: wie zegt nu hardop wat mag wachten, en hoe weet een medewerker dat op maandag? Was dat een jaar geleden anders?",
+        },
+        "wld_friction": {
+            "retention": "Welk dubbel werk of systeemgedoe kost de meeste tijd, en weten jullie dat of de mensen die het doen? Hoe halen jullie het op, en wie lost het eerste punt op?",
+            "exit": "Welk dubbel werk of systeemgedoe kost nu de meeste tijd, en wie lost het eerste punt op? Wat ervan bestond al toen de vertrekkers er nog werkten?",
+        },
+    },
+    "role_clarity": {
+        "rcd_priorities": {
+            "retention": "Vraag een medewerker en de leidinggevende los van elkaar naar de drie belangrijkste dingen in dat werk. Krijg je bij jullie twee keer hetzelfde lijstje? Wie bespreekt het, en hoe vaak?",
+            "exit": "Vraag een medewerker en de leidinggevende los van elkaar naar de drie belangrijkste dingen in dat werk. Krijg je nu twee keer hetzelfde lijstje? En een jaar geleden?",
+        },
+        "rcd_expectations": {
+            "retention": "Waarop wordt een medewerker bij jullie aangesproken, en wist die dat vooraf? Wie spreekt verwachtingen uit, op welk moment, en waar staan ze?",
+            "exit": "Waarop wordt een medewerker nu aangesproken, en wist die dat vooraf? Waar staan die verwachtingen? Stonden ze er al toen de vertrekkers er nog werkten?",
+        },
+        "rcd_alignment": {
+            "retention": "Wat doet een medewerker bij jullie die van twee kanten iets anders te horen krijgt? Wie hakt de knoop door, en hoe snel?",
+            "exit": "Een medewerker krijgt nu van twee kanten iets anders te horen. Wie hakt de knoop door, en hoe snel? En toen de vertrekkers er nog werkten?",
+        },
+        "rcd_scope": {
+            "retention": "Als een takenpakket bij jullie verandert: wie bespreekt dat met de medewerker, vóór of na de verandering, en waar leggen jullie vast wat er is afgesproken?",
+            "exit": "Er verandert nu een takenpakket. Wie bespreekt dat met de medewerker, vóór of na de verandering? Hoe ging dat bij de laatste wijziging?",
+        },
+        "rcd_mandate": {
+            "retention": "Neem een functie die bij jullie veel voorkomt. Waarover beslist iemand in die rol zelf, waarover samen en waarover niet, en wie vertelt dat bij de start?",
+            "exit": "Neem een functie die veel voorkomt. Waarover beslist iemand in die rol nu zelf, en wie vertelt dat? Was dat een jaar geleden even duidelijk?",
+        },
+        "rcd_information": {
+            "retention": "Iemand begint bij jullie aan een klus of neemt een dienst over. Wat moet die dan weten, wie zorgt dat het er ligt, en wat doet die als het ontbreekt?",
+            "exit": "Iemand neemt nu een klus of dienst over. Wat moet die weten, en wie zorgt dat het er ligt? En toen de vertrekkers er nog werkten?",
+        },
+    },
+}
+
+# De vaste zinnen voor een verdeelde richting (amendement plan 3b Taak 13,
+# concept-sectie 7 punt 1): "divided" en "split_none" citeren de routeteksten
+# niet meer, dus geen plaatshouders {a}/{b} meer. Vaste tekst per scan_type.
+WORK_QUESTION_VARIANTS: dict[str, dict[str, str]] = {
+    "divided": {
+        "retention": "Deze groep koos verschillend; de verdeling staat hierboven. Met welke van de meest gekozen richtingen beginnen jullie, en welke laten jullie bewust liggen?",
+        "exit": "Deze vertrekkers kozen verschillend; de verdeling staat hierboven. Welke van de meest gekozen richtingen pakken jullie op voor wie er nu werkt, en welke laten jullie bewust liggen?",
+    },
+    "split_none": {
+        "retention": "Deze groep is verdeeld: een deel vraagt om verandering, een even groot deel zegt dat het goed zit. Beide kan kloppen. Waar zouden jullie met de meest gekozen richting beginnen?",
+        "exit": "Deze vertrekkers waren verdeeld: een deel vroeg om verandering, een even groot deel zei dat het goed zat. Beide kan kloppen. Waar zouden jullie voor wie er nu werkt met de meest gekozen richting beginnen?",
+    },
+}
+
+# Vaste regel bij het onderwerp aansturing (amendement plan 3b Taak 13,
+# concept-sectie 6 punt 4, akkoord Lars): de mensen aan tafel zijn zelf de
+# leidinggevenden waar de vertaalvraag over gaat. Staat alleen onder de
+# vertaalvraag van `leadership`, en alleen als die er ook echt staat.
+WERKVRAGEN_AANSTURING_HINT = ("Deze vraag gaat ook over de leidinggevenden aan deze tafel. "
+                              "Beantwoord hem eerst voor je eigen team.")
+
+
+def work_questions_ready() -> bool:
+    """False zolang de gated content er niet in zit (plan 3b, Taak 13)."""
+    return bool(WORK_QUESTIONS) and bool(WORK_QUESTION_VARIANTS)
+
+
+def _content_route_keys(factor_key: str) -> list[str]:
+    """De inhoudelijke routes van een onderwerp: opties met een opdrachtvorm."""
+    try:
+        options = DIRECTION_SETS[factor_key]["options"]
+    except KeyError:
+        raise KeyError(f"work_question: onbekend onderwerp {factor_key!r}") from None
+    return [o["key"] for o in options if o["imperative"]]
+
+
+def work_question(scan_type: str, factor_key: str, option_key: str) -> str:
+    """De vertaalvraag bij een inhoudelijke route, in de tijd van deze scan.
+
+    Anders dan direction_imperative GEBRUIKT deze functie scan_type: Behoud en
+    Vertrek hebben elk een eigen tekst. Onbekend scantype, onbekend onderwerp,
+    een niets- of Anders-optie of een route zonder vraag: een fout met een
+    duidelijke melding, nooit een ruwe sleutel in een klant-PDF.
+    """
+    if scan_type not in DIRECTION_VERSION:
+        raise ValueError(f"work_question: onbekend scan_type {scan_type!r}")
+    if option_key not in _content_route_keys(factor_key):
+        raise KeyError(
+            f"work_question: {option_key!r} is geen inhoudelijke route van {factor_key!r}")
+    try:
+        return WORK_QUESTIONS[factor_key][option_key][scan_type]
+    except KeyError:
+        raise KeyError(
+            f"work_question: geen vertaalvraag voor {option_key!r} "
+            f"({factor_key!r}, {scan_type!r})") from None
+
+
+def work_question_variant(kind: str, scan_type: str) -> str:
+    """De vaste zin voor een verdeelde richting.
+
+    Amendement plan 3b Taak 13: sinds versie 2 van het conceptdocument citeren
+    deze zinnen geen routetekst meer, dus er valt niets meer in te vullen.
+    """
+    if scan_type not in DIRECTION_VERSION:
+        raise ValueError(f"work_question_variant: onbekend scan_type {scan_type!r}")
+    try:
+        return WORK_QUESTION_VARIANTS[kind][scan_type]
+    except KeyError:
+        raise KeyError(
+            f"work_question_variant: geen variant {kind!r} voor {scan_type!r}") from None
+
+
+def translation_question(scan_type: str, factor_key: str, state: dict[str, Any]) -> str | None:
+    """De vertaalvraag die bij deze richtingstaat hoort, of None als er geen hoort.
+
+    `state` is de uitkomst van direction_state. Per staat:
+      clear, plurality   de route-eigen vraag van de grootste route;
+      divided            de vaste verdeeld-zin, of None als de grootste
+                         veranderoptie *_other is of er geen tweede
+                         inhoudelijke route is gekozen;
+      split_none         de vaste split_none-zin;
+      none_needed,
+      too_few            None: er is geen route om op te kiezen.
+    Zolang de content niet gevuld is (voor de reviewgate) altijd None.
+
+    Amendement plan 3b Taak 13 (concept-sectie 7 punt 1): de verdeeld-zinnen
+    citeren de routeteksten niet meer, dus deze functie vult ze niet meer in.
+    De gate zelf (wanneer wel of geen vertaalvraag) is ongewijzigd t.o.v.
+    Taak 4; alleen het invullen is vervallen.
+    """
+    if scan_type not in DIRECTION_VERSION:
+        raise ValueError(f"translation_question: onbekend scan_type {scan_type!r}")
+    soort = state["state"]
+    if soort not in ("clear", "plurality", "divided", "split_none", "none_needed", "too_few"):
+        raise ValueError(f"translation_question: onbekende staat {soort!r}")
+    if not work_questions_ready() or soort in ("none_needed", "too_few"):
+        return None
+    if soort in ("clear", "plurality"):
+        return work_question(scan_type, factor_key, state["top_key"])
+    if soort == "split_none":
+        return work_question_variant("split_none", scan_type)
+    # divided
+    verander = [k for k, _c in state["ranked"] if not k.endswith("_none")]
+    if not verander or verander[0].endswith("_other"):
+        return None
+    inhoudelijk = [k for k in verander if not k.endswith("_other")]
+    if len(inhoudelijk) < 2:
+        return None
+    return work_question_variant("divided", scan_type)
+
+
 def _factor_items(org_raw: dict[str, int], factor_key: str) -> list[int]:
     return [v for k, v in org_raw.items()
             if k.startswith(f"{factor_key}_") and isinstance(v, int)]

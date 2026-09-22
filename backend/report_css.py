@@ -247,8 +247,14 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .anders-kop { font-size: 10px; color: #374151; margin: 8px 0 0; line-height: 1.5;
   overflow-wrap: break-word; word-wrap: break-word; }
 .anders-note { font-size: 10px; color: """ + STEEL + r"""; margin: 2px 0 0; line-height: 1.5; }
+/* margin-bottom en line-height iets krapper dan de andere quote-blokken op deze
+   pagina (fix scenario 14): dit is de enige lijst die tot MAX_QUOTES items kan
+   tellen binnen een kaart die al twee andere blokken (verdeling + tellingen)
+   draagt, en bij veel "Anders"-antwoorden werd zij zelf de reden dat de
+   eerstvolgende (atomaire) gespreksagenda-sectie niet meer op dezelfde pagina
+   paste en alleen op een volgende vel terechtkwam. Blijft ruim leesbaar. */
 .anders-list { font-size: 10px; color: #374151; margin: 4px 0 0; padding-left: 16px; }
-.anders-list li { margin-bottom: 3px; line-height: 1.5;
+.anders-list li { margin-bottom: 1px; line-height: 1.35;
   overflow-wrap: break-word; word-wrap: break-word; }
 .anders-anon { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.1em;
   text-transform: uppercase; color: #94A3B8; margin: 5px 0 0; }
@@ -327,9 +333,27 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .r-gate { font-size: 10px; color: """ + STEEL + r"""; margin-top: 6px; font-style: italic; }
 
 /* ── Richtingblok "Wat er moet gebeuren" ── */
-.dir-block { margin-top: 18px; break-inside: avoid; }
+/* .dir-block zelf is NIET meer break-inside: avoid (fix scenario 14, plan 3b
+   regressie): de eyebrow/intro/totaalregel zijn gewone tekst en mogen normaal
+   meebreken met de pagina, zoals elke andere alinea in het rapport. Alleen de
+   kaartentabel (.dir-grid hieronder) mag niet middenin splitsen. Vóór deze
+   wijziging maakte break-inside: avoid op de hele .dir-block het tekstblok
+   vóór de tabel net zo onbreekbaar als de tabel zelf, waardoor dat hele blok
+   (tekst + tabel) als één stuk een nieuwe pagina moest openen zodra het niet
+   meer in de resterende ruimte paste -- en daarmee te weinig ruimte overliet
+   voor de agenda-slot erna, die dan alleen en te leeg op de pagina daarna
+   belandde (scenario "35% kiest 'Anders'"). Zonder de wrapper-brede regel kan
+   de tekst vóór de tabel meestromen met wat er nog past, zodat de tabel (en
+   dus ook wat erna komt) eerder ruimte vindt. */
+.dir-block { margin-top: 18px; }
+/* Raster zonder richtingblok (plan 3b, regressiefix): de regels onder de tabel
+   en het agendaslot breken niet los van de laatste rasterrij. Past het slot
+   niet meer, dan reizen de laatste rijen mee in plaats van dat het slot alleen
+   op een vel belandt. Zie _prioriteringsraster. */
+.raster-mee .r-legend, .raster-mee .r-gate, .raster-mee .r-uitleg,
+.raster-mee .mq-brug-sec, .raster-mee .agenda-slot { break-before: avoid; }
 .dir-intro { font-size: 10px; color: #374151; line-height: 1.5; margin: 4px 0 10px; max-width: 70ch; }
-.dir-grid { width: 100%; border-collapse: separate; border-spacing: 12px 0; }
+.dir-grid { width: 100%; border-collapse: separate; border-spacing: 12px 0; break-inside: avoid; }
 .dir-card { width: 50%; vertical-align: top; background: #FFFFFF; border-left: 3px solid """ + HAIRLINE + r"""; padding: 12px 14px; }
 .dir-card.dir-clear { border-left-color: """ + accent + r"""; }
 /* De too_few-kaart heeft geen bronregel, tabel of caveat en is dus veel korter dan
@@ -353,7 +377,35 @@ p  { margin-bottom: 6px; font-size: 11px; }
    een kaart: leesbare 10px in de gewone letter, zoals .dir-intro erboven. De
    maat staat hier en niet inline, zodat er één plek is (codereview taak 9). */
 .dir-chain.dir-totals { font-family: inherit; font-size: 10px; line-height: 1.5;
-  color: #374151; max-width: 70ch; margin: 0 0 10px; }
+  color: #374151; max-width: 70ch; margin: 0 0 10px;
+  /* Niet splitsen over een paginagrens: in stresstest 06 liepen twee regels van
+     deze noemerzin als wees boven de gespreksagenda door (hoofdsessie 22-9). */
+  break-inside: avoid; page-break-inside: avoid; }
+
+/* ── Werkvragen "Zo maak je er een besluit van" (plan 3b) ── */
+.wq-block { margin-top: 16px; break-inside: avoid; }
+.wq-card { width: 50%; vertical-align: top; background: #FFFFFF; border-left: 3px solid """ + accent + r"""; padding: 10px 14px; }
+.wq-tbl { width: 100%; border-collapse: collapse; }
+.wq-tbl td { font-size: 10px; line-height: 1.5; color: #374151; padding: 5px 0; vertical-align: top; border-bottom: 1px solid """ + HAIRLINE + r"""; }
+.wq-tbl tr:last-child td { border-bottom: none; }
+.wq-stap { width: 22%; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: """ + accent_lo + r"""; padding-right: 8px; }
+.wq-hint { font-size: 8.5px; font-style: italic; color: """ + STEEL + r"""; margin-top: 4px; }
+
+/* ── Besluitpagina "Besluit van het MT" (plan 3b): lijnen voor de pen ── */
+/* break-after: de appendix stroomt (.sec zonder .pb) en zou anders onder het
+   invulvel beginnen; dat vel moet los te printen zijn. */
+.besluit { break-inside: avoid; break-after: page; }
+.bl-rij, .bl-drie { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 14px; }
+.bl-cel { width: 50%; vertical-align: top; padding-right: 18px; }
+.bl-drie td { width: 33.3%; vertical-align: top; padding-right: 14px; }
+.bl-drie .bl-lbl { margin-top: 4px; font-size: 7.5px; }
+.bl-blok { margin-top: 16px; break-inside: avoid; }
+.bl-lbl { font-family: 'JetBrains Mono', monospace; font-size: 8.5px; letter-spacing: 0.12em; text-transform: uppercase; color: """ + accent_lo + r"""; margin: 10px 0 2px; }
+.bl-vast { font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 13px; color: """ + INK + r"""; padding: 4px 0 2px; }
+.bl-line { border-bottom: 1px solid #94A3B8; height: 24px; }
+.bl-hint { font-size: 8.5px; font-style: italic; color: """ + STEEL + r"""; margin-top: 4px; }
+.bl-tekst { font-size: 11px; line-height: 1.55; color: """ + INK + r"""; padding: 4px 0 6px; border-bottom: 1px solid """ + HAIRLINE + r"""; }
+.bl-status { font-size: 9.5px; color: """ + STEEL + r"""; margin: 8px 0 0; font-style: italic; }
 .mq-direction { font-size: 11px; font-weight: 600; color: """ + NAVY + r"""; margin: 8px 0 0; }
 .mq-brug { font-size: 10.5px; color: #374151; margin: 8px 0 0; }
 /* Dezelfde brugzin op een eigen sectie (gespreksagenda) staat na een tabel en
@@ -412,6 +464,15 @@ p  { margin-bottom: 6px; font-size: 11px; }
    de negatieve marge brengt de samengevallen witruimte naar 24px, dezelfde
    ruimte als tussen twee onderwerpen. */
 .sec.flow.verd.verd-eerste { margin-top: -20px; }
+/* Dun verdiepingsblok en zijn voorganger (plan 3b): mogen over een paginagrens
+   lopen, zodat het dunne blok niet alleen op een vel belandt. De binnendelen
+   blijven heel: een kop staat nooit los onderaan, een kaart en een tabelrij
+   breken niet. */
+.sec.flow.verd.verd-los { break-inside: auto; }
+.verd-los .slabel, .verd-los .ch-head, .verd-los h2, .verd-los .verd-h3 { break-after: avoid; }
+.verd-los .card, .verd-los .item-tbl tr { break-inside: avoid; }
+.verd-los .card { break-before: avoid; }
+/* einde verd-los */
 .verd-h3 { margin-top: 16px; }
 .verd-compact .slabel { margin-bottom: 10px; }
 .verd-compact .verd-h3 { margin-top: 14px; }

@@ -209,19 +209,17 @@ def test_managementspoor_avoids_hard_language():
 
 
 def test_managementspoor_eigenaarschap_is_blank_not_ai_suggested():
-    """Eigenaarschap wordt bewust niet door Loep gesuggereerd (geen aanname wie
-    dit oppakt) — het vak is een invulbare lege regel voor tijdens de
-    bespreking, met een uitleghint, geen algoritmisch geschatte rol.
-
-    Feedback 2026-07-16: de losse Eigenaarschap-kaart is vervangen door één
-    "Uit de bespreking"-blok met drie invulregels (Prioriteit/Eigenaar/
-    Vervolgmoment); Eigenaar blijft daarbinnen een lege invulregel.
+    """Plan 3b: het invulblok is verhuisd naar de besluitpagina; de agenda
+    suggereert nog steeds geen eigenaar.
     """
     html = _eerste_managementspoor(
         primary_theme="Groeiperspectief + vertrekcontext", second_point="Beloning",
         mgmt_q="Welke loopbaanstappen ontbreken?",
         review_when="over 1 kwartaal")
-    assert "Uit de bespreking" in html
-    assert "step-fill" in html
-    assert "in te vullen tijdens de bespreking" in html.lower()
-    assert "hr " not in html.lower().split("eigenaar</div>")[1].split("</td>")[0]
+    assert "Uit de bespreking" not in html
+    assert "step-fill" not in html
+    assert "Leg het besluit vast op pagina" in html
+    # De agenda noemt de eigenaar alleen als keuze van het MT (sectie-intro),
+    # nooit als ingevulde naam of rol: het navy vlak draagt geen eigenaarveld meer.
+    donker = html[html.index('<div class="agenda-dark">'):]
+    assert "eigenaar" not in donker.lower()

@@ -6,6 +6,8 @@ import { RunningStateCard } from '@/components/dashboard/running-state-card'
 import { WelcomeGate } from '@/components/dashboard/welcome-gate'
 import { RequestNewMeasurement } from '@/components/dashboard/request-new-measurement'
 import { PdfDownloadButton } from './pdf-download-button'
+import { DecisionBlock } from '@/components/dashboard/decision-block'
+import { decisionFromRow } from '@/lib/dashboard/campaign-decision'
 import { SuiteAccessDenied } from '@/components/dashboard/suite-access-denied'
 import { resolveDashboardState } from '@/lib/dashboard/dashboard-state-resolver'
 import { withoutSelfLink } from '@/lib/dashboard/self-link'
@@ -179,6 +181,24 @@ export default async function CampaignPage({ params }: Props) {
   // zichtbaar niets. Het rapportblok onderaan heeft de echte downloadknop.
   const pageState = withoutSelfLink(state, `/campaigns/${id}`)
 
+  // Besluit van het MT (plan 3b): alleen op een gesloten meting met rapport.
+  // Bewust geen throw: ontbreekt de tabel (migratie nog niet gedraaid) of faalt
+  // de query, dan blijft de downloadknop bereikbaar en zegt het blok zelf wat
+  // er mis is.
+  let decisionRow: Record<string, unknown> | null = null
+  let decisionLoadError: string | null = null
+  if (state.kind === 'report_ready') {
+    const { data, error } = await supabase
+      .from('campaign_decisions')
+      .select(
+        'decided_at, primary_topic, primary_action, owner, follow_up_date, secondary_topic, secondary_action, feedback_plan, success_criterion, updated_at',
+      )
+      .eq('campaign_id', id)
+      .maybeSingle()
+    if (error) decisionLoadError = error.message
+    else decisionRow = (data as Record<string, unknown> | null) ?? null
+  }
+
   const reminderText = buildReminderText({
     commsMode: campaignMeta?.comms_mode ?? null,
     scanType: stats.scan_type,
@@ -256,6 +276,14 @@ export default async function CampaignPage({ params }: Props) {
             scanType={stats.scan_type}
           />
         </div>
+      ) : null}
+      {state.kind === 'report_ready' ? (
+        <DecisionBlock
+          campaignId={stats.campaign_id}
+          canManage={canManage}
+          decision={decisionFromRow(decisionRow)}
+          loadError={decisionLoadError}
+        />
       ) : null}
       {state.processingVariant === 'insufficient_response' ? (
         <RequestNewMeasurement variant="follow_up" organizationName={orgData?.name ?? null} />

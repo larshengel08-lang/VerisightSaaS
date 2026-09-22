@@ -21,6 +21,8 @@ Deze tests pinnen drie dingen:
 3. zonder richtingdata (niemand kreeg de vraag) staat het blok er niet én
    belooft de methodiekpagina het niet.
 """
+import re
+
 import pytest
 
 from backend.products.shared.deepening import get_direction_sets
@@ -214,7 +216,14 @@ def test_leidraad_belooft_geen_lege_secties(scan_type):
     # volgorde die er niet is.
     body = _body(_render(scan_type, n=_N_DEGRADED, profile=False, direction={}))
     assert "Zo leid je dit gesprek" not in body
-    assert 'class="pref"' not in body
+    # Plan 3b: de gespreksagenda en de besluitpagina wijzen naar elkaar, en die
+    # twee bestaan ook zonder factorprofiel. Dat zijn dan ook de enige
+    # verwijzingen; een verwijzing naar een sectie die hier niet rendert
+    # (verdieping, overzicht, afdelingen, drempels) blijft verboden.
+    hrefs = set(re.findall(r'<a class="pref" href="#([^"]+)"', body))
+    assert hrefs == {"sec-agenda", "sec-besluit"}, hrefs
+    for anker in hrefs:
+        assert body.count('id="' + anker + '"') == 1, anker
 
 
 # Loep Start noemt zijn eigen hoofdstukken (spec ronde 2 par. 7): die heten geen

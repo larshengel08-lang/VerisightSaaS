@@ -15,6 +15,8 @@ leesroute op p.02 de lezer ernaartoe met "achteraan lees je waar het gesprek
 kan beginnen". Drie beloftes die de pagina in die staat geen van drieën
 waarmaakte.
 """
+import re
+
 import pytest
 
 from backend.report_html import (
@@ -90,7 +92,13 @@ def test_zonder_profiel_geen_leidraad_maar_wel_een_echte_vraag():
     draagt nog steeds een echte vraag."""
     body = _ob(n=_N_DEGRADED, profile=False)
     assert "Zo leid je dit gesprek" not in body
-    assert 'class="pref"' not in body
+    # Plan 3b: de gespreksagenda en de besluitpagina wijzen naar elkaar, en die
+    # twee bestaan ook zonder factorprofiel. Dat zijn dan ook de enige
+    # verwijzingen; naar een sectie die hier niet rendert wijst niets.
+    hrefs = set(re.findall(r'<a class="pref" href="#([^"]+)"', body))
+    assert hrefs == {"sec-agenda", "sec-besluit"}, hrefs
+    for anker in hrefs:
+        assert body.count('id="' + anker + '"') == 1, anker
     assert AGENDA_OPENER_GEEN_PROFIEL in _agenda(body)
 
 

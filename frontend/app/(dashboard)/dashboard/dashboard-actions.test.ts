@@ -2,11 +2,23 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 const source = readFileSync(new URL('./dashboard-actions.ts', import.meta.url), 'utf8')
+// De sessiecontrole zit sinds plan 3b taak 11 in de gedeelde module
+// lib/dashboard/actor-context.ts, zodat de besluit-action dezelfde controle
+// gebruikt. De garantie blijft dezelfde; alleen de plek verschoof.
+const actorContextSource = readFileSync(
+  new URL('../../../lib/dashboard/actor-context.ts', import.meta.url),
+  'utf8',
+)
 
 describe('dashboard server actions', () => {
   it('runs server-side and verifies the session before mutating', () => {
     expect(source).toContain("'use server'")
-    expect(source).toContain('await supabase.auth.getUser()')
+    expect(source).toContain('loadActorContext')
+    expect(actorContextSource).toContain('await supabase.auth.getUser()')
+    // De helper is geen aanroepbaar endpoint, dus geen 'use server'-directive.
+    // Gezocht wordt de directive zelf (een eigen regel), niet een vermelding in
+    // het commentaar.
+    expect(actorContextSource).not.toMatch(/^\s*['"]use server['"]/m)
   })
 
   it('confirmReminderSentAction records an audit event without calling the invite backend', () => {
