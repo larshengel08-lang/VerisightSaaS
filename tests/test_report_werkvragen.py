@@ -71,11 +71,62 @@ def test_herkenningsvraag_noemt_de_toelichting_met_telling_en_noemer():
 
 
 def test_herkenningsvraag_onder_tien_zonder_percentage_en_met_enkelvoud():
-    zin = _herkenningsvraag({"growth": _deep(gr_visibility=1, gr_time=1, gr_criteria=1,
-                                             gr_ceiling=1, gr_conversation=1)},
-                            "retention", "growth", "Groeiperspectief", 5.1)
+    """Lockstep bijgewerkt (N2a, eindreview): de oude fixture (vijf opties met
+    elk telling 1, samen 5) was zelf een ongemerkte vijfvoudige gelijkstand --
+    precies het patroon dat N2 als bug aanwijst. Met answered >= 5 verplicht
+    (_deepening_shows_distribution) en primary_counts die daarbij optelt (zoals
+    _deep() doet), is een unieke top van 1 wiskundig niet te maken zonder een
+    tie: vijf mensen die elk een andere toelichting kozen met telling 1, zijn
+    per definitie vijf toelichtingen met dezelfde telling. Deze test bouwt de
+    aggregatie daarom met de hand: answered=5, maar met één vastgelegde
+    toelichting (primary_counts hoeft niet op te tellen tot answered -- zie
+    aggregate_deepening, dat "answered" ophoogt zodra de status "answered" is,
+    los van of er een primary is vastgelegd), zodat de staffel- en
+    enkelvoudsvorm van _telling los van N2 getest blijft."""
+    agg = {"triggered": 5, "offered": 5, "answered": 5, "skipped": 0,
+           "primary_counts": {"gr_visibility": 1}, "secondary_counts": {}, "other_texts": []}
+    zin = _herkenningsvraag({"growth": agg}, "retention", "growth", "Groeiperspectief", 5.1)
     assert zin.startswith("1 van de 5 koos als toelichting ‘")
     assert "%" not in zin
+
+
+def test_herkenningsvraag_bij_gelijkstand_noemt_alle_toelichtingen():
+    """N2a: een gelijkstand aan de top (scenario 03 uit de stresstest, 4 van de
+    14 elk) mag geen van de twee toelichtingen verzwijgen."""
+    zin = _herkenningsvraag(
+        {"growth": _deep(gr_conversation=4, gr_visibility=4, gr_time=3, gr_other=3)},
+        "retention", "growth", "Groeiperspectief", 5.1)
+    assert zin == ("Twee toelichtingen kregen evenveel stemmen (4 van de 14 (29%) elk): "
+                   "‘Er wordt te weinig concreet met mij over ontwikkeling gesproken’ en "
+                   "‘Ik zie niet welke mogelijkheden er voor mij zijn’; die 14 "
+                   "zijn de mensen die bij groeiperspectief duidelijk laag antwoordden en de "
+                   "verdiepende vraag beantwoordden. Waar zie je dat bij jullie terug, en waar "
+                   "niet?")
+    assert "—" not in zin and "–" not in zin
+
+
+def test_herkenningsvraag_gelijkstand_negeert_een_meetellende_anders_optie():
+    """Een _other-sleutel die toevallig hetzelfde aantal haalt als de top telt
+    niet mee in de gelijkstand (N4 blijft buiten scope): alleen de twee echte
+    toelichtingen worden genoemd, niet 'Anders'."""
+    zin = _herkenningsvraag(
+        {"growth": _deep(gr_conversation=4, gr_other=4, gr_visibility=4, gr_time=2)},
+        "retention", "growth", "Groeiperspectief", 5.1)
+    assert "Anders" not in zin
+    assert "Twee toelichtingen kregen evenveel stemmen (4 van de 14 (29%) elk)" in zin
+
+
+def test_herkenningsvraag_drievoudige_gelijkstand_noemt_ze_alle_drie():
+    zin = _herkenningsvraag(
+        {"growth": _deep(gr_conversation=2, gr_time=2, gr_visibility=2, gr_ceiling=1)},
+        "retention", "growth", "Groeiperspectief", 5.1)
+    assert zin.startswith("Drie toelichtingen kregen evenveel stemmen (2 van de 7 elk): ")
+    assert "%" not in zin.split(":")[0]        # onder MIN_DISTRIBUTION_N (10): geen percentage
+    assert "‘Er wordt te weinig concreet met mij over ontwikkeling gesproken’" in zin
+    assert "‘Er is te weinig tijd of ruimte om mij te ontwikkelen’" in zin
+    assert "‘Ik zie niet welke mogelijkheden er voor mij zijn’" in zin
+    assert zin.count("‘") == 3 and zin.count("’") == 3   # drie toelichtingen, elk een quote-paar
+    assert "—" not in zin and "–" not in zin
 
 
 def test_herkenningsvraag_valt_terug_onder_de_staffel_en_noemt_de_score():
@@ -125,6 +176,27 @@ def test_blok_toont_per_gesprekspunt_de_drie_vragen(gevuld):
     assert "Testvraag zicht, nu?" in t                       # growth is clear
     assert t.count(BESLUITVRAAG) == 2
     assert html.count('class="wq-card"') == 2
+
+
+def test_herkennen_toont_de_beperkte_basis_regel_tussen_vijf_en_tien(gevuld):
+    """N2b: de herkenningsvraag volgt dezelfde beperkte-basis-staffel als de
+    verdiepingspagina (5 tot 9 beantwoorders), met dezelfde formulering
+    (_beperkte_basis_note): geen nieuwe drempel, geen nieuwe zin."""
+    zes = _werkvragen_block(RANKED, {"growth": _deep(gr_visibility=4, gr_time=2)},  # answered 6
+                            DIRECTION, "retention")
+    kaart = zes[:zes.index("Tweede punt")]
+    assert "Beperkte basis: gebruik dit als gesprekshaakje, niet als conclusie" in kaart
+    assert "—" not in kaart and "–" not in kaart
+
+    tien = _werkvragen_block(RANKED, {"growth": _deep(gr_visibility=7, gr_time=3)},  # answered 10
+                             DIRECTION, "retention")
+    kaart10 = tien[:tien.index("Tweede punt")]
+    assert "Beperkte basis" not in kaart10
+
+    vier = _werkvragen_block(RANKED, {"growth": _deep(gr_visibility=4)},  # answered 4, onder de staffel
+                             DIRECTION, "retention")
+    kaart4 = vier[:vier.index("Tweede punt")]
+    assert "Beperkte basis" not in kaart4
 
 
 def test_verdeelde_richting_krijgt_de_verdeeld_zin_naast_de_toelichting(gevuld):

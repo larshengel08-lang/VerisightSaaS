@@ -1628,6 +1628,7 @@ LEIDRAAD_ANKERS = {
     "methodiek": "sec-methodiek",
     "drempels": "sec-drempels",        # drempeltabel op de methodiekpagina (taak 11)
     "besluit": "sec-besluit",          # besluitpagina "Besluit van het MT" (plan 3b)
+    "werkvragen": "sec-werkvragen",    # blok "Zo maak je er een besluit van" (N1, plan 3b eindreview)
 }
 
 
@@ -1661,8 +1662,14 @@ def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
         rij4 = ("Werkbeleving", f"Autonomie, competentie en verbondenheid (pagina {p(A['werkbeleving'])}).")
     # Plan 3b: het besluit heeft een eigen pagina. Geen extra rij (p.02 blijft
     # een A4), wel twee verwijzingen in deze ene.
+    # N1 (eindreview): "met de werkvragen" wees naar het hoofdstukanker
+    # ("agenda"), de beginpagina van de gespreksagenda, terwijl het blok "Zo
+    # maak je er een besluit van" daar één of twee pagina's verderop staat.
+    # Wijst nu naar zijn eigen anker (LEIDRAAD_ANKERS["werkvragen"]), gezet op
+    # de wrapper van _werkvragen_block zelf, dus de lezer slaat het juiste vel
+    # op.
     besluit = f"Het besluit leg je vast op pagina {p(A['besluit'])}."
-    slot = (f"Wat er volgens je mensen moet gebeuren, met de werkvragen (pagina {p(A['agenda'])}). "
+    slot = (f"Wat er volgens je mensen moet gebeuren, met de werkvragen (pagina {p(A['werkvragen'])}). "
             + besluit
             if has_direction else
             f"Het eerste gesprekspunt (pagina {p(A['agenda'])}). " + besluit)
@@ -3189,6 +3196,16 @@ def _herkenningsvraag(deep_agg: dict, scan_type: str, factor_key: str, label: st
 
     Terugval: de score zelf, niet "zo laag". Bij een vlak profiel is het
     startpunt een aandachtspunt of relatief sterk, en dan is "zo laag" onwaar.
+
+    N2a (eindreview): staat de top op een gelijkstand (twee of meer
+    toelichtingen met dezelfde telling), dan noemt de vraag ze allemaal in
+    plaats van willekeurig (alfabetisch op sleutel) de eerste te kiezen en de
+    rest te verzwijgen. Dezelfde eerlijkheid die de verdiepingspagina zelf al
+    toont: die laat bij zo'n gelijkstand beide toelichtingen met dezelfde
+    telling zien (_deepening_block). Alleen echte toelichtingen tellen mee in
+    de gelijkstand; een _other-sleutel die toevallig hetzelfde aantal haalt
+    als de top blijft ongenoemd, net zoals een _other-sleutel die alleen zelf
+    de top is de vraag al laat terugvallen (N4, buiten scope van deze fix).
     """
     terugval = f"Wat zit er volgens jullie achter de {_score_str(_shown(score))} op {_lc(label)}?"
     agg = deep_agg.get(factor_key)
@@ -3197,16 +3214,25 @@ def _herkenningsvraag(deep_agg: dict, scan_type: str, factor_key: str, label: st
     ranked = sorted((agg.get("primary_counts") or {}).items(), key=lambda kv: (-kv[1], kv[0]))
     if not ranked or ranked[0][0].endswith("_other"):
         return terugval
-    top_key, top_n = ranked[0]
+    top_n = ranked[0][1]
+    tied = [key for key, cnt in ranked if cnt == top_n and not key.endswith("_other")]
     teksten = _deepening_option_texts(scan_type, factor_key)
-    if top_key not in teksten:
-        raise KeyError(
-            f"werkvragen: onbekende toelichtingssleutel {top_key!r} voor {factor_key!r} ({scan_type})")
+    for key in tied:
+        if key not in teksten:
+            raise KeyError(
+                f"werkvragen: onbekende toelichtingssleutel {key!r} voor {factor_key!r} ({scan_type})")
     answered = agg["answered"]
-    return (f"{_telling(top_n, answered)} {_werkwoord(top_n, 'koos', 'kozen')} als toelichting "
-            f"‘{teksten[top_key]}’; die {answered} zijn de mensen die bij {_lc(label)} duidelijk "
-            "laag antwoordden en de verdiepende vraag beantwoordden. Waar zie je dat bij jullie "
-            "terug, en waar niet?")
+    telling = _telling(top_n, answered)
+    staart = (f"; die {answered} zijn de mensen die bij {_lc(label)} duidelijk laag antwoordden "
+              "en de verdiepende vraag beantwoordden. Waar zie je dat bij jullie terug, en waar "
+              "niet?")
+    if len(tied) == 1:
+        return (f"{telling} {_werkwoord(top_n, 'koos', 'kozen')} als toelichting "
+                f"‘{teksten[tied[0]]}’{staart}")
+    aantal = _TELWOORD.get(len(tied), str(len(tied)))
+    namen = _opsomming([f"‘{teksten[key]}’" for key in tied])
+    return (f"{aantal[0].upper()}{aantal[1:]} toelichtingen kregen evenveel stemmen "
+            f"({telling} elk): {namen}{staart}")
 
 
 def _besluitvraag(state: str) -> str:
@@ -3252,7 +3278,18 @@ def _werkvragen_block(ranked: list[dict], deep_agg: dict, direction_agg: dict,
             staat = st["state"]
         else:
             vertaal, staat = None, "too_few"
-        rijen = [("Herkennen", _h(_herkenningsvraag(deep_agg, scan_type, fk, r["label"], r["score"])))]
+        # N2b (eindreview): dezelfde beperkte-basis-regel als de
+        # verdiepingspagina (_deepening_block), met dezelfde staffel
+        # (_deepening_shows_distribution EN answered < MIN_AGGREGATE_N, dus 5
+        # tot 9 beantwoorders) en dezelfde formulering (_beperkte_basis_note).
+        # Geen nieuwe drempel, geen nieuwe zin: de herkenningsvraag volgt nu
+        # gewoon wat de verdiepingspagina over dezelfde data al zegt.
+        herken_agg = deep_agg.get(fk)
+        herken_html = _h(_herkenningsvraag(deep_agg, scan_type, fk, r["label"], r["score"]))
+        if (_deepening_shows_distribution(herken_agg)
+                and herken_agg.get("answered", 0) < MIN_AGGREGATE_N):
+            herken_html += _beperkte_basis_note()
+        rijen = [("Herkennen", herken_html)]
         if vertaal:
             vertaal_cel = _h(vertaal)
             if fk == "leadership":
@@ -3264,7 +3301,11 @@ def _werkvragen_block(ranked: list[dict], deep_agg: dict, direction_agg: dict,
                       for stap, vraag in rijen)
         cards += (f'<td class="wq-card"><div class="dir-role">{rol}: {_h(r["label"])}</div>'
                   f'<table class="wq-tbl">{trs}</table></td>')
-    return (f'<div class="wq-block"><span class="eyebrow">{WERKVRAGEN_EYEBROW}</span>'
+    # N1 (eindreview): eigen anker op de wrapper, zodat een paginaverwijzing
+    # (_pref(LEIDRAAD_ANKERS["werkvragen"])) naar het blok zelf kan wijzen in
+    # plaats van naar de beginpagina van het hoofdstuk (LEIDRAAD_ANKERS["agenda"]).
+    return (f'<div class="wq-block" id="{LEIDRAAD_ANKERS["werkvragen"]}">'
+            f'<span class="eyebrow">{WERKVRAGEN_EYEBROW}</span>'
             f'<p class="dir-intro">{WERKVRAGEN_INTRO}</p>'
             f'<table class="dir-grid wq-grid"><tr>{cards}</tr></table></div>')
 
@@ -3340,7 +3381,11 @@ def _besluit_page(*, opener_html: str, scan_type: str, campaign_name: str,
     """
     agenda = _pref(LEIDRAAD_ANKERS["agenda"])
     if heeft_werkvragen:
-        intro = (f"Neem de uitkomst van ‘{WERKVRAGEN_EYEBROW}’ (pagina {agenda}) hier over. "
+        # N1 (eindreview): wijst naar het eigen anker van het blok (gezet op de
+        # wrapper in _werkvragen_block), niet naar de beginpagina van het
+        # hoofdstuk (agenda) waar het blok vaak niet op staat.
+        werkvragen = _pref(LEIDRAAD_ANKERS["werkvragen"])
+        intro = (f"Neem de uitkomst van ‘{WERKVRAGEN_EYEBROW}’ (pagina {werkvragen}) hier over. "
                  "Eén besluit dat iemand draagt is meer waard dan vijf voornemens.")
     elif scan_type == "onboarding":
         intro = ("Loep Start meet nog geen richtingvraag; het besluit volgt uit jullie gesprek over "
@@ -3419,6 +3464,17 @@ def _besluit_page(*, opener_html: str, scan_type: str, campaign_name: str,
 
     ingekort = wat1_afgekapt or wat2_afgekapt or succes_afgekapt or terugkoppeling_afgekapt
     ingekort_regel = ('<p class="bl-status">' + BESLUIT_INGEKORT + "</p>") if ingekort else ""
+    # N5 (eindreview): "Leg dit besluit ook vast in je dashboard" is een
+    # opdracht voor iets dat al gebeurd is zodra er een voorgedrukt besluit
+    # staat -- de statusregel hierboven zegt dat dan al ("Vastgelegd in het
+    # dashboard, laatst bijgewerkt op ..."). De pagina blijft eerlijk over
+    # wáár het besluit bewaard wordt: die statusregel noemt het dashboard
+    # zowel als opslagplek ("Vastgelegd in het dashboard") als voor het
+    # bijwerken van lege velden ("... of werk je bij in het dashboard"), dus
+    # die informatie gaat niet verloren. Zonder besluit (leeg of onleesbaar)
+    # blijft de voetregel staan: dan is "leg het vast" nog een instructie die
+    # klopt.
+    voetregel = f'<p class="trustline">{BESLUIT_VOETREGEL}</p>' if not decision else ""
     return f"""<div class="pb sec besluit">
   {opener_html}
   <p class="sec-intro">{intro}</p>
@@ -3448,7 +3504,7 @@ def _besluit_page(*, opener_html: str, scan_type: str, campaign_name: str,
   <div class="bl-blok">
     {_bl_veld("Waaraan zien we dat het werkt", succes)}
   </div>
-  <p class="trustline">{BESLUIT_VOETREGEL}</p>
+  {voetregel}
 </div>"""
 
 

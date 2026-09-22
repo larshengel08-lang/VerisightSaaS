@@ -753,11 +753,12 @@ def test_zonder_afdelingen_toelichtingen_en_werkbeleving_geen_leidraad():
     assert "Zo leid je dit gesprek" not in html
     # De verwijzing van de gespreksagenda naar pagina twee blijft, en klopt. De
     # ranglijst verwijst sinds taak 11 ook naar de drempeltabel. Sinds plan 3b
-    # wijzen de agenda en de werkvragen naar de besluitpagina, en die pagina
-    # wijst terug naar de agenda; zonder leidraad zijn dat samen alle
+    # wijst de besluitpagina naar het werkvragenblok (N1, eindreview: naar zijn
+    # eigen anker, niet naar de beginpagina van het hoofdstuk), en dat blok
+    # wijst terug naar de besluitpagina; zonder leidraad zijn dat samen alle
     # verwijzingen in dit rapport.
     assert set(_assert_verwijzingen_kloppen(html)) == {
-        "p02", "sec-drempels", "sec-besluit", "sec-agenda"}
+        "p02", "sec-drempels", "sec-besluit", "sec-werkvragen"}
 
 
 def test_omgekeerde_meetperiode_wordt_gemeld_niet_afgedrukt():

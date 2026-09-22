@@ -71,9 +71,13 @@ def test_zonder_startpunt_zegt_de_pagina_dat_eerlijk():
 
 
 def test_inleiding_verwijst_naar_de_werkvragen_of_zegt_dat_ze_er_niet_zijn():
+    """N1 (eindreview): de inleiding wijst naar het eigen anker van het blok
+    (werkvragen), niet naar de beginpagina van het hoofdstuk (agenda) -- het
+    blok staat vaak één of twee pagina's later. Lockstep bijgewerkt: pinde
+    voorheen de oude (foute) verwijzing."""
     met = _pagina()
     assert "Zo maak je er een besluit van" in _plain(met)
-    assert 'href="#' + LEIDRAAD_ANKERS["agenda"] + '"' in met
+    assert 'href="#' + LEIDRAAD_ANKERS["werkvragen"] + '"' in met
     start = _plain(_pagina(scan_type="onboarding", heeft_werkvragen=False))
     assert "Zo maak je er een besluit van" not in start
     assert "Loep Start meet nog geen richtingvraag" in start
@@ -109,11 +113,16 @@ def test_het_oude_blok_is_weg_en_de_agenda_verwijst_naar_de_besluitpagina(scan_t
     assert "Leg het besluit vast op pagina" in t
 
 
-def test_leidraad_rij_vijf_wijst_naar_agenda_en_besluit():
+def test_leidraad_rij_vijf_wijst_naar_werkvragen_en_besluit():
+    """N1 (eindreview): "met de werkvragen" wees naar het hoofdstukanker
+    (agenda), de beginpagina van de gespreksagenda, terwijl het blok "Zo maak
+    je er een besluit van" daar vaak één of twee pagina's verderop staat. Wijst
+    nu naar zijn eigen anker (werkvragen). Lockstep bijgewerkt: pinde voorheen
+    de oude (foute) verwijzing naar agenda."""
     html = _leidraad_block("retention", has_segments=True, has_quotes=True,
                            has_direction=True, has_deepening=True)
     rij = html[html.index("33-45 min"):]
-    assert 'href="#' + LEIDRAAD_ANKERS["agenda"] + '"' in rij
+    assert 'href="#' + LEIDRAAD_ANKERS["werkvragen"] + '"' in rij
     assert 'href="#' + LEIDRAAD_ANKERS["besluit"] + '"' in rij
     assert "met de werkvragen" in _plain(rij)
     assert html.count("<tr>") == 5          # geen extra rij: p.02 blijft een A4
@@ -177,6 +186,31 @@ def test_zonder_besluit_geen_statusregel():
     t = _plain(_pagina())
     assert "Vastgelegd in het dashboard" not in t
     assert "Loep kon niet nagaan" not in t
+
+
+def test_zonder_besluit_staat_de_voetregel_er_nog():
+    t = _plain(_pagina())
+    assert BESLUIT_VOETREGEL in t
+
+
+def test_voorgedrukt_besluit_laat_de_voetregel_weg():
+    """N5 (eindreview): "Leg dit besluit ook vast in je dashboard" was een
+    opdracht voor iets dat al gebeurd was zodra er een voorgedrukt besluit
+    stond. De statusregel ("Vastgelegd in het dashboard, laatst bijgewerkt op
+    ...") blijft staan en noemt het dashboard nog steeds als bewaarplek, dus
+    de pagina blijft eerlijk én zegt nog steeds waar het besluit bewaard
+    wordt."""
+    t = _plain(_pagina(decision=BESLUIT))
+    assert BESLUIT_VOETREGEL not in t
+    assert "Vastgelegd in het dashboard, laatst bijgewerkt op 3 april 2026." in t
+    assert "—" not in t and "–" not in t
+
+
+def test_onleesbare_tabel_laat_de_voetregel_staan():
+    """decision_unavailable betekent dat Loep niet weet of er al een besluit
+    is vastgelegd; "leg het vast" is dan nog een instructie die klopt."""
+    t = _plain(_pagina(decision=None, decision_unavailable=True))
+    assert BESLUIT_VOETREGEL in t
 
 
 @pytest.mark.parametrize("scan_type", ["exit", "retention", "onboarding"])
