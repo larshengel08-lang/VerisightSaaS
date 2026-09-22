@@ -221,8 +221,14 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .anders-kop { font-size: 10px; color: #374151; margin: 8px 0 0; line-height: 1.5;
   overflow-wrap: break-word; word-wrap: break-word; }
 .anders-note { font-size: 10px; color: #4A6070; margin: 2px 0 0; line-height: 1.5; }
+/* margin-bottom en line-height iets krapper dan de andere quote-blokken op deze
+   pagina (fix scenario 14): dit is de enige lijst die tot MAX_QUOTES items kan
+   tellen binnen een kaart die al twee andere blokken (verdeling + tellingen)
+   draagt, en bij veel "Anders"-antwoorden werd zij zelf de reden dat de
+   eerstvolgende (atomaire) gespreksagenda-sectie niet meer op dezelfde pagina
+   paste en alleen op een volgende vel terechtkwam. Blijft ruim leesbaar. */
 .anders-list { font-size: 10px; color: #374151; margin: 4px 0 0; padding-left: 16px; }
-.anders-list li { margin-bottom: 3px; line-height: 1.5;
+.anders-list li { margin-bottom: 1px; line-height: 1.35;
   overflow-wrap: break-word; word-wrap: break-word; }
 .anders-anon { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.1em;
   text-transform: uppercase; color: #94A3B8; margin: 5px 0 0; }
@@ -301,9 +307,27 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .r-gate { font-size: 10px; color: #4A6070; margin-top: 6px; font-style: italic; }
 
 /* ── Richtingblok "Wat er moet gebeuren" ── */
-.dir-block { margin-top: 18px; break-inside: avoid; }
+/* .dir-block zelf is NIET meer break-inside: avoid (fix scenario 14, plan 3b
+   regressie): de eyebrow/intro/totaalregel zijn gewone tekst en mogen normaal
+   meebreken met de pagina, zoals elke andere alinea in het rapport. Alleen de
+   kaartentabel (.dir-grid hieronder) mag niet middenin splitsen. Vóór deze
+   wijziging maakte break-inside: avoid op de hele .dir-block het tekstblok
+   vóór de tabel net zo onbreekbaar als de tabel zelf, waardoor dat hele blok
+   (tekst + tabel) als één stuk een nieuwe pagina moest openen zodra het niet
+   meer in de resterende ruimte paste -- en daarmee te weinig ruimte overliet
+   voor de agenda-slot erna, die dan alleen en te leeg op de pagina daarna
+   belandde (scenario "35% kiest 'Anders'"). Zonder de wrapper-brede regel kan
+   de tekst vóór de tabel meestromen met wat er nog past, zodat de tabel (en
+   dus ook wat erna komt) eerder ruimte vindt. */
+.dir-block { margin-top: 18px; }
+/* Raster zonder richtingblok (plan 3b, regressiefix): de regels onder de tabel
+   en het agendaslot breken niet los van de laatste rasterrij. Past het slot
+   niet meer, dan reizen de laatste rijen mee in plaats van dat het slot alleen
+   op een vel belandt. Zie _prioriteringsraster. */
+.raster-mee .r-legend, .raster-mee .r-gate, .raster-mee .r-uitleg,
+.raster-mee .mq-brug-sec, .raster-mee .agenda-slot { break-before: avoid; }
 .dir-intro { font-size: 10px; color: #374151; line-height: 1.5; margin: 4px 0 10px; max-width: 70ch; }
-.dir-grid { width: 100%; border-collapse: separate; border-spacing: 12px 0; }
+.dir-grid { width: 100%; border-collapse: separate; border-spacing: 12px 0; break-inside: avoid; }
 .dir-card { width: 50%; vertical-align: top; background: #FFFFFF; border-left: 3px solid rgba(13,27,42,0.12); padding: 12px 14px; }
 .dir-card.dir-clear { border-left-color: #E8A020; }
 /* De too_few-kaart heeft geen bronregel, tabel of caveat en is dus veel korter dan
@@ -328,6 +352,31 @@ p  { margin-bottom: 6px; font-size: 11px; }
    maat staat hier en niet inline, zodat er één plek is (codereview taak 9). */
 .dir-chain.dir-totals { font-family: inherit; font-size: 10px; line-height: 1.5;
   color: #374151; max-width: 70ch; margin: 0 0 10px; }
+
+/* ── Werkvragen "Zo maak je er een besluit van" (plan 3b) ── */
+.wq-block { margin-top: 16px; break-inside: avoid; }
+.wq-card { width: 50%; vertical-align: top; background: #FFFFFF; border-left: 3px solid #E8A020; padding: 10px 14px; }
+.wq-tbl { width: 100%; border-collapse: collapse; }
+.wq-tbl td { font-size: 10px; line-height: 1.5; color: #374151; padding: 5px 0; vertical-align: top; border-bottom: 1px solid rgba(13,27,42,0.12); }
+.wq-tbl tr:last-child td { border-bottom: none; }
+.wq-stap { width: 22%; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: #B07A10; padding-right: 8px; }
+.wq-hint { font-size: 8.5px; font-style: italic; color: #4A6070; margin-top: 4px; }
+
+/* ── Besluitpagina "Besluit van het MT" (plan 3b): lijnen voor de pen ── */
+/* break-after: de appendix stroomt (.sec zonder .pb) en zou anders onder het
+   invulvel beginnen; dat vel moet los te printen zijn. */
+.besluit { break-inside: avoid; break-after: page; }
+.bl-rij, .bl-drie { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 14px; }
+.bl-cel { width: 50%; vertical-align: top; padding-right: 18px; }
+.bl-drie td { width: 33.3%; vertical-align: top; padding-right: 14px; }
+.bl-drie .bl-lbl { margin-top: 4px; font-size: 7.5px; }
+.bl-blok { margin-top: 16px; break-inside: avoid; }
+.bl-lbl { font-family: 'JetBrains Mono', monospace; font-size: 8.5px; letter-spacing: 0.12em; text-transform: uppercase; color: #B07A10; margin: 10px 0 2px; }
+.bl-vast { font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 13px; color: #0D1B2A; padding: 4px 0 2px; }
+.bl-line { border-bottom: 1px solid #94A3B8; height: 24px; }
+.bl-hint { font-size: 8.5px; font-style: italic; color: #4A6070; margin-top: 4px; }
+.bl-tekst { font-size: 11px; line-height: 1.55; color: #0D1B2A; padding: 4px 0 6px; border-bottom: 1px solid rgba(13,27,42,0.12); }
+.bl-status { font-size: 9.5px; color: #4A6070; margin: 8px 0 0; font-style: italic; }
 .mq-direction { font-size: 11px; font-weight: 600; color: #0D1B2A; margin: 8px 0 0; }
 .mq-brug { font-size: 10.5px; color: #374151; margin: 8px 0 0; }
 /* Dezelfde brugzin op een eigen sectie (gespreksagenda) staat na een tabel en
@@ -386,6 +435,15 @@ p  { margin-bottom: 6px; font-size: 11px; }
    de negatieve marge brengt de samengevallen witruimte naar 24px, dezelfde
    ruimte als tussen twee onderwerpen. */
 .sec.flow.verd.verd-eerste { margin-top: -20px; }
+/* Dun verdiepingsblok en zijn voorganger (plan 3b): mogen over een paginagrens
+   lopen, zodat het dunne blok niet alleen op een vel belandt. De binnendelen
+   blijven heel: een kop staat nooit los onderaan, een kaart en een tabelrij
+   breken niet. */
+.sec.flow.verd.verd-los { break-inside: auto; }
+.verd-los .slabel, .verd-los .ch-head, .verd-los h2, .verd-los .verd-h3 { break-after: avoid; }
+.verd-los .card, .verd-los .item-tbl tr { break-inside: avoid; }
+.verd-los .card { break-before: avoid; }
+/* einde verd-los */
 .verd-h3 { margin-top: 16px; }
 .verd-compact .slabel { margin-bottom: 10px; }
 .verd-compact .verd-h3 { margin-top: 14px; }
@@ -565,7 +623,7 @@ h3 { font-family: 'Inter Tight', sans-serif; font-weight: 700;
     <table class="why-grid"><tr><td class="why-cell"><div class="why-l">Gemiddelde score</div><div class="why-v" style="color:#C17C00;">5.4/10</div><div class="why-b">van de 3 stellingen over dit onderwerp (aandachtspunt)</div></td><td class="why-cell"><div class="why-l">Laagst scorende stelling</div><div class="why-v" style="color:#C0392B;">4.6/10</div><div class="why-b">De hoeveelheid informatie en werk in mijn eerste periode is haalbaar.</div></td></tr></table>
     <div class="mq-line"><span class="mq-label">Gespreksopener</span><p>Is de informatiedichtheid of het werktempo hoog voor een eerste werkperiode?</p><span class="mq-source">Gebaseerd op het laagst scorende onderwerp.</span></div>
   </div><!-- /why -->
-  <div class="leidraad"><div class="leidraad-title">Zo leid je dit gesprek in 45 minuten</div><table><tr><td class="lt">0-5 min</td><td class="lw">Hoe stevig is dit</td><td>De respons en de meetgegevens op deze pagina; de drempels staan op pagina <a class="pref" href="#sec-drempels"></a>.</td></tr><tr><td class="lt">5-12 min</td><td class="lw">Het beeld in één plaatje</td><td>Het cijferoverzicht (pagina <a class="pref" href="#sec-overzicht"></a>) en de checkpointscore (pagina <a class="pref" href="#sec-context"></a>). Vraag: verrast dit iemand?</td></tr><tr><td class="lt">12-25 min</td><td class="lw">Waar het wringt, en waarom</td><td>Het startpunt: de score en de laagste stelling (pagina <a class="pref" href="#sec-verdieping"></a>). Open met de gespreksopener hierboven.</td></tr><tr><td class="lt">25-33 min</td><td class="lw">Per afdeling</td><td>Waar het per afdeling begint, en hoe dat zich verhoudt tot het startpunt (pagina <a class="pref" href="#sec-afdelingen"></a>).</td></tr><tr><td class="lt">33-45 min</td><td class="lw">Wat gaan we doen</td><td>Het eerste gesprekspunt en het besluit: &eacute;&eacute;n prioriteit, &eacute;&eacute;n eigenaar, een vervolgmoment (pagina <a class="pref" href="#sec-agenda"></a>).</td></tr></table><p class="trustline" style="margin-top:6px;">Dit rapport is een groepsbeeld van de organisatie, geen beoordeling van personen of afdelingen.</p></div>
+  <div class="leidraad"><div class="leidraad-title">Zo leid je dit gesprek in 45 minuten</div><table><tr><td class="lt">0-5 min</td><td class="lw">Hoe stevig is dit</td><td>De respons en de meetgegevens op deze pagina; de drempels staan op pagina <a class="pref" href="#sec-drempels"></a>.</td></tr><tr><td class="lt">5-12 min</td><td class="lw">Het beeld in één plaatje</td><td>Het cijferoverzicht (pagina <a class="pref" href="#sec-overzicht"></a>) en de checkpointscore (pagina <a class="pref" href="#sec-context"></a>). Vraag: verrast dit iemand?</td></tr><tr><td class="lt">12-25 min</td><td class="lw">Waar het wringt, en waarom</td><td>Het startpunt: de score en de laagste stelling (pagina <a class="pref" href="#sec-verdieping"></a>). Open met de gespreksopener hierboven.</td></tr><tr><td class="lt">25-33 min</td><td class="lw">Per afdeling</td><td>Waar het per afdeling begint, en hoe dat zich verhoudt tot het startpunt (pagina <a class="pref" href="#sec-afdelingen"></a>).</td></tr><tr><td class="lt">33-45 min</td><td class="lw">Wat gaan we doen</td><td>Het eerste gesprekspunt (pagina <a class="pref" href="#sec-agenda"></a>). Het besluit leg je vast op pagina <a class="pref" href="#sec-besluit"></a>.</td></tr></table><p class="trustline" style="margin-top:6px;">Dit rapport is een groepsbeeld van de organisatie, geen beoordeling van personen of afdelingen.</p></div>
   <div class="meet-blok"><span class="slabel">Meetgegevens</span>
   <table class="sg no-break"><tr><td><div class="sc-l">Uitgenodigd</div><div class="sc-v">42</div></td><td><div class="sc-l">Ingevuld</div><div class="sc-v">28</div></td><td><div class="sc-l">Respons</div><div class="sc-v">67%</div></td><td><div class="sc-l">Meetperiode</div><div class="sc-v" style="font-size:12px;">9 maart 2026 tot 3 april 2026</div><div class="sc-b">Onboarding Checkpoint Q1 2026 &middot; Nieuwe medewerkers in de eerste werkperiode</div></td></tr></table>
   <p class="trustline" style="margin-top:4px;">Niet in dit rapport: werkgeversaanbeveling (eNPS).</p></div>
@@ -621,6 +679,7 @@ h3 { font-family: 'Inter Tight', sans-serif; font-weight: 700;
     
     <div class="navy-anchor"><div class="navy-anchor-eyebrow">Waar het per afdeling begint</div><p>De twee laagste afdelingen liggen dicht bij elkaar (Sales 6.0/10 en Operations 6.2/10). Loep wijst pas een afdeling aan bij een verschil van minstens 0,3 punt met de volgende. Er is hier dus geen eerste afdeling aan te wijzen. Kijk voor de eerste prioriteit naar het organisatiebeeld.</p></div>
     
+    
   </div>
 </div><div class="pb sec">
   <div class="ch-head" id="sec-toelichtingen"><span class="ch-idx">07</span><h2 class="ch-title">Open toelichtingen</h2></div><hr class="ch-rule"><span class="ch-kicker">8 medewerkersstemmen</span>
@@ -628,18 +687,12 @@ h3 { font-family: 'Inter Tight', sans-serif; font-weight: 700;
   <p class="quote-anon" style="margin-bottom:10px;">Automatisch geanonimiseerd: herkende namen, e-mailadressen, telefoonnummers en postcodes verwijderd.</p><div class="theme-card"><div class="quote-txt">Duidelijkere doelen voor de eerste 90 dagen zouden mij helpen om sneller bij te dragen.</div></div><div class="theme-card"><div class="quote-txt">Ik weet nog niet precies wat er van mij verwacht wordt in de eerste maanden.</div></div><div class="theme-card"><div class="quote-txt">Er is veel informatie tegelijk. Prioriteiten zijn niet altijd even helder.</div></div><div class="theme-card"><div class="quote-txt">De inwerkperiode gaat goed, maar wat meer structuur in de eerste weken zou helpen.</div></div><div class="theme-card"><div class="quote-txt">Ik voel me welkom in het team, maar de cultuur is nog lastig te lezen.</div></div><div class="theme-card"><div class="quote-txt">De werkdruk viel me hoger uit dan verwacht in deze eerste fase.</div></div><div class="theme-card"><div class="quote-txt">Mijn manager is bereikbaar maar geeft weinig concrete terugkoppeling over mijn aanpak.</div></div><div class="theme-card"><div class="quote-txt">Goed gevoel over de organisatie, maar het duurt even voor je weet hoe dingen echt werken.</div></div>
 </div><div class="pb sec">
   <div class="ch-head" id="sec-agenda"><span class="ch-idx">08</span><h2 class="ch-title">Gespreksagenda</h2></div><hr class="ch-rule"><span class="ch-kicker">Eerste managementspoor</span>
-  <p class="sec-intro">Alles wat je tot hier las is de onderbouwing; hier begint het gesprek. Deze agenda vat samen wat als eerste op tafel hoort, waarom juist dat, en wanneer je erop terugkomt. Het is bewust geen kant-en-klaar actieplan: de keuzes (wat pakken we op, wie is eigenaar) maken jullie in de bespreking zelf, met dit rapport als gedeelde basis.</p>
+  <p class="sec-intro">Alles wat je tot hier las is de onderbouwing; hier begint het gesprek. Deze agenda vat samen wat als eerste op tafel hoort en waarom juist dat. Het is bewust geen kant-en-klaar actieplan: de keuzes (wat pakken we op, wie is eigenaar, wanneer kijken we opnieuw) maken jullie zelf, en je legt ze vast op de besluitpagina.</p>
   
   <div class="agenda-dark">
   <table class="steps"><tr>
     <td class="step"><div class="step-no">Primair onderwerp</div><div class="step-body">Bespreek eerst ‘De hoeveelheid informatie en werk in mijn eerste periode is haalbaar.’ binnen informatiedichtheid en werktempo (4.6/10). Dat is de laagst scorende stelling in het cijferbeeld.</div></td>
     <td class="step"><div class="step-no">Tweede aandachtspunt</div><div class="step-body">Rolhelderheid en verwachtingen eerste 90 dagen (5.5/10)</div><span class="agenda-why">Tweede laagste score in het overzichtsprofiel.</span></td>
-    <td class="step">
-      <div class="step-no">Uit de bespreking</div>
-      <div class="step-sublbl">Prioriteit</div><div class="step-fill"></div><div class="step-fill-hint">In te vullen tijdens de bespreking</div>
-      <div class="step-sublbl">Eigenaar</div><div class="step-fill"></div><div class="step-fill-hint">In te vullen tijdens de bespreking</div>
-      <div class="step-sublbl">Vervolgmoment</div><div class="step-fill"></div><div class="step-fill-hint">Plan een vervolgmoment rond het volgende checkpoint: bespreek dan wat er is opgepakt en of dit onderwerp nog voorrang verdient.</div>
-    </td>
   </tr></table>
   <div class="agenda-opener">
     <div style="font-family:'JetBrains Mono', monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#E8A020;margin-bottom:7px;">Gespreksopener</div>
@@ -647,14 +700,44 @@ h3 { font-family: 'Inter Tight', sans-serif; font-weight: 700;
     <p class="agenda-why" style="margin-top:6px;">Dezelfde opener staat op pagina <a class="pref" href="#p02"></a>.</p>
   </div>
   </div>
-  <p class="trustline">Nog niet besluiten of een verdieping of kortere vervolgmeting nodig is: dat volgt uit het gesprek.</p>
+  <p class="trustline">Leg het besluit vast op pagina <a class="pref" href="#sec-besluit"></a>: wat precies, wie, en op welke datum jullie opnieuw kijken.</p>
+</div><div class="pb sec besluit">
+  <div class="ch-head" id="sec-besluit"><span class="ch-idx">09</span><h2 class="ch-title">Besluit van het MT</h2></div><hr class="ch-rule"><span class="ch-kicker">In te vullen door het MT</span>
+  <p class="sec-intro">Loep Start meet nog geen richtingvraag; het besluit volgt uit jullie gesprek over het startpunt (pagina <a class="pref" href="#sec-agenda"></a>). Eén besluit dat iemand draagt is meer waard dan vijf voornemens.</p>
+  
+  
+  <table class="bl-rij"><tr>
+    <td class="bl-cel"><div class="bl-lbl">Meting</div><div class="bl-vast">Onboarding Checkpoint Q1 2026</div></td>
+    <td class="bl-cel"><div class="bl-lbl">Datum van dit gesprek</div><div class="bl-line"></div></td>
+  </tr></table>
+  <div class="bl-blok">
+    <div class="bl-lbl">Startpunt</div><div class="bl-vast">Informatiedichtheid en werktempo</div>
+    <div class="bl-lbl">Wat precies</div><div class="bl-line"></div><div class="bl-line"></div><div class="bl-line"></div><div class="bl-hint">Een onderwerp is nog geen afspraak: schrijf op wat er gebeurt.</div>
+  </div>
+  <table class="bl-rij"><tr>
+    <td class="bl-cel"><div class="bl-lbl">Eigenaar</div><div class="bl-line"></div><div class="bl-hint">Eén naam.</div></td>
+    <td class="bl-cel"><div class="bl-lbl">Datum vervolgmoment</div><div class="bl-line"></div><div class="bl-hint">Kies een datum, geen termijn. Richtlijn: rond het volgende checkpoint.</div></td>
+  </tr></table>
+  <div class="bl-blok">
+    <div class="bl-lbl">Tweede punt</div><div class="bl-vast">Rolhelderheid en verwachtingen eerste 90 dagen</div>
+    <div class="bl-lbl">Wat precies</div><div class="bl-line"></div><div class="bl-line"></div><div class="bl-line"></div>
+  </div>
+  <div class="bl-blok">
+    <div class="bl-lbl">Terugkoppeling aan medewerkers</div>
+    <table class="bl-drie"><tr><td><div class="bl-lbl">Wie</div><div class="bl-line"></div></td><td><div class="bl-lbl">Wanneer</div><div class="bl-line"></div></td><td><div class="bl-lbl">Wat</div><div class="bl-line"></div></td></tr></table>
+    <div class="bl-hint">Je mensen vulden in; ze horen wat het MT ermee doet.</div>
+  </div>
+  <div class="bl-blok">
+    <div class="bl-lbl">Waaraan zien we dat het werkt</div><div class="bl-line"></div>
+  </div>
+  <p class="trustline">Leg dit besluit ook vast in je dashboard. Loep drukt het dan voor in dit rapport en bewaart het bij deze meting.</p>
 </div><div class="sec">
-  <div class="no-break"><div class="ch-head"><span class="ch-idx">09</span><h2 class="ch-title">Appendix</h2></div><hr class="ch-rule"><span class="ch-kicker">Volledige vraagresultaten</span><p class="sec-intro">Hier staat elke stelling met haar groepsgemiddelde: de volledige onderbouwing van de scores per onderwerp eerder in dit rapport. Gebruik deze pagina's om te controleren waar een score vandaan komt of om een specifieke stelling terug te vinden die in de bespreking ter sprake komt.</p><p style="font-size:9px;color:#94A3B8;margin-bottom:14px;">n=28. &#x21a9;&nbsp;= omgekeerd gecodeerde stelling.</p><div class="no-break" style="margin-bottom:14px;"><div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">Begeleiding en bereikbaarheid&nbsp;&middot;&nbsp;5.8/10</div><table class="app-tbl"><tr><th class="aq">Stelling</th><th class="as">Gem.</th><th class="ab">Beeld</th></tr><tr><td class="aq">Ik krijg in mijn eerste periode hier genoeg richting en steun van mijn leidinggevende om mijn rol goed te starten.</td><td class="as" style="color:#C17C00;">5.5</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="38" height="5" rx="2" fill="#C17C00"/></svg></td></tr><tr><td class="aq">Mijn leidinggevende maakt in deze eerste periode duidelijk wat nu het belangrijkst is in mijn rol.</td><td class="as" style="color:#C17C00;">5.7</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="40" height="5" rx="2" fill="#C17C00"/></svg></td></tr><tr><td class="aq">Ik kan in deze eerste periode makkelijk hulp vragen of escaleren als iets onduidelijk is.</td><td class="as" style="color:#C17C00;">6.1</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="42" height="5" rx="2" fill="#C17C00"/></svg></td></tr></table></div></div>
+  <div class="no-break"><div class="ch-head"><span class="ch-idx">10</span><h2 class="ch-title">Appendix</h2></div><hr class="ch-rule"><span class="ch-kicker">Volledige vraagresultaten</span><p class="sec-intro">Hier staat elke stelling met haar groepsgemiddelde: de volledige onderbouwing van de scores per onderwerp eerder in dit rapport. Gebruik deze pagina's om te controleren waar een score vandaan komt of om een specifieke stelling terug te vinden die in de bespreking ter sprake komt.</p><p style="font-size:9px;color:#94A3B8;margin-bottom:14px;">n=28. &#x21a9;&nbsp;= omgekeerd gecodeerde stelling.</p><div class="no-break" style="margin-bottom:14px;"><div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">Begeleiding en bereikbaarheid&nbsp;&middot;&nbsp;5.8/10</div><table class="app-tbl"><tr><th class="aq">Stelling</th><th class="as">Gem.</th><th class="ab">Beeld</th></tr><tr><td class="aq">Ik krijg in mijn eerste periode hier genoeg richting en steun van mijn leidinggevende om mijn rol goed te starten.</td><td class="as" style="color:#C17C00;">5.5</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="38" height="5" rx="2" fill="#C17C00"/></svg></td></tr><tr><td class="aq">Mijn leidinggevende maakt in deze eerste periode duidelijk wat nu het belangrijkst is in mijn rol.</td><td class="as" style="color:#C17C00;">5.7</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="40" height="5" rx="2" fill="#C17C00"/></svg></td></tr><tr><td class="aq">Ik kan in deze eerste periode makkelijk hulp vragen of escaleren als iets onduidelijk is.</td><td class="as" style="color:#C17C00;">6.1</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="42" height="5" rx="2" fill="#C17C00"/></svg></td></tr></table></div></div>
   <div class="no-break" style="margin-bottom:14px;"><div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">Sociale landing en cultuurbegrip&nbsp;&middot;&nbsp;7.0/10</div><table class="app-tbl"><tr><th class="aq">Stelling</th><th class="as">Gem.</th><th class="ab">Beeld</th></tr><tr><td class="aq">Ik voel me in mijn eerste periode hier vrij genoeg om vragen te stellen of onzekerheid te benoemen.</td><td class="as" style="color:#3C8D8A;">7.3</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="51" height="5" rx="2" fill="#3C8D8A"/></svg></td></tr><tr><td class="aq">Ik ervaar mijn team en werkcontext als veilig genoeg om nieuwe dingen te leren en fouten bespreekbaar te maken.</td><td class="as" style="color:#3C8D8A;">7.2</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="50" height="5" rx="2" fill="#3C8D8A"/></svg></td></tr><tr><td class="aq">De manier waarop hier wordt samengewerkt helpt mij om goed in mijn rol te landen.</td><td class="as" style="color:#3C8D8A;">6.6</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="46" height="5" rx="2" fill="#3C8D8A"/></svg></td></tr></table></div><div class="no-break" style="margin-bottom:14px;"><div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">Ontwikkelruimte en eerste succeservaring&nbsp;&middot;&nbsp;6.4/10</div><table class="app-tbl"><tr><th class="aq">Stelling</th><th class="as">Gem.</th><th class="ab">Beeld</th></tr><tr><td class="aq">Ik zie in deze eerste periode genoeg ruimte om mijn rol snel goed te leren kennen.</td><td class="as" style="color:#C17C00;">6.1</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="42" height="5" rx="2" fill="#C17C00"/></svg></td></tr><tr><td class="aq">Ik krijg in deze eerste periode genoeg begeleiding of leermomenten om goed in te stromen.</td><td class="as" style="color:#C17C00;">6.4</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="45" height="5" rx="2" fill="#C17C00"/></svg></td></tr><tr><td class="aq">Ik begrijp in deze eerste periode hoe ik hier succesvol kan landen en doorgroeien.</td><td class="as" style="color:#3C8D8A;">6.6</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="46" height="5" rx="2" fill="#3C8D8A"/></svg></td></tr></table></div><div class="no-break" style="margin-bottom:14px;"><div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">Praktische afspraken en startcondities&nbsp;&middot;&nbsp;7.3/10</div><table class="app-tbl"><tr><th class="aq">Stelling</th><th class="as">Gem.</th><th class="ab">Beeld</th></tr><tr><td class="aq">Mijn arbeidsvoorwaarden en praktische afspraken voelen in deze eerste periode passend en duidelijk.</td><td class="as" style="color:#3C8D8A;">7.0</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="49" height="5" rx="2" fill="#3C8D8A"/></svg></td></tr><tr><td class="aq">Ik begrijp in deze eerste periode voldoende hoe afspraken, voorwaarden en ondersteuning hier werken.</td><td class="as" style="color:#3C8D8A;">7.4</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="52" height="5" rx="2" fill="#3C8D8A"/></svg></td></tr><tr><td class="aq">De praktische voorwaarden helpen mij om in deze eerste periode goed van start te gaan.</td><td class="as" style="color:#3C8D8A;">7.5</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="53" height="5" rx="2" fill="#3C8D8A"/></svg></td></tr></table></div><div class="no-break" style="margin-bottom:14px;"><div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">Informatiedichtheid en werktempo&nbsp;&middot;&nbsp;5.4/10</div><table class="app-tbl"><tr><th class="aq">Stelling</th><th class="as">Gem.</th><th class="ab">Beeld</th></tr><tr><td class="aq">De hoeveelheid informatie en werk in mijn eerste periode is haalbaar.</td><td class="as" style="color:#C0392B;">4.6</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="32" height="5" rx="2" fill="#C0392B"/></svg></td></tr><tr><td class="aq">Mijn eerste weken voelen qua tempo en verwachtingen beheersbaar.</td><td class="as" style="color:#C17C00;">5.9</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="41" height="5" rx="2" fill="#C17C00"/></svg></td></tr><tr><td class="aq">Ik houd in deze eerste periode genoeg ruimte over om te leren zonder direct overbelast te raken.</td><td class="as" style="color:#C17C00;">5.6</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="39" height="5" rx="2" fill="#C17C00"/></svg></td></tr></table></div><div class="no-break" style="margin-bottom:14px;"><div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">Rolhelderheid en verwachtingen eerste 90 dagen&nbsp;&middot;&nbsp;5.5/10</div><table class="app-tbl"><tr><th class="aq">Stelling</th><th class="as">Gem.</th><th class="ab">Beeld</th></tr><tr><td class="aq">Ik weet in deze eerste periode wat mijn belangrijkste prioriteiten zijn.</td><td class="as" style="color:#C17C00;">5.2</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="36" height="5" rx="2" fill="#C17C00"/></svg></td></tr><tr><td class="aq">Ik begrijp in deze eerste periode wat er van mij wordt verwacht en waarop niet.</td><td class="as" style="color:#C17C00;">5.8</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="41" height="5" rx="2" fill="#C17C00"/></svg></td></tr><tr><td class="aq">Ik ervaar in deze eerste periode weinig tegenstrijdigheid in uitleg, opdrachten of verwachtingen.</td><td class="as" style="color:#C17C00;">5.4</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="38" height="5" rx="2" fill="#C17C00"/></svg></td></tr></table></div>
   <div class="no-break" style="margin-bottom:14px;"><div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">Werkbeleving: stellingen bij het checkpoint</div><table class="app-tbl"><tr><th class="aq">Stelling</th><th class="as">Gem.</th><th class="ab">Beeld</th></tr><tr><td class="aq">Ik voel me in deze eerste periode voldoende vrij om mijn werk op een werkbare manier op te pakken.</td><td class="as" style="color:#3C8D8A;">6.5</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="46" height="5" rx="2" fill="#3C8D8A"/></svg></td></tr><tr><td class="aq">Ik voel me in deze eerste periode voldoende toegerust om mijn rol goed te starten.</td><td class="as" style="color:#3C8D8A;">7.3</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="51" height="5" rx="2" fill="#3C8D8A"/></svg></td></tr><tr><td class="aq">Ik voel me in deze eerste periode voldoende verbonden met de mensen met wie ik samenwerk.</td><td class="as" style="color:#3C8D8A;">7.2</td><td class="ab"><svg width="70" height="5" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="70" height="5" rx="2" fill="#E8E0D0"/><rect x="0" y="0" width="50" height="5" rx="2" fill="#3C8D8A"/></svg></td></tr></table></div>
   <p class="trustline">Werkgeversaanbeveling (eNPS): niet gerapporteerd in dit rapport.</p>
 </div><div class="pb sec">
-  <div class="ch-head" id="sec-methodiek"><span class="ch-idx">10</span><h2 class="ch-title">Methodiek, privacy &amp; interpretatiegrenzen</h2></div><hr class="ch-rule">
+  <div class="ch-head" id="sec-methodiek"><span class="ch-idx">11</span><h2 class="ch-title">Methodiek, privacy &amp; interpretatiegrenzen</h2></div><hr class="ch-rule">
   <div class="card" style="margin-bottom:14px;">
     <p style="font-size:11px;color:#374151;">Dit rapport bundelt patronen uit de checkpoints van nieuwe medewerkers tot een groepsbeeld van de eerste werkperiode. Geen prestatiebeoordeling, geen individuele beoordeling en geen voorspelling van uitval.</p>
   </div>
