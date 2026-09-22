@@ -2529,7 +2529,17 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
     # hierboven zojuist ontkende. Zie AGENDA_OPENER_GEEN_PROFIEL.
     opener_vraag = mgmt_q if ranked else AGENDA_OPENER_GEEN_PROFIEL
 
-    return f"""<div class="pb sec">
+    # Zonder richtingblok (meting van vóór de richtingvraag) staat het
+    # agendaslot direct onder het raster. Past het slot (werkvragen + navy
+    # vlak) daar niet meer, dan verhuisde het in zijn geheel en stond het alleen
+    # op een vel van 35% (regressie plan 3b, gemeten in het productie-image).
+    # raster-mee laat dan de laatste rasterrijen met hun uitlegregels meereizen:
+    # de tabel breekt tussen twee rijen (tbody.r-grp blijft heel, de kop herhaalt
+    # via thead) en de regels onder de tabel blijven bij de rijen die ze
+    # toelichten. Met een richtingblok verandert er niets.
+    sec_cls = "pb sec" + (" raster-mee" if ranked and werkvragen_html and not dir_block else "")
+
+    return f"""<div class="{sec_cls}">
   {opener_html}
   <p class="sec-intro">{intro}</p>
   {tabel}
@@ -5714,7 +5724,16 @@ def _verdieping_is_dun(deep_agg: dict, factor_key: str) -> bool:
 def _verd_los(priority_fkeys: list[str], deep_agg: dict) -> set[str]:
     """De onderwerpen waarvan het verdiepingsblok over een paginagrens mag
     lopen: elk dun blok en het blok er direct voor. Leeg als geen blok dun is;
-    dan verandert er niets aan de HTML."""
+    dan verandert er niets aan de HTML.
+
+    Ook leeg als ELK blok dun is (een meting zonder verdiepingsdata, zoals een
+    meting van vóór de verdiepingsvragen): dan is geen blok korter dan de
+    andere, en verhuist elk blok beter heel. Met verd-los op alle drie brak het
+    tweede blok in zo'n rapport tussen de spreidingsgrafiek en de stellingtabel,
+    met de tabel alleen op een vel van 28% (regressie plan 3b, gemeten in het
+    productie-image op de fixture zonder verdieping en richting)."""
+    if all(_verdieping_is_dun(deep_agg, fk) for fk in priority_fkeys):
+        return set()
     los: set[str] = set()
     for i, fk in enumerate(priority_fkeys):
         if _verdieping_is_dun(deep_agg, fk):

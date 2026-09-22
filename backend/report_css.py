@@ -346,6 +346,12 @@ p  { margin-bottom: 6px; font-size: 11px; }
    de tekst vóór de tabel meestromen met wat er nog past, zodat de tabel (en
    dus ook wat erna komt) eerder ruimte vindt. */
 .dir-block { margin-top: 18px; }
+/* Raster zonder richtingblok (plan 3b, regressiefix): de regels onder de tabel
+   en het agendaslot breken niet los van de laatste rasterrij. Past het slot
+   niet meer, dan reizen de laatste rijen mee in plaats van dat het slot alleen
+   op een vel belandt. Zie _prioriteringsraster. */
+.raster-mee .r-legend, .raster-mee .r-gate, .raster-mee .r-uitleg,
+.raster-mee .mq-brug-sec, .raster-mee .agenda-slot { break-before: avoid; }
 .dir-intro { font-size: 10px; color: #374151; line-height: 1.5; margin: 4px 0 10px; max-width: 70ch; }
 .dir-grid { width: 100%; border-collapse: separate; border-spacing: 12px 0; break-inside: avoid; }
 .dir-card { width: 50%; vertical-align: top; background: #FFFFFF; border-left: 3px solid """ + HAIRLINE + r"""; padding: 12px 14px; }

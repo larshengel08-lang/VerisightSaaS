@@ -481,13 +481,34 @@ def test_verd_los_helper_kiest_dunne_blokken_en_hun_voorganger():
     assert _verd_los(["workload", "leadership"], deep) == {"workload", "leadership"}
 
 
-@pytest.mark.parametrize("scan_type", ["exit", "retention"])
-def test_dun_blok_en_zijn_voorganger_mogen_over_de_paginagrens(scan_type):
-    d = _fixture(scan_type, n=25, profile=True)
-    # De fixture heeft geen verdiepingsdata: drie verdiepingsblokken, alle drie dun.
-    body0 = _body(_RENDERERS_3B[scan_type](d))
-    assert len(_verd_klassen(body0)) == 3
-    assert all("verd-los" in k for k in _verd_klassen(body0))
+def test_dun_blok_en_zijn_voorganger_mogen_over_de_paginagrens():
+    """Eén dun blok na blokken met verdiepingsdata: dat blok en zijn voorganger
+    krijgen verd-los, het eerste blok niet. Volgorde in deze fixture (Loep
+    Behoud): werkdruk, groeiperspectief, rolhelderheid."""
+    d = _fixture("retention", n=25, profile=True)
+    d["deepening_agg"] = {
+        "workload": _deep_agg_3b(wl_recovery=6, wl_volume=3),
+        "growth": _deep_agg_3b(gr_visibility=6, gr_time=3),
+    }
+    klassen = _verd_klassen(_body(render_retention_report_html(d)))
+    assert len(klassen) == 3
+    assert ["verd-los" in k for k in klassen] == [False, True, True]
+
+
+def test_meting_zonder_verdiepingsdata_heeft_geen_verd_los():
+    """Regressie plan 3b: zonder enige verdiepingsdata (meting van vóór de
+    verdiepingsvragen) is geen blok korter dan de andere. Met verd-los op alle
+    drie brak het tweede blok in het productie-image tussen de spreidingsgrafiek
+    en de stellingtabel, met de tabel alleen op een vel van 28%."""
+    from backend.report_html import _verd_los
+    assert _verd_los(["workload", "growth", "role_clarity"], {}) == set()
+    niet_getriggerd = {fk: dict(_deep_agg_3b(), triggered=0)
+                       for fk in ("workload", "growth", "role_clarity")}
+    assert _verd_los(["workload", "growth", "role_clarity"], niet_getriggerd) == set()
+    for scan_type, render in _RENDERERS_3B.items():
+        body = _body(render(_fixture(scan_type, n=25, profile=True)))
+        assert len(_verd_klassen(body)) == 3
+        assert not any("verd-los" in k for k in _verd_klassen(body)), scan_type
 
 
 def test_rapport_zonder_dun_blok_verandert_niet():
