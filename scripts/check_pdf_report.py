@@ -25,11 +25,14 @@ uitkiezen zonder de andere te hoeven halen):
                     die op naar de doelpagina. Zo mag een verwijzing naar een
                     blok midden op een pagina wijzen (het werkvragenblok,
                     fixronde leesronde 24-9) en valt een verkeerd nummer toch
-                    op. Draagt pagina 2 de leidraad met nummers maar geen enkele
-                    interne link, dan is dat zelf een bevinding: dan valt er
-                    niets na te gaan. Grens van de meting: of het anker op het
-                    goede element staat, meet deze regel niet; dat bewaken de
-                    unittests op de HTML (_assert_verwijzingen_kloppen);
+                    op. Draagt pagina 2 de leidraad met nummers maar dekt het
+                    aantal interne links met een leesbaar paginanummer dat
+                    aantal niet (ook een deel ontbreekt telt mee, niet alleen
+                    "geen enkele"), dan is dat zelf een bevinding: dan valt er
+                    voor de ontbrekende verwijzing(en) niets na te gaan. Grens
+                    van de meting: of het anker op het goede element staat,
+                    meet deze regel niet; dat bewaken de unittests op de HTML
+                    (_assert_verwijzingen_kloppen);
   tabelkop          alleen met --thead: die tabelkop staat op meer dan één
                     pagina, dus hij herhaalt op de vervolgpagina (ronde 2
                     punt c, taak 11); hoofdletterongevoelig, want de kop
@@ -373,20 +376,23 @@ _LINK_KINDS = (pymupdf.LINK_GOTO, pymupdf.LINK_NAMED)
 
 
 def _interne_links(page: pymupdf.Page) -> list[dict]:
-    """De interne links van een pagina, één per rechthoek.
+    """De interne links van een pagina, één per (rechthoek, bestemming).
 
     WeasyPrint 70 schrijft elke <a class="pref"> als twee identieke
     link-annotaties (gemeten op de drie voorbeeldrapporten, 24-9). PyMuPDF lost
     een benoemde bestemming zelf op naar `page` (0-gebaseerd); een bestemming
-    die niet bestaat geeft -1.
+    die niet bestaat geeft -1. De ontdubbelsleutel neemt naast de rechthoek ook
+    de bestemming mee: anders verdwijnt een tweede, andersgerichte link op
+    dezelfde rechthoek stil onder de eerste.
     """
-    gezien: set[tuple[float, float, float, float]] = set()
+    gezien: set[tuple[float, float, float, float, object, object]] = set()
     uit: list[dict] = []
     for link in page.get_links():
         if link.get("kind") not in _LINK_KINDS:
             continue
         r = pymupdf.Rect(link["from"])
-        sleutel = (round(r.x0, 1), round(r.y0, 1), round(r.x1, 1), round(r.y1, 1))
+        sleutel = (round(r.x0, 1), round(r.y0, 1), round(r.x1, 1), round(r.y1, 1),
+                   link.get("page"), link.get("nameddest"))
         if sleutel in gezien:
             continue
         gezien.add(sleutel)
@@ -468,11 +474,22 @@ def _verwijzingen(doc: pymupdf.Document, p2: str) -> list[Bevinding]:
             f"pagina 2 draagt de leidraad maar {len(gevuld)} gevulde verwijzing(en) "
             f"({gevuld}); dat blok levert er minstens {LEIDRAAD_MIN_VERWIJZINGEN}"))
 
-    if LEIDRAAD_MARKER in p2 and gevuld and not _interne_links(doc[1]):
-        bevindingen.append(Bevinding(
-            REGEL_VERWIJZING,
-            "pagina 2 draagt de leidraad met paginanummers, maar geen enkele interne link; "
-            "de meting kan niet nagaan of die nummers kloppen"))
+    if LEIDRAAD_MARKER in p2 and gevuld:
+        # Niet alleen "geen enkele link": ook een deel van de verwijzingen
+        # zonder link mag niet als "gemeten en goed" doorgaan (anders geeft een
+        # ontbrekende link op één van de vijf tijdvakken stil een OK). Geteld
+        # wordt met hoeveel links op p.02 een paginanummer te lezen is, niet met
+        # welk nummer: dat laatste (klopt het?) meet _link_bevindingen hieronder
+        # al per link.
+        links_met_nummer = sum(
+            1 for link in _interne_links(doc[1])
+            if re.sub(r"\D", "", _tekst_in(doc[1], pymupdf.Rect(link["from"]))))
+        if len(gevuld) > links_met_nummer:
+            bevindingen.append(Bevinding(
+                REGEL_VERWIJZING,
+                f"pagina 2 toont {len(gevuld)} verwijzing(en) met een paginanummer, maar "
+                f"{links_met_nummer} interne link(s) met een paginanummer op die pagina; "
+                f"de meting kan niet nagaan of die nummers allemaal kloppen"))
 
     for ref in sorted(set(gevuld)):
         if not 1 <= ref <= n:

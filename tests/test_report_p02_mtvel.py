@@ -1126,7 +1126,14 @@ def test_check_ziet_een_verwijzing_buiten_het_document(tmp_path: Path):
     pad = _goed_rapport(tmp_path / "ref.pdf",
                         p2_extra=[(765.0, "zie pagina 99 voor de afdelingen")])
     bevindingen = cpr.check(str(pad), regels=(cpr.REGEL_VERWIJZING,))
+    # Een verwijzing buiten het document heeft ook geen link (kan niet, want
+    # er is geen pagina 99 om naartoe te wijzen), dus telt hij ook mee in de
+    # deelcontrole (coordinator-review, minor 1): 5 van de 6 gevulde
+    # verwijzingen hebben een link met een nummer.
     assert [b.melding for b in bevindingen] == [
+        "pagina 2 toont 6 verwijzing(en) met een paginanummer, maar 5 interne link(s) "
+        "met een paginanummer op die pagina; de meting kan niet nagaan of die nummers "
+        "allemaal kloppen",
         "verwijzing naar pagina 99 buiten het document (7 pagina's)"]
 
 
@@ -1214,8 +1221,9 @@ def test_check_eist_vijf_gevulde_verwijzingen_zodra_de_leidraad_er_staat(tmp_pat
     assert meldingen == [
         "pagina 2 draagt de leidraad maar 4 gevulde verwijzing(en) "
         "([3, 4, 5, 6]); dat blok levert er minstens 5",
-        "pagina 2 draagt de leidraad met paginanummers, maar geen enkele interne link; "
-        "de meting kan niet nagaan of die nummers kloppen"]
+        "pagina 2 toont 4 verwijzing(en) met een paginanummer, maar 0 interne link(s) "
+        "met een paginanummer op die pagina; de meting kan niet nagaan of die nummers "
+        "allemaal kloppen"]
 
 
 @requires_pymupdf
