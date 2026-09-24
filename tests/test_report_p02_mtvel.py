@@ -944,12 +944,37 @@ _A4 = (595.0, 842.0)
 
 
 def _bouw_pdf(pad: Path, paginas: list[list[tuple[float, str]]],
-              formaat: tuple[float, float] = _A4) -> Path:
+              formaat: tuple[float, float] = _A4,
+              linkbare_paginas: frozenset[int] = frozenset()) -> Path:
+    """`linkbare_paginas` is 0-gebaseerd: op zo'n pagina krijgt elke "pagina N"
+    in de tekst ook een echte link-annotatie naar pagina N-1, zoals WeasyPrint
+    dat rendert (elke verwijzing is een <a class="pref">). Nodig sinds Taak 1
+    de linkcontrole leest (tests/test_check_pdf_links.py): zonder dit ziet die
+    regel elke fixture aan voor een render zonder werkende links. Alleen
+    _goed_rapport gebruikt dit; de andere, kaal-tekstuele fixtures in dit
+    bestand testen bewust het geval zonder links (bijvoorbeeld een leeggelopen
+    of een weggevallen verwijzing) en blijven daarom ongemoeid."""
     doc = pymupdf.open()
+    n = len(paginas)
     for regels in paginas:
         page = doc.new_page(width=formaat[0], height=formaat[1])
         for y, tekst in regels:
             page.insert_text((60.0, y), tekst, fontsize=11)
+    # Tweede ronde, pas als elke pagina bestaat: insert_link weigert een
+    # bestemming die nog niet is aangemaakt ("bad page number(s)").
+    for i in linkbare_paginas:
+        page = doc[i]
+        for y, tekst in paginas[i]:
+            for m in re.finditer(r"pagina (\d+)", tekst):
+                doel = int(m.group(1)) - 1
+                if not 0 <= doel < n:
+                    continue  # buiten het document: geen link, net als een fout anker
+                prefix = tekst[:m.start(1)]
+                x0 = 60.0 + pymupdf.get_text_length(prefix, fontsize=11)
+                breedte = pymupdf.get_text_length(m.group(1), fontsize=11)
+                rect = pymupdf.Rect(x0 - 0.5, y - 12.0, x0 + breedte + 0.5, y + 6.0)
+                page.insert_link({"kind": pymupdf.LINK_GOTO, "from": rect, "page": doel,
+                                 "to": pymupdf.Point(45.0, 100.0)})
     doc.save(str(pad))
     doc.close()
     return pad
@@ -991,7 +1016,7 @@ def _goed_rapport(pad: Path, *, p2_extra: list[tuple[float, str]] | None = None,
         [(60.0, "04 Verdieping")] + _vulregels(90.0, 760.0, "p5"),
         [(60.0, "05 Werkbeleving")] + _vulregels(90.0, 760.0, "p6"),
         [(60.0, "06 Methodiek"), (90.0, "korte slotpagina")],               # laatste
-    ], formaat=formaat)
+    ], formaat=formaat, linkbare_paginas=frozenset({1}))
 
 
 @requires_pymupdf
@@ -1106,12 +1131,13 @@ def test_check_ziet_een_verwijzing_buiten_het_document(tmp_path: Path):
 
 
 @requires_pymupdf
-def test_check_ziet_een_verwijzing_naar_een_pagina_zonder_hoofdstukkop(tmp_path: Path):
+def test_tekstverwijzing_naar_een_pagina_zonder_hoofdstukkop_is_geen_bevinding_meer(tmp_path: Path):
+    """Fixronde leesronde 24-9: een verwijzing mag naar een blok midden op een
+    pagina wijzen (het werkvragenblok). Of het nummer klopt, meet de regel nu
+    aan de link-annotatie (tests/test_check_pdf_links.py), niet aan de kop."""
     pad = _goed_rapport(tmp_path / "ref2.pdf",
                         p2_extra=[(765.0, "zie pagina 2 voor de meetgegevens")])
-    bevindingen = cpr.check(str(pad), regels=(cpr.REGEL_VERWIJZING,))
-    assert len(bevindingen) == 1
-    assert bevindingen[0].melding.startswith("pagina 2 begint niet met een hoofdstukkop")
+    assert cpr.check(str(pad), regels=(cpr.REGEL_VERWIJZING,)) == []
 
 
 @requires_pymupdf
@@ -1187,7 +1213,9 @@ def test_check_eist_vijf_gevulde_verwijzingen_zodra_de_leidraad_er_staat(tmp_pat
     meldingen = [b.melding for b in cpr.check(str(pad), regels=(cpr.REGEL_VERWIJZING,))]
     assert meldingen == [
         "pagina 2 draagt de leidraad maar 4 gevulde verwijzing(en) "
-        "([3, 4, 5, 6]); dat blok levert er minstens 5"]
+        "([3, 4, 5, 6]); dat blok levert er minstens 5",
+        "pagina 2 draagt de leidraad met paginanummers, maar geen enkele interne link; "
+        "de meting kan niet nagaan of die nummers kloppen"]
 
 
 @requires_pymupdf
@@ -1259,10 +1287,16 @@ def test_check_meldt_een_pagina_die_geen_a4_is(tmp_path: Path):
 
 @requires_pymupdf
 def test_check_meet_alleen_de_gevraagde_regels(tmp_path: Path):
+    # Fixronde leesronde 24-9: of het anker op het juiste element (de kop van
+    # pagina 3) staat, meet REGEL_VERWIJZING niet meer (dat is nu een grens van
+    # de meting, bewaakt door de unittests op de HTML). Om toch drie regels
+    # tegelijk te laten omvallen, draagt de leidraad hier ook een verwijzing
+    # buiten het document.
     pad = _goed_rapport(tmp_path / "filter.pdf", p3_kop="Segmentstatus",
-                        p4_regels=[(60.0, "03 Overzichtsprofiel"), (90.0, "een regel")])
+                        p4_regels=[(60.0, "03 Overzichtsprofiel"), (90.0, "een regel")],
+                        p2_extra=[(765.0, "zie pagina 99 voor de afdelingen")])
     # Drie regels vallen hier om: pagina 3 heeft de verkeerde kop, pagina 4 is
-    # bijna leeg, en de leidraad verwijst naar die kop-loze pagina 3.
+    # bijna leeg, en de leidraad draagt een verwijzing buiten het document.
     assert {b.regel for b in cpr.check(str(pad), regels=cpr.ALLE_REGELS)} == {
         cpr.REGEL_P02, cpr.REGEL_VULLING, cpr.REGEL_VERWIJZING}
     assert {b.regel for b in cpr.check(str(pad), regels=(cpr.REGEL_VULLING,))} == {
@@ -1427,6 +1461,10 @@ def test_check_telt_verwijzingen_niet_unieke_paginanummers(tmp_path: Path):
     drempeltabel op de methodiekpagina, waar regel 1 al naar wijst). Vijf
     verwijzingen naar drie pagina's is dus genoeg, vier niet."""
     def _pdf(naam: str, regels: list[str]) -> Path:
+        # linkbare_paginas: deze verwijzingen horen bij echte hoofdstukken
+        # binnen het document, dus krijgen ze ook een echte link-annotatie
+        # (Taak 1); anders ziet de linkcontrole deze fixture aan voor een
+        # render zonder werkende links, wat hier niet is wat gemeten wordt.
         return _bouw_pdf(tmp_path / naam, [
             [(400.0, "cover")],
             [(60.0, "kernzin")] + _vulregels(90.0, 600.0, "p2")
@@ -1437,7 +1475,7 @@ def test_check_telt_verwijzingen_niet_unieke_paginanummers(tmp_path: Path):
             [(60.0, "03 Overzichtsprofiel")] + _vulregels(90.0, 760.0, "p4"),
             [(60.0, "04 Verdieping")] + _vulregels(90.0, 760.0, "p5"),
             [(60.0, "korte slotpagina")],
-        ])
+        ], linkbare_paginas=frozenset({1}))
 
     vijf_naar_drie = ["0-5 min: de drempels staan op pagina 5",
                       "5-12 min: het cijferoverzicht (pagina 4)",

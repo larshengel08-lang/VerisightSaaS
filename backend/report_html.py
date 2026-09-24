@@ -3324,6 +3324,11 @@ BESLUIT_TITEL = "Besluit van het MT"
 # op pagina twee". De vervolgmeting is plan 3c; tot dan is dat onwaar.
 BESLUIT_VOETREGEL = ("Leg dit besluit ook vast in je dashboard. Loep drukt het dan voor in dit "
                      "rapport en bewaart het bij deze meting.")
+# Het laatste vaste label van de besluitpagina. scripts/check_pdf_report.py
+# gebruikt het begin ervan als eindmarker: staat het label op de besluitpagina,
+# dan liep het invulvel niet over. De voetregel kan dat niet meer zijn, die
+# vervalt bij een voorgedrukt besluit (N5, plan 3b).
+BESLUIT_SLOTLABEL = "Waaraan zien we dat het werkt"
 BESLUIT_GEEN_STARTPUNT = "Dit rapport wijst nog geen startpunt aan; kies zelf het onderwerp."
 BESLUIT_DATUM_HINT = "Kies een datum, geen termijn."
 BESLUIT_ONLEESBAAR = ("Loep kon niet nagaan of er al een besluit is vastgelegd in het dashboard; "
@@ -3508,7 +3513,7 @@ def _besluit_page(*, opener_html: str, scan_type: str, campaign_name: str,
     <div class="bl-hint">Je mensen vulden in; ze horen wat het MT ermee doet.</div>
   </div>
   <div class="bl-blok">
-    {_bl_veld("Waaraan zien we dat het werkt", succes)}
+    {_bl_veld(BESLUIT_SLOTLABEL, succes)}
   </div>
   {voetregel}
 </div>"""
