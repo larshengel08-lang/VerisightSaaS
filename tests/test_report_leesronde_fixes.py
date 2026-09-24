@@ -616,3 +616,223 @@ def test_hoofdredentegel_kleine_letter_niet_kleiner_dan_de_subregel():
     sub = re.search(r"\.sc-b \{[^}]*font-size: ([\d.]+)px", css)
     assert lang and sub
     assert float(sub.group(1)) <= float(lang.group(1)) < 14
+
+
+# ── Taak 8: brugzin bij het tweede punt, afdelingsafspraak (R5) ─────────────
+
+from backend.report_html import (  # noqa: E402
+    BESLUIT_AFDELING_HINT,
+    BESLUIT_AFDELING_LABEL,
+    BESLUIT_AFDELING_SAMEN,
+    BESLUIT_AFDELING_VRAAG,
+    _besluit_afdeling,
+    _brugzin,
+    _fl,
+)
+
+SEG_OPS = {"department": "Operations", "score": 6.0, "n": 17, "invited": 21,
+           "low_fk": "workload", "low_avg": 4.9, "rest_lager": False}
+
+
+def test_brugzin_noemt_het_tweede_punt_als_het_hetzelfde_onderwerp_is():
+    zin = _brugzin("growth", "Groeiperspectief", SEG_OPS, "retention", tweede_key="workload")
+    assert zin == ("Organisatiebreed begint het gesprek bij Groeiperspectief. Bij Operations springt "
+                   + _fl("workload", "retention") + " eruit (4.9/10); dat is ook het tweede punt "
+                   "organisatiebreed, dus neem Operations daarin mee.")
+
+
+def test_brugzin_zonder_samenval_blijft_zoals_hij_was():
+    zonder = _brugzin("growth", "Groeiperspectief", SEG_OPS, "retention", tweede_key="leadership")
+    assert zonder.endswith("bespreek dat voor die afdeling na het startpunt.")
+    assert _brugzin("growth", "Groeiperspectief", SEG_OPS, "retention") == zonder
+
+
+def test_brugzin_bij_een_relatief_sterk_onderwerp_blijft_neutraal():
+    sterk = dict(SEG_OPS, low_avg=6.8)
+    zin = _brugzin("growth", "Groeiperspectief", sterk, "retention", tweede_key="workload")
+    assert "tweede punt" not in zin
+    assert zin.endswith("relatief sterk.")
+
+
+# Doorgeschoven uit de review van taak 3: in de indicatieve staat (respons
+# onder 30%) zegt elke zin die het startpunt noemt "mogelijk startpunt"
+# (ronde 2, spec par. 6.1). Alle vijf varianten, ook "na het startpunt".
+_BRUG_VARIANTEN = {
+    "anders": dict(SEG_OPS),
+    "samen": dict(SEG_OPS),
+    "zelfde": dict(SEG_OPS),
+    "sterk": dict(SEG_OPS, low_avg=6.8),
+    "zonder_thema": dict(SEG_OPS, low_fk=None, low_avg=None, rest_lager=True),
+}
+
+
+def _brug_variant(naam: str, indicatief: bool) -> str:
+    start = "workload" if naam == "zelfde" else "growth"
+    label = _fl(start, "retention")
+    return _brugzin(start, label, _BRUG_VARIANTEN[naam], "retention",
+                    tweede_key="workload" if naam == "samen" else "leadership",
+                    indicatief=indicatief)
+
+
+@pytest.mark.parametrize("naam", sorted(_BRUG_VARIANTEN))
+def test_brugzin_indicatief_noemt_een_mogelijk_startpunt(naam):
+    vast = _brug_variant(naam, False)
+    zin = _brug_variant(naam, True)
+    assert zin and zin != vast
+    assert "als mogelijk startpunt" in zin
+    assert "begint het gesprek" not in zin
+    assert "na het startpunt" not in zin
+    assert not any(s in zin for s in STREEPJES)
+    # De niet-indicatieve vorm is ongewijzigd en stellig.
+    assert "mogelijk" not in vast
+
+
+def test_brugzin_indicatief_letterlijk():
+    assert _brug_variant("anders", True) == (
+        "Organisatiebreed kiest Loep Groeiperspectief als mogelijk startpunt. Bij Operations "
+        "springt " + _fl("workload", "retention") + " eruit (4.9/10); bespreek dat voor die "
+        "afdeling daarna.")
+    assert _brug_variant("zelfde", True) == (
+        "Bij Operations weegt " + _fl("workload", "retention") + " het zwaarst (4.9/10); dat "
+        "kiest Loep organisatiebreed ook als mogelijk startpunt.")
+    assert _brug_variant("samen", True).endswith(
+        "dat is ook het tweede punt organisatiebreed, dus neem Operations daarin mee.")
+
+
+def test_besluit_afdeling():
+    assert _besluit_afdeling(None, "retention", "workload") is None
+    assert _besluit_afdeling(SEG_OPS, "retention", "workload") == {
+        "department": "Operations", "topic": _fl("workload", "retention"), "samen_met_tweede": True}
+    zonder_onderwerp = _besluit_afdeling(dict(SEG_OPS, low_fk=None, low_avg=None), "retention", None)
+    assert zonder_onderwerp == {"department": "Operations", "topic": None, "samen_met_tweede": False}
+    # Geen tweede punt: nooit "samen".
+    assert _besluit_afdeling(SEG_OPS, "retention", None)["samen_met_tweede"] is False
+
+
+def _besluit(**kw) -> str:
+    basis = dict(opener_html="<h2>kop</h2>", scan_type="retention", campaign_name="Wave 1",
+                 startpunt_label="Groeiperspectief", tweede_label="Werkdruk en herstelruimte",
+                 review_hint="Richtlijn: 45 tot 90 dagen na dit gesprek.", heeft_werkvragen=True)
+    basis.update(kw)
+    return _besluit_page(**basis)
+
+
+def test_besluitpagina_heeft_een_regel_voor_de_afdelingsafspraak():
+    t = _plain(_besluit(afdeling={"department": "Operations", "topic": "Werkdruk en herstelruimte",
+                                  "samen_met_tweede": True}))
+    assert BESLUIT_AFDELING_LABEL in t
+    assert "Operations: Werkdruk en herstelruimte" in t
+    assert BESLUIT_AFDELING_SAMEN + " " + BESLUIT_AFDELING_HINT in t
+
+
+def test_besluitpagina_zonder_aangewezen_afdeling_heeft_geen_afdelingsblok():
+    assert BESLUIT_AFDELING_LABEL not in _plain(_besluit())
+
+
+def test_afdelingsblok_staat_voor_de_terugkoppeling():
+    t = _plain(_besluit(afdeling={"department": "Operations", "topic": None, "samen_met_tweede": False}))
+    assert t.index(BESLUIT_AFDELING_LABEL) < t.index("Terugkoppeling aan medewerkers")
+    assert "Operations" in t and "Operations:" not in t
+    assert BESLUIT_AFDELING_SAMEN not in t
+
+
+def test_afdelingshint_belooft_geen_toelichtingen_die_het_rapport_niet_toont():
+    """Zelfde gate als de H7-regel op de afdelingspagina (_toont_toelichtingen):
+    zonder toelichtingverdeling in het rapport zegt de hint niet dat het rapport
+    ze 'alleen voor de hele organisatie' toont."""
+    afd = {"department": "Operations", "topic": None, "samen_met_tweede": False}
+    t = _plain(_besluit(afdeling=afd, afdeling_toelichtingen=False))
+    assert BESLUIT_AFDELING_VRAAG in t
+    assert "toelichtingen" not in t
+    assert BESLUIT_AFDELING_HINT.endswith(BESLUIT_AFDELING_VRAAG)
+
+
+def test_afdelingshint_volgt_het_tweede_punt_dat_het_mt_vastlegde():
+    """Het MT kan in het dashboard een ander tweede punt vastleggen; dat wordt
+    voorgedrukt. De samenval-regel mag dan niet naar het tweede punt van het
+    rapport wijzen, alleen naar wat er op het vel staat."""
+    afd = {"department": "Operations", "topic": "Werkdruk en herstelruimte", "samen_met_tweede": True}
+    anders = _plain(_besluit(afdeling=afd, decision={"secondary_topic": "Leiderschap"}))
+    assert BESLUIT_AFDELING_SAMEN not in anders
+    zelf = dict(afd, samen_met_tweede=False)
+    gekozen = _plain(_besluit(afdeling=zelf, decision={"secondary_topic": "werkdruk en herstelruimte "}))
+    assert BESLUIT_AFDELING_SAMEN in gekozen
+
+
+def test_nieuwe_besluitcopy_zonder_streepjes_en_zonder_wij():
+    for tekst in (BESLUIT_AFDELING_LABEL, BESLUIT_AFDELING_HINT, BESLUIT_AFDELING_SAMEN):
+        assert not any(s in tekst for s in STREEPJES)
+        assert not re.search(r"\b(ik|wij|we)\b", tekst.lower())
+
+
+def _retention_met_afdeling(low_fk: str, **over) -> dict:
+    from tests.test_report_distribution import _min_retention_data
+    d = _min_retention_data()
+    d["factor_avgs"] = {"workload": 5.0, "leadership": 5.6}
+    d["factor_items_map"] = {"workload": [("W1", "Testvraag werkdruk")],
+                             "leadership": [("L1", "Testvraag leiding")]}
+    d["org_item_avgs"] = {"W1": 5.0, "L1": 5.6}
+    d["factor_resp_scores"] = {"workload": [2.0] * 6 + [8.0] * 6, "leadership": [5.6] * 12}
+    d["segment_rows"] = [
+        {"department": "Operations", "n": 12, "avg": 5.0, "scores": [5.0] * 12, "is_pooled": False},
+        {"department": "Finance", "n": 12, "avg": 6.5, "scores": [6.5] * 12, "is_pooled": False},
+    ]
+    d["segment_factor_rows"] = {"Operations": {"factors": [(low_fk, 4.2, 12)], "omitted": 0}}
+    d.update(over)
+    return d
+
+
+def _besluitdeel(html: str) -> str:
+    start = html.index('class="pb sec besluit"')
+    return html[start:html.index("Terugkoppeling aan medewerkers", start)]
+
+
+def test_renderer_behoud_koppelt_afdeling_aan_het_tweede_punt():
+    from backend.report_html import render_retention_report_html
+    html = render_retention_report_html(_retention_met_afdeling("leadership"))
+    t = _plain(html)
+    assert t.count("dat is ook het tweede punt organisatiebreed, dus neem Operations daarin mee.") == 2
+    besluit = _plain(_besluitdeel(html))
+    assert "Operations: " + _fl("leadership", "retention") in besluit
+    assert BESLUIT_AFDELING_SAMEN in besluit
+
+
+def test_renderer_behoud_zonder_aangewezen_afdeling_heeft_geen_afdelingsblok():
+    from backend.report_html import render_retention_report_html
+    d = _retention_met_afdeling("leadership")
+    d["segment_rows"][1]["avg"] = 5.1   # verschil onder de grens: geen afdeling aangewezen
+    html = render_retention_report_html(d)
+    assert BESLUIT_AFDELING_LABEL not in html
+    assert "tweede punt organisatiebreed" not in html
+
+
+def test_renderer_behoud_indicatief_zegt_mogelijk_startpunt_in_de_brugzin():
+    from backend.report_html import render_retention_report_html
+    d = _retention_met_afdeling("leadership", n_invited=100)   # 12 van 100: indicatief
+    brug = re.findall(r'<p class="mq-brug[^"]*"[^>]*>(.*?)</p>', render_retention_report_html(d), re.S)
+    assert len(brug) == 2
+    assert all("als mogelijk startpunt" in _plain(b) and "begint het gesprek" not in _plain(b)
+               for b in brug)
+
+
+def test_renderer_vertrek_geeft_tweede_punt_en_afdeling_door():
+    from backend.report_html import render_exit_report_html
+    from tests.conftest import exit_report_data
+    fa = {"role_clarity": 4.2, "leadership": 4.6, "culture": 6.1,
+          "growth": 6.2, "compensation": 6.3, "workload": 6.4}
+    d = exit_report_data(factor_avgs=fa,
+                         factor_items_map={fk: [(f"{fk}_1", f"Stelling {fk}")] for fk in fa})
+    d["segment_rows"] = [
+        {"department": "Operations", "n": 12, "avg": 5.0, "scores": [5.0] * 12, "is_pooled": False},
+        {"department": "Finance", "n": 12, "avg": 6.5, "scores": [6.5] * 12, "is_pooled": False},
+    ]
+    html = render_exit_report_html(d)
+    tweede = re.search(r'Tweede punt</div><div class="bl-vast">([^<]+)<', html)
+    assert tweede, "fixture moet een tweede punt hebben"
+    # Kies als laagste onderwerp van Operations het tweede punt van de organisatie.
+    tweede_key = next(k for k in d["factor_avgs"] if _fl(k, "exit") == tweede.group(1).strip())
+    d["segment_factor_rows"] = {"Operations": {"factors": [(tweede_key, 4.2, 12)], "omitted": 0}}
+    html = render_exit_report_html(d)
+    assert "dat is ook het tweede punt organisatiebreed, dus neem Operations daarin mee." in html
+    besluit = _plain(_besluitdeel(html))
+    assert BESLUIT_AFDELING_LABEL in besluit and BESLUIT_AFDELING_SAMEN in besluit

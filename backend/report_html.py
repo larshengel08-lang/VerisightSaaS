@@ -3560,6 +3560,34 @@ BESLUIT_ONLEESBAAR = ("Loep kon niet nagaan of er al een besluit is vastgelegd i
 BESLUIT_TEKST_MAX = 300
 BESLUIT_INGEKORT = ("Dit vel toont het begin van lange antwoorden; het volledige besluit staat "
                     "in het dashboard.")
+# R5 (koude leesronde 24-9): de afspraak uit het afdelingsblok ("vraag de
+# afdeling zelf naar de toelichting") had geen plek op de besluitpagina.
+BESLUIT_AFDELING_LABEL = "Afspraak per afdeling"
+BESLUIT_AFDELING_VRAAG = "Wat vragen jullie deze afdeling zelf, wie doet dat, en wanneer?"
+# De eerste zin alleen als het rapport ergens een toelichtingverdeling toont
+# (_toont_toelichtingen, dezelfde gate als SEGMENT_TOELICHTING_GRENS).
+BESLUIT_AFDELING_HINT = ("Het rapport toont de toelichtingen alleen voor de hele organisatie. "
+                         + BESLUIT_AFDELING_VRAAG)
+BESLUIT_AFDELING_SAMEN = "Dit onderwerp is ook het tweede punt; neem de afdeling daarin mee."
+
+
+def _besluit_afdeling(seg: dict | None, scan_type: str, tweede_key: str | None) -> dict | None:
+    """De aangewezen afdeling voor de besluitpagina, of None.
+
+    seg komt uit _segment_startpunt, dezelfde gate als de brugzin en het navy
+    afdelingsblok: de drie kunnen niet uiteenlopen."""
+    if not seg:
+        return None
+    fk = seg.get("low_fk")
+    return {"department": seg["department"],
+            "topic": _fl(fk, scan_type) if fk else None,
+            "samen_met_tweede": bool(fk) and fk == tweede_key}
+
+
+def _zelfde_onderwerp(a: str | None, b: str | None) -> bool:
+    """Vrije tekst uit het dashboard tegen een label: hoofdletters en witruimte
+    tellen niet mee."""
+    return bool(a and b) and " ".join(a.split()).casefold() == " ".join(b.split()).casefold()
 
 
 def _bl_kort(tekst: str, max_chars: int = BESLUIT_TEKST_MAX) -> tuple[str, bool]:
@@ -3593,7 +3621,8 @@ def _bl_waarde(tekst: str | None, lijnen: int) -> str:
 def _besluit_page(*, opener_html: str, scan_type: str, campaign_name: str,
                   startpunt_label: str | None, tweede_label: str | None,
                   review_hint: str, heeft_werkvragen: bool, decision: dict | None = None,
-                  decision_unavailable: bool = False) -> str:
+                  decision_unavailable: bool = False, afdeling: dict | None = None,
+                  afdeling_toelichtingen: bool = True) -> str:
     """Eén A4, los te printen. Voorgedrukt is alleen wat het rapport weet: de
     meting, het startpunt en het tweede punt. Al het andere is een lijn.
 
@@ -3607,6 +3636,13 @@ def _besluit_page(*, opener_html: str, scan_type: str, campaign_name: str,
     Kon Loep de tabel niet lezen (decision_unavailable), dan zegt de pagina dat
     in één regel en blijft ze volledig invulbaar: zichtbare terugval, geen
     stille.
+
+    afdeling (uit _besluit_afdeling, fixronde 24-9 R5): wijst het rapport een
+    afdeling aan, dan krijgt de afspraak met die afdeling een regel. "Ook het
+    tweede punt" volgt wat er op dit vel als tweede punt staat: legde het MT
+    in het dashboard een ander tweede punt vast, dan geldt dat onderwerp.
+    afdeling_toelichtingen volgt _toont_toelichtingen: zonder
+    toelichtingverdeling in het rapport belooft de hint er geen.
     """
     agenda = _pref(LEIDRAAD_ANKERS["agenda"])
     if heeft_werkvragen:
@@ -3691,6 +3727,23 @@ def _besluit_page(*, opener_html: str, scan_type: str, campaign_name: str,
                           + "<td>" + _bl_veld("Wat", _bl_lines(1)) + "</td>"
                           + "</tr></table>")
 
+    if afdeling:
+        topic = afdeling.get("topic")
+        vast = afdeling["department"] + (": " + topic if topic else "")
+        if d.get("secondary_topic"):
+            samen_met_tweede = _zelfde_onderwerp(topic, d["secondary_topic"])
+        else:
+            samen_met_tweede = bool(topic) and bool(afdeling.get("samen_met_tweede"))
+        samen = BESLUIT_AFDELING_SAMEN + " " if samen_met_tweede else ""
+        hint = samen + (BESLUIT_AFDELING_HINT if afdeling_toelichtingen else BESLUIT_AFDELING_VRAAG)
+        afdeling_html = ('<div class="bl-blok">'
+                         + _bl_veld(BESLUIT_AFDELING_LABEL,
+                                    '<div class="bl-vast">' + _h(vast) + "</div>" + _bl_lines(1),
+                                    hint)
+                         + "</div>")
+    else:
+        afdeling_html = ""
+
     ingekort = wat1_afgekapt or wat2_afgekapt or succes_afgekapt or terugkoppeling_afgekapt
     ingekort_regel = ('<p class="bl-status">' + BESLUIT_INGEKORT + "</p>") if ingekort else ""
     # N5 (eindreview): "Leg dit besluit ook vast in je dashboard" is een
@@ -3725,6 +3778,7 @@ def _besluit_page(*, opener_html: str, scan_type: str, campaign_name: str,
     {_bl_veld(tweede_lbl, tweede)}
     {_bl_veld("Wat precies", wat2)}
   </div>
+  {afdeling_html}
   <div class="bl-blok">
     <div class="bl-lbl">Terugkoppeling aan medewerkers</div>
     {terugkoppeling}
@@ -4616,7 +4670,8 @@ def _segment_startpunt(segment_rows: list[dict],
 
 
 def _brugzin(startpunt_key: str | None, startpunt_label: str, seg: dict | None,
-             scan_type: str) -> str:
+             scan_type: str, tweede_key: str | None = None, *,
+             indicatief: bool = False) -> str:
     """De zin die organisatiebreed en per afdeling aan elkaar knoopt (spec par. 5).
 
     Bevinding B2: twee dingen heetten "startpunt". Het rapport heeft er één,
@@ -4647,14 +4702,34 @@ def _brugzin(startpunt_key: str | None, startpunt_label: str, seg: dict | None,
 
     Beide onderwerpen staan met een hoofdletter: de zin noemt er twee, en de
     kernzin en de cover op dezelfde pagina schrijven het startpunt ook zo.
+
+    Fixronde 24-9 (R5): valt het zware onderwerp van de afdeling samen met het
+    tweede punt organisatiebreed (tweede_key), dan zegt de zin dat, zodat het
+    MT de afdeling in dat punt meeneemt in plaats van er een apart gesprek van
+    te maken. Alleen in de zware tak: de neutrale vorm boven de
+    aandachtspuntgrens blijft ongewijzigd.
+
+    indicatief (_respons_indicatief, respons onder 30%): elke zin die het
+    startpunt noemt zegt dan "mogelijk startpunt" (ronde 2, spec par. 6.1),
+    in dezelfde vorm als de kernzin ("kiest Loep ... als mogelijk
+    startpunt"). "Na het startpunt" wordt dan "daarna": de zin ervoor noemt
+    het mogelijke startpunt al.
     """
     if not seg or not startpunt_key:
         return ""
+    if indicatief:
+        org_start = f"Organisatiebreed kiest Loep {startpunt_label} als mogelijk startpunt."
+        ook_start = "dat kiest Loep organisatiebreed ook als mogelijk startpunt."
+        na_start = "daarna"
+    else:
+        org_start = f"Organisatiebreed begint het gesprek bij {startpunt_label}."
+        ook_start = "daar begint het gesprek ook."
+        na_start = "na het startpunt"
     dept, score = seg["department"], _score_str(seg["score"])
     rest_zin = (" De restgroep scoort lager, maar bestaat uit kleine afdelingen en "
                 "telt daarom niet als startpunt." if seg.get("rest_lager") else "")
     if seg["low_fk"] is None:
-        return (f"Organisatiebreed begint het gesprek bij {startpunt_label}. {dept} scoort het "
+        return (f"{org_start} {dept} scoort het "
                 f"laagst van de afdelingen die apart getoond worden ({score}); welk onderwerp "
                 f"daar het zwaarst weegt is niet te zeggen, te weinig antwoorden per "
                 f"onderwerp.{rest_zin}")
@@ -4663,13 +4738,16 @@ def _brugzin(startpunt_key: str | None, startpunt_label: str, seg: dict | None,
     zwaar = _factor_label(seg["low_avg"]) != "Relatief sterk"
     if seg["low_fk"] == startpunt_key:
         if zwaar:
-            return f"Bij {dept} weegt {low_lbl} het zwaarst ({low_sc}); daar begint het gesprek ook."
-        return (f"Bij {dept} is {low_lbl} het laagst scorende onderwerp ({low_sc}); daar begint "
-                f"het gesprek ook.")
+            return f"Bij {dept} weegt {low_lbl} het zwaarst ({low_sc}); {ook_start}"
+        return f"Bij {dept} is {low_lbl} het laagst scorende onderwerp ({low_sc}); {ook_start}"
+    if zwaar and seg["low_fk"] == tweede_key:
+        return (f"{org_start} Bij {dept} springt "
+                f"{low_lbl} eruit ({low_sc}); dat is ook het tweede punt organisatiebreed, dus "
+                f"neem {dept} daarin mee.")
     if zwaar:
-        return (f"Organisatiebreed begint het gesprek bij {startpunt_label}. Bij {dept} springt "
-                f"{low_lbl} eruit ({low_sc}); bespreek dat voor die afdeling na het startpunt.")
-    return (f"Organisatiebreed begint het gesprek bij {startpunt_label}. Het laagst scorende "
+        return (f"{org_start} Bij {dept} springt "
+                f"{low_lbl} eruit ({low_sc}); bespreek dat voor die afdeling {na_start}.")
+    return (f"{org_start} Het laagst scorende "
             f"onderwerp bij {dept} is {low_lbl} ({low_sc}), en dat scoort daar "
             f"{_factor_label(seg['low_avg']).lower()}.")
 
@@ -6110,8 +6188,11 @@ def render_exit_report_html(data: dict) -> str:
     # (dan is er niets om aan te knopen en zegt het navy blok zelf de reden).
     _seg_startpunt = _segment_startpunt(data.get("segment_rows") or [],
                                         data.get("segment_factor_rows"))
+    _tweede_key = next((r["key"] for r in _raster_rows if r["agenda_role"] == "tweede"), None)
     _brug = ("" if _geen_profiel else
-             _brugzin(_raster_rows[0]["key"], _raster_primary_label, _seg_startpunt, "exit"))
+             _brugzin(_raster_rows[0]["key"], _raster_primary_label, _seg_startpunt, "exit",
+                      tweede_key=_tweede_key,
+                      indicatief=_respons_indicatief(data["n_completed"], data["n_invited"])))
     # Het werkvragenblok wordt hier al gebouwd (fixronde 24-9): de leidraad op
     # pagina twee verwijst ernaar, en alleen als het er echt is.
     _wq_block = _werkvragen_block(_raster_rows, deep_agg, direction_agg, "exit")
@@ -6498,7 +6579,9 @@ def render_exit_report_html(data: dict) -> str:
         review_hint="Richtlijn: 45 tot 90 dagen na dit gesprek.",
         heeft_werkvragen=bool(_wq_block),
         decision=data.get("decision"),
-        decision_unavailable=bool(data.get("decision_unavailable")))
+        decision_unavailable=bool(data.get("decision_unavailable")),
+        afdeling=None if _geen_profiel else _besluit_afdeling(_seg_startpunt, "exit", _tweede_key),
+        afdeling_toelichtingen=_toont_toelichtingen(deep_agg))
 
     # ── Appendix ─────────────────────────────────────────────────────────────
     n_factors = len([fk for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None])
@@ -6577,8 +6660,11 @@ def render_retention_report_html(data: dict) -> str:
     # Brugzin (taak 7, B2), zie render_exit_report_html.
     _seg_startpunt = _segment_startpunt(data.get("segment_rows") or [],
                                         data.get("segment_factor_rows"))
+    _tweede_key = next((r["key"] for r in _raster_rows if r["agenda_role"] == "tweede"), None)
     _brug = ("" if _geen_profiel else
-             _brugzin(_raster_rows[0]["key"], _raster_primary_label, _seg_startpunt, ST))
+             _brugzin(_raster_rows[0]["key"], _raster_primary_label, _seg_startpunt, ST,
+                      tweede_key=_tweede_key,
+                      indicatief=_respons_indicatief(data["n_completed"], data["n_invited"])))
     # Zie render_exit_report_html: het blok eerst, de leidraad verwijst ernaar.
     _wq_block = _werkvragen_block(_raster_rows, deep_agg, direction_agg, ST)
 
@@ -6908,7 +6994,9 @@ def render_retention_report_html(data: dict) -> str:
         review_hint="Richtlijn: 45 tot 90 dagen na dit gesprek.",
         heeft_werkvragen=bool(_wq_block),
         decision=data.get("decision"),
-        decision_unavailable=bool(data.get("decision_unavailable")))
+        decision_unavailable=bool(data.get("decision_unavailable")),
+        afdeling=None if _geen_profiel else _besluit_afdeling(_seg_startpunt, ST, _tweede_key),
+        afdeling_toelichtingen=_toont_toelichtingen(deep_agg))
 
     # ── Appendix ─────────────────────────────────────────────────────────────
     n_factors = len([fk for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None])
