@@ -3391,7 +3391,8 @@ def _werkvragen_block(ranked: list[dict], deep_agg: dict, direction_agg: dict,
     Amendement plan 3b Taak 13 (concept-sectie 6 punt 4/sectie 7 punt 3): onder
     de vertaalvraag van het onderwerp aansturing (`leadership`) komt een vaste
     regel over de leidinggevenden aan tafel. Alleen als er ook echt een
-    vertaalvraag staat, en alleen bij dat ene onderwerp.
+    vertaalvraag staat, alleen bij dat ene onderwerp, en sinds amendement 24-9
+    (A2) alleen bij Loep Behoud.
     """
     if scan_type not in DIRECTION_SCAN_TYPES:
         raise ValueError(f"_werkvragen_block: geen werkvragen voor scan_type {scan_type!r}")
@@ -3430,7 +3431,9 @@ def _werkvragen_block(ranked: list[dict], deep_agg: dict, direction_agg: dict,
         rijen = [("Herkennen", herken_html)]
         if vertaal:
             vertaal_cel = _h(vertaal)
-            if fk == "leadership":
+            # Amendement 24-9 (A2): de aansturingshint alleen bij Loep Behoud.
+            # Bij Loep Vertrek staat de namenregel boven het blok.
+            if fk == "leadership" and scan_type == "retention":
                 vertaal_cel += f'<div class="wq-hint">{_h(WERKVRAGEN_AANSTURING_HINT)}</div>'
             rijen.append(("Vertalen", vertaal_cel))
         rijen.append(("Besluiten", _h(_besluitvraag(staat))))

@@ -278,6 +278,19 @@ def test_aansturing_hint_staat_onder_de_vertaalvraag_van_leadership(gevuld):
     assert t.index("Testvraag mandaat, nu?") < t.index(WERKVRAGEN_AANSTURING_HINT) < t.index(BESLUITVRAAG)
 
 
+def test_aansturing_hint_niet_bij_loep_vertrek(gevuld):
+    """Amendement 24-9 (A2): bij Loep Vertrek staat onder het onderwerp
+    aansturing geen hint, ook als de vertaalvraag er wel staat. De namenregel
+    van het blok (Taak 5) blijft wel staan."""
+    from backend.report_html import NAMENREGEL_VERTREK
+    html = _werkvragen_block(LEADERSHIP_RANKED, {}, LEADERSHIP_DIRECTION, "exit")
+    t = _plain(html)
+    assert "Testvraag mandaat, toen?" in t
+    assert WERKVRAGEN_AANSTURING_HINT not in t
+    assert "wq-hint" not in html
+    assert NAMENREGEL_VERTREK in t
+
+
 def test_aansturing_hint_verschijnt_niet_bij_een_ander_onderwerp(gevuld):
     html = _werkvragen_block(RANKED, {"growth": _deep(gr_visibility=6, gr_time=4, gr_criteria=3)},
                              DIRECTION, "retention")
