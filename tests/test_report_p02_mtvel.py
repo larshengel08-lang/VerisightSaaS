@@ -890,18 +890,34 @@ def test_css_houdt_pagina_twee_compact():
     """De compacte maten hangen aan #p02, niet aan de klassen zelf: de rest van
     het rapport houdt zijn eigen ruimte."""
     css = build_css("retention")
-    # Maten van de fixronde na plan 3a (observatie 9), gemeten op de
-    # WeasyPrint-render van alle 24: met deze maten loopt p.02 nergens over.
+    # Maten van de fixronde na plan 3a (observatie 9) en de fixronde leesronde
+    # (Taak 7). Deze test bewaakt alleen tegen per ongeluk wijzigen; dat p.02
+    # op één A4 past, bewijst alleen scripts/check_pdf_report.py (regel
+    # p02-op-een-a4) op de render in het productie-image.
     for regel in ("#p02 .br-kernzin { font-size: 20px;",
                   "#p02 .kz-lang .br-kernzin { font-size: 18px;",
-                  "#p02 .why { padding: 12px 16px 10px;",
+                  "#p02 .why { padding: 10px 14px 8px; margin-bottom: 8px;",
                   "#p02 .why-grid { margin-bottom: 8px;",
                   "#p02 .sg { margin-bottom: 10px;",
                   "#p02 .sc-v { font-size: 18px;",
+                  "#p02 .sc-v.sc-reden { font-size: 14px;",
+                  "#p02 .sc-v.sc-reden-lang { font-size: 11px;",
+                  "#p02 .p02-duiding { font-size: 9.5px; line-height: 1.4;",
                   "#p02 .leidraad { margin-top: 10px;",
+                  "#p02 .leidraad td { padding: 1px 6px 1px 0; line-height: 1.38;",
                   "#p02 .leidraad td.lw { width: 22%;",
-                  "#p02 .meet-blok { margin-top: 12px;"):
+                  "#p02 .meet-blok { margin-top: 8px;",
+                  "#p02 .meet-blok .slabel { margin-bottom: 6px;",
+                  "#p02 .meet-blok .sg { margin-bottom: 4px;"):
         assert regel in css, regel
+    # Elke selector één keer in het #p02-blok: bij gelijke specificiteit wint
+    # de latere regel, dus een tweede regel maakt de eerste stil dood (zo werd
+    # in Taak 7 een hefboom onopgemerkt overschreven).
+    selectors = [m.group(1).strip()
+                 for m in re.finditer(r"^(#p02 [^{]+)\{", css, re.MULTILINE)]
+    assert selectors, "geen #p02-regels gevonden"
+    dubbel = sorted({s for s in selectors if selectors.count(s) > 1})
+    assert not dubbel, dubbel
     assert ".br-kernzin {\n  font-family" in css      # de basisstijl blijft staan
     # De overrides staan ná de basisregels die ze aanpassen. Anders is de eerste
     # `.why {`-regel in het stylesheet die van #p02, en die draagt geen
