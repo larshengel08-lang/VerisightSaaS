@@ -753,10 +753,11 @@ def test_afdelingshint_volgt_het_tweede_punt_dat_het_mt_vastlegde():
     """Het MT kan in het dashboard een ander tweede punt vastleggen; dat wordt
     voorgedrukt. De samenval-regel mag dan niet naar het tweede punt van het
     rapport wijzen, alleen naar wat er op het vel staat."""
-    afd = {"department": "Operations", "topic": "Werkdruk en herstelruimte", "samen_met_tweede": True}
+    afd = {"department": "Operations", "topic": "Werkdruk en herstelruimte", "zwaar": True,
+           "samen_met_tweede": True}
     anders = _plain(_besluit(afdeling=afd, decision={"secondary_topic": "Leiderschap"}))
     assert BESLUIT_AFDELING_SAMEN not in anders
-    zelf = dict(afd, zwaar=True, samen_met_tweede=False)
+    zelf = dict(afd, samen_met_tweede=False)
     gekozen = _plain(_besluit(afdeling=zelf, decision={"secondary_topic": "werkdruk en herstelruimte "}))
     assert BESLUIT_AFDELING_SAMEN in gekozen
 
