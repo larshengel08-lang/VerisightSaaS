@@ -882,6 +882,52 @@ def _blijfintentie_kopzin(avg_si: float | None, stay_scores: list[float], *,
     return f"{opening}: {_score_str(avg_si)}, {_onder_de_vijf(low, n)}."
 
 
+# R1 (koude leesronde 24-9): de blijfintentie had sinds B1 een naam op pagina
+# twee, maar geen duiding. Het MT las "25 van de 39 onder de 5" en vroeg: waar
+# zit dat, en wat doen we ermee? Het rapport splitst blijf- en vertrekintentie
+# niet per afdeling uit (het afdelingsblok toont het behoudssignaal en de
+# onderwerpen), dus de eerlijke zin is: dit zegt hoe dringend, niet waar of
+# waarom; daarom begint het gesprek bij het startpunt.
+INTENTIE_DUIDING_KERN = (
+    "Deze cijfers zeggen hoe dringend behoud hier is. Ze zeggen niet bij welke afdeling "
+    "het speelt of waarom: dit rapport splitst ze niet per afdeling uit.")
+
+
+def _intentie_duiding(avg_si: float | None, stay_scores: list[float],
+                      to_scores: list[float], *, startpunt_label: str | None) -> str:
+    """Eén alinea onder de cijfers op pagina twee (R1), alleen bij Loep Behoud.
+
+    Leeg zonder blijfintentie, zonder startpunt (degraded: daar draagt
+    _geen_factorprofiel_note het verhaal) of bij een relatief sterke
+    blijfintentie (dan is er geen ontsporing om voor te zijn).
+
+    De vertrekintentie staat erin zodra er minstens MIN_DISTRIBUTION_N losse
+    scores zijn, dezelfde staffel als de spreidingsstrook op de
+    behoudscontext; "veel vertrekgedachten" is daar de hoogste zone (vanaf
+    ZONE_HIGH), met hetzelfde label.
+    """
+    if avg_si is None or not startpunt_label:
+        return ""
+    if _factor_label(avg_si) == "Relatief sterk":
+        return ""
+    delen: list[str] = []
+    vals = [v for v in to_scores if v is not None]
+    if len(vals) >= MIN_DISTRIBUTION_N:
+        hoog = score_distribution(vals)["zones"][2]
+        grens = f"{ZONE_HIGH:.1f}".replace(".", ",")
+        if hoog == 0:
+            delen.append("Geen van de " + str(len(vals)) + " heeft veel vertrekgedachten "
+                         "(vertrekintentie vanaf " + grens + ").")
+        else:
+            delen.append(str(hoog) + " van de " + str(len(vals)) + " "
+                         + _werkwoord(hoog, "heeft", "hebben")
+                         + " veel vertrekgedachten (vertrekintentie vanaf " + grens + ").")
+    delen.append(INTENTIE_DUIDING_KERN)
+    delen.append("Daarom begint het gesprek bij " + startpunt_label + ": daar zie je waar het "
+                 "wringt, en daar kan het MT zelf iets besluiten.")
+    return '<p class="p02-duiding">' + _h(" ".join(delen)) + "</p>"
+
+
 # ─── Respons heeft gevolgen (spec ronde 2 par. 6) ────────────────────────────
 # Bevinding B19: 30% respons en 90% respons leverden structureel hetzelfde
 # rapport op. Onder de helft is het beeld dat van wie meedeed, niet van de
@@ -1634,6 +1680,7 @@ LEIDRAAD_ANKERS = {
 
 def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
                     has_deepening: bool, has_werkvragen: bool = False,
+                    intentie_duiding: bool = False,
                     has_tweede_punt: bool = False) -> str:
     """"Zo leid je dit gesprek in 45 minuten" (spec par. 4 blok 5): vijf regels
     met tijdvak, wat je op tafel legt en de paginaverwijzing. Vervangt het
@@ -1654,6 +1701,9 @@ def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
     agenda_role "tweede", dus ook een kaart "Tweede punt" in het
     werkvragenblok). Zonder tweede punt valt de parkeerzin weg: hij zou over
     een punt gaan dat niet op tafel ligt.
+    intentie_duiding (R1, alleen Loep Behoud): onder de cijfers op pagina twee
+    staat de duiding van blijf- en vertrekintentie; rij 2 stuurt de
+    HR-manager daarheen. De renderer geeft bool(_intentie_duiding(...)) door.
     """
     A = LEIDRAAD_ANKERS
     p = _pref
@@ -1703,10 +1753,15 @@ def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
     # dat anker; die tweedeling is daarmee vervallen.
     rij1 = ("De respons en de meetgegevens op deze pagina; de drempels staan op "
             f"pagina {p(A['drempels'])}.")
+    rij2 = (f"Het cijferoverzicht (pagina {p(A['overzicht'])}) en {context} "
+            f"(pagina {p(A['context'])}). Vraag: verrast dit iemand?")
+    if intentie_duiding:
+        # R1: het moment waarop de vergadering ontspoorde. De regel onder de
+        # cijfers op deze pagina is de zin die de HR-manager dan voorleest.
+        rij2 += " Gaat het over de blijfintentie, lees dan de regel onder de cijfers hierboven voor."
     rijen = [
         ("0-5 min", "Hoe stevig is dit", rij1),
-        ("5-12 min", "Het beeld in één plaatje", f"Het cijferoverzicht (pagina {p(A['overzicht'])}) en {context} "
-                                                 f"(pagina {p(A['context'])}). Vraag: verrast dit iemand?"),
+        ("5-12 min", "Het beeld in één plaatje", rij2),
         ("12-25 min", "Waar het wringt, en waarom", rij3),
         ("25-31 min", *rij4),
         ("31-45 min", "Wat gaan we doen", slot),
@@ -1733,7 +1788,8 @@ def _heeft_werkbeleving(sdt_avgs: dict) -> bool:
 
 def _leidraad_html(scan_type: str, *, data: dict, deep_agg: dict,
                    startpunt_fk: str | None, has_sdt: bool, geen_profiel: bool,
-                   has_werkvragen: bool = False, has_tweede_punt: bool = False) -> str:
+                   has_werkvragen: bool = False, intentie_duiding: bool = False,
+                   has_tweede_punt: bool = False) -> str:
     """Kiest de vlaggen van de leidraad uit de data van dit rapport.
 
     Eén plek voor de drie renderers (codereview taak 5), zodat ze niet uit
@@ -1762,7 +1818,8 @@ def _leidraad_html(scan_type: str, *, data: dict, deep_agg: dict,
         scan_type, has_segments=has_segments, has_quotes=has_quotes,
         has_deepening=_deepening_shows_distribution(
             deep_agg.get(startpunt_fk) if startpunt_fk else None),
-        has_werkvragen=has_werkvragen, has_tweede_punt=has_tweede_punt)
+        has_werkvragen=has_werkvragen, intentie_duiding=intentie_duiding,
+        has_tweede_punt=has_tweede_punt)
 
 
 # Standaardwaarde voor het derde coverstatistiek als er geen factorprofiel is
@@ -6424,6 +6481,13 @@ def render_retention_report_html(data: dict) -> str:
         _respons_cell(data["n_completed"], data["n_invited"]),
         _signal_cell,
     ])
+    # R1 (fixronde 24-9): de duiding van blijf- en vertrekintentie hangt direct
+    # onder de cijfers. Zonder startpunt (degraded) niet.
+    _to_scores = (data.get("intent_resp") or {}).get("turnover") or []
+    _intentie_html = _intentie_duiding(
+        avg_si, _stay_scores, _to_scores,
+        startpunt_label=None if _geen_profiel else _raster_primary_label)
+    _cijfers_html += _intentie_html
     # Zelfde telling als _p02_opening: zonder kwetsbaar onderwerp zegt de kop
     # "Geen onderwerp scoort kwetsbaar.", dus geen "Ook".
     _si_kop = _blijfintentie_kopzin(avg_si, _stay_scores,
@@ -6475,6 +6539,7 @@ def render_retention_report_html(data: dict) -> str:
             ST, data=data, deep_agg=deep_agg,
             startpunt_fk=_primary, has_sdt=_heeft_werkbeleving(sdt_a),
             geen_profiel=_geen_profiel, has_werkvragen=bool(_wq_block),
+            intentie_duiding=bool(_intentie_html),
             has_tweede_punt=any(r.get("agenda_role") == "tweede" for r in _raster_rows)),
         direction_line=_direction_p02_line(direction_agg, _primary, ST,
                                            factor_score=_primary_score),

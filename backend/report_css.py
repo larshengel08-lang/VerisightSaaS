@@ -623,6 +623,7 @@ h3 { font-family: 'Inter Tight', sans-serif; font-weight: 700;
 #p02 .mq-line { padding-top: 10px; margin-top: 10px; }
 #p02 .sg { margin-bottom: 10px; }
 #p02 .sc-v { font-size: 18px; }
+#p02 .p02-duiding { font-size: 10px; line-height: 1.45; color: #374151; margin: -4px 0 12px; max-width: none; }
 #p02 .leidraad { margin-top: 10px; padding-top: 8px; }
 #p02 .leidraad-title { margin-bottom: 4px; }
 #p02 .leidraad td { padding: 2px 6px 2px 0; }
