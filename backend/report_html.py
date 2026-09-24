@@ -1633,7 +1633,7 @@ LEIDRAAD_ANKERS = {
 
 
 def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
-                    has_direction: bool, has_deepening: bool) -> str:
+                    has_deepening: bool, has_werkvragen: bool = False) -> str:
     """"Zo leid je dit gesprek in 45 minuten" (spec par. 4 blok 5): vijf regels
     met tijdvak, wat je op tafel legt en de paginaverwijzing. Vervangt het
     gebruiksblok en de zin over de begeleide managementbespreking (H5): de
@@ -1644,10 +1644,11 @@ def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
     sectie die dit rapport niet heeft; de aanroeper geeft geen leidraad mee
     als ook de werkbeleving ontbreekt.
 
-    has_deepening en has_direction volgen dezelfde regel voor regel 3 en 5.
-    Een meting van voor de verdiepings- en richtingvraag (campagne-gate, juli
-    2026) rendert die blokken niet; de leidraad mag ze dan ook niet beloven.
-    Loep Start heeft geen van beide en zegt dat zo.
+    has_deepening volgt dezelfde regel voor regel 3: een meting van voor de
+    verdiepingsvraag (campagne-gate, juli 2026) rendert dat blok niet, en de
+    leidraad mag het dan ook niet beloven. has_werkvragen (fixronde 24-9) is
+    bool(_werkvragen_block(...)) van de renderer: rij 5 verwijst alleen naar
+    dat blok als het er echt staat. Loep Start heeft geen van beide.
     """
     A = LEIDRAAD_ANKERS
     p = _pref
@@ -1660,25 +1661,24 @@ def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
         rij4 = ("Wat mensen zelf schreven", f"De open toelichtingen, ongefilterd (pagina {p(A['toelichtingen'])}).")
     else:
         rij4 = ("Werkbeleving", f"Autonomie, competentie en verbondenheid (pagina {p(A['werkbeleving'])}).")
-    # Plan 3b: het besluit heeft een eigen pagina. Geen extra rij (p.02 blijft
-    # een A4), wel twee verwijzingen in deze ene.
-    # N1 (eindreview): "met de werkvragen" wees naar het hoofdstukanker
-    # ("agenda"), de beginpagina van de gespreksagenda, terwijl het blok "Zo
-    # maak je er een besluit van" daar één of twee pagina's verderop staat.
-    # Teruggedraaid door de hoofdsessie (22-9): de meetregel "paginaverwijzing" in
-    # scripts/check_pdf_report.py eist dat een verwijzing naar een pagina wijst
-    # die met een hoofdstukkop begint; het werkvragenblok staat midden op een
-    # pagina, waardoor 19 van 21 scenario's faalden. De verwijzing blijft dus
-    # naar het begin van de gespreksagenda; het anker op het blok zelf blijft
-    # staan voor een latere, meetbare oplossing.
-    # (N1 wilde: wijzen naar zijn eigen anker (LEIDRAAD_ANKERS["werkvragen"]), gezet op
-    # de wrapper van _werkvragen_block zelf, dus de lezer slaat het juiste vel
-    # op.
+    # Rij 5 (fixronde leesronde 24-9, R2/V6/R3). Twee dingen:
+    # 1. De verwijzing wijst naar het werkvragenblok zelf (anker "werkvragen"),
+    #    niet naar het begin van de gespreksagenda: het blok staat meestal een
+    #    pagina later, en "met de werkvragen (pagina 12)" stuurde het MT naar de
+    #    ranglijst. Mogelijk sinds scripts/check_pdf_report.py het getoonde
+    #    nummer tegen de ankerpagina meet in plaats van een hoofdstukkop te eisen.
+    # 2. Veertien minuten voor twee punten, drie vragen en een besluitpagina is
+    #    krap. De rij zegt wat je overslaat (Herkennen bij het startpunt: dat
+    #    deden jullie al bij de verdieping) en wat mag doorschuiven (het tweede
+    #    punt, met dezelfde parkeerregel als op de besluitpagina).
     besluit = f"Het besluit leg je vast op pagina {p(A['besluit'])}."
-    slot = (f"Wat er volgens je mensen moet gebeuren, met de werkvragen (pagina {p(A['agenda'])}). "
-            + besluit
-            if has_direction else
-            f"Het eerste gesprekspunt (pagina {p(A['agenda'])}). " + besluit)
+    if has_werkvragen:
+        slot = (f"De werkvragen (pagina {p(A['werkvragen'])}). Bij het startpunt sla je "
+                "Herkennen over, dat deden jullie al; neem de vragen eronder. Het tweede punt "
+                "alleen als er tijd is, anders parkeren jullie het tot het vervolgmoment. "
+                + besluit)
+    else:
+        slot = f"Het eerste gesprekspunt (pagina {p(A['agenda'])}). " + besluit
     if scan_type == "onboarding":
         rij3 = (f"Het startpunt: de score en de laagste stelling (pagina {p(A['verdieping'])}). "
                 "Open met de gespreksopener hierboven.")
@@ -1700,8 +1700,8 @@ def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
         ("5-12 min", "Het beeld in één plaatje", f"Het cijferoverzicht (pagina {p(A['overzicht'])}) en {context} "
                                                  f"(pagina {p(A['context'])}). Vraag: verrast dit iemand?"),
         ("12-25 min", "Waar het wringt, en waarom", rij3),
-        ("25-33 min", *rij4),
-        ("33-45 min", "Wat gaan we doen", slot),
+        ("25-31 min", *rij4),
+        ("31-45 min", "Wat gaan we doen", slot),
     ]
     # De body-kolom draagt de <a class="pref">-ankers en gaat daarom bewust
     # niet door _h(); het is vaste copy zonder data.
@@ -1723,8 +1723,9 @@ def _heeft_werkbeleving(sdt_avgs: dict) -> bool:
     return any(sdt_avgs.get(dim) is not None for dim in SDT_LABELS)
 
 
-def _leidraad_html(scan_type: str, *, data: dict, deep_agg: dict, direction_agg: dict,
-                   startpunt_fk: str | None, has_sdt: bool, geen_profiel: bool) -> str:
+def _leidraad_html(scan_type: str, *, data: dict, deep_agg: dict,
+                   startpunt_fk: str | None, has_sdt: bool, geen_profiel: bool,
+                   has_werkvragen: bool = False) -> str:
     """Kiest de vlaggen van de leidraad uit de data van dit rapport.
 
     Eén plek voor de drie renderers (codereview taak 5), zodat ze niet uit
@@ -1738,9 +1739,8 @@ def _leidraad_html(scan_type: str, *, data: dict, deep_agg: dict, direction_agg:
       die regel heeft dan geen sectie om naar te verwijzen.
     - Regel 3 belooft de toelichtingen alleen als het verdiepingsblok van het
       startpunt er echt een verdeling van toont (`_deepening_shows_distribution`).
-    - Regel 5 volgt `direction_agg`: bij te weinig antwoorden rendert het blok
-      "Wat er moet gebeuren" nog wel, met de eerlijke tellingen, dus die
-      verwijzing blijft staan.
+    - Regel 5 volgt `has_werkvragen`: de renderer geeft bool(_werkvragen_block)
+      door, dus de leidraad verwijst alleen naar dat blok als het rendert.
     """
     if geen_profiel:
         return ""
@@ -1750,9 +1750,9 @@ def _leidraad_html(scan_type: str, *, data: dict, deep_agg: dict, direction_agg:
         return ""
     return _leidraad_block(
         scan_type, has_segments=has_segments, has_quotes=has_quotes,
-        has_direction=bool(direction_agg),
         has_deepening=_deepening_shows_distribution(
-            deep_agg.get(startpunt_fk) if startpunt_fk else None))
+            deep_agg.get(startpunt_fk) if startpunt_fk else None),
+        has_werkvragen=has_werkvragen)
 
 
 # Standaardwaarde voor het derde coverstatistiek als er geen factorprofiel is
@@ -3392,10 +3392,10 @@ def _besluit_page(*, opener_html: str, scan_type: str, campaign_name: str,
     """
     agenda = _pref(LEIDRAAD_ANKERS["agenda"])
     if heeft_werkvragen:
-        # N1 (eindreview): wijst naar het eigen anker van het blok (gezet op de
-        # wrapper in _werkvragen_block), niet naar de beginpagina van het
-        # hoofdstuk (agenda) waar het blok vaak niet op staat.
-        werkvragen = _pref(LEIDRAAD_ANKERS["agenda"])
+        # Fixronde 24-9 (R2): wijst naar het eigen anker van het blok (gezet op
+        # de wrapper in _werkvragen_block), niet naar de beginpagina van het
+        # hoofdstuk, waar het blok meestal niet op staat.
+        werkvragen = _pref(LEIDRAAD_ANKERS["werkvragen"])
         intro = (f"Neem de uitkomst van ‘{WERKVRAGEN_EYEBROW}’ (pagina {werkvragen}) hier over. "
                  "Eén besluit dat iemand draagt is meer waard dan vijf voornemens.")
     elif scan_type == "onboarding":
@@ -5875,6 +5875,9 @@ def render_exit_report_html(data: dict) -> str:
                                         data.get("segment_factor_rows"))
     _brug = ("" if _geen_profiel else
              _brugzin(_raster_rows[0]["key"], _raster_primary_label, _seg_startpunt, "exit"))
+    # Het werkvragenblok wordt hier al gebouwd (fixronde 24-9): de leidraad op
+    # pagina twee verwijst ernaar, en alleen als het er echt is.
+    _wq_block = _werkvragen_block(_raster_rows, deep_agg, direction_agg, "exit")
 
     # ── Cover ─────────────────────────────────────────────────────────────────
     opening_q = "Wat speelde mee bij vertrek?"
@@ -6041,9 +6044,9 @@ def render_exit_report_html(data: dict) -> str:
         # De leidraad kiest zijn vlaggen uit de data; zonder factorprofiel of
         # zonder de secties van regel 4 rendert hij bewust niet.
         leidraad_html=_leidraad_html(
-            "exit", data=data, deep_agg=deep_agg, direction_agg=direction_agg,
+            "exit", data=data, deep_agg=deep_agg,
             startpunt_fk=_primary, has_sdt=_heeft_werkbeleving(sdt_a),
-            geen_profiel=_geen_profiel),
+            geen_profiel=_geen_profiel, has_werkvragen=bool(_wq_block)),
         direction_line=_direction_p02_line(direction_agg, _primary, "exit",
                                            factor_score=_primary_score),
         brug_zin=_brug,
@@ -6214,7 +6217,6 @@ def render_exit_report_html(data: dict) -> str:
     # B3): alleen zo kan de methodiekpagina verderop beloven wat dit rapport
     # daadwerkelijk bevat in plaats van wat er aan data bestaat.
     _dir_block = _wat_moet_gebeuren_block(_raster_rows, direction_agg, "exit", n)
-    _wq_block = _werkvragen_block(_raster_rows, deep_agg, direction_agg, "exit")
     s += _prioriteringsraster(
         ranked=_raster_rows,
         scan_type="exit",
@@ -6322,6 +6324,8 @@ def render_retention_report_html(data: dict) -> str:
                                         data.get("segment_factor_rows"))
     _brug = ("" if _geen_profiel else
              _brugzin(_raster_rows[0]["key"], _raster_primary_label, _seg_startpunt, ST))
+    # Zie render_exit_report_html: het blok eerst, de leidraad verwijst ernaar.
+    _wq_block = _werkvragen_block(_raster_rows, deep_agg, direction_agg, ST)
 
     # ── Cover ─────────────────────────────────────────────────────────────────
     _ret_primary = _raster_primary_label or GEEN_FACTORPROFIEL_LBL
@@ -6457,9 +6461,9 @@ def render_retention_report_html(data: dict) -> str:
         opener_html=ch.opener("Het antwoord in het kort"),
         # Vlaggen uit de data, zie render_exit_report_html.
         leidraad_html=_leidraad_html(
-            ST, data=data, deep_agg=deep_agg, direction_agg=direction_agg,
+            ST, data=data, deep_agg=deep_agg,
             startpunt_fk=_primary, has_sdt=_heeft_werkbeleving(sdt_a),
-            geen_profiel=_geen_profiel),
+            geen_profiel=_geen_profiel, has_werkvragen=bool(_wq_block)),
         direction_line=_direction_p02_line(direction_agg, _primary, ST,
                                            factor_score=_primary_score),
         brug_zin=_brug,
@@ -6612,7 +6616,6 @@ def render_retention_report_html(data: dict) -> str:
     _startpunt_fk = _raster_rows[0]["key"] if _raster_rows else None
     # Zie render_exit_report_html: blok eerst, methodiekpagina gate erop (B3).
     _dir_block = _wat_moet_gebeuren_block(_raster_rows, direction_agg, ST, n)
-    _wq_block = _werkvragen_block(_raster_rows, deep_agg, direction_agg, ST)
     s += _prioriteringsraster(
         ranked=_raster_rows,
         scan_type=ST,
@@ -6893,7 +6896,7 @@ def render_onboarding_report_html(data: dict) -> str:
     # hier leeg. _ob_has_sdt schakelt ook de werkbelevingssectie verderop, zodat
     # de leidraad en die sectie niet uiteen kunnen lopen.
     _ob_has_sdt = _heeft_werkbeleving(sdt_a)
-    _ob_leidraad = _leidraad_html(ST, data=data, deep_agg={}, direction_agg={},
+    _ob_leidraad = _leidraad_html(ST, data=data, deep_agg={},
                                   startpunt_fk=None, has_sdt=_ob_has_sdt,
                                   geen_profiel=_geen_profiel)
     s += _bestuurlijke_read(

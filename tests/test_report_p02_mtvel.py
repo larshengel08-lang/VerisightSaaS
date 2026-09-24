@@ -486,10 +486,10 @@ def test_opener_zet_het_anker_op_de_hoofdstukkop():
 
 def test_leidraad_heeft_vijf_tijdvakken_met_paginaverwijzingen():
     html = _leidraad_block("retention", has_segments=True, has_quotes=True,
-                           has_direction=True, has_deepening=True)
+                           has_deepening=True)
     tekst = _tekst(html)
     assert "Zo leid je dit gesprek in 45 minuten" in tekst
-    for tijd in ("0-5 min", "5-12 min", "12-25 min", "25-33 min", "33-45 min"):
+    for tijd in ("0-5 min", "5-12 min", "12-25 min", "25-31 min", "31-45 min"):
         assert tijd in tekst
     assert html.count('class="pref"') >= 5
     assert "begeleide managementbespreking" not in tekst
@@ -499,16 +499,16 @@ def test_leidraad_heeft_vijf_tijdvakken_met_paginaverwijzingen():
 
 def test_leidraad_zonder_afdelingen_valt_terug_op_toelichtingen_of_werkbeleving():
     met_quotes = _tekst(_leidraad_block("retention", has_segments=False, has_quotes=True,
-                                        has_direction=True, has_deepening=True))
+                                        has_deepening=True))
     assert "Per afdeling" not in met_quotes and "Wat mensen zelf schreven" in met_quotes
     zonder = _tekst(_leidraad_block("retention", has_segments=False, has_quotes=False,
-                                    has_direction=True, has_deepening=True))
+                                    has_deepening=True))
     assert "Werkbeleving" in zonder
 
 
 def test_leidraad_loep_start_belooft_geen_verdieping():
     tekst = _tekst(_leidraad_block("onboarding", has_segments=False, has_quotes=False,
-                                   has_direction=False, has_deepening=False))
+                                   has_deepening=False))
     assert "verdieping" not in tekst.lower()
     assert "Wat er volgens je mensen moet gebeuren" not in tekst
 
@@ -517,7 +517,7 @@ def test_leidraad_belooft_geen_toelichtingen_in_een_meting_zonder_verdieping():
     """Een meting van voor de verdiepings- en richtingvraag rendert die blokken
     niet (campagne-gate); regel 3 en 5 mogen ze dan niet aankondigen."""
     tekst = _tekst(_leidraad_block("retention", has_segments=True, has_quotes=False,
-                                   has_direction=False, has_deepening=False))
+                                   has_deepening=False))
     assert "wat mensen als toelichting kozen" not in tekst
     assert "De verdieping van het startpunt: de laagste stelling en de score van elke stelling" in tekst
     assert "Wat er volgens je mensen moet gebeuren" not in tekst
@@ -646,9 +646,9 @@ def test_de_pdf_vult_de_verwijzingen_met_echte_paginanummers():
     for nr in nummers:
         assert 1 <= int(nr) <= doc.page_count
 
-    # De verwijzing uit de slotregel van de leidraad moet echt op de
-    # gespreksagenda uitkomen, niet op een willekeurig nummer.
-    assert str(_pagina_met("Waar begint het gesprek?")) in nummers
+    # De verwijzing uit de slotregel van de leidraad moet echt op de pagina
+    # van het werkvragenblok uitkomen, niet op een willekeurig nummer.
+    assert str(_pagina_met("Per gesprekspunt de vragen die het MT")) in nummers
     assert str(_pagina_met("Overzichtsprofiel")) in nummers
     doc.close()
 
@@ -752,13 +752,12 @@ def test_zonder_afdelingen_toelichtingen_en_werkbeleving_geen_leidraad():
     html = render_retention_report_html(kaal)
     assert "Zo leid je dit gesprek" not in html
     # De verwijzing van de gespreksagenda naar pagina twee blijft, en klopt. De
-    # ranglijst verwijst sinds taak 11 ook naar de drempeltabel. Sinds plan 3b
-    # wijst de besluitpagina naar het werkvragenblok (N1, eindreview: naar zijn
-    # eigen anker, niet naar de beginpagina van het hoofdstuk), en dat blok
-    # wijst terug naar de besluitpagina; zonder leidraad zijn dat samen alle
-    # verwijzingen in dit rapport.
+    # ranglijst verwijst sinds taak 11 ook naar de drempeltabel. Sinds de
+    # fixronde van 24-9 wijst de besluitpagina naar het werkvragenblok zelf,
+    # en dat blok wijst terug naar de besluitpagina; zonder leidraad zijn dat
+    # samen alle verwijzingen in dit rapport.
     assert set(_assert_verwijzingen_kloppen(html)) == {
-        "p02", "sec-drempels", "sec-besluit", "sec-agenda"}
+        "p02", "sec-drempels", "sec-besluit", "sec-werkvragen"}
 
 
 def test_omgekeerde_meetperiode_wordt_gemeld_niet_afgedrukt():
@@ -1448,7 +1447,7 @@ def test_de_markers_van_het_script_komen_uit_de_renderer():
     (taak 13), dan hoort er een rode test te staan in plaats van een regel die
     stil niets meer meet."""
     leidraad = _leidraad_block("retention", has_segments=True, has_quotes=True,
-                              has_direction=True, has_deepening=True)
+                              has_deepening=True)
     assert cpr.LEIDRAAD_MARKER in _tekst(leidraad)
     meet = _responsbasis(invited=58, completed=39, period="W", population="P",
                          segment_available=True)

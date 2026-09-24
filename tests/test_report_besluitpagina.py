@@ -71,13 +71,12 @@ def test_zonder_startpunt_zegt_de_pagina_dat_eerlijk():
 
 
 def test_inleiding_verwijst_naar_de_werkvragen_of_zegt_dat_ze_er_niet_zijn():
-    """N1 (eindreview): de inleiding wijst naar het eigen anker van het blok
-    (werkvragen), niet naar de beginpagina van het hoofdstuk (agenda) -- het
-    blok staat vaak één of twee pagina's later. Lockstep bijgewerkt: pinde
-    voorheen de oude (foute) verwijzing."""
+    """Fixronde leesronde 24-9: de inleiding wijst naar het eigen anker van het
+    blok (werkvragen). De meetregel meet sinds Taak 1 het getoonde nummer tegen
+    de ankerpagina, dus de terugdraai van N1 is niet meer nodig."""
     met = _pagina()
     assert "Zo maak je er een besluit van" in _plain(met)
-    assert 'href="#' + LEIDRAAD_ANKERS["agenda"] + '"' in met  # verwijzing naar het hoofdstukbegin, zie N1-terugdraai in report_html.py
+    assert 'href="#' + LEIDRAAD_ANKERS["werkvragen"] + '"' in met
     start = _plain(_pagina(scan_type="onboarding", heeft_werkvragen=False))
     assert "Zo maak je er een besluit van" not in start
     assert "Loep Start meet nog geen richtingvraag" in start
@@ -114,20 +113,16 @@ def test_het_oude_blok_is_weg_en_de_agenda_verwijst_naar_de_besluitpagina(scan_t
 
 
 def test_leidraad_rij_vijf_wijst_naar_werkvragen_en_besluit():
-    """N1 (eindreview): "met de werkvragen" wees naar het hoofdstukanker
-    (agenda), de beginpagina van de gespreksagenda, terwijl het blok "Zo maak
-    je er een besluit van" daar vaak één of twee pagina's verderop staat. Wijst
-    nu naar zijn eigen anker (werkvragen). Lockstep bijgewerkt: pinde voorheen
-    de oude (foute) verwijzing naar agenda."""
+    """Fixronde leesronde 24-9 (R2): rij 5 wijst naar het werkvragenblok zelf."""
     html = _leidraad_block("retention", has_segments=True, has_quotes=True,
-                           has_direction=True, has_deepening=True)
-    rij = html[html.index("33-45 min"):]
-    assert 'href="#' + LEIDRAAD_ANKERS["agenda"] + '"' in rij  # idem
+                           has_deepening=True, has_werkvragen=True)
+    rij = html[html.index("31-45 min"):]
+    assert 'href="#' + LEIDRAAD_ANKERS["werkvragen"] + '"' in rij
     assert 'href="#' + LEIDRAAD_ANKERS["besluit"] + '"' in rij
-    assert "met de werkvragen" in _plain(rij)
+    assert "De werkvragen (pagina" in _plain(rij)
     assert html.count("<tr>") == 5          # geen extra rij: p.02 blijft een A4
     zonder = _leidraad_block("onboarding", has_segments=False, has_quotes=False,
-                             has_direction=False, has_deepening=False)
+                             has_deepening=False)
     assert "werkvragen" not in _plain(zonder)
     assert 'href="#' + LEIDRAAD_ANKERS["besluit"] + '"' in zonder
 
