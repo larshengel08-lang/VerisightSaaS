@@ -885,16 +885,21 @@ def _blijfintentie_kopzin(avg_si: float | None, stay_scores: list[float], *,
 # R1 (koude leesronde 24-9): de blijfintentie had sinds B1 een naam op pagina
 # twee, maar geen duiding. Het MT las "25 van de 39 onder de 5" en vroeg: waar
 # zit dat, en wat doen we ermee? Het rapport splitst blijf- en vertrekintentie
-# niet per afdeling uit (het afdelingsblok toont het behoudssignaal en de
-# onderwerpen), dus de eerlijke zin is: dit zegt hoe dringend, niet waar of
-# waarom; daarom begint het gesprek bij het startpunt.
+# niet per afdeling uit, dus de eerlijke zin is: dit zegt hoe dringend, niet
+# waar of waarom; daarom begint het gesprek bij het startpunt.
+#
+# De zin noemt blijf- en vertrekintentie bij naam (codereview taak 3): de
+# alinea staat direct onder de cel Behoudssignaal, en dat getal splitst het
+# afdelingsblok wel per afdeling uit (kolom Score). "Deze cijfers" zou dat
+# getal meenemen en dan onwaar zijn.
 INTENTIE_DUIDING_KERN = (
-    "Deze cijfers zeggen hoe dringend behoud hier is. Ze zeggen niet bij welke afdeling "
+    "Blijf- en vertrekintentie zeggen hoe dringend behoud hier is, niet bij welke afdeling "
     "het speelt of waarom: dit rapport splitst ze niet per afdeling uit.")
 
 
 def _intentie_duiding(avg_si: float | None, stay_scores: list[float],
-                      to_scores: list[float], *, startpunt_label: str | None) -> str:
+                      to_scores: list[float], *, startpunt_label: str | None,
+                      startpunt_score: float | None, indicatief: bool = False) -> str:
     """Eén alinea onder de cijfers op pagina twee (R1), alleen bij Loep Behoud.
 
     Leeg zonder blijfintentie, zonder startpunt (degraded: daar draagt
@@ -905,6 +910,16 @@ def _intentie_duiding(avg_si: float | None, stay_scores: list[float],
     scores zijn, dezelfde staffel als de spreidingsstrook op de
     behoudscontext; "veel vertrekgedachten" is daar de hoogste zone (vanaf
     ZONE_HIGH), met hetzelfde label.
+
+    Slotzin (codereview taak 3):
+    - "daar zie je waar het wringt" alleen als het startpunt zelf geen
+      relatief sterke score heeft (grens uit _factor_label, geen nieuwe
+      drempel). Een zwakke blijfintentie kan samengaan met onderwerpen die
+      allemaal relatief sterk scoren; dan wringt het daar niet aantoonbaar.
+      Zonder score valt de bijzin ook weg: niets claimen wat niet vaststaat.
+    - indicatief (_respons_indicatief, respons onder 30%): elke zin die het
+      startpunt noemt zegt dan "mogelijk startpunt" (ronde 2), net als de
+      kernzin en de cel erboven.
     """
     if avg_si is None or not startpunt_label:
         return ""
@@ -923,8 +938,15 @@ def _intentie_duiding(avg_si: float | None, stay_scores: list[float],
                          + _werkwoord(hoog, "heeft", "hebben")
                          + " veel vertrekgedachten (vertrekintentie vanaf " + grens + ").")
     delen.append(INTENTIE_DUIDING_KERN)
-    delen.append("Daarom begint het gesprek bij " + startpunt_label + ": daar zie je waar het "
-                 "wringt, en daar kan het MT zelf iets besluiten.")
+    wringt = (startpunt_score is not None
+              and _factor_label(startpunt_score) != "Relatief sterk")
+    staart = ("daar zie je waar het wringt, en daar kan het MT zelf iets besluiten."
+              if wringt else "daar kan het MT zelf iets besluiten.")
+    if indicatief:
+        delen.append("Daarom kiest Loep " + startpunt_label + " als mogelijk startpunt voor het "
+                     "gesprek: " + staart)
+    else:
+        delen.append("Daarom begint het gesprek bij " + startpunt_label + ": " + staart)
     return '<p class="p02-duiding">' + _h(" ".join(delen)) + "</p>"
 
 
@@ -1758,7 +1780,8 @@ def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
     if intentie_duiding:
         # R1: het moment waarop de vergadering ontspoorde. De regel onder de
         # cijfers op deze pagina is de zin die de HR-manager dan voorleest.
-        rij2 += " Gaat het over de blijfintentie, lees dan de regel onder de cijfers hierboven voor."
+        rij2 += (" Gaat het over blijf- of vertrekintentie, lees dan de regel onder de "
+                 "cijfers hierboven voor.")
     rijen = [
         ("0-5 min", "Hoe stevig is dit", rij1),
         ("5-12 min", "Het beeld in één plaatje", rij2),
@@ -6486,7 +6509,9 @@ def render_retention_report_html(data: dict) -> str:
     _to_scores = (data.get("intent_resp") or {}).get("turnover") or []
     _intentie_html = _intentie_duiding(
         avg_si, _stay_scores, _to_scores,
-        startpunt_label=None if _geen_profiel else _raster_primary_label)
+        startpunt_label=None if _geen_profiel else _raster_primary_label,
+        startpunt_score=_primary_score,
+        indicatief=_respons_indicatief(data["n_completed"], data["n_invited"]))
     _cijfers_html += _intentie_html
     # Zelfde telling als _p02_opening: zonder kwetsbaar onderwerp zegt de kop
     # "Geen onderwerp scoort kwetsbaar.", dus geen "Ook".

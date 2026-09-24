@@ -173,67 +173,165 @@ def test_loep_start_verandert_niet():
 
 
 # ── Taak 3: blijf- en vertrekintentie duiden (R1) ───────────────────────────
+# Tekst na de codereview van taak 3 (controllerbesluit, wijkt af van de plantekst):
+# de kern noemt blijf- en vertrekintentie bij naam, "waar het wringt" alleen bij
+# een startpunt dat niet relatief sterk scoort, "mogelijk startpunt" bij een
+# indicatief beeld, en rij 2 van de leidraad noemt beide intenties.
 
 STAY = [2.0] * 25 + [5.5] * 8 + [8.0] * 6        # n=39
 TO_VEEL = [7.0] * 19 + [3.0] * 20                 # 19 van de 39 vanaf 6,5
-KERN = ("Deze cijfers zeggen hoe dringend behoud hier is. Ze zeggen niet bij welke afdeling "
+KERN = ("Blijf- en vertrekintentie zeggen hoe dringend behoud hier is, niet bij welke afdeling "
         "het speelt of waarom: dit rapport splitst ze niet per afdeling uit.")
 SLOT = ("Daarom begint het gesprek bij Groeiperspectief: daar zie je waar het wringt, en daar "
         "kan het MT zelf iets besluiten.")
+SLOT_STERK = "Daarom begint het gesprek bij Groeiperspectief: daar kan het MT zelf iets besluiten."
+SLOT_INDICATIEF = ("Daarom kiest Loep Groeiperspectief als mogelijk startpunt voor het gesprek: daar "
+                   "zie je waar het wringt, en daar kan het MT zelf iets besluiten.")
+LEIDRAADZIN = ("Gaat het over blijf- of vertrekintentie, lees dan de regel onder de cijfers "
+               "hierboven voor.")
+DUIDING = "hoe dringend behoud hier is"
+
+
+def _duiding(avg_si=3.9, stay=STAY, to=TO_VEEL, *, startpunt="Groeiperspectief",
+             score=4.5, indicatief=False) -> str:
+    return _intentie_duiding(avg_si, stay, to, startpunt_label=startpunt,
+                             startpunt_score=score, indicatief=indicatief)
 
 
 def test_intentie_duiding_noemt_urgentie_grens_en_startpunt():
-    html = _intentie_duiding(3.9, STAY, TO_VEEL, startpunt_label="Groeiperspectief")
+    html = _duiding()
     assert html.startswith('<p class="p02-duiding">')
     assert _plain(html) == ("19 van de 39 hebben veel vertrekgedachten (vertrekintentie vanaf "
                             "6,5). " + KERN + " " + SLOT)
 
 
 def test_intentie_duiding_enkelvoud_en_nul():
-    een = _plain(_intentie_duiding(3.9, STAY, [7.0] + [3.0] * 38, startpunt_label="Groeiperspectief"))
+    een = _plain(_duiding(to=[7.0] + [3.0] * 38))
     assert een.startswith("1 van de 39 heeft veel vertrekgedachten")
-    geen = _plain(_intentie_duiding(3.9, STAY, [3.0] * 39, startpunt_label="Groeiperspectief"))
+    geen = _plain(_duiding(to=[3.0] * 39))
     assert geen.startswith("Geen van de 39 heeft veel vertrekgedachten")
 
 
+def test_vertrekscore_van_precies_zes_en_een_half_telt_als_veel():
+    assert _plain(_duiding(to=[6.5] * 3 + [6.4] * 9)).startswith(
+        "3 van de 12 hebben veel vertrekgedachten")
+
+
 def test_intentie_duiding_zonder_genoeg_vertrekscores_noemt_alleen_de_leesregel():
-    t = _plain(_intentie_duiding(3.9, STAY, [7.0] * 9, startpunt_label="Groeiperspectief"))
-    assert t == KERN + " " + SLOT
+    assert _plain(_duiding(to=[7.0] * 9)) == KERN + " " + SLOT
 
 
 def test_intentie_duiding_ook_bij_een_aandachtspunt():
-    assert KERN in _plain(_intentie_duiding(5.8, STAY, TO_VEEL, startpunt_label="Groeiperspectief"))
+    assert KERN in _plain(_duiding(avg_si=5.8))
 
 
 @pytest.mark.parametrize("avg_si, startpunt", [(7.0, "Groeiperspectief"), (None, "Groeiperspectief"),
                                                (3.9, None), (3.9, "")])
 def test_intentie_duiding_zwijgt_als_er_niets_te_duiden_is(avg_si, startpunt):
-    assert _intentie_duiding(avg_si, STAY, TO_VEEL, startpunt_label=startpunt) == ""
+    assert _duiding(avg_si=avg_si, startpunt=startpunt) == ""
+
+
+@pytest.mark.parametrize("score", [6.5, 7.8, None])
+def test_zonder_wringend_startpunt_geen_waar_het_wringt(score):
+    """Een zwakke blijfintentie kan samengaan met onderwerpen die allemaal
+    relatief sterk scoren; dan wringt het bij het startpunt niet aantoonbaar."""
+    t = _plain(_duiding(score=score))
+    assert t.endswith(SLOT_STERK)
+    assert "wringt" not in t
+
+
+@pytest.mark.parametrize("score", [4.5, 6.4])
+def test_bij_een_kwetsbaar_of_wankel_startpunt_wel_waar_het_wringt(score):
+    assert _plain(_duiding(score=score)).endswith(SLOT)
+
+
+def test_indicatief_beeld_noemt_een_mogelijk_startpunt():
+    t = _plain(_duiding(indicatief=True))
+    assert t.endswith(SLOT_INDICATIEF)
+    assert "Daarom begint het gesprek bij" not in t
+    sterk = _plain(_duiding(indicatief=True, score=7.0))
+    assert sterk.endswith("Daarom kiest Loep Groeiperspectief als mogelijk startpunt voor het "
+                          "gesprek: daar kan het MT zelf iets besluiten.")
 
 
 def test_intentie_duiding_claimt_geen_oorzaak_en_voorspelt_niets():
-    t = _plain(_intentie_duiding(3.9, STAY, TO_VEEL, startpunt_label="Groeiperspectief")).lower()
-    for fout in ("oorzaak", "komt door", "voorspel", "zullen vertrekken", "gaan vertrekken"):
-        assert fout not in t
-    assert not any(s in t for s in STREEPJES)
+    for html in (_duiding(), _duiding(indicatief=True), _duiding(score=7.0)):
+        t = _plain(html).lower()
+        for fout in ("oorzaak", "komt door", "voorspel", "zullen vertrekken", "gaan vertrekken"):
+            assert fout not in t
+        assert not any(s in t for s in STREEPJES)
+
+
+def _behoud(avg_si=3.9, stay=STAY, to=TO_VEEL, **over) -> dict:
+    return _retention_met_secties(
+        avg_si=avg_si, intent_resp={"stay": stay, "turnover": to, "engagement": [6.0] * len(stay)},
+        **over)
+
+
+def _duiding_html(p2: str) -> str:
+    start = p2.index('<p class="p02-duiding">')
+    return p2[start:p2.index("</p>", start) + 4]
 
 
 def test_behoud_pagina_twee_draagt_de_duiding_en_de_leidraad_verwijst_ernaar():
-    data = _retention_met_secties(
-        avg_si=3.9, intent_resp={"stay": STAY, "turnover": TO_VEEL, "engagement": [6.0] * 39})
-    p2 = _page_two(render_retention_report_html(data))
-    assert "hoe dringend behoud hier is" in _plain(p2)
-    assert ("Gaat het over de blijfintentie, lees dan de regel onder de cijfers hierboven voor."
-            in _plain(_rij(p2, "5-12 min")))
+    p2 = _page_two(render_retention_report_html(_behoud()))
+    assert DUIDING in _plain(p2)
+    # Startpunt workload 5.0 (aandachtspunt): de renderer geeft de score door,
+    # dus de bijzin blijft staan (zonder score zou hij wegvallen).
+    assert _plain(_duiding_html(p2)).endswith(
+        ": daar zie je waar het wringt, en daar kan het MT zelf iets besluiten.")
+    assert LEIDRAADZIN in _plain(_rij(p2, "5-12 min"))
+
+
+def test_duiding_staat_tussen_de_cijfers_en_het_waaromblok():
+    p2 = _page_two(render_retention_report_html(_behoud()))
+    cijfers = p2.index('class="sg p02-cijfers"')
+    duiding = p2.index('<p class="p02-duiding">')
+    waarom = p2.index('class="why-title"')
+    assert cijfers < duiding < waarom
+
+
+def test_duiding_telt_hetzelfde_als_de_spreidingsstrook():
+    """Zelfde getal als "Veel vertrekgedachten N" in de strook van de behoudscontext."""
+    html = render_retention_report_html(_behoud())
+    strook = re.findall(r"Veel vertrekgedachten (\d+)</span>", _body(html))
+    assert strook, "spreidingsstrook vertrekintentie niet gevonden"
+    assert set(strook) == {"19"}
+    assert _plain(_duiding_html(_page_two(html))).startswith(
+        strook[0] + " van de 39 hebben veel vertrekgedachten")
 
 
 def test_behoud_met_sterke_blijfintentie_heeft_geen_duiding_en_geen_verwijzing():
-    data = _retention_met_secties(
-        avg_si=7.5, intent_resp={"stay": [8.0] * 39, "turnover": [2.0] * 39, "engagement": [6.0] * 39})
-    p2 = _plain(_page_two(render_retention_report_html(data)))
-    assert "hoe dringend behoud hier is" not in p2
+    p2 = _plain(_page_two(render_retention_report_html(
+        _behoud(avg_si=7.5, stay=[8.0] * 39, to=[2.0] * 39))))
+    assert DUIDING not in p2
     assert "lees dan de regel onder de cijfers" not in p2
 
 
+def test_degraded_pagina_twee_heeft_geen_duiding_en_geen_verwijzing():
+    data = _fixture("retention", n=6, profile=False)
+    data["avg_si"] = 3.9
+    data["intent_resp"] = {"stay": [2.0] * 6, "turnover": [7.0] * 6, "engagement": [6.0] * 6}
+    p2 = _page_two(render_retention_report_html(data))
+    assert "p02-duiding" not in p2
+    assert DUIDING not in _plain(p2)
+    assert "lees dan de regel onder de cijfers" not in _plain(p2)
+
+
+def test_renderer_indicatief_noemt_mogelijk_startpunt_in_de_duiding():
+    data = _behoud(n_completed=39, n_invited=200)
+    t = _plain(_duiding_html(_page_two(render_retention_report_html(data))))
+    assert "als mogelijk startpunt voor het gesprek" in t
+    assert "Daarom begint het gesprek bij" not in t
+
+
+def test_renderer_relatief_sterk_startpunt_zonder_waar_het_wringt():
+    data = _behoud(factor_avgs={"workload": 7.0}, top_risks=[("workload", 7.0)],
+                   org_item_avgs={"W1": 7.0})
+    t = _plain(_duiding_html(_page_two(render_retention_report_html(data))))
+    assert t.endswith(": daar kan het MT zelf iets besluiten.")
+    assert "wringt" not in t
+
+
 def test_vertrek_krijgt_geen_intentieduiding():
-    assert "hoe dringend behoud hier is" not in _plain(render_exit_report_html(_exit_met_toelichtingen()))
+    assert DUIDING not in _plain(render_exit_report_html(_exit_met_toelichtingen()))
