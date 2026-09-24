@@ -209,12 +209,12 @@ def test_campagne_gate_kolom_weg_plus_disclosure():
     assert CELL_NOT_TRIGGERED not in html
 
 
-def test_navy_slotblok_met_opener_en_invulregels():
+def test_navy_slotblok_met_opener_en_verwijzing_naar_de_besluitpagina():
     html = _render()
     assert "Gespreksopener" in html
     assert "Testvraag?" in html
-    assert "Prioriteit" in html and "Eigenaar" in html and "Vervolgmoment" in html
-    assert "In te vullen tijdens de bespreking" in html
+    assert "In te vullen tijdens de bespreking" not in html
+    assert "Leg het besluit vast op pagina" in html
 
 
 def test_zichtbaar_signaal_bij_vlag_in_html():

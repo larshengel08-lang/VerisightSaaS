@@ -1326,6 +1326,265 @@ Was (na ronde 2): Q1 19✓/2~/0✗ · Q2 19✓/2~/0✗ · Q3 10✓/9~/2✗ · Q4
 
 B9 is daarmee op de scenario's gefixt; de rij "B9 niet gefixt" in "Wat er per bevinding veranderde" beschrijft de stand na deel B, vóór de fixrondes.
 
+## Na plan 3b (2026-09-22)
+
+Branch `feature/rapport-3b`, HEAD `2391ec70`, vanaf main `5dc757be`. In scope: spec
+2026-09-16 onderdeel 3 (par. 6, het blok "Zo maak je er een besluit van" met per
+gesprekspunt een herkenningsvraag, een vertaalvraag en een besluitvraag, plus de 72
+vertaalvragen en de verdeeld-zinnen uit het concept van 19 september, akkoord Lars 21
+september) en onderdeel 4 (par. 7, de besluitpagina "Besluit van het MT", invulbaar en
+voorgedrukt uit `campaign_decisions`), plus restpunten 1 tot en met 3 uit plan 3a (dunne
+verdiepingsblokken, `besluit-op-een-a4` en de appendixstaart in `check_pdf_report.py`,
+`_nl_tijd` via `ZoneInfo`).
+
+**Bron van deze sectie: de gerenderde PDF's, niet de code.** Alle eenentwintig scenario's,
+de drie voorbeeldrapporten en `90_besluit_voorgedrukt` zijn gerenderd in het productie-image
+(`loep-backend:test`, WeasyPrint 70.0) en staan in
+`C:\Users\larsh\AppData\Local\Temp\loep-3b\out\`. Per scenario zijn pagina twee, de
+verdiepingspagina's, het blok "Wat er moet gebeuren", het blok "Zo maak je er een besluit
+van" en de besluitpagina gelezen via de tekstlaag (PyMuPDF), met een visuele controle op de
+agendapagina's van 02 en 14. Let op het verschil in meetbasis met "Na plan 3a": daar is Q4
+gescoord op de ghcr-image met WeasyPrint 58.1, hier op het productie-image met 70.0.
+
+### Matrix na plan 3b
+
+| # | Scenario | n | Q1 antwoord p2 | Q2 startpunt | Q3 wat moet gebeuren | Q4 holle pagina's | Q5 tegenspraak | Q6 overclaim |
+|---|----------|---|----|----|----|----|----|----|
+| 01 | Vlak middelmatig | 45 | ✓ | ✓ | ✓ | **~ p7 36% (REGRESSIE)** | ✓ | ✓ |
+| 02 | Eén lage factor | 45 | ✓ | ✓ | **✓** | ✓ | ✓ | ✓ |
+| 03 | Twee near-ties | 45 | ✓ | ✓ | ✓ | ✓ | ✓ | **~ (REGRESSIE)** |
+| 04 | Alles hoog | 45 | ✓ | ✓ | ✓ | ✓ | ~ | ✓ |
+| 05 | Alles laag, crisis | 45 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 06 | Eén afdeling laag | 45 | ✓ | ✓ | **✓** | ✓ | ✓ | ~ |
+| 07 | Vertrek, onder drempel | 8 | ~ | ~ | ~ | ✓ | ~ | ✗ |
+| 08 | Vertrek, net boven | 12 | ✓ | ✓ | **✓** | ✓ | ✓ | ✓ |
+| 09 | Gemengde afdelingen | 25 | ✓ | ✓ | ✓ | **~ p7 26% (REGRESSIE)** | ✓ | ✓ |
+| 10 | Twaalf kleine afdelingen | 90 | ✓ | ✓ | **✓** | ✓ | ✓ | ~ |
+| 11 | Grote populatie | 180 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 12 | 60% overslag verdieping | 45 | ✓ | ✓ | **✓** | ✓ | ✓ | ✓ |
+| 13 | 40% "niets nodig" | 45 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 14 | 35% "Anders" | 45 | ✓ | ✓ | ~ | ✓ | ✓ | ✓ |
+| 15 | Richting verdeeld | 45 | ✓ | ✓ | **✓** | ✓ | ✓ | ✓ |
+| 16 | Respons 30% | 45 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 16b | Respons 25% | 45 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 17 | Respons 90% | 45 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 18 | Vlak + n=12 | 12 | ~ | ~ | **✓** | ✓ | ✓ | ~ |
+| 19 | Vlak + 40% niets nodig | 45 | ✓ | ✓ | ~ | **~ p7 36% (REGRESSIE)** | ✓ | ✓ |
+| 20 | Loep Start sanity | 30 | ✓ | ✓ | **~** | ✓ | ✓ | ✓ |
+
+Vet: gewijzigd ten opzichte van de eindstand van "Na plan 3a" (na fixronde 3). Twaalf cellen
+bewegen: acht omhoog (Q3 van 02, 06, 08, 10, 12, 15, 18 en 20), vier omlaag (Q4 van 01, 09
+en 19, Q6 van 03). De vier omlaag staan hieronder als regressie beschreven.
+
+**Score (21 rijen): Q3 17✓/4~/0✗** · Q1 19✓/2~/0✗ · Q2 19✓/2~/0✗ · Q4 18✓/3~/0✗ · Q5 19✓/2~/0✗ · Q6 16✓/4~/1✗.
+Was (na plan 3a, eindstand): **Q3 10✓/10~/1✗** · Q1 19✓/2~/0✗ · Q2 19✓/2~/0✗ · Q4 21✓/0~/0✗ · Q5 19✓/2~/0✗ · Q6 17✓/3~/1✗.
+
+Beoordelingsregel voor Q1, Q2, Q4, Q5 en Q6: dezelfde als in ronde 1, 2 en plan 3a. Q3 is
+gescoord met de regel uit Taak 15 stap 6 van plan 3b:
+
+| Score | Wanneer |
+|---|---|
+| ✓ | Per gesprekspunt een herkenningsvraag met echte data of een eerlijke terugval, een vertaalvraag óf een staat waarin er terecht geen hoort (`none_needed`, `too_few`, `divided` zonder twee routes), met een besluitvraag die daarbij past, en een besluitpagina die het startpunt voordrukt |
+| ~ | Het blok staat er, maar iets erin helpt het MT niet verder: een terugvalvraag waar data had kunnen staan, een vertaalvraag die niet bij de getoonde richting past, of een besluitpagina zonder startpunt. Bij Loep Start (20): geen werkvragen, wel een besluitpagina |
+| ✗ | Geen brug naar een besluit, of een vraag die iets beweert wat de data niet draagt |
+
+### De drie werkvragen van het startpunt, per scenario
+
+Letterlijk uit de PDF. Vragen die in meerdere rapporten woordelijk terugkomen staan hier één
+keer, met een code:
+
+- **[B]** "Wat spreken jullie vandaag af, wie is eigenaar, en waaraan zie je over 90 dagen dat het werkt?"
+- **[B-niets]** "De meeste betrokkenen zeggen dat hier niets hoeft. Blijft dit een gesprekspunt, of besluiten jullie hier nu niets te doen? Wie is eigenaar van dat besluit, en wanneer kijken jullie opnieuw?"
+- **[V-groei]** "Waar ziet een medewerker bij jullie vandaag welke functies, opleidingen of projecten er zijn? En wie wijst een medewerker op wat er voor hem of haar tussen zit?"
+- **[V-leiding]** "Een medewerker levert werk in dat beter kan. Van wie hoort die wat er anders moet en waar het naartoe moet, en hoe snel? Wat kan die er de volgende dag mee?", met de vaste regel "Deze vraag gaat ook over de leidinggevenden aan deze tafel. Beantwoord hem eerst voor je eigen team."
+- **[V-verdeeld]** "Deze groep koos verschillend; de verdeling staat hierboven. Met welke van de meest gekozen richtingen beginnen jullie, en welke laten jullie bewust liggen?"
+- **[V-split]** "Deze groep is verdeeld: een deel vraagt om verandering, een even groot deel zegt dat het goed zit. Beide kan kloppen. Waar zouden jullie met de meest gekozen richting beginnen?"
+- **[H-data]** betekent: "X van de Y kozen als toelichting ‘T’; die Y zijn de mensen die bij [onderwerp] duidelijk laag antwoordden en de verdiepende vraag beantwoordden. Waar zie je dat bij jullie terug, en waar niet?" X, Y en T staan per scenario.
+
+Bij elk scenario staat de richtingstaat van het startpunt en, waar de herkenningsvraag
+terugvalt, waarom. In alle twintig rapporten met een profiel drukt de besluitpagina het
+startpunt en het tweede punt voor; in 07 staat "Dit rapport wijst nog geen startpunt aan;
+kies zelf het onderwerp."
+
+| # | Startpunt · richtingstaat | Herkennen | Vertalen | Besluiten | Q3 |
+|---|---|---|---|---|---|
+| 01 | Groeiperspectief · clear, 8 van de 11 (73%) | "Wat zit er volgens jullie achter de 5.7/10 op groeiperspectief?" (terugval terecht: 1 van de 2 beantwoordde de verdieping) | [V-groei] | [B] | ✓ |
+| 02 | Groeiperspectief · clear, 19 van de 36 (53%) | [H-data] 9 van de 19 (47%), ‘Ik zie niet welke mogelijkheden er voor mij zijn’ | [V-groei] | [B] | ✓ |
+| 03 | Groeiperspectief · clear, 15 van de 25 (60%) | [H-data] 4 van de 14 (29%), ‘Er wordt te weinig concreet met mij over ontwikkeling gesproken’ | [V-groei] | [B] | ✓ |
+| 04 | Rolhelderheid en eigenaarschap · none_needed, 4 van de 7 | "Wat zit er volgens jullie achter de 7.8/10 op rolhelderheid en eigenaarschap?" (terugval terecht: niemand kreeg een verdieping) | geen (terecht) | [B-niets] | ✓ |
+| 05 | Leiderschap en vertrouwen · clear, 8 van de 15 (53%) | [H-data] 17 van de 30 (57%), ‘Ik krijg te weinig bruikbare feedback of richting’ | [V-leiding] | [B] | ✓ |
+| 06 | Werkdruk en herstelruimte · too_few, 2 van de 3 | [H-data] 2 van de 7, ‘De bezetting of planning sluit niet aan op het werk dat gedaan moet worden’ | geen (terecht) | [B] | ✓ |
+| 07 | geen startpunt (n=8) | geen werkvragen; gespreksopener "Dit rapport wijst nog geen onderwerp aan om mee te beginnen. Wat herkennen jullie in wat er wel staat, en wat is er nodig om bij een volgende meting wel een startpunt te krijgen?" | geen | geen blok; besluitpagina zonder startpunt | ~ |
+| 08 | Leiderschap en feedback · clear, 3 van de 5 | "Wat zit er volgens jullie achter de 4.9/10 op leiderschap en feedback?" (terugval terecht: 3 beantwoordden de verdieping) | "Een medewerker levert nu werk in dat beter kan. Van wie hoort die wat er anders moet, en hoe snel? En toen de vertrekkers er nog werkten?" plus de vaste regel | [B] | ✓ |
+| 09 | Groeiperspectief · plurality, 4 van de 9 | "Wat zit er volgens jullie achter de 5.7/10 op groeiperspectief?" (terugval terecht: 2 beantwoordden de verdieping) | [V-groei] | [B] | ✓ |
+| 10 | Groeiperspectief · clear, 14 van de 19 (74%) | [H-data] 9 van de 18 (50%), ‘Ik zie niet welke mogelijkheden er voor mij zijn’ | [V-groei] | [B] | ✓ |
+| 11 | Groeiperspectief · plurality, 27 van de 62 (44%) | [H-data] 19 van de 45 (42%), ‘Ik zie niet welke mogelijkheden er voor mij zijn’ | [V-groei] | [B] | ✓ |
+| 12 | Groeiperspectief · clear, 21 van de 33 (64%) | [H-data] 7 van de 11 (64%), ‘Ik zie niet welke mogelijkheden er voor mij zijn’ | [V-groei] | [B] | ✓ |
+| 13 | Groeiperspectief · split_none, 14 niets tegen 14 ‘Beter zicht op welke mogelijkheden er voor mij zijn’ van de 36 | [H-data] 10 van de 16 (62%), ‘Ik zie niet welke mogelijkheden er voor mij zijn’ | [V-split] | [B] | ✓ |
+| 14 | Groeiperspectief · divided, ‘Anders’ grootste (9 van de 30) | "Wat zit er volgens jullie achter de 4.5/10 op groeiperspectief?" (terugval terwijl de verdieping 18 antwoorden heeft, zie hieronder) | geen (terecht: ‘Anders’ grootst) | [B] | ~ |
+| 15 | Groeiperspectief · divided, grootste 6 van de 28 (21%) | [H-data] 11 van de 17 (65%), ‘Ik zie niet welke mogelijkheden er voor mij zijn’ | [V-verdeeld] | [B] | ✓ |
+| 16 | Groeiperspectief · clear, 12 van de 21 (57%) | [H-data] 6 van de 12 (50%), ‘Er wordt te weinig concreet met mij over ontwikkeling gesproken’ | [V-groei] | [B] | ✓ |
+| 16b | Groeiperspectief · clear, 13 van de 19 (68%) | [H-data] 5 van de 14 (36%), ‘Er wordt te weinig concreet met mij over ontwikkeling gesproken’ | [V-groei] | [B] | ✓ |
+| 17 | Groeiperspectief · clear, 11 van de 18 (61%) | [H-data] 5 van de 11 (45%), ‘Ik zie niet welke mogelijkheden er voor mij zijn’ | [V-groei] | [B] | ✓ |
+| 18 | Beloning en eerlijkheid · divided, 2 tegen 1 van de 3 (twee routes) | "Wat zit er volgens jullie achter de 5.6/10 op beloning en eerlijkheid?" (terugval terecht: 1 beantwoordde de verdieping) | [V-verdeeld] | [B] | ✓ |
+| 19 | Groeiperspectief · divided, 6 ‘Beter zicht op welke mogelijkheden er voor mij zijn’, 5 niets, 1 andere route, van de 12 | "Wat zit er volgens jullie achter de 5.6/10 op groeiperspectief?" (terugval terecht: 4 beantwoordden de verdieping) | [V-verdeeld] | [B] | ~ |
+| 20 | Informatiedichtheid en werktempo · Loep Start, geen richtingvraag | geen werkvragen; agenda "Bespreek eerst ‘Ik houd in deze eerste periode genoeg ruimte over om te leren zonder direct overbelast te raken.’ binnen informatiedichtheid en werktempo (5.1/10)." | geen | besluitpagina "Loep Start meet nog geen richtingvraag; het besluit volgt uit jullie gesprek over het startpunt (pagina 9)", startpunt voorgedrukt | ~ |
+
+Het tweede punt is op dezelfde manier gelezen. Daar vallen op: 01 (clear, "Een medewerker
+vraagt hoe jullie salaris zich verhoudt tot vergelijkbaar werk elders. Wat krijgt die te
+zien? En weten jullie het zelf niet: wie zoekt het uit, voor welke functies eerst?"), 02
+(divided met 2 route tegen 2 niets van de 4, dus terecht geen vertaalvraag), 04 en 13
+(none_needed met [B-niets]), 06 (clear 3 van de 5 met [V-groei]), 08 (divided 2 tegen 1 van de
+3 met de verdeeld-zin voor Vertrek: "Deze vertrekkers kozen verschillend; de verdeling staat
+hierboven. Welke van de meest gekozen richtingen pakken jullie op voor wie er nu werkt, en
+welke laten jullie bewust liggen?"), 10 (divided over 35 met [V-verdeeld] en de vaste regel),
+12 (clear 3 van de 3 met de beperkte-basis-regel), 14 en 18 (too_few, terecht zonder
+vertaalvraag).
+
+**"De verdeling staat hierboven" klopt in alle zeven gevallen** (08, 10, 15, 18, 19 en de
+voorbeelden Loep Vertrek en Loep Behoud): de richtingkaart met de verdeling staat telkens op
+dezelfde pagina, boven het werkvragenblok. **De vaste regel bij aansturing** staat alleen onder
+een vertaalvraag bij leiderschap (05, 08, 10, 16, 17, voorbeeld Loep Vertrek), nooit zonder
+vertaalvraag. **"Zo laag"** komt in geen enkele render voor.
+
+### Wat er per bevinding veranderde
+
+| # | Status | Bewijs |
+|---|---|---|
+| B3 (koude leesronde: geen brug van keuze naar besluit) | **dicht in de render; de leesronde light zelf is Taak 15 stap 7** | In twintig van de eenentwintig rapporten staat onder "Wat er moet gebeuren" het blok "Zo maak je er een besluit van" ("Per gesprekspunt de vragen die het MT van ‘dit kozen je mensen’ naar ‘dit gaan wij doen’ brengen. Loep geeft hier geen advies; het besluit is aan jullie en komt op pagina 13."), met per gesprekspunt herkennen, vertalen waar een route is, en besluiten. 07 heeft terecht geen blok (geen profiel), 20 terecht geen werkvragen (Loep Start). |
+| Besluitpagina | **gebouwd** | Precies één pagina "Besluit van het MT" in alle vijfentwintig renders, met Startpunt, Tweede punt, Wat precies, Eigenaar, Datum vervolgmoment, Terugkoppeling aan medewerkers (wie, wanneer, wat) en "Waaraan zien we dat het werkt". `90_besluit_voorgedrukt`: "Vastgelegd in het dashboard, laatst bijgewerkt op 3 april 2026.", "Sanne de Vries", "15 juni 2026", "HR vertelt het besluit in het teamoverleg van 14 april." |
+| Q3 van 02, 06, 08, 10, 12, 15, 18 | **omhoog naar ✓** | Deze tildes kwamen in plan 3a uit het ontbreken van werkvragen per startpunt (spec onderdeel 3). Nu staat bij elk gesprekspunt een passende vraagset; zie de tabel hierboven. 18 hield in 3a ook Q3 op ~ om observatie 3 uit ronde 2 (profiel van één punt); die observatie gaat over de stelligheid van pagina twee en telt onder de nieuwe Q3-regel niet mee. Hij blijft Q1, Q2 en Q6 op ~ houden. |
+| Q3 van 20 | **omhoog naar ~** | Loep Start: geen werkvragen (geen richtingdata, besloten context punt 2), wel een eerlijke besluitpagina met het startpunt voorgedrukt. Scoreregel geeft hier ~. |
+| Restpunt 1 plan 3a (dunne verdiepingspagina's 01, 09, 19) | **niet gefixt** | Zie de regressies op Q4 hieronder. Taak 9 heeft de twee toegestane tredes gemeten en teruggedraaid (uitvoeringsverslag, "Taak 9 heeft zijn kern niet gehaald"). |
+| Restpunt 2 plan 3a (appendixstaart voorbeeld Loep Vertrek) | **opgelost via de uitzondering** | `check_pdf_report.py`: "pagina 14 (staart van de appendix, 36% gevuld) is uitgezonderd van de vullingsregel", uitkomst OK. De uitzondering zelf is een aanname op advies, nog door Lars te bevestigen. |
+| Observatie 5 plan 3a (verdiepingssubsectie zonder toelichting, zonder reden) | **open** | 04: drie subsecties onder de intro "De aantallen zijn hun eigen keuzes, geen interpretatie achteraf." zonder één telling en zonder reden. Houdt 04 op Q5 op ~. |
+| Observatie 6 plan 3a (pagina twee zwijgt bij `too_few` op het startpunt) | **open** | 06: de gespreksagenda zegt "Te weinig antwoorden voor een richting.", pagina twee heeft voor dat geval nog steeds geen regel. |
+| B20 | **open, buiten scope** | 07: werkbeleving met bandlabels en eNPS −50 over acht vertrekkers, zonder drempel in de drempeltabel. Houdt 07 op Q5 ~ en Q6 ✗. |
+
+### Regressies ten opzichte van "Na plan 3a"
+
+**REGRESSIE 01, Q4 (✓ naar ~).** `check_pdf_report.py`: "[paginavulling] pagina 7 is 36%
+gevuld (< 40%); begint met 'VERDIEPING: WERKDRUK EN HERSTELRUIMTE'".
+**REGRESSIE 09, Q4 (✓ naar ~).** "[paginavulling] pagina 7 is 26% gevuld (< 40%); begint met
+'VERDIEPING: CULTUUR EN PSYCHOLOGISCHE VEILIGHEID'".
+**REGRESSIE 19, Q4 (✓ naar ~).** "[paginavulling] pagina 7 is 36% gevuld (< 40%); begint met
+'VERDIEPING: BELONING EN EERLIJKHEID'".
+Reden: niet door plan 3b veroorzaakt, maar door de meetbasis. De ✓ van "Na plan 3a" is gemeten
+op de ghcr-image (WeasyPrint 58.1); in het productie-image (70.0) stonden deze drie al op de
+nulmeting van Taak 0 met exact dezelfde percentages (uitvoeringsverslag plan 3b, sectie
+"PDF-validatie in het productie-image"). Het is dus een correctie van een te gunstige 3a-meting,
+en voor een klant is het productie-image de werkelijkheid. Oorzaak volgens de reviewer van
+Taak 9: de drie tonen een korte maar niet-lege "te weinig antwoorden"-terugval en vallen daarmee
+buiten de plandefinitie van "dun". Alle drie één pagina tussen 25 en 40%, dus ~ en geen ✗.
+
+**REGRESSIE 03, Q6 (✓ naar ~), door plan 3b.** De herkenningsvraag van het startpunt: "4 van de
+14 (29%) kozen als toelichting ‘Er wordt te weinig concreet met mij over ontwikkeling
+gesproken’; die 14 zijn de mensen die bij groeiperspectief duidelijk laag antwoordden en de
+verdiepende vraag beantwoordden. Waar zie je dat bij jullie terug, en waar niet?" De
+verdiepingspagina toont "Er wordt te weinig concreet met mij over ontwikkeling gesproken 4 van
+de 14 (29%)" en "Ik zie niet welke mogelijkheden er voor mij zijn 4 van de 14 (29%)". De vraag
+zet één van twee even vaak gekozen toelichtingen neer als dé toelichting om te herkennen, zonder
+de gelijkstand te noemen; de keuze tussen de twee is alfabetisch op de optiesleutel
+(`_herkenningsvraag`, sortering `(-telling, sleutel)`). De telling is juist, dus Q5 blijft ✓,
+maar het is dezelfde soort verzwegen gelijkstand die ronde 2 bij de vertrekredenen als
+overclaim telde (punt b). Hetzelfde gebeurt in 06 (startpunt: drie toelichtingen op 2 van de 7;
+tweede punt: twee op 2 van de 6; 06 stond al op ~) en in het **publieke voorbeeld Loep
+Vertrek** (tweede punt: "2 van de 6 kozen als toelichting ‘Mijn leidinggevende was te weinig
+beschikbaar of zichtbaar’", terwijl drie toelichtingen elk 2 van de 6 kregen).
+
+Geen regressie op Q1, Q2, Q3 of Q5.
+
+### Welke tildes en kruisjes blijven, en waarom
+
+**Q3, vier tildes:**
+
+- **07 (~).** Onder de tien antwoorden is er geen profiel, dus geen gesprekspunt en geen
+  werkvragen. De besluitpagina staat er wel en is eerlijk ("Dit rapport wijst nog geen
+  startpunt aan; kies zelf het onderwerp."), maar volgens de scoreregel is een besluitpagina
+  zonder startpunt ~. Terecht zo, en niet op te lossen zonder de drempel van 10 te verlagen.
+- **14 (~).** De herkenningsvraag valt terug op "Wat zit er volgens jullie achter de 4.5/10 op
+  groeiperspectief?" omdat ‘Anders’ de grootste toelichting is (7 van de 18). Er was data: 18
+  mensen beantwoordden de verdieping, ‘Ik zie niet welke mogelijkheden er voor mij zijn’ kreeg
+  er 5, en de zeven Anders-teksten staan op de verdiepingspagina. Een terugvalvraag waar data
+  had kunnen staan. De ontbrekende vertaalvraag is wel terecht (‘Anders’ is ook de grootste
+  richting, 9 van de 30).
+- **19 (~).** Richting: 6 ‘Beter zicht op welke mogelijkheden er voor mij zijn’, 5 ‘Niets, dit zit
+  hier goed’, 1 ‘Ontwikkelafspraken concreter vastleggen en zichtbaar opvolgen’, van de 12. De
+  staat is `divided`, niet `split_none`, en omdat er technisch twee inhoudelijke routes zijn
+  krijgt het MT [V-verdeeld]: "Met welke van de meest gekozen richtingen beginnen jullie, en
+  welke laten jullie bewust liggen?". De echte verdeling is wel tegen niets (6 tegen 5); de
+  tweede route heeft één stem. [V-split] ("een deel vraagt om verandering, een even groot deel
+  zegt dat het goed zit") past hier, [V-verdeeld] niet. Hetzelfde patroon staat op het tweede
+  punt van het voorbeeld Loep Vertrek (4 feedback, 3 niets, 1 zichtbaarheid).
+- **20 (~).** Loep Start heeft geen richtingvraag, dus geen werkvragen; wel een besluitpagina met
+  startpunt. Blijft ~ tot de v1.1-set van Loep Start.
+
+**Q1 en Q2:** 07 en 18 blijven ~, om dezelfde redenen als na plan 3a (B20 respectievelijk het
+profiel van één punt). **Q4:** 01, 09 en 19, zie de regressies. **Q5:** 04 (observatie 5) en 07
+(B20). **Q6:** 03 en 06 om de verzwegen gelijkstand in de herkenningsvraag (06 ook nog om de
+brugzin "Bij Operations springt Groeiperspectief eruit (4.0/10)", observatie 7d), 10 om
+observatie 2 (kop zonder rem bij 5.1 tegen 5.3), 18 om observatie 3 uit ronde 2, en 07 blijft ✗
+door B20.
+
+### Wat de beoordeling nog opleverde
+
+Geen van deze punten is in deze taak opgelost. N1 en N2 raken het publieke voorbeeldrapport.
+
+**N1. De besluitpagina verwijst naar het verkeerde vel.** "Neem de uitkomst van ‘Zo maak je er
+een besluit van’ (pagina N) hier over" noemt het blok, maar N is de beginpagina van hoofdstuk
+08, niet de pagina waar het blok staat. In alle negentien rapporten met werkvragen staat het blok
+één pagina later, in 11 en 13 twee pagina's (11: blok op 15, verwijzing 13; 13: blok op 13,
+verwijzing 11), en in de voorbeelden Loep Vertrek (blok 11, verwijzing 10) en Loep Behoud (blok
+13, verwijzing 12). `check_pdf_report.py --regel paginaverwijzing` meet alleen of een verwijzing
+gevuld is, niet of hij klopt, en slaagt daarom. Niet gescoord in de matrix, net zoals plan 3a
+paginaverwijzingen onder verificatie behandelde; wel een fout die de lezer het vel laat
+omslaan naar een pagina zonder het blok. Het blok zelf ("komt op pagina 13") en de slotregel
+van de agenda ("Leg het besluit vast op pagina 13") verwijzen wel goed.
+
+**N2. De herkenningsvraag noemt bij een gelijkstand één toelichting en zegt niet dat het er
+meer zijn.** Zie de regressie van 03. Daarnaast draagt de herkenningsvraag bij 5 tot 9
+beantwoorders geen beperkte-basis-regel, terwijl de verdiepingspagina die wel toont ("Beperkte
+basis: gebruik dit als gesprekshaakje, niet als conclusie"): 06 (startpunt 7, tweede punt 6), de
+tweede punten van 16 en 17 (elk 7), en het tweede punt van het voorbeeld Loep Vertrek (6).
+
+**N3. De verdeeld-zin bij een verdeling tegen niets die geen `split_none` heet.** Zie 19 op Q3.
+
+**N4. De herkenningsvraag valt terug zodra ‘Anders’ de grootste toelichting is,** ook als er
+een tweede toelichting met een verdeling is. Zie 14 op Q3.
+
+**N5. De voetregel van de besluitpagina staat er ook als het besluit al vastgelegd is.** In
+`90_besluit_voorgedrukt` staat bovenaan "Vastgelegd in het dashboard, laatst bijgewerkt op 3
+april 2026." en onderaan nog steeds "Leg dit besluit ook vast in je dashboard. Loep drukt het
+dan voor in dit rapport en bewaart het bij deze meting." Geen overclaim, wel een opdracht voor
+iets dat al gedaan is. In de lege variant klopt de voetregel en belooft hij niets over de
+vervolgmeting.
+
+### Verificatie
+
+- **Renders:** vijfentwintig PDF's uit het productie-image (`loep-backend:test`, WeasyPrint
+  70.0), tijdstempel 22 september 2026 07:59 tot 08:01. Paginatelling: Loep Behoud 16 tot 20
+  (voorbeeld 18), Loep Vertrek 8 (07), 13 (08), voorbeeld 16; Loep Start 13 (20 en voorbeeld);
+  `90_besluit_voorgedrukt` 12.
+- **`check_pdf_report.py`** (alle regels, zelf opnieuw gedraaid op deze renders): 22 OK, 3 NIET OK
+  (01, 09, 19, elk één `paginavulling`-bevinding, zie de regressies). `p02-op-een-a4`,
+  `zijmarge`, `paginaformaat` en `besluit-op-een-a4` zonder bevinding in alle vijfentwintig,
+  ook in `90_besluit_voorgedrukt`. De appendixstaart is in eenentwintig bestanden als INFO
+  uitgezonderd (32 tot 49% gevuld).
+- **Tekstlaag:** nul em-dashes en nul en-dashes in alle vijfentwintig; nul keer "zo laag";
+  precies één besluitpagina per rapport.
+- **Herkenningsvraag tegen verdiepingspagina:** in alle vierentwintig herkenningsvragen met data
+  (twintig in de scenario's, vier in de voorbeelden Loep Vertrek en Loep Behoud) dezelfde toelichting, dezelfde
+  telling en dezelfde noemer als op de verdiepingspagina. De enige afwijking is de keuze bij een
+  gelijkstand (N2).
+- **Faalsets:** niet in deze stap opnieuw gedraaid; stand volgens het uitvoeringsverslag van plan
+  3b (backend 25 failed, faalset identiek aan `plan3b-baseline-failset.txt`; frontend tsc 133,
+  vitest 59 failed met identieke faalset). Na Taak 13 (`27642b3e`, `26c899eb`, `b9267134`) valt
+  dat buiten wat deze stap heeft gecontroleerd.
+- **Werkwijze:** gescoord op de tekstlaag van de PDF's, niet op de code. De code is alleen
+  geraadpleegd om een in de PDF gevonden gedrag te verklaren (de sortering in
+  `_herkenningsvraag`, de staatlogica in `translation_question`, de ankerpagina van de
+  besluitpagina).
+
 ## Reproduceren
 
 ```bash

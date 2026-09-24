@@ -14,11 +14,19 @@ from backend.report_html import (
     render_onboarding_report_html,
     render_retention_report_html,
 )
+from backend.products.shared.deepening import DEEPENING_SETS
 from tests.conftest import requires_pymupdf, requires_weasyprint
 from tests.test_report_degraded_page_two import _fixture
 from tests.test_report_distribution import _min_retention_data
 
 ROOT = Path(__file__).resolve().parent.parent
+
+_RENDERERS_3B = {"exit": render_exit_report_html, "retention": render_retention_report_html}
+
+
+def _eerste_optie(factor_key: str) -> str:
+    """Een echte toelichtingssleutel van dit onderwerp (de renderer faalt hard op een onbekende)."""
+    return DEEPENING_SETS[factor_key]["options"][0]["key"]
 
 
 def _body(html):
@@ -388,19 +396,18 @@ def test_melding_zonder_afdelingstabel_houdt_kop_en_melding_bij_elkaar():
     assert html.startswith('<div class="sec no-break seg-status">')
 
 
-def test_raster_agenda_invulregels_naast_elkaar_en_slotregel_reist_mee():
+def test_raster_agenda_slotregel_reist_mee_met_het_navy_blok():
     """De drie invulregels onder elkaar maakten het navy blok bijna een derde
     vel hoog; met de slotregel viel het los op een eigen pagina (30 tot 32%, in
-    15 alleen de slotregel op 1%)."""
+    15 alleen de slotregel op 1%). Plan 3b: het invulwerk staat op de
+    besluitpagina, het navy blok draagt nog alleen de gespreksopener en de
+    verwijzing ernaartoe, en die twee blijven in hetzelfde no-break-blok."""
     d = _fixture("retention", n=25, profile=True)
     body = _body(render_retention_report_html(d))
     slot = body[body.index('<div class="no-break agenda-slot">'):]
-    slot = slot[:slot.index("Nog niet besluiten")]
-    assert '<table class="steps fill-steps">' in slot
-    rij = slot[slot.index('<table class="steps fill-steps">'):slot.index("</table>")]
-    assert rij.count('<td class="step">') == 3
-    for label in ("Prioriteit", "Eigenaar", "Vervolgmoment"):
-        assert label in rij
+    einde = slot.index("Leg het besluit vast op pagina")   # ValueError als de regel ontbreekt
+    assert "fill-steps" not in slot[:einde]
+    assert "Gespreksopener" in slot[:einde]
 
 
 # ── Fixronde 2 na plan 3a: ook het eerste onderwerp stroomt ──────────────────
@@ -449,3 +456,89 @@ def test_appendix_stroomt_en_houdt_de_kop_bij_de_eerste_tabel():
     assert '<div class="no-break"><div class="ch-head"' in kop
     eerste_tabel = body.index('<table class="app-tbl">', i)
     assert body.index("</div>", eerste_tabel) < body.index('<table class="app-tbl">', eerste_tabel + 10)
+
+
+# ── Plan 3b, Taak 9: dunne verdiepingsblokken lopen door ─────────────────────
+
+def _deep_agg_3b(**counts):
+    n = sum(counts.values())
+    return {"triggered": n, "offered": n, "answered": n, "skipped": 0,
+            "primary_counts": counts, "secondary_counts": {}, "other_texts": []}
+
+
+def _verd_klassen(body: str) -> list[str]:
+    return re.findall(r'<div class="(sec flow verd[^"]*)">', body)
+
+
+def test_verd_los_helper_kiest_dunne_blokken_en_hun_voorganger():
+    from backend.report_html import _verd_los
+    deep = {"workload": _deep_agg_3b(wl_recovery=6), "growth": _deep_agg_3b(gr_time=6)}
+    assert _verd_los(["workload", "growth", "role_clarity"], deep) == {"growth", "role_clarity"}
+    assert _verd_los(["role_clarity", "workload", "growth"], deep) == {"role_clarity"}
+    assert _verd_los(["workload", "growth"], deep) == set()
+    # Een aggregaat dat niet getriggerd is levert geen toelichtingsblok: ook dun.
+    deep["leadership"] = dict(_deep_agg_3b(), triggered=0)
+    assert _verd_los(["workload", "leadership"], deep) == {"workload", "leadership"}
+
+
+def test_dun_blok_en_zijn_voorganger_mogen_over_de_paginagrens():
+    """Eén dun blok na blokken met verdiepingsdata: dat blok en zijn voorganger
+    krijgen verd-los, het eerste blok niet. Volgorde in deze fixture (Loep
+    Behoud): werkdruk, groeiperspectief, rolhelderheid."""
+    d = _fixture("retention", n=25, profile=True)
+    d["deepening_agg"] = {
+        "workload": _deep_agg_3b(wl_recovery=6, wl_volume=3),
+        "growth": _deep_agg_3b(gr_visibility=6, gr_time=3),
+    }
+    klassen = _verd_klassen(_body(render_retention_report_html(d)))
+    assert len(klassen) == 3
+    assert ["verd-los" in k for k in klassen] == [False, True, True]
+
+
+def test_meting_zonder_verdiepingsdata_heeft_geen_verd_los():
+    """Regressie plan 3b: zonder enige verdiepingsdata (meting van vóór de
+    verdiepingsvragen) is geen blok korter dan de andere. Met verd-los op alle
+    drie brak het tweede blok in het productie-image tussen de spreidingsgrafiek
+    en de stellingtabel, met de tabel alleen op een vel van 28%."""
+    from backend.report_html import _verd_los
+    assert _verd_los(["workload", "growth", "role_clarity"], {}) == set()
+    niet_getriggerd = {fk: dict(_deep_agg_3b(), triggered=0)
+                       for fk in ("workload", "growth", "role_clarity")}
+    assert _verd_los(["workload", "growth", "role_clarity"], niet_getriggerd) == set()
+    for scan_type, render in _RENDERERS_3B.items():
+        body = _body(render(_fixture(scan_type, n=25, profile=True)))
+        assert len(_verd_klassen(body)) == 3
+        assert not any("verd-los" in k for k in _verd_klassen(body)), scan_type
+
+
+def test_rapport_zonder_dun_blok_verandert_niet():
+    """Alle drie de onderwerpen met verdiepingsdata: geen enkele verd-los, dus
+    de HTML (en daarmee de paginering) is die van voor deze taak."""
+    d = _fixture("retention", n=25, profile=True)
+    d["deepening_agg"] = {
+        "workload": _deep_agg_3b(wl_recovery=6, wl_volume=3),
+        "growth": _deep_agg_3b(gr_visibility=6, gr_time=3),
+        "role_clarity": _deep_agg_3b(**{_eerste_optie("role_clarity"): 6}),
+        "leadership": _deep_agg_3b(**{_eerste_optie("leadership"): 6}),
+        "culture": _deep_agg_3b(**{_eerste_optie("culture"): 6}),
+        "compensation": _deep_agg_3b(**{_eerste_optie("compensation"): 6}),
+    }
+    body = _body(render_retention_report_html(d))
+    assert len(_verd_klassen(body)) == 3
+    assert not any("verd-los" in k for k in _verd_klassen(body))
+
+
+def test_loep_start_blijft_buiten_verd_los():
+    from backend.report_html import render_onboarding_report_html
+    body = _body(render_onboarding_report_html(_fixture("onboarding", n=25, profile=True)))
+    assert "verd-los" not in body
+
+
+def test_css_houdt_de_binnendelen_van_een_los_blok_heel():
+    from backend.report_css import build_css
+    css = build_css("retention")
+    assert ".sec.flow.verd.verd-los { break-inside: auto; }" in css
+    blok = css[css.index(".sec.flow.verd.verd-los"):]
+    blok = blok[:blok.index("/* einde verd-los */")]
+    assert "break-after: avoid" in blok          # kop blijft bij de eerste inhoud
+    assert ".verd-los .card" in blok and ".verd-los .item-tbl tr" in blok

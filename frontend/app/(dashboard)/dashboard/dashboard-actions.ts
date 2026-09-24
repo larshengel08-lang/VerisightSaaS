@@ -6,11 +6,9 @@
  * gate, met RLS als backstop voor data-isolatie per tenant.
  */
 
-import { createClient } from '@/lib/supabase/server'
+import { loadActorContext } from '@/lib/dashboard/actor-context'
 import { insertCampaignAuditEvent } from '@/lib/campaign-audit'
-import type { CampaignAuditActorRole } from '@/lib/campaign-audit'
 import { getCustomerActionPermission, getPermissionDeniedMessage } from '@/lib/customer-permissions'
-import type { MemberRole } from '@/lib/types'
 import { sendLoepEmail } from '@/lib/email'
 import { rapportGereedHtml } from '@/lib/email-templates/rapport-gereed'
 import { isReportReleaseReady } from '@/lib/response-activation'
@@ -25,52 +23,6 @@ export interface DashboardActionResult {
   error?: string
   /** De actie slaagde, maar een neveneffect (de mail) niet. Fail Loud in de UI. */
   warning?: string
-}
-
-type SupabaseClientType = Awaited<ReturnType<typeof createClient>>
-
-type ActorContext =
-  | { ok: false; error: string }
-  | {
-      ok: true
-      supabase: SupabaseClientType
-      user: NonNullable<Awaited<ReturnType<SupabaseClientType['auth']['getUser']>>['data']['user']>
-      organizationId: string
-      isAdmin: boolean
-      role: MemberRole | null
-      actorRole: CampaignAuditActorRole
-    }
-
-async function loadActorContext(campaignId: string): Promise<ActorContext> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { ok: false, error: 'Niet ingelogd.' }
-
-  const { data: campaign } = await supabase
-    .from('campaigns')
-    .select('organization_id')
-    .eq('id', campaignId)
-    .single()
-  if (!campaign) return { ok: false, error: 'Campagne niet gevonden of niet toegankelijk.' }
-
-  const [{ data: profile }, { data: membership }] = await Promise.all([
-    supabase.from('profiles').select('is_verisight_admin').eq('id', user.id).maybeSingle(),
-    supabase.from('org_members').select('role').eq('org_id', campaign.organization_id).eq('user_id', user.id).maybeSingle(),
-  ])
-
-  const isAdmin = profile?.is_verisight_admin === true
-  const role = (membership?.role ?? null) as MemberRole | null
-  const actorRole: CampaignAuditActorRole = isAdmin ? 'verisight_admin' : (role ?? 'unknown')
-
-  return {
-    ok: true,
-    supabase,
-    user,
-    organizationId: campaign.organization_id,
-    isAdmin,
-    role,
-    actorRole,
-  }
 }
 
 /** State 3 reminder confirm: HR sent the reminder manually; record it as handled. No email is sent here. */
