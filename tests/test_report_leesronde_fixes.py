@@ -404,3 +404,50 @@ def test_behoud_heeft_geen_frictieuitleg():
 def test_start_heeft_geen_frictieuitleg():
     assert "Frictiescore:" not in _plain(
         render_onboarding_report_html(_fixture("onboarding", n=25, profile=True)))
+
+
+# ── Taak 5: namenregel Loep Vertrek (V1, V5) ────────────────────────────────
+
+from backend.report_html import (  # noqa: E402
+    NAMENREGEL_VERTREK,
+    TOELICHTINGEN_VRAAG_VERTREK,
+    _werkvragen_block,
+)
+from tests.test_report_priority_render import DIRECTION, RANKED  # noqa: E402
+
+
+def test_namenregel_tekst():
+    assert NAMENREGEL_VERTREK == ("Praat over hoe het werkt, niet over wie er vertrok. Valt er een "
+                                  "naam, ga dan terug naar de vraag.")
+    assert TOELICHTINGEN_VRAAG_VERTREK == ("Lees ze als patroon: wat komt terug in meer dan één "
+                                           "antwoord? Raad niet wie wat schreef.")
+
+
+def test_werkvragen_vertrek_dragen_de_namenregel_behoud_niet():
+    assert NAMENREGEL_VERTREK in _plain(_werkvragen_block(RANKED, {}, DIRECTION, "exit"))
+    assert NAMENREGEL_VERTREK not in _plain(_werkvragen_block(RANKED, {}, DIRECTION, "retention"))
+
+
+def test_leidraad_vertrek_draagt_de_namenregel_en_de_vraag_bij_de_toelichtingen():
+    tekst = _plain(_leidraad_block("exit", has_segments=False, has_quotes=True,
+                                   has_deepening=True, has_werkvragen=True))
+    assert NAMENREGEL_VERTREK in tekst
+    assert "Vraag: wat komt terug in meer dan één antwoord?" in tekst
+
+
+def test_leidraad_behoud_heeft_geen_namenregel():
+    tekst = _plain(_leidraad_block("retention", has_segments=False, has_quotes=True,
+                                   has_deepening=True, has_werkvragen=True))
+    assert NAMENREGEL_VERTREK not in tekst
+    assert "wat komt terug in meer dan één antwoord" not in tekst
+
+
+def test_open_antwoorden_vertrek_dragen_vraag_en_namenregel():
+    body = _body(render_exit_report_html(_exit_met_toelichtingen()))
+    blok = body[body.index('id="' + LEIDRAAD_ANKERS["toelichtingen"] + '"'):]
+    blok = _plain(blok[:blok.index("Toelichting 0")])
+    assert TOELICHTINGEN_VRAAG_VERTREK + " " + NAMENREGEL_VERTREK in blok
+
+
+def test_open_antwoorden_behoud_zonder_namenregel():
+    assert NAMENREGEL_VERTREK not in _plain(render_retention_report_html(_retention_met_secties()))

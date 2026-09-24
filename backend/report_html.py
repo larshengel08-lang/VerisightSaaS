@@ -1720,6 +1720,20 @@ LEIDRAAD_ANKERS = {
     "werkvragen": "sec-werkvragen",    # blok "Zo maak je er een besluit van" (N1, plan 3b eindreview)
 }
 
+# V1/V5 (koude leesronde 24-9): bij Loep Vertrek zitten er managers aan tafel
+# die weten wie er uit hun team vertrok. De werkvragen ("waar zie je dat bij
+# jullie terug") en de open antwoorden sturen dan naar personen, en nergens
+# stond dat je geen namen noemt. Eén vaste regel op drie plekken: bij de
+# werkvragen, in de leidraad en bij de open antwoorden. Loep Behoud heeft hem
+# niet nodig: daar gaat het gesprek over wie er nog werkt.
+NAMENREGEL_VERTREK = ("Praat over hoe het werkt, niet over wie er vertrok. Valt er een naam, "
+                      "ga dan terug naar de vraag.")
+TOELICHTINGEN_VRAAG_VERTREK = ("Lees ze als patroon: wat komt terug in meer dan één antwoord? "
+                               "Raad niet wie wat schreef.")
+TOELICHTINGEN_REGEL_VERTREK_HTML = ('<p class="trustline">'
+                                    + _h(TOELICHTINGEN_VRAAG_VERTREK + " " + NAMENREGEL_VERTREK)
+                                    + "</p>")
+
 
 def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
                     has_deepening: bool, has_werkvragen: bool = False,
@@ -1756,7 +1770,11 @@ def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
         rij4 = ("Per afdeling", "Waar het per afdeling begint, en hoe dat zich verhoudt tot het "
                                 f"startpunt (pagina {p(A['afdelingen'])}).")
     elif has_quotes:
-        rij4 = ("Wat mensen zelf schreven", f"De open toelichtingen, ongefilterd (pagina {p(A['toelichtingen'])}).")
+        # V5: bij Loep Vertrek krijgt dit slot een vraag, anders lees je acht
+        # minuten losse vertrekverhalen voor aan wie de vertrekkers kende.
+        vraag = " Vraag: wat komt terug in meer dan één antwoord?" if scan_type == "exit" else ""
+        rij4 = ("Wat mensen zelf schreven",
+                f"De open toelichtingen, ongefilterd (pagina {p(A['toelichtingen'])})." + vraag)
     else:
         rij4 = ("Werkbeleving", f"Autonomie, competentie en verbondenheid (pagina {p(A['werkbeleving'])}).")
     # Rij 5 (fixronde leesronde 24-9, R2/V6/R3). Twee dingen:
@@ -1814,10 +1832,13 @@ def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
     # niet door _h(); het is vaste copy zonder data.
     trs = "".join(f'<tr><td class="lt">{_h(t)}</td><td class="lw">{_h(w)}</td><td>{body}</td></tr>'
                   for t, w, body in rijen)
+    voet = ("Dit rapport is een groepsbeeld van de organisatie, geen beoordeling van personen "
+            "of afdelingen.")
+    if scan_type == "exit":
+        voet += " " + NAMENREGEL_VERTREK
     return (f'<div class="leidraad"><div class="leidraad-title">Zo leid je dit gesprek in 45 minuten</div>'
             f'<table>{trs}</table>'
-            f'<p class="trustline" style="margin-top:6px;">Dit rapport is een groepsbeeld van de organisatie, '
-            f'geen beoordeling van personen of afdelingen.</p></div>')
+            f'<p class="trustline" style="margin-top:6px;">{_h(voet)}</p></div>')
 
 
 def _heeft_werkbeleving(sdt_avgs: dict) -> bool:
@@ -3421,10 +3442,14 @@ def _werkvragen_block(ranked: list[dict], deep_agg: dict, direction_agg: dict,
     # N1 (eindreview): eigen anker op de wrapper, zodat een paginaverwijzing
     # (_pref(LEIDRAAD_ANKERS["werkvragen"])) naar het blok zelf kan wijzen in
     # plaats van naar de beginpagina van het hoofdstuk (LEIDRAAD_ANKERS["agenda"]).
-    return (f'<div class="wq-block" id="{LEIDRAAD_ANKERS["werkvragen"]}">'
-            f'<span class="eyebrow">{WERKVRAGEN_EYEBROW}</span>'
-            f'<p class="dir-intro">{WERKVRAGEN_INTRO}</p>'
-            f'<table class="dir-grid wq-grid"><tr>{cards}</tr></table></div>')
+    # V1 (fixronde 24-9): de namenregel direct onder de inleiding, bij Loep Vertrek.
+    namenregel = ('<p class="dir-intro">' + _h(NAMENREGEL_VERTREK) + "</p>"
+                  if scan_type == "exit" else "")
+    return ('<div class="wq-block" id="' + LEIDRAAD_ANKERS["werkvragen"] + '">'
+            + '<span class="eyebrow">' + WERKVRAGEN_EYEBROW + "</span>"
+            + '<p class="dir-intro">' + WERKVRAGEN_INTRO + "</p>"
+            + namenregel
+            + '<table class="dir-grid wq-grid"><tr>' + cards + "</tr></table></div>")
 
 
 # ── Besluitpagina "Besluit van het MT" (plan 3b, spec 16-9 par. 7) ───────────
@@ -6324,6 +6349,7 @@ def render_exit_report_html(data: dict) -> str:
         s += f"""<div class="pb sec">
   {ch.opener("Open toelichtingen", kicker=f"{len(texts)} respondentstemmen", anchor=LEIDRAAD_ANKERS["toelichtingen"])}
   {_intro("open_toelichtingen")}
+  {TOELICHTINGEN_REGEL_VERTREK_HTML}
   {_themed_quotes(texts, "exit", top_fkeys, n)}
 </div>"""
 
