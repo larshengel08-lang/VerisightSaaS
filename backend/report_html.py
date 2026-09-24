@@ -1728,8 +1728,11 @@ LEIDRAAD_ANKERS = {
 # niet nodig: daar gaat het gesprek over wie er nog werkt.
 NAMENREGEL_VERTREK = ("Praat over hoe het werkt, niet over wie er vertrok. Valt er een naam, "
                       "ga dan terug naar de vraag.")
-TOELICHTINGEN_VRAAG_VERTREK = ("Lees ze als patroon: wat komt terug in meer dan één antwoord? "
-                               "Raad niet wie wat schreef.")
+# Eén bron voor de vraag bij de open antwoorden: hij staat zowel in rij 4 van
+# de leidraad als boven de open antwoorden zelf, en mag niet uit elkaar lopen.
+PATROONVRAAG_VERTREK = "wat komt terug in meer dan één antwoord?"
+TOELICHTINGEN_VRAAG_VERTREK = ("Lees ze als patroon: " + PATROONVRAAG_VERTREK
+                               + " Raad niet wie wat schreef.")
 TOELICHTINGEN_REGEL_VERTREK_HTML = ('<p class="trustline">'
                                     + _h(TOELICHTINGEN_VRAAG_VERTREK + " " + NAMENREGEL_VERTREK)
                                     + "</p>")
@@ -1772,7 +1775,7 @@ def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
     elif has_quotes:
         # V5: bij Loep Vertrek krijgt dit slot een vraag, anders lees je acht
         # minuten losse vertrekverhalen voor aan wie de vertrekkers kende.
-        vraag = " Vraag: wat komt terug in meer dan één antwoord?" if scan_type == "exit" else ""
+        vraag = " Vraag: " + PATROONVRAAG_VERTREK if scan_type == "exit" else ""
         rij4 = ("Wat mensen zelf schreven",
                 f"De open toelichtingen, ongefilterd (pagina {p(A['toelichtingen'])})." + vraag)
     else:
