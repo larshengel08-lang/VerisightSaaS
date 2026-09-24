@@ -4741,9 +4741,13 @@ def _brugzin(startpunt_key: str | None, startpunt_label: str, seg: dict | None,
             return f"Bij {dept} weegt {low_lbl} het zwaarst ({low_sc}); {ook_start}"
         return f"Bij {dept} is {low_lbl} het laagst scorende onderwerp ({low_sc}); {ook_start}"
     if zwaar and seg["low_fk"] == tweede_key:
+        # Zonder "organisatiebreed" achter "tweede punt" (plantekst): dat woord
+        # kostte pagina twee een regel in het voorbeeldrapport. De zin ervoor
+        # zet het kader al op organisatiebreed, en "het tweede punt" is de
+        # naam van de kaart op de gespreksagenda.
         return (f"{org_start} Bij {dept} springt "
-                f"{low_lbl} eruit ({low_sc}); dat is ook het tweede punt organisatiebreed, dus "
-                f"neem {dept} daarin mee.")
+                f"{low_lbl} eruit ({low_sc}); dat is ook het tweede punt, dus neem {dept} "
+                f"daarin mee.")
     if zwaar:
         return (f"{org_start} Bij {dept} springt "
                 f"{low_lbl} eruit ({low_sc}); bespreek dat voor die afdeling {na_start}.")

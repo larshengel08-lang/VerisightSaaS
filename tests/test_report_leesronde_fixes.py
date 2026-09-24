@@ -637,8 +637,8 @@ SEG_OPS = {"department": "Operations", "score": 6.0, "n": 17, "invited": 21,
 def test_brugzin_noemt_het_tweede_punt_als_het_hetzelfde_onderwerp_is():
     zin = _brugzin("growth", "Groeiperspectief", SEG_OPS, "retention", tweede_key="workload")
     assert zin == ("Organisatiebreed begint het gesprek bij Groeiperspectief. Bij Operations springt "
-                   + _fl("workload", "retention") + " eruit (4.9/10); dat is ook het tweede punt "
-                   "organisatiebreed, dus neem Operations daarin mee.")
+                   + _fl("workload", "retention") + " eruit (4.9/10); dat is ook het tweede punt, dus "
+                   "neem Operations daarin mee.")
 
 
 def test_brugzin_zonder_samenval_blijft_zoals_hij_was():
@@ -696,7 +696,7 @@ def test_brugzin_indicatief_letterlijk():
         "Bij Operations weegt " + _fl("workload", "retention") + " het zwaarst (4.9/10); dat "
         "kiest Loep organisatiebreed ook als mogelijk startpunt.")
     assert _brug_variant("samen", True).endswith(
-        "dat is ook het tweede punt organisatiebreed, dus neem Operations daarin mee.")
+        "dat is ook het tweede punt, dus neem Operations daarin mee.")
 
 
 def test_besluit_afdeling():
@@ -791,7 +791,7 @@ def test_renderer_behoud_koppelt_afdeling_aan_het_tweede_punt():
     from backend.report_html import render_retention_report_html
     html = render_retention_report_html(_retention_met_afdeling("leadership"))
     t = _plain(html)
-    assert t.count("dat is ook het tweede punt organisatiebreed, dus neem Operations daarin mee.") == 2
+    assert t.count("dat is ook het tweede punt, dus neem Operations daarin mee.") == 2
     besluit = _plain(_besluitdeel(html))
     assert "Operations: " + _fl("leadership", "retention") in besluit
     assert BESLUIT_AFDELING_SAMEN in besluit
@@ -803,7 +803,7 @@ def test_renderer_behoud_zonder_aangewezen_afdeling_heeft_geen_afdelingsblok():
     d["segment_rows"][1]["avg"] = 5.1   # verschil onder de grens: geen afdeling aangewezen
     html = render_retention_report_html(d)
     assert BESLUIT_AFDELING_LABEL not in html
-    assert "tweede punt organisatiebreed" not in html
+    assert "dat is ook het tweede punt" not in html
 
 
 def test_renderer_behoud_indicatief_zegt_mogelijk_startpunt_in_de_brugzin():
@@ -833,6 +833,6 @@ def test_renderer_vertrek_geeft_tweede_punt_en_afdeling_door():
     tweede_key = next(k for k in d["factor_avgs"] if _fl(k, "exit") == tweede.group(1).strip())
     d["segment_factor_rows"] = {"Operations": {"factors": [(tweede_key, 4.2, 12)], "omitted": 0}}
     html = render_exit_report_html(d)
-    assert "dat is ook het tweede punt organisatiebreed, dus neem Operations daarin mee." in html
+    assert "dat is ook het tweede punt, dus neem Operations daarin mee." in html
     besluit = _plain(_besluitdeel(html))
     assert BESLUIT_AFDELING_LABEL in besluit and BESLUIT_AFDELING_SAMEN in besluit
