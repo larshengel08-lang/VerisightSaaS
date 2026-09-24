@@ -624,13 +624,6 @@ h3 { font-family: 'Inter Tight', sans-serif; font-weight: 700;
 #p02 .sg { margin-bottom: 10px; }
 #p02 .sc-v { font-size: 18px; }
 #p02 .p02-duiding { font-size: 10px; line-height: 1.45; color: #374151; margin: -4px 0 12px; max-width: none; }
-/* Hefbomen A, B, C (fixronde leesronde 24-9, Taak 7): de duiding, leidraad en
-   meetgegevens van die ronde maakten p.02 langer; gemeten in het
-   productie-image liep hij zonder deze regels over in 08, 09, 16 en de
-   voorbeelden Vertrek en Behoud. */
-#p02 .p02-duiding { font-size: 9.5px; line-height: 1.4; margin: -6px 0 8px; }
-#p02 .leidraad td { padding: 1px 6px 1px 0; line-height: 1.38; }
-#p02 .why { padding: 10px 14px 8px; margin-bottom: 8px; }
 #p02 .leidraad { margin-top: 10px; padding-top: 8px; }
 #p02 .leidraad-title { margin-bottom: 4px; }
 #p02 .leidraad td { padding: 2px 6px 2px 0; }
@@ -638,4 +631,26 @@ h3 { font-family: 'Inter Tight', sans-serif; font-weight: 700;
 #p02 .leidraad td.lw { width: 22%; }
 #p02 .meet-blok { margin-top: 12px; }
 #p02 .meet-blok .slabel { margin-bottom: 8px; }
+/* Hefbomen A, B, C, D1, D2 (fixronde leesronde 24-9, Taak 7): de duiding,
+   leidraad en meetgegevens van die ronde maakten p.02 langer; gemeten in het
+   productie-image liep hij zonder deze regels over in 08, 09, 16 en de
+   voorbeelden Vertrek en Behoud. Ze staan bewust als laatste in het
+   #p02-blok: bij gelijke specificiteit wint de latere regel, en eerder
+   geplaatst werd B (padding) en D2 overschreven door de regels hierboven. */
+#p02 .p02-duiding { font-size: 9.5px; line-height: 1.4; margin: -6px 0 8px; }
+#p02 .leidraad td { padding: 1px 6px 1px 0; line-height: 1.38; }
+#p02 .why { padding: 10px 14px 8px; margin-bottom: 8px; }
+/* Hefboom D1: de tegel "Hoofdreden van vertrek" (was inline 14px). Een lange
+   waarde of een gelijkstand (sc-reden-lang, VERTREKREDEN_LANG in
+   report_html.py) krijgt 11px, nooit kleiner dan de subregel (.sc-b, 9px). */
+.sc-v.sc-reden, #p02 .sc-v.sc-reden { font-size: 14px; }
+.sc-v.sc-reden-lang, #p02 .sc-v.sc-reden-lang { font-size: 11px; line-height: 1.2; }
+/* Hefboom D2: het meetgegevensblok dichter (alleen witruimte en regelafstand,
+   geen lettergrootte). De regels eronder (uitstroom, "Niet in dit rapport")
+   liepen in 08 en het Vertrek-voorbeeld over naar de volgende pagina. */
+#p02 .meet-blok { margin-top: 8px; }
+#p02 .meet-blok .slabel { margin-bottom: 6px; }
+#p02 .meet-blok .sg { margin-bottom: 4px; }
+#p02 .meet-blok .sc-b { line-height: 1.3; }
+#p02 .meet-blok .trustline { line-height: 1.35; }
 """

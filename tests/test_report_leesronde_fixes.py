@@ -575,3 +575,44 @@ def test_behoud_en_start_noemen_geen_vertrekmaand(render, data):
     tekst = _plain(render(d))
     assert "maand van vertrek" not in tekst
     assert "Uitstroomperiode" not in tekst
+
+
+# ── Taak 7, hefboom D1: lange of gedeelde hoofdreden van vertrek kleiner op p.02 ──
+
+def test_hoofdredentegel_krijgt_kleinere_letter_bij_gelijkstand():
+    from backend.report_html import _vertrekreden_cell
+    er = [{"code": "PL1", "label": "Beter aanbod elders", "count": 4},
+          {"code": "P1", "label": "Leiderschap / management", "count": 4}]
+    cel = _vertrekreden_cell(er, 12)
+    assert 'class="sc-v sc-reden sc-reden-lang"' in cel
+    # De waarde blijft volledig zichtbaar: beide redenen staan er ongekort in.
+    assert "Beter aanbod elders en Leiderschap / management" in cel
+
+
+def test_hoofdredentegel_krijgt_kleinere_letter_bij_een_lange_losse_reden():
+    from backend.report_html import VERTREKREDEN_LANG, _vertrekreden_cell
+    label = "x" * (VERTREKREDEN_LANG + 1)
+    cel = _vertrekreden_cell([{"code": "P1", "label": label, "count": 5}], 12)
+    assert 'class="sc-v sc-reden sc-reden-lang"' in cel
+    assert label in cel
+
+
+def test_hoofdredentegel_houdt_gewone_letter_bij_een_korte_reden():
+    from backend.report_html import VERTREKREDEN_LANG, _vertrekreden_cell
+    from backend.scoring_config import EXIT_REASON_LABELS_NL
+    # Elke bestaande losse reden past binnen de grens, dus geen kleinere letter.
+    assert max(len(v) for v in EXIT_REASON_LABELS_NL.values()) <= VERTREKREDEN_LANG
+    for label in EXIT_REASON_LABELS_NL.values():
+        cel = _vertrekreden_cell([{"code": "P1", "label": label, "count": 5}], 12)
+        assert 'class="sc-v sc-reden"' in cel
+        assert "sc-reden-lang" not in cel
+
+
+def test_hoofdredentegel_kleine_letter_niet_kleiner_dan_de_subregel():
+    import re
+    from backend.report_css import build_css
+    css = build_css("exit")
+    lang = re.search(r"#p02 \.sc-v\.sc-reden-lang \{[^}]*font-size: ([\d.]+)px", css)
+    sub = re.search(r"\.sc-b \{[^}]*font-size: ([\d.]+)px", css)
+    assert lang and sub
+    assert float(sub.group(1)) <= float(lang.group(1)) < 14

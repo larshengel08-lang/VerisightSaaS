@@ -1150,12 +1150,24 @@ def _vertrekreden_zin(exit_r_top: list[dict], n: int, *, gegeven: int | None = N
     return delen["zin"] if delen else ""
 
 
+# Boven dit aantal tekens, of bij een gelijkstand tussen redenen, krijgt de
+# waarde in de tegel "Hoofdreden van vertrek" een kleinere letter
+# (#p02 .sc-reden-lang in report_css.py). 26 is de langste losse reden
+# ("Persoonlijke omstandigheid"); een gelijkstand noemt twee of meer redenen en
+# liep in scenario 08 op 14px over vier regels, waardoor p.02 overliep
+# (fixronde leesronde, Taak 7). De waarde blijft altijd volledig staan.
+VERTREKREDEN_LANG = 26
+
+
 def _vertrekreden_cell(exit_r_top: list[dict], n: int, *, gegeven: int | None = None) -> str:
     delen = _vertrekreden_delen(exit_r_top, n, gegeven)
     if not delen:
         return ""
+    tops, _ = _vertrekreden_top(exit_r_top)
+    lang = len(tops) > 1 or len(delen["label"]) > VERTREKREDEN_LANG
+    klasse = "sc-v sc-reden" + (" sc-reden-lang" if lang else "")
     return (f'<td><div class="sc-l">Hoofdreden van vertrek</div>'
-            f'<div class="sc-v" style="font-size:14px;">{_h(delen["label"])}</div>'
+            f'<div class="{klasse}">{_h(delen["label"])}</div>'
             f'<div class="sc-b">{_h(delen["cel"])}</div></td>')
 
 
