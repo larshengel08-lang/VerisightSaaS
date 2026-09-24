@@ -3394,8 +3394,9 @@ WERKVRAGEN_EYEBROW = "Zo maak je er een besluit van"
 WERKVRAGEN_INTRO = ("Per gesprekspunt de vragen die het MT van ‘dit kozen je mensen’ naar "
                     "‘dit gaan wij doen’ brengen. Loep geeft hier geen advies; het besluit is "
                     "aan jullie en komt op pagina " + _pref(LEIDRAAD_ANKERS["besluit"]) + ".")
-BESLUITVRAAG = ("Wat spreken jullie vandaag af, wie is eigenaar, en waaraan zie je "
-                "over 90 dagen dat het werkt?")
+# R15 (fixronde 24-9): één termijn. "Over 90 dagen" stond naast de richtlijn "45 tot 90 dagen" op de besluitpagina.
+BESLUITVRAAG = ("Wat spreken jullie vandaag af, wie is eigenaar, en waaraan zie je op het "
+                "vervolgmoment dat het werkt?")
 # Bij none_needed zegt de richtingkaart al dat hier volgens de meeste
 # betrokkenen niets hoeft; de besluitvraag mag dan niet doen alsof er per se
 # iets afgesproken moet worden.
@@ -3546,7 +3547,8 @@ BESLUIT_VOETREGEL = ("Leg dit besluit ook vast in je dashboard. Loep drukt het d
 # gebruikt het begin ervan als eindmarker: staat het label op de besluitpagina,
 # dan liep het invulvel niet over. De voetregel kan dat niet meer zijn, die
 # vervalt bij een voorgedrukt besluit (N5, plan 3b).
-BESLUIT_SLOTLABEL = "Waaraan zien we dat het werkt"
+# R4 (fixronde 24-9): het label hoort bij het startpunt; het tweede punt parkeert of noemt zelf wie het oppakt.
+BESLUIT_SLOTLABEL = "Waaraan zien we bij het startpunt dat het werkt"
 BESLUIT_GEEN_STARTPUNT = "Dit rapport wijst nog geen startpunt aan; kies zelf het onderwerp."
 BESLUIT_DATUM_HINT = "Kies een datum, geen termijn."
 BESLUIT_ONLEESBAAR = ("Loep kon niet nagaan of er al een besluit is vastgelegd in het dashboard; "
@@ -3569,6 +3571,26 @@ BESLUIT_AFDELING_VRAAG = "Wat vragen jullie deze afdeling zelf, wie doet dat, en
 BESLUIT_AFDELING_HINT = ("Het rapport toont de toelichtingen alleen voor de hele organisatie. "
                          + BESLUIT_AFDELING_VRAAG)
 BESLUIT_AFDELING_SAMEN = "Dit onderwerp is ook het tweede punt; neem de afdeling daarin mee."
+# R4 (koude leesronde 24-9): het tweede punt had geen eigenaar en geen datum.
+# Geen eigen kolommen (zie plan, "Besluit over de migratie"), wel een regel die
+# het punt een eigenaar en een datum geeft: die van het startpunt.
+# Het dashboard (frontend/components/dashboard/decision-block.tsx) toont
+# dezelfde tekst; tests/test_report_leesronde_fixes.py houdt ze gelijk.
+BESLUIT_PARKEERREGEL = ("Spreken jullie hier vandaag iets over af, schrijf dan bij ‘Wat precies’ "
+                        "ook wie het oppakt. Anders parkeren jullie dit punt: de eigenaar van het "
+                        "startpunt zet het op de agenda van het vervolgmoment.")
+# R8/V4 (koude leesronde 24-9): wat mag je terugkoppelen, en bij Loep Vertrek:
+# aan wie? De grens van de afdelingen is die van een afdeling met een score in
+# het rapport (MIN_DISTRIBUTION_N). Loep Start valt buiten deze ronde.
+BESLUIT_TERUGKOPPELING = {
+    "retention": ("Deel het startpunt, het beeld van de hele organisatie en wat het MT besluit. "
+                  "Deel geen open antwoorden en geen uitkomsten van afdelingen met minder dan "
+                  + str(MIN_DISTRIBUTION_N) + " antwoorden."),
+    "exit": ("Wie invulde, is vertrokken: koppel terug aan wie er nu werkt, over wat het MT met "
+             "de vertrekredenen doet. Deel geen open antwoorden en geen uitkomsten van "
+             "afdelingen met minder dan " + str(MIN_DISTRIBUTION_N) + " antwoorden."),
+    "onboarding": "Je mensen vulden in; ze horen wat het MT ermee doet.",
+}
 
 
 def _besluit_afdeling(seg: dict | None, scan_type: str, tweede_key: str | None) -> dict | None:
@@ -3719,7 +3741,7 @@ def _besluit_page(*, opener_html: str, scan_type: str, campaign_name: str,
         wat2_tekst, wat2_afgekapt = _bl_kort(secondary_action_raw)
         wat2 = _bl_waarde(wat2_tekst, 3)
     else:
-        wat2 = _bl_waarde(None, 3)
+        wat2 = _bl_waarde(None, 2)
         wat2_afgekapt = False
 
     success_raw = d.get("success_criterion")
@@ -3792,13 +3814,13 @@ def _besluit_page(*, opener_html: str, scan_type: str, campaign_name: str,
   </tr></table>
   <div class="bl-blok">
     {_bl_veld(tweede_lbl, tweede)}
-    {_bl_veld("Wat precies", wat2)}
+    {_bl_veld("Wat precies", wat2, BESLUIT_PARKEERREGEL)}
   </div>
   {afdeling_html}
   <div class="bl-blok">
     <div class="bl-lbl">Terugkoppeling aan medewerkers</div>
     {terugkoppeling}
-    <div class="bl-hint">Je mensen vulden in; ze horen wat het MT ermee doet.</div>
+    <div class="bl-hint">{_h(BESLUIT_TERUGKOPPELING[scan_type])}</div>
   </div>
   <div class="bl-blok">
     {_bl_veld(BESLUIT_SLOTLABEL, succes)}

@@ -13,10 +13,21 @@ describe('blok "Besluit vastleggen" (plan 3b, spec 2026-09-16 par. 7)', () => {
       'Datum vervolgmoment',
       'Tweede punt',
       'Terugkoppeling aan medewerkers',
-      'Waaraan zien we dat het werkt',
+      'Waaraan zien we bij het startpunt dat het werkt',
     ]) {
       expect(source).toContain(label)
     }
+  })
+
+  it('volgt de besluitpagina: parkeerregel bij het tweede punt en wat je terugkoppelt', () => {
+    expect(source).toContain(
+      'Spreken jullie hier vandaag iets over af, schrijf dan bij ‘Wat precies’ ook wie het oppakt. Anders parkeren jullie dit punt: de eigenaar van het startpunt zet het op de agenda van het vervolgmoment.',
+    )
+    expect(source).toContain(
+      'Deel het startpunt, het beeld van de hele organisatie en wat het MT besluit. Deel geen open antwoorden en geen uitkomsten van afdelingen met minder dan 10 antwoorden.',
+    )
+    expect(source).not.toContain('Alleen als jullie er een kiezen.')
+    expect(source).not.toContain('Je mensen vulden in; ze horen wat het MT ermee doet.')
   })
 
   it('schrijft alleen via de server action en toont fout en succes zichtbaar', () => {

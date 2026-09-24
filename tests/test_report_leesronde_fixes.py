@@ -872,3 +872,77 @@ def test_renderer_behoud_relatief_sterk_onderwerp_geen_samenval_op_de_besluitpag
     assert BESLUIT_AFDELING_LABEL in besluit
     assert BESLUIT_AFDELING_SAMEN not in besluit
     assert "dat is ook het tweede punt" not in html
+
+
+# ── Taak 9: parkeerregel, succes per punt, terugkoppeling, besluitvraag ──────
+
+from pathlib import Path  # noqa: E402
+
+from backend.report_html import (  # noqa: E402
+    BESLUIT_PARKEERREGEL,
+    BESLUIT_SLOTLABEL,
+    BESLUIT_TERUGKOPPELING,
+    BESLUITVRAAG,
+)
+
+
+def test_parkeerregel_tekst_en_plek():
+    assert BESLUIT_PARKEERREGEL == (
+        "Spreken jullie hier vandaag iets over af, schrijf dan bij ‘Wat precies’ ook wie het "
+        "oppakt. Anders parkeren jullie dit punt: de eigenaar van het startpunt zet het op de "
+        "agenda van het vervolgmoment.")
+    t = _plain(_besluit())
+    assert t.index("Tweede punt") < t.index(BESLUIT_PARKEERREGEL) < t.index("Terugkoppeling aan medewerkers")
+
+
+def test_succes_hoort_bij_het_startpunt():
+    assert BESLUIT_SLOTLABEL == "Waaraan zien we bij het startpunt dat het werkt"
+    assert BESLUIT_SLOTLABEL in _plain(_besluit())
+
+
+def test_terugkoppeling_per_scan():
+    assert BESLUIT_TERUGKOPPELING["retention"] == (
+        "Deel het startpunt, het beeld van de hele organisatie en wat het MT besluit. Deel geen "
+        "open antwoorden en geen uitkomsten van afdelingen met minder dan 10 antwoorden.")
+    assert BESLUIT_TERUGKOPPELING["exit"] == (
+        "Wie invulde, is vertrokken: koppel terug aan wie er nu werkt, over wat het MT met de "
+        "vertrekredenen doet. Deel geen open antwoorden en geen uitkomsten van afdelingen met "
+        "minder dan 10 antwoorden.")
+    assert BESLUIT_TERUGKOPPELING["onboarding"] == "Je mensen vulden in; ze horen wat het MT ermee doet."
+    for scan_type, hint in BESLUIT_TERUGKOPPELING.items():
+        assert hint in _plain(_besluit(scan_type=scan_type, heeft_werkvragen=scan_type != "onboarding"))
+
+
+def test_besluitvraag_noemt_het_vervolgmoment_niet_negentig_dagen():
+    assert BESLUITVRAAG == ("Wat spreken jullie vandaag af, wie is eigenaar, en waaraan zie je op het "
+                            "vervolgmoment dat het werkt?")
+
+
+def test_tweede_punt_heeft_twee_lijnen_voor_wat_precies():
+    html = _besluit()
+    blok = html[html.index("Tweede punt"):html.index("Terugkoppeling aan medewerkers")]
+    assert blok.count('class="bl-line"') == 2
+
+
+def test_parkeerregel_blijft_staan_bij_een_ingevuld_tweede_punt():
+    """Het dashboard toont de regel altijd als hint; de pagina ook, zodat een
+    voorgedrukt tweede punt zonder naam erin nog steeds zegt wie het oppakt."""
+    t = _plain(_besluit(decision={"secondary_topic": "Leiderschap",
+                                  "secondary_action": "Teamleiders plannen een gesprek."}))
+    assert BESLUIT_PARKEERREGEL in t
+
+
+def test_nieuwe_besluitcopy_zonder_streepjes():
+    for tekst in (BESLUIT_PARKEERREGEL, BESLUIT_SLOTLABEL, BESLUITVRAAG,
+                  *BESLUIT_TERUGKOPPELING.values()):
+        assert not any(s in tekst for s in STREEPJES), tekst
+
+
+def test_dashboard_gebruikt_dezelfde_labels_en_hints_als_de_besluitpagina():
+    """Labelconsistentie (plan 3b): het blok "Besluit vastleggen" in het
+    dashboard en de besluitpagina moeten hetzelfde zeggen. Het dashboard kent
+    het scantype niet en toont de Behoud-hint."""
+    bron = (Path(__file__).resolve().parents[1] / "frontend" / "components" / "dashboard"
+            / "decision-block.tsx").read_text(encoding="utf-8")
+    for tekst in (BESLUIT_SLOTLABEL, BESLUIT_PARKEERREGEL, BESLUIT_TERUGKOPPELING["retention"]):
+        assert tekst in bron, tekst

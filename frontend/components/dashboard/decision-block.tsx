@@ -26,6 +26,16 @@ const inputClass =
   'mt-1 w-full rounded-lg border border-[color:var(--dashboard-frame-border)] bg-white px-3 py-2 text-sm text-[color:var(--dashboard-ink)] focus:border-[color:var(--dashboard-accent-strong)] focus:outline-none disabled:opacity-50'
 const hintClass = 'mt-1 text-xs text-[color:var(--dashboard-muted)]'
 
+// Dezelfde tekst als op de besluitpagina van het rapport (fixronde 24-9, R4 en
+// R8): BESLUIT_SLOTLABEL, BESLUIT_PARKEERREGEL en BESLUIT_TERUGKOPPELING in
+// backend/report_html.py; tests/test_report_leesronde_fixes.py houdt ze gelijk.
+// Het dashboard kent het scantype hier niet en toont de Behoud-hint.
+const SUCCESS_LABEL = 'Waaraan zien we bij het startpunt dat het werkt'
+const SECOND_POINT_HINT =
+  'Spreken jullie hier vandaag iets over af, schrijf dan bij ‘Wat precies’ ook wie het oppakt. Anders parkeren jullie dit punt: de eigenaar van het startpunt zet het op de agenda van het vervolgmoment.'
+const FEEDBACK_HINT =
+  'Deel het startpunt, het beeld van de hele organisatie en wat het MT besluit. Deel geen open antwoorden en geen uitkomsten van afdelingen met minder dan 10 antwoorden.'
+
 function ReadOnlyRow({ label, value }: { label: string; value: string | null }) {
   if (!value) return null
   return (
@@ -54,7 +64,7 @@ function ReadOnlyDecision({ decision }: { decision: CampaignDecision | null }) {
       <ReadOnlyRow label="Tweede punt" value={decision.secondaryTopic} />
       <ReadOnlyRow label="Wat precies bij het tweede punt" value={decision.secondaryAction} />
       <ReadOnlyRow label="Terugkoppeling aan medewerkers" value={decision.feedbackPlan} />
-      <ReadOnlyRow label="Waaraan zien we dat het werkt" value={decision.successCriterion} />
+      <ReadOnlyRow label={SUCCESS_LABEL} value={decision.successCriterion} />
     </dl>
   )
 }
@@ -176,7 +186,7 @@ export function DecisionBlock({ campaignId, canManage, decision, loadError }: De
               disabled={busy}
               className={inputClass}
             />
-            <span className={hintClass}>Alleen als jullie er een kiezen.</span>
+            <span className={hintClass}>{SECOND_POINT_HINT}</span>
           </label>
           <label className={labelClass}>
             Wat precies bij het tweede punt
@@ -200,10 +210,10 @@ export function DecisionBlock({ campaignId, canManage, decision, loadError }: De
               disabled={busy}
               className={inputClass}
             />
-            <span className={hintClass}>Je mensen vulden in; ze horen wat het MT ermee doet.</span>
+            <span className={hintClass}>{FEEDBACK_HINT}</span>
           </label>
           <label className={`${labelClass} sm:col-span-2`}>
-            Waaraan zien we dat het werkt
+            {SUCCESS_LABEL}
             <input
               type="text"
               name="successCriterion"

@@ -9,6 +9,7 @@ import re
 import pytest
 
 from backend.report_html import (
+    BESLUIT_TERUGKOPPELING,
     BESLUIT_TITEL,
     BESLUIT_VOETREGEL,
     LEIDRAAD_ANKERS,
@@ -41,7 +42,7 @@ def test_pagina_draagt_alle_velden_uit_de_spec():
     for veld in ("Meting", "Wave 1", "Datum van dit gesprek", "Startpunt", "Groeiperspectief",
                  "Wat precies", "Eigenaar", "Datum vervolgmoment", "Tweede punt",
                  "Werkdruk en herstelruimte", "Terugkoppeling aan medewerkers", "Wie", "Wanneer",
-                 "Wat", "Waaraan zien we dat het werkt"):
+                 "Wat", "Waaraan zien we bij het startpunt dat het werkt"):
         assert veld in t, veld
     assert BESLUIT_VOETREGEL in t
 
@@ -49,7 +50,7 @@ def test_pagina_draagt_alle_velden_uit_de_spec():
 def test_pagina_is_een_eigen_vel_en_breekt_niet():
     html = _pagina()
     assert html.startswith('<div class="pb sec besluit">')
-    assert html.count('class="bl-line"') >= 12     # 3 + 3 wat precies, eigenaar, 2 datums, 3 terugkoppeling, 1 succes
+    assert html.count('class="bl-line"') >= 12     # 3 wat precies, eigenaar, 2 datums, 2 wat precies tweede punt, 3 terugkoppeling, 1 succes
 
 
 def test_vervolgmoment_vraagt_een_datum_met_de_hint_ernaast():
@@ -152,8 +153,9 @@ def test_vastgelegd_besluit_staat_voorgedrukt_met_de_datum_van_vastleggen():
 
 def test_lege_velden_van_een_vastgelegd_besluit_blijven_invulbaar():
     html = _pagina(decision=BESLUIT)
-    # tweede punt: wat precies (3) + terugkoppeling (3) blijven lijnen
-    assert html.count('class="bl-line"') == 6
+    # tweede punt: wat precies (2, fixronde 24-9: ruimte voor de parkeerregel)
+    # + terugkoppeling (3) blijven lijnen
+    assert html.count('class="bl-line"') == 5
     assert "Lege velden vul je met de pen in of werk je bij in het dashboard." in _plain(html)
 
 
@@ -224,7 +226,7 @@ def test_ingevuld_terugkoppelingsplan_vervangt_de_tabel_door_tekst():
     t = _plain(html)
     assert 'class="bl-drie"' not in html
     assert "We delen de uitkomst in het eerstvolgende teamoverleg." in t
-    assert "Je mensen vulden in; ze horen wat het MT ermee doet." in t
+    assert BESLUIT_TERUGKOPPELING["retention"] in t
 
 
 def test_ingevuld_terugkoppelingsplan_wordt_geescaped():

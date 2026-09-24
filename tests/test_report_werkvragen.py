@@ -154,7 +154,7 @@ def test_herkenningsvraag_faalt_luid_op_een_onbekende_toelichtingssleutel():
 def test_besluitvraag_heeft_de_vaste_vorm_uit_de_spec():
     assert _besluitvraag("clear") == BESLUITVRAAG
     assert BESLUITVRAAG == ("Wat spreken jullie vandaag af, wie is eigenaar, en waaraan zie je "
-                            "over 90 dagen dat het werkt?")
+                            "op het vervolgmoment dat het werkt?")
 
 
 def test_besluitvraag_bij_niets_nodig_laat_het_mt_ook_niets_besluiten():
