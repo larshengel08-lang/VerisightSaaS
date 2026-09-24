@@ -1633,7 +1633,8 @@ LEIDRAAD_ANKERS = {
 
 
 def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
-                    has_deepening: bool, has_werkvragen: bool = False) -> str:
+                    has_deepening: bool, has_werkvragen: bool = False,
+                    has_tweede_punt: bool = False) -> str:
     """"Zo leid je dit gesprek in 45 minuten" (spec par. 4 blok 5): vijf regels
     met tijdvak, wat je op tafel legt en de paginaverwijzing. Vervangt het
     gebruiksblok en de zin over de begeleide managementbespreking (H5): de
@@ -1649,6 +1650,10 @@ def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
     leidraad mag het dan ook niet beloven. has_werkvragen (fixronde 24-9) is
     bool(_werkvragen_block(...)) van de renderer: rij 5 verwijst alleen naar
     dat blok als het er echt staat. Loep Start heeft geen van beide.
+    has_tweede_punt: de ranglijst wees een tweede gesprekspunt aan (een rij met
+    agenda_role "tweede", dus ook een kaart "Tweede punt" in het
+    werkvragenblok). Zonder tweede punt valt de parkeerzin weg: hij zou over
+    een punt gaan dat niet op tafel ligt.
     """
     A = LEIDRAAD_ANKERS
     p = _pref
@@ -1673,10 +1678,13 @@ def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
     #    punt, met dezelfde parkeerregel als op de besluitpagina).
     besluit = f"Het besluit leg je vast op pagina {p(A['besluit'])}."
     if has_werkvragen:
+        # "wat eronder staat", niet "de vragen eronder": onder Herkennen staat
+        # bij het startpunt vaak alleen nog Besluiten.
+        tweede = ("Het tweede punt alleen als er tijd is, anders parkeren jullie het tot het "
+                  "vervolgmoment. " if has_tweede_punt else "")
         slot = (f"De werkvragen (pagina {p(A['werkvragen'])}). Bij het startpunt sla je "
-                "Herkennen over, dat deden jullie al; neem de vragen eronder. Het tweede punt "
-                "alleen als er tijd is, anders parkeren jullie het tot het vervolgmoment. "
-                + besluit)
+                "Herkennen over, dat deden jullie al; neem wat eronder staat. "
+                + tweede + besluit)
     else:
         slot = f"Het eerste gesprekspunt (pagina {p(A['agenda'])}). " + besluit
     if scan_type == "onboarding":
@@ -1725,7 +1733,7 @@ def _heeft_werkbeleving(sdt_avgs: dict) -> bool:
 
 def _leidraad_html(scan_type: str, *, data: dict, deep_agg: dict,
                    startpunt_fk: str | None, has_sdt: bool, geen_profiel: bool,
-                   has_werkvragen: bool = False) -> str:
+                   has_werkvragen: bool = False, has_tweede_punt: bool = False) -> str:
     """Kiest de vlaggen van de leidraad uit de data van dit rapport.
 
     Eén plek voor de drie renderers (codereview taak 5), zodat ze niet uit
@@ -1741,6 +1749,8 @@ def _leidraad_html(scan_type: str, *, data: dict, deep_agg: dict,
       startpunt er echt een verdeling van toont (`_deepening_shows_distribution`).
     - Regel 5 volgt `has_werkvragen`: de renderer geeft bool(_werkvragen_block)
       door, dus de leidraad verwijst alleen naar dat blok als het rendert.
+      `has_tweede_punt` komt uit dezelfde ranglijst als dat blok: alleen met
+      een tweede gesprekspunt noemt regel 5 het parkeren ervan.
     """
     if geen_profiel:
         return ""
@@ -1752,7 +1762,7 @@ def _leidraad_html(scan_type: str, *, data: dict, deep_agg: dict,
         scan_type, has_segments=has_segments, has_quotes=has_quotes,
         has_deepening=_deepening_shows_distribution(
             deep_agg.get(startpunt_fk) if startpunt_fk else None),
-        has_werkvragen=has_werkvragen)
+        has_werkvragen=has_werkvragen, has_tweede_punt=has_tweede_punt)
 
 
 # Standaardwaarde voor het derde coverstatistiek als er geen factorprofiel is
@@ -6046,7 +6056,8 @@ def render_exit_report_html(data: dict) -> str:
         leidraad_html=_leidraad_html(
             "exit", data=data, deep_agg=deep_agg,
             startpunt_fk=_primary, has_sdt=_heeft_werkbeleving(sdt_a),
-            geen_profiel=_geen_profiel, has_werkvragen=bool(_wq_block)),
+            geen_profiel=_geen_profiel, has_werkvragen=bool(_wq_block),
+            has_tweede_punt=any(r.get("agenda_role") == "tweede" for r in _raster_rows)),
         direction_line=_direction_p02_line(direction_agg, _primary, "exit",
                                            factor_score=_primary_score),
         brug_zin=_brug,
@@ -6463,7 +6474,8 @@ def render_retention_report_html(data: dict) -> str:
         leidraad_html=_leidraad_html(
             ST, data=data, deep_agg=deep_agg,
             startpunt_fk=_primary, has_sdt=_heeft_werkbeleving(sdt_a),
-            geen_profiel=_geen_profiel, has_werkvragen=bool(_wq_block)),
+            geen_profiel=_geen_profiel, has_werkvragen=bool(_wq_block),
+            has_tweede_punt=any(r.get("agenda_role") == "tweede" for r in _raster_rows)),
         direction_line=_direction_p02_line(direction_agg, _primary, ST,
                                            factor_score=_primary_score),
         brug_zin=_brug,

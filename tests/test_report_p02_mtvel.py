@@ -507,21 +507,29 @@ def test_leidraad_zonder_afdelingen_valt_terug_op_toelichtingen_of_werkbeleving(
 
 
 def test_leidraad_loep_start_belooft_geen_verdieping():
-    tekst = _tekst(_leidraad_block("onboarding", has_segments=False, has_quotes=False,
-                                   has_deepening=False))
+    html = _leidraad_block("onboarding", has_segments=False, has_quotes=False,
+                           has_deepening=False)
+    tekst = _tekst(html)
     assert "verdieping" not in tekst.lower()
-    assert "Wat er volgens je mensen moet gebeuren" not in tekst
+    # Zonder werkvragenblok (Loep Start heeft er geen) wijst regel 5 naar het
+    # eerste gesprekspunt, nooit naar het werkvragenanker.
+    assert "Het eerste gesprekspunt (pagina" in tekst
+    assert 'href="#sec-werkvragen"' not in html
 
 
 def test_leidraad_belooft_geen_toelichtingen_in_een_meting_zonder_verdieping():
-    """Een meting van voor de verdiepings- en richtingvraag rendert die blokken
-    niet (campagne-gate); regel 3 en 5 mogen ze dan niet aankondigen."""
-    tekst = _tekst(_leidraad_block("retention", has_segments=True, has_quotes=False,
-                                   has_deepening=False))
+    """Een meting van voor de verdiepingsvraag rendert dat blok niet
+    (campagne-gate); regel 3 mag de toelichtingen dan niet aankondigen. Regel 5
+    hangt sinds de fixronde van 24-9 aan has_werkvragen: zonder werkvragenblok
+    (standaard False) wijst hij naar het eerste gesprekspunt en niet naar het
+    werkvragenanker."""
+    html = _leidraad_block("retention", has_segments=True, has_quotes=False,
+                           has_deepening=False)
+    tekst = _tekst(html)
     assert "wat mensen als toelichting kozen" not in tekst
     assert "De verdieping van het startpunt: de laagste stelling en de score van elke stelling" in tekst
-    assert "Wat er volgens je mensen moet gebeuren" not in tekst
     assert "Het eerste gesprekspunt (pagina" in tekst
+    assert 'href="#sec-werkvragen"' not in html
 
 
 def test_elke_paginaverwijzing_wijst_naar_precies_een_anker():

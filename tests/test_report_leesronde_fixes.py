@@ -48,13 +48,48 @@ def test_rij_vijf_wijst_naar_het_werkvragenblok_zelf():
     assert _href("agenda") not in rij
 
 
+PARKEERZIN = ("Het tweede punt alleen als er tijd is, anders parkeren jullie het tot het "
+              "vervolgmoment.")
+OVERSLAANZIN = "Bij het startpunt sla je Herkennen over, dat deden jullie al; neem wat eronder staat."
+
+
 def test_rij_vijf_zegt_wat_je_overslaat_en_wat_je_parkeert():
+    html = _leidraad_block("exit", has_segments=False, has_quotes=True,
+                           has_deepening=True, has_werkvragen=True, has_tweede_punt=True)
+    tekst = _plain(_rij(html, "31-45 min"))
+    assert OVERSLAANZIN in tekst
+    assert PARKEERZIN in tekst
+
+
+def test_rij_vijf_zonder_tweede_punt_noemt_geen_parkeren():
+    """Codereview Taak 2: zonder tweede gesprekspunt gaat de parkeerzin over
+    een punt dat niet op tafel ligt."""
     html = _leidraad_block("exit", has_segments=False, has_quotes=True,
                            has_deepening=True, has_werkvragen=True)
     tekst = _plain(_rij(html, "31-45 min"))
-    assert "Bij het startpunt sla je Herkennen over, dat deden jullie al; neem de vragen eronder." in tekst
-    assert ("Het tweede punt alleen als er tijd is, anders parkeren jullie het tot het "
-            "vervolgmoment.") in tekst
+    assert OVERSLAANZIN in tekst
+    assert "tweede punt" not in tekst.lower()
+    assert "parkeren" not in tekst
+    assert "Het besluit leg je vast op pagina" in tekst
+
+
+def _retention_met_tweede_punt() -> dict:
+    return _fixture("retention", n=25, profile=True)
+
+
+@pytest.mark.parametrize("data_fn, tweede", [
+    (_retention_met_secties, False),
+    (_retention_met_tweede_punt, True),
+])
+def test_render_noemt_parkeren_alleen_met_een_tweede_punt(data_fn, tweede):
+    """De renderer leidt de vlag af uit dezelfde ranglijst als het
+    werkvragenblok: parkeerzin op p.02 als en alleen als er een kaart
+    "Tweede punt" staat."""
+    html = render_retention_report_html(data_fn())
+    p02 = _plain(_page_two(html))
+    assert OVERSLAANZIN in p02
+    assert ("Tweede punt: " in _body(html)) is tweede
+    assert (PARKEERZIN in p02) is tweede
 
 
 def test_tijdvakken_geven_het_slot_veertien_minuten():
