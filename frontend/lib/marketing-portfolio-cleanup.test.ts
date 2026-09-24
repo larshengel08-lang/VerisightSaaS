@@ -11,7 +11,6 @@ function read(rel: string) {
 // technical removal is a separate track.
 const BROWSABLE_SURFACE = [
   'components/marketing/producten-content.tsx',
-  'components/marketing/tarieven-content.tsx',
   'components/marketing/home-page-content.tsx',
   'components/marketing/public-header.tsx',
   'components/marketing/public-footer.tsx',
@@ -41,8 +40,21 @@ describe('Portfolio cleanup — browsable surface is free of removed products an
     })
   }
 
-  it('Cultuurbeeld is not referenced on /tarieven', () => {
-    expect(read('components/marketing/tarieven-content.tsx')).not.toContain('Cultuurbeeld')
+  // Site-ronde besluit A (2026-09-20): /tarieven en /aanpak verwezen al door en
+  // zijn als pagina verwijderd. De redirect is het enige dat overblijft; de
+  // tarieven staan op /producten#tarieven en komen uit lib/pricing.ts.
+  it('/tarieven en /aanpak bestaan alleen nog als redirect naar /producten', () => {
+    for (const rel of [
+      'app/tarieven/page.tsx',
+      'components/marketing/tarieven-content.tsx',
+      'app/aanpak/page.tsx',
+      'components/marketing/aanpak-content.tsx',
+    ]) {
+      expect(fs.existsSync(path.join(process.cwd(), rel)), `${rel} hoort weg te zijn`).toBe(false)
+    }
+    const config = read('next.config.ts')
+    expect(config).toContain("{ source: '/tarieven', destination: '/producten#tarieven', permanent: true }")
+    expect(config).toContain("{ source: '/aanpak', destination: '/producten', permanent: true }")
   })
 
   // Homepage SEO metadata/JSON-LD and the public login page must not name the
@@ -74,40 +86,34 @@ describe('Portfolio cleanup — /producten routekiezer', () => {
   })
 })
 
-describe('Portfolio cleanup — three equal product pages', () => {
+// Site-ronde besluit A (2026-09-20): de detailpagina's van Loep Vertrek, Loep
+// Behoud en Loep Start verwezen sinds 17 juni door en zijn verwijderd. Wat dit
+// blok vroeger bewaakte (zes dienst-bullets per pagina) staat nu één keer op
+// /producten en wordt bewaakt door lib/site-ronde-besluit-a.guard.test.ts.
+describe("Portfolio cleanup: detailpagina's van Vertrek, Behoud en Start zijn weg, de redirects blijven", () => {
   const page = () => read('app/producten/[slug]/page.tsx')
 
-  function slice(from: string, to: string) {
-    return page().split(from)[1].split(to)[0]
-  }
-
-  it('Loep Vertrek ships the six service bullets and no ritme choice section', () => {
-    const exit = page().split('function RetentionScanPage()')[0]
-    expect(exit).toContain('Intake en scopebepaling')
-    expect(exit).toContain('Survey klaarzetten en launchpakket leveren')
-    expect(exit).toContain('Begeleide managementbespreking (60–90 min)')
-    expect(exit).toContain('Eerste vervolgrichting vastgelegd')
-    expect(exit).not.toContain('Kies baseline of ritmeroute')
-    expect(exit).toContain('Bespreek of deze scan past')
+  it('heeft de vier dode paginafuncties niet meer en houdt Loep Cultuurbeeld', () => {
+    for (const name of ['ExitScanPage', 'RetentionScanPage', 'OnboardingModernPage', 'OnboardingPage']) {
+      expect(page(), `${name} hoort weg te zijn`).not.toContain(`function ${name}(`)
+    }
+    expect(page()).toContain('function CultureAssessmentPage()')
+    expect(page()).toContain('function UpcomingProductPage(')
   })
 
-  it('Loep Behoud ships the six bullets, no ritme section, and a sharpened h1', () => {
-    const retention = slice('function RetentionScanPage()', 'function OnboardingModernPage()')
-    expect(retention).toContain('Intake en scopebepaling')
-    expect(retention).toContain('Eerste vervolgrichting vastgelegd')
-    expect(retention).not.toContain('Kies baseline of ritmeroute')
-    expect(retention).toContain('Bespreek of deze scan past')
-    expect(retention).toContain('voordat uitstroom zichtbaar wordt')
+  it('stuurt de drie slugs ook in de pagina zelf door, als vangnet naast next.config.ts', () => {
+    expect(page()).toContain('REDIRECTED_PRODUCT_ANCHORS')
+    expect(page()).toContain('if (redirectTarget) permanentRedirect(redirectTarget)')
+    expect(page()).toContain("exitscan: '/producten#loep-vertrek'")
+    expect(page()).toContain("retentiescan: '/producten#loep-behoud'")
+    expect(page()).toContain("'onboarding-30-60-90': '/producten#loep-start'")
   })
 
-  it('Onboarding is a €4.500 baseline with the six bullets and no ritme/hercheck section', () => {
-    const onboarding = slice('function OnboardingModernPage()', 'function OnboardingPage()')
-    expect(onboarding).toContain('vanaf €4.500')
-    expect(onboarding).not.toContain('op aanvraag')
-    expect(onboarding).toContain('Intake en scopebepaling')
-    expect(onboarding).toContain('Eerste vervolgrichting vastgelegd')
-    expect(onboarding).not.toContain('Kies baseline of hercheckmoment')
-    expect(onboarding).toContain('Bespreek of deze scan past')
+  it('houdt de drie redirects in next.config.ts', () => {
+    const config = read('next.config.ts')
+    expect(config).toContain("{ source: '/producten/exitscan', destination: '/producten#loep-vertrek', permanent: true }")
+    expect(config).toContain("{ source: '/producten/retentiescan', destination: '/producten#loep-behoud', permanent: true }")
+    expect(config).toContain("{ source: '/producten/onboarding-30-60-90', destination: '/producten#loep-start', permanent: true }")
   })
 })
 
@@ -143,15 +149,5 @@ describe('Portfolio cleanup — deferred public Action Center / removed-product 
     expect(og).not.toContain('Combinatie')
     expect(og).not.toContain('Pulse')
     expect(og).not.toContain('Leadership')
-  })
-})
-
-describe('Portfolio cleanup — /tarieven shows three equal baselines', () => {
-  const source = () => read('components/marketing/tarieven-content.tsx')
-
-  it('renders Onboarding as a third €4.500 baseline card', () => {
-    expect(source()).toContain('Loep Start Baseline')
-    expect(source()).not.toContain('Action Center Start')
-    expect(source()).not.toContain('Rest op aanvraag')
   })
 })

@@ -4,6 +4,15 @@ import Link from 'next/link'
 import { AC, Arrow, FF, Reveal, SHELL, T } from '@/components/marketing/design-tokens'
 import { MarketingClosingCta } from '@/components/marketing/marketing-closing-cta'
 import { buildContactHref } from '@/lib/contact-funnel'
+import {
+  PRICING_ABOVE_LABEL,
+  PRICING_ABOVE_TEXT,
+  PRICING_TIERS,
+  PRICING_VAT_NOTE,
+  firstScanRangeLabel,
+  followUpRangeLabel,
+  formatEur,
+} from '@/lib/pricing'
 
 const TEAL = 'oklch(0.50 0.12 188)'
 const TEAL_SOFT = 'oklch(0.972 0.018 185)'
@@ -13,11 +22,11 @@ const AMBER_SOFT = 'oklch(0.97 0.03 70)'
 // Gedeelde levering: identiek voor elke scan, daarom hier één keer i.p.v. per scan herhaald.
 const sharedDelivery = [
   'Intake en scopebepaling',
-  'Survey klaarzetten en launchpakket leveren (uitnodigingslink + tekst)',
-  'Respons monitoren op campagneniveau',
+  'Meting klaarzetten: vragenlijst, afdelingen en de uitnodigingstekst die je zelf verstuurt',
+  'Je volgt de respons in je eigen omgeving en sluit of verlengt zelf',
   'Rapport: waar het wringt en waar je begint (bij Loep Vertrek en Loep Behoud ook waarom)',
-  'Begeleide managementbespreking (60–90 min)',
-  'Vervolgstap vastgelegd',
+  'Gespreksleidraad van 45 minuten en een besluitpagina in het rapport',
+  'Besluit vastleggen in je omgeving',
 ] as const
 
 const scans = [
@@ -26,7 +35,7 @@ const scans = [
     index: '01',
     eyebrow: 'Vertrek begrijpen',
     title: 'Loep Vertrek',
-    lead: 'Wij brengen vertrekpatronen scherp in beeld en begeleiden je naar één duidelijke managementkeuze.',
+    lead: 'Loep brengt vertrekpatronen scherp in beeld, en het rapport brengt je MT tot één duidelijke keuze.',
     when: [
       'Vertrek is zichtbaar maar de reden is onduidelijk',
       'Management vraagt om een onderbouwd beeld',
@@ -40,7 +49,7 @@ const scans = [
     // minimaal 10 responses (backend/report.py); bij kleinere organisaties
     // betekent dat een langere meetperiode. Behoud/Start meten de hele
     // populatie en hebben deze kanttekening niet.
-    note: 'Patroonanalyse vraagt minimaal 10 respondenten. Bij kleinere organisaties stemmen we de meetperiode daarop af in de intake.',
+    note: 'Patroonanalyse vraagt minimaal 10 respondenten. Bij kleinere organisaties stemt Loep de meetperiode daarop af in de intake.',
     samplePdf: '/examples/voorbeeldrapport_loep.pdf',
     contactRoute: 'exitscan',
     accent: AC.deep,
@@ -51,7 +60,7 @@ const scans = [
     index: '02',
     eyebrow: 'Behoud versterken',
     title: 'Loep Behoud',
-    lead: 'Wij laten zien waar behoud onder druk staat, vóór uitstroom zichtbaar wordt.',
+    lead: 'Loep laat zien waar behoud onder druk staat, vóór uitstroom zichtbaar wordt, en het rapport brengt je MT tot één eerste keuze.',
     when: [
       'Verloop loopt op maar de oorzaak is onduidelijk',
       'Je wilt bijsturen vóór mensen vertrekbesluiten hebben genomen',
@@ -72,7 +81,7 @@ const scans = [
     index: '03',
     eyebrow: 'Goed landen',
     title: 'Loep Start',
-    lead: 'Wij meten vroeg hoe nieuwe medewerkers landen en leveren een helder groepsbeeld.',
+    lead: 'Loep meet vroeg hoe nieuwe medewerkers landen. Het rapport geeft je MT een helder groepsbeeld om één eerste stap op te kiezen.',
     when: [
       'Nieuwe medewerkers landen ongelijk of haken vroeg af',
       'Je wilt vroeg toetsen hoe rol, leiding en team nu landen',
@@ -133,10 +142,11 @@ function HeroSection() {
             Vertrek, behoud of de eerste 90 dagen.
           </h1>
           <p style={{ color: T.inkSoft, fontSize: 16.5, lineHeight: 1.72, margin: '26px auto 36px', maxWidth: '58ch' }}>
-            Drie scans, één recept: Loep doet de meting, jij krijgt een rapport dat zegt waar het wringt en waar je
-            begint. Bij Loep Vertrek en Loep Behoud staat er ook in waarom dat zo is en wat er volgens je mensen moet
-            gebeuren. Daarna bespreken we het samen. Geen software om te beheren. Loep Vertrek als er al mensen weg
-            zijn, Loep Behoud als je ze wilt houden, Loep Start als nieuwe mensen moeten landen.
+            Drie scans, één recept: Loep zet de meting klaar, jij verstuurt hem, en je krijgt een rapport dat zegt
+            waar het wringt en waar je begint. Bij Loep Vertrek en Loep Behoud staat er ook in waarom dat zo is en wat
+            er volgens je mensen moet gebeuren. Daarna leid jij het gesprek met je MT; het rapport is je leidraad.
+            Loep Vertrek als er al mensen weg zijn, Loep Behoud als je ze wilt houden, Loep Start als nieuwe mensen
+            moeten landen.
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 18, justifyContent: 'center' }}>
             {scans.map((scan) => (
@@ -174,11 +184,11 @@ function SharedDeliverySection() {
                 Zo werkt elke scan
               </div>
               <h2 style={{ color: T.ink, fontFamily: FF, fontSize: 'clamp(26px,3vw,38px)', fontWeight: 700, letterSpacing: '-.026em', lineHeight: 1.06, maxWidth: '15ch' }}>
-                Eén begeleide route, ongeacht de scan.
+                Eén vaste route, ongeacht de scan.
               </h2>
               <p style={{ color: T.inkSoft, fontSize: 15, lineHeight: 1.72, marginTop: 16, maxWidth: '46ch' }}>
-                De drie scans verschillen in vraag en uitkomst, maar de uitvoering is hetzelfde. Loep voert uit, jij
-                beheert geen tool.
+                De drie scans verschillen in vraag en uitkomst, maar de route is hetzelfde. Loep zet klaar en levert
+                het rapport; jij verstuurt, volgt de respons en leidt het gesprek.
               </p>
             </div>
           </Reveal>
@@ -216,12 +226,15 @@ function ScanSection({ scan, alt }: { scan: (typeof scans)[number]; alt: boolean
                 {scan.title}
               </h2>
               <p style={{ color: T.inkSoft, fontSize: 16, lineHeight: 1.7, marginBottom: 24, maxWidth: '40ch' }}>{scan.lead}</p>
-              <div style={{ alignItems: 'baseline', display: 'flex', gap: 8, marginBottom: 6 }}>
-                <span style={{ color: T.ink, fontFamily: FF, fontSize: 22, fontWeight: 600, letterSpacing: '-.02em' }}>€4.500</span>
-                <span style={{ color: T.inkMuted, fontSize: 13 }}>excl. btw · volledig traject</span>
+              <div style={{ alignItems: 'baseline', display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 6 }}>
+                <span style={{ color: T.ink, fontFamily: FF, fontSize: 22, fontWeight: 600, letterSpacing: '-.02em' }}>{firstScanRangeLabel()}</span>
+                <span style={{ color: T.inkMuted, fontSize: 13 }}>{PRICING_VAT_NOTE} · naar de grootte van je organisatie</span>
               </div>
               <p style={{ color: T.inkMuted, fontSize: 13, lineHeight: 1.5, marginBottom: 22 }}>
-                Vervolgmeting daarna: €1.250 excl. btw
+                Vervolgmeting daarna: {followUpRangeLabel()} {PRICING_VAT_NOTE}.{' '}
+                <a href="#tarieven" style={{ color: scan.accent, fontWeight: 600, textDecoration: 'none' }}>
+                  Bekijk de staffel
+                </a>
               </p>
               <Link
                 href={buildContactHref({ routeInterest: scan.contactRoute, ctaSource: `products_scan_${scan.contactRoute}` })}
@@ -276,57 +289,84 @@ function ScanSection({ scan, alt }: { scan: (typeof scans)[number]; alt: boolean
   )
 }
 
+// Tussenvorm tot plan 3c (spec 2026-09-20 par. 4.3): het rapport legt de twee
+// metingen nog niet zelf naast elkaar. Task 17 van het plan vervangt deze zin
+// zodra 3c live is; public/llms.txt gaat dan mee.
+const FOLLOW_UP_COPY =
+  'Dezelfde meting opnieuw, wanneer je wilt zien of het signaal beweegt. De inrichting staat er al; het rapport van je tweede meting leg je naast het eerste.'
+
 function PricingSection() {
   const included = [
     'Intake en scopebepaling',
-    'Uitvoering van de survey, zonder toolbeheer voor je team',
+    'Meting klaargezet door Loep: vragenlijst, afdelingen en uitnodigingstekst',
     'Rapport: waar het wringt en waar je begint (bij Loep Vertrek en Loep Behoud ook waarom)',
-    'Begeleide managementbespreking (60–90 min)',
-    'Vervolgstap vastgelegd',
+    'Gespreksleidraad van 45 minuten en een besluitpagina in het rapport',
+    'Besluit vastleggen in je omgeving',
   ] as const
+  const amountCaption = {
+    color: T.inkMuted,
+    fontSize: 10,
+    fontWeight: 700,
+    letterSpacing: '.14em',
+    marginBottom: 4,
+    textTransform: 'uppercase',
+  } as const
+  const amountValue = { color: T.ink, fontFamily: FF, fontSize: 20, fontWeight: 600, letterSpacing: '-.02em' } as const
 
   return (
     <section id="tarieven" style={{ background: T.paperSoft, borderBottom: `1px solid ${T.rule}`, padding: 'clamp(52px,6vw,82px) 0', scrollMarginTop: 80 }}>
       <div style={SHELL}>
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_1fr] lg:gap-16 items-start">
           <Reveal>
-            <div>
+            <div style={{ minWidth: 0 }}>
               <div style={{ color: AC.deep, fontSize: 10, fontWeight: 700, letterSpacing: '.16em', marginBottom: 12, textTransform: 'uppercase' }}>Tarieven</div>
               <h2 style={{ color: T.ink, fontFamily: FF, fontSize: 'clamp(28px,3.5vw,42px)', fontWeight: 700, letterSpacing: '-.026em', lineHeight: 1.06, marginBottom: 16 }}>
-                Eén heldere prijs per scan.
+                Eén vaste prijs, naar de grootte van je organisatie.
               </h2>
               <p style={{ color: T.inkSoft, fontSize: 16, lineHeight: 1.72, marginBottom: 16, maxWidth: '52ch' }}>
-                Elke scan kost <strong style={{ color: T.ink, fontWeight: 600 }}>€4.500 excl. btw</strong> en is een
-                volledig traject, van intake tot en met de begeleide managementbespreking. Geen licenties per
-                medewerker, geen jaarlijkse verhogingen, geen add-ons achteraf. Doorlooptijd: weken, geen maanden;
-                het precieze ritme stemmen we af in de intake. Maatwerk op aanvraag.
+                De prijs hangt af van hoe groot je organisatie is, niet van het aantal mensen dat meedoet. Een grotere
+                organisatie heeft meer op het spel staan als behoud onder druk komt; een kleinere minder, en die betaalt
+                dus minder. Elke scan is een volledig traject, van intake tot en met het rapport met gespreksleidraad.
+                Geen licenties per medewerker, geen jaarlijkse verhogingen, geen add-ons achteraf. Doorlooptijd: weken,
+                geen maanden; het precieze ritme stem je af in de intake. Maatwerk op aanvraag.
               </p>
               <p style={{ color: T.inkSoft, fontSize: 15, lineHeight: 1.72, marginBottom: 24, maxWidth: '52ch' }}>
-                Ter vergelijking: een volledig uitbesteed onderzoekstraject kost al snel drie tot vier keer zoveel.
-                Bij een organisatie van 150 medewerkers komt een scan neer op zo&rsquo;n €30 per medewerker, inclusief de
-                bespreking.
+                In de trede van 150 tot 400 medewerkers komt een scan bij 150 medewerkers neer op zo&rsquo;n €30 per
+                medewerker, en bij 300 medewerkers op de helft daarvan. Ter vergelijking: een volledig uitbesteed
+                onderzoekstraject kost bij die omvang al snel drie tot vier keer het bedrag van die trede.
               </p>
               <div style={{ borderTop: `1px solid ${T.rule}` }}>
-                <div style={{ borderBottom: `1px solid ${T.rule}`, padding: '14px 0' }}>
-                  <div style={{ alignItems: 'baseline', display: 'flex', gap: 8, marginBottom: 4 }}>
-                    <span style={{ color: T.ink, fontFamily: FF, fontSize: 17, fontWeight: 700 }}>Eerste scan</span>
-                    <span style={{ color: T.ink, fontFamily: FF, fontSize: 17, fontWeight: 600, marginLeft: 'auto' }}>€4.500</span>
+                {PRICING_TIERS.map((tier) => (
+                  <div key={tier.id} style={{ borderBottom: `1px solid ${T.rule}`, padding: '16px 0' }}>
+                    <div style={{ color: T.ink, fontFamily: FF, fontSize: 17, fontWeight: 700, marginBottom: 10 }}>{tier.label}</div>
+                    <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
+                      <div>
+                        <div style={amountCaption}>Eerste scan</div>
+                        <div style={amountValue}>{formatEur(tier.firstScanEur)}</div>
+                      </div>
+                      <div>
+                        <div style={amountCaption}>Vervolgmeting</div>
+                        <div style={amountValue}>{formatEur(tier.followUpEur)}</div>
+                      </div>
+                    </div>
+                    {tier.note ? (
+                      <p style={{ color: T.inkMuted, fontSize: 13, lineHeight: 1.6, marginTop: 10 }}>{tier.note}</p>
+                    ) : null}
                   </div>
-                  <p style={{ color: T.inkMuted, fontSize: 13.5, lineHeight: 1.6 }}>
-                    Eenmalig en alles inbegrepen: inrichting, uitvoering, managementrapport en begeleide bespreking.
-                  </p>
-                </div>
-                <div style={{ borderBottom: `1px solid ${T.rule}`, padding: '14px 0' }}>
-                  <div style={{ alignItems: 'baseline', display: 'flex', gap: 8, marginBottom: 4 }}>
-                    <span style={{ color: T.ink, fontFamily: FF, fontSize: 17, fontWeight: 700 }}>Vervolgmeting</span>
-                    <span style={{ color: T.ink, fontFamily: FF, fontSize: 17, fontWeight: 600, marginLeft: 'auto' }}>€1.250</span>
-                  </div>
-                  <p style={{ color: T.inkMuted, fontSize: 13.5, lineHeight: 1.6 }}>
-                    Dezelfde meting opnieuw, wanneer je wilt zien of het signaal beweegt. De inrichting staat er al;
-                    de vergelijking met je eerste meting nemen we door in een compacte bespreking.
-                  </p>
+                ))}
+                <div style={{ alignItems: 'baseline', borderBottom: `1px solid ${T.rule}`, display: 'flex', flexWrap: 'wrap', gap: 8, padding: '16px 0' }}>
+                  <span style={{ color: T.ink, fontFamily: FF, fontSize: 17, fontWeight: 700 }}>{PRICING_ABOVE_LABEL}</span>
+                  <span style={{ color: T.inkSoft, fontSize: 15, marginLeft: 'auto' }}>{PRICING_ABOVE_TEXT}</span>
                 </div>
               </div>
+              <p style={{ color: T.inkMuted, fontSize: 13, lineHeight: 1.6, marginTop: 10 }}>Alle bedragen {PRICING_VAT_NOTE}.</p>
+              <p style={{ color: T.inkMuted, fontSize: 13.5, lineHeight: 1.6, marginTop: 16 }}>
+                <strong style={{ color: T.ink, fontWeight: 600 }}>Eerste scan.</strong> Eenmalig en alles inbegrepen:
+                inrichting, meting, rapport met gespreksleidraad en besluitpagina.
+              </p>
+              <p style={{ color: T.inkMuted, fontSize: 13.5, lineHeight: 1.6, marginTop: 8 }}>
+                <strong style={{ color: T.ink, fontWeight: 600 }}>Vervolgmeting.</strong> {FOLLOW_UP_COPY}
+              </p>
               <p style={{ color: T.inkSoft, fontSize: 14, fontWeight: 600, marginTop: 14 }}>
                 Zo wordt Loep goedkoper naarmate je het langer gebruikt, niet duurder.
               </p>
@@ -362,7 +402,7 @@ function MtoComparisonSection() {
   const loepFits = [
     'Er speelt nu een concreet vraagstuk rond vertrek, behoud of onboarding',
     'Je wilt één scherpe eerste keuze, geen breed dashboard',
-    'Je wilt duiding en een managementbespreking, geen zelfbeheer',
+    'Je wilt een antwoord waar je MT mee aan tafel kan, geen dashboard om te beheren',
   ] as const
 
   return (

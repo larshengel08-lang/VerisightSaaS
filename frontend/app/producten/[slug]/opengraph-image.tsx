@@ -139,7 +139,7 @@ export default async function OpenGraphImage({ params }: Props) {
           >
             <div
               style={{
-                display: 'inline-flex',
+                display: 'flex',
                 alignItems: 'center',
                 gap: '12px',
                 padding: '12px 18px',

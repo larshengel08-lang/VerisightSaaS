@@ -3,6 +3,7 @@ import { PublicHeader } from '@/components/marketing/public-header'
 import { PublicFooter } from '@/components/marketing/public-footer'
 import { ProductenContent } from '@/components/marketing/producten-content'
 import { buildContactHref } from '@/lib/contact-funnel'
+import { buildPricingOfferCatalog } from '@/lib/pricing'
 
 export const metadata: Metadata = {
   title: 'Producten',
@@ -37,11 +38,15 @@ export default function ProductenPage() {
     ],
   }
 
+  // Prijzen in de structured data komen uit dezelfde bron als de tarievensectie.
+  const pricingSchema = buildPricingOfferCatalog()
+
   const ctaHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'products_primary_cta' })
 
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(pricingSchema) }} />
       <div className="min-h-screen">
       <PublicHeader ctaHref={ctaHref} ctaLabel="Plan een kennismaking" />
         <main id="hoofdinhoud">

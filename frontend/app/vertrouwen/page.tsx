@@ -31,7 +31,7 @@ export default function VertrouwenPage() {
     '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.getloep.nl/' },
-      { '@type': 'ListItem', position: 2, name: 'Privacy', item: 'https://www.getloep.nl/vertrouwen' },
+      { '@type': 'ListItem', position: 2, name: 'Vertrouwen', item: 'https://www.getloep.nl/vertrouwen' },
     ],
   }
 

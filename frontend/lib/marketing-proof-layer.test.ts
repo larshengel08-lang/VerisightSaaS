@@ -6,7 +6,6 @@ import {
   publicProofCards,
   statCards,
   trustHubAnswerCards,
-  trustSignalHighlights,
 } from '@/components/marketing/site-content'
 
 describe('Marketing proof layer', () => {
@@ -17,7 +16,6 @@ describe('Marketing proof layer', () => {
     expect(statCards.some((card) => card.value === '1 suite-login')).toBe(true)
     expect(statCards.some((card) => card.value === '2 modules')).toBe(true)
     expect(statCards.some((card) => card.value === 'Afdelingstoewijzing')).toBe(true)
-    expect(trustSignalHighlights.some((item) => item.title === 'Manager-scope blijft bounded')).toBe(true)
     expect(
       trustHubAnswerCards.some(
         (card) =>

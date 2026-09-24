@@ -4,12 +4,11 @@ import { describe, expect, it } from 'vitest'
 import nextConfig from '../next.config'
 import { metadata as homePageMetadata } from '@/app/page'
 import sitemap from '@/app/sitemap'
-import { metadata as aanpakMetadata } from '@/app/aanpak/page'
 import { generateMetadata as generateSolutionMetadata } from '@/app/oplossingen/[slug]/page'
-import { metadata as pricingMetadata } from '@/app/tarieven/page'
 import { metadata as trustMetadata } from '@/app/vertrouwen/page'
 import { generateMetadata as generateProductMetadata } from '@/app/producten/[slug]/page'
 import { SEO_SOLUTION_PAGES, getSeoSolutionPageBySlug } from '@/lib/seo-solution-pages'
+import { SITE_TITLE } from '@/lib/site-meta'
 
 function firstImage(
   image:
@@ -39,10 +38,8 @@ function imageUrl(
 
 describe('SEO conversion tranche', () => {
   it('keeps the homepage and support-page metadata aligned with current SEO positioning', () => {
-    expect(homePageMetadata.title).toBe('Verisight')
+    expect(homePageMetadata.title).toBe(SITE_TITLE)
     expect(homePageMetadata.alternates?.canonical).toBe('/')
-    expect(imageUrl(aanpakMetadata.openGraph?.images)).toBe('/opengraph-image')
-    expect(imageUrl(pricingMetadata.openGraph?.images)).toBe('/opengraph-image')
     expect(imageUrl(trustMetadata.openGraph?.images)).toBe('/opengraph-image')
   })
 
@@ -123,14 +120,6 @@ describe('SEO conversion tranche', () => {
       path.join(process.cwd(), 'app', 'producten', '[slug]', 'page.tsx'),
       'utf8',
     )
-    const pricingPageSource = fs.readFileSync(
-      path.join(process.cwd(), 'app', 'tarieven', 'page.tsx'),
-      'utf8',
-    )
-    const pricingContentSource = fs.readFileSync(
-      path.join(process.cwd(), 'components', 'marketing', 'tarieven-content.tsx'),
-      'utf8',
-    )
     const solutionPageSource = fs.readFileSync(
       path.join(process.cwd(), 'app', 'oplossingen', '[slug]', 'page.tsx'),
       'utf8',
@@ -143,8 +132,6 @@ describe('SEO conversion tranche', () => {
     expect(productPageSource).toContain("ctaSource: 'product_onboarding_form'")
     expect(productPageSource).toContain("ctaSource: 'product_leadership_form'")
     expect(productPageSource.includes('ctaHref="#kennismaking"') || productPageSource.includes('href="#kennismaking"')).toBe(true)
-    expect(pricingPageSource).toContain("ctaSource: 'pricing_primary_cta'")
-    expect(pricingContentSource).toContain("ctaSource: 'pricing_closing_cta'")
     expect(solutionPageSource).toContain('MarketingClosingCta')
     expect(solutionPageSource).toContain('ctaSource: solutionPage.ctaSource')
   })
@@ -152,8 +139,11 @@ describe('SEO conversion tranche', () => {
   it('keeps llms.txt aligned with the current pricing and product routes', () => {
     const llmsText = fs.readFileSync(path.join(process.cwd(), 'public', 'llms.txt'), 'utf8')
 
-    // Actuele portfolio (2026-07-04): drie gelijkwaardige scans, één prijs.
-    expect(llmsText).toContain('EUR 4.500 excl. btw')
+    // Site-ronde besluit A (2026-09-20): drie gelijkwaardige scans, één staffel
+    // op organisatiegrootte. De bedragen zelf legt
+    // lib/site-ronde-besluit-a.guard.test.ts tegen lib/pricing.ts.
+    expect(llmsText.replace(/\s+/g, ' ')).toContain('150 tot 400 medewerkers EUR 4.500')
+    expect(llmsText).toContain('Geen bespreking door Loep')
     expect(llmsText).toContain('https://www.getloep.nl/producten#loep-vertrek')
     expect(llmsText).toContain('https://www.getloep.nl/producten#loep-behoud')
     expect(llmsText).toContain('https://www.getloep.nl/producten#loep-start')

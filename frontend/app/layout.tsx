@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { IBM_Plex_Sans, Inter } from 'next/font/google'
 import { SiteAnalytics } from '@/components/marketing/site-analytics'
 import { AuthLinkErrorBanner } from '@/components/marketing/auth-link-error-banner'
+import { SITE_DESCRIPTION, SITE_TITLE } from '@/lib/site-meta'
 import './globals.css'
 
 const inter = Inter({
@@ -22,24 +23,22 @@ const googleSiteVerification = process.env.GOOGLE_SITE_VERIFICATION
 
 export const metadata: Metadata = {
   title: {
-    default: 'Loep | Begeleide analyse van behoud, vertrek en onboarding',
+    default: SITE_TITLE,
     template: '%s | Loep',
   },
   icons: {
     icon: [{ url: '/icon.png', type: 'image/png' }],
     shortcut: [{ url: '/icon.png', type: 'image/png' }],
   },
-  description:
-    'Loep laat organisaties van 100 tot 1.000 medewerkers zien waar het wringt, waarom volgens hun eigen mensen, en waar ze moeten beginnen. Loep Behoud, Loep Vertrek en Loep Start: rapport en gesprek inbegrepen, geen software om te beheren.',
+  description: SITE_DESCRIPTION,
   metadataBase: new URL('https://www.getloep.nl'),
   openGraph: {
     type: 'website',
     locale: 'nl_NL',
     url: 'https://www.getloep.nl',
     siteName: 'Loep',
-    title: 'Loep | Begeleide analyse van behoud, vertrek en onboarding',
-    description:
-      'Zie waar het wringt voordat mensen vertrekken, hoor waarom van je mensen zelf, en weet waar je begint. Begeleide scan met rapport en gesprek inbegrepen.',
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
     images: [
       {
         url: '/opengraph-image',
@@ -51,9 +50,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Loep | Begeleide analyse van behoud, vertrek en onboarding',
-    description:
-      'Zie waar het wringt voordat mensen vertrekken, hoor waarom van je mensen zelf, en weet waar je begint. Begeleide scan met rapport en gesprek inbegrepen.',
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
     images: ['/opengraph-image'],
   },
   robots: {

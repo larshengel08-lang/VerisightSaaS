@@ -1,7 +1,12 @@
 import { LOEP_CONTACT_EMAIL } from '@/lib/loep-contact'
+import { PRICING_VAT_NOTE, followUpRangeLabel } from '@/lib/pricing'
 
-/** Prijs van de vervolgmeting zoals publiek op /producten (beslissing 2026-07-09). */
-export const NEW_MEASUREMENT_PRICE_LABEL = '€1.250 excl. btw'
+/**
+ * Prijs van de vervolgmeting zoals publiek op /producten#tarieven (staffel op
+ * organisatiegrootte, besluit 2026-09-20). Het dashboard kent de grootte van de
+ * organisatie niet, dus het noemt het bereik en geen enkel bedrag.
+ */
+export const NEW_MEASUREMENT_PRICE_LABEL = `${followUpRangeLabel()} ${PRICING_VAT_NOTE}, naar de grootte van je organisatie`
 
 /**
  * Mailto voor "nieuwe meting aanvragen" (spec 2026-09-16 par. 6.3): geen

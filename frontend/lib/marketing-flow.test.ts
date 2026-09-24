@@ -11,10 +11,7 @@ import {
 } from '@/lib/contact-funnel'
 import { getBuyerFacingShowcaseAssets } from '@/lib/sample-showcase-assets'
 import {
-  approachSteps,
-  homepageProductRoutes,
   homepageUtilityLinks,
-  included,
   marketingNavLinks,
   marketingPrimaryCta,
   marketingSecondaryCta,
@@ -52,17 +49,6 @@ describe('marketing flow defaults', () => {
     ])
   })
 
-  it('keeps the homepage focused on the three buyer-facing primary routes', () => {
-    expect(homepageProductRoutes.map((route) => route.name)).toEqual([
-      'Loep Vertrek',
-      'Loep Behoud',
-      'Loep Cultuurbeeld',
-    ])
-    expect(homepageProductRoutes[0]?.chip).toBe('Kernroute')
-    expect(homepageProductRoutes[1]?.chip).toBe('Kernroute')
-    expect(homepageProductRoutes[2]?.chip).toBe('Kernroute')
-  })
-
   it('keeps homepage utility links aligned with buyer flow and due diligence', () => {
     expect(homepageUtilityLinks.map((link) => link.href)).toEqual([
       '/producten',
@@ -70,12 +56,6 @@ describe('marketing flow defaults', () => {
       '/producten#tarieven',
       '/vertrouwen',
     ])
-  })
-
-  it('keeps the approach flow explicit about assisted onboarding and first use', () => {
-    expect(included).toContain('Begeleide managementbespreking van 60–90 minuten')
-    expect(approachSteps.find((step) => step.title === '5. Dashboard en rapport')?.body.toLowerCase()).toContain('dashboard en rapport')
-    expect(approachSteps.find((step) => step.title === '6. Managementbespreking')?.body.toLowerCase()).toContain('60–90 minuten')
   })
 
   it('keeps preview copy and buyer-facing showcase assets linked to the same proof paths', () => {

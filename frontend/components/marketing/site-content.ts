@@ -1,4 +1,5 @@
 import { buildContactHref } from '@/lib/contact-funnel'
+import { pricingFaqAnswer } from '@/lib/pricing'
 
 export const marketingNavLinks = [
   { href: '/producten', label: 'Producten' },
@@ -34,55 +35,6 @@ export const marketingLegalLinks = [
   { href: '/voorwaarden', label: 'Algemene voorwaarden' },
   { href: '/dpa', label: 'Verwerkersovereenkomst' },
   { href: '/login', label: 'Inloggen' },
-] as const
-
-export const homepageProductRoutes = [
-  {
-    name: 'Loep Vertrek',
-    title: 'Breng scherp in beeld waarom medewerkers vertrekken',
-    body: 'Terugkijkende analyse van vertrek op groepsniveau, met een eerste handoff voor opvolging en een heldere eerste route.',
-    href: '/producten#loep-vertrek',
-    accent: 'border-[#E5E0D6] bg-[#F7F5F1]',
-    chip: 'Kernroute',
-  },
-  {
-    name: 'Loep Behoud',
-    title: 'Zie waar behoud onder druk staat',
-    body: 'Vroegsignalering op behoud op groeps- en segmentniveau, met retentiesignaal en een heldere eerste managementroute.',
-    href: '/producten#loep-behoud',
-    accent: 'border-[#DCEFEA] bg-[#F7F5F1]',
-    chip: 'Kernroute',
-  },
-  {
-    name: 'Loep Start',
-    title: 'Zie vroeg hoe nieuwe medewerkers landen',
-    body: 'Wij meten vroeg hoe nieuwe medewerkers landen in rol, leiding en team. Helder groepsbeeld, begeleide bespreking inbegrepen.',
-    href: '/producten#loep-start',
-    accent: 'border-[#DCF0E8] bg-[#F7F5F1]',
-    chip: 'Kernroute',
-  },
-] as const
-
-// Keep the existing homepage module contract intact for builds that still
-// import the older split names from main.
-export const homepageCoreProductRoutes = homepageProductRoutes
-
-export const homepageComparisonRows = [
-  [
-    'Je wilt begrijpen waarom mensen zijn gegaan',
-    'Loep Vertrek',
-    'Vertrekduiding, werkfactoren en bestuurlijke handoff in een eerste managementrapport',
-  ],
-  [
-    'Je wilt eerder zien waar behoud onder druk staat',
-    'Loep Behoud',
-    'Retentiesignaal, stay-intent, bevlogenheid en vertrekintentie op groepsniveau',
-  ],
-  [
-    'Je wilt vroeg zien hoe nieuwe medewerkers landen',
-    'Loep Start',
-    'Vroege checkpoint-read op landing, rol en team. Begeleide bespreking inbegrepen.',
-  ],
 ] as const
 
 export const homepageProofSignals = [
@@ -175,7 +127,7 @@ export const trustItems = [
   'Signalen, geen schijnzekerheid',
   'Rapportage op geaggregeerd niveau',
   'Vraagblokken gebaseerd op relevante literatuur',
-  'Loep voert uit, je beheert geen tool',
+  'Loep zet de meting klaar, jij verstuurt en leidt het gesprek',
   'AVG-conform, primaire dataopslag in een EU-regio',
   'Geen koppeling aan individuen in rapportage.',
 ] as const
@@ -195,37 +147,6 @@ export const trustQuickLinks = [
     href: '/dpa',
     label: 'Verwerkersovereenkomst',
     body: 'Standaardtemplate voor formele afstemming.',
-  },
-] as const
-
-export const trustSignalHighlights = [
-  {
-    title: 'Methodische duidelijkheid',
-    body: 'Loep Vertrek en Loep Behoud worden helder uitgelegd als managementinstrumenten met duidelijke grenzen, niet als diagnose of black-box voorspeller.',
-  },
-  {
-    title: 'Privacy op groepsniveau',
-    body: 'De publieke trustlaag legt minimale n-grenzen, segmentonderdrukking en geanonimiseerde open tekst uit in gewone taal.',
-  },
-  {
-    title: 'Output die klopt met de propositie',
-    body: 'Dashboard, rapport en preview volgen dezelfde vaste leeslijn, zodat de site niet meer belooft dan het product werkelijk levert.',
-  },
-  {
-    title: 'Manager-scope blijft bounded',
-    body: 'HR kan managers per afdeling toewijzen. Zij krijgen toegang via dezelfde beveiligde inlog, maar zien alleen de opvolglaag en geen dashboard- of rapportinzichten.',
-  },
-  {
-    title: 'Core proof blijft expliciet',
-    body: 'Publiek bewijs blijft bewust gekoppeld aan Loep Vertrek en Loep Behoud. Vervolgroutes zijn formeel uitgewerkt, maar krijgen publiek vooral bewijs via productpagina en trustlaag.',
-  },
-  {
-    title: 'Begeleide productvorm',
-    body: 'Loep biedt een strakke productvorm met intake, uitvoering, rapportage en begeleide vervolgstappen, in plaats van losse vragenlijstsoftware of open adviestrajecten.',
-  },
-  {
-    title: 'Publiek verifieerbare basis',
-    body: 'Trusthub, privacybeleid, DPA, voorwaarden en publieke contactroutes verlagen first-time buyer twijfel zonder badges of theater.',
   },
 ] as const
 
@@ -269,7 +190,7 @@ export const trustHubAnswerCards = [
   },
   {
     title: 'Wat koop je precies?',
-    body: 'Een begeleide dienst: Loep voert de scan uit, levert een managementrapport met prioriteiten en begeleidt HR en management naar één eerste keuze. Geen platform om zelf te beheren.',
+    body: 'Een meting en een rapport. Loep zet de meting klaar, jij verstuurt hem, en het rapport zegt waar je begint en leidt je MT-gesprek. Geen licentie, geen platform dat je moet inrichten.',
   },
   {
     title: 'Heeft elke scan een publiek voorbeeldrapport?',
@@ -347,33 +268,6 @@ export const statCards = [
   },
 ] as const
 
-export const outcomeCards = [
-  [
-    'Sneller kiezen welke vraag eerst telt',
-    'Je voorkomt dat Loep Vertrek en Loep Behoud door elkaar gaan lopen: meestal start je met vertrekduiding en voeg je behoudsignalering pas toe wanneer die vraag echt op tafel ligt.',
-  ],
-  [
-    'Beter intern doorvertellen',
-    'De output helpt HR, sponsor, MT en directie sneller op een lijn komen over waar prioriteit, verdieping of eerste vervolgstap het meeste oplevert.',
-  ],
-  [
-    'Proof die kooprust geeft',
-    'Voorbeeldrapporten, pricing, trust en bounded manager-toegang werken samen als bewijs van de productvorm in plaats van als losse supportblokken.',
-  ],
-  [
-    'Geen extra toolbeheer',
-    'Loep begeleidt de uitvoering, zodat jouw team niet ook nog een nieuw instrument hoeft in te richten of te beheren.',
-  ],
-  [
-    'Privacy by design',
-    'Output blijft bedoeld voor groepsinzichten en managementduiding, met extra terughoudendheid bij actieve medewerkers en zonder individuele managementoutput in Loep Behoud.',
-  ],
-  [
-    'Herhaalbaar zonder productverwarring',
-    'Je kunt starten met een eerste baseline en daarna bewust kiezen welke scan, verdiepend spoor of vervolgritme het meest logisch is.',
-  ],
-] as const
-
 export const processHighlights = [
   {
     title: 'Voor HR',
@@ -386,43 +280,6 @@ export const processHighlights = [
   {
     title: 'Voor directie',
     text: 'Compacte besluitinformatie die laat zien waar terugkerende vertrekpatronen of vroege signalen van behoudsdruk bestuurlijke aandacht en eigenaarschap verdienen.',
-  },
-] as const
-
-export const included = [
-  'Inrichting van de gekozen route',
-  'Uitnodigingen en respondentflow waar relevant',
-  'Dashboard en rapport in dezelfde leeslijn',
-  'Samenvatting voor HR, MT of directie',
-  'Begeleide managementbespreking van 60–90 minuten',
-  'Privacy en interpretatie in gewone taal',
-  'Compacte productvorm zonder extra inrichting of beheer',
-] as const
-
-export const approachSteps = [
-  {
-    title: '1. Intake',
-    body: 'We bepalen samen welke scan past, voor welke doelgroep en op welke tijdlijn. Jij levert de input. Wij regelen de rest.',
-  },
-  {
-    title: '2. Wij richten de scan in',
-    body: 'Wij zetten de scan op en stellen uitnodigingen in. Geen toolbeheer voor je team.',
-  },
-  {
-    title: '3. Je verstuurt de uitnodigingen',
-    body: 'Je nodigt uit via je eigen kanaal: e-mail, Teams of HR-systeem. Wij bewaken de voortgang en geven aan waar bijsturing nodig is.',
-  },
-  {
-    title: '4. Wij houden je op de hoogte',
-    body: 'Zodra de respons opbouwt, ontvang je een update. Geen dashboard te bewaken, wij doen dat voor je.',
-  },
-  {
-    title: '5. Je ontvangt het rapport',
-    body: 'Zodra het beeld stabiel is, leveren wij een managementrapport: patronen, factoranalyse, prioriteiten en de eerste managementvraag.',
-  },
-  {
-    title: '6. Managementbespreking',
-    body: 'We bespreken de uitkomsten met HR en management in 60–90 minuten. Samen bepalen we wat aandacht vraagt en wat de eerste keuze is.',
   },
 ] as const
 
@@ -481,29 +338,6 @@ export const approachRoutes = [
   },
 ] as const
 
-export const customerLifecycleStages = [
-  {
-    title: '1. Eerste routekeuze',
-    body: 'Meestal start je met Loep Vertrek Baseline om vertrek eerst bestuurlijk leesbaar te maken. Loep Behoud Baseline is de eerste route als de actieve behoudsvraag nu echt primair is.',
-  },
-  {
-    title: '2. Betaald eerste traject',
-    body: 'De eerste koop blijft een afgebakend baseline-traject met dashboard, managementrapport, bestuurlijke handoff en een eerste managementsessie.',
-  },
-  {
-    title: '3. Eerste managementwaarde',
-    body: 'Vanaf een bruikbare responsbasis vertalen dashboard en rapport de scan naar prioriteit nu en een eerste vervolgrichting. Daarna begeleiden we hoe een hercheckmoment en bounded follow-through expliciet worden afgesproken.',
-  },
-  {
-    title: '4. Zelfde route herhalen of verdiepen',
-    body: 'Pas na die eerste waarde wordt een vervolgvorm logisch: Loep Vertrek ritmeroute als begeleide vervolgroute, Loep Behoud ritmeroute als vaste herhaalvorm of segment deep dive als bewuste verdieping.',
-  },
-  {
-    title: '5. Uitbreiden naar tweede product',
-    body: 'Expansion volgt alleen wanneer de volgende managementvraag echt op tafel ligt: van Loep Vertrek naar Loep Behoud voor vroegsignalering op behoud, of omgekeerd voor terugkijkende vertrekduiding.',
-  },
-] as const
-
 export const pricingLifecycleLadder = [
   {
     route: 'Loep Vertrek',
@@ -516,56 +350,6 @@ export const pricingLifecycleLadder = [
     firstSale: 'Loep Behoud Baseline alleen wanneer de actieve behoudsvraag nu het echte startpunt is.',
     nextStep: 'Loep Behoud ritmeroute blijft de vaste buyer-facing vervolgvorm na baseline en eerste managementwaarde.',
     expansion: 'Loep Vertrek Baseline wordt pas logisch als retrospectieve vertrekduiding alsnog nodig blijkt.',
-  },
-] as const
-
-export const pricingCards = [
-  {
-    eyebrow: 'Loep Vertrek Baseline',
-    price: 'vanaf €4.500',
-    description:
-      'De standaard eerste instap voor organisaties die snel een betrouwbaar organisatiebeeld, duidelijke prioriteiten en een professioneel managementrapport over uitstroom willen dat ook in sponsor-, prioriteits- en budgetgesprekken overeind blijft.',
-    bullets: [
-      'Loep zet alles klaar; jij stuurt één mail naar je mensen',
-      'Rapport: waar het wringt, waarom, en waar je begint',
-      'Begeleide managementbespreking (60–90 min)',
-      'Eerste keuze en vervolgrichting vastgesteld',
-    ],
-  },
-  {
-    eyebrow: 'Loep Behoud Baseline',
-    price: 'vanaf €4.500',
-    description:
-      'De standaard eerste instap voor organisaties die eerder willen zien waar behoud onder druk staat, met extra nadruk op privacy, groepsduiding en een gerichte managementscan in plaats van een brede MTO.',
-    bullets: [
-      'Scan uitsturen en bewaken door Loep',
-      'Managementrapport met retentiesignaal en prioriteiten',
-      'Begeleide managementbespreking (60–90 min)',
-      'Geen individuele signalen, alleen groepsniveau',
-    ],
-  },
-  {
-    eyebrow: 'Loep Start Baseline',
-    price: 'vanaf €4.500',
-    description:
-      'De gerichte eerste instap voor organisaties die vroeg willen zien hoe nieuwe medewerkers landen, met een groepsbeeld op de eerste 30, 60 en 90 dagen en een begeleide managementbespreking.',
-    bullets: [
-      'Scan uitsturen en bewaken door Loep',
-      'Managementrapport met patronen en prioriteiten',
-      'Begeleide managementbespreking (60–90 min)',
-      'Eerste vervolgrichting vastgelegd',
-    ],
-  },
-  {
-    eyebrow: 'Loep Culture Assessment Baseline',
-    price: 'op aanvraag',
-    description:
-      'De enterprise-instap voor organisaties die cultuur en engagement breed organisatiebreed willen begrijpen, met executive read, board attention points en een board-level baseline in plaats van een generieke survey of benchmark-first platform.',
-    bullets: [
-      'Executive culture read, Loep Culture Index en domeinbeeld',
-      'Board-read als vast productonderdeel en governed drilldown waar toegestaan',
-      'Board-read als vast onderdeel van de baseline',
-    ],
   },
 ] as const
 
@@ -622,10 +406,6 @@ export const faqs = [
     'Nee. Een MTO meet alles een beetje en levert een dik rapport op. Loep Behoud is smal en scherp: het laat zien waar het wringt bij de mensen die je wilt houden, wat ze daar zelf over zeggen, en waar je begint. Per afdeling, nooit per persoon.',
   ],
   [
-    'Wanneer kies je voor de combinatie?',
-    'Als je zowel achteraf wilt begrijpen wat vertrek dreef als eerder wilt signaleren waar behoud nu aandacht vraagt.',
-  ],
-  [
     'Ziet management individuele retention-scores?',
     'Nee. Loep Behoud is bedoeld voor groeps- en segmentinzichten, niet voor beoordeling, performance-sturing of voorspelling op persoonsniveau.',
   ],
@@ -639,12 +419,15 @@ export const faqs = [
   ],
   [
     'Wanneer is Loep Start de juiste route?',
-    'Als de vraag gaat over hoe nieuwe medewerkers de eerste 90 dagen landen in rol, leiding en team. Loep voert de checkpoint-read uit en levert een rapport met begeleide bespreking.',
+    'Als de vraag gaat over hoe nieuwe medewerkers de eerste 90 dagen landen in rol, leiding en team. Loep zet de meting klaar en levert een rapport op groepsniveau, met een gespreksleidraad voor het gesprek met je MT.',
   ],
   [
     'Is Loep een instrument of een dienst?',
-    'Loep is een begeleide dienst. Wij voeren de scan uit, leveren het rapport en begeleiden de managementbespreking. Je hoeft niets zelf in te richten of te beheren.',
+    'Een meting en een rapport. Loep zet de meting klaar en levert het rapport; jij verstuurt de uitnodiging, volgt de respons in je eigen omgeving en leidt het gesprek met je MT, met het rapport als leidraad. Geen licentie, geen platform dat je moet inrichten.',
   ],
+  // Het antwoord komt uit lib/pricing.ts, zodat de FAQ-JSON-LD nooit een ander
+  // bedrag noemt dan /producten#tarieven.
+  ['Wat kost een scan van Loep?', pricingFaqAnswer()],
 ] as const
 
 export const marketingPagePurposes = {

@@ -47,12 +47,12 @@ const suiteFlowPoints = [
   {
     index: '03',
     title: 'Weet waar je begint',
-    body: 'Eén ranglijst, en je ziet waarom.',
+    body: 'Eén ranglijst, met de onderbouwing erbij.',
   },
   {
     index: '04',
     title: 'Kies: wat, wie, wanneer',
-    body: 'Samen, in één gesprek.',
+    body: 'Met je MT, in één gesprek.',
   },
 ]
 
@@ -73,7 +73,7 @@ const routeCards = [
     index: '01',
     eyebrow: 'Behoud onder druk',
     title: 'Loep Behoud',
-    body: 'Waar het wringt bij de mensen die je wilt houden, waarom volgens henzelf, en waar je begint. Rapport en gesprek inbegrepen.',
+    body: 'Waar het wringt bij de mensen die je wilt houden, waarom volgens henzelf, en waar je begint. Het rapport leidt je MT-gesprek.',
     href: '/producten#loep-behoud',
     accent: SURFACE.teal,
   },
@@ -81,7 +81,7 @@ const routeCards = [
     index: '02',
     eyebrow: 'Vertrek begrijpen',
     title: 'Loep Vertrek',
-    body: 'Waarom mensen écht weggingen, volgens henzelf, en wat je als eerste aanpakt. Rapport en gesprek inbegrepen.',
+    body: 'Waarom mensen écht weggingen, volgens henzelf, en wat je als eerste aanpakt. Het rapport leidt je MT-gesprek.',
     href: '/producten#loep-vertrek',
     accent: SURFACE.amber,
   },
@@ -89,7 +89,7 @@ const routeCards = [
     index: '03',
     eyebrow: 'Nieuwe medewerkers laten landen',
     title: 'Loep Start',
-    body: 'Wij meten vroeg hoe nieuwe medewerkers landen. Helder groepsbeeld, geen individuele beoordeling. De verdieping (waarom, volgens je mensen) en het blok "wat er moet gebeuren" komen in een volgende versie.',
+    body: 'Loep meet vroeg hoe nieuwe medewerkers landen. Helder groepsbeeld, geen individuele beoordeling. De verdieping (waarom, volgens je mensen) en het blok "wat er moet gebeuren" komen in een volgende versie.',
     href: '/producten#loep-start',
     accent: '#9b5f1e',
   },
@@ -118,19 +118,19 @@ const managementFlowSteps = [
     step: '1',
     label: 'Luisteren',
     title: 'Medewerkers vullen de scan in',
-    body: 'Anoniem, in tien minuten ingevuld. Loep zet alles klaar; jij stuurt één mail naar je mensen vanuit je eigen mailbox. Loep ziet hun adressen nooit, en jij beheert geen tool.',
+    body: 'Anoniem, in tien minuten ingevuld. Loep zet alles klaar; jij stuurt één mail naar je mensen vanuit je eigen mailbox. Loep ziet hun adressen nooit. De respons volg je in je eigen omgeving.',
   },
   {
     step: '2',
     label: 'Begrijpen',
     title: 'Loep levert een rapport met een antwoord',
-    body: 'Een rapport dat niet alleen zegt wat laag scoort, maar ook wat je mensen daar zelf over zeggen. Plus één ranglijst: dit eerst, en je ziet precies waarom. Binnen weken, niet maanden.',
+    body: 'Een rapport dat niet alleen zegt wat laag scoort, maar ook wat je mensen daar zelf over zeggen. Plus één ranglijst: dit eerst. Bij Loep Vertrek en Loep Behoud lees je er ook bij wat er meewoog in die volgorde. Binnen weken, niet maanden.',
   },
   {
     step: '3',
     label: 'Kiezen',
-    title: 'Samen kiezen: wat, wie, wanneer',
-    body: 'In het gesprek met je MT kiezen jullie samen: wat pakken we op, wie doet het, wanneer kijken we terug. Geen actieplan uit een computer. Jullie kiezen, met de feiten erbij.',
+    title: 'Kiezen met je MT: wat, wie, wanneer',
+    body: 'Jij leidt het gesprek met je MT; het rapport is je leidraad van 45 minuten. Jullie kiezen: wat pakken we op, wie doet het, wanneer kijken we terug. Geen actieplan uit een computer, wel de feiten erbij.',
   },
 ] as const
 
@@ -327,7 +327,7 @@ function ManagementFlowVisual({ step }: { step: string }) {
         {[
           ['Prioriteit', 'Groei en ontwikkeling'],
           ['Eigenaar', 'HR + management'],
-          ['Volgende stap', 'Bespreking ingepland'],
+          ['Volgende stap', 'Besluit vastgelegd'],
         ].map(([label, value]) => (
           <div
             key={label}
@@ -578,7 +578,7 @@ function ManagementFlowSection() {
                 maxWidth: '54rem',
               }}
             >
-              Loep meet niet alleen. Loep begeleidt management naar één eerste keuze.
+              Loep meet niet alleen. Het rapport brengt je MT tot één eerste keuze.
             </p>
           </Reveal>
         </div>
@@ -731,7 +731,7 @@ function HeroSection() {
                   textTransform: 'uppercase',
                 }}
               >
-                Begeleide retentie-analyse
+                Meting en rapport · Het gesprek voer je zelf
               </p>
               <h1
                 style={{
@@ -760,7 +760,7 @@ function HeroSection() {
                   maxWidth: '34rem',
                 }}
               >
-                Loep laat zien waar het wringt voordat mensen vertrekken, laat je mensen zelf vertellen waarom, en wijst aan waar je begint. Loep doet het werk; jij krijgt een antwoord.
+                Loep laat zien waar het wringt voordat mensen vertrekken, laat je mensen zelf vertellen waarom, en wijst aan waar je begint. Loep zet de meting klaar en levert het rapport; jij krijgt een antwoord.
               </p>
 
               <div
@@ -945,7 +945,7 @@ function SuitePreviewSection() {
                   maxWidth: '33rem',
                 }}
               >
-                Het rapport eindigt niet in grafieken maar in een ranglijst: dit pak je als eerste aan, en hierom. Je ziet per onderwerp wat meewoog, dus geen magisch cijfer dat je maar moet geloven. Daarna bespreken we het samen met je MT en leggen we vast: wat, wie, wanneer.
+                Het rapport eindigt niet in grafieken maar in een ranglijst: dit pak je als eerste aan. Bij Loep Vertrek en Loep Behoud staat er per onderwerp bij wat er meewoog in die volgorde, dus geen magisch cijfer dat je maar moet geloven. Daarna leid jij het gesprek met je MT, met het rapport als leidraad, en leggen jullie vast: wat, wie, wanneer.
               </p>
             </Reveal>
 
@@ -1727,7 +1727,7 @@ const proofPoints = [
   'Rapportage alleen op groepsniveau, geen individuele data',
   'Minimum aantal respondenten vereist voor veilige rapportage',
   'Geen individuele voorspellingen of profielen',
-  'Managementbespreking standaard inbegrepen',
+  'Gespreksleidraad en besluitpagina in Loep Vertrek, Loep Behoud en Loep Start',
 ] as const
 
 function PositioningCalloutSection() {
@@ -1758,7 +1758,7 @@ function PositioningCalloutSection() {
               textTransform: 'uppercase',
             }}
           >
-            Begeleide analyse · Geen zelfbedieningstool
+            Meting en rapport · Het gesprek voer je zelf
           </p>
           <p
             style={{
@@ -1775,7 +1775,7 @@ function PositioningCalloutSection() {
           >
             Een tool geeft je grafieken. Loep geeft je de conclusie{' '}
             <span style={{ color: SURFACE.amberGlow, fontStyle: 'italic', fontWeight: 300 }}>
-              én het directiegesprek.
+              én de leidraad voor je MT-gesprek.
             </span>
           </p>
         </Reveal>
@@ -1796,54 +1796,21 @@ function ProofSection() {
     >
       <div style={{ ...SHELL, paddingTop: 'clamp(56px, 7vw, 88px)', paddingBottom: 'clamp(56px, 7vw, 88px)' }}>
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
-          <div>
-            <Reveal>
-              <h2
-                style={{
-                  color: SURFACE.ink,
-                  fontFamily: displayFont,
-                  fontSize: 'clamp(2.6rem, 4.2vw, 4.4rem)',
-                  fontWeight: 700,
-                  letterSpacing: '-0.05em',
-                  lineHeight: 0.96,
-                  maxWidth: '16ch',
-                }}
-              >
-                Veilig op groepsniveau. Niets op de persoon.
-              </h2>
-            </Reveal>
-            <Reveal delay={0.12}>
-              <div style={{ marginTop: 'clamp(28px, 4vw, 44px)', maxWidth: 380 }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/images/lars-loep.jpg"
-                  alt="Lars van den Hengel, oprichter en HR-specialist bij Loep"
-                  style={{ aspectRatio: '1 / 1', border: `1px solid ${SURFACE.border}`, display: 'block', objectFit: 'cover', objectPosition: 'center 78%', width: '100%' }}
-                />
-                <div style={{ borderLeft: `2px solid ${SURFACE.amber}`, marginTop: 20, paddingLeft: 18 }}>
-                  <p style={{ color: SURFACE.ink, fontFamily: displayFont, fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.1 }}>
-                    Lars van den Hengel
-                  </p>
-                  <p
-                    style={{
-                      color: SURFACE.muted,
-                      fontFamily: bodyFont,
-                      fontSize: 11,
-                      fontWeight: 700,
-                      letterSpacing: '.16em',
-                      margin: '6px 0 12px',
-                      textTransform: 'uppercase',
-                    }}
-                  >
-                    Oprichter &amp; HR-specialist · Loep
-                  </p>
-                  <p style={{ color: SURFACE.text, fontSize: 15, lineHeight: 1.6 }}>
-                    &ldquo;Ik duid elke scan zelf. Geen dashboard, maar een gesprek dat tot een keuze leidt.&rdquo;
-                  </p>
-                </div>
-              </div>
-            </Reveal>
-          </div>
+          <Reveal>
+            <h2
+              style={{
+                color: SURFACE.ink,
+                fontFamily: displayFont,
+                fontSize: 'clamp(2.6rem, 4.2vw, 4.4rem)',
+                fontWeight: 700,
+                letterSpacing: '-0.05em',
+                lineHeight: 0.96,
+                maxWidth: '16ch',
+              }}
+            >
+              Veilig op groepsniveau. Niets op de persoon.
+            </h2>
+          </Reveal>
           <div style={{ minWidth: 0 }}>
             <div style={{ borderTop: `1px solid ${SURFACE.border}`, display: 'grid', gap: 0 }}>
               {proofPoints.map((point, index) => (
@@ -1890,9 +1857,10 @@ function ProofSection() {
                   Methode
                 </p>
                 <p style={{ color: SURFACE.text, fontSize: 14.5, lineHeight: 1.7 }}>
-                  Loep gebruikt gevalideerde vragenlijsten. Het rapport laat per onderwerp zien waarom
-                  het bovenaan staat: de score, de spreiding en wat je mensen zelf als reden kozen.
-                  Geen cijfer dat je maar moet geloven.
+                  Loep gebruikt gevalideerde vragenlijsten. De vertaling naar jullie situatie maak je zelf,
+                  met de werkvragen in het rapport van Loep Behoud en Loep Vertrek. Daar staat ook per
+                  onderwerp waarom het bovenaan staat: de score, de spreiding en wat je mensen zelf als
+                  reden kozen. Geen cijfer dat je maar moet geloven.
                 </p>
               </div>
             </Reveal>
