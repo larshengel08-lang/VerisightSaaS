@@ -18,6 +18,12 @@ export const metadata: Metadata = {
       'Word een van de eerste organisaties die met Loep werkt. Een volwaardig traject rond behoud, vertrek of onboarding in ruil voor je eerlijke feedback.',
     type: 'website',
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Founding pilot · Loep',
+    description:
+      'Word een van de eerste organisaties die met Loep werkt. Een volwaardig traject rond behoud, vertrek of onboarding in ruil voor je eerlijke feedback.',
+  },
 }
 
 const T = {

@@ -3116,7 +3116,7 @@ export function ActionCenterPreview({
                                 }}
                               >
                                 <p className="font-semibold text-[#132033]">{item.title}</p>
-                                <p className="mt-1 text-sm text-[#5d6f84]">Volgende bespreking {item.reviewDateLabel}</p>
+                                <p className="mt-1 text-sm text-[#5d6f84]">Volgend overleg {item.reviewDateLabel}</p>
                               </button>
                             ))
                           )}

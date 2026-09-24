@@ -64,12 +64,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const url = `https://www.getloep.nl${product.href}`
   const imageAlt =
     isActiveMarketingProduct(product)
-      ? product.ogAlt ?? `${product.label} productpagina van Verisight`
-      : `${product.label} als gereserveerde future route bij Verisight`
+      ? product.ogAlt ?? `${product.label} productpagina van Loep`
+      : `${product.label} als gereserveerde route bij Loep`
   const imageUrl = `${product.href}/opengraph-image`
 
   return {
-    title: product.seoTitle ?? `${product.label} | Verisight`,
+    title: product.seoTitle ?? `${product.label} | Loep`,
     description,
     alternates: {
       canonical: product.href,
@@ -78,13 +78,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       type: 'website',
       url,
-      title: product.seoTitle ?? `${product.label} | Verisight`,
+      title: product.seoTitle ?? `${product.label} | Loep`,
       description,
       images: [{ url: imageUrl, width: 1200, height: 630, alt: imageAlt }],
     },
     twitter: {
       card: 'summary_large_image',
-      title: product.seoTitle ?? `${product.label} | Verisight`,
+      title: product.seoTitle ?? `${product.label} | Loep`,
       description,
       images: [imageUrl],
     },
@@ -125,12 +125,12 @@ function getProductStructuredData(product: MarketingProduct) {
   const webpageSchema = {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
-    name: product.seoTitle ?? `${product.label} | Verisight`,
+    name: product.seoTitle ?? `${product.label} | Loep`,
     description: product.description,
     url: fullUrl,
     isPartOf: {
       '@type': 'WebSite',
-      name: 'Verisight',
+      name: 'Loep',
       url: 'https://www.getloep.nl',
     },
     primaryImageOfPage: imageUrl,
@@ -161,7 +161,7 @@ function getProductStructuredData(product: MarketingProduct) {
     image: imageUrl,
     provider: {
       '@type': 'Organization',
-      name: 'Verisight',
+      name: 'Loep',
       url: 'https://www.getloep.nl',
     },
     areaServed: { '@type': 'Country', name: 'Nederland' },
@@ -409,7 +409,7 @@ function CultureAssessmentPage() {
           accentTitle="nu de juiste eerste stap is."
           body="Beschrijf kort welke cultuur- of engagementvraag nu speelt. Dan toetsen we of Loep Cultuurbeeld past en wanneer een board-read de meeste waarde geeft."
           buttonLabel="Toets Loep Cultuurbeeld"
-          note="Je krijgt eerst een route-inschatting, geen verplicht uitgebreid traject."
+          note="In de kennismaking kijken we eerst of Cultuurbeeld past, voordat er iets vastligt."
         />
       </main>
       <PublicFooter />
