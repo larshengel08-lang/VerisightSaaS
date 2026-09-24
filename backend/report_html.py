@@ -3575,18 +3575,33 @@ def _besluit_afdeling(seg: dict | None, scan_type: str, tweede_key: str | None) 
     """De aangewezen afdeling voor de besluitpagina, of None.
 
     seg komt uit _segment_startpunt, dezelfde gate als de brugzin en het navy
-    afdelingsblok: de drie kunnen niet uiteenlopen."""
+    afdelingsblok: de drie kunnen niet uiteenlopen.
+
+    - zwaar: het onderwerp van de afdeling scoort niet relatief sterk. Dezelfde
+      regel als _brugzin (grens uit _factor_label): alleen dan zegt pagina twee
+      "dat is ook het tweede punt", en de besluitpagina mag niet stelliger zijn
+      dan pagina twee.
+    - samen_met_tweede: het onderwerp van de afdeling is het tweede punt van
+      het RAPPORT (tweede_key) en weegt zwaar. _besluit_page gebruikt dit
+      alleen als het MT in het dashboard geen eigen tweede punt vastlegde;
+      anders vergelijkt het met dat onderwerp, ook alleen bij zwaar."""
     if not seg:
         return None
     fk = seg.get("low_fk")
+    zwaar = (bool(fk) and seg.get("low_avg") is not None
+             and _factor_label(seg["low_avg"]) != "Relatief sterk")
     return {"department": seg["department"],
             "topic": _fl(fk, scan_type) if fk else None,
-            "samen_met_tweede": bool(fk) and fk == tweede_key}
+            "zwaar": zwaar,
+            "samen_met_tweede": zwaar and fk == tweede_key}
 
 
 def _zelfde_onderwerp(a: str | None, b: str | None) -> bool:
     """Vrije tekst uit het dashboard tegen een label: hoofdletters en witruimte
-    tellen niet mee."""
+    tellen niet mee, verder niets. Kort het MT het onderwerp af of schrijft
+    het het anders op, dan mist de besluitpagina het verband bewust: liever
+    een regel te weinig dan een gok dat twee teksten hetzelfde onderwerp
+    zijn."""
     return bool(a and b) and " ".join(a.split()).casefold() == " ".join(b.split()).casefold()
 
 
@@ -3731,7 +3746,8 @@ def _besluit_page(*, opener_html: str, scan_type: str, campaign_name: str,
         topic = afdeling.get("topic")
         vast = afdeling["department"] + (": " + topic if topic else "")
         if d.get("secondary_topic"):
-            samen_met_tweede = _zelfde_onderwerp(topic, d["secondary_topic"])
+            samen_met_tweede = (bool(afdeling.get("zwaar"))
+                                and _zelfde_onderwerp(topic, d["secondary_topic"]))
         else:
             samen_met_tweede = bool(topic) and bool(afdeling.get("samen_met_tweede"))
         samen = BESLUIT_AFDELING_SAMEN + " " if samen_met_tweede else ""
@@ -6192,11 +6208,12 @@ def render_exit_report_html(data: dict) -> str:
     # (dan is er niets om aan te knopen en zegt het navy blok zelf de reden).
     _seg_startpunt = _segment_startpunt(data.get("segment_rows") or [],
                                         data.get("segment_factor_rows"))
-    _tweede_key = next((r["key"] for r in _raster_rows if r["agenda_role"] == "tweede"), None)
+    _tweede_row = next((r for r in _raster_rows if r["agenda_role"] == "tweede"), None)
+    _tweede_key = _tweede_row["key"] if _tweede_row else None
+    _indicatief = _respons_indicatief(data["n_completed"], data["n_invited"])
     _brug = ("" if _geen_profiel else
              _brugzin(_raster_rows[0]["key"], _raster_primary_label, _seg_startpunt, "exit",
-                      tweede_key=_tweede_key,
-                      indicatief=_respons_indicatief(data["n_completed"], data["n_invited"])))
+                      tweede_key=_tweede_key, indicatief=_indicatief))
     # Het werkvragenblok wordt hier al gebouwd (fixronde 24-9): de leidraad op
     # pagina twee verwijst ernaar, en alleen als het er echt is.
     _wq_block = _werkvragen_block(_raster_rows, deep_agg, direction_agg, "exit")
@@ -6237,7 +6254,7 @@ def render_exit_report_html(data: dict) -> str:
         scan_type="exit", shape=_shape, labels=_raster_labels, primary_key=_primary,
         tie_break_kind=_tk, change=_chg, change_other=_chg_other, next_delta=_delta,
         direction_state_key=_p02_direction_key(direction_agg, _primary),
-        indicatief=_respons_indicatief(data["n_completed"], data["n_invited"]))
+        indicatief=_indicatief)
     _signal_cell = _p02_signal_cell("Frictiescore", rdsp if avg_risk else "",
                                     fl if avg_risk else "")
     # Blok 2 (spec par. 4): vertrekreden met noemer en gelijkspel, respons met
@@ -6579,7 +6596,7 @@ def render_exit_report_html(data: dict) -> str:
                               anchor=LEIDRAAD_ANKERS["besluit"]),
         scan_type="exit", campaign_name=data["campaign_name"],
         startpunt_label=next((r["label"] for r in _raster_rows if r["agenda_role"] == "startpunt"), None),
-        tweede_label=next((r["label"] for r in _raster_rows if r["agenda_role"] == "tweede"), None),
+        tweede_label=_tweede_row["label"] if _tweede_row else None,
         review_hint="Richtlijn: 45 tot 90 dagen na dit gesprek.",
         heeft_werkvragen=bool(_wq_block),
         decision=data.get("decision"),
@@ -6664,11 +6681,12 @@ def render_retention_report_html(data: dict) -> str:
     # Brugzin (taak 7, B2), zie render_exit_report_html.
     _seg_startpunt = _segment_startpunt(data.get("segment_rows") or [],
                                         data.get("segment_factor_rows"))
-    _tweede_key = next((r["key"] for r in _raster_rows if r["agenda_role"] == "tweede"), None)
+    _tweede_row = next((r for r in _raster_rows if r["agenda_role"] == "tweede"), None)
+    _tweede_key = _tweede_row["key"] if _tweede_row else None
+    _indicatief = _respons_indicatief(data["n_completed"], data["n_invited"])
     _brug = ("" if _geen_profiel else
              _brugzin(_raster_rows[0]["key"], _raster_primary_label, _seg_startpunt, ST,
-                      tweede_key=_tweede_key,
-                      indicatief=_respons_indicatief(data["n_completed"], data["n_invited"])))
+                      tweede_key=_tweede_key, indicatief=_indicatief))
     # Zie render_exit_report_html: het blok eerst, de leidraad verwijst ernaar.
     _wq_block = _werkvragen_block(_raster_rows, deep_agg, direction_agg, ST)
 
@@ -6749,7 +6767,7 @@ def render_retention_report_html(data: dict) -> str:
         scan_type=ST, shape=_shape, labels=_raster_labels, primary_key=_primary,
         tie_break_kind=_tk, change=_chg, change_other=_chg_other, next_delta=_delta,
         direction_state_key=_p02_direction_key(direction_agg, _primary),
-        indicatief=_respons_indicatief(data["n_completed"], data["n_invited"]))
+        indicatief=_indicatief)
     _signal_cell = _p02_signal_cell("Behoudssignaal", _score_str(signal) if signal else "",
                                     band_lbl or "")
     _stay_scores = (data.get("intent_resp") or {}).get("stay") or []
@@ -6765,7 +6783,7 @@ def render_retention_report_html(data: dict) -> str:
         avg_si, _stay_scores, _to_scores,
         startpunt_label=None if _geen_profiel else _raster_primary_label,
         startpunt_score=_primary_score,
-        indicatief=_respons_indicatief(data["n_completed"], data["n_invited"]))
+        indicatief=_indicatief)
     _cijfers_html += _intentie_html
     # Zelfde telling als _p02_opening: zonder kwetsbaar onderwerp zegt de kop
     # "Geen onderwerp scoort kwetsbaar.", dus geen "Ook".
@@ -6994,7 +7012,7 @@ def render_retention_report_html(data: dict) -> str:
                               anchor=LEIDRAAD_ANKERS["besluit"]),
         scan_type=ST, campaign_name=data["campaign_name"],
         startpunt_label=next((r["label"] for r in _raster_rows if r["agenda_role"] == "startpunt"), None),
-        tweede_label=next((r["label"] for r in _raster_rows if r["agenda_role"] == "tweede"), None),
+        tweede_label=_tweede_row["label"] if _tweede_row else None,
         review_hint="Richtlijn: 45 tot 90 dagen na dit gesprek.",
         heeft_werkvragen=bool(_wq_block),
         decision=data.get("decision"),

@@ -702,9 +702,11 @@ def test_brugzin_indicatief_letterlijk():
 def test_besluit_afdeling():
     assert _besluit_afdeling(None, "retention", "workload") is None
     assert _besluit_afdeling(SEG_OPS, "retention", "workload") == {
-        "department": "Operations", "topic": _fl("workload", "retention"), "samen_met_tweede": True}
+        "department": "Operations", "topic": _fl("workload", "retention"), "zwaar": True,
+        "samen_met_tweede": True}
     zonder_onderwerp = _besluit_afdeling(dict(SEG_OPS, low_fk=None, low_avg=None), "retention", None)
-    assert zonder_onderwerp == {"department": "Operations", "topic": None, "samen_met_tweede": False}
+    assert zonder_onderwerp == {"department": "Operations", "topic": None, "zwaar": False,
+                                "samen_met_tweede": False}
     # Geen tweede punt: nooit "samen".
     assert _besluit_afdeling(SEG_OPS, "retention", None)["samen_met_tweede"] is False
 
@@ -754,7 +756,7 @@ def test_afdelingshint_volgt_het_tweede_punt_dat_het_mt_vastlegde():
     afd = {"department": "Operations", "topic": "Werkdruk en herstelruimte", "samen_met_tweede": True}
     anders = _plain(_besluit(afdeling=afd, decision={"secondary_topic": "Leiderschap"}))
     assert BESLUIT_AFDELING_SAMEN not in anders
-    zelf = dict(afd, samen_met_tweede=False)
+    zelf = dict(afd, zwaar=True, samen_met_tweede=False)
     gekozen = _plain(_besluit(afdeling=zelf, decision={"secondary_topic": "werkdruk en herstelruimte "}))
     assert BESLUIT_AFDELING_SAMEN in gekozen
 
@@ -836,3 +838,36 @@ def test_renderer_vertrek_geeft_tweede_punt_en_afdeling_door():
     assert "dat is ook het tweede punt, dus neem Operations daarin mee." in html
     besluit = _plain(_besluitdeel(html))
     assert BESLUIT_AFDELING_LABEL in besluit and BESLUIT_AFDELING_SAMEN in besluit
+
+
+def test_besluitpagina_bij_een_relatief_sterk_onderwerp_zegt_geen_samenval():
+    """Codereview taak 8: pagina twee blijft neutraal bij een relatief sterk
+    onderwerp van de afdeling (_brugzin), dus de besluitpagina ook. Beide
+    takken: het tweede punt van het rapport en een tweede punt uit het
+    dashboard met dezelfde tekst."""
+    sterk = dict(SEG_OPS, low_avg=6.8)
+    afd = _besluit_afdeling(sterk, "retention", "workload")
+    assert afd == {"department": "Operations", "topic": _fl("workload", "retention"),
+                   "zwaar": False, "samen_met_tweede": False}
+    rapport = _plain(_besluit(afdeling=afd, tweede_label=_fl("workload", "retention")))
+    assert "Operations: " + _fl("workload", "retention") in rapport
+    assert BESLUIT_AFDELING_SAMEN not in rapport
+    dashboard = _plain(_besluit(afdeling=afd,
+                                decision={"secondary_topic": _fl("workload", "retention")}))
+    assert BESLUIT_AFDELING_SAMEN not in dashboard
+    # Zelfde brugzin-regel: ook pagina twee noemt het tweede punt dan niet.
+    assert "tweede punt" not in _brugzin("growth", "Groeiperspectief", sterk, "retention",
+                                         tweede_key="workload")
+    # Aandachtspunt (onder de grens) telt wel als zwaar.
+    assert _besluit_afdeling(dict(SEG_OPS, low_avg=6.2), "retention", "workload")["samen_met_tweede"]
+
+
+def test_renderer_behoud_relatief_sterk_onderwerp_geen_samenval_op_de_besluitpagina():
+    from backend.report_html import render_retention_report_html
+    d = _retention_met_afdeling("leadership")
+    d["segment_factor_rows"] = {"Operations": {"factors": [("leadership", 6.8, 12)], "omitted": 0}}
+    html = render_retention_report_html(d)
+    besluit = _plain(_besluitdeel(html))
+    assert BESLUIT_AFDELING_LABEL in besluit
+    assert BESLUIT_AFDELING_SAMEN not in besluit
+    assert "dat is ook het tweede punt" not in html
