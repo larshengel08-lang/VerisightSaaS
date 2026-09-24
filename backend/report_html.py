@@ -85,7 +85,10 @@ from backend.survey_window import AMSTERDAM
 
 logger = logging.getLogger(__name__)
 
-# De vorm van respondents.exit_month (schemas.py dwingt hem af bij import).
+# De vorm van respondents.exit_month. Alleen de backend-import valideert hem
+# (schemas.py); het operatorformulier schrijft rechtstreeks naar Supabase en
+# de kolom is daar tekst zonder check-constraint. Deze controle in
+# build_report_data is dus het vangnet, niet een dubbele controle.
 _EXIT_MONTH_RE = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
 
 MIN_QUOTES_N = 5
@@ -1300,13 +1303,28 @@ def _maand_nl(jaar_maand: str) -> str:
     return _MAANDEN_NL[int(maand) - 1] + " " + jaar
 
 
-def _uitstroomperiode(exit_months: list[str] | None, n: int) -> tuple[str | None, str | None]:
+def _uitstroomperiode(exit_months: list[str] | None, n: int, *,
+                      heeft_meetperiode: bool = True) -> tuple[str | None, str | None]:
     """(regel onder de meetgegevens, tekst voor 'Niet in dit rapport') voor Loep Vertrek (V8).
 
     Precies één van de twee is gevuld. Een periode pas vanaf MIN_SEGMENT_N
-    bekende maanden: de vroegste en de laatste maand zijn elk van één persoon,
-    en bij minder bekende maanden ligt die persoon te dichtbij. Zelfde grens
-    als een afdeling apart tonen.
+    bekende maanden, dezelfde grens als een afdeling apart tonen: kleine
+    aantallen blijven zo buiten het rapport.
+
+    Privacy, eerlijk gezegd: die grens beschermt de randen NIET. De vroegste
+    en de laatste genoemde maand kunnen elk van één persoon zijn, ook bij
+    veel bekende maanden. HR heeft die maanden zelf aangeleverd en weet dus
+    wie er in de vroegste of laatste maand vertrok; de security-audit van
+    13-7 rekent exit_month daarom tot de quasi-identificerende kolommen
+    (supabase/schema.sql, kolomgrant op respondents). De periode zelf zegt
+    niets over antwoorden, maar koppelt wel een persoon aan deze meting. Of
+    dat acceptabel is, of dat de randen grover moeten (kwartaal, of de
+    maanden van minstens twee personen), is een keuze voor Lars; deze
+    functie verandert daar niets aan.
+
+    `heeft_meetperiode`: staat er in de meetgegevens een meetperiode (geen
+    "niet vastgelegd" en geen datumconflict)? Alleen dan verwijst de tekst
+    naar "de meetperiode hierboven"; anders zou hij naar een leeg vakje wijzen.
 
     De maanden zijn "YYYY-MM"-tekst zonder tijdstip, dus er is geen tijdzone
     om te vertalen; de vorm is al in build_report_data gecontroleerd.
@@ -1314,6 +1332,8 @@ def _uitstroomperiode(exit_months: list[str] | None, n: int) -> tuple[str | None
     maanden = sorted(m for m in (exit_months or []) if m)
     bekend = len(maanden)
     if bekend == 0:
+        if not heeft_meetperiode:
+            return None, "de maand van vertrek (niet vastgelegd)"
         return None, ("de maand van vertrek (niet vastgelegd; de meetperiode hierboven is de "
                       "periode waarin de vragenlijst openstond)")
     if bekend < MIN_SEGMENT_N:
@@ -6227,7 +6247,13 @@ def render_exit_report_html(data: dict) -> str:
 
     # V8 (fixronde 24-9): wanneer deze mensen vertrokken, of hardop dat dat niet
     # is vastgelegd. Oude fixtures zonder exit_months tellen als "niet vastgelegd".
-    _uit_regel, _uit_ontbreekt = _uitstroomperiode(data.get("exit_months"), data["n_completed"])
+    # Verwijs alleen naar "de meetperiode hierboven" als die cel een periode
+    # toont: niet bij "niet vastgelegd" en niet bij een datumconflict
+    # (dezelfde voorwaarden als in _responsbasis).
+    _heeft_meetperiode = (not data.get("period_dates_conflict")
+                          and bool(data.get("period_start") or data.get("period_end")))
+    _uit_regel, _uit_ontbreekt = _uitstroomperiode(data.get("exit_months"), data["n_completed"],
+                                                   heeft_meetperiode=_heeft_meetperiode)
     _responsbasis_band = _responsbasis(
         invited=data["n_invited"],
         completed=data["n_completed"],

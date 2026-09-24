@@ -538,3 +538,40 @@ def test_build_report_data_levert_geldige_vertrekmaanden(db_session: Session, ca
 def test_build_report_data_behoud_heeft_geen_vertrekmaanden(db_session: Session):
     cid = _exit_met_maanden(db_session, ["2025-03"], scan_type="retention")
     assert build_report_data(cid, db_session)["exit_months"] == []
+
+
+def test_uitstroomperiode_zonder_meetperiode_verwijst_niet_naar_een_leeg_vakje():
+    assert _uitstroomperiode([], 12, heeft_meetperiode=False) == (
+        None, "de maand van vertrek (niet vastgelegd)")
+    # Met een meetperiode blijft de verwijzing staan.
+    assert "de meetperiode hierboven" in _uitstroomperiode([], 12, heeft_meetperiode=True)[1]
+
+
+@pytest.mark.parametrize("start, eind, conflict, verwijst", [
+    ("9 maart 2026", "30 maart 2026", False, True),
+    ("9 maart 2026", None, False, True),        # cel toont "vanaf 9 maart 2026, ..."
+    (None, None, False, False),                 # cel toont "niet vastgelegd"
+    (None, None, True, False),                  # cel toont "niet betrouwbaar vastgelegd"
+])
+def test_vertrek_verwijst_alleen_naar_een_getoonde_meetperiode(start, eind, conflict, verwijst):
+    data = _fixture("exit", n=25, profile=True)
+    data["period_start"], data["period_end"] = start, eind
+    data["period_dates_conflict"] = conflict
+    p2 = _plain(_page_two(render_exit_report_html(data)))
+    assert "de maand van vertrek (niet vastgelegd" in p2
+    assert ("de meetperiode hierboven is de periode waarin de vragenlijst openstond" in p2) is verwijst
+    if not verwijst:
+        assert "de maand van vertrek (niet vastgelegd)." in p2
+
+
+@pytest.mark.parametrize("render, data", [
+    (render_retention_report_html, lambda: _retention_met_secties()),
+    (render_retention_report_html, lambda: _fixture("retention", n=25, profile=True)),
+    (render_onboarding_report_html, lambda: _fixture("onboarding", n=25, profile=True)),
+])
+def test_behoud_en_start_noemen_geen_vertrekmaand(render, data):
+    d = data()
+    d["exit_months"] = ["2025-03"] * 10   # ook als de data ze toevallig draagt
+    tekst = _plain(render(d))
+    assert "maand van vertrek" not in tekst
+    assert "Uitstroomperiode" not in tekst
