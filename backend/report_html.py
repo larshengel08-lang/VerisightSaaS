@@ -950,6 +950,27 @@ def _intentie_duiding(avg_si: float | None, stay_scores: list[float],
     return '<p class="p02-duiding">' + _h(" ".join(delen)) + "</p>"
 
 
+def _frictie_duiding(avg_risk: float | None, *, met_onderwerpen: bool = True) -> str:
+    """V2 (koude leesronde 24-9): de frictiescore stond in de eerste minuut op
+    tafel zonder uitleg. Het is ook het enige getal in dit rapport waar hoger
+    slechter is (risicoschaal, zie _band_key). De grenzen komen uit
+    scoring_config, dezelfde als de band in de cel ernaast. Leeg zonder score.
+
+    met_onderwerpen=False bij een degraded pagina twee (geen factorprofiel,
+    minder dan MIN_AGGREGATE_N antwoorden): het rapport toont dan geen
+    onderwerpen, dus de slotzin verwijst er niet naar."""
+    if avg_risk is None:
+        return ""
+    sterk = f"{RISK_HIGH:.1f}".replace(".", ",")
+    laag = f"{RISK_MEDIUM:.1f}".replace(".", ",")
+    zin = ("Frictiescore: de zes onderwerpen en de werkbeleving van de vertrekkers samen in "
+           "één getal. Hier is hoger slechter, anders dan bij de andere scores in dit "
+           "rapport: vanaf " + sterk + " is de frictie sterk, onder " + laag + " laag. Het "
+           "getal zegt hoe breed het wringt, niet waar")
+    zin += "; dat laten de onderwerpen zien." if met_onderwerpen else "."
+    return '<p class="p02-duiding">' + _h(zin) + "</p>"
+
+
 # ─── Respons heeft gevolgen (spec ronde 2 par. 6) ────────────────────────────
 # Bevinding B19: 30% respons en 90% respons leverden structureel hetzelfde
 # rapport op. Onder de helft is het beeld dat van wie meedeed, niet van de
@@ -6023,6 +6044,11 @@ def render_exit_report_html(data: dict) -> str:
         _respons_cell(data["n_completed"], data["n_invited"]),
         _signal_cell,
     ])
+    # V2 (fixronde 24-9): de frictiescore krijgt uitleg onder de cijfers. Zelfde
+    # gate als _signal_cell (avg_risk ligt geklemd op 1-10, dus nooit 0). Zonder
+    # factorprofiel toont het rapport geen onderwerpen: dan geen verwijzing ernaar.
+    _cijfers_html += _frictie_duiding(avg_risk if avg_risk else None,
+                                      met_onderwerpen=not _geen_profiel)
     # Deze terugval verwijst alleen, hij doet geen uitspraak (spec par. 6.3).
     _verwijst = not exec_line and not avg_risk
     if not exec_line:

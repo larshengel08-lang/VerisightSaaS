@@ -335,3 +335,72 @@ def test_renderer_relatief_sterk_startpunt_zonder_waar_het_wringt():
 
 def test_vertrek_krijgt_geen_intentieduiding():
     assert DUIDING not in _plain(render_exit_report_html(_exit_met_toelichtingen()))
+
+
+# ── Taak 4: frictiescore uitleggen (V2) ─────────────────────────────────────
+
+from backend.report_html import _frictie_duiding  # noqa: E402
+
+FRICTIE = ("Frictiescore: de zes onderwerpen en de werkbeleving van de vertrekkers samen in één "
+           "getal. Hier is hoger slechter, anders dan bij de andere scores in dit rapport: vanaf "
+           "7,0 is de frictie sterk, onder 4,5 laag. Het getal zegt hoe breed het wringt, niet "
+           "waar; dat laten de onderwerpen zien.")
+# Zonder factorprofiel (minder dan 10 antwoorden) toont het rapport geen
+# onderwerpen; de slotzin belooft dan niets wat niet rendert.
+FRICTIE_ZONDER_PROFIEL = ("Frictiescore: de zes onderwerpen en de werkbeleving van de "
+                          "vertrekkers samen in één getal. Hier is hoger slechter, anders dan "
+                          "bij de andere scores in dit rapport: vanaf 7,0 is de frictie sterk, "
+                          "onder 4,5 laag. Het getal zegt hoe breed het wringt, niet waar.")
+
+
+def test_frictie_duiding_zegt_wat_het_meet_en_welke_kant_op():
+    html = _frictie_duiding(5.0)
+    assert html.startswith('<p class="p02-duiding">')
+    assert _plain(html) == FRICTIE
+
+
+def test_frictie_duiding_zonder_profiel_belooft_geen_onderwerpen():
+    html = _frictie_duiding(5.0, met_onderwerpen=False)
+    assert _plain(html) == FRICTIE_ZONDER_PROFIEL
+    assert "onderwerpen zien" not in html
+
+
+def test_frictie_duiding_grenzen_komen_uit_de_scoringconfig():
+    from backend.scoring_config import RISK_HIGH, RISK_MEDIUM
+    t = _plain(_frictie_duiding(5.0))
+    assert "vanaf " + f"{RISK_HIGH:.1f}".replace(".", ",") + " is de frictie sterk" in t
+    assert "onder " + f"{RISK_MEDIUM:.1f}".replace(".", ",") + " laag" in t
+
+
+def test_frictie_duiding_zwijgt_zonder_score():
+    assert _frictie_duiding(None) == ""
+    assert _frictie_duiding(None, met_onderwerpen=False) == ""
+
+
+def test_frictie_duiding_zonder_streepjes():
+    for html in (_frictie_duiding(8.2), _frictie_duiding(3.0, met_onderwerpen=False)):
+        assert not any(s in html for s in STREEPJES)
+
+
+@pytest.mark.parametrize("profile, n, zin", [(True, 25, FRICTIE), (False, 7, FRICTIE_ZONDER_PROFIEL)])
+def test_vertrek_pagina_twee_legt_de_frictiescore_uit(profile, n, zin):
+    p2 = _plain(_page_two(render_exit_report_html(_fixture("exit", n=n, profile=profile))))
+    assert zin in p2
+    assert p2.count("Frictiescore:") == 1
+    # De uitleg staat onder de cijfers, dus na de frictiescore-cel.
+    assert p2.index("Frictiescore 5.5/10") < p2.index("Frictiescore:")
+
+
+def test_vertrek_zonder_frictiescore_heeft_geen_frictieuitleg():
+    data = _fixture("exit", n=25, profile=True)
+    data["avg_risk"] = None
+    assert "Frictiescore:" not in _plain(render_exit_report_html(data))
+
+
+def test_behoud_heeft_geen_frictieuitleg():
+    assert "Frictiescore:" not in _plain(render_retention_report_html(_retention_met_secties()))
+
+
+def test_start_heeft_geen_frictieuitleg():
+    assert "Frictiescore:" not in _plain(
+        render_onboarding_report_html(_fixture("onboarding", n=25, profile=True)))
