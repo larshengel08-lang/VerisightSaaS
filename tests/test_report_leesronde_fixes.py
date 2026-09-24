@@ -451,3 +451,90 @@ def test_open_antwoorden_vertrek_dragen_vraag_en_namenregel():
 
 def test_open_antwoorden_behoud_zonder_namenregel():
     assert NAMENREGEL_VERTREK not in _plain(render_retention_report_html(_retention_met_secties()))
+
+
+# ── Taak 6: uitstroomperiode (V8) ───────────────────────────────────────────
+
+from sqlalchemy.orm import Session  # noqa: E402
+
+from backend.models import Campaign, Organization, Respondent, SurveyResponse  # noqa: E402
+from backend.report_html import _responsbasis, _uitstroomperiode, build_report_data  # noqa: E402
+
+
+def test_uitstroomperiode_zonder_maanden():
+    assert _uitstroomperiode([], 12) == (
+        None, "de maand van vertrek (niet vastgelegd; de meetperiode hierboven is de periode "
+              "waarin de vragenlijst openstond)")
+    assert _uitstroomperiode(None, 12)[0] is None
+
+
+def test_uitstroomperiode_te_weinig_bekend():
+    assert _uitstroomperiode(["2025-03", "2025-04", "2025-06"], 12) == (
+        None, "de maand van vertrek (bij 3 van de 12 vastgelegd, te weinig om een periode te noemen)")
+
+
+def test_uitstroomperiode_spreiding_en_deels_bekend():
+    maanden = ["2026-02", "2025-03", "2025-07", "2025-11", "2025-09"]
+    assert _uitstroomperiode(maanden, 12) == (
+        "Uitstroomperiode: vertrokken tussen maart 2025 en februari 2026 (bij 5 van de 12 vastgelegd).",
+        None)
+
+
+def test_uitstroomperiode_een_maand_iedereen_bekend():
+    assert _uitstroomperiode(["2026-03"] * 5, 5) == (
+        "Uitstroomperiode: vertrokken in maart 2026.", None)
+
+
+def test_responsbasis_toont_uitstroomregel_en_ontbrekende_maand():
+    met = _plain(_responsbasis(invited=20, completed=12, period="Wave 1",
+                               population="Uitgestroomde medewerkers", segment_available=True,
+                               uitstroom_regel="Uitstroomperiode: vertrokken in maart 2026."))
+    assert "Uitstroomperiode: vertrokken in maart 2026." in met
+    zonder = _plain(_responsbasis(invited=20, completed=12, period="Wave 1",
+                                  population="Uitgestroomde medewerkers", segment_available=True,
+                                  extra_ontbreekt=["de maand van vertrek (niet vastgelegd)"]))
+    assert "Niet in dit rapport: de maand van vertrek (niet vastgelegd)." in zonder
+
+
+def test_vertrek_zonder_maanden_zegt_het_op_pagina_twee():
+    p2 = _plain(_page_two(render_exit_report_html(_fixture("exit", n=25, profile=True))))
+    assert "de maand van vertrek (niet vastgelegd" in p2
+
+
+def test_vertrek_met_maanden_noemt_de_periode_op_pagina_twee():
+    data = _fixture("exit", n=25, profile=True)
+    data["exit_months"] = ["2025-03"] * 10 + ["2026-02"] * 10
+    p2 = _plain(_page_two(render_exit_report_html(data)))
+    assert "Uitstroomperiode: vertrokken tussen maart 2025 en februari 2026 (bij 20 van de 25 vastgelegd)." in p2
+
+
+def _exit_met_maanden(db: Session, maanden: list[str | None], scan_type: str = "exit") -> str:
+    org = Organization(name="TestOrg", slug="testorg-v8", contact_email="hr@test.nl")
+    db.add(org)
+    db.flush()
+    camp = Campaign(organization=org, name="Wave 1", scan_type=scan_type, delivery_mode="baseline")
+    db.add(camp)
+    db.flush()
+    for maand in maanden:
+        r = Respondent(campaign=camp, department="Zorg", role_level="medewerker",
+                       completed=True, exit_month=maand)
+        db.add(r)
+        db.add(SurveyResponse(respondent=r, sdt_raw={}, sdt_scores={}, org_raw={}, org_scores={},
+                              pull_factors_raw={}, uwes_raw={}, turnover_intention_raw={},
+                              risk_score=5.5, risk_band="MIDDEN", exit_reason_code="P1"))
+    db.commit()
+    return camp.id
+
+
+def test_build_report_data_levert_geldige_vertrekmaanden(db_session: Session, caplog):
+    cid = _exit_met_maanden(db_session, ["2025-03", "2025-13", None, "2026-02", "maart"])
+    with caplog.at_level("WARNING", logger="backend.report_html"):
+        assert sorted(build_report_data(cid, db_session)["exit_months"]) == ["2025-03", "2026-02"]
+    # De twee ongeldige waarden verdwijnen niet stil (Fail Loud).
+    assert any("2 exit_month-waarde(n) met onbekende vorm genegeerd" in r.getMessage()
+               for r in caplog.records)
+
+
+def test_build_report_data_behoud_heeft_geen_vertrekmaanden(db_session: Session):
+    cid = _exit_met_maanden(db_session, ["2025-03"], scan_type="retention")
+    assert build_report_data(cid, db_session)["exit_months"] == []
