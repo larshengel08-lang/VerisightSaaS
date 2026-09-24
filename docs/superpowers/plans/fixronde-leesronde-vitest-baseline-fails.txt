@@ -1,0 +1,47 @@
+app/(dashboard)/action-center/page.overview-shell.test.ts > action center bounded overview shell keeps the route in bounded overview mode
+app/(dashboard)/action-center/page.route-shell.test.ts > action center landing shell keeps a thin shell around the preview and route params
+app/(dashboard)/action-center/page.route-shell.test.ts > action center landing shell parses contextual entry params and passes the selected view through to the preview
+app/(dashboard)/action-center/page.route-shell.test.ts > action center landing shell treats a non-valid route-action response as a persisted draft outcome instead of a generic save error
+app/(dashboard)/action-center/reviewmomenten/page.route-shell.test.ts > action center reviewmomenten route source does not reuse the broad ActionCenterPreview suite or org_invites as a reviewmomenten workaround
+app/(dashboard)/beheer/contact-aanvragen/page.test.ts > beheer contact-aanvragen admin alignment keeps lead triage operational and visibly separate from buyer-facing dashboard language
+app/(dashboard)/beheer/new-campaign-form.guard.test.ts > new campaign form clarity keeps the campaign step compact and strips long route explanations
+app/(dashboard)/campaigns/[id]/page-helpers.test.ts > dashboard page helpers field semantics clusters exit open signals without inventing extra quotes or factor values
+app/(dashboard)/campaigns/[id]/page-helpers.test.ts > dashboard page helpers field semantics computes eNPS only when at least five responses expose a raw score
+app/(dashboard)/campaigns/[id]/page-helpers.test.ts > dashboard page helpers field semantics keeps exit helper openings centered on vertrekduiding with claim-safe werkfrictie language
+app/(dashboard)/campaigns/[id]/page-helpers.test.ts > dashboard page helpers field semantics uses customer-facing product labels instead of internal managementread language
+app/(dashboard)/campaigns/[id]/setup/page.test.ts > campaign setup shell redirects to the existing beheer route until the real wizard (subsystem 2) lands
+components/dashboard/action-center-preview.contextual-entry.test.ts > action center preview contextual entry sync drops an invalid source while preserving pathname and hash
+components/dashboard/action-center-preview.contextual-entry.test.ts > action center preview contextual entry sync keeps the planned source-contract markers in place
+components/dashboard/action-center-preview.contextual-entry.test.ts > action center preview contextual entry sync keeps the reviews stale-focus fix wired in the component source
+components/dashboard/action-center-preview.contextual-entry.test.ts > action center preview contextual entry sync omits default overview view from the query while preserving pathname and hash
+components/dashboard/action-center-preview.contextual-entry.test.ts > action center preview contextual entry sync preserves pathname, hash, and a valid source while writing focus and view
+components/dashboard/action-center-preview.contextual-entry.test.ts > action center preview contextual entry sync preserves unrelated host-page query params while updating entry params
+lib/action-center-preview-route-fields-render.test.ts > action center preview route fields render hides next-check and next-step detail blocks for closing decisions
+lib/action-center-preview-route-fields-render.test.ts > action center preview route fields render renders a compact bestuurlijke readback block on the overview surface
+lib/action-center-preview-route-fields-render.test.ts > action center preview route fields render renders decision-first review meaning and action progression in the detail experience
+lib/action-center-preview-route-fields-render.test.ts > action center preview route fields render renders historical route empty states as intentional instead of missing data
+lib/action-center-preview-route-fields.test.ts > action center preview route fields recomputes route-level summary and closeout readiness when route-action cards change locally
+lib/action-center-preview-route-fields.test.ts > action center preview route fields surfaces route action cards and editor controls when a manager can continue inside one route
+lib/action-center-route-action-preview.test.ts > action center route action preview clears hidden inline primary-action truth once route-action mode governs the route
+lib/action-center-route-action-preview.test.ts > action center route action preview does not reopen inline primary-action editing when action cards exist but the route-action endpoint is unavailable
+lib/action-center-route-action-preview.test.ts > action center route action preview keeps richer action routes semantically distinct without reopening inline primary-action editing
+lib/action-center-teams-view.test.ts > action center teams helpers builds team rows from preview items without inventing extra data
+lib/commercial-homepage.test.ts > commercial homepage suite opening keeps the public header focused on route choices while homepage metadata stays intact
+lib/commercial-homepage.test.ts > commercial homepage suite opening marks Action Center as an optional extension in the management flow section
+lib/commercial-homepage.test.ts > commercial homepage suite opening uses the spreadsheet-driven homepage copy for hero, problem, flow and baseline section
+lib/commercial-suite-alignment.test.ts > Commercial suite alignment connects pricing, trust and contact copy to the bounded suite promise
+lib/commercial-suite-alignment.test.ts > Commercial suite alignment keeps the combination route framed as a suite path with dashboard, report and Action Center in one line
+lib/contact-qualification.test.ts > contact qualification visibility summary treats onboarding as a bounded peer instead of a flat first route
+lib/homepage-dashboard-preview-label.test.ts > homepage dashboard preview label adds a small management dashboard context label without changing the preview itself
+lib/marketing-positioning.test.ts > Loep Vertrek positioning copy keeps Loep Cultuurbeeld framed as a broad annual baseline instead of a pulse, benchmark or ranking layer
+lib/marketing-positioning.test.ts > Loep Vertrek positioning copy keeps visible trust navigation and quick links available for first-time buyers
+lib/marketing-positioning.test.ts > Portfolio architecture marketing model keeps three primary routes with onboarding as bounded peer and pulse plus leadership as follow-up
+lib/marketing-proof-layer.test.ts > Marketing proof layer anchors public proof on the live suite and bounded manager access model
+lib/marketing-proof-layer.test.ts > Marketing proof layer keeps the homepage Action Center proof explicit about assignment and review
+lib/producten-page-follow-on.test.ts > /producten later vervolg section keeps only a centered Exitscan Live card and removes the old extra options
+lib/products/exit/dashboard.test.ts > buildExitDashboardViewModel surfaces exit-specific top summary cards and decision prompts
+lib/products/retention/dashboard.test.ts > buildRetentionDashboardViewModel builds a compact retention management read with top summary and next step
+lib/report-preview-copy.test.ts > REPORT_PREVIEW_COPY keeps exit preview aligned with the fixed opening flow before the management-summary layer
+lib/seo-conversion.test.ts > SEO conversion tranche adds solution routes to the sitemap and excludes example pdfs
+lib/seo-conversion.test.ts > SEO conversion tranche generates solution and product metadata from the shared SEO contracts
+lib/seo-conversion.test.ts > SEO conversion tranche keeps route-aware CTA wiring on the intended money pages
