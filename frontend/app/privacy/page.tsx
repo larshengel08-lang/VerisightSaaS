@@ -4,7 +4,7 @@ import { LegalPageShell } from '@/components/marketing/legal-page-shell'
 
 export const metadata: Metadata = {
   title: 'Privacybeleid',
-  description: 'Lees hoe Loep omgaat met persoonsgegevens, hosting en rechten onder de AVG voor Loep Vertrek en Loep Behoud.',
+  description: 'Lees hoe Loep omgaat met persoonsgegevens, hosting en rechten onder de AVG voor Loep Vertrek, Loep Behoud en Loep Start.',
 }
 
 export default function PrivacyPage() {
@@ -26,9 +26,9 @@ export default function PrivacyPage() {
       <section>
         <h2>1. Wie is Loep?</h2>
         <p>
-          Loep is een in Nederland gevestigde dienst voor begeleide HR-signalering en rapportage.
-          Loep helpt HR-teams om vertrekredenen beter te begrijpen via Loep Vertrek en om eerder te zien waar
-          behoud onder druk staat via Loep Behoud.
+          Loep is een in Nederland gevestigde dienst voor medewerkersonderzoek en rapportage.
+          Loep helpt HR-teams om vertrekredenen beter te begrijpen via Loep Vertrek, om eerder te zien waar
+          behoud onder druk staat via Loep Behoud, en om te zien hoe nieuwe medewerkers landen via Loep Start.
         </p>
         <p>
           Privacy staat daarbij niet los als juridisch blok, maar hoort bij de manier waarop het product is ingericht.
@@ -50,8 +50,11 @@ export default function PrivacyPage() {
             <strong>HR-gebruikers en beheerders:</strong> naam, zakelijk e-mailadres en inloggegevens.
           </li>
           <li>
-            <strong>Respondenten:</strong> e-mailadres voor uitnodiging, antwoorden op de vragenlijst en beperkte contextgegevens
-            die de klant zelf aanlevert, zoals afdeling of functieniveau.
+            <strong>Respondenten:</strong> antwoorden op de vragenlijst, de afdeling, en een willekeurige sleutel die
+            voorkomt dat dezelfde browser twee keer invult. De klant verstuurt de uitnodiging zelf; Loep ontvangt en
+            bewaart geen namen of e-mailadressen van respondenten, tenzij schriftelijk is afgesproken dat Loep de
+            uitnodigingen verstuurt. Open antwoorden kunnen toch een naam bevatten; herkende namen haalt Loep
+            automatisch weg voordat ze in een rapport komen.
           </li>
           <li>
             <strong>Technische gegevens:</strong> sessiegegevens, serverlogs en beveiligingsinformatie die nodig zijn
@@ -63,10 +66,10 @@ export default function PrivacyPage() {
       <section>
         <h2>3. Waarom verwerken wij deze gegevens?</h2>
         <ul>
-          <li>Om Loep Vertrek en Loep Behoud uit te voeren en rapportages beschikbaar te maken voor de klantorganisatie.</li>
-          <li>Om uitnodigingen en herinneringen te versturen aan respondenten.</li>
+          <li>Om Loep Vertrek, Loep Behoud en Loep Start uit te voeren en rapportages beschikbaar te maken voor de klantorganisatie.</li>
+          <li>Om de klantorganisatie op de afgesproken dag een herinnering te sturen, en om respondenten uit te nodigen alleen als dat schriftelijk is afgesproken.</li>
           <li>Om de veiligheid, betrouwbaarheid en beschikbaarheid van het platform te bewaken.</li>
-          <li>Om klantorganisaties te helpen hun uitstroom te duiden en behoud eerder op groepsniveau te signaleren via Loep Behoud.</li>
+          <li>Om klantorganisaties te helpen op groepsniveau te zien waar het wringt bij vertrek, behoud en de start van nieuwe medewerkers.</li>
         </ul>
       </section>
 
@@ -83,9 +86,9 @@ export default function PrivacyPage() {
       <section>
         <h2>5. Hoe lang bewaren wij gegevens?</h2>
         <p>
-          Campagnedata wordt bewaard zolang dat nodig is voor het overeengekomen traject en maximaal 2 jaar na
-          afronding van de campagne, tenzij een andere bewaartermijn schriftelijk is afgesproken. Respondentgegevens
-          die alleen nodig zijn voor uitnodiging en herinneringen worden niet langer bewaard dan functioneel nodig.
+          Gegevens van een meting bewaart Loep zolang dat nodig is voor de dienst, en uiterlijk twee jaar na het
+          sluiten van de meting, tenzij schriftelijk een andere termijn is afgesproken. Daarna verwijdert of
+          anonimiseert Loep ze. Op verzoek van de klantorganisatie gebeurt dat eerder.
         </p>
       </section>
 

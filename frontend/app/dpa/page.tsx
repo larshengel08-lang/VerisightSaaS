@@ -5,7 +5,7 @@ import { LegalPageShell } from '@/components/marketing/legal-page-shell'
 export const metadata: Metadata = {
   title: 'Verwerkersovereenkomst',
   description:
-    'Standaard verwerkersovereenkomst (DPA) van Loep voor klantorganisaties - AVG-conform en afgestemd op Loep Vertrek en Loep Behoud.',
+    'Standaard verwerkersovereenkomst (DPA) van Loep voor klantorganisaties - AVG-conform en afgestemd op Loep Vertrek, Loep Behoud en Loep Start.',
 }
 
 export default function DpaPage() {
@@ -45,7 +45,7 @@ export default function DpaPage() {
         </p>
         <p>en</p>
         <p>
-          <strong>Verwerker:</strong> Loep, Nederlandse dienst voor begeleide HR-signalering en
+          <strong>Verwerker:</strong> Loep, Nederlandse dienst voor medewerkersonderzoek en
           rapportage. Volledige bedrijfsgegevens worden opgenomen in de gepersonaliseerde en ondertekende
           versie van deze overeenkomst. Loep is bereikbaar via{' '}
           <a href="mailto:privacy@getloep.nl">privacy@getloep.nl</a>, hierna te noemen
@@ -60,29 +60,30 @@ export default function DpaPage() {
       <section>
         <h2>1. Dienst en reikwijdte</h2>
         <p>
-          Deze overeenkomst heeft betrekking op de verwerking van persoonsgegevens in het kader van de Loep Vertrek-
-          en/of Loep Behoud-dienstverlening van Verwerker. De overeenkomst loopt gelijk met de looptijd van de
+          Deze overeenkomst heeft betrekking op de verwerking van persoonsgegevens in het kader van de
+          dienstverlening van Verwerker voor Loep Vertrek, Loep Behoud en/of Loep Start. De overeenkomst loopt gelijk met de looptijd van de
           onderliggende dienstverleningsovereenkomst, tenzij Partijen schriftelijk anders overeenkomen.
         </p>
       </section>
 
       <section>
-        <h2>2. Categorieen persoonsgegevens</h2>
+        <h2>2. Categorieën persoonsgegevens</h2>
         <ul>
           <li>
             <strong>Accountgegevens HR-gebruikers:</strong> naam en zakelijk e-mailadres van HR-medewerkers en
             beheerders.
           </li>
           <li>
-            <strong>Respondentgegevens:</strong> e-mailadres voor uitnodiging en herinnering, surveyantwoorden en
-            beperkte contextgegevens zoals afdeling, functieniveau of diensttijd.
+            <strong>Respondentgegevens:</strong> antwoorden op de vragenlijst, afdeling en een willekeurige sleutel
+            tegen dubbel invullen. E-mailadressen van respondenten uitsluitend indien schriftelijk is overeengekomen
+            dat Verwerker de uitnodigingen verstuurt.
           </li>
           <li>
             <strong>Technische gegevens:</strong> logging- en beveiligingsinformatie die nodig is om het platform
             veilig en betrouwbaar te laten functioneren.
           </li>
         </ul>
-        <p>De categorieen betrokkenen zijn:</p>
+        <p>De categorieën betrokkenen zijn:</p>
         <ul>
           <li>HR-medewerkers en beheerders van de Verwerkingsverantwoordelijke;</li>
           <li>Respondenten: voormalig of actief personeel van de Verwerkingsverantwoordelijke.</li>
@@ -92,9 +93,9 @@ export default function DpaPage() {
       <section>
         <h2>3. Doel van de verwerking</h2>
         <p>
-          Verwerker verwerkt persoonsgegevens uitsluitend ten behoeve van de uitvoering van Loep Vertrek en/of
-          Loep Behoud, inclusief uitnodigingen, herinneringen, dashboardtoegang, rapportage en noodzakelijke
-          technische beveiliging.
+          Verwerker verwerkt persoonsgegevens uitsluitend ten behoeve van de uitvoering van Loep Vertrek, Loep
+          Behoud en/of Loep Start, inclusief de inrichting van de meting, herinneringen aan de
+          Verwerkingsverantwoordelijke, dashboardtoegang, rapportage en noodzakelijke technische beveiliging.
         </p>
         <p>
           Wanneer Loep Behoud wordt ingezet op actieve medewerkers, zijn de uitkomsten nadrukkelijk bedoeld voor
@@ -164,15 +165,16 @@ export default function DpaPage() {
         <p>
           Verwerker meldt een geconstateerde inbreuk in verband met persoonsgegevens zo spoedig mogelijk bij de
           Verwerkingsverantwoordelijke, en verstrekt daarbij voor zover beschikbaar de aard van de inbreuk, de
-          categorieen betrokkenen, de vermoedelijke gevolgen en de genomen of voorgestelde maatregelen.
+          categorieën betrokkenen, de vermoedelijke gevolgen en de genomen of voorgestelde maatregelen.
         </p>
       </section>
 
       <section>
         <h2>9. Bewaartermijnen en einde dienstverlening</h2>
         <p>
-          Na afloop van de dienstverlening verwijdert of anonimiseert Verwerker persoonsgegevens conform het
-          overeengekomen bewaarbeleid, tenzij wettelijke verplichtingen een langere bewaring vereisen.
+          Verwerker verwijdert of anonimiseert persoonsgegevens uiterlijk twee jaar na het sluiten van de meting,
+          of eerder op verzoek van de Verwerkingsverantwoordelijke, tenzij schriftelijk een andere termijn is
+          overeengekomen of wettelijke verplichtingen een langere bewaring vereisen.
         </p>
       </section>
 

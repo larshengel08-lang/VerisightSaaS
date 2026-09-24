@@ -27,7 +27,7 @@ export default function VoorwaardenPage() {
         <h2>1. Definities</h2>
         <ul>
           <li>
-            <strong>Loep:</strong> de dienst en software voor Loep Vertrek, Loep Behoud, rapportage en bijbehorende begeleiding.
+            <strong>Loep:</strong> de dienst en software voor Loep Vertrek, Loep Behoud en Loep Start, met de inrichting van de meting en het rapport.
           </li>
           <li>
             <strong>Klant:</strong> de organisatie die een of meer Loep-producten afneemt.
@@ -52,19 +52,21 @@ export default function VoorwaardenPage() {
       <section>
         <h2>3. Wat levert Loep?</h2>
         <p>
-          Loep levert begeleide productvormen met software, uitnodigingen, analyse en rapportage. Dat kan
-          onder meer bestaan uit Loep Vertrek, Loep Behoud of een combinatie daarvan, met:
+          Loep levert medewerkersonderzoek als dienst: Loep Vertrek, Loep Behoud en Loep Start. Per meting
+          omvat dat:
         </p>
         <ul>
-          <li>inrichting van de campagne;</li>
-          <li>versturen van uitnodigingen en herinneringen;</li>
+          <li>de inrichting van de meting, met de afdelingen en aantallen die de klant aanlevert;</li>
+          <li>een uitnodigings- en herinneringstekst die de klant zelf verstuurt vanuit de eigen mailbox;</li>
           <li>verzamelen en analyseren van antwoorden;</li>
-          <li>dashboardtoegang en rapportage;</li>
-          <li>persoonlijke toelichting op de uitkomsten.</li>
+          <li>een eigen omgeving waarin de klant de respons volgt, de meting sluit of verlengt, het rapport downloadt en het besluit vastlegt;</li>
+          <li>een rapport met gespreksleidraad en besluitpagina, waarmee de klant het gesprek met het management zelf voert.</li>
         </ul>
         <p>
-          De standaarddienst is organisatiegebonden en begeleid van opzet. Loep biedt op dit moment geen
-          publieke self-service checkout, seat- of usageabonnementen, tenzij schriftelijk anders overeengekomen.
+          De dienst wordt per organisatie ingericht na een intake. Een bespreking of presentatie van de
+          uitkomsten door Loep maakt geen deel uit van de dienst, tenzij schriftelijk anders overeengekomen. Loep
+          biedt geen publieke zelfbestelling en geen abonnementen per gebruiker of per gebruik, tenzij schriftelijk
+          anders overeengekomen.
         </p>
       </section>
 
@@ -73,7 +75,8 @@ export default function VoorwaardenPage() {
         <ul>
           <li>Dat aangeleverde gegevens juist, volledig en rechtmatig zijn.</li>
           <li>Dat alleen bevoegde medewerkers toegang krijgen tot het platform.</li>
-          <li>Dat respondenten passend worden geinformeerd over de verwerking van hun gegevens.</li>
+          <li>Dat de klant de uitnodiging aan de juiste groep verstuurt en het aantal uitgenodigden naar waarheid opgeeft. Dat aantal bepaalt het responspercentage in het rapport.</li>
+          <li>Dat respondenten passend worden geïnformeerd over de verwerking van hun gegevens.</li>
           <li>Dat de dienst wordt gebruikt in overeenstemming met wet- en regelgeving.</li>
         </ul>
       </section>
@@ -160,9 +163,9 @@ export default function VoorwaardenPage() {
       <section>
         <h2>12. Looptijd en einde van de overeenkomst</h2>
         <p>
-          De overeenkomst loopt voor de afgesproken periode of campagne. Na beindiging kan klantdata gedurende een
-          beperkte periode — maximaal 6 maanden — beschikbaar blijven voor export, waarna gegevens volgens het
-          bewaarbeleid worden verwijderd of geanonimiseerd.
+          De overeenkomst loopt voor de afgesproken periode of meting. Na beëindiging blijft klantdata hoogstens
+          zes maanden beschikbaar voor export. Daarna, en in elk geval uiterlijk twee jaar na het sluiten van een
+          meting, worden de gegevens verwijderd of geanonimiseerd, zoals beschreven in het privacybeleid.
         </p>
         <p>
           Loep is gerechtigd de overeenkomst met onmiddellijke ingang te beëindigen als de klant de
