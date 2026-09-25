@@ -29,7 +29,8 @@ def fabriek():
     engine = _engine()
     with engine.begin() as con:
         con.execute(text("create table action_center_review_decisions (id varchar(36) primary key, "
-                         "route_source_id char(36), checkpoint_id char(36) not null)"))
+                         "route_source_id char(36), checkpoint_id char(36) not null, "
+                         "created_at timestamp, updated_at timestamp)"))
     yield sessionmaker(bind=engine, autocommit=False, autoflush=False)
     engine.dispose()
 
@@ -99,7 +100,7 @@ def test_lead_zonder_contact_in_twee_jaar_wordt_verwijderd_ook_als_hij_klant_wer
     rec.contact_request_id = lid
     db.commit()
     db.close()
-    jong_dossier = _dossier(fabriek, created=RECENT, updated=RECENT, checkpoints=(), lead_id=lid)
+    oud_dossier = _dossier(fabriek, lead_id=lid)
 
     rapport = dr.opschonen_contacten(fabriek, vandaag=VANDAAG, apply=True)
     lead = next(c for c in rapport.leads if c.id == lid)
@@ -109,9 +110,26 @@ def test_lead_zonder_contact_in_twee_jaar_wordt_verwijderd_ook_als_hij_klant_wer
     assert not _bestaat(fabriek, ContactRequest, lid)
     db = fabriek()
     assert db.query(CampaignDeliveryRecord).filter_by(campaign_id=cid).one().contact_request_id is None
-    assert db.get(PilotLearningDossier, jong_dossier).contact_request_id is None
     db.close()
-    assert _status(rapport.dossiers, jong_dossier) == "binnen_termijn"
+    assert _status(rapport.dossiers, oud_dossier) == "opgeschoond"
+
+
+@pytest.mark.parametrize("waar", ["dossier", "checkpoint"])
+def test_lead_met_een_recent_gekoppeld_dossier_blijft_staan(fabriek, waar):
+    # Het dossier bewaart een kopie van naam en e-mail van de lead: zolang het
+    # dossier leeft, telt zijn laatste contact ook voor de lead.
+    lid = _lead(fabriek)
+    if waar == "dossier":
+        did = _dossier(fabriek, updated=RECENT, checkpoints=(), lead_id=lid)
+    else:
+        did = _dossier(fabriek, checkpoints=((OUD, RECENT),), lead_id=lid)
+    rapport = dr.opschonen_contacten(fabriek, vandaag=VANDAAG, apply=True)
+    lead = next(c for c in rapport.leads if c.id == lid)
+    assert lead.status == "binnen_termijn" and lead.laatste_contact == date(2027, 3, 1)
+    assert _bestaat(fabriek, ContactRequest, lid)
+    db = fabriek()
+    assert db.get(PilotLearningDossier, did).contact_request_id == lid
+    db.close()
 
 
 @pytest.mark.parametrize("kolom", ["last_contacted_at", "qualification_reviewed_at",
@@ -186,29 +204,90 @@ def test_tweede_run_doet_niets(fabriek):
     assert tweede.dossiers == []
 
 
-def test_lead_zonder_enig_tijdstempel_wordt_niet_geraakt_en_is_rood(capsys):
-    # Op Postgres is created_at nullable (schema.sql); het ORM maakt hem op
-    # SQLite NOT NULL. Daarom een oude, kale tabel zonder de andere vier
-    # tijdstempelkolommen: die tellen dan niet mee, created_at wel.
-    engine = _engine()
+def _kale_leadtabel(engine, kolommen: tuple[str, ...]) -> None:
+    """Een contact_requests met alleen deze tijdstempelkolommen, allemaal nullable
+    (op Postgres is created_at nullable; het ORM maakt hem op SQLite NOT NULL)."""
     with engine.begin() as con:
         con.execute(text("drop table contact_requests"))
-        con.execute(text("create table contact_requests (id char(36) primary key, "
-                         "name varchar(120), created_at timestamp)"))
-        con.execute(text("insert into contact_requests values "
-                         "('44444444-4444-4444-4444-444444444444', 'Sanne', null)"))
-        con.execute(text("insert into contact_requests values "
-                         "('55555555-5555-5555-5555-555555555555', 'Piet', '2026-01-01 10:00:00')"))
+        con.execute(text("create table contact_requests (id char(36) primary key, name varchar(120)"
+                         + "".join(", " + k + " timestamp" for k in kolommen) + ")"))
+
+
+ZONDER, OUDE = "44444444-4444-4444-4444-444444444444", "55555555-5555-5555-5555-555555555555"
+
+
+def test_lead_zonder_enig_tijdstempel_wordt_niet_geraakt_en_is_rood(capsys):
+    engine = _engine()
+    _kale_leadtabel(engine, dr.LEAD_TIJDSTEMPELS)
+    with engine.begin() as con:
+        con.execute(text("insert into contact_requests (id, name) values (:i, 'Sanne')"), {"i": ZONDER})
+        con.execute(text("insert into contact_requests (id, name, created_at) values "
+                         "(:i, 'Piet', '2026-01-01 10:00:00')"), {"i": OUDE})
     fabriek = sessionmaker(bind=engine)
-    zonder, oud = "44444444-4444-4444-4444-444444444444", "55555555-5555-5555-5555-555555555555"
     rapport = dr.opschonen_contacten(fabriek, vandaag=VANDAAG, apply=True)
-    assert _status(rapport.leads, zonder) == "zonder_datum"
-    assert _status(rapport.leads, oud) == "opgeschoond"
+    assert _status(rapport.leads, ZONDER) == "zonder_datum"
+    assert _status(rapport.leads, OUDE) == "opgeschoond"          # NULL's tellen niet mee
+    assert rapport.onvolledig == []
     with engine.connect() as con:
-        assert con.execute(text("select id from contact_requests")).scalars().all() == [zonder]
+        assert con.execute(text("select id from contact_requests")).scalars().all() == [ZONDER]
     assert dr.main(["--apply"], session_factory=fabriek, vandaag=VANDAAG) == 1
     uit = capsys.readouterr().out
-    assert "ZONDER DATUM" in uit and ("lead=" + zonder) in uit and "Sanne" not in uit
+    assert "ZONDER DATUM" in uit and ("lead=" + ZONDER) in uit and "Sanne" not in uit
+    engine.dispose()
+
+
+def test_ontbrekende_tijdstempelkolom_slaat_leads_over_en_is_rood(capsys):
+    # Zonder last_contacted_at zou elke oude lead verlopen lijken, ook als er
+    # gisteren nog contact was. Een ontbrekende kolom is geen lege waarde.
+    engine = _engine()
+    _kale_leadtabel(engine, ("created_at",))
+    with engine.begin() as con:
+        con.execute(text("insert into contact_requests (id, name, created_at) values "
+                         "(:i, 'Piet', '2026-01-01 10:00:00')"), {"i": OUDE})
+    fabriek = sessionmaker(bind=engine)
+    did = _dossier(fabriek)                                     # dossiers gaan gewoon door
+    rapport = dr.opschonen_contacten(fabriek, vandaag=VANDAAG, apply=True)
+    assert rapport.leads == []
+    assert rapport.onvolledig == ["tabel contact_requests mist last_contacted_at, "
+                                  "qualification_reviewed_at, commercial_agreement_confirmed_at, "
+                                  "commercial_readiness_reviewed_at; leads overgeslagen"]
+    assert _status(rapport.dossiers, did) == "opgeschoond"
+    for argv in ([], ["--apply"]):
+        assert dr.main(argv, session_factory=fabriek, vandaag=VANDAAG) == 1
+        uit = capsys.readouterr().out
+        assert "LET OP: tabel contact_requests mist last_contacted_at" in uit
+        assert ("lead=" + OUDE) not in uit
+    with engine.connect() as con:
+        assert con.execute(text("select id from contact_requests")).scalars().all() == [OUDE]
+    engine.dispose()
+
+
+def test_ontbrekende_tijdstempelkolom_bij_dossiers_slaat_dossiers_en_leads_over():
+    engine = _engine()
+    with engine.begin() as con:
+        con.execute(text("create table action_center_review_decisions (id varchar(36) primary key, "
+                         "checkpoint_id char(36) not null, created_at timestamp)"))
+    fabriek = sessionmaker(bind=engine)
+    lid = _lead(fabriek)
+    did = _dossier(fabriek)
+    rapport = dr.opschonen_contacten(fabriek, vandaag=VANDAAG, apply=True)
+    assert rapport.leads == [] and rapport.dossiers == []
+    assert rapport.onvolledig == ["tabel action_center_review_decisions mist updated_at; "
+                                  "dossiers en leads overgeslagen"]
+    assert _bestaat(fabriek, ContactRequest, lid) and _bestaat(fabriek, PilotLearningDossier, did)
+    assert dr.main([], session_factory=fabriek, vandaag=VANDAAG) == 1
+    engine.dispose()
+
+
+def test_reviewtabel_zonder_checkpoint_id_hoeft_geen_tijdstempels():
+    engine = _engine()
+    with engine.begin() as con:
+        con.execute(text("create table action_center_review_decisions (id varchar(36) primary key, "
+                         "route_source_id char(36))"))
+    fabriek = sessionmaker(bind=engine)
+    did = _dossier(fabriek)
+    rapport = dr.opschonen_contacten(fabriek, vandaag=VANDAAG, apply=True)
+    assert rapport.onvolledig == [] and _status(rapport.dossiers, did) == "opgeschoond"
     engine.dispose()
 
 
@@ -218,9 +297,10 @@ def test_dossier_zonder_contact_wordt_met_checkpoints_verwijderd(fabriek):
     did = _dossier(fabriek, checkpoints=((OUD, OUD), (OUD, OUD)))
     db = fabriek()
     cps = [c.id for c in db.query(PilotLearningCheckpoint).filter_by(dossier_id=did)]
-    db.execute(text("insert into action_center_review_decisions values ('rd-1', null, :c)"), {"c": cps[0]})
-    db.execute(text("insert into action_center_review_decisions values ('rd-2', null, :c)"),
-               {"c": "33333333-3333-3333-3333-333333333333"})
+    db.execute(text("insert into action_center_review_decisions values ('rd-1', null, :c, :t, :t)"),
+               {"c": cps[0], "t": OUD})
+    db.execute(text("insert into action_center_review_decisions values ('rd-2', null, :c, :t, :t)"),
+               {"c": "33333333-3333-3333-3333-333333333333", "t": OUD})
     db.commit()
     db.close()
     rapport = dr.opschonen_contacten(fabriek, vandaag=VANDAAG, apply=True)
@@ -243,6 +323,25 @@ def test_dossier_met_een_recent_checkpoint_blijft_staan(fabriek, welke):
     assert dossier.status == "binnen_termijn"
     assert dossier.laatste_contact == date(2027, 3, 1)
     assert _bestaat(fabriek, PilotLearningDossier, did) and _checkpoints(fabriek, did) == 2
+
+
+@pytest.mark.parametrize("kolom", ["created_at", "updated_at"])
+def test_oud_dossier_met_een_recent_reviewbesluit_blijft_staan(fabriek, kolom):
+    did = _dossier(fabriek)
+    db = fabriek()
+    cp = db.query(PilotLearningCheckpoint).filter_by(dossier_id=did).one().id
+    tijden = {"created_at": OUD, "updated_at": OUD, kolom: RECENT}
+    db.execute(text("insert into action_center_review_decisions values ('rd-r', null, :c, :a, :u)"),
+               {"c": cp, "a": tijden["created_at"], "u": tijden["updated_at"]})
+    db.commit()
+    db.close()
+    rapport = dr.opschonen_contacten(fabriek, vandaag=VANDAAG, apply=True)
+    dossier = next(c for c in rapport.dossiers if c.id == did)
+    assert dossier.status == "binnen_termijn" and dossier.laatste_contact == date(2027, 3, 1)
+    assert _bestaat(fabriek, PilotLearningDossier, did) and _checkpoints(fabriek, did) == 1
+    db = fabriek()
+    assert db.execute(text("select count(*) from action_center_review_decisions")).scalar() == 1
+    db.close()
 
 
 def test_dossier_met_recente_eigen_wijziging_blijft_staan(fabriek):
@@ -278,6 +377,38 @@ def test_recent_contact_na_de_inventaris_wordt_niet_gewist(fabriek, monkeypatch)
     assert dossier.status == "fout" and dossier.fout == "ContactVeranderd: nu binnen_termijn"
     assert _bestaat(fabriek, ContactRequest, lid)
     assert _bestaat(fabriek, PilotLearningDossier, did) and _checkpoints(fabriek, did) == 2
+
+
+def test_contact_via_reviewbesluit_of_gekoppeld_dossier_na_de_inventaris(fabriek, monkeypatch):
+    lid = _lead(fabriek)
+    gekoppeld = _dossier(fabriek, checkpoints=(), lead_id=lid)
+    did = _dossier(fabriek)
+    echte = dr._inventaris_contacten
+
+    def inventaris_dan_contact(db, **kw):
+        uit = echte(db, **kw)
+        andere = fabriek()
+        cp = andere.query(PilotLearningCheckpoint).filter_by(dossier_id=did).one().id
+        andere.execute(text("insert into action_center_review_decisions values ('rd-n', null, :c, :t, :t)"),
+                       {"c": cp, "t": RECENT})
+        andere.execute(text("update pilot_learning_dossiers set updated_at = :t where id = :d"),
+                       {"t": RECENT, "d": gekoppeld})
+        andere.commit()
+        andere.close()
+        return uit
+
+    monkeypatch.setattr(dr, "_inventaris_contacten", inventaris_dan_contact)
+    rapport = dr.opschonen_contacten(fabriek, vandaag=VANDAAG, apply=True)
+    assert next(c for c in rapport.leads if c.id == lid).fout == "ContactVeranderd: nu binnen_termijn"
+    assert next(c for c in rapport.dossiers if c.id == did).fout == "ContactVeranderd: nu binnen_termijn"
+    assert _bestaat(fabriek, ContactRequest, lid) and _bestaat(fabriek, PilotLearningDossier, did)
+
+
+def test_contact_veranderd_is_geen_meting_veranderd():
+    assert not issubclass(dr.ContactVeranderd, dr.MetingVeranderd)
+    assert issubclass(dr.ContactVeranderd, dr.EenheidVeranderd)
+    assert issubclass(dr.MetingVeranderd, dr.EenheidVeranderd)
+    assert dr._foutcode(dr.MetingVeranderd("open")) == "MetingVeranderd: nu open"
 
 
 def test_fout_in_een_lead_rolt_alleen_die_terug(fabriek, monkeypatch, capsys, caplog):

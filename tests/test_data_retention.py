@@ -759,3 +759,22 @@ def test_heropend_met_nieuwe_respondenten_blijft_heropend(fabriek):
     db.commit()
     db.close()
     assert _status(dr.opschonen(fabriek, vandaag=VANDAAG, apply=True), cid) == "heropend_na_opschoning"
+
+
+def test_al_opgeschoond_telt_eerst_alleen_respondenten(fabriek, monkeypatch):
+    # De volledige tellingen alleen als er weer respondenten staan.
+    leeg, _ = _meting(fabriek, slug="ta1", gesloten=_gesloten(2025, 1, 1))
+    weer, _ = _purge_en_nieuwe_respondent(fabriek, "ta2")
+    dr.opschonen(fabriek, vandaag=VANDAAG, apply=True)
+    geteld = []
+    echte = dr._tellingen
+
+    def tellingen(db, campaign_id):
+        geteld.append(campaign_id)
+        return echte(db, campaign_id)
+
+    monkeypatch.setattr(dr, "_tellingen", tellingen)
+    rapport = dr.opschonen(fabriek, vandaag=VANDAAG, apply=False)
+    assert _status(rapport, leeg) == "al_opgeschoond"
+    assert _status(rapport, weer) == "opnieuw_gesloten_na_opschoning"
+    assert geteld == [weer]

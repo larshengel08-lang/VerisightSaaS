@@ -55,14 +55,17 @@ organisatie) raakt deze opschoning niet.
 Leads en leerdossiers (amendement A4 punt 2): termijn twee jaar
 (CONTACT_TERMIJN_MAANDEN) na het laatste contact, met dezelfde vooruitblik als
 metingen. Het laatste contact is het laatste van de tijdstempels die de eenheid
-heeft; kolommen die in een database ontbreken tellen niet mee.
+heeft. Mist een tabel een van die tijdstempelkolommen, dan valt het laatste
+contact te vroeg uit: die soort wordt dan overgeslagen, met een LET OP-regel en
+exitcode 1 (ook in de dry-run). Een leeg (NULL) tijdstempel telt gewoon niet mee;
+zijn ze allemaal leeg, dan ZONDER DATUM (niet geraakt, exitcode 1).
 
 | Tabel | Wat erin staat | Laatste contact | Na de termijn | Waarom |
 |---|---|---|---|---|
-| contact_requests (lead) | naam, werk-e-mail, organisatie, omvang, vraag (vrije tekst), ops- en kwalificatienotities met namen | created_at, last_contacted_at (laatste ops-update), qualification_reviewed_at, commercial_agreement_confirmed_at, commercial_readiness_reviewed_at | verwijderen; de verwijzing in campaign_delivery_records en pilot_learning_dossiers (contact_request_id) wordt leeg | Een lead is als geheel persoonsgegevens; anonimiseren laat niets bruikbaars over. Geen uitzondering voor leads die klant werden: de organisatie en de meting hebben hun eigen gegevens en termijn. |
-| pilot_learning_dossiers (dossier) | leadgegevens (naam, e-mail, organisatie) plus interne vrije tekst over koopreden, uitkomst en lessen | created_at en updated_at van het dossier en van elk checkpoint | verwijderen, met de checkpoints | Idem: intern en commercieel, zonder de namen blijft er geen bruikbaar dossier over. |
+| contact_requests (lead) | naam, werk-e-mail, organisatie, omvang, vraag (vrije tekst), ops- en kwalificatienotities met namen | created_at, last_contacted_at (laatste ops-update), qualification_reviewed_at, commercial_agreement_confirmed_at, commercial_readiness_reviewed_at, plus alle tijdstempels van de dossiers die naar de lead verwijzen (zo'n dossier bewaart een kopie van naam en e-mail; zolang het leeft, levert verwijderen van de lead niets op) | verwijderen; de verwijzing in campaign_delivery_records en pilot_learning_dossiers (contact_request_id) wordt leeg | Een lead is als geheel persoonsgegevens; anonimiseren laat niets bruikbaars over. Geen uitzondering voor leads die klant werden: de organisatie en de meting hebben hun eigen gegevens en termijn. |
+| pilot_learning_dossiers (dossier) | leadgegevens (naam, e-mail, organisatie) plus interne vrije tekst over koopreden, uitkomst en lessen | created_at en updated_at van het dossier, van elk checkpoint en van elk reviewbesluit aan een checkpoint | verwijderen, met de checkpoints | Idem: intern en commercieel, zonder de namen blijft er geen bruikbaar dossier over. |
 | pilot_learning_checkpoints | notities per checkpoint (owner_label, observaties, lessen) | telt mee voor het dossier | verwijderen met het dossier | Hoort bij het dossier. |
-| action_center_review_decisions (via checkpoint_id) | reviewbesluit dat aan een checkpoint hangt | telt niet mee | verwijderen met het dossier | Op Postgres doet de cascade dit ook; hier expliciet, zodat het in de uitvoer staat. |
+| action_center_review_decisions (via checkpoint_id) | reviewbesluit dat aan een checkpoint hangt | telt mee voor het dossier (een besluit van gisteren houdt het dossier vast) | verwijderen met het dossier | Op Postgres doet de cascade dit ook; hier expliciet, zodat het in de uitvoer staat. |
 
 contact_requests heeft geen updated_at: een wijziging die geen van de vijf
 tijdstempels zet, telt niet als contact. Opschonen op verzoek van één lead of
@@ -147,10 +150,15 @@ LEAD_VERWIJZINGEN: tuple[tuple[str, str], ...] = (
 )
 DOSSIER_TABEL = "pilot_learning_dossiers"
 CHECKPOINT_TABEL = "pilot_learning_checkpoints"
+# Tijdstempels van het dossier en van elk checkpoint.
 DOSSIER_TIJDSTEMPELS = ("created_at", "updated_at")
-# Rijen die via een checkpoint aan een dossier hangen (on delete cascade).
+# Rijen die via een checkpoint aan een dossier hangen (on delete cascade). Hun
+# tijdstempels tellen mee als contact: een reviewbesluit van gisteren houdt het
+# dossier vast.
+REVIEWBESLUIT_TABEL = "action_center_review_decisions"
+REVIEWBESLUIT_TIJDSTEMPELS = ("created_at", "updated_at")
 CHECKPOINT_VERWIJZINGEN: tuple[tuple[str, str], ...] = (
-    ("action_center_review_decisions", "checkpoint_id"),
+    (REVIEWBESLUIT_TABEL, "checkpoint_id"),
 )
 
 _Q_PURGED = (text("select data_purged_at from campaigns where id = :id")
@@ -172,22 +180,31 @@ class RetentieMigratieOntbreekt(RuntimeError):
     """--apply zonder de kolommen van de migratie: stoppen, niets raden."""
 
 
-class MetingVeranderd(RuntimeError):
-    """De meting voldoet in de opschoontransactie niet meer aan de voorwaarden.
+class EenheidVeranderd(RuntimeError):
+    """Een eenheid voldoet in de opschoontransactie niet meer aan de voorwaarden.
 
-    Bijvoorbeeld heropend of een langere termijn gekregen tussen de inventaris
-    en de opschoning. De transactie rolt terug; de meting staat als fout in de
-    uitvoer. `nu` is een status uit een vaste lijst, geen inhoud.
+    De transactie rolt terug; de eenheid staat als fout in de uitvoer. `nu` is
+    een status uit een vaste lijst, geen inhoud (_foutcode toont hem).
     """
+
+    soort = "eenheid"
 
     def __init__(self, nu: str) -> None:
         self.nu = nu
-        super().__init__("meting veranderde na de inventaris: nu " + nu)
+        super().__init__(self.soort + " veranderde na de inventaris: nu " + nu)
 
 
-class ContactVeranderd(MetingVeranderd):
-    """Zelfde betekenis voor een lead of dossier: in de opschoontransactie
-    voldoet hij niet meer (bijvoorbeeld recent contact of al verwijderd)."""
+class MetingVeranderd(EenheidVeranderd):
+    """Bijvoorbeeld heropend of een langere termijn gekregen tussen de
+    inventaris en de opschoning."""
+
+    soort = "meting"
+
+
+class ContactVeranderd(EenheidVeranderd):
+    """Een lead of dossier: bijvoorbeeld recent contact of al verwijderd."""
+
+    soort = "lead of dossier"
 
 
 class ReportDataPurged(Exception):
@@ -340,6 +357,10 @@ def _termijn(db: Session, organization_id: str, gedraaid: bool) -> int:
     return waarde or STANDAARD_TERMIJN_MAANDEN
 
 
+def _aantal_respondenten(db: Session, campaign_id: str) -> int:
+    return db.query(Respondent).filter(Respondent.campaign_id == campaign_id).count()
+
+
 def _tellingen(db: Session, campaign_id: str) -> dict[str, int]:
     resp_ids = select(Respondent.id).where(Respondent.campaign_id == campaign_id)
     uit = {
@@ -426,8 +447,7 @@ def _controleer_opnieuw(db: Session, m: Meting, *, vandaag: date, op_verzoek: bo
     _beoordeel(nieuw, is_active=rij.is_active, closed_at=rij.closed_at, purged=rij.data_purged_at,
                vandaag=vandaag, op_verzoek=op_verzoek,
                termijn=lambda: _termijn(db, rij.organization_id, True),
-               respondenten=lambda: db.query(Respondent).filter(
-                   Respondent.campaign_id == m.campaign_id).count())
+               respondenten=lambda: _aantal_respondenten(db, m.campaign_id))
     if nieuw.status != "verlopen":
         raise MetingVeranderd(nieuw.status)
 
@@ -439,7 +459,7 @@ def _foutcode(exc: BaseException) -> str:
     een SQLAlchemy-fout de parameters; beide kunnen persoonsgegevens zijn.
     """
     uit = type(exc).__name__
-    if isinstance(exc, MetingVeranderd):
+    if isinstance(exc, EenheidVeranderd):
         uit += ": nu " + exc.nu
     orig = getattr(exc, "orig", None)
     code = (getattr(exc, "pgcode", None) or getattr(exc, "sqlstate", None)
@@ -518,9 +538,12 @@ def _inventaris(db: Session, *, vandaag: date, gedraaid: bool, campagne_ids: lis
                    reden="verzoek" if op_verzoek else "termijn")
 
         def respondenten(m=m) -> int:
-            # De bestaande tellingen: ze komen ook in de uitvoerregel.
-            m.tellingen = _tellingen(db, m.campaign_id)
-            return m.tellingen["respondenten"]
+            # Eerst alleen tellen; staan er weer respondenten, dan de volledige
+            # tellingen voor de uitvoerregel.
+            aantal = _aantal_respondenten(db, m.campaign_id)
+            if aantal > 0:
+                m.tellingen = _tellingen(db, m.campaign_id)
+            return aantal
 
         _beoordeel(m, is_active=c.is_active, closed_at=c.closed_at,
                    purged=data_purged_at(db, c.id) if gedraaid else None,
@@ -601,12 +624,10 @@ class ContactRapportage:
     leads: list[Contact]
     dossiers: list[Contact]
     ontbrekende_tabellen: list[str] = field(default_factory=list)
-
-
-def _tijdstempels(db: Session, tabel: str, gewenst: tuple[str, ...]) -> list[str]:
-    """De tijdstempelkolommen die in deze database bestaan, in vaste volgorde."""
-    bestaand = _kolommen(db, tabel)
-    return [k for k in gewenst if k in bestaand]
+    # Een regel per tabel die wel bestaat maar een tijdstempelkolom mist: die
+    # soort wordt dan overgeslagen (rood), omdat het laatste contact anders te
+    # vroeg zou uitvallen.
+    onvolledig: list[str] = field(default_factory=list)
 
 
 def _laatste(momenten: Iterable[datetime | None]) -> datetime | None:
@@ -618,7 +639,7 @@ def _laatste(momenten: Iterable[datetime | None]) -> datetime | None:
 def _beoordeel_contact(c: Contact, laatste: datetime | None, vandaag: date) -> None:
     """De regels voor een lead of dossier; een bron voor inventaris en hercontrole."""
     if laatste is None:
-        # Geen enkel tijdstempel: de termijn is niet te bepalen. Niet raden.
+        # Geen enkel tijdstempel gevuld: de termijn is niet te bepalen. Niet raden.
         c.status = "zonder_datum"
         return
     c.laatste_contact = _sluitdag(laatste)       # zelfde omrekening naar NL-tijd
@@ -631,66 +652,150 @@ def _beoordeel_contact(c: Contact, laatste: datetime | None, vandaag: date) -> N
         c.status = "binnen_termijn"
 
 
-def _q_tijden(tabel: str, sleutel: str, kolommen: list[str], sleutel_type, *,
-              waar: str | None = None, for_update: bool = False):
-    """select <sleutel>, <tijdstempels> from <tabel> [where <waar> = :id] [for update].
+def _mist(db: Session, tabel: str, nodig: tuple[str, ...]) -> str | None:
+    """Een LET OP-tekst als de tabel bestaat maar kolommen mist, anders None."""
+    bestaand = _kolommen(db, tabel)
+    weg = [k for k in nodig if k not in bestaand]
+    if bestaand and weg:
+        return "tabel " + tabel + " mist " + ", ".join(weg)
+    return None
 
-    sleutel_type is ook het type van :id (de sleutel en waar zijn van dezelfde soort).
+
+def _volledigheid(db: Session) -> tuple[list[str], bool, bool]:
+    """(meldingen, leads_kan, dossiers_kan).
+
+    Een ontbrekende tijdstempelkolom laat het laatste contact te vroeg
+    uitvallen; dan liever niets doen en rood kleuren. De leads hangen ook van
+    de dossiers af (een gekoppeld dossier telt mee als contact).
     """
-    sql = "select " + ", ".join([sleutel] + kolommen) + " from " + tabel
-    if waar is not None:
-        sql += " where " + waar + " = :id"
-    sql += " order by " + sleutel
-    if for_update:
-        sql += " for update"
-    q = text(sql).columns(**{sleutel: sleutel_type},
-                          **{k: DateTime(timezone=True) for k in kolommen})
-    if waar is not None:
-        q = q.bindparams(bindparam("id", type_=sleutel_type))
+    lead = _mist(db, LEAD_TABEL, LEAD_TIJDSTEMPELS)
+    # Een reviewtabel zonder checkpoint_id hangt niet aan dossiers: dan niet nodig.
+    review = (_mist(db, REVIEWBESLUIT_TABEL, REVIEWBESLUIT_TIJDSTEMPELS)
+              if "checkpoint_id" in _kolommen(db, REVIEWBESLUIT_TABEL) else None)
+    dossier = [m for m in (_mist(db, DOSSIER_TABEL, DOSSIER_TIJDSTEMPELS),
+                           _mist(db, CHECKPOINT_TABEL, DOSSIER_TIJDSTEMPELS), review) if m]
+    meldingen = []
+    if lead:
+        meldingen.append(lead + "; leads overgeslagen")
+    for m in dossier:
+        meldingen.append(m + "; dossiers en leads overgeslagen")
+    return meldingen, not lead and not dossier, not dossier
+
+
+def _q(sql: str, id_type=None, **kolommen):
+    q = text(sql).columns(**kolommen)
+    if id_type is not None:
+        q = q.bindparams(bindparam("id", type_=id_type))
     return q
 
 
-def _dossier_tijden(db: Session, dossier_id: str | None, *, for_update: bool = False
-                    ) -> dict[str, list[datetime | None]]:
-    """Per dossier alle tijdstempels van het dossier en zijn checkpoints.
+def _tijden_kolommen(kolommen: tuple[str, ...]) -> dict:
+    return {k: DateTime(timezone=True) for k in kolommen}
 
-    Zonder dossier_id: alle dossiers (inventaris). Met dossier_id: alleen dat
-    dossier, met FOR UPDATE op het dossier en zijn checkpoints (hercontrole).
+
+def _dossier_tijden(db: Session, dossier_ids: list[str] | None, *, for_update: bool = False
+                    ) -> dict[str, list[datetime | None]]:
+    """Per dossier alle tijdstempels van het dossier, zijn checkpoints en de
+    reviewbesluiten aan die checkpoints.
+
+    Zonder dossier_ids: alle dossiers (inventaris). Met dossier_ids: alleen
+    die, met FOR UPDATE op elke gelezen rij (hercontrole). Een nieuw checkpoint
+    of reviewbesluit wacht op Postgres op die vergrendeling (de FK-controle) en
+    faalt daarna, omdat de ouder weg is.
     """
-    params = {} if dossier_id is None else {"id": dossier_id}
+    slot = " for update" if for_update else ""
     uit: dict[str, list[datetime | None]] = {}
-    kol = _tijdstempels(db, DOSSIER_TABEL, DOSSIER_TIJDSTEMPELS)
-    q = _q_tijden(DOSSIER_TABEL, "id", kol, GUID(),
-                  waar=None if dossier_id is None else "id", for_update=for_update)
-    for rij in db.execute(q, params):
-        uit[rij[0]] = list(rij[1:])
-    if _kolommen(db, CHECKPOINT_TABEL):
-        kol = _tijdstempels(db, CHECKPOINT_TABEL, DOSSIER_TIJDSTEMPELS)
-        q = _q_tijden(CHECKPOINT_TABEL, "dossier_id", kol, GUID(),
-                      waar=None if dossier_id is None else "dossier_id", for_update=for_update)
-        for rij in db.execute(q, params):
+    tijden = ", ".join(DOSSIER_TIJDSTEMPELS)
+    for did in ([None] if dossier_ids is None else dossier_ids):
+        waar = "" if did is None else " where id = :id"
+        q = _q("select id, " + tijden + " from " + DOSSIER_TABEL + waar + " order by id" + slot,
+               None if did is None else GUID(), id=GUID(), **_tijden_kolommen(DOSSIER_TIJDSTEMPELS))
+        for rij in db.execute(q, {} if did is None else {"id": did}):
+            uit[rij[0]] = list(rij[1:])
+        if not _kolommen(db, CHECKPOINT_TABEL):
+            continue
+        waar = "" if did is None else " where dossier_id = :id"
+        q = _q("select dossier_id, " + tijden + " from " + CHECKPOINT_TABEL + waar
+               + " order by id" + slot, None if did is None else GUID(),
+               dossier_id=GUID(), **_tijden_kolommen(DOSSIER_TIJDSTEMPELS))
+        for rij in db.execute(q, {} if did is None else {"id": did}):
+            if rij[0] in uit:
+                uit[rij[0]].extend(rij[1:])
+        if "checkpoint_id" not in _kolommen(db, REVIEWBESLUIT_TABEL):
+            continue
+        waar = "" if did is None else " where c.dossier_id = :id"
+        # FOR UPDATE OF r: vergrendel de besluiten zelf; de checkpoints zijn
+        # hierboven al vergrendeld.
+        q = _q("select c.dossier_id, " + ", ".join("r." + k for k in REVIEWBESLUIT_TIJDSTEMPELS)
+               + " from " + REVIEWBESLUIT_TABEL + " r join " + CHECKPOINT_TABEL
+               + " c on c.id = r.checkpoint_id" + waar + " order by r.id"
+               + (" for update of r" if for_update else ""),
+               None if did is None else GUID(),
+               dossier_id=GUID(), **_tijden_kolommen(REVIEWBESLUIT_TIJDSTEMPELS))
+        for rij in db.execute(q, {} if did is None else {"id": did}):
             if rij[0] in uit:
                 uit[rij[0]].extend(rij[1:])
     return uit
 
 
+def _dossiers_per_lead(db: Session, lead_id: str | None, *, for_update: bool = False
+                       ) -> dict[str, list[str]]:
+    """lead-id -> id's van de dossiers die naar die lead verwijzen."""
+    if "contact_request_id" not in _kolommen(db, DOSSIER_TABEL):
+        return {}
+    waar = " where contact_request_id is not null" if lead_id is None else \
+        " where contact_request_id = :id"
+    q = _q("select contact_request_id, id from " + DOSSIER_TABEL + waar + " order by id"
+           + (" for update" if for_update else ""),
+           None if lead_id is None else StringGUID(), contact_request_id=StringGUID(), id=GUID())
+    uit: dict[str, list[str]] = {}
+    for lid, did in db.execute(q, {} if lead_id is None else {"id": lead_id}):
+        uit.setdefault(lid, []).append(did)
+    return uit
+
+
+def _lead_tijden(db: Session, lead_id: str | None, *, for_update: bool = False
+                 ) -> dict[str, list[datetime | None]]:
+    """Per lead de eigen tijdstempels plus alles van de gekoppelde dossiers.
+
+    Een dossier bewaart een kopie van naam en e-mail van de lead; zolang het
+    dossier leeft, levert het verwijderen van de lead niets op.
+    """
+    waar = "" if lead_id is None else " where id = :id"
+    q = _q("select id, " + ", ".join(LEAD_TIJDSTEMPELS) + " from " + LEAD_TABEL + waar
+           + " order by id" + (" for update" if for_update else ""),
+           None if lead_id is None else StringGUID(), id=StringGUID(),
+           **_tijden_kolommen(LEAD_TIJDSTEMPELS))
+    uit = {rij[0]: list(rij[1:]) for rij in db.execute(q, {} if lead_id is None else {"id": lead_id})}
+    if not _kolommen(db, DOSSIER_TABEL):
+        return uit
+    koppeling = _dossiers_per_lead(db, lead_id, for_update=for_update)
+    dossier_tijden = _dossier_tijden(
+        db, None if lead_id is None else koppeling.get(lead_id, []), for_update=for_update)
+    for lid, dids in koppeling.items():
+        if lid in uit:
+            for did in dids:
+                uit[lid].extend(dossier_tijden.get(did, []))
+    return uit
+
+
 def _inventaris_contacten(db: Session, *, vandaag: date
-                          ) -> tuple[list[Contact], list[Contact], list[str]]:
+                          ) -> tuple[list[Contact], list[Contact], list[str], list[str]]:
     leads: list[Contact] = []
     dossiers: list[Contact] = []
     ontbrekend = [t for t in (LEAD_TABEL, DOSSIER_TABEL, CHECKPOINT_TABEL) if not _kolommen(db, t)]
-    if LEAD_TABEL not in ontbrekend:
-        kol = _tijdstempels(db, LEAD_TABEL, LEAD_TIJDSTEMPELS)
-        for rij in db.execute(_q_tijden(LEAD_TABEL, "id", kol, StringGUID())):
-            c = Contact(soort="lead", id=rij[0], status="")
-            _beoordeel_contact(c, _laatste(rij[1:]), vandaag)
+    onvolledig, leads_kan, dossiers_kan = _volledigheid(db)
+    if leads_kan and LEAD_TABEL not in ontbrekend:
+        for lid, momenten in _lead_tijden(db, None).items():
+            c = Contact(soort="lead", id=lid, status="")
+            _beoordeel_contact(c, _laatste(momenten), vandaag)
             leads.append(c)
-    if DOSSIER_TABEL not in ontbrekend:
+    if dossiers_kan and DOSSIER_TABEL not in ontbrekend:
         for did, momenten in _dossier_tijden(db, None).items():
             c = Contact(soort="dossier", id=did, status="")
             _beoordeel_contact(c, _laatste(momenten), vandaag)
             dossiers.append(c)
-    return leads, dossiers, ontbrekend
+    return leads, dossiers, ontbrekend, onvolledig
 
 
 def _controleer_contact_opnieuw(c: Contact, laatste: datetime | None, vandaag: date) -> None:
@@ -701,27 +806,22 @@ def _controleer_contact_opnieuw(c: Contact, laatste: datetime | None, vandaag: d
 
 
 def _controleer_lead_opnieuw(db: Session, c: Contact, *, vandaag: date) -> None:
-    """Eerste stap van de transactie: vergrendel de lead en toets opnieuw.
+    """Eerste stap van de transactie: vergrendel de lead (en zijn gekoppelde
+    dossiers) en toets opnieuw.
 
     Tussen de inventaris en deze transactie kan een operator contact
-    vastleggen. Op Postgres houdt FOR UPDATE de rij vast tot de commit.
+    vastleggen. Op Postgres houdt FOR UPDATE de rijen vast tot de commit.
     """
-    kol = _tijdstempels(db, LEAD_TABEL, LEAD_TIJDSTEMPELS)
-    q = _q_tijden(LEAD_TABEL, "id", kol, StringGUID(), waar="id",
-                  for_update=db.get_bind().dialect.name == "postgresql")
-    rij = db.execute(q, {"id": c.id}).one_or_none()
-    if rij is None:
+    tijden = _lead_tijden(db, c.id, for_update=db.get_bind().dialect.name == "postgresql")
+    if c.id not in tijden:
         raise ContactVeranderd("onbekend")
-    _controleer_contact_opnieuw(c, _laatste(rij[1:]), vandaag)
+    _controleer_contact_opnieuw(c, _laatste(tijden[c.id]), vandaag)
 
 
 def _controleer_dossier_opnieuw(db: Session, c: Contact, *, vandaag: date) -> None:
-    """Idem voor een dossier: vergrendelt het dossier en zijn checkpoints.
-
-    Een nieuw checkpoint wacht op Postgres op de vergrendeling van het dossier
-    (de FK-controle) en faalt daarna, omdat het dossier weg is.
-    """
-    tijden = _dossier_tijden(db, c.id, for_update=db.get_bind().dialect.name == "postgresql")
+    """Idem voor een dossier: vergrendelt het dossier, zijn checkpoints en de
+    reviewbesluiten daaraan."""
+    tijden = _dossier_tijden(db, [c.id], for_update=db.get_bind().dialect.name == "postgresql")
     if c.id not in tijden:
         raise ContactVeranderd("onbekend")
     _controleer_contact_opnieuw(c, _laatste(tijden[c.id]), vandaag)
@@ -788,12 +888,14 @@ def opschonen_contacten(session_factory: Callable[[], Session], *, vandaag: date
                         apply: bool) -> ContactRapportage:
     """Bepaal welke leads en leerdossiers twee jaar geen contact hadden en
     verwijder ze (alleen met apply). Per lead en per dossier een transactie,
-    die eerst opnieuw toetst. Heeft de migratie van de metingen niet nodig."""
+    die eerst opnieuw toetst. Heeft de migratie van de metingen niet nodig.
+    Mist een tabel een tijdstempelkolom, dan slaat hij die soort over (zie
+    ContactRapportage.onvolledig)."""
     db = session_factory()
     try:
         if not apply:
             _alleen_lezen(db)
-        leads, dossiers, ontbrekend = _inventaris_contacten(db, vandaag=vandaag)
+        leads, dossiers, ontbrekend, onvolledig = _inventaris_contacten(db, vandaag=vandaag)
     finally:
         db.rollback()
         db.close()
@@ -810,8 +912,7 @@ def opschonen_contacten(session_factory: Callable[[], Session], *, vandaag: date
                 hercontrole=lambda db, c=c: _controleer_dossier_opnieuw(db, c, vandaag=vandaag),
                 tellen=_tellingen_dossier, schoon_op=_schoon_dossier_op)
     return ContactRapportage(apply=apply, leads=leads, dossiers=dossiers,
-                             ontbrekende_tabellen=ontbrekend)
-
+                             ontbrekende_tabellen=ontbrekend, onvolledig=onvolledig)
 
 
 _KOPPEN = {
@@ -969,6 +1070,8 @@ def main(argv: list[str] | None = None, *,
                                         apply=args.apply)
         for tabel in contacten.ontbrekende_tabellen:
             print("LET OP: tabel " + tabel + " bestaat niet in deze database; overgeslagen.")
+        for melding in contacten.onvolledig:
+            print("LET OP: " + melding + " (het laatste contact is niet volledig te bepalen).")
         for c in contacten.leads + contacten.dossiers:
             print(_contact_regel(c, apply=contacten.apply))
         print(_contact_samenvatting(contacten))
@@ -981,9 +1084,10 @@ def main(argv: list[str] | None = None, *,
               "opnieuw_gesloten_na_opschoning"}
     if any(o.status == "onbekend" for o in rapport.organisaties):
         return 1
-    # Leads en dossiers: rood bij een fout of als de termijn niet te bepalen is.
-    if contacten is not None and any(c.status in ("fout", "zonder_datum")
-                                     for c in contacten.leads + contacten.dossiers):
+    # Leads en dossiers: rood bij een fout, als de termijn niet te bepalen is,
+    # of als een soort is overgeslagen omdat een tijdstempelkolom ontbreekt.
+    if contacten is not None and (contacten.onvolledig or any(
+            c.status in ("fout", "zonder_datum") for c in contacten.leads + contacten.dossiers)):
         return 1
     return 1 if any(m.status in slecht for m in rapport.metingen) else 0
 
