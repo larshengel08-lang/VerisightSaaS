@@ -1899,6 +1899,8 @@ async def list_respondents(
     ).first()
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
+    # Deel C: na de opschoning is een lege lijst een leugen; de reden in een 410.
+    _weiger_opgeschoonde_meting(db, campaign_id)
     return campaign.respondents
 
 
@@ -2042,6 +2044,8 @@ async def campaign_stats(
     )
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
+    # Deel C: na de opschoning zou dit "0 ingevuld" zeggen; de reden in een 410.
+    _weiger_opgeschoonde_meting(db, campaign_id)
 
     respondents = campaign.respondents
     completed = [respondent for respondent in respondents if respondent.completed and respondent.response]

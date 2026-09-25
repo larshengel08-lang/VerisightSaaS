@@ -60,8 +60,34 @@ export async function loadDataPurgedAtByCampaign(
   return purged
 }
 
+/** Tweede helft van de 410-zin: wat de opschoning betekent voor het rapport. */
+const PURGED_REPORT_TAIL = 'Een nieuw rapport maken kan daarom niet meer. Een rapport dat eerder is gedownload, blijft geldig.'
+
+/**
+ * Eerste zin van de 410-melding: wanneer en waarom de gegevens weg zijn. Een
+ * pariteitstest (tests/test_data_retention_api.py) vergelijkt deze zin plus
+ * PURGED_REPORT_TAIL met ReportDataPurged in backend/data_retention.py.
+ */
+export function dataPurgedReason(purgedAtIso: string): string {
+  const dag = formatDutchDate(purgedAtIso) ?? 'een onbekende datum'
+  return `De gegevens van deze meting zijn op ${dag} verwijderd, volgens de bewaartermijn of op verzoek van jullie organisatie.`
+}
+
 /** Dezelfde zin als de 410 van de backend (backend/data_retention.py, ReportDataPurged). */
 export function dataPurgedMessage(purgedAtIso: string): string {
-  const dag = formatDutchDate(purgedAtIso) ?? 'een onbekende datum'
-  return `De gegevens van deze meting zijn op ${dag} verwijderd, volgens de bewaartermijn of op verzoek van jullie organisatie. Een nieuw rapport maken kan daarom niet meer. Een rapport dat eerder is gedownload, blijft geldig.`
+  return `${dataPurgedReason(purgedAtIso)} ${PURGED_REPORT_TAIL}`
+}
+
+/** Korte status voor lijsten en tabellen: "Gegevens verwijderd op 16 juni 2028". */
+export function dataPurgedLabel(purgedAtIso: string): string {
+  return `Gegevens verwijderd op ${formatDutchDate(purgedAtIso) ?? 'een onbekende datum'}`
+}
+
+/**
+ * Weigering bij het vastleggen van een besluit: na de opschoning zijn eigenaar
+ * en vrije tekst van het besluit bewust leeggemaakt, dus opnieuw schrijven zou
+ * die persoonsgegevens na de bewaartermijn terugzetten.
+ */
+export function dataPurgedDecisionMessage(purgedAtIso: string): string {
+  return `${dataPurgedReason(purgedAtIso)} Een besluit vastleggen kan daarom niet meer.`
 }
