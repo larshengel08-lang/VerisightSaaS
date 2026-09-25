@@ -24,11 +24,11 @@ SCANS = ("retention", "exit")
 
 # Amendement plan 3b Taak 13 (concept-sectie 7 punt 2): elke Vertrek-vraag
 # bevat een terugblik in een van deze vormen. Amendement 24-9 (A1, fixronde
-# leesronde): "toen de vertrekkers er nog werkten" is vervangen door "in de
-# periode waarin deze mensen vertrokken"; de oude vorm is geen toegestane
-# terugblik meer (zie test_vertrek_heeft_geen_oud_tijdsanker_meer).
+# leesronde, formulering Lars 25-9): "toen de vertrekkers er nog werkten" is
+# vervangen door "in de periode waar deze meting over gaat"; de oude vorm is
+# geen toegestane terugblik meer (zie test_vertrek_heeft_geen_oud_tijdsanker_meer).
 TERUGBLIK_VORMEN = (
-    "in de periode waarin deze mensen vertrokken", "een jaar geleden", "het afgelopen jaar",
+    "in de periode waar deze meting over gaat", "een jaar geleden", "het afgelopen jaar",
     "sindsdien", "voor het laatst", "de laatste wijziging", "het vorige",
 )
 
@@ -152,29 +152,32 @@ import hashlib  # noqa: E402
 import json  # noqa: E402
 
 OUD_TIJDSANKER = "toen de vertrekkers er nog werkten"
-NIEUW_TIJDSANKER = "in de periode waarin deze mensen vertrokken"
+# Tussenformulering van 24-9, op 25-9 door Lars vervangen: noemde nog de
+# mensen die vertrokken. Mag ook niet meer voorkomen.
+TUSSENVORM_TIJDSANKER = "deze mensen vertrokken"
+NIEUW_TIJDSANKER = "in de periode waar deze meting over gaat"
 A1_SLOTEN = {
-    "ldd_feedback": "En in de periode waarin deze mensen vertrokken?",
-    "ldd_escalation": "En in de periode waarin deze mensen vertrokken?",
-    "ldd_availability": "En in de periode waarin deze mensen vertrokken?",
-    "cud_safety": "En in de periode waarin deze mensen vertrokken?",
-    "cud_conflict": "En in de periode waarin deze mensen vertrokken?",
-    "cud_crossteam": "En in de periode waarin deze mensen vertrokken?",
-    "wld_scope": "En in de periode waarin deze mensen vertrokken?",
-    "wld_recovery": "En in de periode waarin deze mensen vertrokken?",
-    "rcd_alignment": "En in de periode waarin deze mensen vertrokken?",
-    "rcd_information": "En in de periode waarin deze mensen vertrokken?",
-    "grd_criteria": "Stond dat er al in de periode waarin deze mensen vertrokken?",
-    "wld_peaks": "Wie mocht dat zeggen in de periode waarin deze mensen vertrokken?",
-    "wld_friction": "Wat ervan bestond al in de periode waarin deze mensen vertrokken?",
-    "rcd_expectations": "Stonden ze er al in de periode waarin deze mensen vertrokken?",
+    "ldd_feedback": "En in de periode waar deze meting over gaat?",
+    "ldd_escalation": "En in de periode waar deze meting over gaat?",
+    "ldd_availability": "En in de periode waar deze meting over gaat?",
+    "cud_safety": "En in de periode waar deze meting over gaat?",
+    "cud_conflict": "En in de periode waar deze meting over gaat?",
+    "cud_crossteam": "En in de periode waar deze meting over gaat?",
+    "wld_scope": "En in de periode waar deze meting over gaat?",
+    "wld_recovery": "En in de periode waar deze meting over gaat?",
+    "rcd_alignment": "En in de periode waar deze meting over gaat?",
+    "rcd_information": "En in de periode waar deze meting over gaat?",
+    "grd_criteria": "Stond dat er al in de periode waar deze meting over gaat?",
+    "wld_peaks": "Wie mocht dat zeggen in de periode waar deze meting over gaat?",
+    "wld_friction": "Wat ervan bestond al in de periode waar deze meting over gaat?",
+    "rcd_expectations": "Stonden ze er al in de periode waar deze meting over gaat?",
 }
 # sha256 over json.dumps({"<factor>.<route>": tekst}, sort_keys=True,
 # ensure_ascii=False). RETENTION: de Behoud-teksten op main 37059706 (vóór de
 # fixronde). EXIT: de Vertrek-teksten van 37059706 met precies de veertien
 # vervangingen uit A1_SLOTEN toegepast, en verder niets.
 RETENTION_SHA_MAIN = "9bec2159e84a2ec73cb6c10b230e169fac17ddc69bc07880eeadb8e11534a341"
-EXIT_SHA_NA_A1 = "d7f48cd2a4a43312de08deecef5983c409af2542bf413f4f0bd073fb6bebc28d"
+EXIT_SHA_NA_A1 = "a7784fa1da84f3a8b4fab1b78439024301953eced319d6f8e21835c8201c0749"
 
 
 def _sha(scan: str) -> str:
@@ -188,6 +191,7 @@ def test_vertrek_heeft_geen_oud_tijdsanker_meer():
     for fk, rk, scan, tekst in _alle_vragen():
         if scan == "exit":
             assert OUD_TIJDSANKER not in tekst.lower(), (fk, rk, tekst)
+            assert TUSSENVORM_TIJDSANKER not in tekst.lower(), (fk, rk, tekst)
 
 
 def test_precies_de_veertien_vragen_dragen_het_nieuwe_tijdsanker():

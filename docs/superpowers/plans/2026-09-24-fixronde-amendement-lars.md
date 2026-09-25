@@ -6,11 +6,11 @@ Hoort bij `2026-09-24-fixronde-leesronde.md`, sectie "Wat Lars moet beslissen". 
 
 In `WORK_QUESTIONS` (`backend/products/shared/deepening.py`), alleen de `exit`-tekst, precies deze zinsdelen; de rest van elke vraag blijft letterlijk:
 
-- "En toen de vertrekkers er nog werkten?" wordt "En in de periode waarin deze mensen vertrokken?" bij `ldd_feedback`, `ldd_escalation`, `ldd_availability`, `cud_safety`, `cud_conflict`, `cud_crossteam`, `wld_scope`, `wld_recovery`, `rcd_alignment`, `rcd_information`.
-- `grd_criteria`: "Stond dat er al toen de vertrekkers er nog werkten?" wordt "Stond dat er al in de periode waarin deze mensen vertrokken?"
-- `wld_peaks`: "Wie mocht dat zeggen toen de vertrekkers er nog werkten?" wordt "Wie mocht dat zeggen in de periode waarin deze mensen vertrokken?"
-- `wld_friction`: "Wat ervan bestond al toen de vertrekkers er nog werkten?" wordt "Wat ervan bestond al in de periode waarin deze mensen vertrokken?"
-- `rcd_expectations`: "Stonden ze er al toen de vertrekkers er nog werkten?" wordt "Stonden ze er al in de periode waarin deze mensen vertrokken?"
+- "En toen de vertrekkers er nog werkten?" wordt "En in de periode waar deze meting over gaat?" bij `ldd_feedback`, `ldd_escalation`, `ldd_availability`, `cud_safety`, `cud_conflict`, `cud_crossteam`, `wld_scope`, `wld_recovery`, `rcd_alignment`, `rcd_information`.
+- `grd_criteria`: "Stond dat er al toen de vertrekkers er nog werkten?" wordt "Stond dat er al in de periode waar deze meting over gaat?"
+- `wld_peaks`: "Wie mocht dat zeggen toen de vertrekkers er nog werkten?" wordt "Wie mocht dat zeggen in de periode waar deze meting over gaat?"
+- `wld_friction`: "Wat ervan bestond al toen de vertrekkers er nog werkten?" wordt "Wat ervan bestond al in de periode waar deze meting over gaat?"
+- `rcd_expectations`: "Stonden ze er al toen de vertrekkers er nog werkten?" wordt "Stonden ze er al in de periode waar deze meting over gaat?"
 
 Eerst meten dat precies deze veertien sleutels de oude vorm dragen (het plan mat op `33920b49`). Guardtest: geen enkele `exit`-tekst bevat nog "toen de vertrekkers er nog werkten"; de `retention`-teksten zijn byte-identiek aan main. Werk de vertaalvragen-spec bij (`docs/superpowers/specs/2026-09-19-vertaalvragen-concept.md`) met een regel "Amendement 24-9: tijdsanker Vertrek vervangen".
 
