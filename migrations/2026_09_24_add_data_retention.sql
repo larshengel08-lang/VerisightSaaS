@@ -38,8 +38,8 @@ end $$;
 -- Om dezelfde reden bewaakt de trigger de klok van de bewaartermijn (die loopt
 -- vanaf closed_at): een klant kan een gesloten meting niet heropenen en
 -- closed_at niet verschuiven, en een meting stopzetten (is_active van waar naar
--- onwaar) kan alleen met een sluitmoment erbij; een meting zonder closed_at
--- raakt de opschoning nooit. Een sluitmoment in de toekomst (bij sluiten of
+-- onwaar) of meteen stopgezet aanmaken kan alleen met een sluitmoment erbij;
+-- een meting zonder closed_at raakt de opschoning nooit. Een sluitmoment in de toekomst (bij sluiten of
 -- aanmaken) wordt stil teruggezet naar nu in plaats van geweigerd: zo geeft een
 -- afwijkende browserklok bij archiveren geen fout, en kan niemand de termijn
 -- uitstellen. Geen enkele klantflow doet een van deze dingen (sluiten zet
@@ -65,6 +65,9 @@ begin
       if tg_op = 'INSERT' then
         if new.data_purged_at is not null then
           raise exception 'data_purged_at wordt alleen door de opschoning gezet';
+        end if;
+        if new.is_active is false and new.closed_at is null then
+          raise exception 'Sluit een meting met een sluitmoment';
         end if;
         if new.closed_at > now() then
           new.closed_at := now();

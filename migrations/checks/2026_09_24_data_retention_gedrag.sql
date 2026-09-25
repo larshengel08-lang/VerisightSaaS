@@ -16,7 +16,8 @@
 --
 -- Gevallen: klant (authenticated, geen operator), anon, operator, service-role
 -- en een directe verbinding, op: termijn, data_purged_at, heropenen van een
--- gesloten meting, closed_at verschuiven, stopzetten zonder sluitmoment, een
+-- gesloten meting, closed_at verschuiven, stopzetten zonder sluitmoment (ook
+-- bij aanmaken), een
 -- sluitmoment in de toekomst, een tweede keer sluiten (0 rijen, geen fout) en
 -- de check-constraint.
 
@@ -141,6 +142,24 @@ select pg_temp.geval('operator: open meting stopzetten zonder sluitmoment', 'aut
   'update public.campaigns set is_active = false where id = ' || quote_literal(:'OPEN') || ' returning 1', 'toegestaan (1)');
 select pg_temp.geval('directe verbinding: open meting stopzetten zonder sluitmoment', null, null,
   'update public.campaigns set is_active = false where id = ' || quote_literal(:'OPEN') || ' returning 1', 'toegestaan (1)');
+select pg_temp.geval('klant: meting stopgezet aanmaken zonder sluitmoment', 'authenticated', :'K',
+  'insert into public.campaigns (id, organization_id, name, is_active) values '
+  || '(''00000000-0000-0000-0000-000000000009'', ' || quote_literal(:'ORG') || ', ''n'', false) returning 1', 'geweigerd');
+select pg_temp.geval('anon: meting stopgezet aanmaken zonder sluitmoment', 'anon', null,
+  'insert into public.campaigns (id, organization_id, name, is_active) values '
+  || '(''00000000-0000-0000-0000-000000000009'', ' || quote_literal(:'ORG') || ', ''n'', false) returning 1', 'geweigerd');
+select pg_temp.geval('klant: meting stopgezet aanmaken met sluitmoment', 'authenticated', :'K',
+  'insert into public.campaigns (id, organization_id, name, is_active, closed_at) values '
+  || '(''00000000-0000-0000-0000-000000000009'', ' || quote_literal(:'ORG') || ', ''n'', false, now()) returning 1', 'toegestaan (1)');
+select pg_temp.geval('operator: meting stopgezet aanmaken zonder sluitmoment', 'authenticated', :'O',
+  'insert into public.campaigns (id, organization_id, name, is_active) values '
+  || '(''00000000-0000-0000-0000-000000000009'', ' || quote_literal(:'ORG') || ', ''n'', false) returning 1', 'toegestaan (1)');
+select pg_temp.geval('service_role: meting stopgezet aanmaken zonder sluitmoment', 'service_role', null,
+  'insert into public.campaigns (id, organization_id, name, is_active) values '
+  || '(''00000000-0000-0000-0000-000000000009'', ' || quote_literal(:'ORG') || ', ''n'', false) returning 1', 'toegestaan (1)');
+select pg_temp.geval('directe verbinding: meting stopgezet aanmaken zonder sluitmoment', null, null,
+  'insert into public.campaigns (id, organization_id, name, is_active) values '
+  || '(''00000000-0000-0000-0000-000000000009'', ' || quote_literal(:'ORG') || ', ''n'', false) returning 1', 'toegestaan (1)');
 select pg_temp.geval('klant: gesloten meting heropenen (is_active)', 'authenticated', :'K',
   'update public.campaigns set is_active = true where id = ' || quote_literal(:'DICHT') || ' returning 1', 'geweigerd');
 select pg_temp.geval('klant: gesloten meting heropenen (is_active en closed_at leeg)', 'authenticated', :'K',

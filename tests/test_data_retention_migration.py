@@ -54,6 +54,9 @@ def test_trigger_bewaakt_de_klok_van_de_bewaartermijn():
     # Stopzetten zonder sluitmoment: zo'n meting raakt de opschoning nooit.
     assert "coalesce(old.is_active, false) and new.is_active is false and new.closed_at is null" in sql
     assert "sluit een meting met een sluitmoment" in sql
+    # Ook bij aanmaken: een meting die meteen stopgezet is zonder closed_at.
+    assert "if new.is_active is false and new.closed_at is null then" in sql
+    assert sql.count("sluit een meting met een sluitmoment") == 2
 
 
 def test_migratie_geeft_lars_een_controle_op_auth_role():
@@ -66,7 +69,7 @@ def test_gedragscontrole_is_alleen_lokaal():
     tekst = check.read_text(encoding="utf-8")
     assert tekst.startswith("-- ALLEEN LOKAAL, NOOIT TEGEN PRODUCTIE")
     for geval in ("heropenen", "closed_at verschuiven", "sluitmoment in de toekomst", "anon",
-                  "stopzetten zonder sluitmoment"):
+                  "stopzetten zonder sluitmoment", "stopgezet aanmaken zonder sluitmoment"):
         assert geval in tekst, geval
 
 
