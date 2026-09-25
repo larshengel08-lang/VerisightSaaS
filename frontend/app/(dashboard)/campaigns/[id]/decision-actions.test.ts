@@ -10,6 +10,8 @@ let statsError: { message: string } | null = null
 let upsertRows = 1
 let upsertError: { message: string } | null = null
 let upserts: Array<{ payload: Record<string, unknown>; options: unknown }> = []
+let purgedAt: string | null = null
+let purgedError: { code?: string; message: string } | null = null
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({
@@ -17,11 +19,16 @@ vi.mock('@/lib/supabase/server', () => ({
     from: (table: string) => {
       if (table === 'campaigns') {
         return {
-          select: () => ({
+          select: (columns: string) => ({
             eq: () => ({
               single: async () => ({ data: { organization_id: 'org-1' } }),
-              maybeSingle: async () =>
-                campaignError ? { data: null, error: campaignError } : { data: { is_active: isActive }, error: null },
+              maybeSingle: async () => {
+                // Deel C: loadDataPurgedAt vraagt alleen deze kolom op.
+                if (columns === 'data_purged_at') {
+                  return purgedError ? { data: null, error: purgedError } : { data: { data_purged_at: purgedAt }, error: null }
+                }
+                return campaignError ? { data: null, error: campaignError } : { data: { is_active: isActive }, error: null }
+              },
             }),
           }),
         }
@@ -85,6 +92,8 @@ beforeEach(() => {
   upsertRows = 1
   upsertError = null
   upserts = []
+  purgedAt = null
+  purgedError = null
 })
 
 describe('saveCampaignDecisionAction (plan 3b)', () => {
@@ -126,6 +135,31 @@ describe('saveCampaignDecisionAction (plan 3b)', () => {
   it('geeft de validatiemelding terug en schrijft niets', async () => {
     const result = await saveCampaignDecisionAction('campaign-1', { ...besluit, owner: ' ' })
     expect(result).toEqual({ ok: false, error: 'Vul in wie eigenaar is van dit besluit.' })
+    expect(upserts).toHaveLength(0)
+  })
+
+  it('weigert na de opschoning met de reden in plaats van "nog niet klaar", en schrijft niets', async () => {
+    purgedAt = '2028-06-16T03:00:00Z'
+    // Ook met een formulier dat anders niet door de validatie komt: de reden gaat vóór.
+    const result = await saveCampaignDecisionAction('campaign-1', { ...besluit, owner: ' ' })
+    expect(result).toEqual({
+      ok: false,
+      error:
+        'De gegevens van deze meting zijn op 16 juni 2028 verwijderd, volgens de bewaartermijn of op verzoek van jullie organisatie. Een besluit vastleggen kan daarom niet meer.',
+    })
+    expect(upserts).toHaveLength(0)
+  })
+
+  it('slaat gewoon op als de kolom data_purged_at nog niet bestaat (migratie niet gedraaid)', async () => {
+    purgedError = { code: '42703', message: 'column campaigns.data_purged_at does not exist' }
+    expect(await saveCampaignDecisionAction('campaign-1', besluit)).toEqual({ ok: true })
+  })
+
+  it('faalt luid als niet na te gaan is of de gegevens nog bestaan', async () => {
+    purgedError = { code: '500', message: 'kapot' }
+    const result = await saveCampaignDecisionAction('campaign-1', besluit)
+    expect(result.ok).toBe(false)
+    expect(result.error).toContain('Kon niet nagaan of de gegevens van deze meting nog bestaan: kapot')
     expect(upserts).toHaveLength(0)
   })
 

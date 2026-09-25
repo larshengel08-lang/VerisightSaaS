@@ -11,6 +11,7 @@ import { loadActorContext } from '@/lib/dashboard/actor-context'
 import { getCustomerActionPermission } from '@/lib/customer-permissions'
 import { decisionToRow, normalizeDecisionInput, validateDecisionInput } from '@/lib/dashboard/campaign-decision'
 import { isReportReleaseReady } from '@/lib/response-activation'
+import { dataPurgedDecisionMessage, loadDataPurgedAt } from '@/lib/dashboard/data-purged'
 import type { ScanType } from '@/lib/types'
 
 export interface DecisionActionResult {
@@ -31,6 +32,18 @@ export async function saveCampaignDecisionAction(
   // Zelfde recht als de andere beheeracties: eigenaar of Loep-operator.
   const canManage = ctx.isAdmin || getCustomerActionPermission(ctx.role, 'review_launch')
   if (!canManage) return { ok: false, error: NOT_ALLOWED }
+
+  // Deel C: na de opschoning is campaign_stats 0; dat is geen "nog niet klaar".
+  // Vóór de validatie: wie hier niets meer kan vastleggen, hoeft geen velden
+  // te verbeteren. Een fout bij deze check (de lader gooit) komt terug als
+  // melding, nooit als stil succes.
+  let purgedAt: string | null
+  try {
+    purgedAt = await loadDataPurgedAt(ctx.supabase, campaignId)
+  } catch (err) {
+    return { ok: false, error: `Opslaan mislukt: ${err instanceof Error ? err.message : String(err)}.` }
+  }
+  if (purgedAt) return { ok: false, error: dataPurgedDecisionMessage(purgedAt) }
 
   // Eerst normaliseren, dan pas valideren, en nooit andersom: een veld met
   // alleen witruimte telt anders als ingevuld. `validateDecisionInput` neemt
