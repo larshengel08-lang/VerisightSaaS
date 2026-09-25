@@ -50,11 +50,12 @@ export default async function CampaignPage({ params }: Props) {
     )
   }
 
-  const { data: statsRow, error: statsError } = await supabase
-    .from('campaign_stats')
-    .select('*')
-    .eq('campaign_id', id)
-    .single()
+  // Deel C (bewaartermijn): data_purged_at wordt tegelijk met de statistieken
+  // geladen; een fout daarbij laat Promise.all luid falen.
+  const [{ data: statsRow, error: statsError }, purgedAt] = await Promise.all([
+    supabase.from('campaign_stats').select('*').eq('campaign_id', id).single(),
+    loadDataPurgedAt(supabase, id),
+  ])
   // .single() returns PGRST116 when no row matches: that is a genuine 404, not a load failure.
   if (statsError && statsError.code !== 'PGRST116') {
     throw new Error(`Kon campagnedetail niet laden: ${statsError.message}`)
@@ -62,9 +63,8 @@ export default async function CampaignPage({ params }: Props) {
   if (!statsRow) notFound()
   const stats = statsRow as CampaignStats
 
-  // Deel C (bewaartermijn): een opgeschoonde meting toont de reden, geen
-  // statuskaart met 0 antwoorden en geen downloadknop die 410 geeft.
-  const purgedAt = await loadDataPurgedAt(supabase, id)
+  // Een opgeschoonde meting toont de reden, geen statuskaart met 0 antwoorden
+  // en geen downloadknop die 410 geeft.
   if (purgedAt) {
     return (
       <div className="space-y-6">

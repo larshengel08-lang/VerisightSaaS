@@ -10,17 +10,25 @@ import {
 
 type Result = { data: unknown; error: { code?: string; message: string } | null }
 
+/** Nep-client voor één meting; houdt bij welke tabel, kolommen en id zijn opgevraagd. */
 function fakeSupabase(result: Result) {
-  return {
-    from: () => ({
-      select: () => ({
-        eq: () => ({
-          maybeSingle: async () => result,
+  const calls: { table: string; columns: string; column: string; value: string }[] = []
+  const client = {
+    from: (table: string) => ({
+      select: (columns: string) => ({
+        eq: (column: string, value: string) => ({
+          maybeSingle: async () => {
+            calls.push({ table, columns, column, value })
+            return result
+          },
         }),
       }),
     }),
   } as unknown as SupabaseClient
+  return { client, calls }
 }
+
+const KOLOM_ONTBREEKT = { code: '42703', message: 'column campaigns.data_purged_at does not exist' }
 
 /** Nep-client voor de lijstvariant; houdt bij welke id's zijn opgevraagd. */
 function fakeListSupabase(result: Result) {
@@ -40,34 +48,47 @@ function fakeListSupabase(result: Result) {
 
 describe('opgeschoonde meting (Deel C, bewaartermijn)', () => {
   it('geeft de datum terug als de gegevens verwijderd zijn', async () => {
-    const supabase = fakeSupabase({ data: { data_purged_at: '2028-06-16T03:00:00Z' }, error: null })
-    expect(await loadDataPurgedAt(supabase, 'c1')).toBe('2028-06-16T03:00:00Z')
+    const { client, calls } = fakeSupabase({ data: { data_purged_at: '2028-06-16T03:00:00Z' }, error: null })
+    expect(await loadDataPurgedAt(client, 'c1')).toBe('2028-06-16T03:00:00Z')
+    expect(calls).toEqual([{ table: 'campaigns', columns: 'data_purged_at', column: 'id', value: 'c1' }])
   })
 
   it('geeft null als de meting niet is opgeschoond', async () => {
-    const supabase = fakeSupabase({ data: { data_purged_at: null }, error: null })
-    expect(await loadDataPurgedAt(supabase, 'c1')).toBeNull()
+    const { client } = fakeSupabase({ data: { data_purged_at: null }, error: null })
+    expect(await loadDataPurgedAt(client, 'c1')).toBeNull()
+  })
+
+  it('geeft null als de meting niet zichtbaar is (geen rij)', async () => {
+    const { client } = fakeSupabase({ data: null, error: null })
+    expect(await loadDataPurgedAt(client, 'c1')).toBeNull()
   })
 
   it('geeft null als de kolom nog niet bestaat: zonder kolom kan er niets zijn opgeschoond', async () => {
-    const supabase = fakeSupabase({ data: null, error: { code: '42703', message: 'column does not exist' } })
-    expect(await loadDataPurgedAt(supabase, 'c1')).toBeNull()
+    const { client } = fakeSupabase({ data: null, error: KOLOM_ONTBREEKT })
+    expect(await loadDataPurgedAt(client, 'c1')).toBeNull()
   })
 
-  it('geeft ook null bij de schema-cachefout van PostgREST voor een onbekende kolom', async () => {
-    const supabase = fakeSupabase({ data: null, error: { code: 'PGRST204', message: 'column not found' } })
-    expect(await loadDataPurgedAt(supabase, 'c1')).toBeNull()
+  it('valt luid om als een andere kolom ontbreekt (tikfout of hernoeming)', async () => {
+    const { client } = fakeSupabase({
+      data: null,
+      error: { code: '42703', message: 'column campaigns.data_purged_att does not exist' },
+    })
+    await expect(loadDataPurgedAt(client, 'c1')).rejects.toThrow('Kon niet nagaan of de gegevens van deze meting nog bestaan')
   })
 
   it('valt luid om bij een andere fout', async () => {
-    const supabase = fakeSupabase({ data: null, error: { code: '500', message: 'kapot' } })
-    await expect(loadDataPurgedAt(supabase, 'c1')).rejects.toThrow('Kon niet nagaan of de gegevens van deze meting nog bestaan')
+    const { client } = fakeSupabase({ data: null, error: { code: '500', message: 'kapot' } })
+    await expect(loadDataPurgedAt(client, 'c1')).rejects.toThrow('Kon niet nagaan of de gegevens van deze meting nog bestaan')
   })
 
   it('zegt wanneer en wat dat betekent', () => {
     expect(dataPurgedMessage('2028-06-16T03:00:00Z')).toBe(
       'De gegevens van deze meting zijn op 16 juni 2028 verwijderd, volgens de bewaartermijn of op verzoek van jullie organisatie. Een nieuw rapport maken kan daarom niet meer. Een rapport dat eerder is gedownload, blijft geldig.',
     )
+  })
+
+  it('leest de dag in Nederlandse tijd, net als de backend', () => {
+    expect(dataPurgedMessage('2028-06-15T22:30:00Z')).toContain('op 16 juni 2028 verwijderd')
   })
 
   it('noemt een onleesbare datum eerlijk onbekend in plaats van een lege plek', () => {
@@ -123,8 +144,18 @@ describe('opgeschoonde metingen in een lijst (voor dashboard, rapporten en behee
   })
 
   it('geeft een lege lijst als de kolom nog niet bestaat', async () => {
-    const { client } = fakeListSupabase({ data: null, error: { code: '42703', message: 'column does not exist' } })
+    const { client } = fakeListSupabase({ data: null, error: KOLOM_ONTBREEKT })
     expect((await loadDataPurgedAtByCampaign(client, ['c1'])).size).toBe(0)
+  })
+
+  it('valt luid om als een andere kolom ontbreekt', async () => {
+    const { client } = fakeListSupabase({
+      data: null,
+      error: { code: '42703', message: 'column campaigns.idd does not exist' },
+    })
+    await expect(loadDataPurgedAtByCampaign(client, ['c1'])).rejects.toThrow(
+      'Kon niet nagaan of de gegevens van deze metingen nog bestaan',
+    )
   })
 
   it('valt luid om bij een andere fout', async () => {

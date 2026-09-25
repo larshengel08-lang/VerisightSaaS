@@ -9,16 +9,17 @@ import { formatDutchDate } from '@/lib/dashboard/format-dutch-date'
  * niets zijn opgeschoond (de opschoning weigert zonder die kolom), dus "niet
  * opgeschoond" is dan de waarheid en geen stille terugval.
  *
- * 42703: Postgres "column does not exist" (PostgREST geeft die door bij een
- * select op een onbekende kolom). PGRST204: PostgREST kent de kolom niet in
- * zijn schema-cache.
+ * Alleen 42703 ("column does not exist", door PostgREST doorgegeven bij een
+ * select op een onbekende kolom) waarvan de melding precies data_purged_at noemt, telt
+ * als "kolom ontbreekt". Een 42703 over een andere kolom (tikfout, hernoeming)
+ * valt luid om: anders ziet elke opgeschoonde meting er stil weer normaal uit.
  */
-const COLUMN_MISSING_CODES = new Set(['42703', 'PGRST204'])
+const COLUMN_NAMED = /\bdata_purged_at\b/
 
 type QueryError = { code?: string; message: string }
 
-function isColumnMissing(error: QueryError): boolean {
-  return COLUMN_MISSING_CODES.has(error.code ?? '')
+function isPurgedColumnMissing(error: QueryError): boolean {
+  return error.code === '42703' && COLUMN_NAMED.test(error.message)
 }
 
 /** Wanneer de gegevens van één meting zijn verwijderd, of null. */
@@ -29,7 +30,7 @@ export async function loadDataPurgedAt(supabase: SupabaseClient, campaignId: str
     .eq('id', campaignId)
     .maybeSingle()
   if (error) {
-    if (isColumnMissing(error)) return null
+    if (isPurgedColumnMissing(error)) return null
     throw new Error(`Kon niet nagaan of de gegevens van deze meting nog bestaan: ${error.message}`)
   }
   const value = (data as { data_purged_at?: string | null } | null)?.data_purged_at
@@ -50,7 +51,7 @@ export async function loadDataPurgedAtByCampaign(
   if (ids.length === 0) return purged
   const { data, error } = await supabase.from('campaigns').select('id, data_purged_at').in('id', ids)
   if (error) {
-    if (isColumnMissing(error)) return purged
+    if (isPurgedColumnMissing(error)) return purged
     throw new Error(`Kon niet nagaan of de gegevens van deze metingen nog bestaan: ${error.message}`)
   }
   for (const row of (data ?? []) as { id: string; data_purged_at: string | null }[]) {

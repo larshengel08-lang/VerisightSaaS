@@ -28,7 +28,7 @@ describe('pdf download button guardrails', () => {
     const source = readFileSync(new URL('./pdf-download-button.tsx', import.meta.url), 'utf8')
 
     expect(source).toContain(
-      "import { downloadErrorMessage, summarizeTechnicalDetail } from '@/lib/report-download-error'",
+      "import { downloadErrorMessage, purgedDownloadMessage, summarizeTechnicalDetail } from '@/lib/report-download-error'",
     )
     expect(source).toContain('downloadErrorMessage(response.status)')
     expect(source).toContain('Technische melding:')
@@ -42,6 +42,13 @@ describe('pdf download button guardrails', () => {
 
     expect(source).toContain('technical: summarizeTechnicalDetail(rawDetail)')
     expect(source).not.toContain('detail.trim()')
+  })
+
+  it('toont bij een 410 na de opschoning de backendzin met datum als hoofdmelding, zonder herhaling als technische melding', () => {
+    const source = readFileSync(new URL('./pdf-download-button.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('purgedDownloadMessage(response.status, rawDetail)')
+    expect(source).toContain('{ message: purgedMessage, technical: null }')
   })
 
   it('logt en toont de echte fout bij een verbindingsprobleem in plaats van een vaste "backend bereikbaar"-tekst (code review Task 9)', () => {
