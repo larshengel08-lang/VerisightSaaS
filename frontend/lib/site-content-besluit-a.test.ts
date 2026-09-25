@@ -48,10 +48,10 @@ describe('FAQ-JSON-LD na besluit A', () => {
 
   /**
    * Loep Combinatie, Pulse en de Leadership-scan zijn in juni uit het portfolio
-   * gehaald (beslissingslog 2026-06-14). De FAQ-JSON-LD van de homepage bood ze
-   * daarna nog aan Google aan; deze guard houdt ze eruit.
+   * gehaald (beslissingslog 2026-06-14). De FAQ-JSON-LD bood ze daarna nog aan
+   * Google aan; deze guard houdt ze eruit.
    */
-  it('biedt geen geschrapt product meer aan in de JSON-LD van de homepage', () => {
+  it('biedt geen geschrapt product meer aan in de FAQ-JSON-LD', () => {
     expect(antwoord('Wanneer kies je voor de combinatie?')).toBeUndefined()
     for (const [vraag, tekst] of faqs) {
       expect(`${vraag} ${tekst}`, vraag).not.toMatch(/combinatie|pulse|leadership/i)
