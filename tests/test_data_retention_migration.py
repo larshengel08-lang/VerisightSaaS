@@ -34,6 +34,7 @@ TABELLEN_PER_METING = (
     "action_center_manager_responses", "action_center_route_actions",
     "action_center_action_reviews", "action_center_route_relations",
     "action_center_review_rhythm_configs", "action_center_governance_interventions",
+    "suite_telemetry_events", "case_proof_registry",
 )
 
 
@@ -120,7 +121,9 @@ def test_gedragscontrole_is_alleen_lokaal():
                   "sluitmoment in het verleden invullen op oude inactieve meting",
                   "besluit bijwerken op opgeschoonde meting", "via ouderrij op opgeschoonde meting",
                   "routerelatie met opgeschoonde meting als doel",
-                  "directe verbinding (de opschoning)"):
+                  "directe verbinding (de opschoning)",
+                  "telemetrie-event op opgeschoonde meting",
+                  "case-proof bijwerken op opgeschoonde meting"):
         assert geval in tekst, geval
 
 

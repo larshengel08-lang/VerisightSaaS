@@ -51,6 +51,10 @@ create table public.action_center_route_relations (id uuid primary key default g
   source_campaign_id uuid, target_campaign_id uuid, note text);
 create table public.action_center_review_rhythm_configs (id uuid primary key default gen_random_uuid(),
   route_source_id uuid, note text);
+create table public.suite_telemetry_events (id uuid primary key default gen_random_uuid(), campaign_id uuid, event_type text);
+create table public.case_proof_registry (id uuid primary key, campaign_id uuid, summary text);
+grant select, insert, update, delete on public.suite_telemetry_events, public.case_proof_registry
+  to anon, authenticated, service_role;
 grant select, insert, update, delete on public.organizations, public.campaigns, public.respondents,
   public.campaign_delivery_records, public.campaign_delivery_checkpoints, public.campaign_decisions,
   public.campaign_action_audit_events, public.action_center_manager_responses,
@@ -94,6 +98,9 @@ insert into public.action_center_manager_responses values
   ('00000000-0000-0000-0000-0000000000f5', '00000000-0000-0000-0000-000000000005', '');
 insert into public.action_center_route_actions values
   ('00000000-0000-0000-0000-0000000000a5', '00000000-0000-0000-0000-000000000005', '');
+insert into public.case_proof_registry values
+  ('00000000-0000-0000-0000-0000000000c5', '00000000-0000-0000-0000-000000000005', ''),
+  ('00000000-0000-0000-0000-0000000000c3', '00000000-0000-0000-0000-000000000003', '');
 insert into public.action_center_route_relations (id, source_campaign_id, target_campaign_id, note) values
   ('00000000-0000-0000-0000-0000000000b3', '00000000-0000-0000-0000-000000000003',
    '00000000-0000-0000-0000-000000000002', '');
@@ -105,7 +112,7 @@ insert into public.action_center_route_relations (id, source_campaign_id, target
 -- De opschoning markeert meting 5 (directe verbinding, dus toegestaan).
 update public.campaigns set data_purged_at = now() where id = '00000000-0000-0000-0000-000000000005';
 
--- 4. Controlequery uit de migratie. Verwacht: t | t | t | 2 | 10 (tien tabellen
+-- 4. Controlequery uit de migratie. Verwacht: t | t | t | 2 | 12 (twaalf tabellen
 -- per meting bestaan hier; de governance-tabel niet, die slaat de migratie over).
 select
   exists (select 1 from information_schema.columns where table_schema = 'public'
@@ -294,6 +301,14 @@ select pg_temp.geval('klant: routerelatie tussen niet-opgeschoonde metingen', 'a
   'update public.action_center_route_relations set note = ''x'' where id = ''00000000-0000-0000-0000-0000000000b3'' returning 1', 'toegestaan (1)');
 select pg_temp.geval('klant: reviewritme op opgeschoonde meting', 'authenticated', :'K',
   'insert into public.action_center_review_rhythm_configs (route_source_id, note) values (' || quote_literal(:'WEG') || ', ''x'') returning 1', 'geweigerd');
+select pg_temp.geval('klant: telemetrie-event op opgeschoonde meting', 'authenticated', :'K',
+  'insert into public.suite_telemetry_events (campaign_id, event_type) values (' || quote_literal(:'WEG') || ', ''x'') returning 1', 'geweigerd');
+select pg_temp.geval('klant: telemetrie-event op open meting', 'authenticated', :'K',
+  'insert into public.suite_telemetry_events (campaign_id, event_type) values (' || quote_literal(:'OPEN') || ', ''x'') returning 1', 'toegestaan (1)');
+select pg_temp.geval('klant: case-proof bijwerken op opgeschoonde meting', 'authenticated', :'K',
+  'update public.case_proof_registry set summary = ''Anna'' where id = ''00000000-0000-0000-0000-0000000000c5'' returning 1', 'geweigerd');
+select pg_temp.geval('klant: case-proof bijwerken op niet-opgeschoonde meting', 'authenticated', :'K',
+  'update public.case_proof_registry set summary = ''x'' where id = ''00000000-0000-0000-0000-0000000000c3'' returning 1', 'toegestaan (1)');
 select pg_temp.geval('anon: besluit bijwerken op opgeschoonde meting', 'anon', null,
   'update public.campaign_decisions set owner = ''Anna'' where campaign_id = ' || quote_literal(:'WEG') || ' returning 1', 'geweigerd');
 select pg_temp.geval('operator: besluit bijwerken op opgeschoonde meting', 'authenticated', :'O',

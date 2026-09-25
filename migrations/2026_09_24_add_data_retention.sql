@@ -123,7 +123,9 @@ create trigger campaigns_retention_guard_trg
 --   campaign_id:           respondents, campaign_delivery_records,
 --                          campaign_decisions, campaign_action_audit_events,
 --                          action_center_manager_responses,
---                          action_center_route_actions
+--                          action_center_route_actions,
+--                          suite_telemetry_events, case_proof_registry
+--                          (migratie 2026_04_27, policies voor de eigenaar)
 --   via een ouderrij:      campaign_delivery_checkpoints (delivery_record_id),
 --                          action_center_action_reviews (action_id)
 --   bron en doel:          action_center_route_relations
@@ -132,7 +134,9 @@ create trigger campaigns_retention_guard_trg
 --                          in schema.sql, dus schrijfbaar als hij bestaat)
 -- Niet erbij: survey_responses (geen schrijfpolicy voor klanten) en de tabellen
 -- die alleen de operator of de service-role schrijft. Een tabel die op deze
--- omgeving niet bestaat, wordt overgeslagen.
+-- omgeving niet bestaat, wordt overgeslagen. Een tabel die pas na het draaien
+-- van deze migratie ontstaat, krijgt de trigger alleen als deze migratie
+-- opnieuw wordt gedraaid.
 -- De kolommen worden via to_jsonb gelezen: zo leest de functie nooit een kolom
 -- die op de tabel niet bestaat (hetzelfde probleem als hierboven).
 create or replace function public.guard_purged_campaign_writes()
@@ -180,7 +184,8 @@ begin
     'campaign_decisions', 'campaign_action_audit_events',
     'action_center_manager_responses', 'action_center_route_actions',
     'action_center_action_reviews', 'action_center_route_relations',
-    'action_center_review_rhythm_configs', 'action_center_governance_interventions'
+    'action_center_review_rhythm_configs', 'action_center_governance_interventions',
+    'suite_telemetry_events', 'case_proof_registry'
   ] loop
     if to_regclass('public.' || t) is not null then
       execute format('drop trigger if exists %I on public.%I', t || '_purged_guard_trg', t);
