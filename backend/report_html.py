@@ -3633,11 +3633,14 @@ BESLUIT_ONLEESBAAR = ("Loep kon niet nagaan of er al een besluit is vastgelegd i
 # tekstveld op zijn frontendlimiet zit (DECISION_LIMITS.action/.text = 600 in
 # frontend/lib/dashboard/campaign-decision.ts) duwt de besluitpagina over een
 # tweede vel; op 470 tekens per lang veld past hij nog net, op 480 niet meer.
-# BESLUIT_TEKST_MAX houdt ruime marge (300) voor natuurlijke tekst, die anders
-# wrapt dan de herhaalde-woord-fixture waarmee de knik is gemeten.
+# Daarom stond de grens op 300.
 # Fixronde leesronde 24-9 (Taak 11): het blok "Afspraak per afdeling" kwam
-# erbij, en met een aangewezen afdeling liep de pagina bij 300 weer over
-# (scripts/render_besluit_max.py, alle velden op hun limiet). Nu 240.
+# erbij, en met een aangewezen afdeling liep de pagina bij 300 weer over.
+# Gemeten met scripts/render_besluit_max.py (alle velden op hun limiet, ook
+# onderwerp en eigenaar op 120 tekens): met 240 plus de kleinere tussenruimte
+# in report_css.py (.bl-blok, .bl-rij/.bl-drie, .bl-hint) houdt het slechtste
+# geval, Loep Vertrek met een aangewezen afdeling, 25,1pt over. Het nieuwe
+# knikpunt (boven 240) is niet gemeten.
 BESLUIT_TEKST_MAX = 240
 BESLUIT_INGEKORT = ("Dit vel toont het begin van lange antwoorden; het volledige besluit staat "
                     "in het dashboard.")
@@ -3710,10 +3713,13 @@ def _zelfde_onderwerp(a: str | None, b: str | None) -> bool:
 def _bl_kort(tekst: str, max_chars: int = BESLUIT_TEKST_MAX) -> tuple[str, bool]:
     """Begrenst een lang MT-tekstveld tot max_chars op een woordgrens, zodat de
     besluitpagina één A4 blijft (spec 3b, restpunt 2). Geen stille afkap: is
-    het veld ingekort, dan meldt de pagina dat via BESLUIT_INGEKORT."""
+    het veld ingekort, dan meldt de pagina dat via BESLUIT_INGEKORT.
+    Een leesteken vlak voor de knip valt weg, anders staat er "euro...."."""
     if len(tekst) <= max_chars:
         return tekst, False
-    kort = tekst[:max_chars].rsplit(" ", 1)[0].rstrip()
+    kort = tekst[:max_chars].rsplit(" ", 1)[0].rstrip(".,;: ")
+    if not kort:
+        kort = tekst[:max_chars].rstrip(".,;: ")
     if not kort:
         kort = tekst[:max_chars].rstrip()
     return kort + "...", True

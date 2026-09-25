@@ -24,6 +24,10 @@ Varianten:
          afdelingsblok een extra zin (BESLUIT_AFDELING_SAMEN). Welke van de twee
          de pagina langer maakt, hangt van het afbreken af; daarom beide.
 
+Het script faalt hard (SystemExit) als die opzet wegvalt: 06 en vx moeten het
+afdelingsblok dragen, 08 niet, en de variant samen moet de zin
+BESLUIT_AFDELING_SAMEN tonen. Anders zou de meting stil een lichter geval meten.
+
 Gebruik: python scripts/render_besluit_max.py
 """
 from __future__ import annotations
@@ -39,6 +43,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+from backend.report_html import BESLUIT_AFDELING_LABEL, BESLUIT_AFDELING_SAMEN  # noqa: E402
 from scripts import stresstest_report as st  # noqa: E402
 
 LIMIETBRON = ROOT / "frontend" / "lib" / "dashboard" / "campaign-decision.ts"
@@ -98,16 +103,22 @@ VERTREK_AFDELING = st.Scenario(
     dept_shift={"Operations": -2.8},
 )
 
-_AFDELING_RE = re.compile(r'Afspraak per afdeling</div><div class="bl-vast">([^<]*)</div>')
+_AFDELING_RE = re.compile(re.escape(html.escape(BESLUIT_AFDELING_LABEL))
+                          + r'</div><div class="bl-vast">([^<]*)</div>')
 
 
-def _afdelingsonderwerp(pad: Path) -> str | None:
-    """Het onderwerp in het afdelingsblok ("Operations: <onderwerp>"), of None."""
-    m = _AFDELING_RE.search(pad.read_text(encoding="utf-8"))
+def _afdelingsblok(pad: Path) -> tuple[bool, str | None]:
+    """Draagt de besluitpagina het afdelingsblok, en met welk onderwerp
+    ("Operations: <onderwerp>")? Een blok zonder onderwerp geeft (True, None)."""
+    tekst = pad.read_text(encoding="utf-8")
+    if html.escape(BESLUIT_AFDELING_LABEL) not in tekst:
+        return False, None
+    m = _AFDELING_RE.search(tekst)
     if not m:
-        return None
+        raise SystemExit("afdelingsblok in " + pad.name + " heeft een onverwachte vorm; "
+                         "pas _AFDELING_RE aan")
     vast = html.unescape(m.group(1))
-    return vast.split(": ", 1)[1] if ": " in vast else None
+    return True, (vast.split(": ", 1)[1] if ": " in vast else None)
 
 
 def main() -> int:
@@ -121,30 +132,44 @@ def main() -> int:
         data["decision_unavailable"] = False
         return data
 
-    scenarios = [next(s for s in st.SCENARIOS if s.num == num) for num in ("06", "08")]
-    scenarios.append(VERTREK_AFDELING)
+    # (scenario, moet het afdelingsblok dragen)
+    scenarios = [(next(s for s in st.SCENARIOS if s.num == "06"), True),
+                 (next(s for s in st.SCENARIOS if s.num == "08"), False),
+                 (VERTREK_AFDELING, True)]
 
     with tempfile.TemporaryDirectory() as tmp:
         st.OUT_DIR = Path(tmp)
         st.build_report_data = met_besluit
         try:
             doelmap.mkdir(parents=True, exist_ok=True)
-            for sc in scenarios:
+            # Oude uitvoer eerst weg: faalt deze run, dan mag er geen eerdere
+            # (mogelijk lichtere) render blijven staan die render_in_image meet.
+            for oud in doelmap.glob("zz_besluitmax_*.html"):
+                oud.unlink()
+            for sc, verwacht_afdeling in scenarios:
                 besluit.clear()
                 besluit.update(_besluit())
                 bron = Path(st.run_scenario(sc)["html"])
+                heeft_afdeling, onderwerp = _afdelingsblok(bron)
+                if heeft_afdeling != verwacht_afdeling:
+                    raise SystemExit(sc.key + ": afdelingsblok " + ("wel" if heeft_afdeling else "niet")
+                                     + " aanwezig, verwacht " + ("wel" if verwacht_afdeling else "niet")
+                                     + "; het slechtste geval wordt niet meer gemeten")
                 doel = doelmap / ("zz_besluitmax_max_" + bron.name)
                 shutil.copyfile(bron, doel)
                 print("geschreven: " + str(doel.relative_to(ROOT)))
 
-                onderwerp = _afdelingsonderwerp(bron)
-                if onderwerp is None:
-                    print("  geen aangewezen afdeling in " + sc.key + ": geen variant samen")
+                if not heeft_afdeling:
+                    print("  " + sc.key + ": geen aangewezen afdeling (zo verwacht), geen variant samen")
                     continue
+                if onderwerp is None:
+                    raise SystemExit(sc.key + ": afdelingsblok zonder onderwerp; variant samen kan niet")
                 besluit.clear()
                 besluit.update(_besluit(tweede_onderwerp=onderwerp))
                 bron = Path(st.run_scenario(sc)["html"])
                 doel = doelmap / ("zz_besluitmax_samen_" + bron.name)
+                if html.escape(BESLUIT_AFDELING_SAMEN) not in bron.read_text(encoding="utf-8"):
+                    raise SystemExit(sc.key + ": variant samen toont BESLUIT_AFDELING_SAMEN niet")
                 shutil.copyfile(bron, doel)
                 print("geschreven: " + str(doel.relative_to(ROOT)) + " (tweede onderwerp: "
                       + onderwerp + ")")

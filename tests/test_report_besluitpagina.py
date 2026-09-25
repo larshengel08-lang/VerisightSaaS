@@ -239,8 +239,12 @@ def test_ingevuld_terugkoppelingsplan_wordt_geescaped():
 # Gemeten in het productie-image (WeasyPrint 70.0, zie het commitbericht): een
 # besluit met alle vier lange velden op de frontendlimiet (600 tekens,
 # DECISION_LIMITS.action/.text) duwt de pagina over een tweede vel. Op 470
-# tekens per veld past hij nog net, op 480 niet meer. BESLUIT_TEKST_MAX houdt
-# ruime marge.
+# tekens per veld past hij nog net, op 480 niet meer; de grens werd 300.
+# Taak 11 (fixronde 24-9): met het blok "Afspraak per afdeling" liep hij bij
+# 300 weer over. Nu 240 plus kleinere tussenruimte (hefboom F); het slechtste
+# geval (Loep Vertrek met een afdeling, onderwerp en eigenaar op 120 tekens,
+# scripts/render_besluit_max.py) houdt 25,1pt over. Het nieuwe knikpunt is
+# niet gemeten.
 from backend.report_html import BESLUIT_INGEKORT, BESLUIT_TEKST_MAX, _bl_kort
 
 
@@ -284,7 +288,7 @@ def test_elk_lang_veld_triggert_de_melding(veld):
     assert BESLUIT_INGEKORT in _plain(html)
 
 
-def test_besluit_tekst_max_past_ook_bij_een_aangewezen_afdeling():
+def test_besluit_tekst_max_is_de_gemeten_waarde():
     # Fixronde leesronde 24-9, Taak 11: met het blok "Afspraak per afdeling"
     # liep de besluitpagina bij 300 tekens per lang veld over naar een tweede
     # vel (06 en Loep Vertrek met een afdeling, alle velden op hun limiet;
@@ -306,9 +310,21 @@ def test_besluitpagina_css_wint_ruimte_tussen_blokken_niet_op_de_schrijflijnen()
     assert "height: 24px" in _css_regel(css, ".bl-line")
     assert "margin-top: 12px" in _css_regel(css, ".bl-blok")
     assert "margin-top: 10px" in _css_regel(css, ".bl-rij, .bl-drie")
+    assert "font-size: 11px" in _css_regel(css, ".bl-tekst")
+    assert "font-size: 8.5px" in _css_regel(css, ".bl-lbl")
     hint = _css_regel(css, ".bl-hint")
     assert "font-size: 8.5px" in hint
     lh = re.search(r"line-height:\s*([\d.]+)", hint)
     assert lh and float(lh.group(1)) >= 1.3
-    for sel in (".bl-blok", ".bl-rij, .bl-drie", ".bl-hint", ".bl-line", ".bl-lbl"):
+    for sel in (".bl-blok", ".bl-rij, .bl-drie", ".bl-hint", ".bl-line", ".bl-lbl", ".bl-tekst"):
         assert len(re.findall(r"(?m)^" + re.escape(sel) + r"\s*\{", css)) == 1, sel
+
+
+@pytest.mark.parametrize("teken", [".", ",", ";", ":"])
+def test_bl_kort_zet_geen_ellips_achter_leestekens(teken):
+    # Valt de knip net na een leesteken, dan geen "euro...." maar "euro...".
+    woord = "x" * 20
+    tekst = (woord + teken + " ") * 30  # knip op een woordgrens na het leesteken
+    kort, afgekapt = _bl_kort(tekst, max_chars=44)
+    assert afgekapt is True
+    assert kort == woord + teken + " " + woord + "..."
