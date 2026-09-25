@@ -110,11 +110,14 @@ def test_met_kolom_maar_niet_opgeschoond_geen_410(db_session: Session):
 
 
 def test_niet_opgeschoonde_meting_gaat_door_naar_de_rapportgeneratie(client, db_session: Session):
-    """Zonder opschoning geen 410: de preview komt bij de gewone rapportgeneratie
-    (die hier op een lege meting 422 of 200 geeft, maar nooit 410)."""
+    """Zonder opschoning geen 410: de preview bouwt het gewone HTML-rapport
+    (lokaal kan dat zonder WeasyPrint, dus hier een echte 200)."""
     cid = _campagne(db_session, met_kolom=True, opgeschoond=False)
     res = client.get("/api/campaigns/" + cid + "/report-preview")
-    assert res.status_code != 410
+    assert res.status_code == 200
+    assert res.headers["content-type"].startswith("text/html")
+    assert "<title>Loep Behoud" in res.text
+    assert "verwijderd, volgens de bewaartermijn" not in res.text
 
 
 def test_generate_report_pdf_weigert_ook_rechtstreeks(db_session: Session):
@@ -122,3 +125,29 @@ def test_generate_report_pdf_weigert_ook_rechtstreeks(db_session: Session):
     cid = _campagne(db_session, met_kolom=True, opgeschoond=True)
     with pytest.raises(dr.ReportDataPurged):
         _generate_report_pdf(cid, db_session)
+
+
+@pytest.mark.parametrize("pad,headers", [
+    ("/api/internal/campaigns/{id}/report", {}),
+    ("/api/campaigns/{id}/report", {"x-api-key": "key-race"}),
+])
+def test_opschoning_tussen_controle_en_generatie_geeft_410(client, db_session: Session,
+                                                          monkeypatch, pad, headers):
+    """Race: de opschoning landt na de controle in de route maar vóór de
+    generatie. _generate_report_pdf ziet dat bij de tweede controle; de route
+    moet dan een 410 geven, geen 500."""
+    import backend.main as main
+
+    cid = _campagne(db_session, met_kolom=False, opgeschoond=False, api_key="key-race")
+    aanroepen: list[str] = []
+
+    def eerst_beschikbaar_dan_weg(db, campaign_id):
+        aanroepen.append(campaign_id)
+        if len(aanroepen) >= 2:
+            raise dr.ReportDataPurged(datetime(2027, 1, 2, 3, 0, tzinfo=timezone.utc))
+
+    monkeypatch.setattr(main, "ensure_report_data_available", eerst_beschikbaar_dan_weg)
+    res = client.get(pad.format(id=cid), headers=headers)
+    assert aanroepen == [cid, cid]
+    assert res.status_code == 410
+    _assert_melding(res.json()["detail"])

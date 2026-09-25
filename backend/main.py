@@ -2125,7 +2125,22 @@ def _weiger_opgeschoonde_meting(db: Session, campaign_id: str) -> None:
     try:
         ensure_report_data_available(db, campaign_id)
     except ReportDataPurged as exc:
-        raise HTTPException(status_code=410, detail=str(exc)) from exc
+        raise _gone(exc) from exc
+
+
+def _gone(exc: ReportDataPurged) -> HTTPException:
+    """De 410 voor een opgeschoonde meting; één mapping voor alle routes."""
+    return HTTPException(status_code=410, detail=str(exc))
+
+
+def _pdf_of_410(campaign_id: str, db: Session) -> tuple[bytes, str]:
+    """_generate_report_pdf voor de PDF-routes. Landt de opschoning tussen de
+    controle in de route en de generatie, dan alsnog een 410 in plaats van een
+    500 (_generate_report_pdf controleert zelf opnieuw)."""
+    try:
+        return _generate_report_pdf(campaign_id, db)
+    except ReportDataPurged as exc:
+        raise _gone(exc) from exc
 
 
 def _generate_report_pdf(campaign_id: str, db: "Session") -> tuple[bytes, str]:
@@ -2213,7 +2228,7 @@ async def download_report(
             headers={"Content-Disposition": f'attachment; filename="Loep_{safe_name}.csv"'},
         )
 
-    export_bytes, design = _generate_report_pdf(campaign_id, db)
+    export_bytes, design = _pdf_of_410(campaign_id, db)
     return Response(
         content=export_bytes,
         media_type="application/pdf",
@@ -2260,7 +2275,7 @@ async def download_report_internal(
             headers={"Content-Disposition": f'attachment; filename="Loep_{safe_name}.csv"'},
         )
 
-    export_bytes, design = _generate_report_pdf(campaign_id, db)
+    export_bytes, design = _pdf_of_410(campaign_id, db)
     return Response(
         content=export_bytes,
         media_type="application/pdf",
