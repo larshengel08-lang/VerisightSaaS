@@ -2771,7 +2771,7 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
   {dir_block}
   <div class="no-break agenda-slot">
   {werkvragen_html}
-  <div class="agenda-dark" style="margin-top:16px;">
+  <div class="agenda-dark" style="margin-top:10px;">
     <div class="agenda-opener">
       <div style="font-family:'JetBrains Mono', monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#E8A020;margin-bottom:7px;">Gespreksopener</div>
       <p style="margin-bottom:0;font-size:12.5px;line-height:1.6;color:#F4F1EA;">{_h(opener_vraag)}</p>
@@ -3569,7 +3569,7 @@ def _werkvragen_block(ranked: list[dict], deep_agg: dict, direction_agg: dict,
             # met de niets-optie apart gewogen. Leeg in elke andere staat.
             weging = _richtingen_weging(st, scan_type, fk) if st else ""
             if weging:
-                vertaal_cel += '<div class="wq-hint">' + _h(weging) + "</div>"
+                vertaal_cel += '<div class="wq-weging">' + _h(weging) + "</div>"
             # Amendement 24-9 (A2): de aansturingshint alleen bij Loep Behoud.
             # Bij Loep Vertrek staat de namenregel boven het blok.
             if fk == "leadership" and scan_type == "retention":

@@ -1079,3 +1079,39 @@ def test_werkvragen_tonen_de_weging_onder_de_verdeeld_zin(gevuld):
     # Alleen bij de verdeelde kaart: het startpunt (growth) staat in clear.
     start = _plain(html[:html.index("Tweede punt: Werkdruk en herstelruimte")])
     assert "De meest gekozen richtingen" not in start
+
+
+from backend.report_css import build_css  # noqa: E402
+
+
+def test_weging_staat_in_een_eigen_leesbare_klasse(gevuld):
+    """De weging is een leesregel: niet de 8,5px van .wq-hint maar 9,5px."""
+    html = _werkvragen_block(RANKED, {}, DIRECTION, "retention")
+    assert '<div class="wq-weging">De meest gekozen richtingen' in html
+    css = build_css("retention")
+    regel = re.search(r"^\.wq-weging \{([^}]*)\}", css, re.MULTILINE)
+    assert regel, ".wq-weging ontbreekt"
+    px = float(re.search(r"font-size: ([\d.]+)px", regel.group(1)).group(1))
+    assert px >= 9.5, px
+
+
+def test_css_houdt_het_agendaslot_compact():
+    """Hefboom E (Taak 10): de maten waarmee het agendaslot met de weging op
+    hetzelfde vel blijft. Dat het past, bewijst alleen de render in het
+    productie-image (regel paginavulling); deze test bewaakt tegen per
+    ongeluk wijzigen en tegen een tweede, overschrijvende regel."""
+    css = build_css("retention")
+    for regel in (".wq-block { margin-top: 10px;",
+                  ".wq-tbl td { font-size: 10px; line-height: 1.42; color: #374151; padding: 3px 0;",
+                  ".agenda-slot .agenda-dark { padding: 10px 16px; }",
+                  ".agenda-slot .agenda-opener { margin-top: 0; padding-top: 10px; margin-bottom: 12px; }"):
+        assert regel in css, regel
+    for selector in (".wq-block", ".wq-tbl td", ".wq-weging", ".wq-hint",
+                     ".agenda-slot .agenda-dark", ".agenda-slot .agenda-opener"):
+        treffers = re.findall(r"^" + re.escape(selector) + r" \{", css, re.MULTILINE)
+        assert len(treffers) == 1, (selector, len(treffers))
+    # De marge boven het navy vlak staat inline in _prioriteringsraster.
+    import inspect
+    from backend.report_html import _prioriteringsraster
+    assert ('<div class="agenda-dark" style="margin-top:10px;">'
+            in inspect.getsource(_prioriteringsraster))

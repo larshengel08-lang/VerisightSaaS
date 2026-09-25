@@ -296,8 +296,8 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .fill-steps .step { width: 33.3%; padding: 10px 12px; }
 .fill-steps .step-sublbl { margin-top: 0; }
 .fill-steps .step-fill-hint { margin-bottom: 0; }
-.agenda-slot .agenda-dark { padding: 14px 16px; }
-.agenda-slot .agenda-opener { padding-top: 10px; margin-bottom: 12px; }
+.agenda-slot .agenda-dark { padding: 10px 16px; }
+.agenda-slot .agenda-opener { margin-top: 0; padding-top: 10px; margin-bottom: 12px; }
 .agenda-opener { border-left: 3px solid #E8A020; border-top: 1px solid #2A3D52;
   padding: 14px 0 0 16px; margin-top: 16px; }
 
@@ -383,13 +383,21 @@ p  { margin-bottom: 6px; font-size: 11px; }
   break-inside: avoid; page-break-inside: avoid; }
 
 /* ── Werkvragen "Zo maak je er een besluit van" (plan 3b) ── */
-.wq-block { margin-top: 16px; break-inside: avoid; }
+/* Hefboom E (fixronde leesronde, Taak 10): de weging onder de verdeeld-zin maakte
+   het agendaslot (no-break) 31 tot 42pt hoger, en dan verhuisde het slot in
+   10, 15 en voorbeeldrapport_loep naar een eigen vel. De marges hier, de
+   celpadding en de navy-marges in .agenda-slot zijn daarom krapper; gemeten
+   in het productie-image (10 en 15 eindigen op y=781/780 van ongeveer 783). */
+.wq-block { margin-top: 10px; break-inside: avoid; }
 .wq-card { width: 50%; vertical-align: top; background: #FFFFFF; border-left: 3px solid """ + accent + r"""; padding: 10px 14px; }
 .wq-tbl { width: 100%; border-collapse: collapse; }
-.wq-tbl td { font-size: 10px; line-height: 1.5; color: #374151; padding: 5px 0; vertical-align: top; border-bottom: 1px solid """ + HAIRLINE + r"""; }
+.wq-tbl td { font-size: 10px; line-height: 1.42; color: #374151; padding: 3px 0; vertical-align: top; border-bottom: 1px solid """ + HAIRLINE + r"""; }
 .wq-tbl tr:last-child td { border-bottom: none; }
 .wq-stap { width: 22%; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: """ + accent_lo + r"""; padding-right: 8px; }
 .wq-hint { font-size: 8.5px; font-style: italic; color: """ + STEEL + r"""; margin-top: 4px; }
+/* De weging onder de verdeeld-zin (R6/V9, fixronde 24-9) is een leesregel, geen
+   voetnoot: daarom niet de 8,5px van .wq-hint maar minstens 9,5px. */
+.wq-weging { font-size: 9.5px; line-height: 1.4; font-style: italic; color: """ + STEEL + r"""; margin-top: 4px; }
 
 /* ── Besluitpagina "Besluit van het MT" (plan 3b): lijnen voor de pen ── */
 /* break-after: de appendix stroomt (.sec zonder .pb) en zou anders onder het
