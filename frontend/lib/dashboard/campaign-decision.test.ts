@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
   DECISION_LIMITS,
+  DECISION_SECOND_POINT_HINT,
+  DECISION_SUCCESS_LABEL,
+  decisionFeedbackHintFor,
+  decisionFollowUpHintFor,
   decisionFromRow,
   decisionToRow,
   normalizeDecisionInput,
@@ -242,5 +246,59 @@ describe('robuustheid tegen onbetrouwbare invoer (codekwaliteitsreview taak 10)'
     } as unknown as CampaignDecisionInput
     expect(() => validateDecisionInput(onvolledig)).not.toThrow()
     expect(validateDecisionInput(onvolledig)).toBeNull()
+  })
+})
+
+describe('labels en hints van "Besluit vastleggen" (fixronde 24-9)', () => {
+  // Letterlijk BESLUIT_TERUGKOPPELING en BESLUIT_REVIEW_HINT in backend/report_html.py.
+  const FEEDBACK = {
+    retention:
+      'Deel het startpunt, het beeld van de hele organisatie en wat het MT besluit. Deel geen open antwoorden en geen uitkomsten van afdelingen met minder dan 10 antwoorden.',
+    exit: 'Wie invulde, is vertrokken: koppel terug aan wie er nu werkt, over wat het MT met de vertrekredenen doet. Deel geen open antwoorden en geen uitkomsten van afdelingen met minder dan 10 antwoorden.',
+    onboarding: 'Je mensen vulden in; ze horen wat het MT ermee doet.',
+  } as const
+  const REVIEW = {
+    retention: 'Richtlijn: 45 tot 90 dagen na dit gesprek.',
+    exit: 'Richtlijn: 45 tot 90 dagen na dit gesprek.',
+    onboarding: 'Richtlijn: rond het volgende checkpoint.',
+  } as const
+  const ONBEKEND = ['pulse', 'team', 'leadership', 'culture_assessment', 'onbekend', 'constructor', '', null, undefined]
+
+  it('heeft het slotlabel en de parkeerregel van de besluitpagina', () => {
+    expect(DECISION_SUCCESS_LABEL).toBe('Waaraan zien we bij het startpunt dat het werkt')
+    expect(DECISION_SECOND_POINT_HINT).toBe(
+      'Spreken jullie hier vandaag iets over af, schrijf dan bij ‘Wat precies’ ook wie het oppakt. Anders parkeren jullie dit punt: de eigenaar van het startpunt zet het op de agenda van het vervolgmoment.',
+    )
+  })
+
+  it('toont per scan de terugkoppelhint van die scan', () => {
+    for (const scanType of ['retention', 'exit', 'onboarding'] as const) {
+      expect(decisionFeedbackHintFor(scanType)).toBe(FEEDBACK[scanType])
+    }
+  })
+
+  it('toont bij een onbekend of ontbrekend scantype geen terugkoppelhint, nooit die van een andere scan', () => {
+    for (const scanType of ONBEKEND) expect(decisionFeedbackHintFor(scanType)).toBeNull()
+  })
+
+  it('toont bij het vervolgmoment de richtlijn van de eigen scan', () => {
+    for (const scanType of ['retention', 'exit', 'onboarding'] as const) {
+      expect(decisionFollowUpHintFor(scanType)).toBe('Kies een datum, geen termijn. ' + REVIEW[scanType])
+    }
+  })
+
+  it('toont bij een onbekend scantype alleen de datumregel, geen richtlijn van een andere scan', () => {
+    for (const scanType of ONBEKEND) expect(decisionFollowUpHintFor(scanType)).toBe('Kies een datum, geen termijn.')
+  })
+
+  it('gebruikt geen streepjes', () => {
+    for (const tekst of [
+      DECISION_SUCCESS_LABEL,
+      DECISION_SECOND_POINT_HINT,
+      ...Object.values(FEEDBACK),
+      ...Object.values(REVIEW),
+    ]) {
+      expect(tekst).not.toMatch(/[\u2013\u2014]/)
+    }
   })
 })

@@ -3551,6 +3551,13 @@ BESLUIT_VOETREGEL = ("Leg dit besluit ook vast in je dashboard. Loep drukt het d
 BESLUIT_SLOTLABEL = "Waaraan zien we bij het startpunt dat het werkt"
 BESLUIT_GEEN_STARTPUNT = "Dit rapport wijst nog geen startpunt aan; kies zelf het onderwerp."
 BESLUIT_DATUM_HINT = "Kies een datum, geen termijn."
+# De richtlijn voor het vervolgmoment per scan. Het dashboard toont dezelfde
+# tekst (DECISION_REVIEW_HINTS in frontend/lib/dashboard/campaign-decision.ts).
+BESLUIT_REVIEW_HINT = {
+    "retention": "Richtlijn: 45 tot 90 dagen na dit gesprek.",
+    "exit": "Richtlijn: 45 tot 90 dagen na dit gesprek.",
+    "onboarding": "Richtlijn: rond het volgende checkpoint.",
+}
 BESLUIT_ONLEESBAAR = ("Loep kon niet nagaan of er al een besluit is vastgelegd in het dashboard; "
                       "vul het hieronder in.")
 # Meting (2026-09-20, productie-image WeasyPrint 70.0): een besluit waarin elk
@@ -3574,8 +3581,9 @@ BESLUIT_AFDELING_SAMEN = "Dit onderwerp is ook het tweede punt; neem de afdeling
 # R4 (koude leesronde 24-9): het tweede punt had geen eigenaar en geen datum.
 # Geen eigen kolommen (zie plan, "Besluit over de migratie"), wel een regel die
 # het punt een eigenaar en een datum geeft: die van het startpunt.
-# Het dashboard (frontend/components/dashboard/decision-block.tsx) toont
-# dezelfde tekst; tests/test_report_leesronde_fixes.py houdt ze gelijk.
+# Alleen als er een tweede punt is, zoals rij 5 van de leidraad. Het dashboard
+# toont dezelfde tekst (frontend/lib/dashboard/campaign-decision.ts);
+# tests/test_report_leesronde_fixes.py houdt ze gelijk.
 BESLUIT_PARKEERREGEL = ("Spreken jullie hier vandaag iets over af, schrijf dan bij ‘Wat precies’ "
                         "ook wie het oppakt. Anders parkeren jullie dit punt: de eigenaar van het "
                         "startpunt zet het op de agenda van het vervolgmoment.")
@@ -3709,6 +3717,8 @@ def _besluit_page(*, opener_html: str, scan_type: str, campaign_name: str,
     tweede_onderwerp = d.get("secondary_topic") or tweede_label
     tweede_lbl = "Tweede punt" if tweede_onderwerp else "Tweede punt (als jullie er een kiezen)"
     tweede = _onderwerp(tweede_onderwerp, "")
+    # Zonder tweede punt valt er niets te parkeren (zelfde regel als de leidraad).
+    parkeerregel = BESLUIT_PARKEERREGEL if tweede_onderwerp else ""
     if decision:
         status = ('<p class="bl-status">Vastgelegd in het dashboard, laatst bijgewerkt op '
                   + _h(_datum_nl(decision.get("updated_at")) or "een onbekende datum")
@@ -3814,7 +3824,7 @@ def _besluit_page(*, opener_html: str, scan_type: str, campaign_name: str,
   </tr></table>
   <div class="bl-blok">
     {_bl_veld(tweede_lbl, tweede)}
-    {_bl_veld("Wat precies", wat2, BESLUIT_PARKEERREGEL)}
+    {_bl_veld("Wat precies", wat2, parkeerregel)}
   </div>
   {afdeling_html}
   <div class="bl-blok">
@@ -6619,7 +6629,7 @@ def render_exit_report_html(data: dict) -> str:
         scan_type="exit", campaign_name=data["campaign_name"],
         startpunt_label=next((r["label"] for r in _raster_rows if r["agenda_role"] == "startpunt"), None),
         tweede_label=_tweede_row["label"] if _tweede_row else None,
-        review_hint="Richtlijn: 45 tot 90 dagen na dit gesprek.",
+        review_hint=BESLUIT_REVIEW_HINT["exit"],
         heeft_werkvragen=bool(_wq_block),
         decision=data.get("decision"),
         decision_unavailable=bool(data.get("decision_unavailable")),
@@ -7035,7 +7045,7 @@ def render_retention_report_html(data: dict) -> str:
         scan_type=ST, campaign_name=data["campaign_name"],
         startpunt_label=next((r["label"] for r in _raster_rows if r["agenda_role"] == "startpunt"), None),
         tweede_label=_tweede_row["label"] if _tweede_row else None,
-        review_hint="Richtlijn: 45 tot 90 dagen na dit gesprek.",
+        review_hint=BESLUIT_REVIEW_HINT[ST],
         heeft_werkvragen=bool(_wq_block),
         decision=data.get("decision"),
         decision_unavailable=bool(data.get("decision_unavailable")),
@@ -7551,7 +7561,7 @@ def render_onboarding_report_html(data: dict) -> str:
         scan_type=ST, campaign_name=data["campaign_name"],
         startpunt_label=_fl(_ob_startpunt_fk, ST) if _ob_startpunt_fk and not _geen_profiel else None,
         tweede_label=_fl(_ob_second_fk, ST) if _ob_second_fk and not _geen_profiel else None,
-        review_hint="Richtlijn: rond het volgende checkpoint.",
+        review_hint=BESLUIT_REVIEW_HINT[ST],
         heeft_werkvragen=False,
         decision=data.get("decision"),
         decision_unavailable=bool(data.get("decision_unavailable")))

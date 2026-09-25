@@ -1,22 +1,18 @@
 import { readFileSync } from 'node:fs'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
-// Alleen voor de gedragstest van feedbackHintFor: het blok zelf wordt niet
-// gerenderd, maar de module importeert de router en de server action.
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: () => {} }) }))
-vi.mock('@/app/(dashboard)/campaigns/[id]/decision-actions', () => ({ saveCampaignDecisionAction: vi.fn() }))
-
-const { feedbackHintFor } = await import('./decision-block')
-
-// Letterlijk BESLUIT_TERUGKOPPELING in backend/report_html.py.
-const FEEDBACK = {
-  retention:
-    'Deel het startpunt, het beeld van de hele organisatie en wat het MT besluit. Deel geen open antwoorden en geen uitkomsten van afdelingen met minder dan 10 antwoorden.',
-  exit: 'Wie invulde, is vertrokken: koppel terug aan wie er nu werkt, over wat het MT met de vertrekredenen doet. Deel geen open antwoorden en geen uitkomsten van afdelingen met minder dan 10 antwoorden.',
-  onboarding: 'Je mensen vulden in; ze horen wat het MT ermee doet.',
-} as const
-
+// De teksten zelf staan in lib/dashboard/campaign-decision.ts en worden daar
+// getest (en door tests/test_report_leesronde_fixes.py gelijk gehouden met de
+// besluitpagina). Hier: dat het blok ze gebruikt, en goed koppelt.
 const source = readFileSync(new URL('./decision-block.tsx', import.meta.url), 'utf8')
+
+const HINT_IDS = [
+  'decision-hint-primary-action',
+  'decision-hint-owner',
+  'decision-hint-follow-up',
+  'decision-hint-second-point',
+  'decision-hint-feedback',
+]
 
 describe('blok "Besluit vastleggen" (plan 3b, spec 2026-09-16 par. 7)', () => {
   it('heeft dezelfde velden als de besluitpagina in het rapport', () => {
@@ -28,31 +24,36 @@ describe('blok "Besluit vastleggen" (plan 3b, spec 2026-09-16 par. 7)', () => {
       'Datum vervolgmoment',
       'Tweede punt',
       'Terugkoppeling aan medewerkers',
-      'Waaraan zien we bij het startpunt dat het werkt',
     ]) {
       expect(source).toContain(label)
     }
+    expect(source).toContain('{DECISION_SUCCESS_LABEL}')
+    expect(source).toContain('label={DECISION_SUCCESS_LABEL}')
   })
 
-  it('volgt de besluitpagina: parkeerregel bij het tweede punt en wat je terugkoppelt', () => {
-    expect(source).toContain(
-      'Spreken jullie hier vandaag iets over af, schrijf dan bij ‘Wat precies’ ook wie het oppakt. Anders parkeren jullie dit punt: de eigenaar van het startpunt zet het op de agenda van het vervolgmoment.',
-    )
-    for (const hint of Object.values(FEEDBACK)) expect(source).toContain(hint)
+  it('volgt de besluitpagina: parkeerregel, richtlijn en terugkoppeling per scan', () => {
+    expect(source).toContain('{DECISION_SECOND_POINT_HINT}')
+    expect(source).toContain('decisionFeedbackHintFor(scanType)')
+    expect(source).toContain('decisionFollowUpHintFor(scanType)')
     expect(source).not.toContain('Alleen als jullie er een kiezen.')
+    expect(source).not.toContain('45 tot 90 dagen')
+    expect(source).not.toContain('Je mensen vulden in')
   })
 
-  it('toont per scan de terugkoppelhint van die scan', () => {
-    expect(feedbackHintFor('retention')).toBe(FEEDBACK.retention)
-    expect(feedbackHintFor('exit')).toBe(FEEDBACK.exit)
-    expect(feedbackHintFor('onboarding')).toBe(FEEDBACK.onboarding)
+  it('toont de terugkoppelhint alleen als de scan er een heeft', () => {
+    expect(source).toContain("aria-describedby={feedbackHint ? 'decision-hint-feedback' : undefined}")
+    expect(source).toMatch(/\{feedbackHint \? \(\s*<span id="decision-hint-feedback"/)
   })
 
-  it('toont bij een onbekend of ontbrekend scantype geen hint, nooit die van een andere scan', () => {
-    for (const scanType of ['pulse', 'team', 'leadership', 'culture_assessment', 'onbekend', 'constructor', '', null, undefined]) {
-      expect(feedbackHintFor(scanType)).toBeNull()
+  it('koppelt elke hint via aria-describedby en zet hem buiten het label', () => {
+    for (const id of HINT_IDS) {
+      expect(source).toContain(`id="${id}"`)
+      expect(source).toMatch(new RegExp(`aria-describedby=(\\{[^}]*)?["']${id}["']`))
     }
-    expect(source).toContain('{feedbackHint ? <span className={hintClass}>{feedbackHint}</span> : null}')
+    // Geen hint meer binnen een <label>: de toegankelijke naam is alleen het label.
+    for (const label of source.split('<label').slice(1)) {
+      expect(label.slice(0, label.indexOf('</label>'))).not.toContain('hintClass')
+    }
   })
 
   it('schrijft alleen via de server action en toont fout en succes zichtbaar', () => {

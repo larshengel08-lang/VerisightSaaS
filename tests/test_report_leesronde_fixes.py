@@ -879,7 +879,9 @@ def test_renderer_behoud_relatief_sterk_onderwerp_geen_samenval_op_de_besluitpag
 from pathlib import Path  # noqa: E402
 
 from backend.report_html import (  # noqa: E402
+    BESLUIT_DATUM_HINT,
     BESLUIT_PARKEERREGEL,
+    BESLUIT_REVIEW_HINT,
     BESLUIT_SLOTLABEL,
     BESLUIT_TERUGKOPPELING,
     BESLUITVRAAG,
@@ -932,24 +934,60 @@ def test_parkeerregel_blijft_staan_bij_een_ingevuld_tweede_punt():
     assert BESLUIT_PARKEERREGEL in t
 
 
+@pytest.mark.parametrize("scan_type", ["retention", "exit", "onboarding"])
+def test_parkeerregel_niet_zonder_tweede_punt(scan_type):
+    """Zelfde regel als de leidraad (has_tweede_punt): zonder tweede punt valt
+    er niets te parkeren."""
+    t = _plain(_besluit(scan_type=scan_type, tweede_label=None,
+                        heeft_werkvragen=scan_type != "onboarding"))
+    assert "Tweede punt (als jullie er een kiezen)" in t
+    assert BESLUIT_PARKEERREGEL not in t
+
+
+def test_parkeerregel_wel_als_het_mt_zelf_een_tweede_punt_vastlegde():
+    t = _plain(_besluit(tweede_label=None, decision={"secondary_topic": "Leiderschap"}))
+    assert BESLUIT_PARKEERREGEL in t
+
+
+@pytest.mark.parametrize("render,data_fn,scan_type", [
+    (render_retention_report_html, lambda: _fixture("retention", n=25, profile=True), "retention"),
+    (render_exit_report_html, lambda: _fixture("exit", n=25, profile=True), "exit"),
+    (render_onboarding_report_html, lambda: _fixture("onboarding", n=25, profile=True), "onboarding"),
+])
+def test_renderers_gebruiken_de_richtlijn_van_hun_scan(render, data_fn, scan_type):
+    assert BESLUIT_REVIEW_HINT[scan_type] in _plain(render(data_fn()))
+
+
+def test_richtlijn_per_scan():
+    assert BESLUIT_REVIEW_HINT == {
+        "retention": "Richtlijn: 45 tot 90 dagen na dit gesprek.",
+        "exit": "Richtlijn: 45 tot 90 dagen na dit gesprek.",
+        "onboarding": "Richtlijn: rond het volgende checkpoint.",
+    }
+
+
 def test_nieuwe_besluitcopy_zonder_streepjes():
     for tekst in (BESLUIT_PARKEERREGEL, BESLUIT_SLOTLABEL, BESLUITVRAAG,
                   *BESLUIT_TERUGKOPPELING.values()):
         assert not any(s in tekst for s in STREEPJES), tekst
 
 
+def _ts_map(bron: str, naam: str) -> dict:
+    """Leest een object-literal {sleutel: 'tekst'} uit TypeScript-bron."""
+    start = bron.index("const " + naam)
+    blok = bron[start:bron.index("}", start)]
+    return dict(re.findall(r"\b(\w+):\s*'([^']*)'", blok))
+
+
 def test_dashboard_gebruikt_dezelfde_labels_en_hints_als_de_besluitpagina():
     """Labelconsistentie (plan 3b): het blok "Besluit vastleggen" in het
-    dashboard en de besluitpagina moeten hetzelfde zeggen. Het dashboard
-    krijgt het scantype mee en toont per scan de terugkoppelhint van die scan
-    (FEEDBACK_HINTS in decision-block.tsx)."""
-    bron = (Path(__file__).resolve().parents[1] / "frontend" / "components" / "dashboard"
-            / "decision-block.tsx").read_text(encoding="utf-8")
-    for tekst in (BESLUIT_SLOTLABEL, BESLUIT_PARKEERREGEL):
-        assert tekst in bron, tekst
-    hints = bron[bron.index("const FEEDBACK_HINTS"):bron.index("export function feedbackHintFor")]
-    assert set(BESLUIT_TERUGKOPPELING) == {"retention", "exit", "onboarding"}
-    for scan_type, tekst in BESLUIT_TERUGKOPPELING.items():
-        m = re.search(r"\b" + scan_type + r":\s*'([^']*)'", hints)
-        assert m, scan_type
-        assert m.group(1) == tekst, scan_type
+    dashboard en de besluitpagina moeten hetzelfde zeggen. De teksten staan in
+    frontend/lib/dashboard/campaign-decision.ts; het dashboard krijgt het
+    scantype mee en toont per scan de hints van die scan."""
+    bron = (Path(__file__).resolve().parents[1] / "frontend" / "lib" / "dashboard"
+            / "campaign-decision.ts").read_text(encoding="utf-8")
+    for tekst in (BESLUIT_SLOTLABEL, BESLUIT_PARKEERREGEL, BESLUIT_DATUM_HINT):
+        assert "'" + tekst + "'" in bron, tekst
+    assert set(BESLUIT_TERUGKOPPELING) == set(BESLUIT_REVIEW_HINT) == {"retention", "exit", "onboarding"}
+    assert _ts_map(bron, "DECISION_FEEDBACK_HINTS") == BESLUIT_TERUGKOPPELING
+    assert _ts_map(bron, "DECISION_REVIEW_HINTS") == BESLUIT_REVIEW_HINT
