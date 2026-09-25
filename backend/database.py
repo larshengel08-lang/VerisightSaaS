@@ -38,10 +38,29 @@ load_dotenv(_ROOT / ".env")
 _DEFAULT_DB_PATH = _ROOT / "data" / "Loep.db"
 _DEFAULT_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
-DATABASE_URL: str = os.getenv(
+def normalize_database_url(url: str) -> str:
+    """Zet een Postgres-URL om naar de driver die in het image zit (psycopg2).
+
+    Connection strings uit een dashboard beginnen soms met ``postgres://`` of
+    ``postgresql+psycopg://`` (psycopg 3). Die driver staat niet in
+    requirements.txt, en dan start de service niet (25-9: ModuleNotFoundError
+    'psycopg'). De omzetting wordt gelogd, zodat zichtbaar blijft dat de
+    variabele een andere vorm had.
+    """
+    for prefix in ("postgresql+psycopg://", "postgres://"):
+        if url.startswith(prefix):
+            logger.warning(
+                "DATABASE_URL begint met %s; omgezet naar postgresql:// (psycopg2).",
+                prefix,
+            )
+            return "postgresql://" + url[len(prefix):]
+    return url
+
+
+DATABASE_URL: str = normalize_database_url(os.getenv(
     "DATABASE_URL",
     f"sqlite:///{_DEFAULT_DB_PATH}",
-)
+))
 
 _IS_SQLITE = DATABASE_URL.startswith("sqlite")
 

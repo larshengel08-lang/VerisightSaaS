@@ -1,0 +1,13 @@
+# Railway-configuratie voor de opschoonservice (bewaartermijn, fixronde 24-9).
+# Een tweede service uit dezelfde repo leest standaard railway.toml, en die
+# start de webserver. Zet in de instellingen van de opschoonservice het
+# config-pad op /railway.cron.toml; dan draait hij dit commando op dit schema.
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "python -m backend.data_retention --apply"
+# De eerste van elke maand om 03:00 UTC.
+cronSchedule = "0 3 1 * *"
+restartPolicyType = "never"
