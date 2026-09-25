@@ -74,17 +74,6 @@ export const CONTACT_SIZE_OPTIONS: readonly string[] = [
   CONTACT_SIZE_UNSURE,
 ]
 
-/**
- * "150 tot 400" en "400 tot 1.000" delen de 400 (de trede-labels blijven zo tot
- * Lars erover beslist). Zonder regel hoort een organisatie van precies 150 of
- * 400 medewerkers bij twee vakken. Regel, in lijn met het besluit van 24-9
- * ("150 valt in de middelste trede"): een grensgetal hoort bij het vak dat
- * ermee begint. 1.000 is geen ondergrens ("Boven 1.000" begint daarna) en valt
- * dus alleen in "400 tot 1.000".
- */
-export const CONTACT_SIZE_BOUNDARY_HINT =
-  'Precies 150 of 400 medewerkers? Kies het vak dat met dat getal begint.'
-
 export const CONTACT_DESIRED_TIMING_OPTIONS = [
   {
     value: 'zo-snel-mogelijk',

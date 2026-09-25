@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { CONTACT_SIZE_BOUNDARY_HINT, CONTACT_SIZE_OPTIONS } from '@/lib/contact-funnel'
+import { CONTACT_SIZE_OPTIONS } from '@/lib/contact-funnel'
 import { PRICING_ABOVE_LABEL, PRICING_TIERS } from '@/lib/pricing'
 
 describe('omvangvakken van het contactformulier (besluit Lars 24-9)', () => {
@@ -35,20 +35,10 @@ describe('omvangvakken van het contactformulier (besluit Lars 24-9)', () => {
     }
   })
 
-  // "150 tot 400" en "400 tot 1.000" delen de 400 (en eerder de 150): zonder
-  // regel valt een organisatie van precies die omvang in twee vakken. De hint
-  // noemt elke ondergrens die ook bovengrens van het vorige vak is, en wordt
-  // bij het veld getoond.
-  it('een grensgetal hoort bij precies één vak, en het formulier zegt welk', () => {
-    const grenzen = PRICING_TIERS.slice(1).map((tier) => tier.label.match(/\d{1,3}(?:\.\d{3})+|\d+/)?.[0])
-    expect(grenzen).toEqual(['150', '400'])
-    for (const grens of grenzen) {
-      expect(CONTACT_SIZE_BOUNDARY_HINT).toContain(String(grens))
+  it('bevatten geen em-dash of en-dash', () => {
+    const streepje = new RegExp(`[${String.fromCharCode(0x2013, 0x2014)}]`)
+    for (const waarde of CONTACT_SIZE_OPTIONS) {
+      expect(waarde).not.toMatch(streepje)
     }
-    expect(CONTACT_SIZE_BOUNDARY_HINT).not.toMatch(new RegExp(`[${String.fromCharCode(0x2013, 0x2014)}]`))
-    const source = readFileSync(path.join(process.cwd(), 'components/marketing/contact-form.tsx'), 'utf8')
-    expect(source).toContain('{CONTACT_SIZE_BOUNDARY_HINT}')
-    expect(source).toContain('aria-describedby="employeeCountHint"')
-    expect(source).toContain('id="employeeCountHint"')
   })
 })
