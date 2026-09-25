@@ -10,7 +10,7 @@ function fakeClient(results: Record<string, Result>): SupabaseClient {
     from(table: string) {
       const result = results[table]
       const builder: Record<string, unknown> = {}
-      for (const method of ['select', 'in', 'eq', 'order']) builder[method] = () => builder
+      for (const method of ['select', 'in', 'eq', 'order', 'not']) builder[method] = () => builder
       builder.then = (resolve: (value: Result) => unknown) => resolve(result)
       return builder
     },

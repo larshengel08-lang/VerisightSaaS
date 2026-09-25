@@ -8,22 +8,28 @@ import { describe, expect, it } from 'vitest'
  * "te weinig antwoorden" of een lege lijst (C.1). Het gedrag van de lader,
  * de status en de rijen staat in de eigen tests; hier de koppeling per scherm.
  */
+/**
+ * De bron met elke reeks witruimte (ook regeleinden, CRLF of LF) samengevoegd
+ * tot één spatie: de patronen hieronder hangen zo niet aan inspringing of
+ * regelafbreking, alleen aan de code zelf.
+ */
 function bron(relatief: string): string {
-  // Werkkopieën kunnen CRLF hebben (core.autocrlf); de patronen hieronder gebruiken \n.
-  return readFileSync(path.join(process.cwd(), relatief), 'utf8').replace(/\r\n/g, '\n')
+  return readFileSync(path.join(process.cwd(), relatief), 'utf8').replace(/\s+/g, ' ')
 }
 
 describe('een opgeschoonde meting is overal eerlijk (Deel C)', () => {
   it('/dashboard: de hoofdkaart toont de reden, ook voor meelezers, vóór de resolverkaarten', () => {
     const page = bron('app/(dashboard)/dashboard/page.tsx')
-    expect(page).toContain('loadDataPurgedAt(supabase, campaign.campaign_id)')
+    // Eén context voor lijst én hoofdkaart, ook bij één meting (geen tweede query).
+    expect(page).toContain('loadCampaignStatusContext(supabase, campaigns.map((c) => c.campaign_id), todayIso())')
+    expect(page).toContain('const mainPurgedAt = statusContext.dataPurgedAtByCampaign.get(campaign.campaign_id) ?? null')
+    expect(page).not.toContain('loadDataPurgedAt(')
+    expect(page).not.toContain('campaigns.length > 1 ? await loadCampaignStatusContext')
     const kaart = page.indexOf('{mainPurgedAt ? (')
     expect(kaart).toBeGreaterThan(-1)
     expect(page.indexOf('<DataPurgedCard', kaart)).toBeGreaterThan(kaart)
     // Eerst de opgeschoonde staat, dan pas de meelezer- en resolverkaarten.
     expect(page.indexOf(': !canManage ? (', kaart)).toBeGreaterThan(kaart)
-    // De lijst eronder krijgt de status uit loadCampaignStatusContext (die de datum laadt).
-    expect(page).toContain('loadCampaignStatusContext(')
   })
 
   it('/reports: opgeschoonde metingen in een eigen blok met de reden, niet bij "Nog niet beschikbaar"', () => {
@@ -45,9 +51,13 @@ describe('een opgeschoonde meting is overal eerlijk (Deel C)', () => {
 
   it('/beheer/campagnes: status, respons en rapport noemen de verwijdering, geen "0% (0/N)"', () => {
     const page = bron('app/(dashboard)/beheer/campagnes/page.tsx')
-    expect(page).toContain('loadDataPurgedAtByCampaign(')
+    // Tegelijk met de organisatiequery, niet als extra rondgang erna.
+    const samen = page.indexOf('await Promise.all([ orgIds.length ? supabase.from(\'organizations\')')
+    expect(samen).toBeGreaterThan(-1)
+    expect(page.indexOf('loadDataPurgedAtByCampaign(', samen)).toBeGreaterThan(samen)
+    expect(page.indexOf('loadDataPurgedAtByCampaign(', samen)).toBeLessThan(page.indexOf('])', samen))
     expect(page).toContain('const reportReady = !purgedAt && ')
-    expect(page).toContain("{purgedAt ? 'Verwijderd' : row.is_active ? 'Actief' : 'Gesloten'}")
+    expect(page).toContain("{purgedAt ? 'Gegevens verwijderd' : row.is_active ? 'Actief' : 'Gesloten'}")
     const respons = page.slice(page.indexOf('{/* Respons */}'), page.indexOf('{/* Sluitdatum */}'))
     expect(respons.indexOf('dataPurgedLabel(purgedAt)')).toBeGreaterThan(-1)
     expect(respons.indexOf('dataPurgedLabel(purgedAt)')).toBeLessThan(respons.indexOf('{pct}%'))
@@ -55,9 +65,11 @@ describe('een opgeschoonde meting is overal eerlijk (Deel C)', () => {
 
   it('/beheer: het campagne-statusoverzicht vervangt de tellingen door de verwijdering', () => {
     const page = bron('app/(dashboard)/beheer/page.tsx')
-    expect(page).toContain('loadDataPurgedAtByCampaign(')
-    expect(page).toContain("{purgedAt ? 'Verwijderd' : stats.is_active ? 'Actief' : 'Gesloten'}")
-    const tak = page.indexOf('{purgedAt ? (\n                            <td colSpan={4}')
+    // Uit de al geladen select('*')-rijen, met een luide fout als die query faalt.
+    expect(page).toContain('purgedAtFromRows(campaigns')
+    expect(page).toContain('if (campaignsError) throw new Error(')
+    expect(page).toContain("{purgedAt ? 'Gegevens verwijderd' : stats.is_active ? 'Actief' : 'Gesloten'}")
+    const tak = page.indexOf('{purgedAt ? ( <td colSpan={4}')
     expect(tak).toBeGreaterThan(-1)
     expect(page.indexOf('dataPurgedLabel(purgedAt)', tak)).toBeGreaterThan(tak)
     expect(page.indexOf('{stats.total_completed ?? 0}', tak)).toBeGreaterThan(page.indexOf('dataPurgedLabel(purgedAt)', tak))
@@ -69,6 +81,7 @@ describe('een opgeschoonde meting is overal eerlijk (Deel C)', () => {
     const secties = bron('app/(dashboard)/campaigns/[id]/beheer/route-beheer-phase-sections.tsx')
     expect(secties).toContain("{data.dataPurgedAt ? `${dataPurgedLabel(data.dataPurgedAt)}.` : 'Rapport nog niet beschikbaar.'}")
     expect(secties).toContain("Rapport {data.dataPurgedAt ? 'verwijderd' : summary.reportReady ? 'klaar' : 'wacht'}")
+    expect(secties).toContain("Dashboard {data.dataPurgedAt ? 'verwijderd' : summary.dashboardReady ? 'klaar' : 'wacht'}")
     const data = bron('app/(dashboard)/campaigns/[id]/beheer/beheer-data.ts')
     expect(data).toContain('const reportAvailable = hasMinDisplay && !dataPurgedAt')
   })

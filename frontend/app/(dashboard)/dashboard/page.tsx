@@ -6,7 +6,6 @@ import { RunningStateCard } from '@/components/dashboard/running-state-card'
 import { WelcomeGate } from '@/components/dashboard/welcome-gate'
 import { CampaignListSection } from '@/components/dashboard/campaign-list-section'
 import { DataPurgedCard } from '@/components/dashboard/data-purged-card'
-import { loadDataPurgedAt } from '@/lib/dashboard/data-purged'
 import { RequestNewMeasurement } from '@/components/dashboard/request-new-measurement'
 import { newMeasurementVariant } from '@/lib/dashboard/new-measurement-request'
 import { loadAccountOrganizations } from '@/lib/dashboard/account-organization'
@@ -82,7 +81,7 @@ export default async function DashboardHomePage() {
     { data: profile },
     { data: membership },
     { count: extensionCount, error: extensionCountError },
-    mainPurgedAt,
+    statusContext,
   ] = await Promise.all([
     supabase
       .from('campaign_delivery_records')
@@ -127,10 +126,14 @@ export default async function DashboardHomePage() {
       .eq('action_key', 'delivery_lifecycle_changed')
       .eq('outcome', 'completed')
       .contains('metadata', { extension: true }),
-    // Deel C (bewaartermijn): een opgeschoonde meting heeft 0 antwoorden in
-    // campaign_stats; de kaart zegt dan waarom, niet "te weinig antwoorden".
-    loadDataPurgedAt(supabase, campaign.campaign_id),
+    // Status van alle metingen (lijst) plus, sinds Deel C, welke zijn
+    // opgeschoond: ook voor de hoofdkaart, dus ook bij één meting.
+    loadCampaignStatusContext(supabase, campaigns.map((c) => c.campaign_id), todayIso()),
   ])
+
+  // Deel C (bewaartermijn): een opgeschoonde meting heeft 0 antwoorden in
+  // campaign_stats; de kaart zegt dan waarom, niet "te weinig antwoorden".
+  const mainPurgedAt = statusContext.dataPurgedAtByCampaign.get(campaign.campaign_id) ?? null
 
   // Fail Loud: een mislukte organisatie-query mag niet stil als "geen naam"
   // doorgaan. Een ontbrekende naam zonder fout blijft de zichtbare
@@ -229,11 +232,7 @@ export default async function DashboardHomePage() {
   // De lijst gebruikt dezelfde statusvocabulaire als /reports en is met een
   // pariteitstest aan de resolver vastgeklonken; ze kan dus niet iets anders
   // zeggen dan de kaart hierboven.
-  const statusContext =
-    campaigns.length > 1
-      ? await loadCampaignStatusContext(supabase, campaigns.map((c) => c.campaign_id), todayIso())
-      : null
-  const listItems = statusContext ? buildCampaignListItems(campaigns, statusContext, campaign.campaign_id) : []
+  const listItems = campaigns.length > 1 ? buildCampaignListItems(campaigns, statusContext, campaign.campaign_id) : []
 
   return (
     <div className="space-y-8">

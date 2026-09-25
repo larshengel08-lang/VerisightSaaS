@@ -53,16 +53,16 @@ export default async function BeheerCampagnesPage() {
   }
 
   const stats = (statsRaw ?? []) as CampaignStats[]
-  // Deel C (bewaartermijn): opgeschoonde metingen tonen de reden, niet "0% (0/N)".
-  const purgedByCampaign = await loadDataPurgedAtByCampaign(
-    supabase,
-    stats.map((s) => s.campaign_id),
-  )
-
   const orgIds = [...new Set(stats.map((s) => s.organization_id))]
-  const { data: orgsRaw } = orgIds.length
-    ? await supabase.from('organizations').select('id, name').in('id', orgIds)
-    : { data: [] }
+  // Deel C (bewaartermijn): opgeschoonde metingen tonen de reden, niet "0% (0/N)".
+  // Tegelijk met de organisaties, geen extra rondgang.
+  const [{ data: orgsRaw }, purgedByCampaign] = await Promise.all([
+    orgIds.length ? supabase.from('organizations').select('id, name').in('id', orgIds) : Promise.resolve({ data: [] }),
+    loadDataPurgedAtByCampaign(
+      supabase,
+      stats.map((s) => s.campaign_id),
+    ),
+  ])
 
   const orgMap = new Map<string, string>(
     ((orgsRaw ?? []) as Pick<Organization, 'id' | 'name'>[]).map((org) => [org.id, org.name]),
@@ -179,7 +179,7 @@ export default async function BeheerCampagnesPage() {
                               row.is_active ? 'bg-emerald-600' : 'bg-slate-400'
                             }`}
                           />
-                          {purgedAt ? 'Verwijderd' : row.is_active ? 'Actief' : 'Gesloten'}
+                          {purgedAt ? 'Gegevens verwijderd' : row.is_active ? 'Actief' : 'Gesloten'}
                         </span>
                       </td>
 

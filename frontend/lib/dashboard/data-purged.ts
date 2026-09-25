@@ -49,7 +49,13 @@ export async function loadDataPurgedAtByCampaign(
   const purged = new Map<string, string>()
   const ids = [...new Set(campaignIds)]
   if (ids.length === 0) return purged
-  const { data, error } = await supabase.from('campaigns').select('id, data_purged_at').in('id', ids)
+  // Alleen de opgeschoonde rijen terug: kleinere payload, en de PostgREST-
+  // rijlimiet telt dan alleen metingen die er echt toe doen.
+  const { data, error } = await supabase
+    .from('campaigns')
+    .select('id, data_purged_at')
+    .in('id', ids)
+    .not('data_purged_at', 'is', null)
   if (error) {
     if (isPurgedColumnMissing(error)) return purged
     throw new Error(`Kon niet nagaan of de gegevens van deze metingen nog bestaan: ${error.message}`)
@@ -57,6 +63,19 @@ export async function loadDataPurgedAtByCampaign(
   for (const row of (data ?? []) as { id: string; data_purged_at: string | null }[]) {
     if (row.data_purged_at) purged.set(row.id, row.data_purged_at)
   }
+  return purged
+}
+
+/**
+ * Dezelfde map uit rijen die al geladen zijn met select('*') op campaigns. Na
+ * de migratie zit data_purged_at daarin; ervoor ontbreekt het veld (undefined)
+ * en kan er ook niets zijn opgeschoond. Zo is geen extra query nodig.
+ */
+export function purgedAtFromRows(
+  rows: ReadonlyArray<{ id: string; data_purged_at?: string | null }>,
+): Map<string, string> {
+  const purged = new Map<string, string>()
+  for (const row of rows) if (row.data_purged_at) purged.set(row.id, row.data_purged_at)
   return purged
 }
 

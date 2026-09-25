@@ -479,7 +479,7 @@ export function RouteBeheerOutputSummary({ data }: { data: RouteBeheerPageData }
         </div>
         <div className="flex flex-wrap gap-2">
           <span className={joinClasses('rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]', summary.dashboardReady ? 'border-[#D7E6DF] bg-[#F6FAF8] text-[#3C8D8A]' : 'border-[color:var(--border)] bg-[color:var(--bg)] text-[color:var(--muted)]')}>
-            Dashboard {summary.dashboardReady ? 'klaar' : 'wacht'}
+            Dashboard {data.dataPurgedAt ? 'verwijderd' : summary.dashboardReady ? 'klaar' : 'wacht'}
           </span>
           <span className={joinClasses('rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]', summary.reportReady ? 'border-[#D7E6DF] bg-[#F6FAF8] text-[#3C8D8A]' : 'border-[color:var(--border)] bg-[color:var(--bg)] text-[color:var(--muted)]')}>
             Rapport {data.dataPurgedAt ? 'verwijderd' : summary.reportReady ? 'klaar' : 'wacht'}

@@ -9,6 +9,7 @@ import {
   dataPurgedReason,
   loadDataPurgedAt,
   loadDataPurgedAtByCampaign,
+  purgedAtFromRows,
 } from '@/lib/dashboard/data-purged'
 
 type Result = { data: unknown; error: { code?: string; message: string } | null }
@@ -35,14 +36,16 @@ const KOLOM_ONTBREEKT = { code: '42703', message: 'column campaigns.data_purged_
 
 /** Nep-client voor de lijstvariant; houdt bij welke id's zijn opgevraagd. */
 function fakeListSupabase(result: Result) {
-  const calls: { table: string; columns: string; ids: readonly string[] }[] = []
+  const calls: { table: string; columns: string; ids: readonly string[]; not: unknown[] }[] = []
   const client = {
     from: (table: string) => ({
       select: (columns: string) => ({
-        in: async (_col: string, ids: readonly string[]) => {
-          calls.push({ table, columns, ids })
-          return result
-        },
+        in: (_col: string, ids: readonly string[]) => ({
+          not: async (column: string, operator: string, value: unknown) => {
+            calls.push({ table, columns, ids, not: [column, operator, value] })
+            return result
+          },
+        }),
       }),
     }),
   } as unknown as SupabaseClient
@@ -92,6 +95,19 @@ describe('opgeschoonde meting (Deel C, bewaartermijn)', () => {
 
   it('leest de dag in Nederlandse tijd, net als de backend', () => {
     expect(dataPurgedMessage('2028-06-15T22:30:00Z')).toContain('op 16 juni 2028 verwijderd')
+  })
+
+  it('leest ook rond middernacht de Nederlandse dag, zoals de backend (pariteitstest in Python)', () => {
+    expect(dataPurgedReason('2027-01-01T23:30:00Z')).toContain('zijn op 2 januari 2027 verwijderd')
+  })
+
+  it('bouwt de map ook uit al geladen rijen; zonder de kolom is niemand opgeschoond', () => {
+    const map = purgedAtFromRows([
+      { id: 'c1', data_purged_at: '2028-06-16T03:00:00Z' },
+      { id: 'c2', data_purged_at: null },
+      { id: 'c3' },
+    ])
+    expect([...map]).toEqual([['c1', '2028-06-16T03:00:00Z']])
   })
 
   it('noemt een onleesbare datum eerlijk onbekend in plaats van een lege plek', () => {
@@ -151,7 +167,10 @@ describe('opgeschoonde metingen in een lijst (voor dashboard, rapporten en behee
     expect(map.get('c1')).toBe('2028-06-16T03:00:00Z')
     expect(map.has('c2')).toBe(false)
     expect(map.size).toBe(1)
-    expect(calls).toEqual([{ table: 'campaigns', columns: 'id, data_purged_at', ids: ['c1', 'c2'] }])
+    expect(calls).toEqual([
+      // Alleen opgeschoonde rijen komen terug (payload en rijlimiet).
+      { table: 'campaigns', columns: 'id, data_purged_at', ids: ['c1', 'c2'], not: ['data_purged_at', 'is', null] },
+    ])
   })
 
   it('vraagt niets op zonder metingen', async () => {

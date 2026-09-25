@@ -9,7 +9,7 @@ import { DeleteOrgButton } from '@/components/dashboard/delete-org-button'
 import { InviteClientUserForm } from '@/components/dashboard/invite-client-user-form'
 import { NewCampaignForm } from '@/components/dashboard/new-campaign-form'
 import { NewOrgForm } from '@/components/dashboard/new-org-form'
-import { dataPurgedLabel, loadDataPurgedAtByCampaign } from '@/lib/dashboard/data-purged'
+import { dataPurgedLabel, purgedAtFromRows } from '@/lib/dashboard/data-purged'
 import { getDeliveryModeLabel } from '@/lib/implementation-readiness'
 import { getDisplaySignalBand, type DisplaySignalBand } from '@/lib/management-language'
 import { getScanDefinition } from '@/lib/scan-definitions'
@@ -63,14 +63,17 @@ export default async function BeheerPage() {
   const archivedOrgs = orgs.filter((org) => !org.is_active)
 
   const orgIds = orgs.map((org) => org.id)
-  const { data: campaignsRaw } = orgIds.length
+  const { data: campaignsRaw, error: campaignsError } = orgIds.length
     ? await supabase
         .from('campaigns')
         .select('*')
         .in('organization_id', orgIds)
         .order('created_at', { ascending: false })
-    : { data: [] }
+    : { data: [], error: null }
 
+  // Fail Loud: de opgeschoonde status hieronder leest uit deze rijen; een
+  // mislukte query mag niet stil als "niets opgeschoond" doorgaan.
+  if (campaignsError) throw new Error(`Kon de metingen niet laden: ${campaignsError.message}`)
   const campaigns = (campaignsRaw ?? []) as Campaign[]
   const activeCampaignCount = campaigns.filter((campaign) => campaign.is_active).length
   const campaignCountByOrg = campaigns.reduce<Record<string, number>>((acc, campaign) => {
@@ -104,10 +107,10 @@ export default async function BeheerPage() {
 
   const campaignStats = (campaignStatsRaw ?? []) as CampaignStats[]
   // Deel C (bewaartermijn): opgeschoonde metingen tonen de reden, niet 0 ingevuld.
-  const purgedByCampaign = await loadDataPurgedAtByCampaign(
-    supabase,
-    campaignStats.map((stats) => stats.campaign_id),
-  )
+  // Geen aparte query: de campagnerijen hierboven zijn met select('*') geladen
+  // over dezelfde organisaties. Na de migratie zit data_purged_at daarin; ervoor
+  // ontbreekt het veld zonder fout, en dan kan er ook niets opgeschoond zijn.
+  const purgedByCampaign = purgedAtFromRows(campaigns as (Campaign & { data_purged_at?: string | null })[])
 
   const { data: invitesRaw } = orgIds.length
     ? await supabase
@@ -508,7 +511,7 @@ export default async function BeheerPage() {
                               }`}
                             >
                               <span className={`h-1.5 w-1.5 rounded-full ${stats.is_active ? 'bg-emerald-600' : 'bg-slate-400'}`} />
-                              {purgedAt ? 'Verwijderd' : stats.is_active ? 'Actief' : 'Gesloten'}
+                              {purgedAt ? 'Gegevens verwijderd' : stats.is_active ? 'Actief' : 'Gesloten'}
                             </span>
                           </td>
                           {purgedAt ? (
