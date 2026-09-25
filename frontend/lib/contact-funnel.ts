@@ -1,3 +1,5 @@
+import { PRICING_ABOVE_LABEL, PRICING_TIERS } from '@/lib/pricing'
+
 export const CONTACT_ROUTE_OPTIONS = [
   {
     value: 'exitscan',
@@ -57,6 +59,31 @@ const LEGACY_HIDDEN_CONTACT_ROUTE_OPTIONS = [
     firstStepLabel: 'een legacy TeamScan-route na een bestaand signaal',
   },
 ] as const
+
+/**
+ * Omvangvakken van het contactformulier (besluit Lars 24-9-2026): dezelfde
+ * grenzen als de prijsstaffel, zodat elke lead bij precies één trede hoort. De
+ * waarde is het label zelf, zodat leadmail en leadlijst hetzelfde lezen als het
+ * formulier. Oude leads houden hun oude waarde ("100 - 200 medewerkers" enz.):
+ * contact_requests.employee_count is vrije tekst en wordt nergens herschreven.
+ */
+export const CONTACT_SIZE_UNSURE = 'Anders / nog niet zeker'
+export const CONTACT_SIZE_OPTIONS: readonly string[] = [
+  ...PRICING_TIERS.map((tier) => tier.label),
+  PRICING_ABOVE_LABEL,
+  CONTACT_SIZE_UNSURE,
+]
+
+/**
+ * "150 tot 400" en "400 tot 1.000" delen de 400 (de trede-labels blijven zo tot
+ * Lars erover beslist). Zonder regel hoort een organisatie van precies 150 of
+ * 400 medewerkers bij twee vakken. Regel, in lijn met het besluit van 24-9
+ * ("150 valt in de middelste trede"): een grensgetal hoort bij het vak dat
+ * ermee begint. 1.000 is geen ondergrens ("Boven 1.000" begint daarna) en valt
+ * dus alleen in "400 tot 1.000".
+ */
+export const CONTACT_SIZE_BOUNDARY_HINT =
+  'Precies 150 of 400 medewerkers? Kies het vak dat met dat getal begint.'
 
 export const CONTACT_DESIRED_TIMING_OPTIONS = [
   {

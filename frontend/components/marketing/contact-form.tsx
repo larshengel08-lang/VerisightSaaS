@@ -7,6 +7,8 @@ import { contactTrustSignals } from '@/components/marketing/site-content'
 import {
   CONTACT_DESIRED_TIMING_OPTIONS,
   CONTACT_ROUTE_OPTIONS,
+  CONTACT_SIZE_BOUNDARY_HINT,
+  CONTACT_SIZE_OPTIONS,
   getContactRouteLabel,
   inferRouteInterestFromSource,
   normalizeContactCtaSource,
@@ -271,19 +273,23 @@ export function ContactForm({
           <select
             id="employeeCount"
             required
+            aria-describedby="employeeCountHint"
             value={form.employeeCount}
             onChange={(event) => updateField('employeeCount', event.target.value)}
             className={fieldClass}
           >
             <option value="" disabled>
-              Kies een range
+              Kies de omvang
             </option>
-            <option value="100 - 200 medewerkers">100 - 200 medewerkers</option>
-            <option value="200 - 400 medewerkers">200 - 400 medewerkers</option>
-            <option value="400 - 700 medewerkers">400 - 700 medewerkers</option>
-            <option value="700 - 1.000 medewerkers">700 - 1.000 medewerkers</option>
-            <option value="Anders / nog niet zeker">Anders / nog niet zeker</option>
+            {CONTACT_SIZE_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
           </select>
+          <p id="employeeCountHint" className={`mt-2 text-xs leading-5 ${helperClass}`}>
+            {CONTACT_SIZE_BOUNDARY_HINT}
+          </p>
         </div>
 
         {!isSimplified ? (
