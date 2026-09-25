@@ -51,6 +51,9 @@ def test_trigger_bewaakt_de_klok_van_de_bewaartermijn():
     assert "new.closed_at is distinct from old.closed_at" in sql
     assert "coalesce(new.is_active, false) and not coalesce(old.is_active, false)" in sql
     assert sql.count("new.closed_at := now();") == 2
+    # Stopzetten zonder sluitmoment: zo'n meting raakt de opschoning nooit.
+    assert "coalesce(old.is_active, false) and new.is_active is false and new.closed_at is null" in sql
+    assert "sluit een meting met een sluitmoment" in sql
 
 
 def test_migratie_geeft_lars_een_controle_op_auth_role():
@@ -62,7 +65,8 @@ def test_gedragscontrole_is_alleen_lokaal():
     check = (ROOT / "migrations" / "checks" / "2026_09_24_data_retention_gedrag.sql")
     tekst = check.read_text(encoding="utf-8")
     assert tekst.startswith("-- ALLEEN LOKAAL, NOOIT TEGEN PRODUCTIE")
-    for geval in ("heropenen", "closed_at verschuiven", "sluitmoment in de toekomst", "anon"):
+    for geval in ("heropenen", "closed_at verschuiven", "sluitmoment in de toekomst", "anon",
+                  "stopzetten zonder sluitmoment"):
         assert geval in tekst, geval
 
 

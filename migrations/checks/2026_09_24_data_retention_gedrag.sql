@@ -16,8 +16,9 @@
 --
 -- Gevallen: klant (authenticated, geen operator), anon, operator, service-role
 -- en een directe verbinding, op: termijn, data_purged_at, heropenen van een
--- gesloten meting, closed_at verschuiven, een sluitmoment in de toekomst, een
--- tweede keer sluiten (0 rijen, geen fout) en de check-constraint.
+-- gesloten meting, closed_at verschuiven, stopzetten zonder sluitmoment, een
+-- sluitmoment in de toekomst, een tweede keer sluiten (0 rijen, geen fout) en
+-- de check-constraint.
 
 -- 1. Minimale tabellen en helpers, zoals in supabase/schema.sql.
 create table public.profiles (id uuid primary key, is_verisight_admin boolean default false);
@@ -132,6 +133,14 @@ select pg_temp.geval('klant: sluitmoment in de toekomst bij aanmaken (teruggezet
   'insert into public.campaigns (id, organization_id, name, is_active, closed_at) values '
   || '(''00000000-0000-0000-0000-000000000009'', ' || quote_literal(:'ORG') || ', ''n'', false, now() + interval ''30 days'')'
   || ' returning closed_at <= now()', 'toegestaan (true)');
+select pg_temp.geval('klant: open meting stopzetten zonder sluitmoment', 'authenticated', :'K',
+  'update public.campaigns set is_active = false where id = ' || quote_literal(:'OPEN') || ' returning 1', 'geweigerd');
+select pg_temp.geval('anon: open meting stopzetten zonder sluitmoment', 'anon', null,
+  'update public.campaigns set is_active = false where id = ' || quote_literal(:'OPEN') || ' returning 1', 'geweigerd');
+select pg_temp.geval('operator: open meting stopzetten zonder sluitmoment', 'authenticated', :'O',
+  'update public.campaigns set is_active = false where id = ' || quote_literal(:'OPEN') || ' returning 1', 'toegestaan (1)');
+select pg_temp.geval('directe verbinding: open meting stopzetten zonder sluitmoment', null, null,
+  'update public.campaigns set is_active = false where id = ' || quote_literal(:'OPEN') || ' returning 1', 'toegestaan (1)');
 select pg_temp.geval('klant: gesloten meting heropenen (is_active)', 'authenticated', :'K',
   'update public.campaigns set is_active = true where id = ' || quote_literal(:'DICHT') || ' returning 1', 'geweigerd');
 select pg_temp.geval('klant: gesloten meting heropenen (is_active en closed_at leeg)', 'authenticated', :'K',

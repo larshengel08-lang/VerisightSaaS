@@ -35,10 +35,15 @@ end $$;
 -- org_managers_can_update_campaigns). Deze kolommen zijn van Loep: een klant die
 -- geen operator is, mag ze niet wijzigen, en mag ook geen meting aanmaken met
 -- data_purged_at al gevuld (die zou de opschoning dan voor altijd overslaan).
--- Om dezelfde reden bewaakt de trigger de klok van de bewaartermijn: een
--- gesloten meting kan een klant niet heropenen en closed_at niet verschuiven,
--- en een sluitmoment in de toekomst wordt teruggezet naar nu. Geen enkele
--- klantflow doet dat (sluiten zet closed_at alleen als hij nog leeg is).
+-- Om dezelfde reden bewaakt de trigger de klok van de bewaartermijn (die loopt
+-- vanaf closed_at): een klant kan een gesloten meting niet heropenen en
+-- closed_at niet verschuiven, en een meting stopzetten (is_active van waar naar
+-- onwaar) kan alleen met een sluitmoment erbij; een meting zonder closed_at
+-- raakt de opschoning nooit. Een sluitmoment in de toekomst (bij sluiten of
+-- aanmaken) wordt stil teruggezet naar nu in plaats van geweigerd: zo geeft een
+-- afwijkende browserklok bij archiveren geen fout, en kan niemand de termijn
+-- uitstellen. Geen enkele klantflow doet een van deze dingen (sluiten zet
+-- is_active en closed_at samen, en alleen als closed_at nog leeg is).
 -- 'anon' valt er ook onder (verdediging in de diepte; RLS laat anon hier niets
 -- schrijven). De service-role en een directe databaseverbinding (de opschoning)
 -- hebben geen van die JWT-rollen en mogen wel.
@@ -67,6 +72,9 @@ begin
       else
         if new.data_purged_at is distinct from old.data_purged_at then
           raise exception 'data_purged_at wordt alleen door de opschoning gezet';
+        end if;
+        if coalesce(old.is_active, false) and new.is_active is false and new.closed_at is null then
+          raise exception 'Sluit een meting met een sluitmoment';
         end if;
         if old.closed_at is not null then
           if new.closed_at is distinct from old.closed_at
