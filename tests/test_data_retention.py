@@ -572,13 +572,26 @@ def test_pgcode_uit_de_sqlalchemy_wrapper():
     assert dr._foutcode(RuntimeError("Sanne")) == "RuntimeError"
 
 
-def test_gestopt_zonder_sluitdatum_telt_mee_en_exitcode_0(fabriek, capsys):
+def test_gestopt_zonder_sluitdatum_telt_mee_en_kleurt_de_periodieke_run_rood(fabriek, capsys):
+    # Zonder sluitmoment kan de termijn nooit verlopen: de maandelijkse run
+    # blijft rood tot iemand er een sluitmoment op zet.
     cid, _ = _meting(fabriek, slug="gz", gesloten=None, actief=False)
-    assert dr.main(["--apply"], session_factory=fabriek, vandaag=VANDAAG) == 0
-    uit = capsys.readouterr().out
-    assert "GESTOPT" in uit and cid in uit
-    assert "1 gestopt zonder sluitdatum" in uit.splitlines()[-1]
+    for argv in (["--apply"], []):
+        assert dr.main(argv, session_factory=fabriek, vandaag=VANDAAG) == 1
+        uit = capsys.readouterr().out
+        assert "GESTOPT" in uit and cid in uit
+        assert "1 gestopt zonder sluitdatum" in uit.splitlines()[-1]
     assert _tel(fabriek, cid)["respondenten"] == 3
+    # Op verzoek: weigeren zoals altijd (ook exitcode 1).
+    assert dr.main(["--apply", "--campagne", cid], session_factory=fabriek, vandaag=VANDAAG) == 1
+    assert "GEWEIGERD" in capsys.readouterr().out
+    # Met een sluitmoment is de run weer groen.
+    db = fabriek()
+    db.execute(text("update campaigns set closed_at = :t where id = :c"),
+               {"t": _gesloten(2028, 6, 1), "c": cid})
+    db.commit()
+    db.close()
+    assert dr.main(["--apply"], session_factory=fabriek, vandaag=VANDAAG) == 0
 
 
 def test_heropend_na_opschoning_is_zichtbaar_en_wordt_niet_opnieuw_geraakt(fabriek, capsys):
@@ -632,3 +645,39 @@ def test_alle_vrije_tekstvelden_worden_leeg(fabriek):
     assert besluit.recorded_by is None
     assert besluit.secondary_topic == "Werkdruk"      # labels blijven
     db.close()
+
+
+def test_opnieuw_gesloten_na_opschoning_is_rood_en_wordt_niet_automatisch_gewist(fabriek, capsys):
+    cid, _ = _meting(fabriek, slug="og", gesloten=_gesloten(2025, 1, 1))
+    dr.opschonen(fabriek, vandaag=VANDAAG, apply=True)
+    db = fabriek()
+    eerste = dr.data_purged_at(db, cid)
+    # Een operator heropent de meting, er komen nieuwe antwoorden, en hij sluit weer.
+    db.add(Respondent(campaign_id=cid, department="Zorg", completed=True))
+    db.execute(text("update campaigns set is_active = 0, closed_at = :t where id = :c"),
+               {"t": datetime(2028, 6, 1, 9, 0), "c": cid})
+    db.commit()
+    db.close()
+
+    rapport = dr.opschonen(fabriek, vandaag=VANDAAG, apply=True)
+    assert _status(rapport, cid) == "opnieuw_gesloten_na_opschoning"
+    op_verzoek = dr.opschonen(fabriek, vandaag=VANDAAG, apply=True, campagne_ids=[cid])
+    assert _status(op_verzoek, cid) == "opnieuw_gesloten_na_opschoning"
+    assert _tel(fabriek, cid)["respondenten"] == 1          # nieuwe antwoorden blijven
+    db = fabriek()
+    assert dr.data_purged_at(db, cid) == eerste
+    db.close()
+
+    assert dr.main(["--apply"], session_factory=fabriek, vandaag=VANDAAG) == 1
+    uit = capsys.readouterr().out
+    assert "OPNIEUW GESLOTEN" in uit and cid in uit
+    assert "1 opnieuw gesloten na opschoning" in uit.splitlines()[-1]
+    assert _tel(fabriek, cid)["respondenten"] == 1
+
+
+def test_opgeschoond_en_niet_heropend_blijft_al_opgeschoond(fabriek):
+    # closed_at van voor de opschoning: gewoon al opgeschoond, exitcode 0.
+    cid, _ = _meting(fabriek, slug="ao", gesloten=_gesloten(2025, 1, 1))
+    dr.opschonen(fabriek, vandaag=VANDAAG, apply=True)
+    assert _status(dr.opschonen(fabriek, vandaag=VANDAAG, apply=True), cid) == "al_opgeschoond"
+    assert dr.main(["--apply"], session_factory=fabriek, vandaag=VANDAAG) == 0

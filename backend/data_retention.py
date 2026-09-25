@@ -187,9 +187,14 @@ def _plus_maanden(d: date, maanden: int) -> date:
     return date(jaar, maand, min(d.day, calendar.monthrange(jaar, maand)[1]))
 
 
+def _utc(moment: datetime) -> datetime:
+    """Een naive datetime (SQLite) is UTC, net als in _sluitdag."""
+    return moment if moment.tzinfo else moment.replace(tzinfo=timezone.utc)
+
+
 def _sluitdag(closed_at: datetime) -> date:
     """De dag van sluiten in Nederlandse tijd; een naive datetime is UTC."""
-    moment = closed_at if closed_at.tzinfo else closed_at.replace(tzinfo=timezone.utc)
+    moment = _utc(closed_at)
     return moment.astimezone(AMSTERDAM).date()
 
 
@@ -198,7 +203,8 @@ class Meting:
     campaign_id: str
     organization_id: str | None
     # verlopen | opgeschoond | binnen_termijn | open | gestopt_zonder_sluitdatum |
-    # al_opgeschoond | heropend_na_opschoning | geweigerd_open | onbekend | fout
+    # al_opgeschoond | heropend_na_opschoning | opnieuw_gesloten_na_opschoning |
+    # geweigerd_open | onbekend | fout
     status: str
     reden: str = ""            # "termijn", "verzoek" of de termijn met vooruitblik
     gesloten_op: date | None = None
@@ -229,7 +235,15 @@ def _beoordeel(m: Meting, *, is_active: bool | None, closed_at: datetime | None,
                termijn: Callable[[], int]) -> None:
     """De regels voor één meting; één bron voor de inventaris en de hercontrole."""
     if purged is not None:
-        m.status = "heropend_na_opschoning" if is_active else "al_opgeschoond"
+        if is_active:
+            m.status = "heropend_na_opschoning"
+        elif closed_at is not None and _utc(closed_at) > _utc(purged):
+            # Na de opschoning heropend en weer gesloten: er kunnen nieuwe
+            # antwoorden zijn. Niet automatisch wissen (de markering staat al),
+            # maar ook niet stil laten liggen: de operator beslist.
+            m.status = "opnieuw_gesloten_na_opschoning"
+        else:
+            m.status = "al_opgeschoond"
     elif is_active:
         m.status = "geweigerd_open" if op_verzoek else "open"
     elif closed_at is None:
@@ -468,7 +482,8 @@ def opschonen(session_factory: Callable[[], Session], *, vandaag: date, apply: b
 _KOPPEN = {
     "verlopen": "VERLOPEN", "opgeschoond": "OPGESCHOOND", "binnen_termijn": "BINNEN TERMIJN",
     "open": "OPEN", "gestopt_zonder_sluitdatum": "GESTOPT", "al_opgeschoond": "AL OPGESCHOOND",
-    "heropend_na_opschoning": "HEROPEND", "geweigerd_open": "GEWEIGERD",
+    "heropend_na_opschoning": "HEROPEND",
+    "opnieuw_gesloten_na_opschoning": "OPNIEUW GESLOTEN", "geweigerd_open": "GEWEIGERD",
     "onbekend": "ONBEKEND", "fout": "FOUT",
 }
 _ORG_KOPPEN = {"onbekend": "ONBEKEND", "geen_metingen": "GEEN METINGEN"}
@@ -492,6 +507,9 @@ def _regel(m: Meting, *, apply: bool) -> str:
         return kop + ": loopt nog of heeft geen sluitdatum, niet geraakt"
     if m.status == "gestopt_zonder_sluitdatum":
         return kop + ": gestopt zonder sluitdatum, niet geraakt (zet eerst een sluitmoment)"
+    if m.status == "opnieuw_gesloten_na_opschoning":
+        return (kop + ": eerder opgeschoond, daarna heropend en opnieuw gesloten; nieuwe "
+                "antwoorden niet geraakt, de operator beslist (ook op verzoek wordt niets gewist)")
     if m.status == "heropend_na_opschoning":
         return kop + ": eerder opgeschoond en daarna heropend, niet opnieuw geraakt"
     if m.status == "onbekend":
@@ -516,6 +534,7 @@ def _samenvatting(r: Rapportage) -> str:
             + str(tel["gestopt_zonder_sluitdatum"]) + " gestopt zonder sluitdatum, "
             + str(tel["al_opgeschoond"]) + " al opgeschoond, "
             + str(tel["heropend_na_opschoning"]) + " heropend na opschoning, "
+            + str(tel["opnieuw_gesloten_na_opschoning"]) + " opnieuw gesloten na opschoning, "
             + str(tel["geweigerd_open"]) + " geweigerd, " + str(tel["onbekend"]) + " onbekend, "
             + str(tel["fout"]) + " fouten"
             + ("; organisaties: " + str(sum(1 for o in r.organisaties if o.status == "onbekend"))
@@ -569,7 +588,11 @@ def main(argv: list[str] | None = None, *,
     for m in rapport.metingen:
         print(_regel(m, apply=rapport.apply))
     print(_samenvatting(rapport))
-    slecht = {"fout", "onbekend", "geweigerd_open"}
+    # Rood (exitcode 1) als iemand iets moet doen: een fout, een verzoek dat
+    # niet kon, een meting zonder sluitmoment (kan nooit verlopen) of een meting
+    # die na de opschoning opnieuw gesloten is (nieuwe antwoorden).
+    slecht = {"fout", "onbekend", "geweigerd_open", "gestopt_zonder_sluitdatum",
+              "opnieuw_gesloten_na_opschoning"}
     if any(o.status == "onbekend" for o in rapport.organisaties):
         return 1
     return 1 if any(m.status in slecht for m in rapport.metingen) else 0
