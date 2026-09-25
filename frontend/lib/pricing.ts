@@ -9,7 +9,7 @@
  * trede is geen korting voor de weggevallen bespreking: een kleinere
  * organisatie heeft minder op het spel staan.
  */
-export type PricingTierId = 'tot-150' | '150-400' | '400-1000'
+export type PricingTierId = 'onder-150' | '150-400' | '400-1000'
 
 export type PricingTier = {
   readonly id: PricingTierId
@@ -31,8 +31,10 @@ function freezeTiers(tiers: readonly PricingTier[]): readonly PricingTier[] {
 
 export const PRICING_TIERS: readonly PricingTier[] = freezeTiers([
   {
-    id: 'tot-150',
-    label: 'Tot 150 medewerkers',
+    // Besluit Lars 24-9-2026: "Tot 150" en "150 tot 400" lazen allebei alsof
+    // 150 erin viel. 150 valt in de middelste trede.
+    id: 'onder-150',
+    label: 'Minder dan 150 medewerkers',
     firstScanEur: 3500,
     followUpEur: 950,
     note: 'Loep Vertrek in deze trede: patroonanalyse vraagt minimaal 10 respondenten. Loep stemt de meetperiode daarop af in de intake.',

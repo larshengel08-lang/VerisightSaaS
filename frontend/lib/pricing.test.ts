@@ -17,10 +17,23 @@ import {
 describe('prijsstaffel (besluit Lars 20-9-2026)', () => {
   it('heeft precies de drie treden uit het besluit, in oplopende volgorde', () => {
     expect(PRICING_TIERS.map((t) => [t.label, t.firstScanEur, t.followUpEur])).toEqual([
-      ['Tot 150 medewerkers', 3500, 950],
+      ['Minder dan 150 medewerkers', 3500, 950],
       ['150 tot 400 medewerkers', 4500, 1250],
       ['400 tot 1.000 medewerkers', 6900, 1750],
     ])
+  })
+
+  it('laat 150 in precies één trede vallen: de middelste (besluit Lars 24-9-2026)', () => {
+    expect(PRICING_TIERS[0].label).toBe('Minder dan 150 medewerkers')
+    expect(PRICING_TIERS[1].label.startsWith('150 tot ')).toBe(true)
+    expect(PRICING_TIERS.some((tier) => /^tot 150\b/i.test(tier.label))).toBe(false)
+  })
+
+  it('zet het nieuwe label ook in de FAQ-tekst en de JSON-LD', () => {
+    expect(pricingFaqAnswer()).toContain('Minder dan 150 medewerkers: €3.500')
+    const namen = buildPricingOfferCatalog().itemListElement.map((offer) => offer.name)
+    expect(namen).toContain('Eerste scan, minder dan 150 medewerkers')
+    expect(namen).toContain('Vervolgmeting, minder dan 150 medewerkers')
   })
 
   it('zet boven 1.000 medewerkers op aanvraag, zonder bedrag', () => {
