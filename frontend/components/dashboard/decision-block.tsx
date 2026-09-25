@@ -6,6 +6,7 @@ import { saveCampaignDecisionAction } from '@/app/(dashboard)/campaigns/[id]/dec
 import { DECISION_LIMITS, type CampaignDecision } from '@/lib/dashboard/campaign-decision'
 import { formatDutchDate } from '@/lib/dashboard/format-dutch-date'
 import { LOEP_CONTACT_EMAIL } from '@/lib/loep-contact'
+import type { ScanType } from '@/lib/types'
 
 /**
  * "Besluit vastleggen" op een gesloten meting met rapport (plan 3b, spec
@@ -19,6 +20,7 @@ interface DecisionBlockProps {
   canManage: boolean
   decision: CampaignDecision | null
   loadError: string | null
+  scanType: ScanType
 }
 
 const labelClass = 'block text-xs font-semibold uppercase tracking-wide text-[color:var(--dashboard-muted)]'
@@ -29,12 +31,25 @@ const hintClass = 'mt-1 text-xs text-[color:var(--dashboard-muted)]'
 // Dezelfde tekst als op de besluitpagina van het rapport (fixronde 24-9, R4 en
 // R8): BESLUIT_SLOTLABEL, BESLUIT_PARKEERREGEL en BESLUIT_TERUGKOPPELING in
 // backend/report_html.py; tests/test_report_leesronde_fixes.py houdt ze gelijk.
-// Het dashboard kent het scantype hier niet en toont de Behoud-hint.
 const SUCCESS_LABEL = 'Waaraan zien we bij het startpunt dat het werkt'
 const SECOND_POINT_HINT =
   'Spreken jullie hier vandaag iets over af, schrijf dan bij ‘Wat precies’ ook wie het oppakt. Anders parkeren jullie dit punt: de eigenaar van het startpunt zet het op de agenda van het vervolgmoment.'
-const FEEDBACK_HINT =
-  'Deel het startpunt, het beeld van de hele organisatie en wat het MT besluit. Deel geen open antwoorden en geen uitkomsten van afdelingen met minder dan 10 antwoorden.'
+const FEEDBACK_HINTS: Partial<Record<ScanType, string>> = {
+  retention:
+    'Deel het startpunt, het beeld van de hele organisatie en wat het MT besluit. Deel geen open antwoorden en geen uitkomsten van afdelingen met minder dan 10 antwoorden.',
+  exit: 'Wie invulde, is vertrokken: koppel terug aan wie er nu werkt, over wat het MT met de vertrekredenen doet. Deel geen open antwoorden en geen uitkomsten van afdelingen met minder dan 10 antwoorden.',
+  onboarding: 'Je mensen vulden in; ze horen wat het MT ermee doet.',
+}
+
+/**
+ * De terugkoppelhint van de besluitpagina voor dit scantype. Alleen Loep
+ * Behoud, Loep Vertrek en Loep Start hebben een besluitpagina; voor elk ander
+ * of ontbrekend scantype geen hint, nooit de tekst van een andere scan.
+ */
+export function feedbackHintFor(scanType: string | null | undefined): string | null {
+  if (!scanType || !Object.prototype.hasOwnProperty.call(FEEDBACK_HINTS, scanType)) return null
+  return FEEDBACK_HINTS[scanType as ScanType] ?? null
+}
 
 function ReadOnlyRow({ label, value }: { label: string; value: string | null }) {
   if (!value) return null
@@ -69,7 +84,8 @@ function ReadOnlyDecision({ decision }: { decision: CampaignDecision | null }) {
   )
 }
 
-export function DecisionBlock({ campaignId, canManage, decision, loadError }: DecisionBlockProps) {
+export function DecisionBlock({ campaignId, canManage, decision, loadError, scanType }: DecisionBlockProps) {
+  const feedbackHint = feedbackHintFor(scanType)
   const router = useRouter()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -210,7 +226,7 @@ export function DecisionBlock({ campaignId, canManage, decision, loadError }: De
               disabled={busy}
               className={inputClass}
             />
-            <span className={hintClass}>{FEEDBACK_HINT}</span>
+            {feedbackHint ? <span className={hintClass}>{feedbackHint}</span> : null}
           </label>
           <label className={`${labelClass} sm:col-span-2`}>
             {SUCCESS_LABEL}

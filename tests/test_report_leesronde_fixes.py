@@ -940,9 +940,16 @@ def test_nieuwe_besluitcopy_zonder_streepjes():
 
 def test_dashboard_gebruikt_dezelfde_labels_en_hints_als_de_besluitpagina():
     """Labelconsistentie (plan 3b): het blok "Besluit vastleggen" in het
-    dashboard en de besluitpagina moeten hetzelfde zeggen. Het dashboard kent
-    het scantype niet en toont de Behoud-hint."""
+    dashboard en de besluitpagina moeten hetzelfde zeggen. Het dashboard
+    krijgt het scantype mee en toont per scan de terugkoppelhint van die scan
+    (FEEDBACK_HINTS in decision-block.tsx)."""
     bron = (Path(__file__).resolve().parents[1] / "frontend" / "components" / "dashboard"
             / "decision-block.tsx").read_text(encoding="utf-8")
-    for tekst in (BESLUIT_SLOTLABEL, BESLUIT_PARKEERREGEL, BESLUIT_TERUGKOPPELING["retention"]):
+    for tekst in (BESLUIT_SLOTLABEL, BESLUIT_PARKEERREGEL):
         assert tekst in bron, tekst
+    hints = bron[bron.index("const FEEDBACK_HINTS"):bron.index("export function feedbackHintFor")]
+    assert set(BESLUIT_TERUGKOPPELING) == {"retention", "exit", "onboarding"}
+    for scan_type, tekst in BESLUIT_TERUGKOPPELING.items():
+        m = re.search(r"\b" + scan_type + r":\s*'([^']*)'", hints)
+        assert m, scan_type
+        assert m.group(1) == tekst, scan_type

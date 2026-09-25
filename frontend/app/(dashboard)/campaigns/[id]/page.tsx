@@ -283,6 +283,7 @@ export default async function CampaignPage({ params }: Props) {
           canManage={canManage}
           decision={decisionFromRow(decisionRow)}
           loadError={decisionLoadError}
+          scanType={stats.scan_type}
         />
       ) : null}
       {state.processingVariant === 'insufficient_response' ? (
