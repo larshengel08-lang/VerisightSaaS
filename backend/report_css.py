@@ -406,15 +406,15 @@ p  { margin-bottom: 6px; font-size: 11px; }
 /* break-after: de appendix stroomt (.sec zonder .pb) en zou anders onder het
    invulvel beginnen; dat vel moet los te printen zijn. */
 .besluit { break-inside: avoid; break-after: page; }
-.bl-rij, .bl-drie { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 14px; }
+.bl-rij, .bl-drie { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 10px; }
 .bl-cel { width: 50%; vertical-align: top; padding-right: 18px; }
 .bl-drie td { width: 33.3%; vertical-align: top; padding-right: 14px; }
 .bl-drie .bl-lbl { margin-top: 4px; font-size: 7.5px; }
-.bl-blok { margin-top: 16px; break-inside: avoid; }
+.bl-blok { margin-top: 12px; break-inside: avoid; }
 .bl-lbl { font-family: 'JetBrains Mono', monospace; font-size: 8.5px; letter-spacing: 0.12em; text-transform: uppercase; color: """ + accent_lo + r"""; margin: 10px 0 2px; }
 .bl-vast { font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 13px; color: """ + INK + r"""; padding: 4px 0 2px; }
 .bl-line { border-bottom: 1px solid #94A3B8; height: 24px; }
-.bl-hint { font-size: 8.5px; font-style: italic; color: """ + STEEL + r"""; margin-top: 4px; }
+.bl-hint { font-size: 8.5px; font-style: italic; color: """ + STEEL + r"""; margin-top: 4px; line-height: 1.35; }
 .bl-tekst { font-size: 11px; line-height: 1.55; color: """ + INK + r"""; padding: 4px 0 6px; border-bottom: 1px solid """ + HAIRLINE + r"""; }
 .bl-status { font-size: 9.5px; color: """ + STEEL + r"""; margin: 8px 0 0; font-style: italic; }
 .mq-direction { font-size: 11px; font-weight: 600; color: """ + NAVY + r"""; margin: 8px 0 0; }

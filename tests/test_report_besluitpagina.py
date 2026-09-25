@@ -282,3 +282,33 @@ def test_elk_lang_veld_triggert_de_melding(veld):
     lang = ("besluitwoord " * 60).strip()
     html = _pagina(decision=dict(BESLUIT, **{veld: lang}))
     assert BESLUIT_INGEKORT in _plain(html)
+
+
+def test_besluit_tekst_max_past_ook_bij_een_aangewezen_afdeling():
+    # Fixronde leesronde 24-9, Taak 11: met het blok "Afspraak per afdeling"
+    # liep de besluitpagina bij 300 tekens per lang veld over naar een tweede
+    # vel (06 en Loep Vertrek met een afdeling, alle velden op hun limiet;
+    # scripts/render_besluit_max.py). Wie de grens verhoogt, meet eerst opnieuw.
+    assert BESLUIT_TEKST_MAX == 240
+
+
+def _css_regel(css: str, selector: str) -> str:
+    m = re.search(r"(?m)^" + re.escape(selector) + r"\s*\{([^}]*)\}", css)
+    assert m, selector
+    return m.group(1)
+
+
+def test_besluitpagina_css_wint_ruimte_tussen_blokken_niet_op_de_schrijflijnen():
+    # Taak 11 (hefboom F): ruimte gewonnen tussen blokken en in de hints, niet
+    # op de lege schrijflijnen (die zijn voor de pen) en niet in lettergrootte.
+    from backend.report_css import build_css
+    css = build_css("retention")
+    assert "height: 24px" in _css_regel(css, ".bl-line")
+    assert "margin-top: 12px" in _css_regel(css, ".bl-blok")
+    assert "margin-top: 10px" in _css_regel(css, ".bl-rij, .bl-drie")
+    hint = _css_regel(css, ".bl-hint")
+    assert "font-size: 8.5px" in hint
+    lh = re.search(r"line-height:\s*([\d.]+)", hint)
+    assert lh and float(lh.group(1)) >= 1.3
+    for sel in (".bl-blok", ".bl-rij, .bl-drie", ".bl-hint", ".bl-line", ".bl-lbl"):
+        assert len(re.findall(r"(?m)^" + re.escape(sel) + r"\s*\{", css)) == 1, sel

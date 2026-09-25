@@ -3635,7 +3635,10 @@ BESLUIT_ONLEESBAAR = ("Loep kon niet nagaan of er al een besluit is vastgelegd i
 # tweede vel; op 470 tekens per lang veld past hij nog net, op 480 niet meer.
 # BESLUIT_TEKST_MAX houdt ruime marge (300) voor natuurlijke tekst, die anders
 # wrapt dan de herhaalde-woord-fixture waarmee de knik is gemeten.
-BESLUIT_TEKST_MAX = 300
+# Fixronde leesronde 24-9 (Taak 11): het blok "Afspraak per afdeling" kwam
+# erbij, en met een aangewezen afdeling liep de pagina bij 300 weer over
+# (scripts/render_besluit_max.py, alle velden op hun limiet). Nu 240.
+BESLUIT_TEKST_MAX = 240
 BESLUIT_INGEKORT = ("Dit vel toont het begin van lange antwoorden; het volledige besluit staat "
                     "in het dashboard.")
 # R5 (koude leesronde 24-9): de afspraak uit het afdelingsblok ("vraag de
