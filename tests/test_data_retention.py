@@ -681,3 +681,81 @@ def test_opgeschoond_en_niet_heropend_blijft_al_opgeschoond(fabriek):
     dr.opschonen(fabriek, vandaag=VANDAAG, apply=True)
     assert _status(dr.opschonen(fabriek, vandaag=VANDAAG, apply=True), cid) == "al_opgeschoond"
     assert dr.main(["--apply"], session_factory=fabriek, vandaag=VANDAAG) == 0
+
+
+# --- Taak 17b: telemetrie en bewijsregister per meting, weer respondenten -----
+
+def test_telemetrie_en_bewijsregister_van_de_meting_worden_verwijderd():
+    assert ("suite_telemetry_events", "campaign_id") in dr.NIET_ORM_TABELLEN
+    assert ("case_proof_registry", "campaign_id") in dr.NIET_ORM_TABELLEN
+    engine = _engine()
+    with engine.begin() as con:
+        con.execute(text("create table suite_telemetry_events (id varchar(36) primary key, "
+                         "campaign_id char(36), payload text)"))
+        con.execute(text("create table case_proof_registry (id varchar(36) primary key, "
+                         "campaign_id char(36), summary text not null, claimable_observation text)"))
+    fabriek = sessionmaker(bind=engine)
+    oud, _ = _meting(fabriek, slug="tp1", gesloten=_gesloten(2025, 1, 1))
+    jong, _ = _meting(fabriek, slug="tp2", gesloten=_gesloten(2028, 1, 1))
+    with engine.begin() as con:
+        for cid, tag in ((oud, "oud"), (jong, "jong"), (None, "los")):
+            con.execute(text("insert into suite_telemetry_events values (:i, :c, :p)"),
+                        {"i": "t-" + tag, "c": cid, "p": '{"door": "Sanne"}'})
+            con.execute(text("insert into case_proof_registry values (:i, :c, :s, :o)"),
+                        {"i": "p-" + tag, "c": cid, "s": "Sanne zag verbetering", "o": "Piet bleef"})
+    droog = dr.opschonen(fabriek, vandaag=VANDAAG, apply=False)
+    meting = next(m for m in droog.metingen if m.campaign_id == oud)
+    assert meting.tellingen["suite_telemetry_events.campaign_id"] == 1
+    assert meting.tellingen["case_proof_registry.campaign_id"] == 1
+    rapport = dr.opschonen(fabriek, vandaag=VANDAAG, apply=True)
+    assert _status(rapport, oud) == "opgeschoond"
+    with engine.connect() as con:
+        for tabel in ("suite_telemetry_events", "case_proof_registry"):
+            rest = sorted(r[0] for r in con.execute(text("select id from " + tabel)))
+            assert len(rest) == 2 and not any(r.endswith("-oud") for r in rest), tabel
+    engine.dispose()
+
+
+def _purge_en_nieuwe_respondent(fabriek, slug):
+    cid, _ = _meting(fabriek, slug=slug, gesloten=_gesloten(2025, 1, 1))
+    dr.opschonen(fabriek, vandaag=VANDAAG, apply=True)
+    db = fabriek()
+    eerste = dr.data_purged_at(db, cid)
+    # Heropend en weer gesloten zonder dat closed_at verschoof: closed_at ligt
+    # nog steeds vóór data_purged_at, maar er staat een nieuwe respondent bij.
+    db.add(Respondent(campaign_id=cid, department="Zorg", completed=True,
+                      email="nieuw@" + slug + ".nl"))
+    db.commit()
+    db.close()
+    return cid, eerste
+
+
+def test_weer_respondenten_na_opschoning_is_rood_ook_met_oude_sluitdatum(fabriek, capsys):
+    cid, eerste = _purge_en_nieuwe_respondent(fabriek, "wr")
+    rapport = dr.opschonen(fabriek, vandaag=VANDAAG, apply=True)
+    meting = next(m for m in rapport.metingen if m.campaign_id == cid)
+    assert meting.status == "opnieuw_gesloten_na_opschoning"
+    assert meting.tellingen["respondenten"] == 1
+    op_verzoek = dr.opschonen(fabriek, vandaag=VANDAAG, apply=True, campagne_ids=[cid])
+    assert _status(op_verzoek, cid) == "opnieuw_gesloten_na_opschoning"
+    assert _tel(fabriek, cid)["respondenten"] == 1
+    db = fabriek()
+    assert dr.data_purged_at(db, cid) == eerste
+    db.close()
+    for argv in (["--apply"], []):
+        assert dr.main(argv, session_factory=fabriek, vandaag=VANDAAG) == 1
+        uit = capsys.readouterr().out
+        regel = next(r for r in uit.splitlines() if cid in r)
+        assert regel.startswith("OPNIEUW GESLOTEN") and "respondenten=1" in regel
+        assert "nieuw@wr.nl" not in uit and "Zorg" not in uit
+    assert _tel(fabriek, cid)["respondenten"] == 1
+
+
+def test_heropend_met_nieuwe_respondenten_blijft_heropend(fabriek):
+    # Nog open: gewoon zichtbaar als heropend, de meting loopt.
+    cid, _ = _purge_en_nieuwe_respondent(fabriek, "hr2")
+    db = fabriek()
+    db.execute(text("update campaigns set is_active = 1 where id = :c"), {"c": cid})
+    db.commit()
+    db.close()
+    assert _status(dr.opschonen(fabriek, vandaag=VANDAAG, apply=True), cid) == "heropend_na_opschoning"
