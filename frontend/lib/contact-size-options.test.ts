@@ -45,7 +45,7 @@ describe('omvangvakken van het contactformulier (besluit Lars 24-9)', () => {
     for (const grens of grenzen) {
       expect(CONTACT_SIZE_BOUNDARY_HINT).toContain(String(grens))
     }
-    expect(CONTACT_SIZE_BOUNDARY_HINT).not.toMatch(/[–—]/)
+    expect(CONTACT_SIZE_BOUNDARY_HINT).not.toMatch(new RegExp(`[${String.fromCharCode(0x2013, 0x2014)}]`))
     const source = readFileSync(path.join(process.cwd(), 'components/marketing/contact-form.tsx'), 'utf8')
     expect(source).toContain('{CONTACT_SIZE_BOUNDARY_HINT}')
     expect(source).toContain('aria-describedby="employeeCountHint"')
