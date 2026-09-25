@@ -126,18 +126,34 @@ def test_verlopen_meting_wordt_opgeschoond(fabriek):
 
 
 def test_niets_jonger_dan_de_termijn_wordt_geraakt(fabriek):
-    cid, _ = _meting(fabriek, slug="b", gesloten=_gesloten(2026, 7, 1))   # 23,5 maand
+    # Termijn loopt af op 1 augustus 2028, na de vooruitblik (15 juli 2028).
+    cid, _ = _meting(fabriek, slug="b", gesloten=_gesloten(2026, 8, 1))
     voor = _tel(fabriek, cid)
     rapport = dr.opschonen(fabriek, vandaag=VANDAAG, apply=True)
     assert _status(rapport, cid) == "binnen_termijn"
     assert _tel(fabriek, cid) == voor
 
 
-def test_grens_valt_op_de_dag_zelf_in_nederlandse_tijd(fabriek):
-    # Gesloten op 15 juni 2026 om 23:30 UTC = 16 juni 01:30 Nederlandse tijd.
+def test_grens_valt_op_de_dag_zelf_in_nederlandse_tijd_min_een_cronperiode(fabriek):
+    # Gesloten op 15 juni 2026 om 23:30 UTC = 16 juni 01:30 Nederlandse tijd,
+    # dus de termijn loopt af op 16 juni 2028. De maandelijkse run schoont op
+    # zodra dat binnen een maand valt: vanaf 16 mei 2028.
+    assert dr.VOORUITBLIK_MAANDEN == 1
     cid, _ = _meting(fabriek, slug="c", gesloten=datetime(2026, 6, 15, 23, 30, tzinfo=timezone.utc))
-    assert _status(dr.opschonen(fabriek, vandaag=date(2028, 6, 15), apply=False), cid) == "binnen_termijn"
-    assert _status(dr.opschonen(fabriek, vandaag=date(2028, 6, 16), apply=False), cid) == "verlopen"
+    binnen = dr.opschonen(fabriek, vandaag=date(2028, 5, 15), apply=False)
+    assert _status(binnen, cid) == "binnen_termijn"
+    verlopen = dr.opschonen(fabriek, vandaag=date(2028, 5, 16), apply=False)
+    assert _status(verlopen, cid) == "verlopen"
+    meting = next(m for m in verlopen.metingen if m.campaign_id == cid)
+    assert meting.verloopt_op == date(2028, 6, 16)    # de echte einddatum, niet de vooruitblik
+
+
+def test_maandelijkse_run_is_nooit_te_laat(fabriek):
+    # Runs op de 1e van elke maand: elke termijn die tussen twee runs afloopt,
+    # is bij de eerste van die twee al opgeschoond.
+    cid, _ = _meting(fabriek, slug="c2", gesloten=_gesloten(2026, 6, 20))   # verloopt 20 juni 2028
+    assert _status(dr.opschonen(fabriek, vandaag=date(2028, 5, 1), apply=False), cid) == "binnen_termijn"
+    assert _status(dr.opschonen(fabriek, vandaag=date(2028, 6, 1), apply=False), cid) == "verlopen"
 
 
 def test_open_metingen_nooit_ook_niet_op_verzoek(fabriek):
@@ -145,12 +161,17 @@ def test_open_metingen_nooit_ook_niet_op_verzoek(fabriek):
     zonder_datum, _ = _meting(fabriek, slug="e", gesloten=None, actief=False)
     oud_maar_actief, _ = _meting(fabriek, slug="f", gesloten=_gesloten(2024, 1, 1), actief=True)
     rapport = dr.opschonen(fabriek, vandaag=VANDAAG, apply=True)
+    assert _status(rapport, lopend) == "open"
+    assert _status(rapport, oud_maar_actief) == "open"
+    assert _status(rapport, zonder_datum) == "gestopt_zonder_sluitdatum"
     for cid in (lopend, zonder_datum, oud_maar_actief):
-        assert _status(rapport, cid) == "open"
         assert _tel(fabriek, cid)["respondenten"] == 3
-    op_verzoek = dr.opschonen(fabriek, vandaag=VANDAAG, apply=True, campagne_ids=[lopend])
+    op_verzoek = dr.opschonen(fabriek, vandaag=VANDAAG, apply=True,
+                              campagne_ids=[lopend, zonder_datum])
     assert _status(op_verzoek, lopend) == "geweigerd_open"
-    assert _tel(fabriek, lopend)["respondenten"] == 3
+    assert _status(op_verzoek, zonder_datum) == "geweigerd_open"
+    for cid in (lopend, zonder_datum):
+        assert _tel(fabriek, cid)["respondenten"] == 3
 
 
 def test_andere_organisaties_nooit(fabriek):
@@ -400,3 +421,214 @@ def test_dry_run_zet_elke_sessie_op_alleen_lezen_en_apply_niet(fabriek, monkeypa
     alleen_lezen.clear()
     dr.opschonen(tellende_fabriek, vandaag=VANDAAG, apply=True)
     assert len(sessies) == 3 and alleen_lezen == []
+
+
+# --- Review 25-9: race, dekking, statussen, geen persoonsgegevens in fouten ---
+
+from backend.models import CampaignDeliveryCheckpoint  # noqa: E402
+
+
+def test_heropend_na_de_inventaris_wordt_niet_gewist(fabriek, monkeypatch):
+    cid, _ = _meting(fabriek, slug="race", gesloten=_gesloten(2025, 1, 1))
+    echte = dr._inventaris
+
+    def inventaris_dan_heropenen(db, **kw):
+        uit = echte(db, **kw)
+        andere = fabriek()          # een operator heropent de meting tussendoor
+        andere.execute(text("update campaigns set is_active = 1, closed_at = null where id = :c"),
+                       {"c": cid})
+        andere.commit()
+        andere.close()
+        return uit
+
+    monkeypatch.setattr(dr, "_inventaris", inventaris_dan_heropenen)
+    rapport = dr.opschonen(fabriek, vandaag=VANDAAG, apply=True)
+    meting = next(m for m in rapport.metingen if m.campaign_id == cid)
+    assert meting.status == "fout"
+    assert meting.fout.startswith("MetingVeranderd")
+    assert _tel(fabriek, cid)["respondenten"] == 3
+    db = fabriek()
+    assert dr.data_purged_at(db, cid) is None
+    db.close()
+
+
+def test_verlengde_termijn_na_de_inventaris_wordt_niet_gewist(fabriek, monkeypatch):
+    cid, org = _meting(fabriek, slug="race2", gesloten=_gesloten(2026, 1, 1))
+    echte = dr._inventaris
+
+    def inventaris_dan_verlengen(db, **kw):
+        uit = echte(db, **kw)
+        andere = fabriek()
+        andere.execute(text("update organizations set retention_months = 60 where id = :o"), {"o": org})
+        andere.commit()
+        andere.close()
+        return uit
+
+    monkeypatch.setattr(dr, "_inventaris", inventaris_dan_verlengen)
+    rapport = dr.opschonen(fabriek, vandaag=VANDAAG, apply=True)
+    assert _status(rapport, cid) == "fout"
+    assert _tel(fabriek, cid)["respondenten"] == 3
+
+
+def test_purge_markering_is_voorwaardelijk(fabriek, monkeypatch):
+    # Zou de hercontrole iets missen: de markering zet alleen van leeg naar
+    # gevuld, en 0 geraakte rijen rolt alles terug.
+    cid, _ = _meting(fabriek, slug="cond", gesloten=_gesloten(2025, 1, 1))
+
+    def al_door_een_ander_opgeschoond(db, m, **kw):
+        db.execute(text("update campaigns set data_purged_at = '2028-01-01 00:00:00' where id = :c"),
+                   {"c": cid})
+
+    monkeypatch.setattr(dr, "_controleer_opnieuw", al_door_een_ander_opgeschoond)
+    rapport = dr.opschonen(fabriek, vandaag=VANDAAG, apply=True)
+    assert _status(rapport, cid) == "fout"
+    assert _tel(fabriek, cid)["respondenten"] == 3
+
+
+def test_extra_action_center_tabellen_via_route_source_id():
+    tabellen = ("action_center_follow_through_mail_events", "action_center_graph_calendar_links",
+                "action_center_review_schedule_revisions", "action_center_adoption_events",
+                "action_center_bounded_execution_events", "action_center_review_rhythm_configs",
+                "action_center_governance_interventions")
+    for tabel in tabellen:
+        assert (tabel, "route_source_id") in dr.NIET_ORM_TABELLEN
+    engine = _engine()
+    with engine.begin() as con:
+        for tabel in tabellen:
+            con.execute(text("create table " + tabel + " (id varchar(60) primary key, "
+                             "route_source_id char(36) not null)"))
+    fabriek = sessionmaker(bind=engine)
+    oud, _ = _meting(fabriek, slug="rs1", gesloten=_gesloten(2025, 1, 1))
+    jong, _ = _meting(fabriek, slug="rs2", gesloten=_gesloten(2028, 1, 1))
+    with engine.begin() as con:
+        for tabel in tabellen:
+            for cid in (oud, jong):
+                con.execute(text("insert into " + tabel + " values (:i, :c)"),
+                            {"i": tabel + cid[:8], "c": cid})
+    rapport = dr.opschonen(fabriek, vandaag=VANDAAG, apply=True)
+    assert _status(rapport, oud) == "opgeschoond"
+    with engine.connect() as con:
+        for tabel in tabellen:
+            rest = con.execute(text("select route_source_id from " + tabel)).scalars().all()
+            assert rest == [jong], tabel
+    engine.dispose()
+
+
+def test_onbekende_organisatie_is_een_regel_en_exitcode_1(fabriek, capsys):
+    _meting(fabriek, slug="z", gesloten=_gesloten(2025, 1, 1))
+    onbekend = "11111111-1111-1111-1111-111111111111"
+    assert dr.main(["--apply", "--organisatie", onbekend], session_factory=fabriek,
+                   vandaag=VANDAAG) == 1
+    uit = capsys.readouterr().out
+    assert "ONBEKEND" in uit and ("organisatie=" + onbekend) in uit
+    rapport = dr.opschonen(fabriek, vandaag=VANDAAG, apply=False, organisatie_ids=[onbekend])
+    assert [(o.organization_id, o.status) for o in rapport.organisaties] == [(onbekend, "onbekend")]
+
+
+def test_organisatie_zonder_metingen_krijgt_een_eigen_regel(fabriek, capsys):
+    db = fabriek()
+    org = Organization(name="Leeg", slug="leeg", contact_email="hr@leeg.nl")
+    db.add(org)
+    db.commit()
+    oid = org.id
+    db.close()
+    assert dr.main(["--organisatie", oid], session_factory=fabriek, vandaag=VANDAAG) == 0
+    uit = capsys.readouterr().out
+    assert "organisatie=" + oid in uit and "geen metingen" in uit
+    assert "Leeg" not in uit
+
+
+def test_fouttekst_bevat_geen_persoonsgegevens(fabriek, monkeypatch, capsys, caplog):
+    cid, _ = _meting(fabriek, slug="pii", gesloten=_gesloten(2025, 1, 1))
+
+    class NepDbFout(Exception):
+        pgcode = "23514"
+
+    def kapot(db, campaign_id, nu):
+        raise NepDbFout("new row violates check constraint\n"
+                        "DETAIL: Failing row contains (Sanne de Vries, sanne@pii.nl)")
+
+    monkeypatch.setattr(dr, "_schoon_op", kapot)
+    with caplog.at_level("DEBUG", logger="backend.data_retention"):
+        assert dr.main(["--apply"], session_factory=fabriek, vandaag=VANDAAG) == 1
+    uit = capsys.readouterr().out
+    log = caplog.text + "".join(str(r.exc_info) + str(r.args) for r in caplog.records)
+    for tekst in (uit, log):
+        assert "Sanne" not in tekst and "sanne@" not in tekst and "Failing row" not in tekst
+    assert "NepDbFout pgcode=23514" in uit
+    assert cid in log
+    meting = next(m for m in dr.opschonen(fabriek, vandaag=VANDAAG, apply=True).metingen
+                  if m.campaign_id == cid)
+    assert meting.fout == "NepDbFout pgcode=23514"
+
+
+def test_pgcode_uit_de_sqlalchemy_wrapper():
+    class Orig(Exception):
+        pgcode = "40001"
+
+    from sqlalchemy.exc import OperationalError
+    fout = OperationalError("update ...", {"naam": "Sanne"}, Orig("Sanne"))
+    assert dr._foutcode(fout) == "OperationalError pgcode=40001"
+    assert dr._foutcode(RuntimeError("Sanne")) == "RuntimeError"
+
+
+def test_gestopt_zonder_sluitdatum_telt_mee_en_exitcode_0(fabriek, capsys):
+    cid, _ = _meting(fabriek, slug="gz", gesloten=None, actief=False)
+    assert dr.main(["--apply"], session_factory=fabriek, vandaag=VANDAAG) == 0
+    uit = capsys.readouterr().out
+    assert "GESTOPT" in uit and cid in uit
+    assert "1 gestopt zonder sluitdatum" in uit.splitlines()[-1]
+    assert _tel(fabriek, cid)["respondenten"] == 3
+
+
+def test_heropend_na_opschoning_is_zichtbaar_en_wordt_niet_opnieuw_geraakt(fabriek, capsys):
+    cid, _ = _meting(fabriek, slug="hn", gesloten=_gesloten(2025, 1, 1))
+    dr.opschonen(fabriek, vandaag=VANDAAG, apply=True)
+    db = fabriek()
+    eerste = dr.data_purged_at(db, cid)
+    db.execute(text("update campaigns set is_active = 1 where id = :c"), {"c": cid})
+    db.commit()
+    db.close()
+    rapport = dr.opschonen(fabriek, vandaag=VANDAAG, apply=True)
+    assert _status(rapport, cid) == "heropend_na_opschoning"
+    op_verzoek = dr.opschonen(fabriek, vandaag=VANDAAG, apply=True, campagne_ids=[cid])
+    assert _status(op_verzoek, cid) == "heropend_na_opschoning"
+    db = fabriek()
+    assert dr.data_purged_at(db, cid) == eerste
+    db.close()
+    assert dr.main(["--apply"], session_factory=fabriek, vandaag=VANDAAG) == 0
+    uit = capsys.readouterr().out
+    assert "HEROPEND" in uit and "1 heropend na opschoning" in uit.splitlines()[-1]
+
+
+def test_alle_vrije_tekstvelden_worden_leeg(fabriek):
+    cid, _ = _meting(fabriek, slug="vv", gesloten=_gesloten(2025, 1, 1))
+    db = fabriek()
+    rec = db.query(CampaignDeliveryRecord).filter_by(campaign_id=cid).one()
+    rec.next_step = "Sanne bellen"
+    rec.participant_comms_config = {"senderName": "Sanne"}
+    rec.self_send_reminders = [{"id": "r1", "kind": "reminder"}]
+    db.add(CampaignDeliveryCheckpoint(delivery_record_id=rec.id, checkpoint_key="launch",
+                                      operator_note="Sanne belt", last_auto_summary="Sanne zei ja"))
+    besluit = db.get(CampaignDecision, cid)
+    besluit.secondary_topic = "Werkdruk"
+    besluit.secondary_action = "Piet regelt"
+    besluit.feedback_plan = "Sanne mailt iedereen"
+    besluit.recorded_by = "22222222-2222-2222-2222-222222222222"
+    db.commit()
+    db.close()
+
+    dr.opschonen(fabriek, vandaag=VANDAAG, apply=True)
+
+    db = fabriek()
+    rec = db.query(CampaignDeliveryRecord).filter_by(campaign_id=cid).one()
+    assert rec.next_step is None
+    assert rec.participant_comms_config == {} and rec.self_send_reminders == []
+    cp = db.query(CampaignDeliveryCheckpoint).filter_by(delivery_record_id=rec.id).one()
+    assert cp.operator_note is None and cp.last_auto_summary is None
+    assert cp.checkpoint_key == "launch"
+    besluit = db.get(CampaignDecision, cid)
+    assert besluit.secondary_action == "" and besluit.feedback_plan == ""
+    assert besluit.recorded_by is None
+    assert besluit.secondary_topic == "Werkdruk"      # labels blijven
+    db.close()

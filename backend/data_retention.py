@@ -25,6 +25,13 @@ schema `0 3 1 * *` (de 1e van de maand, 03:00 UTC) en startcommando
 opgeschoond, slaat hij over. Aanzetten doet Lars, na de migratie en na één
 handmatige dry-run.
 
+Vooruitblik: de maandelijkse run schoont een meting al op als haar termijn
+binnen één cronperiode (VOORUITBLIK_MAANDEN, een maand) afloopt. Zonder die
+vooruitblik zou een termijn die net na een run afloopt pas bij de volgende run
+worden opgeschoond, tot een maand na "uiterlijk twee jaar". Zo is de opschoning
+nooit te laat en hooguit een maand vroeg. Opschonen op verzoek kijkt niet naar
+de termijn en heeft dus ook geen vooruitblik.
+
 Indeling: per soort gegevens een eigen inventaris-, tel- en opschoonfunctie en
 een eigen Rapportage. Nu alleen metingen (opschonen); leads en leerdossiers
 (contact_requests, pilot_learning_*) komen er als eigen functies naast, met
@@ -42,7 +49,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
 from typing import Callable, Iterable
 
-from sqlalchemy import DateTime, Integer, bindparam, inspect, select, text
+from sqlalchemy import Boolean, DateTime, Integer, bindparam, inspect, select, text
 from sqlalchemy.orm import Session
 
 from backend.models import (
@@ -51,6 +58,7 @@ from backend.models import (
     CampaignDecision,
     CampaignDeliveryCheckpoint,
     CampaignDeliveryRecord,
+    Organization,
     Respondent,
     SurveyResponse,
 )
@@ -59,6 +67,9 @@ from backend.survey_window import AMSTERDAM, today_amsterdam
 logger = logging.getLogger(__name__)
 
 STANDAARD_TERMIJN_MAANDEN = 24
+# Eén cronperiode: de periodieke run draait maandelijks (Railway, 0 3 1 * *).
+# Verandert het schema, dan verandert deze constante mee. Zie de docstring.
+VOORUITBLIK_MAANDEN = 1
 MIGRATIE = "migrations/2026_09_24_add_data_retention.sql"
 
 # Tabellen buiten het ORM met rijen per meting. Alleen geraakt als de tabel en
@@ -75,13 +86,28 @@ NIET_ORM_TABELLEN: tuple[tuple[str, str], ...] = (
     ("action_center_route_relations", "source_campaign_id"),
     ("action_center_route_relations", "target_campaign_id"),
     ("action_center_review_decisions", "route_source_id"),
+    # Tabellen met route_source_id naar de meting (gecontroleerd tegen
+    # supabase/schema.sql): mailadressen van ontvangers en organisatoren,
+    # redenen en wie iets wijzigde, gebruikers-id's in gebeurtenissen.
+    ("action_center_follow_through_mail_events", "route_source_id"),
+    ("action_center_graph_calendar_links", "route_source_id"),
+    ("action_center_review_schedule_revisions", "route_source_id"),
+    ("action_center_adoption_events", "route_source_id"),
+    ("action_center_bounded_execution_events", "route_source_id"),
+    ("action_center_review_rhythm_configs", "route_source_id"),
+    ("action_center_governance_interventions", "route_source_id"),
 )
 
 _Q_PURGED = (text("select data_purged_at from campaigns where id = :id")
              .bindparams(bindparam("id", type_=GUID()))
              .columns(data_purged_at=DateTime(timezone=True)))
-_U_PURGED = text("update campaigns set data_purged_at = :ts where id = :id").bindparams(
+# Alleen van leeg naar gevuld: een tweede opschoning van dezelfde meting (door
+# een parallelle run) raakt 0 rijen en rolt dan alles terug.
+_U_PURGED = text("update campaigns set data_purged_at = :ts where id = :id "
+                 "and data_purged_at is null").bindparams(
     bindparam("id", type_=GUID()), bindparam("ts", type_=DateTime(timezone=True)))
+_SQL_CAMPAGNE = ("select is_active, closed_at, data_purged_at, organization_id "
+                 "from campaigns where id = :id")
 _Q_TERMIJN = (text("select retention_months from organizations where id = :id")
               .bindparams(bindparam("id", type_=GUID()))
               .columns(retention_months=Integer()))
@@ -89,6 +115,19 @@ _Q_TERMIJN = (text("select retention_months from organizations where id = :id")
 
 class RetentieMigratieOntbreekt(RuntimeError):
     """--apply zonder de kolommen van de migratie: stoppen, niets raden."""
+
+
+class MetingVeranderd(RuntimeError):
+    """De meting voldoet in de opschoontransactie niet meer aan de voorwaarden.
+
+    Bijvoorbeeld heropend of een langere termijn gekregen tussen de inventaris
+    en de opschoning. De transactie rolt terug; de meting staat als fout in de
+    uitvoer. `nu` is een status uit een vaste lijst, geen inhoud.
+    """
+
+    def __init__(self, nu: str) -> None:
+        self.nu = nu
+        super().__init__("meting veranderde na de inventaris: nu " + nu)
 
 
 class ReportDataPurged(Exception):
@@ -158,8 +197,10 @@ def _sluitdag(closed_at: datetime) -> date:
 class Meting:
     campaign_id: str
     organization_id: str | None
-    status: str   # verlopen | opgeschoond | binnen_termijn | open | al_opgeschoond | geweigerd_open | onbekend | fout
-    reden: str = ""            # "termijn" of "verzoek"
+    # verlopen | opgeschoond | binnen_termijn | open | gestopt_zonder_sluitdatum |
+    # al_opgeschoond | heropend_na_opschoning | geweigerd_open | onbekend | fout
+    status: str
+    reden: str = ""            # "termijn", "verzoek" of de termijn met vooruitblik
     gesloten_op: date | None = None
     verloopt_op: date | None = None
     termijn_maanden: int | None = None
@@ -168,10 +209,44 @@ class Meting:
 
 
 @dataclass
+class Organisatieregel:
+    """Een organisatie uit een verzoek die zelf een regel krijgt."""
+
+    organization_id: str
+    status: str   # onbekend | geen_metingen
+
+
+@dataclass
 class Rapportage:
     migratie_gedraaid: bool
     apply: bool
     metingen: list[Meting]
+    organisaties: list[Organisatieregel] = field(default_factory=list)
+
+
+def _beoordeel(m: Meting, *, is_active: bool | None, closed_at: datetime | None,
+               purged: datetime | None, vandaag: date, op_verzoek: bool,
+               termijn: Callable[[], int]) -> None:
+    """De regels voor één meting; één bron voor de inventaris en de hercontrole."""
+    if purged is not None:
+        m.status = "heropend_na_opschoning" if is_active else "al_opgeschoond"
+    elif is_active:
+        m.status = "geweigerd_open" if op_verzoek else "open"
+    elif closed_at is None:
+        m.status = "geweigerd_open" if op_verzoek else "gestopt_zonder_sluitdatum"
+    else:
+        m.gesloten_op = _sluitdag(closed_at)
+        m.termijn_maanden = termijn()
+        m.verloopt_op = _plus_maanden(m.gesloten_op, m.termijn_maanden)
+        if op_verzoek:
+            m.status = "verlopen"
+        elif m.verloopt_op <= _plus_maanden(vandaag, VOORUITBLIK_MAANDEN):
+            m.status = "verlopen"
+            if m.verloopt_op > vandaag:
+                m.reden = ("termijn, loopt af binnen " + str(VOORUITBLIK_MAANDEN)
+                           + " maand (vooruitblik)")
+        else:
+            m.status = "binnen_termijn"
 
 
 def _termijn(db: Session, organization_id: str, gedraaid: bool) -> int:
@@ -240,7 +315,52 @@ def _schoon_op(db: Session, campaign_id: str, nu: datetime) -> None:
                 bindparam("id", type_=GUID()))
             db.execute(q, {"id": campaign_id})
 
-    db.execute(_U_PURGED, {"ts": nu, "id": campaign_id})
+    if db.execute(_U_PURGED, {"ts": nu, "id": campaign_id}).rowcount != 1:
+        raise MetingVeranderd("al_opgeschoond")
+
+
+def _controleer_opnieuw(db: Session, m: Meting, *, vandaag: date, op_verzoek: bool,
+                        organisatie_ids: list[str]) -> None:
+    """Eerste stap van de opschoontransactie: vergrendel de meting en toets opnieuw.
+
+    Tussen de inventaris en deze transactie kan een operator de meting
+    heropenen of de termijn verlengen. Op Postgres houdt FOR UPDATE de rij vast
+    tot de commit; SQLite kent dat niet en heeft het in de tests niet nodig.
+    """
+    sql = _SQL_CAMPAGNE
+    if db.get_bind().dialect.name == "postgresql":
+        sql += " for update"
+    q = (text(sql).bindparams(bindparam("id", type_=GUID()))
+         .columns(is_active=Boolean(), closed_at=DateTime(timezone=True),
+                  data_purged_at=DateTime(timezone=True), organization_id=GUID()))
+    rij = db.execute(q, {"id": m.campaign_id}).one_or_none()
+    if rij is None:
+        raise MetingVeranderd("onbekend")
+    if organisatie_ids and rij.organization_id not in organisatie_ids:
+        raise MetingVeranderd("andere_organisatie")
+    nieuw = Meting(campaign_id=m.campaign_id, organization_id=rij.organization_id, status="")
+    _beoordeel(nieuw, is_active=rij.is_active, closed_at=rij.closed_at, purged=rij.data_purged_at,
+               vandaag=vandaag, op_verzoek=op_verzoek,
+               termijn=lambda: _termijn(db, rij.organization_id, True))
+    if nieuw.status != "verlopen":
+        raise MetingVeranderd(nieuw.status)
+
+
+def _foutcode(exc: BaseException) -> str:
+    """Alleen de soort fout en de Postgres-code, nooit de melding zelf.
+
+    Een databasemelding kan de rij bevatten ("Failing row contains (...)") en
+    een SQLAlchemy-fout de parameters; beide kunnen persoonsgegevens zijn.
+    """
+    uit = type(exc).__name__
+    if isinstance(exc, MetingVeranderd):
+        uit += ": nu " + exc.nu
+    orig = getattr(exc, "orig", None)
+    code = (getattr(exc, "pgcode", None) or getattr(exc, "sqlstate", None)
+            or getattr(orig, "pgcode", None) or getattr(orig, "sqlstate", None))
+    if code:
+        uit += " pgcode=" + str(code)
+    return uit
 
 
 def _alleen_lezen(db: Session) -> None:
@@ -249,8 +369,8 @@ def _alleen_lezen(db: Session) -> None:
         db.execute(text("SET TRANSACTION READ ONLY"))
 
 
-def _inventaris(db: Session, *, vandaag: date, gedraaid: bool,
-                campagne_ids: list[str], organisatie_ids: list[str]) -> list[Meting]:
+def _inventaris(db: Session, *, vandaag: date, gedraaid: bool, campagne_ids: list[str],
+                organisatie_ids: list[str]) -> tuple[list[Meting], list[Organisatieregel]]:
     op_verzoek = bool(campagne_ids or organisatie_ids)
     q = db.query(Campaign)
     if campagne_ids:
@@ -263,20 +383,25 @@ def _inventaris(db: Session, *, vandaag: date, gedraaid: bool,
     for cid in campagne_ids:
         if cid not in gevonden:
             metingen.append(Meting(campaign_id=cid, organization_id=None, status="onbekend"))
+    organisaties: list[Organisatieregel] = []
+    if organisatie_ids:
+        bestaand = {o for (o,) in db.query(Organization.id).filter(
+            Organization.id.in_(organisatie_ids))}
+        met_metingen = {c.organization_id for c in campagnes}
+        for oid in organisatie_ids:
+            if oid not in bestaand:
+                organisaties.append(Organisatieregel(oid, "onbekend"))
+            elif oid not in met_metingen:
+                organisaties.append(Organisatieregel(oid, "geen_metingen"))
     for c in campagnes:
         m = Meting(campaign_id=c.id, organization_id=c.organization_id, status="",
                    reden="verzoek" if op_verzoek else "termijn")
-        if gedraaid and data_purged_at(db, c.id) is not None:
-            m.status = "al_opgeschoond"
-        elif c.is_active or c.closed_at is None:
-            m.status = "geweigerd_open" if op_verzoek else "open"
-        else:
-            m.gesloten_op = _sluitdag(c.closed_at)
-            m.termijn_maanden = _termijn(db, c.organization_id, gedraaid)
-            m.verloopt_op = _plus_maanden(m.gesloten_op, m.termijn_maanden)
-            m.status = "verlopen" if (op_verzoek or vandaag >= m.verloopt_op) else "binnen_termijn"
+        _beoordeel(m, is_active=c.is_active, closed_at=c.closed_at,
+                   purged=data_purged_at(db, c.id) if gedraaid else None,
+                   vandaag=vandaag, op_verzoek=op_verzoek,
+                   termijn=lambda c=c: _termijn(db, c.organization_id, gedraaid))
         metingen.append(m)
-    return metingen
+    return metingen, organisaties
 
 
 def opschonen(session_factory: Callable[[], Session], *, vandaag: date, apply: bool,
@@ -284,7 +409,8 @@ def opschonen(session_factory: Callable[[], Session], *, vandaag: date, apply: b
     """Bepaal welke metingen verlopen zijn en schoon ze op (alleen met apply).
 
     Op verzoek (campagne_ids of organisatie_ids): alleen die metingen, ongeacht
-    de termijn, en nooit een open meting. Per meting één transactie.
+    de termijn, en nooit een open meting. Per meting één transactie, die eerst
+    de meting vergrendelt en opnieuw toetst (_controleer_opnieuw).
     """
     campagne_ids = [str(uuid.UUID(str(c))) for c in campagne_ids]
     organisatie_ids = [str(uuid.UUID(str(o))) for o in organisatie_ids]
@@ -301,8 +427,9 @@ def opschonen(session_factory: Callable[[], Session], *, vandaag: date, apply: b
             raise RetentieMigratieOntbreekt(
                 "De kolommen campaigns.data_purged_at en organizations.retention_months "
                 "bestaan niet. Draai eerst " + MIGRATIE + " in Supabase.")
-        metingen = _inventaris(db, vandaag=vandaag, gedraaid=gedraaid,
-                               campagne_ids=campagne_ids, organisatie_ids=organisatie_ids)
+        metingen, organisaties = _inventaris(db, vandaag=vandaag, gedraaid=gedraaid,
+                                             campagne_ids=campagne_ids,
+                                             organisatie_ids=organisatie_ids)
     finally:
         db.rollback()
         db.close()
@@ -313,7 +440,11 @@ def opschonen(session_factory: Callable[[], Session], *, vandaag: date, apply: b
             continue
         db = session_factory()
         try:
-            if not apply:
+            if apply:
+                _controleer_opnieuw(db, m, vandaag=vandaag,
+                                    op_verzoek=bool(campagne_ids or organisatie_ids),
+                                    organisatie_ids=organisatie_ids)
+            else:
                 _alleen_lezen(db)
             m.tellingen = _tellingen(db, m.campaign_id)
             if apply:
@@ -325,18 +456,29 @@ def opschonen(session_factory: Callable[[], Session], *, vandaag: date, apply: b
         except Exception as exc:
             db.rollback()
             m.status = "fout"
-            m.fout = type(exc).__name__ + ": " + str(exc)[:200]
-            logger.exception("opschoning mislukt voor campagne %s", m.campaign_id)
+            m.fout = _foutcode(exc)
+            # Bewust zonder exc_info: de traceback bevat de melding zelf.
+            logger.error("opschoning mislukt voor campagne %s: %s", m.campaign_id, m.fout)
         finally:
             db.close()
-    return Rapportage(migratie_gedraaid=gedraaid, apply=apply, metingen=metingen)
+    return Rapportage(migratie_gedraaid=gedraaid, apply=apply, metingen=metingen,
+                      organisaties=organisaties)
 
 
 _KOPPEN = {
     "verlopen": "VERLOPEN", "opgeschoond": "OPGESCHOOND", "binnen_termijn": "BINNEN TERMIJN",
-    "open": "OPEN", "al_opgeschoond": "AL OPGESCHOOND", "geweigerd_open": "GEWEIGERD",
+    "open": "OPEN", "gestopt_zonder_sluitdatum": "GESTOPT", "al_opgeschoond": "AL OPGESCHOOND",
+    "heropend_na_opschoning": "HEROPEND", "geweigerd_open": "GEWEIGERD",
     "onbekend": "ONBEKEND", "fout": "FOUT",
 }
+_ORG_KOPPEN = {"onbekend": "ONBEKEND", "geen_metingen": "GEEN METINGEN"}
+
+
+def _org_regel(o: Organisatieregel) -> str:
+    kop = _ORG_KOPPEN[o.status].ljust(15) + "organisatie=" + o.organization_id
+    if o.status == "onbekend":
+        return kop + ": deze id bestaat niet"
+    return kop + ": deze organisatie heeft geen metingen, niets te doen"
 
 
 def _regel(m: Meting, *, apply: bool) -> str:
@@ -344,8 +486,14 @@ def _regel(m: Meting, *, apply: bool) -> str:
     kop = _KOPPEN[m.status].ljust(15) + "campagne=" + m.campaign_id
     if m.organization_id:
         kop += " organisatie=" + m.organization_id
-    if m.status in ("open", "geweigerd_open"):
+    if m.status == "open":
+        return kop + ": loopt nog, niet geraakt"
+    if m.status == "geweigerd_open":
         return kop + ": loopt nog of heeft geen sluitdatum, niet geraakt"
+    if m.status == "gestopt_zonder_sluitdatum":
+        return kop + ": gestopt zonder sluitdatum, niet geraakt (zet eerst een sluitmoment)"
+    if m.status == "heropend_na_opschoning":
+        return kop + ": eerder opgeschoond en daarna heropend, niet opnieuw geraakt"
     if m.status == "onbekend":
         return kop + ": deze id bestaat niet"
     if m.status == "al_opgeschoond":
@@ -365,8 +513,15 @@ def _samenvatting(r: Rapportage) -> str:
     return ("SAMENVATTING (" + ("opgeschoond" if r.apply else "dry-run") + "): "
             + str(tel["verlopen"]) + " verlopen, " + str(tel["opgeschoond"]) + " opgeschoond, "
             + str(tel["binnen_termijn"]) + " binnen de termijn, " + str(tel["open"]) + " open, "
-            + str(tel["al_opgeschoond"]) + " al opgeschoond, " + str(tel["geweigerd_open"])
-            + " geweigerd, " + str(tel["onbekend"]) + " onbekend, " + str(tel["fout"]) + " fouten.")
+            + str(tel["gestopt_zonder_sluitdatum"]) + " gestopt zonder sluitdatum, "
+            + str(tel["al_opgeschoond"]) + " al opgeschoond, "
+            + str(tel["heropend_na_opschoning"]) + " heropend na opschoning, "
+            + str(tel["geweigerd_open"]) + " geweigerd, " + str(tel["onbekend"]) + " onbekend, "
+            + str(tel["fout"]) + " fouten"
+            + ("; organisaties: " + str(sum(1 for o in r.organisaties if o.status == "onbekend"))
+               + " onbekend, " + str(sum(1 for o in r.organisaties if o.status == "geen_metingen"))
+               + " zonder metingen" if r.organisaties else "")
+            + ".")
 
 
 def _uuid_arg(waarde: str) -> str:
@@ -409,10 +564,14 @@ def main(argv: list[str] | None = None, *,
         print("LET OP: de migratie " + MIGRATIE + " is niet gedraaid. Deze dry-run rekent met "
               + str(STANDAARD_TERMIJN_MAANDEN) + " maanden voor elke organisatie en ziet niet "
               "welke metingen al zijn opgeschoond.")
+    for o in rapport.organisaties:
+        print(_org_regel(o))
     for m in rapport.metingen:
         print(_regel(m, apply=rapport.apply))
     print(_samenvatting(rapport))
     slecht = {"fout", "onbekend", "geweigerd_open"}
+    if any(o.status == "onbekend" for o in rapport.organisaties):
+        return 1
     return 1 if any(m.status in slecht for m in rapport.metingen) else 0
 
 
