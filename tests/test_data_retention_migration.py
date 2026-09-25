@@ -38,6 +38,32 @@ def test_trigger_laat_alleen_loep_de_kolommen_wijzigen():
     assert "before insert or update on public.campaigns" in sql
     assert "tg_op = 'insert'" in sql
     assert "new.data_purged_at is not null" in sql
+    # Ook 'anon' telt als klant (verdediging in de diepte).
+    assert "coalesce(auth.role(), '') in ('anon', 'authenticated')" in sql
+
+
+def test_trigger_bewaakt_de_klok_van_de_bewaartermijn():
+    """De termijn loopt vanaf closed_at. Kan een klant een gesloten meting
+    heropenen of closed_at verschuiven, dan slaat de opschoning hem voor altijd
+    over. Een sluitmoment in de toekomst wordt teruggezet naar nu."""
+    sql = _sql()
+    assert "if old.closed_at is not null then" in sql
+    assert "new.closed_at is distinct from old.closed_at" in sql
+    assert "coalesce(new.is_active, false) and not coalesce(old.is_active, false)" in sql
+    assert sql.count("new.closed_at := now();") == 2
+
+
+def test_migratie_geeft_lars_een_controle_op_auth_role():
+    sql = _sql()
+    assert "-- select pg_get_functiondef('auth.role'::regproc) like '%request.jwt.claims%';" in sql
+
+
+def test_gedragscontrole_is_alleen_lokaal():
+    check = (ROOT / "migrations" / "checks" / "2026_09_24_data_retention_gedrag.sql")
+    tekst = check.read_text(encoding="utf-8")
+    assert tekst.startswith("-- ALLEEN LOKAAL, NOOIT TEGEN PRODUCTIE")
+    for geval in ("heropenen", "closed_at verschuiven", "sluitmoment in de toekomst", "anon"):
+        assert geval in tekst, geval
 
 
 def test_trigger_leest_geen_kolom_van_de_andere_tabel():
@@ -61,6 +87,7 @@ def test_schema_sql_heeft_hetzelfde_blok():
     assert "add column if not exists retention_months integer" in schema
     assert "create or replace function public.guard_retention_columns()" in schema
     assert "before insert or update on public.campaigns" in schema
+    assert "if old.closed_at is not null then" in schema
     # Het blok in schema.sql is de migratie zonder de kopcommentaarregels.
     migratie_zonder_kop = _sql().split("\n\n", 1)[1].strip()
     assert migratie_zonder_kop in schema

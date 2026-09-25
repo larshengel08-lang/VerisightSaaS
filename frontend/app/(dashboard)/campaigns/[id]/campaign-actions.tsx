@@ -39,18 +39,40 @@ export function CampaignActions({
     setLoading('archive')
 
     const supabase = createClient()
-    const { error: supabaseError } = await supabase
+    // Alleen als de meting nog niet gesloten is: closed_at is de klok van de
+    // bewaartermijn en de database weigert een klant die hem verschuift.
+    const { data: updatedRows, error: supabaseError } = await supabase
       .from('campaigns')
       .update({ is_active: false, closed_at: new Date().toISOString() })
       .eq('id', campaignId)
-
-    setLoading(null)
+      .is('closed_at', null)
+      .select('id')
 
     if (supabaseError) {
+      setLoading(null)
       setError(`Archiveren mislukt: ${supabaseError.message}`)
       return
     }
 
+    if (!updatedRows || updatedRows.length === 0) {
+      // 0 rijen: al gesloten (verouderd tabblad), of niet gevonden / geen
+      // rechten. Nalezen welke van de twee: geen valse fout, geen vals succes.
+      const { data: current } = await supabase
+        .from('campaigns')
+        .select('closed_at')
+        .eq('id', campaignId)
+        .maybeSingle()
+      setLoading(null)
+      if ((current as { closed_at?: string | null } | null)?.closed_at) {
+        showToast('Deze campaign was al gearchiveerd. Pagina wordt vernieuwd...')
+        setTimeout(() => window.location.reload(), 1500)
+        return
+      }
+      setError('Archiveren mislukt: campaign niet gevonden of geen rechten.')
+      return
+    }
+
+    setLoading(null)
     showToast('Campaign gearchiveerd. Pagina wordt vernieuwd...')
     setTimeout(() => window.location.reload(), 1500)
   }

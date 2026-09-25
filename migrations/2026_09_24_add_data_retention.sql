@@ -32,11 +32,16 @@ end $$;
 
 -- Klanten mogen hun organisatierij bijwerken (policy owners_can_update_org) en
 -- managers mogen metingen aanmaken en bijwerken (org_managers_can_insert_campaigns,
--- org_managers_can_update_campaigns). Deze twee kolommen zijn van Loep: een
--- ingelogde klant die geen operator is, mag ze niet wijzigen, en mag ook geen
--- meting aanmaken met data_purged_at al gevuld (die zou de opschoning dan voor
--- altijd overslaan). De service-role en een directe databaseverbinding (de
--- opschoning) hebben geen JWT-rol 'authenticated' en mogen wel.
+-- org_managers_can_update_campaigns). Deze kolommen zijn van Loep: een klant die
+-- geen operator is, mag ze niet wijzigen, en mag ook geen meting aanmaken met
+-- data_purged_at al gevuld (die zou de opschoning dan voor altijd overslaan).
+-- Om dezelfde reden bewaakt de trigger de klok van de bewaartermijn: een
+-- gesloten meting kan een klant niet heropenen en closed_at niet verschuiven,
+-- en een sluitmoment in de toekomst wordt teruggezet naar nu. Geen enkele
+-- klantflow doet dat (sluiten zet closed_at alleen als hij nog leeg is).
+-- 'anon' valt er ook onder (verdediging in de diepte; RLS laat anon hier niets
+-- schrijven). De service-role en een directe databaseverbinding (de opschoning)
+-- hebben geen van die JWT-rollen en mogen wel.
 -- Let op: de tabelnaam staat in een eigen, buitenste if. PL/pgSQL rekent een
 -- expressie als "tg_table_name = 'campaigns' and new.data_purged_at ..." niet
 -- kort: op organizations bestaat new.data_purged_at niet en dan faalt elke
@@ -44,7 +49,7 @@ end $$;
 create or replace function public.guard_retention_columns()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  if coalesce(auth.role(), '') = 'authenticated' and not public.is_verisight_admin_user() then
+  if coalesce(auth.role(), '') in ('anon', 'authenticated') and not public.is_verisight_admin_user() then
     if tg_table_name = 'organizations' then
       if tg_op = 'UPDATE' then
         if new.retention_months is distinct from old.retention_months then
@@ -56,8 +61,21 @@ begin
         if new.data_purged_at is not null then
           raise exception 'data_purged_at wordt alleen door de opschoning gezet';
         end if;
-      elsif new.data_purged_at is distinct from old.data_purged_at then
-        raise exception 'data_purged_at wordt alleen door de opschoning gezet';
+        if new.closed_at > now() then
+          new.closed_at := now();
+        end if;
+      else
+        if new.data_purged_at is distinct from old.data_purged_at then
+          raise exception 'data_purged_at wordt alleen door de opschoning gezet';
+        end if;
+        if old.closed_at is not null then
+          if new.closed_at is distinct from old.closed_at
+             or (coalesce(new.is_active, false) and not coalesce(old.is_active, false)) then
+            raise exception 'een gesloten meting kan alleen Loep heropenen of een ander sluitmoment geven';
+          end if;
+        elsif new.closed_at > now() then
+          new.closed_at := now();
+        end if;
       end if;
     end if;
   end if;
@@ -74,3 +92,8 @@ drop trigger if exists campaigns_retention_guard_trg on public.campaigns;
 create trigger campaigns_retention_guard_trg
   before insert or update on public.campaigns
   for each row execute function public.guard_retention_columns();
+
+-- Controle voor Lars (alleen lezen, mag in productie): de trigger leest de rol
+-- via auth.role(). Die moet de claims-json van PostgREST lezen, anders ziet hij
+-- elke klant als 'geen rol' en laat hij alles door. Verwacht: true.
+-- select pg_get_functiondef('auth.role'::regproc) like '%request.jwt.claims%';
