@@ -20,9 +20,47 @@ def test_migratie_is_additief_en_idempotent():
     assert "add column if not exists retention_months integer" in sql
     assert "retention_months between 1 and 120" in sql
     assert "create or replace function public.guard_retention_columns()" in sql
-    assert sql.count("drop trigger if exists") == 2
+    # Twee vaste triggers plus de lus voor de tabellen per meting.
+    assert sql.count("drop trigger if exists") == 3
     for verboden in ("drop table", "drop column", "delete from", "truncate", "alter column"):
         assert verboden not in sql, verboden
+
+
+# Precies de tabellen per meting die een klant via RLS mag schrijven (insert of
+# update), zie het commentaar in de migratie.
+TABELLEN_PER_METING = (
+    "respondents", "campaign_delivery_records", "campaign_delivery_checkpoints",
+    "campaign_decisions", "campaign_action_audit_events",
+    "action_center_manager_responses", "action_center_route_actions",
+    "action_center_action_reviews", "action_center_route_relations",
+    "action_center_review_rhythm_configs", "action_center_governance_interventions",
+)
+
+
+def test_opgeschoonde_meting_is_voor_klanten_dicht():
+    """Na de opschoning slaat de opschoning een meting voor altijd over. Wat een
+    klant daarna nog schrijft (een eigenaarnaam in een besluit) zou dus nooit
+    meer verdwijnen: de trigger weigert dat voor klanten."""
+    sql = _sql()
+    assert "create or replace function public.guard_purged_campaign_writes()" in sql
+    functie = sql.split("create or replace function public.guard_purged_campaign_writes()", 1)[1]
+    functie = functie.split("$$;", 1)[0]
+    assert "security definer set search_path = public" in functie
+    assert "coalesce(auth.role(), '') in ('anon', 'authenticated') and not public.is_verisight_admin_user()" in functie
+    assert "de gegevens van deze meting zijn verwijderd; hier kan niets meer bij." in functie
+    assert "c.data_purged_at is not null" in functie
+    # Bij een update telt ook de meting waar de rij vandaan komt.
+    assert "array_append(rijen, to_jsonb(old))" in functie
+    # Alle manieren waarop een rij aan een meting hangt.
+    for sleutel in ("'campaign_id'", "'source_campaign_id'", "'target_campaign_id'",
+                    "'route_source_id'", "'delivery_record_id'", "'action_id'"):
+        assert sleutel in functie, sleutel
+    lus = sql.split("foreach t in array array[", 1)[1].split("] loop", 1)[0]
+    genoemd = {t.strip().strip("'") for t in lus.replace("\n", " ").split(",")}
+    assert genoemd == set(TABELLEN_PER_METING)
+    # Een tabel die op deze omgeving niet bestaat, wordt overgeslagen.
+    assert "if to_regclass('public.' || t) is not null then" in sql
+    assert "before insert or update on public.%i" in sql
 
 
 def test_trigger_laat_alleen_loep_de_kolommen_wijzigen():
@@ -79,7 +117,10 @@ def test_gedragscontrole_is_alleen_lokaal():
     for geval in ("heropenen", "closed_at verschuiven", "sluitmoment in de toekomst", "anon",
                   "stopzetten zonder sluitmoment", "stopgezet aanmaken zonder sluitmoment",
                   "sluitmoment in het verleden bij sluiten", "sluitmoment in het verleden bij aanmaken",
-                  "sluitmoment in het verleden invullen op oude inactieve meting"):
+                  "sluitmoment in het verleden invullen op oude inactieve meting",
+                  "besluit bijwerken op opgeschoonde meting", "via ouderrij op opgeschoonde meting",
+                  "routerelatie met opgeschoonde meting als doel",
+                  "directe verbinding (de opschoning)"):
         assert geval in tekst, geval
 
 
