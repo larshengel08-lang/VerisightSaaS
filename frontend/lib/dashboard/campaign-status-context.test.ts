@@ -36,12 +36,55 @@ describe('loadCampaignStatusContext: gedrag', () => {
           ],
           error: null,
         },
+        campaigns: { data: [{ id: 'c1', data_purged_at: null }], error: null },
       }),
       ['c1'],
       '2026-09-18',
     )
     expect(context.deliveryByCampaign.get('c1')?.invitedCount).toBe(30)
     expect(context.lastReminderEventAtByCampaign.get('c1')).toBe('2026-09-18T08:00:00Z')
+    expect(context.dataPurgedAtByCampaign.size).toBe(0)
+  })
+
+  it('neemt opgeschoonde metingen mee (Deel C)', async () => {
+    const context = await loadCampaignStatusContext(
+      fakeClient({
+        campaign_delivery_records: { data: [], error: null },
+        campaign_action_audit_events: { data: [], error: null },
+        campaigns: {
+          data: [
+            { id: 'c1', data_purged_at: '2028-06-16T03:00:00Z' },
+            { id: 'c2', data_purged_at: null },
+          ],
+          error: null,
+        },
+      }),
+      ['c1', 'c2'],
+      '2028-07-01',
+    )
+    expect([...context.dataPurgedAtByCampaign]).toEqual([['c1', '2028-06-16T03:00:00Z']])
+  })
+
+  it('zonder de migratiekolom: niemand opgeschoond en geen crash', async () => {
+    const context = await loadCampaignStatusContext(
+      fakeClient({
+        campaign_delivery_records: { data: [], error: null },
+        campaign_action_audit_events: { data: [], error: null },
+        campaigns: { data: null, error: { code: '42703', message: 'column campaigns.data_purged_at does not exist' } as never },
+      }),
+      ['c1'],
+      '2028-07-01',
+    )
+    expect(context.dataPurgedAtByCampaign.size).toBe(0)
+  })
+
+  it('faalt luid als niet na te gaan is welke metingen zijn opgeschoond', async () => {
+    const client = fakeClient({
+      campaign_delivery_records: { data: [], error: null },
+      campaign_action_audit_events: { data: [], error: null },
+      campaigns: { data: null, error: { message: 'kapot' } },
+    })
+    await expect(loadCampaignStatusContext(client, ['c1'], '2028-07-01')).rejects.toThrow(/nog bestaan: kapot/)
   })
 
   it('faalt luid als de delivery records de rijlimiet raken (geen stil afgekapte map)', async () => {
@@ -51,6 +94,7 @@ describe('loadCampaignStatusContext: gedrag', () => {
         error: null,
       },
       campaign_action_audit_events: { data: [], error: null },
+      campaigns: { data: [], error: null },
     })
     await expect(loadCampaignStatusContext(client, ['c0'], '2026-09-18')).rejects.toThrow(/rijlimiet/)
   })
@@ -62,6 +106,7 @@ describe('loadCampaignStatusContext: gedrag', () => {
         data: rows(SUPABASE_ROW_CAP, () => ({ campaign_id: 'c1', created_at: '2026-09-18T08:00:00Z' })),
         error: null,
       },
+      campaigns: { data: [], error: null },
     })
     await expect(loadCampaignStatusContext(client, ['c1'], '2026-09-18')).rejects.toThrow(/rijlimiet/)
   })
@@ -70,6 +115,7 @@ describe('loadCampaignStatusContext: gedrag', () => {
     const client = fakeClient({
       campaign_delivery_records: { data: null, error: { message: 'boom' } },
       campaign_action_audit_events: { data: [], error: null },
+      campaigns: { data: [], error: null },
     })
     await expect(loadCampaignStatusContext(client, ['c1'], '2026-09-18')).rejects.toThrow(/boom/)
   })

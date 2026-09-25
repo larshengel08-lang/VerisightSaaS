@@ -45,6 +45,29 @@ describe('buildReportDownloadIndex', () => {
     expect(model.unavailableRows.map((row) => row.campaignId)).toEqual(['exit-1'])
   })
 
+  it('zet opgeschoonde metingen apart: niet "nog niet", maar niet meer beschikbaar (Deel C)', () => {
+    const purged = {
+      campaignId: 'ret-0',
+      campaignName: 'Retentie 2024',
+      scanType: 'retention' as const,
+      scanName: 'Loep Behoud',
+      periodLabel: 'Q1 2024',
+      createdAt: '2024-02-01T09:00:00Z',
+      responseBasis: 'Gegevens verwijderd',
+      status: 'De gegevens van deze meting zijn op 16 juni 2028 verwijderd.',
+      isAvailable: false,
+      purgedAt: '2028-06-16T03:00:00Z',
+    }
+    const model = buildReportDownloadIndex([...reports, purged])
+    expect(model.purgedRows.map((row) => row.campaignId)).toEqual(['ret-0'])
+    expect(model.unavailableRows.map((row) => row.campaignId)).toEqual(['exit-1'])
+    expect(model.availableRows.map((row) => row.campaignId)).toEqual(['ret-2', 'ret-1'])
+    // Ook een rij die per ongeluk als beschikbaar binnenkomt, komt nooit bij de downloads.
+    const vreemd = buildReportDownloadIndex([{ ...purged, isAvailable: true }])
+    expect(vreemd.availableRows).toHaveLength(0)
+    expect(vreemd.purgedRows).toHaveLength(1)
+  })
+
   it('sorts available rows by period, then date, then name', () => {
     const model = buildReportDownloadIndex(reports)
 

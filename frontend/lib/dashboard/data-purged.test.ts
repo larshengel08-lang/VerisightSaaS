@@ -3,7 +3,10 @@ import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import {
+  dataPurgedDecisionMessage,
+  dataPurgedLabel,
   dataPurgedMessage,
+  dataPurgedReason,
   loadDataPurgedAt,
   loadDataPurgedAtByCampaign,
 } from '@/lib/dashboard/data-purged'
@@ -102,15 +105,36 @@ describe('opgeschoonde meting (Deel C, bewaartermijn)', () => {
   it('de campagnepagina gebruikt het en toont dan geen downloadknop', () => {
     const page = readFileSync(path.join(process.cwd(), 'app/(dashboard)/campaigns/[id]/page.tsx'), 'utf8')
     expect(page).toContain('loadDataPurgedAt')
-    expect(page).toContain('dataPurgedMessage')
     const start = page.indexOf('if (purgedAt)')
     const eind = page.indexOf('const [{ data: campaignMeta')
     expect(start).toBeGreaterThan(-1)
     expect(eind).toBeGreaterThan(start)
     const tak = page.slice(start, eind)
-    expect(tak).toContain('dataPurgedMessage(purgedAt)')
+    // Taak 20c: de kaart staat in één gedeeld component (ook voor dashboard,
+    // open antwoorden en routebeheer); dat component toont dataPurgedMessage.
+    expect(tak).toContain('<DataPurgedCard purgedAt={purgedAt}')
     expect(tak).not.toContain('PdfDownloadButton')
     expect(tak).not.toContain('DecisionBlock')
+    const kaart = readFileSync(path.join(process.cwd(), 'components/dashboard/data-purged-card.tsx'), 'utf8')
+    expect(kaart).toContain('{dataPurgedMessage(purgedAt)}')
+    expect(kaart).toContain('Gegevens verwijderd')
+  })
+
+  it('geeft een korte status met datum voor lijsten en tabellen', () => {
+    expect(dataPurgedLabel('2028-06-15T22:30:00Z')).toBe('Gegevens verwijderd op 16 juni 2028')
+    expect(dataPurgedLabel('geen-datum')).toBe('Gegevens verwijderd op een onbekende datum')
+  })
+
+  it('zegt bij een besluit dat vastleggen niet meer kan, met dezelfde reden', () => {
+    expect(dataPurgedDecisionMessage('2028-06-16T03:00:00Z')).toBe(
+      'De gegevens van deze meting zijn op 16 juni 2028 verwijderd, volgens de bewaartermijn of op verzoek van jullie organisatie. Een besluit vastleggen kan daarom niet meer.',
+    )
+    expect(dataPurgedReason('2028-06-16T03:00:00Z')).toBe(
+      'De gegevens van deze meting zijn op 16 juni 2028 verwijderd, volgens de bewaartermijn of op verzoek van jullie organisatie.',
+    )
+    for (const tekst of [dataPurgedLabel('2028-06-16'), dataPurgedDecisionMessage('2028-06-16')]) {
+      expect(tekst).not.toMatch(/[–—]/)
+    }
   })
 })
 

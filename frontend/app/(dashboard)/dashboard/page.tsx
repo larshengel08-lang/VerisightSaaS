@@ -5,6 +5,8 @@ import { ReadOnlyStateCard } from '@/components/dashboard/read-only-state-card'
 import { RunningStateCard } from '@/components/dashboard/running-state-card'
 import { WelcomeGate } from '@/components/dashboard/welcome-gate'
 import { CampaignListSection } from '@/components/dashboard/campaign-list-section'
+import { DataPurgedCard } from '@/components/dashboard/data-purged-card'
+import { loadDataPurgedAt } from '@/lib/dashboard/data-purged'
 import { RequestNewMeasurement } from '@/components/dashboard/request-new-measurement'
 import { newMeasurementVariant } from '@/lib/dashboard/new-measurement-request'
 import { loadAccountOrganizations } from '@/lib/dashboard/account-organization'
@@ -80,6 +82,7 @@ export default async function DashboardHomePage() {
     { data: profile },
     { data: membership },
     { count: extensionCount, error: extensionCountError },
+    mainPurgedAt,
   ] = await Promise.all([
     supabase
       .from('campaign_delivery_records')
@@ -124,6 +127,9 @@ export default async function DashboardHomePage() {
       .eq('action_key', 'delivery_lifecycle_changed')
       .eq('outcome', 'completed')
       .contains('metadata', { extension: true }),
+    // Deel C (bewaartermijn): een opgeschoonde meting heeft 0 antwoorden in
+    // campaign_stats; de kaart zegt dan waarom, niet "te weinig antwoorden".
+    loadDataPurgedAt(supabase, campaign.campaign_id),
   ])
 
   // Fail Loud: een mislukte organisatie-query mag niet stil als "geen naam"
@@ -231,7 +237,13 @@ export default async function DashboardHomePage() {
 
   return (
     <div className="space-y-8">
-      {!canManage ? (
+      {mainPurgedAt ? (
+        <DataPurgedCard
+          purgedAt={mainPurgedAt}
+          campaignName={campaign.campaign_name}
+          campaignHref={`/campaigns/${campaign.campaign_id}`}
+        />
+      ) : !canManage ? (
         <ReadOnlyStateCard state={state} />
       ) : state.kind === 'setup' ? (
         <WelcomeGate

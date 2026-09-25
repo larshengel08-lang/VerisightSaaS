@@ -35,6 +35,7 @@ const context: CampaignStatusContext = {
     ['c', { launchConfirmedAt: null, launchDate: null, invitedCount: null, reminderConfig: null }],
   ]),
   lastReminderEventAtByCampaign: new Map(),
+  dataPurgedAtByCampaign: new Map(),
   today: '2026-09-16',
 }
 
@@ -70,6 +71,13 @@ describe('buildCampaignListItems', () => {
     })
     expect(items[1]).toMatchObject({ name: 'TEST Loep Vertrek - nog in te richten', scanLabel: 'Loep Vertrek', statusLabel: 'Nog in te richten', isMain: false })
     expect(items[2]).toMatchObject({ statusKey: 'report_ready', statusLabel: 'Rapport beschikbaar', href: '/campaigns/a' })
+  })
+
+  it('noemt bij een opgeschoonde meting de datum, niet "Gesloten, geen rapport" (Deel C)', () => {
+    // Na de opschoning geeft campaign_stats 0 antwoorden voor A.
+    const purgedA = { ...A, total_completed: 0 }
+    const items = buildCampaignListItems([purgedA], { ...context, dataPurgedAtByCampaign: new Map([['a', '2028-06-16T03:00:00Z']]) }, null)
+    expect(items[0]).toMatchObject({ statusKey: 'data_purged', statusLabel: 'Gegevens verwijderd op 16 juni 2028' })
   })
 
   it('bevat geen em- of en-dashes in labels', () => {

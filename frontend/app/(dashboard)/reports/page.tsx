@@ -165,6 +165,30 @@ export default async function ReportsPage() {
           )}
         </div>
       </section>
+
+      {/* Deel C (bewaartermijn): niet "nog niet", maar niet meer beschikbaar. */}
+      {reportIndex.purgedRows.length > 0 ? (
+        <section className="space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="text-lg font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">
+              Gegevens verwijderd
+            </h2>
+            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+              {reportIndex.purgedRows.length}{' '}
+              {reportIndex.purgedRows.length === 1 ? 'meting' : 'metingen'}
+            </p>
+          </div>
+          <div className="overflow-hidden border border-slate-200 bg-white">
+            {reportIndex.purgedRows.map((row) => (
+              <ReportRow key={row.campaignId} row={row}>
+                <p className="max-w-sm text-xs leading-5 text-[color:var(--dashboard-muted)] lg:text-right">
+                  {row.status}
+                </p>
+              </ReportRow>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   )
 }

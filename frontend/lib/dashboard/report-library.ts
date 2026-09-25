@@ -8,6 +8,7 @@ import {
   type CampaignStatusKey,
 } from '@/lib/dashboard/campaign-status'
 import { formatResponseBasis } from '@/lib/dashboard/invited-denominator'
+import { dataPurgedMessage } from '@/lib/dashboard/data-purged'
 
 // ─── HR Report Download Rows ──────────────────────────────────────────────────
 // Sinds reports/page.tsx op buildReportOverviewRows draait (spec 2026-09-11
@@ -29,6 +30,8 @@ export type HrReportDownloadRow = {
   isAvailable: boolean
   /** Alleen gezet door buildReportOverviewRows; de legacy buildHrReportDownloadRows kent de vocabulaire niet. */
   statusKey?: CampaignStatusKey
+  /** Deel C: data_purged_at van een opgeschoonde meting; zo'n rij heeft geen rapport en geen respons meer. */
+  purgedAt?: string | null
   extraDisambiguator?: string | null
 }
 
@@ -97,11 +100,15 @@ export function buildReportOverviewRows(
       const denominator = denominatorFor(campaign, context)
       const date = new Date(campaign.created_at)
       const quarter = Math.floor(date.getUTCMonth() / 3) + 1
+      // Na de opschoning zegt campaign_stats "0 ingevuld"; de rij noemt dan de
+      // reden (dezelfde zin als de 410 van de backend), nooit "te weinig".
+      const purgedAt = statusKey === 'data_purged' ? (context.dataPurgedAtByCampaign.get(campaign.campaign_id) ?? null) : null
 
       // Gesloten zonder rapport houdt de uitleg met aantal en drempel: dat is
       // wat de klant hier wil weten. De andere vier gebruiken het gedeelde label.
-      const status =
-        statusKey === 'closed_no_report'
+      const status = purgedAt
+        ? dataPurgedMessage(purgedAt)
+        : statusKey === 'closed_no_report'
           ? `Gesloten met ${campaign.total_completed} ingevuld. Minimaal ${thresholds.insightMin} nodig voor een rapport.`
           : CAMPAIGN_STATUS_LABELS[statusKey]
 
@@ -112,9 +119,10 @@ export function buildReportOverviewRows(
         scanName: SCAN_TYPE_LABELS[campaign.scan_type],
         periodLabel: `Q${quarter} ${date.getUTCFullYear()}`,
         createdAt: campaign.created_at,
-        responseBasis: formatResponseBasis(campaign.total_completed, denominator),
+        responseBasis: purgedAt ? 'Gegevens verwijderd' : formatResponseBasis(campaign.total_completed, denominator),
         status,
         statusKey,
+        purgedAt,
         isAvailable,
         extraDisambiguator: null,
       }

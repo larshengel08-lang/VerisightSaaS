@@ -157,6 +157,7 @@ describe('buildReportOverviewRows (spec 2026-09-11 par. 4.3 en 2026-09-16 par. 6
     return {
       deliveryByCampaign: new Map([['camp-1', launched]]),
       lastReminderEventAtByCampaign: new Map(),
+      dataPurgedAtByCampaign: new Map(),
       today: '2026-04-05',
       ...overrides,
     }
@@ -209,6 +210,27 @@ describe('buildReportOverviewRows (spec 2026-09-11 par. 4.3 en 2026-09-16 par. 6
   it('verzint geen noemer: zonder invited_count en zonder rijen staat er een reden', () => {
     const [row] = buildReportOverviewRows([campaign()], context({ deliveryByCampaign: new Map() }))
     expect(row.responseBasis).toBe('12 ingevuld, aantal uitgenodigden niet ingevuld')
+  })
+
+  it('noemt bij een opgeschoonde meting de reden, nooit "te weinig" of "0 van 30"', () => {
+    // Na de opschoning geeft campaign_stats 0 antwoorden.
+    const [row] = buildReportOverviewRows(
+      [campaign({ total_completed: 0, total_invited: 0 })],
+      context({ dataPurgedAtByCampaign: new Map([['camp-1', '2028-06-16T03:00:00Z']]) }),
+    )
+    expect(row.statusKey).toBe('data_purged')
+    expect(row.isAvailable).toBe(false)
+    expect(row.purgedAt).toBe('2028-06-16T03:00:00Z')
+    expect(row.status).toBe(
+      'De gegevens van deze meting zijn op 16 juni 2028 verwijderd, volgens de bewaartermijn of op verzoek van jullie organisatie. Een nieuw rapport maken kan daarom niet meer. Een rapport dat eerder is gedownload, blijft geldig.',
+    )
+    expect(row.responseBasis).toBe('Gegevens verwijderd')
+    expect(row.status).not.toContain('Minimaal')
+  })
+
+  it('laat een niet-opgeschoonde meting zonder purgedAt', () => {
+    const [row] = buildReportOverviewRows([campaign()], context())
+    expect(row.purgedAt).toBeNull()
   })
 
   it('bevat geen em- of en-dashes', () => {
