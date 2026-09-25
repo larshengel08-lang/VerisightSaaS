@@ -3462,8 +3462,9 @@ def _besluitvraag(state: str) -> str:
 def _richtingen_weging(st: dict, scan_type: str, factor_key: str) -> str:
     """R6/V9 (koude leesronde 24-9): in de staat `divided` zegt de vaste
     verdeeld-zin "de meest gekozen richtingen" zonder ze te noemen, en de kaart
-    sorteert "Niets, dit zit hier goed" ertussen. Deze regel noemt de routes
-    met de hoogste en de op één na hoogste telling, en weegt de niets-optie
+    sorteert "Niets, dit zit hier goed" ertussen. Deze regel wijst de routes
+    aan via hun tellingen (hoogste en op één na hoogste; de teksten staan op
+    de kaart erboven), en weegt de niets-optie
     apart: die is geen richting. Anders telt ook niet mee (geen opdrachtvorm).
 
     De noemer is dezelfde als op de richtingkaart (alle beantwoorders, de
@@ -3486,15 +3487,30 @@ def _richtingen_weging(st: dict, scan_type: str, factor_key: str) -> str:
         if k not in teksten:
             raise KeyError("richtingen_weging: onbekende optiesleutel " + repr(k)
                            + " voor " + repr(factor_key) + " (" + scan_type + ")")
+    # De routeteksten staan al op de kaart direct erboven (met dezelfde
+    # tellingen); hier alleen de aantallen, zodat de regel kort blijft en het
+    # agendaslot niet naar een volgend vel duwt (controllerbesluit taak 10).
     hoogste = sorted({c for _k, c in inhoud}, reverse=True)[:2]
-    meest = [(k, c) for k, c in inhoud if c in hoogste]
-    zin = ("De meest gekozen richtingen: "
-           + "; ".join("‘" + teksten[k] + "’: " + _telling(c, n) for k, c in meest) + ".")
+    zin = "De meest gekozen richtingen zijn de routes met " + _stemmen(hoogste) + " op de kaart hierboven."
     if niets:
-        zin += (" " + _telling(st["none_n"], n) + " "
-                + _werkwoord(st["none_n"], "koos", "kozen") + " ‘" + teksten[niets]
-                + "’; dat is geen richting en telt hier niet mee.")
+        # Geen haakjes om _telling: die draagt vanaf tien antwoorden zelf een
+        # percentage tussen haakjes, en twee haakjesniveaus in elkaar zijn in
+        # de taalronde juist weggehaald.
+        zin += (" ‘" + teksten[niets] + "’, gekozen door " + _telling(st["none_n"], n)
+                + ", is geen richting en telt hier niet mee.")
     return zin
+
+
+def _stemmen(tellingen: list[int]) -> str:
+    """"3 en 2 stemmen", "2 stemmen", "3 stemmen en 1 stem", "1 stem"."""
+    def _vorm(c: int) -> str:
+        return _werkwoord(c, "stem", "stemmen")
+    if len(tellingen) == 1:
+        return str(tellingen[0]) + " " + _vorm(tellingen[0])
+    a, b = tellingen
+    if b == 1:
+        return str(a) + " " + _vorm(a) + " en 1 stem"
+    return str(a) + " en " + str(b) + " stemmen"
 
 
 def _werkvragen_block(ranked: list[dict], deep_agg: dict, direction_agg: dict,

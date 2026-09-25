@@ -1007,24 +1007,37 @@ def _agg(**counts):
             "other_texts": []}
 
 
-def test_weging_noemt_de_meest_gekozen_richtingen_en_weegt_niets_apart():
+def test_weging_noemt_de_meest_gekozen_tellingen_en_weegt_niets_apart():
+    """Controllerbesluit taak 10: de routeteksten staan al op de kaart erboven;
+    de regel noemt alleen de tellingen (dezelfde als op de kaart) en weegt de
+    niets-optie apart, met de tellingsvorm van de kaart."""
     st = direction_state(_agg(wld_recovery=3, wld_peaks=2, wld_scope=2, wld_none=2, wld_other=1),
                          "workload", 5.8)
     assert st["state"] == "divided"
-    teksten = dp.direction_option_texts("retention", "workload")
     # Tien beantwoorders: _telling zet vanaf MIN_DISTRIBUTION_N (10) het
-    # percentage erachter. Volgorde: telling aflopend, dan sleutel (zoals ranked).
+    # percentage erachter, net als de kaart.
     assert _richtingen_weging(st, "retention", "workload") == (
-        "De meest gekozen richtingen: ‘" + teksten["wld_recovery"] + "’: 3 van de 10 (30%); ‘"
-        + teksten["wld_peaks"] + "’: 2 van de 10 (20%); ‘" + teksten["wld_scope"]
-        + "’: 2 van de 10 (20%). 2 van de 10 (20%) kozen ‘Niets, dit zit hier goed’; dat is geen "
-        "richting en telt hier niet mee.")
+        "De meest gekozen richtingen zijn de routes met 3 en 2 stemmen op de kaart hierboven. "
+        "‘Niets, dit zit hier goed’, gekozen door 2 van de 10 (20%), is geen richting en "
+        "telt hier niet mee.")
+
+
+def test_weging_een_gedeelde_telling_en_enkelvoud():
+    gedeeld = direction_state(_agg(wld_peaks=3, wld_scope=3, wld_none=2), "workload", 5.8)
+    assert _richtingen_weging(gedeeld, "retention", "workload") == (
+        "De meest gekozen richtingen zijn de routes met 3 stemmen op de kaart hierboven. "
+        "‘Niets, dit zit hier goed’, gekozen door 2 van de 8, is geen richting en telt hier niet mee.")
+    een = direction_state(_agg(wld_peaks=1, wld_scope=1, wld_planning=1), "workload", 5.8)
+    assert een["state"] == "divided"
+    assert _richtingen_weging(een, "retention", "workload") == (
+        "De meest gekozen richtingen zijn de routes met 1 stem op de kaart hierboven.")
 
 
 def test_weging_zonder_niets_heeft_geen_niets_zin():
     st = direction_state(_agg(wld_peaks=3, wld_scope=3, wld_planning=2), "workload", 5.8)
     zin = _richtingen_weging(st, "retention", "workload")
-    assert "Niets" not in zin and zin.startswith("De meest gekozen richtingen: ")
+    assert "Niets" not in zin
+    assert zin == "De meest gekozen richtingen zijn de routes met 3 en 2 stemmen op de kaart hierboven."
 
 
 def test_weging_vertrek_citeert_de_verleden_tijd():
@@ -1038,15 +1051,13 @@ def test_weging_alleen_in_de_verdeeld_staat():
     assert _richtingen_weging(duidelijk, "retention", "workload") == ""
 
 
-def test_weging_noemt_anders_niet_als_richting():
+def test_weging_telt_anders_niet_als_richting():
     """Anders heeft geen opdrachtvorm en is dus ook geen richting om mee te
-    beginnen, ook niet als hij even vaak gekozen is als de genoemde routes."""
-    st = direction_state(_agg(wld_peaks=3, wld_scope=2, wld_other=3, wld_none=1), "workload", 5.8)
+    beginnen: zijn telling (2) mag de op één na hoogste niet worden."""
+    st = direction_state(_agg(wld_peaks=3, wld_scope=1, wld_other=2, wld_none=1), "workload", 5.8)
     assert st["state"] == "divided"
-    teksten = dp.direction_option_texts("retention", "workload")
     zin = _richtingen_weging(st, "retention", "workload")
-    assert teksten["wld_other"] not in zin
-    assert teksten["wld_peaks"] in zin and teksten["wld_scope"] in zin
+    assert zin.startswith("De meest gekozen richtingen zijn de routes met 3 stemmen en 1 stem ")
 
 
 def test_weging_zonder_streepjes():
@@ -1060,8 +1071,11 @@ def test_werkvragen_tonen_de_weging_onder_de_verdeeld_zin(gevuld):
     html = _werkvragen_block(RANKED, {}, DIRECTION, "retention")
     kaart = _plain(html[html.index("Tweede punt: Werkdruk en herstelruimte"):])
     assert VARIANTEN["divided"]["retention"] in kaart
-    assert "De meest gekozen richtingen: " in kaart
-    assert "kozen ‘Niets, dit zit hier goed’; dat is geen richting en telt hier niet mee." in kaart
+    # DIRECTION: wld_peaks 3, wld_scope 3, wld_none 2 van 8; dezelfde
+    # tellingen als op de richtingkaart.
+    assert ("De meest gekozen richtingen zijn de routes met 3 stemmen op de kaart hierboven. "
+            "‘Niets, dit zit hier goed’, gekozen door 2 van de 8, is geen richting en telt "
+            "hier niet mee.") in kaart
     # Alleen bij de verdeelde kaart: het startpunt (growth) staat in clear.
     start = _plain(html[:html.index("Tweede punt: Werkdruk en herstelruimte")])
     assert "De meest gekozen richtingen" not in start
