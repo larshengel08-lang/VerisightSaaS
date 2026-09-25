@@ -991,3 +991,77 @@ def test_dashboard_gebruikt_dezelfde_labels_en_hints_als_de_besluitpagina():
     assert set(BESLUIT_TERUGKOPPELING) == set(BESLUIT_REVIEW_HINT) == {"retention", "exit", "onboarding"}
     assert _ts_map(bron, "DECISION_FEEDBACK_HINTS") == BESLUIT_TERUGKOPPELING
     assert _ts_map(bron, "DECISION_REVIEW_HINTS") == BESLUIT_REVIEW_HINT
+
+
+# ── Taak 10: niets telt niet als richting (R6, V9) ──────────────────────────
+
+from backend.products.shared import deepening as dp  # noqa: E402
+from backend.products.shared.deepening import direction_state  # noqa: E402
+from backend.report_html import _richtingen_weging  # noqa: E402
+from tests.test_report_werkvragen import VARIANTEN, gevuld  # noqa: E402,F401
+
+
+def _agg(**counts):
+    n = sum(counts.values())
+    return {"lowest_n": n, "offered": n, "answered": n, "skipped": 0, "counts": counts,
+            "other_texts": []}
+
+
+def test_weging_noemt_de_meest_gekozen_richtingen_en_weegt_niets_apart():
+    st = direction_state(_agg(wld_recovery=3, wld_peaks=2, wld_scope=2, wld_none=2, wld_other=1),
+                         "workload", 5.8)
+    assert st["state"] == "divided"
+    teksten = dp.direction_option_texts("retention", "workload")
+    # Tien beantwoorders: _telling zet vanaf MIN_DISTRIBUTION_N (10) het
+    # percentage erachter. Volgorde: telling aflopend, dan sleutel (zoals ranked).
+    assert _richtingen_weging(st, "retention", "workload") == (
+        "De meest gekozen richtingen: ‘" + teksten["wld_recovery"] + "’: 3 van de 10 (30%); ‘"
+        + teksten["wld_peaks"] + "’: 2 van de 10 (20%); ‘" + teksten["wld_scope"]
+        + "’: 2 van de 10 (20%). 2 van de 10 (20%) kozen ‘Niets, dit zit hier goed’; dat is geen "
+        "richting en telt hier niet mee.")
+
+
+def test_weging_zonder_niets_heeft_geen_niets_zin():
+    st = direction_state(_agg(wld_peaks=3, wld_scope=3, wld_planning=2), "workload", 5.8)
+    zin = _richtingen_weging(st, "retention", "workload")
+    assert "Niets" not in zin and zin.startswith("De meest gekozen richtingen: ")
+
+
+def test_weging_vertrek_citeert_de_verleden_tijd():
+    st = direction_state(_agg(wld_peaks=3, wld_scope=3, wld_none=2), "workload", 5.8)
+    assert "‘Niets, dit zat hier goed’" in _richtingen_weging(st, "exit", "workload")
+
+
+def test_weging_alleen_in_de_verdeeld_staat():
+    duidelijk = direction_state(_agg(wld_peaks=6, wld_scope=1, wld_none=1), "workload", 5.8)
+    assert duidelijk["state"] != "divided"
+    assert _richtingen_weging(duidelijk, "retention", "workload") == ""
+
+
+def test_weging_noemt_anders_niet_als_richting():
+    """Anders heeft geen opdrachtvorm en is dus ook geen richting om mee te
+    beginnen, ook niet als hij even vaak gekozen is als de genoemde routes."""
+    st = direction_state(_agg(wld_peaks=3, wld_scope=2, wld_other=3, wld_none=1), "workload", 5.8)
+    assert st["state"] == "divided"
+    teksten = dp.direction_option_texts("retention", "workload")
+    zin = _richtingen_weging(st, "retention", "workload")
+    assert teksten["wld_other"] not in zin
+    assert teksten["wld_peaks"] in zin and teksten["wld_scope"] in zin
+
+
+def test_weging_zonder_streepjes():
+    st = direction_state(_agg(wld_recovery=3, wld_peaks=2, wld_scope=2, wld_none=2), "workload", 5.8)
+    for scan in ("retention", "exit"):
+        zin = _richtingen_weging(st, scan, "workload")
+        assert zin and not any(s in zin for s in STREEPJES), zin
+
+
+def test_werkvragen_tonen_de_weging_onder_de_verdeeld_zin(gevuld):
+    html = _werkvragen_block(RANKED, {}, DIRECTION, "retention")
+    kaart = _plain(html[html.index("Tweede punt: Werkdruk en herstelruimte"):])
+    assert VARIANTEN["divided"]["retention"] in kaart
+    assert "De meest gekozen richtingen: " in kaart
+    assert "kozen ‘Niets, dit zit hier goed’; dat is geen richting en telt hier niet mee." in kaart
+    # Alleen bij de verdeelde kaart: het startpunt (growth) staat in clear.
+    start = _plain(html[:html.index("Tweede punt: Werkdruk en herstelruimte")])
+    assert "De meest gekozen richtingen" not in start

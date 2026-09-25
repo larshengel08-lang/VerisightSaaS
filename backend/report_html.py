@@ -3459,6 +3459,44 @@ def _besluitvraag(state: str) -> str:
     return BESLUITVRAAG_NIETS if state == "none_needed" else BESLUITVRAAG
 
 
+def _richtingen_weging(st: dict, scan_type: str, factor_key: str) -> str:
+    """R6/V9 (koude leesronde 24-9): in de staat `divided` zegt de vaste
+    verdeeld-zin "de meest gekozen richtingen" zonder ze te noemen, en de kaart
+    sorteert "Niets, dit zit hier goed" ertussen. Deze regel noemt de routes
+    met de hoogste en de op één na hoogste telling, en weegt de niets-optie
+    apart: die is geen richting. Anders telt ook niet mee (geen opdrachtvorm).
+
+    De noemer is dezelfde als op de richtingkaart (alle beantwoorders, de
+    niets-stemmen inbegrepen), zodat elk getal in deze regel letterlijk op de
+    kaart terug te vinden is.
+
+    Leeg buiten `divided`, en bij minder dan twee inhoudelijke routes (dan
+    geeft translation_question ook geen verdeeld-zin). Een onbekende
+    optiesleutel valt luid om, net als in _direction_card_cell.
+    """
+    if st["state"] != "divided":
+        return ""
+    n = st["n"]
+    inhoud = [(k, c) for k, c in st["ranked"] if c > 0 and not k.endswith(("_none", "_other"))]
+    if len(inhoud) < 2:
+        return ""
+    teksten = direction_option_texts(scan_type, factor_key)
+    niets = st["none_key"] if st["none_key"] and st["none_n"] else None
+    for k in [k for k, _c in inhoud] + ([niets] if niets else []):
+        if k not in teksten:
+            raise KeyError("richtingen_weging: onbekende optiesleutel " + repr(k)
+                           + " voor " + repr(factor_key) + " (" + scan_type + ")")
+    hoogste = sorted({c for _k, c in inhoud}, reverse=True)[:2]
+    meest = [(k, c) for k, c in inhoud if c in hoogste]
+    zin = ("De meest gekozen richtingen: "
+           + "; ".join("‘" + teksten[k] + "’: " + _telling(c, n) for k, c in meest) + ".")
+    if niets:
+        zin += (" " + _telling(st["none_n"], n) + " "
+                + _werkwoord(st["none_n"], "koos", "kozen") + " ‘" + teksten[niets]
+                + "’; dat is geen richting en telt hier niet mee.")
+    return zin
+
+
 def _werkvragen_block(ranked: list[dict], deep_agg: dict, direction_agg: dict,
                       scan_type: str) -> str:
     """Twee kaarten (startpunt en tweede punt) met elk twee of drie vragen.
@@ -3496,7 +3534,7 @@ def _werkvragen_block(ranked: list[dict], deep_agg: dict, direction_agg: dict,
             vertaal = translation_question(scan_type, fk, st)
             staat = st["state"]
         else:
-            vertaal, staat = None, "too_few"
+            vertaal, staat, st = None, "too_few", None
         # N2b (eindreview): dezelfde beperkte-basis-regel als de
         # verdiepingspagina (_deepening_block), met dezelfde staffel
         # (_deepening_shows_distribution EN answered < MIN_AGGREGATE_N, dus 5
@@ -3511,6 +3549,11 @@ def _werkvragen_block(ranked: list[dict], deep_agg: dict, direction_agg: dict,
         rijen = [("Herkennen", herken_html)]
         if vertaal:
             vertaal_cel = _h(vertaal)
+            # R6/V9 (fixronde 24-9): onder de verdeeld-zin de routes bij naam,
+            # met de niets-optie apart gewogen. Leeg in elke andere staat.
+            weging = _richtingen_weging(st, scan_type, fk) if st else ""
+            if weging:
+                vertaal_cel += '<div class="wq-hint">' + _h(weging) + "</div>"
             # Amendement 24-9 (A2): de aansturingshint alleen bij Loep Behoud.
             # Bij Loep Vertrek staat de namenregel boven het blok.
             if fk == "leadership" and scan_type == "retention":
