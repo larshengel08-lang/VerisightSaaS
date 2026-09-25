@@ -3,9 +3,17 @@
 import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { saveCampaignDecisionAction } from '@/app/(dashboard)/campaigns/[id]/decision-actions'
-import { DECISION_LIMITS, type CampaignDecision } from '@/lib/dashboard/campaign-decision'
+import {
+  DECISION_LIMITS,
+  DECISION_SECOND_POINT_HINT,
+  DECISION_SUCCESS_LABEL,
+  decisionFeedbackHintFor,
+  decisionFollowUpHintFor,
+  type CampaignDecision,
+} from '@/lib/dashboard/campaign-decision'
 import { formatDutchDate } from '@/lib/dashboard/format-dutch-date'
 import { LOEP_CONTACT_EMAIL } from '@/lib/loep-contact'
+import type { ScanType } from '@/lib/types'
 
 /**
  * "Besluit vastleggen" op een gesloten meting met rapport (plan 3b, spec
@@ -19,12 +27,18 @@ interface DecisionBlockProps {
   canManage: boolean
   decision: CampaignDecision | null
   loadError: string | null
+  scanType: ScanType
 }
 
 const labelClass = 'block text-xs font-semibold uppercase tracking-wide text-[color:var(--dashboard-muted)]'
 const inputClass =
   'mt-1 w-full rounded-lg border border-[color:var(--dashboard-frame-border)] bg-white px-3 py-2 text-sm text-[color:var(--dashboard-ink)] focus:border-[color:var(--dashboard-accent-strong)] focus:outline-none disabled:opacity-50'
-const hintClass = 'mt-1 text-xs text-[color:var(--dashboard-muted)]'
+// De hints staan buiten het label-element en zijn via aria-describedby gekoppeld, zodat
+// ze niet in de toegankelijke naam van het veld belanden. labelClass houdt ze er
+// hetzelfde uit te zien als toen ze binnen het label stonden (en de stijl ervan
+// erfden).
+const hintClass = labelClass
+const fieldClass = 'flex flex-col'
 
 function ReadOnlyRow({ label, value }: { label: string; value: string | null }) {
   if (!value) return null
@@ -54,12 +68,14 @@ function ReadOnlyDecision({ decision }: { decision: CampaignDecision | null }) {
       <ReadOnlyRow label="Tweede punt" value={decision.secondaryTopic} />
       <ReadOnlyRow label="Wat precies bij het tweede punt" value={decision.secondaryAction} />
       <ReadOnlyRow label="Terugkoppeling aan medewerkers" value={decision.feedbackPlan} />
-      <ReadOnlyRow label="Waaraan zien we dat het werkt" value={decision.successCriterion} />
+      <ReadOnlyRow label={DECISION_SUCCESS_LABEL} value={decision.successCriterion} />
     </dl>
   )
 }
 
-export function DecisionBlock({ campaignId, canManage, decision, loadError }: DecisionBlockProps) {
+export function DecisionBlock({ campaignId, canManage, decision, loadError, scanType }: DecisionBlockProps) {
+  const feedbackHint = decisionFeedbackHintFor(scanType)
+  const followUpHint = decisionFollowUpHintFor(scanType)
   const router = useRouter()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -135,49 +151,75 @@ export function DecisionBlock({ campaignId, canManage, decision, loadError }: De
               className={inputClass}
             />
           </label>
-          <label className={`${labelClass} sm:col-span-2`}>
-            Wat precies
-            <textarea
-              name="primaryAction"
-              required
-              rows={3}
-              maxLength={DECISION_LIMITS.action}
-              defaultValue={decision?.primaryAction ?? ''}
-              disabled={busy}
-              className={inputClass}
-            />
-            <span className={hintClass}>Een onderwerp is nog geen afspraak: schrijf op wat er gebeurt.</span>
-          </label>
-          <label className={labelClass}>
-            Eigenaar
-            <input
-              type="text"
-              name="owner"
-              required
-              maxLength={DECISION_LIMITS.owner}
-              defaultValue={decision?.owner ?? ''}
-              disabled={busy}
-              className={inputClass}
-            />
-            <span className={hintClass}>Eén naam.</span>
-          </label>
-          <label className={labelClass}>
-            Datum vervolgmoment
-            <input type="date" name="followUpDate" defaultValue={decision?.followUpDate ?? ''} disabled={busy} className={inputClass} />
-            <span className={hintClass}>Kies een datum, geen termijn. Richtlijn: 45 tot 90 dagen na het gesprek.</span>
-          </label>
-          <label className={labelClass}>
-            Tweede punt
-            <input
-              type="text"
-              name="secondaryTopic"
-              maxLength={DECISION_LIMITS.topic}
-              defaultValue={decision?.secondaryTopic ?? ''}
-              disabled={busy}
-              className={inputClass}
-            />
-            <span className={hintClass}>Alleen als jullie er een kiezen.</span>
-          </label>
+          <div className={`${fieldClass} sm:col-span-2`}>
+            <label className={labelClass}>
+              Wat precies
+              <textarea
+                name="primaryAction"
+                required
+                rows={3}
+                maxLength={DECISION_LIMITS.action}
+                defaultValue={decision?.primaryAction ?? ''}
+                disabled={busy}
+                aria-describedby="decision-hint-primary-action"
+                className={inputClass}
+              />
+            </label>
+            <span id="decision-hint-primary-action" className={hintClass}>
+              Een onderwerp is nog geen afspraak: schrijf op wat er gebeurt.
+            </span>
+          </div>
+          <div className={fieldClass}>
+            <label className={labelClass}>
+              Eigenaar
+              <input
+                type="text"
+                name="owner"
+                required
+                maxLength={DECISION_LIMITS.owner}
+                defaultValue={decision?.owner ?? ''}
+                disabled={busy}
+                aria-describedby="decision-hint-owner"
+                className={inputClass}
+              />
+            </label>
+            <span id="decision-hint-owner" className={hintClass}>
+              Eén naam.
+            </span>
+          </div>
+          <div className={fieldClass}>
+            <label className={labelClass}>
+              Datum vervolgmoment
+              <input
+                type="date"
+                name="followUpDate"
+                defaultValue={decision?.followUpDate ?? ''}
+                disabled={busy}
+                aria-describedby="decision-hint-follow-up"
+                className={inputClass}
+              />
+            </label>
+            <span id="decision-hint-follow-up" className={hintClass}>
+              {followUpHint}
+            </span>
+          </div>
+          <div className={fieldClass}>
+            <label className={labelClass}>
+              Tweede punt
+              <input
+                type="text"
+                name="secondaryTopic"
+                maxLength={DECISION_LIMITS.topic}
+                defaultValue={decision?.secondaryTopic ?? ''}
+                disabled={busy}
+                aria-describedby="decision-hint-second-point"
+                className={inputClass}
+              />
+            </label>
+            <span id="decision-hint-second-point" className={hintClass}>
+              {DECISION_SECOND_POINT_HINT}
+            </span>
+          </div>
           <label className={labelClass}>
             Wat precies bij het tweede punt
             <textarea
@@ -189,21 +231,28 @@ export function DecisionBlock({ campaignId, canManage, decision, loadError }: De
               className={inputClass}
             />
           </label>
+          <div className={`${fieldClass} sm:col-span-2`}>
+            <label className={labelClass}>
+              Terugkoppeling aan medewerkers
+              <textarea
+                name="feedbackPlan"
+                rows={2}
+                maxLength={DECISION_LIMITS.text}
+                defaultValue={decision?.feedbackPlan ?? ''}
+                placeholder="Wie vertelt wat, en wanneer?"
+                disabled={busy}
+                aria-describedby={feedbackHint ? 'decision-hint-feedback' : undefined}
+                className={inputClass}
+              />
+            </label>
+            {feedbackHint ? (
+              <span id="decision-hint-feedback" className={hintClass}>
+                {feedbackHint}
+              </span>
+            ) : null}
+          </div>
           <label className={`${labelClass} sm:col-span-2`}>
-            Terugkoppeling aan medewerkers
-            <textarea
-              name="feedbackPlan"
-              rows={2}
-              maxLength={DECISION_LIMITS.text}
-              defaultValue={decision?.feedbackPlan ?? ''}
-              placeholder="Wie vertelt wat, en wanneer?"
-              disabled={busy}
-              className={inputClass}
-            />
-            <span className={hintClass}>Je mensen vulden in; ze horen wat het MT ermee doet.</span>
-          </label>
-          <label className={`${labelClass} sm:col-span-2`}>
-            Waaraan zien we dat het werkt
+            {DECISION_SUCCESS_LABEL}
             <input
               type="text"
               name="successCriterion"

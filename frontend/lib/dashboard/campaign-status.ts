@@ -12,7 +12,7 @@ import { resolveInvitedDenominator, type InvitedDenominator } from '@/lib/dashbo
  * sluitdatum voorbij, herinneringsdag) en is met een pariteitstest aan de
  * resolver vastgeklonken, zodat lijst en kaart nooit iets anders zeggen.
  */
-export type CampaignStatusKey = 'setup' | 'running' | 'action' | 'closed_no_report' | 'report_ready'
+export type CampaignStatusKey = 'setup' | 'running' | 'action' | 'closed_no_report' | 'report_ready' | 'data_purged'
 
 export const CAMPAIGN_STATUS_LABELS: Record<CampaignStatusKey, string> = {
   setup: 'Nog in te richten',
@@ -20,6 +20,8 @@ export const CAMPAIGN_STATUS_LABELS: Record<CampaignStatusKey, string> = {
   action: 'Actie nodig',
   closed_no_report: 'Gesloten, geen rapport',
   report_ready: 'Rapport beschikbaar',
+  // Deel C (bewaartermijn): lijsten tonen de datum erbij via dataPurgedLabel.
+  data_purged: 'Gegevens verwijderd',
 }
 
 export interface CampaignStatusInput {
@@ -37,9 +39,18 @@ export interface CampaignStatusInput {
   reminderHandledAt: string | null
   /** YYYY-MM-DD, meegegeven zodat tests deterministisch zijn. */
   today: string
+  /**
+   * Deel C: wanneer de gegevens na de bewaartermijn (of op verzoek) zijn
+   * verwijderd, of null. Na de opschoning geeft campaign_stats 0 antwoorden;
+   * zonder deze staat leest de meting als "te weinig antwoorden".
+   */
+  dataPurgedAt: string | null
 }
 
 export function deriveCampaignStatus(input: CampaignStatusInput): CampaignStatusKey {
+  // Vóór alles: de tellingen van een opgeschoonde meting zijn 0 en zeggen niets.
+  if (input.dataPurgedAt) return 'data_purged'
+
   const reportReady = isReportReleaseReady(input.totalCompleted, { scanType: input.scanType })
   if (!input.isActive) return reportReady ? 'report_ready' : 'closed_no_report'
 
@@ -75,6 +86,8 @@ export interface CampaignStatusContext {
   deliveryByCampaign: ReadonlyMap<string, CampaignDeliveryLite>
   /** created_at van het meest recente send_reminders-event (outcome completed) per campagne. */
   lastReminderEventAtByCampaign: ReadonlyMap<string, string>
+  /** Deel C: alleen de opgeschoonde metingen, id naar data_purged_at (loadDataPurgedAtByCampaign). */
+  dataPurgedAtByCampaign: ReadonlyMap<string, string>
   today: string
 }
 
@@ -106,6 +119,7 @@ export function statusInputFor(campaign: CampaignStats, context: CampaignStatusC
     reminderAfterDays: reminderConfig.firstReminderAfterDays,
     reminderHandledAt: context.lastReminderEventAtByCampaign.get(campaign.campaign_id) ?? null,
     today: context.today,
+    dataPurgedAt: context.dataPurgedAtByCampaign.get(campaign.campaign_id) ?? null,
   }
 }
 

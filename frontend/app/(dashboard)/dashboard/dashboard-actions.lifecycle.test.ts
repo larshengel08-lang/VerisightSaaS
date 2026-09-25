@@ -6,10 +6,13 @@ let isAdmin = false
 let closesAt: string | null = '2026-10-07'
 let isActive = true
 let closedAt: string | null = null
+/** Fout bij het (na)lezen van de meting via maybeSingle. */
+let campaignReadError: { message: string } | null = null
 let extensionCount = 0
 let countError: { message: string } | null = null
 let countFilters: Array<[string, unknown]> = []
 let campaignUpdates: Array<Record<string, unknown>> = []
+let updateFilters: Array<[string, unknown]> = []
 /** Eén resultaat per update-aanroep, in volgorde; standaard 1 rij, geen fout. */
 let updateResults: Array<{ rows: number; error: { message: string } | null }> = []
 let auditInserts: Array<Record<string, unknown>> = []
@@ -47,7 +50,9 @@ function auditCountChain(): CountChain {
   return chain
 }
 
-vi.mock('@/lib/email', () => ({ sendLoepEmail: async () => undefined }))
+const { sendLoepEmailMock } = vi.hoisted(() => ({ sendLoepEmailMock: vi.fn(async () => undefined) }))
+
+vi.mock('@/lib/email', () => ({ sendLoepEmail: sendLoepEmailMock }))
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({
@@ -58,18 +63,28 @@ vi.mock('@/lib/supabase/server', () => ({
           select: () => ({
             eq: () => ({
               single: async () => ({ data: { organization_id: 'org-1' } }),
-              maybeSingle: async () => ({ data: { closes_at: closesAt, is_active: isActive, closed_at: closedAt }, error: null }),
+              maybeSingle: async () =>
+                campaignReadError
+                  ? { data: null, error: campaignReadError }
+                  : { data: { closes_at: closesAt, is_active: isActive, closed_at: closedAt }, error: null },
             }),
           }),
           update: (payload: Record<string, unknown>) => ({
-            eq: () => ({
-              select: async () => {
+            eq: () => {
+              const select = async () => {
                 campaignUpdates.push(payload)
                 const result = updateResults.shift() ?? { rows: 1, error: null }
                 if (result.error) return { data: null, error: result.error }
                 return { data: Array.from({ length: result.rows }, () => ({ id: 'campaign-1' })), error: null }
-              },
-            }),
+              }
+              return {
+                select,
+                is: (column: string, value: unknown) => {
+                  updateFilters.push([column, value])
+                  return { select }
+                },
+              }
+            },
           }),
         }
       }
@@ -101,7 +116,7 @@ vi.mock('@/lib/supabase/server', () => ({
   }),
 }))
 
-import { extendCampaignAction, skipReminderAction } from './dashboard-actions'
+import { closeCampaignAction, extendCampaignAction, skipReminderAction } from './dashboard-actions'
 
 const today = new Date().toISOString().slice(0, 10)
 
@@ -111,10 +126,13 @@ beforeEach(() => {
   closesAt = '2026-10-07'
   isActive = true
   closedAt = null
+  campaignReadError = null
+  sendLoepEmailMock.mockClear()
   extensionCount = 0
   countError = null
   countFilters = []
   campaignUpdates = []
+  updateFilters = []
   updateResults = []
   auditInserts = []
   auditInsertError = null
@@ -254,5 +272,57 @@ describe('skipReminderAction (spec 2026-09-16 par. 4.3)', () => {
     auditInsertError = { message: 'insert denied' }
     const result = await skipReminderAction('campaign-1')
     expect(result).toEqual({ ok: false, error: 'Overslaan mislukt: insert denied' })
+  })
+})
+
+describe('closeCampaignAction: closed_at is de klok van de bewaartermijn', () => {
+  it('sluit alleen een meting waarvan closed_at nog leeg is', async () => {
+    isActive = false
+    closedAt = '2026-09-01T10:00:00Z'
+    updateResults = [{ rows: 0, error: null }]
+    await closeCampaignAction('campaign-1')
+    expect(updateFilters).toEqual([['closed_at', null]])
+  })
+
+  it('een tweede keer sluiten is geen fout en verstuurt en logt niets opnieuw', async () => {
+    isActive = false
+    closedAt = '2026-09-01T10:00:00Z'
+    updateResults = [{ rows: 0, error: null }]
+    const result = await closeCampaignAction('campaign-1')
+    expect(result).toEqual({
+      ok: true,
+      warning: 'Deze meting was al gesloten. Er is niets veranderd en er is geen nieuw bericht verstuurd.',
+    })
+    expect(auditInserts).toHaveLength(0)
+    expect(sendLoepEmailMock).not.toHaveBeenCalled()
+  })
+
+  it('closed_at gevuld maar nog actief telt niet als al gesloten', async () => {
+    isActive = true
+    closedAt = '2026-09-01T10:00:00Z'
+    updateResults = [{ rows: 0, error: null }]
+    const result = await closeCampaignAction('campaign-1')
+    expect(result).toEqual({ ok: false, error: 'Sluiten mislukt: campagne niet gevonden of geen rechten.' })
+    expect(sendLoepEmailMock).not.toHaveBeenCalled()
+  })
+
+  it('een mislukt nalezen geeft die fout, niet "niet gevonden of geen rechten"', async () => {
+    updateResults = [{ rows: 0, error: null }]
+    campaignReadError = { message: 'connection reset' }
+    const result = await closeCampaignAction('campaign-1')
+    expect(result).toEqual({
+      ok: false,
+      error: 'Sluiten mislukt: Loep kon niet nalezen of de meting al gesloten is (connection reset).',
+    })
+    expect(auditInserts).toHaveLength(0)
+    expect(sendLoepEmailMock).not.toHaveBeenCalled()
+  })
+
+  it('0 rijen op een meting die niet gesloten is blijft een fout (geen vals succes)', async () => {
+    closedAt = null
+    updateResults = [{ rows: 0, error: null }]
+    const result = await closeCampaignAction('campaign-1')
+    expect(result).toEqual({ ok: false, error: 'Sluiten mislukt: campagne niet gevonden of geen rechten.' })
+    expect(auditInserts).toHaveLength(0)
   })
 })

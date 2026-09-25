@@ -23,10 +23,13 @@ from backend.report_html import _FACTOR_EXIT_LABEL, _FACTOR_RETENTION_LABEL
 SCANS = ("retention", "exit")
 
 # Amendement plan 3b Taak 13 (concept-sectie 7 punt 2): elke Vertrek-vraag
-# bevat een terugblik in een van deze vormen.
+# bevat een terugblik in een van deze vormen. Amendement 24-9 (A1, fixronde
+# leesronde, formulering Lars 25-9): "toen de vertrekkers er nog werkten" is
+# vervangen door "in de periode waar deze meting over gaat"; de oude vorm is
+# geen toegestane terugblik meer (zie test_vertrek_heeft_geen_oud_tijdsanker_meer).
 TERUGBLIK_VORMEN = (
-    "toen de vertrekkers", "een jaar geleden", "het afgelopen jaar", "sindsdien",
-    "voor het laatst", "de laatste wijziging", "het vorige",
+    "in de periode waar deze meting over gaat", "een jaar geleden", "het afgelopen jaar",
+    "sindsdien", "voor het laatst", "de laatste wijziging", "het vorige",
 )
 
 
@@ -138,3 +141,72 @@ def test_aansturing_hint_is_een_vaste_niet_lege_regel():
     assert WERKVRAGEN_AANSTURING_HINT.endswith(".")
     assert "—" not in WERKVRAGEN_AANSTURING_HINT and "–" not in WERKVRAGEN_AANSTURING_HINT
     assert "leidinggevenden" in WERKVRAGEN_AANSTURING_HINT.lower()
+
+
+# ── Amendement 24-9 (A1): tijdsanker Vertrek vervangen ──────────────────────
+# Leesronde V1: "toen de vertrekkers er nog werkten" stuurt het MT naar de
+# personen die vertrokken. Veertien Vertrek-vragen kregen een ander slot; de
+# rest van elke vraag en alle Behoud-vragen bleven letterlijk gelijk.
+
+import hashlib  # noqa: E402
+import json  # noqa: E402
+
+OUD_TIJDSANKER = "toen de vertrekkers er nog werkten"
+# Tussenformulering van 24-9, op 25-9 door Lars vervangen: noemde nog de
+# mensen die vertrokken. Mag ook niet meer voorkomen.
+TUSSENVORM_TIJDSANKER = "deze mensen vertrokken"
+NIEUW_TIJDSANKER = "in de periode waar deze meting over gaat"
+A1_SLOTEN = {
+    "ldd_feedback": "En in de periode waar deze meting over gaat?",
+    "ldd_escalation": "En in de periode waar deze meting over gaat?",
+    "ldd_availability": "En in de periode waar deze meting over gaat?",
+    "cud_safety": "En in de periode waar deze meting over gaat?",
+    "cud_conflict": "En in de periode waar deze meting over gaat?",
+    "cud_crossteam": "En in de periode waar deze meting over gaat?",
+    "wld_scope": "En in de periode waar deze meting over gaat?",
+    "wld_recovery": "En in de periode waar deze meting over gaat?",
+    "rcd_alignment": "En in de periode waar deze meting over gaat?",
+    "rcd_information": "En in de periode waar deze meting over gaat?",
+    "grd_criteria": "Stond dat er al in de periode waar deze meting over gaat?",
+    "wld_peaks": "Wie mocht dat zeggen in de periode waar deze meting over gaat?",
+    "wld_friction": "Wat ervan bestond al in de periode waar deze meting over gaat?",
+    "rcd_expectations": "Stonden ze er al in de periode waar deze meting over gaat?",
+}
+# sha256 over json.dumps({"<factor>.<route>": tekst}, sort_keys=True,
+# ensure_ascii=False). RETENTION: de Behoud-teksten op main 37059706 (vóór de
+# fixronde). EXIT: de Vertrek-teksten van 37059706 met precies de veertien
+# vervangingen uit A1_SLOTEN toegepast, en verder niets.
+RETENTION_SHA_MAIN = "9bec2159e84a2ec73cb6c10b230e169fac17ddc69bc07880eeadb8e11534a341"
+EXIT_SHA_NA_A1 = "a7784fa1da84f3a8b4fab1b78439024301953eced319d6f8e21835c8201c0749"
+
+
+def _sha(scan: str) -> str:
+    teksten = {f"{fk}.{rk}": per_scan[scan]
+               for fk, routes in WORK_QUESTIONS.items() for rk, per_scan in routes.items()}
+    return hashlib.sha256(json.dumps(teksten, sort_keys=True, ensure_ascii=False)
+                          .encode("utf-8")).hexdigest()
+
+
+def test_vertrek_heeft_geen_oud_tijdsanker_meer():
+    for fk, rk, scan, tekst in _alle_vragen():
+        if scan == "exit":
+            assert OUD_TIJDSANKER not in tekst.lower(), (fk, rk, tekst)
+            assert TUSSENVORM_TIJDSANKER not in tekst.lower(), (fk, rk, tekst)
+
+
+def test_precies_de_veertien_vragen_dragen_het_nieuwe_tijdsanker():
+    met_anker = {rk for _fk, rk, scan, tekst in _alle_vragen()
+                 if scan == "exit" and NIEUW_TIJDSANKER in tekst}
+    assert met_anker == set(A1_SLOTEN)
+    for fk, rk, scan, tekst in _alle_vragen():
+        if scan == "exit" and rk in A1_SLOTEN:
+            assert tekst.endswith(" " + A1_SLOTEN[rk]), (fk, rk, tekst)
+            assert tekst.count(NIEUW_TIJDSANKER) == 1, (fk, rk, tekst)
+
+
+def test_behoud_teksten_zijn_byte_identiek_aan_main():
+    assert _sha("retention") == RETENTION_SHA_MAIN
+
+
+def test_vertrek_teksten_veranderden_alleen_in_het_tijdsanker():
+    assert _sha("exit") == EXIT_SHA_NA_A1

@@ -13,18 +13,26 @@ uitkiezen zonder de andere te hoeven halen):
                     geen lay-outmaat lost dat op;
   besluit-op-een-a4 belooft de gespreksagenda een besluitpagina, dan is er precies
                     één pagina die met de kop "Besluit van het MT" begint, staat
-                    de voetregel op diezelfde pagina en begint de pagina erna met
-                    een hoofdstukkop (plan 3b; het invulvel moet los te printen
-                    zijn);
+                    het laatste vaste label ("Waaraan zien we ...") op diezelfde
+                    pagina en begint de pagina erna met een hoofdstukkop (plan 3b;
+                    het invulvel moet los te printen zijn);
   paginaverwijzing  pagina 2 draagt gevulde "pagina N"-verwijzingen, geen die
-                    leeg renderde, en elke verwijzing wijst binnen het document
-                    naar een pagina die met een hoofdstukkop begint (H4). Let
-                    op: niet elk hoofdstuk begint op een eigen pagina. De
-                    segmentanalyse loopt door op de pagina ervoor (geen
-                    `pb sec`), dus een verwijzing daarnaartoe kan hier opduiken
-                    zonder dat de verwijzing fout is. Alleen op een echte render
-                    te zien; weeg zo'n regel af tegen de pagina zelf voordat je
-                    hem als fout aanneemt;
+                    leeg renderde en geen nummer buiten het document (H4).
+                    Daarnaast, op elke pagina: elke interne link toont als
+                    tekst precies het nummer van de pagina waar zijn anker
+                    staat. WeasyPrint schrijft een <a href="#anker"> als
+                    link-annotatie met een benoemde bestemming; PyMuPDF lost
+                    die op naar de doelpagina. Zo mag een verwijzing naar een
+                    blok midden op een pagina wijzen (het werkvragenblok,
+                    fixronde leesronde 24-9) en valt een verkeerd nummer toch
+                    op. Draagt pagina 2 de leidraad met nummers maar dekt het
+                    aantal interne links met een leesbaar paginanummer dat
+                    aantal niet (ook een deel ontbreekt telt mee, niet alleen
+                    "geen enkele"), dan is dat zelf een bevinding: dan valt er
+                    voor de ontbrekende verwijzing(en) niets na te gaan. Grens
+                    van de meting: of het anker op het goede element staat,
+                    meet deze regel niet; dat bewaken de unittests op de HTML
+                    (_assert_verwijzingen_kloppen);
   tabelkop          alleen met --thead: die tabelkop staat op meer dan één
                     pagina, dus hij herhaalt op de vervolgpagina (ronde 2
                     punt c, taak 11); hoofdletterongevoelig, want de kop
@@ -85,10 +93,13 @@ A4_TOLERANTIE_PT = 3.0
 APPENDIX_STAART_UITGEZONDERD = True
 
 # Markers van de besluitpagina (backend/report_html.py: BESLUIT_TITEL,
-# BESLUIT_VOETREGEL en de trustline onder de gespreksagenda). De test
-# test_markers_komen_uit_de_renderer bewaakt dat ze gelijk blijven.
+# BESLUIT_SLOTLABEL en de trustline onder de gespreksagenda). De test
+# test_markers_komen_uit_de_renderer bewaakt dat ze gelijk blijven. De
+# eindmarker is het laatste vaste label en niet de voetregel: die vervalt bij
+# een voorgedrukt besluit (N5, plan 3b), en dan meldde deze regel een overloop
+# die er niet was.
 BESLUIT_KOP = "Besluit van het MT"
-BESLUIT_VOET = "Leg dit besluit ook vast in je dashboard"
+BESLUIT_SLOT = "Waaraan zien we"
 BESLUIT_BELOFTE = "Leg het besluit vast op pagina"
 
 # De leidraad op pagina twee draagt vijf tijdvakken met elk een
@@ -217,23 +228,6 @@ def _begint_met_hoofdstukkop(page: pymupdf.Page) -> bool:
     return bool(re.match(r"^\d{2}\b", first_text(page)))
 
 
-# De gespreksagenda (het slot van hoofdstuk "Waar begint het gesprek?") begint
-# sinds plan 3b vrijwel altijd op een eigen pagina, na het prioriteringsraster,
-# omdat de werkvragen het slot langer maakten. De verwijzingen op pagina twee en
-# op de besluitpagina wijzen naar dat slot (anker sec-agenda), niet naar de
-# hoofdstukkop een pagina eerder: de lezer landt zo op de pagina waar de kaarten
-# staan. Zo'n pagina opent met de kicker van de eerste kaart ("STARTPUNT: ...")
-# of met het werkvragenblok als dat als eerste boven de vouw valt (WeasyPrint
-# spatieert de eyebrow met letterspacing, vandaar dat spaties worden genegeerd).
-# Gemeten door de hoofdsessie op 2026-09-22: 19 van 21 scenario's landden zo.
-_AGENDASLOT_OPENERS = ("startpunt:", "tweede punt:", "zo maak je er een besluit van")
-
-
-def _begint_met_agendaslot(kop: str) -> bool:
-    plat = re.sub(r"\s+", "", kop.casefold())
-    return any(plat.startswith(o.replace(" ", "")) for o in _AGENDASLOT_OPENERS)
-
-
 def _appendix_staart(doc: pymupdf.Document) -> int | None:
     """Index van de laatste vervolgpagina van de appendix, of None.
 
@@ -269,10 +263,10 @@ def _besluit(doc: pymupdf.Document) -> list[Bevinding]:
                           f"({[i + 1 for i in koppen]}); het moet er precies één zijn")]
     i = koppen[0]
     bevindingen: list[Bevinding] = []
-    if BESLUIT_VOET.casefold() not in _pagina_tekst(doc[i]).casefold():
+    if BESLUIT_SLOT.casefold() not in _pagina_tekst(doc[i]).casefold():
         bevindingen.append(Bevinding(
-            REGEL_BESLUIT, f"pagina {i + 1} draagt de besluitpagina maar niet de voetregel; "
-                           f"loopt het invulvel over naar een tweede pagina?"))
+            REGEL_BESLUIT, f"pagina {i + 1} draagt de besluitpagina maar niet het laatste vaste "
+                           f"label ({BESLUIT_SLOT!r}); loopt het invulvel over naar een tweede pagina?"))
     if i + 1 < n and not _begint_met_hoofdstukkop(doc[i + 1]):
         bevindingen.append(Bevinding(
             REGEL_BESLUIT, f"pagina {i + 2}, direct na de besluitpagina, begint niet met een "
@@ -378,13 +372,85 @@ def _check_doc(doc: pymupdf.Document, thead: str | None,
     return bevindingen
 
 
-def _verwijzingen(doc: pymupdf.Document, p2: str) -> list[Bevinding]:
-    """De paginaverwijzingen van pagina twee (H4).
+_LINK_KINDS = (pymupdf.LINK_GOTO, pymupdf.LINK_NAMED)
 
-    Drie dingen kunnen misgaan, en geen ervan mag als "geen overtreding" langs
-    de meting glippen: een verwijzing die leeg renderde (ontbrekend anker), te
-    weinig verwijzingen terwijl de leidraad er vijf hoort te leveren, en een
-    nummer dat naar de verkeerde of naar geen pagina wijst.
+
+def _interne_links(page: pymupdf.Page) -> list[dict]:
+    """De interne links van een pagina, één per (rechthoek, bestemming).
+
+    WeasyPrint 70 schrijft elke <a class="pref"> als twee identieke
+    link-annotaties (gemeten op de drie voorbeeldrapporten, 24-9). PyMuPDF lost
+    een benoemde bestemming zelf op naar `page` (0-gebaseerd); een bestemming
+    die niet bestaat geeft -1. De ontdubbelsleutel neemt naast de rechthoek ook
+    de bestemming mee: anders verdwijnt een tweede, andersgerichte link op
+    dezelfde rechthoek stil onder de eerste.
+    """
+    gezien: set[tuple[float, float, float, float, object, object]] = set()
+    uit: list[dict] = []
+    for link in page.get_links():
+        if link.get("kind") not in _LINK_KINDS:
+            continue
+        r = pymupdf.Rect(link["from"])
+        sleutel = (round(r.x0, 1), round(r.y0, 1), round(r.x1, 1), round(r.y1, 1),
+                   link.get("page"), link.get("nameddest"))
+        if sleutel in gezien:
+            continue
+        gezien.add(sleutel)
+        uit.append(link)
+    return uit
+
+
+def _tekst_in(page: pymupdf.Page, rect: pymupdf.Rect) -> str:
+    """De tekens waarvan het midden binnen `rect` valt.
+
+    Per teken en niet per woord: het nummer staat vast aan een haakje of punt
+    ("12)."), en het woordkader is dan breder dan de link. Gemeten: op alle 84
+    links van de drie voorbeeldrapporten geeft dit precies het getoonde nummer.
+    """
+    tekens: list[str] = []
+    for blok in page.get_text("rawdict")["blocks"]:
+        for regel in blok.get("lines", []):
+            for span in regel["spans"]:
+                for teken in span["chars"]:
+                    x0, y0, x1, y1 = teken["bbox"]
+                    if rect.contains(pymupdf.Point((x0 + x1) / 2, (y0 + y1) / 2)):
+                        tekens.append(teken["c"])
+    return "".join(tekens)
+
+
+def _link_bevindingen(doc: pymupdf.Document) -> list[Bevinding]:
+    """Elke interne link toont het nummer van de pagina waar zijn anker staat."""
+    bevindingen: list[Bevinding] = []
+    for i in range(doc.page_count):
+        page = doc[i]
+        for link in _interne_links(page):
+            naam = repr(link["nameddest"]) if link.get("nameddest") else "een intern anker"
+            doel = link.get("page")
+            if doel is None or not 0 <= doel < doc.page_count:
+                bevindingen.append(Bevinding(
+                    REGEL_VERWIJZING,
+                    f"pagina {i + 1}: de link naar {naam} wijst naar geen bestaande pagina"))
+                continue
+            getoond = re.sub(r"\D", "", _tekst_in(page, pymupdf.Rect(link["from"])))
+            if not getoond:
+                bevindingen.append(Bevinding(
+                    REGEL_VERWIJZING,
+                    f"pagina {i + 1}: de link naar {naam} toont geen paginanummer"))
+            elif int(getoond) != doel + 1:
+                bevindingen.append(Bevinding(
+                    REGEL_VERWIJZING,
+                    f"pagina {i + 1}: de verwijzing naar {naam} toont pagina {getoond}, "
+                    f"maar het anker staat op pagina {doel + 1}"))
+    return bevindingen
+
+
+def _verwijzingen(doc: pymupdf.Document, p2: str) -> list[Bevinding]:
+    """De paginaverwijzingen (H4). Vier dingen kunnen misgaan, en geen ervan mag
+    als "geen overtreding" langs de meting glippen: een verwijzing die leeg
+    renderde (ontbrekend anker), te weinig verwijzingen terwijl de leidraad er
+    vijf hoort te leveren, een nummer buiten het document, en een nummer dat
+    niet de pagina is waar het anker staat (via de link-annotaties, op elke
+    pagina).
     """
     bevindingen: list[Bevinding] = []
     n = doc.page_count
@@ -408,17 +474,29 @@ def _verwijzingen(doc: pymupdf.Document, p2: str) -> list[Bevinding]:
             f"pagina 2 draagt de leidraad maar {len(gevuld)} gevulde verwijzing(en) "
             f"({gevuld}); dat blok levert er minstens {LEIDRAAD_MIN_VERWIJZINGEN}"))
 
+    if LEIDRAAD_MARKER in p2 and gevuld:
+        # Niet alleen "geen enkele link": ook een deel van de verwijzingen
+        # zonder link mag niet als "gemeten en goed" doorgaan (anders geeft een
+        # ontbrekende link op één van de vijf tijdvakken stil een OK). Geteld
+        # wordt met hoeveel links op p.02 een paginanummer te lezen is, niet met
+        # welk nummer: dat laatste (klopt het?) meet _link_bevindingen hieronder
+        # al per link.
+        links_met_nummer = sum(
+            1 for link in _interne_links(doc[1])
+            if re.sub(r"\D", "", _tekst_in(doc[1], pymupdf.Rect(link["from"]))))
+        if len(gevuld) > links_met_nummer:
+            bevindingen.append(Bevinding(
+                REGEL_VERWIJZING,
+                f"pagina 2 toont {len(gevuld)} verwijzing(en) met een paginanummer, maar "
+                f"{links_met_nummer} interne link(s) met een paginanummer op die pagina; "
+                f"de meting kan niet nagaan of die nummers allemaal kloppen"))
+
     for ref in sorted(set(gevuld)):
         if not 1 <= ref <= n:
             bevindingen.append(Bevinding(
                 REGEL_VERWIJZING,
                 f"verwijzing naar pagina {ref} buiten het document ({n} pagina's)"))
-            continue
-        kop = first_text(doc[ref - 1])
-        if not (re.match(r"^\d{2}\b", kop) or _begint_met_agendaslot(kop)):
-            bevindingen.append(Bevinding(
-                REGEL_VERWIJZING,
-                f"pagina {ref} begint niet met een hoofdstukkop: {kop[:50]!r}"))
+    bevindingen += _link_bevindingen(doc)
     return bevindingen
 
 

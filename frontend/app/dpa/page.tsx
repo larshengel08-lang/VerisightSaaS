@@ -176,6 +176,11 @@ export default function DpaPage() {
           of eerder op verzoek van de Verwerkingsverantwoordelijke, tenzij schriftelijk een andere termijn is
           overeengekomen of wettelijke verplichtingen een langere bewaring vereisen.
         </p>
+        <p>
+          Verwijderde gegevens kunnen nog korte tijd voorkomen in back-ups van de hostingpartij. Die back-ups worden
+          volgens hun vaste termijn automatisch overschreven. Verwerker zet daaruit geen gegevens terug, behalve om
+          een storing te herstellen.
+        </p>
       </section>
 
       <section>

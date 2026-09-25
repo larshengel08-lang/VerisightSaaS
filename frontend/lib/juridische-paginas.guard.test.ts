@@ -39,6 +39,24 @@ describe('juridische pagina’s volgen de dienst zoals hij is', () => {
     expect(paginas.dpa).toMatch(/uiterlijk twee jaar na het sluiten van de meting/)
   })
 
+  it('privacy sectie 5 belooft een bewaartermijn voor contactformulier en kennismaking (A4.3)', () => {
+    expect(paginas.privacy).toMatch(
+      /Wat je via het contactformulier of in een kennismaking met Loep deelt, bewaart Loep tot uiterlijk twee jaar\s+na het laatste contact\. Volgt er een overeenkomst, dan gelden de termijnen hierboven\./
+    )
+  })
+
+  it('privacy sectie 2 heeft een categorie voor contactpersonen (A4.3)', () => {
+    expect(paginas.privacy).toMatch(
+      /Contactpersonen:<\/strong> naam, zakelijk e-mailadres, organisatie en wat je in je bericht schrijft\./
+    )
+  })
+
+  it('dpa sectie 9 noemt back-ups van de hostingpartij (A4.4)', () => {
+    expect(paginas.dpa).toMatch(
+      /Verwijderde gegevens kunnen nog korte tijd voorkomen in back-ups van de hostingpartij\. Die back-ups worden\s+volgens hun vaste termijn automatisch overschreven\. Verwerker zet daaruit geen gegevens terug, behalve om\s+een storing te herstellen\./
+    )
+  })
+
   it.each(Object.entries(paginas))('%s heeft geen em- of en-dash', (_naam, bron) => {
     expect(bron).not.toMatch(/[–—]/)
   })

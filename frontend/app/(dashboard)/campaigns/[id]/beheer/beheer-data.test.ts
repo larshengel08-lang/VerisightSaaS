@@ -20,8 +20,10 @@ import {
   mapGuidedPhaseToHrRoutePhase,
 } from './beheer-data'
 
-function createSupabaseMock() {
+function createSupabaseMock(dataPurgedAt: string | null = null) {
   const queryResults = new Map<string, unknown>([
+    // Deel C: loadDataPurgedAt vraagt alleen deze kolom op.
+    ['campaigns|data_purged_at', { data: { data_purged_at: dataPurgedAt }, error: null }],
     [
       'campaign_stats|*',
       {
@@ -407,6 +409,24 @@ describe('routebeheer source integration', () => {
       status: 'current',
       body: 'Dashboard / rapportstatus',
     })
+  })
+
+  it('biedt na de opschoning geen rapport meer aan, ook niet bij genoeg tellingen (Deel C)', async () => {
+    const data = await fetchRouteBeheerData({
+      campaignId: 'campaign-1',
+      // Zelfde mock als de tests hieronder; het mocktype dekt SupabaseLike niet volledig.
+      supabase: createSupabaseMock('2028-06-16T03:00:00Z') as never,
+      userId: 'user-1',
+    })
+    expect(data?.dataPurgedAt).toBe('2028-06-16T03:00:00Z')
+    expect(data?.reportAvailable).toBe(false)
+    expect(data?.outputSummary.reportReady).toBe(false)
+  })
+
+  it('laat een niet-opgeschoonde meting zoals ze was', async () => {
+    const data = await fetchRouteBeheerData({ campaignId: 'campaign-1', supabase: createSupabaseMock() as never, userId: 'user-1' })
+    expect(data?.dataPurgedAt).toBeNull()
+    expect(data?.reportAvailable).toBe(true)
   })
 
   it('keeps the HR self-serve execution workspace available on routebeheer data for owner flows', async () => {

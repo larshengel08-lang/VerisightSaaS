@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { CampaignDeliveryLite, CampaignStatusContext } from '@/lib/dashboard/campaign-status'
+import { loadDataPurgedAtByCampaign } from '@/lib/dashboard/data-purged'
 
 /**
  * Standaard max-rows van Supabase/PostgREST. Een resultaat van precies deze
@@ -27,13 +28,15 @@ export async function loadCampaignStatusContext(
   today: string,
 ): Promise<CampaignStatusContext> {
   if (campaignIds.length === 0) {
-    return { deliveryByCampaign: new Map(), lastReminderEventAtByCampaign: new Map(), today }
+    return { deliveryByCampaign: new Map(), lastReminderEventAtByCampaign: new Map(), dataPurgedAtByCampaign: new Map(), today }
   }
 
   // De .in()-lijsten gaan als GET-querystring mee; de URL groeit met het aantal
   // metingen. Voor één klant (pre eerste klant: een handvol metingen) ruim
   // binnen de grens. Groeit het operatoroverzicht, dan de ids in blokken opdelen.
-  const [{ data: deliveries, error: deliveryError }, { data: events, error: eventError }] = await Promise.all([
+  // De derde: welke metingen na de bewaartermijn zijn opgeschoond (Deel C).
+  // Zonder de migratiekolom is dat niemand; een andere fout valt luid om.
+  const [{ data: deliveries, error: deliveryError }, { data: events, error: eventError }, dataPurgedAtByCampaign] = await Promise.all([
     supabase
       .from('campaign_delivery_records')
       .select('campaign_id, launch_confirmed_at, launch_date, invited_count, reminder_config')
@@ -47,6 +50,7 @@ export async function loadCampaignStatusContext(
       .eq('action_key', 'send_reminders')
       .eq('outcome', 'completed')
       .order('created_at', { ascending: false }),
+    loadDataPurgedAtByCampaign(supabase, campaignIds),
   ])
 
   if (deliveryError) throw new Error(`Kon de metinggegevens niet laden: ${deliveryError.message}`)
@@ -79,5 +83,5 @@ export async function loadCampaignStatusContext(
     if (!lastReminderEventAtByCampaign.has(id)) lastReminderEventAtByCampaign.set(id, row.created_at as string)
   }
 
-  return { deliveryByCampaign, lastReminderEventAtByCampaign, today }
+  return { deliveryByCampaign, lastReminderEventAtByCampaign, dataPurgedAtByCampaign, today }
 }

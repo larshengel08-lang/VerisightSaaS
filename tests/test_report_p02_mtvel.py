@@ -486,10 +486,10 @@ def test_opener_zet_het_anker_op_de_hoofdstukkop():
 
 def test_leidraad_heeft_vijf_tijdvakken_met_paginaverwijzingen():
     html = _leidraad_block("retention", has_segments=True, has_quotes=True,
-                           has_direction=True, has_deepening=True)
+                           has_deepening=True)
     tekst = _tekst(html)
     assert "Zo leid je dit gesprek in 45 minuten" in tekst
-    for tijd in ("0-5 min", "5-12 min", "12-25 min", "25-33 min", "33-45 min"):
+    for tijd in ("0-5 min", "5-12 min", "12-25 min", "25-31 min", "31-45 min"):
         assert tijd in tekst
     assert html.count('class="pref"') >= 5
     assert "begeleide managementbespreking" not in tekst
@@ -499,29 +499,37 @@ def test_leidraad_heeft_vijf_tijdvakken_met_paginaverwijzingen():
 
 def test_leidraad_zonder_afdelingen_valt_terug_op_toelichtingen_of_werkbeleving():
     met_quotes = _tekst(_leidraad_block("retention", has_segments=False, has_quotes=True,
-                                        has_direction=True, has_deepening=True))
+                                        has_deepening=True))
     assert "Per afdeling" not in met_quotes and "Wat mensen zelf schreven" in met_quotes
     zonder = _tekst(_leidraad_block("retention", has_segments=False, has_quotes=False,
-                                    has_direction=True, has_deepening=True))
+                                    has_deepening=True))
     assert "Werkbeleving" in zonder
 
 
 def test_leidraad_loep_start_belooft_geen_verdieping():
-    tekst = _tekst(_leidraad_block("onboarding", has_segments=False, has_quotes=False,
-                                   has_direction=False, has_deepening=False))
+    html = _leidraad_block("onboarding", has_segments=False, has_quotes=False,
+                           has_deepening=False)
+    tekst = _tekst(html)
     assert "verdieping" not in tekst.lower()
-    assert "Wat er volgens je mensen moet gebeuren" not in tekst
+    # Zonder werkvragenblok (Loep Start heeft er geen) wijst regel 5 naar het
+    # eerste gesprekspunt, nooit naar het werkvragenanker.
+    assert "Het eerste gesprekspunt (pagina" in tekst
+    assert 'href="#sec-werkvragen"' not in html
 
 
 def test_leidraad_belooft_geen_toelichtingen_in_een_meting_zonder_verdieping():
-    """Een meting van voor de verdiepings- en richtingvraag rendert die blokken
-    niet (campagne-gate); regel 3 en 5 mogen ze dan niet aankondigen."""
-    tekst = _tekst(_leidraad_block("retention", has_segments=True, has_quotes=False,
-                                   has_direction=False, has_deepening=False))
+    """Een meting van voor de verdiepingsvraag rendert dat blok niet
+    (campagne-gate); regel 3 mag de toelichtingen dan niet aankondigen. Regel 5
+    hangt sinds de fixronde van 24-9 aan has_werkvragen: zonder werkvragenblok
+    (standaard False) wijst hij naar het eerste gesprekspunt en niet naar het
+    werkvragenanker."""
+    html = _leidraad_block("retention", has_segments=True, has_quotes=False,
+                           has_deepening=False)
+    tekst = _tekst(html)
     assert "wat mensen als toelichting kozen" not in tekst
     assert "De verdieping van het startpunt: de laagste stelling en de score van elke stelling" in tekst
-    assert "Wat er volgens je mensen moet gebeuren" not in tekst
     assert "Het eerste gesprekspunt (pagina" in tekst
+    assert 'href="#sec-werkvragen"' not in html
 
 
 def test_elke_paginaverwijzing_wijst_naar_precies_een_anker():
@@ -646,9 +654,9 @@ def test_de_pdf_vult_de_verwijzingen_met_echte_paginanummers():
     for nr in nummers:
         assert 1 <= int(nr) <= doc.page_count
 
-    # De verwijzing uit de slotregel van de leidraad moet echt op de
-    # gespreksagenda uitkomen, niet op een willekeurig nummer.
-    assert str(_pagina_met("Waar begint het gesprek?")) in nummers
+    # De verwijzing uit de slotregel van de leidraad moet echt op de pagina
+    # van het werkvragenblok uitkomen, niet op een willekeurig nummer.
+    assert str(_pagina_met("Per gesprekspunt de vragen die het MT")) in nummers
     assert str(_pagina_met("Overzichtsprofiel")) in nummers
     doc.close()
 
@@ -752,13 +760,12 @@ def test_zonder_afdelingen_toelichtingen_en_werkbeleving_geen_leidraad():
     html = render_retention_report_html(kaal)
     assert "Zo leid je dit gesprek" not in html
     # De verwijzing van de gespreksagenda naar pagina twee blijft, en klopt. De
-    # ranglijst verwijst sinds taak 11 ook naar de drempeltabel. Sinds plan 3b
-    # wijst de besluitpagina naar het werkvragenblok (N1, eindreview: naar zijn
-    # eigen anker, niet naar de beginpagina van het hoofdstuk), en dat blok
-    # wijst terug naar de besluitpagina; zonder leidraad zijn dat samen alle
-    # verwijzingen in dit rapport.
+    # ranglijst verwijst sinds taak 11 ook naar de drempeltabel. Sinds de
+    # fixronde van 24-9 wijst de besluitpagina naar het werkvragenblok zelf,
+    # en dat blok wijst terug naar de besluitpagina; zonder leidraad zijn dat
+    # samen alle verwijzingen in dit rapport.
     assert set(_assert_verwijzingen_kloppen(html)) == {
-        "p02", "sec-drempels", "sec-besluit", "sec-agenda"}
+        "p02", "sec-drempels", "sec-besluit", "sec-werkvragen"}
 
 
 def test_omgekeerde_meetperiode_wordt_gemeld_niet_afgedrukt():
@@ -883,18 +890,34 @@ def test_css_houdt_pagina_twee_compact():
     """De compacte maten hangen aan #p02, niet aan de klassen zelf: de rest van
     het rapport houdt zijn eigen ruimte."""
     css = build_css("retention")
-    # Maten van de fixronde na plan 3a (observatie 9), gemeten op de
-    # WeasyPrint-render van alle 24: met deze maten loopt p.02 nergens over.
+    # Maten van de fixronde na plan 3a (observatie 9) en de fixronde leesronde
+    # (Taak 7). Deze test bewaakt alleen tegen per ongeluk wijzigen; dat p.02
+    # op één A4 past, bewijst alleen scripts/check_pdf_report.py (regel
+    # p02-op-een-a4) op de render in het productie-image.
     for regel in ("#p02 .br-kernzin { font-size: 20px;",
                   "#p02 .kz-lang .br-kernzin { font-size: 18px;",
-                  "#p02 .why { padding: 12px 16px 10px;",
+                  "#p02 .why { padding: 10px 14px 8px; margin-bottom: 8px;",
                   "#p02 .why-grid { margin-bottom: 8px;",
                   "#p02 .sg { margin-bottom: 10px;",
                   "#p02 .sc-v { font-size: 18px;",
+                  "#p02 .sc-v.sc-reden { font-size: 14px;",
+                  "#p02 .sc-v.sc-reden-lang { font-size: 11px;",
+                  "#p02 .p02-duiding { font-size: 9.5px; line-height: 1.4;",
                   "#p02 .leidraad { margin-top: 10px;",
+                  "#p02 .leidraad td { padding: 1px 6px 1px 0; line-height: 1.38;",
                   "#p02 .leidraad td.lw { width: 22%;",
-                  "#p02 .meet-blok { margin-top: 12px;"):
+                  "#p02 .meet-blok { margin-top: 8px;",
+                  "#p02 .meet-blok .slabel { margin-bottom: 6px;",
+                  "#p02 .meet-blok .sg { margin-bottom: 4px;"):
         assert regel in css, regel
+    # Elke selector één keer in het #p02-blok: bij gelijke specificiteit wint
+    # de latere regel, dus een tweede regel maakt de eerste stil dood (zo werd
+    # in Taak 7 een hefboom onopgemerkt overschreven).
+    selectors = [m.group(1).strip()
+                 for m in re.finditer(r"^(#p02 [^{]+)\{", css, re.MULTILINE)]
+    assert selectors, "geen #p02-regels gevonden"
+    dubbel = sorted({s for s in selectors if selectors.count(s) > 1})
+    assert not dubbel, dubbel
     assert ".br-kernzin {\n  font-family" in css      # de basisstijl blijft staan
     # De overrides staan ná de basisregels die ze aanpassen. Anders is de eerste
     # `.why {`-regel in het stylesheet die van #p02, en die draagt geen
@@ -944,12 +967,37 @@ _A4 = (595.0, 842.0)
 
 
 def _bouw_pdf(pad: Path, paginas: list[list[tuple[float, str]]],
-              formaat: tuple[float, float] = _A4) -> Path:
+              formaat: tuple[float, float] = _A4,
+              linkbare_paginas: frozenset[int] = frozenset()) -> Path:
+    """`linkbare_paginas` is 0-gebaseerd: op zo'n pagina krijgt elke "pagina N"
+    in de tekst ook een echte link-annotatie naar pagina N-1, zoals WeasyPrint
+    dat rendert (elke verwijzing is een <a class="pref">). Nodig sinds Taak 1
+    de linkcontrole leest (tests/test_check_pdf_links.py): zonder dit ziet die
+    regel elke fixture aan voor een render zonder werkende links. Alleen
+    _goed_rapport gebruikt dit; de andere, kaal-tekstuele fixtures in dit
+    bestand testen bewust het geval zonder links (bijvoorbeeld een leeggelopen
+    of een weggevallen verwijzing) en blijven daarom ongemoeid."""
     doc = pymupdf.open()
+    n = len(paginas)
     for regels in paginas:
         page = doc.new_page(width=formaat[0], height=formaat[1])
         for y, tekst in regels:
             page.insert_text((60.0, y), tekst, fontsize=11)
+    # Tweede ronde, pas als elke pagina bestaat: insert_link weigert een
+    # bestemming die nog niet is aangemaakt ("bad page number(s)").
+    for i in linkbare_paginas:
+        page = doc[i]
+        for y, tekst in paginas[i]:
+            for m in re.finditer(r"pagina (\d+)", tekst):
+                doel = int(m.group(1)) - 1
+                if not 0 <= doel < n:
+                    continue  # buiten het document: geen link, net als een fout anker
+                prefix = tekst[:m.start(1)]
+                x0 = 60.0 + pymupdf.get_text_length(prefix, fontsize=11)
+                breedte = pymupdf.get_text_length(m.group(1), fontsize=11)
+                rect = pymupdf.Rect(x0 - 0.5, y - 12.0, x0 + breedte + 0.5, y + 6.0)
+                page.insert_link({"kind": pymupdf.LINK_GOTO, "from": rect, "page": doel,
+                                 "to": pymupdf.Point(45.0, 100.0)})
     doc.save(str(pad))
     doc.close()
     return pad
@@ -991,7 +1039,7 @@ def _goed_rapport(pad: Path, *, p2_extra: list[tuple[float, str]] | None = None,
         [(60.0, "04 Verdieping")] + _vulregels(90.0, 760.0, "p5"),
         [(60.0, "05 Werkbeleving")] + _vulregels(90.0, 760.0, "p6"),
         [(60.0, "06 Methodiek"), (90.0, "korte slotpagina")],               # laatste
-    ], formaat=formaat)
+    ], formaat=formaat, linkbare_paginas=frozenset({1}))
 
 
 @requires_pymupdf
@@ -1101,17 +1149,25 @@ def test_check_ziet_een_verwijzing_buiten_het_document(tmp_path: Path):
     pad = _goed_rapport(tmp_path / "ref.pdf",
                         p2_extra=[(765.0, "zie pagina 99 voor de afdelingen")])
     bevindingen = cpr.check(str(pad), regels=(cpr.REGEL_VERWIJZING,))
+    # Een verwijzing buiten het document heeft ook geen link (kan niet, want
+    # er is geen pagina 99 om naartoe te wijzen), dus telt hij ook mee in de
+    # deelcontrole (coordinator-review, minor 1): 5 van de 6 gevulde
+    # verwijzingen hebben een link met een nummer.
     assert [b.melding for b in bevindingen] == [
+        "pagina 2 toont 6 verwijzing(en) met een paginanummer, maar 5 interne link(s) "
+        "met een paginanummer op die pagina; de meting kan niet nagaan of die nummers "
+        "allemaal kloppen",
         "verwijzing naar pagina 99 buiten het document (7 pagina's)"]
 
 
 @requires_pymupdf
-def test_check_ziet_een_verwijzing_naar_een_pagina_zonder_hoofdstukkop(tmp_path: Path):
+def test_tekstverwijzing_naar_een_pagina_zonder_hoofdstukkop_is_geen_bevinding_meer(tmp_path: Path):
+    """Fixronde leesronde 24-9: een verwijzing mag naar een blok midden op een
+    pagina wijzen (het werkvragenblok). Of het nummer klopt, meet de regel nu
+    aan de link-annotatie (tests/test_check_pdf_links.py), niet aan de kop."""
     pad = _goed_rapport(tmp_path / "ref2.pdf",
                         p2_extra=[(765.0, "zie pagina 2 voor de meetgegevens")])
-    bevindingen = cpr.check(str(pad), regels=(cpr.REGEL_VERWIJZING,))
-    assert len(bevindingen) == 1
-    assert bevindingen[0].melding.startswith("pagina 2 begint niet met een hoofdstukkop")
+    assert cpr.check(str(pad), regels=(cpr.REGEL_VERWIJZING,)) == []
 
 
 @requires_pymupdf
@@ -1187,7 +1243,10 @@ def test_check_eist_vijf_gevulde_verwijzingen_zodra_de_leidraad_er_staat(tmp_pat
     meldingen = [b.melding for b in cpr.check(str(pad), regels=(cpr.REGEL_VERWIJZING,))]
     assert meldingen == [
         "pagina 2 draagt de leidraad maar 4 gevulde verwijzing(en) "
-        "([3, 4, 5, 6]); dat blok levert er minstens 5"]
+        "([3, 4, 5, 6]); dat blok levert er minstens 5",
+        "pagina 2 toont 4 verwijzing(en) met een paginanummer, maar 0 interne link(s) "
+        "met een paginanummer op die pagina; de meting kan niet nagaan of die nummers "
+        "allemaal kloppen"]
 
 
 @requires_pymupdf
@@ -1259,10 +1318,16 @@ def test_check_meldt_een_pagina_die_geen_a4_is(tmp_path: Path):
 
 @requires_pymupdf
 def test_check_meet_alleen_de_gevraagde_regels(tmp_path: Path):
+    # Fixronde leesronde 24-9: of het anker op het juiste element (de kop van
+    # pagina 3) staat, meet REGEL_VERWIJZING niet meer (dat is nu een grens van
+    # de meting, bewaakt door de unittests op de HTML). Om toch drie regels
+    # tegelijk te laten omvallen, draagt de leidraad hier ook een verwijzing
+    # buiten het document.
     pad = _goed_rapport(tmp_path / "filter.pdf", p3_kop="Segmentstatus",
-                        p4_regels=[(60.0, "03 Overzichtsprofiel"), (90.0, "een regel")])
+                        p4_regels=[(60.0, "03 Overzichtsprofiel"), (90.0, "een regel")],
+                        p2_extra=[(765.0, "zie pagina 99 voor de afdelingen")])
     # Drie regels vallen hier om: pagina 3 heeft de verkeerde kop, pagina 4 is
-    # bijna leeg, en de leidraad verwijst naar die kop-loze pagina 3.
+    # bijna leeg, en de leidraad draagt een verwijzing buiten het document.
     assert {b.regel for b in cpr.check(str(pad), regels=cpr.ALLE_REGELS)} == {
         cpr.REGEL_P02, cpr.REGEL_VULLING, cpr.REGEL_VERWIJZING}
     assert {b.regel for b in cpr.check(str(pad), regels=(cpr.REGEL_VULLING,))} == {
@@ -1406,7 +1471,7 @@ def test_de_markers_van_het_script_komen_uit_de_renderer():
     (taak 13), dan hoort er een rode test te staan in plaats van een regel die
     stil niets meer meet."""
     leidraad = _leidraad_block("retention", has_segments=True, has_quotes=True,
-                              has_direction=True, has_deepening=True)
+                              has_deepening=True)
     assert cpr.LEIDRAAD_MARKER in _tekst(leidraad)
     meet = _responsbasis(invited=58, completed=39, period="W", population="P",
                          segment_available=True)
@@ -1427,6 +1492,10 @@ def test_check_telt_verwijzingen_niet_unieke_paginanummers(tmp_path: Path):
     drempeltabel op de methodiekpagina, waar regel 1 al naar wijst). Vijf
     verwijzingen naar drie pagina's is dus genoeg, vier niet."""
     def _pdf(naam: str, regels: list[str]) -> Path:
+        # linkbare_paginas: deze verwijzingen horen bij echte hoofdstukken
+        # binnen het document, dus krijgen ze ook een echte link-annotatie
+        # (Taak 1); anders ziet de linkcontrole deze fixture aan voor een
+        # render zonder werkende links, wat hier niet is wat gemeten wordt.
         return _bouw_pdf(tmp_path / naam, [
             [(400.0, "cover")],
             [(60.0, "kernzin")] + _vulregels(90.0, 600.0, "p2")
@@ -1437,7 +1506,7 @@ def test_check_telt_verwijzingen_niet_unieke_paginanummers(tmp_path: Path):
             [(60.0, "03 Overzichtsprofiel")] + _vulregels(90.0, 760.0, "p4"),
             [(60.0, "04 Verdieping")] + _vulregels(90.0, 760.0, "p5"),
             [(60.0, "korte slotpagina")],
-        ])
+        ], linkbare_paginas=frozenset({1}))
 
     vijf_naar_drie = ["0-5 min: de drempels staan op pagina 5",
                       "5-12 min: het cijferoverzicht (pagina 4)",

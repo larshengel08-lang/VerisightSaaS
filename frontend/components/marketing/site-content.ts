@@ -406,16 +406,16 @@ export const faqs = [
     'Nee. Een MTO meet alles een beetje en levert een dik rapport op. Loep Behoud is smal en scherp: het laat zien waar het wringt bij de mensen die je wilt houden, wat ze daar zelf over zeggen, en waar je begint. Per afdeling, nooit per persoon.',
   ],
   [
-    'Ziet management individuele retention-scores?',
-    'Nee. Loep Behoud is bedoeld voor groeps- en segmentinzichten, niet voor beoordeling, performance-sturing of voorspelling op persoonsniveau.',
+    'Ziet het management scores van losse medewerkers?',
+    'Nee. Loep Behoud laat groepen en afdelingen zien, nooit één persoon. Het is niet bedoeld om mensen te beoordelen of om te voorspellen wie weggaat.',
   ],
   [
     'Is Loep Behoud een gevalideerde vertrekvoorspeller?',
-    'Nee. Voor v1 positioneren we Loep Behoud als SDT-gebaseerde managementscan voor vroegsignalering op behoud, verificatie en prioritering: inhoudelijk plausibel en testmatig beschermd, maar niet als wetenschappelijk gevalideerde voorspeller van vrijwillig vertrek.',
+    'Nee. Loep Behoud voorspelt niet wie er vertrekt. Het laat op groepsniveau zien waar behoud onder druk staat en wat je mensen daarover zeggen. De vragen bouwen op onderzoek naar wat mensen aan hun werk bindt, maar de scan is geen wetenschappelijk gevalideerde voorspeller van vertrek.',
   ],
   [
     'Hoe vaak herhaal je Loep Behoud?',
-    'Voor v1 is een baseline logisch als startpunt. Daarna kun je periodiek herhalen, bijvoorbeeld per kwartaal of halfjaar, als je gericht wilt volgen of acties effect hebben.',
+    'Begin met één meting. Wil je later zien of het beeld verschuift, dan herhaal je dezelfde meting als vervolgmeting, bijvoorbeeld na een half jaar.',
   ],
   [
     'Wanneer is Loep Start de juiste route?',

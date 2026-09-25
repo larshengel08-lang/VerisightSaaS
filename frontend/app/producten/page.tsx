@@ -2,6 +2,7 @@
 import { PublicHeader } from '@/components/marketing/public-header'
 import { PublicFooter } from '@/components/marketing/public-footer'
 import { ProductenContent } from '@/components/marketing/producten-content'
+import { faqSchema } from '@/components/marketing/site-content'
 import { buildContactHref } from '@/lib/contact-funnel'
 import { buildPricingOfferCatalog } from '@/lib/pricing'
 
@@ -47,6 +48,7 @@ export default function ProductenPage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(pricingSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       <div className="min-h-screen">
       <PublicHeader ctaHref={ctaHref} ctaLabel="Plan een kennismaking" />
         <main id="hoofdinhoud">

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { loadDataPurgedAt } from '@/lib/dashboard/data-purged'
 import { buildGuidedSelfServeState, deriveGuidedSelfServeDiscipline } from '@/lib/guided-self-serve'
 import { getDeliveryModeLabel } from '@/lib/implementation-readiness'
 import {
@@ -142,6 +143,8 @@ export interface RouteBeheerPageData {
   outputStatusLabel: string
   latestAuditSummary: string | null
   reportAvailable: boolean
+  /** Deel C: data_purged_at als de gegevens na de bewaartermijn zijn verwijderd, anders null. */
+  dataPurgedAt: string | null
   canExecuteCampaign: boolean
   canManageCampaign: boolean
   membershipRole: MemberRole | null
@@ -768,6 +771,7 @@ export async function fetchRouteBeheerData(args: {
     { data: respondentsRaw },
     { data: responsesRaw },
     { data: auditEventsRaw },
+    dataPurgedAt,
   ] = await Promise.all([
     supabase.from('profiles').select('is_verisight_admin').eq('id', userId).maybeSingle(),
     supabase
@@ -808,6 +812,8 @@ export async function fetchRouteBeheerData(args: {
       .eq('campaign_id', campaignId)
       .order('created_at', { ascending: false })
       .limit(8),
+    // Deel C: SupabaseLike heeft alleen `from`, en meer gebruikt de lader niet.
+    loadDataPurgedAt(supabase as SupabaseClient, campaignId),
   ])
 
   const memberRole = (membership?.role ?? null) as MemberRole | null
@@ -965,9 +971,12 @@ export async function fetchRouteBeheerData(args: {
     launchDate: deliveryRecord?.launch_date ?? deliveryRecord?.launch_confirmed_at ?? null,
     createdAt: campaign?.created_at ?? stats.created_at,
   })
+  // Na de opschoning kan er geen rapport meer gemaakt worden (410), ongeacht
+  // de tellingen; zo verschijnt nooit een downloadknop die alleen faalt.
+  const reportAvailable = hasMinDisplay && !dataPurgedAt
   const outputSummary = {
     dashboardReady: hasMinDisplay,
-    reportReady: hasMinDisplay,
+    reportReady: reportAvailable,
     dashboardHref: `/campaigns/${campaignId}`,
     reportHref: null,
     label: 'Dashboard / rapportstatus',
@@ -1060,7 +1069,8 @@ export async function fetchRouteBeheerData(args: {
     routeSettingsBody,
     outputStatusLabel: outputSummary.label,
     latestAuditSummary: auditEvents[0]?.summary ?? null,
-    reportAvailable: hasMinDisplay,
+    reportAvailable,
+    dataPurgedAt,
     canExecuteCampaign,
     canManageCampaign,
     membershipRole: memberRole,

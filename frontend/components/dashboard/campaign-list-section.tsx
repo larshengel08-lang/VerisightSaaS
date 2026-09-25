@@ -10,6 +10,7 @@ const STATUS_PILL: Record<CampaignStatusKey, string> = {
   action: 'border-[#e7d7af] bg-[#FBF4DF] text-[#7A5410]',
   closed_no_report: 'border-[color:var(--dashboard-frame-border)] text-[color:var(--dashboard-muted)]',
   report_ready: 'border-[color:var(--dashboard-ink)] bg-[color:var(--dashboard-ink)] text-white',
+  data_purged: 'border-dashed border-[color:var(--dashboard-frame-border)] text-[color:var(--dashboard-muted)]',
 }
 
 /**

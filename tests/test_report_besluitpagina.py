@@ -9,6 +9,7 @@ import re
 import pytest
 
 from backend.report_html import (
+    BESLUIT_TERUGKOPPELING,
     BESLUIT_TITEL,
     BESLUIT_VOETREGEL,
     LEIDRAAD_ANKERS,
@@ -41,7 +42,7 @@ def test_pagina_draagt_alle_velden_uit_de_spec():
     for veld in ("Meting", "Wave 1", "Datum van dit gesprek", "Startpunt", "Groeiperspectief",
                  "Wat precies", "Eigenaar", "Datum vervolgmoment", "Tweede punt",
                  "Werkdruk en herstelruimte", "Terugkoppeling aan medewerkers", "Wie", "Wanneer",
-                 "Wat", "Waaraan zien we dat het werkt"):
+                 "Wat", "Waaraan zien we bij het startpunt dat het werkt"):
         assert veld in t, veld
     assert BESLUIT_VOETREGEL in t
 
@@ -49,7 +50,7 @@ def test_pagina_draagt_alle_velden_uit_de_spec():
 def test_pagina_is_een_eigen_vel_en_breekt_niet():
     html = _pagina()
     assert html.startswith('<div class="pb sec besluit">')
-    assert html.count('class="bl-line"') >= 12     # 3 + 3 wat precies, eigenaar, 2 datums, 3 terugkoppeling, 1 succes
+    assert html.count('class="bl-line"') >= 12     # 3 wat precies, eigenaar, 2 datums, 2 wat precies tweede punt, 3 terugkoppeling, 1 succes
 
 
 def test_vervolgmoment_vraagt_een_datum_met_de_hint_ernaast():
@@ -71,13 +72,12 @@ def test_zonder_startpunt_zegt_de_pagina_dat_eerlijk():
 
 
 def test_inleiding_verwijst_naar_de_werkvragen_of_zegt_dat_ze_er_niet_zijn():
-    """N1 (eindreview): de inleiding wijst naar het eigen anker van het blok
-    (werkvragen), niet naar de beginpagina van het hoofdstuk (agenda) -- het
-    blok staat vaak één of twee pagina's later. Lockstep bijgewerkt: pinde
-    voorheen de oude (foute) verwijzing."""
+    """Fixronde leesronde 24-9: de inleiding wijst naar het eigen anker van het
+    blok (werkvragen). De meetregel meet sinds Taak 1 het getoonde nummer tegen
+    de ankerpagina, dus de terugdraai van N1 is niet meer nodig."""
     met = _pagina()
     assert "Zo maak je er een besluit van" in _plain(met)
-    assert 'href="#' + LEIDRAAD_ANKERS["agenda"] + '"' in met  # verwijzing naar het hoofdstukbegin, zie N1-terugdraai in report_html.py
+    assert 'href="#' + LEIDRAAD_ANKERS["werkvragen"] + '"' in met
     start = _plain(_pagina(scan_type="onboarding", heeft_werkvragen=False))
     assert "Zo maak je er een besluit van" not in start
     assert "Loep Start meet nog geen richtingvraag" in start
@@ -114,20 +114,16 @@ def test_het_oude_blok_is_weg_en_de_agenda_verwijst_naar_de_besluitpagina(scan_t
 
 
 def test_leidraad_rij_vijf_wijst_naar_werkvragen_en_besluit():
-    """N1 (eindreview): "met de werkvragen" wees naar het hoofdstukanker
-    (agenda), de beginpagina van de gespreksagenda, terwijl het blok "Zo maak
-    je er een besluit van" daar vaak één of twee pagina's verderop staat. Wijst
-    nu naar zijn eigen anker (werkvragen). Lockstep bijgewerkt: pinde voorheen
-    de oude (foute) verwijzing naar agenda."""
+    """Fixronde leesronde 24-9 (R2): rij 5 wijst naar het werkvragenblok zelf."""
     html = _leidraad_block("retention", has_segments=True, has_quotes=True,
-                           has_direction=True, has_deepening=True)
-    rij = html[html.index("33-45 min"):]
-    assert 'href="#' + LEIDRAAD_ANKERS["agenda"] + '"' in rij  # idem
+                           has_deepening=True, has_werkvragen=True)
+    rij = html[html.index("31-45 min"):]
+    assert 'href="#' + LEIDRAAD_ANKERS["werkvragen"] + '"' in rij
     assert 'href="#' + LEIDRAAD_ANKERS["besluit"] + '"' in rij
-    assert "met de werkvragen" in _plain(rij)
+    assert "De werkvragen (pagina" in _plain(rij)
     assert html.count("<tr>") == 5          # geen extra rij: p.02 blijft een A4
     zonder = _leidraad_block("onboarding", has_segments=False, has_quotes=False,
-                             has_direction=False, has_deepening=False)
+                             has_deepening=False)
     assert "werkvragen" not in _plain(zonder)
     assert 'href="#' + LEIDRAAD_ANKERS["besluit"] + '"' in zonder
 
@@ -157,8 +153,9 @@ def test_vastgelegd_besluit_staat_voorgedrukt_met_de_datum_van_vastleggen():
 
 def test_lege_velden_van_een_vastgelegd_besluit_blijven_invulbaar():
     html = _pagina(decision=BESLUIT)
-    # tweede punt: wat precies (3) + terugkoppeling (3) blijven lijnen
-    assert html.count('class="bl-line"') == 6
+    # tweede punt: wat precies (2, fixronde 24-9: ruimte voor de parkeerregel)
+    # + terugkoppeling (3) blijven lijnen
+    assert html.count('class="bl-line"') == 5
     assert "Lege velden vul je met de pen in of werk je bij in het dashboard." in _plain(html)
 
 
@@ -229,7 +226,7 @@ def test_ingevuld_terugkoppelingsplan_vervangt_de_tabel_door_tekst():
     t = _plain(html)
     assert 'class="bl-drie"' not in html
     assert "We delen de uitkomst in het eerstvolgende teamoverleg." in t
-    assert "Je mensen vulden in; ze horen wat het MT ermee doet." in t
+    assert BESLUIT_TERUGKOPPELING["retention"] in t
 
 
 def test_ingevuld_terugkoppelingsplan_wordt_geescaped():
@@ -242,8 +239,12 @@ def test_ingevuld_terugkoppelingsplan_wordt_geescaped():
 # Gemeten in het productie-image (WeasyPrint 70.0, zie het commitbericht): een
 # besluit met alle vier lange velden op de frontendlimiet (600 tekens,
 # DECISION_LIMITS.action/.text) duwt de pagina over een tweede vel. Op 470
-# tekens per veld past hij nog net, op 480 niet meer. BESLUIT_TEKST_MAX houdt
-# ruime marge.
+# tekens per veld past hij nog net, op 480 niet meer; de grens werd 300.
+# Taak 11 (fixronde 24-9): met het blok "Afspraak per afdeling" liep hij bij
+# 300 weer over. Nu 240 plus kleinere tussenruimte (hefboom F); het slechtste
+# geval (Loep Vertrek met een afdeling, onderwerp en eigenaar op 120 tekens,
+# scripts/render_besluit_max.py) houdt 25,1pt over. Het nieuwe knikpunt is
+# niet gemeten.
 from backend.report_html import BESLUIT_INGEKORT, BESLUIT_TEKST_MAX, _bl_kort
 
 
@@ -285,3 +286,45 @@ def test_elk_lang_veld_triggert_de_melding(veld):
     lang = ("besluitwoord " * 60).strip()
     html = _pagina(decision=dict(BESLUIT, **{veld: lang}))
     assert BESLUIT_INGEKORT in _plain(html)
+
+
+def test_besluit_tekst_max_is_de_gemeten_waarde():
+    # Fixronde leesronde 24-9, Taak 11: met het blok "Afspraak per afdeling"
+    # liep de besluitpagina bij 300 tekens per lang veld over naar een tweede
+    # vel (06 en Loep Vertrek met een afdeling, alle velden op hun limiet;
+    # scripts/render_besluit_max.py). Wie de grens verhoogt, meet eerst opnieuw.
+    assert BESLUIT_TEKST_MAX == 240
+
+
+def _css_regel(css: str, selector: str) -> str:
+    m = re.search(r"(?m)^" + re.escape(selector) + r"\s*\{([^}]*)\}", css)
+    assert m, selector
+    return m.group(1)
+
+
+def test_besluitpagina_css_wint_ruimte_tussen_blokken_niet_op_de_schrijflijnen():
+    # Taak 11 (hefboom F): ruimte gewonnen tussen blokken en in de hints, niet
+    # op de lege schrijflijnen (die zijn voor de pen) en niet in lettergrootte.
+    from backend.report_css import build_css
+    css = build_css("retention")
+    assert "height: 24px" in _css_regel(css, ".bl-line")
+    assert "margin-top: 12px" in _css_regel(css, ".bl-blok")
+    assert "margin-top: 10px" in _css_regel(css, ".bl-rij, .bl-drie")
+    assert "font-size: 11px" in _css_regel(css, ".bl-tekst")
+    assert "font-size: 8.5px" in _css_regel(css, ".bl-lbl")
+    hint = _css_regel(css, ".bl-hint")
+    assert "font-size: 8.5px" in hint
+    lh = re.search(r"line-height:\s*([\d.]+)", hint)
+    assert lh and float(lh.group(1)) >= 1.3
+    for sel in (".bl-blok", ".bl-rij, .bl-drie", ".bl-hint", ".bl-line", ".bl-lbl", ".bl-tekst"):
+        assert len(re.findall(r"(?m)^" + re.escape(sel) + r"\s*\{", css)) == 1, sel
+
+
+@pytest.mark.parametrize("teken", [".", ",", ";", ":"])
+def test_bl_kort_zet_geen_ellips_achter_leestekens(teken):
+    # Valt de knip net na een leesteken, dan geen "euro...." maar "euro...".
+    woord = "x" * 20
+    tekst = (woord + teken + " ") * 30  # knip op een woordgrens na het leesteken
+    kort, afgekapt = _bl_kort(tekst, max_chars=44)
+    assert afgekapt is True
+    assert kort == woord + teken + " " + woord + "..."

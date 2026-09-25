@@ -6,6 +6,7 @@ import { GuidedSelfServePanel } from '@/components/dashboard/guided-self-serve-p
 import { SelfSendSetupPanel } from '@/components/dashboard/self-send-setup-panel'
 import { CampaignActions } from '../campaign-actions'
 import { PdfDownloadButton } from '../pdf-download-button'
+import { dataPurgedLabel } from '@/lib/dashboard/data-purged'
 import type {
   HrRouteBeheerNowDoing,
   HrRouteBeheerPhaseDetail,
@@ -291,7 +292,7 @@ function RouteBeheerPhaseDetailContent({ data, detail }: { data: RouteBeheerPage
             />
           ) : (
             <span className="text-sm text-[color:var(--text)]">
-              Rapport nog niet beschikbaar.
+              {data.dataPurgedAt ? `${dataPurgedLabel(data.dataPurgedAt)}.` : 'Rapport nog niet beschikbaar.'}
             </span>
           )}
         </div>
@@ -478,10 +479,10 @@ export function RouteBeheerOutputSummary({ data }: { data: RouteBeheerPageData }
         </div>
         <div className="flex flex-wrap gap-2">
           <span className={joinClasses('rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]', summary.dashboardReady ? 'border-[#D7E6DF] bg-[#F6FAF8] text-[#3C8D8A]' : 'border-[color:var(--border)] bg-[color:var(--bg)] text-[color:var(--muted)]')}>
-            Dashboard {summary.dashboardReady ? 'klaar' : 'wacht'}
+            Dashboard {data.dataPurgedAt ? 'verwijderd' : summary.dashboardReady ? 'klaar' : 'wacht'}
           </span>
           <span className={joinClasses('rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]', summary.reportReady ? 'border-[#D7E6DF] bg-[#F6FAF8] text-[#3C8D8A]' : 'border-[color:var(--border)] bg-[color:var(--bg)] text-[color:var(--muted)]')}>
-            Rapport {summary.reportReady ? 'klaar' : 'wacht'}
+            Rapport {data.dataPurgedAt ? 'verwijderd' : summary.reportReady ? 'klaar' : 'wacht'}
           </span>
         </div>
       </div>

@@ -653,7 +653,7 @@ WORK_QUESTIONS: dict[str, dict[str, dict[str, str]]] = {
     "leadership": {
         "ldd_feedback": {
             "retention": "Een medewerker levert werk in dat beter kan. Van wie hoort die wat er anders moet en waar het naartoe moet, en hoe snel? Wat kan die er de volgende dag mee?",
-            "exit": "Een medewerker levert nu werk in dat beter kan. Van wie hoort die wat er anders moet, en hoe snel? En toen de vertrekkers er nog werkten?",
+            "exit": "Een medewerker levert nu werk in dat beter kan. Van wie hoort die wat er anders moet, en hoe snel? En in de periode waar deze meting over gaat?",
         },
         "ldd_mandate": {
             "retention": "Welke drie beslissingen mag een medewerker bij jullie nemen zonder het eerst te vragen, en hoe reageert een leidinggevende als zo'n beslissing anders uitpakt?",
@@ -661,7 +661,7 @@ WORK_QUESTIONS: dict[str, dict[str, dict[str, str]]] = {
         },
         "ldd_escalation": {
             "retention": "Als een medewerker vastloopt in een situatie of een spanning: wat doet de leidinggevende dan, binnen hoeveel dagen, en bij wie kan die medewerker terecht als het daar niet lukt?",
-            "exit": "Als een medewerker nu vastloopt in een situatie of een spanning: wat doet de leidinggevende dan, en binnen hoeveel dagen? En toen de vertrekkers er nog werkten?",
+            "exit": "Als een medewerker nu vastloopt in een situatie of een spanning: wat doet de leidinggevende dan, en binnen hoeveel dagen? En in de periode waar deze meting over gaat?",
         },
         "ldd_recognition": {
             "retention": "Hoe hoort iemand bij jullie dat zijn of haar werk goed was: van wie, hoe snel erna, en wat wordt er dan precies genoemd?",
@@ -669,7 +669,7 @@ WORK_QUESTIONS: dict[str, dict[str, dict[str, str]]] = {
         },
         "ldd_availability": {
             "retention": "Hoe snel krijgt een medewerker bij jullie antwoord van de leidinggevende, en hoe vaak zien ze elkaar zonder dat er iets aan de hand is? Weet de medewerker wat die mag verwachten?",
-            "exit": "Hoe snel krijgt een medewerker nu antwoord van de leidinggevende, en weet die vooraf wat die mag verwachten? En toen de vertrekkers er nog werkten?",
+            "exit": "Hoe snel krijgt een medewerker nu antwoord van de leidinggevende, en weet die vooraf wat die mag verwachten? En in de periode waar deze meting over gaat?",
         },
         "ldd_consistency": {
             "retention": "Als een besluit of verwachting bij jullie verandert: wie legt uit waarom, aan wie, en binnen hoeveel dagen? En wat als het daarna weer wijzigt?",
@@ -679,7 +679,7 @@ WORK_QUESTIONS: dict[str, dict[str, dict[str, str]]] = {
     "culture": {
         "cud_safety": {
             "retention": "Een medewerker meldt zelf een fout. Wat gebeurt er daarna: wie reageert, wat zien collega's daarvan, en hoort de melder wat ermee gedaan is?",
-            "exit": "Een medewerker meldt nu zelf een fout. Wie reageert, en wat zien collega's daarvan? En toen de vertrekkers er nog werkten?",
+            "exit": "Een medewerker meldt nu zelf een fout. Wie reageert, en wat zien collega's daarvan? En in de periode waar deze meting over gaat?",
         },
         "cud_dissent": {
             "retention": "Wanneer veranderde een kritische vraag van een medewerker bij jullie voor het laatst een besluit? In welk overleg is daar ruimte voor, en wat hoort iemand wiens bezwaar het niet haalt?",
@@ -687,7 +687,7 @@ WORK_QUESTIONS: dict[str, dict[str, dict[str, str]]] = {
         },
         "cud_conflict": {
             "retention": "Wanneer is een spanning bij jullie groot genoeg om te bespreken: wie begint erover, hoe snel, en wie helpt als twee collega's er samen niet uitkomen?",
-            "exit": "Twee collega's komen er nu samen niet uit. Wie begint erover, hoe snel, en wie helpt? En toen de vertrekkers er nog werkten?",
+            "exit": "Twee collega's komen er nu samen niet uit. Wie begint erover, hoe snel, en wie helpt? En in de periode waar deze meting over gaat?",
         },
         "cud_agreements": {
             "retention": "Een collega houdt zich niet aan een teamafspraak. Wie zegt daar bij jullie iets van, en hoe snel? En waar staan die afspraken, zodat een nieuw teamlid ze kent?",
@@ -699,7 +699,7 @@ WORK_QUESTIONS: dict[str, dict[str, dict[str, str]]] = {
         },
         "cud_crossteam": {
             "retention": "Twee teams hangen van elkaars werk af. Wat spreken ze bij jullie met elkaar af, wie regelt dat, en wie beslist als het botst?",
-            "exit": "Twee teams hangen nu van elkaars werk af. Wat spreken ze met elkaar af, en wie beslist als het botst? En toen de vertrekkers er nog werkten?",
+            "exit": "Twee teams hangen nu van elkaars werk af. Wat spreken ze met elkaar af, en wie beslist als het botst? En in de periode waar deze meting over gaat?",
         },
     },
     "growth": {
@@ -721,7 +721,7 @@ WORK_QUESTIONS: dict[str, dict[str, dict[str, str]]] = {
         },
         "grd_criteria": {
             "retention": "Wat moet iemand bij jullie laten zien om door te groeien, wie beslist daarover, en waar kan een medewerker dat nalezen voordat hij of zij het vraagt?",
-            "exit": "Wat moet een medewerker nu laten zien om door te groeien, en waar kan die dat nalezen? Stond dat er al toen de vertrekkers er nog werkten?",
+            "exit": "Wat moet een medewerker nu laten zien om door te groeien, en waar kan die dat nalezen? Stond dat er al in de periode waar deze meting over gaat?",
         },
         "grd_nextstep": {
             "retention": "Welke vervolgstappen zijn er bij jullie echt, en welke niet? Wie zegt dat eerlijk tegen een medewerker, en op welk moment in het jaar?",
@@ -757,7 +757,7 @@ WORK_QUESTIONS: dict[str, dict[str, dict[str, str]]] = {
     "workload": {
         "wld_scope": {
             "retention": "Er komt werk bij voor een team dat al vol zit. Wie zegt bij jullie wat er dan afgaat, en waar staat wat wel en niet bij een functie hoort?",
-            "exit": "Er komt nu werk bij voor een team dat al vol zit. Wie zegt wat er dan afgaat? En toen de vertrekkers er nog werkten?",
+            "exit": "Er komt nu werk bij voor een team dat al vol zit. Wie zegt wat er dan afgaat? En in de periode waar deze meting over gaat?",
         },
         "wld_planning": {
             "retention": "Hoe ver vooruit zien jullie hoeveel werk er komt, en wie legt dat naast de bezetting? Klopt het niet: mensen erbij, werk eraf, of vangt het team het op?",
@@ -765,11 +765,11 @@ WORK_QUESTIONS: dict[str, dict[str, dict[str, str]]] = {
         },
         "wld_peaks": {
             "retention": "Welke pieken kunnen jullie zien aankomen, en welke niet? Wie verdeelt het spoedwerk, en wie mag zeggen: dit kan er nu niet bij?",
-            "exit": "Welke pieken zien jullie nu aankomen, en wie mag zeggen: dit kan er niet bij? Wie mocht dat zeggen toen de vertrekkers er nog werkten?",
+            "exit": "Welke pieken zien jullie nu aankomen, en wie mag zeggen: dit kan er niet bij? Wie mocht dat zeggen in de periode waar deze meting over gaat?",
         },
         "wld_recovery": {
             "retention": "Na een drukke periode: wat mag er bij jullie blijven liggen zodat mensen kunnen bijkomen en werk goed kunnen afmaken? Wie beslist dat, en hoe weet het team dat het mag?",
-            "exit": "Na een drukke periode: wat mag er nu blijven liggen, en hoe weet het team dat het mag? En toen de vertrekkers er nog werkten?",
+            "exit": "Na een drukke periode: wat mag er nu blijven liggen, en hoe weet het team dat het mag? En in de periode waar deze meting over gaat?",
         },
         "wld_priorities": {
             "retention": "Als alles belangrijk is: wie zegt bij jullie hardop wat mag wachten, en hoe weet een medewerker dat op maandag? Wat hebben jullie zelf voor het laatst laten wachten?",
@@ -777,7 +777,7 @@ WORK_QUESTIONS: dict[str, dict[str, dict[str, str]]] = {
         },
         "wld_friction": {
             "retention": "Welk dubbel werk of systeemgedoe kost de meeste tijd, en weten jullie dat of de mensen die het doen? Hoe halen jullie het op, en wie lost het eerste punt op?",
-            "exit": "Welk dubbel werk of systeemgedoe kost nu de meeste tijd, en wie lost het eerste punt op? Wat ervan bestond al toen de vertrekkers er nog werkten?",
+            "exit": "Welk dubbel werk of systeemgedoe kost nu de meeste tijd, en wie lost het eerste punt op? Wat ervan bestond al in de periode waar deze meting over gaat?",
         },
     },
     "role_clarity": {
@@ -787,11 +787,11 @@ WORK_QUESTIONS: dict[str, dict[str, dict[str, str]]] = {
         },
         "rcd_expectations": {
             "retention": "Waarop wordt een medewerker bij jullie aangesproken, en wist die dat vooraf? Wie spreekt verwachtingen uit, op welk moment, en waar staan ze?",
-            "exit": "Waarop wordt een medewerker nu aangesproken, en wist die dat vooraf? Waar staan die verwachtingen? Stonden ze er al toen de vertrekkers er nog werkten?",
+            "exit": "Waarop wordt een medewerker nu aangesproken, en wist die dat vooraf? Waar staan die verwachtingen? Stonden ze er al in de periode waar deze meting over gaat?",
         },
         "rcd_alignment": {
             "retention": "Wat doet een medewerker bij jullie die van twee kanten iets anders te horen krijgt? Wie hakt de knoop door, en hoe snel?",
-            "exit": "Een medewerker krijgt nu van twee kanten iets anders te horen. Wie hakt de knoop door, en hoe snel? En toen de vertrekkers er nog werkten?",
+            "exit": "Een medewerker krijgt nu van twee kanten iets anders te horen. Wie hakt de knoop door, en hoe snel? En in de periode waar deze meting over gaat?",
         },
         "rcd_scope": {
             "retention": "Als een takenpakket bij jullie verandert: wie bespreekt dat met de medewerker, vóór of na de verandering, en waar leggen jullie vast wat er is afgesproken?",
@@ -803,7 +803,7 @@ WORK_QUESTIONS: dict[str, dict[str, dict[str, str]]] = {
         },
         "rcd_information": {
             "retention": "Iemand begint bij jullie aan een klus of neemt een dienst over. Wat moet die dan weten, wie zorgt dat het er ligt, en wat doet die als het ontbreekt?",
-            "exit": "Iemand neemt nu een klus of dienst over. Wat moet die weten, en wie zorgt dat het er ligt? En toen de vertrekkers er nog werkten?",
+            "exit": "Iemand neemt nu een klus of dienst over. Wat moet die weten, en wie zorgt dat het er ligt? En in de periode waar deze meting over gaat?",
         },
     },
 }
@@ -826,6 +826,9 @@ WORK_QUESTION_VARIANTS: dict[str, dict[str, str]] = {
 # concept-sectie 6 punt 4, akkoord Lars): de mensen aan tafel zijn zelf de
 # leidinggevenden waar de vertaalvraag over gaat. Staat alleen onder de
 # vertaalvraag van `leadership`, en alleen als die er ook echt staat.
+# Amendement 24-9 (A2): alleen bij Loep Behoud. Bij Loep Vertrek stuurt
+# "beantwoord hem eerst voor je eigen team" naar wie er uit dat team vertrok;
+# daar staat de namenregel (report_html.NAMENREGEL_VERTREK) in de plaats.
 WERKVRAGEN_AANSTURING_HINT = ("Deze vraag gaat ook over de leidinggevenden aan deze tafel. "
                               "Beantwoord hem eerst voor je eigen team.")
 

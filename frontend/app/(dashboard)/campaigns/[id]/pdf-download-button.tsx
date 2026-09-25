@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { SCAN_TYPE_LABELS, type ScanType } from '@/lib/types'
-import { downloadErrorMessage, summarizeTechnicalDetail } from '@/lib/report-download-error'
+import { downloadErrorMessage, purgedDownloadMessage, summarizeTechnicalDetail } from '@/lib/report-download-error'
 
 interface Props {
   campaignId: string
@@ -59,10 +59,17 @@ export function PdfDownloadButton({
         } catch {
           // Geen JSON-detail (bijvoorbeeld een kale foutpagina zonder body).
         }
-        setError({
-          message: downloadErrorMessage(response.status),
-          technical: summarizeTechnicalDetail(rawDetail),
-        })
+        // 410 na de opschoning: de backendzin noemt de datum en is zelf de
+        // hoofdmelding; een technische regel eronder zou hem herhalen.
+        const purgedMessage = purgedDownloadMessage(response.status, rawDetail)
+        setError(
+          purgedMessage
+            ? { message: purgedMessage, technical: null }
+            : {
+                message: downloadErrorMessage(response.status),
+                technical: summarizeTechnicalDetail(rawDetail),
+              },
+        )
         setLoadingFormat(null)
         return
       }

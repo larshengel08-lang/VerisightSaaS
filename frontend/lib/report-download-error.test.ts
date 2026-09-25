@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { downloadErrorMessage, summarizeTechnicalDetail } from './report-download-error'
+import { downloadErrorMessage, purgedDownloadMessage, summarizeTechnicalDetail } from './report-download-error'
 import { LOEP_CONTACT_EMAIL } from './loep-contact'
 
 describe('summarizeTechnicalDetail', () => {
@@ -72,9 +72,47 @@ describe('downloadErrorMessage', () => {
     expect(downloadErrorMessage(418)).toContain('fout 418')
   })
 
+  it('zegt bij 410 dat de gegevens verwijderd zijn en dat opnieuw proberen niet helpt', () => {
+    const message = downloadErrorMessage(410)
+    expect(message).toBe(
+      'De gegevens van deze meting zijn verwijderd, volgens de bewaartermijn of op verzoek van jullie organisatie. Een nieuw rapport maken kan daarom niet meer. Een rapport dat eerder is gedownload, blijft geldig.',
+    )
+    expect(message).not.toContain('Probeer het later opnieuw')
+    expect(message).not.toContain('fout 410')
+  })
+
   it('gebruikt nergens een em-dash of en-dash', () => {
-    for (const status of [401, 403, 404, 500, 502, 418]) {
+    for (const status of [401, 403, 404, 410, 500, 502, 418]) {
       expect(downloadErrorMessage(status)).not.toMatch(/[—–]/)
     }
+  })
+})
+
+describe('purgedDownloadMessage (410 na de opschoning)', () => {
+  const BACKEND_ZIN =
+    'De gegevens van deze meting zijn op 16 juni 2028 verwijderd, volgens de bewaartermijn of op verzoek van jullie organisatie. Een nieuw rapport maken kan daarom niet meer. Een rapport dat eerder is gedownload, blijft geldig.'
+
+  it('neemt de backendzin met datum over uit de geneste FastAPI-body', () => {
+    expect(purgedDownloadMessage(410, JSON.stringify({ detail: BACKEND_ZIN }))).toBe(BACKEND_ZIN)
+  })
+
+  it('neemt ook platte tekst met dezelfde zin over', () => {
+    expect(purgedDownloadMessage(410, `  ${BACKEND_ZIN}
+`)).toBe(BACKEND_ZIN)
+  })
+
+  it('geeft null bij een andere statuscode, ook met dezelfde zin', () => {
+    expect(purgedDownloadMessage(500, JSON.stringify({ detail: BACKEND_ZIN }))).toBeNull()
+  })
+
+  it('geeft null bij een 410 met een andere of ontbrekende melding: dan geldt de algemene 410-zin', () => {
+    expect(purgedDownloadMessage(410, JSON.stringify({ detail: 'Gone' }))).toBeNull()
+    expect(purgedDownloadMessage(410, '<html>410</html>')).toBeNull()
+    expect(purgedDownloadMessage(410, null)).toBeNull()
+    expect(purgedDownloadMessage(410, '')).toBeNull()
+  })
+
+  it('geeft null bij een onverwacht lange tekst met hetzelfde begin', () => {
+    expect(purgedDownloadMessage(410, BACKEND_ZIN + ' x'.repeat(200))).toBeNull()
   })
 })

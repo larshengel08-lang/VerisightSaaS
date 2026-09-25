@@ -16,6 +16,11 @@ describe('campagnedetail: besluit vastleggen (plan 3b)', () => {
     expect(source).toContain('canManage={canManage}')
   })
 
+  it('geeft het scantype door, zodat de terugkoppelhint die van deze scan is', () => {
+    const blok = source.slice(source.indexOf('<DecisionBlock'), source.indexOf('/>', source.indexOf('<DecisionBlock')))
+    expect(blok).toContain('scanType={stats.scan_type}')
+  })
+
   it('haalt het besluit alleen op als er een rapport is, en laat een queryfout de pagina niet omvallen', () => {
     expect(source).toContain(".from('campaign_decisions')")
     expect(source).toContain('decisionLoadError')

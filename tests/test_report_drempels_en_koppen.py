@@ -199,7 +199,6 @@ def test_leidraadregel_wijst_in_alle_drie_de_producten_naar_de_drempeltabel():
     drempeltabel op alle drie de methodiekpagina's mag die tweedeling weg."""
     for st in ("exit", "retention", "onboarding"):
         html = _leidraad_block(st, has_segments=True, has_quotes=True,
-                               has_direction=st != "onboarding",
                                has_deepening=st != "onboarding")
         assert f'href="#{LEIDRAAD_ANKERS["drempels"]}"' in html
         assert "de drempels staan op pagina" in _tekst(html)

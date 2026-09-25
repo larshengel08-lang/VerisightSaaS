@@ -296,8 +296,8 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .fill-steps .step { width: 33.3%; padding: 10px 12px; }
 .fill-steps .step-sublbl { margin-top: 0; }
 .fill-steps .step-fill-hint { margin-bottom: 0; }
-.agenda-slot .agenda-dark { padding: 14px 16px; }
-.agenda-slot .agenda-opener { padding-top: 10px; margin-bottom: 12px; }
+.agenda-slot .agenda-dark { padding: 10px 16px; }
+.agenda-slot .agenda-opener { margin-top: 0; border-top: none; padding-top: 10px; margin-bottom: 12px; }
 .agenda-opener { border-left: 3px solid #E8A020; border-top: 1px solid #2A3D52;
   padding: 14px 0 0 16px; margin-top: 16px; }
 
@@ -383,27 +383,38 @@ p  { margin-bottom: 6px; font-size: 11px; }
   break-inside: avoid; page-break-inside: avoid; }
 
 /* ── Werkvragen "Zo maak je er een besluit van" (plan 3b) ── */
-.wq-block { margin-top: 16px; break-inside: avoid; }
+/* Hefboom E (fixronde leesronde, Taak 10): de weging onder de verdeeld-zin maakte
+   het agendaslot (no-break) 31 tot 42pt hoger, en dan verhuisde het slot in
+   10, 15 en voorbeeldrapport_loep naar een eigen vel. De marges hier, de
+   celpadding en de navy-marges in .agenda-slot zijn daarom krapper; gemeten
+   in het productie-image (10 en 15 eindigen op y=781/780 van ongeveer 783). */
+.wq-block { margin-top: 10px; break-inside: avoid; }
 .wq-card { width: 50%; vertical-align: top; background: #FFFFFF; border-left: 3px solid """ + accent + r"""; padding: 10px 14px; }
 .wq-tbl { width: 100%; border-collapse: collapse; }
-.wq-tbl td { font-size: 10px; line-height: 1.5; color: #374151; padding: 5px 0; vertical-align: top; border-bottom: 1px solid """ + HAIRLINE + r"""; }
+.wq-tbl td { font-size: 10px; line-height: 1.42; color: #374151; padding: 3px 0; vertical-align: top; border-bottom: 1px solid """ + HAIRLINE + r"""; }
 .wq-tbl tr:last-child td { border-bottom: none; }
-.wq-stap { width: 22%; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: """ + accent_lo + r"""; padding-right: 8px; }
+/* Met td erbij: anders wint .wq-tbl td (klasse + element) en vallen maat,
+   kleur en padding-right hier weg; dan liep het label tegen de vraag aan
+   ("BESLUITENWat spreken", code review Taak 10). */
+.wq-tbl td.wq-stap { width: 22%; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: """ + accent_lo + r"""; padding-right: 8px; }
 .wq-hint { font-size: 8.5px; font-style: italic; color: """ + STEEL + r"""; margin-top: 4px; }
+/* De weging onder de verdeeld-zin (R6/V9, fixronde 24-9) is een leesregel, geen
+   voetnoot: daarom niet de 8,5px van .wq-hint maar minstens 9,5px. */
+.wq-weging { font-size: 9.5px; line-height: 1.4; font-style: italic; color: """ + STEEL + r"""; margin-top: 4px; }
 
 /* ── Besluitpagina "Besluit van het MT" (plan 3b): lijnen voor de pen ── */
 /* break-after: de appendix stroomt (.sec zonder .pb) en zou anders onder het
    invulvel beginnen; dat vel moet los te printen zijn. */
 .besluit { break-inside: avoid; break-after: page; }
-.bl-rij, .bl-drie { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 14px; }
+.bl-rij, .bl-drie { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 10px; }
 .bl-cel { width: 50%; vertical-align: top; padding-right: 18px; }
 .bl-drie td { width: 33.3%; vertical-align: top; padding-right: 14px; }
 .bl-drie .bl-lbl { margin-top: 4px; font-size: 7.5px; }
-.bl-blok { margin-top: 16px; break-inside: avoid; }
+.bl-blok { margin-top: 12px; break-inside: avoid; }
 .bl-lbl { font-family: 'JetBrains Mono', monospace; font-size: 8.5px; letter-spacing: 0.12em; text-transform: uppercase; color: """ + accent_lo + r"""; margin: 10px 0 2px; }
 .bl-vast { font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 13px; color: """ + INK + r"""; padding: 4px 0 2px; }
 .bl-line { border-bottom: 1px solid #94A3B8; height: 24px; }
-.bl-hint { font-size: 8.5px; font-style: italic; color: """ + STEEL + r"""; margin-top: 4px; }
+.bl-hint { font-size: 8.5px; font-style: italic; color: """ + STEEL + r"""; margin-top: 4px; line-height: 1.35; }
 .bl-tekst { font-size: 11px; line-height: 1.55; color: """ + INK + r"""; padding: 4px 0 6px; border-bottom: 1px solid """ + HAIRLINE + r"""; }
 .bl-status { font-size: 9.5px; color: """ + STEEL + r"""; margin: 8px 0 0; font-style: italic; }
 .mq-direction { font-size: 11px; font-weight: 600; color: """ + NAVY + r"""; margin: 8px 0 0; }
@@ -608,26 +619,42 @@ h3 { font-family: 'Inter Tight', sans-serif; font-weight: 700;
    rapport houdt zijn eigen ruimte.
    Gemeten op de WeasyPrint-render (fixronde na plan 3a, observatie 9): met de
    vorige maten liep p.02 over in tien van de 24 renders, tot ongeveer 110pt in
-   scenario 08. Deze maten laten in alle 24 ruimte over (krapst: 08). Winst zit
-   vooral in de kernzin (20px, volle breedte), de leidraad (beschrijving krijgt
-   67% van de breedte, dus meestal één regel) en de witruimte rond het
-   meetgegevensblok. Een kernzin boven KERNZIN_LANG tekens (report_html.py)
-   krijgt 18px, zodat een langere kop dan de stresstest kent p.02 ook niet
-   laat overlopen. */
+   scenario 08. Winst zit vooral in de kernzin (20px, volle breedte), de
+   leidraad (beschrijving krijgt 67% van de breedte, dus meestal één regel) en
+   de witruimte rond het meetgegevensblok. Een kernzin boven KERNZIN_LANG
+   tekens (report_html.py) krijgt 18px, zodat een langere kop dan de stresstest
+   kent p.02 ook niet laat overlopen.
+   Fixronde leesronde 24-9 (Taak 7): de duiding onder de cijfers, de langere
+   leidraad en de extra regel in de meetgegevens maakten p.02 weer langer.
+   Daarom zijn het waarom-blok, de leidraadregels en het meetgegevensblok
+   dichter gezet, en krijgt een lange of gedeelde hoofdreden van vertrek
+   (sc-reden-lang, VERTREKREDEN_LANG in report_html.py) 11px, nooit kleiner
+   dan de subregel (.sc-b, 9px). Gemeten in het productie-image (WeasyPrint
+   70.0) past p.02 in alle 24 renders; krapst is scenario 08 met 10,5pt over.
+   Het echte bewijs is de regel p02-op-een-a4 in het productie-image; de test
+   op deze maten bewaakt alleen tegen per ongeluk wijzigen. Elke selector
+   staat hier één keer: bij gelijke specificiteit wint de latere regel, dus een
+   tweede regel voor dezelfde selector maakt de eerste stil dood. */
 #p02 .br-kernzin { font-size: 20px; max-width: none; margin-bottom: 14px; }
 #p02 .kz-lang .br-kernzin { font-size: 18px; }
-#p02 .why { padding: 12px 16px 10px; margin-bottom: 10px; }
+#p02 .why { padding: 10px 14px 8px; margin-bottom: 8px; }
 #p02 .why-title { margin-bottom: 10px; }
 #p02 .why-grid { margin-bottom: 8px; }
 #p02 .why-v { font-size: 22px; }
 #p02 .mq-line { padding-top: 10px; margin-top: 10px; }
 #p02 .sg { margin-bottom: 10px; }
 #p02 .sc-v { font-size: 18px; }
+#p02 .sc-v.sc-reden { font-size: 14px; }
+#p02 .sc-v.sc-reden-lang { font-size: 11px; line-height: 1.2; }
+#p02 .p02-duiding { font-size: 9.5px; line-height: 1.4; color: #374151; margin: -6px 0 8px; max-width: none; }
 #p02 .leidraad { margin-top: 10px; padding-top: 8px; }
 #p02 .leidraad-title { margin-bottom: 4px; }
-#p02 .leidraad td { padding: 2px 6px 2px 0; }
+#p02 .leidraad td { padding: 1px 6px 1px 0; line-height: 1.38; }
 #p02 .leidraad td.lt { width: 11%; }
 #p02 .leidraad td.lw { width: 22%; }
-#p02 .meet-blok { margin-top: 12px; }
-#p02 .meet-blok .slabel { margin-bottom: 8px; }
+#p02 .meet-blok { margin-top: 8px; }
+#p02 .meet-blok .slabel { margin-bottom: 6px; }
+#p02 .meet-blok .sg { margin-bottom: 4px; }
+#p02 .meet-blok .sc-b { line-height: 1.3; }
+#p02 .meet-blok .trustline { line-height: 1.35; }
 """

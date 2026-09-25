@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { AC, Arrow, FF, Reveal, SHELL, T } from '@/components/marketing/design-tokens'
 import { MarketingClosingCta } from '@/components/marketing/marketing-closing-cta'
+import { faqs } from '@/components/marketing/site-content'
 import { buildContactHref } from '@/lib/contact-funnel'
 import {
   PRICING_ABOVE_LABEL,
@@ -455,6 +456,44 @@ function MtoComparisonSection() {
   )
 }
 
+/**
+ * Veelgestelde vragen (besluit Lars 24-9-2026). Dezelfde bron als de
+ * FAQPage-JSON-LD op deze pagina (faqSchema in site-content.ts): Google wil dat
+ * die vragen zichtbaar op de pagina staan. Uitklapbaar met <details>, zodat de
+ * antwoorden in de HTML staan en zonder JavaScript leesbaar zijn.
+ */
+function FaqSection() {
+  return (
+    <section
+      id="veelgestelde-vragen"
+      style={{ background: T.white, borderBottom: `1px solid ${T.rule}`, padding: 'clamp(48px,5.5vw,72px) 0', scrollMarginTop: 80 }}
+    >
+      <div style={SHELL}>
+        <Reveal>
+          <div style={{ marginBottom: 28, maxWidth: '64ch' }}>
+            <div style={{ color: AC.deep, fontSize: 10, fontWeight: 700, letterSpacing: '.16em', marginBottom: 12, textTransform: 'uppercase' }}>
+              Veelgestelde vragen
+            </div>
+            <h2 style={{ color: T.ink, fontFamily: FF, fontSize: 'clamp(26px,3vw,38px)', fontWeight: 700, letterSpacing: '-.026em', lineHeight: 1.06 }}>
+              Wat mensen vragen voor ze beginnen
+            </h2>
+          </div>
+        </Reveal>
+        <div style={{ borderTop: `1px solid ${T.rule}`, maxWidth: '72ch' }}>
+          {faqs.map(([vraag, antwoord]) => (
+            <details key={vraag} style={{ borderBottom: `1px solid ${T.rule}`, padding: '16px 0' }}>
+              <summary style={{ color: T.ink, cursor: 'pointer', fontFamily: FF, fontSize: 16.5, fontWeight: 700, lineHeight: 1.4 }}>
+                {vraag}
+              </summary>
+              <p style={{ color: T.inkSoft, fontSize: 15, lineHeight: 1.7, marginTop: 10 }}>{antwoord}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function ContactSection() {
   const href = buildContactHref({ routeInterest: 'nog-onzeker', ctaSource: 'products_closing_cta' })
 
@@ -483,6 +522,7 @@ export function ProductenContent() {
       <SharedDeliverySection />
       <MtoComparisonSection />
       <PricingSection />
+      <FaqSection />
       <ContactSection />
     </div>
   )

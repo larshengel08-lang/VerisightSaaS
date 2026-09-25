@@ -22,6 +22,7 @@ import {
 } from '@/components/dashboard/dashboard-primitives'
 import { finalizeActionCenterPreviewItem } from '@/lib/action-center-live'
 import { getContactRequestsForAdmin } from '@/lib/contact-requests'
+import { estimateHeadcount } from '@/lib/lead-headcount'
 import { getProofApprovalLabel, getProofStateLabel, type ProofRegistrySummary } from '@/lib/proof-registry'
 import { getLatestProofRegistryPreview, getProofRegistrySummarySnapshot } from '@/lib/proof-registry-server'
 import { createClient } from '@/lib/supabase/server'
@@ -96,11 +97,6 @@ function inferPreviewRhythm(reviewMoment: string | null) {
   if (diffDays <= 14) return 'Tweewekelijks'
   if (diffDays <= 45) return 'Maandelijks'
   return 'Per kwartaal'
-}
-
-function estimateHeadcount(value: string | null) {
-  const match = value?.match(/\d+/)
-  return match ? Number.parseInt(match[0], 10) : 0
 }
 
 function normalizePreviewReviewOutcome(value: string | null | undefined): ActionCenterReviewOutcome {

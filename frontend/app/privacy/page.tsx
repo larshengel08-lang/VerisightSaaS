@@ -60,6 +60,9 @@ export default function PrivacyPage() {
             <strong>Technische gegevens:</strong> sessiegegevens, serverlogs en beveiligingsinformatie die nodig zijn
             om het platform veilig te laten werken.
           </li>
+          <li>
+            <strong>Contactpersonen:</strong> naam, zakelijk e-mailadres, organisatie en wat je in je bericht schrijft.
+          </li>
         </ul>
       </section>
 
@@ -89,6 +92,10 @@ export default function PrivacyPage() {
           Gegevens van een meting bewaart Loep zolang dat nodig is voor de dienst, en uiterlijk twee jaar na het
           sluiten van de meting, tenzij schriftelijk een andere termijn is afgesproken. Daarna verwijdert of
           anonimiseert Loep ze. Op verzoek van de klantorganisatie gebeurt dat eerder.
+        </p>
+        <p>
+          Wat je via het contactformulier of in een kennismaking met Loep deelt, bewaart Loep tot uiterlijk twee jaar
+          na het laatste contact. Volgt er een overeenkomst, dan gelden de termijnen hierboven.
         </p>
       </section>
 

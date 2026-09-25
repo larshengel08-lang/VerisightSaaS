@@ -1,7 +1,7 @@
 # Vertaalvragen voor het blok "Zo maak je er een besluit van" (concept)
 
 Datum: 2026-09-19
-Status: akkoord Lars, 2026-09-21 (versie 2, review van 21-9 verwerkt; keuzes in sectie 6)
+Status: akkoord Lars, 2026-09-21 (versie 2, review van 21-9 verwerkt; keuzes in sectie 6); amendement 24-9 in sectie 8
 Hoort bij: `docs/superpowers/specs/2026-09-16-rapport-onbegeleid-design.md` par. 6 en Bijlage A (plan 3b)
 Bron van de routes: `DIRECTION_SETS` in `backend/products/shared/deepening.py` (retention v2, exit v1)
 
@@ -104,23 +104,23 @@ De opdrachtvorm is in de code tijd-neutraal en dus dezelfde als bij Behoud. De k
 
 | Routesleutel | Wat de respondent zag | Opdrachtvorm uit de code | Vertaalvraag (concept) |
 |---|---|---|---|
-| `ldd_feedback` | Meer bruikbare feedback en richting | Geef meer bruikbare feedback en richting. | Een medewerker levert nu werk in dat beter kan. Van wie hoort die wat er anders moet, en hoe snel? En toen de vertrekkers er nog werkten? |
+| `ldd_feedback` | Meer bruikbare feedback en richting | Geef meer bruikbare feedback en richting. | Een medewerker levert nu werk in dat beter kan. Van wie hoort die wat er anders moet, en hoe snel? En in de periode waar deze meting over gaat? |
 | `ldd_mandate` | Duidelijker wat ik zelf mocht beslissen in mijn werk | Maak duidelijker wat medewerkers zelf mogen beslissen. | Welke drie beslissingen mag een medewerker nu nemen zonder het eerst te vragen, en van wie heeft die dat gehoord? Was dat een jaar geleden anders? |
-| `ldd_escalation` | Duidelijkere steun als er spanningen waren of situaties vastliepen | Bied duidelijkere steun als er spanningen zijn of situaties vastlopen. | Als een medewerker nu vastloopt in een situatie of een spanning: wat doet de leidinggevende dan, en binnen hoeveel dagen? En toen de vertrekkers er nog werkten? |
+| `ldd_escalation` | Duidelijkere steun als er spanningen waren of situaties vastliepen | Bied duidelijkere steun als er spanningen zijn of situaties vastlopen. | Als een medewerker nu vastloopt in een situatie of een spanning: wat doet de leidinggevende dan, en binnen hoeveel dagen? En in de periode waar deze meting over gaat? |
 | `ldd_recognition` | Concretere terugkoppeling op wat goed ging en wat werd gewaardeerd | Koppel concreter terug wat goed gaat en wat wordt gewaardeerd. | Hoe hoort een medewerker nu dat het werk goed was: van wie, en wat wordt er dan precies genoemd? Wat is daar het afgelopen jaar aan veranderd? |
-| `ldd_availability` | Meer beschikbaarheid en zichtbaarheid van mijn leidinggevende | Zorg dat leidinggevenden beschikbaarder en zichtbaarder zijn. | Hoe snel krijgt een medewerker nu antwoord van de leidinggevende, en weet die vooraf wat die mag verwachten? En toen de vertrekkers er nog werkten? |
+| `ldd_availability` | Meer beschikbaarheid en zichtbaarheid van mijn leidinggevende | Zorg dat leidinggevenden beschikbaarder en zichtbaarder zijn. | Hoe snel krijgt een medewerker nu antwoord van de leidinggevende, en weet die vooraf wat die mag verwachten? En in de periode waar deze meting over gaat? |
 | `ldd_consistency` | Stabielere en beter uitlegbare besluiten en verwachtingen | Maak besluiten en verwachtingen stabieler en beter uitlegbaar. | Er verandert nu een besluit of verwachting. Wie legt uit waarom, en binnen hoeveel dagen? Ging dat het afgelopen jaar ook zo? |
 
 ### 3.2 De samenwerking in het team (`culture`)
 
 | Routesleutel | Wat de respondent zag | Opdrachtvorm uit de code | Vertaalvraag (concept) |
 |---|---|---|---|
-| `cud_safety` | Fouten of twijfels makkelijker en veiliger kunnen bespreken | Maak het makkelijker en veiliger om fouten of twijfels te bespreken. | Een medewerker meldt nu zelf een fout. Wie reageert, en wat zien collega's daarvan? En toen de vertrekkers er nog werkten? |
+| `cud_safety` | Fouten of twijfels makkelijker en veiliger kunnen bespreken | Maak het makkelijker en veiliger om fouten of twijfels te bespreken. | Een medewerker meldt nu zelf een fout. Wie reageert, en wat zien collega's daarvan? En in de periode waar deze meting over gaat? |
 | `cud_dissent` | Meer ruimte voor kritische vragen en afwijkende meningen | Geef kritische vragen en afwijkende meningen meer ruimte. | In welk overleg kan een medewerker nu een kritische vraag stellen vóórdat een besluit vaststaat, en wat hoort die terug? Wat is daar het afgelopen jaar aan veranderd? |
-| `cud_conflict` | Spanningen of conflicten eerder bespreekbaar maken | Maak spanningen of conflicten eerder bespreekbaar. | Twee collega's komen er nu samen niet uit. Wie begint erover, hoe snel, en wie helpt? En toen de vertrekkers er nog werkten? |
+| `cud_conflict` | Spanningen of conflicten eerder bespreekbaar maken | Maak spanningen of conflicten eerder bespreekbaar. | Twee collega's komen er nu samen niet uit. Wie begint erover, hoe snel, en wie helpt? En in de periode waar deze meting over gaat? |
 | `cud_agreements` | Duidelijkere teamafspraken over gedrag, samenwerking en opvolging | Maak duidelijkere teamafspraken over gedrag, samenwerking en opvolging. | Een collega houdt zich nu niet aan een teamafspraak. Wie zegt daar iets van, en waar staan die afspraken? Was dat een jaar geleden anders? |
 | `cud_involvement` | Eerder betrokken worden bij besluiten of veranderingen die het team raakten | Betrek medewerkers eerder bij besluiten of veranderingen die het team raken. | Welk besluit dat een team raakt komt eraan? Op welk moment praten medewerkers mee voordat het vaststaat? En hoe ging dat bij het vorige grote besluit? |
-| `cud_crossteam` | Betere samenwerking tussen teams of afdelingen | Verbeter de samenwerking tussen teams of afdelingen. | Twee teams hangen nu van elkaars werk af. Wat spreken ze met elkaar af, en wie beslist als het botst? En toen de vertrekkers er nog werkten? |
+| `cud_crossteam` | Betere samenwerking tussen teams of afdelingen | Verbeter de samenwerking tussen teams of afdelingen. | Twee teams hangen nu van elkaars werk af. Wat spreken ze met elkaar af, en wie beslist als het botst? En in de periode waar deze meting over gaat? |
 
 ### 3.3 Groeiperspectief (`growth`)
 
@@ -130,7 +130,7 @@ De opdrachtvorm is in de code tijd-neutraal en dus dezelfde als bij Behoud. De k
 | `grd_conversation` | Een concreter gesprek over mijn ontwikkeling | Voer een concreter gesprek over ontwikkeling. | Wat weet een medewerker nu ná een ontwikkelgesprek dat die ervoor niet wist, en wie voert dat gesprek? Wat is daar het afgelopen jaar aan veranderd? |
 | `grd_followthrough` | Ontwikkelafspraken concreter vastleggen en zichtbaar opvolgen | Leg ontwikkelafspraken concreter vast en volg ze zichtbaar op. | Waar staat een ontwikkelafspraak nu na het gesprek, en wie komt erop terug? Hoeveel afspraken van een jaar geleden zijn nagekomen? |
 | `grd_time` | Ontwikkeling beter inplannen naast het reguliere werk | Plan ontwikkeling in naast het reguliere werk. | Hoeveel uur per maand heeft een medewerker nu voor ontwikkeling, en wat gebeurt er als het druk is? Was dat een jaar geleden anders? |
-| `grd_criteria` | Duidelijkere criteria voor hoe doorgroei werd bepaald | Maak duidelijker hoe doorgroei wordt bepaald. | Wat moet een medewerker nu laten zien om door te groeien, en waar kan die dat nalezen? Stond dat er al toen de vertrekkers er nog werkten? |
+| `grd_criteria` | Duidelijkere criteria voor hoe doorgroei werd bepaald | Maak duidelijker hoe doorgroei wordt bepaald. | Wat moet een medewerker nu laten zien om door te groeien, en waar kan die dat nalezen? Stond dat er al in de periode waar deze meting over gaat? |
 | `grd_nextstep` | Een open en concreet gesprek over realistische vervolgstappen binnen de organisatie | Voer een open en concreet gesprek over realistische vervolgstappen binnen de organisatie. | Welke vervolgstappen zijn er nu echt, en welke niet? Wie zegt dat eerlijk tegen een medewerker, en wanneer? Gebeurde dat een jaar geleden ook? |
 
 ### 3.4 Beloning en voorwaarden (`compensation`)
@@ -148,23 +148,23 @@ De opdrachtvorm is in de code tijd-neutraal en dus dezelfde als bij Behoud. De k
 
 | Routesleutel | Wat de respondent zag | Opdrachtvorm uit de code | Vertaalvraag (concept) |
 |---|---|---|---|
-| `wld_scope` | Takenpakket en werkvolume beter afbakenen | Baken het takenpakket en het werkvolume scherper af. | Er komt nu werk bij voor een team dat al vol zit. Wie zegt wat er dan afgaat? En toen de vertrekkers er nog werkten? |
+| `wld_scope` | Takenpakket en werkvolume beter afbakenen | Baken het takenpakket en het werkvolume scherper af. | Er komt nu werk bij voor een team dat al vol zit. Wie zegt wat er dan afgaat? En in de periode waar deze meting over gaat? |
 | `wld_planning` | Planning en bezetting beter laten aansluiten op het werk dat er ligt | Laat planning en bezetting beter aansluiten op het werk dat er ligt. | Hoe ver vooruit weten jullie nu hoeveel werk er komt, en wie legt dat naast de bezetting? Keken jullie daar een jaar geleden ook zo naar? |
-| `wld_peaks` | Piekmomenten en spoedwerk eerder plannen, verdelen of begrenzen | Plan piekmomenten en spoedwerk eerder, verdeel ze beter of begrens ze. | Welke pieken zien jullie nu aankomen, en wie mag zeggen: dit kan er niet bij? Wie mocht dat zeggen toen de vertrekkers er nog werkten? |
-| `wld_recovery` | Meer ruimte om te herstellen en werk goed af te ronden | Maak meer ruimte om te herstellen en werk goed af te ronden. | Na een drukke periode: wat mag er nu blijven liggen, en hoe weet het team dat het mag? En toen de vertrekkers er nog werkten? |
+| `wld_peaks` | Piekmomenten en spoedwerk eerder plannen, verdelen of begrenzen | Plan piekmomenten en spoedwerk eerder, verdeel ze beter of begrens ze. | Welke pieken zien jullie nu aankomen, en wie mag zeggen: dit kan er niet bij? Wie mocht dat zeggen in de periode waar deze meting over gaat? |
+| `wld_recovery` | Meer ruimte om te herstellen en werk goed af te ronden | Maak meer ruimte om te herstellen en werk goed af te ronden. | Na een drukke periode: wat mag er nu blijven liggen, en hoe weet het team dat het mag? En in de periode waar deze meting over gaat? |
 | `wld_priorities` | Duidelijkere keuzes over wat voorrang heeft en wat kan wachten | Maak duidelijker wat voorrang heeft en wat kan wachten. | Als alles belangrijk is: wie zegt nu hardop wat mag wachten, en hoe weet een medewerker dat op maandag? Was dat een jaar geleden anders? |
-| `wld_friction` | Minder dubbel werk, systeemgedoe of fouten in overdracht | Haal dubbel werk, systeemgedoe en fouten in de overdracht weg. | Welk dubbel werk of systeemgedoe kost nu de meeste tijd, en wie lost het eerste punt op? Wat ervan bestond al toen de vertrekkers er nog werkten? |
+| `wld_friction` | Minder dubbel werk, systeemgedoe of fouten in overdracht | Haal dubbel werk, systeemgedoe en fouten in de overdracht weg. | Welk dubbel werk of systeemgedoe kost nu de meeste tijd, en wie lost het eerste punt op? Wat ervan bestond al in de periode waar deze meting over gaat? |
 
 ### 3.6 Duidelijkheid over je rol (`role_clarity`)
 
 | Routesleutel | Wat de respondent zag | Opdrachtvorm uit de code | Vertaalvraag (concept) |
 |---|---|---|---|
 | `rcd_priorities` | Duidelijkere prioriteiten binnen mijn rol | Maak de prioriteiten binnen rollen duidelijker. | Vraag een medewerker en de leidinggevende los van elkaar naar de drie belangrijkste dingen in dat werk. Krijg je nu twee keer hetzelfde lijstje? En een jaar geleden? |
-| `rcd_expectations` | Duidelijkheid over verwachtingen en waarop ik werd aangesproken | Maak duidelijk wat er wordt verwacht en waarop medewerkers worden aangesproken. | Waarop wordt een medewerker nu aangesproken, en wist die dat vooraf? Waar staan die verwachtingen? Stonden ze er al toen de vertrekkers er nog werkten? |
-| `rcd_alignment` | Eenduidigere opdrachten en betere afstemming tussen betrokkenen | Maak opdrachten eenduidiger en stem beter af tussen betrokkenen. | Een medewerker krijgt nu van twee kanten iets anders te horen. Wie hakt de knoop door, en hoe snel? En toen de vertrekkers er nog werkten? |
+| `rcd_expectations` | Duidelijkheid over verwachtingen en waarop ik werd aangesproken | Maak duidelijk wat er wordt verwacht en waarop medewerkers worden aangesproken. | Waarop wordt een medewerker nu aangesproken, en wist die dat vooraf? Waar staan die verwachtingen? Stonden ze er al in de periode waar deze meting over gaat? |
+| `rcd_alignment` | Eenduidigere opdrachten en betere afstemming tussen betrokkenen | Maak opdrachten eenduidiger en stem beter af tussen betrokkenen. | Een medewerker krijgt nu van twee kanten iets anders te horen. Wie hakt de knoop door, en hoe snel? En in de periode waar deze meting over gaat? |
 | `rcd_scope` | Duidelijke afspraken als mijn takenpakket veranderde | Maak duidelijke afspraken wanneer een takenpakket verandert. | Er verandert nu een takenpakket. Wie bespreekt dat met de medewerker, vóór of na de verandering? Hoe ging dat bij de laatste wijziging? |
 | `rcd_mandate` | Duidelijkheid over wat ik zelf mocht beslissen | Maak duidelijk wat medewerkers zelf mogen beslissen. | Neem een functie die veel voorkomt. Waarover beslist iemand in die rol nu zelf, en wie vertelt dat? Was dat een jaar geleden even duidelijk? |
-| `rcd_information` | Betere informatie, context en overdracht voor mijn werk | Zorg voor betere informatie, context en overdracht. | Iemand neemt nu een klus of dienst over. Wat moet die weten, en wie zorgt dat het er ligt? En toen de vertrekkers er nog werkten? |
+| `rcd_information` | Betere informatie, context en overdracht voor mijn werk | Zorg voor betere informatie, context en overdracht. | Iemand neemt nu een klus of dienst over. Wat moet die weten, en wie zorgt dat het er ligt? En in de periode waar deze meting over gaat? |
 
 ## 4. Waar ik over twijfel
 
@@ -264,3 +264,18 @@ Geldt zodra bovenaan dit document `Status: akkoord` staat. De extractie in taak 
 4. **Spec.** Voeg aan `docs/superpowers/specs/2026-09-16-rapport-onbegeleid-design.md` onder "Afwijkingen" toe: Vertrek-vertaalvragen staan in de tegenwoordige tijd met een verleden-tijd-toets (review 21-9, akkoord Lars), in plaats van de verleden-tijd-stem uit par. 6 en Bijlage A.
 5. **Pagina.** Drie vragen per punt, tot 32 woorden per vertaalvraag, op een gespreksagenda die al vol is. Meet na het vullen opnieuw met `scripts/check_pdf_report.py` in het productie-image; loopt de pagina over, dan gaat het werkvragenblok van het tweede punt naar de volgende pagina, niet de lettergrootte omlaag.
 
+## 8. Amendement 24-9: tijdsanker Vertrek vervangen
+
+Besluit Lars, 24 september 2026 (fixronde na de koude leesronde, beslispunt 1 en 2; `docs/superpowers/plans/2026-09-24-fixronde-amendement-lars.md`, A1 en A2).
+
+1. **Tijdsanker Vertrek vervangen.** "toen de vertrekkers er nog werkten" stuurde het MT naar de mensen die vertrokken (leesronde V1). In veertien Vertrek-vragen is alleen het slot vervangen; de rest van elke vraag is letterlijk gelijk gebleven. De tabellen in sectie 3 tonen de nieuwe tekst.
+   - "En toen de vertrekkers er nog werkten?" wordt "En in de periode waar deze meting over gaat?" bij `ldd_feedback`, `ldd_escalation`, `ldd_availability`, `cud_safety`, `cud_conflict`, `cud_crossteam`, `wld_scope`, `wld_recovery`, `rcd_alignment`, `rcd_information`.
+   - `grd_criteria`: "Stond dat er al toen de vertrekkers er nog werkten?" wordt "Stond dat er al in de periode waar deze meting over gaat?"
+   - `wld_peaks`: "Wie mocht dat zeggen toen de vertrekkers er nog werkten?" wordt "Wie mocht dat zeggen in de periode waar deze meting over gaat?"
+   - `wld_friction`: "Wat ervan bestond al toen de vertrekkers er nog werkten?" wordt "Wat ervan bestond al in de periode waar deze meting over gaat?"
+   - `rcd_expectations`: "Stonden ze er al toen de vertrekkers er nog werkten?" wordt "Stonden ze er al in de periode waar deze meting over gaat?"
+
+   Formulering bijgesteld door Lars op 25-9: het tijdsanker noemt de periode waar de meting over gaat, niet de mensen die vertrokken. Eén formulering in alle veertien vragen.
+
+   Gemeten vóór de wijziging: precies deze veertien sleutels droegen de oude vorm. De Behoud-vragen zijn ongewijzigd. De terugblik-guard uit sectie 7 punt 2 accepteert "toen de vertrekkers" niet meer; de nieuwe toegestane vorm is "in de periode waar deze meting over gaat".
+2. **Regel bij aansturing alleen bij Loep Behoud.** De regel uit sectie 6 punt 4 ("Deze vraag gaat ook over de leidinggevenden aan deze tafel. Beantwoord hem eerst voor je eigen team.") staat alleen nog onder de vertaalvraag van `leadership` bij Loep Behoud. Bij Loep Vertrek staat er geen regel onder; boven het blok staat daar de namenregel ("Praat over hoe het werkt, niet over wie er vertrok. Valt er een naam, ga dan terug naar de vraag.").

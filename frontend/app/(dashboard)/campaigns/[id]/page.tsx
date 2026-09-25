@@ -8,6 +8,8 @@ import { RequestNewMeasurement } from '@/components/dashboard/request-new-measur
 import { PdfDownloadButton } from './pdf-download-button'
 import { DecisionBlock } from '@/components/dashboard/decision-block'
 import { decisionFromRow } from '@/lib/dashboard/campaign-decision'
+import { loadDataPurgedAt } from '@/lib/dashboard/data-purged'
+import { DataPurgedCard } from '@/components/dashboard/data-purged-card'
 import { SuiteAccessDenied } from '@/components/dashboard/suite-access-denied'
 import { resolveDashboardState } from '@/lib/dashboard/dashboard-state-resolver'
 import { withoutSelfLink } from '@/lib/dashboard/self-link'
@@ -49,17 +51,37 @@ export default async function CampaignPage({ params }: Props) {
     )
   }
 
-  const { data: statsRow, error: statsError } = await supabase
-    .from('campaign_stats')
-    .select('*')
-    .eq('campaign_id', id)
-    .single()
+  // Deel C (bewaartermijn): data_purged_at wordt tegelijk met de statistieken
+  // geladen; een fout daarbij laat Promise.all luid falen.
+  const [{ data: statsRow, error: statsError }, purgedAt] = await Promise.all([
+    supabase.from('campaign_stats').select('*').eq('campaign_id', id).single(),
+    loadDataPurgedAt(supabase, id),
+  ])
   // .single() returns PGRST116 when no row matches: that is a genuine 404, not a load failure.
   if (statsError && statsError.code !== 'PGRST116') {
     throw new Error(`Kon campagnedetail niet laden: ${statsError.message}`)
   }
   if (!statsRow) notFound()
   const stats = statsRow as CampaignStats
+
+  // Een opgeschoonde meting toont de reden, geen statuskaart met 0 antwoorden
+  // en geen downloadknop die 410 geeft.
+  if (purgedAt) {
+    return (
+      <div className="space-y-6">
+        <Link
+          href="/dashboard"
+          className="inline-flex text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:text-[color:var(--dashboard-ink)]"
+        >
+          ← Alle metingen
+        </Link>
+        <h2 className="text-xl font-semibold tracking-tight text-[color:var(--dashboard-ink)]">
+          {stats.campaign_name}
+        </h2>
+        <DataPurgedCard purgedAt={purgedAt} />
+      </div>
+    )
+  }
 
   const [{ data: campaignMeta, error: campaignMetaError }, { data: deliveryRecord, error: deliveryRecordError }, { data: reminderEvents, error: reminderEventsError }, { data: profile }, { data: orgData, error: orgDataError }, { data: respondentDepts }, { data: membership }, { count: extensionCount, error: extensionCountError }] = await Promise.all([
     supabase.from('campaigns').select('closed_at, closes_at, delivery_mode, comms_mode, public_survey_token, organization_id, segment_departments').eq('id', id).maybeSingle(),
@@ -283,6 +305,7 @@ export default async function CampaignPage({ params }: Props) {
           canManage={canManage}
           decision={decisionFromRow(decisionRow)}
           loadError={decisionLoadError}
+          scanType={stats.scan_type}
         />
       ) : null}
       {state.processingVariant === 'insufficient_response' ? (

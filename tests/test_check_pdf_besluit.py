@@ -11,7 +11,7 @@ import pytest
 pymupdf = pytest.importorskip("pymupdf")
 
 from backend.report_css import build_css  # noqa: E402
-from backend.report_html import BESLUIT_TITEL, BESLUIT_VOETREGEL  # noqa: E402
+from backend.report_html import BESLUIT_SLOTLABEL, BESLUIT_TITEL, BESLUIT_VOETREGEL  # noqa: E402
 from scripts import check_pdf_report as cpr  # noqa: E402
 
 A4 = (595.0, 842.0)
@@ -40,16 +40,19 @@ BELOFTE = (400.0, "Leg het besluit vast op pagina 4: wat precies, wie, en op wel
 VOET = (740.0, BESLUIT_VOETREGEL[:60])
 
 
+SLOT = (700.0, BESLUIT_SLOTLABEL.upper())
+
+
 def _besluit(met_voet: bool = True) -> list[tuple[float, str]]:
     regels = [(70.0, "04 " + BESLUIT_TITEL), (120.0, "Startpunt"), (400.0, "Eigenaar")]
-    return regels + ([VOET] if met_voet else [])
+    return regels + ([SLOT, VOET] if met_voet else [])
 
 
 # ── (a) besluit-op-een-a4 ────────────────────────────────────────────────────
 
 def test_markers_komen_uit_de_renderer():
     assert cpr.BESLUIT_KOP == BESLUIT_TITEL
-    assert BESLUIT_VOETREGEL.startswith(cpr.BESLUIT_VOET)
+    assert BESLUIT_SLOTLABEL.startswith(cpr.BESLUIT_SLOT)
 
 
 def test_besluitpagina_op_een_vel_is_goed(tmp_path):
@@ -67,10 +70,19 @@ def test_belofte_zonder_besluitpagina_is_een_bevinding(tmp_path):
 
 def test_overgelopen_besluitpagina_is_een_bevinding(tmp_path):
     pad = _pdf(tmp_path / "over.pdf", [_vol("cover"), _vol("01 Kop"), _vol("03 Agenda") + [BELOFTE],
-                                       _besluit(met_voet=False), [VOET], _vol("05 Appendix")])
+                                       _besluit(met_voet=False), [SLOT, VOET], _vol("05 Appendix")])
     meldingen = [b.melding for b in cpr.check(pad, regels=(cpr.REGEL_BESLUIT,))]
-    assert any("voetregel" in m for m in meldingen)
+    assert any("laatste vaste label" in m for m in meldingen)
     assert any("begint niet met een hoofdstukkop" in m for m in meldingen)
+
+
+def test_voorgedrukt_besluit_zonder_voetregel_is_geen_bevinding(tmp_path):
+    """N5 (plan 3b): met een voorgedrukt besluit staat de voetregel er niet.
+    Dat is geen overloop; de eindmarker is het laatste vaste label."""
+    gevuld = [(70.0, "04 " + BESLUIT_TITEL), (120.0, "Startpunt"), (400.0, "Eigenaar"), SLOT]
+    pad = _pdf(tmp_path / "gevuld.pdf", [_vol("cover"), _vol("01 Kop"), _vol("03 Agenda") + [BELOFTE],
+                                         gevuld, _vol("05 Appendix")])
+    assert cpr.check(pad, regels=(cpr.REGEL_BESLUIT,)) == []
 
 
 def test_twee_besluitpaginas_is_een_bevinding(tmp_path):

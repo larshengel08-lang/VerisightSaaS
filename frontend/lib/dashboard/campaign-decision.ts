@@ -5,6 +5,8 @@
  * koppeling met antwoorden of respondenten.
  */
 
+import type { ScanType } from '@/lib/types'
+
 export interface CampaignDecisionInput {
   decidedAt: string | null
   primaryTopic: string
@@ -22,6 +24,53 @@ export interface CampaignDecision extends CampaignDecisionInput {
 }
 
 export const DECISION_LIMITS = { topic: 120, owner: 120, action: 600, text: 600 } as const
+
+// Labels en hints van het blok "Besluit vastleggen". Dezelfde tekst als op de
+// besluitpagina van het rapport (fixronde 24-9, R4, R8, V4): BESLUIT_SLOTLABEL,
+// BESLUIT_PARKEERREGEL, BESLUIT_DATUM_HINT, BESLUIT_TERUGKOPPELING en
+// BESLUIT_REVIEW_HINT in backend/report_html.py.
+// tests/test_report_leesronde_fixes.py leest dit bestand en houdt ze gelijk.
+export const DECISION_SUCCESS_LABEL = 'Waaraan zien we bij het startpunt dat het werkt'
+export const DECISION_SECOND_POINT_HINT =
+  'Spreken jullie hier vandaag iets over af, schrijf dan bij ‘Wat precies’ ook wie het oppakt. Anders parkeren jullie dit punt: de eigenaar van het startpunt zet het op de agenda van het vervolgmoment.'
+export const DECISION_FOLLOW_UP_DATE_HINT = 'Kies een datum, geen termijn.'
+
+const DECISION_FEEDBACK_HINTS: Partial<Record<ScanType, string>> = {
+  retention:
+    'Deel het startpunt, het beeld van de hele organisatie en wat het MT besluit. Deel geen open antwoorden en geen uitkomsten van afdelingen met minder dan 10 antwoorden.',
+  exit: 'Wie invulde, is vertrokken: koppel terug aan wie er nu werkt, over wat het MT met de vertrekredenen doet. Deel geen open antwoorden en geen uitkomsten van afdelingen met minder dan 10 antwoorden.',
+  onboarding: 'Je mensen vulden in; ze horen wat het MT ermee doet.',
+}
+
+const DECISION_REVIEW_HINTS: Partial<Record<ScanType, string>> = {
+  retention: 'Richtlijn: 45 tot 90 dagen na dit gesprek.',
+  exit: 'Richtlijn: 45 tot 90 dagen na dit gesprek.',
+  onboarding: 'Richtlijn: rond het volgende checkpoint.',
+}
+
+function hintForScan(hints: Partial<Record<ScanType, string>>, scanType: string | null | undefined): string | null {
+  if (!scanType || !Object.prototype.hasOwnProperty.call(hints, scanType)) return null
+  return hints[scanType as ScanType] ?? null
+}
+
+/**
+ * De terugkoppelhint van de besluitpagina voor dit scantype. Alleen Loep
+ * Behoud, Loep Vertrek en Loep Start hebben een besluitpagina; voor elk ander
+ * of ontbrekend scantype geen hint, nooit de tekst van een andere scan.
+ */
+export function decisionFeedbackHintFor(scanType: string | null | undefined): string | null {
+  return hintForScan(DECISION_FEEDBACK_HINTS, scanType)
+}
+
+/**
+ * De hint bij "Datum vervolgmoment": de datumregel geldt altijd, de richtlijn
+ * alleen voor een scan met een besluitpagina (zelfde regel als de
+ * terugkoppelhint), nooit de richtlijn van een andere scan.
+ */
+export function decisionFollowUpHintFor(scanType: string | null | undefined): string {
+  const review = hintForScan(DECISION_REVIEW_HINTS, scanType)
+  return review ? DECISION_FOLLOW_UP_DATE_HINT + ' ' + review : DECISION_FOLLOW_UP_DATE_HINT
+}
 
 const TEXT_FIELDS = [
   'primaryTopic',

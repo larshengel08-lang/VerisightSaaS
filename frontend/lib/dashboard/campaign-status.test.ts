@@ -26,6 +26,7 @@ function statusInput(overrides: Partial<CampaignStatusInput> = {}): CampaignStat
     reminderAfterDays: 5,
     reminderHandledAt: null,
     today: '2026-09-16',
+    dataPurgedAt: null,
     ...overrides,
   }
 }
@@ -65,13 +66,14 @@ const KIND_TO_STATUS: Record<DashboardStateKind, CampaignStatusKey | null> = {
 }
 
 describe('deriveCampaignStatus (spec 2026-09-16 par. 6.1)', () => {
-  it('kent precies de vijf labels uit de spec, zonder streepjes', () => {
+  it('kent de vijf labels uit de spec plus de opgeschoonde staat (Deel C), zonder streepjes', () => {
     expect(CAMPAIGN_STATUS_LABELS).toEqual({
       setup: 'Nog in te richten',
       running: 'Loopt',
       action: 'Actie nodig',
       closed_no_report: 'Gesloten, geen rapport',
       report_ready: 'Rapport beschikbaar',
+      data_purged: 'Gegevens verwijderd',
     })
     for (const label of Object.values(CAMPAIGN_STATUS_LABELS)) expect(label).not.toMatch(/[—–]/)
   })
@@ -114,6 +116,56 @@ describe('deriveCampaignStatus (spec 2026-09-16 par. 6.1)', () => {
   }
 })
 
+describe('opgeschoonde meting (Deel C, bewaartermijn)', () => {
+  // De resolver kent geen opgeschoonde staat: /dashboard en de campagnepagina
+  // tonen dan DataPurgedCard in plaats van de resolverkaart. Daarom hier geen
+  // pariteit met de resolver, maar de eis dat de tellingen niets meer zeggen.
+  const PURGED = '2028-06-16T03:00:00Z'
+  const gevallen: Array<[string, Partial<CampaignStatusInput>]> = [
+    ['gesloten met 0 antwoorden (zoals campaign_stats na de opschoning)', { isActive: false, totalCompleted: 0, totalInvited: 0 }],
+    ['gesloten met genoeg antwoorden', { isActive: false, totalCompleted: 14 }],
+    ['heropend na de opschoning', { isActive: true, totalCompleted: 0 }],
+  ]
+  for (const [naam, overrides] of gevallen) {
+    it(`${naam} -> data_purged, nooit "Gesloten, geen rapport"`, () => {
+      expect(deriveCampaignStatus(statusInput({ ...overrides, dataPurgedAt: PURGED }))).toBe('data_purged')
+    })
+  }
+
+  it('zonder datum (kolom ontbreekt of niet opgeschoond) verandert er niets', () => {
+    expect(deriveCampaignStatus(statusInput({ isActive: false, totalCompleted: 0, dataPurgedAt: null }))).toBe('closed_no_report')
+  })
+
+  it('leest de datum uit de context', () => {
+    const campaign = {
+      campaign_id: 'c1',
+      campaign_name: 'Meting',
+      scan_type: 'retention',
+      organization_id: 'org-1',
+      is_active: false,
+      created_at: '2026-01-01T09:00:00Z',
+      closed_at: '2026-02-01T09:00:00Z',
+      closes_at: null,
+      total_invited: 0,
+      total_completed: 0,
+      completion_rate_pct: 0,
+      avg_risk_score: null,
+      band_high: 0,
+      band_medium: 0,
+      band_low: 0,
+    } as CampaignStats
+    const ctx: CampaignStatusContext = {
+      deliveryByCampaign: new Map(),
+      lastReminderEventAtByCampaign: new Map(),
+      dataPurgedAtByCampaign: new Map([['c1', PURGED]]),
+      today: '2028-07-01',
+    }
+    expect(statusInputFor(campaign, ctx).dataPurgedAt).toBe(PURGED)
+    expect(deriveCampaignStatusFor(campaign, ctx)).toBe('data_purged')
+    expect(deriveCampaignStatusFor({ ...campaign, campaign_id: 'c2' }, ctx)).toBe('closed_no_report')
+  })
+})
+
 describe('pariteit via de paginaketen: campaign_stats plus context naar lijst én kaart', () => {
   function stats(overrides: Partial<CampaignStats> = {}): CampaignStats {
     return {
@@ -142,6 +194,7 @@ describe('pariteit via de paginaketen: campaign_stats plus context naar lijst é
         ['c1', { launchConfirmedAt: '2026-09-13T09:00:00Z', launchDate: '2026-09-13', invitedCount, reminderConfig: null }],
       ]),
       lastReminderEventAtByCampaign: new Map(),
+      dataPurgedAtByCampaign: new Map(),
       today: '2026-09-16',
     }
   }
@@ -195,6 +248,7 @@ describe('deriveCampaignStatusFor: uit campaign_stats plus context', () => {
         ['c1', { launchConfirmedAt: '2026-09-13T09:00:00Z', launchDate: '2026-09-13', invitedCount: 30, reminderConfig: { enabled: true, firstReminderAfterDays: 5, maxReminderCount: 1 } }],
       ]),
       lastReminderEventAtByCampaign: new Map(),
+      dataPurgedAtByCampaign: new Map(),
       today: '2026-09-16',
     }
     expect(deriveCampaignStatusFor(stats(), context)).toBe('running')
@@ -211,6 +265,7 @@ describe('deriveCampaignStatusFor: uit campaign_stats plus context', () => {
         ['c1', { launchConfirmedAt: '2026-09-13T09:00:00Z', launchDate: '2026-09-13', invitedCount: null, reminderConfig: null }],
       ]),
       lastReminderEventAtByCampaign: new Map(),
+      dataPurgedAtByCampaign: new Map(),
       today: '2026-09-16',
     }
     expect(deriveCampaignStatusFor(stats({ total_invited: 40, total_completed: 3 }), context)).toBe('running')

@@ -74,14 +74,33 @@ export async function closeCampaignAction(campaignId: string): Promise<Dashboard
     (campaignMeta as { organizations?: { name?: string } | null } | null)?.organizations?.name ??
     'Onbekende organisatie'
 
+  // Alleen een meting die nog niet gesloten is: closed_at is de klok van de
+  // bewaartermijn en de database weigert een klant die hem verschuift. Een
+  // tweede keer sluiten (verouderd tabblad, dubbele klik) raakt dan 0 rijen.
   const { data: updatedRows, error } = await ctx.supabase
     .from('campaigns')
     .update({ is_active: false, closed_at: new Date().toISOString() })
     .eq('id', campaignId)
+    .is('closed_at', null)
     .select('id')
 
   if (error) return { ok: false, error: `Sluiten mislukt: ${error.message}` }
   if (!updatedRows || updatedRows.length === 0) {
+    // 0 rijen: al gesloten, of niet gevonden / geen rechten. Nalezen welke van
+    // de twee, zodat een herhaalde sluiting geen valse fout geeft en een echte
+    // weigering geen vals succes. Geen tweede mail en geen tweede auditregel.
+    const { data: current, error: rereadError } = await ctx.supabase
+      .from('campaigns')
+      .select('is_active, closed_at')
+      .eq('id', campaignId)
+      .maybeSingle()
+    if (rereadError) {
+      return { ok: false, error: `Sluiten mislukt: Loep kon niet nalezen of de meting al gesloten is (${rereadError.message}).` }
+    }
+    const row = current as { is_active?: boolean; closed_at?: string | null } | null
+    if (row?.closed_at && row.is_active === false) {
+      return { ok: true, warning: 'Deze meting was al gesloten. Er is niets veranderd en er is geen nieuw bericht verstuurd.' }
+    }
     return { ok: false, error: 'Sluiten mislukt: campagne niet gevonden of geen rechten.' }
   }
 

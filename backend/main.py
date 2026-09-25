@@ -51,6 +51,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm import Session, selectinload
 
+from backend.data_retention import ReportDataPurged, ensure_report_data_available
 from backend.database import DATABASE_URL, check_db_connection, get_db, init_db
 from backend.email import (
     send_contact_request_result,
@@ -1898,6 +1899,8 @@ async def list_respondents(
     ).first()
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
+    # Deel C: na de opschoning is een lege lijst een leugen; de reden in een 410.
+    _weiger_opgeschoonde_meting(db, campaign_id)
     return campaign.respondents
 
 
@@ -2041,6 +2044,8 @@ async def campaign_stats(
     )
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
+    # Deel C: na de opschoning zou dit "0 ingevuld" zeggen; de reden in een 410.
+    _weiger_opgeschoonde_meting(db, campaign_id)
 
     respondents = campaign.respondents
     completed = [respondent for respondent in respondents if respondent.completed and respondent.response]
@@ -2113,6 +2118,35 @@ _report_log = _logging.getLogger("loep.report")
 _LOEP_V6_SCAN_TYPES = {"exit", "retention", "onboarding"}
 
 
+def _weiger_opgeschoonde_meting(db: Session, campaign_id: str) -> None:
+    """410 met een leesbare reden als de gegevens van de meting volgens de
+    bewaartermijn of op verzoek zijn verwijderd (fixronde 24-9, Deel C). Fail
+    Loud: geen leeg of kapot rapport.
+
+    Alleen aanroepen NA de autorisatie en de 404: wie de meting niet mag zien,
+    mag via de 410 niet leren dat ze bestaat of is opgeschoond.
+    """
+    try:
+        ensure_report_data_available(db, campaign_id)
+    except ReportDataPurged as exc:
+        raise _gone(exc) from exc
+
+
+def _gone(exc: ReportDataPurged) -> HTTPException:
+    """De 410 voor een opgeschoonde meting; één mapping voor alle routes."""
+    return HTTPException(status_code=410, detail=str(exc))
+
+
+def _pdf_of_410(campaign_id: str, db: Session) -> tuple[bytes, str]:
+    """_generate_report_pdf voor de PDF-routes. Landt de opschoning tussen de
+    controle in de route en de generatie, dan alsnog een 410 in plaats van een
+    500 (_generate_report_pdf controleert zelf opnieuw)."""
+    try:
+        return _generate_report_pdf(campaign_id, db)
+    except ReportDataPurged as exc:
+        raise _gone(exc) from exc
+
+
 def _generate_report_pdf(campaign_id: str, db: "Session") -> tuple[bytes, str]:
     """Genereert het PDF-rapport voor een campagne.
 
@@ -2128,6 +2162,8 @@ def _generate_report_pdf(campaign_id: str, db: "Session") -> tuple[bytes, str]:
     campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
     if campaign is None:
         raise ValueError(f"Campagne {campaign_id} niet gevonden.")
+    # Deel C: ook wie deze functie rechtstreeks aanroept, krijgt een reden.
+    ensure_report_data_available(db, campaign_id)
 
     if campaign.scan_type in _LOEP_V6_SCAN_TYPES:
         from backend.report_html import generate_campaign_report_html
@@ -2173,6 +2209,7 @@ async def download_report(
     ).first()
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
+    _weiger_opgeschoonde_meting(db, campaign_id)
     product_name = _get_report_unavailable_product_name(campaign.scan_type)
     if product_name:
         raise HTTPException(status_code=422, detail=f"{product_name} ondersteunt in deze wave nog geen PDF-rapport.")
@@ -2195,7 +2232,7 @@ async def download_report(
             headers={"Content-Disposition": f'attachment; filename="Loep_{safe_name}.csv"'},
         )
 
-    export_bytes, design = _generate_report_pdf(campaign_id, db)
+    export_bytes, design = _pdf_of_410(campaign_id, db)
     return Response(
         content=export_bytes,
         media_type="application/pdf",
@@ -2219,6 +2256,7 @@ async def download_report_internal(
     campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
+    _weiger_opgeschoonde_meting(db, campaign_id)
     product_name = _get_report_unavailable_product_name(campaign.scan_type)
     if product_name:
         raise HTTPException(status_code=422, detail=f"{product_name} ondersteunt in deze wave nog geen PDF-rapport.")
@@ -2241,7 +2279,7 @@ async def download_report_internal(
             headers={"Content-Disposition": f'attachment; filename="Loep_{safe_name}.csv"'},
         )
 
-    export_bytes, design = _generate_report_pdf(campaign_id, db)
+    export_bytes, design = _pdf_of_410(campaign_id, db)
     return Response(
         content=export_bytes,
         media_type="application/pdf",
@@ -2333,6 +2371,7 @@ async def report_html_preview(
     campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
+    _weiger_opgeschoonde_meting(db, campaign_id)
 
     try:
         from backend.report_html import build_report_data, render_report_html
@@ -2359,6 +2398,7 @@ async def report_html_pdf(
     campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
+    _weiger_opgeschoonde_meting(db, campaign_id)
 
     try:
         from backend.report_html import generate_campaign_report_html

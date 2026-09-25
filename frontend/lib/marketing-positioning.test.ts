@@ -150,7 +150,7 @@ describe('Loep Behoud positioning copy', () => {
 
   it('keeps retention faq copy explicit about group insight and non-predictive use', () => {
     const mtoFaq = faqs.find(([question]) => question === 'Is Loep Behoud gewoon een MTO?')
-    const scoreFaq = faqs.find(([question]) => question === 'Ziet management individuele retention-scores?')
+    const scoreFaq = faqs.find(([question]) => question === 'Ziet het management scores van losse medewerkers?')
     const predictorFaq = faqs.find(([question]) => question === 'Is Loep Behoud een gevalideerde vertrekvoorspeller?')
     const pricingFaq = pricingFaqs.find(([question]) => question === 'Waarom is Loep Behoud niet goedkoper dan Loep Vertrek?')
     const rhythmFaq = pricingFaqs.find(
@@ -161,9 +161,9 @@ describe('Loep Behoud positioning copy', () => {
     expect(mtoFaq?.[1].toLowerCase()).toContain('smal en scherp')
     expect(mtoFaq?.[1].toLowerCase()).toContain('nooit per persoon')
     expect(mtoFaq?.[1].toLowerCase()).toContain('wat ze daar zelf over zeggen')
-    expect(scoreFaq?.[1].toLowerCase()).toContain('groeps- en segmentinzichten')
-    expect(scoreFaq?.[1].toLowerCase()).toContain('performance-sturing')
-    expect(predictorFaq?.[1].toLowerCase()).toContain('verificatie en prioritering')
+    expect(scoreFaq?.[1].toLowerCase()).toContain('nooit één persoon')
+    expect(scoreFaq?.[1].toLowerCase()).toContain('niet bedoeld om mensen te beoordelen')
+    expect(predictorFaq?.[1].toLowerCase()).toContain('voorspelt niet wie er vertrekt')
     expect(pricingFaq?.[1].toLowerCase()).toContain('eigen managementverhaal')
     expect(rhythmFaq?.[1].toLowerCase()).toContain('vaste buyer-facing vervolgvorm')
   })

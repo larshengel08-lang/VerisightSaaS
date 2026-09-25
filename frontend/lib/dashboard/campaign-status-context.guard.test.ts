@@ -28,6 +28,11 @@ describe('loadCampaignStatusContext (spec 2026-09-16 par. 6.2: één query met i
     expect(src).not.toContain('supabase/admin')
   })
 
+  it('laadt ook welke metingen zijn opgeschoond, in dezelfde ronde (Deel C)', () => {
+    expect(src).toContain('loadDataPurgedAtByCampaign(supabase, campaignIds)')
+    expect(src).toContain('dataPurgedAtByCampaign: new Map()')
+  })
+
   it('houdt per campagne alleen het nieuwste herinneringsevent', () => {
     expect(src).toContain('if (!lastReminderEventAtByCampaign.has(id))')
   })

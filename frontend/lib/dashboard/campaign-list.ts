@@ -5,6 +5,7 @@ import {
   type CampaignStatusContext,
   type CampaignStatusKey,
 } from '@/lib/dashboard/campaign-status'
+import { dataPurgedLabel } from '@/lib/dashboard/data-purged'
 
 function newestFirst<T extends { created_at: string }>(campaigns: readonly T[]): T[] {
   return [...campaigns].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
@@ -42,12 +43,14 @@ export function buildCampaignListItems(
 ): CampaignListItem[] {
   return newestFirst(campaigns).map((campaign) => {
     const statusKey = deriveCampaignStatusFor(campaign, context)
+    const purgedAt = context.dataPurgedAtByCampaign.get(campaign.campaign_id)
     return {
       campaignId: campaign.campaign_id,
       name: campaign.campaign_name,
       scanLabel: SCAN_TYPE_LABELS[campaign.scan_type] ?? campaign.scan_type,
       statusKey,
-      statusLabel: CAMPAIGN_STATUS_LABELS[statusKey],
+      // Een opgeschoonde meting noemt de datum, in lijn met de 410-melding.
+      statusLabel: statusKey === 'data_purged' && purgedAt ? dataPurgedLabel(purgedAt) : CAMPAIGN_STATUS_LABELS[statusKey],
       href: `/campaigns/${campaign.campaign_id}`,
       isMain: campaign.campaign_id === mainCampaignId,
     }

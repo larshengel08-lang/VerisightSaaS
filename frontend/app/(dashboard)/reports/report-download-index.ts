@@ -10,12 +10,16 @@ export type ReportDownloadRow = {
   responseBasis: string
   status: string
   isAvailable: boolean
+  /** Deel C: gezet als de gegevens van de meting na de bewaartermijn zijn verwijderd. */
+  purgedAt?: string | null
   extraDisambiguator?: string | null
 }
 
 export type ReportDownloadIndex = {
   availableRows: ReportDownloadRow[]
   unavailableRows: ReportDownloadRow[]
+  /** Opgeschoonde metingen: niet "nog niet", maar niet meer beschikbaar. */
+  purgedRows: ReportDownloadRow[]
 }
 
 function getPeriodSortKey(periodLabel: string, createdAt: string) {
@@ -72,11 +76,13 @@ function addDisambiguators(rows: ReportDownloadRow[]) {
 }
 
 export function buildReportDownloadIndex(rows: ReportDownloadRow[]): ReportDownloadIndex {
-  const availableRows = rows.filter((row) => row.isAvailable).sort(compareRows)
-  const unavailableRows = rows.filter((row) => !row.isAvailable).sort(compareRows)
+  const availableRows = rows.filter((row) => row.isAvailable && !row.purgedAt).sort(compareRows)
+  const unavailableRows = rows.filter((row) => !row.isAvailable && !row.purgedAt).sort(compareRows)
+  const purgedRows = rows.filter((row) => Boolean(row.purgedAt)).sort(compareRows)
 
   return {
     availableRows: addDisambiguators(availableRows),
     unavailableRows: addDisambiguators(unavailableRows),
+    purgedRows: addDisambiguators(purgedRows),
   }
 }

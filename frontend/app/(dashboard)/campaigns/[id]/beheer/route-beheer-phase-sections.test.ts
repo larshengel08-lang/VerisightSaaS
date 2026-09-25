@@ -124,6 +124,7 @@ const routeBeheerData: RouteBeheerPageData = {
   outputStatusLabel: 'Dashboard / rapportstatus',
   latestAuditSummary: 'Invites verstuurd',
   reportAvailable: true,
+  dataPurgedAt: null,
   canExecuteCampaign: true,
   canManageCampaign: true,
   membershipRole: 'owner',
