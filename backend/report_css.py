@@ -297,7 +297,7 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .fill-steps .step-sublbl { margin-top: 0; }
 .fill-steps .step-fill-hint { margin-bottom: 0; }
 .agenda-slot .agenda-dark { padding: 10px 16px; }
-.agenda-slot .agenda-opener { margin-top: 0; padding-top: 10px; margin-bottom: 12px; }
+.agenda-slot .agenda-opener { margin-top: 0; border-top: none; padding-top: 10px; margin-bottom: 12px; }
 .agenda-opener { border-left: 3px solid #E8A020; border-top: 1px solid #2A3D52;
   padding: 14px 0 0 16px; margin-top: 16px; }
 
@@ -393,7 +393,10 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .wq-tbl { width: 100%; border-collapse: collapse; }
 .wq-tbl td { font-size: 10px; line-height: 1.42; color: #374151; padding: 3px 0; vertical-align: top; border-bottom: 1px solid """ + HAIRLINE + r"""; }
 .wq-tbl tr:last-child td { border-bottom: none; }
-.wq-stap { width: 22%; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: """ + accent_lo + r"""; padding-right: 8px; }
+/* Met td erbij: anders wint .wq-tbl td (klasse + element) en vallen maat,
+   kleur en padding-right hier weg; dan liep het label tegen de vraag aan
+   ("BESLUITENWat spreken", code review Taak 10). */
+.wq-tbl td.wq-stap { width: 22%; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: """ + accent_lo + r"""; padding-right: 8px; }
 .wq-hint { font-size: 8.5px; font-style: italic; color: """ + STEEL + r"""; margin-top: 4px; }
 /* De weging onder de verdeeld-zin (R6/V9, fixronde 24-9) is een leesregel, geen
    voetnoot: daarom niet de 8,5px van .wq-hint maar minstens 9,5px. */

@@ -3462,16 +3462,18 @@ def _besluitvraag(state: str) -> str:
 def _richtingen_weging(st: dict, scan_type: str, factor_key: str) -> str:
     """R6/V9 (koude leesronde 24-9): in de staat `divided` zegt de vaste
     verdeeld-zin "de meest gekozen richtingen" zonder ze te noemen, en de kaart
-    sorteert "Niets, dit zit hier goed" ertussen. Deze regel wijst de routes
-    aan via hun tellingen (hoogste en op één na hoogste; de teksten staan op
-    de kaart erboven), en weegt de niets-optie
-    apart: die is geen richting. Anders telt ook niet mee (geen opdrachtvorm).
+    sorteert "Niets, dit zit hier goed" ertussen. Deze regel wijst de meest
+    gekozen richtingen aan via hun tellingen (hoogste en op één na hoogste; de
+    teksten staan op de kaart erboven) en weegt de niets-optie apart: die is
+    geen richting. Anders telt ook niet mee (geen opdrachtvorm); de regel zegt
+    dat erbij zodra Anders even vaak of vaker gekozen is dan de laagste
+    genoemde telling, anders blijft een even hoge rij op de kaart onverklaard.
 
     De noemer is dezelfde als op de richtingkaart (alle beantwoorders, de
     niets-stemmen inbegrepen), zodat elk getal in deze regel letterlijk op de
     kaart terug te vinden is.
 
-    Leeg buiten `divided`, en bij minder dan twee inhoudelijke routes (dan
+    Leeg buiten `divided`, en bij minder dan twee inhoudelijke richtingen (dan
     geeft translation_question ook geen verdeeld-zin). Een onbekende
     optiesleutel valt luid om, net als in _direction_card_cell.
     """
@@ -3483,34 +3485,41 @@ def _richtingen_weging(st: dict, scan_type: str, factor_key: str) -> str:
         return ""
     teksten = direction_option_texts(scan_type, factor_key)
     niets = st["none_key"] if st["none_key"] and st["none_n"] else None
-    for k in [k for k, _c in inhoud] + ([niets] if niets else []):
+    anders = next(((k, c) for k, c in st["ranked"] if k.endswith("_other") and c > 0), None)
+    sleutels = ([k for k, _c in inhoud] + ([niets] if niets else [])
+                + ([anders[0]] if anders else []))
+    for k in sleutels:
         if k not in teksten:
             raise KeyError("richtingen_weging: onbekende optiesleutel " + repr(k)
                            + " voor " + repr(factor_key) + " (" + scan_type + ")")
-    # De routeteksten staan al op de kaart direct erboven (met dezelfde
-    # tellingen); hier alleen de aantallen, zodat de regel kort blijft en het
-    # agendaslot niet naar een volgend vel duwt (controllerbesluit taak 10).
+    # De teksten staan al op de kaart direct erboven (met dezelfde tellingen);
+    # hier alleen de aantallen, zodat de regel kort blijft en het agendaslot
+    # niet naar een volgend vel duwt (controllerbesluit taak 10).
     hoogste = sorted({c for _k, c in inhoud}, reverse=True)[:2]
-    zin = "De meest gekozen richtingen zijn de routes met " + _stemmen(hoogste) + " op de kaart hierboven."
+    zin = "De meest gekozen richtingen zijn die met " + _stemmen(hoogste) + " op de kaart hierboven."
+    # Anders alleen noemen als zijn telling tussen of naast de genoemde staat;
+    # de kaart toont hem als "Anders, namelijk…" (content-guard in de tests).
+    anders_telt = anders is not None and anders[1] >= min(hoogste)
     if niets:
         # Geen haakjes om _telling: die draagt vanaf tien antwoorden zelf een
         # percentage tussen haakjes, en twee haakjesniveaus in elkaar zijn in
         # de taalronde juist weggehaald.
         zin += (" ‘" + teksten[niets] + "’, gekozen door " + _telling(st["none_n"], n)
-                + ", is geen richting en telt hier niet mee.")
+                + ", is geen richting en telt hier niet mee"
+                + (", net als ‘Anders’." if anders_telt else "."))
+    elif anders_telt:
+        zin += " ‘Anders’ is geen richting en telt hier niet mee."
     return zin
 
 
 def _stemmen(tellingen: list[int]) -> str:
     """"3 en 2 stemmen", "2 stemmen", "3 stemmen en 1 stem", "1 stem"."""
-    def _vorm(c: int) -> str:
-        return _werkwoord(c, "stem", "stemmen")
     if len(tellingen) == 1:
-        return str(tellingen[0]) + " " + _vorm(tellingen[0])
+        return _tel(tellingen[0], "stem", "stemmen")
     a, b = tellingen
     if b == 1:
-        return str(a) + " " + _vorm(a) + " en 1 stem"
-    return str(a) + " en " + str(b) + " stemmen"
+        return _tel(a, "stem", "stemmen") + " en " + _tel(b, "stem", "stemmen")
+    return str(a) + " en " + _tel(b, "stem", "stemmen")
 
 
 def _werkvragen_block(ranked: list[dict], deep_agg: dict, direction_agg: dict,
@@ -3565,8 +3574,9 @@ def _werkvragen_block(ranked: list[dict], deep_agg: dict, direction_agg: dict,
         rijen = [("Herkennen", herken_html)]
         if vertaal:
             vertaal_cel = _h(vertaal)
-            # R6/V9 (fixronde 24-9): onder de verdeeld-zin de routes bij naam,
-            # met de niets-optie apart gewogen. Leeg in elke andere staat.
+            # R6/V9 (fixronde 24-9): onder de verdeeld-zin de tellingen van de
+            # meest gekozen richtingen, met de niets-optie (en zo nodig Anders)
+            # apart gewogen. Leeg in elke andere staat.
             weging = _richtingen_weging(st, scan_type, fk) if st else ""
             if weging:
                 vertaal_cel += '<div class="wq-weging">' + _h(weging) + "</div>"

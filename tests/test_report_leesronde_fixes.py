@@ -1017,7 +1017,7 @@ def test_weging_noemt_de_meest_gekozen_tellingen_en_weegt_niets_apart():
     # Tien beantwoorders: _telling zet vanaf MIN_DISTRIBUTION_N (10) het
     # percentage erachter, net als de kaart.
     assert _richtingen_weging(st, "retention", "workload") == (
-        "De meest gekozen richtingen zijn de routes met 3 en 2 stemmen op de kaart hierboven. "
+        "De meest gekozen richtingen zijn die met 3 en 2 stemmen op de kaart hierboven. "
         "‘Niets, dit zit hier goed’, gekozen door 2 van de 10 (20%), is geen richting en "
         "telt hier niet mee.")
 
@@ -1025,19 +1025,19 @@ def test_weging_noemt_de_meest_gekozen_tellingen_en_weegt_niets_apart():
 def test_weging_een_gedeelde_telling_en_enkelvoud():
     gedeeld = direction_state(_agg(wld_peaks=3, wld_scope=3, wld_none=2), "workload", 5.8)
     assert _richtingen_weging(gedeeld, "retention", "workload") == (
-        "De meest gekozen richtingen zijn de routes met 3 stemmen op de kaart hierboven. "
+        "De meest gekozen richtingen zijn die met 3 stemmen op de kaart hierboven. "
         "‘Niets, dit zit hier goed’, gekozen door 2 van de 8, is geen richting en telt hier niet mee.")
     een = direction_state(_agg(wld_peaks=1, wld_scope=1, wld_planning=1), "workload", 5.8)
     assert een["state"] == "divided"
     assert _richtingen_weging(een, "retention", "workload") == (
-        "De meest gekozen richtingen zijn de routes met 1 stem op de kaart hierboven.")
+        "De meest gekozen richtingen zijn die met 1 stem op de kaart hierboven.")
 
 
 def test_weging_zonder_niets_heeft_geen_niets_zin():
     st = direction_state(_agg(wld_peaks=3, wld_scope=3, wld_planning=2), "workload", 5.8)
     zin = _richtingen_weging(st, "retention", "workload")
     assert "Niets" not in zin
-    assert zin == "De meest gekozen richtingen zijn de routes met 3 en 2 stemmen op de kaart hierboven."
+    assert zin == "De meest gekozen richtingen zijn die met 3 en 2 stemmen op de kaart hierboven."
 
 
 def test_weging_vertrek_citeert_de_verleden_tijd():
@@ -1053,11 +1053,63 @@ def test_weging_alleen_in_de_verdeeld_staat():
 
 def test_weging_telt_anders_niet_als_richting():
     """Anders heeft geen opdrachtvorm en is dus ook geen richting om mee te
-    beginnen: zijn telling (2) mag de op één na hoogste niet worden."""
+    beginnen: zijn telling (2) mag de op één na hoogste niet worden, en omdat
+    hij boven de laagste genoemde telling staat, zegt de regel waarom hij
+    ontbreekt."""
     st = direction_state(_agg(wld_peaks=3, wld_scope=1, wld_other=2, wld_none=1), "workload", 5.8)
     assert st["state"] == "divided"
-    zin = _richtingen_weging(st, "retention", "workload")
-    assert zin.startswith("De meest gekozen richtingen zijn de routes met 3 stemmen en 1 stem ")
+    assert _richtingen_weging(st, "retention", "workload") == (
+        "De meest gekozen richtingen zijn die met 3 stemmen en 1 stem op de kaart hierboven. "
+        "‘Niets, dit zit hier goed’, gekozen door 1 van de 7, is geen richting en telt hier "
+        "niet mee, net als ‘Anders’.")
+
+
+def test_weging_verklaart_anders_naast_een_even_hoge_richting():
+    """Code review Taak 10: bij Anders 2 en scope 2 staan er twee rijen met 2
+    op de kaart; de regel moet zeggen waarom er maar één meetelt."""
+    st = direction_state(_agg(wld_peaks=3, wld_other=2, wld_scope=2, wld_none=1), "workload", 5.8)
+    assert st["state"] == "divided"
+    assert _richtingen_weging(st, "retention", "workload") == (
+        "De meest gekozen richtingen zijn die met 3 en 2 stemmen op de kaart hierboven. "
+        "‘Niets, dit zit hier goed’, gekozen door 1 van de 8, is geen richting en telt hier "
+        "niet mee, net als ‘Anders’.")
+
+
+def test_weging_verklaart_een_overgeslagen_anders_zonder_niets():
+    st = direction_state(_agg(wld_peaks=3, wld_other=2, wld_scope=1, wld_planning=1),
+                         "workload", 5.8)
+    assert st["state"] == "divided"
+    assert _richtingen_weging(st, "retention", "workload") == (
+        "De meest gekozen richtingen zijn die met 3 stemmen en 1 stem op de kaart hierboven. "
+        "‘Anders’ is geen richting en telt hier niet mee.")
+
+
+def test_weging_zwijgt_over_anders_onder_de_laagste_genoemde_telling():
+    st = direction_state(_agg(wld_peaks=3, wld_scope=3, wld_other=1), "workload", 5.8)
+    assert st["state"] == "divided"
+    assert _richtingen_weging(st, "retention", "workload") == (
+        "De meest gekozen richtingen zijn die met 3 stemmen op de kaart hierboven.")
+
+
+def test_anders_heet_op_elke_richtingkaart_anders():
+    """De weging citeert ‘Anders’ letterlijk; dat klopt alleen zolang elke
+    Anders-optie op de kaart met dat woord begint."""
+    from backend.products.shared.deepening import DEEPENING_FACTOR_KEYS
+    for scan in ("retention", "exit"):
+        for fk in DEEPENING_FACTOR_KEYS:
+            anders = [t for k, t in dp.direction_option_texts(scan, fk).items()
+                      if k.endswith("_other")]
+            assert anders and all(t.startswith("Anders") for t in anders), (scan, fk, anders)
+
+
+def test_weging_valt_luid_om_bij_een_onbekende_optiesleutel(monkeypatch):
+    import backend.report_html as rh
+    st = direction_state(_agg(wld_peaks=3, wld_scope=3, wld_none=2), "workload", 5.8)
+    echt = rh.direction_option_texts("retention", "workload")
+    zonder = {k: v for k, v in echt.items() if k != "wld_scope"}
+    monkeypatch.setattr(rh, "direction_option_texts", lambda _s, _f: zonder)
+    with pytest.raises(KeyError, match="wld_scope"):
+        _richtingen_weging(st, "retention", "workload")
 
 
 def test_weging_zonder_streepjes():
@@ -1073,7 +1125,7 @@ def test_werkvragen_tonen_de_weging_onder_de_verdeeld_zin(gevuld):
     assert VARIANTEN["divided"]["retention"] in kaart
     # DIRECTION: wld_peaks 3, wld_scope 3, wld_none 2 van 8; dezelfde
     # tellingen als op de richtingkaart.
-    assert ("De meest gekozen richtingen zijn de routes met 3 stemmen op de kaart hierboven. "
+    assert ("De meest gekozen richtingen zijn die met 3 stemmen op de kaart hierboven. "
             "‘Niets, dit zit hier goed’, gekozen door 2 van de 8, is geen richting en telt "
             "hier niet mee.") in kaart
     # Alleen bij de verdeelde kaart: het startpunt (growth) staat in clear.
@@ -1104,9 +1156,12 @@ def test_css_houdt_het_agendaslot_compact():
     for regel in (".wq-block { margin-top: 10px;",
                   ".wq-tbl td { font-size: 10px; line-height: 1.42; color: #374151; padding: 3px 0;",
                   ".agenda-slot .agenda-dark { padding: 10px 16px; }",
-                  ".agenda-slot .agenda-opener { margin-top: 0; padding-top: 10px; margin-bottom: 12px; }"):
+                  ".agenda-slot .agenda-opener { margin-top: 0; border-top: none; padding-top: 10px; margin-bottom: 12px; }",
+                  ".wq-tbl td.wq-stap { width: 22%;"):
         assert regel in css, regel
-    for selector in (".wq-block", ".wq-tbl td", ".wq-weging", ".wq-hint",
+    # .wq-stap alleen met td erbij: kaal verloor hij van .wq-tbl td.
+    assert not re.search(r"^\.wq-stap \{", css, re.MULTILINE)
+    for selector in (".wq-block", ".wq-tbl td", ".wq-tbl td.wq-stap", ".wq-weging", ".wq-hint",
                      ".agenda-slot .agenda-dark", ".agenda-slot .agenda-opener"):
         treffers = re.findall(r"^" + re.escape(selector) + r" \{", css, re.MULTILINE)
         assert len(treffers) == 1, (selector, len(treffers))
