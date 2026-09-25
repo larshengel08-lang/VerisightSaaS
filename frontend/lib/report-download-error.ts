@@ -68,5 +68,13 @@ export function downloadErrorMessage(status: number): string {
     return `Je hebt geen toegang tot dit rapport met dit account. Mail ${LOEP_CONTACT_EMAIL} als dit niet klopt.`
   }
 
+  // 410: de gegevens van de meting zijn na de bewaartermijn (of op verzoek)
+  // verwijderd. Opnieuw proberen helpt dan nooit; zelfde strekking als de
+  // backendmelding (backend/data_retention.py, ReportDataPurged). De datum
+  // staat in de technische melding die de knop daarnaast toont.
+  if (status === 410) {
+    return 'De gegevens van deze meting zijn verwijderd, volgens de bewaartermijn of op verzoek van jullie organisatie. Een nieuw rapport maken kan daarom niet meer. Een rapport dat eerder is gedownload, blijft geldig.'
+  }
+
   return `Het rapport kon niet worden opgehaald (fout ${status}). Probeer het later opnieuw of mail ${LOEP_CONTACT_EMAIL}.`
 }

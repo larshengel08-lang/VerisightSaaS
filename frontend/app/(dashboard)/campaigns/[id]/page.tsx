@@ -8,6 +8,7 @@ import { RequestNewMeasurement } from '@/components/dashboard/request-new-measur
 import { PdfDownloadButton } from './pdf-download-button'
 import { DecisionBlock } from '@/components/dashboard/decision-block'
 import { decisionFromRow } from '@/lib/dashboard/campaign-decision'
+import { dataPurgedMessage, loadDataPurgedAt } from '@/lib/dashboard/data-purged'
 import { SuiteAccessDenied } from '@/components/dashboard/suite-access-denied'
 import { resolveDashboardState } from '@/lib/dashboard/dashboard-state-resolver'
 import { withoutSelfLink } from '@/lib/dashboard/self-link'
@@ -60,6 +61,29 @@ export default async function CampaignPage({ params }: Props) {
   }
   if (!statsRow) notFound()
   const stats = statsRow as CampaignStats
+
+  // Deel C (bewaartermijn): een opgeschoonde meting toont de reden, geen
+  // statuskaart met 0 antwoorden en geen downloadknop die 410 geeft.
+  const purgedAt = await loadDataPurgedAt(supabase, id)
+  if (purgedAt) {
+    return (
+      <div className="space-y-6">
+        <Link
+          href="/dashboard"
+          className="inline-flex text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:text-[color:var(--dashboard-ink)]"
+        >
+          ← Alle metingen
+        </Link>
+        <h2 className="text-xl font-semibold tracking-tight text-[color:var(--dashboard-ink)]">
+          {stats.campaign_name}
+        </h2>
+        <div role="status" className="rounded-[22px] border border-[color:var(--dashboard-frame-border)] bg-white px-6 py-6">
+          <p className="mb-1 text-sm font-semibold text-[color:var(--dashboard-ink)]">Gegevens verwijderd</p>
+          <p className="max-w-2xl text-sm leading-6 text-[color:var(--dashboard-text)]">{dataPurgedMessage(purgedAt)}</p>
+        </div>
+      </div>
+    )
+  }
 
   const [{ data: campaignMeta, error: campaignMetaError }, { data: deliveryRecord, error: deliveryRecordError }, { data: reminderEvents, error: reminderEventsError }, { data: profile }, { data: orgData, error: orgDataError }, { data: respondentDepts }, { data: membership }, { count: extensionCount, error: extensionCountError }] = await Promise.all([
     supabase.from('campaigns').select('closed_at, closes_at, delivery_mode, comms_mode, public_survey_token, organization_id, segment_departments').eq('id', id).maybeSingle(),

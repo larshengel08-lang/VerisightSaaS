@@ -72,8 +72,17 @@ describe('downloadErrorMessage', () => {
     expect(downloadErrorMessage(418)).toContain('fout 418')
   })
 
+  it('zegt bij 410 dat de gegevens verwijderd zijn en dat opnieuw proberen niet helpt', () => {
+    const message = downloadErrorMessage(410)
+    expect(message).toBe(
+      'De gegevens van deze meting zijn verwijderd, volgens de bewaartermijn of op verzoek van jullie organisatie. Een nieuw rapport maken kan daarom niet meer. Een rapport dat eerder is gedownload, blijft geldig.',
+    )
+    expect(message).not.toContain('Probeer het later opnieuw')
+    expect(message).not.toContain('fout 410')
+  })
+
   it('gebruikt nergens een em-dash of en-dash', () => {
-    for (const status of [401, 403, 404, 500, 502, 418]) {
+    for (const status of [401, 403, 404, 410, 500, 502, 418]) {
       expect(downloadErrorMessage(status)).not.toMatch(/[—–]/)
     }
   })
