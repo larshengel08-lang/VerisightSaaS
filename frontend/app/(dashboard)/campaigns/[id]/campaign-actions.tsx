@@ -57,13 +57,18 @@ export function CampaignActions({
     if (!updatedRows || updatedRows.length === 0) {
       // 0 rijen: al gesloten (verouderd tabblad), of niet gevonden / geen
       // rechten. Nalezen welke van de twee: geen valse fout, geen vals succes.
-      const { data: current } = await supabase
+      const { data: current, error: rereadError } = await supabase
         .from('campaigns')
-        .select('closed_at')
+        .select('is_active, closed_at')
         .eq('id', campaignId)
         .maybeSingle()
       setLoading(null)
-      if ((current as { closed_at?: string | null } | null)?.closed_at) {
+      if (rereadError) {
+        setError(`Archiveren mislukt: Loep kon niet nalezen of de campaign al gearchiveerd is (${rereadError.message}).`)
+        return
+      }
+      const row = current as { is_active?: boolean; closed_at?: string | null } | null
+      if (row?.closed_at && row.is_active === false) {
         showToast('Deze campaign was al gearchiveerd. Pagina wordt vernieuwd...')
         setTimeout(() => window.location.reload(), 1500)
         return

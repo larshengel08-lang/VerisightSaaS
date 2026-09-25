@@ -18,7 +18,7 @@
 -- en een directe verbinding, op: termijn, data_purged_at, heropenen van een
 -- gesloten meting, closed_at verschuiven, stopzetten zonder sluitmoment (ook
 -- bij aanmaken), een
--- sluitmoment in de toekomst, een tweede keer sluiten (0 rijen, geen fout) en
+-- sluitmoment in de toekomst of in het verleden, een tweede keer sluiten (0 rijen, geen fout) en
 -- de check-constraint.
 
 -- 1. Minimale tabellen en helpers, zoals in supabase/schema.sql.
@@ -56,7 +56,9 @@ insert into public.organizations values ('00000000-0000-0000-0000-000000000001',
 insert into public.campaigns values
   ('00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', 'open', true, null),
   ('00000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000001', 'gesloten', false,
-   '2026-01-01 10:00:00+00');
+   '2026-01-01 10:00:00+00'),
+  -- oude inactieve meting zonder sluitmoment (van voor deze migratie)
+  ('00000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000001', 'oud', false, null);
 
 -- 3. De migratie, twee keer (idempotent).
 \ir ../2026_09_24_add_data_retention.sql
@@ -102,12 +104,13 @@ begin
 end;
 $$;
 
--- Kortschrift: K = klant, O = operator; ORG, OPEN, DICHT = de rijen hierboven.
+-- Kortschrift: K = klant, O = operator; ORG, OPEN, DICHT, OUD = de rijen hierboven.
 \set K 00000000-0000-0000-0000-00000000000c
 \set O 00000000-0000-0000-0000-00000000000a
 \set ORG 00000000-0000-0000-0000-000000000001
 \set OPEN 00000000-0000-0000-0000-000000000002
 \set DICHT 00000000-0000-0000-0000-000000000003
+\set OUD 00000000-0000-0000-0000-000000000004
 
 -- Klant (authenticated, geen operator)
 select pg_temp.geval('klant: termijn wijzigen', 'authenticated', :'K',
@@ -130,6 +133,19 @@ select pg_temp.geval('klant: open meting sluiten', 'authenticated', :'K',
 select pg_temp.geval('klant: sluitmoment in de toekomst bij sluiten (teruggezet naar nu)', 'authenticated', :'K',
   'update public.campaigns set is_active = false, closed_at = now() + interval ''30 days'' where id = '
   || quote_literal(:'OPEN') || ' returning closed_at <= now()', 'toegestaan (true)');
+select pg_temp.geval('klant: sluitmoment in het verleden bij sluiten (wordt nu)', 'authenticated', :'K',
+  'update public.campaigns set is_active = false, closed_at = ''2001-01-01'' where id = '
+  || quote_literal(:'OPEN') || ' returning closed_at >= now() - interval ''1 minute''', 'toegestaan (true)');
+select pg_temp.geval('klant: sluitmoment in het verleden bij aanmaken (wordt nu)', 'authenticated', :'K',
+  'insert into public.campaigns (id, organization_id, name, is_active, closed_at) values '
+  || '(''00000000-0000-0000-0000-000000000009'', ' || quote_literal(:'ORG') || ', ''n'', false, ''2001-01-01'')'
+  || ' returning closed_at >= now() - interval ''1 minute''', 'toegestaan (true)');
+select pg_temp.geval('klant: sluitmoment in het verleden invullen op oude inactieve meting (wordt nu)', 'authenticated', :'K',
+  'update public.campaigns set closed_at = ''2001-01-01'' where id = '
+  || quote_literal(:'OUD') || ' returning closed_at >= now() - interval ''1 minute''', 'toegestaan (true)');
+select pg_temp.geval('operator: sluitmoment in het verleden (blijft staan)', 'authenticated', :'O',
+  'update public.campaigns set is_active = false, closed_at = ''2001-01-01'' where id = '
+  || quote_literal(:'OPEN') || ' returning closed_at < now() - interval ''1 year''', 'toegestaan (true)');
 select pg_temp.geval('klant: sluitmoment in de toekomst bij aanmaken (teruggezet naar nu)', 'authenticated', :'K',
   'insert into public.campaigns (id, organization_id, name, is_active, closed_at) values '
   || '(''00000000-0000-0000-0000-000000000009'', ' || quote_literal(:'ORG') || ', ''n'', false, now() + interval ''30 days'')'

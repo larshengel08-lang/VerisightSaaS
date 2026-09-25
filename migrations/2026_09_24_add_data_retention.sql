@@ -36,14 +36,18 @@ end $$;
 -- geen operator is, mag ze niet wijzigen, en mag ook geen meting aanmaken met
 -- data_purged_at al gevuld (die zou de opschoning dan voor altijd overslaan).
 -- Om dezelfde reden bewaakt de trigger de klok van de bewaartermijn (die loopt
--- vanaf closed_at): een klant kan een gesloten meting niet heropenen en
--- closed_at niet verschuiven, en een meting stopzetten (is_active van waar naar
--- onwaar) of meteen stopgezet aanmaken kan alleen met een sluitmoment erbij;
--- een meting zonder closed_at raakt de opschoning nooit. Een sluitmoment in de toekomst (bij sluiten of
--- aanmaken) wordt stil teruggezet naar nu in plaats van geweigerd: zo geeft een
--- afwijkende browserklok bij archiveren geen fout, en kan niemand de termijn
--- uitstellen. Geen enkele klantflow doet een van deze dingen (sluiten zet
--- is_active en closed_at samen, en alleen als closed_at nog leeg is).
+-- vanaf closed_at). Voor een klant is de database eigenaar van het sluitmoment:
+-- zodra closed_at van leeg naar gevuld gaat (sluiten, of een meting aanmaken
+-- met een sluitmoment), zet de trigger closed_at op now(), wat de client ook
+-- stuurt. Een sluitmoment in de toekomst zou de termijn uitstellen, een in het
+-- verleden zou de meting bij de volgende opschoning onherroepelijk wissen; nu
+-- kan geen van beide, en een afwijkende browserklok geeft ook geen fout. Verder
+-- kan een klant een gesloten meting niet heropenen en closed_at daarna niet
+-- verschuiven, en een meting stopzetten (is_active van waar naar onwaar) of
+-- meteen stopgezet aanmaken kan alleen met een sluitmoment erbij; een meting
+-- zonder closed_at raakt de opschoning nooit. Geen enkele klantflow wordt
+-- hierdoor geweigerd (sluiten zet is_active en closed_at samen, en alleen als
+-- closed_at nog leeg is).
 -- 'anon' valt er ook onder (verdediging in de diepte; RLS laat anon hier niets
 -- schrijven). De service-role en een directe databaseverbinding (de opschoning)
 -- hebben geen van die JWT-rollen en mogen wel.
@@ -69,7 +73,7 @@ begin
         if new.is_active is false and new.closed_at is null then
           raise exception 'Sluit een meting met een sluitmoment';
         end if;
-        if new.closed_at > now() then
+        if new.closed_at is not null then
           new.closed_at := now();
         end if;
       else
@@ -84,7 +88,7 @@ begin
              or (coalesce(new.is_active, false) and not coalesce(old.is_active, false)) then
             raise exception 'een gesloten meting kan alleen Loep heropenen of een ander sluitmoment geven';
           end if;
-        elsif new.closed_at > now() then
+        elsif new.closed_at is not null then
           new.closed_at := now();
         end if;
       end if;

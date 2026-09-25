@@ -89,12 +89,16 @@ export async function closeCampaignAction(campaignId: string): Promise<Dashboard
     // 0 rijen: al gesloten, of niet gevonden / geen rechten. Nalezen welke van
     // de twee, zodat een herhaalde sluiting geen valse fout geeft en een echte
     // weigering geen vals succes. Geen tweede mail en geen tweede auditregel.
-    const { data: current } = await ctx.supabase
+    const { data: current, error: rereadError } = await ctx.supabase
       .from('campaigns')
-      .select('closed_at')
+      .select('is_active, closed_at')
       .eq('id', campaignId)
       .maybeSingle()
-    if ((current as { closed_at?: string | null } | null)?.closed_at) {
+    if (rereadError) {
+      return { ok: false, error: `Sluiten mislukt: Loep kon niet nalezen of de meting al gesloten is (${rereadError.message}).` }
+    }
+    const row = current as { is_active?: boolean; closed_at?: string | null } | null
+    if (row?.closed_at && row.is_active === false) {
       return { ok: true, warning: 'Deze meting was al gesloten. Er is niets veranderd en er is geen nieuw bericht verstuurd.' }
     }
     return { ok: false, error: 'Sluiten mislukt: campagne niet gevonden of geen rechten.' }

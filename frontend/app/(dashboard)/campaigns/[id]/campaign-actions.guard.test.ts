@@ -14,4 +14,11 @@ describe('archiveren: closed_at is de klok van de bewaartermijn', () => {
     expect(source).toContain('Deze campaign was al gearchiveerd.')
     expect(source).toContain('Archiveren mislukt: campaign niet gevonden of geen rechten.')
   })
+
+  it('nalezen: alleen gesloten als closed_at gevuld is en is_active onwaar, en een leesfout wordt getoond', () => {
+    expect(source).toContain(".select('is_active, closed_at')")
+    expect(source).toContain('row?.closed_at && row.is_active === false')
+    expect(source).toContain('if (rereadError)')
+    expect(source).toContain('Loep kon niet nalezen of de campaign al gearchiveerd is')
+  })
 })

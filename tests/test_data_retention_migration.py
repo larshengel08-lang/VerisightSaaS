@@ -45,12 +45,20 @@ def test_trigger_laat_alleen_loep_de_kolommen_wijzigen():
 def test_trigger_bewaakt_de_klok_van_de_bewaartermijn():
     """De termijn loopt vanaf closed_at. Kan een klant een gesloten meting
     heropenen of closed_at verschuiven, dan slaat de opschoning hem voor altijd
-    over. Een sluitmoment in de toekomst wordt teruggezet naar nu."""
+    over. Voor een klant is de database eigenaar van het sluitmoment: gaat
+    closed_at van leeg naar gevuld, dan wordt het now(), wat de client ook
+    stuurt. In de toekomst zou de termijn uitstellen, in het verleden zou de
+    meting bij de volgende opschoning onherroepelijk wissen."""
     sql = _sql()
     assert "if old.closed_at is not null then" in sql
     assert "new.closed_at is distinct from old.closed_at" in sql
     assert "coalesce(new.is_active, false) and not coalesce(old.is_active, false)" in sql
+    # Insert-tak en update-tak (closed_at was leeg): altijd now(), geen
+    # eenzijdige begrenzing op de toekomst meer.
     assert sql.count("new.closed_at := now();") == 2
+    assert "        if new.closed_at is not null then\n          new.closed_at := now();" in sql
+    assert "        elsif new.closed_at is not null then\n          new.closed_at := now();" in sql
+    assert "new.closed_at > now()" not in sql
     # Stopzetten zonder sluitmoment: zo'n meting raakt de opschoning nooit.
     assert "coalesce(old.is_active, false) and new.is_active is false and new.closed_at is null" in sql
     assert "sluit een meting met een sluitmoment" in sql
@@ -69,7 +77,9 @@ def test_gedragscontrole_is_alleen_lokaal():
     tekst = check.read_text(encoding="utf-8")
     assert tekst.startswith("-- ALLEEN LOKAAL, NOOIT TEGEN PRODUCTIE")
     for geval in ("heropenen", "closed_at verschuiven", "sluitmoment in de toekomst", "anon",
-                  "stopzetten zonder sluitmoment", "stopgezet aanmaken zonder sluitmoment"):
+                  "stopzetten zonder sluitmoment", "stopgezet aanmaken zonder sluitmoment",
+                  "sluitmoment in het verleden bij sluiten", "sluitmoment in het verleden bij aanmaken",
+                  "sluitmoment in het verleden invullen op oude inactieve meting"):
         assert geval in tekst, geval
 
 
