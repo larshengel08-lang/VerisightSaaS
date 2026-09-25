@@ -270,8 +270,8 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .fill-steps .step { width: 33.3%; padding: 10px 12px; }
 .fill-steps .step-sublbl { margin-top: 0; }
 .fill-steps .step-fill-hint { margin-bottom: 0; }
-.agenda-slot .agenda-dark { padding: 14px 16px; }
-.agenda-slot .agenda-opener { padding-top: 10px; margin-bottom: 12px; }
+.agenda-slot .agenda-dark { padding: 10px 16px; }
+.agenda-slot .agenda-opener { margin-top: 0; border-top: none; padding-top: 10px; margin-bottom: 12px; }
 .agenda-opener { border-left: 3px solid #E8A020; border-top: 1px solid #2A3D52;
   padding: 14px 0 0 16px; margin-top: 16px; }
 
@@ -357,27 +357,38 @@ p  { margin-bottom: 6px; font-size: 11px; }
   break-inside: avoid; page-break-inside: avoid; }
 
 /* ── Werkvragen "Zo maak je er een besluit van" (plan 3b) ── */
-.wq-block { margin-top: 16px; break-inside: avoid; }
+/* Hefboom E (fixronde leesronde, Taak 10): de weging onder de verdeeld-zin maakte
+   het agendaslot (no-break) 31 tot 42pt hoger, en dan verhuisde het slot in
+   10, 15 en voorbeeldrapport_loep naar een eigen vel. De marges hier, de
+   celpadding en de navy-marges in .agenda-slot zijn daarom krapper; gemeten
+   in het productie-image (10 en 15 eindigen op y=781/780 van ongeveer 783). */
+.wq-block { margin-top: 10px; break-inside: avoid; }
 .wq-card { width: 50%; vertical-align: top; background: #FFFFFF; border-left: 3px solid #E8A020; padding: 10px 14px; }
 .wq-tbl { width: 100%; border-collapse: collapse; }
-.wq-tbl td { font-size: 10px; line-height: 1.5; color: #374151; padding: 5px 0; vertical-align: top; border-bottom: 1px solid rgba(13,27,42,0.12); }
+.wq-tbl td { font-size: 10px; line-height: 1.42; color: #374151; padding: 3px 0; vertical-align: top; border-bottom: 1px solid rgba(13,27,42,0.12); }
 .wq-tbl tr:last-child td { border-bottom: none; }
-.wq-stap { width: 22%; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: #B07A10; padding-right: 8px; }
+/* Met td erbij: anders wint .wq-tbl td (klasse + element) en vallen maat,
+   kleur en padding-right hier weg; dan liep het label tegen de vraag aan
+   ("BESLUITENWat spreken", code review Taak 10). */
+.wq-tbl td.wq-stap { width: 22%; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: #B07A10; padding-right: 8px; }
 .wq-hint { font-size: 8.5px; font-style: italic; color: #4A6070; margin-top: 4px; }
+/* De weging onder de verdeeld-zin (R6/V9, fixronde 24-9) is een leesregel, geen
+   voetnoot: daarom niet de 8,5px van .wq-hint maar minstens 9,5px. */
+.wq-weging { font-size: 9.5px; line-height: 1.4; font-style: italic; color: #4A6070; margin-top: 4px; }
 
 /* ── Besluitpagina "Besluit van het MT" (plan 3b): lijnen voor de pen ── */
 /* break-after: de appendix stroomt (.sec zonder .pb) en zou anders onder het
    invulvel beginnen; dat vel moet los te printen zijn. */
 .besluit { break-inside: avoid; break-after: page; }
-.bl-rij, .bl-drie { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 14px; }
+.bl-rij, .bl-drie { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 10px; }
 .bl-cel { width: 50%; vertical-align: top; padding-right: 18px; }
 .bl-drie td { width: 33.3%; vertical-align: top; padding-right: 14px; }
 .bl-drie .bl-lbl { margin-top: 4px; font-size: 7.5px; }
-.bl-blok { margin-top: 16px; break-inside: avoid; }
+.bl-blok { margin-top: 12px; break-inside: avoid; }
 .bl-lbl { font-family: 'JetBrains Mono', monospace; font-size: 8.5px; letter-spacing: 0.12em; text-transform: uppercase; color: #B07A10; margin: 10px 0 2px; }
 .bl-vast { font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 13px; color: #0D1B2A; padding: 4px 0 2px; }
 .bl-line { border-bottom: 1px solid #94A3B8; height: 24px; }
-.bl-hint { font-size: 8.5px; font-style: italic; color: #4A6070; margin-top: 4px; }
+.bl-hint { font-size: 8.5px; font-style: italic; color: #4A6070; margin-top: 4px; line-height: 1.35; }
 .bl-tekst { font-size: 11px; line-height: 1.55; color: #0D1B2A; padding: 4px 0 6px; border-bottom: 1px solid rgba(13,27,42,0.12); }
 .bl-status { font-size: 9.5px; color: #4A6070; margin: 8px 0 0; font-style: italic; }
 .mq-direction { font-size: 11px; font-weight: 600; color: #0D1B2A; margin: 8px 0 0; }
@@ -582,28 +593,44 @@ h3 { font-family: 'Inter Tight', sans-serif; font-weight: 700;
    rapport houdt zijn eigen ruimte.
    Gemeten op de WeasyPrint-render (fixronde na plan 3a, observatie 9): met de
    vorige maten liep p.02 over in tien van de 24 renders, tot ongeveer 110pt in
-   scenario 08. Deze maten laten in alle 24 ruimte over (krapst: 08). Winst zit
-   vooral in de kernzin (20px, volle breedte), de leidraad (beschrijving krijgt
-   67% van de breedte, dus meestal één regel) en de witruimte rond het
-   meetgegevensblok. Een kernzin boven KERNZIN_LANG tekens (report_html.py)
-   krijgt 18px, zodat een langere kop dan de stresstest kent p.02 ook niet
-   laat overlopen. */
+   scenario 08. Winst zit vooral in de kernzin (20px, volle breedte), de
+   leidraad (beschrijving krijgt 67% van de breedte, dus meestal één regel) en
+   de witruimte rond het meetgegevensblok. Een kernzin boven KERNZIN_LANG
+   tekens (report_html.py) krijgt 18px, zodat een langere kop dan de stresstest
+   kent p.02 ook niet laat overlopen.
+   Fixronde leesronde 24-9 (Taak 7): de duiding onder de cijfers, de langere
+   leidraad en de extra regel in de meetgegevens maakten p.02 weer langer.
+   Daarom zijn het waarom-blok, de leidraadregels en het meetgegevensblok
+   dichter gezet, en krijgt een lange of gedeelde hoofdreden van vertrek
+   (sc-reden-lang, VERTREKREDEN_LANG in report_html.py) 11px, nooit kleiner
+   dan de subregel (.sc-b, 9px). Gemeten in het productie-image (WeasyPrint
+   70.0) past p.02 in alle 24 renders; krapst is scenario 08 met 10,5pt over.
+   Het echte bewijs is de regel p02-op-een-a4 in het productie-image; de test
+   op deze maten bewaakt alleen tegen per ongeluk wijzigen. Elke selector
+   staat hier één keer: bij gelijke specificiteit wint de latere regel, dus een
+   tweede regel voor dezelfde selector maakt de eerste stil dood. */
 #p02 .br-kernzin { font-size: 20px; max-width: none; margin-bottom: 14px; }
 #p02 .kz-lang .br-kernzin { font-size: 18px; }
-#p02 .why { padding: 12px 16px 10px; margin-bottom: 10px; }
+#p02 .why { padding: 10px 14px 8px; margin-bottom: 8px; }
 #p02 .why-title { margin-bottom: 10px; }
 #p02 .why-grid { margin-bottom: 8px; }
 #p02 .why-v { font-size: 22px; }
 #p02 .mq-line { padding-top: 10px; margin-top: 10px; }
 #p02 .sg { margin-bottom: 10px; }
 #p02 .sc-v { font-size: 18px; }
+#p02 .sc-v.sc-reden { font-size: 14px; }
+#p02 .sc-v.sc-reden-lang { font-size: 11px; line-height: 1.2; }
+#p02 .p02-duiding { font-size: 9.5px; line-height: 1.4; color: #374151; margin: -6px 0 8px; max-width: none; }
 #p02 .leidraad { margin-top: 10px; padding-top: 8px; }
 #p02 .leidraad-title { margin-bottom: 4px; }
-#p02 .leidraad td { padding: 2px 6px 2px 0; }
+#p02 .leidraad td { padding: 1px 6px 1px 0; line-height: 1.38; }
 #p02 .leidraad td.lt { width: 11%; }
 #p02 .leidraad td.lw { width: 22%; }
-#p02 .meet-blok { margin-top: 12px; }
-#p02 .meet-blok .slabel { margin-bottom: 8px; }
+#p02 .meet-blok { margin-top: 8px; }
+#p02 .meet-blok .slabel { margin-bottom: 6px; }
+#p02 .meet-blok .sg { margin-bottom: 4px; }
+#p02 .meet-blok .sc-b { line-height: 1.3; }
+#p02 .meet-blok .trustline { line-height: 1.35; }
 </style></head><body><div class="cover">
   <div class="cover-rings"></div>
   <div class="cover-top">
@@ -620,13 +647,13 @@ h3 { font-family: 'Inter Tight', sans-serif; font-weight: 700;
   <div class="ch-head"><span class="ch-idx">01</span><h2 class="ch-title">Het antwoord in het kort</h2></div><hr class="ch-rule">
   <p class="br-kernzin">Behoud vraagt aandacht op één kwetsbaar onderwerp: Groeiperspectief (4.7/10). Daarnaast zijn Werkdruk en herstelruimte (5.2/10) en Leiderschap en vertrouwen (5.7/10) aandachtspunten. Als startpunt kiest Loep Groeiperspectief. Ook de blijfintentie is kwetsbaar: 3.9/10, 25 van de 39 zitten onder de 5.</p>
   
-  <table class="sg p02-cijfers"><tr><td><div class="sc-l">Blijfintentie</div><div class="sc-v" style="color:#C0392B;">3.9/10</div><div class="sc-b">kwetsbaar punt: 25 van de 39 zitten onder de 5</div></td><td><div class="sc-l">Respons</div><div class="sc-v">67%</div><div class="sc-b">39 van de 58 ingevuld (67%): genoeg voor een betrouwbaar groepsbeeld.</div></td><td><div class="sc-l">Behoudssignaal</div><div class="sc-v">6.2/10</div><div class="sc-b">Behoud vraagt aandacht</div></td></tr></table>
+  <table class="sg p02-cijfers"><tr><td><div class="sc-l">Blijfintentie</div><div class="sc-v" style="color:#C0392B;">3.9/10</div><div class="sc-b">kwetsbaar punt: 25 van de 39 zitten onder de 5</div></td><td><div class="sc-l">Respons</div><div class="sc-v">67%</div><div class="sc-b">39 van de 58 ingevuld (67%): genoeg voor een betrouwbaar groepsbeeld.</div></td><td><div class="sc-l">Behoudssignaal</div><div class="sc-v">6.2/10</div><div class="sc-b">Behoud vraagt aandacht</div></td></tr></table><p class="p02-duiding">19 van de 39 hebben veel vertrekgedachten (vertrekintentie vanaf 6,5). Blijf- en vertrekintentie zeggen hoe dringend behoud hier is, niet bij welke afdeling het speelt of waarom: dit rapport splitst ze niet per afdeling uit. Daarom begint het gesprek bij Groeiperspectief: daar zie je waar het wringt, en daar kan het MT zelf iets besluiten.</p>
   <div class="why">
     <div class="why-title">Waarom Groeiperspectief bovenaan staat</div>
     <table class="why-grid"><tr><td class="why-cell"><div class="why-l">Gemiddelde score</div><div class="why-v" style="color:#C0392B;">4.7/10</div><div class="why-b">van de 3 stellingen over dit onderwerp (kwetsbaar punt)</div></td><td class="why-cell"><div class="why-l">Laagst scorende stelling</div><div class="why-v" style="color:#C0392B;">4.3/10</div><div class="why-b">De organisatie investeert in mijn persoonlijke en professionele ontwikkeling.</div></td><td class="why-cell"><div class="why-l">Spreiding</div><div class="why-v" style="color:#C0392B;">21</div><div class="why-b">van de 39 onder de 5</div></td></tr></table>
-    <div class="mq-line"><span class="mq-label">Gespreksopener</span><p>De meest gekozen toelichting was &#x27;Ik zie niet welke mogelijkheden er voor mij zijn&#x27;. Herkennen jullie dat beeld, en wat zit erachter?</p><span class="mq-source">Gebaseerd op het laagst scorende onderwerp.</span><p class="mq-direction">Wat er moet gebeuren volgens 11 van de 15 (73%) die dit het laagst scoorden en de vraag beantwoordden: Voer een concreter gesprek over ontwikkeling.</p><p class="mq-brug">Organisatiebreed begint het gesprek bij Groeiperspectief. Bij Operations springt Werkdruk en herstelruimte eruit (4.9/10); bespreek dat voor die afdeling na het startpunt.</p></div>
+    <div class="mq-line"><span class="mq-label">Gespreksopener</span><p>De meest gekozen toelichting was &#x27;Ik zie niet welke mogelijkheden er voor mij zijn&#x27;. Herkennen jullie dat beeld, en wat zit erachter?</p><span class="mq-source">Gebaseerd op het laagst scorende onderwerp.</span><p class="mq-direction">Wat er moet gebeuren volgens 11 van de 15 (73%) die dit het laagst scoorden en de vraag beantwoordden: Voer een concreter gesprek over ontwikkeling.</p><p class="mq-brug">Organisatiebreed begint het gesprek bij Groeiperspectief. Bij Operations springt Werkdruk en herstelruimte eruit (4.9/10); dat is ook het tweede punt, dus neem Operations daarin mee.</p></div>
   </div><!-- /why -->
-  <div class="leidraad"><div class="leidraad-title">Zo leid je dit gesprek in 45 minuten</div><table><tr><td class="lt">0-5 min</td><td class="lw">Hoe stevig is dit</td><td>De respons en de meetgegevens op deze pagina; de drempels staan op pagina <a class="pref" href="#sec-drempels"></a>.</td></tr><tr><td class="lt">5-12 min</td><td class="lw">Het beeld in één plaatje</td><td>Het cijferoverzicht (pagina <a class="pref" href="#sec-overzicht"></a>) en de blijfintentie en het behoudssignaal (pagina <a class="pref" href="#sec-context"></a>). Vraag: verrast dit iemand?</td></tr><tr><td class="lt">12-25 min</td><td class="lw">Waar het wringt, en waarom</td><td>De verdieping van het startpunt: de laagste stelling en wat mensen als toelichting kozen (pagina <a class="pref" href="#sec-verdieping"></a>). Open met de gespreksopener hierboven.</td></tr><tr><td class="lt">25-33 min</td><td class="lw">Per afdeling</td><td>Waar het per afdeling begint, en hoe dat zich verhoudt tot het startpunt (pagina <a class="pref" href="#sec-afdelingen"></a>).</td></tr><tr><td class="lt">33-45 min</td><td class="lw">Wat gaan we doen</td><td>Wat er volgens je mensen moet gebeuren, met de werkvragen (pagina <a class="pref" href="#sec-agenda"></a>). Het besluit leg je vast op pagina <a class="pref" href="#sec-besluit"></a>.</td></tr></table><p class="trustline" style="margin-top:6px;">Dit rapport is een groepsbeeld van de organisatie, geen beoordeling van personen of afdelingen.</p></div>
+  <div class="leidraad"><div class="leidraad-title">Zo leid je dit gesprek in 45 minuten</div><table><tr><td class="lt">0-5 min</td><td class="lw">Hoe stevig is dit</td><td>De respons en de meetgegevens op deze pagina; de drempels staan op pagina <a class="pref" href="#sec-drempels"></a>.</td></tr><tr><td class="lt">5-12 min</td><td class="lw">Het beeld in één plaatje</td><td>Het cijferoverzicht (pagina <a class="pref" href="#sec-overzicht"></a>) en de blijfintentie en het behoudssignaal (pagina <a class="pref" href="#sec-context"></a>). Vraag: verrast dit iemand? Gaat het over blijf- of vertrekintentie, lees dan de regel onder de cijfers hierboven voor.</td></tr><tr><td class="lt">12-25 min</td><td class="lw">Waar het wringt, en waarom</td><td>De verdieping van het startpunt: de laagste stelling en wat mensen als toelichting kozen (pagina <a class="pref" href="#sec-verdieping"></a>). Open met de gespreksopener hierboven.</td></tr><tr><td class="lt">25-31 min</td><td class="lw">Per afdeling</td><td>Waar het per afdeling begint, en hoe dat zich verhoudt tot het startpunt (pagina <a class="pref" href="#sec-afdelingen"></a>).</td></tr><tr><td class="lt">31-45 min</td><td class="lw">Wat gaan we doen</td><td>De werkvragen (pagina <a class="pref" href="#sec-werkvragen"></a>). Bij het startpunt sla je Herkennen over, dat deden jullie al; neem wat eronder staat. Het tweede punt alleen als er tijd is, anders parkeren jullie het tot het vervolgmoment. Het besluit leg je vast op pagina <a class="pref" href="#sec-besluit"></a>.</td></tr></table><p class="trustline" style="margin-top:6px;">Dit rapport is een groepsbeeld van de organisatie, geen beoordeling van personen of afdelingen.</p></div>
   <div class="meet-blok"><span class="slabel">Meetgegevens</span>
   <table class="sg no-break"><tr><td><div class="sc-l">Uitgenodigd</div><div class="sc-v">58</div></td><td><div class="sc-l">Ingevuld</div><div class="sc-v">39</div></td><td><div class="sc-l">Respons</div><div class="sc-v">67%</div></td><td><div class="sc-l">Meetperiode</div><div class="sc-v" style="font-size:12px;">9 maart 2026 tot 3 april 2026</div><div class="sc-b">Loep Behoud Voorjaar 2026 &middot; Actieve medewerkers</div></td></tr></table>
   </div>
@@ -700,11 +727,11 @@ h3 { font-family: 'Inter Tight', sans-serif; font-weight: 700;
   <p class="r-legend">Het blokje in de spreidingsbalk markeert het groepsgemiddelde; de telling eronder toont hoeveel respondenten dit onderwerp onder de 5 scoren.</p>
   
   <div class="r-uitleg">Hoe deze volgorde tot stand komt: gesorteerd op score. Liggen scores binnen 0,3 van elkaar, dan telt eerst waar de meeste mensen om verandering vragen, en alleen als een onderwerp er minstens 2 mensen bovenuit steekt; anders geeft een grote spreiding of een gedeelde toelichting uit de verdieping de doorslag. De drempels (spreiding vanaf 10, verdieping vanaf 8, richting vanaf 3) staan uitgelegd in de drempeltabel op pagina <a class="pref" href="#sec-drempels"></a>.</div>
-  <p class="mq-brug mq-brug-sec">Organisatiebreed begint het gesprek bij Groeiperspectief. Bij Operations springt Werkdruk en herstelruimte eruit (4.9/10); bespreek dat voor die afdeling na het startpunt.</p>
+  <p class="mq-brug mq-brug-sec">Organisatiebreed begint het gesprek bij Groeiperspectief. Bij Operations springt Werkdruk en herstelruimte eruit (4.9/10); dat is ook het tweede punt, dus neem Operations daarin mee.</p>
   <div class="dir-block"><span class="eyebrow">Wat er moet gebeuren</span><p class="dir-intro">Elke respondent kreeg één vraag over het onderwerp dat bij die respondent het laagst scoorde: wat zou hier het meest helpen? Hieronder staat wat die respondenten kozen voor het startpunt en het tweede punt. Dit is hun keuze, geen advies van Loep.</p><p class="dir-chain dir-totals">Van de 39 respondenten kregen 39 de vraag, 34 beantwoordden hem, 5 sloegen over. 16 hadden groeiperspectief als laagste onderwerp, 11 werkdruk en herstelruimte; de overige 12 een ander onderwerp (leiderschap en vertrouwen 7, beloning en eerlijkheid 3, cultuur en psychologische veiligheid 1, rolhelderheid en eigenaarschap 1). Die antwoorden gaan over onderwerpen die niet op de agenda staan en zijn daarom niet uitgewerkt.</p><table class="dir-grid"><tr><td class="dir-card dir-clear"><div class="dir-role">Startpunt: Groeiperspectief</div><div class="dir-head">Voer een concreter gesprek over ontwikkeling.</div><div class="dir-src">Volgens 11 van de 15 (73%); die 15 zijn de mensen bij wie groeiperspectief het laagst scoorde en die de vraag beantwoordden.</div><table class="item-tbl dir-tbl"><tr><td class="iq">Een concreter gesprek over mijn ontwikkeling</td><td class="is">11 van de 15 (73%)</td></tr><tr><td class="iq">Beter zicht op welke mogelijkheden er voor mij zijn</td><td class="is">4 van de 15 (27%)</td></tr></table><div class="dir-chain">16 van de 39 respondenten hadden dit als eigen laagste onderwerp; 15 van de 16 beantwoordden de vraag, 1 sloeg over.</div></td><td class="dir-card dir-divided"><div class="dir-role">Tweede punt: Werkdruk en herstelruimte</div><div class="dir-head">Geen eenduidige richting.</div><div class="dir-src">De 10 die dit het laagst scoorden en de vraag beantwoordden kozen verschillend.</div><table class="item-tbl dir-tbl"><tr><td class="iq">Meer ruimte om te herstellen en werk goed af te ronden</td><td class="is">3 van de 10 (30%)</td></tr><tr><td class="iq">Niets, dit zit hier goed</td><td class="is">2 van de 10 (20%)</td></tr><tr><td class="iq">Planning en bezetting beter laten aansluiten op het werk dat er ligt</td><td class="is">2 van de 10 (20%)</td></tr><tr><td class="iq">Duidelijkere keuzes over wat voorrang heeft en wat kan wachten</td><td class="is">2 van de 10 (20%)</td></tr><tr><td class="iq">Piekmomenten en spoedwerk eerder plannen, verdelen of begrenzen</td><td class="is">1 van de 10 (10%)</td></tr></table><div class="dir-chain">11 van de 39 respondenten hadden dit als eigen laagste onderwerp; 10 van de 11 beantwoordden de vraag, 1 sloeg over.</div></td></tr></table></div>
   <div class="no-break agenda-slot">
-  <div class="wq-block" id="sec-werkvragen"><span class="eyebrow">Zo maak je er een besluit van</span><p class="dir-intro">Per gesprekspunt de vragen die het MT van ‘dit kozen je mensen’ naar ‘dit gaan wij doen’ brengen. Loep geeft hier geen advies; het besluit is aan jullie en komt op pagina <a class="pref" href="#sec-besluit"></a>.</p><table class="dir-grid wq-grid"><tr><td class="wq-card"><div class="dir-role">Startpunt: Groeiperspectief</div><table class="wq-tbl"><tr><td class="wq-stap">Herkennen</td><td class="wq-vraag">8 van de 16 (50%) kozen als toelichting ‘Ik zie niet welke mogelijkheden er voor mij zijn’; die 16 zijn de mensen die bij groeiperspectief duidelijk laag antwoordden en de verdiepende vraag beantwoordden. Waar zie je dat bij jullie terug, en waar niet?</td></tr><tr><td class="wq-stap">Vertalen</td><td class="wq-vraag">Wat weet een medewerker bij jullie ná een ontwikkelgesprek dat die ervoor niet wist: welke stap, welke opleiding, welk ander werk? Wie voert dat gesprek, en hoe vaak?</td></tr><tr><td class="wq-stap">Besluiten</td><td class="wq-vraag">Wat spreken jullie vandaag af, wie is eigenaar, en waaraan zie je over 90 dagen dat het werkt?</td></tr></table></td><td class="wq-card"><div class="dir-role">Tweede punt: Werkdruk en herstelruimte</div><table class="wq-tbl"><tr><td class="wq-stap">Herkennen</td><td class="wq-vraag">6 van de 12 (50%) kozen als toelichting ‘Er is te weinig ruimte om te herstellen of werk goed af te ronden’; die 12 zijn de mensen die bij werkdruk en herstelruimte duidelijk laag antwoordden en de verdiepende vraag beantwoordden. Waar zie je dat bij jullie terug, en waar niet?</td></tr><tr><td class="wq-stap">Vertalen</td><td class="wq-vraag">Deze groep koos verschillend; de verdeling staat hierboven. Met welke van de meest gekozen richtingen beginnen jullie, en welke laten jullie bewust liggen?</td></tr><tr><td class="wq-stap">Besluiten</td><td class="wq-vraag">Wat spreken jullie vandaag af, wie is eigenaar, en waaraan zie je over 90 dagen dat het werkt?</td></tr></table></td></tr></table></div>
-  <div class="agenda-dark" style="margin-top:16px;">
+  <div class="wq-block" id="sec-werkvragen"><span class="eyebrow">Zo maak je er een besluit van</span><p class="dir-intro">Per gesprekspunt de vragen die het MT van ‘dit kozen je mensen’ naar ‘dit gaan wij doen’ brengen. Loep geeft hier geen advies; het besluit is aan jullie en komt op pagina <a class="pref" href="#sec-besluit"></a>.</p><table class="dir-grid wq-grid"><tr><td class="wq-card"><div class="dir-role">Startpunt: Groeiperspectief</div><table class="wq-tbl"><tr><td class="wq-stap">Herkennen</td><td class="wq-vraag">8 van de 16 (50%) kozen als toelichting ‘Ik zie niet welke mogelijkheden er voor mij zijn’; die 16 zijn de mensen die bij groeiperspectief duidelijk laag antwoordden en de verdiepende vraag beantwoordden. Waar zie je dat bij jullie terug, en waar niet?</td></tr><tr><td class="wq-stap">Vertalen</td><td class="wq-vraag">Wat weet een medewerker bij jullie ná een ontwikkelgesprek dat die ervoor niet wist: welke stap, welke opleiding, welk ander werk? Wie voert dat gesprek, en hoe vaak?</td></tr><tr><td class="wq-stap">Besluiten</td><td class="wq-vraag">Wat spreken jullie vandaag af, wie is eigenaar, en waaraan zie je op het vervolgmoment dat het werkt?</td></tr></table></td><td class="wq-card"><div class="dir-role">Tweede punt: Werkdruk en herstelruimte</div><table class="wq-tbl"><tr><td class="wq-stap">Herkennen</td><td class="wq-vraag">6 van de 12 (50%) kozen als toelichting ‘Er is te weinig ruimte om te herstellen of werk goed af te ronden’; die 12 zijn de mensen die bij werkdruk en herstelruimte duidelijk laag antwoordden en de verdiepende vraag beantwoordden. Waar zie je dat bij jullie terug, en waar niet?</td></tr><tr><td class="wq-stap">Vertalen</td><td class="wq-vraag">Deze groep koos verschillend; de verdeling staat hierboven. Met welke van de meest gekozen richtingen beginnen jullie, en welke laten jullie bewust liggen?<div class="wq-weging">De meest gekozen richtingen zijn die met 3 en 2 stemmen op de kaart hierboven. ‘Niets, dit zit hier goed’, gekozen door 2 van de 10 (20%), is geen richting en telt hier niet mee.</div></td></tr><tr><td class="wq-stap">Besluiten</td><td class="wq-vraag">Wat spreken jullie vandaag af, wie is eigenaar, en waaraan zie je op het vervolgmoment dat het werkt?</td></tr></table></td></tr></table></div>
+  <div class="agenda-dark" style="margin-top:10px;">
     <div class="agenda-opener">
       <div style="font-family:'JetBrains Mono', monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#E8A020;margin-bottom:7px;">Gespreksopener</div>
       <p style="margin-bottom:0;font-size:12.5px;line-height:1.6;color:#F4F1EA;">De meest gekozen toelichting was &#x27;Ik zie niet welke mogelijkheden er voor mij zijn&#x27;. Herkennen jullie dat beeld, en wat zit erachter?</p>
@@ -715,7 +742,7 @@ h3 { font-family: 'Inter Tight', sans-serif; font-weight: 700;
   </div>
 </div><div class="pb sec besluit">
   <div class="ch-head" id="sec-besluit"><span class="ch-idx">09</span><h2 class="ch-title">Besluit van het MT</h2></div><hr class="ch-rule"><span class="ch-kicker">In te vullen door het MT</span>
-  <p class="sec-intro">Neem de uitkomst van ‘Zo maak je er een besluit van’ (pagina <a class="pref" href="#sec-agenda"></a>) hier over. Eén besluit dat iemand draagt is meer waard dan vijf voornemens.</p>
+  <p class="sec-intro">Neem de uitkomst van ‘Zo maak je er een besluit van’ (pagina <a class="pref" href="#sec-werkvragen"></a>) hier over. Eén besluit dat iemand draagt is meer waard dan vijf voornemens.</p>
   
   
   <table class="bl-rij"><tr>
@@ -732,15 +759,16 @@ h3 { font-family: 'Inter Tight', sans-serif; font-weight: 700;
   </tr></table>
   <div class="bl-blok">
     <div class="bl-lbl">Tweede punt</div><div class="bl-vast">Werkdruk en herstelruimte</div>
-    <div class="bl-lbl">Wat precies</div><div class="bl-line"></div><div class="bl-line"></div><div class="bl-line"></div>
+    <div class="bl-lbl">Wat precies</div><div class="bl-line"></div><div class="bl-line"></div><div class="bl-hint">Spreken jullie hier vandaag iets over af, schrijf dan bij ‘Wat precies’ ook wie het oppakt. Anders parkeren jullie dit punt: de eigenaar van het startpunt zet het op de agenda van het vervolgmoment.</div>
   </div>
+  <div class="bl-blok"><div class="bl-lbl">Afspraak per afdeling</div><div class="bl-vast">Operations: Werkdruk en herstelruimte</div><div class="bl-line"></div><div class="bl-hint">Dit onderwerp is ook het tweede punt; neem de afdeling daarin mee. Het rapport toont de toelichtingen alleen voor de hele organisatie. Wat vragen jullie deze afdeling zelf, wie doet dat, en wanneer?</div></div>
   <div class="bl-blok">
     <div class="bl-lbl">Terugkoppeling aan medewerkers</div>
     <table class="bl-drie"><tr><td><div class="bl-lbl">Wie</div><div class="bl-line"></div></td><td><div class="bl-lbl">Wanneer</div><div class="bl-line"></div></td><td><div class="bl-lbl">Wat</div><div class="bl-line"></div></td></tr></table>
-    <div class="bl-hint">Je mensen vulden in; ze horen wat het MT ermee doet.</div>
+    <div class="bl-hint">Deel het startpunt, het beeld van de hele organisatie en wat het MT besluit. Deel geen open antwoorden en geen uitkomsten van afdelingen met minder dan 10 antwoorden.</div>
   </div>
   <div class="bl-blok">
-    <div class="bl-lbl">Waaraan zien we dat het werkt</div><div class="bl-line"></div>
+    <div class="bl-lbl">Waaraan zien we bij het startpunt dat het werkt</div><div class="bl-line"></div>
   </div>
   <p class="trustline">Leg dit besluit ook vast in je dashboard. Loep drukt het dan voor in dit rapport en bewaart het bij deze meting.</p>
 </div><div class="sec">
