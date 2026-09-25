@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { SuiteAccessDenied } from '@/components/dashboard/suite-access-denied'
+import { DataPurgedCard } from '@/components/dashboard/data-purged-card'
+import { loadDataPurgedAt } from '@/lib/dashboard/data-purged'
 import { getScanDefinition } from '@/lib/scan-definitions'
 import {
   getDashboardModuleHref,
@@ -79,6 +81,26 @@ export default async function OpenAnswersPage({ params }: Props) {
 
   if (!statsRow) notFound()
   const stats = statsRow as CampaignStats
+
+  // Deel C (bewaartermijn): na de opschoning bestaan de open antwoorden niet
+  // meer. Dezelfde kaart als de campagnepagina, geen lege of 404-pagina.
+  const purgedAt = await loadDataPurgedAt(supabase, id)
+  if (purgedAt) {
+    return (
+      <div className="space-y-6">
+        <Link
+          href={`/campaigns/${id}`}
+          className="inline-flex text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:text-[color:var(--dashboard-ink)]"
+        >
+          &larr; Terug naar de meting
+        </Link>
+        <h1 className="text-xl font-semibold tracking-tight text-[color:var(--dashboard-ink)]">
+          Open antwoorden · {stats.campaign_name}
+        </h1>
+        <DataPurgedCard purgedAt={purgedAt} />
+      </div>
+    )
+  }
 
   // Toegang is hierboven al geverifieerd (canViewInsights + campaign_stats onder RLS).
   // Individuele responses lezen we na de audit-lockdown (H1) via de service-role; de
