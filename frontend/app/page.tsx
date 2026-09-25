@@ -3,7 +3,6 @@ import { PublicHeader } from '@/components/marketing/public-header'
 import { PublicFooter } from '@/components/marketing/public-footer'
 import { HomePageContent } from '@/components/marketing/home-page-content'
 import { buildContactHref } from '@/lib/contact-funnel'
-import { faqSchema } from '@/components/marketing/site-content'
 import { HOME_SCHEMA_DESCRIPTION, SITE_DESCRIPTION, SITE_TITLE } from '@/lib/site-meta'
 
 export const metadata: Metadata = {
@@ -35,7 +34,6 @@ export default function LandingPage() {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(homepageSchema) }} />
 
       <a

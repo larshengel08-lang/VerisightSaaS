@@ -35,7 +35,7 @@ describe('FAQ-JSON-LD na besluit A', () => {
     expect(antwoord('Wat kost een scan van Loep?')).toBe(pricingFaqAnswer())
   })
 
-  it('zet de prijsvraag ook in het schema dat de homepage rendert', () => {
+  it('zet de prijsvraag ook in het schema dat /producten rendert', () => {
     const entity = faqSchema.mainEntity.find((item) => item.name === 'Wat kost een scan van Loep?')
     expect(entity?.acceptedAnswer.text).toBe(pricingFaqAnswer())
   })
