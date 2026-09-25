@@ -9,6 +9,7 @@ import { DeleteOrgButton } from '@/components/dashboard/delete-org-button'
 import { InviteClientUserForm } from '@/components/dashboard/invite-client-user-form'
 import { NewCampaignForm } from '@/components/dashboard/new-campaign-form'
 import { NewOrgForm } from '@/components/dashboard/new-org-form'
+import { dataPurgedLabel, loadDataPurgedAtByCampaign } from '@/lib/dashboard/data-purged'
 import { getDeliveryModeLabel } from '@/lib/implementation-readiness'
 import { getDisplaySignalBand, type DisplaySignalBand } from '@/lib/management-language'
 import { getScanDefinition } from '@/lib/scan-definitions'
@@ -102,6 +103,11 @@ export default async function BeheerPage() {
     : { data: [] }
 
   const campaignStats = (campaignStatsRaw ?? []) as CampaignStats[]
+  // Deel C (bewaartermijn): opgeschoonde metingen tonen de reden, niet 0 ingevuld.
+  const purgedByCampaign = await loadDataPurgedAtByCampaign(
+    supabase,
+    campaignStats.map((stats) => stats.campaign_id),
+  )
 
   const { data: invitesRaw } = orgIds.length
     ? await supabase
@@ -479,6 +485,7 @@ export default async function BeheerPage() {
                   <tbody className="divide-y divide-slate-100">
                     {campaignStats.map((stats) => {
                       const pct = stats.completion_rate_pct ?? 0
+                      const purgedAt = purgedByCampaign.get(stats.campaign_id) ?? null
                       const org = orgs.find((item) => item.id === stats.organization_id)
                       // Weergave op de rapportschaal: retention/onboarding tonen hoog = goed,
                       // de andere scans blijven op de risicoschaal (hoog = meer frictie).
@@ -501,9 +508,15 @@ export default async function BeheerPage() {
                               }`}
                             >
                               <span className={`h-1.5 w-1.5 rounded-full ${stats.is_active ? 'bg-emerald-600' : 'bg-slate-400'}`} />
-                              {stats.is_active ? 'Actief' : 'Gesloten'}
+                              {purgedAt ? 'Verwijderd' : stats.is_active ? 'Actief' : 'Gesloten'}
                             </span>
                           </td>
+                          {purgedAt ? (
+                            <td colSpan={4} className="px-5 py-3 text-right text-xs font-semibold text-slate-500">
+                              {dataPurgedLabel(purgedAt)}
+                            </td>
+                          ) : (
+                          <>
                           <td className="px-5 py-3 text-right tabular-nums text-slate-700">{stats.total_invited ?? 0}</td>
                           <td className="px-5 py-3 text-right tabular-nums text-slate-700">{stats.total_completed ?? 0}</td>
                           <td className="px-5 py-3 text-right">
@@ -528,6 +541,8 @@ export default async function BeheerPage() {
                               <span className="text-xs text-slate-300">n.b.</span>
                             )}
                           </td>
+                          </>
+                          )}
                           <td className="px-4 py-3">
                             <a
                               href={`/campaigns/${stats.campaign_id}`}

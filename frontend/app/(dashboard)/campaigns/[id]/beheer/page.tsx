@@ -1,5 +1,6 @@
 import { notFound, redirect } from 'next/navigation'
 import { SuiteAccessDenied } from '@/components/dashboard/suite-access-denied'
+import { DataPurgedCard } from '@/components/dashboard/data-purged-card'
 import { createClient } from '@/lib/supabase/server'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import { fetchRouteBeheerData } from './beheer-data'
@@ -78,6 +79,8 @@ export default async function RouteBeheerPage({ params, searchParams }: Props) {
         </div>
       ) : null}
       <RouteBeheerHeader data={data} />
+      {/* Deel C (bewaartermijn): de tellingen hieronder zijn na de opschoning 0. */}
+      {data.dataPurgedAt ? <DataPurgedCard purgedAt={data.dataPurgedAt} /> : null}
       <RouteBeheerStructuredBody
         data={data}
         initialSelectedPhaseKey={normalizeSelectedPhase(resolvedSearchParams?.fase)}
