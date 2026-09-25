@@ -78,6 +78,7 @@ import calendar
 import logging
 import sys
 import uuid
+import weakref
 from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
 from typing import Callable, Iterable
@@ -239,13 +240,31 @@ def migratie_gedraaid(db: Session) -> bool:
             and "retention_months" in _kolommen(db, "organizations"))
 
 
+# Databases (engines) waarop campaigns.data_purged_at al eens bestond. Na de
+# migratie verdwijnt de kolom niet meer, dus één keer "ja" is genoeg en elke
+# rapport- of API-aanvraag spaart een schema-inspectie uit. "Nee" wordt bewust
+# niet onthouden: dan ziet een draaiende server de migratie zonder herstart.
+# Per engine en zwak gehouden, zodat een nieuwe (test)database opnieuw kijkt.
+_PURGED_KOLOM_GEZIEN: "weakref.WeakSet[object]" = weakref.WeakSet()
+
+
+def _heeft_purged_kolom(db: Session) -> bool:
+    bind = db.get_bind()
+    if bind in _PURGED_KOLOM_GEZIEN:
+        return True
+    if "data_purged_at" not in _kolommen(db, "campaigns"):
+        return False
+    _PURGED_KOLOM_GEZIEN.add(bind)
+    return True
+
+
 def data_purged_at(db: Session, campaign_id: str) -> datetime | None:
     """Wanneer de gegevens van deze meting zijn verwijderd, of None.
 
     Zonder de kolom kan er niets zijn opgeschoond: opschonen() weigert --apply
     zonder migratie. None is dan de waarheid, geen terugval.
     """
-    if "data_purged_at" not in _kolommen(db, "campaigns"):
+    if not _heeft_purged_kolom(db):
         return None
     return db.execute(_Q_PURGED, {"id": campaign_id}).scalar()
 

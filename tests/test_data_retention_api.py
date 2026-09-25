@@ -13,6 +13,7 @@ import pytest
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from backend import data_retention as dr
 from backend.data_retention import ReportDataPurged
 from backend.models import Campaign, Organization, OrganizationSecret, Respondent
 
@@ -73,7 +74,7 @@ def test_andere_organisatie_krijgt_404_en_leert_niets(client, db_session: Sessio
 def test_onbekende_sleutel_krijgt_geen_410(client, db_session: Session, pad):
     cid = _meting(db_session, met_kolom=True, opgeschoond=True)
     res = client.get(pad.format(id=cid), headers={"x-api-key": "fout"})
-    assert res.status_code != 410
+    assert res.status_code == 401
     assert "verwijderd" not in res.text
 
 
@@ -124,7 +125,74 @@ def test_dezelfde_zin_in_backend_en_dashboard():
     assert onbekend == str(ReportDataPurged(None))
 
 
+def test_middernacht_valt_in_beide_op_de_nederlandse_dag():
+    """23:30 UTC op 1 januari is 00:30 op 2 januari in Nederland. De backend
+    (_datum_nl) leest de Nederlandse kalenderdag; de frontend (formatDutchDate)
+    ook, via timeZone Europe/Amsterdam. Beide moeten "2 januari 2027" zeggen."""
+    moment = datetime(2027, 1, 1, 23, 30, tzinfo=timezone.utc)
+    assert "zijn op 2 januari 2027 verwijderd" in str(ReportDataPurged(moment))
+    datum = (_FRONTEND / "dashboard" / "format-dutch-date.ts").read_text(encoding="utf-8")
+    assert "timeZone: 'Europe/Amsterdam'" in datum
+    test = (_FRONTEND / "dashboard" / "data-purged.test.ts").read_text(encoding="utf-8")
+    assert "dataPurgedReason('2027-01-01T23:30:00Z')" in test
+    assert "zijn op 2 januari 2027 verwijderd" in test
+
+
 def test_downloadknop_herkent_de_backendzin():
     backend = str(ReportDataPurged(datetime(2027, 1, 2, 3, 0, tzinfo=timezone.utc)))
     bron = (_FRONTEND / "report-download-error.ts").read_text(encoding="utf-8")
     assert backend.startswith(_ts_string(bron, "PURGED_DETAIL_PREFIX"))
+
+
+# ── Kolomcheck: één keer "ja" onthouden, "nee" nooit ────────────────────────
+
+def test_kolom_bestaat_wordt_onthouden(db_session: Session, monkeypatch):
+    cid = _meting(db_session, met_kolom=True, opgeschoond=True)
+    assert dr.data_purged_at(db_session, cid) is not None
+    aanroepen: list[str] = []
+    echt = dr._kolommen
+
+    def tel(db, tabel):
+        aanroepen.append(tabel)
+        return echt(db, tabel)
+
+    monkeypatch.setattr(dr, "_kolommen", tel)
+    for _ in range(3):
+        with pytest.raises(ReportDataPurged):
+            dr.ensure_report_data_available(db_session, cid)
+    assert aanroepen == []
+
+
+def test_ontbrekende_kolom_wordt_niet_onthouden(db_session: Session):
+    """Zonder kolom: geen opschoning. Draait de migratie daarna, dan ziet
+    dezelfde (draaiende) server dat meteen, zonder herstart."""
+    cid = _meting(db_session, met_kolom=False, opgeschoond=False)
+    assert dr.data_purged_at(db_session, cid) is None
+    assert dr.data_purged_at(db_session, cid) is None
+    db_session.execute(text("alter table campaigns add column data_purged_at timestamp"))
+    db_session.execute(text("update campaigns set data_purged_at = :ts where id = :id"),
+                       {"ts": datetime(2027, 1, 2, 3, 0), "id": cid})
+    db_session.commit()
+    with pytest.raises(ReportDataPurged):
+        dr.ensure_report_data_available(db_session, cid)
+
+
+def test_onthouden_geldt_per_database(db_session: Session):
+    """Een andere database zonder de kolom leert niets van de eerste."""
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+    from sqlalchemy.pool import StaticPool
+    from backend.models import Base
+
+    cid = _meting(db_session, met_kolom=True, opgeschoond=True)
+    assert dr.data_purged_at(db_session, cid) is not None
+    engine = create_engine("sqlite://", connect_args={"check_same_thread": False},
+                           poolclass=StaticPool)
+    Base.metadata.create_all(bind=engine)
+    ander = sessionmaker(bind=engine)()
+    try:
+        cid2 = _meting(ander, met_kolom=False, opgeschoond=False, slug="org-ander-db")
+        assert dr.data_purged_at(ander, cid2) is None   # geen fout op een ontbrekende kolom
+    finally:
+        ander.close()
+        engine.dispose()
