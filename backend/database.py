@@ -39,21 +39,22 @@ _DEFAULT_DB_PATH = _ROOT / "data" / "Loep.db"
 _DEFAULT_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 def normalize_database_url(url: str) -> str:
-    """Zet een Postgres-URL om naar de driver die in het image zit (psycopg2).
+    """Kies expliciet psycopg2 voor elke Postgres-URL.
 
-    Connection strings uit een dashboard beginnen soms met ``postgres://`` of
-    ``postgresql+psycopg://`` (psycopg 3). Die driver staat niet in
-    requirements.txt, en dan start de service niet (25-9: ModuleNotFoundError
-    'psycopg'). De omzetting wordt gelogd, zodat zichtbaar blijft dat de
-    variabele een andere vorm had.
+    Het image heeft alleen psycopg2. SQLAlchemy 2.1 kiest voor ``postgresql://``
+    standaard psycopg 3, en een dashboard levert soms ``postgres://`` of
+    ``postgresql+psycopg://``. Zonder expliciete driver startte de service dan
+    niet (25-9 en 4-10: ModuleNotFoundError 'psycopg'). Een omgezette vorm
+    wordt gelogd, zodat zichtbaar blijft dat de variabele anders luidde.
     """
-    for prefix in ("postgresql+psycopg://", "postgres://"):
+    for prefix in ("postgresql+psycopg://", "postgres://", "postgresql://"):
         if url.startswith(prefix):
-            logger.warning(
-                "DATABASE_URL begint met %s; omgezet naar postgresql:// (psycopg2).",
-                prefix,
-            )
-            return "postgresql://" + url[len(prefix):]
+            if prefix != "postgresql://":
+                logger.warning(
+                    "DATABASE_URL begint met %s; omgezet naar postgresql+psycopg2://.",
+                    prefix,
+                )
+            return "postgresql+psycopg2://" + url[len(prefix):]
     return url
 
 

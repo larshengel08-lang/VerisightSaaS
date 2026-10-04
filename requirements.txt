@@ -6,7 +6,9 @@ fastapi>=0.111.0
 uvicorn[standard]>=0.29.0
 
 # Database — SQLAlchemy ORM + PostgreSQL driver (Supabase)
-sqlalchemy>=2.0.0
+# <2.1: SQLAlchemy 2.1 maakt psycopg 3 de standaarddriver voor postgresql://;
+# dit image heeft psycopg2 (4-10: elke nieuwe Railway-build crashte daarop).
+sqlalchemy>=2.0.0,<2.1
 psycopg2-binary>=2.9.0
 
 # Template engine (survey HTML)
