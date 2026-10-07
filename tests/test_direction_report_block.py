@@ -274,9 +274,14 @@ def test_bestuurlijke_read_renders_direction_line_only_when_given():
 
 # ── Ronde 2 par. 4: plurality en split_none ──────────────────────────
 
-# Scenario 11: 27 van de 62 (44%), voorsprong 12 op de niets-groep.
-PLURALITY = _agg(62, {"grd_visibility": 27, "grd_none": 15, "grd_conversation": 10,
-                      "grd_criteria": 6, "grd_time": 4}, skipped=0)
+# Spec 2026-10-07 par. 3: niets telt niet mee; was scenario 11 (27 van de 62,
+# niets 15, gesprek 10, criteria 6, tijd 4). Die verdeling is op de
+# inhoudelijke stemmen 27 van de 47 met voorsprong 17 en dus clear (gepind in
+# test_direction_state_plurality). Deze fixture blijft plurality onder beide
+# regels: 27 van de 70 op alle beantwoorders, 27 van de 55 (0,49) op de
+# veranderstemmen, voorsprong 17 op gesprek en 12 op de niets-groep.
+PLURALITY = _agg(70, {"grd_visibility": 27, "grd_none": 15, "grd_conversation": 10,
+                      "grd_criteria": 10, "grd_time": 8}, skipped=0)
 # Scenario 13: 14 tegenover 14 op een factor die 4,5 scoort.
 SPLIT_NONE = _agg(31, {"grd_none": 14, "grd_visibility": 14, "grd_conversation": 3},
                   skipped=0)
@@ -299,15 +304,15 @@ def test_plurality_card_names_the_largest_group_without_claiming_a_majority():
     assert 'class="dir-card dir-plurality"' in html
     assert ("De grootste groep kiest ‘Beter zicht op welke mogelijkheden er voor "
             "mij zijn’, zonder meerderheid.") in html
-    assert ("27 van de 62 (44%) kozen die richting; 15 kozen ‘Niets, dit zit hier goed’. "
-            "Die 62 zijn de mensen bij wie groeiperspectief het laagst scoorde en die de "
+    assert ("27 van de 70 (39%) kozen die richting; 15 kozen ‘Niets, dit zit hier goed’. "
+            "Die 70 zijn de mensen bij wie groeiperspectief het laagst scoorde en die de "
             "vraag beantwoordden. Wat er volgens de grootste groep moet gebeuren: Maak "
             "zichtbaar welke mogelijkheden er voor medewerkers zijn.") in html
     # Nooit een meerderheidsclaim, en de percentages blijven binnen de staffel.
     assert "volgens de meeste" not in html
-    assert "27 van de 62 (44%)" in html
-    assert ("62 van de 180 respondenten hadden dit als eigen laagste onderwerp; "
-            "62 van de 62 beantwoordden de vraag.") in html
+    assert "27 van de 70 (39%)" in html
+    assert ("70 van de 180 respondenten hadden dit als eigen laagste onderwerp; "
+            "70 van de 70 beantwoordden de vraag.") in html
 
 
 def test_plurality_card_without_a_runner_up_makes_no_second_claim():
@@ -350,7 +355,10 @@ def test_split_none_beslist_op_de_getoonde_score_niet_op_de_rauwe():
                                     agg=SPLIT_NONE, scan_type="retention",
                                     factor_key="growth", n_total=45,
                                     factor_score=4.96)
-    assert 'class="dir-card dir-divided"' in net_niet
+    # Spec 2026-10-07 par. 3: niets telt niet mee; was divided.
+    # Niet kwetsbaar, dus geen split_none; op de veranderstemmen is het 14 van
+    # de 17 met voorsprong 11 op gesprek: clear.
+    assert 'class="dir-card dir-clear"' in net_niet
     assert "op een onderwerp dat laag scoort" not in net_niet.lower()
     assert "5.0/10" not in net_niet
 
@@ -431,7 +439,9 @@ def test_new_states_stay_out_without_a_known_factor_score():
     html = _direction_card_cell("startpunt", label="Groeiperspectief", agg=SPLIT_NONE,
                                 scan_type="retention", factor_key="growth", n_total=45,
                                 factor_score=None)
-    assert 'class="dir-card dir-divided"' in html
+    # Spec 2026-10-07 par. 3: niets telt niet mee; was divided.
+    # Geen split_none zonder score; 14 van de 17 veranderstemmen is clear.
+    assert 'class="dir-card dir-clear"' in html
     assert "een deel zegt dat hier niets hoeft" not in html
 
 
@@ -490,7 +500,7 @@ def test_p02_line_for_the_new_states():
         # Geen haakje om een telling die zelf een percentage tussen haakjes
         # draagt (taalronde, taak 13): de nuance staat tussen komma's, zoals de
         # clear-tak zijn noemer al achter "volgens" zet.
-        "Wat er moet gebeuren volgens de grootste groep, 27 van de 62 (44%) die "
+        "Wat er moet gebeuren volgens de grootste groep, 27 van de 70 (39%) die "
         "dit het laagst scoorden en de vraag beantwoordden, zonder meerderheid: Maak "
         "zichtbaar welke mogelijkheden er voor medewerkers zijn.")
     assert _direction_p02_line({"growth": SPLIT_NONE}, "growth", "retention",
@@ -498,10 +508,15 @@ def test_p02_line_for_the_new_states():
         "Wat er moet gebeuren: de 31 die dit het laagst scoorden en de vraag beantwoordden "
         "zijn hierover verdeeld. 14 zeggen dat hier niets hoeft, 14 vragen om "
         "‘Beter zicht op welke mogelijkheden er voor mij zijn’.")
-    # Zonder bekende score blijft de oude regel staan: onbekend is niet laag.
-    assert _direction_p02_line({"growth": SPLIT_NONE}, "growth", "retention", None) == (
-        "Over wat hier moet gebeuren zijn de 31 die dit het laagst scoorden "
-        "en de vraag beantwoordden verdeeld. Zie de gespreksagenda.")
+    # Zonder bekende score geen split_none-regel: onbekend is niet laag.
+    # Spec 2026-10-07 par. 3: niets telt niet mee; was divided ("Over wat hier
+    # moet gebeuren zijn de 31 ... verdeeld. Zie de gespreksagenda."). Op de
+    # veranderstemmen is het 14 van de 17 met voorsprong 11: de clear-regel. De
+    # exacte tellingsvorm daarvan bij niets-stemmen pint Taak 7.
+    zonder_score = _direction_p02_line({"growth": SPLIT_NONE}, "growth", "retention", None)
+    assert "zijn hierover verdeeld" not in zonder_score
+    assert zonder_score.startswith("Wat er moet gebeuren volgens ")
+    assert zonder_score.endswith("Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.")
 
 
 def test_p02_split_none_line_is_singular_correct():

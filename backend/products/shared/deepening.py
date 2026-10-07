@@ -1085,8 +1085,12 @@ DEEPENING_MIN_N = 8
 DIRECTION_OTHER_WARN_N = DEEPENING_MIN_N
 
 # Grootste groep zonder meerderheid (spec ronde 2 par. 4.2). Onder ruim een
-# derde van de beantwoorders is "de grootste groep" geen zinvolle uitspraak
-# meer; daarboven met een voorsprong van TOP_CHOICE_MIN_LEAD wel.
+# derde van de inhoudelijke stemmen is "de grootste groep" geen zinvolle
+# uitspraak meer; daarboven met een voorsprong van TOP_CHOICE_MIN_LEAD wel.
+# Sinds spec 2026-10-07 par. 3 rekent zowel het aandeel als de voorsprong op
+# de stemmen van wie om verandering vroeg: de noemer is change_n (alle
+# beantwoorders minus de niets-stemmen) en de voorsprong wordt tegen de andere
+# veranderopties gemeten, niet tegen de niets-optie.
 DIRECTION_PLURALITY_MIN_SHARE = 0.35
 # Verdeeld over wel of niets (spec ronde 2 par. 4.3): alleen op een factor die
 # kwetsbaar scoort. Dat is dezelfde grens als ZONE_LOW in report_distribution,
@@ -1173,13 +1177,32 @@ def aggregate_direction(
 def direction_state(agg: dict[str, Any], factor_key: str,
                     factor_score: float | None) -> dict[str, Any]:
     """Staat van het richtingblok voor een factor (spec par. 5.4, uitgebreid in
-    stresstest ronde 2 par. 4), geëvalueerd in de volgorde
-    too_few -> none_needed -> clear -> split_none -> plurality -> divided.
+    stresstest ronde 2 par. 4 en in spec 2026-10-07 par. 3), geëvalueerd in de
+    volgorde too_few -> none_needed -> split_none -> clear -> plurality -> divided.
 
-    Tussen clear en split_none liggen twee vroege uitgangen naar divided: er is
-    geen enkele veranderoptie gekozen, of de grootste veranderoptie is *_other.
-    Beide staten hieronder tonen een opdrachtvorm, en die bestaat voor *_other
-    niet; zonder veranderoptie valt er sowieso niets te tonen.
+    Vóór split_none liggen twee vroege uitgangen naar divided: er is geen enkele
+    veranderoptie gekozen, of de grootste veranderoptie is *_other. De staten
+    daarna tonen een opdrachtvorm, en die bestaat voor *_other niet; zonder
+    veranderoptie valt er sowieso niets te tonen.
+
+    Inhoudelijke stemmen (besluit Lars 7-10, spec 2026-10-07 par. 3): clear en
+    plurality worden bepaald op de stemmen van wie om verandering vroeg, niet op
+    alle beantwoorders. Wie "niets, dit zit hier goed" kiest, zegt dat er geen
+    richting nodig is, en dat telt al in none_needed en split_none; de keuze
+    tussen routes maken alleen de mensen die er een kozen. Daarom staat
+    split_none nu vóór clear: anders zou een groep die half niets en half één
+    route kiest op een kwetsbaar onderwerp als eenduidige richting lezen. De
+    noemer is change_n = n - none_n. Een `answered`-rij zonder keuze
+    (datadefect, zie aggregate_direction) telt daardoor als inhoudelijk mee in
+    de noemer en nooit in de teller; dat maakt de drempel alleen strenger, de
+    veilige kant. De bestaande drempels (vloer DIRECTION_MIN_N, meerderheid,
+    voorsprong TOP_CHOICE_MIN_LEAD) gelden ongewijzigd, nu op change_n. De
+    vloer geldt voor clear én plurality: plurality is per definitie de staat
+    zonder meerderheid, en onder de vloer (bijv. 2 van de 2) zou de
+    plurality-tak een meerderheid opvangen die alleen door de vloer geen clear
+    werd. Ten opzichte van de oude regel kan een staat daardoor alleen omhoog:
+    divided -> plurality, divided -> clear of plurality -> clear (gepind in
+    test_direction_state_inhoudelijk).
 
     factor_score is VERPLICHT en moet de GETOONDE score zijn: de waarde die de
     lezer op dezelfde pagina ziet, dus afgerond op één decimaal via _shown in
@@ -1193,16 +1216,22 @@ def direction_state(agg: dict[str, Any], factor_key: str,
     valt de split_none-tak weg, want "dit onderwerp scoort laag" is dan
     onbekend, en onbekend mag nooit als kwetsbaar gelden.
 
-    Retourneert altijd {state, n, top_key, top_n, second_n, none_n, none_key,
-    ranked}; none_key staat erbij zodat de renderer de niets-optie met haar
-    eigen (scan-specifieke, dus voor Loep Vertrek verleden-tijd) tekst kan
-    citeren in plaats van met een hardgecodeerde zin.
+    Retourneert altijd {state, n, change_n, top_key, top_n, second_n, none_n,
+    none_key, ranked}; none_key staat erbij zodat de renderer de niets-optie met
+    haar eigen (scan-specifieke, dus voor Loep Vertrek verleden-tijd) tekst kan
+    citeren in plaats van met een hardgecodeerde zin. change_n is in too_few 0
+    (niet berekend, net als top_n en none_n daar) en in alle andere staten
+    n - none_n. In clear en plurality verwijzen top_key, top_n en second_n naar
+    de veranderopties (second_n = de op één na grootste veranderoptie, *_other
+    meegerekend, 0 als die er niet is); in split_none naar de grootste
+    veranderoptie met second_n 0; in none_needed naar de niets-optie; in
+    divided naar de top van alle opties.
     """
     n = agg["answered"]
     counts: dict[str, int] = agg.get("counts") or {}
     ranked = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
-    base: dict[str, Any] = {"n": n, "ranked": ranked, "top_key": None, "top_n": 0,
-                            "second_n": 0, "none_n": 0, "none_key": None}
+    base: dict[str, Any] = {"n": n, "change_n": 0, "ranked": ranked, "top_key": None,
+                            "top_n": 0, "second_n": 0, "none_n": 0, "none_key": None}
     if n < DIRECTION_MIN_N:
         return {**base, "state": "too_few"}
     if not counts:
@@ -1213,59 +1242,76 @@ def direction_state(agg: dict[str, Any], factor_key: str,
     # en de ratio verwijzen gegarandeerd naar hetzelfde getal.
     # Strikte meerderheid (> 0.5), niet >= 0.5: de kop van dit blok zegt "volgens
     # de meeste betrokkenen", en precies de helft is niet "de meeste" (B11).
-    # Op precies de helft valt de factor door naar de logica hieronder; de
-    # clear-tak sluit *_none expliciet uit, dus dat landt op split_none of
-    # divided en nooit op een opdrachtvorm die zegt dat er niets hoeft. Ook
-    # split_none doet dat niet: die toont het verschil van inzicht en de
-    # opdrachtvorm van de veranderoptie, niet die van de niets-optie (die
-    # bestaat ook niet: *_none heeft geen imperative).
+    # Op precies de helft valt de factor door naar de logica hieronder; clear
+    # en plurality kijken alleen naar veranderopties, dus dat landt op
+    # split_none, een routestaat of divided en nooit op een opdrachtvorm die
+    # zegt dat er niets hoeft. Ook split_none doet dat niet: die toont het
+    # verschil van inzicht en de opdrachtvorm van de veranderoptie, niet die van
+    # de niets-optie (die bestaat ook niet: *_none heeft geen imperative).
     none_key = next((k for k in sorted(counts) if k.endswith("_none")), None)
     none_n = counts.get(none_key, 0) if none_key is not None else 0
-    base.update(none_key=none_key, none_n=none_n)
+    # Noemer van de inhoudelijke stemmen (spec 2026-10-07 par. 3). Een
+    # answered-rij zonder keuze telt hier mee en nooit in een teller: strenger.
+    change_n = n - none_n
+    base.update(none_key=none_key, none_n=none_n, change_n=change_n)
     if none_key is not None and none_n / n > 0.5:
         return {**base, "state": "none_needed",
                 "top_key": none_key, "top_n": none_n}
     top_key, top_n = ranked[0]
     second_n = ranked[1][1] if len(ranked) > 1 else 0
     base.update(top_key=top_key, top_n=top_n, second_n=second_n)
+    # Reviewvlag op de top van ALLE opties, niets meegerekend (ongewijzigd):
+    # het gaat om de optieset, niet om de staat.
     if top_key.endswith("_other") and n >= DIRECTION_OTHER_WARN_N:
         logger.warning("direction: *_other is topoptie voor %s - optieset review nodig",
                        factor_key)
-    if (not top_key.endswith(("_none", "_other"))
-            and top_n / n >= 0.5 and top_n - second_n >= TOP_CHOICE_MIN_LEAD):
-        return {**base, "state": "clear"}
-    # Vanaf hier draait alles om de grootste optie die om verandering vraagt:
-    # de niets-optie is dat per definitie niet, en *_other heeft geen
+    # Vanaf hier draait alles om de opties die om verandering vragen: de
+    # niets-optie is dat per definitie niet, en *_other heeft geen
     # opdrachtvorm, dus daar valt niet uit af te leiden wat er moet gebeuren.
     change_ranked = [(k, c) for k, c in ranked if k != none_key]
     if not change_ranked:
         return {**base, "state": "divided"}
-    change_key, change_n = change_ranked[0]
+    change_key, change_top = change_ranked[0]
     if change_key.endswith("_other"):
         return {**base, "state": "divided"}
     # Verdeeld over wel of niets, op een onderwerp dat laag scoort: het verschil
     # van inzicht tussen die twee groepen is zelf de bevinding (par. 4.3). De
     # niets-groep mag er een achter liggen ("grootste of gedeeld-grootste") en
-    # mag ook groter zijn; in beide gevallen is de vraag dezelfde.
+    # mag ook groter zijn; in beide gevallen is de vraag dezelfde. Staat vóór
+    # clear (spec 2026-10-07 par. 3): clear kijkt alleen nog naar de
+    # veranderstemmen, en zou een groep die half niets en half één route kiest
+    # anders als eenduidige richting lezen.
     if (factor_score is not None and factor_score < DIRECTION_SPLIT_NONE_MAX_SCORE
-            and none_key is not None and none_n >= change_n - 1):
+            and none_key is not None and none_n >= change_top - 1):
         # second_n bewust op 0: in deze staat zijn none_n en top_n het paar dat
         # de bevinding draagt, en "de tweede optie" heeft hier geen betekenis.
         # De waarde uit base wijst na de overschrijving van top_key naar de rij
         # die vóór die overschrijving tweede was, en dat kan top_key zelf zijn.
         return {**base, "state": "split_none",
-                "top_key": change_key, "top_n": change_n, "second_n": 0}
-    # Grootste groep zonder meerderheid (par. 4.2). De voorsprong wordt tegen
-    # ALLE andere opties gemeten, de niets-optie meegerekend, zodat "de grootste
-    # groep" letterlijk waar is. Samen met de clear-tak hierboven garandeert dat
-    # ook dat deze staat nooit een meerderheid heeft: bij >= 50% met dezelfde
-    # voorsprong was de staat al clear.
-    rest = [c for k, c in ranked if k != change_key]
-    runner_up = max(rest) if rest else 0
-    if (change_n / n >= DIRECTION_PLURALITY_MIN_SHARE
-            and change_n - runner_up >= TOP_CHOICE_MIN_LEAD):
+                "top_key": change_key, "top_n": change_top, "second_n": 0}
+    # Tweede veranderoptie, *_other meegerekend (dat is ook een vraag om
+    # verandering, alleen zonder opdrachtvorm); de niets-optie niet.
+    second_change = change_ranked[1][1] if len(change_ranked) > 1 else 0
+    # Vloer op de inhoudelijke stemmen, voor clear én plurality: onder
+    # DIRECTION_MIN_N veranderstemmen is er geen route aan te wijzen, en zonder
+    # deze vloer zou plurality een meerderheid (bijv. 2 van de 2) opvangen die
+    # alleen door de vloer geen clear werd.
+    if change_n < DIRECTION_MIN_N:
+        return {**base, "state": "divided"}
+    if (change_top / change_n >= 0.5
+            and change_top - second_change >= TOP_CHOICE_MIN_LEAD):
+        return {**base, "state": "clear",
+                "top_key": change_key, "top_n": change_top, "second_n": second_change}
+    # Grootste groep zonder meerderheid (par. 4.2). De voorsprong wordt tegen de
+    # andere VERANDEROPTIES gemeten (*_other meegerekend, de niets-optie niet;
+    # spec 2026-10-07 par. 3), zodat "de grootste groep van wie om verandering
+    # vroeg" letterlijk waar is. Samen met de clear-tak hierboven garandeert dat
+    # ook dat deze staat nooit een meerderheid van de veranderstemmen heeft: bij
+    # >= 50% met dezelfde voorsprong was de staat al clear.
+    if (change_top / change_n >= DIRECTION_PLURALITY_MIN_SHARE
+            and change_top - second_change >= TOP_CHOICE_MIN_LEAD):
         return {**base, "state": "plurality",
-                "top_key": change_key, "top_n": change_n, "second_n": runner_up}
+                "top_key": change_key, "top_n": change_top, "second_n": second_change}
     return {**base, "state": "divided"}
 
 

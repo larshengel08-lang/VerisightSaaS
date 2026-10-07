@@ -427,8 +427,12 @@ def _dir_agg(answered, counts, *, skipped=0, lowest=None, offered=None):
 STATEN = {
     "clear": (_dir_agg(10, {"grd_visibility": 8, "grd_none": 1, "grd_time": 1}, skipped=3), 5.1),
     "none_needed": (_dir_agg(10, {"grd_none": 6, "grd_visibility": 3, "grd_time": 1}, skipped=3), 5.1),
-    "plurality": (_dir_agg(10, {"grd_visibility": 4, "grd_none": 2, "grd_time": 2,
-                                "grd_criteria": 2}, skipped=3), 5.2),
+    # Spec 2026-10-07 par. 3: niets telt niet mee; was plurality met
+    # {visibility 4, niets 2, time 2, criteria 2}, dat op de veranderstemmen
+    # 4 van de 8 met voorsprong 2 is en dus clear. Nu 4 van de 9 (0,44),
+    # voorsprong 2: plurality onder beide regels.
+    "plurality": (_dir_agg(10, {"grd_visibility": 4, "grd_none": 1, "grd_time": 2,
+                                "grd_criteria": 2, "grd_conversation": 1}, skipped=3), 5.2),
     "split_none": (_dir_agg(10, {"grd_none": 4, "grd_visibility": 4, "grd_time": 2}, skipped=3), 4.5),
     "divided": (_dir_agg(10, {"grd_visibility": 4, "grd_time": 4, "grd_criteria": 2}, skipped=3), 5.4),
 }

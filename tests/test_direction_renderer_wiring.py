@@ -84,4 +84,11 @@ def test_niet_kwetsbaar_geeft_op_beide_plekken_de_oude_regel(html_fn):
     split_none-zin, zodat deze test ook echt op de score toetst."""
     html = html_fn(score=6.0)
     assert "een deel zegt dat hier niets hoeft" not in html
-    assert "Zie de gespreksagenda." in _p02_direction_line(html)
+    # Spec 2026-10-07 par. 3: niets telt niet mee; was divided.
+    # Niets 5 van 12, dus change_n = 7: piekmomenten 5 van 7 met voorsprong 3
+    # op scope is clear. Op p.02 dus de clear-regel, niet de split_none-regel;
+    # de exacte tellingsvorm pint Taak 7, hier alleen welke regel het is.
+    line = _p02_direction_line(html)
+    assert "zijn hierover verdeeld" not in line
+    assert "Zie de gespreksagenda." not in line
+    assert line.startswith("Wat er moet gebeuren volgens ")
