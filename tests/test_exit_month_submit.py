@@ -159,6 +159,8 @@ def test_survey_pagina_toont_vertrekmaandvraag_zonder_hr_waarde(client, db_sessi
     select_match = re.search(r'<select name="exit_month"[^>]*>', html)
     assert select_match, "select exit_month niet gevonden"
     assert "required" not in select_match.group(0)
+    assert 'aria-describedby="exit-month-help"' in select_match.group(0)
+    assert 'id="exit-month-help"' in html
 
 
 def test_survey_pagina_verbergt_vertrekmaandvraag_met_hr_waarde(client, db_session: Session):

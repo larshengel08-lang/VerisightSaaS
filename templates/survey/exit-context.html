@@ -26,8 +26,8 @@
       <label class="field-label" for="exit_month">
         In welke maand ben je vertrokken, of vertrek je?
       </label>
-      <p class="helper-text">Niet verplicht. Je organisatie ziet je antwoord niet los: het rapport noemt alleen een periode, en alleen als genoeg mensen dezelfde maand kozen.</p>
-      <select name="exit_month" id="exit_month">
+      <p class="helper-text" id="exit-month-help">Niet verplicht. Je organisatie ziet je antwoord niet los: het rapport noemt alleen een periode, en alleen als genoeg mensen dezelfde maand kozen.</p>
+      <select name="exit_month" id="exit_month" aria-describedby="exit-month-help">
         <option value="">Kies een maand</option>
         <option value="liever_niet">Zeg ik liever niet</option>
         {% for m in exit_month_options %}
