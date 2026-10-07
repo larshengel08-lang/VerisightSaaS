@@ -1320,18 +1320,24 @@ def _uitstroomperiode(exit_months: list[str] | None, n: int, *,
     """(regel onder de meetgegevens, tekst voor 'Niet in dit rapport') voor Loep Vertrek (V8).
 
     Precies één van de twee is gevuld. Een periode pas vanaf MIN_SEGMENT_N
-    bekende maanden, dezelfde grens als een afdeling apart tonen: kleine
-    aantallen blijven zo buiten het rapport.
+    bekende maanden -- dezelfde grens als het apart tonen van een afdeling.
 
-    Randgeval (spec 2026-10-07 par. 2): MIN_SEGMENT_N bekende maanden is geen
-    bescherming voor de vroegste en de laatste maand zelf -- die kunnen elk
+    Randgeval (spec 2026-10-07 par. 2): MIN_SEGMENT_N bekende maanden
+    beschermt de vroegste en de laatste maand zelf niet -- die kunnen elk
     van één persoon zijn. HR kent die maanden en zou dus weten wie er in de
-    randmaand vertrok. Daarom toont deze functie de periode alleen als de
-    vroegste en de laatste maand elk minstens UITSTROOM_RAND_MIN personen
-    hebben; anders valt de hele periode weg, met een reden zonder aantallen
-    en zonder maandnamen. Dit beschermt niet elke maand binnen de periode --
-    een maand in het midden kan nog steeds van één persoon zijn -- maar die
-    maand wordt dan nooit afgedrukt, alleen de (dan bredere) randen.
+    randmaand vertrok. Daarom toont deze functie de echte vroegste en de
+    echte laatste maand alleen als beide elk minstens UITSTROOM_RAND_MIN
+    personen hebben; anders valt de hele periode weg -- er is geen
+    verschuiving naar de volgende maand die wel aan de grens voldoet -- met
+    een reden zonder aantallen en zonder maandnamen. Dit beschermt niet elke
+    maand binnen de periode: een maand in het midden kan nog steeds van één
+    persoon zijn, maar wordt dan ook nooit afgedrukt.
+
+    Eerlijk over wat UITSTROOM_RAND_MIN (2) wel en niet voorkomt: de grens
+    voorkomt dat er één naam aan een randmaand hangt, niet dat HR afleidt dat
+    allebei die twee personen aan deze meting deelnamen. Weet HR wie er in
+    die maand vertrok, dan telt dat als twee bekende deelnemers, ook al zegt
+    het rapport niet wie van de twee welk antwoord gaf.
 
     `heeft_meetperiode`: staat er in de meetgegevens een meetperiode (geen
     "niet vastgelegd" en geen datumconflict)? Alleen dan verwijst de tekst

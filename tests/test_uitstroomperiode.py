@@ -1,3 +1,4 @@
+from backend.exit_month import MAANDEN_NL
 from backend.report_html import UITSTROOM_RAND_MIN, UITSTROOM_RAND_TE_KLEIN, _uitstroomperiode
 
 
@@ -22,9 +23,9 @@ def test_laatste_maand_van_een_persoon_laat_periode_weg():
 
 def test_reden_noemt_geen_aantallen_of_maanden():
     assert not any(ch.isdigit() for ch in UITSTROOM_RAND_TE_KLEIN)
-    for maand in ("januari", "februari", "maart", "april", "november", "december"):
+    for maand in MAANDEN_NL:
         assert maand not in UITSTROOM_RAND_TE_KLEIN
-    assert "–" not in UITSTROOM_RAND_TE_KLEIN and "—" not in UITSTROOM_RAND_TE_KLEIN
+    assert "\u2013" not in UITSTROOM_RAND_TE_KLEIN and "\u2014" not in UITSTROOM_RAND_TE_KLEIN
 
 
 def test_een_maand_voor_iedereen():
