@@ -140,3 +140,64 @@ def test_exit_month_niet_leesbaar_voor_klanten():
         )
         if schema_grant:
             assert "exit_month" not in schema_grant.group(1)
+
+
+# --- De vraag in de vragenlijst zelf (Task 3) ------------------------------
+
+def test_survey_pagina_toont_vertrekmaandvraag_zonder_hr_waarde(client, db_session: Session):
+    r = _setup(db_session, exit_month=None)
+    resp = client.get(f"/survey/{r.token}")
+    assert resp.status_code == 200
+    html = resp.text
+    assert 'name="exit_month"' in html
+    assert "In welke maand ben je vertrokken, of vertrek je?" in html
+    assert "Zeg ik liever niet" in html
+
+    eerste = em.exit_month_options(FIXED_TODAY)[0]
+    assert f'value="{eerste["value"]}"' in html
+
+    select_match = re.search(r'<select name="exit_month"[^>]*>', html)
+    assert select_match, "select exit_month niet gevonden"
+    assert "required" not in select_match.group(0)
+
+
+def test_survey_pagina_verbergt_vertrekmaandvraag_met_hr_waarde(client, db_session: Session):
+    r = _setup(db_session, exit_month="2026-05")
+    resp = client.get(f"/survey/{r.token}")
+    assert resp.status_code == 200
+    assert 'name="exit_month"' not in resp.text
+
+
+def test_survey_pagina_verbergt_vertrekmaandvraag_bij_behoud(client, db_session: Session):
+    r = _setup(db_session, scan_type="retention", exit_month=None)
+    resp = client.get(f"/survey/{r.token}")
+    assert resp.status_code == 200
+    assert 'name="exit_month"' not in resp.text
+
+
+def test_vertrekmaandblok_bevat_geen_streepjes(client, db_session: Session):
+    r = _setup(db_session, exit_month=None)
+    resp = client.get(f"/survey/{r.token}")
+    html = resp.text
+    block_match = re.search(
+        r'<div class="question-block" id="qblock-exit-month">(.*?)</div>', html, re.S,
+    )
+    assert block_match, "qblock-exit-month niet gevonden"
+    block = block_match.group(1)
+    assert "–" not in block
+    assert "—" not in block
+
+
+def test_exit_submit_lege_string_422(client, db_session: Session):
+    """Bewijst dat de frontend null moet sturen, niet "" ('Kies een maand')."""
+    r = _setup(db_session, exit_month=None)
+    payload = _exit_payload(r.token, org_raw=_org_raw())
+    payload["exit_month"] = ""
+    resp = client.post("/survey/submit", json=payload)
+    assert resp.status_code == 422, resp.text
+    assert "geen geldige vorm" in resp.json()["detail"]
+
+
+def test_payload_mapt_liever_niet_naar_null():
+    html = Path("templates/survey.html").read_text(encoding="utf-8")
+    assert 'data.exit_month !== "liever_niet"' in html

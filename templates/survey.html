@@ -226,6 +226,7 @@
       font-size: 12px;
       color: var(--muted);
       margin-top: 8px;
+      margin-bottom: 8px;
     }
 
     /* ── Select / Input ──────────────────────────────────────── */
@@ -1227,6 +1228,7 @@ try { sessionStorage.removeItem(key); } catch (e) {}
       open_text:                data.open_text || null,
       uwes_raw,
       turnover_intention_raw:   ti_raw,
+      exit_month:               data.exit_month && data.exit_month !== "liever_niet" ? data.exit_month : null,
     };
 
     // Verduidelijkingsantwoorden: één entry per gerenderd blok.
