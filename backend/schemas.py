@@ -356,6 +356,10 @@ class SurveySubmit(BaseModel):
     tenure_years: Optional[float] = Field(None, ge=0, le=60)
     exit_reason_category: Optional[str] = None
     exit_reason_code: Optional[str] = None
+    # Vertrekmaand (spec 2026-10-07 par. 1): alleen Loep Vertrek, optioneel.
+    # De vorm en het venster controleert submit_survey (backend.exit_month),
+    # met een leesbare 422 in plaats van een Pydantic-lijst.
+    exit_month: Optional[str] = Field(None, max_length=20)
     # Shared request field for a product-specific direction/stay item.
     # Product interpretation must come from scan_type and product definition.
     stay_intent_score: Optional[int] = Field(None, ge=1, le=5)

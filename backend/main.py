@@ -61,7 +61,7 @@ from backend.email import (
     send_survey_invite,
     send_survey_invite_result,
 )
-from backend.exit_month import EXIT_MONTH_RE
+from backend.exit_month import EXIT_MONTH_RE, exit_month_options, validate_survey_exit_month
 from backend.models import (
     Campaign,
     CampaignDeliveryRecord,
@@ -89,6 +89,7 @@ from backend.survey_window import (
     SURVEY_CLOSED_MESSAGE,
     SURVEY_CLOSED_TITLE,
     is_survey_open,
+    today_amsterdam,
 )
 from backend.schemas import (
     CampaignCreate,
@@ -661,6 +662,16 @@ def _campaign_is_open(campaign: Campaign) -> bool:
     """Eén bron van waarheid voor 'mag deze meting nog ingevuld worden'
     (is_active én sluitdatum, amendement spec 2026-09-16 par. 4.3a)."""
     return is_survey_open(is_active=campaign.is_active, closes_at=campaign.closes_at)
+
+
+def _survey_exit_month_options(campaign: Campaign, respondent: Respondent) -> list[dict[str, str]]:
+    """De keuzelijst voor de vertrekmaand-vraag (spec 2026-10-07 par. 1).
+
+    Alleen bij Loep Vertrek, en alleen als er nog geen HR-waarde vastligt:
+    die blijft leidend, dus de vraag wordt dan niet aangeboden."""
+    if campaign.scan_type != "exit" or respondent.exit_month:
+        return []
+    return exit_month_options(today_amsterdam())
 
 
 def _survey_closed_response(request: Request) -> HTMLResponse:
@@ -1379,6 +1390,7 @@ async def serve_survey(
             "deepening_sets":  get_deepening_sets(campaign.scan_type) if campaign.scan_type in DEEPENING_SCAN_TYPES else {},
             "deepening_cap":   DEEPENING_CAP.get(campaign.scan_type, 0),
             "direction_sets":  get_direction_sets(campaign.scan_type) if campaign.scan_type in DIRECTION_SCAN_TYPES else {},
+            "exit_month_options": _survey_exit_month_options(campaign, respondent),
         },
     )
 
@@ -1409,6 +1421,18 @@ async def submit_survey(
     product_module = get_product_module(respondent.campaign.scan_type)
     product_module.validate_submission(payload)
     scan_type = respondent.campaign.scan_type
+
+    # --- Vertrekmaand (spec 2026-10-07 par. 1): server valideert, weigert luid ---
+    exit_month_clean: str | None = None
+    if payload.exit_month is not None:
+        if scan_type != "exit":
+            raise HTTPException(status_code=422, detail="De vertrekmaand hoort alleen bij Loep Vertrek.")
+        if respondent.exit_month:
+            raise HTTPException(status_code=422, detail="De vertrekmaand is voor deze uitnodiging al vastgelegd.")
+        try:
+            exit_month_clean = validate_survey_exit_month(payload.exit_month, today_amsterdam())
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from None
 
     # --- Verdiepingsvragen: server-side semantische validatie (client is untrusted) ---
     if payload.deepening_responses:
@@ -1544,6 +1568,9 @@ async def submit_survey(
         respondent.annual_salary_eur = None
 
     db.add(response_row)
+
+    if exit_month_clean:
+        respondent.exit_month = exit_month_clean
 
     respondent.completed    = True
     respondent.completed_at = datetime.now(timezone.utc)
