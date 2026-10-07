@@ -79,9 +79,10 @@ def test_p02_en_de_kaart_spreken_elkaar_niet_tegen(html_fn):
 
 @pytest.mark.parametrize("html_fn", [_retention_html, _exit_html],
                          ids=["retention", "exit"])
-def test_niet_kwetsbaar_geeft_op_beide_plekken_de_oude_regel(html_fn):
+def test_niet_kwetsbaar_geeft_op_beide_plekken_geen_split_none_maar_de_route(html_fn):
     """Dezelfde verdeling op een factor die niet kwetsbaar scoort: nergens een
-    split_none-zin, zodat deze test ook echt op de score toetst."""
+    split_none-zin, zodat deze test ook echt op de score toetst. Op p.02 staat
+    dan de clear-regel met de route (5 van de 7 veranderstemmen)."""
     html = html_fn(score=6.0)
     assert "een deel zegt dat hier niets hoeft" not in html
     # Spec 2026-10-07 par. 3: niets telt niet mee; was divided.

@@ -43,7 +43,7 @@ def test_fixturesleutels_bestaan_echt():
         assert key in texts
 
 
-def test_scenario_11_grootste_groep_zonder_meerderheid():
+def test_scenario_11_is_een_meerderheid_van_de_veranderstemmen():
     # Spec 2026-10-07 par. 3: niets telt niet mee; was plurality.
     # 27 van de 62 (44%) op alle beantwoorders, maar de 15 niets-stemmen kiezen
     # geen route: change_n = 62 - 15 = 47, en 27 van de 47 (57%) met een
@@ -61,11 +61,20 @@ def test_scenario_11_grootste_groep_zonder_meerderheid():
 
 
 def test_plurality_heeft_nooit_een_meerderheid():
-    """De kop zegt "zonder meerderheid"; bij >= 50% hoort clear te vuren."""
+    """De kop zegt "zonder meerderheid"; bij >= 50% van de veranderstemmen
+    (change_n) hoort clear te vuren, ook als het aandeel op alle
+    beantwoorders onder de helft blijft."""
     agg = _agg({"grd_visibility": 5, "grd_none": 2, "grd_time": 1})
     st = direction_state(agg, "growth", factor_score=5.2)
     assert st["state"] == "clear"
-    assert st["top_n"] / st["n"] >= 0.5
+    assert st["top_n"] / st["change_n"] >= 0.5          # 5 van 6
+    # 4 van de 10 op alle beantwoorders, 4 van de 7 op de veranderstemmen,
+    # voorsprong 2 op time: clear, geen plurality.
+    agg = _agg({"grd_visibility": 4, "grd_none": 3, "grd_time": 2, "grd_criteria": 1})
+    st = direction_state(agg, "growth", factor_score=5.2)
+    assert st["top_n"] / st["n"] < 0.5
+    assert st["top_n"] / st["change_n"] >= 0.5
+    assert st["state"] == "clear"
 
 
 def test_plurality_vereist_de_share_en_de_voorsprong():
@@ -112,22 +121,13 @@ def test_plurality_vereist_de_share_en_de_voorsprong():
 def test_plurality_share_grens_is_inclusief_en_exact():
     """Precies op DIRECTION_PLURALITY_MIN_SHARE telt mee, een haartje eronder
     niet. Zonder deze twee kan de vergelijking van >= naar > verschuiven zonder
-    dat iets rood wordt (alle andere nieuwe grenzen zijn wel exact gepind)."""
-    op_de_grens = _agg({"grd_visibility": 7, "grd_none": 5, "grd_conversation": 4,
-                        "grd_time": 4})  # 7 van 20 = exact 0,35, voorsprong 2
-    st = direction_state(op_de_grens, "growth", 5.2)
-    assert st["top_n"] / st["n"] == DIRECTION_PLURALITY_MIN_SHARE
-    assert st["state"] == "plurality"
-    eronder = _agg({"grd_visibility": 17, "grd_none": 15, "grd_conversation": 9,
-                    "grd_time": 9})  # 17 van 50 = 0,34, zelfde voorsprong
-    st = direction_state(eronder, "growth", 5.2)
-    assert st["top_n"] / st["n"] < DIRECTION_PLURALITY_MIN_SHARE
-    # Spec 2026-10-07 par. 3: niets telt niet mee; was divided.
-    # Op de inhoudelijke stemmen is het 17 van 35 = 0,49, voorsprong 8.
-    assert st["state"] == "plurality"
+    dat iets rood wordt (alle andere nieuwe grenzen zijn wel exact gepind).
 
-    # De grens zelf ligt nu op change_n; hier opnieuw exact gepind, met
-    # niets-stemmen erbij die de noemer niet mogen raken.
+    Spec 2026-10-07 par. 3: de grens ligt op change_n (alle beantwoorders
+    minus de niets-stemmen), niet meer op n. De oude grensfixtures (7 van 20
+    en 17 van 50 op n, met niets-stemmen) waren daardoor geen grens meer en
+    zijn vervangen door deze twee, met niets-stemmen erbij die de noemer niet
+    mogen raken."""
     op_de_grens = _agg({"grd_visibility": 7, "grd_conversation": 5, "grd_time": 4,
                         "grd_criteria": 4, "grd_none": 3})  # 7 van 20 = exact 0,35, voorsprong 2
     st = direction_state(op_de_grens, "growth", 5.2)

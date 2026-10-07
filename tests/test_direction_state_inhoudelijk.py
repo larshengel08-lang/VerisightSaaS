@@ -135,10 +135,12 @@ def test_plurality_op_inhoudelijke_stemmen():
     assert dp.direction_state(_agg({a: 4, b: 3, c: 2, none_key: 3}), FK, 6.5)["state"] == "divided"
 
 
-def test_rij_zonder_keuze_maakt_de_drempel_alleen_strenger():
+def test_rij_zonder_keuze_verlaagt_het_aandeel_van_de_route():
     # Een `answered`-rij zonder choice (datadefect) telt mee in n en dus in
-    # change_n = n - none_n; nooit in de teller. Zelfde stemmen, oplopend aantal
-    # defecte rijen: de staat kan alleen omlaag.
+    # change_n = n - none_n, nooit in de teller. Zelfde keuzes (3 echte
+    # veranderkeuzes, dus boven de vloer), oplopend aantal defecte rijen: het
+    # aandeel van de route daalt en de staat zakt van clear via plurality naar
+    # divided.
     none_key, _o, (a, *_r) = _opties()
     counts = {a: 3, none_key: 1}
     # answered 4: change_n 3, a 3/3 = 1,0, voorsprong 3: clear
@@ -150,6 +152,65 @@ def test_rij_zonder_keuze_maakt_de_drempel_alleen_strenger():
     # answered 10: change_n 9, a 3/9 = 0,33 < 0,35: divided
     st = dp.direction_state(_agg(counts, answered=10), FK, 6.0)
     assert st["state"] == "divided" and st["change_n"] == 9
+
+
+def test_vloer_telt_alleen_echte_veranderkeuzes():
+    # Twee echte veranderkeuzes: nooit clear of plurality, hoeveel defecte rijen
+    # change_n ook ophogen. {a 2, niets 1}: answered 3 -> change_n 2; answered 4
+    # -> change_n 3 (a 2/3 = 0,67, voorsprong 2: zou zonder deze vloer clear
+    # zijn); answered 5 -> change_n 4 (a 2/4 = 0,5, voorsprong 2: idem).
+    none_key, other_key, (a, b, *_r) = _opties()
+    for counts in ({a: 2, none_key: 1}, {a: 2}, {a: 1, b: 1, none_key: 1},
+                   {a: 1, other_key: 1}):
+        for answered in (3, 4, 5):
+            st = dp.direction_state(_agg(counts, answered=answered), FK, 6.0)
+            assert st["state"] not in ("clear", "plurality"), (counts, answered, st)
+            assert st["state"] == "divided", (counts, answered, st)
+    # Met precies drie echte veranderkeuzes mag het wel: {a 3, niets 1},
+    # answered 5 -> change_n 4, a 3/4 = 0,75, voorsprong 3: clear.
+    assert dp.direction_state(_agg({a: 3, none_key: 1}, answered=5), FK, 6.0)["state"] == "clear"
+
+
+def test_defecte_rij_tilt_nooit_via_de_veranderstemmen():
+    """Docstring-claim van direction_state, letterlijk getoetst: bij dezelfde
+    keuzes kan een defecte rij (answered zonder choice) een staat alleen naar
+    clear of plurality tillen door none_needed op te heffen. Elke andere
+    uitgangsstaat zonder defecte rijen blijft met defecte rijen buiten
+    clear/plurality, en plurality wordt nooit clear."""
+    none_key, other_key, gewoon = _opties()
+    sleutels = gewoon[:3] + [none_key, other_key]
+    rng = random.Random(20261008)
+    opgeheven = 0
+    for _ in range(20000):
+        counts = {k: rng.randint(0, 5) for k in sleutels}
+        counts = {k: v for k, v in counts.items() if v}
+        if not counts:
+            continue
+        score = rng.choice([None, 3.9, 4.9, 6.4])
+        schoon = dp.direction_state(_agg(counts), FK, score)["state"]
+        defect = dp.direction_state(
+            _agg(counts, answered=sum(counts.values()) + rng.randint(1, 4)), FK, score)["state"]
+        if defect in ("clear", "plurality") and schoon != defect:
+            assert schoon == "none_needed" or (schoon, defect) == ("clear", "plurality"), (
+                counts, score, schoon, defect)
+            if schoon == "none_needed":
+                opgeheven += 1
+    # De uitzondering bestaat echt (anders hoort hij niet in de docstring):
+    # {niets 4, a 3} is none_needed (4/7); met 2 defecte rijen niet meer (4/9),
+    # en a 3 van change_n 5 = 0,6, voorsprong 3: clear.
+    assert dp.direction_state(_agg({none_key: 4, gewoon[0]: 3}), FK, 6.0)["state"] == "none_needed"
+    assert dp.direction_state(_agg({none_key: 4, gewoon[0]: 3}, answered=9), FK, 6.0)["state"] == "clear"
+    assert opgeheven > 0
+
+
+def test_defecte_rijen_kunnen_oud_clear_naar_divided_laten_zakken():
+    # Op main was {a 2} met answered 3 clear (2/3, voorsprong 2) op twee echte
+    # keuzes; de vloer op echte keuzes maakt dat divided. Dit is de enige
+    # neerwaartse beweging ten opzichte van main, en alleen met defecte rijen.
+    _n, _o, (a, *_r) = _opties()
+    agg = _agg({a: 2}, answered=3)
+    assert _oud(agg, FK, 6.0)["state"] == "clear"
+    assert dp.direction_state(agg, FK, 6.0)["state"] == "divided"
 
 
 def test_change_n_in_elke_staat():

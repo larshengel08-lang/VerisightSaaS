@@ -1123,8 +1123,10 @@ def aggregate_direction(
     Een status-`answered`-rij zonder `choice` telt als answered maar draagt niet bij
     aan counts (mirrort aggregate_deepening): een datadefect mag nooit als "sloeg
     over" in het rapport belanden (spec par. 6.1). Het gevolg is answered >=
-    sum(counts), wat de clear-drempel in direction_state alleen strenger maakt --
-    de veilige kant voor een eerlijkheidscontract.
+    sum(counts). direction_state telt zo'n rij mee in de noemers (n en change_n)
+    maar nooit in een teller en nooit in de vloer van clear en plurality, zodat
+    hij de aandelen alleen verlaagt; zie daar voor de ene uitzondering via
+    none_needed.
     """
     if scan_type not in DIRECTION_VERSION:
         raise ValueError(f"unknown scan_type {scan_type!r}")
@@ -1192,17 +1194,28 @@ def direction_state(agg: dict[str, Any], factor_key: str,
     tussen routes maken alleen de mensen die er een kozen. Daarom staat
     split_none nu vóór clear: anders zou een groep die half niets en half één
     route kiest op een kwetsbaar onderwerp als eenduidige richting lezen. De
-    noemer is change_n = n - none_n. Een `answered`-rij zonder keuze
-    (datadefect, zie aggregate_direction) telt daardoor als inhoudelijk mee in
-    de noemer en nooit in de teller; dat maakt de drempel alleen strenger, de
-    veilige kant. De bestaande drempels (vloer DIRECTION_MIN_N, meerderheid,
-    voorsprong TOP_CHOICE_MIN_LEAD) gelden ongewijzigd, nu op change_n. De
-    vloer geldt voor clear én plurality: plurality is per definitie de staat
-    zonder meerderheid, en onder de vloer (bijv. 2 van de 2) zou de
-    plurality-tak een meerderheid opvangen die alleen door de vloer geen clear
-    werd. Ten opzichte van de oude regel kan een staat daardoor alleen omhoog:
-    divided -> plurality, divided -> clear of plurality -> clear (gepind in
-    test_direction_state_inhoudelijk).
+    noemer van de aandelen is change_n = n - none_n. De bestaande drempels
+    gelden ongewijzigd: meerderheid en voorsprong TOP_CHOICE_MIN_LEAD op
+    change_n en de veranderopties, en de vloer DIRECTION_MIN_N op de echte
+    veranderkeuzes (de som van de counts buiten de niets-optie). De vloer geldt
+    voor clear én plurality: plurality is per definitie de staat zonder
+    meerderheid, en onder de vloer (bijv. 2 van de 2) zou de plurality-tak een
+    meerderheid opvangen die alleen door de vloer geen clear werd.
+
+    Een `answered`-rij zonder keuze (datadefect, zie aggregate_direction) telt
+    mee in n en in change_n maar nooit in een teller en nooit in de vloer. Bij
+    dezelfde keuzes kan zo'n rij daarom het aandeel van de grootste route
+    alleen verlagen en nooit een staat naar clear of plurality tillen via de
+    veranderstemmen. Eén uitzondering, die van de niets-kant komt: de rij
+    verlaagt ook het niets-aandeel in none_needed (noemer n, ongewijzigd), en
+    als none_needed daardoor vervalt, beslist de rest op de echte keuzes; dat
+    kan clear of plurality opleveren (gepind in test_direction_state_inhoudelijk).
+
+    Ten opzichte van de oude regel (main 91ecfd14) kan een staat bij een
+    aggregaat zonder defecte rijen alleen omhoog: divided -> plurality,
+    divided -> clear of plurality -> clear. Met defecte rijen kan hij ook naar
+    divided zakken, als de echte veranderkeuzes onder de vloer blijven (gepind
+    in test_direction_state_inhoudelijk).
 
     factor_score is VERPLICHT en moet de GETOONDE score zijn: de waarde die de
     lezer op dezelfde pagina ziet, dus afgerond op één decimaal via _shown in
@@ -1250,8 +1263,9 @@ def direction_state(agg: dict[str, Any], factor_key: str,
     # de niets-optie (die bestaat ook niet: *_none heeft geen imperative).
     none_key = next((k for k in sorted(counts) if k.endswith("_none")), None)
     none_n = counts.get(none_key, 0) if none_key is not None else 0
-    # Noemer van de inhoudelijke stemmen (spec 2026-10-07 par. 3). Een
-    # answered-rij zonder keuze telt hier mee en nooit in een teller: strenger.
+    # Noemer van de aandelen in clear en plurality (spec 2026-10-07 par. 3). Een
+    # answered-rij zonder keuze zit hierin en nooit in een teller, dus hij
+    # verlaagt die aandelen; voor de vloer telt hij niet (zie real_change).
     change_n = n - none_n
     base.update(none_key=none_key, none_n=none_n, change_n=change_n)
     if none_key is not None and none_n / n > 0.5:
@@ -1292,11 +1306,14 @@ def direction_state(agg: dict[str, Any], factor_key: str,
     # Tweede veranderoptie, *_other meegerekend (dat is ook een vraag om
     # verandering, alleen zonder opdrachtvorm); de niets-optie niet.
     second_change = change_ranked[1][1] if len(change_ranked) > 1 else 0
-    # Vloer op de inhoudelijke stemmen, voor clear én plurality: onder
-    # DIRECTION_MIN_N veranderstemmen is er geen route aan te wijzen, en zonder
-    # deze vloer zou plurality een meerderheid (bijv. 2 van de 2) opvangen die
-    # alleen door de vloer geen clear werd.
-    if change_n < DIRECTION_MIN_N:
+    # Vloer op de ECHTE veranderkeuzes, voor clear én plurality: onder
+    # DIRECTION_MIN_N gekozen routes (*_other meegerekend) is er geen route aan
+    # te wijzen, en zonder deze vloer zou plurality een meerderheid (bijv. 2
+    # van de 2) opvangen die alleen door de vloer geen clear werd. Bewust de som
+    # van de counts en niet change_n: een answered-rij zonder keuze zit wel in
+    # change_n, en zou anders twee echte keuzes over de vloer tillen.
+    real_change = sum(c for _k, c in change_ranked)
+    if real_change < DIRECTION_MIN_N:
         return {**base, "state": "divided"}
     if (change_top / change_n >= 0.5
             and change_top - second_change >= TOP_CHOICE_MIN_LEAD):
