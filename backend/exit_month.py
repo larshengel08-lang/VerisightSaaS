@@ -55,7 +55,7 @@ def validate_survey_exit_month(waarde: object, vandaag: date) -> str:
     Een andere waarde dan JJJJ-MM is dus een fout en wordt geweigerd, niet stil
     weggegooid.
     """
-    if not isinstance(waarde, str) or not EXIT_MONTH_RE.match(waarde):
+    if not isinstance(waarde, str) or not EXIT_MONTH_RE.fullmatch(waarde):
         raise ValueError("De vertrekmaand heeft geen geldige vorm.")
     oudste = _sleutel(*_verschuif(vandaag.year, vandaag.month,
                                   -EXIT_MONTH_PAST_MONTHS - _SPELING_MAANDEN))

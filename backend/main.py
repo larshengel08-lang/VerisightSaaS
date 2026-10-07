@@ -465,7 +465,7 @@ def _normalize_exit_month(value: Any) -> str | None:
     if not raw:
         return None
     raw = raw.replace("/", "-").replace(".", "-")
-    if EXIT_MONTH_RE.match(raw):
+    if EXIT_MONTH_RE.fullmatch(raw):
         return raw
     return None
 

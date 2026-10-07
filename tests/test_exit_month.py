@@ -35,6 +35,19 @@ def test_validatie_weigert(waarde):
         em.validate_survey_exit_month(waarde, date(2026, 10, 7))
 
 
+def test_validatie_weigert_trailing_newline():
+    """"$" accepteert zonder fullmatch een afsluitende newline (re.match-valkuil)."""
+    with pytest.raises(ValueError):
+        em.validate_survey_exit_month("2026-03\n", date(2026, 10, 7))
+
+
+def test_keuzelijst_in_december():
+    opties = em.exit_month_options(date(2026, 12, 1))
+    waarden = [o["value"] for o in opties]
+    assert opties[0] == {"value": "2027-06", "label": "juni 2027"}
+    assert "2027-01" in waarden and "2026-12" in waarden
+
+
 def test_normalisatie_import_is_streng():
     from backend.main import _normalize_exit_month
     assert _normalize_exit_month("2026/03") == "2026-03"

@@ -25,7 +25,7 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 # schrijft rechtstreeks naar Supabase en de kolom is daar tekst zonder
 # check-constraint (de backend-import in main.py valideert zelf, via dezelfde
 # regex). Geen dubbele controle, wel een eigen vangnet.
-from backend.exit_month import EXIT_MONTH_RE as _EXIT_MONTH_RE, MAANDEN_NL as _MAANDEN_NL
+from backend.exit_month import EXIT_MONTH_RE as _EXIT_MONTH_RE, MAANDEN_NL as _MAANDEN_NL, maand_label as _maand_nl
 from backend.models import Campaign, Respondent, SurveyResponse
 from backend.report_decision import load_decision
 from backend.report_css import build_css, RAG_HIGH, RAG_MID, RAG_LOW
@@ -1302,12 +1302,6 @@ def _kalenderdag(d: date | datetime) -> date:
     van `date`, dus die check staat vooraan.
     """
     return _nl_tijd(d).date() if isinstance(d, datetime) else d
-
-
-def _maand_nl(jaar_maand: str) -> str:
-    """"2025-03" -> "maart 2025"."""
-    jaar, maand = jaar_maand.split("-")
-    return _MAANDEN_NL[int(maand) - 1] + " " + jaar
 
 
 def _uitstroomperiode(exit_months: list[str] | None, n: int, *,
@@ -5538,7 +5532,7 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
         for r in completed:
             if not r.exit_month:
                 continue
-            if _EXIT_MONTH_RE.match(r.exit_month):
+            if _EXIT_MONTH_RE.fullmatch(r.exit_month):
                 exit_months.append(r.exit_month)
             else:
                 _exit_month_ongeldig += 1

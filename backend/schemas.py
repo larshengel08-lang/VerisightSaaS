@@ -13,6 +13,8 @@ from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
+from backend.exit_month import EXIT_MONTH_RE
+
 
 # ---------------------------------------------------------------------------
 # Shared base
@@ -109,7 +111,7 @@ class CampaignRead(OrmBase):
 class RespondentCreate(BaseModel):
     department: Optional[str] = Field(None, max_length=100)
     role_level: Optional[str] = Field(None, max_length=50)
-    exit_month: Optional[str] = Field(None, pattern=r"^\d{4}-(0[1-9]|1[0-2])$")
+    exit_month: Optional[str] = Field(None, pattern=EXIT_MONTH_RE.pattern)
     annual_salary_eur: Optional[float] = Field(None, gt=0, lt=1_000_000)
     email: Optional[EmailStr] = None  # voor uitnodigingsmail
 
