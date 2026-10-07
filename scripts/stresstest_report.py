@@ -171,6 +171,7 @@ class Scenario:
     direction_other: float = 0.0
     direction_top_share: float = 0.62            # aandeel van de resterende massa voor de topoptie
     direction_flat: bool = False                 # verdeeld: geen optie springt eruit
+    exit_months: tuple[str | None, ...] = ()      # per respondent op volgorde; None = niet opgegeven
 
     @property
     def num(self) -> str:
@@ -198,6 +199,14 @@ EEN_LAGE = {
     "leadership": (7.0, 0.9), "culture": (7.4, 0.9), "growth": (4.5, 1.1),
     "compensation": (6.6, 0.9), "workload": (7.1, 0.9), "role_clarity": (7.3, 0.9),
 }
+
+# Profiel/afdelingen van scenario 08 ("Vertrek, n=12"), hergebruikt door 21 en
+# 22 (vertrekmaanden) zodat alleen exit_months verschilt.
+VERTREK_12 = {
+    "leadership": (4.6, 1.0), "culture": (6.4, 1.0), "growth": (5.2, 1.0),
+    "compensation": (6.1, 1.0), "workload": (5.5, 1.0), "role_clarity": (6.6, 1.0),
+}
+VERTREK_12_DEPTS = [("Operations", 4), ("Sales", 3), ("Finance", 3), ("IT", 2)]
 
 SCENARIOS: list[Scenario] = [
     Scenario("01_vlak_middelmatig", "Vlak middelmatig profiel (n=45)",
@@ -231,9 +240,17 @@ SCENARIOS: list[Scenario] = [
     Scenario("08_exit_n12", "Vertrek, n=12",
              "Net boven de drempel; alle segmenten onder MIN_SEGMENT_N=5.",
              scan_type="exit", n=12, invited=19,
-             factors={"leadership": (4.6, 1.0), "culture": (6.4, 1.0), "growth": (5.2, 1.0),
-                      "compensation": (6.1, 1.0), "workload": (5.5, 1.0), "role_clarity": (6.6, 1.0)},
-             depts=[("Operations", 4), ("Sales", 3), ("Finance", 3), ("IT", 2)]),
+             factors=dict(VERTREK_12), depts=list(VERTREK_12_DEPTS)),
+    Scenario("21_exit_uitstroom", "Vertrek, n=12, met vertrekmaanden",
+             "Als 08, met vertrekmaanden: randmaanden van twee, dus de periode staat op pagina twee.",
+             scan_type="exit", n=12, invited=19, factors=dict(VERTREK_12), depts=list(VERTREK_12_DEPTS),
+             exit_months=("2026-01", "2026-01", "2026-02", "2026-02", "2026-02", "2026-03",
+                          "2026-03", "2026-03", "2026-04", "2026-04", None, None)),
+    Scenario("22_exit_uitstroom_rand", "Vertrek, n=12, randmaand van één persoon",
+             "Als 21, maar de vroegste maand is van één persoon: de periode valt weg.",
+             scan_type="exit", n=12, invited=19, factors=dict(VERTREK_12), depts=list(VERTREK_12_DEPTS),
+             exit_months=("2025-11", "2026-01", "2026-01", "2026-02", "2026-02", "2026-02",
+                          "2026-03", "2026-03", "2026-03", "2026-04", "2026-04", None)),
     Scenario("09_gemengde_afdelingen", "Gemengde afdelingsgrootte (n=25)",
              "3 afdelingen van 10+, 2 van 3-4: wat gebeurt er met de kleine?",
              n=25, invited=36, factors=VLAK,
@@ -626,7 +643,8 @@ def run_scenario(sc: Scenario) -> dict:
         respondent = Respondent(id=str(uuid.uuid4()), campaign_id=campaign.id,
                                 department=dept, role_level=role,
                                 annual_salary_eur=float(salary), sent_at=now,
-                                opened_at=now, completed=True, completed_at=now)
+                                opened_at=now, completed=True, completed_at=now,
+                                exit_month=(sc.exit_months[i] if i < len(sc.exit_months) else None))
         db.add(respondent)
         db.flush()
         dept_counts[dept] = dept_counts.get(dept, 0) + 1
