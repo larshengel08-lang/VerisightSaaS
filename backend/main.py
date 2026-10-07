@@ -61,6 +61,7 @@ from backend.email import (
     send_survey_invite,
     send_survey_invite_result,
 )
+from backend.exit_month import EXIT_MONTH_RE
 from backend.models import (
     Campaign,
     CampaignDeliveryRecord,
@@ -464,7 +465,7 @@ def _normalize_exit_month(value: Any) -> str | None:
     if not raw:
         return None
     raw = raw.replace("/", "-").replace(".", "-")
-    if len(raw) == 7 and raw[4] == "-":
+    if EXIT_MONTH_RE.match(raw):
         return raw
     return None
 

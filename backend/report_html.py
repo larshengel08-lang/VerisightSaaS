@@ -21,6 +21,11 @@ from typing import Any
 
 from sqlalchemy.orm import Session, joinedload, selectinload
 
+# _EXIT_MONTH_RE is hier het vangnet in build_report_data: het operatorformulier
+# schrijft rechtstreeks naar Supabase en de kolom is daar tekst zonder
+# check-constraint (de backend-import in main.py valideert zelf, via dezelfde
+# regex). Geen dubbele controle, wel een eigen vangnet.
+from backend.exit_month import EXIT_MONTH_RE as _EXIT_MONTH_RE, MAANDEN_NL as _MAANDEN_NL
 from backend.models import Campaign, Respondent, SurveyResponse
 from backend.report_decision import load_decision
 from backend.report_css import build_css, RAG_HIGH, RAG_MID, RAG_LOW
@@ -84,12 +89,6 @@ from backend.survey_window import AMSTERDAM
 # ─── Constanten ───────────────────────────────────────────────────────────────
 
 logger = logging.getLogger(__name__)
-
-# De vorm van respondents.exit_month. Alleen de backend-import valideert hem
-# (schemas.py); het operatorformulier schrijft rechtstreeks naar Supabase en
-# de kolom is daar tekst zonder check-constraint. Deze controle in
-# build_report_data is dus het vangnet, niet een dubbele controle.
-_EXIT_MONTH_RE = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
 
 MIN_QUOTES_N = 5
 MAX_QUOTES   = 12
@@ -1264,10 +1263,6 @@ def _p02_met_respons(zin: str, *, completed: int, invited: int | None,
     if zin.endswith("."):
         return f"{zin[:-1]}{staart}."
     return f"{zin}{staart}"
-
-
-_MAANDEN_NL = ("januari", "februari", "maart", "april", "mei", "juni", "juli",
-               "augustus", "september", "oktober", "november", "december")
 
 
 def _nl_tijd(d: datetime) -> datetime:
