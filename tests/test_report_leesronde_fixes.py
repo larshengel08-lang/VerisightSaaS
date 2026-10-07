@@ -474,22 +474,26 @@ def test_uitstroomperiode_te_weinig_bekend():
 
 
 def test_uitstroomperiode_spreiding_en_deels_bekend():
-    maanden = ["2026-02", "2025-03", "2025-07", "2025-11", "2025-09"]
+    # Beide randmaanden (maart 2025 en februari 2026) komen hier van twee
+    # personen (spec 2026-10-07 par. 2: een randmaand van één persoon laat de
+    # periode weg, zie tests/test_uitstroomperiode.py); de maanden ertussen
+    # mogen op zichzelf staan.
+    maanden = ["2026-02", "2026-02", "2025-03", "2025-03", "2025-07", "2025-09", "2025-11"]
     assert _uitstroomperiode(maanden, 12) == (
-        "Uitstroomperiode: vertrokken tussen maart 2025 en februari 2026 (bij 5 van de 12 vastgelegd).",
+        "Uitstroomperiode: vertrek tussen maart 2025 en februari 2026 (bij 7 van de 12 vastgelegd).",
         None)
 
 
 def test_uitstroomperiode_een_maand_iedereen_bekend():
     assert _uitstroomperiode(["2026-03"] * 5, 5) == (
-        "Uitstroomperiode: vertrokken in maart 2026.", None)
+        "Uitstroomperiode: vertrek in maart 2026.", None)
 
 
 def test_responsbasis_toont_uitstroomregel_en_ontbrekende_maand():
     met = _plain(_responsbasis(invited=20, completed=12, period="Wave 1",
                                population="Uitgestroomde medewerkers", segment_available=True,
-                               uitstroom_regel="Uitstroomperiode: vertrokken in maart 2026."))
-    assert "Uitstroomperiode: vertrokken in maart 2026." in met
+                               uitstroom_regel="Uitstroomperiode: vertrek in maart 2026."))
+    assert "Uitstroomperiode: vertrek in maart 2026." in met
     zonder = _plain(_responsbasis(invited=20, completed=12, period="Wave 1",
                                   population="Uitgestroomde medewerkers", segment_available=True,
                                   extra_ontbreekt=["de maand van vertrek (niet vastgelegd)"]))
@@ -505,7 +509,19 @@ def test_vertrek_met_maanden_noemt_de_periode_op_pagina_twee():
     data = _fixture("exit", n=25, profile=True)
     data["exit_months"] = ["2025-03"] * 10 + ["2026-02"] * 10
     p2 = _plain(_page_two(render_exit_report_html(data)))
-    assert "Uitstroomperiode: vertrokken tussen maart 2025 en februari 2026 (bij 20 van de 25 vastgelegd)." in p2
+    assert "Uitstroomperiode: vertrek tussen maart 2025 en februari 2026 (bij 20 van de 25 vastgelegd)." in p2
+
+
+def test_vertrek_met_een_randmaand_van_een_persoon_laat_periode_weg_op_pagina_twee():
+    # Integratietest voor de nieuwe randregel (spec 2026-10-07 par. 2): de
+    # vroegste maand (2025-01) komt hier van één persoon, dus pagina twee
+    # noemt de reden en drukt geen "Uitstroomperiode:"-regel af.
+    data = _fixture("exit", n=25, profile=True)
+    data["exit_months"] = ["2025-01"] + ["2025-03"] * 9 + ["2026-02"] * 10
+    p2 = _plain(_page_two(render_exit_report_html(data)))
+    assert "Uitstroomperiode:" not in p2
+    assert ("de periode van vertrek (de vroegste of de laatste opgegeven maand is door te "
+            "weinig mensen gekozen om die te noemen zonder dat iemand herkenbaar wordt)") in p2
 
 
 def _exit_met_maanden(db: Session, maanden: list[str | None], scan_type: str = "exit") -> str:

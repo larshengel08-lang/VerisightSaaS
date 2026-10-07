@@ -1304,6 +1304,17 @@ def _kalenderdag(d: date | datetime) -> date:
     return _nl_tijd(d).date() if isinstance(d, datetime) else d
 
 
+# Spec 2026-10-07 par. 2 (besluit Lars): een periode noemt de vroegste en de
+# laatste maand. HR kent die maanden en weet dus wie er in een randmaand
+# vertrok; van één persoon is dat herleidbaar. Daarom pas een periode als
+# beide randmaanden minstens twee personen hebben. De reden noemt bewust geen
+# aantallen en geen maanden.
+UITSTROOM_RAND_MIN = 2
+UITSTROOM_RAND_TE_KLEIN = ("de periode van vertrek (de vroegste of de laatste opgegeven maand "
+                           "is door te weinig mensen gekozen om die te noemen zonder dat "
+                           "iemand herkenbaar wordt)")
+
+
 def _uitstroomperiode(exit_months: list[str] | None, n: int, *,
                       heeft_meetperiode: bool = True) -> tuple[str | None, str | None]:
     """(regel onder de meetgegevens, tekst voor 'Niet in dit rapport') voor Loep Vertrek (V8).
@@ -1312,16 +1323,15 @@ def _uitstroomperiode(exit_months: list[str] | None, n: int, *,
     bekende maanden, dezelfde grens als een afdeling apart tonen: kleine
     aantallen blijven zo buiten het rapport.
 
-    Privacy, eerlijk gezegd: die grens beschermt de randen NIET. De vroegste
-    en de laatste genoemde maand kunnen elk van één persoon zijn, ook bij
-    veel bekende maanden. HR heeft die maanden zelf aangeleverd en weet dus
-    wie er in de vroegste of laatste maand vertrok; de security-audit van
-    13-7 rekent exit_month daarom tot de quasi-identificerende kolommen
-    (supabase/schema.sql, kolomgrant op respondents). De periode zelf zegt
-    niets over antwoorden, maar koppelt wel een persoon aan deze meting. Of
-    dat acceptabel is, of dat de randen grover moeten (kwartaal, of de
-    maanden van minstens twee personen), is een keuze voor Lars; deze
-    functie verandert daar niets aan.
+    Randgeval (spec 2026-10-07 par. 2): MIN_SEGMENT_N bekende maanden is geen
+    bescherming voor de vroegste en de laatste maand zelf -- die kunnen elk
+    van één persoon zijn. HR kent die maanden en zou dus weten wie er in de
+    randmaand vertrok. Daarom toont deze functie de periode alleen als de
+    vroegste en de laatste maand elk minstens UITSTROOM_RAND_MIN personen
+    hebben; anders valt de hele periode weg, met een reden zonder aantallen
+    en zonder maandnamen. Dit beschermt niet elke maand binnen de periode --
+    een maand in het midden kan nog steeds van één persoon zijn -- maar die
+    maand wordt dan nooit afgedrukt, alleen de (dan bredere) randen.
 
     `heeft_meetperiode`: staat er in de meetgegevens een meetperiode (geen
     "niet vastgelegd" en geen datumconflict)? Alleen dan verwijst de tekst
@@ -1340,9 +1350,12 @@ def _uitstroomperiode(exit_months: list[str] | None, n: int, *,
     if bekend < MIN_SEGMENT_N:
         return None, ("de maand van vertrek (bij " + str(bekend) + " van de " + str(n)
                       + " vastgelegd, te weinig om een periode te noemen)")
+    per_maand = Counter(maanden)
+    if per_maand[maanden[0]] < UITSTROOM_RAND_MIN or per_maand[maanden[-1]] < UITSTROOM_RAND_MIN:
+        return None, UITSTROOM_RAND_TE_KLEIN
     eerste, laatste = _maand_nl(maanden[0]), _maand_nl(maanden[-1])
-    regel = ("Uitstroomperiode: vertrokken in " + eerste if eerste == laatste
-             else "Uitstroomperiode: vertrokken tussen " + eerste + " en " + laatste)
+    regel = ("Uitstroomperiode: vertrek in " + eerste if eerste == laatste
+             else "Uitstroomperiode: vertrek tussen " + eerste + " en " + laatste)
     if bekend < n:
         regel += " (bij " + str(bekend) + " van de " + str(n) + " vastgelegd)"
     return regel + ".", None
