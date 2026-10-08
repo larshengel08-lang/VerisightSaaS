@@ -36,8 +36,8 @@ describe('prijsstaffel (besluit Lars 20-9-2026)', () => {
     expect(namen).toContain('Vervolgmeting, minder dan 150 medewerkers')
   })
 
-  it('zet boven 1.000 medewerkers op aanvraag, zonder bedrag', () => {
-    expect(PRICING_ABOVE_LABEL).toBe('Boven 1.000 medewerkers')
+  it('zet 1.000 of meer medewerkers op aanvraag, zonder bedrag', () => {
+    expect(PRICING_ABOVE_LABEL).toBe('1.000 of meer medewerkers')
     expect(PRICING_ABOVE_TEXT).toBe('Op aanvraag')
     expect(PRICING_ABOVE_TEXT).not.toMatch(/\d/)
   })
@@ -105,7 +105,7 @@ describe('prijs-FAQ', () => {
       expect(antwoord).toContain(formatEur(tier.firstScanEur))
       expect(antwoord).toContain(formatEur(tier.followUpEur))
     }
-    expect(antwoord).toContain('Boven 1.000 medewerkers op aanvraag')
+    expect(antwoord).toContain('1.000 of meer medewerkers op aanvraag')
     expect(antwoord).toContain('excl. btw')
   })
 

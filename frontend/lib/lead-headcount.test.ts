@@ -7,6 +7,7 @@ describe('estimateHeadcount', () => {
     expect(estimateHeadcount('150 tot 400 medewerkers')).toBe(150)
     expect(estimateHeadcount('400 tot 1.000 medewerkers')).toBe(400)
     expect(estimateHeadcount('Boven 1.000 medewerkers')).toBe(1000)
+    expect(estimateHeadcount('1.000 of meer medewerkers')).toBe(1000)
   })
 
   it('geeft voor oude leads hetzelfde als voorheen', () => {

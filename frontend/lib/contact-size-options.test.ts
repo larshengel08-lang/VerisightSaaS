@@ -5,14 +5,25 @@ import { CONTACT_SIZE_OPTIONS } from '@/lib/contact-funnel'
 import { PRICING_ABOVE_LABEL, PRICING_TIERS } from '@/lib/pricing'
 
 describe('omvangvakken van het contactformulier (besluit Lars 24-9)', () => {
-  it('zijn precies de prijstreden, boven 1.000 en twijfel', () => {
+  it('zijn precies de prijstreden, 1.000 of meer en twijfel', () => {
     expect(CONTACT_SIZE_OPTIONS).toEqual([
       'Minder dan 150 medewerkers',
       '150 tot 400 medewerkers',
       '400 tot 1.000 medewerkers',
-      'Boven 1.000 medewerkers',
+      '1.000 of meer medewerkers',
       'Anders / nog niet zeker',
     ])
+  })
+
+  it('heeft geen overlap op 1.000: elke grens is precies één keer ondergrens', () => {
+    for (const label of CONTACT_SIZE_OPTIONS) {
+      expect(label.startsWith('Boven')).toBe(false)
+      expect(label.startsWith('Tot ')).toBe(false)
+    }
+    for (const grens of ['150 tot', '400 tot', '1.000 of meer']) {
+      const treffers = CONTACT_SIZE_OPTIONS.filter((label) => label.startsWith(grens))
+      expect(treffers).toHaveLength(1)
+    }
   })
 
   it('komen uit dezelfde bron als de staffel', () => {

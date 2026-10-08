@@ -213,8 +213,8 @@ describe('public/llms.txt volgt de staffel', () => {
     expect(gevonden).toEqual(verwacht)
   })
 
-  it('zegt dat boven 1.000 medewerkers op aanvraag is en dat Loep niet aan tafel zit', () => {
-    expect(llms()).toContain('boven 1.000 medewerkers op aanvraag')
+  it('zegt dat 1.000 of meer medewerkers op aanvraag is en dat Loep niet aan tafel zit', () => {
+    expect(llms()).toContain('1.000 of meer medewerkers op aanvraag')
     expect(llms()).toContain('Geen bespreking door Loep')
   })
 })

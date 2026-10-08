@@ -386,7 +386,7 @@ function CultureAssessmentPage() {
                     ['Vragenlijst', 'Vaste 40-item enterprise-baseline', 'Op maat, lang traject', 'Zelf bouwen, geen validatie'],
                     ['Governance', 'Minimum-n hardcoded, manager detail standaard locked', 'Afhankelijk van afspraken', 'Niet ingebouwd'],
                     ['Prijs', `Vanaf ${formatEur(CULTUURBEELD_FROM_EUR)}`, '€25.000 tot €100.000 en meer', 'Laag instap, hoge tijdsinvestering'],
-                    ['Geschikt voor', '100 tot 1.000 medewerkers, directie als koper', 'Organisaties boven 1.000 medewerkers', 'Teams die zelf willen bouwen'],
+                    ['Geschikt voor', '100 tot 1.000 medewerkers, directie als koper', 'Organisaties met 1.000 of meer medewerkers', 'Teams die zelf willen bouwen'],
                   ].map(([thema, ...cols]) => (
                     <tr key={thema} style={{ borderBottom: `1px solid ${T.rule}`, background: T.white }}>
                       <td style={{ padding: '12px 14px', fontWeight: 600, color: T.ink, verticalAlign: 'top' }}>{thema}</td>
