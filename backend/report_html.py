@@ -3744,10 +3744,10 @@ BESLUIT_REVIEW_HINT = {
 BESLUIT_ONLEESBAAR = ("Loep kon niet nagaan of er al een besluit is vastgelegd in het dashboard; "
                       "vul het hieronder in.")
 # Meting (2026-09-20, productie-image WeasyPrint 70.0): een besluit waarin elk
-# tekstveld op zijn frontendlimiet zit (DECISION_LIMITS.action/.text = 600 in
-# frontend/lib/dashboard/campaign-decision.ts) duwt de besluitpagina over een
-# tweede vel; op 470 tekens per lang veld past hij nog net, op 480 niet meer.
-# Daarom stond de grens op 300.
+# tekstveld op zijn toenmalige frontendlimiet zit (DECISION_LIMITS.action/.text
+# stond toen op 600 in frontend/lib/dashboard/campaign-decision.ts) duwt de
+# besluitpagina over een tweede vel; op 470 tekens per lang veld past hij nog
+# net, op 480 niet meer. Daarom stond de grens op 300.
 # Fixronde leesronde 24-9 (Taak 11): het blok "Afspraak per afdeling" kwam
 # erbij, en met een aangewezen afdeling liep de pagina bij 300 weer over.
 # Gemeten met scripts/render_besluit_max.py (alle velden op hun limiet, ook
@@ -3755,6 +3755,14 @@ BESLUIT_ONLEESBAAR = ("Loep kon niet nagaan of er al een besluit is vastgelegd i
 # in report_css.py (.bl-blok, .bl-rij/.bl-drie, .bl-hint) houdt het slechtste
 # geval, Loep Vertrek met een aangewezen afdeling, 25,1pt over. Het nieuwe
 # knikpunt (boven 240) is niet gemeten.
+# Vervolgronde vertrekmaand en zes keuzes (Taak 10): DECISION_LIMITS.action/
+# .text in de frontend gingen naar 240, gelijk aan deze grens, zodat een
+# nieuw besluit niet meer kan worden ingekort. Een besluit dat vóór die
+# wijziging is opgeslagen kan nog tot 600 tekens per lang veld bevatten (de
+# database kort bestaande rijen niet met terugwerkende kracht af); de
+# besluitpagina toont zo'n oud besluit nog steeds als het begin, met
+# BESLUIT_INGEKORT. scripts/render_besluit_max.py meet dat geval met een
+# eigen "_oud"-variant, zodat dit vel één A4 blijft.
 BESLUIT_TEKST_MAX = 240
 BESLUIT_INGEKORT = ("Dit vel toont het begin van lange antwoorden; het volledige besluit staat "
                     "in het dashboard.")

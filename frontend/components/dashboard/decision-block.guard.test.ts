@@ -99,13 +99,27 @@ describe('blok "Besluit vastleggen" (plan 3b, spec 2026-09-16 par. 7)', () => {
   // dat zijn tekst niet past; geen stille afkap (Fail Loud).
   const LONG_FIELDS = ['primaryAction', 'secondaryAction', 'feedbackPlan', 'successCriterion']
 
-  it('toont bij elk lang veld een teller die live meetelt', () => {
-    // CharCount zelf draagt aria-live="polite"; elk lang veld gebruikt hem via
-    // een eigen id (`<CharCount id="decision-count-<veld>" .../>`).
-    expect(source).toMatch(/function CharCount\([^)]*\)[\s\S]{0,200}?aria-live="polite"/)
+  it('toont bij elk lang veld een teller met een eigen id', () => {
+    // CharCount gebruikt elk lang veld via een eigen id
+    // (`<CharCount id="decision-count-<veld>" .../>`).
     for (const field of LONG_FIELDS) {
       expect(source).toContain(`<CharCount id="decision-count-${field}"`)
     }
+  })
+
+  it('kondigt alleen de waarschuwing aan, niet elke toetsaanslag', () => {
+    // Controller-amendement op taak 10: de telling zelf is geen live region
+    // (dat zou bij elke toetsaanslag onderbreken); alleen de waarschuwing bij
+    // overschrijding is aria-live="polite", en staat er pas zodra hij nodig is.
+    const start = source.indexOf('function CharCount')
+    expect(start).toBeGreaterThan(-1)
+    const end = source.indexOf('\n}', start)
+    const body = source.slice(start, end)
+    expect(body).toMatch(/<span id=\{id\}[^>]*>/)
+    expect(body).not.toMatch(/<span id=\{id\}[^>]*aria-live/)
+    expect(body).toMatch(/aria-live="polite"/)
+    // De waarschuwing staat alleen gerenderd als `over` waar is.
+    expect(body).toMatch(/over \? <span aria-live="polite">/)
   })
 
   it('koppelt elk lang veld aan zijn teller via aria-describedby', () => {

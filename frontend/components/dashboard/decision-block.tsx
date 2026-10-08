@@ -45,16 +45,18 @@ const countOverClass = 'block text-xs font-semibold text-red-600'
  * Teller voor een lang veld (primaryAction, secondaryAction, feedbackPlan,
  * successCriterion): die vier kunnen op de besluitpagina worden ingekort
  * (BESLUIT_TEKST_MAX, zie DECISION_LIMITS in lib/dashboard/campaign-decision.ts).
- * aria-live="polite" zodat een schermlezer meekrijgt dat het veld te lang
- * wordt zonder elke toetsaanslag te onderbreken. Toont nooit een afgekapte
- * waarde: alleen de lengte, en bij overschrijding de meldtekst.
+ * De telling zelf (`{lengte} / {max}`) is géén live region: bij elke
+ * toetsaanslag zou een schermlezer dan constant onderbroken worden. Alleen de
+ * waarschuwing bij overschrijding is aria-live="polite", en staat er pas
+ * zodra hij nodig is: zo komt er maar één aankondiging, op het moment dat het
+ * veld te lang wordt. Toont nooit een afgekapte waarde: alleen de lengte.
  */
 function CharCount({ id, length, max }: { id: string; length: number; max: number }) {
   const over = length > max
   return (
-    <span id={id} aria-live="polite" className={over ? countOverClass : hintClass}>
+    <span id={id} className={over ? countOverClass : hintClass}>
       {length} / {max}
-      {over ? ` Te lang voor het rapport: kort in tot ${max} tekens.` : ''}
+      {over ? <span aria-live="polite">{` Te lang voor het rapport: kort in tot ${max} tekens.`}</span> : null}
     </span>
   )
 }

@@ -237,14 +237,20 @@ def test_ingevuld_terugkoppelingsplan_wordt_geescaped():
 
 # ── Opvolgtaak: lange tekstvelden begrensd zodat het vel één A4 blijft ───────
 # Gemeten in het productie-image (WeasyPrint 70.0, zie het commitbericht): een
-# besluit met alle vier lange velden op de frontendlimiet (600 tekens,
-# DECISION_LIMITS.action/.text) duwt de pagina over een tweede vel. Op 470
-# tekens per veld past hij nog net, op 480 niet meer; de grens werd 300.
+# besluit met alle vier lange velden op de toenmalige frontendlimiet (600
+# tekens, DECISION_LIMITS.action/.text) duwt de pagina over een tweede vel. Op
+# 470 tekens per veld past hij nog net, op 480 niet meer; de grens werd 300.
 # Taak 11 (fixronde 24-9): met het blok "Afspraak per afdeling" liep hij bij
 # 300 weer over. Nu 240 plus kleinere tussenruimte (hefboom F); het slechtste
 # geval (Loep Vertrek met een afdeling, onderwerp en eigenaar op 120 tekens,
 # scripts/render_besluit_max.py) houdt 25,1pt over. Het nieuwe knikpunt is
 # niet gemeten.
+# Vervolgronde vertrekmaand en zes keuzes (Taak 10): DECISION_LIMITS.action/
+# .text staan nu zelf op 240, gelijk aan BESLUIT_TEKST_MAX, zodat een nieuw
+# besluit niet meer wordt ingekort. Een bestaand besluit van vóór die
+# wijziging kan nog tot 600 tekens per lang veld bevatten; dat geval (nog
+# steeds met BESLUIT_INGEKORT) meet scripts/render_besluit_max.py met een
+# eigen "_oud"-variant.
 from backend.report_html import BESLUIT_INGEKORT, BESLUIT_TEKST_MAX, _bl_kort
 
 
