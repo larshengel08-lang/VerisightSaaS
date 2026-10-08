@@ -36,7 +36,9 @@ Indeling: per soort gegevens een eigen inventaris-, tel- en opschoonfunctie en
 een eigen rapportage: metingen (opschonen, Rapportage), leads en leerdossiers
 (opschonen_contacten, ContactRapportage) en gebruiksgegevens zonder meting
 (opschonen_gebruik, Gebruiksregel). Voor alle drie geldt: dry-run standaard,
-één transactie per eenheid die eerst opnieuw toetst, tweede run doet niets.
+per eenheid een transactie die de voorwaarde bij het schrijven opnieuw toetst
+(voor metingen, leads en dossiers vooraf met een slot, voor gebruiksgegevens
+in de delete zelf), tweede run doet niets.
 De periodieke run (zonder --campagne of --organisatie) doet alle drie; een
 verzoek per meting of organisatie raakt alleen metingen.
 
@@ -54,9 +56,10 @@ NIET_ORM_TABELLEN. Rijen zonder campaign_id (nooit gekoppeld, of losgeraakt
 doordat de meting verdween) hebben een eigen termijn (vervolgronde 7-10, spec
 2026-10-07 par. 7): GEBRUIK_TERMIJN_MAANDEN (24) na created_at, met dezelfde
 dagberekening in Nederlandse tijd en dezelfde vooruitblik als leads. Eenheid is
-de tabel: per tabel één transactie die de kandidaten (campaign_id is null) op
-Postgres met FOR UPDATE vasthoudt en bij het verwijderen opnieuw toetst dat
-campaign_id leeg is. Ontbreekt de tabel, dan een LET OP-regel (niet rood); mist
+de tabel: per tabel één transactie die de rijen zonder meting zonder slot
+leest en beoordeelt, met --apply alleen de verlopen rijen vergrendelt (op
+Postgres FOR UPDATE) en bij het verwijderen opnieuw toetst dat campaign_id
+leeg is; wordt er minder verwijderd dan er verliepen, dan rolt de tabel terug. Ontbreekt de tabel, dan een LET OP-regel (niet rood); mist
 hij id, campaign_id of created_at, of heeft een rij geen created_at, dan wordt
 er niets geraakt en is de run rood (exitcode 1). Het bewijs van toestemming
 voor gepubliceerde cases bewaart Loep buiten de database.
@@ -973,6 +976,26 @@ class Gebruiksregel:
     ontbrekende_kolommen: list[str] = field(default_factory=list)
 
 
+def _in_stukken(ids: list[str]) -> Iterable[list[str]]:
+    for i in range(0, len(ids), GEBRUIK_STUK):
+        yield ids[i:i + GEBRUIK_STUK]
+
+
+def _vergrendel_gebruik(db: Session, tabel: str, ids: list[str]) -> None:
+    """Vergrendel de verlopen rijen die nog geen meting hebben (alleen met apply).
+
+    Op Postgres met FOR UPDATE: een rij die tussendoor een meting kreeg, valt
+    hier af (Postgres toetst de voorwaarde na het wachten opnieuw) en blijft
+    daarna vast tot de commit. SQLite kent FOR UPDATE niet; daar dezelfde
+    select zonder slot.
+    """
+    slot = " for update" if db.get_bind().dialect.name == "postgresql" else ""
+    q = text("select id from " + tabel + " where id in :ids and campaign_id is null"
+             + slot).bindparams(bindparam("ids", expanding=True, type_=GUID()))
+    for stuk in _in_stukken(ids):
+        db.execute(q, {"ids": stuk}).all()
+
+
 def _verwijder_gebruik(db: Session, tabel: str, ids: list[str]) -> int:
     """Verwijder deze rijen, alleen als ze nog steeds geen meting hebben.
 
@@ -980,20 +1003,20 @@ def _verwijder_gebruik(db: Session, tabel: str, ids: list[str]) -> int:
     """
     q = text("delete from " + tabel + " where id in :ids and campaign_id is null").bindparams(
         bindparam("ids", expanding=True, type_=GUID()))
-    weg = 0
-    for i in range(0, len(ids), GEBRUIK_STUK):
-        weg += db.execute(q, {"ids": ids[i:i + GEBRUIK_STUK]}).rowcount
-    return weg
+    return sum(db.execute(q, {"ids": stuk}).rowcount for stuk in _in_stukken(ids))
 
 
 def _schoon_gebruik_op(session_factory: Callable[[], Session], regel: Gebruiksregel, *,
                        vandaag: date, apply: bool) -> None:
     """Een tabel in een eigen transactie: tellen, en met apply verwijderen.
 
-    Op Postgres houdt FOR UPDATE de kandidaatrijen vast tot de commit: een
-    rij die tussendoor een meting krijgt, wacht en wordt daarna niet meer
-    geraakt (de delete toetst campaign_id opnieuw). Een fout rolt alleen deze
-    tabel terug.
+    Eerst een select zonder slot op alle rijen zonder meting, om te tellen en
+    te bepalen welke verlopen zijn. Met apply daarna alleen de verlopen rijen
+    vergrendelen (_vergrendel_gebruik) en verwijderen; de delete toetst
+    opnieuw dat campaign_id leeg is. Kreeg een rij tussendoor toch een meting,
+    dan worden minder rijen verwijderd dan er verlopen waren: dan rolt de
+    hele tabel terug (GebruikVeranderd) en is de run rood. Elke fout rolt
+    alleen deze tabel terug. Zonder apply een alleen-lezen transactie.
     """
     db = session_factory()
     try:
@@ -1007,9 +1030,8 @@ def _schoon_gebruik_op(session_factory: Callable[[], Session], regel: Gebruiksre
         if regel.ontbrekende_kolommen:
             regel.status = "onvolledig"
             return
-        slot = " for update" if apply and db.get_bind().dialect.name == "postgresql" else ""
         q = _q("select id, created_at from " + regel.tabel + " where campaign_id is null "
-               "order by id" + slot, id=GUID(), created_at=DateTime(timezone=True))
+               "order by id", id=GUID(), created_at=DateTime(timezone=True))
         verlopen: list[str] = []
         for rid, aangemaakt in db.execute(q):
             if aangemaakt is None:
@@ -1022,6 +1044,7 @@ def _schoon_gebruik_op(session_factory: Callable[[], Session], regel: Gebruiksre
                 regel.binnen_termijn += 1
         regel.verlopen = len(verlopen)
         if apply and verlopen:
+            _vergrendel_gebruik(db, regel.tabel, verlopen)
             weg = _verwijder_gebruik(db, regel.tabel, verlopen)
             if weg != len(verlopen):
                 raise GebruikVeranderd("minder_rijen")
@@ -1038,7 +1061,7 @@ def _schoon_gebruik_op(session_factory: Callable[[], Session], regel: Gebruiksre
         # Bewust zonder exc_info: de traceback bevat de melding zelf.
         logger.error("opschoning mislukt voor tabel %s: %s", regel.tabel, regel.fout)
     finally:
-        db.rollback()
+        # close() rolt een nog open transactie terug (ook na een vroege return).
         db.close()
 
 

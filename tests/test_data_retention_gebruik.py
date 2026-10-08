@@ -151,6 +151,60 @@ def test_grens_volgt_dezelfde_dagberekening_en_vooruitblik_als_leads(engine, fab
     assert rid not in _ids(engine, "case_proof_registry")
 
 
+def test_grens_vast_op_de_kalender(engine, fabriek):
+    # Aangemaakt 15 juni 2026 23:30 UTC = 16 juni 01:30 Nederlandse tijd:
+    # termijn tot 16 juni 2028. Met een maand vooruitblik pakt de run hem
+    # vanaf 16 mei 2028 (16 mei + 1 maand = 16 juni), op 15 mei nog niet.
+    rid = _rij(engine, "suite_telemetry_events", datetime(2026, 6, 15, 23, 30, tzinfo=timezone.utc))
+    ervoor = dr.opschonen_gebruik(fabriek, vandaag=date(2028, 5, 15), apply=True)
+    assert _regel(ervoor, "suite_telemetry_events").binnen_termijn == 1
+    assert rid in _ids(engine, "suite_telemetry_events")
+    erop = dr.opschonen_gebruik(fabriek, vandaag=date(2028, 5, 16), apply=True)
+    assert _regel(erop, "suite_telemetry_events").verwijderd == 1
+    assert rid not in _ids(engine, "suite_telemetry_events")
+
+
+def test_rij_die_tussendoor_een_meting_krijgt_rolt_de_tabel_terug(engine, fabriek, monkeypatch,
+                                                                  capsys):
+    # Een kandidaat krijgt in dezelfde transactie, vlak voor de delete, toch
+    # een meting: de delete toetst campaign_id opnieuw, verwijdert er minder
+    # dan er verliepen, en dan gaat er niets weg.
+    cid, _org = _meting(fabriek, slug="race", gesloten=None, actief=True)
+    eerste = _rij(engine, "suite_telemetry_events", OUD)
+    tweede = _rij(engine, "suite_telemetry_events", OUD)
+    echte = dr._verwijder_gebruik
+
+    def koppel_dan_verwijder(db, tabel, ids):
+        db.execute(text("update " + tabel + " set campaign_id = :c where id = :i"),
+                   {"c": cid, "i": eerste})
+        return echte(db, tabel, ids)
+
+    monkeypatch.setattr(dr, "_verwijder_gebruik", koppel_dan_verwijder)
+    rapport = dr.opschonen_gebruik(fabriek, vandaag=VANDAAG, apply=True)
+    regel = _regel(rapport, "suite_telemetry_events")
+    assert (regel.status, regel.verwijderd) == ("fout", 0)
+    assert regel.fout == "GebruikVeranderd: nu minder_rijen"
+    assert _ids(engine, "suite_telemetry_events") == {eerste, tweede}
+    with engine.connect() as con:            # ook de koppeling is teruggedraaid
+        assert con.execute(text("select count(*) from suite_telemetry_events "
+                                "where campaign_id is not null")).scalar() == 0
+    assert dr.main(["--apply"], session_factory=fabriek, vandaag=VANDAAG) == 1
+    uit = capsys.readouterr().out
+    regel_uit = next(r for r in uit.splitlines() if "tabel=suite_telemetry_events" in r)
+    assert regel_uit.startswith("FOUT") and "GebruikVeranderd" in regel_uit
+    assert _ids(engine, "suite_telemetry_events") == {eerste, tweede}
+
+
+def test_verwijdert_in_blokken(engine, fabriek, monkeypatch):
+    monkeypatch.setattr(dr, "GEBRUIK_STUK", 2)
+    for _ in range(5):
+        _rij(engine, "case_proof_registry", OUD)
+    rapport = dr.opschonen_gebruik(fabriek, vandaag=VANDAAG, apply=True)
+    regel = _regel(rapport, "case_proof_registry")
+    assert (regel.status, regel.verlopen, regel.verwijderd) == ("ok", 5, 5)
+    assert _ids(engine, "case_proof_registry") == set()
+
+
 def test_rij_zonder_aanmaakdatum_wordt_niet_geraakt_en_is_rood(engine, fabriek, capsys):
     zonder = _rij(engine, "suite_telemetry_events", None)
     oud = _rij(engine, "suite_telemetry_events", OUD)
