@@ -40,15 +40,22 @@ describe('blok "Besluit vastleggen" (plan 3b, spec 2026-09-16 par. 7)', () => {
     expect(source).not.toContain('Je mensen vulden in')
   })
 
-  it('toont de terugkoppelhint alleen als de scan er een heeft', () => {
-    expect(source).toContain("aria-describedby={feedbackHint ? 'decision-hint-feedback' : undefined}")
+  it('toont de terugkoppelhint alleen als de scan er een heeft, de teller altijd', () => {
+    // Taak 10: de teller (decision-count-feedbackPlan) is nu altijd gekoppeld,
+    // de terugkoppelhint alleen als de scan er een heeft.
+    expect(source).toContain(
+      "aria-describedby={feedbackHint ? 'decision-hint-feedback decision-count-feedbackPlan' : 'decision-count-feedbackPlan'}",
+    )
     expect(source).toMatch(/\{feedbackHint \? \(\s*<span id="decision-hint-feedback"/)
   })
 
   it('koppelt elke hint via aria-describedby en zet hem buiten het label', () => {
+    // Taak 10: sommige velden koppelen nu twee ids (hint + teller), dus het
+    // id staat niet altijd meer direct tussen aanhalingstekens; wel als los
+    // woord binnen de aria-describedby-waarde.
     for (const id of HINT_IDS) {
       expect(source).toContain(`id="${id}"`)
-      expect(source).toMatch(new RegExp(`aria-describedby=(\\{[^}]*)?["']${id}["']`))
+      expect(source).toMatch(new RegExp(`aria-describedby=[^\\n]*\\b${id}\\b`))
     }
     // Geen hint meer binnen een <label>: de toegankelijke naam is alleen het label.
     for (const label of source.split('<label').slice(1)) {
@@ -85,5 +92,30 @@ describe('blok "Besluit vastleggen" (plan 3b, spec 2026-09-16 par. 7)', () => {
   it('veronderstelt geen begeleider en gebruikt geen streepjes', () => {
     expect(source).not.toMatch(/bespreking met Loep|begeleide|tijdens de bespreking/)
     expect(source).not.toMatch(/[—–]/)
+  })
+
+  // Taak 10: de besluitvelden kregen dezelfde grens als de PDF (240 i.p.v.
+  // 600). Een teller per lang veld voorkomt dat iemand pas bij opslaan merkt
+  // dat zijn tekst niet past; geen stille afkap (Fail Loud).
+  const LONG_FIELDS = ['primaryAction', 'secondaryAction', 'feedbackPlan', 'successCriterion']
+
+  it('toont bij elk lang veld een teller die live meetelt', () => {
+    // CharCount zelf draagt aria-live="polite"; elk lang veld gebruikt hem via
+    // een eigen id (`<CharCount id="decision-count-<veld>" .../>`).
+    expect(source).toMatch(/function CharCount\([^)]*\)[\s\S]{0,200}?aria-live="polite"/)
+    for (const field of LONG_FIELDS) {
+      expect(source).toContain(`<CharCount id="decision-count-${field}"`)
+    }
+  })
+
+  it('koppelt elk lang veld aan zijn teller via aria-describedby', () => {
+    for (const field of LONG_FIELDS) {
+      expect(source).toMatch(new RegExp(`name="${field}"[\\s\\S]{0,400}?aria-describedby=[^>]*decision-count-${field}`))
+    }
+  })
+
+  it('kapt geen besluitveld stil af: geen .slice(0, of .substring(0, op een veldwaarde', () => {
+    expect(source).not.toMatch(/\.slice\(0,/)
+    expect(source).not.toMatch(/\.substring\(0,/)
   })
 })
