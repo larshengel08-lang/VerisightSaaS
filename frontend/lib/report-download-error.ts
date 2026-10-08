@@ -32,11 +32,20 @@ export function summarizeTechnicalDetail(detail: unknown): string | null {
  * de tekst zelf. Null bij lege of niet-tekst invoer.
  */
 function unwrapDetail(detail: unknown): string | null {
+  return parseDetail(detail)?.text ?? null
+}
+
+/**
+ * Zoals unwrapDetail, maar zegt ook of de tekst echt uit een JSON-object met
+ * een niet-lege tekstuele `detail` kwam (fromJsonDetail). Een FastAPI-
+ * validatiefout heeft een lijst als detail en telt dus niet mee.
+ */
+function parseDetail(detail: unknown): { text: string; fromJsonDetail: boolean } | null {
   if (typeof detail !== 'string') return null
 
   const trimmed = detail.trim()
   if (!trimmed) return null
-  if (looksLikeHtml(trimmed)) return trimmed
+  if (looksLikeHtml(trimmed)) return { text: trimmed, fromJsonDetail: false }
 
   try {
     const parsed = JSON.parse(trimmed) as unknown
@@ -47,13 +56,13 @@ function unwrapDetail(detail: unknown): string | null {
       typeof (parsed as { detail?: unknown }).detail === 'string' &&
       (parsed as { detail: string }).detail.trim()
     ) {
-      return (parsed as { detail: string }).detail.trim()
+      return { text: (parsed as { detail: string }).detail.trim(), fromJsonDetail: true }
     }
   } catch {
     // Geen geldige JSON: gebruik de tekst zoals die is.
   }
 
-  return trimmed
+  return { text: trimmed, fromJsonDetail: false }
 }
 
 /** Begin van de 410-melding van de backend (backend/data_retention.py, ReportDataPurged). */
@@ -92,15 +101,54 @@ export function reportFailureMessage(status: number, detail: unknown): string | 
   return value
 }
 
+/**
+ * Een 422 van de rapportroute betekent dat het rapport volgens een
+ * bedrijfsregel nog niet bestaat (backend ReportNotAvailable). De backend
+ * geeft dan een eigen, eerlijke zin mee die de hoofdmelding wordt. Alleen een
+ * korte tekstuele `detail` uit een JSON-object telt: geen validatielijst van
+ * FastAPI, geen geneste JSON, geen HTML, niet te lang en zonder regeleinde.
+ * Anders null: dan gelden downloadErrorMessage plus de technische melding.
+ */
+export function notAvailableMessage(status: number, detail: unknown): string | null {
+  if (status !== 422) return null
+  const parsed = parseDetail(detail)
+  if (parsed === null || !parsed.fromJsonDetail) return null
+  const value = parsed.text
+  if (value.startsWith('{') || value.startsWith('[')) return null
+  if (looksLikeHtml(value)) return null
+  if (value.length > MAX_TECHNICAL_DETAIL_LENGTH) return null
+  if (/[\r\n]/.test(value)) return null
+  return value
+}
+
+/**
+ * Wat de downloadknop toont bij een mislukte download (niet-ok antwoord van de
+ * rapportproxy). Een herkende backendzin (410 na de opschoning, 422 rapport
+ * nog niet beschikbaar, 500 mislukte generatie) is zelf de hoofdmelding,
+ * zonder technische regel die hem alleen zou herhalen. Elke andere fout krijgt
+ * de hoofdzin per statuscode plus de technische melding (Fail Loud).
+ */
+export function resolveDownloadError(
+  status: number,
+  rawDetail: unknown,
+): { message: string; technical: string | null } {
+  const known =
+    purgedDownloadMessage(status, rawDetail) ??
+    notAvailableMessage(status, rawDetail) ??
+    reportFailureMessage(status, rawDetail)
+  if (known !== null) return { message: known, technical: null }
+  return { message: downloadErrorMessage(status), technical: summarizeTechnicalDetail(rawDetail) }
+}
+
 function looksLikeHtml(value: string): boolean {
   return /^\s*</.test(value)
 }
 
 /**
  * Statusgebonden Nederlandse hoofdmelding voor een mislukte rapportdownload.
- * De technische melding (summarizeTechnicalDetail) blijft daarnaast altijd
- * zichtbaar; deze functie bepaalt alleen de zin die uitlegt wat de klant kan
- * doen.
+ * De technische melding (summarizeTechnicalDetail) blijft daarnaast zichtbaar,
+ * behalve bij een herkende backendzin (zie resolveDownloadError); deze functie
+ * bepaalt alleen de zin die uitlegt wat de klant kan doen.
  */
 export function downloadErrorMessage(status: number): string {
   if (status === 401) {
@@ -109,6 +157,12 @@ export function downloadErrorMessage(status: number): string {
 
   if (status === 403 || status === 404) {
     return `Je hebt geen toegang tot dit rapport met dit account. Mail ${LOEP_CONTACT_EMAIL} als dit niet klopt.`
+  }
+
+  // 422: het rapport bestaat volgens een bedrijfsregel nog niet. Opnieuw
+  // proberen helpt dan niet; de backendzin staat in de technische melding.
+  if (status === 422) {
+    return `Dit rapport is nu nog niet beschikbaar. Mail ${LOEP_CONTACT_EMAIL} als je denkt dat dit niet klopt.`
   }
 
   // 410: de gegevens van de meting zijn na de bewaartermijn (of op verzoek)

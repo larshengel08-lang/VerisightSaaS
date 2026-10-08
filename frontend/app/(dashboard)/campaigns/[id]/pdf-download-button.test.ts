@@ -27,28 +27,17 @@ describe('pdf download button guardrails', () => {
   it('legt een mislukte download in het Nederlands uit, met contact, en houdt de technische melding apart (walkthrough 5.3)', () => {
     const source = readFileSync(new URL('./pdf-download-button.tsx', import.meta.url), 'utf8')
 
-    expect(source).toContain(
-      "import { downloadErrorMessage, purgedDownloadMessage, summarizeTechnicalDetail } from '@/lib/report-download-error'",
-    )
-    expect(source).toContain('downloadErrorMessage(response.status)')
     expect(source).toContain('Technische melding:')
     expect(source).not.toContain('Controleer of de backend bereikbaar is')
     expect(source).not.toContain('Rapport kon niet worden gegenereerd')
     expect(source).not.toMatch(/[—–]/)
   })
 
-  it('geeft de statuscode-specifieke hoofdmelding en de ruwe backend-body altijd door aan summarizeTechnicalDetail (code review Task 9)', () => {
+  it('laat de keuze tussen hoofdzin en technische melding over aan resolveDownloadError (gedrag getest in lib/report-download-error.test.ts)', () => {
     const source = readFileSync(new URL('./pdf-download-button.tsx', import.meta.url), 'utf8')
 
-    expect(source).toContain('technical: summarizeTechnicalDetail(rawDetail)')
+    expect(source).toContain('setError(resolveDownloadError(response.status, rawDetail))')
     expect(source).not.toContain('detail.trim()')
-  })
-
-  it('toont bij een 410 na de opschoning de backendzin met datum als hoofdmelding, zonder herhaling als technische melding', () => {
-    const source = readFileSync(new URL('./pdf-download-button.tsx', import.meta.url), 'utf8')
-
-    expect(source).toContain('purgedDownloadMessage(response.status, rawDetail)')
-    expect(source).toContain('{ message: purgedMessage, technical: null }')
   })
 
   it('logt en toont de echte fout bij een verbindingsprobleem in plaats van een vaste "backend bereikbaar"-tekst (code review Task 9)', () => {
