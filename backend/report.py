@@ -93,6 +93,7 @@ from backend.report_design import (
     make_page_callbacks,
 )
 from backend.report_content import FACTOR_EXPLANATIONS, METHODOLOGY_REFERENCES
+from backend.report_errors import ReportNotAvailable
 from backend.scan_definitions import get_scan_definition
 from backend.scoring import (
     FACTOR_LABELS_NL,
@@ -6122,17 +6123,17 @@ def _generate_culture_assessment_report(
         if respondent.completed and respondent.response is not None
     ]
     if camp.is_active:
-        raise ValueError("Loep Culture Assessment boardrapport komt pas beschikbaar na formele sluiting van de baseline.")
+        raise ReportNotAvailable("Loep Culture Assessment boardrapport komt pas beschikbaar na formele sluiting van de baseline.")
 
     organization_min_n = int(methodology_payload["organization_min_n"])
     if len(responses) < organization_min_n:
-        raise ValueError(
+        raise ReportNotAvailable(
             f"Loep Culture Assessment boardrapport vraagt minimaal {organization_min_n} volledige responses."
         )
 
     culture_values = [float(response.risk_score) for response in responses if isinstance(response.risk_score, (int, float))]
     if not culture_values:
-        raise ValueError("Loep Culture Assessment boardrapport vraagt geldige Culture Index-scoredata.")
+        raise ReportNotAvailable("Loep Culture Assessment boardrapport vraagt geldige Culture Index-scoredata.")
 
     org = camp.organization
     now_str = datetime.now(timezone.utc).strftime("%d-%m-%Y %H:%M UTC")

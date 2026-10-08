@@ -488,3 +488,58 @@ def test_422_segmentexport_valueerror_is_geen_fout_in_sentry(client, db_session,
     assert res.status_code == 422
     sentry_sdk.flush()
     assert sentry_vanger.events == []
+
+
+def test_422_open_cultuurmeting_via_pdf_route_is_geen_fout_in_sentry(client, db_session, sentry_vanger):
+    """Bedrijfsregel van de legacy-renderer (ReportNotAvailable): een open
+    meting heeft nog geen rapport. Dat is geen fout en geen melding waard."""
+    cid = _meting(db_session, scan_type="culture_assessment")
+    db_session.query(Campaign).filter(Campaign.id == cid).update({"is_active": True})
+    db_session.commit()
+    res = client.get(f"/api/campaigns/{cid}/report", headers={"x-api-key": _API_KEY})
+    assert res.status_code == 422
+    assert res.json() == {
+        "detail": "Loep Culture Assessment boardrapport komt pas beschikbaar na formele sluiting van de baseline."
+    }
+    sentry_sdk.flush()
+    assert sentry_vanger.events == []
+
+
+def test_gewone_valueerror_uit_legacy_renderer_is_een_gemelde_500(client, db_session, sentry_vanger):
+    """Alleen ReportNotAvailable is een 422. Een gewone ValueError is een bug:
+    gemeld, en de ruwe waarde gaat niet naar de klant."""
+    geheim = "Bosman " + "salaris 98765"
+    cid = _meting(db_session, scan_type="culture_assessment")
+    with patch("backend.report.generate_campaign_report",
+               side_effect=ValueError("could not convert string to float: " + geheim)):
+        res = client.get(f"/api/campaigns/{cid}/report", headers={"x-api-key": _API_KEY})
+    assert res.status_code == 500
+    assert res.json() == {"detail": observability.REPORT_FAILED_REPORTED}
+    assert geheim not in res.text
+    sentry_sdk.flush()
+    assert len(sentry_vanger.events) == 1, json.dumps(sentry_vanger.events, default=str)
+    assert sentry_vanger.events[0]["tags"]["report_route"] == "klant_pdf"
+
+
+def test_mutatie_met_status_code_geeft_twee_events(client, db_session, sentry_vanger, monkeypatch):
+    """Bewijst dat de 'precies één event'-tests dubbel melden door de
+    integratie op backend.main.app wél zouden zien: met een status_code-
+    attribuut meldt de FastAPI-integratie de exceptie nog een keer."""
+    monkeypatch.setattr(observability.ReportGenerationFailed, "status_code", 500, raising=False)
+    cid = _meting(db_session)
+    with patch("backend.report_html.generate_campaign_report_html", side_effect=_renderfout):
+        res = client.get(f"/api/campaigns/{cid}/report", headers={"x-api-key": _API_KEY})
+    assert res.status_code == 500
+    sentry_sdk.flush()
+    assert len(sentry_vanger.events) == 2, json.dumps(sentry_vanger.events, default=str)
+
+
+def test_databasefout_in_pdf_route_wordt_503_zonder_melding(client, db_session, sentry_vanger):
+    from sqlalchemy.exc import OperationalError
+
+    cid = _meting(db_session)
+    with patch("backend.main._generate_report_pdf", side_effect=OperationalError("x", {}, Exception())):
+        res = client.get(f"/api/campaigns/{cid}/report", headers={"x-api-key": _API_KEY})
+    assert res.status_code == 503
+    sentry_sdk.flush()
+    assert sentry_vanger.events == []

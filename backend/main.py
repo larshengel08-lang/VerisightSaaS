@@ -26,6 +26,7 @@ import sentry_sdk
 from openpyxl import load_workbook
 
 from backend.observability import ReportGenerationFailed, init_sentry, report_generation_failed
+from backend.report_errors import ReportNotAvailable
 
 _SENTRY_DSN = os.getenv("SENTRY_DSN")
 if _SENTRY_DSN:
@@ -2139,13 +2140,21 @@ def _gone(exc: ReportDataPurged) -> HTTPException:
 def _pdf_of_410(campaign_id: str, db: Session, *, scan_type: str | None, route: str) -> tuple[bytes, str]:
     """_generate_report_pdf voor de PDF-routes. Landt de opschoning tussen de
     controle in de route en de generatie, dan alsnog een 410 in plaats van een
-    500 (_generate_report_pdf controleert zelf opnieuw). Elke andere fout gaat
-    naar Sentry en wordt een 500 met vaste tekst (spec 2026-10-08, punt 2).
-    Databasefouten blijven bij de bestaande 503-handlers."""
+    500 (_generate_report_pdf controleert zelf opnieuw). Een rapport dat
+    volgens een bedrijfsregel nog niet bestaat (ReportNotAvailable) wordt een
+    422 met de vaste tekst, zonder melding. Elke andere fout gaat naar Sentry
+    en wordt een 500 met vaste tekst (spec 2026-10-08, punt 2).
+
+    Databasefouten uit de queries vóór het renderen en uit het legacy-pad gaan
+    naar de bestaande 503-handlers. Op het loep-v6-pad verpakt
+    _generate_report_pdf elke renderfout, ook een databasefout, in een
+    RuntimeError; die wordt dus een gemelde 500 (Fail Loud)."""
     try:
         return _generate_report_pdf(campaign_id, db)
     except ReportDataPurged as exc:
         raise _gone(exc) from exc
+    except ReportNotAvailable as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     except SQLAlchemyError:
         raise
     except Exception as exc:

@@ -171,4 +171,5 @@ def report_generation_failed(
         scope.set_tag("scan_type", scan_type or "onbekend")
         scope.set_tag("report_route", route)
         event_id = scope.capture_exception(exc)
+    # Als hetzelfde exceptie-object eerder al is gemeld, laat Sentry's dedupe dit event vallen; dan is reported False en zegt de melding eerlijk dat er geen melding is.
     return ReportGenerationFailed(reported=event_id is not None)
