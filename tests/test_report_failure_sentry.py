@@ -98,6 +98,8 @@ def test_sentry_opties_sturen_geen_lokale_variabelen_body_of_pii():
 
 def test_scrub_event_houdt_alleen_methode_en_url_zonder_query():
     event = {
+        "transaction": "/api/campaigns/{campaign_id}/report",
+        "transaction_info": {"source": "route"},
         "request": {
             "method": "GET",
             "url": "https://api.test/api/campaigns/abc/report",
@@ -109,25 +111,53 @@ def test_scrub_event_houdt_alleen_methode_en_url_zonder_query():
         }
     }
     uit = observability.scrub_event(event, {})
-    assert uit["request"] == {"method": "GET", "url": "https://api.test/api/campaigns/abc/report"}
+    assert uit["request"] == {"method": "GET", "url": "https://api.test/api/campaigns/{campaign_id}/report"}
 
 
 def test_scrub_event_vervangt_pad_door_routesjabloon():
     event = {
         "transaction": "/survey/{token}",
+        "transaction_info": {"source": "route"},
         "request": {"method": "GET", "url": "https://api.test/survey/geheim-token-123?x=1"},
     }
     uit = observability.scrub_event(event, {})
     assert uit["request"] == {"method": "GET", "url": "https://api.test/survey/{token}"}
 
 
-def test_scrub_event_laat_url_staan_als_transactie_geen_routesjabloon_is():
+def test_scrub_event_zonder_routesjabloon_krijgt_vaste_plaatshouder():
+    """Zonder gematchte route zet Starlette de volledige ruwe url als
+    transactienaam (bron "url"); het token in het pad mag dan nergens blijven."""
+    event = {
+        "transaction": "https://api.test/onbekend/geheim-token-123",
+        "transaction_info": {"source": "url"},
+        "request": {"method": "GET", "url": "https://api.test/onbekend/geheim-token-123?x=1"},
+    }
+    uit = observability.scrub_event(event, {})
+    assert uit["request"] == {"method": "GET", "url": "https://api.test/<onbekende route>"}
+    assert uit["transaction"] == "/<onbekende route>"
+
+
+def test_scrub_event_zonder_bron_krijgt_ook_de_plaatshouder():
     event = {
         "transaction": "backend.main.download_report",
         "request": {"method": "GET", "url": "https://api.test/api/campaigns/abc/report"},
     }
     uit = observability.scrub_event(event, {})
-    assert uit["request"]["url"] == "https://api.test/api/campaigns/abc/report"
+    assert uit["request"]["url"] == "https://api.test/<onbekende route>"
+    assert uit["transaction"] == "/<onbekende route>"
+
+
+def test_scrub_event_houdt_alleen_het_sjabloon_van_een_logregel():
+    event = {
+        "logger": "loep.test",
+        "logentry": {
+            "message": "fout voor %s",
+            "formatted": "fout voor Bosman BV",
+            "params": ["Bosman BV"],
+        },
+    }
+    uit = observability.scrub_event(event, {})
+    assert uit["logentry"] == {"message": "fout voor %s"}
 
 
 def test_scrub_event_haalt_tekst_uit_breadcrumbs_behalve_sql():
@@ -182,6 +212,31 @@ def test_fout_in_request_bevat_geen_headers_query_of_token(sentry_vanger_traces)
     assert sentry_vanger_traces.events, "geen event gevangen: de test bewijst dan niets"
     for verboden in _VERBODEN_REQUEST:
         assert verboden not in tekst, verboden
+
+
+def test_onbekende_route_lekt_geen_token(sentry_vanger_traces):
+    los = FastAPI()
+
+    @los.get("/survey/{token}")
+    async def survey(token: str):
+        return {"ok": True}
+
+    with TestClient(los) as c:
+        res = c.get(f"/onbekend/{_TOKEN}?email={_EMAIL}", headers={"x-admin-token": _ADMIN})
+        assert res.status_code == 404
+    tekst = _alles_json(sentry_vanger_traces)
+    assert sentry_vanger_traces.transactions, "geen transactie gevangen: de test bewijst dan niets"
+    assert sentry_vanger_traces.transactions[0]["transaction"] == "/<onbekende route>"
+    for verboden in _VERBODEN_REQUEST:
+        assert verboden not in tekst, verboden
+
+
+def test_logregel_op_error_niveau_stuurt_alleen_het_sjabloon(sentry_vanger):
+    logging.getLogger("loep.test").error("fout voor %s", _ORG)
+    tekst = _alles_json(sentry_vanger)
+    assert len(sentry_vanger.events) == 1, "de logregel werd geen event: de test bewijst dan niets"
+    assert sentry_vanger.events[0]["logentry"] == {"message": "fout voor %s"}
+    assert _ORG not in tekst
 
 
 def test_logregel_komt_niet_via_breadcrumb_in_een_later_event(sentry_vanger):

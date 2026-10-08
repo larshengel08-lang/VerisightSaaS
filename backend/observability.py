@@ -8,9 +8,14 @@ traces):
 - de request-body;
 - headers en cookies (x-api-key en x-admin-token zijn sleutels);
 - de querystring;
-- tokens in het pad: de url krijgt het routesjabloon (/survey/{token});
+- tokens in het pad: de url krijgt het routesjabloon (/survey/{token}), en
+  zonder gematchte route een vaste plaatshouder; dat geldt ook voor de
+  transactienaam;
 - de tekst van log-breadcrumbs (logregels noemen soms organisaties of
-  e-mailadressen). SQL-breadcrumbs blijven, zonder parameters.
+  e-mailadressen). SQL-breadcrumbs blijven, zonder parameters;
+- de ingevulde waarden van een logregel die zelf een event wordt: alleen het
+  sjabloon ("fout voor %s") gaat mee. Zet daarom nooit persoonsgegevens in
+  het sjabloon zelf, altijd als parameter.
 Wat wél meegaat: de fout, de stacktrace met broncoderegels, de methode, de url
 zonder query en de tags die report_generation_failed() zet.
 """
@@ -49,20 +54,46 @@ REPORT_FAILED_UNREPORTED = (
 )
 
 
+# Plaatshouder voor het pad als er geen routesjabloon is (bijvoorbeeld een url
+# die geen route matcht): het echte pad kan dan een token bevatten.
+ONBEKENDE_ROUTE = "/<onbekende route>"
+
+
+def _transaction_source(event: dict[str, Any]) -> str | None:
+    info = event.get("transaction_info")
+    source = info.get("source") if isinstance(info, dict) else None
+    # TransactionSource is een str-enum; .value geeft de kale tekst.
+    return getattr(source, "value", source)
+
+
 def _scrub_request(event: dict[str, Any]) -> None:
     request = event.get("request")
     if not isinstance(request, dict):
         return
     kept = {key: request[key] for key in ("method", "url") if key in request}
-    url = kept.get("url")
+    source = _transaction_source(event)
     transaction = event.get("transaction")
+    is_template = source == "route" and isinstance(transaction, str) and transaction.startswith("/")
+    url = kept.get("url")
     if isinstance(url, str):
         parts = urlsplit(url)
-        # Bij transaction_style "url" is de transactienaam het routesjabloon;
-        # dat vervangt het echte pad, zodat tokens in het pad wegblijven.
-        path = transaction if isinstance(transaction, str) and transaction.startswith("/") else parts.path
+        # Alleen een routesjabloon (/survey/{token}) is veilig als pad; anders
+        # de vaste plaatshouder. Query en fragment gaan er altijd af.
+        path = transaction if is_template else ONBEKENDE_ROUTE
         kept["url"] = urlunsplit((parts.scheme, parts.netloc, path, "", ""))
+    # Zonder route matcht Starlette de ruwe url als transactienaam (bron "url").
+    # Een componentnaam (bron "component") bevat geen pad en mag blijven.
+    if source not in ("route", "component") and isinstance(transaction, str):
+        event["transaction"] = ONBEKENDE_ROUTE
     event["request"] = kept
+
+
+def _scrub_logentry(event: dict[str, Any]) -> None:
+    # Een logregel op error-niveau wordt een eigen event; formatted en params
+    # bevatten dan de ingevulde waarden. Alleen het sjabloon blijft over.
+    logentry = event.get("logentry")
+    if isinstance(logentry, dict):
+        event["logentry"] = {key: logentry[key] for key in ("message",) if key in logentry}
 
 
 def _scrub_breadcrumbs(event: dict[str, Any]) -> None:
@@ -78,10 +109,12 @@ def _scrub_breadcrumbs(event: dict[str, Any]) -> None:
 
 def scrub_event(event: dict[str, Any], hint: dict[str, Any]) -> dict[str, Any]:
     """before_send én before_send_transaction: van het request blijven alleen
-    de methode en de url zonder query over (pad als routesjabloon), en
-    breadcrumbs verliezen hun tekst, behalve SQL-breadcrumbs."""
+    de methode en de url zonder query over (pad als routesjabloon, anders een
+    vaste plaatshouder), breadcrumbs verliezen hun tekst behalve SQL-
+    breadcrumbs, en van een logregel blijft alleen het sjabloon."""
     _scrub_request(event)
     _scrub_breadcrumbs(event)
+    _scrub_logentry(event)
     return event
 
 
