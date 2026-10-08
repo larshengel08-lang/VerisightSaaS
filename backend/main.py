@@ -24,19 +24,12 @@ from contextlib import asynccontextmanager
 
 import sentry_sdk
 from openpyxl import load_workbook
-from sentry_sdk.integrations.fastapi import FastApiIntegration
-from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+
+from backend.observability import ReportGenerationFailed, init_sentry, report_generation_failed
 
 _SENTRY_DSN = os.getenv("SENTRY_DSN")
 if _SENTRY_DSN:
-    sentry_sdk.init(
-        dsn=_SENTRY_DSN,
-        integrations=[FastApiIntegration(), SqlalchemyIntegration()],
-        traces_sample_rate=0.2,   # 20% van requests getraceerd
-        environment=os.getenv("ENVIRONMENT", "production"),
-        # Zorg dat PII niet in Sentry belandt
-        send_default_pii=False,
-    )
+    init_sentry(dsn=_SENTRY_DSN, environment=os.getenv("ENVIRONMENT", "production"))
 from datetime import datetime, timezone
 from pathlib import Path
 from time import time
