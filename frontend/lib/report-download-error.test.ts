@@ -168,8 +168,8 @@ describe('reportFailureMessage (vaste 500-melding van de backend)', () => {
   })
 
   it('gebruikt nergens een em-dash of en-dash', () => {
-    expect(gemeld).not.toMatch(/[–—]/)
-    expect(nietGemeld).not.toMatch(/[–—]/)
+    expect(gemeld).not.toMatch(/[\u2013\u2014]/)
+    expect(nietGemeld).not.toMatch(/[\u2013\u2014]/)
   })
 })
 
