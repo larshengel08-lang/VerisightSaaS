@@ -315,20 +315,34 @@ def test_plurality_card_names_the_largest_group_without_claiming_a_majority():
             "70 van de 70 beantwoordden de vraag.") in html
 
 
-def test_plurality_card_without_a_runner_up_makes_no_second_claim():
-    """answered telt hoger dan de som van de counts (een beantwoorde rij zonder
-    keuze): dan is er maar een optie om te noemen en mag de zin er geen tweede
-    verzinnen."""
+def test_plurality_heeft_altijd_een_tweede_veranderoptie():
+    """Was test_plurality_card_without_a_runner_up_makes_no_second_claim.
+
+    Spec 2026-10-07 par. 3: niets en rijen zonder keuze tellen niet mee in
+    change_n; was plurality. {visibility 3} met answered 8 (vijf beantwoorde
+    rijen zonder keuze) is nu 3 van de 3 echte veranderkeuzes: clear. Een
+    plurality zonder tweede veranderoptie bestaat daardoor niet meer (met één
+    veranderoptie is het aandeel 1,0), dus de tak in _direction_card_cell die
+    dan geen tweede clausule maakt is onbereikbaar; hij blijft als vangnet."""
     agg = _agg(8, {"grd_visibility": 3}, skipped=0)
     html = _direction_card_cell("tweede", label="Groeiperspectief", agg=agg,
                                 scan_type="retention", factor_key="growth",
                                 n_total=20, factor_score=5.2)
-    assert 'class="dir-card dir-plurality"' in html
-    assert ("3 van de 8 kozen die richting. Die 8 zijn de mensen bij wie groeiperspectief "
-            "het laagst scoorde en die de vraag beantwoordden. Wat er volgens de grootste "
-            "groep moet gebeuren: Maak zichtbaar welke mogelijkheden er voor medewerkers "
-            "zijn.") in html
-    assert ";" not in html.split('class="dir-src"')[1].split("</div>")[0]
+    assert 'class="dir-card dir-clear"' in html
+    import itertools
+
+    from backend.products.shared.deepening import direction_state
+    sleutels = ["grd_visibility", "grd_time", "grd_other", "grd_none"]
+    for waarden in itertools.product(range(5), repeat=len(sleutels)):
+        counts = {k: v for k, v in zip(sleutels, waarden) if v}
+        if sum(counts.values()) < 3:
+            continue
+        for extra in (0, 3):
+            st = direction_state({"answered": sum(counts.values()) + extra,
+                                  "counts": counts}, "growth", 5.2)
+            if st["state"] == "plurality":
+                verander = [k for k in counts if not k.endswith("_none")]
+                assert len(verander) >= 2, counts
 
 
 def test_split_none_card_makes_the_split_the_subject():
@@ -381,7 +395,12 @@ def test_onbekende_optiesleutel_geeft_de_nette_melding_in_elke_tak():
     """De kop zoekt de optietekst op vóór de verdelingstabel; zonder de
     gedeelde lookup gaf een onbekende sleutel daar een kale KeyError in plaats
     van de melding die zegt om welke factor en scan het gaat."""
-    plurality = _agg(8, {"grd_bogus_key": 3, "grd_none": 1}, skipped=0)
+    # Spec 2026-10-07 par. 3: {bogus 3, niets 1} is nu clear (3 van 3 echte
+    # veranderkeuzes), en de clear-tak valt om in direction_imperative met een
+    # eigen KeyError. Daarom een verdeling die plurality blijft: 4 van de 9
+    # veranderkeuzes (0,44), voorsprong 2.
+    plurality = _agg(10, {"grd_bogus_key": 4, "grd_time": 2, "grd_criteria": 2,
+                          "grd_conversation": 1, "grd_none": 1}, skipped=0)
     with pytest.raises(KeyError, match="onbekende optiesleutel 'grd_bogus_key'"):
         _direction_card_cell("startpunt", label="Groeiperspectief", agg=plurality,
                              scan_type="retention", factor_key="growth",
@@ -469,15 +488,21 @@ def test_split_none_card_is_singular_correct():
 
 def test_plurality_card_second_option_is_singular_correct():
     """De grootste groep telt altijd minstens 2 (de voorsprong eist dat), maar
-    de tweede optie kan er een zijn."""
+    de tweede optie kan er een zijn.
+
+    Spec 2026-10-07 par. 3: niets en rijen zonder keuze tellen niet mee; de
+    oude fixture {visibility 3, niets 1} met answered 8 is nu 3 van de 3 echte
+    veranderkeuzes en dus clear. Deze verdeling blijft plurality: 3 van de 7
+    (0,43), voorsprong 2 op vier opties met elk 1."""
     html = _direction_card_cell(
         "startpunt", label="Groeiperspectief",
-        agg=_agg(8, {"grd_visibility": 3, "grd_none": 1}, skipped=0),
+        agg=_agg(7, {"grd_visibility": 3, "grd_conversation": 1, "grd_followthrough": 1,
+                     "grd_time": 1, "grd_criteria": 1}, skipped=0),
         scan_type="retention", factor_key="growth", n_total=20, factor_score=5.2)
     assert 'class="dir-card dir-plurality"' in html
-    assert ("3 van de 8 kozen die richting; 1 koos ‘Niets, dit zit hier goed’. Die 8 "
-            "zijn de mensen bij wie groeiperspectief het laagst scoorde en die de vraag "
-            "beantwoordden.") in html
+    assert ("3 van de 7 kozen die richting; 1 koos ‘Een concreter gesprek over mijn "
+            "ontwikkeling’. Die 7 zijn de mensen bij wie groeiperspectief het laagst "
+            "scoorde en die de vraag beantwoordden.") in html
 
 
 def test_factor_score_heeft_geen_default_in_de_renderhelpers():
