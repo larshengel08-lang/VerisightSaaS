@@ -7,15 +7,20 @@ from __future__ import annotations
 
 import json
 import logging
+from datetime import datetime, timezone
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 import sentry_sdk
 from fastapi import FastAPI, HTTPException
 from fastapi.testclient import TestClient
 from sentry_sdk.transport import Transport
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 from backend import observability
+from backend.models import Campaign, Organization, OrganizationSecret, Respondent, SurveyResponse
 
 
 # Geheimen worden samengesteld, zodat ze nooit letterlijk in de broncode staan:
@@ -320,3 +325,166 @@ def test_controle_integratie_is_actief(sentry_vanger):
         assert c.get("/kapot").status_code == 500
     sentry_sdk.flush()
     assert len(sentry_vanger.events) == 1
+
+
+# --- Rapportroutes (Task 5) --------------------------------------------------
+# Ook hier samengesteld: de geheimen staan in de database van de test, nooit
+# letterlijk in deze file (zie de toelichting bij _ADMIN hierboven).
+_GEHEIME_ORG = "Bosman " + "Vertrouwelijk BV"
+_GEHEIME_METING = "Behoud Q3 " + "Bosman Geheim"
+_GEHEIME_TEKST = "Mijn leidinggevende " + "Jan Jansen negeert mij al maanden"
+_API_KEY = "sleutel-die-nooit-" + "in-sentry-mag"
+_ORG_EMAIL = "hr" + "@" + "bosman-geheim.nl"
+_VERBODEN_ROUTE = (_GEHEIME_ORG, _GEHEIME_METING, _GEHEIME_TEKST, _API_KEY, _ORG_EMAIL)
+
+
+def _meting(db: Session, *, scan_type: str = "retention") -> str:
+    """Gesloten meting met één ingevuld antwoord met een open tekst, zodat de
+    PII-controle echte gegevens in de database heeft die zouden kunnen lekken."""
+    org = Organization(name=_GEHEIME_ORG, slug="org-sentry", contact_email=_ORG_EMAIL)
+    db.add(org)
+    db.flush()
+    db.add(OrganizationSecret(org_id=org.id, api_key=_API_KEY))
+    camp = Campaign(organization=org, name=_GEHEIME_METING, scan_type=scan_type, is_active=False,
+                    closed_at=datetime(2026, 9, 1, tzinfo=timezone.utc))
+    db.add(camp)
+    db.flush()
+    resp = Respondent(campaign_id=camp.id, completed=True,
+                      completed_at=datetime(2026, 8, 1, tzinfo=timezone.utc))
+    db.add(resp)
+    db.flush()
+    db.add(SurveyResponse(respondent_id=resp.id, open_text_raw=_GEHEIME_TEKST))
+    db.commit()
+    return camp.id
+
+
+def _renderfout(*args, **kwargs):
+    # Bewust zonder persoonsgegevens: de fout zelf mag in Sentry.
+    raise RuntimeError("weasyprint: lettertype ontbreekt")
+
+
+def _assert_een_schoon_event(vanger: _Vanger, *, campaign_id: str, scan_type: str, route: str) -> dict:
+    tekst = _alles_json(vanger)
+    # Alleen error-events tellen; de vanger houdt transacties apart bij.
+    assert len(vanger.events) == 1, tekst
+    event = vanger.events[0]
+    assert event["tags"]["campaign_id"] == campaign_id
+    assert event["tags"]["scan_type"] == scan_type
+    assert event["tags"]["report_route"] == route
+    assert "lettertype ontbreekt" in tekst  # de foutmelding zit erin
+    frames = event["exception"]["values"][-1]["stacktrace"]["frames"]
+    assert frames  # en de stacktrace
+    for verboden in _VERBODEN_ROUTE:
+        assert verboden not in tekst, verboden
+    for frame in frames:
+        assert "vars" not in frame
+    return event
+
+
+@pytest.fixture()
+def zonder_admin_token(monkeypatch):
+    # Buiten productie en zonder geconfigureerd token zijn de adminroutes open.
+    monkeypatch.delenv("BACKEND_ADMIN_TOKEN", raising=False)
+
+
+def test_klantroute_pdf_meldt_precies_een_event_en_geeft_vaste_melding(client, db_session, sentry_vanger):
+    cid = _meting(db_session)
+    with patch("backend.report_html.generate_campaign_report_html", side_effect=_renderfout):
+        res = client.get(f"/api/campaigns/{cid}/report", headers={"x-api-key": _API_KEY})
+    assert res.status_code == 500
+    assert res.json() == {"detail": observability.REPORT_FAILED_REPORTED}
+    assert "lettertype" not in res.text and cid not in res.text
+    _assert_een_schoon_event(sentry_vanger, campaign_id=cid, scan_type="retention", route="klant_pdf")
+
+
+def test_interne_route_pdf_meldt_precies_een_event(client, db_session, sentry_vanger, zonder_admin_token):
+    cid = _meting(db_session, scan_type="exit")
+    with patch("backend.report_html.generate_campaign_report_html", side_effect=_renderfout):
+        res = client.get(f"/api/internal/campaigns/{cid}/report")
+    assert res.status_code == 500
+    assert res.json() == {"detail": observability.REPORT_FAILED_REPORTED}
+    _assert_een_schoon_event(sentry_vanger, campaign_id=cid, scan_type="exit", route="intern_pdf")
+
+
+def test_segmentexport_meldt_precies_een_event(client, db_session, sentry_vanger, zonder_admin_token):
+    cid = _meting(db_session, scan_type="culture_assessment")
+    with patch("backend.report.generate_culture_assessment_segment_summary_export", side_effect=_renderfout):
+        res = client.get(f"/api/internal/campaigns/{cid}/report?format=segment_summary")
+    assert res.status_code == 500
+    assert res.json() == {"detail": observability.REPORT_FAILED_REPORTED}
+    _assert_een_schoon_event(sentry_vanger, campaign_id=cid, scan_type="culture_assessment", route="intern_segment")
+
+
+def test_html_preview_en_html_pdf_melden_ook(client, db_session, sentry_vanger, zonder_admin_token):
+    cid = _meting(db_session)
+    with patch("backend.report_html.build_report_data", side_effect=_renderfout):
+        res = client.get(f"/api/campaigns/{cid}/report-preview")
+    assert res.status_code == 500
+    assert res.json() == {"detail": observability.REPORT_FAILED_REPORTED}
+    _assert_een_schoon_event(sentry_vanger, campaign_id=cid, scan_type="retention", route="html_preview")
+    sentry_vanger.events.clear()
+    with patch("backend.report_html.generate_campaign_report_html", side_effect=_renderfout):
+        res = client.get(f"/api/campaigns/{cid}/report-html")
+    assert res.status_code == 500
+    assert res.json() == {"detail": observability.REPORT_FAILED_REPORTED}
+    _assert_een_schoon_event(sentry_vanger, campaign_id=cid, scan_type="retention", route="html_pdf")
+
+
+def test_zonder_sentry_belooft_de_melding_geen_melding(client, db_session):
+    sentry_sdk.init(dsn=None)
+    cid = _meting(db_session)
+    with patch("backend.report_html.generate_campaign_report_html", side_effect=_renderfout):
+        res = client.get(f"/api/campaigns/{cid}/report", headers={"x-api-key": _API_KEY})
+    assert res.status_code == 500
+    assert res.json() == {"detail": observability.REPORT_FAILED_UNREPORTED}
+
+
+def test_410_na_opschoning_is_geen_fout_in_sentry(client, db_session, sentry_vanger):
+    db_session.execute(text("alter table campaigns add column data_purged_at timestamp"))
+    cid = _meting(db_session)
+    db_session.execute(text("update campaigns set data_purged_at = :ts where id = :id"),
+                       {"ts": datetime(2027, 1, 2, 3, 0), "id": cid})
+    db_session.commit()
+    res = client.get(f"/api/campaigns/{cid}/report", headers={"x-api-key": _API_KEY})
+    assert res.status_code == 410
+    assert "verwijderd" in res.json()["detail"]
+    sentry_sdk.flush()
+    assert sentry_vanger.events == []
+
+
+def test_410_als_opschoning_tijdens_generatie_landt_is_geen_fout_in_sentry(client, db_session, sentry_vanger):
+    """De opschoning landt tussen de controle in de route en de generatie:
+    _pdf_of_410 maakt er alsnog een 410 van, geen gemelde 500."""
+    from backend.data_retention import ReportDataPurged
+
+    cid = _meting(db_session)
+
+    def _opgeschoond(*args, **kwargs):
+        raise ReportDataPurged(datetime(2027, 1, 2, 3, 0))
+
+    with patch("backend.main._generate_report_pdf", side_effect=_opgeschoond):
+        res = client.get(f"/api/campaigns/{cid}/report", headers={"x-api-key": _API_KEY})
+    assert res.status_code == 410
+    sentry_sdk.flush()
+    assert sentry_vanger.events == []
+
+
+def test_422_onbekend_product_is_geen_fout_in_sentry(client, db_session, sentry_vanger):
+    from backend import main as backend_main
+
+    cid = _meting(db_session)
+    with patch.object(backend_main, "_get_report_unavailable_product_name", return_value="Loep Proef"):
+        res = client.get(f"/api/campaigns/{cid}/report", headers={"x-api-key": _API_KEY})
+    assert res.status_code == 422
+    sentry_sdk.flush()
+    assert sentry_vanger.events == []
+
+
+def test_422_segmentexport_valueerror_is_geen_fout_in_sentry(client, db_session, sentry_vanger, zonder_admin_token):
+    cid = _meting(db_session, scan_type="culture_assessment")
+    with patch("backend.report.generate_culture_assessment_segment_summary_export",
+               side_effect=ValueError("Te weinig respondenten voor een segmentexport.")):
+        res = client.get(f"/api/internal/campaigns/{cid}/report?format=segment_summary")
+    assert res.status_code == 422
+    sentry_sdk.flush()
+    assert sentry_vanger.events == []

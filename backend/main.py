@@ -688,6 +688,12 @@ async def db_general_error_handler(request: Request, exc: SQLAlchemyError):
     )
 
 
+@app.exception_handler(ReportGenerationFailed)
+async def report_generation_failed_handler(request: Request, exc: ReportGenerationFailed):
+    # Al gemeld in report_generation_failed(); de klant krijgt alleen de vaste tekst.
+    return JSONResponse(status_code=500, content={"detail": exc.detail})
+
+
 # ---------------------------------------------------------------------------
 # Health
 # ---------------------------------------------------------------------------
@@ -2130,14 +2136,20 @@ def _gone(exc: ReportDataPurged) -> HTTPException:
     return HTTPException(status_code=410, detail=str(exc))
 
 
-def _pdf_of_410(campaign_id: str, db: Session) -> tuple[bytes, str]:
+def _pdf_of_410(campaign_id: str, db: Session, *, scan_type: str | None, route: str) -> tuple[bytes, str]:
     """_generate_report_pdf voor de PDF-routes. Landt de opschoning tussen de
     controle in de route en de generatie, dan alsnog een 410 in plaats van een
-    500 (_generate_report_pdf controleert zelf opnieuw)."""
+    500 (_generate_report_pdf controleert zelf opnieuw). Elke andere fout gaat
+    naar Sentry en wordt een 500 met vaste tekst (spec 2026-10-08, punt 2).
+    Databasefouten blijven bij de bestaande 503-handlers."""
     try:
         return _generate_report_pdf(campaign_id, db)
     except ReportDataPurged as exc:
         raise _gone(exc) from exc
+    except SQLAlchemyError:
+        raise
+    except Exception as exc:
+        raise report_generation_failed(exc, campaign_id=campaign_id, scan_type=scan_type, route=route) from exc
 
 
 def _generate_report_pdf(campaign_id: str, db: "Session") -> tuple[bytes, str]:
@@ -2163,7 +2175,11 @@ def _generate_report_pdf(campaign_id: str, db: "Session") -> tuple[bytes, str]:
         try:
             pdf_bytes = generate_campaign_report_html(campaign_id, db)
         except Exception as e:
-            _report_log.error(
+            # Warning, geen error: de enige aanroeper (_pdf_of_410) meldt de fout
+            # al getagd via report_generation_failed(). Een error-regel zou via de
+            # LoggingIntegration een tweede, ongetagd Sentry-event geven. De regel
+            # blijft wel in de Railway-logs staan.
+            _report_log.warning(
                 "WeasyPrint PDF generatie mislukt voor campagne %s (scan_type=%s) — "
                 "GEEN fallback naar legacy ReportLab (verouderd, mist verdiepingsvragen/"
                 "gespreksrichting). Fout: %s",
@@ -2218,14 +2234,16 @@ async def download_report(
         except ValueError as e:
             raise HTTPException(status_code=422, detail=str(e))
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Exportgeneratie mislukt: {e}")
+            raise report_generation_failed(
+                e, campaign_id=campaign_id, scan_type=campaign.scan_type, route="klant_segment"
+            ) from e
         return Response(
             content=export_bytes,
             media_type="text/csv; charset=utf-8",
             headers={"Content-Disposition": f'attachment; filename="Loep_{safe_name}.csv"'},
         )
 
-    export_bytes, design = _pdf_of_410(campaign_id, db)
+    export_bytes, design = _pdf_of_410(campaign_id, db, scan_type=campaign.scan_type, route="klant_pdf")
     return Response(
         content=export_bytes,
         media_type="application/pdf",
@@ -2265,14 +2283,16 @@ async def download_report_internal(
         except ValueError as e:
             raise HTTPException(status_code=422, detail=str(e))
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Exportgeneratie mislukt: {e}")
+            raise report_generation_failed(
+                e, campaign_id=campaign_id, scan_type=campaign.scan_type, route="intern_segment"
+            ) from e
         return Response(
             content=export_bytes,
             media_type="text/csv; charset=utf-8",
             headers={"Content-Disposition": f'attachment; filename="Loep_{safe_name}.csv"'},
         )
 
-    export_bytes, design = _pdf_of_410(campaign_id, db)
+    export_bytes, design = _pdf_of_410(campaign_id, db, scan_type=campaign.scan_type, route="intern_pdf")
     return Response(
         content=export_bytes,
         media_type="application/pdf",
@@ -2373,7 +2393,9 @@ async def report_html_preview(
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"HTML-rapport generatie mislukt: {e}")
+        raise report_generation_failed(
+            e, campaign_id=campaign_id, scan_type=campaign.scan_type, route="html_preview"
+        ) from e
 
     return Response(content=html_str, media_type="text/html; charset=utf-8")
 
@@ -2399,7 +2421,9 @@ async def report_html_pdf(
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"WeasyPrint PDF generatie mislukt: {e}")
+        raise report_generation_failed(
+            e, campaign_id=campaign_id, scan_type=campaign.scan_type, route="html_pdf"
+        ) from e
 
     import re as _re
     safe_name = _re.sub(r"[^\w\s-]", "", campaign.name)
