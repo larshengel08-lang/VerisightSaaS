@@ -74,6 +74,24 @@ export function purgedDownloadMessage(status: number, detail: unknown): string |
   return value
 }
 
+/** Begin van de vaste 500-melding van de backend (backend/observability.py, REPORT_FAILED_PREFIX). */
+const REPORT_FAILED_PREFIX = 'Het rapport kon niet worden gemaakt.'
+
+/**
+ * Bij een mislukte rapportgeneratie stuurt de backend een vaste zin die zegt
+ * of Loep een melding heeft gekregen. Die zin is dan de hoofdmelding; een
+ * technische regel eronder zou hem alleen herhalen. Null als het geen
+ * herkende melding is: dan blijven downloadErrorMessage plus de technische
+ * melding gelden (Fail Loud bij een onbekende fout).
+ */
+export function reportFailureMessage(status: number, detail: unknown): string | null {
+  if (status !== 500) return null
+  const value = unwrapDetail(detail)
+  if (value === null || !value.startsWith(REPORT_FAILED_PREFIX)) return null
+  if (value.length > MAX_TECHNICAL_DETAIL_LENGTH) return null
+  return value
+}
+
 function looksLikeHtml(value: string): boolean {
   return /^\s*</.test(value)
 }

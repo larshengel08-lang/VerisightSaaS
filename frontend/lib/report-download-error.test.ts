@@ -1,5 +1,11 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { downloadErrorMessage, purgedDownloadMessage, summarizeTechnicalDetail } from './report-download-error'
+import {
+  downloadErrorMessage,
+  purgedDownloadMessage,
+  reportFailureMessage,
+  summarizeTechnicalDetail,
+} from './report-download-error'
 import { LOEP_CONTACT_EMAIL } from './loep-contact'
 
 describe('summarizeTechnicalDetail', () => {
@@ -114,5 +120,65 @@ describe('purgedDownloadMessage (410 na de opschoning)', () => {
 
   it('geeft null bij een onverwacht lange tekst met hetzelfde begin', () => {
     expect(purgedDownloadMessage(410, BACKEND_ZIN + ' x'.repeat(200))).toBeNull()
+  })
+})
+
+describe('reportFailureMessage (vaste 500-melding van de backend)', () => {
+  const gemeld =
+    'Het rapport kon niet worden gemaakt. Loep heeft hier automatisch een melding van gekregen en zoekt uit wat er misging. Je hoeft verder niets te doen. Probeer het later gerust opnieuw.'
+  const nietGemeld =
+    'Het rapport kon niet worden gemaakt. Probeer het later opnieuw. Lukt het dan nog niet, mail dan naar hallo@getloep.nl.'
+
+  it('neemt de backendzin over uit de geneste FastAPI-body', () => {
+    expect(reportFailureMessage(500, JSON.stringify({ detail: gemeld }))).toBe(gemeld)
+  })
+
+  it('herkent ook de zin zonder Sentry-melding (geen DSN)', () => {
+    expect(reportFailureMessage(500, JSON.stringify({ detail: nietGemeld }))).toBe(nietGemeld)
+  })
+
+  it('geeft null bij een andere status, ook met dezelfde zin', () => {
+    expect(reportFailureMessage(502, JSON.stringify({ detail: gemeld }))).toBeNull()
+  })
+
+  it('geeft null bij de 502 van de proxy zelf: dan blijven hoofdzin en technische regel gelden', () => {
+    const onbereikbaar = 'De rapportserver is nu niet bereikbaar. Probeer het later opnieuw.'
+    expect(reportFailureMessage(502, onbereikbaar)).toBeNull()
+    expect(downloadErrorMessage(502)).toContain('fout 502')
+    expect(summarizeTechnicalDetail(onbereikbaar)).toBe(onbereikbaar)
+  })
+
+  it('geeft null bij een andere 500-melding: dan blijft de technische regel zichtbaar', () => {
+    expect(reportFailureMessage(500, 'Internal Server Error')).toBeNull()
+    expect(reportFailureMessage(500, JSON.stringify({ detail: 'Exportgeneratie mislukt: boom' }))).toBeNull()
+    expect(reportFailureMessage(500, '<html>500</html>')).toBeNull()
+    expect(reportFailureMessage(500, null)).toBeNull()
+  })
+
+  it('geeft null bij een onverwacht lange tekst met hetzelfde begin', () => {
+    expect(reportFailureMessage(500, `Het rapport kon niet worden gemaakt. ${'x'.repeat(400)}`)).toBeNull()
+  })
+
+  it('herkent precies de zinnen die de backend stuurt', () => {
+    const backend = readFileSync(new URL('../../backend/observability.py', import.meta.url), 'utf8')
+    expect(backend).toContain('REPORT_FAILED_PREFIX = "Het rapport kon niet worden gemaakt."')
+    expect(backend).toContain('Loep heeft hier automatisch een melding van gekregen en zoekt uit wat er misging.')
+    expect(backend).toContain('Je hoeft verder niets te doen. Probeer het later gerust opnieuw.')
+    expect(backend).toContain('Probeer het later opnieuw. Lukt het dan nog niet, mail dan naar hallo@getloep.nl.')
+  })
+
+  it('gebruikt nergens een em-dash of en-dash', () => {
+    expect(gemeld).not.toMatch(/[–—]/)
+    expect(nietGemeld).not.toMatch(/[–—]/)
+  })
+})
+
+describe('downloadknop gebruikt de vaste melding', () => {
+  it('toont reportFailureMessage als hoofdzin zonder technische regel', () => {
+    const knop = readFileSync(
+      new URL('../app/(dashboard)/campaigns/[id]/pdf-download-button.tsx', import.meta.url),
+      'utf8',
+    )
+    expect(knop).toContain('reportFailureMessage(response.status, rawDetail)')
   })
 })

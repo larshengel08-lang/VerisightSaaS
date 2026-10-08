@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { SCAN_TYPE_LABELS, type ScanType } from '@/lib/types'
 import { downloadErrorMessage, purgedDownloadMessage, summarizeTechnicalDetail } from '@/lib/report-download-error'
+import { reportFailureMessage } from '@/lib/report-download-error'
 
 interface Props {
   campaignId: string
@@ -59,12 +60,20 @@ export function PdfDownloadButton({
         } catch {
           // Geen JSON-detail (bijvoorbeeld een kale foutpagina zonder body).
         }
-        // 410 na de opschoning: de backendzin noemt de datum en is zelf de
-        // hoofdmelding; een technische regel eronder zou hem herhalen.
+        // Twee herkende backendzinnen zijn zelf de hoofdmelding; een
+        // technische regel eronder zou ze alleen herhalen:
+        // - 410 na de opschoning: de zin noemt de datum van verwijdering.
+        // - 500 bij een mislukte rapportgeneratie: de vaste zin zegt al wat
+        //   er gebeurt en of Loep een melding kreeg.
+        // Elke andere fout (ook de 502 van de proxy zelf) houdt de hoofdzin
+        // per statuscode plus de technische melding.
         const purgedMessage = purgedDownloadMessage(response.status, rawDetail)
+        const failureMessage = reportFailureMessage(response.status, rawDetail)
         setError(
           purgedMessage
             ? { message: purgedMessage, technical: null }
+            : failureMessage
+            ? { message: failureMessage, technical: null }
             : {
                 message: downloadErrorMessage(response.status),
                 technical: summarizeTechnicalDetail(rawDetail),
