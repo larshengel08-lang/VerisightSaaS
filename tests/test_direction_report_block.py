@@ -34,8 +34,11 @@ def test_clear_card_shows_imperative_source_and_chain():
                                 factor_score=5.1)
     assert "Startpunt: Groeiperspectief" in html
     assert "Maak zichtbaar welke mogelijkheden er voor medewerkers zijn." in html
-    assert ("Volgens 6 van de 8; die 8 zijn de mensen bij wie groeiperspectief het "
-            "laagst scoorde en die de vraag beantwoordden.") in html
+    # Spec 2026-10-07 taak 7: met niets-stemmen rust de richting op de
+    # veranderkeuzes; die noemer staat in de telling, niets apart erachter.
+    assert ("Volgens 6 van de 7 die om verandering vroegen; 1 koos ‘Niets, dit zit hier "
+            "goed’. Die 8 zijn de mensen bij wie groeiperspectief het laagst scoorde en "
+            "die de vraag beantwoordden.") in html
     assert ("9 van de 13 respondenten hadden dit als eigen laagste onderwerp; "
             "8 van de 9 beantwoordden de vraag, 1 sloeg over.") in html
     assert "Niets, dit zit hier goed" in html
@@ -249,10 +252,12 @@ def test_prioriteringsraster_raises_without_n_total():
 
 
 def test_p02_line_per_state():
+    # Spec 2026-10-07 taak 7: met niets-stemmen rust de richting op de
+    # veranderkeuzes; die noemer staat in de telling, niets apart erachter.
     assert _direction_p02_line({"growth": CLEAR}, "growth", "retention", 5.1) == (
-        "Wat er moet gebeuren volgens 6 van de 8 die dit het laagst scoorden "
-        "en de vraag beantwoordden: Maak zichtbaar welke mogelijkheden er voor "
-        "medewerkers zijn.")
+        "Wat er moet gebeuren volgens 6 van de 7 die om verandering vroegen: Maak "
+        "zichtbaar welke mogelijkheden er voor medewerkers zijn. 1 vindt dat hier "
+        "niets hoeft.")
     assert _direction_p02_line({"workload": DIVIDED}, "workload", "retention", 5.4) == (
         "Over wat hier moet gebeuren zijn de 8 die dit het laagst scoorden "
         "en de vraag beantwoordden verdeeld. Zie de gespreksagenda.")
@@ -302,12 +307,17 @@ def _split_none_card():
 def test_plurality_card_names_the_largest_group_without_claiming_a_majority():
     html = _plurality_card()
     assert 'class="dir-card dir-plurality"' in html
-    assert ("De grootste groep kiest ‘Beter zicht op welke mogelijkheden er voor "
-            "mij zijn’, zonder meerderheid.") in html
-    assert ("27 van de 70 (39%) kozen die richting; 15 kozen ‘Niets, dit zit hier goed’. "
-            "Die 70 zijn de mensen bij wie groeiperspectief het laagst scoorde en die de "
-            "vraag beantwoordden. Wat er volgens de grootste groep moet gebeuren: Maak "
-            "zichtbaar welke mogelijkheden er voor medewerkers zijn.") in html
+    # Spec 2026-10-07 taak 7: niets (15) is hier groter dan elke tweede route,
+    # dus de kop perkt "de grootste groep" in tot wie om verandering vroeg, de
+    # telling rust op die 55, en "tweede" is de grootste andere route, nooit
+    # de niets-optie (die stond hier eerder als tweede groep).
+    assert ("Van wie om verandering vroeg, kiest de grootste groep ‘Beter zicht op "
+            "welke mogelijkheden er voor mij zijn’, zonder meerderheid.") in html
+    assert ("27 van de 55 (49%) die om verandering vroegen, kozen die richting; 10 kozen "
+            "‘Een concreter gesprek over mijn ontwikkeling’; 15 kozen ‘Niets, dit zit "
+            "hier goed’. Die 70 zijn de mensen bij wie groeiperspectief het laagst "
+            "scoorde en die de vraag beantwoordden. Wat er volgens de grootste groep moet "
+            "gebeuren: Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.") in html
     # Nooit een meerderheidsclaim, en de percentages blijven binnen de staffel.
     assert "volgens de meeste" not in html
     assert "27 van de 70 (39%)" in html
@@ -525,9 +535,11 @@ def test_p02_line_for_the_new_states():
         # Geen haakje om een telling die zelf een percentage tussen haakjes
         # draagt (taalronde, taak 13): de nuance staat tussen komma's, zoals de
         # clear-tak zijn noemer al achter "volgens" zet.
-        "Wat er moet gebeuren volgens de grootste groep, 27 van de 70 (39%) die "
-        "dit het laagst scoorden en de vraag beantwoordden, zonder meerderheid: Maak "
-        "zichtbaar welke mogelijkheden er voor medewerkers zijn.")
+        # Spec 2026-10-07 taak 7: de telling op de 55 veranderkeuzes, de 15
+        # niets-stemmen als eigen zin erachter.
+        "Wat er moet gebeuren volgens de grootste groep van wie om verandering vroeg, "
+        "27 van de 55 (49%), zonder meerderheid: Maak zichtbaar welke mogelijkheden er "
+        "voor medewerkers zijn. 15 vinden dat hier niets hoeft.")
     assert _direction_p02_line({"growth": SPLIT_NONE}, "growth", "retention",
                                factor_score=4.5) == (
         "Wat er moet gebeuren: de 31 die dit het laagst scoorden en de vraag beantwoordden "
@@ -537,11 +549,13 @@ def test_p02_line_for_the_new_states():
     # Spec 2026-10-07 par. 3: niets telt niet mee; was divided ("Over wat hier
     # moet gebeuren zijn de 31 ... verdeeld. Zie de gespreksagenda."). Op de
     # veranderstemmen is het 14 van de 17 met voorsprong 11: de clear-regel. De
-    # exacte tellingsvorm daarvan bij niets-stemmen pint Taak 7.
+    # exacte tellingsvorm daarvan bij niets-stemmen pint Taak 7: de telling op
+    # de 17 veranderkeuzes, de 14 niets-stemmen als eigen zin erachter.
     zonder_score = _direction_p02_line({"growth": SPLIT_NONE}, "growth", "retention", None)
-    assert "zijn hierover verdeeld" not in zonder_score
-    assert zonder_score.startswith("Wat er moet gebeuren volgens ")
-    assert zonder_score.endswith("Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.")
+    assert zonder_score == (
+        "Wat er moet gebeuren volgens 14 van de 17 (82%) die om verandering vroegen: "
+        "Maak zichtbaar welke mogelijkheden er voor medewerkers zijn. 14 vinden dat "
+        "hier niets hoeft.")
 
 
 def test_p02_split_none_line_is_singular_correct():

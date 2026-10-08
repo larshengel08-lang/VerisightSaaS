@@ -173,14 +173,14 @@ def test_rij_zonder_keuze_telt_niet_in_change_n():
     assert _oud(_agg(counts, answered=10), FK, 6.0)["state"] == "divided"
 
 
-def test_rij_zonder_keuze_wordt_gelogd(caplog):
+def test_rij_zonder_keuze_wordt_niet_meer_in_direction_state_gelogd(caplog):
+    # Spec 2026-10-07 taak 7: de waarschuwing staat nu in aggregate_direction
+    # (één keer per factor per aggregatie); direction_state wordt per render
+    # drie à vier keer aangeroepen en logde hetzelfde defect even vaak.
+    # test_direction_niets_apart pint de nieuwe plek.
     none_key, _o, (a, *_r) = _opties()
     with caplog.at_level(logging.WARNING):
         dp.direction_state(_agg({a: 3, none_key: 1}, answered=6), FK, 6.0)
-    assert any("zonder keuze" in r.message and FK in r.message for r in caplog.records)
-    caplog.clear()
-    with caplog.at_level(logging.WARNING):
-        dp.direction_state(_agg({a: 3, none_key: 1}), FK, 6.0)
     assert not any("zonder keuze" in r.message for r in caplog.records)
 
 

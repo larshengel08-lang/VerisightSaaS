@@ -1123,9 +1123,10 @@ def aggregate_direction(
     Een status-`answered`-rij zonder `choice` telt als answered maar draagt niet bij
     aan counts (mirrort aggregate_deepening): een datadefect mag nooit als "sloeg
     over" in het rapport belanden (spec par. 6.1). Het gevolg is answered >=
-    sum(counts). direction_state telt zo'n rij mee in n (too_few, none_needed)
-    maar niet in change_n (clear, plurality) en logt hem; answered < sum(counts)
-    is een kapotte telling en valt daar luid om.
+    sum(counts). Zo'n rij wordt hier gelogd (één keer per factor);
+    direction_state telt hem mee in n (too_few, none_needed) maar niet in
+    change_n (clear, plurality). answered < sum(counts) is een kapotte telling
+    en valt daar luid om.
     """
     if scan_type not in DIRECTION_VERSION:
         raise ValueError(f"unknown scan_type {scan_type!r}")
@@ -1172,6 +1173,14 @@ def aggregate_direction(
             # gedegradeerde keten die beide getallen noemt.
             logger.warning("direction: offered > lowest_n voor %s (%d > %d)",
                            fk, agg["offered"], agg["lowest_n"])
+        # Datadefect (answered-rij zonder keuze): hier gelogd, één keer per
+        # factor per aggregatie. In direction_state logde hij bij elke aanroep,
+        # en de rapportlaag roept die per factor drie à vier keer aan.
+        gekozen = sum(agg["counts"].values())
+        if agg["answered"] > gekozen:
+            logger.warning("direction: %d beantwoorde rij(en) zonder keuze voor %s "
+                           "(answered %d, keuzes %d)", agg["answered"] - gekozen, fk,
+                           agg["answered"], gekozen)
     return out
 
 
@@ -1205,8 +1214,8 @@ def direction_state(agg: dict[str, Any], factor_key: str,
     echte veranderkeuzes, de som van de counts buiten de niets-optie (*_other
     meegerekend, want dat is ook een vraag om verandering, alleen zonder
     opdrachtvorm). Een answered-rij zonder keuze (datadefect, zie
-    aggregate_direction) telt dus mee in n maar niet in change_n, en wordt
-    gelogd. answered kleiner dan de som van de counts is een kapotte telling
+    aggregate_direction, die hem ook logt) telt dus mee in n maar niet in
+    change_n. answered kleiner dan de som van de counts is een kapotte telling
     en valt luid om.
 
     factor_score is VERPLICHT en moet de GETOONDE score zijn (afgerond via
@@ -1230,9 +1239,6 @@ def direction_state(agg: dict[str, Any], factor_key: str,
         raise ValueError(
             f"direction_state: answered={n} kleiner dan de som van de counts "
             f"({gekozen}) voor {factor_key!r}: kapotte telling")
-    if n > gekozen:
-        logger.warning("direction: %d beantwoorde rij(en) zonder keuze voor %s "
-                       "(answered %d, keuzes %d)", n - gekozen, factor_key, n, gekozen)
     ranked = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
     base: dict[str, Any] = {"n": n, "change_n": 0, "ranked": ranked, "top_key": None,
                             "top_n": 0, "second_n": 0, "none_n": 0, "none_key": None}
