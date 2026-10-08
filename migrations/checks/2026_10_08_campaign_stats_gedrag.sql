@@ -10,18 +10,25 @@
 --   export MSYS_NO_PATHCONV=1
 --   docker run -d --rm --name loep-stats-check -e POSTGRES_PASSWORD=wegwerp \
 --     -v "$(pwd -W):/repo:ro" public.ecr.aws/supabase/postgres:15.8.1.085
---   (wachten tot: docker exec loep-stats-check pg_isready -U postgres -h localhost,
---    en daarna nog een paar seconden: het image herstart na zijn eigen init)
+--   # wachten: eerst tot de init van het image klaar is (het herstart daarna),
+--   # dan tot de herstarte server verbindingen aanneemt
+--   until docker logs loep-stats-check 2>&1 | grep -q "init process complete"; do sleep 1; done
+--   until docker exec loep-stats-check pg_isready -U postgres -h localhost; do sleep 1; done
 --   # schema.sql laadt pas in twee rondes (regel 216 wijzigt survey_responses
---   # voordat die bestaat); de tweede ronde moet foutloos zijn. Laden als
+--   # voordat die bestaat). De fouten van de eerste ronde zijn verwacht en
+--   # worden weggegooid; de tweede ronde moet foutloos zijn. Laden als
 --   # postgres, zodat tabellen en view net als in productie van postgres zijn.
---   docker exec loep-stats-check psql -U postgres -h localhost -d postgres -q -f /repo/supabase/schema.sql
---   docker exec loep-stats-check psql -U postgres -h localhost -d postgres -q -v ON_ERROR_STOP=1 -f /repo/supabase/schema.sql
+--   docker exec loep-stats-check psql -U postgres -h localhost -d postgres -q -f /repo/supabase/schema.sql >/dev/null 2>&1
+--   docker exec -e PGOPTIONS='-c client_min_messages=warning' loep-stats-check \
+--     psql -U postgres -h localhost -d postgres -q -v ON_ERROR_STOP=1 -f /repo/supabase/schema.sql
 --   docker exec loep-stats-check psql -U supabase_admin -h localhost -d postgres -v ON_ERROR_STOP=1 \
 --     -f /repo/migrations/checks/2026_10_08_campaign_stats_gedrag.sql
 --   docker stop loep-stats-check
 -- Slaagt alles, dan eindigt de uitvoer met "ALLE GEVALLEN ZOALS VERWACHT";
 -- anders stopt het script met een fout die het afwijkende geval noemt.
+-- Opnieuw draaien vraagt een nieuwe container. Het script weigert te starten
+-- zodra er al gebruikers of organisaties zijn: een tweede keer draaien zou de
+-- oude productietoestand terugzetten (het lek weer open) en nepdata seeden.
 --
 -- Over het image: postgres is daar geen superuser maar heeft wel BYPASSRLS,
 -- net als op gehoste Supabase; de functie campaign_risk_summary is van
@@ -50,8 +57,19 @@
 --                33333333-0000-0000-0000-0000000000b1  B1 (exit, 3 respondenten, 3 ingevuld)
 
 \set ON_ERROR_STOP 1
+\set ECHO errors
 \pset tuples_only on
 \pset format unaligned
+
+-- Bewaker: alleen in een verse wegwerpcontainer. Na de twee schemarondes zijn
+-- auth.users en public.organizations leeg; staat daar iets, dan is dit een
+-- gebruikte of echte database en verandert het script niets.
+do $$
+begin
+  if exists (select 1 from auth.users) or exists (select 1 from public.organizations) then
+    raise exception 'GESTOPT: deze database bevat al gebruikers of organisaties. Dit script draait alleen in een verse wegwerpcontainer (zie de kop); start een nieuwe container.';
+  end if;
+end $$;
 
 -- 0. Hulpmiddelen, alleen voor dit script.
 create schema if not exists loep_controle;
@@ -81,13 +99,15 @@ begin
 end $$;
 
 -- Zet de claims zoals PostgREST ze zet, in beide vormen, alleen voor deze
--- transactie. Een lege sub laat de sub weg.
+-- transactie. Een lege sub laat de sub weg. Geeft een vaste tekst terug, zodat
+-- \gset nooit een lege waarde krijgt.
 create or replace function loep_controle.zet_claims(sub text, rol text)
-returns void language sql as $$
+returns text language sql as $$
   select set_config('request.jwt.claim.sub', coalesce(sub, ''), true),
          set_config('request.jwt.claim.role', coalesce(rol, ''), true),
          set_config('request.jwt.claims',
                     jsonb_strip_nulls(jsonb_build_object('sub', sub, 'role', rol))::text, true);
+  select 'claims gezet'::text;
 $$;
 grant execute on all functions in schema loep_controle to public;
 
@@ -179,6 +199,11 @@ insert into public.survey_responses (respondent_id, risk_score, risk_band) value
   ('44444444-0000-0000-0000-0000000000b2', 2.5, 'LAAG'),
   ('44444444-0000-0000-0000-0000000000b3', 3.0, 'LAAG');
 
+-- Elke waarde die naar \gset gaat is niet leeg en komt uit een aggregaat (dus
+-- altijd precies een rij): een lege waarde maakt de psql-variabele ongedaan en
+-- dan stopt het script met een onduidelijke syntaxfout in plaats van met de
+-- AFWIJKING-melding. Waar leeg verwacht wordt, staat er '(leeg)'.
+
 -- 3. Snapshots "voor" (geval 1 en 2).
 \echo '--- snapshots voor de migratie'
 
@@ -255,7 +280,8 @@ commit;
 begin;
 select loep_controle.zet_claims('11111111-0000-0000-0000-000000000001', 'authenticated') as gezet \gset tmp_
 set local role authenticated;
-select count(*) as n, string_agg(risk_band, ',' order by risk_score) as banden
+select count(*)::text as n,
+       coalesce(string_agg(risk_band, ',' order by risk_score), '(geen rijen)') as banden
   from public.survey_responses \gset lek_voor_
 commit;
 select loep_controle.controleer(
@@ -514,18 +540,23 @@ end $$;
 \echo 'ok: GEVAL 7 anon: permissiefout op risk_band, risk_score, id en count(*)'
 commit;
 
+-- has_column_privilege telt ook rechten via PUBLIC, via een andere rol en op
+-- tabelniveau mee (zelfde controle als Blok B van de controlequery).
 select loep_controle.controleer(
   not exists (
-    select 1 from information_schema.column_privileges
-    where table_schema = 'public' and table_name = 'survey_responses'
-      and grantee in ('anon', 'authenticated') and privilege_type = 'SELECT'),
-  'GEVAL 7: geen enkel kolomleesrecht op survey_responses voor anon of authenticated');
+    select 1
+    from pg_attribute a
+    cross join (values ('anon'), ('authenticated')) as r(rol)
+    where a.attrelid = 'public.survey_responses'::regclass
+      and a.attnum > 0 and not a.attisdropped
+      and has_column_privilege(r.rol, 'public.survey_responses', a.attname, 'SELECT')),
+  'GEVAL 7: anon en authenticated mogen geen enkele kolom van survey_responses lezen');
 
 -- Geval 8: de service-role leest survey_responses nog wel.
 begin;
 select loep_controle.zet_claims(null, 'service_role') as gezet \gset tmp_
 set local role service_role;
-select count(*) as n from public.survey_responses \gset service_sr_
+select count(*)::text as n from public.survey_responses \gset service_sr_
 commit;
 select loep_controle.controleer(:'service_sr_n' = '8',
   'GEVAL 8: service-role leest na de migratie alle 8 antwoorden');
@@ -534,31 +565,34 @@ select loep_controle.controleer(:'service_sr_n' = '8',
 begin;
 select loep_controle.zet_claims('11111111-0000-0000-0000-000000000001', 'authenticated') as gezet \gset tmp_
 set local role authenticated;
-select count(*) as rijen,
-       bool_and(avg_risk_score is null and band_high = 0 and band_medium = 0 and band_low = 0) as leeg
+select count(*)::text as rijen,
+       coalesce(bool_and(avg_risk_score is null and band_high = 0 and band_medium = 0
+                         and band_low = 0)::text, '(geen rij)') as leeg
   from public.campaign_risk_summary('33333333-0000-0000-0000-0000000000b1') \gset g9a_
 commit;
-select loep_controle.controleer(:'g9a_rijen' = '1' and :'g9a_leeg' = 't',
+select loep_controle.controleer(:'g9a_rijen' = '1' and :'g9a_leeg' = 'true',
   'GEVAL 9: lidA_owner krijgt via campaign_risk_summary(B1) geen cijfers van B');
 
 begin;
 select loep_controle.zet_claims('11111111-0000-0000-0000-000000000005', 'authenticated') as gezet \gset tmp_
 set local role authenticated;
-select count(*) as rijen,
-       bool_and(avg_risk_score is null and band_high = 0 and band_medium = 0 and band_low = 0) as leeg
+select count(*)::text as rijen,
+       coalesce(bool_and(avg_risk_score is null and band_high = 0 and band_medium = 0
+                         and band_low = 0)::text, '(geen rij)') as leeg
   from public.campaign_risk_summary('33333333-0000-0000-0000-0000000000a1') \gset g9b_
 commit;
-select loep_controle.controleer(:'g9b_rijen' = '1' and :'g9b_leeg' = 't',
+select loep_controle.controleer(:'g9b_rijen' = '1' and :'g9b_leeg' = 'true',
   'GEVAL 9: buitenstaander krijgt via campaign_risk_summary(A1) geen cijfers');
 
 begin;
 select loep_controle.zet_claims('11111111-0000-0000-0000-000000000003', 'authenticated') as gezet \gset tmp_
 set local role authenticated;
-select count(*) as rijen,
-       bool_and(avg_risk_score is null and band_high = 0 and band_medium = 0 and band_low = 0) as leeg
+select count(*)::text as rijen,
+       coalesce(bool_and(avg_risk_score is null and band_high = 0 and band_medium = 0
+                         and band_low = 0)::text, '(geen rij)') as leeg
   from public.campaign_risk_summary('33333333-0000-0000-0000-0000000000a1') \gset g9c_
 commit;
-select loep_controle.controleer(:'g9c_rijen' = '1' and :'g9c_leeg' = 't',
+select loep_controle.controleer(:'g9c_rijen' = '1' and :'g9c_leeg' = 'true',
   'GEVAL 9: lidB_owner krijgt via campaign_risk_summary(A1) geen cijfers van A');
 
 -- Geval 10: anon mag de functie niet aanroepen.
@@ -582,29 +616,34 @@ select loep_controle.controleer(
   auth.uid() is null and auth.role() is null
   and nullif(current_setting('request.jwt.claims', true), '') is null,
   'GEVAL 11: deze transactie heeft echt geen claims');
-select count(*) as rijen,
-       bool_and(avg_risk_score is null and band_high = 0 and band_medium = 0 and band_low = 0) as leeg
+select count(*)::text as rijen,
+       coalesce(bool_and(avg_risk_score is null and band_high = 0 and band_medium = 0
+                         and band_low = 0)::text, '(geen rij)') as leeg
   from public.campaign_risk_summary('33333333-0000-0000-0000-0000000000a1') \gset g11_
 commit;
-select loep_controle.controleer(:'g11_rijen' = '1' and :'g11_leeg' = 't',
+select loep_controle.controleer(:'g11_rijen' = '1' and :'g11_leeg' = 'true',
   'GEVAL 11: databaserol authenticated zonder claims krijgt geen cijfers van A1');
 
 -- Geval 12: databaserol authenticated met claims-rol service_role ontsnapt niet.
 begin;
 select loep_controle.zet_claims(null, 'service_role') as gezet \gset tmp_
 set local role authenticated;
-select count(*) as rijen,
-       bool_and(avg_risk_score is null and band_high = 0 and band_medium = 0 and band_low = 0) as leeg
+select count(*)::text as rijen,
+       coalesce(bool_and(avg_risk_score is null and band_high = 0 and band_medium = 0
+                         and band_low = 0)::text, '(geen rij)') as leeg
   from public.campaign_risk_summary('33333333-0000-0000-0000-0000000000a1') \gset g12_
 commit;
-select loep_controle.controleer(:'g12_rijen' = '1' and :'g12_leeg' = 't',
+select loep_controle.controleer(:'g12_rijen' = '1' and :'g12_leeg' = 'true',
   'GEVAL 12: databaserol authenticated met claims-rol service_role krijgt geen cijfers van A1');
 
 -- Geval 13: de operator (authenticated, geen lid) krijgt de echte cijfers.
 begin;
 select loep_controle.zet_claims('11111111-0000-0000-0000-000000000004', 'authenticated') as gezet \gset tmp_
 set local role authenticated;
-select avg_risk_score as gem, band_high as hoog, band_medium as midden, band_low as laag
+select coalesce(max(avg_risk_score)::text, '(leeg)') as gem,
+       coalesce(max(band_high)::text, '(leeg)') as hoog,
+       coalesce(max(band_medium)::text, '(leeg)') as midden,
+       coalesce(max(band_low)::text, '(leeg)') as laag
   from public.campaign_risk_summary('33333333-0000-0000-0000-0000000000a1') \gset g13_
 commit;
 select loep_controle.controleer(
@@ -616,7 +655,8 @@ select loep_controle.controleer(
 begin;
 select loep_controle.zet_claims('11111111-0000-0000-0000-000000000002', 'authenticated') as gezet \gset tmp_
 set local role authenticated;
-select avg_risk_score as gem from public.campaign_risk_summary('33333333-0000-0000-0000-0000000000a1') \gset g13b_
+select coalesce(max(avg_risk_score)::text, '(leeg)') as gem
+  from public.campaign_risk_summary('33333333-0000-0000-0000-0000000000a1') \gset g13b_
 commit;
 select loep_controle.controleer(:'g13b_gem' = '5.50',
   'GEVAL 13: lidA_member krijgt via campaign_risk_summary(A1) de cijfers van zijn eigen meting');
@@ -637,19 +677,21 @@ grant execute on function public.campaign_risk_summary(uuid) to loep_proef_klant
 begin;
 select loep_controle.zet_claims('11111111-0000-0000-0000-000000000005', 'loep_proef_klantrol') as gezet \gset tmp_
 set local role loep_proef_klantrol;
-select current_setting('role') as rol,
-       count(*) as rijen,
-       bool_and(avg_risk_score is null and band_high = 0 and band_medium = 0 and band_low = 0) as leeg
+select coalesce(current_setting('role', true), '(leeg)') as rol,
+       count(*)::text as rijen,
+       coalesce(bool_and(avg_risk_score is null and band_high = 0 and band_medium = 0
+                         and band_low = 0)::text, '(geen rij)') as leeg
   from public.campaign_risk_summary('33333333-0000-0000-0000-0000000000a1') \gset g17_
 commit;
 select loep_controle.controleer(
-  :'g17_rol' = 'loep_proef_klantrol' and :'g17_rijen' = '1' and :'g17_leeg' = 't',
+  :'g17_rol' = 'loep_proef_klantrol' and :'g17_rijen' = '1' and :'g17_leeg' = 'true',
   'GEVAL 17: eigen klantrol zonder lidmaatschap krijgt geen cijfers van A1');
 
 begin;
 select loep_controle.zet_claims('11111111-0000-0000-0000-000000000001', 'loep_proef_klantrol') as gezet \gset tmp_
 set local role loep_proef_klantrol;
-select avg_risk_score as gem from public.campaign_risk_summary('33333333-0000-0000-0000-0000000000a1') \gset g17b_
+select coalesce(max(avg_risk_score)::text, '(leeg)') as gem
+  from public.campaign_risk_summary('33333333-0000-0000-0000-0000000000a1') \gset g17b_
 commit;
 select loep_controle.controleer(:'g17b_gem' = '5.50',
   'GEVAL 17: eigen klantrol met de sub van lidA_owner krijgt wel de cijfers van A1');
@@ -689,9 +731,12 @@ select loep_controle.controleer_gelijk(:'voor_lida_owner_uit', :'nogmaals_lida_o
 select loep_controle.controleer(
   not has_table_privilege('anon', 'public.campaign_stats', 'select')
   and not exists (
-    select 1 from information_schema.column_privileges
-    where table_schema = 'public' and table_name = 'survey_responses'
-      and grantee in ('anon', 'authenticated') and privilege_type = 'SELECT'),
+    select 1
+    from pg_attribute a
+    cross join (values ('anon'), ('authenticated')) as r(rol)
+    where a.attrelid = 'public.survey_responses'::regclass
+      and a.attnum > 0 and not a.attisdropped
+      and has_column_privilege(r.rol, 'public.survey_responses', a.attname, 'SELECT')),
   'GEVAL 15: na een tweede keer migreren zijn de rechten nog steeds dicht');
 
 \echo 'ALLE GEVALLEN ZOALS VERWACHT'
