@@ -13,9 +13,19 @@ const BACKEND_ONBEREIKBAAR = 'De rapportserver is nu niet bereikbaar. Probeer he
 
 // De frontend-Sentry staat uit; deze regels landen in de Vercel-logs. Alleen
 // het campagne-id en de fout, nooit de organisatiesleutel of de campagnenaam.
+// Statussen waarmee de backend bewust weigert (opgeschoonde data, bedrijfsregel).
+// Elke andere niet-ok status na onze eigen rechtencheck wijst op een fout of
+// een verkeerde configuratie en wordt gelogd.
+const VERWACHTE_STATUS = new Set([410, 422])
+
 function logProxyFout(campaignId: string, stap: string, fout: unknown) {
   const melding = fout instanceof Error ? fout.message : String(fout)
-  console.error(`[rapportproxy] ${stap}`, { campaignId, fout: melding })
+  // Node-fetch (undici) geeft alleen 'fetch failed'; de echte oorzaak
+  // (ECONNREFUSED, ENOTFOUND, UND_ERR_CONNECT_TIMEOUT) zit in error.cause.
+  const oorzaak = fout instanceof Error && fout.cause
+    ? (fout.cause as { code?: string; message?: string })
+    : undefined
+  console.error(`[rapportproxy] ${stap}`, { campaignId, fout: melding, oorzaak: oorzaak?.code ?? oorzaak?.message })
 }
 
 export async function GET(request: Request, { params }: Context) {
@@ -84,26 +94,36 @@ export async function GET(request: Request, { params }: Context) {
     })
   }
 
-  let backendResponse: globalThis.Response | null = null
+  let backendResponse: globalThis.Response
 
   try {
     if (format === 'segment_summary') {
       backendResponse = await fetchInternalReport()
     } else {
+      // Alleen het ophalen van de sleutel en de eerste poging staan hierbinnen;
+      // een fout in de terugval valt zo in de buitenste catch.
+      let eerstePoging: globalThis.Response | null = null
       try {
         const apiKey = await getOrganizationApiKey(campaign.organization_id, { supabase })
-        backendResponse = await fetch(backendUrl, {
+        eerstePoging = await fetch(backendUrl, {
           headers: {
             'x-api-key': apiKey,
           },
           cache: 'no-store',
         })
-
-        if (backendResponse.status === 401 || backendResponse.status === 403) {
-          backendResponse = await fetchInternalReport()
-        }
       } catch (error) {
         logProxyFout(id, 'eerste poging via de organisatiesleutel mislukt, terugval op de interne route', error)
+      }
+
+      if (eerstePoging && eerstePoging.status !== 401 && eerstePoging.status !== 403) {
+        backendResponse = eerstePoging
+      } else {
+        if (eerstePoging) {
+          console.warn('[rapportproxy] organisatiesleutel geweigerd, terugval op de interne route', {
+            campaignId: id,
+            status: eerstePoging.status,
+          })
+        }
         backendResponse = await fetchInternalReport()
       }
     }
@@ -112,14 +132,9 @@ export async function GET(request: Request, { params }: Context) {
     return NextResponse.json({ detail: BACKEND_ONBEREIKBAAR }, { status: 502 })
   }
 
-  if (!backendResponse) {
-    logProxyFout(id, 'geen antwoord van de backend', 'leeg antwoord')
-    return NextResponse.json({ detail: 'Rapportproxy kon niet worden gestart.' }, { status: 502 })
-  }
-
   if (!backendResponse.ok) {
     const detail = await backendResponse.text()
-    if (backendResponse.status >= 500) {
+    if (!VERWACHTE_STATUS.has(backendResponse.status)) {
       logProxyFout(id, `backend gaf status ${backendResponse.status}`, detail.slice(0, 300))
     }
     return NextResponse.json(
@@ -129,6 +144,7 @@ export async function GET(request: Request, { params }: Context) {
   }
 
   if (!backendResponse.body) {
+    logProxyFout(id, 'backend gaf status 200 zonder inhoud', 'leeg antwoord')
     return NextResponse.json(
       { detail: 'Rapport kon niet worden gestreamd.' },
       { status: 502 },
