@@ -287,11 +287,12 @@ def test_niets_tekst_gelijk_over_factoren(scan_type):
 @pytest.mark.parametrize("scan_type", ["retention", "exit"])
 def test_methodiek_legt_uit_dat_niets_geen_richting_is(scan_type):
     html = _trust_page(scan_type, direction_active=True)
-    zin = (f"‘{NIETS[scan_type]}’ telt niet als richting: welke richting de grootste "
-           "is, bepalen de mensen die om verandering vroegen. Kiest meer dan de helft "
-           "niets, of is die groep op een laag scorend onderwerp hooguit één kleiner dan "
-           "de grootste richting, dan staat dat er; hoeveel mensen niets kozen, staat er "
-           "apart bij.")
+    zin = (f"Wie ‘{NIETS[scan_type]}’ koos, telt niet mee bij de vraag welke richting "
+           "de grootste is; hoeveel mensen dat kozen, staat er apart bij. Kiest meer dan "
+           "de helft niets, dan staat er dat hier volgens de meesten niets hoeft. Scoort "
+           "het onderwerp onder de 5,0 en is de groep die niets koos even groot als de "
+           "grootste richting, groter, of maar één kleiner, dan heet het onderwerp "
+           "verdeeld.")
     assert f"geen advies van Loep. {zin}" in html
 
 

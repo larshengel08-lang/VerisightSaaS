@@ -45,6 +45,7 @@ from backend.products.shared.deepening import (
     DIRECTION_CAVEAT_MAX_N,
     DIRECTION_MIN_N,
     DIRECTION_SCAN_TYPES,
+    DIRECTION_SPLIT_NONE_MAX_SCORE,
     TOP_CHOICE_MIN_LEAD,
     TRIGGER_AVG_MAX,
     TRIGGER_LOW_ITEM_COUNT,
@@ -4682,11 +4683,13 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "",
              "Elke respondent kreeg één vraag over het onderwerp dat bij die respondent het laagst "
              "scoorde: wat zou hier het meest helpen? De opdrachtvorm in ‘Wat er moet gebeuren’ "
              f"geeft de keuze van die respondenten weer, geen advies van Loep. "
-             f"‘{_niets_tekst(scan_type)}’ telt niet als richting: welke richting de "
-             "grootste is, bepalen de mensen die om verandering vroegen. Kiest meer dan "
-             "de helft niets, of is die groep op een laag scorend onderwerp hooguit één "
-             "kleiner dan de grootste richting, dan staat dat er; hoeveel mensen niets "
-             f"kozen, staat er apart bij. De drempel van "
+             f"Wie ‘{_niets_tekst(scan_type)}’ koos, telt niet mee bij de vraag welke "
+             "richting de grootste is; hoeveel mensen dat kozen, staat er apart bij. "
+             "Kiest meer dan de helft niets, dan staat er dat hier volgens de meesten "
+             "niets hoeft. Scoort het onderwerp onder de "
+             f"{_komma(DIRECTION_SPLIT_NONE_MAX_SCORE)} en is de groep die niets koos "
+             "even groot als de grootste richting, "
+             "groter, of maar één kleiner, dan heet het onderwerp verdeeld. De drempel van "
              f"{DIRECTION_MIN_N} staat in de drempeltabel op pagina",
              # Derde element: HTML die NIET door _h() gaat. "in de drempeltabel
              # hierboven" was een positieclaim die al breekt zodra de
