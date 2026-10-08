@@ -2908,9 +2908,12 @@ DIRECTION_HEAD_DIVIDED = "Geen eenduidige richting."
 # "De grootste groep", nooit "de meeste": deze staat bestaat juist omdat er geen
 # meerderheid is (spec ronde 2 par. 4.2).
 DIRECTION_HEAD_PLURALITY = "De grootste groep kiest ‘{opt}’, zonder meerderheid."
-# Zelfde staat met niets-stemmen erbij (spec 2026-10-07, taak 7): plurality rekent
-# op de veranderkeuzes, dus de niets-optie kan de grootste losse optie zijn. "De
-# grootste groep kiest" zonder deze inperking is dan letterlijk onwaar.
+# Zelfde staat zodra de telling op de veranderkeuzes rust (change_n != n, zie
+# _op_veranderkeuzes; spec 2026-10-07, taak 7): door niets-stemmen, door rijen
+# zonder keuze, of beide. Met niets-stemmen kan de niets-optie de grootste losse
+# optie zijn, en dan is "De grootste groep kiest" zonder deze inperking letterlijk
+# onwaar; met alleen rijen zonder keuze beschrijft de kop zo dezelfde groep als
+# de telling eronder.
 DIRECTION_HEAD_PLURALITY_VERANDERING = (
     "Van wie om verandering vroeg, kiest de grootste groep ‘{opt}’, zonder meerderheid.")
 # {deel} is "even groot" of "ander" (spec ronde 2 par. 4.3). De spec schrijft
@@ -3005,37 +3008,64 @@ def _niets_tekst(scan_type: str) -> str:
     return teksten.pop()
 
 
-def _niets_apart(st: dict, niets: str | None) -> str:
+def _niets_apart(st: dict, scan_type: str, factor_key: str) -> str:
     """"; 3 kozen ‘Niets, dit zit hier goed’": de niets-stemmen naast een
     richting die op de veranderkeuzes rust (spec 2026-10-07, taak 7). Leeg
-    zonder niets-stemmen (dan is niets ook None: geen niets-sleutel in de
-    telling)."""
+    zonder niets-stemmen. Zoekt de tekst zelf op, met dezelfde nette fout als
+    _opt in _direction_card_cell bij een onbekende sleutel."""
     if not st["none_n"]:
         return ""
-    return f"; {_tel(st['none_n'], 'koos', 'kozen')} ‘{niets}’"
+    texts = direction_option_texts(scan_type, factor_key)
+    if st["none_key"] not in texts:
+        raise KeyError(f"direction: onbekende optiesleutel {st['none_key']!r} voor "
+                       f"{factor_key!r} ({scan_type})")
+    return f"; {_tel(st['none_n'], 'koos', 'kozen')} ‘{texts[st['none_key']]}’"
 
 
 def _op_veranderkeuzes(st: dict) -> bool:
-    """Rust de telling van een richting op de veranderkeuzes? Ja zodra die
-    afwijken van alle beantwoorders: door niets-stemmen, door beantwoorde rijen
-    zonder keuze, of beide. Alleen als ze gelijk zijn blijft de oude telling op
-    alle beantwoorders staan (die is dan hetzelfde getal)."""
+    """Rust de telling van een richting (clear, plurality) op de
+    veranderkeuzes in plaats van op alle beantwoorders?
+
+    Drie uitkomsten:
+    - er zijn niets-stemmen: ja, en de niets-stemmen staan er apart bij;
+    - er zijn beantwoorde rijen zonder keuze (datadefect): ja, en een korte
+      zin meldt die rijen;
+    - geen van beide: nee; change_n is dan gelijk aan n en de zin blijft
+      zoals hij vóór taak 7 was.
+    """
     return st["change_n"] != st["n"]
+
+
+def _richting_telling(st: dict) -> str:
+    """De telling achter een richting (clear, plurality): de grootste route op
+    de veranderkeuzes als die afwijken van alle beantwoorders, anders op alle
+    beantwoorders. Eén bron voor kaart en pagina twee; die verschillen alleen
+    in het zinskader eromheen."""
+    noemer = st["change_n"] if _op_veranderkeuzes(st) else st["n"]
+    return _telling(st["top_n"], noemer)
+
+
+def _zonder_keuze_n(st: dict) -> int:
+    """Beantwoorde rijen zonder vastgelegde keuze (datadefect, zie
+    aggregate_direction): n min de som van de keuzes. Uit de counts zelf en
+    niet uit change_n, want die is in too_few niet berekend (0)."""
+    return st["n"] - sum(c for _k, c in st["ranked"])
 
 
 def _zonder_keuze_p02(st: dict) -> str:
     """De korte defectzin voor pagina twee; zie _zonder_keuze_zin."""
-    rest = st["n"] - st["none_n"] - st["change_n"]
+    rest = _zonder_keuze_n(st)
     if rest <= 0:
         return ""
     return f" Bij {rest} {_werkwoord(rest, 'antwoord', 'antwoorden')} is geen keuze vastgelegd."
 
 
 def _zonder_keuze_zin(st: dict) -> str:
-    """Slotzin voor beantwoorde rijen zonder vastgelegde keuze (datadefect, zie
-    aggregate_direction), zodat veranderkeuzes, niets-stemmen en deze rijen
-    samen de noemer van de kaart vormen. Leeg zonder zulke rijen."""
-    rest = st["n"] - st["none_n"] - st["change_n"]
+    """Zin direct na de noemerzin van een kaart, voor beantwoorde rijen zonder
+    vastgelegde keuze, zodat de getallen op de kaart samen de noemer vormen.
+    In elke staat behalve too_few (die toont geen tellingen). Leeg zonder
+    zulke rijen."""
+    rest = _zonder_keuze_n(st)
     return f" Bij {rest} van hen is geen keuze vastgelegd." if rest > 0 else ""
 
 
@@ -3341,19 +3371,18 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
         # erachter. Anders leest "Volgens 4 van de 8" naast een tabel met 3
         # niets-stemmen als een rekenfout.
         if _op_veranderkeuzes(st):
-            niets = _opt(st["none_key"]) if st["none_n"] else None
-            src = (f"Volgens {_telling(st['top_n'], st['change_n'])} die om verandering "
-                   f"vroegen{_niets_apart(st, niets)}. "
-                   f"{_dir_noemer_zin(n, label)}")
+            src = (f"Volgens {_richting_telling(st)} die om verandering "
+                   f"vroegen{_niets_apart(st, scan_type, factor_key)}. "
+                   f"{_dir_noemer_zin(n, label)}{_zonder_keuze_zin(st)}")
         else:
-            src = (f"Volgens {_telling(st['top_n'], n)}; "
+            src = (f"Volgens {_richting_telling(st)}; "
                    f"{_dir_noemer_zin(n, label, los=False)}")
-        src += _zonder_keuze_zin(st)
     elif st["state"] == "none_needed":
         head = DIRECTION_HEAD_NONE_NEEDED
         opt = _opt(st["top_key"])
         src = (f"{_telling(st['top_n'], n)} kozen ‘{opt}’. "
-               f"{_dir_noemer_zin(n, label)} Bespreek of dit dan {which} moet zijn.")
+               f"{_dir_noemer_zin(n, label)}{_zonder_keuze_zin(st)} Bespreek of dit "
+               f"dan {which} moet zijn.")
     elif st["state"] == "plurality":
         # De tweede optie komt uit ranked zelf en niet uit second_n, zodat de
         # zin de optie noemt die bij dat getal hoort. Alleen veranderopties: de
@@ -3372,12 +3401,10 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
                 f"grootste groep moet gebeuren: "
                 f"{direction_imperative(scan_type, factor_key, st['top_key'])}")
         if _op_veranderkeuzes(st):
-            niets = _opt(st["none_key"]) if st["none_n"] else None
-            src = (f"{_telling(st['top_n'], st['change_n'])} die om verandering vroegen, "
-                   f"kozen die richting{tweede}{_niets_apart(st, niets)}. "
-                   f"{slot}")
+            src = (f"{_richting_telling(st)} die om verandering vroegen, kozen die "
+                   f"richting{tweede}{_niets_apart(st, scan_type, factor_key)}. {slot}")
         else:
-            src = f"{_telling(st['top_n'], n)} kozen die richting{tweede}. {slot}"
+            src = f"{_richting_telling(st)} kozen die richting{tweede}. {slot}"
     elif st["state"] == "split_none":
         # "even groot" alleen als de twee groepen echt gelijk zijn; zie de
         # toelichting bij DIRECTION_HEAD_SPLIT_NONE.
@@ -3389,14 +3416,14 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
         src = (f"{_telling(st['none_n'], n)} "
                f"{_werkwoord(st['none_n'], 'koos', 'kozen')} ‘{_opt(st['none_key'])}’; "
                f"{_tel(st['top_n'], 'koos', 'kozen')} "
-               f"‘{_opt(st['top_key'])}’. {_dir_noemer_zin(n, label)} "
-               f"Op een onderwerp dat laag scoort "
+               f"‘{_opt(st['top_key'])}’. {_dir_noemer_zin(n, label)}"
+               f"{_zonder_keuze_zin(st)} Op een onderwerp dat laag scoort "
                f"({_score_str(factor_score)}) is dat verschil van inzicht zelf het "
                f"gesprek. Wat die andere groep vraagt: "
                f"{direction_imperative(scan_type, factor_key, st['top_key'])}")
     else:
         head = DIRECTION_HEAD_DIVIDED
-        src = f"De {n} {DIR_N_DIE_WIE} kozen verschillend."
+        src = f"De {n} {DIR_N_DIE_WIE} kozen verschillend.{_zonder_keuze_zin(st)}"
 
     table = ""
     if st["state"] != "too_few":
@@ -4063,32 +4090,33 @@ def _direction_p02_line(direction_agg: dict, factor_key: str | None, scan_type: 
     # iemand overslaat (codereview taak 10). "Wat er moet gebeuren volgens ..."
     # in plaats van "Wat er volgens ... moet gebeuren": met de bijzin erin stond
     # het werkwoord anders twaalf woorden van zijn onderwerp.
-    # Met niets-stemmen rust de richting op de veranderkeuzes (spec 2026-10-07,
-    # taak 7), net als op de kaart: die noemer in de telling, de niets-stemmen
-    # als eigen zin erachter.
-    # Rijen zonder keuze (datadefect) krijgen hier ook één korte zin, zodat
-    # pagina twee nooit een telling toont die niet optelt.
-    niets_zin = (f" {_tel(st['none_n'], 'vindt', 'vinden')} dat hier niets hoeft."
-                 if st["none_n"] else "") + _zonder_keuze_p02(st)
-    if st["state"] == "clear" and _op_veranderkeuzes(st):
-        return (f"Wat er moet gebeuren volgens {_telling(st['top_n'], st['change_n'])} "
-                f"die om verandering vroegen: "
-                f"{direction_imperative(scan_type, factor_key, st['top_key'])}{niets_zin}")
+    # Rust de telling op de veranderkeuzes (change_n != n: niets-stemmen, rijen
+    # zonder keuze of beide; spec 2026-10-07, taak 7), dan zegt het label dat:
+    # wie dit het laagst scoorde én om verandering vroeg. De niets-stemmen en de
+    # rijen zonder keuze volgen als eigen korte zinnen, zodat pagina twee nooit
+    # een telling toont die niet optelt.
+    if st["state"] in ("clear", "plurality") and _op_veranderkeuzes(st):
+        slot = (f"{direction_imperative(scan_type, factor_key, st['top_key'])}"
+                + (f" {_tel(st['none_n'], 'vindt', 'vinden')} dat hier niets hoeft."
+                   if st["none_n"] else "")
+                + _zonder_keuze_p02(st))
+        if st["state"] == "clear":
+            return (f"Wat er moet gebeuren volgens {_richting_telling(st)} die dit het "
+                    f"laagst scoorden en om verandering vroegen: {slot}")
+        return (f"Wat er moet gebeuren volgens de grootste groep van wie dit het laagst "
+                f"scoorde en om verandering vroeg, {_richting_telling(st)}, zonder "
+                f"meerderheid: {slot}")
     if st["state"] == "clear":
-        return (f"Wat er moet gebeuren volgens {_telling(st['top_n'], n)} "
+        return (f"Wat er moet gebeuren volgens {_richting_telling(st)} "
                 f"{DIR_N_DIE_WIE}: "
                 f"{direction_imperative(scan_type, factor_key, st['top_key'])}")
-    if st["state"] == "plurality" and _op_veranderkeuzes(st):
-        return (f"Wat er moet gebeuren volgens de grootste groep van wie om verandering "
-                f"vroeg, {_telling(st['top_n'], st['change_n'])}, zonder meerderheid: "
-                f"{direction_imperative(scan_type, factor_key, st['top_key'])}{niets_zin}")
     if st["state"] == "plurality":
         # Geen haakje om een telling die zelf een percentage tussen haakjes
         # draagt: "(27 van de 62 (44%) die dit ..., zonder meerderheid)" zette
         # twee haakjesniveaus in elkaar (taalronde, taak 13). Zelfde vorm als de
         # clear-tak, met de nuance als bijstelling tussen komma's.
         return (f"Wat er moet gebeuren volgens de grootste groep, "
-                f"{_telling(st['top_n'], n)} {DIR_N_DIE_WIE}, zonder meerderheid: "
+                f"{_richting_telling(st)} {DIR_N_DIE_WIE}, zonder meerderheid: "
                 f"{direction_imperative(scan_type, factor_key, st['top_key'])}")
     if st["state"] == "split_none":
         texts = direction_option_texts(scan_type, factor_key)
@@ -4654,9 +4682,11 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "",
              "Elke respondent kreeg één vraag over het onderwerp dat bij die respondent het laagst "
              "scoorde: wat zou hier het meest helpen? De opdrachtvorm in ‘Wat er moet gebeuren’ "
              f"geeft de keuze van die respondenten weer, geen advies van Loep. "
-             f"‘{_niets_tekst(scan_type)}’ telt niet als richting: of er een eenduidige "
-             "richting is, bepalen de mensen die om verandering vroegen; hoeveel mensen "
-             f"niets kozen, staat er apart bij. De drempel van "
+             f"‘{_niets_tekst(scan_type)}’ telt niet als richting: welke richting de "
+             "grootste is, bepalen de mensen die om verandering vroegen. Kiest meer dan "
+             "de helft niets, of is die groep op een laag scorend onderwerp hooguit één "
+             "kleiner dan de grootste richting, dan staat dat er; hoeveel mensen niets "
+             f"kozen, staat er apart bij. De drempel van "
              f"{DIRECTION_MIN_N} staat in de drempeltabel op pagina",
              # Derde element: HTML die NIET door _h() gaat. "in de drempeltabel
              # hierboven" was een positieclaim die al breekt zodra de

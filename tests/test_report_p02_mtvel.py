@@ -281,8 +281,8 @@ def test_direction_p02_line_draagt_de_noemer_ter_plekke():
     zin = _direction_p02_line({"growth": CLEAR}, "growth", "retention", 5.1)
     # Spec 2026-10-07 taak 7: CLEAR heeft een niets-stem, dus de telling rust
     # op de veranderkeuzes en de niets-stem staat er apart achter.
-    assert zin.startswith("Wat er moet gebeuren volgens 6 van de 7 die om verandering "
-                          "vroegen: ")
+    assert zin.startswith("Wat er moet gebeuren volgens 6 van de 7 die dit het laagst "
+                          "scoorden en om verandering vroegen: ")
     assert zin.endswith(" 1 vindt dat hier niets hoeft.")
     assert "—" not in zin
 

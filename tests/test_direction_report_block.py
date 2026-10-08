@@ -255,9 +255,9 @@ def test_p02_line_per_state():
     # Spec 2026-10-07 taak 7: met niets-stemmen rust de richting op de
     # veranderkeuzes; die noemer staat in de telling, niets apart erachter.
     assert _direction_p02_line({"growth": CLEAR}, "growth", "retention", 5.1) == (
-        "Wat er moet gebeuren volgens 6 van de 7 die om verandering vroegen: Maak "
-        "zichtbaar welke mogelijkheden er voor medewerkers zijn. 1 vindt dat hier "
-        "niets hoeft.")
+        "Wat er moet gebeuren volgens 6 van de 7 die dit het laagst scoorden en om "
+        "verandering vroegen: Maak zichtbaar welke mogelijkheden er voor medewerkers "
+        "zijn. 1 vindt dat hier niets hoeft.")
     assert _direction_p02_line({"workload": DIVIDED}, "workload", "retention", 5.4) == (
         "Over wat hier moet gebeuren zijn de 8 die dit het laagst scoorden "
         "en de vraag beantwoordden verdeeld. Zie de gespreksagenda.")
@@ -537,9 +537,9 @@ def test_p02_line_for_the_new_states():
         # clear-tak zijn noemer al achter "volgens" zet.
         # Spec 2026-10-07 taak 7: de telling op de 55 veranderkeuzes, de 15
         # niets-stemmen als eigen zin erachter.
-        "Wat er moet gebeuren volgens de grootste groep van wie om verandering vroeg, "
-        "27 van de 55 (49%), zonder meerderheid: Maak zichtbaar welke mogelijkheden er "
-        "voor medewerkers zijn. 15 vinden dat hier niets hoeft.")
+        "Wat er moet gebeuren volgens de grootste groep van wie dit het laagst scoorde "
+        "en om verandering vroeg, 27 van de 55 (49%), zonder meerderheid: Maak zichtbaar "
+        "welke mogelijkheden er voor medewerkers zijn. 15 vinden dat hier niets hoeft.")
     assert _direction_p02_line({"growth": SPLIT_NONE}, "growth", "retention",
                                factor_score=4.5) == (
         "Wat er moet gebeuren: de 31 die dit het laagst scoorden en de vraag beantwoordden "
@@ -553,9 +553,9 @@ def test_p02_line_for_the_new_states():
     # de 17 veranderkeuzes, de 14 niets-stemmen als eigen zin erachter.
     zonder_score = _direction_p02_line({"growth": SPLIT_NONE}, "growth", "retention", None)
     assert zonder_score == (
-        "Wat er moet gebeuren volgens 14 van de 17 (82%) die om verandering vroegen: "
-        "Maak zichtbaar welke mogelijkheden er voor medewerkers zijn. 14 vinden dat "
-        "hier niets hoeft.")
+        "Wat er moet gebeuren volgens 14 van de 17 (82%) die dit het laagst scoorden "
+        "en om verandering vroegen: Maak zichtbaar welke mogelijkheden er voor "
+        "medewerkers zijn. 14 vinden dat hier niets hoeft.")
 
 
 def test_p02_split_none_line_is_singular_correct():

@@ -448,7 +448,10 @@ def _zonder_juiste_claims(tekst):
     claim: n is het aantal beantwoorders, niet iedereen bij wie dit het laagst
     scoorde."""
     for goed in ("het laagst scoorde en die de vraag beantwoordden",
-                 "het laagst scoorden en de vraag beantwoordden"):
+                 "het laagst scoorden en de vraag beantwoordden",
+                 # Spec 2026-10-07 taak 7: telling op de veranderkeuzes.
+                 "het laagst scoorden en om verandering vroegen",
+                 "het laagst scoorde en om verandering vroeg"):
         tekst = tekst.replace(goed, "")
     return tekst
 
@@ -473,14 +476,18 @@ def test_p02_regel_labelt_de_noemer_net_als_de_kaart(staat):
 
     agg, score = STATEN[staat]
     regel = _direction_p02_line({"growth": agg}, "growth", "retention", score)
-    # Spec 2026-10-07 taak 7: clear en plurality met niets-stemmen rusten op de
-    # veranderkeuzes en zeggen dat ("die om verandering vroegen", "van wie om
-    # verandering vroeg"); de andere staten houden het label van de
-    # beantwoorders.
+    # Spec 2026-10-07 taak 7: clear en plurality rusten op de veranderkeuzes
+    # zodra die afwijken van alle beantwoorders (zelfde predicaat als de code)
+    # en zeggen dat met het volle label; de andere staten houden het label van
+    # de beantwoorders.
     st = direction_state(agg, "growth", score)
-    if st["state"] in ("clear", "plurality") and st["none_n"]:
-        assert "om verandering vroeg" in regel, regel
-        assert "dat hier niets hoeft." in regel, regel
+    if st["state"] in ("clear", "plurality") and st["change_n"] != st["n"]:
+        label = {"clear": "die dit het laagst scoorden en om verandering vroegen: ",
+                 "plurality": "van wie dit het laagst scoorde en om verandering "
+                              "vroeg, "}[st["state"]]
+        assert label in regel, regel
+        if st["none_n"]:
+            assert "dat hier niets hoeft." in regel, regel
     else:
         assert "de vraag beantwoordden" in regel, regel
     assert "het laagst scoor" not in _zonder_juiste_claims(regel), regel

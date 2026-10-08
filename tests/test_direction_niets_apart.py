@@ -117,8 +117,8 @@ def test_clear_kaart_noemt_noemer_en_niets(scan_type):
 @pytest.mark.parametrize("scan_type", ["retention", "exit"])
 def test_clear_p02_noemt_noemer_en_niets(scan_type):
     assert p02(CLEAR_NIETS, scan_type) == (
-        f"Wat er moet gebeuren volgens 4 van de 5 die om verandering vroegen: {IMP_VIS} "
-        "3 vinden dat hier niets hoeft.")
+        "Wat er moet gebeuren volgens 4 van de 5 die dit het laagst scoorden en om "
+        f"verandering vroegen: {IMP_VIS} 3 vinden dat hier niets hoeft.")
 
 
 @pytest.mark.parametrize("scan_type", ["retention", "exit"])
@@ -136,8 +136,9 @@ def test_plurality_kaart_met_niets(scan_type):
 @pytest.mark.parametrize("scan_type", ["retention", "exit"])
 def test_plurality_p02_met_niets(scan_type):
     assert p02(PLUR_NIETS, scan_type) == (
-        "Wat er moet gebeuren volgens de grootste groep van wie om verandering vroeg, "
-        f"5 van de 12 (42%), zonder meerderheid: {IMP_VIS} 8 vinden dat hier niets hoeft.")
+        "Wat er moet gebeuren volgens de grootste groep van wie dit het laagst scoorde "
+        f"en om verandering vroeg, 5 van de 12 (42%), zonder meerderheid: {IMP_VIS} "
+        "8 vinden dat hier niets hoeft.")
 
 
 def test_enkelvoud_bij_een_niets_stem():
@@ -159,13 +160,14 @@ def test_rijen_zonder_keuze_krijgen_een_zin_en_alles_telt_op():
         f"Volgens 3 van de 3 die om verandering vroegen. Die 8 {NOEMER} Bij 5 van hen "
         "is geen keuze vastgelegd.")
     assert p02(b, "retention") == (
-        f"Wat er moet gebeuren volgens 3 van de 3 die om verandering vroegen: {IMP_VIS} "
-        "Bij 5 antwoorden is geen keuze vastgelegd.")
+        "Wat er moet gebeuren volgens 3 van de 3 die dit het laagst scoorden en om "
+        f"verandering vroegen: {IMP_VIS} Bij 5 antwoorden is geen keuze vastgelegd.")
     # Pagina twee met niets én defecten: beide zinnen, en het enkelvoud.
     e = agg(9, {"grd_visibility": 4, "grd_time": 1, "grd_none": 3})
     assert p02(e, "retention") == (
-        f"Wat er moet gebeuren volgens 4 van de 5 die om verandering vroegen: {IMP_VIS} "
-        "3 vinden dat hier niets hoeft. Bij 1 antwoord is geen keuze vastgelegd.")
+        "Wat er moet gebeuren volgens 4 van de 5 die dit het laagst scoorden en om "
+        f"verandering vroegen: {IMP_VIS} 3 vinden dat hier niets hoeft. Bij 1 antwoord "
+        "is geen keuze vastgelegd.")
     # Eén rij zonder keuze: zelfde zin, geen enkelvoudsprobleem.
     d = agg(9, {"grd_visibility": 4, "grd_time": 1, "grd_none": 3})
     assert src(card(d, "retention")).endswith("Bij 1 van hen is geen keuze vastgelegd.")
@@ -191,9 +193,9 @@ def test_plurality_met_rijen_zonder_keuze_en_zonder_niets():
         f"concreter gesprek over mijn ontwikkeling’. Die 10 {NOEMER} Bij 1 van hen is "
         f"geen keuze vastgelegd. Wat er volgens de grootste groep moet gebeuren: {IMP_VIS}")
     assert p02(a, "retention") == (
-        "Wat er moet gebeuren volgens de grootste groep van wie om verandering vroeg, "
-        f"4 van de 9, zonder meerderheid: {IMP_VIS} Bij 1 antwoord is geen keuze "
-        "vastgelegd.")
+        "Wat er moet gebeuren volgens de grootste groep van wie dit het laagst scoorde "
+        f"en om verandering vroeg, 4 van de 9, zonder meerderheid: {IMP_VIS} Bij 1 "
+        "antwoord is geen keuze vastgelegd.")
 
 
 def test_plurality_tweede_is_nooit_de_niets_optie():
@@ -285,9 +287,11 @@ def test_niets_tekst_gelijk_over_factoren(scan_type):
 @pytest.mark.parametrize("scan_type", ["retention", "exit"])
 def test_methodiek_legt_uit_dat_niets_geen_richting_is(scan_type):
     html = _trust_page(scan_type, direction_active=True)
-    zin = (f"‘{NIETS[scan_type]}’ telt niet als richting: of er een eenduidige "
-           "richting is, bepalen de mensen die om verandering vroegen; hoeveel mensen "
-           "niets kozen, staat er apart bij.")
+    zin = (f"‘{NIETS[scan_type]}’ telt niet als richting: welke richting de grootste "
+           "is, bepalen de mensen die om verandering vroegen. Kiest meer dan de helft "
+           "niets, of is die groep op een laag scorend onderwerp hooguit één kleiner dan "
+           "de grootste richting, dan staat dat er; hoeveel mensen niets kozen, staat er "
+           "apart bij.")
     assert f"geen advies van Loep. {zin}" in html
 
 
@@ -323,3 +327,33 @@ def test_rij_zonder_keuze_wordt_een_keer_per_aggregatie_gelogd(caplog):
     with caplog.at_level(logging.WARNING):
         aggregate_direction(_rows(0), "retention")
     assert not any("zonder keuze" in r.getMessage() for r in caplog.records)
+
+
+@pytest.mark.parametrize("counts,score,staat,na", [
+    ({"grd_none": 6, "grd_visibility": 3}, 6.2, "none_needed", " Bespreek of dit"),
+    ({"grd_none": 4, "grd_visibility": 4, "grd_time": 1}, 4.5, "split_none", " Op een onderwerp"),
+    ({"grd_visibility": 3, "grd_time": 3, "grd_none": 2}, 6.2, "divided", ""),
+])
+def test_rijen_zonder_keuze_in_elke_andere_staat(counts, score, staat, na):
+    # Ook in none_needed, split_none en divided tellen de getallen op de kaart
+    # op tot de noemer: de defectzin staat direct na de noemerzin.
+    a = agg(10, counts)
+    d = 10 - sum(counts.values())
+    html = card(a, "retention", score)
+    assert f"dir-card dir-{staat}" in html
+    s = src(html)
+    zin = f" Bij {d} van hen is geen keuze vastgelegd."
+    assert zin + na in s, s
+    if not na:
+        assert s.endswith(zin), s
+    # Zonder defecten geen defectzin.
+    schoon = agg(sum(counts.values()), counts)
+    assert "geen keuze vastgelegd" not in card(schoon, "retention", score)
+
+
+def test_too_few_toont_geen_defectzin():
+    # change_n is 0 in too_few; de defectzin rekent op de counts en verschijnt
+    # hier niet, want de kaart toont geen tellingen.
+    html = card(agg(2, {"grd_visibility": 1}), "retention")
+    assert "dir-card dir-too_few" in html
+    assert "geen keuze vastgelegd" not in html
