@@ -20,15 +20,22 @@
 
 -- 1. Aggregatie per meting achter een security-definer-functie.
 -- Bevoegd: lid van de organisatie van de meting, de Loep-operator, of een
--- verbinding die geen klantrol is (service-role, directe databaseverbinding).
--- Een klantrol herkennen we aan zowel de JWT-rol als de databaserol
--- (current_setting('role') is de SET ROLE van PostgREST, ook binnen een
--- security-definer-functie). Allebei moeten zeggen "geen klant" voordat de
--- tenancycheck vervalt. Wie niet bevoegd is, krijgt dezelfde uitkomst als bij
--- een meting zonder antwoorden (leeg gemiddelde, nul per band): de functie
--- verraadt niets.
+-- verbinding die geen klantrol is. Dat laatste is een lijst van wat wel mag
+-- (fail closed), geen lijst van wat niet mag. Zonder tenancycheck mag alleen:
+-- een sessie zonder SET ROLE (directe databaseverbinding, rol 'none'), een
+-- sessie die SET ROLE postgres deed (SQL Editor, beheer), of de service-role.
+-- PostgREST zet altijd SET ROLE naar de JWT-rol (current_setting('role') geeft
+-- die ook binnen een security-definer-functie), dus elke klantrol, ook een
+-- toekomstige, valt buiten deze lijst en krijgt de tenancycheck. De JWT-rol mag
+-- daarbovenop geen anon of authenticated zijn. Wie niet bevoegd is, krijgt
+-- dezelfde uitkomst als bij een meting zonder antwoorden (leeg gemiddelde, nul
+-- per band): de functie verraadt niets.
 -- Een SQL-functie met security definer wordt door Postgres nooit ge-inlined,
 -- dus de rechten van de eigenaar gelden altijd.
+-- rows 1: de functie geeft altijd precies een rij per meting; zonder deze
+-- schatting rekent de planner met 1000 rijen per meting.
+-- Let op: de kolommen van returns table kunnen niet via create or replace
+-- veranderen; dat vraagt drop function ... cascade en de view opnieuw aanmaken.
 create or replace function public.campaign_risk_summary(target_campaign_id uuid)
 returns table (
   avg_risk_score numeric,
@@ -38,6 +45,7 @@ returns table (
 )
 language sql
 stable
+rows 1
 security definer
 set search_path = public
 as $$
@@ -52,8 +60,8 @@ as $$
   where c.id = target_campaign_id
     and (
       (
-        coalesce(auth.role(), '') not in ('anon', 'authenticated')
-        and coalesce(current_setting('role', true), '') not in ('anon', 'authenticated')
+        coalesce(current_setting('role', true), 'none') in ('none', 'postgres', 'service_role')
+        and coalesce(auth.role(), '') not in ('anon', 'authenticated')
       )
       or public.is_verisight_admin_user()
       or public.is_org_member(c.organization_id)

@@ -24,22 +24,43 @@ def _view_body(sql: str) -> str:
     return sql[start : sql.index(";", start)]
 
 
-def test_migratie_bestaat_en_heeft_security_definer_functie():
-    sql = _sql(MIGRATIE)
-    assert "create or replace function public.campaign_risk_summary(target_campaign_id uuid)" in sql
+def _functie(sql: str) -> str:
     functie = sql[sql.index("create or replace function public.campaign_risk_summary") :]
-    functie = functie[: functie.index("$$;") ]
-    assert "security definer" in functie
-    assert "set search_path = public" in functie
-    assert "public.is_org_member(c.organization_id)" in functie
-    assert "public.is_verisight_admin_user()" in functie
-    assert "current_setting('role', true)" in functie
+    return functie[: functie.index("$$;")]
+
+
+def test_migratie_bestaat_en_heeft_security_definer_functie():
+    for path in (MIGRATIE, SCHEMA):
+        sql = _sql(path)
+        assert "create or replace function public.campaign_risk_summary(target_campaign_id uuid)" in sql, path
+        functie = _functie(sql)
+        assert "security definer" in functie, path
+        assert "set search_path = public" in functie, path
+        assert re.search(r"\brows\s+1\b", functie), path
+        assert "public.is_org_member(c.organization_id)" in functie, path
+        assert "public.is_verisight_admin_user()" in functie, path
+
+
+def test_bypass_zonder_tenancycheck_is_een_allowlist():
+    """Fail closed: alleen geen SET ROLE, postgres of service_role slaan de
+    tenancycheck over. Een denylist op klantrollen zou een nieuwe rol doorlaten."""
+    for path in (MIGRATIE, SCHEMA):
+        functie = _functie(_sql(path))
+        assert (
+            "coalesce(current_setting('role', true), 'none') in ('none', 'postgres', 'service_role')"
+            in functie
+        ), path
+        assert "coalesce(auth.role(), '') not in ('anon', 'authenticated')" in functie, path
+        assert "current_setting('role', true), '') not in" not in functie, path
 
 
 def test_functie_niet_uitvoerbaar_voor_public_en_anon():
-    sql = _sql(MIGRATIE)
-    assert "revoke all on function public.campaign_risk_summary(uuid) from public, anon;" in sql
-    assert "grant execute on function public.campaign_risk_summary(uuid) to authenticated, service_role;" in sql
+    for path in (MIGRATIE, SCHEMA):
+        sql = _sql(path)
+        assert "revoke all on function public.campaign_risk_summary(uuid) from public, anon;" in sql, path
+        assert (
+            "grant execute on function public.campaign_risk_summary(uuid) to authenticated, service_role;" in sql
+        ), path
 
 
 def test_view_blijft_security_invoker_en_leest_survey_responses_niet_meer():
@@ -70,8 +91,11 @@ def test_kolomrecht_op_survey_responses_is_weg():
     for path in (MIGRATIE, SCHEMA):
         sql = _sql(path)
         assert "revoke select on public.survey_responses from anon, authenticated;" in sql, path
-        assert not re.search(r"grant\s+select\s*\([^)]*\)\s*on\s+public\.survey_responses", sql), path
-        assert not re.search(r"grant\s+select\s+on\s+public\.survey_responses\s+to\s+(anon|authenticated)", sql), path
+        # Vangt ook grant all, kolomgrants en grants met meerdere rechten of rollen.
+        assert not re.search(
+            r"grant\s+[^;]*\bon\s+(table\s+)?public\.survey_responses\b[^;]*\bto\b[^;]*\b(anon|authenticated)\b",
+            sql,
+        ), path
 
 
 def test_anon_leest_campaign_stats_niet():
