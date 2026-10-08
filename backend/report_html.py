@@ -3609,7 +3609,8 @@ def _richtingen_weging(st: dict, scan_type: str, factor_key: str) -> str:
     # hier alleen de aantallen, zodat de regel kort blijft en het agendaslot
     # niet naar een volgend vel duwt (controllerbesluit taak 10).
     hoogste = sorted({c for _k, c in inhoud}, reverse=True)[:2]
-    zin = "De meest gekozen richtingen zijn die met " + _stemmen(hoogste) + " op de kaart hierboven."
+    zin = ("De meest gekozen richtingen zijn die met " + _stemmen(hoogste)
+          + " op de kaart bij ‘Wat er moet gebeuren’.")
     # Anders alleen noemen als zijn telling tussen of naast de genoemde staat;
     # de kaart toont hem als "Anders, namelijk…" (content-guard in de tests).
     anders_telt = anders is not None and anders[1] >= min(hoogste)

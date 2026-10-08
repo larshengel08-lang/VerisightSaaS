@@ -1033,7 +1033,7 @@ def test_weging_noemt_de_meest_gekozen_tellingen_en_weegt_niets_apart():
     # Tien beantwoorders: _telling zet vanaf MIN_DISTRIBUTION_N (10) het
     # percentage erachter, net als de kaart.
     assert _richtingen_weging(st, "retention", "workload") == (
-        "De meest gekozen richtingen zijn die met 3 en 2 stemmen op de kaart hierboven. "
+        "De meest gekozen richtingen zijn die met 3 en 2 stemmen op de kaart bij ‘Wat er moet gebeuren’. "
         "‘Niets, dit zit hier goed’, gekozen door 2 van de 10 (20%), is geen richting en "
         "telt hier niet mee.")
 
@@ -1041,19 +1041,19 @@ def test_weging_noemt_de_meest_gekozen_tellingen_en_weegt_niets_apart():
 def test_weging_een_gedeelde_telling_en_enkelvoud():
     gedeeld = direction_state(_agg(wld_peaks=3, wld_scope=3, wld_none=2), "workload", 5.8)
     assert _richtingen_weging(gedeeld, "retention", "workload") == (
-        "De meest gekozen richtingen zijn die met 3 stemmen op de kaart hierboven. "
+        "De meest gekozen richtingen zijn die met 3 stemmen op de kaart bij ‘Wat er moet gebeuren’. "
         "‘Niets, dit zit hier goed’, gekozen door 2 van de 8, is geen richting en telt hier niet mee.")
     een = direction_state(_agg(wld_peaks=1, wld_scope=1, wld_planning=1), "workload", 5.8)
     assert een["state"] == "divided"
     assert _richtingen_weging(een, "retention", "workload") == (
-        "De meest gekozen richtingen zijn die met 1 stem op de kaart hierboven.")
+        "De meest gekozen richtingen zijn die met 1 stem op de kaart bij ‘Wat er moet gebeuren’.")
 
 
 def test_weging_zonder_niets_heeft_geen_niets_zin():
     st = direction_state(_agg(wld_peaks=3, wld_scope=3, wld_planning=2), "workload", 5.8)
     zin = _richtingen_weging(st, "retention", "workload")
     assert "Niets" not in zin
-    assert zin == "De meest gekozen richtingen zijn die met 3 en 2 stemmen op de kaart hierboven."
+    assert zin == "De meest gekozen richtingen zijn die met 3 en 2 stemmen op de kaart bij ‘Wat er moet gebeuren’."
 
 
 def test_weging_vertrek_citeert_de_verleden_tijd():
@@ -1075,7 +1075,7 @@ def test_weging_telt_anders_niet_als_richting():
     st = direction_state(_agg(wld_peaks=3, wld_scope=1, wld_other=2, wld_none=1), "workload", 5.8)
     assert st["state"] == "divided"
     assert _richtingen_weging(st, "retention", "workload") == (
-        "De meest gekozen richtingen zijn die met 3 stemmen en 1 stem op de kaart hierboven. "
+        "De meest gekozen richtingen zijn die met 3 stemmen en 1 stem op de kaart bij ‘Wat er moet gebeuren’. "
         "‘Niets, dit zit hier goed’, gekozen door 1 van de 7, is geen richting en telt hier "
         "niet mee, net als ‘Anders’.")
 
@@ -1086,7 +1086,7 @@ def test_weging_verklaart_anders_naast_een_even_hoge_richting():
     st = direction_state(_agg(wld_peaks=3, wld_other=2, wld_scope=2, wld_none=1), "workload", 5.8)
     assert st["state"] == "divided"
     assert _richtingen_weging(st, "retention", "workload") == (
-        "De meest gekozen richtingen zijn die met 3 en 2 stemmen op de kaart hierboven. "
+        "De meest gekozen richtingen zijn die met 3 en 2 stemmen op de kaart bij ‘Wat er moet gebeuren’. "
         "‘Niets, dit zit hier goed’, gekozen door 1 van de 8, is geen richting en telt hier "
         "niet mee, net als ‘Anders’.")
 
@@ -1096,7 +1096,7 @@ def test_weging_verklaart_een_overgeslagen_anders_zonder_niets():
                          "workload", 5.8)
     assert st["state"] == "divided"
     assert _richtingen_weging(st, "retention", "workload") == (
-        "De meest gekozen richtingen zijn die met 3 stemmen en 1 stem op de kaart hierboven. "
+        "De meest gekozen richtingen zijn die met 3 stemmen en 1 stem op de kaart bij ‘Wat er moet gebeuren’. "
         "‘Anders’ is geen richting en telt hier niet mee.")
 
 
@@ -1104,7 +1104,7 @@ def test_weging_zwijgt_over_anders_onder_de_laagste_genoemde_telling():
     st = direction_state(_agg(wld_peaks=3, wld_scope=3, wld_other=1), "workload", 5.8)
     assert st["state"] == "divided"
     assert _richtingen_weging(st, "retention", "workload") == (
-        "De meest gekozen richtingen zijn die met 3 stemmen op de kaart hierboven.")
+        "De meest gekozen richtingen zijn die met 3 stemmen op de kaart bij ‘Wat er moet gebeuren’.")
 
 
 def test_anders_heet_op_elke_richtingkaart_anders():
@@ -1141,7 +1141,7 @@ def test_werkvragen_tonen_de_weging_onder_de_verdeeld_zin(gevuld):
     assert VARIANTEN["divided"]["retention"] in kaart
     # DIRECTION: wld_peaks 3, wld_scope 3, wld_none 2 van 8; dezelfde
     # tellingen als op de richtingkaart.
-    assert ("De meest gekozen richtingen zijn die met 3 stemmen op de kaart hierboven. "
+    assert ("De meest gekozen richtingen zijn die met 3 stemmen op de kaart bij ‘Wat er moet gebeuren’. "
             "‘Niets, dit zit hier goed’, gekozen door 2 van de 8, is geen richting en telt "
             "hier niet mee.") in kaart
     # Alleen bij de verdeelde kaart: het startpunt (growth) staat in clear.

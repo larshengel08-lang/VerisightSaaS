@@ -813,8 +813,8 @@ WORK_QUESTIONS: dict[str, dict[str, dict[str, str]]] = {
 # niet meer, dus geen plaatshouders {a}/{b} meer. Vaste tekst per scan_type.
 WORK_QUESTION_VARIANTS: dict[str, dict[str, str]] = {
     "divided": {
-        "retention": "Deze groep koos verschillend; de verdeling staat hierboven. Met welke van de meest gekozen richtingen beginnen jullie, en welke laten jullie bewust liggen?",
-        "exit": "Deze vertrekkers kozen verschillend; de verdeling staat hierboven. Welke van de meest gekozen richtingen pakken jullie op voor wie er nu werkt, en welke laten jullie bewust liggen?",
+        "retention": "Deze groep koos verschillend; de verdeling staat bij ‘Wat er moet gebeuren’. Met welke van de meest gekozen richtingen beginnen jullie, en welke laten jullie bewust liggen?",
+        "exit": "Deze vertrekkers kozen verschillend; de verdeling staat bij ‘Wat er moet gebeuren’. Welke van de meest gekozen richtingen pakken jullie op voor wie er nu werkt, en welke laten jullie bewust liggen?",
     },
     "split_none": {
         "retention": "Deze groep is verdeeld: een deel vraagt om verandering, een even groot deel zegt dat het goed zit. Beide kan kloppen. Waar zouden jullie met de meest gekozen richting beginnen?",
