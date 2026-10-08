@@ -453,9 +453,11 @@ def test_cli_uitvoer_bevat_alleen_ids_datums_en_aantallen(fabriek, capsys):
             assert verboden not in uit, verboden
         regels = uit.splitlines()
         # De samenvatting van de metingen blijft de laatste regel (C.3);
-        # de samenvatting van leads en dossiers staat er direct boven.
+        # daarboven die van de gebruiksgegevens zonder meting (Taak 11 van de
+        # vervolgronde), en direct daarboven die van leads en dossiers.
         assert regels[-1].startswith("SAMENVATTING (")
-        assert regels[-2].startswith("SAMENVATTING LEADS EN DOSSIERS (")
+        assert regels[-2].startswith("SAMENVATTING GEBRUIKSGEGEVENS ZONDER METING (")
+        assert regels[-3].startswith("SAMENVATTING LEADS EN DOSSIERS (")
     assert "dry-run: niets gewijzigd" in droog
     assert ("SAMENVATTING LEADS EN DOSSIERS (dry-run): leads: 1 verlopen, 0 opgeschoond, "
             "1 binnen de termijn, 0 zonder datum, 0 fouten; dossiers: 1 verlopen, 0 opgeschoond, "
