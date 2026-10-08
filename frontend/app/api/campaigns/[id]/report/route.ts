@@ -11,13 +11,13 @@ interface Context {
 
 const BACKEND_ONBEREIKBAAR = 'De rapportserver is nu niet bereikbaar. Probeer het later opnieuw.'
 
-// De frontend-Sentry staat uit; deze regels landen in de Vercel-logs. Alleen
-// het campagne-id en de fout, nooit de organisatiesleutel of de campagnenaam.
 // Statussen waarmee de backend bewust weigert (opgeschoonde data, bedrijfsregel).
 // Elke andere niet-ok status na onze eigen rechtencheck wijst op een fout of
 // een verkeerde configuratie en wordt gelogd.
 const VERWACHTE_STATUS = new Set([410, 422])
 
+// De frontend-Sentry staat uit; deze regels landen in de Vercel-logs. Alleen
+// het campagne-id en de fout, nooit de organisatiesleutel of de campagnenaam.
 function logProxyFout(campaignId: string, stap: string, fout: unknown) {
   const melding = fout instanceof Error ? fout.message : String(fout)
   // Node-fetch (undici) geeft alleen 'fetch failed'; de echte oorzaak
@@ -119,6 +119,9 @@ export async function GET(request: Request, { params }: Context) {
         backendResponse = eerstePoging
       } else {
         if (eerstePoging) {
+          // De ongelezen body houdt anders de verbinding bezet. Een fout bij het
+          // afbreken mag de terugval niet als onbereikbare backend laten eindigen.
+          await eerstePoging.body?.cancel().catch(() => undefined)
           console.warn('[rapportproxy] organisatiesleutel geweigerd, terugval op de interne route', {
             campaignId: id,
             status: eerstePoging.status,
