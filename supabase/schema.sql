@@ -1467,12 +1467,11 @@ create policy "org_members_can_select_responses"
 -- + status). De operator leest alles via de service-role; de klant krijgt aggregatie via
 -- campaign_stats + het backend-rapport. (De policies blijven staan voor de service-role
 -- en toekomstige owner-only leespaden.)
--- survey_responses: alleen de aggregatiekolommen die de campaign_stats-view nodig heeft
--- (die view is security_invoker=true en joint survey_responses). Ruwe antwoorden/open tekst
--- gaan dicht. Residu: per-respondent risk_score/risk_band (afgeleid) blijft leesbaar.
+-- survey_responses: geen enkele kolom leesbaar voor anon of authenticated (2026-10-08).
+-- campaign_stats haalt de risico-aggregatie uit public.campaign_risk_summary (security
+-- definer, eigen tenancycheck), dus de klant heeft geen kolomrecht meer nodig.
 revoke select on public.survey_responses from anon, authenticated;
-grant  select (id, respondent_id, risk_score, risk_band)
-  on public.survey_responses to authenticated;
+revoke select (id, respondent_id, risk_score, risk_band) on public.survey_responses from anon, authenticated;
 -- respondents: alleen niet-identificerende operationele kolommen (department-tellingen +
 -- status). token/email/role_level/exit_month/salary/dedup_key_hash gaan dicht.
 revoke select on public.respondents      from anon, authenticated;
@@ -2461,34 +2460,109 @@ create index if not exists idx_action_center_governance_interventions_route
 -- ============================================================
 -- VIEW: campaign_stats
 -- ============================================================
+-- Gelijk aan migrations/2026_10_08_campaign_stats_zonder_respondentscores.sql.
 
+-- campaigns.closes_at komt uit migrations/2026_06_17_add_closes_at.sql en stond
+-- nog niet in dit bestand; de view hieronder heeft hem nodig.
+alter table public.campaigns add column if not exists closes_at date;
+
+-- 1. Aggregatie per meting achter een security-definer-functie.
+-- Bevoegd: lid van de organisatie van de meting, de Loep-operator, of een
+-- verbinding die geen klantrol is (service-role, directe databaseverbinding).
+-- Een klantrol herkennen we aan zowel de JWT-rol als de databaserol
+-- (current_setting('role') is de SET ROLE van PostgREST, ook binnen een
+-- security-definer-functie). Allebei moeten zeggen "geen klant" voordat de
+-- tenancycheck vervalt. Wie niet bevoegd is, krijgt dezelfde uitkomst als bij
+-- een meting zonder antwoorden (leeg gemiddelde, nul per band): de functie
+-- verraadt niets.
+-- Een SQL-functie met security definer wordt door Postgres nooit ge-inlined,
+-- dus de rechten van de eigenaar gelden altijd.
+create or replace function public.campaign_risk_summary(target_campaign_id uuid)
+returns table (
+  avg_risk_score numeric,
+  band_high      bigint,
+  band_medium    bigint,
+  band_low       bigint
+)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select
+    round(avg(sr.risk_score)::numeric, 2),
+    count(sr.id) filter (where sr.risk_band = 'HOOG'),
+    count(sr.id) filter (where sr.risk_band = 'MIDDEN'),
+    count(sr.id) filter (where sr.risk_band = 'LAAG')
+  from public.campaigns c
+  join public.respondents      r  on r.campaign_id    = c.id
+  join public.survey_responses sr on sr.respondent_id = r.id
+  where c.id = target_campaign_id
+    and (
+      (
+        coalesce(auth.role(), '') not in ('anon', 'authenticated')
+        and coalesce(current_setting('role', true), '') not in ('anon', 'authenticated')
+      )
+      or public.is_verisight_admin_user()
+      or public.is_org_member(c.organization_id)
+    );
+$$;
+
+revoke all on function public.campaign_risk_summary(uuid) from public, anon;
+grant execute on function public.campaign_risk_summary(uuid) to authenticated, service_role;
+
+-- 2. campaign_stats: zelfde kolommen in dezelfde volgorde als in productie
+-- (migrations/2026_06_17_add_closes_at.sql), zelfde rekenregels. De
+-- respondenttellingen gebeuren eerst per meting in een subquery, zodat de
+-- functie één keer per meting draait en niet één keer per respondent.
 -- security_invoker = true: view runs with caller's permissions so RLS on
--- campaigns / respondents / survey_responses is applied. Without this option
+-- campaigns / respondents is applied. Without this option
 -- Supabase would run the view as the view-creator (security definer), bypassing
 -- RLS and leaking campaign data across tenants.
 -- Requires PostgreSQL 15 — Supabase EU Frankfurt ✓
 create or replace view public.campaign_stats with (security_invoker = true) as
 select
-  c.id                                                as campaign_id,
-  c.name                                              as campaign_name,
-  c.scan_type,
-  c.organization_id,
-  c.is_active,
-  c.created_at,
-  count(r.id)                                         as total_invited,
-  count(r.id) filter (where r.completed)              as total_completed,
-  round(
-    count(r.id) filter (where r.completed)::numeric
-    / nullif(count(r.id), 0) * 100, 1
-  )                                                   as completion_rate_pct,
-  round(avg(sr.risk_score)::numeric, 2)               as avg_risk_score,
-  count(sr.id) filter (where sr.risk_band = 'HOOG')   as band_high,
-  count(sr.id) filter (where sr.risk_band = 'MIDDEN') as band_medium,
-  count(sr.id) filter (where sr.risk_band = 'LAAG')   as band_low
-from public.campaigns c
-left join public.respondents      r  on r.campaign_id   = c.id
-left join public.survey_responses sr on sr.respondent_id = r.id
-group by c.id, c.name, c.scan_type, c.organization_id, c.is_active, c.created_at;
+  s.campaign_id,
+  s.campaign_name,
+  s.scan_type,
+  s.organization_id,
+  s.is_active,
+  s.created_at,
+  s.closed_at,
+  s.closes_at,
+  s.total_invited,
+  s.total_completed,
+  s.completion_rate_pct,
+  rs.avg_risk_score,
+  rs.band_high,
+  rs.band_medium,
+  rs.band_low
+from (
+  select
+    c.id                                                as campaign_id,
+    c.name                                              as campaign_name,
+    c.scan_type,
+    c.organization_id,
+    c.is_active,
+    c.created_at,
+    c.closed_at,
+    c.closes_at,
+    count(r.id)                                         as total_invited,
+    count(r.id) filter (where r.completed)              as total_completed,
+    round(
+      count(r.id) filter (where r.completed)::numeric
+      / nullif(count(r.id), 0) * 100, 1
+    )                                                   as completion_rate_pct
+  from public.campaigns c
+  left join public.respondents r on r.campaign_id = c.id
+  group by
+    c.id, c.name, c.scan_type, c.organization_id, c.is_active,
+    c.created_at, c.closed_at, c.closes_at
+) s
+cross join lateral public.campaign_risk_summary(s.campaign_id) rs;
+
+-- anon heeft hier niets te zoeken (geen enkele lezer in de code is anon).
+revoke select on public.campaign_stats from anon;
 
 -- ── Plan 3b (2026-09-19): besluit van het MT per meting + koppeling vorige meting ──
 -- Gelijk aan migrations/2026_09_19_add_campaign_decisions.sql.
