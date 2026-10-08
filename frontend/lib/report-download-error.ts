@@ -160,7 +160,8 @@ export function downloadErrorMessage(status: number): string {
   }
 
   // 422: het rapport bestaat volgens een bedrijfsregel nog niet. Opnieuw
-  // proberen helpt dan niet; de backendzin staat in de technische melding.
+  // proberen helpt dan niet; een onherkende backendzin staat in de technische
+  // melding.
   if (status === 422) {
     return `Dit rapport is nu nog niet beschikbaar. Mail ${LOEP_CONTACT_EMAIL} als je denkt dat dit niet klopt.`
   }
