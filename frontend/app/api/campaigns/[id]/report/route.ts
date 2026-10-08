@@ -9,6 +9,15 @@ interface Context {
   params: Promise<{ id: string }>
 }
 
+const BACKEND_ONBEREIKBAAR = 'De rapportserver is nu niet bereikbaar. Probeer het later opnieuw.'
+
+// De frontend-Sentry staat uit; deze regels landen in de Vercel-logs. Alleen
+// het campagne-id en de fout, nooit de organisatiesleutel of de campagnenaam.
+function logProxyFout(campaignId: string, stap: string, fout: unknown) {
+  const melding = fout instanceof Error ? fout.message : String(fout)
+  console.error(`[rapportproxy] ${stap}`, { campaignId, fout: melding })
+}
+
 export async function GET(request: Request, { params }: Context) {
   const { id } = await params
   const supabase = await createClient()
@@ -77,32 +86,42 @@ export async function GET(request: Request, { params }: Context) {
 
   let backendResponse: globalThis.Response | null = null
 
-  if (format === 'segment_summary') {
-    backendResponse = await fetchInternalReport()
-  } else {
-    try {
-      const apiKey = await getOrganizationApiKey(campaign.organization_id, { supabase })
-      backendResponse = await fetch(backendUrl, {
-        headers: {
-          'x-api-key': apiKey,
-        },
-        cache: 'no-store',
-      })
+  try {
+    if (format === 'segment_summary') {
+      backendResponse = await fetchInternalReport()
+    } else {
+      try {
+        const apiKey = await getOrganizationApiKey(campaign.organization_id, { supabase })
+        backendResponse = await fetch(backendUrl, {
+          headers: {
+            'x-api-key': apiKey,
+          },
+          cache: 'no-store',
+        })
 
-      if (backendResponse.status === 401 || backendResponse.status === 403) {
+        if (backendResponse.status === 401 || backendResponse.status === 403) {
+          backendResponse = await fetchInternalReport()
+        }
+      } catch (error) {
+        logProxyFout(id, 'eerste poging via de organisatiesleutel mislukt, terugval op de interne route', error)
         backendResponse = await fetchInternalReport()
       }
-    } catch {
-      backendResponse = await fetchInternalReport()
     }
+  } catch (error) {
+    logProxyFout(id, 'backend niet bereikbaar', error)
+    return NextResponse.json({ detail: BACKEND_ONBEREIKBAAR }, { status: 502 })
   }
 
   if (!backendResponse) {
+    logProxyFout(id, 'geen antwoord van de backend', 'leeg antwoord')
     return NextResponse.json({ detail: 'Rapportproxy kon niet worden gestart.' }, { status: 502 })
   }
 
   if (!backendResponse.ok) {
     const detail = await backendResponse.text()
+    if (backendResponse.status >= 500) {
+      logProxyFout(id, `backend gaf status ${backendResponse.status}`, detail.slice(0, 300))
+    }
     return NextResponse.json(
       { detail: detail || 'Rapport kon niet worden gegenereerd.' },
       { status: backendResponse.status },
