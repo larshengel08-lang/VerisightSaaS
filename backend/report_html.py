@@ -3005,10 +3005,30 @@ def _niets_tekst(scan_type: str) -> str:
     return teksten.pop()
 
 
-def _niets_apart(st: dict, niets: str) -> str:
+def _niets_apart(st: dict, niets: str | None) -> str:
     """"; 3 kozen ‘Niets, dit zit hier goed’": de niets-stemmen naast een
-    richting die op de veranderkeuzes rust (spec 2026-10-07, taak 7)."""
+    richting die op de veranderkeuzes rust (spec 2026-10-07, taak 7). Leeg
+    zonder niets-stemmen (dan is niets ook None: geen niets-sleutel in de
+    telling)."""
+    if not st["none_n"]:
+        return ""
     return f"; {_tel(st['none_n'], 'koos', 'kozen')} ‘{niets}’"
+
+
+def _op_veranderkeuzes(st: dict) -> bool:
+    """Rust de telling van een richting op de veranderkeuzes? Ja zodra die
+    afwijken van alle beantwoorders: door niets-stemmen, door beantwoorde rijen
+    zonder keuze, of beide. Alleen als ze gelijk zijn blijft de oude telling op
+    alle beantwoorders staan (die is dan hetzelfde getal)."""
+    return st["change_n"] != st["n"]
+
+
+def _zonder_keuze_p02(st: dict) -> str:
+    """De korte defectzin voor pagina twee; zie _zonder_keuze_zin."""
+    rest = st["n"] - st["none_n"] - st["change_n"]
+    if rest <= 0:
+        return ""
+    return f" Bij {rest} {_werkwoord(rest, 'antwoord', 'antwoorden')} is geen keuze vastgelegd."
 
 
 def _zonder_keuze_zin(st: dict) -> str:
@@ -3320,9 +3340,10 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
         # 2026-10-07): die noemer staat in de telling, de niets-stemmen apart
         # erachter. Anders leest "Volgens 4 van de 8" naast een tabel met 3
         # niets-stemmen als een rekenfout.
-        if st["none_n"]:
+        if _op_veranderkeuzes(st):
+            niets = _opt(st["none_key"]) if st["none_n"] else None
             src = (f"Volgens {_telling(st['top_n'], st['change_n'])} die om verandering "
-                   f"vroegen{_niets_apart(st, _opt(st['none_key']))}. "
+                   f"vroegen{_niets_apart(st, niets)}. "
                    f"{_dir_noemer_zin(n, label)}")
         else:
             src = (f"Volgens {_telling(st['top_n'], n)}; "
@@ -3345,14 +3366,15 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
                   if rest else "")
         # De kop eerst: _opt geeft bij een onbekende topsleutel de nette
         # melding, direction_imperative in de slotzin alleen een kale KeyError.
-        head = (DIRECTION_HEAD_PLURALITY_VERANDERING if st["none_n"]
+        head = (DIRECTION_HEAD_PLURALITY_VERANDERING if _op_veranderkeuzes(st)
                 else DIRECTION_HEAD_PLURALITY).format(opt=_opt(st["top_key"]))
         slot = (f"{_dir_noemer_zin(n, label)}{_zonder_keuze_zin(st)} Wat er volgens de "
                 f"grootste groep moet gebeuren: "
                 f"{direction_imperative(scan_type, factor_key, st['top_key'])}")
-        if st["none_n"]:
+        if _op_veranderkeuzes(st):
+            niets = _opt(st["none_key"]) if st["none_n"] else None
             src = (f"{_telling(st['top_n'], st['change_n'])} die om verandering vroegen, "
-                   f"kozen die richting{tweede}{_niets_apart(st, _opt(st['none_key']))}. "
+                   f"kozen die richting{tweede}{_niets_apart(st, niets)}. "
                    f"{slot}")
         else:
             src = f"{_telling(st['top_n'], n)} kozen die richting{tweede}. {slot}"
@@ -4044,9 +4066,11 @@ def _direction_p02_line(direction_agg: dict, factor_key: str | None, scan_type: 
     # Met niets-stemmen rust de richting op de veranderkeuzes (spec 2026-10-07,
     # taak 7), net als op de kaart: die noemer in de telling, de niets-stemmen
     # als eigen zin erachter.
+    # Rijen zonder keuze (datadefect) krijgen hier ook één korte zin, zodat
+    # pagina twee nooit een telling toont die niet optelt.
     niets_zin = (f" {_tel(st['none_n'], 'vindt', 'vinden')} dat hier niets hoeft."
-                 if st["none_n"] else "")
-    if st["state"] == "clear" and st["none_n"]:
+                 if st["none_n"] else "") + _zonder_keuze_p02(st)
+    if st["state"] == "clear" and _op_veranderkeuzes(st):
         return (f"Wat er moet gebeuren volgens {_telling(st['top_n'], st['change_n'])} "
                 f"die om verandering vroegen: "
                 f"{direction_imperative(scan_type, factor_key, st['top_key'])}{niets_zin}")
@@ -4054,7 +4078,7 @@ def _direction_p02_line(direction_agg: dict, factor_key: str | None, scan_type: 
         return (f"Wat er moet gebeuren volgens {_telling(st['top_n'], n)} "
                 f"{DIR_N_DIE_WIE}: "
                 f"{direction_imperative(scan_type, factor_key, st['top_key'])}")
-    if st["state"] == "plurality" and st["none_n"]:
+    if st["state"] == "plurality" and _op_veranderkeuzes(st):
         return (f"Wat er moet gebeuren volgens de grootste groep van wie om verandering "
                 f"vroeg, {_telling(st['top_n'], st['change_n'])}, zonder meerderheid: "
                 f"{direction_imperative(scan_type, factor_key, st['top_key'])}{niets_zin}")
@@ -4495,9 +4519,10 @@ def _drempeltabel(scan_type: str, *, direction_active: bool = True,
              "afdelingen, omdat niemand in de organisatie kan zien wie een onderwerp "
              f"als laagste had; bij {_TELWOORD.get(DIRECTION_MIN_N, DIRECTION_MIN_N)} of "
              f"{_TELWOORD.get(DIRECTION_CAVEAT_MAX_N, DIRECTION_CAVEAT_MAX_N)} antwoorden "
-             "staat er een beperkte-basis-regel bij. Een richting wijst het rapport pas "
-             f"aan als ook minstens {_TELWOORD.get(DIRECTION_MIN_N, DIRECTION_MIN_N)} "
-             "mensen om verandering vroegen."))
+             "staat er een beperkte-basis-regel bij. Een duidelijke richting, of de "
+             "richting van de grootste groep, noemt het rapport pas als minstens "
+             f"{_TELWOORD.get(DIRECTION_MIN_N, DIRECTION_MIN_N)} mensen om verandering "
+             "vroegen."))
     rijen.sort(key=lambda rij: rij[0])
     trs = "".join(f'<tr><td class="is" style="width:8%;text-align:left;">{n}</td>'
                   f'<td class="iq" style="width:38%;">{_h(waar)}</td><td>{_h(waarom)}</td></tr>'

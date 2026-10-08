@@ -152,10 +152,20 @@ def test_rijen_zonder_keuze_krijgen_een_zin_en_alles_telt_op():
     assert src(card(a, "retention")) == (
         "Volgens 4 van de 5 die om verandering vroegen; 3 kozen ‘Niets, dit zit hier "
         f"goed’. Die 10 {NOEMER} Bij 2 van hen is geen keuze vastgelegd.")
-    # Zonder niets-stemmen: de oude zin plus dezelfde slotzin.
+    # Zonder niets-stemmen maar met rijen zonder keuze: ook dan rust de
+    # richting op de veranderkeuzes (change_n != n), zonder niets-clausule.
     b = agg(8, {"grd_visibility": 3})
     assert src(card(b, "retention")) == (
-        f"Volgens 3 van de 8; die 8 {NOEMER} Bij 5 van hen is geen keuze vastgelegd.")
+        f"Volgens 3 van de 3 die om verandering vroegen. Die 8 {NOEMER} Bij 5 van hen "
+        "is geen keuze vastgelegd.")
+    assert p02(b, "retention") == (
+        f"Wat er moet gebeuren volgens 3 van de 3 die om verandering vroegen: {IMP_VIS} "
+        "Bij 5 antwoorden is geen keuze vastgelegd.")
+    # Pagina twee met niets én defecten: beide zinnen, en het enkelvoud.
+    e = agg(9, {"grd_visibility": 4, "grd_time": 1, "grd_none": 3})
+    assert p02(e, "retention") == (
+        f"Wat er moet gebeuren volgens 4 van de 5 die om verandering vroegen: {IMP_VIS} "
+        "3 vinden dat hier niets hoeft. Bij 1 antwoord is geen keuze vastgelegd.")
     # Eén rij zonder keuze: zelfde zin, geen enkelvoudsprobleem.
     d = agg(9, {"grd_visibility": 4, "grd_time": 1, "grd_none": 3})
     assert src(card(d, "retention")).endswith("Bij 1 van hen is geen keuze vastgelegd.")
@@ -164,6 +174,26 @@ def test_rijen_zonder_keuze_krijgen_een_zin_en_alles_telt_op():
                  "grd_time": 2, "grd_criteria": 2})
     assert (f"Die 23 {NOEMER} Bij 3 van hen is geen keuze vastgelegd. Wat er volgens "
             "de grootste groep") in src(card(c, "retention"))
+    assert p02(c, "retention").endswith(
+        "8 vinden dat hier niets hoeft. Bij 3 antwoorden is geen keuze vastgelegd.")
+
+
+def test_plurality_met_rijen_zonder_keuze_en_zonder_niets():
+    # 9 veranderkeuzes + 1 rij zonder keuze = 10; 4 van de 9 is plurality.
+    a = agg(10, {"grd_visibility": 4, "grd_conversation": 2, "grd_time": 1,
+                 "grd_criteria": 1, "grd_followthrough": 1})
+    html = card(a, "retention")
+    assert "dir-card dir-plurality" in html
+    assert head(html) == ("Van wie om verandering vroeg, kiest de grootste groep "
+                          f"‘{OPT_VIS['retention']}’, zonder meerderheid.")
+    assert src(html) == (
+        "4 van de 9 die om verandering vroegen, kozen die richting; 2 kozen ‘Een "
+        f"concreter gesprek over mijn ontwikkeling’. Die 10 {NOEMER} Bij 1 van hen is "
+        f"geen keuze vastgelegd. Wat er volgens de grootste groep moet gebeuren: {IMP_VIS}")
+    assert p02(a, "retention") == (
+        "Wat er moet gebeuren volgens de grootste groep van wie om verandering vroeg, "
+        f"4 van de 9, zonder meerderheid: {IMP_VIS} Bij 1 antwoord is geen keuze "
+        "vastgelegd.")
 
 
 def test_plurality_tweede_is_nooit_de_niets_optie():
@@ -201,13 +231,21 @@ def test_getallen_tellen_op_in_clear_en_plurality():
             gezien += 1
             s = src(card(a, "retention"))
             assert st["change_n"] + st["none_n"] + defect == st["n"]
+            assert re.search(rf"van de {st['change_n']}( \(\d+%\))? die om verandering vroegen", s), s
+            r = p02(a, "retention")
+            assert "om verandering vroeg" in r, r
             if st["none_n"]:
-                assert re.search(rf"van de {st['change_n']}( \(\d+%\))? die om verandering vroegen", s), s
                 vorm = "koos" if st["none_n"] == 1 else "kozen"
                 assert f"{st['none_n']} {vorm} ‘Niets" in s, s
+                assert "dat hier niets hoeft." in r, r
+            else:
+                assert "Niets" not in s and "niets hoeft" not in r, (s, r)
             assert re.search(rf"[Dd]ie {st['n']} zijn de mensen", s), s
             if defect:
                 assert f"Bij {defect} van hen is geen keuze vastgelegd." in s, s
+                assert r.endswith(f"Bij {defect} antwoorden is geen keuze vastgelegd."), r
+            else:
+                assert "geen keuze vastgelegd" not in s + r
     assert gezien > 50
 
 
@@ -216,6 +254,9 @@ def _alle_teksten():
         for a in [*BASE_CASES.values(), CLEAR_NIETS, PLUR_NIETS,
                   agg(10, {"grd_visibility": 4, "grd_time": 1, "grd_none": 3}),
                   agg(8, {"grd_visibility": 3}),
+                  agg(9, {"grd_visibility": 4, "grd_time": 1, "grd_none": 3}),
+                  agg(10, {"grd_visibility": 4, "grd_conversation": 2, "grd_time": 1,
+                           "grd_criteria": 1, "grd_followthrough": 1}),
                   agg(23, {"grd_none": 8, "grd_visibility": 5, "grd_conversation": 3,
                            "grd_time": 2, "grd_criteria": 2})]:
             yield card(a, scan_type)
@@ -253,7 +294,8 @@ def test_methodiek_legt_uit_dat_niets_geen_richting_is(scan_type):
 def test_drempeltabel_zegt_dat_de_vloer_ook_voor_veranderkeuzes_geldt():
     html = _drempeltabel("retention", direction_active=True, direction_degraded=False,
                          deepening_active=True, ranking_active=True)
-    assert "minstens drie mensen om verandering vroegen" in html
+    assert ("Een duidelijke richting, of de richting van de grootste groep, noemt het "
+            "rapport pas als minstens drie mensen om verandering vroegen.") in html
 
 
 def _rows(zonder_keuze):
