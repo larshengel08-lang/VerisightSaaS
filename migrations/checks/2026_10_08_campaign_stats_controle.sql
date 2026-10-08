@@ -9,7 +9,7 @@
 -- Zie je ooit "current transaction is aborted", draai dan los: rollback;
 --
 -- Waar: Supabase Dashboard -> SQL Editor. Controleer bij de knop Run
--- dat de rol op postgres staat; anders draaien A, B, C0 en C3 als een andere
+-- dat de rol op postgres staat; anders draaien alle blokken als een andere
 -- rol en zeggen ze niets.
 -- Hoe: draai elk blok LOS. Kopieer alleen dat blok in een leeg query-venster,
 -- of selecteer het en klik op Run. De SQL Editor toont van een heel bestand
@@ -57,12 +57,15 @@
 --           op van een meting van een ANDERE organisatie (de meting met de
 --           meeste antwoorden waar deze eigenaar geen lid van is). Kolom
 --           uitkomst moet "ok" zijn: gemiddelde leeg en 0/0/0. Staat er
---           "niet getoetst", dan bestaat zo'n meting niet; meld dat. Voor de
---           migratie faalt C3 met "function ... does not exist".
+--           "niet getoetst: niet ingelogd als klant-owner", dan is er geen
+--           eigenaar van de testklant gevonden of is het blok niet als geheel
+--           gedraaid. Staat er "niet getoetst: geen andere meting met
+--           antwoorden gevonden", dan bestaat zo'n meting niet. Meld beide.
+--           Voor de migratie faalt C3 met "function ... does not exist".
 --
 -- Bij een afwijking of een onverwachte uitkomst: stop. Verander niets en draai
 -- de migratie niet zelf terug; terugdraaien zet het lek weer open. Stuur een
--- schermafbeelding van het blok en de uitkomst naar de hoofdsessie.
+-- schermafbeelding van het blok en de uitkomst naar Claude in de chat.
 
 
 -- Blok A: vingerafdruk van campaign_stats (alle metingen, als postgres)
@@ -228,6 +231,8 @@ select current_user as rol, auth.uid() as ingelogd_als,
        rs.band_medium as vreemd_midden_moet_0_zijn,
        rs.band_low as vreemd_laag_moet_0_zijn,
        case
+         when auth.uid() is null or current_user <> 'authenticated'
+           then 'niet getoetst: niet ingelogd als klant-owner'
          when nullif(current_setting('loep.vreemde_meting', true), '') is null
            then 'niet getoetst: geen andere meting met antwoorden gevonden'
          when rs.avg_risk_score is null and rs.band_high = 0
