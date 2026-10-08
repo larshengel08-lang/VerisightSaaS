@@ -41,3 +41,17 @@ def test_richtingen_weging_verwijst_naar_het_blok_met_zijn_naam():
     zin = _richtingen_weging(st, "retention", "growth")
     assert "hierboven" not in zin
     assert "op de kaart bij ‘Wat er moet gebeuren’." in zin
+
+
+def test_drempeltabel_verwijst_niet_meer_met_erboven_of_hierboven():
+    """Controllerbevinding: de OTHER_MIN_N-rij van de drempeltabel (de
+    methodiekpagina) zei "het aantal staat dan al in de verdeling erboven" --
+    op een pagina die losstaat van waar die verdeling echt staat, is "erboven"
+    net zo'n loze plaatsaanduiding als "hierboven" elders. Nu "de verdeling
+    zelf"."""
+    from backend.report_html import _drempeltabel
+
+    for scan_type in ("retention", "exit", "onboarding"):
+        html = _drempeltabel(scan_type)
+        assert "erboven" not in html, (scan_type, html)
+        assert "hierboven" not in html, (scan_type, html)

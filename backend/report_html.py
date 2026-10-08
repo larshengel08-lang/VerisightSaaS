@@ -3577,7 +3577,7 @@ def _richtingen_weging(st: dict, scan_type: str, factor_key: str) -> str:
     verdeeld-zin "de meest gekozen richtingen" zonder ze te noemen, en de kaart
     sorteert "Niets, dit zit hier goed" ertussen. Deze regel wijst de meest
     gekozen richtingen aan via hun tellingen (hoogste en op één na hoogste; de
-    teksten staan op de kaart erboven) en weegt de niets-optie apart: die is
+    teksten staan op de kaart ‘Wat er moet gebeuren’) en weegt de niets-optie apart: die is
     geen richting. Anders telt ook niet mee (geen opdrachtvorm); de regel zegt
     dat erbij zodra Anders even vaak of vaker gekozen is dan de laagste
     genoemde telling, anders blijft een even hoge rij op de kaart onverklaard.
@@ -3605,9 +3605,9 @@ def _richtingen_weging(st: dict, scan_type: str, factor_key: str) -> str:
         if k not in teksten:
             raise KeyError("richtingen_weging: onbekende optiesleutel " + repr(k)
                            + " voor " + repr(factor_key) + " (" + scan_type + ")")
-    # De teksten staan al op de kaart direct erboven (met dezelfde tellingen);
-    # hier alleen de aantallen, zodat de regel kort blijft en het agendaslot
-    # niet naar een volgend vel duwt (controllerbesluit taak 10).
+    # De teksten staan al op de kaart ‘Wat er moet gebeuren’ (met dezelfde
+    # tellingen); hier alleen de aantallen, zodat de regel kort blijft en het
+    # agendaslot niet naar een volgend vel duwt (controllerbesluit taak 10).
     hoogste = sorted({c for _k, c in inhoud}, reverse=True)[:2]
     zin = ("De meest gekozen richtingen zijn die met " + _stemmen(hoogste)
           + " op de kaart bij ‘Wat er moet gebeuren’.")
@@ -4529,7 +4529,7 @@ def _drempeltabel(scan_type: str, *, direction_active: bool = True,
              f"en minstens {OTHER_MIN_N} mensen het kozen: op de kleinste basis van dit "
              "rapport haalt één mens dat aandeel al, en van één mens is geen conclusie "
              "over de vraagopties te trekken. Schreef niemand van hen een toelichting, "
-             "dan blijft het blok weg: het aantal staat dan al in de verdeling erboven."))
+             "dan blijft het blok weg: het aantal staat dan al in de verdeling zelf."))
     if scan_type in DIRECTION_SCAN_TYPES and verdieping_actief:
         rijen.append(
             (DEEPENING_DISTRIBUTION_MIN_N, "de verdeling van toelichtingen onder een onderwerp",
