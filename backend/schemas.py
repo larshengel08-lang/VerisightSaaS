@@ -13,6 +13,8 @@ from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
+from backend.exit_month import EXIT_MONTH_RE
+
 
 # ---------------------------------------------------------------------------
 # Shared base
@@ -109,7 +111,7 @@ class CampaignRead(OrmBase):
 class RespondentCreate(BaseModel):
     department: Optional[str] = Field(None, max_length=100)
     role_level: Optional[str] = Field(None, max_length=50)
-    exit_month: Optional[str] = Field(None, pattern=r"^\d{4}-(0[1-9]|1[0-2])$")
+    exit_month: Optional[str] = Field(None, pattern=EXIT_MONTH_RE.pattern)
     annual_salary_eur: Optional[float] = Field(None, gt=0, lt=1_000_000)
     email: Optional[EmailStr] = None  # voor uitnodigingsmail
 
@@ -354,6 +356,10 @@ class SurveySubmit(BaseModel):
     tenure_years: Optional[float] = Field(None, ge=0, le=60)
     exit_reason_category: Optional[str] = None
     exit_reason_code: Optional[str] = None
+    # Vertrekmaand (spec 2026-10-07 par. 1): alleen Loep Vertrek, optioneel.
+    # De vorm en het venster controleert submit_survey (backend.exit_month),
+    # met een leesbare 422 in plaats van een Pydantic-lijst.
+    exit_month: Optional[str] = Field(None, max_length=20)
     # Shared request field for a product-specific direction/stay item.
     # Product interpretation must come from scan_type and product definition.
     stay_intent_score: Optional[int] = Field(None, ge=1, le=5)

@@ -43,7 +43,7 @@ export const PRICING_TIERS: readonly PricingTier[] = freezeTiers([
   { id: '400-1000', label: '400 tot 1.000 medewerkers', firstScanEur: 6900, followUpEur: 1750, note: null },
 ])
 
-export const PRICING_ABOVE_LABEL = 'Boven 1.000 medewerkers'
+export const PRICING_ABOVE_LABEL = '1.000 of meer medewerkers'
 export const PRICING_ABOVE_TEXT = 'Op aanvraag'
 export const PRICING_VAT_NOTE = 'excl. btw'
 

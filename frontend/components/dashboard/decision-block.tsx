@@ -39,6 +39,27 @@ const inputClass =
 // erfden).
 const hintClass = labelClass
 const fieldClass = 'flex flex-col'
+const countOverClass = 'block text-xs font-semibold text-red-600'
+
+/**
+ * Teller voor een lang veld (primaryAction, secondaryAction, feedbackPlan,
+ * successCriterion): die vier kunnen op de besluitpagina worden ingekort
+ * (BESLUIT_TEKST_MAX, zie DECISION_LIMITS in lib/dashboard/campaign-decision.ts).
+ * De telling zelf (`{lengte} / {max}`) is géén live region: bij elke
+ * toetsaanslag zou een schermlezer dan constant onderbroken worden. Alleen de
+ * waarschuwing bij overschrijding is aria-live="polite", en staat er pas
+ * zodra hij nodig is: zo komt er maar één aankondiging, op het moment dat het
+ * veld te lang wordt. Toont nooit een afgekapte waarde: alleen de lengte.
+ */
+function CharCount({ id, length, max }: { id: string; length: number; max: number }) {
+  const over = length > max
+  return (
+    <span id={id} className={over ? countOverClass : hintClass}>
+      {length} / {max}
+      {over ? <span aria-live="polite">{` Te lang voor het rapport: kort in tot ${max} tekens.`}</span> : null}
+    </span>
+  )
+}
 
 function ReadOnlyRow({ label, value }: { label: string; value: string | null }) {
   if (!value) return null
@@ -80,6 +101,13 @@ export function DecisionBlock({ campaignId, canManage, decision, loadError, scan
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  // Lengte van de vier velden die de besluitpagina kan inkorten (taak 10). De
+  // velden blijven ongecontroleerd (defaultValue): alleen de lengte wordt
+  // bijgehouden voor de teller, de waarde zelf nooit afgekapt.
+  const [primaryActionLength, setPrimaryActionLength] = useState(decision?.primaryAction.length ?? 0)
+  const [secondaryActionLength, setSecondaryActionLength] = useState(decision?.secondaryAction.length ?? 0)
+  const [feedbackPlanLength, setFeedbackPlanLength] = useState(decision?.feedbackPlan.length ?? 0)
+  const [successCriterionLength, setSuccessCriterionLength] = useState(decision?.successCriterion.length ?? 0)
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -161,13 +189,15 @@ export function DecisionBlock({ campaignId, canManage, decision, loadError, scan
                 maxLength={DECISION_LIMITS.action}
                 defaultValue={decision?.primaryAction ?? ''}
                 disabled={busy}
-                aria-describedby="decision-hint-primary-action"
+                aria-describedby="decision-hint-primary-action decision-count-primaryAction"
+                onChange={(event) => setPrimaryActionLength(event.target.value.length)}
                 className={inputClass}
               />
             </label>
             <span id="decision-hint-primary-action" className={hintClass}>
               Een onderwerp is nog geen afspraak: schrijf op wat er gebeurt.
             </span>
+            <CharCount id="decision-count-primaryAction" length={primaryActionLength} max={DECISION_LIMITS.action} />
           </div>
           <div className={fieldClass}>
             <label className={labelClass}>
@@ -220,17 +250,22 @@ export function DecisionBlock({ campaignId, canManage, decision, loadError, scan
               {DECISION_SECOND_POINT_HINT}
             </span>
           </div>
-          <label className={labelClass}>
-            Wat precies bij het tweede punt
-            <textarea
-              name="secondaryAction"
-              rows={2}
-              maxLength={DECISION_LIMITS.action}
-              defaultValue={decision?.secondaryAction ?? ''}
-              disabled={busy}
-              className={inputClass}
-            />
-          </label>
+          <div className={fieldClass}>
+            <label className={labelClass}>
+              Wat precies bij het tweede punt
+              <textarea
+                name="secondaryAction"
+                rows={2}
+                maxLength={DECISION_LIMITS.action}
+                defaultValue={decision?.secondaryAction ?? ''}
+                disabled={busy}
+                aria-describedby="decision-count-secondaryAction"
+                onChange={(event) => setSecondaryActionLength(event.target.value.length)}
+                className={inputClass}
+              />
+            </label>
+            <CharCount id="decision-count-secondaryAction" length={secondaryActionLength} max={DECISION_LIMITS.action} />
+          </div>
           <div className={`${fieldClass} sm:col-span-2`}>
             <label className={labelClass}>
               Terugkoppeling aan medewerkers
@@ -241,7 +276,8 @@ export function DecisionBlock({ campaignId, canManage, decision, loadError, scan
                 defaultValue={decision?.feedbackPlan ?? ''}
                 placeholder="Wie vertelt wat, en wanneer?"
                 disabled={busy}
-                aria-describedby={feedbackHint ? 'decision-hint-feedback' : undefined}
+                aria-describedby={feedbackHint ? 'decision-hint-feedback decision-count-feedbackPlan' : 'decision-count-feedbackPlan'}
+                onChange={(event) => setFeedbackPlanLength(event.target.value.length)}
                 className={inputClass}
               />
             </label>
@@ -250,18 +286,24 @@ export function DecisionBlock({ campaignId, canManage, decision, loadError, scan
                 {feedbackHint}
               </span>
             ) : null}
+            <CharCount id="decision-count-feedbackPlan" length={feedbackPlanLength} max={DECISION_LIMITS.text} />
           </div>
-          <label className={`${labelClass} sm:col-span-2`}>
-            {DECISION_SUCCESS_LABEL}
-            <input
-              type="text"
-              name="successCriterion"
-              maxLength={DECISION_LIMITS.text}
-              defaultValue={decision?.successCriterion ?? ''}
-              disabled={busy}
-              className={inputClass}
-            />
-          </label>
+          <div className={`${fieldClass} sm:col-span-2`}>
+            <label className={labelClass}>
+              {DECISION_SUCCESS_LABEL}
+              <input
+                type="text"
+                name="successCriterion"
+                maxLength={DECISION_LIMITS.text}
+                defaultValue={decision?.successCriterion ?? ''}
+                disabled={busy}
+                aria-describedby="decision-count-successCriterion"
+                onChange={(event) => setSuccessCriterionLength(event.target.value.length)}
+                className={inputClass}
+              />
+            </label>
+            <CharCount id="decision-count-successCriterion" length={successCriterionLength} max={DECISION_LIMITS.text} />
+          </div>
           <div className="flex flex-wrap items-center gap-4 sm:col-span-2">
             <button
               type="submit"

@@ -33,10 +33,13 @@ nooit te laat en hooguit een maand vroeg. Opschonen op verzoek kijkt niet naar
 de termijn en heeft dus ook geen vooruitblik.
 
 Indeling: per soort gegevens een eigen inventaris-, tel- en opschoonfunctie en
-een eigen rapportage: metingen (opschonen, Rapportage) en leads en leerdossiers
-(opschonen_contacten, ContactRapportage). Voor beide geldt: dry-run standaard,
-één transactie per eenheid die eerst opnieuw toetst, tweede run doet niets.
-De periodieke run (zonder --campagne of --organisatie) doet allebei; een
+een eigen rapportage: metingen (opschonen, Rapportage), leads en leerdossiers
+(opschonen_contacten, ContactRapportage) en gebruiksgegevens zonder meting
+(opschonen_gebruik, Gebruiksregel). Voor alle drie geldt: dry-run standaard,
+per eenheid een transactie die de voorwaarde bij het schrijven opnieuw toetst
+(voor metingen, leads en dossiers vooraf met een slot, voor gebruiksgegevens
+in de delete zelf), tweede run doet niets.
+De periodieke run (zonder --campagne of --organisatie) doet alle drie; een
 verzoek per meting of organisatie raakt alleen metingen.
 
 Per meting, bovenop Deel C.1 (Taak 17b, onderzocht in
@@ -45,12 +48,21 @@ frontend/lib/telemetry/store.ts en frontend/lib/proof-registry-server.ts):
 
 | Tabel | Wat erin staat | Na de termijn | Waarom |
 |---|---|---|---|
-| suite_telemetry_events | gebeurtenis per meting (type, actor_id = gebruikers-id, payload als vrije JSON van de aanroeper) | verwijderen (rijen van deze meting) | Operationele meting van het gebruik; na de termijn geen doel meer, en de payload is ongecontroleerd. |
-| case_proof_registry | intern bewijsregister per meting: summary en claimable_observation (vrije tekst over de uitkomst bij de klant), supporting_artifacts | verwijderen (rijen van deze meting) | Alleen voor Loep-beheerders; vrije tekst over de klant en de meting. Leegmaken laat een rij zonder inhoud staan, dus verwijderen. |
+| suite_telemetry_events | gebeurtenis per meting (type, actor_id = gebruikers-id, payload als vrije JSON van de aanroeper) | met meting: verwijderen (rijen van deze meting); zonder meting: verwijderd 24 maanden na aanmaken | Operationele meting van het gebruik; na de termijn geen doel meer, en de payload is ongecontroleerd. |
+| case_proof_registry | intern bewijsregister per meting: summary en claimable_observation (vrije tekst over de uitkomst bij de klant), supporting_artifacts | met meting: verwijderen (rijen van deze meting); zonder meting: verwijderd 24 maanden na aanmaken | Alleen voor Loep-beheerders; vrije tekst over de klant en de meting. Leegmaken laat een rij zonder inhoud staan, dus verwijderen. |
 
 Beide hangen via campaign_id (on delete set null) aan een meting en gaan mee in
-NIET_ORM_TABELLEN, niet als eigen termijn. Rijen zonder campaign_id (alleen een
-organisatie) raakt deze opschoning niet.
+NIET_ORM_TABELLEN. Rijen zonder campaign_id (nooit gekoppeld, of losgeraakt
+doordat de meting verdween) hebben een eigen termijn (vervolgronde 7-10, spec
+2026-10-07 par. 7): GEBRUIK_TERMIJN_MAANDEN (24) na created_at, met dezelfde
+dagberekening in Nederlandse tijd en dezelfde vooruitblik als leads. Eenheid is
+de tabel: per tabel één transactie die de rijen zonder meting zonder slot
+leest en beoordeelt, met --apply alleen de verlopen rijen vergrendelt (op
+Postgres FOR UPDATE) en bij het verwijderen opnieuw toetst dat campaign_id
+leeg is; wordt er minder verwijderd dan er verliepen, dan rolt de tabel terug. Ontbreekt de tabel, dan een LET OP-regel (niet rood); mist
+hij id, campaign_id of created_at, of heeft een rij geen created_at, dan wordt
+er niets geraakt en is de run rood (exitcode 1). Het bewijs van toestemming
+voor gepubliceerde cases bewaart Loep buiten de database.
 
 Leads en leerdossiers (amendement A4 punt 2): termijn twee jaar
 (CONTACT_TERMIJN_MAANDEN) na het laatste contact, met dezelfde vooruitblik als
@@ -161,6 +173,13 @@ REVIEWBESLUIT_TIJDSTEMPELS = ("created_at", "updated_at")
 CHECKPOINT_VERWIJZINGEN: tuple[tuple[str, str], ...] = (
     (REVIEWBESLUIT_TABEL, "checkpoint_id"),
 )
+
+# Gebruiksgegevens zonder meting (vervolgronde 7-10, Taak 11): rijen zonder
+# campaign_id, twee jaar na aanmaken. Vaste constanten, geen invoer.
+GEBRUIK_TERMIJN_MAANDEN = 24
+GEBRUIK_TABELLEN = ("suite_telemetry_events", "case_proof_registry")
+GEBRUIK_KOLOMMEN = ("id", "campaign_id", "created_at")
+GEBRUIK_STUK = 500          # id's per delete-statement
 
 _Q_PURGED = (text("select data_purged_at from campaigns where id = :id")
              .bindparams(bindparam("id", type_=GUID()))
@@ -934,6 +953,132 @@ def opschonen_contacten(session_factory: Callable[[], Session], *, vandaag: date
                              ontbrekende_tabellen=ontbrekend, onvolledig=onvolledig)
 
 
+# --- Gebruiksgegevens zonder meting (vervolgronde 7-10, Taak 11) ---------------
+
+class GebruikVeranderd(EenheidVeranderd):
+    """Minder rijen verwijderd dan er verlopen waren: de tabel veranderde."""
+
+    soort = "gebruiksgegevens"
+
+
+@dataclass
+class Gebruiksregel:
+    """Een tabel met gebruiksgegevens: de rijen zonder meting, geteld."""
+
+    tabel: str
+    # ok | ontbreekt (tabel bestaat niet) | onvolledig (kolom ontbreekt) | fout
+    status: str
+    verlopen: int = 0
+    binnen_termijn: int = 0
+    zonder_datum: int = 0
+    verwijderd: int = 0
+    fout: str = ""
+    ontbrekende_kolommen: list[str] = field(default_factory=list)
+
+
+def _in_stukken(ids: list[str]) -> Iterable[list[str]]:
+    for i in range(0, len(ids), GEBRUIK_STUK):
+        yield ids[i:i + GEBRUIK_STUK]
+
+
+def _vergrendel_gebruik(db: Session, tabel: str, ids: list[str]) -> None:
+    """Vergrendel de verlopen rijen die nog geen meting hebben (alleen met apply).
+
+    Op Postgres met FOR UPDATE: een rij die tussendoor een meting kreeg, valt
+    hier af (Postgres toetst de voorwaarde na het wachten opnieuw) en blijft
+    daarna vast tot de commit. SQLite kent FOR UPDATE niet; daar dezelfde
+    select zonder slot.
+    """
+    slot = " for update" if db.get_bind().dialect.name == "postgresql" else ""
+    q = text("select id from " + tabel + " where id in :ids and campaign_id is null"
+             + slot).bindparams(bindparam("ids", expanding=True, type_=GUID()))
+    for stuk in _in_stukken(ids):
+        db.execute(q, {"ids": stuk}).all()
+
+
+def _verwijder_gebruik(db: Session, tabel: str, ids: list[str]) -> int:
+    """Verwijder deze rijen, alleen als ze nog steeds geen meting hebben.
+
+    In stukken van GEBRUIK_STUK id's; geeft het aantal verwijderde rijen.
+    """
+    q = text("delete from " + tabel + " where id in :ids and campaign_id is null").bindparams(
+        bindparam("ids", expanding=True, type_=GUID()))
+    return sum(db.execute(q, {"ids": stuk}).rowcount for stuk in _in_stukken(ids))
+
+
+def _schoon_gebruik_op(session_factory: Callable[[], Session], regel: Gebruiksregel, *,
+                       vandaag: date, apply: bool) -> None:
+    """Een tabel in een eigen transactie: tellen, en met apply verwijderen.
+
+    Eerst een select zonder slot op alle rijen zonder meting, om te tellen en
+    te bepalen welke verlopen zijn. Met apply daarna alleen de verlopen rijen
+    vergrendelen (_vergrendel_gebruik) en verwijderen; de delete toetst
+    opnieuw dat campaign_id leeg is. Kreeg een rij tussendoor toch een meting,
+    dan worden minder rijen verwijderd dan er verlopen waren: dan rolt de
+    hele tabel terug (GebruikVeranderd) en is de run rood. Elke fout rolt
+    alleen deze tabel terug. Zonder apply een alleen-lezen transactie.
+    """
+    db = session_factory()
+    try:
+        if not apply:
+            _alleen_lezen(db)
+        kolommen = _kolommen(db, regel.tabel)
+        if not kolommen:
+            regel.status = "ontbreekt"
+            return
+        regel.ontbrekende_kolommen = [k for k in GEBRUIK_KOLOMMEN if k not in kolommen]
+        if regel.ontbrekende_kolommen:
+            regel.status = "onvolledig"
+            return
+        q = _q("select id, created_at from " + regel.tabel + " where campaign_id is null "
+               "order by id", id=GUID(), created_at=DateTime(timezone=True))
+        verlopen: list[str] = []
+        for rid, aangemaakt in db.execute(q):
+            if aangemaakt is None:
+                regel.zonder_datum += 1          # niet te bepalen: niet raden
+                continue
+            verloopt = _plus_maanden(_sluitdag(aangemaakt), GEBRUIK_TERMIJN_MAANDEN)
+            if _termijn_verstreken(verloopt, vandaag):
+                verlopen.append(rid)
+            else:
+                regel.binnen_termijn += 1
+        regel.verlopen = len(verlopen)
+        if apply and verlopen:
+            _vergrendel_gebruik(db, regel.tabel, verlopen)
+            weg = _verwijder_gebruik(db, regel.tabel, verlopen)
+            if weg != len(verlopen):
+                raise GebruikVeranderd("minder_rijen")
+            db.commit()
+            regel.verwijderd = weg
+        else:
+            db.rollback()
+        regel.status = "ok"
+    except Exception as exc:
+        db.rollback()
+        regel.status = "fout"
+        regel.verwijderd = 0
+        regel.fout = _foutcode(exc)
+        # Bewust zonder exc_info: de traceback bevat de melding zelf.
+        logger.error("opschoning mislukt voor tabel %s: %s", regel.tabel, regel.fout)
+    finally:
+        # close() rolt een nog open transactie terug (ook na een vroege return).
+        db.close()
+
+
+def opschonen_gebruik(session_factory: Callable[[], Session], *, vandaag: date,
+                      apply: bool) -> list[Gebruiksregel]:
+    """Verwijder telemetrie en bewijsregister zonder meting twee jaar na
+    aanmaken (alleen met apply). Rijen met een meting gaan mee met die meting
+    (NIET_ORM_TABELLEN) en worden hier niet geraakt. Per tabel een transactie;
+    heeft de migratie van de metingen niet nodig."""
+    regels = []
+    for tabel in GEBRUIK_TABELLEN:
+        regel = Gebruiksregel(tabel=tabel, status="")
+        _schoon_gebruik_op(session_factory, regel, vandaag=vandaag, apply=apply)
+        regels.append(regel)
+    return regels
+
+
 _KOPPEN = {
     "verlopen": "VERLOPEN", "opgeschoond": "OPGESCHOOND", "binnen_termijn": "BINNEN TERMIJN",
     "open": "OPEN", "gestopt_zonder_sluitdatum": "GESTOPT", "al_opgeschoond": "AL OPGESCHOOND",
@@ -1034,6 +1179,40 @@ def _contact_samenvatting(r: ContactRapportage) -> str:
             + "): leads: " + deel(r.leads) + "; dossiers: " + deel(r.dossiers) + ".")
 
 
+def _gebruik_let_op(g: Gebruiksregel) -> str | None:
+    if g.status == "ontbreekt":
+        return "LET OP: tabel " + g.tabel + " bestaat niet in deze database; overgeslagen."
+    if g.status == "onvolledig":
+        return ("LET OP: tabel " + g.tabel + " mist " + ", ".join(g.ontbrekende_kolommen)
+                + "; gebruiksgegevens zonder meting overgeslagen.")
+    return None
+
+
+def _gebruik_regel(g: Gebruiksregel, *, apply: bool) -> str:
+    """Een uitvoerregel: tabelnaam en aantallen, nooit inhoud of id's van rijen."""
+    kop = ("FOUT" if g.status == "fout" else "GEBRUIK").ljust(15) + "tabel=" + g.tabel
+    uit = (kop + " zonder meting: verlopen=" + str(g.verlopen) + " binnen_termijn="
+           + str(g.binnen_termijn) + " zonder_datum=" + str(g.zonder_datum) + " | ")
+    if g.status == "fout":
+        return uit + g.fout + " (teruggedraaid)"
+    return uit + ("verwijderd=" + str(g.verwijderd) if apply else "dry-run: niets gewijzigd")
+
+
+def _gebruik_samenvatting(regels: list[Gebruiksregel], *, apply: bool) -> str:
+    def deel(g: Gebruiksregel) -> str:
+        if g.status == "ontbreekt":
+            return g.tabel + ": tabel bestaat niet"
+        if g.status == "onvolledig":
+            return g.tabel + ": overgeslagen (kolom ontbreekt)"
+        uit = (g.tabel + ": " + str(g.verlopen) + " verlopen, " + str(g.verwijderd)
+               + " verwijderd, " + str(g.binnen_termijn) + " binnen de termijn, "
+               + str(g.zonder_datum) + " zonder datum")
+        return uit + (", fout (teruggedraaid)" if g.status == "fout" else "")
+    return ("SAMENVATTING GEBRUIKSGEGEVENS ZONDER METING ("
+            + ("opgeschoond" if apply else "dry-run") + "): "
+            + "; ".join(deel(g) for g in regels) + ".")
+
+
 def _uuid_arg(waarde: str) -> str:
     try:
         return str(uuid.UUID(waarde))
@@ -1046,7 +1225,9 @@ def main(argv: list[str] | None = None, *,
          vandaag: date | None = None) -> int:
     ap = argparse.ArgumentParser(
         prog="python -m backend.data_retention",
-        description=("Schoon metingen, leads en leerdossiers op na de bewaartermijn. Zonder "
+        description=("Schoon metingen, leads en leerdossiers op na de bewaartermijn, en "
+                     "telemetrie en bewijsregister zonder meting twee jaar na aanmaken. "
+                     "Met --campagne of --organisatie alleen die metingen. Zonder "
                      "--apply schrijft dit niets."),
         epilog="Periodiek draait dit maandelijks als Railway-cron (schema '0 3 1 * *') met --apply.")
     ap.add_argument("--apply", action="store_true",
@@ -1065,7 +1246,8 @@ def main(argv: list[str] | None = None, *,
               + (engine.url.host or "een lokaal bestand"))
     periodiek = not (args.campagne or args.organisatie)
     vandaag = vandaag or today_amsterdam()      # een datum voor de hele run
-    print("modus: " + (("--apply, verlopen metingen" + (", leads en dossiers" if periodiek else "")
+    print("modus: " + (("--apply, verlopen metingen"
+                        + (", leads, dossiers en gebruiksgegevens zonder meting" if periodiek else "")
                         + " worden opgeschoond") if args.apply
                        else "dry-run, er wordt niets gewijzigd"))
     try:
@@ -1083,6 +1265,7 @@ def main(argv: list[str] | None = None, *,
     for m in rapport.metingen:
         print(_regel(m, apply=rapport.apply))
     contacten = None
+    gebruik = None
     if periodiek:
         # Leads en leerdossiers alleen in de periodieke run, niet op verzoek.
         contacten = opschonen_contacten(session_factory, vandaag=vandaag,
@@ -1093,7 +1276,14 @@ def main(argv: list[str] | None = None, *,
             print("LET OP: " + melding + " (het laatste contact is niet volledig te bepalen).")
         for c in contacten.leads + contacten.dossiers:
             print(_contact_regel(c, apply=contacten.apply))
+        # Gebruiksgegevens zonder meting: ook alleen in de periodieke run.
+        gebruik = opschonen_gebruik(session_factory, vandaag=vandaag, apply=args.apply)
+        for g in gebruik:
+            melding = _gebruik_let_op(g)
+            print(melding if melding else _gebruik_regel(g, apply=args.apply))
+        # De samenvattingen onderaan, achter elkaar.
         print(_contact_samenvatting(contacten))
+        print(_gebruik_samenvatting(gebruik, apply=args.apply))
     # De samenvatting van de metingen blijft de laatste regel (Deel C.3).
     print(_samenvatting(rapport))
     # Rood (exitcode 1) als iemand iets moet doen: een fout, een verzoek dat
@@ -1107,6 +1297,11 @@ def main(argv: list[str] | None = None, *,
     # of als een soort is overgeslagen omdat een tijdstempelkolom ontbreekt.
     if contacten is not None and (contacten.onvolledig or any(
             c.status in ("fout", "zonder_datum") for c in contacten.leads + contacten.dossiers)):
+        return 1
+    # Gebruiksgegevens: rood bij een fout, een ontbrekende kolom of een rij
+    # zonder aanmaakdatum. Een ontbrekende tabel is niet rood (net als contacten).
+    if gebruik is not None and any(g.status in ("fout", "onvolledig") or g.zonder_datum
+                                   for g in gebruik):
         return 1
     return 1 if any(m.status in slecht for m in rapport.metingen) else 0
 

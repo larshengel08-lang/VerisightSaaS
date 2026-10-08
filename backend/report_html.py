@@ -21,6 +21,11 @@ from typing import Any
 
 from sqlalchemy.orm import Session, joinedload, selectinload
 
+# _EXIT_MONTH_RE is hier het vangnet in build_report_data: het operatorformulier
+# schrijft rechtstreeks naar Supabase en de kolom is daar tekst zonder
+# check-constraint (de backend-import in main.py valideert zelf, via dezelfde
+# regex). Geen dubbele controle, wel een eigen vangnet.
+from backend.exit_month import EXIT_MONTH_RE as _EXIT_MONTH_RE, MAANDEN_NL as _MAANDEN_NL, maand_label as _maand_nl
 from backend.models import Campaign, Respondent, SurveyResponse
 from backend.report_decision import load_decision
 from backend.report_css import build_css, RAG_HIGH, RAG_MID, RAG_LOW
@@ -35,10 +40,12 @@ from backend.report_distribution import (
 )
 from backend.products.shared.deepening import (
     DEEPENING_CAP,
+    DEEPENING_FACTOR_KEYS,
     DEEPENING_MIN_N,
     DIRECTION_CAVEAT_MAX_N,
     DIRECTION_MIN_N,
     DIRECTION_SCAN_TYPES,
+    DIRECTION_SPLIT_NONE_MAX_SCORE,
     TOP_CHOICE_MIN_LEAD,
     TRIGGER_AVG_MAX,
     TRIGGER_LOW_ITEM_COUNT,
@@ -84,12 +91,6 @@ from backend.survey_window import AMSTERDAM
 # ─── Constanten ───────────────────────────────────────────────────────────────
 
 logger = logging.getLogger(__name__)
-
-# De vorm van respondents.exit_month. Alleen de backend-import valideert hem
-# (schemas.py); het operatorformulier schrijft rechtstreeks naar Supabase en
-# de kolom is daar tekst zonder check-constraint. Deze controle in
-# build_report_data is dus het vangnet, niet een dubbele controle.
-_EXIT_MONTH_RE = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
 
 MIN_QUOTES_N = 5
 MAX_QUOTES   = 12
@@ -1266,10 +1267,6 @@ def _p02_met_respons(zin: str, *, completed: int, invited: int | None,
     return f"{zin}{staart}"
 
 
-_MAANDEN_NL = ("januari", "februari", "maart", "april", "mei", "juni", "juli",
-               "augustus", "september", "oktober", "november", "december")
-
-
 def _nl_tijd(d: datetime) -> datetime:
     """Zet een timestamp om naar Nederlandse tijd.
 
@@ -1309,10 +1306,15 @@ def _kalenderdag(d: date | datetime) -> date:
     return _nl_tijd(d).date() if isinstance(d, datetime) else d
 
 
-def _maand_nl(jaar_maand: str) -> str:
-    """"2025-03" -> "maart 2025"."""
-    jaar, maand = jaar_maand.split("-")
-    return _MAANDEN_NL[int(maand) - 1] + " " + jaar
+# Spec 2026-10-07 par. 2 (besluit Lars): een periode noemt de vroegste en de
+# laatste maand. HR kent die maanden en weet dus wie er in een randmaand
+# vertrok; van één persoon is dat herleidbaar. Daarom pas een periode als
+# beide randmaanden minstens twee personen hebben. De reden noemt bewust geen
+# aantallen en geen maanden.
+UITSTROOM_RAND_MIN = 2
+UITSTROOM_RAND_TE_KLEIN = ("de periode van vertrek (de vroegste of de laatste opgegeven maand "
+                           "is door te weinig mensen gekozen om die te noemen zonder dat "
+                           "iemand herkenbaar wordt)")
 
 
 def _uitstroomperiode(exit_months: list[str] | None, n: int, *,
@@ -1320,19 +1322,24 @@ def _uitstroomperiode(exit_months: list[str] | None, n: int, *,
     """(regel onder de meetgegevens, tekst voor 'Niet in dit rapport') voor Loep Vertrek (V8).
 
     Precies één van de twee is gevuld. Een periode pas vanaf MIN_SEGMENT_N
-    bekende maanden, dezelfde grens als een afdeling apart tonen: kleine
-    aantallen blijven zo buiten het rapport.
+    bekende maanden -- dezelfde grens als het apart tonen van een afdeling.
 
-    Privacy, eerlijk gezegd: die grens beschermt de randen NIET. De vroegste
-    en de laatste genoemde maand kunnen elk van één persoon zijn, ook bij
-    veel bekende maanden. HR heeft die maanden zelf aangeleverd en weet dus
-    wie er in de vroegste of laatste maand vertrok; de security-audit van
-    13-7 rekent exit_month daarom tot de quasi-identificerende kolommen
-    (supabase/schema.sql, kolomgrant op respondents). De periode zelf zegt
-    niets over antwoorden, maar koppelt wel een persoon aan deze meting. Of
-    dat acceptabel is, of dat de randen grover moeten (kwartaal, of de
-    maanden van minstens twee personen), is een keuze voor Lars; deze
-    functie verandert daar niets aan.
+    Randgeval (spec 2026-10-07 par. 2): MIN_SEGMENT_N bekende maanden
+    beschermt de vroegste en de laatste maand zelf niet -- die kunnen elk
+    van één persoon zijn. HR kent die maanden en zou dus weten wie er in de
+    randmaand vertrok. Daarom toont deze functie de echte vroegste en de
+    echte laatste maand alleen als beide elk minstens UITSTROOM_RAND_MIN
+    personen hebben; anders valt de hele periode weg -- er is geen
+    verschuiving naar de volgende maand die wel aan de grens voldoet -- met
+    een reden zonder aantallen en zonder maandnamen. Dit beschermt niet elke
+    maand binnen de periode: een maand in het midden kan nog steeds van één
+    persoon zijn, maar wordt dan ook nooit afgedrukt.
+
+    Eerlijk over wat UITSTROOM_RAND_MIN (2) wel en niet voorkomt: de grens
+    voorkomt dat er één naam aan een randmaand hangt, niet dat HR afleidt dat
+    allebei die twee personen aan deze meting deelnamen. Weet HR wie er in
+    die maand vertrok, dan telt dat als twee bekende deelnemers, ook al zegt
+    het rapport niet wie van de twee welk antwoord gaf.
 
     `heeft_meetperiode`: staat er in de meetgegevens een meetperiode (geen
     "niet vastgelegd" en geen datumconflict)? Alleen dan verwijst de tekst
@@ -1351,9 +1358,12 @@ def _uitstroomperiode(exit_months: list[str] | None, n: int, *,
     if bekend < MIN_SEGMENT_N:
         return None, ("de maand van vertrek (bij " + str(bekend) + " van de " + str(n)
                       + " vastgelegd, te weinig om een periode te noemen)")
+    per_maand = Counter(maanden)
+    if per_maand[maanden[0]] < UITSTROOM_RAND_MIN or per_maand[maanden[-1]] < UITSTROOM_RAND_MIN:
+        return None, UITSTROOM_RAND_TE_KLEIN
     eerste, laatste = _maand_nl(maanden[0]), _maand_nl(maanden[-1])
-    regel = ("Uitstroomperiode: vertrokken in " + eerste if eerste == laatste
-             else "Uitstroomperiode: vertrokken tussen " + eerste + " en " + laatste)
+    regel = ("Uitstroomperiode: vertrek in " + eerste if eerste == laatste
+             else "Uitstroomperiode: vertrek tussen " + eerste + " en " + laatste)
     if bekend < n:
         regel += " (bij " + str(bekend) + " van de " + str(n) + " vastgelegd)"
     return regel + ".", None
@@ -2899,6 +2909,14 @@ DIRECTION_HEAD_DIVIDED = "Geen eenduidige richting."
 # "De grootste groep", nooit "de meeste": deze staat bestaat juist omdat er geen
 # meerderheid is (spec ronde 2 par. 4.2).
 DIRECTION_HEAD_PLURALITY = "De grootste groep kiest ‘{opt}’, zonder meerderheid."
+# Zelfde staat zodra de telling op de veranderkeuzes rust (change_n != n, zie
+# _op_veranderkeuzes; spec 2026-10-07, taak 7): door niets-stemmen, door rijen
+# zonder keuze, of beide. Met niets-stemmen kan de niets-optie de grootste losse
+# optie zijn, en dan is "De grootste groep kiest" zonder deze inperking letterlijk
+# onwaar; met alleen rijen zonder keuze beschrijft de kop zo dezelfde groep als
+# de telling eronder.
+DIRECTION_HEAD_PLURALITY_VERANDERING = (
+    "Van wie om verandering vroeg, kiest de grootste groep ‘{opt}’, zonder meerderheid.")
 # {deel} is "even groot" of "ander" (spec ronde 2 par. 4.3). De spec schrijft
 # "een even groot deel", maar deze staat vuurt ook als de niets-groep er een
 # achter ligt of juist groter is; dan zou die kop worden tegengesproken door de
@@ -2975,6 +2993,81 @@ def _dir_noemer_zin(n: int, label: str | None = None, *, los: bool = True) -> st
     op vijf plaatsen los kan gaan lopen.
     """
     return ("D" if los else "d") + f"ie {n} zijn de mensen {_dir_n_wie(label)}."
+
+
+def _niets_tekst(scan_type: str) -> str:
+    """De tekst van de niets-optie voor deze scan, voor plekken die niet over
+    één onderwerp gaan (de methodiekpagina). Per scan in de eigen tijd ("zit"
+    bij Behoud, "zat" bij Vertrek). Valt luid om als de onderwerpen elk een
+    andere tekst zouden krijgen: dan kan één zin ze niet allemaal citeren."""
+    teksten = {tekst for fk in DEEPENING_FACTOR_KEYS
+               for sleutel, tekst in direction_option_texts(scan_type, fk).items()
+               if sleutel.endswith("_none")}
+    if len(teksten) != 1:
+        raise ValueError(f"_niets_tekst: geen eenduidige niets-tekst voor {scan_type!r}: "
+                         f"{sorted(teksten)}")
+    return teksten.pop()
+
+
+def _niets_apart(st: dict, scan_type: str, factor_key: str) -> str:
+    """"; 3 kozen ‘Niets, dit zit hier goed’": de niets-stemmen naast een
+    richting die op de veranderkeuzes rust (spec 2026-10-07, taak 7). Leeg
+    zonder niets-stemmen. Zoekt de tekst zelf op, met dezelfde nette fout als
+    _opt in _direction_card_cell bij een onbekende sleutel."""
+    if not st["none_n"]:
+        return ""
+    texts = direction_option_texts(scan_type, factor_key)
+    if st["none_key"] not in texts:
+        raise KeyError(f"direction: onbekende optiesleutel {st['none_key']!r} voor "
+                       f"{factor_key!r} ({scan_type})")
+    return f"; {_tel(st['none_n'], 'koos', 'kozen')} ‘{texts[st['none_key']]}’"
+
+
+def _op_veranderkeuzes(st: dict) -> bool:
+    """Rust de telling van een richting (clear, plurality) op de
+    veranderkeuzes in plaats van op alle beantwoorders?
+
+    Drie uitkomsten:
+    - er zijn niets-stemmen: ja, en de niets-stemmen staan er apart bij;
+    - er zijn beantwoorde rijen zonder keuze (datadefect): ja, en een korte
+      zin meldt die rijen;
+    - geen van beide: nee; change_n is dan gelijk aan n en de zin blijft
+      zoals hij vóór taak 7 was.
+    """
+    return st["change_n"] != st["n"]
+
+
+def _richting_telling(st: dict) -> str:
+    """De telling achter een richting (clear, plurality): de grootste route op
+    de veranderkeuzes als die afwijken van alle beantwoorders, anders op alle
+    beantwoorders. Eén bron voor kaart en pagina twee; die verschillen alleen
+    in het zinskader eromheen."""
+    noemer = st["change_n"] if _op_veranderkeuzes(st) else st["n"]
+    return _telling(st["top_n"], noemer)
+
+
+def _zonder_keuze_n(st: dict) -> int:
+    """Beantwoorde rijen zonder vastgelegde keuze (datadefect, zie
+    aggregate_direction): n min de som van de keuzes. Uit de counts zelf en
+    niet uit change_n, want die is in too_few niet berekend (0)."""
+    return st["n"] - sum(c for _k, c in st["ranked"])
+
+
+def _zonder_keuze_p02(st: dict) -> str:
+    """De korte defectzin voor pagina twee; zie _zonder_keuze_zin."""
+    rest = _zonder_keuze_n(st)
+    if rest <= 0:
+        return ""
+    return f" Bij {rest} {_werkwoord(rest, 'antwoord', 'antwoorden')} is geen keuze vastgelegd."
+
+
+def _zonder_keuze_zin(st: dict) -> str:
+    """Zin direct na de noemerzin van een kaart, voor beantwoorde rijen zonder
+    vastgelegde keuze, zodat de getallen op de kaart samen de noemer vormen.
+    In elke staat behalve too_few (die toont geen tellingen). Leeg zonder
+    zulke rijen."""
+    rest = _zonder_keuze_n(st)
+    return f" Bij {rest} van hen is geen keuze vastgelegd." if rest > 0 else ""
 
 
 # Zelfde claim in de vorm die achter "de {n}" past (pagina twee en de
@@ -3274,25 +3367,45 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
         # (H2).
         # Niet twee haakjes achter elkaar ("(53%) (36 = ...)"): de uitleg van de
         # noemer staat als bijzin achter de telling.
-        src = (f"Volgens {_telling(st['top_n'], n)}; "
-               f"{_dir_noemer_zin(n, label, los=False)}")
+        # Met niets-stemmen rust de richting op de veranderkeuzes (spec
+        # 2026-10-07): die noemer staat in de telling, de niets-stemmen apart
+        # erachter. Anders leest "Volgens 4 van de 8" naast een tabel met 3
+        # niets-stemmen als een rekenfout.
+        if _op_veranderkeuzes(st):
+            src = (f"Volgens {_richting_telling(st)} die om verandering "
+                   f"vroegen{_niets_apart(st, scan_type, factor_key)}. "
+                   f"{_dir_noemer_zin(n, label)}{_zonder_keuze_zin(st)}")
+        else:
+            src = (f"Volgens {_richting_telling(st)}; "
+                   f"{_dir_noemer_zin(n, label, los=False)}")
     elif st["state"] == "none_needed":
         head = DIRECTION_HEAD_NONE_NEEDED
         opt = _opt(st["top_key"])
         src = (f"{_telling(st['top_n'], n)} kozen ‘{opt}’. "
-               f"{_dir_noemer_zin(n, label)} Bespreek of dit dan {which} moet zijn.")
+               f"{_dir_noemer_zin(n, label)}{_zonder_keuze_zin(st)} Bespreek of dit "
+               f"dan {which} moet zijn.")
     elif st["state"] == "plurality":
-        head = DIRECTION_HEAD_PLURALITY.format(opt=_opt(st["top_key"]))
         # De tweede optie komt uit ranked zelf en niet uit second_n, zodat de
-        # zin de optie noemt die bij dat getal hoort. Is er geen tweede optie
-        # (mogelijk als answered hoger ligt dan de som van de keuzes), dan komt
-        # die clausule er niet; een tweede groep verzinnen mag niet.
-        rest = [(k, c) for k, c in st["ranked"] if k != st["top_key"]]
+        # zin de optie noemt die bij dat getal hoort. Alleen veranderopties: de
+        # niets-optie is geen richting en kreeg hier eerder de plek van "tweede"
+        # als zij op één na de grootste was (spec 2026-10-07, taak 7). Is er geen
+        # tweede veranderoptie, dan komt die clausule er niet; een tweede groep
+        # verzinnen mag niet.
+        rest = [(k, c) for k, c in st["ranked"] if k not in (st["top_key"], st["none_key"])]
         tweede = (f"; {_tel(rest[0][1], 'koos', 'kozen')} ‘{_opt(rest[0][0])}’"
                   if rest else "")
-        src = (f"{_telling(st['top_n'], n)} kozen die richting{tweede}. "
-               f"{_dir_noemer_zin(n, label)} Wat er volgens de grootste groep moet "
-               f"gebeuren: {direction_imperative(scan_type, factor_key, st['top_key'])}")
+        # De kop eerst: _opt geeft bij een onbekende topsleutel de nette
+        # melding, direction_imperative in de slotzin alleen een kale KeyError.
+        head = (DIRECTION_HEAD_PLURALITY_VERANDERING if _op_veranderkeuzes(st)
+                else DIRECTION_HEAD_PLURALITY).format(opt=_opt(st["top_key"]))
+        slot = (f"{_dir_noemer_zin(n, label)}{_zonder_keuze_zin(st)} Wat er volgens de "
+                f"grootste groep moet gebeuren: "
+                f"{direction_imperative(scan_type, factor_key, st['top_key'])}")
+        if _op_veranderkeuzes(st):
+            src = (f"{_richting_telling(st)} die om verandering vroegen, kozen die "
+                   f"richting{tweede}{_niets_apart(st, scan_type, factor_key)}. {slot}")
+        else:
+            src = f"{_richting_telling(st)} kozen die richting{tweede}. {slot}"
     elif st["state"] == "split_none":
         # "even groot" alleen als de twee groepen echt gelijk zijn; zie de
         # toelichting bij DIRECTION_HEAD_SPLIT_NONE.
@@ -3304,14 +3417,14 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
         src = (f"{_telling(st['none_n'], n)} "
                f"{_werkwoord(st['none_n'], 'koos', 'kozen')} ‘{_opt(st['none_key'])}’; "
                f"{_tel(st['top_n'], 'koos', 'kozen')} "
-               f"‘{_opt(st['top_key'])}’. {_dir_noemer_zin(n, label)} "
-               f"Op een onderwerp dat laag scoort "
+               f"‘{_opt(st['top_key'])}’. {_dir_noemer_zin(n, label)}"
+               f"{_zonder_keuze_zin(st)} Op een onderwerp dat laag scoort "
                f"({_score_str(factor_score)}) is dat verschil van inzicht zelf het "
                f"gesprek. Wat die andere groep vraagt: "
                f"{direction_imperative(scan_type, factor_key, st['top_key'])}")
     else:
         head = DIRECTION_HEAD_DIVIDED
-        src = f"De {n} {DIR_N_DIE_WIE} kozen verschillend."
+        src = f"De {n} {DIR_N_DIE_WIE} kozen verschillend.{_zonder_keuze_zin(st)}"
 
     table = ""
     if st["state"] != "too_few":
@@ -3464,7 +3577,7 @@ def _richtingen_weging(st: dict, scan_type: str, factor_key: str) -> str:
     verdeeld-zin "de meest gekozen richtingen" zonder ze te noemen, en de kaart
     sorteert "Niets, dit zit hier goed" ertussen. Deze regel wijst de meest
     gekozen richtingen aan via hun tellingen (hoogste en op één na hoogste; de
-    teksten staan op de kaart erboven) en weegt de niets-optie apart: die is
+    teksten staan op de kaart ‘Wat er moet gebeuren’) en weegt de niets-optie apart: die is
     geen richting. Anders telt ook niet mee (geen opdrachtvorm); de regel zegt
     dat erbij zodra Anders even vaak of vaker gekozen is dan de laagste
     genoemde telling, anders blijft een even hoge rij op de kaart onverklaard.
@@ -3492,11 +3605,12 @@ def _richtingen_weging(st: dict, scan_type: str, factor_key: str) -> str:
         if k not in teksten:
             raise KeyError("richtingen_weging: onbekende optiesleutel " + repr(k)
                            + " voor " + repr(factor_key) + " (" + scan_type + ")")
-    # De teksten staan al op de kaart direct erboven (met dezelfde tellingen);
-    # hier alleen de aantallen, zodat de regel kort blijft en het agendaslot
-    # niet naar een volgend vel duwt (controllerbesluit taak 10).
+    # De teksten staan al op de kaart ‘Wat er moet gebeuren’ (met dezelfde
+    # tellingen); hier alleen de aantallen, zodat de regel kort blijft en het
+    # agendaslot niet naar een volgend vel duwt (controllerbesluit taak 10).
     hoogste = sorted({c for _k, c in inhoud}, reverse=True)[:2]
-    zin = "De meest gekozen richtingen zijn die met " + _stemmen(hoogste) + " op de kaart hierboven."
+    zin = ("De meest gekozen richtingen zijn die met " + _stemmen(hoogste)
+          + " op de kaart bij ‘Wat er moet gebeuren’.")
     # Anders alleen noemen als zijn telling tussen of naast de genoemde staat;
     # de kaart toont hem als "Anders, namelijk…" (content-guard in de tests).
     anders_telt = anders is not None and anders[1] >= min(hoogste)
@@ -3630,10 +3744,10 @@ BESLUIT_REVIEW_HINT = {
 BESLUIT_ONLEESBAAR = ("Loep kon niet nagaan of er al een besluit is vastgelegd in het dashboard; "
                       "vul het hieronder in.")
 # Meting (2026-09-20, productie-image WeasyPrint 70.0): een besluit waarin elk
-# tekstveld op zijn frontendlimiet zit (DECISION_LIMITS.action/.text = 600 in
-# frontend/lib/dashboard/campaign-decision.ts) duwt de besluitpagina over een
-# tweede vel; op 470 tekens per lang veld past hij nog net, op 480 niet meer.
-# Daarom stond de grens op 300.
+# tekstveld op zijn toenmalige frontendlimiet zit (DECISION_LIMITS.action/.text
+# stond toen op 600 in frontend/lib/dashboard/campaign-decision.ts) duwt de
+# besluitpagina over een tweede vel; op 470 tekens per lang veld past hij nog
+# net, op 480 niet meer. Daarom stond de grens op 300.
 # Fixronde leesronde 24-9 (Taak 11): het blok "Afspraak per afdeling" kwam
 # erbij, en met een aangewezen afdeling liep de pagina bij 300 weer over.
 # Gemeten met scripts/render_besluit_max.py (alle velden op hun limiet, ook
@@ -3641,6 +3755,14 @@ BESLUIT_ONLEESBAAR = ("Loep kon niet nagaan of er al een besluit is vastgelegd i
 # in report_css.py (.bl-blok, .bl-rij/.bl-drie, .bl-hint) houdt het slechtste
 # geval, Loep Vertrek met een aangewezen afdeling, 25,1pt over. Het nieuwe
 # knikpunt (boven 240) is niet gemeten.
+# Vervolgronde vertrekmaand en zes keuzes (Taak 10): DECISION_LIMITS.action/
+# .text in de frontend gingen naar 240, gelijk aan deze grens, zodat een
+# nieuw besluit niet meer kan worden ingekort. Een besluit dat vóór die
+# wijziging is opgeslagen kan nog tot 600 tekens per lang veld bevatten (de
+# database kort bestaande rijen niet met terugwerkende kracht af); de
+# besluitpagina toont zo'n oud besluit nog steeds als het begin, met
+# BESLUIT_INGEKORT. scripts/render_besluit_max.py meet dat geval met een
+# eigen "_oud"-variant, zodat dit vel één A4 blijft.
 BESLUIT_TEKST_MAX = 240
 BESLUIT_INGEKORT = ("Dit vel toont het begin van lange antwoorden; het volledige besluit staat "
                     "in het dashboard.")
@@ -3978,8 +4100,24 @@ def _direction_p02_line(direction_agg: dict, factor_key: str | None, scan_type: 
     # iemand overslaat (codereview taak 10). "Wat er moet gebeuren volgens ..."
     # in plaats van "Wat er volgens ... moet gebeuren": met de bijzin erin stond
     # het werkwoord anders twaalf woorden van zijn onderwerp.
+    # Rust de telling op de veranderkeuzes (change_n != n: niets-stemmen, rijen
+    # zonder keuze of beide; spec 2026-10-07, taak 7), dan zegt het label dat:
+    # wie dit het laagst scoorde én om verandering vroeg. De niets-stemmen en de
+    # rijen zonder keuze volgen als eigen korte zinnen, zodat pagina twee nooit
+    # een telling toont die niet optelt.
+    if st["state"] in ("clear", "plurality") and _op_veranderkeuzes(st):
+        slot = (f"{direction_imperative(scan_type, factor_key, st['top_key'])}"
+                + (f" {_tel(st['none_n'], 'vindt', 'vinden')} dat hier niets hoeft."
+                   if st["none_n"] else "")
+                + _zonder_keuze_p02(st))
+        if st["state"] == "clear":
+            return (f"Wat er moet gebeuren volgens {_richting_telling(st)} die dit het "
+                    f"laagst scoorden en om verandering vroegen: {slot}")
+        return (f"Wat er moet gebeuren volgens de grootste groep van wie dit het laagst "
+                f"scoorde en om verandering vroeg, {_richting_telling(st)}, zonder "
+                f"meerderheid: {slot}")
     if st["state"] == "clear":
-        return (f"Wat er moet gebeuren volgens {_telling(st['top_n'], n)} "
+        return (f"Wat er moet gebeuren volgens {_richting_telling(st)} "
                 f"{DIR_N_DIE_WIE}: "
                 f"{direction_imperative(scan_type, factor_key, st['top_key'])}")
     if st["state"] == "plurality":
@@ -3988,7 +4126,7 @@ def _direction_p02_line(direction_agg: dict, factor_key: str | None, scan_type: 
         # twee haakjesniveaus in elkaar (taalronde, taak 13). Zelfde vorm als de
         # clear-tak, met de nuance als bijstelling tussen komma's.
         return (f"Wat er moet gebeuren volgens de grootste groep, "
-                f"{_telling(st['top_n'], n)} {DIR_N_DIE_WIE}, zonder meerderheid: "
+                f"{_richting_telling(st)} {DIR_N_DIE_WIE}, zonder meerderheid: "
                 f"{direction_imperative(scan_type, factor_key, st['top_key'])}")
     if st["state"] == "split_none":
         texts = direction_option_texts(scan_type, factor_key)
@@ -4399,7 +4537,7 @@ def _drempeltabel(scan_type: str, *, direction_active: bool = True,
              f"en minstens {OTHER_MIN_N} mensen het kozen: op de kleinste basis van dit "
              "rapport haalt één mens dat aandeel al, en van één mens is geen conclusie "
              "over de vraagopties te trekken. Schreef niemand van hen een toelichting, "
-             "dan blijft het blok weg: het aantal staat dan al in de verdeling erboven."))
+             "dan blijft het blok weg: het aantal staat dan al in de verdeling zelf."))
     if scan_type in DIRECTION_SCAN_TYPES and verdieping_actief:
         rijen.append(
             (DEEPENING_DISTRIBUTION_MIN_N, "de verdeling van toelichtingen onder een onderwerp",
@@ -4419,7 +4557,10 @@ def _drempeltabel(scan_type: str, *, direction_active: bool = True,
              "afdelingen, omdat niemand in de organisatie kan zien wie een onderwerp "
              f"als laagste had; bij {_TELWOORD.get(DIRECTION_MIN_N, DIRECTION_MIN_N)} of "
              f"{_TELWOORD.get(DIRECTION_CAVEAT_MAX_N, DIRECTION_CAVEAT_MAX_N)} antwoorden "
-             "staat er een beperkte-basis-regel bij."))
+             "staat er een beperkte-basis-regel bij. Een duidelijke richting, of de "
+             "richting van de grootste groep, noemt het rapport pas als minstens "
+             f"{_TELWOORD.get(DIRECTION_MIN_N, DIRECTION_MIN_N)} mensen om verandering "
+             "vroegen."))
     rijen.sort(key=lambda rij: rij[0])
     trs = "".join(f'<tr><td class="is" style="width:8%;text-align:left;">{n}</td>'
                   f'<td class="iq" style="width:38%;">{_h(waar)}</td><td>{_h(waarom)}</td></tr>'
@@ -4550,7 +4691,14 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "",
             ("Richtingvraag",
              "Elke respondent kreeg één vraag over het onderwerp dat bij die respondent het laagst "
              "scoorde: wat zou hier het meest helpen? De opdrachtvorm in ‘Wat er moet gebeuren’ "
-             f"geeft de keuze van die respondenten weer, geen advies van Loep. De drempel van "
+             f"geeft de keuze van die respondenten weer, geen advies van Loep. "
+             f"Wie ‘{_niets_tekst(scan_type)}’ koos, telt niet mee bij de vraag welke "
+             "richting de grootste is; hoeveel mensen dat kozen, staat er apart bij. "
+             "Kiest meer dan de helft niets, dan staat er dat hier volgens de meesten "
+             "niets hoeft. Scoort het onderwerp onder de "
+             f"{_komma(DIRECTION_SPLIT_NONE_MAX_SCORE)} en is de groep die niets koos "
+             "even groot als de grootste richting, "
+             "groter, of maar één kleiner, dan heet het onderwerp verdeeld. De drempel van "
              f"{DIRECTION_MIN_N} staat in de drempeltabel op pagina",
              # Derde element: HTML die NIET door _h() gaat. "in de drempeltabel
              # hierboven" was een positieclaim die al breekt zodra de
@@ -5543,7 +5691,7 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
         for r in completed:
             if not r.exit_month:
                 continue
-            if _EXIT_MONTH_RE.match(r.exit_month):
+            if _EXIT_MONTH_RE.fullmatch(r.exit_month):
                 exit_months.append(r.exit_month)
             else:
                 _exit_month_ongeldig += 1

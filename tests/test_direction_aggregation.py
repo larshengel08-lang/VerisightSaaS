@@ -107,10 +107,15 @@ def test_clear_requires_half_and_margin_2():
     assert direction_state(_agg(wld_peaks=3, wld_scope=1), "workload", 6.0)["state"] == "clear"    # 3-1
     assert direction_state(_agg(wld_peaks=5, wld_scope=3, wld_none=2), "workload", 6.0)["state"] == "clear"   # 50%, marge 2
     assert direction_state(_agg(wld_peaks=5, wld_scope=4, wld_none=1), "workload", 6.0)["state"] == "divided"  # marge 1
-    # 40% met voorsprong 2: geen clear, maar sinds ronde 2 par. 4.2 ook geen kaal
-    # "divided" meer -- de grootste groep wordt wel genoemd, zonder meerderheid.
+    # Spec 2026-10-07 par. 3: niets telt niet mee; was plurality.
+    # n = 10, niets 2, change_n = 8: peaks 4/8 = 0,5 met voorsprong 2 op scope
+    # en time, dus clear. Op alle beantwoorders was dat 4/10 = 40%.
     st = direction_state(_agg(wld_peaks=4, wld_scope=2, wld_none=2, wld_time=2), "workload", 6.0)
-    assert st["state"] == "plurality" and st["top_n"] / st["n"] < 0.5
+    assert st["state"] == "clear" and st["top_n"] / st["change_n"] >= 0.5
+    # Zonder niets-stemmen blijft 40% met voorsprong 2 de grootste groep zonder
+    # meerderheid: peaks 4/10, scope, planning en anders elk 2.
+    st = direction_state(_agg(wld_peaks=4, wld_scope=2, wld_planning=2, wld_other=2), "workload", 6.0)
+    assert st["state"] == "plurality" and st["top_n"] / st["change_n"] < 0.5
 
 
 def test_none_needed_requires_a_strict_majority():
@@ -154,7 +159,9 @@ def test_strikte_niets_meerderheid_wordt_none_needed_minderheid_niet():
     """
     s = direction_state(_agg(wld_none=5, wld_peaks=2, wld_scope=1), "workload", 6.0)
     assert s["state"] == "none_needed" and s["top_key"] == "wld_none" and s["top_n"] == 5
-    assert direction_state(_agg(wld_none=2, wld_peaks=3), "workload", 6.0)["state"] == "divided"  # niets 40%, peaks 60% marge 1
+    # Spec 2026-10-07 par. 3: niets telt niet mee; was divided.
+    # Niets 2/5 = 40%, geen meerderheid. change_n = 3, peaks 3/3 met voorsprong 3: clear.
+    assert direction_state(_agg(wld_none=2, wld_peaks=3), "workload", 6.0)["state"] == "clear"
 
 
 def test_other_as_top_is_divided_and_logged(caplog):

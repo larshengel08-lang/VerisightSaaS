@@ -56,8 +56,12 @@ def test_scan_type_wordt_echt_gebruikt(gevuld):
 
 
 def test_plurality_geeft_de_vraag_van_de_grootste_groep(gevuld):
+    # Spec 2026-10-07 par. 3: niets telt niet mee; was plurality met niets 2 en
+    # zonder gesprek, dat op de veranderstemmen 4 van de 8 met voorsprong 2 is
+    # en dus clear. Nu 4 van de 9 (0,44), voorsprong 2: plurality.
     staat, vraag = _vraag("retention", "growth",
-                          {"grd_visibility": 4, "grd_time": 2, "grd_none": 2, "grd_criteria": 2}, 6.0)
+                          {"grd_visibility": 4, "grd_time": 2, "grd_none": 1, "grd_criteria": 2,
+                           "grd_conversation": 1}, 6.0)
     assert staat == "plurality"
     assert vraag == "Testvraag zicht, nu?"
 

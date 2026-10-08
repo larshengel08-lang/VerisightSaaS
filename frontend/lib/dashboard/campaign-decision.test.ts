@@ -78,10 +78,17 @@ describe('besluit van het MT (plan 3b, spec 2026-09-16 par. 7)', () => {
     )
   })
 
-  it('weigert een veld dat te lang is, met de grens in de melding', () => {
+  it('weigert een veld dat te lang is, met de grens en de huidige lengte in de melding', () => {
     const lang = 'x'.repeat(DECISION_LIMITS.action + 1)
     expect(validateDecisionInput(normalizeDecisionInput({ ...geldig, primaryAction: lang }))).toBe(
-      `Wat precies is te lang (maximaal ${DECISION_LIMITS.action} tekens).`,
+      `Wat precies is te lang voor het rapport (maximaal ${DECISION_LIMITS.action} tekens, nu ${lang.length}).`,
+    )
+  })
+
+  it('weigert een primaryAction van 600 tekens met exact deze melding (taak 10)', () => {
+    const lang = 'x'.repeat(600)
+    expect(validateDecisionInput(normalizeDecisionInput({ ...geldig, primaryAction: lang }))).toBe(
+      'Wat precies is te lang voor het rapport (maximaal 240 tekens, nu 600).',
     )
   })
 
@@ -91,7 +98,7 @@ describe('besluit van het MT (plan 3b, spec 2026-09-16 par. 7)', () => {
       expect(validateDecisionInput(normalizeDecisionInput({ ...geldig, primaryAction: opDeGrens }))).toBeNull()
       const eroverheen = 'x'.repeat(DECISION_LIMITS.action + 1)
       expect(validateDecisionInput(normalizeDecisionInput({ ...geldig, primaryAction: eroverheen }))).toBe(
-        `Wat precies is te lang (maximaal ${DECISION_LIMITS.action} tekens).`,
+        `Wat precies is te lang voor het rapport (maximaal ${DECISION_LIMITS.action} tekens, nu ${eroverheen.length}).`,
       )
     })
 
@@ -118,7 +125,7 @@ describe('besluit van het MT (plan 3b, spec 2026-09-16 par. 7)', () => {
       expect(validateDecisionInput(normalizeDecisionInput({ ...geldig, feedbackPlan: opDeGrens }))).toBeNull()
       const eroverheen = 'x'.repeat(DECISION_LIMITS.text + 1)
       expect(validateDecisionInput(normalizeDecisionInput({ ...geldig, feedbackPlan: eroverheen }))).toBe(
-        `De terugkoppeling is te lang (maximaal ${DECISION_LIMITS.text} tekens).`,
+        `De terugkoppeling is te lang voor het rapport (maximaal ${DECISION_LIMITS.text} tekens, nu ${eroverheen.length}).`,
       )
     })
   })

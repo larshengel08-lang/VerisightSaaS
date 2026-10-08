@@ -81,6 +81,21 @@ ROLE_LEVELS = [
 SALARIES = [38_000, 42_000, 48_000, 52_000, 58_000, 65_000, 74_000]
 TENURES = [0.5, 1.0, 1.5, 2.0, 2.0, 3.0, 4.0, 5.5, 7.0]
 
+# Vervolgronde vertrekmaand (taak 5): deterministisch, geen random-call, zodat
+# geen enkel ander getal in het Loep Vertrek-voorbeeldrapport verschuift. Elke
+# zevende respondent (index % 7 == 6) koos "Zeg ik liever niet"; de rest
+# verdeelt zich gelijk over zes maanden vóór de sluitingsdatum van de
+# demo-campagne (2026-04-03). Bij 35 responses geeft dit 5 per maand, ruim
+# boven de UITSTROOM_RAND_MIN=2-grens voor de vroegste en de laatste maand.
+EXIT_MONTH_CYCLE = ("2025-10", "2025-11", "2025-12", "2026-01", "2026-02", "2026-03")
+
+
+def _exit_month_for_index(index: int) -> str | None:
+    if index % 7 == 6:
+        return None
+    return EXIT_MONTH_CYCLE[index % len(EXIT_MONTH_CYCLE)]
+
+
 EXIT_CONFIG = {
     "scan_type": "exit",
     "campaign_name": "Loep Vertrek Q1 2026",
@@ -1070,6 +1085,7 @@ def main() -> None:
             opened_at=datetime.now(timezone.utc),
             completed=True,
             completed_at=datetime.now(timezone.utc),
+            exit_month=(_exit_month_for_index(index) if campaign.scan_type == "exit" else None),
         )
         db.add(respondent)
         db.flush()

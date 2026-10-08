@@ -23,7 +23,13 @@ export interface CampaignDecision extends CampaignDecisionInput {
   updatedAt: string | null
 }
 
-export const DECISION_LIMITS = { topic: 120, owner: 120, action: 600, text: 600 } as const
+// action en text gelijk aan BESLUIT_TEKST_MAX in backend/report_html.py: de
+// besluitpagina van het rapport kort een lang veld daar af en meldt dat
+// (BESLUIT_INGEKORT). Zonder deze grens kon het dashboard een veld opslaan dat
+// het rapport vervolgens zelf inkort, zonder dat de klant dat bij het invullen
+// kon zien. Gepind door tests/test_besluit_limiet_pin.py (taak 10, plan
+// "Vervolgronde vertrekmaand en zes keuzes", owner-besluit par. 6).
+export const DECISION_LIMITS = { topic: 120, owner: 120, action: 240, text: 240 } as const
 
 // Labels en hints van het blok "Besluit vastleggen". Dezelfde tekst als op de
 // besluitpagina van het rapport (fixronde 24-9, R4, R8, V4): BESLUIT_SLOTLABEL,
@@ -129,14 +135,18 @@ function isRealDate(value: string): boolean {
   return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value
 }
 
-const FIELD_LABELS: Record<(typeof TEXT_FIELDS)[number], { label: string; max: number }> = {
-  primaryTopic: { label: 'Het onderwerp', max: DECISION_LIMITS.topic },
-  primaryAction: { label: 'Wat precies', max: DECISION_LIMITS.action },
-  owner: { label: 'De eigenaar', max: DECISION_LIMITS.owner },
-  secondaryTopic: { label: 'Het tweede onderwerp', max: DECISION_LIMITS.topic },
-  secondaryAction: { label: 'Wat precies bij het tweede punt', max: DECISION_LIMITS.action },
-  feedbackPlan: { label: 'De terugkoppeling', max: DECISION_LIMITS.text },
-  successCriterion: { label: 'Waaraan jullie zien dat het werkt', max: DECISION_LIMITS.text },
+// `long: true` zijn de velden die ook op de besluitpagina kunnen worden
+// ingekort (BESLUIT_TEKST_MAX); hun melding noemt daarom het rapport en de
+// huidige lengte. `long: false` (onderwerp, eigenaar) blijft de oude, kortere
+// melding: die velden worden nooit afgekapt.
+const FIELD_LABELS: Record<(typeof TEXT_FIELDS)[number], { label: string; max: number; long: boolean }> = {
+  primaryTopic: { label: 'Het onderwerp', max: DECISION_LIMITS.topic, long: false },
+  primaryAction: { label: 'Wat precies', max: DECISION_LIMITS.action, long: true },
+  owner: { label: 'De eigenaar', max: DECISION_LIMITS.owner, long: false },
+  secondaryTopic: { label: 'Het tweede onderwerp', max: DECISION_LIMITS.topic, long: false },
+  secondaryAction: { label: 'Wat precies bij het tweede punt', max: DECISION_LIMITS.action, long: true },
+  feedbackPlan: { label: 'De terugkoppeling', max: DECISION_LIMITS.text, long: true },
+  successCriterion: { label: 'Waaraan jullie zien dat het werkt', max: DECISION_LIMITS.text, long: true },
 }
 
 /**
@@ -157,8 +167,13 @@ export function validateDecisionInput(input: CampaignDecisionInput): string | nu
   if (!input.owner) return 'Vul in wie eigenaar is van dit besluit.'
   if (input.secondaryAction && !input.secondaryTopic) return 'Vul bij het tweede punt ook het onderwerp in.'
   for (const field of TEXT_FIELDS) {
-    const { label, max } = FIELD_LABELS[field]
-    if (fieldText(input[field]).length > max) return `${label} is te lang (maximaal ${max} tekens).`
+    const { label, max, long } = FIELD_LABELS[field]
+    const lengte = fieldText(input[field]).length
+    if (lengte > max) {
+      return long
+        ? `${label} is te lang voor het rapport (maximaal ${max} tekens, nu ${lengte}).`
+        : `${label} is te lang (maximaal ${max} tekens).`
+    }
   }
   if (input.decidedAt && !isRealDate(input.decidedAt)) return 'De datum van het gesprek is geen geldige datum.'
   if (input.followUpDate && !isRealDate(input.followUpDate)) {

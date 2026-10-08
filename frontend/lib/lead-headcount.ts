@@ -1,7 +1,8 @@
 /**
  * Schatting van de organisatiegrootte uit het omvangvak van een lead: het eerste
- * getal, met een duizendtalpunt gelezen als duizendtal ("Boven 1.000" is 1000,
- * niet 1). Oude leads ("100 - 200 medewerkers") geven hetzelfde als voorheen.
+ * getal, met een duizendtalpunt gelezen als duizendtal ("1.000 of meer" en het
+ * oudere "Boven 1.000" geven beide 1000, niet 1). Oude leads ("100 - 200
+ * medewerkers") geven hetzelfde als voorheen.
  * Alleen voor een interne schatting (beheer/klantlearnings); nooit voor een prijs.
  */
 export function estimateHeadcount(value: string | null | undefined): number {

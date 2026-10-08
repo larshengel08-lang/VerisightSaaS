@@ -43,55 +43,102 @@ def test_fixturesleutels_bestaan_echt():
         assert key in texts
 
 
-def test_scenario_11_grootste_groep_zonder_meerderheid():
-    # 27 van de 62 (44%) met een voorsprong van 12: een duidelijke grootste groep.
+def test_scenario_11_is_een_meerderheid_van_de_veranderstemmen():
+    # Spec 2026-10-07 par. 3: niets telt niet mee; was plurality.
+    # 27 van de 62 (44%) op alle beantwoorders, maar de 15 niets-stemmen kiezen
+    # geen route: change_n = 62 - 15 = 47, en 27 van de 47 (57%) met een
+    # voorsprong van 27 - 10 = 17 op de tweede veranderoptie is een meerderheid.
     agg = _agg({"grd_visibility": 27, "grd_none": 15, "grd_conversation": 10,
                 "grd_criteria": 6, "grd_time": 4}, answered=62)
     st = direction_state(agg, "growth", factor_score=5.2)
-    assert st["state"] == "plurality"
+    assert st["state"] == "clear"
     assert st["top_key"] == "grd_visibility"
     assert st["top_n"] == 27
-    assert st["second_n"] == 15
+    assert st["change_n"] == 47
+    # second_n is de tweede VERANDEROPTIE (gesprek, 10), niet de niets-optie (15).
+    assert st["second_n"] == 10
+    assert st["none_n"] == 15
 
 
 def test_plurality_heeft_nooit_een_meerderheid():
-    """De kop zegt "zonder meerderheid"; bij >= 50% hoort clear te vuren."""
+    """De kop zegt "zonder meerderheid"; bij >= 50% van de veranderstemmen
+    (change_n) hoort clear te vuren, ook als het aandeel op alle
+    beantwoorders onder de helft blijft."""
     agg = _agg({"grd_visibility": 5, "grd_none": 2, "grd_time": 1})
     st = direction_state(agg, "growth", factor_score=5.2)
     assert st["state"] == "clear"
-    assert st["top_n"] / st["n"] >= 0.5
+    assert st["top_n"] / st["change_n"] >= 0.5          # 5 van 6
+    # 4 van de 10 op alle beantwoorders, 4 van de 7 op de veranderstemmen,
+    # voorsprong 2 op time: clear, geen plurality.
+    agg = _agg({"grd_visibility": 4, "grd_none": 3, "grd_time": 2, "grd_criteria": 1})
+    st = direction_state(agg, "growth", factor_score=5.2)
+    assert st["top_n"] / st["n"] < 0.5
+    assert st["top_n"] / st["change_n"] >= 0.5
+    assert st["state"] == "clear"
 
 
 def test_plurality_vereist_de_share_en_de_voorsprong():
-    # 30% haalt de share niet, ook al is de voorsprong ruim.
+    # Spec 2026-10-07 par. 3: niets telt niet mee; was divided.
+    # 30 van de 100, maar change_n = 75: 30/75 = 0,4 >= 0,35, voorsprong 30-25 = 5.
     agg = _agg({"grd_visibility": 30, "grd_none": 25, "grd_conversation": 25,
                 "grd_time": 20})
-    assert direction_state(agg, "growth", factor_score=5.2)["state"] == "divided"
-    # Net boven de share, zelfde voorsprong: wel plurality.
+    assert direction_state(agg, "growth", factor_score=5.2)["state"] == "plurality"
+    # Net boven de share, zelfde voorsprong: plurality (36/75 = 0,48, voorsprong 11).
     agg = _agg({"grd_visibility": 36, "grd_none": 25, "grd_conversation": 25,
                 "grd_time": 14})
     assert direction_state(agg, "growth", factor_score=5.2)["state"] == "plurality"
-    # Wel de share, maar voorsprong 1.
+    # Spec 2026-10-07 par. 3: niets telt niet mee; was divided.
+    # De voorsprong van 1 lag op de niets-optie; op de veranderopties is het
+    # 10 van 16 (0,625) met voorsprong 4 op gesprek: clear.
     agg = _agg({"grd_visibility": 10, "grd_none": 9, "grd_conversation": 6})
-    assert direction_state(agg, "growth", factor_score=5.2)["state"] == "divided"
-    # Wel de share en voorsprong 2: kantelt naar plurality.
+    assert direction_state(agg, "growth", factor_score=5.2)["state"] == "clear"
+    # Spec 2026-10-07 par. 3: niets telt niet mee; was plurality.
+    # 11 van 17 (0,65) met voorsprong 5 op gesprek: clear.
     agg = _agg({"grd_visibility": 11, "grd_none": 9, "grd_conversation": 6})
+    assert direction_state(agg, "growth", factor_score=5.2)["state"] == "clear"
+
+    # Dezelfde vier grenzen, nu op de inhoudelijke stemmen (change_n), met
+    # telkens 10 of 5 niets-stemmen die de noemer niet mogen raken.
+    # 30% van change_n haalt de share niet, ook al is de voorsprong ruim:
+    # change_n = 100, 30/100 = 0,30 < 0,35.
+    agg = _agg({"grd_visibility": 30, "grd_conversation": 25, "grd_time": 25,
+                "grd_criteria": 20, "grd_none": 10})
+    assert direction_state(agg, "growth", factor_score=5.2)["state"] == "divided"
+    # Net boven de share: 36/100 = 0,36, voorsprong 11: plurality.
+    agg = _agg({"grd_visibility": 36, "grd_conversation": 25, "grd_time": 25,
+                "grd_criteria": 14, "grd_none": 10})
+    assert direction_state(agg, "growth", factor_score=5.2)["state"] == "plurality"
+    # Wel de share (10/25 = 0,4), maar voorsprong 1 op de tweede veranderoptie.
+    agg = _agg({"grd_visibility": 10, "grd_conversation": 9, "grd_time": 6,
+                "grd_none": 5})
+    assert direction_state(agg, "growth", factor_score=5.2)["state"] == "divided"
+    # Wel de share (11/26 = 0,42) en voorsprong 2: kantelt naar plurality.
+    agg = _agg({"grd_visibility": 11, "grd_conversation": 9, "grd_time": 6,
+                "grd_none": 5})
     assert direction_state(agg, "growth", factor_score=5.2)["state"] == "plurality"
 
 
 def test_plurality_share_grens_is_inclusief_en_exact():
     """Precies op DIRECTION_PLURALITY_MIN_SHARE telt mee, een haartje eronder
     niet. Zonder deze twee kan de vergelijking van >= naar > verschuiven zonder
-    dat iets rood wordt (alle andere nieuwe grenzen zijn wel exact gepind)."""
-    op_de_grens = _agg({"grd_visibility": 7, "grd_none": 5, "grd_conversation": 4,
-                        "grd_time": 4})  # 7 van 20 = exact 0,35, voorsprong 2
+    dat iets rood wordt (alle andere nieuwe grenzen zijn wel exact gepind).
+
+    Spec 2026-10-07 par. 3: de grens ligt op change_n (alle beantwoorders
+    minus de niets-stemmen), niet meer op n. De oude grensfixtures (7 van 20
+    en 17 van 50 op n, met niets-stemmen) waren daardoor geen grens meer en
+    zijn vervangen door deze twee, met niets-stemmen erbij die de noemer niet
+    mogen raken."""
+    op_de_grens = _agg({"grd_visibility": 7, "grd_conversation": 5, "grd_time": 4,
+                        "grd_criteria": 4, "grd_none": 3})  # 7 van 20 = exact 0,35, voorsprong 2
     st = direction_state(op_de_grens, "growth", 5.2)
-    assert st["top_n"] / st["n"] == DIRECTION_PLURALITY_MIN_SHARE
+    assert st["change_n"] == 20
+    assert st["top_n"] / st["change_n"] == DIRECTION_PLURALITY_MIN_SHARE
     assert st["state"] == "plurality"
-    eronder = _agg({"grd_visibility": 17, "grd_none": 15, "grd_conversation": 9,
-                    "grd_time": 9})  # 17 van 50 = 0,34, zelfde voorsprong
+    eronder = _agg({"grd_visibility": 17, "grd_conversation": 15, "grd_time": 9,
+                    "grd_criteria": 9, "grd_none": 5})  # 17 van 50 = 0,34, voorsprong 2
     st = direction_state(eronder, "growth", 5.2)
-    assert st["top_n"] / st["n"] < DIRECTION_PLURALITY_MIN_SHARE
+    assert st["change_n"] == 50
+    assert st["top_n"] / st["change_n"] < DIRECTION_PLURALITY_MIN_SHARE
     assert st["state"] == "divided"
 
 
@@ -177,7 +224,12 @@ def test_factor_score_is_verplicht():
 
 def test_onbekende_score_geldt_nooit_als_kwetsbaar():
     agg = _agg({"grd_none": 14, "grd_visibility": 14, "grd_conversation": 3})
-    assert direction_state(agg, "growth", None)["state"] == "divided"
+    # Spec 2026-10-07 par. 3: niets telt niet mee; was divided.
+    # Geen split_none (onbekend is niet kwetsbaar); op de inhoudelijke stemmen
+    # is het 14 van 17 met voorsprong 11 op gesprek: clear.
+    st = direction_state(agg, "growth", None)
+    assert st["state"] != "split_none"
+    assert st["state"] == "clear"
 
 
 def test_lege_counts_boven_de_vloer_blijft_fail_loud():
@@ -193,6 +245,6 @@ def test_payload_heeft_altijd_dezelfde_vorm():
                        (_agg({"grd_visibility": 3, "grd_none": 3}), 6.0),
                        (_agg({"grd_visibility": 27, "grd_none": 15}, answered=62), 5.2)):
         st = direction_state(agg, "growth", factor_score=score)
-        for key in ("state", "n", "ranked", "top_key", "top_n", "second_n",
+        for key in ("state", "n", "change_n", "ranked", "top_key", "top_n", "second_n",
                     "none_n", "none_key"):
             assert key in st, (st["state"], key)

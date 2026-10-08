@@ -7,8 +7,12 @@ NIET-PRODUCTIE. Schrijft docs/stresstest/zz_besluitmax_<variant>_<scenario>.html
 Elk tekstveld van het besluit staat op zijn frontendlimiet (DECISION_LIMITS in
 frontend/lib/dashboard/campaign-decision.ts, hier uit dat bestand gelezen, niet
 overgetypt): onderwerpen en eigenaar 120 tekens, "Wat precies", terugkoppeling
-en succes 600. De besluitpagina kort de lange velden af op BESLUIT_TEKST_MAX en
-meldt dat; onderwerpen en eigenaar kort ze niet af.
+en succes ook 240 (vervolgronde vertrekmaand, taak 10: gelijk aan
+BESLUIT_TEKST_MAX, dus een nieuw besluit wordt niet meer ingekort). Een besluit
+dat vóór die wijziging is opgeslagen kan nog tot 600 tekens per lang veld
+bevatten (de database kort bestaande rijen niet met terugwerkende kracht af);
+de besluitpagina kort zo'n veld nog steeds af op BESLUIT_TEKST_MAX en meldt dat
+(BESLUIT_INGEKORT). Onderwerpen en eigenaar worden nooit afgekapt.
 
 Scenario's:
   06  Loep Behoud met een aangewezen afdeling (blok "Afspraak per afdeling").
@@ -18,15 +22,25 @@ Scenario's:
       voegt het slechtste geval zelf toe; het zit niet in de vaste matrix.
 
 Varianten:
-  max    elk veld op zijn limiet, ook het tweede onderwerp (120 tekens).
-  samen  alleen bij een aangewezen afdeling: gelijk aan max, maar het tweede
-         onderwerp is het onderwerp van die afdeling. Dan staat er in het
-         afdelingsblok een extra zin (BESLUIT_AFDELING_SAMEN). Welke van de twee
-         de pagina langer maakt, hangt van het afbreken af; daarom beide.
+  max    elk veld op zijn huidige limiet, ook het tweede onderwerp (120
+         tekens). Met action/text nu op 240 (= BESLUIT_TEKST_MAX) wordt dit
+         geval zelf niet meer ingekort; het meet de kolombreedte, niet het
+         inkortpad.
+  oud    een bestaand besluit van vóór taak 10: action/text op 600 tekens (de
+         toenmalige frontendlimiet), topic/owner ongewijzigd op 120. Dit is nu
+         het zwaarste geval dat de besluitpagina nog kan tegenkomen (met
+         BESLUIT_INGEKORT), en blijft dus nodig om het vel op één A4 te
+         bewaken.
+  samen  alleen bij een aangewezen afdeling, gebaseerd op de variant max: gelijk
+         aan max, maar het tweede onderwerp is het onderwerp van die afdeling.
+         Dan staat er in het afdelingsblok een extra zin (BESLUIT_AFDELING_SAMEN).
+         Welke van de twee de pagina langer maakt, hangt van het afbreken af;
+         daarom beide.
 
 Het script faalt hard (SystemExit) als die opzet wegvalt: 06 en vx moeten het
-afdelingsblok dragen, 08 niet, en de variant samen moet de zin
-BESLUIT_AFDELING_SAMEN tonen. Anders zou de meting stil een lichter geval meten.
+afdelingsblok dragen, 08 niet, de variant oud moet BESLUIT_INGEKORT tonen, en
+de variant samen moet de zin BESLUIT_AFDELING_SAMEN tonen. Anders zou de
+meting stil een lichter geval meten.
 
 Gebruik: python scripts/render_besluit_max.py
 """
@@ -43,7 +57,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from backend.report_html import BESLUIT_AFDELING_LABEL, BESLUIT_AFDELING_SAMEN  # noqa: E402
+from backend.report_html import BESLUIT_AFDELING_LABEL, BESLUIT_AFDELING_SAMEN, BESLUIT_INGEKORT  # noqa: E402
 from scripts import stresstest_report as st  # noqa: E402
 
 LIMIETBRON = ROOT / "frontend" / "lib" / "dashboard" / "campaign-decision.ts"
@@ -62,6 +76,13 @@ def _limieten() -> dict[str, int]:
 
 
 LIMIET = _limieten()
+
+# De grens vóór taak 10 (vervolgronde vertrekmaand): toen stond
+# DECISION_LIMITS.action/.text zelf op 600. Een besluit dat al vóór die
+# wijziging was opgeslagen kan nog een lang veld van die lengte bevatten; de
+# huidige bron (campaign-decision.ts) beschrijft alleen de nieuwe grens (240),
+# dus deze waarde is hier bewust vast, niet uit die bron gelezen.
+OUD_TEKST_MAX = 600
 
 _ZIN = ("Elke leidinggevende voert voor de zomer met iedere medewerker een gesprek over de "
         "volgende stap in het werk, en legt de afspraak vast. ")
@@ -90,6 +111,27 @@ def _besluit(tweede_onderwerp: str | None = None) -> dict:
         "secondary_action": _vul(_ZIN, LIMIET["action"]),
         "feedback_plan": _vul(_ZIN, LIMIET["text"]),
         "success_criterion": _vul(_ZIN, LIMIET["text"]),
+        "updated_at": datetime(2026, 9, 29, 9, 30, tzinfo=timezone.utc),
+    }
+
+
+def _besluit_oud(tweede_onderwerp: str | None = None) -> dict:
+    """Een bestaand besluit van vóór taak 10, toen action/text nog tot 600
+    tekens mochten. Zo'n rij wordt niet met terugwerkende kracht ingekort
+    (zie campaign-decision.ts), dus de besluitpagina moet dit geval, met
+    BESLUIT_INGEKORT, blijven renderen voor de A4-meting. Onderwerp en
+    eigenaar hadden altijd al de grens van 120, dus die blijven gelijk aan
+    de variant max."""
+    return {
+        "decided_at": date(2026, 9, 28),
+        "primary_topic": _vul(_ONDERWERP, LIMIET["topic"]),
+        "primary_action": _vul(_ZIN, OUD_TEKST_MAX),
+        "owner": _vul(_EIGENAAR, LIMIET["owner"]),
+        "follow_up_date": date(2026, 11, 30),
+        "secondary_topic": tweede_onderwerp or _vul(_ONDERWERP, LIMIET["topic"]),
+        "secondary_action": _vul(_ZIN, OUD_TEKST_MAX),
+        "feedback_plan": _vul(_ZIN, OUD_TEKST_MAX),
+        "success_criterion": _vul(_ZIN, OUD_TEKST_MAX),
         "updated_at": datetime(2026, 9, 29, 9, 30, tzinfo=timezone.utc),
     }
 
@@ -158,6 +200,27 @@ def main() -> int:
                 doel = doelmap / ("zz_besluitmax_max_" + bron.name)
                 shutil.copyfile(bron, doel)
                 print("geschreven: " + str(doel.relative_to(ROOT)))
+
+                # Variant oud (controller-amendement, vervolgronde vertrekmaand
+                # taak 10): action/text op de grens van vóór deze taak (600),
+                # zodat het inkortpad (BESLUIT_INGEKORT) voor een bestaand
+                # besluit blijft gemeten. Met action/text nu op 240 (gelijk
+                # aan BESLUIT_TEKST_MAX) is dit het enige geval dat nog kort.
+                besluit.clear()
+                besluit.update(_besluit_oud())
+                bron_oud = Path(st.run_scenario(sc)["html"])
+                heeft_afdeling_oud, _ = _afdelingsblok(bron_oud)
+                if heeft_afdeling_oud != verwacht_afdeling:
+                    raise SystemExit(sc.key + " (oud): afdelingsblok " + ("wel" if heeft_afdeling_oud else "niet")
+                                     + " aanwezig, verwacht " + ("wel" if verwacht_afdeling else "niet")
+                                     + "; het slechtste geval wordt niet meer gemeten")
+                tekst_oud = bron_oud.read_text(encoding="utf-8")
+                if html.escape(BESLUIT_INGEKORT) not in tekst_oud:
+                    raise SystemExit(sc.key + " (oud): BESLUIT_INGEKORT ontbreekt; het inkortpad "
+                                     "van een bestaand besluit wordt niet meer gemeten")
+                doel_oud = doelmap / ("zz_besluitmax_oud_" + bron_oud.name)
+                shutil.copyfile(bron_oud, doel_oud)
+                print("geschreven: " + str(doel_oud.relative_to(ROOT)))
 
                 if not heeft_afdeling:
                     print("  " + sc.key + ": geen aangewezen afdeling (zo verwacht), geen variant samen")

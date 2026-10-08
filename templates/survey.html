@@ -227,6 +227,10 @@
       color: var(--muted);
       margin-top: 8px;
     }
+    /* Alleen onder de vertrekmaandvraag: ruimte voor de keuzelijst eronder. */
+    #exit-month-help {
+      margin-bottom: 8px;
+    }
 
     /* ── Select / Input ──────────────────────────────────────── */
     select, input[type="number"], textarea {
@@ -1227,6 +1231,7 @@ try { sessionStorage.removeItem(key); } catch (e) {}
       open_text:                data.open_text || null,
       uwes_raw,
       turnover_intention_raw:   ti_raw,
+      exit_month:               data.exit_month && data.exit_month !== "liever_niet" ? data.exit_month : null,
     };
 
     // Verduidelijkingsantwoorden: één entry per gerenderd blok.

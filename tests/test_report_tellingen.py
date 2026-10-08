@@ -5,7 +5,11 @@ import pytest
 from sqlalchemy.orm import Session
 
 from backend.models import Campaign, Organization, Respondent, SurveyResponse
-from backend.products.shared.deepening import aggregate_deepening, aggregate_direction
+from backend.products.shared.deepening import (
+    aggregate_deepening,
+    aggregate_direction,
+    direction_state,
+)
 from backend.report_html import (
     MAX_QUOTES,
     MIN_QUOTES_N,
@@ -427,8 +431,12 @@ def _dir_agg(answered, counts, *, skipped=0, lowest=None, offered=None):
 STATEN = {
     "clear": (_dir_agg(10, {"grd_visibility": 8, "grd_none": 1, "grd_time": 1}, skipped=3), 5.1),
     "none_needed": (_dir_agg(10, {"grd_none": 6, "grd_visibility": 3, "grd_time": 1}, skipped=3), 5.1),
-    "plurality": (_dir_agg(10, {"grd_visibility": 4, "grd_none": 2, "grd_time": 2,
-                                "grd_criteria": 2}, skipped=3), 5.2),
+    # Spec 2026-10-07 par. 3: niets telt niet mee; was plurality met
+    # {visibility 4, niets 2, time 2, criteria 2}, dat op de veranderstemmen
+    # 4 van de 8 met voorsprong 2 is en dus clear. Nu 4 van de 9 (0,44),
+    # voorsprong 2: plurality onder beide regels.
+    "plurality": (_dir_agg(10, {"grd_visibility": 4, "grd_none": 1, "grd_time": 2,
+                                "grd_criteria": 2, "grd_conversation": 1}, skipped=3), 5.2),
     "split_none": (_dir_agg(10, {"grd_none": 4, "grd_visibility": 4, "grd_time": 2}, skipped=3), 4.5),
     "divided": (_dir_agg(10, {"grd_visibility": 4, "grd_time": 4, "grd_criteria": 2}, skipped=3), 5.4),
 }
@@ -440,7 +448,10 @@ def _zonder_juiste_claims(tekst):
     claim: n is het aantal beantwoorders, niet iedereen bij wie dit het laagst
     scoorde."""
     for goed in ("het laagst scoorde en die de vraag beantwoordden",
-                 "het laagst scoorden en de vraag beantwoordden"):
+                 "het laagst scoorden en de vraag beantwoordden",
+                 # Spec 2026-10-07 taak 7: telling op de veranderkeuzes.
+                 "het laagst scoorden en om verandering vroegen",
+                 "het laagst scoorde en om verandering vroeg"):
         tekst = tekst.replace(goed, "")
     return tekst
 
@@ -465,7 +476,20 @@ def test_p02_regel_labelt_de_noemer_net_als_de_kaart(staat):
 
     agg, score = STATEN[staat]
     regel = _direction_p02_line({"growth": agg}, "growth", "retention", score)
-    assert "de vraag beantwoordden" in regel, regel
+    # Spec 2026-10-07 taak 7: clear en plurality rusten op de veranderkeuzes
+    # zodra die afwijken van alle beantwoorders (zelfde predicaat als de code)
+    # en zeggen dat met het volle label; de andere staten houden het label van
+    # de beantwoorders.
+    st = direction_state(agg, "growth", score)
+    if st["state"] in ("clear", "plurality") and st["change_n"] != st["n"]:
+        label = {"clear": "die dit het laagst scoorden en om verandering vroegen: ",
+                 "plurality": "van wie dit het laagst scoorde en om verandering "
+                              "vroeg, "}[st["state"]]
+        assert label in regel, regel
+        if st["none_n"]:
+            assert "dat hier niets hoeft." in regel, regel
+    else:
+        assert "de vraag beantwoordden" in regel, regel
     assert "het laagst scoor" not in _zonder_juiste_claims(regel), regel
 
 
@@ -477,6 +501,17 @@ def test_p02_en_kaart_noemen_hetzelfde_getal_met_percentage():
     kaart = _plain(_direction_card_cell("startpunt", label="Groeiperspectief", agg=agg,
                                         scan_type="retention", factor_key="growth",
                                         n_total=39, factor_score=score))
+    # Spec 2026-10-07 taak 7: met een niets-stem rusten beide op de 9
+    # veranderkeuzes (onder de tien, dus zonder percentage).
+    assert "4 van de 9," in regel and "4 van de 9 die om verandering vroegen" in kaart
+    # Zonder niets-stem blijft de noemer alle beantwoorders, met percentage.
+    zonder = _dir_agg(10, {"grd_visibility": 4, "grd_time": 2, "grd_criteria": 2,
+                           "grd_conversation": 2}, skipped=3)
+    regel = _direction_p02_line({"growth": zonder}, "growth", "retention", score)
+    kaart = _plain(_direction_card_cell("startpunt", label="Groeiperspectief", agg=zonder,
+                                        scan_type="retention", factor_key="growth",
+                                        n_total=39, factor_score=score))
+    assert direction_state(zonder, "growth", score)["state"] == "plurality"
     assert "4 van de 10 (40%)" in regel and "4 van de 10 (40%)" in kaart
 
 

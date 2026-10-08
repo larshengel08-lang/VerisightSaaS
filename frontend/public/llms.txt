@@ -29,7 +29,7 @@
 - Elke scan (Loep Behoud, Loep Vertrek of Loep Start) heeft een vaste prijs
   naar de grootte van de organisatie, excl. btw: minder dan 150 medewerkers EUR 3.500,
   150 tot 400 medewerkers EUR 4.500, 400 tot 1.000 medewerkers EUR 6.900,
-  boven 1.000 medewerkers op aanvraag. Een volledig traject: inrichting, meting
+  1.000 of meer medewerkers op aanvraag. Een volledig traject: inrichting, meting
   en rapport met gespreksleidraad en besluitpagina. Geen bespreking door Loep.
   Geen licentie per medewerker.
 - Een vervolgmeting kost in dezelfde treden EUR 950, EUR 1.250 en EUR 1.750
