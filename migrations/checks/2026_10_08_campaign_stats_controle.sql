@@ -23,6 +23,10 @@
 --           rechtstreeks" en "anon leest campaign_stats niet".
 --   Blok C0 NA de migratie, als postgres: de cijfers van de testklant zoals
 --           de beheerverbinding ze ziet.
+--   C1 en C2 nemen bewust de eigenaar van de klant aan, niet de Loep-
+--           operator. De operator is ook owner van de testklant (en van elke
+--           organisatie die hij aanmaakt) en ziet via zijn lidmaatschappen
+--           metingen van andere organisaties; dat zou op een lek lijken.
 --   Blok C1 NA de migratie, als eigenaar van de testklant: moet precies
 --           dezelfde regels geven als C0 (en als het dashboard), en geen
 --           meting van een andere organisatie.
@@ -107,9 +111,9 @@ order by cs.created_at;
 -- de rol uit de inlog) en draait alles terug. De claims staan er in twee
 -- vormen, zodat het werkt welke versie van auth.uid() de database ook heeft.
 -- Verwacht: kolom rol = authenticated, ingelogd_als gevuld, en verder precies
--- de regels van Blok C0. Is ingelogd_als leeg, dan is de eigenaar van de
--- testklant niet gevonden en zegt de rest niets. Is rol niet authenticated,
--- dan is het blok niet als geheel gedraaid.
+-- de regels van Blok C0. Is ingelogd_als leeg, dan is er geen eigenaar van
+-- de testklant gevonden die geen Loep-operator is, en zegt de rest niets.
+-- Is rol niet authenticated, dan is het blok niet als geheel gedraaid.
 begin;
 select set_config('request.jwt.claim.sub', m.user_id::text, true),
        set_config('request.jwt.claim.role', 'authenticated', true),
@@ -118,6 +122,8 @@ select set_config('request.jwt.claim.sub', m.user_id::text, true),
 from public.org_members m
 join public.organizations o on o.id = m.org_id
 where o.slug = 'loep-testklant' and m.role = 'owner'
+  and not exists (select 1 from public.profiles p
+                  where p.id = m.user_id and p.is_verisight_admin)
 limit 1;
 set local role authenticated;
 select current_user as rol, auth.uid() as ingelogd_als,
@@ -141,6 +147,8 @@ select set_config('request.jwt.claim.sub', m.user_id::text, true),
 from public.org_members m
 join public.organizations o on o.id = m.org_id
 where o.slug = 'loep-testklant' and m.role = 'owner'
+  and not exists (select 1 from public.profiles p
+                  where p.id = m.user_id and p.is_verisight_admin)
 limit 1;
 set local role authenticated;
 select risk_band from public.survey_responses limit 1;
