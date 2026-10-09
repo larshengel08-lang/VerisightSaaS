@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { SCAN_TYPE_LABELS, type ScanType } from '@/lib/types'
-import { downloadErrorMessage, purgedDownloadMessage, summarizeTechnicalDetail } from '@/lib/report-download-error'
+import { resolveDownloadError, summarizeTechnicalDetail } from '@/lib/report-download-error'
 
 interface Props {
   campaignId: string
@@ -49,9 +49,10 @@ export function PdfDownloadButton({
         // De rapportproxy geeft de ruwe backend-body soms door als JSON
         // { detail }: dat kan een geneste FastAPI-JSON-string, een hele
         // HTML-foutpagina (Railway 502/504) of platte tekst zijn.
-        // summarizeTechnicalDetail maakt daar altijd leesbare tekst van
-        // (nooit ruwe HTML); downloadErrorMessage bepaalt de hoofdzin per
-        // statuscode. De technische melding blijft apart zichtbaar (Fail Loud).
+        // resolveDownloadError kiest de hoofdzin: een herkende backendzin
+        // (410, 422, 500) is zelf de hoofdmelding, anders de zin per
+        // statuscode. De technische melding (nooit ruwe HTML) blijft apart
+        // zichtbaar, behalve bij een herkende backendzin (Fail Loud).
         let rawDetail: string | null = null
         try {
           const payload = (await response.json()) as { detail?: unknown }
@@ -59,17 +60,7 @@ export function PdfDownloadButton({
         } catch {
           // Geen JSON-detail (bijvoorbeeld een kale foutpagina zonder body).
         }
-        // 410 na de opschoning: de backendzin noemt de datum en is zelf de
-        // hoofdmelding; een technische regel eronder zou hem herhalen.
-        const purgedMessage = purgedDownloadMessage(response.status, rawDetail)
-        setError(
-          purgedMessage
-            ? { message: purgedMessage, technical: null }
-            : {
-                message: downloadErrorMessage(response.status),
-                technical: summarizeTechnicalDetail(rawDetail),
-              },
-        )
+        setError(resolveDownloadError(response.status, rawDetail))
         setLoadingFormat(null)
         return
       }

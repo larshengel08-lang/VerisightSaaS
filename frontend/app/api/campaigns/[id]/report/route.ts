@@ -9,6 +9,25 @@ interface Context {
   params: Promise<{ id: string }>
 }
 
+const BACKEND_ONBEREIKBAAR = 'De rapportserver is nu niet bereikbaar. Probeer het later opnieuw.'
+
+// Statussen waarmee de backend bewust weigert (opgeschoonde data, bedrijfsregel).
+// Elke andere niet-ok status na onze eigen rechtencheck wijst op een fout of
+// een verkeerde configuratie en wordt gelogd.
+const VERWACHTE_STATUS = new Set([410, 422])
+
+// De frontend-Sentry staat uit; deze regels landen in de Vercel-logs. Alleen
+// het campagne-id en de fout, nooit de organisatiesleutel of de campagnenaam.
+function logProxyFout(campaignId: string, stap: string, fout: unknown) {
+  const melding = fout instanceof Error ? fout.message : String(fout)
+  // Node-fetch (undici) geeft alleen 'fetch failed'; de echte oorzaak
+  // (ECONNREFUSED, ENOTFOUND, UND_ERR_CONNECT_TIMEOUT) zit in error.cause.
+  const oorzaak = fout instanceof Error && fout.cause
+    ? (fout.cause as { code?: string; message?: string })
+    : undefined
+  console.error(`[rapportproxy] ${stap}`, { campaignId, fout: melding, oorzaak: oorzaak?.code ?? oorzaak?.message })
+}
+
 export async function GET(request: Request, { params }: Context) {
   const { id } = await params
   const supabase = await createClient()
@@ -75,34 +94,52 @@ export async function GET(request: Request, { params }: Context) {
     })
   }
 
-  let backendResponse: globalThis.Response | null = null
+  let backendResponse: globalThis.Response
 
-  if (format === 'segment_summary') {
-    backendResponse = await fetchInternalReport()
-  } else {
-    try {
-      const apiKey = await getOrganizationApiKey(campaign.organization_id, { supabase })
-      backendResponse = await fetch(backendUrl, {
-        headers: {
-          'x-api-key': apiKey,
-        },
-        cache: 'no-store',
-      })
+  try {
+    if (format === 'segment_summary') {
+      backendResponse = await fetchInternalReport()
+    } else {
+      // Alleen het ophalen van de sleutel en de eerste poging staan hierbinnen;
+      // een fout in de terugval valt zo in de buitenste catch.
+      let eerstePoging: globalThis.Response | null = null
+      try {
+        const apiKey = await getOrganizationApiKey(campaign.organization_id, { supabase })
+        eerstePoging = await fetch(backendUrl, {
+          headers: {
+            'x-api-key': apiKey,
+          },
+          cache: 'no-store',
+        })
+      } catch (error) {
+        logProxyFout(id, 'eerste poging via de organisatiesleutel mislukt, terugval op de interne route', error)
+      }
 
-      if (backendResponse.status === 401 || backendResponse.status === 403) {
+      if (eerstePoging && eerstePoging.status !== 401 && eerstePoging.status !== 403) {
+        backendResponse = eerstePoging
+      } else {
+        if (eerstePoging) {
+          // De ongelezen body houdt anders de verbinding bezet. Een fout bij het
+          // afbreken mag de terugval niet als onbereikbare backend laten eindigen.
+          await eerstePoging.body?.cancel().catch(() => undefined)
+          console.warn('[rapportproxy] organisatiesleutel geweigerd, terugval op de interne route', {
+            campaignId: id,
+            status: eerstePoging.status,
+          })
+        }
         backendResponse = await fetchInternalReport()
       }
-    } catch {
-      backendResponse = await fetchInternalReport()
     }
-  }
-
-  if (!backendResponse) {
-    return NextResponse.json({ detail: 'Rapportproxy kon niet worden gestart.' }, { status: 502 })
+  } catch (error) {
+    logProxyFout(id, 'backend niet bereikbaar', error)
+    return NextResponse.json({ detail: BACKEND_ONBEREIKBAAR }, { status: 502 })
   }
 
   if (!backendResponse.ok) {
     const detail = await backendResponse.text()
+    if (!VERWACHTE_STATUS.has(backendResponse.status)) {
+      logProxyFout(id, `backend gaf status ${backendResponse.status}`, detail.slice(0, 300))
+    }
     return NextResponse.json(
       { detail: detail || 'Rapport kon niet worden gegenereerd.' },
       { status: backendResponse.status },
@@ -110,6 +147,7 @@ export async function GET(request: Request, { params }: Context) {
   }
 
   if (!backendResponse.body) {
+    logProxyFout(id, 'backend gaf status 200 zonder inhoud', 'leeg antwoord')
     return NextResponse.json(
       { detail: 'Rapport kon niet worden gestreamd.' },
       { status: 502 },
