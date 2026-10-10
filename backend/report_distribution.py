@@ -87,7 +87,14 @@ def shown(score: float | None) -> float | None:
 
 
 def _zone_index(v: float) -> int:
-    """0 = laagste zone, 1 = midden, 2 = hoogste zone. De enige plek met de grenzen."""
+    """0 = laagste zone, 1 = midden, 2 = hoogste zone, op de exacte waarde.
+
+    De vergelijking met ZONE_LOW en ZONE_HIGH voor kleur (_zone_color) en via
+    zone_index ook voor de labelniveaus in report_html (_factor_level, en
+    daarmee _factor_label en _band_key voor retention/onboarding).
+    score_distribution telt de stippen met dezelfde constanten. De strikt
+    kleiner-dan-grenzen: 5,0 zelf hoort in het midden, 6,5 zelf bovenin.
+    """
     if v < ZONE_LOW:
         return 0
     if v < ZONE_HIGH:
@@ -96,7 +103,7 @@ def _zone_index(v: float) -> int:
 
 
 def _zone_color(v: float, invert_scale: bool) -> str:
-    """De ladder: de enige plek in de codebase met deze drempels.
+    """De kleur bij een zone; de indeling zelf doet _zone_index.
 
     Alles wat een score of een stip een RAG-kleur geeft, loopt hier langs:
     zone_color (naast een getoonde score), dot_color (een stip in de strook) en
@@ -119,14 +126,12 @@ def zone_color(score: float, invert_scale: bool = False) -> str:
     return _zone_color(shown(score), invert_scale)
 
 
-def zone_label(score: float, invert_scale: bool = False) -> str:
-    """Naam van de zone waarin een getoonde score valt, met de tellingnamen van
-    de strook (_ZONE_LABELS / _ZONE_LABELS_INVERT). Rondt af zoals zone_color
-    (B15), zodat een label naast een getal hetzelfde zegt als de kleur ervan.
-    Polijstronde R12: de note bij vertrekintentie op p.03 komt hier vandaan,
-    zodat rij en strook nooit twee verschillende zones noemen."""
-    labels = _ZONE_LABELS_INVERT if invert_scale else _ZONE_LABELS
-    return labels[_zone_index(shown(score))]
+def zone_index(score: float) -> int:
+    """Zone van een getoonde score: 0 laag, 1 midden, 2 hoog. Rondt af zoals
+    zone_color (B15), zodat een label naast een getal dezelfde zone noemt als
+    de kleur ervan. Op de getallenas, dus los van invert_scale: bij een
+    omgekeerde as (vertrekintentie) is zone 2 de slechte kant."""
+    return _zone_index(shown(score))
 
 
 def dot_color(value: float, invert_scale: bool = False) -> str:

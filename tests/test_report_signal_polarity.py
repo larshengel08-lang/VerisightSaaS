@@ -65,7 +65,7 @@ def test_band_exit_keeps_risk_polarity():
 
 # ── _behoudscontext: één ladder voor kleur en note ───────────────────────────
 
-def _sigrow_behoudssignaal(html: str) -> str:
+def _sigrow_werkbeeld(html: str) -> str:
     # Op de sigrow-titel geankerd en niet op het kale woord: sinds ronde 2
     # (taak 3) draagt ook de onderbouwingscel op p.02 het label
     # "Werkbeeld" (polijstronde: was "Behoudssignaal"), en die staat eerder
@@ -77,7 +77,7 @@ def _sigrow_behoudssignaal(html: str) -> str:
 
 def test_behoudscontext_strong_signal_is_teal_and_sterk():
     html = _behoudscontext(retention_score=8.0, stay_intent=None, turnover=None, engagement=None)
-    row = _sigrow_behoudssignaal(html)
+    row = _sigrow_werkbeeld(html)
     assert "8.0/10" in row
     assert "#3C8D8A" in row
     assert '<span class="sigrow-note">relatief sterk</span>' in row
@@ -85,7 +85,7 @@ def test_behoudscontext_strong_signal_is_teal_and_sterk():
 
 def test_behoudscontext_weak_signal_is_red_and_onder_druk():
     html = _behoudscontext(retention_score=3.5, stay_intent=None, turnover=None, engagement=None)
-    row = _sigrow_behoudssignaal(html)
+    row = _sigrow_werkbeeld(html)
     assert "3.5/10" in row
     assert "#C0392B" in row
     assert '<span class="sigrow-note">kwetsbaar punt</span>' in row
@@ -93,7 +93,7 @@ def test_behoudscontext_weak_signal_is_red_and_onder_druk():
 
 def test_behoudscontext_middle_signal_is_amber_and_vraagt_aandacht():
     html = _behoudscontext(retention_score=5.8, stay_intent=None, turnover=None, engagement=None)
-    row = _sigrow_behoudssignaal(html)
+    row = _sigrow_werkbeeld(html)
     assert "#C17C00" in row
     assert '<span class="sigrow-note">aandachtspunt</span>' in row
 
@@ -177,12 +177,12 @@ def test_retention_kernzin_shows_health_value_and_matching_band():
     # kernzin, en het getal draagt zijn duiding nu via het cel-label hieronder.
     cel = _signaalcel(html, "Werkbeeld")
     assert "8.0/10" in cel and "Relatief sterk" in cel
-    assert "3.0/10" not in _sigrow_behoudssignaal(html)
+    assert "3.0/10" not in _sigrow_werkbeeld(html)
 
     html_low = render_retention_report_html(_min_data("retention", 7.0))
     cel_low = _signaalcel(html_low, "Werkbeeld")
     assert "4.0/10" in cel_low and "Kwetsbaar punt" in cel_low
-    assert '<span class="sigrow-note">kwetsbaar punt</span>' in _sigrow_behoudssignaal(html_low)
+    assert '<span class="sigrow-note">kwetsbaar punt</span>' in _sigrow_werkbeeld(html_low)
 
 
 def test_onboarding_kernzin_shows_health_value_and_matching_band():

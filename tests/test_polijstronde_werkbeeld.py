@@ -59,8 +59,9 @@ def test_vertrekrapport_gebruikt_werkbeeld_niet_als_los_woord():
 def test_p03_labels_uit_een_set():
     html = _html("02_een_lage_factor")
     notes = re.findall(r'class="sigrow-note"[^>]*>(.*?)<', html)
-    toegestaan = {"kwetsbaar punt", "aandachtspunt", "relatief sterk",
-                  "veel vertrekgedachten", "weinig vertrekgedachten"}
+    from backend.report_html import _FACTOR_LABEL_WOORDEN
+    toegestaan = {w.lower() for w in _FACTOR_LABEL_WOORDEN} | {
+        "veel vertrekgedachten", "weinig vertrekgedachten"}
     assert len(notes) == 4, notes
     for note in notes:
         assert note.strip().lower() in toegestaan, note
@@ -152,4 +153,21 @@ def test_labels_komen_uit_factor_label():
 ])
 def test_zin_zonder_profiel_is_grammaticaal(score, zin):
     from backend.report_html import _werkbeeld_zin
-    assert _werkbeeld_zin(score, _band(score, "retention")[0]) == zin
+    assert _werkbeeld_zin(score) == zin
+
+
+@pytest.mark.parametrize("score,niveau", [
+    (4.94, 0), (4.96, 1), (5.0, 1), (6.44, 1), (6.46, 2), (6.5, 2), (9.0, 2),
+])
+def test_factor_level_en_zone_index_op_de_getoonde_score(score, niveau):
+    from backend.report_distribution import zone_index
+    from backend.report_html import _FACTOR_LABEL_WOORDEN, _factor_label, _factor_level
+    assert zone_index(score) == niveau
+    assert _factor_level(score) == niveau
+    assert _factor_label(score) == _FACTOR_LABEL_WOORDEN[niveau]
+
+
+def test_factor_level_zonder_score():
+    from backend.report_html import _factor_label, _factor_level
+    assert _factor_level(None) is None
+    assert _factor_label(None) == "Geen data"

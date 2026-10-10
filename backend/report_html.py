@@ -3,7 +3,7 @@ Loep — HTML→PDF rapportgenerator (WeasyPrint) v6
 ================================================
 Product-hardened: eigen copy, labels en structuur per scan-type.
   ExitScan    — terugkijkende vertrekduiding
-  RetentieScan — actieve-populatie behoudssignaal / vroegsignalering
+  RetentieScan — actieve populatie: werkbeeld, blijf- en vertrekintentie
   Onboarding  — 30/60/90 onboardingervaring en eerste werkperiode
 Parallel pad naast report.py. report.py blijft onaangeroerd.
 """
@@ -37,7 +37,7 @@ from backend.report_distribution import (
     score_distribution,
     shown as _shown,
     zone_color,
-    zone_label,
+    zone_index,
 )
 from backend.products.shared.deepening import (
     DEEPENING_CAP,
@@ -151,10 +151,11 @@ _EXIT_BANDS = {
     "LAAG":   ("Laag frictiebeeld",         "#3C8D8A"),
 }
 # De labelwoorden van de ladder 5,0 / 6,5 (gezondheidsschaal), van laag naar
-# hoog. Eén bron: _factor_label geeft ze terug, en de band onder de tegel
-# Werkbeeld op p.02 (_RETENTION_BANDS) en de labels op p.03 (_p03_note) lezen
-# ze hier, zodat het rapport voor dezelfde grenzen overal dezelfde woorden
-# gebruikt (polijstronde R12).
+# hoog, geindexeerd met _factor_level. Eén bron: _factor_label geeft ze terug,
+# en de band onder de tegel Werkbeeld op p.02 (_RETENTION_BANDS) en de labels
+# op p.03 lezen ze hier, zodat het rapport voor dezelfde grenzen overal
+# dezelfde woorden gebruikt (polijstronde R12). Code die op een niveau test,
+# vergelijkt met _factor_level, nooit met deze woorden.
 _FACTOR_LABEL_WOORDEN = ("Kwetsbaar punt", "Aandachtspunt", "Relatief sterk")
 
 _RETENTION_BANDS = {
@@ -201,14 +202,15 @@ def _band_key(score: float | None, scan_type: str = "exit") -> str | None:
       >= RISK_HIGH -> HOOG, >= RISK_MEDIUM -> MIDDEN, anders LAAG.
     - retention / onboarding: GEZONDHEIDS-schaal (werkbeeld /
       checkpointscore via _signal_health, hoog = goed), dezelfde ladder als
-      _factor_label: < 5,0 -> HOOG (onder druk), < 6,5 -> MIDDEN, anders LAAG.
+      _factor_label (via _factor_level): < 5,0 -> HOOG (kwetsbaar punt),
+      < 6,5 -> MIDDEN (aandachtspunt), anders LAAG (relatief sterk).
     HOOG betekent in beide gevallen "meeste aandacht nodig" (rood).
     Vergelijkt op de getoonde (afgeronde) score, zie _shown (B15)."""
     if score is None:
         return None
-    score = _shown(score)
     if scan_type in ("retention", "onboarding"):
-        return "HOOG" if score < 5.0 else "MIDDEN" if score < 6.5 else "LAAG"
+        return ("HOOG", "MIDDEN", "LAAG")[_factor_level(score)]
+    score = _shown(score)
     return "HOOG" if score >= RISK_HIGH else "MIDDEN" if score >= RISK_MEDIUM else "LAAG"
 
 
@@ -312,13 +314,19 @@ def _friction_label(score: float | None) -> str:
 def _friction_color(score: float | None) -> str:
     return _band(score, "exit")[1]
 
+def _factor_level(score: float | None) -> int | None:
+    """Niveau op de gezondheidsladder: 0 kwetsbaar (< 5,0), 1 aandacht (< 6,5),
+    2 relatief sterk; None zonder score. Op de getoonde score (B15), via
+    zone_index: dezelfde grenzen als de kleur en de spreidingsstrook."""
+    if score is None:
+        return None
+    return zone_index(score)
+
+
 def _factor_label(score: float | None) -> str:
     # Drempels op de getoonde score (1 decimaal), zie _shown (B15).
     if score is None:  return "Geen data"
-    score = _shown(score)
-    if score < 5.0:    return _FACTOR_LABEL_WOORDEN[0]
-    if score < 6.5:    return _FACTOR_LABEL_WOORDEN[1]
-    return _FACTOR_LABEL_WOORDEN[2]
+    return _FACTOR_LABEL_WOORDEN[_factor_level(score)]
 
 
 def profile_shape(factor_avgs: dict[str, float | None]) -> dict[str, Any]:
@@ -747,6 +755,26 @@ def _p02_startpunt_gronden(
     return kind, change, change_other, delta
 
 
+# Uitleg onder de tegel Werkbeeld op p.02 (polijstronde R20). Waar: de score is
+# per respondent het gelijkgewogen gemiddelde van zeven delen, de zes
+# werkonderwerpen en de werkbeleving (products/retention/scoring.py,
+# compute_retention_risk). Dus nooit "gemiddelde van de zes".
+WERKBEELD_UITLEG = ("De zes werkonderwerpen en de werkbeleving samen; "
+                    "geen meting van of mensen blijven.")
+
+# De p.02-zin zonder factorprofiel, per bandsleutel van _band_key: dezelfde
+# woorden als de band onder de tegel, met het lidwoord dat de zin nodig heeft.
+_WERKBEELD_ZIN_BAND = {"HOOG": "een kwetsbaar punt", "MIDDEN": "een aandachtspunt",
+                       "LAAG": "relatief sterk"}
+
+
+def _werkbeeld_zin(signal: float) -> str:
+    """De p.02-zin zonder factorprofiel: "Het werkbeeld is 5.5/10: een
+    aandachtspunt." Loep Behoud, gezondheidsschaal (_signal_health)."""
+    return (f"Het werkbeeld is {_score_str(signal)}: "
+            f"{_WERKBEELD_ZIN_BAND[_band_key(signal, 'retention')]}.")
+
+
 def _p02_signal_cell(label: str, value: str, band: str, note: str = "") -> str:
     """Het totaalsignaal met zijn band, als cel in de onderbouwingsrij van p.02.
 
@@ -894,7 +922,7 @@ def _blijfintentie_kopzin(avg_si: float | None, stay_scores: list[float], *,
     niet, dan zegt de kop "Geen onderwerp scoort kwetsbaar." en zou "Ook" die
     zin tegenspreken; dan wordt het "Wel is de blijfintentie kwetsbaar".
     """
-    if avg_si is None or _factor_label(avg_si) != "Kwetsbaar punt":
+    if avg_si is None or _factor_level(avg_si) != 0:
         return ""
     low, _mid, _high, n = _blijfintentie_zones(stay_scores)
     if not n:
@@ -945,7 +973,7 @@ def _intentie_duiding(avg_si: float | None, stay_scores: list[float],
     """
     if avg_si is None or not startpunt_label:
         return ""
-    if _factor_label(avg_si) == "Relatief sterk":
+    if _factor_level(avg_si) == 2:
         return ""
     delen: list[str] = []
     vals = [v for v in to_scores if v is not None]
@@ -961,7 +989,7 @@ def _intentie_duiding(avg_si: float | None, stay_scores: list[float],
                          + " veel vertrekgedachten (vertrekintentie vanaf " + grens + ").")
     delen.append(INTENTIE_DUIDING_KERN)
     wringt = (startpunt_score is not None
-              and _factor_label(startpunt_score) != "Relatief sterk")
+              and _factor_level(startpunt_score) != 2)
     staart = ("daar zie je waar het wringt, en daar kan het MT zelf iets besluiten."
               if wringt else "daar kan het MT zelf iets besluiten.")
     if indicatief:
@@ -3859,7 +3887,7 @@ def _besluit_afdeling(seg: dict | None, scan_type: str, tweede_key: str | None) 
         return None
     fk = seg.get("low_fk")
     zwaar = (bool(fk) and seg.get("low_avg") is not None
-             and _factor_label(seg["low_avg"]) != "Relatief sterk")
+             and _factor_level(seg["low_avg"]) != 2)
     return {"department": seg["department"],
             "topic": _fl(fk, scan_type) if fk else None,
             "zwaar": zwaar,
@@ -5053,7 +5081,7 @@ def _brugzin(startpunt_key: str | None, startpunt_label: str, seg: dict | None,
                 f"onderwerp.{rest_zin}")
     low_lbl = _fl(seg["low_fk"], scan_type)
     low_sc = _score_str(seg["low_avg"])
-    zwaar = _factor_label(seg["low_avg"]) != "Relatief sterk"
+    zwaar = _factor_level(seg["low_avg"]) != 2
     if seg["low_fk"] == startpunt_key:
         if zwaar:
             return f"Bij {dept} weegt {low_lbl} het zwaarst ({low_sc}); {ook_start}"
@@ -5945,10 +5973,10 @@ def _overzicht_summary_and_bands(profile_factors: list[tuple[str, float | None]]
     Het bandwoord is "kwetsbaar", zoals overal in het rapport, niet "kritisch".
     """
     ranked = sorted([(l, s) for l, s in profile_factors if s is not None], key=lambda x: x[1])
-    # Indeling via _factor_label: zelfde (afgeronde) drempels als de balken (B15).
-    kwetsbaar = [l for l, s in ranked if _factor_label(s) == "Kwetsbaar punt"]
-    aandacht  = [l for l, s in ranked if _factor_label(s) == "Aandachtspunt"]
-    sterk     = [l for l, s in ranked if _factor_label(s) == "Relatief sterk"]
+    # Indeling via _factor_level: zelfde (afgeronde) drempels als de balken (B15).
+    kwetsbaar = [l for l, s in ranked if _factor_level(s) == 0]
+    aandacht  = [l for l, s in ranked if _factor_level(s) == 1]
+    sterk     = [l for l, s in ranked if _factor_level(s) == 2]
     laag_sc = ranked[0][1] if ranked else None
     if ranked and len(laagste) == len(ranked) and len(ranked) > 1:
         laagste_zin = (f"{_alle_onderwerpen(len(ranked)).capitalize()} scoren "
@@ -6114,30 +6142,6 @@ def _vertrekcontext(*, exit_reasons: list[tuple[str, int]],
 
 # ─── Behoudscontext (T7-retention) ───────────────────────────────────────────
 
-# Uitleg onder de tegel Werkbeeld op p.02 (polijstronde R20). Waar: de score is
-# per respondent het gelijkgewogen gemiddelde van zeven delen, de zes
-# werkonderwerpen en de werkbeleving (products/retention/scoring.py,
-# compute_retention_risk). Dus nooit "gemiddelde van de zes".
-WERKBEELD_UITLEG = ("De zes werkonderwerpen en de werkbeleving samen; "
-                    "geen meting van of mensen blijven.")
-
-def _werkbeeld_zin(signal: float, band_lbl: str) -> str:
-    """De p.02-zin zonder factorprofiel: "Het werkbeeld is 5.5/10: een
-    aandachtspunt." De band komt uit _RETENTION_BANDS (de _factor_label-woorden);
-    een "punt" krijgt een lidwoord, "relatief sterk" niet."""
-    woord = band_lbl.lower()
-    if woord.endswith("punt"):
-        woord = "een " + woord
-    return f"Het werkbeeld is {_score_str(signal)}: {woord}."
-
-
-def _p03_note(score: float) -> str:
-    """Label voor een gezondheidscijfer op p.03 (hoog = goed): kwetsbaar punt /
-    aandachtspunt / relatief sterk, de woorden van _factor_label in kleine
-    letters, op de getoonde score (B15). Zelfde ladder als de kleur ernaast."""
-    return _factor_label(score).lower()
-
-
 def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
                     turnover: float | None, engagement: float | None,
                     intent_resp: dict | None = None,
@@ -6150,11 +6154,14 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
     Blijfintentie waren zo nauwelijks te onderscheiden).
 
     Labels (polijstronde R12): werkbeeld, blijfintentie en bevlogenheid krijgen
-    hun label uit _p03_note (de _factor_label-woorden op de ladder 5,0 / 6,5,
-    zelfde als hun kleur); vertrekintentie uit zone_label van de omgekeerde
-    strook, met "aandachtspunt" in het midden. Zo staat er
-    op deze pagina een set labels en zegt een label nooit iets anders dan de
-    kleur of de strook.
+    de _factor_label-woorden in kleine letters (kwetsbaar punt / aandachtspunt /
+    relatief sterk), op dezelfde ladder 5,0 / 6,5 als hun kleur; het werkbeeld
+    uit dezelfde band als zijn kleur (_RETENTION_BANDS). Vertrekintentie krijgt
+    weinig / veel vertrekgedachten met aandachtspunt in het midden, via
+    zone_index op dezelfde zones als de strook. De spreidingsstrook op de
+    vervolgpagina houdt zijn korte tellingnamen (Kwetsbaar / Aandacht / Sterk,
+    bij vertrekintentie Weinig / Aandacht / Veel vertrekgedachten) op dezelfde
+    zones, dus een label noemt nooit een andere zone dan kleur of strook.
     """
     rows = ""
     if retention_score is not None:
@@ -6164,7 +6171,7 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
         # ("onder de 5,0 kwetsbaar ... vanaf 6,5 relatief sterk") ontstaat.
         _k = _band_key(retention_score, "retention")
         col = _RETENTION_BANDS[_k][1]
-        note = _p03_note(retention_score)
+        note = _RETENTION_BANDS[_k][0].lower()
         rows += (f'<div class="sigrow"><div class="sigrow-title">Werkbeeld</div>'
                  f'<div class="sigrow-body">De zes onderwerpen over het werk en de werkbeleving samen, op groepsniveau. Geen meting van of mensen blijven.</div>'
                  f'<div><span class="sigrow-score" style="color:{col};">{retention_score:.1f}/10</span>'
@@ -6175,7 +6182,7 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
                   f'<div class="sigrow-body">&ldquo;Als het aan mij ligt, werk ik over 12 maanden nog steeds hier.&rdquo; '
                   f'Enkelvoudige richtingsvraag, indicatief.</div>'
                   f'<div><span class="sigrow-score" style="color:{scol};">{stay_intent:.1f}/10</span>'
-                  f'<span class="sigrow-note">{_p03_note(stay_intent)}</span></div></div>')
+                  f'<span class="sigrow-note">{_factor_label(stay_intent).lower()}</span></div></div>')
     if turnover is not None:
         _tv = _shown(turnover)  # note + kleur op de getoonde score (B15)
         # Kleur en note komen uit dezelfde zone-as als de spreidingsstrook op de
@@ -6184,13 +6191,11 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
         # een amber rij boven een teal stip, dezelfde tegenspraak als de gespiegelde
         # getallen, alleen in kleur. De grenzen zijn daarom ZONE_LOW en ZONE_HIGH,
         # en strikt kleiner-dan: 5,0 zelf hoort in het midden, 6,5 zelf bovenin,
-        # precies zoals de strook de stip indeelt. De note is sinds polijstronde
-        # R12 de zonenaam van de strook zelf (zone_label), met "aandachtspunt"
-        # voor het midden (het _factor_label-woord), zodat rij en strook dezelfde
-        # zone noemen.
+        # precies zoals de strook de stip indeelt. De note (polijstronde R12)
+        # komt uit dezelfde zone_index, dus rij en strook noemen dezelfde zone.
         tcol = zone_color(_tv, invert_scale=True)
-        note = zone_label(_tv, invert_scale=True)
-        note = (_FACTOR_LABEL_WOORDEN[1] if note == "Aandacht" else note).lower()
+        note = ("weinig vertrekgedachten", _FACTOR_LABEL_WOORDEN[1].lower(),
+                "veel vertrekgedachten")[zone_index(_tv)]
         rows += (f'<div class="sigrow"><div class="sigrow-title">Vertrekintentie</div>'
                   f'<div class="sigrow-body">&ldquo;Ik denk er serieus over na te vertrekken&rdquo; + &ldquo;Ik zoek actief.&rdquo; '
                   f'Gemiddelde van 2 stellingen.</div>'
@@ -6200,7 +6205,7 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
         ecol = _factor_color(engagement)
         # Polijstronde R12: geen eigen grenzen meer (was 7,5 / 6,0 / 4,5, terwijl
         # de kleur op 5,0 / 6,5 lag); de note volgt nu de ladder van de kleur.
-        note = _p03_note(engagement)
+        note = _factor_label(engagement).lower()
         rows += (f'<div class="sigrow"><div class="sigrow-title">Bevlogenheid</div>'
                   f'<div class="sigrow-body">Energie &middot; Inspiratie &middot; Zin om te gaan (UWES). Gemiddelde van 3 stellingen.</div>'
                   f'<div><span class="sigrow-score" style="color:{ecol};">{engagement:.1f}/10</span>'
@@ -7125,9 +7130,9 @@ def render_retention_report_html(data: dict) -> str:
     if not exec_line:
         # Geen factorprofiel (bug B2). De onderbouwingsrij rendert in die staat
         # niet, dus het werkbeeld blijft hier staan in plaats van uit het
-        # rapport te verdwijnen. Polijstronde: de band is een _factor_label-
-        # woord ("Aandachtspunt"), dus een hele zin met dubbele punt.
-        exec_line = (_werkbeeld_zin(signal, band_lbl)
+        # rapport te verdwijnen. Polijstronde: een hele zin met dubbele punt,
+        # zie _werkbeeld_zin.
+        exec_line = (_werkbeeld_zin(signal)
                      if signal and band_lbl
                      else "Zie de behoudscontext en de meetgegevens voor wat dit rapport wel toont.")
 
