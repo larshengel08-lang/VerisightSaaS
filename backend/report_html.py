@@ -700,13 +700,65 @@ def _p02_opening(*, scan_type: str, shape: dict[str, Any], labels: dict[str, str
     # of een aandachtspuntenzin zou "Daar" naar meer dan het startpunt wijzen.
     # Een zin met grond (klein verschil, gelijkstand, richting) zegt iets nieuws
     # en blijft staan.
+    #
+    # R13 (polijstronde): staat er wel een aandachtspuntenzin tussen, dan noemde
+    # de kale startpuntzin het kwetsbare onderwerp een tweede keer bij naam.
+    # "Het kwetsbare onderwerp" wijst naar precies dat ene onderwerp en niet
+    # naar de aandachtspunten, dus geen "Daar". Is het startpunt een ander
+    # onderwerp dan het laagste, of draagt de zin een grond, dan blijft hij.
     kiest = "Als mogelijk startpunt kiest Loep" if indicatief else "Als startpunt kiest Loep"
     if (k == 1 and shape["factors_low_to_high"][0][0] == primary_key
-            and not aandacht
             and start == f"{kiest} {labels[primary_key]}."):
-        start = ("Daar begint het gesprek waarschijnlijk." if indicatief
-                 else "Daar begint het gesprek.")
+        if not aandacht:
+            start = ("Daar begint het gesprek waarschijnlijk." if indicatief
+                     else "Daar begint het gesprek.")
+        else:
+            start = ("Het gesprek begint waarschijnlijk bij het kwetsbare onderwerp." if indicatief
+                     else "Het gesprek begint bij het kwetsbare onderwerp.")
     return f"{kop} {start}"
+
+
+def _p02_afdelingen_zin(*, shape: dict[str, Any], labels: dict[str, str],
+                        primary_key: str | None, segment_rows: list[dict] | None,
+                        segment_factor_rows: dict[str, dict] | None) -> str:
+    """S3 (polijstronde): de zin achter "Geen onderwerp scoort kwetsbaar." als
+    op de afdelingspagina het laagste onderwerp van een afdeling wel kwetsbaar
+    scoort. Leeg in elke andere staat.
+
+    Alleen dezelfde tak als in _p02_opening (geen kwetsbaar onderwerp, geen
+    vlak profiel): alleen daar begint de kernzin met die zin.
+
+    Privacy: telt uitsluitend wat de afdelingspagina zelf laat zien. Een
+    afdeling telt mee als ze een eigen rij in de tabel heeft (niet de
+    restgroep; geen tabel zonder minstens twee afdelingen, dan ook geen zin)
+    en haar EERSTE onderwerp uit segment_factor_rows, het laagste, op de
+    getoonde score kwetsbaar is: precies het label in de kolom "Laagste
+    onderwerp", ook bij 5 tot 9 antwoorden. Een ander onderwerp van een kleine
+    afdeling staat niet op die pagina en telt dus nooit mee.
+
+    Losse zin en niet in _p02_opening: de noemer van een lage respons
+    (_p02_met_respons) hangt aan de laatste zin van de kernzin en relativeert
+    het startpunt. Net als de vertrekredenzin wordt deze zin daarom pas na
+    _p02_met_respons aangehaakt.
+    """
+    if (not shape["n_factors"] or primary_key is None or shape["n_vulnerable"] != 0
+            or shape["flat"] or not segment_rows or not segment_factor_rows):
+        return ""
+    eigen_rij = [r["department"] for r in segment_rows if not r.get("is_pooled", False)]
+    laagste: list[str] = []
+    for dept in eigen_rij:
+        factors = (segment_factor_rows.get(dept) or {}).get("factors") or []
+        if factors and _factor_level(factors[0][1]) == 0:
+            laagste.append(factors[0][0])
+    if not laagste:
+        return ""
+    k = len(laagste)
+    aantal = "één afdeling" if k == 1 else _TELWOORD.get(k, str(k)) + " afdelingen"
+    pagina = "(pagina " + _pref(LEIDRAAD_ANKERS["afdelingen"]) + ")."
+    if all(fk == primary_key for fk in laagste):
+        return ("In " + aantal + " is " + _h(labels[primary_key])
+                + " daar wel een kwetsbaar punt " + pagina)
+    return "In " + aantal + " scoort het laagste onderwerp daar wel kwetsbaar " + pagina
 
 
 def _getoond_verschil(laag: float, hoog: float) -> float:
@@ -942,9 +994,13 @@ def _blijfintentie_kopzin(avg_si: float | None, stay_scores: list[float], *,
 # alinea staat direct onder de cel Werkbeeld, en dat getal splitst het
 # afdelingsblok wel per afdeling uit (kolom Score). "Deze cijfers" zou dat
 # getal meenemen en dan onwaar zijn.
+# R27 (polijstronde): "en ook niet wie er vertrekt" stond alleen op de
+# methodiekpagina. Een reden waarom de intenties niet per afdeling staan is
+# niet vastgelegd; die zin verzint Loep dus niet (beslispunt voor Lars).
 INTENTIE_DUIDING_KERN = (
     "Blijf- en vertrekintentie zeggen hoe dringend behoud hier is, niet bij welke afdeling "
-    "het speelt of waarom: dit rapport splitst ze niet per afdeling uit.")
+    "het speelt of waarom, en ook niet wie er vertrekt: dit rapport splitst ze niet per "
+    "afdeling uit.")
 
 
 def _intentie_duiding(avg_si: float | None, stay_scores: list[float],
@@ -1851,10 +1907,11 @@ LEIDRAAD_ANKERS = {
 # niet nodig: daar gaat het gesprek over wie er nog werkt.
 NAMENREGEL_VERTREK = ("Praat over hoe het werkt, niet over wie er vertrok. Valt er een naam, "
                       "ga dan terug naar de vraag.")
-# Eén bron voor de vraag bij de open antwoorden: hij staat zowel in rij 4 van
-# de leidraad als boven de open antwoorden zelf, en mag niet uit elkaar lopen.
-PATROONVRAAG_VERTREK = "wat komt terug in meer dan één antwoord?"
-TOELICHTINGEN_VRAAG_VERTREK = ("Lees ze als patroon: " + PATROONVRAAG_VERTREK
+# Eén bron voor de vraag bij de open antwoorden: hij staat in rij 4 van de
+# leidraad (Loep Vertrek), boven de open antwoorden zelf (Loep Vertrek) en in
+# rij 3 van de leidraad van Loep Start (S11), en mag niet uit elkaar lopen.
+PATROONVRAAG = "wat komt terug in meer dan één antwoord?"
+TOELICHTINGEN_VRAAG_VERTREK = ("Lees ze als patroon: " + PATROONVRAAG
                                + " Raad niet wie wat schreef.")
 TOELICHTINGEN_REGEL_VERTREK_HTML = ('<p class="trustline">'
                                     + _h(TOELICHTINGEN_VRAAG_VERTREK + " " + NAMENREGEL_VERTREK)
@@ -1864,7 +1921,8 @@ TOELICHTINGEN_REGEL_VERTREK_HTML = ('<p class="trustline">'
 def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
                     has_deepening: bool, has_werkvragen: bool = False,
                     intentie_duiding: bool = False,
-                    has_tweede_punt: bool = False) -> str:
+                    has_tweede_punt: bool = False,
+                    has_afdeling_afspraak: bool = False) -> str:
     """"Zo leid je dit gesprek in 45 minuten" (spec par. 4 blok 5): vijf regels
     met tijdvak, wat je op tafel legt en de paginaverwijzing. Vervangt het
     gebruiksblok en de zin over de begeleide managementbespreking (H5): de
@@ -1887,6 +1945,10 @@ def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
     intentie_duiding (R1, alleen Loep Behoud): onder de cijfers op pagina twee
     staat de duiding van blijf- en vertrekintentie; rij 2 stuurt de
     HR-manager daarheen. De renderer geeft bool(_intentie_duiding(...)) door.
+    has_afdeling_afspraak (R21): de besluitpagina krijgt een blok "Afspraak per
+    afdeling". De renderer haalt de vlag uit dezelfde waarde die hij aan
+    _besluit_page geeft, zodat de leidraad dat blok alleen noemt als het er
+    staat.
     """
     A = LEIDRAAD_ANKERS
     p = _pref
@@ -1898,7 +1960,7 @@ def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
     elif has_quotes:
         # V5: bij Loep Vertrek krijgt dit slot een vraag, anders lees je acht
         # minuten losse vertrekverhalen voor aan wie de vertrekkers kende.
-        vraag = " Vraag: " + PATROONVRAAG_VERTREK if scan_type == "exit" else ""
+        vraag = " Vraag: " + PATROONVRAAG if scan_type == "exit" else ""
         rij4 = ("Wat mensen zelf schreven",
                 f"De open toelichtingen, ongefilterd (pagina {p(A['toelichtingen'])})." + vraag)
     else:
@@ -1917,8 +1979,14 @@ def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
     if has_werkvragen:
         # "wat eronder staat", niet "de vragen eronder": onder Herkennen staat
         # bij het startpunt vaak alleen nog Besluiten.
+        # R21 (polijstronde): wie het tweede punt parkeert, vult de
+        # terugkoppeling (en de afdelingsafspraak) toch in; anders kregen die
+        # velden in de leidraad geen tijd.
+        vul = ("de afdelingsafspraak en de terugkoppeling" if has_afdeling_afspraak
+               else "de terugkoppeling")
         tweede = ("Het tweede punt alleen als er tijd is, anders parkeren jullie het tot het "
-                  "vervolgmoment. " if has_tweede_punt else "")
+                  "vervolgmoment. Vul op de besluitpagina ook " + vul + " in, ook als je het "
+                  "tweede punt parkeert. " if has_tweede_punt else "")
         slot = (f"De werkvragen (pagina {p(A['werkvragen'])}). Bij het startpunt sla je "
                 "Herkennen over, dat deden jullie al; neem wat eronder staat. "
                 + tweede + besluit)
@@ -1927,6 +1995,12 @@ def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
     if scan_type == "onboarding":
         rij3 = (f"Het startpunt: de score en de laagste stelling (pagina {p(A['verdieping'])}). "
                 "Open met de gespreksopener hierboven.")
+        # S11 (polijstronde): de enige waarom-bron van Loep Start zijn de open
+        # antwoorden. Alleen als die er zijn, en niet als rij 4 er al naar
+        # verwijst (geen afdelingen): dan zou dezelfde pagina twee keer staan.
+        if has_quotes and has_segments:
+            rij3 += (f" Het waarom staat in de open antwoorden (pagina {p(A['toelichtingen'])}); "
+                     "vraag: " + PATROONVRAAG)
     elif has_deepening:
         rij3 = ("De verdieping van het startpunt: de laagste stelling en wat mensen als toelichting "
                 f"kozen (pagina {p(A['verdieping'])}). Open met de gespreksopener hierboven.")
@@ -1980,7 +2054,8 @@ def _heeft_werkbeleving(sdt_avgs: dict) -> bool:
 def _leidraad_html(scan_type: str, *, data: dict, deep_agg: dict,
                    startpunt_fk: str | None, has_sdt: bool, geen_profiel: bool,
                    has_werkvragen: bool = False, intentie_duiding: bool = False,
-                   has_tweede_punt: bool = False) -> str:
+                   has_tweede_punt: bool = False,
+                   has_afdeling_afspraak: bool = False) -> str:
     """Kiest de vlaggen van de leidraad uit de data van dit rapport.
 
     Eén plek voor de drie renderers (codereview taak 5), zodat ze niet uit
@@ -1998,6 +2073,8 @@ def _leidraad_html(scan_type: str, *, data: dict, deep_agg: dict,
       door, dus de leidraad verwijst alleen naar dat blok als het rendert.
       `has_tweede_punt` komt uit dezelfde ranglijst als dat blok: alleen met
       een tweede gesprekspunt noemt regel 5 het parkeren ervan.
+    - `has_afdeling_afspraak` (R21) is `_bl_afdeling is not None` van de
+      renderer: dezelfde waarde die als `afdeling` naar _besluit_page gaat.
     """
     if geen_profiel:
         return ""
@@ -2010,7 +2087,7 @@ def _leidraad_html(scan_type: str, *, data: dict, deep_agg: dict,
         has_deepening=_deepening_shows_distribution(
             deep_agg.get(startpunt_fk) if startpunt_fk else None),
         has_werkvragen=has_werkvragen, intentie_duiding=intentie_duiding,
-        has_tweede_punt=has_tweede_punt)
+        has_tweede_punt=has_tweede_punt, has_afdeling_afspraak=has_afdeling_afspraak)
 
 
 # Standaardwaarde voor het derde coverstatistiek als er geen factorprofiel is
@@ -2123,7 +2200,8 @@ def _bestuurlijke_read(*, kernzin: str, primary_label: str, why_cells_html: str,
                        responsbasis_html: str = "", opener_html: str = "",
                        direction_line: str = "", brug_zin: str = "",
                        degraded_note: str = "", why_title: str = "",
-                       scope_note: str = "") -> str:
+                       scope_note: str = "", afdelingen_zin: str = "",
+                       kernzin_vervolg: str = "") -> str:
     """Pagina twee als MT-vel (spec 16-9 par. 4), in vaste blokvolgorde:
     1 kernzin, 2 cijfers (cijfers_html, taak 2), 3 startpunt en waarom (why-blok
     met alleen echte redenen, C10), 4 gespreksopener (dezelfde als op de agenda,
@@ -2134,6 +2212,11 @@ def _bestuurlijke_read(*, kernzin: str, primary_label: str, why_cells_html: str,
 
     scope_note (spec ronde 2 par. 7): één regel direct onder de kernzin over wat
     dit product nog niet levert; rendert in beide staten.
+
+    afdelingen_zin (S3, polijstronde) is HTML uit _p02_afdelingen_zin, met een
+    paginaverwijzing, en gaat daarom niet door _h(). Hij staat direct achter de
+    kernzin; kernzin_vervolg (platte tekst, bijv. de vertrekredenzin of de
+    blijfintentie) volgt daarna in dezelfde alinea.
 
     Degraded (bug B2): zonder factorprofiel rendert één expliciete alinea in
     plaats van het why-blok; cijfers en meetgegevens blijven staan, want die
@@ -2160,8 +2243,17 @@ def _bestuurlijke_read(*, kernzin: str, primary_label: str, why_cells_html: str,
                   f'{_h(scope_note)}</p>') if scope_note else ""
     # Een uitzonderlijk lange kop (meer dan KERNZIN_LANG tekens) krijgt een
     # kleinere letter via de wrapper, zodat p.02 op een vel blijft (H16).
-    kernzin_html = f'<p class="br-kernzin">{_h(kernzin)}</p>'
-    if len(kernzin) > KERNZIN_LANG:
+    delen = [_h(kernzin)]
+    lengte = len(kernzin)
+    if afdelingen_zin:
+        delen.append(afdelingen_zin)
+        # Het paginanummer telt als twee tekens mee.
+        lengte += 1 + len(re.sub(r"<[^>]+>", "", afdelingen_zin)) + 2
+    if kernzin_vervolg:
+        delen.append(_h(kernzin_vervolg))
+        lengte += 1 + len(kernzin_vervolg)
+    kernzin_html = '<p class="br-kernzin">' + " ".join(delen) + "</p>"
+    if lengte > KERNZIN_LANG:
         kernzin_html = f'<div class="kz-lang">{kernzin_html}</div>'
     return f"""<div class="pb sec" id="p02">
   {opener_html or '<span class="slabel">Het antwoord in het kort</span>'}
@@ -3845,7 +3937,10 @@ BESLUIT_AFDELING_VRAAG = "Wat vragen jullie deze afdeling zelf, wie doet dat, en
 # (_toont_toelichtingen, dezelfde gate als SEGMENT_TOELICHTING_GRENS).
 BESLUIT_AFDELING_HINT = ("Het rapport toont de toelichtingen alleen voor de hele organisatie. "
                          + BESLUIT_AFDELING_VRAAG)
-BESLUIT_AFDELING_SAMEN = "Dit onderwerp is ook het tweede punt; neem de afdeling daarin mee."
+# R21 (polijstronde): de afdeling hing aan het tweede punt, en dat mag je
+# parkeren. De afspraak per afdeling blijft daarom staan, ook bij parkeren.
+BESLUIT_AFDELING_SAMEN = ("Dit onderwerp is ook het tweede punt. Ook als jullie dat parkeren: "
+                          "spreek hier af wie de afdeling vraagt, en wanneer.")
 # R4 (koude leesronde 24-9): het tweede punt had geen eigenaar en geen datum.
 # Geen eigen kolommen (zie plan, "Besluit over de migratie"), wel een regel die
 # het punt een eigenaar en een datum geeft: die van het startpunt.
@@ -6546,6 +6641,9 @@ def render_exit_report_html(data: dict) -> str:
                                         data.get("segment_factor_rows"))
     _tweede_row = next((r for r in _raster_rows if r["agenda_role"] == "tweede"), None)
     _tweede_key = _tweede_row["key"] if _tweede_row else None
+    # De aangewezen afdeling voor de besluitpagina, één keer bepaald: de
+    # leidraad (R21) noemt de afdelingsafspraak alleen als dit blok er staat.
+    _bl_afdeling = None if _geen_profiel else _besluit_afdeling(_seg_startpunt, "exit", _tweede_key)
     _indicatief = _respons_indicatief(data["n_completed"], data["n_invited"])
     _brug = ("" if _geen_profiel else
              _brugzin(_raster_rows[0]["key"], _raster_primary_label, _seg_startpunt, "exit",
@@ -6624,7 +6722,12 @@ def render_exit_report_html(data: dict) -> str:
 
     exec_line = _p02_met_respons(exec_line, completed=data["n_completed"],
                                  invited=data["n_invited"],
-                                 verwijzing=_verwijst) + _er_zin
+                                 verwijzing=_verwijst)
+    # S3: direct achter de kernzin, vóór de vertrekredenzin (zie
+    # _p02_afdelingen_zin voor waarom dit pas na _p02_met_respons kan).
+    _afd_zin = _p02_afdelingen_zin(shape=_shape, labels=_raster_labels, primary_key=_primary,
+                                   segment_rows=data.get("segment_rows"),
+                                   segment_factor_rows=data.get("segment_factor_rows"))
 
     # ── Bestuurlijke read ─────────────────────────────────────────────────────
     # Build why_cells for the primary (lowest-scoring) factor
@@ -6725,6 +6828,8 @@ def render_exit_report_html(data: dict) -> str:
 
     s += _bestuurlijke_read(
         kernzin=exec_line,
+        afdelingen_zin=_afd_zin,
+        kernzin_vervolg=_er_zin.strip(),
         primary_label=primary_label,
         why_cells_html=why_cells,
         mgmt_q=br_mgmt_q,
@@ -6738,7 +6843,8 @@ def render_exit_report_html(data: dict) -> str:
             "exit", data=data, deep_agg=deep_agg,
             startpunt_fk=_primary, has_sdt=_heeft_werkbeleving(sdt_a),
             geen_profiel=_geen_profiel, has_werkvragen=bool(_wq_block),
-            has_tweede_punt=any(r.get("agenda_role") == "tweede" for r in _raster_rows)),
+            has_tweede_punt=any(r.get("agenda_role") == "tweede" for r in _raster_rows),
+            has_afdeling_afspraak=_bl_afdeling is not None),
         direction_line=_direction_p02_line(direction_agg, _primary, "exit",
                                            factor_score=_primary_score),
         brug_zin=_brug,
@@ -6937,7 +7043,7 @@ def render_exit_report_html(data: dict) -> str:
         heeft_werkvragen=bool(_wq_block),
         decision=data.get("decision"),
         decision_unavailable=bool(data.get("decision_unavailable")),
-        afdeling=None if _geen_profiel else _besluit_afdeling(_seg_startpunt, "exit", _tweede_key),
+        afdeling=_bl_afdeling,
         afdeling_toelichtingen=_toont_toelichtingen(deep_agg))
 
     # ── Appendix ─────────────────────────────────────────────────────────────
@@ -7019,6 +7125,9 @@ def render_retention_report_html(data: dict) -> str:
                                         data.get("segment_factor_rows"))
     _tweede_row = next((r for r in _raster_rows if r["agenda_role"] == "tweede"), None)
     _tweede_key = _tweede_row["key"] if _tweede_row else None
+    # De aangewezen afdeling voor de besluitpagina, één keer bepaald: de
+    # leidraad (R21) noemt de afdelingsafspraak alleen als dit blok er staat.
+    _bl_afdeling = None if _geen_profiel else _besluit_afdeling(_seg_startpunt, ST, _tweede_key)
     _indicatief = _respons_indicatief(data["n_completed"], data["n_invited"])
     _brug = ("" if _geen_profiel else
              _brugzin(_raster_rows[0]["key"], _raster_primary_label, _seg_startpunt, ST,
@@ -7138,11 +7247,14 @@ def render_retention_report_html(data: dict) -> str:
 
     exec_line = _p02_met_respons(exec_line, completed=data["n_completed"],
                                  invited=data["n_invited"], verwijzing=_verwijst)
+    # S3: direct achter de kernzin, zie _p02_afdelingen_zin.
+    _afd_zin = _p02_afdelingen_zin(shape=_shape, labels=_raster_labels, primary_key=_primary,
+                                   segment_rows=data.get("segment_rows"),
+                                   segment_factor_rows=data.get("segment_factor_rows"))
     # Kwetsbare blijfintentie hoort in de kop (B1): het rapport past zijn eigen
     # regel "onder 5,0 is kwetsbaar" toe op zijn slechtste getal. Niet in de
     # degraded staat: daar draagt de alinea van _geen_factorprofiel_note het verhaal.
-    if _si_kop and not _geen_profiel:
-        exec_line = f"{exec_line} {_si_kop}"
+    _kern_vervolg = _si_kop if (_si_kop and not _geen_profiel) else ""
 
     _responsbasis_band = _responsbasis(
         invited=data["n_invited"],
@@ -7161,6 +7273,8 @@ def render_retention_report_html(data: dict) -> str:
 
     s += _bestuurlijke_read(
         kernzin=exec_line,
+        afdelingen_zin=_afd_zin,
+        kernzin_vervolg=_kern_vervolg,
         primary_label=primary_label,
         why_cells_html=why_cells,
         mgmt_q=br_mgmt_q,
@@ -7174,7 +7288,8 @@ def render_retention_report_html(data: dict) -> str:
             startpunt_fk=_primary, has_sdt=_heeft_werkbeleving(sdt_a),
             geen_profiel=_geen_profiel, has_werkvragen=bool(_wq_block),
             intentie_duiding=bool(_intentie_html),
-            has_tweede_punt=any(r.get("agenda_role") == "tweede" for r in _raster_rows)),
+            has_tweede_punt=any(r.get("agenda_role") == "tweede" for r in _raster_rows),
+            has_afdeling_afspraak=_bl_afdeling is not None),
         direction_line=_direction_p02_line(direction_agg, _primary, ST,
                                            factor_score=_primary_score),
         brug_zin=_brug,
@@ -7354,7 +7469,7 @@ def render_retention_report_html(data: dict) -> str:
         heeft_werkvragen=bool(_wq_block),
         decision=data.get("decision"),
         decision_unavailable=bool(data.get("decision_unavailable")),
-        afdeling=None if _geen_profiel else _besluit_afdeling(_seg_startpunt, ST, _tweede_key),
+        afdeling=_bl_afdeling,
         afdeling_toelichtingen=_toont_toelichtingen(deep_agg))
 
     # ── Appendix ─────────────────────────────────────────────────────────────
@@ -7588,6 +7703,10 @@ def render_onboarding_report_html(data: dict) -> str:
 
     exec_line = _p02_met_respons(exec_line, completed=data["n_completed"],
                                  invited=data["n_invited"], verwijzing=_verwijst)
+    # S3: direct achter de kernzin, zie _p02_afdelingen_zin.
+    _afd_zin = _p02_afdelingen_zin(shape=_shape, labels=_raster_labels, primary_key=_primary,
+                                   segment_rows=data.get("segment_rows"),
+                                   segment_factor_rows=data.get("segment_factor_rows"))
 
     _responsbasis_band = _responsbasis(
         invited=data["n_invited"],
@@ -7614,6 +7733,7 @@ def render_onboarding_report_html(data: dict) -> str:
                                   geen_profiel=_geen_profiel)
     s += _bestuurlijke_read(
         kernzin=exec_line,
+        afdelingen_zin=_afd_zin,
         primary_label=primary_label,
         why_cells_html=why_cells,
         mgmt_q=br_mgmt_q,

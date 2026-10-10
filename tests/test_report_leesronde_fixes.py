@@ -181,7 +181,8 @@ def test_loep_start_verandert_niet():
 STAY = [2.0] * 25 + [5.5] * 8 + [8.0] * 6        # n=39
 TO_VEEL = [7.0] * 19 + [3.0] * 20                 # 19 van de 39 vanaf 6,5
 KERN = ("Blijf- en vertrekintentie zeggen hoe dringend behoud hier is, niet bij welke afdeling "
-        "het speelt of waarom: dit rapport splitst ze niet per afdeling uit.")
+        "het speelt of waarom, en ook niet wie er vertrekt: dit rapport splitst ze niet per "
+        "afdeling uit.")
 SLOT = ("Daarom begint het gesprek bij Groeiperspectief: daar zie je waar het wringt, en daar "
         "kan het MT zelf iets besluiten.")
 SLOT_STERK = "Daarom begint het gesprek bij Groeiperspectief: daar kan het MT zelf iets besluiten."

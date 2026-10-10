@@ -459,7 +459,9 @@ def test_scenario_16_dertig_procent_remt_de_kernzin():
 def test_scenario_16b_vijfentwintig_procent_is_indicatief():
     tekst = _tekst(render_exit_report_html(_fixture(completed=45, invited=180)))
     assert "Indicatief beeld. Het vertrekbeeld wijst naar" in tekst
-    assert ("Als mogelijk startpunt kiest Loep Groeiperspectief (op basis van 45 "
+    # Polijstronde R13: één kwetsbaar onderwerp naast aandachtspunten; de
+    # startpuntzin noemt het niet nog eens bij naam, wel indicatief.
+    assert ("Het gesprek begint waarschijnlijk bij het kwetsbare onderwerp (op basis van 45 "
             "van de 180 genodigden).") in tekst
     assert "Onder de 30% noemt Loep het beeld indicatief" in tekst
 
@@ -488,7 +490,9 @@ def test_staart_hangt_aan_de_claim_en_niet_aan_de_vertrekredentelling():
     data = _fixture(completed=45, invited=150)
     data["exit_r_dist"] = [{"code": "PL1", "label": "Beter aanbod elders", "count": 9}]
     tekst = _tekst(render_exit_report_html(data))
-    assert ("Als startpunt kiest Loep Groeiperspectief (op basis van 45 van de 150 "
+    # Polijstronde R13: de startpuntzin noemt het kwetsbare onderwerp niet nog
+    # eens bij naam; de noemer hangt er nog steeds aan.
+    assert ("Het gesprek begint bij het kwetsbare onderwerp (op basis van 45 van de 150 "
             "genodigden). Beter aanbod elders is de meest genoemde hoofdreden van vertrek (9 van de 45).") in tekst
 
 

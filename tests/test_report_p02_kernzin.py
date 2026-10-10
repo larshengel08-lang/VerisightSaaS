@@ -169,13 +169,14 @@ def test_kop_herhaalt_niet_maar_grond_blijft_staan():
 
 def test_daar_wijst_niet_naar_de_aandachtspunten():
     """Staat er na het kwetsbare onderwerp een "Daarnaast"-zin, dan zou "Daar
-    begint het gesprek." naar de aandachtspunten wijzen. Dan blijft de volle
-    startpuntzin staan: die zegt welk onderwerp het is."""
+    begint het gesprek." naar de aandachtspunten wijzen. Polijstronde R13: de
+    startpuntzin noemt het onderwerp dan niet nog eens bij naam, maar wijst naar
+    "het kwetsbare onderwerp", en dat is er precies één."""
     avgs = {"leadership": 5.7, "culture": 7.1, "growth": 4.7,
             "compensation": 7.1, "workload": 5.2, "role_clarity": 7.1}
     zin = _open(avgs, primary="growth")
     assert "Daar begint het gesprek" not in zin
-    assert zin.endswith(f"aandachtspunten. Als startpunt kiest Loep {L('growth')}.")
+    assert zin.endswith("aandachtspunten. Het gesprek begint bij het kwetsbare onderwerp.")
 
 
 def test_daar_wijst_niet_naar_twee_kwetsbare_onderwerpen():
