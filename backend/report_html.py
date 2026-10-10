@@ -1919,8 +1919,9 @@ LEIDRAAD_ANKERS = {
 NAMENREGEL_VERTREK = ("Praat over hoe het werkt, niet over wie er vertrok. Valt er een naam, "
                       "ga dan terug naar de vraag.")
 # Eén bron voor de vraag bij de open antwoorden: hij staat in rij 4 van de
-# leidraad (Loep Vertrek), boven de open antwoorden zelf (Loep Vertrek) en in
-# rij 3 van de leidraad van Loep Start (S11), en mag niet uit elkaar lopen.
+# leidraad (Loep Vertrek en Loep Start), boven de open antwoorden zelf (Loep
+# Vertrek) en bij Loep Start in rij 3 als rij 4 niet naar de open antwoorden
+# wijst (S11). De plaatsen mogen niet uit elkaar lopen.
 PATROONVRAAG = "wat komt terug in meer dan één antwoord?"
 TOELICHTINGEN_VRAAG_VERTREK = ("Lees ze als patroon: " + PATROONVRAAG
                                + " Raad niet wie wat schreef.")
