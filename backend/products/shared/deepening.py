@@ -820,7 +820,32 @@ WORK_QUESTION_VARIANTS: dict[str, dict[str, str]] = {
         "retention": "Deze groep is verdeeld: een deel vraagt om verandering, een even groot deel zegt dat het goed zit. Beide kan kloppen. Waar zouden jullie met de meest gekozen richting beginnen?",
         "exit": "Deze vertrekkers waren verdeeld: een deel vroeg om verandering, een even groot deel zei dat het goed zat. Beide kan kloppen. Waar zouden jullie voor wie er nu werkt met de meest gekozen richting beginnen?",
     },
+    # Spec 2026-10-09 par. 3 (besluit Lars 9-10): de niets-groep is minstens zo
+    # groot als de grootste richting (direction_none_at_least_top_shown). Niet
+    # "een even groot deel": de niets-groep kan ook groter zijn. De vraag laat
+    # beide uitkomsten open, zodat hij de kaart niet tegenspreekt door het MT
+    # toch een route te laten kiezen. CONCEPT: nog ter review bij Lars.
+    "none_at_least_top": {
+        "retention": "Bij deze groep zeggen minstens zoveel mensen dat het hier goed zit als er om de meest gekozen richting vragen. Beide kan kloppen. Pakken jullie hier toch iets op, en zo ja wat, of laten jullie dit onderwerp bewust liggen?",
+        "exit": "Bij deze vertrekkers zeiden minstens zoveel mensen dat het hier goed zat als er om de meest gekozen richting vroegen. Beide kan kloppen. Pakken jullie hier voor wie er nu werkt toch iets op, en zo ja wat, of laten jullie dit onderwerp bewust liggen?",
+    },
 }
+
+# Vanaf hoeveel stemmen voor de grootste richting kaart, pagina twee en
+# werkvraag de niets-groep en die richting met hun tellingen tegenover elkaar
+# zetten (spec 2026-10-09 par. 3). Bij 1 tegen 1 leest "even veel mensen kozen"
+# als een uitspraak over een groep die er niet is; dan blijft de gewone
+# verdeeld-tekst staan.
+DIRECTION_NONE_TOP_COUNTS_MIN = 2
+
+
+def direction_none_at_least_top_shown(state: dict[str, Any]) -> bool:
+    """Toont het rapport de niets-groep tegenover de grootste richting? Eén
+    bron voor kaart, pagina twee en werkvraag: True in de divided-staat van
+    spec 2026-10-09 par. 3 zodra de grootste richting minstens
+    DIRECTION_NONE_TOP_COUNTS_MIN stemmen heeft."""
+    return (state["state"] == "divided" and bool(state.get("none_at_least_top"))
+            and state["change_top_n"] >= DIRECTION_NONE_TOP_COUNTS_MIN)
 
 # Vaste regel bij het onderwerp aansturing (amendement plan 3b Taak 13,
 # concept-sectie 6 punt 4, akkoord Lars): de mensen aan tafel zijn zelf de
@@ -888,9 +913,12 @@ def translation_question(scan_type: str, factor_key: str, state: dict[str, Any])
 
     `state` is de uitkomst van direction_state. Per staat:
       clear, plurality   de route-eigen vraag van de grootste route;
-      divided            de vaste verdeeld-zin, of None als de grootste
-                         veranderoptie *_other is of er geen tweede
-                         inhoudelijke route is gekozen;
+      divided            met de niets-groep minstens zo groot als de
+                         grootste richting (direction_none_at_least_top_shown,
+                         spec 2026-10-09 par. 3) de vaste zin daarvoor, ook
+                         bij één route; anders de vaste verdeeld-zin, of None
+                         als de grootste veranderoptie *_other is of er geen
+                         tweede inhoudelijke route is gekozen;
       split_none         de vaste split_none-zin;
       none_needed,
       too_few            None: er is geen route om op te kiezen.
@@ -913,6 +941,8 @@ def translation_question(scan_type: str, factor_key: str, state: dict[str, Any])
     if soort == "split_none":
         return work_question_variant("split_none", scan_type)
     # divided
+    if direction_none_at_least_top_shown(state):
+        return work_question_variant("none_at_least_top", scan_type)
     verander = [k for k, _c in state["ranked"] if not k.endswith("_none")]
     if not verander or verander[0].endswith("_other"):
         return None

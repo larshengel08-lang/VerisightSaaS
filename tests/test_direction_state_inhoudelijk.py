@@ -147,10 +147,16 @@ def test_vloer_op_inhoudelijke_stemmen():
 
 def test_plurality_op_inhoudelijke_stemmen():
     none_key, _o, (a, b, c, d, *_r) = _opties()
-    # n=12, change_n=8, a 4/8 = 0,5 met voorsprong 2 op b: clear (oud: 4/12 = 0,33 -> divided)
-    agg = _agg({a: 4, b: 2, c: 2, none_key: 4})
+    # n=11, change_n=8, a 4/8 = 0,5 met voorsprong 2 op b, niets 3 < 4: clear
+    # (oud: 4/11 = 0,36 -> divided). Deze invoer draagt het punt van de test
+    # sinds spec 2026-10-09 par. 3; de oude invoer met niets 4 staat eronder.
+    agg = _agg({a: 4, b: 2, c: 2, none_key: 3})
+    st = dp.direction_state(agg, FK, 6.5)
+    assert st["state"] == "clear" and st["top_key"] == a and st["change_n"] == 8
+    assert _oud(agg, FK, 6.5)["state"] == "divided"
+    # n=12, change_n=8, a 4/8 met voorsprong 2, maar niets 4 tegen a 4.
     # Spec 2026-10-09 par. 3: niets >= grootste richting is verdeeld.
-    # Niets 4 tegen a 4: verdeeld.
+    agg = _agg({a: 4, b: 2, c: 2, none_key: 4})
     assert dp.direction_state(agg, FK, 6.5)["state"] == "divided"
     assert _oud(agg, FK, 6.5)["state"] == "divided"
     # n=13, change_n=10, a 4/10 = 0,4 (< 0,5, >= 0,35), voorsprong 2: plurality (oud: 4/13 -> divided)

@@ -114,7 +114,9 @@ def test_vragen_spreken_het_mt_aan_en_niet_loep():
 def test_verdeeld_zinnen_zijn_vaste_teksten_zonder_citaat():
     """Amendement plan 3b Taak 13 (concept-sectie 7 punt 1): de vier zinnen zijn
     vast, zonder plaatshouders {a}/{b} en zonder de routeteksten te citeren."""
-    assert set(WORK_QUESTION_VARIANTS) == {"divided", "split_none"}
+    # Spec 2026-10-09 par. 3: derde vaste zin, voor een niets-groep die minstens
+    # zo groot is als de grootste richting.
+    assert set(WORK_QUESTION_VARIANTS) == {"divided", "split_none", "none_at_least_top"}
     for soort, per_scan in WORK_QUESTION_VARIANTS.items():
         assert set(per_scan) == set(SCANS), soort
         for scan, tekst in per_scan.items():
@@ -125,6 +127,7 @@ def test_verdeeld_zinnen_zijn_vaste_teksten_zonder_citaat():
     # Vertrek: de mensen zijn weg, dus niet "zijn verdeeld".
     assert "zijn verdeeld" not in WORK_QUESTION_VARIANTS["divided"]["exit"]
     assert "zijn verdeeld" not in WORK_QUESTION_VARIANTS["split_none"]["exit"]
+    assert "zijn verdeeld" not in WORK_QUESTION_VARIANTS["none_at_least_top"]["exit"]
 
 
 def test_ophaalfunctie_levert_voor_elke_route_en_scan_de_juiste_tekst():

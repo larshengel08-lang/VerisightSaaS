@@ -24,6 +24,9 @@ VRAGEN = {
 VARIANTEN = {
     "divided": {"retention": "Nu verdeeld, vaste zin?", "exit": "Toen verdeeld, vaste zin?"},
     "split_none": {"retention": "Nu vraagt een deel, vaste zin?", "exit": "Toen vroeg een deel, vaste zin?"},
+    # Spec 2026-10-09 par. 3: niets-groep minstens zo groot als de grootste richting.
+    "none_at_least_top": {"retention": "Nu zegt minstens zoveel niets, vaste zin?",
+                          "exit": "Toen zei minstens zoveel niets, vaste zin?"},
 }
 
 
@@ -88,9 +91,17 @@ def test_divided_met_anders_als_grootste_veranderoptie_geeft_geen_vraag(gevuld):
 
 
 def test_divided_zonder_tweede_inhoudelijke_route_geeft_geen_vraag(gevuld):
-    staat, vraag = _vraag("retention", "workload", {"wld_peaks": 3, "wld_none": 3, "wld_other": 2}, 6.0)
+    # Spec 2026-10-09 par. 3: niets >= grootste richting is verdeeld met een
+    # eigen vaste zin, ook bij één route. Deze invoer houdt niets (2) kleiner
+    # dan de route (3), zodat de test nog steeds de gewone verdeeld-tak toetst:
+    # peaks 3 van 5 veranderkeuzes, voorsprong 1 op Anders, dus divided.
+    staat, vraag = _vraag("retention", "workload", {"wld_peaks": 3, "wld_none": 2, "wld_other": 2}, 6.0)
     assert staat == "divided"
     assert vraag is None
+    # De oude invoer (niets 3 tegen peaks 3) krijgt nu de niets-variant.
+    staat, vraag = _vraag("retention", "workload", {"wld_peaks": 3, "wld_none": 3, "wld_other": 2}, 6.0)
+    assert staat == "divided"
+    assert vraag == VARIANTEN["none_at_least_top"]["retention"]
 
 
 def test_split_none_geeft_de_vaste_zin_zonder_citaat(gevuld):

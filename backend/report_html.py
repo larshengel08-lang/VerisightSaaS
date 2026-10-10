@@ -56,6 +56,7 @@ from backend.products.shared.deepening import (
     aggregate_deepening,
     aggregate_direction,
     direction_imperative,
+    direction_none_at_least_top_shown,
     direction_none_needed_view,
     direction_option_texts,
     direction_state,
@@ -3422,17 +3423,19 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
                f"({_score_str(factor_score)}) is dat verschil van inzicht zelf het "
                f"gesprek. Wat die andere groep vraagt: "
                f"{direction_imperative(scan_type, factor_key, st['top_key'])}")
-    elif st["none_at_least_top"]:
+    elif direction_none_at_least_top_shown(st):
         # Spec 2026-10-09 par. 3 (besluit Lars 9-10): de niets-groep is even
         # groot als of groter dan de grootste richting, dus geen richting. Beide
         # tellingen staan erbij, zodat de lezer ziet waarom er geen opdrachtvorm
-        # komt. De niets-tekst via _opt: per onderwerp, met de nette fout.
+        # komt. De niets-tekst via _opt: per onderwerp, met de nette fout. Bij
+        # een grootste richting van één stem valt dit terug op de gewone
+        # verdeeld-tekst hieronder (DIRECTION_NONE_TOP_COUNTS_MIN).
         head = DIRECTION_HEAD_DIVIDED
         niets = _opt(st["none_key"])
         top = st["change_top_n"]
-        vergelijking = ("even veel mensen kozen" if st["none_n"] == top
-                        else "meer mensen kozen")
-        verbinding = "als" if st["none_n"] == top else "dan"
+        vergelijking, verbinding = (("even veel mensen kozen", "als")
+                                    if st["none_n"] == top
+                                    else ("meer mensen kozen", "dan"))
         src = (f"De {n} {DIR_N_DIE_WIE} zijn verdeeld: {vergelijking} "
                f"‘{niets}’ ({st['none_n']}) {verbinding} de grootste richting "
                f"({top}).{_zonder_keuze_zin(st)}")
@@ -3601,10 +3604,14 @@ def _richtingen_weging(st: dict, scan_type: str, factor_key: str) -> str:
     kaart terug te vinden is.
 
     Leeg buiten `divided`, en bij minder dan twee inhoudelijke richtingen (dan
-    geeft translation_question ook geen verdeeld-zin). Een onbekende
+    geeft translation_question ook geen verdeeld-zin). Ook leeg als de
+    niets-groep minstens zo groot is als de grootste richting
+    (direction_none_at_least_top_shown, spec 2026-10-09 par. 3): de vertaalvraag
+    is dan de eigen niets-zin, die juist over die niets-groep gaat, en "is geen
+    richting en telt hier niet mee" zou hem direct tegenspreken. Een onbekende
     optiesleutel valt luid om, net als in _direction_card_cell.
     """
-    if st["state"] != "divided":
+    if st["state"] != "divided" or direction_none_at_least_top_shown(st):
         return ""
     n = st["n"]
     inhoud = [(k, c) for k, c in st["ranked"] if c > 0 and not k.endswith(("_none", "_other"))]
@@ -4151,7 +4158,7 @@ def _direction_p02_line(direction_agg: dict, factor_key: str | None, scan_type: 
                 f"hier niets hoeft, {_tel(st['top_n'], 'vraagt', 'vragen')} om "
                 f"‘{texts[st['top_key']]}’.")
     if st["state"] == "divided":
-        if st["none_at_least_top"]:
+        if direction_none_at_least_top_shown(st):
             # Spec 2026-10-09 par. 3: niets >= grootste richting; beide tellingen.
             # De defectzin erachter, net als op de kaart en in de clear- en
             # plurality-regels: pagina twee noemt tellingen, dus ook de rijen

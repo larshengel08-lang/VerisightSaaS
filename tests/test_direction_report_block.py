@@ -385,9 +385,7 @@ def test_split_none_beslist_op_de_getoonde_score_niet_op_de_rauwe():
                                     agg=SPLIT_NONE, scan_type="retention",
                                     factor_key="growth", n_total=45,
                                     factor_score=4.96)
-    # Spec 2026-10-07 par. 3: niets telt niet mee; was divided.
-    # Niet kwetsbaar, dus geen split_none; op de veranderstemmen is het 14 van
-    # de 17 met voorsprong 11 op gesprek: clear.
+    # Niet kwetsbaar (getoond 5.0), dus geen split_none.
     # Spec 2026-10-09 par. 3: niets >= grootste richting is verdeeld.
     # Niets 14 tegen 14: verdeeld, maar nog steeds niet split_none.
     assert 'class="dir-card dir-divided"' in net_niet
@@ -476,8 +474,7 @@ def test_new_states_stay_out_without_a_known_factor_score():
     html = _direction_card_cell("startpunt", label="Groeiperspectief", agg=SPLIT_NONE,
                                 scan_type="retention", factor_key="growth", n_total=45,
                                 factor_score=None)
-    # Spec 2026-10-07 par. 3: niets telt niet mee; was divided.
-    # Geen split_none zonder score; 14 van de 17 veranderstemmen is clear.
+    # Geen split_none zonder score.
     # Spec 2026-10-09 par. 3: niets >= grootste richting is verdeeld.
     # Niets 14 tegen 14: verdeeld, en nog steeds geen split_none.
     assert 'class="dir-card dir-divided"' in html

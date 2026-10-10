@@ -224,9 +224,7 @@ def test_factor_score_is_verplicht():
 
 def test_onbekende_score_geldt_nooit_als_kwetsbaar():
     agg = _agg({"grd_none": 14, "grd_visibility": 14, "grd_conversation": 3})
-    # Spec 2026-10-07 par. 3: niets telt niet mee; was divided.
-    # Geen split_none (onbekend is niet kwetsbaar); op de inhoudelijke stemmen
-    # is het 14 van 17 met voorsprong 11 op gesprek: clear.
+    # Geen split_none: onbekend is niet kwetsbaar.
     st = direction_state(agg, "growth", None)
     assert st["state"] != "split_none"
     # Spec 2026-10-09 par. 3: niets >= grootste richting is verdeeld.
