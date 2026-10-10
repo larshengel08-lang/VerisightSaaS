@@ -95,10 +95,9 @@ def test_r21_wie_en_wanneer_staan_een_keer_in_beide_hintvarianten():
         assert hint.strip().endswith("Wat vragen jullie deze afdeling zelf, wie doet dat, en wanneer?")
 
 
-VUL_TERUG = ("Vul op de besluitpagina ook de terugkoppeling in, ook als je het tweede punt "
-             "parkeert.")
-VUL_AFDELING = ("Vul op de besluitpagina ook de afdelingsafspraak en de terugkoppeling in, ook "
-                "als je het tweede punt parkeert.")
+VUL_TERUG = "Vul op de besluitpagina de terugkoppeling ook in als je het tweede punt parkeert."
+VUL_AFDELING = ("Vul op de besluitpagina de afdelingsafspraak en de terugkoppeling ook in als je "
+                "het tweede punt parkeert.")
 PARKEERZIN = ("Het tweede punt alleen als er tijd is, anders parkeren jullie het tot het "
               "vervolgmoment.")
 
@@ -211,7 +210,7 @@ def test_s3_eenheid_twee_afdelingen_op_het_startpunt():
     zin = _afd(_seg(("Sales", 7), ("Operations", 12)),
                {"Sales": {"factors": [("growth", 4.6, 7), ("leadership", 5.5, 7)], "omitted": 0},
                 "Operations": {"factors": [("growth", 4.8, 12)], "omitted": 0}})
-    assert zin.startswith(f"In twee afdelingen is {L('growth')} daar wel een kwetsbaar punt (pagina ")
+    assert zin.startswith(f"In twee afdelingen is {L('growth')} wel een kwetsbaar punt (pagina ")
     assert _href("afdelingen") in zin
 
 
@@ -219,7 +218,7 @@ def test_s3_eenheid_ander_laagste_onderwerp():
     zin = _afd(_seg(("Sales", 7), ("Operations", 12)),
                {"Sales": {"factors": [("growth", 4.6, 7)], "omitted": 0},
                 "Operations": {"factors": [("workload", 4.8, 12)], "omitted": 0}})
-    assert zin.startswith("In twee afdelingen scoort het laagste onderwerp daar wel kwetsbaar "
+    assert zin.startswith("In twee afdelingen scoort het eigen laagste onderwerp wel kwetsbaar "
                           "(pagina ")
 
 
@@ -227,7 +226,7 @@ def test_s3_eenheid_een_afdeling_enkelvoud():
     zin = _afd(_seg(("Sales", 7), ("Operations", 12)),
                {"Sales": {"factors": [("growth", 4.6, 7)], "omitted": 0},
                 "Operations": {"factors": [("growth", 5.4, 12)], "omitted": 0}})
-    assert zin.startswith(f"In één afdeling is {L('growth')} daar wel een kwetsbaar punt (pagina ")
+    assert zin.startswith(f"In één afdeling is {L('growth')} wel een kwetsbaar punt (pagina ")
 
 
 def test_s3_privacy_telt_alleen_wat_de_afdelingspagina_toont():
@@ -263,26 +262,26 @@ def test_s3_scenario_20_loep_start_gemengd():
     allemaal het startpunt."""
     t = _kern(_html("20_onboarding_sanity"))
     assert t.count("Geen onderwerp scoort kwetsbaar.") == 1
-    assert "In vier afdelingen scoort het laagste onderwerp daar wel kwetsbaar (pagina" in t
+    assert "In vier afdelingen scoort het eigen laagste onderwerp wel kwetsbaar (pagina" in t
 
 
 def test_s3_scenario_11_behoud_een_afdeling_op_het_startpunt():
     t = _kern(_html("11_groot_normaal"))
-    assert ("is het eerste gesprekspunt. In één afdeling is Groeiperspectief daar wel een "
+    assert ("is het eerste gesprekspunt. In één afdeling is Groeiperspectief wel een "
             "kwetsbaar punt (pagina") in t
 
 
 def test_s3_scenario_16b_respons_staart_blijft_bij_de_kernzin():
     t = _kern(_html("16b_respons_25"))
     assert ("een mogelijk eerste gesprekspunt (op basis van 45 van de 180 genodigden). In drie "
-            "afdelingen is Groeiperspectief daar wel een kwetsbaar punt (pagina") in t
+            "afdelingen is Groeiperspectief wel een kwetsbaar punt (pagina") in t
 
 
 def test_s3_scenario_18_zonder_afdelingen_geen_zin():
     t = _kern(_html("18_vlak_n12"))
     assert "Geen onderwerp scoort kwetsbaar." in t
-    assert "daar wel een kwetsbaar punt" not in t
-    assert "daar wel kwetsbaar" not in t
+    assert "wel een kwetsbaar punt (pagina" not in t
+    assert "laagste onderwerp wel kwetsbaar" not in t
 
 
 def test_s3_renderer_loep_vertrek():
@@ -294,8 +293,10 @@ def test_s3_renderer_loep_vertrek():
     html = _RENDERERS["exit"](data)
     t = _kern(html)
     assert "Geen onderwerp scoort kwetsbaar." in t
-    assert re.search(r"In één afdeling (is .+ daar wel een kwetsbaar punt|scoort het laagste "
-                     r"onderwerp daar wel kwetsbaar) \(pagina", t), t[:700]
+    # Startpunt Werkdruk en balans (laagste, workload 5.1); Sales toont dat
+    # onderwerp als laagste en kwetsbaar (4.4), Finance niet (5.6).
+    assert (f"is het eerste gesprekspunt. In één afdeling is {L('workload', 'exit')} wel een "
+            "kwetsbaar punt (pagina ). Organisatiecultuur is de meest genoemde hoofdreden") in t
 
 
 # ── S11: Loep Start verwijst naar de open antwoorden ─────────────────────────
@@ -317,10 +318,27 @@ def test_s11_start_leidraad_met_afdelingen_en_open_antwoorden():
 
 
 def test_s11_geen_dubbele_verwijzing_als_rij_vier_al_naar_de_open_antwoorden_wijst():
+    """Zonder afdelingen wijst rij 4 naar de open antwoorden; dan staat de
+    patroonvraag daar, en rij 3 verwijst niet nog eens."""
     blok = _leidraad_block("onboarding", has_segments=False, has_quotes=True, has_deepening=False)
     assert "Wat mensen zelf schreven" in blok
     assert blok.count(_href("toelichtingen")) == 1
     assert "Het waarom staat in de open antwoorden" not in blok
+    rij4 = re.search(r"<tr><td class=\"lt\">25-31 min</td>.*?</tr>", blok, re.S).group(0)
+    assert _plain(rij4).endswith("(pagina ). Vraag: " + PATROONVRAAG)
+    assert _plain(blok).count(PATROONVRAAG) == 1
+    assert "verdieping" not in _plain(blok).lower()
+
+
+def test_s11_met_afdelingen_staat_de_patroonvraag_een_keer_in_rij_drie():
+    blok = _leidraad_block("onboarding", has_segments=True, has_quotes=True, has_deepening=False)
+    assert _plain(blok).count(PATROONVRAAG) == 1
+    assert blok.count(_href("toelichtingen")) == 1
+
+
+def test_s11_behoud_krijgt_geen_patroonvraag_in_rij_vier():
+    blok = _leidraad_block("retention", has_segments=False, has_quotes=True, has_deepening=True)
+    assert PATROONVRAAG not in _plain(blok)
 
 
 def test_s11_zonder_open_antwoorden_geen_verwijzing():

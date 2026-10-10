@@ -589,6 +589,14 @@ def _p02_startpunt_zin(primary_label: str, *, tie_break_kind: str | None,
     return f"{kiest} {primary_label}."
 
 
+def _p02_geen_kwetsbaar_tak(shape: dict[str, Any]) -> bool:
+    """De tak van de kernzin die begint met "Geen onderwerp scoort kwetsbaar.":
+    een factorprofiel zonder kwetsbaar onderwerp dat niet vlak is (een vlak
+    profiel krijgt _p02_flat_sentence). Eén bron voor _p02_opening en
+    _p02_afdelingen_zin, zodat de afdelingszin (S3) alleen achter die zin staat."""
+    return bool(shape["n_factors"]) and shape["n_vulnerable"] == 0 and not shape["flat"]
+
+
 def _p02_opening(*, scan_type: str, shape: dict[str, Any], labels: dict[str, str],
                  primary_key: str | None,
                  tie_break_kind: str | None = None,
@@ -619,7 +627,7 @@ def _p02_opening(*, scan_type: str, shape: dict[str, Any], labels: dict[str, str
     aandacht: list[tuple[str, float]] = []
     if k == 0 and shape["flat"]:
         kop = _p02_flat_sentence(shape, labels)
-    elif k == 0:
+    elif _p02_geen_kwetsbaar_tak(shape):
         # De laagst scorende factor is NIET altijd het startpunt: bij Loep
         # Vertrek verschuift de vertrekredenweging de base, en binnen een
         # gelijkspelgroep kan richting, spreiding of verdieping de volgorde
@@ -725,8 +733,8 @@ def _p02_afdelingen_zin(*, shape: dict[str, Any], labels: dict[str, str],
     op de afdelingspagina het laagste onderwerp van een afdeling wel kwetsbaar
     scoort. Leeg in elke andere staat.
 
-    Alleen dezelfde tak als in _p02_opening (geen kwetsbaar onderwerp, geen
-    vlak profiel): alleen daar begint de kernzin met die zin.
+    Alleen in dezelfde tak als _p02_opening (_p02_geen_kwetsbaar_tak): alleen
+    daar begint de kernzin met die zin.
 
     Privacy: telt uitsluitend wat de afdelingspagina zelf laat zien. Een
     afdeling telt mee als ze een eigen rij in de tabel heeft (niet de
@@ -741,8 +749,8 @@ def _p02_afdelingen_zin(*, shape: dict[str, Any], labels: dict[str, str],
     het startpunt. Net als de vertrekredenzin wordt deze zin daarom pas na
     _p02_met_respons aangehaakt.
     """
-    if (not shape["n_factors"] or primary_key is None or shape["n_vulnerable"] != 0
-            or shape["flat"] or not segment_rows or not segment_factor_rows):
+    if (not _p02_geen_kwetsbaar_tak(shape) or primary_key is None
+            or not segment_rows or not segment_factor_rows):
         return ""
     eigen_rij = [r["department"] for r in segment_rows if not r.get("is_pooled", False)]
     laagste: list[str] = []
@@ -757,8 +765,8 @@ def _p02_afdelingen_zin(*, shape: dict[str, Any], labels: dict[str, str],
     pagina = "(pagina " + _pref(LEIDRAAD_ANKERS["afdelingen"]) + ")."
     if all(fk == primary_key for fk in laagste):
         return ("In " + aantal + " is " + _h(labels[primary_key])
-                + " daar wel een kwetsbaar punt " + pagina)
-    return "In " + aantal + " scoort het laagste onderwerp daar wel kwetsbaar " + pagina
+                + " wel een kwetsbaar punt " + pagina)
+    return "In " + aantal + " scoort het eigen laagste onderwerp wel kwetsbaar " + pagina
 
 
 def _getoond_verschil(laag: float, hoog: float) -> float:
@@ -1957,13 +1965,19 @@ def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
     p = _pref
     context = {"exit": "de vertrekredenen", "retention": "de blijfintentie en het werkbeeld",
                "onboarding": "de checkpointscore"}[scan_type]
+    # Wijst rij 4 naar de open antwoorden? Rij 3 van Loep Start (S11) leest
+    # deze vlag, zodat die twee rijen niet allebei naar die pagina verwijzen.
+    rij4_toelichtingen = not has_segments and has_quotes
     if has_segments:
         rij4 = ("Per afdeling", "Waar het per afdeling begint, en hoe dat zich verhoudt tot het "
                                 f"startpunt (pagina {p(A['afdelingen'])}).")
-    elif has_quotes:
+    elif rij4_toelichtingen:
         # V5: bij Loep Vertrek krijgt dit slot een vraag, anders lees je acht
         # minuten losse vertrekverhalen voor aan wie de vertrekkers kende.
-        vraag = " Vraag: " + PATROONVRAAG if scan_type == "exit" else ""
+        # S11: ook bij Loep Start, waar de open antwoorden de enige
+        # waarom-bron zijn; zo krijgt Start de patroonvraag altijd precies één
+        # keer, in rij 3 of hier.
+        vraag = " Vraag: " + PATROONVRAAG if scan_type in ("exit", "onboarding") else ""
         rij4 = ("Wat mensen zelf schreven",
                 f"De open toelichtingen, ongefilterd (pagina {p(A['toelichtingen'])})." + vraag)
     else:
@@ -1988,7 +2002,7 @@ def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
         vul = ("de afdelingsafspraak en de terugkoppeling" if has_afdeling_afspraak
                else "de terugkoppeling")
         tweede = ("Het tweede punt alleen als er tijd is, anders parkeren jullie het tot het "
-                  "vervolgmoment. Vul op de besluitpagina ook " + vul + " in, ook als je het "
+                  "vervolgmoment. Vul op de besluitpagina " + vul + " ook in als je het "
                   "tweede punt parkeert. " if has_tweede_punt else "")
         slot = (f"De werkvragen (pagina {p(A['werkvragen'])}). Bij het startpunt sla je "
                 "Herkennen over, dat deden jullie al; neem wat eronder staat. "
@@ -2001,7 +2015,7 @@ def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
         # S11 (polijstronde): de enige waarom-bron van Loep Start zijn de open
         # antwoorden. Alleen als die er zijn, en niet als rij 4 er al naar
         # verwijst (geen afdelingen): dan zou dezelfde pagina twee keer staan.
-        if has_quotes and has_segments:
+        if has_quotes and not rij4_toelichtingen:
             rij3 += (f" Het waarom staat in de open antwoorden (pagina {p(A['toelichtingen'])}); "
                      "vraag: " + PATROONVRAAG)
     elif has_deepening:
@@ -6704,7 +6718,7 @@ def render_exit_report_html(data: dict) -> str:
     # kennen ze niet en vallen terug op de tabel en op n (plan-regel 12).
     _er_top = data.get("exit_r_top") or data["exit_r_dist"]
     _er_given = data.get("exit_r_given")
-    _er_zin = ((" " + _vertrekreden_zin(_er_top, n, gegeven=_er_given))
+    _er_zin = (_vertrekreden_zin(_er_top, n, gegeven=_er_given)
                if (exec_line and er_top) else "")
     _cijfers_html = _p02_cijfers_block([
         _vertrekreden_cell(_er_top, n, gegeven=_er_given),
@@ -6834,7 +6848,7 @@ def render_exit_report_html(data: dict) -> str:
     s += _bestuurlijke_read(
         kernzin=exec_line,
         afdelingen_zin=_afd_zin,
-        kernzin_vervolg=_er_zin.strip(),
+        kernzin_vervolg=_er_zin,
         primary_label=primary_label,
         why_cells_html=why_cells,
         mgmt_q=br_mgmt_q,
