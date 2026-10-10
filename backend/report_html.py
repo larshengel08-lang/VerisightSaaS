@@ -816,8 +816,11 @@ WERKBEELD_UITLEG = ("De zes werkonderwerpen en de werkbeleving samen; "
 
 # De p.02-zin zonder factorprofiel, per bandsleutel van _band_key: dezelfde
 # woorden als de band onder de tegel, met het lidwoord dat de zin nodig heeft.
-_WERKBEELD_ZIN_BAND = {"HOOG": "een kwetsbaar punt", "MIDDEN": "een aandachtspunt",
-                       "LAAG": "relatief sterk"}
+# Uit _FACTOR_LABEL_WOORDEN, zodat de zin niet los van de bandlabels kan gaan
+# lopen (review Taak 3).
+_WERKBEELD_ZIN_BAND = {"HOOG": "een " + _FACTOR_LABEL_WOORDEN[0].lower(),
+                       "MIDDEN": "een " + _FACTOR_LABEL_WOORDEN[1].lower(),
+                       "LAAG": _FACTOR_LABEL_WOORDEN[2].lower()}
 
 
 def _werkbeeld_zin(signal: float) -> str:
