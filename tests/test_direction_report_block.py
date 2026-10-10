@@ -43,7 +43,9 @@ def test_clear_card_shows_imperative_source_and_chain():
             "8 van de 9 beantwoordden de vraag, 1 sloeg over.") in html
     assert "Niets, dit zit hier goed" in html
     assert "%" not in html
-    assert "Beperkte basis" not in html
+    # V10 (polijstronde taak 5): de richting rust op 7 veranderkeuzes, minder
+    # dan tien, dus staat de beperkte-basis-regel eronder.
+    assert "Beperkte basis" in html
     assert 'class="dir-card dir-clear"' in html
 
 

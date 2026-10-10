@@ -1910,6 +1910,21 @@ LEIDRAAD_ANKERS = {
     "werkvragen": "sec-werkvragen",    # blok "Zo maak je er een besluit van" (N1, plan 3b eindreview)
 }
 
+
+def _verdieping_anker(factor_key: str) -> str:
+    """Anker op het toelichtingsblok van één onderwerp (R7/V7, polijstronde
+    taak 5). De richtingkaart verwijst ernaar als zij een ander getal toont
+    dan die toelichting.
+
+    Op het blok zelf en niet op de kop van de verdiepingspagina: bij een
+    verdiepingsblok dat over een paginagrens mag lopen (.verd-los, _verd_los)
+    kan de toelichting een vel later staan dan de kop, en dan zou "de
+    toelichting op pagina N" een pagina te vroeg wijzen. Het leidraad-anker
+    (LEIDRAAD_ANKERS["verdieping"]) blijft op de kop van de eerste
+    verdiepingspagina; daar verwijst de leidraad naar het onderwerp als geheel.
+    """
+    return "sec-verdieping-" + factor_key
+
 # V1/V5 (koude leesronde 24-9): bij Loep Vertrek zitten er managers aan tafel
 # die weten wie er uit hun team vertrok. De werkvragen ("waar zie je dat bij
 # jullie terug") en de open antwoorden sturen dan naar personen, en nergens
@@ -3242,7 +3257,8 @@ def _beperkte_basis_note() -> str:
 
     Eén bron voor twee plekken: onder de verdiepingsverdeling (_deepening_block,
     onder MIN_AGGREGATE_N antwoorden) en onder een richtingkaart
-    (_direction_card_cell, bij DIRECTION_MIN_N of DIRECTION_CAVEAT_MAX_N). De twee
+    (_direction_card_cell, bij DIRECTION_MIN_N of DIRECTION_CAVEAT_MAX_N, en sinds
+    V10 ook bij een richting op minder dan MIN_AGGREGATE_N veranderkeuzes). De twee
     hadden dezelfde bedoeling in twee formuleringen ("Beperkte antwoordbasis" en
     "Beperkte basis") en de drempel erachter stond nergens uitgelegd. De opmaak
     zit in .dir-caveat in het stylesheet (codereview taak 9, bevinding 3).
@@ -3487,7 +3503,9 @@ def _direction_totals_line(direction_agg: dict, agenda_keys: list[str], scan_typ
 
 def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
                          factor_key: str, n_total: int,
-                         factor_score: float | None) -> str:
+                         factor_score: float | None,
+                         deep_answered: int | None = None,
+                         verdieping_page: bool = False) -> str:
     """Eén tabelcel (<td>) voor het startpunt of tweede punt, in de zes
     staten van spec par. 6.1 + ronde 2 par. 4. Keyword-only na role:
     scan_type/factor_key en label zijn anders aangrenzende gelijksoortige
@@ -3498,7 +3516,13 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
     gaat via _shown naar direction_state: de staat moet beslissen op de score
     die de lezer op de pagina ziet, niet op de rauwe waarde (B15). Anders zegt
     de kaart "op een onderwerp dat laag scoort (5.0/10)" naast een legenda die
-    kwetsbaar definieert als onder de 5,0."""
+    kwetsbaar definieert als onder de 5,0.
+
+    deep_answered en verdieping_page (R7/V7, polijstronde taak 5): het aantal
+    beantwoorde verdiepingsvragen over dit onderwerp, en of het
+    toelichtingsblok daarvan in dit rapport staat. Zijn beide er (en is het
+    aantal groter dan nul), dan legt een zin onder de keten uit dat dit een
+    andere telling is dan die bij de toelichting, met een paginaverwijzing."""
     st = direction_state(agg, factor_key, _shown(factor_score))
     texts = direction_option_texts(scan_type, factor_key)
     n = st["n"]
@@ -3605,16 +3629,49 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
 
     table = ""
     if st["state"] != "too_few":
+        # R22 (polijstronde): eerst de veranderopties op aantal (*_other
+        # meegerekend, want dat is ook een vraag om verandering), dan de
+        # niets-optie in een eigen rij onder een streep, ook bij 0 stemmen.
+        # Gesorteerd tussen de richtingen las "Niets" aan tafel als een van de
+        # richtingen, terwijl de methodiekpagina belooft dat het apart staat.
+        # De sleutel komt uit de optieset, niet uit st["none_key"]: die is
+        # None als niemand niets koos.
+        none_key = next((k for k in texts if k.endswith("_none")), None)
+        counts = dict(st["ranked"])
         row_htmls = []
         for k, c in st["ranked"]:
+            if k == none_key:
+                continue
             # Vaste tellingsvorm (B14): dezelfde "X van de Y (P%)" als de
             # bronregel erboven en de verdiepingstabel, in plaats van "70% (7)"
             # naast een kaal aantal onder de staffel.
             row_htmls.append(f'<tr><td class="iq">{_h(_opt(k))}</td>'
                              f'<td class="is">{_telling(c, n)}</td></tr>')
+        if none_key is not None:
+            row_htmls.append(f'<tr class="dir-niets"><td class="iq">{_h(_opt(none_key))}</td>'
+                             f'<td class="is">{_telling(counts.get(none_key, 0), n)}</td></tr>')
         rows = "".join(row_htmls)
         table = f'<table class="item-tbl dir-tbl">{rows}</table>'
-        if n <= DIRECTION_CAVEAT_MAX_N:
+        # R19 (polijstronde): de richtingen die niemand koos, in één regel, zodat
+        # de lezer ziet waaruit gekozen kon worden. Zonder de niets-optie (die
+        # heeft haar eigen rij) en zonder Anders (geen richting). Eén
+        # optieversie per scan in de opgeslagen antwoorden (de server weigert
+        # elke andere question_set_version), dus de huidige optieset is ook de
+        # set waaruit deze mensen kozen.
+        niet_gekozen = [k for k in texts
+                        if not k.endswith(("_none", "_other")) and counts.get(k, 0) == 0]
+        if niet_gekozen:
+            namen = _opsomming(["‘" + texts[k] + "’" for k in niet_gekozen])
+            table += '<div class="dir-unchosen">' + _h("Niet gekozen: " + namen + ".") + "</div>"
+        # V10 (polijstronde): het voorbehoud hangt aan de basis waar de
+        # richting echt op rust. Een richting (clear, plurality) rust op de
+        # veranderkeuzes; onder de tien is dat dezelfde beperkte basis als
+        # bij een verdieping onder de tien antwoorden op dezelfde pagina.
+        # DIRECTION_CAVEAT_MAX_N blijft de regel voor kaarten met drie of vier
+        # antwoorden.
+        weinig_veranderkeuzes = (st["state"] in ("clear", "plurality")
+                                 and st["change_n"] < MIN_AGGREGATE_N)
+        if n <= DIRECTION_CAVEAT_MAX_N or weinig_veranderkeuzes:
             table += _beperkte_basis_note()
         # B13, zelfde blok als onder de verdiepingsverdeling, en net als daar na
         # de beperkte-basis-regel (die hoort bij de verdeling). Bewust binnen
@@ -3627,14 +3684,32 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
     # hierboven bewust rauw (ongeescaped) opgebouwd, dus geen asymmetrie meer
     # tussen een vooraf geescapete head en een deels geescapete src.
     src_html = f'<div class="dir-src">{_h(src)}</div>' if src else ""
+    # R7/V7 (polijstronde): op dezelfde pagina staan twee tellingen die vaak
+    # hetzelfde getal dragen (bijv. twee keer 16): wie dit als eigen laagste
+    # onderwerp had (deze keten) en wie hier duidelijk laag antwoordde (de
+    # toelichting). "Telling", niet "groep": de twee groepen kunnen overlappen.
+    # De paginaverwijzing staat buiten _h(), anders wordt het anker tekst.
+    telling_html = ""
+    if verdieping_page and deep_answered:
+        wie = "die ene" if deep_answered == 1 else "de " + str(deep_answered)
+        telling_html = ('<div class="dir-chain dir-telling">'
+                        + _h("Dit is een andere telling dan " + wie
+                             + " bij de toelichting op pagina ")
+                        + _pref(_verdieping_anker(factor_key))
+                        + _h(": daar gaat het om wie op dit onderwerp duidelijk laag "
+                             "antwoordde, hier om wie dit als eigen laagste onderwerp had.")
+                        + "</div>")
     return (f'<td class="dir-card dir-{st["state"]}">'
             f'<div class="dir-role">{role_lbl}: {_h(label)}</div>'
             f'<div class="dir-head">{_h(head)}</div>{src_html}{table}'
-            f'<div class="dir-chain">{_h(_direction_chain(agg, n_total))}</div></td>')
+            f'<div class="dir-chain">{_h(_direction_chain(agg, n_total))}</div>'
+            f'{telling_html}</td>')
 
 
 def _wat_moet_gebeuren_block(ranked: list[dict], direction_agg: dict,
-                             scan_type: str, n_total: int) -> str:
+                             scan_type: str, n_total: int, *,
+                             deep_agg: dict | None = None,
+                             verdieping_fkeys: tuple[str, ...] | list[str] = ()) -> str:
     """Twee kaarten (startpunt + tweede punt) onder het raster. Leeg zonder
     richtingdata (campagne-gate zit in build_report_data).
 
@@ -3646,14 +3721,30 @@ def _wat_moet_gebeuren_block(ranked: list[dict], direction_agg: dict,
     stil een lege-kaart-tekst tonen. Om dezelfde reden wordt ook r["score"]
     direct geïndexeerd: die score bepaalt of de kaart de split_none-staat mag
     tonen (ronde 2 par. 4.3), en een rasterrij zonder score bestaat niet.
+
+    deep_agg en verdieping_fkeys (R7/V7, polijstronde taak 5): het
+    verdiepingsaggregaat en de onderwerpen met een verdiepingspagina in dit
+    rapport. Een kaart verwijst naar de toelichting van haar onderwerp alleen
+    als dat toelichtingsblok er echt staat: het onderwerp heeft een
+    verdiepingspagina en _deepening_block rendert (triggered).
     """
     if not direction_agg:
         return ""
+    deep_agg = deep_agg or {}
+
+    def _toelichting(fk: str) -> tuple[int | None, bool]:
+        d = deep_agg.get(fk)
+        if not d:
+            return None, False
+        return d.get("answered"), fk in verdieping_fkeys and bool(d.get("triggered"))
+
     cards = "".join(
         _direction_card_cell(r["agenda_role"], label=r["label"],
                              agg=direction_agg[r["key"]], scan_type=scan_type,
                              factor_key=r["key"], n_total=n_total,
-                             factor_score=r["score"])
+                             factor_score=r["score"],
+                             deep_answered=_toelichting(r["key"])[0],
+                             verdieping_page=_toelichting(r["key"])[1])
         for r in ranked if r["agenda_role"] in ("startpunt", "tweede"))
     if not cards:
         # Geen rasterrijen, dus geen startpunt om een richting aan te hangen
@@ -3751,11 +3842,10 @@ def _besluitvraag(state: str) -> str:
 
 def _richtingen_weging(st: dict, scan_type: str, factor_key: str) -> str:
     """R6/V9 (koude leesronde 24-9): in de staat `divided` zegt de vaste
-    verdeeld-zin "de meest gekozen richtingen" zonder ze te noemen, en de kaart
-    sorteert "Niets, dit zit hier goed" ertussen. Deze regel wijst de meest
-    gekozen richtingen aan via hun tellingen (hoogste en op één na hoogste; de
-    teksten staan op de kaart ‘Wat er moet gebeuren’) en weegt de niets-optie apart: die is
-    geen richting. Anders telt ook niet mee (geen opdrachtvorm); de regel zegt
+    verdeeld-zin "de meest gekozen richtingen" zonder ze te noemen. Deze regel
+    noemt de meest gekozen richtingen bij naam met hun aantal, voor de hoogste
+    en op één na hoogste telling (R22, polijstronde), en weegt de niets-optie
+    apart: die is geen richting (op de kaart staat zij in een eigen rij). Anders telt ook niet mee (geen opdrachtvorm); de regel zegt
     dat erbij zodra Anders even vaak of vaker gekozen is dan de laagste
     genoemde telling, anders blijft een even hoge rij op de kaart onverklaard.
 
@@ -3786,12 +3876,19 @@ def _richtingen_weging(st: dict, scan_type: str, factor_key: str) -> str:
         if k not in teksten:
             raise KeyError("richtingen_weging: onbekende optiesleutel " + repr(k)
                            + " voor " + repr(factor_key) + " (" + scan_type + ")")
-    # De teksten staan al op de kaart ‘Wat er moet gebeuren’ (met dezelfde
-    # tellingen); hier alleen de aantallen, zodat de regel kort blijft en het
-    # agendaslot niet naar een volgend vel duwt (controllerbesluit taak 10).
+    # R22 (polijstronde): de richtingen bij naam, gegroepeerd per aantal, voor
+    # de twee hoogste aantallen. Met alleen de aantallen ("die met 3 en 2
+    # stemmen") omvatte "2" aan tafel ook de niets-rij op de kaart. Kost dit
+    # het agendaslot een vel, dan is de terugvaloptie in Taak 11 (polijstronde)
+    # de namen weer weglaten; de niets-rij staat sindsdien apart op de kaart.
     hoogste = sorted({c for _k, c in inhoud}, reverse=True)[:2]
-    zin = ("De meest gekozen richtingen zijn die met " + _stemmen(hoogste)
-          + " op de kaart bij ‘Wat er moet gebeuren’.")
+    groepen = []
+    for aantal in hoogste:
+        namen = ["‘" + teksten[k] + "’" for k, c in inhoud if c == aantal]
+        groepen.append(namen[0] + " (" + str(aantal) + ")" if len(namen) == 1
+                       else _opsomming(namen) + " (elk " + str(aantal) + ")")
+    zin = ("De meest gekozen richtingen op de kaart bij ‘Wat er moet gebeuren’ zijn "
+           + " en ".join(groepen) + ".")
     # Anders alleen noemen als zijn telling tussen of naast de genoemde staat;
     # de kaart toont hem als "Anders, namelijk…" (content-guard in de tests).
     anders_telt = anders is not None and anders[1] >= min(hoogste)
@@ -3805,16 +3902,6 @@ def _richtingen_weging(st: dict, scan_type: str, factor_key: str) -> str:
     elif anders_telt:
         zin += " ‘Anders’ is geen richting en telt hier niet mee."
     return zin
-
-
-def _stemmen(tellingen: list[int]) -> str:
-    """"3 en 2 stemmen", "2 stemmen", "3 stemmen en 1 stem", "1 stem"."""
-    if len(tellingen) == 1:
-        return _tel(tellingen[0], "stem", "stemmen")
-    a, b = tellingen
-    if b == 1:
-        return _tel(a, "stem", "stemmen") + " en " + _tel(b, "stem", "stemmen")
-    return str(a) + " en " + _tel(b, "stem", "stemmen")
 
 
 def _werkvragen_block(ranked: list[dict], deep_agg: dict, direction_agg: dict,
@@ -4532,12 +4619,16 @@ def _toont_toelichtingen(deep_agg: dict) -> bool:
 
 
 def _deepening_block(agg: dict, scan_type: str, factor_key: str, n_total: int,
-                     met_regel: bool = True) -> str:
+                     met_regel: bool = True, anchor: str | None = None) -> str:
     """Toelichtingsblok onder een factor (spec 6.1 + 6.2), gestaffeld op n=answered.
 
     n_total is het aantal respondenten en is verplicht: de keten begint ermee
     (B14), en zonder dat getal staan de tellingen van dit blok los van de rest
-    van het rapport (H2)."""
+    van het rapport (H2).
+
+    anchor (R7/V7, polijstronde taak 5): id op het blok, zodat de richtingkaart
+    met een paginanummer naar deze toelichting kan verwijzen
+    (_verdieping_anker). De renderers geven het mee; elk onderwerp één keer."""
     if not agg.get("triggered"):
         return ""
     answered = agg.get("answered", 0)
@@ -4576,7 +4667,8 @@ def _deepening_block(agg: dict, scan_type: str, factor_key: str, n_total: int,
     # De "Daarnaast werden vooral X en Y genoemd"-samenvatting is bewust weg
     # (feedback 2026-07-16): de regel dupliceerde de tabel met aantallen die
     # er direct boven staat. secondary_counts blijft in de aggregatie bestaan.
-    return (f'<div class="card"><span class="eyebrow">Welke toelichting respondenten kozen</span>'
+    id_attr = f' id="{anchor}"' if anchor else ""
+    return (f'<div class="card"{id_attr}><span class="eyebrow">Welke toelichting respondenten kozen</span>'
             f'<p style="font-size:10px;margin:4px 0 0;">{_h(chain)}</p>'
             f'{body}</div>')
 
@@ -4740,8 +4832,10 @@ def _drempeltabel(scan_type: str, *, direction_active: bool = True,
              f"Lager dan de {_TELWOORD.get(MIN_SEGMENT_N, MIN_SEGMENT_N)} voor "
              "afdelingen, omdat niemand in de organisatie kan zien wie een onderwerp "
              f"als laagste had; bij {_TELWOORD.get(DIRECTION_MIN_N, DIRECTION_MIN_N)} of "
-             f"{_TELWOORD.get(DIRECTION_CAVEAT_MAX_N, DIRECTION_CAVEAT_MAX_N)} antwoorden "
-             "staat er een beperkte-basis-regel bij. Een duidelijke richting, of de "
+             f"{_TELWOORD.get(DIRECTION_CAVEAT_MAX_N, DIRECTION_CAVEAT_MAX_N)} antwoorden, "
+             f"en bij een richting die op minder dan {_tw(MIN_AGGREGATE_N)} "
+             "veranderkeuzes rust, staat er een beperkte-basis-regel bij. Een duidelijke "
+             "richting, of de "
              "richting van de grootste groep, noemt het rapport pas als minstens "
              f"{_TELWOORD.get(DIRECTION_MIN_N, DIRECTION_MIN_N)} mensen om verandering "
              "vroegen."))
@@ -6950,7 +7044,8 @@ def render_exit_report_html(data: dict) -> str:
         # NB: het statische "Eerste managementvraag"-navy-blok is hier bewust weg —
         # dezelfde template-vraag stond al op p.02 en 3x op de verdiepingspagina's;
         # de data (items + toelichting + quote) draagt deze pagina zelf.
-        deep_block = (_deepening_block(deep_agg[fk], "exit", fk, n, met_regel=_regel_nog[0])
+        deep_block = (_deepening_block(deep_agg[fk], "exit", fk, n, met_regel=_regel_nog[0],
+                                       anchor=_verdieping_anker(fk))
                       if fk in deep_agg else "")
         if deep_block:
             _regel_nog[0] = False
@@ -7035,7 +7130,8 @@ def render_exit_report_html(data: dict) -> str:
     # Het richtingblok wordt hier gebouwd, niet in _prioriteringsraster (bug
     # B3): alleen zo kan de methodiekpagina verderop beloven wat dit rapport
     # daadwerkelijk bevat in plaats van wat er aan data bestaat.
-    _dir_block = _wat_moet_gebeuren_block(_raster_rows, direction_agg, "exit", n)
+    _dir_block = _wat_moet_gebeuren_block(_raster_rows, direction_agg, "exit", n,
+                                          deep_agg=deep_agg, verdieping_fkeys=priority_fkeys)
     s += _prioriteringsraster(
         ranked=_raster_rows,
         scan_type="exit",
@@ -7383,7 +7479,8 @@ def render_retention_report_html(data: dict) -> str:
         # Statisch "Eerste managementvraag"-blok bewust verwijderd (template-taal;
         # stond ook al op p.02) — het toelichtingsblok draagt de duiding.
         # ── Toelichtingsblok verdiepingsvragen (spec 6.2) ──
-        deep_block = (_deepening_block(deep_agg[fk], ST, fk, n, met_regel=_regel_nog[0])
+        deep_block = (_deepening_block(deep_agg[fk], ST, fk, n, met_regel=_regel_nog[0],
+                                       anchor=_verdieping_anker(fk))
                       if fk in deep_agg else "")
         if deep_block:
             _regel_nog[0] = False
@@ -7461,7 +7558,8 @@ def render_retention_report_html(data: dict) -> str:
     # vóór de appendix) ────────────────────────────────────────────────────────
     _startpunt_fk = _raster_rows[0]["key"] if _raster_rows else None
     # Zie render_exit_report_html: blok eerst, methodiekpagina gate erop (B3).
-    _dir_block = _wat_moet_gebeuren_block(_raster_rows, direction_agg, ST, n)
+    _dir_block = _wat_moet_gebeuren_block(_raster_rows, direction_agg, ST, n,
+                                          deep_agg=deep_agg, verdieping_fkeys=priority_fkeys)
     s += _prioriteringsraster(
         ranked=_raster_rows,
         scan_type=ST,

@@ -11,7 +11,9 @@ Zonder niets-stemmen (en zonder rijen zonder keuze) blijft elke zin byte-gelijk:
 BASELINE hieronder is de uitvoer van HEAD (a8db33a3) vóór deze wijziging,
 letterlijk overgenomen; de */p02-regels zijn bijgewerkt na polijstronde taak 2
 (R18: geen percentage op pagina twee; bij de grootste groep eerst de opdracht,
-dan de noemer in een slotzin).
+dan de noemer in een slotzin). Sinds polijstronde taak 5 komen op de kaart de
+niets-rij, de niet-gekozen-regel en zo nodig de beperkte-basis-regel erbij
+(TOEVOEGINGEN); de test haalt die eruit en vergelijkt de rest byte voor byte.
 """
 import itertools
 import logging
@@ -91,11 +93,42 @@ BASE_CASES = {
 }
 
 
+# Polijstronde taak 5 voegt aan de kaart toe: de niets-rij onder de richtingen
+# (R22, ook bij 0 stemmen), de regel met de niet gekozen richtingen (R19) en de
+# beperkte-basis-regel als de richting op minder dan tien veranderkeuzes rust
+# (V10). Per geval: de telling in de niets-rij, de niet gekozen opties en of de
+# beperkte-basis-regel erbij komt.
+TOEVOEGINGEN = {
+    "clear0": ("0 van de 8", ["grd_conversation", "grd_followthrough", "grd_criteria",
+                              "grd_nextstep"], True),
+    "plur0": ("0 van de 7", ["grd_nextstep"], True),
+    "plur0big": ("0 van de 20 (0%)", ["grd_followthrough", "grd_nextstep"], False),
+}
+
+
+def _zonder_toevoegingen(html):
+    html = re.sub(r'<tr class="dir-niets">.*?</tr>', "", html, count=1)
+    html = re.sub(r'<div class="dir-unchosen">.*?</div>', "", html, count=1)
+    return re.sub(r'<p class="dir-caveat">.*?</p>', "", html, count=1)
+
+
 @pytest.mark.parametrize("scan_type", ["retention", "exit"])
 @pytest.mark.parametrize("name", sorted(BASE_CASES))
 def test_zonder_niets_byte_gelijk(scan_type, name):
+    """Zonder niets-stemmen: alleen de niets-rij met 0, de niet-gekozen-regel
+    en (V10) de beperkte-basis-regel erbij; de rest van de kaart en pagina
+    twee blijven byte-gelijk aan BASELINE."""
     a = BASE_CASES[name]
-    assert card(a, scan_type) == BASELINE[f"{scan_type}/{name}/card"]
+    html = card(a, scan_type)
+    telling, niet_gekozen, voorbehoud = TOEVOEGINGEN[name]
+    teksten = direction_option_texts(scan_type, "growth")
+    assert (f'<tr class="dir-niets"><td class="iq">{NIETS[scan_type]}</td>'
+            f'<td class="is">{telling}</td></tr></table>') in html
+    namen = [f"‘{teksten[k]}’" for k in niet_gekozen]
+    lijst = namen[0] if len(namen) == 1 else ", ".join(namen[:-1]) + " en " + namen[-1]
+    assert f'<div class="dir-unchosen">Niet gekozen: {lijst}.</div>' in html
+    assert ('<p class="dir-caveat">Beperkte basis' in html) is voorbehoud
+    assert _zonder_toevoegingen(html) == BASELINE[f"{scan_type}/{name}/card"]
     assert p02(a, scan_type) == BASELINE[f"{scan_type}/{name}/p02"]
 
 

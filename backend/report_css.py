@@ -367,6 +367,10 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .dir-head { font-size: 14px; font-weight: 700; line-height: 1.3; color: """ + NAVY + r"""; margin-bottom: 6px; }
 .dir-src { font-size: 10px; color: #374151; margin-bottom: 8px; }
 .dir-tbl td { font-size: 9.5px; padding: 5px 6px; }
+/* R22 (polijstronde): de niets-optie onder een streep, apart van de richtingen. */
+.dir-tbl tr.dir-niets td { border-top: 1px solid #CBD5E1; padding-top: 5px; }
+/* R19 (polijstronde): de richtingen die niemand koos, in één regel onder de tabel. */
+.dir-unchosen { font-size: 10px; color: #64748B; margin-top: 4px; line-height: 1.4; }
 /* De scorekolom draagt sinds B14 de volle tellingsvorm ("27 van de 62 (44%)",
    ongeveer 91px): in een halve kaart geeft auto-layout die kolom ongeveer 59px,
    waardoor de telling over twee regels viel en niet meer als één getal las.
@@ -375,6 +379,9 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .dir-tbl .is { width: 34%; white-space: nowrap; }
 .dir-caveat { font-size: 10px; color: #92400E; margin: 4px 0 0; }
 .dir-chain { font-family: 'JetBrains Mono', monospace; font-size: 8.5px; color: """ + STEEL + r"""; margin-top: 8px; }
+/* R7/V7 (polijstronde): de zin die de keten van de toelichting onderscheidt,
+   direct onder de keten. */
+.dir-chain.dir-telling { margin-top: 3px; }
 /* De sluitende totaalregel boven de kaarten (B14, H19) verantwoordt álle
    richtingantwoorden en is daarmee een eerlijkheidsregel, niet een voetnoot in
    een kaart: leesbare 10px in de gewone letter, zoals .dir-intro erboven. De
@@ -384,6 +391,12 @@ p  { margin-bottom: 6px; font-size: 11px; }
   /* Niet splitsen over een paginagrens: in stresstest 06 liepen twee regels van
      deze noemerzin als wees boven de gespreksagenda door (hoofdsessie 22-9). */
   break-inside: avoid; page-break-inside: avoid; }
+/* R23 (polijstronde): de kop van het blok (eyebrow, uitleg, totaalregel) blijft
+   bij de kaarten, zodat de kaarten nooit zonder kop bovenaan een vel beginnen.
+   Niet via break-inside op .dir-block: zie de toelichting daar (scenario 14).
+   De eyebrow is een inline span; break-before op de uitleg houdt hem erbij. */
+.dir-intro, .dir-totals { break-after: avoid; page-break-after: avoid; }
+.dir-block .dir-intro { break-before: avoid; page-break-before: avoid; }
 
 /* ── Werkvragen "Zo maak je er een besluit van" (plan 3b) ── */
 /* Hefboom E (fixronde leesronde, Taak 10): de weging onder de verdeeld-zin maakte
