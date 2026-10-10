@@ -1190,8 +1190,8 @@ def direction_state(agg: dict[str, Any], factor_key: str,
     par. 4, spec 2026-10-07 par. 3).
 
     Volgorde: too_few -> none_needed -> (divided zonder veranderoptie, of met
-    *_other als grootste veranderoptie) -> split_none -> clear -> plurality ->
-    divided.
+    *_other als grootste veranderoptie) -> split_none -> divided als niets >=
+    grootste richting -> clear -> plurality -> divided.
 
     - too_few: minder dan DIRECTION_MIN_N beantwoorders (n = agg["answered"]).
     - none_needed: de niets-optie heeft een strikte meerderheid van n (B11:
@@ -1201,6 +1201,11 @@ def direction_state(agg: dict[str, Any], factor_key: str,
       veranderoptie min één. Staat vóór clear, zodat een groep die half niets
       en half één route kiest op een laag onderwerp nooit als eenduidige
       richting leest.
+    - divided als niets >= grootste richting (spec 2026-10-09 par. 3, besluit
+      Lars 9-10): heeft de niets-optie minstens evenveel stemmen als de
+      grootste veranderoptie, dan is er geen richting aan te wijzen, ook niet
+      boven DIRECTION_SPLIT_NONE_MAX_SCORE of bij een onbekende score. Zet
+      none_at_least_top op True en change_top_n op de grootste veranderoptie.
     - clear: minstens DIRECTION_MIN_N veranderkeuzes, de grootste route heeft
       minstens de helft daarvan en TOP_CHOICE_MIN_LEAD voorsprong op de
       tweede veranderoptie.
@@ -1225,7 +1230,10 @@ def direction_state(agg: dict[str, Any], factor_key: str,
     score gaat via direction_none_needed_view.
 
     Retourneert altijd {state, n, change_n, top_key, top_n, second_n, none_n,
-    none_key, ranked}. change_n is 0 in too_few (niet berekend, net als top_n).
+    none_key, ranked, none_at_least_top, change_top_n}. change_n is 0 in too_few
+    (niet berekend, net als top_n). none_at_least_top is alleen True in de
+    divided-staat van spec 2026-10-09 par. 3; change_top_n is dan de grootste
+    veranderoptie en anders 0.
     In clear en plurality wijzen top_key/top_n/second_n naar de veranderopties
     (second_n = tweede veranderoptie, 0 als die er niet is); in split_none naar
     de grootste veranderoptie met second_n 0; in none_needed naar de
@@ -1241,7 +1249,8 @@ def direction_state(agg: dict[str, Any], factor_key: str,
             f"({gekozen}) voor {factor_key!r}: kapotte telling")
     ranked = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
     base: dict[str, Any] = {"n": n, "change_n": 0, "ranked": ranked, "top_key": None,
-                            "top_n": 0, "second_n": 0, "none_n": 0, "none_key": None}
+                            "top_n": 0, "second_n": 0, "none_n": 0, "none_key": None,
+                            "none_at_least_top": False, "change_top_n": 0}
     if n < DIRECTION_MIN_N:
         return {**base, "state": "too_few"}
     if not counts:
@@ -1286,6 +1295,15 @@ def direction_state(agg: dict[str, Any], factor_key: str,
         # zelf wijzen.
         return {**base, "state": "split_none",
                 "top_key": change_key, "top_n": change_top, "second_n": 0}
+    # Spec 2026-10-09 par. 3 (besluit Lars 9-10): een richting heet pas
+    # duidelijk, of de grootste groep, als hij meer stemmen heeft dan de
+    # niets-optie. Is de niets-groep even groot of groter, dan is het onderwerp
+    # verdeeld. Onder DIRECTION_SPLIT_NONE_MAX_SCORE heeft split_none dit
+    # hierboven al strenger afgevangen (daar ook bij één stem verschil); deze
+    # regel werkt dus vanaf die score en bij een onbekende score.
+    if none_key is not None and none_n >= change_top:
+        return {**base, "state": "divided", "none_at_least_top": True,
+                "change_top_n": change_top}
     # Vloer, aandeel en voorsprong één keer, voor clear en plurality samen. De
     # vloer geldt voor beide: zonder hem zou plurality een meerderheid (bijv.
     # 2 van de 2) opvangen die alleen door de vloer geen clear werd. De

@@ -89,7 +89,12 @@ def test_niet_kwetsbaar_geeft_op_beide_plekken_geen_split_none_maar_de_route(htm
     # Niets 5 van 12, dus change_n = 7: piekmomenten 5 van 7 met voorsprong 3
     # op scope is clear. Op p.02 dus de clear-regel, niet de split_none-regel;
     # de exacte tellingsvorm pint Taak 7, hier alleen welke regel het is.
+    # Spec 2026-10-09 par. 3: niets >= grootste richting is verdeeld. Niets 5
+    # tegen piekmomenten 5: geen route meer, wel beide tellingen op p.02, en
+    # nog steeds niet de split_none-regel.
     line = _p02_direction_line(html)
     assert "zijn hierover verdeeld" not in line
     assert "Zie de gespreksagenda." not in line
-    assert line.startswith("Wat er moet gebeuren volgens ")
+    assert line.startswith("Over wat hier moet gebeuren zijn de 12 ")
+    assert line.endswith("verdeeld: 5 vinden dat hier niets hoeft, tegen 5 voor de "
+                         "grootste richting.")

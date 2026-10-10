@@ -103,6 +103,10 @@ CLEAR_NIETS = agg(8, {"grd_visibility": 4, "grd_time": 1, "grd_none": 3})
 # zonder "van wie om verandering vroeg" zou letterlijk onwaar zijn.
 PLUR_NIETS = agg(20, {"grd_none": 8, "grd_visibility": 5, "grd_conversation": 3,
                       "grd_time": 2, "grd_criteria": 2})
+# Spec 2026-10-09 par. 3: met niets 8 > route 5 is PLUR_NIETS nu verdeeld. Deze
+# invoer bewijst de plurality-met-niets: niets (4) kleiner dan de route (5).
+PLUR_NIETS_KLEIN = agg(16, {"grd_none": 4, "grd_visibility": 5, "grd_conversation": 3,
+                            "grd_time": 2, "grd_criteria": 2})
 
 
 @pytest.mark.parametrize("scan_type", ["retention", "exit"])
@@ -124,21 +128,41 @@ def test_clear_p02_noemt_noemer_en_niets(scan_type):
 @pytest.mark.parametrize("scan_type", ["retention", "exit"])
 def test_plurality_kaart_met_niets(scan_type):
     html = card(PLUR_NIETS, scan_type)
+    # Spec 2026-10-09 par. 3: niets >= grootste richting is verdeeld.
+    assert "dir-card dir-divided" in html
+    assert head(html) == "Geen eenduidige richting."
+    assert src(html) == (
+        "De 20 die dit het laagst scoorden en de vraag beantwoordden zijn verdeeld: "
+        f"meer mensen kozen ‘{NIETS[scan_type]}’ (8) dan de grootste richting (5).")
+
+
+@pytest.mark.parametrize("scan_type", ["retention", "exit"])
+def test_plurality_p02_met_niets(scan_type):
+    # Spec 2026-10-09 par. 3: niets >= grootste richting is verdeeld.
+    assert p02(PLUR_NIETS, scan_type) == (
+        "Over wat hier moet gebeuren zijn de 20 die dit het laagst scoorden en de vraag "
+        "beantwoordden verdeeld: 8 vinden dat hier niets hoeft, tegen 5 voor de "
+        "grootste richting.")
+
+
+@pytest.mark.parametrize("scan_type", ["retention", "exit"])
+def test_plurality_kaart_met_niets_kleiner_dan_de_route(scan_type):
+    html = card(PLUR_NIETS_KLEIN, scan_type)
     assert "dir-card dir-plurality" in html
     assert head(html) == ("Van wie om verandering vroeg, kiest de grootste groep "
                           f"‘{OPT_VIS[scan_type]}’, zonder meerderheid.")
     assert src(html) == (
         "5 van de 12 (42%) die om verandering vroegen, kozen die richting; 3 kozen "
-        f"‘Een concreter gesprek over mijn ontwikkeling’; 8 kozen ‘{NIETS[scan_type]}’. "
-        f"Die 20 {NOEMER} Wat er volgens de grootste groep moet gebeuren: {IMP_VIS}")
+        f"‘Een concreter gesprek over mijn ontwikkeling’; 4 kozen ‘{NIETS[scan_type]}’. "
+        f"Die 16 {NOEMER} Wat er volgens de grootste groep moet gebeuren: {IMP_VIS}")
 
 
 @pytest.mark.parametrize("scan_type", ["retention", "exit"])
-def test_plurality_p02_met_niets(scan_type):
-    assert p02(PLUR_NIETS, scan_type) == (
+def test_plurality_p02_met_niets_kleiner_dan_de_route(scan_type):
+    assert p02(PLUR_NIETS_KLEIN, scan_type) == (
         "Wat er moet gebeuren volgens de grootste groep van wie dit het laagst scoorde "
         f"en om verandering vroeg, 5 van de 12 (42%), zonder meerderheid: {IMP_VIS} "
-        "8 vinden dat hier niets hoeft.")
+        "4 vinden dat hier niets hoeft.")
 
 
 def test_enkelvoud_bij_een_niets_stem():
@@ -171,13 +195,17 @@ def test_rijen_zonder_keuze_krijgen_een_zin_en_alles_telt_op():
     # Eén rij zonder keuze: zelfde zin, geen enkelvoudsprobleem.
     d = agg(9, {"grd_visibility": 4, "grd_time": 1, "grd_none": 3})
     assert src(card(d, "retention")).endswith("Bij 1 van hen is geen keuze vastgelegd.")
-    # Plurality: de slotzin hoort bij de noemer, vóór de opdrachtvorm.
+    # Spec 2026-10-09 par. 3: niets >= grootste richting is verdeeld. De
+    # defectzin staat ook daar direct achter de tellingen op de kaart.
     c = agg(23, {"grd_none": 8, "grd_visibility": 5, "grd_conversation": 3,
                  "grd_time": 2, "grd_criteria": 2})
-    assert (f"Die 23 {NOEMER} Bij 3 van hen is geen keuze vastgelegd. Wat er volgens "
-            "de grootste groep") in src(card(c, "retention"))
+    assert src(card(c, "retention")) == (
+        "De 23 die dit het laagst scoorden en de vraag beantwoordden zijn verdeeld: "
+        "meer mensen kozen ‘Niets, dit zit hier goed’ (8) dan de grootste richting (5). "
+        "Bij 3 van hen is geen keuze vastgelegd.")
     assert p02(c, "retention").endswith(
-        "8 vinden dat hier niets hoeft. Bij 3 antwoorden is geen keuze vastgelegd.")
+        "8 vinden dat hier niets hoeft, tegen 5 voor de grootste richting. "
+        "Bij 3 antwoorden is geen keuze vastgelegd.")
 
 
 def test_plurality_met_rijen_zonder_keuze_en_zonder_niets():
@@ -253,7 +281,7 @@ def test_getallen_tellen_op_in_clear_en_plurality():
 
 def _alle_teksten():
     for scan_type in ("retention", "exit"):
-        for a in [*BASE_CASES.values(), CLEAR_NIETS, PLUR_NIETS,
+        for a in [*BASE_CASES.values(), CLEAR_NIETS, PLUR_NIETS, PLUR_NIETS_KLEIN,
                   agg(10, {"grd_visibility": 4, "grd_time": 1, "grd_none": 3}),
                   agg(8, {"grd_visibility": 3}),
                   agg(9, {"grd_visibility": 4, "grd_time": 1, "grd_none": 3}),
@@ -287,12 +315,14 @@ def test_niets_tekst_gelijk_over_factoren(scan_type):
 @pytest.mark.parametrize("scan_type", ["retention", "exit"])
 def test_methodiek_legt_uit_dat_niets_geen_richting_is(scan_type):
     html = _trust_page(scan_type, direction_active=True)
+    # Spec 2026-10-09 par. 3: niets >= grootste richting is verdeeld.
     zin = (f"Wie ‘{NIETS[scan_type]}’ koos, telt niet mee bij de vraag welke richting "
-           "de grootste is; hoeveel mensen dat kozen, staat er apart bij. Kiest meer dan "
+           "de grootste is; hoeveel mensen dat kozen, staat er apart bij. Een richting "
+           "heet pas duidelijk, of de grootste groep, als hij meer stemmen heeft dan "
+           f"‘{NIETS[scan_type]}’; anders heet het onderwerp verdeeld. Kiest meer dan "
            "de helft niets, dan staat er dat hier volgens de meesten niets hoeft. Scoort "
-           "het onderwerp onder de 5,0 en is de groep die niets koos even groot als de "
-           "grootste richting, groter, of maar één kleiner, dan heet het onderwerp "
-           "verdeeld.")
+           "het onderwerp onder de 5,0, dan heet het ook verdeeld als de grootste "
+           "richting maar één stem meer heeft dan de niets-groep.")
     assert f"geen advies van Loep. {zin}" in html
 
 

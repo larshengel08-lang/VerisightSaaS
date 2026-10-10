@@ -229,7 +229,9 @@ def test_onbekende_score_geldt_nooit_als_kwetsbaar():
     # is het 14 van 17 met voorsprong 11 op gesprek: clear.
     st = direction_state(agg, "growth", None)
     assert st["state"] != "split_none"
-    assert st["state"] == "clear"
+    # Spec 2026-10-09 par. 3: niets >= grootste richting is verdeeld.
+    # Niets 14 tegen visibility 14: verdeeld, en nog steeds geen split_none.
+    assert st["state"] == "divided"
 
 
 def test_lege_counts_boven_de_vloer_blijft_fail_loud():

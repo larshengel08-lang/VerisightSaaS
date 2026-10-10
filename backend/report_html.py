@@ -3422,6 +3422,20 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
                f"({_score_str(factor_score)}) is dat verschil van inzicht zelf het "
                f"gesprek. Wat die andere groep vraagt: "
                f"{direction_imperative(scan_type, factor_key, st['top_key'])}")
+    elif st["none_at_least_top"]:
+        # Spec 2026-10-09 par. 3 (besluit Lars 9-10): de niets-groep is even
+        # groot als of groter dan de grootste richting, dus geen richting. Beide
+        # tellingen staan erbij, zodat de lezer ziet waarom er geen opdrachtvorm
+        # komt. De niets-tekst via _opt: per onderwerp, met de nette fout.
+        head = DIRECTION_HEAD_DIVIDED
+        niets = _opt(st["none_key"])
+        top = st["change_top_n"]
+        vergelijking = ("even veel mensen kozen" if st["none_n"] == top
+                        else "meer mensen kozen")
+        verbinding = "als" if st["none_n"] == top else "dan"
+        src = (f"De {n} {DIR_N_DIE_WIE} zijn verdeeld: {vergelijking} "
+               f"‘{niets}’ ({st['none_n']}) {verbinding} de grootste richting "
+               f"({top}).{_zonder_keuze_zin(st)}")
     else:
         head = DIRECTION_HEAD_DIVIDED
         src = f"De {n} {DIR_N_DIE_WIE} kozen verschillend.{_zonder_keuze_zin(st)}"
@@ -4137,6 +4151,15 @@ def _direction_p02_line(direction_agg: dict, factor_key: str | None, scan_type: 
                 f"hier niets hoeft, {_tel(st['top_n'], 'vraagt', 'vragen')} om "
                 f"‘{texts[st['top_key']]}’.")
     if st["state"] == "divided":
+        if st["none_at_least_top"]:
+            # Spec 2026-10-09 par. 3: niets >= grootste richting; beide tellingen.
+            # De defectzin erachter, net als op de kaart en in de clear- en
+            # plurality-regels: pagina twee noemt tellingen, dus ook de rijen
+            # zonder vastgelegde keuze.
+            return (f"Over wat hier moet gebeuren zijn de {n} {DIR_N_DIE_WIE} verdeeld: "
+                    f"{_tel(st['none_n'], 'vindt', 'vinden')} dat hier niets hoeft, "
+                    f"tegen {st['change_top_n']} voor de grootste richting."
+                    + _zonder_keuze_p02(st))
         return (f"Over wat hier moet gebeuren zijn de {n} {DIR_N_DIE_WIE} "
                 "verdeeld. Zie de gespreksagenda.")
     if st["state"] == "none_needed":
@@ -4694,11 +4717,14 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "",
              f"geeft de keuze van die respondenten weer, geen advies van Loep. "
              f"Wie ‘{_niets_tekst(scan_type)}’ koos, telt niet mee bij de vraag welke "
              "richting de grootste is; hoeveel mensen dat kozen, staat er apart bij. "
+             "Een richting heet pas duidelijk, of de grootste groep, als hij meer "
+             f"stemmen heeft dan ‘{_niets_tekst(scan_type)}’; anders heet het "
+             "onderwerp verdeeld. "
              "Kiest meer dan de helft niets, dan staat er dat hier volgens de meesten "
              "niets hoeft. Scoort het onderwerp onder de "
-             f"{_komma(DIRECTION_SPLIT_NONE_MAX_SCORE)} en is de groep die niets koos "
-             "even groot als de grootste richting, "
-             "groter, of maar één kleiner, dan heet het onderwerp verdeeld. De drempel van "
+             f"{_komma(DIRECTION_SPLIT_NONE_MAX_SCORE)}, dan heet het ook verdeeld als "
+             "de grootste richting maar één stem meer heeft dan de niets-groep. "
+             "De drempel van "
              f"{DIRECTION_MIN_N} staat in de drempeltabel op pagina",
              # Derde element: HTML die NIET door _h() gaat. "in de drempeltabel
              # hierboven" was een positieclaim die al breekt zodra de

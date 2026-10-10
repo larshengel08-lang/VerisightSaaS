@@ -83,7 +83,11 @@ def test_half_none_card_prints_no_do_nothing_imperative():
     assert "Geen eenduidige richting." in html
     assert "Hier hoeft volgens de meeste betrokkenen niets." not in html
     assert "Bespreek of dit dan het startpunt moet zijn." not in html
-    assert "De 4 die dit het laagst scoorden en de vraag beantwoordden kozen verschillend." in html
+    # Spec 2026-10-09 par. 3: niets >= grootste richting is verdeeld.
+    # Niets 2 tegen piekmomenten 2: de kaart noemt beide tellingen.
+    assert ("De 4 die dit het laagst scoorden en de vraag beantwoordden zijn verdeeld: "
+            "even veel mensen kozen ‘Niets, dit zit hier goed’ (2) als de grootste "
+            "richting (2).") in html
     # De verdeling blijft zichtbaar, inclusief de niets-optie.
     assert "Niets, dit zit hier goed" in html
     assert "Beperkte basis" in html
@@ -93,8 +97,10 @@ def test_half_none_p02_line_makes_no_majority_claim():
     half = _agg(4, {"wld_none": 2, "wld_peaks": 2}, skipped=0)
     line = _direction_p02_line({"workload": half}, "workload", "retention",
                                factor_score=5.4)
+    # Spec 2026-10-09 par. 3: niets >= grootste richting is verdeeld.
     assert line == ("Over wat hier moet gebeuren zijn de 4 die dit het laagst "
-                    "scoorden en de vraag beantwoordden verdeeld. Zie de gespreksagenda.")
+                    "scoorden en de vraag beantwoordden verdeeld: 2 vinden dat hier "
+                    "niets hoeft, tegen 2 voor de grootste richting.")
     assert "hier hoeft niets" not in line
 
 
@@ -382,7 +388,9 @@ def test_split_none_beslist_op_de_getoonde_score_niet_op_de_rauwe():
     # Spec 2026-10-07 par. 3: niets telt niet mee; was divided.
     # Niet kwetsbaar, dus geen split_none; op de veranderstemmen is het 14 van
     # de 17 met voorsprong 11 op gesprek: clear.
-    assert 'class="dir-card dir-clear"' in net_niet
+    # Spec 2026-10-09 par. 3: niets >= grootste richting is verdeeld.
+    # Niets 14 tegen 14: verdeeld, maar nog steeds niet split_none.
+    assert 'class="dir-card dir-divided"' in net_niet
     assert "op een onderwerp dat laag scoort" not in net_niet.lower()
     assert "5.0/10" not in net_niet
 
@@ -470,7 +478,9 @@ def test_new_states_stay_out_without_a_known_factor_score():
                                 factor_score=None)
     # Spec 2026-10-07 par. 3: niets telt niet mee; was divided.
     # Geen split_none zonder score; 14 van de 17 veranderstemmen is clear.
-    assert 'class="dir-card dir-clear"' in html
+    # Spec 2026-10-09 par. 3: niets >= grootste richting is verdeeld.
+    # Niets 14 tegen 14: verdeeld, en nog steeds geen split_none.
+    assert 'class="dir-card dir-divided"' in html
     assert "een deel zegt dat hier niets hoeft" not in html
 
 
@@ -552,10 +562,12 @@ def test_p02_line_for_the_new_states():
     # exacte tellingsvorm daarvan bij niets-stemmen pint Taak 7: de telling op
     # de 17 veranderkeuzes, de 14 niets-stemmen als eigen zin erachter.
     zonder_score = _direction_p02_line({"growth": SPLIT_NONE}, "growth", "retention", None)
+    # Spec 2026-10-09 par. 3: niets >= grootste richting is verdeeld.
+    # Niets 14 tegen 14: verdeeld, met beide tellingen en zonder split_none-zin.
     assert zonder_score == (
-        "Wat er moet gebeuren volgens 14 van de 17 (82%) die dit het laagst scoorden "
-        "en om verandering vroegen: Maak zichtbaar welke mogelijkheden er voor "
-        "medewerkers zijn. 14 vinden dat hier niets hoeft.")
+        "Over wat hier moet gebeuren zijn de 31 die dit het laagst scoorden en de vraag "
+        "beantwoordden verdeeld: 14 vinden dat hier niets hoeft, tegen 14 voor de "
+        "grootste richting.")
 
 
 def test_p02_split_none_line_is_singular_correct():
