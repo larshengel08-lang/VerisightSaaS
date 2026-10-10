@@ -1,10 +1,12 @@
 """R18 en spec 2026-10-09 par. 5: richtingregel op pagina twee zonder percentage,
 en bij de grootste groep eerst de opdracht, dan de noemer in een slotzin."""
-import re
-
 import pytest
 
-from backend.products.shared.deepening import direction_option_texts
+from backend.products.shared.deepening import (
+    direction_imperative,
+    direction_option_texts,
+    direction_state,
+)
 from backend.report_html import _direction_card_cell, _direction_p02_line
 
 FK = "growth"
@@ -45,8 +47,10 @@ def test_kaart_houdt_het_percentage(scan_type):
 def test_grootste_groep_met_niets_opdracht_eerst_noemer_in_slotzin(scan_type):
     none_key, (a, b, c, d, *_r) = _keys(scan_type)
     # change_n 27: a 12 (44%), b 8, c 4, d 3; niets 8 < 12.
-    regel = _direction_p02_line({FK: _agg({a: 12, b: 8, c: 4, d: 3, none_key: 8})},
-                                FK, scan_type, 6.2)
+    agg = _agg({a: 12, b: 8, c: 4, d: 3, none_key: 8})
+    assert direction_state(agg, FK, 6.2)["state"] == "plurality"
+    regel = _direction_p02_line({FK: agg}, FK, scan_type, 6.2)
+    assert direction_imperative(scan_type, FK, a) in regel
     assert regel.startswith("Wat er moet gebeuren volgens de grootste groep, zonder meerderheid: ")
     assert regel.endswith(" Dat zijn 12 van de 27 die dit het laagst scoorden en om "
                           "verandering vroegen; 8 vinden dat hier niets hoeft.")
@@ -56,6 +60,19 @@ def test_grootste_groep_met_niets_opdracht_eerst_noemer_in_slotzin(scan_type):
 @pytest.mark.parametrize("scan_type", ["retention", "exit"])
 def test_grootste_groep_zonder_niets(scan_type):
     _n, (a, b, c, d, *_r) = _keys(scan_type)
-    regel = _direction_p02_line({FK: _agg({a: 8, b: 5, c: 4, d: 3})}, FK, scan_type, 6.2)
+    agg = _agg({a: 8, b: 5, c: 4, d: 3})
+    assert direction_state(agg, FK, 6.2)["state"] == "plurality"
+    regel = _direction_p02_line({FK: agg}, FK, scan_type, 6.2)
+    assert direction_imperative(scan_type, FK, a) in regel
     assert regel.endswith(" Dat zijn 8 van de 20 die dit het laagst scoorden en de vraag "
                           "beantwoordden.")
+
+
+@pytest.mark.parametrize("scan_type", ["retention", "exit"])
+def test_hier_hoeft_niets_zonder_percentage(scan_type):
+    # Vanaf tien antwoorden zou _telling een percentage geven; pagina twee niet.
+    none_key, (a, b, *_r) = _keys(scan_type)
+    agg = _agg({none_key: 8, a: 2, b: 2})
+    assert direction_state(agg, FK, 6.2)["state"] == "none_needed"
+    regel = _direction_p02_line({FK: agg}, FK, scan_type, 6.2)
+    assert "8 van de 12 die dit" in regel and "%" not in regel
