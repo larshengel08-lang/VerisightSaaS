@@ -85,6 +85,7 @@ Uitvoer per bestand `OK <naam> paginas=N warnings=0 emdash=0 check=OK` of `NIET 
 | `frontend/lib/dashboard/campaign-decision.ts` (+ test) | Terugkoppelingsregel en termijn Loep Start in lockstep | 8 |
 | `frontend/lib/action-center-live.ts` | Oude naam uit één vraag | 3 |
 | `frontend/app/privacy/page.tsx`, `frontend/lib/juridische-paginas.guard.test.ts` | Zin over gebruiksgegevens | 13 |
+| `frontend/components/marketing/home-page-content.tsx`, `scripts/render_hero_p02.py`, `frontend/public/images/voorbeeld-loep-behoud-p02.*`, `frontend/lib/homepage-polijstronde.test.ts` | Homepage: hero-afbeelding en gelijke kaarten | 13b |
 | `tests/test_polijstronde_*.py` (nieuw) | Nieuwe gedragstests per taak | 1-12 |
 | `docs/examples/`, `frontend/public/examples/` | Voorbeeldrapporten opnieuw | 14 |
 | `docs/superpowers/plans/2026-10-09-polijstronde-uitvoering.md` (nieuw) | Verslag | 14 |
@@ -107,9 +108,10 @@ Uitvoer per bestand `OK <naam> paginas=N warnings=0 emdash=0 check=OK` of `NIET 
 | 11 | Tussenmeting in het productie-image, met vaste terugvalopties | |
 | 12 | Respondentflow | spec par. 4 |
 | 13 | Privacyverklaring sectie 5 | spec par. 5 |
+| 13b | Homepage: echte rapportafbeelding in de hero, drie gelijke kaarten | spec par. 7 |
 | 14 | Eindverificatie, voorbeeldrapporten, browsercheck, verslag | |
 
-Volgorde: 0, dan 1 tot en met 10 **na elkaar** (ze raken allemaal `backend/report_html.py`; niet parallel), dan 11, dan 12 en 13 (onafhankelijk van het rapport; mogen in elke volgorde na 11), dan 14.
+Volgorde: 0, dan 1 tot en met 10 **na elkaar** (ze raken allemaal `backend/report_html.py`; niet parallel), dan 11, dan 12 en 13 (onafhankelijk van het rapport; mogen in elke volgorde na 11), dan 13b (na 11 en 12), dan 14.
 
 **Codes die niet in een taak staan:** S1 (vertaalvraag Loep Start) schuift volgens de spec naar na de eerste klant. Alle andere 38 codes staan hierboven.
 
@@ -1110,7 +1112,7 @@ Past het daarna nog niet: **stop**. Schrap geen copy om ruimte te maken; meld pe
 - `survey_intro` bouwt zijn tijdzin uit `survey_minutes` (bijv. `"Invullen kost ongeveer " + str(MINUTEN) + " minuten."` met een module-constante; geen f-string-trucs nodig).
 - `invite_duration` wordt `"ongeveer " + str(MINUTEN) + " minuten"` (de mails tonen "Duur: {duration}").
 - De startpagina (`survey-intro.html:186`) toont `Invullen kost ongeveer {{ survey_minutes }} minuten.`; `main.py` geeft `survey_minutes` mee in de context van `/survey/open/{token}` (haal de definitie op zoals `/survey/{token}` dat doet met `get_scan_definition`). Heeft een scan geen `survey_minutes` (Cultuurbeeld en andere niet-verkochte scans), dan laat de pagina de tijdzin weg; nooit een getal verzinnen.
-- `frontend/lib/campaign-setup.ts` blijft zijn eigen labels houden ("ongeveer 8 minuten"); een nieuwe Python-test leest het TS-bestand en controleert dat de drie getallen gelijk zijn aan `survey_minutes` (patroon van `tests/test_besluit_limiet_pin.py`).
+- `frontend/lib/campaign-setup.ts` krijgt een getallenkaart `export const SURVEY_MINUTES: Partial<Record<ScanType, number>> = { exit: 8, retention: 6, onboarding: 3 }` en `SURVEY_DURATION_LABEL` wordt daaruit afgeleid (`'ongeveer ' + n + ' minuten'`; de andere scans houden `'een paar minuten'`). Een nieuwe Python-test leest het TS-bestand en controleert dat de drie getallen in `SURVEY_MINUTES` gelijk zijn aan `survey_minutes` (patroon van `tests/test_besluit_limiet_pin.py`). Taak 13b gebruikt `SURVEY_MINUTES` op de homepage.
 
 **Overige punten (alle respondentzichtbaar):**
 | Plek | Nu | Wordt |
@@ -1182,10 +1184,12 @@ def test_invultijd_een_bron(definitie, minuten):
     assert definitie["invite_duration"] == "ongeveer " + str(minuten) + " minuten"
 
 
-def test_frontend_labels_gelijk_aan_backend():
+def test_frontend_minuten_gelijk_aan_backend():
     ts = (ROOT / "frontend" / "lib" / "campaign-setup.ts").read_text(encoding="utf-8")
+    blok = ts[ts.index("SURVEY_MINUTES"):]
+    blok = blok[: blok.index("}")]
     for scan, d in (("exit", EXIT), ("retention", RET), ("onboarding", ONB)):
-        assert re.search(scan + r"\s*:\s*'ongeveer " + str(d["survey_minutes"]) + " minuten'", ts), scan
+        assert re.search(scan + r"\s*:\s*" + str(d["survey_minutes"]) + r"\b", blok), scan
 
 
 def test_startpagina_toont_invultijd_en_juiste_aanhef(client):
@@ -1235,6 +1239,111 @@ it('privacy sectie 5 noemt de termijn voor gebruiksgegevens zonder meting (polij
 
 ---
 
+## Taak 13b: homepage (spec par. 7, toegevoegd 10-10)
+
+**Files:**
+- Create: `scripts/render_hero_p02.py` (draait in het productie-image)
+- Create: `frontend/public/images/voorbeeld-loep-behoud-p02.webp` (of `.png` als WebP niet lukt; zie stap 2)
+- Modify: `frontend/components/marketing/home-page-content.tsx` (`managementFlowSteps` 116-136, `ManagementFlowVisual` label op ~269, `ManagementFlowSection` 539-705, hero-visual in `HeroSection` 821-893)
+- Create: `frontend/lib/homepage-polijstronde.test.ts`
+
+**Afhankelijkheid:** draai deze taak na Taak 11 (alle rapportwijzigingen staan, ook "Werkbeeld") en na Taak 12 (`SURVEY_MINUTES` bestaat). Taak 14 genereert de voorbeeldrapporten opnieuw; de generator is deterministisch, dus de afbeelding blijft kloppen. Controleer dat in Taak 14 (stap 1b).
+
+**1. Afbeelding uit het echte rapport.** `scripts/render_hero_p02.py` (niet-productie, QA/marketing):
+- leest `/repo/docs/examples/voorbeeldrapport_retentiescan.html`, rendert met WeasyPrint naar PDF (zoals `render_in_image.py`), opent pagina 2 (index 1) met PyMuPDF;
+- knipt de bovenste helft: `clip = pymupdf.Rect(0, 0, page.rect.width, page.rect.height * 0.5)`; stel de factor bij (0,45 tot 0,6) zodat de knip na een heel blok valt (kernzin, tegels met Werkbeeld en de regel eronder), nooit door een tekstregel heen;
+- rendert op 2,5x (`matrix=pymupdf.Matrix(2.5, 2.5)`), schrijft `/out/hero_p02.png`;
+- comprimeert met Pillow als dat in het image zit (`python -c "import PIL"`) naar WebP kwaliteit 82, anders blijft het PNG (optimize). Doel: kleiner dan 250 KB, breedte rond 1400 px.
+Draaien:
+```bash
+$PY generate_voorbeeldrapport.py retention
+MSYS_NO_PATHCONV=1 docker run --rm \
+  -v "C:/Users/larsh/Desktop/Business/Verisight/.worktrees/polijstronde:/repo:ro" \
+  -v "C:/Users/larsh/AppData/Local/Temp/loep-polijst/out:/out" \
+  loep-backend:test sh -c "pip install -q pymupdf; python /repo/scripts/render_hero_p02.py"
+cp $T/out/hero_p02.webp frontend/public/images/voorbeeld-loep-behoud-p02.webp
+git checkout -- docs/examples frontend/public/examples
+```
+Bekijk de afbeelding (Read-tool op het bestand): scherp, "Werkbeeld" zichtbaar, geen afgesneden regel, geen streepjes, geen "Behoudssignaal".
+
+**2. Hero.** Vervang in `HeroSection` de hele navy mock-kaart (de `div` met `background: '#0d1b2a'` en de schaduw-`div` ervoor, ~821-892) door een `figure`:
+- `next/image` met de afbeelding, `width`/`height` gelijk aan de echte pixelmaten, `sizes="(max-width: 1120px) 100vw, 480px"`, `priority` (hero, grootste element), `style={{ width: '100%', height: 'auto', display: 'block' }}`;
+- alt-tekst: `Voorbeeld van pagina twee uit een Loep Behoud-rapport: de kernzin, het werkbeeld en de cijfers over blijven en vertrekken.`;
+- zichtbaar label linksboven op de afbeelding: `Voorbeeld` (klein, hoofdletters, op een donker of wit vlak met voldoende contrast);
+- de verschoven schaduwvlak-`div` en de omlijsting mogen blijven (zelfde huisstijl); de container blijft `maxWidth: 480`.
+Werkt `next/image` niet met de bestaande `images`-config in `next.config.ts`, gebruik dan een gewone `<img>` met `width`, `height`, `loading="eager"` en `decoding="async"`; CSP `img-src 'self'` staat dat al toe.
+
+**3. Blok "Luisteren. Begrijpen. Kiezen."**
+- Even hoog: het `article` krijgt `height: '100%'`, `display: 'flex'`, `flexDirection: 'column'`; de mini-visual staat in een wrapper met `marginTop: 'auto'` zodat alle drie onderaan op één lijn staan. Werkt de stretch niet door de `Reveal`-wrapper, geef `Reveal` een optionele `style`-prop (alleen doorgeven aan de buitenste `div`) en zet daar `height: '100%'`. Verwijder `minHeight: 408` als het niet meer nodig is.
+- Tekst per kaart rond 40 woorden (tussen 36 en 44). Basis (de implementer mag licht schaven, maar niets toevoegen wat het rapport niet doet):
+  - kaart 1 (de minuten uit `SURVEY_MINUTES` in `frontend/lib/campaign-setup.ts`, kleinste en grootste van exit, retention en onboarding): `` `Anoniem, in ${min} tot ${max} minuten ingevuld, afhankelijk van de scan. Loep zet alles klaar; jij stuurt één mail vanuit je eigen mailbox. Loep ziet de adressen van je mensen nooit. De respons volg je in je eigen omgeving.` ``
+  - kaart 2: `Een rapport dat laat zien wat laag scoort én wat je mensen daar zelf over zeggen. Plus één ranglijst: dit eerst, en waarom. Bij Loep Vertrek en Loep Behoud staat er ook bij wat er volgens je mensen moet gebeuren.`
+  - kaart 3: `Jij leidt het gesprek met je MT; het rapport is je leidraad van 45 minuten. Jullie kiezen wat je oppakt, wie het doet en wanneer je terugkijkt. Geen actieplan uit een computer, wel de feiten erbij.`
+- In `ManagementFlowVisual` (kaart 2) wordt het label `Eerste managementvraag` `Gespreksopener`.
+
+- [ ] **Stap 1: Falende test** `frontend/lib/homepage-polijstronde.test.ts`:
+```ts
+import { readFileSync, statSync } from 'node:fs'
+import { join } from 'node:path'
+import { describe, expect, it } from 'vitest'
+
+const bron = readFileSync(join(__dirname, '..', 'components', 'marketing', 'home-page-content.tsx'), 'utf8')
+const live = bron.slice(0, bron.indexOf('function SuitePreviewSection'))
+
+describe('homepage polijstronde (spec par. 7)', () => {
+  it('hero zegt niets meer wat het rapport niet zegt', () => {
+    for (const oud of ['veruit het laagst', 'Eerste managementvraag', 'Waardering en erkenning', 'Illustratief voorbeeld']) {
+      expect(live).not.toContain(oud)
+    }
+  })
+
+  it('hero toont de echte rapportafbeelding met label en alt-tekst', () => {
+    expect(live).toContain('/images/voorbeeld-loep-behoud-p02.')
+    expect(live).toContain('Voorbeeld van pagina twee uit een Loep Behoud-rapport')
+    expect(live).toMatch(/>\s*Voorbeeld\s*</)
+    const pad = join(__dirname, '..', 'public', 'images')
+    const bestand = ['voorbeeld-loep-behoud-p02.webp', 'voorbeeld-loep-behoud-p02.png']
+      .map((n) => join(pad, n)).find((p) => { try { return statSync(p).isFile() } catch { return false } })
+    expect(bestand).toBeTruthy()
+    expect(statSync(bestand!).size).toBeLessThan(250 * 1024)
+  })
+
+  it('invultijd komt uit SURVEY_MINUTES, niet uit vaste tekst', () => {
+    expect(live).not.toContain('tien minuten')
+    expect(live).toContain('SURVEY_MINUTES')
+  })
+
+  it('kaartteksten rond 40 woorden', () => {
+    const blok = live.slice(live.indexOf('const managementFlowSteps'), live.indexOf('function ManagementFlowVisual'))
+    const bodies = [...blok.matchAll(/body:\s*(?:'([^']*)'|`([^`]*)`)/g)].map((m) => m[1] ?? m[2])
+    expect(bodies).toHaveLength(3)
+    for (const b of bodies) {
+      const woorden = b.replace(/\$\{[^}]*\}/g, 'X').trim().split(/\s+/).length
+      expect(woorden).toBeGreaterThanOrEqual(36)
+      expect(woorden).toBeLessThanOrEqual(44)
+    }
+  })
+
+  it('geen streepjes in de live homepage', () => {
+    expect(live).not.toMatch(/[\u2013\u2014]/)
+  })
+})
+```
+Staat `managementFlowSteps` niet meer als lijst met `body:` (bijv. omdat kaart 1 een template literal nodig heeft), pas de regex aan; de test moet de drie echte teksten meten. Bevat de live homepage al streepjes buiten deze twee blokken, beperk die laatste test dan tot de twee blokken en meld het.
+
+- [ ] **Stap 2: Zie hem falen.** `cd frontend && npx vitest run lib/homepage-polijstronde.test.ts`
+- [ ] **Stap 3: Afbeelding maken** (punt 1), **hero** (punt 2), **blok** (punt 3).
+- [ ] **Stap 4: Test groen; frontend-faalset; `npm run build` met de dummy's.**
+- [ ] **Stap 5: Browsercheck homepage**, desktop (1440 breed) en 375 px, tegen de dev-server van de worktree: tijdelijke configuratie in `C:\Users\larsh\Desktop\Business\.claude\launch.json` (eerst een kopie in `$T`, daarna terugzetten) met `runtimeExecutable` het volledige pad naar `npm.cmd`, `runtimeArgs` `["--prefix", "C:/Users/larsh/Desktop/Business/Verisight/.worktrees/polijstronde/frontend", "run", "dev", "--", "-p", "3100"]`, poort 3100. Controleer met `javascript_tool`:
+  - de drie kaarten hebben op desktop dezelfde hoogte (`getBoundingClientRect().height`, verschil hoogstens 1 px) en de mini-visuals beginnen op dezelfde `top`;
+  - de hero-afbeelding laadt (`naturalWidth > 0`), heeft de alt-tekst, het label "Voorbeeld" staat erop;
+  - op 375 px: `document.documentElement.scrollWidth === 375`, de afbeelding past binnen de kolom, kaarten onder elkaar;
+  - de console geeft geen fouten (behalve de bekende CSP-melding over het debugscript van Vercel Analytics in dev).
+  Noteer de gemeten hoogtes voor en na (voor: 433, 490, 508 px) en de woordaantallen. Een screenshot van de hero en het blok (desktop en 375 px) mag; zet er geen inloggegevens of persoonsgegevens op.
+- [ ] **Stap 6: Commit** (`feat(homepage): echte rapportafbeelding in de hero, drie gelijke kaarten met invultijd uit de vragenlijstbron`), met script, afbeelding, component, test en eventueel `design-tokens.tsx`.
+
+---
+
 ## Taak 14: eindverificatie, voorbeeldrapporten, browsercheck, verslag
 
 - [ ] **Stap 1: Voorbeeldrapporten opnieuw**
@@ -1242,6 +1351,8 @@ it('privacy sectie 5 noemt de termijn voor gebruiksgegevens zonder meting (polij
 $PY generate_voorbeeldrapport.py exit && $PY generate_voorbeeldrapport.py retention && $PY generate_voorbeeldrapport.py onboarding
 ```
 Controleer dat zowel `docs/examples/` als `frontend/public/examples/` de nieuwe HTML hebben (de generator schrijft beide; zo niet, kopieer zoals eerdere rondes dat deden: zie `git log --stat -1 -- frontend/public/examples`). Maak de PDF's in het productie-image (zoals in de fixronde: de PDF-uitvoer van `render_in_image.py` in `$T/out` naar beide mappen kopiëren onder de bestaande bestandsnamen; controleer welke bestanden de site linkt).
+
+- [ ] **Stap 1b: Hero-afbeelding nog gelijk?** Draai `scripts/render_hero_p02.py` opnieuw op het nieuwe Behoud-voorbeeld en vergelijk met `frontend/public/images/voorbeeld-loep-behoud-p02.*` (byte-gelijk, of visueel gelijk als de compressie varieert). Wijkt de inhoud af, vervang de afbeelding en noem het in het verslag.
 
 - [ ] **Stap 2: Eindmeting.** Vast recept zonder selectie, `| tee $T/eind.txt`. Verwacht: 34 bestanden, alleen de bekende 3 bevindingen, 0 warnings, 0 streepjes. Paginatallen naast de nulmeting.
 
@@ -1266,7 +1377,8 @@ Controleer dat zowel `docs/examples/` als `frontend/public/examples/` de nieuwe 
   - **Wat er is gebouwd, per taak** (taak, onderwerp, commits).
   - **Wat de reviews vonden** (per taak, spec-review en codekwaliteitsreview).
   - **Renders in het productie-image** (nulmeting, tussenmeting, eindmeting; paginatallen; gebruikte terugvalopties uit Taak 11).
-  - **Browsercheck** (tabel per controle).
+  - **Browsercheck** (tabel per controle), respondentflow én homepage.
+  - **Homepage (spec par. 7):** de nieuwe hero-afbeelding (bron, knip, formaat, bestandsgrootte), kaarthoogtes voor (433, 490, 508 px) en na, woordaantallen voor (43, 59, 63) en na, welke minuten kaart 1 noemt en waar ze vandaan komen.
   - **Afwijkingen van het plan, en waarom.**
   - **Wat Lars moet beslissen**, minstens: (1) R27 reden of uitsplitsing per afdeling; (2) R25 regel op de antwoordschaal gehouden; (3) naam voor de scorekolom bij Loep Vertrek (R14); (4) V13 eigen frictiegrenzen gelijktrekken of niet; (5) S6 termijn "ongeveer 30 dagen"; (6) V10 voorbehoud nu ook onder tien veranderkeuzes (vaker zichtbaar); (7) bevlogenheid-labels volgen nu 5,0/6,5 (R12); (8) site Loep Start zegt nog "volgende versie" (S2); (9) eventueel ingezette terugvalopties uit Taak 11; (10) dode code met de oude naam (opruimen of laten).
   - **Na merge:** geen migratie; Railway-redeploy van "Loep main" (rapport, vragenlijst, definities); Vercel deployt privacyverklaring, Action Center-zin en voorbeeldrapporten; browsercheck op de testklant volgens `docs/testklant.md`.

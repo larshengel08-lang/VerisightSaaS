@@ -49,6 +49,13 @@ Deze regel komt bovenop de regels van de vervolgronde. Draai de stresstest en no
 
 Loep Start wordt nog niet actief verkocht. Dat is een verkoopbesluit en vraagt geen codewijziging in deze ronde. De vertaalvragen volgen na de eerste klant.
 
+## 7. Homepage (toegevoegd 10-10, akkoord Lars, via de hoofdsessie)
+
+1. **Hero-visual vervangen.** De navy mock-kaart in de hero (`frontend/components/marketing/home-page-content.tsx`) zegt dingen die het rapport bewust niet meer zegt: "veruit het laagst" (geen laagste-claim, B1), "Eerste managementvraag" (heet nu "Gespreksopener"), "Waardering en erkenning" (erkenning wordt niet gemeten). Vervang hem door een echte, scherpe afbeelding van de bovenste helft van pagina twee uit het nieuw gegenereerde Loep Behoud-voorbeeldrapport (na de wijzigingen van deze ronde, dus met "Werkbeeld"), gerenderd uit het productie-image (PyMuPDF, hoge resolutie, gecomprimeerd), met een zichtbaar label "Voorbeeld" en een alt-tekst. Geen gefantaseerde cijfers: de afbeelding komt uit de echte generator. Op 375 px leesbaar of netjes geschaald.
+2. **Blok "Luisteren. Begrijpen. Kiezen." gelijktrekken.** De drie kaarten zijn nu 433, 490 en 508 px hoog en 43, 59 en 63 woorden. Maak ze even hoog (grid stretch, mini-visual onderaan op één lijn) en breng de tekst per kaart naar ongeveer 40 woorden. Kaart 1: "in tien minuten" gebruikt de invultijd uit dezelfde bron als de vragenlijst. Kaart 2: het label "Eerste managementvraag" wordt "Gespreksopener". Copyregels gelden (je/jij, Loep als onderwerp, geen streepjes, geen jargon, geen claims die het rapport niet waarmaakt).
+
+Browsercheck desktop en 375 px van de homepage; beide punten in het verslag.
+
 ## Niet in deze ronde
 
 - Plan 3c, de vervolgmeting.
