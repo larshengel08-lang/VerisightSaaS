@@ -86,6 +86,15 @@ def shown(score: float | None) -> float | None:
     return float(f"{score:.1f}")
 
 
+def _zone_index(v: float) -> int:
+    """0 = laagste zone, 1 = midden, 2 = hoogste zone. De enige plek met de grenzen."""
+    if v < ZONE_LOW:
+        return 0
+    if v < ZONE_HIGH:
+        return 1
+    return 2
+
+
 def _zone_color(v: float, invert_scale: bool) -> str:
     """De ladder: de enige plek in de codebase met deze drempels.
 
@@ -97,11 +106,7 @@ def _zone_color(v: float, invert_scale: bool) -> str:
     4.0 een amber rij boven een teal stip stond (spec ronde 2 par. 7b).
     """
     low, high = _zone_ends(invert_scale)
-    if v < ZONE_LOW:
-        return low
-    if v < ZONE_HIGH:
-        return _C_MID
-    return high
+    return (low, _C_MID, high)[_zone_index(v)]
 
 
 def zone_color(score: float, invert_scale: bool = False) -> str:
@@ -112,6 +117,16 @@ def zone_color(score: float, invert_scale: bool = False) -> str:
     dot_color, die op de exacte waarde kleurt.
     """
     return _zone_color(shown(score), invert_scale)
+
+
+def zone_label(score: float, invert_scale: bool = False) -> str:
+    """Naam van de zone waarin een getoonde score valt, met de tellingnamen van
+    de strook (_ZONE_LABELS / _ZONE_LABELS_INVERT). Rondt af zoals zone_color
+    (B15), zodat een label naast een getal hetzelfde zegt als de kleur ervan.
+    Polijstronde R12: de note bij vertrekintentie op p.03 komt hier vandaan,
+    zodat rij en strook nooit twee verschillende zones noemen."""
+    labels = _ZONE_LABELS_INVERT if invert_scale else _ZONE_LABELS
+    return labels[_zone_index(shown(score))]
 
 
 def dot_color(value: float, invert_scale: bool = False) -> str:

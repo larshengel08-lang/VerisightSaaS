@@ -174,6 +174,9 @@ p  { margin-bottom: 6px; font-size: 11px; }
   text-transform: uppercase; color: """ + STEEL + r"""; margin-bottom: 4px; }
 .sc-v { font-family: 'Inter Tight', sans-serif; font-weight: 800; font-size: 24px; color: """ + INK + r"""; line-height: 1.1; }
 .sc-b { font-size: 9px; color: """ + STEEL + r"""; margin-top: 2px; line-height: 1.4; }
+/* Uitleg onder de totaaltegel op p.02, alleen Loep Behoud (polijstronde R20). 10px is de ondergrens
+   voor uitlegregels (besluit 2026-07-09). */
+.sc-n { font-size: 10px; color: #475569; margin-top: 3px; line-height: 1.35; }
 
 /* ── Signaalrijen (behoudscontext e.d.): titel -> uitleg -> score, onder elkaar
    i.p.v. naast elkaar, zodat de uitleg niet wegvalt onder de score ── */

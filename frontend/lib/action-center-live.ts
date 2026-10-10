@@ -57,7 +57,7 @@ const SCAN_DEFAULTS: Record<
     fallbackRhythm: 'Maandelijks',
   },
   retention: {
-    managementQuestion: 'Welk behoudssignaal verdient nu als eerste een zichtbare behoudsactie en welke eigenaar trekt die follow-through?',
+    managementQuestion: 'Welk signaal over behoud verdient nu als eerste een zichtbare behoudsactie en welke eigenaar trekt die follow-through?',
     fallbackStep: 'Kies de eerste behoudsactie, expliciteer de eigenaar en plan een bounded reviewmoment.',
     fallbackSummary: 'Loep Behoud vertaalt hier signalen naar een eerste behoudsactie met eigenaar en reviewritme.',
     fallbackRhythm: 'Maandelijks',

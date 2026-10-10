@@ -568,23 +568,23 @@ def test_bestuurlijke_read_gebruikt_de_neutrale_kop():
 # ── het signaalgetal verdwijnt niet, het verhuist ────────────────────────────
 
 def test_signaalcel_toont_het_getal_met_zijn_band():
-    cel = _p02_signal_cell("Behoudssignaal", "8.0/10", "Behoudsklimaat stabiel")
-    assert '<div class="sc-l">Behoudssignaal</div>' in cel
+    cel = _p02_signal_cell("Werkbeeld", "8.0/10", "Relatief sterk")
+    assert '<div class="sc-l">Werkbeeld</div>' in cel
     assert '<div class="sc-v">8.0/10</div>' in cel
-    assert '<div class="sc-b">Behoudsklimaat stabiel</div>' in cel
+    assert '<div class="sc-b">Relatief sterk</div>' in cel
 
 
 def test_signaalcel_blijft_leeg_zonder_getal_of_band():
     """Een cel met een gat erin is geen eerlijke degradatie maar een kaal veld
     (Fail Loud). Zonder band is het getal onduidbaar, zonder getal is er niets
     te duiden; in beide gevallen draagt de degraded kernzin het verhaal."""
-    assert _p02_signal_cell("Behoudssignaal", "", "Behoudsklimaat stabiel") == ""
-    assert _p02_signal_cell("Behoudssignaal", "8.0/10", "") == ""
+    assert _p02_signal_cell("Werkbeeld", "", "Relatief sterk") == ""
+    assert _p02_signal_cell("Werkbeeld", "8.0/10", "") == ""
 
 
 def test_signaalcel_staat_in_de_onderbouwingsrij():
     # Plan 3a taak 4: het signaalgetal staat in blok 2 (de cijfersrij).
-    cel = _p02_signal_cell("Behoudssignaal", "8.0/10", "Behoudsklimaat stabiel")
+    cel = _p02_signal_cell("Werkbeeld", "8.0/10", "Relatief sterk")
     html = _bestuurlijke_read(kernzin="K.",
                               primary_label="Werkdruk", why_cells_html="",
                               mgmt_q="V?",

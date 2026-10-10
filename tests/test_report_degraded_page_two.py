@@ -292,7 +292,9 @@ def test_met_profiel_is_pagina_twee_niet_degraded(scan_type):
 
 _DEGRADED_SIGNAAL = {
     "exit": "De frictiescore van 5.5/10 wijst op een",
-    "retention": "(behoudssignaal 5.5/10).",
+    # Polijstronde: het label heet Werkbeeld en de band heeft geen onderwerp
+    # meer, dus een hele zin in plaats van "{band} (behoudssignaal 5.5/10).".
+    "retention": "Het werkbeeld van 5.5/10 vraagt aandacht.",
     "onboarding": "(checkpointscore 5.5/10).",
 }
 

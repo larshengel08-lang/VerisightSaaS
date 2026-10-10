@@ -37,6 +37,7 @@ from backend.report_distribution import (
     score_distribution,
     shown as _shown,
     zone_color,
+    zone_label,
 )
 from backend.products.shared.deepening import (
     DEEPENING_CAP,
@@ -150,9 +151,9 @@ _EXIT_BANDS = {
     "LAAG":   ("Laag frictiebeeld",         "#3C8D8A"),
 }
 _RETENTION_BANDS = {
-    "HOOG":   ("Behoud onder druk",          "#C0392B"),
-    "MIDDEN": ("Behoud vraagt aandacht",    "#C17C00"),
-    "LAAG":   ("Behoudsklimaat stabiel",    "#3C8D8A"),
+    "HOOG":   ("Onder druk",                "#C0392B"),
+    "MIDDEN": ("Vraagt aandacht",           "#C17C00"),
+    "LAAG":   ("Relatief sterk",            "#3C8D8A"),
 }
 _ONBOARDING_BANDS = {
     "HOOG":   ("Onboardingbasis vraagt aandacht", "#C0392B"),
@@ -161,7 +162,7 @@ _ONBOARDING_BANDS = {
 }
 
 def _signal_health(avg_risk: float | None) -> float | None:
-    """Behoudssignaal / checkpointscore zoals het rapport 'm toont: health = 11 - avg_risk.
+    """Werkbeeld / checkpointscore zoals het rapport 'm toont: health = 11 - avg_risk.
 
     B4: de opgeslagen risk_score (DB, API, campaign_stats) staat op de
     RISICO-schaal (hoog = slecht; per factor 11 - score, zie
@@ -191,7 +192,7 @@ def _band_key(score: float | None, scan_type: str = "exit") -> str | None:
     Polariteit per product (B4):
     - exit: RISICO-schaal (frictiescore, hoog = meer frictie):
       >= RISK_HIGH -> HOOG, >= RISK_MEDIUM -> MIDDEN, anders LAAG.
-    - retention / onboarding: GEZONDHEIDS-schaal (behoudssignaal /
+    - retention / onboarding: GEZONDHEIDS-schaal (werkbeeld /
       checkpointscore via _signal_health, hoog = goed), dezelfde ladder als
       _factor_label: < 5,0 -> HOOG (onder druk), < 6,5 -> MIDDEN, anders LAAG.
     HOOG betekent in beide gevallen "meeste aandacht nodig" (rood).
@@ -234,7 +235,7 @@ _MGMT_Q_EXIT: dict[str, str] = {
     "role_clarity": "Gaat de onduidelijkheid over prioriteiten, eigenaarschap of beslisruimte?",
 }
 _MGMT_Q_RETENTION: dict[str, str] = {
-    "leadership":   "Gaat het behoudssignaal over vertrouwen in leiding, feedback of zichtbare steun?",
+    "leadership":   "Gaat wat hier wringt over vertrouwen in leiding, feedback of zichtbare steun?",
     "culture":      "Is dit beeld over psychologische veiligheid, teambinding of cultuurmatch?",
     "growth":       "Speelt ontbrekend perspectief, te weinig concrete ontwikkelgesprekken of stagnatie een rol?",
     "compensation": "Is de kern hier ervaren fairness, uitlegbaarheid of beloningshoogte?",
@@ -739,18 +740,23 @@ def _p02_startpunt_gronden(
     return kind, change, change_other, delta
 
 
-def _p02_signal_cell(label: str, value: str, band: str) -> str:
+def _p02_signal_cell(label: str, value: str, band: str, note: str = "") -> str:
     """Het totaalsignaal met zijn band, als cel in de onderbouwingsrij van p.02.
 
     Stond tot ronde 2 in de kernzin; die plek is nu van de zin over de vorm van
     het profiel. Leeg zonder waarde of band: een cel met een gat erin is geen
     eerlijke degradatie maar een kaal veld.
+
+    note (polijstronde R20): een regel uitleg onder de band. Alleen Loep Behoud
+    geeft er een mee, omdat "Werkbeeld" zonder uitleg leest als een meting van
+    behoud; dat is het niet.
     """
     if not value or not band:
         return ""
+    note_html = f'<div class="sc-n">{_h(note)}</div>' if note else ""
     return (f'<td><div class="sc-l">{_h(label)}</div>'
             f'<div class="sc-v">{_h(value)}</div>'
-            f'<div class="sc-b">{_h(band)}</div></td>')
+            f'<div class="sc-b">{_h(band)}</div>{note_html}</td>')
 
 
 def _p02_cijfers_block(cells: list[str]) -> str:
@@ -898,7 +904,7 @@ def _blijfintentie_kopzin(avg_si: float | None, stay_scores: list[float], *,
 # waar of waarom; daarom begint het gesprek bij het startpunt.
 #
 # De zin noemt blijf- en vertrekintentie bij naam (codereview taak 3): de
-# alinea staat direct onder de cel Behoudssignaal, en dat getal splitst het
+# alinea staat direct onder de cel Werkbeeld, en dat getal splitst het
 # afdelingsblok wel per afdeling uit (kolom Score). "Deze cijfers" zou dat
 # getal meenemen en dan onwaar zijn.
 INTENTIE_DUIDING_KERN = (
@@ -1607,9 +1613,11 @@ SECTION_INTROS: dict[str, str] = {
     # samenstelling van het signaal blijft zonder die verwijzing gewoon waar,
     # dus vervalt hij in beide staten (review ronde 2).
     "behoudscontext": (
-        "Het behoudssignaal is een samenvattende groepsscore: de zes onderwerpen over "
-        "het werk en de werkbeleving samen, teruggebracht tot &eacute;&eacute;n getal "
-        "tussen 1 en 10. Hoe hoger, hoe beter. "
+        "Het werkbeeld is een samenvattende groepsscore: de zes onderwerpen over "
+        "het werk en de werkbeleving (de drie basisbehoeften autonomie, competentie en "
+        "verbondenheid) samen, teruggebracht tot &eacute;&eacute;n getal tussen 1 en 10. "
+        "Het zegt hoe mensen hun werk ervaren, niet of ze blijven; dat zeggen blijf- en "
+        "vertrekintentie. Hoe hoger, hoe beter. "
         "Onder de 5,0 noemen we een score kwetsbaar, tussen 5,0 en 6,5 een "
         "aandachtspunt, vanaf 6,5 relatief sterk. De drie signalen daaronder geven context: "
         "bij vertrekintentie leest een hoge score juist als meer vertrekgedachten, bij de "
@@ -1622,7 +1630,7 @@ SECTION_INTROS: dict[str, str] = {
     "vertrekcontext": (
         "Deze pagina zet de vertrekredenen op een rij zoals vertrokken medewerkers ze zelf "
         "opgaven: eerst de hoofdreden, daarna wat er volgens hen meespeelde. Samen met de "
-        "scores per onderwerp verderop laat dit zien of de opgegeven redenen en het bredere werkbeeld "
+        "scores per onderwerp verderop laat dit zien of de opgegeven redenen en het bredere beeld van het werk "
         "hetzelfde verhaal vertellen. Lees dit als de context waarin de rest van het rapport "
         "staat: het beschrijft waarom mensen zeggen te vertrekken, niet wie er nog zal vertrekken."
     ),
@@ -1847,7 +1855,7 @@ def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
     """
     A = LEIDRAAD_ANKERS
     p = _pref
-    context = {"exit": "de vertrekredenen", "retention": "de blijfintentie en het behoudssignaal",
+    context = {"exit": "de vertrekredenen", "retention": "de blijfintentie en het werkbeeld",
                "onboarding": "de checkpointscore"}[scan_type]
     if has_segments:
         rij4 = ("Per afdeling", "Waar het per afdeling begint, en hoe dat zich verhoudt tot het "
@@ -6099,6 +6107,25 @@ def _vertrekcontext(*, exit_reasons: list[tuple[str, int]],
 
 # ─── Behoudscontext (T7-retention) ───────────────────────────────────────────
 
+# Uitleg onder de tegel Werkbeeld op p.02 (polijstronde R20). Waar: de score is
+# per respondent het gelijkgewogen gemiddelde van zeven delen, de zes
+# werkonderwerpen en de werkbeleving (products/retention/scoring.py,
+# compute_retention_risk). Dus nooit "gemiddelde van de zes".
+WERKBEELD_UITLEG = ("De zes werkonderwerpen en de werkbeleving samen; "
+                    "geen meting van of mensen blijven.")
+
+# De degraded kernzin op p.02 (zonder factorprofiel), per bandsleutel.
+_WERKBEELD_BAND_ZIN = {"HOOG": "staat onder druk", "MIDDEN": "vraagt aandacht",
+                       "LAAG": "is relatief sterk"}
+
+
+def _p03_note(score: float) -> str:
+    """Label voor een gezondheidscijfer op p.03 (hoog = goed): onder druk /
+    vraagt aandacht / relatief sterk, op de getoonde score (B15) via _band_key.
+    Zelfde woorden als de band onder de tegel op p.02 (_RETENTION_BANDS)."""
+    return _RETENTION_BANDS[_band_key(score, "retention")][0].lower()
+
+
 def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
                     turnover: float | None, engagement: float | None,
                     intent_resp: dict | None = None,
@@ -6107,8 +6134,14 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
 
     Signalen staan bewust onder elkaar (niet naast elkaar in één balk): titel
     eerst, dan de uitleg van wat het meet, dan pas de score — anders valt de
-    uitleg weg onder de opvallende cijfers (feedback: Behoudssignaal en
+    uitleg weg onder de opvallende cijfers (feedback: het totaalsignaal en
     Blijfintentie waren zo nauwelijks te onderscheiden).
+
+    Labels (polijstronde R12): werkbeeld, blijfintentie en bevlogenheid krijgen
+    hun label uit _p03_note (de ladder 5,0 / 6,5 van _band_key, zelfde als hun
+    kleur); vertrekintentie uit zone_label van de omgekeerde strook. Zo staat er
+    op deze pagina een set labels en zegt een label nooit iets anders dan de
+    kleur of de strook.
     """
     rows = ""
     if retention_score is not None:
@@ -6118,9 +6151,9 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
         # ("onder de 5,0 kwetsbaar ... vanaf 6,5 relatief sterk") ontstaat.
         _k = _band_key(retention_score, "retention")
         col = _RETENTION_BANDS[_k][1]
-        note = {"HOOG": "onder druk", "MIDDEN": "vraagt aandacht", "LAAG": "sterk"}[_k]
-        rows += (f'<div class="sigrow"><div class="sigrow-title">Behoudssignaal</div>'
-                 f'<div class="sigrow-body">De zes onderwerpen over het werk en de werkbeleving samengebracht op groepsniveau.</div>'
+        note = _p03_note(retention_score)
+        rows += (f'<div class="sigrow"><div class="sigrow-title">Werkbeeld</div>'
+                 f'<div class="sigrow-body">De zes onderwerpen over het werk en de werkbeleving samen, op groepsniveau. Geen meting van of mensen blijven.</div>'
                  f'<div><span class="sigrow-score" style="color:{col};">{retention_score:.1f}/10</span>'
                  f'<span class="sigrow-note">{note}</span></div></div>')
     if stay_intent is not None:
@@ -6128,7 +6161,8 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
         rows += (f'<div class="sigrow"><div class="sigrow-title">Blijfintentie</div>'
                   f'<div class="sigrow-body">&ldquo;Als het aan mij ligt, werk ik over 12 maanden nog steeds hier.&rdquo; '
                   f'Enkelvoudige richtingsvraag, indicatief.</div>'
-                  f'<div><span class="sigrow-score" style="color:{scol};">{stay_intent:.1f}/10</span></div></div>')
+                  f'<div><span class="sigrow-score" style="color:{scol};">{stay_intent:.1f}/10</span>'
+                  f'<span class="sigrow-note">{_p03_note(stay_intent)}</span></div></div>')
     if turnover is not None:
         _tv = _shown(turnover)  # note + kleur op de getoonde score (B15)
         # Kleur en note komen uit dezelfde zone-as als de spreidingsstrook op de
@@ -6137,14 +6171,12 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
         # een amber rij boven een teal stip, dezelfde tegenspraak als de gespiegelde
         # getallen, alleen in kleur. De grenzen zijn daarom ZONE_LOW en ZONE_HIGH,
         # en strikt kleiner-dan: 5,0 zelf hoort in het midden, 6,5 zelf bovenin,
-        # precies zoals de strook de stip indeelt. De grens van 3,0 splitst binnen
-        # de laagste zone ("laag" of "beperkt", allebei weinig vertrekgedachten) en
-        # valt daarom niet samen met een zonegrens.
+        # precies zoals de strook de stip indeelt. De note is sinds polijstronde
+        # R12 de zonenaam van de strook zelf (zone_label), met "vraagt aandacht"
+        # voor het midden, zodat rij en strook letterlijk hetzelfde zeggen.
         tcol = zone_color(_tv, invert_scale=True)
-        note = ("laag" if _tv <= 3.0 else
-                "beperkt" if _tv < ZONE_LOW else
-                "zichtbaar" if _tv < ZONE_HIGH else
-                "hoog: actief vertrekrisico")
+        note = zone_label(_tv, invert_scale=True)
+        note = "vraagt aandacht" if note == "Aandacht" else note.lower()
         rows += (f'<div class="sigrow"><div class="sigrow-title">Vertrekintentie</div>'
                   f'<div class="sigrow-body">&ldquo;Ik denk er serieus over na te vertrekken&rdquo; + &ldquo;Ik zoek actief.&rdquo; '
                   f'Gemiddelde van 2 stellingen.</div>'
@@ -6152,11 +6184,9 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
                   f'<span class="sigrow-note">{note}</span></div></div>')
     if engagement is not None:
         ecol = _factor_color(engagement)
-        _ev = _shown(engagement)  # note op de getoonde score (B15)
-        note = ("hoog" if _ev >= 7.5 else
-                "gemiddeld" if _ev >= 6.0 else
-                "laag: geen buffer" if _ev >= 4.5 else
-                "zorgelijk laag")
+        # Polijstronde R12: geen eigen grenzen meer (was 7,5 / 6,0 / 4,5, terwijl
+        # de kleur op 5,0 / 6,5 lag); de note volgt nu de ladder van de kleur.
+        note = _p03_note(engagement)
         rows += (f'<div class="sigrow"><div class="sigrow-title">Bevlogenheid</div>'
                   f'<div class="sigrow-body">Energie &middot; Inspiratie &middot; Zin om te gaan (UWES). Gemiddelde van 3 stellingen.</div>'
                   f'<div><span class="sigrow-score" style="color:{ecol};">{engagement:.1f}/10</span>'
@@ -6925,7 +6955,7 @@ def render_retention_report_html(data: dict) -> str:
     avg_eng     = data["avg_eng"]
     avg_to      = data["avg_to"]
     avg_si      = data["avg_si"]
-    # Behoudssignaal op de gezondheidsschaal (B4): één omkering, hier, en
+    # Werkbeeld op de gezondheidsschaal (B4): één omkering, hier, en
     # daarna overal dezelfde waarde (band, kernzin, behoudscontext).
     signal      = _signal_health(avg_risk)
     band_lbl, band_col = _band(signal, ST)
@@ -7041,7 +7071,7 @@ def render_retention_report_html(data: dict) -> str:
         )
 
     # Kernzin (ronde 2, B17): volgt de vorm van het profiel, niet de band van
-    # het behoudssignaal. Dat getal volgde eerder als enige de openingszin,
+    # het werkbeeld. Dat getal volgde eerder als enige de openingszin,
     # waardoor "geen factor kwetsbaar" en "alle zes kwetsbaar" dezelfde zin
     # kregen; het staat nu met zijn band in de onderbouwingsrij eronder.
     _shape = profile_shape(fa)
@@ -7055,8 +7085,8 @@ def render_retention_report_html(data: dict) -> str:
         tie_break_kind=_tk, change=_chg, change_other=_chg_other, next_delta=_delta,
         direction_state_key=_p02_direction_key(direction_agg, _primary),
         indicatief=_indicatief)
-    _signal_cell = _p02_signal_cell("Behoudssignaal", _score_str(signal) if signal else "",
-                                    band_lbl or "")
+    _signal_cell = _p02_signal_cell("Werkbeeld", _score_str(signal) if signal else "",
+                                    band_lbl or "", note=WERKBEELD_UITLEG)
     _stay_scores = (data.get("intent_resp") or {}).get("stay") or []
     _cijfers_html = _p02_cijfers_block([
         _blijfintentie_cell(avg_si, _stay_scores),
@@ -7080,9 +7110,11 @@ def render_retention_report_html(data: dict) -> str:
     _verwijst = not exec_line and not (signal and band_lbl)
     if not exec_line:
         # Geen factorprofiel (bug B2). De onderbouwingsrij rendert in die staat
-        # niet, dus het behoudssignaal blijft hier staan in plaats van uit het
-        # rapport te verdwijnen.
-        exec_line = (f"{band_lbl} (behoudssignaal {_score_str(signal)})."
+        # niet, dus het werkbeeld blijft hier staan in plaats van uit het
+        # rapport te verdwijnen. Polijstronde: de bandlabels hebben geen
+        # onderwerp meer ("Vraagt aandacht"), dus een hele zin.
+        exec_line = (f"Het werkbeeld van {_score_str(signal)} "
+                     f"{_WERKBEELD_BAND_ZIN[_band_key(signal, ST)]}."
                      if signal and band_lbl
                      else "Zie de behoudscontext en de meetgegevens voor wat dit rapport wel toont.")
 

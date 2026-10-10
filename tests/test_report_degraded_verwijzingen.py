@@ -118,7 +118,10 @@ def test_behoudscontext_intro_verwijst_niet_naar_het_overzichtsprofiel():
     # een hoofdstuk dat in deze staat leeg is, verdwijnt.
     assert "uit het overzichtsprofiel" not in SECTION_INTROS["behoudscontext"]
     body = _render("retention", profile=False)
-    assert "de zes onderwerpen over het werk en de werkbeleving samen" in body
+    # Polijstronde: de intro noemt de drie basisbehoeften tussen "werkbeleving"
+    # en "samen"; de samenstelling zelf is ongewijzigd.
+    assert ("de zes onderwerpen over het werk en de werkbeleving (de drie "
+            "basisbehoeften autonomie, competentie en verbondenheid) samen") in body
     assert "uit het overzichtsprofiel" not in body
 
 
