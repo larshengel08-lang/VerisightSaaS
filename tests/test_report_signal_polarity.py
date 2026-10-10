@@ -45,10 +45,10 @@ def test_band_retention_follows_health_ladder():
     # Polijstronde R12: de labels onder de tegel Werkbeeld zijn de p.03-set.
     assert _band(8.0, "retention")[0] == "Relatief sterk"
     assert _band(6.5, "retention")[0] == "Relatief sterk"
-    assert _band(6.4, "retention")[0] == "Vraagt aandacht"
-    assert _band(5.0, "retention")[0] == "Vraagt aandacht"
-    assert _band(4.0, "retention")[0] == "Onder druk"
-    assert _band(4.9, "retention")[0] == "Onder druk"
+    assert _band(6.4, "retention")[0] == "Aandachtspunt"
+    assert _band(5.0, "retention")[0] == "Aandachtspunt"
+    assert _band(4.0, "retention")[0] == "Kwetsbaar punt"
+    assert _band(4.9, "retention")[0] == "Kwetsbaar punt"
 
 
 def test_band_onboarding_follows_health_ladder():
@@ -88,14 +88,14 @@ def test_behoudscontext_weak_signal_is_red_and_onder_druk():
     row = _sigrow_behoudssignaal(html)
     assert "3.5/10" in row
     assert "#C0392B" in row
-    assert '<span class="sigrow-note">onder druk</span>' in row
+    assert '<span class="sigrow-note">kwetsbaar punt</span>' in row
 
 
 def test_behoudscontext_middle_signal_is_amber_and_vraagt_aandacht():
     html = _behoudscontext(retention_score=5.8, stay_intent=None, turnover=None, engagement=None)
     row = _sigrow_behoudssignaal(html)
     assert "#C17C00" in row
-    assert '<span class="sigrow-note">vraagt aandacht</span>' in row
+    assert '<span class="sigrow-note">aandachtspunt</span>' in row
 
 
 def test_checkpointoverzicht_colour_follows_health_ladder():
@@ -181,8 +181,8 @@ def test_retention_kernzin_shows_health_value_and_matching_band():
 
     html_low = render_retention_report_html(_min_data("retention", 7.0))
     cel_low = _signaalcel(html_low, "Werkbeeld")
-    assert "4.0/10" in cel_low and "Onder druk" in cel_low
-    assert '<span class="sigrow-note">onder druk</span>' in _sigrow_behoudssignaal(html_low)
+    assert "4.0/10" in cel_low and "Kwetsbaar punt" in cel_low
+    assert '<span class="sigrow-note">kwetsbaar punt</span>' in _sigrow_behoudssignaal(html_low)
 
 
 def test_onboarding_kernzin_shows_health_value_and_matching_band():
@@ -280,12 +280,12 @@ def test_de_andere_twee_rijen_kleuren_ook_als_hun_stippen(signaal, v):
 
 @pytest.mark.parametrize("v,verwacht_note,verwacht_telling", [
     # Polijstronde R12: de note is de zonenaam van de strook zelf, met
-    # "vraagt aandacht" voor het midden.
+    # "aandachtspunt" voor het midden.
     (2.0, "weinig vertrekgedachten", "Weinig vertrekgedachten"),
     (3.0, "weinig vertrekgedachten", "Weinig vertrekgedachten"),
     (4.9, "weinig vertrekgedachten", "Weinig vertrekgedachten"),
-    (5.0, "vraagt aandacht", "Aandacht"),          # ZONE_LOW zelf hoort in het midden
-    (6.4, "vraagt aandacht", "Aandacht"),
+    (5.0, "aandachtspunt", "Aandacht"),          # ZONE_LOW zelf hoort in het midden
+    (6.4, "aandachtspunt", "Aandacht"),
     (6.5, "veel vertrekgedachten", "Veel vertrekgedachten"),  # ZONE_HIGH zelf bovenin
     (8.0, "veel vertrekgedachten", "Veel vertrekgedachten"),
 ])
@@ -312,7 +312,7 @@ def test_rij_kleurt_op_de_getoonde_score_en_de_stip_op_zijn_positie():
     html = _behoudscontext(retention_score=None, stay_intent=None, turnover=v,
                            engagement=None, intent_resp={"turnover": [v] * 12})
     assert '<span class="sigrow-score" style="color:#C17C00;">5.0/10</span>' in html
-    assert '<span class="sigrow-note">vraagt aandacht</span>' in html
+    assert '<span class="sigrow-note">aandachtspunt</span>' in html
     rij, stippen = _rij_en_stipkleur("turnover", v)
     assert rij == "#C17C00" and stippen == {"#3C8D8A"}
     # De telling volgt de stippen, dus die zegt hetzelfde als hun kleur.

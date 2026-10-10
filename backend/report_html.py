@@ -150,10 +150,17 @@ _EXIT_BANDS = {
     "MIDDEN": ("Gemengd vertrekbeeld",      "#C17C00"),
     "LAAG":   ("Laag frictiebeeld",         "#3C8D8A"),
 }
+# De labelwoorden van de ladder 5,0 / 6,5 (gezondheidsschaal), van laag naar
+# hoog. Eén bron: _factor_label geeft ze terug, en de band onder de tegel
+# Werkbeeld op p.02 (_RETENTION_BANDS) en de labels op p.03 (_p03_note) lezen
+# ze hier, zodat het rapport voor dezelfde grenzen overal dezelfde woorden
+# gebruikt (polijstronde R12).
+_FACTOR_LABEL_WOORDEN = ("Kwetsbaar punt", "Aandachtspunt", "Relatief sterk")
+
 _RETENTION_BANDS = {
-    "HOOG":   ("Onder druk",                "#C0392B"),
-    "MIDDEN": ("Vraagt aandacht",           "#C17C00"),
-    "LAAG":   ("Relatief sterk",            "#3C8D8A"),
+    "HOOG":   (_FACTOR_LABEL_WOORDEN[0], "#C0392B"),
+    "MIDDEN": (_FACTOR_LABEL_WOORDEN[1], "#C17C00"),
+    "LAAG":   (_FACTOR_LABEL_WOORDEN[2], "#3C8D8A"),
 }
 _ONBOARDING_BANDS = {
     "HOOG":   ("Onboardingbasis vraagt aandacht", "#C0392B"),
@@ -309,9 +316,9 @@ def _factor_label(score: float | None) -> str:
     # Drempels op de getoonde score (1 decimaal), zie _shown (B15).
     if score is None:  return "Geen data"
     score = _shown(score)
-    if score < 5.0:    return "Kwetsbaar punt"
-    if score < 6.5:    return "Aandachtspunt"
-    return "Relatief sterk"
+    if score < 5.0:    return _FACTOR_LABEL_WOORDEN[0]
+    if score < 6.5:    return _FACTOR_LABEL_WOORDEN[1]
+    return _FACTOR_LABEL_WOORDEN[2]
 
 
 def profile_shape(factor_avgs: dict[str, float | None]) -> dict[str, Any]:
@@ -1618,7 +1625,7 @@ SECTION_INTROS: dict[str, str] = {
         "verbondenheid) samen, teruggebracht tot &eacute;&eacute;n getal tussen 1 en 10. "
         "Het zegt hoe mensen hun werk ervaren, niet of ze blijven; dat zeggen blijf- en "
         "vertrekintentie. Hoe hoger, hoe beter. "
-        "Onder de 5,0 noemen we een score kwetsbaar, tussen 5,0 en 6,5 een "
+        "Onder de 5,0 heet een score een kwetsbaar punt, tussen 5,0 en 6,5 een "
         "aandachtspunt, vanaf 6,5 relatief sterk. De drie signalen daaronder geven context: "
         "bij vertrekintentie leest een hoge score juist als meer vertrekgedachten, bij de "
         "andere twee is hoog weer beter. "
@@ -6114,16 +6121,21 @@ def _vertrekcontext(*, exit_reasons: list[tuple[str, int]],
 WERKBEELD_UITLEG = ("De zes werkonderwerpen en de werkbeleving samen; "
                     "geen meting van of mensen blijven.")
 
-# De degraded kernzin op p.02 (zonder factorprofiel), per bandsleutel.
-_WERKBEELD_BAND_ZIN = {"HOOG": "staat onder druk", "MIDDEN": "vraagt aandacht",
-                       "LAAG": "is relatief sterk"}
+def _werkbeeld_zin(signal: float, band_lbl: str) -> str:
+    """De p.02-zin zonder factorprofiel: "Het werkbeeld is 5.5/10: een
+    aandachtspunt." De band komt uit _RETENTION_BANDS (de _factor_label-woorden);
+    een "punt" krijgt een lidwoord, "relatief sterk" niet."""
+    woord = band_lbl.lower()
+    if woord.endswith("punt"):
+        woord = "een " + woord
+    return f"Het werkbeeld is {_score_str(signal)}: {woord}."
 
 
 def _p03_note(score: float) -> str:
-    """Label voor een gezondheidscijfer op p.03 (hoog = goed): onder druk /
-    vraagt aandacht / relatief sterk, op de getoonde score (B15) via _band_key.
-    Zelfde woorden als de band onder de tegel op p.02 (_RETENTION_BANDS)."""
-    return _RETENTION_BANDS[_band_key(score, "retention")][0].lower()
+    """Label voor een gezondheidscijfer op p.03 (hoog = goed): kwetsbaar punt /
+    aandachtspunt / relatief sterk, de woorden van _factor_label in kleine
+    letters, op de getoonde score (B15). Zelfde ladder als de kleur ernaast."""
+    return _factor_label(score).lower()
 
 
 def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
@@ -6138,8 +6150,9 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
     Blijfintentie waren zo nauwelijks te onderscheiden).
 
     Labels (polijstronde R12): werkbeeld, blijfintentie en bevlogenheid krijgen
-    hun label uit _p03_note (de ladder 5,0 / 6,5 van _band_key, zelfde als hun
-    kleur); vertrekintentie uit zone_label van de omgekeerde strook. Zo staat er
+    hun label uit _p03_note (de _factor_label-woorden op de ladder 5,0 / 6,5,
+    zelfde als hun kleur); vertrekintentie uit zone_label van de omgekeerde
+    strook, met "aandachtspunt" in het midden. Zo staat er
     op deze pagina een set labels en zegt een label nooit iets anders dan de
     kleur of de strook.
     """
@@ -6172,11 +6185,12 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
         # getallen, alleen in kleur. De grenzen zijn daarom ZONE_LOW en ZONE_HIGH,
         # en strikt kleiner-dan: 5,0 zelf hoort in het midden, 6,5 zelf bovenin,
         # precies zoals de strook de stip indeelt. De note is sinds polijstronde
-        # R12 de zonenaam van de strook zelf (zone_label), met "vraagt aandacht"
-        # voor het midden, zodat rij en strook letterlijk hetzelfde zeggen.
+        # R12 de zonenaam van de strook zelf (zone_label), met "aandachtspunt"
+        # voor het midden (het _factor_label-woord), zodat rij en strook dezelfde
+        # zone noemen.
         tcol = zone_color(_tv, invert_scale=True)
         note = zone_label(_tv, invert_scale=True)
-        note = "vraagt aandacht" if note == "Aandacht" else note.lower()
+        note = (_FACTOR_LABEL_WOORDEN[1] if note == "Aandacht" else note).lower()
         rows += (f'<div class="sigrow"><div class="sigrow-title">Vertrekintentie</div>'
                   f'<div class="sigrow-body">&ldquo;Ik denk er serieus over na te vertrekken&rdquo; + &ldquo;Ik zoek actief.&rdquo; '
                   f'Gemiddelde van 2 stellingen.</div>'
@@ -7111,10 +7125,9 @@ def render_retention_report_html(data: dict) -> str:
     if not exec_line:
         # Geen factorprofiel (bug B2). De onderbouwingsrij rendert in die staat
         # niet, dus het werkbeeld blijft hier staan in plaats van uit het
-        # rapport te verdwijnen. Polijstronde: de bandlabels hebben geen
-        # onderwerp meer ("Vraagt aandacht"), dus een hele zin.
-        exec_line = (f"Het werkbeeld van {_score_str(signal)} "
-                     f"{_WERKBEELD_BAND_ZIN[_band_key(signal, ST)]}."
+        # rapport te verdwijnen. Polijstronde: de band is een _factor_label-
+        # woord ("Aandachtspunt"), dus een hele zin met dubbele punt.
+        exec_line = (_werkbeeld_zin(signal, band_lbl)
                      if signal and band_lbl
                      else "Zie de behoudscontext en de meetgegevens voor wat dit rapport wel toont.")
 

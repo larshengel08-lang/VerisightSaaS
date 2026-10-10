@@ -294,7 +294,7 @@ _DEGRADED_SIGNAAL = {
     "exit": "De frictiescore van 5.5/10 wijst op een",
     # Polijstronde: het label heet Werkbeeld en de band heeft geen onderwerp
     # meer, dus een hele zin in plaats van "{band} (behoudssignaal 5.5/10).".
-    "retention": "Het werkbeeld van 5.5/10 vraagt aandacht.",
+    "retention": "Het werkbeeld is 5.5/10: een aandachtspunt.",
     "onboarding": "(checkpointscore 5.5/10).",
 }
 

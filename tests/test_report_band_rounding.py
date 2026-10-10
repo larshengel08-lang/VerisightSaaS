@@ -149,15 +149,16 @@ def test_checkpointoverzicht_never_shows_6_5_with_aandachtspunt():
 
 def test_behoudscontext_notes_follow_displayed_score():
     # Werkbeeld staat op de gezondheidsschaal (B4): 4.96 toont als 5.0 en
-    # krijgt dus dezelfde note als een echte 5.0 ("vraagt aandacht"), niet de
-    # note van 4.9 ("onder druk").
+    # krijgt dus dezelfde note als een echte 5.0 ("aandachtspunt"), niet de
+    # note van 4.9 ("kwetsbaar punt").
     html = _behoudscontext(retention_score=4.96, stay_intent=None,
                            turnover=6.46, engagement=7.46)
     assert "5.0/10" in html
-    assert "vraagt aandacht" in html and "onder druk" not in html
+    assert '<span class="sigrow-note">aandachtspunt</span>' in html
+    assert '<span class="sigrow-note">kwetsbaar punt</span>' not in html
     html_low = _behoudscontext(retention_score=4.94, stay_intent=None,
                                turnover=None, engagement=None)
-    assert "4.9/10" in html_low and "onder druk" in html_low
+    assert "4.9/10" in html_low and '<span class="sigrow-note">kwetsbaar punt</span>' in html_low
     # Lockstep met spec ronde 2 par. 7b: de note van vertrekintentie ligt nu op
     # ZONE_LOW en ZONE_HIGH, dezelfde grenzen waarmee de spreidingsstrook de
     # stippen indeelt, en strikt kleiner-dan. 6.46 toont als 6.5 en valt daarmee
@@ -166,12 +167,12 @@ def test_behoudscontext_notes_follow_displayed_score():
     # de stip in de rode zone stond. Wat deze test bewaakt blijft hetzelfde: de
     # note volgt de GETOONDE score (6.5), niet de onafgeronde 6.46 (B15).
     # Polijstronde R12: de note is de zonenaam van de strook ("veel
-    # vertrekgedachten"); het middenlabel "vraagt aandacht" staat hier al voor
+    # vertrekgedachten"); het middenlabel "aandachtspunt" staat hier al voor
     # het werkbeeld, dus de check is op de rij van vertrekintentie zelf.
     vt = html[html.index('<div class="sigrow-title">Vertrekintentie</div>'):]
     vt = vt[:vt.index('<div class="sigrow-title">Bevlogenheid</div>')]
     assert "6.5/10" in vt and '<span class="sigrow-note">veel vertrekgedachten</span>' in vt
-    assert "vraagt aandacht" not in vt
+    assert "aandachtspunt" not in vt
     # Bevlogenheid toont 7.5 -> "relatief sterk" (ladder van zijn kleur, 6,5).
     assert "7.5/10" in html
     assert '<span class="sigrow-note">relatief sterk</span>' in html

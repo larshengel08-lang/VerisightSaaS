@@ -59,7 +59,7 @@ def test_vertrekrapport_gebruikt_werkbeeld_niet_als_los_woord():
 def test_p03_labels_uit_een_set():
     html = _html("02_een_lage_factor")
     notes = re.findall(r'class="sigrow-note"[^>]*>(.*?)<', html)
-    toegestaan = {"onder druk", "vraagt aandacht", "relatief sterk",
+    toegestaan = {"kwetsbaar punt", "aandachtspunt", "relatief sterk",
                   "veel vertrekgedachten", "weinig vertrekgedachten"}
     assert len(notes) == 4, notes
     for note in notes:
@@ -75,8 +75,8 @@ def test_p03_intro_noemt_werkbeeld_en_de_basisbehoeften():
 # ── Eenheid: de bandsets ─────────────────────────────────────────────────────
 
 @pytest.mark.parametrize("score,label", [
-    (8.0, "Relatief sterk"), (6.5, "Relatief sterk"), (6.4, "Vraagt aandacht"),
-    (5.0, "Vraagt aandacht"), (4.9, "Onder druk"), (4.0, "Onder druk"),
+    (8.0, "Relatief sterk"), (6.5, "Relatief sterk"), (6.4, "Aandachtspunt"),
+    (5.0, "Aandachtspunt"), (4.9, "Kwetsbaar punt"), (4.0, "Kwetsbaar punt"),
 ])
 def test_retention_band_onder_de_tegel(score, label):
     assert _band(score, "retention")[0] == label
@@ -91,7 +91,7 @@ def _note(html: str, titel: str) -> str:
 
 
 @pytest.mark.parametrize("v,label", [
-    (4.9, "onder druk"), (5.0, "vraagt aandacht"), (6.4, "vraagt aandacht"),
+    (4.9, "kwetsbaar punt"), (5.0, "aandachtspunt"), (6.4, "aandachtspunt"),
     (6.5, "relatief sterk"), (8.0, "relatief sterk"),
 ])
 @pytest.mark.parametrize("veld,titel", [
@@ -114,8 +114,8 @@ def test_bevlogenheid_volgt_de_ladder_van_zijn_kleur_niet_meer_eigen_grenzen():
 
 @pytest.mark.parametrize("v,label", [
     (2.0, "weinig vertrekgedachten"), (4.9, "weinig vertrekgedachten"),
-    (4.96, "vraagt aandacht"),  # toont 5.0
-    (5.0, "vraagt aandacht"), (6.4, "vraagt aandacht"),
+    (4.96, "aandachtspunt"),  # toont 5.0
+    (5.0, "aandachtspunt"), (6.4, "aandachtspunt"),
     (6.5, "veel vertrekgedachten"), (9.0, "veel vertrekgedachten"),
 ])
 def test_vertrekintentie_label_volgt_de_zones_van_de_strook(v, label):
@@ -127,6 +127,29 @@ def test_vertrekintentie_label_volgt_de_zones_van_de_strook(v, label):
 def test_signaalcel_met_en_zonder_uitleg():
     zonder = _p02_signal_cell("Checkpointscore", "6.0/10", "Gemengd")
     assert 'class="sc-n"' not in zonder
-    met = _p02_signal_cell("Werkbeeld", "6.0/10", "Vraagt aandacht", note=UITLEG)
+    met = _p02_signal_cell("Werkbeeld", "6.0/10", "Aandachtspunt", note=UITLEG)
     assert f'<div class="sc-n">{UITLEG}</div>' in met
     assert met.index('class="sc-b"') < met.index('class="sc-n"')
+
+
+def test_p03_intro_laat_loep_niet_spreken_en_noemt_de_labelwoorden():
+    from backend.report_html import SECTION_INTROS
+    intro = SECTION_INTROS["behoudscontext"]
+    assert "noemen we" not in intro
+    assert "Onder de 5,0 heet een score een kwetsbaar punt, tussen 5,0 en 6,5 een aandachtspunt" in intro
+
+
+def test_labels_komen_uit_factor_label():
+    from backend.report_html import _RETENTION_BANDS, _factor_label
+    assert [_RETENTION_BANDS[k][0] for k in ("HOOG", "MIDDEN", "LAAG")] == [
+        _factor_label(4.0), _factor_label(5.5), _factor_label(7.0)]
+
+
+@pytest.mark.parametrize("score,zin", [
+    (4.0, "Het werkbeeld is 4.0/10: een kwetsbaar punt."),
+    (5.5, "Het werkbeeld is 5.5/10: een aandachtspunt."),
+    (7.0, "Het werkbeeld is 7.0/10: relatief sterk."),
+])
+def test_zin_zonder_profiel_is_grammaticaal(score, zin):
+    from backend.report_html import _werkbeeld_zin
+    assert _werkbeeld_zin(score, _band(score, "retention")[0]) == zin
