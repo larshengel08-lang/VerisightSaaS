@@ -37,7 +37,7 @@
 **Backend-faalset (na elke backendtaak):**
 ```bash
 cd /c/Users/larsh/Desktop/Business/Verisight/.worktrees/polijstronde
-$PY -m pytest tests -q -rf -p no:cacheprovider 2>&1 | grep -E "^(FAILED|ERROR) " | sed -E "s/ - .*$//" | sort > $T/na.txt; diff docs/superpowers/plans/polijstronde-backend-baseline-fails.txt $T/na.txt && echo GEEN_REGRESSIES
+$PY -m pytest tests -q -rf -p no:cacheprovider 2>&1 | grep -E "^(FAILED|ERROR) " | sed -E "s/ - .*$//" | sort > $T/na.txt; diff --strip-trailing-cr docs/superpowers/plans/polijstronde-backend-baseline-fails.txt $T/na.txt && echo GEEN_REGRESSIES
 ```
 Verwacht `GEEN_REGRESSIES`. Een regel aan de `<`-kant (test op main rood, nu groen) mag; noteer hem. Elke regel aan de `>`-kant is een regressie. De volledige suite duurt ongeveer 20 minuten; draai tussendoor alleen de geraakte testbestanden en de volledige suite aan het eind van elke taak.
 
@@ -47,7 +47,7 @@ cd /c/Users/larsh/Desktop/Business/Verisight/.worktrees/polijstronde/frontend
 npx tsc --noEmit 2>&1 | grep -c "error TS"
 npx vitest run --reporter=json --outputFile=C:/Users/larsh/AppData/Local/Temp/loep-polijst/vitest-na.json >/dev/null 2>&1
 node $T/vitest-fails.js C:/Users/larsh/AppData/Local/Temp/loep-polijst/vitest-na.json > $T/vitest-na.txt
-diff ../docs/superpowers/plans/polijstronde-vitest-baseline-fails.txt $T/vitest-na.txt | grep "^>" ; echo KLAAR
+diff --strip-trailing-cr ../docs/superpowers/plans/polijstronde-vitest-baseline-fails.txt $T/vitest-na.txt | grep "^>" ; echo KLAAR
 ```
 Verwacht `131` en geen regel met `>` vóór `KLAAR`. Ontbreken de drie wisselvallige namen aan de `<`-kant: prima.
 
